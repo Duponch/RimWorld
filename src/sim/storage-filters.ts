@@ -4,7 +4,7 @@ import { isPerishable } from './food-preservation.ts';
 import { SCHEMA_VERSION,type MaterialPile,type StockpileCell } from './types.ts';
 
 export function validStorageItems(items:unknown,version:number=SCHEMA_VERSION):boolean {
-  return items===undefined||!!items&&typeof items==='object'&&!Array.isArray(items)&&Object.entries(items).every(([key,value])=>Object.hasOwn(ITEM_DEFINITIONS,key)&&(version>=227||key!=='hay'&&key!=='kibble')&&(version>=218||key!=='chemfuel')&&(version>=206||key!=='neutroamine')&&(version>=217||key!=='nutrient-paste-meal')&&typeof value==='boolean');
+  return items===undefined||!!items&&typeof items==='object'&&!Array.isArray(items)&&Object.entries(items).every(([key,value])=>Object.hasOwn(ITEM_DEFINITIONS,key)&&(version>=235||key!=='minified-tree')&&(version>=227||key!=='hay'&&key!=='kibble')&&(version>=218||key!=='chemfuel')&&(version>=206||key!=='neutroamine')&&(version>=217||key!=='nutrient-paste-meal')&&typeof value==='boolean');
 }
 
 /** A missing item list is the historical category-only rule. Once present,

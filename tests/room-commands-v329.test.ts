@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { BundleGroup, Color, Frustum, LessEqualDepth, Matrix4, Mesh, MeshStandardNodeMaterial,
   OrthographicCamera, RenderTarget, Scene, Vector2, Vector3, Vector4, WebGPUCoordinateSystem,
   type BufferGeometry, type Camera, type WebGPURenderer } from 'three/webgpu';
+import { DecorOcclusion } from '../src/render/decor-occlusion';
 import { RoomLayer } from '../src/render/RoomLayer';
 import { createRoomGeometry } from '../src/render/room-geometry';
 import { sampleDaylight } from '../src/render/daylight';
@@ -42,7 +43,7 @@ function material(mesh: Mesh): MeshStandardNodeMaterial {
  * lights, targets and TSL nodes; backend records calls only, never simulates a
  * retained render bundle or certifies GPU culling, bindings or pixels. */
 function harness(mobileLayers = false) {
-  const game = new Scene(), room = new RoomLayer(game); room.configure(32, 48, 7);
+  const game = new Scene(), mask=new DecorOcclusion(), room = new RoomLayer(game,mask); room.configure(32, 48, 7);
   if (!mobileLayers) for (const mesh of movers(room)) mesh.layers.set(7);
   const focus = new Vector3(15.5, 0, 23.5), camera = new OrthographicCamera(-50, 50, 50, -50, .1, 1000);
   camera.position.copy(focus).add(new Vector3(80, 90, 100)); camera.lookAt(focus); camera.updateMatrixWorld();
@@ -81,7 +82,7 @@ function harness(mobileLayers = false) {
   const draw = (tick = noon, view: Camera = camera) => {
     room.present(sample(tick), view); room.renderBackground(renderer, view, focus, false);
   };
-  return { game, room, focus, camera, caller, state, renderer, draws, draw,
+  return { game, room, mask, focus, camera, caller, state, renderer, draws, draw,
     dispose: () => { room.dispose(); caller.dispose(); } };
 }
 function geometricallyVisible(room: RoomLayer, camera: Camera): Mesh[] {
@@ -167,7 +168,7 @@ describe('V329 B2 ordered room commands and native mobile fallback', () => {
       h.room.sun.visible = false; h.draw(noon + 604.25); expect(group.visible).toBe(true);
       h.room.sun.visible = true; h.draw(noon + 604.5); expect(group.visible).toBe(false);
       // Intensity and opaque mask do not imply a non-submission.
-      h.room.setSettings({ sun: 0, moon: 0, ambient: 1 }); h.room.setMaskRadius(.31);
+      h.room.setSettings({ sun: 0, moon: 0, ambient: 1 }); h.mask.setEnabled(true); h.room.invalidateDecorOcclusion();
       h.draw(noon + 605); expect(group.visible).toBe(false);
       selected.frustumCulled = true;
       const savedPosition = h.camera.position.clone(); h.camera.position.x += 10000;
@@ -256,11 +257,11 @@ describe('V329 B2 ordered room commands and native mobile fallback', () => {
       h.room.setTexturesEnabled(false); h.draw();
       expect(group.version).toBeGreaterThan(version); version = group.version;
       for (const mesh of original) expect(material(mesh).colorNode).toBeNull();
-      h.room.setMaskRadius(0); h.draw(); expect(group.version).toBeGreaterThan(version); version = group.version;
+      h.mask.setEnabled(false); h.room.invalidateDecorOcclusion(); h.draw(); expect(group.version).toBeGreaterThan(version); version = group.version;
       h.room.setSettings({ sun: 2, moon: 0, ambient: .5 }); h.draw();
       expect(group.version).toBeGreaterThan(version); version = group.version;
       expect(h.room.lighting.sun.intensity).toBeCloseTo(source * 2, 8); expect(h.room.lighting.moon.intensity).toBe(0);
-      h.room.setTexturesEnabled(true); h.room.setMaskRadius(.31);
+      h.room.setTexturesEnabled(true); h.mask.setEnabled(true); h.room.invalidateDecorOcclusion();
       h.room.setSettings({ sun: 1, moon: 1, ambient: 1 }); h.draw();
       expect(group.version).toBeGreaterThan(version);
       for (const mesh of original) expect(material(mesh).colorNode).not.toBeNull();
@@ -321,7 +322,7 @@ describe('V329 B2 ordered room commands and native mobile fallback', () => {
     const h = harness();
     const core = Object.assign(Object.create(SceneRenderCore.prototype), {
       disposed: false, roomEnabled: true, dioramaEnabled: true, room: h.room, scene: h.game,
-      world: { width: 32, height: 48, seed: 7 }, texturesEnabled: true, roomMaskRadius: .31,
+      world: { width: 32, height: 48, seed: 7 }, texturesEnabled: true, decorOcclusion: h.mask,
       lightingSettings: { sun: 1, moon: 1, ambient: 1 }, landscape: new LandscapeBatch(), armedRoom: null,
       animationDetail: new AnimationDetail(), skyAnimation: new AnimationDetail().createHandle(),
       daylight: { setExternalLighting: vi.fn() }, rig: { setRoomEnabled: vi.fn() },

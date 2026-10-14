@@ -1,5 +1,5 @@
 import { iconPosition, type UiIcon } from './visual-identity';
-import {modelIconUrl,UI_ATLAS_URL} from './pictograms';
+import {modelIconUrl,pictogramDataUrl,UI_ATLAS_URL} from './pictograms';
 
 export type CellHealth = { current: number; maximum: number; label: string; valueText?: string };
 
@@ -9,7 +9,7 @@ export function presentCellDescription(panel: HTMLElement, text: string, icon: U
   if (art && art.dataset.icon !== (model??icon)) {
     art.dataset.icon = model??icon;
     const [x, y] = iconPosition(icon);
-    art.style.backgroundImage=`url('${model?modelIconUrl(model):UI_ATLAS_URL}')`;
+    art.style.backgroundImage=`url('${model?(model==='extract-tree'||model==='replant-tree'?pictogramDataUrl(model):modelIconUrl(model)):UI_ATLAS_URL}')`;
     art.style.backgroundSize=model?'contain':'400% 500%';art.style.backgroundPosition=model?'center':`${x}% ${y}%`;
   }
   const description = panel.querySelector<HTMLElement>('#cell-description');

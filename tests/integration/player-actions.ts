@@ -1,3 +1,4 @@
+import {footprintCells} from '../../src/sim/definitions';
 import { testOutputPath } from '../test-output.ts';
 import { isBuildableFloor } from '../../src/sim/flooring';
 import { expect, type Page } from '@playwright/test';
@@ -122,7 +123,13 @@ async function groundOrderPoint(page:Page,target:{x:number;z:number}):Promise<{x
 export async function perform(page: Page, decision: Decision, rotation: { value: number }): Promise<void> {
   const c=decision.command;
   if(c.type==='auto-slaughter-policy'){await editAutoSlaughterPolicy(page,c.config);return;}
-  let heaterTarget:number|undefined,billIndex:number|undefined;
+  let heaterTarget:number|undefined,billIndex:number|undefined,cancelJobIds:number[]|undefined,cancelPileIds:number[]|undefined;
+  if(c.type==='area'&&c.action==='cancel'){
+    const before=await world(page),inside=(p:{x:number;z:number})=>p.x>=Math.min(c.from.x,c.to.x)&&p.x<=Math.max(c.from.x,c.to.x)&&p.z>=Math.min(c.from.z,c.to.z)&&p.z<=Math.max(c.from.z,c.to.z);
+    cancelJobIds=before.jobs.filter(j=>j.kind!=='repair'&&j.kind!=='fix-breakdown'&&(footprintCells(j).some(inside)||!!j.furniture&&(
+      before.structures.some(b=>b.id===j.furniture!.structureId&&footprintCells(b).some(inside))||before.packed.some(p=>p.building.id===j.furniture!.structureId&&p.owner.type==='ground'&&inside(p.owner))))).map(j=>j.id);
+    cancelPileIds=before.piles.filter(p=>p.kind==='chunk'&&p.haulRequested&&p.owner.type==='ground'&&inside(p.owner)).map(p=>p.id);
+  }
   if(c.type==='answer-arrival'){await page.locator('#arrival-letter').click();await page.locator(c.accept?'#accept-arrival':'#reject-arrival').click();await expect(page.locator('#arrival-dialog')).not.toBeVisible();await expect(page.locator('#arrival-letter')).toHaveCount(0);return;}
   if(c.type==='enable-arrivals'){await panel(page,'menu');if(!await page.locator('.legacy-scenario-settings').evaluate(node=>node.hasAttribute('open')))await page.locator('.legacy-scenario-settings>summary').click();await page.locator('#enable-arrivals').click();await expect(page.locator('#enable-arrivals')).toBeHidden();await page.keyboard.press('Escape');return;}
   if(c.type==='draft'||c.type==='draft-move'||c.type==='draft-stop') {
@@ -280,7 +287,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
       await page.locator(`[data-bill="${c.billId}"]`).getByRole('button',{name:c.direction===-1?'Monter la facture':'Descendre la facture',exact:true}).click();
     }
   } else throw new Error(`Player UI action not supported: ${c.type}`);
-  try { await page.waitForFunction(({command:c,heaterTarget,billIndex})=>{
+  try { await page.waitForFunction(({command:c,heaterTarget,billIndex,cancelJobIds,cancelPileIds})=>{
     const w=window.__lisiere.world;
     if(c.type==='growing-policy'){const z=w.growingZones.find(z=>z.id===c.zoneId);return !!z&&(!c.plant||z.plant===c.plant)&&z.allowSow===c.allowSow&&z.allowCut===c.allowCut;}
     if(c.type==='hunt')return !!w.hunting?.targets.includes(c.animalId)===c.enabled;
@@ -332,6 +339,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
       }
       if(c.action==='stockpile'){for(let z=Math.min(c.from.z,c.to.z);z<=Math.max(c.from.z,c.to.z);z++)for(let x=Math.min(c.from.x,c.to.x);x<=Math.max(c.from.x,c.to.x);x++){const s=w.stockpiles.find(s=>s.x===x&&s.z===z);if(!s||c.filters&&Object.entries(s.filters).some(([k,v])=>!!v!==!!c.filters![k as keyof typeof c.filters]))return false;}return true;}
       if(c.action==='deconstruct')return w.jobs.some(j=>j.kind==='deconstruct');
+      if(c.action==='cancel')return (cancelJobIds??[]).every(id=>!w.jobs.some(j=>j.id===id))&&(cancelPileIds??[]).every(id=>{const p=w.piles.find(p=>p.id===id);return !p||!p.haulRequested||p.owner.type!=='ground';});
       if(c.action==='haul-chunks')return w.piles.some(p=>p.kind==='chunk'&&p.haulRequested&&p.owner.type==='ground'&&p.owner.x>=Math.min(c.from.x,c.to.x)&&p.owner.x<=Math.max(c.from.x,c.to.x)&&p.owner.z>=Math.min(c.from.z,c.to.z)&&p.owner.z<=Math.max(c.from.z,c.to.z));
       if(c.action==='mine')return w.jobs.some(j=>j.kind==='mine'&&j.x>=Math.min(c.from.x,c.to.x)&&j.x<=Math.max(c.from.x,c.to.x)&&j.z>=Math.min(c.from.z,c.to.z)&&j.z<=Math.max(c.from.z,c.to.z));
       return w.growingZones.length>0;
@@ -339,7 +347,7 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     if(c.type==='stockpile')return w.stockpiles.some(s=>s.x===c.x&&s.z===c.z);
     if(c.type==='designate'&&(c.kind==='butcher-spot'||c.kind==='crafting-spot'))return w.structures.some(s=>s.kind===c.kind&&s.x===c.x&&s.z===c.z);
     return c.type==='designate' && w.jobs.some(j=>j.x===c.x&&j.z===c.z&&j.kind===c.kind&&(!c.material||j.material===c.material)&&(!c.targetId||(j.deconstruction??j.furniture)?.structureId===c.targetId));
-  },{command:c,heaterTarget,billIndex},{polling:100,timeout:5000});
+  },{command:c,heaterTarget,billIndex,cancelJobIds,cancelPileIds},{polling:100,timeout:5000});
   } catch(error) {
     const diagnostic=await page.evaluate(()=>({tick:window.__lisiere.tick,notice:document.querySelector('#notice')?.textContent,stockpiles:window.__lisiere.world.stockpiles,events:window.__lisiere.world.events.slice(-5),tool:document.querySelector('[data-tool].active')?.getAttribute('data-tool')}));
     await page.screenshot({path:testOutputPath('artifacts/player-action-failure.png')});

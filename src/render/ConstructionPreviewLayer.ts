@@ -1,3 +1,5 @@
+import {treeVisualParts,type TreeVisualTraits} from './tree-presentation';
+import {createItemGeometry} from './item-geometry';
 import * as THREE from 'three/webgpu';
 import { BoxMesh, configureBoxMaterial } from './BoxMesh';
 import { constructionPreviewParts, type ConstructionPreviewSpec } from './construction-preview-parts';
@@ -17,7 +19,7 @@ export class ConstructionPreviewLayer {
   readonly material = new THREE.MeshBasicNodeMaterial({ transparent: true, opacity: .48, depthWrite: false, depthTest: false, vertexColors:true });
   /** Only real ground-height faces; furniture/roof models are not floor fills. */
   surfaces:readonly GroundOverlayRect[]=EMPTY_GROUND_OVERLAYS;
-  private readonly bases = [new THREE.BoxGeometry(1, 1, 1), createTimberGeometry(false), createTimberGeometry(true), new THREE.BoxGeometry(1, 1, 1),createSandbagGeometry()];
+  private readonly bases = [new THREE.BoxGeometry(1, 1, 1), createTimberGeometry(false), createTimberGeometry(true), new THREE.BoxGeometry(1, 1, 1),createSandbagGeometry(),createItemGeometry('item-disc'),createItemGeometry('item-nugget'),createItemGeometry('trap-spike')];
   private readonly meshes: BoxMesh[];
   private revision = 0;
   private previousWorld:World|undefined;
@@ -46,7 +48,7 @@ export class ConstructionPreviewLayer {
     const surfaces:GroundOverlayRect[]=[];
     const floorKeys=new Set(context.flatMap((spec,index)=>spec.kind==='lay-floor'?[spec.key??index]:[]));
     for (let index = 0; index < this.meshes.length; index++) {
-      const mesh = this.meshes[index]!, goodParts = goodArrays[index]!, badParts = badArrays[index]!;
+      const mesh = this.meshes[index]!, goodParts = goodArrays[index]??[], badParts = badArrays[index]??[];
       const count = goodParts.length + badParts.length;
       if (count > mesh.instanceMatrix.count) {
         const base=this.bases[index]!;
@@ -77,6 +79,25 @@ export class ConstructionPreviewLayer {
     this.previousWorld=world;this.previousSignature=signature;
   }
 
+  /** Full planted silhouette from immutable source traits; no phantom Resource
+   * or simulation entry is allocated for this one-cell intention. */
+  updateTree(world:World,tree:TreeVisualTraits,cell:{x:number;z:number},valid:boolean):void {
+    const signature=JSON.stringify(['tree',cell,valid,tree.species,tree.growth,!!tree.blight]);
+    if(this.previousWorld===world&&this.previousSignature===signature)return;
+    this.revision++;this.surfaces=EMPTY_GROUND_OVERLAYS;
+    const parts=treeVisualParts(tree,false);
+    for(let index=0;index<this.meshes.length;index++){
+      const mesh=this.meshes[index]!,shape=index===5?'item-disc':index===6?'item-nugget':index===7?'trap-spike':undefined;
+      const selected=shape?parts.filter(part=>part.shape===shape):[];mesh.activeCount=selected.length;
+      for(let ordinal=0;ordinal<selected.length;ordinal++){
+        const part=selected[ordinal]!;object.position.set(cell.x+part.x,part.y,cell.z+part.z);
+        object.rotation.set(0,part.ry??0,0);object.scale.set(part.sx??1,part.sy??1,part.sz??1);object.updateMatrix();
+        mesh.setMatrixAt(ordinal,object.matrix);color.setHex(part.color??0xffffff).lerp(valid?validTint:invalidTint,valid?.35:.8);mesh.setColorAt(ordinal,color);
+      }
+      mesh.instanceMatrix.needsUpdate=true;mesh.colorBuffer.needsUpdate=true;mesh.computeBoundingSphere();
+    }
+    this.previousWorld=world;this.previousSignature=signature;
+  }
   hide(): void { this.surfaces=EMPTY_GROUND_OVERLAYS;this.revision++;this.previousWorld=undefined;this.previousSignature=''; for (const mesh of this.meshes) mesh.activeCount = 0; }
 
   prepareForCompile(): () => void {

@@ -1,3 +1,4 @@
+import {treeWorkTarget} from './tree-transfer.ts';
 import { reservedSource } from './materials.ts';
 import { footprintCells } from './definitions.ts';
 import { constructionObstruction, constructionSiteFree } from './construction-rules.ts';
@@ -10,6 +11,7 @@ export const minifiable = (kind: string): boolean => ['shelf','small-shelf','spi
 export const packedAt = (world:World, cell:Cell) => world.packed?.find(p=>p.owner.type==='ground'&&p.owner.x===cell.x&&p.owner.z===cell.z);
 export const furnitureObject = (world:World,id:number) => world.structures.find(s=>s.id===id)??world.packed?.find(p=>p.building.id===id)?.building;
 export function furnitureWorkTarget(world:World,job:Job):Cell & {kind?:Job['kind']} {
+  if(job.tree)return treeWorkTarget(world,job)??job;
   if(!job.furniture)return job;
   const source=world.structures.find(s=>s.id===job.furniture!.structureId);
   if(source)return source;

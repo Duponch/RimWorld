@@ -103,7 +103,7 @@ test('rectangles : sélection exacte, frontières, reprise, concurrence et conse
     if (phase === 'deliver') {
       const exhausted = deserializeWorld(saved); exhausted.nextId = Number.MAX_SAFE_INTEGER;
       const unchanged = serializeWorld(exhausted);
-      expect(applyCommand(exhausted, area('remove-stockpile', 12, 4, 13, 5)).ok).toBe(false);
+          expect(applyCommand(exhausted, area('remove-stockpile', 12, 4, 13, 5)).ok).toBe(false);
       expect(serializeWorld(exhausted)).toBe(unchanged);
     }
     for (const current of [busy, resumed]) {
@@ -120,9 +120,12 @@ test('rectangles : sélection exacte, frontières, reprise, concurrence et conse
   until(building, () => building.piles.some(pile => pile.owner.type === 'job') && building.pawns.some(pawn => pawn.haul?.phase === 'deliver'));
   const total = mass(building), resumed = deserializeWorld(serializeWorld(building));
   const exhausted = deserializeWorld(serializeWorld(building)); exhausted.nextId = Number.MAX_SAFE_INTEGER;
-  const unchanged = serializeWorld(exhausted);
-  expect(applyCommand(exhausted, area('cancel', 10, 8, 12, 9)).ok).toBe(false);
-  expect(serializeWorld(exhausted)).toBe(unchanged);
+  // Cancellation now retains every existing material ID and deferred cargo.
+  // It needs no fresh identity even at exhaustion; it must neither mint nor lose.
+  const exhaustedMass=mass(exhausted);
+  expect(applyCommand(exhausted, area('cancel', 10, 8, 12, 9)).ok).toBe(true);
+  expect(exhausted.nextId).toBe(Number.MAX_SAFE_INTEGER);expect(exhausted.jobs).toEqual([]);
+  expect(mass(exhausted)).toBe(exhaustedMass);expect(validateWorld(exhausted)).toEqual([]);
   for (const current of [building, resumed]) {
     // Both cells of the bed are selected, but only one cancellation and refund occur.
     expect(applyCommand(current, area('cancel', 10, 8, 10, 9))).toEqual({ ok: true, affected: 1, skipped: 0 });

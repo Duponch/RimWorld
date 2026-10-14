@@ -1,3 +1,5 @@
+import {validTreePileShape} from './tree-transfer-save.ts';
+import {validOriginalTreeResource} from './tree-transfer-resource-save.ts';
 import { validMechCorpseShape } from './mechanoid-corpse-save.ts';
 import { validFlakWorkShape } from './flak-work.ts';
 import { validArtWorkShape } from './art-work.ts';
@@ -23,6 +25,7 @@ export function validatePileRecordShape(item:Record<string,unknown>,world:World,
  const input={width:world.width,height:world.height,tick:validationTick};
  const coord=(v:Record<string,unknown>)=>integer(v.x,0,world.width-1)&&integer(v.z,0,world.height-1);
  const errors:string[]=[];
+ if(!validTreePileShape(item,version,validationTick,world.nextId,(raw,tick)=>validOriginalTreeResource(raw,world,version,tick)))errors.push('Invalid or future minified tree.');
 if(!validMechCorpseShape(item,version,input.tick as number))errors.push('Invalid or future mechanoid carcass.');
 if(!validFoodContamination(item.foodPoison,item.item as keyof typeof ITEM_DEFINITIONS,version>=89))errors.push('Invalid food contamination.');
 if(item.item==='human-corpse'?!validHumanCorpseShape(item.humanCorpse,version,input.tick as number):item.humanCorpse!==undefined)errors.push('Invalid human corpse metadata.');
@@ -49,7 +52,7 @@ if(version<79&&['hare-corpse','hare-meat','light-leather'].includes(String(item.
 if(!validUnfinishedShape(item,version)||!validGunWorkShape(item,version)||!validFlakWorkShape(item,version)||!validComponentWorkShape(item,version))errors.push('Invalid unfinished item.');
 if(!validApparelShape(item,version))errors.push('Invalid apparel state for schema.');
 if(!validWeaponShape(item,version))errors.push('Invalid weapon state for schema.');
-if (!oneOf(item.kind, ['wood', 'food', ...(version>=218?['chemfuel']:[]), ...(version>=206?['neutroamine']:[]), ...(version>=28?['chunk']:[]), ...(version>=29?['steel']:[]),...(version>=123?['gold','plasteel','advanced-component']:[]), ...(version>=32?['blocks']:[]), ...(version>=41?['component']:[]), ...(version>=51?['medicine']:[]), ...(version>=52?['weapon']:[]), ...(version>=63?['apparel']:[]), ...(version>=71?['textile']:[]), ...(version>=72?['unfinished']:[]),...(version>=79?['corpse']:[]),...(version>=194?['mech-corpse']:[]),...(version>=88?['silver']:[])]) || !integer(item.quantity, 1, version>=227&&item.item==='hay'?200:version>=218&&item.item==='chemfuel'?150:version>=206&&item.item==='neutroamine'?150:version>=120&&item.item==='muffalo-wool'?100:version>=88&&item.item==='silver'||version>=123&&item.item==='gold'?500:MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
+if (!oneOf(item.kind, ['wood', 'food', ...(version>=235?['plant']:[]), ...(version>=218?['chemfuel']:[]), ...(version>=206?['neutroamine']:[]), ...(version>=28?['chunk']:[]), ...(version>=29?['steel']:[]),...(version>=123?['gold','plasteel','advanced-component']:[]), ...(version>=32?['blocks']:[]), ...(version>=41?['component']:[]), ...(version>=51?['medicine']:[]), ...(version>=52?['weapon']:[]), ...(version>=63?['apparel']:[]), ...(version>=71?['textile']:[]), ...(version>=72?['unfinished']:[]),...(version>=79?['corpse']:[]),...(version>=194?['mech-corpse']:[]),...(version>=88?['silver']:[])]) || !integer(item.quantity, 1, version>=227&&item.item==='hay'?200:version>=218&&item.item==='chemfuel'?150:version>=206&&item.item==='neutroamine'?150:version>=120&&item.item==='muffalo-wool'?100:version>=88&&item.item==='silver'||version>=123&&item.item==='gold'?500:MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
 else {
   if (version >= 5) {
     if (typeof item.item !== 'string' || !Object.hasOwn(ITEM_DEFINITIONS, item.item)) errors.push('Unknown item definition.');

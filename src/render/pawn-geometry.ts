@@ -1,3 +1,4 @@
+import {TREE_CARGO_MODELS} from './tree-presentation';
 import { HAIR_PARTS,BEARD_PARTS } from './pawn-appearance-shape';
 import * as THREE from 'three/webgpu';
 import { PAWN_MODEL_SCALE } from '../world/scale';
@@ -212,10 +213,11 @@ export function cargoGeometry(): THREE.InstancedBufferGeometry {
   // Immutable all-item geometry is built once for the two resident cargo
   // batches. No meshes, selection, or portrait work is performed per frame.
   const transform=new THREE.Matrix4(),rotation=new THREE.Quaternion(),point=new THREE.Vector3(),normal=new THREE.Vector3(),normalMatrix=new THREE.Matrix3();
-  for(const item of ITEM_VISUAL_IDS){
-    const kind=itemCargoKind(item);
+  for(const model of [...ITEM_VISUAL_IDS.filter(item=>item!=='minified-tree').map(item=>({item,kind:itemCargoKind(item),traits:undefined})),...TREE_CARGO_MODELS.map(model=>({item:'minified-tree' as const,kind:model.kind,traits:model.traits}))]){
+    const {item,traits}=model;
+    const kind=model.kind;
     const range=begin(kind);
-    for(const p of centreItemParts(itemGeometry(item),true)){
+    for(const p of centreItemParts(itemGeometry(item,undefined,undefined,traits),true)){
       const source=placementGeometry(p),positions=source.getAttribute('position'),normals=source.getAttribute('normal'),index=source.getIndex(),tint=new THREE.Color(p.color??0xb8ac96);
       rotation.setFromAxisAngle(new THREE.Vector3(0,1,0),p.ry??0);
       transform.compose(new THREE.Vector3(p.x,p.y,p.z),rotation,new THREE.Vector3(p.sx??1,p.sy??1,p.sz??1));normalMatrix.getNormalMatrix(transform);

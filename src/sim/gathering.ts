@@ -15,7 +15,7 @@ export function gatherResource(world: World, resource: Resource, kind:'chop'|'ha
   if(kind==='harvest'&&!harvestable(world,resource)||kind==='chop'&&!choppable(world,resource))return null;
   // Medicinal roots and V91 species clear without product. Historical bushes
   // and other crops keep their established cut yield.
-  const roll=kind==='chop'&&!resource.species&&!worker?{quantity:resource.amount,rng:world.rng}:kind==='cut'&&(resource.blight||resource.species||resource.kind==='healroot'||resource.kind==='haygrass')?{quantity:0,rng:world.rng}:harvestRoll(world,resource,kind==='cut'?undefined:worker);
+  const roll=kind==='chop'&&!resource.species&&!worker?{quantity:resource.amount,rng:world.rng}:kind==='cut'&&(world.schemaVersion>=235&&resource.kind==='tree'||resource.blight||resource.species||resource.kind==='healroot'||resource.kind==='haygrass')?{quantity:0,rng:world.rng}:harvestRoll(world,resource,kind==='cut'?undefined:worker);
   if(roll.quantity>0) {
     const item=resource.species?FLORA_DEFINITIONS[resource.species].product:
       kind==='chop'?'wood':isCrop(resource)?cropProduct(resource.kind):world.foodRules==='legacy'?'legacy-portion':'berries';
@@ -34,7 +34,7 @@ export function gatherResource(world: World, resource: Resource, kind:'chop'|'ha
   // was designated. Only the successful producer keeps the yield; its rivals
   // and their actor/queue claims must disappear with the consumed resource.
   if(removed){
-    const obsolete=new Set(world.jobs.filter(j=>j.id!==producerJobId&&j.x===resource.x&&j.z===resource.z&&['chop','harvest','cut'].includes(j.kind)).map(j=>j.id));
+    const obsolete=new Set(world.jobs.filter(j=>j.id!==producerJobId&&j.x===resource.x&&j.z===resource.z&&['chop','harvest','cut','extract-tree'].includes(j.kind)).map(j=>j.id));
     if(obsolete.size){
       for(const pawn of world.pawns)if(pawn.jobId!==null&&obsolete.has(pawn.jobId)&&!releaseWork(world,pawn))interruptWork(world,pawn);
       for(const pawn of world.pawns)if(pawn.orders.queue.length)pawn.orders.queue=pawn.orders.queue.filter(order=>typeof order!=='number'||!obsolete.has(order));

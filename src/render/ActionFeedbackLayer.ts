@@ -80,6 +80,7 @@ export class ActionFeedbackLayer {
     for(const pawn of world.pawns)if(pawn.state==='working'&&pawn.jobId!==null){
       const job=lookup.jobs!.get(pawn.jobId);if(!job)continue;
       if(job.clearance)ids.add(job.clearance.resourceId);
+      else if(job.tree?.kind==='extract')ids.add(job.tree.resourceId);
       else if(job.kind==='cut'||job.kind==='harvest')cells.add(job.z*world.width+job.x);
     }
     const resourceCells=new Map<number,World['resources'][number]>(),resources=new Map<number,World['resources'][number]>();

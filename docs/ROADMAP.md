@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V349–V350 — [arbres replantables et annulations exactes](gameplay/tree-transfer-v349.md), [décor selon caméra](development/decor-occlusion-v350.md), schéma 235.** Qualification ciblée acquise par reprises, dernière présentationWebGPU56,193s et gel2917exact ; livraison/publication groupée avecV348 PENDING. Suite autonome humaine ACTIVE : étendre correctement la classification des petites plantes devant ouvrages et sols, vérifier la frontière Frame Core puis les sorties de dégagement refusées. Après les bugs, reprendre campagne/réserves avec mêmes personnes. Aucun FPS/campagne entière/parité exhaustive annoncé. Les états suivants sont historiques.
+
 **V348 — [dégagement et plans](gameplay/construction-clearance-v348.md), schéma234.** Premier lot des bugs humains14octobre qualifié sur deux scènes préparées ChromeWebGPU88,057s/huit recharges exactes : jeune arbre/sol léger/porte sur ghost et lectures réelles des phases, groupe85cas/14 acquis par reprises, typage/Pages et corpus63/66 passent. Aucune sauvegarde humaine/campagne entière/FPS ni publication acquis ; documentation PASS1,448s puis commit/push et poursuivre plantes/transport/masquage en autonomie. Campagne/réserves passent après ces correctifs. Les états suivants sont historiques.
 
 

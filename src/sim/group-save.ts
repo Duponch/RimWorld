@@ -130,12 +130,12 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState):stri
     if(!dense(v,0,max))return false;
     const counts=new Map<number,number>(),equipment=new Set<number>(),worn=new Map<number,MaterialPile[]>();
     for(const item of v){
-      if(!object(item)||!keys(item,PILE_KEYS,PILE_OPTIONAL)||!thing(item.id)||pileIds.has(item.id)
+      if(!object(item)||!keys(item,PILE_KEYS,version>=235?[...PILE_OPTIONAL,'innerResource','plantPack']:PILE_OPTIONAL)||!thing(item.id)||pileIds.has(item.id)
         ||!object(item.owner)||!keys(item.owner,['type','pawnId'])||!people.has(item.owner.pawnId as number)
         ||!oneOf(item.owner.type,['inventory','equipment','apparel']))return false;
       const shape=validatePileRecordShape(item,world,version,clock);
       if(shape.length){errors.push(...shape.map(e=>`Group pile ${item.id}: ${e}`));return false;}
-      if(commercialItemMassGrams(item.item as MaterialPile['item'])===undefined)return false;
+      if(commercialItemMassGrams(item.item as MaterialPile['item'],version)===undefined)return false;
       const pile=item as unknown as MaterialPile;
       if(item.damage!==undefined&&(pile.apparel||pile.weapon||!int(item.damage,1,pileMaxHp(pile,version)-1)))return false;
       if(isPerishable(pile.item)){

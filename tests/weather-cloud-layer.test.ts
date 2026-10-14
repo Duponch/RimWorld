@@ -1,3 +1,5 @@
+// cloudScreenMask/cloudViewOpacity checks below preserve historical pure math only.
+// V350 live visibility uses a shared fragment mask, never whole-cloud camera opacity.
 import { expect, test } from 'vitest';
 import { InterleavedBufferAttribute, Matrix4, OrthographicCamera, PerspectiveCamera, Quaternion, Vector3 } from 'three/webgpu';
 import { CLOUD_CLEAR_RADIUS, CLOUD_CLEAR_SOFT_EDGE, WeatherCloudLayer, cloudScreenMask, cloudViewOpacity } from '../src/render/WeatherCloudLayer';
@@ -79,7 +81,7 @@ test('nuages V87 : huit états, transition Core et direction de vent visuelle pu
   expect(visualWindDirection(54321, 901.25)).not.toEqual(direction);
 });
 
-test('nuages : trou central circulaire en pixels, complètement transparent avant le fondu', () => {
+test('historique : ancien trou central circulaire en pixels', () => {
   expect(CLOUD_CLEAR_RADIUS).toBe(.31);
   expect(CLOUD_CLEAR_RADIUS + CLOUD_CLEAR_SOFT_EDGE).toBeCloseTo(.39);
   for (const [width, height] of [[1600, 900], [900, 1600], [900, 900]]) {
@@ -164,6 +166,8 @@ test('nuages : lot monde résident, discret en vue haute et iso sans suivre la c
     layer.present(initial);
     expect(mesh.visible).toBe(true);
     expect(material.opacity).toBe(1);
+    expect(material.maskNode).not.toBeNull();
+    const maskNode=material.maskNode;
     const lowOpacity = material.opacity;
     let activeCentres = 0;
     const altitudeBands = new Set<number>();
@@ -225,13 +229,13 @@ test('nuages : lot monde résident, discret en vue haute et iso sans suivre la c
     overhead.lookAt(target);
     const cameraVersion = mesh.instanceMatrix.version;
     layer.present({ ...initial, camera: overhead });
-    expect(mesh.visible).toBe(false);
+    expect(mesh.visible).toBe(true);
     expect(material.opacity).toBe(lowOpacity); // opacity lives in its resident uniform, not a second multiplier
     expect(mesh.instanceMatrix.version).toBe(cameraVersion);
     const ortho = new OrthographicCamera(-20, 20, 20, -20, .1, 1000);
     ortho.position.copy(overhead.position);
     layer.present({ ...initial, camera: ortho });
-    expect(mesh.visible).toBe(false);
+    expect(mesh.visible).toBe(true);
     expect(material.opacity).toBe(1);
     expect(cloudViewOpacity(ortho, target)).toBeCloseTo(cloudViewOpacity(overhead, target), 5);
     expect(mesh.instanceMatrix.version).toBe(cameraVersion);
@@ -239,8 +243,9 @@ test('nuages : lot monde résident, discret en vue haute et iso sans suivre la c
     ortho.updateProjectionMatrix();
     expect(cloudViewOpacity(ortho, target)).toBe(0);
     layer.present({ ...initial, camera: ortho });
-    expect(mesh.visible).toBe(false);
+    expect(mesh.visible).toBe(true);
     expect(mesh.instanceMatrix.version).toBe(cameraVersion);
+    expect(material.maskNode).toBe(maskNode);
     layer.configureMap(250, 175);
     expect(mesh.count).toBe(54);
     expect(mesh.boundingSphere!.center.x).toBe(124.5);

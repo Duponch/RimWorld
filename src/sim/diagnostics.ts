@@ -1,5 +1,7 @@
 import { clearingDuration } from './gathering.ts';
 import { workProgress } from './work-progress.ts';
+import { extractTreeDefinition } from './tree-transfer-rules.ts';
+import { isMinifiedTree } from './tree-transfer-state.ts';
 import { jobDuration } from './farming.ts';
 import { workPriority } from './work-types.ts';
 import { prisonBreakActive } from './prison-break-state.ts';
@@ -24,6 +26,31 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
   const required = costs.reduce((n,c) => n+c.quantity,0), delivered = costs.reduce((n,c) => n+deliveredMaterial(world,job,c.item),0);
   const queued=job.reservedBy===null?undefined:world.pawns.find(p=>p.id===job.reservedBy&&p.orders.queue.includes(job.id));
   if(queued)return {code:'working',reason:`Réservé dans la file de ${queued.name}.`,delivered,required};
+  if(job.kind==='extract-tree'||job.kind==='replant-tree'){
+    const task=job.tree,worker=world.pawns.find(p=>p.id===job.reservedBy&&p.jobId===job.id);
+    const waiting=():JobDiagnostic=>{const enabled=world.pawns.some(p=>workPriority(p,workType(job))>0);return {code:enabled?'ready':'waiting-worker',reason:enabled?'Prêt ; attend un colon disponible et un accès.':'Travail désactivé pour tous les colons.',delivered,required};};
+    if(!task)return {code:'blocked',reason:'La désignation de l’arbre est indisponible.',delivered,required};
+    if(task.kind==='extract'){
+      const resource=world.resources.find(r=>r.id===task.resourceId),definition=resource&&extractTreeDefinition(resource);
+      if(!resource||!definition)return {code:'blocked',reason:'L’arbre à déraciner est indisponible.',delivered,required};
+      if(!worker)return waiting();
+      const percentage=Math.min(99,Math.floor(100*workProgress(job)/definition.workCore));
+      return {code:'working',reason:worker.state==='working'?`Déracinement de ${definition.label.toLowerCase()} par ${worker.name} (${percentage} %).`:`${worker.name} rejoint ${definition.label.toLowerCase()} pour le déraciner.`,delivered,required};
+    }
+    const pile=world.piles.find(p=>p.id===task.sourcePileId);
+    if(!pile||!isMinifiedTree(pile)||pile.innerResource.id!==task.resourceId)return {code:'blocked',reason:'L’arbre déraciné est indisponible.',delivered,required};
+    const definition=extractTreeDefinition(pile.innerResource),label=definition?.label.toLowerCase()??'l’arbre';
+    const plant=job.clearance&&world.resources.find(r=>r.id===job.clearance!.resourceId);
+    if(plant&&worker){
+      const percentage=Math.min(99,Math.floor(100*workProgress(job.clearance!)/clearingDuration(plant)));
+      return {code:'clearing',reason:worker.state==='working'?`Dégagement de la plante par ${worker.name} avant replantation (${percentage} %).`:`${worker.name} rejoint la plante pour dégager l’emplacement de replantation.`,delivered,required};
+    }
+    if(task.phase==='pickup')return worker?{code:'working',reason:`${worker.name} rejoint ${label} déraciné pour le replanter.`,delivered,required}:waiting();
+    if(!worker||pile.owner.type!=='pawn'||pile.owner.pawnId!==worker.id||task.carryPileId!==pile.id)return {code:'blocked',reason:'Attend le porteur de l’arbre déraciné.',delivered,required};
+    if(task.phase==='carry')return {code:'delivering',reason:`${worker.name} transporte ${label} vers son emplacement de replantation.`,delivered,required};
+    const percentage=task.durationCore&&task.durationCore>0?Math.min(99,Math.floor(100*task.workCore/task.durationCore)):undefined;
+    return {code:'working',reason:worker.state==='working'&&percentage!==undefined?`Replantation de ${label} par ${worker.name} (${percentage} %).`:`${worker.name} prépare l’emplacement de replantation.`,delivered,required};
+  }
   if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,job.reservedBy??undefined))return {code:'blocked',reason:'Attend la fin de l’utilisation du bâtiment.',delivered,required};
   if(isConstruction(job)){
     const {plant,pile,pack}=constructionObstruction(world,job);

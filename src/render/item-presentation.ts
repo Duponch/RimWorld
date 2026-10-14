@@ -1,3 +1,4 @@
+import {treeCargoKind,treeVisualParts,type TreeVisualTraits} from './tree-presentation';
 import {ITEM_DEFINITIONS,type ItemId} from '../sim/items';
 import {blockParts} from './block-presentation';
 import {chunkParts} from './chunk-presentation';
@@ -7,12 +8,13 @@ import type {Placement} from './primitives';
 /** Explicit visual order, independent of save IDs and insertion order. */
 export const ITEM_VISUAL_IDS:readonly ItemId[]=Object.freeze((Object.keys(ITEM_DEFINITIONS) as ItemId[]).filter(id=>!id.endsWith('-corpse')).sort());
 const cargoKinds=new Map(ITEM_VISUAL_IDS.map((item,ordinal)=>[item,200+ordinal] as const));
-export const itemCargoKind=(item:ItemId):number=>cargoKinds.get(item)??0;
+export const itemCargoKind=(item:ItemId):number=>item==='minified-tree'?treeCargoKind():cargoKinds.get(item)??0;
 
 /** Local ground assembly, centred on X/Z; never owns mutable gameplay state. */
-export function itemGeometry(item:ItemId,quantity:number=ITEM_DEFINITIONS[item].stackLimit,anchor?:{x:number;z:number}):Placement[] {
+export function itemGeometry(item:ItemId,quantity:number=ITEM_DEFINITIONS[item].stackLimit,anchor?:{x:number;z:number},tree?:TreeVisualTraits):Placement[] {
   const definition=ITEM_DEFINITIONS[item],color=definition.color,parts:Placement[]=[];
   if(item.endsWith('-corpse'))return parts;
+  if(item==='minified-tree')return centreItemParts(treeVisualParts(tree));
   const add=(shape:Placement['shape'],x:number,y:number,z:number,sx:number,sy:number,sz:number,tint:number=color,ry=0)=>parts.push({shape,x,y,z,sx,sy,sz,color:tint,ry});
   const box=(x:number,y:number,z:number,sx:number,sy:number,sz:number,tint:number=color,ry=0)=>add(undefined,x,y,z,sx,sy,sz,tint,ry);
   const round=(x:number,y:number,z:number,sx:number,sy:number,sz:number,tint:number=color)=>add('item-round',x,y,z,sx,sy,sz,tint);

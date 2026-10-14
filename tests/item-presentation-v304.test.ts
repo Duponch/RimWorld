@@ -129,7 +129,7 @@ test('native cargo group selection keeps actor order and shared trajectories; or
 
 test('primitive atlas preserves every authored face, normal and UV; padding is finite and degenerate',()=>{
   const atlas=new ItemMeshAtlas(),values=atlas.data.array;
-  expect(atlas.shapes).toHaveLength(12);expect(atlas.verticesPerSlot).toBeLessThanOrEqual(240);
+  expect(atlas.shapes).toHaveLength(13);expect(atlas.shapes).toContain('trap-spike');expect(atlas.verticesPerSlot).toBeLessThanOrEqual(240);
   expect(atlas.verticesPerSlot%3).toBe(0);
   for(const [slot,shape] of atlas.shapes.entries()){
     const source=shape?createItemGeometry(shape):new THREE.BoxGeometry(1,1,1),position=source.getAttribute('position'),normal=source.getAttribute('normal'),uv=source.getAttribute('uv');

@@ -1,6 +1,5 @@
 import { expect, test } from 'vitest';
 import { applyCommand, createWorld } from '../src/sim/engine';
-import { footprintCells } from '../src/sim/definitions';
 import type { Job, World } from '../src/sim/types';
 import { mapObjectActions, mapObjectGroupActions } from '../src/ui/map-object-actions';
 
@@ -23,21 +22,21 @@ test('rock inspector creates the physical mine command then cancels its exact Jo
   expect(JSON.stringify(world)).toBe(before);
   expect(actions.map(action => action.id)).toEqual(['mine']);
   expect(actions[0]!.command).toEqual({ type: 'designate', kind: 'mine', x: 2, z: 2 });
-  expect(applyCommand(world, actions[0]!.command).ok).toBe(true);
+  expect(applyCommand(world, actions[0]!.command!).ok).toBe(true);
   const cancel = mapObjectActions(world, selected);
   expect(cancel.map(action => action.id)).toEqual(['cancel']);
-  expect(applyCommand(world, cancel[0]!.command).ok).toBe(true); expect(world.jobs).toEqual([]);
+  expect(applyCommand(world, cancel[0]!.command!).ok).toBe(true); expect(world.jobs).toEqual([]);
   world.tiles[id] = { terrain: 'rough-stone' }; expect(mapObjectActions(world, selected)).toEqual([]);
 });
 
-test('chunks submit a one-cell area permission, never a fake haul Job or cancel permission', () => {
+test('chunks submit a one-cell permission and cancel that exact permission without a fake haul Job', () => {
   const world = fixture(), id = world.nextId++;
   world.piles = [{ id, kind: 'chunk', item: 'granite-chunk', quantity: 1, owner: { type: 'ground', x: 2, z: 2 } }];
   const actions = mapObjectActions(world, { kind: 'pile', id });
   expect(actions.map(action => action.id)).toEqual(['haul-chunks']);
   expect(actions[0]!.command).toEqual({ type: 'area', action: 'haul-chunks', from: { x: 2, z: 2 }, to: { x: 2, z: 2 } });
-  expect(applyCommand(world, actions[0]!.command).ok).toBe(true); expect(world.piles[0]!.haulRequested).toBe(true);
-  expect(world.jobs).toEqual([]); expect(mapObjectActions(world, { kind: 'pile', id })).toEqual([]);
+  expect(applyCommand(world, actions[0]!.command!).ok).toBe(true); expect(world.piles[0]!.haulRequested).toBe(true);
+  expect(world.jobs).toEqual([]); const cancel=mapObjectActions(world,{kind:'pile',id}); expect(cancel.map(action=>action.id)).toEqual(['cancel']); expect(cancel[0]!.command).toEqual({type:'cancel-pile',pileId:id}); expect(applyCommand(world,cancel[0]!.command!).ok).toBe(true); expect(Object.hasOwn(world.piles[0]!,'haulRequested')).toBe(false);
   delete world.piles[0]!.haulRequested; world.piles[0]!.owner = { type: 'pawn', pawnId: world.pawns[0]!.id };
   expect(mapObjectActions(world, { kind: 'pile', id })).toEqual([]);
 });
@@ -50,18 +49,18 @@ test('resource offers follow species/growth and an existing designation becomes 
   world.resources[0]!.growth = .1;
   expect(mapObjectActions(world, selected).map(action => action.id)).toEqual(['cut']);
   const cut = mapObjectActions(world, selected)[0]!;
-  expect(applyCommand(world, cut.command).ok).toBe(true);
+  expect(applyCommand(world, cut.command!).ok).toBe(true);
   expect(mapObjectActions(world, selected).map(action => action.id)).toEqual(['cancel']);
-  expect(applyCommand(world, mapObjectActions(world, selected)[0]!.command).ok).toBe(true);
+  expect(applyCommand(world, mapObjectActions(world, selected)[0]!.command!).ok).toBe(true);
   expect(world.resources).toHaveLength(1);
 });
 
-test('coordinate cancel never removes a different first overlapping Job or automatic maintenance', () => {
+test('exact cancellation targets a secondary overlapping Job or its plant and excludes automatic maintenance', () => {
   const world = fixture(), first = job(world, 'build-roof'), second = job(world, 'cut');
   world.jobs = [first, second];
   world.resources = [{ id: world.nextId++, kind: 'berries', amount: 10, x: 2, z: 2, growth: 1, growthTick: world.tick }];
-  expect(mapObjectActions(world, { kind: 'job', id: second.id })).toEqual([]);
-  expect(mapObjectActions(world, { kind: 'resource', id: world.resources[0]!.id })).toEqual([]);
+  expect(mapObjectActions(world,{kind:'job',id:second.id})).toEqual([{id:'cancel',label:'Annuler l’ordre',command:{type:'cancel-job',jobId:second.id}}]);
+  expect(mapObjectActions(world,{kind:'resource',id:world.resources[0]!.id})).toEqual([{id:'cancel',label:'Annuler l’ordre',command:{type:'cancel-resource',resourceId:world.resources[0]!.id}}]);
   expect(mapObjectActions(world, { kind: 'job', id: first.id }).map(action => action.id)).toEqual(['cancel']);
   world.jobs = [job(world, 'repair')];
   expect(mapObjectActions(world, { kind: 'job', id: world.jobs[0]!.id })).toEqual([]);
@@ -76,14 +75,14 @@ test('deconstruction pins targetId and preserves independent layers while refusi
   const actions = mapObjectActions(world, { kind: 'structure', id });
   expect(actions.map(action => action.id)).toEqual(['deconstruct']);
   expect(actions[0]!.command).toEqual({ type: 'designate', kind: 'deconstruct', targetId: id, x: 2, z: 2 });
-  expect(applyCommand(world, actions[0]!.command).ok).toBe(true);
-  // Conduit remains first at the anchor; a secondary bed cell still resolves
-  // exactly to its removal Job and must not cancel the independent conduit.
+  expect(applyCommand(world, actions[0]!.command!).ok).toBe(true);
+  // The selected bed identifies its removal Job even though the independent
+  // conduit appears first at the same anchor.
   const cancel = mapObjectActions(world, { kind: 'structure', id });
   expect(cancel.map(action => action.id)).toEqual(['cancel']);
-  const secondary = footprintCells(world.structures[0]!).find(cell => cell.x !== 2 || cell.z !== 2)!;
-  expect(cancel[0]!.command).toEqual({ type: 'cancel', x: secondary.x, z: secondary.z });
-  expect(applyCommand(world, cancel[0]!.command).ok).toBe(true); expect(world.structures).toHaveLength(1);
+  const removal=world.jobs.find(job=>job.deconstruction?.structureId===id)!;
+  expect(cancel[0]!.command).toEqual({type:'cancel-job',jobId:removal.id});
+  expect(applyCommand(world, cancel[0]!.command!).ok).toBe(true); expect(world.structures).toHaveLength(1);
   expect(world.jobs.map(job => job.kind)).toEqual(['power-conduit']);
 });
 
@@ -112,17 +111,19 @@ test('a busy ground packed source can cancel its exact distant installation via 
   world.jobs = [install];
   const actions = mapObjectActions(world, { kind: 'packed', id });
   expect(actions.map(action => action.id)).toEqual(['cancel']);
-  expect(actions[0]!.command).toEqual({ type: 'cancel', x: 2, z: 2 });
-  expect(applyCommand(world, actions[0]!.command).ok).toBe(true);
+  expect(actions[0]!.command).toEqual({type:'cancel-job',jobId:install.id});
+  expect(applyCommand(world, actions[0]!.command!).ok).toBe(true);
   expect(world.jobs).toEqual([]); expect(world.packed[0]!.building.id).toBe(id);
 });
 
-test('packed cancellation never skips an incompatible first coordinate Job to reach its installation', () => {
+test('packed cancellation identifies its installation without removing a first independent roof Job', () => {
   const world = fixture(), id = world.nextId++;
   world.packed = [{ building: { id, kind: 'bed', x: 4, z: 4, orientation: 0, footprint: 'standard' }, owner: { type: 'ground', x: 2, z: 2 } }];
   world.jobs = [job(world, 'build-roof'), { ...job(world, 'install', 8, 8), furniture: { structureId: id, kind: 'bed' } }];
-  expect(mapObjectActions(world, { kind: 'packed', id })).toEqual([]);
-  expect(mapObjectGroupActions(world, [{ kind: 'packed', id }])).toEqual([]);
+  const roofId=world.jobs[0]!.id,installationId=world.jobs[1]!.id,actions=mapObjectActions(world,{kind:'packed',id});
+  expect(actions).toEqual([{id:'cancel',label:'Annuler l’ordre',command:{type:'cancel-job',jobId:installationId}}]);
+  expect(mapObjectGroupActions(world,[{kind:'packed',id}])).toEqual([{id:'cancel',label:'Annuler l’ordre',commands:[{type:'cancel-job',jobId:installationId}]}]);
+  expect(applyCommand(world,actions[0]!.command!).ok).toBe(true);expect(world.jobs.map(job=>job.id)).toEqual([roofId]);expect(world.packed[0]!.building.id).toBe(id);
 });
 
 test('group resource facts belong to one call and refresh when a secondary plant becomes harvestable', () => {

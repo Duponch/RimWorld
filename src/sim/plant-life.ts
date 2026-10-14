@@ -1,3 +1,4 @@
+import {resumedTreeElapsed,recordResumedTreeCheck,recordResumedTreeFrost,clearResumedTreeLeafless} from './tree-transfer-clock.ts';
 import type { Resource,World } from './types.ts';
 import type { ThermalLayout } from './thermal-topology.ts';
 import { isPlant,PLANT_DEFINITIONS } from './plants.ts';
@@ -10,6 +11,7 @@ import type { LightEnvironment,LightReader } from './light-environment.ts';
 
 /** since starts observation. bornAt exists only when actual sowing is known. */
 export interface PlantLife {
+  pausedTicks?:number;ageTick?:number;leaflessPausedTicks?:number;
   since:number;
   bornAt?:number;
   age:number;
@@ -40,8 +42,8 @@ export function applyPlantFrost(world:World,plant:Resource,usesOutside:boolean,t
   if(usesOutside&&temperature<plantFrostThreshold(plant.id)) {
     if(!plant.species&&plant.kind!=='berries'&&plant.kind!=='healroot')return damageResource(world,plant,100000,'frost');
     if(plant.species&&!FLORA_DEFINITIONS[plant.species].coldLeafless)return false;
-    life.leaflessAt=world.tick;
-  } else if(life.leaflessAt!==undefined&&world.tick-life.leaflessAt>=6000)delete life.leaflessAt;
+    life.leaflessAt=world.tick;recordResumedTreeFrost(plant);
+  } else if(life.leaflessAt!==undefined&&world.tick-life.leaflessAt>=6000){delete life.leaflessAt;clearResumedTreeLeafless(plant);}
   return false;
 }
 
@@ -68,8 +70,8 @@ export function advancePlantLife(world:World,layout:ThermalLayout,providedLight?
   for(const plant of due) {
     const life=plant.plantLife!;
     if(life.nextCheck!==world.tick||!isPlant(plant))continue;
-    const elapsed=world.tick-Math.max(life.since,life.nextCheck-PLANT_LIFE_INTERVAL);
-    life.nextCheck+=PLANT_LIFE_INTERVAL;life.age+=elapsed;
+    const elapsed=resumedTreeElapsed(plant,world.tick)??world.tick-Math.max(life.since,life.nextCheck-PLANT_LIFE_INTERVAL);
+    life.nextCheck+=PLANT_LIFE_INTERVAL;life.age+=elapsed;recordResumedTreeCheck(plant,world.tick);
     const cell=plant.z*world.width+plant.x,outdoors=layout.indices[cell]!<0;
     if(applyPlantFrost(world,plant,outdoors,outside))continue;
     if(needsArtificial&&!environment)environment=typeof providedLight==='function'?providedLight():providedLight;

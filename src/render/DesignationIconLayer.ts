@@ -8,19 +8,19 @@ import { floraSize, floraTreeHeight } from './flora-presentation';
 import { noise } from './StaticGeometry';
 import { perspectiveDetailRange, screenSpriteScale } from './map-overlay-detail';
 import { WORLD_SCALE } from '../world/scale';
-import {UI_ATLAS_URL} from '../ui/pictograms';
+import {UI_ATLAS_URL,pictogramSvg} from '../ui/pictograms';
 
 export const DESIGNATION_MIN_CELL_PIXELS = 32;
 export const DESIGNATION_ICON_PIXELS = 30;
 const CHOP_ICON_HEIGHT_FRACTION = .72;
-export const DESIGNATION_ICON_KINDS = ['mine', 'chop', 'harvest', 'cut'] as const;
+export const DESIGNATION_ICON_KINDS = ['mine', 'chop', 'harvest', 'cut', 'extract-tree', 'replant-tree'] as const;
 export type DesignationIconKind = typeof DESIGNATION_ICON_KINDS[number];
-const ICON_INDEX: Readonly<Record<DesignationIconKind, number>> = { mine: 0, chop: 1, harvest: 2, cut: 3 };
+const ICON_INDEX: Readonly<Record<DesignationIconKind, number>> = { mine: 0, chop: 1, harvest: 2, cut: 3, 'extract-tree':80, 'replant-tree':81 };
 const EXTRA_ICON_KINDS = ['haul-chunks', 'deconstruct', 'uninstall', 'remove-floor', 'build-roof', 'remove-roof'] as const;
 type MarkerKind = DesignationIconKind | typeof EXTRA_ICON_KINDS[number];
 type MarkerTarget = { kind: MarkerKind; x: number; z: number };
-// Keep the historical predicate below: JobLayer uses it to choose between
-// plant/mining sprites and its existing construction/removal geometry.
+// JobLayer uses this predicate to choose between
+// plant/mining/tree sprites and its existing construction/removal geometry.
 const isMarkerKind = (kind: string): kind is MarkerKind => isIconDesignationKind(kind)
   || (EXTRA_ICON_KINDS as readonly string[]).includes(kind);
 function iconIndex(kind: MarkerKind): number {
@@ -32,15 +32,33 @@ function iconIndex(kind: MarkerKind): number {
 export const isIconDesignationKind = (kind: unknown): kind is DesignationIconKind =>
   typeof kind === 'string' && (DESIGNATION_ICON_KINDS as readonly string[]).includes(kind);
 
+/** Two vector slots only; historical v304 assets are neither edited nor copied. */
+export const TREE_DESIGNATION_ATLAS_URL='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="192" height="96" viewBox="0 0 128 64">'+
+  ['extract-tree','replant-tree'].map((kind,index)=>pictogramSvg(kind).replace('<svg ',`<svg x="${index*64}" y="0" `).replace('width="96" height="96"','width="64" height="64"')).join('')+'</svg>');
+
+function treeFallbackAtlas():THREE.DataTexture {
+  const width=32,height=16,data=new Uint8Array(width*height*4);
+  const pixel=(slot:number,x:number,y:number)=>{if(x<1||x>14||y<1||y>14)return;const at=(y*width+slot*16+x)*4;data[at]=data[at+1]=data[at+2]=data[at+3]=255;};
+  // Upright shovel and rooted sprout remain distinct even if SVG decoding fails.
+  for(let y=3;y<=10;y++)for(let x=7;x<=8;x++)pixel(0,x,y);
+  for(let y=2;y<=4;y++)for(let x=5;x<=10;x++)if(y===2||y===4||x===5||x===10)pixel(0,x,y);
+  for(let y=10;y<=13;y++)for(let x=5+(y===13?1:0);x<=10-(y===13?1:0);x++)pixel(0,x,y);
+  for(let y=4;y<=12;y++)pixel(1,8,y);
+  for(let i=0;i<4;i++){pixel(1,8-i,7-i);pixel(1,8+i,6-i);pixel(1,5+i,12);}
+  const map=new THREE.DataTexture(data,width,height,THREE.RGBAFormat,THREE.UnsignedByteType);
+  map.minFilter=map.magFilter=THREE.LinearFilter;map.generateMipmaps=false;map.needsUpdate=true;return map;
+}
+
 export interface DesignationIconInstance { x: number; y: number; z: number; icon: number }
 function instancesForTargets(world: World, targets: readonly MarkerTarget[]): DesignationIconInstance[] {
-  const trees=targets.some(j=>j.kind==='chop')?new Map(world.resources.filter(r=>r.kind==='tree').map(r=>[r.z*world.width+r.x,r])):undefined;
+  const trees=targets.some(j=>j.kind==='chop'||j.kind==='extract-tree')?new Map(world.resources.filter(r=>r.kind==='tree').map(r=>[r.z*world.width+r.x,r])):undefined;
   return targets.map(job => {
     const tree=trees?.get(job.z*world.width+job.x);
     const treeHeight=tree?.species?floraTreeHeight(tree)*floraSize(world,tree)
       :tree?WORLD_SCALE.treeMinHeight+noise(tree.x,tree.z,77)*(WORLD_SCALE.treeMaxHeight-WORLD_SCALE.treeMinHeight)
       :(WORLD_SCALE.treeMinHeight+WORLD_SCALE.treeMaxHeight)/2;
-    const y=job.kind==='chop'?treeHeight*CHOP_ICON_HEIGHT_FRACTION:job.kind==='mine'?3.2
+    const y=job.kind==='chop'||job.kind==='extract-tree'?treeHeight*CHOP_ICON_HEIGHT_FRACTION:job.kind==='mine'?3.2
       :job.kind==='build-roof'||job.kind==='remove-roof'?WORLD_SCALE.wallHeight+.12:1.08;
     return { x: job.x, y, z: job.z, icon: iconIndex(job.kind) };
   });
@@ -174,6 +192,8 @@ export class DesignationIconLayer {
   private readonly atlasNode = texture(this.fallback);
   private readonly architectFallbacks = [fallbackAtlas(0), fallbackAtlas(1)] as const;
   private readonly architectNodes = [texture(this.architectFallbacks[0]), texture(this.architectFallbacks[1])] as const;
+  private readonly treeFallback=treeFallbackAtlas();
+  private readonly treeNode=texture(this.treeFallback);
   private readonly screenScale = uniform(1);
   private readonly detailDistance = uniform(0);
   private readonly distanceLimited = uniform(1);
@@ -213,8 +233,9 @@ export class DesignationIconLayer {
       const cell = icon.sub(offset);
       return vec2(uv().x.add(cell.mod(6)).div(6), uv().y.add(cell.div(6).floor().negate().add(4)).div(5));
     };
-    material.colorNode = icon.lessThan(20).select(this.atlasNode.sample(atlasUv),
-      icon.lessThan(50).select(this.architectNodes[0].sample(architectUv(20)), this.architectNodes[1].sample(architectUv(50))));
+    const treeUv=vec2(uv().x.add(icon.sub(80)).div(2),uv().y);
+    material.colorNode = icon.greaterThanEqual(80).select(this.treeNode.sample(treeUv),icon.lessThan(20).select(this.atlasNode.sample(atlasUv),
+      icon.lessThan(50).select(this.architectNodes[0].sample(architectUv(20)), this.architectNodes[1].sample(architectUv(50)))));
     this.mesh = new THREE.Mesh(geometry, material);
     this.mesh.name = 'designation-icon-billboards';
     this.mesh.frustumCulled = false;
@@ -230,6 +251,7 @@ export class DesignationIconLayer {
     }, undefined, () => { /* Procedural icons remain usable if an atlas fails. */ }); };
     loadAtlas(UI_ATLAS_URL, this.atlasNode);
     ARCHITECT_ICON_ATLASES.forEach((url, index) => loadAtlas(url, this.architectNodes[index]!));
+    loadAtlas(TREE_DESIGNATION_ATLAS_URL,this.treeNode);
   }
 
   update(world: World): void {
@@ -316,7 +338,7 @@ export class DesignationIconLayer {
     this.committed = []; this.preview = [];
     this.mesh.geometry.dispose();
     this.mesh.material.dispose();
-    this.fallback.dispose();
+    this.fallback.dispose();this.treeFallback.dispose();
     for (const fallback of this.architectFallbacks) fallback.dispose();
     for (const loaded of this.loaded) loaded.dispose();
   }

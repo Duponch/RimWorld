@@ -1,3 +1,4 @@
+import {treeCargoKind} from './tree-presentation';
 import { appearanceOf } from '../sim/pawn-appearance';
 import { AnimationDetail } from './AnimationDetail';
 import {ActorAnimationCache,sampleActorRoot} from './ActorAnimationCache';
@@ -31,7 +32,7 @@ import { constructionWorkTarget } from '../sim/construction-rules';
 import { pawnSelectionMesh } from './PawnSelectionLayer';
 import type { MotionTimeline } from './MotionTimeline';
 import * as THREE from 'three/webgpu';
-import { Fn, If, attribute, cos, float, instanceIndex, mix, positionLocal, sin, uniform, renderGroup, vec3,vec4 } from 'three/tsl';
+import { Fn, If, attribute, cos, float, instanceIndex, mix, positionLocal, sin, uniform, renderGroup, vec2,vec3,vec4, varying } from 'three/tsl';
 import { TICKS_PER_SECOND,type MaterialPile,type Pawn,type World } from '../sim/types';
 import { adjacentTable } from '../sim/dining';
 import { CARRY_CAPACITY, footprintCells } from '../sim/definitions';
@@ -42,6 +43,11 @@ import { pawnSurfaceShade } from './actor-surface';
 import { CargoHandoffs,type CargoAnchor } from './cargo-handoff';
 import { bodyBloodPigment,bodyBloodWord } from './body-blood';
 import type { AnimalCorpseCarrier } from './animal-corpse-carrier';
+// Two affine traits share one fragment location. Keep all decisions (skin,
+// equipment, corpse ribs and blood) in the fragment shader; vertex poses use
+// the original attributes and receive no additional buffer or approximation.
+export const pawnFragmentTraits=varying(vec2(attribute('boneId','float'),attribute('dye','float')),'v_pawnFragmentTraits');
+
 type VisualPawn = { from: THREE.Vector4; to: THREE.Vector4 };
 type ApproachTransition = { fromX:number; fromZ:number; toX:number; toZ:number; start:number; baseX:number; baseZ:number };
 type CrouchTransition = { start:number; from:number; to:number };
@@ -103,10 +109,10 @@ function cargoAppearance(load:MaterialPile|undefined):readonly [number,number] {
   // The dedicated mechanical rig follows this owner's existing cargo handoff.
   // No generic food/material proxy may duplicate the entire carcass.
   if(load.mechCorpse)return [0,0];
-  const kind=load.kind==='corpse'?(BIOME_CARGO[load.item]??27):itemCargoKind(load.item);
+  const kind=load.kind==='corpse'?(BIOME_CARGO[load.item]??27):load.item==='minified-tree'?treeCargoKind(load.innerResource):itemCargoKind(load.item);
   // Corpse loads are indivisible. Negative y encodes their exact anatomical
   // mask in the existing actor stream; no extra per-actor GPU attribute.
-  const size=load.corpse?-1-corpseVisualMask(load.corpse):load.kind==='corpse'||load.kind==='unfinished'||load.kind==='weapon'||load.kind==='apparel'?1:Math.min(1,load.quantity/CARRY_CAPACITY);
+  const size=load.corpse?-1-corpseVisualMask(load.corpse):load.kind==='corpse'||load.kind==='unfinished'||load.kind==='weapon'||load.kind==='apparel'||load.kind==='plant'?1:Math.min(1,load.quantity/CARRY_CAPACITY);
   return [kind,size];
 }
 /** Packed into the existing appearance stream; no extra vertex buffer. */
@@ -525,12 +531,12 @@ export class PawnLayer {
     })();
     const originalPosition = makeOriginalPosition();
     mat.positionNode=Fn(()=>{const result=vec3(0).toVar();If(this.animationCache.cached(),()=>{result.assign(this.cachedPawnPosition());}).Else(()=>{result.assign(originalPosition);});return result;})();
-    const baseColor = Fn(()=>{const tint=mix(attribute('color','vec3'),attribute('aTint','vec3'),attribute('dye','float').equal(1).select(float(1),float(0))).toVar();
-      If(attribute('dye','float').equal(-3).or(attribute('dye','float').equal(PARKA_HOOD_DYE)),()=>{ tint.assign(attribute('aTint','vec3')); });
-      If(attribute('aEquipment','vec4').y.equal(2).and(attribute('boneId','float').greaterThanEqual(2)).and(attribute('boneId','float').lessThanEqual(3)),()=>{ tint.assign(attribute('aSkin','vec3')); });
-      If(attribute('dye','float').equal(2),()=>{ tint.assign(attribute('aSkin','vec3')); });
-      If(attribute('dye','float').greaterThanEqual(100),()=>{ tint.assign(attribute('aHairBlood','vec4').xyz); });
-      const legs=attribute('boneId','float').greaterThanEqual(4).and(attribute('dye','float').equal(0));
+    const baseColor = Fn(()=>{const fragmentBone=pawnFragmentTraits.x,fragmentDye=pawnFragmentTraits.y;const tint=mix(attribute('color','vec3'),attribute('aTint','vec3'),fragmentDye.equal(1).select(float(1),float(0))).toVar();
+      If(fragmentDye.equal(-3).or(fragmentDye.equal(PARKA_HOOD_DYE)),()=>{ tint.assign(attribute('aTint','vec3')); });
+      If(attribute('aEquipment','vec4').y.equal(2).and(fragmentBone.greaterThanEqual(2)).and(fragmentBone.lessThanEqual(3)),()=>{ tint.assign(attribute('aSkin','vec3')); });
+      If(fragmentDye.equal(2),()=>{ tint.assign(attribute('aSkin','vec3')); });
+      If(fragmentDye.greaterThanEqual(100),()=>{ tint.assign(attribute('aHairBlood','vec4').xyz); });
+      const legs=fragmentBone.greaterThanEqual(4).and(fragmentDye.equal(0));
       const cloth=new THREE.Color(0xd8c8a2),leather=new THREE.Color(0xad8a61);
       If(legs.and(attribute('aEquipment','vec4').w.equal(1)),()=>{ tint.assign(vec3(cloth.r,cloth.g,cloth.b)); });
       If(legs.and(attribute('aEquipment','vec4').w.equal(2)),()=>{ tint.assign(vec3(leather.r,leather.g,leather.b)); });
@@ -542,15 +548,15 @@ export class PawnLayer {
       const stage=attribute('aShape','vec4').x.div(10).floor().mod(10);
       {const red=new THREE.Color(0x965f58);If(stage.equal(1),()=>{ tint.assign(mix(tint,vec3(red.r,red.g,red.b),.7)); });}
       {const bone=new THREE.Color(0xc9bd9b),dark=new THREE.Color(0x554e43);
-        const eyes=attribute('dye','float').greaterThanEqual(PAWN_EYE_OPEN).and(attribute('dye','float').lessThanEqual(PAWN_EYE_CROSS));
+        const eyes=fragmentDye.greaterThanEqual(PAWN_EYE_OPEN).and(fragmentDye.lessThanEqual(PAWN_EYE_CROSS));
         If(stage.greaterThan(1.5),()=>{
           tint.assign(eyes.select(vec3(dark.r,dark.g,dark.b),vec3(bone.r,bone.g,bone.b)));
           // Sparse dark gaps read as ribs in the existing torso geometry.
           const ribs=sin(positionLocal.y.mul(43)).greaterThan(.25);
-          If(attribute('boneId','float').equal(0).and(attribute('dye','float').equal(1)),()=>{ tint.assign(ribs.select(vec3(bone.r,bone.g,bone.b),vec3(dark.r,dark.g,dark.b))); });
+          If(fragmentBone.equal(0).and(fragmentDye.equal(1)),()=>{ tint.assign(ribs.select(vec3(bone.r,bone.g,bone.b),vec3(dark.r,dark.g,dark.b))); });
         });}
       // Blood is drawn only on body/clothes, never weapon, hair or eye marks.
-      const dye=attribute('dye','float'),bone=attribute('boneId','float');
+      const dye=fragmentDye,bone=fragmentBone;
       const region=bone.greaterThanEqual(6).select(bone.sub(2),bone);
       return bodyBloodPigment(tint,region,1,dye.equal(-3).or(dye.equal(-2)).or(dye.greaterThanEqual(0).and(dye.lessThan(3))).select(float(1),float(0)),attribute('aHairBlood','vec4').w);})();
     mat.colorNode = baseColor;

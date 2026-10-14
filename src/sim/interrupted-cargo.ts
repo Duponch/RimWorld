@@ -11,8 +11,8 @@ export function interruptWork(world:World,pawn:Pawn):void {
   // Only an explicitly ordered meal retains its food over a captured edge.
   // Health can interrupt before the actor dispatcher has observed that edge;
   // its logical arrival cell is not yet a physical drop location.
-  if(pawn.need?.kind==='eat'&&pawn.need.forced===true&&(pawn.motion?.end??0)>world.tick
-    &&world.piles.some(p=>p.kind==='food'&&p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)){
+  if((pawn.need?.kind==='eat'&&pawn.need.forced===true||world.jobs.some(j=>j.id===pawn.jobId&&j.tree))&&(pawn.motion?.end??0)>world.tick
+    &&world.piles.some(p=>(p.kind==='food'||p.kind==='plant'||world.jobs.some(j=>j.id===pawn.jobId&&j.tree))&&p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)){
     releaseAssignments(world,pawn);pawn.interruptedCargo=true;pawn.planCooldown=0;return;
   }
   if(releaseWork(world,pawn))return;
@@ -28,14 +28,17 @@ export function retryInterruptedCargo(world:World,pawn:Pawn):void {
   const held=world.piles.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
   const pack=world.packed.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
   if(!held&&!pack){delete pawn.interruptedCargo;return;}
+  if((pawn.motion?.end??0)>world.tick)return;
   pawn.planCooldown=20;
   if(pack?!releaseFurniture(world,pawn):held&&!commitDrop(world,held,pawn))return;
   delete pawn.interruptedCargo;
   pawn.planCooldown=0;
 }
 
-/** Shape validation precedes this ownership check. Sleeping is the only task
- * compatible with retained emergency cargo in V44. */
+/** Shape validation precedes this ownership check. Sleeping remains the only
+ * concurrent task. V235 exact cancellation can retain previously accepted
+ * foreign queued work until the cargo is dropped; its ordinary queue validator
+ * still checks reservations, identities and bounds before adoption. */
 export function validateInterruptedCargo(world:World):string[] {
   const errors:string[]=[];
   for(const pawn of world.pawns)if(pawn.interruptedCargo) {
@@ -44,7 +47,7 @@ export function validateInterruptedCargo(world:World):string[] {
       ||world.schemaVersion>=125&&pawn.melee?.order?.auto==='social'||world.schemaVersion>=192&&pawn.melee?.order?.auto==='retaliation';
     const owners=world.piles.filter(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id).length
       +world.packed.filter(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id).length;
-    if(owners!==1||pawn.jobId!==null||pawn.animalHandling||pawn.animalCare||pawn.animalFeed||pawn.animalRescue||pawn.ward||pawn.feed||pawn.tend||pawn.surgery||pawn.rescue||pawn.haul||pawn.cooking||pawn.recreation.task||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork
+    if(owners!==1||pawn.jobId!==null||pawn.animalHandling||pawn.animalCare||pawn.animalFeed||pawn.animalRescue||pawn.ward||pawn.feed||pawn.tend||pawn.surgery||pawn.rescue||pawn.haul||pawn.cooking||pawn.recreation.task||pawn.orders.active!==null||pawn.orders.queue.length&&world.schemaVersion<235||pawn.priorityWork
       ||pawn.path.length&&!tactical||pawn.moveCooldown>0&&world.schemaVersion<53&&!tactical&&!(world.schemaVersion>=45&&(pawn.state==='downed'||pawn.state==='dead'||pawnBody(pawn).capacities.manipulation===0))||pawn.transitExit&&!tactical||pawn.need&&(pawn.need.kind!=='sleep'||pawn.need.phase!=='sleep')||!['sleeping','idle','hungry',...(tactical?['moving']:[]),...(burning?['working']:[]),...(world.schemaVersion>=45?['downed','dead']:[])].includes(pawn.state))errors.push('Invalid interrupted cargo ownership or task.');
   }
   return errors;

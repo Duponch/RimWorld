@@ -1,6 +1,8 @@
 import { clearingDuration } from '../sim/gathering';
 import { floraDefinition } from '../sim/biome-flora';
 import { choppable } from '../sim/plants';
+import { extractTreeDefinition } from '../sim/tree-transfer-rules';
+import { isMinifiedTree } from '../sim/tree-transfer-state';
 import { workProgress } from '../sim/work-progress';
 import { researchProjects } from './research-panel';
 import type { Pawn, World } from '../sim/types';
@@ -32,12 +34,34 @@ export function specificWorkActivity(world: World, pawn: Pawn): string | undefin
       ? 'Commerce · rejoint la bordure de la carte' : 'Commerce · décharge ses possessions';
   if (pawn.jobId === null) return undefined;
   const job = world.jobs.find(item => item.id === pawn.jobId);
-  if (!job?.clearance || job.reservedBy !== pawn.id || job.status !== 'active') return undefined;
-  const resource = world.resources.find(item => item.id === job.clearance!.resourceId);
-  if (!resource) return undefined;
-  const label = floraDefinition(resource)?.label ?? (resource.kind === 'tree' ? 'arbre' : 'plante');
-  if (pawn.state === 'moving') return `Rejoint ${label.toLocaleLowerCase('fr')} pour dégager le chantier`;
-  if (pawn.state !== 'working') return undefined;
-  const percentage = Math.min(99, Math.floor(100 * workProgress(job.clearance) / clearingDuration(resource)));
-  return `Dégagement · ${resource.kind === 'tree' && choppable(world, resource) ? 'abattage' : 'coupe'} de ${label.toLocaleLowerCase('fr')} (${percentage} %)`;
+  if (!job || job.reservedBy !== pawn.id || job.status !== 'active') return undefined;
+  if (job.clearance) {
+    const resource = world.resources.find(item => item.id === job.clearance!.resourceId);
+    if (!resource) return undefined;
+    const label = floraDefinition(resource)?.label ?? (resource.kind === 'tree' ? 'arbre' : 'plante');
+    if (pawn.state === 'moving') return `Rejoint ${label.toLocaleLowerCase('fr')} pour dégager ${job.tree?.kind === 'replant' ? 'l’emplacement de replantation' : 'le chantier'}`;
+    if (pawn.state !== 'working') return undefined;
+    const percentage = Math.min(99, Math.floor(100 * workProgress(job.clearance) / clearingDuration(resource)));
+    return `Dégagement · ${resource.kind === 'tree' && choppable(world, resource) ? 'abattage' : 'coupe'} de ${label.toLocaleLowerCase('fr')} (${percentage} %)${job.tree?.kind === 'replant' ? ' avant replantation' : ''}`;
+  }
+  const task = job.tree;
+  if (!task) return undefined;
+  if (task.kind === 'extract') {
+    const resource = world.resources.find(item => item.id === task.resourceId),definition = resource && extractTreeDefinition(resource);
+    if (!resource || !definition) return undefined;
+    const label = floraDefinition(resource)?.label.toLocaleLowerCase('fr') ?? 'l’arbre';
+    if (pawn.state === 'moving') return `Rejoint ${label} pour le déraciner`;
+    if (pawn.state !== 'working') return undefined;
+    const percentage = Math.min(99, Math.floor(100 * workProgress(job) / definition.workCore));
+    return `Déracinement · ${label} (${percentage} %)`;
+  }
+  const pile = world.piles.find(item => item.id === task.sourcePileId);
+  if (!pile || !isMinifiedTree(pile) || pile.innerResource.id !== task.resourceId) return undefined;
+  const label = floraDefinition(pile.innerResource)?.label.toLocaleLowerCase('fr') ?? 'l’arbre';
+  if (task.phase === 'pickup') return pile.owner.type === 'ground' ? `Rejoint ${label} déraciné pour le replanter` : undefined;
+  if (pile.owner.type !== 'pawn' || pile.owner.pawnId !== pawn.id || task.carryPileId !== pile.id) return undefined;
+  if (task.phase === 'carry') return `Transport · ${label} vers son emplacement de replantation`;
+  if (pawn.state !== 'working' || task.durationCore === undefined || task.durationCore <= 0) return undefined;
+  const percentage = Math.min(99, Math.floor(100 * task.workCore / task.durationCore));
+  return `Replantation · ${label} (${percentage} %)`;
 }

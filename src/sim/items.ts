@@ -11,6 +11,7 @@ export type MechCorpseItem=typeof MECH_CORPSE_ITEMS[number];
  * rules are tracked in docs/development/food-items.md. Nutrition uses integer
  * hundredths here; the actor's 0..100 meter represents one nutrition unit. */
 export const ITEM_DEFINITIONS = Object.freeze({
+  'minified-tree':Object.freeze({label:'Arbre déraciné',kind:'plant',stackLimit:1,nutrition:0,maxIngest:0,color:0x729548}),
   hay:Object.freeze({label:'Foin',kind:'food',stackLimit:200,nutrition:5,maxIngest:200,color:0xc3aa59}),
   kibble:Object.freeze({label:'Croquettes',kind:'food',stackLimit:75,nutrition:5,maxIngest:75,color:0xa98355}),
   ...BIOME_ITEM_DEFINITIONS,

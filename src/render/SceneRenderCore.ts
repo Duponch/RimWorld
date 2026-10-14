@@ -1,8 +1,9 @@
+import {replantTreeReason,isMinifiedTree} from '../sim/tree-transfer';
 import { AllowedAreaLayer } from './AllowedAreaLayer';
 import { DioramaLayer } from './DioramaLayer';
 import { RoomLayer } from './RoomLayer';
 import { parseLightingSettings, type LightingSettings } from './lighting-settings';
-import { DEFAULT_ROOM_MASK_RADIUS, roomMaskRadius } from './room-mask-settings';
+import { DecorOcclusion } from './decor-occlusion';
 import { DeepResourceLayer } from './DeepResourceLayer';
 import { AreaPreviewLayer } from './AreaPreviewLayer';
 import {OrderTargetIndex} from './order-target-index';
@@ -129,7 +130,7 @@ export class SceneRenderCore {
   protected room: RoomLayer | null = null;
   protected roomEnabled = true;
   private armedRoom: RoomLayer | null = null;
-  private roomMaskRadius = DEFAULT_ROOM_MASK_RADIUS;
+  protected readonly decorOcclusion = new DecorOcclusion();
   private lightingSettings = parseLightingSettings(null);
   private shadowSettings = { ...DEFAULT_SHADOW_SETTINGS };
   protected readonly shadowRefresh = new ShadowRefreshScheduler();
@@ -262,7 +263,7 @@ export class SceneRenderCore {
   protected readonly texturedStaticMaterial=material(0xffffff,{vertexColors:true,map:this.staticPaint});
   protected readonly waterMaterial = material(0xffffff, { vertexColors: true, roughness: 0.45, metalness: 0.08 });
   protected readonly paintedWater=new PaintedWater(this.terrainPaintTexture,this.environmentLighting.configure,this.animationDetail);
-  protected readonly clouds=new WeatherCloudLayer(this.animationDetail);
+  protected readonly clouds=new WeatherCloudLayer(this.animationDetail,this.decorOcclusion);
   protected readonly precipitation=new WeatherPrecipitationLayer(this.animationDetail);
   protected readonly boxes = new BoxBatches(this.environmentLighting.configure);
   protected readonly recreationHints = new RecreationHints(this.boxes);
@@ -292,6 +293,8 @@ export class SceneRenderCore {
   protected readonly storageSignature = new StoragePresentationSignature();
   protected readonly homeSignature = new HomePresentationSignature();
   protected tool = 'select';
+  protected treePlacementId:number|undefined;
+  setTreePlacement(pileId:number|undefined):void {this.treePlacementId=pileId;this.updateHover();}
   protected furniturePlacement:Structure|undefined;
   setFurniturePlacement(object:Structure|undefined):void {this.furniturePlacement=object;this.updateDeepResources();this.updateHover();}
   protected placementRotation: Orientation = 0;
@@ -596,6 +599,7 @@ export class SceneRenderCore {
     if (tool !== this.tool) this.cancelDesignation();
     const homeBefore=this.tool==='home'||this.tool==='remove-home';
     this.tool = tool;
+    if(tool!=='replant-tree')this.treePlacementId=undefined;
     this.updateDeepResources();
     this.updateGrowingZones(false);
     if(this.world&&(homeBefore||tool==='home'||tool==='remove-home'))this.buildStorage(this.world);
@@ -745,10 +749,9 @@ export class SceneRenderCore {
     this.roofAreasVisible=visible;if(!this.preparing)this.roofs.areas.visible=visible&&this.zonesVisible;
     this.zonesTintDirty=true;this.refreshZonesTint();
   }
-  setCloudClearRadius(radius:number):void {this.clouds.setClearRadius(radius);}
-  setRoomMaskRadius(radius: number): void {
-    this.roomMaskRadius = roomMaskRadius(radius);
-    this.room?.setMaskRadius(this.roomMaskRadius);
+  setDecorOcclusion(enabled:boolean):void {
+    if(!this.decorOcclusion.setEnabled(enabled))return;
+    this.room?.invalidateDecorOcclusion();
   }
 
   setDioramaEnabled(enabled: boolean): void {
@@ -802,11 +805,11 @@ export class SceneRenderCore {
 
   private configureRoom(): void {
     if (!this.roomEnabled || !this.world) return;
-    this.room ??= new RoomLayer(this.scene);
+    this.room ??= new RoomLayer(this.scene,this.decorOcclusion);
     this.room.configure(this.world.width, this.world.height, this.world.seed);
     this.room.setSettings(this.lightingSettings);
     this.room.setShadowSettings(this.shadowSettings);
-    this.room.setMaskRadius(this.roomMaskRadius);
+
     this.room.setTexturesEnabled(this.texturesEnabled);
     this.daylight.setExternalLighting(true);
     this.rig.setRoomEnabled?.(true);
@@ -1215,10 +1218,10 @@ export class SceneRenderCore {
       if (pile.owner.type === 'job' && !job) continue;
       const position = pile.owner.type === 'ground' ? pile.owner : job!;
       const identitySurface=job?undefined:identitySurfaces.get(pile.id);
-      const key = `${position.x}:${position.z}:${pile.item}:${job ? 'job' : 'ground'}${pile.corpse||identitySurface?`:${pile.id}`:''}`;
+      const key = `${position.x}:${position.z}:${pile.item}:${job ? 'job' : 'ground'}${pile.corpse||pile.innerResource||identitySurface?`:${pile.id}`:''}`;
       const bundle = cells.get(key);
       if (bundle) bundle.quantity += quantity;
-      else cells.set(key, { x: position.x, z: position.z, kind: pile.kind, item: pile.item, quantity, supplied: !!job,...(identitySurface?{pileId:pile.id}:{}),
+      else cells.set(key, { x: position.x, z: position.z, kind: pile.kind, item: pile.item, quantity, supplied: !!job,...(identitySurface||pile.innerResource?{pileId:pile.id}:{}),...(pile.innerResource?{innerResource:pile.innerResource}:{}),
         ...(pile.kind==='chunk'&&pile.owner.type==='ground'?{targetId:position.z*world.width+position.x}:{}),
         surface:job?undefined:identitySurface??surfaces.get(position.z*world.width+position.x),...(pile.kind==='corpse'?{corpseStage:corpseStage(pile,world.tick),facing:pile.corpse?.facing??0,corpse:pile.corpse}:{}) });
     }
@@ -1232,7 +1235,7 @@ export class SceneRenderCore {
       this.boxes.set(chunk.group, `pile:${key}`, []); chunk.signature = '';
     }
     for (const [key, bundles] of chunks) {
-      const signature = bundles.map(bundle => `${bundle.x}:${bundle.z}:${bundle.item}:${bundle.quantity}:${bundle.supplied}:${bundle.pileId??''}:${bundle.corpseStage??''}:${bundle.facing??0}:${bundle.corpse?corpseVisualMask(bundle.corpse):0}:${bundle.surface?Object.values(bundle.surface).join(','):'ground'}`).join('|');
+      const signature = bundles.map(bundle => `${bundle.x}:${bundle.z}:${bundle.item}:${bundle.quantity}:${bundle.supplied}:${bundle.pileId??''}:${bundle.corpseStage??''}:${bundle.facing??0}:${bundle.innerResource?`${bundle.innerResource.species??'legacy'}:${bundle.innerResource.growth??1}:${bundle.innerResource.blight??false}`:''}:${bundle.corpse?corpseVisualMask(bundle.corpse):0}:${bundle.surface?Object.values(bundle.surface).join(','):'ground'}`).join('|');
       const previous = this.pileChunks.get(key);
       if (previous?.signature === signature) continue;
       const group = previous?.group ?? new THREE.Group();
@@ -1525,6 +1528,14 @@ export class SceneRenderCore {
     this.hover.visible = !!cell&&this.tool!=='select';
     if(this.tool==='select'){this.constructionPreview.hide();this.hostPort.title('');return;}
     if (!cell || !this.world) {this.constructionPreview.hide();return;}
+    if(this.tool==='replant-tree'){
+      const pile=this.world.piles.find(p=>p.id===this.treePlacementId),reason=replantTreeReason(this.world,pile,cell);
+      const valid=reason===undefined,color=valid?0x9dd9ca:0xe46f58,material=this.hover.material as THREE.MeshBasicNodeMaterial;
+      this.hover.scale.set(1,1,1);this.hover.position.set(cell.x,(surfaceHeightAtCell(this.world,cell.x,cell.z)??0)+.055,cell.z);material.color.setHex(color);material.opacity=.55;
+      this.surfaceTint.setHover(cell.x,cell.z,1,1,color,material.opacity);this.hostPort.title(reason??'Replanter cet arbre ici');
+      if(pile&&isMinifiedTree(pile))this.constructionPreview.updateTree(this.world,pile.innerResource,cell,valid);else this.constructionPreview.hide();
+      return;
+    }
     const kind=this.tool==='install'&&this.furniturePlacement?this.furniturePlacement.kind:this.tool in STRUCTURE_DEFINITIONS?this.tool as JobKind:'wall';
     const cells = footprintCells({ ...cell, kind, orientation: this.placementRotation });
     const minX=Math.min(...cells.map(c=>c.x)),maxX=Math.max(...cells.map(c=>c.x)),minZ=Math.min(...cells.map(c=>c.z)),maxZ=Math.max(...cells.map(c=>c.z));

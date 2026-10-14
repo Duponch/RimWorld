@@ -12,7 +12,10 @@ test('all 35 textiles and delivered gear have Core mass independent of quality, 
     expect(commercialItemMassGrams(apparelItemFor(family,material))).toBe(grams[family]);
   for(const [item,mass] of Object.entries({'flak-vest':4000,'flak-helmet':1200,'recon-helmet':1000,revolver:1400,'bolt-action-rifle':3500,'plasteel-knife':500,silver:8,'survival-meal':300,medicine:500,component:600}))
     expect(commercialItemMassGrams(item as ItemId)).toBe(mass);
-  expect(commercialItemMassGrams('wood')).toBeUndefined();
+  expect(commercialItemMassGrams('wood',193)).toBeUndefined();
+  expect(commercialItemMassGrams('wood',235)).toBe(400);
+  expect(commercialItemMassGrams('minified-tree',234)).toBeUndefined();
+  expect(commercialItemMassGrams('minified-tree',235)).toBe(150000);
 });
 
 test('mass includes worn gear and personal inventory exactly once, never bodies or other owners',()=>{
@@ -25,7 +28,8 @@ test('mass includes worn gear and personal inventory exactly once, never bodies 
   expect(commercialMass(w,p,items)).toEqual({grams:6600,capacityGrams:35000});
   expect(JSON.stringify({w,p,items})).toBe(before);
   expect(commercialPawnMass(p,[...items,items[0]!])).toBeNull();
-  expect(commercialPawnMass(p,[pile(106,'wood',1,{type:'inventory',pawnId:p.id})])).toBeNull();
+  expect(commercialPawnMass(p,[pile(106,'wood',1,{type:'inventory',pawnId:p.id})],193)).toBeNull();
+  expect(commercialPawnMass(p,[pile(106,'wood',1,{type:'inventory',pawnId:p.id})],235)).toEqual({grams:400,capacityGrams:35000});
 });
 
 test('mass reports exact capacity and overload without a hidden clamp',()=>{

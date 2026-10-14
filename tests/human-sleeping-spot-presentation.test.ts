@@ -73,13 +73,13 @@ test('civil floor places count without HP, exclude medical/prison roles and pres
 test('inspection removes exact floor owners immediately and groups mixed buildings honestly',()=>{
   const w=deconstructionCamp(),a=spot(w),b={...spot(w),x:14};w.structures=[a,b];
   const action=mapObjectActions(w,{kind:'structure',id:a.id}).find(action=>action.id==='deconstruct')!;
-  expect(action.label).toBe('Retirer l’emplacement');expect(action.command).toMatchObject({type:'designate',kind:'deconstruct',targetId:a.id});
+  expect(action.label).toBe('Retirer l’emplacement');expect(action.command).toBeDefined();expect(action.command).toMatchObject({type:'designate',kind:'deconstruct',targetId:a.id});
   const both=mapObjectGroupActions(w,[{kind:'structure',id:a.id},{kind:'structure',id:b.id}]);
   expect(both[0]!.label).toBe('Retirer l’emplacement');expect(both[0]!.commands).toHaveLength(2);
   b.kind='bed';expect(mapObjectGroupActions(w,[{kind:'structure',id:a.id},{kind:'structure',id:b.id}])[0]!.label).toBe('Déconstruire');
   const cells=footprintCells(a).map(c=>c.z*w.width+c.x);
   expect(designationPreviewIconInstances(w,'deconstruct',cells)).toEqual([]);
-  expect(applyCommand(w,action.command).ok).toBe(true);expect(w.structures.some(s=>s.id===a.id)).toBe(false);expect(w.jobs).toEqual([]);
+  expect(applyCommand(w,action.command!).ok).toBe(true);expect(w.structures.some(s=>s.id===a.id)).toBe(false);expect(w.jobs).toEqual([]);
 });
 
 test('Architecte offers an immediate human floor place with no material selector and its original model portrait',()=>{

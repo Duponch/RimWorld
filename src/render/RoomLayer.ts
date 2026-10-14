@@ -1,12 +1,12 @@
 import { BundleGroup, Color, Frustum, Group, Matrix4, Mesh, MeshStandardNodeMaterial, Scene, Vector2, Vector3, Vector4,
   type Camera, type WebGPURenderer } from 'three/webgpu';
-import { attribute, positionLocal, sin, uniform, vec3, viewportSize, viewportUV } from 'three/tsl';
+import { attribute, positionLocal, sin, uniform, vec3 } from 'three/tsl';
 import { createRoomGeometry, sampleRoomOrbit, type RoomGeometryPart } from './room-geometry';
 import { RoomLighting } from './RoomLighting';
 import { RoomBackdrop } from './RoomBackdrop';
 import type { DaylightSample } from './daylight';
 import { parseLightingSettings, type LightingSettings } from './lighting-settings';
-import { DEFAULT_ROOM_MASK_RADIUS, roomMaskRadius } from './room-mask-settings';
+import { DecorOcclusion } from './decor-occlusion';
 import type { ShadowSettings } from './shadow-settings';
 
 /** Optional presentation owner. No World, simulation random stream, independent
@@ -45,7 +45,7 @@ export class RoomLayer {
   private readonly sunCenter = new Vector3();
   private readonly moonCenter = new Vector3();
   private readonly local = new Vector3();
-  private readonly maskRadius = uniform(DEFAULT_ROOM_MASK_RADIUS);
+
   private width = 0;
   private height = 0;
   private seed = 0;
@@ -55,7 +55,7 @@ export class RoomLayer {
   private lightingSettings = parseLightingSettings(null);
   private readonly displayedSample:DaylightSample={x:NaN,y:NaN,z:NaN,daylight:NaN,warmth:NaN,sunlight:NaN,moonlight:NaN};
 
-  constructor(private readonly gameScene: Scene) {
+  constructor(private readonly gameScene: Scene,private readonly decorOcclusion=new DecorOcclusion()) {
     this.scene.name = 'room-background'; this.scene.background = new Color(0x17151a);
     this.sun.name = 'paper-sun-carrier'; this.moon.name = 'paper-moon-carrier';
     this.scene.add(this.sun, this.moon);
@@ -72,12 +72,13 @@ export class RoomLayer {
   configure(width: number, height: number, seed: number): void {
     if (this.disposed || (this.width === width && this.height === height && this.seed === seed)) return;
     this.clearGeometry(); this.width = width; this.height = height; this.seed = seed;
+    this.decorOcclusion.configure(width,height);
     this.displayedSample.x=NaN;
     this.lighting.configure(width, height);
     this.geometry = createRoomGeometry(width, height, seed);
     for (const part of this.geometry.parts) {
       // The installation uses separate materials from furniture with the same
-      // pigment, so its screen aperture never cuts a wall, bed or bookshelf.
+      // pigment, so its map projection never cuts a wall, bed or bookshelf.
       const key = part.motionKind && part.material === 'paper' ? part.motionKind
         : part.section === 'orbit' || part.motionKind ? `overhead-${part.material}` : part.material;
       const mesh = new Mesh(part.geometry, this.material(key)); mesh.name = part.name;
@@ -96,11 +97,9 @@ export class RoomLayer {
     material = new MeshStandardNodeMaterial({ color: 0xffffff, roughness: metal ? .52 : .94,
       metalness: metal ? .12 : 0, vertexColors: true });
     if (kind.startsWith('overhead-') || kind === 'sun' || kind === 'moon') {
-      const pixels = viewportUV.sub(.5).mul(viewportSize);
-      // Opaque discard retains the correct room depth and requires no sorting,
-      // geometry rebuild, per-object updates or extra render pass.
-      material.maskNode = this.maskRadius.lessThanEqual(0).or(pixels.length()
-        .greaterThanEqual(viewportSize.x.min(viewportSize.y).mul(this.maskRadius)));
+      // Cut only the fragments in front of the nominal map. These materials
+      // are separate from room walls, furniture and table surfaces.
+      material.maskNode = this.decorOcclusion.visibleNode;
     }
     this.materials.set(kind, material);
     this.applySurface(kind, material);
@@ -134,12 +133,10 @@ export class RoomLayer {
     this.invalidateStaticCommands();
   }
 
-  setMaskRadius(radius: number): void {
-    const value = roomMaskRadius(radius);
-    if (value === this.maskRadius.value) return;
-    this.maskRadius.value = value;
+  invalidateDecorOcclusion(): void {
     this.invalidateStaticCommands();
     this.artVersion++; this.backdrop.invalidate();
+    this.currentVersion = this.lightingVersion + this.artVersion;
   }
 
   setShadowSettings(settings: ShadowSettings): void { this.lighting.setShadowSettings(settings); }
@@ -234,6 +231,7 @@ export class RoomLayer {
 
   renderBackground(renderer: WebGPURenderer, camera: Camera, focus: Vector3, compose = true): void {
     if (this.disposed || !this.geometry) return;
+    if(this.decorOcclusion.present(camera))this.invalidateDecorOcclusion();
     this.prepareStaticCommands(renderer, camera);
     this.local.copy(focus).applyMatrix4(camera.matrixWorldInverse);
     this.backdrop.render(renderer, this.scene, camera, this.currentVersion, -this.local.z, this.span, compose);

@@ -1,11 +1,12 @@
 import { expect, test, vi } from 'vitest';
 import { Mesh, PerspectiveCamera, Scene, Vector3 } from 'three/webgpu';
+import { DecorOcclusion } from '../src/render/decor-occlusion';
 import { RoomLayer } from '../src/render/RoomLayer';
 import { SceneRenderCore } from '../src/render/SceneRenderCore';
 import { sampleDaylight } from '../src/render/daylight';
 
-test('fixed room walls survive all camera quadrants and only installation materials have an aperture', () => {
-  const room = new RoomLayer(new Scene()); room.configure(32, 32, 42);
+test('fixed room walls survive all camera quadrants and only installation materials share a geometric fragment mask', () => {
+  const mask=new DecorOcclusion(),room = new RoomLayer(new Scene(),mask); room.configure(32, 32, 42);
   const camera = new PerspectiveCamera(45, 1, .1, 1000), target = new Vector3(15.5, 0, 15.5);
   const meshes: Mesh[] = []; room.scene.traverse(object => { if (object instanceof Mesh) meshes.push(object); });
   try {
@@ -21,16 +22,17 @@ test('fixed room walls survive all camera quadrants and only installation materi
       expect((mesh.material as any).maskNode).toBeNull();
     }
     const original = meshes.map(mesh => mesh.geometry), powers = [room.lighting.sun.intensity, room.lighting.moon.intensity];
-    for (const radius of [0, .75, 1, .31]) room.setMaskRadius(radius);
+    for (const enabled of [false,true,false,true]) { if(mask.setEnabled(enabled))room.invalidateDecorOcclusion(); }
     expect(meshes.map(mesh => mesh.geometry)).toEqual(original);
     expect([room.lighting.sun.intensity, room.lighting.moon.intensity]).toEqual(powers);
   } finally { room.dispose(); }
 });
 
-test('aperture preference while room OFF reads no World and allocates no room', () => {
-  const core = Object.assign(Object.create(SceneRenderCore.prototype), { room: null });
-  Object.defineProperty(core, 'world', { get() { throw Error('Mask preference read World'); } });
-  core.setRoomMaskRadius(.75); expect(core.roomMaskRadius).toBe(.75); expect(core.room).toBeNull();
-  const setMaskRadius = vi.fn(); core.room = { setMaskRadius };
-  core.setRoomMaskRadius(.4); expect(setMaskRadius).toHaveBeenCalledExactlyOnceWith(.4);
+test('V350 decor preference while room OFF reads no World, allocates no room and invalidates only on a boolean transition', () => {
+  const decorOcclusion=new DecorOcclusion(),core=Object.assign(Object.create(SceneRenderCore.prototype),{room:null,decorOcclusion});
+  Object.defineProperty(core,'world',{get(){throw Error('Mask preference read World');}});
+  core.setDecorOcclusion(false);expect(core.room).toBeNull();
+  const invalidateDecorOcclusion=vi.fn();core.room={invalidateDecorOcclusion};
+  core.setDecorOcclusion(false);expect(invalidateDecorOcclusion).not.toHaveBeenCalled();
+  core.setDecorOcclusion(true);expect(invalidateDecorOcclusion).toHaveBeenCalledOnce();
 });

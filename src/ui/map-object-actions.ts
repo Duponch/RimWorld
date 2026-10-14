@@ -1,14 +1,14 @@
 import { footprintCells } from '../sim/definitions';
-import { furnitureIntentAt } from '../sim/furniture-rules';
 import { choppable, harvestable, isPlant } from '../sim/plants';
 import { sharesConstructionLayer } from '../sim/power-grid';
+import { extractTreeReason,isMinifiedTree,isPlantDesignationJob } from '../sim/tree-transfer';
 import { isRoofJob } from '../sim/roof-rules';
 import type { Cell, Command, Job, MaterialPile, Resource, Structure, World } from '../sim/types';
 import { mapObjectCells, type MapObjectSelection } from './map-object-selection';
 import { mapObjectGroupCells } from './map-object-group-selection';
 
-export type MapObjectActionId = 'mine' | 'chop' | 'harvest' | 'cut' | 'haul-chunks' | 'deconstruct' | 'cancel';
-export interface MapObjectAction { id: MapObjectActionId; label: string; command: Command }
+export type MapObjectActionId = 'mine' | 'chop' | 'harvest' | 'cut' | 'haul-chunks' | 'deconstruct' | 'cancel' | 'extract' | 'replant';
+export interface MapObjectAction { id: MapObjectActionId; label: string; command?: Command; placementPileId?:number }
 export interface MapObjectGroupAction { id: MapObjectActionId; label: string; commands: Command[] }
 const same = (a: Cell, b: Cell) => a.x === b.x && a.z === b.z;
 const contains = (job: Job, cell: Cell) => footprintCells(job).some(target => same(target, cell));
@@ -33,13 +33,13 @@ function actionsFor(world: World, selected: MapObjectSelection, cells: readonly 
   const cell = cells[0];
   if (!cell) return [];
   const actions: MapObjectAction[] = [];
-  const firstAt = (at: Cell) => world.jobs.find(job => contains(job, at)) ?? furnitureIntentAt(world, at);
   const blocked = (kind: Job['kind'], targets: readonly Cell[], deconstruct = false) => world.jobs.some(job => !isRoofJob(job)
     && !(deconstruct && ['repair', 'fix-breakdown', 'flick'].includes(job.kind))
     && sharesConstructionLayer(job.furniture?.kind ?? job.deconstruction?.kind ?? job.flick?.kind ?? job.fixBreakdown?.kind ?? job.kind, kind)
     && footprintCells(job).some(at => targets.some(target => same(at, target))));
   const designate = (id: 'mine' | 'chop' | 'harvest' | 'cut', label: string) => {
-    if (!blocked(id, [cell])) actions.push({ id, label, command: { type: 'designate', kind: id, x: cell.x, z: cell.z } });
+    const plant=['chop','cut','harvest'].includes(id);
+    if (!(plant?world.jobs.some(job=>isPlantDesignationJob(job)&&contains(job,cell)):blocked(id,[cell]))) actions.push({ id, label, command: { type: 'designate', kind: id, x: cell.x, z: cell.z } });
   };
   let ownsJob: ((job: Job) => boolean) | undefined;
   if (selected.kind === 'rock' || selected.kind === 'resource') {
@@ -47,21 +47,24 @@ function actionsFor(world: World, selected: MapObjectSelection, cells: readonly 
       ? lookups.resources.get(selected.id) : world.resources.find(resource => resource.id === selected.id) : undefined;
     if (selected.kind === 'rock' || resource?.kind === 'rock') {
       if (world.tiles[cell.z * world.width + cell.x]?.terrain === 'rock') designate('mine', 'Miner');
-      ownsJob = job => job.kind === 'mine';
+      ownsJob = job => job.kind === 'mine'&&contains(job,cell);
     } else if (resource && (lookups?.firstResources ? lookups.firstResources.get(cellKey(cell))
       : world.resources.find(resource => same(resource, cell)))?.id === selected.id) {
-      if (choppable(world, resource)) designate('chop', 'Couper du bois');
+      if (choppable(world, resource)) designate('chop', 'Abattre');
       if (harvestable(world, resource)) designate('harvest', 'Récolter');
-      if (isPlant(resource)) designate('cut', resource.blight ? 'Couper ce plant malade' : resource.kind === 'tree' ? 'Déraciner' : 'Couper les plantes');
-      ownsJob = job => ['chop', 'harvest', 'cut'].includes(job.kind);
+      if (isPlant(resource)||resource.kind==='tree') designate('cut', resource.blight ? 'Couper ce plant malade' : 'Couper');
+      if (!extractTreeReason(world,resource)) actions.push({id:'extract',label:'Déraciner',command:{type:'extract-tree',resourceId:resource.id}});
+      ownsJob = job => isPlantDesignationJob(job)&&contains(job,resource);
     }
   } else if (selected.kind === 'pile') {
     const pile = lookups?.piles ? lookups.piles.get(selected.id) : world.piles.find(pile => pile.id === selected.id);
     if (pile?.kind === 'chunk' && pile.owner.type === 'ground' && !pile.haulRequested) {
-      actions.push({ id: 'haul-chunks', label: 'Transporter les fragments',
+      actions.push({ id: 'haul-chunks', label: 'Transporter',
         command: { type: 'area', action: 'haul-chunks', from: { x: cell.x, z: cell.z }, to: { x: cell.x, z: cell.z } } });
     }
-    // A haul flag is permission, not a cancellable Job. No synthetic cancel.
+    if(pile?.kind==='chunk'&&pile.owner.type==='ground'&&pile.haulRequested)actions.push({id:'cancel',label:'Annuler l’ordre',command:{type:'cancel-pile',pileId:pile.id}});
+    if(pile&&isMinifiedTree(pile))ownsJob=job=>job.tree?.kind==='replant'&&job.tree.sourcePileId===pile.id;
+    if(pile&&isMinifiedTree(pile)&&pile.owner.type==='ground'&&!world.jobs.some(j=>j.tree?.kind==='replant'&&j.tree.sourcePileId===pile.id))actions.push({id:'replant',label:'Replanter',placementPileId:pile.id});
   } else if (selected.kind === 'structure') {
     const structure = lookups?.structures ? lookups.structures.get(selected.id) : world.structures.find(structure => structure.id === selected.id);
     if (structure && !world.jobs.some(job => job.furniture?.structureId === structure.id) && !blocked(structure.kind, cells, true)) {
@@ -71,10 +74,9 @@ function actionsFor(world: World, selected: MapObjectSelection, cells: readonly 
     ownsJob = job => job.deconstruction?.structureId === selected.id || job.furniture?.structureId === selected.id || job.flick?.structureId === selected.id;
   } else if (selected.kind === 'packed') ownsJob = job => job.furniture?.structureId === selected.id;
   else if (selected.kind === 'job') ownsJob = job => job.id === selected.id;
-  // Coordinate cancellation resolves the FIRST matching Job, then furniture
-  // source fallback. Offer a cell only when that exact intent belongs here.
-  const cancelCell = ownsJob && cells.find(at => { const job = firstAt(at); return !!job && cancellable(job) && ownsJob!(job); });
-  if (cancelCell) actions.push({ id: 'cancel', label: 'Annuler cet ordre', command: { type: 'cancel', x: cancelCell.x, z: cancelCell.z } });
+  // Each inspector cancels its own identity, even under another blueprint.
+  const owned=ownsJob&&world.jobs.find(job=>cancellable(job)&&ownsJob!(job));
+  if(owned)actions.push({id:'cancel',label:'Annuler l’ordre',command:selected.kind==='resource'&&owned.kind!=='mine'?{type:'cancel-resource',resourceId:selected.id}:{type:'cancel-job',jobId:owned.id}});
   return actions;
 }
 
@@ -104,13 +106,14 @@ export function mapObjectGroupActions(world: World, selected: readonly MapObject
     for (const structure of world.structures) if (structures.has(structure.id) && !lookups.structures.has(structure.id)) lookups.structures.set(structure.id, structure);
   }
   for (let index = 0; index < objects.length; index++) for (const action of actionsFor(world, objects[index]!, cells[index]!, lookups)) {
+    if(!action.command)continue;
     const key = JSON.stringify(action.command);
     if (seen.has(key)) continue;
     seen.add(key);
     const group = groups.get(action.id);
     if (group) {
       group.commands.push(action.command);
-      if(group.label!==action.label)group.label='Déconstruire';
+      if(group.label!==action.label)group.label=action.id==='deconstruct'?'Déconstruire':action.id==='cut'?'Couper':group.label;
     }
     else groups.set(action.id, { id: action.id, label: action.label, commands: [action.command] });
   }

@@ -32,7 +32,7 @@ function subjectQuality(s:Subject):WeaponQuality|undefined {
 /** Core GenMath.RoundedHundredth uses Mathf.Round (ties to even), with
  * single-precision arithmetic at the division and multiplication boundaries. */
 function hitPointsPercent(s:Subject):number|undefined {
-  const max=isPile(s)?pileMaxHp(s):structureMaxHp(s);
+  const max=isPile(s)?pileMaxHp(s,s.kind==='plant'?235:193):structureMaxHp(s);
   if(max<=0)return;
   const hp=max-(isPile(s)?pileDamage(s):s.damage??0);
   const ratio=Math.max(0,Math.min(1,Math.fround(hp/max))),scaled=Math.fround(ratio*100);

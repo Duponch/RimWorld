@@ -1,3 +1,6 @@
+import {validateTreeTransport,registerTreeThingIds,validTreePileShape,validTreeJobShape,validPlantTargetShape} from '../sim/tree-transfer-save.ts';
+import {validOriginalTreeResource} from '../sim/tree-transfer-resource-save.ts';
+import {hasPausedTreeClock} from '../sim/tree-transfer-clock.ts';
 import {validShelfTransport,validShelfGround,shelfIdentityOwners} from '../sim/shelf-save.ts';
 import {validSiteClimate} from '../sim/site-climate-save.ts';
 import { hasForcedConsumptionDomain,validForcedConsumePawnShape,validForcedConsumeOwners,validForcedConsumeTransport } from '../sim/consume-save.ts';
@@ -437,6 +440,7 @@ import { validPlantGrowthLight } from '../sim/plant-light-save.ts';
 /** The new cultivated identity must not enter an older transport stream, even
  * without growth fields. Keep its physical and vital bounds shared with saves. */
 function validDomesticHealroot(resource:Resource,world:World|DynamicWorld):boolean {
+  if(hasPausedTreeClock(resource)&&!validPlantLife(resource,world.schemaVersion,world))return false;
   if(resource.kind!=='healroot')return true;
   if(world.schemaVersion<182||resource.amount!==1||resource.species!==undefined
     ||!Number.isSafeInteger(resource.id)||resource.id<1||resource.id>=world.nextId
@@ -482,6 +486,7 @@ function validImmuneDiseaseTransport(pawn:Pawn,world:Pick<World,'schemaVersion'|
 const equalResourceBase = (a: Resource, b: Resource): boolean => a.id === b.id && a.kind === b.kind && a.species === b.species
   && a.growthLight === b.growthLight && a.x === b.x && a.z === b.z && a.amount === b.amount && a.stone === b.stone && a.damage === b.damage
   && a.plantLife?.since === b.plantLife?.since && a.plantLife?.bornAt === b.plantLife?.bornAt
+  && a.plantLife?.pausedTicks === b.plantLife?.pausedTicks && a.plantLife?.ageTick === b.plantLife?.ageTick && a.plantLife?.leaflessPausedTicks === b.plantLife?.leaflessPausedTicks
   && a.plantLife?.age === b.plantLife?.age && a.plantLife?.darkTicks === b.plantLife?.darkTicks
   && a.plantLife?.leaflessAt === b.plantLife?.leaflessAt && a.plantLife?.nextCheck === b.plantLife?.nextCheck
   && a.blight?.since === b.blight?.since && a.blight?.severity === b.blight?.severity && a.blight?.lastHarmTick === b.blight?.lastHarmTick
@@ -587,10 +592,10 @@ function validPile(pile:MaterialPile,world:World|DynamicWorld):boolean {
     if(world.schemaVersion<89||!Number.isSafeInteger(owner.graveId)||owner.graveId<1||!world.structures.some(s=>s.id===owner.graveId&&s.kind==='grave')
       ||Object.keys(owner).some(key=>!['type','graveId'].includes(key)))return false;
   }else return false;
-  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','mechCorpse','damage','unfinished','gunWork','flakWork','componentWork','artWork','apparel','weapon','haulRequested'].includes(key)))return false;
+  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','mechCorpse','damage','unfinished','gunWork','flakWork','componentWork','artWork','apparel','weapon','haulRequested','innerResource','plantPack'].includes(key)))return false;
   if(world.schemaVersion<194&&Object.hasOwn(pile,'mechCorpse'))return false;
   if(pile.haulRequested!==undefined&&(world.schemaVersion<28||pile.kind!=='chunk'||pile.haulRequested!==true))return false;
-  if(pile.damage!==undefined&&(world.schemaVersion<87||!Number.isSafeInteger(pile.damage)||pile.damage<1||pile.damage>=pileMaxHp(pile)))return false;
+  if(pile.damage!==undefined&&(world.schemaVersion<87||!Number.isSafeInteger(pile.damage)||pile.damage<1||pile.damage>=pileMaxHp(pile,world.schemaVersion)))return false;
   const rot=pile.rot;
   if(rot!==undefined&&(!rot||typeof rot!=='object'||!Number.isFinite(rot.progress)||rot.progress<0
     ||!Number.isSafeInteger(rot.atTick)||rot.atTick<0||rot.atTick>world.tick
@@ -605,7 +610,8 @@ function validPile(pile:MaterialPile,world:World|DynamicWorld):boolean {
     &&validUnfinishedShape(record,world.schemaVersion)&&validGunWorkShape(record,world.schemaVersion)
     &&validArtWorkShape(record,world.schemaVersion)&&validFlakWorkShape(record,world.schemaVersion)&&validComponentWorkShape(record,world.schemaVersion)
     &&validApparelShape(record,world.schemaVersion)
-    &&validWeaponShape(record,world.schemaVersion);
+    &&validWeaponShape(record,world.schemaVersion)
+    &&validTreePileShape(record,world.schemaVersion,world.tick,world.nextId,(raw,tick)=>validOriginalTreeResource(raw,world,world.schemaVersion,tick));
 }
 
 /** Only the new pharmaceutical envelope is added to the historical decoder.
@@ -1133,6 +1139,7 @@ export class SnapshotDecoder {
       return resync('Contenu ou transfert des capsules initiales réécrit dans cette partie.');
     const validation=this.createValidationContext(next,resourceReuse,geometryReuse),powerTopology=validation.powerParents;
     const identities=new ValidationIdentityContext(next,validation.resourceFacts);
+    if(next.jobs.some(j=>!validTreeJobShape(j,next.schemaVersion,next.nextId)||!validPlantTargetShape(j,next.schemaVersion,next.nextId))||!validateTreeTransport(next,next.schemaVersion))return resync('Invalid tree transfer domain.');
     if(!validBiofuelTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Biocarburant, propriétaire original ou ravitaillement invalide.');
     if(!validAllowedAreaTransport(next,next.schemaVersion))return resync('Zone autorisée, affectation originale ou retour invalide ou futur.');
     if(!validDoubleBedTransport(next,next.schemaVersion))return resync('Lit double, place ou réservation invalide ou futur.');
@@ -1229,7 +1236,7 @@ export class SnapshotDecoder {
     // owners reserve the same namespace as the map and cannot become a wave.
     const shelves=next.structures.some(s=>s.shelf!==undefined)||next.packed.some(p=>p.building.shelf!==undefined);
     const startingArrival=Object.hasOwn(next,'startingArrival');
-    if(startingArrival||shelves||relationships||Object.hasOwn(next,'orbital')||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
+    if(next.jobs.some(j=>j.tree)||next.piles.some(p=>p.innerResource)||startingArrival||shelves||relationships||Object.hasOwn(next,'orbital')||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
       // Only the closed MAIN context can reuse its resource facts. Keep RAW
       // and non-strict collection/getter evaluation on the historical path.
       const owned=validation.resourceFacts&&(startingArrival||shelves||relationships||Object.hasOwn(next,'orbital'))
@@ -1244,9 +1251,10 @@ export class SnapshotDecoder {
           ...(next.wildlife?.animals??[]),...(next.filth?.items??[]),...(next.fires?.items??[]),...(next.fires?.embers??[]),
           ...next.packed.map(p=>p.building),...shelfIdentityOwners(next),...next.structures.flatMap(s=>s.bills??[]),...next.packed.flatMap(p=>p.building.bills??[]),
         ];
-        ids=new NumericMembership();strictIds=startingArrival||shelves||relationships||Object.hasOwn(next,'orbital');
+        ids=new NumericMembership();strictIds=startingArrival||shelves||relationships||Object.hasOwn(next,'orbital')||next.schemaVersion>=235&&(next.jobs.some(j=>j.tree!==undefined||j.plantTarget!==undefined)||next.piles.some(p=>p.kind==='plant')||next.resources.some(hasPausedTreeClock));
         for(const owner of owners){if(strictIds&&(!Number.isSafeInteger(owner.id)||owner.id<1||owner.id>=next.nextId||ids.has(owner.id)))return resync('Identité dupliquée ou invalide dans le registre relationnel.');if(mechanicalCorpseIds.has(owner.id)&&ids.has(owner.id))return resync('Identité de carcasse mécanique dupliquée.');ids.add(owner.id);}
       }
+      if(registerTreeThingIds(next,ids).length)return resync('Duplicate contained tree identity.');
       const addId=(id:unknown):boolean=>{if(!Number.isSafeInteger(id)||Number(id)<1||Number(id)>=next.nextId||ids.has(Number(id))&&(strictIds||mechanicalCorpseIds.has(Number(id))))return false;ids.add(Number(id));return true;};
       const addItems=(items:unknown):boolean=>Array.isArray(items)&&items.every(item=>item&&typeof item==='object'&&addId(item.id));
       if(relationships){for(const id of postIds)if(!addId(id))return resync('Identité du comptoir dupliquée dans le registre relationnel.');}

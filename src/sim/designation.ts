@@ -1,3 +1,4 @@
+import {isPlantDesignationJob} from './tree-transfer.ts';
 import { validStorageItems } from './storage-filters.ts';
 import { validStorageConditions } from './storage-condition.ts';
 import { connectedZoneCells,stockpileCellsByZoneId,stockpileZoneId } from './stockpile-zones.ts';
@@ -12,7 +13,7 @@ import { canDesignateFloor,isBuildableFloor } from './flooring.ts';
 import { soilFertility } from './soil.ts';
 import { SCHEMA_VERSION,type AreaAction,type AreaCommand,type Cell,type CommandResult,type StorageSettings,type World } from './types.ts';
 
-const TREE = 1, BERRIES = 2, FIXED = 4, JOB = 8, STORAGE = 16, BLOCKED = 32, RIPE = 64, GROWING = 128, ZONE_BLOCKED = 256, GROW_BLOCKED = 512, DECONSTRUCTIBLE = 1024, ROCK = 2048, CHUNK = 4096;
+const TREE = 1, BERRIES = 2, FIXED = 4, JOB = 8, STORAGE = 16, BLOCKED = 32, RIPE = 64, GROWING = 128, ZONE_BLOCKED = 256, GROW_BLOCKED = 512, DECONSTRUCTIBLE = 1024, ROCK = 2048, CHUNK = 4096, HAUL = 8192, PLANT_JOB = 16384;
 export const isAreaAction = (value: unknown): value is AreaAction => ['lay-floor','remove-floor','home','remove-home','build-roof', 'remove-roof', 'ignore-roof', 'mine', 'haul-chunks', 'deconstruct', 'chop', 'harvest', 'cut', 'cancel', 'stockpile', 'remove-stockpile', 'growing', 'remove-growing'].includes(value as string);
 export interface AreaBounds { minX: number; maxX: number; minZ: number; maxZ: number }
 export interface AreaIndex { flags: Uint16Array }
@@ -20,6 +21,7 @@ export type AreaQuery = { ok: false; reason: string; code: CommandResult['code']
   | { ok: true; bounds: AreaBounds; cells: number[]; selected: number; skipped: number; targetZoneId?:number };
 
 export function validStorageSettings(settings: StorageSettings,version:number=SCHEMA_VERSION): boolean {
+  if(settings.filters&&Object.hasOwn(settings.filters,'plant')&&(version<235||typeof settings.filters.plant!=='boolean'))return false;
   if(settings.filters?.corpse!==undefined&&(version<79||typeof settings.filters.corpse!=='boolean'))return false;
   if(settings.filters&&Object.hasOwn(settings.filters,'chemfuel')&&(version<218||typeof settings.filters.chemfuel!=='boolean'))return false;
   return validStorageConditions(settings,version)&&validStorageItems(settings.items,version)&&(version>=206||!settings.filters||!Object.hasOwn(settings.filters,'neutroamine'))&&(settings.filters === undefined || (!!settings.filters && typeof settings.filters.wood === 'boolean' && typeof settings.filters.food === 'boolean' && (settings.filters['mech-corpse']===undefined||typeof settings.filters['mech-corpse']==='boolean') && (settings.filters.silver===undefined||typeof settings.filters.silver==='boolean') && (settings.filters.unfinished===undefined||typeof settings.filters.unfinished==='boolean') && (settings.filters.textile===undefined||typeof settings.filters.textile==='boolean') && (settings.filters.apparel===undefined||typeof settings.filters.apparel==='boolean') && (settings.filters.weapon===undefined||typeof settings.filters.weapon==='boolean') && (settings.filters.neutroamine===undefined||typeof settings.filters.neutroamine==='boolean') && (settings.filters.medicine===undefined||typeof settings.filters.medicine==='boolean') && (settings.filters.component===undefined||typeof settings.filters.component==='boolean') && (settings.filters['advanced-component']===undefined||typeof settings.filters['advanced-component']==='boolean') && (settings.filters.gold===undefined||typeof settings.filters.gold==='boolean') && (settings.filters.plasteel===undefined||typeof settings.filters.plasteel==='boolean') && (settings.filters.blocks===undefined||typeof settings.filters.blocks==='boolean') && (settings.filters.steel===undefined||typeof settings.filters.steel==='boolean') && (settings.filters.chunk===undefined||typeof settings.filters.chunk==='boolean') && (settings.filters.furniture===undefined||typeof settings.filters.furniture==='boolean')))
@@ -33,16 +35,16 @@ export function buildAreaIndex(world: World): AreaIndex {
   const index = (cell: Cell) => cell.z * world.width + cell.x;
   for (let i = 0; i < flags.length; i++) if (world.tiles[i]!.terrain === 'water' || world.tiles[i]!.terrain === 'rock') flags[i] = BLOCKED | (world.tiles[i]!.terrain==='rock'?ROCK:0);
   for(let i=0;i<flags.length;i++)if(world.tiles[i]!.terrain==='rough-stone'||world.tiles[i]!.floor||world.schemaVersion>=219&&soilFertility(world.tiles[i]!.terrain)<.7)flags[i]!|=GROW_BLOCKED;
-  for(const pile of world.piles)if(pile.kind==='chunk'&&pile.owner.type==='ground'&&!pile.haulRequested)flags[index(pile.owner)]!|=CHUNK;
+  for(const pile of world.piles)if(pile.owner.type==='ground'){if(pile.kind==='chunk'&&!pile.haulRequested)flags[index(pile.owner)]!|=CHUNK;if(pile.haulRequested)flags[index(pile.owner)]!|=HAUL;}
   // Core's CanOverlapZones exempts plants from the impassable-thing rule.
   // A plant or its work designation does not carve a hole in a zone. Rock
   // resources still obstruct both zone types; legacy schemas keep their rules.
-  for (const resource of world.resources) flags[index(resource)]! |= (world.schemaVersion<219?ZONE_BLOCKED:resource.kind==='rock'?ZONE_BLOCKED|GROW_BLOCKED:0) | FIXED | (choppable(world,resource)?TREE:0) | (isPlant(resource) ? BERRIES | (harvestable(world, resource) ? RIPE : 0) : 0);
+  for (const resource of world.resources) flags[index(resource)]! |= (world.schemaVersion<219?ZONE_BLOCKED:resource.kind==='rock'?ZONE_BLOCKED|GROW_BLOCKED:0) | FIXED | (choppable(world,resource)?TREE:0) | (isPlant(resource)||world.schemaVersion>=235&&resource.kind==='tree' ? BERRIES | (harvestable(world, resource) ? RIPE : 0) : 0);
   for (const structure of world.structures) for (const cell of footprintCells(structure)) flags[index(cell)]! |= DECONSTRUCTIBLE | FIXED | (occupancyOf(structure.kind)?.zones?0:ZONE_BLOCKED | GROW_BLOCKED);
   for(const job of world.jobs)if(job.furniture){const source=world.structures.find(s=>s.id===job.furniture!.structureId);if(source)for(const c of footprintCells(source))flags[index(c)]!|=JOB;}
   // Repair is automatic maintenance, not a cancellable designation. Its existing
   // barrier already supplies occupancy; it must not prevent deconstruction.
-  for (const job of world.jobs.filter(j=>!isRoofJob(j)&&j.kind!=='repair'&&j.kind!=='fix-breakdown')) for (const cell of footprintCells(job)) flags[index(cell)]! |= JOB | (job.kind==='deconstruct'||job.kind==='uninstall'||(world.schemaVersion>=219?occupancyOf(job.furniture?.kind??job.kind)?.zones!==false:occupancyOf(job.furniture?.kind??job.kind)?.zones)?0:ZONE_BLOCKED) | (occupancyOf(job.furniture?.kind??job.kind)?.zones===false?GROW_BLOCKED:0);
+  for (const job of world.jobs.filter(j=>!isRoofJob(j)&&j.kind!=='repair'&&j.kind!=='fix-breakdown')) for (const cell of footprintCells(job)) flags[index(cell)]! |= JOB | (isPlantDesignationJob(job)?PLANT_JOB:0) | (job.kind==='deconstruct'||job.kind==='uninstall'||(world.schemaVersion>=219?occupancyOf(job.furniture?.kind??job.kind)?.zones!==false:occupancyOf(job.furniture?.kind??job.kind)?.zones)?0:ZONE_BLOCKED) | (occupancyOf(job.furniture?.kind??job.kind)?.zones===false?GROW_BLOCKED:0);
   for(const pack of world.packed??[])if(pack.owner.type==='ground'&&world.jobs.some(j=>j.furniture?.structureId===pack.building.id))flags[index(pack.owner)]!|=JOB;
   for (const storage of world.stockpiles) flags[index(storage)]! |= STORAGE;
   for (const pawn of world.pawns) {
@@ -85,10 +87,10 @@ export function queryArea(world: World, command: AreaCommand, index?: AreaIndex)
     const eligible = command.action==='lay-floor'||command.action==='remove-floor'?canDesignateFloor(world,{type:'designate',kind:command.action,x,z,...command.action==='lay-floor'?{floor:command.floor}:{}}).ok:command.action==='home'?!home.has(i):command.action==='remove-home'?home.has(i):isRoofArea(command.action) ? true : command.action === 'mine' ? (value & ROCK) && !(value & JOB)
       : command.action === 'haul-chunks' ? value & CHUNK
       : command.action === 'deconstruct' ? (value & DECONSTRUCTIBLE) && !(value & JOB)
-      : command.action === 'chop' ? (value & TREE) && !(value & JOB)
-      : command.action === 'cut' ? (value & BERRIES) && !(value & JOB)
-      : command.action === 'harvest' ? (value & RIPE) && !(value & JOB)
-        : command.action === 'cancel' ? value & JOB
+      : command.action === 'chop' ? (value & TREE) && !(value & (world.schemaVersion>=235?PLANT_JOB:JOB))
+      : command.action === 'cut' ? (value & BERRIES) && !(value & (world.schemaVersion>=235?PLANT_JOB:JOB))
+      : command.action === 'harvest' ? (value & RIPE) && !(value & (world.schemaVersion>=235?PLANT_JOB:JOB))
+        : command.action === 'cancel' ? value & (world.schemaVersion>=235?JOB|HAUL:JOB)
           : command.action === 'remove-growing' ? value & GROWING
           : command.action === 'growing' ? !(value & (BLOCKED | STORAGE | GROWING | GROW_BLOCKED))
           : command.action === 'remove-stockpile' ? value & STORAGE

@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V349–V350, schéma 235 : [arbres et annulations](../gameplay/tree-transfer-v349.md), [masquage selon caméra](decor-occlusion-v350.md).** Qualification ciblée acquise par reprises, Pages/typage15,176s, corpus63/66final63,431s ; arbre/annulation et douze vues de décor ChromeWebGPU, onze recharges exactes, gel2917exact. Rouges et limites conservés dans les notes, aucune sauvegarde humaine/campagne entière/FPS/parité exhaustive certifiés. Commit/push/publication groupée avecV348 en préparation ; autonomie ACTIVE vers les derniers blocages de végétation et sorties lourdes, puis campagne/réserves. Les états suivants sont historiques.
+
 **V347, schéma 234 conservé : [consommation de réserve naturelle](../gameplay/colony-reserve-use-v347.md).** Aucun produit changé ; entrée233 migrée neutrement, propriétaires réels et kernel alimentaire livré, source intérieure/cargo/ingestion puis retrait du même cargo à vraie fin. Cinq recharges exactes, backendWebGPU explicitement enregistré pour ce passage ; ancien voyage extérieur non entièrement tracé conservé comme limite. QA-only, documentation/commit PENDING, autonomie ACTIVE vers réserve médicale/campagne naturelle. Les états suivants sont historiques.
 
 **V346 livré**, schéma 234 : [consommation directe](../gameplay/consuming-v346.md), produit `f9f65b54` publié une fois en `5afc7ff6`,104réponsesHTTPS exactes. Sources qualifiées2875exactes ; reprise alimentaire naturelle V347 préparée, aucune ingestion future ou performance déduite. Autonomie ACTIVE. Les états suivants sont historiques.

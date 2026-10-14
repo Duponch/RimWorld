@@ -8,6 +8,8 @@ import { BODY_PARTS } from '../sim/body-definition';
 import { mechCorpseMass } from '../sim/mechanoid-corpse';
 import { mechanoidBodyModel } from '../sim/mechanoid-anatomy';
 import { partMissing } from '../sim/injury-state';
+import {isMinifiedTree} from '../sim/tree-transfer-state';
+import {floraDefinition} from '../sim/biome-flora';
 import { pileMaxHp,pileDamage } from '../sim/thing-damage-rules';
 
 /** Only delivered properties, evaluated on explicit inspection of one item. */
@@ -16,6 +18,13 @@ export function itemInformation(pile:MaterialPile):ObjectInformationInput {
   const add=(category:string,label:string,value:string,description:string)=>rows.push({category,label,value,description});
   add('Général','Quantité',String(pile.quantity),'Quantité réellement présente dans cette pile.');
   add('Général','Limite de pile',String(definition.stackLimit),'Quantité maximale d’une pile de cet objet.');
+  if(isMinifiedTree(pile)){
+    add('Général','Masse','150 kg','Masse de l’arbre entier ; son portage à la main est distinct du transport de provisions en voyage.');
+    add('Général','Points de vie',`${pileMaxHp(pile,235)-pileDamage(pile)} / ${pileMaxHp(pile,235)}`,'État de l’emballage, distinct de la santé de l’arbre conservé à l’intérieur.');
+    add('Arbre','Espèce',floraDefinition(pile.innerResource)?.label??'Arbre','L’arbre conserve son espèce lors de sa replantation.');
+    add('Arbre','Croissance',`${Math.round((pile.innerResource.growth??1)*100)} %`,'La croissance est suspendue tant que l’arbre reste déraciné.');
+    add('Arbre','Conservation','7 jours après le déracinement','Replantez l’arbre sur un sol fertile et sans toit avant sa mort.');
+  }
   if(pile.mechCorpse){
     add('Général','Masse restante',`${mechCorpseMass(pile).toFixed(3).replace('.',',')} kg`,'Masse de la carcasse entière, issue de la couverture naturelle des parties restantes. Les blessures seules ne retirent pas de matière.');
     add('Général','Points de vie',`${pileMaxHp(pile)-pileDamage(pile)} / ${pileMaxHp(pile)}`,'État physique de l’objet transporté, distinct du dossier mécanique figé au décès.');

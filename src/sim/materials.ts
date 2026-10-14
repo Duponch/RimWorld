@@ -75,6 +75,7 @@ export function materialCanFit(world: World, kind: MaterialKind, quantity: numbe
 }
 
 export function addMaterial(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner, item: ItemId = legacyItem(kind)): void {
+  if(kind==='plant')throw new Error('A minified tree requires an original Resource.');
   if(kind==='corpse'||kind==='mech-corpse')throw new Error('A corpse requires an existing dead owner identity.');
   if (!Number.isSafeInteger(quantity) || quantity < 0 || quantity > MAX_STACK * 32768) throw new Error('Material quantity exceeds supported range.');
   if (!Object.hasOwn(ITEM_DEFINITIONS, item) || ITEM_DEFINITIONS[item].kind !== kind) throw new Error('Unknown or incompatible item.');
@@ -112,6 +113,7 @@ export function addGroundMaterial(world: World, kind: MaterialKind, quantity: nu
 export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):boolean {
   if(!world.piles.includes(pile)||!validOrbitalOwner(world,owner))return false;
   if(sameOwner(pile.owner,owner))return true;
+  if(pile.kind==='plant'){if(owner.type!=='ground'&&owner.type!=='pawn'&&owner.type!=='inventory')return false;if(owner.type==='ground'&&groundCapacity(world,owner,pile,pile.owner.type==='pawn'?pile.owner.pawnId:undefined)<1)return false;pile.owner={...owner};refreshStock(world);return true;}
   if((pile.kind==='corpse'||pile.kind==='mech-corpse')&&owner.type!=='ground'&&owner.type!=='pawn')return false;
   const carrier=pile.owner.type==='pawn'?pile.owner.pawnId:undefined;
   if(owner.type==='ground'&&groundCapacity(world,owner,pile,carrier)<pile.quantity)return false;
@@ -140,8 +142,9 @@ export function depositMaterialPart(world:World,source:MaterialPile,cell:Cell,qu
   while(remaining){const moved=Math.min(remaining,ITEM_DEFINITIONS[source.item].stackLimit);world.piles.push({...source,...copyPileCondition(source),id:world.nextId++,quantity:moved,owner:{type:'ground',x:cell.x,z:cell.z}});remaining-=moved;}
   source.quantity-=quantity;refreshStock(world);return true;
 }
-export function reservedSource(world: World, pileId: number, exceptPawn?: number): number {
+export function reservedSource(world: World, pileId: number, exceptPawn?: number, exceptTreeJob?:number): number {
   let quantity = commercialReservedQuantity(world,pileId,exceptPawn)+groupReservedQuantity(world,pileId);
+  for(const j of world.jobs)if(j.id!==exceptTreeJob&&j.tree?.kind==='replant'&&j.tree.phase==='pickup'&&j.tree.sourcePileId===pileId&&j.reservedBy!==exceptPawn)quantity++;
   if(world.scout?.phase==='loading'&&world.scout.pawnId!==exceptPawn&&world.scout.sourcePileId===pileId)quantity+=world.scout.quantity;
   for(const a of world.wildlife?.animals??[])if(a.id!==exceptPawn&&a.meal?.kind==='pile'&&a.meal.id===pileId)quantity+=a.meal.quantity;
   for (const pawn of world.pawns) {
@@ -180,6 +183,7 @@ export function reservedSourcesByPile(world: World, exceptPawn?: number): Readon
     quantities.set(pileId, (quantities.get(pileId) ?? 0) + quantity);
   };
   if(world.scout?.phase==='loading'&&world.scout.pawnId!==exceptPawn)add(world.scout.sourcePileId,world.scout.quantity);
+  for(const j of world.jobs)if(j.tree?.kind==='replant'&&j.tree.phase==='pickup'&&j.reservedBy!==exceptPawn)add(j.tree.sourcePileId,1);
   for(const [id,quantity] of commercialReservedSources(world,exceptPawn))add(id,quantity);
   for(const [id,quantity] of groupReservedQuantities(world))add(id,quantity);
   for (const animal of world.wildlife?.animals ?? [])

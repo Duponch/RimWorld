@@ -23,7 +23,7 @@ export interface OwnedValidationResourceOwner {
   discard():void;
 }
 
-const plantCandidate=(resource:Resource):boolean=>resource.kind==='healroot'||resource.growthLight!==undefined||resource.blight!==undefined||Object.hasOwn(resource,'blight');
+const plantCandidate=(resource:Resource):boolean=>resource.plantLife?.pausedTicks!==undefined||resource.plantLife?.ageTick!==undefined||resource.kind==='healroot'||resource.growthLight!==undefined||resource.blight!==undefined||Object.hasOwn(resource,'blight');
 
 /** ID summary from the same resource capture, never an earlier guard verdict.
  * maxId is absent for an empty safe-positive ID collection. */

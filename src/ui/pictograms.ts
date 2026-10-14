@@ -8,6 +8,7 @@ const bodies:Readonly<Record<string,string>>={
   chop:`<path d="m14 55 7 4 29-41-7-5z" fill="${wood}"/><path d="m33 8 10 4C43 23 48 28 59 30L49 44C36 36 30 24 33 8Z" fill="${metal}"/><path d="M55 30 47 40" stroke="#dce5ed" stroke-width="3"/>`,
   harvest:`<path d="m15 54 9 3 12-26-8-4z" fill="${wood}"/><path d="M29 29C57 25 63 3 33 5 47 10 49 20 29 24Z" fill="${metal}"/>`,
   slaughter:`<path d="m9 53 8 5 15-20-8-6z" fill="${wood}"/><path d="M25 30 49 5l9 9-10 20-17 7z" fill="${metal}"/><path d="m49 8 6 7-11 17-13 6" stroke="#e1e7ed" stroke-width="3"/><circle cx="16" cy="49" r="2" fill="#efc05b"/>`,
+  extract:`<path d="M25 5h14v14H25z" fill="${wood}"/><path d="M32 18v22" stroke="${wood}" stroke-width="7"/><path d="M21 36h22v12Q40 56 32 61 24 56 21 48Z" fill="${metal}"/><path d="M32 40v13" stroke="#dce5ed" stroke-width="3"/>`,
   cut:`<circle cx="16" cy="48" r="9" fill="${wood}"/><circle cx="37" cy="51" r="8" fill="${wood}"/><path d="m22 41 29-31-9 31-17 7M29 43 16 9l-3 29 17 11" fill="${metal}"/><circle cx="27" cy="40" r="3" fill="#d8e2e6"/>`,
   'haul-chunks':'<path d="m8 21 39 4-5 19H16z" fill="#bc813a"/><path d="m47 25 5-12h8M7 22l6 3M18 44h24"/><circle cx="19" cy="49" r="6" fill="#62778c"/><circle cx="40" cy="49" r="6" fill="#62778c"/><path d="M10 12h23m-7-6 7 6-7 6" stroke="#2b9b78"/>',
   uninstall:'<path d="m24 30 16-8 17 8v23l-17 8-16-8z" fill="#bb8548"/><path d="m24 30 16 8 17-8M40 38v23M33 26l17 8"/><path d="M6 12h14v24m-7-7 7 7 7-7" stroke="#3e9bff" stroke-width="5"/>',
@@ -34,7 +35,7 @@ const bodies:Readonly<Record<string,string>>={
   stockpile:'<path d="m8 29 24-12 24 12v22L32 63 8 51z" fill="#deb46d"/><path d="m8 29 24 12 24-12M32 41v22M19 23l25 12"/>',
   'remove-floor':'<path d="m6 39 26-16 26 16-26 16z" fill="#c4b6a6"/><path d="m22 8 19 19m0-19L22 27" stroke="#ff6b5e" stroke-width="5"/>',
 };
-const aliases:Readonly<Record<string,string>>={select:'pointer',work:'chop',schedule:'clock',assign:'people','remove-growing':'growing','remove-stockpile':'stockpile','remove-home':'home'};
+const aliases:Readonly<Record<string,string>>={'extract-tree':'extract','replant-tree':'growing',replant:'growing',select:'pointer',work:'chop',schedule:'clock',assign:'people','remove-growing':'growing','remove-stockpile':'stockpile','remove-home':'home'};
 export const PICTOGRAM_IDS=Object.freeze([...Object.keys(bodies),...Object.keys(aliases)]);
 export function pictogramSvg(id:string):string {
   const target=aliases[id]??id,body=bodies[target];
@@ -47,6 +48,7 @@ export function pictogramDataUrl(id:string):string {let url=urls.get(id);if(!url
 
 export const UI_ATLAS_URL='/assets/ui/elsewhere/v304/ui.svg';
 const FODDER_MODEL_ICONS:Readonly<Record<string,string>>=Object.freeze({
+  'item-minified-tree':'/assets/ui/elsewhere/v349/minified-tree.svg',
   'item-hay':'/assets/ui/elsewhere/v316/hay.svg',
   'item-kibble':'/assets/ui/elsewhere/v316/kibble.svg',
   'crop-haygrass':'/assets/ui/elsewhere/v316/haygrass.svg',

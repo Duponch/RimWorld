@@ -5,7 +5,7 @@ import { queryArea } from '../src/sim/designation';
 import { footprintCells } from '../src/sim/definitions';
 import type { AreaAction, Job, MaterialPile, World } from '../src/sim/types';
 import { DesignationIconLayer, designationIconInstances, designationPreviewIconInstances,
-  isIconDesignationKind } from '../src/render/DesignationIconLayer';
+  isIconDesignationKind,TREE_DESIGNATION_ATLAS_URL } from '../src/render/DesignationIconLayer';
 import type { SceneTextureLoader } from '../src/render/scene-render-ports';
 
 function fixture(): World {
@@ -127,11 +127,11 @@ test('preview clear restores ground designations and camera presentation never r
   icons.dispose();
 });
 
-test('all three existing atlases load once and late loads after disposal are released', () => {
+test('the three historical vector atlases plus tree slots load once and release late loads', () => {
   const pending: { url: string; complete: (texture: THREE.Texture) => void }[] = [];
   const loader: SceneTextureLoader = (url, complete) => { pending.push({ url, complete }); };
   const icons = new DesignationIconLayer(loader);
-  expect(pending.map(entry => entry.url)).toEqual(['/assets/ui/lisiere/icons.png', '/assets/ui/lisiere/architect-1.png', '/assets/ui/lisiere/architect-2.png']);
+  expect(pending.map(entry => entry.url)).toEqual(['/assets/ui/elsewhere/v304/ui.svg','/assets/ui/elsewhere/v304/architect-1.svg','/assets/ui/elsewhere/v304/architect-2.svg',TREE_DESIGNATION_ATLAS_URL]);
   const loaded = new THREE.Texture(), late = new THREE.Texture();
   const loadedDispose = vi.spyOn(loaded, 'dispose'), lateDispose = vi.spyOn(late, 'dispose');
   pending[0]!.complete(loaded); icons.dispose(); pending[1]!.complete(late);

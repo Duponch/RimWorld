@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V349–V350, schéma 235 : [arbres et annulations](tree-transfer-v349.md), [masquage selon caméra](../development/decor-occlusion-v350.md).** Qualification ciblée acquise par reprises, Pages/typage15,176s, corpus63/66final63,431s ; arbre/annulation et douze vues de décor ChromeWebGPU, onze recharges exactes, gel2917exact. Rouges et limites conservés dans les notes, aucune sauvegarde humaine/campagne entière/FPS/parité exhaustive certifiés. Commit/push/publication groupée avecV348 en préparation ; autonomie ACTIVE vers les derniers blocages de végétation et sorties lourdes, puis campagne/réserves. Les états suivants sont historiques.
+
 **V347, schéma 234 : [utilisation réelle d'une réserve intérieure](colony-reserve-use-v347.md).** Iris consomme une ration existante par l'action livrée ; source intérieure, cargo unique, mastication stationnaire et résultat nutritionnel attestés, cinq recharges exactes. Qualification d'une portion seulement, sans autonomie alimentaire ou guérison V344. QA-only, documentation/commit PENDING, produit V346 inchangé ; autonomie ACTIVE vers réserve médicale intérieure et campagne naturelle. Les états suivants sont historiques.
 
 **V346 livré**, schéma 234 : [Consommer](consuming-v346.md), produit `f9f65b54` commité/poussé et publié une fois en `5afc7ff6`,104réponsesHTTPS exactes. Action explicite qualifiée sur scènes préparées ; suite V347 naturelle seulement préparée, autonomie ACTIVE. Les états suivants sont historiques.

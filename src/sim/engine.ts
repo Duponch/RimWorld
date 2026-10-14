@@ -1,3 +1,5 @@
+import {applyTreeCommand,extractTreeReason,replantTreeReason,processTreeWork,advanceMinifiedTrees,isPlantDesignationJob,treeJobReason} from './tree-transfer.ts';
+import {applyDesignationCancel,cancelIntentJobs,clearPileHaulFlags} from './designation-cancel.ts';
 import {isShelfKind,newShelfStorage} from './shelf-storage.ts';
 import {patchShelfPolicy} from './shelf-commands.ts';
 import { applyAllowedAreaCommand } from './allowed-areas.ts';
@@ -117,7 +119,7 @@ import { applyMeleeCommand,processMelee } from './melee.ts';
 import { isStunned } from './stun.ts';
 import { processTactics } from './tactics.ts';
 import { considerFlee,processFlee,processSentry,threatQueries } from './threats.ts';
-import { retryInterruptedCargo } from './interrupted-cargo.ts';
+import { retryInterruptedCargo,interruptWork } from './interrupted-cargo.ts';
 import { applyDraftCommand,processDraft,interruptDraftWork } from './drafting.ts';
 import { advanceWorldCombat } from './combat-system.ts';
 import {applySpikeTrapSwitch,reconcileSpikeTrapContacts,spikeTrapWindow} from './spike-traps.ts';
@@ -220,7 +222,7 @@ import type { AreaCommand, BuildLineCommand, Cell, Command, CommandResult, Desig
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
 const PATH_SEARCHES_PER_TICK = 8;
-const JOB_LABEL: Readonly<Record<JobKind, string>> = { shelf:'construction d’étagère','small-shelf':'construction de petite étagère', 'spike-trap':'construction de piège à pointes', 'double-bed':'construction de lit double', 'electric-crematorium':'Construction du crématorium électrique','electric-smelter':'construction de fonderie électrique','sleeping-spot':'couchage au sol','animal-sleeping-spot':'emplacement de couchage animal', 'biofuel-refinery':'construction de raffinerie de biocarburant','chemfuel-generator':'construction de générateur à biocarburant', 'nutrient-paste-dispenser':'construction du distributeur de pâte nutritive',hopper:'construction de trémie', 'orbital-beacon':'construction de balise orbitale','comms-console':'construction de console de communication', 'deep-drill':'construction de foreuse profonde','ground-scanner':'construction du scanner souterrain', 'vitals-monitor':'construction du moniteur vital', 'drug-lab':'construction du laboratoire de chimie', 'hydroponics-basin':'construction du bac hydroponique', 'mini-turret':'construction de mini-tourelle', 'tube-television':'construction de télévision cathodique', sandbags:'construction de sacs de sable', autodoor:'construction de porte automatique', fence:'construction de clôture','fence-gate':'construction de portillon','pen-marker':'construction de marqueur d’enclos', 'art-bench':'construction de l’atelier de sculpture','small-sculpture':'petite sculpture','large-sculpture':'grande sculpture', 'machining-table':'construction de l’atelier d’usinage','fabrication-bench':'construction de l’établi de fabrication','hi-tech-research-bench':'construction du bureau de recherche haute technologie','multi-analyzer':'construction du multi-analyseur', grave:'creusement de tombe','lay-floor':'pose de sol','remove-floor':'retrait de sol',heater:'construction de radiateur','wind-turbine':'construction d’éolienne',flick:'commutation électrique','power-conduit':'construction de conduit','power-switch':'construction d’interrupteur',battery:'construction de batterie','solar-generator':'construction de panneau solaire', 'fueled-stove':'construction de cuisinière à bois','electric-stove':'construction de cuisinière électrique','butcher-table':'construction de table de boucherie', 'butcher-spot':'emplacement de boucherie', cooler:'construction de climatiseur', 'research-bench':'construction de bureau de recherche','tailor-bench':'construction d’établi de tailleur','electric-tailor-bench':'construction d’établi de tailleur électrique', 'crafting-spot':'emplacement d’artisanat', repair:'réparer', 'fix-breakdown':'remplacer un composant en panne', 'wood-generator':'construction de générateur à bois', 'sun-lamp':'construction de lampe horticole', 'standing-lamp':'construction de lampe sur pied', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'pose de toit', 'remove-roof':'retrait de toit', door:'construction de porte', stonecutter:'construction de table de taille de pierre', mine:'minage', uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis', horseshoes: 'construction de piquet de fers à cheval', 'chess-table':'construction de table d’échecs', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', 'hospital-bed':'construction de lit d’hôpital', table: 'construction de table','table-square':'construction de table carrée','table-long':'construction de table longue', stool: 'construction de tabouret','dining-chair':'construction de chaise',armchair:'construction de fauteuil','end-table':'construction de table de chevet',dresser:'construction de commode','flower-pot':'construction de pot de fleurs' };
+const JOB_LABEL: Readonly<Record<JobKind, string>> = {'extract-tree':'extraction arbre','replant-tree':'replantation arbre', shelf:'construction d’étagère','small-shelf':'construction de petite étagère', 'spike-trap':'construction de piège à pointes', 'double-bed':'construction de lit double', 'electric-crematorium':'Construction du crématorium électrique','electric-smelter':'construction de fonderie électrique','sleeping-spot':'couchage au sol','animal-sleeping-spot':'emplacement de couchage animal', 'biofuel-refinery':'construction de raffinerie de biocarburant','chemfuel-generator':'construction de générateur à biocarburant', 'nutrient-paste-dispenser':'construction du distributeur de pâte nutritive',hopper:'construction de trémie', 'orbital-beacon':'construction de balise orbitale','comms-console':'construction de console de communication', 'deep-drill':'construction de foreuse profonde','ground-scanner':'construction du scanner souterrain', 'vitals-monitor':'construction du moniteur vital', 'drug-lab':'construction du laboratoire de chimie', 'hydroponics-basin':'construction du bac hydroponique', 'mini-turret':'construction de mini-tourelle', 'tube-television':'construction de télévision cathodique', sandbags:'construction de sacs de sable', autodoor:'construction de porte automatique', fence:'construction de clôture','fence-gate':'construction de portillon','pen-marker':'construction de marqueur d’enclos', 'art-bench':'construction de l’atelier de sculpture','small-sculpture':'petite sculpture','large-sculpture':'grande sculpture', 'machining-table':'construction de l’atelier d’usinage','fabrication-bench':'construction de l’établi de fabrication','hi-tech-research-bench':'construction du bureau de recherche haute technologie','multi-analyzer':'construction du multi-analyseur', grave:'creusement de tombe','lay-floor':'pose de sol','remove-floor':'retrait de sol',heater:'construction de radiateur','wind-turbine':'construction d’éolienne',flick:'commutation électrique','power-conduit':'construction de conduit','power-switch':'construction d’interrupteur',battery:'construction de batterie','solar-generator':'construction de panneau solaire', 'fueled-stove':'construction de cuisinière à bois','electric-stove':'construction de cuisinière électrique','butcher-table':'construction de table de boucherie', 'butcher-spot':'emplacement de boucherie', cooler:'construction de climatiseur', 'research-bench':'construction de bureau de recherche','tailor-bench':'construction d’établi de tailleur','electric-tailor-bench':'construction d’établi de tailleur électrique', 'crafting-spot':'emplacement d’artisanat', repair:'réparer', 'fix-breakdown':'remplacer un composant en panne', 'wood-generator':'construction de générateur à bois', 'sun-lamp':'construction de lampe horticole', 'standing-lamp':'construction de lampe sur pied', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'pose de toit', 'remove-roof':'retrait de toit', door:'construction de porte', stonecutter:'construction de table de taille de pierre', mine:'minage', uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis', horseshoes: 'construction de piquet de fers à cheval', 'chess-table':'construction de table d’échecs', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', 'hospital-bed':'construction de lit d’hôpital', table: 'construction de table','table-square':'construction de table carrée','table-long':'construction de table longue', stool: 'construction de tabouret','dining-chair':'construction de chaise',armchair:'construction de fauteuil','end-table':'construction de table de chevet',dresser:'construction de commode','flower-pot':'construction de pot de fleurs' };
 const sameCell = (a: Cell, b: Cell): boolean => a.x === b.x && a.z === b.z;
 const refusal = (code: RefusalCode, reason: string): CommandResult => ({ ok: false, code, reason });
 function event(world: World, type: 'job' | 'need' | 'command', message: string): void {
@@ -246,6 +248,13 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   const selection = queryArea(world, command);
   if (!selection.ok) return selection;
   if (!selection.cells.length) return refusal('missing-target', 'Aucune case compatible dans ce rectangle.');
+  if(command.action==='cancel'){
+    const cells=new Set(selection.cells);
+    const jobs=new Set(world.jobs.filter(j=>[...footprintCells(j),...furnitureSourceCells(world,j)].some(c=>cells.has(c.z*world.width+c.x))).map(j=>j.id));
+    const result=cancelIntentJobs(world,jobs);if(!result.ok)return result;
+    const removed=clearPileHaulFlags(world,new Set(world.piles.filter(p=>p.owner.type==='ground'&&cells.has(p.owner.z*world.width+p.owner.x)).map(p=>p.id)));
+    wakePlanners(world);refreshStock(world);return {ok:true,affected:jobs.size+removed,skipped:selection.skipped};
+  }
   const creates = command.action === 'lay-floor' || command.action === 'remove-floor' || command.action === 'mine' || command.action === 'deconstruct' || command.action === 'chop' || command.action === 'harvest' || command.action === 'cut' || command.action === 'stockpile' || command.action === 'growing';
   const deconstructionCells=command.action==='deconstruct'?new Set(selection.cells):undefined;
   const identities=deconstructionCells?world.structures.filter(s=>!['sleeping-spot','animal-sleeping-spot','crafting-spot','butcher-spot'].includes(s.kind)&&footprintCells(s).some(c=>deconstructionCells.has(c.z*world.width+c.x))).length:command.action==='growing'?(selection.targetZoneId===undefined?zoneCellComponents(world.width,selection.cells).length:0):selection.cells.length;
@@ -261,7 +270,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   } else if(command.action==='haul-chunks') {
     const selected=new Set(selection.cells);for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground'&&selected.has(cellIndex(world,p.owner.x,p.owner.z)))p.haulRequested=true;
   } else if (command.action === 'mine' || command.action === 'chop' || command.action === 'harvest' || command.action === 'cut') {
-    for (const index of selection.cells) world.jobs.push({ id: world.nextId++, kind: command.action, x: index % world.width, z: Math.floor(index / world.width), orientation: 0, footprint: 'standard', status: 'pending', reservedBy: null, progress: 0, escrow: { wood: 0, food: 0 } });
+    for (const index of selection.cells) world.jobs.push({ id: world.nextId++, kind: command.action, ...(world.schemaVersion>=235&&command.action!=='mine'?{plantTarget:{resourceId:world.resources.find(r=>r.x===index%world.width&&r.z===Math.floor(index/world.width))!.id}}:{}), x: index % world.width, z: Math.floor(index / world.width), orientation: 0, footprint: 'standard', status: 'pending', reservedBy: null, progress: 0, escrow: { wood: 0, food: 0 } });
   } else if (command.action === 'growing') {
     const target=world.growingZones.find(zone=>zone.id===selection.targetZoneId);
     if(target)world.growingZones=world.growingZones.map(zone=>zone===target?{...zone,cells:[...zone.cells,...selection.cells].sort((a,b)=>a-b)}:zone);
@@ -305,7 +314,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
     }
   }
   wakePlanners(world); refreshStock(world);
-  event(world, 'command', `Rectangle : ${affected} ${command.action === 'cancel' ? 'ordre(s) annulé(s)' : command.action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : command.action === 'stockpile' ? 'case(s) de réserve créée(s)' : command.action==='home'||command.action==='remove-home'?'case(s) de foyer modifiée(s)':command.action==='deconstruct' ? 'ordre(s) de déconstruction créé(s)' : isRoofArea(command.action) ? 'case(s) de toiture désignée(s)' : 'ordre(s) de collecte créé(s)'}.`);
+  event(world, 'command', `Rectangle : ${affected} ${command.action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : command.action === 'stockpile' ? 'case(s) de réserve créée(s)' : command.action==='home'||command.action==='remove-home'?'case(s) de foyer modifiée(s)':command.action==='deconstruct' ? 'ordre(s) de déconstruction créé(s)' : isRoofArea(command.action) ? 'case(s) de toiture désignée(s)' : 'ordre(s) de collecte créé(s)'}.`);
   return { ok: true, affected, skipped: selection.skipped };
 }
 
@@ -381,6 +390,8 @@ export function canDesignate(world: World, command: DesignateCommand, installing
   const material=command.kind==='electric-crematorium'?(command.material??'granite-blocks'):command.kind==='sandbags'?(command.material??'cloth'):command.kind==='electric-smelter'||command.kind==='biofuel-refinery'||command.kind==='chemfuel-generator'||command.kind==='nutrient-paste-dispenser'||command.kind==='hopper'||command.kind==='orbital-beacon'||command.kind==='comms-console'||command.kind==='deep-drill'||command.kind==='ground-scanner'||command.kind==='vitals-monitor'||command.kind==='hydroponics-basin'||command.kind==='mini-turret'||command.kind==='hospital-bed'||command.kind==='tube-television'?(command.material??'steel'):command.material;
   if(!validConstructionMaterial(command.kind,material,world.schemaVersion))return refusal('invalid-command','Matériau incompatible avec cette construction.');
   if(command.kind==='cooler'){const faces=coolerFaces(command);if(coolerFaceBlocked(world,faces.cold,true)||coolerFaceBlocked(world,faces.hot,true))return refusal('occupied','Les faces froide et chaude doivent rester dégagées.');}
+  if(command.kind==='extract-tree'||command.kind==='replant-tree'){const reason=command.kind==='extract-tree'?extractTreeReason(world,world.resources.find(r=>r.id===command.targetId)):replantTreeReason(world,world.piles.find(p=>p.id===command.targetId),command);return reason?refusal('incompatible-resource',reason):{ok:true};}
+  if(['chop','cut','harvest'].includes(command.kind)){const resource=world.resources.find(r=>command.targetId!==undefined?r.id===command.targetId:sameCell(r,command));if(world.jobs.some(j=>isPlantDesignationJob(j)&&sameCell(j,command)))return refusal('occupied','Une plante possede deja cet ordre.');return resource&&sameCell(resource,command)&&(command.kind==='chop'?choppable(world,resource):isPlant(resource)||world.schemaVersion>=235&&command.kind==='cut'&&resource.kind==='tree')&&(command.kind!=='harvest'||harvestable(world,resource))?{ok:true}:refusal('incompatible-resource','Ressource incompatible.');}
   if(command.targetId!==undefined&&(!Number.isSafeInteger(command.targetId)||command.targetId<1||command.kind!=='deconstruct'&&command.kind!=='uninstall'))return refusal('invalid-command','Cible de retrait invalide.');
   const target = (command.kind==='deconstruct'||command.kind==='uninstall')?deconstructionAt(world,command):undefined;
   if((command.kind==='deconstruct'||command.kind==='uninstall')&&!target)return refusal('missing-target','Aucun bâtiment à déconstruire ici.');
@@ -396,7 +407,7 @@ export function canDesignate(world: World, command: DesignateCommand, installing
   if(command.kind==='grave'&&cells.some(c=>{const tile=world.tiles[cellIndex(world,c.x,c.z)]!;return !!tile.floor||!['grass','soil','rich-soil','gravel'].includes(tile.terrain);}))return refusal('incompatible-resource','La tombe exige un terrain meuble à creuser.');
   const replacing=installing?undefined:wallBlueprintForDoor(world,command);
   if (!replacing&&index?.kind===command.kind ? cells.some(cell=>!!(index.flags[cellIndex(world,cell.x,cell.z)]!&1))
-    : world.jobs.some(job => job!==replacing && !isRoofJob(job) && !(command.kind==='deconstruct'&&(job.kind==='repair'||job.kind==='fix-breakdown'||job.kind==='flick')) && sharesConstructionLayer(job.furniture?.kind??job.deconstruction?.kind??job.flick?.kind??job.fixBreakdown?.kind??job.kind,target?.kind??command.kind) && footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
+    : world.jobs.some(job => job!==replacing && !isRoofJob(job) && !isPlantDesignationJob(job) && !(command.kind==='deconstruct'&&(job.kind==='repair'||job.kind==='fix-breakdown'||job.kind==='flick')) && sharesConstructionLayer(job.furniture?.kind??job.deconstruction?.kind??job.flick?.kind??job.fixBreakdown?.kind??job.kind,target?.kind??command.kind) && footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
   if(command.kind==='deconstruct'||command.kind==='uninstall')return {ok:true};
   if(command.kind==='mine')return world.tiles[cellIndex(world,command.x,command.z)]!.terrain==='rock'?{ok:true}:refusal('incompatible-resource','Désigner un massif rocheux à miner.');
   if((command.kind==='crafting-spot'||command.kind==='butcher-spot')&&world.resources.some(r=>sameCell(r,command)))return refusal('occupied','Dégager la plante avant de placer cet emplacement.');
@@ -434,6 +445,9 @@ export function applyCommand(world: World, command: Command): CommandResult {
 }
 function applyCommandInternal(world: World, command: Command): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if(command.type==='cancel-job'||command.type==='cancel-resource'||command.type==='cancel-pile')return applyDesignationCancel(world,command)??refusal('invalid-command','Annulation inconnue.');
+  if(command.type==='extract-tree'||command.type==='replant-tree')return applyTreeCommand(world,command)!;
+  if(command.type==='designate'&&(command.kind==='extract-tree'||command.kind==='replant-tree'))return command.kind==='extract-tree'?applyTreeCommand(world,{type:'extract-tree',resourceId:command.targetId??-1})!:applyTreeCommand(world,{type:'replant-tree',pileId:command.targetId??-1,x:command.x,z:command.z})!;
   if(command.type==='spike-trap-auto-rebuild')return validSpikeTrapCommand(command)?applySpikeTrapSwitch(world,command):refusal('invalid-command','Réglage de piège invalide.');
   if(command.type==='allowed-area-create'||command.type==='allowed-area-settings'||command.type==='allowed-area-paint'||command.type==='allowed-area-delete'||command.type==='assign-allowed-area')
     return applyAllowedAreaCommand(world,command,{preflight:(next,affected)=>preflightAllowedAreaChange(world,next,affected),reconcile:commitAllowedAreaChange})!;
@@ -715,17 +729,10 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     for(const p of world.pawns)if(p.haul?.whole&&p.haul.destination.type==='aside'&&!destinationValid(world,p))releaseWork(world,p,drops);
     wakePlanners(world); refreshStock(world); return { ok: true };
   }
-  if (command.type === 'cancel') {
-    const existing = world.jobs.find(job => footprintCells(job).some(cell => sameCell(cell, command)))??furnitureIntentAt(world,command);
-    if (!existing) return refusal('missing-target', 'Aucun ordre à annuler ici.');
-    if(existing.kind==='repair'||existing.kind==='fix-breakdown')return refusal('invalid-command','Retirez la zone de foyer pour suspendre cet entretien automatique.');
-    if(isRoofJob(existing)){designateRoofArea(world,[cellIndex(world,command.x,command.z)],'ignore-roof');wakePlanners(world);return {ok:true};}
-    for (const pawn of world.pawns) if (pawn.jobId === existing.id || (pawn.haul && constructionHaulId(pawn.haul.destination) === existing.id)) releaseWork(world, pawn,drops);
-    removeIdentity(world.jobs,existing);
-    const delivered = world.piles.filter(pile => pile.owner.type === 'job' && pile.owner.jobId === existing.id);
-    for (const pile of delivered) if(!commitDrop(world,pile,existing,drops)) throw new Error('Preflighted cancellation has no drop cell.');
-    event(world, 'command', 'Ordre annulé ; les matériaux restent sur place.');
-    wakePlanners(world); refreshStock(world); return { ok: true };
+  if(command.type==='cancel'){
+    const jobs=new Set(world.jobs.filter(j=>footprintCells(j).some(c=>sameCell(c,command))).map(j=>j.id));
+    if(!jobs.size)return refusal('missing-target','Aucun ordre a annuler ici.');
+    return cancelIntentJobs(world,jobs);
   }
   const result = canDesignate(world, command);
   if (!result.ok) return result;
@@ -748,7 +755,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   if(command.kind==='crafting-spot'||command.kind==='butcher-spot'){const r=placeCraftingSpot(world,command,drops);if(r.ok)wakePlanners(world);return r;}
   if(replacing)retireWallBlueprint(world,replacing,drops);
   removeZonesForPlan(world,command,drops);
-  world.jobs.push({ id: world.nextId++, kind: command.kind, ...(isConstruction(command)?{construction:command.kind==='grave'?'frame' as const:'blueprint' as const,...command.kind==='grave'||command.kind==='lay-floor'?{}:{material:command.material??(command.kind==='electric-crematorium'?'granite-blocks' as const:command.kind==='sandbags'?'cloth' as const:command.kind==='electric-smelter'||command.kind==='biofuel-refinery'||command.kind==='chemfuel-generator'||command.kind==='nutrient-paste-dispenser'||command.kind==='hopper'||command.kind==='orbital-beacon'||command.kind==='comms-console'||command.kind==='deep-drill'||command.kind==='ground-scanner'||command.kind==='vitals-monitor'||command.kind==='hydroponics-basin'||command.kind==='mini-turret'||command.kind==='hospital-bed'||command.kind==='tube-television'?'steel' as const:'wood' as const)}}:{}),...(command.kind==='lay-floor'?{floor:command.floor}:command.kind==='remove-floor'?{floor:world.tiles[command.z*world.width+command.x]!.floor}:{}), x: command.x, z: command.z, orientation: command.orientation ?? 0, footprint: 'standard', status: 'pending', reservedBy: null, progress: 0, escrow: { wood: 0, food: 0 } });
+  world.jobs.push({ id: world.nextId++, kind: command.kind, ...(world.schemaVersion>=235&&['chop','cut','harvest'].includes(command.kind)?{plantTarget:{resourceId:world.resources.find(r=>sameCell(r,command))!.id}}:{}), ...(isConstruction(command)?{construction:command.kind==='grave'?'frame' as const:'blueprint' as const,...command.kind==='grave'||command.kind==='lay-floor'?{}:{material:command.material??(command.kind==='electric-crematorium'?'granite-blocks' as const:command.kind==='sandbags'?'cloth' as const:command.kind==='electric-smelter'||command.kind==='biofuel-refinery'||command.kind==='chemfuel-generator'||command.kind==='nutrient-paste-dispenser'||command.kind==='hopper'||command.kind==='orbital-beacon'||command.kind==='comms-console'||command.kind==='deep-drill'||command.kind==='ground-scanner'||command.kind==='vitals-monitor'||command.kind==='hydroponics-basin'||command.kind==='mini-turret'||command.kind==='hospital-bed'||command.kind==='tube-television'?'steel' as const:'wood' as const)}}:{}),...(command.kind==='lay-floor'?{floor:command.floor}:command.kind==='remove-floor'?{floor:world.tiles[command.z*world.width+command.x]!.floor}:{}), x: command.x, z: command.z, orientation: command.orientation ?? 0, footprint: 'standard', status: 'pending', reservedBy: null, progress: 0, escrow: { wood: 0, food: 0 } });
   refreshStock(world); wakePlanners(world); event(world, 'command', `Nouvel ordre : ${JOB_LABEL[command.kind]} (${command.x}, ${command.z}).`); return { ok: true };
 }
 
@@ -756,7 +763,7 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
   if(job.flowerPotId!==undefined&&job.kind==='cut'){
     const pot=world.structures.find(s=>s.id===job.flowerPotId&&s.kind==='flower-pot');if(!pot?.flower?.plant){releaseWork(world,pawn);return;}pot.flower=cutFlowerPotPlant(pot.flower);
   } else if (job.kind === 'chop' || job.kind === 'harvest' || job.kind === 'cut') {
-    const resource = world.resources.find(item => sameCell(item, job));
+    const resource = world.resources.find(item => job.plantTarget?item.id===job.plantTarget.resourceId:sameCell(item, job));
     if (!resource) { releaseWork(world, pawn); return; }
     if (job.kind === 'harvest' && !harvestable(world, resource)) { releaseWork(world, pawn); return; }
     const quantity=gatherResource(world,resource,job.kind,job.id,pawn);
@@ -908,6 +915,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       if(processPawnVomiting(world,pawn)){if(prisonBreakActive(pawn))endPrisonBreak(world,pawn);continue;}
       if(pawn.stun&&pawn.stun.untilCore<=world.tick*10)delete pawn.stun;
       if(isForcedConsuming(pawn)&&!consumeActivityValid(world,pawn))interruptDraftWork(world,pawn);
+      if(pawn.jobId!==null&&(pawn.stun||pawn.burning||pawn.bombRefuge||pawn.heatRefuge||pawn.tactics||pawn.draft)){const tree=world.jobs.find(j=>j.id===pawn.jobId&&j.tree);if(tree&&treeJobReason(world,tree,pawn))interruptWork(world,pawn);}
       if(pawn.state==='downed'||carrierOf(world,pawn.id)||isStunned(pawn,world.tick*10))continue;
       if(!isDraftedTending(pawn)&&!isForcedConsuming(pawn)&&(hasAdversary||pawn.meleeThreat&&world.tick*10-pawn.meleeThreat.atCore<=400)&&!pawn.prisoner&&!pawn.mental?.crisis){considerAutomaticCombat(world,pawn,budget,animalThreats);considerFlee(world,pawn,getThreats());}
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
@@ -1013,6 +1021,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         release:()=>releaseWork(world,pawn),event:message=>event(world,'job',message),
       });continue;}
       const job = world.jobs.find(candidate => candidate.id === pawn.jobId); if (!job) { if(processReturnToAllowedArea(world,pawn,needsContext))continue; processRecreation(world,pawn,needsContext,true); continue; }
+      if(job.tree){const beforeResources=world.resources,beforePiles=world.piles,beforeJobs=world.jobs;processTreeWork(world,pawn,job,(target,touch)=>moveToward(world,pawn,target,false,getBlocked,budget,false,getLight),getLight().speedAt(pawn));if(world.resources!==beforeResources||world.piles!==beforePiles||world.jobs!==beforeJobs){blocked=undefined;roofs=undefined;invalidateEnvironment();}continue;}
       if(backgroundWorkRefusal(pawn,workType(job))){releaseWork(world,pawn);continue;}
        if ((job.growingZoneId !== undefined||job.flowerPotId!==undefined) && !growingJobValid(world, job)) { releaseWork(world, pawn); world.jobs = world.jobs.filter(j => j.id !== job.id); continue; }
       if (job.kind === 'sow' && groundPile(world, job)) { releaseWork(world, pawn); continue; }
@@ -1096,7 +1105,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     reconcileFires(world);reconcilePowerFlicks(world);reconcilePower(world);reconcileOrders(world);syncCarriedAnimals(world);reconcileAnimalRescues(world);reconcileAnimalRest(world);reconcileWildlife(world);advanceCorpses(world,thermal);advanceMechanoidCorpses(world);reconcileDomesticWork(world);advanceHumanCorpses(world);reconcileBurials(world);reconcileCommercialOnMap(world);
     if(world.hunting)world.hunting.targets=world.hunting.targets.filter(id=>world.wildlife?.animals.some(a=>a.id===id&&a.state!=='dead')||world.pawns.some(p=>p.hunting?.animalId===id));
     advanceScoutTrip(world);advanceCommercialTrip(world);advanceGroup(world);
-    advanceStartingArrival(world);
+    advanceStartingArrival(world);advanceMinifiedTrees(world);
     refreshStock(world);reconcileSpikeTrapContacts(world);
     if(thermalDirty)thermal=reconcileTemperature(world);
     updateFoodTemperatures(world,thermal);

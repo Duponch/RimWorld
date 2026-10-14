@@ -17,7 +17,7 @@ Une case de catalogue, un bouton grisé, une simulation préparée ou un test ci
 
 ## Ordre de travail courant
 
-Priorité humaine14octobre : [correctifs de construction V348](construction-clearance-v348.md) puis plantes/extraction, annulation du transport et masquage du décor. Reprendre la qualification de campagne après ces bugs ; V347 est commité/poussé en2196efdf, sans publication QA supplémentaire.
+Priorité humaine14octobre : [construction V348](construction-clearance-v348.md) commité/poussé en f640c01e, [arbres/annulations V349](tree-transfer-v349.md) et [masquage V350](../development/decor-occlusion-v350.md) qualifiés sur scènes préparées, livraison groupée PENDING. Poursuivre sans relance par classification des plantes légères devant tous ouvrages/sols et sorties lourdes refusées ; frontière Frame Core à requalifier avant parité de timing. Reprendre la campagne/réserves après ces bugs ; V347 est commité/poussé en2196efdf. Aucun résultat humain/naturel nouveau crédité par les régressions préparées.
 
 1. Carnet contextuel V334 commité et poussé ; préserver toutes les mécaniques.
 2. Arrivée physique V335 acquise : personnes et biens réellement détenus pendant la descente, mêmes identités et quantités à l’ouverture, pause et reprise exactes. Les écarts Core restent explicites, sans interdiction générique ou scorie fictives.

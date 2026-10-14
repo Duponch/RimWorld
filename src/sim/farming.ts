@@ -1,3 +1,4 @@
+import {extractTreeDefinition} from './tree-transfer-rules.ts';
 import { furnitureDuration } from './furniture-rules.ts';
 import { constructionRecipe } from './construction-materials.ts';
 import { deconstructionDuration } from './deconstruction-rules.ts';
@@ -50,6 +51,8 @@ export function sowingJobAllowed(world:World,pawn:Pawn,job:Pick<Job,'kind'|'grow
 /** Presentation may supply the already captured target; omission keeps the
  * simulation's existing spatial cache. null means the target is absent. */
 export function jobDuration(world: World, job: Job, capturedResource?:Resource|null): number {
+  if(job.tree?.kind==='extract')return extractTreeDefinition(world.resources.find(r=>r.id===job.tree!.resourceId)??{kind:'tree'})?.workCore??800;
+  if(job.tree?.kind==='replant')return job.tree.durationCore??800;
   if(job.flowerPotId!==undefined&&job.kind==='sow')return 54;
   if(job.kind==='sow'&&job.growingZoneId!==undefined&&zoneCells(world).byId.get(job.growingZoneId)?.plant==='haygrass')return 17;
   if(job.kind==='sow'&&job.growingZoneId!==undefined&&zoneCells(world).byId.get(job.growingZoneId)?.plant==='healroot')return 80;
@@ -69,7 +72,7 @@ export function jobDuration(world: World, job: Job, capturedResource?:Resource|n
 }
 interface Context { resources: Map<number, Resource>; fixed: Set<number>; hydroBlocked?:Set<number>; temperatures:TemperatureView }
 function context(world: World, queriedCells?:readonly number[]): Context {
-  const placed=world.structures.filter(s=>s.kind!=='power-conduit'),planned=world.jobs.filter(j => j.kind==='install'||j.kind!=='power-conduit'&&j.kind in STRUCTURE_DEFINITIONS);
+  const placed=world.structures.filter(s=>s.kind!=='power-conduit'),planned=world.jobs.filter(j => j.kind==='replant-tree'||j.kind==='install'||j.kind!=='power-conduit'&&j.kind in STRUCTURE_DEFINITIONS);
   const objects=[...placed,...planned];
   // Validation asks about at most five cells. Avoid expanding every building
   // footprint for that point query; discovery still captures the full field.

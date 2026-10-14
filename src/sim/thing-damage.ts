@@ -1,3 +1,4 @@
+import {destroyMinifiedTree} from './tree-transfer.ts';
 import {commitShelfRemoval} from './shelf-retirement.ts';
 import {removeHydroponicPlants} from './hydroponics.ts';
 import {rebuildSpikeTrap} from './spike-trap-rebuild.ts';
@@ -49,7 +50,7 @@ export function damageResource(world:World,r:Resource,amount:number,reason:'fire
   const neutral=reason==='bullet'||reason==='bomb'?neutralLossPlan(world,{resources:{[r.kind]:1},...(woodPotential?{woodPotentialLost:woodPotential}:{})}):undefined;
   if(neutral===null)return false;
   if(ledger&&(!addSafe(ledger.resources[r.kind]??0,1)||!addSafe(ledger.woodPotentialLost,woodPotential)))return false;
-  const jobs=new Set(world.jobs.filter(j=>at(j,r)&&['mine','chop','cut','harvest'].includes(j.kind)).map(j=>j.id));
+  const jobs=new Set(world.jobs.filter(j=>at(j,r)&&['mine','chop','cut','harvest','extract-tree'].includes(j.kind)).map(j=>j.id));
   removeJobs(world,jobs);world.resources=world.resources.filter(candidate=>candidate!==r);
   // The clearance step ended without a harvest. Keep its construction intent,
   // materials and unrelated queued work, but release this now-obsolete claim:
@@ -79,6 +80,7 @@ export function damagePile(world:World,pile:MaterialPile,amount:number,cause:'fi
   const max=pileMaxHp(pile,world.schemaVersion);if(!max||!positive(amount)||!world.piles.includes(pile))return false;
   const damage=pileDamage(pile)+amount;
   if(damage<max){if(pile.apparel)pile.apparel.hitPoints=max-damage;else if(pile.weapon)pile.weapon.hitPoints=max-damage;else pile.damage=damage;return true;}
+  if(pile.kind==='plant')return destroyMinifiedTree(world,pile);
   if(pile.humanCorpse){
     if(!destroyHumanCorpse(world,pile,cause))return false;
     for(const p of world.pawns){

@@ -50,10 +50,11 @@ import { DEFAULT_ANIMATION_SETTINGS, ANIMATION_PREFERENCE_KEY, parseAnimationSet
 import {DESIGNATION_VISIBILITY_KEY,designationMinCellPixels,designationVisibilityLabel} from './ui/designation-visibility';
 import {ITEM_LABEL_VISIBILITY_KEY,itemLabelMinCellPixels,itemLabelVisibilityLabel} from './ui/item-label-visibility';
 import {applyUiFont,readUiFont,saveUiFont,type UiFontId} from './ui/ui-fonts';
-import {CLOUD_MASK_RADIUS_KEY,DEFAULT_CLOUD_MASK_RADIUS,cloudMaskRadius,cloudMaskRadiusLabel} from './render/cloud-mask';
+import {CLOUD_MASK_RADIUS_KEY} from './render/cloud-mask';
+import {DECOR_OCCLUSION_KEY,DEFAULT_DECOR_OCCLUSION_ENABLED,decorOcclusionEnabled} from './render/decor-occlusion-settings';
 import {DIORAMA_PREFERENCE_KEY,DEFAULT_DIORAMA_ENABLED,dioramaEnabled as parseDioramaEnabled} from './render/diorama-settings';
 import {ROOM_PREFERENCE_KEY,DEFAULT_ROOM_ENABLED,roomEnabled as parseRoomEnabled} from './render/room-settings';
-import {ROOM_MASK_RADIUS_KEY,DEFAULT_ROOM_MASK_RADIUS,roomMaskRadius,roomMaskRadiusLabel} from './render/room-mask-settings';
+import {ROOM_MASK_RADIUS_KEY} from './render/room-mask-settings';
 import {LIGHTING_PREFERENCE_KEY,DEFAULT_LIGHTING_SETTINGS,LIGHTING_CONTROLS,parseLightingSettings,lightingPercentLabel,type LightingSettings} from './render/lighting-settings';
 import type { PawnTrack } from './bridge/motion-tracks';
 import { SCENARIOS, type ScenarioId } from './sim/scenario-definitions';
@@ -158,6 +159,8 @@ import { MapHoverLightCache,mapHoverLines } from './ui/map-hover-readout';
 import { mapCellDetails } from './ui/map-cell-details';
 import './ui/map-details.css';
 import './ui/cursors.css';
+import { pictogramDataUrl } from './ui/pictograms';
+import { isMinifiedTree } from './sim/tree-transfer';
 import { installVisualIdentity, type UiIcon } from './ui/visual-identity';
 import { installArchitectIcons } from './ui/architect-icons';
 import { syncToolCursor } from './ui/tool-cursors';
@@ -201,7 +204,7 @@ import './ui/resource-ledger.css';
 import './ui/architect-workbench.css';
 import './ui/time-controls.css';
 import './ui/first-day-guide.css';
-const jobLabels: Record<JobKind, string> = { 'sleeping-spot':'Couchage au sol', shelf:'Construction de l’étagère', 'small-shelf':'Construction de la petite étagère', 'spike-trap':'Construction du piège à pointes', 'electric-crematorium':'Construction du crématorium électrique','electric-smelter':'Construction de fonderie électrique','animal-sleeping-spot':'Emplacement de couchage animal', 'biofuel-refinery':'Construction de la raffinerie de biocarburant','chemfuel-generator':'Construction du générateur à biocarburant', 'nutrient-paste-dispenser':'Construction du distributeur de pâte nutritive',hopper:'Construction de la trémie', 'orbital-beacon':'Construction de la balise orbitale','comms-console':'Construction de la console de communication', 'deep-drill':'Construction de foreuse profonde','ground-scanner':'Construction du scanner souterrain', 'vitals-monitor':'Construction du moniteur vital', 'drug-lab':'Construction du laboratoire de chimie', 'hydroponics-basin':'Construction du bac hydroponique', 'mini-turret':'Construction de mini-tourelle automatique', 'tube-television':'Construction de télévision cathodique', sandbags: 'sacs de sable', fence:'Clôture','fence-gate':'Portillon',autodoor:'Porte automatique','pen-marker':'Marqueur d’enclos', 'art-bench':'Atelier de sculpture','small-sculpture':'Petite sculpture','large-sculpture':'Grande sculpture', 'machining-table':'Atelier d’usinage','fabrication-bench':'Établi de fabrication','hi-tech-research-bench':'Bureau de recherche haute technologie','multi-analyzer':'Multi-analyseur', grave:'Creuser une tombe','lay-floor':'Pose de sol','remove-floor':'Retrait de sol', heater:'Radiateur','wind-turbine':'Éolienne',flick:'Actionner un interrupteur', 'power-conduit':'Construction du câble', 'power-switch':'Construction de l’interrupteur', battery:'Construction de la batterie', 'solar-generator':'Construction du générateur solaire', 'fueled-stove':'Cuisinière à bois','electric-stove':'Cuisinière électrique','butcher-table':'Table de boucherie', 'butcher-spot':'Emplacement de boucherie', cooler:'Climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur','electric-tailor-bench':'Établi de tailleur électrique', 'crafting-spot':'Emplacement d’artisanat', repair:'Réparation', 'fix-breakdown':'Remplacement du composant', 'wood-generator':'Construction du générateur à bois', 'sun-lamp':'Construction de la lampe horticole', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis', wall: 'Construction du mur', 'double-bed':'Construction du lit double', bed: 'Construction du lit', 'hospital-bed':'Construction du lit d’hôpital', table: 'Construction de la table','table-square':'Construction de la table carrée','table-long':'Construction de la table longue', stool: 'Construction du tabouret','dining-chair':'Construction de la chaise',armchair:'Construction du fauteuil','end-table':'Construction de la table de chevet',dresser:'Construction de la commode','flower-pot':'Construction du pot de fleurs', horseshoes: 'Construction du piquet de fers à cheval', 'chess-table': 'Construction de la table d’échecs', campfire: 'Construction du feu de camp' };
+const jobLabels: Record<JobKind, string> = { 'extract-tree':'Déracinement de l’arbre','replant-tree':'Replantation de l’arbre', 'sleeping-spot':'Couchage au sol', shelf:'Construction de l’étagère', 'small-shelf':'Construction de la petite étagère', 'spike-trap':'Construction du piège à pointes', 'electric-crematorium':'Construction du crématorium électrique','electric-smelter':'Construction de fonderie électrique','animal-sleeping-spot':'Emplacement de couchage animal', 'biofuel-refinery':'Construction de la raffinerie de biocarburant','chemfuel-generator':'Construction du générateur à biocarburant', 'nutrient-paste-dispenser':'Construction du distributeur de pâte nutritive',hopper:'Construction de la trémie', 'orbital-beacon':'Construction de la balise orbitale','comms-console':'Construction de la console de communication', 'deep-drill':'Construction de foreuse profonde','ground-scanner':'Construction du scanner souterrain', 'vitals-monitor':'Construction du moniteur vital', 'drug-lab':'Construction du laboratoire de chimie', 'hydroponics-basin':'Construction du bac hydroponique', 'mini-turret':'Construction de mini-tourelle automatique', 'tube-television':'Construction de télévision cathodique', sandbags: 'sacs de sable', fence:'Clôture','fence-gate':'Portillon',autodoor:'Porte automatique','pen-marker':'Marqueur d’enclos', 'art-bench':'Atelier de sculpture','small-sculpture':'Petite sculpture','large-sculpture':'Grande sculpture', 'machining-table':'Atelier d’usinage','fabrication-bench':'Établi de fabrication','hi-tech-research-bench':'Bureau de recherche haute technologie','multi-analyzer':'Multi-analyseur', grave:'Creuser une tombe','lay-floor':'Pose de sol','remove-floor':'Retrait de sol', heater:'Radiateur','wind-turbine':'Éolienne',flick:'Actionner un interrupteur', 'power-conduit':'Construction du câble', 'power-switch':'Construction de l’interrupteur', battery:'Construction de la batterie', 'solar-generator':'Construction du générateur solaire', 'fueled-stove':'Cuisinière à bois','electric-stove':'Cuisinière électrique','butcher-table':'Table de boucherie', 'butcher-spot':'Emplacement de boucherie', cooler:'Climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur','electric-tailor-bench':'Établi de tailleur électrique', 'crafting-spot':'Emplacement d’artisanat', repair:'Réparation', 'fix-breakdown':'Remplacement du composant', 'wood-generator':'Construction du générateur à bois', 'sun-lamp':'Construction de la lampe horticole', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis', wall: 'Construction du mur', 'double-bed':'Construction du lit double', bed: 'Construction du lit', 'hospital-bed':'Construction du lit d’hôpital', table: 'Construction de la table','table-square':'Construction de la table carrée','table-long':'Construction de la table longue', stool: 'Construction du tabouret','dining-chair':'Construction de la chaise',armchair:'Construction du fauteuil','end-table':'Construction de la table de chevet',dresser:'Construction de la commode','flower-pot':'Construction du pot de fleurs', horseshoes: 'Construction du piquet de fers à cheval', 'chess-table': 'Construction de la table d’échecs', campfire: 'Construction du feu de camp' };
 const stateLabels: Record<Pawn['state'], string> = { resting:'Au lit pour soins', downed:'À terre', dead:'Décédé', idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
 const rotatableTools=new Set<Tool>(['sleeping-spot','shelf','small-shelf','electric-crematorium','electric-smelter','biofuel-refinery','nutrient-paste-dispenser','hopper','comms-console','deep-drill','ground-scanner','vitals-monitor','drug-lab','hydroponics-basin','tube-television','art-bench','machining-table','hi-tech-research-bench','fabrication-bench','grave','wind-turbine','battery','fueled-stove','electric-stove','butcher-table','install','bed','double-bed','hospital-bed','table','table-square','table-long','dining-chair','armchair','end-table','dresser','campfire','stonecutter','butcher-spot','crafting-spot','research-bench','tailor-bench','electric-tailor-bench','cooler']);
 const resourceLabels = { 'wild-plant':'Plante sauvage', healroot:'Racine médicinale', haygrass:'Herbe à foin', potato:'Plant de pommes de terre',corn:'Plant de maïs', tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz', cotton: 'Cotonnier' };
@@ -338,6 +341,7 @@ function syncAudioSources(world: World,camera=lastAudioCamera): void {
 }
 let lastColonyHistorySignature='';
 let installationId:number|undefined;
+let replantPileId:number|undefined;
 let currentTool: Tool = 'select';
 let currentPanel: Panel = null;
 const scoutUI=createScoutUI(el('scout-content'),c=>void attempt(()=>client.command(c)));
@@ -415,11 +419,10 @@ let itemLabelThreshold = 96;
 let groundGrassEnabled = true;
 let dioramaEnabled = DEFAULT_DIORAMA_ENABLED;
 let roomEnabled = DEFAULT_ROOM_ENABLED;
-let roomMaskRadiusPreference = DEFAULT_ROOM_MASK_RADIUS;
+let decorOcclusionPreference = DEFAULT_DECOR_OCCLUSION_ENABLED;
 let lightingSettings = { ...DEFAULT_LIGHTING_SETTINGS };
 let shadowSettings = { ...DEFAULT_SHADOW_SETTINGS };
 let animationSettings = { ...DEFAULT_ANIMATION_SETTINGS };
-let cloudClearRadius = DEFAULT_CLOUD_MASK_RADIUS;
 let uiFont = readUiFont();
 applyUiFont(uiFont);
 let soundEnabled = true;
@@ -437,11 +440,10 @@ try {
   groundGrassEnabled = localStorage.getItem(GROUND_GRASS_PREFERENCE_KEY) !== 'false';
   dioramaEnabled = parseDioramaEnabled(localStorage.getItem(DIORAMA_PREFERENCE_KEY));
   roomEnabled = parseRoomEnabled(localStorage.getItem(ROOM_PREFERENCE_KEY));
-  roomMaskRadiusPreference = roomMaskRadius(localStorage.getItem(ROOM_MASK_RADIUS_KEY));
+  decorOcclusionPreference=decorOcclusionEnabled(localStorage.getItem(DECOR_OCCLUSION_KEY),localStorage.getItem(CLOUD_MASK_RADIUS_KEY),localStorage.getItem(ROOM_MASK_RADIUS_KEY));
   lightingSettings = parseLightingSettings(localStorage.getItem(LIGHTING_PREFERENCE_KEY));
   shadowSettings = parseShadowSettings(localStorage.getItem(SHADOW_PREFERENCE_KEY));
   animationSettings = parseAnimationSettings(localStorage.getItem(ANIMATION_PREFERENCE_KEY));
-  cloudClearRadius = cloudMaskRadius(localStorage.getItem(CLOUD_MASK_RADIUS_KEY));
   soundEnabled = localStorage.getItem(SOUND_ENABLED_PREFERENCE_KEY) !== 'false';
   const storedVolume = Number(localStorage.getItem(SOUND_VOLUME_PREFERENCE_KEY));
   if (localStorage.getItem(SOUND_VOLUME_PREFERENCE_KEY) !== null && Number.isFinite(storedVolume)) soundVolume = Math.max(0, Math.min(1, storedVolume));
@@ -517,26 +519,12 @@ fontSelect.value = uiFont;
 function setUiFontPreference(value:UiFontId):void {
   uiFont=value; fontSelect.value=value; applyUiFont(value); saveUiFont(value);
 }
-const cloudRadiusSlider = el<HTMLInputElement>('cloud-mask-radius');
-cloudRadiusSlider.value = String(Math.round(cloudClearRadius*100));
-el('cloud-mask-value').textContent = cloudMaskRadiusLabel(cloudClearRadius);
-function setCloudClearRadius(value:number):boolean {
-  cloudClearRadius=cloudMaskRadius(value);
-  cloudRadiusSlider.value=String(Math.round(cloudClearRadius*100));
-  el('cloud-mask-value').textContent=cloudMaskRadiusLabel(cloudClearRadius);
-  renderer?.setCloudClearRadius(cloudClearRadius);
-  try {localStorage.setItem(CLOUD_MASK_RADIUS_KEY,String(cloudClearRadius));return true;}catch{return false;}
-}
-const roomMaskSlider = el<HTMLInputElement>('room-mask-radius');
-roomMaskSlider.value = String(Math.round(roomMaskRadiusPreference * 100));
-el('room-mask-value').textContent = roomMaskRadiusLabel(roomMaskRadiusPreference);
-function setRoomMaskRadius(value: number): boolean {
-  roomMaskRadiusPreference = roomMaskRadius(value);
-  roomMaskSlider.value = String(Math.round(roomMaskRadiusPreference * 100));
-  el('room-mask-value').textContent = roomMaskRadiusLabel(roomMaskRadiusPreference);
-  renderer?.setRoomMaskRadius(roomMaskRadiusPreference);
-  try { localStorage.setItem(ROOM_MASK_RADIUS_KEY, String(roomMaskRadiusPreference)); return true; }
-  catch { return false; }
+const decorOcclusionToggle=el<HTMLInputElement>('decor-occlusion-enabled');
+decorOcclusionToggle.checked=decorOcclusionPreference;
+function setDecorOcclusionPreference(enabled:boolean):boolean {
+  decorOcclusionPreference=enabled;decorOcclusionToggle.checked=enabled;
+  renderer?.setDecorOcclusion(enabled);
+  try{localStorage.setItem(DECOR_OCCLUSION_KEY,String(enabled));return true;}catch{return false;}
 }
 const designationSlider=el<HTMLInputElement>('designation-visibility');
 const itemLabelSlider=el<HTMLInputElement>('item-label-visibility');
@@ -699,10 +687,8 @@ const frontMenu = createFrontMenu(frontHost, {
   getTexturesEnabled: () => texturesEnabled,
   getUiFont:()=>uiFont,
   onUiFontChange:setUiFontPreference,
-  getCloudClearRadius:()=>cloudClearRadius,
-  onCloudClearRadiusChange:setCloudClearRadius,
-  getRoomMaskRadius: () => roomMaskRadiusPreference,
-  onRoomMaskRadiusChange: setRoomMaskRadius,
+  getDecorOcclusion:()=>decorOcclusionPreference,
+  onDecorOcclusionChange:setDecorOcclusionPreference,
   getDesignationMinCellPixels:()=>designationIconThreshold,
   getItemLabelMinCellPixels:()=>itemLabelThreshold,
   onItemLabelMinCellPixelsChange:setItemLabelMinCellPixels,
@@ -854,6 +840,7 @@ function applyTool(tool: Tool) {
   zoneEditTarget=undefined;renderer?.setZoneTarget(undefined);allowedAreaEditId=undefined;renderer?.setAllowedAreaTarget(undefined);
   shootingControls.cancel();
   if(tool!=='install'){installationId=undefined;renderer?.setFurniturePlacement(undefined);}
+  if(tool!=='replant-tree'){replantPileId=undefined;renderer?.setTreePlacement(undefined);}
   currentTool = tool;
   syncToolCursor(el('viewport'), tool);
   renderer?.setFloorSelection(isBuildableFloor(tool)?tool:undefined);renderer?.setTool(isBuildableFloor(tool)?'lay-floor':tool);
@@ -863,7 +850,7 @@ function applyTool(tool: Tool) {
     button.classList.toggle('active', active);
     button.setAttribute('aria-pressed', String(active));
   }
-  el('tool-instruction').textContent = constructionUI.update(tool, tool==='allowed-expand'||tool==='allowed-shrink'?'Tracer un rectangle pour modifier la zone autorisée. Échap ou clic droit : quitter.':toolDefinitions.find(item => item.id === tool)?.hint??'Choisissez le nouvel emplacement du meuble. Q/E : rotation. Échap : annuler.');
+  el('tool-instruction').textContent = constructionUI.update(tool, tool==='replant-tree'?'Choisissez un sol fertile, sans toit pour replanter cet arbre. Échap ou clic droit : annuler.':tool==='allowed-expand'||tool==='allowed-shrink'?'Tracer un rectangle pour modifier la zone autorisée. Échap ou clic droit : quitter.':toolDefinitions.find(item => item.id === tool)?.hint??'Choisissez le nouvel emplacement du meuble. Q/E : rotation. Échap : annuler.');
   renderer?.setConstructionMaterial(constructionUI.material(tool));
   el('placement-controls').hidden = !rotatableTools.has(tool);
   el('storage-options').hidden = tool !== 'stockpile';
@@ -875,6 +862,10 @@ function setTool(tool: Tool) {
   setPanel('architect');
   applyTool(tool);
   setPanel(null,true);
+}
+function beginTreePlacement(pileId:number):void {
+  if(!snapshot||!snapshot.piles.some(p=>p.id===pileId&&p.owner.type==='ground'&&isMinifiedTree(p)))return;
+  setPanel('architect');applyTool('replant-tree');replantPileId=pileId;renderer?.setTreePlacement(pileId);setPanel(null,true);
 }
 function selectPawn(id: number) {
   selectPawns({ids:[id],additive:false,toggle:false},true);
@@ -940,6 +931,7 @@ function pickCell(x: number, z: number) {
     void attempt(() => {
       if(isBuildableFloor(tool))return client.command({type:'area',action:'lay-floor',floor:tool,from:{x,z},to:{x,z}});
       if(tool==='remove-floor')return client.command({type:'area',action:'remove-floor',from:{x,z},to:{x,z}});
+      if(tool==='replant-tree'){if(replantPileId===undefined)throw new Error('Sélectionnez un arbre à replanter.');return client.command({type:'replant-tree',pileId:replantPileId,x,z}).then(()=>{applyTool('select');setPanel(null);});}
       if(tool==='install'){if(installationId===undefined)throw new Error('Sélectionnez un meuble à installer.');return client.command({type:'install',structureId:installationId,x,z,orientation:['sun-lamp','standing-lamp','small-sculpture','large-sculpture'].includes(furnitureObject(snapshot!,installationId)?.kind??'')?0:placementOrientation}).then(()=>{applyTool('select');setPanel(null);});}
       if (tool==='home'||tool==='remove-home'||isRoofArea(tool) || tool === 'haul-chunks' || tool === 'growing' || tool === 'remove-growing') return client.command({type:'area',action:tool,from:{x,z},to:{x,z},...(zoneEditTarget===undefined?{}:{targetZoneId:zoneEditTarget})});
       if (tool==='stockpile'||tool==='remove-stockpile')return client.command({type:'area',action:tool,from:{x,z},to:{x,z},...(zoneEditTarget===undefined?{}:{targetZoneId:zoneEditTarget}),...(tool==='stockpile'?readStorageSettings('stockpile'):{})});
@@ -1085,7 +1077,7 @@ function rebuildInspector() {
     }
   } else if (selectedCell) {
     panel.classList.add('cell-inspector-host');
-    panel.innerHTML = `<div class="cell-summary"><div class="cell-card"><div class="panel-heading cell-heading"><span class="cell-illustration ui-icon" aria-hidden="true"></span><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="cell-description"></div><p id="cell-materials"></p><p id="cell-job"></p></div><div class="cell-actions" role="group" aria-label="Commandes de l’objet"><button id="weapon-permission" class="secondary-action" hidden></button><button id="cell-chop" class="secondary-action" hidden>Couper du bois</button><button id="cell-harvest" class="secondary-action" hidden>Récolter</button><button id="cell-cut" class="secondary-action" hidden>Déraciner</button><button id="cell-deconstruct" class="secondary-action" hidden>Déconstruire</button><button id="cell-cancel" class="secondary-action" hidden>Annuler cet ordre</button></div></div><div id="cell-storage" hidden><div id="selected-stockpile-items"></div></div>`;
+    panel.innerHTML = `<div class="cell-summary"><div class="cell-card"><div class="panel-heading cell-heading"><span class="cell-illustration ui-icon" aria-hidden="true"></span><h2 id="cell-title"></h2><button id="inspect-close" aria-label="Fermer l’inspection">×</button></div><div id="cell-description"></div><p id="cell-materials"></p><p id="cell-job"></p></div><div class="cell-actions" role="group" aria-label="Commandes de l’objet"><button id="weapon-permission" class="secondary-action" hidden></button><button id="cell-chop" class="secondary-action" hidden>Couper du bois</button><button id="cell-harvest" class="secondary-action" hidden>Récolter</button><button id="cell-cut" class="secondary-action" hidden>Couper</button><button id="cell-extract" class="secondary-action" hidden>Déraciner</button><button id="cell-replant" class="secondary-action" hidden>Replanter</button><button id="cell-deconstruct" class="secondary-action" hidden>Déconstruire</button><button id="cell-cancel" class="secondary-action" hidden>Annuler cet ordre</button></div></div><div id="cell-storage" hidden><div id="selected-stockpile-items"></div></div>`;
     for(const [id,label] of [['mine','Miner'],['haul-chunks','Transporter']] as const){
       const button=document.createElement('button');button.id=`cell-${id}`;button.className='secondary-action';button.hidden=true;button.textContent=label;panel.querySelector('.cell-actions')!.append(button);
     }
@@ -1388,7 +1380,9 @@ function renderState() {
       const zone=selectedObject.kind==='growing'?world.growingZones.find(z=>z.id===selectedObject!.id):undefined;
       el('cell-title').textContent = packed ? `Meuble emballé · ${buildingLabels[packed.building.kind]}` : pile ? ITEM_DEFINITIONS[pile.item].label : structure ? buildingLabels[structure.kind] : resource ? (floraDefinition(resource)?.label??resourceLabels[resource.kind]) : job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]}` : zone ? 'Zone de culture' : storage ? `Zone de stockage ${stockpileZoneId(storageCell!)}` : 'Massif rocheux';
       let cellDescription = resource ? (isPlant(resource)||resource.kind==='tree') ? plantInspection(world,resource) : `Quantité : ${resource.amount}` : pile ? `Quantité : ${pile.quantity}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:pile.kind==='corpse'?` · ${{fresh:'Fraîche',rotting:'Pourrie (impropre à la boucherie)',desiccated:'Desséchée'}[corpseStage(pile,world.tick)]}`:''}` : structure ? `${structureFootprintLabel(structure)} cases` : job ? queryJobStatus(world,job).reason??'' : zone ? `Culture : ${PLANT_DEFINITIONS[zone.plant].label} · ${zone.cells.length} cases${growingTemperatureInspection(world,selectedCell)}` : storage ? `Taille : ${stockpileZoneCells(world,storageCell!.id).length} cases` : '';
+      if(pile&&isMinifiedTree(pile))cellDescription=`${floraDefinition(pile.innerResource)?.label??'Arbre'} · Croissance : ${Math.round((pile.innerResource.growth??1)*100)} % · À replanter sous ${Math.max(0,Math.ceil((pile.plantPack.expiresAt-world.tick)/6000))} jour(s) · 150 kg`;
       let cellHealth:CellHealth|undefined;
+      if(pile&&isMinifiedTree(pile))cellHealth={current:100-(pile.damage??0),maximum:100,label:'Emballage'};
       const inspectedBuilding=packed?.building??structure;
       if(inspectedBuilding&&inspectedBuilding.kind!=='sleeping-spot'){
         const maximum=structureMaxHp(inspectedBuilding),current=maximum-(inspectedBuilding.damage??0);
@@ -1422,7 +1416,7 @@ function renderState() {
       const plantOrder=(kind:'chop'|'harvest'|'cut')=>{if(resource)void attempt(()=>client.command({type:'designate',kind,x:resource.x,z:resource.z}));};
       const chop=el<HTMLButtonElement>('cell-chop'),harvest=el<HTMLButtonElement>('cell-harvest'),cut=el<HTMLButtonElement>('cell-cut');
       chop.hidden=!resource||!choppable(world,resource);harvest.hidden=!resource||!harvestable(world,resource);cut.hidden=!resource||!isPlant(resource);
-      cut.textContent=resource?.blight?'Couper ce plant malade':resource?.kind==='tree'?'Déraciner':'Couper les plantes';
+      cut.textContent=resource?.blight?'Couper ce plant malade':resource?.kind==='tree'?'Couper':'Couper les plantes';
       let cutBlight=el('inspector').querySelector<HTMLButtonElement>('#cell-cut-blighted');
       if(!cutBlight){cutBlight=document.createElement('button');cutBlight.id='cell-cut-blighted';cutBlight.className='secondary-action';cutBlight.textContent='Couper tous les plants malades';cut.after(cutBlight);}
       cutBlight.hidden=!resource?.blight;
@@ -1458,7 +1452,7 @@ function renderState() {
       const illustration=structure?.kind??packed?.building.kind??(pile&&!['corpse','mech-corpse'].includes(pile.kind)?`item-${pile.item}`:undefined)
         ??(resource?`resource-${resource.species??resource.kind}`:undefined)
         ??(selectedObject.kind==='rock'?`mountain-${tile?.ore??tile?.stone??'granite'}`:undefined)
-        ??(zone?'growing':storage?'stockpile':job&&Object.hasOwn(STRUCTURE_DEFINITIONS,job.kind)?job.kind:undefined);
+        ??(zone?'growing':storage?'stockpile':job?.tree?job.kind:job&&Object.hasOwn(STRUCTURE_DEFINITIONS,job.kind)?job.kind:undefined);
       presentCellDescription(el('inspector'), cellDescription, inspectionIcon, cellHealth,illustration);
       if(structure?.fuel)updateFireControls(el('inspector'),structure);
       updateMiniTurretControls(el('inspector'),world,structure,c=>void attempt(async()=>{await client.command(c);renderState();}));
@@ -1469,11 +1463,15 @@ function renderState() {
       const cancelTarget=job&&(world.jobs.find(item=>footprintCells(item).some(cell=>cell.x===x&&cell.z===z))??furnitureIntentAt(world,selectedCell));
       el('cell-cancel').hidden=!job||job.kind==='repair'||job.kind==='fix-breakdown'||cancelTarget?.id!==job.id||selectedObject.kind!=='job'&&job.furniture?.structureId!==selectedObject.id;
       const offered=mapObjectActions(world,selectedObject);
-      for(const id of ['mine','haul-chunks','chop','harvest','cut','deconstruct','cancel'] as const){
+      for(const id of ['mine','haul-chunks','chop','harvest','cut','extract','replant','deconstruct','cancel'] as const){
         const button=el<HTMLButtonElement>(`cell-${id}`),action=offered.find(a=>a.id===id);button.hidden=!action;
-        if(action){button.textContent=action.label;button.onclick=()=>void attempt(async()=>{
+        if(action){
+          if(id==='extract'||id==='replant'){
+            if(button.dataset.actionLabel!==action.label){const icon=document.createElement('span');icon.className='ui-icon';icon.setAttribute('aria-hidden','true');icon.style.backgroundImage=`url('${pictogramDataUrl(id)}')`;icon.style.backgroundSize='contain';icon.style.backgroundPosition='center';icon.style.backgroundRepeat='no-repeat';const label=document.createElement('span');label.textContent=action.label;button.replaceChildren(icon,label);button.dataset.actionLabel=action.label;}
+          }else button.textContent=action.label;
+          button.onclick=()=>void attempt(async()=>{
           if(!snapshot||!selectedObject)return;
-          const current=mapObjectActions(snapshot,selectedObject).find(a=>a.id===id);if(current)await client.command(current.command);
+          const current=mapObjectActions(snapshot,selectedObject).find(a=>a.id===id);if(current?.command)await client.command(current.command);else if(current?.placementPileId!==undefined)beginTreePlacement(current.placementPileId);
           renderState();
         });}
       }
@@ -1652,8 +1650,7 @@ textureToggle.onchange = () => { if (!setTexturesEnabled(textureToggle.checked))
 designationSlider.oninput=()=>{if(!setDesignationMinCellPixels(Number(designationSlider.value)))notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.',true);};
 itemLabelSlider.oninput=()=>{if(!setItemLabelMinCellPixels(Number(itemLabelSlider.value)))notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.',true);};
 fontSelect.onchange=()=>setUiFontPreference(fontSelect.value as UiFontId);
-cloudRadiusSlider.oninput=()=>{if(!setCloudClearRadius(Number(cloudRadiusSlider.value)/100))notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.',true);};
-roomMaskSlider.oninput = () => { if (!setRoomMaskRadius(Number(roomMaskSlider.value) / 100)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
+decorOcclusionToggle.onchange=()=>{if(!setDecorOcclusionPreference(decorOcclusionToggle.checked))notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.',true);};
 groundGrassToggle.onchange = () => { if (!setGroundGrassEnabled(groundGrassToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
 dioramaToggle.onchange = () => { if (!setDioramaEnabled(dioramaToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
 roomToggle.onchange = () => { if (!setRoomEnabled(roomToggle.checked)) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true); };
@@ -1777,6 +1774,11 @@ function receiveMainSnapshot(world: World, cost: number, speed: number, replaced
     const replacement=old?stockpileCellsByZoneId(world,stockpileZoneId(old))[0]:undefined;
     if(replacement){selectedObject={kind:'stockpile',id:replacement.id};selectedObjects=[selectedObject];selectedCell={x:replacement.x,z:replacement.z};renderer?.setSelectedObject(selectedObject);zoneAnchorChanged=true;}
   }
+  if(!replaced&&selectedObject?.kind==='resource'&&!world.resources.some(r=>r.id===selectedObject!.id)){
+    const tree=world.piles.find(p=>p.owner.type==='ground'&&isMinifiedTree(p)&&p.innerResource.id===selectedObject!.id);
+    if(tree&&tree.owner.type==='ground'){selectedObject={kind:'pile',id:tree.id};selectedObjects=[selectedObject];selectedCell={x:tree.owner.x,z:tree.owner.z};renderer?.setSelectedObject(selectedObject);zoneAnchorChanged=true;}
+  }
+  if(currentTool==='replant-tree'&&replantPileId!==undefined&&!world.piles.some(p=>p.id===replantPileId&&p.owner.type==='ground'&&isMinifiedTree(p)))applyTool('select');
   snapshot=world;stepMs=cost;currentSpeed=speed;latestMotion=motion;session.hasWorld=true;frontMenu.setHasGame(true);
   let objectGroupChanged=false;
   if(!replaced&&selectedObjects.length>1){
@@ -1860,7 +1862,7 @@ async function prepareWorldView(): Promise<void> {
     renderer = await MainColonyRenderer.create(el('viewport'), pickCell, groundGrassEnabled);
     renderer.setDioramaEnabled(dioramaEnabled);
     renderer.setRoomEnabled(roomEnabled);
-    renderer.setRoomMaskRadius(roomMaskRadiusPreference);
+    renderer.setDecorOcclusion(decorOcclusionPreference);
     renderer.setLightingSettings(lightingSettings);
     renderer.setShadowSettings(shadowSettings);
     renderer.setAnimationSettings(animationSettings);
@@ -1869,7 +1871,6 @@ async function prepareWorldView(): Promise<void> {
     renderer.setTexturesEnabled(texturesEnabled);
     renderer.setDesignationMinCellPixels(designationIconThreshold);
     renderer.setItemLabelMinCellPixels(itemLabelThreshold);
-    renderer.setCloudClearRadius(cloudClearRadius);
     renderer.onAudioFrame = view => {
       lastAudioCamera=view.camera;
       audio.updateCamera(view.camera);

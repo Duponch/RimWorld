@@ -25,6 +25,7 @@ export function buildJobMarkers(world: World, group: THREE.Group, cutaway: boole
           if(job.kind==='remove-floor')for(const ry of [-Math.PI/4,Math.PI/4])frames.push({targetId:job.id,x:cell.x,z:cell.z,y:.13,sx:.8,sy:.025,sz:.05,ry,color:0xd77855});}
         continue;
       }
+      // Tree intentions use their actual-source billboard, never a building cube.
       if(isIconDesignationKind(job.kind)||job.kind === 'sow')continue;
       if(job.kind==='deconstruct'||job.kind==='uninstall') {
         const targetKind=(job.deconstruction??job.furniture)!.kind;

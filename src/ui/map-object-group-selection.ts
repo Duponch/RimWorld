@@ -1,7 +1,7 @@
 import { apparelFamily, isApparelItem } from '../sim/apparel-rules';
 import { footprintCells, STRUCTURE_DEFINITIONS } from '../sim/definitions';
 import type { Cell, Job, MaterialPile, Resource, World } from '../sim/types';
-import { mapObjectCells, sameMapObject, type MapObjectSelection } from './map-object-selection';
+import { mapObjectCells, mapResourceSelectable, sameMapObject, type MapObjectSelection } from './map-object-selection';
 
 /** Installed Core 1.6 Selector.MaxNumSelected, not a world-distance radius. */
 export const MAX_MAP_OBJECT_SELECTION = 200;
@@ -40,7 +40,7 @@ function targetIdentity(world:World,target:MapObjectSelection):Identity|undefine
     case 'structure': {const object=world.structures.find(s=>s.id===target.id);return object?playerDefinition(`building:${object.kind}`):undefined;}
     case 'packed': {const object=world.packed.find(p=>p.building.id===target.id&&p.owner.type==='ground');return object?playerDefinition(`building:${object.building.kind}`):undefined;}
     case 'pile': {const object=world.piles.find(p=>p.id===target.id&&p.owner.type==='ground');return object?pileIdentity(object):undefined;}
-    case 'resource': {const object=world.resources.find(r=>r.id===target.id);return object?resourceIdentity(object):undefined;}
+    case 'resource': {const object=world.resources.find(r=>r.id===target.id);return object&&mapResourceSelectable(object)?resourceIdentity(object):undefined;}
     case 'rock': {const tile=world.tiles[target.id];return tile?.terrain==='rock'?naturalDefinition(`mineable:${tile.ore??tile.stone??'legacy'}`):undefined;}
     case 'job': {const object=world.jobs.find(j=>j.id===target.id);return object?jobIdentity(object):undefined;}
     // Zones keep their own editing and selection pipeline.
@@ -71,7 +71,7 @@ export function matchingMapObjects(world:World,target:MapObjectSelection,visible
       for(const object of world.piles)if(object.owner.type==='ground')add({kind:'pile',id:object.id},pileIdentity(object),[cellOf(object.owner)]);
       break;
     case 'resource':
-      for(const object of world.resources)add({kind:'resource',id:object.id},resourceIdentity(object),[cellOf(object)]);
+      for(const object of world.resources)if(mapResourceSelectable(object))add({kind:'resource',id:object.id},resourceIdentity(object),[cellOf(object)]);
       break;
     case 'rock':
       for(let id=0;id<world.tiles.length;id++) {
@@ -116,7 +116,7 @@ export function mapObjectGroupCells(world:World,selections:readonly MapObjectSel
   const jobs=indexes.get('job');
   if(jobs)for(const object of world.jobs)if(jobs.has(object.id))jobs.set(object.id,footprintCells(object));
   const resources=indexes.get('resource');
-  if(resources)for(const object of world.resources)if(resources.has(object.id))resources.set(object.id,[cellOf(object)]);
+  if(resources)for(const object of world.resources)if(resources.has(object.id)&&mapResourceSelectable(object))resources.set(object.id,[cellOf(object)]);
   const piles=indexes.get('pile');
   if(piles)for(const object of world.piles)if(piles.has(object.id)&&object.owner.type==='ground')piles.set(object.id,[cellOf(object.owner)]);
   const packed=indexes.get('packed');

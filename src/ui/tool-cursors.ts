@@ -1,3 +1,4 @@
+import { pictogramDataUrl } from './pictograms';
 import type { Tool } from './layout';
 import { ARCHITECT_ICON_ATLASES, ARCHITECT_ICON_MAPPING, ARCHITECT_ICON_ORDER } from './architect-icons';
 
@@ -19,6 +20,7 @@ export type ToolCursorKind = 'pointer' | Exclude<Tool, 'select'>;
 // Installation uses the pictured furniture; sculptures share the sculpture bench icon.
 const TOOL_ICON_ALIASES: Partial<Record<Tool, string>> = {
   'allowed-expand':'home', 'allowed-shrink':'remove-home',
+  'extract-tree':'extract','replant-tree':'growing',
   install: 'uninstall', 'small-sculpture': 'art-bench', 'large-sculpture': 'art-bench',
 };
 export function toolCursorIcon(tool: Tool): string { return TOOL_ICON_ALIASES[tool] ?? tool; }
@@ -153,7 +155,7 @@ async function installMapToolCursors(root: HTMLElement, atlasUrl: string, artwor
   await Promise.all(tools.filter(tool => tool !== 'select').map(async tool => {
     const icon = toolCursorIcon(tool);
     const installed = root.querySelector<HTMLElement>(`[data-tool="${icon}"] .tool-icon`);
-    const svg = installed&&(installed.style.backgroundSize==='contain'||/data:image\/svg\+xml/.test(installed.style.backgroundImage))
+    const svg = icon==='extract'?pictogramDataUrl('extract'):installed&&(installed.style.backgroundSize==='contain'||/data:image\/svg\+xml/.test(installed.style.backgroundImage))
       ?installed.style.backgroundImage.match(/^url\(["']?([^"')]+)["']?\)$/)?.[1]:undefined;
     const cell = ARCHITECT_ICON_MAPPING[icon];
     if (!svg && !cell) return;

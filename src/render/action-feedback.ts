@@ -1,3 +1,5 @@
+import { extractTreeDefinition } from '../sim/tree-transfer-rules';
+import { isMinifiedTree } from '../sim/tree-transfer-state';
 import { WOODEN_PARTS } from '../sim/artificial-parts';
 import { readProjectProgress, researchCost } from '../sim/research';
 import { ANIMAL_FEED_TICKS } from '../sim/animal-feeding-rules';
@@ -83,6 +85,16 @@ export function actionProgress(world:World,pawn:Pawn,lookup?:ActionLookup):Actio
         if(lookup&&!lookup.resources)lookup.resources=new Map(world.resources.map(resource=>[resource.id,resource]));
         const resource=lookup?.resources?.get(job.clearance.resourceId)??world.resources.find(r=>r.id===job.clearance!.resourceId);
         if(resource)return measured('clearing',workProgress(job.clearance),clearingDuration(resource));}
+      if(job.tree?.kind==='extract') {
+        const resource=lookup?.resources?.get(job.tree.resourceId)??world.resources.find(r=>r.id===job.tree!.resourceId);
+        const definition=resource&&extractTreeDefinition(resource);
+        return definition?measured('job',workProgress(job),definition.workCore):undefined;
+      }
+      if(job.tree?.kind==='replant') {
+        const task=job.tree,pile=world.piles.find(p=>p.id===task.sourcePileId);
+        if(task.phase!=='prepare'||task.durationCore===undefined||!pile||!isMinifiedTree(pile)||pile.innerResource.id!==task.resourceId||pile.owner.type!=='pawn'||pile.owner.pawnId!==pawn.id||task.carryPileId!==pile.id)return undefined;
+        return measured('job',task.workCore,task.durationCore);
+      }
       return measured('job',workProgress(job),jobDuration(world,job,lookup?.resourceCells ? lookup.resourceCells.get(job.z*world.width+job.x)??null : undefined));
     }
   }

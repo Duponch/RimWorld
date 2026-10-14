@@ -1,3 +1,4 @@
+import {validPausedTreeLife,hasPausedTreeClock} from './tree-transfer-clock.ts';
 import { isPlant } from './plants.ts';
 import { PLANT_LIFE_INTERVAL } from './plant-life.ts';
 import type { Resource,World } from './types.ts';
@@ -5,7 +6,7 @@ import type { Resource,World } from './types.ts';
 const record=(v:unknown):v is Record<string,unknown>=>typeof v==='object'&&v!==null&&!Array.isArray(v);
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 
-export function validPlantLife(plant:Partial<Resource>,version:number,world:Pick<World,'tick'|'climate'>):boolean {
+export function validOrdinaryPlantLife(plant:Partial<Resource>,version:number,world:Pick<World,'tick'|'climate'>):boolean {
   if(plant.kind==='healroot'&&version<182)return false;
   if(plant.species==='healroot-wild'&&version<167)return false;
   const life:unknown=plant.plantLife;
@@ -17,3 +18,5 @@ export function validPlantLife(plant:Partial<Resource>,version:number,world:Pick
   if(life.bornAt!==undefined&&life.bornAt!==life.since)return false;
   return life.leaflessAt===undefined||(plant.kind==='berries'||plant.kind==='healroot'||plant.species!==undefined)&&integer(life.leaflessAt,life.since,world.tick)&&life.leaflessAt%PLANT_LIFE_INTERVAL===(plant.id!+1)%PLANT_LIFE_INTERVAL;
 }
+
+export function validPlantLife(plant:Partial<Resource>,version:number,world:Pick<World,'tick'|'climate'>):boolean {return hasPausedTreeClock(plant)?validPausedTreeLife(plant,version,world):validOrdinaryPlantLife(plant,version,world);}

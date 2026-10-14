@@ -1,3 +1,4 @@
+import {treeCargoCenterY} from './tree-presentation';
 import type { MaterialPile, World } from '../sim/types';
 import { pileSurfaces,pileIdentitySurfaces,type PileSurface } from './pile-surfaces';
 import {storageCellById} from '../sim/shelf-storage';
@@ -15,7 +16,7 @@ function groundAnchor(world:World,pile:MaterialPile,surfaces:ReadonlyMap<number,
   const cell=owner.type==='ground'?owner:owner.type==='job'?world.jobs.find(job=>job.id===owner.jobId):undefined;
   if(!cell)return;
   const surface=owner.type==='ground'?identities.get(pile.id)??surfaces.get(cell.z*world.width+cell.x):undefined;
-  return {x:cell.x+(surface?.x??(owner.type==='job'?(pile.kind==='wood'?-.12:.2):0)),y:(surface?.y??0)+.15,
+  return {x:cell.x+(surface?.x??(owner.type==='job'?(pile.kind==='wood'?-.12:.2):0)),y:(surface?.y??0)+(pile.item==='minified-tree'?treeCargoCenterY(pile.innerResource)*(surface?.scale??1):.15),
     z:cell.z+(surface?.z??(owner.type==='job'?.16:0)),yaw:0};
 }
 
@@ -93,7 +94,7 @@ export class CargoHandoffs {
         const {surfaces,identities}=groundNow(),to=groundAnchor(world,target,surfaces,identities);
         if(!to){this.active.delete(id);continue;}
         const surface=target.owner.type==='ground'?identities.get(target.id)??surfaces.get(target.owner.z*world.width+target.owner.x):undefined;
-        item.to=to;item.groundScale=(surface?.scale??1)*.8;
+        item.to=to;item.groundScale=(surface?.scale??1)*(target.item==='minified-tree'?1:.8);
       }
     }
     const transfers=[...new Set([...oldCarried.keys(),...nowCarried.keys()])].filter(id=>{
@@ -123,7 +124,7 @@ export class CargoHandoffs {
       claimed.set(target.id,(claimed.get(target.id)??0)+amount);
       const surface=target.owner.type==='ground'?currentIdentities.get(target.id)??currentSurfaces.get(target.owner.z*world.width+target.owner.x):undefined;
       this.active.set(pawnId,{pawnId,pile:{...pile,quantity:amount},direction:'drop',start:tick,end:tick+CARGO_HANDOFF_TICKS,from,to,
-        groundScale:(surface?.scale??1)*.8,targetPileId:target.id,partial:!!retained});
+        groundScale:(surface?.scale??1)*(pile.item==='minified-tree'?1:.8),targetPileId:target.id,partial:!!retained});
     }
     for(const [pawnId,pile] of nowCarried){
       if(oldCarried.has(pawnId)||this.active.has(pawnId))continue;
@@ -138,7 +139,7 @@ export class CargoHandoffs {
       if(!from)continue;
       const surface=source?.owner.type==='ground'?previousIdentities.get(source.id)??previousSurfaces.get(source.owner.z*previous.width+source.owner.x):undefined;
       this.active.set(pawnId,{pawnId,pile,direction:'pickup',start:tick,end:tick+CARGO_HANDOFF_TICKS,from,
-        to:{x:0,y:0,z:0,yaw:0},groundScale:(surface?.scale??1)*.8});
+        to:{x:0,y:0,z:0,yaw:0},groundScale:(surface?.scale??1)*(pile.item==='minified-tree'?1:.8)});
     }
   }
 }

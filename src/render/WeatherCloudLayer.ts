@@ -1,5 +1,6 @@
 import * as THREE from 'three/webgpu';
-import { Fn, If, attribute, materialColor, positionLocal, smoothstep as shaderSmoothstep, texture, uniform, viewportSize, viewportUV } from 'three/tsl';
+import { Fn, If, attribute, materialColor, positionLocal, texture, uniform, varying } from 'three/tsl';
+import { DecorOcclusion } from './decor-occlusion';
 import type { AnimationDetail,AnimationSampleHandle } from './AnimationDetail';
 import type { WeatherState } from '../sim/weather';
 import { visualCloudAppearance } from './visual-weather';
@@ -229,7 +230,7 @@ export class WeatherCloudLayer {
     color: 0xffffff, vertexColors: true, transparent: true, opacity: 1, depthWrite: false, alphaTest: .001, fog: false,
   });
   private readonly opacityUniform = uniform(0);
-  private readonly clearRadius = uniform(CLOUD_CLEAR_RADIUS);
+
   private readonly paintMap=createCloudPaint();
   private readonly paintEnabled=uniform(true);
   private readonly variantData = new THREE.InstancedInterleavedBuffer(new Float32Array(CLOUD_COUNT * 12), 12);
@@ -257,7 +258,7 @@ export class WeatherCloudLayer {
 
   private readonly animationHandles:AnimationSampleHandle[]=[];
   private readonly seededPositions=new Float64Array(CLOUD_COUNT*5);
-  constructor(private readonly detail?:AnimationDetail) {
+  constructor(private readonly detail?:AnimationDetail,private readonly decorOcclusion=new DecorOcclusion()) {
     this.mesh = new THREE.InstancedMesh(this.geometry, this.material, CLOUD_COUNT);
     // Alias the existing CPU matrices, without copying them. Three's internal
     // instancing uniform cannot be accessed from positionNode; these three
@@ -270,26 +271,20 @@ export class WeatherCloudLayer {
     this.geometry.setAttribute('aCloudProfile', this.profile);
     this.geometry.setAttribute('aCloudAssembly', this.assembly);
     this.geometry.setAttribute('aCloudOffset', this.shapeOffset);
+    // This affine UV sum commutes with perspective-correct interpolation.
+    // Transport one vec2 instead of the separate paint UV and vec4 profile;
+    // all seeded paint offsets and the vertex deformation remain unchanged.
+    const paintCoords=varying(attribute('aCloudPaintUv','vec2')
+      .add(attribute('aCloudProfile','vec4').xz.mul(.27)),'v_cloudPaintCoords');
     this.material.colorNode=Fn(()=>{
       const pigment=materialColor.toVar();
       If(this.paintEnabled,()=>{
-        const coords=attribute('aCloudPaintUv','vec2').add(attribute('aCloudProfile','vec4').xz.mul(.27));
-        pigment.mulAssign(texture(this.paintMap,coords).rgb);
+        pigment.mulAssign(texture(this.paintMap,paintCoords).rgb);
       });
       return pigment;
     })();
-    // Fragment position, not the instance centre, cuts even a large cloud out
-    // of the screen centre. Pixel units make the circular hole aspect-correct.
-    this.material.opacityNode = Fn(() => {
-      // Materialize the vec2 before reading its components: a chained .zw.x
-      // swizzle fails in the native Tint compiler on the supported browser.
-      const size = viewportSize.toConst();
-      const pixelsFromCentre = viewportUV.sub(.5).mul(size);
-      const distance = pixelsFromCentre.length().div(size.x.min(size.y));
-      const clearCentre = this.clearRadius.greaterThan(0).select(
-        shaderSmoothstep(this.clearRadius, this.clearRadius.add(CLOUD_CLEAR_SOFT_EDGE), distance), 1);
-      return this.opacityUniform.mul(attribute('aCloudFade')).mul(clearCentre);
-    })();
+    this.material.opacityNode = Fn(() => this.opacityUniform.mul(attribute('aCloudFade')))();
+    this.material.maskNode = this.decorOcclusion.visibleNode;
     this.material.positionNode = Fn(() => {
       const lobe = attribute('aCloudLobe', 'vec4').toConst();
       const profile = attribute('aCloudProfile', 'vec4').toConst();
@@ -359,6 +354,7 @@ export class WeatherCloudLayer {
   /** The cloud centres stay inside the map's horizontal bounds. They shrink
    * and fade at its edges before wrapping to the opposite side. */
   configureMap(width: number, height: number): void {
+    this.decorOcclusion.configure(width,height);
     this.centerX = (width - 1) / 2;
     this.centerZ = (height - 1) / 2;
     this.radiusX = width / 2;
@@ -416,18 +412,14 @@ export class WeatherCloudLayer {
     this.lastDirectionZ = z;
   }
 
-  present({ seed, tick, weather, camera, target, strength, directionX, directionZ, daylight = 1 }: CloudPresentation): void {
+  present({ seed, tick, weather, camera, strength, directionX, directionZ, daylight = 1 }: CloudPresentation): void {
     this.advance(seed, tick, strength, directionX, directionZ);
     this.configureShapes(seed);
-    const angleOpacity = cloudViewOpacity(camera, target);
+    this.decorOcclusion.present(camera);
     const appearance = visualCloudAppearance(weather);
     const daylightFraction = THREE.MathUtils.clamp(daylight, 0, 1);
-    // Low and moderately low views keep each established lobe fully solid.
-    // Night changes its pigment, while angle, the screen opening, spawn and
-    // map edges supply the intentional transparency.
-    const opacity = angleOpacity;
-    this.opacityUniform.value = opacity;
-    if (opacity < .002) { this.mesh.visible = false; this.lastPoseSeed = undefined; return; }
+    // Weather and recycling fades remain physical; no whole-cloud camera fade.
+    this.opacityUniform.value = 1;
     this.mesh.visible = true;
     this.material.color.setHex(appearance.color).lerp(this.nightColor, (1 - daylightFraction) * .78);
 
@@ -494,7 +486,7 @@ export class WeatherCloudLayer {
   }
 
   setTexturesEnabled(enabled:boolean):void {this.paintEnabled.value=enabled;}
-  setClearRadius(radius:number):void {this.clearRadius.value=cloudMaskRadius(radius);}
+
 
   dispose(): void {
     this.mesh.removeFromParent();

@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V349–V350, schéma 235 : [arbres et annulations](gameplay/tree-transfer-v349.md), [masquage selon caméra](development/decor-occlusion-v350.md).** Qualification ciblée acquise par reprises, Pages/typage15,176s, corpus63/66final63,431s ; arbre/annulation et douze vues de décor ChromeWebGPU, onze recharges exactes, gel2917exact. Rouges et limites conservés dans les notes, aucune sauvegarde humaine/campagne entière/FPS/parité exhaustive certifiés. Commit/push/publication groupée avecV348 en préparation ; autonomie ACTIVE vers les derniers blocages de végétation et sorties lourdes, puis campagne/réserves. Les états suivants sont historiques.
+
 **V347 : [ration depuis la réserve intérieure](gameplay/colony-reserve-use-v347.md), schéma 234.** Source intérieure/cargo/ingestion réelle acquis sur même branche naturelle, cinq recharges exactes et backendWebGPU relevé ici ; aucune qualification rétroactive de V346. Provenance antérieure et limites conservées dans note unique. QA-only, documentation/commit PENDING, produit V346 stable et autonomie ACTIVE vers réserves médicales/campagne naturelle. Les états suivants sont historiques.
 
 **V346 livré**, schéma 234 : [consommation directe](gameplay/consuming-v346.md), produit `f9f65b54`, publication unique `5afc7ff6` et104réponsesHTTPS exactes. [Preuves](development/cloudflare-pages.md#publication-v346--consommation-directe). Suite autonome ACTIVE : ration intérieure sur copie naturelle distincte58111, V347 seulement préparé. Les états suivants sont historiques.

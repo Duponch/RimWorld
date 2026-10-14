@@ -35,6 +35,7 @@ export const STORAGE_FILTER_TREE:readonly StorageFilterNode[]=[
     branch('stone-blocks','Blocs de pierre',kind('blocks')),
     ...leaves((_id,k)=>['steel','gold','plasteel','silver','wood'].includes(k)),
   ]),
+  branch('plants','Plantes déracinées',kind('plant')),
   branch('objects','Objets',[branch('unfinished','Inachevé',kind('unfinished'))]),
   branch('weapons','Armes',[
     branch('ranged','Armes à distance',leaves((id,k)=>k==='weapon'&&id!=='plasteel-knife')),
