@@ -1,5 +1,7 @@
 # Elsewhere sur Cloudflare Pages
 
+**Publication courante V357 : `965abf99`, 14 octobre 2026, schéma 236.** Produit `5cd5ffce` commité/poussé : [première recherche guidée](../gameplay/research-guidance-v357.md). Une publication,106réponsesHTTPS exactes sur [l’adresse stable](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://965abf99.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v357--première-recherche-guidée). Les publications suivantes sont historiques.
+
 **Publication courante V353 : `f6ced911`,14octobre2026, schéma 236.** Produit `8dc7bf70` commité/poussé ; [expiration d’arbre sous saturation](../gameplay/tree-expiry-v353.md), une publication et106réponsesHTTPS exactes sur [l’adresse stable](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://f6ced911.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v353--arbre-expiré-et-sortie-saturée). Les publications suivantes sont historiques.
 
 **Publication courante V352 : `fbf78d3a`,14octobre2026, schéma 235.** Produit `f0c9b83c` commité/poussé ; [coupe productive et attente](../gameplay/cut-yield-v352.md), une publication et106réponsesHTTPS exactes sur [l'adresse stable](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://fbf78d3a.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v352--coupe-productive-et-attente). Les publications suivantes sont historiques.
@@ -464,3 +466,15 @@ Rapports privés : tmp/elsewhere-pages/v353-package-duxIFv/report.json et tmp/el
 
 Suite autonome ACTIVE : un médicament réel vers la réserve intérieure depuis V34758168, puis campagne durable ; les branches blessées restent distinctes. Aucun nouveau résultat naturel ou FPS annoncé.
 
+
+## Publication V357 — première recherche guidée
+
+14 octobre 2026, schéma236 conservé. Produit `5cd5ffce5d1a6f124dfca17606959c69421c9c60` commité/poussé : [conseil facultatif, alerte et attentes expliquées](../gameplay/research-guidance-v357.md). Publication unique [965abf99](https://965abf99.elsewhere-cq7.pages.dev/), également servie sur [l’adresse stable](https://elsewhere-cq7.pages.dev/). Les QA V354–V356 ne déclenchent aucune publication supplémentaire.
+
+Typage19,215s, groupe86cas/6fichiers29,104s et Chrome/WebGPU27,756s/body22,792s acquis sur sources/pilotes figés ; deux recharges3000/3024 exactes et deux captures inspectées ROOT. La scène32² fournit un bureau et un colon capable puis utilise les gestes UI ordinaires : aucun projet achevé, construction payée ou progrès de campagne V356 crédités.
+
+Build Pages2,499s, package1,775s : **517fichiers/119566517octets**,63références/66chemins publics exacts, laboratoire et instrumentation privés absents. JS `/assets/index-BOJ_j1Ig.js`, SHA256 `cfda4c09eb437f2dcad896496514bb83bb8ba5c8bbea12a371158d6232be96da`. Worker `/assets/simulation.worker-FnucXed3.js`, SHA256 `13ec3c20b9bcfa0d7ad16969e86b03f38593da86096b8c332f41446f31b1ddba`, identique au produitV353. CSS et assets visuels conservés ; aucun moteur, bridge, rendu ou schéma changé.
+
+Wrangler4.149.0, syntaxe locale vérifiée et documentation officielle consultée : déploiement14,629s,2fichiers téléversés/513réemployés. Son avertissement dirty vient seulement de references_UI humain non suivi, absent du package ; les modifications produit sont commités. Contrôle post-publication7,939s : **106réponses HTTPS200 exactes avec MIME attendu** sur les deux origines, distribution/publics inchangés. Rapports privés : `tmp/elsewhere-pages/v357-package-ID8WFS/report.json` et `tmp/elsewhere-pages/v357-http-MCDoI3/report.json` ; gel2935exact avant/après. Ces réponses établissent la disponibilité du package, pas un parcours navigateur public, une réparation de sauvegarde humaine, une campagne entière ou240FPS.
+
+La branche distante codex/ui-papier-v317 garde `a7a6b4654158312178ecd1a6dfed02940b81219b`. Sessions/références humaines intactes ; Vite5412 reste disponible pour le prochain contrôle. Suite autonome : besoins et repas naturels depuis la vraie campagne V35666037, puis renouvellement/incidents, sans résultat futur promis.

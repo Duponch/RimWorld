@@ -1,5 +1,7 @@
 # Préparer une version early access
 
+**V357 livré**, schéma236 : [recherche guidée](research-guidance-v357.md), produit5cd5ffce/pub965abf99 et106réponsesHTTPS exactes. V356QAffc19efd poussé, journée jusqu’à66037 par reprises ; aucun repas complet nouveau crédité. Suite autonome ACTIVE : réveils et alimentation naturelle depuis cet export, réserves/renouvellement/incidents ensuite. Les critères généraux restent ouverts. Les états suivants sont historiques.
+
 **V357 qualifié**, schéma236 conservé : [première recherche guidée](research-guidance-v357.md), conseils facultatifs et diagnostics de progression, sans recherche achevée ou campagne nouvelle créditées. V356ffc19efd poussé, campagne66037 conservée. Livraison V357 en cours, suite autonome ACTIVE vers besoins et incidents naturels. Les critères généraux restent ouverts. Les états suivants sont historiques.
 
 **V356 acquis par reprise**, schéma 236 conservé : [coin repas et journée naturelle](dining-day-v356.md), table/tabouret réellement payés, cinq recharges exactes cumulées jusqu’à66037. Premier natif rouge de perte d’accès navigateur conservé ; continuation WebGPU PASS66,788s, aucun repas complet supplémentaire crédité. ProduitV353/f6ced911 inchangé. Suite autonome ACTIVE : première recherche guidée et attentes expliquées ; campagne durable, incidents, reprises et fluidité restent à qualifier. Les états suivants sont historiques.
