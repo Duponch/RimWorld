@@ -1,5 +1,7 @@
 # Préparer une version early access
 
+**V356 acquis par reprise**, schéma 236 conservé : [coin repas et journée naturelle](dining-day-v356.md), table/tabouret réellement payés, cinq recharges exactes cumulées jusqu’à66037. Premier natif rouge de perte d’accès navigateur conservé ; continuation WebGPU PASS66,788s, aucun repas complet supplémentaire crédité. ProduitV353/f6ced911 inchangé. Suite autonome ACTIVE : première recherche guidée et attentes expliquées ; campagne durable, incidents, reprises et fluidité restent à qualifier. Les états suivants sont historiques.
+
 Objectif humain du 13 octobre 2026 : une version prête à être essayée par des joueurs, avec progression autonome entre lots validés, commits/push et publications regroupées. Le statut actuel reste un jeu en développement ; un compteur de contenu RimWorld ne définit pas sa préparation.
 
 ## Critères de sortie
@@ -40,5 +42,7 @@ Priorité humaine14octobre : les lots [construction V348](construction-clearance
 15. [V354 : une dose médicale intérieure](medicine-reserve-v354.md), schéma236 conservé. Copie naturelle V34758168, Iris démobilisée par geste réel, source18975→cargo19676→dépôt123114, cinq recharges exactes et26doses globales conservées. La réserve contient1dose, les25autres restent dehors ; QA-only, prêt au commit/push. Suite autonome : seconde cellule intérieure, transferts restants puis fin de journée naturelle, sans soinV344 ou résultat futur crédité.
 
 16. [V355 : réserve26 et aube suivante](medicine-day-v355.md), schéma236 conservé. Trois transports/fusions réels et quatre recharges exactes jusqu’à60031 ;26médicaments intérieurs, deux ingestions ordinaires observées et nouvelle cuisson en cours. QA-only commité/poussé enb0b09701 ; V3547a0be77f poussé. Suite autonome : une journée plus longue, coin repas et préparation aux incidents selon les constats ; aucune autonomie alimentaire, guérisonV344 ou campagne entière créditée.
+
+17. [V356 : coin repas et journée naturelle](dining-day-v356.md), schéma236 conservé. Meubles payés et journée60031→66037 acquis par reprises, cinq recharges exactes ; premier rouge navigateur et traces de repas non qualifiées conservés. Les besoins affamés encore endormis restent naturels et la suite n'est pas promise. Prochaine amélioration produit : expliquer la première recherche depuis les panneaux existants, puis poursuivre la campagne avec ses identités et incidents.
 
 La recherche et les validations peuvent préciser cet ordre. Les sous-métiers restent reportés ; la refonte papier demeure sur sa branche séparée. La relance de cette conversation est active à la demande humaine ; elle respecte toute nouvelle instruction d’arrêt ou de pause.

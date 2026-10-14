@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V356 acquis par reprise**, schéma 236 conservé : [coin repas et journée naturelle](gameplay/dining-day-v356.md), table/tabouret réellement payés, cinq recharges exactes cumulées jusqu’à66037. Premier natif rouge de perte d’accès navigateur conservé ; continuation WebGPU PASS66,788s, aucun repas complet supplémentaire crédité. ProduitV353/f6ced911 inchangé. Suite autonome ACTIVE : première recherche guidée et attentes expliquées ; campagne durable, incidents, reprises et fluidité restent à qualifier. Les états suivants sont historiques.
+
 **V354–V355 livrés**, schéma 236 conservé : QA `7a0be77f`/`b0b09701`, [réserve26 et aube suivante](gameplay/medicine-day-v355.md), neuf recharges natives exactes cumulées. ProduitV353/f6ced911 reste publié, aucun déploiement inchangé rejoué. Suite autonome ACTIVE : depuis60031, coinrepas et journée naturelle selon audit, arrêt/conservation au premier danger réel ; aucune réussitefuture/guérisonV344/campagneentière/FPS certifiés. Les états suivants sont historiques.
 
 **V355, schéma 236 conservé : [réserve26 et aube suivante](gameplay/medicine-day-v355.md).** Troistrajets/fusions réels puis besoin/cuisine jusqu’à60031, quatre recharges exactes ChromeWebGPU108,190s et typagefinal16,291s. QA-only, commit PENDING ; V3547a0be77f livré, produitV353/f6ced911 reste publié. Suite autonome une journée naturelle depuis60031 et coinrepas/incidents selon audit ; aucune réussitefuture/campagneentière/FPS certifiés. Les états suivants sont historiques.
