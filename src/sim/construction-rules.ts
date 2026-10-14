@@ -19,7 +19,9 @@ export const asBuilder = (pawn: Pawn): boolean => workPriority(pawn,'build')>0&&
 
 export interface ConstructionObstruction { plant?:Resource; pile?:MaterialPile; pack?:import('./furniture-rules.ts').PackedFurniture }
 /** One synchronous planner decision. Keep array ordering for multi-cell sites,
- * and discard this index before any transfer, cutting or construction occurs. */
+ * and discard this index before any transfer, cutting or construction occurs.
+ * Small plants are not blockers; their Frame/final destruction is committed
+ * separately after the physical placement and custody preflight succeeds. */
 export function constructionObstructions(world:World):ReadonlyMap<number,ConstructionObstruction> {
   const sites=new Map<number,number[]>(),result=new Map<number,ConstructionObstruction>(),clearItems=new Set<number>(),shelves=new Set<number>();
   for(const job of world.jobs)if(isConstruction(job)) {

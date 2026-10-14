@@ -1,3 +1,5 @@
+import {isConstructionLightPlant,clearanceOutputPending} from './construction-plants.ts';
+import {planConstructionPlantRetirement,commitConstructionPlantRetirement,retainClearingWorkAfterOutputRefusal} from './plant-retirement.ts';
 import {applyTreeCommand,extractTreeReason,replantTreeReason,processTreeWork,advanceMinifiedTrees,isPlantDesignationJob,treeJobReason} from './tree-transfer.ts';
 import {applyDesignationCancel,cancelIntentJobs,clearPileHaulFlags} from './designation-cancel.ts';
 import {isShelfKind,newShelfStorage} from './shelf-storage.ts';
@@ -410,7 +412,7 @@ export function canDesignate(world: World, command: DesignateCommand, installing
     : world.jobs.some(job => job!==replacing && !isRoofJob(job) && !isPlantDesignationJob(job) && !(command.kind==='deconstruct'&&(job.kind==='repair'||job.kind==='fix-breakdown'||job.kind==='flick')) && sharesConstructionLayer(job.furniture?.kind??job.deconstruction?.kind??job.flick?.kind??job.fixBreakdown?.kind??job.kind,target?.kind??command.kind) && footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
   if(command.kind==='deconstruct'||command.kind==='uninstall')return {ok:true};
   if(command.kind==='mine')return world.tiles[cellIndex(world,command.x,command.z)]!.terrain==='rock'?{ok:true}:refusal('incompatible-resource','Désigner un massif rocheux à miner.');
-  if((command.kind==='crafting-spot'||command.kind==='butcher-spot')&&world.resources.some(r=>sameCell(r,command)))return refusal('occupied','Dégager la plante avant de placer cet emplacement.');
+  if((command.kind==='crafting-spot'||command.kind==='butcher-spot')&&world.resources.some(r=>sameCell(r,command)&&!isConstructionLightPlant(r)))return refusal('occupied','Dégager la plante avant de placer cet emplacement.');
   if (command.kind === 'chop' || command.kind === 'harvest' || command.kind === 'cut') {
     const resource = world.resources.find(candidate => sameCell(candidate, command));
     return resource && (command.kind === 'chop' ? choppable(world,resource) : isPlant(resource)) && (command.kind !== 'harvest' || harvestable(world, resource)) ? { ok: true } : refusal('incompatible-resource', 'Ressource incompatible.');
@@ -730,7 +732,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
     wakePlanners(world); refreshStock(world); return { ok: true };
   }
   if(command.type==='cancel'){
-    const jobs=new Set(world.jobs.filter(j=>footprintCells(j).some(c=>sameCell(c,command))).map(j=>j.id));
+    const jobs=new Set(world.jobs.filter(j=>[...footprintCells(j),...furnitureSourceCells(world,j)].some(c=>sameCell(c,command))).map(j=>j.id));
     if(!jobs.size)return refusal('missing-target','Aucun ordre a annuler ici.');
     return cancelIntentJobs(world,jobs);
   }
@@ -784,6 +786,8 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
     finishSowing(world, job);
   } else {
     if(!constructionSupplied(world,job)||!constructionSiteFree(world,job,pawn.id)||!Number.isSafeInteger(world.nextId+(isShelfKind(job.kind)?1+footprintCells(job).length:job.kind==='hydroponics-basin'?2:1))){setWorkUnits(job,Math.max(0,Math.round((jobDuration(world,job)-1)*WORK_FRACTIONS)));releaseWork(world,pawn);return;}
+    const retirement=planConstructionPlantRetirement(world,job,job.id);
+    if(!retirement||!commitConstructionPlantRetirement(world,retirement)){setWorkUnits(job,Math.max(0,Math.round((jobDuration(world,job)-1)*WORK_FRACTIONS)));releaseWork(world,pawn);return;}
     world.piles = world.piles.filter(pile => pile.owner.type !== 'job' || pile.owner.jobId !== job.id);
     if(job.kind==='wind-turbine')adoptWind(world);
     const qualityStream={rng:world.rng},quality=isHabitatFurnitureKind(job.kind)&&FURNITURE_DEFINITIONS[job.kind].quality?craftingQuality(pawn.skills.construction.level,()=>healthRandom(qualityStream)):undefined;if(quality)world.rng=qualityStream.rng;
@@ -1037,10 +1041,18 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         const plant=world.resources.find(r=>r.id===job.clearance!.resourceId);
         if(!plant){releaseWork(world,pawn);continue;}
         if(adjacent(pawn,plant)) {
-          pawn.path=[];pawn.state='working';advanceWork(job.clearance,getLight().speedAt(pawn)*plantWorkRate(pawn,body,plant.kind==='tree'&&choppable(world,plant)&&berryYield(world,plant)>0));
-          if(job.clearance.progress>=clearingDuration(plant)) {
+          pawn.path=[];pawn.state='working';const duration=clearingDuration(plant);
+          // Only the exact persisted output boundary uses the planner cooldown.
+          // Ordinary assigned jobs already have a cooldown and must still work.
+          const outputPending=clearanceOutputPending(job,duration);
+          if(outputPending&&pawn.planCooldown>0)continue;
+          // The first failed producer already paid the completion work/XP.
+          // A retry is output preflight, never another tick of plant work.
+          if(!outputPending)advanceWork(job.clearance,getLight().speedAt(pawn)*plantWorkRate(pawn,body,plant.kind==='tree'&&choppable(world,plant)&&berryYield(world,plant)>0));
+          if(outputPending||job.clearance.progress>=duration) {
             const quantity=gatherResource(world,plant,clearingKind(world,plant),job.id,pawn);
-            if(quantity!==null)event(world,'job',`${pawn.name} a dégagé le chantier${plant.kind!=='tree'&&quantity>0?` et a récolté ${quantity} ${harvestProductLabel(plant)}`:''}.`);
+            if(quantity===null){retainClearingWorkAfterOutputRefusal(job,duration);pawn.planCooldown=20;continue;}
+            event(world,'job',`${pawn.name} a dégagé le chantier${plant.kind!=='tree'&&quantity>0?` et a récolté ${quantity} ${harvestProductLabel(plant)}`:''}.`);
             releaseWork(world,pawn);wakePlanners(world);
           }
         } else moveToward(world,pawn,constructionWorkTarget(world,job),false,getBlocked,budget,false,getLight);
@@ -1077,6 +1089,15 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
       const cells = footprintCells(job);
       if (cells.some(cell => adjacent(pawn, cell)) && !cells.some(cell => sameCell(pawn, cell))) {
         pawn.path = []; pawn.state = 'working';
+        // Historical frames (including zero-material graves) are not erased
+        // during load/designation. Retire their small plants at real work contact.
+        const frameCells=isConstruction(job)&&job.construction==='frame'&&job.kind!=='lay-floor'?footprintCells(job):undefined;
+        // Empty footprints need no transaction, JSON signature or drop plan.
+        // Read living resources directly, so no stale cache can miss a plant.
+        if(frameCells&&world.resources.some(r=>isConstructionLightPlant(r)&&frameCells.some(c=>sameCell(c,r)))){
+          const retirement=planConstructionPlantRetirement(world,job,job.id,'frame');
+          if(!retirement||!commitConstructionPlantRetirement(world,retirement))continue;
+        }
         const plantJob=job.kind==='sow'||job.kind==='harvest'||job.kind==='cut'||job.kind==='chop';
         const tree=job.kind==='chop'?resourceAt(world,job.z*world.width+job.x):undefined;
         const plantLearning=job.kind==='sow'||job.kind==='harvest'||!!tree&&choppable(world,tree)&&berryYield(world,tree)>0;

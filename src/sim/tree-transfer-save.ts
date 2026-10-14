@@ -146,7 +146,7 @@ export function validateTreeTransport(w:World,version:number=w.schemaVersion):bo
       if(!validPlantTargetShape(j,version,w.nextId))return false;
       if(j.plantTarget){const r=byResource.get(j.plantTarget.resourceId);if(!r||r.x!==j.x||r.z!==j.z)return false;}
       const source=j.clearance?.resourceId??j.tree?.resourceId??j.plantTarget?.resourceId??(['chop','cut','harvest'].includes(j.kind)?legacyCells.get(`${j.x}:${j.z}`):undefined);
-      if(j.status==='active'&&j.reservedBy!==null&&source!==undefined){const owner=claimed.get(source);if(owner!==undefined&&owner!==j.id)return false;claimed.set(source,j.id);}
+      if(j.status==='active'&&j.reservedBy!==null&&byPawn.get(j.reservedBy)?.jobId===j.id&&source!==undefined){const owner=claimed.get(source);if(owner!==undefined&&owner!==j.id)return false;claimed.set(source,j.id);}
     }
     const activeJobValid=(j:TreeJob,p:Pawn):boolean=>{
       if(!isColonist(p)||p.prisoner||p.draft||p.visitor||p.raid||p.body||p.state==='dead'||p.state==='downed'||medicalWorkRefusal(p)||backgroundWorkRefusal(p,j.tree.kind==='extract'?'gather':'grow')||

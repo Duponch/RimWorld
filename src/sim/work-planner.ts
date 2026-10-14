@@ -156,7 +156,18 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   if (!deepWorking && !handling && !leading && !gathering && !vet && !vetFeed && !animalRescuing && !cleaning && !burying && !fightingFire && !warding && !releasePatients.length && !selfCare && !selfTreatment && !tendable.length && !operations.length && !feedable.length && !patients.length && !researching && !hunting && !cooking && !fires.length && !hoppers.length && !world.jobs.length && (!storageCells(world).length || !world.piles.length && !world.packed.length || workPriority(pawn,'haul') === 0)) { pawn.planCooldown = PLAN_INTERVAL; return; }
   if (!deepWorking && !handling && !leading && !gathering && !vet && !vetFeed && !animalRescuing && !cleaning && !burying && !fightingFire && !warding && !releasePatients.length && !selfCare && !selfTreatment && !tendable.length && !operations.length && !feedable.length && !patients.length && !researching && !hunting && !cooking && !fires.length && !hoppers.length && !world.jobs.length && !mayImproveFurnitureStorage(world) && !mayImproveStorage(world)) {pawn.planCooldown=PLAN_INTERVAL;return;}
   const blocked = getBlocked();
-  const clearingCells=new Set(world.jobs.filter(j=>j.clearance).map(j=>cellIndex(world,j.x,j.z)));
+  const clearingCells=new Set<number>();
+  for(const job of world.jobs){
+    if(!job.clearance){
+      if(world.schemaVersion<235||job.flowerPotId!==undefined||!(['cut','chop','harvest'].includes(job.kind)||job.tree?.kind==='extract'))continue;
+      if(job.status!=='active'||job.reservedBy===null||!world.pawns.some(p=>p.id===job.reservedBy&&p.jobId===job.id))continue;
+    }
+    // Single-cell jobs already carry the exact source coordinate. Only a
+    // multi-cell clearance needs to resolve its persisted Resource ID.
+    const source=world.schemaVersion>=235&&job.clearance&&footprintCells(job).length>1
+      ?world.resources.find(r=>r.id===job.clearance!.resourceId)??job:job;
+    clearingCells.add(cellIndex(world,source.x,source.z));
+  }
   // Rankings do not depend on flood order. Try the top ready job directly;
   // a failed targeted search has explored the full component and is reusable.
   // Logistics with a higher priority still uses the ordinary complete planner.

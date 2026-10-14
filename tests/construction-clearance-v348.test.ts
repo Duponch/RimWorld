@@ -71,9 +71,11 @@ test('V348 heavier agave still requires a real cut before a floor, while neighbo
   expect(w.resources.some(r=>r.id===id)).toBe(false);expect(w.resources.find(r=>r.id===neighbor.id)).toBe(neighbor);expect(wood(w)).toBe(5);
 });
 
-test('V348 a floor cannot silently erase another actors real cutting claim',()=>{
+test('V351 a floor blueprint retains another actors cutting claim until physical completion',()=>{
   const w=camp('grass',.5,2),cutter=w.pawns[1]!;Object.assign(cutter,{x:11,z:9});cutter.priorities.gather=1;accept(w,{type:'designate',kind:'cut',x:12,z:10});const cut=w.jobs[0]!;
-  accept(w,{type:'order-job',pawnId:cutter.id,jobId:cut.id,queue:false});const before=serializeWorld(w);expect(applyCommand(w,floor).ok).toBe(false);expect(serializeWorld(w)).toBe(before);expect(w.resources).toHaveLength(1);expect(cutter.jobId).toBe(cut.id);
+  accept(w,{type:'order-job',pawnId:cutter.id,jobId:cut.id,queue:false});const before={pawn:structuredClone(cutter),cut:structuredClone(cut),resources:structuredClone(w.resources),piles:structuredClone(w.piles),rng:w.rng};
+  expect(applyCommand(w,floor).ok).toBe(true);expect(cutter).toEqual(before.pawn);expect(cut).toEqual(before.cut);expect(w.resources).toEqual(before.resources);expect(w.piles).toEqual(before.piles);expect(w.rng).toBe(before.rng);
+  expect(w.jobs.find(j=>j.kind==='lay-floor')).toMatchObject({construction:'blueprint',progress:0,reservedBy:null});expect(w.jobs.find(j=>j.kind==='lay-floor')?.clearance).toBeUndefined();valid(w);
 });
 // Declared pre-fix accepted phase: current admission now skips this grass cut.
 test('V348 an already saved grass clearance keeps its real elapsed work and replays before floor completion',()=>{

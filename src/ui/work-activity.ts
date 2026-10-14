@@ -1,4 +1,5 @@
 import { clearingDuration } from '../sim/gathering';
+import { clearanceOutputPending } from '../sim/construction-plants';
 import { floraDefinition } from '../sim/biome-flora';
 import { choppable } from '../sim/plants';
 import { extractTreeDefinition } from '../sim/tree-transfer-rules';
@@ -41,6 +42,7 @@ export function specificWorkActivity(world: World, pawn: Pawn): string | undefin
     const label = floraDefinition(resource)?.label ?? (resource.kind === 'tree' ? 'arbre' : 'plante');
     if (pawn.state === 'moving') return `Rejoint ${label.toLocaleLowerCase('fr')} pour dégager ${job.tree?.kind === 'replant' ? 'l’emplacement de replantation' : 'le chantier'}`;
     if (pawn.state !== 'working') return undefined;
+    if (!job.tree && clearanceOutputPending(job, clearingDuration(resource))) return 'En attente · place pour les produits du dégagement';
     const percentage = Math.min(99, Math.floor(100 * workProgress(job.clearance) / clearingDuration(resource)));
     return `Dégagement · ${resource.kind === 'tree' && choppable(world, resource) ? 'abattage' : 'coupe'} de ${label.toLocaleLowerCase('fr')} (${percentage} %)${job.tree?.kind === 'replant' ? ' avant replantation' : ''}`;
   }

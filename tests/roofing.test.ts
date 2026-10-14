@@ -119,13 +119,21 @@ test('roof clearance and a later chop share one tree yield, release rival claims
   const reverseRoof=reverse.jobs.find(j=>j.kind==='build-roof'&&j.x===otherTree.x&&j.z===otherTree.z)!;
   expect(applyCommand(reverse,{type:'designate',kind:'chop',x:otherTree.x,z:otherTree.z}).ok).toBe(true);
   const reverseChop=reverse.jobs.find(j=>j.kind==='chop'&&j.x===otherTree.x&&j.z===otherTree.z)!;
-  reverseChop.progress=99; // Force the legitimate cutter to finish first.
+  const beforeConflict=serializeWorld(reverse);
+  expect(queryOrderOptions(reverse,cutter.id,otherTree).find(o=>o.jobId===reverseChop.id)).toMatchObject({enabled:false,reason:'Cette plante est déjà travaillée par un autre colon.'});
+  for(const queue of [false,true]){
+    expect(queryOrderOptions(reverse,cutter.id,otherTree,queue).find(o=>o.jobId===reverseChop.id)).toMatchObject({enabled:false});
+    expect(applyCommand(reverse,{type:'order-job',pawnId:cutter.id,jobId:reverseChop.id,queue}).ok).toBe(false);expect(serializeWorld(reverse)).toBe(beforeConflict);
+  }
+  // Explicitly cancel the owner's roof work before assigning a different cutter.
+  expect(applyCommand(reverse,{type:'cancel-job',jobId:reverseRoof.id}).ok).toBe(true);
+  reverseChop.progress=99; // Declared completed-work boundary for the sole cutter.
   expect(applyCommand(reverse,{type:'order-job',pawnId:cutter.id,jobId:reverseChop.id,queue:false}).ok).toBe(true);
   const reverseReplay=deserializeWorld(serializeWorld(reverse));
   until(reverse,()=>!reverse.resources.some(r=>r.id===otherTree.id));
   stepWorld(reverseReplay,reverse.tick-reverseReplay.tick);expect(reverseReplay).toEqual(reverse);
-  expect(reverse.jobs).toContain(reverseRoof);
-  expect(reverseRoof.clearance).toBeUndefined();
+  expect(reverse.jobs).not.toContain(reverseRoof);
+  area(reverse,'build-roof',otherTree.x,otherTree.z);
   expect(reverse.jobs.some(j=>j.id===reverseChop.id)).toBe(false);
   expect(reverse.piles.filter(p=>p.item==='wood').reduce((sum,p)=>sum+p.quantity,0)).toBe(12);
   until(reverse,()=>isRoofed(reverse,otherTree.z*reverse.width+otherTree.x));
@@ -142,9 +150,9 @@ test('roof clearance and a later chop share one tree yield, release rival claims
   expect(applyCommand(active,{type:'designate',kind:'deconstruct',x:10,z:14}).ok).toBe(true);
   const unrelated=active.jobs.find(j=>j.kind==='deconstruct'&&j.x===10&&j.z===14)!;
   expect(applyCommand(active,{type:'priority',pawnId:worker.id,work:'build',value:2}).ok).toBe(true);
-  expect(applyCommand(active,{type:'order-job',pawnId:worker.id,jobId:activeChop.id,queue:false}).ok).toBe(true);
-  expect(applyCommand(active,{type:'order-job',pawnId:worker.id,jobId:unrelated.id,queue:true}).ok).toBe(true);
-  expect(worker.jobId).toBe(activeChop.id);expect(worker.orders.queue).toContain(unrelated.id);
+  expect(applyCommand(active,{type:'order-job',pawnId:worker.id,jobId:unrelated.id,queue:false}).ok).toBe(true);
+  expect(applyCommand(active,{type:'order-job',pawnId:worker.id,jobId:activeChop.id,queue:true}).ok).toBe(true);
+  expect(worker.jobId).toBe(unrelated.id);expect(worker.orders.queue).toContain(activeChop.id);
   activeRoof.clearance!.progress=99; // The roof worker now wins the shared tree.
   stepWorld(active);
   expect(active.resources.some(r=>r.id===activeTree.id)).toBe(false);

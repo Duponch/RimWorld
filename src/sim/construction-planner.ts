@@ -1,4 +1,5 @@
 import { workPriority } from './work-types.ts';
+import {plantExecutionReserved} from './construction-plants.ts';
 import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
 import { FLOOR_DEFINITIONS } from './flooring.ts';
 import { planFurnitureTransport } from './furniture-haul-planner.ts';
@@ -28,6 +29,7 @@ export function constructionCandidates(world:World,pawn:Pawn,blocked:Uint8Array,
     const obstacle=obstacles.get(job.id)!;const {plant,pile}=obstacle;
     const base={id:job.id,rank:1,distance:Math.abs(job.x-pawn.x)+Math.abs(job.z-pawn.z)};
     if(plant) {
+      if(world.schemaVersion>=235&&plantExecutionReserved(world,plant.id,pawn.id))continue;
       if(world.jobs.some(j=>j.tree?.kind==='extract'&&j.tree.resourceId===plant.id))continue;
       const target={x:plant.x,z:plant.z};
       if(allows(target)&&(workPriority(pawn,'build')>0||job.kind==='install'&&workPriority(pawn,'haul')>0)&&plant.kind!=='rock'&&canReach(world,target,reach,false))result.push({...base,priority:job.kind==='install'?constructionHaulPriority(pawn):workPriority(pawn,'build'),target,job,clearance:{resourceId:plant.id,progress:0}});

@@ -8,6 +8,7 @@ import { releaseWork } from './work-release.ts';
 import { footprintCells } from './definitions.ts';
 import { adjacent } from './pathfinding.ts';
 import { transferPile } from './materials.ts';
+import {planConstructionPlantRetirement,commitConstructionPlantRetirement} from './plant-retirement.ts';
 import { haulingWork } from './work-types.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import type { Cell, Job, Pawn, World } from './types.ts';
@@ -41,6 +42,13 @@ export function processHaul(world: World, pawn: Pawn, move: (target: Cell, allow
   const atTarget = task.destination.type === 'job' ? footprintCells(target as Job).some(cell => adjacent(pawn, cell)) && !footprintCells(target as Job).some(cell => sameCell(pawn, cell)) : task.destination.type==='fuel'?footprintCells(target as Job).some(cell=>nearby(pawn,cell)):nearby(pawn, target);
   if (!atTarget) { move(target, task.destination.type !== 'job'); return; }
   if(task.destination.type==='job'&&!constructionSiteFree(world,target as Job,pawn.id)){releaseWork(world,pawn);return;}
+  if(task.destination.type==='job'&&(target as Job).kind!=='fix-breakdown'&&(target as Job).kind!=='lay-floor'){
+    // transferPile to this live job cannot fail after these exact source/owner
+    // checks. Retire before payment so the target signature stays unchanged.
+    if(!world.piles.includes(carry)||carry.owner.type!=='pawn'||carry.owner.pawnId!==pawn.id)return;
+    const retirement=planConstructionPlantRetirement(world,target as Job,(target as Job).id,'frame');
+    if(!retirement||retirement.actors.has(pawn.id)||!commitConstructionPlantRetirement(world,retirement)){pawn.path=[];pawn.state='working';return;}
+  }
   if (task.destination.type==='turret') {
     pawn.state='working';pawn.path=[];task.serviceProgress=(task.serviceProgress??0)+1;
     if(task.serviceProgress<TURRET_RELOAD_WORK_TICKS)return;

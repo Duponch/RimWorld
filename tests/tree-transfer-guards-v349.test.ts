@@ -68,3 +68,35 @@ test('V349 older mass context keeps wood outside its historical travel catalogue
  const wood={id:2,kind:'wood' as const,item:'wood' as const,quantity:1,owner:{type:'inventory' as const,pawnId:1}};
  expect(physicalTravelUnitMass(wood,234)).toBeUndefined();expect(physicalTravelUnitMass(wood,235)).toBe(400);
 });
+
+// Real future command membership is distinct from an active execution claim.
+// The historical roofing replay also exercises queuing during actual cutting.
+test('V351 queued cut is saveable beside a real clearance while two executing cutters stay exclusive',()=>{
+ const w=treeTransferScene('oak',1);prepareConstructionFlora(w);const source=w.resources[0]!,builder=w.pawns[0]!;builder.priorities.build=1;
+ expect(applyCommand(w,{type:'designate',kind:'wall',material:'wood',x:source.x,z:source.z}).ok).toBe(true);
+ for(let n=0;n<250&&!w.jobs.find(j=>j.kind==='wall')?.clearance;n++)stepWorld(w);
+ const wall=w.jobs.find(j=>j.kind==='wall')!;expect(wall.clearance?.resourceId).toBe(source.id);
+ expect(applyCommand(w,{type:'designate',kind:'chop',x:source.x,z:source.z}).ok).toBe(true);const chop=w.jobs.find(j=>j.kind==='chop')!;
+ expect(applyCommand(w,{type:'order-job',pawnId:builder.id,jobId:chop.id,queue:true}).ok).toBe(true);expect(builder.orders.queue).toContain(chop.id);
+ expect(validateTreeTransport(w)).toBe(true);expect(validateWorld(w)).toEqual([]);expect(deserializeWorld(serializeWorld(w))).toEqual(w);
+ const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder();const raw=decoder.adopt(structuredClone(encoder.encode(w,0,1,true)));expect(raw.status).toBe('applied');if(raw.status==='applied')expect(raw.world).toEqual(w);
+});
+
+test('V351 automatic building cannot acquire a tree already cut by another actual worker',()=>{
+ const w=treeTransferScene('oak',1);prepareConstructionFlora(w);const source=w.resources[0]!,cutter=w.pawns[0]!,builder=w.pawns[1]!;Object.assign(cutter,{x:11,z:10});Object.assign(builder,{x:13,z:10});builder.priorities.build=1;
+ expect(applyCommand(w,{type:'designate',kind:'chop',x:source.x,z:source.z}).ok).toBe(true);const cut=w.jobs.find(j=>j.kind==='chop')!;
+ expect(applyCommand(w,{type:'order-job',pawnId:cutter.id,jobId:cut.id,queue:false}).ok).toBe(true);
+ expect(applyCommand(w,{type:'designate',kind:'wall',material:'wood',x:source.x,z:source.z}).ok).toBe(true);const wall=w.jobs.find(j=>j.kind==='wall')!;
+ for(let n=0;n<10;n++){stepWorld(w);expect(wall.clearance).toBeUndefined();expect(cutter.jobId).toBe(cut.id);expect(validateWorld(w)).toEqual([]);}expect(deserializeWorld(serializeWorld(w))).toEqual(w);
+ expect(applyCommand(w,{type:'cancel-job',jobId:cut.id}).ok).toBe(true);
+ for(let n=0;n<120&&!wall.clearance;n++)stepWorld(w);expect(wall.clearance?.resourceId).toBe(source.id);expect(wall.reservedBy).toBe(builder.id);expect(validateWorld(w)).toEqual([]);
+});
+
+test('V351 automatic gathering observes the exact second-cell tree claimed by a table builder',()=>{
+ const w=treeTransferScene('oak',1);prepareConstructionFlora(w);const source=w.resources[0]!,builder=w.pawns[0]!,cutter=w.pawns[1]!;source.z=11;Object.assign(builder,{x:11,z:11});Object.assign(cutter,{x:13,z:11});builder.priorities.build=1;builder.priorities.gather=0;builder.priorities.grow=0;cutter.priorities.gather=0;
+ expect(applyCommand(w,{type:'designate',kind:'table',material:'wood',x:12,z:10}).ok).toBe(true);const table=w.jobs.find(j=>j.kind==='table')!;
+ expect(applyCommand(w,{type:'order-job',pawnId:builder.id,jobId:table.id,queue:false}).ok).toBe(true);expect(table.clearance?.resourceId).toBe(source.id);
+ expect(applyCommand(w,{type:'designate',kind:'chop',x:source.x,z:source.z}).ok).toBe(true);const chop=w.jobs.find(j=>j.kind==='chop')!;cutter.priorities.gather=1;
+ for(let n=0;n<10;n++){stepWorld(w);expect(builder.jobId).toBe(table.id);expect(cutter.jobId).not.toBe(chop.id);expect(validateWorld(w)).toEqual([]);}expect(deserializeWorld(serializeWorld(w))).toEqual(w);
+ expect(applyCommand(w,{type:'cancel-job',jobId:table.id}).ok).toBe(true);for(let n=0;n<60&&cutter.jobId!==chop.id;n++)stepWorld(w);expect(cutter.jobId).toBe(chop.id);expect(validateWorld(w)).toEqual([]);
+});

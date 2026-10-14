@@ -1,4 +1,5 @@
 import {treeJobReason} from './tree-transfer.ts';
+import {plantExecutionReserved} from './construction-plants.ts';
 import { allowedAreaReason } from './allowed-area-state.ts';
 import { workPriority, workType, haulingWork } from './work-types.ts';
 import { backgroundWorkRefusal,violentWorkRefusal } from './colonist-backgrounds.ts';
@@ -54,7 +55,7 @@ const orderLabel=(world:World,job:Job)=>clearingPlant(world,job)?'Couper la plan
 
 /** This provider orders one executable job, never an entire construction chain.
  * Quantity-based delivery is handled separately by player-hauling. */
-export function orderReadiness(world: World, pawn: Pawn, job: Job, accepted=false): string | undefined {
+export function orderReadiness(world: World, pawn: Pawn, job: Job, accepted=false, queued=false): string | undefined {
   const areaReason=allowedAreaReason(world,pawn,job);if(areaReason)return areaReason;
   if(!isColonist(pawn)||pawn.prisoner)return 'Seul un colon libre peut recevoir un ordre de travail.';
   const work=job.kind==='install'&&!job.installationWork?(asBuilder(pawn)?'build':'haul'):workType(job);
@@ -62,6 +63,11 @@ export function orderReadiness(world: World, pawn: Pawn, job: Job, accepted=fals
   if(job.kind==='lay-floor'&&job.floor&&pawn.skills.construction.level<FLOOR_DEFINITIONS[job.floor].skill)return `Construction ${FLOOR_DEFINITIONS[job.floor].skill} nécessaire pour finir ce sol.`;
   if (!accepted&&(job.kind==='install'?!Number.isFinite(constructionHaulPriority(pawn)):!workPriority(pawn,workType(job)))) return 'Ce travail est désactivé dans le tableau Travail.';
   if (job.reservedBy !== null && job.reservedBy !== pawn.id) return 'Travail réservé par un autre colon.';
+  if(world.schemaVersion>=235&&!queued&&job.flowerPotId===undefined){
+    const sourceId=job.clearance?.resourceId??(job.tree?.kind==='extract'?job.tree.resourceId:undefined)??job.plantTarget?.resourceId
+      ??(['cut','chop','harvest'].includes(job.kind)?world.resources.find(r=>r.x===job.x&&r.z===job.z)?.id:clearingPlant(world,job)?.id);
+    if(sourceId!==undefined&&plantExecutionReserved(world,sourceId,pawn.id))return 'Cette plante est déjà travaillée par un autre colon.';
+  }
   if (job.growingZoneId !== undefined && !growingJobValid(world,job)) return 'La culture ne permet plus ce travail.';
   if(!accepted&&!sowingJobAllowed(world,pawn,job))return 'Plantes 8 nécessaire pour semer cette racine médicinale.';
   if(job.kind==='mine'&&world.tiles[job.z*world.width+job.x]?.terrain!=='rock')return 'Le massif a disparu.';
@@ -95,7 +101,7 @@ function preflight(world:World,pawn:Pawn,job:Job,queue=false):string|undefined {
   if(pawn.interruptedCargo)return 'Ce colon doit d’abord déposer sa cargaison interrompue. Libérez une case de sol à proximité.';
   if(pawn.collapsePending || world.restRules==='legacy'&&pawn.rest===0) return 'Ce colon doit récupérer de son épuisement.';
   if(pawn.jobId===job.id || queue&&pawn.orders.queue.includes(job.id)) return 'Ce travail est déjà attribué à ce colon.';
-  return orderReadiness(world,pawn,job);
+  return orderReadiness(world,pawn,job,false,queue&&(busy(pawn)||pawn.orders.queue.length>0));
 }
 /** Called only for a menu query in the worker, not on render frames/snapshots. */
 export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=false):OrderOption[] {

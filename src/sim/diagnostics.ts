@@ -1,4 +1,5 @@
 import { clearingDuration } from './gathering.ts';
+import { clearanceOutputPending } from './construction-plants.ts';
 import { workProgress } from './work-progress.ts';
 import { extractTreeDefinition } from './tree-transfer-rules.ts';
 import { isMinifiedTree } from './tree-transfer-state.ts';
@@ -26,6 +27,14 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
   const required = costs.reduce((n,c) => n+c.quantity,0), delivered = costs.reduce((n,c) => n+deliveredMaterial(world,job,c.item),0);
   const queued=job.reservedBy===null?undefined:world.pawns.find(p=>p.id===job.reservedBy&&p.orders.queue.includes(job.id));
   if(queued)return {code:'working',reason:`Réservé dans la file de ${queued.name}.`,delivered,required};
+  // The same confirmed output boundary covers construction and roof clearing.
+  // Replanting has a distinct producer and never writes this waiting marker.
+  if (!job.tree && job.status === 'active' && job.clearance) {
+    const plant = world.resources.find(r => r.id === job.clearance!.resourceId);
+    const worker = world.pawns.find(p => p.id === job.reservedBy && p.jobId === job.id);
+    if (plant && worker?.state === 'working' && clearanceOutputPending(job, clearingDuration(plant)))
+      return {code:'blocked',reason:'Attend de la place pour les produits du dégagement.',delivered,required};
+  }
   if(job.kind==='extract-tree'||job.kind==='replant-tree'){
     const task=job.tree,worker=world.pawns.find(p=>p.id===job.reservedBy&&p.jobId===job.id);
     const waiting=():JobDiagnostic=>{const enabled=world.pawns.some(p=>workPriority(p,workType(job))>0);return {code:enabled?'ready':'waiting-worker',reason:enabled?'Prêt ; attend un colon disponible et un accès.':'Travail désactivé pour tous les colons.',delivered,required};};
