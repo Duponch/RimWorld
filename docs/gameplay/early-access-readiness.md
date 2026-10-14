@@ -17,7 +17,7 @@ Une case de catalogue, un bouton grisé, une simulation préparée ou un test ci
 
 ## Ordre de travail courant
 
-Priorité humaine14octobre : [construction V348](construction-clearance-v348.md) commité/poussé en f640c01e, [arbres/annulations V349](tree-transfer-v349.md) et [masquage V350](../development/decor-occlusion-v350.md) qualifiés sur scènes préparées, livraison groupée PENDING. Poursuivre sans relance par classification des plantes légères devant tous ouvrages/sols et sorties lourdes refusées ; frontière Frame Core à requalifier avant parité de timing. Reprendre la campagne/réserves après ces bugs ; V347 est commité/poussé en2196efdf. Aucun résultat humain/naturel nouveau crédité par les régressions préparées.
+Priorité humaine14octobre : les lots [construction V348](construction-clearance-v348.md), [arbres/annulations V349](tree-transfer-v349.md), [masquage V350](../development/decor-occlusion-v350.md), [plantes V351](construction-plants-v351.md) et [coupe V352](cut-yield-v352.md) sont livrés. [V353 expiration d’arbre sous saturation](tree-expiry-v353.md) est qualifié sur scènes préparées, livraison PENDING. Après sa livraison, reprendre médicaments/réserves depuis V34758168 puis campagne durable avec mêmes personnes et branches blessées distinctes ; aucune réussite naturelle nouvelle n’est créditée par ces régressions préparées.
 
 1. Carnet contextuel V334 commité et poussé ; préserver toutes les mécaniques.
 2. Arrivée physique V335 acquise : personnes et biens réellement détenus pendant la descente, mêmes identités et quantités à l’ouverture, pause et reprise exactes. Les écarts Core restent explicites, sans interdiction générique ou scorie fictives.

@@ -10,7 +10,7 @@ import type {NumericMembershipSink} from './numeric-membership.ts';
 /** V349 sparse domain guards over actual candidate owners. */
 import type {Pawn,Resource,MaterialPile} from './types.ts';
 import {TREE_PACK_LIFETIME,TREE_SCHEMA,type TreeJob,type TreeOwnerOccurrence,type MinifiedTreePile} from './tree-transfer-state.ts';
-import {extractTreeDefinition} from './tree-transfer-rules.ts';
+import {extractTreeDefinition,treeExpiryQuantityRange} from './tree-transfer-rules.ts';
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 const exact=(v:Record<string,unknown>,required:readonly string[],optional:readonly string[]=[])=>
@@ -25,10 +25,16 @@ export function validTreePileShape(pile:unknown,version:number,clock:number,next
     pile.kind!=='plant'||pile.item!=='minified-tree'||pile.quantity!==1||!integer(pile.id,1,nextId-1)||
     !record(pile.innerResource)||!record(pile.plantPack)||!record(pile.owner))return false;
   const tree=pile.innerResource,pack=pile.plantPack;
-  if(!exact(pack,['packedAt','expiresAt'])||!integer(pack.packedAt,0,clock)||
+  if(!exact(pack,['packedAt','expiresAt'],version>=236?['pendingExpiry']:[])||!integer(pack.packedAt,0,clock)||
     !integer(pack.expiresAt,pack.packedAt+1)||pack.expiresAt-pack.packedAt!==TREE_PACK_LIFETIME||
     !integer(tree.id,1,nextId-1)||tree.id===pile.id||tree.kind!=='tree'||
     !extractTreeDefinition(tree as unknown as Resource)||!resourceValidAt(tree,pack.packedAt))return false;
+  if(Object.hasOwn(pack,'pendingExpiry')){
+    const pending=pack.pendingExpiry;
+    if(version<236||clock<(pack.expiresAt as number)||!record(pending)||!exact(pending,['quantity','retryAt'])||
+      !integer(pending.quantity,1,500000)||!integer(pending.retryAt,clock,clock+20)||
+      !treeExpiryQuantityRange(pile as unknown as MinifiedTreePile).includes(pending.quantity))return false;
+  }
   if(Object.hasOwn(pile,'damage')&&!integer(pile.damage,1,99))return false;
   const owner=pile.owner;
   return owner.type==='ground'?exact(owner,['type','x','z'])&&integer(owner.x)&&integer(owner.z)
@@ -81,7 +87,7 @@ export function validateTreeDomain(input:TreeDomainInput):TreeDomainIndex|undefi
     if(!validTreePileShape(pile,input.version,occurrence.clock,input.nextId,input.resourceValidAt))return;
     const treePile=pile as MinifiedTreePile,id=treePile.innerResource.id;
     if(wrappers.has(treePile.id)||innerIds.has(id)||input.outerIds.has(id)||local.has(id)||
-      occurrence.clock>=treePile.plantPack.expiresAt)return;
+      occurrence.clock>=treePile.plantPack.expiresAt&&!treePile.plantPack.pendingExpiry)return;
     wrappers.set(treePile.id,occurrence);innerIds.add(id);
   }
   for(const job of input.jobs){
@@ -95,7 +101,7 @@ export function validateTreeDomain(input:TreeDomainInput):TreeDomainIndex|undefi
       if(!source||!extractTreeDefinition(source)||source.x!==job.x||source.z!==job.z||!integer(job.progress,0,extractTreeDefinition(source)!.workCore)||job.progress===extractTreeDefinition(source)!.workCore&&job.workRemainder!==undefined)return;
     } else {
       const occurrence=wrappers.get(task.sourcePileId),pile=occurrence?.pile as MinifiedTreePile|undefined;
-      if(!occurrence?.active||!pile||pile.innerResource.id!==task.resourceId||task.durationCore!==undefined&&task.durationCore>Math.floor(extractTreeDefinition(pile.innerResource)!.workCore/.08))return;
+      if(!occurrence?.active||!pile||pile.plantPack.pendingExpiry||pile.innerResource.id!==task.resourceId||task.durationCore!==undefined&&task.durationCore>Math.floor(extractTreeDefinition(pile.innerResource)!.workCore/.08))return;
       if(task.phase==='pickup'?pile.owner.type!=='ground'&&!(job.status==='pending'&&pile.owner.type==='pawn'&&actors.get(pile.owner.pawnId)?.interruptedCargo):
         !actor||pile.owner.type!=='pawn'||pile.owner.pawnId!==actor.id)return;
       if(actor&&!queued&&!input.activeJobValid(job,actor,pile))return;
@@ -125,7 +131,7 @@ function currentTreeDomain(w:World):boolean {
 }
 /** Shared RAW and isolated full/delta candidate domain. Never validates a whole
  * World or allocates tile arrays; ordinary archives are read only for markers. */
-export function validateTreeTransport(w:World,version:number=w.schemaVersion):boolean {
+export function validateTreeTransport(w:World,version:number=w.schemaVersion,collectWrapper?:(pile:MinifiedTreePile)=>void):boolean {
   try{
     if(!currentTreeDomain(w))return true;
     if(version<235)return false;
@@ -166,6 +172,7 @@ export function validateTreeTransport(w:World,version:number=w.schemaVersion):bo
         const p=byPawn.get(pile.owner.pawnId);if(!p||held.get(p.id)?.length!==1||w.packed.some(x=>x.owner.type==='pawn'&&x.owner.pawnId===p.id))return false;
         if(!p.interruptedCargo&&!(p.haul?.phase==='deliver'&&p.haul.carryPileId===pile.id&&p.haul.quantity===1)&&!jobs.some(j=>j.reservedBy===p.id&&j.tree?.kind==='replant'&&j.tree.carryPileId===pile.id&&j.tree.phase!=='pickup'))return false;
       }
+      collectWrapper?.(pile);
     }
     return true;
   }catch{return false;}

@@ -6,7 +6,10 @@ import {advanceWork,workProgress,resetWork} from './work-progress.ts';
 import {extractTreeDefinition,treePackLive} from './tree-transfer-rules.ts';
 import {isMinifiedTree,type MinifiedTreePile,type TreeJob,type TreeCommand} from './tree-transfer-state.ts';
 import {advanceTreeTransfer} from './tree-transfer-runtime.ts';
-import {planTreeExpiry,commitTreeExpiry,type TreeHost,type TreePileRef,type TreeExpiryOutputPlan} from './tree-transfer-atomic.ts';
+import {planTreeExpiry,commitTreeExpiry,planPendingTreeExpiry,commitPendingTreeExpiry,type TreeHost,type TreePileRef,type TreeExpiryOutputPlan} from './tree-transfer-atomic.ts';
+import {isHaulOrder} from './order-types.ts';
+import {constructionHaulId} from './construction-rules.ts';
+import {cancelGroupPreparation} from './group-authority.ts';
 import {captureTreeOccurrences} from './tree-transfer-owners.ts';
 import {captureHumanOwners} from './human-owners.ts';
 import {plantGrowth,choppable,harvestable,isPlant,plantCanYieldNow} from './plants.ts';
@@ -115,6 +118,23 @@ export function removeTreeClaims(w:World,resourceId:number,wrapperId?:number,com
   for(const p of w.pawns){if(p.jobId!==null&&p.jobId!==completedJobId&&removed.has(p.jobId))interruptWork(w,p);p.orders.queue=p.orders.queue.filter(o=>typeof o!=='number'||!removed.has(o));}
   w.jobs=w.jobs.filter(j=>!removed.has(j.id));for(const j of w.jobs)if(j.clearance?.resourceId===resourceId){for(const p of w.pawns)if(p.jobId===j.id){if(!releaseWork(w,p))interruptWork(w,p);}delete j.clearance;j.reservedBy=null;j.status='pending';}
 }
+/** Expiry is an exact custody boundary, not a voluntary global interruption. */
+function removeExpiredTreeClaims(w:World,resourceId:number,wrapperId:number):void {
+  const ids=new Set(w.jobs.filter(j=>j.tree?.resourceId===resourceId||j.plantTarget?.resourceId===resourceId).map(j=>j.id));
+  const matchingHaul=(h:NonNullable<Pawn['haul']>)=>h.sourcePileId===wrapperId||h.carryPileId===wrapperId||ids.has(constructionHaulId(h.destination)??-1);
+  for(const p of w.pawns){
+    const held=w.piles.some(i=>i.id===wrapperId&&i.owner.type==='pawn'&&i.owner.pawnId===p.id);
+    if(p.jobId!==null&&ids.has(p.jobId)||p.haul&&matchingHaul(p.haul)||held&&!p.interruptedCargo){
+      releaseAssignments(w,p);delete p.priorityWork;
+      if(held)p.interruptedCargo=true;else delete p.interruptedCargo;
+    }
+    p.orders.queue=p.orders.queue.filter(o=>typeof o==='number'?!ids.has(o):!isHaulOrder(o)||!matchingHaul(o));
+  }
+  w.jobs=w.jobs.filter(j=>!ids.has(j.id));
+  const g=w.group;if(g?.phase==='unloading'&&g.pendingPileIds.includes(wrapperId)&&!w.piles.some(i=>i.id===wrapperId)){
+    g.pendingPileIds=g.pendingPileIds.filter(id=>id!==wrapperId);if(!g.pendingPileIds.length)cancelGroupPreparation(w);
+  }
+}
 function hostFor(w:World,refs?:readonly TreePileRef[]):TreeHost {
   const find=(id:number):TreePileRef|undefined=>refs?.find(r=>r.pile.id===id)??(()=>{const pile=w.piles.find(p=>p.id===id);return pile&&isMinifiedTree(pile)?{pile,container:'map',clock:w.tick,active:true}:undefined;})();
   return {
@@ -126,7 +146,7 @@ function hostFor(w:World,refs?:readonly TreePileRef[]):TreeHost {
     idsAvailable:(n,retiring)=>{
       const container=retiring?(retiring.container==='map'?w.piles:retiring.container as MaterialPile[]):w.piles;
       return Number.isSafeInteger(n)&&n>=0&&Number.isSafeInteger(w.nextId+n)
-        &&(!retiring||container.includes(retiring.pile))&&container.length+n-(retiring?1:0)<=32768;
+                &&(!retiring||container.includes(retiring.pile))&&container.length+n-(retiring?1:0)+(w.schemaVersion>=236&&retiring&&retiring.container!=='map'?w.piles.length:0)<=32768;
     },
     removeResource:r=>{w.resources=w.resources.filter(x=>x!==r);},addResource:r=>{w.resources=[...w.resources,r];},addGroundTree:p=>{w.piles=[...w.piles,p];},
     removePile:ref=>{const local=ref.container==='map',container=local?w.piles:ref.container as MaterialPile[];const index=container.indexOf(ref.pile);if(index<0)throw Error('Original tree container lost');container.splice(index,1);if(local)w.piles=[...w.piles];},
@@ -140,17 +160,32 @@ function hostFor(w:World,refs?:readonly TreePileRef[]):TreeHost {
         const outputs=parts.map(part=>({owner:{type:'ground' as const,...part.cell},quantity:part.quantity}));
         return {outputs,newIds:parts.reduce((n,part)=>n+materialIdentityCount(view,part.quantity,{type:'ground',...part.cell},'wood'),0),token:{container,owner:p.owner,local}};
       }
+      const count=Math.ceil(quantity/75);
+      if(w.schemaVersion>=236&&owner.type==='inventory'){
+        const sameOwner=(i:MaterialPile)=>'pawnId' in i.owner&&i.owner.pawnId===owner.pawnId;
+        const other=container.filter(i=>i!==p&&sameOwner(i));
+        if(other.length+count>256)return;
+        // Existing group overload is a total-mass travel state, not a new
+        // per-owner expiry rejection. Closed owner catalogues remain strict.
+
+      }
       const outputs=[];for(let remaining=quantity;remaining>0;remaining-=75)outputs.push({owner:{...p.owner},quantity:Math.min(75,remaining)});
       return {outputs,newIds:outputs.length,token:{container,owner:p.owner,local}};
     },
     expiryOutputStillValid:(ref,plan)=>{const token=plan.token as {container:MaterialPile[];owner:MaterialOwner;local:boolean};return (token.local?w.piles:token.container).includes(ref.pile)&&JSON.stringify(ref.pile.owner)===JSON.stringify(token.owner);},
     commitExpiryOutput:(ref,plan)=>{const token=plan.token as {container:MaterialPile[];local:boolean};for(const output of plan.outputs){if(token.local)addMaterial(w,'wood',output.quantity,output.owner,'wood');else token.container.push({id:w.nextId++,kind:'wood',item:'wood',quantity:output.quantity,owner:{...output.owner}});}},
-    removeTreeClaims:(id,wrapper,completed)=>removeTreeClaims(w,id,wrapper,completed),finish:j=>finish(w,j),growth:r=>plantGrowth(w,r),
+    removeTreeClaims:(id,wrapper,completed,expiry)=>{if(expiry&&w.schemaVersion>=236&&wrapper!==undefined)removeExpiredTreeClaims(w,id,wrapper);else removeTreeClaims(w,id,wrapper,completed);},finish:j=>finish(w,j),growth:r=>plantGrowth(w,r),
     reconcileReplantedGrowth:r=>{delete r.growthThermalFactor;delete r.growthLight;},
   };
 }
 export function processTreeWork(w:World,p:Pawn,j:Job,move:(target:Cell,touch:boolean)=>void,speed=1):void {
   if(!isTreeJob(j))return;
+  if(w.schemaVersion>=236&&j.tree.kind==='replant'&&j.status==='active'&&j.reservedBy===p.id&&p.jobId===j.id){
+    const sourcePileId=j.tree.sourcePileId,pile=w.piles.find(i=>i.id===sourcePileId);
+    // The dispatcher after actors owns this exact death boundary. Neither
+    // new work nor a global interruption may consume foreign queued orders.
+    if(pile&&isMinifiedTree(pile)&&!pile.plantPack.pendingExpiry&&w.tick>=pile.plantPack.expiresAt)return;
+  }
   const body=pawnBody(p);
   const obstruction=j.tree.kind==='replant'&&j.tree.phase!=='pickup'?w.resources.find(r=>same(r,j)):undefined;
   if(obstruction){
@@ -209,6 +244,21 @@ export function advanceMinifiedTrees(w:World):void {
   const refs:TreePileRef[]=[];
   for(const container of collections)for(const pile of container)if(isMinifiedTree(pile))refs.push({pile,container:container===w.piles?'map':container,clock:w.tick,active:true});
   const host=hostFor(w,refs);
-  for(const ref of refs)if(w.tick>=ref.pile.plantPack.expiresAt){const plan=planTreeExpiry(host,ref);if(!plan||!commitTreeExpiry(host,plan))throw Error('Expired tree has no atomic physical output');releaseLostTreeCarrier(w,ref.pile);w.events.push({tick:w.tick,type:'job',message:'Un arbre deracine est mort; ses restes sont conserves.'});if(w.events.length>80)w.events.shift();}
+  for(const ref of refs)if(w.tick>=ref.pile.plantPack.expiresAt){
+    const pending=ref.pile.plantPack.pendingExpiry;
+    if(pending&&w.tick<pending.retryAt)continue;
+    const plan=planTreeExpiry(host,ref);
+    if(plan&&commitTreeExpiry(host,plan)){
+      releaseLostTreeCarrier(w,ref.pile);treeExpiryDomains.delete(w);
+      w.events.push({tick:w.tick,type:'job',message:pending?'Les restes de l’arbre mort ont été déposés.':'Un arbre deracine est mort; ses restes sont conserves.'});
+    }else if(w.schemaVersion>=236){
+      if(pending)ref.pile.plantPack={...ref.pile.plantPack,pendingExpiry:{quantity:pending.quantity,retryAt:w.tick+20}};
+      else {
+        const death=planPendingTreeExpiry(host,ref);if(!death||!commitPendingTreeExpiry(host,death))throw Error('Expired tree death transaction lost its original');
+        w.events.push({tick:w.tick,type:'job',message:'Un arbre déraciné est mort ; ses restes attendent une place.'});
+      }
+    }else throw Error('Expired tree has no atomic physical output');
+    if(w.events.length>80)w.events.shift();
+  }
   refreshStock(w);
 }

@@ -20,7 +20,7 @@ export const treeWorkCorePerTick=(speed:number,growth:number):number=>
 export const replantDurationCore=(definition:TreeDefinition,speed:number,growth:number):number|undefined=>{
   const rate=treeWorkCorePerTick(speed,growth);return rate>0?Math.max(1,Math.trunc(definition.workCore/rate)):undefined;
 };
-export const treePackLive=(pile:MinifiedTreePile,tick:number):boolean=>tick<pile.plantPack.expiresAt;
+export const treePackLive=(pile:MinifiedTreePile,tick:number):boolean=>!pile.plantPack.pendingExpiry&&tick<pile.plantPack.expiresAt;
 export const treePackDeadline=(tick:number):number=>tick+TREE_PACK_LIFETIME;
 const draw=(rng:number):{value:number;rng:number}=>{
   let next=rng;next^=next<<13;next^=next>>>17;next^=next<<5;next>>>=0;
@@ -38,5 +38,13 @@ export function treeExpiryYield(pile:MinifiedTreePile,rng:number,cropYieldFactor
   // Core GenMath.RoundRandom draws even when the fractional part is zero.
   const roll=draw(rng);
   return {quantity:Math.floor((whole+(roll.value<raw-whole?1:0))*.5),rng:roll.rng};
+}
+/** The only two possible fixed quantities from the frozen source; no draw. */
+export function treeExpiryQuantityRange(pile:MinifiedTreePile):readonly number[] {
+  const tree=pile.innerResource,def=extractTreeDefinition(tree);if(!def)return [];
+  const growth=tree.growth??1;if(tree.blight||growth<=def.minimumGrowth)return [0];
+  const hp=Math.max(0,Math.min(1,1-(tree.damage??0)/def.maxHP));
+  const raw=tree.amount*(.5+.5*Math.max(0,Math.min(1,(growth-def.minimumGrowth)/(1-def.minimumGrowth))))*(.5+.5*hp);
+  return [Math.floor(Math.floor(raw)*.5),Math.floor(Math.ceil(raw)*.5)];
 }
 export const treePileMassGrams=(pile:MinifiedTreePile):number|undefined=>extractTreeDefinition(pile.innerResource)?.massGrams;

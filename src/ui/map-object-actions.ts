@@ -2,6 +2,7 @@ import { footprintCells } from '../sim/definitions';
 import { choppable, harvestable, isPlant } from '../sim/plants';
 import { sharesConstructionLayer } from '../sim/power-grid';
 import { extractTreeReason,isMinifiedTree,isPlantDesignationJob } from '../sim/tree-transfer';
+import {treePackLive} from '../sim/tree-transfer-rules';
 import { isRoofJob } from '../sim/roof-rules';
 import type { Cell, Command, Job, MaterialPile, Resource, Structure, World } from '../sim/types';
 import { mapObjectCells, type MapObjectSelection } from './map-object-selection';
@@ -64,7 +65,7 @@ function actionsFor(world: World, selected: MapObjectSelection, cells: readonly 
     }
     if(pile?.kind==='chunk'&&pile.owner.type==='ground'&&pile.haulRequested)actions.push({id:'cancel',label:'Annuler l’ordre',command:{type:'cancel-pile',pileId:pile.id}});
     if(pile&&isMinifiedTree(pile))ownsJob=job=>job.tree?.kind==='replant'&&job.tree.sourcePileId===pile.id;
-    if(pile&&isMinifiedTree(pile)&&pile.owner.type==='ground'&&!world.jobs.some(j=>j.tree?.kind==='replant'&&j.tree.sourcePileId===pile.id))actions.push({id:'replant',label:'Replanter',placementPileId:pile.id});
+    if(pile&&isMinifiedTree(pile)&&treePackLive(pile,world.tick)&&pile.owner.type==='ground'&&!world.jobs.some(j=>j.tree?.kind==='replant'&&j.tree.sourcePileId===pile.id))actions.push({id:'replant',label:'Replanter',placementPileId:pile.id});
   } else if (selected.kind === 'structure') {
     const structure = lookups?.structures ? lookups.structures.get(selected.id) : world.structures.find(structure => structure.id === selected.id);
     if (structure && !world.jobs.some(job => job.furniture?.structureId === structure.id) && !blocked(structure.kind, cells, true)) {

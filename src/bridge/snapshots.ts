@@ -1,4 +1,5 @@
 import {validateTreeTransport,registerTreeThingIds,validTreePileShape,validTreeJobShape,validPlantTargetShape} from '../sim/tree-transfer-save.ts';
+import type {MinifiedTreePile} from '../sim/tree-transfer-state.ts';
 import {validOriginalTreeResource} from '../sim/tree-transfer-resource-save.ts';
 import {hasPausedTreeClock} from '../sim/tree-transfer-clock.ts';
 import {validShelfTransport,validShelfGround,shelfIdentityOwners} from '../sim/shelf-save.ts';
@@ -848,6 +849,9 @@ export interface SnapshotValidationContext {
 }
 
 /** Reuses stable arrays and replaces changed arrays; previous render snapshots remain intact. */
+interface ExpiredTreeFact {wrapperId:number;resourceId:number;quantity:number;packedAt:number;expiresAt:number;source:string}
+const expiredTreeSource=(pile:MinifiedTreePile):string=>JSON.stringify(pile.innerResource,(_key,value)=>
+  value&&typeof value==='object'&&!Array.isArray(value)?Object.fromEntries(Object.keys(value).sort().map(k=>[k,value[k]])):value);
 export class SnapshotDecoder {
   private epoch = 0;
   private revision = 0;
@@ -862,6 +866,10 @@ export class SnapshotDecoder {
   // index; ordinary growth/metadata packets only copy the array of references.
   private resourceSlots = new Map<number, number>();
   private pileSlots = new Map<number, number>();
+  // Only dead pending trees have epoch-local facts. Ordinary packets add no
+  // index, retained-resource scan or mutable historical ownership registry.
+  private expiredTreeWrappers:ReadonlyMap<number,ExpiredTreeFact>|undefined;
+  private expiredTreeSources:ReadonlyMap<number,ExpiredTreeFact>|undefined;
 
   /** Public/mutable consumers retain the mutation-aware historical reader.
    * The closed MAIN subclass owns its fixed consumers and local query scope. */
@@ -1139,7 +1147,19 @@ export class SnapshotDecoder {
       return resync('Contenu ou transfert des capsules initiales réécrit dans cette partie.');
     const validation=this.createValidationContext(next,resourceReuse,geometryReuse),powerTopology=validation.powerParents;
     const identities=new ValidationIdentityContext(next,validation.resourceFacts);
-    if(next.jobs.some(j=>!validTreeJobShape(j,next.schemaVersion,next.nextId)||!validPlantTargetShape(j,next.schemaVersion,next.nextId))||!validateTreeTransport(next,next.schemaVersion))return resync('Invalid tree transfer domain.');
+    const oldDeadWrappers=message.epoch===this.epoch?this.expiredTreeWrappers:undefined;
+    const oldDeadSources=message.epoch===this.epoch?this.expiredTreeSources:undefined;
+    let addedDeadTrees:MinifiedTreePile[]|undefined,invalidDeadTree=false;
+    const collectTree=(pile:MinifiedTreePile)=>{
+      const old=oldDeadWrappers?.get(pile.id)??oldDeadSources?.get(pile.innerResource.id),pending=pile.plantPack.pendingExpiry;
+      if(old){
+        if(!pending||pile.id!==old.wrapperId||pile.innerResource.id!==old.resourceId||pending.quantity!==old.quantity||pile.plantPack.packedAt!==old.packedAt||pile.plantPack.expiresAt!==old.expiresAt||expiredTreeSource(pile)!==old.source)invalidDeadTree=true;
+      }else if(pending)(addedDeadTrees??=[]).push(pile);
+    };
+    if(next.jobs.some(j=>!validTreeJobShape(j,next.schemaVersion,next.nextId)||!validPlantTargetShape(j,next.schemaVersion,next.nextId))||!validateTreeTransport(next,next.schemaVersion,collectTree)||invalidDeadTree)return resync('Invalid tree transfer domain.');
+    // Retained resources could not already be this original; only actual
+    // checkpoint records or delta upserts can attempt to resurrect it.
+    if(oldDeadSources?.size&&(message.kind==='checkpoint'?next.resources:message.resources?.upserted??[]).some(r=>oldDeadSources.has(r.id)))return resync('Expired tree original cannot become a living resource in this epoch.');
     if(!validBiofuelTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Biocarburant, propriétaire original ou ravitaillement invalide.');
     if(!validAllowedAreaTransport(next,next.schemaVersion))return resync('Zone autorisée, affectation originale ou retour invalide ou futur.');
     if(!validDoubleBedTransport(next,next.schemaVersion))return resync('Lit double, place ou réservation invalide ou futur.');
@@ -1353,6 +1373,13 @@ export class SnapshotDecoder {
       }
     }
     const previous = this.current;
+    let deadWrappers=oldDeadWrappers,deadSources=oldDeadSources;
+    if(addedDeadTrees?.length){
+      const wrappers=new Map<number,ExpiredTreeFact>(oldDeadWrappers??[]),sources=new Map<number,ExpiredTreeFact>(oldDeadSources??[]);
+      for(const pile of addedDeadTrees){const fact:ExpiredTreeFact={wrapperId:pile.id,resourceId:pile.innerResource.id,quantity:pile.plantPack.pendingExpiry!.quantity,packedAt:pile.plantPack.packedAt,expiresAt:pile.plantPack.expiresAt,source:expiredTreeSource(pile)};wrappers.set(fact.wrapperId,fact);sources.set(fact.resourceId,fact);}
+      deadWrappers=wrappers;deadSources=sources;
+    }
+    this.expiredTreeWrappers=deadWrappers;this.expiredTreeSources=deadSources;
     this.current = next; this.epoch = message.epoch; this.revision = message.revision;
     // Publish only at the confirmed boundary, after every guard and planet commit.
     if (message.kind === 'checkpoint' || !previous) this.#snapshotChanges.reset(next, message.epoch, message.revision);

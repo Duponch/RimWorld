@@ -21,9 +21,14 @@ export function itemInformation(pile:MaterialPile):ObjectInformationInput {
   if(isMinifiedTree(pile)){
     add('Général','Masse','150 kg','Masse de l’arbre entier ; son portage à la main est distinct du transport de provisions en voyage.');
     add('Général','Points de vie',`${pileMaxHp(pile,235)-pileDamage(pile)} / ${pileMaxHp(pile,235)}`,'État de l’emballage, distinct de la santé de l’arbre conservé à l’intérieur.');
-    add('Arbre','Espèce',floraDefinition(pile.innerResource)?.label??'Arbre','L’arbre conserve son espèce lors de sa replantation.');
-    add('Arbre','Croissance',`${Math.round((pile.innerResource.growth??1)*100)} %`,'La croissance est suspendue tant que l’arbre reste déraciné.');
-    add('Arbre','Conservation','7 jours après le déracinement','Replantez l’arbre sur un sol fertile et sans toit avant sa mort.');
+    add('Arbre','Espèce',floraDefinition(pile.innerResource)?.label??'Arbre',pile.plantPack.pendingExpiry?'Espèce de l’arbre original avant sa mort.':'L’arbre conserve son espèce lors de sa replantation.');
+    if(pile.plantPack.pendingExpiry){
+      add('Arbre','État','Mort · restes en attente','L’arbre est mort à son échéance et ne peut plus être replanté.');
+      add('Arbre','Bois à déposer',String(pile.plantPack.pendingExpiry.quantity),'Tous les restes sont conservés ; leur dépôt attend de pouvoir se faire entièrement.');
+    }else{
+      add('Arbre','Croissance',`${Math.round((pile.innerResource.growth??1)*100)} %`,'La croissance est suspendue tant que l’arbre reste déraciné.');
+      add('Arbre','Conservation','7 jours après le déracinement','Replantez l’arbre sur un sol fertile et sans toit avant sa mort.');
+    }
   }
   if(pile.mechCorpse){
     add('Général','Masse restante',`${mechCorpseMass(pile).toFixed(3).replace('.',',')} kg`,'Masse de la carcasse entière, issue de la couverture naturelle des parties restantes. Les blessures seules ne retirent pas de matière.');
@@ -51,5 +56,5 @@ export function itemInformation(pile:MaterialPile):ObjectInformationInput {
     add('Isolation','Chaleur',`${insulation.heat.toFixed(1)} °C`,'Isolation de cette pièce après facteur de qualité.');
     add('Vêtement','Parties couvertes',apparel.coverage.parts.map(part=>BODY_PARTS[part].label).join(', '),'Parties anatomiques couvertes par cette pièce. La couverture participe au calcul de protection au contact.');
   }
-  return {title:isApparelItem(pile.item)&&pile.apparel?apparelLabel(pile):definition.label,description:definition.kind==='food'?'Aliment physique pouvant être consommé selon le régime alimentaire.':definition.kind==='apparel'?'Vêtement physique qui peut être porté, retiré et stocké.':definition.kind==='weapon'?'Arme physique qui peut être équipée, déposée et stockée.':'Objet physique de la colonie.',rows};
+  return {title:isMinifiedTree(pile)&&pile.plantPack.pendingExpiry?'Arbre mort · restes en attente':isApparelItem(pile.item)&&pile.apparel?apparelLabel(pile):definition.label,description:isMinifiedTree(pile)&&pile.plantPack.pendingExpiry?'Arbre mort ; tous ses restes sont conservés jusqu’à leur dépôt.':definition.kind==='food'?'Aliment physique pouvant être consommé selon le régime alimentaire.':definition.kind==='apparel'?'Vêtement physique qui peut être porté, retiré et stocké.':definition.kind==='weapon'?'Arme physique qui peut être équipée, déposée et stockée.':'Objet physique de la colonie.',rows};
 }

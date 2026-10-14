@@ -11,7 +11,7 @@ import {refreshStock} from '../src/sim/materials';
 import {SnapshotEncoder,SnapshotDecoder} from '../src/bridge/snapshots';
 import {serializeWorld,deserializeWorld,validateWorld} from '../src/sim/serialization';
 import type {PlantSpecies} from '../src/sim/biome-flora';
-import type {Resource,World} from '../src/sim/types';
+import {SCHEMA_VERSION,type Resource,type World} from '../src/sim/types';
 
 function independentDraws(seed:number,count:number){
  let state=BigInt(seed>>>0);const mask=0xffffffffn,values:number[]=[];
@@ -96,7 +96,7 @@ test('V352 saturated typed CUT output refuses before source, RNG, IDs, stocks or
 
 test('V352 schema234 typed CUT stays literal and neutral migration does not create retrospective products or draws',()=>{
  const {w}=scene(),legacy=structuredClone(w);Object.assign(legacy,{schemaVersion:234});
- const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated.schemaVersion).toBe(235);expect(migrated.rng).toBe(legacy.rng);expect(migrated.piles).toEqual([]);
+ const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);expect(migrated.rng).toBe(legacy.rng);expect(migrated.piles).toEqual([]);
  const rng=legacy.rng,nextId=legacy.nextId;expect(gatherResource(legacy,legacy.resources[0]!,'cut',undefined,legacy.pawns[0])).toBe(0);
  expect(legacy.piles).toEqual([]);expect(legacy.rng).toBe(rng);expect(legacy.nextId).toBe(nextId);
  expect(deserializeWorld(JSON.stringify(legacy)).piles).toEqual([]);

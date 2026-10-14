@@ -2,7 +2,7 @@
 import type {Cell,MaterialOwner,MaterialPile,Resource} from './types.ts';
 import type {PlantLife} from './plant-life.ts';
 import {PLANT_LIFE_INTERVAL} from './plant-life.ts';
-import {treeExpiryYield,treePackDeadline,extractTreeDefinition} from './tree-transfer-rules.ts';
+import {treeExpiryYield,treePackDeadline,extractTreeDefinition,treePackLive} from './tree-transfer-rules.ts';
 import type {MinifiedTreePile,TreeJob,TreeOutput} from './tree-transfer-state.ts';
 export type PausedTreeLife=PlantLife&{pausedTicks:number;ageTick:number;leaflessPausedTicks?:number};
 export interface TreePileRef {pile:MinifiedTreePile;container:unknown;clock:number;active:boolean}
@@ -34,7 +34,7 @@ export interface TreeHost {
   expiryOutputStillValid(ref:TreePileRef,plan:TreeExpiryOutputPlan):boolean;
   commitExpiryOutput(ref:TreePileRef,plan:TreeExpiryOutputPlan):void;
   /** Release source-ID rivals/clearance and real carrier task after committing goods. */
-  removeTreeClaims(resourceId:number,wrapperId?:number,completedJobId?:number):void;
+  removeTreeClaims(resourceId:number,wrapperId?:number,completedJobId?:number,expiry?:true):void;
   finish(job:TreeJob):void;
   /** Captured source-cell growth, not contained coordinates queried after removal. */
   growth(resource:Resource):number;
@@ -81,14 +81,14 @@ export function planTreeReplantation(host:TreeHost,job:TreeJob):ReplantPlan|unde
   if(job.tree.kind!=='replant'||job.tree.phase!=='prepare'||job.tree.carryPileId===null)return;
   const ref=host.pile(job.tree.carryPileId);
   if(!ref||!ref.active||ref.pile.owner.type!=='pawn'||ref.pile.owner.pawnId!==job.reservedBy||
-    ref.pile.innerResource.id!==job.tree.resourceId||host.tick>=ref.pile.plantPack.expiresAt||
+    ref.pile.innerResource.id!==job.tree.resourceId||!treePackLive(ref.pile,host.tick)||
     !host.replantReady(job,ref.pile))return;
   return {tick:host.tick,nextId:host.nextId,job,ref,signature:fingerprint(ref.pile)};
 }
 export function commitTreeReplantation(host:TreeHost,plan:ReplantPlan):Resource|undefined {
   if(host.tick!==plan.tick||host.nextId!==plan.nextId||host.job(plan.job.id)!==plan.job||
     host.pile(plan.ref.pile.id)?.pile!==plan.ref.pile||fingerprint(plan.ref.pile)!==plan.signature||
-    !host.replantReady(plan.job,plan.ref.pile)||host.tick>=plan.ref.pile.plantPack.expiresAt)return;
+    !host.replantReady(plan.job,plan.ref.pile)||!treePackLive(plan.ref.pile,host.tick))return;
   const original=plan.ref.pile.innerResource;
   if(host.resource(original.id))return; // No coexistence with a forged clone.
   resumeTreeLife(original,plan.ref.pile.plantPack.packedAt,host.tick);
@@ -101,7 +101,7 @@ export function commitTreeReplantation(host:TreeHost,plan:ReplantPlan):Resource|
 export interface ExpiryPlan {tick:number;nextId:number;beforeRng:number;afterRng:number;ref:TreePileRef;signature:string;output:TreeExpiryOutputPlan}
 export function planTreeExpiry(host:TreeHost,ref:TreePileRef,destroyed=false):ExpiryPlan|undefined {
   if(!ref.active||!destroyed&&host.tick<ref.pile.plantPack.expiresAt)return;
-  const roll=treeExpiryYield(ref.pile,host.rng,host.expiryYieldFactor(ref));if(!roll)return;
+  const pending=ref.pile.plantPack.pendingExpiry,roll=pending?{quantity:pending.quantity,rng:host.rng}:treeExpiryYield(ref.pile,host.rng,host.expiryYieldFactor(ref));if(!roll)return;
   const output=host.expiryOutput(ref,roll.quantity);
   if(!output||!host.idsAvailable(output.newIds,ref))return;
   if(output.outputs.reduce((n,o)=>n+o.quantity,0)!==roll.quantity)return;
@@ -114,5 +114,17 @@ export function commitTreeExpiry(host:TreeHost,plan:ExpiryPlan):boolean {
   // Adapter commits removal/new IDs in one transaction; a held owner stays at the
   // same physical container. It interrupts current work without ending a live edge.
   host.removePile(plan.ref);host.commitExpiryOutput(plan.ref,plan.output);host.rng=plan.afterRng;
-  host.removeTreeClaims(plan.ref.pile.innerResource.id,plan.ref.pile.id);return true;
+  host.removeTreeClaims(plan.ref.pile.innerResource.id,plan.ref.pile.id,undefined,true);return true;
+}
+export interface PendingExpiryPlan {tick:number;nextId:number;beforeRng:number;afterRng:number;ref:TreePileRef;signature:string;quantity:number;retryAt:number}
+/** Only the first failed expiry captures a draw. No lifetime is extended. */
+export function planPendingTreeExpiry(host:TreeHost,ref:TreePileRef):PendingExpiryPlan|undefined {
+  if(!ref.active||host.tick<ref.pile.plantPack.expiresAt||ref.pile.plantPack.pendingExpiry||!Number.isSafeInteger(host.tick+20))return;
+  const roll=treeExpiryYield(ref.pile,host.rng,host.expiryYieldFactor(ref));if(!roll||roll.quantity<1)return;
+  return {tick:host.tick,nextId:host.nextId,beforeRng:host.rng,afterRng:roll.rng,ref,signature:fingerprint(ref.pile),quantity:roll.quantity,retryAt:host.tick+20};
+}
+export function commitPendingTreeExpiry(host:TreeHost,plan:PendingExpiryPlan):boolean {
+  if(host.tick!==plan.tick||host.nextId!==plan.nextId||host.rng!==plan.beforeRng||host.pile(plan.ref.pile.id)?.pile!==plan.ref.pile||fingerprint(plan.ref.pile)!==plan.signature)return false;
+  plan.ref.pile.plantPack={...plan.ref.pile.plantPack,pendingExpiry:{quantity:plan.quantity,retryAt:plan.retryAt}};
+  host.rng=plan.afterRng;host.removeTreeClaims(plan.ref.pile.innerResource.id,plan.ref.pile.id,undefined,true);return true;
 }

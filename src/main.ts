@@ -170,6 +170,7 @@ import { installTextSelectionGuard } from './ui/text-selection';
 import { pawnNeedsMarkup, updatePawnInspection } from './ui/pawn-inspection';
 import { openObjectInformation } from './ui/object-information';
 import { itemInformation } from './ui/item-information';
+import {minifiedTreeDescription} from './ui/minified-tree-inspection';
 import { healthCapacityRows } from './ui/health-inspection';
 import { ITEM_DEFINITIONS, availableNutrition } from './sim/items';
 import { foodFreshnessLabel } from './ui/food-freshness';
@@ -1380,7 +1381,7 @@ function renderState() {
       const zone=selectedObject.kind==='growing'?world.growingZones.find(z=>z.id===selectedObject!.id):undefined;
       el('cell-title').textContent = packed ? `Meuble emballé · ${buildingLabels[packed.building.kind]}` : pile ? ITEM_DEFINITIONS[pile.item].label : structure ? buildingLabels[structure.kind] : resource ? (floraDefinition(resource)?.label??resourceLabels[resource.kind]) : job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]}` : zone ? 'Zone de culture' : storage ? `Zone de stockage ${stockpileZoneId(storageCell!)}` : 'Massif rocheux';
       let cellDescription = resource ? (isPlant(resource)||resource.kind==='tree') ? plantInspection(world,resource) : `Quantité : ${resource.amount}` : pile ? `Quantité : ${pile.quantity}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:pile.kind==='corpse'?` · ${{fresh:'Fraîche',rotting:'Pourrie (impropre à la boucherie)',desiccated:'Desséchée'}[corpseStage(pile,world.tick)]}`:''}` : structure ? `${structureFootprintLabel(structure)} cases` : job ? queryJobStatus(world,job).reason??'' : zone ? `Culture : ${PLANT_DEFINITIONS[zone.plant].label} · ${zone.cells.length} cases${growingTemperatureInspection(world,selectedCell)}` : storage ? `Taille : ${stockpileZoneCells(world,storageCell!.id).length} cases` : '';
-      if(pile&&isMinifiedTree(pile))cellDescription=`${floraDefinition(pile.innerResource)?.label??'Arbre'} · Croissance : ${Math.round((pile.innerResource.growth??1)*100)} % · À replanter sous ${Math.max(0,Math.ceil((pile.plantPack.expiresAt-world.tick)/6000))} jour(s) · 150 kg`;
+      if(pile&&isMinifiedTree(pile)){cellDescription=minifiedTreeDescription(pile,world.tick);if(pile.plantPack.pendingExpiry)el('cell-title').textContent='Arbre mort · restes en attente';}
       let cellHealth:CellHealth|undefined;
       if(pile&&isMinifiedTree(pile))cellHealth={current:100-(pile.damage??0),maximum:100,label:'Emballage'};
       const inspectedBuilding=packed?.building??structure;
@@ -1778,7 +1779,7 @@ function receiveMainSnapshot(world: World, cost: number, speed: number, replaced
     const tree=world.piles.find(p=>p.owner.type==='ground'&&isMinifiedTree(p)&&p.innerResource.id===selectedObject!.id);
     if(tree&&tree.owner.type==='ground'){selectedObject={kind:'pile',id:tree.id};selectedObjects=[selectedObject];selectedCell={x:tree.owner.x,z:tree.owner.z};renderer?.setSelectedObject(selectedObject);zoneAnchorChanged=true;}
   }
-  if(currentTool==='replant-tree'&&replantPileId!==undefined&&!world.piles.some(p=>p.id===replantPileId&&p.owner.type==='ground'&&isMinifiedTree(p)))applyTool('select');
+  if(currentTool==='replant-tree'&&replantPileId!==undefined&&!world.piles.some(p=>p.id===replantPileId&&p.owner.type==='ground'&&isMinifiedTree(p)&&!p.plantPack.pendingExpiry))applyTool('select');
   snapshot=world;stepMs=cost;currentSpeed=speed;latestMotion=motion;session.hasWorld=true;frontMenu.setHasGame(true);
   let objectGroupChanged=false;
   if(!replaced&&selectedObjects.length>1){
