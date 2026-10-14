@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V355, schéma 236 conservé : [réserve médicale complète et aube](docs/gameplay/medicine-day-v355.md).**26doses rentrées sur deuxcases par trois transports/fusions réels ; même campagne poursuivie jusqu’à60031, quatre reprises exactes WebGPU. QA-only, commit PENDING ; V3547a0be77f poussé et V353/f6ced911 reste publié. Suite autonome journée naturelle et préparation du coin repas/incidents, sans campagne entière/FPS/EA100% certifiés. Les états suivants sont historiques.
+
 **V354, schéma 236 conservé : [une dose de médicament à l’intérieur](docs/gameplay/medicine-reserve-v354.md).** Transport naturel source/cargo/dépôt tracé, mêmes personnes et cinqrecharges exactes en ChromeWebGPU. QA-only, produitV353/f6ced911 inchangé, commit PENDING ; suite autonome réserve médicale complète et fin de journée, sans soinV344/FPS/campagne entière certifiés. Les états suivants sont historiques.
 
 **V353 livré**, schéma 236 : [expiration d’arbre sous saturation](docs/gameplay/tree-expiry-v353.md), produit `8dc7bf70` commité/poussé et [publié une fois en f6ced911](docs/development/cloudflare-pages.md#publication-v353--arbre-expiré-et-sortie-saturée),106réponsesHTTPS exactes.213tests/14fichiers acquis par reprises, corpus63références et cinqrecharges WebGPU exactes. Autonomie ACTIVE vers réserve médicale/campagne ; aucun FPS/campagne entière/parité exhaustive certifiés. Les états suivants sont historiques.

@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V355, schéma 236 conservé : [réserve26 et aube suivante](gameplay/medicine-day-v355.md).** Troistrajets/fusions réels puis besoin/cuisine jusqu’à60031, quatre recharges exactes ChromeWebGPU108,190s et typagefinal16,291s. QA-only, commit PENDING ; V3547a0be77f livré, produitV353/f6ced911 reste publié. Suite autonome une journée naturelle depuis60031 et coinrepas/incidents selon audit ; aucune réussitefuture/campagneentière/FPS certifiés. Les états suivants sont historiques.
+
 **V354, schéma 236 conservé : [première dose médicale intérieure](gameplay/medicine-reserve-v354.md).** Source18975/cargo19676/dépôt123114 tracés depuis V34758168, cinqrecharges exactes et ChromeWebGPU55,281s. QA-only, commit PENDING, V353/f6ced911 reste publié ; suite autonome réserve26surdeuxcases puisfinjournée60000, aucun résultat futur/FPS/récupérationV344 certifiés. Les états suivants sont historiques.
 
 **V353 livré**, schéma 236 : produit `8dc7bf70` commité/poussé et [publié une fois en f6ced911](development/cloudflare-pages.md#publication-v353--arbre-expiré-et-sortie-saturée),106réponsesHTTPS exactes.213cas/14 acquis par reprises, corpus63/66 et cinqrecharges WebGPU exactes. Suite autonome ACTIVE : V354 médicament intérieur depuis V34758168 puis campagne durable, branches blessées conservées. Aucun FPS/parité exhaustive/EA100% certifiés. Les états suivants sont historiques.

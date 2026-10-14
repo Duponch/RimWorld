@@ -19,3 +19,5 @@ Le pilote privé a d’abord été corrigé sur lecture statique : World utilise
 Premier natif rouge45,768s/body39,597s à58168, avant transport : le helper demandait le bouton Inspecter supprimé à la demande humaine V348. Son chemin select utilise désormais les vrais Escape et vérifie qu’aucun outil n’est actif. Le produit conserve cette sélection native et ne réintroduit pas le bouton. Rapport/export d’arrêt, capture et reprise restent dans native/native-reprise. Le helper est exercé par la réelle sélection/configuration de réserve de la reprise ; aucune suite native exhaustive n’est prétendue.
 
 Aucun moteur, bridge, rendu ou fichier public changé ; lot QA/pilote seulement, aucun nouveau build/corpus/déploiement requis. Produit V3538dc7bf70 et publication f6ced911 restent exacts. Aucun FPS, campagne entière, autonomie alimentaire, récupération V344 ou early access100% certifiés. Suite autonome : réserve médicale complète puis fin de journée avec les mêmes personnes et les règles ordinaires, sans forcer les ingestions.
+
+LotQA commité/poussé en `7a0be77f`, documentationPASS1,350s ; [suite réserve complète et aube V355](medicine-day-v355.md).
