@@ -1,5 +1,5 @@
-import {isConstructionLightPlant,clearanceOutputPending} from './construction-plants.ts';
-import {planConstructionPlantRetirement,commitConstructionPlantRetirement,retainClearingWorkAfterOutputRefusal} from './plant-retirement.ts';
+import {isConstructionLightPlant,clearanceOutputPending,workOutputPending} from './construction-plants.ts';
+import {planConstructionPlantRetirement,commitConstructionPlantRetirement,retainClearingWorkAfterOutputRefusal,retainWorkAfterOutputRefusal} from './plant-retirement.ts';
 import {applyTreeCommand,extractTreeReason,replantTreeReason,processTreeWork,advanceMinifiedTrees,isPlantDesignationJob,treeJobReason} from './tree-transfer.ts';
 import {applyDesignationCancel,cancelIntentJobs,clearPileHaulFlags} from './designation-cancel.ts';
 import {isShelfKind,newShelfStorage} from './shelf-storage.ts';
@@ -200,7 +200,7 @@ import { bombDanger,captureBombDangerSources } from './bomb-danger.ts';
 import { processHaul } from './hauling.ts';
 import { initializeHydroponicBasin,advanceHydroponics,hydroponicCropAllowed } from './hydroponics.ts';
 import { scheduleGrowing, cancelGrowingJobs, growingJobValid, finishSowing, jobDuration, growingZoneAt, resourceAt } from './farming.ts';
-import { isPlant, harvestable,choppable,berryYield } from './plants.ts';
+import { isPlant, harvestable,choppable,berryYield,plantCanYieldNow } from './plants.ts';
 import { search, searchCandidates, destinationValid, planWork, type SearchBudget, type NavigationGrid } from './work-planner.ts';
 import { workPriority,workType } from './work-types.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
@@ -769,7 +769,12 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
     if (!resource) { releaseWork(world, pawn); return; }
     if (job.kind === 'harvest' && !harvestable(world, resource)) { releaseWork(world, pawn); return; }
     const quantity=gatherResource(world,resource,job.kind,job.id,pawn);
-    if(quantity===null){setWorkUnits(job,Math.max(0,Math.round((jobDuration(world,job)-1)*WORK_FRACTIONS)));releaseWork(world,pawn);return;}
+    if(quantity===null){
+      // Current ground CUT has already paid its contact work and plant XP.
+      // Keep the producer claim and retry only placement at the saved boundary.
+      if(world.schemaVersion>=235&&job.kind==='cut'&&retainWorkAfterOutputRefusal(job,jobDuration(world,job))){pawn.planCooldown=20;return;}
+      setWorkUnits(job,Math.max(0,Math.round((jobDuration(world,job)-1)*WORK_FRACTIONS)));releaseWork(world,pawn);return;
+    }
     if(job.kind!=='chop'&&quantity>0)event(world,'job',`${pawn.name} a récolté ${quantity} ${harvestProductLabel(resource)}.`);
   } else if(job.kind==='lay-floor'||job.kind==='remove-floor'){
     if(!(job.kind==='lay-floor'?finishFloor(world,job):removeFloor(world,job))){releaseWork(world,pawn);return;}
@@ -1048,7 +1053,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
           if(outputPending&&pawn.planCooldown>0)continue;
           // The first failed producer already paid the completion work/XP.
           // A retry is output preflight, never another tick of plant work.
-          if(!outputPending)advanceWork(job.clearance,getLight().speedAt(pawn)*plantWorkRate(pawn,body,plant.kind==='tree'&&choppable(world,plant)&&berryYield(world,plant)>0));
+          if(!outputPending)advanceWork(job.clearance,getLight().speedAt(pawn)*plantWorkRate(pawn,body,world.schemaVersion>=235&&clearingKind(world,plant)==='cut'?plantCanYieldNow(world,plant):plant.kind==='tree'&&choppable(world,plant)&&berryYield(world,plant)>0));
           if(outputPending||job.clearance.progress>=duration) {
             const quantity=gatherResource(world,plant,clearingKind(world,plant),job.id,pawn);
             if(quantity===null){retainClearingWorkAfterOutputRefusal(job,duration);pawn.planCooldown=20;continue;}
@@ -1100,9 +1105,14 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
         }
         const plantJob=job.kind==='sow'||job.kind==='harvest'||job.kind==='cut'||job.kind==='chop';
         const tree=job.kind==='chop'?resourceAt(world,job.z*world.width+job.x):undefined;
-        const plantLearning=job.kind==='sow'||job.kind==='harvest'||!!tree&&choppable(world,tree)&&berryYield(world,tree)>0;
-        advanceWork(job,plantJob?getLight().speedAt(pawn)*plantWorkRate(pawn,body,plantLearning):constructionWorkRate(pawn,job,getLight().speedAt(pawn),body));
-        if (workProgress(job) >= jobDuration(world, job)) {completeJob(world, pawn, job);blocked=undefined;roofs=undefined;invalidateEnvironment();}
+        const cutSource=world.schemaVersion>=235&&job.kind==='cut'&&job.flowerPotId===undefined?resourceAt(world,job.z*world.width+job.x):undefined;
+        const plantLearning=job.kind==='sow'||job.kind==='harvest'||!!tree&&choppable(world,tree)&&berryYield(world,tree)>0||!!cutSource&&plantCanYieldNow(world,cutSource);
+        // Only CUT235 on a ground Resource reuses the paid output boundary.
+        // Flower pots and all historical CHOP/HARVEST paths keep their work.
+        const cutOutputPending=world.schemaVersion>=235&&job.kind==='cut'&&job.flowerPotId===undefined&&workOutputPending(job,jobDuration(world,job));
+        if(cutOutputPending&&pawn.planCooldown>0)continue;
+        if(!cutOutputPending)advanceWork(job,plantJob?getLight().speedAt(pawn)*plantWorkRate(pawn,body,plantLearning):constructionWorkRate(pawn,job,getLight().speedAt(pawn),body));
+        if (cutOutputPending||workProgress(job) >= jobDuration(world, job)) {completeJob(world, pawn, job);blocked=undefined;roofs=undefined;invalidateEnvironment();}
       } else moveToward(world, pawn, job, false, getBlocked, budget,false,getLight);
     }
     if(!(world.tick%2))processMechanicalDecisions();

@@ -1,5 +1,5 @@
 import { clearingDuration } from './gathering.ts';
-import { clearanceOutputPending } from './construction-plants.ts';
+import { clearanceOutputPending,workOutputPending } from './construction-plants.ts';
 import { workProgress } from './work-progress.ts';
 import { extractTreeDefinition } from './tree-transfer-rules.ts';
 import { isMinifiedTree } from './tree-transfer-state.ts';
@@ -27,9 +27,15 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
   const required = costs.reduce((n,c) => n+c.quantity,0), delivered = costs.reduce((n,c) => n+deliveredMaterial(world,job,c.item),0);
   const queued=job.reservedBy===null?undefined:world.pawns.find(p=>p.id===job.reservedBy&&p.orders.queue.includes(job.id));
   if(queued)return {code:'working',reason:`Réservé dans la file de ${queued.name}.`,delivered,required};
+  if(world.schemaVersion>=235&&job.kind==='cut'&&job.flowerPotId===undefined&&job.status==='active'){
+    const worker=world.pawns.find(p=>p.id===job.reservedBy&&p.jobId===job.id);
+    const source=world.resources.find(r=>job.plantTarget?r.id===job.plantTarget.resourceId:r.x===job.x&&r.z===job.z);
+    if(source&&worker?.state==='working'&&workOutputPending(job,jobDuration(world,job)))
+      return {code:source.blight?'working':'blocked',reason:source.blight?'Coupe effectuée ; retrait de la plante infectée en attente.':'Attend de la place pour les produits de la coupe.',delivered,required};
+  }
   // The same confirmed output boundary covers construction and roof clearing.
-  // Replanting has a distinct producer and never writes this waiting marker.
-  if (!job.tree && job.status === 'active' && job.clearance) {
+  // Replanting uses the same paid output boundary from V352 onward.
+  if (job.status === 'active' && job.clearance) {
     const plant = world.resources.find(r => r.id === job.clearance!.resourceId);
     const worker = world.pawns.find(p => p.id === job.reservedBy && p.jobId === job.id);
     if (plant && worker?.state === 'working' && clearanceOutputPending(job, clearingDuration(plant)))

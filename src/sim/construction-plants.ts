@@ -42,8 +42,10 @@ export const constructionFrameWipesPlants=(kind:JobKind|StructureKind):boolean=>
 
 /** Existing strict fraction reused for a paid output refusal, not a new field.
  * An exact historical fraction may be finalized up to0.0001 local unit early. */
+export const workOutputPending=(work:Pick<Job,'progress'|'workRemainder'>|undefined,duration:number):boolean=>
+  Number.isSafeInteger(duration)&&duration>=1&&work?.progress===duration-1&&work.workRemainder===9999;
 export const clearanceOutputPending=(job:Pick<Job,'clearance'>,duration:number):boolean=>
-  Number.isSafeInteger(duration)&&duration>=1&&job.clearance?.progress===duration-1&&job.clearance.workRemainder===9999;
+  workOutputPending(job.clearance,duration);
 
 /** A reserved future order is not an executing plant claim. Queried only on
  * work admission, not per animation/render frame. The owner may replace its

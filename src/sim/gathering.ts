@@ -3,7 +3,7 @@ import { addGroundMaterial,materialIdentityCount } from './materials.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { cropProduct } from './crops.ts';
 import { FLORA_DEFINITIONS } from './biome-flora.ts';
-import { isCrop, AFTER_HARVEST_GROWTH, choppable, harvestable, harvestRoll } from './plants.ts';
+import { isCrop, AFTER_HARVEST_GROWTH, choppable, harvestable, harvestRoll,plantCanYieldNow } from './plants.ts';
 import { interruptWork } from './interrupted-cargo.ts';
 import { releaseWork } from './work-release.ts';
 import { designateBlightedCrops } from './crop-blight-orders.ts';
@@ -13,12 +13,14 @@ import type { Pawn, Resource, World } from './types.ts';
  * leaves resource, RNG and material unchanged when output cannot be placed. */
 export function gatherResource(world: World, resource: Resource, kind:'chop'|'harvest'|'cut', producerJobId?:number, worker?:Pawn): number|null {
   if(kind==='harvest'&&!harvestable(world,resource)||kind==='chop'&&!choppable(world,resource))return null;
-  // Medicinal roots and V91 species clear without product. Historical bushes
-  // and other crops keep their established cut yield.
-  const roll=kind==='chop'&&!resource.species&&!worker?{quantity:resource.amount,rng:world.rng}:kind==='cut'&&(world.schemaVersion>=235&&resource.kind==='tree'||resource.blight||resource.species||resource.kind==='healroot'||resource.kind==='haygrass')?{quantity:0,rng:world.rng}:harvestRoll(world,resource,kind==='cut'?undefined:worker);
+  const currentCut=kind==='cut'&&world.schemaVersion>=235;
+  // CUT235 attempts the common worker yield only for a currently yieldable
+  // source. All pre235 paths remain literal, including legacy no-worker draws.
+  const roll=currentCut?(plantCanYieldNow(world,resource)?harvestRoll(world,resource,worker):{quantity:0,rng:world.rng}):
+    kind==='chop'&&!resource.species&&!worker?{quantity:resource.amount,rng:world.rng}:kind==='cut'&&(world.schemaVersion>=235&&resource.kind==='tree'||resource.blight||resource.species||resource.kind==='healroot'||resource.kind==='haygrass')?{quantity:0,rng:world.rng}:harvestRoll(world,resource,kind==='cut'?undefined:worker);
   if(roll.quantity>0) {
     const item=resource.species?FLORA_DEFINITIONS[resource.species].product:
-      kind==='chop'?'wood':isCrop(resource)?cropProduct(resource.kind):world.foodRules==='legacy'?'legacy-portion':'berries';
+      kind==='chop'||currentCut&&resource.kind==='tree'?'wood':isCrop(resource)?cropProduct(resource.kind):world.foodRules==='legacy'?'legacy-portion':'berries';
     if(!item)return null;
     const placements=planGroundPlacement(world,roll.quantity,resource,item);
     const identities=placements?.reduce((n,part)=>n+materialIdentityCount(world,part.quantity,{type:'ground',...part.cell},item),0)??0;

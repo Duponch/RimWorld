@@ -80,7 +80,10 @@ export function commitConstructionPlantRetirement(world:World,plan:PlantRetireme
  * advancement and plant XP at this exact boundary, even on retry wake-up.
  * A naturally saved fraction at the same boundary is finalized prospectively;
  * at most0.0001 local work unit separates it from the paid-output sentinel. */
+export function retainWorkAfterOutputRefusal(work:Pick<Job,'progress'|'workRemainder'>|undefined,duration:number):boolean {
+  if(!work||!Number.isSafeInteger(duration)||duration<1)return false;
+  work.progress=duration-1;work.workRemainder=9999;return true;
+}
 export function retainClearingWorkAfterOutputRefusal(job:Job,duration:number):boolean {
-  if(!job.clearance||!Number.isSafeInteger(duration)||duration<1)return false;
-  job.clearance.progress=duration-1;job.clearance.workRemainder=9999;return true;
+  return retainWorkAfterOutputRefusal(job.clearance,duration);
 }

@@ -1,5 +1,7 @@
 import {travelPieces} from './travel-timing.ts';
 import {gatherResource,clearingDuration} from './gathering.ts';
+import {clearanceOutputPending} from './construction-plants.ts';
+import {retainClearingWorkAfterOutputRefusal} from './plant-retirement.ts';
 import {advanceWork,workProgress,resetWork} from './work-progress.ts';
 import {extractTreeDefinition,treePackLive} from './tree-transfer-rules.ts';
 import {isMinifiedTree,type MinifiedTreePile,type TreeJob,type TreeCommand} from './tree-transfer-state.ts';
@@ -7,7 +9,7 @@ import {advanceTreeTransfer} from './tree-transfer-runtime.ts';
 import {planTreeExpiry,commitTreeExpiry,type TreeHost,type TreePileRef,type TreeExpiryOutputPlan} from './tree-transfer-atomic.ts';
 import {captureTreeOccurrences} from './tree-transfer-owners.ts';
 import {captureHumanOwners} from './human-owners.ts';
-import {plantGrowth,choppable,harvestable,isPlant} from './plants.ts';
+import {plantGrowth,choppable,harvestable,isPlant,plantCanYieldNow} from './plants.ts';
 import {plantWorkRate,plantWorkSpeed} from './plant-skills.ts';
 import {planGroundPlacement,groundCapacity,nearbyGround} from './ground-placement.ts';
 import {addMaterial,materialIdentityCount,refreshStock,reservedSource} from './materials.ts';
@@ -155,8 +157,13 @@ export function processTreeWork(w:World,p:Pawn,j:Job,move:(target:Cell,touch:boo
     if(obstruction.kind==='tree'||obstruction.kind==='rock'||treeJobReason(w,j,p)){interruptWork(w,p);return;}
     if(!contact(w,p,j)){move(j,false);return;}
     j.clearance??={resourceId:obstruction.id,progress:0};p.path=[];p.state='working';
-    advanceWork(j.clearance,plantWorkRate(p,body,true)*speed);
-    if(workProgress(j.clearance)>=clearingDuration(obstruction)){if(gatherResource(w,obstruction,'cut',j.id,p)===null){j.clearance.progress=clearingDuration(obstruction)-1;delete j.clearance.workRemainder;}else delete j.clearance;}
+    const duration=clearingDuration(obstruction),outputPending=clearanceOutputPending(j,duration);
+    if(outputPending&&p.planCooldown>0)return;
+    if(!outputPending)advanceWork(j.clearance,plantWorkRate(p,body,plantCanYieldNow(w,obstruction))*speed);
+    if(outputPending||workProgress(j.clearance)>=duration){
+      if(gatherResource(w,obstruction,'cut',j.id,p)===null){retainClearingWorkAfterOutputRefusal(j,duration);p.planCooldown=20;}
+      else delete j.clearance;
+    }
     return;
   }
   advanceTreeTransfer(hostFor(w),p,j,{

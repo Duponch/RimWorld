@@ -20,7 +20,7 @@ export const PLANT_DEFINITIONS = Object.freeze({
 export const isPlant = (plant: Resource): boolean => plant.species!==undefined || plant.kind === 'berries' || isCropKind(plant.kind);
 export const isCrop = (plant: Pick<Resource,'kind'>): plant is Pick<Resource,'kind'>&{kind:CropKind} => isCropKind(plant.kind);
 export const harvestProductLabel = (plant:Resource):string => plant.species?FLORA_DEFINITIONS[plant.species].product==='wood'?'bois':FLORA_DEFINITIONS[plant.species].product==='agave-fruit'?'agave':FLORA_DEFINITIONS[plant.species].product==='berries'?'baies':FLORA_DEFINITIONS[plant.species].product==='herbal-medicine'?'dose de médicament à base de plantes':FLORA_DEFINITIONS[plant.species].label:
-  plant.kind==='haygrass'?'foin':plant.kind==='healroot'?'dose de médicament à base de plantes':plant.kind==='cotton'?'tissu':plant.kind==='rice'?'riz':plant.kind==='potato'?'pommes de terre':plant.kind==='corn'?'maïs':'baies';
+  plant.kind==='tree'?'bois':plant.kind==='haygrass'?'foin':plant.kind==='healroot'?'dose de médicament à base de plantes':plant.kind==='cotton'?'tissu':plant.kind==='rice'?'riz':plant.kind==='potato'?'pommes de terre':plant.kind==='corn'?'maïs':'baies';
 
 export const BERRY_GROW_DAYS = 6;
 export const HARVEST_MIN_GROWTH = .65;
@@ -99,6 +99,15 @@ export function berryYield(world: World, plant: Resource): number {
   const remaining=healthSensitive?Math.max(0,Math.min(1,1-(plant.damage??0)/(medicinal?FLORA_DEFINITIONS['healroot-wild'].hitPoints:85))):1;
   const health=healthSensitive?.5+.5*remaining:1;
   return plant.amount * (.5 + .5 * (growth - minimum) / (1 - minimum)) * health;
+}
+
+/** Current yield eligibility at resolution; this is a reader, not a draw.
+ * Uses the existing clone's growth/HP basis. It does not add Core difficulty,
+ * drug-yield or duration rules, nor change historical CHOP/HARVEST contracts. */
+export function plantCanYieldNow(world:World,plant:Resource):boolean {
+  const hasProduct=plant.species?FLORA_DEFINITIONS[plant.species].product!==null:
+    plant.kind==='tree'||plant.kind==='berries'||isCrop(plant);
+  return hasProduct&&!plant.blight&&plant.amount>0&&berryYield(world,plant)>0;
 }
 /** Preview stochastic rounding without consuming RNG until placement succeeds. */
 export function harvestRoll(world: World, plant: Resource, worker?:Pawn): { quantity: number; rng: number } {

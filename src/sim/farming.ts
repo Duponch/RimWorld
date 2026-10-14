@@ -1,4 +1,6 @@
 import {extractTreeDefinition} from './tree-transfer-rules.ts';
+import {clearingDuration} from './gathering.ts';
+import {workOutputPending} from './construction-plants.ts';
 import { furnitureDuration } from './furniture-rules.ts';
 import { constructionRecipe } from './construction-materials.ts';
 import { deconstructionDuration } from './deconstruction-rules.ts';
@@ -64,6 +66,9 @@ export function jobDuration(world: World, job: Job, capturedResource?:Resource|n
   if(job.material!==undefined)return constructionRecipe(job).work;
   if(job.kind==='harvest'||job.kind==='cut'){
     const resource=capturedResource===undefined?resourceCells(world).get(index(world,job)):capturedResource;
+    // Only a paid ground CUT boundary keeps its healthy duration after an
+    // actual infection. Nonterminal and historical blighted work stays literal.
+    if(world.schemaVersion>=235&&job.kind==='cut'&&job.flowerPotId===undefined&&resource?.blight&&workOutputPending(job,clearingDuration(resource)))return clearingDuration(resource);
     if(job.kind==='cut'&&resource?.blight)return (resource.kind==='healroot'?40:20)/(3.3-2.3*plantGrowth(world,resource));
     if(job.kind==='harvest'&&(resource?.species==='healroot-wild'||resource?.kind==='healroot'))return 40;
     if(isCrop(resource??{kind:'rock'}))return 20;

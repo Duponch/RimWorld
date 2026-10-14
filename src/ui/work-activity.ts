@@ -1,5 +1,6 @@
 import { clearingDuration } from '../sim/gathering';
-import { clearanceOutputPending } from '../sim/construction-plants';
+import { clearanceOutputPending,workOutputPending } from '../sim/construction-plants';
+import { jobDuration } from '../sim/farming';
 import { floraDefinition } from '../sim/biome-flora';
 import { choppable } from '../sim/plants';
 import { extractTreeDefinition } from '../sim/tree-transfer-rules';
@@ -36,13 +37,17 @@ export function specificWorkActivity(world: World, pawn: Pawn): string | undefin
   if (pawn.jobId === null) return undefined;
   const job = world.jobs.find(item => item.id === pawn.jobId);
   if (!job || job.reservedBy !== pawn.id || job.status !== 'active') return undefined;
+  if(world.schemaVersion>=235&&job.kind==='cut'&&job.flowerPotId===undefined&&pawn.state==='working'&&workOutputPending(job,jobDuration(world,job))){
+    const source=world.resources.find(r=>job.plantTarget?r.id===job.plantTarget.resourceId:r.x===job.x&&r.z===job.z);
+    if(source)return source.blight?'En attente · retrait de la plante infectée':'En attente · place pour les produits de la coupe';
+  }
   if (job.clearance) {
     const resource = world.resources.find(item => item.id === job.clearance!.resourceId);
     if (!resource) return undefined;
     const label = floraDefinition(resource)?.label ?? (resource.kind === 'tree' ? 'arbre' : 'plante');
     if (pawn.state === 'moving') return `Rejoint ${label.toLocaleLowerCase('fr')} pour dégager ${job.tree?.kind === 'replant' ? 'l’emplacement de replantation' : 'le chantier'}`;
     if (pawn.state !== 'working') return undefined;
-    if (!job.tree && clearanceOutputPending(job, clearingDuration(resource))) return 'En attente · place pour les produits du dégagement';
+    if (clearanceOutputPending(job, clearingDuration(resource))) return 'En attente · place pour les produits du dégagement';
     const percentage = Math.min(99, Math.floor(100 * workProgress(job.clearance) / clearingDuration(resource)));
     return `Dégagement · ${resource.kind === 'tree' && choppable(world, resource) ? 'abattage' : 'coupe'} de ${label.toLocaleLowerCase('fr')} (${percentage} %)${job.tree?.kind === 'replant' ? ' avant replantation' : ''}`;
   }
