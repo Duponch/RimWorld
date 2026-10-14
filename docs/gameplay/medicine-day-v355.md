@@ -31,3 +31,5 @@ ROOT seul, sources/tests/pilotes figés ; Chrome/WebGPU acquis par reprise PASS1
 Deux rouges préparatoires conservés :46,306s/body41,9s attendait le bouton d’expansion dans le mauvais enfant DOM cell-storage ;35,206s attendait un export égal à un témoin de snapshot lu avant l’adoption asynchrone du clic d’expansion. Le bon bouton vit dans l’inspecteur commun ; le pilote attend maintenant les deux cellules confirmées avant de prendre son témoin. Les exports d’arrêt sont conservés dans native/native-reprise, sans recharger ni présenter une réussite. Produit, sauvegardes et gardes inchangés.
 
 QA-only : aucun moteur/bridge/rendu/public changé, aucun build/corpus/déploiement inchangé rejoué. ProduitV353 `8dc7bf70` et publication `f6ced911` conservés. Prêt au commit/push après documentation. Suite autonome : une journée naturelle plus longue depuis60031, avec examen du coin repas et de la préparation aux incidents, mêmes personnes et branche distincte de V344. Aucun résultat futur, FPS, parité exhaustive ou early access100% certifiés.
+
+LotQA commité/poussé en `b0b09701`, documentationPASS1,219s ; la sortie60031 rechargée est le point de reprise autonome suivant.

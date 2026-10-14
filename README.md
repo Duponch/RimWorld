@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V354–V355 livrés**, schéma 236 conservé : QA `7a0be77f`/`b0b09701`, [réserve médicale complète et aube](docs/gameplay/medicine-day-v355.md).26doses intérieures, neuf reprises natives exactes sur les deux lots et même campagne jusqu’à60031. ProduitV353/f6ced911 reste publié ; suite autonome coinrepas/journée naturelle et incidents, sans soinV344/campagne entière/FPS/EA100% certifiés. Les états suivants sont historiques.
+
 **V355, schéma 236 conservé : [réserve médicale complète et aube](docs/gameplay/medicine-day-v355.md).**26doses rentrées sur deuxcases par trois transports/fusions réels ; même campagne poursuivie jusqu’à60031, quatre reprises exactes WebGPU. QA-only, commit PENDING ; V3547a0be77f poussé et V353/f6ced911 reste publié. Suite autonome journée naturelle et préparation du coin repas/incidents, sans campagne entière/FPS/EA100% certifiés. Les états suivants sont historiques.
 
 **V354, schéma 236 conservé : [une dose de médicament à l’intérieur](docs/gameplay/medicine-reserve-v354.md).** Transport naturel source/cargo/dépôt tracé, mêmes personnes et cinqrecharges exactes en ChromeWebGPU. QA-only, produitV353/f6ced911 inchangé, commit PENDING ; suite autonome réserve médicale complète et fin de journée, sans soinV344/FPS/campagne entière certifiés. Les états suivants sont historiques.

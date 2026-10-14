@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V354–V355 livrés**, schéma 236 conservé : QA `7a0be77f`/`b0b09701`, [réserve26 et aube suivante](gameplay/medicine-day-v355.md), neuf recharges natives exactes cumulées. ProduitV353/f6ced911 reste publié, aucun déploiement inchangé rejoué. Suite autonome ACTIVE : depuis60031, coinrepas et journée naturelle selon audit, arrêt/conservation au premier danger réel ; aucune réussitefuture/guérisonV344/campagneentière/FPS certifiés. Les états suivants sont historiques.
+
 **V355, schéma 236 conservé : [réserve26 et aube suivante](gameplay/medicine-day-v355.md).** Troistrajets/fusions réels puis besoin/cuisine jusqu’à60031, quatre recharges exactes ChromeWebGPU108,190s et typagefinal16,291s. QA-only, commit PENDING ; V3547a0be77f livré, produitV353/f6ced911 reste publié. Suite autonome une journée naturelle depuis60031 et coinrepas/incidents selon audit ; aucune réussitefuture/campagneentière/FPS certifiés. Les états suivants sont historiques.
 
 **V354, schéma 236 conservé : [première dose médicale intérieure](gameplay/medicine-reserve-v354.md).** Source18975/cargo19676/dépôt123114 tracés depuis V34758168, cinqrecharges exactes et ChromeWebGPU55,281s. QA-only, commit PENDING, V353/f6ced911 reste publié ; suite autonome réserve26surdeuxcases puisfinjournée60000, aucun résultat futur/FPS/récupérationV344 certifiés. Les états suivants sont historiques.

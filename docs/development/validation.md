@@ -1,5 +1,7 @@
 # Validation courante — V349–V350
 
+**V354–V355 livrés**, schéma 236 conservé : [preuve et limites](../gameplay/medicine-day-v355.md), QA `7a0be77f`/`b0b09701` commités/poussés. ChromeWebGPU55,281/108,190s, cinq+quatre recharges exactes, sixcapturesacquises et unerougeinspectéesROOT ; typesfinals16,140/16,291s etdocs1,350/1,219s PASS, gels2928/2929exacts. Produit/publicationV353 conservés ; aucune suiteexhaustive/campagneentière/FPS certifiés. Les validations suivantes sont historiques.
+
 **V355, schéma 236 conservé : [réserve médicale et aube naturelle](../gameplay/medicine-day-v355.md).** ROOTChromeWebGPU108,190s/body103,947s, quatre recharges58206/58233/58333/60031exactes, erreurs[]/troiscapturesinspectées et gel2929exact ; typages16,452/16,291s PASS, deux rouges de préparation conservés. QA-only, gate doc/commit PENDING ; V3547a0be77f poussé, produitV353 publié conservé. Les validations suivantes sont historiques.
 
 **V354, schéma 236 conservé : [réserve médicale naturelle](../gameplay/medicine-reserve-v354.md).** ROOTChromeWebGPU55,281s/body49,918s, cinqrecharges exactes58168/58168/58168/58199/58206, erreurs[], troiscapturesacquises et unerougeinspectées, gel2928exact. LotQA, aucun build/corpus/déploiement inchangé rejoué ; typage final16,140s PASS, gate doc/commit PENDING, produitV353 publié conservé. Les validations suivantes sont historiques.
