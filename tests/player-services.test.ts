@@ -27,7 +27,15 @@ test('forced refuel bypasses automation, reserves its station while queued, trav
   rejected(w,{...fuel,pawnId:q!.id});rejected(w,fuel);
   q!.priorities.cook=1;expect(applyCommand(w,{type:'bill-add',structureId:s.id}).ok).toBe(true);
   expect(availableCookingStations(w,q!)).toEqual([]);
-  const raw=JSON.parse(serializeWorld(w));const old={...raw,schemaVersion:18};expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/version 18/);
+  const raw=JSON.parse(serializeWorld(w));
+  // Prepare the declared old fixture before injecting the future fuel order.
+  // Current default food/actor fields must not intercept the intended refusal.
+  const old=structuredClone(raw),futureFuel=structuredClone(raw.pawns[0].orders.queue[0]);
+  old.pawns[0].orders.queue=[];withoutPawnSkills(old);old.schemaVersion=18;
+  for(const actor of old.pawns){delete actor.priorities.mine;delete actor.priorities.craft;}
+  delete old.deconstructed;delete old.packed;
+  old.pawns[0].orders.queue.push(futureFuel);
+  expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/version 18/);
   for(const mutate of [(s:any)=>s.pawns[0].orders.queue[0].destination.forced=false,(s:any)=>s.pawns[0].orders.queue[0].destination.structureId=999999,(s:any)=>s.pawns[1].orders.queue.push(structuredClone(s.pawns[0].orders.queue[0]))]) {
     const invalid=structuredClone(raw);mutate(invalid);expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow();
   }

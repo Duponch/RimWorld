@@ -1,0 +1,25 @@
+# Ravitaillement manuel des générateurs V365
+
+Le clic droit propose désormais le ravitaillement des générateurs à bois et à biocarburant. Le moteur savait déjà les ravitailler ; seul leur accès par le menu manquait. Le même prédicat couvre les cinq consommateurs actuels, sans modifier recettes, capacités, matières ou schéma238.
+
+## Correction et portée
+
+`player-orders.ts` réemploie isFueledBuilding pour identifier le bâtiment sous toute son empreinte et proposer la destination fuel. Il conserve planHaulOrder, réservations exclusives, restrictions personnelles, priorité Transport, accès et zones autorisées. Bois et biocarburant gardent leurs destinations respectives ; moins d’une unité entière de capacité ne permet aucun crédit partiel. Les options de cuisine et mini-tourelle suivent le même chemin qu’avant.
+
+Le correctif n’ajoute aucune boucle de simulation ou de rendu. Dans la requête de menu existante, deux types de plus peuvent maintenant demander leur vrai plan de transport ; ce coût par requête n’est pas mesuré. Aucune gratuité de ce calcul ni mesure FPS n’est revendiquée. Schéma238 conservé, pas de migration ou réécriture d’un ancien save.
+
+Deux lectures statiques indépendantes ont confirmé le périmètre. Les tests nouveaux contrôlent les cinq bâtiments sur chaque cellule, lecture pure, ordre réel, pickup complet dans un nouveau cargoID, pickup partiel dix+reste cinq, service/crédit, interruption historique, combustible correct, réservations et refus de capacité fractionnaire. La custody source/cargo/destinationforced est explicitement vérifiée. Ils ne prouvent pas encore un réseau Batteries réellement payé dans la campagne.
+
+## Contrôles acquis
+
+ROOT seul, contrôles séquentiels sur sources figées. Groupe21cas/4fichiers acquis par reprises, dont11nouveaux : premier RED7,948s avec20verts et un ancien test18 intercepté par ses permissions modernes de fodder. Le fixture18 est désormais préparé avant l’injection du futur ordre de combustible ; le refus attendu version18 et les validateurs produit restent inchangés. Reprise du seul fichier2cas PASS6,168s. Typage du lot natif PASS12,777s, puis PASS12,965s après ajout du pilote clinique indépendant ; Pages PASS2,214s. Ces ajouts de tests ne changent pas les sources produit du build. Corpus inchangé non rejoué, car aucun domaine de sauvegarde/migration n’est modifié.
+
+Contrôle natif préparé : deux scènes32² explicitement distinctes de la campagne. Générateurs, recherche et cinq unités initiales sont des fixtures déclarées ; seules les commandes par vrais menus, les pickups, le travail et les exports/recharges peuvent être crédités. Les pilotes privés d’origine restent figés ; ROOT a adopté leurs chemins dans les tests et une copie isolée de config/wrapper. Opt-out au niveau du module évite toute allocation de navigateur dans le chemin par défaut. Wrapper réserve un nom inédit avecwx avant Playwright, sources et préparation contrôlées avant/après, aucune preuve écrasée.
+
+Unique contrôle Chrome/WebGPU **PASS50,384s**, deux cas23,9s/22,2s. Sur chaque scène3000→3033 : menu réel sur case secondaire13,14, ordre3000, pickup complet3004 dans cargo186 distinct de source, service au contact3010, crédit3000 constaté3033. Quatre exports/recharges UI exacts par cas, soit **huit recharges exactes**, erreurs[] et lifecycle[]. Le bilan ticks+burned demeure3000 ; cinq unités disparaissent physiquement, aucune recherche ou construction naturelle n’est créditée. Les identifiants égaux entre ces deux scènes préparées indépendantes ne constituent pas une fusion de leur histoire.
+
+Sources/tests/publics et pilotes gelés2973 exacts avant/après le natif. Six captures acquises ; ROOT inspecte quatre captures menu/final, deux par générateur. Elles montrent bien les libellés et les scènes ; service et custody sont établis par les journaux/checkpoints, sans inspection visuelle fine de ce modèle. Preuves privées : `tmp/early-access-refuel-v365/native-adopted-01/native-01/`, chaque dossier a summary.json, déclaration initiale et quatre exports. Les scènes préparées restent distinctes de la [campagne V364](raid-care-v364.md), poursuivie réellement jusqu’à74950 avec des personnes blessées.
+
+Constat séparé sur ces captures : dans cette disposition, le texte de survol peut chevaucher la liste de ressources en haut à gauche. L’agencement n’est pas modifié dans ce correctif de menu ; une revue de placement événementiel est préparée séparément, sans attribuer le défaut au ravitaillement.
+
+Package PASS1,545s : 517 fichiers/119598776 octets,63références/66chemins publics et assets visuels exacts, laboratoire privé absent. Rapport privé `tmp/elsewhere-pages/v365-package-v6qvsL/report.json` produit avant commit sur les mêmes sources. Commit et publication : en cours. Le pilote productif Batteries révision02 demeure privé, avec entrée future sûre obligatoire ; aucun progrès de recherche, défense ou guérison de campagne n’est déduit de ces scènes.

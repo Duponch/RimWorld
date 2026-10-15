@@ -1,4 +1,5 @@
 import {treeJobReason} from './tree-transfer.ts';
+import { isFueledBuilding } from './fuel.ts';
 import {plantExecutionReserved} from './construction-plants.ts';
 import { allowedAreaReason } from './allowed-area-state.ts';
 import { workPriority, workType, haulingWork } from './work-types.ts';
@@ -141,8 +142,8 @@ export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=fals
   if(job?.kind==='sow'&&(pile||packedAt(world,cell)))targets.push({type:'clear-sow',jobId:job.id});
   const pack=packedAt(world,cell);if(pack)targets.push({type:'furniture',structureId:pack.building.id});
   for(const source of piles)targets.push({type:'pile',pileId:source.id});
-  const fire=world.structures.find(s=>(stationRecipe(s)!==null||s.kind==='passive-cooler'||s.kind==='mini-turret')&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));
-  if(fire&&(fire.kind==='campfire'||fire.kind==='fueled-stove'||fire.kind==='passive-cooler'))targets.push({type:'fuel',structureId:fire.id});
+  const fire=world.structures.find(s=>(stationRecipe(s)!==null||isFueledBuilding(s.kind)||s.kind==='mini-turret')&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z));
+  if(fire&&isFueledBuilding(fire.kind))targets.push({type:'fuel',structureId:fire.id});
   if(fire?.kind==='mini-turret')targets.push({type:'turret',structureId:fire.id});
   for(const target of targets) {
     const view=orderView(world,pawn,queue),proposal=planHaulOrder(view,view.pawns.find(p=>p.id===pawn.id)!,target);
