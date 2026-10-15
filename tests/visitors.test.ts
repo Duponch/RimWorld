@@ -17,6 +17,9 @@ import { withoutPredatorFoodPolicies,withoutPredatorApparelPolicies } from './sc
 function withoutLaterVisitorAgendas(w:World):World {
   expect(w.orbital?.ships??[]).toEqual([]);expect(w.orbital?.pending??[]).toEqual([]);
   expect(w.pawns.some(p=>p.orbitalTrade||p.deepWork)).toBe(false);
+  // Current defaults list the V378 suit; declared pre-216 registries did not.
+  // Prepare before poisoning any refusal fixture; no validator is relaxed.
+  if(w.apparelPolicies)w.apparelPolicies=w.apparelPolicies.map(policy=>({...policy,allowedItems:policy.allowedItems.filter(item=>item!=='recon-armor')}));
   delete w.orbital;delete w.deepResources;return w;
 }
 function replay(w:World,ticks:number):void {

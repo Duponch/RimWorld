@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V379 — schéma 242 :** [incidents secondaires et alertes hors carte](docs/gameplay/secondary-incidents-v379.md). Calendriers prospectifs, acteurs locaux et bascule/centrage vers la vraie carte ; contrôles et limites dans la note canonique. Publication regroupée suivante ; dernière production confirmée V378/e5ec566c. Les états suivants sont historiques.
+
 **V378 — schéma 241 :** [uranium et combinaison de reconnaissance](docs/gameplay/recon-armor-v378.md). Extraction, fabrication payée, stockage et habillement qualifiés, trois recharges exactes ; produitfdceb8b3 publié en e5ec566c avec V377,114HTTPS exacts. Les états suivants sont historiques.
 
 **V377 — schéma 240 :** [second site persistant](docs/gameplay/secondary-site-v377.md). Personnes et biens originaux, simulation partagée, sauvegarde complète et revisite ; retour/revisite UI acquis par reprises, anciennes sauvegardes conservées. Publication groupée suivante ; dernière production V376. Les états suivants sont historiques.

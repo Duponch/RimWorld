@@ -46,6 +46,7 @@ test('a real Cassandra expedition saves and decodes immediately on entry, with a
   expect(local.fluIncidents).toMatchObject({profile:'cassandra-flu-v1',checks:0,fluDraws:0,episodes:0,cases:0});
   expect(local.fluIncidents!.nextCheck).toBeGreaterThan(enteredAt);
   expect(local.fluIncidents!.immuneDiseases).toBeUndefined();
+  expect(local.raids).toBeUndefined();expect(local.visitors).toBeUndefined();
   expect(validateWorld(w)).toEqual([]);
   const restored=deserializeWorld(serializeWorld(w));expect(restored).toEqual(w);
   expect(restored.secondarySite!.map.pawns.map(p=>p.id).sort()).toEqual([...ids].sort());
@@ -54,8 +55,9 @@ test('a real Cassandra expedition saves and decodes immediately on entry, with a
   stepWorld(w);stepWorld(restored);
   expect(local.fluIncidents!.immuneDiseases).toMatchObject({adoptedAt:enteredAt+1,draws:0,episodes:0,cases:0});
   expect(serializeWorld(restored)).toBe(serializeWorld(w));
-  // Deliberately partial: no raid/visitor producer was added by this fix.
-  expect(local.raids).toBeUndefined();expect(local.visitors).toBeUndefined();
+  // V379 admits future secondary opportunities without another introduction.
+  expect(local.raids?.profile).toBe('cassandra-raids-v1');expect(local.visitors?.introAt).toBeNull();
+  expect(local.raids!.nextCheck).toBeGreaterThan(w.tick);
 });
 
 test('a prepared solar condition keeps its last five Core boundaries on both real maps before shared expiry',()=>{

@@ -25,6 +25,7 @@ export class PresentationChanges {
       world.seed,world.width,world.height,world.events.at(-1),
       this.relationshipSignature,
       world.worldIncidents?.active,
+      world.campaignMap?.incidents,
       world.podRescues?.pending,world.podRescues?.incidents,world.pawns.map(p=>p.podRescue),
       world.wildlife?.animals.map(a=>[a.id,a.state,a.burning?.phase,a.meal?.id,a.flee,a.stagger,a.stun,a.threat,a.strike,a.health?.nextInjuryId,a.exiting?.destination,a.manhunter?[a.manhunter.startedAtCore,a.manhunter.targetId,a.manhunter.door]:undefined]),world.wildlife?.eatenNutrition,world.wildlife?.exitedAnimals,
       world.fires?.items.map(f=>[f.id,f.attachedPawnId,f.attachedAnimalId]),world.weather?.current,

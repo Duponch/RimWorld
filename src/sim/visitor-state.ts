@@ -27,8 +27,14 @@ export function prepareVisitorCycle(a:VisitorAgenda,kind:VisitorAgendaKind):void
   }
   throw new Error('Cannot schedule neutral visitor opportunities.');
 }
-export function newVisitorAgenda(seed:number,kind:VisitorAgendaKind,tick:number):VisitorAgenda {
+export function newVisitorAgenda(seed:number,kind:VisitorAgendaKind,tick:number,prospective=false):VisitorAgenda {
   const a:VisitorAgenda={rng:((seed^(kind==='traveler'?0x88a1641:kind==='exotic'?0x123e70c:0x88b4371))>>>0)||1,cycle:0,last:-VISITOR_YEAR,pending:[]};
+  if(prospective){
+    // Jump directly to the first unstarted annual window. No historical RNG
+    // catch-up loop, arrival, old last-date or population is reconstructed.
+    a.cycle=Math.max(0,Math.floor((tick-VISITOR_FLOWS[kind].minimum)/VISITOR_YEAR)+1);
+    prepareVisitorCycle(a,kind);return a;
+  }
   // Explicit adoption discards past opportunities, never a catch-up arrival.
   do {prepareVisitorCycle(a,kind);a.pending=a.pending.filter(t=>t>tick);if(!a.pending.length)a.cycle++;}while(!a.pending.length);
   return a;

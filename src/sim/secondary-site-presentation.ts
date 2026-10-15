@@ -3,6 +3,25 @@ import { campaignAuthority,otherCampaignMap,selectedMap } from './secondary-site
 import { validExpeditionOrigin } from './secondary-site-save.ts';
 import type { World } from './types.ts';
 import type { RelationshipPerson } from './relationship-state.ts';
+import {activeThreat} from './affiliation.ts';
+
+export interface CampaignIncident {site:'home'|'secondary';kind:'raid'|'mechanoid'|'visitor';count:number;actorId:number}
+/** Bounded summary only: no inactive cells, terrain, jobs or actor list.
+ * Derived at confirmed tick/snapshot boundaries, never by the image loop. */
+export function otherMapIncidents(world:World):CampaignIncident[] {
+  const root=campaignAuthority(world),other=otherCampaignMap(world);if(!other)return [];
+  const site=other===root?'home':'secondary',rows:CampaignIncident[]=[];
+  let raidCount=0,raidId=Infinity,visitorCount=0,visitorId=Infinity,mechCount=0,mechId=Infinity;
+  for(const p of other.pawns){
+    if(p.faction==='outlaws'&&!p.prisoner&&activeThreat(p)){raidCount++;raidId=Math.min(raidId,p.id);}
+    if(p.visitor&&p.visitor.phase!=='leaving'&&p.state!=='dead'&&p.state!=='downed'){visitorCount++;visitorId=Math.min(visitorId,p.id);}
+  }
+  for(const m of other.mechanoids??[])if(m.state!=='dead'&&m.state!=='downed'){mechCount++;mechId=Math.min(mechId,m.id);}
+  if(raidCount)rows.push({site,kind:'raid',count:raidCount,actorId:raidId});
+  if(mechCount)rows.push({site,kind:'mechanoid',count:mechCount,actorId:mechId});
+  if(visitorCount)rows.push({site,kind:'visitor',count:visitorCount,actorId:visitorId});
+  return rows;
+}
 
 const projections=new WeakMap<World,{source:World;view:World}>();
 /** Publish the selected genuine map, plus cross-map KNOWLEDGE only. Inactive
@@ -20,7 +39,8 @@ export function campaignPresentation(world:World):World {
   const other=otherCampaignMap(source)!;
   cached.view.campaignPeople=[...captureHumanOwners(other,{},false).people.values()].map((person):RelationshipPerson=>({...person,status:person.status==='present'?'away':person.status}));
   cached.view.campaignMap={active:source===root?'home':'secondary',secondaryTile:root.secondarySite.tile,
-    createdAt:root.secondarySite.createdAt,visitIds:[...root.secondarySite.visit?.memberIds??[]]};
+    createdAt:root.secondarySite.createdAt,visitIds:[...root.secondarySite.visit?.memberIds??[]],
+    ...root.schemaVersion>=242?{incidents:otherMapIncidents(source)}:{}};
   return cached.view;
 }
 
@@ -31,14 +51,15 @@ const dense=(v:unknown,max:number):v is unknown[]=>Array.isArray(v)&&v.length<=m
 
 /** Snapshot-only domains are rejected by saved-world guards. References here
  * prove no physical ownership and are never inserted into byId/pawnOwners. */
-export function validCampaignPresentation(w:Pick<World,'schemaVersion'|'tick'|'nextId'|'width'|'height'|'pawns'|'planet'|'expeditionSite'|'campaignPeople'|'campaignMap'> & {secondarySite?:unknown}):boolean {
+export function validCampaignPresentation(w:Pick<World,'schemaVersion'|'tick'|'nextId'|'width'|'height'|'pawns'|'mechanoids'|'planet'|'expeditionSite'|'campaignPeople'|'campaignMap'> & {secondarySite?:unknown}):boolean {
   const raw=w as unknown as Record<string,unknown>;
   if(Object.hasOwn(raw,'secondarySite'))return false;
   if(w.schemaVersion<240)return !['expeditionSite','campaignPeople','campaignMap'].some(k=>Object.hasOwn(raw,k));
   if(!Object.hasOwn(raw,'campaignMap'))return !Object.hasOwn(raw,'campaignPeople')&&!Object.hasOwn(raw,'expeditionSite');
   if(!Array.isArray(w.pawns)||!Array.isArray(w.planet?.tiles))return false;
+  if(w.mechanoids!==undefined&&!Array.isArray(w.mechanoids))return false;
   const map:unknown=w.campaignMap,people:unknown=w.campaignPeople;
-  if(!object(map)||!exact(map,['active','secondaryTile','createdAt','visitIds'])||typeof map.active!=='string'||!['home','secondary'].includes(map.active)
+  if(!object(map)||!exact(map,['active','secondaryTile','createdAt','visitIds',...w.schemaVersion>=242?['incidents']:[]])||typeof map.active!=='string'||!['home','secondary'].includes(map.active)
     ||!integer(map.secondaryTile,0,161)||!integer(map.createdAt,0,w.tick)||!dense(map.visitIds,8)||map.visitIds.some(id=>!integer(id,1,w.nextId-1))
     ||new Set(map.visitIds).size!==map.visitIds.length||!dense(people,w.width*w.height+65536)||!validExpeditionOrigin(w.expeditionSite,w,w.schemaVersion))return false;
   if(map.active==='secondary'?(!w.expeditionSite||w.expeditionSite.tile!==map.secondaryTile||w.expeditionSite.createdAt!==map.createdAt):Object.hasOwn(raw,'expeditionSite'))return false;
@@ -48,6 +69,17 @@ export function validCampaignPresentation(w:Pick<World,'schemaVersion'|'tick'|'n
       ||!integer(person.id,1,w.nextId-1)||seen.has(person.id)||typeof person.name!=='string'||person.name.length<1||person.name.length>80
       ||typeof person.status!=='string'||!['away','departed','dead'].includes(person.status)||(person.status==='dead'?!integer(person.deathAt,0,w.tick):person.deathAt!==undefined))return false;
     seen.add(person.id);
+  }
+  if(w.schemaVersion>=242){
+    if(!dense(map.incidents,3))return false;
+    const kinds=new Set<string>(),actors=new Set<number>();
+    for(const row of map.incidents){
+      if(!object(row)||!exact(row,['site','kind','count','actorId'])||row.site===(map.active)||!['home','secondary'].includes(String(row.site))
+        ||!['raid','mechanoid','visitor'].includes(String(row.kind))||kinds.has(String(row.kind))||!integer(row.count,1,w.width*w.height)
+        ||!integer(row.actorId,1,w.nextId-1)||actors.has(row.actorId)||w.pawns.some(p=>p.id===row.actorId)||w.mechanoids?.some(m=>m.id===row.actorId)
+        ||row.kind!=='mechanoid'&&!people.some(p=>object(p)&&p.id===row.actorId&&p.status==='away'))return false;
+      kinds.add(String(row.kind));actors.add(row.actorId);
+    }
   }
   return true;
 }

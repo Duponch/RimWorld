@@ -1543,9 +1543,22 @@ function focusNotification(target:NotificationTarget):void {
   }else {clearSelection();setPanel(null);}
   renderer?.focusCell(target.cell);
 }
+let campaignFocusBusy=false,campaignPresentationEpoch=0;
 const statusAlerts=createStatusAlerts(el('status-alerts'),{
   'inspect-threat':el<HTMLButtonElement>('inspect-threat'),'inspect-fire':el<HTMLButtonElement>('inspect-fire'),'inspect-blight':el<HTMLButtonElement>('inspect-blight'),
-},{focus:focusNotification,context:context=>{
+},{focus:focusNotification,campaign:target=>{
+  const before=snapshot?.campaignMap;if(!before||before.active===target.site||campaignFocusBusy||replacingWorld||frontMenu.isOpen())return;
+  const origin={tile:before.secondaryTile,createdAt:before.createdAt,epoch:campaignPresentationEpoch};campaignFocusBusy=true;
+  void attempt(async()=>{
+    await client.command({type:'secondary-view',site:target.site});
+    const next=snapshot,map=next?.campaignMap;
+    // The worker's replacement snapshot must be adopted and rendered before
+    // resolving this real ID. Never focus an old remote cell or actor proxy.
+    if(!next||!map||map.active!==target.site||map.secondaryTile!==origin.tile||map.createdAt!==origin.createdAt||campaignPresentationEpoch<=origin.epoch)return;
+    if(!next.pawns.some(p=>p.id===target.actorId)&&!next.mechanoids?.some(m=>m.id===target.actorId))return;
+    focusNotification({key:`actor:${target.actorId}`,kind:'actor',id:target.actorId});
+  }).finally(()=>{campaignFocusBusy=false;});
+},context:context=>{
   if(context.tool){setTool(context.tool);return;}
   if(context.worldTab)worldTab=context.worldTab;
   void attempt(async()=>{await switchPanel(context.panel);if(context.category)setCategory(context.category);});
@@ -1792,6 +1805,7 @@ client.onFault = () => {
   updateIncident(); syncStorageButtons();
 };
 function receiveMainSnapshot(world: World, cost: number, speed: number, replaced: boolean, motion?: PawnTrack[]): void {
+  if(replaced)campaignPresentationEpoch++;
   if (replaced) {audio.reset();lastAudioCamera=undefined;lastAudioSourceFocus={x:Infinity,z:Infinity};lastAudioSourceHeight=NaN;}
   const speedChanged=currentSpeed!==speed;
   const role=(p:Pawn|undefined)=>p?p.prisoner?'prisoner':isColonist(p)?'colonist':'other':'absent';

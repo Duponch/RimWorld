@@ -23,11 +23,11 @@ import { consumeVisitorOpportunity,INTRO_VISITOR_TICK,newVisitorAgenda,visitorPo
 import type { MaterialPile,Pawn,World } from './types.ts';
 
 const log=(w:World,message:string)=>{w.events.push({tick:w.tick,type:'command',message});if(w.events.length>80)w.events.splice(0,w.events.length-80);};
-export function enableVisitors(w:World,withIntro=false):void {
+export function enableVisitors(w:World,withIntro=false,prospective=false):void {
   if(w.visitors)return;
   w.visitors={profile:'cassandra-visitors-v1',adoptedAt:w.tick,rng:((w.seed^0x88c0173)>>>0)||1,serial:0,
-    introAt:withIntro&&w.tick===0?INTRO_VISITOR_TICK:null,traveler:newVisitorAgenda(w.seed,'traveler',w.tick),visitor:newVisitorAgenda(w.seed,'visitor',w.tick),
-    ...w.schemaVersion>=123?{exotic:newVisitorAgenda(w.seed,'exotic',w.tick)}:{},groups:[],departed:[]};
+    introAt:!prospective&&withIntro&&w.tick===0?INTRO_VISITOR_TICK:null,traveler:newVisitorAgenda(w.seed,'traveler',w.tick,prospective),visitor:newVisitorAgenda(w.seed,'visitor',w.tick,prospective),
+    ...w.schemaVersion>=123?{exotic:newVisitorAgenda(w.seed,'exotic',w.tick,prospective)}:{},groups:[],departed:[]};
 }
 /** V122→V123 migration: discard past exotic opportunities without touching the
  * old visitor agendas, stock, actor identities, or the business RNG. */

@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 241 as const;
+export const SCHEMA_VERSION = 242 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -194,7 +194,7 @@ export interface World {
   /** Snapshot-only campaign knowledge; never an additional physical owner. */
   campaignPeople?:import('./relationship-state.ts').RelationshipPerson[];
   /** Snapshot-only navigation metadata; full inactive terrain stays in worker. */
-  campaignMap?:{active:'home'|'secondary';secondaryTile:number;createdAt:number;visitIds:number[]};
+  campaignMap?:{active:'home'|'secondary';secondaryTile:number;createdAt:number;visitIds:number[];incidents?:import('./secondary-site-presentation.ts').CampaignIncident[]};
   snow?:import('./snow-rules.ts').SnowState;
   snowClearArea?:number[];
   /** V318 prospective herd limits; absent policies leave the herd untouched. */

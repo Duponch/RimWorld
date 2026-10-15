@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V379 — schéma 242 :** [incidents secondaires et alertes hors carte](secondary-incidents-v379.md). Calendriers prospectifs, acteurs locaux et bascule/centrage vers la vraie carte ; contrôles et limites dans la note canonique. Publication regroupée suivante ; dernière production confirmée V378/e5ec566c. Les états suivants sont historiques.
+
 **V378 — schéma 241 :** [combinaison de reconnaissance et uranium](recon-armor-v378.md). Chaîne acquisition/minage, commerce physique adapté, fabrication, stockage, habillement et sauvegarde qualifiée ; 51cas ciblés et parcours natif physique acquis. Le casque existe déjà ; les autres usages de l’uranium restent absents.
 
 **V377 — schéma 240 :** [second site persistant](secondary-site-v377.md). Personnes et biens originaux, simulation partagée, sauvegarde complète et revisite ; retour/revisite UI acquis par reprises, anciennes sauvegardes conservées. Publication groupée suivante ; dernière production V376. Les états suivants sont historiques.

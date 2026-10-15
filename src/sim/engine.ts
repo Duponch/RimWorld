@@ -1,4 +1,5 @@
 import {campaignAuthority,isSecondaryContext,selectedMap,secondaryContext,flushSecondaryContext} from './secondary-site-context.ts';
+import {adoptSecondaryIncidents} from './secondary-incidents.ts';
 import {applySecondarySiteCommand} from './secondary-site.ts';
 import {secondaryCommand} from './secondary-site-state.ts';
 import type {SecondarySiteCommand} from './secondary-site-state.ts';
@@ -854,6 +855,7 @@ export function stepWorld(world:World,ticks=1,diagnostics?:import('./work-planne
 function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-planner.ts').SearchStats,advanceClock=true): void {
   if (!Number.isInteger(ticks) || ticks < 0 || ticks > 100000) throw new Error('Tick count must be an integer between 0 and 100000.');
   if(!ticks)return;
+  adoptSecondaryIncidents(world);
   // Old profiles start this new stream prospectively, when play resumes.
   // Loading or pausing never invents a past opportunity or heat exposure.
   adoptMiscIncidents(world);

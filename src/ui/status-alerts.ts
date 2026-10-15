@@ -23,7 +23,7 @@ import { setTooltip,type TooltipContent } from './tooltip';
 import {readResearchReadiness} from './research-readiness';
 
 export interface NotificationContext { panel:Exclude<Panel,null>;category?:ArchitectCategory;tool?:'stockpile';worldTab?:'group'|'individual'; }
-export interface StatusAlert { key:string;text:string;targets:NotificationTarget[];context?:NotificationContext;tab?:'health'|'needs'|'prisoner';tooltip?:TooltipContent; }
+export interface StatusAlert { key:string;text:string;targets:NotificationTarget[];context?:NotificationContext;tab?:'health'|'needs'|'prisoner';tooltip?:TooltipContent;campaign?:{site:'home'|'secondary';actorId:number}; }
 const present=<T>(target:T|undefined):target is T=>target!==undefined;
 const people=(world:World,pawns:readonly Pawn[])=>[...pawns].sort((a,b)=>a.id-b.id).map(p=>personNotificationTarget(world,p.id)).filter(present);
 const actors=(values:readonly {id:number}[])=>[...values].sort((a,b)=>a.id-b.id).map(p=>actorNotificationTarget(p.id));
@@ -59,6 +59,10 @@ export function readAvailabilityStatusAlerts(world:World):StatusAlert[] {
  * never parsed to find an entity, a medical condition or a management panel. */
 export function readStatusAlerts(world:World):StatusAlert[] {
   const rows:StatusAlert[]=readAvailabilityStatusAlerts(world),colonists=world.pawns.filter(isColonist),living=colonists.filter(p=>p.state!=='dead');
+  for(const incident of world.campaignMap?.incidents??[]){
+    const place=incident.site==='home'?'Foyer':'Second site',label=incident.kind==='raid'?'assaillant(s)':incident.kind==='mechanoid'?'mécanoïde(s)':'visiteur(s)';
+    rows.push({key:`campaign:${incident.site}:${incident.kind}:${incident.actorId}`,text:`${place} · ${incident.count} ${label} hors carte · voir`,targets:[],campaign:{site:incident.site,actorId:incident.actorId}});
+  }
   const add=(key:string,text:string,targets:NotificationTarget[],context?:NotificationContext,tab?:StatusAlert['tab'])=>rows.push({key,text,targets,...context?{context}:{},...tab?{tab}:{}});
   const counted=(key:string,pawns:Pawn[],text:(count:number)=>string,tab?:StatusAlert['tab'])=>{if(pawns.length)add(key,text(pawns.length),people(world,pawns),{panel:'history'},tab);};
   counted('sad-wander',living.filter(p=>p.mental?.crisis?.kind==='sad-wander'),n=>`${n} colon(s) en errance triste`,'needs');
@@ -129,11 +133,12 @@ export function readInspectAlerts(world:World):Partial<Record<'inspect-fire'|'in
 
 export interface StatusAlertsActions {
   focus:FocusNotification;context:(context:NotificationContext)=>void;tab?:(tab:NonNullable<StatusAlert['tab']>)=>void;
+  campaign?:(target:NonNullable<StatusAlert['campaign']>)=>void;
 }
 /** Keyed nodes keep keyboard focus and the per-alert ring through tick refreshes. */
 export function createStatusAlerts(host:HTMLElement,jumps:Partial<Record<'inspect-fire'|'inspect-blight'|'inspect-threat',HTMLButtonElement>>,actions:StatusAlertsActions):{update:(world:World)=>void;reset:()=>void} {
   const cycle=new NotificationFocusCycle(),nodes=new Map<string,{node:HTMLElement;row:StatusAlert}>();
-  const activate=(row:StatusAlert)=>{const target=cycle.next(row.key,row.targets);if(target){actions.focus(target);if(row.tab&&target.kind==='actor')actions.tab?.(row.tab);}else if(row.context)actions.context(row.context);};
+  const activate=(row:StatusAlert)=>{if(row.campaign){actions.campaign?.(row.campaign);return;}const target=cycle.next(row.key,row.targets);if(target){actions.focus(target);if(row.tab&&target.kind==='actor')actions.tab?.(row.tab);}else if(row.context)actions.context(row.context);};
   let inspection:ReturnType<typeof readInspectAlerts>={};
   for(const [id,button] of Object.entries(jumps))if(button)button.onclick=()=>{const row=inspection[id as keyof typeof inspection];if(row)activate(row);};
   return {reset:()=>cycle.reset(),update(world){

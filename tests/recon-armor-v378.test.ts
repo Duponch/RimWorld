@@ -22,6 +22,7 @@ import {prepareAdvancedIndustryDemo} from '../scripts/generate-advanced-industry
 import {miningCamp} from './scenarios/mining.ts';
 import {visitorTradeFixture} from './scenarios/visitors.ts';
 import type {World} from '../src/sim/types.ts';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 
 const amount=(w:World,item:string)=>w.piles.filter(p=>p.item===item).reduce((n,p)=>n+p.quantity,0);
 function prepared():World {
@@ -128,7 +129,7 @@ test('schema240 migration is neutral and rejects every new durable identifier be
   w.apparelPolicies=w.apparelPolicies!.map(policy=>({...policy,allowedItems:policy.allowedItems.filter(item=>item!=='recon-armor')}));
   (w as {schemaVersion:number}).schemaVersion=240;
   const old=JSON.parse(JSON.stringify(w)),restored=deserializeWorld(JSON.stringify(old));
-  expect(restored).toEqual({...old,schemaVersion:241});
+  expect(restored).toEqual({...old,schemaVersion:SCHEMA_VERSION});
   for(const future of [
     {piles:[{item:'uranium'}]},{tiles:[{ore:'uranium'}]},
     {piles:[{item:'recon-armor'}]},{piles:[{item:'unfinished-recon-armor'}]},

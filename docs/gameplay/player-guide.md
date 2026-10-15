@@ -1,5 +1,9 @@
 # Guide joueur
 
+## Réagir sur l’autre carte — V379
+
+Une ligne « Second site » ou « Foyer » dans les alertes indique une menace ou des visiteurs sur l’autre carte. Cliquez-la : le jeu affiche cette carte et centre la personne réelle, puis les commandes ordinaires restent disponibles. Changer de vue ne déplace personne et ne suspend aucune carte. Les sauvegardes conservent les deux sites et leurs calendriers ; les anciens sites adoptent seulement des occasions futures en reprenant le temps. [Portée et contrôles](secondary-incidents-v379.md).
+
 ## Combinaison de reconnaissance — V378
 
 Après la recherche **Armure de reconnaissance**, ajoutez **Combinaison de reconnaissance** aux factures d’un établi de fabrication alimenté. Il faut un artisan de niveau6, 80plastacier, 3composants avancés et10uranium accessibles dans le rayon et les filtres de la facture. L’uranium peut provenir du minerai présent sur les nouvelles cartes ou des stocks finis d’un visiteur exotique ; les anciennes cartes ne reçoivent pas de gisement ajouté rétroactivement. Autorisez la catégorie Uranium dans une réserve ou une étagère pour le transporter.
@@ -10,7 +14,7 @@ L’ouvrage garde ses matières et sa progression lors d’une interruption. Une
 
 Ouvrez **Monde → Globe et groupe**, choisissez des adultes disponibles, des provisions réellement présentes sur la carte et une destination terrestre accessible. Formez le groupe puis laissez-le charger et sortir. À l’arrivée, **Entrer sur la carte** fait entrer ces mêmes personnes sur le second site. **Afficher le foyer** et **Afficher le second site** changent seulement la vue ; les personnes restent où elles sont.
 
-Avant le retour, prévoyez des rations au sol sur le site et laissez terminer les activités en cours. Si le brouillon mentionne une ancienne pile, utilisez **Retirer les choix devenus indisponibles** avant de choisir les nouvelles sources. Formez le groupe depuis cette carte vers le foyer : chargement, sortie, trajet et déchargement restent physiques. Une visite ultérieure retrouve le terrain modifié et les biens laissés. Les sauvegardes et exports gardent les deux cartes. Un seul second site est actuellement pris en charge ; raids et visiteurs ambiants secondaires restent à raccorder. [Portée et contrôles](secondary-site-v377.md).
+Avant le retour, prévoyez des rations au sol sur le site et laissez terminer les activités en cours. Si le brouillon mentionne une ancienne pile, utilisez **Retirer les choix devenus indisponibles** avant de choisir les nouvelles sources. Formez le groupe depuis cette carte vers le foyer : chargement, sortie, trajet et déchargement restent physiques. Une visite ultérieure retrouve le terrain modifié et les biens laissés. Les sauvegardes et exports gardent les deux cartes. Un seul second site est actuellement pris en charge ; raids et visiteurs secondaires sont reliés depuis V379. [Portée et contrôles](secondary-site-v377.md).
 
 ## Toundra et déneigement — V376
 

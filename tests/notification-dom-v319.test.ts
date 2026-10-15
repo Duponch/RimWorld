@@ -26,6 +26,22 @@ function documentFixture(){
 }
 afterEach(()=>vi.unstubAllGlobals());
 
+test('V379 an off-map alert calls navigation with the latest real-ID metadata, never local focus before switching',()=>{
+  documentFixture();const host=new NodeFixture(),focus=vi.fn(),context=vi.fn(),campaign=vi.fn(),ui=createStatusAlerts(host as unknown as HTMLElement,{},{focus,context,campaign});
+  // DOM contract double only. Real admission/ID/transport/epoch assertions
+  // belong to secondary-incidents-v379; no absent actor is simulated here.
+  const w=createWorld(379,32,32);w.campaignMap={active:'home',secondaryTile:52,createdAt:0,visitIds:[],incidents:[{site:'secondary',kind:'raid',count:1,actorId:379}]};
+  ui.update(w);const node=host.children.find(n=>n.dataset.alert==='campaign:secondary:raid:379')!;
+  node.onclick!();expect(campaign).toHaveBeenLastCalledWith({site:'secondary',actorId:379});expect(focus).not.toHaveBeenCalled();
+  w.campaignMap.incidents![0]={site:'secondary',kind:'raid',count:2,actorId:379};ui.update(w);
+  expect(host.children.find(n=>n.dataset.alert==='campaign:secondary:raid:379')).toBe(node);
+  w.campaignMap.incidents![0]={site:'secondary',kind:'raid',count:2,actorId:380};ui.update(w);
+  const replacement=host.children.find(n=>n.dataset.alert==='campaign:secondary:raid:380')!;expect(replacement).not.toBe(node);
+  const event={key:'Enter',preventDefault:vi.fn(),stopPropagation:vi.fn()};replacement.onkeydown!(event);
+  expect(campaign).toHaveBeenLastCalledWith({site:'secondary',actorId:380});expect(focus).not.toHaveBeenCalled();expect(event.preventDefault).toHaveBeenCalledOnce();
+  w.campaignMap.incidents=[];ui.update(w);expect(host.children.some(n=>n.dataset.alert.startsWith('campaign:secondary:raid:'))).toBe(false);
+});
+
 test('V319 status nodes retain keyboard identity, count changes and per-key ring while refreshing their actual target data',()=>{
   documentFixture();const host=new NodeFixture(),focus=vi.fn(),context=vi.fn(),tab=vi.fn(),ui=createStatusAlerts(host as unknown as HTMLElement,{},{focus,context,tab});
   const w=createWorld(319,32,32),[a,b,c]=w.pawns;for(const p of [a!,b!]){p.health=createMedicalRecord(w.tick);p.health.hypothermia=40000000;}

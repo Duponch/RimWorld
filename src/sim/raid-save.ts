@@ -32,7 +32,7 @@ export function validateRaids(w:World,version:number,ids:Set<number>):string[] {
   if(state===undefined)return w.pawns.some(p=>p.raid!==undefined)?['Raider without calendar.']:[];
   if(!object(state)||!keys(state,['profile','rng','nextCheck','serial','completed','active','last','departed','cassandra',...(version>=194?['mechanoid','mechActive']:[])])||!['camp-raids-v1','cassandra-raids-v1'].includes(String(state.profile))||!integer(state.rng,1,4294967295)||!integer(state.serial,0)||!integer(state.completed,0,state.serial)||!Array.isArray(state.departed)||state.departed.length>w.width*w.height)return ['Invalid raid calendar.'];
   const cassandra=state.profile==='cassandra-raids-v1';
-  if(cassandra?version<82||!w.gameProfile||!validCassandraAgenda(state.cassandra,w.tick):state.cassandra!==undefined)return ['Invalid Cassandra raid agenda.'];
+  if(cassandra?version<82||!w.gameProfile||!validCassandraAgenda(state.cassandra,w.tick,version):state.cassandra!==undefined)return ['Invalid Cassandra raid agenda.'];
   const s=w.raids!,a:unknown=s.active,last:unknown=s.last;
   // Cassandra's already-validated agenda fixes its exact future window. The
   // gap from an early opportunity to the next cycle's late opportunity can

@@ -24,10 +24,16 @@ function prepareCycle(agenda:CassandraRaidAgenda):void {
   }
   throw new Error('Cannot schedule Cassandra raid opportunities.');
 }
-export function enableCassandraRaids(world:World):void {
+export function enableCassandraRaids(world:World,prospective=false):void {
   if(world.raids)throw new Error('Cannot replace an existing raid calendar.');
   world.raids={profile:'cassandra-raids-v1',rng:((world.seed^0x7a1d068)>>>0)||1,nextCheck:INTRO_RAID_TICK,serial:0,completed:0,departed:[],
     cassandra:{rng:((world.seed^0xc455a82)>>>0)||1,cycle:-1,pending:[INTRO_RAID_TICK]}};
+  if(prospective){
+    // A secondary map never replays ClassicIntro or an already begun cycle.
+    const agenda=world.raids.cassandra!;
+    agenda.cycle=Math.max(0,Math.floor((world.tick-CASSANDRA_CYCLE_START)/CASSANDRA_CYCLE_TICKS)+1);
+    prepareCycle(agenda);world.raids.nextCheck=agenda.pending[0]!;
+  }
   if(world.schemaVersion>=194)enableMechanoidRaids(world);
 }
 /** A failed or occupied opportunity is consumed, never postponed into an
@@ -44,13 +50,13 @@ export function consumeCassandraOpportunity(world:World,state:RaidCalendar):bool
   return due;
 }
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
-export function validCassandraAgenda(value:unknown,tick:number):boolean {
+export function validCassandraAgenda(value:unknown,tick:number,version=241):boolean {
   if(typeof value!=='object'||value===null||Array.isArray(value))return false;
   const s=value as Record<string,unknown>;
   if(Object.keys(s).length!==3||!Object.keys(s).every(k=>['rng','cycle','pending'].includes(k))||!integer(s.rng,1,0xffffffff)||!integer(s.cycle,-1)||!Array.isArray(s.pending)||!s.pending.length||s.pending.length>2)return false;
   if(s.cycle===-1)return s.pending.length===1&&s.pending[0]===INTRO_RAID_TICK&&tick<INTRO_RAID_TICK;
   const start=CASSANDRA_CYCLE_START+s.cycle*CASSANDRA_CYCLE_TICKS,end=start+CASSANDRA_ACTIVE_TICKS;
-  if(!Number.isSafeInteger(end)||start>tick+CASSANDRA_CYCLE_TICKS)return false;
+  if(!Number.isSafeInteger(end)||start>tick+CASSANDRA_CYCLE_TICKS&&!(version>=242&&s.cycle===0&&tick<CASSANDRA_CYCLE_START))return false;
   const pending=s.pending;
   return pending.every((time,i)=>integer(time,Math.max(start,tick+1),end)&&time%INTERVAL===0&&(i===0||time-Number(pending[i-1])>=CASSANDRA_MIN_SPACING));
 }

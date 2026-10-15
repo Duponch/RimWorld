@@ -1,14 +1,15 @@
 # Plan de développement
 
-**15 octobre 2026 — schéma 241.** [V378](gameplay/recon-armor-v378.md) qualifie uranium et combinaison de reconnaissance, après [V377](gameplay/secondary-site-v377.md) et la toundra/neigeV376. Parcours physiques et reprises acquis dans les limites des notes. Publication groupée V377–V378 **e5ec566c**, produitfdceb8b3 poussé et114HTTPS exacts. Campagne98038 close partielle, aucun pourcentage ou FPS certifié.
+**16 octobre 2026 — schéma 242.** [V379](gameplay/secondary-incidents-v379.md) relie incidents secondaires et alertes permettant de rejoindre la vraie carte. Toundra, second site persistant et combinaison V376–V378 conservés. Publication regroupée suivante ; dernière production confirmée V378/e5ec566c. Campagne98038 close partielle, aucun pourcentage ou FPS certifié.
 
 ## Priorité actuelle
 
 1. **Trois biomes existants : départs vérifiés V375.** Six cas fixes et trois parcours UI250², trois recharges exactes acquis par reprises. Références officielles et visuelles consultées ; ni année de survie ni hiver entier certifiés. Ne pas rejouer ce contrôle sans changement concerné.
 2. **Toundra et neige V376.** Froid, surface persistée, écologie existante, choix du site et déneigement sont reliés. Sols humides/lichen et espèces absentes restent ouverts ; voir le périmètre de la note.
-3. **Deuxième site V377 qualifié.** Mêmes personnes/biens, coupe et bois retrouvés après retour/revisite, deux cartes sauvées ensemble. Un seul site secondaire ; menaces/visiteurs secondaires et alertes associées restent à raccorder.
+3. **Deuxième site V377 qualifié.** Mêmes personnes/biens, coupe et bois retrouvés après retour/revisite, deux cartes sauvées ensemble. Un seul site secondaire ; incidents et alertes raccordés par V379, limites explicites conservées.
 4. **Catalogue V378 qualifié.** Uranium extrait/acheté, combinaison fabriquée/payée, stockée, portée et retirée avec sauvegardes exactes ; casque existant conservé. Autres usages et armures restent ouverts.
-5. **Priorité active : incidents secondaires et alertes.** Réutiliser les calendriers locaux prospectifs sans introduction ou cycle passé rejoué ; signaler une menace hors carte affichée et permettre de la rejoindre dans le même lot.
+5. **Incidents secondaires et alertes V379.** Calendriers futurs persistés et alerte navigable vers la vraie carte ; équilibrage mondial exhaustif ouvert.
+6. **Priorité active : parcours joueurs et lisibilité.** Corriger les chevauchements survol/ressources/dock dans un petit lot, puis choisir le catalogue utile selon les manques réellement constatés, sans rallonger une campagne comme condition de livraison.
 
 La stabilité, l’ergonomie et les performances accompagnent ces lots avec contrôles proportionnés. Les campagnes longues sont périodiques ou motivées par un risque précis. La campagne conservée au 98038 reste une preuve partielle, pas une condition bloquant toutes les livraisons. Le [suivi early access](gameplay/early-access-readiness.md) distingue acquis et limites. La [stratégie de validation](development/testing.md) décrit la méthode ; les sous-métiers restent reportés.
 
