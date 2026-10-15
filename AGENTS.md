@@ -4,9 +4,10 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V374, schéma 238 :** [clôture de la qualification partielle](docs/gameplay/productive-proof-v374.md). Outil QA mémoire/durabilité corrigé et contrôlé ; campagne conservée au vrai 98038, porte/bureau payés et recherche commencée, énergie non qualifiée. Aucun changement produit : dernière publication V365. Cette campagne ne bloque plus les essais indépendants ni les extensions. Ne pas relancer le pilote depuis un ancien checkpoint favorable.
+**État V375, schéma 238 :** [trois biomes qualifiés au départ](docs/gameplay/biome-readiness-v375.md). Six cas courts et trois parcours250² acquis par reprises ; trois recharges exactes, limites conservées. QA seule, dernière publication produit V365. Campagne historique98038 conservée partielle, ne plus la prolonger comme condition de livraison.
 
-**Ordre courant :** vérifier les trois biomes par contrôles courts regroupés, puis toundra cohérente, second site persistant modifié/revisité et catalogue utile. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. Références humaines, `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
+
+**Ordre courant :** livrer neige physique et toundra cohérente après vérification courte des trois biomes, second site persistant modifié/revisité et catalogue utile. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. Références humaines, `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
 
 ## Méthode de livraison
 

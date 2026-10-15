@@ -1,10 +1,10 @@
 # Plan de développement
 
-**15 octobre 2026 — schéma 238.** Autonomie et push `origin/main` explicitement autorisés. [V374](gameplay/productive-proof-v374.md) clôt la campagne QA comme partielle au tick 98038 ; la progression recherche/énergie n’est pas intégralement certifiée. Dernier produit publié : V365. Aucun pourcentage de complétude ou objectif FPS certifié.
+**15 octobre 2026 — schéma 238.** Autonomie et push `origin/main` explicitement autorisés. [V375](gameplay/biome-readiness-v375.md) qualifie les départs des trois biomes par contrôles courts et reprises exactes. La campagne98038 et sa progression énergie restent partielles. Dernier produit publié : V365. Aucun pourcentage de complétude ou objectif FPS certifié.
 
 ## Priorité actuelle
 
-1. **Trois biomes existants.** Contrôles courts sur deux graines fixes par biome : génération, cohérence du climat/flore/faune, arrivée et sauvegarde/reprise ; parcours UI regroupé. Comparer les règles et les écrans au RimWorld Vanilla avec sources datées. Garder les limites : ce n’est pas une année de survie ni un hiver entier.
+1. **Trois biomes existants : départs vérifiés V375.** Six cas fixes et trois parcours UI250², trois recharges exactes acquis par reprises. Références officielles et visuelles consultées ; ni année de survie ni hiver entier certifiés. Ne pas rejouer ce contrôle sans changement concerné.
 2. **Toundra cohérente.** Relier froid, neige, végétation/faune, choix du site, décor et conservation. Réutiliser les références déjà auditées ; livrer une boucle utilisable plutôt qu’une seule recoloration ou des domaines dormants.
 3. **Deuxième site persistant.** Voyager avec les mêmes personnes/biens, entrer sur une seconde carte, la modifier, revenir et retrouver les changements. Préserver une seule autorité de campagne et les sauvegardes historiques.
 4. **Catalogue utile.** Compléter une chaîne existante avec un objet réellement fabriqué, stocké, équipé/utilisé et sauvegardé ; premier candidat étudié : armure de reconnaissance correspondant au casque existant.

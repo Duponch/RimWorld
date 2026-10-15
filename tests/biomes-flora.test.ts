@@ -1,3 +1,9 @@
+import { BIOME_READINESS_CASES, biomeReadinessSite } from './scenarios/biome-readiness';
+import { createStartingCandidateRoster, startingPartyFromRoster } from '../src/sim/starting-candidates';
+import { faunaBiome } from '../src/sim/animal-species';
+import { validateWorld } from '../src/sim/serialization';
+import { seasonalOutdoorTemperature } from '../src/sim/site-climate';
+
 import { createHash } from 'node:crypto';
 import { expect,test } from 'vitest';
 import { applyCommand,deserializeWorld,serializeWorld,stepWorld } from '../src/sim/index';
@@ -147,4 +153,69 @@ test('flora state and its private stream resume exactly without retroactive lega
   expect(validateWildFlora(world,SCHEMA_VERSION)).toBe(true);
   const legacy=generateSiteWorld(42,32,32,resolveSite(42,{hilliness:'small-hills'}));
   expect(validateWildFlora(legacy,90)).toBe(true);expect(legacy.flora).toBeUndefined();
+});
+
+/** V375 adds six short factory/continuation cases to the existing biome tests.
+ * These are controlled simulation tests, not a played campaign or a UI oracle. */
+test.each(BIOME_READINESS_CASES)('V375 short biome $seed/$biome: deterministic geography, ecology and exact arrival resume', ({ seed, biome }) => {
+  const { choice, resolved } = biomeReadinessSite(seed, biome);
+  const party = startingPartyFromRoster(375, createStartingCandidateRoster(375));
+  const create = () => createScenarioWorld(resolved.seed, 64, 'crashlanded', resolved.site, party, choice);
+  const world = create(), repeated = create(), initialText = serializeWorld(world);
+  expect(serializeWorld(repeated)).toBe(initialText);
+  expect(validateWorld(world)).toEqual([]);
+  expect(world).toMatchObject({ seed: resolved.seed, site: { revision: 2, biome }, planet: { generationSeed: seed, homeTile: choice.tile } });
+  expect(world.climate?.revision).toBe(2);
+  expect(siteClimateDefinition(world)).toEqual(resolved.climate);
+  for (const tick of [0, 1500, 3000, 4500]) expect(Number.isFinite(seasonalOutdoorTemperature(world, tick))).toBe(true);
+
+  const plants = world.resources.filter(resource => resource.species !== undefined);
+  const plantSpecies = new Set(Object.keys(BIOME_FLORA[biome].weights));
+  expect(plants.length).toBeGreaterThan(0);
+  expect(plants.every(plant => plantSpecies.has(plant.species!))).toBe(true);
+  expect(world.flora?.biome).toBe(biome);
+  const fauna = world.wildlife!, allowedAnimals = new Set(faunaBiome(biome).entries.map(entry => entry.species));
+  expect(fauna.profile).toBe('biome-fauna-v2');
+  expect(fauna.population?.biome).toBe(biome);
+  expect(fauna.animals.length).toBeGreaterThan(0);
+  expect(fauna.animals.every(animal => allowedAnimals.has(animal.species))).toBe(true);
+
+  const pending = world.startingArrival;
+  if (!pending || pending.phase === 'opened') throw Error('Expected actual initial capsule custody');
+  const original = structuredClone(pending), loose = structuredClone(world.piles);
+  expect(world.pawns).toEqual([]);
+  expect(pending.pods).toHaveLength(3);
+  const resumed = deserializeWorld(initialText);
+  expect(resumed).toEqual(world);
+  expect(resumed.climate).toEqual(world.climate);
+  stepWorld(world, pending.landAt - 1); stepWorld(resumed, pending.landAt - 1);
+  expect(world.startingArrival?.phase).toBe('incoming');
+  expect(resumed).toEqual(world);
+  // At most 64 ordinary engine steps, stopping on the first actual discharge.
+  for (let ticks = 0; ticks < 64 && world.startingArrival?.phase !== 'opened'; ticks++) {
+    stepWorld(world); stepWorld(resumed);
+  }
+  expect(world.startingArrival?.phase).toBe('opened');
+  expect(resumed).toEqual(world);
+  expect(world.tick).toBeLessThanOrEqual(original.landAt - 1 + 64);
+  expect(world.pawns.map(pawn => pawn.id)).toEqual(original.pods.map(pod => pod.pawn.id));
+  for (const pile of loose) expect(world.piles.find(current => current.id === pile.id)).toMatchObject(pile);
+  for (const pod of original.pods) {
+    const expected = structuredClone(pod.pawn);
+    if (expected.health) expected.health.tick = world.tick;
+    expect(world.pawns.find(pawn => pawn.id === expected.id)).toEqual(expected);
+    for (const pile of pod.items) {
+      const owner = pile.owner.type === 'starting-pod'
+        ? { type: 'ground', ...pod.drops.find(drop => drop.pileId === pile.id)!.cell }
+        : pile.owner;
+      expect(world.piles.filter(current => current.id === pile.id)).toHaveLength(1);
+      expect(world.piles.find(current => current.id === pile.id)).toEqual({ ...pile, owner });
+    }
+  }
+  const openedSave = serializeWorld(world), continued = deserializeWorld(openedSave);
+  expect(continued).toEqual(world);
+  stepWorld(world, 24); stepWorld(continued, 24);
+  expect(continued).toEqual(world);
+  expect(validateWorld(world)).toEqual([]);
+  expect(serializeWorld(deserializeWorld(serializeWorld(world)))).toBe(serializeWorld(world));
 });
