@@ -4,9 +4,9 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V383, schéma 244 :** [bouche d’aération](docs/gameplay/vent-v383.md) qualifiée : construction payée, service physique et partage de chaleur entre pièces. Publier V382–V383 ensemble ; dernière production V379–V381 **bd2107e4**, 116 HTTPS exacts, produit `859dff42`. Les Aulnes V381 restent courantes ; campagne98038 close partielle.
+**État V383, schéma 244 :** [bouche d’aération](docs/gameplay/vent-v383.md) qualifiée : construction payée, service physique et partage de chaleur entre pièces. Publication commune V382–V383 **31deee1d**, 120 HTTPS exacts, produit `e147f81a`. Les Aulnes V381 restent courantes ; campagne98038 close partielle.
 
-**Ordre courant :** publication regroupée puis tuque tissu/laine pour les sorties froides, avec chaîne de confection/port/isolation et migration stricte. Préparation privée, aucune livraison V384 acquise. Conserver les mises à jour périodiques et cohérentes des Aulnes. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. Références humaines, `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
+**Ordre courant :** tuque tissu/laine pour les sorties froides, avec chaîne de confection/port/isolation et migration stricte. Préparation privée, aucune livraison V384 acquise. Conserver les mises à jour périodiques et cohérentes des Aulnes. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. Références humaines, `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
 
 ## Méthode de livraison
 

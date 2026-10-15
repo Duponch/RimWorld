@@ -27,3 +27,7 @@ Sorties actuelles sous `tmp/silver-v382/`, `tmp/validation-runs/v382-*` ; parent
 - Build Pages PASS2,086s. Gel04 de3316chemins exact avant/après ; rouges et captures conservés sous tmp/silver-v382/native-01 et native-02. Cette scène démontre une chaîne préparée et jouée, pas la fréquence naturelle d’argent, une campagne complète ou une conformité exhaustive des règles de transport et de commerce Core.
 
 Documentation initialement RED1,189s sur quatre en-têtes de schéma restés242 ; index mis à jour vers243, puis PASS1,192s, contrôle inchangé.
+
+## Publication groupée
+
+V382 est maintenant en production avec V383, déploiement **31deee1d**, produit `e147f81a`. Les 120 réponses HTTPS et le package sont vérifiés ; voir la [clôture V383](vent-v383.md#publication-v382v383). Les mentions de publication en attente ci-dessus décrivent le moment du commit V382.

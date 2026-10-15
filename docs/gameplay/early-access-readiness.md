@@ -1,6 +1,6 @@
 # Préparer une version early access
 
-**V383 — schéma 244 :** [bouche d’aération](vent-v383.md) : construction payée, service physique et échange de chaleur entre pièces. Construction, services, thermique et recharges qualifiés ; publication groupée V382–V383 prévue, dernière production V381/bd2107e4. Les états suivants sont historiques.
+**V383 — schéma 244 :** [bouche d’aération](vent-v383.md) : construction payée, service physique et échange de chaleur entre pièces. Publication commune V382–V383 **31deee1d**, produit `e147f81a`, 120 réponses HTTPS exactes. Construction, services, thermique et recharges qualifiés dans la note canonique. Les états suivants sont historiques.
 
 **V381 — référence Les Aulnes actualisée, publication bd2107e4 :** [atelier, étagères et tenue de garde](aulnes-workshop-v381.md). Patrimoine préparé explicite, habillage et rangement ordinaires observés, anciennes références conservées ; aucune nouvelle mécanique ou campagne entière revendiquée. Les états suivants sont historiques.
 
