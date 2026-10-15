@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V381 — référence Les Aulnes actualisée :** [atelier, étagères et tenue de garde](aulnes-workshop-v381.md). Patrimoine préparé explicite, habillage et rangement ordinaires observés, anciennes références conservées ; aucune nouvelle mécanique ou campagne entière revendiquée. Les états suivants sont historiques.
+
 **V379 — schéma 242 :** [incidents secondaires et alertes hors carte](secondary-incidents-v379.md). Calendriers prospectifs, acteurs locaux et bascule/centrage vers la vraie carte ; contrôles et limites dans la note canonique. Publication regroupée suivante ; dernière production confirmée V378/e5ec566c. Les états suivants sont historiques.
 
 **V378 — schéma 241 :** [combinaison de reconnaissance et uranium](recon-armor-v378.md). Chaîne acquisition/minage, commerce physique adapté, fabrication, stockage, habillement et sauvegarde qualifiée ; 51cas ciblés et parcours natif physique acquis. Le casque existe déjà ; les autres usages de l’uranium restent absents.

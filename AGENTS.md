@@ -4,9 +4,9 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V380, schéma 242 :** [survol/ressources/dock](docs/gameplay/hover-layout-v380.md) stabilisés et qualifiés à quatre tailles, après les incidents secondaires V379. Dernière publication confirmée V377–V378 **e5ec566c**,114HTTPS exacts ; groupe produit suivant après actualisation des Aulnes. Campagne98038 close partielle.
+**État V381, schéma 242 :** [Les Aulnes actualisées](docs/gameplay/aulnes-workshop-v381.md), après le HUD V380 et les incidents secondaires V379. Dernière publication confirmée V377–V378 **e5ec566c**,114HTTPS exacts ; publication regroupée V379–V381 en préparation. Campagne98038 close partielle.
 
-**Ordre courant :** actualiser Les Aulnes avec un atelier/stockage/équipement cohérents, en gardant le patrimoine préparé explicite et les versions historiques ; puis parcours joueurs et catalogue selon les manques constatés. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. Références humaines, `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
+**Ordre courant :** clôturer la publication V379–V381, puis filons d’argent de surface pour relier extraction, monnaie et achats préindustriels ; garder les mises à jour des Aulnes périodiques et cohérentes. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. Références humaines, `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
 
 ## Méthode de livraison
 

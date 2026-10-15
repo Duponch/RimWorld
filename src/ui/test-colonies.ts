@@ -1,4 +1,4 @@
-import { decodeStoredSave, MAX_DECOMPRESSED_SAVE_BYTES } from './save-storage-codec';
+import { decodeStoredSave, MAX_DECOMPRESSED_SAVE_BYTES } from './save-storage-codec.ts';
 
 export interface TestColony {
   id: string;

@@ -1,5 +1,9 @@
 # Guide joueur
 
+## Les Aulnes actualisées — V381
+
+Dans **Charger une partie → Colonies de test**, la référence intégrée des Aulnes ouvre le village historique avec deux étagères près du poste de fabrication128,139, un stock fini d’uranium et Tao en combinaison de reconnaissance. Une facture permet de fabriquer un second exemplaire avec les matières coloniales existantes. La première tenue et les aménagements sont un patrimoine préparé déclaré ; les autres activités continuent normalement. La référence V284 reste disponible séparément. [Repères et limites](aulnes-workshop-v381.md).
+
 ## Lire les informations de la carte — V380
 
 Le survol se place dans une région libre du HUD. Avec un grand dossier ouvert, les ressources et la page du dossier restent défilantes pour préserver les commandes. Fermez le dossier pour retrouver davantage de place ; ouvrir Ordres ou Zones le ferme normalement. Si le survol devient lui-même défilant, vous pouvez entrer dans sa surface pour le lire, puis sortir ou appuyer sur Échap. [Portée et limites](hover-layout-v380.md).

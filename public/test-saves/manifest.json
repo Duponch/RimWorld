@@ -3,9 +3,41 @@
   "saves": [
     {
       "id": "aulnes-current",
-      "release": "v284",
+      "release": "v381",
       "filename": "les-aulnes-integrees.json",
       "label": "Les Aulnes · référence intégrée 250×250",
+      "description": "Le village historique conserve ses habitants, élevage et ateliers ; rangement industriel sur étagères, uranium fini et tenue de garde Recon complètent les activités existantes. Patrimoine déclaré puis continuation ordinaire.",
+      "pawns": 15,
+      "colonists": 14,
+      "width": 250,
+      "height": 250,
+      "tick": 8794,
+      "prepared": true,
+      "sha256": "c95c7b6e99a21f521f8fe533a8b4664e758e6dd20fcdeeebf2da3f88531cced8",
+      "provenance": "Dérivé du checkpoint V284, tick8434, SHA e11bdf91…644d, migré strictement au schéma242. Deux étagères en bois,40uranium au sol, une combinaison normale et la seule recherche Recon sont explicitement préparés. Iris libérée par vraie annulation ; Tao reçoit la tenue par ordre/contact ordinaires. Aucune acquisition naturelle, expédition ou nouvelle histoire n’est inventée.",
+      "focus": [
+        "colonie intégrée",
+        "atelier et étagères",
+        "uranium",
+        "tenue de garde Recon",
+        "fabrication",
+        "hôpital et pharmacie",
+        "élevage",
+        "commerce orbital"
+      ],
+      "steps": [
+        "Au sud, atelier de fabrication (128,139) : deux étagères, stock physique limité et une facture de combinaison80plastacier/3composants avancés/10uranium.",
+        "Inspecter Tao et sa tenue de garde ; son gilet historique reste un objet original après le remplacement physique. La combinaison initiale est du patrimoine déclaré.",
+        "La facture suivante reste à fabriquer par un artisan qualifié. Les autres ateliers, recherches historiques, logements et relations restent ceux de la colonie.",
+        "Iris a été libérée de sa recherche par une annulation normale ; la complétion Recon est déclarée dans la préparation, pas présentée comme une recherche jouée.",
+        "Le marchand orbital historique garde sa date de départ10934 et ses biens propres. Aucun uranium n’a été pris à son inventaire."
+      ]
+    },
+    {
+      "id": "aulnes-integrated-v284",
+      "release": "v284",
+      "filename": "les-aulnes-integrees.json",
+      "label": "Les Aulnes · référence historique V284 250×250",
       "description": "Village avancé : 14 colons, prisonnier, cinq espèces domestiques, hôpital, hydroponie, pharmacie, industrie, forage, commerce orbital et pâte nutritive. Extension préparée puis activités ordinaires réellement jouées.",
       "pawns": 15,
       "colonists": 14,

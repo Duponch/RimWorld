@@ -1,5 +1,7 @@
 # Les Aulnes, référence intégrée
 
+**Référence courante V381 — schéma 242, tick8794.** [Atelier, étagères et tenue de garde](aulnes-workshop-v381.md) : deux étagères,40uranium finis, Tao physiquement équipé et facture d’un second exemplaire. Les ajouts préparés sont déclarés ; une courte continuation ordinaire et une recharge UI exacte les accompagnent. Les14colons, Dorian, les animaux et le village sont conservés. Ouvrez la première fiche **Les Aulnes · référence intégrée250×250** dans Colonies de test, ou importez [le fichier courant](../../public/test-saves/v381/les-aulnes-integrees.json). Le fichier V284 demeure une fiche historique distincte. Les mesures de performance et états ci-dessous portent sur les anciennes versions.
+
 La [préparation des bâtiments V299](../development/aulnes-performance-v299.md) conserve cette sauvegarde, les règles et la qualité. Comparaison fraîche avec V296 :121,47→130,25RAF/s en1440p/dev, débit5,618→6,056× sous×6 demandé ; la référence ne tient pas uniformément×6. Quatre recharges exactes, pointes réduites,240FPS non atteints. Les états suivants sont historiques.
 
 Le [diagnostic CPU/GPU V298](../development/aulnes-performance-v298.md) conserve ce checkpoint et le produit V296. Les pointes de préparation MAIN restent prioritaires ; aucune baisse de qualité, aucun nouveau FPS livré. Les états suivants sont historiques.
