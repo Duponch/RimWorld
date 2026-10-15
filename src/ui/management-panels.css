@@ -625,3 +625,8 @@
 #work-panel td small{font-size:11px}
 
 #schedule-panel .schedule-brushes button[aria-pressed=true]{color:var(--ink);font-weight:700}
+.management-panel {
+  /* An opened player window must receive clicks above the persistent HUD.
+     Loading, context menus and modal dialogs retain their higher layers. */
+  z-index: 8;
+}

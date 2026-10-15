@@ -52,13 +52,26 @@ export function validShelfTransport(w:World,version:number=w.schemaVersion):bool
     if(![...buildings,...w.jobs,...descriptors].some(prospective))return true;
     if(version<229||!buildings.every(s=>validShelfBuildingShape(s,version))||archives.some(p=>prospective(p.building)))return false;
     if(descriptors.some(d=>Object.hasOwn(d!,'shelf')))return false;
+    // Reuse the shape traversal for this adoption's ground-stockpile geometry.
+    // Packed shelves do not occupy cells; absent stockpiles need no index.
+    // Cloned zone packets cannot use identity as an unchanged-value witness.
+    const noStockpileCells=w.stockpiles.length?new Set<number>():undefined;
     for(const j of w.jobs){
       if(Object.hasOwn(j,'shelf'))return false;
       if(isShelfKind(j.kind)&&(!integer(j.orientation,0,3)||j.footprint!=='standard'
         ||!(j.material==='wood'||j.material==='steel'||isBlockMaterial(j.material))
         ||['quality','art','fuel','bills','power','medical','prisoner','damage'].some(k=>Object.hasOwn(j,k))))return false;
+      if(noStockpileCells&&(isShelfKind(j.kind)||j.kind==='install'&&isShelfKind(j.furniture?.kind??'')))
+        for(const c of footprintCells(j))noStockpileCells.add(c.z*w.width+c.x);
     }
-    for(const s of buildings)if(isShelfKind(s.kind)&&(!integer(s.id,1,w.nextId-1)||s.shelf!.cells.some(id=>!integer(id,1,w.nextId-1))||footprintCells(s).some(c=>!integer(c.x,0,w.width-1)||!integer(c.z,0,w.height-1))))return false;
+    for(let i=0;i<buildings.length;i++){
+      const s=buildings[i]!;if(!isShelfKind(s.kind))continue;
+      const cells=footprintCells(s);
+      if(!integer(s.id,1,w.nextId-1)||s.shelf!.cells.some(id=>!integer(id,1,w.nextId-1))
+        ||cells.some(c=>!integer(c.x,0,w.width-1)||!integer(c.z,0,w.height-1)))return false;
+      if(noStockpileCells&&i<w.structures.length)for(const c of cells)noStockpileCells.add(c.z*w.width+c.x);
+    }
+    if(noStockpileCells?.size&&w.stockpiles.some(z=>noStockpileCells.has(z.z*w.width+z.x)))return false;
     if((w.packed??[]).some(p=>prospective(p.building))||w.jobs.some(j=>isShelfKind(j.furniture?.kind??''))){
       if(validateFurniture(w,version,new Set()).length)return false;
     }

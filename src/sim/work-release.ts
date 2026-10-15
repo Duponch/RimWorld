@@ -14,6 +14,7 @@ import { furnitureIntentAt, furnitureSourceCells } from './furniture-rules.ts';
 import { furnitureDropCell, releaseFurniture } from './furniture-transfer.ts';
 import { resetWork } from './work-progress.ts';
 import { zonesUnderPlan } from './construction-zones.ts';
+import { isShelfKind } from './shelf-storage.ts';
 import { constructionHaulId } from './construction-rules.ts';
 import type { Cell, Command, MaterialPile, Pawn, World } from './types.ts';
 import { workType } from './work-types.ts';
@@ -39,11 +40,17 @@ export function humanSleepingSpotActors(world:World,ids:ReadonlySet<number>):Paw
 export function planCommandDrops(world:World,command:Command):DropPlan|null {
   if(command.type==='designate'&&(command.kind==='sleeping-spot'||command.kind==='animal-sleeping-spot'))return new Map();
   const jobs=new Set<number>(),zones=new Set<number>(),pawns=new Set<number>();
+  let retiringGrowingActors:Set<number>|undefined;
   if(command.type==='order-bury'||command.type==='clean-room'||command.type==='order-orbital-trade'||command.type==='order-trade'||command.type==='order-extinguish'||command.type==='order-capture'||command.type==='order-arrest'||command.type==='order-equipment'||command.type==='order-feed'||command.type==='order-tend'||command.type==='order-drafted-tend'||command.type==='order-consume'||command.type==='order-animal-rescue'||command.type==='order-rescue'||command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders') {
     pawns.add(command.pawnId);
   } else if(command.type==='designate') {
     const affected=zonesUnderPlan(world,command);for(const id of affected.deliveries)zones.add(id);
-    for(const pawn of world.pawns)if(pawn.haul?.destination.type==='aside'&&affected.growing.has(pawn.haul.destination.growingZoneId??-1))pawns.add(pawn.id);
+    if(affected.growing.size){
+      retiringGrowingActors=new Set<number>();
+      for(const job of world.jobs)if(job.growingZoneId!==undefined&&affected.growing.has(job.growingZoneId))jobs.add(job.id);
+      for(const pawn of world.pawns)if(pawn.jobId!==null&&jobs.has(pawn.jobId)
+        ||pawn.haul?.destination.type==='aside'&&affected.growing.has(pawn.haul.destination.growingZoneId??-1)){pawns.add(pawn.id);retiringGrowingActors.add(pawn.id);}
+    }
     if(command.kind==='deconstruct'||command.kind==='uninstall')for(const job of world.jobs)if(job.fixBreakdown&&footprintCells(job).some(c=>same(c,command)))jobs.add(job.id);
   } else if(command.type==='cancel') {
     const job=world.jobs.find(j=>footprintCells(j).some(c=>same(c,command)))??furnitureIntentAt(world,command);if(job)jobs.add(job.id);
@@ -100,6 +107,14 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
     const humanSpots=new Set(world.structures.filter(s=>s.kind==='sleeping-spot'&&(cells?footprintCells(s).some(c=>cells.has(c.z*world.width+c.x)):command.type==='designate'&&(command.targetId===undefined||command.targetId===s.id)&&footprintCells(s).some(c=>same(c,command)))).map(s=>s.id));
     for(const p of humanSleepingSpotActors(world,humanSpots))pawns.add(p.id);
   }
+  // Zone retirement must not put a held object down at the logical end of
+  // an edge still physically in progress. Growing actors are exactly those
+  // canceled by removeZonesForPlan; construction and installation share this.
+  if(command.type==='designate'&&(isShelfKind(command.kind)||retiringGrowingActors?.size))for(const pawn of world.pawns)
+    if(pawns.has(pawn.id)&&(isShelfKind(command.kind)||retiringGrowingActors?.has(pawn.id))
+      &&(pawn.moveCooldown>0||(pawn.motion?.end??0)>world.tick)
+      &&(world.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)
+        ||world.packed.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)))return null;
   return planSelectedDrops(world,jobs,pawns);
 }
 /** Preflight a single automatic job as one transaction, including material

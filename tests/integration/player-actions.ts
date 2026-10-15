@@ -338,6 +338,10 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
         return true;
       }
       if(c.action==='stockpile'){for(let z=Math.min(c.from.z,c.to.z);z<=Math.max(c.from.z,c.to.z);z++)for(let x=Math.min(c.from.x,c.to.x);x<=Math.max(c.from.x,c.to.x);x++){const s=w.stockpiles.find(s=>s.x===x&&s.z===z);if(!s||c.filters&&Object.entries(s.filters).some(([k,v])=>!!v!==!!c.filters![k as keyof typeof c.filters]))return false;}return true;}
+      if(c.action==='remove-growing')return !w.growingZones.some(zone=>(c.targetZoneId===undefined||zone.id===c.targetZoneId)&&zone.cells.some(index=>{
+        const x=index%w.width,z=Math.floor(index/w.width);
+        return x>=Math.min(c.from.x,c.to.x)&&x<=Math.max(c.from.x,c.to.x)&&z>=Math.min(c.from.z,c.to.z)&&z<=Math.max(c.from.z,c.to.z);
+      }));
       if(c.action==='deconstruct')return w.jobs.some(j=>j.kind==='deconstruct');
       if(c.action==='cancel')return (cancelJobIds??[]).every(id=>!w.jobs.some(j=>j.id===id))&&(cancelPileIds??[]).every(id=>{const p=w.piles.find(p=>p.id===id);return !p||!p.haulRequested||p.owner.type!=='ground';});
       if(c.action==='haul-chunks')return w.piles.some(p=>p.kind==='chunk'&&p.haulRequested&&p.owner.type==='ground'&&p.owner.x>=Math.min(c.from.x,c.to.x)&&p.owner.x<=Math.max(c.from.x,c.to.x)&&p.owner.z>=Math.min(c.from.z,c.to.z)&&p.owner.z<=Math.max(c.from.z,c.to.z));

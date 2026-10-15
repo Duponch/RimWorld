@@ -340,13 +340,19 @@ function applyBuildLine(world: World, command: BuildLineCommand): CommandResult 
   return { ok: true, affected, skipped: cells.length - affected };
 }
 
+/** Generated sowing work is an AI intention, not a placed blueprint. A
+ * no-zone construction will retire its generating zone through the shared path. */
+function constructionRetiresSowingIntent(job:Job,kind:JobKind):boolean {
+  return job.kind==='sow'&&job.growingZoneId!==undefined&&occupancyOf(kind)?.zones===false;
+}
+
 /** Snapshot-local spatial index for repeated line previews. It is never saved or
  * reused after a World mutation; canDesignate remains the common authority. */
 export interface ConstructionCellIndex { kind: LineBuildKind; flags: Uint8Array }
 export function buildConstructionCellIndex(world: World, kind: LineBuildKind): ConstructionCellIndex {
   const flags=new Uint8Array(world.width*world.height);
   const mark=(cell:Cell,bit:number)=>{if(inBounds(world,cell.x,cell.z))flags[cellIndex(world,cell.x,cell.z)]!|=bit;};
-  for(const job of world.jobs)if(!isRoofJob(job)&&sharesConstructionLayer(job.furniture?.kind??job.deconstruction?.kind??job.flick?.kind??job.fixBreakdown?.kind??job.kind,kind))
+  for(const job of world.jobs)if(!isRoofJob(job)&&!isPlantDesignationJob(job)&&!constructionRetiresSowingIntent(job,kind)&&sharesConstructionLayer(job.furniture?.kind??job.deconstruction?.kind??job.flick?.kind??job.fixBreakdown?.kind??job.kind,kind))
     for(const cell of footprintCells(job))mark(cell,1);
   for(const structure of world.structures)if(sharesConstructionLayer(structure.kind,kind))
     for(const cell of footprintCells(structure))mark(cell,2);
@@ -409,7 +415,7 @@ export function canDesignate(world: World, command: DesignateCommand, installing
   if(command.kind==='grave'&&cells.some(c=>{const tile=world.tiles[cellIndex(world,c.x,c.z)]!;return !!tile.floor||!['grass','soil','rich-soil','gravel'].includes(tile.terrain);}))return refusal('incompatible-resource','La tombe exige un terrain meuble à creuser.');
   const replacing=installing?undefined:wallBlueprintForDoor(world,command);
   if (!replacing&&index?.kind===command.kind ? cells.some(cell=>!!(index.flags[cellIndex(world,cell.x,cell.z)]!&1))
-    : world.jobs.some(job => job!==replacing && !isRoofJob(job) && !isPlantDesignationJob(job) && !(command.kind==='deconstruct'&&(job.kind==='repair'||job.kind==='fix-breakdown'||job.kind==='flick')) && sharesConstructionLayer(job.furniture?.kind??job.deconstruction?.kind??job.flick?.kind??job.fixBreakdown?.kind??job.kind,target?.kind??command.kind) && footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
+    : world.jobs.some(job => job!==replacing && !isRoofJob(job) && !isPlantDesignationJob(job) && !constructionRetiresSowingIntent(job,target?.kind??command.kind) && !(command.kind==='deconstruct'&&(job.kind==='repair'||job.kind==='fix-breakdown'||job.kind==='flick')) && sharesConstructionLayer(job.furniture?.kind??job.deconstruction?.kind??job.flick?.kind??job.fixBreakdown?.kind??job.kind,target?.kind??command.kind) && footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
   if(command.kind==='deconstruct'||command.kind==='uninstall')return {ok:true};
   if(command.kind==='mine')return world.tiles[cellIndex(world,command.x,command.z)]!.terrain==='rock'?{ok:true}:refusal('incompatible-resource','Désigner un massif rocheux à miner.');
   if((command.kind==='crafting-spot'||command.kind==='butcher-spot')&&world.resources.some(r=>sameCell(r,command)&&!isConstructionLightPlant(r)))return refusal('occupied','Dégager la plante avant de placer cet emplacement.');
