@@ -1,6 +1,6 @@
 # Validation courante — V349–V350
 
-**V378 — schéma 241 :** [uranium et combinaison de reconnaissance](../gameplay/recon-armor-v378.md). Extraction, fabrication payée, stockage et habillement qualifiés, trois recharges exactes ; publication groupée avec le second site V377 en préparation. Les états suivants sont historiques.
+**V378 — schéma 241 :** [uranium et combinaison de reconnaissance](../gameplay/recon-armor-v378.md). Extraction, fabrication payée, stockage et habillement qualifiés, trois recharges exactes ; produitfdceb8b3 publié en e5ec566c avec V377,114HTTPS exacts. Les états suivants sont historiques.
 
 **V377 — schéma 240 :** [second site persistant](../gameplay/secondary-site-v377.md). Personnes et biens originaux, simulation partagée, sauvegarde complète et revisite ; retour/revisite UI acquis par reprises, anciennes sauvegardes conservées. Publication groupée suivante ; dernière production V376. Les états suivants sont historiques.
 

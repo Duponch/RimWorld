@@ -1,6 +1,6 @@
 # Plan de développement
 
-**15 octobre 2026 — schéma 241.** [V378](gameplay/recon-armor-v378.md) qualifie uranium et combinaison de reconnaissance, après [V377](gameplay/secondary-site-v377.md) et la toundra/neigeV376. Parcours physiques et reprises acquis dans les limites des notes. Publication groupée V377–V378 en préparation ; dernière productionV376/712fc270. Campagne98038 close partielle, aucun pourcentage ou FPS certifié.
+**15 octobre 2026 — schéma 241.** [V378](gameplay/recon-armor-v378.md) qualifie uranium et combinaison de reconnaissance, après [V377](gameplay/secondary-site-v377.md) et la toundra/neigeV376. Parcours physiques et reprises acquis dans les limites des notes. Publication groupée V377–V378 **e5ec566c**, produitfdceb8b3 poussé et114HTTPS exacts. Campagne98038 close partielle, aucun pourcentage ou FPS certifié.
 
 ## Priorité actuelle
 
