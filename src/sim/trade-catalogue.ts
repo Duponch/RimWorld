@@ -19,7 +19,7 @@ function gear(baseMarketValue:number,maxHitPoints:number,visitorHandles:boolean,
   return value(baseMarketValue,visitorHandles,{healthAffectsPrice:true,maxHitPoints,hasQuality:true,sellPriceFactor:weapon?.2:1,...extra});
 }
 export const TRADE_CATALOGUE:Readonly<Partial<Record<ItemId,TradeCatalogueEntry>>>=Object.freeze({
-  silver:value(1,true),wood:value(1.2),steel:value(1.9),gold:value(10),plasteel:value(9),cloth:value(1.5,true),'light-leather':value(1.9),'muffalo-wool':value(2.7),component:value(32,true),'advanced-component':value(200),
+  silver:value(1,true),wood:value(1.2),steel:value(1.9),gold:value(10),uranium:value(6),plasteel:value(9),cloth:value(1.5,true),'light-leather':value(1.9),'muffalo-wool':value(2.7),component:value(32,true),'advanced-component':value(200),
   'herbal-medicine':value(10),medicine:value(18,true),'glitterworld-medicine':value(50),
   chemfuel:value(2.3,false,{playerCanBuy:false,playerCanSell:false}),neutroamine:value(6),
   hay:value(.6,false,{playerCanBuy:false,playerCanSell:false}),kibble:value(1.1,false,{playerCanBuy:false,playerCanSell:false}),
@@ -28,7 +28,7 @@ export const TRADE_CATALOGUE:Readonly<Partial<Record<ItemId,TradeCatalogueEntry>
   'simple-meal':value(15,false,{playerCanSell:false}),'fine-meal':value(20,false,{playerCanSell:false}),'vegetarian-fine-meal':value(20,false,{playerCanSell:false}),'carnivore-fine-meal':value(20,false,{playerCanSell:false}),'lavish-meal':value(40,false,{playerCanSell:false}),'vegetarian-lavish-meal':value(40,false,{playerCanSell:false}),'carnivore-lavish-meal':value(40,false,{playerCanSell:false}),'survival-meal':value(24,true),
   'granite-blocks':value(.9,false,{playerCanSell:false}),'limestone-blocks':value(.9,false,{playerCanSell:false}),
   'marble-blocks':value(.9,false,{playerCanSell:false}),'sandstone-blocks':value(.9,false,{playerCanSell:false}),'slate-blocks':value(.9,false,{playerCanSell:false}),
-  'cloth-tribalwear':gear(96.48,100,true,false,{playerCanBuy:false}),'cloth-shirt':gear(77.22,100,true),'flak-vest':gear(223.4,200,false),'flak-helmet':gear(258.8,120,false),'recon-helmet':gear(526.7,120,false),
+  'cloth-tribalwear':gear(96.48,100,true,false,{playerCanBuy:false}),'cloth-shirt':gear(77.22,100,true),'flak-vest':gear(223.4,200,false),'flak-helmet':gear(258.8,120,false),'recon-helmet':gear(526.7,120,false),'recon-armor':gear(1542,280,false),
   revolver:gear(135.4,100,true,true),'bolt-action-rifle':gear(253.2,100,true,true),'plasteel-knife':gear(284.256,280,false,true),
   // Fixed materials + Core work value: 75*1.9 + 8*32 + 30000*.0036.
   'emp-launcher':gear(506.5,100,true,true),

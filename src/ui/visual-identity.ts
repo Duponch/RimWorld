@@ -83,7 +83,7 @@ export function installVisualIdentity(root: HTMLElement): void {
     const name = row.querySelector<HTMLElement>('span:not(.resource-symbol)');
     if (name) { name.classList.add('resource-name'); row.title = name.textContent ?? ''; }
   }
-  for(const [id,item]of Object.entries({wood:'wood',steel:'steel',plasteel:'plasteel',gold:'gold',cloth:'cloth',component:'component','advanced-component':'advanced-component',chemfuel:'chemfuel',silver:'silver',medicine:'medicine',blocks:'granite-blocks',food:'rice'})){
+  for(const [id,item]of Object.entries({wood:'wood',steel:'steel',plasteel:'plasteel',uranium:'uranium',gold:'gold',cloth:'cloth',component:'component','advanced-component':'advanced-component',chemfuel:'chemfuel',silver:'silver',medicine:'medicine',blocks:'granite-blocks',food:'rice'})){
     const symbol=root.querySelector<HTMLElement>(`#${id}`)?.parentElement?.querySelector<HTMLElement>('.resource-symbol');if(!symbol)continue;
     symbol.classList.add('ui-icon');symbol.textContent='';symbol.setAttribute('aria-hidden','true');symbol.style.backgroundImage=`url('${modelIconUrl(`item-${item}`)}')`;symbol.style.backgroundSize='contain';symbol.style.backgroundPosition='center';
   }

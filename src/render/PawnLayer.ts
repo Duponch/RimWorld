@@ -19,7 +19,7 @@ import { apparelProjection,apparelAppearance } from './character-apparel';
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import { growPawnBuffers } from './pawn-buffers';
 import { isColonist } from '../sim/affiliation';
-import { pawnGeometry,cargoGeometry,selectCargoGeometryKinds,PARKA_HOOD_DYE,FLAK_HELMET_DYE,RECON_HELMET_DYE,PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS } from './pawn-geometry';
+import { pawnGeometry,cargoGeometry,selectCargoGeometryKinds,PARKA_HOOD_DYE,FLAK_HELMET_DYE,RECON_HELMET_DYE,RECON_ARMOR_DYE,PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS } from './pawn-geometry';
 import { equipmentProjection } from './character-equipment';
 import { WEAPON_VISUALS,weaponVisual } from './weapon-shape';
 import { doorAt } from '../sim/door-rules';
@@ -497,6 +497,7 @@ export class PawnLayer {
       const wornFlags=attribute('aEquipment','vec4').z,helmet=wornFlags.greaterThan(1.5),recon=wornFlags.greaterThan(3.5);
       If(attribute('dye','float').equal(-2).and(wornFlags.mod(2).lessThan(.5)),()=>{animated.assign(vec3(0));});
       If(attribute('dye','float').equal(FLAK_HELMET_DYE).and(helmet.not().or(recon)),()=>{animated.assign(vec3(0));});
+      If(attribute('dye','float').equal(RECON_ARMOR_DYE).and(attribute('aEquipment','vec4').y.notEqual(5)),()=>{animated.assign(vec3(0));});
       If(attribute('dye','float').equal(RECON_HELMET_DYE).and(recon.not()),()=>{animated.assign(vec3(0));});
       If(attribute('dye','float').equal(PARKA_HOOD_DYE).and(attribute('aEquipment','vec4').y.notEqual(4).or(helmet)),()=>{animated.assign(vec3(0));});
       // One face variant is visible at a time. The pause-controlled scene
@@ -712,6 +713,7 @@ export class PawnLayer {
       If(dye.equal(-3).and(equipment.y.notEqual(2).and(equipment.y.notEqual(3))),()=>{animated.assign(vec3(0));});
       If(dye.equal(-2).and(worn.mod(2).lessThan(.5)),()=>{animated.assign(vec3(0));});
       If(dye.equal(FLAK_HELMET_DYE).and(helmet.not().or(recon)),()=>{animated.assign(vec3(0));});
+      If(dye.equal(RECON_ARMOR_DYE).and(attribute('aEquipment','vec4').y.notEqual(5)),()=>{animated.assign(vec3(0));});
       If(dye.equal(RECON_HELMET_DYE).and(recon.not()),()=>{animated.assign(vec3(0));});
       If(dye.equal(PARKA_HOOD_DYE).and(equipment.y.notEqual(4).or(helmet)),()=>{animated.assign(vec3(0));});
       const face=motion.z.equal(POSE_DEAD).select(float(PAWN_EYE_CROSS),motion.z.equal(POSE_SLEEP).or(this.animationCache.cell(3).y.greaterThan(.5)).select(float(PAWN_EYE_CLOSED),float(PAWN_EYE_OPEN)));

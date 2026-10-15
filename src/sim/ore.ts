@@ -5,11 +5,12 @@ export const ORE_DEFINITIONS = Object.freeze({
   steel: Object.freeze({hp:1500,yield:40,item:'steel',label:'Acier compacté',color:0x725c53}),
   machinery: Object.freeze({hp:2000,yield:2,item:'component',label:'Machines compactées',color:0xb38d53}),
   gold: Object.freeze({hp:1500,yield:40,item:'gold',label:"Minerai d'or",color:0xb4a344}),
+  uranium:Object.freeze({hp:4000,yield:40,item:'uranium',label:'Minerai d’uranium',color:0x777d73}),
   plasteel: Object.freeze({hp:8000,yield:40,item:'plasteel',label:'Plastacier compacté',color:0x839f9f}),
 } as const);
 export const STEEL_ORE = ORE_DEFINITIONS.steel;
 export function validOre(tile: {terrain:unknown;ore?:unknown}, version:number):boolean {
-  return tile.ore===undefined || tile.terrain==='rock' && (version>=29 && tile.ore==='steel' || version>=41 && tile.ore==='machinery' || version>=123 && (tile.ore==='gold'||tile.ore==='plasteel'));
+  return tile.ore===undefined || tile.terrain==='rock' && (version>=241 && tile.ore==='uranium' || version>=29 && tile.ore==='steel' || version>=41 && tile.ore==='machinery' || version>=123 && (tile.ore==='gold'||tile.ore==='plasteel'));
 }
 
 function sample(seed:number,cell:number):number {

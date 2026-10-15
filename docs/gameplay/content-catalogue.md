@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V378 — schéma 241 :** [combinaison de reconnaissance et uranium](recon-armor-v378.md). Chaîne acquisition/minage, commerce physique adapté, fabrication, stockage, habillement et sauvegarde qualifiée ; 51cas ciblés et parcours natif physique acquis. Le casque existe déjà ; les autres usages de l’uranium restent absents.
+
 **V377 — schéma 240 :** [second site persistant](secondary-site-v377.md). Personnes et biens originaux, simulation partagée, sauvegarde complète et revisite ; retour/revisite UI acquis par reprises, anciennes sauvegardes conservées. Publication groupée suivante ; dernière production V376. Les états suivants sont historiques.
 
 **V376 — schéma 239 :** [toundra et neige physique](tundra-snow-v376.md). Nouveau départ froid, surface persistée, déplacements et déneigement au contact ; écologie et génération restent partiellement adaptées. Qualification et limites dans la note unique. Produit872afdbb publié en712fc270, fichiers HTTPS vérifiés ; les états suivants sont historiques.

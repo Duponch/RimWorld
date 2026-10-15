@@ -1,5 +1,6 @@
 import {validTundraTransport} from '../sim/tundra-save.ts';
 import {validCampaignPresentation} from '../sim/secondary-site-presentation.ts';
+import {validReconCatalogueTransport} from '../sim/recon-catalogue-save.ts';
 import {validateTreeTransport,registerTreeThingIds,validTreePileShape,validTreeJobShape,validPlantTargetShape} from '../sim/tree-transfer-save.ts';
 import type {MinifiedTreePile} from '../sim/tree-transfer-state.ts';
 import {validOriginalTreeResource} from '../sim/tree-transfer-resource-save.ts';
@@ -888,6 +889,7 @@ export class SnapshotDecoder {
     if (packet.epoch < this.epoch || (packet.epoch === this.epoch && packet.revision <= this.revision)) return { status: 'stale' };
     if (!Number.isSafeInteger(packet.world.schemaVersion) || packet.world.schemaVersion < 1
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
+    if(!validReconCatalogueTransport(packet,packet.world.schemaVersion))return resync('Contenu de reconnaissance futur.');
     if(!validCampaignPresentation(packet.world))return resync('Registre de campagne ou carte affichée invalide.');
     if(!validHumanSleepingSpotProvenance(packet.world,packet.world.schemaVersion))return resync('Provenance de couchage au sol humain invalide ou future.');
     const arrivalField=Object.getOwnPropertyDescriptor(packet.world,'startingArrival');

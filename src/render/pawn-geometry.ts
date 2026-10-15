@@ -11,6 +11,7 @@ import { WEAPON_VISUALS } from './weapon-shape';
 export const PARKA_HOOD_DYE = -6;
 export const FLAK_HELMET_DYE = -7;
 export const RECON_HELMET_DYE = -8;
+export const RECON_ARMOR_DYE = -9;
 // Face variants are resident in the same pawn batch. The vertex shader shows
 // exactly one of them; portraits project the open-eye variant at rest.
 export const PAWN_EYE_OPEN = 60;
@@ -155,6 +156,17 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
   addPart([.30,.075,.03],[0,1.208,.183],1,[0,1.04,0],0x344a57,RECON_HELMET_DYE);
   addPart([.155,.105,.036],[0,1.115,.176],1,[0,1.04,0],0x536a74,RECON_HELMET_DYE);
   for(const side of [-1,1])addPart([.052,.17,.22],[side*.167,1.14,.02],1,[0,1.04,0],0x637c84,RECON_HELMET_DYE);
+  // Resident original recon plates follow the existing body/limb bones.
+  addShell([ring(.67,0,0,.17,.14,.03),ring(.84,0,0,.205,.16,.04),ring(1.02,0,0,.22,.155,.04)],0,[0,.61,0],APPAREL['recon-armor'].color,RECON_ARMOR_DYE);
+  addPart([.16,.21,.035],[0,.87,.17],0,[0,.61,0],0x536a74,RECON_ARMOR_DYE);
+  addPart([.18,.12,.13],[0,.99,-.17],0,[0,.61,0],0x657c84,RECON_ARMOR_DYE);
+  for(const side of [-1,1]){
+    const arm=side<0?2:3,leg=side<0?4:5,calf=side<0?6:7,hip=side*.105;
+    addShell([ring(.73,side*.23,0,.065,.076,.018),ring(.9,side*.23,0,.077,.09,.023),ring(1.04,side*.23,0,.10,.10,.025)],arm,[side*.23,1.01,0],APPAREL['recon-armor'].color,RECON_ARMOR_DYE);
+    addShell([ring(.59,side*.23,0,.064,.075,.017),ring(.75,side*.23,0,.070,.082,.019)],arm,[side*.23,1.01,0],0x657c84,RECON_ARMOR_DYE);
+    addShell([ring(.40,hip,0,.076,.092,.022),ring(.65,hip,0,.09,.106,.026)],leg,[hip,.61,0],APPAREL['recon-armor'].color,RECON_ARMOR_DYE);
+    addShell([ring(.18,hip,0,.071,.085,.018),ring(.40,hip,0,.078,.096,.022)],calf,[hip,.61,0],0x657c84,RECON_ARMOR_DYE);
+  }
   // Resident parka hood; its visibility follows the outfit attribute.
   addPart([.34,.34,.14],[0,1.17,-.12],1,[0,1.04,0],0xffffff,PARKA_HOOD_DYE);
   // Ground weapon shapes run along X. Rifle barrel rises on its sling; the

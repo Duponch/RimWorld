@@ -51,6 +51,7 @@ export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=193):number
 }
 export function pileFlammability(p:Pick<MaterialPile,'kind'|'item'>):number {
   if(p.kind==='plant')return .8;
+  if(p.item==='recon-armor')return .4;
   if(p.kind==='apparel')return (p.item==='flak-vest'||p.item==='flak-helmet')?.6:1.2;
   if(p.kind==='mech-corpse')return 0;
   if(p.kind==='weapon')return p.item==='plasteel-knife'?0:.5;if(p.kind==='corpse')return .7;if(p.kind==='food')return p.item==='hay'?1.5:1;

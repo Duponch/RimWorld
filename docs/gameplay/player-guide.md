@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Combinaison de reconnaissance — V378
+
+Après la recherche **Armure de reconnaissance**, ajoutez **Combinaison de reconnaissance** aux factures d’un établi de fabrication alimenté. Il faut un artisan de niveau6, 80plastacier, 3composants avancés et10uranium accessibles dans le rayon et les filtres de la facture. L’uranium peut provenir du minerai présent sur les nouvelles cartes ou des stocks finis d’un visiteur exotique ; les anciennes cartes ne reçoivent pas de gisement ajouté rétroactivement. Autorisez la catégorie Uranium dans une réserve ou une étagère pour le transporter.
+
+L’ouvrage garde ses matières et sa progression lors d’une interruption. Une fois terminé, faites porter la combinaison au colon choisi par le menu d’équipement. Elle occupe les couches intermédiaire et extérieure du torse et des membres : gilet, parka et cache-poussière incompatibles sont retirés physiquement. Chemise, pantalon et casque peuvent rester portés. Le casque de reconnaissance est un objet distinct. La combinaison protège aussi du froid mais ne remplace ni la nourriture ni un abri. [Périmètre et contrôles](recon-armor-v378.md).
+
 ## Visiter puis retrouver un second site — V377
 
 Ouvrez **Monde → Globe et groupe**, choisissez des adultes disponibles, des provisions réellement présentes sur la carte et une destination terrestre accessible. Formez le groupe puis laissez-le charger et sortir. À l’arrivée, **Entrer sur la carte** fait entrer ces mêmes personnes sur le second site. **Afficher le foyer** et **Afficher le second site** changent seulement la vue ; les personnes restent où elles sont.

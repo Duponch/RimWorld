@@ -28,7 +28,7 @@ export function itemGeometry(item:ItemId,quantity:number=ITEM_DEFINITIONS[item].
   else if(definition.kind==='blocks')return centreItemParts(blockParts(anchor?.x??0,anchor?.z??0,item,Math.min(75,quantity)));
   else if(item==='steel'){
     add('item-nugget',-.12,.10,-.06,.39,.20,.31,color,.22);add('item-nugget',.16,.08,.07,.31,.16,.25,0x687c85,-.42);add('item-nugget',.02,.23,.01,.26,.20,.22,0x9cabb1,.35);
-  }else if(item==='gold'||item==='plasteel'){
+  }else if(item==='gold'||item==='plasteel'||item==='uranium'){
     for(const side of [-1,1])add('item-ingot',side*.15,.075,0,.25,.14,.44,color);
     add('item-ingot',0,.19,0,.27,.10,.40,color);
     if(item==='plasteel')for(const x of [-.075,.075])box(x,.245,0,.025,.018,.35,0xc3dedc);
@@ -38,8 +38,9 @@ export function itemGeometry(item:ItemId,quantity:number=ITEM_DEFINITIONS[item].
     const weapon=weaponVisual(item==='unfinished-gun'?'bolt-action-rifle':item);
     for(const p of weapon?.parts??[])box(p.center[0]!, .07+p.center[2]!,p.center[1]!,p.size[0]!,p.size[2]!,p.size[1]!,item==='unfinished-gun'?color:p.color);
   }else if(definition.kind==='apparel'||/^unfinished-(shirt|pants|tribalwear|duster|parka|flak|recon)/.test(item)){
-    const pants=item.endsWith('pants'),helmet=item.endsWith('helmet'),coat=item.endsWith('duster')||item.endsWith('parka'),vest=item.endsWith('vest')||item.endsWith('tribalwear');
+    const recon=item.endsWith('recon-armor'),pants=item.endsWith('pants'),helmet=item.endsWith('helmet'),coat=item.endsWith('duster')||item.endsWith('parka'),vest=item.endsWith('vest')||item.endsWith('tribalwear');
     add(helmet?'item-helmet':pants?'item-pants':coat?'item-coat':vest?'item-vest':'item-shirt',0,helmet?.15:.055,0,helmet?.38:.65,helmet?.30:.085,helmet?.38:coat?.78:.66,color);
+    if(recon){for(const side of [-1,1]){box(side*.18,.15,.06,.20,.09,.35,0x536a74);box(side*.29,.10,-.20,.16,.12,.19);}box(0,.15,-.16,.18,.07,.18,0xc0d0ce);}
     if(item.endsWith('parka'))add('item-helmet',0,.12,-.28,.22,.17,.20,0xc7ba9d);
     if(item.endsWith('duster'))for(const side of [-1,1])add('item-leaf',side*.08,.11,-.24,.13,.025,.20,0x9b825f,side*.35);
     if(item.endsWith('vest')&&!item.endsWith('tribalwear'))for(const side of [-1,1])add('item-ingot',side*.09,.12,0,.16,.04,.34,0x48594f);

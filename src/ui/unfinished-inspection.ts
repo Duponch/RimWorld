@@ -12,7 +12,7 @@ function componentMaterials(work:NonNullable<MaterialPile['componentWork']>):str
 }
 
 function armorMaterials(work:NonNullable<MaterialPile['flakWork']>):string {
-  const items=work.recipe==='make-recon-helmet'?['plasteel','advanced-component'] as const:
+  const items=work.recipe==='make-recon-armor'?['plasteel','advanced-component','uranium'] as const:work.recipe==='make-recon-helmet'?['plasteel','advanced-component'] as const:
     work.recipe==='make-flak-helmet'?['steel','component','plasteel'] as const:['cloth','steel','component'] as const;
   return items.map(item=>`${work.parts.filter(part=>part.item===item).reduce((sum,part)=>sum+part.quantity,0)} ${ITEM_DEFINITIONS[item].label.toLowerCase()}`).join(' · ');
 }

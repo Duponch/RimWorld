@@ -26,6 +26,7 @@ export const ITEM_DEFINITIONS = Object.freeze({
   'unfinished-sculpture':Object.freeze({label:'Sculpture inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0xb59b76}),
   'unfinished-flak-vest':Object.freeze({label:'Gilet pare-balles inachevé',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x626d65}),
   'unfinished-flak-helmet':Object.freeze({label:'Casque pare-balles inachevé',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x626d65}),
+  'unfinished-recon-armor':Object.freeze({label:'Combinaison de reconnaissance inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x879da4}),
   'unfinished-recon-helmet':Object.freeze({label:'Casque de reconnaissance inachevé',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x879da4}),
   'unfinished-gun':Object.freeze({label:'Arme à feu inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x798c90}),
   'unfinished-component':Object.freeze({label:'Composant inachevé',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x9aa69e}),
@@ -47,6 +48,7 @@ export const ITEM_DEFINITIONS = Object.freeze({
   'light-leather-parka':Object.freeze({label:'Parka en cuir léger',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0xad8a61}),
   'flak-vest':Object.freeze({label:'Gilet pare-balles',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0x626d65}),
   'flak-helmet':Object.freeze({label:'Casque pare-balles',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0x626d65}),
+  'recon-armor':Object.freeze({label:'Combinaison de reconnaissance',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0x879da4}),
   'recon-helmet':Object.freeze({label:'Casque de reconnaissance',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0x879da4}),
   silver:Object.freeze({label:'Argent',kind:'silver',stackLimit:500,nutrition:0,maxIngest:0,color:0xc7c9cc}),
   'bolt-action-rifle':Object.freeze({label:'Fusil à verrou',kind:'weapon',stackLimit:1,nutrition:0,maxIngest:0,color:0x695342}),
@@ -67,6 +69,7 @@ export const ITEM_DEFINITIONS = Object.freeze({
   'advanced-component':Object.freeze({label:'Composants avancés',kind:'advanced-component',stackLimit:50,nutrition:0,maxIngest:0,color:0xb7c9c1}),
   steel: Object.freeze({label:'Acier',kind:'steel',stackLimit:75,nutrition:0,maxIngest:0,color:0x839399}),
   gold: Object.freeze({label:'Or',kind:'gold',stackLimit:500,nutrition:0,maxIngest:0,color:0xd8b85d}),
+  uranium:Object.freeze({label:'Uranium',kind:'uranium',stackLimit:75,nutrition:0,maxIngest:0,color:0x777d73}),
   plasteel: Object.freeze({label:'Plastacier',kind:'plasteel',stackLimit:75,nutrition:0,maxIngest:0,color:0x93b8bd}),
   'granite-chunk': Object.freeze({label:'Fragment de granite',kind:'chunk',stackLimit:1,nutrition:0,maxIngest:0,color:0x99958d}),
   'limestone-chunk': Object.freeze({label:'Fragment de calcaire',kind:'chunk',stackLimit:1,nutrition:0,maxIngest:0,color:0xafad8b}),
@@ -94,7 +97,7 @@ export const ITEM_DEFINITIONS = Object.freeze({
 export type ItemId = keyof typeof ITEM_DEFINITIONS;
 /** These raw foods cause the shared raw-meal thought, independently of policy. */
 export const rawFoodThought = (item: ItemId): boolean => item === 'rice' || item === 'potato' || item === 'corn' || item === 'agave-fruit' || isAnimalMeat(item);
-export const legacyItem = (kind: MaterialKind): ItemId => kind==='chemfuel'?'chemfuel':kind==='neutroamine'?'neutroamine':kind==='silver'?'silver':kind==='corpse'||kind==='mech-corpse'?missingEquipmentType():kind==='unfinished'?missingEquipmentType():kind==='textile'?'cloth':kind==='apparel'||kind==='weapon'?missingEquipmentType():kind==='medicine'?missingMedicineType():kind==='component'?'component':kind==='advanced-component'?'advanced-component':kind==='gold'?'gold':kind==='plasteel'?'plasteel':kind==='blocks'?missingBlockType(): kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
+export const legacyItem = (kind: MaterialKind): ItemId => kind==='chemfuel'?'chemfuel':kind==='neutroamine'?'neutroamine':kind==='silver'?'silver':kind==='uranium'?'uranium':kind==='corpse'||kind==='mech-corpse'?missingEquipmentType():kind==='unfinished'?missingEquipmentType():kind==='textile'?'cloth':kind==='apparel'||kind==='weapon'?missingEquipmentType():kind==='medicine'?missingMedicineType():kind==='component'?'component':kind==='advanced-component'?'advanced-component':kind==='gold'?'gold':kind==='plasteel'?'plasteel':kind==='blocks'?missingBlockType(): kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
 export const nutritionOf = (pile: MaterialPile): number => ITEM_DEFINITIONS[pile.item].nutrition * pile.quantity;
 export function availableNutrition(world: World): number {
   return world.piles.reduce((sum, pile) => sum + (pile.item==='hay'||pile.owner.type === 'job'||pile.owner.type==='inventory'||pile.owner.type==='pawn'&&!world.pawns.some(p=>p.id===('pawnId' in pile.owner?pile.owner.pawnId:-1)&&(p.faction??'colony')==='colony') ? 0 : nutritionOf(pile)), 0) / 100;

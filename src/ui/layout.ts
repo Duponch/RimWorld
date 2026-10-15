@@ -144,6 +144,7 @@ export function gameLayout(): string {
       <div class="resource"><span class="resource-symbol wood">▤</span><span>Bois</span><strong id="wood">—</strong></div>
       <div class="resource"><span class="resource-symbol">▱</span><span>Acier</span><strong id="steel">—</strong></div>
       <div class="resource" id="plasteel-stock" hidden><span class="resource-symbol">▱</span><span>Plastacier</span><strong id="plasteel">—</strong></div>
+      <div class="resource" id="uranium-stock" hidden><span class="resource-symbol">▰</span><span>Uranium</span><strong id="uranium">—</strong></div>
       <div class="resource" id="gold-stock" hidden><span class="resource-symbol">◆</span><span>Or</span><strong id="gold">—</strong></div>
       <div class="resource" id="cloth-stock" hidden><span class="resource-symbol">▤</span><span>Tissu</span><strong id="cloth">—</strong></div>
       <div class="resource"><span class="resource-symbol">⚙</span><span>Composants</span><strong id="component">—</strong></div><div class="resource"><span class="resource-symbol">¤</span><span>Argent</span><strong id="silver">—</strong></div>

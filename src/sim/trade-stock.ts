@@ -96,5 +96,8 @@ export function generateExoticStock(seed:number,pawnId:number,nextId:number,tick
   // Core Orbital_Exotic range adapted to the existing physical local trader.
   // Append after the historical draws; older schemas never draw this stock.
   if(version>=206)add('neutroamine',integer(state,100,500));
+  // Core Base_Outlander_Standard range; appended to our existing physical
+  // exotic profile. Historical arrivals keep their exact draw sequence.
+  if(version>=241)add('uranium',integer(state,40,200));
   return {piles,nextId,rng:state.rng};
 }

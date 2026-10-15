@@ -4,9 +4,9 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V377, schéma 240 :** [second site persistant](docs/gameplay/secondary-site-v377.md) qualifié : formation, entrée, coupe, sauvegarde/reprise, retour et revisite avec personnes/biens originaux. Natif composé acquis par reprises ; raids/visiteurs secondaires restent absents. Dernière publication V376872afdbb/712fc270 ; prochaine publication regroupée avec le catalogue. Campagne98038 close partielle.
+**État V378, schéma 241 :** [uranium et combinaison de reconnaissance](docs/gameplay/recon-armor-v378.md) qualifiés : 51cas ciblés, corpus63, fabrication/transport/port/retrait natifs et trois recharges exactes. [Second site V377](docs/gameplay/secondary-site-v377.md) livré87ca7031/poussé, vrai retour/revisite acquis. Publication groupée V377–V378 en préparation ; dernière production V376/712fc270. Campagne98038 close partielle.
 
-**Ordre courant :** catalogue utile, uranium et combinaison de reconnaissance ; puis incidents secondaires et alertes hors carte cohérents. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. Références humaines, `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
+**Ordre courant :** incidents du second site et alertes hors carte dans un même lot cohérent ; puis parcours joueurs et catalogue selon les manques constatés. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. Références humaines, `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
 
 ## Méthode de livraison
 

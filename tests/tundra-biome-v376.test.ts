@@ -33,7 +33,10 @@ test('v1 reconstruction stays the default; v2 is explicit, cold, score classifie
 test('prepared local tundra starts a real colony with snow, sparse ecology and its cold preset',()=>{
  const w=createScenarioWorld(42,64,'crashlanded',{biome:'tundra',hilliness:'small-hills'});expect(w.site?.biome).toBe('tundra');expect(w.flora?.biome).toBe('tundra');expect(w.wildlife?.population?.biome).toBe('tundra');expect(w.snow?.lastTick).toBe(0);expect(w.climate?.revision).toBe(1);expect(validTundraTransport(w,239)).toBe(true);
  const copy=deserializeWorld(serializeWorld(w));expect(copy).toEqual(w);stepWorld(w,20);stepWorld(copy,20);expect(serializeWorld(copy)).toBe(serializeWorld(w));
- const before=structuredClone(w);const bad=JSON.parse(serializeWorld(w));bad.schemaVersion=238;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();expect(w).toEqual(before);
+ const before=structuredClone(w);const bad=JSON.parse(serializeWorld(w));
+ for(const policy of bad.apparelPolicies)policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-armor');
+ for(const tile of bad.tiles)if(tile.ore==='uranium')delete tile.ore;
+ bad.schemaVersion=238;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/Future tundra provenance/);expect(w).toEqual(before);
 });
 
 test('prospective globe tundra preserves the exact chosen tile climate through launch and bridge',()=>{

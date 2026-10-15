@@ -1,13 +1,14 @@
 # Plan de développement
 
-**15 octobre 2026 — schéma 240.** [V377](gameplay/secondary-site-v377.md) relie un second site persistant, après toundra/neigeV376 et départsV375. Retour/revisite natifs acquis par reprises, sauvegardes complètes exactes. Dernière productionV376/712fc270, publication groupée suivante prévue. Campagne98038 close partielle ; aucun pourcentage ou FPS certifié.
+**15 octobre 2026 — schéma 241.** [V378](gameplay/recon-armor-v378.md) qualifie uranium et combinaison de reconnaissance, après [V377](gameplay/secondary-site-v377.md) et la toundra/neigeV376. Parcours physiques et reprises acquis dans les limites des notes. Publication groupée V377–V378 en préparation ; dernière productionV376/712fc270. Campagne98038 close partielle, aucun pourcentage ou FPS certifié.
 
 ## Priorité actuelle
 
 1. **Trois biomes existants : départs vérifiés V375.** Six cas fixes et trois parcours UI250², trois recharges exactes acquis par reprises. Références officielles et visuelles consultées ; ni année de survie ni hiver entier certifiés. Ne pas rejouer ce contrôle sans changement concerné.
 2. **Toundra et neige V376.** Froid, surface persistée, écologie existante, choix du site et déneigement sont reliés. Sols humides/lichen et espèces absentes restent ouverts ; voir le périmètre de la note.
 3. **Deuxième site V377 qualifié.** Mêmes personnes/biens, coupe et bois retrouvés après retour/revisite, deux cartes sauvées ensemble. Un seul site secondaire ; menaces/visiteurs secondaires et alertes associées restent à raccorder.
-4. **Catalogue utile — priorité active.** Compléter une chaîne existante avec un objet réellement fabriqué, stocké, équipé/utilisé et sauvegardé ; premier candidat étudié : armure de reconnaissance correspondant au casque existant.
+4. **Catalogue V378 qualifié.** Uranium extrait/acheté, combinaison fabriquée/payée, stockée, portée et retirée avec sauvegardes exactes ; casque existant conservé. Autres usages et armures restent ouverts.
+5. **Priorité active : incidents secondaires et alertes.** Réutiliser les calendriers locaux prospectifs sans introduction ou cycle passé rejoué ; signaler une menace hors carte affichée et permettre de la rejoindre dans le même lot.
 
 La stabilité, l’ergonomie et les performances accompagnent ces lots avec contrôles proportionnés. Les campagnes longues sont périodiques ou motivées par un risque précis. La campagne conservée au 98038 reste une preuve partielle, pas une condition bloquant toutes les livraisons. Le [suivi early access](gameplay/early-access-readiness.md) distingue acquis et limites. La [stratégie de validation](development/testing.md) décrit la méthode ; les sous-métiers restent reportés.
 

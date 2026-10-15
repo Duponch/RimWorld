@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V378 — schéma 241 :** [uranium et combinaison de reconnaissance](docs/gameplay/recon-armor-v378.md). Extraction, fabrication payée, stockage et habillement qualifiés, trois recharges exactes ; publication groupée avec le second site V377 en préparation. Les états suivants sont historiques.
+
 **V377 — schéma 240 :** [second site persistant](docs/gameplay/secondary-site-v377.md). Personnes et biens originaux, simulation partagée, sauvegarde complète et revisite ; retour/revisite UI acquis par reprises, anciennes sauvegardes conservées. Publication groupée suivante ; dernière production V376. Les états suivants sont historiques.
 
 **V376 — schéma 239 :** [toundra et neige physique](docs/gameplay/tundra-snow-v376.md). Nouveau départ froid, surface persistée, déplacements et déneigement au contact ; écologie et génération restent partiellement adaptées. Qualification et limites dans la note unique. Produit872afdbb publié en712fc270, fichiers HTTPS vérifiés ; les états suivants sont historiques.

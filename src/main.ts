@@ -213,7 +213,7 @@ const resourceLabels = { 'wild-plant':'Plante sauvage', healroot:'Racine médici
 const params = new URLSearchParams(location.search);
 const diagnosticStart = params.has('scenario');
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = gameLayout();
-const creationStorageControls=mountStorageControls(document.getElementById('stockpile-items')!,{priority:2,filters:{wood:true,food:true,unfinished:true,textile:true,apparel:true,weapon:true,medicine:true,neutroamine:true,chemfuel:true,component:true,'advanced-component':true,steel:true,gold:true,plasteel:true,blocks:true,furniture:true,silver:true}},()=>{});
+const creationStorageControls=mountStorageControls(document.getElementById('stockpile-items')!,{priority:2,filters:{wood:true,food:true,unfinished:true,textile:true,apparel:true,weapon:true,medicine:true,neutroamine:true,chemfuel:true,component:true,'advanced-component':true,steel:true,gold:true,uranium:true,plasteel:true,blocks:true,furniture:true,silver:true}},()=>{});
 let selectedStorageControls:StorageControls|undefined;
 let selectedStoragePending=0;
 let storageClipboard:StorageControlSettings|undefined;
@@ -1291,7 +1291,7 @@ function renderState() {
   }
   if(currentPanel==='schedule')scheduleUI.update(world);
   if(currentPanel==='assign'){foodPolicyUI.update(world);apparelPolicyUI.update(world);} allowedAreaUI.update(world);
-  const totals = {blocks:0,medicine:0,silver:0,component:0,cloth:0,steel:0,chemfuel:0,gold:0,plasteel:0,'advanced-component':0,carried:0,delivered:0};
+  const totals = {blocks:0,medicine:0,silver:0,component:0,cloth:0,steel:0,chemfuel:0,gold:0,uranium:0,plasteel:0,'advanced-component':0,carried:0,delivered:0};
   const stockCounts = new Map<World['piles'][number]['item'],number>();
   for (const pile of world.piles) {
     const owner = pile.owner;
@@ -1305,7 +1305,7 @@ function renderState() {
     if (pile.item === 'component') totals.component += pile.quantity;
     if (pile.item === 'cloth') totals.cloth += pile.quantity;
     if (pile.item === 'steel') totals.steel += pile.quantity;
-    if (pile.item === 'chemfuel' || pile.item === 'gold' || pile.item === 'plasteel' || pile.item === 'advanced-component') totals[pile.item] += pile.quantity;
+    if (pile.item === 'chemfuel' || pile.item === 'gold' || pile.item === 'uranium' || pile.item === 'plasteel' || pile.item === 'advanced-component') totals[pile.item] += pile.quantity;
     if (owner.type === 'pawn') totals.carried += pile.quantity;
   }
   el('blocks').textContent=String(totals.blocks);
@@ -1314,7 +1314,7 @@ function renderState() {
   el('component').textContent=String(totals.component);
   el('cloth').textContent=String(totals.cloth);el('cloth-stock').hidden=totals.cloth===0;
   el('steel').textContent=String(totals.steel);
-  for(const item of ['chemfuel','gold','plasteel','advanced-component'] as const){el(item).textContent=String(totals[item]);el(`${item}-stock`).hidden=totals[item]===0;}
+  for(const item of ['chemfuel','gold','uranium','plasteel','advanced-component'] as const){el(item).textContent=String(totals[item]);el(`${item}-stock`).hidden=totals[item]===0;}
   el('wood').textContent = String(world.stock.wood); const nutrition = availableNutrition(world);el('food').textContent = nutrition.toFixed(1);
   resourceLedger.update(stockCounts);
   const carried = totals.carried, delivered = totals.delivered;

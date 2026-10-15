@@ -16,14 +16,15 @@ export const TAILORING_RECIPES = ['tribalwear','shirt','pants','duster','parka']
 export type TailoringRecipe = typeof TAILORING_RECIPES[number];
 export type TailoringMaterial = ApparelMaterial;
 export type UnfinishedApparelItem = 'unfinished-tribalwear'|'unfinished-shirt'|'unfinished-pants'|'unfinished-duster'|'unfinished-parka';
-export type ProductionIngredient = 'hay'|'human-corpse'|WeaponItem|'herbal-medicine'|'neutroamine'|MechCorpseItem| ArtMaterial|'unfinished-sculpture'|'steel'|'component'|'advanced-component'|'plasteel'|'gold'|'unfinished-gun'|'unfinished-flak-vest'|'unfinished-flak-helmet'|'unfinished-recon-helmet'|'unfinished-component'|'rice'|'berries'|'milk'|'agave-fruit'|'potato'|'corn'|typeof ANIMAL_MEAT_ITEMS[number]|typeof ANIMAL_CORPSE_ITEMS[number]|TailoringMaterial|UnfinishedApparelItem|StoneIngredient;
-export type FlakRecipe='make-flak-vest'|'make-flak-helmet'|'make-recon-helmet';
-export const isFlakRecipe=(v:unknown):v is FlakRecipe=>v==='make-flak-vest'||v==='make-flak-helmet'||v==='make-recon-helmet';
+export type ProductionIngredient = 'hay'|'human-corpse'|WeaponItem|'herbal-medicine'|'neutroamine'|MechCorpseItem| ArtMaterial|'unfinished-sculpture'|'steel'|'component'|'advanced-component'|'plasteel'|'uranium'|'gold'|'unfinished-gun'|'unfinished-flak-vest'|'unfinished-flak-helmet'|'unfinished-recon-helmet'|'unfinished-recon-armor'|'unfinished-component'|'rice'|'berries'|'milk'|'agave-fruit'|'potato'|'corn'|typeof ANIMAL_MEAT_ITEMS[number]|typeof ANIMAL_CORPSE_ITEMS[number]|TailoringMaterial|UnfinishedApparelItem|StoneIngredient;
+export type FlakRecipe='make-flak-vest'|'make-flak-helmet'|'make-recon-helmet'|'make-recon-armor';
+export const isFlakRecipe=(v:unknown):v is FlakRecipe=>v==='make-flak-vest'||v==='make-flak-helmet'||v==='make-recon-helmet'||v==='make-recon-armor';
 export const FLAK_REQUIREMENTS={cloth:30,steel:60,component:1,skill:4} as const;
 export const FLAK_HELMET_REQUIREMENTS={steel:40,component:2,plasteel:10,skill:5} as const;
 export const RECON_HELMET_REQUIREMENTS={plasteel:30,'advanced-component':1,skill:6} as const;
-export const flakRequirements=(recipe:FlakRecipe)=>recipe==='make-flak-vest'?FLAK_REQUIREMENTS:recipe==='make-flak-helmet'?FLAK_HELMET_REQUIREMENTS:RECON_HELMET_REQUIREMENTS;
-export const flakWorkpiece=(recipe:FlakRecipe)=>recipe==='make-flak-vest'?'unfinished-flak-vest':recipe==='make-flak-helmet'?'unfinished-flak-helmet':'unfinished-recon-helmet';
+export const RECON_ARMOR_REQUIREMENTS={plasteel:80,'advanced-component':3,uranium:10,skill:6} as const;
+export const flakRequirements=(recipe:FlakRecipe)=>recipe==='make-flak-vest'?FLAK_REQUIREMENTS:recipe==='make-flak-helmet'?FLAK_HELMET_REQUIREMENTS:recipe==='make-recon-armor'?RECON_ARMOR_REQUIREMENTS:RECON_HELMET_REQUIREMENTS;
+export const flakWorkpiece=(recipe:FlakRecipe)=>recipe==='make-flak-vest'?'unfinished-flak-vest':recipe==='make-flak-helmet'?'unfinished-flak-helmet':recipe==='make-recon-armor'?'unfinished-recon-armor':'unfinished-recon-helmet';
 export type ComponentRecipe='make-component'|'make-advanced-component';
 export const isComponentRecipe=(v:unknown):v is ComponentRecipe=>v==='make-component'||v==='make-advanced-component';
 export const ADVANCED_COMPONENT_REQUIREMENTS={component:1,steel:20,plasteel:10,gold:3,skill:8} as const;
@@ -155,6 +156,7 @@ export const PRODUCTION_RECIPES = Object.freeze({
   'make-emp-launcher':Object.freeze({label:'Lanceur EMP',station:'machining-table',work:'craft',inputs:['steel','component'] as readonly ProductionIngredient[],units:83,workTicks:3000,outputUnits:1}),
   'make-flak-vest':Object.freeze({label:'Gilet pare-balles',station:'machining-table',work:'craft',inputs:['cloth','steel','component'] as readonly ProductionIngredient[],units:91,workTicks:900,outputUnits:1}),
   'make-flak-helmet':Object.freeze({label:'Casque pare-balles',station:'machining-table',work:'craft',inputs:['steel','component','plasteel'] as readonly ProductionIngredient[],units:52,workTicks:800,outputUnits:1}),
+  'make-recon-armor':Object.freeze({label:'Combinaison de reconnaissance',station:'fabrication-bench',work:'craft',inputs:['plasteel','advanced-component','uranium'] as readonly ProductionIngredient[],units:93,workTicks:4500,outputUnits:1}),
   'make-recon-helmet':Object.freeze({label:'Casque de reconnaissance',station:'fabrication-bench',work:'craft',inputs:['plasteel','advanced-component'] as readonly ProductionIngredient[],units:31,workTicks:1575,outputUnits:1}),
   'make-component':Object.freeze({label:'Composant',station:'fabrication-bench',work:'craft',inputs:['steel'] as readonly ProductionIngredient[],units:12,workTicks:500,outputUnits:1}),
   'make-advanced-component':Object.freeze({label:'Composant avancé',station:'fabrication-bench',work:'craft',inputs:['component','steel','plasteel','gold'] as readonly ProductionIngredient[],units:34,workTicks:1000,outputUnits:1}),
@@ -217,7 +219,7 @@ export function recipeProduct(recipe:ProductionRecipe,ingredients:readonly {item
   if(recipe==='make-medicine')return 'medicine';
   if(isArtRecipe(recipe))throw new RangeError('Sculptures are whole furniture products');
   if(isGunRecipe(recipe))return recipe==='make-revolver'?'revolver':recipe==='make-emp-launcher'?'emp-launcher':'bolt-action-rifle';
-  if(isFlakRecipe(recipe))return recipe==='make-flak-vest'?'flak-vest':recipe==='make-flak-helmet'?'flak-helmet':'recon-helmet';
+  if(isFlakRecipe(recipe))return recipe==='make-flak-vest'?'flak-vest':recipe==='make-flak-helmet'?'flak-helmet':recipe==='make-recon-armor'?'recon-armor':'recon-helmet';
   if(recipe==='smash-mechanoid'||recipe==='shred-mechanoid')return 'steel';
   if(recipe==='make-component')return 'component';
   if(recipe==='make-advanced-component')return 'advanced-component';
@@ -232,7 +234,7 @@ export function isRecipeProduct(recipe:ProductionRecipe,item:ItemId):boolean {
   if(recipe==='make-medicine')return item==='medicine';
   if(isArtRecipe(recipe))return false;
   if(isGunRecipe(recipe))return item===(recipe==='make-revolver'?'revolver':recipe==='make-emp-launcher'?'emp-launcher':'bolt-action-rifle');
-  if(isFlakRecipe(recipe))return item===(recipe==='make-flak-vest'?'flak-vest':recipe==='make-flak-helmet'?'flak-helmet':'recon-helmet');
+  if(isFlakRecipe(recipe))return item===(recipe==='make-flak-vest'?'flak-vest':recipe==='make-flak-helmet'?'flak-helmet':recipe==='make-recon-armor'?'recon-armor':'recon-helmet');
   if(recipe==='smash-mechanoid'||recipe==='shred-mechanoid')return item==='steel';
   if(recipe==='make-component')return item==='component';
   if(recipe==='make-advanced-component')return item==='advanced-component';
@@ -241,7 +243,7 @@ export function isRecipeProduct(recipe:ProductionRecipe,item:ItemId):boolean {
 }
 export function tailoringProduct(recipe:TailoringRecipe,material:TailoringMaterial):ApparelItem { return apparelItemFor(recipe,material); }
 
-export const stationRecipes=(station:Pick<Structure,'kind'>):readonly ProductionRecipe[]=>station.kind==='electric-crematorium'?['cremate-corpse']:station.kind==='electric-smelter'?['smelt-weapon']:station.kind==='biofuel-refinery'?['chemfuel-from-wood','chemfuel-from-organics']:station.kind==='art-bench'?['small-sculpture','large-sculpture']:station.kind==='machining-table'?['make-revolver','make-bolt-action-rifle','make-emp-launcher','make-flak-vest','make-flak-helmet','shred-mechanoid']:station.kind==='fabrication-bench'?['make-component','make-advanced-component','make-recon-helmet']:(station.kind==='tailor-bench'||station.kind==='electric-tailor-bench')?['shirt','pants','duster','parka','tribalwear']:station.kind==='crafting-spot'?['tribalwear','smash-mechanoid']:isStove(station.kind)?['simple-meal','cook-simple-meal-bulk','fine-meal','cook-fine-meal-bulk','vegetarian-fine-meal','cook-vegetarian-fine-meal-bulk','carnivore-fine-meal','cook-carnivore-fine-meal-bulk','lavish-meal','cook-lavish-meal-bulk','vegetarian-lavish-meal','cook-vegetarian-lavish-meal-bulk','cook-carnivore-lavish-meal','cook-carnivore-lavish-meal-bulk','cook-survival-meal']:station.kind==='campfire'?['simple-meal','cook-simple-meal-bulk']:isButcherStation(station.kind)?['butcher-creature','make-kibble']:stationRecipe(station)?[stationRecipe(station)!]:[];
+export const stationRecipes=(station:Pick<Structure,'kind'>):readonly ProductionRecipe[]=>station.kind==='electric-crematorium'?['cremate-corpse']:station.kind==='electric-smelter'?['smelt-weapon']:station.kind==='biofuel-refinery'?['chemfuel-from-wood','chemfuel-from-organics']:station.kind==='art-bench'?['small-sculpture','large-sculpture']:station.kind==='machining-table'?['make-revolver','make-bolt-action-rifle','make-emp-launcher','make-flak-vest','make-flak-helmet','shred-mechanoid']:station.kind==='fabrication-bench'?['make-component','make-advanced-component','make-recon-helmet','make-recon-armor']:(station.kind==='tailor-bench'||station.kind==='electric-tailor-bench')?['shirt','pants','duster','parka','tribalwear']:station.kind==='crafting-spot'?['tribalwear','smash-mechanoid']:isStove(station.kind)?['simple-meal','cook-simple-meal-bulk','fine-meal','cook-fine-meal-bulk','vegetarian-fine-meal','cook-vegetarian-fine-meal-bulk','carnivore-fine-meal','cook-carnivore-fine-meal-bulk','lavish-meal','cook-lavish-meal-bulk','vegetarian-lavish-meal','cook-vegetarian-lavish-meal-bulk','cook-carnivore-lavish-meal','cook-carnivore-lavish-meal-bulk','cook-survival-meal']:station.kind==='campfire'?['simple-meal','cook-simple-meal-bulk']:isButcherStation(station.kind)?['butcher-creature','make-kibble']:stationRecipe(station)?[stationRecipe(station)!]:[];
 export const stationAccepts=(station:Pick<Structure,'kind'>,recipe:ProductionRecipe):boolean=>stationRecipes(station).includes(recipe);
 
 /** Snapshot-only display total; the authoritative workpiece owns its material. */

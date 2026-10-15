@@ -19,6 +19,7 @@ import {planetTileClimateDefinition} from '../src/sim/site-climate.ts';
 import {initializeSnowSurface} from '../src/sim/snow-surface.ts';
 import {releaseAssignments} from '../src/sim/work-release.ts';
 import {footprintCells} from '../src/sim/definitions.ts';
+import {newApparelState} from '../src/sim/apparel-rules.ts';
 import type {Command,World} from '../src/sim/types.ts';
 
 function command(w:World,c:Command):void {
@@ -163,7 +164,10 @@ describe('V377 real second map',()=>{
   },120000);
 
   it('rejects future fields and duplicate owners atomically and migrates schema239 without creating a site',()=>{
-    const f=preparation(),old=JSON.parse(serializeWorld(f.w));old.schemaVersion=239;
+    const f=preparation(),old=JSON.parse(serializeWorld(f.w));
+    // The historical fixture must not inherit a future catalogue permission.
+    for(const policy of old.apparelPolicies)policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-armor');
+    old.schemaVersion=239;
     const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.secondarySite).toBeUndefined();expect(migrated.rng).toBe(old.rng);expect(migrated.nextId).toBe(old.nextId);
     Object.defineProperty(old,'secondarySite',{value:undefined,enumerable:true});expect(validateWorld(old).length).toBeGreaterThan(0);
     departAndEnter(f);const local=secondaryContext(f.w)!,before=serializeWorld(f.w);
@@ -172,5 +176,34 @@ describe('V377 real second map',()=>{
     command(f.w,{type:'secondary-view',site:'secondary'});expect(serializeWorld(f.w)).toBe(before);
     const invalid=JSON.parse(before);invalid.secondarySite.map.pawns.push(structuredClone(invalid.pawns[0]));
     expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow();expect(serializeWorld(f.w)).toBe(before);expect(local.pawns.length).toBe(f.ids.length);
+  },120000);
+
+  it('migrates a prepared schema240 campaign only after both old maps and their shared namespace are valid',()=>{
+    const f=preparation();departAndEnter(f);
+    const before=serializeWorld(f.w),old=JSON.parse(before);
+    // Down-versioned fixture only: remove the new current default permission
+    // and prospective deposits. No historical fixture or save is rewritten.
+    for(const policy of old.apparelPolicies)policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-armor');
+    for(const map of [old,old.secondarySite.map])for(const tile of map.tiles)if(tile.ore==='uranium')delete tile.ore;
+    old.schemaVersion=240;
+    const raw=JSON.stringify(old),restored=deserializeWorld(raw);
+    expect(restored).toEqual({...old,schemaVersion:241});
+    expect(restored.secondarySite).toEqual(old.secondarySite);
+    for(const item of ['uranium','recon-armor','unfinished-recon-armor'] as const){
+      const bad=JSON.parse(raw),map=bad.secondarySite.map;
+      map.piles.push({id:bad.nextId++,item,kind:item==='uranium'?'uranium':item==='recon-armor'?'apparel':'unfinished',quantity:1,owner:{type:'ground',x:2,z:2},
+        ...(item==='recon-armor'?{apparel:newApparelState('recon-armor')}:{})});
+      expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/Future recon catalogue/);
+    }
+    const futureOre=JSON.parse(raw);futureOre.secondarySite.map.tiles[0]={terrain:'rock',stone:'granite',ore:'uranium'};
+    expect(()=>deserializeWorld(JSON.stringify(futureOre))).toThrow(/Future recon catalogue/);
+    const invalidOldLocal=JSON.parse(raw);invalidOldLocal.secondarySite.map.tiles[0].terrain='invalid-terrain';
+    expect(()=>deserializeWorld(JSON.stringify(invalidOldLocal))).toThrow(/Invalid version240 save: Second site:/);
+    const duplicate=JSON.parse(raw);
+    const localPile=duplicate.secondarySite.map.piles.find((p:{owner:{type:string}})=>p.owner.type==='ground');
+    expect(localPile).toBeDefined();
+    localPile.id=duplicate.structures[0].id;
+    expect(()=>deserializeWorld(JSON.stringify(duplicate))).toThrow(/Invalid version240 save: .*Thing identity owned by both campaign maps/);
+    expect(serializeWorld(f.w)).toBe(before);
   },120000);
 });

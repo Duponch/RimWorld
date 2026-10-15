@@ -38,7 +38,7 @@ test('ore occasions share one budget, include hidden centres, consume absent min
   const seen=new Set<number>();
   for(const [index,occasion] of report.occasions.entries()) {
     for(const prior of report.occasions.slice(0,index))expect((prior.center%64-occasion.center%64)**2+(Math.floor(prior.center/64)-Math.floor(occasion.center/64))**2).toBeGreaterThanOrEqual(25);
-    if(!['steel','machinery','gold','plasteel'].includes(occasion.mineral)){expect(occasion.cells).toEqual([]);continue;}
+    if(!['steel','machinery','gold','plasteel','uranium'].includes(occasion.mineral)){expect(occasion.cells).toEqual([]);continue;}
     expect(occasion.cells.length).toBe(occasion.requested);
     for(const cell of occasion.cells){expect(seen.has(cell)).toBe(false);seen.add(cell);expect(world.tiles[cell]!.ore).toBe(occasion.mineral);}
   }

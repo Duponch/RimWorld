@@ -33,7 +33,7 @@ export const STORAGE_FILTER_TREE:readonly StorageFilterNode[]=[
   ]),
   branch('raw-resources','Ressources brutes',[
     branch('stone-blocks','Blocs de pierre',kind('blocks')),
-    ...leaves((_id,k)=>['steel','gold','plasteel','silver','wood'].includes(k)),
+    ...leaves((_id,k)=>['steel','gold','uranium','plasteel','silver','wood'].includes(k)),
   ]),
   branch('plants','Plantes déracinées',kind('plant')),
   branch('objects','Objets',[branch('unfinished','Inachevé',kind('unfinished'))]),
@@ -44,9 +44,9 @@ export const STORAGE_FILTER_TREE:readonly StorageFilterNode[]=[
   branch('apparel','Vêtements',[
     branch('armor','Armures',[
       branch('armor-headgear','Casques',leaves(id=>id==='flak-helmet'||id==='recon-helmet')),
-      ...leaves(id=>id==='flak-vest'),
+      ...leaves(id=>id==='flak-vest'||id==='recon-armor'),
     ]),
-    branch('apparel-misc','Divers',leaves((id,k)=>k==='apparel'&&id!=='flak-vest'&&id!=='flak-helmet'&&id!=='recon-helmet')),
+    branch('apparel-misc','Divers',leaves((id,k)=>k==='apparel'&&id!=='recon-armor'&&id!=='flak-vest'&&id!=='flak-helmet'&&id!=='recon-helmet')),
   ]),
   branch('buildings','Constructions',[{id:'furniture',label:'Constructions emballées',item:'furniture'}]),
   branch('chunks','Morceaux',[

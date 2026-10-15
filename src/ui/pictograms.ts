@@ -54,4 +54,5 @@ const FODDER_MODEL_ICONS:Readonly<Record<string,string>>=Object.freeze({
   'crop-haygrass':'/assets/ui/elsewhere/v316/haygrass.svg',
   'resource-haygrass':'/assets/ui/elsewhere/v316/haygrass.svg',
 });
-export function modelIconUrl(id:string):string {const fodder=FODDER_MODEL_ICONS[id];if(fodder)return fodder;const version=id==='sleeping-spot'?'v336':id==='shelf'||id==='small-shelf'?'v320':id==='spike-trap'?'v315':id==='electric-crematorium'?'v314':id==='double-bed'?'v313':id==='electric-smelter'?'v311':id==='animal-sleeping-spot'?'v310':id==='dresser'||id==='sandbags'||id==='mini-turret'?'v308':'v304';return `/assets/ui/elsewhere/${version}/${encodeURIComponent(id)}.svg`;}
+const V378_MODEL_ICONS=new Set(['item-uranium','item-recon-armor','item-unfinished-recon-armor','mountain-uranium']);
+export function modelIconUrl(id:string):string {if(V378_MODEL_ICONS.has(id))return `/assets/ui/elsewhere/v378/${encodeURIComponent(id)}.svg`;const fodder=FODDER_MODEL_ICONS[id];if(fodder)return fodder;const version=id==='sleeping-spot'?'v336':id==='shelf'||id==='small-shelf'?'v320':id==='spike-trap'?'v315':id==='electric-crematorium'?'v314':id==='double-bed'?'v313':id==='electric-smelter'?'v311':id==='animal-sleeping-spot'?'v310':id==='dresser'||id==='sandbags'||id==='mini-turret'?'v308':'v304';return `/assets/ui/elsewhere/${version}/${encodeURIComponent(id)}.svg`;}
