@@ -523,3 +523,20 @@ Package `tmp/elsewhere-pages/v361-package-2rVihy/report.json` : **517 fichiers/1
 Wrangler4.149.0 PASS14,305s sur le projet existant **elsewhere**, branchemain/commit explicite : quatre fichiers téléversés,511 réutilisés, en-têtes/redirections transmis. Une seule publication effective **ff304a50**. HTTPS PASS7,827s : **106 réponses200/MIME/octets exacts**,53chemins sur chaque origine ; rapport `tmp/elsewhere-pages/v361-http-1VzEFf/report.json`, erreurs[], dist/publics inchangés. Les66publics sont comparés localement ; tous ne sont pas téléchargés à distance. `--commit-dirty=true` reflète uniquement references_UI humain non suivi, conservé ; seul le dist vérifié est envoyé. UI papier distante `codex/ui-papier-v317`/a7a6b465 intacte. Contextes Chrome possédés terminés, Vite5412 réemployé ; aucune session humaine fermée.
 
 Cette publication vérifie des octets disponibles et des parcours préparés, pas une guérison, une campagne entière, une sauvegarde humaine réparée ou un gain FPS. Campagne canonique V36072605/SHA19cbd521 et ledger1faef6af conservés. Suite V362 clinique/besoins regroupée, puis survie durable, recherche productive et essai des trois biomes avant les expansions autorisées. Autonomie ACTIVE, ROOT seul contrôles lourds séquentiels sur gel ; sous-métiers reportés.
+
+
+## Publication V363 — origine physique des tirs
+
+15 octobre 2026, schéma238. Produit `ad28f47c29b0d111d23dbd96495b886e2cae672f` commité/poussé sur main : [qualification et défense partielle](../gameplay/shooting-lean-v363.md). Le demi-lean capturé corrige la source physique humaine sans réécrire les anciennes balles ni augmenter la précision. Raid encore actif au vrai74567 ; aucun résultat de victoire, campagne entière ou FPS attribué à cette publication.
+
+Pages PASS2,182s, package PASS1,311s : **517 fichiers/119598854 octets**,63références/66chemins publics locaux exacts, visuels inchangés et laboratoire privé absent. Rapport `tmp/elsewhere-pages/v363-package-tAH9E9/report.json` produit avant commit sur les mêmes sources ; le contrôle HTTP identifie ensuite explicitement le commit produit poussé. Aucun build inchangé rejoué. Deux fins de pilotes seulement normalisées avant commit, manifeste privé conservé et nouveau gel2970 exact.
+
+Wrangler4.149.0 PASS14,052s, projet existant elsewhere/branchemain/commit explicite. Une seule publication effective **b0b70b29**, trois fichiers envoyés/512réutilisés puis headers/redirects. Stable [Elsewhere](https://elsewhere-cq7.pages.dev/) et [publication V363](https://b0b70b29.elsewhere-cq7.pages.dev/).
+
+| Asset | SHA256 du package et des deux origines |
+| --- | --- |
+| index-BVU3fyrq.js | f0f3473f6280736c80f7639d5fb0469aebfbcbbe4b19041cdde166ad12438ce8 |
+| simulation.worker-BYg7Bggy.js | 254fe685da43a91a505297b006d4ef667a9fef40ce4d1e7d067de62c1bbedafd |
+| index-CoPGpbxY.css | 69919787f33ba30e423383c1f4ce8a889b0da83f5306a28294453924bb3c802e |
+
+HTTPS PASS7,835s, **106 réponses200/MIME/octets exacts**,53chemins sur chaque origine. Rapport `tmp/elsewhere-pages/v363-http-Ld7GCr/report.json`, erreurs[], dist/publics inchangés ; gel final05/2970 exact après contrôle. Les66publics sont comparés localement, tous ne sont pas téléchargés à distance. La disponibilité de fichiers ne certifie pas un nouveau parcours navigateur public ni une réparation de save humain. `--commit-dirty=true` reflète uniquement references_UI humain non suivi ; le dist produit commité est le seul package envoyé. UI papier et sessions humaines conservées, contextes de test terminés et Vite5412 réemployable. Suite autonome : intervention sur le vrai mur menacé, puis recherche productive et essai des trois biomes.
