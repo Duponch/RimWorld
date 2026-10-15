@@ -147,7 +147,8 @@
 #app .map-tools-dock {
   position: absolute;
   left: 12px;
-  bottom: calc(var(--tabs-height) + 12px);
+  --hud-inspector-gap: 10px;
+  bottom: var(--hud-map-tools-bottom, calc(var(--tabs-height) + 12px));
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -209,9 +210,6 @@
 #app .map-tools-tray .map-tool > span:not(.tool-icon),
 #app .map-tools-tray .map-tool kbd { display: none; }
 #app .game-shell:has(.management-panel:not([hidden])) .map-tools-dock { display: none; }
-#app .game-shell:has(#inspector:not([hidden])) .map-tools-dock {
-  bottom: calc(var(--tabs-height) + var(--hover-inspector-height, 0px) + 24px);
-}
 
 @media (max-width: 1280px) {
   #app .architect-workbench .architect-body { grid-template-columns: 210px minmax(0, 1fr); }

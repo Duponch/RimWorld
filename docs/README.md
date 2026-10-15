@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V380 — schéma 242 :** [lisibilité des HUD](gameplay/hover-layout-v380.md). Survol, ressources et dock stabilisés et qualifiés à quatre tailles ; correctif UI sans nouvelle mécanique. Publication regroupée suivante ; dernière production V378/e5ec566c. Les états suivants sont historiques.
+
 **V379 — schéma 242 :** [incidents secondaires et alertes hors carte](gameplay/secondary-incidents-v379.md). Calendriers prospectifs, acteurs locaux et bascule/centrage vers la vraie carte ; contrôles et limites dans la note canonique. Publication regroupée suivante ; dernière production confirmée V378/e5ec566c. Les états suivants sont historiques.
 
 **V378 — schéma 241 :** [uranium et combinaison de reconnaissance](gameplay/recon-armor-v378.md). Extraction, fabrication payée, stockage et habillement qualifiés, trois recharges exactes ; produitfdceb8b3 publié en e5ec566c avec V377,114HTTPS exacts. Les états suivants sont historiques.

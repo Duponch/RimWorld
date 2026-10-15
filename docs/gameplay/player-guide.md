@@ -1,5 +1,9 @@
 # Guide joueur
 
+## Lire les informations de la carte — V380
+
+Le survol se place dans une région libre du HUD. Avec un grand dossier ouvert, les ressources et la page du dossier restent défilantes pour préserver les commandes. Fermez le dossier pour retrouver davantage de place ; ouvrir Ordres ou Zones le ferme normalement. Si le survol devient lui-même défilant, vous pouvez entrer dans sa surface pour le lire, puis sortir ou appuyer sur Échap. [Portée et limites](hover-layout-v380.md).
+
 ## Réagir sur l’autre carte — V379
 
 Une ligne « Second site » ou « Foyer » dans les alertes indique une menace ou des visiteurs sur l’autre carte. Cliquez-la : le jeu affiche cette carte et centre la personne réelle, puis les commandes ordinaires restent disponibles. Changer de vue ne déplace personne et ne suspend aucune carte. Les sauvegardes conservent les deux sites et leurs calendriers ; les anciens sites adoptent seulement des occasions futures en reprenant le temps. [Portée et contrôles](secondary-incidents-v379.md).

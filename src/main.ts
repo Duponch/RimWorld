@@ -156,6 +156,7 @@ import { mapObjectExists,nextMapObject,type MapObjectSelection } from './ui/map-
 import {mapObjectGroupCells,MAX_MAP_OBJECT_SELECTION} from './ui/map-object-group-selection';
 import {mapObjectActions,mapObjectGroupActions} from './ui/map-object-actions';
 import { MapHoverLightCache,mapHoverLines } from './ui/map-hover-readout';
+import {installHoverReadoutLayout} from './ui/hover-readout-layout';
 import { mapCellDetails } from './ui/map-cell-details';
 import './ui/map-details.css';
 import './ui/cursors.css';
@@ -304,6 +305,7 @@ let selectedObject:MapObjectSelection|undefined;
 let selectedObjects:MapObjectSelection[]=[];
 const objectGroupReads=new WeakMap<HTMLElement,{world:World;selection:string}>();
 let hoveredCell:Cell|null=null;
+let hoverReadoutLayout:ReturnType<typeof installHoverReadoutLayout>|undefined;
 let lastHoverReadAt=0,lastHoverCopy='';
 let altInspectorHeld=false,lastAltReadAt=0,lastAltCopy='',mapPointerX=0,mapPointerY=0;
 const mapHoverLight=new MapHoverLightCache();
@@ -627,8 +629,6 @@ let latestMotion: PawnTrack[] | undefined;
 let menuResumeSpeed: number | undefined;
 let menuTransition: Promise<unknown> = Promise.resolve();
 const shell = document.querySelector<HTMLElement>('.game-shell')!;
-const inspectorSizeObserver=new ResizeObserver(()=>shell.style.setProperty('--hover-inspector-height',`${el('inspector').hidden?0:el('inspector').getBoundingClientRect().height}px`));
-inspectorSizeObserver.observe(el('inspector'));
 installVisualIdentity(document.querySelector<HTMLElement>('#app')!);
 installTooltips(document.body);
 installTextSelectionGuard(document.body);
@@ -638,6 +638,7 @@ const resourceLedger = createResourceLedger(document.querySelector<HTMLElement>(
 const architectWorkbench = installArchitectWorkbench(document.querySelector<HTMLElement>('#app')!, () => {
   setPanel(null); clearSelection(); applyTool('select');
 });
+hoverReadoutLayout=installHoverReadoutLayout(shell,{cell:()=>hoveredCell,refresh:()=>updateMapHover(true)});
 // Workbench has already moved Orders/Zones out of Architect. Keep the
 // resident catalogue and its icon/handler nodes; only visibility changes.
 const architectToolButtons=[...el('architect-panel').querySelectorAll<HTMLButtonElement>('[data-tool-category]')]
@@ -827,6 +828,7 @@ function syncArchitectAvailability(force=false):void {
 function selectedColonyIds():number[]{return snapshot?.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner).map(p=>p.id)??[];}
 function renderWildlife(world:World){updateWildlifePanel(el('wildlife-content'),world,id=>selectPawn(id),()=>void attempt(async()=>{await client.command({type:'enable-wildlife'});renderState();}),[...selection.ids],id=>void attempt(async()=>{await client.command({type:'shoot',pawnIds:selectedColonyIds(),targetId:id});renderState();}),id=>void attempt(async()=>{await client.command({type:'melee',pawnIds:selectedColonyIds(),targetId:id});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId:id,enabled});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'tame',animalId:id,enabled});renderState();}));}
 function setPanel(panel: Panel, preserveTool = false) {
+  hoverReadoutLayout?.reset();
   architectWorkbench.close();
   dismissTooltip();
   // Every exit path (tabs, map, portraits and shortcuts) releases this pause.
@@ -861,6 +863,7 @@ function setPanel(panel: Panel, preserveTool = false) {
   if (panel === 'work' && snapshot) updateWorkPanel(snapshot,carriedPatientsOf(snapshot));
 }
 function applyTool(tool: Tool) {
+  hoverReadoutLayout?.reset();
   architectWorkbench.close();
   zoneEditTarget=undefined;renderer?.setZoneTarget(undefined);allowedAreaEditId=undefined;renderer?.setAllowedAreaTarget(undefined);
   shootingControls.cancel();
@@ -898,15 +901,21 @@ function selectPawn(id: number) {
   selectPawns({ids:[id],additive:false,toggle:false},true);
 }
 function updateMapHover(force=false):void {
-  const readout=el('map-hover-readout');
-  if(currentTool!=='select'||!snapshot||!hoveredCell){readout.hidden=true;readout.replaceChildren();lastHoverCopy='';updateMapCellDetails(true);return;}
+  const readout=el('map-hover-readout'),cell=hoveredCell??hoverReadoutLayout?.retainedCell;
+  if(currentTool!=='select'||!snapshot||!cell||currentPanel!==null||frontMenu.isOpen()||replacingWorld||document.querySelector('dialog[open]')){
+    const changed=!readout.hidden||lastHoverCopy!=='';
+    readout.hidden=true;if(lastHoverCopy)readout.replaceChildren();lastHoverCopy='';
+    if(changed)hoverReadoutLayout?.changed();
+    updateMapCellDetails(true);return;
+  }
   const now=performance.now();
   if(!force&&now-lastHoverReadAt<250)return;
   lastHoverReadAt=now;
-  const lines=mapHoverLines(snapshot,hoveredCell,mapHoverLight.lightAt(snapshot,hoveredCell,now));
-  const copy=lines.join('\n');
+  const lines=mapHoverLines(snapshot,cell,mapHoverLight.lightAt(snapshot,cell,now));
+  const copy=lines.join('\n'),changed=copy!==lastHoverCopy||readout.hidden!==!lines.length;
   if(copy!==lastHoverCopy){readout.replaceChildren(...lines.map(line=>{const span=document.createElement('span');span.textContent=line;return span;}));lastHoverCopy=copy;}
   readout.hidden=!lines.length;
+  if(changed)hoverReadoutLayout?.changed();
   updateMapCellDetails(force);
 }
 function positionMapCellDetails():void {
@@ -1805,6 +1814,7 @@ client.onFault = () => {
   updateIncident(); syncStorageButtons();
 };
 function receiveMainSnapshot(world: World, cost: number, speed: number, replaced: boolean, motion?: PawnTrack[]): void {
+  if(replaced){hoveredCell=null;hoverReadoutLayout?.reset();}
   if(replaced)campaignPresentationEpoch++;
   if (replaced) {audio.reset();lastAudioCamera=undefined;lastAudioSourceFocus={x:Infinity,z:Infinity};lastAudioSourceHeight=NaN;}
   const speedChanged=currentSpeed!==speed;
@@ -1926,7 +1936,7 @@ async function prepareWorldView(): Promise<void> {
     };
     renderer.onSelection=gesture=>{if(shootingControls.active){const targetId=gesture.ids[0];if(targetId!==undefined){const type=shootingControls.mode!;shootingControls.cancel();void attempt(async()=>{await client.command({type,pawnIds:selectedColonyIds(),targetId});renderState();});}return;}selectPawns(gesture);};
     renderer.onObjectSelection=selectObjects;
-    renderer.onHover=cell=>{hoveredCell=cell;updateMapHover(true);};
+    renderer.onHover=cell=>{hoveredCell=cell;if(cell)hoverReadoutLayout?.resume();updateMapHover(true);};
     renderer.onInteractionCancel=()=>orderMenu.close();
     renderer.onContext=(cell,x,y,queue,targetId)=>{if(shootingControls.active){shootingControls.cancel();renderState();return;}if(!snapshot||replacingWorld||frontMenu.isOpen())return;const selected=snapshot.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner);if(selected.some(p=>p.draft))void orderMenu.openTactical(snapshot,new Set(selected.map(p=>p.id)),cell,x,y,queue,targetId);else void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);};
     renderer.onArea = designateArea;

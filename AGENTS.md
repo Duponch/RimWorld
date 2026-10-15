@@ -4,9 +4,9 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V379, schéma 242 :** [incidents secondaires et alertes hors carte](docs/gameplay/secondary-incidents-v379.md) relient calendriers futurs, admissions locales et bascule/centrage réel. Toundra V376, second site V377 et uranium/combinaison V378 conservés. Dernière publication confirmée V377–V378 **e5ec566c**,114HTTPS exacts ; prochaine publication produit regroupée. Campagne98038 close partielle.
+**État V380, schéma 242 :** [survol/ressources/dock](docs/gameplay/hover-layout-v380.md) stabilisés et qualifiés à quatre tailles, après les incidents secondaires V379. Dernière publication confirmée V377–V378 **e5ec566c**,114HTTPS exacts ; groupe produit suivant après actualisation des Aulnes. Campagne98038 close partielle.
 
-**Ordre courant :** V379 qualifié ; corriger les chevauchements survol/ressources/dock ; poursuivre parcours joueurs et catalogue selon les manques constatés. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. Références humaines, `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
+**Ordre courant :** actualiser Les Aulnes avec un atelier/stockage/équipement cohérents, en gardant le patrimoine préparé explicite et les versions historiques ; puis parcours joueurs et catalogue selon les manques constatés. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. Références humaines, `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
 
 ## Méthode de livraison
 
@@ -15,6 +15,7 @@ Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` auto
 - Agents sur tâches indépendantes bornées (recherche, revue, code), ROOT seul pour contrôles lourds séquentiels. Geler les sources servies avant le navigateur ; les agents peuvent préparer des copies privées pendant les contrôles.
 - Une passe ciblée regroupée et un court parcours UI pertinent suffisent aux risques qu’ils couvrent. Régression élargie uniquement pour frontières transversales ; campagne longue périodique ou motivée, jamais condition automatique de chaque lot. Un échec est conservé et diagnostiqué avant reprise.
 - Penser coûts CPU/GPU/mémoire dès l’implémentation ; réutiliser index, cadence et lots existants. Mesurer le chemin changé si le risque le justifie, sans relancer un banc FPS inchangé. Aucun 100 %, parité exhaustive ou 240 FPS sans preuves.
+- Mettre à jour régulièrement Les Aulnes pour exposer le contenu et les boucles effectivement jouables dans une colonie cohérente : aménagements, stocks finis, matières, travail et usages logiques. Préserver les versions historiques et les parties personnelles ; déclarer le patrimoine préparé sans lui inventer une acquisition naturelle.
 - Une note canonique par lot ; les index donnent seulement le résultat et un lien. L’historique ne doit plus envahir les consignes courantes. [Historique antérieur](docs/history/agents-through-v373.md), à lire seulement pour une question précise.
 
 ## Référence et périmètre

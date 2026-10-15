@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 242.** [V379](gameplay/secondary-incidents-v379.md) relie incidents secondaires et alertes permettant de rejoindre la vraie carte. Toundra, second site persistant et combinaison V376–V378 conservés. Publication regroupée suivante ; dernière production confirmée V378/e5ec566c. Campagne98038 close partielle, aucun pourcentage ou FPS certifié.
+**16 octobre 2026 — schéma 242.** [V380](gameplay/hover-layout-v380.md) stabilise survol/ressources/dock, après les incidents secondaires et alertes V379. Toundra, second site persistant et combinaison V376–V378 conservés. Publication regroupée suivante ; dernière production confirmée V378/e5ec566c. Campagne98038 close partielle, aucun pourcentage ou FPS certifié.
 
 ## Priorité actuelle
 
@@ -9,7 +9,10 @@
 3. **Deuxième site V377 qualifié.** Mêmes personnes/biens, coupe et bois retrouvés après retour/revisite, deux cartes sauvées ensemble. Un seul site secondaire ; incidents et alertes raccordés par V379, limites explicites conservées.
 4. **Catalogue V378 qualifié.** Uranium extrait/acheté, combinaison fabriquée/payée, stockée, portée et retirée avec sauvegardes exactes ; casque existant conservé. Autres usages et armures restent ouverts.
 5. **Incidents secondaires et alertes V379.** Calendriers futurs persistés et alerte navigable vers la vraie carte ; équilibrage mondial exhaustif ouvert.
-6. **Priorité active : parcours joueurs et lisibilité.** Corriger les chevauchements survol/ressources/dock dans un petit lot, puis choisir le catalogue utile selon les manques réellement constatés, sans rallonger une campagne comme condition de livraison.
+6. **Lisibilité V380 qualifiée.** Survol/ressources/dock stables à quatre tailles ; limites compactes et modes non observés explicités.
+7. **Priorité active : actualiser Les Aulnes**, puis parcours joueurs et catalogue utile selon les manques constatés ; aucune longue campagne comme condition automatique.
+
+**Référence jouable à entretenir : Les Aulnes.** Actualiser régulièrement sa version courante avec les objets et boucles pertinents du catalogue, en conservant une colonie logique et les anciennes versions. Le patrimoine ajouté peut être préparé et explicitement décrit ; il ne devient pas une campagne naturellement acquise. La prochaine mise à jour est préparée après le correctif HUD.
 
 La stabilité, l’ergonomie et les performances accompagnent ces lots avec contrôles proportionnés. Les campagnes longues sont périodiques ou motivées par un risque précis. La campagne conservée au 98038 reste une preuve partielle, pas une condition bloquant toutes les livraisons. Le [suivi early access](gameplay/early-access-readiness.md) distingue acquis et limites. La [stratégie de validation](development/testing.md) décrit la méthode ; les sous-métiers restent reportés.
 

@@ -1,5 +1,5 @@
 /* The selected Thing has a short identity card; its commands occupy a separate rail. */
-#map-hover-readout{position:absolute;left:18px;bottom:calc(var(--tabs-height) + var(--hover-inspector-height, 0px) + var(--map-tools-height, 100px) + 36px);z-index:2;max-width:min(560px,calc(100vw - 40px));pointer-events:none;color:#fff8e8;text-shadow:0 1px 3px #142018,0 2px 7px #142018;font-size:14px;line-height:1.35}
+#map-hover-readout{position:absolute;left:18px;bottom:auto;z-index:2;max-width:min(560px,calc(100vw - 40px));pointer-events:none;color:#fff8e8;text-shadow:0 1px 3px #142018,0 2px 7px #142018;font-size:14px;line-height:1.35}
 #map-hover-readout span{display:block}
 .game-shell:has(.management-panel:not([hidden])) #map-hover-readout{display:none}
 
@@ -48,3 +48,15 @@
 .cell-inspector-host .cell-environment #room-description{padding:0;margin:0 0 10px;background:none;font-size:13px;line-height:1.4;color:var(--muted-ink)}
 .room-fact{display:block;margin:5px 0;line-height:1.4}.room-fact strong{font-weight:600;color:var(--ink)}
 @media(max-width:580px){.cell-inspector-host .cell-summary:has(.cell-actions>button:not([hidden])){grid-template-columns:1fr}.cell-inspector-host .cell-actions{display:flex;flex-wrap:wrap}.cell-inspector-host .cell-actions button{flex:1 1 120px;width:auto}.cell-inspector-host #cell-title{font-size:19px}}
+
+/* V380: one event-driven owner reserves the ledger, dock and inspector space.
+   Resource details keep their open state and existing scrolling surface. */
+#app .game-shell .resource-list.panel{max-height:min(calc(100dvh - 132px),var(--hud-resource-max-height,100dvh))}
+#app #inspector:not(.colonist-inspector-host){max-height:min(calc(100dvh - 190px),var(--hud-inspector-max-height,100dvh))}
+#app #inspector.colonist-inspector-host{max-height:min(calc(100dvh - 205px),var(--hud-inspector-max-height,100dvh))}
+#app #map-hover-readout[data-hover-layout]{bottom:auto;max-width:none;max-height:none;box-sizing:border-box;padding:6px;overflow-y:auto;overflow-wrap:anywhere;scrollbar-gutter:stable}
+#app #map-hover-readout[data-hover-layout=whole]{pointer-events:none}
+#app #map-hover-readout:is([data-hover-layout=scroll],[data-hover-layout=panel]){pointer-events:auto;background:#172820ed;border-radius:4px;box-shadow:0 0 0 1px #fff8e655}
+#app #map-hover-readout[data-hover-layout=panel]{z-index:20}
+#app #map-hover-readout:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+.map-hover-layout-probe span{display:block}
