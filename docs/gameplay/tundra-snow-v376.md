@@ -1,6 +1,6 @@
 # V376 — Toundra et neige physique
 
-15 octobre 2026, schéma 239. Lot produit qualifié dans le périmètre ci-dessous ; publication en préparation.
+15 octobre 2026, schéma 239. Lot produit qualifié dans le périmètre ci-dessous ; produit872afdbb publié en712fc270.
 
 ## Pour le joueur
 
@@ -40,4 +40,4 @@ Sources/tests/publics3274fichiers figés sous tmp/tundra-v376/freeze01–04. Ent
 - Mesure CPU isolée du seul balayage250², Node24.11.1, Ryzen5 3600 :165ticks avec préparation paresseuse, p95=0,392ms/max5,368ms ;1000ticks chauds, p95=0,071ms/max0,261ms. Terrain synthétique froid sans toit ; simulation complète, thermique, bridge, rendu et GPU exclus. Pas de gain de FPS déduit.
 - Typage de livraison sources et tests modifiés **PASS15,523s**, Pages **PASS3,025s** (compilation Vite après ce typage ciblé). Aucun nouveau typage global ou ancienne campagne prétendu vert.
 
-Sorties sous tmp/validation-runs/v376-* et tmp/tundra-ui-v376/native-01..03/. Aucun test d’énergie de la campagne98038 n’est crédité à cette tranche. Publication et package renseignés après vérification.
+Sorties sous tmp/validation-runs/v376-* et tmp/tundra-ui-v376/native-01..03/. Aucun test d’énergie de la campagne98038 n’est crédité à cette tranche. Produit `872afdbb978a8ad6de7ef10bba5a240dc3626762` commité/poussé sur origin/main. Publication unique `712fc270` : [production](https://elsewhere-cq7.pages.dev/) et [déploiement](https://712fc270.elsewhere-cq7.pages.dev/). Package517fichiers/119627847octets,63références/66fichiers publics inchangés, laboratoire et sources privées absents. Vérification locale PASS2,124s, Wrangler4.149.0 PASS15,712s, **106réponses HTTPS200 exactes**/MIME attendu PASS8,919s ; erreurs[]. Rapports tmp/elsewhere-pages/v376-package-Pfa17G/report.json et v376-http-CxlPgU/report.json. Le premier lanceur documentaire python avait EACCES ; le runtime explicite passe2,124s. Les3274entrées gelées restent exactes. references_UI humain non suivi est la seule raison de commit-dirty=true ; seul dist vérifié envoyé. Aucune session humaine fermée.

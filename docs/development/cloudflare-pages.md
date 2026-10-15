@@ -1,5 +1,7 @@
 # Elsewhere sur Cloudflare Pages
 
+**Publication courante V376, schéma 239 : `712fc270`.** Produit872afdbb poussé : [toundra et neige physique](../gameplay/tundra-snow-v376.md). 106réponses HTTPS exactes sur la production et le déploiement, package public inchangé hors JS/Worker/CSS du produit. Les états suivants sont historiques.
+
 **Publication courante V361 : `ff304a50`, 15 octobre 2026, schéma237.** Produit `e3fe6efb` commité/poussé : [réserves, étagères et placements](../gameplay/shelf-zones-v361.md). Une publication et106 réponses HTTPS exactes sur [la production](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://ff304a50.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v361--réserves-étagères-et-placements). Les publications suivantes sont historiques.
 
 **Publication courante V357 : `965abf99`, 14 octobre 2026, schéma 236.** Produit `5cd5ffce` commité/poussé : [première recherche guidée](../gameplay/research-guidance-v357.md). Une publication,106réponsesHTTPS exactes sur [l’adresse stable](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://965abf99.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v357--première-recherche-guidée). Les publications suivantes sont historiques.

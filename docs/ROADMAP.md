@@ -1,6 +1,6 @@
 # Plan de développement
 
-**15 octobre 2026 — schéma 239.** Autonomie et push `origin/main` explicitement autorisés. [V376](gameplay/tundra-snow-v376.md) ajoute la toundra, la neige et le déneigement physique après [V375](gameplay/biome-readiness-v375.md). Publication en préparation ; la campagne98038 reste close partielle. Aucun pourcentage de complétude ou FPS certifié.
+**15 octobre 2026 — schéma 239.** Autonomie et push `origin/main` explicitement autorisés. [V376](gameplay/tundra-snow-v376.md) ajoute la toundra, la neige et le déneigement physique après [V375](gameplay/biome-readiness-v375.md). Produit872afdbb publié en712fc270 ; la campagne98038 reste close partielle. Aucun pourcentage de complétude ou FPS certifié.
 
 ## Priorité actuelle
 

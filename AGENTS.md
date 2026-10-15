@@ -4,9 +4,9 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V376, schéma 239 :** [toundra et neige physique](docs/gameplay/tundra-snow-v376.md) en clôture. Départ natif, travail au contact et trois recharges exactes acquis sur Chrome ; corpus63 inchangé. Publication produit encore V365 jusqu’à confirmation du déploiement. Campagne98038 close partielle, sans blocage des extensions.
+**État V376, schéma 239 :** [toundra et neige physique](docs/gameplay/tundra-snow-v376.md) livré : produit872afdbb poussé et publié712fc270/106HTTPS exacts. Départ natif, travail au contact et trois recharges exactes acquis sur Chrome ; corpus63 inchangé. Campagne98038 close partielle, sans blocage des extensions.
 
-**Ordre courant :** terminer la clôture V376, puis second site persistant modifié/revisité et catalogue utile. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. Références humaines, `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
+**Ordre courant :** second site persistant modifié/revisité, puis catalogue utile. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. Références humaines, `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
 
 ## Méthode de livraison
 
