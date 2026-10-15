@@ -15,5 +15,5 @@ export function tundraHistoricalFieldsAbsent(raw:unknown,version:number):boolean
 export function validTundraTransport(w:World,version:number):boolean {
  if(!tundraHistoricalFieldsAbsent(w,version))return false;
  if(w.site?.biome!=='tundra')return w.flora?.biome!=='tundra'&&!(w.climate?.revision===1&&w.climate.profile==='tundra-preset');
- return version>=239&&w.site.revision===2&&w.snow!==undefined&&w.climate!==undefined&&validSite(w.site,version,w.scenario)&&validateWildFlora(w,version)&&validSiteClimate(w.climate,version,w);
+ return version>=239&&w.site.revision===2&&w.snow!==undefined&&w.climate!==undefined&&validSite(w.site,version,w.scenario,w.expeditionSite!==undefined)&&validateWildFlora(w,version)&&validSiteClimate(w.climate,version,w);
 }

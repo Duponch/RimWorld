@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 239 as const;
+export const SCHEMA_VERSION = 240 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -188,6 +188,13 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  secondarySite?:import('./secondary-site-state.ts').SecondarySite;
+  /** Real secondary-map provenance; no crash landing or supplies are inferred. */
+  expeditionSite?:{tile:number;createdAt:number;calendarOffset:number};
+  /** Snapshot-only campaign knowledge; never an additional physical owner. */
+  campaignPeople?:import('./relationship-state.ts').RelationshipPerson[];
+  /** Snapshot-only navigation metadata; full inactive terrain stays in worker. */
+  campaignMap?:{active:'home'|'secondary';secondaryTile:number;createdAt:number;visitIds:number[]};
   snow?:import('./snow-rules.ts').SnowState;
   snowClearArea?:number[];
   /** V318 prospective herd limits; absent policies leave the herd untouched. */
@@ -280,7 +287,7 @@ export type AreaAction = 'snow-clear' | 'remove-snow-clear' | 'lay-floor' | 'rem
 export interface StorageSettings extends StorageConditions { items?:Partial<Record<ItemId,boolean>>; filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell; targetZoneId?:number; floor?: import('./flooring.ts').FloorKind }
 export interface BuildLineCommand { type: 'build-line'; kind: import('./construction-line.ts').LineBuildKind; from: Cell; to: Cell; material?: import('./construction-materials.ts').ConstructionMaterial }
-export type Command = import('./tree-transfer-state.ts').TreeCommand | import('./orbital-state.ts').OrbitalCommand | import('./group-state.ts').GroupCommand | {type:'enable-mech-raids'} | import('./commercial-state.ts').CommercialCommand | import('./surgery-state.ts').SurgeryCommand | import('./quest-state.ts').QuestCommand | import('./caravan-state.ts').ScoutCommand | import('./domestic-state.ts').DomesticCommand | import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
+export type Command = import('./secondary-site-state.ts').SecondarySiteCommand | import('./tree-transfer-state.ts').TreeCommand | import('./orbital-state.ts').OrbitalCommand | import('./group-state.ts').GroupCommand | {type:'enable-mech-raids'} | import('./commercial-state.ts').CommercialCommand | import('./surgery-state.ts').SurgeryCommand | import('./quest-state.ts').QuestCommand | import('./caravan-state.ts').ScoutCommand | import('./domestic-state.ts').DomesticCommand | import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
   | import('./auto-slaughter-state.ts').AutoSlaughterCommand
   | {type:'spike-trap-auto-rebuild';structureId:number;on:boolean}
   | {type:'shelf-policy';structureId:number;settings:StorageSettings}

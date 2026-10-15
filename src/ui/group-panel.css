@@ -1,7 +1,7 @@
 /* Scope keeps the cream/forest identity and leaves
    the existing speed/menu column available; no extra fixed overlay/context. */
 #world-panel.world-group-active{
-  width:min(1180px,calc(100vw - 282px));max-width:calc(100vw - 282px);
+  width:min(1180px,calc(100vw - 332px));max-width:calc(100vw - 332px);
   max-height:calc(100dvh - 132px);overflow:auto;box-sizing:border-box;
 }
 .world-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}

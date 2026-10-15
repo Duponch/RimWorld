@@ -1,4 +1,5 @@
 import { captureHumanOwners } from './human-owners.ts';
+import { campaignLivingObservers } from './campaign-people.ts';
 import { isColonist } from './affiliation.ts';
 import { captureRelationshipPeople } from './relationship-namespace.ts';
 import { relationshipIndex } from './relationship-runtime.ts';
@@ -25,8 +26,7 @@ export function notifyFamilyDeath(world:World,deceased:Pawn):void {
   const owners=captureHumanOwners(world);if(owners.byId.get(deceased.id)?.pawn!==deceased)return;
   const deathAt=deceased.health.death.tick,links=world.relationships.links;
   const index=links.some(link=>link.recordedAt>deathAt)?captureRelationshipIndex({links:links.filter(link=>link.recordedAt<=deathAt)}):relationshipIndex(world);
-  for(const slot of [...owners.local,...owners.away]){
-    const p=slot.pawn!;
+  for(const {pawn:p} of campaignLivingObservers(world)){
     if(p===deceased||!isColonist(p)||p.prisoner||p.visitor||p.state==='dead')continue;
     expireFamilyBereavement(p,world.tick);
     if(p.familyBereavement?.some(m=>m.otherId===deceased.id))continue;

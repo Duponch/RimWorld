@@ -1,3 +1,5 @@
+import {secondaryLocalGroupAllowed} from './secondary-site.ts';
+import {campaignAuthority} from './secondary-site-context.ts';
 import { quoteGroupTrade,draftGroupTrade,type GroupTradeEnvironment } from './group-trade.ts';
 import { bestGroupNegotiator } from './trade-negotiator.ts';
 import type { Cell, CommandResult, MaterialPile, Pawn, World } from './types.ts';
@@ -32,7 +34,7 @@ export function groupMemberReason(w:World,p:Pawn,preparing=false):string|undefin
   if(!w.pawns.includes(p)||!isColonist(p)||p.prisoner||p.visitor)return 'Choisissez un colon libre et présent.';
   if(w.scout||w.commercialTrip)return 'Terminez le voyage individuel en cours.';
   if(p.age&&biologicalYears(p.age)<18)return 'Le groupe accepte actuellement des adultes.';
-  const reason=scoutPreparationReason(w,p);if(reason)return reason;
+  const reason=scoutPreparationReason(w,p,!w.expeditionSite);if(reason)return reason;
   if(scoutActiveTask(p))return 'Le colon doit terminer son activité avant de rejoindre le groupe.';
   if(!preparing&&(p.state!=='idle'||p.path.length||p.moveCooldown>0||(p.motion?.end??0)>w.tick))return 'Le colon doit avoir terminé son déplacement.';
   if(w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)||w.packed.some(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id))return 'Déposez la cargaison de travail avant de partir.';
@@ -52,7 +54,7 @@ export function groupFormationAuthority(w:World,preparing=false):GroupFormationA
     return result;
   };
   return {
-    reachable,stand:c=>inBounds(w,c.x,c.z)&&!blocked[c.z*w.width+c.x]&&stand(c),
+    requireResident:!w.expeditionSite,reachable,stand:c=>inBounds(w,c.x,c.z)&&!blocked[c.z*w.width+c.x]&&stand(c),
     namespace:world=>({byId:new Map(captureHumanOwners(world).slots.map(s=>[s.id,{pawn:s.pawn,local:s.kind==='map'}]))}),
     memberReason:(world,p)=>groupMemberReason(world,p,preparing),
     residentCapable:(_world,p)=>isColonist(p)&&!p.prisoner&&!p.visitor&&!['dead','downed'].includes(p.state)&&!p.mental?.crisis,
@@ -64,7 +66,7 @@ export function groupFormationAuthority(w:World,preparing=false):GroupFormationA
     sourceAccess:(_world,p,pile)=>pile.owner.type==='ground'&&[pile.owner,...workNeighbours(pile.owner)].some(c=>reachable(p,c))?'reachable':'unreachable',
     namespaceReason:(world,{additionalPiles,members,items})=>{
       try {captureHumanOwners(world);}catch {return 'Une identité humaine possède plusieurs propriétaires.';}
-      if((world.groupLosses?.length??0)+members.length>GROUP_MAX_LOSSES)return 'Les dossiers de pertes conservés ne permettent plus ce départ.';
+      if((campaignAuthority(world).groupLosses?.length??0)+members.length>GROUP_MAX_LOSSES)return 'Les dossiers de pertes conservés ne permettent plus ce départ.';
       if(world.piles.length+additionalPiles>32768||!Number.isSafeInteger(world.nextId+additionalPiles))return 'Le nombre de biens ou d’identités disponibles est dépassé.';
       if(members.some(p=>items.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id).length>256))return 'Un inventaire dépasse 256 piles.';
       return undefined;
@@ -86,7 +88,16 @@ function viewMass(mass:GroupMassCapture,items:readonly MaterialPile[]):GroupMass
   return {grams:mass.grams,capacityGrams:mass.capacityGrams,byMember:mass.carriers,rations:items.filter(p=>p.item==='survival-meal'&&p.owner.type==='inventory').reduce((n,p)=>n+p.quantity,0)};
 }
 function previewFormation(w:World,ids:readonly number[],sources:readonly CommercialBuyLine[],destination:number) {
-  if(!w.planet||!groupDestinationValid(w.planet,destination)||destination===w.planet.homeTile)return {kind:'refused' as const,reason:'Choisissez une destination terrestre hors du foyer.'};
+  const origin=w.expeditionSite?.tile??w.planet?.homeTile;
+  if(!w.planet||!groupDestinationValid(w.planet,destination)||destination===origin)return {kind:'refused' as const,reason:'Choisissez une destination terrestre différente de la carte actuelle.'};
+  const visit=campaignAuthority(w).secondarySite?.visit;
+  if(!w.expeditionSite&&(visit||w.campaignMap?.visitIds.length))return {kind:'refused' as const,reason:'Une expédition est déjà présente sur le second site.'};
+  if(w.expeditionSite){
+    if(destination!==w.planet.homeTile)return {kind:'refused' as const,reason:'Cette première expédition repart vers le foyer.'};
+    const roster=visit?.memberIds??w.campaignMap?.visitIds??[];
+    const living=roster.filter(id=>w.pawns.some(p=>p.id===id&&p.state!=='dead'));
+    if(living.length!==ids.length||living.some(id=>!ids.includes(id)))return {kind:'refused' as const,reason:'Choisissez tous les membres vivants de l’expédition pour le retour.'};
+  }
   if(w.group||w.scout||w.commercialTrip)return {kind:'refused' as const,reason:'Un groupe ou voyage est déjà engagé.'};
   if(!Number.isSafeInteger(w.planet.nextGroupId+1))return {kind:'refused' as const,reason:'Le registre des groupes est plein.'};
   const authority=groupFormationAuthority(w),loading=previewGroupLoading(w,ids,sources,authority);
@@ -94,7 +105,7 @@ function previewFormation(w:World,ids:readonly number[],sources:readonly Commerc
   if(loading.capture.members.some(p=>loading.capture.items.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id).length+loading.manifest.filter(l=>l.carrierId===p.id).length>256))return {kind:'refused' as const,reason:'Un inventaire dépasserait 256 piles.'};
   const food=loading.capture.items.filter(p=>p.owner.type==='inventory'&&p.item==='survival-meal'&&!p.foodPoison).reduce((n,p)=>n+p.quantity,0)+loading.manifest.filter(l=>l.item==='survival-meal').reduce((n,l)=>n+l.quantity,0);
   if(food<loading.capture.members.length)return {kind:'refused' as const,reason:'Chargez au moins une ration saine par membre.'};
-  const route=findPlanetRoute(w.planet,w.planet.homeTile,destination,planetCostContext(w,loading.mass),queryBudget());
+  const route=findPlanetRoute(w.planet,origin!,destination,planetCostContext(w,loading.mass),queryBudget());
   if(route.kind!=='found')return {kind:'refused' as const,reason:route.kind==='deferred'?'Le calcul de route attend une nouvelle tentative.':'Cette destination est inaccessible.'};
   const rendezvous={x:loading.capture.members[0]!.x,z:loading.capture.members[0]!.z},used=new Set<number>();
   const others=new Set(w.pawns.filter(p=>!ids.includes(p.id)).map(p=>p.z*w.width+p.x));
@@ -143,7 +154,7 @@ export function groupPermission(w:World):GroupPermissionView {
   const g=w.group,ids=g&&!away(g)?new Set(g.memberIds):undefined;
   const members=away(g)?g.members:ids?w.pawns.filter(p=>ids.has(p.id)):[],items=away(g)?g.items:ids?w.piles.filter(p=>'pawnId' in p.owner&&ids.has(p.owner.pawnId)):[];
   const mass=g?captureGroupMass(members,items):undefined;
-  const actions:Record<GroupPanelAction,GroupActionPermission>={adopt:{ok:!w.planet},start:{ok:!!w.planet&&!g&&!w.scout&&!w.commercialTrip},cancel:{ok:!!g&&!away(g)},pause:{ok:away(g)},route:{ok:away(g)},return:{ok:away(g)},buy:{ok:false},sell:{ok:false},unload:{ok:!!w.planet&&(!g||g.phase==='unloading')}};
+  const actions:Record<GroupPanelAction,GroupActionPermission>={adopt:{ok:!w.planet},start:{ok:!!w.planet&&!g&&!w.scout&&!w.commercialTrip&&(!!w.expeditionSite||!(w.secondarySite?.visit||w.campaignMap?.visitIds.length))},cancel:{ok:!!g&&!away(g)},pause:{ok:away(g)},route:{ok:away(g)},return:{ok:away(g)},buy:{ok:false},sell:{ok:false},unload:{ok:!!w.planet&&(!g||g.phase==='unloading')}};
   let trade:GroupPermissionView['trade']=null;
   if(w.planet&&away(g)&&g.phase==='at-site'&&g.tile===w.planet.civilianTile&&mass){
     const env=tradeEnvironment(w,mass),buy=quoteGroupTrade(g,env,'buy',[]),sell=quoteGroupTrade(g,env,'sell',[]),negotiator=bestGroupNegotiator(g.members)??null;
@@ -151,7 +162,7 @@ export function groupPermission(w:World):GroupPermissionView {
     trade={negotiator,...!buy.ok?{refusal:buy.reason}:{},groupSilver:g.items.filter(p=>p.owner.type==='inventory'&&p.item==='silver').reduce((n,p)=>n+p.quantity,0),postSilver:w.civilianPost?.stock.filter(p=>p.item==='silver').reduce((n,p)=>n+p.quantity,0)??0,buys:goods(buy,'buy'),sells:goods(sell,'sell')};
     actions.buy={ok:buy.ok,...!buy.ok?{reason:buy.reason}:{}};actions.sell={ok:sell.ok,...!sell.ok?{reason:sell.reason}:{}};
   }
-  return {originTile:away(g)?g.tile:w.planet?.homeTile??0,originLabel:away(g)?'Groupe': 'Foyer',maximumSources:64,mass:mass?viewMass(mass,items):null,confirmedRoute:away(g)?g.route:[],actions,trade};
+  return {originTile:away(g)?g.tile:w.expeditionSite?.tile??w.planet?.homeTile??0,originLabel:away(g)?'Groupe':w.expeditionSite?'Expédition':'Foyer',maximumSources:64,mass:mass?viewMass(mass,items):null,confirmedRoute:away(g)?g.route:[],actions,trade};
 }
 export function cancelGroupPreparation(w:World):void {
   const g=w.group;if(!g||away(g))return;
@@ -164,11 +175,13 @@ export function cancelGroupPreparation(w:World):void {
   delete w.group;
 }
 export function applyGroupCommand(w:World,c:GroupCommand):CommandResult {
+  if(!secondaryLocalGroupAllowed(w,c.type))return fail('Sur le second site, formez une caravane vers le foyer ou terminez le chargement en cours.');
+  if(c.type==='group-start'&&!w.expeditionSite&&campaignAuthority(w).secondarySite?.visit)return fail('Une expédition est déjà présente sur le second site.');
   if(c.type==='planet-adopt'){if(!w.planet){w.planet=generatePlanet(w.seed,planetHomeInput(w),w.tick,w.site?.biome==='tundra'?2:1);groupLog(w,'La planète et ses destinations sont maintenant accessibles.');}return {ok:true};}
   if(c.type==='group-start'){
     const p=previewFormation(w,c.memberIds,c.sources,c.destination);if(p.kind!=='ready')return fail(p.kind==='deferred'?'La préparation attend une nouvelle tentative.':p.reason);
     const id=w.planet!.nextGroupId;
-    w.group={id,startedAt:w.tick,destination:c.destination,ledger:emptyGroupLedger(),phase:'gathering',memberIds:p.loading.capture.members.map(p=>p.id),rendezvous:p.rendezvous,meeting:p.meeting,manifest:p.loading.manifest,cursor:0,exits:p.exits};
+    w.group={...w.expeditionSite?{originTile:w.expeditionSite.tile}:{},id,startedAt:w.tick,destination:c.destination,ledger:emptyGroupLedger(),phase:'gathering',memberIds:p.loading.capture.members.map(p=>p.id),rendezvous:p.rendezvous,meeting:p.meeting,manifest:p.loading.manifest,cursor:0,exits:p.exits};
     w.planet!.nextGroupId++;groupLog(w,'Le groupe se rassemble avant le chargement des provisions.');return {ok:true};
   }
   if(c.type==='group-cancel'){if(!w.group||away(w.group))return fail('Aucune préparation ou décharge à annuler.');cancelGroupPreparation(w);return {ok:true};}

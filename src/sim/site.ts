@@ -36,8 +36,8 @@ export function resolveSite(seed:number,options:SiteOptions={hilliness:'small-hi
 }
 export const isBiomeSite=(site:LocalSite):site is BiomeSite=>site.revision===2;
 /** Provenance survives later excavation and landscaping; do not regenerate to validate. */
-export function validSite(value:unknown,version:number,scenario:World['scenario']):boolean {
-  const requiresSite=scenario?.id==='crashlanded'&&scenario.revision>=2;
+export function validSite(value:unknown,version:number,scenario:World['scenario'],expedition=false):boolean {
+  const requiresSite=expedition&&version>=240||scenario?.id==='crashlanded'&&scenario.revision>=2;
   if(value===undefined)return !requiresSite;
   if(version<83||!requiresSite||!record(value)||Object.keys(value).length!==5||!Object.keys(value).every(k=>['revision','biome','hilliness','river','stones'].includes(k)))return false;
   const provenance=value.revision===1?value.biome==='temperate-forest':value.revision===2&&version>=91&&isBiomeId(value.biome)&&(value.biome!=='tundra'||version>=239);

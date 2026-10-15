@@ -4,6 +4,7 @@
  * This capture registers no Thing IDs and never turns a reference into an owner.
  */
 import type {MaterialPile,Pawn,World} from './types.ts';
+import { appendCampaignPeople } from './campaign-people.ts';
 import type {PackedFurniture} from './furniture-rules.ts';
 import type {RelationshipPeople,RelationshipPerson} from './relationship-state.ts';
 import type {GroupDepartureBaseline,GroupLoss,GroupState} from './group-state.ts';
@@ -87,7 +88,7 @@ export function everyHumanPawnOwner(realWorld:World,predicate:(pawn:Pawn,kind:Hu
  * Formation/unloading memberIds, offers, raid members/lost and relationships
  * are REFERENCES: ignored as owners. They are checked later against this result.
  */
-export function captureHumanOwners(realWorld:World,explicit:ExplicitWorldHumanOwners={}):HumanOwnershipCapture {
+export function captureHumanOwners(realWorld:World,explicit:ExplicitWorldHumanOwners={},includeCampaignKnowledge=true):HumanOwnershipCapture {
   if(!Number.isSafeInteger(realWorld.tick)||realWorld.tick<0||!Number.isSafeInteger(realWorld.nextId)||realWorld.nextId<1)
     fail('world-clock','Missing or invalid authoritative World clock/nextId.');
   const byId=new Map<number,HumanOwnerSlot>(),people=new Map<number,RelationshipPerson>(),slots:HumanOwnerSlot[]=[];
@@ -162,6 +163,9 @@ export function captureHumanOwners(realWorld:World,explicit:ExplicitWorldHumanOw
     place:{kind:'archive'},status:'departed',validationTick:departure.tick,items:Object.freeze([...departure.items]),packed:[]});
   for(const departure of realWorld.prisonDepartures??[])add({id:departure.pawnId,name:departure.name,kind:'prison-departure',simulation:'identity-only',
     place:{kind:'archive'},status:'departed',validationTick:departure.tick,items:Object.freeze([...departure.items]),packed:[]});
+  // Other maps contribute knowledge, not foreign spatial owners. Their own
+  // complete guards retain the actual owning context for jobs and possessions.
+  if(includeCampaignKnowledge)appendCampaignPeople(realWorld,people);
   const select=(predicate:(slot:HumanOwnerSlot)=>boolean)=>Object.freeze(slots.filter(predicate));
   const local=select(s=>s.kind==='map'),away=select(s=>s.simulation==='world'),contained=select(s=>s.kind==='starting-pod'),terminals=select(s=>s.kind==='group-loss'),
     frozen=select(s=>s.kind!=='group-loss'&&s.kind!=='starting-pod'&&(s.simulation==='frozen'||s.simulation==='identity-only'));
@@ -170,7 +174,7 @@ export function captureHumanOwners(realWorld:World,explicit:ExplicitWorldHumanOw
   const census:HumanOwnerCensus={localOwned:local.length,localLiving:countLiving(local),localDead:local.length-countLiving(local),
     containedOwned:contained.length,containedLiving:countLiving(contained),containedPiles:arrival&&arrival.phase!=='opened'?arrival.pods.reduce((n,p)=>n+p.items.length,0):0,
     legacyAwayOwned:legacy.length,legacyAwayLiving:countLiving(legacy),groupAwayOwned:groupAway.length,groupAwayLiving:countLiving(groupAway),terminalOwned:terminals.length,
-    frozenPawnArchives:archives.filter(s=>!!s.pawn).length,simpleDepartureIdentities:archives.filter(s=>!s.pawn).length,knownHumans:slots.length,
+    frozenPawnArchives:archives.filter(s=>!!s.pawn).length,simpleDepartureIdentities:archives.filter(s=>!s.pawn).length,knownHumans:people.size,
     mapPiles:realWorld.piles.length,legacyTravelPiles:legacy.reduce((n,s)=>n+s.items.length,0),groupTravelPiles:group&&'members' in group?group.items.length:0,
     terminalPiles:(explicit.losses??realWorld.groupLosses??[]).reduce((n,l)=>n+l.items.length,0),archivedPiles:archives.reduce((n,s)=>n+s.items.length,0),
     postPiles:realWorld.civilianPost?.stock.length??0,archivedPacked:archives.reduce((n,s)=>n+s.packed.length,0)};

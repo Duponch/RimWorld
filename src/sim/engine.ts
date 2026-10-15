@@ -1,3 +1,7 @@
+import {campaignAuthority,isSecondaryContext,selectedMap,secondaryContext,flushSecondaryContext} from './secondary-site-context.ts';
+import {applySecondarySiteCommand} from './secondary-site.ts';
+import {secondaryCommand} from './secondary-site-state.ts';
+import type {SecondarySiteCommand} from './secondary-site-state.ts';
 import {isConstructionLightPlant,clearanceOutputPending,workOutputPending} from './construction-plants.ts';
 import {planConstructionPlantRetirement,commitConstructionPlantRetirement,retainClearingWorkAfterOutputRefusal,retainWorkAfterOutputRefusal} from './plant-retirement.ts';
 import {applyTreeCommand,extractTreeReason,replantTreeReason,processTreeWork,advanceMinifiedTrees,isPlantDesignationJob,treeJobReason} from './tree-transfer.ts';
@@ -441,6 +445,17 @@ export function canDesignate(world: World, command: DesignateCommand, installing
   return { ok: true };
 }
 export function applyCommand(world: World, command: Command): CommandResult {
+  if(!command||typeof command!=='object')return refusal('invalid-command','Commande invalide.');
+  if(secondaryCommand(command))return applySecondarySiteCommand(world,command);
+  const root=campaignAuthority(world);
+  if(!isSecondaryContext(world)&&root.secondarySite?.visit&&/^(scout-|commercial-)/.test(command.type))return {ok:false,code:'invalid-command',reason:'Terminez l’expédition du second site avant un autre voyage.'};
+  const local=isSecondaryContext(world)?world:selectedMap(world);
+  const result=applyLocalCommand(local,command);
+  if(isSecondaryContext(local))flushSecondaryContext(local);
+  return result;
+}
+type LocalCommand=Exclude<Command,SecondarySiteCommand>;
+function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
   const result=applyCommandInternal(world,command);
   if(result.ok){
     reconcileAllowedAreas(world);
@@ -453,7 +468,7 @@ export function applyCommand(world: World, command: Command): CommandResult {
   if(result.ok)reconcileSpikeTrapContacts(world);
   return result;
 }
-function applyCommandInternal(world: World, command: Command): CommandResult {
+function applyCommandInternal(world: World, command: LocalCommand): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
   if(command.type==='cancel-job'||command.type==='cancel-resource'||command.type==='cancel-pile')return applyDesignationCancel(world,command)??refusal('invalid-command','Annulation inconnue.');
   if(command.type==='extract-tree'||command.type==='replant-tree')return applyTreeCommand(world,command)!;
@@ -490,7 +505,7 @@ function applyCommandInternal(world: World, command: Command): CommandResult {
   const scoutId=scoutOnMapId(world)??commercialOnMapId(world);
   if(scoutId!==null&&actors.includes(scoutId)&&(typeof command.type==='string'&&command.type.startsWith('order-')||['clear-orders','draft','draft-move','draft-stop','shoot','melee','clean-room'].includes(command.type)))
     return refusal('invalid-command','Terminez ou annulez le voyage et son déchargement avant de donner un autre ordre à ce colon.');
-  const traveler=scoutPawn(world)??commercialPawn(world);
+  const traveler=scoutPawn(campaignAuthority(world))??commercialPawn(campaignAuthority(world));
   if(traveler&&'policyId' in command&&command.policyId===traveler.foodPolicyId
     &&(command.type==='food-policy-delete'||command.type==='food-policy-update'&&Array.isArray(command.allowed)&&!command.allowed.includes('survival-meal')))
     return refusal('invalid-command','Ce régime est engagé pour le voyage : conservez les repas de survie jusqu’au retour ou à l’annulation.');
@@ -820,7 +835,23 @@ function environmentCache(world:World):WorkEnvironmentCache {
 }
 const readPlantLight=(world:World):LightEnvironment=>environmentCache(world).readLight(world);
 const plantLightSourcesKey=(world:World):string=>lightSources(world).map(s=>`${s.cell}:${s.radius}:${s.red}:${s.green}:${s.blue}:${s.overlightRadius??0}`).join('|');
-export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-planner.ts').SearchStats): void {
+export function stepWorld(world:World,ticks=1,diagnostics?:import('./work-planner.ts').SearchStats):void {
+  if(!Number.isInteger(ticks)||ticks<0||ticks>100000)throw new Error('Tick count must be an integer between 0 and 100000.');
+  const root=campaignAuthority(world);
+  if(!root.secondarySite){stepLocalWorld(root,ticks,diagnostics);return;}
+  // One clock/allocator/PRNG, stable home-then-secondary order. Every map uses
+  // the genuine local engine and receives each confirmed campaign tick once.
+  for(let i=0;i<ticks;i++){
+    stepLocalWorld(root,1,diagnostics);
+    const local=secondaryContext(root)!;
+    stepLocalWorld(local,1,diagnostics,false);
+    // Both maps must observe the same exact Core end boundary before a
+    // shared solar condition expires. The single-map historical order stays.
+    advanceWorldIncidents(root);
+    flushSecondaryContext(root);
+  }
+}
+function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-planner.ts').SearchStats,advanceClock=true): void {
   if (!Number.isInteger(ticks) || ticks < 0 || ticks > 100000) throw new Error('Tick count must be an integer between 0 and 100000.');
   if(!ticks)return;
   // Old profiles start this new stream prospectively, when play resumes.
@@ -830,24 +861,24 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
   adoptShortCircuits(world);
   adoptCropBlights(world);
   adoptDeepResources(world);adoptOrbital(world);
-  adoptWorldIncidents(world);
+  if(!isSecondaryContext(world))adoptWorldIncidents(world);
   adoptSmallIncidents(world);
   adoptRainElectrical(world);
   let thermal=reconcileTemperature(world);reconcilePlantLighting(world,()=>readPlantLight(world));updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);
   for (let step = 0; step < ticks; step++) {
     flushColonyLosses(world);
-    world.tick++;finishSnowSteps(world);
+    if(advanceClock)world.tick++;finishSnowSteps(world);
     let light:LightEnvironment|undefined,lightKey:string|undefined;
     const getLight=()=>{if(!light){light=readPlantLight(world);lightKey=plantLightSourcesKey(world);}return light;};
     advanceHumanAges(world);
     sampleColonyEconomy(world);
     advanceArrivals(world);advanceHeatwaves(world);advanceMiscIncidents(world);advanceSmallIncidents(world);advanceVisitors(world);advancePodRescues(world);advanceFluIncidents(world);
     const beforeWeather=world.structures;
-    advanceSurfaceWeather(world,cell=>{const c={type:'designate' as const,kind:'chop' as const,...cell};if(canDesignate(world,c).ok)applyCommand(world,c);});
+    advanceSurfaceWeather(world,cell=>{const c={type:'designate' as const,kind:'chop' as const,...cell};if(canDesignate(world,c).ok)applyLocalCommand(world,c);});
     if(beforeWeather!==world.structures)thermal=reconcileTemperature(world);
     advancePower(world);advanceHydroponics(world);advanceOrbital(world);
     advanceCropBlight(world);
-    advanceWorldIncidents(world);
+    if(!isSecondaryContext(world)&&!world.secondarySite)advanceWorldIncidents(world);
     const beforeElectricalRain=world.structures;
     advanceRainElectrical(world);
     if(beforeElectricalRain!==world.structures)thermal=reconcileTemperature(world);
@@ -1151,7 +1182,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
     if(world.hunting)world.hunting.targets=world.hunting.targets.filter(id=>world.wildlife?.animals.some(a=>a.id===id&&a.state!=='dead')||world.pawns.some(p=>p.hunting?.animalId===id));
     // Death is captured before an active traveller becomes an immutable archive.
     if(world.schemaVersion>=236)advanceMinifiedTrees(world);
-    advanceScoutTrip(world);advanceCommercialTrip(world);advanceGroup(world);
+    advanceScoutTrip(world);advanceCommercialTrip(world);if(!isSecondaryContext(world))advanceGroup(world);
     advanceStartingArrival(world);if(world.schemaVersion<236)advanceMinifiedTrees(world);
     refreshStock(world);reconcileSpikeTrapContacts(world);
     if(thermalDirty)thermal=reconcileTemperature(world);

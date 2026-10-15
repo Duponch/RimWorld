@@ -1,4 +1,6 @@
 import { V91_ITEM_IDS,V190_ITEM_IDS } from './biome-items.ts';
+import { campaignPhysicalCaptures } from './campaign-people.ts';
+import { otherCampaignMap } from './secondary-site-context.ts';
 import { isCarePatient } from './affiliation.ts';
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import type { CommandResult, Pawn, World } from './types.ts';
@@ -31,6 +33,11 @@ export function foodAllowed(world: World, pawn: Pawn, item: ItemId): boolean {
 export const allowedFood = (world: World, pawn: Pawn): readonly FoodItemId[] => allowedFoodFromPolicies(world.foodPolicies,pawn);
 export const allowedFoodFromPolicies=(policies:readonly FoodPolicy[],pawn:Pawn):readonly FoodItemId[]=>pawn.mental?.crisis?FOOD_ITEMS:policies.find(policy=>policy.id===pawn.foodPolicyId)?.allowed??[];
 
+/** The registry is shared, but each person remains in their physical map or
+ * travelling owner. Frozen archives retain their historical policy IDs. */
+const policyUsers=(world:World):readonly Pawn[]=>otherCampaignMap(world)?campaignPhysicalCaptures(world).flatMap(({owners})=>[...owners.local,...owners.away].map(slot=>slot.pawn!)):
+  world.group&&'members' in world.group?[...world.pawns,...world.group.members]:world.pawns;
+
 /** Policy IDs have their own namespace: migrations never renumber entities. */
 export function applyFoodPolicyCommand(world: World, command: FoodPolicyCommand): CommandResult {
   const invalid = (reason: string): CommandResult => ({ok: false, code: 'invalid-command', reason});
@@ -46,18 +53,18 @@ export function applyFoodPolicyCommand(world: World, command: FoodPolicyCommand)
   if (command.type === 'food-policy-update') {
     if (!validPolicyName(command.name) || !validAllowedFood(command.allowed)) return invalid('Nom ou liste des aliments invalide.');
     policy.name = command.name.trim(); policy.allowed = FOOD_ITEMS.filter(id => command.allowed.includes(id));
-    const users=world.group&&'members' in world.group?[...world.pawns,...world.group.members]:world.pawns;
+    const users=policyUsers(world);
     for (const pawn of users) if (pawn.foodPolicyId === policy.id) pawn.needCooldown = 0;
   } else if (command.type === 'food-policy-assign') {
     const pawn = world.pawns.find(p => p.id === command.pawnId);
     if (!pawn) return invalid('Colon introuvable.');
     pawn.foodPolicyId = policy.id; pawn.needCooldown = 0;
   } else {
-    const users=world.group&&'members' in world.group?[...world.pawns,...world.group.members]:world.pawns;
+    const users=policyUsers(world);
     if (users.some(p => isCarePatient(p)&&p.foodPolicyId === policy.id)) return invalid('Ce régime est utilisé : réaffectez ses utilisateurs avant de le supprimer.');
     if (world.foodPolicies.length === 1) return invalid('Conservez au moins un régime.');
     world.foodPolicies.splice(world.foodPolicies.indexOf(policy), 1);
-    for(const p of world.pawns)if(!isCarePatient(p)&&p.foodPolicyId===policy.id)p.foodPolicyId=world.foodPolicies[0]!.id;
+    for(const p of users)if(!isCarePatient(p)&&p.foodPolicyId===policy.id)p.foodPolicyId=world.foodPolicies[0]!.id;
   }
   // An accepted meal remains committed. Filtering applies at the next food choice,
   // independently of hauling, ingredient permissions and preservation.

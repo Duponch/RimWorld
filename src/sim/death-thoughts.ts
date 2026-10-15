@@ -1,5 +1,6 @@
 import { factionOf,factionRelation,isColonist,distanceSquared } from './affiliation.ts';
 import { captureHumanOwners,type HumanOwnershipCapture,type HumanOwnerSlot } from './human-owners.ts';
+import { campaignPhysicalCaptures } from './campaign-people.ts';
 import { captureWorldShotGrid } from './combat-world.ts';
 import { clearShotSegment,type ShotGrid } from './combat-space.ts';
 import { pawnBody } from './health-rules.ts';
@@ -41,18 +42,19 @@ export function notifyDeathThoughts(world:World,deceased:Pawn,capture?:HumanOwne
   const owners=capture??captureHumanOwners(world),victim=owners.byId.get(deceased.id);
   if(victim?.pawn!==deceased)return;
   let grid:ShotGrid|undefined;
-  const witnessed=(slot:HumanOwnerSlot,p:Pawn):boolean=>{
+  const witnessed=(slot:HumanOwnerSlot,p:Pawn,observerWorld:World):boolean=>{
     if(!deathObserverAwake(p))return false;
+    if(observerWorld!==world)return false;
     if(victim.groupId!==undefined)return slot.groupId===victim.groupId;
     if(victim.kind!=='map'||slot.kind!=='map'||distanceSquared(p,deceased)>=12**2)return false;
     grid??=captureWorldShotGrid(world,{minX:deceased.x-12,minZ:deceased.z-12,maxX:deceased.x+12,maxZ:deceased.z+12});
     return clearShotSegment(grid,deceased,p);
   };
   const family=relationshipIndex(world);
-  for(const slot of [...owners.local,...owners.away]){
+  for(const {world:observerWorld,owners:physical} of campaignPhysicalCaptures(world))for(const slot of [...physical.local,...physical.away]){
     const p=slot.pawn!;if(p===deceased||!deathThoughtObserver(p)||p.social?.fight?.opponentId===deceased.id)continue;
     const bloodlust=p.traits?.includes('bloodlust');
-    if(witnessed(slot,p)){
+    if(witnessed(slot,p,observerWorld)){
       if(bloodlust)rememberDeathThought(p,'witnessed-bloodlust-death',deceased.id,world.tick);
       else {
         if(factionOf(p)===factionOf(deceased)&&!deceased.visitor)rememberDeathThought(p,'witnessed-ally-death',deceased.id,world.tick);

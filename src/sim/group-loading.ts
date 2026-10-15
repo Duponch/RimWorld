@@ -158,11 +158,11 @@ export function prepareGroupDeparture(world:World,planet:PlanetState,group:Prepa
   const result=captureGroupDeparture(world,group,authority);if(result.kind!=='ready')return result;
   const capture=result.capture;
   if(authority.personalPassTick(world,capture.members)!==world.tick)return fail('personal-pass');
-  const route=findPlanetRoute(planet,planet.homeTile,group.destination,planetCostContext(world,capture.mass),budget);
+  const route=findPlanetRoute(planet,group.originTile??planet.homeTile,group.destination,planetCostContext(world,capture.mass),budget);
   if(route.kind==='deferred')return {kind:'deferred'};if(route.kind!=='found')return fail('unreachable');
-  const next:AwayGroup={id:group.id,startedAt:group.startedAt,destination:group.destination,ledger:group.ledger,phase:'travelling',
+  const next:AwayGroup={...group.originTile!==undefined?{originTile:group.originTile}:{},id:group.id,startedAt:group.startedAt,destination:group.destination,ledger:group.ledger,phase:'travelling',
     members:[...capture.members],items:[...capture.items],departedAt:world.tick,lastPersonalTick:world.tick,baseline:capture.baseline,
-    entry:{...capture.exitCells[0]!.cell},tile:planet.homeTile,route:route.tiles,segment:null,paused:false,stop:null};
+    entry:{...capture.exitCells[0]!.cell},tile:group.originTile??planet.homeTile,route:route.tiles,segment:null,paused:false,stop:null};
   const plan:GroupDeparturePlan={group,expectedGroup:JSON.stringify(group),capture,next};
   const reason=authority.departureReason(world,plan);return reason?fail(reason):{kind:'ready',plan};
 }

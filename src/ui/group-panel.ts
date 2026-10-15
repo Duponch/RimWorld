@@ -1,6 +1,7 @@
 /** Group travel DOM: all state and eligibility come from confirmed authority projections.
  * All eligibility, route, capacity and price decisions belong to injected
  * projections of the same confirmed snapshot as the authority. */
+import type {SecondarySiteCommand} from '../sim/secondary-site-state.ts';
 import type {MaterialPile,Pawn,World} from '../sim/types.ts';
 import {TICKS_PER_DAY} from '../sim/types.ts';
 import {ITEM_DEFINITIONS} from '../sim/items.ts';
@@ -37,7 +38,7 @@ export interface GroupPanelAdapters {
   previewRoute(snapshot:GroupPanelSnapshot,facts:GroupPanelFacts,destination:number):RoutePreview;
   quoteTrade(snapshot:GroupPanelSnapshot,facts:GroupPanelFacts,direction:'buy'|'sell',lines:CommercialBuyLine[]):TradePreview;
   /** Resolution/rejection must follow the authoritative correlated ack. */
-  send(command:GroupCommand):Promise<unknown>;
+  send(command:GroupCommand|SecondarySiteCommand):Promise<unknown>;
   inspectPresentPawn?(pawnId:number):void;
 }
 export interface GroupPanel {
@@ -85,9 +86,9 @@ function phaseLabel(s:GroupPanelSnapshot):string {
     case 'loading':return `Chargement au contact : ${g.cursor}/${g.manifest.length} prises terminées. Les personnes sont encore dans la colonie.`;
     case 'leaving':return 'Sortie physique du groupe avec les biens réellement pris.';
     case 'travelling':return `Groupe à ${s.planet?planetTileLabel(s.planet,g.tile):'géographie absente'}.${g.segment?` Segment engagé : ${hours(g.segment.remainingCore)} restantes.`:''}`;
-    case 'at-site':return s.planet&&g.tile===s.planet.civilianTile?'Groupe arrivé au comptoir civil. Le stock et les fonds du poste sont finis.':'Groupe arrivé à la case choisie. Aucun camp ni comptoir n’est créé à cette halte.';
+    case 'at-site':return s.planet&&g.tile===s.planet.civilianTile?'Groupe arrivé au comptoir civil. Le stock et les fonds du poste sont finis.':'Groupe arrivé à la case choisie. Une carte locale peut être ouverte pour cette expédition.';
     case 'awaiting-entry':return 'Groupe au foyer, en attente de cellules de rentrée accessibles.';
-    case 'unloading':return `Retour accompli. ${g.pendingPileIds.length} piles attendent un dépôt physique.`;
+    case 'unloading':return `${s.world.expeditionSite?'Entrée sur le second site.':'Retour accompli.'} ${g.pendingPileIds.length} piles attendent un dépôt physique.`;
   }
 }
 function quantityLines(values:ReadonlyMap<number,string>):CommercialBuyLine[] {
@@ -115,7 +116,13 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
   function button(label:string,action:GroupAction){const b=document.createElement('button');b.type='button';b.textContent=label;b.dataset.groupAction=action;actions.append(b);return b;}
   const adopt=button('Ouvrir le globe','adopt'),start=button('Former le groupe','start'),cancel=button('Annuler la formation','cancel'),pause=button('Suspendre la marche','pause'),change=button('Adopter cette route','route'),back=button('Revenir au foyer','return'),unload=button('Décharger les biens portés','unload');
   function section(label:string,parent:HTMLElement=details){const box=document.createElement('section'),title=document.createElement('h3');title.textContent=label;box.append(title);parent.append(box);return box;}
-  details.append(origin,status,stop,mass,routeText,previews,actions);
+  const siteActions=document.createElement('div');siteActions.className='group-actions';
+  const enterSite=document.createElement('button'),showHome=document.createElement('button'),showSite=document.createElement('button'),elsewhere=document.createElement('p');
+  for(const b of [enterSite,showHome,showSite])b.type='button';
+  enterSite.textContent='Entrer sur la carte';showHome.textContent='Afficher le foyer';showSite.textContent='Afficher le second site';
+  enterSite.dataset.siteAction='enter';showHome.dataset.siteAction='home';showSite.dataset.siteAction='secondary';
+  siteActions.append(enterSite,showHome,showSite);elsewhere.dataset.campaignElsewhere='';
+  details.append(origin,status,stop,mass,elsewhere,siteActions,routeText,previews,actions);
   const peopleBox=section('Personnes'),sourceBox=section('Sources au sol'),possessionsBox=section('Biens portés'),tradeBox=section('Commerce'),lossesBox=section('Décès hors carte');
   const chosen=document.createElement('p');chosen.dataset.groupChosen='';peopleBox.append(chosen);
   const removeUnavailable=document.createElement('button');removeUnavailable.type='button';removeUnavailable.textContent='Retirer les choix devenus indisponibles';removeUnavailable.dataset.groupDraftCleanup='';peopleBox.append(removeUnavailable);
@@ -134,8 +141,8 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
   function permission(action:GroupAction):string|undefined {return lockReason()??(!facts?'Les projections métier sont indisponibles.':facts.actions[action].ok?undefined:facts.actions[action].reason??'Action indisponible.');}
   function available(b:HTMLButtonElement,reason:string|undefined){b.setAttribute('aria-disabled',String(!!reason));setTooltip(b,{body:reason??'Appliquer la commande au monde confirmé.'});}
   function updateRequest(){const message=lockReason();request.hidden=!message;request.textContent=message??'';}
-  async function send(action:GroupAction,command:GroupCommand){
-    if(permission(action))return;
+  async function send(action:GroupAction|null,command:GroupCommand|SecondarySiteCommand){
+    if(action===null?lockReason():permission(action))return;
     const token=generation;busy=true;updateLocks();
     try{await adapters.send(command);if(token!==generation||disposed)return;error.hidden=true;}
     catch(cause){
@@ -207,7 +214,14 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
   const lossesTable=paged<GroupLoss>(lossesBox,['Personne','Lieu / décès confirmé','Biens retenus'],x=>x.pawn.id,()=>{const {row,cells}=rowCells(3);return {row,paint(loss){cells[0]!.textContent=loss.pawn.name;cells[1]!.textContent=`${planetTileLabel(snapshot!.planet!,loss.tile)} · J${(loss.tick/TICKS_PER_DAY).toLocaleString('fr-FR',{maximumFractionDigits:2})}`;cells[2]!.textContent=loss.items.slice(0,8).map(p=>`${p.quantity} ${itemLabel(p)} (#${p.id})`).join(', ')+(loss.items.length>8?` · ${loss.items.length-8} autres piles retenues`:'');if(!loss.items.length)cells[2]!.textContent='Aucun bien retenu';}};},8);
 
   function updateLocks(){
-    updateRequest();for(const [action,b] of buttons){const previewReason=action==='start'&&!plan?.ok?'Le plan doit être admissible.':action==='route'&&!routePreview?.ok?'La route doit être admissible.':action==='buy'&&!shownBuy||action==='sell'&&!shownSell?'Le panier doit disposer d’un devis courant.':undefined;available(b,permission(action)??previewReason);}
+    updateRequest();
+    const view=snapshot?.world.campaignMap,g=snapshot?.group,atFreeSite=groupAway(g)&&g.phase==='at-site'&&g.tile!==snapshot?.planet?.civilianTile;
+    enterSite.hidden=!atFreeSite;
+    showHome.hidden=!view||view.active==='home';showSite.hidden=!view||view.active==='secondary';
+    const tile=atFreeSite?snapshot?.planet?.tiles[g.tile]:undefined;
+    available(enterSite,lockReason()??(view?.visitIds.length?'Une expédition est déjà sur place.':tile?.hilliness==='mountainous'?'Le relief montagneux ne possède pas encore de carte locale.':view&&groupAway(g)&&g.tile!==view.secondaryTile?'Cette première boucle conserve un seul second site.':undefined));
+    available(showHome,lockReason());available(showSite,lockReason());
+    for(const [action,b] of buttons){const previewReason=action==='start'&&!plan?.ok?'Le plan doit être admissible.':action==='route'&&!routePreview?.ok?'La route doit être admissible.':action==='buy'&&!shownBuy||action==='sell'&&!shownSell?'Le panier doit disposer d’un devis courant.':undefined;available(b,permission(action)??previewReason);}
     available(removeUnavailable,lockReason()??(snapshot?.group?'Le groupe est déjà engagé.':undefined));peopleTable.refresh();sourceTable.refresh();buyTable.refresh();sellTable.refresh();
     available(checkFormation,permission('start')??(destination===null?'Choisissez une destination.':undefined));
     available(checkRoute,permission('route')??(destination===null?'Choisissez une destination.':undefined));
@@ -216,7 +230,7 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
     if(!snapshot||!facts){updateLocks();return;}
     selectionNotes.textContent='';
     try{
-      if(destination===null&&snapshot.planet)destination=snapshot.planet.civilianTile;
+      if(destination===null&&snapshot.planet)destination=snapshot.world.expeditionSite?snapshot.planet.homeTile:snapshot.planet.civilianTile;
       const projected=facts.mass??(plan?.ok?plan.mass:null);mass.textContent=projected?`Charge ${kg(projected.grams)} / ${kg(projected.capacityGrams)} · ${projected.rations} rations${facts.mass?' possédées.':' prévues au départ (estimation à vérifier au lancement).'}`:'Charge non calculée : vérifiez la formation choisie.';
       if(plan&&!plan.ok)selectionNotes.textContent=plan.reason;
       const stamp=previewTick!==undefined?` Estimation au J${(previewTick/TICKS_PER_DAY).toLocaleString('fr-FR',{maximumFractionDigits:2})}, revalidée à la commande.`:'';
@@ -247,6 +261,9 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
     try{routePreview=adapters.previewRoute(snapshot,facts,destination);plan=undefined;previewTick=snapshot.world.tick;renderDraft();}
     catch(cause){invalidatePreview();error.hidden=false;error.textContent=cause instanceof Error?cause.message:String(cause);renderDraft();}
   },{signal:abort.signal});
+  enterSite.addEventListener('click',()=>{if(enterSite.getAttribute('aria-disabled')!=='true')void send(null,{type:'secondary-enter'});},{signal:abort.signal});
+  showHome.addEventListener('click',()=>void send(null,{type:'secondary-view',site:'home'}),{signal:abort.signal});
+  showSite.addEventListener('click',()=>void send(null,{type:'secondary-view',site:'secondary'}),{signal:abort.signal});
   adopt.addEventListener('click',()=>void send('adopt',{type:'planet-adopt'}),{signal:abort.signal});
   start.addEventListener('click',()=>{if(permission('start')||!plan?.ok||!snapshot||!facts||destination===null)return;try{const lines=quantityLines(sources),draft={memberIds:[...selected],destination,sources:lines};const check=adapters.previewPlan(snapshot,facts,draft);if(!check.ok)throw Error(check.reason);void send('start',{type:'group-start',...draft});}catch(cause){invalidatePreview();error.hidden=false;error.textContent=cause instanceof Error?cause.message:String(cause);renderDraft();}},{signal:abort.signal});
   cancel.addEventListener('click',()=>void send('cancel',{type:'group-cancel'}),{signal:abort.signal});
@@ -257,6 +274,7 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
   return {
     update(next){
       if(snapshot?.group?.id!==next.group?.id||snapshot?.group?.phase!==next.group?.phase)invalidatePreview();
+      if(next.world.expeditionSite&&next.planet)destination=next.planet.homeTile;
       snapshot=next;facts=undefined;
       try{
         const captured=adapters.capture(next);for(const key of ['adopt','start','cancel','pause','route','return','buy','sell','unload'] as const)if(!captured.actions[key])throw Error(`Projection d'action manquante : ${key}.`);
@@ -265,6 +283,10 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
         for(const c of captured.candidates)if(!next.world.pawns.includes(c.pawn))throw Error('Un candidat ne référence pas une vraie personne présente.');
         if(next.group&&!captured.mass)throw Error('La projection de masse du groupe est manquante.');
         facts=captured;globe.setPlanet(next.planet);origin.textContent=next.planet?`Origine : ${captured.originLabel} · ${planetTileLabel(next.planet,captured.originTile)}`:'La géographie persistée doit être adoptée pour préparer un voyage.';
+        const remote=next.world.expeditionSite,elsewherePeople=next.world.campaignPeople?.filter(p=>p.status==='away')??[];
+        intro.textContent=remote?'Second site persistant. Les travaux ordinaires et les besoins continuent sur les deux cartes. Pour rentrer, choisissez tous les membres vivants, les provisions au sol, puis formez la caravane vers le foyer.':'Choisissez les personnes et les biens réels. Rassemblement, chargement et sortie se déroulent sur leur carte.';
+        start.textContent=remote?'Former la caravane de retour':'Former le groupe';
+        elsewhere.textContent=elsewherePeople.length?'Sur l’autre carte, indisponibles ici : '+elsewherePeople.map(p=>p.name).join(', ')+'.':'';
         status.textContent=phaseLabel(next);stop.textContent=stopLabel(next);stop.hidden=!stop.textContent;
         adopt.hidden=!!next.planet;start.hidden=!!next.group||!next.planet;cancel.hidden=!next.group;pause.hidden=!groupAway(next.group);change.hidden=!groupAway(next.group);back.hidden=!groupAway(next.group);unload.hidden=!!next.group||!selected.size;
         checkFormation.hidden=!!next.group||!next.planet;checkRoute.hidden=!groupAway(next.group);

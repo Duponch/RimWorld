@@ -83,6 +83,8 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState):stri
   const raw=world as unknown as Record<string,unknown>,errors:string[]=[];
   const fail=(message:string)=>errors.push(message);
   const group=raw.group,losses=raw.groupLosses;
+  const originPresent=object(group)&&Object.hasOwn(group,'originTile');
+  const commonKeys=originPresent&&version>=240?[...COMMON,'originTile']:COMMON;
   const point=(v:unknown)=>object(v)&&keys(v,['x','z'])&&int(v.x,0,world.width-1)&&int(v.z,0,world.height-1);
   const place=(v:unknown)=>int(v,0,planet.tiles.length-1)&&planet.tiles[v]!.biome!=='ocean';
   const thing=(v:unknown)=>int(v,1,world.nextId-1);
@@ -168,10 +170,12 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState):stri
     }
   }
   if(group!==undefined){
+    if(originPresent&&(version<240||!object(group)||!place(group.originTile)||group.originTile===planet.homeTile
+      ||group.originTile!==(world.expeditionSite?.tile??world.secondarySite?.tile??world.campaignMap?.secondaryTile)))return ['Invalid group origin map.'];
     if(!object(group)||!groupId(group.id)||!int(group.startedAt,planet.adoptedAt,world.tick)||!place(group.destination)||!ledger(group.ledger))
       return ['Invalid group identity or ledger.'];
     if(oneOf(group.phase,['gathering','loading','leaving'])){
-      if(!keys(group,[...COMMON,...PREPARING])||!ids(group.memberIds)||!point(group.rendezvous)
+      if(!keys(group,[...commonKeys,...PREPARING])||!ids(group.memberIds)||!point(group.rendezvous)
         ||!dense(group.meeting,(group.memberIds as number[]).length,(group.memberIds as number[]).length)
         ||!dense(group.exits,(group.memberIds as number[]).length,(group.memberIds as number[]).length)
         ||!dense(group.manifest,0,512)||!int(group.cursor,0,group.manifest.length))return ['Invalid group formation shape.'];
@@ -209,11 +213,11 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState):stri
         ||l.cargoLoaded.cloth!==loaded.cloth||l.cargoLoaded['muffalo-wool']!==loaded['muffalo-wool']||l.foodConsumed!==0||l.medicineUsed!==0
         ||l.silverPaid!==0||l.silverEarned!==0||l.sold.cloth!==0||l.sold['muffalo-wool']!==0||l.bought.medicine!==0||l.bought.component!==0)return ['Invalid formation contact ledger.'];
     }else if(group.phase==='unloading'){
-      if(!keys(group,[...COMMON,'memberIds','pendingPileIds'])||!ids(group.memberIds)||!ids(group.pendingPileIds,1,256*GROUP_MAX_MEMBERS))return ['Invalid group unloading shape.'];
+      if(!keys(group,[...commonKeys,'memberIds','pendingPileIds'])||!ids(group.memberIds)||!ids(group.pendingPileIds,1,256*GROUP_MAX_MEMBERS))return ['Invalid group unloading shape.'];
       const members=group.memberIds as number[];
       if(members.some(id=>!localById.has(id))||(group.pendingPileIds as number[]).some(id=>!world.piles.some(p=>p.id===id&&p.owner.type==='inventory'&&members.includes(p.owner.pawnId))))return ['Invalid group unloading possession.'];
     }else if(oneOf(group.phase,['travelling','at-site','awaiting-entry'])){
-      if(!keys(group,[...COMMON,...AWAY])||!dense(group.members,1,GROUP_MAX_MEMBERS)||!baseline(group.baseline)||!point(group.entry)
+      if(!keys(group,[...commonKeys,...AWAY])||!dense(group.members,1,GROUP_MAX_MEMBERS)||!baseline(group.baseline)||!point(group.entry)
         ||!int(group.departedAt,group.startedAt as number,world.tick)||group.lastPersonalTick!==world.tick||!place(group.tile)
         ||typeof group.paused!=='boolean'||!dense(group.route,1,162))return ['Invalid away group shape or clock.'];
       for(const p of group.members)if(!person(p,world.tick,false))return ['Invalid away group person.',...errors];

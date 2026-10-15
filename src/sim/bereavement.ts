@@ -1,4 +1,5 @@
 import { captureHumanOwners } from './human-owners.ts';
+import { campaignLivingObservers } from './campaign-people.ts';
 import { isColonist } from './affiliation.ts';
 import { opinionOf } from './social-state.ts';
 import { TICKS_PER_DAY,type Pawn,type World } from './types.ts';
@@ -22,12 +23,11 @@ export function notifyPawnDeath(world:World,deceased:Pawn):void {
   if(known?.pawn!==deceased||deceased.state!=='dead'||!deceased.health?.death)return;
   notifyDeathThoughts(world,deceased,owners);
   notifyFamilyDeath(world,deceased);
-  for(const slot of [...owners.local,...owners.away]){
-    const observer=slot.pawn!;
+  for(const {pawn:observer,world:observerWorld} of campaignLivingObservers(world)){
     if(observer===deceased||!isColonist(observer)||observer.prisoner||observer.state==='dead')continue;
     expireBereavement(observer,world.tick);
     if(observer.bereavement?.some(memory=>memory.otherId===deceased.id))continue;
-    const opinion=opinionOf(observer,deceased.id,world.tick,world);
+    const opinion=opinionOf(observer,deceased.id,world.tick,observerWorld);
     const kind:DeathMemoryKind|undefined=opinion>=20?'friend-died':opinion<=-20?'rival-died':undefined;
     if(!kind)continue;
     const memories=observer.bereavement??=[];

@@ -18,7 +18,8 @@ export interface StartingSiteClimate {
   calendarOrigin:number;
   definition:ClimateDefinition;
 }
-export type SiteClimate=ReferenceSiteClimate|StartingSiteClimate;
+export interface ExpeditionSiteClimate {revision:3;adoptedAt:number;calendarOrigin:number;definition:ClimateDefinition}
+export type SiteClimate=ReferenceSiteClimate|StartingSiteClimate|ExpeditionSiteClimate;
 
 export type ClimateProfile='temperate-reference'|'boreal-reference'|'arid-reference'|'tundra-preset';
 export interface ClimateDefinition {meanTemperature:number;amplitude:number;rainfall:number;latitude:number;longitude:number}
@@ -40,7 +41,7 @@ export const CLIMATE_DEFINITIONS:Readonly<Record<ClimateProfile,ClimateDefinitio
   'temperate-reference':TEMPERATE_CLIMATE,'boreal-reference':BOREAL_CLIMATE,'arid-reference':ARID_CLIMATE,'tundra-preset':TUNDRA_CLIMATE,
 });
 const climateForBiome:Readonly<Record<BiomeId,ClimateProfile>>={'temperate-forest':'temperate-reference','boreal-forest':'boreal-reference','arid-shrubland':'arid-reference',tundra:'tundra-preset'};
-export const siteClimateDefinition=(world:Pick<World,'climate'>):ClimateDefinition=>world.climate?.revision===2?
+export const siteClimateDefinition=(world:Pick<World,'climate'>):ClimateDefinition=>world.climate&&(world.climate.revision===2||world.climate.revision===3)?
   world.climate.definition:CLIMATE_DEFINITIONS[world.climate?.profile??'temperate-reference'];
 
 /** Persist only the tile's actual climate and its geographic seasonal amplitude. */
@@ -142,8 +143,8 @@ export function seasonalOutdoorTemperature(world:ClimateWorld,tick=world.tick):n
 }
 
 export function climateDate(world:ClimateWorld):{year:number;day:number;quadrum:number;season:string} {
-  const civil=climateTick(world),day=Math.floor(civil/TICKS_PER_DAY)%60;
-  const seasonOffset=world.climate?.revision===2&&world.climate.definition.latitude<0?2:0;
+  const civil=climateTick(world),day=((Math.floor(civil/TICKS_PER_DAY)%60)+60)%60;
+  const seasonOffset=world.climate&&(world.climate.revision===2||world.climate.revision===3)&&world.climate.definition.latitude<0?2:0;
   return {year:5500+Math.floor(civil/TICKS_PER_YEAR),day:day%15+1,quadrum:Math.floor(day/15),
     season:['Printemps','Été','Automne','Hiver'][(Math.floor(day/15)+seasonOffset)%4]!};
 }

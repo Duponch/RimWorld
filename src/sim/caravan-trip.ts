@@ -69,9 +69,9 @@ export function scoutUnloadEligible(w:World,p:Pawn):string|null {
 }
 
 /** A preparation can continue walking while these safety conditions hold. */
-export function scoutPreparationReason(w:World,p:Pawn):string|null {
+export function scoutPreparationReason(w:World,p:Pawn,requireResident=true):string|null {
   if(!w.pawns.includes(p)||!isColonist(p)||p.prisoner||p.visitor||p.state==='dead'||p.state==='downed')return 'Choisissez un colon libre et présent.';
-  if(w.pawns.filter(other=>other!==p&&isColonist(other)&&!other.prisoner&&other.state!=='dead'&&other.state!=='downed'&&!other.mental?.crisis).length===0)return 'Un autre colon capable doit rester sur la carte.';
+  if(requireResident&&w.pawns.filter(other=>other!==p&&isColonist(other)&&!other.prisoner&&other.state!=='dead'&&other.state!=='downed'&&!other.mental?.crisis).length===0)return 'Un autre colon capable doit rester sur la carte.';
   if(acuteCondition(p))return 'Le colon doit être sain avant de partir.';
   if(p.rest<50||p.hunger<=20||p.collapsePending)return 'Le colon doit être reposé et nourri avant le départ.';
   if(unstable(p,w))return 'Le colon est mobilisé, en crise ou engagé dans un combat.';

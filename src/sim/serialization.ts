@@ -203,12 +203,22 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 
 /** Structural validation first, cross-reference validation second; accepts arbitrary JSON without throwing. */
 export function validateWorld(input: unknown): string[] {
-  return validateSchema(input, SCHEMA_VERSION);
+  try{
+    if(!validSecondarySiteShape(input,SCHEMA_VERSION))return ['Invalid or future second-site authority.'];
+    const homeIds=new Set<number>(),errors=validateSchema(input,SCHEMA_VERSION,true,homeIds);
+    if(errors.length||!record(input))return errors;
+    const local=secondaryMapForValidation(input as unknown as World);if(!local)return errors;
+    const localIds=new Set<number>(),secondaryErrors=validateSchema(local,SCHEMA_VERSION,true,localIds);
+    if(secondaryErrors.length)return secondaryErrors.map(e=>'Second site: '+e);
+    for(const id of localIds)if(homeIds.has(id))errors.push('Thing identity owned by both campaign maps.');
+    return errors;
+  }catch{return ['Invalid second-site records or owner namespace.'];}
 }
-function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239, relationshipContext = true): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240, relationshipContext = true,registeredIds?:Set<number>): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(raw)) return ['World must be an object.'];
+  if(!validSecondarySiteShape(raw,version))return ['Invalid or future second-site authority.'];
   if(!tundraHistoricalFieldsAbsent(raw,version))return ['Future tundra provenance.'];
   if(!snowHistoricalFieldsAbsent(raw,version))return ['Future snow content.'];
   const arrivalErrors=validateStartingArrivalOwners(raw as unknown as World,version);
@@ -226,8 +236,8 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if (!integer(input.logisticsCursor, 0)) errors.push('Invalid logistics search cursor.');
   if (!validMapDimension(input.width) || !validMapDimension(input.height)) return [...errors, 'Invalid dimensions.'];
   if(!validScenario(input.scenario,version,input.width,input.height))errors.push('Invalid scenario provenance for schema.');
-  if(!validGameProfile(input.gameProfile,version,input.scenario))errors.push('Invalid game profile for schema.');
-  if(!validSite(input.site,version,input.scenario as World['scenario']))errors.push('Invalid local site provenance for schema.');
+  if(!validGameProfile(input.gameProfile,version,input.scenario,input.expeditionSite!==undefined))errors.push('Invalid game profile for schema.');
+  if(!validSite(input.site,version,input.scenario as World['scenario'],input.expeditionSite!==undefined))errors.push('Invalid local site provenance for schema.');
   if(!validSiteClimate(input.climate,version,input as unknown as World))errors.push('Invalid site climate for schema.');
   const size = input.width * input.height;
   if(!validPodRescueShape(input.podRescues,version,input as unknown as World))errors.push('Invalid or future pod rescue state for schema.');
@@ -342,7 +352,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if(groupErrors.length)return groupErrors;
   const planetErrors=validatePlanet(commercialWorld.planet,commercialWorld,version);
   if(planetErrors.length)return planetErrors;
-  const knownPeople=(commercialWorld.group||commercialWorld.groupLosses?.length)?captureHumanOwners(commercialWorld).people:undefined;
+  const knownPeople=(commercialWorld.group||commercialWorld.groupLosses?.length||commercialWorld.secondarySite||isSecondaryContext(commercialWorld))?captureHumanOwners(commercialWorld).people:undefined;
   const world = input as unknown as World;
   errors.push(...validateFlooring(world,version),...validateFilth(world,version,ids),...validateBurials(world,version,ids));
   if(errors.length)return errors;
@@ -582,6 +592,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
     else if (!jobById.has(owner.jobId)) errors.push('Pile references missing construction.');
   }
   if (world.stock.wood !== available.wood || world.stock.food !== available.food) errors.push('Derived stock differs from physical piles.');
+  if(!errors.length&&registeredIds)for(const id of ids)registeredIds.add(id);
   return errors;
 }
 
@@ -631,6 +642,8 @@ export function serializeWorld(world: World): string {
 export function deserializeWorld(serialized: string): World {
   if (typeof serialized !== 'string' || serialized.length > 16_000_000) throw new Error('Invalid or oversized save.');
   let input: unknown = JSON.parse(serialized);
+  if(record(input)&&Number.isInteger(input.schemaVersion)&&Number(input.schemaVersion)<240
+    &&(Object.hasOwn(input,'secondarySite')||Object.hasOwn(input,'expeditionSite')))throw new Error('Historical save contains future second-site fields.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!tundraHistoricalFieldsAbsent(input,Number(input.schemaVersion)))throw new Error('Future tundra provenance in historical save.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!snowHistoricalFieldsAbsent(input,Number(input.schemaVersion)))throw new Error('Future snow content in historical save.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&Number(input.schemaVersion)>=1&&Number(input.schemaVersion)<232
@@ -1357,6 +1370,10 @@ export function deserializeWorld(serialized: string): World {
     input.schemaVersion=238; // No captured lean, past projectile, clock, person or draw is invented.
   }
   if(record(input)&&input.schemaVersion===238){const old=validateSchema(input,238);if(old.length)throw new Error('Invalid version238 save: '+old.join(' '));input.schemaVersion=239;}
+  if(record(input)&&input.schemaVersion===239){
+    const errors=validateSchema(input,239);if(errors.length)throw new Error('Invalid version239 save: '+errors.join(' '));
+    input.schemaVersion=240; // No site, people, goods, research, RNG or progress is invented.
+  }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;
   consolidateLooseRocks(world);
@@ -1370,5 +1387,7 @@ export function hashWorld(world: World): string {
   for (let index = 0; index < serialized.length; index++) { hash ^= serialized.charCodeAt(index); hash = Math.imul(hash, 0x01000193); }
   return (hash >>> 0).toString(16).padStart(8, '0');
 }
+import { validSecondarySiteShape,secondaryMapForValidation } from './secondary-site-save.ts';
+import { isSecondaryContext } from './secondary-site-context.ts';
 import { validateMedicalRecord } from './injury-validation.ts';
 import { validatePawnHealth,validArtificialPartsWorldTransport } from './health-save.ts';

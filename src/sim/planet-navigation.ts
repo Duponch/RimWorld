@@ -18,10 +18,10 @@ const mod=(x:number,n:number)=>((x%n)+n)%n;
 const inverse=(a:number,b:number,x:number)=>clamp((x-a)/(b-a),0,1);
 export function roundEven(x:number):number {const lower=Math.floor(x),fraction=x-lower;
   return fraction<.5?lower:fraction>.5?lower+1:lower%2===0?lower:lower+1;}
-const longitudeOffsetCore=(longitude:number)=>roundEven(longitude/15)*2500;
+export const longitudeOffsetCore=(longitude:number)=>roundEven(longitude/15)*2500;
 /** One actual mass capture reused by UI, overload and edge cost. No climate adoption. */
 export function planetCostContext(world:World,mass:GroupMassCapture):PlanetCostContext {
-  return {homeCivilCore:calendarTick(world)*10,mass};
+  return {homeCivilCore:(calendarTick(world)-(world.expeditionSite?.calendarOffset??0))*10,mass};
 }
 export function tileCivilCore(planet:PlanetState,id:number,homeCivilCore:number):number {
   const tile=planet.tiles[id],home=planet.tiles[planet.homeTile];if(!tile||!home)throw new Error('Unknown planet tile');

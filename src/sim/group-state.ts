@@ -39,6 +39,8 @@ export type GroupStop =
   | { kind: 'overload'; grams: number; capacityGrams: number }
   | { kind: 'unreachable'; destination: number };
 interface GroupCommon {
+  /** Present only for a new departure from the persisted secondary map. */
+  originTile?:number;
   id: number; // Group namespace; one active group initially.
   startedAt: number;
   destination: number;

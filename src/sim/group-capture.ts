@@ -25,6 +25,7 @@ export interface FormationNamespace {
 }
 /** Root injects real guards/common physical captures; no projected World. */
 export interface GroupFormationAuthority {
+  requireResident?:boolean;
   namespace(world:World):FormationNamespace;
   memberReason(world:World,pawn:Pawn):string|undefined;
   residentCapable(world:World,pawn:Pawn):boolean;
@@ -80,7 +81,7 @@ export function captureGroupCandidates(world:World,memberIds:readonly number[],a
     const reason=authority.memberReason(world,pawn);if(reason)return fail(reason);members.push(pawn);
   }
   const ids=new Set(memberIds);
-  if(!world.pawns.some(p=>!ids.has(p.id)&&authority.residentCapable(world,p)))return fail('resident');
+  if(authority.requireResident!==false&&!world.pawns.some(p=>!ids.has(p.id)&&authority.residentCapable(world,p)))return fail('resident');
   const sources=new Map<number,MaterialPile>(),items:MaterialPile[]=[];
   for(const pile of world.piles){
     if(sources.has(pile.id))return fail('duplicate-map-pile');sources.set(pile.id,pile);

@@ -1,5 +1,7 @@
 # Préparer une version early access
 
+**V377 — schéma 240 :** [second site persistant](secondary-site-v377.md). Personnes et biens originaux, simulation partagée, sauvegarde complète et revisite ; retour/revisite UI acquis par reprises, anciennes sauvegardes conservées. Publication groupée suivante ; dernière production V376. Les états suivants sont historiques.
+
 **V376 — schéma 239 :** [toundra et neige physique](tundra-snow-v376.md). Nouveau départ froid, surface persistée, déplacements et déneigement au contact ; écologie et génération restent partiellement adaptées. Qualification et limites dans la note unique. Produit872afdbb publié en712fc270, fichiers HTTPS vérifiés ; les états suivants sont historiques.
 
 **15 octobre 2026 au soir — V375, schéma 238 :** [trois biomes, départs et reprises courts](biome-readiness-v375.md). Six cas automatiques et trois parcours250² acquis par reprises, trois recharges exactes ; limites et échecs conservés. QA seule, produit V365 inchangé. Suite neige/toundra, site persistant et catalogue utile. Les états suivants sont historiques.

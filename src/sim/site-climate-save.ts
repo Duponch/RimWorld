@@ -6,13 +6,23 @@ import { PREPARED_CRASHLANDED_REVISION,ARRIVING_CRASHLANDED_REVISION } from './s
 const record=(value:unknown):value is Record<string,unknown>=>typeof value==='object'&&value!==null&&!Array.isArray(value);
 const finite=(value:unknown,min:number,max:number):value is number=>typeof value==='number'&&Number.isFinite(value)&&value>=min&&value<=max;
 
-export function validSiteClimate(value:unknown,version:number,world:Pick<World,'tick'|'gameProfile'|'site'>&Partial<Pick<World,'planet'|'scenario'>>):boolean {
+export function validSiteClimate(value:unknown,version:number,world:Pick<World,'tick'|'gameProfile'|'site'>&Partial<Pick<World,'planet'|'scenario'|'expeditionSite'>>):boolean {
   if(version<239&&(world.site?.biome==='tundra'||record(value)&&value.profile==='tundra-preset'))return false;
   const prepared=world.scenario?.revision===PREPARED_CRASHLANDED_REVISION||world.scenario?.revision===ARRIVING_CRASHLANDED_REVISION;
   if(prepared&&(!record(value)||value.revision!==2))return false;
   if(value===undefined)return true;
   if(version<87||typeof value!=='object'||value===null||Array.isArray(value))return false;
   const v=value as Record<string,unknown>;
+  if(v.revision===3){
+    const origin=world.expeditionSite,planet=world.planet,definition=v.definition;
+    if(version<240||!origin||!planet||!validClimateDefinition(definition)||v.adoptedAt!==origin.createdAt
+      ||Reflect.ownKeys(v).length!==4||!['revision','adoptedAt','calendarOrigin','definition'].every(k=>Object.hasOwn(v,k))
+      ||!Number.isSafeInteger(v.calendarOrigin)||!Number.isSafeInteger(v.adoptedAt)||Number(v.adoptedAt)<0||Number(v.adoptedAt)>world.tick)return false;
+    const tile=planet.tiles[origin.tile];if(!tile||tile.biome!==world.site?.biome||tile.hilliness!==world.site.hilliness)return false;
+    const expected=planetTileClimateDefinition(tile);
+    return definition.meanTemperature===expected.meanTemperature&&definition.rainfall===expected.rainfall
+      &&(['latitude','longitude','amplitude'] as const).every(k=>sameDerivedClimateNumber(definition[k],expected[k]));
+  }
   if(v.revision===2) {
     const keys=Reflect.ownKeys(v),planet:unknown=world.planet;
     if(version<230||keys.length!==4||!keys.every(k=>typeof k==='string'&&['revision','adoptedAt','calendarOrigin','definition'].includes(k)&&

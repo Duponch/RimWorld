@@ -1,4 +1,6 @@
 /// <reference lib="webworker" />
+import {selectedMap} from '../sim/secondary-site-context';
+import {campaignPresentation} from '../sim/secondary-site-presentation';
 import { createScenarioWorld } from '../sim/new-game';
 import { MotionRecorder } from './motion-tracks';
 import { FixedClock } from './fixed-clock';
@@ -21,14 +23,20 @@ let fault: SimulationFault | undefined;
 const send = (message: Response) => scope.postMessage(message);
 const snapshots = new SnapshotEncoder({structureDelta:true,minimumStructures:1000});
 const motion = new MotionRecorder();
-const presentationChanges=new PresentationChanges();
+let presentationChanges=new PresentationChanges();
+let observedWorld:World|undefined;
+function visibleWorld():World {
+  const current=campaignPresentation(world!);
+  if(current!==observedWorld){motion.reset();audioCues.reset();presentationChanges=new PresentationChanges();observedWorld=current;}
+  return current;
+}
 const audioCues=new AudioCueRecorder();
 // Tick publications use this only after the presentation observers captured that tick.
 const publishCapturedTick = (checkpoint = false) => {
   let published: { epoch: number; revision: number } | undefined;
   if (world) {
     const cues=audioCues.drain();
-    const packet = snapshots.encode(world, stepMs, speed, checkpoint);
+    const packet = snapshots.encode(visibleWorld(), stepMs, speed, checkpoint);
     send({...packet, motion:motion.snapshot(),...cues.length?{audioCues:cues}:{}});
     published = { epoch: packet.epoch, revision: packet.revision };
   }
@@ -36,7 +44,7 @@ const publishCapturedTick = (checkpoint = false) => {
   return published;
 };
 const publish = (checkpoint = false) => {
-  if (world) {presentationChanges.capture(world);motion.capture(world);audioCues.capture(world);}
+  if (world) {const visible=visibleWorld();presentationChanges.capture(visible);motion.capture(visible);audioCues.capture(visible);}
   return publishCapturedTick(checkpoint);
 };
 
@@ -82,7 +90,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
     } else {
       if (!world) throw new Error('La simulation ne répond pas encore.');
       if(request.type==='order-options') {
-        data=JSON.stringify(queryOrderOptions(world,request.pawnId,request,request.queue));
+        data=JSON.stringify(queryOrderOptions(selectedMap(world),request.pawnId,request,request.queue));
       } else if (request.type === 'command') {
         mutating = true;
         const result = applyCommand(world, request.command);
@@ -116,9 +124,9 @@ function advanceSimulation(now:number):boolean {
     let simulationMs=0;
     for(let i=0;i<ticks;i++) {
       const started=performance.now();stepWorld(world);simulationMs+=performance.now()-started;stepMs=simulationMs/(i+1);
-      motion.capture(world);
-      audioCues.capture(world);
-      if(presentationChanges.capture(world))publishCapturedTick();
+      const visible=visibleWorld();motion.capture(visible);
+      audioCues.capture(visible);
+      if(presentationChanges.capture(visible))publishCapturedTick();
     }
   }
   // Supply confirmed motion every active batch (20 ms), including batches

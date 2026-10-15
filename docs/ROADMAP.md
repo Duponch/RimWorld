@@ -1,13 +1,13 @@
 # Plan de développement
 
-**15 octobre 2026 — schéma 239.** Autonomie et push `origin/main` explicitement autorisés. [V376](gameplay/tundra-snow-v376.md) ajoute la toundra, la neige et le déneigement physique après [V375](gameplay/biome-readiness-v375.md). Produit872afdbb publié en712fc270 ; la campagne98038 reste close partielle. Aucun pourcentage de complétude ou FPS certifié.
+**15 octobre 2026 — schéma 240.** [V377](gameplay/secondary-site-v377.md) relie un second site persistant, après toundra/neigeV376 et départsV375. Retour/revisite natifs acquis par reprises, sauvegardes complètes exactes. Dernière productionV376/712fc270, publication groupée suivante prévue. Campagne98038 close partielle ; aucun pourcentage ou FPS certifié.
 
 ## Priorité actuelle
 
 1. **Trois biomes existants : départs vérifiés V375.** Six cas fixes et trois parcours UI250², trois recharges exactes acquis par reprises. Références officielles et visuelles consultées ; ni année de survie ni hiver entier certifiés. Ne pas rejouer ce contrôle sans changement concerné.
 2. **Toundra et neige V376.** Froid, surface persistée, écologie existante, choix du site et déneigement sont reliés. Sols humides/lichen et espèces absentes restent ouverts ; voir le périmètre de la note.
-3. **Deuxième site persistant.** Voyager avec les mêmes personnes/biens, entrer sur une seconde carte, la modifier, revenir et retrouver les changements. Préserver une seule autorité de campagne et les sauvegardes historiques.
-4. **Catalogue utile.** Compléter une chaîne existante avec un objet réellement fabriqué, stocké, équipé/utilisé et sauvegardé ; premier candidat étudié : armure de reconnaissance correspondant au casque existant.
+3. **Deuxième site V377 qualifié.** Mêmes personnes/biens, coupe et bois retrouvés après retour/revisite, deux cartes sauvées ensemble. Un seul site secondaire ; menaces/visiteurs secondaires et alertes associées restent à raccorder.
+4. **Catalogue utile — priorité active.** Compléter une chaîne existante avec un objet réellement fabriqué, stocké, équipé/utilisé et sauvegardé ; premier candidat étudié : armure de reconnaissance correspondant au casque existant.
 
 La stabilité, l’ergonomie et les performances accompagnent ces lots avec contrôles proportionnés. Les campagnes longues sont périodiques ou motivées par un risque précis. La campagne conservée au 98038 reste une preuve partielle, pas une condition bloquant toutes les livraisons. Le [suivi early access](gameplay/early-access-readiness.md) distingue acquis et limites. La [stratégie de validation](development/testing.md) décrit la méthode ; les sous-métiers restent reportés.
 

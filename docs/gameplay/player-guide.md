@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Visiter puis retrouver un second site — V377
+
+Ouvrez **Monde → Globe et groupe**, choisissez des adultes disponibles, des provisions réellement présentes sur la carte et une destination terrestre accessible. Formez le groupe puis laissez-le charger et sortir. À l’arrivée, **Entrer sur la carte** fait entrer ces mêmes personnes sur le second site. **Afficher le foyer** et **Afficher le second site** changent seulement la vue ; les personnes restent où elles sont.
+
+Avant le retour, prévoyez des rations au sol sur le site et laissez terminer les activités en cours. Si le brouillon mentionne une ancienne pile, utilisez **Retirer les choix devenus indisponibles** avant de choisir les nouvelles sources. Formez le groupe depuis cette carte vers le foyer : chargement, sortie, trajet et déchargement restent physiques. Une visite ultérieure retrouve le terrain modifié et les biens laissés. Les sauvegardes et exports gardent les deux cartes. Un seul second site est actuellement pris en charge ; raids et visiteurs ambiants secondaires restent à raccorder. [Portée et contrôles](secondary-site-v377.md).
+
 ## Toundra et déneigement — V376
 
 Dans **Nouvelle partie**, choisissez une case **Toundra** et lisez sa température et sa saison avant de confirmer. Prévoyez réserves, vêtements chauds et chauffage : la végétation y est rare. La neige s’accumule avec les précipitations et fond avec la chaleur ; elle ralentit les trajets. Ouvrez **Zones → Déneigement**, tracez les accès à dégager et activez **Nettoyage** dans Travail. Un colon disponible rejoint les cases et les déneige au contact. Retirez la zone avec l’outil opposé. Les anciens mondes gardent leur climat et leur terrain historiques. [Portée du lot](tundra-snow-v376.md).
