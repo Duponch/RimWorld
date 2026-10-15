@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Extraire de l’argent — V382, proposition
+
+Sur les nouvelles cartes de site, les filons **Minerai d’argent** peuvent produire la monnaie physique déjà utilisée par les marchands : 1500 PV, 40 unités à rendement neutre ; la compétence et les capacités du mineur modulent le produit. Désignez la roche avec **Ordres → Miner**, puis autorisez **Argent** dans une réserve ou une étagère accessible. Le transport est réel. Une pile extraite et disponible dans le foyer ou une réserve peut financer un achat au contact d’un marchand, ou être chargée dans un groupe par les commandes existantes.
+
+Un filon rare n’est pas garanti sur chaque carte. Charger une ancienne carte n’ajoute aucun gisement ; un second site nouvellement créé peut en contenir. L’argent profond et les anciennes piles conservent leurs règles. Construction en argent et banque restent absentes. [Périmètre proposé](silver-surface-v382.md).
+
 ## Les Aulnes actualisées — V381
 
 Dans **Charger une partie → Colonies de test**, la référence intégrée des Aulnes ouvre le village historique avec deux étagères près du poste de fabrication128,139, un stock fini d’uranium et Tao en combinaison de reconnaissance. Une facture permet de fabriquer un second exemplaire avec les matières coloniales existantes. La première tenue et les aménagements sont un patrimoine préparé déclaré ; les autres activités continuent normalement. La référence V284 reste disponible séparément. [Repères et limites](aulnes-workshop-v381.md).

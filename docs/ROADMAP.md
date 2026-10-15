@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 242.** [V381](gameplay/aulnes-workshop-v381.md) actualise Les Aulnes avec atelier/étagères/tenue de garde, après le HUD V380 et les incidents secondaires V379. Toundra, second site persistant et combinaison V376–V378 conservés. Publication commune V379–V381 **bd2107e4**,116HTTPS exacts, produit859dff42. Campagne98038 close partielle, aucun pourcentage ou FPS certifié.
+**16 octobre 2026 — schéma 243.** [V382](gameplay/silver-surface-v382.md) relie les filons d’argent à l’extraction, au rangement et à un achat physique. Dernière production publique V379–V381/bd2107e4 ; publication regroupée suivante. Les Aulnes V381 sont actualisées ; campagne98038 close partielle, aucun pourcentage ou FPS certifié.
 
 ## Priorité actuelle
 
@@ -11,7 +11,8 @@
 5. **Incidents secondaires et alertes V379.** Calendriers futurs persistés et alerte navigable vers la vraie carte ; équilibrage mondial exhaustif ouvert.
 6. **Lisibilité V380 qualifiée.** Survol/ressources/dock stables à quatre tailles ; limites compactes et modes non observés explicités.
 7. **Les Aulnes actualisées V381.** Patrimoine explicite, habillage et rangement observés, anciennes références conservées.
-8. **Priorité active : filons d’argent de surface** : extraction finie et achats avant le forage profond ; pas de campagne longue comme condition automatique.
+8. **Argent de surface V382 qualifié.** Extraction finie puis achat avec le produit, reprise et patrimoine historique conservés.
+9. **Priorité active : bouche d’aération entre pièces**, pour partager la chaleur en climat froid avec une vraie ouverture/fermeture ; publication commune V382–V383 si qualifiée.
 
 **Référence jouable à entretenir : Les Aulnes.** Actualiser régulièrement sa version courante avec les objets et boucles pertinents du catalogue, en conservant une colonie logique et les anciennes versions. Le patrimoine ajouté peut être préparé et explicitement décrit ; il ne devient pas une campagne naturellement acquise. V381 expose les étagères et la tenue de garde ; les prochaines mises à jour suivront les ajouts pertinents.
 

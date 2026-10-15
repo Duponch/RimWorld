@@ -986,7 +986,7 @@ export class SnapshotDecoder {
     if((message.world.schemaVersion<181&&Object.hasOwn(message.world,'rainElectrical'))
       ||!validRainElectrical(message.world.rainElectrical,message.world.schemaVersion,message.world))return resync('Exposition électrique aux précipitations invalide pour ce snapshot.');
     if(!validPodRescueTransportBindings(message.world))return resync('Secours civil invalide pour ce snapshot.');
-    if(message.kind==='checkpoint'&&(!Array.isArray(message.world.tiles)||message.world.tiles.some(tile=>!tile||!validMiningDamage(tile,message.world.schemaVersion)||tile.floor==='sterile-tile'&&!sterileMaterialsUnlocked(message.world))))return resync('Rendement ou dégâts miniers invalides pour ce snapshot.');
+    if(message.kind==='checkpoint'&&(!Array.isArray(message.world.tiles)||message.world.tiles.some(tile=>!tile||!validOre(tile,message.world.schemaVersion)||!validMiningDamage(tile,message.world.schemaVersion)||tile.floor==='sterile-tile'&&!sterileMaterialsUnlocked(message.world))))return resync('Rendement ou dégâts miniers invalides pour ce snapshot.');
     let next: World;
     let planetCheck: PlanetPreparation | undefined;
     let reindexResources = message.kind === 'checkpoint';

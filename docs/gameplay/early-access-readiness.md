@@ -1,5 +1,7 @@
 # Préparer une version early access
 
+**V382 — schéma 243 :** [argent de surface](silver-surface-v382.md). Génération prospective, extraction/rangement et achat réel avec la monnaie produite qualifiés ; anciennes cartes et64sauvegardes conservées. Publication regroupée suivante, production publique V381/bd2107e4. Les états suivants sont historiques.
+
 **V381 — référence Les Aulnes actualisée, publication bd2107e4 :** [atelier, étagères et tenue de garde](aulnes-workshop-v381.md). Patrimoine préparé explicite, habillage et rangement ordinaires observés, anciennes références conservées ; aucune nouvelle mécanique ou campagne entière revendiquée. Les états suivants sont historiques.
 
 **V380 — schéma 242 :** [lisibilité des HUD](hover-layout-v380.md). Survol, ressources et dock stabilisés et qualifiés à quatre tailles ; correctif UI sans nouvelle mécanique. Publication regroupée suivante ; dernière production V378/e5ec566c. Les états suivants sont historiques.

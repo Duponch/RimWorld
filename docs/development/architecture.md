@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V382 — schéma 243 :** [argent de surface](../gameplay/silver-surface-v382.md). Génération prospective, extraction/rangement et achat depuis le produit qualifiés ; anciennes cartes et64sauvegardes conservées. Publication regroupée suivante, production publique V381/bd2107e4. Les états suivants sont historiques.
+
 **V380 — schéma 242 :** [lisibilité des HUD](../gameplay/hover-layout-v380.md). Survol, ressources et dock stabilisés et qualifiés à quatre tailles ; correctif UI sans nouvelle mécanique. Publication regroupée suivante ; dernière production V378/e5ec566c. Les états suivants sont historiques.
 
 **V379 — schéma 242 :** [incidents secondaires et alertes hors carte](../gameplay/secondary-incidents-v379.md). Calendriers prospectifs, acteurs locaux et bascule/centrage vers la vraie carte ; contrôles et limites dans la note canonique. Publication regroupée suivante ; dernière production confirmée V378/e5ec566c. Les états suivants sont historiques.

@@ -4,9 +4,9 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V381, schéma 242 :** [Les Aulnes actualisées](docs/gameplay/aulnes-workshop-v381.md), après le HUD V380 et les incidents secondaires V379. Publication commune V379–V381 **bd2107e4**,116HTTPS exacts, produit `859dff42`. Campagne98038 close partielle.
+**État V382, schéma 243 :** [argent de surface](docs/gameplay/silver-surface-v382.md) qualifié : extraction, rangement et achat depuis les pièces produites. Publication regroupée suivante ; dernière production V379–V381 **bd2107e4**,116HTTPS exacts, produit `859dff42`. Les Aulnes V381 restent la référence courante ; campagne98038 close partielle.
 
-**Ordre courant :** filons d’argent de surface pour relier extraction, monnaie et achats préindustriels ; garder les mises à jour des Aulnes périodiques et cohérentes. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. Références humaines, `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
+**Ordre courant :** bouche d’aération entre pièces pour la survie froide, après références Core et revue des couplages ; publier avec V382 si qualifiée. Conserver les mises à jour des Aulnes périodiques et cohérentes. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. Références humaines, `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
 
 ## Méthode de livraison
 

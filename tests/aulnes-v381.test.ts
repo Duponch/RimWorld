@@ -1,3 +1,6 @@
+import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {decodeStoredSave} from '../src/ui/save-storage-codec.ts';
 import {expect,test} from 'vitest';
 import {loadAulnesV284,prepareAulnesV381,AULNES_V381_PARENT_SHA,AULNES_V381_START} from '../scripts/aulnes-workshop-v381.ts';
 import {aulnesV381Entry} from '../scripts/update-aulnes-v381.ts';
@@ -7,6 +10,26 @@ import {storageAt} from '../src/sim/shelf-storage.ts';
 import {SCHEMA_VERSION} from '../src/sim/types.ts';
 
 test('V381 fixed RAW284 derivative conserves residents/property, declares only the bounded workshop inheritance and decodes exactly',async()=>{
+  // The V381 generator is deliberately locked to its release. Once the game
+  // format advances, qualify its immutable published estate and neutral
+  // migration instead of reauthoring that historical preparation.
+  if(Number(SCHEMA_VERSION)>242){
+    const raw=await decodeStoredSave(readFileSync('public/test-saves/v381/les-aulnes-integrees.json','utf8'));
+    expect(createHash('sha256').update(raw).digest('hex')).toBe('c95c7b6e99a21f521f8fe533a8b4664e758e6dd20fcdeeebf2da3f88531cced8');
+    const historical=JSON.parse(raw),world=deserializeWorld(raw);
+    expect(world).toEqual({...historical,schemaVersion:SCHEMA_VERSION});
+    expect(validateWorld(world)).toEqual([]);
+    expect(world.piles.find(p=>p.id===26497)).toMatchObject({item:'recon-armor',owner:{type:'apparel',pawnId:20331}});
+    expect([26490,26493].every(id=>world.structures.some(s=>s.id===id&&s.kind==='shelf'))).toBe(true);
+    const manifest=JSON.parse(readFileSync('public/test-saves/manifest.json','utf8'));
+    expect(manifest.saves).toHaveLength(64);
+    expect(manifest.saves.find((e:{id:string})=>e.id==='aulnes-current')).toMatchObject({release:'v381',sha256:'c95c7b6e99a21f521f8fe533a8b4664e758e6dd20fcdeeebf2da3f88531cced8'});
+    expect(manifest.saves.find((e:{id:string})=>e.id==='aulnes-integrated-v284')).toMatchObject({release:'v284',sha256:AULNES_V381_PARENT_SHA});
+    const {world:source}=await loadAulnesV284();expect(()=>prepareAulnesV381(source)).toThrow(/242/);
+    const decoded=new SnapshotDecoder().adopt(structuredClone(new SnapshotEncoder().encode(world,0,0,true)));
+    expect(decoded.status).toBe('applied');if(decoded.status==='applied')expect(serializeWorld(decoded.world)).toBe(serializeWorld(world));
+    return;
+  }
   const {world:source}=await loadAulnesV284(),original=serializeWorld(source),{world,preparation:p}=prepareAulnesV381(source);
   expect(p.sourceRawSha256).toBe(AULNES_V381_PARENT_SHA);expect(world.schemaVersion).toBe(SCHEMA_VERSION);expect(world.tick).toBe(AULNES_V381_START);
   expect(serializeWorld(source)).toBe(original);expect(world.pawns.map(p=>p.id)).toEqual(source.pawns.map(p=>p.id));
