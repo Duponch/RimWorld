@@ -18,6 +18,7 @@ const BIOMES={
   'temperate-forest':{mtbDays:50,humanWeight:470},
   'boreal-forest':{mtbDays:60,humanWeight:370},
   'arid-shrubland':{mtbDays:65,humanWeight:390},
+  tundra:{mtbDays:80,humanWeight:330},
 } as const;
 const FLU_WEIGHT=100;
 
@@ -151,12 +152,12 @@ export function advanceFluIncidents(world:World):void {
   // Core chooses a weighted, currently usable disease after the category
   // event. These static human weights preserve category frequency; other
   // diseases have not yet been implemented or dynamically filtered here.
-  const ticket=random(state)*biome.humanWeight;
+  const ticket=random(state)*biome.humanWeight,plagueCeiling=FLU_WEIGHT+((world.site?.biome==='tundra')?80:100);
   if(ticket>=FLU_WEIGHT){
     const extension=state.immuneDiseases;
-    if(world.schemaVersion>=207&&extension&&(ticket<200||ticket<300&&(world.site?.biome??'temperate-forest')==='temperate-forest')){
+    if(world.schemaVersion>=207&&extension&&(ticket<plagueCeiling||ticket<300&&(world.site?.biome??'temperate-forest')==='temperate-forest')){
       extension.draws++;
-      resolveImmuneDiseaseIncident(world,ticket<200?'plague':'malaria',extension);
+      resolveImmuneDiseaseIncident(world,ticket<plagueCeiling?'plague':'malaria',extension);
     }
     return;
   }

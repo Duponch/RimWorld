@@ -417,3 +417,12 @@ describe('decorative GPU soil grass', () => {
     layer.dispose();
   });
 });
+
+
+test('snow-only sparse snapshots hide resident decorative grass at medium depth and restore it after clearing',()=>{
+ const w=createWorld(116,8,8);w.tiles=w.tiles.map(()=>({terrain:'soil'}));w.structures=[];w.resources=[];w.piles=[];w.packed=[];
+ const layer=new GpuGroundGrassLayer();layer.update(w);const alpha=()=> (layer.map.image.data as Uint8Array)[3];expect(alpha()).toBe(255);const allocation=layer.map;
+ w.tiles=w.tiles.slice();w.tiles[0]={terrain:'soil',snowDepth:.5};layer.update(w,false,[0]);expect(alpha()).toBe(0);const version=layer.map.version;
+ w.tiles=w.tiles.slice();w.tiles[0]={terrain:'soil',snowDepth:.9};layer.update(w,false,[0]);expect(layer.map).toBe(allocation);expect(layer.map.version).toBe(version);
+ w.tiles=w.tiles.slice();w.tiles[0]={terrain:'soil'};layer.update(w,false,[0]);expect(alpha()).toBe(255);expect(layer.map.version).toBe(version+1);layer.dispose();
+});

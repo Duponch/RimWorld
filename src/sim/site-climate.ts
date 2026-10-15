@@ -20,7 +20,7 @@ export interface StartingSiteClimate {
 }
 export type SiteClimate=ReferenceSiteClimate|StartingSiteClimate;
 
-export type ClimateProfile='temperate-reference'|'boreal-reference'|'arid-reference';
+export type ClimateProfile='temperate-reference'|'boreal-reference'|'arid-reference'|'tundra-preset';
 export interface ClimateDefinition {meanTemperature:number;amplitude:number;rainfall:number;latitude:number;longitude:number}
 export type ClimateWorld=Pick<World,'tick'|'gameProfile'|'climate'|'miscIncidents'>;
 export const TICKS_PER_YEAR=60*TICKS_PER_DAY;
@@ -34,10 +34,12 @@ export const BOREAL_CLIMATE=Object.freeze({meanTemperature:5.3,amplitude:seasona
 /** Reference-Core-4871 tile 89, decoded from the same 119904-cell surface. */
 export const ARID_CLIMATE=Object.freeze({meanTemperature:25.4,amplitude:seasonalAmplitude(4.01),rainfall:690,
   latitude:4.01,longitude:27.74});
+/** Authored cold local preset, not an observed Core tile or universal biome climate. */
+export const TUNDRA_CLIMATE=Object.freeze({meanTemperature:-12,amplitude:seasonalAmplitude(60),rainfall:700,latitude:60,longitude:0});
 export const CLIMATE_DEFINITIONS:Readonly<Record<ClimateProfile,ClimateDefinition>>=Object.freeze({
-  'temperate-reference':TEMPERATE_CLIMATE,'boreal-reference':BOREAL_CLIMATE,'arid-reference':ARID_CLIMATE,
+  'temperate-reference':TEMPERATE_CLIMATE,'boreal-reference':BOREAL_CLIMATE,'arid-reference':ARID_CLIMATE,'tundra-preset':TUNDRA_CLIMATE,
 });
-const climateForBiome:Readonly<Record<BiomeId,ClimateProfile>>={'temperate-forest':'temperate-reference','boreal-forest':'boreal-reference','arid-shrubland':'arid-reference'};
+const climateForBiome:Readonly<Record<BiomeId,ClimateProfile>>={'temperate-forest':'temperate-reference','boreal-forest':'boreal-reference','arid-shrubland':'arid-reference',tundra:'tundra-preset'};
 export const siteClimateDefinition=(world:Pick<World,'climate'>):ClimateDefinition=>world.climate?.revision===2?
   world.climate.definition:CLIMATE_DEFINITIONS[world.climate?.profile??'temperate-reference'];
 

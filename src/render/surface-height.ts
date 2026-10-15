@@ -16,6 +16,12 @@ export function surfaceHeightAtCell(surface: FilthSurface, x: number, z: number)
   return tile ? tile.floor ? FLOOR_SURFACE_Y : tile.terrain === 'water' ? WORLD_SCALE.waterSurface : 0 : undefined;
 }
 
+export type GroundOverlaySurface=FilthSurface&Partial<Pick<World,'snow'>>;
+/** Snow volumes top out at .094 above terrain/floor. A fixed confirmed-map
+ * clearance keeps management overlays legible without per-depth uploads. */
+export const SNOW_OVERLAY_LIFT=.1;
+export function overlaySurfaceHeightAtCell(surface:GroundOverlaySurface,x:number,z:number):number|undefined {const base=surfaceHeightAtCell(surface,x,z);return base===undefined?undefined:base+(surface.snow?SNOW_OVERLAY_LIFT:0);}
+
 /** Use the same Float32 pose and shape that the resident GPU attributes use.
  * A small conservative margin includes rounding at a neighbouring cell edge;
  * the original rotated quad still defines the stain's exact coverage. */

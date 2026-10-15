@@ -12,7 +12,7 @@ function node<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string,classNam
   const n=document.createElement(tag);n.className=className;if(text!==undefined)n.textContent=text;return n;
 }
 function button(text:string,handler:()=>void):HTMLButtonElement {const b=node('button',text);b.type='button';b.addEventListener('click',handler);return b;}
-const BIOMES={'temperate-forest':'Forêt tempérée','boreal-forest':'Forêt boréale','arid-shrubland':'Broussailles arides',ocean:'Océan'} as const;
+const BIOMES={'temperate-forest':'Forêt tempérée','boreal-forest':'Forêt boréale','arid-shrubland':'Broussailles arides',tundra:'Toundra',ocean:'Océan'} as const;
 
 export function createWorldParameters(options:{seed:string;onSeed:(seed:string)=>void;onRandom:()=>string;onError:(message:string)=>void}):{element:HTMLElement;validate():number|undefined;dispose():void}{
   const root=node('div',undefined,'front-world-parameters');
@@ -48,7 +48,7 @@ export function createWorldParameters(options:{seed:string;onSeed:(seed:string)=
   parameters.append(node('span','Paramètres avancés'),edit);
   const factions=node('section',undefined,'front-world-factions');factions.append(node('h2','Factions'));
   const faction=node('div','Comptoir civil','front-faction-row');faction.append(node('span','1'));factions.append(faction,node('p','Un comptoir réel est généré pour les caravanes. Le catalogue des factions et leurs réglages restent à développer.','front-small'));
-  root.append(parameters,factions,node('p','Notre globe original comprend 162 cases et trois biomes terrestres. Couverture, climat global et population restent fixes ; les cases choisies déterminent réellement le terrain et son climat local.','front-world-limit front-small'));
+  root.append(parameters,factions,node('p','Notre globe original comprend 162 cases et quatre biomes terrestres. Couverture, climat global et population restent fixes ; les cases choisies déterminent réellement le terrain et son climat local.','front-world-limit front-small'));
   return {element:root,validate(){const seed=parseWorldSeed(input.value);if(seed===undefined){input.setAttribute('aria-invalid','true');options.onError('Saisissez une graine de 1 à 64 caractères.');input.focus();}return seed;},dispose(){if(dialog){dialog.close();dialog.remove();dialog=undefined;}}};
 }
 
@@ -67,6 +67,7 @@ export function createStartingSiteConfiguration(options:{planet:PlanetState;sele
     heading.textContent=BIOMES[tile.biome];const climate=startingTileClimate(tile),amplitude=seasonalAmplitude(climate.latitude);
     fact('Case',String(tile.id));fact('Coordonnées',`${climate.latitude.toFixed(2)}° / ${climate.longitude.toFixed(2)}°`);
     fact('Relief',tile.hilliness==='mountainous'?'Montagnes':HILLINESS_LABELS[tile.hilliness]);
+    if(tile.biome==='tundra')fact('Survie','Végétation rare, froid et neige au sol. Réserves, vêtements chauds, chauffage et accès à déneiger.');
     fact('Température moyenne',`${tile.meanTemperature.toFixed(1)} °C`);fact('Plage saisonnière',`${(tile.meanTemperature-amplitude).toFixed(1)} à ${(tile.meanTemperature+amplitude).toFixed(1)} °C`);fact('Précipitations',`${Math.round(tile.rainfall)} mm/an`);
     if(tile.biome!=='ocean'&&tile.hilliness!=='mountainous'){
       const seed=localSeedForTile(options.planet.generationSeed,tile.id),site=resolveSite(seed,{biome:tile.biome,hilliness:tile.hilliness});fact('Roches locales',site.stones.map(s=>STONE_LABELS[s]).join(', '));fact('Rivière','Aucune');fact('Taille',`${DEFAULT_MAP_SIZE} × ${DEFAULT_MAP_SIZE}`);fact('Saison de départ',`Automatique · jour ${automaticStartDay(climate.latitude,climate.meanTemperature)+1} de l’année`);

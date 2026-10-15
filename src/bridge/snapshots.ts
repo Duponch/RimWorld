@@ -1,3 +1,4 @@
+import {validTundraTransport} from '../sim/tundra-save.ts';
 import {validateTreeTransport,registerTreeThingIds,validTreePileShape,validTreeJobShape,validPlantTargetShape} from '../sim/tree-transfer-save.ts';
 import type {MinifiedTreePile} from '../sim/tree-transfer-state.ts';
 import {validOriginalTreeResource} from '../sim/tree-transfer-resource-save.ts';
@@ -103,6 +104,7 @@ import { validApparelShape } from '../sim/apparel-save.ts';
 import { validPrisonerPawnShape,validPrisonBreakBindings } from '../sim/prisoner-save.ts';
 import { validWeaponShape } from '../sim/equipment-save.ts';
 import { pileMaxHp } from '../sim/thing-damage-rules.ts';
+import {validateSnowTransport} from '../sim/snow-save.ts';
 import { SCHEMA_VERSION, type MaterialPile, type Pawn, type Resource, type Structure, type Terrain, type Tile, type World } from '../sim/types.ts';
 import { STRUCTURE_DEFINITIONS } from '../sim/definitions.ts';
 import { TileSnapshotCache, type TileDelta } from '../bridge/tile-snapshot-cache.ts';
@@ -1004,14 +1006,15 @@ export class SnapshotDecoder {
       let tiles = previous.tiles;
       if (message.tiles?.length) {
         const touched = new Set<number>();
+        if(message.tiles.some(tile=>!Array.isArray(tile)||tile.length>(message.world.schemaVersion>=239?8:message.world.schemaVersion>=186?7:6)))return resync('Future snow/terrain tuple.');
         if(message.world.schemaVersion<186&&message.tiles.some(tile=>tile.length>6))return resync('Rendement minier futur dans ce delta.');
-        for (const [index, terrain, stone, miningDamage, ore, floor, miningYield] of message.tiles) {
-          if (!Number.isInteger(index) || index < 0 || index >= tiles.length || touched.has(index)
+        for (const [index, terrain, stone, miningDamage, ore, floor, miningYield, snowDepth] of message.tiles) {
+          if (snowDepth!==undefined&&(message.world.schemaVersion<239||typeof snowDepth!=='number'||!Number.isFinite(snowDepth)||snowDepth<=0||snowDepth>1) || !Number.isInteger(index) || index < 0 || index >= tiles.length || touched.has(index)
             || !['grass', 'soil', 'water', 'rock', ...(message.world.schemaVersion>=28?['rough-stone']:[]), ...(message.world.schemaVersion>=83?['rich-soil','gravel']:[])].includes(terrain) || floor!==undefined&&(message.world.schemaVersion<89||!isFloorKind(floor)||floor==='sterile-tile'&&!sterileMaterialsUnlocked(message.world)||terrain==='water'||terrain==='rock') || !validOre({terrain,ore},message.world.schemaVersion) || !validMiningDamage({terrain,stone,miningDamage,ore,...miningYield===undefined?{}:{miningYield}},message.world.schemaVersion) || !validStoneIdentity(stone, terrain, message.world.schemaVersion)) return resync('Delta de terrain invalide.');
           touched.add(index);
         }
         tiles = tiles.slice();
-        for (const [index, terrain, stone, miningDamage, ore, floor, miningYield] of message.tiles) tiles[index] = {terrain,...stone===undefined?{}:{stone},...miningDamage===undefined?{}:{miningDamage},...ore===undefined?{}:{ore},...floor===undefined?{}:{floor},...miningYield===undefined?{}:{miningYield}};
+        for (const [index, terrain, stone, miningDamage, ore, floor, miningYield, snowDepth] of message.tiles) tiles[index] = {terrain,...stone===undefined?{}:{stone},...miningDamage===undefined?{}:{miningDamage},...ore===undefined?{}:{ore},...floor===undefined?{}:{floor},...miningYield===undefined?{}:{miningYield},...snowDepth===undefined?{}:{snowDepth}};
         changedTileIndices = [...touched];
       }
       let resources = previous.resources;
@@ -1143,6 +1146,8 @@ export class SnapshotDecoder {
     // properties to infer authority here. Public contexts ignore this fact.
     const geometryReuse:OwnedGeometryReuseWitness|undefined=structureIndices!==undefined&&this.current
       ?{kind:'sparse',previous:this.current,updatedOrdinals:structureIndices}:undefined;
+    if(!validTundraTransport(next,next.schemaVersion))return resync('Toundra, flore ou climat futur/incohérent.');
+    if(validateSnowTransport(next,next.schemaVersion, message.kind==='delta'&&!!this.current?.snow===!!next.snow?changedTileIndices:undefined).length)return resync('Snow surface clock, depth or owner invalid.');
     if(validateStartingArrivalOwners(next,next.schemaVersion).length)return resync('Personne, possession ou propriétaire de capsule initiale invalide.');
     if(hasDraftedTend&&!validDraftedTendingTransport(next))return resync('Soins mobilisés, patient, contact ou réservation incohérents.');
     if(!validVisitorMedicalTransport(next))return resync('Invité médical, secours, lit ou possession incohérents.');

@@ -19,7 +19,7 @@ export class AreaPreviewLayer {
     this.mesh.renderOrder=6;this.mesh.activeCount=0;
   }
 
-  update(width:number,area:number,cells:readonly number[],color:number):void {
+  update(width:number,area:number,cells:readonly number[],color:number,surfaceLift=0):void {
     this.revision++;
     if(cells.length>this.mesh.instanceMatrix.count){
       const capacity=Math.min(area,2**Math.ceil(Math.log2(Math.max(16,cells.length))));
@@ -27,7 +27,7 @@ export class AreaPreviewLayer {
     }
     this.material.color.setHex(color);this.mesh.activeCount=cells.length;
     for(let i=0;i<cells.length;i++){
-      transform.makeTranslation(cells[i]!%width,.065,Math.floor(cells[i]!/width));
+      transform.makeTranslation(cells[i]!%width,.065+surfaceLift,Math.floor(cells[i]!/width));
       this.mesh.setMatrixAt(i,transform);
     }
     this.mesh.instanceMatrix.needsUpdate=true;this.mesh.computeBoundingSphere();

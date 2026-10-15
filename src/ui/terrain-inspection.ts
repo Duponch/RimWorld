@@ -14,8 +14,10 @@ export const TERRAIN_LABELS: Record<Terrain, string> = {
 
 /** Describe the actual saved terrain even when a plant or rock occupies it.
  * This is soil suitability, not a promise that the cell can be sown now. */
-export function terrainInspection(tile: Tile): string {
+function baseTerrainInspection(tile: Tile): string {
   if(tile.floor)return `Sol : ${FLOOR_DEFINITIONS[tile.floor].label} · Fertilité : 0 % · Propreté du revêtement : ${FLOOR_DEFINITIONS[tile.floor].cleanliness.toFixed(1)} · Terrain non cultivable`;
   const fertility = Math.round(soilFertility(tile.terrain) * 100);
   return `Sol : ${TERRAIN_LABELS[tile.terrain]} · Fertilité : ${fertility} % · ${isGrowingTerrain(tile.terrain) ? 'Terrain cultivable' : 'Terrain non cultivable'}`;
 }
+
+export function terrainInspection(tile:Tile):string {const depth=tile.snowDepth??0;return baseTerrainInspection(tile)+(depth>0?` · Neige : ${Math.round(depth*100)} % · Marche : +${depth<.25?0:depth<.5?.4:depth<.75?.8:1.2} tick(s)`:'');}

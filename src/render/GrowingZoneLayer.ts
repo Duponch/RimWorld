@@ -2,7 +2,7 @@ import * as THREE from 'three/webgpu';
 import { BoxBatches } from './BoxBatches';
 import type { Placement } from './primitives';
 import type { World } from '../sim/types';
-import {surfaceHeightAtCell} from './surface-height';
+import {overlaySurfaceHeightAtCell} from './surface-height';
 import {adjacentZoneColors} from './zone-surface-presentation';
 import {GROUND_OVERLAY_RENDER_ORDER,setGroundOverlayRenderOrder} from './ground-overlay-surfaces';
 
@@ -12,7 +12,7 @@ export class GrowingZoneLayer {
   private signature = '';
   constructor(private readonly boxes: BoxBatches) {}
   update(world: World, reset: boolean,showAll=false,selectedId?:number): boolean {
-    const signature = `${world.width}:`+world.growingZones.map(z => `${z.id}:${z.allowSow}:${z.cells.map(i=>`${i}:${surfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))}`).join(',')}`).join('|');
+    const signature = `${world.width}:`+world.growingZones.map(z => `${z.id}:${z.allowSow}:${z.cells.map(i=>`${i}:${overlaySurfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))}`).join(',')}`).join('|');
     if (!reset && signature === this.signature) return false;
     this.signature = signature;
     const surfaces: Placement[] = [];
@@ -24,7 +24,7 @@ export class GrowingZoneLayer {
       const color = colors.get(zone.id)!;
       for (const cell of zone.cells) {
         const x = cell % world.width, z = Math.floor(cell / world.width);
-        surfaces.push({x,z,y:(surfaceHeightAtCell(world,x,z)??0)+.021,sx:1,sy:.014,sz:1,color});
+        surfaces.push({x,z,y:(overlaySurfaceHeightAtCell(world,x,z)??0)+.021,sx:1,sy:.014,sz:1,color});
       }
     }
     this.surfaces=surfaces;

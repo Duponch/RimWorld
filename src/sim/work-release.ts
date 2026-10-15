@@ -59,6 +59,8 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
     const cells=new Set(selection.cells);
     if(command.action==='cancel')for(const job of world.jobs){if([...footprintCells(job),...furnitureSourceCells(world,job)].some(c=>cells.has(c.z*world.width+c.x)))jobs.add(job.id);}
     else for(const zone of world.stockpiles)if(cells.has(zone.z*world.width+zone.x))zones.add(zone.id);
+  } else if(command.type==='area'&&command.action==='remove-snow-clear'){
+    const selected=queryArea(world,command);if(!selected.ok)return new Map();const cells=new Set(selected.cells);for(const p of world.pawns)if(p.cleaning?.snowCell!==undefined&&cells.has(p.cleaning.snowCell))pawns.add(p.id);
   } else if(command.type==='area'&&(command.action==='remove-home'||command.action==='deconstruct')) {
     const selection=queryArea(world,command);if(!selection.ok)return new Map();
     const cells=new Set(selection.cells);

@@ -9,7 +9,7 @@ import { AUTO_SAVE_KEYS,MANAGED_SAVE_KEYS,NAMED_SAVE_KEYS,encodeSaveSlot,isManag
 export { SAVE_KEY, PREVIOUS_KEY } from './save-repository';
 
 interface SessionClient {
-  init(seed: number, size: number, scenario: ScenarioId, paused?: boolean,site?:SiteOptions,startingParty?:StartingParty,startingWorld?:StartingWorld): Promise<unknown>;
+  init(seed: number, size: number, scenario: ScenarioId, paused?: boolean,site?:SiteOptions,startingParty?:StartingParty,startingWorld?:StartingWorld,surface?:'snow-phased-v1'): Promise<unknown>;
   load(data: string): Promise<unknown>;
   save(): Promise<string | undefined>;
 }
@@ -163,7 +163,7 @@ export class GameSession {
   }
 
   create(seed: number, size: number, scenario: ScenarioId,site?:SiteOptions,startingParty?:StartingParty,startingWorld?:StartingWorld): Promise<void> {
-    return this.exclusive(() => this.replace(() => this.client.init(seed, size, scenario, true,site,startingParty,startingWorld)));
+    return this.exclusive(() => this.replace(() => this.client.init(seed, size, scenario, true,site,startingParty,startingWorld,'snow-phased-v1')));
   }
 
   /** External copies never occupy the manual slot. Read/decode/check the file

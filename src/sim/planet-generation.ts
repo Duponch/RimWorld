@@ -1,5 +1,6 @@
 /** Original discrete globe. Centers/neighbours are its sole saved geometry. */
 import type { PlanetState, PlanetTile } from './planet-state.ts';
+import {selectProspectiveBiome} from './tundra-world.ts';
 import type { World } from './types.ts';
 import { siteClimateDefinition } from './site-climate.ts';
 import { validatePlanetTopology } from './planet-save.ts';
@@ -13,7 +14,7 @@ export interface PlanetHomeInput {
   rainfall: number;
   hilliness?: PlanetTile['hilliness'];
 }
-const biomes = ['temperate-forest', 'boreal-forest', 'arid-shrubland'] as const;
+const biomes = ['temperate-forest', 'boreal-forest', 'arid-shrubland', 'tundra'] as const;
 const hills = ['flat', 'small-hills', 'large-hills', 'mountainous'] as const;
 const finite = (n: unknown, min: number, max: number): n is number =>
   typeof n === 'number' && Number.isFinite(n) && n >= min && n <= max;
@@ -52,8 +53,8 @@ export function planetHomeInput(world: World): PlanetHomeInput {
 }
 
 /** Called only by explicit adoption/new-start dispatcher. No World/Thing draw. */
-export function generatePlanet(seed: number, home: PlanetHomeInput, adoptedAt: number): PlanetState {
-  if (!Number.isSafeInteger(seed) || seed < 0 || seed > 0xffffffff || !validHome(home)
+export function generatePlanet(seed: number, home: PlanetHomeInput, adoptedAt: number,revision:1|2=1): PlanetState {
+  if (![1,2].includes(revision)||revision===1&&home?.biome==='tundra'||!Number.isSafeInteger(seed) || seed < 0 || seed > 0xffffffff || !validHome(home)
     || !Number.isSafeInteger(adoptedAt) || adoptedAt < 0) throw new Error('Invalid planet generation input');
   let rng = (seed ^ 0x5c1f73a9) >>> 0; if (!rng) rng = 1;
   const draw = () => { rng ^= rng << 13; rng ^= rng >>> 17; rng ^= rng << 5; rng >>>= 0; return rng / 4294967296; };
@@ -81,10 +82,10 @@ export function generatePlanet(seed: number, home: PlanetHomeInput, adoptedAt: n
   }
   const continents = Array.from({length:3}, () => centers[Math.floor(draw()*centers.length)]!);
   const tiles: PlanetTile[] = centers.map((center,id) => {
-    const meanTemperature=28-40*Math.abs(center[1])+(draw()-.5)*8, rainfall=400+draw()*1200, relief=draw();
+    const meanTemperature=28-(revision===2?56:40)*Math.abs(center[1])+(draw()-.5)*8, rainfall=(revision===2?600:400)+draw()*1200, relief=draw();
     const land = continents.some(c => dot(center,c) > .55);
     return { id, center, neighbours:[...neighbours[id]!].sort((a,b)=>a-b),
-      biome: land ? meanTemperature<8 ? 'boreal-forest' : rainfall<700 ? 'arid-shrubland' : 'temperate-forest' : 'ocean',
+      biome: land ? revision===2?selectProspectiveBiome(meanTemperature,rainfall):meanTemperature<8 ? 'boreal-forest' : rainfall<700 ? 'arid-shrubland' : 'temperate-forest' : 'ocean',
       hilliness: relief<.55 ? 'flat' : relief<.8 ? 'small-hills' : relief<.95 ? 'large-hills' : 'mountainous', meanTemperature, rainfall };
   });
   // Original constraint, not Core continent/site frequencies: connected post at three hops.
@@ -94,10 +95,10 @@ export function generatePlanet(seed: number, home: PlanetHomeInput, adoptedAt: n
   }
   const choices=tiles.filter(tile=>distances[tile.id]===3), post=choices[Math.floor(draw()*choices.length)]!.id;
   for (let cursor=post;cursor!==-1;cursor=parents[cursor]!) if (tiles[cursor]!.biome==='ocean') {
-    const tile=tiles[cursor]!; tile.biome=tile.meanTemperature<8?'boreal-forest':tile.rainfall<700?'arid-shrubland':'temperate-forest';
+    const tile=tiles[cursor]!; tile.biome=revision===2?selectProspectiveBiome(tile.meanTemperature,tile.rainfall):tile.meanTemperature<8?'boreal-forest':tile.rainfall<700?'arid-shrubland':'temperate-forest';
   }
   Object.assign(tiles[0]!, {biome:home.biome,meanTemperature:home.meanTemperature,rainfall:home.rainfall,hilliness:home.hilliness??'flat'});
-  const planet:PlanetState={revision:1,adoptedAt,generationSeed:seed,tiles,homeTile:0,civilianTile:post,nextGroupId:1};
+  const planet:PlanetState={revision,adoptedAt,generationSeed:seed,tiles,homeTile:0,civilianTile:post,nextGroupId:1};
   if (!validPlanetTopology(planet)) throw new Error('Invalid original planet topology');
   return planet;
 }

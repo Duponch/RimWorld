@@ -31,7 +31,7 @@ export function validateWildFlora(world:Pick<World,'flora'|'site'|'tick'|'width'
   if(state===undefined)return world.site?.revision!==2&&world.resources.every(resource=>resource.species===undefined);
   if(version<91||world.site?.revision!==2||!record(state)||Object.keys(state).length!==6||
     !Object.keys(state).every(key=>['revision','biome','rng','nextCheck','adoptedAt','capacity'].includes(key)))return false;
-  if(state.revision!==1||!isBiomeId(state.biome)||state.biome!==world.site.biome||!uint(state.rng)||state.rng===0||
+  if(state.revision!==1||state.biome==='tundra'&&version<239||!isBiomeId(state.biome)||state.biome!==world.site.biome||!uint(state.rng)||state.rng===0||
     !Number.isSafeInteger(state.adoptedAt)||state.adoptedAt<0||state.adoptedAt>world.tick||
     !Number.isSafeInteger(state.nextCheck)||state.nextCheck<world.tick||state.nextCheck>world.tick+CHECK_INTERVAL||state.nextCheck%CHECK_INTERVAL!==state.adoptedAt%CHECK_INTERVAL||
     !Number.isSafeInteger(state.capacity)||state.capacity<0||state.capacity>world.width*world.height)return false;
@@ -53,7 +53,7 @@ function next(state:WildFloraState):number {
   return state.rng/0x100000000;
 }
 function freeCell(world:World,index:number):boolean {
-  const tile=world.tiles[index];if(!tile||tile.floor||soilFertility(tile.terrain)<=0||tile.terrain==='water'||tile.terrain==='rock')return false;
+  const tile=world.tiles[index];if(!tile||world.snow&&(tile.snowDepth??0)>=.2||tile.floor||soilFertility(tile.terrain)<=0||tile.terrain==='water'||tile.terrain==='rock')return false;
   const x=index%world.width,z=Math.floor(index/world.width);
   if(isRoofed(world,index)||world.growingZones.some(zone=>zone.cells.includes(index)))return false;
   return !world.resources.some(resource=>resource.x===x&&resource.z===z)&&

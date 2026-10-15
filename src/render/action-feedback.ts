@@ -66,6 +66,7 @@ export function actionProgress(world:World,pawn:Pawn,lookup?:ActionLookup):Actio
   if(pawn.cooking?.phase==='work')return measured('production',pawn.cooking.progress,productionTaskTotal(world,pawn.cooking));
   if(pawn.feed?.phase==='feed')return measured('feeding',pawn.feed.progress,FEED_TICKS);
   if(pawn.cleaning?.phase==='clean'){
+    if(pawn.cleaning.snowCell!==undefined)return measured('cleaning',pawn.cleaning.progress,50*(world.tiles[pawn.cleaning.snowCell]!.snowDepth??0));
     const filth=world.filth?.items.find(item=>item.id===pawn.cleaning!.targets[0]);
     if(filth)return measured('cleaning',pawn.cleaning.progress,FILTH_DEFINITIONS[filth.kind].work);
   }

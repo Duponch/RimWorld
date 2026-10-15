@@ -1,3 +1,4 @@
+import {snowTravelDelay,snowSearchCost} from './snow-rules.ts';
 import { fireNavigationCosts,addFireNavigationCosts } from './fire-navigation.ts';
 import { doorWait,isRoomDoor } from './door-rules.ts';
 import { footprintCells, footprintContains } from './definitions.ts';
@@ -108,7 +109,7 @@ export function furnitureDelay(world:World,from:Cell,to:Cell):number {
   }
   const materialDelay=world.piles.some(p=>(world.schemaVersion>=29&&p.kind==='steel'||world.schemaVersion>=32&&p.kind==='blocks'||world.schemaVersion>=41&&p.kind==='component'||world.schemaVersion>=123&&(p.kind==='gold'||p.kind==='plasteel'||p.kind==='advanced-component'))&&p.owner.type==='ground'&&p.owner.x===to.x&&p.owner.z===to.z)?1.4:0;
   const actor=trap?spikeTrapNavigationActor(world,from):undefined;
-  return Math.max(repeats&&previousRepeats?0:objectDelay,materialDelay,terrainTravelDelay(world,to.z*world.width+to.x))
+  return Math.max(repeats&&previousRepeats?0:objectDelay,materialDelay,terrainTravelDelay(world,to.z*world.width+to.x),world.snow?snowTravelDelay(world.tiles[to.z*world.width+to.x]!.snowDepth??0):0)
     +(actor&&spikeTrapKnowsOf(world,actor)?SPIKE_TRAP_WALK_DELAY:0);
 }
 /** Captured once per synchronous search. No shared mutation or cross-tick cache. */
@@ -127,7 +128,7 @@ export function navigationCosts(world:World,origin?:Cell):{costs:NavigationCostL
   const floors=new Map<number,number>();
   // A single captured byte per cell replaces two mostly dense Maps on a site.
   // Objects remain sparse; both lookups retain the same terrain floor.
-  const terrain=new Uint8Array(world.tiles.length);let terrainMaximum=0;
+  let terrain:Uint8Array|Uint16Array=new Uint8Array(world.tiles.length);let terrainMaximum=0;
   if(world.schemaVersion>=28) {
     for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground'){const i=p.owner.z*world.width+p.owner.x;costs.set(i,Math.max(costs.get(i)??0,1400));repeaters.add(i);stops.add(i);}
     // Capture terrain on every decision: flooring can mutate between actors
@@ -136,7 +137,9 @@ export function navigationCosts(world:World,origin?:Cell):{costs:NavigationCostL
     const tiles=world.tiles,hasSite=!!world.site;
     for(let i=0;i<tiles.length;i++){
       const tile=tiles[i]!,kind=tile.terrain;
-      const cost=tile.floor?Math.round(FLOOR_DEFINITIONS[tile.floor].pathCost/10/3*1000):kind==='rough-stone'||kind==='rich-soil'||kind==='gravel'||hasSite&&kind==='grass'?67:0;
+      let cost=tile.floor?Math.round(FLOOR_DEFINITIONS[tile.floor].pathCost/10/3*1000):kind==='rough-stone'||kind==='rich-soil'||kind==='gravel'||hasSite&&kind==='grass'?67:0;
+      if(world.snow)cost=Math.max(cost,snowSearchCost(tile.snowDepth??0));
+      if(cost>255&&terrain instanceof Uint8Array){const wide:Uint16Array=new Uint16Array(terrain.length);wide.set(terrain);terrain=wide;}
       if(cost){terrain[i]=cost;if(cost>terrainMaximum)terrainMaximum=cost;}
     }
   }

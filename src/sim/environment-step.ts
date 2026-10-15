@@ -11,6 +11,7 @@ import { ensureFireState } from './fire-rules.ts';
 import { advanceFlashstorm } from './flashstorm.ts';
 import type { ThermalLayout } from './thermal-topology.ts';
 import type { Cell,World } from './types.ts';
+import {stepSnowSurface} from './snow-surface.ts';
 import { advanceWildFlora } from './wild-flora.ts';
 
 /** One explicit adoption, without replaying weather or exposure in old saves. */
@@ -41,6 +42,7 @@ export function advanceSurfaceTemperature(world:World,layout:ThermalLayout,provi
   reconcilePlantLighting(world,light);
   updatePlantTemperatures(world,layout);
   if(world.climate)advancePlantLife(world,layout,light);
+  stepSnowSurface(world,layout);
   advanceWildFlora(world);
   return layout;
 }

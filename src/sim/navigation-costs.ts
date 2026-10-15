@@ -10,7 +10,7 @@ export const EMPTY_NAVIGATION_COSTS:NavigationCostLookup=Object.freeze({get:()=>
 
 /** Sparse objects can raise a terrain cost, including a present zero-cost door.
  * The dense layer is shared by total and non-repeatable floor costs. */
-export function overlayNavigationCosts(terrain:Uint8Array,terrainMaximum:number,sparse:ReadonlyMap<number,number>):NavigationCostLookup {
+export function overlayNavigationCosts(terrain:Uint8Array|Uint16Array,terrainMaximum:number,sparse:ReadonlyMap<number,number>):NavigationCostLookup {
   let maximum=terrainMaximum;for(const cost of sparse.values())maximum=Math.max(maximum,cost);
   return {
     get(index){const floor=terrain[index]||undefined,extra=sparse.get(index);return extra===undefined?floor:Math.max(extra,floor??0);},

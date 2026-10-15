@@ -57,7 +57,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
     if (fault && request.type !== 'init' && request.type !== 'load') throw new Error(fault.reason);
     if (request.type === 'init') {
       if (request.size !== 32 && !(MAP_SIZE_PRESETS as readonly number[]).includes(request.size)) throw new Error('Taille de carte invalide.');
-      const created=createScenarioWorld(request.seed, request.size, request.scenario,request.site,request.startingParty,request.startingWorld);
+      const created=createScenarioWorld(request.seed, request.size, request.scenario,request.site,request.startingParty,request.startingWorld,request.surface);
       world=created;
       adoptedReplacement = true;
       fault = undefined;

@@ -249,7 +249,7 @@ export class AudioCueRecorder {
           job.x, job.z, pawn.state === 'working', WORK_CUE_INTERVAL_TICKS);
       } else if (pawn.cleaning) {
         const task = pawn.cleaning;
-        recordWork(pawn.id, `clean:${task.targets[0] ?? 'none'}`, task.progress, 'cleaning.work',
+        recordWork(pawn.id, `clean:${task.snowCell===undefined?task.targets[0]??'none':'snow:'+task.snowCell}`, task.progress, 'cleaning.work',
           pawn.x, pawn.z, task.phase === 'clean' && pawn.state === 'working', STATION_CUE_INTERVAL_TICKS);
       } else if (pawn.surgery) {
         const task = pawn.surgery;

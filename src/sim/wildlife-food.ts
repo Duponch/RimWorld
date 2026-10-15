@@ -51,7 +51,8 @@ function unclaimedPlant(world:World,r:Resource,except:number,workCells?:Readonly
   return !world.wildlife?.animals.some(a=>a.id!==except&&a.meal?.kind==='plant'&&a.meal.id===r.id)
     &&(workCells?!workCells.has(r.z*world.width+r.x):!world.jobs.some(j=>j.reservedBy!==null&&j.x===r.x&&j.z===r.z&&['harvest','cut','sow'].includes(j.kind)));
 }
-function grazeablePlant(r:Resource,growth:number):boolean {
+function grazeablePlant(r:Resource,growth:number,world:World):boolean {
+  if(world.snow&&r.kind!=='tree'&&(world.tiles[r.z*world.width+r.x]!.snowDepth??0)>.5)return false;
   return growth>=(r.species==='healroot-wild'||r.kind==='healroot'||r.kind==='haygrass'?.65:.1)&&plantNutrition(r,growth)>0;
 }
 export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
@@ -66,7 +67,7 @@ export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
   for(const job of world.jobs)if(job.reservedBy!==null&&(job.kind==='harvest'||job.kind==='cut'||job.kind==='sow'))reservedPlantCells.add(job.z*world.width+job.x);
   if(!animalSpecies(a.species).predator)for(const r of world.resources)if((r.kind!=='haygrass'||world.schemaVersion>=227)&&(!pen||pen.has(r.z*world.width+r.x))&&isPlant(r)&&!plantLeafless(world,r)) {
     const growth=plantGrowth(world,r);
-    if(grazeablePlant(r,growth)&&!claimedPlants.has(r.id)&&!reservedPlantCells.has(r.z*world.width+r.x))result.push({id:r.id,kind:'plant',x:r.x,z:r.z,quantity:1});
+    if(grazeablePlant(r,growth,world)&&!claimedPlants.has(r.id)&&!reservedPlantCells.has(r.z*world.width+r.x))result.push({id:r.id,kind:'plant',x:r.x,z:r.z,quantity:1});
   }
   let reservations:ReadonlyMap<number,number>|undefined;
   for(const p of world.piles)if(animalPileFood(world,a,p)&&p.owner.type==='ground'&&(!pen||pen.has(p.owner.z*world.width+p.owner.x))) {
@@ -89,7 +90,7 @@ export function animalMealTarget(world:World,a:WildAnimal,resourcesById?:Readonl
     const r=resourcesById?resourcesById.get(meal.id):world.resources.find(r=>r.id===meal.id);
     if(!r||r.kind==='haygrass'&&world.schemaVersion<227||!isPlant(r)||plantLeafless(world,r))return;
     const growth=plantGrowth(world,r);
-    return grazeablePlant(r,growth)&&unclaimedPlant(world,r,a.id,workCells)&&(!pen||pen.has(r.z*world.width+r.x))?r:undefined;
+    return grazeablePlant(r,growth,world)&&unclaimedPlant(world,r,a.id,workCells)&&(!pen||pen.has(r.z*world.width+r.x))?r:undefined;
   }
   const p=world.piles.find(p=>p.id===meal.id);
   return p&&animalPileFood(world,a,p)&&p.owner.type==='ground'&&p.quantity-reservedSource(world,p.id,a.id)>=meal.quantity&&(!animalFoodPreference(p.item)||meal.quantity<=ITEM_DEFINITIONS[p.item].maxIngest)&&(!p.corpse||meal.quantity===1)&&(!pen||pen.has(p.owner.z*world.width+p.owner.x))?p.owner:undefined;

@@ -44,9 +44,9 @@ test('point queries keep complete rotated and historical footprints, job targets
   const line=[[[0,0],[1,0],[-1,0]],[[0,0],[0,1],[0,-1]],[[0,0],[1,0],[-1,0]],[[0,0],[0,1],[0,-1]]];
   const pair=[[[0,0],[0,1]],[[0,0],[1,0]],[[0,0],[0,-1]],[[0,0],[-1,0]]];
   const bench=[[[0,0],[-1,0],[1,0],[0,1],[-1,1],[1,1]],[[0,0],[0,-1],[0,1],[1,0],[1,-1],[1,1]],[[0,0],[-1,0],[1,0],[0,-1],[-1,-1],[1,-1]],[[0,0],[0,-1],[0,1],[-1,0],[-1,-1],[-1,1]]];
-  const stands=new Set<StructureKind>(['animal-sleeping-spot','grave','power-conduit','power-switch','butcher-spot','crafting-spot','door','autodoor','fence','fence-gate','pen-marker','stool','dining-chair','armchair','horseshoes']);
+  const stands=new Set<StructureKind>(['sleeping-spot','spike-trap','animal-sleeping-spot','grave','power-conduit','power-switch','butcher-spot','crafting-spot','door','autodoor','fence','fence-gate','pen-marker','stool','dining-chair','armchair','horseshoes']);
   const rejectsItems=new Set<StructureKind>(['chemfuel-generator','nutrient-paste-dispenser','double-bed','hydroponics-basin','sandbags','small-sculpture','large-sculpture','grave','heater','wind-turbine','battery','solar-generator','cooler','wood-generator','passive-cooler','wall','bed','hospital-bed','dresser','flower-pot','campfire']);
-  const stores=new Set<StructureKind>(['animal-sleeping-spot','orbital-beacon','fence','fence-gate','power-conduit','standing-lamp','sun-lamp','door','autodoor','stool','dining-chair','armchair','horseshoes']);
+  const stores=new Set<StructureKind>(['spike-trap','shelf','small-shelf','sleeping-spot','animal-sleeping-spot','orbital-beacon','fence','fence-gate','power-conduit','standing-lamp','sun-lamp','door','autodoor','stool','dining-chair','armchair','horseshoes']);
   const flickable=new Set<StructureKind>(['machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench','power-switch','wood-generator','standing-lamp','cooler','heater','electric-stove']);
   const w=createWorld(42,16,16);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.jobs=[];
   const points=Array.from({length:121},(_,i)=>({x:4+i%11,z:4+Math.floor(i/11)}));points.push({x:-20,z:8},{x:8,z:-20},{x:100,z:8},{x:8,z:100});
@@ -57,14 +57,15 @@ test('point queries keep complete rotated and historical footprints, job targets
       :kind==='wind-turbine'?[0,1].flatMap(a=>[-3,-2,-1,0,1,2,3].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
       :kind==='solar-generator'?Array.from({length:16},(_,i)=>[i%4,Math.floor(i/4)])
       :kind==='wood-generator'||kind==='chemfuel-generator'?[[0,0],[1,0],[0,1],[1,1]]
-      :['research-bench','comms-console','biofuel-refinery'].includes(kind)?bench[orientation]!
+      :['electric-crematorium','research-bench','comms-console','biofuel-refinery'].includes(kind)?bench[orientation]!
       :kind==='nutrient-paste-dispenser'?[-1,0,1,2].flatMap(a=>[-1,0,1].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
       :['hi-tech-research-bench','fabrication-bench'].includes(kind)?[0,1].flatMap(a=>[-2,-1,0,1,2].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
       :['electric-smelter','drug-lab','machining-table','art-bench','stonecutter','tailor-bench','electric-tailor-bench','fueled-stove','electric-stove','butcher-table'].includes(kind)?line[orientation]!
       :kind==='table-square'||kind==='multi-analyzer'||kind==='double-bed'?[0,1].flatMap(a=>[0,1].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
       :kind==='table-long'?[0,1,2,3].flatMap(a=>[0,1].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
+      :kind==='shelf'?[[0,0],side]
       :kind==='dresser'?pair[orientation]!
-      :footprint!=='legacy-single'&&['bed','hospital-bed','table','battery','grave'].includes(kind)?pair[orientation]!:[[0,0]];
+      :footprint!=='legacy-single'&&['sleeping-spot','bed','hospital-bed','table','battery','grave'].includes(kind)?pair[orientation]!:[[0,0]];
     const cells=offsets.map(([x,z])=>({x:8+x!,z:8+z!})),keys=new Set(cells.map(c=>`${c.x},${c.z}`)),expected=points.map(c=>keys.has(`${c.x},${c.z}`));
     const shape={x:8,z:8,orientation,footprint},structure={...shape,id:1,kind};
     const targets:Parameters<typeof footprintContains>[0][]=[structure,{...shape,kind:'install',furniture:{kind}},{...shape,kind:'deconstruct',deconstruction:{kind}}];

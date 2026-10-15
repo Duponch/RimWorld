@@ -6,7 +6,7 @@ export const PLANET_TILE_COUNT = 162;
 export const PLANET_ARC_COUNT = 960;
 const PLANET_KEYS = ['revision', 'adoptedAt', 'generationSeed', 'tiles', 'homeTile', 'civilianTile', 'nextGroupId'] as const satisfies readonly (keyof PlanetState)[];
 const TILE_KEYS = ['id', 'center', 'neighbours', 'biome', 'hilliness', 'meanTemperature', 'rainfall'] as const satisfies readonly (keyof PlanetTile)[];
-const BIOMES = ['ocean', 'temperate-forest', 'boreal-forest', 'arid-shrubland'] as const;
+const BIOMES = ['ocean', 'temperate-forest', 'boreal-forest', 'arid-shrubland', 'tundra'] as const;
 const HILLS = ['flat', 'small-hills', 'large-hills', 'mountainous'] as const;
 const CENTER_UNIT_EPSILON = 1e-9;
 // Numerical separation, not a second saved geometry or a seed replay. The
@@ -139,13 +139,14 @@ export function validatePlanet(value: unknown, realWorld: World, version: number
   if (!integer(realWorld.tick, 0, Number.MAX_SAFE_INTEGER)) return ['Invalid planet world clock.'];
   if (!record(value) || !exactKeys(value, PLANET_KEYS)) return ['Invalid planet state shape.'];
   if (!denseArray(value.tiles, PLANET_TILE_COUNT, PLANET_TILE_COUNT)) return ['Invalid planet tile array.'];
-  if (value.revision !== 1 || !integer(value.generationSeed, 0, 0xffffffff)
+  if (!(value.revision===1||version>=239&&value.revision===2) || !integer(value.generationSeed, 0, 0xffffffff)
     || !integer(value.adoptedAt, 0, realWorld.tick) || !integer(value.nextGroupId, 1, Number.MAX_SAFE_INTEGER)
     || !integer(value.homeTile, 0, PLANET_TILE_COUNT - 1) || !integer(value.civilianTile, 0, PLANET_TILE_COUNT - 1)
     || value.homeTile === value.civilianTile) return ['Invalid planet revision, clock, seed or indices.'];
   const errors = validatePlanetTopology(value.tiles);
   if (errors.length) return errors;
   const tiles = value.tiles as PlanetTile[];
+  if(value.revision===1&&tiles.some(t=>t.biome==='tundra'))return ['Future biome in legacy planet revision.'];
   if (tiles[value.homeTile]!.biome === 'ocean' || tiles[value.civilianTile]!.biome === 'ocean')
     return ['Planet home or civilian site is ocean.'];
   if (!reachableTiles(tiles, value.homeTile, true).has(value.civilianTile))

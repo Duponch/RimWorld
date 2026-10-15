@@ -68,6 +68,7 @@ export function allowedAreaWorkAllowed(world:World,pawn:Pawn):boolean {
     if(c.phase!=='output')for(const i of c.ingredients)if(!allows(i.cell)||i.stage!=='held'&&!ground(i.pileId))return false;
     // Output can reselect an admissible depot. Its old destination is not an ingredient.
   }
+  if(pawn.cleaning?.snowCell!==undefined&&!allows({x:pawn.cleaning.snowCell%world.width,z:Math.floor(pawn.cleaning.snowCell/world.width)}))return false;
   if(pawn.cleaning?.targets.some(id=>!allows(world.filth?.items.find(f=>f.id===id))))return false;
   if(pawn.firefighting){const f=world.fires?.items.find(f=>f.id===pawn.firefighting!.fireId);if(f){const cell=f.attachedPawnId!==undefined?world.pawns.find(p=>p.id===f.attachedPawnId):f.attachedAnimalId!==undefined?world.wildlife?.animals.find(a=>a.id===f.attachedAnimalId):f;if(!allows(cell))return false;}}
   if(pawn.burial){const b=pawn.burial;if(!allows(world.structures.find(s=>s.id===b.graveId)))return false;

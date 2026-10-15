@@ -1,3 +1,4 @@
+import {clearSnowForStructure} from './snow-surface.ts';
 import {shelfAt} from './shelf-storage.ts';
 import {planShelfRemoval,commitShelfRemoval} from './shelf-retirement.ts';
 import { groundCapacity, groundPile, groundPileCells, nearbyGround } from './ground-placement.ts';
@@ -88,7 +89,7 @@ export function advanceFurniture(world:World,pawn:Pawn,job:Job,move:(target:Cell
     if(!retirement||retirement.actors.has(pawn.id)||!commitConstructionPlantRetirement(world,retirement))return false;
     Object.assign(pack.building,{x:job.x,z:job.z,orientation:job.orientation});
     if(pack.building.kind==='spike-trap')pack.building.spikeTrap=initialSpikeTrapState(world,pack.building);
-    world.packed=world.packed.filter(p=>p!==pack);world.structures.push(pack.building);
+    world.packed=world.packed.filter(p=>p!==pack);world.structures.push(pack.building);clearSnowForStructure(world,pack.building);
   } else {release();return false;}
   world.jobs=world.jobs.filter(j=>j!==job);pawn.jobId=null;pawn.path=[];pawn.state='idle';pawn.planCooldown=0;
   world.events.push({tick:world.tick,type:'job',message:`${pawn.name} a ${job.kind==='uninstall'?'désinstallé':'installé'} le meuble.`});

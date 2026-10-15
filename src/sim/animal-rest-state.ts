@@ -23,6 +23,7 @@ export function syncCarriedAnimals(w:World,carrier?:Pawn):void {
     if(p.motion)a.motion={...p.motion,from:{...p.motion.from},to:{...p.motion.to},
       ...(p.motion.stagger?{stagger:p.motion.stagger.map(s=>({...s}))}:{}),...(p.motion.stuns?{stuns:p.motion.stuns.map(s=>({...s}))}:{})};
     else delete a.motion;
+    if(a.motion)delete a.motion.snowEntryPending;
   }
 }
 /** The patient keeps the captured edge, even when its carrier falls or dies. */

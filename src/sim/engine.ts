@@ -42,6 +42,8 @@ import { advanceHumanCorpses } from './human-corpses.ts';
 import { advanceDeathThoughts } from './death-thoughts-perception.ts';
 import { applyBurial,processBurial,reconcileBurials,initialGrave } from './burial.ts';
 import { applyCleanRoom,processCleaning } from './cleaning.ts';
+import {editSnowArea} from './snow-clearing.ts';
+import {finishSnowSteps,clearSnowForStructure} from './snow-surface.ts';
 import { advanceFilth,recordFilthMovement,bleedFilth } from './filth.ts';
 import { weatherRainRate } from './weather.ts';
 import { medicalBleed } from './injury-state.ts';
@@ -262,7 +264,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   const identities=deconstructionCells?world.structures.filter(s=>!['sleeping-spot','animal-sleeping-spot','crafting-spot','butcher-spot'].includes(s.kind)&&footprintCells(s).some(c=>deconstructionCells.has(c.z*world.width+c.x))).length:command.action==='growing'?(selection.targetZoneId===undefined?zoneCellComponents(world.width,selection.cells).length:0):selection.cells.length;
   if (creates && !Number.isSafeInteger(world.nextId + identities)) return refusal('invalid-command', 'Limite des identités atteinte.');
   let affected = selection.cells.length;
-  if(command.action==='home'||command.action==='remove-home'){const cells=new Set(world.home);for(const i of selection.cells)if(command.action==='home')cells.add(i);else cells.delete(i);world.home=[...cells].sort((a,b)=>a-b);if(!world.home.length)delete world.home;} else if (isRoofArea(command.action)) { designateRoofArea(world, selection.cells, command.action); } else if (command.action === 'deconstruct') {
+  if(command.action==='snow-clear'||command.action==='remove-snow-clear'){editSnowArea(world,selection.cells,command.action==='snow-clear',drops);}else if(command.action==='home'||command.action==='remove-home'){const cells=new Set(world.home);for(const i of selection.cells)if(command.action==='home')cells.add(i);else cells.delete(i);world.home=[...cells].sort((a,b)=>a-b);if(!world.home.length)delete world.home;} else if (isRoofArea(command.action)) { designateRoofArea(world, selection.cells, command.action); } else if (command.action === 'deconstruct') {
     const selected = deconstructionCells!;
     const targets = world.structures.filter(s => footprintCells(s).some(c => selected.has(cellIndex(world,c.x,c.z))));
     for (const target of targets)if(target.kind==='sleeping-spot')removeHumanSleepingSpot(world,target,drops);else if(target.kind==='animal-sleeping-spot')removeAnimalSpot(world,target);else if((target.kind==='crafting-spot'||target.kind==='butcher-spot'))removeCraftingSpot(world,target,drops);else designateDeconstruction(world,target);
@@ -804,6 +806,7 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
     const qualityStream={rng:world.rng},quality=isHabitatFurnitureKind(job.kind)&&FURNITURE_DEFINITIONS[job.kind].quality?craftingQuality(pawn.skills.construction.level,()=>healthRandom(qualityStream)):undefined;if(quality)world.rng=qualityStream.rng;
     const builtId=world.nextId++,shelf=isShelfKind(job.kind)?newShelfStorage(footprintCells(job).map(()=>world.nextId++)):undefined;
     world.structures.push({ ...(shelf?{shelf}:{}), ...(job.kind==='spike-trap'?{spikeTrap:initialSpikeTrapState(world,job)}:{}),...(job.kind==='mini-turret'?{turret:newMiniTurretState()}:{}),...(job.kind==='hospital-bed'?{medical:true as const}:{}),...(job.kind==='grave'?{grave:initialGrave()}:{}),...(job.kind==='pen-marker'?{pen:{accepted:[...PEN_ANIMALS]}}:{}),...(job.kind==='heater'?{heater:newHeaterState()}:{}),...(job.kind==='wind-turbine'?{wind:newWindTurbineState()}:{}),...(job.kind==='battery'?{battery:{stored:0}}:{}),...(job.kind==='cooler'?{cooler:newCoolerState()}:{}),...(job.kind==='flower-pot'?{flower:createFlowerPotState()}:{}),...(quality?{quality}:{}),...(isElectrical(job.kind)?{power:newPowerState(job.kind)}:{}),...(isPassageDoor(job.kind)?{door:builtDoorState(world,job)}:{}),...(job.material?{material:job.material}:{}),...(isFueledBuilding(job.kind)?{fuel:newBuildingFuel(job.kind as import('./types.ts').StructureKind)}:{}),...(job.kind==='electric-crematorium'||job.kind==='electric-smelter'||job.kind==='biofuel-refinery'||job.kind==='drug-lab'||job.kind==='art-bench'||job.kind==='machining-table'||job.kind==='fabrication-bench'||job.kind==='tailor-bench'||job.kind==='electric-tailor-bench'||job.kind==='campfire'||isFoodWorkstation(job.kind)||job.kind==='stonecutter'?{bills:[]}:{}), id: builtId, kind: job.kind as import('./types.ts').StructureKind, x: job.x, z: job.z, orientation: job.orientation, footprint: job.footprint });
+    clearSnowForStructure(world,world.structures.at(-1)!);
     if(job.kind==='hydroponics-basin')initializeHydroponicBasin(world,world.structures.at(-1)!);
     if(job.kind==='fence'||job.kind==='fence-gate'||job.kind==='pen-marker'||job.kind==='wall'||isRoomDoor(job.kind)||job.kind==='cooler')invalidateAnimalPens(world);
   }
@@ -833,7 +836,7 @@ export function stepWorld(world: World, ticks = 1, diagnostics?:import('./work-p
   let thermal=reconcileTemperature(world);reconcilePlantLighting(world,()=>readPlantLight(world));updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);
   for (let step = 0; step < ticks; step++) {
     flushColonyLosses(world);
-    world.tick++;
+    world.tick++;finishSnowSteps(world);
     let light:LightEnvironment|undefined,lightKey:string|undefined;
     const getLight=()=>{if(!light){light=readPlantLight(world);lightKey=plantLightSourcesKey(world);}return light;};
     advanceHumanAges(world);

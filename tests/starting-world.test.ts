@@ -27,7 +27,7 @@ test('text seeds are bounded deterministic uint32 values, literal numeric seeds 
 
 test('prospective descriptors reject future keys, inherited fields, accessors and out of range values',()=>{
   const good={version:1,seed:333,tile:0};expect(validStartingWorld(good)).toBe(true);
-  for(const bad of [null,[],{}, {...good,version:2},{...good,seed:-1},{...good,seed:2**32},
+  for(const bad of [null,[],{}, {...good,version:3},{...good,seed:-1},{...good,seed:2**32},
     {...good,tile:162},{...good,tile:.5},{...good,extra:1},{...good,[Symbol('extra')]:1},
     Object.assign(Object.create({seed:333}),{version:1,tile:0}),Object.defineProperty({...good},'tile',{get:()=>0})]) {
     expect(validStartingWorld(bad)).toBe(false);

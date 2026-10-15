@@ -1,5 +1,9 @@
 # Guide joueur
 
+## Toundra et déneigement — V376
+
+Dans **Nouvelle partie**, choisissez une case **Toundra** et lisez sa température et sa saison avant de confirmer. Prévoyez réserves, vêtements chauds et chauffage : la végétation y est rare. La neige s’accumule avec les précipitations et fond avec la chaleur ; elle ralentit les trajets. Ouvrez **Zones → Déneigement**, tracez les accès à dégager et activez **Nettoyage** dans Travail. Un colon disponible rejoint les cases et les déneige au contact. Retirez la zone avec l’outil opposé. Les anciens mondes gardent leur climat et leur terrain historiques. [Portée du lot](tundra-snow-v376.md).
+
 ## Consommer un aliment choisi — V346
 
 Sélectionnez un seul colon, faites un clic droit sur une pile alimentaire au sol, en réserve ou sur une étagère, puis choisissez **Consommer**. Les piles d’une étagère restent des choix distincts. L’ordre remplace l’activité actuelle, sans mise en file ; relâchez Maj. Il exige un accès réel et une portion disponible.

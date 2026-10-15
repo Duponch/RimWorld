@@ -634,7 +634,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     addNavigation(()=>navigate('story'),'Générer',()=>{
       const parsed=parameters.validate();if(parsed===undefined)return;
       try{
-        if(!planet||planet.generationSeed!==parsed){planet=generateStartingWorld(parsed);selectedTile=planet.homeTile;}
+        if(!planet||planet.generationSeed!==parsed){planet=generateStartingWorld(parsed,2);selectedTile=planet.homeTile;}
         if(selectedTile===null||!startingSiteChoices(planet).includes(selectedTile))selectedTile=startingSiteChoices(planet)[0]??null;
         navigate('site');
       }catch(cause){showError(cause instanceof Error?cause.message:'Le monde n’a pas pu être généré.');}
@@ -670,7 +670,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     content.append(configuration.element);pawnsPage=configuration;disposePage=configuration.dispose;
     addNavigation(()=>navigate('site'),'Démarrer',()=>{
       if(!configuration.validate())return;
-      const startingParty=startingPartyFromRoster(teamSeed,roster),startingWorld:StartingWorld={version:1,seed:planet!.generationSeed,tile:selectedTile!};
+      const startingParty=startingPartyFromRoster(teamSeed,roster),startingWorld:StartingWorld={version:planet!.revision,seed:planet!.generationSeed,tile:selectedTile!};
       const resolved=resolveStartingSite(startingWorld);site=resolved.site;
       const launch=()=>void run(()=>options.onStart({seed:resolved.seed,size:DEFAULT_MAP_SIZE,site:{...site},startingParty,startingWorld}),'Génération de la carte et préparation de la colonie…');
       const missing=startingPartyMissingWork(teamSeed,startingParty.selected);

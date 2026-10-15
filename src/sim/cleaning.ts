@@ -1,3 +1,4 @@
+import {snowClearingWanted,snowClearingProposal,processSnowClearing} from './snow-clearing.ts';
 import { workPriority } from './work-types.ts';
 import { allowedAreaAllows,allowedAreaReason,captureAllowedArea,type AllowedAreaPolicy } from './allowed-area-state.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
@@ -15,13 +16,13 @@ import { thinFilth } from './filth.ts';
 import type { NeedContext } from './needs.ts';
 import type { Cell,Pawn,World } from './types.ts';
 
-export interface CleaningTask {targets:number[];forced:boolean;phase:'approach'|'clean';progress:number}
+export interface CleaningTask {snowCell?:number;targets:number[];forced:boolean;phase:'approach'|'clean';progress:number}
 export interface CommandCleaning extends Cell {type:'clean-room';pawnId:number}
 export interface CleaningProposal {task:CleaningTask;path:Cell[];target:Cell;id:number}
 const distance=(a:Cell,b:Cell)=>Math.abs(a.x-b.x)+Math.abs(a.z-b.z);
 const eligible=(w:World,p:Pawn,f:FilthRecord,forced=false,policy?:AllowedAreaPolicy)=>(!policy||allowedAreaAllows(w,p,f,policy))&&inHome(w,f.z*w.width+f.x)&&(forced||w.tick*10-f.grownCore>=600)&&!w.pawns.some(q=>q!==p&&q.cleaning?.targets.includes(f.id));
 const able=(p:Pawn)=>isColonist(p)&&!p.prisoner&&!p.draft&&!p.mental?.crisis&&!p.burning&&!medicalWorkRefusal(p);
-export function cleaningWanted(w:World,p:Pawn):boolean {const policy=captureAllowedArea(w,p);return !!workPriority(p,'clean')&&able(p)&&!!w.filth?.items.some(f=>eligible(w,p,f,false,policy));}
+export function cleaningWanted(w:World,p:Pawn):boolean {const policy=captureAllowedArea(w,p);return !!workPriority(p,'clean')&&able(p)&&(!!w.filth?.items.some(f=>eligible(w,p,f,false,policy))||snowClearingWanted(w,p));}
 function route(w:World,p:Pawn,f:FilthRecord,reach:Reachability):Cell[]|null {
   const paths=[f,...workNeighbours(f,'mine')].filter(c=>fireTouch(w,c,f)&&canStopAt(w,c,reach)).map(c=>routeToCell(w,c,reach)).filter((v):v is Cell[]=>v!==null);
   paths.sort((a,b)=>routeCost(w,a,reach)-routeCost(w,b,reach)||a.length-b.length);return paths[0]??null;
@@ -33,11 +34,12 @@ function sameCleaningRoom(w:World,origin:Cell,target:Cell,capture:CleanlinessCap
 }
 export function cleaningProposal(w:World,p:Pawn,reach:Reachability):CleaningProposal|undefined {
   if(!cleaningWanted(w,p))return;
-  const policy=captureAllowedArea(w,p),targets=w.filth!.items.filter(f=>eligible(w,p,f,false,policy)).sort((a,b)=>distance(a,p)-distance(b,p)||a.id-b.id);
+  const policy=captureAllowedArea(w,p),targets=(w.filth?.items??[]).filter(f=>eligible(w,p,f,false,policy)).sort((a,b)=>distance(a,p)-distance(b,p)||a.id-b.id);
   for(const f of targets){const path=route(w,p,f,reach);if(!path)continue;
     const capture=captureCleanliness(w),near=targets.filter(v=>v!==f&&(v.x-f.x)**2+(v.z-f.z)**2<=30&&sameCleaningRoom(w,f,v,capture)).slice(0,14);
     return {id:f.id,target:{x:f.x,z:f.z},path,task:{targets:[f.id,...near.map(v=>v.id)],forced:false,phase:'approach',progress:0}};
   }
+  return snowClearingProposal(w,p,reach);
 }
 export function startCleaning(p:Pawn,proposal:CleaningProposal):void {p.cleaning=proposal.task;p.path=proposal.path;p.state=proposal.path.length?'moving':'working';}
 /** Explicit room command: unlike automatic WorkGiver, Core does not enforce
@@ -59,6 +61,7 @@ export function applyCleanRoom(w:World,command:CommandCleaning):string|null {
 }
 export function processCleaning(w:World,p:Pawn,context:NeedContext):boolean {
   const task=p.cleaning;if(!task)return false;
+  const snow=processSnowClearing(w,p,task,context);if(snow!==undefined)return snow;
   if(backgroundWorkRefusal(p,'clean')||!able(p)||!task.forced&&!workPriority(p,'clean')){delete p.cleaning;p.path=[];p.planCooldown=0;if(p.state==='working')p.state='idle';return false;}
   const policy=captureAllowedArea(w,p);
   while(task.targets.length){const f=w.filth?.items.find(f=>f.id===task.targets[0]);if(f&&(!policy||allowedAreaAllows(w,p,f,policy))&&inHome(w,f.z*w.width+f.x))break;task.targets.shift();task.progress=0;p.path=[];}

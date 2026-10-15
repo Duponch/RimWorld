@@ -35,7 +35,7 @@ const bodies:Readonly<Record<string,string>>={
   stockpile:'<path d="m8 29 24-12 24 12v22L32 63 8 51z" fill="#deb46d"/><path d="m8 29 24 12 24-12M32 41v22M19 23l25 12"/>',
   'remove-floor':'<path d="m6 39 26-16 26 16-26 16z" fill="#c4b6a6"/><path d="m22 8 19 19m0-19L22 27" stroke="#ff6b5e" stroke-width="5"/>',
 };
-const aliases:Readonly<Record<string,string>>={'extract-tree':'extract','replant-tree':'growing',replant:'growing',select:'pointer',work:'chop',schedule:'clock',assign:'people','remove-growing':'growing','remove-stockpile':'stockpile','remove-home':'home'};
+const aliases:Readonly<Record<string,string>>={'snow-clear':'extract','remove-snow-clear':'extract','extract-tree':'extract','replant-tree':'growing',replant:'growing',select:'pointer',work:'chop',schedule:'clock',assign:'people','remove-growing':'growing','remove-stockpile':'stockpile','remove-home':'home'};
 export const PICTOGRAM_IDS=Object.freeze([...Object.keys(bodies),...Object.keys(aliases)]);
 export function pictogramSvg(id:string):string {
   const target=aliases[id]??id,body=bodies[target];

@@ -22,7 +22,7 @@ function unit(v:Vector):Vector {
   return [v[0]/n,v[1]/n,v[2]/n];
 }
 const add=(a:Vector,b:Vector,c:Vector):Vector=>[a[0]+b[0]+c[0],a[1]+b[1]+c[1],a[2]+b[2]+c[2]];
-const biomeLabel=(tile:PlanetTile)=>({ocean:'Océan','temperate-forest':'Forêt tempérée','boreal-forest':'Forêt boréale','arid-shrubland':'Broussailles arides'})[tile.biome];
+const biomeLabel=(tile:PlanetTile)=>({ocean:'Océan','temperate-forest':'Forêt tempérée','boreal-forest':'Forêt boréale','arid-shrubland':'Broussailles arides',tundra:'Toundra'})[tile.biome];
 const reliefLabel=(tile:PlanetTile)=>({flat:'plat','small-hills':'petites collines','large-hills':'grandes collines',mountainous:'montagnes'})[tile.hilliness];
 export function planetTileLabel(planet:PlanetState,id:number):string {
   const tile=planet.tiles.find(t=>t.id===id);if(!tile)throw Error('Case géographique absente.');

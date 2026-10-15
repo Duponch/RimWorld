@@ -34,7 +34,7 @@ export function validAnimalRescueShape(v:unknown,version:number):boolean {
  * recovery before the edge ends, while every captured cost/interval stays strict. */
 export function validAnimalCarrierMotion(w:World,a:WildAnimal,version:number):boolean {
   const m=a.motion;
-  if(version<221||!a.domestic||!m||!object(m)||!keys(m,['from','to','start','end'],['speedFactor','terrainDelay','stagger','stuns']))return false;
+  if(version<221||!a.domestic||!m||!object(m)||!keys(m,['from','to','start','end'],['speedFactor','terrainDelay','stagger','stuns',...(version>=239?['snowEntryPending']:[])]))return false;
   const cell=(v:unknown):v is {x:number;z:number}=>object(v)&&keys(v,['x','z'])&&Number.isSafeInteger(v.x)&&Number(v.x)>=0&&Number(v.x)<w.width&&Number.isSafeInteger(v.z)&&Number(v.z)>=0&&Number(v.z)<w.height;
   if(!cell(m.from)||!cell(m.to)||!same(a,m.to)||!Number.isFinite(m.start)||m.start<0||m.start>w.tick||!Number.isFinite(m.end)||m.end<=m.start
     ||Math.max(Math.abs(m.from.x-m.to.x),Math.abs(m.from.z-m.to.z))!==1

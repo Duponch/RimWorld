@@ -10,7 +10,7 @@ export interface PlanetTile {
   rainfall: number;
 }
 export interface PlanetState {
-  revision: 1;
+  revision: 1 | 2;
   adoptedAt: number;
   generationSeed: number;
   tiles: PlanetTile[];

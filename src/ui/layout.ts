@@ -14,7 +14,7 @@ import { siteHudLayout } from './site-hud';
 
 const mapSizeLabels: Record<number, string> = { 32: 'terrain d’essai', 64: 'compacte', 128: 'compacte', 200: 'petite', 250: 'moyenne' };
 
-export type Tool = BuildableFloorKind | 'home' | 'remove-home' | 'ignore-roof' | 'haul-chunks' | 'select' | 'allowed-expand' | 'allowed-shrink' | Exclude<JobKind, 'sow'|'repair'|'fix-breakdown'|'flick'|'lay-floor'> | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
+export type Tool = 'snow-clear' | 'remove-snow-clear' | BuildableFloorKind | 'home' | 'remove-home' | 'ignore-roof' | 'haul-chunks' | 'select' | 'allowed-expand' | 'allowed-shrink' | Exclude<JobKind, 'sow'|'repair'|'fix-breakdown'|'flick'|'lay-floor'> | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
 export type Panel = 'quests' | 'world' | 'animals' | 'wildlife' | 'research' | 'architect' | 'work' | 'schedule' | 'assign' | 'history' | 'menu' | null;
 export type ArchitectCategory = 'orders' | 'zones' | 'structure' | 'floors' | 'furniture' | 'temperature' | 'recreation' | 'production' | 'power';
 /** Visible Core work order (naturalPriority), omitting Smithing and Tailoring
@@ -118,6 +118,8 @@ export const toolDefinitions: { id: Tool; title: string; hint: string; key: stri
   { id:'ignore-roof',title:'Ignorer le toit',hint:'Effacer la zone de toiture sans changer la couverture déjà posée.',key:'',category:'zones' },
   { id: 'remove-growing', title: 'Retirer une culture', hint: 'Retirer la zone conserve les plantes déjà semées.', key: '', category: 'zones' },
   { id: 'stockpile', title: 'Zone de stockage', hint: 'Tracer une zone, ou commencer dans une zone existante pour l’agrandir. Les objets mobiles restent au sol.', key: 'S', category: 'zones' },
+  { id:'snow-clear',title:'Déneigement',hint:'Tracer une zone entretenue par le travail Nettoyage dès que la neige atteint20%. La neige est retirée par un vrai travail au contact.',key:'',category:'zones' },
+  { id:'remove-snow-clear',title:'Retirer le déneigement',hint:'Retirer la zone conserve la neige déjà présente et libère le travail en cours.',key:'',category:'zones' },
   { id:'home',title:'Zone de foyer',hint:'Tracer les cases où les bâtisseurs doivent entretenir les ouvrages endommagés.',key:'',category:'zones' },
   { id:'remove-home',title:'Retirer le foyer',hint:'Retire la permission de réparation sans démolir les ouvrages.',key:'',category:'zones' },
   { id: 'remove-stockpile', title: 'Retirer', hint: 'Cliquer ou tracer un rectangle pour retirer des cases de réserve ; les objets restent au sol.', key: '', category: 'zones' },

@@ -45,6 +45,7 @@ const PROFILES: Record<BiomeId, {
     foliage: [0x466a4b, 0x5d7851, 0x708454], species: ['oak', 'poplar', 'oak', 'poplar'], floraCount: 13, snow: .22 },
   'boreal-forest': { ridges: [0x758a85, 0x879994, 0x697f7c], foreground: [0x4e6d65, 0x5c766c],
     foliage: [0x31584c, 0x456a59, 0x5d7967], species: ['pine', 'pine', 'birch', 'pine'], floraCount: 14, snow: .67 },
+  tundra: {ridges:[0xaab8b6,0xbfc9c3,0x97a8a4],foreground:[0x8e9c92,0xa1ab99],foliage:[0x6e8675,0x84917b,0x98a48c],species:['grass','pine','grass','grass','birch'],floraCount:6,snow:.9},
   'arid-shrubland': { ridges: [0xba9f7d, 0xae9271, 0xc3ad8e], foreground: [0x948565, 0xa49573],
     foliage: [0x79875a, 0x8d955f, 0x5f795b], species: ['saguaro', 'agave', 'drago', 'agave', 'grass'], floraCount: 11, snow: 0 },
 };

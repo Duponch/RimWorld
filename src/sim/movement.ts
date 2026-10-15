@@ -1,3 +1,4 @@
+import {finishSnowStep} from './snow-surface.ts';
 import { apparelMoveFactor } from './apparel-rules.ts';
 import { weatherMoveFactor } from './weather-exposure.ts';
 import { isStunned } from './stun.ts';
@@ -32,8 +33,9 @@ export function startTravel(world:World,pawn:Pawn,next:Cell,getLight?:LightReade
     if(pawn.stagger&&pawn.stagger.untilCore/10>start)intervals.push({start:Math.max(start,pawn.stagger.sinceCore/10),end:pawn.stagger.untilCore/10});
     if(intervals.length){motion.stagger=mergeSlowIntervals(intervals);motion.end=travelEnd(motion);}
   }
+  if(world.snow)motion.snowEntryPending=true;
   pawn.motion=motion;
   pawn.x=next.x; pawn.z=next.z; pawn.moveCooldown=Math.max(0,pawn.motion.end-world.tick);
   approachAutodoor(world,pawn,next);
-  syncPatient(world,pawn);return true;
+  finishSnowStep(world,pawn);syncPatient(world,pawn);return true;
 }

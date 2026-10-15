@@ -1,3 +1,5 @@
+import {finishSnowStep} from './snow-surface.ts';
+import {animalBodySize} from './animal-life.ts';
 import { mergeSlowIntervals,travelEnd } from './travel-timing.ts';
 import { weatherMoveFactor } from './weather-exposure.ts';
 import { routeToCell,hasReachableCell,inBounds } from './pathfinding.ts';
@@ -135,5 +137,6 @@ export function moveAnimal(world:World,a:WildAnimal,step:(a:Cell,b:Cell)=>boolea
   const species=animalSpecies(a.species),pace=(a.meal||a.flee||a.retaliation||a.predation||a.manhunter||a.burning?species.moveTicks:species.walkTicks)/(moving*weatherMoveFactor(world,a)),delay=furnitureDelay(world,a,next),start=a.motion&&a.motion.end>=world.tick-1?a.motion.end:world.tick;
   a.motion={from:{x:a.x,z:a.z},to:{...next},start,end:start+Math.hypot(next.x-a.x,next.z-a.z)*pace+delay,speedFactor:3/pace,terrainDelay:delay};
   if(a.stagger&&a.stagger.untilCore/10>start){a.motion.stagger=mergeSlowIntervals([{start:Math.max(start,a.stagger.sinceCore/10),end:a.stagger.untilCore/10}]);a.motion.end=travelEnd(a.motion);}
-  a.x=next.x;a.z=next.z;a.path.shift();a.state='moving';return true;
+  if(world.snow&&animalBodySize(a)>.9)a.motion.snowEntryPending=true;
+  a.x=next.x;a.z=next.z;a.path.shift();a.state='moving';finishSnowStep(world,a,animalBodySize(a));return true;
 }

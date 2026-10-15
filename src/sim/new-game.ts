@@ -1,3 +1,4 @@
+import {initializeSnowSurface} from './snow-surface.ts';
 import { resolveStartingSite,type StartingWorld } from './starting-world.ts';
 import { adoptStartingSiteClimate } from './site-climate.ts';
 import { isPlant,plantGrowth } from './plants.ts';
@@ -105,7 +106,8 @@ function survivalStart(world:World,commerce=false,party?:StartingParty):{landing
 
 /** The only application factory. Loading an existing save must not call this
  * function: scenario population, supplies and technologies are creation-only. */
-export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAULT_SCENARIO,siteOptions?:SiteOptions,startingParty?:StartingParty,startingWorld?:StartingWorld):World {
+export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAULT_SCENARIO,siteOptions?:SiteOptions,startingParty?:StartingParty,startingWorld?:StartingWorld,surface?:'snow-phased-v1'):World {
+  if(surface!==undefined&&surface!=='snow-phased-v1')throw new Error('Surface inconnue.');
   if(!isScenarioId(id))throw new Error('Scénario inconnu.');
   if(!Number.isInteger(seed)||seed<0||seed>0xffffffff)throw new Error('La graine doit être un entier de 0 à 4 294 967 295.');
   if(!validMapDimension(size)||size<SCENARIOS[id].minSize)throw new Error('Taille de carte incompatible avec ce scénario.');
@@ -148,5 +150,6 @@ export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAUL
     if(links.length&&!replaceRelationshipLinks(world,links))throw new Error('Les relations initiales contredisent les colons choisis.');
   }else initializeCampRelationships(world);
   if(selectedSite&&start)prepareStartingArrival(world,start.pawnIds,start.transportedPileIds);
+  if(surface==='snow-phased-v1'||site?.biome==='tundra')initializeSnowSurface(world);
   return world;
 }

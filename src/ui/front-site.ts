@@ -33,19 +33,20 @@ export function createSiteConfiguration(options: SiteConfigurationOptions): { el
   const root = document.createElement('div');
   root.className = 'front-split front-configuration';
   root.innerHTML = `<section class="front-card front-site-controls"><p class="front-kicker">SITE LOCAL</p><h2>Choisir le terrain</h2>
-    <p>Le milieu détermine la végétation et la faune ; le relief détermine la présence des massifs rocheux et des filons.</p><label for="front-biome">Milieu</label><select id="front-biome" aria-label="Milieu"><option value="temperate-forest">Forêt tempérée</option><option value="boreal-forest">Forêt boréale</option><option value="arid-shrubland">Broussailles arides</option></select><p id="front-biome-description" class="front-small"></p>
+    <p>Le milieu détermine la végétation et la faune ; le relief détermine la présence des massifs rocheux et des filons.</p><label for="front-biome">Milieu</label><select id="front-biome" aria-label="Milieu"><option value="temperate-forest">Forêt tempérée</option><option value="boreal-forest">Forêt boréale</option><option value="arid-shrubland">Broussailles arides</option><option value="tundra">Toundra</option></select><p id="front-biome-description" class="front-small"></p>
     <label class="front-seed-label" for="front-seed">Graine de la carte</label><div class="front-seed-row"><input id="front-seed" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" aria-describedby="front-seed-help"><button id="front-random-seed" type="button">Aléatoire</button></div>
     <p id="front-seed-help" class="front-small">Un entier entre 0 et 4 294 967 295. La graine et les réglages reproduisent la même carte dans cette version.</p>
     <fieldset class="front-relief-options"><legend>Relief</legend></fieldset>
     <p class="front-small front-site-default">Petites collines est la proposition d’Elsewhere, pas un site imposé par RimWorld.</p>
     </section><section class="front-card front-summary"><p class="front-kicker">VOTRE SITE</p><h2 id="front-biome-title">Forêt tempérée</h2>
     <dl class="front-map-facts"><div><dt>Relief</dt><dd id="front-site-relief"></dd></div><div><dt>Rivière</dt><dd>Sans rivière</dd></div><div><dt>Roches locales</dt><dd id="front-site-stones" aria-live="polite"></dd></div><div><dt>Taille</dt><dd>${DEFAULT_MAP_SIZE} × ${DEFAULT_MAP_SIZE} cases</dd></div></dl>
-    <p class="front-small">Trois profils locaux sont proposés. La planète et les cours d’eau restent à développer.</p>
+    <p class="front-small">Quatre profils locaux sont proposés. La planète et les cours d’eau restent à développer.</p>
     <dl class="front-start-summary"><div><dt>Scénario et équipe</dt><dd>Atterrissage forcé <span>Adaptation partielle · 3 personnes aux profils fixes</span></dd></div><div><dt>Narrateur et difficulté</dt><dd>Cassandra Classique <span>Introduction partielle · Récit d’aventure</span></dd></div><div><dt>Sauvegardes</dt><dd>Rechargeable à tout moment</dd></div></dl>
     <p class="front-small">Vous arrivez avec vos provisions et aucun bâtiment. La carte s’ouvre en pause pour vous laisser examiner les lieux.</p></section>`;
   const biomes={
     'temperate-forest':{label:'Forêt tempérée',description:'Feuillus, baies et gibier. Bois et nourriture sauvage complètent vos provisions.'},
     'boreal-forest':{label:'Forêt boréale',description:'Conifères, mousses et grands herbivores. Préparez chauffage, réserves et vêtements chauds.'},
+    tundra:{label:'Toundra',description:'Végétation basse et clairsemée, rares arbres, lièvres des neiges et muffalos. Prévoyez réserves, vêtements chauds et chauffage ; tracez les accès à déneiger dans Architecte.'},
     'arid-shrubland':{label:'Broussailles arides',description:'Végétation plus clairsemée, agaves et cactus. Choisissez vos ressources et protégez-vous de la chaleur.'},
   };
   const biomeSelect=root.querySelector<HTMLSelectElement>('#front-biome')!;

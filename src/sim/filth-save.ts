@@ -27,6 +27,12 @@ export function validateFilth(w:World,version:number,ids?:Set<number>):string[] 
   for(const p of w.pawns){
     if(p.filthFeet!==undefined&&(version<89||!s||!validFilthFeet(p.filthFeet)))errors.push('Invalid carried filth.');
     const t=p.cleaning;if(t===undefined)continue;
+    if(t.snowCell!==undefined){
+      if(version<239||!w.snow||!object(t)||!keys(t,['snowCell','targets','forced','phase','progress'])||!int(t.snowCell,0,w.tiles.length-1)||!w.snowClearArea?.includes(t.snowCell)||!Array.isArray(t.targets)||t.targets.length||t.forced!==false||!['approach','clean'].includes(String(t.phase))||typeof t.progress!=='number'||!Number.isFinite(t.progress)||t.progress<0||t.progress>50||!isColonist(p)||p.prisoner||p.draft||p.mental?.crisis||p.burning||medicalWorkRefusal(p)||!p.priorities.clean||reserved.has(-t.snowCell-1))errors.push('Invalid snow cleaning activity.');
+      reserved.add(-t.snowCell-1);
+      if(p.orders?.active!==null||p.jobId!==null||p.haul||p.cooking||p.need||p.research||p.ward||p.feed||p.tend||p.rescue||p.firefighting||p.trade||p.burial||p.hunting||p.equipmentTask||p.recreation.task)errors.push('Conflicting snow cleaning activity.');
+      continue;
+    }
     if(version<89||!s||!object(t)||!keys(t,['targets','forced','phase','progress'])||!Array.isArray(t.targets)||!t.targets.length||t.targets.length>s.items.length||typeof t.forced!=='boolean'||!['approach','clean'].includes(String(t.phase))||typeof t.progress!=='number'||!Number.isFinite(t.progress)||t.progress<0||!isColonist(p)||p.prisoner||p.draft||p.mental?.crisis||p.burning||medicalWorkRefusal(p)||!t.forced&&!p.priorities.clean){errors.push('Invalid cleaning activity.');continue;}
     const active=s.items.find(f=>f.id===t.targets[0]);if(!active||t.progress>FILTH_DEFINITIONS[active.kind].work)errors.push('Invalid cleaning progress.');
     for(const id of t.targets){if(!int(id,1)||reserved.has(id)||!s.items.some(f=>f.id===id))errors.push('Invalid cleaning reservation.');reserved.add(id);}

@@ -960,7 +960,7 @@ function pickCell(x: number, z: number) {
       if(tool==='remove-floor')return client.command({type:'area',action:'remove-floor',from:{x,z},to:{x,z}});
       if(tool==='replant-tree'){if(replantPileId===undefined)throw new Error('Sélectionnez un arbre à replanter.');return client.command({type:'replant-tree',pileId:replantPileId,x,z}).then(()=>{applyTool('select');setPanel(null);});}
       if(tool==='install'){if(installationId===undefined)throw new Error('Sélectionnez un meuble à installer.');return client.command({type:'install',structureId:installationId,x,z,orientation:['sun-lamp','standing-lamp','small-sculpture','large-sculpture'].includes(furnitureObject(snapshot!,installationId)?.kind??'')?0:placementOrientation}).then(()=>{applyTool('select');setPanel(null);});}
-      if (tool==='home'||tool==='remove-home'||isRoofArea(tool) || tool === 'haul-chunks' || tool === 'growing' || tool === 'remove-growing') return client.command({type:'area',action:tool,from:{x,z},to:{x,z},...(zoneEditTarget===undefined?{}:{targetZoneId:zoneEditTarget})});
+      if (tool==='snow-clear'||tool==='remove-snow-clear'||tool==='home'||tool==='remove-home'||isRoofArea(tool) || tool === 'haul-chunks' || tool === 'growing' || tool === 'remove-growing') return client.command({type:'area',action:tool,from:{x,z},to:{x,z},...(zoneEditTarget===undefined?{}:{targetZoneId:zoneEditTarget})});
       if (tool==='stockpile'||tool==='remove-stockpile')return client.command({type:'area',action:tool,from:{x,z},to:{x,z},...(zoneEditTarget===undefined?{}:{targetZoneId:zoneEditTarget}),...(tool==='stockpile'?readStorageSettings('stockpile'):{})});
       const objects = tool==='deconstruct'||tool==='uninstall' ? snapshot?.structures.filter(s=>footprintCells(s).some(c=>c.x===x&&c.z===z))??[] : [];
       const target = objects.find(s=>s.kind!=='power-conduit')??objects[0];
@@ -989,7 +989,7 @@ function designateArea(action: AreaAction, from: Cell, to: Cell) {
     }
     const result = JSON.parse(response!) as { affected: number; skipped: number };
     if(result.affected===0)return;
-    const label = action==='lay-floor'||action==='remove-floor'?'ordre(s) de sol créé(s)':action==='home'||action==='remove-home'?'case(s) de foyer modifiée(s)':isRoofArea(action) ? 'case(s) de zone de toiture modifiée(s)' : action === 'growing' ? 'case(s) de culture créée(s)' : action === 'remove-growing' ? 'case(s) de culture retirée(s)' : action === 'cancel' ? 'ordre(s) annulé(s)' : action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : action === 'stockpile' ? 'case(s) de réserve créée(s)' : 'ordre(s) de collecte créé(s)';
+    const label = action==='snow-clear'||action==='remove-snow-clear'?'case(s) de déneigement modifiée(s)':action==='lay-floor'||action==='remove-floor'?'ordre(s) de sol créé(s)':action==='home'||action==='remove-home'?'case(s) de foyer modifiée(s)':isRoofArea(action) ? 'case(s) de zone de toiture modifiée(s)' : action === 'growing' ? 'case(s) de culture créée(s)' : action === 'remove-growing' ? 'case(s) de culture retirée(s)' : action === 'cancel' ? 'ordre(s) annulé(s)' : action === 'remove-stockpile' ? 'case(s) de réserve retirée(s)' : action === 'stockpile' ? 'case(s) de réserve créée(s)' : 'ordre(s) de collecte créé(s)';
     notify(`${result.affected} ${label}${result.skipped ? ` · ${result.skipped} case(s) ignorée(s)` : ''}.`);
   });
 }

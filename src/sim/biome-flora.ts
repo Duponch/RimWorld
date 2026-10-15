@@ -1,7 +1,7 @@
 import type { ItemId } from './items.ts';
 import type { Resource } from './types.ts';
 
-export const BIOMES = ['temperate-forest','boreal-forest','arid-shrubland'] as const;
+export const BIOMES = ['temperate-forest','boreal-forest','arid-shrubland','tundra'] as const;
 export type BiomeId = typeof BIOMES[number];
 
 export const PLANT_SPECIES = [
@@ -59,6 +59,7 @@ export interface BiomeFloraProfile {
 export const BIOME_FLORA:Readonly<Record<BiomeId,BiomeFloraProfile>>=Object.freeze({
   'temperate-forest':{plantDensity:.65,regrowDays:20,totalCoreWeight:15.9,weights:{grass:5,'tall-grass':2,brambles:1,oak:.5,poplar:.5,'berry-bush':.05,'healroot-wild':.05}},
   'boreal-forest':{plantDensity:.40,regrowDays:25,totalCoreWeight:44.22,weights:{grass:9,moss:4,brambles:2,pine:5,birch:1.5,poplar:1.2,'berry-bush':.16,'healroot-wild':.16}},
+  tundra:{plantDensity:.19,regrowDays:28,totalCoreWeight:9.26,weights:{grass:3.6,moss:.5,pine:.08,birch:.08,'berry-bush':.07,'healroot-wild':.05}},
   'arid-shrubland':{plantDensity:.24,regrowDays:27,totalCoreWeight:16.46,weights:{grass:7,agave:.2,saguaro:.26,drago:.2,'berry-bush':.1}},
 });
 

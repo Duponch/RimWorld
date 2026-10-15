@@ -1,7 +1,7 @@
 import type { StockpileCell } from '../sim/types';
 import type { Placement } from './primitives';
 import {stockpileZoneId} from '../sim/stockpile-zones';
-import {surfaceHeightAtCell,type FilthSurface} from './surface-height';
+import {overlaySurfaceHeightAtCell,type GroundOverlaySurface} from './surface-height';
 import {adjacentZoneColors} from './zone-surface-presentation';
 
 // Verse.ZoneColorUtility's six storage hues, each mixed halfway with gray.
@@ -19,12 +19,12 @@ export function storageZoneSignature(stockpiles: readonly StockpileCell[]): stri
 
 /** Stable simulation zone identity owns the colour, even after its original
  * anchor is removed or its policy changes. Selection outlines are separate. */
-export function storageZonePlacements(width: number, stockpiles: readonly StockpileCell[],surface?:FilthSurface): { cells: Placement[]; borders: Placement[] } {
+export function storageZonePlacements(width: number, stockpiles: readonly StockpileCell[],surface?:GroundOverlaySurface): { cells: Placement[]; borders: Placement[] } {
   const cells: Placement[] = [], borders: Placement[] = [];
   const colors=adjacentZoneColors(width,stockpiles.map(storage=>({zoneId:stockpileZoneId(storage),cell:storage.z*width+storage.x})),STORAGE_COLORS);
   for (const storage of stockpiles) {
     const color = colors.get(stockpileZoneId(storage))!;
-    cells.push({ x: storage.x, z: storage.z, y: (surface?surfaceHeightAtCell(surface,storage.x,storage.z)??0:0)+.021, sx: 1, sy: 0.014, sz: 1, color });
+    cells.push({ x: storage.x, z: storage.z, y: (surface?overlaySurfaceHeightAtCell(surface,storage.x,storage.z)??0:0)+.021, sx: 1, sy: 0.014, sz: 1, color });
   }
   return { cells, borders };
 }

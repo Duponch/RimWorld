@@ -50,6 +50,7 @@ const KEY_RESEARCH:readonly ResearchProject[]=Object.freeze([...new Set([
 /** Catalogue visibility only. Placement still has its own shared simulation
  * validation; an occupied cell or an empty stock never removes an icon. */
 export function architectToolAvailable(world:World,tool:Tool):boolean {
+  if((tool==='snow-clear'||tool==='remove-snow-clear')&&!world.snow)return false;
   if(isFloorKind(tool)&&!isBuildableFloor(tool))return false;
   if(world.schemaVersion<(MIN_SCHEMA[tool]??(isBuildableFloor(tool)?89:0)))return false;
   const project=isBuildableFloor(tool)?FLOOR_DEFINITIONS[tool].research
@@ -64,5 +65,5 @@ export function architectAvailabilityKey(world:World):string {
   // The completion vector stays collision-free as the delivered catalogue grows.
   let completed='';
   for(const project of KEY_RESEARCH)completed+=researchUnlocked(world,project)?'1':'0';
-  return `${world.schemaVersion}:${completed}`;
+  return `${world.schemaVersion}:${world.snow?1:0}:${completed}`;
 }

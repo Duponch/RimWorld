@@ -66,6 +66,7 @@ import { FurniturePresentation } from './FurnitureLayer';
 import { PawnLayer } from './PawnLayer';
 import { FrameMetrics } from './FrameMetrics';
 import { BoxBatches } from './BoxBatches';
+import {SnowSurfaceLayer} from './SnowSurfaceLayer';
 import { ResourceLayer } from './ResourceLayer';
 import { clearGroup, material } from './primitives';
 import type { Placement } from './primitives';
@@ -101,7 +102,7 @@ import { storageZonePlacements } from './storage-zone-presentation';
 import {GroundSurfaceTint} from './GroundSurfaceTint';
 import {ZONE_FILL_OPACITY,ZONE_TOOLS,areaPreviewColor,zoneBoundaryVertices} from './zone-surface-presentation';
 import {stockpileZoneCells} from '../sim/stockpile-zones';
-import {surfaceHeightAtCell} from './surface-height';
+import {overlaySurfaceHeightAtCell as surfaceHeightAtCell,SNOW_OVERLAY_LIFT} from './surface-height';
 import { HomePresentationSignature, StoragePresentationSignature, StructurePresentationSignature } from './presentation-signatures';
 import { mapObjectCells,mapObjectsAt,sameMapObject,type MapObjectSelection } from '../ui/map-object-selection';
 import {mapObjectGroupCells} from '../ui/map-object-group-selection';
@@ -266,6 +267,7 @@ export class SceneRenderCore {
   protected readonly clouds=new WeatherCloudLayer(this.animationDetail,this.decorOcclusion);
   protected readonly precipitation=new WeatherPrecipitationLayer(this.animationDetail);
   protected readonly boxes = new BoxBatches(this.environmentLighting.configure);
+  protected readonly snowSurface=new SnowSurfaceLayer(this.environmentLighting.configure);
   protected readonly recreationHints = new RecreationHints(this.boxes);
   protected readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial,this.texturedStaticMaterial,this.animationDetail);
   protected readonly naturalPresentation = new NaturalResourcePresentation();
@@ -495,6 +497,8 @@ export class SceneRenderCore {
     this.grass?.update(world,newMap,immutableTileChanges,resourceFrame);
     this.fires.adopt(world,newMap);this.wind.adopt(world,newMap);
     this.environmentLighting.update(world);
+    this.snowSurface.update(world,newMap,immutableTileChanges);
+    if(!this.snowSurface.group.parent)this.scene.add(this.snowSurface.group);
     if(groundChanged) {
       if(terrainChanges===null||this.terrainPaintDirty)this.terrainPaintDirty=true;
       else if(this.texturesEnabled){
@@ -554,7 +558,7 @@ export class SceneRenderCore {
       +`;${world.roofing?.build.join(',')};${world.roofing?.remove.join(',')};${world.roofing?.constructed.join(',')}`;
     if(jobsChanged||designationKey!==this.designationKey){this.designationKey=designationKey;this.designations.update(world);}
     if(resetPoses)this.homeSignature.clear();
-    const storageKey = `${this.homeSignature.read(world.home)};`+this.storageSignature.read(world.stockpiles,resetPoses);
+    const storageKey = `${this.homeSignature.read(world.home)};`+this.storageSignature.read(world.stockpiles,resetPoses)+`;snow:${world.snowClearArea?.join(',')??''};surface:${!!world.snow}`;
     if (storageKey !== this.storageKey || newMap || groundChanged) { this.storageKey = storageKey; this.buildStorage(world); }
     if (newMap || previousWorld?.resources !== world.resources || Math.floor((previousWorld?.tick ?? -1) / 25) !== Math.floor(world.tick / 25)) this.crops.update(world, newMap, this.immutableWorlds.has(world));
     const zoneChanged=this.updateGrowingZones(newMap);
@@ -597,12 +601,12 @@ export class SceneRenderCore {
 
   setTool(tool: string): void {
     if (tool !== this.tool) this.cancelDesignation();
-    const homeBefore=this.tool==='home'||this.tool==='remove-home';
+    const homeBefore=['home','remove-home','snow-clear','remove-snow-clear'].includes(this.tool);
     this.tool = tool;
     if(tool!=='replant-tree')this.treePlacementId=undefined;
     this.updateDeepResources();
     this.updateGrowingZones(false);
-    if(this.world&&(homeBefore||tool==='home'||tool==='remove-home'))this.buildStorage(this.world);
+    if(this.world&&(homeBefore||['home','remove-home','snow-clear','remove-snow-clear'].includes(tool)))this.buildStorage(this.world);
     if (tool in STRUCTURE_DEFINITIONS) this.keys.delete('q');
     const color = tool === 'cancel' ? 0xe6876a : tool === 'select' ? 0xf9ebae : 0x9dd9ca;
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
@@ -909,6 +913,7 @@ export class SceneRenderCore {
     const restoreOrbitalDelivery=this.orbitalDelivery.prepareForCompile();
     const restorePrecipitation=this.precipitation.prepareForCompile();
     const restoreBoxes=this.boxes.prepareEmptyShadows();
+    const restoreSnow=this.snowSurface.prepareForCompile();
     const restoreArea=this.areaPreview.prepareForCompile();
     const restoreTurretRange=this.turretRange.prepareForCompile();
     const restoreHints=this.recreationHints.prepareForCompile();
@@ -949,7 +954,7 @@ export class SceneRenderCore {
       for (const [object, value] of culling) object.frustumCulled = value;
       restoreMechanoids();
       restoreWind();restorePawnFires();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
-      restoreBoxes();restoreArea();restoreTurretRange();restoreHints();restoreOrderRock();restoreConstruction();restoreDeep();
+      restoreSnow();restoreBoxes();restoreArea();restoreTurretRange();restoreHints();restoreOrderRock();restoreConstruction();restoreDeep();
       restoreOverview();
       restorePodRescue();restoreOrbitalDelivery();
       restoreStartingArrival();
@@ -1185,6 +1190,7 @@ export class SceneRenderCore {
     const { cells } = storageZonePlacements(world.width, world.stockpiles,world);
     const home: Placement[] = [];
     if(this.tool==='home'||this.tool==='remove-home')for(const i of world.home??[])home.push({x:i%world.width,z:Math.floor(i/world.width),y:(surfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))??0)+.04,sx:1,sy:.014,sz:1,color:0x779ee6});
+    if(this.tool==='snow-clear'||this.tool==='remove-snow-clear')for(const i of world.snowClearArea??[])home.push({x:i%world.width,z:Math.floor(i/world.width),y:(surfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))??0)+.04,sx:1,sy:.014,sz:1,color:0x86b8d7});
     this.storageTintPlacements=cells;this.homeTintPlacements=home;this.zonesTintDirty=true;
     this.boxes.set(this.storageGroup, 'storage-cells', cells, 'storage', false);
     this.boxes.set(this.storageGroup, 'storage-borders', [], 'border', false);
@@ -1502,7 +1508,7 @@ export class SceneRenderCore {
     hoverMat.opacity = 0.12; hoverMat.color.setHex(color);
     this.surfaceTint.setHover(this.hover.position.x,this.hover.position.z,width,height,color,.12);
     this.surfaceTint.setArea(world.width,bounds,cells,color);
-    this.areaPreview.update(world.width,world.width*world.height,cells,color);
+    this.areaPreview.update(world.width,world.width*world.height,cells,color,world.snow?SNOW_OVERLAY_LIFT:0);
     if('allowed' in drag){this.designations.clearPreview();this.clearOrderTargets();}
     else {this.designations.updatePreview(world,action as AreaAction,cells);this.updateOrderTargets(world,action as AreaAction,cells);}
     this.onAreaPreview({ width, height, eligible: cells.length, skipped, line:'kind' in drag });
@@ -1596,7 +1602,7 @@ export class SceneRenderCore {
     this.hostPort.disconnectResize();
     this.rig?.dispose();
     this.hostPort.removeInputListeners();
-    this.boxes.dispose();
+    this.boxes.dispose();this.snowSurface.dispose();
     this.roofs.dispose();
     this.timber.dispose();
     this.hygiene.dispose();

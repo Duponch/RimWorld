@@ -164,7 +164,7 @@ export function cancelGroupPreparation(w:World):void {
   delete w.group;
 }
 export function applyGroupCommand(w:World,c:GroupCommand):CommandResult {
-  if(c.type==='planet-adopt'){if(!w.planet){w.planet=generatePlanet(w.seed,planetHomeInput(w),w.tick);groupLog(w,'La planète et ses destinations sont maintenant accessibles.');}return {ok:true};}
+  if(c.type==='planet-adopt'){if(!w.planet){w.planet=generatePlanet(w.seed,planetHomeInput(w),w.tick,w.site?.biome==='tundra'?2:1);groupLog(w,'La planète et ses destinations sont maintenant accessibles.');}return {ok:true};}
   if(c.type==='group-start'){
     const p=previewFormation(w,c.memberIds,c.sources,c.destination);if(p.kind!=='ready')return fail(p.kind==='deferred'?'La préparation attend une nouvelle tentative.':p.reason);
     const id=w.planet!.nextGroupId;

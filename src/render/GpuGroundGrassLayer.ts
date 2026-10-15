@@ -113,7 +113,7 @@ function writeGroundCell(data: Uint8Array, world: GroundWorld, i: number, blocke
   const tile = world.tiles[i]!;
   const p = i * 4;
   let hex = 0, alpha = 0;
-  if (!blocked[i]) {
+  if (!blocked[i]&&(tile.snowDepth??0)<.5) {
     // The same palette and per-cell noise as TerrainLayer, encoded in sRGB for
     // DataTexture sampling. A root in a tile thus follows its actual colour.
     const x = i % world.width, z = Math.floor(i / world.width);
@@ -425,7 +425,8 @@ export class GpuGroundGrassLayer {
         for (let n = 0; n < (inspect?.length ?? world.tiles.length); n++) {
           const i = inspect ? inspect[n]! : n;
           if (oldTiles?.[i]?.terrain !== world.tiles[i]!.terrain ||
-            oldTiles[i]?.floor !== world.tiles[i]!.floor) touch(i);
+            oldTiles[i]?.floor !== world.tiles[i]!.floor ||
+            ((oldTiles[i]?.snowDepth??0)>=.5)!==((world.tiles[i]!.snowDepth??0)>=.5)) touch(i);
         }
       }
       const structuresOkay = diffCover(this.previousStructures, world.structures, s => s.id,

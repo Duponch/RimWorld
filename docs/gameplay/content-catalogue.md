@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V376 — schéma 239 :** [toundra et neige physique](tundra-snow-v376.md). Nouveau départ froid, surface persistée, déplacements et déneigement au contact ; écologie et génération restent partiellement adaptées. Qualification et limites dans la note unique. Publication produit en attente ; les états suivants sont historiques.
+
 **V336 — [couchages humains au sol](human-sleeping-spots-v336.md), schéma 232, premières nuits acquises dans trois biomes.** `sleeping-spot` ajoute une place humaine gratuite 1×2 orientable, posée et retirée immédiatement. Affectation civile exclusive, rôles médical et prison indépendants, sommeil et services physiques ; repos 0,8, confort 0,4, guérison additionnelle 0/jour, immunité ×1 et chirurgie ×0,7. Aucun matériau, qualité, PV, chantier ou paquet. Double emplacement, bedrolls et mémoire Core SleptOnGround restent hors lot ; les lits historiques gardent leurs règles. [Guide](player-guide.md#préparer-un-couchage-au-sol--v336), écarts et qualification bornée dans la note unique ; la campagne durable reste à vérifier.
 
 **V318 — [régulation du troupeau](auto-slaughter-v318.md).** Aucun nouvel objet, bâtiment ou espèce : cinq animaux domestiquables, maxima facultatifs par sexe/stade et protection des gestantes. Les excédents alimentent l'abattage physique V309, sans désignation manuelle ni produit au clic. [Guide](player-guide.md#réguler-le-troupeau--v318). Liens affectifs et libération sauvage différés.

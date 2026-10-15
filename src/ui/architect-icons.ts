@@ -1,4 +1,4 @@
-import {modelIconUrl} from './pictograms';
+import {modelIconUrl,pictogramDataUrl} from './pictograms';
 const ATLAS_COLUMNS = 6;
 const ATLAS_ROWS = 5;
 
@@ -24,10 +24,10 @@ const SECOND_ATLAS = [
 ] as const;
 export const ARCHITECT_ATLAS_IDS=Object.freeze([FIRST_ATLAS,SECOND_ATLAS]);
 
-export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='door'?[id,'autodoor']:id==='wall'?[id,'spike-trap','mini-turret','sandbags','fence','fence-gate','pen-marker']:id==='dresser'?[id,'shelf','small-shelf']:id==='bed'?[id,'sleeping-spot','double-bed','hospital-bed','vitals-monitor','animal-sleeping-spot']:id==='steel-tile'?[id,'sterile-tile']:id==='horseshoes'?[id,'chess-table','tube-television']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='standing-lamp'?[id,'sun-lamp']:id==='growing'?[id,'hydroponics-basin']:id==='tailor-bench'?[id,'electric-crematorium','electric-smelter','biofuel-refinery','chemfuel-generator','nutrient-paste-dispenser','hopper','orbital-beacon','comms-console','deep-drill','ground-scanner','drug-lab','art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id])]);
+export const ARCHITECT_ICON_ORDER = Object.freeze([...FIRST_ATLAS.flatMap(id=>id==='door'?[id,'autodoor']:id==='wall'?[id,'spike-trap','mini-turret','sandbags','fence','fence-gate','pen-marker']:id==='dresser'?[id,'shelf','small-shelf']:id==='bed'?[id,'sleeping-spot','double-bed','hospital-bed','vitals-monitor','animal-sleeping-spot']:id==='steel-tile'?[id,'sterile-tile']:id==='horseshoes'?[id,'chess-table','tube-television']:[id]), ...SECOND_ATLAS.flatMap(id=>id==='standing-lamp'?[id,'sun-lamp']:id==='growing'?[id,'hydroponics-basin']:id==='tailor-bench'?[id,'electric-crematorium','electric-smelter','biofuel-refinery','chemfuel-generator','nutrient-paste-dispenser','hopper','orbital-beacon','comms-console','deep-drill','ground-scanner','drug-lab','art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench']:[id]),'snow-clear','remove-snow-clear']);
 /** Every visible tool has its own model/action image. The old sheet addresses
  * below remain solely the fixed world-marker UV layout. */
-export const ARCHITECT_ICON_URLS:Readonly<Record<string,string>>=Object.freeze(Object.fromEntries(ARCHITECT_ICON_ORDER.map(id=>[id,modelIconUrl(id)])));
+export const ARCHITECT_ICON_URLS:Readonly<Record<string,string>>=Object.freeze(Object.fromEntries(ARCHITECT_ICON_ORDER.map(id=>[id,id==='snow-clear'||id==='remove-snow-clear'?pictogramDataUrl(id):modelIconUrl(id)])));
 
 // Small original vector additions share the existing Architecte icon installer.
 // They do not change the historical two-atlas coordinates.
