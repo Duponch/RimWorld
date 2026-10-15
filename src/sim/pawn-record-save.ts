@@ -27,7 +27,7 @@ import { validStagger } from './stagger.ts';
 import { travelEnd,validSlowIntervals,validStunIntervals,type TravelSegment } from './travel-timing.ts';
 import { validCapturedTravelDelay } from './captured-travel-delay.ts';
 import { validMeleeShape,validStunShape,validateMelee } from './melee-save.ts';
-import { validShootingShape,validateShooting } from './shooting-save.ts';
+import { validShootingShape,validShootingLeanOwner,validateShooting } from './shooting-save.ts';
 import { validDraftShape,validateDrafting } from './drafting-save.ts';
 import { validEquipmentShape,validWeaponShape,validateEquipment } from './equipment-save.ts';
 import { validFeedShape,validateFeeding } from './feeding-save.ts';
@@ -91,7 +91,7 @@ export function validatePawnRecordShape(item:Record<string,unknown>, world:World
   if(version<192&&Object.hasOwn(item,'meleeThreat')||!validMeleeThreatShape(item.meleeThreat,version,validationTick))errors.push('Invalid melee threat for schema.');
   if(!validStagger(item.stagger,version,validationTick))errors.push('Invalid stagger state for schema.');
   if(!validMeleeShape(item.melee,version,validationTick)||!validStunShape(item.stun,version,validationTick))errors.push('Invalid melee or stun shape for schema.');
-  if(!validShootingShape(item.shooting,version,validationTick))errors.push('Invalid shooting state for schema.');
+  if(!validShootingShape(item.shooting,version,validationTick)||!validShootingLeanOwner(item,world,version))errors.push('Invalid shooting state for schema.');
   if(!validDraftShape(item.draft,version,input as unknown as World))errors.push('Invalid draft state for schema.');
   if(!validEquipmentShape(item,version))errors.push('Invalid equipment state for schema.');
   if(item.feed!==undefined&&!validFeedShape(item.feed,version,input as unknown as World))errors.push('Invalid feeding task shape.');

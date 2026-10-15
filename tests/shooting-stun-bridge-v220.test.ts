@@ -1,3 +1,4 @@
+import {historicalCustomFoodPolicies} from './scenarios/legacy-skills';
 import {expect,test} from 'vitest';
 import {SnapshotDecoder,SnapshotEncoder,type SnapshotMessage} from '../src/bridge/snapshots.ts';
 import {PresentationChanges} from '../src/bridge/presentation-changes.ts';
@@ -57,8 +58,14 @@ test.each([false,true])('real aim/cooldown clocks reject corruptions and preserv
 
 test.each([false,true])('197 migration preserves the original stance/order and rejects own future clock before atomic retry (checkpoint=%s)',checkpoint=>{
   for(const phase of ['aim','cooldown'] as const){
-    const {world:w,shooterId}=prepareShootingStun(phase==='aim'?12:26,phase);
+    const {world:w,shooterId}=prepareShootingStun(phase==='aim'?12:26,phase);historicalCustomFoodPolicies(w);
     for(const pawn of w.pawns)if(pawn.shooting?.stance)delete pawn.shooting.stance.clock;
+    // The modern prepared steps have only initialized these future calendars.
+    // No real ship, cargo, discovery or operator is removed to claim schema197.
+    expect(w.orbital?.ships??[]).toEqual([]);expect(w.orbital?.pending??[]).toEqual([]);
+    expect(w.deepResources?.discoveries??0).toBe(0);expect(w.deepResources?.cells??[]).toEqual([]);
+    expect(w.pawns.some(p=>p.orbitalTrade||p.deepWork)).toBe(false);
+    delete w.orbital;delete w.deepResources;
     (w as {schemaVersion:number}).schemaVersion=197;
     const original=JSON.stringify(w.pawns.find(p=>p.id===shooterId)!.shooting),migrated=deserializeWorld(JSON.stringify(w));
     expect(migrated).toEqual({...w,schemaVersion:SCHEMA_VERSION});

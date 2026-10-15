@@ -1,3 +1,4 @@
+import {withoutFodderDefaults} from './scenarios/legacy-skills';
 import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { withoutShootingSkills,withMigratedShootingSkills } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
@@ -70,7 +71,7 @@ test('registration is atomic; launch data is owned; V54 is validated before migr
   expect(deserializeWorld(JSON.stringify(legacy))).toEqual(withMigratedShootingSkills({...legacy,schemaVersion:SCHEMA_VERSION}));
   const before=serializeWorld(w),next=w.nextId;
   expect(()=>launch(w,{x:-1,z:10})).toThrow();expect(serializeWorld(w)).toBe(before);expect(w.nextId).toBe(next);
-  const shot=launch(w),saved=serializeWorld(w);expect(()=>deserializeWorld(saved.replace(`"schemaVersion":${SCHEMA_VERSION}`,'"schemaVersion":54'))).toThrow(/version 54/);
+  const shot=launch(w),saved=serializeWorld(w);const futureFlight=withoutFodderDefaults(structuredClone(w));(futureFlight as {schemaVersion:number}).schemaVersion=54;expect(()=>deserializeWorld(JSON.stringify(futureFlight))).toThrow(/version 54/);
   const mutations:Array<(v:World)=>void>=[
     v=>{v.projectiles![0].flight.remainingCoreTicks--;},v=>{v.projectiles![0].flight.completed=true;},v=>{v.projectiles![0].advancedAtCore--;},v=>{v.projectiles![0].emittedAtCore++;},
     v=>{v.projectiles![0].id=v.pawns[0].id;},v=>{v.projectiles![0].relations.friendlyPawnIds.reverse();},v=>{v.projectiles![0].relations.friendlyFireFactor=2;},v=>{v.projectiles![0].flight.speedPerCoreTick=2;},

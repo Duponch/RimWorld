@@ -16,7 +16,7 @@ import { captureWorldShotGrid } from './combat-world.ts';
 import { captureWorldProjectileTargets } from './projectile-world.ts';
 import { findShotLine } from './combat-space.ts';
 import { shotAim,shotCover } from './combat-report.ts';
-import { emitRevolverBullet } from './bullet-emission.ts';
+import { emitRevolverBullet,type BulletEmissionInput } from './bullet-emission.ts';
 import { emitEmpProjectile } from './emp-emission.ts';
 import { registerWorldProjectile } from './projectile-system.ts';
 import { CORE_TICKS_PER_LOCAL,rangedWeaponProfile,shootingAccuracy,rangedTimings } from './ranged-statistics.ts';
@@ -54,7 +54,8 @@ function startAim(world:World,pawn:Pawn,core:number,queries:Queries):void {
   const plan=shotPlan(world,pawn,order.targetId,queries);
   if('reason' in plan||plan.weapon.id!==order.weaponId){cancelShooting(pawn);return;}
   pawn.shooting!.stance={phase:'aim',startedAtCore:core,endsAtCore:core+plan.profile.warmupCoreTicks,targetStartedDowned:plan.target.state==='downed',...plan.weapon.item!=='revolver'?{weaponItem:plan.weapon.item as 'bolt-action-rifle'|'emp-launcher'}:{},
-    ...world.schemaVersion>=198?{clock:{lastAdvancedAtCore:core,pausedCore:0}}:{}};
+    ...world.schemaVersion>=198?{clock:{lastAdvancedAtCore:core,pausedCore:0}}:{},
+    ...world.schemaVersion>=238&&(plan.line.from.x!==pawn.x||plan.line.from.z!==pawn.z)?{lean:{x:plan.line.from.x-pawn.x,z:plan.line.from.z-pawn.z}}:{}};
   pawn.state='idle';
 }
 export function applyShootingCommand(world:World,command:ShootingCommand):CommandResult {
@@ -130,8 +131,13 @@ export function advanceShooter(world:World,pawn:Pawn,core:number,queries:Queries
   const cover=shotCover(queries.grid(),pawn,target,combatTargetKey(target));
   const aim=shotAim({distance:line.distance,pawnAccuracy:shootingAccuracy(pawn.skills.shooting.level,body.sight,body.manipulation).perCell,weaponAccuracy:profile.accuracy,targetSize:combatTargetSize(target),standing,weather:weatherShotFactor(world,pawn,target),blindSmoke:false},cover.passChance);
   const random={rng:world.rng};
-  const emit=weapon.item==='emp-launcher'?emitEmpProjectile:emitRevolverBullet;
-  const emission=emit({grid:queries.grid(),line,origin:{x:pawn.x+.5,z:pawn.z+.5},launcherKey:`pawn:${pawn.id}`,equipmentKey:`pile:${weapon.id}`,target:{key:combatTargetKey(target),cell:target,full:false,canBenefitFromCover:true},aim,cover,profile,canHitOtherPawns:true,preventFriendlyFire:false,coverAnchor:key=>queries.targets().anchor(key)},()=>healthRandom(random));
+  // The current18/102/210-Core warmups exceed Core lean saturation (14Core).
+  // Capture the warmup offset, not the newly queried line. Legacy aims stay base.
+  const lean=world.schemaVersion>=238?shot.stance.lean:undefined;
+  const origin={x:pawn.x+.5+(lean?.x??0)*.5,z:pawn.z+.5+(lean?.z??0)*.5};
+  const emissionInput:BulletEmissionInput={grid:queries.grid(),line,origin,launcherKey:`pawn:${pawn.id}`,equipmentKey:`pile:${weapon.id}`,target:{key:combatTargetKey(target),cell:target,full:false,canBenefitFromCover:true},aim,cover,profile,canHitOtherPawns:true,preventFriendlyFire:false,coverAnchor:key=>queries.targets().anchor(key)};
+  // Forced-radius distance uses the logical pawn cell, independently of DrawPos.
+  const emission=weapon.item==='emp-launcher'?emitEmpProjectile(emissionInput,()=>healthRandom(random),pawn):emitRevolverBullet(emissionInput,()=>healthRandom(random));
   registerWorldProjectile(world,emission.flight,profile.quality,{friendlyPawnIds:world.pawns.filter(p=>!hostileTo(pawn,p)).map(p=>p.id),friendlyFireFactor:friendlyFireFactor(world)},random.rng,core,weapon.item as 'revolver'|'bolt-action-rifle'|'emp-launcher');
   // Same projectile rules; only the documented hostile learning rate differs.
   if(target.state!=='downed')learnSkill(pawn.skills.shooting,(hostileTarget(pawn,target)?170:20)*rangedTimings(profile).learningCycleSeconds*XP_SCALE,pawn);

@@ -1,9 +1,9 @@
 import { isColonist } from './affiliation.ts';
 import { workPriority } from './work-types.ts';
-import type { Pawn,World } from './types.ts';
+import type { Cell,Pawn,World } from './types.ts';
 
 export interface ShootingClock {lastAdvancedAtCore:number;pausedCore:number}
-export type ShootingStance=({phase:'aim';startedAtCore:number;endsAtCore:number;targetStartedDowned:boolean}
+export type ShootingStance=({phase:'aim';startedAtCore:number;endsAtCore:number;targetStartedDowned:boolean;lean?:Cell}
   |{phase:'cooldown';startedAtCore:number;endsAtCore:number})&{weaponItem?:'bolt-action-rifle'|'emp-launcher';clock?:ShootingClock};
 export type ShootingClockStep='duplicate'|'paused'|'active';
 

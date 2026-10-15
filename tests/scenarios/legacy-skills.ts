@@ -16,6 +16,16 @@ export function withoutFodderDefaults<T>(world:T):T {
     for(const bill of building.bills??[]){delete bill.filters.hay;delete bill.filters.kibble;}
   return world;
 }
+/** Declared pre-217 custom policies: omit later default foods before the
+ * legacy claim. Custom names deliberately preserve literal permissions through
+ * the prospective extension of untouched standard profiles. Never sanitize a
+ * refusal after adding the future field under test. */
+export function historicalCustomFoodPolicies<T>(world:T):T {
+  withoutFodderDefaults(world);
+  const w=world as {foodPolicies?:{id:number;name:string;allowed:string[]}[]};
+  for(const policy of w.foodPolicies??[]){policy.allowed=policy.allowed.filter(item=>item!=='nutrient-paste-meal');policy.name=`Historique ${policy.id}`;}
+  return world;
+}
 /** Fixture preparation only; never a production migration or validator. */
 export function withoutMiningSkill<T>(world:T):T {
   const w=world as any;

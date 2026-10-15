@@ -34,7 +34,7 @@ test('V360 no rescue choice for historical236, standing visitor, enemy or unknow
  const {w,doctor,patient}=visitorCareScene();
  expect(applyCommand(w,{type:'draft',pawnIds:[doctor.id],enabled:true}).ok).toBe(true);
  const ids=new Set([doctor.id]);w.schemaVersion=236 as World['schemaVersion'];
- expect(tacticalRescuePolicy(w,ids,patient.id,false)).toBeUndefined();w.schemaVersion=237;
+ expect(tacticalRescuePolicy(w,ids,patient.id,false)).toBeUndefined();w.schemaVersion=237 as World['schemaVersion'];
  expect(tacticalRescuePolicy(w,ids,w.nextId+9,false)).toBeUndefined();
  patient.faction='outlaws';expect(tacticalRescuePolicy(w,ids,patient.id,false)).toBeUndefined();
  // The enemy can still receive dry field care; it is not a neutral guest.

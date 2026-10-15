@@ -1,3 +1,4 @@
+import {historicalCustomFoodPolicies} from './scenarios/legacy-skills';
 import {expect,test} from 'vitest';
 import {SnapshotDecoder,SnapshotEncoder} from '../src/bridge/snapshots.ts';
 import {bombWaveRadius,validBombWaveShape,validateBombWaves,type MiniTurretBombWave} from '../src/sim/bomb-state.ts';
@@ -37,9 +38,9 @@ function wave(w:World):MiniTurretBombWave {
 }
 
 test('schema207 migrates neutrally; an obtained EMP weapon requires208 but no fabrication research',()=>{
-  const old=camp();old.schemaVersion=207 as World['schemaVersion'];
+  const old=historicalCustomFoodPolicies(camp());old.schemaVersion=207 as World['schemaVersion'];
   expect(deserializeWorld(JSON.stringify(old))).toEqual({...old,schemaVersion:SCHEMA_VERSION});
-  const w=camp(),pile=weapon(w);expect(validWeaponShape(pile as never,208)).toBe(true);expect(validWeaponShape(pile as never,207)).toBe(false);
+  const w=historicalCustomFoodPolicies(camp()),pile=weapon(w);expect(validWeaponShape(pile as never,208)).toBe(true);expect(validWeaponShape(pile as never,207)).toBe(false);
   expect(validateWorld(w)).toEqual([]);expect(deserializeWorld(serializeWorld(w))).toEqual(w);
   w.schemaVersion=207 as World['schemaVersion'];expect(()=>deserializeWorld(JSON.stringify(w))).toThrow('Invalid version 207 save');
 });

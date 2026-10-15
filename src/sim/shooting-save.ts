@@ -7,7 +7,7 @@ import { equippedWeapon,isRangedWeaponItem } from './equipment-rules.ts';
 import { shootingOrderAuthority } from './shooting-state.ts';
 import { validStunShape } from './melee-save.ts';
 import { rangedWeaponProfile } from './ranged-statistics.ts';
-import type { World } from './types.ts';
+import type { Cell,World } from './types.ts';
 
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
@@ -17,7 +17,8 @@ export function validShootingShape(value:unknown,version:number,tick:number):boo
   if(version<56||!record(value)||!keys(value,['order','stance'])||value.order===null&&value.stance===null)return false;
   if(value.order!==null&&(!record(value.order)||!keys(value.order,['targetId','weaponId','startedDowned',...(version>=60?['auto']:[]),...(version>=79?['hunt']:[])])||!integer(value.order.targetId,1)||!integer(value.order.weaponId,1)||typeof value.order.startedDowned!=='boolean'||!validAutomaticAttack(value.order.auto,version,tick)||value.order.hunt!==undefined&&(value.order.hunt!==true||value.order.auto!==undefined||value.order.startedDowned!==false)))return false;
   const s=value.stance;if(s===null)return value.order!==null;
-  if(!record(s)||version<198&&Object.hasOwn(s,'clock')||!keys(s,['phase','startedAtCore','endsAtCore',...(s.phase==='aim'?['targetStartedDowned']:[]),...(version>=88?['weaponItem']:[]),...(version>=198?['clock']:[])])||s.weaponItem!==undefined&&s.weaponItem!=='bolt-action-rifle'&&!(version>=208&&s.weaponItem==='emp-launcher')||!integer(s.startedAtCore,0,tick*10)||!integer(s.endsAtCore,tick*10+1))return false;
+  if(record(s)&&'lean' in s&&(!Object.hasOwn(s,'lean')||version<238||s.phase!=='aim'||!validLeanOffset(s.lean)))return false;
+  if(!record(s)||version<198&&Object.hasOwn(s,'clock')||!keys(s,['phase','startedAtCore','endsAtCore',...(s.phase==='aim'?['targetStartedDowned']:[]),...(version>=88?['weaponItem']:[]),...(version>=198?['clock']:[]),...(version>=238&&s.phase==='aim'?['lean']:[])])||s.weaponItem!==undefined&&s.weaponItem!=='bolt-action-rifle'&&!(version>=208&&s.weaponItem==='emp-launcher')||!integer(s.startedAtCore,0,tick*10)||!integer(s.endsAtCore,tick*10+1))return false;
   if(s.phase!=='aim'&&s.phase!=='cooldown'||s.phase==='aim'&&(value.order===null||typeof s.targetStartedDowned!=='boolean'))return false;
   if(record(value.order)&&value.order.hunt&&s.weaponItem==='emp-launcher')return false;
   const emp=s.weaponItem==='emp-launcher'?rangedWeaponProfile('emp-launcher','normal'):undefined;
@@ -29,6 +30,20 @@ export function validShootingShape(value:unknown,version:number,tick:number):boo
     ||!integer(tick*10,0)||c.lastAdvancedAtCore!==tick*10||!integer(c.lastAdvancedAtCore,s.startedAtCore)
     ||!integer(c.pausedCore,0,c.lastAdvancedAtCore-s.startedAtCore))return false;
   return Number.isSafeInteger(s.startedAtCore+duration+c.pausedCore)&&s.endsAtCore-s.startedAtCore-c.pausedCore===duration;
+}
+/** A captured cardinal offset is history, not a new sight/path query. */
+function validLeanOffset(value:unknown):value is Cell {
+  return record(value)&&Reflect.ownKeys(value).length===2&&Object.hasOwn(value,'x')&&Object.hasOwn(value,'z')
+    &&integer(value.x,-1,1)&&integer(value.z,-1,1)&&Math.abs(value.x)+Math.abs(value.z)===1;
+}
+/** Shared RAW/transport boundary. The hypothetical source stays inside the map;
+ * later doors/cover/target movement do not rewrite this captured warmup fact. */
+export function validShootingLeanOwner(pawn:unknown,world:Pick<World,'width'|'height'>,version:number):boolean {
+  if(!record(pawn)||!record(pawn.shooting)||!record(pawn.shooting.stance)||!('lean' in pawn.shooting.stance))return true;
+  const stance=pawn.shooting.stance;
+  if(version<238||stance.phase!=='aim'||!Object.hasOwn(stance,'lean')||!validLeanOffset(stance.lean))return false;
+  return integer(pawn.x,0,world.width-1)&&integer(pawn.z,0,world.height-1)
+    &&integer(pawn.x+stance.lean.x,0,world.width-1)&&integer(pawn.z+stance.lean.z,0,world.height-1);
 }
 /** Numeric human orders never captured a historical target kind. The mandate
  * still bounds the known categories, and a Thing cannot become a living target. */
@@ -47,7 +62,7 @@ function historicalTargetKind(w:World,id:number):'pawn'|'animal'|'mech'|undefine
 export function validateShooting(world:World,version:number=world.schemaVersion,registeredIds?:NumericMembershipLookup):string[] {
   const errors:string[]=[];
   for(const p of world.pawns)if(p.shooting!==undefined) {
-    if(!validShootingShape(p.shooting,version,world.tick)||!validStunShape(p.stun,version,world.tick)){errors.push('Invalid shooting state for schema.');continue;}
+    if(!validShootingShape(p.shooting,version,world.tick)||!validShootingLeanOwner(p,world,version)||!validStunShape(p.stun,version,world.tick)){errors.push('Invalid shooting state for schema.');continue;}
     const {order,stance}=p.shooting;
     const suspended=version>=198&&stance?.phase==='aim'&&!!p.stun&&world.tick*10<p.stun.untilCore;
     if(order){const weapon=equippedWeapon(world,p);if(!weapon||!isRangedWeaponItem(weapon.item)||order.hunt&&weapon.item==='emp-launcher'||stance?.phase==='aim'&&(stance.weaponItem??'revolver')!==weapon.item)errors.push('Invalid ranged weapon/aim profile.');}

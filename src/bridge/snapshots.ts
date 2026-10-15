@@ -112,7 +112,7 @@ import { validHumanAge, type HumanAge } from '../sim/human-age.ts';
 import { validOfferedBackground } from '../sim/background-save.ts';
 import { validMentalShape, validMeleeThreatShape, validateMental } from '../sim/mental-save.ts';
 import { validMeleeShape, validStunShape, validateMelee } from '../sim/melee-save.ts';
-import { validShootingShape,validateShooting } from '../sim/shooting-save.ts';
+import { validShootingShape,validShootingLeanOwner,validateShooting } from '../sim/shooting-save.ts';
 import { validArchivedMeleeThreat,hasVisitorMedicalGuestMarker,validVisitorShape } from '../sim/visitor-save.ts';
 import { validMechanoidShape,validateMechanoids } from '../sim/mechanoid-save.ts';
 import { validMechCorpseShape,validMechSalvageLedger } from '../sim/mechanoid-corpse-save.ts';
@@ -951,6 +951,7 @@ export class SnapshotDecoder {
       if(Object.hasOwn(pawn,'bombRefuge')&&!validBombRefugeShape(pawn.bombRefuge,message.world.schemaVersion))return resync('Refuge Bomb futur ou invalide.');
       if(!validMentalTransport(pawn,message.world))return resync('Crise mentale, menace ou autorité de mêlée invalide pour ce snapshot.');
       if(!validShootingShape(pawn.shooting,message.world.schemaVersion,message.world.tick)
+        ||!validShootingLeanOwner(pawn,message.world,message.world.schemaVersion)
         ||pawn.shooting!==undefined&&!validStunShape(pawn.stun,message.world.schemaVersion,message.world.tick))return resync('Phase de tir humaine invalide pour ce snapshot.');
       if(!validBackgroundTransport(pawn,message.world.schemaVersion))return resync('Âge ou passé personnel invalide pour ce snapshot.');
       if(!validSurgeryTransport(pawn,message.world))return resync('État chirurgical ou anesthésique invalide pour ce snapshot.');

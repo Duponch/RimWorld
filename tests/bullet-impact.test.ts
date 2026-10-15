@@ -1,3 +1,4 @@
+import {withoutFodderDefaults} from './scenarios/legacy-skills';
 import { withoutShootingSkills,withMigratedShootingSkills } from './scenarios/legacy-skills';
 import { expect,test } from 'vitest';
 import { BODY_COVERAGE,BODY_INDEX,BODY_PARTS,HUMAN_BODY,type BodyPartId } from '../src/sim/body-definition';
@@ -103,7 +104,7 @@ test('V53 migration is strict and injury-free; incapacity preserves captured mov
   expect(p.state).toBe('downed');expect(p.motion).toEqual(motion);expect(p.path).toEqual([]);expect(p.jobId).toBeNull();
   expect(w.piles.filter(s=>s.owner.type==='pawn'&&s.owner.pawnId===p.id).map(s=>({id:s.id,quantity:s.quantity,item:s.item}))).toEqual(cargo);expect(validateWorld(w)).toEqual([]);
   const copy=deserializeWorld(serializeWorld(w));stepWorld(w,40);stepWorld(copy,40);expect(copy).toEqual(w);expect(validateWorld(w)).toEqual([]);
-  const smuggled=medicalCamp();damageUnarmoredPawnWithBullet(smuggled,smuggled.pawns[0]!,{part:'torso',damage:2});(smuggled as {schemaVersion:number}).schemaVersion=53;
+  const smuggled=withoutFodderDefaults(medicalCamp());damageUnarmoredPawnWithBullet(smuggled,smuggled.pawns[0]!,{part:'torso',damage:2});(smuggled as {schemaVersion:number}).schemaVersion=53;
   expect(()=>deserializeWorld(JSON.stringify(smuggled))).toThrow(/Invalid version 53/);
   const malformed=structuredClone(old);malformed.pawns[0]!.hunger=NaN;expect(()=>deserializeWorld(JSON.stringify(malformed))).toThrow(/Invalid version 53/);
   const failure=medicalCamp(),target=failure.pawns[0]!;target.health=createMedicalRecord(failure.tick);target.health.nextInjuryId=Number.MAX_SAFE_INTEGER;

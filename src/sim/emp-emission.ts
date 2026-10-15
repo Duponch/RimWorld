@@ -1,5 +1,6 @@
 import { emitRevolverBullet,type BulletEmissionInput,type BulletEmission } from './bullet-emission.ts';
 import { createBulletFlight } from './bullet-flight.ts';
+import { shotInBounds } from './combat-space.ts';
 import { projectileChance,projectileDraw,type ProjectileRandom } from './projectile-rules.ts';
 import type { Cell } from './types.ts';
 
@@ -13,8 +14,11 @@ export function empForcedMissRadius(from:Cell,to:Cell):number {
 }
 /** Forced-radius admission precedes ordinary cover/accuracy draws. Choosing
  * the centre resumes the historical bullet producer, including its jitter. */
-export function emitEmpProjectile(input:BulletEmissionInput,random:ProjectileRandom):BulletEmission|{branch:'forced';coverKey:null;flight:BulletEmission['flight']} {
-  const radius=empForcedMissRadius({x:Math.floor(input.origin.x),z:Math.floor(input.origin.z)},input.target.cell);
+export function emitEmpProjectile(input:BulletEmissionInput,random:ProjectileRandom,logicalSource?:Cell):BulletEmission|{branch:'forced';coverKey:null;flight:BulletEmission['flight']} {
+  // Human lean changes the physical launch point, not caster-cell forced spread.
+  // Existing two-argument callers retain their exact historical source contract.
+  if(logicalSource!==undefined&&!shotInBounds(input.grid,logicalSource))throw new RangeError('Invalid logical EMP source');
+  const radius=empForcedMissRadius(logicalSource??{x:Math.floor(input.origin.x),z:Math.floor(input.origin.z)},input.target.cell);
   if(radius<=.5)return emitRevolverBullet(input,random);
   const cells=offsets.filter(p=>p.x*p.x+p.z*p.z<=radius*radius),offset=cells[Math.floor(projectileDraw(random)*cells.length)]!;
   if(!offset.x&&!offset.z)return emitRevolverBullet(input,random);
