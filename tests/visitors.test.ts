@@ -11,6 +11,14 @@ import { SCHEMA_VERSION, type World } from '../src/sim/types.ts';
 import { withoutFutureHelmetPolicy, withoutPlantsSkill, withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { withoutPredatorFoodPolicies,withoutPredatorApparelPolicies } from './scenarios/legacy-save.ts';
 
+/** Historical visitor fixtures retain people, possessions, IDs, RNG and visit
+ * clocks. These later, inactive agendas did not exist before 215/216. Never
+ * apply this preparation to a poisoned future-field refusal input. */
+function withoutLaterVisitorAgendas(w:World):World {
+  expect(w.orbital?.ships??[]).toEqual([]);expect(w.orbital?.pending??[]).toEqual([]);
+  expect(w.pawns.some(p=>p.orbitalTrade||p.deepWork)).toBe(false);
+  delete w.orbital;delete w.deepResources;return w;
+}
 function replay(w:World,ticks:number):void {
   expect(validateWorld(w)).toEqual([]);const clone=deserializeWorld(serializeWorld(w));
   stepWorld(w,ticks);stepWorld(clone,ticks);expect(serializeWorld(clone)).toBe(serializeWorld(w));
@@ -51,7 +59,7 @@ test('arrival starts the strictly elapsed halt, then genuine border departure fr
   expect(visitorAtEdge(w,d.pawn)).toBe(true);expect(d.pawn.health).toEqual(p.health);expect(d.items.map(i=>i.id)).toEqual(owned);expect(w.visitors!.groups).toHaveLength(0);
   const frozen=JSON.stringify(d);replay(w,30);expect(JSON.stringify(w.visitors!.departed[0])).toBe(frozen);
   expect(d.pawn.appearance).toEqual(p.appearance);expect(d.pawn.appearance).toBeDefined();
-  const legacy=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(structuredClone(w))) as any;
+  const legacy=withoutLaterVisitorAgendas(withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(structuredClone(w)))) as any;
   legacy.schemaVersion=(withoutTelevisionRecreation(legacy),135);
   for(const policy of legacy.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='fine-meal'&&item!=='lavish-meal'&&item!=='vegetarian-fine-meal'&&item!=='carnivore-fine-meal'&&item!=='vegetarian-lavish-meal'&&item!=='carnivore-lavish-meal');
   delete legacy.breakdown;
@@ -61,7 +69,7 @@ test('arrival starts the strictly elapsed halt, then genuine border departure fr
   const migrated=deserializeWorld(JSON.stringify(legacy));
   expect(migrated.visitors!.departed[0]!.pawn.age).toEqual({biologicalTicks:10_800_000,chronologicalTicks:10_800_000});
   expect(validateWorld(migrated)).toEqual([]);
-  const v150=withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(structuredClone(w)));
+  const v150=withoutLaterVisitorAgendas(withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(structuredClone(w))));
   (v150 as {schemaVersion:number}).schemaVersion=(withoutTelevisionRecreation(v150),150);
   for(const pawn of [...v150.pawns,...v150.visitors!.departed.map(entry=>entry.pawn)])delete pawn.background;
   withoutPlantsSkill(v150);
@@ -80,8 +88,11 @@ test('arrival starts the strictly elapsed halt, then genuine border departure fr
     const bad=structuredClone(w) as unknown as {visitors:{departed:unknown[]}};
     bad.visitors.departed[0]=missing;
     // A malformed owner can be rejected by the shared human namespace before
-    // the visitor-specific archive guard. Both must refuse the whole save.
-    expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/Invalid.*(?:frozen visitor departure|quest human ownership)/);
+    // the visitor-specific archive guard, including sleeping-spot provenance.
+    // Each boundary must still refuse the whole malformed save.
+    // Several owner/slot guards inspect the same malformed historical identity.
+    // Require a typed save rejection, without choosing which valid guard fires first.
+    expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/^Invalid\b/);
   }
   for(const mutate of [(v:World)=>v.visitors!.departed[0]!.pawn.id=v.pawns[0]!.id,(v:World)=>v.visitors!.departed[0]!.items[0]!.id=v.pawns[0]!.id,(v:World)=>v.visitors!.departed[0]!.pawn.hunger=Infinity,(v:World)=>v.visitors!.departed[0]!.pawn.need={kind:'sleep',phase:'sleep',bedId:null,target:{x:1,z:1}},(v:World)=>v.visitors!.departed[0]!.items[0]!.owner={type:'inventory',pawnId:v.pawns[0]!.id}]){const bad=structuredClone(w);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();}
 });

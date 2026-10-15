@@ -44,7 +44,10 @@ function departure() {
 test('schema 174 is validated before a neutral migration; pod world and pawn fields cannot be smuggled into it',()=>{
   const old=withoutTelevisionRecreation(withoutMiningSkill(withoutPredatorApparelPolicies(withoutPredatorFoodPolicies(medicalCamp()))));old.schemaVersion=(withoutTelevisionRecreation(old),174) as World['schemaVersion'];const before=structuredClone(old);
   const migrated=deserializeWorld(JSON.stringify(old));
-  expect(migrated).toEqual(withMigratedTelevisionRecreation({...before,schemaVersion:SCHEMA_VERSION}));expect(old).toEqual(before);
+  const expected=withMigratedTelevisionRecreation({...before,schemaVersion:SCHEMA_VERSION});
+  // The unchanged 217 migration recognizes the historical meals-only profile.
+  expected.foodPolicies.find(policy=>policy.id===2)!.allowed.push('nutrient-paste-meal');
+  expect(migrated).toEqual(expected);expect(old).toEqual(before);
   expect(migrated.podRescues).toBeUndefined();expect(migrated.pawns.every(p=>p.podRescue===undefined)).toBe(true);
   const pending=staged().w.podRescues!;
   for(const change of [

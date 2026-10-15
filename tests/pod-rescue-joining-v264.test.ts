@@ -16,6 +16,7 @@ import { startingPawn } from '../src/sim/starting-pawns.ts';
 import { SCHEMA_VERSION,TICKS_PER_DAY,type Pawn,type World } from '../src/sim/types.ts';
 import { fixtureBuilding } from './scenarios/deconstruction.ts';
 import { medicalCamp } from './scenarios/health.ts';
+import { withoutFodderDefaults } from './scenarios/legacy-skills.ts';
 
 type Origin='independent'|'outlander';
 function opened(origin:Origin|'historical'='independent') {
@@ -147,7 +148,9 @@ test('old capsules and foreign-faction capsules never acquire the new joining de
     expect(incident.decision).toBeUndefined();expect(incident.result).toBeUndefined();
     expect(p.faction).toBe('outlanders');expect(p.podRescue).toBeDefined();
   }
-  const old=medicalCamp();old.schemaVersion=198 as World['schemaVersion'];
+  const old=withoutFodderDefaults(medicalCamp());
+  for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='nutrient-paste-meal');
+  old.schemaVersion=198 as World['schemaVersion'];
   expect(resolveSelectedPodRescue(old,187)).toBe(true);expect(old.podRescues!.pending!.origin).toBeUndefined();
   const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
   expect(migrated.podRescues).toEqual(old.podRescues);

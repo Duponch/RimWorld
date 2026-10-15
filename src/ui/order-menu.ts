@@ -10,6 +10,7 @@ import { meleeTools } from '../sim/melee-statistics';
 import { meleePlaces, meleeRoute } from '../sim/melee-space';
 import { blockedCells, reachableCells } from '../sim/pathfinding';
 import { draftedTendingReason, draftedTendingProposal } from '../sim/drafted-tending';
+import { rescueReason,rescueProposal,wantsRescue } from '../sim/rescue';
 import { draftablePawns } from './drafting-controls';
 import { FOOD_ITEMS } from '../sim/food-policy';
 import { groundPilesAt } from '../sim/ground-placement';
@@ -89,6 +90,20 @@ export function tacticalTendingPolicy(world:World,ids:ReadonlySet<number>,target
   return {patientId:patient.id,...doctor?{pawnId:doctor.id}:{},label:`Soigner ${patient.name} (sans médicament)`,enabled:!reason,...reason?{reason}:{}};
 }
 
+/** Explicit bed rescue is distinct from dry field tending. Availability uses
+ * the worker's real patient/claim/path kernels and is read only on opening a menu. */
+export function tacticalRescuePolicy(world:World,ids:ReadonlySet<number>,targetId:number,queue:boolean):TacticalTendingOption|undefined {
+  const patient=world.pawns.find(p=>p.id===targetId);
+  if(world.schemaVersion<237||!patient||!wantsRescue(patient,true))return;
+  const actor=ids.size===1?world.pawns.find(p=>ids.has(p.id)):undefined;
+  const reason=queue?'Le secours direct ne peut pas être mis en file ; relâchez Maj.'
+    :ids.size!==1?'Sélectionnez un seul colon pour le secours.'
+    :!actor?.draft||!isColonist(actor)||actor.prisoner?'Mobilisez un colon libre pour ce secours tactique.'
+    :rescueReason(world,actor,patient,true)
+      ??(!rescueProposal(world,actor,patient,reachableCells(world,actor,blockedCells(world),new Set()),true)?'Aucun couchage accessible et disponible.':undefined);
+  return {patientId:patient.id,...actor?{pawnId:actor.id}:{},label:`Secourir ${patient.name}`,enabled:!reason,...reason?{reason}:{}};
+}
+
 /** One selected actor must choose food explicitly, rather than accidentally
  * walking to it. Distinct piles in an ordinary reserve or shelf stay distinct. */
 export function contextConsumesFood(world:World,ids:ReadonlySet<number>,cell:Cell,targetId?:number):boolean {
@@ -136,10 +151,21 @@ export class OrderMenu {
     }
     const policy=tacticalAttackPolicy(world,ids,targetId,queue);
     const tending=tacticalTendingPolicy(world,ids,targetId,queue);
+    const rescue=tacticalRescuePolicy(world,ids,targetId,queue);
     this.menu.replaceChildren();this.menu.hidden=false;
     const header=document.createElement('strong');header.textContent=`${policy.target} · case ${cell.x}, ${cell.z}`;
     const content=document.createElement('div');
-    if(policy.reason&&!tending)content.textContent=policy.reason;
+    if(policy.reason&&!tending&&!rescue)content.textContent=policy.reason;
+    if(rescue){
+      const button=document.createElement('button');button.type='button';button.setAttribute('role','menuitem');button.dataset.orderRescue=String(rescue.patientId);
+      button.textContent=rescue.enabled?rescue.label:`${rescue.label} — ${rescue.reason}`;button.disabled=!rescue.enabled;
+      button.onclick=()=>{
+        if(!rescue.enabled||rescue.pawnId===undefined)return;
+        this.close();void this.client.command({type:'order-rescue',pawnId:rescue.pawnId,patientId:rescue.patientId,queue:false})
+          .then(()=>this.report(`Secours demandé pour ${policy.target}.`)).catch(error=>this.report(String(error instanceof Error?error.message:error),true));
+      };
+      content.append(button);
+    }
     if(tending){
       const button=document.createElement('button');button.type='button';button.setAttribute('role','menuitem');button.dataset.orderDraftedTend=String(tending.patientId);
       button.textContent=tending.enabled?tending.label:`${tending.label} — ${tending.reason}`;button.disabled=!tending.enabled;

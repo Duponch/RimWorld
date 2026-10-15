@@ -1,5 +1,7 @@
 import { releaseAllowedAreaReturn } from './allowed-area-state.ts';
-import { activeThreat,hostileTo,isColonist } from './affiliation.ts';
+import { activeThreat,hostileTo,isColonist,isAdmittedVisitorGuest } from './affiliation.ts';
+import { treatmentTarget,medicalRestNeeded } from './care-rules.ts';
+import { processMedicalGuestNeeds } from './medical-guest-needs.ts';
 import { newApparelState } from './apparel-rules.ts';
 import { processEating } from './eating.ts';
 import { adjacentTable } from './dining.ts';
@@ -48,7 +50,11 @@ function leaveGroup(w:World,g:VisitorGroup,reason:VisitorGroup['reason']):void {
   if(g.phase==='leaving'){if(reason==='hostile'){g.reason=reason;g.hostile=true;}return;}
   g.phase='leaving';g.reason=reason;
   for(const p of w.pawns)if(p.visitor?.group===g.id){
-    p.visitor.phase='leaving';p.visitor.goal=null;p.path=[];p.planCooldown=0;
+    p.visitor.phase='leaving';p.visitor.goal=null;
+    // A visit deadline changes its agenda, not an accepted medical service or
+    // the captured movement of a carried guest. Departure resumes after care.
+    if(isAdmittedVisitorGuest(p)&&(carrierOf(w,p.id)||p.need||treatmentTarget(p)||medicalRestNeeded(p)))continue;
+    p.path=[];p.planCooldown=0;
     if(p.need?.kind==='sleep'&&p.state!=='dead'&&p.state!=='downed'){p.need=null;p.state='idle';}
   }
   log(w,reason==='timeout'?'Les visiteurs terminent leur halte et cherchent la sortie.':reason==='hostile'?'Les visiteurs interrompent les échanges après une agression et se retirent.':'Les visiteurs interrompent leur halte face au danger.');
@@ -139,6 +145,7 @@ function personalMeal(w:World,p:Pawn):void {
 export function processVisitor(w:World,p:Pawn,ctx:NeedContext):boolean {
   if(!p.visitor)return false;
   if(p.state==='dead'||p.state==='downed'||p.moveCooldown>0||(p.motion?.end??0)>w.tick)return true;
+  if(isAdmittedVisitorGuest(p)&&processMedicalGuestNeeds(w,p,ctx,true))return true;
   if(processDraftSleep(w,p,ctx))return true;
   if(p.interruptedCargo){retryInterruptedCargo(w,p);if(p.interruptedCargo){p.state='idle';return true;}}
   personalMeal(w,p);if(p.need?.kind==='eat'){processEating(w,p,ctx);return true;}
@@ -160,11 +167,11 @@ export function exitVisitor(w:World,p:Pawn):boolean {
   const v=p.visitor;
   // The shared ingestion/spoilage pass may remove food after calendar upkeep.
   if(v)v.personalFoodIds=v.personalFoodIds.filter(id=>w.piles.some(i=>i.id===id&&'pawnId' in i.owner&&i.owner.pawnId===p.id));
-  if(!v||v.phase!=='leaving'||!visitorAtEdge(w,p)||p.need||p.moveCooldown>0||(p.motion?.end??0)>w.tick||p.state==='dead'||p.state==='downed'||p.state==='sleeping'||p.burning||carrierOf(w,p.id)||(p.stun?.untilCore??0)>w.tick*10||p.bombRefuge||p.interruptedCargo||p.equipmentDropPending||p.shooting?.stance||p.melee?.strike)return false;
+  if(!v||v.phase!=='leaving'||!visitorAtEdge(w,p)||p.need||p.moveCooldown>0||(p.motion?.end??0)>w.tick||p.state==='dead'||p.state==='downed'||p.state==='sleeping'||p.burning||carrierOf(w,p.id)||(p.stun?.untilCore??0)>w.tick*10||p.bombRefuge||p.interruptedCargo||p.equipmentDropPending||p.shooting?.stance||p.melee?.strike||isAdmittedVisitorGuest(p)&&(treatmentTarget(p)||medicalRestNeeded(p)))return false;
   const items=w.piles.filter(i=>('pawnId' in i.owner)&&i.owner.pawnId===p.id);
   if(items.some(i=>i.owner.type==='pawn')||w.packed.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id))return false;
   const packed=w.packed.filter(i=>i.owner.type==='inventory'&&i.owner.pawnId===p.id);
-  releaseAllowedAreaReturn(p);p.path=[];p.state='idle';p.visitor!.goal=null;delete p.flee;delete p.tactics;delete p.shooting;delete p.melee;delete p.motion;delete p.stagger;delete p.stun;
+  releaseAllowedAreaReturn(p);p.path=[];p.state='idle';p.visitor!.goal=null;p.bedId=null;delete p.bedSlot;delete p.medicalSleep;delete p.flee;delete p.tactics;delete p.shooting;delete p.melee;delete p.motion;delete p.stagger;delete p.stun;
   w.visitors!.departed.push({group:v.group,tick:w.tick,pawn:structuredClone(p),items:structuredClone(items),...packed.length?{packed:structuredClone(packed)}:{}});
   w.piles=w.piles.filter(i=>!items.includes(i));w.packed=w.packed.filter(i=>!packed.includes(i));w.pawns=w.pawns.filter(q=>q!==p);
   if(!w.pawns.some(q=>q.visitor?.group===v.group))w.visitors!.groups=w.visitors!.groups.filter(g=>g.id!==v.group);

@@ -1,31 +1,14 @@
-import { isBedKind } from './bed-kinds.ts';
 import { isAdmittedGuest } from './affiliation.ts';
-import { treatmentTarget,medicalRestNeeded } from './care-rules.ts';
-import { processNeeds,processDraftSleep,type NeedContext } from './needs.ts';
-import { patientProposal,startPatientRest } from './patient-rest.ts';
+import { processDraftSleep,type NeedContext } from './needs.ts';
+import { processMedicalGuestNeeds } from './medical-guest-needs.ts';
 import { hasReachableCell,routeToCell } from './pathfinding.ts';
 import type { Cell,Pawn,World } from './types.ts';
 
 /** Guest medical intentions reuse actual services, never colonial work. */
 export function processPodRescuePatient(w:World,p:Pawn,ctx:NeedContext):boolean {
   if(!p.podRescue||p.prisoner)return false;
-  const admitted=isAdmittedGuest(p),medical=!!(treatmentTarget(p)||medicalRestNeeded(p));
-  if(admitted){
-    // A rescued person who can stand still needs recovery from healing injuries.
-    if(medical&&p.need?.kind==='sleep'&&p.need.phase==='sleep'&&p.need.bedId!==null&&!p.need.medical)
-      p.need.medical=treatmentTarget(p)?'patient':'bedrest';
-    if(medical&&!p.need&&p.planCooldown===0){
-      const goals=new Set(w.structures.filter(b=>isBedKind(b.kind)&&!b.prisoner).map(b=>b.z*w.width+b.x));
-      if(goals.size){
-        const reach=ctx.search(goals);if(!reach)return true;
-        const proposal=patientProposal(w,p,reach);if(proposal)startPatientRest(w,p,proposal);
-      }
-      p.planCooldown=20;
-    }
-    if(processNeeds(w,p,ctx))return true;
-    // An unavailable bed never makes an injured admitted guest disappear.
-    if(medical){p.path=[];p.state='idle';return true;}
-  }else if(processDraftSleep(w,p,ctx))return true;
+  if(isAdmittedGuest(p)){if(processMedicalGuestNeeds(w,p,ctx))return true;}
+  else if(processDraftSleep(w,p,ctx))return true;
   if(p.need||p.interruptedCargo||p.burning)return true;
   p.bedId=null;delete p.bedSlot;
   const target=p.path.at(-1);

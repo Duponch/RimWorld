@@ -1,4 +1,4 @@
-import { hostileTo,isColonist } from './affiliation.ts';
+import { hostileTo,isColonist,isAdmittedVisitorGuest } from './affiliation.ts';
 import { bombRefugeRouteTarget } from './bomb-refuge-route.ts';
 import { combatTarget,hostileTarget,isMechanoidTarget } from './combat-target.ts';
 import type { World } from './types.ts';
@@ -15,8 +15,11 @@ export function validateAffiliations(world:World):string[] {
   const errors:string[]=[];
   for(const p of world.pawns) {
     const podGuest=world.schemaVersion>=175&&p.faction==='outlanders'&&!!p.podRescue;
+    const visitorGuest=world.schemaVersion>=237&&isAdmittedVisitorGuest(p);
     if(p.lastAttack&&(p.lastAttack.targetId===p.id||p.lastAttack.targetId>=world.nextId))errors.push('Invalid historical attack target.');
-    if(!isColonist(p)&&(p.draft||p.flee||p.hostilityResponse||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.haul||p.cooking||p.rescue||p.tend||p.ward||p.feed||p.equipmentTask||p.recreation.task||!p.prisoner&&!podGuest&&(p.bedId!==null||p.need&&!(p.need.kind==='sleep'&&p.need.bedId===null||wantsVisitorMeal(p)))))errors.push('Non-colonist owns a colony activity.');
+    // An actual visitor pickup opens patient bed/needs services only. All
+    // colonial activity guards above them, and old-schema permissions, remain.
+    if(!isColonist(p)&&(p.draft||p.flee||p.hostilityResponse||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.haul||p.cooking||p.rescue||p.tend||p.ward||p.feed||p.equipmentTask||p.recreation.task||!p.prisoner&&!podGuest&&!visitorGuest&&(p.bedId!==null||p.need&&!(p.need.kind==='sleep'&&p.need.bedId===null||wantsVisitorMeal(p)))))errors.push('Non-colonist owns a colony activity.');
     const recovering=world.schemaVersion>=79&&p.shooting?.order===null&&p.shooting.stance?.phase==='cooldown';
     if(p.flee&&(!isColonist(p)||p.draft||!['idle','moving','hungry'].includes(p.state)||p.shooting&&!recovering||p.need||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.haul||p.cooking||p.rescue||p.tend||p.ward||p.feed||p.equipmentTask||p.recreation.task))errors.push('Flee conflicts with another activity.');
     const fleeTarget=bombRefugeRouteTarget(p,p.flee?.target,world.schemaVersion);

@@ -7,7 +7,15 @@ import {deserializeWorld,serializeWorld,validateWorld} from '../src/sim/serializ
 import {SCHEMA_VERSION,type World} from '../src/sim/types.ts';
 import {decodeStoredSave} from '../src/ui/save-storage-codec.ts';
 import {medicalCamp} from './scenarios/health.ts';
+import {withoutFodderDefaults} from './scenarios/legacy-skills.ts';
 
+/** Declared 198 input has neither fodder nor paste default permissions. IDs,
+ * objects, capsule clocks and RNG are retained; poison cases are cloned later. */
+function historical198(source:World):World {
+  withoutFodderDefaults(source);
+  for(const policy of source.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='nutrient-paste-meal');
+  source.schemaVersion=198 as World['schemaVersion'];return source;
+}
 function staged():World {
   const w=medicalCamp();expect(resolveSelectedPodRescue(w,264)).toBe(true);return w;
 }
@@ -20,14 +28,19 @@ test('schema198 is checked before neutral migration, including pending and alrea
   for(const source of [staged(),opened()]){
     if(source.podRescues!.pending)delete source.podRescues!.pending.origin;
     for(const incident of source.podRescues!.incidents)delete incident.origin;
-    source.schemaVersion=198 as World['schemaVersion'];const before=structuredClone(source);
+    historical198(source);const before=structuredClone(source);
     const migrated=deserializeWorld(JSON.stringify(source));
-    expect(migrated).toEqual({...before,schemaVersion:SCHEMA_VERSION});expect(source).toEqual(before);
+    const expected=structuredClone({...before,schemaVersion:SCHEMA_VERSION});
+    // Exact historical default profiles acquire only the existing 217 paste permission.
+    for(const policy of expected.foodPolicies.slice(0,3))policy.allowed.push('nutrient-paste-meal');
+    expect(migrated).toEqual(expected);expect(source).toEqual(before);
+    const futureFodder=structuredClone(source);futureFodder.foodPolicies[0]!.allowed.push('kibble');
+    expect(()=>deserializeWorld(JSON.stringify(futureFodder))).toThrow('Future fodder content');
     expect(migrated.podRescues!.pending?.origin).toBeUndefined();
     expect(migrated.podRescues!.incidents.every(i=>i.origin===undefined)).toBe(true);
   }
   for(const source of [staged(),opened()]){
-    source.schemaVersion=198 as World['schemaVersion'];
+    historical198(source);
     expect(()=>deserializeWorld(JSON.stringify(source))).toThrow('Invalid version 198 save');
   }
 });

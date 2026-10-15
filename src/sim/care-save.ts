@@ -41,10 +41,11 @@ export function validTendShape(value:unknown,version:number,w:Pick<World,'width'
     &&(t.phase==='approach'||t.phase==='tend'||version>=51&&(t.phase==='pickup'||t.phase==='find-medicine'))&&int(t.progress,0,5999)
     &&(t.duration===undefined?t.phase!=='tend'&&t.phase!=='find-medicine'&&t.progress===0:int(t.duration,1,6000)&&Number(t.progress)<Number(t.duration));
 }
-export function validateCare(world:World,onlyBedIds?:ReadonlySet<number>):string[] {
+export function validateCare(world:World,onlyBedIds?:ReadonlySet<number>,onlyPatientIds?:ReadonlySet<number>):string[] {
   const errors:string[]=[],patients=new Set<number>();
   let field=false;
   for(const d of world.pawns){
+    if(onlyPatientIds&&!onlyPatientIds.has(d.id)&&!(d.tend&&onlyPatientIds.has(d.tend.patientId)))continue;
     if(hasDraftedTendingMarker(d)||d.draft&&d.tend)field=true;
     if(onlyBedIds&&!(d.need?.kind==='sleep'&&onlyBedIds.has(d.need.bedId??0))
       &&!(d.tend&&world.pawns.some(p=>p.id===d.tend!.patientId&&p.need?.kind==='sleep'&&onlyBedIds.has(p.need.bedId??0))))continue;

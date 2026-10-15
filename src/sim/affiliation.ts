@@ -10,9 +10,14 @@ const RELATIONS:Readonly<Record<FactionId,Readonly<Record<FactionId,'friendly'|'
 export const factionRelation=(a:FactionId,b:FactionId):'friendly'|'neutral'|'hostile'=>RELATIONS[a][b];
 export const factionOf=(p:Pick<Pawn,'faction'>):FactionId=>p.faction??'colony';
 export const isColonist=(p:Pick<Pawn,'faction'>):boolean=>factionOf(p)==='colony';
-export const isAdmittedGuest=(p:Pick<Pawn,'faction'|'prisoner'|'podRescue'>):boolean=>p.faction==='outlanders'&&!p.prisoner&&p.podRescue?.admittedAt!==undefined;
+type GuestAffiliation=Pick<Pawn,'faction'|'prisoner'|'podRescue'|'visitor'>;
+/** A visit is not an invitation to colonial care. Its original owner and
+ * goods remain unchanged when an explicit rescue admits it at pickup. */
+export const isRescuableVisitor=(p:GuestAffiliation):boolean=>p.faction==='outlanders'&&!p.prisoner&&!p.podRescue&&!!p.visitor;
+export const isAdmittedVisitorGuest=(p:GuestAffiliation):boolean=>isRescuableVisitor(p)&&p.visitor?.medicalGuestAt!==undefined;
+export const isAdmittedGuest=(p:GuestAffiliation):boolean=>p.faction==='outlanders'&&!p.prisoner&&(p.podRescue?.admittedAt!==undefined||isAdmittedVisitorGuest(p));
 export const isPlayerPatient=(p:Pick<Pawn,'faction'|'prisoner'>):boolean=>isColonist(p)||!!p.prisoner;
-export const isCarePatient=(p:Pick<Pawn,'faction'|'prisoner'|'podRescue'>):boolean=>isPlayerPatient(p)||isAdmittedGuest(p);
+export const isCarePatient=(p:GuestAffiliation):boolean=>isPlayerPatient(p)||isAdmittedGuest(p);
 type CombatAffiliation=Pick<Pawn,'faction'|'prisoner'>&Partial<Pick<Pawn,'mental'>>;
 export const hostileTo=(a:CombatAffiliation,b:CombatAffiliation):boolean=>a!==b&&
   (!(a.prisoner&&b.prisoner&&(prisonBreakActive(a)||prisonBreakActive(b)))&&

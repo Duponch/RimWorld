@@ -3,7 +3,7 @@ import { TICKS_PER_DAY,type Cell,type MaterialPile,type Pawn } from './types.ts'
 export type VisitorPhase='arriving'|'staying'|'leaving';
 export type VisitorKind='traveler'|'visitor';
 export type VisitorAgendaKind=VisitorKind|'exotic';
-export interface VisitorState {group:number;role:'traveler'|'visitor'|'trader';merchantKind?:'exotic';phase:VisitorPhase;goal:Cell|null;personalFoodIds:number[]}
+export interface VisitorState {group:number;role:'traveler'|'visitor'|'trader';merchantKind?:'exotic';phase:VisitorPhase;goal:Cell|null;personalFoodIds:number[];medicalGuestAt?:number}
 export interface VisitorGroup {id:number;kind:VisitorKind;members:number[];entry:Cell;spot:Cell;phase:VisitorPhase;startedAt:number;arrivedAt:number|null;durationCore:number;hostile:boolean;reason?:'timeout'|'danger'|'hostile'|'blocked'}
 /** Frozen departure evidence, not a simulated world population. */
 export interface VisitorDeparture {group:number;tick:number;pawn:Pawn;items:MaterialPile[];packed?:import('./furniture-rules.ts').PackedFurniture[]}

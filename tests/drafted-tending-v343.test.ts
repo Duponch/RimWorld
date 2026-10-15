@@ -61,8 +61,6 @@ const refusals:{name:string;change:(w:World)=>Command|void}[]=[
   {name:'caring refusal',change:w=>{w.pawns[0]!.background={childhood:'settlement-child',adulthood:'mercenary'};}},
   {name:'None care policy',change:w=>{w.pawns[1]!.medicalCare='none';}},
   {name:'standing patient',change:w=>{w.pawns[1]!.health!.bloodLoss=0;reconcilePawnHealth(w,w.pawns[1]!);}},
-  {name:'unadmitted outsider',change:w=>{w.pawns[1]!.faction='outlanders';}},
-  {name:'hostile uncaptured patient',change:w=>{w.pawns[1]!.faction='outlaws';}},
   {name:'incapacitated doctor',change:w=>{controlledInjury(w,w.pawns[0]!,'left-leg',30000);controlledInjury(w,w.pawns[0]!,'right-leg',30000);}},
   {name:'doctor without manipulation',change:w=>{controlledInjury(w,w.pawns[0]!,'left-shoulder',30000);controlledInjury(w,w.pawns[0]!,'right-shoulder',30000);}},
   {name:'dead patient',change:w=>{controlledInjury(w,w.pawns[1]!,'heart',15000,'cut');}},
@@ -71,6 +69,16 @@ const refusals:{name:string;change:(w:World)=>Command|void}[]=[
 test.each(refusals)('V343 refuses $name atomically with an explicit reason',({change})=>{
   const w=field(),c=change(w)??command(w),before=serializeWorld(w),result=applyCommand(w,c);
   expect(result.ok).toBe(false);if(!result.ok)expect(result.reason?.length??0).toBeGreaterThan(0);expect(serializeWorld(w)).toBe(before);
+});
+
+// V360 opens these actual Downed targets in237. The earlier233-236
+// domain stays strict; validate its literal before neutral migration, and
+// compare raw records because serializeWorld only exports the current schema.
+test.each(['outlanders','outlaws'] as const)('V343 historical236 still refuses unadmitted %s atomically',faction=>{
+  const w=field();w.schemaVersion=236 as World['schemaVersion'];w.pawns[1]!.faction=faction;
+  const before=JSON.stringify(w);expect(validateWorld(deserializeWorld(before))).toEqual([]);
+  const result=applyCommand(w,command(w));expect(result.ok).toBe(false);
+  if(!result.ok)expect(result.reason?.length??0).toBeGreaterThan(0);expect(JSON.stringify(w)).toBe(before);
 });
 
 test('V343 exclusive patient claim blocks a second drafted doctor and a rescue; cancellation releases it',()=>{

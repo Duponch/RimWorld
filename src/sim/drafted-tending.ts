@@ -35,7 +35,7 @@ export function draftedTendingReason(world:World,doctor:Pawn,patient:Pawn|undefi
   if(doctor.collapsePending||world.restRules==='legacy'&&doctor.rest===0)return 'Ce colon doit récupérer de son épuisement.';
   if(carrierOf(world,doctor.id))return 'Ce colon est transporté.';
   if(doctor.interruptedCargo)return 'La cargaison doit être déposée avant les soins.';
-  if(!patient||!world.pawns.includes(patient)||!isCarePatient(patient))return 'Patient humain pris en charge introuvable.';
+  if(!patient||!world.pawns.includes(patient)||!isCarePatient(patient)&&!(world.schemaVersion>=237&&patient.state==='downed'))return 'Patient humain pris en charge introuvable.';
   if(patient.id===doctor.id)return 'Les auto-soins utilisent leur commande et leur politique habituelles.';
   if(patient.state==='dead'||patient.health?.death)return 'Ce patient est décédé.';
   if(patient.mental?.crisis||prisonBreakActive(patient))return 'Ce patient est en crise et ne peut pas recevoir ces soins mobilisés.';

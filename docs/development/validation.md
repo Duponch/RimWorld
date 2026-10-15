@@ -1,5 +1,7 @@
 # Validation courante — V349–V350
 
+**V360 qualifié, schéma 237 : [Preuves et limites V360](../gameplay/visitor-care-v360.md).** Secours explicite neutre au pickup, soins civils et secours mobilisé sauvegardables ; migration236 stricte puis neutre. Groupe161cas/14 acquis par reprises, corpus63/roundtrip/Decoder, ChromeWebGPU74,157s avec trois recharges exactes ; vrai72605,15plaies traitées/4doses, visiteurs encore àterre. Livraison pending ; V358/9cc85810 conservé. Autonomie ACTIVE vers stockage, besoins/récupération et quatre résultats avant expansions. Aucun FPS, campagne entière ou EA100% certifiés. Les états suivants sont historiques.
+
 **V354–V355 livrés**, schéma 236 conservé : [preuve et limites](../gameplay/medicine-day-v355.md), QA `7a0be77f`/`b0b09701` commités/poussés. ChromeWebGPU55,281/108,190s, cinq+quatre recharges exactes, sixcapturesacquises et unerougeinspectéesROOT ; typesfinals16,140/16,291s etdocs1,350/1,219s PASS, gels2928/2929exacts. Produit/publicationV353 conservés ; aucune suiteexhaustive/campagneentière/FPS certifiés. Les validations suivantes sont historiques.
 
 **V355, schéma 236 conservé : [réserve médicale et aube naturelle](../gameplay/medicine-day-v355.md).** ROOTChromeWebGPU108,190s/body103,947s, quatre recharges58206/58233/58333/60031exactes, erreurs[]/troiscapturesinspectées et gel2929exact ; typages16,452/16,291s PASS, deux rouges de préparation conservés. QA-only, gate doc/commit PENDING ; V3547a0be77f poussé, produitV353 publié conservé. Les validations suivantes sont historiques.

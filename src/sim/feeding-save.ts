@@ -13,10 +13,11 @@ export function validFeedShape(value:unknown,version:number,w:World):boolean {
     &&(int(t.sourcePileId,1,w.nextId-1)&&!Object.hasOwn(t,'paste')||version>=217&&t.sourcePileId===null&&validPasteRequestShape(t.paste,w))&&int(t.quantity,1,75)&&typeof t.phase==='string'&&['pickup','deliver','feed',...(version>=217?['collect']:[])].includes(t.phase)
     &&(t.phase==='pickup'?t.carryPileId===null:int(t.carryPileId,1,w.nextId-1))&&int(t.progress,0,FEED_TICKS-1)&&(t.phase==='feed'||t.progress===0);
 }
-export function validateFeeding(w:World):string[] {
+export function validateFeeding(w:World,onlyPatientIds?:ReadonlySet<number>):string[] {
   const errors:string[]=[];
   for(const d of w.pawns)if(d.feed){
     const t=d.feed,p=w.pawns.find(p=>p.id===t.patientId),food=w.piles.find(p=>p.id===(t.phase==='pickup'?t.sourcePileId:t.carryPileId));
+    if(onlyPatientIds&&!onlyPatientIds.has(t.patientId))continue;
     if(feedingReason(w,d,p,true)||p&&d.priorities[feedingWork(p)]===0&&d.orders.active!=='feed')errors.push('Invalid feeding patient or reservation.');
     if(!p||!feedingPlaceValid(w,t,p))errors.push('Invalid feeding bedside.');
     if(!(t.paste&&t.phase==='pickup')&&(!food||food.kind!=='food'||(t.phase==='pickup'?food.owner.type!=='ground'||reservedSource(w,food.id)>food.quantity:food.owner.type!=='pawn'||food.owner.pawnId!==d.id||food.quantity!==t.quantity)))errors.push('Invalid feeding food ownership or quantity.');

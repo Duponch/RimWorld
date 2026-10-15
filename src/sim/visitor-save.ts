@@ -17,11 +17,12 @@ import { validateMedicalRecord } from './injury-validation.ts';
 import { validFoodContamination } from './food-poisoning-save.ts';
 import { validFilthFeet } from './filth-save.ts';
 import { medicalStatus } from './injury-state.ts';
+import { MEDICAL_CARE } from './medicine-rules.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { validSkills } from './skills-save.ts';
 import { pileMaxHp } from './thing-damage-rules.ts';
 import { INTRO_VISITOR_TICK,VISITOR_FLOWS,VISITOR_INTERVAL,VISITOR_YEAR,type VisitorAgendaKind } from './visitor-state.ts';
-import { TICKS_PER_DAY,type Cell,type MaterialPile,type World } from './types.ts';
+import { TICKS_PER_DAY,type Cell,type MaterialPile,type Pawn,type World } from './types.ts';
 import { APPAREL_POLICY_INTERVAL } from './apparel-renewal.ts';
 import { validMeleeThreatShape } from './mental-save.ts';
 
@@ -41,10 +42,24 @@ export function validArchivedMeleeThreat(value:unknown,w:Pick<World,'schemaVersi
   return threat===undefined||object(threat)&&threat.attackerId!==value.id&&integer(threat.attackerId,1,w.nextId-1);
 }
 
+/** Presence is prospective even when the value is undefined or inherited. */
+export function hasVisitorMedicalGuestMarker(p:Pick<Pawn,'visitor'>):boolean {
+  return !!p.visitor&&typeof p.visitor==='object'&&'medicalGuestAt' in p.visitor;
+}
+
 export function validVisitorShape(p:Record<string,unknown>,version:number,w:World):boolean {
   const v=p.visitor;if(version<88)return v===undefined;
   if(v===undefined)return true;
-  return object(v)&&Object.keys(v).length===5+(v.merchantKind!==undefined?1:0)&&keys(v,['group','role','phase','goal','personalFoodIds',...(version>=123?['merchantKind']:[])])&&integer(v.group,1)
+  if(!object(v))return false;
+  const medical='medicalGuestAt' in v;
+  if(medical){
+    const marker=Object.getOwnPropertyDescriptor(v,'medicalGuestAt');
+    if(version<237||!marker||!Object.hasOwn(marker,'value')||!marker.enumerable||!integer(marker.value,0,w.tick)
+      ||Object.getPrototypeOf(v)!==Object.prototype&&Object.getPrototypeOf(v)!==null
+      ||Reflect.ownKeys(v).some(k=>typeof k!=='string'||!Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)!,'value'))
+      ||p.faction!=='outlanders'||p.prisoner!==undefined||p.podRescue!==undefined)return false;
+  }
+  return Object.keys(v).length===5+(v.merchantKind!==undefined?1:0)+(medical?1:0)&&keys(v,['group','role','phase','goal','personalFoodIds',...(version>=123?['merchantKind']:[]),...(version>=237?['medicalGuestAt']:[])])&&integer(v.group,1)
     &&['traveler','visitor','trader'].includes(String(v.role))&&phases.includes(String(v.phase))&&(v.goal===null||cell(v.goal,w))
     &&(v.merchantKind===undefined||version>=123&&v.role==='trader'&&v.merchantKind==='exotic')
     &&Array.isArray(v.personalFoodIds)&&v.personalFoodIds.length<=8&&new Set(v.personalFoodIds).size===v.personalFoodIds.length&&v.personalFoodIds.every(id=>integer(id,1,w.nextId-1));
@@ -58,10 +73,12 @@ function validAgenda(value:unknown,kind:VisitorAgendaKind,w:World):boolean {
 function validArchivedPawn(value:unknown,w:World,tick:number):boolean {
   if(object(value)&&value.filthFeet!==undefined){if(w.schemaVersion<89||!validFilthFeet(value.filthFeet))return false;const copy={...value};delete copy.filthFeet;value=copy;}
   if(object(value)&&value.appearance!==undefined&&(w.schemaVersion<109||validatePawnAppearance(value.appearance).length))return false;
-  if(!object(value)||!keys(value,[...(w.schemaVersion>=223?['allowedAreaId']:[]),...(w.schemaVersion>=109?['appearance']:[]),...(w.schemaVersion>=138?['age']:[]),...(w.schemaVersion>=191?['background']:[]),...(w.schemaVersion>=192?['meleeThreat']:[]),...(w.schemaVersion>=195?['familyBereavement','romanceMemories']:[]),...(w.schemaVersion>=209?['deathThoughts']:[]),'id','name','x','z','visitor','faction','medicalCare','skills','recreation','foodPolicyId','schedule','restZeroTicks','collapsePending','hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty','apparelPolicyId','apparelAutomation','nextApparelCheckAt']:[]),'memories','orders','jobId','haul','cooking','need','bedId','needCooldown','state','priorities','path','moveCooldown','planCooldown','health','lastAttack','disturbance'])||!validHumanAge(value.age,w.schemaVersion)||!validBackground(value.background,w.schemaVersion,value.age as import('./human-age.ts').HumanAge|undefined)||!validArchivedMeleeThreat(value,w,tick))return false;
+  const medicalGuest=object(value)&&w.schemaVersion>=237&&hasVisitorMedicalGuestMarker(value as unknown as Pick<Pawn,'visitor'>);
+  if(!object(value)||!keys(value,[...(medicalGuest?['careDisabled']:[]),...(w.schemaVersion>=223?['allowedAreaId']:[]),...(w.schemaVersion>=109?['appearance']:[]),...(w.schemaVersion>=138?['age']:[]),...(w.schemaVersion>=191?['background']:[]),...(w.schemaVersion>=192?['meleeThreat']:[]),...(w.schemaVersion>=195?['familyBereavement','romanceMemories']:[]),...(w.schemaVersion>=209?['deathThoughts']:[]),'id','name','x','z','visitor','faction','medicalCare','skills','recreation','foodPolicyId','schedule','restZeroTicks','collapsePending','hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty','apparelPolicyId','apparelAutomation','nextApparelCheckAt']:[]),'memories','orders','jobId','haul','cooking','need','bedId','needCooldown','state','priorities','path','moveCooldown','planCooldown','health','lastAttack','disturbance'])||!validHumanAge(value.age,w.schemaVersion)||!validBackground(value.background,w.schemaVersion,value.age as import('./human-age.ts').HumanAge|undefined)||!validArchivedMeleeThreat(value,w,tick))return false;
+  const careValid=medicalGuest?(value.medicalCare===undefined?(value.careDisabled===undefined||value.careDisabled===true):typeof value.medicalCare==='string'&&Object.hasOwn(MEDICAL_CARE,value.medicalCare)&&value.careDisabled===undefined):value.medicalCare==='industrial';
   if(!validDeathThoughtsPawnShape(value,w.schemaVersion,tick)||!validFamilyBereavementShape(value.familyBereavement,w.schemaVersion,tick)||!validRomanceMemoryShape(value.romanceMemories,w.schemaVersion,tick))return false;
   if(!integer(value.id,1,w.nextId-1)||typeof value.name!=='string'||!value.name.trim()||value.name.length>48||!integer(value.x,0,w.width-1)||!integer(value.z,0,w.height-1)||!edge(value as unknown as Cell,w)
-    ||value.faction!=='outlanders'||value.medicalCare!=='industrial'||value.state!=='idle'||!validVisitorShape(value,w.schemaVersion,w)||!object(value.visitor)||value.visitor.phase!=='leaving'||value.visitor.goal!==null
+    ||value.faction!=='outlanders'||!careValid||value.state!=='idle'||!validVisitorShape(value,w.schemaVersion,{...w,tick})||!object(value.visitor)||value.visitor.phase!=='leaving'||value.visitor.goal!==null
     ||!['hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty']:[])].every(k=>range(value[k],0,100))||value.collapsePending!==false||!integer(value.restZeroTicks,0)||!validSkills(value.skills,tick,w.schemaVersion)||!integer(value.foodPolicyId,1)
     ||w.schemaVersion>=90&&value.apparelPolicyId!==undefined&&(!integer(value.apparelPolicyId,1)||!w.apparelPolicies?.some(policy=>policy.id===value.apparelPolicyId)||typeof value.apparelAutomation!=='boolean'||!integer(value.nextApparelCheckAt,0,w.tick+APPAREL_POLICY_INTERVAL.max))
     ||!Array.isArray(value.schedule)||value.schedule.length!==24||!value.schedule.every(v=>['anything','work','sleep','recreation'].includes(String(v)))
@@ -80,6 +97,31 @@ function validArchivedPawn(value:unknown,w:World,tick:number):boolean {
   if(!validDisturbance(value.disturbance,88,tick))return false;
   const a=value.lastAttack;if(a!==undefined&&(!object(a)||Object.keys(a).length!==2||!integer(a.targetId,1,w.nextId-1)||a.targetId===value.id||!integer(a.atCore,0,tick*10)))return false;
   return true;
+}
+
+/** New medical guests retain the same archived person and owned possessions.
+ * The archive is validated at departure, never at a later live clock. */
+export function validVisitorMedicalDeparture(d:import('./visitor-state.ts').VisitorDeparture,w:World):boolean {
+  if(!hasVisitorMedicalGuestMarker(d.pawn))return true;
+  if(!object(d)||!keys(d,['group','tick','pawn','items','packed'])||!integer(d.group,1,w.visitors?.serial??0)
+    ||d.packed!==undefined&&(!Array.isArray(d.packed)||!d.packed.length||d.packed.length>32768)
+    ||!integer(d.tick,w.visitors?.adoptedAt??0,w.tick)||!validArchivedPawn(d.pawn,w,d.tick)
+    ||d.pawn.visitor?.group!==d.group||!integer(d.pawn.visitor.medicalGuestAt,w.visitors?.adoptedAt??0,d.tick)
+    ||!Array.isArray(d.items)||d.items.length>32768||d.items.some(p=>!validExportedPile(p,d.pawn.id,d.tick,w)))return false;
+  const ids=new Set<number>([d.pawn.id]),worn:MaterialPile[]=[];let equipped=0;
+  for(const pile of d.items){
+    if(ids.has(pile.id))return false;ids.add(pile.id);
+    if(pile.owner.type==='equipment'&&++equipped>1)return false;
+    if(pile.owner.type==='apparel'){if(worn.some(p=>conflictsWith(p,pile)))return false;worn.push(pile);}
+  }
+  for(const pack of d.packed??[]){
+    if(!object(pack)||!object(pack.building)||!object(pack.owner)||!isSculptureKind(pack.building.kind)
+      ||pack.owner.type!=='inventory'||pack.owner.pawnId!==d.pawn.id)return false;
+    const view={...w,tick:d.tick,packed:[pack],structures:[],jobs:[],piles:[],pawns:[...w.pawns,d.pawn]};
+    if(validateFurniture(view,w.schemaVersion,ids,true).length||validateFurniture(view,w.schemaVersion,new Set(),false).length
+      ||validateArtObjects(view,w.schemaVersion).length)return false;
+  }
+  return d.pawn.visitor.personalFoodIds.every(id=>d.items.some(p=>p.id===id&&p.kind==='food'&&p.owner.type==='inventory'));
 }
 function validExportedPile(value:unknown,pawnId:number,tick:number,w:World):value is MaterialPile {
   if(!object(value)||!keys(value,['id','kind','item','quantity','owner','rot','apparel','weapon','damage',...(w.schemaVersion>=89?['foodPoison']:[])])||!integer(value.id,1,w.nextId-1)||typeof value.item!=='string'||w.schemaVersion<227&&['hay','kibble'].includes(value.item)||!Object.hasOwn(ITEM_DEFINITIONS,value.item)||!validFoodContamination(value.foodPoison,value.item as keyof typeof ITEM_DEFINITIONS,w.schemaVersion>=89)||!object(value.owner)||Object.keys(value.owner).length!==2||!['inventory','apparel','equipment'].includes(String(value.owner.type))||value.owner.pawnId!==pawnId)return false;
@@ -128,7 +170,9 @@ export function validateVisitors(w:World,version:number,ids:Set<number>):string[
   for(const p of w.pawns)if(p.visitor){const v=p.visitor,g=s.groups.find(g=>g.id===v.group);
     if(!validVisitorShape(p as unknown as Record<string,unknown>,version,w)||p.faction!=='outlanders'||p.prisoner||p.raid||p.trade||p.draft||!g||!g.members.includes(p.id)||v.phase!==g.phase||g.kind==='traveler'&&v.role!=='traveler'||g.kind==='visitor'&&v.role==='traveler')errors.push('Invalid visitor mandate.');
     if(!v.personalFoodIds.every(id=>w.piles.some(i=>i.id===id&&i.kind==='food'&&(i.owner.type==='inventory'||i.owner.type==='pawn')&&i.owner.pawnId===p.id)))errors.push('Invalid visitor personal food ownership.');
-    if(p.orders.active!==null||p.orders.queue.length||p.jobId!==null||p.haul||p.cooking||p.bedId!==null||p.need?.kind==='sleep'&&p.need.bedId!==null)errors.push('Visitor retains colonial work or bed.');
+    const admitted=version>=237&&hasVisitorMedicalGuestMarker(p);
+    if(admitted&&(!g||!integer(v.medicalGuestAt,g.startedAt,w.tick)))errors.push('Invalid visitor medical admission chronology.');
+    if(p.orders.active!==null||p.orders.queue.length||p.jobId!==null||p.haul||p.cooking||!admitted&&(p.bedId!==null||p.need?.kind==='sleep'&&p.need.bedId!==null))errors.push('Visitor retains colonial work or bed.');
   }
   return errors;
 }

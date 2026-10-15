@@ -64,7 +64,8 @@ import { validFlashstorm } from '../sim/flashstorm-save.ts';
 import { validRainElectrical } from '../sim/rain-electric-save.ts';
 import { validDomesticTasksTransport } from '../sim/domestic-save.ts';
 import { validAnimalRestTransport } from '../sim/animal-rest-save.ts';
-import { validArrestRescueTransport } from '../sim/rescue-save.ts';
+import { validArrestRescueTransport,validDraftedRescueTransport } from '../sim/rescue-save.ts';
+import { validVisitorMedicalTransport,validVisitorMedicalTransition } from '../sim/visitor-medical-save.ts';
 import { validPawnPodRescue,validPodRescueTransportBindings } from '../sim/pod-rescue-save.ts';
 import { validWildlifeExitState,validWildlifePredationState } from '../sim/wildlife-save.ts';
 import { validCorpseConsumption } from '../sim/corpse-anatomy.ts';
@@ -112,7 +113,7 @@ import { validOfferedBackground } from '../sim/background-save.ts';
 import { validMentalShape, validMeleeThreatShape, validateMental } from '../sim/mental-save.ts';
 import { validMeleeShape, validStunShape, validateMelee } from '../sim/melee-save.ts';
 import { validShootingShape,validateShooting } from '../sim/shooting-save.ts';
-import { validArchivedMeleeThreat } from '../sim/visitor-save.ts';
+import { validArchivedMeleeThreat,hasVisitorMedicalGuestMarker,validVisitorShape } from '../sim/visitor-save.ts';
 import { validMechanoidShape,validateMechanoids } from '../sim/mechanoid-save.ts';
 import { validMechCorpseShape,validMechSalvageLedger } from '../sim/mechanoid-corpse-save.ts';
 import { validateMechanoidRaids } from '../sim/mechanoid-raid-save.ts';
@@ -935,6 +936,8 @@ export class SnapshotDecoder {
     let hasDraftedTend=false;const forcedConsumers:Pawn[]=[];
     for(const pawn of message.world.pawns){
       if(!pawn||typeof pawn!=='object'||Array.isArray(pawn))return resync('Personne locale invalide pour ce snapshot.');
+      if(hasVisitorMedicalGuestMarker(pawn)&&!validVisitorShape(pawn as unknown as Record<string,unknown>,message.world.schemaVersion,message.world as World))
+        return resync('Admission médicale de visiteur invalide ou future.');
       if(hasDraftedTendingMarker(pawn)||pawn.draft&&pawn.tend){
         if(!hasDraftedTendingMarker(pawn)||!validTendShape(pawn.tend,message.world.schemaVersion,message.world))return resync('Forme de soins mobilisés invalide ou future.');
         hasDraftedTend=true;
@@ -1141,6 +1144,10 @@ export class SnapshotDecoder {
       ?{kind:'sparse',previous:this.current,updatedOrdinals:structureIndices}:undefined;
     if(validateStartingArrivalOwners(next,next.schemaVersion).length)return resync('Personne, possession ou propriétaire de capsule initiale invalide.');
     if(hasDraftedTend&&!validDraftedTendingTransport(next))return resync('Soins mobilisés, patient, contact ou réservation incohérents.');
+    if(!validVisitorMedicalTransport(next))return resync('Invité médical, secours, lit ou possession incohérents.');
+    if(!validDraftedRescueTransport(next))return resync('Secours mobilisé, autorité ou portage incohérents.');
+    if(this.current&&message.epoch===this.epoch&&!validVisitorMedicalTransition(this.current,next))
+      return resync('Admission médicale d’un visiteur réécrite dans cette partie.');
     if(forcedConsumers.length?!validForcedConsumeTransport(next,forcedConsumers):!validForcedConsumeOwners(next))return resync('Consommation forcée, propriétaire, source, contact ou réservation incohérents.');
     if(!validHumanSleepingSpotTransport(next,next.schemaVersion))return resync('Couchage au sol humain, propriétaire, rôle ou réservation physique invalide ou futur.');
     if(this.current&&message.epoch===this.epoch&&!validStartingArrivalTransition(this.current,next))

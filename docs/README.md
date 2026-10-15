@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V360 qualifié, schéma 237 : [Secours et soins des visiteurs](gameplay/visitor-care-v360.md).** Secours explicite neutre au pickup, soins civils et secours mobilisé sauvegardables ; migration236 stricte puis neutre. Groupe161cas/14 acquis par reprises, corpus63/roundtrip/Decoder, ChromeWebGPU74,157s avec trois recharges exactes ; vrai72605,15plaies traitées/4doses, visiteurs encore àterre. Livraison pending ; V358/9cc85810 conservé. Autonomie ACTIVE vers stockage, besoins/récupération et quatre résultats avant expansions. Aucun FPS, campagne entière ou EA100% certifiés. Les états suivants sont historiques.
+
 **V353 livré**, schéma 236 : [expiration d’arbre sous saturation](gameplay/tree-expiry-v353.md), produit `8dc7bf70` et [publication f6ced911](development/cloudflare-pages.md#publication-v353--arbre-expiré-et-sortie-saturée),106réponsesHTTPS exactes. Suite autonome ACTIVE vers réserve médicale puis campagne ; aucun FPS/EA100%/campagne entière acquis. Les états suivants sont historiques.
 
 **V353, schéma 236 : [expiration d’arbre sous saturation](gameplay/tree-expiry-v353.md).** Quantité capturée, attente et sortie atomiques ; groupe213/14 acquis par reprises, corpus63/66 et ChromeWebGPU/cinqrecharges exactes, gel2932. Livraison PENDING, autonomie ACTIVE vers réserve médicale puis campagne ; aucun FPS/EA100%/campagne entière acquis. Les états suivants sont historiques.

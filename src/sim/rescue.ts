@@ -2,7 +2,10 @@ import { interruptWork } from './interrupted-cargo.ts';
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { allowedAreaAllows,allowedAreaReason } from './allowed-area-state.ts';
 import { bedSlotCell } from './bed-slots.ts';
-import { isCarePatient } from './affiliation.ts';
+import { isCarePatient,isRescuableVisitor,isAdmittedVisitorGuest,isColonist } from './affiliation.ts';
+import { medicalCare } from './medicine-rules.ts';
+import { cancelShooting } from './shooting-state.ts';
+import { cancelMelee } from './melee-state.ts';
 import { captureReason,completeCapture } from './capture.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
@@ -19,16 +22,49 @@ import type { BedSlot,Cell,CommandResult,Pawn,World } from './types.ts';
 
 export interface RescueProposal {patientId:number;bedId:number;path:Cell[];bedSlot?:BedSlot}
 
-export const wantsRescue=(p:Pawn,forced=false):boolean=>(isCarePatient(p)||forced&&p.faction==='outlanders'&&!!p.podRescue)&&p.state==='downed'&&!(p.need?.kind==='sleep'&&p.need.bedId!==null&&p.need.phase==='sleep');
+/** The existing explicit mandate owns this mobilized service; no additional
+ * saved flag, capture/arrest/release authority or automatic work is introduced. */
+export const isDraftedRescue=(world:World,actor:Pawn):boolean=>world.schemaVersion>=237&&isColonist(actor)&&!actor.prisoner&&!!actor.draft&&actor.orders.active==='rescue'&&!!actor.rescue&&!actor.rescue.capture&&!actor.rescue.arrest&&!actor.rescue.release;
+
+/** Read-only admission is shared by the menu, proposal and command. Cancelling
+ * an accepted attack must never erase a strike or post-shot recovery. */
+function draftedRescueOrderRefusal(world:World,actor:Pawn,acquiredStun=false):string|undefined {
+  if(world.schemaVersion<237||!actor.draft)return;
+  if(!isColonist(actor)||actor.prisoner)return 'Mobilisez un colon libre pour donner cet ordre de secours.';
+  if(actor.mental?.crisis||actor.burning||actor.bombRefuge||actor.heatRefuge||actor.tactics)return 'Ce colon doit terminer sa réaction immédiate avant le secours mobilisé.';
+  if(!acquiredStun&&(actor.stun?.untilCore??0)>world.tick*10||actor.melee?.strike||actor.shooting?.stance?.phase==='cooldown')return 'Attendez la fin de l’étourdissement ou de la récupération de combat.';
+}
+
+export const wantsRescue=(p:Pawn,forced=false):boolean=>((!p.visitor&&isCarePatient(p))||forced&&(isRescuableVisitor(p)||p.faction==='outlanders'&&!!p.podRescue))&&p.state==='downed'&&!(p.need?.kind==='sleep'&&p.need.bedId!==null&&p.need.phase==='sleep');
+/** Only the explicit neutral-visitor branch is new. Automatic work keeps its
+ * historical colony/prisoner/pod domain, including after visitor admission. */
+function visitorRescueRefusal(world:World,patient:Pawn,forced:boolean):string|undefined {
+  if(!patient.visitor)return;
+  if(!forced||world.schemaVersion<237||!isRescuableVisitor(patient))return 'Ce visiteur ne peut pas recevoir ce secours.';
+  const group=world.visitors?.groups.find(g=>g.id===patient.visitor!.group);
+  if(!group||!group.members.includes(patient.id)||group.hostile||patient.mental?.crisis||patient.health?.death)return 'Ce visiteur ne peut pas être admis comme patient neutre.';
+  if(medicalCare(patient)==='none')return 'Les soins sont désactivés pour ce visiteur.';
+}
 export function rescueReason(world:World,actor:Pawn,patient:Pawn|undefined,forced=false):string|undefined {
+  return rescueReasonFor(world,actor,patient,forced,false);
+}
+/** A stun acquired during this exact mobilized mandate pauses its physical
+ * service. It does not authorize a new order, another patient or recovery from
+ * any of the other immediate reactions rejected by the ordinary menu. */
+export function rescueContinuationReason(world:World,actor:Pawn,patient:Pawn|undefined):string|undefined {
+  return rescueReasonFor(world,actor,patient,true,isDraftedRescue(world,actor)&&actor.rescue!.patientId===patient?.id);
+}
+function rescueReasonFor(world:World,actor:Pawn,patient:Pawn|undefined,forced:boolean,acquiredStun:boolean):string|undefined {
   if(!forced&&patient){const reason=allowedAreaReason(world,actor,patient);if(reason)return reason;}
   // Forced Rescue/Capture are Core menu services, not admitted work providers.
   if(!forced){const refusal=backgroundWorkRefusal(actor,patient?.prisoner?'warden':'doctor');if(refusal)return refusal;}
-  return medicalWorkRefusal(actor)??(!forced&&(patient?.prisoner?actor.priorities.warden:actor.priorities.doctor)===0?`${patient?.prisoner?'Geôlier':'Médecin'} est désactivé dans le tableau Travail.`
+  const visitorRefusal=patient?visitorRescueRefusal(world,patient,forced):undefined;
+  return medicalWorkRefusal(actor)??(forced?draftedRescueOrderRefusal(world,actor,acquiredStun):undefined)??(!forced&&(patient?.prisoner?actor.priorities.warden:actor.priorities.doctor)===0?`${patient?.prisoner?'Geôlier':'Médecin'} est désactivé dans le tableau Travail.`
     :actor.collapsePending||world.restRules==='legacy'&&actor.rest===0?'Ce colon doit récupérer de son épuisement.'
     :carrierOf(world,actor.id)?'Ce colon est transporté.'
     :actor.interruptedCargo?'La cargaison doit être déposée avant le secours.'
     :!patient||patient===actor||!wantsRescue(patient,forced)?'Cette personne ne nécessite pas de secours vers un lit.'
+    :visitorRefusal?visitorRefusal
     :rescueClaim(world,patient.id,actor.id)?'Une autre personne a réservé ce secours.'
     :world.pawns.some(p=>p.id!==actor.id&&p.tend?.drafted&&p.tend.patientId===patient.id)?'Cette personne est réservée pour des soins mobilisés.':undefined);
 }
@@ -43,7 +79,9 @@ export function rescueProposal(world:World,actor:Pawn,patient:Pawn,reach:Reachab
 export function startRescue(world:World,actor:Pawn,proposal:RescueProposal,forced=false,capture=false):void {
   const bed=world.structures.find(b=>b.id===proposal.bedId)!,patient=world.pawns.find(p=>p.id===proposal.patientId)!;
   if(bed.kind==='double-bed'&&(capture||proposal.bedSlot===undefined||!rescueBedAvailable(world,bed,patient,actor.id,false,proposal.bedSlot)))return;
-  if(!bed.medical&&!capture){patient.bedId=bed.id;if(bed.kind==='double-bed')patient.bedSlot=proposal.bedSlot;else delete patient.bedSlot;}
+  // The accepted rescue itself reserves a new visitor's destination. Do not
+  // leave an ordinary bed owner behind if the order is cancelled before pickup.
+  if(!bed.medical&&!capture&&(!isRescuableVisitor(patient)||isAdmittedVisitorGuest(patient))){patient.bedId=bed.id;if(bed.kind==='double-bed')patient.bedSlot=proposal.bedSlot;else delete patient.bedSlot;}
   actor.rescue={patientId:proposal.patientId,bedId:proposal.bedId,phase:'approach',...(bed.kind==='double-bed'?{bedSlot:proposal.bedSlot}:{}),...(capture?{capture:true as const}:{})};
   actor.path=proposal.path;actor.state='moving';actor.planCooldown=0;
   if(forced)actor.orders.active='rescue';
@@ -59,6 +97,10 @@ export function applyRescue(world:World,command:{pawnId:number;patientId:number;
   const drops=planCommandDrops(world,{type:'order-rescue',...command});
   if(!drops)return fail('Pas de place pour déposer la cargaison avant le secours.');
   if(!releaseWork(world,actor,drops))return fail('Impossible de libérer le travail précédent.');
+  if(world.schemaVersion>=237&&actor.draft){
+    cancelShooting(actor);cancelMelee(actor);
+    actor.draft.target=null;actor.draft.queue=[];actor.draft.lastActiveTick=world.tick;
+  }
   clearQueuedOrders(world,actor);delete actor.priorityWork;startRescue(world,actor,proposal,true);
   return {ok:true};
 }
@@ -69,7 +111,7 @@ export function reconcileRescues(world:World):void {
     if(actor.rescue.release){reconcileRelease(world,actor);continue;}
     if(actor.rescue.arrest){reconcileArrest(world,actor);continue;}
     const task=actor.rescue,patient=world.pawns.find(p=>p.id===task.patientId),bed=world.structures.find(s=>s.id===task.bedId);
-    if(!patient||!task.capture&&actor.orders.active!=='rescue'&&backgroundWorkRefusal(actor,patient.prisoner?'warden':'doctor')||(task.capture?!!captureReason(world,actor,patient,true):!wantsRescue(patient,actor.orders.active==='rescue'))||!bed
+    if(!patient||!task.capture&&actor.orders.active!=='rescue'&&backgroundWorkRefusal(actor,patient.prisoner?'warden':'doctor')||(task.capture?!!captureReason(world,actor,patient,true):!wantsRescue(patient,actor.orders.active==='rescue')||!!visitorRescueRefusal(world,patient,actor.orders.active==='rescue'))||!bed
       ||bed.kind==='double-bed'&&(task.bedSlot===undefined||patient.bedId!==bed.id||patient.bedSlot!==task.bedSlot)
       ||!rescueBedAvailable(world,bed,patient,actor.id,!!task.capture,task.bedSlot)||medicalWorkRefusal(actor))releaseWork(world,actor);
   }
@@ -83,7 +125,7 @@ export function processRescue(world:World,actor:Pawn,context:NeedContext):void {
   // Finish the previous physiological interval under its previous posture,
   // regardless of which actor was processed first in this tick.
   if(patient&&patient.health&&!patient.health.death&&patient.health.tick<world.tick)updatePawnHealth(world,patient);
-  if(!patient||!task.capture&&actor.orders.active!=='rescue'&&backgroundWorkRefusal(actor,patient.prisoner?'warden':'doctor')||(task.capture?!!captureReason(world,actor,patient,true):!wantsRescue(patient,actor.orders.active==='rescue'))||!bed
+  if(!patient||!task.capture&&actor.orders.active!=='rescue'&&backgroundWorkRefusal(actor,patient.prisoner?'warden':'doctor')||(task.capture?!!captureReason(world,actor,patient,true):!wantsRescue(patient,actor.orders.active==='rescue')||!!visitorRescueRefusal(world,patient,actor.orders.active==='rescue'))||!bed
     ||bed.kind==='double-bed'&&(task.bedSlot===undefined||patient.bedId!==bed.id||patient.bedSlot!==task.bedSlot)
     ||!rescueBedAvailable(world,bed,patient,actor.id,!!task.capture,task.bedSlot)){releaseWork(world,actor);return;}
   const target=bed.kind==='double-bed'&&task.bedSlot!==undefined?bedSlotCell(bed,task.bedSlot):bed;
@@ -94,13 +136,20 @@ export function processRescue(world:World,actor:Pawn,context:NeedContext):void {
     if(actor.x!==patient.x||actor.z!==patient.z){context.move(patient,true);return;}
     if(patient.moveCooldown>0||bed.kind==='double-bed'&&(patient.motion?.end??0)>world.tick)return;
     patient.need=null;delete patient.medicalSleep;patient.path=[];
+    // Core's invitation precedes the real carry, without changing faction,
+    // inventory, visit group or phase. A later interruption retains admission.
+    if(!task.capture&&actor.orders.active==='rescue'&&isRescuableVisitor(patient)){
+      patient.visitor!.medicalGuestAt??=world.tick;patient.visitor!.goal=null;
+      if(!bed.medical){patient.bedId=bed.id;delete patient.bedSlot;}
+    }
     task.phase='carry';actor.path=[];actor.planCooldown=0;syncPatient(world,actor);
     context.event(`${actor.name} prend ${patient.name} pour le porter vers un lit.`);
   }
   if(actor.x!==target.x||actor.z!==target.z){context.move(target,true);syncPatient(world,actor);return;}
   if(bed.kind==='double-bed')syncPatient(world,actor);
   if(task.capture&&!completeCapture(world,patient))return;
-  // Admission follows the actual bed deposit, never the order or pickup.
+  // Historical capsule admission remains at deposit; visitor admission above
+  // follows its separate pickup timing and never fabricates a capsule record.
   if(!task.capture&&patient.faction==='outlanders'&&patient.podRescue)patient.podRescue.admittedAt??=world.tick;
   // The mover has completed the captured edge before entering this processor.
   delete actor.rescue;actor.orders.active=null;actor.path=[];actor.state='idle';actor.planCooldown=0;

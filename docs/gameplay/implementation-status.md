@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V360 qualifié, schéma 237 : [Parcours clinique V360](visitor-care-v360.md).** Secours explicite neutre au pickup, soins civils et secours mobilisé sauvegardables ; migration236 stricte puis neutre. Groupe161cas/14 acquis par reprises, corpus63/roundtrip/Decoder, ChromeWebGPU74,157s avec trois recharges exactes ; vrai72605,15plaies traitées/4doses, visiteurs encore àterre. Livraison pending ; V358/9cc85810 conservé. Autonomie ACTIVE vers stockage, besoins/récupération et quatre résultats avant expansions. Aucun FPS, campagne entière ou EA100% certifiés. Les états suivants sont historiques.
+
 **V357 livré**, schéma236 conservé : [première recherche guidée](research-guidance-v357.md), produit `5cd5ffce` et [publication965abf99](../development/cloudflare-pages.md#publication-v357--première-recherche-guidée),106réponsesHTTPS exactes. V356QAffc19efd commité/poussé, campagne66037 conservée ; suite autonome ACTIVE besoins/repas/renouvellement/incidents avec reprises. Aucun catalogue général, campagne entière, FPS ou early access100% certifiés. Les états suivants sont historiques.
 
 **V357 qualifié**, schéma236 : [première recherche guidée](research-guidance-v357.md), mêmes projets/règles/graphes avec conseil facultatif, alerte et constats de travail. Livraison PENDING ; V356ffc19efd poussé, campagne66037 acquise par reprises. Priorité durable : besoins, réserves, incidents et progression avec reprises ; aucune campagne entière/FPS/EA100% certifiés. Les états suivants sont historiques.

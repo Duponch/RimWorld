@@ -3,7 +3,8 @@ import { isColonist } from './affiliation.ts';
 import { captureReason } from './capture.ts';
 import { arrestReason } from './arrest.ts';
 import { rescueBedAvailable } from './medical-beds.ts';
-import { wantsRescue } from './rescue.ts';
+import { wantsRescue,rescueContinuationReason,isDraftedRescue } from './rescue.ts';
+import { validDraftShape,validateDrafting } from './drafting-save.ts';
 import { patientClaimed } from './care-access.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { capturePrisonTopology,prisonRoom } from './prison-space.ts';
@@ -31,10 +32,11 @@ export function validRescueShape(value:unknown,version:number):boolean {
 }
 /** Shapes have passed first. Cross-references must describe a single physical
  * person, never a second actor or a resource owned by the rescuer. */
-export function validateRescues(world:World,onlyArrestDomain=false,onlyBedIds?:ReadonlySet<number>):string[] {
+export function validateRescues(world:World,onlyArrestDomain=false,onlyBedIds?:ReadonlySet<number>,onlyPatientIds?:ReadonlySet<number>):string[] {
   const errors:string[]=[],patients=new Set<number>(),beds=new Set<string>();
   for(const actor of world.pawns)if(actor.rescue){
     const t=actor.rescue,patient=world.pawns.find(p=>p.id===t.patientId),bed=world.structures.find(b=>b.id===t.bedId);
+    if(onlyPatientIds&&!onlyPatientIds.has(t.patientId))continue;
     if(onlyBedIds&&!onlyBedIds.has(t.bedId))continue;
     const bedKey=bed?.kind==='double-bed'?`${t.bedId}:${t.bedSlot}`:String(t.bedId);
     const prospective=Object.hasOwn(t,'arrest')||!!(t.release&&patient&&isColonist(patient));
@@ -63,6 +65,8 @@ export function validateRescues(world:World,onlyArrestDomain=false,onlyBedIds?:R
       if(actor.orders.active!=='rescue'||actor.orders.queue.length||actor.priorityWork||actor.surgery||actor.animalCare||actor.animalHandling||actor.hunting||actor.research||actor.equipmentTask||actor.burial||actor.cleaning||actor.firefighting||actor.trade||actor.melee?.order||actor.shooting?.order||actor.tactics)errors.push('Invalid arrest authority.');
       if(t.phase==='carry'&&bed&&actor.path.length&&!same(actor.path.at(-1)!,bed))errors.push('Invalid arrest carry route.');
     }else{
+      if(patient?.visitor&&(world.schemaVersion<237||t.capture||actor.orders.active!=='rescue'
+        ||rescueContinuationReason(world,actor,patient)||t.phase==='carry'&&patient.visitor.medicalGuestAt===undefined))errors.push('Invalid visitor rescue admission or explicit authority.');
       if(!patient||patient===actor||(t.capture?!!captureReason(world,actor,patient,true):!wantsRescue(patient,actor.orders.active==='rescue'))||patient.rescue||patients.has(t.patientId)||world.schemaVersion>=233&&patientClaimed(world,t.patientId,actor))errors.push('Invalid or duplicate rescue patient.');
       if(!bed||!patient||!rescueBedAvailable(world,bed,patient,actor.id,!!t.capture,t.bedSlot)||beds.has(bedKey))errors.push('Invalid or duplicate rescue bed.');
       beds.add(bedKey);
@@ -82,4 +86,20 @@ export function validateRescues(world:World,onlyArrestDomain=false,onlyBedIds?:R
  * rescue services keep their existing transport path and validation cost. */
 export function validArrestRescueTransport(world:World):boolean {
   try{return validateRescues(world,true).length===0;}catch{return false;}
+}
+
+/** Only the new explicit mobilized Rescue authority acquires this transport
+ * guard. No passive rescue provider or historical drafted activity is relaxed. */
+export function validDraftedRescueTransport(world:World):boolean {
+  try {
+    const actors=world.pawns.filter(p=>p.draft&&p.rescue);
+    if(!actors.length)return true;
+    const actorIds=new Set<number>(),patientIds=new Set<number>();
+    for(const actor of actors){
+      if(!isDraftedRescue(world,actor)||!validDraftShape(actor.draft,world.schemaVersion,world)
+        ||!validRescueShape(actor.rescue,world.schemaVersion)||actorIds.has(actor.id))return false;
+      actorIds.add(actor.id);patientIds.add(actor.rescue!.patientId);
+    }
+    return !validateDrafting(world,actorIds).length&&!validateRescues(world,false,undefined,patientIds).length;
+  }catch{return false;}
 }
