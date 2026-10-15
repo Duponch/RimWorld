@@ -1,5 +1,7 @@
 # Elsewhere sur Cloudflare Pages
 
+**Publication courante V361 : `ff304a50`, 15 octobre 2026, schéma237.** Produit `e3fe6efb` commité/poussé : [réserves, étagères et placements](../gameplay/shelf-zones-v361.md). Une publication et106 réponses HTTPS exactes sur [la production](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://ff304a50.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v361--réserves-étagères-et-placements). Les publications suivantes sont historiques.
+
 **Publication courante V357 : `965abf99`, 14 octobre 2026, schéma 236.** Produit `5cd5ffce` commité/poussé : [première recherche guidée](../gameplay/research-guidance-v357.md). Une publication,106réponsesHTTPS exactes sur [l’adresse stable](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://965abf99.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v357--première-recherche-guidée). Les publications suivantes sont historiques.
 
 **Publication courante V353 : `f6ced911`,14octobre2026, schéma 236.** Produit `8dc7bf70` commité/poussé ; [expiration d’arbre sous saturation](../gameplay/tree-expiry-v353.md), une publication et106réponsesHTTPS exactes sur [l’adresse stable](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://f6ced911.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v353--arbre-expiré-et-sortie-saturée). Les publications suivantes sont historiques.
@@ -503,3 +505,21 @@ La première commande RED3,588s a utilisé à tort le nom de domaine comme proje
 HTTPS PASS8,313s, **106réponses200/MIME/octets exacts**,53chemins sur chaque origine ; rapport `tmp/elsewhere-pages/v360-http-R7VOtu/report.json`, erreurs[], package/publics inchangés. Les66publics sont comparés localement ; tous ne sont pas téléchargés à distance. `--commit-dirty=true` reflète seulement le dossier humain non suivi references_UI, laissé intact ; seul le dist inspecté est envoyé. Les contextes Chrome de test sont terminés, Vite5412 est réemployé pour la suite ; aucune session humaine fermée.
 
 Suite autonome ACTIVE depuis le vrai72605/SHA19cbd521 : second visiteur et récupération/besoins encore ouverts, correctif cohérent d’étagère sur réserve préparé avant retour à la survie durable. Quatre résultats avant expansions biomes/multicartes/catalogue ; aucun soinV344/global/campagne entière/EA100%/240FPS crédité.
+
+## Publication V361 — réserves, étagères et placements
+
+15 octobre 2026, schéma237 conservé. Produit `e3fe6efb9e23c60ae6d51e6cdccc106bd4f7be7f` commité/poussé sur main : [qualification et rouges](../gameplay/shelf-zones-v361.md). Retrait atomique des réserves sous blueprint/install, semis générés et prévisualisations cohérentes, cargos et sortie de cuisine conservés, fenêtres de gestion devant le HUD. Aucun nouvel asset ou refonte de charte.
+
+Groupe248cas/13 acquis par reprises dont36nouveaux ; corpus63 PASS59,628s, dernier Chrome/WebGPU PASS43,238s/body38,812s et six recharges exactes/quatre captures inspectées ROOT. Typage livraison PASS12,473s et gate initiale documentaire PASS1,979s. Pages initial PASS2,053s ; source EOF normalisée ensuite sans comportement changé, recompilation du commit poussé PASS2,061s, package final strictement identique au premier, PASS1,477s.
+
+Package `tmp/elsewhere-pages/v361-package-2rVihy/report.json` : **517 fichiers/119597135 octets**, corpus63références/66chemins locaux exacts, visuels publics exacts, laboratoire et instrumentation privés absents selon inspection ciblée. Gel2956 exact avant et après contrôle/publication.
+
+| Asset courant | SHA256 du package et des deux origines |
+| --- | --- |
+| `/assets/index-v_h7DDAo.js` | `e39ea115f394dbfefa32350706015d5756b9338e775b9a2297234947dc69df00` |
+| `/assets/simulation.worker-tA31M6Tj.js` | `d16ec84f1ed2c9792ca9cf220203b1c582027d93ea26c612720e966518e98d7c` |
+| `/assets/index-CoPGpbxY.css` | `69919787f33ba30e423383c1f4ce8a889b0da83f5306a28294453924bb3c802e` |
+
+Wrangler4.149.0 PASS14,305s sur le projet existant **elsewhere**, branchemain/commit explicite : quatre fichiers téléversés,511 réutilisés, en-têtes/redirections transmis. Une seule publication effective **ff304a50**. HTTPS PASS7,827s : **106 réponses200/MIME/octets exacts**,53chemins sur chaque origine ; rapport `tmp/elsewhere-pages/v361-http-1VzEFf/report.json`, erreurs[], dist/publics inchangés. Les66publics sont comparés localement ; tous ne sont pas téléchargés à distance. `--commit-dirty=true` reflète uniquement references_UI humain non suivi, conservé ; seul le dist vérifié est envoyé. UI papier distante `codex/ui-papier-v317`/a7a6b465 intacte. Contextes Chrome possédés terminés, Vite5412 réemployé ; aucune session humaine fermée.
+
+Cette publication vérifie des octets disponibles et des parcours préparés, pas une guérison, une campagne entière, une sauvegarde humaine réparée ou un gain FPS. Campagne canonique V36072605/SHA19cbd521 et ledger1faef6af conservés. Suite V362 clinique/besoins regroupée, puis survie durable, recherche productive et essai des trois biomes avant les expansions autorisées. Autonomie ACTIVE, ROOT seul contrôles lourds séquentiels sur gel ; sous-métiers reportés.
