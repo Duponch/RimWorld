@@ -540,3 +540,22 @@ Wrangler4.149.0 PASS14,052s, projet existant elsewhere/branchemain/commit explic
 | index-CoPGpbxY.css | 69919787f33ba30e423383c1f4ce8a889b0da83f5306a28294453924bb3c802e |
 
 HTTPS PASS7,835s, **106 réponses200/MIME/octets exacts**,53chemins sur chaque origine. Rapport `tmp/elsewhere-pages/v363-http-Ld7GCr/report.json`, erreurs[], dist/publics inchangés ; gel final05/2970 exact après contrôle. Les66publics sont comparés localement, tous ne sont pas téléchargés à distance. La disponibilité de fichiers ne certifie pas un nouveau parcours navigateur public ni une réparation de save humain. `--commit-dirty=true` reflète uniquement references_UI humain non suivi ; le dist produit commité est le seul package envoyé. UI papier et sessions humaines conservées, contextes de test terminés et Vite5412 réemployable. Suite autonome : intervention sur le vrai mur menacé, puis recherche productive et essai des trois biomes.
+
+
+## Publication V365 — ravitaillement manuel des générateurs
+
+15 octobre2026, schéma238 conservé. Produit `28a2e8a93e097b6219e2bc1a5a97d6d32f7b33d3` commité/poussé, précédé du QA V364 `5a3319fe` : [menu et scènes préparées](../gameplay/manual-refuel-v365.md), [vrai raid et premiers soins](../gameplay/raid-care-v364.md). Seul le correctif produit de menu déclenche une publication ; aucun déploiement séparé pour les contrôles de campagne.
+
+Pages PASS2,214s, package PASS1,545s : **517 fichiers/119598776 octets**,63références/66chemins publics locaux exacts, assets visuels et CSS inchangés, laboratoire/instrumentation privés absents. Rapport `tmp/elsewhere-pages/v365-package-v6qvsL/report.json`, produit avant commit sur les mêmes sources. Typage12,777s puis12,965s après ajout des pilotes QA ; ces fichiers de tests ne modifient pas le build, aucun build inchangé rejoué.
+
+Unique publication ROOT **2f42e85c**, Wrangler4.149.0 PASS12,932s sur le projet existant elsewhere/branchemain/commit explicite. Trois fichiers envoyés/512réemployés puis headers/redirects. [Elsewhere stable](https://elsewhere-cq7.pages.dev/) et [publication V365](https://2f42e85c.elsewhere-cq7.pages.dev/).
+
+| Asset | SHA256 du package et des deux origines |
+| --- | --- |
+| index-CoPGpbxY.css | 69919787f33ba30e423383c1f4ce8a889b0da83f5306a28294453924bb3c802e |
+| index-K9UFPTtS.js | ad8017c3966e66640d23ae096df79d4fbf37c3354b684f8172aa1c4c89a8df12 |
+| simulation.worker-B2dEy9oV.js | 1a4929be7272217152d77e60bfc2ba5b3019ba1f56aeae6acc697d2ca89e0cab |
+
+HTTPS PASS8,056s : **106 réponses200/MIME/octets exacts**,53chemins sur chaque origine, erreurs[]. Rapport `tmp/elsewhere-pages/v365-http-IAOlCE/report.json`, dist/publics inchangés et gel final2977 exact. Les66publics sont comparés localement ; tous ne sont pas téléchargés à distance. La disponibilité du package ne remplace pas un parcours public supplémentaire, une réparation de sauvegarde humaine ou un banc FPS. `--commit-dirty=true` reflète seulement references_UI humain non suivi, conservé ; le dist vérifié reste le seul package envoyé. Sessions humaines/UI papier intactes, contextes de test terminés, Vite5412 gardé pour la continuation.
+
+La vraie campagne est maintenant74950/SHA976b0045, rechargée exactement : raid2 défendu, infection du visiteur traitée mais active, Gaël au lit avec seulement deux plaies traitées et des saignements restants. Suite autonome : conserver les soins engagés et leurs médicaments physiques, besoins et couchage du visiteur, puis Batteries utiles/trois biomes et expansions. Aucun succès futur, guérison globale, EA100% ou240FPS crédité.
