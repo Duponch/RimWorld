@@ -1,0 +1,16 @@
+import {mkdir,writeFile} from 'node:fs/promises';
+import {registerHooks,createRequire} from 'node:module';
+import {resolve,join} from 'node:path';
+import {pathToFileURL} from 'node:url';
+import type {World} from '../src/sim/types.ts';
+registerHooks({resolve(specifier,context,nextResolve){try{return nextResolve(specifier,context);}catch(error){if((error as NodeJS.ErrnoException).code==='ERR_MODULE_NOT_FOUND'&&specifier.startsWith('.')&&!/\.[a-z]+$/i.test(specifier))return nextResolve(`${specifier}.ts`,context);throw error;}}});
+const option=(name:string)=>process.argv.find(value=>value.startsWith(name+'='))?.slice(name.length+1);
+const project=resolve(option('--source-root')??'.'),output=resolve(option('--output-dir')??join(project,'public/assets/ui/elsewhere/v383'));
+const source=(path:string)=>pathToFileURL(join(project,path)).href,require=createRequire(join(project,'package.json'));
+const {geometryPortraitSvg}=await import(source('src/render/item-portrait.ts'));
+const {ventParts}=await import(source('src/render/vent-parts.ts'));
+const THREE=await import(pathToFileURL(require.resolve('three/webgpu')).href);
+const view:Pick<World,'structures'>={structures:[{id:1,kind:'vent',x:0,z:0,orientation:0,footprint:'standard',material:'steel',vent:{open:true}}]};
+const geometry=new THREE.BoxGeometry(1,1,1),parts=ventParts(view),svg=geometryPortraitSvg(parts.map((placement:Record<string,unknown>)=>({geometry,placement})),'vent:authored-v383');
+geometry.dispose();if(!svg.includes('<path '))throw Error('Empty original vent icon.');await mkdir(output,{recursive:true});await writeFile(join(output,'vent.svg'),svg,'utf8');
+console.log('Wrote only vent.svg from original resident vent geometry.');

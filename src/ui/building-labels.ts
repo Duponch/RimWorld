@@ -1,6 +1,7 @@
 import type { StructureKind } from '../sim/types';
 
 export const buildingLabels: Readonly<Record<StructureKind, string>> = {
+  vent:'Bouche d’aération',
   'spike-trap':'Piège à pointes','electric-crematorium':'Crématorium électrique',
   'electric-smelter':'Fonderie électrique',
   'biofuel-refinery':'Raffinerie de biocarburant','chemfuel-generator':'Générateur à biocarburant',

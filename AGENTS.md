@@ -4,9 +4,9 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V382, schéma 243 :** [argent de surface](docs/gameplay/silver-surface-v382.md) qualifié : extraction, rangement et achat depuis les pièces produites. Publication regroupée suivante ; dernière production V379–V381 **bd2107e4**,116HTTPS exacts, produit `859dff42`. Les Aulnes V381 restent la référence courante ; campagne98038 close partielle.
+**État V383, schéma 244 :** [bouche d’aération](docs/gameplay/vent-v383.md) qualifiée : construction payée, service physique et partage de chaleur entre pièces. Publier V382–V383 ensemble ; dernière production V379–V381 **bd2107e4**, 116 HTTPS exacts, produit `859dff42`. Les Aulnes V381 restent courantes ; campagne98038 close partielle.
 
-**Ordre courant :** bouche d’aération entre pièces pour la survie froide, après références Core et revue des couplages ; publier avec V382 si qualifiée. Conserver les mises à jour des Aulnes périodiques et cohérentes. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. Références humaines, `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
+**Ordre courant :** publication regroupée puis tuque tissu/laine pour les sorties froides, avec chaîne de confection/port/isolation et migration stricte. Préparation privée, aucune livraison V384 acquise. Conserver les mises à jour périodiques et cohérentes des Aulnes. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. Références humaines, `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
 
 ## Méthode de livraison
 

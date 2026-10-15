@@ -50,7 +50,7 @@ export function doorOrientation(world:World,c:Cell):0|1 {
 }
 export function doorOrientations(world:World):ReadonlyMap<number,0|1> {
   const scores=new Map<number,number>(),result=new Map<number,0|1>();
-  for(const s of [...world.structures,...world.jobs])if(s.kind==='wall'||isRoomDoor(s.kind))scores.set(s.z*world.width+s.x,s.kind==='wall'?9:1);
+  for(const s of [...world.structures,...world.jobs])if(s.kind==='wall'||s.kind==='vent'||isRoomDoor(s.kind))scores.set(s.z*world.width+s.x,s.kind==='wall'||s.kind==='vent'?9:1);
   const score=(x:number,z:number)=>{
     if(x<0||z<0||x>=world.width||z>=world.height)return 0;
     if(['rock','water'].includes(world.tiles[z*world.width+x]!.terrain))return 9;

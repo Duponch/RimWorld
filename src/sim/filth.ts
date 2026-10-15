@@ -12,7 +12,7 @@ const inside=(w:World,c:Cell)=>Number.isInteger(c.x)&&Number.isInteger(c.z)&&c.x
  * carry traces; walls, cooler shells and natural rock cannot. */
 function filthWalkable(w:World,c:Cell):boolean {
   if(!inside(w,c)||['rock','water'].includes(w.tiles[c.z*w.width+c.x]!.terrain))return false;
-  return !w.structures.some(s=>(s.kind==='wall'||s.kind==='cooler')&&same(s,c));
+  return !w.structures.some(s=>(s.kind==='vent'||s.kind==='wall'||s.kind==='cooler')&&same(s,c));
 }
 function accepted(w:World,c:Cell,kind:FilthKind,spontaneous=false):boolean {
   const tile=w.tiles[c.z*w.width+c.x]!;

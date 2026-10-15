@@ -31,7 +31,7 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
   const solids=new Set<number>(),corners=doorCorners(world),stand=captureStandability(world),width=world.width;
   const add=(s:Parameters<typeof footprintCells>[0])=>{for(const c of footprintCells(s))solids.add(c.z*width+c.x);};
   for(const s of world.structures) {
-    if(s.kind==='wall'||s.kind==='cooler'||s.kind==='fence'&&!fencePassable||world.schemaVersion<22&&s.kind==='table')add(s);
+    if(s.kind==='vent'||s.kind==='wall'||s.kind==='cooler'||s.kind==='fence'&&!fencePassable||world.schemaVersion<22&&s.kind==='table')add(s);
     if(isPassageDoor(s.kind)&&(s.door?.forbidden||!allowClosedGate&&(!s.door?.open||doorOpenness(s,world.tick)<1-1e-9)))solids.add(s.z*width+s.x);
   }
   for(const j of world.jobs)if(jobBlocksTransit(world,j))add(j);

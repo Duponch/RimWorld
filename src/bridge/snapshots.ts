@@ -1,3 +1,4 @@
+import {validVentTransport} from '../sim/vent.ts';
 import {validTundraTransport} from '../sim/tundra-save.ts';
 import {validCampaignPresentation} from '../sim/secondary-site-presentation.ts';
 import {validReconCatalogueTransport} from '../sim/recon-catalogue-save.ts';
@@ -917,6 +918,7 @@ export class SnapshotDecoder {
         ||!Array.isArray(packet.world.structures))return resync('Forme de transport des structures ambiguë.');
       message=packet as SnapshotMessage;
     }
+    if(!validVentTransport(message.world,message.world.schemaVersion))return resync('Bouche d’aération, état ou service futur/invalide.');
     if(message.world.schemaVersion<=195&&['planet','group','groupLosses'].some(key=>Object.hasOwn(message.world,key)))return resync('Planète ou propriétaire de groupe futur.');
     if(message.world.schemaVersion<194&&(Object.hasOwn(message.world,'mechanoids')||Object.hasOwn(message.world,'mechSalvage')
       ||['mechanoid','mechActive'].some(k=>Object.hasOwn(message.world.raids??{},k))

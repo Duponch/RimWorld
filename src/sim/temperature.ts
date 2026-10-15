@@ -1,3 +1,4 @@
+import {advanceVents} from './vent.ts';
 import { seasonalOutdoorTemperature } from './site-climate.ts';
 import { advanceCoolers } from './cooler.ts';
 import { activeHeatwave,heatwaveOffset } from './heatwave.ts';
@@ -68,6 +69,7 @@ export function advanceTemperature(world:World,layout:ThermalLayout):void {
     for(const i of layout.rooms[id]!.equalize){const target=layout.indices[i]!;change+=((target===-2?(temperature+outside)/2:air(target))-temperature)*.00017*10;}
     r.temperature=Math.max(-273.15,Math.min(1000,temperature+change));
   }
+  advanceVents(world,layout,outside);
   applyThermalSources(world,layout);
   advanceCoolers(world,layout,outside);
 }

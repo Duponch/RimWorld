@@ -33,7 +33,7 @@ const terrainPassable=(world:World,i:number):boolean=>{
   return t!==undefined&&t!=='rock'&&t!=='water';
 };
 const penBarrier=(s:Structure):boolean=>
-  s.kind==='wall'||s.kind==='cooler'||s.kind==='fence'
+  s.kind==='wall'||s.kind==='cooler'||s.kind==='vent'||s.kind==='fence'
   ||isPassageDoor(s.kind)&&!(s.door?.holdOpen&&s.door.open);
 const passage=(s:Structure):boolean=>isPassageDoor(s.kind);
 
@@ -43,7 +43,7 @@ export function invalidateAnimalPens(world:World):void { caches.delete(world); }
 
 function signature(world:World):string {
   const parts:string[]=[];
-  for(const s of world.structures)if(s.kind==='wall'||s.kind==='cooler'||s.kind==='fence'||passage(s)||s.kind==='pen-marker')
+  for(const s of world.structures)if(s.kind==='wall'||s.kind==='cooler'||s.kind==='vent'||s.kind==='fence'||passage(s)||s.kind==='pen-marker')
     parts.push(`${s.id}:${s.kind}:${s.x}:${s.z}:${s.door?.holdOpen&&s.door.open?1:0}`);
   return parts.join('|');
 }

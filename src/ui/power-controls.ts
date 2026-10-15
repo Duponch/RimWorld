@@ -1,5 +1,5 @@
 import { footprintContains } from '../sim/definitions';
-import { canFlickPower, actualPowerSwitch } from '../sim/power-flick';
+import { canFlickDevice, actualDeviceSwitch } from '../sim/power-flick';
 import { isElectrical } from '../sim/power-rules';
 import { buildingLabels } from './building-labels';
 import { powerInspection } from './power-inspection';
@@ -10,9 +10,9 @@ export function updatePowerControls(root: HTMLElement, world: World, cell: Cell,
   let section = root.querySelector<HTMLElement>('[data-power-controls]');
   if (!section) {
     section = document.createElement('section'); section.dataset.powerControls = '';
-    section.className = 'power-controls'; section.setAttribute('aria-label', 'Électricité'); root.append(section);
+    section.className = 'power-controls'; section.setAttribute('aria-label', 'Commandes des appareils'); root.append(section);
   }
-  const structures = world.structures.filter(s => isElectrical(s.kind) && footprintContains(s, cell));
+  const structures = world.structures.filter(s => (isElectrical(s.kind)||s.kind==='vent') && footprintContains(s, cell));
   section.hidden = !structures.length;
   for (const card of section.querySelectorAll<HTMLElement>('[data-power-id]')) {
     if (!structures.some(s => s.id === Number(card.dataset.powerId))) card.remove();
@@ -38,14 +38,14 @@ export function updatePowerControls(root: HTMLElement, world: World, cell: Cell,
     }
     card.dataset.powerKind = structure.kind;
     card.querySelector('h3')!.textContent = buildingLabels[structure.kind];
-    card.querySelector('[data-power-state]')!.textContent = powerInspection(world, structure).replace(/^ · /, '');
+    card.querySelector('[data-power-state]')!.textContent = (structure.kind==='vent'?`${structure.vent?.open?'Ouverte':'Fermée'} · échange entre les deux faces, passage bloqué. Sans électricité ; aucun soutien de toit.`:powerInspection(world, structure)).replace(/^ · /, '');
     const pending = world.jobs.find(j => j.flick?.structureId === structure.id);
     const removing = world.jobs.some(j => j.deconstruction?.structureId === structure.id);
-    card.querySelector('[data-power-request]')!.textContent = pending ? `${pending.flick!.on ? 'Mise en marche' : 'Arrêt'} demandé · attend l’intervention d’un colon (Manutention).` : '';
+    card.querySelector('[data-power-request]')!.textContent = pending ? `${structure.kind==='vent'?(pending.flick!.on?'Ouverture':'Fermeture'):(pending.flick!.on?'Mise en marche':'Arrêt')} demandé${structure.kind==='vent'?'e':''} · attend l’intervention d’un colon (Manutention).` : '';
     const flick = card.querySelector<HTMLButtonElement>('[data-power-flick]')!;
-    flick.hidden = !canFlickPower(structure); flick.disabled = removing;
-    flick.textContent = pending ? 'Annuler la demande' : actualPowerSwitch(structure) ? 'Demander l’arrêt' : 'Demander la mise en marche';
-    flick.onclick = () => send({type: 'power-flick', structureId: structure.id, on: pending ? actualPowerSwitch(structure) : !actualPowerSwitch(structure)});
+    flick.hidden = !canFlickDevice(structure); flick.disabled = removing;
+    flick.textContent = pending ? 'Annuler la demande' : structure.kind==='vent'?(actualDeviceSwitch(structure)?'Demander la fermeture':'Demander l’ouverture'):actualDeviceSwitch(structure) ? 'Demander l’arrêt' : 'Demander la mise en marche';
+    flick.onclick = () => send({type: 'power-flick', structureId: structure.id, on: pending ? actualDeviceSwitch(structure) : !actualDeviceSwitch(structure)});
     const remove = card.querySelector<HTMLButtonElement>('[data-power-remove]')!;
     remove.hidden = structure.kind !== 'power-conduit'; remove.disabled = removing;
     remove.onclick = () => send({type: 'designate', kind: 'deconstruct', targetId: structure.id, x: structure.x, z: structure.z});

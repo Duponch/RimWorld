@@ -1,6 +1,6 @@
 # Ce qui est jouable et ce qui manque
 
-**V382 — schéma 243 :** [argent de surface](silver-surface-v382.md). Génération prospective, extraction/rangement et achat réel avec la monnaie produite qualifiés ; anciennes cartes et64sauvegardes conservées. Publication regroupée suivante, production publique V381/bd2107e4. Les états suivants sont historiques.
+**V383 — schéma 244 :** [bouche d’aération](vent-v383.md) : construction payée, service physique et échange de chaleur entre pièces. Construction, services, thermique et recharges qualifiés ; publication groupée V382–V383 prévue, dernière production V381/bd2107e4. Les états suivants sont historiques.
 
 **V381 — référence Les Aulnes actualisée :** [atelier, étagères et tenue de garde](aulnes-workshop-v381.md). Patrimoine préparé explicite, habillage et rangement ordinaires observés, anciennes références conservées ; aucune nouvelle mécanique ou campagne entière revendiquée. Les états suivants sont historiques.
 

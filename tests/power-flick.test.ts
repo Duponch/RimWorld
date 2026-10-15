@@ -123,17 +123,21 @@ test('switching during real automatic refuelling conserves carried wood, rejects
   until(w,()=>g.power!.switchOn===true);expect(woodAccount(w)).toBeCloseTo(wood,10);
 });
 
-test('conduits are built under walls and ordinary crops, retain traversable frames and can be removed by identity without refund or damage to the wall',()=>{
+test('conduit blueprints preserve crops until their physical frame, retain traversable frames and can be removed without wall damage',()=>{
   const w=powerFixture(),p=w.pawns[0]!;p.schedule.fill('work');p.priorities.haul=0;
   const wall={id:w.nextId++,kind:'wall' as const,x:16,z:12,orientation:0 as const,footprint:'standard' as const,material:'wood' as const};w.structures.push(wall);
   const rice={id:w.nextId++,kind:'rice' as const,x:14,z:12,amount:6,growth:.1,growthTick:w.tick};w.resources.push(rice);
   for(const x of [14,16])expect(applyCommand(w,{type:'designate',kind:'power-conduit',material:'steel',x,z:12}).ok).toBe(true);
   const cropJob=w.jobs.find(j=>j.x===14)!;
   expect(constructionObstruction(w,cropJob).plant).toBeUndefined();
+  expect(w.resources).toContain(rice);expect(rice.growth).toBe(.1);
   until(w,()=>cropJob.construction==='frame');
+  // Core Frame fill0.2 retires light plants (V351); the final conduit's
+  // SupportsPlants policy does not resurrect that retired plant or yield food.
+  expect(w.resources).not.toContain(rice);expect(w.piles.some(pile=>pile.item==='rice')).toBe(false);
   expect(canStandAt(w,cropJob)).toBe(true);expect(captureStandability(w)(cropJob)).toBe(true);expect(navigationCosts(w).stops.has(cropJob.z*w.width+cropJob.x)).toBe(false);
   until(w,()=>w.structures.filter(s=>s.kind==='power-conduit').length===2);
-  expect(w.resources).toContain(rice);expect(rice.growth).toBe(.1);expect(canStandAt(w,wall)).toBe(false);
+  expect(w.resources).not.toContain(rice);expect(rice.growth).toBe(.1);expect(canStandAt(w,wall)).toBe(false);
   const wire=w.structures.find(s=>s.kind==='power-conduit'&&s.x===16)!;
   const peer=deserializeWorld(serializeWorld(w));peer.structures.reverse();expect(validateWorld(peer)).toEqual([]);expect(canStandAt(peer,wall)).toBe(false);
   expect(furnitureDelay(peer,{x:15,z:12},wall)).toBe(furnitureDelay(w,{x:15,z:12},wall));

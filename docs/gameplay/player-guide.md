@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Partager la chaleur entre pièces — V383, proposition
+
+Après **Mobilier complexe**, ouvrez **Architecte → Température → Bouche d’aération**. Prévoyez30acier accessibles ; Q/E oriente les deux faces indiquées, qui doivent rester libres. Déconstruisez normalement tout mur à cet emplacement avant la pose. Le colon livre les matières et construit l’objet : le passage demeure bloqué, même ouvert. La bouche ne soutient aucun toit et ne peut pas être emballée.
+
+Dans sa fiche, **Demander la fermeture** ou **Demander l’ouverture** attend un colon avec **Manutention** activée ; l’état réel change seulement après son geste au contact. Le bouton permet aussi d’annuler une demande. Ouverte, la bouche rapproche les températures des deux pièces sans produire de chaleur ; fermée, elle arrête son propre échange, tandis que les autres sources et pertes continuent. Aucun courant n’est requis. [Portée proposée et limites](vent-v383.md).
+
 ## Extraire de l’argent — V382, proposition
 
 Sur les nouvelles cartes de site, les filons **Minerai d’argent** peuvent produire la monnaie physique déjà utilisée par les marchands : 1500 PV, 40 unités à rendement neutre ; la compétence et les capacités du mineur modulent le produit. Désignez la roche avec **Ordres → Miner**, puis autorisez **Argent** dans une réserve ou une étagère accessible. Le transport est réel. Une pile extraite et disponible dans le foyer ou une réserve peut financer un achat au contact d’un marchand, ou être chargée dans un groupe par les commandes existantes.

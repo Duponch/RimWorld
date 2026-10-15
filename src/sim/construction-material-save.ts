@@ -14,6 +14,7 @@ export function validateConstructionMaterials(world:World,version:number):string
     if(['grave','lay-floor','remove-floor'].includes(entity.kind)&&(version<89||entity.material!==undefined))errors.push('Terrain work requires V89 without a building material.');
     if(['fueled-stove','electric-stove','butcher-table'].includes(entity.kind)&&(version<84||entity.material!==(entity.kind==='butcher-table'?'wood':'steel')||entity.footprint!=='standard'))errors.push('Food workstation requires V84 and its fixed material.');
     if(entity.kind==='sun-lamp'&&(version<177||entity.material!=='steel'||entity.orientation!==0||entity.footprint!=='standard'))errors.push('Sun lamp requires V177, steel and fixed orientation.');
+    if(entity.kind==='vent'&&(version<244||entity.material!=='steel'||entity.footprint!=='standard'))errors.push('Vent requires V244, steel and its standard footprint.');
     if(entity.kind==='cooler'&&(version<75||entity.material!=='steel'||entity.footprint!=='standard'))errors.push('Cooler requires V75 and steel.');
     if(entity.kind==='passive-cooler'&&(version<40||entity.material!=='wood'||entity.orientation!==0))errors.push('Passive cooler requires V40, wood and fixed orientation.');
     if((entity.kind==='door'||entity.kind==='autodoor')&&(version<(entity.kind==='autodoor'?143:34)||entity.material===undefined))errors.push('Door requires its schema and an explicit material.');

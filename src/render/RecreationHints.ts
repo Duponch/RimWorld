@@ -61,6 +61,11 @@ export class RecreationHints {
     const obstacles=new WindObstructionView(world);
     this.show(windClearance(turbine).filter(c=>c.x>=0&&c.z>=0&&c.x<world.width&&c.z<world.height).map(c=>({...c,y:.026,sx:1,sy:.014,sz:1,color:obstacles.blocked(c)?0xb97c68:0x879f8c})),'storage',outline?world.width:undefined);
   }
+  vent(cell:Cell,orientation:Orientation,outlineWorld?:Pick<World,'width'|'height'>):void {
+    const {cold,hot}=coolerFaces({...cell,orientation});
+    const parts=[cold,hot].map(c=>({...c,y:.045,sx:.8,sy:.02,sz:.8,color:0xc6d5c8}));
+    this.show(outlineWorld?parts.filter(p=>p.x>=0&&p.z>=0&&p.x<outlineWorld.width&&p.z<outlineWorld.height):parts,'overlay',outlineWorld?.width);
+  }
   cooler(cell:Cell,orientation:Orientation,outlineWorld?:Pick<World,'width'|'height'>):void {
     const {cold,hot}=coolerFaces({...cell,orientation});
     const parts=[{...cold,y:.045,sx:.8,sy:.02,sz:.8,color:0x55b6ec},{...hot,y:.045,sx:.8,sy:.02,sz:.8,color:0xed7050}];

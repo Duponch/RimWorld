@@ -1527,6 +1527,8 @@ export class SceneRenderCore {
     if(this.world&&cell&&(this.tool==='tube-television'||television||this.tool==='install'&&this.furniturePlacement?.kind==='tube-television'))this.recreationHints.television(this.world,{...(television??cell),orientation:television?.orientation??this.placementRotation},this.tool==='select');
     const turbine=(this.tool==='wind-turbine'||this.tool==='install'&&this.furniturePlacement?.kind==='wind-turbine')&&cell?{...cell,orientation:this.placementRotation}:this.tool==='select'?this.world?.structures.find(s=>s.kind==='wind-turbine'&&cell&&footprintCells(s).some(c=>c.x===cell.x&&c.z===cell.z)):undefined;
     if(this.world&&turbine)this.recreationHints.wind(this.world,turbine,this.tool==='select');
+    const vent=this.tool==='select'&&cell?this.world?.structures.find(s=>s.kind==='vent'&&s.x===cell?.x&&s.z===cell?.z):undefined;
+    if(cell&&(this.tool==='vent'||vent))this.recreationHints.vent(cell,vent?.orientation??this.placementRotation,this.tool==='select'?this.world??undefined:undefined);
     const cooler=this.tool==='select'?this.world?.structures.find(s=>s.kind==='cooler'&&s.x===cell?.x&&s.z===cell?.z):undefined;
     if(cell&&(this.tool==='cooler'||cooler||this.tool==='install'&&this.furniturePlacement?.kind==='cooler'))this.recreationHints.cooler(cell,cooler?.orientation??this.placementRotation,this.tool==='select'?this.world??undefined:undefined);
     const sunLamp=this.tool==='select'?this.world?.structures.find(s=>s.kind==='sun-lamp'&&s.x===cell?.x&&s.z===cell?.z):undefined;

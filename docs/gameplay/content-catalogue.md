@@ -1,6 +1,8 @@
 # Catalogue de contenu : couverture connue
 
-**V382 proposé — schéma243 :** [argent de surface](silver-surface-v382.md) ; filon rare des nouvelles cartes, minage/transport/rangement/paiement existants. Contrôles non exécutés à ce stade.
+**V383 — schéma 244 :** [bouche d’aération](vent-v383.md),30acier/Mobilier complexe, construction payée et commande physique d’ouverture/fermeture ; deux pièces thermiques distinctes. Démolition manuelle préalable du mur, aucun soutien de toit ni paquet. Construction, services, échanges thermiques et recharges qualifiés ; périmètre dans la note canonique.
+
+**V382 — schéma243 :** [argent de surface](silver-surface-v382.md) ; filon rare des nouvelles cartes, extraction, rangement puis achat réel qualifiés. Publication commune suivante ; les états suivants sont historiques.
 
 
 **V381 — référence Les Aulnes actualisée :** [atelier, étagères et tenue de garde](aulnes-workshop-v381.md). Patrimoine préparé explicite, habillage et rangement ordinaires observés, anciennes références conservées ; aucune nouvelle mécanique ou campagne entière revendiquée. Les états suivants sont historiques.

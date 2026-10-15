@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 243.** [V382](gameplay/silver-surface-v382.md) relie les filons d’argent à l’extraction, au rangement et à un achat physique. Dernière production publique V379–V381/bd2107e4 ; publication regroupée suivante. Les Aulnes V381 sont actualisées ; campagne98038 close partielle, aucun pourcentage ou FPS certifié.
+**16 octobre 2026 — schéma 244.** [V383](gameplay/vent-v383.md) ajoute la bouche d’aération : construction payée, ouverture/fermeture au contact et chaleur partagée entre pièces. [V382](gameplay/silver-surface-v382.md) relie l’argent extrait à un achat. Publication commune suivante ; dernière production V381/bd2107e4. Les Aulnes V381 restent courantes ; campagne98038 close partielle.
 
 ## Priorité actuelle
 
@@ -12,7 +12,8 @@
 6. **Lisibilité V380 qualifiée.** Survol/ressources/dock stables à quatre tailles ; limites compactes et modes non observés explicités.
 7. **Les Aulnes actualisées V381.** Patrimoine explicite, habillage et rangement observés, anciennes références conservées.
 8. **Argent de surface V382 qualifié.** Extraction finie puis achat avec le produit, reprise et patrimoine historique conservés.
-9. **Priorité active : bouche d’aération entre pièces**, pour partager la chaleur en climat froid avec une vraie ouverture/fermeture ; publication commune V382–V383 si qualifiée.
+9. **Bouche d’aération V383 qualifiée.** Deux pièces, construction et ouverture/fermeture physiques, thermique et recharges exactes ; remplacement direct d’un mur encore adapté en démolition préalable.
+10. **Suite : protection textile contre le froid.** Tuque tissu/laine avec confection, stockage, port et isolation ; références Core relues, préparation privée sans résultat acquis. Publier d’abord V382–V383 ensemble.
 
 **Référence jouable à entretenir : Les Aulnes.** Actualiser régulièrement sa version courante avec les objets et boucles pertinents du catalogue, en conservant une colonie logique et les anciennes versions. Le patrimoine ajouté peut être préparé et explicitement décrit ; il ne devient pas une campagne naturellement acquise. V381 expose les étagères et la tenue de garde ; les prochaines mises à jour suivront les ajouts pertinents.
 

@@ -21,6 +21,7 @@ export function validateFurniture(world:World,version:number,ids:Set<number>,sha
   if(!Array.isArray(world.packed)||world.packed.length>32768)return ['Invalid packed furniture collection.'];
   const cell=(v:Record<string,unknown>)=>integer(v.x)&&integer(v.z)&&v.x<world.width&&v.z<world.height;
   for(const pack of world.packed) {
+    if(record(pack)&&record(pack.building)&&(pack.building.kind==='vent'||Object.hasOwn(pack.building,'vent'))){errors.push('Invalid vent state on packed furniture.');continue;}
     if(!record(pack)||!record(pack.building)||!record(pack.owner)) {errors.push('Invalid furniture package.');continue;}
     const b=pack.building,o:Record<string,unknown>=pack.owner;
     if(!validShelfBuildingShape(b,version))errors.push('Invalid packed shelf storage state.');

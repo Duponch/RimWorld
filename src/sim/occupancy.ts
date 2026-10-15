@@ -46,6 +46,7 @@ export const OCCUPANCY = Object.freeze({
   'butcher-table':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   'butcher-spot':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   cooler:Object.freeze({clearItems:true,items:false,zones:false,store:false}),
+  vent:Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   'research-bench':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   'tailor-bench':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   'machining-table':Object.freeze({clearItems:false,items:true,zones:false,store:false}),

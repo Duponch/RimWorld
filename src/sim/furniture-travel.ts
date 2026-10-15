@@ -54,6 +54,7 @@ export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:numb
   'electric-stove':{delay:5,stand:false,repeat:true},
   'butcher-table':{delay:5,stand:false,repeat:true},
   cooler:{delay:0,stand:false,repeat:false},
+  vent:{delay:0,stand:false,repeat:false},
   'research-bench':{delay:5,stand:false,repeat:true},
   'tailor-bench':{delay:5,stand:false,repeat:true},
   'machining-table':{delay:5,stand:false,repeat:true},
