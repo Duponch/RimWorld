@@ -1,0 +1,23 @@
+# Reprise clinique et nouvel assaut V362
+
+Le lot reprend la même campagne depuis le vrai export V36072605. Le second visiteur est ramené au couchage médical et reçoit un premier traitement. Un raid naturel apparaît au74100 ; le contrôle s'arrête en rouge au74106 et conserve cet état en pause. Ce résultat partiel ne certifie ni guérison globale, défense réussie, autonomie alimentaire ou campagne entière.
+
+## Entrée et gestes réels
+
+Schéma237 conservé, aucun changement produit. Input V36072605 SHA256 `19cbd5219d27e335e99f9885dc2af1fb5d86cf605a2f30d684dc4467f62a8884`, parent ledger `1faef6af182e8284e3d5abbffc49722539547275e0f6d3e86bf9a322e2cac17b`. Validation stricte, roundtrip neutre puis import et export/recharge UI exacts. Iris18530, Gaël18532 et Léonie18534 restent les mêmes personnes ; la branche blessée V344 demeure distincte.
+
+Iris termine le cargo alimentaire19793 déjà détenu à l'entrée, fin observée72672. Son trajet source→cargo n'est pas qualifié rétroactivement. Un nouveau couchage au sol médical19797 est réellement placé122114/orientation1, sans supprimer les réserves ou les lits civils. Léonie reçoit le secours civil explicite de Villageois5.2/19771. Admission médicale réelle72942, portage observé72946 puis rechargé exactement72972 ; dépôt dans le couchage au73420, observé73422. Sa faction outlander et ses possessions ne deviennent pas coloniales.
+
+L'événement73543 et l'état final attestent quatre plaies traitées avec médicament. Le lecteur a manqué l'intervalle exact de consommation ; ce traitement n'est donc pas une nouvelle preuve complète source→cargo→dose. Les seize plaies ne sont pas toutes traitées. Le patient peut de nouveau se relever au73591 puis mange un repas simple à table au73929 ; l'événement et la faim finale95,28 sont constatés, sans attribuer une nouvelle chaîne alimentaire intégrale à ce repas. Le premier patient19768 peut se relever au72628, reste au repos médical et garde ses quinze plaies traitées. Aucun de ces constats n'est une guérison complète.
+
+Les médicaments coloniaux passent légitimement de22 à21. Les trois médicaments personnels19776 du visiteur restent à leur propriétaire ; cette invariance est bornée à son contrôleur actuel sans selfTend, sans compétence médicale ni groupe de voyage, et aux sources de soin au sol. Elle n'interdit pas une consommation personnelle légitime dans un autre parcours. Bois final83, mêmes370acier et30composants ; récoltes, cuissons et nouvelles désignations ordinaires restent des faits de cette campagne, sans pedigree intégral inventé pour chaque fusion de pile.
+
+## Arrêt et preuves
+
+ROOT seul, sources/tests/publics/pilote/inputs figés : gel2959 exact avant/après. Typage **PASS13,233s**. Unique Chrome/**WebGPU RED95,100s**, body73,738s/overall89,253s dans le pilote, erreurs[] et lifecycle[]. Deux exports/recharges exacts72605 et72972. Troisième export UI74106 validé et conservé, **non rechargé**, ledger `resumeAllowed:false`. Deux captures inspectées ROOT : cadrages larges de l'UI et de la carte, insuffisants pour certifier un détail de modèle ou un gain FPS. Aucun build, corpus ou déploiement produit inchangé rejoué ; V361/ff304a50 reste publié.
+
+Le raid2 démarre74100 avec Assaillant2.1/19852, couteau équipé, phase assault et échéance77465. À la conservation74106, il est2,104 ; Gaël possède toujours son fusil, les trois originaux sont indemnes et les deux visiteurs sont vivants. La porte18648 est autorisée. Le pilote n'efface pas ce raid pour poursuivre une recherche favorable. Son résultat reste rouge malgré les progrès cliniques acquis.
+
+Preuves privées : `tmp/early-access-v362/native-01/clinical-survival-v362-V36-4a953--ordinary-clinical-survival/`. Export `conservation.json` SHA256 `f51accaa9481a63a22cc6fcd3d4726c4deec1877c4ae210a70b74c98ae6981ba` ; ledger `94f8abcb91e3a0c8cb0947c60d5be6950c541a412f25a125b126d7f77fea8b7c` ; summary `a4d09fd26e631158c30d580910dfd11737bb73497c51fd67d2135457a27a672a`. `last-adopted.json` reste explicitement un snapshot lu, distinct d'une recharge réussie.
+
+Le wrapper privé réserve atomiquement un nom de segment inédit avant Playwright et refuse tout output/reporter/réservation existant. Aucune preuve rouge n'est écrasée. Les reprises cliniques automatiques refusent ce ledger dangereux. La suite autorisée est un **nouveau mandat d'intervention sur ce vrai74106**, avec import/recharge exact à qualifier : protéger les patients, organiser la défense et conserver la première blessure ou issue. La recherche Batteries et son usage électrique viennent après cette urgence, puis l'essai des trois biomes et les extensions autorisées. Aucun résultat futur, EA100% ou240FPS n'est crédité.
