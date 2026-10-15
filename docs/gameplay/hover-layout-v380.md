@@ -23,3 +23,5 @@ Sorties sous tmp/hover-v380/ et tmp/validation-runs/v380-* ; parents et rouges c
 ## Livraison
 
 Correctif qualifié, à publier avec les incidents V379 et l’actualisation cohérente des Aulnes qui suit. Dernière production confirmée avant ce groupe : V378/e5ec566c. Les anciennes sauvegardes et parties personnelles restent intactes.
+
+Clôture du16octobre : publié avec V381 en **bd2107e4**, produit859dff42,116HTTPS exacts. [Publication et limites](aulnes-workshop-v381.md).

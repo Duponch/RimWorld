@@ -32,3 +32,5 @@ L’adoption saute directement à une fenêtre future, sans boucle sur les anné
 ## Livraison
 
 Sources qualifiées ; publication à regrouper avec le prochain correctif d’interface. Dernière production confirmée : V377–V378/e5ec566c. Aucune publication V379 revendiquée avant vérification.
+
+Clôture du16octobre : publié avec V381 en **bd2107e4**, produit859dff42,116HTTPS exacts. [Publication et limites](aulnes-workshop-v381.md).

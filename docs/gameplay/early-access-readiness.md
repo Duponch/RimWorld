@@ -1,6 +1,6 @@
 # Préparer une version early access
 
-**V381 — référence Les Aulnes actualisée :** [atelier, étagères et tenue de garde](aulnes-workshop-v381.md). Patrimoine préparé explicite, habillage et rangement ordinaires observés, anciennes références conservées ; aucune nouvelle mécanique ou campagne entière revendiquée. Les états suivants sont historiques.
+**V381 — référence Les Aulnes actualisée, publication bd2107e4 :** [atelier, étagères et tenue de garde](aulnes-workshop-v381.md). Patrimoine préparé explicite, habillage et rangement ordinaires observés, anciennes références conservées ; aucune nouvelle mécanique ou campagne entière revendiquée. Les états suivants sont historiques.
 
 **V380 — schéma 242 :** [lisibilité des HUD](hover-layout-v380.md). Survol, ressources et dock stabilisés et qualifiés à quatre tailles ; correctif UI sans nouvelle mécanique. Publication regroupée suivante ; dernière production V378/e5ec566c. Les états suivants sont historiques.
 
