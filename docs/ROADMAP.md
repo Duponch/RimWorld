@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 245.** [V384](gameplay/tuque-v384.md) relie20textiles à la confection d’une tuque, son rangement, port physique et isolation. Publication regroupée suivante ; dernière production V382–V383/31deee1d, schéma244. Les Aulnes V381 restent courantes ; campagne98038 close partielle.
+**16 octobre 2026 — schéma 246.** [V385](gameplay/marsh-tundra-v385.md) ajoute des marais aux nouvelles toundras, avec effets de trajet et contraintes d’implantation. [V384](gameplay/tuque-v384.md) qualifie la tuque fabriquée/portée. Publication commune suivante ; dernière production V382–V383/31deee1d. Les Aulnes V381 restent courantes ; campagne98038 close partielle.
 
 ## Priorité actuelle
 
@@ -14,7 +14,8 @@
 8. **Argent de surface V382 qualifié.** Extraction finie puis achat avec le produit, reprise et patrimoine historique conservés.
 9. **Bouche d’aération V383 qualifiée.** Deux pièces, construction et ouverture/fermeture physiques, thermique et recharges exactes ; remplacement direct d’un mur encore adapté en démolition préalable.
 10. **Protection textile V384 qualifiée.** Tuque tissu/laine, ouvrage/reprise, rangement, port/retrait physiques et isolation ; quantification prospective48→50Core explicitée.
-11. **Suite : sols humides de toundra.** Poches de marais avec contraintes réelles de trajet, culture et construction ; références et préparation privées, aucun résultat V385 acquis. Publication regroupée après qualification, sans hydrologie ou ponts ajoutés par analogie.
+11. **Marais de toundra V385 qualifiés.** Génération prospective, marche et transport, refus de support/culture, feu/neige et recharges ; gel, séchage, ponts et écologie complète restent ouverts.
+12. **Suite : actualisation cohérente des Aulnes.** Deux tuques de travail extérieur avec la laine libre existante, sans interrompre Ada ni forcer une bouche sans emplacement utile. Capacité du catalogue à faire évoluer explicitement en conservant toutes les archives ; préparations privées, aucun résultat acquis.
 
 **Référence jouable à entretenir : Les Aulnes.** Actualiser régulièrement sa version courante avec les objets et boucles pertinents du catalogue, en conservant une colonie logique et les anciennes versions. Le patrimoine ajouté peut être préparé et explicitement décrit ; il ne devient pas une campagne naturellement acquise. V381 expose les étagères et la tenue de garde ; les prochaines mises à jour suivront les ajouts pertinents.
 

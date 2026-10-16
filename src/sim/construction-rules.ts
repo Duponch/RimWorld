@@ -1,3 +1,4 @@
+import {marshSupportsFootprint} from './marsh.ts';
 import { workPriority } from './work-types.ts';
 import { constructionPlantBlocks } from './construction-plants.ts';
 import { furnitureWorkTarget } from './furniture-rules.ts';
@@ -49,7 +50,7 @@ export function constructionObstruction(world: World, job: Job):ConstructionObst
 /** A frame is traversable. Completion must not materialize a building across
  * a person, an active edge (including its diagonal corner), or a service. */
 export function constructionSiteFree(world: World, job: Job, workerId?: number, obstacle=constructionObstruction(world,job)): boolean {
-  if(obstacle.plant||obstacle.pile||obstacle.pack)return false;
+  if(obstacle.plant||obstacle.pile||obstacle.pack||!marshSupportsFootprint(world,footprintCells(job)))return false;
   if((job.furniture?.kind??job.kind)==='spike-trap'&&!spikeTrapPlacementAllowed(
     {...world,jobs:world.jobs.filter(j=>j!==job)},job,job.furniture?.structureId))return false;
   const cells=footprintCells(job);

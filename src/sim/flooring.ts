@@ -44,7 +44,7 @@ export function canDesignateFloor(w:World,c:DesignateCommand):CommandResult {
     const research=FLOOR_DEFINITIONS[c.floor].research;if(research&&!researchUnlocked(w,research))return refuse(research==='stonecutting'?'Recherchez Taille de pierre pour poser ces dalles.':research==='sterile-materials'?'Recherchez Matériaux stériles pour poser ces dalles.':'Recherchez Forge pour poser ces dalles.');
     if(tile.floor)return refuse('Retirez le revêtement existant avant de poser ce sol.','occupied');
   }else if(!tile.floor||c.floor!==undefined&&c.floor!==tile.floor)return refuse('Aucun revêtement correspondant à retirer.','missing-target');
-  if(tile.terrain==='rock'||tile.terrain==='water')return refuse('Ce terrain ne peut pas recevoir ce sol.','incompatible-resource');
+  if(tile.terrain==='rock'||tile.terrain==='water'||tile.terrain==='marsh')return refuse('Ce terrain ne peut pas recevoir ce sol.','incompatible-resource');
   const covers=(kind:unknown)=>kind==='wall'||kind==='cooler';
   if(w.structures.some(s=>covers(s.kind)&&footprintContains(s,c))||w.jobs.some(j=>footprintContains(j,c)&&(covers(j.furniture?.kind??j.kind)||j.kind==='lay-floor'||j.kind==='remove-floor'||w.schemaVersion<235&&['sow','cut','chop','harvest'].includes(j.kind)||j.kind==='mine')))return refuse('Un ouvrage ou un travail incompatible occupe cette case.','occupied');
   if(c.kind==='lay-floor'&&[...w.structures,...w.jobs].some(s=>s.kind==='grave'&&footprintContains(s,c)))return refuse('Une tombe doit conserver son terrain creusable.','incompatible-resource');
@@ -55,7 +55,7 @@ export function canDesignateFloor(w:World,c:DesignateCommand):CommandResult {
  * not remove the job: the central finish transaction owns activity cleanup. */
 export function finishFloor(w:World,job:Job):boolean {
   if(job.kind!=='lay-floor'||!isBuildableFloor(job.floor)||job.floor==='sterile-tile'&&w.schemaVersion<211)return false;
-  const tile=w.tiles[job.z*w.width+job.x];if(!tile||tile.floor||tile.terrain==='rock'||tile.terrain==='water'||w.resources.some(r=>r.x===job.x&&r.z===job.z&&!isFloorLightPlant(r)))return false;
+  const tile=w.tiles[job.z*w.width+job.x];if(!tile||tile.floor||tile.terrain==='rock'||tile.terrain==='water'||tile.terrain==='marsh'||w.resources.some(r=>r.x===job.x&&r.z===job.z&&!isFloorLightPlant(r)))return false;
   const recipe=flooringRecipe(job.floor),piles=w.piles.filter(p=>p.owner.type==='job'&&p.owner.jobId===job.id);
   if(piles.some(p=>!recipe.ingredients.some(c=>c.item===p.item))||recipe.ingredients.some(c=>piles.filter(p=>p.item===c.item).reduce((n,p)=>n+p.quantity,0)!==c.quantity))return false;
   // Terrain incompatibility destroys the plant, without the CutPlant producer.

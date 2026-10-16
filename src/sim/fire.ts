@@ -173,7 +173,7 @@ export function advanceFires(w:World,weather:{rainRate:number},initialLayout:The
       }
     }
     if(f.complexCore<FIRE_COMPLEX_CORE)continue;f.complexCore-=FIRE_COMPLEX_CORE;
-    if(w.tiles[pos.z*w.width+pos.x]?.terrain==='water'){removeFire(w,f,true);break;}
+    if(['water','marsh'].includes(w.tiles[pos.z*w.width+pos.x]?.terrain??'')){removeFire(w,f,true);break;}
     const peopleHere=w.pawns.filter(p=>same(p,pos)&&p.state!=='dead'),animalsHere=w.wildlife?.animals.filter(a=>same(a,pos)&&a.state!=='dead')??[];
     const ownershipChanged=watchOwners(w,new Set(peopleHere.map(p=>p.id)));
     const targets=groundFire(f)?view().allTargets(pos).filter(t=>targetFlammability(t)>=.01):[],fuel=groundFire(f)?Math.max(view().fuel(pos),peopleHere.length||animalsHere.length?.7:0):.7;

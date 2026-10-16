@@ -33,7 +33,7 @@ test('bounded sweep melts before adding snow and preserves exact phase after run
 
 test('strict 238 migration leaves the snow domain absent and rejects future spellings',()=>{
  const w=createWorld(42,16,16),old=JSON.parse(serializeWorld(w));
- for(const policy of old.apparelPolicies)policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-armor');
+ for(const policy of old.apparelPolicies)policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-armor'&&!item.endsWith('-tuque'));
  old.schemaVersion=238;const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);expect('snow' in migrated).toBe(false);
  for(const key of ['snow','snowClearArea'])expect(snowHistoricalFieldsAbsent({...old,[key]:undefined},238)).toBe(false);
  old.tiles[0].snowDepth=.2;expect(()=>deserializeWorld(JSON.stringify(old))).toThrow();

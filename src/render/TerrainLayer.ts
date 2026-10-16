@@ -5,7 +5,7 @@ import { WORLD_SCALE } from '../world/scale';
 import { clearGroup, type Placement } from './primitives';
 import { mergedInstances, noise } from './StaticGeometry';
 const scratchColor=new THREE.Color();
-export const TERRAIN_COLORS: Record<Terrain, number> = { 'rich-soil':0x665642,gravel:0x999783,'rough-stone':0x899182, grass: 0x81946c, soil: 0xa39b75, rock: 0x899182, water: 0x78a7a4 };
+export const TERRAIN_COLORS: Record<Terrain, number> = { 'rich-soil':0x665642,gravel:0x999783,'rough-stone':0x899182, grass: 0x81946c, soil: 0xa39b75, marsh: 0x738675, rock: 0x899182, water: 0x78a7a4 };
 export const ARID_GRASS_COLOR = 0xa69772;
 
 /** The visual map is sampled by the existing terrain quads. A texel can borrow
@@ -191,7 +191,7 @@ export function buildTerrain(world: World, group: THREE.Group, surface: THREE.Ma
     // Small spatial chunks keep each instance batch independently cullable.
     const chunkSize = WORLD_SCALE.chunkSize;
     for (let cz = 0; cz < world.height; cz += chunkSize) for (let cx = 0; cx < world.width; cx += chunkSize) {
-      const tileGroups: Record<Terrain, Placement[]> = { grass: [], soil: [], water: [], rock: [], 'rough-stone':[],'rich-soil':[],gravel:[] };
+      const tileGroups: Record<Terrain, Placement[]> = { grass: [], soil: [], water: [], marsh: [], rock: [], 'rough-stone':[],'rich-soil':[],gravel:[] };
       const banks: Placement[] = [];
       for (let z = cz; z < Math.min(cz + chunkSize, world.height); z++) for (let x = cx; x < Math.min(cx + chunkSize, world.width); x++) {
         const type = world.tiles[z * world.width + x].terrain;
@@ -199,6 +199,7 @@ export function buildTerrain(world: World, group: THREE.Group, surface: THREE.Ma
         const terrain = type==='rock'?'rough-stone':type;
         const n = noise(x, z, world.seed);
         scratchColor.setHex(terrain==='rough-stone'?stoneColor(world.tiles[z*world.width+x].stone):terrain==='grass'&&world.site?.biome==='arid-shrubland'?ARID_GRASS_COLOR:TERRAIN_COLORS[terrain]).multiplyScalar(0.94 + n * 0.12);
+        // Marsh stays on the existing land quad at0; it is walkable wet ground.
         const color = scratchColor.getHex(), level = terrain === 'water' ? WORLD_SCALE.waterSurface : 0;
         tileGroups[terrain].push({ x, z, y: level, color });
         // Top quads replace six-sided ground cubes; exposed bank and perimeter
@@ -211,7 +212,7 @@ export function buildTerrain(world: World, group: THREE.Group, surface: THREE.Ma
         }
       }
       mergedInstances(group, [
-        { geometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), items: [...tileGroups.grass, ...tileGroups.soil, ...tileGroups.rock,...tileGroups['rough-stone'],...tileGroups['rich-soil'],...tileGroups.gravel] },
+        { geometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), items: [...tileGroups.grass, ...tileGroups.soil, ...tileGroups.rock,...tileGroups['rough-stone'],...tileGroups['rich-soil'],...tileGroups.gravel,...tileGroups.marsh] },
         { geometry: new THREE.PlaneGeometry(1, 1), items: banks },
       ], surface, false);
       mergedInstances(group, [{ geometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), items: tileGroups.water }], water, false);

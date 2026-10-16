@@ -1,3 +1,4 @@
+import {MARSH_PATH_COST_CORE,MARSH_PERCEIVED_CORE} from './marsh.ts';
 import {snowTravelDelay,snowSearchCost} from './snow-rules.ts';
 import { fireNavigationCosts,addFireNavigationCosts } from './fire-navigation.ts';
 import { doorWait,isRoomDoor } from './door-rules.ts';
@@ -12,6 +13,7 @@ import type { Cell, StructureKind, World } from './types.ts';
 export function terrainTravelDelay(world:World,index:number):number {
   const tile=world.tiles[index],terrain=tile?.terrain;
   if(tile?.floor)return FLOOR_DEFINITIONS[tile.floor].pathCost/10;
+  if(terrain==='marsh')return MARSH_PATH_COST_CORE/10;
   return terrain==='rough-stone'||terrain==='rich-soil'||terrain==='gravel'||world.site&&terrain==='grass'?.2:0;
 }
 
@@ -116,7 +118,7 @@ export function furnitureDelay(world:World,from:Cell,to:Cell):number {
 /** Captured once per synchronous search. No shared mutation or cross-tick cache. */
 export function navigationCosts(world:World,origin?:Cell):{costs:NavigationCostLookup|undefined;repeaters:ReadonlySet<number>;stops:ReadonlySet<number>;floors:NavigationCostLookup} {
   const costs=new Map(frameCosts(world)),repeaters=new Set<number>(),stops=new Set<number>();
-  const actor=world.schemaVersion>=226?spikeTrapNavigationActor(world,origin):undefined,knows=!!actor&&spikeTrapKnowsOf(world,actor),traps=new Map<number,number>();
+  const actor=world.schemaVersion>=226?spikeTrapNavigationActor(world,origin):undefined,knows=!!actor&&spikeTrapKnowsOf(world,actor),traps=new Map<number,number>(),marshPerceptionCosts=new Map<number,number>();
   if(world.schemaVersion>=22) {
     for(const s of world.structures)for(const c of footprintCells(s)) {
       const i=c.z*world.width+c.x,p=FURNITURE_TRAVEL[s.kind];
@@ -136,10 +138,13 @@ export function navigationCosts(world:World,origin?:Cell):{costs:NavigationCostL
     // within a tick. Read floor definitions when a floor is present, like the
     // scalar travel rule, without scanning the whole map through that helper.
     const tiles=world.tiles,hasSite=!!world.site;
+    const marshPerception=actor&&'draft' in actor&&actor.draft?MARSH_PERCEIVED_CORE.drafted:MARSH_PERCEIVED_CORE.ordinary;
     for(let i=0;i<tiles.length;i++){
       const tile=tiles[i]!,kind=tile.terrain;
       let cost=tile.floor?Math.round(FLOOR_DEFINITIONS[tile.floor].pathCost/10/3*1000):kind==='rough-stone'||kind==='rich-soil'||kind==='gravel'||hasSite&&kind==='grass'?67:0;
+      if(kind==='marsh'&&!tile.floor)cost=Math.round(MARSH_PATH_COST_CORE/30*1000);
       if(world.snow)cost=Math.max(cost,snowSearchCost(tile.snowDepth??0));
+      if(kind==='marsh'&&!tile.floor)marshPerceptionCosts.set(i,Math.round(marshPerception/30*1000));
       if(cost>255&&terrain instanceof Uint8Array){const wide:Uint16Array=new Uint16Array(terrain.length);wide.set(terrain);terrain=wide;}
       if(cost){terrain[i]=cost;if(cost>terrainMaximum)terrainMaximum=cost;}
     }
@@ -152,5 +157,5 @@ export function navigationCosts(world:World,origin?:Cell):{costs:NavigationCostL
   // Trap avoidance is additive after the ordinary terrain/object maximum, like
   // fire danger. Its 800 Core cost already includes avoidance: do not add the
   // separate 40 Core physical walk delay to the search a second time.
-  return {costs:addFireNavigationCosts(addFireNavigationCosts(costs.size||terrainMaximum?overlayNavigationCosts(terrain,terrainMaximum,costs):undefined,fire),traps),repeaters,stops,floors:addFireNavigationCosts(addFireNavigationCosts(overlayNavigationCosts(terrain,terrainMaximum,floors),fire),traps)!};
+  return {costs:addFireNavigationCosts(addFireNavigationCosts(addFireNavigationCosts(costs.size||terrainMaximum?overlayNavigationCosts(terrain,terrainMaximum,costs):undefined,fire),traps),marshPerceptionCosts),repeaters,stops,floors:addFireNavigationCosts(addFireNavigationCosts(addFireNavigationCosts(overlayNavigationCosts(terrain,terrainMaximum,floors),fire),traps),marshPerceptionCosts)!};
 }

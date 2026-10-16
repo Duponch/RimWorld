@@ -80,6 +80,14 @@ Pour une correction de continuité comme la [poursuite V197](melee-pursuit-v197.
 
 Regrouper les changements cohérents avant de lancer leur lot de contrôles. Après un échec, corriger sa cause et rejouer les scénarios concernés. Ne pas desserrer un seuil uniquement pour obtenir un résultat vert. Un fichier de rapport ancien reste daté ; il n’est pas une preuve d’exécution sur le code présent.
 
+## Pièges connus des témoins préparés
+
+- Le transport d’une pile de matériau crée une nouvelle cargaison même quand il prend toute la source. Observer source, propriétaire et nouvel ID avant le dépôt ; ne pas exiger le retour de l’ancien ID supprimé.
+- Le SnapshotEncoder conserve l’identité du World source : une autre instance demande un checkpoint. Pour exercer un delta, garder la source et cloner les paquets/témoins précédents avant mutation.
+- Échap peut désélectionner le colon après mobilisation. Le clic tactique exige encore une vraie sélection ; le helper d’action ne doit pas la supprimer systématiquement.
+- Une fixture créée avec les défauts courants puis abaissée à un ancien schéma doit omettre explicitement les seuls contenus futurs étrangers à son contrat. Ne jamais détendre le validateur pour la rendre historique.
+- L’atomicité d’une commande refusée et les effets internes d’un sous-système sont distincts. La tentative de saleté peut initialiser son propre domaine et sonder les voisins ; tester l’absence de dépôt et les invariants réellement promis, sans inventer une invariance de son PRNG indépendant.
+
 ## Choisir les contrôles
 
 | Changement | Contrôles nécessaires selon son contrat |

@@ -5,7 +5,7 @@ import type { World } from './types.ts';
 export function validateFlooring(w:World,version:number):string[] {
   const errors:string[]=[],plans=new Set<number>();
   for(let i=0;i<w.tiles.length;i++){
-    const tile=w.tiles[i]!;if(tile.floor!==undefined&&(version<89||!isFloorKind(tile.floor)||tile.floor==='sterile-tile'&&(version<211||!sterileMaterialsUnlocked(w))||tile.terrain==='water'||tile.terrain==='rock'))errors.push('Invalid constructed floor.');
+    const tile=w.tiles[i]!;if(tile.floor!==undefined&&(version<89||!isFloorKind(tile.floor)||tile.floor==='sterile-tile'&&(version<211||!sterileMaterialsUnlocked(w))||tile.terrain==='water'||tile.terrain==='rock'||tile.terrain==='marsh'))errors.push('Invalid constructed floor.');
   }
   for(const job of w.jobs){
     if(job.kind!=='lay-floor'&&job.kind!=='remove-floor'){if(job.floor!==undefined)errors.push('Unexpected floor target.');continue;}

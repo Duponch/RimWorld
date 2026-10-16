@@ -219,7 +219,7 @@ import { haulingWork } from './haul-aside.ts';
 import { groundPile } from './ground-placement.ts';
 import { generateWorld } from './generation.ts';
 import { adjacent, blockedCells, cellIndex, inBounds } from './pathfinding.ts';
-import { CARRY_CAPACITY, footprintCells } from './definitions.ts';
+import { CARRY_CAPACITY, footprintCells, STRUCTURE_DEFINITIONS } from './definitions.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { constructionSkillRequired,constructionSupplied, validConstructionMaterial } from './construction-materials.ts';
 import { refreshStock } from './materials.ts';
@@ -370,6 +370,7 @@ export function buildConstructionCellIndex(world: World, kind: LineBuildKind): C
 
 /** Pure shared rule used by preview and command execution. */
 export function canDesignate(world: World, command: DesignateCommand, installing=false, index?:ConstructionCellIndex): CommandResult {
+  if(command&&Object.hasOwn(STRUCTURE_DEFINITIONS,command.kind)&&footprintCells(command).some(c=>world.tiles[c.z*world.width+c.x]?.terrain==='marsh'))return refusal('incompatible-resource','Le marais ne porte pas cette construction, y compris les emplacements et conduits ordinaires.');
   if((command?.kind==='orbital-beacon'||command?.kind==='comms-console')&&(world.schemaVersion<216||command.kind==='comms-console'&&installing||!installing&&!microelectronicsUnlocked(world)))return refusal('invalid-command','Recherchez Microélectronique pour construire cet appareil ; la console ne se désinstalle pas.');
   if(command?.kind==='deep-drill'&&(world.schemaVersion<215||!installing&&!deepDrillingUnlocked(world)))return refusal('invalid-command','Recherchez Forage profond pour construire une foreuse.');
   if(command?.kind==='ground-scanner'&&(world.schemaVersion<215||installing||!groundScannerUnlocked(world)))return refusal('invalid-command','Recherchez Scanner souterrain pour construire cet appareil non déplaçable.');
@@ -434,7 +435,7 @@ export function canDesignate(world: World, command: DesignateCommand, installing
     return resource && (command.kind === 'chop' ? choppable(world,resource) : isPlant(resource)) && (command.kind !== 'harvest' || harvestable(world, resource)) ? { ok: true } : refusal('incompatible-resource', 'Ressource incompatible.');
   }
   for (const cell of cells) {
-    if (['water', 'rock'].includes(world.tiles[cellIndex(world, cell.x, cell.z)]!.terrain)
+    if (['water', 'rock','marsh'].includes(world.tiles[cellIndex(world, cell.x, cell.z)]!.terrain)
       || (index?.kind===command.kind ? !!(index.flags[cellIndex(world,cell.x,cell.z)]!&4) : world.resources.some(item => item.kind==='rock'&&sameCell(item, cell)))
       || (index?.kind===command.kind ? !!(index.flags[cellIndex(world,cell.x,cell.z)]!&2) : world.structures.some(item => sharesConstructionLayer(item.kind,command.kind)&&footprintCells(item).some(target => sameCell(target, cell))))
       || world.pawns.some(p => p.haul?.destination.type === 'aside' && sameCell(p.haul.destination, cell))

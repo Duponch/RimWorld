@@ -23,7 +23,7 @@ export class FireContent {
   solid(c:Cell):boolean{return !this.inside(c)||this.world.tiles[index(this.world,c)]!.terrain==='rock'||this.solids.has(index(this.world,c));}
   allTargets(c:Cell):FireTarget[]{return this.inside(c)?this.contents.get(index(this.world,c))??[]:[];}
   targets(c:Cell):FireTarget[]{
-    if(!this.inside(c)||['water','rock'].includes(this.world.tiles[index(this.world,c)]!.terrain))return [];
+    if(!this.inside(c)||['water','rock','marsh'].includes(this.world.tiles[index(this.world,c)]!.terrain))return [];
     const list=this.contents.get(index(this.world,c))??[];
     // Full edifices shield other content, including the separate conduit layer.
     const full=list.find(t=>t.kind==='structure'&&(t.value.kind==='wall'||isRoomDoor(t.value.kind)||(t.value.kind==='cooler'||t.value.kind==='vent')));

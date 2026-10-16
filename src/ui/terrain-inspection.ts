@@ -8,6 +8,7 @@ export const TERRAIN_LABELS: Record<Terrain, string> = {
   'rich-soil': 'Terre riche',
   gravel: 'Gravier',
   'rough-stone': 'Sol rocheux brut',
+  marsh: 'Marais',
   water: 'Eau infranchissable',
   rock: 'Massif rocheux infranchissable',
 };
@@ -16,6 +17,7 @@ export const TERRAIN_LABELS: Record<Terrain, string> = {
  * This is soil suitability, not a promise that the cell can be sown now. */
 function baseTerrainInspection(tile: Tile): string {
   if(tile.floor)return `Sol : ${FLOOR_DEFINITIONS[tile.floor].label} · Fertilité : 0 % · Propreté du revêtement : ${FLOOR_DEFINITIONS[tile.floor].cleanliness.toFixed(1)} · Terrain non cultivable`;
+  if(tile.terrain==='marsh')return 'Sol : Marais · Fertilité : 0 % · Terrain non cultivable · Déplacements ralentis · Support de construction ordinaire absent · Conduit électrique ordinaire incompatible';
   const fertility = Math.round(soilFertility(tile.terrain) * 100);
   return `Sol : ${TERRAIN_LABELS[tile.terrain]} · Fertilité : ${fertility} % · ${isGrowingTerrain(tile.terrain) ? 'Terrain cultivable' : 'Terrain non cultivable'}`;
 }

@@ -1,5 +1,9 @@
 # Guide joueur
 
+## Composer avec les marais — V385, proposition
+
+Sur les nouveaux sites de **Toundra**, le survol **Marais** signale un terrain lent et non cultivable. Les colons peuvent y marcher et prendre/déposer des biens au contact ; les trajets civils privilégient davantage les détours. Installez cultures, bâtiments, emplacements et conduits ordinaires sur un terrain porteur voisin : un plancher ne remplace pas un pont. Le marais ne retient ni neige ni feu à terme. Il reste statique, sans commande de drainage ou pont disponible. Une ancienne sauvegarde ne reçoit aucune poche nouvelle. [Portée et limites](marsh-tundra-v385.md).
+
 ## Confectionner une tuque — V384, proposition
 
 Après **Vêtements complexes**, sélectionnez un établi de tailleur manuel ou électrique puis ajoutez la facture **Tuque**. Rendez disponibles20tissus ou20laines de mufalo d’une seule matière et activez son filtre. L’Artisanat collecte et travaille au poste ; un ouvrage interrompu reste lié à son auteur. Autorisez les vêtements dans une réserve/étagère accessible pour ranger le produit. Au contact, **Porter** remplace un casque incompatible ; **Retirer** dépose la tuque. Une tuque en tissu/laine normale apporte9/14°C d’isolation froide, selon sa qualité ; elle reste compatible avec la parka. Les anciennes politiques ne sont pas élargies au chargement. [Portée et adaptations](tuque-v384.md).
