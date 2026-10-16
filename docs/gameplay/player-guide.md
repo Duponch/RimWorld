@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Éclairer un abri au bois — V390, proposition
+
+Dans Architecte, choisissez **Lampe-torche** et rendez **20 bois** accessibles. Le colon livre puis construit : la réserve de 20 bois est initialement pleine, sans recharge supplémentaire à payer au premier allumage. La lumière aide les travaux alentour ; la chaleur est faible et plafonnée à 23°C. La torche reste un objet fixe, traversable, sans interrupteur ni désinstallation en paquet.
+
+Au sec elle consomme 2 bois par jour neutre. Pluie/neige au-delà du seuil et hors toit accélèrent fortement la consommation : couvrez la case pour éviter ce supplément. À vide, lumière/chaleur/flamme cessent mais l’objet peut être rechargé. Activez **Auto-ravitaillement** avec Transport autorisé et une vraie réserve de bois accessible, ou ordonnez le ravitaillement au contact. Désactiver Auto n’éteint pas la torche. Déconstruire ou détruire ne rend aucun bois ni combustible. [Règles, adaptations et limites](torch-lamp-v390.md).
+
 ## Franchir un marais avec un pont
 
 Architecte → Sols → Pont en bois. Apporter12bois par cellule et attendre la fin du chantier ; seuls les ouvrages Light peuvent ensuite être bâtis dessus. Retirer d’abord meubles et plans pour récupérer6bois en retirant le pont. Le marais revient dessous en cas de retrait/destruction. [Détails et limites](bridge-marsh-v387.md).

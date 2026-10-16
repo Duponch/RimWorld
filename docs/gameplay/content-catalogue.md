@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V390 proposé — [lampe-torche au sol](torch-lamp-v390.md), schéma 249.** Construction physique de 20 bois, réserve finie pleine de 20, lumière et chaleur sans électricité ; panne, recharge et retrait sans restitution. Aucun paquet mobile, interrupteur, ajout aux Aulnes ou nouvelle provision de voyage.
+
 **V389 proposé — [pemmican de camp](pemmican-v389.md), schéma 248.** Recherche 500, feu/cuisinières, 5 viandes animales + 5 végétaux sans lait → 16 unités ; travail, rangement, ingestion multipièce, conservation et contamination existants. Pas de nouvelle provision de voyage ni scène publique ; anciennes politiques et archives littérales.
 
 **V388 proposé — [rendre la tenue à sa politique](clear-forced-apparel-v388.md).** Assignations efface les marqueurs des seuls habits forcés actuellement portés d’un colon ; Matériel les signale. La politique reprend ensuite ses gestes physiques si Auto est actif, sans dépose immédiate ni nouveau schéma.
@@ -255,7 +257,7 @@ V38 ajoute des propriétés au contenu existant, sans nouvel objet : chaleur du 
 
 V37 étend les effets des feux/toits existants aux travaux et déplacements ; aucun nouvel objet. Le catalogue reste ouvert, notamment plantes, terrains et éclairages supplémentaires.
 
-Le feu présent éclaire maintenant aussi le décor et les colons en 3D ; aucun nouvel objet lumineux. Lampe électrique livrée V42 ; V189 ajoute la lampe horticole décrite en tête. Les torches restent absentes. [Présentation](../development/environment-lighting.md).
+Le feu présent éclaire maintenant aussi le décor et les colons en 3D ; aucun nouvel objet lumineux. Lampe électrique livrée V42 ; V189 ajoute la lampe horticole décrite en tête. V390 propose la lampe-torche fixe décrite en tête ; les variantes murales et portées restent absentes. [Présentation](../development/environment-lighting.md).
 
 V36 enrichit les propriétés des objets existants : lumière logique du feu allumé, rôle de lit/table/piquet/atelier et facteurs des deux recettes. Aucun nouvel objet ni catalogue lumineux complet. [Contrat](../development/work-environment.md).
 

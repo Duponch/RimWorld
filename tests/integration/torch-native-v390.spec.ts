@@ -1,0 +1,83 @@
+import {test,expect,type Page,type TestInfo} from '@playwright/test';
+import {readFile,writeFile} from 'node:fs/promises';
+import {torchWorkshopV390} from '../scenarios/torch-v390';
+import {deserializeWorld,validateWorld} from '../../src/sim/serialization';
+import {decodeStoredSave} from '../../src/ui/save-storage-codec';
+import {LightEnvironmentCache} from '../../src/sim/light-environment';
+import {FUEL_UNIT_TICKS} from '../../src/sim/fuel';
+import type {Cell,World} from '../../src/sim/types';
+import {world,pause,panel,expectWorld,observeErrors,cell,settledCells} from './helpers';
+import {perform,revealCells} from './player-actions';
+
+test.skip(process.env.TORCH_V390!=='1','ROOT opt-in only; adopt/freeze V390 schema249 first.');
+const wood=(w:World)=>w.piles.filter(p=>p.item==='wood').reduce((n,p)=>n+p.quantity,0);
+async function exportReload(page:Page,info:TestInfo){
+  await pause(page);const before=await world(page);expect(validateWorld(before)).toEqual([]);
+  await page.keyboard.press('Escape');await panel(page,'menu');const manager=page.locator('[data-save-manager]');
+  await manager.locator('[data-save-manager-name]').fill('V390 torche recharge au contact');
+  await manager.locator('[data-save-manager-action="create"]').click();await expect(manager.locator('[data-save-manager-status]')).toHaveAttribute('data-state','success');
+  const download=page.waitForEvent('download');await manager.locator('[data-save-manager-action="export"]').click();
+  const path=info.outputPath('contact-refuel-exact.json');await(await download).saveAs(path);
+  expect(deserializeWorld(await decodeStoredSave(await readFile(path,'utf8')))).toEqual(before);
+  await page.locator('#browse-saves').click();await page.locator('.front-menu input[type=file]').setInputFiles(path);
+  await expect(page.locator('.front-menu')).toBeHidden({timeout:30_000});await expect(page.locator('#loading')).toHaveCount(0,{timeout:60_000});
+  await pause(page);await expectWorld(page,before);await page.keyboard.press('Escape');await info.attach('contact-refuel-exact',{path,contentType:'application/json'});return before;
+}
+
+test('V390 prepared night: paid wooden torch, real empty lamp, owned wood and physical refuel with exact reload',async({page},info)=>{
+  test.setTimeout(120_000);const errors=observeErrors(page),f=torchWorkshopV390(32),rotation={value:0};
+  expect(f.world.schemaVersion).toBe(249);expect(wood(f.world)).toBe(30);
+  const prepared=f.world.structures.find(s=>s.id===f.preparedTorchId)!,probe={x:prepared.x+3,z:prepared.z};
+  expect(prepared.fuel).toMatchObject({ticks:1,burnRemainder:4,autoRefuel:false});expect(Math.abs(probe.x-f.torchCell.x)).toBeGreaterThan(10);
+  const path=info.outputPath('declared-torch-preparation.json');await writeFile(path,f.initial);
+  const inspect=async(id:number)=>{await page.keyboard.press('Escape');const w=await world(page),s=w.structures.find(s=>s.id===id)!;
+    for(let i=0;i<=w.pawns.length+1;i++){await revealCells(page,[s]);await cell(page,s.x,s.z);if(await page.locator('#fire-fuel').isVisible())break;}await expect(page.locator('#fire-fuel')).toBeVisible();};
+  const hoverLight=async(c:Cell,lit:boolean)=>{await page.keyboard.press('Escape');await revealCells(page,[c]);
+    const w=await world(page),light=new LightEnvironmentCache().read(w),value=light.lightAt(c);if(lit)expect(value).toBeGreaterThan(0);else expect(value).toBe(0);
+    const [p]=await settledCells(page,[c]),b=(await page.locator('#viewport canvas').boundingBox())!;
+    await page.mouse.move(8,8);await page.waitForTimeout(280);await page.mouse.move(b.x+p!.x,b.y+p!.y);
+    await expect(page.locator('#map-hover-readout')).toContainText(`Lumière : ${Math.round(value*100)} %`);return value;};
+  try{
+    await page.goto('/?e2e');const front=page.locator('.front-menu');await front.getByRole('button',{name:'Charger une partie',exact:true}).click();await front.locator('input[type=file]').setInputFiles(path);
+    await expect(page.locator('#loading')).toHaveCount(0,{timeout:60_000});await pause(page);await expectWorld(page,f.world);
+    const initialLight=await hoverLight(probe,true);await page.screenshot({path:info.outputPath('01-prepared-last-fuel-night.png')});
+    await panel(page,'architect');await page.locator('[data-category="furniture"]').click();await page.locator('[data-tool="torch-lamp"]').click();
+    if(await page.locator('#architect-panel').isVisible())await page.locator('#architect-panel [data-close-panel]').click();
+    await revealCells(page,[f.torchCell]);await cell(page,f.torchCell.x,f.torchCell.z);await page.keyboard.press('Escape');
+    await expect.poll(async()=>(await world(page)).jobs.some(j=>j.kind==='torch-lamp'&&j.x===f.torchCell.x&&j.z===f.torchCell.z)).toBe(true);expect(wood(await world(page))).toBe(30);
+    await page.locator('[data-speed="1"]').click();await page.waitForFunction(c=>window.__lisiere.world.structures.some(s=>s.kind==='torch-lamp'&&s.x===c.x&&s.z===c.z),f.torchCell,{timeout:20_000});await pause(page);
+    const built=await world(page);await writeFile(info.outputPath('built-world.json'),JSON.stringify(built));
+    const torch=built.structures.find(s=>s.kind==='torch-lamp'&&s.x===f.torchCell.x&&s.z===f.torchCell.z)!,empty=built.structures.find(s=>s.id===f.preparedTorchId)!;
+    expect(wood(built)).toBe(10);expect(built.piles.some(p=>p.id===f.constructionWoodId)).toBe(false);
+    expect(torch.fuel!.ticks).toBeGreaterThan(0);expect(torch.fuel!.ticks).toBeLessThanOrEqual(20*FUEL_UNIT_TICKS);
+    expect(torch.fuel!.ticks+torch.fuel!.burned).toBe(20*FUEL_UNIT_TICKS);
+    expect(empty.fuel).toMatchObject({ticks:0,burnRemainder:0,autoRefuel:false});expect(torch.power).toBeUndefined();expect(empty.power).toBeUndefined();
+    expect(built.piles.find(p=>p.id===f.reserveWoodId)).toMatchObject({item:'wood',quantity:10,owner:{type:'ground',x:15,z:7}});
+    await inspect(torch.id);await expect(page.locator('#fire-fuel')).toContainText('Allumée');await expect(page.locator('#fire-fuel')).toContainText('20.0 / 20 bois');
+    await expect(page.locator('#cell-uninstall')).toBeHidden();await expect(page.locator('[data-power-flick]')).toHaveCount(0);
+    const emptyLight=await hoverLight(probe,false);await page.screenshot({path:info.outputPath('02-paid-torch-and-real-empty-neighbor.png')});
+    await inspect(f.preparedTorchId);await expect(page.locator('#fire-fuel')).toContainText('Éteinte');await expect(page.locator('#fire-auto-refuel')).not.toBeChecked();
+    await page.locator('#fire-auto-refuel').setChecked(true);await expect.poll(async()=>(await world(page)).structures.find(s=>s.id===f.preparedTorchId)?.fuel?.autoRefuel).toBe(true);
+    await page.keyboard.press('Escape');await perform(page,{reason:'Autoriser le transport des dix bois de recharge après la construction payée.',command:{type:'priority',pawnId:f.pawnId,work:'haul',value:1}},rotation);await page.keyboard.press('Escape');
+    await page.locator('[data-speed="1"]').click();
+    await page.waitForFunction(({id,target})=>{const w=window.__lisiere.world,p=w.pawns.find(p=>p.id===id),h=p?.haul;return h?.destination.type==='fuel'&&h.destination.structureId===target&&h.phase==='deliver'&&h.carryPileId!==null;},{id:f.pawnId,target:f.preparedTorchId},{polling:20,timeout:15_000});await pause(page);
+    const carrying=await world(page),carrier=carrying.pawns.find(p=>p.id===f.pawnId)!,haul=carrier.haul!;
+    expect(haul.sourcePileId).toBe(f.reserveWoodId);const cargo=carrying.piles.find(p=>p.id===haul.carryPileId)!;
+    expect(cargo).toMatchObject({item:'wood',quantity:10,owner:{type:'pawn',pawnId:f.pawnId}});expect(carrying.structures.find(s=>s.id===f.preparedTorchId)!.fuel!.ticks).toBe(0);
+    await page.locator('[data-speed="1"]').click();await page.waitForFunction(id=>{const p=window.__lisiere.world.pawns.find(p=>p.id===id);return !!p?.haul&&p.haul.serviceProgress!==undefined&&p.haul.serviceProgress>0&&p.haul.serviceProgress<15;},f.pawnId,{polling:20,timeout:15_000});await pause(page);
+    const contact=await world(page),worker=contact.pawns.find(p=>p.id===f.pawnId)!,target=contact.structures.find(s=>s.id===f.preparedTorchId)!;
+    expect(target.fuel!.ticks).toBe(0);expect(Math.abs(worker.x-target.x)+Math.abs(worker.z-target.z)).toBeLessThanOrEqual(1);
+    expect(worker.moveCooldown).toBe(0);expect(worker.motion?.end??0).toBeLessThanOrEqual(contact.tick);expect(worker.haul!.serviceProgress).toBeGreaterThan(0);
+    const resumed=await exportReload(page,info);expect(resumed.pawns.find(p=>p.id===f.pawnId)!.haul).toEqual(worker.haul);
+    await page.locator('[data-speed="1"]').click();await page.waitForFunction(id=>(window.__lisiere.world.structures.find(s=>s.id===id)?.fuel?.ticks??0)>0,f.preparedTorchId,{timeout:10_000});await pause(page);
+    const final=await world(page);await writeFile(info.outputPath('final-world.json'),JSON.stringify(final));
+    const relit=final.structures.find(s=>s.id===f.preparedTorchId)!;expect(relit.fuel!.ticks).toBeGreaterThan(0);expect(relit.fuel!.ticks).toBeLessThanOrEqual(10*FUEL_UNIT_TICKS);
+    expect(relit.fuel!.ticks+relit.fuel!.burned).toBe(target.fuel!.ticks+target.fuel!.burned+10*FUEL_UNIT_TICKS);
+    expect(wood(final)).toBe(0);expect(final.piles.some(p=>p.id===cargo.id)).toBe(false);expect(final.pawns.find(p=>p.id===f.pawnId)!.haul).toBeNull();
+    const restoredLight=await hoverLight(probe,true);await inspect(f.preparedTorchId);await expect(page.locator('#fire-fuel')).toContainText('Allumée');await expect(page.locator('[data-power-flick]')).toHaveCount(0);
+    await page.screenshot({path:info.outputPath('03-real-refuel-relit-without-electricity.png')});
+    expect(validateWorld(final)).toEqual([]);expect(errors).toEqual([]);
+    expect(await page.evaluate(()=>({backend:window.__lisiere.backend,...window.__lisiere.incident}))).toMatchObject({backend:'WebGPU',simulationStopped:false,graphicsFault:false,waiting:0});
+    await writeFile(info.outputPath('native-summary.json'),JSON.stringify({notice:f.notice,start:f.world.tick,builtAt:built.tick,carryingAt:carrying.tick,contactAt:contact.tick,resumedAt:resumed.tick,relitAt:final.tick,builtTorchId:torch.id,preparedTorchId:f.preparedTorchId,constructionPaid:20,refuelPaid:10,remainingWood:0,initialLight,emptyLight,restoredLight,cargoId:cargo.id,errors,scope:'One prepared32² night scene: paid construction, declared near-empty second lamp burns out naturally, real wood pickup/contact service and exact reload. No fuel mutation after import, long-duration runtime, rain, winter or performance qualification.'},null,2));
+  }catch(error){const state=await world(page).catch(()=>undefined);if(state)await writeFile(info.outputPath('failure-world.json'),JSON.stringify(state));throw error;}
+});

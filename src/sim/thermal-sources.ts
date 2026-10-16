@@ -31,6 +31,7 @@ export function applyThermalSources(world:World,layout:ThermalLayout):void {
     const room=regions[id]!;
     if(source.kind==='fueled-stove'||source.kind==='electric-stove')room.temperature=Math.min(1000,room.temperature+(source.kind==='fueled-stove'?4:3)/6/room.cells.length);
     else if((source.kind==='wood-generator'||source.kind==='chemfuel-generator')&&isPowerActive(source))room.temperature=Math.min(1000,room.temperature+1/room.cells.length);
+    else if(source.kind==='torch-lamp'&&room.temperature<23)room.temperature=Math.min(23,room.temperature+3.5/6/room.cells.length);
     else if(source.kind==='campfire'&&room.temperature<28)room.temperature=Math.min(28,room.temperature+21/6/room.cells.length);
     else if(source.kind==='passive-cooler'&&room.temperature>17)room.temperature=Math.max(17,room.temperature-11/6/room.cells.length);
   }

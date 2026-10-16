@@ -89,6 +89,7 @@ const BUILDINGS: Readonly<Record<StructureKind, BuildingValueDef>> = Object.free
   'electric-tailor-bench': def(75, 2500, 'pass-through', {steel:50,component:2}),
   'crafting-spot': def(0, 0, 'standable'),
   'wood-generator': def(0, 2500, 'pass-through', {steel:100,component:2}),
+  'torch-lamp': def(0, 100, 'pass-through', {wood:20}),
   'standing-lamp': def(0, 300, 'pass-through', {steel:20}),
   'sun-lamp': def(0, 330, 'pass-through', {steel:40}),
   'passive-cooler': def(0, 200, 'pass-through', {wood:50}),

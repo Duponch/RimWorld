@@ -17,7 +17,11 @@ function carried(){const camp=stacked(),{world:w,pile,generatorId}=camp,p=w.pawn
   p.jobId=null;p.need=null;p.cooking=null;p.state='working';p.path=[];p.moveCooldown=0;delete p.motion;refreshStock(w);return {...camp,p};}
 
 test('217 migration changes only the schema and does not add research, stock category or reserves',()=>{
-  const w=medicalCamp(),before=structuredClone(w);w.schemaVersion=217 as World['schemaVersion'];before.schemaVersion=SCHEMA_VERSION;
+  const w=medicalCamp();
+  // Declare pre-217 defaults before taking the literal migration witness.
+  for(const policy of w.foodPolicies)policy.allowed=policy.allowed.filter(id=>id!=='pemmican'&&id!=='kibble');
+  w.apparelPolicies=(w.apparelPolicies??[]).map(policy=>({...policy,allowedItems:policy.allowedItems.filter(id=>id!=='recon-armor'&&!id.endsWith('-tuque'))}));
+  const before=structuredClone(w);w.schemaVersion=217 as World['schemaVersion'];before.schemaVersion=SCHEMA_VERSION;
   const original=structuredClone(w);expect(deserializeWorld(JSON.stringify(w))).toEqual(before);expect(w).toEqual(original);
   expect(Object.hasOwn(w.research??{},'biofuelRefining')).toBe(false);expect(w.stockpiles.every(z=>!Object.hasOwn(z.filters,'chemfuel'))).toBe(true);
 });

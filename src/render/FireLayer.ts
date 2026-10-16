@@ -89,9 +89,9 @@ export class FireLayer {
   }
   adopt(world:World,reset=false):void {
     const fires=(world.fires?.items??[]).filter(f=>f.attachedPawnId===undefined&&f.attachedAnimalId===undefined);
-    const campfires=world.structures.filter(s=>s.kind==='campfire'&&!!s.fuel?.ticks);
-    const key=fires.map(f=>`${f.id}:${f.x}:${f.z}:${f.size}`).join('|')+';'+campfires.map(s=>`${s.id}:${s.x}:${s.z}`).join('|');if(!reset&&key===this.signature)return;this.signature=key;
-    const count=fires.length+campfires.length*3;
+    const campfires=world.structures.filter(s=>s.kind==='campfire'&&!!s.fuel?.ticks),torches=world.structures.filter(s=>s.kind==='torch-lamp'&&!!s.fuel?.ticks);
+    const key=fires.map(f=>`${f.id}:${f.x}:${f.z}:${f.size}`).join('|')+';'+campfires.map(s=>`${s.id}:${s.x}:${s.z}`).join('|')+';'+torches.map(s=>`${s.id}:${s.x}:${s.z}`).join('|');if(!reset&&key===this.signature)return;this.signature=key;
+    const count=fires.length+campfires.length*3+torches.length;
     if(count>this.capacity){while(this.capacity<count)this.capacity*=2;this.allocate();}
     const a=this.mesh.geometry.getAttribute('firePosition') as THREE.InstancedBufferAttribute;
     // A new small fire used to disappear behind the ground/logs in the
@@ -100,6 +100,7 @@ export class FireLayer {
     this.flames=[];this.cache.reset();this.drawn=[];
     let i=0;for(const f of fires){const size=groundFireVisualScale(f.size);a.setXYZW(i++,f.x,0,f.z,size);this.flames.push({x:f.x,y:0,z:f.z,size});}
     for(const s of campfires)for(let j=0;j<3;j++){const item={x:s.x+(j-1)*.13,y:.2+(j%2)*.045,z:s.z+(j%2)*.09,size:j===1?.54:.40};a.setXYZW(i++,item.x,item.y,item.z,item.size);this.flames.push(item);}
+    for(const s of torches){const item={x:s.x,y:.89,z:s.z,size:.23};a.setXYZW(i++,item.x,item.y,item.z,item.size);this.flames.push(item);}
     if(!count)a.setXYZW(0,0,-100,0,0);
     a.needsUpdate=true;(this.mesh.geometry as THREE.InstancedBufferGeometry).instanceCount=this.detail?count:Math.max(1,count);this.mesh.visible=this.detail?count>0:true;
   }

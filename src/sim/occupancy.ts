@@ -59,6 +59,7 @@ export const OCCUPANCY = Object.freeze({
   'build-roof': Object.freeze({clearItems:false,items:true,zones:true,store:true}),
   'remove-roof': Object.freeze({clearItems:false,items:true,zones:true,store:true}),
   'wood-generator':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
+  'torch-lamp':Object.freeze({clearItems:false,items:true,zones:true,store:true}),
   'standing-lamp':Object.freeze({clearItems:false,items:true,zones:true,store:true}),
   'sun-lamp':Object.freeze({clearItems:false,items:true,zones:true,store:true}),
   'passive-cooler': Object.freeze({clearItems:true,items:false,zones:true,store:false}),

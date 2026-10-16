@@ -19,10 +19,16 @@ const chem=(p:unknown)=>obj(p)&&(p.item==='chemfuel'||p.kind==='chemfuel');
 /** Remove the remainder before division to keep the reserve bound exact. */
 const maximumChemfuelBurned=(tick:number)=>Math.floor(tick/20)*9+Math.floor((tick%20)*9/20);
 
+const maximumTorchBurned=(tick:number)=>Math.floor(tick/5)*19+Math.floor((tick%5)*19/5);
+
 /** The former fuel bounds are retained literally. Only the new generator has
  * a strict four-field contract and its own saved twentieths of a reserve unit. */
 export function validBuildingFuelShape(value:unknown,kind:unknown,version:number,tick:number):boolean {
   if(!obj(value)||version<10||!int(value.ticks,0,fuelLimit(kind))||typeof value.autoRefuel!=='boolean')return false;
+  if(kind==='torch-lamp')return version>=249&&keys(value,['ticks','burned','autoRefuel','burnRemainder'])
+    &&int(tick)&&int(value.burned,0,maximumTorchBurned(tick))&&int(value.burnRemainder,0,4)
+    &&(value.burned<maximumTorchBurned(tick)||value.burnRemainder<=((tick%5)*19)%5)
+    &&(value.ticks!==0||value.burnRemainder===0);
   if(kind==='chemfuel-generator')return version>=218&&keys(value,['ticks','burned','autoRefuel','burnRemainder'])
     &&int(tick)&&int(value.burned,0,maximumChemfuelBurned(tick))&&int(value.burnRemainder,0,19)
     &&(value.ticks!==0||value.burnRemainder===0);

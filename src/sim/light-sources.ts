@@ -9,6 +9,7 @@ export interface LightSource {cell:number;radius:number;red:number;green:number;
 export function lightSources(world:World):LightSource[] {
   return world.structures.flatMap(s=>{
     const cell=s.z*world.width+s.x;
+    if(s.kind==='torch-lamp'&&s.fuel?.ticks)return [{cell,radius:10,red:184,green:136,blue:83}];
     if(s.kind==='campfire'&&s.fuel?.ticks)return [{cell,radius:10,red:252,green:187,blue:113}];
     if(s.kind==='electric-crematorium'&&isPowerActive(s))return [{cell,radius:6,red:217,green:112,blue:33}];
     if(s.kind==='electric-smelter'&&isPowerActive(s))return [{cell,radius:6,red:217,green:112,blue:33}];

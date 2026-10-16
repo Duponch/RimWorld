@@ -25,7 +25,7 @@ export const buildingLabels: Readonly<Record<StructureKind, string>> = {
   'animal-sleeping-spot':'Emplacement de couchage animal',
   'sleeping-spot':'Couchage au sol',
   'crafting-spot': 'Emplacement d’artisanat', 'wood-generator': 'Générateur à bois',
-  'standing-lamp': 'Lampe sur pied', 'sun-lamp': 'Lampe horticole', 'passive-cooler': 'Refroidisseur passif', door: 'Porte', autodoor: 'Porte automatique',
+  'torch-lamp':'Lampe-torche','standing-lamp': 'Lampe sur pied', 'sun-lamp': 'Lampe horticole', 'passive-cooler': 'Refroidisseur passif', door: 'Porte', autodoor: 'Porte automatique',
   fence: 'Clôture', 'fence-gate': 'Portillon', 'pen-marker': 'Marqueur d’enclos',
   stonecutter: 'Table de taille de pierre', 'small-sculpture':'Petite sculpture', 'large-sculpture':'Grande sculpture', wall: 'Mur', bed: 'Lit', table: 'Table 1 × 2','table-square':'Table 2 × 2','table-long':'Table 2 × 4',
   shelf:'Étagère','small-shelf':'Petite étagère',stool: 'Tabouret','dining-chair':'Chaise de salle à manger',armchair:'Fauteuil','end-table':'Table de chevet',dresser:'Commode','flower-pot':'Pot de fleurs',horseshoes: 'Piquet de fers à cheval','chess-table':'Table d’échecs', campfire: 'Feu de camp',

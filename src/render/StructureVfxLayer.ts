@@ -197,6 +197,8 @@ export class StructureVfxLayer {
         tokens.push(`${s.id}:wood-generator:${s.x}:${s.z}:${on}`);
       }else if(s.kind==='campfire'){
         const lit=!!s.fuel?.ticks;tokens.push(`${s.id}:campfire:${s.x}:${s.z}:${lit}`);
+      }else if(s.kind==='torch-lamp'){
+        tokens.push(`${s.id}:torch-lamp:${s.x}:${s.z}:${!!s.fuel?.ticks}`);
       }
       if(s.breakdown){
         const cells=footprintCells(s);
@@ -315,6 +317,9 @@ export class StructureVfxLayer {
       }else if(s.kind==='campfire'){
         const lit=!!s.fuel?.ticks;tokens.push(`${s.id}:campfire:${s.x}:${s.z}:${lit}`);
         if(lit)puff(s.x,.47,s.z,s.id,.58,.76,1.06,9);
+      }else if(s.kind==='torch-lamp'){
+        const lit=!!s.fuel?.ticks;tokens.push(`${s.id}:torch-lamp:${s.x}:${s.z}:${lit}`);
+        if(lit)puff(s.x,1.04,s.z,s.id,.17,.1,.35,5);
       }
       if(s.breakdown){
         // A flat, two-piece amber exclamation remains legible from the normal

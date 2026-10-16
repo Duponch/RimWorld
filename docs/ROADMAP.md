@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 248.** [V389](gameplay/pemmican-v389.md) ajoute une réserve de camp fabricable, stockable et consommable après recherche, avec reprise active exacte. Produit c6870b74 publié avec V388 en 05b8f6b6,130HTTPS exacts. Les Aulnes V386 et la campagne98038 close partielle sont préservées.
+**16 octobre 2026 — schéma 249.** [V390](gameplay/torch-lamp-v390.md) ajoute la lampe-torche fixe : construction payée, lumière utile, consommation finie et recharge physique qualifiées, reprise au contact. Publication regroupée suivante ; production V388–V389/05b8f6b6 conservée. Les Aulnes V386 et la campagne98038 close partielle restent préservées.
 
 ## Priorité actuelle
 
@@ -19,6 +19,7 @@
 13. **Ponts de marais V387 qualifiés.** Fondation payée et terrain dessous conservé, supports Light, passage/transport et retrait physiques, feu/explosion et migrations strictes. Rivières/profondeurs, pont lourd et destruction de masse restent hors du parcours natif qualifié.
 14. **Gestion des tenues V388 qualifiée.** Effacement des seules pièces forcées, Auto conservé, renouvellement physique et sauvegarde exacte. Édition détaillée des politiques encore absente.
 15. **Réserve de camp V389 qualifiée.** Pemmican payé et préparé au contact, stockage/prise de plusieurs unités et reprise active ; provisions de voyage et catalogue alimentaire exhaustif ouverts.
+16. **Éclairage préindustriel V390 qualifié.** Lampe-torche construite/payée, consommation et effet du toit/pluie, panne/recharge et reprise ; modèle mobile, mural et DLC différés.
 
 **Référence jouable à entretenir : Les Aulnes.** Actualiser régulièrement sa version courante avec les objets et boucles pertinents du catalogue, en conservant une colonie logique et les anciennes versions. Le patrimoine ajouté peut être préparé et explicitement décrit ; il ne devient pas une campagne naturellement acquise. V381 expose les étagères et la tenue de garde, V386 une confection de tuques en cours ; les prochaines mises à jour suivront les ajouts pertinents.
 

@@ -7,7 +7,7 @@ import { readSnapshotStructureChanges } from '../bridge/snapshot-changes';
 type Capture = { id:number; kind:Structure['kind']; x:number; z:number; effect:boolean };
 const effectKinds=new Set<string>(['electric-crematorium','electric-smelter','mini-turret','autodoor','machining-table','fabrication-bench','electric-stove',
   'fueled-stove','hi-tech-research-bench','multi-analyzer','battery','biofuel-refinery','chemfuel-generator',
-  'wood-generator','campfire']);
+  'wood-generator','campfire','torch-lamp']);
 const effect=(s:Structure)=>effectKinds.has(s.kind)||!!s.breakdown||!!s.emp;
 const capture=(s:Structure):Capture=>({id:s.id,kind:s.kind,x:s.x,z:s.z,effect:effect(s)});
 

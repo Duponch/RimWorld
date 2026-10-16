@@ -86,7 +86,7 @@ test('object reservations coordinate beds, seats, recreation and fuel; removal c
 });
 
 test('rectangle deduplicates multi-cell furniture, cancellation preserves it, and V23 migration rejects corrupted or disguised removal state',()=>{
-  const w=deconstructionCamp();fixtureBuilding(w,'bed',14,16,1);fixtureBuilding(w,'table',16,17,2);
+  const w=deconstructionCamp();for(const policy of w.foodPolicies)policy.allowed=policy.allowed.filter(id=>id!=='pemmican');fixtureBuilding(w,'bed',14,16,1);fixtureBuilding(w,'table',16,17,2);
   const old=JSON.parse(serializeWorld(w));((old.schemaVersion=23,withoutResearch(old)),withoutPawnSkills(old));for(const a of old.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete old.deconstructed;delete old.packed;
   expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedSkills(w));
   expect(applyCommand(w,{type:'area',action:'deconstruct',from:{x:14,z:16},to:{x:16,z:17}}).affected).toBe(2);

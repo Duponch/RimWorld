@@ -14,6 +14,7 @@ export function validBridgeTile(tile:{terrain?:unknown;floor?:unknown;snowDepth?
 /** Core1.6.4871 resolved terrainAffordanceNeeded. Stuff replaces it ONLY for
  * these explicit Stuff rows; furniture does not become Heavy just by stone. */
 export const BUILDING_SUPPORT:Readonly<Record<StructureKind,'Light'|'Medium'|'Heavy'|'Diggable'|'Stuff'>>={
+  'torch-lamp':'Light',
   'bed':'Light',
   'double-bed':'Light',
   'hospital-bed':'Light',

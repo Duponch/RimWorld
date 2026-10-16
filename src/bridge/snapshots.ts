@@ -1,3 +1,4 @@
+import {validTorchHistoricalTransport,validTorchTransport} from '../sim/torch-save.ts';
 import {validPemmicanHistoricalTransport,validPemmicanCatalogueDomains} from '../sim/pemmican-save.ts';
 import {validPemmicanResearchTransport} from '../sim/research-save.ts';
 import {validBridgeTile,validateBridgeTransport} from '../sim/bridge-rules.ts';
@@ -896,6 +897,7 @@ export class SnapshotDecoder {
     if (packet.epoch < this.epoch || (packet.epoch === this.epoch && packet.revision <= this.revision)) return { status: 'stale' };
     if (!Number.isSafeInteger(packet.world.schemaVersion) || packet.world.schemaVersion < 1
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
+    if(!validTorchHistoricalTransport(packet,packet.world.schemaVersion))return resync('Lampe-torche future.');
     if(!validPemmicanHistoricalTransport(packet,packet.world.schemaVersion))return resync('Contenu de pemmican futur.');
     if(!validTuqueCatalogueTransport(packet,packet.world.schemaVersion))return resync('Contenu de tuque futur.');
     if(!validReconCatalogueTransport(packet,packet.world.schemaVersion))return resync('Contenu de reconnaissance futur.');
@@ -1160,6 +1162,7 @@ export class SnapshotDecoder {
     // properties to infer authority here. Public contexts ignore this fact.
     const geometryReuse:OwnedGeometryReuseWitness|undefined=structureIndices!==undefined&&this.current
       ?{kind:'sparse',previous:this.current,updatedOrdinals:structureIndices}:undefined;
+    if(!validTorchTransport(next,next.schemaVersion))return resync('Lampe-torche, carburant ou propriétaire de recharge invalide.');
     if(!validPemmicanCatalogueDomains(next,next.schemaVersion)||!validPemmicanResearchTransport(next,next.schemaVersion))return resync('Pemmican, recherche ou production future/invalide.');
     if(!validTundraTransport(next,next.schemaVersion))return resync('Toundra, flore ou climat futur/incohérent.');
     if(validateBridgeTransport(next,next.schemaVersion,message.kind==='delta'?changedTileIndices:[]).length)return resync('Fondation future, chantier ou support invalide.');

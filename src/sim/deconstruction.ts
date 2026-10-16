@@ -32,8 +32,8 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   // Prospective accounting only: older textile losses remain unknown.
   const lostTextiles:Partial<Record<UpholsteryMaterial,number>>={...world.deconstructed.lostTextiles};
   for (const cost of structure.kind === 'campfire' || structure.kind === 'passive-cooler' ? [] : constructionRecipe(structure).ingredients) {
-    let quantity = structure.kind==='power-conduit'?0:Math.floor(cost.quantity / 2);
-    if (structure.kind!=='power-conduit'&&cost.quantity % 2) {
+    let quantity = structure.kind==='torch-lamp'||structure.kind==='power-conduit'?0:Math.floor(cost.quantity / 2);
+    if (structure.kind!=='torch-lamp'&&structure.kind!=='power-conduit'&&cost.quantity % 2) {
       rng ^= rng << 13; rng ^= rng >>> 17; rng ^= rng << 5; rng >>>= 0;
       if (rng / 0x100000000 < .5) quantity++;
     }
