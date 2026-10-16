@@ -4,7 +4,7 @@ import type { CommercialBuyLine, CommercialTextileTotals } from './commercial-st
 export interface GroupSource {
   pileId: number;
   quantity: number;
-  item: 'pemmican' | 'survival-meal' | 'silver' | 'cloth' | 'muffalo-wool';
+  item: 'pemmican' | 'survival-meal' | 'silver' | 'cloth' | 'muffalo-wool' | 'wood' | 'steel';
   carrierId: number;
   carriedPileId?: number;
 }
@@ -26,7 +26,15 @@ export interface GroupProvisions {
   pemmicanConsumedUnits:number;
   pemmicanSpoiledUnits:number;
 }
+export interface GroupFreight {
+  revision:1;
+  /** Formation pickup contacts only, never the departure inventory. */
+  woodLoaded:number;
+  steelLoaded:number;
+}
 export interface GroupDepartureBaseline {
+  /** Real departure inventory only for a prospective freight formation. */
+  freight?:{wood:number;steel:number};
   /** Present only for prospective mixed collective formations. Units, never rations. */
   pemmican?:number;
   food: number;
@@ -47,6 +55,8 @@ export type GroupStop =
   | { kind: 'overload'; grams: number; capacityGrams: number }
   | { kind: 'unreachable'; destination: number };
 interface GroupCommon {
+  /** Absence preserves the engaged historical formation through its return. */
+  freight?:GroupFreight;
   /** Absence preserves the historical ration-only expedition through return. */
   provisions?:GroupProvisions;
   /** Present only for a new departure from the persisted secondary map. */

@@ -1,0 +1,23 @@
+# Fret collectif de bois et d’acier — V401
+
+Schéma 253. Lot qualifié ; publication groupée V400–V401 à confirmer séparément.
+
+Dans **Monde → Globe et groupe**, les nouvelles formations peuvent sélectionner du bois et de l’acier réellement présents au sol, notamment pour rentrer du second site. Les sources montrent disponibilité, quantité choisie et masse : **400 g par bois, 500 g par acier**. Vêtements, équipement et inventaires comptent toujours dans la charge ; la prévisualisation ne réserve ni ne transfère les biens.
+
+Rassemblement, accès, réservations, prises au contact, sortie, trajet, entrée et dépôts réutilisent les chaînes physiques existantes. Une prise partielle crée une identité de portion ; une prise entière conserve la pile. Quantité, état et propriétaire restent réels, visibles au manifeste et dans les biens portés. Annuler libère les prises futures sans rembourser le déjà chargé. Après dépôt, bois et acier peuvent être employés normalement par la colonie.
+
+La migration valide strictement le schéma 252 sur les deux cartes avant passage neutre au schéma 253. Les groupes déjà engagés sans contrat de fret gardent leurs permissions et données historiques jusqu’à leur fin, y compris leurs anciens inventaires légaux de bois. Seules les nouvelles formations reçoivent les reçus bois/acier ; au départ, la référence de conservation capture les possessions effectives, sans appeler « chargé » un bien préexistant. En voyage, inventaires vivants et pertes terminales conservent ensemble les quantités de départ. Cette équation ne fige pas les stocks après dépôt. Sauvegarde et reprise conservent les phases, reçus et propriétaires confirmés.
+
+Le lot ajoute seulement ces deux matières au chargement collectif. Voyages individuels, commerce, animaux, autres matières et nombre de groupes/sites restent sous leurs règles existantes. Aucun nouvel objet, recette, asset ou rendu. Masses Core 1.6.4871 relues dans les définitions locales ; sélection sous limite de masse et collecte physique attestées par l’[annonce officielle Ludeon Alpha16](https://ludeon.com/blog/2016/12/rimworld-alpha-16-wanderlust-released/). L’attribution locale entre humains et les colonnes de notre panneau restent des adaptations ; aucune parité visuelle actuelle revendiquée.
+
+## Qualification ROOT
+
+56 cas distincts dans dix fichiers acquis par reprises, dont huit nouveaux groupes de cas fret. Première passe : 42 PASS / 14 RED en 18,372 s. Les défauts de préparation sont conservés : dégât acier inadmissible dans le catalogue existant, témoin commercial sans provisions et témoins anciens contenant les nouveaux champs ou comparant encore au seul schéma 250. Seules ces préparations et attentes de migration ont changé ; aucun validateur ni règle du jeu détendu. Les quatre fichiers concernés repassent : 26 cas, 10,221 s. Typage final de toutes les sources et des tests concernés : 16,550 s.
+
+Quatre références publiques pertinentes (groupe V216, voyages individuels V193/V182 et Aulnes courantes V394) passent migration, aller-retour de sérialisation et Decoder complet en 13,194 s, sans tick joué. Le reste du corpus inchangé est réutilisé. Présentation Chrome : PASS 138,293 s ; aucun nouveau banc FPS, CPU ou campagne longue.
+
+Le court parcours Chrome/WebGPU préparé 32² passe en 48,075 s : dotation déclarée de 12 bois, 4 acier et 4 rations sur le second site, puis vrais gestes de formation et prises. Au tick 1734, 7 bois sont effectivement portés dans la nouvelle portion 539 et 5 restent dans la source 536 ; export et réimport UI actifs exacts. Au tick 1870, le groupe transporte aussi les 4 aciers 537, identité conservée pour cette prise entière ; référence de départ bois7/acier4. Entrée et dépôts réels au foyer constatés au tick 2090, mêmes personnes et biens, 5 bois encore sur le site. Trois captures inspectées par ROOT, erreurs vides, WebGPU sans incident ; quatre exports complets dont la paire de reprise active. Les sources, tests et pilote sont gelés dans `tmp/group-freight-v401/freeze01.json` puis vérifiés exacts après navigateur ; seuls quatre tests de préparation ont ensuite changé dans freeze02.
+
+Ce parcours démontre le retour de fret dans sa scène préparée ; il ne qualifie ni une nouvelle campagne des Aulnes, ni les 21 bois de la branche blessée V397, ni toutes les charges/routes/pertes possibles. Aulnes publiques V394 et vrai état 21483 restent intacts et distincts. La mesure Node V400 reste celle de sa note, sans gain navigateur/GPU/FPS déduit de V401.
+
+Build Pages PASS 2,447 s, documentation PASS 1,795 s ; gel documentaire final freeze04 de 3 475 chemins exact. Publication distante encore à confirmer.

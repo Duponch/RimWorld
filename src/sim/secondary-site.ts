@@ -85,7 +85,7 @@ export function enterSecondarySite(root:World):CommandResult {
   // A cached context can exist on a revisit; update its replaced containers.
   const local=secondaryContext(root)!;local.pawns=site.map.pawns;local.piles=site.map.piles;
   const pending=g.items.filter(i=>i.owner.type==='inventory').map(i=>i.id);
-  if(pending.length)local.group={id:g.id,startedAt:g.startedAt,destination:site.tile,ledger:g.ledger,...g.provisions?{provisions:g.provisions}:{},phase:'unloading',memberIds:g.members.map(p=>p.id),pendingPileIds:pending};
+  if(pending.length)local.group={id:g.id,startedAt:g.startedAt,destination:site.tile,ledger:g.ledger,...g.provisions?{provisions:g.provisions}:{},...g.freight?{freight:g.freight}:{},phase:'unloading',memberIds:g.members.map(p=>p.id),pendingPileIds:pending};
   // Personal carried soil keeps its original record across map entry.
   ensureFilth(local);refreshStock(local);flushSecondaryContext(root);
   log(root,'L’expédition entre sur le second site. Les deux cartes suivent la même horloge ; leurs habitants et biens restent distincts.');

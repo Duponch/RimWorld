@@ -1,3 +1,4 @@
+import {validGroupFreightHistoricalTransport} from '../sim/group-freight-save.ts';
 import {validDeteriorationHistoricalTransport,validDeteriorationTransport} from '../sim/deterioration-save.ts';
 import {validBurnApparelHistoricalTransport,validBurnApparelTransport} from '../sim/burn-apparel-save.ts';
 import {validGroupProvisionsHistoricalTransport} from '../sim/group-provisions-save.ts';
@@ -917,6 +918,7 @@ export class SnapshotDecoder {
     if(!validDeteriorationHistoricalTransport(packet,packet.world.schemaVersion))return resync('État de détérioration futur.');
     if(!validBurnApparelHistoricalTransport(packet,packet.world.schemaVersion))return resync('Recette de destruction de vêtement future.');
     if(!validGroupProvisionsHistoricalTransport(packet,packet.world.schemaVersion))return resync('Provisions mixtes de groupe futures.');
+    if(!validGroupFreightHistoricalTransport(packet.world,packet.world.schemaVersion,packet.kind==='delta'?packet.piles?.upserted:undefined))return resync('Fret collectif futur.');
     if(!validTorchHistoricalTransport(packet,packet.world.schemaVersion))return resync('Lampe-torche future.');
     if(!validPemmicanHistoricalTransport(packet,packet.world.schemaVersion))return resync('Contenu de pemmican futur.');
     if(!validTuqueCatalogueTransport(packet,packet.world.schemaVersion))return resync('Contenu de tuque futur.');
@@ -1182,6 +1184,9 @@ export class SnapshotDecoder {
     // properties to infer authority here. Public contexts ignore this fact.
     const geometryReuse:OwnedGeometryReuseWitness|undefined=structureIndices!==undefined&&this.current
       ?{kind:'sparse',previous:this.current,updatedOrdinals:structureIndices}:undefined;
+    // Old packets cannot introduce the new local inventory combination via
+    // retained piles and a changed visitor owner either. Current253 is O(1).
+    if(!validGroupFreightHistoricalTransport(next,next.schemaVersion))return resync('Fret collectif futur.');
     if(!this.validateDeteriorationTransport(next,geometryReuse))return resync('Horloge ou propriétaire de détérioration invalide.');
     if(!validTorchTransport(next,next.schemaVersion))return resync('Lampe-torche, carburant ou propriétaire de recharge invalide.');
     if(!validPemmicanCatalogueDomains(next,next.schemaVersion)||!validPemmicanResearchTransport(next,next.schemaVersion))return resync('Pemmican, recherche ou production future/invalide.');

@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V401 qualifié — [fret collectif bois/acier](group-freight-v401.md), schéma 253.** Sources finies au sol, quantité et masse explicites (400/500 g), porteurs et retour/dépôts physiques ; reprise active et anciens groupes conservés. Aucun fret individuel ni commerce de ces matières.
+
 **V396 qualifié — [matières sensibles et stockage protégé](deterioration-v396.md), schéma 252.** Dix matières existantes, perte de PV au sol exposé et protection des pièces sèches/étagères ; transport et recettes conservent les mêmes biens. Couverture limitée, cas ciblés, reprise et court parcours réel qualifiés ; aucune couverture universelle des objets.
 
 **V395 qualifié — [Brûler des vêtements](burn-apparel-v395.md), schéma 251.** Facture au feu de camp/crématorium existants, pièce entière autorisée, filtres PV/qualité, Transport et perte unique sans sortie ni combustible récupéré. Casque acier refusé, anciennes sauvegardes neutres ; perte unique et reprise au travail qualifiées.

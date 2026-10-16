@@ -1,3 +1,4 @@
+import {GROUP_FREIGHT_SCHEMA,freightGroup} from './group-freight.ts';
 import type { GroupState } from './group-state.ts';
 import type { GroupMassCapture } from './group-capture.ts';
 import type { CivilianPost,CommercialBuyLine } from './commercial-state.ts';
@@ -13,7 +14,8 @@ function captureGroupTrade(group:AwayGroup,e:GroupTradeEnvironment):CommercialOw
   if(group.phase!=='at-site'||group.tile!==e.siteTile||!e.siteOpen||!e.post||group.lastPersonalTick!==e.tick)return;
   const negotiator=bestGroupNegotiator(group.members);if(!negotiator)return;
   return {tick:e.tick,nextId:e.nextId,version:e.version,scope:`group:${group.id}:site:${e.siteTile}`,members:group.members,negotiator,items:group.items,post:e.post,mass:e.mass,
-    ledgerStamp:[group.baseline,group.ledger],pileCountElsewhere:e.pileCountElsewhere,inventoryLimit:256};
+    ...(e.version>=GROUP_FREIGHT_SCHEMA&&freightGroup(group)?{groupFreight:true as const}:{}),
+    ledgerStamp:[group.baseline,group.ledger,group.freight],pileCountElsewhere:e.pileCountElsewhere,inventoryLimit:256};
 }
 export function quoteGroupTrade(group:AwayGroup,e:GroupTradeEnvironment,direction:CommercialDirection,lines:readonly CommercialBuyLine[]):OwnerQuote {
   const context=captureGroupTrade(group,e);

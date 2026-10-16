@@ -1,10 +1,10 @@
+import {GROUP_FREIGHT_SCHEMA,freightGroup,groupItemMassGrams} from './group-freight.ts';
 /** Real-owner operation captures, never parallel saved state. */
 import {mixedGroupProvisions,freshGroupProvision} from './group-provisions.ts';
 import type { PlanetState } from './planet-state.ts';
 import type { GroupState, GroupDepartureBaseline } from './group-state.ts';
 import { GROUP_MAX_MEMBERS } from './group-state.ts';
 import type { Cell, MaterialPile, Pawn, World } from './types.ts';
-import { commercialItemMassGrams } from './commercial-mass.ts';
 
 export type PreparingGroup=Extract<GroupState,{memberIds:number[];manifest:unknown}>;
 export type AwayGroup=Extract<GroupState,{members:Pawn[]}>;
@@ -52,13 +52,13 @@ const allowedOwner=(pile:MaterialPile):boolean=>['inventory','equipment','appare
 const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 
 /** Actual items only; no descriptors with user-supplied eligible/unitMass fields. */
-export function captureGroupMass(members:readonly Pawn[],items:readonly MaterialPile[]):GroupMassCapture|undefined {
+export function captureGroupMass(members:readonly Pawn[],items:readonly MaterialPile[],freight=false):GroupMassCapture|undefined {
   if(members.length<1||members.length>GROUP_MAX_MEMBERS||new Set(members.map(p=>p.id)).size!==members.length)return undefined;
   const byId=new Map(members.map(p=>[p.id,{pawnId:p.id,grams:0,capacityGrams:35000}])),pileIds=new Set<number>(),counts=new Map<number,number>();
   for(const pile of items){
     if(pileIds.has(pile.id)||!Number.isSafeInteger(pile.id)||pile.id<1||!Number.isSafeInteger(pile.quantity)||pile.quantity<1
       ||!allowedOwner(pile)||!('pawnId' in pile.owner))return undefined;
-    pileIds.add(pile.id);const owner=byId.get(pile.owner.pawnId),unit=commercialItemMassGrams(pile.item);
+    pileIds.add(pile.id);const owner=byId.get(pile.owner.pawnId),unit=groupItemMassGrams(pile.item,freight);
     if(!owner||unit===undefined||pile.owner.type!=='inventory'&&pile.quantity!==1)return undefined;
     const count=(counts.get(owner.pawnId)??0)+1;if(count>256)return undefined;counts.set(owner.pawnId,count);
     owner.grams+=unit*pile.quantity;if(!Number.isSafeInteger(owner.grams))return undefined;
@@ -89,7 +89,7 @@ export function captureGroupCandidates(world:World,memberIds:readonly number[],a
     if(possession(pile,ids)){if(!allowedOwner(pile))return fail('temporary-cargo');items.push(pile);}
   }
   if(world.packed.some(p=>'pawnId' in p.owner&&ids.has(p.owner.pawnId)))return fail('packed-cargo');
-  const mass=captureGroupMass(members,items);if(!mass)return fail('unknown-mass');
+  const mass=captureGroupMass(members,items,world.schemaVersion>=GROUP_FREIGHT_SCHEMA&&(!world.group||freightGroup(world.group)));if(!mass)return fail('unknown-mass');
   if(mass.carriers.some(c=>c.grams>c.capacityGrams))return fail('overload');
   const reason=authority.namespaceReason(world,{additionalPiles:0,members,items});if(reason)return fail(reason);
   return {kind:'ready',capture:{tick:world.tick,namespace,members,items,sources,mass}};
@@ -107,17 +107,18 @@ export interface GroupDepartureCapture extends GroupCandidatesCapture {
   memberSignatures:readonly string[];
   itemSignatures:readonly string[];
 }
-function departureBaseline(items:readonly MaterialPile[],mixed:boolean,tick:number):GroupDepartureBaseline|undefined {
-  const result:GroupDepartureBaseline={...(mixed?{pemmican:0}:{}),food:0,silver:0,cargo:{cloth:0,'muffalo-wool':0},medicine:0,component:0};
+function departureBaseline(items:readonly MaterialPile[],mixed:boolean,tick:number,freight:boolean):GroupDepartureBaseline|undefined {
+  const result:GroupDepartureBaseline={...(freight?{freight:{wood:0,steel:0}}:{}),...(mixed?{pemmican:0}:{}),food:0,silver:0,cargo:{cloth:0,'muffalo-wool':0},medicine:0,component:0};
   for(const item of items){
     if(item.owner.type!=='inventory')continue;
     if(item.item==='survival-meal'){if(item.foodPoison)return undefined;result.food+=item.quantity;}
     else if(mixed&&item.item==='pemmican'){if(!freshGroupProvision(item,tick))return undefined;result.pemmican!+=item.quantity;}
+    else if(freight&&(item.item==='wood'||item.item==='steel'))result.freight![item.item]+=item.quantity;
     else if(item.item==='silver')result.silver+=item.quantity;
     else if(item.item==='cloth'||item.item==='muffalo-wool')result.cargo[item.item]+=item.quantity;
     else if(item.item==='medicine'||item.item==='component')result[item.item]+=item.quantity;
   }
-  return [result.pemmican??0,result.food,result.silver,result.cargo.cloth,result.cargo['muffalo-wool'],result.medicine,result.component].every(Number.isSafeInteger)?result:undefined;
+  return [result.freight?.wood??0,result.freight?.steel??0,result.pemmican??0,result.food,result.silver,result.cargo.cloth,result.cargo['muffalo-wool'],result.medicine,result.component].every(Number.isSafeInteger)?result:undefined;
 }
 
 /** Captures ONLY after all real exit contacts/arêtes and personal pass of tick.
@@ -140,7 +141,7 @@ export function captureGroupDeparture(world:World,group:PreparingGroup,authority
     if(!same(pawn,exit)||pawn.path.length||pawn.motion&&pawn.motion.end>world.tick||pawn.moveCooldown>0)return fail('exit-not-complete');
   }
   // Contact receipts are historical. Consumed on-map rations are not recreated.
-  const baseline=departureBaseline(capture.items,mixedGroupProvisions(group),world.tick);if(!baseline)return fail('departure-baseline');
+  const baseline=departureBaseline(capture.items,mixedGroupProvisions(group),world.tick,freightGroup(group));if(!baseline)return fail('departure-baseline');
   return {kind:'ready',capture:{...capture,baseline,exitCells:[...exits].map(([pawnId,cell])=>({pawnId,cell:{...cell}})),
     mapPawns:world.pawns,mapPiles:world.piles,nextThingId:world.nextId,
     memberSignatures:capture.members.map(p=>JSON.stringify(p)),itemSignatures:capture.items.map(p=>JSON.stringify(p))}};
@@ -160,7 +161,7 @@ export function groupDepartureCurrent(world:World,capture:GroupDepartureCapture)
 /** Root supplies clinical incapacity/rest semantics; mass derives only owners.
  * The caller then passes exactly capture.mass to planetCostContext. */
 export function captureGroupTravel(group:AwayGroup,assess:(pawn:Pawn)=>{incapable:boolean;restNeed:boolean}):GroupTravelCapture|undefined {
-  const mass=captureGroupMass(group.members,group.items);if(!mass)return undefined;
+  const mass=captureGroupMass(group.members,group.items,freightGroup(group));if(!mass)return undefined;
   const incapableIds:number[]=[],rest:boolean[]=[];
   for(const pawn of group.members){if(pawn.state==='dead'||pawn.health?.death)return undefined;const status=assess(pawn);
     if(status.incapable)incapableIds.push(pawn.id);rest.push(status.restNeed);}

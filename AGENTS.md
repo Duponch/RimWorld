@@ -4,11 +4,11 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V400, schéma 252 :** [Provenance et adoption CPU](docs/development/sleeping-provenance-v400.md) qualifiée : contrôle statique des structures exactement inchangées, tous contrôles dynamiques maintenus. Mesure Node ciblée, aucun gain FPS établi ; publication groupée suivante.
+**État V401, schéma 253 :** [Fret collectif bois/acier](docs/gameplay/group-freight-v401.md) qualifié : sélection/masses, vrais chargements, reprise active et retour/dépôts. Anciens groupes conservés ; publication groupée avec V400 suivante.
 
 **Dernière publication V398–V399 :** [Dangers hors carte](docs/gameplay/remote-danger-alerts-v398.md) et [première réduction CPU](docs/development/structure-adoption-v399.md), produit7ee3a889/déploiement8a146d54,134 réponses HTTPS exactes.
 
-**Ordre courant :** [Parcours Aulnes V397](docs/gameplay/aulnes-multimap-v397.md) clos partiel : aller-retour/travaux/revisite acquis, branche21483 conservée avec Noé/Iris/Rose à terre sur rage animale non remontée hors carte. Alertes corrigées V398, coûts ciblés réduits V399/V400. Revenir au chargement/retour du second site et aux manques joueurs concrets ; ne pas enchaîner automatiquement des certificats CPU. Mesures restantes conservées, aucune fluidité générale promise. Ne pas prolonger la campagne ni rejouer un état favorable pour fabriquer un vert. Aulnes publiques V394 inchangées, terrain continu non prévu. Voir [la feuille de route](docs/ROADMAP.md).
+**Ordre courant :** [Parcours Aulnes V397](docs/gameplay/aulnes-multimap-v397.md) clos partiel : aller-retour/travaux/revisite acquis, branche21483 conservée avec Noé/Iris/Rose à terre sur rage animale non remontée hors carte. Alertes corrigées V398, coûts ciblés réduits V399/V400. Fret collectif bois/acier qualifié V401 ; poursuivre les manques joueurs concrets des voyages et de la colonie, sans enchaîner automatiquement des certificats CPU. Mesures restantes conservées, aucune fluidité générale promise. Ne pas prolonger la campagne ni rejouer un état favorable pour fabriquer un vert. Aulnes publiques V394 inchangées, terrain continu non prévu. Voir [la feuille de route](docs/ROADMAP.md).
 
 ## Méthode de livraison
 

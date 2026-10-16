@@ -10,11 +10,26 @@ import {BLOOD_UNIT} from '../src/sim/injury-rules.ts';
 import {commercialCamp} from './helpers/commercial-v193.ts';
 import {preparedCassandraExpedition} from './scenarios/secondary-incidents-v379.ts';
 import type {AwayGroup,PreparingGroup} from '../src/sim/group-capture.ts';
-import type {World} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type World} from '../src/sim/types.ts';
+import {createDeteriorationState} from '../src/sim/deterioration-content.ts';
 
 const flag=()=>({revision:1 as const,pemmicanLoadedUnits:0,pemmicanConsumedUnits:0,pemmicanSpoiledUnits:0});
 const raw=(v:unknown)=>v as Record<string,any>;
-const as249=(w:World)=>{raw(w).schemaVersion=249;return w;};
+/** Name the old format before its positive baseline: prospective permissions
+ * and map clocks were absent, not erased by a permissive migration. */
+const as249=(w:World)=>{
+  for(const map of [w,w.secondarySite?.map])if(map){
+    delete raw(map).deterioration;
+    if(map.group){delete map.group.freight;if('baseline' in map.group)delete map.group.baseline.freight;}
+  }
+  raw(w).schemaVersion=249;return w;
+};
+function migratedExpected(old:World):World {
+  const expected=structuredClone(old);raw(expected).schemaVersion=SCHEMA_VERSION;
+  expected.deterioration=createDeteriorationState(expected.seed,expected.tick);
+  if(expected.secondarySite)expected.secondarySite.map.deterioration=createDeteriorationState(expected.secondarySite.map.seed,expected.tick);
+  return expected;
+}
 function formation(){
   const {world:w}=commercialCamp(32),members=w.pawns.slice(0,2);
   addMaterial(w,'food',2,{type:'inventory',pawnId:members[0]!.id},'survival-meal');
@@ -42,12 +57,12 @@ function refuses(w:World,mutate:(bad:World)=>void){
   expect(decoder.adopt(structuredClone(encoder.encode(w,0,0))).status).toBe('applied');
 }
 
-test('249 group and pemmican possessions migrate literally, and both maps validate before the sole250 bump',()=>{
+test('249 group and pemmican possessions remain literal through current migration, with prospective clocks on both maps',()=>{
   const old=legacy(),before=structuredClone(old),text=JSON.stringify(old),next=deserializeWorld(text);
-  expect(next).toEqual({...before,schemaVersion:250});expect(JSON.stringify(old)).toBe(text);expect(next.group?.provisions).toBeUndefined();
+  expect(next.schemaVersion).toBe(SCHEMA_VERSION);expect(next).toEqual(migratedExpected(before));expect(JSON.stringify(old)).toBe(text);expect(next.group?.provisions).toBeUndefined();
   expect((next.group as AwayGroup).items.some(p=>p.item==='pemmican')).toBe(true);expect(validateWorld(next)).toEqual([]);
   const {w}=preparedCassandraExpedition();as249(w);const both=structuredClone(w);
-  expect(deserializeWorld(JSON.stringify(w))).toEqual({...both,schemaVersion:250});
+  expect(deserializeWorld(JSON.stringify(w))).toEqual(migratedExpected(both));
   raw(w.secondarySite!.map).group={provisions:flag()};expect(()=>deserializeWorld(JSON.stringify(w))).toThrow(/provision/i);
 });
 
@@ -74,7 +89,12 @@ test('250 requires the exact four-field marker and paired away baseline while un
   refuses(w,bad=>{delete raw(bad.group!.provisions).pemmicanSpoiledUnits;});
   refuses(w,bad=>{delete (bad.group as AwayGroup).baseline.pemmican;});
   refuses(w,bad=>{delete bad.group!.provisions;});
-  const unmarked=legacy();raw(unmarked).schemaVersion=250;expect(validateWorld(unmarked)).toEqual([]);
+  const historical=legacy();raw(historical).schemaVersion=250;
+  expect(validGroupProvisionsShape(historical.group,250)).toBe(true);
+  expect(new SnapshotDecoder().adopt(structuredClone(new SnapshotEncoder().encode(historical,0,0))).status).toBe('applied');
+  const unmarked=deserializeWorld(JSON.stringify(historical));expect(unmarked).toEqual(migratedExpected(historical));
+  expect(unmarked.group!.provisions).toBeUndefined();expect((unmarked.group as AwayGroup).baseline.pemmican).toBeUndefined();
+  expect(validateWorld(unmarked)).toEqual([]);
   expect(validGroupProvisionsShape({provisions:undefined},250)).toBe(false);
 });
 
@@ -113,6 +133,11 @@ test('local collective pemmican inventory is prospective in RAW and both Decoder
   expect(()=>deserializeWorld(JSON.stringify(w))).toThrow(/inventory ownership/i);
   const delta=structuredClone(encoder.encode(w,0,0));expect(delta.kind).toBe('delta');expect(decoder.adopt(delta).status).toBe('resync');expect(first.world).toEqual(before);
   expect(new SnapshotDecoder().adopt(structuredClone(new SnapshotEncoder().encode(w,0,0))).status).toBe('resync');
-  raw(w).schemaVersion=250;expect(validateWorld(w)).toEqual([]);expect(deserializeWorld(serializeWorld(w))).toEqual(w);
+  raw(w).schemaVersion=250;
+  // Exact historical250 counterpart still admits the inventory in Decoder.
   expect(new SnapshotDecoder().adopt(structuredClone(new SnapshotEncoder().encode(w,0,0))).status).toBe('applied');
+  const upgraded=deserializeWorld(JSON.stringify(w));expect(upgraded.schemaVersion).toBe(SCHEMA_VERSION);
+  expect(upgraded).toEqual(migratedExpected(w));expect(validateWorld(upgraded)).toEqual([]);
+  expect(deserializeWorld(serializeWorld(upgraded))).toEqual(upgraded);
+  expect(new SnapshotDecoder().adopt(structuredClone(new SnapshotEncoder().encode(upgraded,0,0))).status).toBe('applied');
 });

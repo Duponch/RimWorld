@@ -4,6 +4,7 @@ import { addMaterial,refreshStock } from '../src/sim/materials.ts';
 import { previewGroupFormation,groupTradeQuote } from '../src/sim/group-authority.ts';
 import { commercialCamp } from './helpers/commercial-v193.ts';
 import { SCHEMA_VERSION,type Command,type World } from '../src/sim/types.ts';
+import {createDeteriorationState} from '../src/sim/deterioration-content.ts';
 
 /** Prepared sources and healthy adults only. Commands and ordinary ticks own
  * all pickup, movement, departure, physiology, trade and unloading below. */
@@ -105,13 +106,16 @@ test('195 validates before the neutral migration chain and refuses future JSON o
   // These current default permissions were absent from the declared 195 witness.
   for(const policy of w.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='pemmican'&&item!=='kibble'&&item!=='nutrient-paste-meal');
   w.apparelPolicies=w.apparelPolicies!.map(policy=>({...policy,allowedItems:policy.allowedItems.filter(item=>item!=='recon-armor'&&item!=='cloth-tuque'&&item!=='muffalo-wool-tuque')}));
+  delete w.deterioration;
+  if(w.group){delete w.group.freight;if('baseline' in w.group)delete w.group.baseline.freight;}
   (w as unknown as {schemaVersion:number}).schemaVersion=195;
   const before=JSON.stringify(w),migrated=deserializeWorld(before);
   expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
   // V217 already extended these three untouched original profiles; this old
   // migration is literal history, not a new permission granted by V391.
   const expected=structuredClone(w);for(const policy of expected.foodPolicies)if(policy.id<=3)policy.allowed.push('nutrient-paste-meal');
-  expect({...migrated,schemaVersion:195}).toEqual(expected);expect(JSON.stringify(w)).toBe(before);
+  expected.deterioration=createDeteriorationState(w.seed,w.tick);
+  expect(migrated).toEqual({...expected,schemaVersion:SCHEMA_VERSION});expect(JSON.stringify(w)).toBe(before);
   for(const key of ['planet','group','groupLosses']){
     const bad=structuredClone(w) as World&Record<string,unknown>;bad[key]=key==='groupLosses'?[]:null;
     expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(key==='group'?/Future human sleeping spot content/:/Historical schema contains future world\/group fields/);

@@ -106,6 +106,7 @@ test.each([false,true])('historical 195 accepts true absence and rejects own fut
   const world=withoutFodderDefaults(createWorld(42,16,16));
   for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='nutrient-paste-meal'&&item!=='pemmican');
   world.apparelPolicies=world.apparelPolicies!.map(policy=>({...policy,allowedItems:policy.allowedItems.filter(item=>item!=='recon-armor'&&item!=='cloth-tuque'&&item!=='muffalo-wool-tuque')}));
+  delete world.deterioration; // Prospective252 clock is absent from the positive195 baseline.
   (world as unknown as {schemaVersion:number}).schemaVersion=195;
   delete world.planet;delete world.group;delete world.groupLosses;
   const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder(),before=adopt(decoder,structuredClone(encoder.encode(world,0,0))),frozen=structuredClone(before);

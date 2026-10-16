@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 252.** [Consolidation CPU V400](development/sleeping-provenance-v400.md) qualifiée, publication groupée suivante ; aucune nouvelle mécanique.
+**16 octobre 2026 — schéma 253.** [Fret collectif V401](gameplay/group-freight-v401.md) qualifié : bois/acier pris au contact et rapportés du second site ; reprise active exacte. Publication groupée avec [CPU V400](development/sleeping-provenance-v400.md) suivante.
 
 **Dernière production V398–V399.** [Alertes V398](gameplay/remote-danger-alerts-v398.md) et [CPU V399](development/structure-adoption-v399.md) qualifiés ; V398–V399 publiés ensemble en 8a146d54, produit 7ee3a889, 134 réponses HTTPS exactes.
 
@@ -8,7 +8,7 @@
 
 ## Prochaines corrections issues du parcours réel
 
-[Les Aulnes V397](gameplay/aulnes-multimap-v397.md) : aller-retour, travaux et revisite du même site observés ; garde finale rouge sur trois habitants blessés à terre au foyer. Les alertes rage animale/incapacité sont corrigées V398. V399/V400 réduisent deux lectures de structures inchangées, après profil ciblé et comparaison CPU bornée. Aucun gain FPS annoncé. Revenir au chargement/retour du second site et choisir le prochain manque joueur concret ; pas de succession automatique de caches par domaine. Garder la branche21483 et les Aulnes publiques V394 distinctes ; pas de nouvelle campagne gagnée exigée pour avancer.
+[Les Aulnes V397](gameplay/aulnes-multimap-v397.md) : aller-retour, travaux et revisite du même site observés ; garde finale rouge sur trois habitants blessés à terre au foyer. Les alertes rage animale/incapacité sont corrigées V398. V399/V400 réduisent deux lectures de structures inchangées, après profil ciblé et comparaison CPU bornée. Aucun gain FPS annoncé. Le chargement/retour de bois et acier est qualifié V401. Poursuivre les manques joueurs concrets des voyages et de la colonie ; pas de succession automatique de caches par domaine. Garder la branche21483 et les Aulnes publiques V394 distinctes ; pas de nouvelle campagne gagnée exigée pour avancer.
 
 ## Priorité actuelle
 

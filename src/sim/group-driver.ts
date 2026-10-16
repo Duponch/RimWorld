@@ -135,7 +135,7 @@ function returnGroup(w:World,g:AwayGroup):boolean {
   for(const {pawn,cell} of placements){pawn.x=cell.x;pawn.z=cell.z;pawn.path=[];pawn.moveCooldown=0;pawn.planCooldown=0;delete pawn.motion;if(pawn.state!=='downed')pawn.state='idle';}
   w.pawns.push(...g.members);w.piles.push(...g.items);
   const pending=g.items.filter(i=>i.owner.type==='inventory').map(i=>i.id);
-  if(pending.length)w.group={id:g.id,startedAt:g.startedAt,destination:g.destination,ledger:g.ledger,...g.provisions?{provisions:g.provisions}:{},phase:'unloading',memberIds:g.members.map(p=>p.id),pendingPileIds:pending};else delete w.group;
+  if(pending.length)w.group={id:g.id,startedAt:g.startedAt,destination:g.destination,ledger:g.ledger,...g.provisions?{provisions:g.provisions}:{},...g.freight?{freight:g.freight}:{},phase:'unloading',memberIds:g.members.map(p=>p.id),pendingPileIds:pending};else delete w.group;
   // Reinsert the real owners together before the local physical drop. A full
   // floor keeps the same disabled weapon with equipmentDropPending for retry.
   for(const {pawn} of placements)dropIncapacitatedEquipment(w,pawn);

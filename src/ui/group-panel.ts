@@ -5,6 +5,7 @@ import type {SecondarySiteCommand} from '../sim/secondary-site-state.ts';
 import type {MaterialPile,Pawn,World} from '../sim/types.ts';
 import {TICKS_PER_DAY} from '../sim/types.ts';
 import {ITEM_DEFINITIONS} from '../sim/items.ts';
+import {GROUP_FREIGHT_SCHEMA,freightGroup,groupItemMassGrams} from '../sim/group-freight.ts';
 import {biologicalYears} from '../sim/human-age.ts';
 import type {CommercialBuyLine} from '../sim/commercial-state.ts';
 import {SimulationRequestError,type SimulationRequestStatus} from '../bridge/protocol.ts';
@@ -134,6 +135,13 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
   let busy=false,unknown:string|undefined,stopped:string|undefined,hostBlocked:string|undefined,generation=0,disposed=false;
   let plan:PlanPreview|undefined,routePreview:RoutePreview|undefined,previewTick:number|undefined;
   const selected=new Set<number>(),sources=new Map<number,string>(),buys=new Map<number,string>(),sells=new Map<number,string>(),waiting=new Map<number,string>();
+  function lineMass(item:MaterialPile['item'],quantity:number):string {
+    const version=snapshot?.world.schemaVersion??0,freight=snapshot?.group?freightGroup(snapshot.group):version>=GROUP_FREIGHT_SCHEMA;
+    const unit=groupItemMassGrams(item,freight,version);
+    if(unit===undefined)return 'Masse indisponible';
+    if(!Number.isSafeInteger(quantity)||quantity<0||!Number.isSafeInteger(unit*quantity))return 'Quantité à corriger';
+    return kg(unit*quantity);
+  }
   const buttons=new Map<GroupAction,HTMLButtonElement>([['adopt',adopt],['start',start],['cancel',cancel],['pause',pause],['route',change],['return',back],['unload',unload]]);
   const lockReason=()=>stopped??unknown??hostBlocked??(busy?'Une commande est en cours.':waiting.size?[...waiting.values()].join(' '):undefined);
   function invalidatePreview(){plan=routePreview=undefined;previewTick=undefined;}
@@ -179,24 +187,24 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
       const load=facts?.mass?.byMember.find(m=>m.pawnId===p.id)??(plan?.ok?plan.mass.byMember.find(m=>m.pawnId===p.id):undefined);cells[3]!.textContent=load?`${kg(load.grams)} / ${kg(load.capacityGrams)}`:'Charge non calculée';}};
   });
   function quantityTable(box:HTMLElement,kind:'source'|'buy'|'sell',values:Map<number,string>){
-    return paged<SourceChoice|TradeChoice>(box,['Pile réelle','Position / prix','Disponible','Quantité'],x=>x.pile.id,()=>{
-      const {row,cells}=rowCells(4),input=document.createElement('input'),remove=document.createElement('button');input.type='number';input.min='0';input.step='1';remove.type='button';remove.textContent='Retirer';remove.className='group-remove-line';cells[3]!.append(input,remove);let current:SourceChoice|TradeChoice;
+    return paged<SourceChoice|TradeChoice>(box,['Pile réelle','Position / prix','Disponible','Quantité',...(kind==='source'?['Masse choisie']:[])],x=>x.pile.id,()=>{
+      const {row,cells}=rowCells(kind==='source'?5:4),input=document.createElement('input'),remove=document.createElement('button');input.type='number';input.min='0';input.step='1';remove.type='button';remove.textContent='Retirer';remove.className='group-remove-line';cells[3]!.append(input,remove);let current:SourceChoice|TradeChoice;
       input.addEventListener('input',()=>{if(lockReason()||current.reason||kind==='source'&&snapshot?.group){input.value=values.get(current.pile.id)??'';return;}values.set(current.pile.id,input.value);if(kind==='source')invalidatePreview();renderDraft();},{signal:abort.signal});
       remove.addEventListener('click',()=>{if(lockReason()||kind==='source'&&snapshot?.group)return;values.delete(current.pile.id);input.value='';if(kind==='source')invalidatePreview();renderDraft();},{signal:abort.signal});
       return {row,paint(value){current=value;const pile=value.pile;row.dataset.groupPile=String(pile.id);cells[0]!.textContent=`${itemLabel(pile)} · #${pile.id}`;
         cells[1]!.textContent='reserved' in value?('owner' in pile&&pile.owner.type==='ground'?`${pile.owner.x}, ${pile.owner.z} · ${value.reserved} réservés`:'Propriétaire de sol absent'):`${value.unitPrice} argent / unité`;
-        cells[2]!.textContent=String(value.available);if(document.activeElement!==input)input.value=values.get(pile.id)??'';input.max=String(value.available);input.readOnly=!!lockReason()||!!value.reason||kind==='source'&&!!snapshot?.group;input.setAttribute('aria-label',`${kind==='buy'?'Acheter':kind==='sell'?'Vendre':'Charger'} ${itemLabel(pile)} de la pile ${pile.id}`);setTooltip(input,{body:lockReason()??value.reason??(kind==='source'?'La quantité sera prise au contact dans cette pile.':'Le devis courant sera vérifié avant l’échange.')});remove.hidden=!values.has(pile.id);remove.setAttribute('aria-label',`Retirer la quantité choisie de la pile ${pile.id}`);available(remove,lockReason()??(kind==='source'&&snapshot?.group?'Le chargement engagé est confirmé.':undefined));}};
+        cells[2]!.textContent=String(value.available);if(kind==='source')cells[4]!.textContent=`Unité : ${lineMass(pile.item,1)} · Choisi : ${lineMass(pile.item,Number(values.get(pile.id)??'0'))}`;if(document.activeElement!==input)input.value=values.get(pile.id)??'';input.max=String(value.available);input.readOnly=!!lockReason()||!!value.reason||kind==='source'&&!!snapshot?.group;input.setAttribute('aria-label',`${kind==='buy'?'Acheter':kind==='sell'?'Vendre':'Charger'} ${itemLabel(pile)} de la pile ${pile.id}`);setTooltip(input,{body:lockReason()??value.reason??(kind==='source'?'La quantité sera prise au contact dans cette pile.':'Le devis courant sera vérifié avant l’échange.')});remove.hidden=!values.has(pile.id);remove.setAttribute('aria-label',`Retirer la quantité choisie de la pile ${pile.id}`);available(remove,lockReason()??(kind==='source'&&snapshot?.group?'Le chargement engagé est confirmé.':undefined));}};
     },20);
   }
   const sourceTable=quantityTable(sourceBox,'source',sources);
-  const manifestTable=paged<{index:number;line:GroupSource}>(manifest,['Source confirmée','Porteur','Prise réelle'],m=>m.index,()=>{
-    const {row,cells}=rowCells(3);return {row,paint({line:m}){
+  const manifestTable=paged<{index:number;line:GroupSource}>(manifest,['Source confirmée','Porteur','Prise réelle','Masse'],m=>m.index,()=>{
+    const {row,cells}=rowCells(4);return {row,paint({line:m}){
       const carrier=members(snapshot!).find(p=>p.id===m.carrierId);if(!carrier)throw Error('Porteur du manifeste absent.');
       cells[0]!.textContent=`${m.quantity} ${ITEM_DEFINITIONS[m.item].label} · #${m.pileId}`;
-      cells[1]!.textContent=carrier.name;cells[2]!.textContent=m.carriedPileId!==undefined?`Pile prise #${m.carriedPileId}`:'Prise en attente';
+      cells[1]!.textContent=carrier.name;cells[2]!.textContent=m.carriedPileId!==undefined?`Pile prise #${m.carriedPileId}`:'Prise en attente';cells[3]!.textContent=lineMass(m.item,m.quantity);
     }};
   },20);
-  const goodsTable=paged<MaterialPile>(possessionsBox,['Bien réel','Quantité','Propriétaire'],p=>p.id,()=>{const {row,cells}=rowCells(3);return {row,paint(p){cells[0]!.textContent=`${itemLabel(p)} · #${p.id}`;cells[1]!.textContent=String(p.quantity);if(!('pawnId' in p.owner))throw Error('Un bien porté a perdu son propriétaire.');const ownerId=p.owner.pawnId,owner=(snapshot!.group?members(snapshot!):snapshot!.world.pawns.filter(m=>selected.has(m.id))).find(m=>m.id===ownerId);if(!owner)throw Error('Propriétaire de possession absent des personnes affichées.');cells[2]!.textContent=`${owner.name} · ${p.owner.type==='inventory'?'Inventaire':p.owner.type==='equipment'?'Équipement':p.owner.type==='apparel'?'Vêtement':'Portage'}`;}};},20);
+  const goodsTable=paged<MaterialPile>(possessionsBox,['Bien réel','Quantité','Propriétaire','Masse'],p=>p.id,()=>{const {row,cells}=rowCells(4);return {row,paint(p){cells[0]!.textContent=`${itemLabel(p)} · #${p.id}`;cells[1]!.textContent=String(p.quantity);cells[3]!.textContent=lineMass(p.item,p.quantity);if(!('pawnId' in p.owner))throw Error('Un bien porté a perdu son propriétaire.');const ownerId=p.owner.pawnId,owner=(snapshot!.group?members(snapshot!):snapshot!.world.pawns.filter(m=>selected.has(m.id))).find(m=>m.id===ownerId);if(!owner)throw Error('Propriétaire de possession absent des personnes affichées.');cells[2]!.textContent=`${owner.name} · ${p.owner.type==='inventory'?'Inventaire':p.owner.type==='equipment'?'Équipement':p.owner.type==='apparel'?'Vêtement':'Portage'}`;}};},20);
   const tradeStatus=document.createElement('p');tradeBox.append(tradeStatus);const purchaseBox=section('Acheter',tradeBox),saleBox=section('Vendre',tradeBox),buyTable=quantityTable(purchaseBox,'buy',buys),sellTable=quantityTable(saleBox,'sell',sells);
   const buyTotal=document.createElement('p'),sellTotal=document.createElement('p'),buyButton=document.createElement('button'),sellButton=document.createElement('button');buyButton.type=sellButton.type='button';buyButton.textContent='Confirmer les achats';sellButton.textContent='Confirmer les ventes';buyButton.dataset.groupAction='buy';sellButton.dataset.groupAction='sell';purchaseBox.append(buyTotal,buyButton);saleBox.append(sellTotal,sellButton);buttons.set('buy',buyButton);buttons.set('sell',sellButton);
   let shownBuy:string|undefined,shownSell:string|undefined;
@@ -284,7 +292,7 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
         if(next.group&&!captured.mass)throw Error('La projection de masse du groupe est manquante.');
         facts=captured;globe.setPlanet(next.planet);origin.textContent=next.planet?`Origine : ${captured.originLabel} · ${planetTileLabel(next.planet,captured.originTile)}`:'La géographie persistée doit être adoptée pour préparer un voyage.';
         const remote=next.world.expeditionSite,elsewherePeople=next.world.campaignPeople?.filter(p=>p.status==='away')??[];
-        intro.textContent=remote?'Second site persistant. Les travaux ordinaires et les besoins continuent sur les deux cartes. Pour rentrer, choisissez tous les membres vivants, les provisions au sol, puis formez la caravane vers le foyer.':'Choisissez les personnes et les biens réels. Rassemblement, chargement et sortie se déroulent sur leur carte.';
+        intro.textContent=remote?'Second site persistant. Les travaux ordinaires et les besoins continuent sur les deux cartes. Pour rentrer, choisissez tous les membres vivants, les provisions et le fret au sol, puis formez la caravane vers le foyer.':'Choisissez les personnes et les biens réels. Rassemblement, chargement et sortie se déroulent sur leur carte.';
         start.textContent=remote?'Former la caravane de retour':'Former le groupe';
         elsewhere.textContent=elsewherePeople.length?'Sur l’autre carte, indisponibles ici : '+elsewherePeople.map(p=>p.name).join(', ')+'.':'';
         status.textContent=phaseLabel(next);stop.textContent=stopLabel(next);stop.hidden=!stop.textContent;

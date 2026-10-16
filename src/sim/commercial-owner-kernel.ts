@@ -1,3 +1,4 @@
+import {groupItemMassGrams} from './group-freight.ts';
 import { COMMERCIAL_MAX_STOCK,COMMERCIAL_RECEIPTS,emptyCommercialTextiles,isCommercialTextile,type CivilianPost,type CommercialBuyLine,type CommercialProduct,type CommercialTextile,type CommercialStockPile } from './commercial-state.ts';
 import { validCivilianPostShape } from './commercial-post-rules.ts';
 import { commercialItemMassGrams,type CommercialMass } from './commercial-mass.ts';
@@ -11,6 +12,8 @@ export interface CommercialOwnerContext {
   members:readonly Pawn[];negotiator:Pawn;items:readonly MaterialPile[];post:CivilianPost;
   /** Same captured object used by route/overload for this decision phase. */
   mass:CommercialMass;
+  /** Internal collective253 freight authority only; never a traded good. */
+  groupFreight?:true;
   /** Channel-specific contact/baseline/counter authority; quotes bind to it. */
   ledgerStamp:unknown;
   pileCountElsewhere:number;inventoryLimit:number;
@@ -117,7 +120,7 @@ export function draftOwnerTrade(c:CommercialOwnerContext,q:Extract<OwnerQuote,{o
   const inventory=items.filter(p=>p.owner.type==='inventory');
   if(c.pileCountElsewhere+items.length>32768||post.stock.length>COMMERCIAL_MAX_STOCK||inventory.length>c.inventoryLimit*c.members.length||c.members.some(p=>inventory.filter(i=>i.owner.type==='inventory'&&i.owner.pawnId===p.id).length>c.inventoryLimit)||!validCivilianPostShape(post,c.tick,nextId,c.version))return null;
   // Verify the final delta from actual units, not a second caller-owned mass capture.
-  const grams=(piles:readonly MaterialPile[])=>piles.reduce((sum,p)=>{const unit=commercialItemMassGrams(p.item);return unit===undefined?NaN:sum+unit*p.quantity;},0);
+  const grams=(piles:readonly MaterialPile[])=>piles.reduce((sum,p)=>{const unit=groupItemMassGrams(p.item,c.groupFreight===true,c.version);return unit===undefined?NaN:sum+unit*p.quantity;},0);
   if(c.mass.grams+grams(items)-grams(c.items)!==q.mass.grams)return null;
   const ids=new Set<number>();
   for(const pile of [...items,...post.stock])if(!integer(pile.id,1)||pile.id>=nextId||ids.has(pile.id)||!integer(pile.quantity,1))return null;else ids.add(pile.id);
