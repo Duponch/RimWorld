@@ -9,7 +9,7 @@ import { serviceCell } from './service-reservations.ts';
 import { spikeTrapPlacementAllowed } from './spike-trap-state.ts';
 import { isShelfKind,shelfFixedAccepts } from './shelf-storage.ts';
 
-export const isConstruction = (job: Pick<Job,'kind'>): boolean => job.kind==='install'||job.kind==='lay-floor'||job.kind in STRUCTURE_DEFINITIONS;
+export const isConstruction = (job: Pick<Job,'kind'>): boolean => job.kind==='build-bridge'||job.kind==='install'||job.kind==='lay-floor'||job.kind in STRUCTURE_DEFINITIONS;
 export const containsCell = (job: Job, cell: Cell): boolean => footprintCells(job).some(c=>c.x===cell.x&&c.z===cell.z);
 /** Old saves are validated with the old solid-plan contract before migration. */
 export const jobBlocksTransit = (world: World, job: Job): boolean => world.schemaVersion<16&&(job.kind==='wall'||job.kind==='table');
@@ -50,7 +50,7 @@ export function constructionObstruction(world: World, job: Job):ConstructionObst
 /** A frame is traversable. Completion must not materialize a building across
  * a person, an active edge (including its diagonal corner), or a service. */
 export function constructionSiteFree(world: World, job: Job, workerId?: number, obstacle=constructionObstruction(world,job)): boolean {
-  if(obstacle.plant||obstacle.pile||obstacle.pack||!marshSupportsFootprint(world,footprintCells(job)))return false;
+  if(obstacle.plant||obstacle.pile||obstacle.pack||job.kind!=='build-bridge'&&!marshSupportsFootprint(world,footprintCells(job),job.kind==='install'?{kind:job.furniture?.kind??'install',material:world.packed.find(p=>p.building.id===job.furniture?.structureId)?.building.material??world.structures.find(s=>s.id===job.furniture?.structureId)?.material}:job))return false;
   if((job.furniture?.kind??job.kind)==='spike-trap'&&!spikeTrapPlacementAllowed(
     {...world,jobs:world.jobs.filter(j=>j!==job)},job,job.furniture?.structureId))return false;
   const cells=footprintCells(job);

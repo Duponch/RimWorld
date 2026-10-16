@@ -1,3 +1,4 @@
+import {validBridgeTile,validateBridgeTransport} from '../sim/bridge-rules.ts';
 import {validVentTransport} from '../sim/vent.ts';
 import {validTundraTransport} from '../sim/tundra-save.ts';
 import {validCampaignPresentation} from '../sim/secondary-site-presentation.ts';
@@ -991,7 +992,7 @@ export class SnapshotDecoder {
     if((message.world.schemaVersion<181&&Object.hasOwn(message.world,'rainElectrical'))
       ||!validRainElectrical(message.world.rainElectrical,message.world.schemaVersion,message.world))return resync('Exposition électrique aux précipitations invalide pour ce snapshot.');
     if(!validPodRescueTransportBindings(message.world))return resync('Secours civil invalide pour ce snapshot.');
-    if(message.kind==='checkpoint'&&(!Array.isArray(message.world.tiles)||message.world.tiles.some(tile=>!tile||!validMarshTile(tile,message.world.schemaVersion)||!validOre(tile,message.world.schemaVersion)||!validMiningDamage(tile,message.world.schemaVersion)||tile.floor==='sterile-tile'&&!sterileMaterialsUnlocked(message.world))))return resync('Rendement ou dégâts miniers invalides pour ce snapshot.');
+    if(message.kind==='checkpoint'&&(!Array.isArray(message.world.tiles)||message.world.tiles.some(tile=>!tile||!validMarshTile(tile,message.world.schemaVersion)||!validBridgeTile(tile,message.world.schemaVersion)||!validOre(tile,message.world.schemaVersion)||!validMiningDamage(tile,message.world.schemaVersion)||tile.floor==='sterile-tile'&&!sterileMaterialsUnlocked(message.world))))return resync('Rendement ou dégâts miniers invalides pour ce snapshot.');
     let next: World;
     let planetCheck: PlanetPreparation | undefined;
     let reindexResources = message.kind === 'checkpoint';
@@ -1015,15 +1016,15 @@ export class SnapshotDecoder {
       let tiles = previous.tiles;
       if (message.tiles?.length) {
         const touched = new Set<number>();
-        if(message.tiles.some(tile=>!Array.isArray(tile)||tile.length>(message.world.schemaVersion>=239?8:message.world.schemaVersion>=186?7:6)))return resync('Future snow/terrain tuple.');
+        if(message.tiles.some(tile=>!Array.isArray(tile)||tile.length>(message.world.schemaVersion>=247?9:message.world.schemaVersion>=239?8:message.world.schemaVersion>=186?7:6)))return resync('Future snow/terrain tuple.');
         if(message.world.schemaVersion<186&&message.tiles.some(tile=>tile.length>6))return resync('Rendement minier futur dans ce delta.');
-        for (const [index, terrain, stone, miningDamage, ore, floor, miningYield, snowDepth] of message.tiles) {
-          if (snowDepth!==undefined&&(message.world.schemaVersion<239||typeof snowDepth!=='number'||!Number.isFinite(snowDepth)||snowDepth<=0||snowDepth>1) || !Number.isInteger(index) || index < 0 || index >= tiles.length || touched.has(index)
+        for (const [index, terrain, stone, miningDamage, ore, floor, miningYield, snowDepth, bridge] of message.tiles) {
+          if (bridge!==undefined&&(message.world.schemaVersion<247||bridge!==true||terrain!=='marsh'||floor!==undefined) || snowDepth!==undefined&&(message.world.schemaVersion<239||typeof snowDepth!=='number'||!Number.isFinite(snowDepth)||snowDepth<=0||snowDepth>1) || !Number.isInteger(index) || index < 0 || index >= tiles.length || touched.has(index)
             || !['grass', 'soil', 'water', 'rock', ...(message.world.schemaVersion>=28?['rough-stone']:[]), ...(message.world.schemaVersion>=83?['rich-soil','gravel']:[]),...(message.world.schemaVersion>=246?['marsh']:[])].includes(terrain) || floor!==undefined&&(message.world.schemaVersion<89||!isFloorKind(floor)||floor==='sterile-tile'&&!sterileMaterialsUnlocked(message.world)||terrain==='water'||terrain==='rock'||terrain==='marsh') || !validOre({terrain,ore},message.world.schemaVersion) || !validMiningDamage({terrain,stone,miningDamage,ore,...miningYield===undefined?{}:{miningYield}},message.world.schemaVersion) || !validStoneIdentity(stone, terrain, message.world.schemaVersion)) return resync('Delta de terrain invalide.');
           touched.add(index);
         }
         tiles = tiles.slice();
-        for (const [index, terrain, stone, miningDamage, ore, floor, miningYield, snowDepth] of message.tiles) tiles[index] = {terrain,...stone===undefined?{}:{stone},...miningDamage===undefined?{}:{miningDamage},...ore===undefined?{}:{ore},...floor===undefined?{}:{floor},...miningYield===undefined?{}:{miningYield},...snowDepth===undefined?{}:{snowDepth}};
+        for (const [index, terrain, stone, miningDamage, ore, floor, miningYield, snowDepth, bridge] of message.tiles) tiles[index] = {terrain,...stone===undefined?{}:{stone},...miningDamage===undefined?{}:{miningDamage},...ore===undefined?{}:{ore},...floor===undefined?{}:{floor},...miningYield===undefined?{}:{miningYield},...snowDepth===undefined?{}:{snowDepth},...bridge===undefined?{}:{bridge}};
         changedTileIndices = [...touched];
       }
       let resources = previous.resources;
@@ -1156,6 +1157,7 @@ export class SnapshotDecoder {
     const geometryReuse:OwnedGeometryReuseWitness|undefined=structureIndices!==undefined&&this.current
       ?{kind:'sparse',previous:this.current,updatedOrdinals:structureIndices}:undefined;
     if(!validTundraTransport(next,next.schemaVersion))return resync('Toundra, flore ou climat futur/incohérent.');
+    if(validateBridgeTransport(next,next.schemaVersion,message.kind==='delta'?changedTileIndices:[]).length)return resync('Fondation future, chantier ou support invalide.');
     if(validateMarshTransport(next,next.schemaVersion,message.kind==='delta'?changedTileIndices:[]).length)return resync('Marais futur, sans support ou fertile invalide.');
     if(validateSnowTransport(next,next.schemaVersion, message.kind==='delta'&&!!this.current?.snow===!!next.snow?changedTileIndices:undefined).length)return resync('Snow surface clock, depth or owner invalid.');
     if(validateStartingArrivalOwners(next,next.schemaVersion).length)return resync('Personne, possession ou propriétaire de capsule initiale invalide.');

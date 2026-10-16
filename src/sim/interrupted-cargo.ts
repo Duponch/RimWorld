@@ -6,12 +6,14 @@ import type { Pawn,World } from './types.ts';
 
 /** A forced interruption cannot fail because a drop failed. Existing ownership
  * survives without preserving the task, destination, workstation or queue. */
-export function interruptWork(world:World,pawn:Pawn):void {
+export const hasTravellingCargo=(world:World,pawn:Pawn):boolean=>(pawn.motion?.end??0)>world.tick&&(world.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)||world.packed.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id));
+export function interruptWork(world:World,pawn:Pawn,retainTravellingCargo=false):void {
   clearQueuedOrders(world,pawn);delete pawn.priorityWork;
-  // Only an explicitly ordered meal retains its food over a captured edge.
+  // Destruction explicitly retains any in-flight cargo. Other callers keep
+  // their existing explicit-meal/tree exceptions over a captured edge.
   // Health can interrupt before the actor dispatcher has observed that edge;
   // its logical arrival cell is not yet a physical drop location.
-  if((pawn.need?.kind==='eat'&&pawn.need.forced===true||world.jobs.some(j=>j.id===pawn.jobId&&j.tree))&&(pawn.motion?.end??0)>world.tick
+  if(retainTravellingCargo&&hasTravellingCargo(world,pawn)||(pawn.need?.kind==='eat'&&pawn.need.forced===true||world.jobs.some(j=>j.id===pawn.jobId&&j.tree))&&(pawn.motion?.end??0)>world.tick
     &&world.piles.some(p=>(p.kind==='food'||p.kind==='plant'||world.jobs.some(j=>j.id===pawn.jobId&&j.tree))&&p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)){
     releaseAssignments(world,pawn);pawn.interruptedCargo=true;pawn.planCooldown=0;return;
   }

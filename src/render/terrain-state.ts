@@ -21,7 +21,7 @@ export function terrainSurfaceChanges(a:World|null|undefined,b:World,tiles=terra
   for(const i of tiles){
     const old=a.tiles[i]!,next=b.tiles[i]!;
     if(rocky(old)&&rocky(next)){if(old.stone!==next.stone)(changed??=[]).push(i);}
-    else if(old.terrain!==next.terrain)(changed??=[]).push(i);
+    else if(old.terrain!==next.terrain||old.bridge!==next.bridge)(changed??=[]).push(i);
   }
   return changed??NO_CHANGES;
 }

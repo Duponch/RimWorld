@@ -27,9 +27,9 @@ export function constructionControls(onChange:()=>void) {
         select.value=validConstructionMaterial(tool,preferred)?preferred:defaultPlacementMaterial(tool);previousTool=tool;
       }
       const material = placementMaterial(tool, select.value as ConstructionMaterial);
-      if (!material) return hint;
+      if (!material&&tool!=='build-bridge') return hint;
       const recipe = constructionRecipe({ kind:tool as JobKind, material });
-      const rest=(tool==='bed'||tool==='double-bed')&&BUILDING_MATERIALS[material].restFactor<1?' · Efficacité du repos : 90 %':'';
+      const rest=(tool==='bed'||tool==='double-bed')&&material&&BUILDING_MATERIALS[material].restFactor<1?' · Efficacité du repos : 90 %':'';
       return `${recipe.ingredients.map(c => `${c.quantity} ${ITEM_DEFINITIONS[c.item].label}`).join(' + ')} à livrer${rest} · ${hint}`;
     },
   };

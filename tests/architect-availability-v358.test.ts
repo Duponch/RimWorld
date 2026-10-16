@@ -1,3 +1,4 @@
+import {initializeSnowSurface} from '../src/sim/snow-surface';
 import { expect,test } from 'vitest';
 import { canDesignate } from '../src/sim/engine';
 import { isBuildableFloor } from '../src/sim/flooring';
@@ -25,7 +26,8 @@ function camp(allResearch=false):World {
  * dispenser; removing a floor starts with an existing wooden surface. */
 function command(world:World,tool:Tool):DesignateCommand {
   world.structures=[];world.jobs=[];
-  delete world.tiles[8*world.width+8]!.floor;
+  world.tiles[8*world.width+8]={terrain:'grass'};
+  if(tool==='build-bridge'||tool==='remove-bridge')world.tiles[8*world.width+8]={terrain:'marsh',...(tool==='remove-bridge'?{bridge:true}:{})};
   if(tool==='hopper')Object.assign(fixtureBuilding(world,'nutrient-paste-dispenser',10,8),{material:'steel',power:{on:true,parentId:null}});
   if(tool==='remove-floor')world.tiles[8*world.width+8]!.floor='wood-planks';
   if(isBuildableFloor(tool))return {type:'designate',kind:'lay-floor',floor:tool,x:8,z:8,orientation:0};
@@ -41,7 +43,7 @@ function freeze(value:unknown,seen=new WeakSet<object>()):void {
 }
 
 test('V358 complete catalogue agrees with physical command research gates on admissible sites',()=>{
-  expect(toolDefinitions).toHaveLength(95);
+  expect(toolDefinitions).toHaveLength(100);
   const locked=camp(),known=camp(true),hidden:Tool[]=[];
   for(const tool of constructionTools){
     const initial=engineAvailable(locked,tool.id),completed=engineAvailable(known,tool.id);
@@ -50,7 +52,7 @@ test('V358 complete catalogue agrees with physical command research gates on adm
     expect(architectToolAvailable(known,tool.id),tool.id).toBe(completed);
     if(!initial)hidden.push(tool.id);
   }
-  expect(hidden).toHaveLength(38);
+  expect(hidden).toHaveLength(39);expect(hidden).toContain('vent');
   expect(hidden).toEqual(constructionTools.filter(tool=>!architectToolAvailable(locked,tool.id)).map(tool=>tool.id));
 });
 
@@ -89,7 +91,7 @@ test('V358 historical format boundaries agree with command and canonical-materia
   const world=camp(true);
   // Before and at every current construction-format boundary; these worlds
   // test pure admission, not adoption of impossible future records in a save.
-  const epochs=[1,39,40,41,42,72,73,74,75,83,84,85,86,87,88,89,90,100,101,103,104,118,119,121,122,123,142,143,176,177,186,187,188,189,190,192,193,202,203,205,206,210,211,214,215,216,217,218,220,221,222,223,224,225,226,228,229,231,232,236];
+  const epochs=[1,39,40,41,42,72,73,74,75,83,84,85,86,87,88,89,90,100,101,103,104,118,119,121,122,123,142,143,176,177,186,187,188,189,190,192,193,202,203,205,206,210,211,214,215,216,217,218,220,221,222,223,224,225,226,228,229,231,232,236,246,247];
   for(const schemaVersion of epochs){
     Object.assign(world,{schemaVersion});
     for(const tool of constructionTools)
@@ -101,6 +103,8 @@ test('V358 historical format boundaries agree with command and canonical-materia
 
 test('V358 preserved adaptations and all order/zone tools remain available without research',()=>{
   const world=camp();
+  for(const id of ['snow-clear','remove-snow-clear'] as const)expect(architectToolAvailable(world,id)).toBe(false);
+  initializeSnowSurface(world);
   for(const id of ['bed','table','table-square','table-long','stool','stonecutter','research-bench','chemfuel-generator','electric-crematorium','electric-smelter'] as const)
     expect(architectToolAvailable(world,id),id).toBe(true);
   for(const tool of toolDefinitions.filter(tool=>tool.category==='orders'||tool.category==='zones'))

@@ -1,3 +1,4 @@
+import {destroyBridge} from './bridge.ts';
 import { BOMB_AMOUNT,BOMB_RADIUS,bombCellCore,validBombWaveShape,type MiniTurretBombWave } from './bomb-state.ts';
 import { SHOT_LAYER,structureShotLayer } from './combat-content.ts';
 import { STRUCTURE_DEFINITIONS } from './definitions.ts';
@@ -128,6 +129,7 @@ export function advanceBombWave(w:World,wave:MiniTurretBombWave,core:number,read
       }
       if(attempted){affected.add(key);invalidate();}
     }
+    if(w.tiles[index]?.bridge&&BOMB_AMOUNT>=35){if(!destroyBridge(w,cell,'bomb',BOMB_AMOUNT))throw new RangeError('Cannot retire Bomb-hit bridge support');invalidate();}
     for(const id of fireIds)if(!affected.has(`fire:${id}`)&&destroyFireFromBomb(w,id)){affected.add(`fire:${id}`);invalidate();}
     wave.nextCell++;
   }

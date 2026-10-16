@@ -16,6 +16,7 @@ export const TERRAIN_LABELS: Record<Terrain, string> = {
 /** Describe the actual saved terrain even when a plant or rock occupies it.
  * This is soil suitability, not a promise that the cell can be sown now. */
 function baseTerrainInspection(tile: Tile): string {
+  if(tile.bridge)return 'Sol : Pont en bois sur marais · Fertilité : 0 % · Terrain non cultivable · Support léger uniquement · Marche : +0 tick (marais nu : +3)';
   if(tile.floor)return `Sol : ${FLOOR_DEFINITIONS[tile.floor].label} · Fertilité : 0 % · Propreté du revêtement : ${FLOOR_DEFINITIONS[tile.floor].cleanliness.toFixed(1)} · Terrain non cultivable`;
   if(tile.terrain==='marsh')return 'Sol : Marais · Fertilité : 0 % · Terrain non cultivable · Déplacements ralentis · Support de construction ordinaire absent · Conduit électrique ordinaire incompatible';
   const fertility = Math.round(soilFertility(tile.terrain) * 100);

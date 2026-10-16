@@ -58,7 +58,7 @@ export function jobDuration(world: World, job: Job, capturedResource?:Resource|n
   if(job.flowerPotId!==undefined&&job.kind==='sow')return 54;
   if(job.kind==='sow'&&job.growingZoneId!==undefined&&zoneCells(world).byId.get(job.growingZoneId)?.plant==='haygrass')return 17;
   if(job.kind==='sow'&&job.growingZoneId!==undefined&&zoneCells(world).byId.get(job.growingZoneId)?.plant==='healroot')return 80;
-  if(job.kind==='lay-floor'||job.kind==='remove-floor'||job.kind==='grave')return constructionRecipe(job).work;
+  if(job.kind==='build-bridge'||job.kind==='remove-bridge'||job.kind==='lay-floor'||job.kind==='remove-floor'||job.kind==='grave')return constructionRecipe(job).work;
   if(job.kind==='mine'&&job.pickTicks!==undefined)return job.pickTicks/10;
   if(job.furniture)return furnitureDuration(world,job);
   if(job.kind==='repair')return job.repair?.warmed?20:80;

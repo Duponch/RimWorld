@@ -12,8 +12,8 @@ import {
 describe('Architect generated icon atlases', () => {
   it('keeps marker cell addresses while every UI tool has its own complete image', () => {
     const rendered = toolDefinitions.map(tool => tool.id);
-    expect(rendered).toHaveLength(92);
-    expect(new Set(rendered).size).toBe(92);
+    expect(rendered).toHaveLength(100);
+    expect(new Set(rendered).size).toBe(100);
     expect(rendered).toContain('spike-trap');
     expect(rendered).toContain('double-bed');
     expect(rendered).toContain('mini-turret');
@@ -25,7 +25,7 @@ describe('Architect generated icon atlases', () => {
     expect(new Set(Object.values(ARCHITECT_ICON_URLS)).size).toBe(rendered.length);
     expect(ARCHITECT_ICON_URLS['machining-table']).not.toBe(ARCHITECT_ICON_URLS['electric-tailor-bench']);
     expect(ARCHITECT_ICON_URLS['mini-turret']).not.toBe(ARCHITECT_ICON_URLS['standing-lamp']);
-    for(const id of rendered){const svg=readFileSync(new URL(`../public${ARCHITECT_ICON_URLS[id]}`,import.meta.url),'utf8');expect(svg,id).toContain('<svg');expect(svg,id).toContain('<path');}
+    for(const id of rendered){const url=ARCHITECT_ICON_URLS[id]!,svg=url.startsWith('data:image/svg+xml')?decodeURIComponent(url.slice(url.indexOf(',')+1)):readFileSync(new URL(`../public${url}`,import.meta.url),'utf8');expect(svg,id).toContain('<svg');expect(svg,id).toContain('<path');}
   });
 
   it('ships transparent SVG sheets with equal cells for unchanged marker UVs', () => {

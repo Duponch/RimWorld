@@ -12,7 +12,7 @@ import type {TravelSegment} from './travel-timing.ts';
 interface Runtime {active:Set<number>;sweep:SnowSweepRuntime;full:Set<number>;structures:Structure[];structureCount:number;outside:number;layout?:ThermalLayout}
 const runtimes=new WeakMap<World,Runtime>();
 export const snowDepthAt=(w:Pick<World,'tiles'>,index:number):number=>w.tiles[index]?.snowDepth??0;
-export const terrainRetainsSnow=(terrain:string):boolean=>terrain!=='rock'&&terrain!=='water'&&terrain!=='marsh';
+export const terrainRetainsSnow=(terrain:string,bridge=false):boolean=>terrain!=='rock'&&terrain!=='water'&&(terrain!=='marsh'||bridge);
 export function snowFullCells(w:Pick<World,'structures'|'width'>):Set<number>{const full=new Set<number>();for(const s of w.structures)if(STRUCTURE_SHOT_FILL[s.kind]>=1)for(const c of footprintCells(s))full.add(c.z*w.width+c.x);return full;}
 /** Explicit creation path only. Historical migration never calls this. */
 export function initializeSnowSurface(w:World):void {
@@ -24,7 +24,7 @@ function runtime(w:World):Runtime {
  let r=runtimes.get(w);if(r)return r;
  const state=w.snow;if(!state)throw new Error('Snow surface absent');
  r={structures:w.structures,structureCount:w.structures.length,outside:0,full:snowFullCells(w),active:new Set(w.tiles.flatMap((t,i)=>t.snowDepth?[i]:[]))} as Runtime;const owner=r;
- r.sweep=new SnowSweepRuntime(state,{width:w.width,height:w.height,depth:i=>snowDepthAt(w,i),writeDepth(i,v){if(v>0){w.tiles[i]!.snowDepth=v;owner.active.add(i);}else{delete w.tiles[i]!.snowDepth;owner.active.delete(i);}},retains:i=>terrainRetainsSnow(w.tiles[i]!.terrain)&&!owner.full.has(i),roofed:i=>isRoofed(w,i),usesIndoorAir:i=>(owner.layout?.indices[i]??-1)>=0,temperature:i=>w.thermal?.regions[owner.layout?.indices[i]??-1]?.temperature??owner.outside,snowRate:()=>weatherSnowRate(w),changed:()=>{}});
+ r.sweep=new SnowSweepRuntime(state,{width:w.width,height:w.height,depth:i=>snowDepthAt(w,i),writeDepth(i,v){if(v>0){w.tiles[i]!.snowDepth=v;owner.active.add(i);}else{delete w.tiles[i]!.snowDepth;owner.active.delete(i);}},retains:i=>terrainRetainsSnow(w.tiles[i]!.terrain,!!w.tiles[i]!.bridge)&&!owner.full.has(i),roofed:i=>isRoofed(w,i),usesIndoorAir:i=>(owner.layout?.indices[i]??-1)>=0,temperature:i=>w.thermal?.regions[owner.layout?.indices[i]??-1]?.temperature??owner.outside,snowRate:()=>weatherSnowRate(w),changed:()=>{}});
  runtimes.set(w,r);return r;
 }
 export function setSnowDepth(w:World,index:number,value:number):void {if(!w.snow)return;runtime(w).sweep.set(index,value);}

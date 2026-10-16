@@ -4,9 +4,9 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V386, schéma 246 :** [Les Aulnes actualisées](docs/gameplay/aulnes-winter-v386.md) au vrai tick10373 : une tuque finie/rangée, seconde en collecte, aucun port.65fiches/68chemins,64anciens payloads exacts. Publication **ff70e800**, produit `026d2c4e`,128 HTTPS exacts. Campagne98038 close partielle.
+**État V387, schéma 247 :** [pont standard sur marais](docs/gameplay/bridge-marsh-v387.md) qualifié : construction payée, transport, retrait et sauvegardes ; supports Light et pertes atomiques. Publication en préparation ; production précédente V386 **ff70e800**. Les Aulnes V386/tick10373 et leurs archives sont préservées ; campagne98038 close partielle.
 
-**Ordre courant :** une boucle de pont standard sur marais seulement, après vérification des règles de support, retrait et destruction. Les rivières demandent une définition shallow/deep encore absente ; ne pas leur offrir un support universel. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
+**Ordre courant :** clore et publier les ponts, puis sélectionner la prochaine boucle utile du catalogue/parcours joueur selon les manques observés. Les rivières demandent encore shallow/deep ; pas de pont universel. Actualisations des Aulnes périodiques et cohérentes. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
 
 ## Méthode de livraison
 

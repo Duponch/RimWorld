@@ -11,7 +11,7 @@ import {detachMissingArtBills} from './art-work.ts';
 import { constructionRecipe } from './construction-materials.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { addMaterial,refreshStock } from './materials.ts';
-import { interruptWork } from './interrupted-cargo.ts';
+import { interruptWork,hasTravellingCargo } from './interrupted-cargo.ts';
 import { commitDrop,releaseAssignments } from './work-release.ts';
 import { releaseFurniture } from './furniture-transfer.ts';
 import { planStructureDestruction } from './thing-destruction.ts';
@@ -150,6 +150,7 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   // Commit exactly the floor preview before health/roof/task interruption can
   // cause other deposits. Those later effects see the already occupied floor.
   for(const p of actors){
+    if(hasTravellingCargo(world,p))continue;
     const held=world.piles.find(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id);
     if(held&&drops.has(held.id))commitDrop(world,held,p,drops);
     const pack=world.packed.find(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id);
@@ -158,7 +159,7 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   if(delivered.length)world.piles=world.piles.filter(p=>!delivered.includes(p));
   if(state){if(salvage)state.rng=salvage.rng;}else world.rng=salvage?.rng??rng;
   if(salvage)for(const drop of salvage.drops)addMaterial(world,ITEM_DEFINITIONS[drop.item].kind,drop.quantity,{type:'ground',...drop.cell},drop.item);
-  for(const p of actors)interruptWork(world,p);
+  for(const p of actors)interruptWork(world,p,true);
   for(const a of world.wildlife?.animals??[])if(a.manhunter?.door?.targetId===s.id)delete a.manhunter.door;
   removeJobs(world,ids);
   for(const p of world.pawns){

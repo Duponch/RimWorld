@@ -337,7 +337,7 @@ export function advanceWildlife(world:World):void {
     // Bounded neighbouring moves avoid full-map wandering floods. No random
     // walk through walls/closed doors; diagonal length stays Euclidean.
     const pen=grazingPen(world,a);
-    const choices=[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]].map(([x,z])=>({x:a.x+x!,z:a.z+z!})).filter(c=>n.free(c)&&world.tiles[c.z*world.width+c.x]?.terrain!=='marsh'&&n.step(a,c)&&(!pen||pen.has(c.z*world.width+c.x)));
+    const choices=[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]].map(([x,z])=>({x:a.x+x!,z:a.z+z!})).filter(c=>n.free(c)&&(world.tiles[c.z*world.width+c.x]?.terrain!=='marsh'||!!world.tiles[c.z*world.width+c.x]?.bridge)&&n.step(a,c)&&(!pen||pen.has(c.z*world.width+c.x)));
     if(choices.length){a.path=[choices[Math.floor(wildlifeRandom(s)*choices.length)]!];moveAnimal(world,a,n.step,body.capacities.moving);}
     a.nextDecision=Math.max(a.nextDecision,world.tick+12+Math.floor(wildlifeRandom(s)*13));
   }

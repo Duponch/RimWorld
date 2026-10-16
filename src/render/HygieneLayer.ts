@@ -5,6 +5,7 @@ import { FilthLayer } from './FilthLayer';
 import type { BoxBatches } from './BoxBatches';
 import type { Placement } from './primitives';
 import { FLOOR_SURFACE_Y } from './surface-height';
+import { bridgePartsForCell } from './bridge-parts';
 
 const floorColors:Record<FloorKind,number>={'wood-planks':0x98714a,'burned-wood':0x302c28,'granite-tile':0x918c85,'limestone-tile':0xb5aa85,'marble-tile':0xc4c0b5,'sandstone-tile':0xb18a64,'slate-tile':0x626970,'steel-tile':0x83989a,'sterile-tile':0xd4e0dc};
 
@@ -20,7 +21,7 @@ export function floorPartsForKind(floor:FloorKind,x:number,z:number):Placement[]
  * natural terrain, compile materials, or retain mutable simulation objects. */
 export class HygieneLayer {
   readonly group=new THREE.Group();
-  private floors=new Map<number,FloorKind>();
+  private floors=new Map<number,FloorKind|'bridge'>();
   private tiles:World['tiles']|undefined;
   readonly filth:FilthLayer;
   constructor(configure?:(m:THREE.MeshStandardNodeMaterial)=>void){this.filth=new FilthLayer(configure);this.group.add(this.filth.mesh);}
@@ -30,12 +31,12 @@ export class HygieneLayer {
     // Bridge snapshots retain unchanged tile arrays. A new array triggers a
     // value comparison; no simulation revision or mutable cache is assumed.
     if(reset||this.tiles!==world.tiles)for(let i=0;i<world.tiles.length;i++){
-      const floor=world.tiles[i]!.floor,old=this.floors.get(i);
+      const tile=world.tiles[i]!,floor=tile.bridge?'bridge':tile.floor,old=this.floors.get(i);
       if(floor!==old){changed=true;if(floor)this.floors.set(i,floor);else this.floors.delete(i);}
     }
     this.tiles=world.tiles;
     if(changed){const parts:Placement[]=[];
-      for(const [i,floor] of this.floors)parts.push(...floorPartsForKind(floor,i%world.width,Math.floor(i/world.width)));
+      for(const [i,floor] of this.floors)parts.push(...(floor==='bridge'?bridgePartsForCell(i%world.width,Math.floor(i/world.width)):floorPartsForKind(floor,i%world.width,Math.floor(i/world.width))));
       batches.set(this.group,'hygiene-floors',parts,'solid',false);
     }
     this.filth.update(world.filth?.items??[],reset,world);

@@ -1,3 +1,4 @@
+import {hasTravellingCargo,interruptWork} from './interrupted-cargo.ts';
 import {footprintCells} from './definitions.ts';
 import {dropRetainingIdentity} from './ground-placement.ts';
 import {reservedSource} from './materials.ts';
@@ -26,7 +27,7 @@ export function planShelfRemoval(world:World,s:Structure):ShelfRemovalPlan|null 
     drops.set(p.id,{x:p.owner.x,z:p.owner.z});
   }
   for(const p of world.pawns)if(p.haul?.destination.type==='stockpile'&&cells.has(p.haul.destination.stockpileId))carriers.add(p.id);
-  const cargo=planPawnDrops(view,carriers);if(!cargo)return null;
+  const cargo=planPawnDrops(view,new Set([...carriers].filter(id=>!hasTravellingCargo(world,world.pawns.find(p=>p.id===id)!))));if(!cargo)return null;
   for(const [id,cell] of cargo){drops.set(id,cell);const pile=view.piles.find(p=>p.id===id);if(pile)pile.owner={type:'ground',...cell};}
   return {view,drops,carriers,cells};
 }
@@ -35,7 +36,7 @@ export function planShelfRemoval(world:World,s:Structure):ShelfRemovalPlan|null 
 export function commitShelfRemoval(world:World,plan:ShelfRemovalPlan):void {
   for(const [id,cell] of plan.drops){const pile=world.piles.find(p=>p.id===id);if(pile)pile.owner={type:'ground',...cell};}
   for(const p of world.pawns){
-    if(plan.carriers.has(p.id))releaseWork(world,p,plan.drops);
+    if(plan.carriers.has(p.id)){if(hasTravellingCargo(world,p))interruptWork(world,p,true);else releaseWork(world,p,plan.drops);}
     if(p.cooking?.storageId!==null&&p.cooking?.storageId!==undefined&&plan.cells.has(p.cooking.storageId)){
       p.cooking.storageId=null;delete p.cooking.storageQuantity;p.path=[];p.planCooldown=0;
     }

@@ -1,3 +1,4 @@
+import {hasTravellingCargo,interruptWork} from './interrupted-cargo.ts';
 import { footprintCells } from './definitions.ts';
 import { sharesConstructionLayer } from './power-grid.ts';
 import { isRoofJob } from './roof-rules.ts';
@@ -13,7 +14,7 @@ export function canPlaceHumanSleepingSpot(world:World,c:DesignateCommand):Comman
   const cells=footprintCells({...c,orientation:c.orientation??0,footprint:'standard'});
   if(cells.some(p=>!Number.isSafeInteger(p.x)||!Number.isSafeInteger(p.z)||p.x<0||p.z<0||p.x>=world.width||p.z>=world.height))
     return {ok:false,code:'out-of-bounds',reason:'Empreinte du couchage hors de la carte.'};
-  if(cells.some(p=>['rock','water','marsh'].includes(world.tiles[p.z*world.width+p.x]!.terrain)
+  if(cells.some(p=>(['rock','water'].includes(world.tiles[p.z*world.width+p.x]!.terrain)||world.tiles[p.z*world.width+p.x]!.terrain==='marsh'&&!world.tiles[p.z*world.width+p.x]!.bridge)
     ||world.resources.some(r=>(r.kind==='rock'||r.kind==='tree')&&same(r,p))))
     return {ok:false,code:'occupied',reason:'Dégager la roche ou l’arbre et choisir un sol praticable.'};
   if(world.structures.some(s=>sharesConstructionLayer(s.kind,c.kind)&&footprintCells(s).some(p=>cells.some(q=>same(p,q))))
@@ -33,11 +34,11 @@ export function placeHumanSleepingSpot(world:World,c:DesignateCommand):CommandRe
 export function removeHumanSleepingSpot(world:World,spot:Structure,planned?:DropPlan):CommandResult {
   if(spot.kind!=='sleeping-spot'||!world.structures.includes(spot))return {ok:false,code:'missing-target',reason:'Couchage au sol introuvable.'};
   const actors=humanSleepingSpotActors(world,new Set([spot.id]));
-  const drops=planned??planPawnDrops(world,new Set(actors.map(p=>p.id)));
+  const drops=planned??planPawnDrops(world,new Set(actors.filter(p=>!hasTravellingCargo(world,p)).map(p=>p.id)));
   if(!drops)return {ok:false,code:'occupied',reason:'Pas de place pour conserver les objets portés.'};
   // Release while the occupied service still exists, so completed clinical and
   // room observations are settled against the correct original bed.
-  for(const p of actors){if(!releaseWork(world,p,drops))throw Error('Preflighted sleeping-spot interruption failed.');p.needCooldown=0;}
+  for(const p of actors){if(hasTravellingCargo(world,p))interruptWork(world,p,true);else if(!releaseWork(world,p,drops))throw Error('Preflighted sleeping-spot interruption failed.');p.needCooldown=0;}
   for(const p of world.pawns){if(p.bedId===spot.id){p.bedId=null;delete p.bedSlot;}p.planCooldown=0;}
   world.structures=world.structures.filter(s=>s.id!==spot.id);
   return {ok:true};

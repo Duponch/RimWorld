@@ -1,3 +1,4 @@
+import {hasTravellingCargo} from './interrupted-cargo.ts';
 import {planShelfRemoval} from './shelf-retirement.ts';
 import { coolerSalvage } from './cooler-salvage.ts';
 import { dropRetainingIdentity } from './ground-placement.ts';
@@ -17,6 +18,7 @@ export function planStructureDestruction(world:World,structure:Structure,actors:
     piles:shelfRemoval.view.piles};
   const drops:DropPlan=new Map(shelfRemoval.drops);
   for(const actor of actors){
+    if(hasTravellingCargo(world,actor))continue; // Logical arrival is not a physical drop contact.
     const pack=view.packed.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===actor.id);
     if(pack){const cell=furnitureDropCell(view,actor,actor.id);if(cell){pack.owner={type:'ground',...cell};drops.set(pack.building.id,cell);}}
     const pile=view.piles.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===actor.id);

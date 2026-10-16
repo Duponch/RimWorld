@@ -13,7 +13,7 @@ export interface SurfacePatch extends SurfaceBounds { height: number }
 export function surfaceHeightAtCell(surface: FilthSurface, x: number, z: number): number | undefined {
   if (x < 0 || z < 0 || x >= surface.width || z >= surface.height) return undefined;
   const tile = surface.tiles[z * surface.width + x];
-  return tile ? tile.floor ? FLOOR_SURFACE_Y : tile.terrain === 'water' ? WORLD_SCALE.waterSurface : 0 : undefined;
+  return tile ? tile.bridge || tile.floor ? FLOOR_SURFACE_Y : tile.terrain === 'water' ? WORLD_SCALE.waterSurface : 0 : undefined;
 }
 
 export type GroundOverlaySurface=FilthSurface&Partial<Pick<World,'snow'>>;

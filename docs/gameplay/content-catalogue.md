@@ -1,5 +1,10 @@
 # Catalogue de contenu : couverture connue
 
+## V387 proposé — pont standard sur marais
+
+Pont en bois payé12bois, chantier/livraison, fondation Light distincte, neige/saleté et sauvegarde247 ; retrait6bois ou destruction sans restitution du pont. Rivières/pont lourd absents. [Boucle et limites](bridge-marsh-v387.md).
+
+
 **V386 — référence Les Aulnes :** [confection d’hiver](aulnes-winter-v386.md), une tuque normale réellement finie et rangée, seconde en collecte ; aucun port. Patrimoine historique et archives conservés.
 
 **V385 — schéma 246 :** [marais physiques de toundra](marsh-tundra-v385.md). Nouveau terrain prospectif, trajet/transport, supports, cultures, feu/neige et reprises qualifiés dans leur périmètre. Publication commune V384–V385 **dfa8bdde** ; limites dans la note canonique.

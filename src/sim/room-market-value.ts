@@ -173,6 +173,7 @@ const FLOOR_VALUE: Readonly<Record<FloorKind, number>> = Object.freeze({
   'burned-wood': 0,
 });
 export function floorRoomMarketValue(tile: Tile): number {
+  if(tile.bridge)return 12*MATERIAL_VALUE.wood+1500*VALUE_PER_WORK;
   if (tile.floor === undefined) return 0;
   const value = FLOOR_VALUE[tile.floor];
   if (value === undefined) throw new RangeError(`Unmapped room floor value: ${tile.floor}`);

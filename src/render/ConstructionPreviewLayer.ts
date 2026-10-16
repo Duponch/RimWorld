@@ -46,7 +46,7 @@ export class ConstructionPreviewLayer {
     const goodArrays = [good.boxes.filter(part=>part.shape!=='sandbag'), good.timberWalls, good.timberEaves, good.rotatedBoxes,good.boxes.filter(part=>part.shape==='sandbag')];
     const badArrays = [bad.boxes.filter(part=>part.shape!=='sandbag'), bad.timberWalls, bad.timberEaves, bad.rotatedBoxes,bad.boxes.filter(part=>part.shape==='sandbag')];
     const surfaces:GroundOverlayRect[]=[];
-    const floorKeys=new Set(context.flatMap((spec,index)=>spec.kind==='lay-floor'?[spec.key??index]:[]));
+    const floorKeys=new Set(context.flatMap((spec,index)=>(spec.kind==='lay-floor'||spec.kind==='build-bridge'||spec.kind==='remove-bridge')?[spec.key??index]:[]));
     for (let index = 0; index < this.meshes.length; index++) {
       const mesh = this.meshes[index]!, goodParts = goodArrays[index]??[], badParts = badArrays[index]??[];
       const count = goodParts.length + badParts.length;

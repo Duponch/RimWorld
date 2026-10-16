@@ -51,7 +51,7 @@ for(const kind of Object.keys(JOB_DURATION) as JobKind[]) {
   if(kind==='tube-television'){recipes.set('tube-television:steel',Object.freeze({ingredients:Object.freeze([{item:'steel' as const,quantity:80},{item:'component' as const,quantity:4}].map(c=>Object.freeze(c))),work:1000,coreWork:10000}));continue;}
   if(kind==='sandbags'){recipes.set('sandbags:cloth',Object.freeze({ingredients:Object.freeze([Object.freeze({item:'cloth' as const,quantity:5})]),work:18,coreWork:180}));continue;}
   if(kind==='hospital-bed'){recipes.set('hospital-bed:steel',Object.freeze({ingredients:Object.freeze([{item:'steel' as const,quantity:120},{item:'component' as const,quantity:5}].map(c=>Object.freeze(c))),work:280,coreWork:2800}));continue;}
-  if(kind==='lay-floor'||kind==='remove-floor')continue;
+  if(kind==='lay-floor'||kind==='remove-floor'||kind==='build-bridge'||kind==='remove-bridge')continue;
   // Sculptures are finished furniture delivered by an art bill, never plans.
   if(kind==='small-sculpture'||kind==='large-sculpture')continue;
   if(kind==='drug-lab'){
@@ -139,6 +139,7 @@ export function validConstructionMaterial(kind:unknown,material:unknown,version:
   if(kind==='small-sculpture'||kind==='large-sculpture')return version>=104&&isSculptureMaterial(material);
   if(kind==='fabrication-bench'||kind==='hi-tech-research-bench'||kind==='multi-analyzer')return version>=123&&material==='steel';
   if(kind==='machining-table')return version>=101&&material==='steel';
+  if(kind==='build-bridge'||kind==='remove-bridge')return version>=247&&material===undefined;
   if(kind==='grave'||kind==='lay-floor'||kind==='remove-floor')return version>=89&&material===undefined;
   if(kind==='heater'||kind==='wind-turbine')return version>=87&&material==='steel';
   if(kind==='power-conduit'||kind==='power-switch'||kind==='battery'||kind==='solar-generator')return version>=85&&material==='steel';
@@ -157,6 +158,8 @@ export function validConstructionMaterial(kind:unknown,material:unknown,version:
 export const constructionMaterials=(kind:string):readonly ConstructionMaterial[]=>CONSTRUCTION_MATERIALS.filter(material=>validConstructionMaterial(kind,material));
 export const constructionSkillRequired=(kind:unknown):number=>kind==='spike-trap'?3:kind==='electric-crematorium'||kind==='electric-smelter'||kind==='biofuel-refinery'?4:kind==='nutrient-paste-dispenser'?5:kind==='comms-console'?5:kind==='drug-lab'?4:kind==='mini-turret'?5:kind==='tube-television'?7:kind==='autodoor'?6:kind==='cooler'?5:kind==='electric-stove'||kind==='electric-tailor-bench'||kind==='machining-table'?4:kind==='fabrication-bench'||kind==='hi-tech-research-bench'?6:kind==='multi-analyzer'?8:isHabitatFurnitureKind(kind)?FURNITURE_DEFINITIONS[kind].constructionSkill:powerConstructionSkill(kind as JobKind);
 export function constructionRecipe(entity:ConstructionObject):ConstructionRecipe {
+  if(entity.kind==='build-bridge')return {ingredients:[{item:'wood',quantity:12}],work:150,coreWork:1500};
+  if(entity.kind==='remove-bridge')return {ingredients:[],work:30,coreWork:300};
   if(entity.kind==='fix-breakdown')return BREAKDOWN_RECIPE;
   if(entity.kind==='lay-floor'||entity.kind==='remove-floor')return flooringRecipe(entity.floor,entity.kind==='remove-floor');
   return recipes.get(`${entity.kind}:${entity.material??'legacy'}`)!;

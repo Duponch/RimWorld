@@ -1,3 +1,4 @@
+import {hasTravellingCargo,interruptWork} from './interrupted-cargo.ts';
 import { removeZonesForPlan } from './construction-zones.ts';
 import { releaseWork,type DropPlan } from './work-release.ts';
 import { isCookingOrder } from './order-types.ts';
@@ -13,6 +14,6 @@ export function placeCraftingSpot(world:World,c:DesignateCommand,drops?:DropPlan
 }
 export function removeCraftingSpot(world:World,spot:Structure,drops:DropPlan):void {
   // All affected cargo was preflighted by planCommandDrops.
-  for(const p of world.pawns){if(p.cooking?.stationId===spot.id)releaseWork(world,p,drops);p.orders.queue=p.orders.queue.filter(o=>!isCookingOrder(o)||o.cooking.stationId!==spot.id);}
+  for(const p of world.pawns){if(p.cooking?.stationId===spot.id){if(hasTravellingCargo(world,p))interruptWork(world,p,true);else releaseWork(world,p,drops);}p.orders.queue=p.orders.queue.filter(o=>!isCookingOrder(o)||o.cooking.stationId!==spot.id);}
   world.structures=world.structures.filter(s=>s!==spot);
 }

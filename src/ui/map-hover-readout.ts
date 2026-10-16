@@ -39,7 +39,7 @@ export class MapHoverLightCache {
 export function mapHoverLines(world:World,cell:Cell,lightLevel=lightCache.read(world).lightAt(cell)):string[] {
   const index=cell.z*world.width+cell.x,tile=world.tiles[index];
   if(!tile)return [];
-  const label=tile.floor?FLOOR_DEFINITIONS[tile.floor].label:TERRAIN_LABELS[tile.terrain];
+  const label=tile.bridge?'Pont en bois sur marais':tile.floor?FLOOR_DEFINITIONS[tile.floor].label:TERRAIN_LABELS[tile.terrain];
   const speed=tile.terrain==='rock'||tile.terrain==='water'?0:Math.round(300/(3+terrainTravelDelay(world,index)));
   const ground=`${label} (vitesse de déplacement ${speed} %, fertilité ${tile.floor?0:Math.round(soilFertility(tile.terrain)*100)} %)`;
   const light=Math.round(lightLevel*100);
@@ -56,5 +56,5 @@ export function mapHoverLines(world:World,cell:Cell,lightLevel=lightCache.read(w
     }
   });
   for(const mech of world.mechanoids??[])if(mech.x===cell.x&&mech.z===cell.z)objects.push(`${mechanoidDefinition(mech.mechKind).label} ${mech.id} · ${mech.state==='dead'?'neutralisé':mech.state==='downed'?'incapacité mécanique':'hostile'}`);
-  return [ground,`Lumière : ${light} %`,...objects,...(world.roofing?.constructed.includes(index)?['Toit']:[])];
+  return [ground,...(tile.bridge?['Support léger uniquement · Marche : +0 tick (marais nu : +3)']:[]),`Lumière : ${light} %`,...objects,...(world.roofing?.constructed.includes(index)?['Toit']:[])];
 }

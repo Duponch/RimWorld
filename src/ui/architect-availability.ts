@@ -22,7 +22,7 @@ const BUILD_RESEARCH:Readonly<Partial<Record<Tool,ResearchProject>>>=Object.free
 /** Existing command/material compatibility boundaries. These describe the
  * format, never the colony's stock, selected material, workers or terrain. */
 const MIN_SCHEMA:Readonly<Partial<Record<Tool,number>>>=Object.freeze({
-  vent:244,'sleeping-spot':232,shelf:229,'small-shelf':229,'spike-trap':226,
+  'build-bridge':247,'remove-bridge':247,vent:244,'sleeping-spot':232,shelf:229,'small-shelf':229,'spike-trap':226,
   'electric-crematorium':225,'double-bed':224,'electric-smelter':222,
   'animal-sleeping-spot':221,'biofuel-refinery':218,'chemfuel-generator':218,
   'nutrient-paste-dispenser':217,hopper:217,'orbital-beacon':216,

@@ -7,6 +7,7 @@ import { WORLD_SCALE } from '../world/scale';
 import type { BoxBatches } from './BoxBatches';
 import { buildFurniture } from './FurnitureLayer';
 import { floorPartsForKind } from './HygieneLayer';
+import { bridgePartsForCell } from './bridge-parts';
 import { roofSlabCellBounds, roofSurfaceCells } from './RoofLayer';
 import { timberCladdingParts } from './TimberCladdingLayer';
 import { doorLeafParts } from './door-parts';
@@ -18,7 +19,7 @@ export { createTimberGeometry } from './TimberCladdingLayer';
 
 export interface ConstructionPreviewSpec {
   key?: number;
-  kind: StructureKind | 'lay-floor' | 'build-roof';
+  kind: StructureKind | 'lay-floor' | 'build-roof' | 'build-bridge' | 'remove-bridge';
   x: number; z: number;
   orientation?: Orientation;
   material?: ConstructionMaterial;
@@ -66,7 +67,7 @@ export function constructionPreviewParts(world: World, specs: readonly Construct
   const virtuals = new Map<ConstructionPreviewSpec, Structure>(), keys = new Map<number, number>();
   for (let index = 0; index < all.length; index++) {
     const spec = all[index]!;
-    if (spec.kind === 'lay-floor' || spec.kind === 'build-roof') continue;
+    if (spec.kind === 'lay-floor' || spec.kind === 'build-roof' || spec.kind === 'build-bridge' || spec.kind === 'remove-bridge') continue;
     const structure = virtualStructure(spec, -index - 1);
     virtuals.set(spec, structure); keys.set(structure.id, spec.key ?? index);
   }
@@ -107,6 +108,11 @@ export function constructionPreviewParts(world: World, specs: readonly Construct
   }
   for (const spec of specs) {
     const key = spec.key ?? ordinals.get(spec)!;
+    if (spec.kind === 'build-bridge' || spec.kind === 'remove-bridge') {
+      result.boxes.push(...bridgePartsForCell(spec.x,spec.z).map(part=>({...part,key})));
+      if(spec.kind==='remove-bridge')for(const ry of [-Math.PI/4,Math.PI/4])result.boxes.push({x:spec.x,z:spec.z,y:.09,sx:.85,sy:.025,sz:.045,ry,color:0xd77855,key});
+      continue;
+    }
     if (spec.kind === 'lay-floor') {
       if (!isFloorKind(spec.floor)) throw new Error('Construction floor model requires a floor kind');
       result.boxes.push(...floorPartsForKind(spec.floor, spec.x, spec.z).map(part => ({ ...part, key })));

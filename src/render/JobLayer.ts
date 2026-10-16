@@ -20,6 +20,16 @@ export function buildJobMarkers(world: World, group: THREE.Group, cutaway: boole
       const cells = footprintCells(job);
       if(!isIconDesignationKind(job.kind))for (const cell of cells) orders.push({ targetId:job.id, x: cell.x, y: 0.032, z: cell.z, color: job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
       if(job.kind==='repair'||job.kind==='flick')continue;
+      if(job.kind==='build-bridge'||job.kind==='remove-bridge'){
+        blueprints.push({targetId:job.id,x:job.x,z:job.z,y:.075,sx:.94,sy:.04,sz:.94});
+        if(job.kind==='remove-bridge')for(const ry of [-Math.PI/4,Math.PI/4])frames.push({targetId:job.id,x:job.x,z:job.z,y:.1,sx:.85,sy:.025,sz:.05,ry,color:0xd77855});
+        else if(job.construction==='frame'){
+          for(const dz of [-.4,.4])frames.push({targetId:job.id,x:job.x,z:job.z+dz,y:.025,sx:1,sy:.04,sz:.08});
+          const fraction=Math.floor(job.progress/jobDuration(world,job)*20)/20;
+          if(fraction>0)progress.push({targetId:job.id,x:job.x-.5+fraction/2,z:job.z,y:.05,sx:fraction,sy:.025,sz:.92});
+        }
+        continue;
+      }
       if(job.kind==='lay-floor'||job.kind==='remove-floor'||job.kind==='grave'){
         for(const cell of cells){blueprints.push({targetId:job.id,x:cell.x,z:cell.z,y:.09,sx:.94,sy:.08,sz:.94});
           if(job.kind==='remove-floor')for(const ry of [-Math.PI/4,Math.PI/4])frames.push({targetId:job.id,x:cell.x,z:cell.z,y:.13,sx:.8,sy:.025,sz:.05,ry,color:0xd77855});}

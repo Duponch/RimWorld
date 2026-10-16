@@ -12,6 +12,7 @@ import type { Cell, StructureKind, World } from './types.ts';
 /** Core natural floors cost two Core ticks. Historical grass/soil stay neutral. */
 export function terrainTravelDelay(world:World,index:number):number {
   const tile=world.tiles[index],terrain=tile?.terrain;
+  if(tile?.bridge)return 0;
   if(tile?.floor)return FLOOR_DEFINITIONS[tile.floor].pathCost/10;
   if(terrain==='marsh')return MARSH_PATH_COST_CORE/10;
   return terrain==='rough-stone'||terrain==='rich-soil'||terrain==='gravel'||world.site&&terrain==='grass'?.2:0;
@@ -84,14 +85,14 @@ export function canStandAt(world:World,cell:Cell):boolean {
   if(!Number.isInteger(cell.x)||!Number.isInteger(cell.z)||cell.x<0||cell.z<0||cell.x>=world.width||cell.z>=world.height||['rock','water'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain))return false;
   for(const s of world.structures)if(footprintContains(s,cell)&&(world.schemaVersion<22?s.kind==='wall'||s.kind==='table':!FURNITURE_TRAVEL[s.kind].stand))return false;
   if(world.schemaVersion>=28&&world.piles.some(p=>p.kind==='chunk'&&p.owner.type==='ground'&&p.owner.x===cell.x&&p.owner.z===cell.z))return false;
-  return !world.jobs.some(j=>(world.schemaVersion<16&&(j.kind==='wall'||j.kind==='table')||world.schemaVersion>=22&&j.construction==='frame'&&j.kind!=='power-conduit'&&j.kind!=='lay-floor')&&footprintContains(j,cell));
+  return !world.jobs.some(j=>(world.schemaVersion<16&&(j.kind==='wall'||j.kind==='table')||world.schemaVersion>=22&&j.construction==='frame'&&j.kind!=='power-conduit'&&j.kind!=='lay-floor'&&j.kind!=='build-bridge')&&footprintContains(j,cell));
 }
 /** For a batch of point queries in one read-only decision. Discard before any
  * world mutation; this is not a shared navigation or cross-actor cache. */
 export function captureStandability(world:World):(cell:Cell)=>boolean {
   const denied=new Set<number>(),add=(s:Parameters<typeof footprintCells>[0])=>{for(const c of footprintCells(s))denied.add(c.z*world.width+c.x);};
   for(const s of world.structures)if(world.schemaVersion<22?s.kind==='wall'||s.kind==='table':!FURNITURE_TRAVEL[s.kind].stand)add(s);
-  for(const j of world.jobs)if(world.schemaVersion<16&&(j.kind==='wall'||j.kind==='table')||world.schemaVersion>=22&&j.construction==='frame'&&j.kind!=='power-conduit'&&j.kind!=='lay-floor')add(j);
+  for(const j of world.jobs)if(world.schemaVersion<16&&(j.kind==='wall'||j.kind==='table')||world.schemaVersion>=22&&j.construction==='frame'&&j.kind!=='power-conduit'&&j.kind!=='lay-floor'&&j.kind!=='build-bridge')add(j);
   if(world.schemaVersion>=28)for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground')denied.add(p.owner.z*world.width+p.owner.x);
   return cell=>Number.isInteger(cell.x)&&Number.isInteger(cell.z)&&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['rock','water'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)&&!denied.has(cell.z*world.width+cell.x);
@@ -126,7 +127,7 @@ export function navigationCosts(world:World,origin?:Cell):{costs:NavigationCostL
       if(p.delay)costs.set(i,Math.round(p.delay/3*1000));
       if(p.repeat)repeaters.add(i);if(!p.stand)stops.add(i);
     }
-    for(const j of world.jobs)if(j.construction==='frame'&&j.kind!=='power-conduit'&&j.kind!=='lay-floor')for(const c of footprintCells(j))stops.add(c.z*world.width+c.x);
+    for(const j of world.jobs)if(j.construction==='frame'&&j.kind!=='power-conduit'&&j.kind!=='lay-floor'&&j.kind!=='build-bridge')for(const c of footprintCells(j))stops.add(c.z*world.width+c.x);
   }
   const floors=new Map<number,number>();
   // A single captured byte per cell replaces two mostly dense Maps on a site.
@@ -142,9 +143,9 @@ export function navigationCosts(world:World,origin?:Cell):{costs:NavigationCostL
     for(let i=0;i<tiles.length;i++){
       const tile=tiles[i]!,kind=tile.terrain;
       let cost=tile.floor?Math.round(FLOOR_DEFINITIONS[tile.floor].pathCost/10/3*1000):kind==='rough-stone'||kind==='rich-soil'||kind==='gravel'||hasSite&&kind==='grass'?67:0;
-      if(kind==='marsh'&&!tile.floor)cost=Math.round(MARSH_PATH_COST_CORE/30*1000);
+      if(kind==='marsh'&&!tile.bridge&&!tile.floor)cost=Math.round(MARSH_PATH_COST_CORE/30*1000);
       if(world.snow)cost=Math.max(cost,snowSearchCost(tile.snowDepth??0));
-      if(kind==='marsh'&&!tile.floor)marshPerceptionCosts.set(i,Math.round(marshPerception/30*1000));
+      if(kind==='marsh'&&!tile.bridge&&!tile.floor)marshPerceptionCosts.set(i,Math.round(marshPerception/30*1000));
       if(cost>255&&terrain instanceof Uint8Array){const wide:Uint16Array=new Uint16Array(terrain.length);wide.set(terrain);terrain=wide;}
       if(cost){terrain[i]=cost;if(cost>terrainMaximum)terrainMaximum=cost;}
     }

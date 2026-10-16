@@ -1,3 +1,4 @@
+import {destroyBridge} from './bridge.ts';
 import { footprintCells } from './definitions.ts';
 import { isRoofed } from './roof-rules.ts';
 import { isRoomDoor } from './door-rules.ts';
@@ -165,7 +166,9 @@ export function advanceFires(w:World,weather:{rainRate:number},initialLayout:The
   for(const f of [...state.items])while(state.items.includes(f)&&f.nextPulseCore<=now){
     const core=f.nextPulseCore;f.nextPulseCore+=FIRE_PULSE_CORE;f.complexCore+=FIRE_PULSE_CORE;if(f.size>1)f.spreadCore+=FIRE_PULSE_CORE;
     const pos=firePosition(w,f);if(!pos){removeFire(w,f);break;}f.x=pos.x;f.z=pos.z;
-    if(groundFire(f)&&core-f.bornCore>=7500&&view().floorFuel(pos)>0)burnFloor(w,pos);
+    if(groundFire(f)&&core-f.bornCore>=7500&&view().floorFuel(pos)>0){
+      if(w.tiles[pos.z*w.width+pos.x]?.bridge){if(destroyBridge(w,pos,'fire')){content=undefined;layout=reconcileTemperature(w);}}else burnFloor(w,pos);
+    }
     if(f.size>1&&f.spreadCore>=fireSpreadInterval(f.size)){
       f.spreadCore=0;const near=fireRandom(state)<.8,offsets=near?NEAR:FAR,[dx,dz]=offsets[Math.floor(fireRandom(state)*offsets.length)]!,to={x:pos.x+dx,z:pos.z+dz};
       if(view().inside(to)&&fireRandom(state)<view().chance(to)){
@@ -173,7 +176,7 @@ export function advanceFires(w:World,weather:{rainRate:number},initialLayout:The
       }
     }
     if(f.complexCore<FIRE_COMPLEX_CORE)continue;f.complexCore-=FIRE_COMPLEX_CORE;
-    if(['water','marsh'].includes(w.tiles[pos.z*w.width+pos.x]?.terrain??'')){removeFire(w,f,true);break;}
+    if(w.tiles[pos.z*w.width+pos.x]?.terrain==='water'||w.tiles[pos.z*w.width+pos.x]?.terrain==='marsh'&&!w.tiles[pos.z*w.width+pos.x]?.bridge){removeFire(w,f,true);break;}
     const peopleHere=w.pawns.filter(p=>same(p,pos)&&p.state!=='dead'),animalsHere=w.wildlife?.animals.filter(a=>same(a,pos)&&a.state!=='dead')??[];
     const ownershipChanged=watchOwners(w,new Set(peopleHere.map(p=>p.id)));
     const targets=groundFire(f)?view().allTargets(pos).filter(t=>targetFlammability(t)>=.01):[],fuel=groundFire(f)?Math.max(view().fuel(pos),peopleHere.length||animalsHere.length?.7:0):.7;

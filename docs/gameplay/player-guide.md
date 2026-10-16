@@ -1,5 +1,10 @@
 # Guide joueur
 
+## Franchir un marais avec un pont
+
+Architecte → Sols → Pont en bois. Apporter12bois par cellule et attendre la fin du chantier ; seuls les ouvrages Light peuvent ensuite être bâtis dessus. Retirer d’abord meubles et plans pour récupérer6bois en retirant le pont. Le marais revient dessous en cas de retrait/destruction. [Détails et limites](bridge-marsh-v387.md).
+
+
 ## Les Aulnes : atelier d’hiver — V386
 
 La référence courante contient une tuque laine normale rangée en139,149. Une seconde est demandée à l’établi manuel116,152 ; Marin en rassemble les matières. Noé et Alma ne la portent pas encore : après leur repos, choisissez la personne puis **Porter** sur un vêtement libre. Les anciennes versions restent dans le catalogue ; aucune partie personnelle n’est remplacée. [État exact et limites](aulnes-winter-v386.md).

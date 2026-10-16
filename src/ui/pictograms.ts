@@ -2,6 +2,8 @@
  * silhouette is shared by menus, cursors and map markers. */
 const ink='#262238',wood='#a9652c',metal='#8296b0';
 const bodies:Readonly<Record<string,string>>={
+  'build-bridge':'<path d="M5 44h54v8H5z" fill="#8a9e98"/><path d="M10 23h44v19H10z" fill="#b49b77"/><path d="M21 24v17m11-17v17m11-17v17" stroke="#78664d" stroke-width="2"/><path d="M14 42v12m36-12v12" stroke="#78664d" stroke-width="5"/>',
+  'remove-bridge':'<path d="M7 30h50v18H7z" fill="#b49b77"/><path d="M20 31v16m12-16v16m12-16v16" stroke="#78664d" stroke-width="2"/><path d="m23 8 18 18m0-18L23 26" stroke="#ff6b5e" stroke-width="5"/>',
   passion:'<path d="M34 5c9 17-5 19 5 27 6-4 7-11 7-11 24 25-1 43-17 40S4 40 14 29c3 12 11 7 10-1C24 18 34 17 34 5Z" fill="#ff6b5e"/><path d="M32 33c-9 14-10 18 0 25 11-6 10-14 0-25Z" fill="#ffc23c"/>',
   pointer:'<path d="M13 7v43l12-13 10 20 8-4-10-19h17z" fill="#fff7e9"/>',
   mine:`<path d="m17 54 7 4 29-38-7-6z" fill="${wood}"/><path d="M9 14Q31-2 58 23L48 27Q34 11 9 14Z" fill="${metal}"/>`,

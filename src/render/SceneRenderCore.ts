@@ -1483,7 +1483,7 @@ export class SceneRenderCore {
       skipped = line.length-cells.length;
     }
     const width = bounds.maxX - bounds.minX + 1, height = bounds.maxZ - bounds.minZ + 1;
-    if ('kind' in drag || action === 'lay-floor' || action === 'build-roof') {
+    if ('kind' in drag || action === 'lay-floor' || action === 'build-roof' || action === 'build-bridge' || action === 'remove-bridge') {
       this.surfaceTint.clearPreview();
       this.designations.clearPreview();
       this.clearOrderTargets();
@@ -1554,7 +1554,7 @@ export class SceneRenderCore {
       const material=this.hover.material as THREE.MeshBasicNodeMaterial;material.color.setHex(color);material.opacity=.55;
       this.surfaceTint.setHover(cell.x,cell.z,1,1,color,material.opacity);this.constructionPreview.hide();return;
     }
-    if (isAreaAction(this.tool) && this.tool!=='lay-floor' && this.tool!=='build-roof') {
+    if (isAreaAction(this.tool) && this.tool!=='lay-floor' && this.tool!=='build-roof' && this.tool!=='build-bridge' && this.tool!=='remove-bridge') {
       let color=0x8bcef0;
       if(ZONE_TOOLS.has(this.tool)){
         this.areaIndex??=buildAreaIndex(this.world);
@@ -1566,12 +1566,12 @@ export class SceneRenderCore {
       this.constructionPreview.hide(); return;
     }
     const placeable=this.tool in STRUCTURE_DEFINITIONS||['mine','uninstall','deconstruct','chop','harvest','cut'].includes(this.tool);
-    const validity = this.tool==='build-roof'?queryArea(this.world,{type:'area',action:'build-roof',from:cell,to:cell}):this.tool==='lay-floor'||this.tool==='remove-floor'?canDesignate(this.world,{type:'designate',kind:this.tool,...cell,...this.tool==='lay-floor'?{floor:this.selectedFloor}:{}}):this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:['sun-lamp','standing-lamp','small-sculpture','large-sculpture'].includes(this.furniturePlacement.kind)?0:this.placementRotation},true):placeable
+    const validity = this.tool==='build-roof'?queryArea(this.world,{type:'area',action:'build-roof',from:cell,to:cell}):this.tool==='lay-floor'||this.tool==='remove-floor'||this.tool==='build-bridge'||this.tool==='remove-bridge'?canDesignate(this.world,{type:'designate',kind:this.tool,...cell,...this.tool==='lay-floor'?{floor:this.selectedFloor}:{}}):this.tool==='install'&&this.furniturePlacement?installCommand(this.world,{type:'install',structureId:this.furniturePlacement.id,...cell,orientation:['sun-lamp','standing-lamp','small-sculpture','large-sculpture'].includes(this.furniturePlacement.kind)?0:this.placementRotation},true):placeable
       ? canDesignate(this.world, { type:'designate',kind:this.tool as JobKind,...cell,...(this.constructionMaterial?{material:this.constructionMaterial}:{}),orientation:this.tool==='mini-turret'||this.tool==='sandbags'||this.tool==='solar-generator'||this.tool==='power-conduit'||this.tool==='power-switch'||this.tool==='wood-generator'||this.tool==='chemfuel-generator'||this.tool==='sun-lamp'||this.tool==='standing-lamp'||this.tool==='door'||this.tool==='autodoor'||this.tool==='passive-cooler'?0:this.placementRotation }) : undefined;
     const invalidPlacement=validity?.ok===false||this.tool==='build-roof'&&validity!==undefined&&'cells' in validity&&validity.cells.length===0;
     const color = invalidPlacement ? 0xe46f58 : this.tool === 'cancel' || this.tool === 'remove-stockpile' ? 0xe6876a : this.tool === 'select' ? 0xf9ebae : 0x9dd9ca;
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
-    if (this.tool in STRUCTURE_DEFINITIONS || this.tool==='lay-floor'||this.tool==='build-roof'||this.tool==='install'&&this.furniturePlacement) {
+    if (this.tool in STRUCTURE_DEFINITIONS || this.tool==='lay-floor'||this.tool==='build-roof'||this.tool==='build-bridge'||this.tool==='remove-bridge'||this.tool==='install'&&this.furniturePlacement) {
       const orientation:Orientation = this.tool==='install'
         ? ['sun-lamp','standing-lamp','small-sculpture','large-sculpture'].includes(kind)?0:this.placementRotation
         : ['mini-turret','sandbags','solar-generator','power-conduit','power-switch','wood-generator','chemfuel-generator','sun-lamp','standing-lamp','door','autodoor','passive-cooler'].includes(this.tool)?0:this.placementRotation;

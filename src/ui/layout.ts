@@ -34,6 +34,8 @@ export const workColumns: readonly {id: WorkType; label: string}[] = [
 ];
 export const toolDefinitions: { id: Tool; title: string; hint: string; key: string; category: ArchitectCategory }[] = [
   ...FLOOR_KINDS.map(id=>({id,title:FLOOR_DEFINITIONS[id].label,hint:`${flooringRecipe(id).ingredients.map(i=>`${i.quantity} ${ITEM_DEFINITIONS[i.item].label}`).join(' + ')} par case · Construction ${FLOOR_DEFINITIONS[id].skill}${FLOOR_DEFINITIONS[id].research==='stonecutting'?' · recherche Taille de pierre':FLOOR_DEFINITIONS[id].research==='smithing'?' · recherche Forge':FLOOR_DEFINITIONS[id].research==='sterile-materials'?' · recherche Matériaux stériles':''} · cliquer ou tracer un rectangle`,key:'',category:'floors' as const})),
+  {id:'build-bridge',title:'Pont en bois',hint:'Fondation sur marais · support léger uniquement · tracer une ligne ou un rectangle',key:'',category:'floors'},
+  {id:'remove-bridge',title:'Retirer le pont',hint:'Travail de Construction · récupère 6 bois · refusé si une construction perd son support',key:'',category:'floors'},
   {id:'remove-floor',title:'Retirer le sol',hint:'Travail de Construction · récupère environ la moitié du matériau · conserve le terrain naturel',key:'',category:'floors'},
   {id:'grave',title:'Tombe',hint:'1 × 2 · creusée sans matériau · un corps · Q / E pour tourner',key:'',category:'furniture'},
   { id: 'select', title: 'Inspecter', hint: 'Choisir un colon, un objet ou une zone ; survoler le terrain pour le lire', key: 'Échap', category: 'orders' },

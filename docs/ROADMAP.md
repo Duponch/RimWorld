@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 246.** [V386](gameplay/aulnes-winter-v386.md) actualise Les Aulnes : une tuque finie/rangée, seconde en collecte, archives conservées et catalogue128. Publication **ff70e800**, produit `026d2c4e`,128 réponses HTTPS exactes. Campagne98038 close partielle.
+**16 octobre 2026 — schéma 247.** [V387](gameplay/bridge-marsh-v387.md) relie construction, transport et retrait des ponts sur marais, support Light et destruction. Publication en préparation ; production précédente V386/ff70e800. Les Aulnes V386 et la campagne98038 close partielle sont préservées.
 
 ## Priorité actuelle
 
@@ -16,7 +16,7 @@
 10. **Protection textile V384 qualifiée.** Tuque tissu/laine, ouvrage/reprise, rangement, port/retrait physiques et isolation ; quantification prospective48→50Core explicitée.
 11. **Marais de toundra V385 qualifiés.** Génération prospective, marche et transport, refus de support/culture, feu/neige et recharges ; gel, séchage, ponts et écologie complète restent ouverts.
 12. **Les Aulnes V386 qualifiées.** Facture laine réelle et première production rangée ; seconde production et port restent à jouer. Anciennes références et parties personnelles préservées.
-13. **Suite : pont standard sur marais.** Référence ciblée préparée ; relever retrait/destruction et support Light avant implémentation. Rivières/profondeurs et pont lourd hors de cette tranche. Aucun code ni contrôle acquis.
+13. **Ponts de marais V387 qualifiés.** Fondation payée et terrain dessous conservé, supports Light, passage/transport et retrait physiques, feu/explosion et migrations strictes. Rivières/profondeurs, pont lourd et destruction de masse restent hors du parcours natif qualifié.
 
 **Référence jouable à entretenir : Les Aulnes.** Actualiser régulièrement sa version courante avec les objets et boucles pertinents du catalogue, en conservant une colonie logique et les anciennes versions. Le patrimoine ajouté peut être préparé et explicitement décrit ; il ne devient pas une campagne naturellement acquise. V381 expose les étagères et la tenue de garde, V386 une confection de tuques en cours ; les prochaines mises à jour suivront les ajouts pertinents.
 

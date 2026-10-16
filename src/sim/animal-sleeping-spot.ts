@@ -13,7 +13,7 @@ export function canPlaceAnimalSpot(world:World,c:DesignateCommand):CommandResult
     return {ok:false,code:'invalid-command',reason:'Emplacement animal non rotatif et sans matériau.'};
   if(!Number.isSafeInteger(c.x)||!Number.isSafeInteger(c.z)||c.x<0||c.z<0||c.x>=world.width||c.z>=world.height)
     return {ok:false,code:'out-of-bounds',reason:'Emplacement hors de la carte.'};
-  if(['rock','water','marsh'].includes(world.tiles[c.z*world.width+c.x]!.terrain)||world.resources.some(r=>r.kind==='rock'&&same(r,c)))
+  if((['rock','water'].includes(world.tiles[c.z*world.width+c.x]!.terrain)||world.tiles[c.z*world.width+c.x]!.terrain==='marsh'&&!world.tiles[c.z*world.width+c.x]!.bridge)||world.resources.some(r=>r.kind==='rock'&&same(r,c)))
     return refusal('Dégager la roche ou choisir un terrain praticable.');
   if(world.structures.some(s=>sharesConstructionLayer(s.kind,c.kind)&&footprintCells(s).some(p=>same(p,c)))
     ||world.jobs.some(j=>!isRoofJob(j)&&sharesConstructionLayer(j.furniture?.kind??j.kind,c.kind)&&footprintCells(j).some(p=>same(p,c))))

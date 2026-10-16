@@ -23,7 +23,7 @@ export class FireContent {
   solid(c:Cell):boolean{return !this.inside(c)||this.world.tiles[index(this.world,c)]!.terrain==='rock'||this.solids.has(index(this.world,c));}
   allTargets(c:Cell):FireTarget[]{return this.inside(c)?this.contents.get(index(this.world,c))??[]:[];}
   targets(c:Cell):FireTarget[]{
-    if(!this.inside(c)||['water','rock','marsh'].includes(this.world.tiles[index(this.world,c)]!.terrain))return [];
+    if(!this.inside(c)||(['water','rock'].includes(this.world.tiles[index(this.world,c)]!.terrain)||this.world.tiles[index(this.world,c)]!.terrain==='marsh'&&!this.world.tiles[index(this.world,c)]!.bridge))return [];
     const list=this.contents.get(index(this.world,c))??[];
     // Full edifices shield other content, including the separate conduit layer.
     const full=list.find(t=>t.kind==='structure'&&(t.value.kind==='wall'||isRoomDoor(t.value.kind)||(t.value.kind==='cooler'||t.value.kind==='vent')));
@@ -33,7 +33,8 @@ export class FireContent {
     if(!this.inside(c)||this.world.fires?.items.some(f=>firePosition(this.world,f)?.x===c.x&&firePosition(this.world,f)?.z===c.z))return 0;
     return this.fuel(c);
   }
-  floorFuel(c:Cell):number {const floor=this.inside(c)&&!this.solids.has(index(this.world,c))&&this.world.tiles[index(this.world,c)]!.floor;return floor?FLOOR_DEFINITIONS[floor].flammability:0;}
+  bridgeFuel(c:Cell):number {return this.inside(c)&&this.world.tiles[index(this.world,c)]!.bridge&&!this.world.structures.some(s=>(s.kind==='wall'||s.kind==='cooler'||s.kind==='vent'||isRoomDoor(s.kind)&&!s.door?.open)&&footprintCells(s).some(p=>p.x===c.x&&p.z===c.z))?.8:0;}
+  floorFuel(c:Cell):number {if(this.bridgeFuel(c))return .8;const floor=this.inside(c)&&!this.solids.has(index(this.world,c))&&this.world.tiles[index(this.world,c)]!.floor;return floor?FLOOR_DEFINITIONS[floor].flammability:0;}
   fuel(c:Cell):number{return this.targets(c).reduce((max,t)=>Math.max(max,targetFlammability(t)),this.floorFuel(c));}
   line(a:Cell,b:Cell):boolean {
     // Short exact grid traversal. Target may itself be a burning solid.

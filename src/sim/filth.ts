@@ -11,12 +11,12 @@ const inside=(w:World,c:Cell)=>Number.isInteger(c.x)&&Number.isInteger(c.z)&&c.x
 /** Filth needs walkable ground, not an empty storage slot. Tables/chunks can
  * carry traces; walls, cooler shells and natural rock cannot. */
 function filthWalkable(w:World,c:Cell):boolean {
-  if(!inside(w,c)||['rock','water','marsh'].includes(w.tiles[c.z*w.width+c.x]!.terrain))return false;
+  if(!inside(w,c)||(['rock','water'].includes(w.tiles[c.z*w.width+c.x]!.terrain)||w.tiles[c.z*w.width+c.x]!.terrain==='marsh'&&!w.tiles[c.z*w.width+c.x]!.bridge))return false;
   return !w.structures.some(s=>(s.kind==='vent'||s.kind==='wall'||s.kind==='cooler')&&same(s,c));
 }
 function accepted(w:World,c:Cell,kind:FilthKind,spontaneous=false):boolean {
   const tile=w.tiles[c.z*w.width+c.x]!;
-  if(tile.floor)return true;
+  if(tile.floor||tile.bridge)return true;
   if(!spontaneous)return tile.terrain==='rough-stone'||kind!=='dirt'&&kind!=='trash';
   if(isRoofed(w,c.z*w.width+c.x))return true;
   const room=captureCleanliness(w).room(c);return !!room&&room.cells.size-room.covered<Math.ceil(room.cells.size*.25);
