@@ -27,7 +27,7 @@ export function validateTrade(w:World,version:number):string[] {
     // A cancelled or returned group keeps its real possessions on the local
     // human owner, even after death or a later change of affiliation.
     const groupInventory=version>=196&&!!p&&!Object.hasOwn(p,'mechKind')&&p.health?.body===undefined
-      &&['survival-meal','silver','medicine','component','cloth','muffalo-wool'].includes(pile.item);
+      &&(['survival-meal','silver','medicine','component','cloth','muffalo-wool'].includes(pile.item)||version>=250&&pile.item==='pemmican');
     if(!p?.visitor&&!scoutRation&&!commercialInventory&&!groupInventory||pile.kind==='corpse'||pile.kind==='mech-corpse'||pile.kind==='unfinished')errors.push('Invalid inventory ownership.');
   }
   const ledger:unknown=w.trade;if(ledger===undefined)return errors;

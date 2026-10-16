@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 249.** [V390](gameplay/torch-lamp-v390.md) ajoute la lampe-torche fixe : construction payée, lumière utile, consommation finie et recharge physique qualifiées, reprise au contact. Publication regroupée suivante ; production V388–V389/05b8f6b6 conservée. Les Aulnes V386 et la campagne98038 close partielle restent préservées.
+**16 octobre 2026 — schéma 250.** [V391](gameplay/group-provisions-v391.md) relie les provisions mixtes au groupe collectif ; chargement, ingestion et retour qualifiés, publication groupée avec V390 ensuite. Les Aulnes V386 et la campagne98038 close partielle restent préservées.
 
 ## Priorité actuelle
 
@@ -18,8 +18,10 @@
 12. **Les Aulnes V386 qualifiées.** Facture laine réelle et première production rangée ; seconde production et port restent à jouer. Anciennes références et parties personnelles préservées.
 13. **Ponts de marais V387 qualifiés.** Fondation payée et terrain dessous conservé, supports Light, passage/transport et retrait physiques, feu/explosion et migrations strictes. Rivières/profondeurs, pont lourd et destruction de masse restent hors du parcours natif qualifié.
 14. **Gestion des tenues V388 qualifiée.** Effacement des seules pièces forcées, Auto conservé, renouvellement physique et sauvegarde exacte. Édition détaillée des politiques encore absente.
-15. **Réserve de camp V389 qualifiée.** Pemmican payé et préparé au contact, stockage/prise de plusieurs unités et reprise active ; provisions de voyage et catalogue alimentaire exhaustif ouverts.
+15. **Réserve de camp V389 qualifiée.** Pemmican payé et préparé au contact, stockage/prise de plusieurs unités et reprise active ; provisions des deux voyages individuels et catalogue alimentaire exhaustif ouverts ; groupe collectif étendu enV391.
 16. **Éclairage préindustriel V390 qualifié.** Lampe-torche construite/payée, consommation et effet du toit/pluie, panne/recharge et reprise ; modèle mobile, mural et DLC différés.
+17. **Provisions collectives V391 qualifiées.** Rations/pemmican, âge, régimes, partage et retour physiques ; seuil manuel adapté, pas de durée d’autonomie promise.
+18. **Gestion des tenues V392 proposée.** Éditer les filtres existants pour réutiliser les vêtements déjà confectionnés ; aucune création/suppression de politique dans cette tranche.
 
 **Référence jouable à entretenir : Les Aulnes.** Actualiser régulièrement sa version courante avec les objets et boucles pertinents du catalogue, en conservant une colonie logique et les anciennes versions. Le patrimoine ajouté peut être préparé et explicitement décrit ; il ne devient pas une campagne naturellement acquise. V381 expose les étagères et la tenue de garde, V386 une confection de tuques en cours ; les prochaines mises à jour suivront les ajouts pertinents.
 

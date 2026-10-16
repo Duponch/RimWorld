@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Préparer les provisions du groupe — V391, proposition
+
+Dans **Monde → Globe et groupe**, choisissez des repas de survie et/ou du pemmican au sol pour une nouvelle formation. Vérifiez le régime de chaque membre : le stock partagé doit couvrir au moins **0,9 nutrition par personne**, soit une ration ou 18 unités de pemmican. Le panneau distingue les deux quantités et leur nutrition ; ce minimum ne garantit aucune autonomie de voyage. Laissez les membres charger au contact et sortir.
+
+Hors carte, les provisions sont partagées selon les régimes et le pemmican continue de vieillir. Les mêmes biens reviennent puis sont déchargés physiquement. Les anciens groupes déjà engagés et les voyages individuels gardent leurs règles antérieures. [Règles et limites](group-provisions-v391.md).
+
 ## Éclairer un abri au bois — V390, proposition
 
 Dans Architecte, choisissez **Lampe-torche** et rendez **20 bois** accessibles. Le colon livre puis construit : la réserve de 20 bois est initialement pleine, sans recharge supplémentaire à payer au premier allumage. La lumière aide les travaux alentour ; la chaleur est faible et plafonnée à 23°C. La torche reste un objet fixe, traversable, sans interrupteur ni désinstallation en paquet.
@@ -1255,7 +1261,7 @@ Le cuisinier rassemble **5 viandes animales + 5 végétaux crus** pour **16 unit
 
 Chaque unité apporte **0,05 nutrition**, jusqu’à **75 par pile**. La consommation ordinaire ou **Consommer** prend le nombre d’unités nécessaire au besoin actuel, avec contact, portage et ingestion réels ; ce n’est pas un repas entier consommé par unité. Prévoyez une réserve autorisant **Plats/Pemmican**, couverte pour l’organisation du camp. Le début de pourriture est **70 jours d’âge neutre**, ralenti par le froid existant : le produit n’est pas impérissable. Une mauvaise cuisine peut contaminer toute la fabrication ; division et fusion conservent son risque.
 
-Les anciennes politiques alimentaires restent littérales : autorisez le pemmican si nécessaire. Les nouvelles parties l’admettent dans les politiques usuelles. **Les provisions des expéditions restent limitées aux repas de survie** ; cette tranche apporte une réserve coloniale, sans nouveau chargement de voyage ni scène publique. [Règles, références et limites V389](pemmican-v389.md).
+Les anciennes politiques alimentaires restent littérales : autorisez le pemmican si nécessaire. Les nouvelles parties l’admettent dans les politiques usuelles. **V389 apportait une réserve coloniale. V391 étend les nouvelles expéditions collectives au pemmican**, tandis que les voyages individuels restent limités aux repas de survie ; aucune nouvelle scène publique. [Règles, références et limites V389](pemmican-v389.md).
 
 ## Préparer des repas au feu
 

@@ -1,4 +1,6 @@
 /** Physical formation/loading and closed collective departure preflight. */
+import {GROUP_PROVISIONS_SCHEMA,mixedGroupProvisions,freshGroupProvision} from './group-provisions.ts';
+import type { GroupProvisions } from './group-state.ts';
 import type { GroupState, GroupSource, GroupLedger } from './group-state.ts';
 import type { PlanetState } from './planet-state.ts';
 import type { CommercialBuyLine } from './commercial-state.ts';
@@ -13,8 +15,8 @@ import { findPlanetRoute, planetCostContext, type PlanetSearchBudget } from './p
 export const GROUP_MAX_SOURCES=64,GROUP_MAX_MANIFEST=512;
 export const emptyGroupLedger=():GroupLedger=>({foodLoaded:0,foodConsumed:0,medicineUsed:0,silverLoaded:0,silverPaid:0,silverEarned:0,
   cargoLoaded:{cloth:0,'muffalo-wool':0},sold:{cloth:0,'muffalo-wool':0},bought:{medicine:0,component:0}});
-const loadItem=(item:MaterialPile['item']):item is GroupSource['item']=>
-  item==='survival-meal'||item==='silver'||item==='cloth'||item==='muffalo-wool';
+const loadItem=(item:MaterialPile['item'],mixed:boolean):item is GroupSource['item']=>
+  mixed&&item==='pemmican'||item==='survival-meal'||item==='silver'||item==='cloth'||item==='muffalo-wool';
 const fail=(reason:string)=>({kind:'refused' as const,reason});
 const contact=(pawn:Pawn,cell:Cell)=>Math.abs(pawn.x-cell.x)+Math.abs(pawn.z-cell.z)<=1;
 export type GroupLoadingPreview=
@@ -33,7 +35,7 @@ export function previewGroupLoading(world:World,memberIds:readonly number[],line
   const access=new Map<string,'reachable'|'unreachable'|'deferred'>();let additionalPiles=0;
   for(const line of [...lines].sort((a,b)=>a.pileId-b.pileId)){
     const source=capture.sources.get(line.pileId);
-    if(!source||source.owner.type!=='ground'||!loadItem(source.item)||source.foodPoison)return fail('source');
+    if(!source||source.owner.type!=='ground'||!loadItem(source.item,world.schemaVersion>=GROUP_PROVISIONS_SCHEMA)||source.foodPoison||source.item==='pemmican'&&!freshGroupProvision(source,world.tick))return fail('source');
     const unit=commercialItemMassGrams(source.item),reserved=authority.reservedQuantity(world,source.id);
     if(unit===undefined||!Number.isSafeInteger(reserved)||reserved<0||source.quantity-reserved<line.quantity)return fail('source-reserved');
     remainingBySource.set(source.id,source.quantity);let remaining=line.quantity;
@@ -92,6 +94,7 @@ export interface GroupPickupPlan {
   cursor:number;
   transfer:InventoryPickupPlan;
   nextLedger:GroupLedger;
+  nextProvisions?:GroupProvisions;
   tick:number;
   carrier:Pawn;
   expectedCarrier:string;
@@ -105,7 +108,7 @@ export function prepareGroupPickup(world:World,group:PreparingGroup,authority:Gr
   const line=group.manifest[group.cursor];if(!line)return fail('cursor');
   const result=captureGroupCandidates(world,group.memberIds,authority);if(result.kind!=='ready')return result;
   const capture=result.capture,pawn=capture.members.find(p=>p.id===line.carrierId),source=capture.sources.get(line.pileId);
-  if(!pawn||!source||source.owner.type!=='ground'||source.item!==line.item||source.foodPoison||!contact(pawn,source.owner)
+  if(!pawn||!source||source.owner.type!=='ground'||source.item!==line.item||source.foodPoison||line.item==='pemmican'&&(!mixedGroupProvisions(group)||!freshGroupProvision(source,world.tick))||!contact(pawn,source.owner)
     ||pawn.motion&&pawn.motion.end>world.tick||pawn.moveCooldown>0)return fail('physical-contact');
   const policy=authority.sourceReason(world,source,pawn);if(policy)return fail(policy);
   const reserved=authority.reservedQuantity(world,source.id,group.id),future=groupReservedSources(group).get(source.id)??0;
@@ -115,11 +118,13 @@ export function prepareGroupPickup(world:World,group:PreparingGroup,authority:Gr
   const transfer=planInventoryPickup(world,source,pawn.id,line.quantity);if(!transfer)return fail('transfer');
   const namespace=authority.namespaceReason(world,{additionalPiles:Number(transfer.split),members:capture.members,items:capture.items});if(namespace)return fail(namespace);
   const nextLedger:GroupLedger={...group.ledger,cargoLoaded:{...group.ledger.cargoLoaded},sold:{...group.ledger.sold},bought:{...group.ledger.bought}};
-  if(line.item==='survival-meal')nextLedger.foodLoaded+=line.quantity;
+  const nextProvisions=group.provisions?{...group.provisions}:undefined;
+  if(line.item==='pemmican'){if(!nextProvisions)return fail('future-provision');nextProvisions.pemmicanLoadedUnits+=line.quantity;}
+  else if(line.item==='survival-meal')nextLedger.foodLoaded+=line.quantity;
   else if(line.item==='silver')nextLedger.silverLoaded+=line.quantity;else nextLedger.cargoLoaded[line.item]+=line.quantity;
-  if(![nextLedger.foodLoaded,nextLedger.silverLoaded,nextLedger.cargoLoaded.cloth,nextLedger.cargoLoaded['muffalo-wool']].every(Number.isSafeInteger))return fail('ledger');
+  if(![nextProvisions?.pemmicanLoadedUnits??0,nextLedger.foodLoaded,nextLedger.silverLoaded,nextLedger.cargoLoaded.cloth,nextLedger.cargoLoaded['muffalo-wool']].every(Number.isSafeInteger))return fail('ledger');
   const possessions=capture.items.filter(p=>'pawnId' in p.owner&&p.owner.pawnId===pawn.id);
-  return {kind:'ready',plan:{group,expectedGroup:JSON.stringify(group),cursor:group.cursor,transfer,nextLedger,tick:world.tick,
+  return {kind:'ready',plan:{group,expectedGroup:JSON.stringify(group),cursor:group.cursor,transfer,nextLedger,...nextProvisions?{nextProvisions}:{},tick:world.tick,
     carrier:pawn,expectedCarrier:JSON.stringify(pawn),possessions,possessionSignatures:possessions.map(p=>JSON.stringify(p))}};
 }
 /** Caller proves plan.group is still active; all preflight before first write.
@@ -131,7 +136,7 @@ export function commitGroupPickup(world:World,activeGroup:GroupState,plan:GroupP
   if(actual.length!==plan.possessions.length||!plan.possessions.every((p,i)=>actual.includes(p)&&JSON.stringify(p)===plan.possessionSignatures[i]))return false;
   if(!commitInventoryPickup(world,plan.transfer))return false;
   plan.group.manifest[plan.cursor]!.carriedPileId=plan.transfer.carried.id;
-  plan.group.ledger=plan.nextLedger;plan.group.cursor++;refreshStock(world);
+  plan.group.ledger=plan.nextLedger;if(plan.nextProvisions)plan.group.provisions=plan.nextProvisions;plan.group.cursor++;refreshStock(world);
   // Gathering/loading/leaving transition is root-owned after real roster contacts.
   return true;
 }
@@ -160,7 +165,7 @@ export function prepareGroupDeparture(world:World,planet:PlanetState,group:Prepa
   if(authority.personalPassTick(world,capture.members)!==world.tick)return fail('personal-pass');
   const route=findPlanetRoute(planet,group.originTile??planet.homeTile,group.destination,planetCostContext(world,capture.mass),budget);
   if(route.kind==='deferred')return {kind:'deferred'};if(route.kind!=='found')return fail('unreachable');
-  const next:AwayGroup={...group.originTile!==undefined?{originTile:group.originTile}:{},id:group.id,startedAt:group.startedAt,destination:group.destination,ledger:group.ledger,phase:'travelling',
+  const next:AwayGroup={...group.originTile!==undefined?{originTile:group.originTile}:{},id:group.id,startedAt:group.startedAt,destination:group.destination,ledger:group.ledger,...group.provisions?{provisions:{...group.provisions}}:{},phase:'travelling',
     members:[...capture.members],items:[...capture.items],departedAt:world.tick,lastPersonalTick:world.tick,baseline:capture.baseline,
     entry:{...capture.exitCells[0]!.cell},tile:group.originTile??planet.homeTile,route:route.tiles,segment:null,paused:false,stop:null};
   const plan:GroupDeparturePlan={group,expectedGroup:JSON.stringify(group),capture,next};

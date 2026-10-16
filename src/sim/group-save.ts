@@ -1,4 +1,5 @@
 /** Raw owner/phase guard. No projected World, registration or mutation. */
+import {validGroupProvisionsShape} from './group-provisions-save.ts';
 import type { GroupState } from './group-state.ts';
 import { GROUP_MAX_MEMBERS,GROUP_MAX_LOSSES } from './group-state.ts';
 import type { MaterialPile,Pawn,World } from './types.ts';
@@ -56,8 +57,8 @@ function ledger(v:unknown):boolean {
   return object(v)&&keys(v,LEDGER)&&LEDGER.filter(k=>!['cargoLoaded','sold','bought'].includes(k)).every(k=>int(v[k]))
     &&pair(v.cargoLoaded,'cloth','muffalo-wool')&&pair(v.sold,'cloth','muffalo-wool')&&pair(v.bought,'medicine','component');
 }
-function baseline(v:unknown):boolean {
-  return object(v)&&keys(v,BASELINE)&&['food','silver','medicine','component'].every(k=>int(v[k]))&&pair(v.cargo,'cloth','muffalo-wool');
+function baseline(v:unknown,provisioned=false):boolean {
+  return object(v)&&keys(v,provisioned?[...BASELINE,'pemmican']:BASELINE)&&(!provisioned||int(v.pemmican))&&['food','silver','medicine','component'].every(k=>int(v[k]))&&pair(v.cargo,'cloth','muffalo-wool');
 }
 const total=(values:readonly number[]):number|undefined=>{let n=0;for(const value of values){n+=value;if(!Number.isSafeInteger(n))return undefined;}return n;};
 
@@ -84,7 +85,8 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState):stri
   const fail=(message:string)=>errors.push(message);
   const group=raw.group,losses=raw.groupLosses;
   const originPresent=object(group)&&Object.hasOwn(group,'originTile');
-  const commonKeys=originPresent&&version>=240?[...COMMON,'originTile']:COMMON;
+  const provisioned=object(group)&&Object.hasOwn(group,'provisions');
+  const commonKeys=[...COMMON,...originPresent&&version>=240?['originTile']:[],...provisioned?['provisions']:[]];
   const point=(v:unknown)=>object(v)&&keys(v,['x','z'])&&int(v.x,0,world.width-1)&&int(v.z,0,world.height-1);
   const place=(v:unknown)=>int(v,0,planet.tiles.length-1)&&planet.tiles[v]!.biome!=='ocean';
   const thing=(v:unknown)=>int(v,1,world.nextId-1);
@@ -170,6 +172,8 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState):stri
     }
   }
   if(group!==undefined){
+    if(!validGroupProvisionsShape(group,version))return ['Invalid or future group provisions.'];
+    const provisions=provisioned&&object(group)?group.provisions as Record<string,number>:undefined;
     if(originPresent&&(version<240||!object(group)||!place(group.originTile)||group.originTile===planet.homeTile
       ||group.originTile!==(world.expeditionSite?.tile??world.secondarySite?.tile??world.campaignMap?.secondaryTile)))return ['Invalid group origin map.'];
     if(!object(group)||!groupId(group.id)||!int(group.startedAt,planet.adoptedAt,world.tick)||!place(group.destination)||!ledger(group.ledger))
@@ -196,18 +200,19 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState):stri
           if(cells.has(key)||!(c.x===0||c.z===0||c.x===world.width-1||c.z===world.height-1))return ['Invalid group exit cells.'];cells.add(key);}
       }
       if(group.phase==='gathering'&&group.cursor!==0||group.phase==='leaving'&&group.cursor!==group.manifest.length)return ['Invalid group contact frontier.'];
-      const future=new Map<number,{item:string;quantity:number}>(),carried=new Set<number>(),loaded={food:0,silver:0,cloth:0,'muffalo-wool':0};
+      const future=new Map<number,{item:string;quantity:number}>(),carried=new Set<number>(),loaded={food:0,pemmican:0,silver:0,cloth:0,'muffalo-wool':0};
       for(let i=0;i<group.manifest.length;i++){
         const line:unknown=group.manifest[i];
         if(!object(line)||!keys(line,['pileId','quantity','item','carrierId'],i<(group.cursor as number)?['carriedPileId']:[])
-          ||!thing(line.pileId)||!members.includes(line.carrierId as number)||!oneOf(line.item,['survival-meal','silver','cloth','muffalo-wool'])
+          ||!thing(line.pileId)||!members.includes(line.carrierId as number)||!oneOf(line.item,['survival-meal','silver','cloth','muffalo-wool',...provisioned?['pemmican']:[]])
           ||!int(line.quantity,1,ITEM_DEFINITIONS[line.item as MaterialPile['item']].stackLimit))return ['Invalid group manifest row.'];
         if(i<(group.cursor as number)){
           if(!thing(line.carriedPileId)||carried.has(line.carriedPileId))return ['Invalid group pickup receipt.'];carried.add(line.carriedPileId);
-          const key=line.item==='survival-meal'?'food':line.item as 'silver'|'cloth'|'muffalo-wool';loaded[key]+=line.quantity;
+          const key=line.item==='survival-meal'?'food':line.item as 'silver'|'cloth'|'muffalo-wool'|'pemmican';loaded[key]+=line.quantity;
         }else{const old=future.get(line.pileId)??{item:line.item as string,quantity:0};if(old.item!==line.item)return ['Conflicting group source item.'];old.quantity+=line.quantity;future.set(line.pileId,old);}
       }
       for(const [id,line] of future){const pile=world.piles.find(p=>p.id===id);if(!pile||pile.owner.type!=='ground'||pile.item!==line.item||pile.foodPoison||pile.quantity<line.quantity)return ['Invalid future group source ownership.'];}
+      if(provisions&&(provisions.pemmicanLoadedUnits!==loaded.pemmican||provisions.pemmicanConsumedUnits!==0||provisions.pemmicanSpoiledUnits!==0))return ['Invalid formation pemmican contact ledger.'];
       const l=group.ledger as unknown as GroupState['ledger'];
       if(!Object.values(loaded).every(Number.isSafeInteger)||l.foodLoaded!==loaded.food||l.silverLoaded!==loaded.silver
         ||l.cargoLoaded.cloth!==loaded.cloth||l.cargoLoaded['muffalo-wool']!==loaded['muffalo-wool']||l.foodConsumed!==0||l.medicineUsed!==0
@@ -217,7 +222,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState):stri
       const members=group.memberIds as number[];
       if(members.some(id=>!localById.has(id))||(group.pendingPileIds as number[]).some(id=>!world.piles.some(p=>p.id===id&&p.owner.type==='inventory'&&members.includes(p.owner.pawnId))))return ['Invalid group unloading possession.'];
     }else if(oneOf(group.phase,['travelling','at-site','awaiting-entry'])){
-      if(!keys(group,[...commonKeys,...AWAY])||!dense(group.members,1,GROUP_MAX_MEMBERS)||!baseline(group.baseline)||!point(group.entry)
+      if(!keys(group,[...commonKeys,...AWAY])||!dense(group.members,1,GROUP_MAX_MEMBERS)||!baseline(group.baseline,provisioned)||!point(group.entry)
         ||!int(group.departedAt,group.startedAt as number,world.tick)||group.lastPersonalTick!==world.tick||!place(group.tile)
         ||typeof group.paused!=='boolean'||!dense(group.route,1,162))return ['Invalid away group shape or clock.'];
       for(const p of group.members)if(!person(p,world.tick,false))return ['Invalid away group person.',...errors];
@@ -242,7 +247,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState):stri
       if((losses as unknown[]|undefined)?.some(loss=>object(loss)&&loss.groupId===group.id&&(loss.tick as number)<(group.departedAt as number)))return ['Group loss predates its departure.'];
       const all=[...(group.items as MaterialPile[]),...(retained.get(group.id as number)??[])],b=group.baseline as unknown as Extract<GroupState,{members:Pawn[]}>['baseline'],l=group.ledger as unknown as GroupState['ledger'];
       const amount=(item:string)=>total(all.filter(p=>p.owner.type==='inventory'&&p.item===item).map(p=>p.quantity));
-      const equations:[string,bigint][]=[['survival-meal',BigInt(b.food)-BigInt(l.foodConsumed)],['silver',BigInt(b.silver)+BigInt(l.silverEarned)-BigInt(l.silverPaid)],
+      const equations:[string,bigint][]=[...(provisions?[['pemmican',BigInt(b.pemmican!)-BigInt(provisions.pemmicanConsumedUnits!)-BigInt(provisions.pemmicanSpoiledUnits!)] as [string,bigint]]:[]),['survival-meal',BigInt(b.food)-BigInt(l.foodConsumed)],['silver',BigInt(b.silver)+BigInt(l.silverEarned)-BigInt(l.silverPaid)],
         ['cloth',BigInt(b.cargo.cloth)-BigInt(l.sold.cloth)],['muffalo-wool',BigInt(b.cargo['muffalo-wool'])-BigInt(l.sold['muffalo-wool'])],
         ['medicine',BigInt(b.medicine)+BigInt(l.bought.medicine)-BigInt(l.medicineUsed)],['component',BigInt(b.component)+BigInt(l.bought.component)]];
       if(equations.some(([item,expected])=>{const actual=amount(item);return expected<0n||expected>BigInt(Number.MAX_SAFE_INTEGER)||actual===undefined||BigInt(actual)!==expected;}))return ['Invalid group baseline conservation.'];

@@ -101,10 +101,11 @@ test.each([false,true])('group owners reserve ballistic/Bomb identities before r
 
 test.each([false,true])('historical 195 accepts true absence and rejects own future keys even undefined without advancing the revision (checkpoint=%s)',checkpoint=>{
   // Construct the declared historical baseline before injecting any future
-  // owner: fodder and paste permissions did not exist in 195. Fox permissions
+  // owner: later food and recon/tuque permissions did not exist in 195. Fox permissions
   // already existed and remain intact, as do every original entity and ID.
   const world=withoutFodderDefaults(createWorld(42,16,16));
-  for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='nutrient-paste-meal');
+  for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='nutrient-paste-meal'&&item!=='pemmican');
+  world.apparelPolicies=world.apparelPolicies!.map(policy=>({...policy,allowedItems:policy.allowedItems.filter(item=>item!=='recon-armor'&&item!=='cloth-tuque'&&item!=='muffalo-wool-tuque')}));
   (world as unknown as {schemaVersion:number}).schemaVersion=195;
   delete world.planet;delete world.group;delete world.groupLosses;
   const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder(),before=adopt(decoder,structuredClone(encoder.encode(world,0,0))),frozen=structuredClone(before);

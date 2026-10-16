@@ -231,7 +231,7 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
     selectionNotes.textContent='';
     try{
       if(destination===null&&snapshot.planet)destination=snapshot.world.expeditionSite?snapshot.planet.homeTile:snapshot.planet.civilianTile;
-      const projected=facts.mass??(plan?.ok?plan.mass:null);mass.textContent=projected?`Charge ${kg(projected.grams)} / ${kg(projected.capacityGrams)} · ${projected.rations} rations${facts.mass?' possédées.':' prévues au départ (estimation à vérifier au lancement).'}`:'Charge non calculée : vérifiez la formation choisie.';
+      const projected=facts.mass??(plan?.ok?plan.mass:null);mass.textContent=projected?`Charge ${kg(projected.grams)} / ${kg(projected.capacityGrams)} · ${projected.rations} repas de survie · ${projected.pemmicanUnits} unités de pemmican · nutrition disponible ${(projected.provisionNutrition/100).toLocaleString('fr-FR',{maximumFractionDigits:2})}${facts.mass?' possédée.':' prévue au départ (estimation à vérifier au lancement).'}`:'Charge non calculée : vérifiez la formation choisie.';
       if(plan&&!plan.ok)selectionNotes.textContent=plan.reason;
       const stamp=previewTick!==undefined?` Estimation au J${(previewTick/TICKS_PER_DAY).toLocaleString('fr-FR',{maximumFractionDigits:2})}, revalidée à la commande.`:'';
       routeText.textContent=routePreview?.ok?`Route proposée : ${routePreview.route.length} cases · ${hours(routePreview.durationCore)}.${stamp} Le segment engagé reste conservé.`:routePreview&&!routePreview.ok?routePreview.reason:plan?.ok?`Route proposée : ${plan.route.length} cases.${stamp}`:snapshot.group?'Choisissez une destination puis calculez l’itinéraire.':'Vérifiez la formation pour examiner la route et la charge.';

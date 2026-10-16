@@ -1,6 +1,6 @@
 # Elsewhere
 
-**V390 — schéma 249 :** [Lampe-torche au sol](docs/gameplay/torch-lamp-v390.md) : construction payée, éclairage sans électricité, panne et recharge physiques qualifiés, reprise exacte au contact. Publication groupée suivante ; dernière production V388–V389/05b8f6b6 conservée. Les états suivants sont historiques.
+**V391 — schéma 250 :** [Provisions mixtes du groupe](docs/gameplay/group-provisions-v391.md) : pemmican/rations, régimes et vieillissement physiques ; chargement, ingestion et retour qualifiés, recharge UI exacte. V390 sera publié dans le même lot ; dernière production V388–V389/05b8f6b6 conservée. Les états suivants sont historiques.
 
 **V380 — schéma 242 :** [lisibilité des HUD](docs/gameplay/hover-layout-v380.md). Survol, ressources et dock stabilisés et qualifiés à quatre tailles ; correctif UI sans nouvelle mécanique. Publication regroupée suivante ; dernière production V378/e5ec566c. Les états suivants sont historiques.
 

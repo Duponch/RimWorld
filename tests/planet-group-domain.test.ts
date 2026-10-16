@@ -105,7 +105,10 @@ describe('planet/group domain',()=>{
     const real=quota(),found=findPlanetRoute(w.planet!,w.planet!.homeTile,w.planet!.civilianTile,planetCostContext(w,mass),real);
     expect(found.kind).toBe('found');expect(real.nodes).toBeGreaterThanOrEqual(0);expect(real.arcs).toBeGreaterThanOrEqual(0);
     if(found.kind==='found'){expect(found.tiles[0]).toBe(w.planet!.homeTile);expect(found.tiles.at(-1)).toBe(w.planet!.civilianTile);expect(found.estimatedCore).toBeGreaterThan(0);}
-    const unknown:MaterialPile={id:w.nextId,kind:'wood',item:'wood',quantity:1,owner:{type:'inventory',pawnId:members[0]!.id}};
+    const wood:MaterialPile={id:w.nextId,kind:'wood',item:'wood',quantity:1,owner:{type:'inventory',pawnId:members[0]!.id}};
+    expect(captureGroupMass(members,[...held,wood])?.grams).toBe(mass.grams+400);
+    // Steel is a real catalogue item whose local travel mass remains undefined.
+    const unknown:MaterialPile={...wood,kind:'steel',item:'steel'};
     expect(captureGroupMass(members,[...held,unknown])).toBeUndefined();
   });
 

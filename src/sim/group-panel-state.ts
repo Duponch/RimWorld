@@ -7,7 +7,7 @@ export interface GroupActionPermission {ok:boolean;reason?:string}
 export interface GroupMemberChoice extends GroupActionPermission {pawn:Pawn}
 export interface GroupSourceChoice {pile:MaterialPile;reserved:number;available:number;reason?:string}
 export interface GroupMassView {
-  grams:number;capacityGrams:number;rations:number;
+  grams:number;capacityGrams:number;rations:number;pemmicanUnits:number;provisionNutrition:number;
   byMember:readonly {pawnId:number;grams:number;capacityGrams:number}[];
 }
 export interface GroupTradeChoice {pile:MaterialPile|CommercialStockPile;available:number;unitPrice:number;reason?:string}

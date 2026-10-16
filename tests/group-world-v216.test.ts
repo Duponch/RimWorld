@@ -101,12 +101,20 @@ test('cancellation during a captured movement edge preserves that edge and its e
 });
 
 test('195 validates before the neutral migration chain and refuses future JSON owners without adoption',()=>{
-  const {w}=camp();(w as unknown as {schemaVersion:number}).schemaVersion=195;
+  const {w}=camp();
+  // These current default permissions were absent from the declared 195 witness.
+  for(const policy of w.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='pemmican'&&item!=='kibble'&&item!=='nutrient-paste-meal');
+  w.apparelPolicies=w.apparelPolicies!.map(policy=>({...policy,allowedItems:policy.allowedItems.filter(item=>item!=='recon-armor'&&item!=='cloth-tuque'&&item!=='muffalo-wool-tuque')}));
+  (w as unknown as {schemaVersion:number}).schemaVersion=195;
   const before=JSON.stringify(w),migrated=deserializeWorld(before);
-  expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);expect({...migrated,schemaVersion:195}).toEqual(w);
+  expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
+  // V217 already extended these three untouched original profiles; this old
+  // migration is literal history, not a new permission granted by V391.
+  const expected=structuredClone(w);for(const policy of expected.foodPolicies)if(policy.id<=3)policy.allowed.push('nutrient-paste-meal');
+  expect({...migrated,schemaVersion:195}).toEqual(expected);expect(JSON.stringify(w)).toBe(before);
   for(const key of ['planet','group','groupLosses']){
     const bad=structuredClone(w) as World&Record<string,unknown>;bad[key]=key==='groupLosses'?[]:null;
-    expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/Historical schema contains future world\/group fields/);
+    expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(key==='group'?/Future human sleeping spot content/:/Historical schema contains future world\/group fields/);
   }
   const bad=JSON.parse(before);bad.pawns[0].hunger=-1;
   expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/Invalid version 195 save/);

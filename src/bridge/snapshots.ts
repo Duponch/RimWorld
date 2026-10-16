@@ -1,3 +1,4 @@
+import {validGroupProvisionsHistoricalTransport} from '../sim/group-provisions-save.ts';
 import {validTorchHistoricalTransport,validTorchTransport} from '../sim/torch-save.ts';
 import {validPemmicanHistoricalTransport,validPemmicanCatalogueDomains} from '../sim/pemmican-save.ts';
 import {validPemmicanResearchTransport} from '../sim/research-save.ts';
@@ -595,6 +596,10 @@ function validPile(pile:MaterialPile,world:World|DynamicWorld):boolean {
   }else if(owner.type==='pawn'||owner.type==='inventory'||owner.type==='equipment'||owner.type==='apparel'){
     if(!Number.isSafeInteger(owner.pawnId)||owner.pawnId<1||!world.pawns.some(p=>p.id===owner.pawnId)
       ||Object.keys(owner).some(key=>!['type','pawnId'].includes(key)))return false;
+    if(pile.item==='pemmican'&&owner.type==='inventory'){
+      const pawn=world.pawns.find(p=>p.id===owner.pawnId)!;
+      if(!pawn.visitor&&(world.schemaVersion<250||Object.hasOwn(pawn,'mechKind')||pawn.health?.body!==undefined))return false;
+    }
   }else if(owner.type==='job'){
     if(!Number.isSafeInteger(owner.jobId)||owner.jobId<1||!world.jobs.some(job=>job.id===owner.jobId)
       ||Object.keys(owner).some(key=>!['type','jobId'].includes(key)))return false;
@@ -897,6 +902,7 @@ export class SnapshotDecoder {
     if (packet.epoch < this.epoch || (packet.epoch === this.epoch && packet.revision <= this.revision)) return { status: 'stale' };
     if (!Number.isSafeInteger(packet.world.schemaVersion) || packet.world.schemaVersion < 1
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
+    if(!validGroupProvisionsHistoricalTransport(packet,packet.world.schemaVersion))return resync('Provisions mixtes de groupe futures.');
     if(!validTorchHistoricalTransport(packet,packet.world.schemaVersion))return resync('Lampe-torche future.');
     if(!validPemmicanHistoricalTransport(packet,packet.world.schemaVersion))return resync('Contenu de pemmican futur.');
     if(!validTuqueCatalogueTransport(packet,packet.world.schemaVersion))return resync('Contenu de tuque futur.');

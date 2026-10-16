@@ -38,7 +38,7 @@ function setup(){
   const actions=Object.fromEntries((['adopt','start','cancel','pause','route','return','buy','sell','unload'] satisfies GroupPanelAction[]).map(k=>[k,{ok:true}])) as GroupPanelFacts['actions'];
   const facts:GroupPanelFacts={originTile:world.planet.homeTile,originLabel:'Foyer',maximumSources:64,mass:null,confirmedRoute:[],actions,trade:null,
     candidates:world.pawns.map(pawn=>({pawn,ok:true})),sources:[]};
-  const adapters:GroupPanelAdapters={capture:vi.fn(()=>facts),previewPlan:vi.fn<GroupPanelAdapters['previewPlan']>((_snapshot,_facts,draft)=>({ok:true,route:[world.planet!.civilianTile],carriers:[],mass:{grams:0,capacityGrams:35000,rations:0,byMember:draft.memberIds.map(pawnId=>({pawnId,grams:0,capacityGrams:35000}))}})),
+  const adapters:GroupPanelAdapters={capture:vi.fn(()=>facts),previewPlan:vi.fn<GroupPanelAdapters['previewPlan']>((_snapshot,_facts,draft)=>({ok:true,route:[world.planet!.civilianTile],carriers:[],mass:{grams:0,capacityGrams:35000,rations:0,pemmicanUnits:0,provisionNutrition:0,byMember:draft.memberIds.map(pawnId=>({pawnId,grams:0,capacityGrams:35000}))}})),
     previewRoute:vi.fn<GroupPanelAdapters['previewRoute']>(()=>({ok:false,reason:'Aucun groupe.'})),quoteTrade:vi.fn<GroupPanelAdapters['quoteTrade']>(()=>({ok:false,reason:'Aucun comptoir.'})),send:vi.fn(()=>Promise.resolve()),inspectPresentPawn:vi.fn()};
   return {world,facts,adapters,snapshot:{world,planet:world.planet,losses:[]}};
 }
@@ -86,9 +86,39 @@ test('two confirmed manifest rows sharing one source retain both porters instead
     meeting:[{pawnId:a!.id,cell:{x:a!.x,z:a!.z}},{pawnId:b!.id,cell:{x:b!.x,z:b!.z}}],cursor:0,
     manifest:[{pileId:sourceId,quantity:37,item:'cloth',carrierId:a!.id},{pileId:sourceId,quantity:38,item:'cloth',carrierId:b!.id}],
     exits:[{pawnId:a!.id,cell:null},{pawnId:b!.id,cell:null}]};
-  facts.mass={grams:0,capacityGrams:70000,rations:0,byMember:[{pawnId:a!.id,grams:0,capacityGrams:35000},{pawnId:b!.id,grams:0,capacityGrams:35000}]};
+  facts.mass={grams:0,capacityGrams:70000,rations:0,pemmicanUnits:0,provisionNutrition:0,byMember:[{pawnId:a!.id,grams:0,capacityGrams:35000},{pawnId:b!.id,grams:0,capacityGrams:35000}]};
   const panel=createGroupPanel(host as unknown as HTMLElement,adapters);panel.update({...snapshot,group:world.group});
   const rows=find(host,'groupManifest').querySelectorAll('*').filter(n=>n.tag==='tbody')[0]!.children;
   expect(rows).toHaveLength(2);expect(rows[0]!.textContent).toContain(a!.name);expect(rows[1]!.textContent).toContain(b!.name);
   expect(rows.every(row=>row.textContent.includes(`#${sourceId}`))).toBe(true);expect(adapters.send).not.toHaveBeenCalled();panel.dispose();
+});
+
+
+test('V391 mixed provision counts and nutrition follow the confirmed projection, without changing source identities or solving a route',()=>{
+  const {host,documentFixture}=dom(),{world,facts,adapters,snapshot}=setup(),p=world.pawns[0]!;
+  const source={id:world.nextId++,kind:'food' as const,item:'pemmican' as const,quantity:60,owner:{type:'ground' as const,x:p.x,z:p.z}};
+  world.piles.push(source);facts.sources=[{pile:source,reserved:0,available:60}];
+  facts.mass={grams:1080,capacityGrams:35000,rations:2,pemmicanUnits:60,provisionNutrition:480,byMember:[]};
+  const before=JSON.stringify(world),panel=createGroupPanel(host as unknown as HTMLElement,adapters);panel.update(snapshot);
+  const mass=find(host,'groupMass'),row=find(host,'groupPile',String(source.id)),input=row.children[3]!.children[0]!;
+  expect(mass.textContent).toContain('2 repas de survie · 60 unités de pemmican · nutrition disponible 4,8');
+  expect(mass.textContent).toContain('possédée');expect(mass.textContent).not.toMatch(/jour|autonomie/);
+  documentFixture.activeElement=input;input.value='37';input.fire('input');
+  facts.mass={...facts.mass,rations:1,pemmicanUnits:37,provisionNutrition:275};panel.update(snapshot);
+  expect(find(host,'groupPile',String(source.id))).toBe(row);expect(documentFixture.activeElement).toBe(input);expect(input.value).toBe('37');
+  expect(mass.textContent).toContain('1 repas de survie · 37 unités de pemmican · nutrition disponible 2,75');
+  expect(adapters.send).not.toHaveBeenCalled();expect(adapters.previewPlan).not.toHaveBeenCalled();expect(adapters.previewRoute).not.toHaveBeenCalled();expect(JSON.stringify(world)).toBe(before);panel.dispose();
+});
+
+test('V391 draft nutrition is only the injected formation estimate, including an empty legacy projection',()=>{
+  const {host}=dom(),{facts,adapters,snapshot}=setup();
+  adapters.previewPlan=vi.fn(()=>({ok:true as const,route:[],carriers:[],mass:{grams:900,capacityGrams:35000,rations:1,pemmicanUnits:50,provisionNutrition:340,byMember:[]}}));
+  const panel=createGroupPanel(host as unknown as HTMLElement,adapters);panel.update(snapshot);
+  expect(find(host,'groupMass').textContent).toContain('Charge non calculée');
+  find(host,'groupPreview','formation').fire('click');
+  expect(find(host,'groupMass').textContent).toContain('1 repas de survie · 50 unités de pemmican · nutrition disponible 3,4');
+  expect(find(host,'groupMass').textContent).toContain('estimation à vérifier au lancement');
+  facts.mass={grams:0,capacityGrams:35000,rations:0,pemmicanUnits:0,provisionNutrition:0,byMember:[]};panel.update(snapshot);
+  expect(find(host,'groupMass').textContent).toContain('0 repas de survie · 0 unités de pemmican · nutrition disponible 0');
+  expect(adapters.send).not.toHaveBeenCalled();panel.dispose();
 });

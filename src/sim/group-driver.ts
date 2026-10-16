@@ -1,3 +1,5 @@
+import {mixedGroupProvisions,groupProvisionMinimum,freshGroupProvision} from './group-provisions.ts';
+import {adoptGroupProvisionClimate,advanceGroupProvisionAges} from './group-provision-age.ts';
 import {campaignAuthority,isSecondaryContext,flushSecondaryContext} from './secondary-site-context.ts';
 import { releaseAllowedAreaReturn } from './allowed-area-state.ts';
 import { ensureCommercialPost } from './commercial-post.ts';
@@ -81,6 +83,8 @@ export function processGroupOnMap(w:World,p:Pawn,ctx:NeedContext):boolean {
  * reconciled: contact receipts and actual inventories remain historical. */
 export function reconcileGroupPreparation(w:World):void {
   const g=w.group;if(!g||!('manifest' in g))return;
+  let pileIndex:Map<number,MaterialPile>|undefined;const currentPiles=()=>pileIndex??=new Map(w.piles.map(p=>[p.id,p]));
+  if(mixedGroupProvisions(g)&&g.manifest.slice(0,g.cursor).some(line=>{if(line.item!=='pemmican')return false;const p=currentPiles().get(line.carriedPileId!);return !p||p.owner.type!=='inventory'||p.owner.pawnId!==line.carrierId||p.item!=='pemmican'||p.quantity!==line.quantity||!freshGroupProvision(p,w.tick);})){groupLog(w,'Préparation annulée : une provision déjà chargée n’est plus disponible ; les autres biens restent portés.');cancelGroupPreparation(w);return;}
   const future=new Map<number,{item:MaterialPile['item'];quantity:number}>();
   for(let i=g.cursor;i<g.manifest.length;i++){
     const line=g.manifest[i]!,old=future.get(line.pileId);
@@ -88,7 +92,7 @@ export function reconcileGroupPreparation(w:World):void {
     future.set(line.pileId,{item:line.item,quantity:(old?.quantity??0)+line.quantity});
   }
   if(!future.size)return;
-  const piles=new Map(w.piles.map(p=>[p.id,p]));
+  const piles=currentPiles();
   for(const [id,promised] of future){
     const source=piles.get(id);
     if(!source||source.owner.type!=='ground'||source.item!==promised.item||source.foodPoison||source.quantity<promised.quantity){
@@ -104,10 +108,11 @@ export function tryGroupDeparture(w:World):void {
   if(!g.exits.every(e=>{const p=w.pawns.find(p=>p.id===e.pawnId);return !!p&&!!e.cell&&same(p,e.cell)&&p.moveCooldown===0&&!p.path.length&&(p.motion?.end??0)<=w.tick;}))return;
   const base=groupFormationAuthority(w,true);
   const authority:DepartureAuthority={...base,personalPassTick:()=>w.tick,departureReason:(_world,plan)=>{
-    if(plan.next.baseline.food<plan.next.members.length)return 'Chargez au moins une ration saine par membre avant le départ.';
+    if(mixedGroupProvisions(plan.next)?!groupProvisionMinimum(plan.next.members,plan.next.items.filter(p=>p.owner.type==='inventory'),w.foodPolicies,w.tick):plan.next.baseline.food<plan.next.members.length)return mixedGroupProvisions(plan.next)?'Les provisions saines doivent couvrir les régimes de tous les membres avant le départ.':'Chargez au moins une ration saine par membre avant le départ.';
     return undefined;
   },adoptDeparture:(world,plan)=>{
     if(world.group!==g)return false;
+    adoptGroupProvisionClimate(world,plan.next);
     const people=new Set(plan.capture.members.map(p=>p.id)),items=new Set(plan.capture.items.map(p=>p.id));
     for(const p of plan.capture.members){releaseAllowedAreaReturn(p);if(isSecondaryContext(world))delete p.allowedAreaId;p.bedId=null;delete p.bedSlot;p.path=[];p.moveCooldown=0;p.planCooldown=0;p.state='idle';if(p.mental)p.mental.below=[0,0,0];delete p.motion;delete p.shooting;delete p.stagger;delete p.stun;}
     world.pawns=world.pawns.filter(p=>!people.has(p.id));world.piles=world.piles.filter(p=>!items.has(p.id));
@@ -130,7 +135,7 @@ function returnGroup(w:World,g:AwayGroup):boolean {
   for(const {pawn,cell} of placements){pawn.x=cell.x;pawn.z=cell.z;pawn.path=[];pawn.moveCooldown=0;pawn.planCooldown=0;delete pawn.motion;if(pawn.state!=='downed')pawn.state='idle';}
   w.pawns.push(...g.members);w.piles.push(...g.items);
   const pending=g.items.filter(i=>i.owner.type==='inventory').map(i=>i.id);
-  if(pending.length)w.group={id:g.id,startedAt:g.startedAt,destination:g.destination,ledger:g.ledger,phase:'unloading',memberIds:g.members.map(p=>p.id),pendingPileIds:pending};else delete w.group;
+  if(pending.length)w.group={id:g.id,startedAt:g.startedAt,destination:g.destination,ledger:g.ledger,...g.provisions?{provisions:g.provisions}:{},phase:'unloading',memberIds:g.members.map(p=>p.id),pendingPileIds:pending};else delete w.group;
   // Reinsert the real owners together before the local physical drop. A full
   // floor keeps the same disabled weapon with equipmentDropPending for retry.
   for(const {pawn} of placements)dropIncapacitatedEquipment(w,pawn);
@@ -140,6 +145,7 @@ function returnGroup(w:World,g:AwayGroup):boolean {
 /** Personal evolution, actual consumption and ten Core route steps per local tick. */
 export function advanceGroup(w:World):void {
   let g=w.group;if(!w.planet||!g||!('members' in g)||g.lastPersonalTick===w.tick)return;
+  const provisionTile=g.tile;advanceGroupProvisionAges(w,g);
   for(const p of g.members)if(p.droppedWeaponId!==undefined&&(g.items.some(i=>i.owner.type==='equipment'&&i.owner.pawnId===p.id)||!w.piles.some(i=>i.id===p.droppedWeaponId&&i.kind==='weapon'&&i.owner.type==='ground')))delete p.droppedWeaponId;
   // Reused Core V182 Caravan_NeedsTracker.AnyPawnsNeedRest tests whether
   // Rest exists. Every admitted human has it, including one at rest100.
@@ -174,5 +180,6 @@ export function advanceGroup(w:World):void {
       groupLog(w,g.tile===w.planet.homeTile?'Le groupe attend une entrée accessible au foyer.':'Le groupe est arrivé à sa destination.');
     }
   }
+  if(g.tile!==provisionTile)adoptGroupProvisionClimate(w,g);
   returnGroup(w,g);
 }

@@ -1,0 +1,38 @@
+# Provisions mixtes du groupe — V391
+
+Schéma 250. Implémentation et revue privées, adoption et contrôles exécutés par ROOT ; publication groupée avec V390 après qualification.
+
+## Résultat joueur
+
+Dans Monde → Globe et groupe, une nouvelle expédition collective peut charger des repas de survie et du pemmican réellement présents au sol, puis les partager selon les régimes de ses membres. Le panneau distingue les deux quantités et leur nutrition disponible, sans promettre des jours d’autonomie. Prise au contact, sortie, propriétaires, route, retour et décharge utilisent les chaînes existantes. Aucun autre aliment ni commerce de provisions n’est ajouté ; les deux voyages individuels restent limités aux repas de survie.
+
+Le départ exige au moins 0,9 nutrition saine par personne : une ration ou 18 unités de pemmican. Ce seuil est une adaptation de sécurité locale, pas une estimation de voyage Core. Les régimes exclusifs sont servis avant les régimes flexibles avec le même stock partagé : 18 pemmicans + une ration suffisent pour une personne autorisant les deux et une seconde autorisant seulement le pemmican ; 17 + une ration ne suffisent pas.
+
+## Conservation et continuité
+
+Les anciens compteurs foodLoaded/foodConsumed/baseline.food gardent leur sens d’unités de repas de survie. Seules les nouvelles formations reçoivent un marqueur et des reçus chargés/consommés/pourris propres au pemmican, avec une baseline distincte au départ. Migration 249 → 250 strictement validée sur les deux cartes avant le seul changement de numéro ; anciens groupes engagés, politiques, possessions et archives restent littéraux jusqu’au retour. RAW, checkpoint et delta refusent les champs futurs à l’ancienne frontière.
+
+Le pemmican conserve son identité, âge et contamination. Les nouvelles provisions périssables vieillissent avant ingestion et décès ; un départ depuis un réfrigérateur ne conserve pas éternellement son taux nul. La température saisonnière de la tuile planétaire est une adaptation faute de pièce thermique hors carte ; chaque changement de taux conserve l’âge accumulé. Une provision chargée qui expire avant la sortie annule la formation sans recréer les biens. Hors carte, la perte retire les vraies unités et leur masse avant les besoins personnels ; les biens d’un défunt deviennent ensuite une archive immuable. Chaque aliment débite son bilan propre. L’ingestion multipièce et son unique tirage de contamination réutilisent les règles V389.
+
+## Références et limites
+
+Core 1.6.4871 : [relevé caravanes V182](../research/caravan-core-v182.md), [globe et groupe V216](../research/planet-group-core-v216.md), [pemmican V389](pemmican-v389.md). Décisions : adopter partage réel des inventaires, régimes, nutrition et contamination ; adapter minimum manuel et température hors carte ; différer choix d’autres aliments et estimation d’autonomie. L’[annonce officielle Ludeon du 10 août 2020](https://ludeon.com/blog/2020/08/1-2-update-with-new-quests-psycasts-gear-and-more/) décrit historiquement l’estimation automatique des provisions et la surcharge manuelle ; elle ne justifie pas notre seuil fixe. L’image Travel supplies identifiée via Gamepressure est inaccessible (cache miss), comme Caravan_party.png : aucun pixel actuel inspecté, aucune parité visuelle revendiquée.
+
+Coût borné aux stocks et personnes du groupe : attribution à deux aliments, inventaires réels pour âge/ingestion ; index des piles partagé par la réconciliation existante des promesses. Aucun scan de grille, nouveau cache, lot GPU ou travail par image. Aucune performance générale mesurée ici.
+
+## Contrôles ROOT
+
+**66 cas de douze fichiers acquis par reprises, dont 15 nouveaux.** Attribution sans double comptage, prises et propriétaires, ingestion multipièce/contamination, âge et perte de masse, décès/archives, annulation, voyage individuel inchangé, deux cartes et RAW/checkpoint/delta. Le premier groupe RED22,273 s conserve 50 PASS et 15 échecs : le camp nouvellement préparé déplaçait seulement son tick sans ses horloges feu/météo ; il réutilise maintenant le camp médical existant cohérent à3000. Un vrai oubli produit a été corrigé : l’inventaire local du pemmican devait être admis au chargement/retour en250, avec le même contrat humain et les mêmes exclusions que les autres possessions de groupe ; aucun commerce de provision offert. Le Decoder refuse désormais cet inventaire de colon sous249 comme le fichier RAW, sans refuser les visiteurs historiques ou les biens hors carte légaux.
+
+Les réparations QA restent distinctes : témoin de delta sur le même World plutôt qu’un clone créant un nouvel epoch ; baseline immuable pour les getters de grille ; état clinique du blessé préparé ; permissions réellement futures omises seulement des témoins195/239/240, marker prospectif absent dans leur unloading historique. La masse du bois400g et le refus de l’acier à masse locale inconnue sont tous deux conservés. Le témoin195 compare toujours le monde entier en reconnaissant l’ancienne adoption V217 de pâte pour trois profils originaux ; le refus group:null suit désormais le garde de provenance antérieur. Aucun validateur n’est détendu. Reprises rouges7,933/8,030/16,021/6,154 s conservées ; nouvelles garanties PASS8,206 s, cinq des six fichiers repris déjà verts au16,021 s, dernier fichier PASS6,179 s.
+
+Typages initiaux RED11,827 s puis PASS11,866 s ; livraison RED12,135 s sur deux accès optionnels de témoins, puis PASS11,732 s. Les changements correspondants sont des annotations de type, sans effet exécutable. Quatre références publiques pertinentes PASS10,820 s : groupe V216, commerce individuel V193, reconnaissance V182 et Les AulnesV386250², validation/migration/roundtrip/Decoder sans avancer les mondes et sources exactes. Le corpus65 acquis enV390 est réutilisé pour les autres références non touchées ; aucune nouvelle passe de65 ni campagne gagnée annoncée.
+
+Le parcours UI préparé32² opt-in (150 s au maximum) distingue une phase unloading réellement observée d’une restitution finale coalescée : aucun ledger terminal ne peut être inventé. Ce parcours ne qualifie ni charge250², production naturelle, expiration native ou autonomie générale. Aucun banc FPS inchangé ou campagne longue ajouté.
+
+
+Présentation Chrome PASS132,025 s. Natif Chrome/WebGPU **PASS44,798 s**, erreurs[], sans arrêt de simulation ni incident graphique : formation3000, vraie prise3014, ingestion hors carte3122 et export/réimport UI exactement3122. Les deux personnes182/183 conservent leurs régimes :15 unités de pemmican et un repas de survie réellement consommés. La phase de décharge est effectivement observée3499 avec ses deux bilans, puis mêmes personnes rentrées et45 pemmicans/3 rations physiquement au sol3508 ; conservation exacte native, aucune perte ni ingestion supplémentaire attribuée. Trois captures inspectées ROOT. Le scénario préparé remplace ses stocks finis sans acquisition naturelle revendiquée ; son chargement, ingestion et retour seuls sont joués.
+
+Gel `tmp/group-provisions-v391/freeze09.json` : **3385 chemins uniques exacts** avant/après navigateur. Toutes les nouvelles sorties restent sous `tmp/validation-runs/` et `tmp/group-provisions-v391/`. Les références et sauvegardes publiques, notamment Les AulnesV386, restent littérales. Cette livraison ne mesure ni coût général250², GPU/FPS ou survie prolongée.
+
+Build Pages PASS2,112 s et documentation PASS1,543 s. Publication V390–V391 encore à confirmer ; aucun résultat HTTPS attribué avant vérification du nouveau paquet.

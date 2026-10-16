@@ -1,4 +1,5 @@
 /** Real-owner operation captures, never parallel saved state. */
+import {mixedGroupProvisions,freshGroupProvision} from './group-provisions.ts';
 import type { PlanetState } from './planet-state.ts';
 import type { GroupState, GroupDepartureBaseline } from './group-state.ts';
 import { GROUP_MAX_MEMBERS } from './group-state.ts';
@@ -106,16 +107,17 @@ export interface GroupDepartureCapture extends GroupCandidatesCapture {
   memberSignatures:readonly string[];
   itemSignatures:readonly string[];
 }
-function departureBaseline(items:readonly MaterialPile[]):GroupDepartureBaseline|undefined {
-  const result:GroupDepartureBaseline={food:0,silver:0,cargo:{cloth:0,'muffalo-wool':0},medicine:0,component:0};
+function departureBaseline(items:readonly MaterialPile[],mixed:boolean,tick:number):GroupDepartureBaseline|undefined {
+  const result:GroupDepartureBaseline={...(mixed?{pemmican:0}:{}),food:0,silver:0,cargo:{cloth:0,'muffalo-wool':0},medicine:0,component:0};
   for(const item of items){
     if(item.owner.type!=='inventory')continue;
     if(item.item==='survival-meal'){if(item.foodPoison)return undefined;result.food+=item.quantity;}
+    else if(mixed&&item.item==='pemmican'){if(!freshGroupProvision(item,tick))return undefined;result.pemmican!+=item.quantity;}
     else if(item.item==='silver')result.silver+=item.quantity;
     else if(item.item==='cloth'||item.item==='muffalo-wool')result.cargo[item.item]+=item.quantity;
     else if(item.item==='medicine'||item.item==='component')result[item.item]+=item.quantity;
   }
-  return [result.food,result.silver,result.cargo.cloth,result.cargo['muffalo-wool'],result.medicine,result.component].every(Number.isSafeInteger)?result:undefined;
+  return [result.pemmican??0,result.food,result.silver,result.cargo.cloth,result.cargo['muffalo-wool'],result.medicine,result.component].every(Number.isSafeInteger)?result:undefined;
 }
 
 /** Captures ONLY after all real exit contacts/arêtes and personal pass of tick.
@@ -138,7 +140,7 @@ export function captureGroupDeparture(world:World,group:PreparingGroup,authority
     if(!same(pawn,exit)||pawn.path.length||pawn.motion&&pawn.motion.end>world.tick||pawn.moveCooldown>0)return fail('exit-not-complete');
   }
   // Contact receipts are historical. Consumed on-map rations are not recreated.
-  const baseline=departureBaseline(capture.items);if(!baseline)return fail('departure-baseline');
+  const baseline=departureBaseline(capture.items,mixedGroupProvisions(group),world.tick);if(!baseline)return fail('departure-baseline');
   return {kind:'ready',capture:{...capture,baseline,exitCells:[...exits].map(([pawnId,cell])=>({pawnId,cell:{...cell}})),
     mapPawns:world.pawns,mapPiles:world.piles,nextThingId:world.nextId,
     memberSignatures:capture.members.map(p=>JSON.stringify(p)),itemSignatures:capture.items.map(p=>JSON.stringify(p))}};

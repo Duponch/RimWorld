@@ -4,9 +4,9 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V390, schéma 249 :** [lampe-torche au sol](docs/gameplay/torch-lamp-v390.md) qualifiée : construction payée, lumière/chaleur, panne et recharge physiques, reprise au contact. Publication à regrouper avec V391 ; dernière production V388–V389 **05b8f6b6**/`c6870b74`,130HTTPS exacts. Les Aulnes V386/tick10373, archives et campagne98038 close partielle préservées.
+**État V391, schéma 250 :** [provisions mixtes du groupe](docs/gameplay/group-provisions-v391.md) qualifiées : chargement, ingestion, vieillissement et retour physiques ; publication commune avec V390 ensuite. Dernière production V388–V389 **05b8f6b6**/`c6870b74`,130HTTPS exacts. Les Aulnes V386/tick10373 et campagne98038 close partielle préservées.
 
-**Ordre courant :** provisions mixtes pemmican/rations pour la seule expédition collective, après revue des copies privées. Conserver les anciens compteurs de rations et les groupes engagés littéralement ; âge, régimes, consommation et retour physiques, aucun nouveau framework. Voyages individuels, rivières/profondeurs et sous-métiers différés. Actualisations des Aulnes périodiques et cohérentes. Voir [la feuille de route](docs/ROADMAP.md). `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
+**Ordre courant :** publier V391 avec V390 puis poursuivre l’édition des filtres de tenue existants, sans CRUD ni nouvelle migration si le format ne change pas. Préserver tâches, port forcé, Auto, politiques historiques et deux cartes. Actualisations des Aulnes périodiques ; sous-métiers différés. Voir [la feuille de route](docs/ROADMAP.md). `references_UI`, branche UI papier et sessions humaines préservées.
 
 ## Méthode de livraison
 

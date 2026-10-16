@@ -1,6 +1,6 @@
 # Ce qui est jouable et ce qui manque
 
-**V390 — schéma 249 :** [Lampe-torche au sol](torch-lamp-v390.md) : construction payée, éclairage sans électricité, panne et recharge physiques qualifiés, reprise exacte au contact. Publication groupée suivante ; dernière production V388–V389/05b8f6b6 conservée. Les états suivants sont historiques.
+**V391 — schéma 250 :** [Provisions mixtes du groupe](group-provisions-v391.md) : pemmican/rations, régimes et vieillissement physiques ; chargement, ingestion et retour qualifiés, recharge UI exacte. V390 sera publié dans le même lot ; dernière production V388–V389/05b8f6b6 conservée. Les états suivants sont historiques.
 
 **V381 — référence Les Aulnes actualisée :** [atelier, étagères et tenue de garde](aulnes-workshop-v381.md). Patrimoine préparé explicite, habillage et rangement ordinaires observés, anciennes références conservées ; aucune nouvelle mécanique ou campagne entière revendiquée. Les états suivants sont historiques.
 

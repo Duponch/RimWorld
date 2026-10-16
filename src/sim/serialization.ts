@@ -1,3 +1,4 @@
+import {validGroupProvisionsHistoricalTransport} from './group-provisions-save.ts';
 import {validTorchHistoricalTransport,validTorchTransport} from './torch-save.ts';
 import {validPemmicanHistoricalTransport,validPemmicanCatalogueDomains} from './pemmican-save.ts';
 import {validBridgeTile,validateBridgeTransport} from './bridge-rules.ts';
@@ -226,12 +227,13 @@ function validateCampaignSchema(input:unknown,version:Parameters<typeof validate
     return errors;
   }catch{return ['Invalid second-site records or owner namespace.'];}
 }
-function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249, relationshipContext = true,registeredIds?:Set<number>): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250, relationshipContext = true,registeredIds?:Set<number>): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(raw)) return ['World must be an object.'];
   if(!validSecondarySiteShape(raw,version))return ['Invalid or future second-site authority.'];
   if(!validTuqueCatalogueDomains(raw,version))return ['Future tuque catalogue content.'];
+  if(!validGroupProvisionsHistoricalTransport(raw,version))return ['Future mixed group provisions.'];
   if(!tundraHistoricalFieldsAbsent(raw,version))return ['Future tundra provenance.'];
   if(!snowHistoricalFieldsAbsent(raw,version))return ['Future snow content.'];
   const arrivalErrors=validateStartingArrivalOwners(raw as unknown as World,version);
@@ -659,6 +661,7 @@ export function serializeWorld(world: World): string {
 export function deserializeWorld(serialized: string): World {
   if (typeof serialized !== 'string' || serialized.length > 16_000_000) throw new Error('Invalid or oversized save.');
   let input: unknown = JSON.parse(serialized);
+  if(record(input)&&Number.isInteger(input.schemaVersion)&&!validGroupProvisionsHistoricalTransport(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future mixed group provisions.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validTorchHistoricalTransport(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future torch lamp content.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validPemmicanHistoricalTransport(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future pemmican catalogue content.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validTuqueCatalogueTransport(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future tuque catalogue content.');
@@ -1430,6 +1433,10 @@ export function deserializeWorld(serialized: string): World {
   if(record(input)&&input.schemaVersion===248){
     const errors=validateCampaignSchema(input,248);if(errors.length)throw new Error('Invalid version248 save: '+errors.join(' '));
     input.schemaVersion=249; // Both maps remain literal: no torch, fuel, work, owner, ID or draw is granted.
+  }
+  if(record(input)&&input.schemaVersion===249){
+    const errors=validateCampaignSchema(input,249);if(errors.length)throw new Error('Invalid version249 save: '+errors.join(' '));
+    input.schemaVersion=250; // Existing groups remain literal: no mixed-provision permission, stock, counter or history is granted.
   }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;

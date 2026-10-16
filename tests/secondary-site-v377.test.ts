@@ -20,7 +20,7 @@ import {initializeSnowSurface} from '../src/sim/snow-surface.ts';
 import {releaseAssignments} from '../src/sim/work-release.ts';
 import {footprintCells} from '../src/sim/definitions.ts';
 import {newApparelState} from '../src/sim/apparel-rules.ts';
-import type {Command,World} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type Command,type World} from '../src/sim/types.ts';
 
 function command(w:World,c:Command):void {
   const result=applyCommand(w,c);expect(result.ok,result.reason??JSON.stringify(c)).toBe(true);
@@ -166,7 +166,8 @@ describe('V377 real second map',()=>{
   it('rejects future fields and duplicate owners atomically and migrates schema239 without creating a site',()=>{
     const f=preparation(),old=JSON.parse(serializeWorld(f.w));
     // The historical fixture must not inherit a future catalogue permission.
-    for(const policy of old.apparelPolicies)policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-armor');
+    for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='pemmican');
+    for(const policy of old.apparelPolicies)policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-armor'&&item!=='cloth-tuque'&&item!=='muffalo-wool-tuque');
     old.schemaVersion=239;
     const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.secondarySite).toBeUndefined();expect(migrated.rng).toBe(old.rng);expect(migrated.nextId).toBe(old.nextId);
     Object.defineProperty(old,'secondarySite',{value:undefined,enumerable:true});expect(validateWorld(old).length).toBeGreaterThan(0);
@@ -183,11 +184,17 @@ describe('V377 real second map',()=>{
     const before=serializeWorld(f.w),old=JSON.parse(before);
     // Down-versioned fixture only: remove the new current default permission
     // and prospective deposits. No historical fixture or save is rewritten.
-    for(const policy of old.apparelPolicies)policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-armor');
-    for(const map of [old,old.secondarySite.map])for(const tile of map.tiles)if(tile.ore==='uranium')delete tile.ore;
+    for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='pemmican');
+    for(const policy of old.apparelPolicies)policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-armor'&&item!=='cloth-tuque'&&item!=='muffalo-wool-tuque');
+    for(const map of [old,old.secondarySite.map]){
+      // The real current entry creates a prospective unloading marker; the
+      // declared old campaign has the same possessions and literal ration ledger.
+      if(map.group)delete map.group.provisions;
+      for(const tile of map.tiles)if(tile.ore==='uranium')delete tile.ore;
+    }
     old.schemaVersion=240;
     const raw=JSON.stringify(old),restored=deserializeWorld(raw);
-    expect(restored).toEqual({...old,schemaVersion:241});
+    expect(restored).toEqual({...old,schemaVersion:SCHEMA_VERSION});
     expect(restored.secondarySite).toEqual(old.secondarySite);
     for(const item of ['uranium','recon-armor','unfinished-recon-armor'] as const){
       const bad=JSON.parse(raw),map=bad.secondarySite.map;
