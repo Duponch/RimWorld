@@ -1,3 +1,4 @@
+import {isWetTerrain} from './shallow-water.ts';
 import {footprintCells} from './definitions.ts';
 import {validConstructionMaterial} from './construction-materials.ts';
 import {sharesConstructionLayer} from './power-grid.ts';
@@ -16,7 +17,7 @@ export function canPlaceSpikeTrap(world:World,command:DesignateCommand):CommandR
  if(!spikeTrapPlacementAllowed(world,command))return fail('invalid-command','Aucun autre piège dans les huit cases voisines.');
  const same=(c:{x:number;z:number})=>c.x===x&&c.z===z;
  if(world.jobs.some(j=>!isRoofJob(j)&&sharesConstructionLayer(j.furniture?.kind??j.deconstruction?.kind??j.flick?.kind??j.fixBreakdown?.kind??j.kind,'spike-trap')&&footprintCells(j).some(same)))return fail('occupied','Un ordre existe déjà dans cette empreinte.');
- if((['water','rock'].includes(world.tiles[z*world.width+x]!.terrain)||world.tiles[z*world.width+x]!.terrain==='marsh'&&!world.tiles[z*world.width+x]!.bridge)||world.resources.some(r=>r.kind==='rock'&&same(r))
+ if((['water','rock'].includes(world.tiles[z*world.width+x]!.terrain)||isWetTerrain(world.tiles[z*world.width+x]!.terrain)&&!world.tiles[z*world.width+x]!.bridge)||world.resources.some(r=>r.kind==='rock'&&same(r))
   ||world.structures.some(s=>sharesConstructionLayer(s.kind,'spike-trap')&&footprintCells(s).some(same))
   ||world.pawns.some(p=>p.haul?.destination.type==='aside'&&same(p.haul.destination))||cookingCellReserved(world,command))return fail('occupied','Construction impossible : terrain, ouvrage ou réservation incompatible.');
  return {ok:true};

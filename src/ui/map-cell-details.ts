@@ -1,14 +1,13 @@
 import { captureWorldBeauty } from '../sim/beauty-need';
 import type { RoomBeautyCapture } from '../sim/room-beauty';
 import { captureRoomQuality } from '../sim/room-quality';
-import { FLOOR_DEFINITIONS } from '../sim/flooring';
 import { terrainTravelDelay } from '../sim/furniture-travel';
 import { isRoofed } from '../sim/roof-rules';
 import { soilFertility } from '../sim/soil';
 import { TemperatureView } from '../sim/temperature';
 import { ROOM_ROLE_LABEL, WorkEnvironmentCache } from '../sim/work-environment';
 import type { Cell, World } from '../sim/types';
-import { TERRAIN_LABELS } from './terrain-inspection';
+import { terrainSurfaceLabel } from './terrain-inspection';
 import { mapHoverLines } from './map-hover-readout';
 
 const environmentCache = new WorkEnvironmentCache();
@@ -31,8 +30,8 @@ export function mapCellDetails(world: World, cell: Cell, lightLevel: number): Ma
   let beautyView = beautyViews.get(world);
   if (!beautyView) { beautyView = captureWorldBeauty(world, qualityCapture.topology); beautyViews.set(world, beautyView); }
   const speed = tile.terrain === 'rock' || tile.terrain === 'water' ? 0 : Math.round(300 / (3 + terrainTravelDelay(world, index)));
-  const terrain = tile.floor ? FLOOR_DEFINITIONS[tile.floor].label : TERRAIN_LABELS[tile.terrain];
-  const objects = mapHoverLines(world, cell, lightLevel).slice(2).filter(line => line !== 'Toit');
+  const terrain = terrainSurfaceLabel(tile);
+  const objects = mapHoverLines(world, cell, lightLevel).slice(tile.bridge?3:2).filter(line => line !== 'Toit');
   const temperature = new TemperatureView(world).at(world, cell);
   const rows: MapCellDetails['rows'] = [];
   if (room && !room.psychologicallyOutdoors && room.role !== 'none') rows.push({ label: 'Pièce', value: ROOM_ROLE_LABEL[room.role] });
@@ -46,6 +45,7 @@ export function mapCellDetails(world: World, cell: Cell, lightLevel: number): Ma
   }
   rows.push({ label: 'Terrain', value: terrain });
   rows.push({ label: 'Vitesse de déplacement', value: `${speed} %` });
+  if(tile.terrain==='water-shallow')rows.push({label:'Support',value:tile.bridge?'Léger uniquement':'Absent · Pont en bois possible'},{label:'Culture',value:'Terrain non cultivable'});
   if (!tile.floor) rows.push({ label: 'Fertilité', value: `${Math.round(soilFertility(tile.terrain) * 100)} %` });
   rows.push({ label: 'Température', value: `${Math.round(temperature)} °C` });
   rows.push({ label: 'Luminosité', value: `${Math.round(lightLevel * 100)} %` });

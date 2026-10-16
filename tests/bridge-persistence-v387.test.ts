@@ -1,3 +1,4 @@
+import {createDeteriorationState} from '../src/sim/deterioration-content.ts';
 import {expect,test} from 'vitest';
 import {applyCommand,stepWorld,serializeWorld,deserializeWorld,validateWorld} from '../src/sim/index.ts';
 import {validBridgeTile,validateBridgeTransport} from '../src/sim/bridge-rules.ts';
@@ -11,8 +12,8 @@ import {bridgeWorkshopV387} from './scenarios/bridge-v387.ts';
 import {preparedCassandraExpedition} from './scenarios/secondary-incidents-v379.ts';
 
 test('246→247 validates both OLD maps before neutral bump and rejects every future bridge spelling including false, jobs and misplaced object fields',()=>{
-  const {w}=preparedCassandraExpedition();(w as {schemaVersion:number}).schemaVersion=246;
-  const old=JSON.parse(JSON.stringify(w)),before=JSON.stringify(w);expect(deserializeWorld(before)).toEqual({...old,schemaVersion:SCHEMA_VERSION});
+  const {w}=preparedCassandraExpedition();(w as {schemaVersion:number}).schemaVersion=246;delete w.deterioration;for(const policy of w.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='pemmican');if(w.research)delete w.research.pemmican;
+  delete w.secondarySite!.map.deterioration;const old=JSON.parse(JSON.stringify(w)),before=JSON.stringify(w);const expected={...old,schemaVersion:SCHEMA_VERSION,deterioration:createDeteriorationState(w.seed,w.tick)};expected.secondarySite.map.deterioration=createDeteriorationState(w.secondarySite!.map.seed,w.tick);expect(deserializeWorld(before)).toEqual(expected);
   for(const side of ['home','secondary'] as const)for(const bridge of [false,true]){
     const future=structuredClone(w),map=side==='home'?future:future.secondarySite!.map;(map.tiles[0] as unknown as Record<string,unknown>)={terrain:'marsh',bridge};
     expect(()=>deserializeWorld(JSON.stringify(future))).toThrow(/version246/);expect(future.schemaVersion).toBe(246);expect(validateWorld(future).length).toBeGreaterThan(0);
@@ -32,8 +33,8 @@ test('a real wet motion paused in246 survives migration literally; future bridge
   const {world:w,pawnId,bridgeCell,bankEast}=bridgeWorkshopV387(32),p=w.pawns[0]!;
   expect(applyCommand(w,{type:'draft',pawnIds:[pawnId],enabled:true}).ok).toBe(true);expect(applyCommand(w,{type:'draft-move',pawnIds:[pawnId],target:bankEast,queue:false}).ok).toBe(true);
   for(let i=0;i<300&&!(p.motion?.terrainDelay===3&&p.motion.end>w.tick);i++)stepWorld(w);
-  expect(p.motion?.terrainDelay).toBe(3);const captured=structuredClone(p.motion);(w as {schemaVersion:number}).schemaVersion=246;
-  const old=JSON.stringify(w),current=deserializeWorld(old);expect(current.pawns[0]!.motion).toEqual(captured);expect(current).toEqual({...JSON.parse(old),schemaVersion:247});
+  expect(p.motion?.terrainDelay).toBe(3);const captured=structuredClone(p.motion);(w as {schemaVersion:number}).schemaVersion=246;delete w.deterioration;for(const policy of w.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='pemmican');if(w.research)delete w.research.pemmican;
+  const old=JSON.stringify(w),current=deserializeWorld(old);expect(current.pawns[0]!.motion).toEqual(captured);expect(current).toEqual({...JSON.parse(old),schemaVersion:SCHEMA_VERSION,deterioration:createDeteriorationState(w.seed,w.tick)});
   const before=JSON.stringify(w);expect(applyCommand(w,{type:'designate',kind:'build-bridge',...bridgeCell}).ok).toBe(false);expect(applyCommand(w,{type:'area',action:'build-bridge',from:bridgeCell,to:bridgeCell}).affected??0).toBe(0);expect(JSON.stringify(w)).toBe(before);
 });
 
@@ -51,7 +52,7 @@ test('same World/same tick uses a true bridge delta, rejects false without adopt
 
 test('old full snapshots and old incremental envelopes refuse future bridge true/false, and actual removal emits a presentation event at its confirmed tick',()=>{
   for(const bridge of [false,true]){
-    const {world:w,bridgeCell}=bridgeWorkshopV387(16),i=bridgeCell.z*w.width+bridgeCell.x;(w as {schemaVersion:number}).schemaVersion=246;
+    const {world:w,bridgeCell}=bridgeWorkshopV387(16),i=bridgeCell.z*w.width+bridgeCell.x;(w as {schemaVersion:number}).schemaVersion=246;delete w.deterioration;for(const policy of w.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='pemmican');if(w.research)delete w.research.pemmican;
     const e=new SnapshotEncoder(),d=new SnapshotDecoder();expect(d.adopt(structuredClone(e.encode(w,0,0))).status).toBe('applied');(w.tiles[i] as unknown as Record<string,unknown>).bridge=bridge;
     const delta=structuredClone(e.encode(w,0,0));
     expect(delta.kind).toBe('delta');expect(d.adopt(delta).status).toBe('resync');

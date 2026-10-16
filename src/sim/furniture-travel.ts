@@ -1,3 +1,4 @@
+import {isWetTerrain} from './shallow-water.ts';
 import {MARSH_PATH_COST_CORE,MARSH_PERCEIVED_CORE} from './marsh.ts';
 import {snowTravelDelay,snowSearchCost} from './snow-rules.ts';
 import { fireNavigationCosts,addFireNavigationCosts } from './fire-navigation.ts';
@@ -14,7 +15,7 @@ export function terrainTravelDelay(world:World,index:number):number {
   const tile=world.tiles[index],terrain=tile?.terrain;
   if(tile?.bridge)return 0;
   if(tile?.floor)return FLOOR_DEFINITIONS[tile.floor].pathCost/10;
-  if(terrain==='marsh')return MARSH_PATH_COST_CORE/10;
+  if(isWetTerrain(terrain))return MARSH_PATH_COST_CORE/10;
   return terrain==='rough-stone'||terrain==='rich-soil'||terrain==='gravel'||world.site&&terrain==='grass'?.2:0;
 }
 
@@ -144,9 +145,9 @@ export function navigationCosts(world:World,origin?:Cell):{costs:NavigationCostL
     for(let i=0;i<tiles.length;i++){
       const tile=tiles[i]!,kind=tile.terrain;
       let cost=tile.floor?Math.round(FLOOR_DEFINITIONS[tile.floor].pathCost/10/3*1000):kind==='rough-stone'||kind==='rich-soil'||kind==='gravel'||hasSite&&kind==='grass'?67:0;
-      if(kind==='marsh'&&!tile.bridge&&!tile.floor)cost=Math.round(MARSH_PATH_COST_CORE/30*1000);
+      if(isWetTerrain(kind)&&!tile.bridge&&!tile.floor)cost=Math.round(MARSH_PATH_COST_CORE/30*1000);
       if(world.snow)cost=Math.max(cost,snowSearchCost(tile.snowDepth??0));
-      if(kind==='marsh'&&!tile.bridge&&!tile.floor)marshPerceptionCosts.set(i,Math.round(marshPerception/30*1000));
+      if(isWetTerrain(kind)&&!tile.bridge&&!tile.floor)marshPerceptionCosts.set(i,Math.round(marshPerception/30*1000));
       if(cost>255&&terrain instanceof Uint8Array){const wide:Uint16Array=new Uint16Array(terrain.length);wide.set(terrain);terrain=wide;}
       if(cost){terrain[i]=cost;if(cost>terrainMaximum)terrainMaximum=cost;}
     }

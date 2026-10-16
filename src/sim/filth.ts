@@ -1,3 +1,4 @@
+import {isWetTerrain} from './shallow-water.ts';
 import { isRoofed } from './roof-rules.ts';
 import { isGrowingTerrain } from './soil.ts';
 import { captureCleanliness } from './filth-room.ts';
@@ -11,7 +12,7 @@ const inside=(w:World,c:Cell)=>Number.isInteger(c.x)&&Number.isInteger(c.z)&&c.x
 /** Filth needs walkable ground, not an empty storage slot. Tables/chunks can
  * carry traces; walls, cooler shells and natural rock cannot. */
 function filthWalkable(w:World,c:Cell):boolean {
-  if(!inside(w,c)||(['rock','water'].includes(w.tiles[c.z*w.width+c.x]!.terrain)||w.tiles[c.z*w.width+c.x]!.terrain==='marsh'&&!w.tiles[c.z*w.width+c.x]!.bridge))return false;
+  if(!inside(w,c)||(['rock','water'].includes(w.tiles[c.z*w.width+c.x]!.terrain)||isWetTerrain(w.tiles[c.z*w.width+c.x]!.terrain)&&!w.tiles[c.z*w.width+c.x]!.bridge))return false;
   return !w.structures.some(s=>(s.kind==='vent'||s.kind==='wall'||s.kind==='cooler')&&same(s,c));
 }
 function accepted(w:World,c:Cell,kind:FilthKind,spontaneous=false):boolean {

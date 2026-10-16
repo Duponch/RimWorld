@@ -1,3 +1,4 @@
+import {isWetTerrain} from './shallow-water.ts';
 import { isColonist } from './affiliation.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { FILTH_DEFINITIONS,filthCheckPeriod,isFilthKind,type FilthFeet } from './filth-rules.ts';
@@ -19,7 +20,7 @@ export function validateFilth(w:World,version:number,ids?:Set<number>):string[] 
     for(const f of s.items){
       if(!object(f)||!keys(f,['id','kind','x','z','thickness','grownCore','expiresAfterCore','nextCheckCore'])||!isFilthKind(f.kind)||!int(f.id,1,w.nextId-1)||seen.has(f.id)||!int(f.x,0,w.width-1)||!int(f.z,0,w.height-1)||!int(f.thickness,1,5)||!int(f.grownCore,0,now)||!int(f.nextCheckCore,now+1,now+period)){errors.push('Invalid filth record.');continue;}
       const d=FILTH_DEFINITIONS[f.kind],key=`${f.x}:${f.z}:${f.kind}`;
-      if(!int(f.expiresAfterCore,d.minDays*60000,d.maxDays*60000-1)||cells.has(key)||(['rock','water'].includes(w.tiles[f.z*w.width+f.x]!.terrain)||w.tiles[f.z*w.width+f.x]!.terrain==='marsh'&&!w.tiles[f.z*w.width+f.x]!.bridge))errors.push('Invalid filth lifetime or position.');
+      if(!int(f.expiresAfterCore,d.minDays*60000,d.maxDays*60000-1)||cells.has(key)||(['rock','water'].includes(w.tiles[f.z*w.width+f.x]!.terrain)||isWetTerrain(w.tiles[f.z*w.width+f.x]!.terrain)&&!w.tiles[f.z*w.width+f.x]!.bridge))errors.push('Invalid filth lifetime or position.');
       seen.add(f.id);cells.add(key);
     }
   }

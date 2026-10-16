@@ -1,3 +1,4 @@
+import {isWetTerrain} from './shallow-water.ts';
 import {footprintCells} from './definitions.ts';
 import {isShelfKind} from './shelf-storage.ts';
 import {isRoofed} from './roof-rules.ts';
@@ -21,7 +22,7 @@ export function deteriorationExposure(w:World,pile:MaterialPile,environment?:Det
  const baseRate=DETERIORATION_RATES[pile.item];if(pile.owner.type!=='ground')return {status:'not-ground',...neutral,baseRate};
  const e=environment??captureDeteriorationEnvironment(w),cell=pile.owner.z*w.width+pile.owner.x;
  const roofed=isRoofed(w,cell),inside=e.layout?(e.layout.indices[cell]??-1)>=0:(w.thermal?.regions??[]).some(r=>containsSorted(r.cells,cell));
- const tile=w.tiles[cell],terrainFactor=tile&&(tile.terrain==='marsh'||tile.terrain==='water')&&!tile.bridge&&!tile.floor?3:0;
+ const tile=w.tiles[cell],terrainFactor=tile&&(isWetTerrain(tile.terrain)||tile.terrain==='water')&&!tile.bridge&&!tile.floor?3:0;
  const flags={baseRate,roofed,usesOutdoorTemperature:!inside,terrainFactor};
  if(e.shelves.has(cell))return {status:'protected-shelf',...flags,rate:0};
  const rate=baseRate*((roofed?0:.5)+(inside?0:.5)+terrainFactor)*(roofed?1:1+4*e.rain);

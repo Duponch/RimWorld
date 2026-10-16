@@ -1,3 +1,4 @@
+import {createDeteriorationState} from '../src/sim/deterioration-content.ts';
 import {expect,test} from 'vitest';
 import {addGroundMaterial} from '../src/sim/materials.ts';
 import {applyCommand,stepWorld,serializeWorld,deserializeWorld,validateWorld} from '../src/sim/index.ts';
@@ -76,8 +77,9 @@ test('wet ground has no fire fuel even with wood, extinguishes an attached fire 
 });
 
 test('245 migration is literal on both maps and refuses future wet cells or malformed local authority before bump246',()=>{
-  const {w}=preparedCassandraExpedition();(w as {schemaVersion:number}).schemaVersion=245;const old=JSON.parse(JSON.stringify(w));
-  expect(deserializeWorld(JSON.stringify(w))).toEqual({...old,schemaVersion:SCHEMA_VERSION});
+  const {w}=preparedCassandraExpedition();(w as {schemaVersion:number}).schemaVersion=245;delete w.deterioration;for(const policy of w.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='pemmican');if(w.research)delete w.research.pemmican;delete w.secondarySite!.map.deterioration;const old=JSON.parse(JSON.stringify(w));
+  // V252's prospective clocks are the sole added domains; all old geography/owners stay exact.
+  const expected={...old,schemaVersion:SCHEMA_VERSION,deterioration:createDeteriorationState(w.seed,w.tick)};expected.secondarySite.map.deterioration=createDeteriorationState(w.secondarySite!.map.seed,w.tick);expect(deserializeWorld(JSON.stringify(w))).toEqual(expected);
   for(const side of ['home','secondary'] as const){
     const future=structuredClone(w),map=side==='home'?future:future.secondarySite!.map;map.tiles[0]={terrain:'marsh'};expect(()=>deserializeWorld(JSON.stringify(future))).toThrow(/version245/);
     const malformed=structuredClone(w),local=side==='home'?malformed:malformed.secondarySite!.map;local.tiles=[];expect(()=>deserializeWorld(JSON.stringify(malformed))).toThrow(/version245/);

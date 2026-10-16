@@ -24,7 +24,7 @@ export function generateSiteChunks(world:World,site:LocalSite,elevation:Float64A
       const [dx,dz]=directions[dir]!;x+=dx;z+=dz;
       if(x<0||z<0||x>=width||z>=height)break;
       const i=z*width+x;
-      if(occupied[i]||elevation[i]!>.55||world.tiles[i]!.terrain==='rock'||world.tiles[i]!.terrain==='water')break;
+      if(occupied[i]||elevation[i]!>.55||world.tiles[i]!.terrain==='rock'||(world.tiles[i]!.terrain==='water'||world.tiles[i]!.terrain==='water-shallow'))break;
       occupied[i]=1;
       addMaterial(world,'chunk',1,{type:'ground',x,z},`${stone}-chunk`);
     }

@@ -1,8 +1,10 @@
-import type { World } from '../sim/types';
+import type { Terrain, World } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
 
 /** Shared with the constructed floor placements, whose bottom is .024. */
 export const FLOOR_SURFACE_Y = .062;
+/** Both water identities share the existing flat fluid surface and material. */
+export const isWaterTerrain=(terrain:Terrain):boolean=>terrain==='water'||terrain==='water-shallow';
 export const FILTH_SURFACE_OFFSET = .009;
 export type FilthSurface = Pick<World, 'width' | 'height' | 'tiles'>;
 export interface SurfaceBounds { minX: number; minZ: number; maxX: number; maxZ: number }
@@ -13,7 +15,7 @@ export interface SurfacePatch extends SurfaceBounds { height: number }
 export function surfaceHeightAtCell(surface: FilthSurface, x: number, z: number): number | undefined {
   if (x < 0 || z < 0 || x >= surface.width || z >= surface.height) return undefined;
   const tile = surface.tiles[z * surface.width + x];
-  return tile ? tile.bridge || tile.floor ? FLOOR_SURFACE_Y : tile.terrain === 'water' ? WORLD_SCALE.waterSurface : 0 : undefined;
+  return tile ? tile.bridge || tile.floor ? FLOOR_SURFACE_Y : isWaterTerrain(tile.terrain) ? WORLD_SCALE.waterSurface : 0 : undefined;
 }
 
 export type GroundOverlaySurface=FilthSurface&Partial<Pick<World,'snow'>>;

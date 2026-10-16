@@ -1,6 +1,6 @@
 # Préparer une version early access
 
-**V385 — schéma 246 :** [marais physiques de toundra](marsh-tundra-v385.md) : génération prospective, trajets, supports et recharges qualifiés. Publication commune V384–V385 **dfa8bdde**, produit `a7fc3244`,126 réponses HTTPS exactes. Les états suivants sont historiques.
+**V403 — schéma 254 :** [Étangs peu profonds](shallow-water-v403.md) qualifiés dans leur périmètre ; V397 conserve le parcours monde partiel, V398/V402 couvrent navigation et pause sur des menaces hors carte. Les états suivants sont historiques.
 
 **V381 — référence Les Aulnes actualisée, publication bd2107e4 :** [atelier, étagères et tenue de garde](aulnes-workshop-v381.md). Patrimoine préparé explicite, habillage et rangement ordinaires observés, anciennes références conservées ; aucune nouvelle mécanique ou campagne entière revendiquée. Les états suivants sont historiques.
 
@@ -62,6 +62,7 @@ Objectif humain du 13 octobre 2026 : une version prête à être essayée par de
 | Comprendre et préparer les premiers jours | Carnet contextuel V334, outils et dossiers ; couchages gratuits V336, première nuit naturelle tempérée, boréale et aride ; [aide initiale et guide actuel V341](player-help-v341.md) | Renouvellement des ressources et incidents durant une campagne plus longue |
 | Survivre et progresser | Construction, agriculture, cuisine, travail, besoins, soins, incidents et recherche déjà reliés ; [V338 première chaîne alimentaire naturelle acquise par reprises](early-colony-food-v338.md), récolte/transport/cuisson/ingestion et resemis, animal et raid naturels documentés | V340 : seconde récolte/cargo et quatre cuissons attestés, ingestion nouvelle non attribuée ; réserves suffisantes, saisons et récupération restent à qualifier. Aucune autonomie alimentaire ni survie de tous les exposés certifiée |
 | Conserver sa campagne | Copies nommées, autosauvegardes, import/export ; reprises historiques et départ choisi qualifiés, douze checkpoints V338 rechargés exactement jusqu’à39073 | Reprises réparties durant une campagne plus longue, conservation complète des identités et propriétaires |
+| Voyager et revisiter | [V397](aulnes-multimap-v397.md) : mêmes personnes/biens/site, travaux, retour et revisite observés ; [V401](group-freight-v401.md) fret physique qualifié sur préparation | Branche V397 blessée conservée, pas une campagne sûre ; groupes/sites supplémentaires et camps Core restent ouverts |
 | Comprendre une difficulté ou une issue | [V393 qualifié : lecture piles/régimes](food-readability-v393.md), sans accès/autonomie déduits ; diagnostics de chantier, santé, météo, ordres et sauvegardes ; [V337 acquis sur six situations préparées](colonist-availability-v337.md), absence expliquée, destinations réelles et six recharges exactes, sans fin prématurée | Observer ces diagnostics et les issues durant une campagne naturelle longue |
 | Jouer avec les visuels actuels | UI, chambre, carton et LOD configurables ; contrôles natifs locaux | Surveiller fluidité active, mémoire et récupération graphique ; pas de promesse 240 FPS ni compatibilité matérielle exhaustive |
 

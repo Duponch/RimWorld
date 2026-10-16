@@ -58,7 +58,7 @@ test('V387 preview and terrain work stay in existing boxes; schema and icon admi
   const historical=structuredClone(w);(historical as {schemaVersion:number}).schemaVersion=246;
   for(const kind of ['build-bridge','remove-bridge'] as const){
     expect(architectToolAvailable(historical,kind)).toBe(false);
-    expect(architectToolAvailable({...w,schemaVersion:247},kind)).toBe(true);
+    const available=structuredClone(w);(available as {schemaVersion:number}).schemaVersion=247;expect(architectToolAvailable(available,kind)).toBe(true);
     expect(ARCHITECT_ICON_URLS[kind]).toContain('data:image/svg+xml');expect(ARCHITECT_ICON_MAPPING[kind]).toBeDefined();
     const job={id:55,kind,x:8,z:8,orientation:0,progress:0,status:'active',construction:'blueprint',footprint:'standard'} as Job;
     expect(pawnWorkPose({...pawn,state:'working'},job)).toBe(WORK_POSE.ground);

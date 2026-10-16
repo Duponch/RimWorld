@@ -55,7 +55,7 @@ export function generateSiteOres(world:Pick<World,'seed'|'width'|'height'|'tiles
     while(frontier.length&&occasion.cells.length<count) {
       let best=0;for(let k=1;k<frontier.length;k++)if(score(frontier[k]!)<score(frontier[best]!))best=k;
       const cell=frontier.splice(best,1)[0]!;
-      if(tiles[cell]!.ore||tiles[cell]!.terrain==='water')continue;
+      if(tiles[cell]!.ore||(tiles[cell]!.terrain==='water'||tiles[cell]!.terrain==='water-shallow'))continue;
       occasion.cells.push(cell);
       for(const next of neighbors(cell,width,height))if(!seen.has(next)){seen.add(next);frontier.push(next);}
     }

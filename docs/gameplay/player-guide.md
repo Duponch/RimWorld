@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Traverser un étang peu profond — V403
+
+Les nouveaux sites boréaux peuvent contenir de l’**Eau peu profonde** : le survol la distingue de l’ancienne **Eau infranchissable**. Elle se traverse lentement, sans offrir de support de construction ou de culture. Dans **Architecte → Sols**, posez un **Pont en bois**, apportez12bois par case et laissez le chantier se terminer avant d’y bâtir un ouvrage léger ou de profiter du passage rapide.
+
+Retirer le pont exige de libérer ses constructions dépendantes, rend6bois et révèle la même eau. Une eau infranchissable existante ne devient pas traversable ou compatible avec ce pont. Les anciennes cartes restent telles quelles ; aucun étang n’est ajouté aux Aulnes. [Règles et limites](shallow-water-v403.md).
+
 ## Choisir la pause sur nouvelle menace — V402
 
 Dans **Options** à l’accueil ou **Menu** en jeu, choisissez **Jamais**, **Menaces majeures** (défaut) ou **Toutes menaces**. Le choix confirmé vaut pour le foyer et le second site. Jamais garde l’avertissement et son signal ; les raids humains/mécaniques ordinaires sont majeurs. Toutes menaces ajoute la rage animale individuelle. Les autres alertes ne déclenchent pas automatiquement cette pause.
@@ -44,7 +50,7 @@ Au sec elle consomme 2 bois par jour neutre. Pluie/neige au-delà du seuil et ho
 
 ## Franchir un marais avec un pont
 
-Architecte → Sols → Pont en bois. Apporter12bois par cellule et attendre la fin du chantier ; seuls les ouvrages Light peuvent ensuite être bâtis dessus. Retirer d’abord meubles et plans pour récupérer6bois en retirant le pont. Le marais revient dessous en cas de retrait/destruction. [Détails et limites](bridge-marsh-v387.md).
+Architecte → Sols → Pont en bois sur marais ou eau peu profonde. Apporter12bois par cellule et attendre la fin du chantier ; seuls les ouvrages Light peuvent ensuite être bâtis dessus. Retirer d’abord meubles et plans pour récupérer6bois en retirant le pont. Le terrain humide d’origine revient dessous en cas de retrait/destruction. [Détails et limites](bridge-marsh-v387.md).
 
 
 ## Les Aulnes : atelier d’hiver — V386

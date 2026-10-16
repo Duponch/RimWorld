@@ -1,3 +1,4 @@
+import {isWetTerrain} from './shallow-water.ts';
 import {animalBodySize} from './animal-life.ts';
 import {footprintCells} from './definitions.ts';
 import {STRUCTURE_SHOT_FILL} from './combat-content.ts';
@@ -12,7 +13,7 @@ import type {TravelSegment} from './travel-timing.ts';
 interface Runtime {active:Set<number>;sweep:SnowSweepRuntime;full:Set<number>;structures:Structure[];structureCount:number;outside:number;layout?:ThermalLayout}
 const runtimes=new WeakMap<World,Runtime>();
 export const snowDepthAt=(w:Pick<World,'tiles'>,index:number):number=>w.tiles[index]?.snowDepth??0;
-export const terrainRetainsSnow=(terrain:string,bridge=false):boolean=>terrain!=='rock'&&terrain!=='water'&&(terrain!=='marsh'||bridge);
+export const terrainRetainsSnow=(terrain:string,bridge=false):boolean=>terrain!=='rock'&&terrain!=='water'&&(!isWetTerrain(terrain)||bridge);
 export function snowFullCells(w:Pick<World,'structures'|'width'>):Set<number>{const full=new Set<number>();for(const s of w.structures)if(STRUCTURE_SHOT_FILL[s.kind]>=1)for(const c of footprintCells(s))full.add(c.z*w.width+c.x);return full;}
 /** Explicit creation path only. Historical migration never calls this. */
 export function initializeSnowSurface(w:World):void {

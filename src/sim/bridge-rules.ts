@@ -1,3 +1,4 @@
+import {isWetTerrain,SHALLOW_WATER_SCHEMA_VERSION} from './shallow-water.ts';
 import {footprintContains} from './definitions.ts';
 import type {Cell,Job,World,StructureKind} from './types.ts';
 export const BRIDGE_SCHEMA_VERSION=247;
@@ -8,7 +9,7 @@ export const BRIDGE_BOMB_THRESHOLD=35;
 export const bridgeAt=(w:Pick<World,'width'|'tiles'>,c:Cell):boolean=>w.tiles[c.z*w.width+c.x]?.bridge===true;
 export const isBridgeJob=(j:Pick<Job,'kind'>):boolean=>j.kind==='build-bridge'||j.kind==='remove-bridge';
 export function validBridgeTile(tile:{terrain?:unknown;floor?:unknown;snowDepth?:unknown;bridge?:unknown},version:number):boolean {
-  return !Object.hasOwn(tile,'bridge')||version>=BRIDGE_SCHEMA_VERSION&&tile.bridge===true&&tile.terrain==='marsh'&&tile.floor===undefined;
+  return !Object.hasOwn(tile,'bridge')||version>=BRIDGE_SCHEMA_VERSION&&tile.bridge===true&&isWetTerrain(tile.terrain)&&(tile.terrain!=='water-shallow'||version>=SHALLOW_WATER_SCHEMA_VERSION)&&tile.floor===undefined;
 }
 
 /** Core1.6.4871 resolved terrainAffordanceNeeded. Stuff replaces it ONLY for
@@ -101,7 +102,7 @@ export function validateBridgeTransport(w:World,version:number,changedTiles?:rea
     if(Object.hasOwn(job,'bridge'))return bad('Bridge state belongs to a terrain tile.');
     if(!isBridgeJob(job))continue;
     const index=job.z*w.width+job.x,tile=w.tiles[index];
-    if(version<247||!tile||tile.terrain!=='marsh'||tile.floor!==undefined||job.kind==='build-bridge'&&tile.bridge!==undefined||job.kind==='remove-bridge'&&tile.bridge!==true
+    if(version<247||!tile||!isWetTerrain(tile.terrain)||tile.terrain==='water-shallow'&&version<SHALLOW_WATER_SCHEMA_VERSION||tile.floor!==undefined||job.kind==='build-bridge'&&tile.bridge!==undefined||job.kind==='remove-bridge'&&tile.bridge!==true
       ||seen.has(index)||job.orientation!==0||job.footprint!=='standard'||job.material!==undefined||job.floor!==undefined||job.furniture!==undefined||job.deconstruction!==undefined
       ||job.tree!==undefined||job.plantTarget!==undefined||job.repair!==undefined||job.flick!==undefined||job.growingZoneId!==undefined||job.flowerPotId!==undefined||job.clearance!==undefined||job.pickTicks!==undefined||job.installationWork!==undefined)return bad('Invalid or future bridge work.');
     if(job.kind==='remove-bridge'&&(w.structures.some(s=>footprintContains(s,job))||w.jobs.some(j=>j!==job&&(j.kind==='install'||Object.hasOwn(BUILDING_SUPPORT,j.kind))&&footprintContains(j,job))))return bad('Voluntary bridge removal would lose an occupied support.');

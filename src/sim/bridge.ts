@@ -1,3 +1,4 @@
+import {isWetTerrain,SHALLOW_WATER_SCHEMA_VERSION} from './shallow-water.ts';
 import {campaignAuthority,captureSecondaryMap,isSecondaryContext,secondaryContext} from './secondary-site-context.ts';
 import {hasTravellingCargo} from './interrupted-cargo.ts';
 import {footprintContains,STRUCTURE_DEFINITIONS} from './definitions.ts';
@@ -30,7 +31,7 @@ export function canDesignateBridge(w:World,c:DesignateCommand,exceptJob?:number)
   if(w.schemaVersion<BRIDGE_SCHEMA_VERSION||!isBridgeJob(c)||Object.keys(c).some(k=>!['type','kind','x','z','orientation'].includes(k))||c.orientation!==undefined&&c.orientation!==0)return fail('Ordre de fondation invalide.');
   if(!Number.isInteger(c.x)||!Number.isInteger(c.z)||c.x<0||c.z<0||c.x>=w.width||c.z>=w.height)return fail('Case hors carte.','out-of-bounds');
   const tile=w.tiles[c.z*w.width+c.x]!;
-  if(tile.terrain!=='marsh'||tile.floor!==undefined)return fail('Le pont standard de cette tranche exige un marais nu.','incompatible-resource');
+  if(!isWetTerrain(tile.terrain)||tile.terrain==='water-shallow'&&w.schemaVersion<SHALLOW_WATER_SCHEMA_VERSION||tile.floor!==undefined)return fail('Le pont standard exige un marais ou une eau peu profonde, sans sol construit.','incompatible-resource');
   if(c.kind==='build-bridge'?tile.bridge!==undefined:tile.bridge!==true)return fail(c.kind==='build-bridge'?'Une fondation occupe déjà cette case.':'Aucun pont à retirer.','occupied');
   if(w.jobs.some(j=>j.id!==exceptJob&&same(j,c)&&isBridgeJob(j)))return fail('Un travail de pont occupe déjà cette case.','occupied');
   if(buildings(w,c).length||supportedPlans(w,c).length)return fail(c.kind==='remove-bridge'?'Retirez d’abord les bâtiments et leurs plans portés par ce pont.':'Dégagez bâtiments et plans avant de construire le pont.','occupied');
@@ -43,9 +44,9 @@ export function finishBridge(w:World,job:Job):boolean {
   if(held.some(p=>p.item!=='wood')||held.reduce((n,p)=>n+p.quantity,0)!==BRIDGE_WOOD)return false;
   w.piles=w.piles.filter(p=>p.owner.type!=='job'||p.owner.jobId!==job.id);
   w.tiles[job.z*w.width+job.x]!.bridge=true;job.escrow.wood=job.escrow.food=0;refreshStock(w);
-  announce(w,'Pont terminé ; le marais reste sous la fondation.');return true;
+  announce(w,w.tiles[job.z*w.width+job.x]!.terrain==='water-shallow'?'Pont terminé ; l’eau peu profonde reste sous la fondation.':'Pont terminé ; le marais reste sous la fondation.');return true;
 }
-function revealMarsh(w:World,c:Cell):void {
+function revealWetGround(w:World,c:Cell):void {
   const index=c.z*w.width+c.x;
   setSnowDepth(w,index,0);delete w.tiles[index]!.snowDepth;delete w.tiles[index]!.bridge;
   for(const f of [...w.filth?.items??[]])if(same(f,c))removeFilth(w,f);
@@ -59,8 +60,8 @@ export function removeBridge(w:World,job:Job):boolean {
   if(!drops)return false;
   for(const d of drops){const owner={type:'ground' as const,...d.cell};if(!materialCanFit(view,'wood',d.quantity,owner,'wood'))return false;addMaterial(view,'wood',d.quantity,owner,'wood');}
   for(const d of drops)addMaterial(w,'wood',d.quantity,{type:'ground',...d.cell},'wood');
-  revealMarsh(w,job);ledger.count++;ledger.lostWood+=BRIDGE_WOOD-refund;refreshStock(w);
-  announce(w,'Pont retiré ; 6 bois récupérés et marais révélé.');return true;
+  revealWetGround(w,job);ledger.count++;ledger.lostWood+=BRIDGE_WOOD-refund;refreshStock(w);
+  announce(w,w.tiles[job.z*w.width+job.x]!.terrain==='water-shallow'?'Pont retiré ; 6 bois récupérés et eau peu profonde révélée.':'Pont retiré ; 6 bois récupérés et marais révélé.');return true;
 }
 /** Forced disappearance differs from voluntary removal. Cancel dependent
  * construction with its exact custody, then use ordinary killed-building
@@ -70,7 +71,7 @@ function commitDestroyed(w:World,c:Cell,cause:'fire'|'bomb'):boolean {
   if(ids.size&&!cancelIntentJobs(w,ids).ok)return false;
   // Core reveals the underlying terrain before killing its occupant. This
   // also keeps automatic trap reconstruction from creating an unsupported plan.
-  revealMarsh(w,c);
+  revealWetGround(w,c);
   for(const s of buildings(w,c))if(w.structures.includes(s)){
     if(s.kind==='sleeping-spot'){if(!removeHumanSleepingSpot(w,s).ok)return false;}
     else if(s.kind==='animal-sleeping-spot')removeAnimalSpot(w,s);

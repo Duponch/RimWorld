@@ -102,7 +102,7 @@ import { storageZonePlacements } from './storage-zone-presentation';
 import {GroundSurfaceTint} from './GroundSurfaceTint';
 import {ZONE_FILL_OPACITY,ZONE_TOOLS,areaPreviewColor,zoneBoundaryVertices} from './zone-surface-presentation';
 import {stockpileZoneCells} from '../sim/stockpile-zones';
-import {overlaySurfaceHeightAtCell as surfaceHeightAtCell,SNOW_OVERLAY_LIFT} from './surface-height';
+import {overlaySurfaceHeightAtCell as surfaceHeightAtCell,SNOW_OVERLAY_LIFT,isWaterTerrain} from './surface-height';
 import { HomePresentationSignature, StoragePresentationSignature, StructurePresentationSignature } from './presentation-signatures';
 import { mapObjectCells,mapObjectsAt,sameMapObject,type MapObjectSelection } from '../ui/map-object-selection';
 import {mapObjectGroupCells} from '../ui/map-object-group-selection';
@@ -509,7 +509,7 @@ export class SceneRenderCore {
       }
       else this.terrainPaintDirty=true;
       if(this.texturesEnabled)this.refreshTerrainPaint(world);
-      const waterTopologyChanged=terrainChanges===null||terrainChanges.some(i=>(previousWorld!.tiles[i]!.terrain==='water')!==(world.tiles[i]!.terrain==='water'));
+      const waterTopologyChanged=terrainChanges===null||terrainChanges.some(i=>isWaterTerrain(previousWorld!.tiles[i]!.terrain)!==isWaterTerrain(world.tiles[i]!.terrain));
       if(this.texturesEnabled&&!waterTopologyChanged){
         // Painted terrain reads its colour from the map. A soil/grass/stone
         // change does not alter its quad or bank geometry. Keep the plain

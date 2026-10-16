@@ -1,3 +1,4 @@
+import {isWetTerrain} from './shallow-water.ts';
 import {hasTravellingCargo,interruptWork} from './interrupted-cargo.ts';
 import { footprintCells } from './definitions.ts';
 import { sharesConstructionLayer } from './power-grid.ts';
@@ -14,7 +15,7 @@ export function canPlaceHumanSleepingSpot(world:World,c:DesignateCommand):Comman
   const cells=footprintCells({...c,orientation:c.orientation??0,footprint:'standard'});
   if(cells.some(p=>!Number.isSafeInteger(p.x)||!Number.isSafeInteger(p.z)||p.x<0||p.z<0||p.x>=world.width||p.z>=world.height))
     return {ok:false,code:'out-of-bounds',reason:'Empreinte du couchage hors de la carte.'};
-  if(cells.some(p=>(['rock','water'].includes(world.tiles[p.z*world.width+p.x]!.terrain)||world.tiles[p.z*world.width+p.x]!.terrain==='marsh'&&!world.tiles[p.z*world.width+p.x]!.bridge)
+  if(cells.some(p=>(['rock','water'].includes(world.tiles[p.z*world.width+p.x]!.terrain)||isWetTerrain(world.tiles[p.z*world.width+p.x]!.terrain)&&!world.tiles[p.z*world.width+p.x]!.bridge)
     ||world.resources.some(r=>(r.kind==='rock'||r.kind==='tree')&&same(r,p))))
     return {ok:false,code:'occupied',reason:'Dégager la roche ou l’arbre et choisir un sol praticable.'};
   if(world.structures.some(s=>sharesConstructionLayer(s.kind,c.kind)&&footprintCells(s).some(p=>cells.some(q=>same(p,q))))

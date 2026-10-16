@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V403 qualifié — [étangs peu profonds et ponts](shallow-water-v403.md), schéma254.** Terrain statique prospectif boréal, marche réelle ralentie, support nu absent et pont Light réellement payé, cargo et retrait ; anciennes eaux littérales. Rivières, hydrologie, gel et franges complètes hors lot.
+
 **V402 qualifié — [avertissement et pause](urgent-pause-v402.md), schéma 253 inchangé.** Consolidation joueur : raids humains/mécaniques et rage individuelle sur les deux cartes, signal et action Voir, réglage Jamais/Menaces majeures/Toutes menaces. Pas de nouvelle ressource, incident ou format ; autres lettres et ralentissement temporaire Core hors tranche.
 
 **V401 qualifié — [fret collectif bois/acier](group-freight-v401.md), schéma 253.** Sources finies au sol, quantité et masse explicites (400/500 g), porteurs et retour/dépôts physiques ; reprise active et anciens groupes conservés. Aucun fret individuel ni commerce de ces matières.
