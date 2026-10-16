@@ -2,6 +2,10 @@
 
 **16 octobre 2026 — schéma 252.** [Brûler des vêtements V395](gameplay/burn-apparel-v395.md) : facture physique au feu/crématorium qualifiée, perte unique et reprise au travail. V395–V396 publiés ensemble en a02aa932, produit59780d4f,134 réponses HTTPS exactes. [Matières sensibles V396](gameplay/deterioration-v396.md) qualifiées dans leur périmètre ; priorité humaine suivante : Les Aulnes, aller-retour, travaux et revisite du même site, conservation et performances.
 
+## Prochaines corrections issues du parcours réel
+
+[Les Aulnes V397](gameplay/aulnes-multimap-v397.md) : aller-retour, travaux et revisite du même site observés ; garde finale rouge sur trois habitants blessés à terre au foyer. Corriger l’alerte hors carte pour rage animale/incapacité, puis réduire le coût MAIN des snapshots/structures mesuré à15–18ms/réception. Copies privées en préparation, aucun résultat suivant acquis. Garder la branche21483 et les Aulnes publiques V394 distinctes ; pas de nouvelle campagne gagnée exigée pour avancer.
+
 ## Priorité actuelle
 
 1. **Trois biomes existants : départs vérifiés V375.** Six cas fixes et trois parcours UI250², trois recharges exactes acquis par reprises. Références officielles et visuelles consultées ; ni année de survie ni hiver entier certifiés. Ne pas rejouer ce contrôle sans changement concerné.

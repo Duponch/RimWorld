@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V397 QA partielle — schéma 252 :** [Les Aulnes, voyage et revisite](aulnes-multimap-v397.md). Aller-retour, travaux payés et persistance observés ; rouge de bien-être au foyer sur rage animale hors carte. Mesures CPU/RAF acquises, aucune nouvelle mécanique ou publication. Les Aulnes publiques V394 préservées.
+
 **V396 qualifié — schéma 252 :** [Matières sensibles et stockage protégé](deterioration-v396.md). Dix matières au sol, toit/pièce/pluie/marais et étagères ; calendrier prospectif par carte et diagnostics. Usure, transport, protection et reprise qualifiés ; coût CPU rare mesuré. V395–V396 publiés ensemble en a02aa932, produit59780d4f,134 réponses HTTPS exactes. Les Aulnes feront ensuite un vrai aller-retour et une revisite avec travaux et mesures.
 
 **V395 — schéma 251 :** [Brûler des vêtements](burn-apparel-v395.md) : facture au feu/crématorium, filtres et perte physique d’une pièce entière, sans sortie. Migrations strictes et reprise au travail qualifiées ; publication regroupée suivante, dernière production V394/eefe3715.

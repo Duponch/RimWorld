@@ -6,7 +6,7 @@ Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` auto
 
 **État V396, schéma 252 :** [Stockage sensible](docs/gameplay/deterioration-v396.md) qualifié : usure au sol, transport, protection et reprise ; coût rare mesuré. V395–V396 publiés ensemble en a02aa932, produit59780d4f,134 réponses HTTPS exactes. Les Aulnes10733, archives et campagne98038 close partielle préservées.
 
-**Ordre courant :** demande humaine du 16 octobre : après clôture V396, véritable aller-retour et revisite depuis Les Aulnes, travaux payés sur le second site, mêmes personnes/biens et analyse pause/×1/×6. Ne pas ajouter un nouveau catalogue avant ce parcours ; pas de terrain continu prévu. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers, `references_UI`, branche UI papier et sessions humaines préservés.
+**Ordre courant :** [Parcours Aulnes V397](docs/gameplay/aulnes-multimap-v397.md) clos partiel : aller-retour/travaux/revisite acquis, branche21483 conservée avec Noé/Iris/Rose à terre sur rage animale non remontée hors carte. Corriger ces alertes puis coût CPU des snapshots/structures selon mesures ; préparations privées, aucune adoption suivante acquise. Ne pas prolonger la campagne ni rejouer un état favorable pour fabriquer un vert. Aulnes publiques V394 inchangées, terrain continu non prévu. Voir [la feuille de route](docs/ROADMAP.md).
 
 ## Méthode de livraison
 
