@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V392 qualifié — [filtres des politiques de tenue](apparel-policy-edit-v392.md).** Édition d’une politique partagée existante, pièces/matières/qualité/PV, brouillon Appliquer/Annuler ; gestes futurs à cadence existante et port forcé conservés. Sans CRUD, renommage ou changement de schéma 250.
+
 **V391 livré — [provisions mixtes de groupe](group-provisions-v391.md), schéma 250.** Seules les nouvelles expéditions collectives chargent et partagent repas de survie/pemmican selon les régimes ; âge, contamination et bilans distincts jusqu’au retour physique. Anciens groupes littéraux, voyages individuels et commerce de provisions hors lot.
 
 **V390 proposé — [lampe-torche au sol](torch-lamp-v390.md), schéma 249.** Construction physique de 20 bois, réserve finie pleine de 20, lumière et chaleur sans électricité ; panne, recharge et retrait sans restitution. Aucun paquet mobile, interrupteur, ajout aux Aulnes ou nouvelle provision de voyage.
@@ -377,7 +379,7 @@ Ces entrées sont validées dans le périmètre des [preuves V90](../history/val
 | Qualité des meubles et besoin `beauty` | Sept qualités sur neuf familles de meubles ; confort, repos et beauté dérivés. Besoin personnel 0–100, pensée −15 à +15 ; beauté de pièce calculable par le noyau. | Le score de pièce n'est pas encore affiché. Anciens meubles lus normaux ; impression, richesse, espace Core et souvenirs absents. |
 | Structure `electric-tailor-bench` | 3×1, 75 matériau principal + 50 acier + 2 composants, Construction 4, 120 W ; vitesse 1 alimenté et 0,5 hors tension. Raccordement au réseau et arrêt par contact physique effectifs en V194 ; appareil vulnérable aux précipitations si exposé et réellement alimenté. | Vêtements complexes requis ; pannes et remplacement physique du composant selon V144. Pas de projet Électricité distinct ni de nouvelle recette V194. |
 | Objets `cloth-*`, `light-leather-*` des familles `tribalwear`, `shirt`, `pants`, `duster`, `parka` | Dix combinaisons textile × famille, chacune issue d'une facture et d'un inachevé homogène ; matière, qualité, PV, protection/isolation, apparence, port et stockage conservés. | Gilet pare-balles non fabricable ; aucun casque, chaussure, ceinture, réparation, teinture ou recyclage. |
-| Calendrier d'usure et politiques vestimentaires | Tirage quotidien par vêtement porté ; deux politiques partagées, affectation et automatisation par colon, remplacement par trajet/réservation/retrait/port réels. | Préréglages Tout vêtement / Tenue entretenue et bouton individuel Effacer le port forcé ; marqueur visible dans Matériel. Éditeur et copie/suppression des politiques restent absents. |
+| Calendrier d'usure et politiques vestimentaires | Tirage quotidien par vêtement porté ; deux politiques partagées, affectation et automatisation par colon, remplacement par trajet/réservation/retrait/port réels. | Préréglages Tout vêtement / Tenue entretenue, bouton individuel Effacer le port forcé et filtres des politiques existantes éditables en V392 ; marqueur visible dans Matériel. Création, copie, renommage et suppression de politiques restent absents. |
 
 La [diversité des biomes](../research/biome-diversity-reference-v90.md) est seulement préparée : aucune espèce sauvage, aucun biome sélectionnable et aucune distribution naturelle supplémentaire ne comptent parmi les ajouts V90.
 

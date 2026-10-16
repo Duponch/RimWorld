@@ -1,3 +1,4 @@
+import {createApparelPolicyEditor,apparelPolicyEditorLayout,type ApparelPolicyUpdate} from './apparel-policy-editor';
 import { isColonist } from '../sim/affiliation';
 import { apparelLabel } from '../sim/apparel-rules';
 import type { World } from '../sim/types';
@@ -6,7 +7,7 @@ import type { World } from '../sim/types';
  * union without depending on edit order between the two integrations. */
 export type ApparelPolicyAssignment={type:'apparel-policy-assign';pawnId:number;policyId:number;automatic:boolean};
 export type ApparelClearForced={type:'apparel-clear-forced';pawnId:number};
-export type ApparelAssignmentCommand=ApparelPolicyAssignment|ApparelClearForced;
+export type ApparelAssignmentCommand=ApparelPolicyAssignment|ApparelClearForced|ApparelPolicyUpdate;
 
 /** One pass at confirmed snapshot adoption, never an inventory/task inference. */
 export function forcedApparelByPawn(world:World):Map<number,string[]> {
@@ -23,11 +24,13 @@ export function apparelAssignmentLayout(layout:string):string {
   return layout
     .replace('<th>Réaction hostile</th>','<th>Tenue</th><th>Auto.</th><th>Réaction hostile</th>')
     .replace('Choisissez les aliments autorisés pour chaque colon.','Choisissez les aliments et la tenue autorisés pour chaque colon.')
-    .replace('Vêtements, drogues, et réaction Attaquer restent à développer.','Les règles détaillées des tenues et les drogues restent à développer.');
+    .replace('Vêtements, drogues, et réaction Attaquer restent à développer.','Les politiques de tenue partagées se règlent ici ; les drogues restent à développer.')
+    .replace('<button id="manage-food-policies">','<button type="button" id="manage-apparel-policies">Régler les politiques de tenue</button><button id="manage-food-policies">')+apparelPolicyEditorLayout();
 }
 
 export function createApparelPolicyControls(root:HTMLElement,send:(command:ApparelAssignmentCommand)=>Promise<string|null>) {
   let world:World|undefined,pending=false,policySignature='';
+  const editor=createApparelPolicyEditor(root,send,()=>pending);
   const rows=new Map<number,{policy:HTMLSelectElement;automatic:HTMLInputElement;clear:HTMLButtonElement}>();
   const feedback=()=>document.getElementById('assign-feedback')!;
   const policies=()=>world?.apparelPolicies??[];
@@ -53,7 +56,7 @@ export function createApparelPolicyControls(root:HTMLElement,send:(command:Appar
     rows.set(pawnId,{policy,automatic,clear});
   }
   function update(next:World) {
-    world=next;if(root.hidden)return;
+    world=next;editor.update(next);if(root.hidden)return;
     const currentIds=new Set(next.pawns.filter(isColonist).map(p=>p.id));
     for(const id of rows.keys())if(!currentIds.has(id))rows.delete(id);
     for(const pawn of next.pawns.filter(isColonist)) {

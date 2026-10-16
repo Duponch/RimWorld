@@ -8,5 +8,8 @@ describe('apparel assignment layout',()=>{
     expect(html).toContain('<th>Régime alimentaire</th><th>Tenue</th><th>Auto.</th><th>Réaction hostile</th>');
     expect(html).toContain('Choisissez les aliments et la tenue autorisés pour chaque colon.');
     expect(html).not.toContain('Vêtements, drogues, et réaction Attaquer restent à développer.');
+    expect(html).toContain('id="manage-apparel-policies"');expect(html).toContain('id="apparel-policy-dialog"');
+    expect(html).toContain('id="apply-apparel-policy"');expect(html).toContain('id="cancel-apparel-policy"');
+    expect(html).not.toContain('Les règles détaillées des tenues et les drogues restent à développer.');
   });
 });

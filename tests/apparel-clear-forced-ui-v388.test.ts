@@ -36,7 +36,7 @@ function dom(ids:number[]){
   const root=new NodeFixture(),feedback=new NodeFixture();
   for(const id of ids){const row=new NodeFixture('tr');for(let i=0;i<4;i++)row.append(new NodeFixture('td'));
     const food=new NodeFixture('select');food.dataset.foodPolicyPawn=String(id);row.children[1]!.append(food);root.append(row);}
-  vi.stubGlobal('document',{createElement:(tag:string)=>new NodeFixture(tag),getElementById:()=>feedback});return {root,feedback};
+  vi.stubGlobal('document',{createElement:(tag:string)=>new NodeFixture(tag),getElementById:(id:string)=>id==='assign-feedback'?feedback:null});return {root,feedback};
 }
 
 test('V388 forced presentation only uses actual apparel owners and never changes the world',()=>{

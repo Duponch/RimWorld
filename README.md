@@ -1,6 +1,6 @@
 # Elsewhere
 
-**V391 — schéma 250 :** [Provisions mixtes du groupe](docs/gameplay/group-provisions-v391.md) : pemmican/rations, régimes et vieillissement physiques ; chargement, ingestion et retour qualifiés, recharge UI exacte. V390–V391 publiés ensemble en21e3c957, produit1823bc0a,132réponses HTTPS exactes. Les états suivants sont historiques.
+**V392 — schéma 250 :** [Filtres des politiques de tenue](docs/gameplay/apparel-policy-edit-v392.md) : édition partagée, gestes/Auto/port forcé préservés, port automatique et reprise qualifiés. Publication regroupée suivante ; dernière production V390–V391/21e3c957,132HTTPS exacts. Les états suivants sont historiques.
 
 **V380 — schéma 242 :** [lisibilité des HUD](docs/gameplay/hover-layout-v380.md). Survol, ressources et dock stabilisés et qualifiés à quatre tailles ; correctif UI sans nouvelle mécanique. Publication regroupée suivante ; dernière production V378/e5ec566c. Les états suivants sont historiques.
 

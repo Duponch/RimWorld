@@ -1,6 +1,6 @@
 # Ce qui est jouable et ce qui manque
 
-**V391 — schéma 250 :** [Provisions mixtes du groupe](group-provisions-v391.md) : pemmican/rations, régimes et vieillissement physiques ; chargement, ingestion et retour qualifiés, recharge UI exacte. V390–V391 publiés ensemble en21e3c957, produit1823bc0a,132réponses HTTPS exactes. Les états suivants sont historiques.
+**V392 — schéma 250 :** [Filtres des politiques de tenue](apparel-policy-edit-v392.md) : édition partagée, gestes/Auto/port forcé préservés, port automatique et reprise qualifiés. Publication regroupée suivante ; dernière production V390–V391/21e3c957,132HTTPS exacts. Les états suivants sont historiques.
 
 **V381 — référence Les Aulnes actualisée :** [atelier, étagères et tenue de garde](aulnes-workshop-v381.md). Patrimoine préparé explicite, habillage et rangement ordinaires observés, anciennes références conservées ; aucune nouvelle mécanique ou campagne entière revendiquée. Les états suivants sont historiques.
 

@@ -40,7 +40,7 @@ Les pensées existantes restent strictement sous 50 % pour « abîmé » et sous
 
 V90 persiste des politiques partagées avec ID, nom, familles admises, matières admises, qualités minimale/maximale et plage de PV. Deux préréglages sont disponibles : **Tout vêtement** accepte le catalogue présent ; **Tenue entretenue** exige au moins 51 % des PV.
 
-L'onglet Assignations permet, pour chaque colon joueur, de choisir un préréglage et d'activer ou désactiver l'automatisation. L'éditeur de politiques (création, copie, renommage, filtres détaillés et suppression) n'est pas livré : le moteur et le format de sauvegarde portent les critères, mais l'interface expose seulement les deux préréglages. Captifs, visiteurs et morts ne reçoivent pas une affectation ordinaire.
+L'onglet Assignations permet, pour chaque colon joueur, de choisir un préréglage et d'activer ou désactiver l'automatisation. Depuis V392, les critères d’une politique existante sont éditables avec brouillon Appliquer/Annuler, sans modifier l’identité partagée ni les gestes engagés. Création, copie, renommage et suppression restent absents. [Portée et adaptations](../gameplay/apparel-policy-edit-v392.md). Captifs, visiteurs et morts ne reçoivent pas une affectation ordinaire.
 
 Une évaluation espacée de 600 à 900 ticks locaux retire d'abord une pièce non admise, puis cherche un meilleur candidat. Le candidat doit être dans une réserve, accessible, non réservé, autorisé et hors feu. Le score tient compte des couches, de l'état, de la qualité, de l'armure et du besoin thermique disponible ; un gain inférieur à 0,05 est refusé. Les égalités sont résolues par ID stable.
 

@@ -1,0 +1,21 @@
+.apparel-policy-dialog {
+  width: min(850px, calc(100vw - 40px)); max-height: 84dvh; overflow: auto;
+  border: 1px solid var(--line, #8c927c); border-radius: 8px;
+  background: var(--paper, #eeebdb); color: var(--ink, #26332b); padding: 20px;
+}
+.apparel-policy-dialog::backdrop { background: #17251d99; }
+.apparel-policy-dialog .panel-heading, .apparel-policy-dialog .policy-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.apparel-policy-dialog fieldset { margin: 14px 0; padding: 12px; border: 1px solid var(--line, #8c927c); }
+.apparel-policy-dialog .apparel-item-filters, .apparel-policy-dialog .apparel-material-filters {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px 16px;
+  /* A bounded scrollport must not compress multiline labels into 28px tracks. */
+  grid-auto-rows: max-content; align-content: start;
+}
+.apparel-policy-dialog .apparel-item-filters { max-height: min(36dvh, 340px); overflow: auto; }
+.apparel-policy-dialog fieldset label { display: flex; align-items: center; gap: 8px; min-height: 28px; }
+.apparel-policy-dialog .apparel-policy-ranges { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 12px; }
+.apparel-policy-dialog .apparel-policy-ranges label { display: flex; flex-direction: column; gap: 6px; }
+.apparel-policy-dialog select, .apparel-policy-dialog input[type=number] { min-height: 34px; max-width: 100%; }
+.apparel-policy-dialog button { min-height: 36px; }
+.apparel-policy-dialog .muted { color: var(--muted-ink, #586653); }
+.apparel-policy-dialog [role=status] { min-height: 1.3em; }
