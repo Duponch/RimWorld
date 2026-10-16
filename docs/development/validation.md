@@ -1,6 +1,6 @@
 # Validation courante — V349–V350
 
-**V387 — schéma 247 :** [pont standard sur marais](../gameplay/bridge-marsh-v387.md). Construction payée, passage/transport, retrait et sauvegardes qualifiés ; supports Light et destruction atomique. Publication en préparation ; production précédente V386/ff70e800. Les états suivants sont historiques.
+**V387 — schéma 247 :** [pont standard sur marais](../gameplay/bridge-marsh-v387.md). Construction payée, passage/transport, retrait et sauvegardes qualifiés ; supports Light et destruction atomique. Publication **9f9a926a**, produit `a1092767`,128 réponses HTTPS exactes. Les états suivants sont historiques.
 
 **V380 — schéma 242 :** [lisibilité des HUD](../gameplay/hover-layout-v380.md). Survol, ressources et dock stabilisés et qualifiés à quatre tailles ; correctif UI sans nouvelle mécanique. Publication regroupée suivante ; dernière production V378/e5ec566c. Les états suivants sont historiques.
 

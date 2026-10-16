@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 247.** [V387](gameplay/bridge-marsh-v387.md) relie construction, transport et retrait des ponts sur marais, support Light et destruction. Publication en préparation ; production précédente V386/ff70e800. Les Aulnes V386 et la campagne98038 close partielle sont préservées.
+**16 octobre 2026 — schéma 247.** [V387](gameplay/bridge-marsh-v387.md) relie construction, transport et retrait des ponts sur marais, support Light et destruction. Publication **9f9a926a**, produit `a1092767`,128 réponses HTTPS exactes. Les Aulnes V386 et la campagne98038 close partielle sont préservées.
 
 ## Priorité actuelle
 
