@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 246.** [V385](gameplay/marsh-tundra-v385.md) ajoute des marais aux nouvelles toundras, avec effets de trajet et contraintes d’implantation. [V384](gameplay/tuque-v384.md) qualifie la tuque fabriquée/portée. Publication commune **dfa8bdde**, produit `a7fc3244`,126 réponses HTTPS exactes. Les Aulnes V381 restent courantes ; campagne98038 close partielle.
+**16 octobre 2026 — schéma 246.** [V386](gameplay/aulnes-winter-v386.md) actualise Les Aulnes : une tuque finie/rangée, seconde en collecte, archives conservées et catalogue128. Dernière production V384–V385 **dfa8bdde**, publication V386 suivante. Campagne98038 close partielle.
 
 ## Priorité actuelle
 
@@ -15,9 +15,10 @@
 9. **Bouche d’aération V383 qualifiée.** Deux pièces, construction et ouverture/fermeture physiques, thermique et recharges exactes ; remplacement direct d’un mur encore adapté en démolition préalable.
 10. **Protection textile V384 qualifiée.** Tuque tissu/laine, ouvrage/reprise, rangement, port/retrait physiques et isolation ; quantification prospective48→50Core explicitée.
 11. **Marais de toundra V385 qualifiés.** Génération prospective, marche et transport, refus de support/culture, feu/neige et recharges ; gel, séchage, ponts et écologie complète restent ouverts.
-12. **Suite : actualisation cohérente des Aulnes.** Deux tuques de travail extérieur avec la laine libre existante, sans interrompre Ada ni forcer une bouche sans emplacement utile. Capacité du catalogue à faire évoluer explicitement en conservant toutes les archives ; préparations privées, aucun résultat acquis.
+12. **Les Aulnes V386 qualifiées.** Facture laine réelle et première production rangée ; seconde production et port restent à jouer. Anciennes références et parties personnelles préservées.
+13. **Suite : pont standard sur marais.** Référence ciblée préparée ; relever retrait/destruction et support Light avant implémentation. Rivières/profondeurs et pont lourd hors de cette tranche. Aucun code ni contrôle acquis.
 
-**Référence jouable à entretenir : Les Aulnes.** Actualiser régulièrement sa version courante avec les objets et boucles pertinents du catalogue, en conservant une colonie logique et les anciennes versions. Le patrimoine ajouté peut être préparé et explicitement décrit ; il ne devient pas une campagne naturellement acquise. V381 expose les étagères et la tenue de garde ; les prochaines mises à jour suivront les ajouts pertinents.
+**Référence jouable à entretenir : Les Aulnes.** Actualiser régulièrement sa version courante avec les objets et boucles pertinents du catalogue, en conservant une colonie logique et les anciennes versions. Le patrimoine ajouté peut être préparé et explicitement décrit ; il ne devient pas une campagne naturellement acquise. V381 expose les étagères et la tenue de garde, V386 une confection de tuques en cours ; les prochaines mises à jour suivront les ajouts pertinents.
 
 La stabilité, l’ergonomie et les performances accompagnent ces lots avec contrôles proportionnés. Les campagnes longues sont périodiques ou motivées par un risque précis. La campagne conservée au 98038 reste une preuve partielle, pas une condition bloquant toutes les livraisons. Le [suivi early access](gameplay/early-access-readiness.md) distingue acquis et limites. La [stratégie de validation](development/testing.md) décrit la méthode ; les sous-métiers restent reportés.
 

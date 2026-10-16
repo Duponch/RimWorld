@@ -1,8 +1,10 @@
 # Catalogue de contenu : couverture connue
 
+**V386 — référence Les Aulnes :** [confection d’hiver](aulnes-winter-v386.md), une tuque normale réellement finie et rangée, seconde en collecte ; aucun port. Patrimoine historique et archives conservés.
+
 **V385 — schéma 246 :** [marais physiques de toundra](marsh-tundra-v385.md). Nouveau terrain prospectif, trajet/transport, supports, cultures, feu/neige et reprises qualifiés dans leur périmètre. Publication commune V384–V385 **dfa8bdde** ; limites dans la note canonique.
 
-**V384 — proposition, schéma245 :** [tuque tissu/laine](tuque-v384.md),20unités homogènes, confection/reprise, rangement et protection du haut de tête ; casque remplacé physiquement. Durée prospective48Core arrondie à50Core explicitement. Préparation privée non encore qualifiée.
+**V384 — livré, schéma245 :** [tuque tissu/laine](tuque-v384.md),20unités homogènes, confection/reprise, rangement et protection du haut de tête ; casque remplacé physiquement. Durée prospective48Core arrondie à50Core explicitement. Confection, reprise, rangement, port/retrait et isolation qualifiés ; publication V384–V385 dfa8bdde.
 
 **V383 — schéma 244 :** [bouche d’aération](vent-v383.md),30acier/Mobilier complexe, construction payée et commande physique d’ouverture/fermeture ; deux pièces thermiques distinctes. Démolition manuelle préalable du mur, aucun soutien de toit ni paquet. Construction, services, échanges thermiques et recharges qualifiés ; périmètre dans la note canonique.
 

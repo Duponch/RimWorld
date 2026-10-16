@@ -1,6 +1,6 @@
 # Ce qui est jouable et ce qui manque
 
-**V385 — schéma 246 :** [marais physiques de toundra](marsh-tundra-v385.md) : génération prospective, trajets, supports et recharges qualifiés. Publication commune V384–V385 **dfa8bdde**, produit `a7fc3244`,126 réponses HTTPS exactes. Les états suivants sont historiques.
+**V386 — schéma 246 :** [Les Aulnes : confection d’hiver](aulnes-winter-v386.md). Une tuque réellement produite/rangée, seconde facture en cours ;65fiches et toutes les archives conservées. Publication suivante ; dernière production V384–V385 **dfa8bdde**. Les états suivants sont historiques.
 
 **V381 — référence Les Aulnes actualisée :** [atelier, étagères et tenue de garde](aulnes-workshop-v381.md). Patrimoine préparé explicite, habillage et rangement ordinaires observés, anciennes références conservées ; aucune nouvelle mécanique ou campagne entière revendiquée. Les états suivants sont historiques.
 

@@ -1,18 +1,22 @@
 # Guide joueur
 
-## Composer avec les marais — V385, proposition
+## Les Aulnes : atelier d’hiver — V386
+
+La référence courante contient une tuque laine normale rangée en139,149. Une seconde est demandée à l’établi manuel116,152 ; Marin en rassemble les matières. Noé et Alma ne la portent pas encore : après leur repos, choisissez la personne puis **Porter** sur un vêtement libre. Les anciennes versions restent dans le catalogue ; aucune partie personnelle n’est remplacée. [État exact et limites](aulnes-winter-v386.md).
+
+## Composer avec les marais — V385
 
 Sur les nouveaux sites de **Toundra**, le survol **Marais** signale un terrain lent et non cultivable. Les colons peuvent y marcher et prendre/déposer des biens au contact ; les trajets civils privilégient davantage les détours. Installez cultures, bâtiments, emplacements et conduits ordinaires sur un terrain porteur voisin : un plancher ne remplace pas un pont. Le marais ne retient ni neige ni feu à terme. Il reste statique, sans commande de drainage ou pont disponible. Une ancienne sauvegarde ne reçoit aucune poche nouvelle. [Portée et limites](marsh-tundra-v385.md).
 
-## Confectionner une tuque — V384, proposition
+## Confectionner une tuque — V384
 
 Après **Vêtements complexes**, sélectionnez un établi de tailleur manuel ou électrique puis ajoutez la facture **Tuque**. Rendez disponibles20tissus ou20laines de mufalo d’une seule matière et activez son filtre. L’Artisanat collecte et travaille au poste ; un ouvrage interrompu reste lié à son auteur. Autorisez les vêtements dans une réserve/étagère accessible pour ranger le produit. Au contact, **Porter** remplace un casque incompatible ; **Retirer** dépose la tuque. Une tuque en tissu/laine normale apporte9/14°C d’isolation froide, selon sa qualité ; elle reste compatible avec la parka. Les anciennes politiques ne sont pas élargies au chargement. [Portée et adaptations](tuque-v384.md).
 
-## Partager la chaleur entre pièces — V383, proposition
+## Partager la chaleur entre pièces — V383
 
 Après **Mobilier complexe**, ouvrez **Architecte → Température → Bouche d’aération**. Prévoyez30acier accessibles ; Q/E oriente les deux faces indiquées, qui doivent rester libres. Déconstruisez normalement tout mur à cet emplacement avant la pose. Le colon livre les matières et construit l’objet : le passage demeure bloqué, même ouvert. La bouche ne soutient aucun toit et ne peut pas être emballée.
 
-Dans sa fiche, **Demander la fermeture** ou **Demander l’ouverture** attend un colon avec **Manutention** activée ; l’état réel change seulement après son geste au contact. Le bouton permet aussi d’annuler une demande. Ouverte, la bouche rapproche les températures des deux pièces sans produire de chaleur ; fermée, elle arrête son propre échange, tandis que les autres sources et pertes continuent. Aucun courant n’est requis. [Portée proposée et limites](vent-v383.md).
+Dans sa fiche, **Demander la fermeture** ou **Demander l’ouverture** attend un colon avec **Manutention** activée ; l’état réel change seulement après son geste au contact. Le bouton permet aussi d’annuler une demande. Ouverte, la bouche rapproche les températures des deux pièces sans produire de chaleur ; fermée, elle arrête son propre échange, tandis que les autres sources et pertes continuent. Aucun courant n’est requis. [Portée et limites](vent-v383.md).
 
 ## Extraire de l’argent — V382, proposition
 

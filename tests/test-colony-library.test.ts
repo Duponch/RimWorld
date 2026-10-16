@@ -20,12 +20,35 @@ test('test catalogue rejects invalid paths, duplicate identities and inconsisten
   expect(()=>parseTestColonies({...manifest,saves:[]})).toThrow('invalide');
   const many=(count:number)=>Array.from({length:count},(_,i)=>({...save,id:`colony-${i}`,filename:`colony-${i}.json`}));
   expect(parseTestColonies({...manifest,saves:many(64)})).toHaveLength(64);
-  expect(()=>parseTestColonies({...manifest,saves:many(65)})).toThrow('invalide');
+  expect(parseTestColonies({...manifest,saves:many(65)})).toHaveLength(65);
+  expect(parseTestColonies({...manifest,saves:many(128)})).toHaveLength(128);
+  expect(()=>parseTestColonies({...manifest,saves:many(129)})).toThrow('invalide');
   expect(()=>testColonyUrl({...save,release:'../v103'})).toThrow('inconnu');
   expect(()=>testColonyUrl({...save,filename:'../salles.json'})).toThrow('inconnu');
   const legacy={version:1,release:'v98',saves:[Object.fromEntries(Object.entries(save).filter(([key])=>key!=='release'))]};
   expect(parseTestColonies(legacy)).toEqual([save]);
   expect(()=>parseTestColonies({...legacy,release:'v103'})).toThrow('invalide');
+});
+test.each([128*1024+1,256*1024])('catalogue fetch accepts a bounded UTF-8 manifest of %i bytes',async(size)=>{
+  const manifest={version:2,saves:[{...save,label:'Colonie enneigée'}]};
+  const json=JSON.stringify(manifest),encoder=new TextEncoder();
+  const bytes=encoder.encode(json+' '.repeat(size-encoder.encode(json).byteLength));
+  expect(bytes.byteLength).toBe(size);
+  vi.stubGlobal('fetch',vi.fn(async()=>new Response(bytes)));
+  expect(await fetchTestColonies()).toEqual(manifest.saves);
+});
+
+test('catalogue fetch cancels a chunked body above 256 KiB before JSON decoding',async()=>{
+  const json=JSON.stringify({version:2,saves:[save]}),encoder=new TextEncoder();
+  const full=encoder.encode(json+' '.repeat(256*1024-encoder.encode(json).byteLength));
+  const cancel=vi.fn();
+  const body=new ReadableStream<Uint8Array>({
+    start(controller){controller.enqueue(full);controller.enqueue(new Uint8Array([32]));},
+    cancel,
+  });
+  vi.stubGlobal('fetch',vi.fn(async()=>new Response(body)));
+  await expect(fetchTestColonies()).rejects.toThrow('trop volumineux');
+  expect(cancel).toHaveBeenCalledOnce();
 });
 test('published catalogue keeps six V98 entries and lists the V101/V103/V104/V105/V106 demonstrations with exact bytes and valid migration',async()=>{
   const manifest=JSON.parse(readFileSync('public/test-saves/manifest.json','utf8'));

@@ -8,6 +8,7 @@ import {serializeWorld,deserializeWorld,validateWorld} from '../src/sim/serializ
 import {SnapshotEncoder,SnapshotDecoder} from '../src/bridge/snapshots.ts';
 import {storageAt} from '../src/sim/shelf-storage.ts';
 import {SCHEMA_VERSION} from '../src/sim/types.ts';
+import {TEST_COLONY_COUNT} from './test-colony-count.ts';
 
 test('V381 fixed RAW284 derivative conserves residents/property, declares only the bounded workshop inheritance and decodes exactly',async()=>{
   // The V381 generator is deliberately locked to its release. Once the game
@@ -22,8 +23,8 @@ test('V381 fixed RAW284 derivative conserves residents/property, declares only t
     expect(world.piles.find(p=>p.id===26497)).toMatchObject({item:'recon-armor',owner:{type:'apparel',pawnId:20331}});
     expect([26490,26493].every(id=>world.structures.some(s=>s.id===id&&s.kind==='shelf'))).toBe(true);
     const manifest=JSON.parse(readFileSync('public/test-saves/manifest.json','utf8'));
-    expect(manifest.saves).toHaveLength(64);
-    expect(manifest.saves.find((e:{id:string})=>e.id==='aulnes-current')).toMatchObject({release:'v381',sha256:'c95c7b6e99a21f521f8fe533a8b4664e758e6dd20fcdeeebf2da3f88531cced8'});
+    expect(manifest.saves).toHaveLength(TEST_COLONY_COUNT);
+    expect(manifest.saves.find((e:{release:string})=>e.release==='v381')).toMatchObject({sha256:'c95c7b6e99a21f521f8fe533a8b4664e758e6dd20fcdeeebf2da3f88531cced8'});
     expect(manifest.saves.find((e:{id:string})=>e.id==='aulnes-integrated-v284')).toMatchObject({release:'v284',sha256:AULNES_V381_PARENT_SHA});
     const {world:source}=await loadAulnesV284();expect(()=>prepareAulnesV381(source)).toThrow(/242/);
     const decoded=new SnapshotDecoder().adopt(structuredClone(new SnapshotEncoder().encode(world,0,0,true)));

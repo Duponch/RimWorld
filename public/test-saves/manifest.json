@@ -3,9 +3,43 @@
   "saves": [
     {
       "id": "aulnes-current",
+      "release": "v386",
+      "filename": "les-aulnes-integrees.json",
+      "label": "Les Aulnes · atelier d’hiver 250×250",
+      "description": "Colonie historique conservée ; facture limitée de deux tuques en laine ajoutée à l’atelier manuel. Au checkpoint final tick 10373 : 1 tuque(s) laine finie(s), 1 rangée(s), aucune portée. Les objectifs inachevés restent à jouer.",
+      "pawns": 15,
+      "colonists": 14,
+      "width": 250,
+      "height": 250,
+      "tick": 10373,
+      "prepared": true,
+      "sha256": "dfd9302647b4d1cabaa8760a150209c6804a788f48a0b0596660318b4d1707ee",
+      "provenance": "Suite de la référence V381, tick 8794, avec son patrimoine préparé : Dérivé du checkpoint V284, tick8434, SHA e11bdf91…644d, migré strictement au schéma242. Deux étagères en bois,40uranium au sol, une combinaison normale et la seule recherche Recon sont explicitement préparés. Iris libérée par vraie annulation ; Tao reçoit la tenue par ordre/contact ordinaires. Aucune acquisition naturelle, expédition ou nouvelle histoire n’est inventée. Cette mise à jour ajoute seulement une facture de deux tuques laine, puis laisse les habitants collecter, confectionner et ranger par leurs gestes ordinaires. Aucun stock, recherche, travail ou vêtement supplémentaire n’est offert. Au tick 10373, une tuque finie et rangée ; aucune portée. La seconde production et le port restent à jouer.",
+      "focus": [
+        "colonie intégrée",
+        "atelier et étagères",
+        "uranium",
+        "tenue de garde Recon",
+        "fabrication",
+        "hôpital et pharmacie",
+        "élevage",
+        "commerce orbital",
+        "atelier d’hiver",
+        "tuques en laine"
+      ],
+      "steps": [
+        "Atelier manuel (structure 20988) : facture 26682, deux tuques, laine homogène dans le rayon 32, destination réserve. État au checkpoint final : Rassemble les ingrédients (0/20 déposés au poste).",
+        "Au checkpoint : 1 tuque(s) laine finie(s), 0 ouvrage(s) de cette facture ; 1 rangée(s) dans une réserve compatible et aucune portée au checkpoint final. La production et le rangement ne sont pas attribués rétroactivement.",
+        "Noé et Alma sont les destinataires envisagés. Port constaté au checkpoint : aucune portée. Aucun ordre Porter n’a encore été donné.",
+        "L’héritage V381 comprend la tâche de chemise d’Ada et ses réservations ; la préparation de cette facture ne les a pas annulées.",
+        "Le village et ses matières proviennent du patrimoine déclaré V381. Aucun marais ni bouche d’aération n’est imposé à cette carte ; les ajouts futurs restent des choix de partie."
+      ]
+    },
+    {
+      "id": "aulnes-integrated-v381",
       "release": "v381",
       "filename": "les-aulnes-integrees.json",
-      "label": "Les Aulnes · référence intégrée 250×250",
+      "label": "Les Aulnes · référence historique V381 250×250",
       "description": "Le village historique conserve ses habitants, élevage et ateliers ; rangement industriel sur étagères, uranium fini et tenue de garde Recon complètent les activités existantes. Patrimoine déclaré puis continuation ordinaire.",
       "pawns": 15,
       "colonists": 14,

@@ -18,6 +18,9 @@ export interface TestColony {
   sha256: string;
 }
 
+export const MAX_TEST_COLONIES = 128;
+export const MAX_TEST_COLONY_MANIFEST_BYTES = 256 * 1024;
+
 const DIRECTORY = '/test-saves/';
 const RELEASE = /^v[1-9][0-9]{1,2}$/;
 const FILENAME = /^[a-z0-9-]+\.json$/;
@@ -28,7 +31,7 @@ const strings = (value: unknown): value is string[] => Array.isArray(value) && v
 export function parseTestColonies(value: unknown): TestColony[] {
   if (!object(value) || (value.version !== 1 && value.version !== 2)
     || (value.version === 1 && value.release !== 'v98')
-    || !Array.isArray(value.saves) || !value.saves.length || value.saves.length > 64) throw Error('Catalogue de colonies de test invalide.');
+    || !Array.isArray(value.saves) || !value.saves.length || value.saves.length > MAX_TEST_COLONIES) throw Error('Catalogue de colonies de test invalide.');
   const ids = new Set<string>(), paths = new Set<string>();
   const saves = value.saves.map(save => value.version === 1 && object(save) ? {...save,release:'v98'} : save);
   for (const save of saves) {
@@ -68,7 +71,7 @@ async function readResponse(response: Response, limit: number): Promise<string> 
 }
 
 export async function fetchTestColonies(): Promise<TestColony[]> {
-  return parseTestColonies(JSON.parse(await readResponse(await fetch(DIRECTORY+'manifest.json'),128*1024)));
+  return parseTestColonies(JSON.parse(await readResponse(await fetch(DIRECTORY+'manifest.json'),MAX_TEST_COLONY_MANIFEST_BYTES)));
 }
 
 export function testColonyUrl(save: TestColony): string {
