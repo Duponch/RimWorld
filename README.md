@@ -1,6 +1,6 @@
 # Elsewhere
 
-**V386 — schéma 246 :** [Les Aulnes : confection d’hiver](docs/gameplay/aulnes-winter-v386.md). Une tuque réellement produite/rangée, seconde facture en cours ;65fiches et toutes les archives conservées. Publication suivante ; dernière production V384–V385 **dfa8bdde**. Les états suivants sont historiques.
+**V386 — schéma 246 :** [Les Aulnes : confection d’hiver](docs/gameplay/aulnes-winter-v386.md). Une tuque réellement produite/rangée, seconde facture en cours ;65fiches et toutes les archives conservées. Publication **ff70e800**, produit `026d2c4e`,128 réponses HTTPS exactes. Les états suivants sont historiques.
 
 **V380 — schéma 242 :** [lisibilité des HUD](docs/gameplay/hover-layout-v380.md). Survol, ressources et dock stabilisés et qualifiés à quatre tailles ; correctif UI sans nouvelle mécanique. Publication regroupée suivante ; dernière production V378/e5ec566c. Les états suivants sont historiques.
 

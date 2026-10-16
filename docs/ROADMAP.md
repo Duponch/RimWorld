@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 246.** [V386](gameplay/aulnes-winter-v386.md) actualise Les Aulnes : une tuque finie/rangée, seconde en collecte, archives conservées et catalogue128. Dernière production V384–V385 **dfa8bdde**, publication V386 suivante. Campagne98038 close partielle.
+**16 octobre 2026 — schéma 246.** [V386](gameplay/aulnes-winter-v386.md) actualise Les Aulnes : une tuque finie/rangée, seconde en collecte, archives conservées et catalogue128. Publication **ff70e800**, produit `026d2c4e`,128 réponses HTTPS exactes. Campagne98038 close partielle.
 
 ## Priorité actuelle
 
