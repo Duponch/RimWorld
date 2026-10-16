@@ -1,6 +1,6 @@
 # Fret collectif de bois et d’acier — V401
 
-Schéma 253. Lot qualifié ; publication groupée V400–V401 à confirmer séparément.
+Schéma 253. V400–V401 publiés ensemble en65bad476, produit5fdec2e6246af94fd5416144936fb5eeeba8704a,134 réponses HTTPS exactes.
 
 Dans **Monde → Globe et groupe**, les nouvelles formations peuvent sélectionner du bois et de l’acier réellement présents au sol, notamment pour rentrer du second site. Les sources montrent disponibilité, quantité choisie et masse : **400 g par bois, 500 g par acier**. Vêtements, équipement et inventaires comptent toujours dans la charge ; la prévisualisation ne réserve ni ne transfère les biens.
 
@@ -20,4 +20,4 @@ Le court parcours Chrome/WebGPU préparé 32² passe en 48,075 s : dotation déc
 
 Ce parcours démontre le retour de fret dans sa scène préparée ; il ne qualifie ni une nouvelle campagne des Aulnes, ni les 21 bois de la branche blessée V397, ni toutes les charges/routes/pertes possibles. Aulnes publiques V394 et vrai état 21483 restent intacts et distincts. La mesure Node V400 reste celle de sa note, sans gain navigateur/GPU/FPS déduit de V401.
 
-Build Pages PASS 2,447 s, documentation PASS 1,795 s ; gel documentaire final freeze04 de 3 475 chemins exact. Publication distante encore à confirmer.
+Build Pages PASS 2,447 s, documentation PASS 1,795 s ; gel documentaire final freeze04 de 3 475 chemins exact. Publication commune V400–V401 confirmée : paquet PASS1,418s,531fichiers/126415035octets,66fiches/69chemins de sauvegarde exacts ; déploiement65bad476 PASS16,181s ;134réponses HTTPS200/MIME/octets exacts PASS27,963s sur le déploiement et le domaine stable. Rapports `tmp/elsewhere-pages/v401-package-w1GlTy` et `v401-http-vgGGsk`. Les archives et pointeurs AulnesV394 restent exacts. Aucun nouveau build après clôture documentaire.

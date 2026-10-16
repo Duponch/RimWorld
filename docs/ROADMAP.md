@@ -1,14 +1,14 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 253.** [Fret collectif V401](gameplay/group-freight-v401.md) qualifié : bois/acier pris au contact et rapportés du second site ; reprise active exacte. Publication groupée avec [CPU V400](development/sleeping-provenance-v400.md) suivante.
+**16 octobre 2026 — schéma 253.** [Fret collectif V401](gameplay/group-freight-v401.md) qualifié : bois/acier pris au contact et rapportés du second site ; reprise active exacte. Publié avec [CPU V400](development/sleeping-provenance-v400.md) en 65bad476, produit 5fdec2e6, 134 réponses HTTPS exactes.
 
-**Dernière production V398–V399.** [Alertes V398](gameplay/remote-danger-alerts-v398.md) et [CPU V399](development/structure-adoption-v399.md) qualifiés ; V398–V399 publiés ensemble en 8a146d54, produit 7ee3a889, 134 réponses HTTPS exactes.
+**Publication antérieure V398–V399.** [Alertes V398](gameplay/remote-danger-alerts-v398.md) et [CPU V399](development/structure-adoption-v399.md) qualifiés ; V398–V399 publiés ensemble en 8a146d54, produit 7ee3a889, 134 réponses HTTPS exactes.
 
 **Dernière publication V396.** [Brûler des vêtements V395](gameplay/burn-apparel-v395.md) : facture physique au feu/crématorium qualifiée, perte unique et reprise au travail. V395–V396 publiés ensemble en a02aa932, produit59780d4f,134 réponses HTTPS exactes. [Matières sensibles V396](gameplay/deterioration-v396.md) qualifiées dans leur périmètre ; priorité humaine suivante : Les Aulnes, aller-retour, travaux et revisite du même site, conservation et performances.
 
 ## Prochaines corrections issues du parcours réel
 
-[Les Aulnes V397](gameplay/aulnes-multimap-v397.md) : aller-retour, travaux et revisite du même site observés ; garde finale rouge sur trois habitants blessés à terre au foyer. Les alertes rage animale/incapacité sont corrigées V398. V399/V400 réduisent deux lectures de structures inchangées, après profil ciblé et comparaison CPU bornée. Aucun gain FPS annoncé. Le chargement/retour de bois et acier est qualifié V401. Poursuivre les manques joueurs concrets des voyages et de la colonie ; pas de succession automatique de caches par domaine. Garder la branche21483 et les Aulnes publiques V394 distinctes ; pas de nouvelle campagne gagnée exigée pour avancer.
+[Les Aulnes V397](gameplay/aulnes-multimap-v397.md) : aller-retour, travaux et revisite du même site observés ; garde finale rouge sur trois habitants blessés à terre au foyer. Les alertes rage animale/incapacité sont corrigées V398. V399/V400 réduisent deux lectures de structures inchangées, après profil ciblé et comparaison CPU bornée. Aucun gain FPS annoncé. Le chargement/retour de bois et acier est qualifié V401. Prochaine tranche retenue : avertissement urgent et pause automatique configurable sur nouvelle menace, quelle que soit la carte affichée. Préparation seulement ; aucune pause automatique encore livrée. Pas de succession automatique de caches par domaine. Garder la branche21483 et les Aulnes publiques V394 distinctes ; pas de nouvelle campagne gagnée exigée pour avancer.
 
 ## Priorité actuelle
 

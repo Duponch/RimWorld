@@ -1,6 +1,6 @@
 # Provenance des couchages et coût d’adoption — V400
 
-16 octobre 2026, schéma 252 inchangé. Consolidation CPU après [V399](structure-adoption-v399.md), sans nouvelle mécanique : éviter de relire la provenance statique des structures restées exactement identiques, tout en vérifiant à chaque réception les lits, personnes, terrains, tâches, soins et possessions actuels. Produit qualifié, publication groupée suivante ; dernière production V398–V399/8a146d54/7ee3a889.
+16 octobre 2026, schéma 252 inchangé. Consolidation CPU après [V399](structure-adoption-v399.md), sans nouvelle mécanique : éviter de relire la provenance statique des structures restées exactement identiques, tout en vérifiant à chaque réception les lits, personnes, terrains, tâches, soins et possessions actuels. Produit qualifié puis publié avec V401 en65bad476, produit5fdec2e6,134 réponses HTTPS exactes. Les mesures ci-dessous restent celles du schéma252 de V400, pas une nouvelle mesure navigateur du produit253.
 
 ## Cause mesurée et changement borné
 
