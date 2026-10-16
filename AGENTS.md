@@ -4,9 +4,9 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V392, schéma 250 :** [filtres de tenue](docs/gameplay/apparel-policy-edit-v392.md) qualifiés, édition partagée sans modifier Auto/forced/tâches/échéances ; port réel et reprise. Publication regroupée suivante ; dernière production V390–V391 **21e3c957**/`1823bc0a`,132HTTPS exacts. Les Aulnes V386/tick10373 et campagne98038 close partielle préservées.
+**État V393, schéma 250 :** [lecture des piles/régimes](docs/gameplay/food-readability-v393.md) et filtres de tenue V392 qualifiés, publication groupée suivante ; dernière production V390–V391/21e3c957. Les Aulnes V386/tick10373 et campagne98038 close partielle préservées.
 
-**Ordre courant :** lecture cohérente des piles alimentaires et des régimes pour alertes/guide, après revue des copies privées V393 ; aucun nouveau moteur de sélection ni navigation par image. Qualifier les faits réellement évalués, conserver accès/autonomie inconnus et repas engagés. Actualisations des Aulnes périodiques ; sous-métiers différés. Voir [la feuille de route](docs/ROADMAP.md). `references_UI`, branche UI papier et sessions humaines préservées.
+**Ordre courant :** actualisation périodique Aulnes V394 depuis le vrai RAW386, autorisation ciblée de la tuque laine puis courte évolution ordinaire, sans dotation, réveil ou port forcé. Préserver travaux, sommeil, personnes/biens et archives ; qualifier le résultat réel, même partiel. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers, `references_UI`, branche UI papier et sessions humaines préservés.
 
 ## Méthode de livraison
 

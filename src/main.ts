@@ -173,6 +173,7 @@ import { openObjectInformation } from './ui/object-information';
 import { itemInformation } from './ui/item-information';
 import {minifiedTreeDescription} from './ui/minified-tree-inspection';
 import { healthCapacityRows } from './ui/health-inspection';
+import {captureFoodReadability,type FoodReadability} from './sim/food-readability';
 import { ITEM_DEFINITIONS, availableNutrition } from './sim/items';
 import { foodFreshnessLabel } from './ui/food-freshness';
 import { SimulationClient } from './bridge/SimulationClient';
@@ -297,6 +298,11 @@ const client = (() => {
 const audio = new AudioDirector();
 const music = new MusicDirector();
 let snapshot: World | undefined;
+let latestFoodReadability:FoodReadability|undefined;
+function confirmedFoodReadability():FoodReadability|undefined {
+  if(!snapshot)return undefined;
+  return latestFoodReadability??=captureFoodReadability(snapshot);
+}
 let guideAfterStartingArrival=false;
 let selectedPawn: number | undefined;
 let colonistInspector: ColonistInspectorState | undefined;
@@ -765,6 +771,7 @@ async function switchPanel(panel: Panel, preserveTool = false): Promise<void> {
 }
 async function replaceColony(action: () => Promise<void>): Promise<void> {
   client.restartForReplacement();
+  latestFoodReadability=undefined;
   lastCommercialArrivalKey=undefined;
   replacingWorld = true; syncStorageButtons();
   try {
@@ -852,7 +859,7 @@ function setPanel(panel: Panel, preserveTool = false) {
     button.setAttribute('aria-pressed', String(active));
   }
   if (panel === 'schedule' && snapshot) scheduleUI.update(snapshot);
-  if (panel === 'assign' && snapshot) {foodPolicyUI.update(snapshot);apparelPolicyUI.update(snapshot);allowedAreaUI.update(snapshot);}
+  if (panel === 'assign' && snapshot) {foodPolicyUI.update(snapshot,confirmedFoodReadability());apparelPolicyUI.update(snapshot);allowedAreaUI.update(snapshot);}
   if (panel === 'research' && snapshot) updateResearchPanel(el('research-content'),snapshot,c=>void attempt(()=>client.command(c)),researchPanelActions);
   el('inspector').hidden = panel !== null || preserveTool&&currentTool!=='select' || (!selection.ids.size && !selectedCell);
   if (panel !== 'architect' && !preserveTool) applyTool('select');
@@ -1199,8 +1206,8 @@ function actionLabel(pawn: Pawn, carriedPatients: ReadonlySet<number>) {
   if(pawn.burning)return pawn.burning.phase==='panic'?'En feu · panique':'Éteint les flammes sur lui';
   if(pawn.firefighting)return pawn.firefighting.phase==='approach'?'Rejoint un incendie':'Éteint un incendie';
   if(prisonBreakActive(pawn))return pawn.melee?.strike?'Révolte · récupération après attaque':pawn.melee?'Révolte · force le passage':'Révolte · cherche à s’échapper';
-  if(pawn.bombRefuge||pawn.prisoner)return queryPawnStatus(snapshot!,pawn).reason;
-  if(pawn.mental?.crisis)return queryPawnStatus(snapshot!,pawn).reason;
+  if(pawn.bombRefuge||pawn.prisoner)return queryPawnStatus(snapshot!,pawn,confirmedFoodReadability()).reason;
+  if(pawn.mental?.crisis)return queryPawnStatus(snapshot!,pawn,confirmedFoodReadability()).reason;
   if(pawn.flee)return pawn.path.length||pawn.moveCooldown>0?'Fuit une menace':'Reste à couvert après la fuite';
   if(pawn.stun)return 'Étourdi';
   if(pawn.melee)return pawn.melee.strike?'Mêlée · récupération':pawn.path.length?'Mêlée · approche':'Mêlée · au contact';
@@ -1210,19 +1217,19 @@ function actionLabel(pawn: Pawn, carriedPatients: ReadonlySet<number>) {
   if(pawn.shooting)return pawn.shooting.stance?.phase==='cooldown'?'Récupération après tir':pawn.shooting.stance?.phase==='aim'?'Riposte · vise':'Riposte · rejoint sa position';
   if(pawn.equipmentTask)return ({equip:'Va équiper son arme',drop:'Dépose son arme',wear:pawn.state==='working'?'Enfile un vêtement':'Va chercher un vêtement',remove:'Retire un vêtement'})[pawn.equipmentTask.action];
   const pasteLabel=pasteTaskLabel(snapshot!,pawn);if(pasteLabel)return pasteLabel;
-  if(pawn.ward||pawn.prisoner||pawn.feed||pawn.tend||pawn.surgery||pawn.state==='resting'||pawn.rescue||carriedPatients.has(pawn.id))return queryPawnStatus(snapshot!,pawn).reason;
+  if(pawn.ward||pawn.prisoner||pawn.feed||pawn.tend||pawn.surgery||pawn.state==='resting'||pawn.rescue||carriedPatients.has(pawn.id))return queryPawnStatus(snapshot!,pawn,confirmedFoodReadability()).reason;
   if(pawn.state==='downed'||pawn.state==='dead')return stateLabels[pawn.state];
   if(pawn.interruptedCargo)return pawn.state==='sleeping'?'Se repose · cargaison à déposer':'Cargaison à déposer · sol proche encombré';
   if(pawn.animalHandling)return ({tame:'Apprivoisement',maintain:'Entretien de la familiarité',lead:'Conduit un animal vers son enclos',milk:'Trait un dromadaire',shear:'Tond un mufalo',slaughter:'Abattage domestique'})[pawn.animalHandling.kind];
   if(pawn.animalRescue)return pawn.animalRescue.phase==='carry'?'Porte un animal vers un couchage':'Secourt un animal';
   if(pawn.animalCare)return 'Soins vétérinaires';
   if(pawn.animalFeed)return 'Alimentation assistée animale';
-  if(pawn.cooking)return queryPawnStatus(snapshot!,pawn).reason;
-  if (pawn.need) return queryPawnStatus(snapshot!, pawn).reason;
-  if(pawn.recreation.task)return queryPawnStatus(snapshot!,pawn).reason;
+  if(pawn.cooking)return queryPawnStatus(snapshot!,pawn,confirmedFoodReadability()).reason;
+  if (pawn.need) return queryPawnStatus(snapshot!,pawn,confirmedFoodReadability()).reason;
+  if(pawn.recreation.task)return queryPawnStatus(snapshot!,pawn,confirmedFoodReadability()).reason;
   if(pawn.orbitalTrade)return pawn.orbitalTrade.phase==='ready'?'Commerce orbital · au contact de la console':'Commerce orbital · rejoint la console';
   if(pawn.visitor)return pawn.visitor.phase==='leaving'?'Visiteur · quitte la carte':pawn.visitor.phase==='arriving'?'Visiteur · rejoint la colonie':pawn.visitor.role==='trader'?'Marchand · séjourne dans la colonie':'Visiteur · séjourne dans la colonie';
-  if(pawn.haul?.destination.type==='fuel'||pawn.haul?.destination.type==='turret')return queryPawnStatus(snapshot!,pawn).reason;
+  if(pawn.haul?.destination.type==='fuel'||pawn.haul?.destination.type==='turret')return queryPawnStatus(snapshot!,pawn,confirmedFoodReadability()).reason;
   if (pawn.haul) {
     const destination = pawn.haul.destination.type === 'job' ? 'chantier' : pawn.haul.destination.type === 'aside' ? 'bord du champ' : pawn.haul.destination.type==='hopper'?'trémie':'réserve';
     const carried = snapshot?.piles.find(pile => pile.id === pawn.haul!.carryPileId);
@@ -1279,8 +1286,8 @@ async function updateAutoSlaughterPolicy(config:AutoSlaughterConfig):Promise<voi
 
 function renderState() {
   if (!snapshot) return;
+  const world = snapshot,food=confirmedFoodReadability()!;
   syncArchitectAvailability();
-  const world = snapshot;
   const colonists = world.pawns.filter(isColonist);
   const living = colonists.filter(pawn => pawn.state !== 'dead');
   const colonistIds = new Set(colonists.map(pawn => pawn.id));
@@ -1300,7 +1307,7 @@ function renderState() {
     }
   }
   if(currentPanel==='schedule')scheduleUI.update(world);
-  if(currentPanel==='assign'){foodPolicyUI.update(world);apparelPolicyUI.update(world);} allowedAreaUI.update(world);
+  if(currentPanel==='assign'){foodPolicyUI.update(world,food);apparelPolicyUI.update(world);} allowedAreaUI.update(world);
   const totals = {blocks:0,medicine:0,silver:0,component:0,cloth:0,steel:0,chemfuel:0,gold:0,uranium:0,plasteel:0,'advanced-component':0,carried:0,delivered:0};
   const stockCounts = new Map<World['piles'][number]['item'],number>();
   for (const pile of world.piles) {
@@ -1326,6 +1333,8 @@ function renderState() {
   el('steel').textContent=String(totals.steel);
   for(const item of ['chemfuel','gold','uranium','plasteel','advanced-component'] as const){el(item).textContent=String(totals[item]);el(`${item}-stock`).hidden=totals[item]===0;}
   el('wood').textContent = String(world.stock.wood); const nutrition = availableNutrition(world);el('food').textContent = nutrition.toFixed(1);
+  const physicalFoodLabel=el('food').previousElementSibling;if(physicalFoodLabel)physicalFoodLabel.textContent='Stock physique';
+  setTooltip(el('food').parentElement!,{title:'Stock physique de nutrition',body:'Compteur physique existant, indépendant des régimes. Il ne mesure ni fraîcheur, accès, réservation, partage ni autonomie.'});
   resourceLedger.update(stockCounts);
   const carried = totals.carried, delivered = totals.delivered;
   el('material-status').textContent = `${carried} portées · ${delivered} au chantier`;
@@ -1396,7 +1405,7 @@ function renderState() {
       updateMoodInspection(el('inspector'),world,pawn);
       updateSocialInspection(el('inspector'),world,pawn);
       updateJournalInspection(el('inspector'),world,pawn);
-      setTooltip(el('selected-action'),{title:'Activité',body:queryPawnStatus(world,pawn).reason});
+      setTooltip(el('selected-action'),{title:'Activité',body:queryPawnStatus(world,pawn,food).reason});
     }
   } else if (selectedCell) {
     const { x, z } = selectedCell;
@@ -1538,7 +1547,7 @@ function renderState() {
     }));
     if (!entries.length) el('journal-items').textContent = 'Trois survivants. Une nouvelle histoire.';
   }
-  statusAlerts.update(world);
+  statusAlerts.update(world,food);
   startingArrivalUI.update(world,currentSpeed);
   syncFirstDayGuide();
   economyUI.update(world);arrivalUI.update(world);questUI.update(world);raidUI.update(world);heatwaveUI.update(world);flashstormUI.update(world);solarFlareUI.update(world);weatherConditionUI.update(world);shortCircuitUI.update(world);tradeUI.update(world);orbitalUI.update(world);
@@ -1591,7 +1600,7 @@ function syncFirstDayGuide():void {
   const pending=!!snapshot?.startingArrival&&snapshot.startingArrival.phase!=='opened';
   if(guideAfterStartingArrival&&!pending&&!frontMenu.isOpen()&&!replacingWorld){guideAfterStartingArrival=false;learningReadout.open=true;}
   firstDayGuide.setActive(learningReadout.open&&!pending&&!frontMenu.isOpen()&&!replacingWorld);
-  if(snapshot)firstDayGuide.update(snapshot);
+  if(snapshot)firstDayGuide.update(snapshot,confirmedFoodReadability());
 }
 learningReadout.addEventListener('toggle',syncFirstDayGuide);
 const heatwaveUI=createHeatwaveUI(command=>client.command(command),focusNotification);
@@ -1832,7 +1841,7 @@ function receiveMainSnapshot(world: World, cost: number, speed: number, replaced
     if(tree&&tree.owner.type==='ground'){selectedObject={kind:'pile',id:tree.id};selectedObjects=[selectedObject];selectedCell={x:tree.owner.x,z:tree.owner.z};renderer?.setSelectedObject(selectedObject);zoneAnchorChanged=true;}
   }
   if(currentTool==='replant-tree'&&replantPileId!==undefined&&!world.piles.some(p=>p.id===replantPileId&&p.owner.type==='ground'&&isMinifiedTree(p)&&!p.plantPack.pendingExpiry))applyTool('select');
-  snapshot=world;stepMs=cost;currentSpeed=speed;latestMotion=motion;session.hasWorld=true;frontMenu.setHasGame(true);
+  latestFoodReadability=undefined;snapshot=world;stepMs=cost;currentSpeed=speed;latestMotion=motion;session.hasWorld=true;frontMenu.setHasGame(true);
   syncArchitectAvailability(replaced);
   let objectGroupChanged=false;
   if(!replaced&&selectedObjects.length>1){

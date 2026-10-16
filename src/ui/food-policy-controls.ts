@@ -1,6 +1,7 @@
 import { isColonist } from '../sim/affiliation';
 import { FOOD_ITEMS, type FoodPolicyCommand, type FoodItemId } from '../sim/food-policy';
 import { ITEM_DEFINITIONS } from '../sim/items';
+import {captureFoodReadability,type FoodReadability} from '../sim/food-readability';
 import { queryPawnStatus } from '../sim/diagnostics';
 import type { World,Command } from '../sim/types';
 
@@ -31,7 +32,7 @@ export function createFoodPolicyControls(root: HTMLElement, send: (command: Food
   const el=<T extends HTMLElement=HTMLElement>(id:string)=>document.getElementById(id) as T;
   const dialog=el<HTMLDialogElement>('food-policy-dialog'),choice=el<HTMLSelectElement>('food-policy-choice'),name=el<HTMLInputElement>('food-policy-name');
   const checks=[...dialog.querySelectorAll<HTMLInputElement>('[data-allowed-food]')];
-  let world:World|undefined,identity='',policiesSignature='',formSignature='',selectedId=1,pending=false;
+  let world:World|undefined,lastFoodReadability:FoodReadability|undefined,identity='',policiesSignature='',formSignature='',selectedId=1,pending=false;
   const rows=new Map<number,{select:HTMLSelectElement;response:HTMLSelectElement;status:HTMLElement}>();
   function options(select:HTMLSelectElement) {
     select.replaceChildren(...world!.foodPolicies.map(p=>{const option=document.createElement('option');option.value=String(p.id);option.textContent=p.name;return option;}));
@@ -56,7 +57,7 @@ export function createFoodPolicyControls(root: HTMLElement, send: (command: Food
       const error=await send(command);
       el('assign-feedback').textContent=error??'';el('food-policy-feedback').textContent=error??'Régime appliqué.';
       if(!error&&selectCreated&&newId)selectedId=newId;
-      if(!error){formSignature='';if(world)update(world);renderForm();}
+      if(!error){formSignature='';if(world)update(world,lastFoodReadability);renderForm();}
     } finally {pending=false;root.removeAttribute('aria-busy');dialog.removeAttribute('aria-busy');}
   }
   el('manage-food-policies').onclick=()=>{if(world){options(choice);renderForm();el('food-policy-feedback').textContent='';dialog.showModal();}};
@@ -68,8 +69,9 @@ export function createFoodPolicyControls(root: HTMLElement, send: (command: Food
   el('delete-food-policy').onclick=()=>{void commit({type:'food-policy-delete',policyId:selectedId});};
   el('allow-all-food').onclick=()=>checks.forEach(c=>c.checked=true);
   el('deny-all-food').onclick=()=>checks.forEach(c=>c.checked=false);
-  function update(next:World) {
-    world=next;if(root.hidden&&!dialog.open)return;
+  function update(next:World,food?:FoodReadability) {
+    world=next;lastFoodReadability=food;if(root.hidden&&!dialog.open)return;
+    const readability=lastFoodReadability??captureFoodReadability(next);lastFoodReadability=readability;
     const nextIdentity=JSON.stringify(next.pawns.filter(isColonist).map(p=>[p.id,p.name]));
     if(identity!==nextIdentity) {
       identity=nextIdentity;rows.clear();policiesSignature='';
@@ -83,7 +85,7 @@ export function createFoodPolicyControls(root: HTMLElement, send: (command: Food
     }
     const signature=JSON.stringify(next.foodPolicies.map(p=>[p.id,p.name]));
     if(signature!==policiesSignature){policiesSignature=signature;options(choice);for(const row of rows.values())options(row.select);}
-    for(const p of next.pawns.filter(isColonist)){const row=rows.get(p.id)!;row.response.value=p.hostilityResponse??'flee';row.select.value=String(p.foodPolicyId);row.status.textContent=queryPawnStatus(next,p).reason;}
+    for(const p of next.pawns.filter(isColonist)){const row=rows.get(p.id)!;row.response.value=p.hostilityResponse??'flee';row.select.value=String(p.foodPolicyId);row.status.textContent=queryPawnStatus(next,p,readability).reason;}
     if(dialog.open)renderForm();
   }
   return {update};

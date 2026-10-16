@@ -93,9 +93,9 @@ test('food is real current nutrition and excludes future production, foreign, de
   addMaterial(w,'food',50,{type:'pawn',pawnId:b.id},'survival-meal');
   addMaterial(w,'food',50,{type:'inventory',pawnId:w.pawns[2]!.id},'survival-meal');
   const j=plan(w,'campfire');addMaterial(w,'food',50,{type:'job',jobId:j.id},'survival-meal');
-  expect(row(w,'food')).toMatchObject({status:'missing',detail:'0.0 nutrition actuellement en réserve, dont 0 repas de survie.'});
+  expect(row(w,'food')).toMatchObject({status:'missing'});expect(row(w,'food').detail).toContain('0.0 nutrition fraîche constatée, dont 0 repas de survie.');
   addMaterial(w,'food',5,{type:'ground',x:7,z:7},'survival-meal');
-  expect(row(w,'food')).toMatchObject({status:'ready',detail:'4.5 nutrition actuellement en réserve, dont 5 repas de survie.'});
+  expect(row(w,'food')).toMatchObject({status:'ready'});expect(row(w,'food').detail).toContain('4.5 nutrition fraîche constatée, dont 5 repas de survie.');
 });
 
 test.each(['cotton','healroot','haygrass'] as const)('%s does not complete human food cultivation',plant=>{

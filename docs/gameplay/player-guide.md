@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Comprendre le stock et les régimes — V393
+
+Le compteur **Stock physique** décrit de la nourriture présente, sans garantir qu’un colon l’autorise ou puisse l’atteindre. L’alerte de régime et le guide signalent les personnes pour lesquelles aucune pile fraîche autorisée n’est constatée au sol ou dans leur propre main. Ouvrez **Assignations**, vérifiez leur régime ou préparez un aliment autorisé. Une simple pile compatible n’est pas une promesse de repas accessible.
+
+Repas déjà engagé, pâte non évaluée et personnes hors de cette lecture sont distingués. Les soins, crises, détenus et voyages gardent leurs règles ; le guide ne les transforme pas en personnes nourries. Un repas engagé peut finir après changement de régime. Cette aide n’est pas une estimation d’autonomie. [Portée et limites](food-readability-v393.md).
+
 ## Régler les filtres d’une tenue — V392
 
 Dans **Assignations**, ouvrez les filtres d’une politique de tenue existante. Elle est partagée avec les autres personnes affectées : vérifiez les utilisateurs indiqués, puis choisissez les vêtements, matières, qualités et PV autorisés. **Appliquer** confirme le brouillon ; **Annuler** l’abandonne sans modifier la politique.

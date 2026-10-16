@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 250.** [V392](gameplay/apparel-policy-edit-v392.md) rend les politiques de tenue existantes éditables sans changer les gestes engagés ; port automatique et reprise qualifiés. Publication regroupée suivante, production V390–V391/21e3c957 conservée. Les Aulnes V386 et campagne98038 close partielle préservées.
+**16 octobre 2026 — schéma 250.** [V393](gameplay/food-readability-v393.md) consolide la lecture des piles/régimes ; [V392](gameplay/apparel-policy-edit-v392.md) rend les filtres de tenue éditables. Deux parcours natifs courts et reprises acquis ; publication regroupée suivante, dernière production21e3c957. Prochain lot : actualisation périodique et bornée des Aulnes depuis V386, sans dotation ni réveil forcé.
 
 ## Priorité actuelle
 
@@ -22,7 +22,9 @@
 16. **Éclairage préindustriel V390 qualifié.** Lampe-torche construite/payée, consommation et effet du toit/pluie, panne/recharge et reprise ; modèle mobile, mural et DLC différés.
 17. **Provisions collectives V391 qualifiées.** Rations/pemmican, âge, régimes, partage et retour physiques ; seuil manuel adapté, pas de durée d’autonomie promise.
 18. **Gestion des tenues V392 qualifiée.** Filtres des politiques existantes, brouillon, cadence et port physique ; aucune création/suppression de politique dans cette tranche.
-19. **Lecture alimentaire V393 proposée.** Signaler les piles incompatibles avec les régimes sans prétendre connaître accès, production ou autonomie.
+19. **Lecture alimentaire V393 qualifiée.** Signaler les piles incompatibles avec les régimes sans prétendre connaître accès, production ou autonomie.
+
+20. **Actualisation Aulnes V394 préparée.** Autoriser la tuque laine dans la politique existante puis laisser le travail et les besoins ordinaires évoluer sur une courte fenêtre ; aucun résultat acquis.
 
 **Référence jouable à entretenir : Les Aulnes.** Actualiser régulièrement sa version courante avec les objets et boucles pertinents du catalogue, en conservant une colonie logique et les anciennes versions. Le patrimoine ajouté peut être préparé et explicitement décrit ; il ne devient pas une campagne naturellement acquise. V381 expose les étagères et la tenue de garde, V386 une confection de tuques en cours ; les prochaines mises à jour suivront les ajouts pertinents.
 

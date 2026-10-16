@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V393 qualifié — [lecture des piles alimentaires et régimes](food-readability-v393.md).** Consolidation UX : stock physique distinct des types autorisés constatés, alerte/guide/diagnostic communs et action Assignations. Accès, partage, pâte produisible et autonomie non évalués ; aucun objet, état ou schéma nouveau.
+
 **V392 qualifié — [filtres des politiques de tenue](apparel-policy-edit-v392.md).** Édition d’une politique partagée existante, pièces/matières/qualité/PV, brouillon Appliquer/Annuler ; gestes futurs à cadence existante et port forcé conservés. Sans CRUD, renommage ou changement de schéma 250.
 
 **V391 livré — [provisions mixtes de groupe](group-provisions-v391.md), schéma 250.** Seules les nouvelles expéditions collectives chargent et partagent repas de survie/pemmican selon les régimes ; âge, contamination et bilans distincts jusqu’au retour physique. Anciens groupes littéraux, voyages individuels et commerce de provisions hors lot.

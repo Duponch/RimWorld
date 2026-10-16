@@ -17,7 +17,7 @@ import { workType } from './work-types.ts';
 import { COOK_TICKS, INGREDIENT_UNITS } from './cooking-bills.ts';
 import { REFUEL_WORK_TICKS } from './fuel.ts';
 import { TURRET_RELOAD_WORK_TICKS } from './mini-turret-reload.ts';
-import { allowedFood, type FoodItemId } from './food-policy.ts';
+import {captureFoodReadability,type FoodReadability} from './food-readability.ts';
 import { mentalCrisisStatus } from './mental-presentation.ts';
 import type { Job, JobDiagnostic, Pawn, World } from './types.ts';
 
@@ -93,7 +93,7 @@ export function queryJobStatus(world: World, job: Job): JobDiagnostic {
   const enabled = world.pawns.some(pawn => job.kind==='install'?workPriority(pawn,'build')>0||workPriority(pawn,'haul')>0:workPriority(pawn,workType(job))>0);
   return { code: enabled ? 'ready' : 'waiting-worker', reason: enabled ? 'Prêt ; attend un colon disponible et un accès.' : 'Travail désactivé pour tous les colons.', delivered, required };
 }
-export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reason: string } {
+export function queryPawnStatus(world: World, pawn: Pawn, foodReadability?:FoodReadability): { code: string; reason: string } {
   if(pawn.bombRefuge)return {code:'bomb-refuge',reason:`${pawn.melee?.strike?'Termine sa récupération physique avant de fuir':pawn.motion&&pawn.motion.end>world.tick?'Rejoint son refuge':'Attend hors du rayon'} contre l’explosion de la mini-tourelle ${pawn.bombRefuge.sourceId} · refuge (${pawn.bombRefuge.target.x}, ${pawn.bombRefuge.target.z}).`};
   if(pawn.allowedAreaReturn)return {code:'allowed-area-return',reason:`Rejoint la zone autorisée ${world.allowedAreas?.find(a=>a.id===pawn.allowedAreaId)?.label??''}.`};
   if(pawn.surgery){const t=pawn.surgery,name=world.pawns.find(p=>p.id===t.patientId)?.name??'un patient';return {code:'surgery',reason:`${t.phase==='pickup'?'Collecte une dose pour':t.phase==='approach'?'Rejoint le chevet de':'Opère'} ${name}.`};}
@@ -158,9 +158,9 @@ export function queryPawnStatus(world: World, pawn: Pawn): { code: string; reaso
   if (pawn.jobId !== null) return { code: 'working', reason: pawn.state === 'moving' ? 'Se rend à son travail.' : 'Travaille sur sa cible.' };
   if (pawn.state === 'sleeping') return { code: 'sleeping', reason: 'Se repose.' };
   if (pawn.state === 'hungry') {
-    const allowed = allowedFood(world, pawn);
-    const stock = world.piles.filter(p => p.kind === 'food' && (p.owner.type === 'ground' || p.owner.type === 'pawn' && p.owner.pawnId === pawn.id));
-    if (stock.length && !stock.some(p => allowed.includes(p.item as FoodItemId))) return {code: 'food-policy-blocked', reason: 'Le régime exclut tous les aliments au sol ou en main. Modifier le régime ou produire un aliment autorisé.'};
+    const food=(foodReadability??captureFoodReadability(world)).byPawn.get(pawn.id);
+    if(food?.status==='blocked')return {code:'food-policy-blocked',reason:'Aucun aliment autorisé parmi les piles fraîches au sol ou dans sa propre main examinées sur cette carte. Vérifier Assignations ou produire un aliment autorisé ; accès et réservations non évalués.'};
+    if(food?.status==='paste-unchecked')return {code:'food-source-unchecked',reason:'Aucune pile autorisée constatée ; le régime autorise la pâte et un distributeur est présent, mais sa production et son accès ne sont pas évalués.'};
     return { code: 'hungry', reason: 'Faim critique ; attend de la nourriture autorisée et accessible.' };
   }
   return { code: world.jobs.length ? 'waiting' : 'idle', reason: world.jobs.length ? 'Aucun travail actuellement admissible : priorités, matériaux ou accès à vérifier.' : 'Aucun travail admissible actuellement.' };

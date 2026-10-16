@@ -9,7 +9,8 @@ import { IMMUNE_DISEASE_UNIT,immuneDiseaseStage } from '../sim/immune-diseases-r
 import { IMMUNE_DISEASE_KINDS } from '../sim/immune-diseases-types';
 import { INFECTION_UNIT,infectionStage } from '../sim/infection-rules';
 import { medicalBleed } from '../sim/injury-state';
-import { availableNutrition } from '../sim/items';
+import {availableNutrition} from '../sim/items';
+import {captureFoodReadability,type FoodReadability} from '../sim/food-readability';
 import { mentalCrisisView } from '../sim/mental-presentation';
 import { prisonBreakActive } from '../sim/prison-break-state';
 import type { Pawn,World } from '../sim/types';
@@ -57,7 +58,7 @@ export function readAvailabilityStatusAlerts(world:World):StatusAlert[] {
 
 /** All predicates and targets share the same confirmed snapshot. Labels are
  * never parsed to find an entity, a medical condition or a management panel. */
-export function readStatusAlerts(world:World):StatusAlert[] {
+export function readStatusAlerts(world:World,food:FoodReadability=captureFoodReadability(world)):StatusAlert[] {
   const rows:StatusAlert[]=readAvailabilityStatusAlerts(world),colonists=world.pawns.filter(isColonist),living=colonists.filter(p=>p.state!=='dead');
   for(const incident of world.campaignMap?.incidents??[]){
     const place=incident.site==='home'?'Foyer':'Second site',label=incident.kind==='raid'?'assaillant(s)':incident.kind==='mechanoid'?'mécanoïde(s)':'visiteur(s)';
@@ -99,6 +100,10 @@ export function readStatusAlerts(world:World):StatusAlert[] {
   counted('bleeding',living.filter(p=>p.health&&medicalBleed(p.health)>=.1),n=>`${n} colon(s) saignent`,'health');
   counted('deaths',colonists.filter(p=>p.state==='dead'),n=>`${n} colon(s) décédé(s)`,'health');
   if(availableNutrition(world)<living.length*1.6)add('food-reserves','Réserves de nourriture faibles',[],{panel:'assign'});
+  if(food.blockedPawnIds.length){
+    const ids=new Set(food.blockedPawnIds),names=world.pawns.filter(p=>ids.has(p.id)).map(p=>p.name);
+    rows.push({key:'food-policy-blocked',text:`Régime alimentaire à vérifier · ${food.blockedPawnIds.length} colon(s)`,targets:[],context:{panel:'assign'},tooltip:{title:'Aucun type autorisé parmi les piles évaluées',body:`Personnes concernées : ${names.join(', ')}. Les piles fraîches au sol et leur propre portion portée ne contiennent aucun type autorisé par le régime. Accès, réservations, partage et autonomie non évalués. Les repas déjà engagés sont conservés.`}});
+  }
   counted('hungry',living.filter(p=>p.hunger<25),n=>`${n} colon(s) affamé(s)`,'needs');
   const research=world.research?.project?undefined:readResearchReadiness(world);
   if(research?.needProject)rows.push({key:'research-project',text:'Choisir une recherche',targets:[],context:{panel:'research'},tooltip:{title:'Choisir une recherche',body:'Un bureau physique est présent et un projet est sélectionnable, mais aucun projet n’est choisi. Ouvrir Recherche permet de consulter les prérequis et de choisir ; cela n’affecte personne et ne garantit pas un travail au bureau.'}});
@@ -136,13 +141,13 @@ export interface StatusAlertsActions {
   campaign?:(target:NonNullable<StatusAlert['campaign']>)=>void;
 }
 /** Keyed nodes keep keyboard focus and the per-alert ring through tick refreshes. */
-export function createStatusAlerts(host:HTMLElement,jumps:Partial<Record<'inspect-fire'|'inspect-blight'|'inspect-threat',HTMLButtonElement>>,actions:StatusAlertsActions):{update:(world:World)=>void;reset:()=>void} {
+export function createStatusAlerts(host:HTMLElement,jumps:Partial<Record<'inspect-fire'|'inspect-blight'|'inspect-threat',HTMLButtonElement>>,actions:StatusAlertsActions):{update:(world:World,food?:FoodReadability)=>void;reset:()=>void} {
   const cycle=new NotificationFocusCycle(),nodes=new Map<string,{node:HTMLElement;row:StatusAlert}>();
   const activate=(row:StatusAlert)=>{if(row.campaign){actions.campaign?.(row.campaign);return;}const target=cycle.next(row.key,row.targets);if(target){actions.focus(target);if(row.tab&&target.kind==='actor')actions.tab?.(row.tab);}else if(row.context)actions.context(row.context);};
   let inspection:ReturnType<typeof readInspectAlerts>={};
   for(const [id,button] of Object.entries(jumps))if(button)button.onclick=()=>{const row=inspection[id as keyof typeof inspection];if(row)activate(row);};
-  return {reset:()=>cycle.reset(),update(world){
-    const rows=readStatusAlerts(world),keys=new Set(rows.map(row=>row.key));
+  return {reset:()=>cycle.reset(),update(world,food){
+    const rows=readStatusAlerts(world,food),keys=new Set(rows.map(row=>row.key));
     for(const [key,record] of nodes)if(!keys.has(key)){record.node.remove();nodes.delete(key);}
     rows.forEach((row,index)=>{
       let record=nodes.get(row.key);if(!record){
