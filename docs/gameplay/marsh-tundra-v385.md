@@ -26,4 +26,8 @@ Le champ humide se calcule seulement à la création des nouvelles toundras, apr
 
 Mesure descriptive du seul chemin de paysage sur trois paires fixes250² de toundra plate, Node24.11.1/Windows x64, ordre alterné et échauffement32² : graine 42 : version 245 à 265,299 ms, version 246 à 269,758 ms ; graine 271828 : 223,486→245,815 ms ; graine 314159 : 221,230→238,322 ms. Les nouvelles cartes contiennent respectivement4227/3285/2306 cellules de marais ; aucun quota universel déduit. Rapport `tmp/marsh-v385/generation-cost.json`, contrôle5,073 s. Pas de chargement complet, GPU, FPS, significativité statistique ou contrôle du GC dans cette mesure ; aucun banc FPS inchangé relancé.
 
-Publication commune V384–V385 en attente au moment du commit produit ; la clôture indiquera la publication réellement vérifiée. Les Aulnes V381 restent courantes, sans ajout artificiel de marais à leur forêt tempérée.
+## Publication V384–V385
+
+Produit `a7fc3244274bcf3afb7e0d60411f2e4bcf7831b3` commité et poussé sur `origin/main`. Publication commune unique **dfa8bdde** : [jeu courant](https://elsewhere-cq7.pages.dev/) et [déploiement identifié](https://dfa8bdde.elsewhere-cq7.pages.dev/). Inspection du package1,120 s, téléversement14,577 s puis contrôle HTTPS8,309 s. Les126 réponses sur les deux origines ont statut200, MIME et octets exacts ; erreurs vides. Package527 fichiers/120 292 250 octets,64 fiches/67 chemins de sauvegarde exacts ; sources privées et laboratoire exclus par le contrôle ciblé. Rapports `tmp/elsewhere-pages/v385-package-5PhPsd/` et `tmp/elsewhere-pages/v385-http-yHukMm/report.json`. Gel final des3 345 chemins exact.
+
+Ces contrôles établissent la disponibilité de cette version, pas ses FPS ni une campagne complète. Les Aulnes V381 restent courantes, sans marais ajouté artificiellement à leur forêt tempérée. Leur actualisation suivante sera qualifiée séparément.

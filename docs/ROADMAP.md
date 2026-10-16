@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 246.** [V385](gameplay/marsh-tundra-v385.md) ajoute des marais aux nouvelles toundras, avec effets de trajet et contraintes d’implantation. [V384](gameplay/tuque-v384.md) qualifie la tuque fabriquée/portée. Publication commune suivante ; dernière production V382–V383/31deee1d. Les Aulnes V381 restent courantes ; campagne98038 close partielle.
+**16 octobre 2026 — schéma 246.** [V385](gameplay/marsh-tundra-v385.md) ajoute des marais aux nouvelles toundras, avec effets de trajet et contraintes d’implantation. [V384](gameplay/tuque-v384.md) qualifie la tuque fabriquée/portée. Publication commune **dfa8bdde**, produit `a7fc3244`,126 réponses HTTPS exactes. Les Aulnes V381 restent courantes ; campagne98038 close partielle.
 
 ## Priorité actuelle
 

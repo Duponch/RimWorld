@@ -1,6 +1,6 @@
 # Elsewhere
 
-**V385 — schéma 246 :** [marais physiques de toundra](docs/gameplay/marsh-tundra-v385.md) : génération prospective, trajets, supports et recharges qualifiés. Publication commune V384–V385 suivante ; dernière production V382–V383/31deee1d, schéma244. Les états suivants sont historiques.
+**V385 — schéma 246 :** [marais physiques de toundra](docs/gameplay/marsh-tundra-v385.md) : génération prospective, trajets, supports et recharges qualifiés. Publication commune V384–V385 **dfa8bdde**, produit `a7fc3244`,126 réponses HTTPS exactes. Les états suivants sont historiques.
 
 **V380 — schéma 242 :** [lisibilité des HUD](docs/gameplay/hover-layout-v380.md). Survol, ressources et dock stabilisés et qualifiés à quatre tailles ; correctif UI sans nouvelle mécanique. Publication regroupée suivante ; dernière production V378/e5ec566c. Les états suivants sont historiques.
 

@@ -4,9 +4,9 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V385, schéma 246 :** [marais de toundra](docs/gameplay/marsh-tundra-v385.md) qualifiés : génération prospective, trajets et transport, supports, cultures, feu/neige et reprises. Publication commune V384–V385 suivante ; dernière production V382–V383 **31deee1d**, 120 HTTPS exacts, produit `e147f81a`. Les Aulnes V381 restent courantes ; campagne98038 close partielle.
+**État V385, schéma 246 :** [marais de toundra](docs/gameplay/marsh-tundra-v385.md) qualifiés : génération prospective, trajets et transport, supports, cultures, feu/neige et reprises. Publication commune V384–V385 **dfa8bdde**,126 HTTPS exacts, produit `a7fc3244`. Les Aulnes V381 restent courantes ; campagne98038 close partielle.
 
-**Ordre courant :** publier V384–V385 ensemble puis actualiser Les Aulnes de façon cohérente : facture de deux tuques laine avec stock libre existant, tâche d’Ada et histoires préservées ; aucune bouche à emplacement inventé, aucun marais forcé. Évolution explicite du catalogue requise sans supprimer d’archive. Préparations privées, aucun résultat de cette actualisation acquis. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
+**Ordre courant :** actualiser Les Aulnes de façon cohérente : facture de deux tuques laine avec stock libre existant, tâche d’Ada et histoires préservées ; aucune bouche à emplacement inventé, aucun marais forcé. Évolution explicite du catalogue requise sans supprimer d’archive. Préparations privées, aucun résultat de cette actualisation acquis. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
 
 ## Méthode de livraison
 

@@ -1,6 +1,6 @@
 # Ce qui est jouable et ce qui manque
 
-**V385 — schéma 246 :** [marais physiques de toundra](marsh-tundra-v385.md) : génération prospective, trajets, supports et recharges qualifiés. Publication commune V384–V385 suivante ; dernière production V382–V383/31deee1d, schéma244. Les états suivants sont historiques.
+**V385 — schéma 246 :** [marais physiques de toundra](marsh-tundra-v385.md) : génération prospective, trajets, supports et recharges qualifiés. Publication commune V384–V385 **dfa8bdde**, produit `a7fc3244`,126 réponses HTTPS exactes. Les états suivants sont historiques.
 
 **V381 — référence Les Aulnes actualisée :** [atelier, étagères et tenue de garde](aulnes-workshop-v381.md). Patrimoine préparé explicite, habillage et rangement ordinaires observés, anciennes références conservées ; aucune nouvelle mécanique ou campagne entière revendiquée. Les états suivants sont historiques.
 

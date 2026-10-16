@@ -1,6 +1,6 @@
 # Catalogue de contenu : couverture connue
 
-**V385 — schéma 246 :** [marais physiques de toundra](marsh-tundra-v385.md). Nouveau terrain prospectif, trajet/transport, supports, cultures, feu/neige et reprises qualifiés dans leur périmètre. Publication regroupée suivante ; limites dans la note canonique.
+**V385 — schéma 246 :** [marais physiques de toundra](marsh-tundra-v385.md). Nouveau terrain prospectif, trajet/transport, supports, cultures, feu/neige et reprises qualifiés dans leur périmètre. Publication commune V384–V385 **dfa8bdde** ; limites dans la note canonique.
 
 **V384 — proposition, schéma245 :** [tuque tissu/laine](tuque-v384.md),20unités homogènes, confection/reprise, rangement et protection du haut de tête ; casque remplacé physiquement. Durée prospective48Core arrondie à50Core explicitement. Préparation privée non encore qualifiée.
 
