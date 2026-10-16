@@ -4,9 +4,9 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V388, schéma 247 inchangé :** [Effacer le port forcé](docs/gameplay/clear-forced-apparel-v388.md) qualifié dans Assignations/Matériel : Auto, objets et tâches préservés, renouvellement physique et reprise. Publication regroupée suivante ; dernière production V387 **9f9a926a**/`a1092767`,128HTTPS exacts. Les Aulnes V386/tick10373, archives et campagne98038 close partielle préservées.
+**État V389, schéma 248 :** [pemmican de camp](docs/gameplay/pemmican-v389.md) qualifié : recherche, cuisson payée, rangement, ingestion et reprise active. Publication commune V388–V389 suivante ; dernière production V387 **9f9a926a**/`a1092767`,128HTTPS exacts. Les Aulnes V386/tick10373 et archives préservées ; campagne98038 close partielle.
 
-**Ordre courant :** clore V388 puis ajouter une réserve alimentaire préindustrielle utile, après relevé ciblé de recette, recherche et conservation ; préparation privée à revoir avant adoption. Les rivières demandent encore shallow/deep ; pas de pont universel. Actualisations des Aulnes périodiques et cohérentes. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
+**Ordre courant :** publier V388–V389 puis lampe-torche au sol pour l’éclairage préindustriel, après revue des copies privées et couplages carburant/lumière/thermique/persistance. Pemmican de voyage, rivières/profondeurs et sous-métiers différés. Actualisations des Aulnes périodiques et cohérentes. Voir [la feuille de route](docs/ROADMAP.md). `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
 
 ## Méthode de livraison
 

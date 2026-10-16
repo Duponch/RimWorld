@@ -13,6 +13,7 @@ export type MechCorpseItem=typeof MECH_CORPSE_ITEMS[number];
 export const ITEM_DEFINITIONS = Object.freeze({
   'minified-tree':Object.freeze({label:'Arbre déraciné',kind:'plant',stackLimit:1,nutrition:0,maxIngest:0,color:0x729548}),
   hay:Object.freeze({label:'Foin',kind:'food',stackLimit:200,nutrition:5,maxIngest:200,color:0xc3aa59}),
+  pemmican:Object.freeze({label:'Pemmican',kind:'food',stackLimit:75,nutrition:5,maxIngest:75,color:0xaf7958}),
   kibble:Object.freeze({label:'Croquettes',kind:'food',stackLimit:75,nutrition:5,maxIngest:75,color:0xa98355}),
   ...BIOME_ITEM_DEFINITIONS,
   ...ANIMAL_PRODUCT_ITEM_DEFINITIONS,

@@ -1,3 +1,4 @@
+import {isPemmicanRecipe} from './pemmican-content.ts';
 import { storageCells,storageCellAccepts,shelfAt } from './shelf-storage.ts';
 import {isArtRecipe} from './art-rules.ts';
 import { isKibbleRecipe } from './fodder-recipes.ts';
@@ -24,6 +25,7 @@ export function newCookingBill(id:number,recipe:ProductionRecipe='simple-meal',v
     ...isCremationRecipe(recipe)?{cremationFilter:{colonists:true,strangers:true,fresh:true,rotting:true,desiccated:true}}:{}};
 }
 export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-meal',version:number=SCHEMA_VERSION):value is BillSettings {
+  if(isPemmicanRecipe(recipe)&&version<248)return false;
   if(isKibbleRecipe(recipe)&&version<227)return false;
   if(isSmeltingRecipe(recipe)&&version<222)return false;
   if(isCremationRecipe(recipe)&&version<225)return false;
@@ -58,7 +60,7 @@ export function countedProducts(world:World,bill?:CookingBill):number {
   let products=COUNTED_PRODUCTS.get(recipe);
   if(!products){products=new Set(Object.keys(ITEM_DEFINITIONS).filter(item=>recipe==='butcher-creature'?isAnimalMeat(item):isRecipeProduct(recipe,item as keyof typeof ITEM_DEFINITIONS)));COUNTED_PRODUCTS.set(recipe,products);}
   const stored=new Map(storageCells(world).map(z=>[z.z*world.width+z.x,z] as const));
-  const meal=isKibbleRecipe(recipe)||recipe==='cook-survival-meal'||recipe==='fine-meal'||recipe==='cook-fine-meal-bulk'||recipe==='vegetarian-fine-meal'||recipe==='cook-vegetarian-fine-meal-bulk'||recipe==='carnivore-fine-meal'||recipe==='cook-carnivore-fine-meal-bulk'||recipe==='lavish-meal'||recipe==='cook-lavish-meal-bulk'||recipe==='vegetarian-lavish-meal'||recipe==='cook-vegetarian-lavish-meal-bulk'||recipe==='cook-carnivore-lavish-meal'||recipe==='cook-carnivore-lavish-meal-bulk';
+  const meal=isPemmicanRecipe(recipe)||isKibbleRecipe(recipe)||recipe==='cook-survival-meal'||recipe==='fine-meal'||recipe==='cook-fine-meal-bulk'||recipe==='vegetarian-fine-meal'||recipe==='cook-vegetarian-fine-meal-bulk'||recipe==='carnivore-fine-meal'||recipe==='cook-carnivore-fine-meal-bulk'||recipe==='lavish-meal'||recipe==='cook-lavish-meal-bulk'||recipe==='vegetarian-lavish-meal'||recipe==='cook-vegetarian-lavish-meal-bulk'||recipe==='cook-carnivore-lavish-meal'||recipe==='cook-carnivore-lavish-meal-bulk';
   return world.piles.reduce((n,p)=>{
     if(!products.has(p.item))return n;
     if(p.owner.type==='pawn'&&bill?.recipe!=='butcher-creature'||isFlakRecipe(recipe)&&p.owner.type==='apparel')return n+p.quantity;
@@ -96,7 +98,7 @@ export function ingredientPlaceFree(world:World,cell:Cell,spot:Cell,recipe:Produ
     &&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)
     &&!(geometry?geometry.hasResource(cell):world.resources.some(r=>r.x===cell.x&&r.z===cell.z))&&(geometry?geometry.groundAllows(cell):groundOccupancyAllows(world,cell));
-  if(recipe==='cook-survival-meal'||recipe==='simple-meal'||recipe==='cook-simple-meal-bulk'||recipe==='fine-meal'||recipe==='cook-fine-meal-bulk'||recipe==='vegetarian-fine-meal'||recipe==='cook-vegetarian-fine-meal-bulk'||recipe==='carnivore-fine-meal'||recipe==='cook-carnivore-fine-meal-bulk'||recipe==='lavish-meal'||recipe==='cook-lavish-meal-bulk'||recipe==='vegetarian-lavish-meal'||recipe==='cook-vegetarian-lavish-meal-bulk'||recipe==='cook-carnivore-lavish-meal'||recipe==='cook-carnivore-lavish-meal-bulk')return cookingPlaceFree(world,cell,geometry);
+  if(isPemmicanRecipe(recipe)||recipe==='cook-survival-meal'||recipe==='simple-meal'||recipe==='cook-simple-meal-bulk'||recipe==='fine-meal'||recipe==='cook-fine-meal-bulk'||recipe==='vegetarian-fine-meal'||recipe==='cook-vegetarian-fine-meal-bulk'||recipe==='carnivore-fine-meal'||recipe==='cook-carnivore-fine-meal-bulk'||recipe==='lavish-meal'||recipe==='cook-lavish-meal-bulk'||recipe==='vegetarian-lavish-meal'||recipe==='cook-vegetarian-lavish-meal-bulk'||recipe==='cook-carnivore-lavish-meal'||recipe==='cook-carnivore-lavish-meal-bulk')return cookingPlaceFree(world,cell,geometry);
   return (cell.x!==spot.x||cell.z!==spot.z)&&Math.abs(cell.x-spot.x)+Math.abs(cell.z-spot.z)<=1
     &&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['water','rock'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)

@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V389 proposé — [pemmican de camp](pemmican-v389.md), schéma 248.** Recherche 500, feu/cuisinières, 5 viandes animales + 5 végétaux sans lait → 16 unités ; travail, rangement, ingestion multipièce, conservation et contamination existants. Pas de nouvelle provision de voyage ni scène publique ; anciennes politiques et archives littérales.
+
 **V388 proposé — [rendre la tenue à sa politique](clear-forced-apparel-v388.md).** Assignations efface les marqueurs des seuls habits forcés actuellement portés d’un colon ; Matériel les signale. La politique reprend ensuite ses gestes physiques si Auto est actif, sans dépose immédiate ni nouveau schéma.
 
 ## V387 proposé — pont standard sur marais
@@ -296,6 +298,8 @@ L’[audit du 13 septembre](../research/environment-review.md) confirme que les 
 
 | Registre / identifiant local | Acquisition et usage physique | Limites |
 | --- | --- | --- |
+| Projet `pemmican` | 500 points, bureau simple ou avancé utilisable ; aucune recherche préalable ni connaissance offerte au nouveau Crashlanded. | Migration 247→248 neutre, aucun progrès ancien ajouté. |
+| Facture `make-pemmican` et objet `pemmican` | Feu/cuisinières, 5 viandes animales + 5 végétaux crus → 16 ; Cuisine sans minimum de niveau, 70 ticks neutres avant facteurs. Nutrition 0,05, pile 75, âge neutre 70 jours ; cuisine, stockage, contact, fraction contaminée et prise de plusieurs unités réemploient les systèmes existants. | Lait/foin exclus ; pas de recette ×4, nouvel inachevé, acquisition naturelle préparée ni provisions de voyage élargies. |
 | Projet `packaged-survival-meals` | 500 points au bureau simple ou avancé utilisable ; ce dernier demande son courant réel. Débloque la préparation unitaire des rations. | Parent Core Pâte nutritive et distributeur différés ensemble ; aucun faux projet ni multi-analyseur requis. Aucun progrès rétroactif. |
 | Facture `cook-survival-meal` | Cuisine 8, cuisinière à bois/électrique, six protéines crues (viande et/ou lait) plus six végétaux crus ; 45 ticks neutres avant facteurs réels, sortie un `survival-meal` existant. Ingrédients acquis par les cultures, cueillette, élevage et boucherie existants ; collecte, surface, finition et dépôt physiques. | Feu de camp refusé ; mélange d’un seul groupe insuffisant. Bois/courant, filtres, fraîcheur et accès restent nécessaires. Recette ×4 absente. |
 | Usage du produit existant | Nutrition 0,9, pile dix, masse 300 g, stockage et ingestion actuels ; une ration saine peut servir à la reconnaissance et au comptoir. Le cuisinier transporte réellement son produit. | Absence de pourriture distincte de l’innocuité : contamination conservée, rations contaminées refusées par les voyages. Détérioration extérieure exhaustive et traçabilité culinaire complète différées. |

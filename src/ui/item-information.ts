@@ -11,6 +11,7 @@ import { partMissing } from '../sim/injury-state';
 import {isMinifiedTree} from '../sim/tree-transfer-state';
 import {floraDefinition} from '../sim/biome-flora';
 import { pileMaxHp,pileDamage } from '../sim/thing-damage-rules';
+import { ROT_DAYS } from '../sim/food-preservation';
 
 /** Only delivered properties, evaluated on explicit inspection of one item. */
 export function itemInformation(pile:MaterialPile):ObjectInformationInput {
@@ -40,6 +41,10 @@ export function itemInformation(pile:MaterialPile):ObjectInformationInput {
   const mass=commercialItemMassGrams(pile.item);
   if(mass!==undefined&&!pile.mechCorpse)add('Général','Masse unitaire',`${mass/1000} kg`,'Masse utilisée par le chargement des expéditions commerciales ; elle ne limite pas le transport ordinaire sur la carte.');
   if(definition.nutrition)add('Alimentation','Nutrition',String(definition.nutrition/100),'Nutrition par unité consommée. La jauge de nourriture de 100 points représente une unité de nutrition.');
+  if(pile.item==='pemmican'){
+    add('Alimentation','Conservation',`${ROT_DAYS.pemmican} jours`,'Durée avant pourriture à 10 °C ou plus. Le froid ralentit cette progression ; la congélation la suspend.');
+    add('Alimentation','Usage','Réserve de camp','Aliment préparé pouvant être consommé selon le régime. Les expéditions de cette version demandent toujours des repas de survie.');
+  }
   const quality=pile.weapon?.quality??pile.apparel?.quality;
   if(quality)add('Général','Qualité',QUALITY_LABELS[quality],'Qualité propre à cette instance, conservée pendant les déplacements et l’équipement.');
   if(isWeaponItem(pile.item)&&pile.weapon)add('Général','Points de vie',`${pile.weapon.hitPoints} / ${weaponMaxHitPoints(pile.item)}`,'État réel de l’arme sélectionnée.');

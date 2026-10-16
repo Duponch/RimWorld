@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 247.** [V388](gameplay/clear-forced-apparel-v388.md) ferme la boucle Porter manuellement → rendre à la politique, avec vrais retraits/ports et reprise. Publication regroupée suivante ; production V387/9f9a926a conservée. Les Aulnes V386 et la campagne98038 close partielle sont préservées.
+**16 octobre 2026 — schéma 248.** [V389](gameplay/pemmican-v389.md) ajoute une réserve de camp fabricable, stockable et consommable après recherche, avec reprise active exacte. Publication groupée V388–V389 à suivre ; production V387/9f9a926a conservée. Les Aulnes V386 et la campagne98038 close partielle sont préservées.
 
 ## Priorité actuelle
 
@@ -18,6 +18,7 @@
 12. **Les Aulnes V386 qualifiées.** Facture laine réelle et première production rangée ; seconde production et port restent à jouer. Anciennes références et parties personnelles préservées.
 13. **Ponts de marais V387 qualifiés.** Fondation payée et terrain dessous conservé, supports Light, passage/transport et retrait physiques, feu/explosion et migrations strictes. Rivières/profondeurs, pont lourd et destruction de masse restent hors du parcours natif qualifié.
 14. **Gestion des tenues V388 qualifiée.** Effacement des seules pièces forcées, Auto conservé, renouvellement physique et sauvegarde exacte. Édition détaillée des politiques encore absente.
+15. **Réserve de camp V389 qualifiée.** Pemmican payé et préparé au contact, stockage/prise de plusieurs unités et reprise active ; provisions de voyage et catalogue alimentaire exhaustif ouverts.
 
 **Référence jouable à entretenir : Les Aulnes.** Actualiser régulièrement sa version courante avec les objets et boucles pertinents du catalogue, en conservant une colonie logique et les anciennes versions. Le patrimoine ajouté peut être préparé et explicitement décrit ; il ne devient pas une campagne naturellement acquise. V381 expose les étagères et la tenue de garde, V386 une confection de tuques en cours ; les prochaines mises à jour suivront les ajouts pertinents.
 

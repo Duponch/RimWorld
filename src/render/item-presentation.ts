@@ -113,6 +113,14 @@ export function itemGeometry(item:ItemId,quantity:number=ITEM_DEFINITIONS[item].
     for(const x of [-.14,0,.14])round(x,.17,-.10,.045,.035,.08,0xf0cf62);
   }else if(item==='agave-fruit'){
     round(0,.15,0,.37,.29,.34);for(let i=0;i<4;i++)add('item-leaf',Math.sin(i*Math.PI/2)*.09,.31,Math.cos(i*Math.PI/2)*.09,.11,.035,.30,0x5e8252,i*Math.PI/2);
+  }else if(item==='pemmican'){
+    // Original dried meat/grain pieces. Ground, cargo and portraits reuse
+    // existing resident nugget/disc shapes; no per-unit objects or new mesh.
+    for(let i=0;i<5;i++){
+      const a=i*2.4,r=i===4?.035:.15;
+      add('item-nugget',Math.cos(a)*r,.07+(i===4?.10:0),Math.sin(a)*r,.23,.12,.18,color,a);
+    }
+    for(const [x,z] of [[-.15,.04],[.09,-.13],[.10,.14]])add('item-disc',x!, .14,z!,.065,.035,.052,0xd1b173,.3);
   }else if(item==='survival-meal'){
     for(const x of [-.12,.12]){add('item-ingot',x,.06,0,.22,.09,.35);box(x,.115,-.15,.23,.025,.035,0x7f8657);}
   }else {

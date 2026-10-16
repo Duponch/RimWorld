@@ -1,3 +1,5 @@
+import {validPemmicanHistoricalTransport,validPemmicanCatalogueDomains} from '../sim/pemmican-save.ts';
+import {validPemmicanResearchTransport} from '../sim/research-save.ts';
 import {validBridgeTile,validateBridgeTransport} from '../sim/bridge-rules.ts';
 import {validVentTransport} from '../sim/vent.ts';
 import {validTundraTransport} from '../sim/tundra-save.ts';
@@ -579,6 +581,7 @@ function prepareStructureChanges(previous:World,world:Pick<World,'nextId'|'width
 function validPile(pile:MaterialPile,world:World|DynamicWorld):boolean {
   if(!pile||typeof pile!=='object'||Array.isArray(pile)||!Number.isSafeInteger(pile.id)||pile.id<1||pile.id>=world.nextId
     ||typeof pile.item!=='string'||!Object.hasOwn(ITEM_DEFINITIONS,pile.item))return false;
+  if(pile.item==='pemmican'&&world.schemaVersion<248)return false;
   if(pile.item==='nutrient-paste-meal'&&world.schemaVersion<217)return false;
   if(pile.item==='chemfuel'&&(world.schemaVersion<218||pile.rot!==undefined))return false;
   if(pile.item==='neutroamine'&&(world.schemaVersion<206||pile.rot!==undefined))return false;
@@ -893,6 +896,7 @@ export class SnapshotDecoder {
     if (packet.epoch < this.epoch || (packet.epoch === this.epoch && packet.revision <= this.revision)) return { status: 'stale' };
     if (!Number.isSafeInteger(packet.world.schemaVersion) || packet.world.schemaVersion < 1
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
+    if(!validPemmicanHistoricalTransport(packet,packet.world.schemaVersion))return resync('Contenu de pemmican futur.');
     if(!validTuqueCatalogueTransport(packet,packet.world.schemaVersion))return resync('Contenu de tuque futur.');
     if(!validReconCatalogueTransport(packet,packet.world.schemaVersion))return resync('Contenu de reconnaissance futur.');
     if(!validCampaignPresentation(packet.world))return resync('Registre de campagne ou carte affichée invalide.');
@@ -1156,6 +1160,7 @@ export class SnapshotDecoder {
     // properties to infer authority here. Public contexts ignore this fact.
     const geometryReuse:OwnedGeometryReuseWitness|undefined=structureIndices!==undefined&&this.current
       ?{kind:'sparse',previous:this.current,updatedOrdinals:structureIndices}:undefined;
+    if(!validPemmicanCatalogueDomains(next,next.schemaVersion)||!validPemmicanResearchTransport(next,next.schemaVersion))return resync('Pemmican, recherche ou production future/invalide.');
     if(!validTundraTransport(next,next.schemaVersion))return resync('Toundra, flore ou climat futur/incohérent.');
     if(validateBridgeTransport(next,next.schemaVersion,message.kind==='delta'?changedTileIndices:[]).length)return resync('Fondation future, chantier ou support invalide.');
     if(validateMarshTransport(next,next.schemaVersion,message.kind==='delta'?changedTileIndices:[]).length)return resync('Marais futur, sans support ou fertile invalide.');

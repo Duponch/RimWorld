@@ -1,3 +1,4 @@
+import {isPemmicanRecipe} from './pemmican-content.ts';
 import {isMechSalvageRecipe} from './mechanoid-salvage.ts';
 import { isKibbleRecipe } from './fodder-recipes.ts';
 import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
@@ -92,7 +93,7 @@ export function processProductionOutput(world:World,pawn:Pawn,context:Production
         task.storageId=zone.id;
         // A bulk meal may fill a partly free stack; its remainder stays with
         // the worker until another physical delivery succeeds.
-        if(isKibbleRecipe(task.recipe)||isSmeltingRecipe(task.recipe)||isBiofuelRecipe(task.recipe)||isMechSalvageRecipe(task.recipe)||task.recipe==='stone-blocks'||task.recipe==='butcher-creature'||task.recipe==='cook-simple-meal-bulk'||task.recipe==='cook-fine-meal-bulk'||task.recipe==='cook-lavish-meal-bulk'||task.recipe==='cook-vegetarian-lavish-meal-bulk'||task.recipe==='cook-carnivore-lavish-meal-bulk'||task.recipe==='cook-vegetarian-fine-meal-bulk'||task.recipe==='cook-carnivore-fine-meal-bulk')task.storageQuantity=Math.min(product.quantity,capacity);
+        if(isPemmicanRecipe(task.recipe)||isKibbleRecipe(task.recipe)||isSmeltingRecipe(task.recipe)||isBiofuelRecipe(task.recipe)||isMechSalvageRecipe(task.recipe)||task.recipe==='stone-blocks'||task.recipe==='butcher-creature'||task.recipe==='cook-simple-meal-bulk'||task.recipe==='cook-fine-meal-bulk'||task.recipe==='cook-lavish-meal-bulk'||task.recipe==='cook-vegetarian-lavish-meal-bulk'||task.recipe==='cook-carnivore-lavish-meal-bulk'||task.recipe==='cook-vegetarian-fine-meal-bulk'||task.recipe==='cook-carnivore-fine-meal-bulk')task.storageQuantity=Math.min(product.quantity,capacity);
         pawn.path=path;pawn.state='moving';pawn.planCooldown=0;return;
       }
     }

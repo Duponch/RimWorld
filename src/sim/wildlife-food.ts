@@ -26,8 +26,8 @@ export interface AnimalFood extends Cell { id:number;kind:'plant'|'pile';quantit
 export const animalFoodPreference=(item:ItemId):number=>item==='kibble'?100:item==='hay'?7:0;
 // Herbivory is an explicit content profile. New nutritious items do not silently
 // become animal food; prepared meals remain admissible under the existing rule.
-const herbivoreFoods:ReadonlySet<ItemId>=new Set(['nutrient-paste-meal','berries','rice','potato','corn','agave-fruit','simple-meal','fine-meal','vegetarian-fine-meal','carnivore-fine-meal','lavish-meal','vegetarian-lavish-meal','carnivore-lavish-meal','survival-meal','legacy-portion']);
-const preparedFoods:ReadonlySet<ItemId>=new Set(['nutrient-paste-meal','simple-meal','fine-meal','vegetarian-fine-meal','carnivore-fine-meal','lavish-meal','vegetarian-lavish-meal','carnivore-lavish-meal','survival-meal','legacy-portion']);
+const herbivoreFoods:ReadonlySet<ItemId>=new Set(['nutrient-paste-meal','berries','rice','potato','corn','agave-fruit','simple-meal','fine-meal','vegetarian-fine-meal','carnivore-fine-meal','lavish-meal','vegetarian-lavish-meal','carnivore-lavish-meal','survival-meal','pemmican','legacy-portion']);
+const preparedFoods:ReadonlySet<ItemId>=new Set(['nutrient-paste-meal','simple-meal','fine-meal','vegetarian-fine-meal','carnivore-fine-meal','lavish-meal','vegetarian-lavish-meal','carnivore-lavish-meal','survival-meal','pemmican','legacy-portion']);
 export const animalPileFood=(world:World,a:WildAnimal,p:World['piles'][number]):boolean=>p.item==='hay'||p.item==='kibble'
   ?world.schemaVersion>=227&&p.kind==='food'&&(p.item==='kibble'||!animalSpecies(a.species).predator)
   :animalSpecies(a.species).predator

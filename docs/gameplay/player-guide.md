@@ -1241,6 +1241,16 @@ Prévoyez plusieurs cellules de réserve alimentaire : baies, repas et riz sont 
 
 Les colons peuvent manger le riz cru : 0,05 nutrition par unité, avec un souvenir −7 humeur pendant un jour. Le repas simple utilise dix unités admises de riz, baies ou viande ; V84 ajoute pommes de terre et maïs, seuls ou mélangés, au feu ou sur une cuisinière. Les denrées peuvent pourrir. V89 ajoute un risque à l’ingestion crue et une contamination possible des repas préparés, distincts de leur fraîcheur. La culture médicinale complète riz, coton, pommes de terre et maïs ; les arbres, sols et buissons génériques ne constituent toujours pas un catalogue complet des espèces et biomes.
 
+## Préparer du pemmican : une réserve de camp (V389)
+
+Recherchez **Pemmican** : 500 points au bureau simple ou avancé utilisable, sans autre projet préalable. Les nouveaux départs proposés doivent aussi le rechercher. Après achèvement, inspectez un **feu de camp** ou une **cuisinière** et ajoutez **Préparer du pemmican**. Le menu Ajouter une facture montre les recettes recherchées ; une facture déjà présente reste visible. Activez Cuisine, autorisez les ingrédients et choisissez rangement ou dépôt.
+
+Le cuisinier rassemble **5 viandes animales + 5 végétaux crus** pour **16 unités de pemmican**. Riz, baies, pommes de terre, maïs et fruits d’agave sont admis ; **lait et foin sont exclus**. Aucun niveau minimal de Cuisine, mais capacité, accès, fraîcheur, combustible/courant et temps de travail restent nécessaires. Le travail de recette vaut **70 ticks neutres** ; le feu travaille à demi-vitesse, puis compétence et environnement modifient le temps réel. Aucun gras ni ouvrage intermédiaire nouveau.
+
+Chaque unité apporte **0,05 nutrition**, jusqu’à **75 par pile**. La consommation ordinaire ou **Consommer** prend le nombre d’unités nécessaire au besoin actuel, avec contact, portage et ingestion réels ; ce n’est pas un repas entier consommé par unité. Prévoyez une réserve autorisant **Plats/Pemmican**, couverte pour l’organisation du camp. Le début de pourriture est **70 jours d’âge neutre**, ralenti par le froid existant : le produit n’est pas impérissable. Une mauvaise cuisine peut contaminer toute la fabrication ; division et fusion conservent son risque.
+
+Les anciennes politiques alimentaires restent littérales : autorisez le pemmican si nécessaire. Les nouvelles parties l’admettent dans les politiques usuelles. **Les provisions des expéditions restent limitées aux repas de survie** ; cette tranche apporte une réserve coloniale, sans nouveau chargement de voyage ni scène publique. [Règles, références et limites V389](pemmican-v389.md).
+
 ## Préparer des repas au feu
 
 Construisez un **feu de camp** dans Architecte → Température : vingt bois doivent être livrés. Il démarre rempli et brûle dix bois par jour. L’inspection indique son combustible et permet de désactiver son ravitaillement automatique. Le feu vide reste en place et ne permet plus de cuire. Il éclaire localement et chauffe une pièce retenant son air jusqu’à 28 °C.

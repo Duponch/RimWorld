@@ -7,7 +7,7 @@ import type { MaterialPile,Pawn,World } from './types.ts';
 
 export interface CommercialMass {grams:number;capacityGrams:number}
 const FIXED:Readonly<Partial<Record<ItemId,number>>>=Object.freeze({
-  hay:14,kibble:15,chemfuel:50,'nutrient-paste-meal':440,silver:8,'survival-meal':300,medicine:500,neutroamine:20,component:600,cloth:26,'muffalo-wool':28,
+  pemmican:18,hay:14,kibble:15,chemfuel:50,'nutrient-paste-meal':440,silver:8,'survival-meal':300,medicine:500,neutroamine:20,component:600,cloth:26,'muffalo-wool':28,
   revolver:1400,'bolt-action-rifle':3500,'plasteel-knife':500,'emp-launcher':3400,
   'flak-vest':4000,'flak-helmet':1200,'recon-helmet':1000,'recon-armor':9000,uranium:1000,
 });
@@ -16,6 +16,7 @@ const TEXTILE=Object.freeze({tribalwear:500,shirt:300,pants:500,duster:2000,park
 /** The delivered shirt is Core's CollarShirt, not the lighter BasicShirt.
  * Quality, HP and the seven represented stuffs do not alter these masses. */
 export function commercialItemMassGrams(item:ItemId,version:number=SCHEMA_VERSION):number|undefined {
+  if(item==='pemmican'&&version<248)return undefined;
   if(item==='minified-tree')return version>=235?150000:undefined;if(item==='wood')return version>=235?400:undefined;
   if(item.endsWith('-tuque')&&version<245)return undefined;
   const fixed=FIXED[item];if(fixed!==undefined)return fixed;

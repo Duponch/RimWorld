@@ -14,7 +14,7 @@ const kind=(name:string)=>leaves((_id,k)=>k===name);
 /** Only the supported catalogue is displayed. A leaf occurs exactly once. */
 export const STORAGE_FILTER_TREE:readonly StorageFilterNode[]=[
   branch('foods','Aliments',[
-    branch('meals','Plats',leaves((id,k)=>k==='food'&&(id.endsWith('-meal')||id==='legacy-portion'))),
+    branch('meals','Plats',leaves((id,k)=>k==='food'&&(id.endsWith('-meal')||id==='pemmican'||id==='legacy-portion'))),
     branch('raw-food','Aliments crus',[
       branch('meat','Viandes crues',leaves(id=>isAnimalMeat(id))),
       branch('vegetarian','Végétaux',leaves(id=>['berries','rice','potato','corn','agave-fruit'].includes(id))),

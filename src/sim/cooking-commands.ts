@@ -14,7 +14,7 @@ export function applyBillCommand(world:World,command:BillCommand,drops:DropPlan)
   if(!station?.bills)return {ok:false,code:'missing-target',reason:'Poste de production introuvable.'};
   if(command.type==='bill-add') {
     if(station.bills.length>=64||!Number.isSafeInteger(world.nextId+1))return {ok:false,code:'invalid-command',reason:'Limite de factures atteinte.'};
-    const recipe=command.recipe??stationRecipe(station)!;if(isKibbleRecipe(recipe)&&world.schemaVersion<227||isCremationRecipe(recipe)&&world.schemaVersion<225||isSmeltingRecipe(recipe)&&world.schemaVersion<222||!stationAccepts(station,recipe)||!productionResearchUnlocked(world,recipe))return {ok:false,code:'invalid-command',reason:'Recette indisponible : vérifiez le poste et sa recherche préalable.'};
+    const recipe=command.recipe??stationRecipe(station)!;if(recipe==='make-pemmican'&&world.schemaVersion<248||isKibbleRecipe(recipe)&&world.schemaVersion<227||isCremationRecipe(recipe)&&world.schemaVersion<225||isSmeltingRecipe(recipe)&&world.schemaVersion<222||!stationAccepts(station,recipe)||!productionResearchUnlocked(world,recipe))return {ok:false,code:'invalid-command',reason:'Recette indisponible : vérifiez le poste et sa recherche préalable.'};
     station.bills.push(newCookingBill(world.nextId++,recipe,world.schemaVersion));return {ok:true};
   }
   const index=station.bills.findIndex(b=>b.id===command.billId),bill=station.bills[index];

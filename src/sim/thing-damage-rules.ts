@@ -54,7 +54,7 @@ export function pileFlammability(p:Pick<MaterialPile,'kind'|'item'>):number {
   if(p.item==='recon-armor')return .4;
   if(p.kind==='apparel')return (p.item==='flak-vest'||p.item==='flak-helmet')?.6:1.2;
   if(p.kind==='mech-corpse')return 0;
-  if(p.kind==='weapon')return p.item==='plasteel-knife'?0:.5;if(p.kind==='corpse')return .7;if(p.kind==='food')return p.item==='hay'?1.5:1;
+  if(p.kind==='weapon')return p.item==='plasteel-knife'?0:.5;if(p.kind==='corpse')return .7;if(p.kind==='food')return p.item==='pemmican'?.6:p.item==='hay'?1.5:1;
   if(p.kind==='medicine')return p.item==='herbal-medicine'?1.3:.7;
   if(p.kind==='chemfuel')return 2;if(p.kind==='neutroamine')return .7;
   // Unfinished apparel inherits the default zero stat; its embedded cloth is not a second ground pile.
