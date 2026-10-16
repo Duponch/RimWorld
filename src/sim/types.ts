@@ -329,6 +329,7 @@ export type Command = import('./secondary-site-state.ts').SecondarySiteCommand |
   | import('./player-orders.ts').OrderCommand
   | import('./food-policy.ts').FoodPolicyCommand
   | import('./apparel-system.ts').ApparelPolicyAssignmentCommand
+  | import('./apparel-system.ts').ClearForcedApparelCommand
   | import('./schedule.ts').ScheduleCommand
   | { type: 'bill-add';recipe?:import('./production-recipes.ts').ProductionRecipe; structureId: number }
   | { type: 'bill-update'; structureId: number; billId: number; settings: import('./cooking-types.ts').BillSettings }

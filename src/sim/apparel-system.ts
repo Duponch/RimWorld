@@ -16,6 +16,7 @@ import { TemperatureView,thermalLayout } from './temperature.ts';
 import type { CommandResult,Pawn,World } from './types.ts';
 
 export type ApparelPolicyAssignmentCommand={type:'apparel-policy-assign';pawnId:number;policyId:number;automatic:boolean};
+export type ClearForcedApparelCommand={type:'apparel-clear-forced';pawnId:number};
 const fail=(reason:string):CommandResult=>({ok:false,code:'invalid-command',reason});
 const report=(world:World,message:string)=>{world.events.push({tick:world.tick,type:'job',message});if(world.events.length>80)world.events.splice(0,world.events.length-80);};
 
@@ -24,6 +25,19 @@ export function applyApparelPolicyAssignment(world:World,command:ApparelPolicyAs
   if(!pawn||!isColonist(pawn)||pawn.state==='dead'||pawn.prisoner||pawn.visitor||!policy||typeof command.automatic!=='boolean')return fail('Affectation vestimentaire invalide.');
   pawn.apparelPolicyId=policy.id;pawn.apparelAutomation=command.automatic;pawn.nextApparelCheckAt=world.tick;
   if(!command.automatic&&pawn.equipmentTask?.automatic)releaseAssignments(world,pawn);
+  return {ok:true};
+}
+
+/** Release only currently worn manual choices. A pending manual wear retains
+ * its intent and will mark its garment forced at real contact completion. */
+export function applyClearForcedApparel(world:World,command:ClearForcedApparelCommand):CommandResult {
+  if(world.schemaVersion<90||Reflect.ownKeys(command).length!==2||!Object.hasOwn(command,'type')||!Object.hasOwn(command,'pawnId')
+    ||command.type!=='apparel-clear-forced'||!Number.isSafeInteger(command.pawnId)||command.pawnId<=0)return fail('Commande de port forcé invalide.');
+  const pawn=world.pawns.find(p=>p.id===command.pawnId);
+  if(!pawn||!isColonist(pawn)||pawn.state==='dead'||pawn.prisoner||pawn.visitor)return fail('Colon indisponible pour effacer le port forcé.');
+  const forced=wornApparel(world,pawn).filter(p=>p.kind==='apparel'&&p.apparel?.forced===true);
+  for(const pile of forced)delete pile.apparel!.forced;
+  if(forced.length)pawn.nextApparelCheckAt=world.tick;
   return {ok:true};
 }
 

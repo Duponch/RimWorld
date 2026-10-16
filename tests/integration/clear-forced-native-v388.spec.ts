@@ -1,0 +1,71 @@
+import {test,expect,type Page,type TestInfo} from '@playwright/test';
+import {readFile,writeFile} from 'node:fs/promises';
+import {clearForcedWorkshopV388} from '../scenarios/clear-forced-v388';
+import {deserializeWorld,validateWorld} from '../../src/sim/serialization';
+import {decodeStoredSave} from '../../src/ui/save-storage-codec';
+import type {Command} from '../../src/sim/types';
+import {world,pause,panel,expectWorld,observeErrors} from './helpers';
+import {perform,inspectPerson} from './player-actions';
+
+test.skip(process.env.CLEAR_FORCED_V388!=='1','ROOT opt-in only; adopt/freeze V388 first.');
+async function exportReload(page:Page,info:TestInfo){
+  await pause(page);const before=await world(page);expect(validateWorld(before)).toEqual([]);
+  await page.keyboard.press('Escape');await panel(page,'menu');const manager=page.locator('[data-save-manager]');
+  await manager.locator('[data-save-manager-name]').fill('V388 port forcé effacé');
+  await manager.locator('[data-save-manager-action="create"]').click();await expect(manager.locator('[data-save-manager-status]')).toHaveAttribute('data-state','success');
+  const download=page.waitForEvent('download');await manager.locator('[data-save-manager-action="export"]').click();
+  const path=info.outputPath('cleared-worn-exact.json');await(await download).saveAs(path);
+  expect(deserializeWorld(await decodeStoredSave(await readFile(path,'utf8')))).toEqual(before);
+  await page.locator('#browse-saves').click();await page.locator('.front-menu input[type=file]').setInputFiles(path);
+  await expect(page.locator('.front-menu')).toBeHidden({timeout:30_000});await expect(page.locator('#loading')).toHaveCount(0,{timeout:60_000});
+  await pause(page);await expectWorld(page,before);await page.keyboard.press('Escape');await info.attach('cleared-worn-exact',{path,contentType:'application/json'});return before;
+}
+
+test('V388 actual wear → clear forced → exact reload → physical policy removal',async({page},info)=>{
+  test.setTimeout(120_000);const errors=observeErrors(page),f=clearForcedWorkshopV388(),rotation={value:0};
+  const initialTuque=f.world.piles.find(p=>p.id===f.tuqueId)!,initialHelmet=f.world.piles.find(p=>p.id===f.helmetId)!;
+  expect(initialTuque.owner.type).toBe('ground');expect(initialTuque.apparel!.forced).toBeUndefined();
+  const path=info.outputPath('declared-clear-forced-preparation.json');await writeFile(path,f.initial);
+  await page.goto('/?e2e');const front=page.locator('.front-menu');await front.getByRole('button',{name:'Charger une partie',exact:true}).click();await front.locator('input[type=file]').setInputFiles(path);
+  await expect(page.locator('#loading')).toHaveCount(0,{timeout:60_000});await pause(page);await expectWorld(page,f.world);
+  const act=async(command:Command,reason:string)=>{await pause(page);await perform(page,{command,reason},rotation);await page.keyboard.press('Escape');};
+  const clear=page.locator(`[data-apparel-clear-forced-pawn="${f.pawnId}"]`),otherClear=page.locator(`[data-apparel-clear-forced-pawn="${f.otherId}"]`);
+  await panel(page,'assign');await expect(clear).toBeHidden();await expect(otherClear).toBeVisible();await page.keyboard.press('Escape');
+  await act({type:'order-equipment',pawnId:f.pawnId,itemId:f.tuqueId,action:'wear',queue:false},'Porter physiquement la tuque préparée, même si la politique ne la choisit pas.');
+  await expect.poll(async()=>(await world(page)).pawns.find(p=>p.id===f.pawnId)?.equipmentTask?.itemId).toBe(f.tuqueId);
+  await page.locator('[data-speed="1"]').click();await page.waitForFunction(id=>window.__lisiere.world.piles.find(p=>p.id===id)?.owner.type==='apparel',f.tuqueId,{timeout:15_000});await pause(page);
+  const worn=await world(page),tuque=worn.piles.find(p=>p.id===f.tuqueId)!;
+  expect(tuque.owner).toEqual({type:'apparel',pawnId:f.pawnId});expect(tuque.apparel).toEqual({...initialTuque.apparel,forced:true});
+  await inspectPerson(page,f.pawnId,'gear');await expect(page.locator(`[data-apparel-forced="${f.tuqueId}"]`)).toHaveText('forcé');
+  await page.screenshot({path:info.outputPath('01-real-manual-wear-forced.png')});
+  await panel(page,'assign');const auto=page.locator(`[data-apparel-automation-pawn="${f.pawnId}"]`);await expect(auto).not.toBeChecked();
+  await expect(clear).toBeVisible();await expect(clear).toBeEnabled();
+  const before=await world(page);expect(before.piles.find(p=>p.id===f.tuqueId)!.apparel!.forced).toBe(true);
+  await clear.click();await expect(clear).toBeHidden();const cleared=await world(page);
+  // This is an oracle clone of a confirmed snapshot, never a write to live World.
+  const expected=structuredClone(before);for(const p of expected.piles)if(p.owner.type==='apparel'&&p.owner.pawnId===f.pawnId&&p.apparel?.forced)delete p.apparel.forced;
+  expected.pawns.find(p=>p.id===f.pawnId)!.nextApparelCheckAt=before.tick;
+  expect(cleared).toEqual(expected);await expect(otherClear).toBeVisible();
+  expect(cleared.piles.find(p=>p.id===f.helmetId)).toEqual(initialHelmet);
+  await page.screenshot({path:info.outputPath('02-assignment-cleared-with-auto-preserved.png')});
+  await page.keyboard.press('Escape');await inspectPerson(page,f.pawnId,'gear');
+  await expect(page.locator(`[data-apparel-information="${f.tuqueId}"]`)).toBeVisible();await expect(page.locator(`[data-apparel-forced="${f.tuqueId}"]`)).toHaveCount(0);
+  const resumed=await exportReload(page,info);expect(resumed.piles.find(p=>p.id===f.tuqueId)!.owner.type).toBe('apparel');
+  expect(resumed.pawns.find(p=>p.id===f.pawnId)!.apparelAutomation).toBe(false);
+  await panel(page,'assign');await auto.setChecked(true);
+  await expect.poll(async()=>(await world(page)).pawns.find(p=>p.id===f.pawnId)?.apparelAutomation).toBe(true);await page.keyboard.press('Escape');
+  await page.locator('[data-speed="1"]').click();
+  await page.waitForFunction(id=>{const w=window.__lisiere.world,p=w.pawns.find(p=>p.id===id);return p?.equipmentTask?.automatic===true&&p.equipmentTask.action==='remove';},f.pawnId,{polling:20,timeout:10_000});
+  await page.waitForFunction(id=>window.__lisiere.world.piles.find(p=>p.id===id)?.owner.type==='ground',f.tuqueId,{timeout:10_000});await pause(page);
+  const final=await world(page);await writeFile(info.outputPath('final-world.json'),JSON.stringify(final));
+  const removed=final.piles.find(p=>p.id===f.tuqueId)!;
+  expect(removed.apparel).toEqual({...initialTuque.apparel,forbidden:true});
+  expect(final.piles.find(p=>p.id===f.shirtId)!.owner).toEqual({type:'apparel',pawnId:f.pawnId});
+  expect(final.piles.find(p=>p.id===f.helmetId)).toEqual(initialHelmet);expect(final.pawns.find(p=>p.id===f.pawnId)!.apparelAutomation).toBe(true);
+  expect(final.piles).toHaveLength(f.world.piles.length);expect(validateWorld(final)).toEqual([]);
+  await inspectPerson(page,f.pawnId,'gear');await expect(page.locator(`[data-apparel-information="${f.tuqueId}"]`)).toHaveCount(0);
+  await page.screenshot({path:info.outputPath('03-policy-physical-removal-shirt-kept.png')});
+  expect(errors).toEqual([]);
+  expect(await page.evaluate(()=>({backend:window.__lisiere.backend,...window.__lisiere.incident}))).toMatchObject({backend:'WebGPU',simulationStopped:false,graphicsFault:false,waiting:0});
+  await writeFile(info.outputPath('native-summary.json'),JSON.stringify({notice:f.notice,start:f.world.tick,wornAt:worn.tick,clearedAt:cleared.tick,resumedAt:resumed.tick,removedAt:final.tick,pawnId:f.pawnId,tuqueId:f.tuqueId,otherId:f.otherId,otherHelmetId:f.helmetId,errors,scope:'One prepared32² UI clothing loop, real manual wear and physical policy removal, exact metadata-only command conservation and reload. No natural production or performance qualification.'},null,2));
+});

@@ -1,6 +1,6 @@
 # Ce qui est jouable et ce qui manque
 
-**V387 — schéma 247 :** [pont standard sur marais](bridge-marsh-v387.md). Construction payée, passage/transport, retrait et sauvegardes qualifiés ; supports Light et destruction atomique. Publication **9f9a926a**, produit `a1092767`,128 réponses HTTPS exactes. Les états suivants sont historiques.
+**V388 — schéma 247 inchangé :** [Effacer le port forcé](clear-forced-apparel-v388.md) rend la main aux politiques sans retrait instantané ni Auto changé. Commande, reprise et parcours UI qualifiés. Publication regroupée suivante ; production V387/9f9a926a conservée. Les états suivants sont historiques.
 
 **V381 — référence Les Aulnes actualisée :** [atelier, étagères et tenue de garde](aulnes-workshop-v381.md). Patrimoine préparé explicite, habillage et rangement ordinaires observés, anciennes références conservées ; aucune nouvelle mécanique ou campagne entière revendiquée. Les états suivants sont historiques.
 

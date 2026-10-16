@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V388 proposé — [rendre la tenue à sa politique](clear-forced-apparel-v388.md).** Assignations efface les marqueurs des seuls habits forcés actuellement portés d’un colon ; Matériel les signale. La politique reprend ensuite ses gestes physiques si Auto est actif, sans dépose immédiate ni nouveau schéma.
+
 ## V387 proposé — pont standard sur marais
 
 Pont en bois payé12bois, chantier/livraison, fondation Light distincte, neige/saleté et sauvegarde247 ; retrait6bois ou destruction sans restitution du pont. Rivières/pont lourd absents. [Boucle et limites](bridge-marsh-v387.md).
@@ -367,7 +369,7 @@ Ces entrées sont validées dans le périmètre des [preuves V90](../history/val
 | Qualité des meubles et besoin `beauty` | Sept qualités sur neuf familles de meubles ; confort, repos et beauté dérivés. Besoin personnel 0–100, pensée −15 à +15 ; beauté de pièce calculable par le noyau. | Le score de pièce n'est pas encore affiché. Anciens meubles lus normaux ; impression, richesse, espace Core et souvenirs absents. |
 | Structure `electric-tailor-bench` | 3×1, 75 matériau principal + 50 acier + 2 composants, Construction 4, 120 W ; vitesse 1 alimenté et 0,5 hors tension. Raccordement au réseau et arrêt par contact physique effectifs en V194 ; appareil vulnérable aux précipitations si exposé et réellement alimenté. | Vêtements complexes requis ; pannes et remplacement physique du composant selon V144. Pas de projet Électricité distinct ni de nouvelle recette V194. |
 | Objets `cloth-*`, `light-leather-*` des familles `tribalwear`, `shirt`, `pants`, `duster`, `parka` | Dix combinaisons textile × famille, chacune issue d'une facture et d'un inachevé homogène ; matière, qualité, PV, protection/isolation, apparence, port et stockage conservés. | Gilet pare-balles non fabricable ; aucun casque, chaussure, ceinture, réparation, teinture ou recyclage. |
-| Calendrier d'usure et politiques vestimentaires | Tirage quotidien par vêtement porté ; deux politiques partagées, affectation et automatisation par colon, remplacement par trajet/réservation/retrait/port réels. | UI limitée aux préréglages Tout vêtement / Tenue entretenue. Éditeur, copie/suppression et bouton Effacer forcé absents. |
+| Calendrier d'usure et politiques vestimentaires | Tirage quotidien par vêtement porté ; deux politiques partagées, affectation et automatisation par colon, remplacement par trajet/réservation/retrait/port réels. | Préréglages Tout vêtement / Tenue entretenue et bouton individuel Effacer le port forcé ; marqueur visible dans Matériel. Éditeur et copie/suppression des politiques restent absents. |
 
 La [diversité des biomes](../research/biome-diversity-reference-v90.md) est seulement préparée : aucune espèce sauvage, aucun biome sélectionnable et aucune distribution naturelle supplémentaire ne comptent parmi les ajouts V90.
 

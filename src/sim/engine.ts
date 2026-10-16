@@ -143,7 +143,7 @@ import { applyShootingCommand } from './shooting.ts';
 import { expireStaggers } from './stagger.ts';
 import { collapseFromExhaustion,processDraftSleep } from './needs.ts';
 import { applyEquipment,processEquipment,reconcileEquipmentTasks,recoverDroppedWeapon } from './equipment.ts';
-import { advanceWorldApparelWear,applyApparelPolicyAssignment,considerApparelPolicy } from './apparel-system.ts';
+import { advanceWorldApparelWear,applyApparelPolicyAssignment,applyClearForcedApparel,considerApparelPolicy } from './apparel-system.ts';
 import { dropIncapacitatedEquipment,reconcileWeaponMemory } from './equipment-state.ts';
 import { applyFeeding,processFeeding,reconcileFeeding } from './feeding.ts';
 import { applySurgery,processSurgery,reconcileSurgery } from './surgery.ts';
@@ -526,6 +526,7 @@ function applyCommandInternal(world: World, command: LocalCommand): CommandResul
     &&actors.some(id=>{const h=world.pawns.find(p=>p.id===id)?.health;return h?.foodPoisoning?.vomit||h?.flu?.vomit||h?.immuneDiseases?.malaria?.vomit;}))return refusal('invalid-command','Ce colon vomit et ne peut pas interrompre cet épisode.');
   if(command?.type==='order-bury'||command?.type==='grave-policy'||command?.type==='assign-grave')return applyBurial(world,command);
   if(command?.type==='apparel-policy-assign')return applyApparelPolicyAssignment(world,command);
+  if(command?.type==='apparel-clear-forced')return applyClearForcedApparel(world,command);
   if(command?.type==='clean-room'){const reason=applyCleanRoom(world,command);return reason?refusal('invalid-command',reason):{ok:true};}
   if(command?.type==='designate'&&command.kind==='flick')return refusal('invalid-command','Utilisez le bouton marche/arrêt de l’appareil.');
   if(command?.type==='designate'&&(command.kind==='repair'||command.kind==='fix-breakdown'))return refusal('invalid-command','Utilisez la zone de foyer pour activer les réparations.');

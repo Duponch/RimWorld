@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 247.** [V387](gameplay/bridge-marsh-v387.md) relie construction, transport et retrait des ponts sur marais, support Light et destruction. Publication **9f9a926a**, produit `a1092767`,128 réponses HTTPS exactes. Les Aulnes V386 et la campagne98038 close partielle sont préservées.
+**16 octobre 2026 — schéma 247.** [V388](gameplay/clear-forced-apparel-v388.md) ferme la boucle Porter manuellement → rendre à la politique, avec vrais retraits/ports et reprise. Publication regroupée suivante ; production V387/9f9a926a conservée. Les Aulnes V386 et la campagne98038 close partielle sont préservées.
 
 ## Priorité actuelle
 
@@ -17,6 +17,7 @@
 11. **Marais de toundra V385 qualifiés.** Génération prospective, marche et transport, refus de support/culture, feu/neige et recharges ; gel, séchage, ponts et écologie complète restent ouverts.
 12. **Les Aulnes V386 qualifiées.** Facture laine réelle et première production rangée ; seconde production et port restent à jouer. Anciennes références et parties personnelles préservées.
 13. **Ponts de marais V387 qualifiés.** Fondation payée et terrain dessous conservé, supports Light, passage/transport et retrait physiques, feu/explosion et migrations strictes. Rivières/profondeurs, pont lourd et destruction de masse restent hors du parcours natif qualifié.
+14. **Gestion des tenues V388 qualifiée.** Effacement des seules pièces forcées, Auto conservé, renouvellement physique et sauvegarde exacte. Édition détaillée des politiques encore absente.
 
 **Référence jouable à entretenir : Les Aulnes.** Actualiser régulièrement sa version courante avec les objets et boucles pertinents du catalogue, en conservant une colonie logique et les anciennes versions. Le patrimoine ajouté peut être préparé et explicitement décrit ; il ne devient pas une campagne naturellement acquise. V381 expose les étagères et la tenue de garde, V386 une confection de tuques en cours ; les prochaines mises à jour suivront les ajouts pertinents.
 

@@ -12,7 +12,7 @@ import { itemInformation } from './item-information';
 export interface EquipmentInspectionView {
   comfort:string;
   primary:string;
-  apparel:ReadonlyArray<{id:number;name:string;condition:string;protection:string;insulation:string}>;
+  apparel:ReadonlyArray<{id:number;name:string;condition:string;protection:string;insulation:string;forced:boolean}>;
   inventory:readonly string[];
   memory:string;
 }
@@ -26,6 +26,7 @@ export function equipmentInspectionView(world:World,pawn:Pawn):EquipmentInspecti
     return {
       id:piece.id,
       name:apparelLabel(piece),
+      forced:piece.apparel!.forced===true,
       condition:`${piece.apparel!.hitPoints}/${definition.hitPoints} PV`,
       protection:`Tranchant ${Math.round(rating.sharp*100)} % · Contondant ${Math.round(rating.blunt*100)} % · Chaleur ${Math.round(rating.heat*100)} %`,
       insulation:`Isolation froid ${insulation.cold.toFixed(1)} °C · chaleur ${insulation.heat.toFixed(1)} °C`,
@@ -79,8 +80,9 @@ export function updateEquipmentInspection(parent:HTMLElement,world:World,pawn:Pa
       const name=document.createElement('strong');name.textContent=piece.name;
       const condition=document.createElement('span');condition.textContent=piece.condition;
       line.append(name,condition);
+      if(piece.forced){const forced=document.createElement('span');forced.className='equipment-apparel-forced';forced.dataset.apparelForced=String(piece.id);forced.textContent='forcé';line.append(forced);}
       const stats=document.createElement('p');stats.className='equipment-apparel-stats';stats.textContent=`${piece.protection} · ${piece.insulation}`;stats.hidden=true;
-      line.tabIndex=0;setTooltip(line,{title:piece.name,body:`${piece.protection}\n${piece.insulation}`,rows:[{label:'État',value:piece.condition}]});
+      line.tabIndex=0;setTooltip(line,{title:piece.name,body:`${piece.protection}\n${piece.insulation}${piece.forced?'\nPort forcé : ce vêtement reste protégé des remplacements automatiques.':''}`,rows:[{label:'État',value:piece.condition}]});
       const info=document.createElement('button');info.type='button';info.className='information-button';info.textContent='i';info.dataset.apparelInformation=String(piece.id);info.setAttribute('aria-label',`Informations : ${piece.name}`);setTooltip(info,{title:'Informations',body:'Afficher les propriétés de ce vêtement.'});
       const button=document.createElement('button');button.type='button';button.textContent='Retirer';button.dataset.removeApparel=String(piece.id);button.disabled=pawn.state==='dead'||pawn.state==='downed';button.hidden=!isColonist(pawn);
       setTooltip(button,{title:`Retirer ${piece.name}`,body:'Retirer physiquement ce vêtement puis le déposer. La commande attend une personne capable d’agir.'});

@@ -1,6 +1,6 @@
 # Elsewhere
 
-**V387 — schéma 247 :** [pont standard sur marais](docs/gameplay/bridge-marsh-v387.md). Construction payée, passage/transport, retrait et sauvegardes qualifiés ; supports Light et destruction atomique. Publication **9f9a926a**, produit `a1092767`,128 réponses HTTPS exactes. Les états suivants sont historiques.
+**V388 — schéma 247 inchangé :** [Effacer le port forcé](docs/gameplay/clear-forced-apparel-v388.md) rend la main aux politiques sans retrait instantané ni Auto changé. Commande, reprise et parcours UI qualifiés. Publication regroupée suivante ; production V387/9f9a926a conservée. Les états suivants sont historiques.
 
 **V380 — schéma 242 :** [lisibilité des HUD](docs/gameplay/hover-layout-v380.md). Survol, ressources et dock stabilisés et qualifiés à quatre tailles ; correctif UI sans nouvelle mécanique. Publication regroupée suivante ; dernière production V378/e5ec566c. Les états suivants sont historiques.
 

@@ -4,9 +4,9 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V387, schéma 247 :** [pont standard sur marais](docs/gameplay/bridge-marsh-v387.md) qualifié : construction payée, transport, retrait et sauvegardes ; supports Light et pertes atomiques. Publication **9f9a926a**, produit `a1092767`,128 réponses HTTPS exactes. Les Aulnes V386/tick10373 et leurs archives sont préservées ; campagne98038 close partielle.
+**État V388, schéma 247 inchangé :** [Effacer le port forcé](docs/gameplay/clear-forced-apparel-v388.md) qualifié dans Assignations/Matériel : Auto, objets et tâches préservés, renouvellement physique et reprise. Publication regroupée suivante ; dernière production V387 **9f9a926a**/`a1092767`,128HTTPS exacts. Les Aulnes V386/tick10373, archives et campagne98038 close partielle préservées.
 
-**Ordre courant :** rendre le port forcé à la politique vestimentaire par une action explicite dans Assignations, sans dépôt immédiat ni annulation de tâches ; préparation privée V388 à revoir avant adoption. Les rivières demandent encore shallow/deep ; pas de pont universel. Actualisations des Aulnes périodiques et cohérentes. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
+**Ordre courant :** clore V388 puis ajouter une réserve alimentaire préindustrielle utile, après relevé ciblé de recette, recherche et conservation ; préparation privée à revoir avant adoption. Les rivières demandent encore shallow/deep ; pas de pont universel. Actualisations des Aulnes périodiques et cohérentes. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
 
 ## Méthode de livraison
 
