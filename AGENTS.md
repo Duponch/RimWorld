@@ -4,11 +4,11 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V398–V399, schéma 252 :** [Dangers hors carte](docs/gameplay/remote-danger-alerts-v398.md) et [adoption CPU](docs/development/structure-adoption-v399.md) qualifiés : navigation réelle en pause depuis21483 ; économie mesurée sur deltas de structures inchangées, aucun gain FPS établi. V398–V399 publiés ensemble en 8a146d54, produit 7ee3a889, 134 réponses HTTPS exactes.
+**État V400, schéma 252 :** [Provenance et adoption CPU](docs/development/sleeping-provenance-v400.md) qualifiée : contrôle statique des structures exactement inchangées, tous contrôles dynamiques maintenus. Mesure Node ciblée, aucun gain FPS établi ; publication groupée suivante.
 
-**Dernière publication V396, schéma 252 :** [Stockage sensible](docs/gameplay/deterioration-v396.md) qualifié : usure au sol, transport, protection et reprise ; coût rare mesuré. V395–V396 publiés ensemble en a02aa932, produit59780d4f,134 réponses HTTPS exactes. Les Aulnes10733, archives et campagne98038 close partielle préservées.
+**Dernière publication V398–V399 :** [Dangers hors carte](docs/gameplay/remote-danger-alerts-v398.md) et [première réduction CPU](docs/development/structure-adoption-v399.md), produit7ee3a889/déploiement8a146d54,134 réponses HTTPS exactes.
 
-**Ordre courant :** [Parcours Aulnes V397](docs/gameplay/aulnes-multimap-v397.md) clos partiel : aller-retour/travaux/revisite acquis, branche21483 conservée avec Noé/Iris/Rose à terre sur rage animale non remontée hors carte. Alertes corrigées V398 et premier coût CPU réduit V399 ; les autres coûts de réception restent à mesurer précisément avant une nouvelle optimisation. Ne pas prolonger la campagne ni rejouer un état favorable pour fabriquer un vert. Aulnes publiques V394 inchangées, terrain continu non prévu. Voir [la feuille de route](docs/ROADMAP.md).
+**Ordre courant :** [Parcours Aulnes V397](docs/gameplay/aulnes-multimap-v397.md) clos partiel : aller-retour/travaux/revisite acquis, branche21483 conservée avec Noé/Iris/Rose à terre sur rage animale non remontée hors carte. Alertes corrigées V398, coûts ciblés réduits V399/V400. Revenir au chargement/retour du second site et aux manques joueurs concrets ; ne pas enchaîner automatiquement des certificats CPU. Mesures restantes conservées, aucune fluidité générale promise. Ne pas prolonger la campagne ni rejouer un état favorable pour fabriquer un vert. Aulnes publiques V394 inchangées, terrain continu non prévu. Voir [la feuille de route](docs/ROADMAP.md).
 
 ## Méthode de livraison
 

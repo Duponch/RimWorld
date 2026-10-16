@@ -184,6 +184,7 @@ import { PowerParentValidationCache, type PowerParentIndex } from './sim/power-p
 import { createOwnedValidationGeometryOwner, type OwnedGeometryReuseWitness } from './sim/owned-validation-geometry.ts';
 import { createOwnedValidationResourceOwner, type OwnedResourceReuseWitness } from './sim/owned-validation-resources.ts';
 import { createOwnedDeteriorationOwner } from './sim/deterioration-save.ts';
+import { createOwnedSleepingProvenanceOwner } from './sim/human-sleeping-spot-save.ts';
 import { AudioDirector } from './audio/AudioDirector';
 import { MusicDirector, type MusicMood } from './audio/MusicDirector';
 import { ambientCameraGain, FoliageAmbience } from './audio/ambience';
@@ -234,10 +235,12 @@ const client = (() => {
     readonly #resourceOwner = createOwnedValidationResourceOwner();
     readonly #geometryOwner = createOwnedValidationGeometryOwner();
     readonly #deteriorationOwner = createOwnedDeteriorationOwner();
+    readonly #sleepingProvenanceOwner = createOwnedSleepingProvenanceOwner();
     override adopt(packet: SnapshotMessage<true>): SnapshotAdoption {
       this.#resourceOwner.discard();
       this.#geometryOwner.discard();
       this.#deteriorationOwner.discard();
+      this.#sleepingProvenanceOwner.discard();
       try {
         const result = super.adopt(packet);
         if (result.status === 'applied') this.#resourceOwner.commit(result.world);
@@ -246,16 +249,22 @@ const client = (() => {
         else this.#geometryOwner.discard();
         if (result.status === 'applied') this.#deteriorationOwner.commit(result.world);
         else this.#deteriorationOwner.discard();
+        if (result.status === 'applied') this.#sleepingProvenanceOwner.commit(result.world);
+        else this.#sleepingProvenanceOwner.discard();
         return result;
       } catch (error) {
         this.#resourceOwner.discard();
         this.#geometryOwner.discard();
         this.#deteriorationOwner.discard();
+        this.#sleepingProvenanceOwner.discard();
         throw error;
       }
     }
     protected override validateDeteriorationTransport(next:World,structureReuse?:OwnedGeometryReuseWitness):boolean {
       return this.#deteriorationOwner.validate(next,structureReuse);
+    }
+    protected override validateHumanSleepingSpotTransport(next:World,structureReuse?:OwnedGeometryReuseWitness):boolean {
+      return this.#sleepingProvenanceOwner.validate(next,structureReuse);
     }
     protected override createValidationContext(next: World, resourceReuse?: OwnedResourceReuseWitness, geometryReuse?: OwnedGeometryReuseWitness): SnapshotValidationContext {
       const raw = new PowerParentValidationCache();

@@ -7,6 +7,7 @@ import { SnapshotDecoder,SnapshotEncoder } from '../src/bridge/snapshots.ts';
 import { medicalCamp } from './scenarios/health.ts';
 import { fixtureBuilding } from './scenarios/deconstruction.ts';
 import { BLOOD_UNIT } from '../src/sim/injury-rules.ts';
+import {createDeteriorationState} from '../src/sim/deterioration-content.ts';
 import { reconcilePawnHealth } from '../src/sim/health.ts';
 import { reconcilePrisoners } from '../src/sim/prisoners.ts';
 import { prisonBedValid } from '../src/sim/prison-space.ts';
@@ -69,9 +70,17 @@ test('actual assigned travel, sleep deadline and room observation survive file a
   const bad=structuredClone(w);if(bad.pawns[0]!.need?.kind==='sleep')bad.pawns[0]!.need.roomRest!.nextAt=bad.tick;
   expect(validHumanSleepingSpotTransport(bad)).toBe(false);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
 });
-test('231 strict neutral migration changes only schema and preserves a historical real bed',()=>{
-  const w=medicalCamp(),bed=fixtureBuilding(w,'bed',16,16);w.pawns[0]!.bedId=bed.id;w.schemaVersion=231 as World['schemaVersion'];
-  const before=structuredClone(w);expect(deserializeWorld(JSON.stringify(w))).toEqual({...before,schemaVersion:SCHEMA_VERSION});expect(w).toEqual(before);
+// These generated old witnesses predate future catalogue permissions and the
+// prospective252 clock; preserve genuine fields before testing old admission.
+function pre232Witness(w:World){
+  delete w.deterioration;
+  for(const p of w.foodPolicies??[])p.allowed=p.allowed.filter(id=>id!=='pemmican');
+  if(w.apparelPolicies)w.apparelPolicies=w.apparelPolicies.map(p=>({...p,allowedItems:p.allowedItems.filter(id=>!['cloth-tuque','muffalo-wool-tuque','recon-armor'].includes(id))}));
+  return w;
+}
+test('231 strict neutral migration preserves the historical bed and adds only schema/prospective clock',()=>{
+  const w=medicalCamp(),bed=fixtureBuilding(w,'bed',16,16);w.pawns[0]!.bedId=bed.id;w.schemaVersion=231 as World['schemaVersion'];pre232Witness(w);
+  const before=structuredClone(w);expect(deserializeWorld(JSON.stringify(w))).toEqual({...before,schemaVersion:SCHEMA_VERSION,deterioration:createDeteriorationState(before.seed,before.tick)});expect(w).toEqual(before);
   w.pawns[0]!.bedId=w.nextId+1;expect(()=>deserializeWorld(JSON.stringify(w))).toThrow('Invalid version 231 save');
 });
 const shapeForges:Array<[string,(f:ReturnType<typeof sleepingSpotFrame>)=>void]>=[
@@ -93,7 +102,7 @@ test.each(shapeForges)('232 file refuses %s without repairing caller state',(nam
   expect(validHumanSleepingSpotTransport(f.w),name).toBe(false);expect(()=>deserializeWorld(JSON.stringify(f.w))).toThrow();expect(f.w).toEqual(before);
 });
 test.each([1,230,231])('schema %s refuses future spot even before its historical migration',version=>{
-  const f=sleepingSpotFrame();f.w.schemaVersion=version as World['schemaVersion'];expect(()=>deserializeWorld(JSON.stringify(f.w))).toThrow('Future human sleeping spot');
+  const f=sleepingSpotFrame();f.w.schemaVersion=version as World['schemaVersion'];pre232Witness(f.w);expect(()=>deserializeWorld(JSON.stringify(f.w))).toThrow('Future human sleeping spot');
 });
 test.each(['kind','furniture','deconstruction','flick','repair','fixBreakdown','packed','pile','visitor-archive','pod-archive','group-item'] as const)
 ('provenance refuses spot hidden in %s before any migration',route=>{

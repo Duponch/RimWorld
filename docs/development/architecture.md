@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V400 qualifiée — schéma 252 :** [Provenance et adoption CPU](../development/sleeping-provenance-v400.md). Lectures répétées réduites sur structures inchangées, règles/sauvegardes conservées ; économie Node bornée, aucun gain FPS établi. Publication groupée suivante ; dernière production V398–V399/8a146d54.
+
 **V398–V399 qualifiés — schéma 252 :** [Alertes hors carte](../gameplay/remote-danger-alerts-v398.md) et [adoption CPU](../development/structure-adoption-v399.md). Navigation réelle en pause, anciennes règles/sauvegardes conservées ; économie CPU bornée, aucun gain FPS établi. V398–V399 publiés ensemble en 8a146d54, produit 7ee3a889, 134 réponses HTTPS exactes ; V397 reste partiel et les Aulnes publiques V394 intactes.
 
 **V397 QA partielle — schéma 252 :** [Les Aulnes, voyage et revisite](../gameplay/aulnes-multimap-v397.md). Aller-retour, travaux payés et persistance observés ; rouge de bien-être au foyer sur rage animale hors carte. Mesures CPU/RAF acquises, aucune nouvelle mécanique ou publication. Les Aulnes publiques V394 préservées.

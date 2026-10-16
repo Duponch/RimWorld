@@ -8,6 +8,7 @@ import { validateCare } from './care-save.ts';
 import { validateSurgeries } from './surgery-save.ts';
 import { validRoomExperience } from './room-experience.ts';
 import type { Cell,Structure,World } from './types.ts';
+import type { OwnedGeometryReuseWitness } from './owned-validation-geometry.ts';
 
 const SPOT='sleeping-spot';
 const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
@@ -45,7 +46,8 @@ export function validHumanSleepingSpotStructureEntry(v:unknown,version:number,w:
 /** A floor designation is only a placed Structure. In particular old migrations
  * may not erase a future kind hidden in a frame, archive or original possession.
  * Missing historical containers are permitted; their ordinary guards own shape. */
-export function validHumanSleepingSpotProvenance(raw:unknown,version:number):boolean {
+type StructureProvenanceReader=(value:unknown,walk:()=>boolean)=>boolean;
+function validProvenance(raw:unknown,version:number,structures?:StructureProvenanceReader):boolean {
   try {
     if(!dataRecord(raw))return false;
     const scanRecords=(value:unknown,placed=false):boolean=>{
@@ -60,7 +62,9 @@ export function validHumanSleepingSpotProvenance(raw:unknown,version:number):boo
         return true;
       });
     };
-    if(!scanRecords(raw.structures,true)||!scanRecords(raw.jobs)||!scanRecords(raw.packed)||!scanRecords(raw.piles))return false;
+    const placed=raw.structures;
+    if(!(structures?structures(placed,()=>scanRecords(placed,true)):scanRecords(placed,true))
+      ||!scanRecords(raw.jobs)||!scanRecords(raw.packed)||!scanRecords(raw.piles))return false;
     for(const key of ['scout','commercialTrip','civilianPost','group'])if(raw[key]!==undefined){
       const owner=raw[key];if(!dataRecord(owner)||!scanRecords(owner.items)||!scanRecords(owner.stock)||!scanRecords(owner.packed))return false;
     }
@@ -83,11 +87,17 @@ export function validHumanSleepingSpotProvenance(raw:unknown,version:number):boo
   }catch{return false;}
 }
 
+/** Public/RAW and early packet admission always inspect every original domain.
+ * Additional arguments cannot grant authority to skip a structure traversal. */
+export function validHumanSleepingSpotProvenance(raw:unknown,version:number):boolean {
+  return validProvenance(raw,version);
+}
+
 /** A bounded new-domain guard, with real World ownership and existing physical
  * medical/rescue rules. It never projects actors, repairs records or runs RNG. */
-export function validHumanSleepingSpotTransport(w:World,version:number=w.schemaVersion):boolean {
+function validTransport(w:World,version:number,structures?:StructureProvenanceReader):boolean {
   try {
-    if(!validHumanSleepingSpotProvenance(w,version))return false;
+    if(!validProvenance(w,version,structures))return false;
     const spots=w.structures.filter(s=>s.kind===SPOT);if(!spots.length)return true;
     const byId=new Map(spots.map(s=>[s.id,s]));if(byId.size!==spots.length)return false;
     const occupied=new Set<number>();
@@ -136,4 +146,48 @@ export function validHumanSleepingSpotTransport(w:World,version:number=w.schemaV
     const ids=new Set(byId.keys());
     return !validateRescues(w,false,ids).length&&!validateCare(w,ids).length&&!validateSurgeries(w,version,ids).length;
   }catch{return false;}
+}
+
+/** Public mutable callers retain complete provenance and dynamic admission. */
+export function validHumanSleepingSpotTransport(w:World,version:number=w.schemaVersion):boolean {
+  return validTransport(w,version);
+}
+
+export interface OwnedSleepingProvenanceOwner {
+  validate(world:World,reuse?:OwnedGeometryReuseWitness):boolean;
+  commit(world:World):void;
+  discard():void;
+}
+
+/** Closed MAIN only: the confirmed structures have no external writers. This
+ * caches only their descriptor-safe placed provenance, never tasks, archives,
+ * possessions, geometry, occupancy, assignments, rescue, care or surgery.
+ * A genuine empty contiguous sparse edge can keep the EXACT accepted array,
+ * including at the same tick. Every upsert/remap/full boundary walks it again.
+ * Constructing this helper grants no authority to arbitrary mutable Worlds. */
+export function createOwnedSleepingProvenanceOwner():OwnedSleepingProvenanceOwner {
+  type Fact={world:World;structures:World['structures']};
+  let confirmed:Fact|undefined,pending:Fact|undefined;
+  return {
+    validate(world,reuse){
+      pending=undefined;
+      let clean:World['structures']|undefined;
+      const valid=validTransport(world,world.schemaVersion,(value,walk)=>{
+        const base=confirmed;
+        const unchanged=!!base&&!!reuse&&reuse.kind==='sparse'&&reuse.previous===base.world
+          &&reuse.updatedOrdinals.length===0&&value===base.structures&&value===reuse.previous.structures
+          &&world.schemaVersion>=232&&world.schemaVersion===base.world.schemaVersion
+          &&world.width===base.world.width&&world.height===base.world.height
+          &&world.seed===base.world.seed&&world.nextId===base.world.nextId;
+        const clear=unchanged||walk();
+        if(clear&&Array.isArray(value))clean=value;
+        return clear;
+      });
+      if(valid&&clean)pending={world,structures:clean};
+      return valid;
+    },
+    // The whole adoption must succeed before its local fact can be retained.
+    commit(world){confirmed=pending?.world===world?pending:undefined;pending=undefined;},
+    discard(){pending=undefined;},
+  };
 }

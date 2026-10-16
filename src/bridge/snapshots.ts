@@ -902,6 +902,11 @@ export class SnapshotDecoder {
   protected validateDeteriorationTransport(next:World,_structureReuse?:OwnedGeometryReuseWitness):boolean {
     return validDeteriorationTransport(next,next.schemaVersion);
   }
+  /** Closed MAIN may reuse only unchanged placed-structure provenance.
+   * Public admission and all dynamic sleeping/clinical checks stay complete. */
+  protected validateHumanSleepingSpotTransport(next:World,_structureReuse?:OwnedGeometryReuseWitness):boolean {
+    return validHumanSleepingSpotTransport(next,next.schemaVersion);
+  }
   adopt(packet: SnapshotMessage<true>): SnapshotAdoption {
     const resync = (reason: string): SnapshotAdoption => ({ status: 'resync', reason });
     if (!Number.isSafeInteger(packet.epoch) || packet.epoch < 1
@@ -1191,7 +1196,7 @@ export class SnapshotDecoder {
     if(this.current&&message.epoch===this.epoch&&!validVisitorMedicalTransition(this.current,next))
       return resync('Admission médicale d’un visiteur réécrite dans cette partie.');
     if(forcedConsumers.length?!validForcedConsumeTransport(next,forcedConsumers):!validForcedConsumeOwners(next))return resync('Consommation forcée, propriétaire, source, contact ou réservation incohérents.');
-    if(!validHumanSleepingSpotTransport(next,next.schemaVersion))return resync('Couchage au sol humain, propriétaire, rôle ou réservation physique invalide ou futur.');
+    if(!this.validateHumanSleepingSpotTransport(next,geometryReuse))return resync('Couchage au sol humain, propriétaire, rôle ou réservation physique invalide ou futur.');
     if(this.current&&message.epoch===this.epoch&&!validStartingArrivalTransition(this.current,next))
       return resync('Contenu ou transfert des capsules initiales réécrit dans cette partie.');
     const validation=this.createValidationContext(next,resourceReuse,geometryReuse),powerTopology=validation.powerParents;
