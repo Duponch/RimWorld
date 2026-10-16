@@ -1,3 +1,4 @@
+import { UrgentThreatDelivery, validThreatPauseMode, type ThreatPauseMode, type ThreatPauseToken, type ThreatSpeedOptions, type UrgentThreatReceipt } from './urgent-threats';
 import type { Command, World } from '../sim/types';
 import { SimulationRequestError, type Request, type Response, type SimulationFault, type SimulationRequestStatus } from './protocol';
 import { DEFAULT_MAP_SIZE } from '../sim/map-config';
@@ -17,6 +18,8 @@ interface PendingRequest {
 
 export class SimulationClient {
   private worker!: Worker;
+  private readonly urgentThreats = new UrgentThreatDelivery();
+  private threatPauseMode: ThreatPauseMode = 'major';
   private nextId = 1;
   private snapshots: SnapshotDecoder;
   private adopted?: { epoch: number; revision: number };
@@ -26,6 +29,7 @@ export class SimulationClient {
   private readonly pending = new Map<number, PendingRequest>();
   onSnapshot: (world: World, stepMs: number, speed: number, replaced: boolean, motion?: import('./motion-tracks').PawnTrack[]) => void = () => {};
   onAudioCues: (cues: readonly AudioCue[], world: World, replaced: boolean) => void = () => {};
+  onUrgentThreats: (receipt: UrgentThreatReceipt) => void = () => {};
   onError: (message: string) => void = () => {};
   onFault: (fault: SimulationFault) => void = () => {};
   onRequestStatus: (status: SimulationRequestStatus) => void = () => {};
@@ -45,6 +49,8 @@ export class SimulationClient {
     this.onAudioCues(cues, world, replaced);
   }
 
+  protected deliverUrgentThreats(receipt: UrgentThreatReceipt): void { this.onUrgentThreats(receipt); }
+
   private startWorker() {
     this.worker = new Worker(new URL('./simulation.worker.ts', import.meta.url), { type: 'module' });
     this.stopped = false;
@@ -60,9 +66,15 @@ export class SimulationClient {
       }
       if (data.type === 'snapshot') {
         let result;
-        try { result = this.snapshots.adopt(data); }
+        try {
+          const tick = Object.getOwnPropertyDescriptor(data.world, 'tick');
+          if (!tick || !('value' in tick) || !this.urgentThreats.accepts(data.urgentThreats, tick.value, data.speed)) {
+            result = { status: 'resync' as const, reason: 'Métadonnées de menace illisibles.' };
+          } else result = this.snapshots.adopt(data);
+        }
         catch { result = { status: 'resync' as const, reason: 'Snapshot illisible.' }; }
         if (result.status === 'applied') {
+          const urgentReceipt = this.urgentThreats.commit(data.urgentThreats!, result.world.tick);
           this.adopted = { epoch: data.epoch, revision: data.revision };
           for (const pending of this.pending.values()) if (pending.type === 'init' || pending.type === 'load') {
             if (result.replaced) pending.replacementEpoch = data.epoch;
@@ -71,6 +83,8 @@ export class SimulationClient {
           catch (error) { this.onError(`Présentation interrompue : ${error instanceof Error ? error.message : String(error)}`); }
           try { if (result.replaced || data.audioCues?.length) this.deliverAudioCues(data.audioCues ?? [], result.world, result.replaced); }
           catch (error) { this.onError(`Audio interrompu : ${error instanceof Error ? error.message : String(error)}`); }
+          try { if (urgentReceipt) this.deliverUrgentThreats(urgentReceipt); }
+          catch (error) { this.onError(`Avertissement interrompu : ${error instanceof Error ? error.message : String(error)}`); }
           for (const [id, pending] of this.pending) this.finishReply(id, pending);
         }
         else if (result.status === 'resync' && !this.resyncing) {
@@ -127,6 +141,7 @@ export class SimulationClient {
   restartForReplacement() {
     if (!this.stopped) return;
     this.snapshots = this.createDecoder();
+    this.urgentThreats.reset();
     this.adopted = undefined;
     this.resyncing = false;
     this.startWorker();
@@ -161,14 +176,24 @@ export class SimulationClient {
     });
   }
 
-  init(seed: number, size = DEFAULT_MAP_SIZE,scenario:import('../sim/scenario-definitions').ScenarioId='survivors',paused=false,site?:import('../sim/site').SiteOptions,startingParty?:import('../sim/starting-candidates').StartingParty,startingWorld?:import('../sim/starting-world').StartingWorld,surface?:'snow-phased-v1') { return this.request({ type: 'init', seed, size,scenario,paused,...site?{site}:{},...startingParty?{startingParty}:{},...startingWorld?{startingWorld}:{},...surface?{surface}:{} }); }
+  init(seed: number, size = DEFAULT_MAP_SIZE,scenario:import('../sim/scenario-definitions').ScenarioId='survivors',paused=false,site?:import('../sim/site').SiteOptions,startingParty?:import('../sim/starting-candidates').StartingParty,startingWorld?:import('../sim/starting-world').StartingWorld,surface?:'snow-phased-v1') { return this.request({ type: 'init', threatPauseMode: this.threatPauseMode, seed, size,scenario,paused,...site?{site}:{},...startingParty?{startingParty}:{},...startingWorld?{startingWorld}:{},...surface?{surface}:{} }); }
   command(command: Command) { return this.request({ type: 'command', command }); }
   async orderOptions(pawnId:number,x:number,z:number,queue=false):Promise<import('../sim/player-orders').OrderOption[]> {
     return JSON.parse((await this.request({type:'order-options',pawnId,x,z,queue}))!);
   }
-  setSpeed(speed: number) { return this.request({ type: 'speed', speed }); }
+  getThreatPauseToken(): ThreatPauseToken { return this.urgentThreats.token(); }
+  setSpeed(speed: number, options?: ThreatSpeedOptions) {
+    // Copy at invocation: a caller cannot mutate a queued gesture's authority.
+    return this.request({ type: 'speed', speed, ...options ? { options: { explicit: options.explicit, token: { ...options.token } } } : {} });
+  }
+  async setThreatPauseMode(mode: ThreatPauseMode): Promise<string | undefined> {
+    if (!validThreatPauseMode(mode)) throw new Error('Mode de pause invalide.');
+    const result = await this.request({ type: 'threat-pause-mode', mode });
+    this.threatPauseMode = mode;
+    return result;
+  }
   save() { return this.request({ type: 'save' }); }
-  load(data: string) { return this.request({ type: 'load', data }); }
+  load(data: string) { return this.request({ type: 'load', data, threatPauseMode: this.threatPauseMode }); }
 
   private rejectPending(reason: Error) {
     for (const [id, pending] of this.pending) {

@@ -78,7 +78,6 @@ export class AudioCueRecorder {
   private hauls = new Map<number, HaulObservation>();
   private pawnStates = new Map<number, ActorDamageObservation>();
   private animalStates = new Map<number, ActorDamageObservation>();
-  private manhunters = new Map<number, number>();
   private firefighting = new Map<number, { fireId: number; cooldownCore: number }>();
   private fireIds = new Set<number>();
   private switches = new Map<number, boolean>();
@@ -87,7 +86,6 @@ export class AudioCueRecorder {
   private structures = new Set<number>();
   private deconstructionCount = 0;
   private lightningCount = 0;
-  private raidId: number | null = null;
 
   reset(): void {
     this.initialized = false;
@@ -104,7 +102,6 @@ export class AudioCueRecorder {
     this.hauls.clear();
     this.pawnStates.clear();
     this.animalStates.clear();
-    this.manhunters.clear();
     this.firefighting.clear();
     this.fireIds.clear();
     this.switches.clear();
@@ -113,7 +110,6 @@ export class AudioCueRecorder {
     this.structures.clear();
     this.deconstructionCount = 0;
     this.lightningCount = 0;
-    this.raidId = null;
   }
 
   capture(world: World): void {
@@ -135,7 +131,6 @@ export class AudioCueRecorder {
     const hauls = new Map<number, HaulObservation>();
     const pawnStates = new Map<number, ActorDamageObservation>();
     const animalStates = new Map<number, ActorDamageObservation>();
-    const manhunters = new Map<number, number>();
     const firefighting = new Map<number, { fireId: number; cooldownCore: number }>();
     const fireIds = new Set((world.fires?.items ?? []).map(fire => fire.id));
     const switches = new Map<number, boolean>();
@@ -365,12 +360,7 @@ export class AudioCueRecorder {
             tick: world.tick, kind: 'building.deconstructed', x: previous.x, z: previous.z });
     }
     for (const animal of world.wildlife?.animals ?? []) {
-      if(animal.manhunter&&animal.state!=='dead'&&animal.state!=='downed'){
-        const startedAtCore=animal.manhunter.startedAtCore;
-        manhunters.set(animal.id,startedAtCore);
-        if(this.initialized&&this.manhunters.get(animal.id)!==startedAtCore)
-          this.add({id:`ui.threat:manhunter:${animal.id}:${startedAtCore}`,tick:world.tick,kind:'ui.threat',x:0,z:0});
-      }
+
       if(animal.strike){
         melee.set(animal.id,animal.strike.atCore);
         if(this.initialized&&previousMelee.get(animal.id)!==animal.strike.atCore)
@@ -413,10 +403,6 @@ export class AudioCueRecorder {
     if (this.initialized && lightningCount > this.lightningCount && lightning)
       this.add({ id: `weather.thunder:${lightning.coreTick}`, tick: world.tick,
         kind: 'weather.thunder', x: lightning.x, z: lightning.z });
-    const raidId = world.raids?.active?.phase === 'assault' ? world.raids.active.id : world.raids?.mechActive?.id??null;
-    if (this.initialized && raidId !== null && raidId !== this.raidId)
-      this.add({ id: `ui.threat:${world.tick}:${raidId}`, tick: world.tick,
-        kind: 'ui.threat', x: 0, z: 0 });
     this.work = work;
     this.projectiles = projectiles;
     this.projectileArrivals = projectileArrivals;
@@ -426,7 +412,6 @@ export class AudioCueRecorder {
     this.hauls = hauls;
     this.pawnStates = pawnStates;
     this.animalStates = animalStates;
-    this.manhunters = manhunters;
     this.firefighting = firefighting;
     this.fireIds = fireIds;
     this.switches = switches;
@@ -435,7 +420,6 @@ export class AudioCueRecorder {
     this.structures = structures;
     this.deconstructionCount = world.deconstructed.count;
     this.lightningCount = lightningCount;
-    this.raidId = raidId;
     this.initialized = true;
   }
 

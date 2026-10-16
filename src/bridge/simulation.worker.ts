@@ -1,4 +1,5 @@
 /// <reference lib="webworker" />
+import { UrgentThreatObserver, validThreatPauseMode, type ThreatPauseMode } from './urgent-threats';
 import {selectedMap} from '../sim/secondary-site-context';
 import {campaignPresentation} from '../sim/secondary-site-presentation';
 import { createScenarioWorld } from '../sim/new-game';
@@ -16,6 +17,8 @@ import { AudioCueRecorder } from './audio-cues';
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 let world: World | undefined;
 let speed = 1;
+let threatPauseMode: ThreatPauseMode = 'major';
+const urgentThreats = new UrgentThreatObserver();
 const clock=new FixedClock();clock.reset(performance.now());
 let lastPublishedTick=-1;
 let stepMs = 0;
@@ -37,14 +40,14 @@ const publishCapturedTick = (checkpoint = false) => {
   if (world) {
     const cues=audioCues.drain();
     const packet = snapshots.encode(visibleWorld(), stepMs, speed, checkpoint);
-    send({...packet, motion:motion.snapshot(),...cues.length?{audioCues:cues}:{}});
+    send({...packet, urgentThreats: urgentThreats.snapshot(), motion:motion.snapshot(),...cues.length?{audioCues:cues}:{}});
     published = { epoch: packet.epoch, revision: packet.revision };
   }
   lastPublishedTick=world?.tick??-1;
   return published;
 };
 const publish = (checkpoint = false) => {
-  if (world) {const visible=visibleWorld();presentationChanges.capture(visible);motion.capture(visible);audioCues.capture(visible);}
+  if (world) {urgentThreats.prepareMaps(world);const visible=visibleWorld();presentationChanges.capture(visible);motion.capture(visible);audioCues.capture(visible);}
   return publishCapturedTick(checkpoint);
 };
 
@@ -63,30 +66,40 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
   try {
     let data: string | undefined;
     if (fault && request.type !== 'init' && request.type !== 'load') throw new Error(fault.reason);
-    if (request.type === 'init') {
+    if (request.type === 'threat-pause-mode') {
+      if (!validThreatPauseMode(request.mode)) throw new Error('Mode de pause invalide.');
+      threatPauseMode = request.mode;
+    } else if (request.type === 'init') {
+      if (request.threatPauseMode !== undefined && !validThreatPauseMode(request.threatPauseMode)) throw new Error('Mode de pause invalide.');
       if (request.size !== 32 && !(MAP_SIZE_PRESETS as readonly number[]).includes(request.size)) throw new Error('Taille de carte invalide.');
       const created=createScenarioWorld(request.seed, request.size, request.scenario,request.site,request.startingParty,request.startingWorld,request.surface);
       world=created;
       adoptedReplacement = true;
+      threatPauseMode = request.threatPauseMode ?? threatPauseMode;
+      urgentThreats.bootstrap(world);
       fault = undefined;
       speed=request.paused?0:1;
       motion.reset();
       audioCues.reset();
       clock.reset(performance.now());
     } else if (request.type === 'load') {
+      if (request.threatPauseMode !== undefined && !validThreatPauseMode(request.threatPauseMode)) throw new Error('Mode de pause invalide.');
       // A cold load needs no temporary colony. Validate completely before the
       // publication, preserving an existing world and clock on refusal.
       let restored: World;
       try { restored = deserializeWorld(request.data); }
       catch { throw new Error('Cette sauvegarde est illisible ou incompatible avec cette version. La colonie actuelle et vos sauvegardes sont conservées.'); }
       world = restored; adoptedReplacement = true; speed = 0; motion.reset();
+      threatPauseMode = request.threatPauseMode ?? threatPauseMode;
+      urgentThreats.bootstrap(world);
       fault = undefined;
       audioCues.reset();
       clock.reset(performance.now());
     } else if (request.type === 'speed') {
       if (![0, 1, 3, 6].includes(request.speed)) throw new Error('Vitesse invalide.');
+      const beforeAdvance = urgentThreats.token();
       if (!advanceSimulation(performance.now())) throw new Error(fault!.reason);
-      speed = request.speed;
+      speed = urgentThreats.requestedSpeed(request.speed, request.options, beforeAdvance);
     } else {
       if (!world) throw new Error('La simulation ne répond pas encore.');
       if(request.type==='order-options') {
@@ -123,10 +136,15 @@ function advanceSimulation(now:number):boolean {
   if (ticks > 0) {
     let simulationMs=0;
     for(let i=0;i<ticks;i++) {
+      urgentThreats.prepareMaps(world);
       const started=performance.now();stepWorld(world);simulationMs+=performance.now()-started;stepMs=simulationMs/(i+1);
+      const paused = urgentThreats.capture(world, threatPauseMode);
+      if (paused) { speed = 0; clock.reset(now); }
       const visible=visibleWorld();motion.capture(visible);
       audioCues.capture(visible);
-      if(presentationChanges.capture(visible))publishCapturedTick();
+      const changed = presentationChanges.capture(visible);
+      if (changed || paused) publishCapturedTick();
+      if (paused) break;
     }
   }
   // Supply confirmed motion every active batch (20 ms), including batches

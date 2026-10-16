@@ -418,7 +418,7 @@ type StructurelessDynamicWorld = Omit<DynamicWorld, 'structures'> & { readonly s
 interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: number[]; growth?:Float64Array }
 interface PileChanges { removed: number[]; upserted: MaterialPile[]; order?: number[] }
 export interface StructureChanges { removed: number[]; upserted: Structure[]; order?: number[] }
-interface SnapshotHeader { motion?:import('../bridge/motion-tracks.ts').PawnTrack[]; audioCues?:import('../bridge/audio-cues.ts').AudioCue[]; type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
+interface SnapshotHeader { urgentThreats?:import('./urgent-threats').UrgentThreatSnapshot; motion?:import('../bridge/motion-tracks.ts').PawnTrack[]; audioCues?:import('../bridge/audio-cues.ts').AudioCue[]; type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
 function validMiningTransport(pawn:Pawn,version:number):boolean {
   return !(version<186&&pawn.skills&&Object.hasOwn(pawn.skills,'mining'))&&validMiningSkill(pawn.skills?.mining,version);
 }

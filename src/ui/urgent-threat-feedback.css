@@ -1,0 +1,5 @@
+.urgent-threat-feedback{pointer-events:auto;text-align:left;margin:6px 0;padding:10px;border:1px solid #d89977;border-radius:7px;background:#342c23;color:#fff0cf;max-height:38vh;overflow:auto}
+.urgent-threat-feedback[hidden]{display:none!important}
+.urgent-threat-feedback strong{font-size:13px}.urgent-threat-feedback p{display:block;margin:6px 0;padding:0;max-width:none;background:none;font-size:12px;text-shadow:none}
+.urgent-threat-feedback button{margin:3px 6px 4px 0;min-height:32px;font:inherit;font-size:12px;max-width:100%}
+.urgent-threat-feedback button:focus-visible{outline:3px solid #dfc784;outline-offset:2px}

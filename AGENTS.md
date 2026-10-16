@@ -4,11 +4,11 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V401, schéma 253 :** [Fret collectif bois/acier](docs/gameplay/group-freight-v401.md) qualifié : sélection/masses, vrais chargements, reprise active et retour/dépôts. Anciens groupes conservés ; V400–V401 publiés ensemble en65bad476, produit5fdec2e6,134 réponses HTTPS exactes.
+**État V402, schéma 253 :** [Avertissement et pause sur nouvelle menace](docs/gameplay/urgent-pause-v402.md) qualifiés : deux cartes, préférence globale, arrêt au tick confirmé et reprise explicite. Publication en préparation ; dernière production V400–V401/65bad476.
 
 **Dernière publication V400–V401 :** [CPU V400](docs/development/sleeping-provenance-v400.md) et [fret V401](docs/gameplay/group-freight-v401.md), produit5fdec2e6/déploiement65bad476,134 réponses HTTPS exactes ; schéma253.
 
-**Ordre courant :** [Parcours Aulnes V397](docs/gameplay/aulnes-multimap-v397.md) clos partiel : aller-retour/travaux/revisite acquis, branche21483 conservée avec Noé/Iris/Rose à terre sur rage animale non remontée hors carte. Alertes corrigées V398, coûts ciblés réduits V399/V400. Fret collectif bois/acier qualifié V401 ; prochaine tranche préparée : avertissement urgent et pause automatique configurable sur nouvelle menace, sur les deux cartes. Rien de cette pause encore adopté ou qualifié ; ne pas enchaîner automatiquement des certificats CPU. Mesures restantes conservées, aucune fluidité générale promise. Ne pas prolonger la campagne ni rejouer un état favorable pour fabriquer un vert. Aulnes publiques V394 inchangées, terrain continu non prévu. Voir [la feuille de route](docs/ROADMAP.md).
+**Ordre courant :** [Parcours Aulnes V397](docs/gameplay/aulnes-multimap-v397.md) clos partiel : aller-retour/travaux/revisite acquis, branche21483 conservée avec Noé/Iris/Rose à terre sur rage animale non remontée hors carte. Alertes corrigées V398, coûts ciblés réduits V399/V400. Fret collectif bois/acier qualifié V401 ; avertissement urgent et pause configurable qualifiés V402. Prochaine piste en revue : étangs peu profonds boréaux/pont standard, sans nouveau terrain encore adopté ; ne pas enchaîner automatiquement des certificats CPU. Mesures restantes conservées, aucune fluidité générale promise. Ne pas prolonger la campagne ni rejouer un état favorable pour fabriquer un vert. Aulnes publiques V394 inchangées, terrain continu non prévu. Voir [la feuille de route](docs/ROADMAP.md).
 
 ## Méthode de livraison
 

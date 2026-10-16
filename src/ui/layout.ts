@@ -1,3 +1,4 @@
+import {THREAT_PAUSE_CHOICES} from './threat-pause-settings';
 import { allowedAreaLayout } from './allowed-area-controls';
 import { SCENARIOS, DEFAULT_SCENARIO } from '../sim/scenario-definitions';
 import type { JobKind, WorkType } from '../sim/types';
@@ -214,6 +215,9 @@ export function gameLayout(): string {
     <section id="menu-panel" class="management-panel menu-panel panel" aria-label="Menu du jeu" hidden>
       <div class="panel-heading"><h2>Elsewhere</h2><button data-close-panel aria-label="Fermer Menu">×</button></div><p id="scenario-current" class="muted"></p><div id="climate-options"></div>
       <div id="save-management"></div>
+      <fieldset class="presentation-settings"><legend>Jeu</legend>
+        <label class="presentation-setting"><span><strong id="threat-pause-label">Pause automatique</strong><small id="threat-pause-description">Nouvelles menaces au foyer ou au second site. La vue actuelle est conservée.</small><small data-threat-pause-status role="status"></small></span><select id="threat-pause-mode" data-threat-pause-mode aria-labelledby="threat-pause-label" aria-describedby="threat-pause-description">${THREAT_PAUSE_CHOICES.map(choice=>`<option value="${choice.value}">${choice.label}</option>`).join('')}</select></label>
+      </fieldset>
       <fieldset class="presentation-settings"><legend>Affichage</legend>
         <label class="presentation-setting"><span><strong id="ui-font-label">Typographie</strong><small id="ui-font-description">Police de toute l’interface. Choix conservé dans ce navigateur.</small></span><select id="ui-font" aria-labelledby="ui-font-label" aria-describedby="ui-font-description">${UI_FONT_CHOICES.map(font=>`<option value="${font.id}">${font.label}</option>`).join('')}</select></label>
           <label class="presentation-setting"><span><strong id="item-label-visibility-label">Quantités et qualités des objets</strong><small id="item-label-visibility-description">Seuil de zoom des chiffres et qualités. 0 : toujours visibles.</small><output id="item-label-visibility-value"></output></span><input id="item-label-visibility" type="range" min="0" max="160" step="1" value="96" aria-labelledby="item-label-visibility-label" aria-describedby="item-label-visibility-description item-label-visibility-value"></label>

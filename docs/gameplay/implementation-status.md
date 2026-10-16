@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V402 qualifié — schéma 253 :** [Avertissement et pause sur nouvelle menace](urgent-pause-v402.md). Préférence globale, deux cartes, arrêt au tick confirmé et reprise explicite ; bootstrap sans réannonce. Publication en préparation ; dernière production V400–V401/65bad476. Les états suivants sont historiques.
+
 **V401 qualifié — schéma 253 :** [Fret collectif bois/acier](group-freight-v401.md). Prises, charge, retour et dépôts physiques avec reprise active exacte ; anciens groupes conservés. V400–V401 publiés ensemble en 65bad476, produit 5fdec2e6, 134 réponses HTTPS exactes. Les états suivants sont historiques.
 
 **V400 qualifiée — schéma 252 :** [Provenance et adoption CPU](../development/sleeping-provenance-v400.md). Lectures répétées réduites sur structures inchangées, règles/sauvegardes conservées ; économie Node bornée, aucun gain FPS établi. Publication groupée suivante ; dernière production V398–V399/8a146d54.

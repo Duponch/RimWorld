@@ -180,7 +180,7 @@ test('thunder follows confirmed lightning, not rain or a loaded storm', () => {
   expect(recorder.drain()).toEqual([]);
 });
 
-test('confirmed raid and colonist death signal once, including across a paused tick', () => {
+test('local recorder leaves raid arrivals to the global receipt and retains colonist death', () => {
   const world = createWorld(855, 32, 32), pawn = world.pawns[0]!;
   const recorder = new AudioCueRecorder();
   recorder.capture(world);
@@ -188,7 +188,7 @@ test('confirmed raid and colonist death signal once, including across a paused t
     departed: [], active: { id: 1, startedAt: world.tick, deadline: world.tick + 1000,
       lossPermille: 500, members: [], lost: [], phase: 'assault' } };
   recorder.capture(world);
-  expect(recorder.drain().map(cue => cue.kind)).toEqual(['ui.threat']);
+  expect(recorder.drain().map(cue => cue.kind)).toEqual([]);
   pawn.state = 'dead';
   recorder.capture(world);
   expect(recorder.drain().map(cue => cue.kind)).toEqual(['ui.colonist-death']);
@@ -323,10 +323,12 @@ test('delivers cues only after accepted snapshot adoption', async () => {
   client.onSnapshot = () => { order.push('snapshot'); };
   client.onAudioCues = (cues, _world, replaced) => { order.push(replaced ? 'reset' : cues[0]!.kind); };
   const packet = encoder.encode(world, 0, 1);
+  packet.urgentThreats = { generation: 1, serial: 0, pauseRevision: 0, urgentHeld: false, rows: [] };
   worker.onmessage!({ data: packet } as MessageEvent<unknown>);
   worker.onmessage!({ data: packet } as MessageEvent<unknown>); // stale revision
   world.tick++;
   const next = encoder.encode(world, 0, 1);
+  next.urgentThreats = { generation: 1, serial: 0, pauseRevision: 0, urgentHeld: false, rows: [] };
   next.audioCues = [{ id: 'test:1', tick: world.tick, kind: 'mining.hit', x: 1, z: 2 }];
   worker.onmessage!({ data: next } as MessageEvent<unknown>);
   expect(order).toEqual(['snapshot', 'reset', 'snapshot', 'mining.hit']);
@@ -352,7 +354,7 @@ test('caps crowded ticks and unpublished cues', () => {
   expect(recorder.drain()).toEqual([]);
 });
 
-test('retains a new threat alert when local contacts fill the cue limit', () => {
+test('local contact cap cannot duplicate the global threat sound', () => {
   const world = createWorld(813, 32, 32);
   const recorder = new AudioCueRecorder();
   recorder.capture(world);
@@ -367,7 +369,7 @@ test('retains a new threat alert when local contacts fill the cue limit', () => 
   recorder.capture(world);
   const cues = recorder.drain();
   expect(cues).toHaveLength(32);
-  expect(cues.filter(cue => cue.kind === 'ui.threat')).toHaveLength(1);
+  expect(cues.filter(cue => cue.kind === 'ui.threat')).toHaveLength(0);
 });
 
 test('uses confirmed shooting cooldown when a short projectile is already gone', () => {

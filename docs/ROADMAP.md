@@ -1,5 +1,7 @@
 # Plan de développement
 
+**16 octobre 2026 — schéma 253.** [Avertissement et pause V402](gameplay/urgent-pause-v402.md) qualifiés : nouvelle menace des deux cartes, préférence confirmée, arrêt réel et reprise explicite. Publication en préparation ; dernière production V400–V401/65bad476.
+
 **16 octobre 2026 — schéma 253.** [Fret collectif V401](gameplay/group-freight-v401.md) qualifié : bois/acier pris au contact et rapportés du second site ; reprise active exacte. Publié avec [CPU V400](development/sleeping-provenance-v400.md) en 65bad476, produit 5fdec2e6, 134 réponses HTTPS exactes.
 
 **Publication antérieure V398–V399.** [Alertes V398](gameplay/remote-danger-alerts-v398.md) et [CPU V399](development/structure-adoption-v399.md) qualifiés ; V398–V399 publiés ensemble en 8a146d54, produit 7ee3a889, 134 réponses HTTPS exactes.
@@ -8,7 +10,7 @@
 
 ## Prochaines corrections issues du parcours réel
 
-[Les Aulnes V397](gameplay/aulnes-multimap-v397.md) : aller-retour, travaux et revisite du même site observés ; garde finale rouge sur trois habitants blessés à terre au foyer. Les alertes rage animale/incapacité sont corrigées V398. V399/V400 réduisent deux lectures de structures inchangées, après profil ciblé et comparaison CPU bornée. Aucun gain FPS annoncé. Le chargement/retour de bois et acier est qualifié V401. Prochaine tranche retenue : avertissement urgent et pause automatique configurable sur nouvelle menace, quelle que soit la carte affichée. Préparation seulement ; aucune pause automatique encore livrée. Pas de succession automatique de caches par domaine. Garder la branche21483 et les Aulnes publiques V394 distinctes ; pas de nouvelle campagne gagnée exigée pour avancer.
+[Les Aulnes V397](gameplay/aulnes-multimap-v397.md) : aller-retour, travaux et revisite du même site observés ; garde finale rouge sur trois habitants blessés à terre au foyer. Les alertes rage animale/incapacité sont corrigées V398. V399/V400 réduisent deux lectures de structures inchangées, après profil ciblé et comparaison CPU bornée. Aucun gain FPS annoncé. Le chargement/retour de bois et acier est qualifié V401. Avertissement urgent et pause configurable sur nouvelle menace qualifiés V402, quelle que soit la carte affichée. Prochaine piste en revue : étangs peu profonds boréaux et pont standard ; aucune eau nouvelle encore implémentée ou qualifiée. Pas de succession automatique de caches par domaine. Garder la branche21483 et les Aulnes publiques V394 distinctes ; pas de nouvelle campagne gagnée exigée pour avancer.
 
 ## Priorité actuelle
 

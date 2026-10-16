@@ -1,3 +1,4 @@
+import { UrgentThreatObserver, UrgentThreatDelivery } from '../src/bridge/urgent-threats';
 import { expect, test } from 'vitest';
 import { AudioCueRecorder } from '../src/bridge/audio-cues.ts';
 import { applyCommand, deserializeWorld, serializeWorld, stepWorld } from '../src/sim/index.ts';
@@ -11,15 +12,20 @@ import type { Cell, World } from '../src/sim/types.ts';
 import { animalCombatCamp } from './scenarios/animal-combat.ts';
 import { startAnimalManhunter } from '../src/sim/animal-manhunter.ts';
 
-test('a real manhunter start sounds once even at the same tick, while reload remains silent',()=>{
+test('a real manhunter start uses one global receipt without local duplicate and reload remains silent',()=>{
   const world=animalCombatCamp(),animal=world.wildlife!.animals[0]!,recorder=new AudioCueRecorder();
+  const observer=new UrgentThreatObserver(),delivery=new UrgentThreatDelivery();observer.bootstrap(world);
   recorder.capture(world);expect(recorder.drain()).toEqual([]);
   expect(startAnimalManhunter(world,animal)).toBe(true);
   recorder.capture(world);
   const cues=recorder.drain().filter(cue=>cue.kind==='ui.threat');
-  expect(cues).toHaveLength(1);expect(cues[0]!.id).toContain(`manhunter:${animal.id}:`);
+  expect(cues).toHaveLength(0); // Global worker receipt is the sole threat channel.
+  expect(observer.capture(world,'any-threat')).toBe(true);
+  expect(delivery.commit(observer.snapshot(),world.tick)).toMatchObject({paused:true,rows:[{kind:'manhunter',actorId:animal.id,delta:1}]});
+  expect(observer.capture(world,'any-threat')).toBe(false);expect(delivery.commit(observer.snapshot(),world.tick)).toBeUndefined();
   recorder.capture(world);expect(recorder.drain()).toEqual([]);
   const resumed=deserializeWorld(serializeWorld(world));
+  const reloadedObserver=new UrgentThreatObserver();reloadedObserver.bootstrap(resumed);expect(reloadedObserver.capture(resumed,'any-threat')).toBe(false);
   recorder.reset();recorder.capture(resumed);expect(recorder.drain()).toEqual([]);
   stepWorld(resumed);recorder.capture(resumed);
   expect(recorder.drain().filter(cue=>cue.kind==='ui.threat')).toEqual([]);

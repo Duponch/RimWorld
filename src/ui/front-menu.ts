@@ -1,3 +1,4 @@
+import {THREAT_PAUSE_CHOICES,type ThreatPauseMode} from './threat-pause-settings';
 import { DEFAULT_MAP_SIZE } from '../sim/map-config';
 import { AUTOSAVE_MINUTES } from './autosave';
 import type { SiteOptions } from '../sim/site';
@@ -37,6 +38,7 @@ export interface FrontMenuSave {
 }
 
 export interface FrontMenuOptions {
+  getThreatPauseMode?:()=>ThreatPauseMode;getThreatPausePending?:()=>boolean;onThreatPauseModeChange?:(mode:ThreatPauseMode)=>Promise<boolean>;
   getAutosaveMinutes?:()=>number;
   onAutosaveMinutesChange?:(minutes:number)=>boolean;
   onExport?:()=>Promise<void>;
@@ -310,6 +312,20 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
         clearError();if(!options.onAutosaveMinutesChange!(Number(select.value)))showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver.');
       });
       setting.append(select,text);card.append(setting);
+    }
+    if(options.getThreatPauseMode&&options.onThreatPauseModeChange){
+      card.append(element('h2','','Jeu'));
+      const setting=element('label','front-relief front-texture-setting'),select=element('select'),text=element('span');select.id='front-threat-pause-mode';select.dataset.threatPauseMode='';
+      for(const choice of THREAT_PAUSE_CHOICES){const option=element('option','',choice.label);option.value=choice.value;select.append(option);}
+      const title=element('strong','','Pause automatique'),description=element('span','','Nouvelles menaces au foyer ou au second site. La vue actuelle est conservée.'),status=element('span');status.dataset.threatPauseStatus='';status.setAttribute('role','status');
+      title.id='front-threat-pause-label';description.id='front-threat-pause-description';select.setAttribute('aria-labelledby',title.id);select.setAttribute('aria-describedby',description.id);
+      select.value=options.getThreatPauseMode();select.disabled=options.getThreatPausePending?.()??false;status.textContent=select.disabled?'Application du choix en attente…':'';
+      select.addEventListener('change',async()=>{const mode=select.value as ThreatPauseMode;select.value=options.getThreatPauseMode!();select.disabled=true;clearError();
+        try{if(!await options.onThreatPauseModeChange!(mode))showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');}
+        catch(cause){showError(cause instanceof Error?cause.message:String(cause));}
+        finally{select.value=options.getThreatPauseMode!();select.disabled=options.getThreatPausePending?.()??false;}
+      });
+      text.append(title,description,status);setting.append(select,text);card.append(setting);
     }
     card.append(element('h2', '', 'Affichage'));
     const setting = element('label', 'front-relief front-texture-setting');

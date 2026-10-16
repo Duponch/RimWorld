@@ -23,7 +23,7 @@ class Transport {
   terminate = vi.fn();
   constructor() { Transport.current = this; }
   postMessage(request: Request) { this.requests.push(request); }
-  deliver(packet: Response) { this.onmessage!({ data: packet } as MessageEvent<Response>); }
+  deliver(packet: Response) { if (packet.type === 'snapshot') packet.urgentThreats = { generation: 1, serial: 0, pauseRevision: 0, urgentHeld: false, rows: [] }; this.onmessage!({ data: packet } as MessageEvent<Response>); }
   checkpoint(epoch: number, revision = 1) {
     this.deliver({ type: 'snapshot', kind: 'checkpoint', epoch, revision, speed: 0, stepMs: 0, world: { tick: epoch } } as Response);
   }

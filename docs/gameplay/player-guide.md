@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Choisir la pause sur nouvelle menace — V402
+
+Dans **Options** à l’accueil ou **Menu** en jeu, choisissez **Jamais**, **Menaces majeures** (défaut) ou **Toutes menaces**. Le choix confirmé vaut pour le foyer et le second site. Jamais garde l’avertissement et son signal ; les raids humains/mécaniques ordinaires sont majeurs. Toutes menaces ajoute la rage animale individuelle. Les autres alertes ne déclenchent pas automatiquement cette pause.
+
+À l’arrivée, le lieu est annoncé sans changer votre vue. **Voir la carte** rejoint la vraie menace. **Fermer** masque l’avertissement ; ni ce bouton ni la fermeture du Menu ne reprennent une pause de menace : utilisez les commandes de temps. Une menace déjà présente au chargement n’est pas annoncée comme nouvelle. Les réglages de son restent applicables. [Périmètre et qualification](urgent-pause-v402.md).
+
 ## Préserver les matières sensibles — V396
 
 Rangez bois, tissu, laine de mufalo, cuirs et composants dans une pièce intérieure couverte sèche ou sur une étagère existante. Un simple auvent extérieur réduit l’usure et arrête le supplément pluie ; un marais nu garde son effet humide, supprimé par un pont fini ou un sol construit. Les filtres et Transport doivent autoriser le vrai rangement. Inspectez la pile pour lire son exposition et son taux moyen : transporter conserve les dommages, et la perte des derniers PV détruit toute la pile. Les étagères ne protègent pas du feu ni de la pourriture. [Périmètre, règles et qualification](deterioration-v396.md).
@@ -951,7 +957,7 @@ Les nouveaux camps ont trois profils composés : Ada Optimiste/Apprentissage rap
 
 Dans le nouveau profil, la première occasion est à **J5,4 écoulés**. Les suivantes suivent des fenêtres ouvertes à partir de **J11** : 4,6 jours actifs, six jours de repos, une ou deux occasions espacées d'au moins 1,9 jour. Une occasion impossible ou occupée par un groupe actif n'est pas reportée. La fin d'un assaut ne décale pas les fenêtres. Même après J20, les grandes menaces restent limitées aux raids ; les visiteurs et passants V88 ont des calendriers distincts. Autres menaces, budget selon richesse et adaptation restent absents. Le premier groupe réellement créé est un assaillant sans arme ; les suivants comportent deux personnes dont une avec revolver. Cette composition reste locale et partielle.
 
-Cliquez sur la lettre **Raid**, puis **Voir les assaillants**. Mobilisez les défenseurs depuis leurs portraits et placez-les ; leurs tirs libres et la mêlée restent disponibles. Des murs fermés peuvent être frappés puis détruits. Il n'y a pas encore de pause automatique à l'alerte. Les parties historiques gardent leur premier raid entre 3,5 et 4 jours, puis six à huit jours après une issue.
+Cliquez sur la lettre **Raid**, puis **Voir les assaillants**. Mobilisez les défenseurs depuis leurs portraits et placez-les ; leurs tirs libres et la mêlée restent disponibles. Des murs fermés peuvent être frappés puis détruits. Une nouvelle arrivée met en pause selon le réglage global de menace ; le défaut Menaces majeures couvre ces raids. Les parties historiques gardent leur premier raid entre 3,5 et 4 jours, puis six à huit jours après une issue.
 
 Après **Assaut terminé**, démobilisez, contrôlez Santé, soignez les blessés et entretenez les murs/portes dans la zone de foyer. Les fuyards doivent atteindre le bord. Un ennemi à terre peut mourir ou se relever ; V86 permet sa capture dans les conditions décrites plus bas. Le transport des corps et les sépultures V89 sont décrits dans la section « Transporter et inhumer les morts ». Le bilan est celui de la fin de l’assaut. Dans une ancienne sauvegarde, **Activer les raids du camp** démarre ce calendrier sans changer la carte. [Contrat et limites](../development/raids.md).
 

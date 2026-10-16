@@ -1,3 +1,6 @@
+import type {ThreatPauseMode,ThreatPauseToken,UrgentThreatReceipt} from './bridge/urgent-threats';
+import {THREAT_PAUSE_PREFERENCE_KEY,createThreatPausePreference,readThreatPausePreference,createDeferredResumeGuard} from './ui/threat-pause-settings';
+import {createUrgentThreatFeedback,type UrgentThreatTarget} from './ui/urgent-threat-feedback';
 import { createAllowedAreaControls } from './ui/allowed-area-controls';
 import './ui/allowed-area-controls.css';
 import { createFirstDayGuide } from './ui/first-day-guide';
@@ -286,6 +289,7 @@ const client = (() => {
       receiveMainSnapshot(world, cost, speed, replaced, motion);
     }
     protected override deliverAudioCues(cues: readonly AudioCue[]): void { receiveMainAudioCues(cues); }
+    protected override deliverUrgentThreats(receipt:UrgentThreatReceipt):void { receiveMainUrgentThreats(receipt); }
   }
   const native = new MainSimulationClient();
   let onError: SimulationClient['onError'] = () => {};
@@ -301,6 +305,8 @@ const client = (() => {
     command: (...args: Parameters<SimulationClient['command']>) => native.command(...args),
     orderOptions: (...args: Parameters<SimulationClient['orderOptions']>) => native.orderOptions(...args),
     setSpeed: (...args: Parameters<SimulationClient['setSpeed']>) => native.setSpeed(...args),
+    setThreatPauseMode: (mode:ThreatPauseMode) => native.setThreatPauseMode(mode),
+    getThreatPauseToken: () => native.getThreatPauseToken(),
     save: () => native.save(),
     load: (...args: Parameters<SimulationClient['load']>) => native.load(...args),
     stop: (...args: Parameters<SimulationClient['stop']>) => native.stop(...args),
@@ -379,8 +385,9 @@ let currentTool: Tool = 'select';
 let currentPanel: Panel = null;
 const scoutUI=createScoutUI(el('scout-content'),c=>void attempt(()=>client.command(c)));
 const commercialUI=createCommercialUI(el('commercial-content'),async command=>{
+  const resumeRevision=deferredResumeGuard.capture();
   const result=await client.command(command);
-  if(['commercial-start','commercial-return','commercial-unload'].includes(command.type)&&currentSpeed===0)await client.setSpeed(1);
+  if(['commercial-start','commercial-return','commercial-unload'].includes(command.type)&&currentSpeed===0&&deferredResumeGuard.allows(resumeRevision))await client.setSpeed(1);
   return result;
 });
 type WorldTab='group'|'individual';
@@ -420,6 +427,7 @@ let lastCommercialArrivalKey:string|undefined;
 let currentCategory: ArchitectCategory = 'structure';
 let placementOrientation: Orientation = 0;
 let currentSpeed = 1, lastSpeed = 1, stepMs = 0;
+const deferredResumeGuard=createDeferredResumeGuard();
 let wallCutaway = false, foliageVisible = true, replacingWorld = false;
 let simulationStopped = false, graphicsFault = false, graphicsRecovering = false;
 let presentationPreparation: Promise<void> | undefined;
@@ -484,6 +492,16 @@ try {
   const storedMusicVolume = Number(localStorage.getItem(MUSIC_VOLUME_PREFERENCE_KEY));
   if (localStorage.getItem(MUSIC_VOLUME_PREFERENCE_KEY) !== null && Number.isFinite(storedMusicVolume)) musicVolume = Math.max(0, Math.min(1, storedMusicVolume));
 } catch { /* The defaults remain active when browser storage is unavailable. */ }
+const threatPausePreference=createThreatPausePreference({
+ initial:readThreatPausePreference(()=>localStorage.getItem(THREAT_PAUSE_PREFERENCE_KEY)),
+ confirm:mode=>client.setThreatPauseMode(mode),
+ store:mode=>{try{localStorage.setItem(THREAT_PAUSE_PREFERENCE_KEY,mode);return true;}catch{return false;}},
+ changed:()=>syncThreatPauseControls(),
+});
+function syncThreatPauseControls():void {
+ for(const select of document.querySelectorAll<HTMLSelectElement>('[data-threat-pause-mode]')){select.value=threatPausePreference.mode;select.disabled=threatPausePreference.pending;}
+ for(const status of document.querySelectorAll<HTMLElement>('[data-threat-pause-status]'))status.textContent=threatPausePreference.pending?'Application du choix en attente…':'';
+}
 autosaveScheduler.setMinutes(autosaveIntervalMinutes);
 function setAutosaveMinutes(minutes:number):boolean {
   autosaveIntervalMinutes=autosaveMinutes(minutes);
@@ -716,6 +734,7 @@ helpDialog.addEventListener('close',()=>{
 document.querySelector('#app')!.append(el('fps-counter'));
 const frontMenu = createFrontMenu(frontHost, {
   onHelp:openHelp,
+  getThreatPauseMode:()=>threatPausePreference.mode,getThreatPausePending:()=>threatPausePreference.pending,onThreatPauseModeChange:mode=>threatPausePreference.set(mode),
   getAutosaveMinutes:()=>autosaveIntervalMinutes,onAutosaveMinutesChange:setAutosaveMinutes,
   onExport:exportCurrentColony,
   getShadowSettings:()=>({...shadowSettings}),onShadowSettingsChange:setShadowSettings,
@@ -763,15 +782,16 @@ const frontMenu = createFrontMenu(frontHost, {
     if (simulationStopped || waitingRequests.size > 0) throw new Error('Chargez une colonie validée pour reprendre.');
     frontMenu.hide(); syncStorageButtons();
     const speed = menuResumeSpeed ?? 0; menuResumeSpeed = undefined;
-    await changeSpeed(speed);
+    await changeSpeed(deferredResumeGuard.held?0:speed);
   },
 });
+void attempt(()=>threatPausePreference.initialize());
 async function pauseForMenu(): Promise<void> {
   renderer?.cancelDesignation(); orderMenu.close();
   await menuTransition;
   if (snapshot && menuResumeSpeed === undefined) {
-    const speed = currentSpeed;
-    await client.setSpeed(0); menuResumeSpeed = speed;
+    const speed = currentSpeed,resumeRevision=deferredResumeGuard.capture();
+    await client.setSpeed(0); menuResumeSpeed = deferredResumeGuard.allows(resumeRevision)?speed:0;
   }
 }
 async function openFront(page: 'home' | 'create' | 'load'): Promise<void> {
@@ -789,12 +809,13 @@ async function switchPanel(panel: Panel, preserveTool = false): Promise<void> {
   setPanel(panel, preserveTool);
 }
 async function replaceColony(action: () => Promise<void>): Promise<void> {
+  await threatPausePreference.whenSettled();
   client.restartForReplacement();
   latestFoodReadability=undefined;
   lastCommercialArrivalKey=undefined;
   replacingWorld = true; syncStorageButtons();
   try {
-    await action(); menuResumeSpeed = undefined; updateIncident();
+    await action(); menuResumeSpeed = undefined;deferredResumeGuard.cancel();deferredResumeGuard.confirm(false);urgentThreatUI.reset(); updateIncident();
     if (simulationStopped) throw new Error('La simulation s’est arrêtée pendant la préparation de l’affichage. Chargez une colonie validée pour reprendre.');
     statusAlerts.reset();raidUI.reset();heatwaveUI.reset();flashstormUI.reset();weatherConditionUI.reset();tradeUI.reset();
     guideAfterStartingArrival=false;learningReadout.open=false;firstDayGuide.reset();startingArrivalUI.reset();
@@ -860,7 +881,7 @@ function setPanel(panel: Panel, preserveTool = false) {
   // Every exit path (tabs, map, portraits and shortcuts) releases this pause.
   if (currentPanel === 'menu' && panel !== 'menu' && menuResumeSpeed !== undefined && !replacingWorld && !frontMenu.isOpen()) {
     const speed = menuResumeSpeed; menuResumeSpeed = undefined;
-    menuTransition = client.setSpeed(speed);
+    menuTransition = client.setSpeed(deferredResumeGuard.held?0:speed);
     void attempt(() => menuTransition);
   }
   orderMenu.close();
@@ -1584,23 +1605,37 @@ function focusNotification(target:NotificationTarget):void {
   renderer?.focusCell(target.cell);
 }
 let campaignFocusBusy=false,campaignPresentationEpoch=0;
+async function viewUrgentThreat(target:UrgentThreatTarget):Promise<string|undefined> {
+ deferredResumeGuard.cancel();menuResumeSpeed=undefined;
+ if(campaignFocusBusy||replacingWorld||frontMenu.isOpen())return 'La carte attend la fin de l’opération en cours.';
+ const before=snapshot?.campaignMap;
+ if(target.site==='secondary'&&!before)return 'Le second site n’est plus disponible.';
+ campaignFocusBusy=true;
+ try{
+  if(before&&before.active!==target.site){
+   const origin={tile:before.secondaryTile,createdAt:before.createdAt,epoch:campaignPresentationEpoch};
+   await client.command({type:'secondary-view',site:target.site});
+   const map=snapshot?.campaignMap;
+   if(!map||map.active!==target.site||map.secondaryTile!==origin.tile||map.createdAt!==origin.createdAt||campaignPresentationEpoch<=origin.epoch)return 'La carte demandée n’a pas encore été adoptée.';
+  }
+  const next=snapshot;if(!next)return 'La carte n’est pas disponible.';
+  const id=target.actorId;if(id===undefined)return 'Cette arrivée ne possède plus de cible à montrer.';
+  const person=next.pawns.find(p=>p.id===id);
+  if(!person&&!next.mechanoids?.some(m=>m.id===id)&&!next.wildlife?.animals.some(a=>a.id===id))return 'La dernière cible de cette arrivée n’est plus présente sur la carte.';
+  focusNotification({key:`actor:${id}`,kind:'actor',id});
+  if(person?.state==='downed')document.querySelector<HTMLButtonElement>('[data-colonist-tab="health"]')?.click();
+  return undefined;
+ }finally{campaignFocusBusy=false;}
+}
+const urgentThreatUI=createUrgentThreatFeedback(el('alerts'),{view:viewUrgentThreat});
+function receiveMainUrgentThreats(receipt:UrgentThreatReceipt):void {
+ if(receipt.paused){deferredResumeGuard.confirm(true);menuResumeSpeed=undefined;}
+ urgentThreatUI.show(receipt);
+ if(soundEnabled)audio.playInterface('ui.threat');
+}
 const statusAlerts=createStatusAlerts(el('status-alerts'),{
   'inspect-threat':el<HTMLButtonElement>('inspect-threat'),'inspect-fire':el<HTMLButtonElement>('inspect-fire'),'inspect-blight':el<HTMLButtonElement>('inspect-blight'),
-},{focus:focusNotification,campaign:target=>{
-  const before=snapshot?.campaignMap;if(!before||before.active===target.site||campaignFocusBusy||replacingWorld||frontMenu.isOpen())return;
-  const origin={tile:before.secondaryTile,createdAt:before.createdAt,epoch:campaignPresentationEpoch};campaignFocusBusy=true;
-  void attempt(async()=>{
-    await client.command({type:'secondary-view',site:target.site});
-    const next=snapshot,map=next?.campaignMap;
-    // The worker's replacement snapshot must be adopted and rendered before
-    // resolving this real ID. Never focus an old remote cell or actor proxy.
-    if(!next||!map||map.active!==target.site||map.secondaryTile!==origin.tile||map.createdAt!==origin.createdAt||campaignPresentationEpoch<=origin.epoch)return;
-    const person=next.pawns.find(p=>p.id===target.actorId);
-    if(!person&&!next.mechanoids?.some(m=>m.id===target.actorId)&&!next.wildlife?.animals.some(a=>a.id===target.actorId))return;
-    focusNotification({key:`actor:${target.actorId}`,kind:'actor',id:target.actorId});
-    if(person?.state==='downed')document.querySelector<HTMLButtonElement>('[data-colonist-tab="health"]')?.click();
-  }).finally(()=>{campaignFocusBusy=false;});
-},context:context=>{
+},{focus:focusNotification,campaign:target=>{void attempt(async()=>{const reason=await viewUrgentThreat(target);if(reason)throw Error(reason);});},context:context=>{
   if(context.tool){setTool(context.tool);return;}
   if(context.worldTab)worldTab=context.worldTab;
   void attempt(async()=>{await switchPanel(context.panel);if(context.category)setCategory(context.category);});
@@ -1633,8 +1668,9 @@ const weatherConditionUI=createWeatherConditionUI(focusNotification);
 const shortCircuitUI=createShortCircuitUI(focusNotification);
 const economyUI=createColonyEconomyUI(el('colony-economy'),command=>client.command(command));
 const raidUI=createRaidUI(command=>client.command(command),focusNotification);
-const orbitalUI=createOrbitalTradeUI(command=>client.command(command),()=>client.setSpeed(0),id=>{const console=snapshot?.structures.find(s=>s.id===id);if(console)renderer?.focusCell(console);},async()=>{if(currentSpeed===0)await client.setSpeed(1);});
-const tradeUI=createTradeUI(command=>client.command(command),()=>client.setSpeed(0),id=>selectPawn(id),async()=>{if(currentSpeed===0)await client.setSpeed(1);});
+let orbitalResumeRevision=0,tradeResumeRevision=0;
+const orbitalUI=createOrbitalTradeUI(command=>{orbitalResumeRevision=deferredResumeGuard.capture();return client.command(command);},()=>client.setSpeed(0),id=>{const console=snapshot?.structures.find(s=>s.id===id);if(console)renderer?.focusCell(console);},async()=>{if(currentSpeed===0&&deferredResumeGuard.allows(orbitalResumeRevision))await client.setSpeed(1);});
+const tradeUI=createTradeUI(command=>{tradeResumeRevision=deferredResumeGuard.capture();return client.command(command);},()=>client.setSpeed(0),id=>selectPawn(id),async()=>{if(currentSpeed===0&&deferredResumeGuard.allows(tradeResumeRevision))await client.setSpeed(1);});
 const arrivalUI=createArrivalUI(command=>client.command(command));
 const questUI=createQuestUI(command=>client.command(command));
 function syncStorageButtons() {
@@ -1701,7 +1737,7 @@ async function createWorld() {
     el('new-world-error').hidden=false;
   }
 }
-async function changeSpeed(speed: number) { if (currentPanel==='menu'||graphicsFault||simulationStopped||waitingRequests.size>0) return; if (speed > 0) lastSpeed = speed; await client.setSpeed(speed); }
+async function changeSpeed(speed: number,token?:ThreatPauseToken) { if (currentPanel==='menu'||graphicsFault||simulationStopped||waitingRequests.size>0) return; if (speed > 0) lastSpeed = speed; await client.setSpeed(speed,token?{explicit:true,token}:undefined); }
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool]')) button.onclick = () => setTool(button.dataset.tool as Tool);
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-category]')) button.onclick = () => { setCategory(button.dataset.category as ArchitectCategory); applyTool('select'); };
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]:not(:disabled)')) button.onclick = () => { const panel = button.dataset.panel as Panel; void attempt(() => switchPanel(currentPanel === panel ? null : panel)); };
@@ -1714,7 +1750,7 @@ for (const button of document.querySelectorAll<HTMLButtonElement>('[data-close-p
   const preserveTool = currentPanel === 'architect' && currentTool !== 'select';
   void attempt(() => switchPanel(null, preserveTool));
 };
-for (const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]')) button.onclick = () => { void attempt(() => changeSpeed(Number(button.dataset.speed))); };
+for (const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]')) button.onclick = () => { const token=client.getThreatPauseToken(),speed=Number(button.dataset.speed);void attempt(() => changeSpeed(speed,token)); };
 el('save').onclick = () => { void attempt(save); }; el('load').onclick = () => { void attempt(() => load()); };
 el('restore-previous').onclick = () => { void attempt(() => load(PREVIOUS_KEY)); };
 el('browse-saves').onclick = () => { void attempt(() => openFront('load')); };
@@ -1743,6 +1779,8 @@ for (const { key, slider } of lightingSliders) slider.oninput = () => {
 el<HTMLButtonElement>('lighting-reset').onclick = () => {
   if (!setLightingSettings({ ...DEFAULT_LIGHTING_SETTINGS })) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true);
 };
+const threatPauseSelect=el<HTMLSelectElement>('threat-pause-mode');syncThreatPauseControls();
+threatPauseSelect.onchange=()=>{const mode=threatPauseSelect.value as ThreatPauseMode;void attempt(async()=>{if(!await threatPausePreference.set(mode))notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.',true);});};
 const soundToggle = el<HTMLInputElement>('sound-enabled');
 const soundVolumeSlider = el<HTMLInputElement>('sound-volume');
 soundToggle.checked = soundEnabled;
@@ -1820,11 +1858,11 @@ document.addEventListener('keydown', event => {
   if (event.target instanceof HTMLElement && (event.target.matches('input, select, textarea') || event.target.isContentEditable)) return;
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); void attempt(save); return; }
   if (event.ctrlKey || event.metaKey || event.altKey) return;
-  if (event.code === 'Space') { event.preventDefault(); void attempt(() => changeSpeed(currentSpeed === 0 ? lastSpeed : 0)); return; }
+  if (event.code === 'Space') { event.preventDefault();const token=client.getThreatPauseToken(),speed=currentSpeed===0?lastSpeed:0;void attempt(() => changeSpeed(speed,token)); return; }
   if (event.key === 'Escape') { event.preventDefault(); if(shootingControls.active){shootingControls.cancel();renderState();return;} if (orderMenu.close() || renderer?.cancelDesignation()) return; void attempt(() => switchPanel(null)); clearSelection(); return; }
   if (event.key === 'Tab' || event.key === 'F1' || event.key === 'F2' || event.key === 'F3') { event.preventDefault(); const panel = event.key === 'Tab' ? 'architect' : event.key === 'F1' ? 'work' : event.key === 'F2' ? 'schedule' : 'assign'; setPanel(currentPanel === panel ? null : panel); return; }
   const speeds: Record<string, number> = { '1': 1, '2': 3, '3': 6 };
-  if (event.key in speeds) { void attempt(() => changeSpeed(speeds[event.key])); return; }
+  if (event.key in speeds) { const token=client.getThreatPauseToken(),speed=speeds[event.key];void attempt(() => changeSpeed(speed,token)); return; }
   if(event.key.toLowerCase()==='r'&&selection.ids.size){event.preventDefault();if(!event.repeat)toggleDraft(snapshot?.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner)??[],c=>void attempt(async()=>{await client.command(c);renderState();}));return;}
   const shortcuts: Record<string, Tool> = { m:'mine', c: 'chop', r: 'harvest', b: 'wall', l: 'bed', x: 'cancel' };
   const key = event.key.toLowerCase(); if (key in shortcuts) setTool(shortcuts[key]);
@@ -1851,6 +1889,7 @@ function receiveMainSnapshot(world: World, cost: number, speed: number, replaced
   if(replaced)campaignPresentationEpoch++;
   if (replaced) {audio.reset();lastAudioCamera=undefined;lastAudioSourceFocus={x:Infinity,z:Infinity};lastAudioSourceHeight=NaN;}
   const speedChanged=currentSpeed!==speed;
+  if(speed>0)deferredResumeGuard.confirm(false);
   const role=(p:Pawn|undefined)=>p?p.prisoner?'prisoner':isColonist(p)?'colonist':'other':'absent';
   const roleChanged=selectedPawn!==undefined&&role(snapshot?.pawns.find(p=>p.id===selectedPawn))!==role(world.pawns.find(p=>p.id===selectedPawn));
   let zoneAnchorChanged=false;
