@@ -1,5 +1,7 @@
 # Plan de développement
 
+**Dernière priorité humaine du16octobre : une colonie.** Terminer le lot engagé de fondations, puis concentrer génération/monde/voyages sur une seule implantation. Conserver le réglage1–5 déjà livré V407 avec défaut1, mais différer tout approfondissement multicolonie et ses nouveaux bancs. Les cartes temporaires et voyages d'une colonie restent distincts de plusieurs colonies permanentes ; les acquis et sauvegardes existants sont préservés.
+
 **16 octobre 2026 — schéma 255, fondations à terminer.** [Registre cartes/caravanes V407](gameplay/world-maps-v407.md) qualifié ; aucun achèvement global ni nouvelle publication acquis. Ordre humain : [planète, génération et multicarte conformes Core](development/world-foundations.md) avant tout autre contenu ; auditV406 point de départ. V405 en attente, V404 poussé non publié ; dernière productionV403/e24c5731. Arrêt et rapport final après achèvement démontré.
 
 **16 octobre 2026 — schéma 253.** [Fret collectif V401](gameplay/group-freight-v401.md) qualifié : bois/acier pris au contact et rapportés du second site ; reprise active exacte. Publié avec [CPU V400](development/sleeping-provenance-v400.md) en 65bad476, produit 5fdec2e6, 134 réponses HTTPS exactes.
