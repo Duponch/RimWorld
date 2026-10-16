@@ -1,6 +1,6 @@
 # Avertissement de menace et pause automatique — V402
 
-Qualifié le 16 octobre 2026. Schéma World 253 inchangé ; aucune menace, progression ni ressource ajoutée aux sauvegardes. Publication en préparation ; dernière production V400–V401/65bad476.
+Qualifié le 16 octobre 2026. Schéma World 253 inchangé ; aucune menace, progression ni ressource ajoutée aux sauvegardes. V402 publié en b5b83f4a, produit 5a60e95d, 134 réponses HTTPS200/MIME/octets exacts.
 
 Une menace qui arrive au foyer ou au second site est annoncée avec son lieu, quelle que soit la carte affichée. La pause automatique est une préférence globale du navigateur : **Jamais**, **Menaces majeures** (défaut) ou **Toutes menaces**. Jamais conserve l’avertissement ; la vue ne change pas seule. Voir rejoint la vraie carte et cible après adoption, comme V398 ; Fermer ne reprend pas le temps et ne supprime pas la menace.
 
@@ -23,3 +23,5 @@ Natif02 Chrome/WebGPU PASS38,204s sur deux cartes32² préparées, calendriers f
 Sources, tests, pilote et configuration : freeze04 de3487 chemins exacts avant/après navigateur sous tmp/urgent-pause-v402. Le reste du corpus public inchangé et la campagne Aulnes ne sont pas rejoués : aucun format World, calendrier, producteur ou RNG n’a changé. Aucun banc CPU/GPU/FPS ni campagne longue nécessaire à cette tranche ; détection bornée aux calendriers actifs et aux épisodes d’animaux des deux cartes après chaque vrai tick, pas de scan de grille par image. Aucun gain de performance revendiqué.
 
 Typage livraison toutes sources et tests concernés PASS15,564s après seul changement du helper de préparation ; une commande de lanceur absente a échoué avant typage, puis l’outil TypeScript épinglé du projet a été employé. Build Pages PASS2,226s et documentation PASS1,849s. Aucun rejeu des 78 cas ou de la présentation après cette seule correction du témoin. Gel final freeze06 :3489 chemins exacts.
+
+Publication V402 confirmée : produit5a60e95daf26c545873d4cb01d347fc7c0c1ab3f commité/poussé ; paquet PASS1,713s,531fichiers/126428449octets,66fiches/69chemins publics exacts. Déploiement unique b5b83f4a PASS14,350s puis134réponses HTTPS200/MIME/octets exacts PASS11,594s sur le déploiement et le domaine stable. Rapports tmp/elsewhere-pages/v402-package-NE7RO2 et v402-http-iu4Ejx ; aucune archive ni Aulnes publique modifiée. Clôture documentaire sans nouveau build ni déploiement. Gel final freeze07 :3489 chemins exacts.

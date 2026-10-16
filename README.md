@@ -1,6 +1,6 @@
 # Elsewhere
 
-**V402 qualifié — schéma 253 :** [Avertissement et pause sur nouvelle menace](docs/gameplay/urgent-pause-v402.md). Préférence globale, deux cartes, arrêt au tick confirmé et reprise explicite ; bootstrap sans réannonce. Publication en préparation ; dernière production V400–V401/65bad476. Les états suivants sont historiques.
+**V402 qualifié — schéma 253 :** [Avertissement et pause sur nouvelle menace](docs/gameplay/urgent-pause-v402.md). Préférence globale, deux cartes, arrêt au tick confirmé et reprise explicite ; bootstrap sans réannonce. V402 publié en b5b83f4a, produit 5a60e95d, 134 réponses HTTPS200/MIME/octets exacts. Les états suivants sont historiques.
 
 **V401 qualifié — schéma 253 :** [Fret collectif bois/acier](docs/gameplay/group-freight-v401.md). Prises, charge, retour et dépôts physiques avec reprise active exacte ; anciens groupes conservés. V400–V401 publiés ensemble en 65bad476, produit 5fdec2e6, 134 réponses HTTPS exactes. Les états suivants sont historiques.
 
