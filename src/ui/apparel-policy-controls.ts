@@ -1,4 +1,4 @@
-import {createApparelPolicyEditor,apparelPolicyEditorLayout,type ApparelPolicyUpdate} from './apparel-policy-editor';
+import {createApparelPolicyEditor,apparelPolicyEditorLayout,type ApparelPolicyEditorCommand} from './apparel-policy-editor';
 import { isColonist } from '../sim/affiliation';
 import { apparelLabel } from '../sim/apparel-rules';
 import type { World } from '../sim/types';
@@ -7,7 +7,7 @@ import type { World } from '../sim/types';
  * union without depending on edit order between the two integrations. */
 export type ApparelPolicyAssignment={type:'apparel-policy-assign';pawnId:number;policyId:number;automatic:boolean};
 export type ApparelClearForced={type:'apparel-clear-forced';pawnId:number};
-export type ApparelAssignmentCommand=ApparelPolicyAssignment|ApparelClearForced|ApparelPolicyUpdate;
+export type ApparelAssignmentCommand=ApparelPolicyAssignment|ApparelClearForced|ApparelPolicyEditorCommand;
 
 /** One pass at confirmed snapshot adoption, never an inventory/task inference. */
 export function forcedApparelByPawn(world:World):Map<number,string[]> {

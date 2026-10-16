@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Copier ou renommer une tenue — V404
+
+Dans **Assignations → filtres de tenue**, sélectionnez une politique. Appliquez ou annulez d’abord tout brouillon de filtre. **Copier** demande un nom puis crée une politique indépendante à partir des critères confirmés ; affectez-la ensuite aux personnes voulues. **Renommer** conserve la politique et ses utilisateurs. **Annuler** avant confirmation ne change rien.
+
+Les noms ne doivent pas être vides ; deux politiques peuvent avoir le même nom. Copier ou renommer ne touche ni Auto, ni les habits forcés, ni un geste engagé. Le changement confirmé est partagé avec le second site. Suppression et changement du défaut restent absents. [Règles et qualification](apparel-policy-copy-v404.md).
+
 ## Traverser un étang peu profond — V403
 
 Les nouveaux sites boréaux peuvent contenir de l’**Eau peu profonde** : le survol la distingue de l’ancienne **Eau infranchissable**. Elle se traverse lentement, sans offrir de support de construction ou de culture. Dans **Architecte → Sols**, posez un **Pont en bois**, apportez12bois par case et laissez le chantier se terminer avant d’y bâtir un ouvrage léger ou de profiter du passage rapide.
@@ -34,7 +40,7 @@ Repas déjà engagé, pâte non évaluée et personnes hors de cette lecture son
 
 Dans **Assignations**, ouvrez les filtres d’une politique de tenue existante. Elle est partagée avec les autres personnes affectées : vérifiez les utilisateurs indiqués, puis choisissez les vêtements, matières, qualités et PV autorisés. **Appliquer** confirme le brouillon ; **Annuler** l’abandonne sans modifier la politique.
 
-Avec **Auto** actif, le colon libre relira ces critères à sa prochaine vérification et effectuera les retraits/ports nécessaires au contact. Appliquer ne dépose rien, ne change ni Auto ni le port forcé et n’annule pas les gestes déjà engagés. Un ordre manuel Porter reste forcé à son achèvement ; utilisez ensuite Effacer le port forcé si voulu. Création/copie/renommage/suppression restent absents. [Règles et limites](apparel-policy-edit-v392.md).
+Avec **Auto** actif, le colon libre relira ces critères à sa prochaine vérification et effectuera les retraits/ports nécessaires au contact. Appliquer ne dépose rien, ne change ni Auto ni le port forcé et n’annule pas les gestes déjà engagés. Un ordre manuel Porter reste forcé à son achèvement ; utilisez ensuite Effacer le port forcé si voulu. Copie et renommage sont disponibles depuis V404 ; création séparée, suppression et changement du défaut restent absents. [Règles et limites](apparel-policy-edit-v392.md).
 
 ## Préparer les provisions du groupe — V391
 
@@ -1007,7 +1013,7 @@ Le gilet protège le torse/cou, pas les épaules ni les bras ; il ralentit lég�
 
 V90 rend cette boucle plus large : tenue tribale, chemise, pantalon, cache-poussière et parka se fabriquent en tissu ou cuir léger. Chemise et pantalon occupent des zones différentes ; la tenue tribale les remplace, tandis que parka ou cache-poussière se porte par-dessus avec le gilet intermédiaire. Matière, qualité et état modifient protection, isolation, apparence et valeur. [Protection existante](../development/armor.md), [renouvellement V90](../development/apparel-renewal.md).
 
-Dans **Assignations**, choisissez **Tout vêtement** ou **Tenue entretenue**, puis activez le remplacement automatique pour le colon. La seconde politique retire les pièces à 51 % de PV ou moins et cherche un meilleur vêtement dans une réserve accessible. Le colon marche, réserve, retire et enfile réellement les pièces ; il n'échange rien à distance. Un vêtement mis par un ordre manuel **Porter** est marqué **forcé** dans **Matériel** : la politique ne peut ni le retirer ni le remplacer. Dans **Assignations**, le bouton **Effacer le port forcé** de ce colon libère tous ses habits actuellement portés. Ils restent immédiatement sur lui ; si **Auto** est activé, la politique est réévaluée puis organise les vrais retraits et ports nécessaires. Si Auto est désactivé, il le reste. L'action n'annule aucune tâche et un ordre manuel Porter encore en cours marquera sa pièce forcée à son achèvement réel. [Détails V388](clear-forced-apparel-v388.md). Les filtres d’une politique existante sont éditables depuis V392 ; création, copie, renommage et suppression restent absents.
+Dans **Assignations**, choisissez **Tout vêtement** ou **Tenue entretenue**, puis activez le remplacement automatique pour le colon. La seconde politique retire les pièces à 51 % de PV ou moins et cherche un meilleur vêtement dans une réserve accessible. Le colon marche, réserve, retire et enfile réellement les pièces ; il n'échange rien à distance. Un vêtement mis par un ordre manuel **Porter** est marqué **forcé** dans **Matériel** : la politique ne peut ni le retirer ni le remplacer. Dans **Assignations**, le bouton **Effacer le port forcé** de ce colon libère tous ses habits actuellement portés. Ils restent immédiatement sur lui ; si **Auto** est activé, la politique est réévaluée puis organise les vrais retraits et ports nécessaires. Si Auto est désactivé, il le reste. L'action n'annule aucune tâche et un ordre manuel Porter encore en cours marquera sa pièce forcée à son achèvement réel. [Détails V388](clear-forced-apparel-v388.md). Les filtres d’une politique existante sont éditables depuis V392 ; copie et renommage sont disponibles V404 ; création séparée, suppression et changement du défaut restent absents.
 
 Les vêtements portés subissent aussi un tirage d'usure chaque jour. Ils peuvent finir détruits à zéro PV sans rendre leur matière. Conservez donc des pièces de rechange dans une réserve autorisant **Vêtements**. Le tailleur manuel travaille à demi-vitesse ; l'établi électrique consomme 120 W, travaille à pleine vitesse alimenté et à demi-vitesse hors tension. **Vêtements complexes** ouvre les deux tailleurs et les recettes avancées ; l'emplacement gratuit reste limité à la tenue tribale.
 

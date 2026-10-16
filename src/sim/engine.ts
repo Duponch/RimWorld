@@ -144,7 +144,7 @@ import { applyShootingCommand } from './shooting.ts';
 import { expireStaggers } from './stagger.ts';
 import { collapseFromExhaustion,processDraftSleep } from './needs.ts';
 import { applyEquipment,processEquipment,reconcileEquipmentTasks,recoverDroppedWeapon } from './equipment.ts';
-import { applyApparelPolicyUpdate } from './apparel-policy-edit.ts';
+import { applyApparelPolicyUpdate,applyApparelPolicyName } from './apparel-policy-edit.ts';
 import { advanceWorldApparelWear,applyApparelPolicyAssignment,applyClearForcedApparel,considerApparelPolicy } from './apparel-system.ts';
 import { dropIncapacitatedEquipment,reconcileWeaponMemory } from './equipment-state.ts';
 import { applyFeeding,processFeeding,reconcileFeeding } from './feeding.ts';
@@ -473,6 +473,7 @@ function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
   // Filter editing changes campaign metadata only. Ordinary due checks own
   // future clothing actions; no task/thermal reconciliation is triggered here.
   if(command.type==='apparel-policy-update')return applyApparelPolicyUpdate(world,command);
+  if(command.type==='apparel-policy-copy'||command.type==='apparel-policy-rename')return applyApparelPolicyName(world,command);
   const result=applyCommandInternal(world,command);
   if(result.ok){
     reconcileAllowedAreas(world);
@@ -485,7 +486,7 @@ function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
   if(result.ok)reconcileSpikeTrapContacts(world);
   return result;
 }
-function applyCommandInternal(world: World, command: Exclude<LocalCommand,{type:'apparel-policy-update'}>): CommandResult {
+function applyCommandInternal(world: World, command: Exclude<LocalCommand,{type:'apparel-policy-update'|'apparel-policy-copy'|'apparel-policy-rename'}>): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
   if(command.type==='cancel-job'||command.type==='cancel-resource'||command.type==='cancel-pile')return applyDesignationCancel(world,command)??refusal('invalid-command','Annulation inconnue.');
   if(command.type==='extract-tree'||command.type==='replant-tree')return applyTreeCommand(world,command)!;

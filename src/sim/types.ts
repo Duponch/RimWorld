@@ -332,6 +332,7 @@ export type Command = import('./secondary-site-state.ts').SecondarySiteCommand |
   | import('./food-policy.ts').FoodPolicyCommand
   | import('./apparel-system.ts').ApparelPolicyAssignmentCommand
   | import('./apparel-policy-edit.ts').ApparelPolicyUpdateCommand
+  | import('./apparel-policy-edit.ts').ApparelPolicyNameCommand
   | import('./apparel-system.ts').ClearForcedApparelCommand
   | import('./schedule.ts').ScheduleCommand
   | { type: 'bill-add';recipe?:import('./production-recipes.ts').ProductionRecipe; structureId: number }

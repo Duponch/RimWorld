@@ -39,3 +39,50 @@ export function applyApparelPolicyUpdate(world:World,command:ApparelPolicyUpdate
     return {ok:true};
   }catch{return fail();}
 }
+
+
+export interface ApparelPolicyCopyCommand {type:'apparel-policy-copy';policyId:number;label:string}
+export interface ApparelPolicyRenameCommand {type:'apparel-policy-rename';policyId:number;label:string}
+export type ApparelPolicyNameCommand=ApparelPolicyCopyCommand|ApparelPolicyRenameCommand;
+/** Local command rule only: existing saved labels remain literal. Length uses
+ * the same UTF-16 bound as the persistent registry; duplicate labels are legal. */
+export function normalizeApparelPolicyName(value:unknown):string|null {
+  if(typeof value!=='string'||/[\u0000-\u001f\u007f-\u009f]/.test(value))return null;
+  const label=value.trim();return label.length>=1&&label.length<=60?label:null;
+}
+const nameFields=['type','policyId','label'] as const;
+/** Campaign metadata only. Both commands finish all admission and allocation
+ * checks before commit; no actor, Auto/forced flag, task or due check is touched. */
+export function applyApparelPolicyName(world:World,command:ApparelPolicyNameCommand):CommandResult {
+  const refuse=(reason:string,code:CommandResult['code']='invalid-command'):CommandResult=>({ok:false,code,reason});
+  try{
+    if(world.schemaVersion!==SCHEMA_VERSION||!command||typeof command!=='object'
+      ||Reflect.ownKeys(command).length!==nameFields.length||!nameFields.every(k=>{
+        const d=Object.getOwnPropertyDescriptor(command,k);return !!d&&d.enumerable&&Object.hasOwn(d,'value');
+      }))return refuse('Commande de politique de tenue invalide.');
+    const {type,policyId}=command,label=normalizeApparelPolicyName(command.label);
+    if((type!=='apparel-policy-copy'&&type!=='apparel-policy-rename')||!Number.isSafeInteger(policyId)||policyId<=0||label===null)
+      return refuse('Donnez un nom de 1 à 60 caractères, sans caractère de contrôle.');
+    const registry=world.apparelPolicies,nextId=world.nextApparelPolicyId;
+    if(!Array.isArray(registry)||registry.length<1||registry.length>32||typeof nextId!=='number'||!Number.isSafeInteger(nextId)||nextId<=0
+      ||registry.some(p=>!validApparelPolicy(p)||p.label.length>60)||new Set(registry.map(p=>p.id)).size!==registry.length
+      ||registry.some(p=>p.id>=nextId))return refuse('Registre des politiques de tenue invalide.');
+    const index=registry.findIndex(p=>p.id===policyId);if(index<0)return refuse('Cette politique de tenue n’existe plus.','missing-target');
+    const source=registry[index]!;
+    if(type==='apparel-policy-rename'){
+      if(source.label===label)return {ok:true};
+      const renamed:ApparelPolicy={...source,label};
+      world.apparelPolicies=registry.map((p,i)=>i===index?renamed:p);
+      return {ok:true};
+    }
+    if(registry.length>=32)return refuse('Le registre contient déjà 32 politiques de tenue.');
+    if(!Number.isSafeInteger(nextId+1))return refuse('Les identifiants de politique de tenue sont épuisés.');
+    // Whitelist confirmed filters: identity/name and any future metadata are
+    // never copied from an editor draft, pawn, equipment task or source object.
+    const copy:ApparelPolicy={id:nextId,label,allowedItems:[...source.allowedItems],allowedMaterials:[...source.allowedMaterials],
+      minQuality:source.minQuality,maxQuality:source.maxQuality,minHitPointsPercent:source.minHitPointsPercent,maxHitPointsPercent:source.maxHitPointsPercent};
+    const updated=[...registry,copy],nextCounter=nextId+1;
+    world.apparelPolicies=updated;world.nextApparelPolicyId=nextCounter;
+    return {ok:true};
+  }catch{return refuse('Commande de politique de tenue invalide.');}
+}

@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 254.** [Étangs et ponts V403](gameplay/shallow-water-v403.md) qualifiés : terrain boréal prospectif, marche, chantier payé et conservation après retrait. V403 publié en e24c5731, produit0f1a8cc1,134 réponses HTTPS200/MIME/octets exacts.
+**16 octobre 2026 — schéma 254 inchangé.** [Politiques de tenue V404](gameplay/apparel-policy-copy-v404.md) : copier les filtres confirmés et renommer sans changer les affectations ; commandes partagées et recharge exacte qualifiées. Publication groupée avec V405 prévue ; dernière production V403/e24c5731, produit0f1a8cc1.
 
 **16 octobre 2026 — schéma 253.** [Fret collectif V401](gameplay/group-freight-v401.md) qualifié : bois/acier pris au contact et rapportés du second site ; reprise active exacte. Publié avec [CPU V400](development/sleeping-provenance-v400.md) en 65bad476, produit 5fdec2e6, 134 réponses HTTPS exactes.
 
@@ -10,7 +10,7 @@
 
 ## Prochaines corrections issues du parcours réel
 
-[Les Aulnes V397](gameplay/aulnes-multimap-v397.md) : aller-retour, travaux et revisite du même site observés ; garde finale rouge sur trois habitants blessés à terre au foyer. Les alertes rage animale/incapacité sont corrigées V398. V399/V400 réduisent deux lectures de structures inchangées, après profil ciblé et comparaison CPU bornée. Aucun gain FPS annoncé. Le chargement/retour de bois et acier est qualifié V401. Avertissement urgent et pause configurable sur nouvelle menace qualifiés V402, quelle que soit la carte affichée. Étangs peu profonds boréaux et pont standard qualifiés V403 ; anciennes eaux/cartes conservées. Prochaine tranche V404 autorisée en copies privées : copier/renommer une politique de tenue, sans suppression ni code encore adopté. Pas de succession automatique de caches par domaine. Garder la branche21483 et les Aulnes publiques V394 distinctes ; pas de nouvelle campagne gagnée exigée pour avancer.
+[Les Aulnes V397](gameplay/aulnes-multimap-v397.md) : aller-retour, travaux et revisite du même site observés ; garde finale rouge sur trois habitants blessés à terre au foyer. Les alertes rage animale/incapacité sont corrigées V398. V399/V400 réduisent deux lectures de structures inchangées, après profil ciblé et comparaison CPU bornée. Aucun gain FPS annoncé. Le chargement/retour de bois et acier est qualifié V401. Avertissement urgent et pause configurable sur nouvelle menace qualifiés V402, quelle que soit la carte affichée. Étangs peu profonds boréaux et pont standard qualifiés V403 ; anciennes eaux/cartes conservées. Copier/renommer une politique de tenue qualifié V404, sans suppression. Prochaine tranche V405 autorisée en copies privées : table carrée3×3 Core, construction et usage via les boucles existantes, aucun code adopté. Pas de succession automatique de caches par domaine. Garder la branche21483 et les Aulnes publiques V394 distinctes ; pas de nouvelle campagne gagnée exigée pour avancer.
 
 ## Priorité actuelle
 
@@ -27,7 +27,7 @@
 11. **Marais de toundra V385 qualifiés.** Génération prospective, marche et transport, refus de support/culture, feu/neige et recharges ; gel, séchage, ponts et écologie complète restent ouverts.
 12. **Les Aulnes V386 qualifiées.** Facture laine réelle et première production rangée ; seconde production et port restent à jouer. Anciennes références et parties personnelles préservées.
 13. **Ponts de marais V387 qualifiés.** Fondation payée et terrain dessous conservé, supports Light, passage/transport et retrait physiques, feu/explosion et migrations strictes. Rivières/profondeurs, pont lourd et destruction de masse restent hors du parcours natif qualifié.
-14. **Gestion des tenues V388 qualifiée.** Effacement des seules pièces forcées, Auto conservé, renouvellement physique et sauvegarde exacte. Édition détaillée des politiques encore absente.
+14. **Gestion des tenues V388 qualifiée.** Effacement des seules pièces forcées, Auto conservé, renouvellement physique et sauvegarde exacte. Filtres éditables V392, copie et renommage V404 ; suppression et changement du défaut restent absents.
 15. **Réserve de camp V389 qualifiée.** Pemmican payé et préparé au contact, stockage/prise de plusieurs unités et reprise active ; provisions des deux voyages individuels et catalogue alimentaire exhaustif ouverts ; groupe collectif étendu enV391.
 16. **Éclairage préindustriel V390 qualifié.** Lampe-torche construite/payée, consommation et effet du toit/pluie, panne/recharge et reprise ; modèle mobile, mural et DLC différés.
 17. **Provisions collectives V391 qualifiées.** Rations/pemmican, âge, régimes, partage et retour physiques ; seuil manuel adapté, pas de durée d’autonomie promise.

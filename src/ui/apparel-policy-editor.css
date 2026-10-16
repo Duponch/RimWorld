@@ -19,3 +19,8 @@
 .apparel-policy-dialog button { min-height: 36px; }
 .apparel-policy-dialog .muted { color: var(--muted-ink, #586653); }
 .apparel-policy-dialog [role=status] { min-height: 1.3em; }
+
+.apparel-policy-dialog .apparel-policy-name-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.apparel-policy-dialog .apparel-policy-name-editor { overflow-wrap: anywhere; border: 1px solid var(--line, #8c927c); padding: 12px; margin: 12px 0; }
+.apparel-policy-dialog .apparel-policy-name-editor label { display: block; margin-bottom: 6px; }
+.apparel-policy-dialog .apparel-policy-name-editor input { min-height: 34px; width: 100%; box-sizing: border-box; }

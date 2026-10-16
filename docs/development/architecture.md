@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-**V403 qualifié — schéma 254 :** [Étangs peu profonds et ponts](../gameplay/shallow-water-v403.md). Nouveaux sites boréaux, traversée lente, vrai chantier et transport, retrait/reprise ; anciennes cartes littérales. V403 publié en e24c5731, produit0f1a8cc1,134 réponses HTTPS200/MIME/octets exacts. Les états suivants sont historiques.
+**V404 qualifié — schéma 254 inchangé :** [Copier et renommer une politique de tenue](../gameplay/apparel-policy-copy-v404.md). Filtres confirmés indépendants, registre partagé et sauvegarde exacte ; aucune affectation ou tâche changée. V404 attend la publication groupée avec V405 ; dernière production V403/e24c5731, produit0f1a8cc1,134 réponses HTTPS exactes. Les états suivants sont historiques.
 
 **V401 qualifié — schéma 253 :** [Fret collectif bois/acier](../gameplay/group-freight-v401.md). Prises, charge, retour et dépôts physiques avec reprise active exacte ; anciens groupes conservés. V400–V401 publiés ensemble en 65bad476, produit 5fdec2e6, 134 réponses HTTPS exactes. Les états suivants sont historiques.
 
