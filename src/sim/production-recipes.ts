@@ -1,3 +1,4 @@
+import {BURN_APPAREL_INPUTS,BURN_APPAREL_WORK_TICKS,isBurnApparelRecipe} from './burn-apparel-content.ts';
 import {PEMMICAN_INPUTS,PEMMICAN_INPUT_UNITS,PEMMICAN_WORK_TICKS,PEMMICAN_OUTPUT_UNITS,isPemmicanRecipe} from './pemmican-content.ts';
 import {ART_MATERIALS,isArtRecipe,artWorkTotal,type ArtMaterial,type ArtRecipe} from './art-rules.ts';
 import { isSmeltingRecipe,SMELTING_WORK_TICKS,SMELTING_MAX_OUTPUT,SMELTING_WEAPONS,smeltingProduct } from './smelting-content.ts';
@@ -17,7 +18,7 @@ export const TAILORING_RECIPES = ['tribalwear','shirt','pants','duster','parka',
 export type TailoringRecipe = typeof TAILORING_RECIPES[number];
 export type TailoringMaterial = ApparelMaterial;
 export type UnfinishedApparelItem = 'unfinished-tribalwear'|'unfinished-shirt'|'unfinished-pants'|'unfinished-duster'|'unfinished-parka'|'unfinished-tuque';
-export type ProductionIngredient = 'hay'|'human-corpse'|WeaponItem|'herbal-medicine'|'neutroamine'|MechCorpseItem| ArtMaterial|'unfinished-sculpture'|'steel'|'component'|'advanced-component'|'plasteel'|'uranium'|'gold'|'unfinished-gun'|'unfinished-flak-vest'|'unfinished-flak-helmet'|'unfinished-recon-helmet'|'unfinished-recon-armor'|'unfinished-component'|'rice'|'berries'|'milk'|'agave-fruit'|'potato'|'corn'|typeof ANIMAL_MEAT_ITEMS[number]|typeof ANIMAL_CORPSE_ITEMS[number]|TailoringMaterial|UnfinishedApparelItem|StoneIngredient;
+export type ProductionIngredient = ApparelItem|'hay'|'human-corpse'|WeaponItem|'herbal-medicine'|'neutroamine'|MechCorpseItem| ArtMaterial|'unfinished-sculpture'|'steel'|'component'|'advanced-component'|'plasteel'|'uranium'|'gold'|'unfinished-gun'|'unfinished-flak-vest'|'unfinished-flak-helmet'|'unfinished-recon-helmet'|'unfinished-recon-armor'|'unfinished-component'|'rice'|'berries'|'milk'|'agave-fruit'|'potato'|'corn'|typeof ANIMAL_MEAT_ITEMS[number]|typeof ANIMAL_CORPSE_ITEMS[number]|TailoringMaterial|UnfinishedApparelItem|StoneIngredient;
 export type FlakRecipe='make-flak-vest'|'make-flak-helmet'|'make-recon-helmet'|'make-recon-armor';
 export const isFlakRecipe=(v:unknown):v is FlakRecipe=>v==='make-flak-vest'||v==='make-flak-helmet'||v==='make-recon-helmet'||v==='make-recon-armor';
 export const FLAK_REQUIREMENTS={cloth:30,steel:60,component:1,skill:4} as const;
@@ -30,7 +31,7 @@ export type ComponentRecipe='make-component'|'make-advanced-component';
 export const isComponentRecipe=(v:unknown):v is ComponentRecipe=>v==='make-component'||v==='make-advanced-component';
 export const ADVANCED_COMPONENT_REQUIREMENTS={component:1,steel:20,plasteel:10,gold:3,skill:8} as const;
 export type AdvancedComponentMaterial=Exclude<keyof typeof ADVANCED_COMPONENT_REQUIREMENTS,'skill'>;
-export type ProductionRecipe = 'make-pemmican'|'make-kibble'|CremationRecipe|'smelt-weapon'|BiofuelRecipe|'make-medicine'|'smash-mechanoid'|'shred-mechanoid'|ArtRecipe|GunRecipe|FlakRecipe|ComponentRecipe|'simple-meal'|'cook-simple-meal-bulk'|'fine-meal'|'cook-fine-meal-bulk'|'vegetarian-fine-meal'|'cook-vegetarian-fine-meal-bulk'|'carnivore-fine-meal'|'cook-carnivore-fine-meal-bulk'|'lavish-meal'|'cook-lavish-meal-bulk'|'vegetarian-lavish-meal'|'cook-vegetarian-lavish-meal-bulk'|'cook-carnivore-lavish-meal'|'cook-carnivore-lavish-meal-bulk'|'cook-survival-meal'|'stone-blocks'|TailoringRecipe|'butcher-creature';
+export type ProductionRecipe = 'burn-apparel'|'make-pemmican'|'make-kibble'|CremationRecipe|'smelt-weapon'|BiofuelRecipe|'make-medicine'|'smash-mechanoid'|'shred-mechanoid'|ArtRecipe|GunRecipe|FlakRecipe|ComponentRecipe|'simple-meal'|'cook-simple-meal-bulk'|'fine-meal'|'cook-fine-meal-bulk'|'vegetarian-fine-meal'|'cook-vegetarian-fine-meal-bulk'|'carnivore-fine-meal'|'cook-carnivore-fine-meal-bulk'|'lavish-meal'|'cook-lavish-meal-bulk'|'vegetarian-lavish-meal'|'cook-vegetarian-lavish-meal-bulk'|'cook-carnivore-lavish-meal'|'cook-carnivore-lavish-meal-bulk'|'cook-survival-meal'|'stone-blocks'|TailoringRecipe|'butcher-creature';
 
 export type BiofuelRecipe='chemfuel-from-wood'|'chemfuel-from-organics';
 export const isBiofuelRecipe=(value:unknown):value is BiofuelRecipe=>value==='chemfuel-from-wood'||value==='chemfuel-from-organics';
@@ -146,6 +147,7 @@ export const GUN_REQUIREMENTS={ 'make-revolver':{steel:30,component:2,skill:3}, 
 export const PRODUCTION_RECIPES = Object.freeze({
   'make-pemmican':Object.freeze({label:'Préparer du pemmican',station:'campfire',work:'cook',inputs:PEMMICAN_INPUTS as readonly ProductionIngredient[],units:PEMMICAN_INPUT_UNITS,workTicks:PEMMICAN_WORK_TICKS,outputUnits:PEMMICAN_OUTPUT_UNITS}),
   'make-kibble':Object.freeze({label:'Fabriquer des croquettes',station:'butcher-table',work:'cook',inputs:KIBBLE_INPUTS as readonly ProductionIngredient[],units:KIBBLE_INPUT_UNITS,workTicks:KIBBLE_WORK_TICKS,outputUnits:KIBBLE_OUTPUT_UNITS}),
+  'burn-apparel':Object.freeze({label:'Brûler des vêtements',station:'campfire',work:'haul',inputs:BURN_APPAREL_INPUTS as readonly ProductionIngredient[],units:1,workTicks:BURN_APPAREL_WORK_TICKS,outputUnits:0}),
   'cremate-corpse':Object.freeze({label:'Incinérer une dépouille',station:'electric-crematorium',work:'haul',inputs:CREMATION_INPUTS as readonly ProductionIngredient[],units:1,workTicks:CREMATION_WORK_TICKS,outputUnits:0}),
   'smelt-weapon':Object.freeze({label:'Fondre une arme',station:'electric-smelter',work:'craft',inputs:SMELTING_WEAPONS as readonly ProductionIngredient[],units:1,workTicks:SMELTING_WORK_TICKS,outputUnits:SMELTING_MAX_OUTPUT}),
   'chemfuel-from-wood':Object.freeze({label:'Raffiner du biocarburant à partir de bois',station:'biofuel-refinery',work:'craft',inputs:['wood'] as readonly ProductionIngredient[],units:70,workTicks:200,outputUnits:35}),
@@ -204,19 +206,20 @@ export const stationRecipe=(station:Pick<Structure,'kind'>):ProductionRecipe|nul
  * invalidating an already reserved bill or unfinished garment. */
 export const productionStationUsable=(station:Structure):boolean=>(station.kind!=='electric-crematorium'&&station.kind!=='electric-smelter'&&station.kind!=='machining-table'&&station.kind!=='fabrication-bench'&&station.kind!=='biofuel-refinery')||station.power?.on===true;
 export const stationWork=(station:Pick<Structure,'kind'>):'cook'|'craft'|'art'|'haul'=>station.kind==='electric-crematorium'?'haul':station.kind==='art-bench'?'art':station.kind==='campfire'||isStove(station.kind)||isButcherStation(station.kind)?'cook':'craft';
+export const billWork=(bill:Pick<CookingBill,'recipe'>):'cook'|'craft'|'art'|'haul'=>PRODUCTION_RECIPES[bill.recipe].work;
 export function admittedIngredient(bill:CookingBill,item:ItemId):item is ProductionIngredient {
   return PRODUCTION_RECIPES[bill.recipe].inputs.includes(item as ProductionIngredient)&&bill.filters[item as ProductionIngredient]===true;
 }
 export const blockFor=(chunk:StoneIngredient):ItemId=>chunk.replace('-chunk','-blocks') as ItemId;
 /** Zero output is a real recipe result, with no sentinel item or allocation. */
-export const recipeHasProducts=(recipe:ProductionRecipe):boolean=>!isCremationRecipe(recipe);
+export const recipeHasProducts=(recipe:ProductionRecipe):boolean=>!isCremationRecipe(recipe)&&!isBurnApparelRecipe(recipe);
 export function tailoringMaterialFromIngredients(ingredients:readonly {item:ProductionIngredient}[]):TailoringMaterial|undefined {
   const found=new Set(ingredients.map(i=>i.item).filter((item):item is TailoringMaterial=>isApparelMaterial(item)));
   return found.size===1?[...found][0]:undefined;
 }
 export const tailoringMaterialAllowed=(recipe:TailoringRecipe,material:TailoringMaterial):boolean=>PRODUCTION_RECIPES[recipe].inputs.includes(material);
 export function recipeProduct(recipe:ProductionRecipe,ingredients:readonly {item:ProductionIngredient}[],material?:TailoringMaterial):ItemId {
-  if(!recipeHasProducts(recipe))throw new RangeError('Cremation has no products');
+  if(!recipeHasProducts(recipe))throw new RangeError('Destructive recipe has no products');
   if(isPemmicanRecipe(recipe))return 'pemmican';
   if(isKibbleRecipe(recipe))return 'kibble';
   if(isSmeltingRecipe(recipe))return smeltingProduct(ingredients[0]!.item as WeaponItem);
@@ -249,7 +252,7 @@ export function isRecipeProduct(recipe:ProductionRecipe,item:ItemId):boolean {
 }
 export function tailoringProduct(recipe:TailoringRecipe,material:TailoringMaterial):ApparelItem { return apparelItemFor(recipe,material); }
 
-export const stationRecipes=(station:Pick<Structure,'kind'>):readonly ProductionRecipe[]=>station.kind==='electric-crematorium'?['cremate-corpse']:station.kind==='electric-smelter'?['smelt-weapon']:station.kind==='biofuel-refinery'?['chemfuel-from-wood','chemfuel-from-organics']:station.kind==='art-bench'?['small-sculpture','large-sculpture']:station.kind==='machining-table'?['make-revolver','make-bolt-action-rifle','make-emp-launcher','make-flak-vest','make-flak-helmet','shred-mechanoid']:station.kind==='fabrication-bench'?['make-component','make-advanced-component','make-recon-helmet','make-recon-armor']:(station.kind==='tailor-bench'||station.kind==='electric-tailor-bench')?['shirt','pants','duster','parka','tribalwear','tuque']:station.kind==='crafting-spot'?['tribalwear','smash-mechanoid']:isStove(station.kind)?['make-pemmican','simple-meal','cook-simple-meal-bulk','fine-meal','cook-fine-meal-bulk','vegetarian-fine-meal','cook-vegetarian-fine-meal-bulk','carnivore-fine-meal','cook-carnivore-fine-meal-bulk','lavish-meal','cook-lavish-meal-bulk','vegetarian-lavish-meal','cook-vegetarian-lavish-meal-bulk','cook-carnivore-lavish-meal','cook-carnivore-lavish-meal-bulk','cook-survival-meal']:station.kind==='campfire'?['make-pemmican','simple-meal','cook-simple-meal-bulk']:isButcherStation(station.kind)?['butcher-creature','make-kibble']:stationRecipe(station)?[stationRecipe(station)!]:[];
+export const stationRecipes=(station:Pick<Structure,'kind'>):readonly ProductionRecipe[]=>station.kind==='electric-crematorium'?['cremate-corpse','burn-apparel']:station.kind==='electric-smelter'?['smelt-weapon']:station.kind==='biofuel-refinery'?['chemfuel-from-wood','chemfuel-from-organics']:station.kind==='art-bench'?['small-sculpture','large-sculpture']:station.kind==='machining-table'?['make-revolver','make-bolt-action-rifle','make-emp-launcher','make-flak-vest','make-flak-helmet','shred-mechanoid']:station.kind==='fabrication-bench'?['make-component','make-advanced-component','make-recon-helmet','make-recon-armor']:(station.kind==='tailor-bench'||station.kind==='electric-tailor-bench')?['shirt','pants','duster','parka','tribalwear','tuque']:station.kind==='crafting-spot'?['tribalwear','smash-mechanoid']:isStove(station.kind)?['make-pemmican','simple-meal','cook-simple-meal-bulk','fine-meal','cook-fine-meal-bulk','vegetarian-fine-meal','cook-vegetarian-fine-meal-bulk','carnivore-fine-meal','cook-carnivore-fine-meal-bulk','lavish-meal','cook-lavish-meal-bulk','vegetarian-lavish-meal','cook-vegetarian-lavish-meal-bulk','cook-carnivore-lavish-meal','cook-carnivore-lavish-meal-bulk','cook-survival-meal']:station.kind==='campfire'?['burn-apparel','make-pemmican','simple-meal','cook-simple-meal-bulk']:isButcherStation(station.kind)?['butcher-creature','make-kibble']:stationRecipe(station)?[stationRecipe(station)!]:[];
 export const stationAccepts=(station:Pick<Structure,'kind'>,recipe:ProductionRecipe):boolean=>stationRecipes(station).includes(recipe);
 
 /** Snapshot-only display total; the authoritative workpiece owns its material. */

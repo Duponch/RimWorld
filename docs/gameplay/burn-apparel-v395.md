@@ -1,0 +1,23 @@
+# Brûler des vêtements — V395
+
+Les feux de camp et crématoriums existants proposent désormais une facture **Brûler des vêtements**. Transport collecte une vraie pièce autorisée au sol, conserve identité/état/qualité pendant le portage, la pose au contact puis la détruit. Aucun produit, matériau, combustible, expérience ou nouveau tirage aléatoire. Les filtres sont initialement désactivés ; choisir types, PV et qualités. Les habits portés, cargaisons tierces et objets interdits ne sont pas des sources.
+
+Core 1.6.4871 rev590, relevé ciblé du 16 octobre 2026 : 60 de travail, GeneralLaborSpeed, Transport ; facteur feu 0,5, crématorium 1. Les textiles et les pièces fixes gilet/recon sont brûlables par recette ; le casque pare-balles en acier ne l’est pas. Brûlabilité de recette et inflammabilité physique restent distinctes. Conversion locale : 6 ticks neutres, soit 12 au feu avant environnement/capacités. Le filtre HP/qualité entier et son champ historique `smeltFilter` sont réutilisés.
+
+Adaptations conservées : les vêtements retirés localement restent interdits ; utiliser **Autoriser cet objet** avant la facture. Le feu exige sa vraie réserve et conserve sa consommation locale déjà livrée (pas de nouvelle surcharge activité/pluie, ni recharge depuis l’habit brûlé). Interruption en vol : propriétaire maintenu jusqu’à l’arrivée réelle puis dépôt ordinaire. Aucune pièce intermédiaire nouvelle.
+
+Schéma 251 : validation stricte de 250 sur les deux cartes avant seul changement de numéro. Aucun ajout rétroactif de facture, habit, permission, recherche ou fuel ; les anciens réglages restent littéraux. RAW, checkpoint, delta et Decoder gardent la même frontière.
+
+Coût : filtres et priorités des seules factures/piles existantes aux décisions et adoptions ; aucune grille, navigation supplémentaire côté UI, scan RAF ou lot graphique nouveau. Références primaires paraphrasées, sources propriétaires privées. Les essais visuels externes sont restés inaccessibles : aucun pixel Vanilla actuel qualifié. Aucune mesure générale CPU/GPU/FPS n’est déduite de ce lot.
+
+## Qualification du 16 octobre 2026
+
+- 56 cas distincts sur huit fichiers acquis par reprises, dont 19 nouveaux V395 : facture et refus, pièce entière/transport/contact, pertes uniques, interruption en arête, préflight sans mutation, filtres, permissions, deux cartes, schémas et snapshots. Ce bilan ne désigne pas une passe complète unique. Les sorties rouges restent sous `tmp/validation-runs/`.
+- Typage final : 12,385 s. Deux références publiques pertinentes V386/V216 : migration, identité et reprise exacte d’un tick, 5,454 s ; l’artefact courant V394 et son ancien producteur verrouillé 250 sont contrôlés séparément. Aucun ancien fichier public réécrit. Présentation Chrome : 132,634 s.
+- Parcours préparé 32² Chrome/WebGPU : PASS 47,397 s. Feu, réserve finie, chemise normale abîmée et témoins déclarés ; vraie facture UI avec Transport actif/Cuisine désactivée, filtre chemise seule/PV0–50/qualité normale. Même pièce184 portée au3006, posée au contact et travail réel au3020 ; export/réimport UI exact avec progrès4000/60000. Au3034, perte unique de la chemise et facture à0, sans sortie ; casque et seconde chemise interdite intacts. Réserve11966+34 brûlés=12000, aucun combustible offert. Trois captures inspectées ROOT, erreurs vides, WebGPU sans incident. Le variant électrique est couvert par les cas ciblés, pas par ce parcours natif.
+- Build Pages : 2,294 s ; contrôle documentaire : 1,696 s.
+- Sources et entrées : `tmp/burn-apparel-v395/freeze02.json`, 3412 chemins uniques exacts avant/après navigateur. Pas de nouvelle campagne, corpus intégral ou mesure FPS ; résultats non touchés réutilisés.
+
+Les premiers contrôles ont révélé des types trop étroits et deux témoins historiques contenant une permission pemmican future : annotations et seuls témoins corrigés, assertions historiques conservées. Ils ont aussi révélé un vrai défaut de migration du nouvel auxiliaire : lecture de `packed` avant son existence dans les schémas19/22. La lecture accepte désormais son absence historique avant la sortie sans facture, sans enrichir l’ancien World ni détendre sa validation. Le producteur daté des AulnesV394 reste verrouillé250 ; son artefact immuable est validé/migré au schéma courant. Le manifeste privé d’adoption omettait la base de `bill-controls.ts` : son SHA parent exact a été vérifié et enregistré avant copie.
+
+Le parcours ne prouve ni acquisition naturelle de cette chemise, ni autonomie du feu, ni campagne entière. Dernière production confirmée à l’écriture : V394/eefe3715 ; cette mécanique attend une publication regroupée.

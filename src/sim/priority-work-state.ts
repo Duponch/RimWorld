@@ -1,4 +1,4 @@
-import { stationWork } from './production-recipes.ts';
+import { stationWork,billWork,taskRecipe } from './production-recipes.ts';
 import { isConstruction } from './construction-rules.ts';
 import { isCookingOrder } from './order-types.ts';
 import type { OrderCommand } from './player-orders.ts';
@@ -14,7 +14,7 @@ export function rememberPriorityWork(world:World,pawn:Pawn,command:OrderCommand,
   if(command.type==='order-job') {
     const job=world.jobs.find(j=>j.id===command.jobId);if(job&&isConstruction(job)){cell=job;work=job.installationWork??'build';}
   } else if(command.type==='order-cook') {
-    const station=world.structures.find(s=>s.id===command.structureId);cell=station;work=station?stationWork(station):'cook';
+    const station=world.structures.find(s=>s.id===command.structureId);cell=station;work=order&&isCookingOrder(order)?billWork({recipe:taskRecipe(order.cooking)}):order&&typeof order!=='number'&&!isCookingOrder(order)&&order.destination.type==='fuel'&&!order.destination.forCooking?'haul':station?stationWork(station):'cook';
   } else if(command.type==='order-haul'&&order&&typeof order!=='number'&&!isCookingOrder(order)) {
     const d=order.destination;
     if(d.type==='fuel'||d.type==='turret'){cell=world.structures.find(s=>s.id===d.structureId);work='haul';}

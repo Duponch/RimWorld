@@ -1,3 +1,5 @@
+import {isBurnApparelRecipe} from './burn-apparel-rules.ts';
+import {hasTravellingCargo,interruptWork} from './interrupted-cargo.ts';
 import { productionResearchUnlocked } from './machining.ts';
 import { isKibbleRecipe } from './fodder-recipes.ts';
 import { isSmeltingRecipe } from './smelting-rules.ts';
@@ -14,7 +16,7 @@ export function applyBillCommand(world:World,command:BillCommand,drops:DropPlan)
   if(!station?.bills)return {ok:false,code:'missing-target',reason:'Poste de production introuvable.'};
   if(command.type==='bill-add') {
     if(station.bills.length>=64||!Number.isSafeInteger(world.nextId+1))return {ok:false,code:'invalid-command',reason:'Limite de factures atteinte.'};
-    const recipe=command.recipe??stationRecipe(station)!;if(recipe==='make-pemmican'&&world.schemaVersion<248||isKibbleRecipe(recipe)&&world.schemaVersion<227||isCremationRecipe(recipe)&&world.schemaVersion<225||isSmeltingRecipe(recipe)&&world.schemaVersion<222||!stationAccepts(station,recipe)||!productionResearchUnlocked(world,recipe))return {ok:false,code:'invalid-command',reason:'Recette indisponible : vérifiez le poste et sa recherche préalable.'};
+    const recipe=command.recipe??stationRecipe(station)!;if(isBurnApparelRecipe(recipe)&&world.schemaVersion<251||recipe==='make-pemmican'&&world.schemaVersion<248||isKibbleRecipe(recipe)&&world.schemaVersion<227||isCremationRecipe(recipe)&&world.schemaVersion<225||isSmeltingRecipe(recipe)&&world.schemaVersion<222||!stationAccepts(station,recipe)||!productionResearchUnlocked(world,recipe))return {ok:false,code:'invalid-command',reason:'Recette indisponible : vérifiez le poste et sa recherche préalable.'};
     station.bills.push(newCookingBill(world.nextId++,recipe,world.schemaVersion));return {ok:true};
   }
   const index=station.bills.findIndex(b=>b.id===command.billId),bill=station.bills[index];
@@ -27,6 +29,7 @@ export function applyBillCommand(world:World,command:BillCommand,drops:DropPlan)
   }
   if(command.type==='bill-update'&&!validBillSettings(command.settings,bill.recipe,world.schemaVersion))return {ok:false,code:'invalid-command',reason:'Réglages de recette invalides.'};
   for(const pawn of world.pawns)if(pawn.cooking?.stationId===station.id&&pawn.cooking.billId===bill.id) {
+    if(isBurnApparelRecipe(pawn.cooking.recipe)&&hasTravellingCargo(world,pawn)){interruptWork(world,pawn,true);continue;}
     if(!releaseWork(world,pawn,drops))return {ok:false,code:'occupied',reason:'Aucune place pour conserver la cargaison.'};
   }
   for(const pawn of world.pawns)pawn.orders.queue=pawn.orders.queue.filter(o=>!isCookingOrder(o)||o.cooking.stationId!==station.id||o.cooking.billId!==bill.id);
@@ -36,7 +39,7 @@ export function applyBillCommand(world:World,command:BillCommand,drops:DropPlan)
     bill.mode=s.mode;bill.target=s.target;bill.suspended=s.suspended;
     bill.filters=Object.fromEntries(PRODUCTION_RECIPES[bill.recipe].inputs.filter(i=>s.filters[i]!==undefined).map(i=>[i,s.filters[i]]));
     bill.radius=s.radius;bill.destination=s.destination;
-    if(isSmeltingRecipe(bill.recipe))bill.smeltFilter={...s.smeltFilter!};
+    if(isSmeltingRecipe(bill.recipe)||isBurnApparelRecipe(bill.recipe))bill.smeltFilter={...s.smeltFilter!};
     if(isCremationRecipe(bill.recipe))bill.cremationFilter={...s.cremationFilter!};
   }
   return {ok:true};

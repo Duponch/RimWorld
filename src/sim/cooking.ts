@@ -1,3 +1,4 @@
+import {isBurnApparelRecipe,burnApparelIngredientAllowed,validBurnApparelIngredients} from './burn-apparel-rules.ts';
 import {isPemmicanRecipe,validPemmicanIngredients} from './pemmican-content.ts';
 import { shelfAt } from './shelf-storage.ts';
 import {isMechSalvageRecipe,mechSalvageSpeed,finishMechSalvage} from './mechanoid-salvage.ts';
@@ -5,6 +6,7 @@ import { workPriority } from './work-types.ts';
 import { isKibbleRecipe,validKibbleIngredients,kibbleOutputUnits } from './fodder-recipes.ts';
 import { allowedAreaWorkAllowed } from './allowed-area-state.ts';
 import { isSmeltingRecipe,smeltingIngredientAllowed,smeltingSpeed,validSmeltingIngredients } from './smelting-rules.ts';
+import {finishBurnApparel} from './burn-apparel.ts';
 import { finishSmelting } from './smelting.ts';
 import { isCremationRecipe,cremationIngredientAllowed,cremationSpeed,validCremationIngredients } from './cremation-rules.ts';
 import { finishCremation } from './cremation.ts';
@@ -63,12 +65,13 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(kibble&&world.schemaVersion<227){context.release();return;}
   const biofuel=isBiofuelRecipe(task.recipe);
   const smelting=isSmeltingRecipe(task.recipe);
-  const cremation=isCremationRecipe(task.recipe);
-  if((smelting||cremation)&&((pawn.motion?.end??0)>world.tick||cremation&&pawn.moveCooldown>0))return;
-  if((smelting||cremation)&&(pawn.stun||pawn.draft||pawn.state==='downed'||pawn.state==='dead'||pawnBody(pawn).capacities.manipulation<=0||cremation&&(medicalWorkRefusal(pawn)||(pawn.faction??'colony')!=='colony'||pawn.prisoner||pawn.visitor||pawn.raid||pawn.podRescue||pawn.burning||pawn.mental?.crisis||pawn.collapsePending||workPriority(pawn,'haul')===0))){context.release();return;}
+  const cremation=isCremationRecipe(task.recipe),burningApparel=isBurnApparelRecipe(task.recipe);
+  if(burningApparel&&world.schemaVersion<251){context.release();return;}
+  if((smelting||cremation||burningApparel)&&((pawn.motion?.end??0)>world.tick||(cremation||burningApparel)&&pawn.moveCooldown>0))return;
+  if((smelting||cremation||burningApparel)&&(pawn.stun||pawn.draft||pawn.state==='downed'||pawn.state==='dead'||pawnBody(pawn).capacities.manipulation<=0||(cremation||burningApparel)&&(medicalWorkRefusal(pawn)||(pawn.faction??'colony')!=='colony'||pawn.prisoner||pawn.visitor||pawn.raid||pawn.podRescue||pawn.burning||pawn.mental?.crisis||pawn.collapsePending||workPriority(pawn,'haul')===0))){context.release();return;}
   if(task.phase==='interrupted'){context.release();return;}
   const station=world.structures.find(s=>s.id===task.stationId),bill=station?.bills?.find(b=>b.id===task.billId);
-  if((pemmican||kibble||medicine||biofuel||smelting||cremation)&&(!station||!bill||bill.recipe!==task.recipe||!stationAccepts(station,task.recipe!))){context.release();return;}
+  if((pemmican||kibble||medicine||biofuel||smelting||cremation||burningApparel)&&(!station||!bill||bill.recipe!==task.recipe||!stationAccepts(station,task.recipe!))){context.release();return;}
   if(backgroundWorkRefusal(pawn,taskWork(task))||!station||!bill||bill.suspended||task.recipe==='cook-survival-meal'&&!stationAccepts(station,task.recipe)||!productionResearchUnlocked(world,taskRecipe(task))||task.phase!=='output'&&!productionWorkerQualified(pawn,taskRecipe(task))||workPriority(pawn,taskWork(task))===0&&pawn.orders.active!=='cook'||(task.phase!=='output'&&(!foodStationUsable(station)||!productionStationUsable(station)))) {context.release();return;}
   if(task.phase==='output'){if(!recipeHasProducts(taskRecipe(task))){context.release();return;}processProductionOutput(world,pawn,context,bill.destination);return;}
   const recipe=PRODUCTION_RECIPES[taskRecipe(task)];
@@ -77,6 +80,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(medicine&&!validMedicineIngredients(taskRecipe(task),task.ingredients)){context.release();return;}
   if(biofuel&&!validBiofuelIngredients(taskRecipe(task),task.ingredients)){context.release();return;}
   if(smelting&&(!validSmeltingIngredients(task.ingredients)||bill.mode==='until')){context.release();return;}
+  if(burningApparel&&(!validBurnApparelIngredients(task.ingredients)||bill.mode==='until'||bill.destination!=='drop'||bill.mode==='times'&&bill.target<=0)){context.release();return;}
   if(cremation&&(!validCremationIngredients(task.ingredients)||bill.mode==='until'||bill.destination!=='drop'||bill.mode==='times'&&bill.target<=0)){context.release();return;}
   if((pemmican||task.recipe==='cook-survival-meal'||task.recipe==='cook-simple-meal-bulk'||task.recipe==='cook-fine-meal-bulk'||task.recipe==='cook-lavish-meal-bulk'||task.recipe==='vegetarian-fine-meal'||task.recipe==='cook-vegetarian-fine-meal-bulk'||task.recipe==='carnivore-fine-meal'||task.recipe==='cook-carnivore-fine-meal-bulk'||task.recipe==='vegetarian-lavish-meal'||task.recipe==='cook-vegetarian-lavish-meal-bulk'||task.recipe==='cook-carnivore-lavish-meal'||task.recipe==='cook-carnivore-lavish-meal-bulk')&&bill.recipe!==task.recipe){context.release();return;}
   if(task.recipe==='cook-survival-meal'&&!validSurvivalMealIngredients(task.ingredients)||task.recipe==='fine-meal'&&!validFineMealIngredients(task.ingredients)||task.recipe==='cook-fine-meal-bulk'&&!validFineMealBulkIngredients(task.ingredients)||task.recipe==='vegetarian-fine-meal'&&!validVegetarianFineMealIngredients(task.ingredients)||task.recipe==='cook-vegetarian-fine-meal-bulk'&&!validVegetarianFineMealBulkIngredients(task.ingredients)||task.recipe==='carnivore-fine-meal'&&!validCarnivoreFineMealIngredients(task.ingredients)||task.recipe==='cook-carnivore-fine-meal-bulk'&&!validCarnivoreFineMealBulkIngredients(task.ingredients)||task.recipe==='lavish-meal'&&!validLavishMealIngredients(task.ingredients)||task.recipe==='cook-lavish-meal-bulk'&&!validLavishMealBulkIngredients(task.ingredients)||task.recipe==='vegetarian-lavish-meal'&&!validVegetarianLavishMealIngredients(task.ingredients)||task.recipe==='cook-vegetarian-lavish-meal-bulk'&&!validVegetarianLavishMealBulkIngredients(task.ingredients)||task.recipe==='cook-carnivore-lavish-meal'&&!validCarnivoreLavishMealIngredients(task.ingredients)||task.recipe==='cook-carnivore-lavish-meal-bulk'&&!validCarnivoreLavishMealBulkIngredients(task.ingredients)){context.release();return;}
@@ -84,14 +88,14 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
     const pile=world.piles.find(p=>p.id===entry.pileId);
     if(cremation&&!canStandAt(world,entry.cell)){context.release();return;}
     if((pemmican||kibble||biofuel)&&entry.stage!=='placed'&&entry.quantity>10){context.release();return;}
-    if((pemmican||kibble||medicine||biofuel||smelting||cremation)&&(!bill.filters[entry.item]||!pile||smelting&&!smeltingIngredientAllowed(bill,pile)
+    if((pemmican||kibble||medicine||biofuel||smelting||cremation||burningApparel)&&(!bill.filters[entry.item]||!pile||burningApparel&&!burnApparelIngredientAllowed(bill,pile)||smelting&&!smeltingIngredientAllowed(bill,pile)
       ||cremation&&(!cremationIngredientAllowed(world,bill,pile)||pile.humanCorpse&&burialClaim(world,pile.humanCorpse.pawnId,pawn.id))
       ||entry.stage==='source'&&(pile.owner.type!=='ground'||(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2)
       ||entry.stage==='placed'&&(pile.owner.type!=='ground'||pile.owner.x!==entry.cell.x||pile.owner.z!==entry.cell.z)
       ||entry.stage==='held'&&(pile.owner.type!=='pawn'||pile.owner.pawnId!==pawn.id))){context.release();return;}
     if((pemmican||kibble||task.recipe==='chemfuel-from-organics')&&pile&&ticksUntilRot(pile,world.tick)<=0){context.release();return;}
     if(!pile||!cremation&&isAnimalCorpseItem(pile.item)&&!corpseFresh(pile,world.tick)||(task.recipe==='cook-survival-meal'||task.recipe==='cook-simple-meal-bulk'||task.recipe==='cook-fine-meal-bulk'||task.recipe==='cook-lavish-meal-bulk'||task.recipe==='vegetarian-fine-meal'||task.recipe==='cook-vegetarian-fine-meal-bulk'||task.recipe==='carnivore-fine-meal'||task.recipe==='cook-carnivore-fine-meal-bulk'||task.recipe==='vegetarian-lavish-meal'||task.recipe==='cook-vegetarian-lavish-meal-bulk'||task.recipe==='cook-carnivore-lavish-meal'||task.recipe==='cook-carnivore-lavish-meal-bulk')&&ticksUntilRot(pile,world.tick)<=0||pile.item!==entry.item||pile.quantity<entry.quantity||entry.stage!=='held'&&reservedSource(world,pile.id)>pile.quantity){context.release();return;}
-    if(cremation&&reservedSource(world,pile.id,pawn.id)>0){context.release();return;}
+    if((cremation||burningApparel)&&reservedSource(world,pile.id,pawn.id)>0){context.release();return;}
     if((task.recipe==='cook-survival-meal'||task.recipe==='cook-simple-meal-bulk'||task.recipe==='cook-fine-meal-bulk'||task.recipe==='cook-lavish-meal-bulk'||task.recipe==='vegetarian-fine-meal'||task.recipe==='cook-vegetarian-fine-meal-bulk'||task.recipe==='carnivore-fine-meal'||task.recipe==='cook-carnivore-fine-meal-bulk'||task.recipe==='vegetarian-lavish-meal'||task.recipe==='cook-vegetarian-lavish-meal-bulk'||task.recipe==='cook-carnivore-lavish-meal'||task.recipe==='cook-carnivore-lavish-meal-bulk')&&(!bill.filters[entry.item]
       ||entry.stage==='source'&&(pile.owner.type!=='ground'||(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2)
       ||entry.stage==='placed'&&(pile.owner.type!=='ground'||pile.owner.x!==entry.cell.x||pile.owner.z!==entry.cell.z)
@@ -137,7 +141,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const culinary=taskWork(task)==='cook',mechanical=isMechSalvageRecipe(task.recipe);
   if(task.progress<total){
     if(culinary||mechanical||medicine){if(!Number.isSafeInteger((task.workTicks??0)+1)||((task.workTicks??0)+1)>Math.floor(Number.MAX_SAFE_INTEGER/1000))return;task.workTicks=(task.workTicks??0)+1;}
-    const speed=cremation?cremationSpeed(pawn):smelting?smeltingSpeed(pawn):biofuel?biofuelProductionSpeed(pawn):medicine?medicineProductionSpeed(pawn):mechanical?mechSalvageSpeed(pawn):task.recipe==='butcher-creature'?butcherySpeed(pawn):culinary?cookingSpeed(pawn):1;
+    const speed=burningApparel?cremationSpeed(pawn):cremation?cremationSpeed(pawn):smelting?smeltingSpeed(pawn):biofuel?biofuelProductionSpeed(pawn):medicine?medicineProductionSpeed(pawn):mechanical?mechSalvageSpeed(pawn):task.recipe==='butcher-creature'?butcherySpeed(pawn):culinary?cookingSpeed(pawn):1;
     const fraction=medicine||biofuel?1:consumeCookingFuel(station);if(!medicine&&!biofuel)applyCookingHeat(world,station,fraction);
     task.progress=Math.min(total,task.progress+Math.round(context.workRate(station,pawn)*speed*PRODUCTION_WORK_SCALE*fraction));
   }
@@ -147,6 +151,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(component)component.componentWork!.progress=task.progress;
   if(art)art.artWork!.progress=task.progress;
   if(task.progress<total)return;
+  if(burningApparel){finishBurnApparel(world,pawn,bill,context);return;}
   if(cremation){finishCremation(world,pawn,bill,context);return;}
   if(smelting){finishSmelting(world,pawn,bill,context);return;}
   if(art){completeArtProduction(world,pawn,task,context);return;}

@@ -1,3 +1,5 @@
+import {isBurnApparelRecipe,burnApparelIngredientAllowed,validBurnApparelIngredients} from './burn-apparel-rules.ts';
+import {billWork,taskWork} from './production-recipes.ts';
 import { workPriority } from './work-types.ts';
 import { isKibbleRecipe,validKibbleIngredients } from './fodder-recipes.ts';
 import { allowedAreaReason } from './allowed-area-state.ts';
@@ -13,7 +15,7 @@ import { isAnimalCorpseItem } from './biome-items.ts';
 import { foodStationUsable, usesCookingFuel, isButcherStation } from './food-workstations.ts';
 import { corpseFresh } from './corpses.ts';
 import { ticksUntilRot } from './food-preservation.ts';
-import { isFlakRecipe,stationRecipe, stationWork, taskRecipe, validSurvivalMealIngredients, validFineMealIngredients, validFineMealBulkIngredients, validLavishMealIngredients, validLavishMealBulkIngredients, validVegetarianFineMealIngredients, validVegetarianFineMealBulkIngredients, validVegetarianLavishMealIngredients, validVegetarianLavishMealBulkIngredients, validCarnivoreFineMealIngredients, validCarnivoreFineMealBulkIngredients, validCarnivoreLavishMealIngredients, validCarnivoreLavishMealBulkIngredients, type ProductionIngredient } from './production-recipes.ts';
+import { isFlakRecipe,stationRecipe,  taskRecipe, validSurvivalMealIngredients, validFineMealIngredients, validFineMealBulkIngredients, validLavishMealIngredients, validLavishMealBulkIngredients, validVegetarianFineMealIngredients, validVegetarianFineMealBulkIngredients, validVegetarianLavishMealIngredients, validVegetarianLavishMealBulkIngredients, validCarnivoreFineMealIngredients, validCarnivoreFineMealBulkIngredients, validCarnivoreLavishMealIngredients, validCarnivoreLavishMealBulkIngredients, type ProductionIngredient } from './production-recipes.ts';
 import { candidateAccess } from './candidate-access.ts';
 import { billWanted, componentWorkpiecePlaceFree,cookingPlaceFree, cookingSpot, ingredientPlaceFree, ingredientWithinReach } from './cooking-bills.ts';
 import { planCooking } from './cooking-planner.ts';
@@ -37,9 +39,10 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
     if(unavailable)return no(unavailable);
   }
   const areaReason=allowedAreaReason(world,pawn,station);if(areaReason)return no(areaReason);
-  const refusal=backgroundWorkRefusal(pawn,stationWork(station));if(refusal)return no(refusal);
-  if(!workPriority(pawn,stationWork(station)))return no('Métier désactivé dans le tableau Travail.');
   if(!station.bills?.some(b=>billWanted(world,b)))return no('Aucune facture active à produire : vérifiez suspension et quantité demandée.');
+  const enabled=(station.bills??[]).filter(b=>billWanted(world,b)&&workPriority(pawn,billWork(b))>0);
+  const refusal=enabled.length&&enabled.every(b=>backgroundWorkRefusal(pawn,billWork(b)))?backgroundWorkRefusal(pawn,billWork(enabled[0]!)):undefined;if(refusal)return no(refusal);
+  if(!enabled.length)return no('Métier désactivé dans le tableau Travail.');
   if(station.kind==='drug-lab'&&!productionResearchUnlocked(world,'make-medicine'))return no('La recherche Production de médicaments est nécessaire.');
   if(station.kind==='biofuel-refinery'&&!productionResearchUnlocked(world,'chemfuel-from-wood'))return no('La recherche Raffinage du biocarburant est nécessaire.');
   if(station.kind==='drug-lab'&&!productionWorkerQualified(pawn,'make-medicine'))return no('Artisanat 4 et Intellectuel 4 nécessaires.');
@@ -55,6 +58,7 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   if(!routeToCell(world,spot,reach))return no('Aucun accès à la place de cuisine.');
   const plan=planCooking(world,pawn,reach,budget,{stationId,forced});
   if(!plan)return no(!usesCookingFuel(station.kind)||station.fuel?.ticks?'Aucune recette réalisable : ingrédients autorisés dans le rayon, accès ou dépôt insuffisants.':'Aucun bois disponible et accessible pour rallumer le feu.');
+  if(isBurnApparelRecipe(plan.task?.recipe))return {label:'Brûler des vêtements',order:{cooking:plan.task!},path:plan.path};
   if(station.kind==='drug-lab')return {label:'Fabriquer un médicament',order:{cooking:plan.task!},path:plan.path};
   if(station.kind==='biofuel-refinery')return {label:'Raffiner du biocarburant',order:{cooking:plan.task!},path:plan.path};
   if(station.kind==='electric-smelter')return {label:'Fondre une arme',order:{cooking:plan.task!},path:plan.path};
@@ -69,6 +73,7 @@ export function queuedCookingReason(world:World,order:CookingOrder,pawn?:Pawn):s
   const view=withoutQueuedOrder(world,order),c=order.cooking,station=view.structures.find(s=>s.id===c.stationId&&stationRecipe(s)!==null),bill=station?.bills?.find(b=>b.id===c.billId);
   if(!station||!bill||bill.recipe!==taskRecipe(c)||!billWanted(view,bill))return 'Facture supprimée, suspendue ou quantité atteinte.';
   if(isKibbleRecipe(bill.recipe)&&(world.schemaVersion<227||!stationAccepts(station,bill.recipe)||!validKibbleIngredients(c.ingredients)||c.ingredients.some(i=>i.stage==='source'&&i.quantity>10)))return 'Les croquettes exigent vingt protéines et vingt végétaux frais au poste de boucherie.';
+  if(isBurnApparelRecipe(bill.recipe)&&(world.schemaVersion<251||!stationAccepts(station,bill.recipe)||!validBurnApparelIngredients(c.ingredients)||c.phase==='output'||c.phase==='interrupted'||bill.mode==='until'||bill.destination!=='drop'))return 'La combustion exige un vêtement entier autorisé et aucune sortie.';
   if(isCremationRecipe(bill.recipe)&&(!validCremationIngredients(c.ingredients)||c.phase==='output'||bill.mode==='until'||bill.destination!=='drop'))return 'La crémation exige une seule dépouille entière et aucune sortie.';
   if(!productionStationUsable(station)||!productionResearchUnlocked(world,bill.recipe))return 'Atelier sans courant ou recherche manquante.';
   if(!foodStationUsable(station))return station.kind==='electric-stove'?'La cuisinière n’est pas alimentée.':'Le poste est sans combustible.';
@@ -97,6 +102,7 @@ export function queuedCookingReason(world:World,order:CookingOrder,pawn?:Pawn):s
     const pile=view.piles.find(p=>p.id===i.pileId);
     if(isCremationRecipe(bill.recipe)&&!canStandAt(view,i.cell))return 'Dépôt des ingrédients inaccessible.';
     if(isCremationRecipe(bill.recipe)&&(!pile||!cremationIngredientAllowed(view,bill,pile)||pile.humanCorpse&&burialClaim(view,pile.humanCorpse.pawnId,author?.id)))return 'Dépouille interdite par les filtres, indisponible ou réservée pour une inhumation.';
+    if(isBurnApparelRecipe(bill.recipe)&&(!pile||!burnApparelIngredientAllowed(bill,pile)))return 'Vêtement interdit, non brûlable ou hors des filtres de type, état et qualité.';
     if(isSmeltingRecipe(bill.recipe)&&(!pile||!smeltingIngredientAllowed(bill,pile)))return 'Arme interdite ou hors des filtres de type, état et qualité de la facture.';
     const work=pile?.artWork??pile?.gunWork??pile?.flakWork??pile?.componentWork??pile?.unfinished,bound=work?.billId===bill.id;
     const required=(sources.get(i.pileId)??0)+i.quantity;sources.set(i.pileId,required);
@@ -141,7 +147,7 @@ export function queuedCookingAreaReason(world:World,pawn:Pawn,order:CookingOrder
 }
 export function advanceCookingOrder(world:World,pawn:Pawn,order:CookingOrder,getBlocked:NavigationGrid,budget:SearchBudget):boolean {
   const station=world.structures.find(s=>s.id===order.cooking.stationId);
-  let reason=queuedCookingAreaReason(world,pawn,order)??(station?backgroundWorkRefusal(pawn,stationWork(station)):undefined)??queuedCookingReason(world,order),path:Cell[]|null=null;
+  let reason=queuedCookingAreaReason(world,pawn,order)??(station?backgroundWorkRefusal(pawn,taskWork(order.cooking)):undefined)??queuedCookingReason(world,order),path:Cell[]|null=null;
   if(!reason) {
     const c=order.cooking,sources=c.ingredients.filter(i=>i.stage==='source').map(i=>world.piles.find(p=>p.id===i.pileId)!.owner as Cell);
     const groups=[new Set([cellIndex(world,c.spot.x,c.spot.z)]),...sources.map(s=>interactionGoals(world,[s]))];

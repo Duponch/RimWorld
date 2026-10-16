@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 250.** [Les Aulnes V394](gameplay/aulnes-policy-v394.md) reprennent au10733 : permission laine cohérente, seconde tuque en cours, aucun port imposé ; diagnostic de recette corrigé. Publié en eefe3715, produit b23e178b, 134 réponses HTTPS exactes. Ensuite : destruction physique des vêtements indésirables aux postes existants, après revue ciblée.
+**16 octobre 2026 — schéma 251.** [Brûler des vêtements V395](gameplay/burn-apparel-v395.md) : facture physique au feu/crématorium qualifiée, perte unique et reprise au travail. Publication regroupée suivante ; dernière production V394/eefe3715. Ensuite : détérioration des réserves sensibles au sol et intérêt du stockage abrité, après références ciblées.
 
 ## Priorité actuelle
 
@@ -25,7 +25,8 @@
 19. **Lecture alimentaire V393 qualifiée.** Signaler les piles incompatibles avec les régimes sans prétendre connaître accès, production ou autonomie.
 
 20. **Actualisation Aulnes V394 qualifiée.** Permission laine partagée et ouvrage réellement repris,360ticks ordinaires ; seconde tuque et port encore ouverts.
-21. **Fin du cycle textile V395 proposée.** Brûler des vêtements indésirables via une facture physique et filtres existants, sans nouvel objet ; préparation privée seulement.
+21. **Fin du cycle textile V395 qualifiée.** Brûler des vêtements indésirables via une facture physique et filtres existants, sans nouvel objet ; reprise et perte unique observées.
+22. **Stockage sensible V396 en préparation privée.** Détérioration des matières au sol selon toit/pièce/pluie, transport et étagères existantes ; aucune qualification acquise.
 
 **Référence jouable à entretenir : Les Aulnes.** Actualiser régulièrement sa version courante avec les objets et boucles pertinents du catalogue, en conservant une colonie logique et les anciennes versions. Le patrimoine ajouté peut être préparé et explicitement décrit ; il ne devient pas une campagne naturellement acquise. V381 expose les étagères et la tenue de garde, V386 une confection de tuques en cours ; les prochaines mises à jour suivront les ajouts pertinents.
 

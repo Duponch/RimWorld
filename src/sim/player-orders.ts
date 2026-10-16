@@ -15,7 +15,7 @@ import { feedingProposal } from './feeding.ts';
 import { tendingReason,tendingProposal,lyingPatient } from './tending.ts';
 import { carrierOf } from './rescue-state.ts';
 import { rescueReason,rescueProposal,wantsRescue } from './rescue.ts';
-import { stationRecipe, stationWork } from './production-recipes.ts';
+import { stationRecipe, taskWork } from './production-recipes.ts';
 import { furnitureReady, furnitureWorkTarget, packedAt } from './furniture-rules.ts';
 import { deconstructionAvailable } from './deconstruction-rules.ts';
 import { rememberPriorityWork, expirePriorityWork } from './priority-work-state.ts';
@@ -268,7 +268,7 @@ export function reconcileOrders(world:World):void {
     orders.queue=orders.queue.filter(id=>{
       if(typeof id!=='number') {
         const station=isCookingOrder(id)?world.structures.find(s=>s.id===id.cooking.stationId):undefined;
-        const work=isCookingOrder(id)?station?stationWork(station):undefined:haulingWork(id.destination);
+        const work=isCookingOrder(id)?station?taskWork(id.cooking):undefined:haulingWork(id.destination);
         const reason=(work?backgroundWorkRefusal(pawn,work):undefined)??(isCookingOrder(id)?queuedCookingReason(world,id,pawn):queuedHaulReason(world,id,pawn));
         if(reason){world.events.push({tick:world.tick,type:'command',message:`${pawn.name} : livraison abandonnée. ${reason}`});if(world.events.length>80)world.events.shift();}
         return !reason;

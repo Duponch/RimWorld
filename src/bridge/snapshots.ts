@@ -1,3 +1,4 @@
+import {validBurnApparelHistoricalTransport,validBurnApparelTransport} from '../sim/burn-apparel-save.ts';
 import {validGroupProvisionsHistoricalTransport} from '../sim/group-provisions-save.ts';
 import {validTorchHistoricalTransport,validTorchTransport} from '../sim/torch-save.ts';
 import {validPemmicanHistoricalTransport,validPemmicanCatalogueDomains} from '../sim/pemmican-save.ts';
@@ -902,6 +903,7 @@ export class SnapshotDecoder {
     if (packet.epoch < this.epoch || (packet.epoch === this.epoch && packet.revision <= this.revision)) return { status: 'stale' };
     if (!Number.isSafeInteger(packet.world.schemaVersion) || packet.world.schemaVersion < 1
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
+    if(!validBurnApparelHistoricalTransport(packet,packet.world.schemaVersion))return resync('Recette de destruction de vêtement future.');
     if(!validGroupProvisionsHistoricalTransport(packet,packet.world.schemaVersion))return resync('Provisions mixtes de groupe futures.');
     if(!validTorchHistoricalTransport(packet,packet.world.schemaVersion))return resync('Lampe-torche future.');
     if(!validPemmicanHistoricalTransport(packet,packet.world.schemaVersion))return resync('Contenu de pemmican futur.');
@@ -1206,6 +1208,7 @@ export class SnapshotDecoder {
     if(!validShelfTransport(next,next.schemaVersion)||!validShelfGround(next))return resync('Étagère, cellules ou contenu physique invalide ou futur.');
     if(!validSpikeTrapTransport(next,next.schemaVersion))return resync('Piège à pointes, contact ou propriétaire invalide ou futur.');
     if(!validCremationTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Crématorium, filtre ou corps réservé invalide ou futur.');
+    if(!validBurnApparelTransport(next,next.schemaVersion,true,validation.geometry))return resync('Recette, vêtement ou propriétaire de brûlage invalide ou futur.');
     if(!validSmeltingTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Fonderie, filtre, arme ou propriétaire de fusion invalide ou futur.');
     if(!validNutrientPasteTransport(next,next.schemaVersion,powerTopology))return resync('Pâte nutritive, source ou transport invalide.');
     if(!validOrbitalTransport(next,next.schemaVersion,powerTopology,identities))return resync('État orbital, propriétaire ou contact invalide.');

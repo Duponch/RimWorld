@@ -48,9 +48,9 @@ export function applyEquipment(world:World,command:EquipmentCommand):CommandResu
     if(command.allowed)delete state.forbidden;else state.forbidden=true;
     if(!command.allowed)for(const p of world.pawns){
       if(p.haul?.phase==='pickup'&&p.haul.sourcePileId===pile!.id)release(world,p);
-      if(p.cooking?.recipe==='smelt-weapon'&&p.cooking.ingredients.some(i=>i.pileId===pile.id))release(world,p);
+      if((p.cooking?.recipe==='smelt-weapon'||p.cooking?.recipe==='burn-apparel')&&p.cooking.ingredients.some(i=>i.pileId===pile.id))release(world,p);
       p.orders.queue=p.orders.queue.filter(o=>typeof o==='number'||('cooking' in o
-        ?o.cooking.recipe!=='smelt-weapon'||!o.cooking.ingredients.some(i=>i.pileId===pile.id)
+        ?o.cooking.recipe!=='smelt-weapon'&&o.cooking.recipe!=='burn-apparel'||!o.cooking.ingredients.some(i=>i.pileId===pile.id)
         :o.sourcePileId!==pile.id));
     }
     return {ok:true};

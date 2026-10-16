@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Éliminer un vêtement indésirable — V395
+
+Inspectez un **feu de camp** ou un **crématorium** et ajoutez **Brûler des vêtements**. Aucun type n’est choisi au départ : ouvrez les filtres, cochez les pièces voulues et limitez leurs PV/qualités. Une pièce retirée reste interdite dans le jeu livré ; utilisez **Autoriser cet objet** au sol si vous voulez la brûler. Un habit porté, une cargaison tierce ou un casque pare-balles en acier ne sera pas pris.
+
+Activez **Transport**, laissez un accès et une place de dépôt. Le colon apporte la pièce entière puis la détruit au contact, sans matière ni fuel récupéré. Le feu doit avoir son vrai combustible ; le crématorium exige son courant. Une annulation conserve l’objet et son portage physique. [Règles et limites](burn-apparel-v395.md).
+
 **Les Aulnes V394 :** dans Assignations, Défense entretenue autorise désormais la tuque laine ; Noé et Alma dorment encore, le renouvellement dépend des besoins et règles ordinaires. Marin poursuit la facture de seconde tuque au poste manuel. [État réel et limites](aulnes-policy-v394.md).
 
 ## Comprendre le stock et les régimes — V393

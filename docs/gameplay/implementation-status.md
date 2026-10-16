@@ -1,6 +1,6 @@
 # Ce qui est jouable et ce qui manque
 
-**V394 — schéma 250 :** [Les Aulnes, tenues et ouvrage](aulnes-policy-v394.md) : permission laine partagée, courte évolution ordinaire et diagnostic de production corrigé. Aucun nouveau produit fini ou port annoncé ; archives préservées. Publié en eefe3715, produit b23e178b, 134 réponses HTTPS exactes.
+**V395 — schéma 251 :** [Brûler des vêtements](burn-apparel-v395.md) : facture au feu/crématorium, filtres et perte physique d’une pièce entière, sans sortie. Migrations strictes et reprise au travail qualifiées ; publication regroupée suivante, dernière production V394/eefe3715.
 
 **V381 — référence Les Aulnes actualisée :** [atelier, étagères et tenue de garde](aulnes-workshop-v381.md). Patrimoine préparé explicite, habillage et rangement ordinaires observés, anciennes références conservées ; aucune nouvelle mécanique ou campagne entière revendiquée. Les états suivants sont historiques.
 

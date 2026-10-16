@@ -1,4 +1,7 @@
+import {isBurnApparelRecipe,burnApparelIngredientAllowed} from './burn-apparel-rules.ts';
 import {isPemmicanRecipe,validPemmicanIngredients} from './pemmican-content.ts';
+import {backgroundWorkRefusal} from './colonist-backgrounds.ts';
+import {billWork} from './production-recipes.ts';
 import { workPriority } from './work-types.ts';
 import { isKibbleRecipe,KIBBLE_GROUP_UNITS,kibbleIngredientGroup,validKibbleIngredients } from './fodder-recipes.ts';
 import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
@@ -20,7 +23,7 @@ import { corpseFresh } from './corpses.ts';
 import { ticksUntilRot } from './food-preservation.ts';
 import { planUnfinished } from './tailoring-plan.ts';
 import { CARRY_CAPACITY, footprintCells } from './definitions.ts';
-import { PRODUCTION_RECIPES, admittedIngredient, fineMealIngredientGroup, mixedMealGroupUnits, validSurvivalMealIngredients, validFineMealIngredients, validFineMealBulkIngredients, validLavishMealIngredients, validLavishMealBulkIngredients, validVegetarianFineMealIngredients, validVegetarianFineMealBulkIngredients, validVegetarianLavishMealIngredients, validVegetarianLavishMealBulkIngredients, validCarnivoreFineMealIngredients, validCarnivoreFineMealBulkIngredients, validCarnivoreLavishMealIngredients, validCarnivoreLavishMealBulkIngredients, isTailoring, productionStationUsable, stationRecipe, stationWork, type ProductionIngredient } from './production-recipes.ts';
+import { PRODUCTION_RECIPES, admittedIngredient, fineMealIngredientGroup, mixedMealGroupUnits, validSurvivalMealIngredients, validFineMealIngredients, validFineMealBulkIngredients, validLavishMealIngredients, validLavishMealBulkIngredients, validVegetarianFineMealIngredients, validVegetarianFineMealBulkIngredients, validVegetarianLavishMealIngredients, validVegetarianLavishMealBulkIngredients, validCarnivoreFineMealIngredients, validCarnivoreFineMealBulkIngredients, validCarnivoreLavishMealIngredients, validCarnivoreLavishMealBulkIngredients, isTailoring, productionStationUsable, stationRecipe,  type ProductionIngredient } from './production-recipes.ts';
 import { reservedServiceCells } from './service-reservations.ts';
 import { billWanted, cookingPlaceFree, cookingSpot, ingredientPlaceFree } from './cooking-bills.ts';
 import { groundCapacity } from './ground-placement.ts';
@@ -33,12 +36,15 @@ import type { Cell, HaulTask, Pawn, Structure, World } from './types.ts';
 export interface CookingPlan {station:Structure;priority:number;target:Cell;path:Cell[];task?:CookingTask;refuel?:HaulTask}
 const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 const distance=(a:Cell,b:Cell)=>(a.x-b.x)**2+(a.z-b.z)**2;
+function stationPriority(world:World,pawn:Pawn,s:Structure):number {
+  let best=5;for(const bill of s.bills??[]){const priority=workPriority(pawn,billWork(bill));if(priority>0&&priority<best&&billWanted(world,bill)&&!backgroundWorkRefusal(pawn,billWork(bill)))best=priority;}return best;
+}
 export function hasCookingWork(world:World,pawn:Pawn):boolean {
   return productionPriority(world,pawn)<5;
 }
 export function availableCookingStations(world:World,pawn:Pawn):Structure[] {
   const policy=captureAllowedArea(world,pawn);
-  return world.structures.filter(s=>(!policy||allowedAreaAllows(world,pawn,s,policy))&&stationRecipe(s)&&(s.kind!=='electric-stove'||foodStationUsable(s))&&productionStationUsable(s)&&workPriority(pawn,stationWork(s))>0&&s.bills?.some(b=>billWanted(world,b))
+  return world.structures.filter(s=>(!policy||allowedAreaAllows(world,pawn,s,policy))&&stationRecipe(s)&&(s.kind!=='electric-stove'||foodStationUsable(s))&&productionStationUsable(s)&&stationPriority(world,pawn,s)<5
     &&(s.kind!=='electric-crematorium'||(pawn.faction??'colony')==='colony'&&!pawn.prisoner&&!pawn.visitor&&!pawn.raid&&!pawn.podRescue&&!medicalWorkRefusal(pawn)&&!pawn.stun&&!pawn.draft&&!pawn.burning&&!pawn.mental?.crisis&&!pawn.collapsePending)
     &&!fuelStationReserved(world,s.id,pawn.id));
 }
@@ -46,8 +52,9 @@ export function availableCookingStations(world:World,pawn:Pawn):Structure[] {
  * construction/growing/hauling before committing its reservations. */
 export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:{pairs:number},options?:{stationId:number;forced:boolean}):CookingPlan|null {
   const policy=captureAllowedArea(world,pawn),allows=(cell:Cell)=>!policy||allowedAreaAllows(world,pawn,cell,policy);
-  const stations=availableCookingStations(world,pawn).filter(s=>!options||s.id===options.stationId)
-    .sort((a,b)=>workPriority(pawn,stationWork(a))-workPriority(pawn,stationWork(b))||distance(pawn,a)-distance(pawn,b)||a.id-b.id);
+  const stations=availableCookingStations(world,pawn).filter(s=>!options||s.id===options.stationId);
+  const priorities=new Map(stations.map(s=>[s.id,stationPriority(world,pawn,s)]));
+  stations.sort((a,b)=>priorities.get(a.id)!-priorities.get(b.id)!||distance(pawn,a)-distance(pawn,b)||a.id-b.id);
   // Proposals below only read the World; reserve claims cannot change until
   // the caller commits a plan. Capture the same service cells at most once.
   let serviceCells:ReadonlySet<number>|undefined;
@@ -58,7 +65,8 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
     const toSpot=routeToCell(world,spot,reachable);
     if(!toSpot)continue;
     for(const bill of station.bills!) {
-      if(!billWanted(world,bill)||!productionResearchUnlocked(world,bill.recipe)||!productionWorkerQualified(pawn,bill.recipe))continue;
+      if(isBurnApparelRecipe(bill.recipe)&&((pawn.faction??'colony')!=='colony'||pawn.prisoner||pawn.visitor||pawn.raid||pawn.podRescue||medicalWorkRefusal(pawn)||pawn.stun||pawn.draft||pawn.burning||pawn.mental?.crisis||pawn.collapsePending))continue;
+      if(!workPriority(pawn,billWork(bill))||backgroundWorkRefusal(pawn,billWork(bill))||!billWanted(world,bill)||!productionResearchUnlocked(world,bill.recipe)||!productionWorkerQualified(pawn,bill.recipe))continue;
       // The reference bill worker refuels an empty usable station before cooking.
       if(usesCookingFuel(station.kind)&&!station.fuel?.ticks) {
         const capacity=fuelCapacity(world,station.id,undefined,options?.forced);if(!capacity)break;
@@ -68,7 +76,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
           if(budget.pairs--<=0){budget.pairs=0;return null;}
           const path=routeToJob(world,pile.owner as Cell,reachable,true);
           if(!path)continue;
-          return {station,priority:workPriority(pawn,stationWork(station)),target:pile.owner as Cell,path,refuel:{sourcePileId:pile.id,quantity:Math.min(10,capacity,pile.quantity-reservedSource(world,pile.id)),phase:'pickup',carryPileId:null,destination:{type:'fuel',structureId:station.id,forCooking:true,...(options?.forced?{forced:true}:{})}}};
+          return {station,priority:workPriority(pawn,billWork(bill)),target:pile.owner as Cell,path,refuel:{sourcePileId:pile.id,quantity:Math.min(10,capacity,pile.quantity-reservedSource(world,pile.id)),phase:'pickup',carryPileId:null,destination:{type:'fuel',structureId:station.id,...(isBurnApparelRecipe(bill.recipe)?{}:{forCooking:true as const}),...(options?.forced?{forced:true}:{})}}};
         }
         break;
       }
@@ -78,7 +86,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       const componentResumed=planComponentWork(world,pawn,station,bill,reachable,budget);if(componentResumed.plan)return componentResumed.plan;if(componentResumed.handled)continue;
       const resumed=planUnfinished(world,pawn,station,bill,reachable,budget);if(resumed.plan)return resumed.plan;if(resumed.handled)continue;
       const requiresFreshIngredients=isPemmicanRecipe(bill.recipe)||isKibbleRecipe(bill.recipe)||bill.recipe==='chemfuel-from-organics'||bill.recipe==='cook-survival-meal'||bill.recipe==='cook-simple-meal-bulk'||bill.recipe==='cook-fine-meal-bulk'||bill.recipe==='cook-lavish-meal-bulk'||bill.recipe==='vegetarian-fine-meal'||bill.recipe==='cook-vegetarian-fine-meal-bulk'||bill.recipe==='carnivore-fine-meal'||bill.recipe==='cook-carnivore-fine-meal-bulk'||bill.recipe==='vegetarian-lavish-meal'||bill.recipe==='cook-vegetarian-lavish-meal-bulk'||bill.recipe==='cook-carnivore-lavish-meal'||bill.recipe==='cook-carnivore-lavish-meal-bulk';
-      const sources=world.piles.filter(p=>admittedIngredient(bill,p.item)&&(!isSmeltingRecipe(bill.recipe)||smeltingIngredientAllowed(bill,p))&&(!isCremationRecipe(bill.recipe)||cremationIngredientAllowed(world,bill,p)&&(!p.humanCorpse||!burialClaim(world,p.humanCorpse.pawnId,pawn.id)))&&(isCremationRecipe(bill.recipe)||!isAnimalCorpseItem(p.item)||corpseFresh(p,world.tick))&&(!requiresFreshIngredients||ticksUntilRot(p,world.tick)>0)&&p.owner.type==='ground'&&allows(p.owner)&&distance(p.owner,station)<=bill.radius**2)
+      const sources=world.piles.filter(p=>admittedIngredient(bill,p.item)&&(!isBurnApparelRecipe(bill.recipe)||burnApparelIngredientAllowed(bill,p))&&(!isSmeltingRecipe(bill.recipe)||smeltingIngredientAllowed(bill,p))&&(!isCremationRecipe(bill.recipe)||cremationIngredientAllowed(world,bill,p)&&(!p.humanCorpse||!burialClaim(world,p.humanCorpse.pawnId,pawn.id)))&&(isCremationRecipe(bill.recipe)||!isAnimalCorpseItem(p.item)||corpseFresh(p,world.tick))&&(!requiresFreshIngredients||ticksUntilRot(p,world.tick)>0)&&p.owner.type==='ground'&&allows(p.owner)&&distance(p.owner,station)<=bill.radius**2)
         .sort((a,b)=>distance(a.owner as Cell,station)-distance(b.owner as Cell,station)||a.id-b.id);
       // No source means no pair was visited and no staging decision was made.
       // Avoid six full resource/footprint scans per empty bill, especially after
@@ -114,7 +122,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       }
       if(missing||isPemmicanRecipe(bill.recipe)&&!validPemmicanIngredients(ingredients)||kibble&&!validKibbleIngredients(ingredients)||!validBiofuelIngredients(bill.recipe,ingredients)||!validMedicineIngredients(bill.recipe,ingredients)||bill.recipe==='cook-survival-meal'&&!validSurvivalMealIngredients(ingredients)||bill.recipe==='fine-meal'&&!validFineMealIngredients(ingredients)||bill.recipe==='cook-fine-meal-bulk'&&!validFineMealBulkIngredients(ingredients)||bill.recipe==='vegetarian-fine-meal'&&!validVegetarianFineMealIngredients(ingredients)||bill.recipe==='cook-vegetarian-fine-meal-bulk'&&!validVegetarianFineMealBulkIngredients(ingredients)||bill.recipe==='carnivore-fine-meal'&&!validCarnivoreFineMealIngredients(ingredients)||bill.recipe==='cook-carnivore-fine-meal-bulk'&&!validCarnivoreFineMealBulkIngredients(ingredients)||bill.recipe==='lavish-meal'&&!validLavishMealIngredients(ingredients)||bill.recipe==='cook-lavish-meal-bulk'&&!validLavishMealBulkIngredients(ingredients)||bill.recipe==='vegetarian-lavish-meal'&&!validVegetarianLavishMealIngredients(ingredients)||bill.recipe==='cook-vegetarian-lavish-meal-bulk'&&!validVegetarianLavishMealBulkIngredients(ingredients)||bill.recipe==='cook-carnivore-lavish-meal'&&!validCarnivoreLavishMealIngredients(ingredients)||bill.recipe==='cook-carnivore-lavish-meal-bulk'&&!validCarnivoreLavishMealBulkIngredients(ingredients)||!validFlakIngredients(bill.recipe,ingredients)||!validAdvancedComponentIngredients(bill.recipe,ingredients))continue; // Try the next bill if its filters admit other ingredients.
       const source=ingredients.find(i=>i.stage==='source'),target=source?world.piles.find(p=>p.id===source.pileId)!.owner as Cell:spot;
-      return {station,priority:workPriority(pawn,stationWork(station)),target,path:source?routeToJob(world,target,reachable,true)!:toSpot,task:{...(bill.recipe!=='simple-meal'?{recipe:bill.recipe}:{}),stationId:station.id,billId:bill.id,spot,actionCell:{x:target.x,z:target.z},phase:'gather',ingredients,progress:0,productId:null,storageId:null}};
+      return {station,priority:workPriority(pawn,billWork(bill)),target,path:source?routeToJob(world,target,reachable,true)!:toSpot,task:{...(bill.recipe!=='simple-meal'?{recipe:bill.recipe}:{}),stationId:station.id,billId:bill.id,spot,actionCell:{x:target.x,z:target.z},phase:'gather',ingredients,progress:0,productId:null,storageId:null}};
       }
     }
   }
@@ -124,6 +132,6 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
 export function productionPriority(world:World,pawn:Pawn):number {
   const policy=captureAllowedArea(world,pawn);
   let priority=5;
-  for(const s of world.structures)if((!policy||allowedAreaAllows(world,pawn,s,policy))&&stationRecipe(s)&&s.bills?.some(b=>billWanted(world,b))){const p=workPriority(pawn,stationWork(s));if(p>0)priority=Math.min(priority,p);}
+  for(const s of world.structures)if((!policy||allowedAreaAllows(world,pawn,s,policy))&&stationRecipe(s)&&s.bills?.some(b=>billWanted(world,b))){const p=stationPriority(world,pawn,s);priority=Math.min(priority,p);}
   return priority;
 }

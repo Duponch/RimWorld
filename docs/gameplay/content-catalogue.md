@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V395 qualifié — [Brûler des vêtements](burn-apparel-v395.md), schéma 251.** Facture au feu de camp/crématorium existants, pièce entière autorisée, filtres PV/qualité, Transport et perte unique sans sortie ni combustible récupéré. Casque acier refusé, anciennes sauvegardes neutres ; perte unique et reprise au travail qualifiées.
+
 **V394 — [Les Aulnes, tenues partagées](aulnes-policy-v394.md).** Référence actualisée au10733 : tuque laine autorisée, ouvrage repris, première tuque toujours rangée ; seconde production et port restent à jouer. Archives et patrimoine déclaré conservés.
 
 **V393 qualifié — [lecture des piles alimentaires et régimes](food-readability-v393.md).** Consolidation UX : stock physique distinct des types autorisés constatés, alerte/guide/diagnostic communs et action Assignations. Accès, partage, pâte produisible et autonomie non évalués ; aucun objet, état ou schéma nouveau.

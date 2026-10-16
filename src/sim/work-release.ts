@@ -1,3 +1,4 @@
+import {hasTravellingCargo} from './interrupted-cargo.ts';
 import { releaseSurgeryState } from './surgery-state.ts';
 import { releaseAllowedAreaReturn } from './allowed-area-state.ts';
 import { cancelHunting } from './hunting-state.ts';
@@ -84,7 +85,8 @@ export function planCommandDrops(world:World,command:Command):DropPlan|null {
     if(pawn?.burial&&command.work==='haul'&&pawn.orders.active!=='bury'||pawn?.cleaning&&!pawn.cleaning.forced&&command.work==='clean')pawns.add(pawn!.id);
     if(pawn&&((pawn.surgery&&command.work==='doctor')||(pawn.tend&&command.work==='doctor'&&pawn.orders.active!=='tend')||(pawn.feed&&command.work===feedingWork(world.pawns.find(p=>p.id===pawn.feed!.patientId))&&pawn.orders.active!=='feed')||(pawn.haul&&pawn.orders.active!=='haul'&&command.work===haulingWork(pawn.haul.destination))||(job&&workType(job)===command.work&&pawn.orders.active===null)||(pawn.cooking&&pawn.orders.active!=='cook'&&command.work === taskWork(pawn.cooking))))pawns.add(pawn.id);
   } else if(command.type==='bill-remove'||command.type==='bill-update') {
-    for(const pawn of world.pawns)if(pawn.cooking?.billId===command.billId&&pawn.cooking.stationId===command.structureId)pawns.add(pawn.id);
+    for(const pawn of world.pawns)if(pawn.cooking?.billId===command.billId&&pawn.cooking.stationId===command.structureId
+      &&!(pawn.cooking.recipe==='burn-apparel'&&hasTravellingCargo(world,pawn)))pawns.add(pawn.id);
   } else if(command.type==='turret-auto-reload'&&!command.enabled) {
     for(const pawn of world.pawns)if(pawn.haul?.destination.type==='turret'&&!pawn.haul.destination.forced&&pawn.haul.destination.structureId===command.structureId)pawns.add(pawn.id);
   } else if(command.type==='refuel-policy' && !command.enabled) {

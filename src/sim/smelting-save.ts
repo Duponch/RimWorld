@@ -1,3 +1,4 @@
+import {isBurnApparelRecipe} from './burn-apparel-content.ts';
 import { captureHumanOwners } from './human-owners.ts';
 import { validateCooking } from './cooking-save.ts';
 import { validCookingOrder } from './player-cooking-save.ts';
@@ -37,7 +38,7 @@ export function validateSmelting(w:World,version:number,powerTopology?:PowerPare
     ||(s.pawn.orders?.queue??[]).some(o=>isCookingOrder(o)&&isSmeltingRecipe(o.cooking.recipe))));
   if(!machinePresent&&!bills.some(prospectiveBill)&&!taskPresent)return errors;
   if(version<222)return ['Future smelting station, recipe or filter.'];
-  for(const b of bills)if(prospectiveBill(b)&&(!obj(b)||!isSmeltingRecipe(b.recipe)||!validBillSettings(b,'smelt-weapon',version)))errors.push('Invalid smelting bill or filter attached to another recipe.');
+  for(const b of bills)if(prospectiveBill(b)&&(!obj(b)||!(isSmeltingRecipe(b.recipe)&&validBillSettings(b,'smelt-weapon',version)||version>=251&&isBurnApparelRecipe(b.recipe)&&validBillSettings(b,'burn-apparel',version))))errors.push('Invalid smelting bill or filter attached to another recipe.');
   if(foreign.some(s=>s.pawn&&(isSmeltingRecipe(s.pawn.cooking?.recipe)
     ||(s.pawn.orders?.queue??[]).some(o=>isCookingOrder(o)&&isSmeltingRecipe(o.cooking.recipe)))))errors.push('Off-map owner retains a local smelting task.');
   if(machines.length&&!productionResearchUnlocked(w,'smelt-weapon'))errors.push('Unavailable electric smelter.');
