@@ -17,7 +17,7 @@ import {BLOOD_UNIT} from '../src/sim/injury-rules.ts';
 import {campaignPresentation} from '../src/sim/secondary-site-presentation.ts';
 import {groupProvisionsWorkshopV391} from './scenarios/group-provisions-v391.ts';
 import {preparedCassandraExpedition} from './scenarios/secondary-incidents-v379.ts';
-import type {World,Command} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type World,type Command} from '../src/sim/types.ts';
 const raw=(v:unknown)=>v as Record<string,unknown>;
 const accept=(w:World,c:Command)=>expect(applyCommand(w,c),JSON.stringify(c)).toMatchObject({ok:true});
 const until=(w:World,done:()=>boolean,max=2400)=>{for(let i=0;i<max&&!done();i++)stepWorld(w);expect(done(),'tick '+w.tick).toBe(true);};
@@ -116,8 +116,10 @@ test('252 migration validates both original maps first and grants no active grou
   const f=departed(),old=f.w;delete old.group!.freight;delete (old.group as AwayGroup).baseline.freight;
   // Historical wood inventory is admissible off-map; steel was not.
   (old.group as AwayGroup).items=(old.group as AwayGroup).items.filter(i=>i.item!=='steel');Object.assign(old,{schemaVersion:252});
-  const before=structuredClone(old),next=deserializeWorld(JSON.stringify(old));expect(next).toEqual({...before,schemaVersion:253});expect(next.group!.freight).toBeUndefined();expect((next.group as AwayGroup).baseline.freight).toBeUndefined();expect((next.group as AwayGroup).items.some(i=>i.item==='wood')).toBe(true);
-  const {w}=preparedCassandraExpedition();Object.assign(w,{schemaVersion:252});const saved=structuredClone(w);expect(deserializeWorld(JSON.stringify(w))).toEqual({...saved,schemaVersion:253});
+  // The input remains historical252; the neutral migration ends at the
+  // current schema, including later number-only terrain migrations.
+  const before=structuredClone(old),next=deserializeWorld(JSON.stringify(old));expect(next).toEqual({...before,schemaVersion:SCHEMA_VERSION});expect(next.group!.freight).toBeUndefined();expect((next.group as AwayGroup).baseline.freight).toBeUndefined();expect((next.group as AwayGroup).items.some(i=>i.item==='wood')).toBe(true);
+  const {w}=preparedCassandraExpedition();Object.assign(w,{schemaVersion:252});const saved=structuredClone(w);expect(deserializeWorld(JSON.stringify(w))).toEqual({...saved,schemaVersion:SCHEMA_VERSION});
   const bad=structuredClone(w);raw(bad.secondarySite!.map).group={freight:newGroupFreight()};expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/freight/i);
   const malformed=structuredClone(w);raw(malformed.secondarySite!.map.tiles[0]).terrain='invalid';expect(()=>deserializeWorld(JSON.stringify(malformed))).toThrow(/252/);
 });

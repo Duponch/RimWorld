@@ -8,7 +8,7 @@ Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` auto
 
 **Dernière publication V403 :** [Étangs peu profonds](docs/gameplay/shallow-water-v403.md), produit0f1a8cc1/déploiemente24c5731,134 réponses HTTPS exactes ; schéma254.
 
-**Ordre courant :** [Parcours Aulnes V397](docs/gameplay/aulnes-multimap-v397.md) clos partiel : aller-retour/travaux/revisite acquis, branche21483 conservée avec Noé/Iris/Rose à terre sur rage animale non remontée hors carte. Alertes corrigées V398, coûts ciblés réduits V399/V400. Fret collectif bois/acier qualifié V401 ; avertissement urgent et pause configurable qualifiés V402. Étangs peu profonds boréaux/pont standard qualifiés V403 ; copie/renommage de politique qualifiés V404 ; table carrée3×3 V405 autorisée en copies privées, sans code adopté ; ne pas enchaîner automatiquement des certificats CPU. Mesures restantes conservées, aucune fluidité générale promise. Ne pas prolonger la campagne ni rejouer un état favorable pour fabriquer un vert. Aulnes publiques V394 inchangées, terrain continu non prévu. Voir [la feuille de route](docs/ROADMAP.md).
+**Ordre courant — demande humaine du16octobre :** [Audit multicarte/voyages/eau V406](docs/development/multimap-audit-v406.md). Le domaine reste PARTIEL : foyer+un second site persistant+un groupe, pas parité Core complète ni UI exhaustive. Consolider d’abord voyages, persistance, destinations et performances actuelles ; V405 table3×3 reste en attente, copies privées figées non adoptées. Aulnes publiquesV394 et branche blesséeV39721483 distinctes ; aucun rejeu favorable, soin ou régénération rétroactive. Aucun nouveau catalogue avant cette consolidation.
 
 ## Méthode de livraison
 

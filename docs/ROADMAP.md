@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 254 inchangé.** [Politiques de tenue V404](gameplay/apparel-policy-copy-v404.md) : copier les filtres confirmés et renommer sans changer les affectations ; commandes partagées et recharge exacte qualifiées. Publication groupée avec V405 prévue ; dernière production V403/e24c5731, produit0f1a8cc1.
+**16 octobre 2026 — audit V406, schéma 254 inchangé.** [Voyages, cartes et eau](development/multimap-audit-v406.md) : boucle existante conservée, domaine partiel face au Core ; aucune nouvelle mécanique. Priorité humaine à la consolidation multicarte/persistance/performances. V405 en attente, V404 poussé non publié ; dernière production V403/e24c5731.
 
 **16 octobre 2026 — schéma 253.** [Fret collectif V401](gameplay/group-freight-v401.md) qualifié : bois/acier pris au contact et rapportés du second site ; reprise active exacte. Publié avec [CPU V400](development/sleeping-provenance-v400.md) en 65bad476, produit 5fdec2e6, 134 réponses HTTPS exactes.
 
@@ -10,7 +10,7 @@
 
 ## Prochaines corrections issues du parcours réel
 
-[Les Aulnes V397](gameplay/aulnes-multimap-v397.md) : aller-retour, travaux et revisite du même site observés ; garde finale rouge sur trois habitants blessés à terre au foyer. Les alertes rage animale/incapacité sont corrigées V398. V399/V400 réduisent deux lectures de structures inchangées, après profil ciblé et comparaison CPU bornée. Aucun gain FPS annoncé. Le chargement/retour de bois et acier est qualifié V401. Avertissement urgent et pause configurable sur nouvelle menace qualifiés V402, quelle que soit la carte affichée. Étangs peu profonds boréaux et pont standard qualifiés V403 ; anciennes eaux/cartes conservées. Copier/renommer une politique de tenue qualifié V404, sans suppression. Prochaine tranche V405 autorisée en copies privées : table carrée3×3 Core, construction et usage via les boucles existantes, aucun code adopté. Pas de succession automatique de caches par domaine. Garder la branche21483 et les Aulnes publiques V394 distinctes ; pas de nouvelle campagne gagnée exigée pour avancer.
+[Les Aulnes V397](gameplay/aulnes-multimap-v397.md) : aller-retour, travaux et revisite du même site observés ; garde finale rouge sur trois habitants blessés à terre au foyer. Les alertes rage animale/incapacité sont corrigées V398. V399/V400 réduisent deux lectures de structures inchangées, après profil ciblé et comparaison CPU bornée. Aucun gain FPS annoncé. Le chargement/retour de bois et acier est qualifié V401. Avertissement urgent et pause configurable sur nouvelle menace qualifiés V402, quelle que soit la carte affichée. Étangs peu profonds boréaux et pont standard qualifiés V403 ; anciennes eaux/cartes conservées. Copier/renommer une politique de tenue qualifié V404, sans suppression. Demande humaine suivante : vérifier/consolider les voyages, cartes, persistance, performances et menus face au Core, selon [auditV406](development/multimap-audit-v406.md). Table3×3 V405 en attente, aucune adoption. Le multicarte reste une tranche limitée, pas un domaine terminé. Pas de succession automatique de caches par domaine. Garder la branche21483 et les Aulnes publiques V394 distinctes ; pas de nouvelle campagne gagnée exigée pour avancer.
 
 ## Priorité actuelle
 
