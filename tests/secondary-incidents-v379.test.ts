@@ -1,3 +1,4 @@
+import {createDeteriorationState} from '../src/sim/deterioration-content.ts';
 import {expect,test} from 'vitest';
 import {preparedCassandraExpedition,incidentCommand} from './scenarios/secondary-incidents-v379.ts';
 import {adoptSecondaryIncidents} from '../src/sim/secondary-incidents.ts';
@@ -56,8 +57,11 @@ test.each([100,1_000_000])('V379 late day%s adoption jumps directly past begun w
 
 test('V379 strict241 validates both real maps, migrates neutrally and adopts only when play resumes',()=>{
   const {w}=preparedCassandraExpedition(),old=JSON.parse(serializeWorld(w));old.schemaVersion=241;
-  delete old.secondarySite.map.raids;delete old.secondarySite.map.visitors;
-  const restored=deserializeWorld(JSON.stringify(old));expect(restored).toEqual({...old,schemaVersion:SCHEMA_VERSION});
+  delete old.secondarySite.map.raids;delete old.secondarySite.map.visitors;delete old.deterioration;delete old.secondarySite.map.deterioration;
+  // Genuine241 policies predate pemmican248 and tuques245; keep recon241.
+  for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter((id:string)=>id!=='pemmican');
+  for(const policy of old.apparelPolicies)policy.allowedItems=policy.allowedItems.filter((id:string)=>id!=='cloth-tuque'&&id!=='muffalo-wool-tuque');
+  const restored=deserializeWorld(JSON.stringify(old));expect(restored).toEqual({...old,schemaVersion:SCHEMA_VERSION,deterioration:createDeteriorationState(old.seed,old.tick),secondarySite:{...old.secondarySite,map:{...old.secondarySite.map,deterioration:createDeteriorationState(old.secondarySite.map.seed,old.tick)}}});
   expect(restored.secondarySite!.map.raids).toBeUndefined();expect(restored.secondarySite!.map.visitors).toBeUndefined();
   for(const map of ['home','secondary'] as const){
     const bad=structuredClone(old),target=map==='home'?bad:bad.secondarySite.map;

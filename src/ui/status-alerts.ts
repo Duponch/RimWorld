@@ -1,3 +1,4 @@
+import {alertManhunter,alertDownedColonist} from '../sim/status-alert-rules';
 import { isColonist,activeThreat } from '../sim/affiliation';
 import { isBedKind } from '../sim/bed-kinds';
 import { bedSlotsCount } from '../sim/bed-slots';
@@ -61,7 +62,7 @@ export function readAvailabilityStatusAlerts(world:World):StatusAlert[] {
 export function readStatusAlerts(world:World,food:FoodReadability=captureFoodReadability(world)):StatusAlert[] {
   const rows:StatusAlert[]=readAvailabilityStatusAlerts(world),colonists=world.pawns.filter(isColonist),living=colonists.filter(p=>p.state!=='dead');
   for(const incident of world.campaignMap?.incidents??[]){
-    const place=incident.site==='home'?'Foyer':'Second site',label=incident.kind==='raid'?'assaillant(s)':incident.kind==='mechanoid'?'mécanoïde(s)':'visiteur(s)';
+    const place=incident.site==='home'?'Foyer':'Second site',label=incident.kind==='raid'?'assaillant(s)':incident.kind==='mechanoid'?'mécanoïde(s)':incident.kind==='manhunter'?'animal(aux) en rage':incident.kind==='downed'?'colon(s) à terre':'visiteur(s)';
     rows.push({key:`campaign:${incident.site}:${incident.kind}:${incident.actorId}`,text:`${place} · ${incident.count} ${label} hors carte · voir`,targets:[],campaign:{site:incident.site,actorId:incident.actorId}});
   }
   const add=(key:string,text:string,targets:NotificationTarget[],context?:NotificationContext,tab?:StatusAlert['tab'])=>rows.push({key,text,targets,...context?{context}:{},...tab?{tab}:{}});
@@ -81,7 +82,7 @@ export function readStatusAlerts(world:World,food:FoodReadability=captureFoodRea
     const view=miniTurretView(world,structure)!;
     add(`turret-wick:${structure.id}`,`Mini-tourelle (${structure.x}, ${structure.z}) · mèche engagée · danger 3,9 · ${turretSeconds(view.wick!.remainingCore)}`,[objectNotificationTarget('structure',structure.id,structure)]);
   }
-  const enraged=world.wildlife?.animals.filter(a=>a.manhunter&&a.state!=='dead'&&a.state!=='downed')??[];
+  const enraged=world.wildlife?.animals.filter(alertManhunter)??[];
   if(enraged.length)add('manhunter',`${enraged.length} ${enraged.length>1?'animaux':'animal'} en rage`,actors(enraged));
   counted('malnutrition',living.filter(p=>(p.health?.malnutrition??0)>0),n=>`${n} colon(s) en malnutrition`,'health');
   counted('hypothermia',living.filter(p=>(p.health?.hypothermia??0)>=40000000),n=>`${n} colon(s) en hypothermie`,'health');
@@ -96,7 +97,7 @@ export function readStatusAlerts(world:World,food:FoodReadability=captureFoodRea
     counted(`${kind}-critical`,cases.filter(p=>{const d=p.health!.immuneDiseases![kind]!;return d.immunity<IMMUNE_DISEASE_UNIT&&['extreme','critical'].includes(immuneDiseaseStage(kind,d.severity));}),n=>`Urgence médicale : ${n} colon(s) avec ${label} grave`,'health');
     counted(kind,cases,n=>`${n} colon(s) avec ${label} · consulter Santé`,'health');
   }
-  counted('downed',living.filter(p=>p.state==='downed'),n=>`${n} colon(s) à terre`,'health');
+  counted('downed',living.filter(alertDownedColonist),n=>`${n} colon(s) à terre`,'health');
   counted('bleeding',living.filter(p=>p.health&&medicalBleed(p.health)>=.1),n=>`${n} colon(s) saignent`,'health');
   counted('deaths',colonists.filter(p=>p.state==='dead'),n=>`${n} colon(s) décédé(s)`,'health');
   if(availableNutrition(world)<living.length*1.6)add('food-reserves','Réserves de nourriture faibles',[],{panel:'assign'});
@@ -130,7 +131,7 @@ export function readInspectAlerts(world:World):Partial<Record<'inspect-fire'|'in
   }).filter(present),context:{panel:'work'}};
   if(blighted.length)result['inspect-blight']={key:'blight',text:`Fléau des cultures · ${blighted.length} plant(s) · voir`,targets:blighted.map(r=>objectNotificationTarget('resource',r.id,r)),context:{panel:'architect',category:'orders'}};
   const enemies=world.pawns.filter(p=>p.faction==='outlaws'&&!p.prisoner&&activeThreat(p)),rebels=world.pawns.filter(p=>prisonBreakActive(p)&&activeThreat(p));
-  const machines=world.mechanoids?.filter(m=>m.state!=='dead'&&m.state!=='downed')??[],mental=world.pawns.filter(p=>isColonist(p)&&p.state!=='dead'&&p.mental?.crisis&&['tantrum','berserk','murderous-rage'].includes(p.mental.crisis.kind)),animals=world.wildlife?.animals.filter(a=>a.manhunter&&a.state!=='dead'&&a.state!=='downed')??[];
+  const machines=world.mechanoids?.filter(m=>m.state!=='dead'&&m.state!=='downed')??[],mental=world.pawns.filter(p=>isColonist(p)&&p.state!=='dead'&&p.mental?.crisis&&['tantrum','berserk','murderous-rage'].includes(p.mental.crisis.kind)),animals=world.wildlife?.animals.filter(alertManhunter)??[];
   const targets=[...people(world,enemies),...people(world,rebels),...actors(machines),...people(world,mental),...actors(animals)];
   if(targets.length)result['inspect-threat']={key:'threat',text:enemies.length?'Menace armée · voir':rebels.length?'Révolte de prison · voir':machines.length?'Menace mécanique · voir':mental.length?`${mentalCrisisView(world,mental[0]!)!.label} · voir`:'Animal en rage · voir',targets};
   return result;

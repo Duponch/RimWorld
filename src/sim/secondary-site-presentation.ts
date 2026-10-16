@@ -1,3 +1,5 @@
+import {alertManhunter,alertDownedColonist} from './status-alert-rules.ts';
+import {MAX_WILDLIFE} from './wildlife-state.ts';
 import { captureHumanOwners } from './human-owners.ts';
 import { campaignAuthority,otherCampaignMap,selectedMap } from './secondary-site-context.ts';
 import { validExpeditionOrigin } from './secondary-site-save.ts';
@@ -5,7 +7,7 @@ import type { World } from './types.ts';
 import type { RelationshipPerson } from './relationship-state.ts';
 import {activeThreat} from './affiliation.ts';
 
-export interface CampaignIncident {site:'home'|'secondary';kind:'raid'|'mechanoid'|'visitor';count:number;actorId:number}
+export interface CampaignIncident {site:'home'|'secondary';kind:'raid'|'mechanoid'|'visitor'|'manhunter'|'downed';count:number;actorId:number}
 /** Bounded summary only: no inactive cells, terrain, jobs or actor list.
  * Derived at confirmed tick/snapshot boundaries, never by the image loop. */
 export function otherMapIncidents(world:World):CampaignIncident[] {
@@ -20,6 +22,13 @@ export function otherMapIncidents(world:World):CampaignIncident[] {
   if(raidCount)rows.push({site,kind:'raid',count:raidCount,actorId:raidId});
   if(mechCount)rows.push({site,kind:'mechanoid',count:mechCount,actorId:mechId});
   if(visitorCount)rows.push({site,kind:'visitor',count:visitorCount,actorId:visitorId});
+  if(root.schemaVersion>=252){
+    let manhunterCount=0,manhunterId=Infinity,downedCount=0,downedId=Infinity;
+    for(const a of other.wildlife?.animals??[])if(alertManhunter(a)){manhunterCount++;manhunterId=Math.min(manhunterId,a.id);}
+    for(const p of other.pawns)if(alertDownedColonist(p)){downedCount++;downedId=Math.min(downedId,p.id);}
+    if(manhunterCount)rows.push({site,kind:'manhunter',count:manhunterCount,actorId:manhunterId});
+    if(downedCount)rows.push({site,kind:'downed',count:downedCount,actorId:downedId});
+  }
   return rows;
 }
 
@@ -51,13 +60,14 @@ const dense=(v:unknown,max:number):v is unknown[]=>Array.isArray(v)&&v.length<=m
 
 /** Snapshot-only domains are rejected by saved-world guards. References here
  * prove no physical ownership and are never inserted into byId/pawnOwners. */
-export function validCampaignPresentation(w:Pick<World,'schemaVersion'|'tick'|'nextId'|'width'|'height'|'pawns'|'mechanoids'|'planet'|'expeditionSite'|'campaignPeople'|'campaignMap'> & {secondarySite?:unknown}):boolean {
+export function validCampaignPresentation(w:Pick<World,'schemaVersion'|'tick'|'nextId'|'width'|'height'|'pawns'|'mechanoids'|'wildlife'|'planet'|'expeditionSite'|'campaignPeople'|'campaignMap'> & {secondarySite?:unknown}):boolean {
   const raw=w as unknown as Record<string,unknown>;
   if(Object.hasOwn(raw,'secondarySite'))return false;
   if(w.schemaVersion<240)return !['expeditionSite','campaignPeople','campaignMap'].some(k=>Object.hasOwn(raw,k));
   if(!Object.hasOwn(raw,'campaignMap'))return !Object.hasOwn(raw,'campaignPeople')&&!Object.hasOwn(raw,'expeditionSite');
   if(!Array.isArray(w.pawns)||!Array.isArray(w.planet?.tiles))return false;
   if(w.mechanoids!==undefined&&!Array.isArray(w.mechanoids))return false;
+  if(w.wildlife!==undefined&&(!object(w.wildlife)||!Array.isArray(w.wildlife.animals)))return false;
   const map:unknown=w.campaignMap,people:unknown=w.campaignPeople;
   if(!object(map)||!exact(map,['active','secondaryTile','createdAt','visitIds',...w.schemaVersion>=242?['incidents']:[]])||typeof map.active!=='string'||!['home','secondary'].includes(map.active)
     ||!integer(map.secondaryTile,0,161)||!integer(map.createdAt,0,w.tick)||!dense(map.visitIds,8)||map.visitIds.some(id=>!integer(id,1,w.nextId-1))
@@ -71,13 +81,15 @@ export function validCampaignPresentation(w:Pick<World,'schemaVersion'|'tick'|'n
     seen.add(person.id);
   }
   if(w.schemaVersion>=242){
-    if(!dense(map.incidents,3))return false;
+    const extended=w.schemaVersion>=252;
+    if(!dense(map.incidents,extended?5:3))return false;
     const kinds=new Set<string>(),actors=new Set<number>();
     for(const row of map.incidents){
       if(!object(row)||!exact(row,['site','kind','count','actorId'])||row.site===(map.active)||!['home','secondary'].includes(String(row.site))
-        ||!['raid','mechanoid','visitor'].includes(String(row.kind))||kinds.has(String(row.kind))||!integer(row.count,1,w.width*w.height)
-        ||!integer(row.actorId,1,w.nextId-1)||actors.has(row.actorId)||w.pawns.some(p=>p.id===row.actorId)||w.mechanoids?.some(m=>m.id===row.actorId)
-        ||row.kind!=='mechanoid'&&!people.some(p=>object(p)&&p.id===row.actorId&&p.status==='away'))return false;
+        ||!(extended?['raid','mechanoid','visitor','manhunter','downed']:['raid','mechanoid','visitor']).includes(String(row.kind))||kinds.has(String(row.kind))||!integer(row.count,1,w.width*w.height)
+        ||!integer(row.actorId,1,w.nextId-1)||actors.has(row.actorId)||w.pawns.some(p=>p.id===row.actorId)||w.mechanoids?.some(m=>m.id===row.actorId)||w.wildlife?.animals.some(a=>!object(a)||a.id===row.actorId)
+        ||row.kind==='manhunter'&&(row.count>MAX_WILDLIFE||people.some(p=>object(p)&&p.id===row.actorId))
+        ||row.kind!=='mechanoid'&&row.kind!=='manhunter'&&!people.some(p=>object(p)&&p.id===row.actorId&&p.status==='away'))return false;
       kinds.add(String(row.kind));actors.add(row.actorId);
     }
   }

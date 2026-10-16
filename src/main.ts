@@ -183,6 +183,7 @@ import type { AudioCue } from './bridge/audio-cues';
 import { PowerParentValidationCache, type PowerParentIndex } from './sim/power-parent-validation';
 import { createOwnedValidationGeometryOwner, type OwnedGeometryReuseWitness } from './sim/owned-validation-geometry.ts';
 import { createOwnedValidationResourceOwner, type OwnedResourceReuseWitness } from './sim/owned-validation-resources.ts';
+import { createOwnedDeteriorationOwner } from './sim/deterioration-save.ts';
 import { AudioDirector } from './audio/AudioDirector';
 import { MusicDirector, type MusicMood } from './audio/MusicDirector';
 import { ambientCameraGain, FoliageAmbience } from './audio/ambience';
@@ -232,21 +233,29 @@ const client = (() => {
   class MainSnapshotDecoder extends SnapshotDecoder {
     readonly #resourceOwner = createOwnedValidationResourceOwner();
     readonly #geometryOwner = createOwnedValidationGeometryOwner();
+    readonly #deteriorationOwner = createOwnedDeteriorationOwner();
     override adopt(packet: SnapshotMessage<true>): SnapshotAdoption {
       this.#resourceOwner.discard();
       this.#geometryOwner.discard();
+      this.#deteriorationOwner.discard();
       try {
         const result = super.adopt(packet);
         if (result.status === 'applied') this.#resourceOwner.commit(result.world);
         else this.#resourceOwner.discard();
         if (result.status === 'applied') this.#geometryOwner.commit(result.world);
         else this.#geometryOwner.discard();
+        if (result.status === 'applied') this.#deteriorationOwner.commit(result.world);
+        else this.#deteriorationOwner.discard();
         return result;
       } catch (error) {
         this.#resourceOwner.discard();
         this.#geometryOwner.discard();
+        this.#deteriorationOwner.discard();
         throw error;
       }
+    }
+    protected override validateDeteriorationTransport(next:World,structureReuse?:OwnedGeometryReuseWitness):boolean {
+      return this.#deteriorationOwner.validate(next,structureReuse);
     }
     protected override createValidationContext(next: World, resourceReuse?: OwnedResourceReuseWitness, geometryReuse?: OwnedGeometryReuseWitness): SnapshotValidationContext {
       const raw = new PowerParentValidationCache();
@@ -1577,8 +1586,10 @@ const statusAlerts=createStatusAlerts(el('status-alerts'),{
     // The worker's replacement snapshot must be adopted and rendered before
     // resolving this real ID. Never focus an old remote cell or actor proxy.
     if(!next||!map||map.active!==target.site||map.secondaryTile!==origin.tile||map.createdAt!==origin.createdAt||campaignPresentationEpoch<=origin.epoch)return;
-    if(!next.pawns.some(p=>p.id===target.actorId)&&!next.mechanoids?.some(m=>m.id===target.actorId))return;
+    const person=next.pawns.find(p=>p.id===target.actorId);
+    if(!person&&!next.mechanoids?.some(m=>m.id===target.actorId)&&!next.wildlife?.animals.some(a=>a.id===target.actorId))return;
     focusNotification({key:`actor:${target.actorId}`,kind:'actor',id:target.actorId});
+    if(person?.state==='downed')document.querySelector<HTMLButtonElement>('[data-colonist-tab="health"]')?.click();
   }).finally(()=>{campaignFocusBusy=false;});
 },context:context=>{
   if(context.tool){setTool(context.tool);return;}

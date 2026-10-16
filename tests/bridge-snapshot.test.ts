@@ -27,7 +27,7 @@ test('flak and sculpture works transmit incremental progress without resync or m
 });
 
 test('packed growth deltas preserve exact doubles, absent fields, order and atomic rejection',()=>{
-  const w=createWorld(911,16,16);w.tick=2000;w.resources=[
+  const w=createWorld(911,16,16);w.tick=2000;w.deterioration!.lastTick=w.tick;w.resources=[
     {id:w.nextId++,kind:'berries',x:2,z:2,amount:10,growth:.3,growthTick:1900,growthThermalFactor:.9},
     {id:w.nextId++,kind:'berries',x:3,z:2,amount:10,growth:.4,growthTick:1900},
   ];
@@ -249,7 +249,7 @@ test('snapshots preserve exact state and previous frames through harvest, patche
 });
 
 test('buffered scene preserves arrival, work, excavation, tree removal and cargo across sparse publications',()=>{
-  const source=miningCamp(),pawn=source.pawns[0]!;pawn.priorities.gather=2;
+  const source=miningCamp(),pawn=source.pawns[0]!;source.deterioration!.lastTick=source.tick;pawn.priorities.gather=2;
   for(const x of [12,13,14]){source.tiles[12*32+x]={terrain:'rock',stone:'sandstone'};expect(applyCommand(source,{type:'designate',kind:'mine',x,z:12}).ok).toBe(true);}
   source.resources.push({id:source.nextId++,x:15,z:11,kind:'tree',amount:12});expect(applyCommand(source,{type:'designate',kind:'chop',x:15,z:11}).ok).toBe(true);
   const initial=source.tick,encoder=new SnapshotEncoder(),changes=new PresentationChanges(),motion=new MotionRecorder();

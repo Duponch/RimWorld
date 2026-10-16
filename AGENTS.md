@@ -4,9 +4,11 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V396, schéma 252 :** [Stockage sensible](docs/gameplay/deterioration-v396.md) qualifié : usure au sol, transport, protection et reprise ; coût rare mesuré. V395–V396 publiés ensemble en a02aa932, produit59780d4f,134 réponses HTTPS exactes. Les Aulnes10733, archives et campagne98038 close partielle préservées.
+**État V398–V399, schéma 252 :** [Dangers hors carte](docs/gameplay/remote-danger-alerts-v398.md) et [adoption CPU](docs/development/structure-adoption-v399.md) qualifiés : navigation réelle en pause depuis21483 ; économie mesurée sur deltas de structures inchangées, aucun gain FPS établi. Publication regroupée suivante.
 
-**Ordre courant :** [Parcours Aulnes V397](docs/gameplay/aulnes-multimap-v397.md) clos partiel : aller-retour/travaux/revisite acquis, branche21483 conservée avec Noé/Iris/Rose à terre sur rage animale non remontée hors carte. Corriger ces alertes puis coût CPU des snapshots/structures selon mesures ; préparations privées, aucune adoption suivante acquise. Ne pas prolonger la campagne ni rejouer un état favorable pour fabriquer un vert. Aulnes publiques V394 inchangées, terrain continu non prévu. Voir [la feuille de route](docs/ROADMAP.md).
+**Dernière publication V396, schéma 252 :** [Stockage sensible](docs/gameplay/deterioration-v396.md) qualifié : usure au sol, transport, protection et reprise ; coût rare mesuré. V395–V396 publiés ensemble en a02aa932, produit59780d4f,134 réponses HTTPS exactes. Les Aulnes10733, archives et campagne98038 close partielle préservées.
+
+**Ordre courant :** [Parcours Aulnes V397](docs/gameplay/aulnes-multimap-v397.md) clos partiel : aller-retour/travaux/revisite acquis, branche21483 conservée avec Noé/Iris/Rose à terre sur rage animale non remontée hors carte. Alertes corrigées V398 et premier coût CPU réduit V399 ; les autres coûts de réception restent à mesurer précisément avant une nouvelle optimisation. Ne pas prolonger la campagne ni rejouer un état favorable pour fabriquer un vert. Aulnes publiques V394 inchangées, terrain continu non prévu. Voir [la feuille de route](docs/ROADMAP.md).
 
 ## Méthode de livraison
 

@@ -897,6 +897,11 @@ export class SnapshotDecoder {
     return {powerParents:new PowerParentValidationCache()};
   }
 
+  /** Closed MAIN may reuse only its privately certified unchanged structures.
+   * Public decoders keep the complete RAW guard at the same refusal frontier. */
+  protected validateDeteriorationTransport(next:World,_structureReuse?:OwnedGeometryReuseWitness):boolean {
+    return validDeteriorationTransport(next,next.schemaVersion);
+  }
   adopt(packet: SnapshotMessage<true>): SnapshotAdoption {
     const resync = (reason: string): SnapshotAdoption => ({ status: 'resync', reason });
     if (!Number.isSafeInteger(packet.epoch) || packet.epoch < 1
@@ -1172,7 +1177,7 @@ export class SnapshotDecoder {
     // properties to infer authority here. Public contexts ignore this fact.
     const geometryReuse:OwnedGeometryReuseWitness|undefined=structureIndices!==undefined&&this.current
       ?{kind:'sparse',previous:this.current,updatedOrdinals:structureIndices}:undefined;
-    if(!validDeteriorationTransport(next,next.schemaVersion))return resync('Horloge ou propriétaire de détérioration invalide.');
+    if(!this.validateDeteriorationTransport(next,geometryReuse))return resync('Horloge ou propriétaire de détérioration invalide.');
     if(!validTorchTransport(next,next.schemaVersion))return resync('Lampe-torche, carburant ou propriétaire de recharge invalide.');
     if(!validPemmicanCatalogueDomains(next,next.schemaVersion)||!validPemmicanResearchTransport(next,next.schemaVersion))return resync('Pemmican, recherche ou production future/invalide.');
     if(!validTundraTransport(next,next.schemaVersion))return resync('Toundra, flore ou climat futur/incohérent.');

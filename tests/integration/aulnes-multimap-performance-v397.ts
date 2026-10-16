@@ -95,8 +95,8 @@ function browserProbe(){
       const members=new Set(ids),g=w.group,people=[...w.pawns,...g&&'members' in g?g.members:[]];
       const unsafe=people.find((p:any)=>members.has(p.id)&&(p.state==='dead'||p.state==='downed'||p.burning||p.mental?.crisis
         ||p.health?.injuries?.length||p.health?.bloodLoss||p.health?.heatstroke||p.health?.hypothermia||p.health?.infections));
-      const hostile=w.pawns.some((p:any)=>!!p.raid&&!['dead','downed'].includes(p.state))||w.mechanoids?.some((p:any)=>!['dead','downed'].includes(p.state));
-      const remote=w.campaignMap?.incidents?.find((row:any)=>row.kind==='raid'||row.kind==='mechanoid');
+      const hostile=w.pawns.some((p:any)=>!!p.raid&&!['dead','downed'].includes(p.state))||w.mechanoids?.some((p:any)=>!['dead','downed'].includes(p.state))||w.wildlife?.animals.some((a:any)=>a.manhunter&&!['dead','downed'].includes(a.state));
+      const remote=w.campaignMap?.incidents?.find((row:any)=>row.kind==='raid'||row.kind==='mechanoid'||row.kind==='manhunter'||row.kind==='downed');
       const reason=unsafe?'Voyageur en danger réel #'+unsafe.id:hostile?'Hostile présent sur la carte active':remote?'Danger réel sur la carte '+remote.site:undefined;
       return reason?{tick:w.tick,reason}:null;
     },

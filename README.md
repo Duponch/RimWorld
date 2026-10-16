@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V398–V399 qualifiés — schéma 252 :** [Alertes hors carte](docs/gameplay/remote-danger-alerts-v398.md) et [adoption CPU](docs/development/structure-adoption-v399.md). Navigation réelle en pause, anciennes règles/sauvegardes conservées ; économie CPU bornée, aucun gain FPS établi. Publication regroupée suivante ; V397 reste partiel et les Aulnes publiques V394 intactes.
+
 **V397 QA partielle — schéma 252 :** [Les Aulnes, voyage et revisite](docs/gameplay/aulnes-multimap-v397.md). Aller-retour, travaux payés et persistance observés ; rouge de bien-être au foyer sur rage animale hors carte. Mesures CPU/RAF acquises, aucune nouvelle mécanique ou publication. Les Aulnes publiques V394 préservées.
 
 **V396 qualifié — schéma 252 :** [Matières sensibles et stockage protégé](docs/gameplay/deterioration-v396.md). Dix matières au sol, toit/pièce/pluie/marais et étagères ; calendrier prospectif par carte et diagnostics. Usure, transport, protection et reprise qualifiés ; coût CPU rare mesuré. V395–V396 publiés ensemble en a02aa932, produit59780d4f,134 réponses HTTPS exactes. Les Aulnes feront ensuite un vrai aller-retour et une revisite avec travaux et mesures.
