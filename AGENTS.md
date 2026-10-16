@@ -4,9 +4,9 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V391, schéma 250 :** [provisions mixtes du groupe](docs/gameplay/group-provisions-v391.md) qualifiées : chargement, ingestion, vieillissement et retour physiques ; publication commune avec V390 ensuite. Dernière production V388–V389 **05b8f6b6**/`c6870b74`,130HTTPS exacts. Les Aulnes V386/tick10373 et campagne98038 close partielle préservées.
+**État V391, schéma 250 :** [provisions mixtes du groupe](docs/gameplay/group-provisions-v391.md) qualifiées : chargement, ingestion, âge et retour physiques. V390–V391 publiés ensemble **21e3c957**/`1823bc0a`,132HTTPS exacts. Les Aulnes V386/tick10373 et campagne98038 close partielle préservées.
 
-**Ordre courant :** publier V391 avec V390 puis poursuivre l’édition des filtres de tenue existants, sans CRUD ni nouvelle migration si le format ne change pas. Préserver tâches, port forcé, Auto, politiques historiques et deux cartes. Actualisations des Aulnes périodiques ; sous-métiers différés. Voir [la feuille de route](docs/ROADMAP.md). `references_UI`, branche UI papier et sessions humaines préservées.
+**Ordre courant :** poursuivre l’édition des filtres de tenue existants, sans CRUD ni nouvelle migration si le format ne change pas. Préserver tâches, port forcé, Auto, politiques historiques et deux cartes. Actualisations des Aulnes périodiques ; sous-métiers différés. Voir [la feuille de route](docs/ROADMAP.md). `references_UI`, branche UI papier et sessions humaines préservées.
 
 ## Méthode de livraison
 

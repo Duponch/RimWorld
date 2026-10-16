@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 250.** [V391](gameplay/group-provisions-v391.md) relie les provisions mixtes au groupe collectif ; chargement, ingestion et retour qualifiés, publication groupée avec V390 ensuite. Les Aulnes V386 et la campagne98038 close partielle restent préservées.
+**16 octobre 2026 — schéma 250.** [V391](gameplay/group-provisions-v391.md) relie les provisions mixtes au groupe collectif ; chargement, ingestion et retour qualifiés, publication V390–V391 confirmée21e3c957/1823bc0a,132HTTPS exacts. Les Aulnes V386 et la campagne98038 close partielle restent préservées.
 
 ## Priorité actuelle
 

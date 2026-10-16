@@ -1,6 +1,6 @@
 # Adoption du référentiel utilisateur
 
-**V391 proposé — mêmes domaines caravanes V182/V216 et alimentation V389 :** adopter provisions partagées réelles, régimes, nutrition et contamination ; adapter minimum manuel de 0,9 nutrition et température saisonnière hors carte ; différer autres aliments, estimation d’autonomie et extension des voyages individuels. [Décisions, références datées et limites](../gameplay/group-provisions-v391.md). Aucun identifiant global clos ; originaux préservés.
+**V391 livré — mêmes domaines caravanes V182/V216 et alimentation V389 :** adopter provisions partagées réelles, régimes, nutrition et contamination ; adapter minimum manuel de 0,9 nutrition et température saisonnière hors carte ; différer autres aliments, estimation d’autonomie et extension des voyages individuels. [Décisions, références datées et limites](../gameplay/group-provisions-v391.md). Aucun identifiant global clos ; originaux préservés.
 
 **V390 proposé — éclairage et chaleur, continuité chapitres 5/8/10 et SYS/TEST-023..025, UI-005 :** adopter la torche fixe Core, construction payée, réserve finie, pluie/toit, absence de minification/interrupteur/restitution ; adapter le fuel flottant aux cinquièmes entiers persistés et conserver la présentation lumineuse/thermique locale. Différer variantes murales/portées et DLC. [Relevés Core 1.6.4871, décisions et limites](../gameplay/torch-lamp-v390.md). Aucun domaine global clos, références humaines préservées.
 

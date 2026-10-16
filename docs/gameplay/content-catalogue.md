@@ -1,6 +1,6 @@
 # Catalogue de contenu : couverture connue
 
-**V391 proposé — [provisions mixtes de groupe](group-provisions-v391.md), schéma 250.** Seules les nouvelles expéditions collectives chargent et partagent repas de survie/pemmican selon les régimes ; âge, contamination et bilans distincts jusqu’au retour physique. Anciens groupes littéraux, voyages individuels et commerce de provisions hors lot.
+**V391 livré — [provisions mixtes de groupe](group-provisions-v391.md), schéma 250.** Seules les nouvelles expéditions collectives chargent et partagent repas de survie/pemmican selon les régimes ; âge, contamination et bilans distincts jusqu’au retour physique. Anciens groupes littéraux, voyages individuels et commerce de provisions hors lot.
 
 **V390 proposé — [lampe-torche au sol](torch-lamp-v390.md), schéma 249.** Construction physique de 20 bois, réserve finie pleine de 20, lumière et chaleur sans électricité ; panne, recharge et retrait sans restitution. Aucun paquet mobile, interrupteur, ajout aux Aulnes ou nouvelle provision de voyage.
 

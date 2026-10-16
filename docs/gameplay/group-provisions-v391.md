@@ -1,6 +1,6 @@
 # Provisions mixtes du groupe — V391
 
-Schéma 250. Implémentation et revue privées, adoption et contrôles exécutés par ROOT ; publication groupée avec V390 après qualification.
+Schéma 250. Implémentation et revue privées, adoption et contrôles exécutés par ROOT ; publication groupée avec V390 confirmée ci-dessous.
 
 ## Résultat joueur
 
@@ -35,4 +35,4 @@ Présentation Chrome PASS132,025 s. Natif Chrome/WebGPU **PASS44,798 s**, erreur
 
 Gel `tmp/group-provisions-v391/freeze09.json` : **3385 chemins uniques exacts** avant/après navigateur. Toutes les nouvelles sorties restent sous `tmp/validation-runs/` et `tmp/group-provisions-v391/`. Les références et sauvegardes publiques, notamment Les AulnesV386, restent littérales. Cette livraison ne mesure ni coût général250², GPU/FPS ou survie prolongée.
 
-Build Pages PASS2,112 s et documentation PASS1,543 s. Publication V390–V391 encore à confirmer ; aucun résultat HTTPS attribué avant vérification du nouveau paquet.
+Build Pages PASS2,112 s et documentation PASS1,543 s. Publication commune V390–V391 confirmée : produit `1823bc0a57654802062777cd518a93ed55c1aebb`, déploiement `21e3c957` sur [Elsewhere](https://elsewhere-cq7.pages.dev/). Paquet530fichiers/125795024octets vérifié en1,124 s :65fiches/68chemins sauvegardés exacts, laboratoires et sources privés absents. Déploiement14,112 s ;132réponses HTTPS200/MIME/octets exacts en9,554 s sur domaine stable et URL du déploiement. Rapports sous `tmp/elsewhere-pages/v391-package-51d65Z/` et `v391-http-22gwKx/`. Aucun nouveau contenu Les Aulnes ni publication QA seule.

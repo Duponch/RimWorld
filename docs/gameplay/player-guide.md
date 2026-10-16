@@ -1,6 +1,6 @@
 # Guide joueur
 
-## Préparer les provisions du groupe — V391, proposition
+## Préparer les provisions du groupe — V391
 
 Dans **Monde → Globe et groupe**, choisissez des repas de survie et/ou du pemmican au sol pour une nouvelle formation. Vérifiez le régime de chaque membre : le stock partagé doit couvrir au moins **0,9 nutrition par personne**, soit une ration ou 18 unités de pemmican. Le panneau distingue les deux quantités et leur nutrition ; ce minimum ne garantit aucune autonomie de voyage. Laissez les membres charger au contact et sortir.
 
