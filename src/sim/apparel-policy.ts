@@ -1,5 +1,5 @@
 import { apparelCompatible } from './armor.ts';
-import { APPAREL, APPAREL_FAMILIES, APPAREL_MATERIALS, type ApparelFamily, type ApparelItem, type ApparelMaterial, type ApparelState } from './apparel-rules.ts';
+import { APPAREL, isApparelFamily, APPAREL_MATERIALS, type ApparelFamily, type ApparelItem, type ApparelMaterial, type ApparelState } from './apparel-rules.ts';
 import { WEAPON_QUALITIES, type WeaponQuality } from './equipment-rules.ts';
 
 export type ApparelTemperatureNeed='neutral'|'cold'|'heat';
@@ -41,9 +41,9 @@ export interface ApparelPolicyRegistry {apparelPolicies:ApparelPolicy[];nextAppa
 const clonePolicy=(policy:ApparelPolicy):ApparelPolicy=>({...policy,allowedItems:[...policy.allowedItems],allowedMaterials:[...policy.allowedMaterials]});
 // The pre-V90 migration requests the old catalogue via includeWool=false.
 // It must not acquire later V141 headgear before its own strict validation.
-export const createDefaultApparelPolicyRegistry=(includeWool=true,includeHelmet=includeWool,includePredators=true):ApparelPolicyRegistry=>({apparelPolicies:[DEFAULT_APPAREL_POLICY,TEXTILE_APPAREL_POLICY].map(policy=>{
+export const createDefaultApparelPolicyRegistry=(includeWool=true,includeHelmet=includeWool,includePredators=true,includeTuque=includeHelmet):ApparelPolicyRegistry=>({apparelPolicies:[DEFAULT_APPAREL_POLICY,TEXTILE_APPAREL_POLICY].map(policy=>{
   const copy=clonePolicy(policy);
-  return {...copy,allowedItems:copy.allowedItems.filter(item=>(includePredators||APPAREL[item].material!=='foxfur')&&(includeWool||APPAREL[item].material!=='muffalo-wool')&&(includeHelmet||item!=='flak-helmet'&&item!=='recon-helmet'&&item!=='recon-armor')),
+  return {...copy,allowedItems:copy.allowedItems.filter(item=>(includeTuque||APPAREL[item].family!=='tuque')&&(includePredators||APPAREL[item].material!=='foxfur')&&(includeWool||APPAREL[item].material!=='muffalo-wool')&&(includeHelmet||item!=='flak-helmet'&&item!=='recon-helmet'&&item!=='recon-armor')),
     allowedMaterials:copy.allowedMaterials.filter(material=>(includeWool||material!=='muffalo-wool')&&(includePredators||material!=='foxfur'))};
 }),nextApparelPolicyId:3});
 
@@ -100,4 +100,4 @@ export function chooseApparelReplacement(policy:ApparelPolicy,worn:readonly Appa
 }
 
 /** Convenience constructor for adapters that already know family and material. */
-export const policyAllowsFamily=(policy:ApparelPolicy,family:ApparelFamily,material:ApparelMaterial):boolean=>APPAREL_FAMILIES.includes(family)&&policy.allowedItems.some(i=>APPAREL[i].family===family)&&policy.allowedMaterials.includes(material);
+export const policyAllowsFamily=(policy:ApparelPolicy,family:ApparelFamily,material:ApparelMaterial):boolean=>isApparelFamily(family)&&policy.allowedItems.some(i=>APPAREL[i].family===family&&APPAREL[i].material===material)&&policy.allowedMaterials.includes(material);

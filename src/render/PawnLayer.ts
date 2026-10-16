@@ -19,7 +19,7 @@ import { apparelProjection,apparelAppearance } from './character-apparel';
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import { growPawnBuffers } from './pawn-buffers';
 import { isColonist } from '../sim/affiliation';
-import { pawnGeometry,cargoGeometry,selectCargoGeometryKinds,PARKA_HOOD_DYE,FLAK_HELMET_DYE,RECON_HELMET_DYE,RECON_ARMOR_DYE,PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS } from './pawn-geometry';
+import { pawnGeometry,cargoGeometry,selectCargoGeometryKinds,PARKA_HOOD_DYE,FLAK_HELMET_DYE,TUQUE_DYE,RECON_HELMET_DYE,RECON_ARMOR_DYE,PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS } from './pawn-geometry';
 import { equipmentProjection } from './character-equipment';
 import { WEAPON_VISUALS,weaponVisual } from './weapon-shape';
 import { doorAt } from '../sim/door-rules';
@@ -492,13 +492,14 @@ export class PawnLayer {
         animated.assign(vec3(float(.65).sub(y),z.add(.19+.95/PAWN_MODEL_SCALE),x.add(.3)));
       });
       If(attribute('dye','float').equal(-3).and(attribute('aEquipment','vec4').y.notEqual(2).and(attribute('aEquipment','vec4').y.notEqual(3))),()=>{animated.assign(vec3(0));});
-      // The existing apparel slot packs vest (bit 0), flak (bit 1) and
-      // recon (bit 2); the two headgear kinds are mutually exclusive.
-      const wornFlags=attribute('aEquipment','vec4').z,helmet=wornFlags.greaterThan(1.5),recon=wornFlags.greaterThan(3.5);
+      // Vest is bit0. Mutually exclusive headgear occupies even codes:
+      // flak2, recon4, cloth tuque6, wool tuque8. No new actor buffer.
+      const wornFlags=attribute('aEquipment','vec4').z,helmet=wornFlags.greaterThan(1.5),recon=wornFlags.greaterThan(3.5).and(wornFlags.lessThan(5.5)),tuque=wornFlags.greaterThan(5.5);
       If(attribute('dye','float').equal(-2).and(wornFlags.mod(2).lessThan(.5)),()=>{animated.assign(vec3(0));});
-      If(attribute('dye','float').equal(FLAK_HELMET_DYE).and(helmet.not().or(recon)),()=>{animated.assign(vec3(0));});
+      If(attribute('dye','float').equal(FLAK_HELMET_DYE).and(helmet.not().or(wornFlags.greaterThan(3.5))),()=>{animated.assign(vec3(0));});
       If(attribute('dye','float').equal(RECON_ARMOR_DYE).and(attribute('aEquipment','vec4').y.notEqual(5)),()=>{animated.assign(vec3(0));});
       If(attribute('dye','float').equal(RECON_HELMET_DYE).and(recon.not()),()=>{animated.assign(vec3(0));});
+      If(attribute('dye','float').equal(TUQUE_DYE).and(tuque.not()),()=>{animated.assign(vec3(0));});
       If(attribute('dye','float').equal(PARKA_HOOD_DYE).and(attribute('aEquipment','vec4').y.notEqual(4).or(helmet)),()=>{animated.assign(vec3(0));});
       // One face variant is visible at a time. The pause-controlled scene
       // clock also freezes blinks and sleep poses when the game is paused.
@@ -533,6 +534,7 @@ export class PawnLayer {
     const originalPosition = makeOriginalPosition();
     mat.positionNode=Fn(()=>{const result=vec3(0).toVar();If(this.animationCache.cached(),()=>{result.assign(this.cachedPawnPosition());}).Else(()=>{result.assign(originalPosition);});return result;})();
     const baseColor = Fn(()=>{const fragmentBone=pawnFragmentTraits.x,fragmentDye=pawnFragmentTraits.y;const tint=mix(attribute('color','vec3'),attribute('aTint','vec3'),fragmentDye.equal(1).select(float(1),float(0))).toVar();
+      {const wool=new THREE.Color(0xb3c0ba);If(fragmentDye.equal(TUQUE_DYE).and(attribute('aEquipment','vec4').z.greaterThan(7.5)),()=>{tint.assign(vec3(wool.r,wool.g,wool.b));});}
       If(fragmentDye.equal(-3).or(fragmentDye.equal(PARKA_HOOD_DYE)),()=>{ tint.assign(attribute('aTint','vec3')); });
       If(attribute('aEquipment','vec4').y.equal(2).and(fragmentBone.greaterThanEqual(2)).and(fragmentBone.lessThanEqual(3)),()=>{ tint.assign(attribute('aSkin','vec3')); });
       If(fragmentDye.equal(2),()=>{ tint.assign(attribute('aSkin','vec3')); });
@@ -709,12 +711,13 @@ export class PawnLayer {
       If(motion.z.equal(1).or(motion.z.equal(5)).or(motion.z.equal(POSE_SLEEP)).or(motion.z.equal(POSE_DEAD)),()=>{const y=animated.y.toVar();animated.y.assign(animated.z.add(.19));animated.z.assign(float(.65).sub(y));});
       If(motion.z.equal(POSE_DEAD),()=>{animated.z.assign(animated.z.mul(.78));});
       If(motion.z.equal(6),()=>{const x=animated.x.toVar(),y=animated.y.toVar(),z=animated.z.toVar();animated.assign(vec3(float(.65).sub(y),z.add(.19+.95/PAWN_MODEL_SCALE),x.add(.3)));});
-      const equipment=attribute('aEquipment','vec4'),worn=equipment.z,helmet=worn.greaterThan(1.5),recon=worn.greaterThan(3.5);
+      const equipment=attribute('aEquipment','vec4'),worn=equipment.z,helmet=worn.greaterThan(1.5),recon=worn.greaterThan(3.5).and(worn.lessThan(5.5)),tuque=worn.greaterThan(5.5);
       If(dye.equal(-3).and(equipment.y.notEqual(2).and(equipment.y.notEqual(3))),()=>{animated.assign(vec3(0));});
       If(dye.equal(-2).and(worn.mod(2).lessThan(.5)),()=>{animated.assign(vec3(0));});
-      If(dye.equal(FLAK_HELMET_DYE).and(helmet.not().or(recon)),()=>{animated.assign(vec3(0));});
+      If(dye.equal(FLAK_HELMET_DYE).and(helmet.not().or(worn.greaterThan(3.5))),()=>{animated.assign(vec3(0));});
       If(dye.equal(RECON_ARMOR_DYE).and(attribute('aEquipment','vec4').y.notEqual(5)),()=>{animated.assign(vec3(0));});
       If(dye.equal(RECON_HELMET_DYE).and(recon.not()),()=>{animated.assign(vec3(0));});
+      If(dye.equal(TUQUE_DYE).and(tuque.not()),()=>{animated.assign(vec3(0));});
       If(dye.equal(PARKA_HOOD_DYE).and(equipment.y.notEqual(4).or(helmet)),()=>{animated.assign(vec3(0));});
       const face=motion.z.equal(POSE_DEAD).select(float(PAWN_EYE_CROSS),motion.z.equal(POSE_SLEEP).or(this.animationCache.cell(3).y.greaterThan(.5)).select(float(PAWN_EYE_CLOSED),float(PAWN_EYE_OPEN)));
       If(dye.greaterThanEqual(PAWN_EYE_OPEN).and(dye.lessThanEqual(PAWN_EYE_CROSS)).and(dye.notEqual(face)),()=>{animated.assign(vec3(0));});
@@ -978,7 +981,7 @@ export class PawnLayer {
       scratchColor.setHex(look.color??(isColonist(pawn)?pawnBaseColor(pawn.id):pawn.visitor&&!world.visitors?.groups.find(g=>g.id===pawn.visitor!.group)?.hostile?0x77958f:0xb74736));
       if(pawn.state==='dead')scratchColor.setHex(0x73756c);
       tint.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
-      equipment.setXYZW(index,weaponVisual(gears.get(pawn.id)?.item)?.equipment??0,look.silhouette,(look.vest?1:0)+(look.reconHelmet?4:look.helmet?2:0),look.pants);
+      equipment.setXYZW(index,weaponVisual(gears.get(pawn.id)?.item)?.equipment??0,look.silhouette,(look.vest?1:0)+(look.reconHelmet?4:look.helmet?2:look.tuque===2?8:look.tuque===1?6:0),look.pants);
       const load = carried.get(pawn.id);
       const packed=world.packed?.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
       const handoff=this.handoffs.active.get(pawn.id);

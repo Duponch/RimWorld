@@ -1,6 +1,6 @@
 # Validation courante — V349–V350
 
-**V383 — schéma 244 :** [bouche d’aération](../gameplay/vent-v383.md) : construction payée, service physique et échange de chaleur entre pièces. Publication commune V382–V383 **31deee1d**, produit `e147f81a`, 120 réponses HTTPS exactes. Construction, services, thermique et recharges qualifiés dans la note canonique. Les états suivants sont historiques.
+**V384 — schéma 245 :** [tuques tissu/laine](../gameplay/tuque-v384.md) : confection payée, reprise, rangement, port/retrait et isolation qualifiés. Publication regroupée suivante ; dernière production V382–V383/31deee1d, schéma244. Les états suivants sont historiques.
 
 **V380 — schéma 242 :** [lisibilité des HUD](../gameplay/hover-layout-v380.md). Survol, ressources et dock stabilisés et qualifiés à quatre tailles ; correctif UI sans nouvelle mécanique. Publication regroupée suivante ; dernière production V378/e5ec566c. Les états suivants sont historiques.
 

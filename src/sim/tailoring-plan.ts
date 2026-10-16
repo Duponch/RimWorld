@@ -1,5 +1,6 @@
 import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
+import {unfinishedMaterial} from './unfinished.ts';
 import { isTailoring,unfinishedItem } from './production-recipes.ts';
 import { cookingSpot,ingredientPlaceFree } from './cooking-bills.ts';
 import { groundCapacity } from './ground-placement.ts';
@@ -16,7 +17,7 @@ export function planUnfinished(world:World,pawn:Pawn,station:Structure,bill:Cook
   if(!allows(station))return {handled:false};
   if(!isTailoring(bill.recipe))return {handled:false};
   const bound=world.piles.find(p=>p.unfinished?.billId===bill.id),spot=cookingSpot(station);
-  const candidates=bound?[bound]:world.piles.filter(p=>p.unfinished?.recipe===bill.recipe&&!p.unfinished.billId&&bill.filters.cloth&&p.owner.type==='ground'&&allows(p.owner)&&(p.owner.x-station.x)**2+(p.owner.z-station.z)**2<=bill.radius**2)
+  const candidates=bound?[bound]:world.piles.filter(p=>p.unfinished?.recipe===bill.recipe&&!p.unfinished.billId&&bill.filters[unfinishedMaterial(p.unfinished)]&&p.owner.type==='ground'&&allows(p.owner)&&(p.owner.x-station.x)**2+(p.owner.z-station.z)**2<=bill.radius**2)
     .sort((a,b)=>((a.owner as Cell).x-pawn.x)**2+((a.owner as Cell).z-pawn.z)**2-(((b.owner as Cell).x-pawn.x)**2+((b.owner as Cell).z-pawn.z)**2)||a.id-b.id);
   for(const pile of candidates){
     if(pile.unfinished!.authorId!==pawn.id||pile.owner.type!=='ground'||!allows(pile.owner)||reservedSource(world,pile.id)>0)continue;

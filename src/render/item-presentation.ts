@@ -37,7 +37,8 @@ export function itemGeometry(item:ItemId,quantity:number=ITEM_DEFINITIONS[item].
   }else if(definition.kind==='weapon'||item==='unfinished-gun'){
     const weapon=weaponVisual(item==='unfinished-gun'?'bolt-action-rifle':item);
     for(const p of weapon?.parts??[])box(p.center[0]!, .07+p.center[2]!,p.center[1]!,p.size[0]!,p.size[2]!,p.size[1]!,item==='unfinished-gun'?color:p.color);
-  }else if(definition.kind==='apparel'||/^unfinished-(shirt|pants|tribalwear|duster|parka|flak|recon)/.test(item)){
+  }else if(definition.kind==='apparel'||/^unfinished-(shirt|pants|tribalwear|duster|parka|tuque|flak|recon)/.test(item)){
+    if(item.endsWith('tuque')){add('item-helmet',0,.15,0,.36,.27,.34);add('item-disc',0,.045,0,.41,.07,.38);return centreItemParts(parts);}
     const recon=item.endsWith('recon-armor'),pants=item.endsWith('pants'),helmet=item.endsWith('helmet'),coat=item.endsWith('duster')||item.endsWith('parka'),vest=item.endsWith('vest')||item.endsWith('tribalwear');
     add(helmet?'item-helmet':pants?'item-pants':coat?'item-coat':vest?'item-vest':'item-shirt',0,helmet?.15:.055,0,helmet?.38:.65,helmet?.30:.085,helmet?.38:coat?.78:.66,color);
     if(recon){for(const side of [-1,1]){box(side*.18,.15,.06,.20,.09,.35,0x536a74);box(side*.29,.10,-.20,.16,.12,.19);}box(0,.15,-.16,.18,.07,.18,0xc0d0ce);}

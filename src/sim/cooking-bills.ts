@@ -30,6 +30,7 @@ export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-
   if(isBiofuelRecipe(recipe)&&version<218)return false;
   if(recipe==='make-medicine'&&version<206)return false;
   if(recipe==='make-recon-armor'&&version<241)return false;
+  if(recipe==='tuque'&&version<245)return false;
   if(recipe==='make-emp-launcher'&&version<208)return false;
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
   const v=value as BillSettings;

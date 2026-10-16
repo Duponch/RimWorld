@@ -6,8 +6,9 @@ import type { MaterialPile, Pawn, World } from './types.ts';
 
 export const APPAREL_MATERIALS = ['cloth', 'light-leather', 'plainleather', 'bluefur', 'camelhide', 'muffalo-wool', 'foxfur'] as const;
 export type ApparelMaterial = typeof APPAREL_MATERIALS[number];
+/** Historical families admit every existing material. Tuques are a limited family. */
 export const APPAREL_FAMILIES = ['tribalwear', 'shirt', 'pants', 'duster', 'parka'] as const;
-export type ApparelFamily = typeof APPAREL_FAMILIES[number];
+export type ApparelFamily = typeof APPAREL_FAMILIES[number] | 'tuque';
 
 export interface ApparelMaterialDefinition {
   readonly label: string;
@@ -40,6 +41,8 @@ export const APPAREL_FAMILY_DEFINITIONS: Readonly<Record<ApparelFamily, ApparelF
   shirt: Object.freeze({label:'Chemise',hitPoints:100,equipTicks:9,coverage:apparelCoverage(['skin'],['torso','neck','shoulders','arms']),armorFactor:.2,coldFactor:.26,heatFactor:.1}),
   pants: Object.freeze({label:'Pantalon',hitPoints:100,equipTicks:12,coverage:apparelCoverage(['skin'],['legs']),armorFactor:.2,coldFactor:.2,heatFactor:.08}),
   duster: Object.freeze({label:'Cache-poussière',hitPoints:200,equipTicks:18,coverage:apparelCoverage(['shell'],['torso','neck','shoulders','arms','legs']),armorFactor:.3,coldFactor:.6,heatFactor:.85}),
+  // Core48 equip ticks are quantized to50 Core ticks by our 10-Core step.
+  tuque:Object.freeze({label:'Tuque',hitPoints:80,equipTicks:5,coverage:apparelCoverage(['headgear'],['upper-head']),armorFactor:.2,coldFactor:.5,heatFactor:0}),
   parka: Object.freeze({label:'Parka',hitPoints:180,equipTicks:18,coverage:apparelCoverage(['shell'],['torso','neck','shoulders','arms']),armorFactor:.2,coldFactor:2,heatFactor:0}),
 });
 
@@ -66,7 +69,7 @@ const textileDefinition = (family: ApparelFamily, material: ApparelMaterial): Ap
   });
 };
 
-export type ApparelItem=`${ApparelMaterial}-${ApparelFamily}`|'flak-vest'|'flak-helmet'|'recon-helmet'|'recon-armor';
+export type ApparelItem=`${ApparelMaterial}-${Exclude<ApparelFamily,'tuque'>}`|'cloth-tuque'|'muffalo-wool-tuque'|'flak-vest'|'flak-helmet'|'recon-helmet'|'recon-armor';
 /** Existing cloth ids stay canonical so old saves and reservations retain identity. */
 export const APPAREL:Readonly<Record<ApparelItem,ApparelDefinition>> = Object.freeze({
   'foxfur-tribalwear': textileDefinition('tribalwear','foxfur'),
@@ -102,6 +105,8 @@ export const APPAREL:Readonly<Record<ApparelItem,ApparelDefinition>> = Object.fr
   'light-leather-pants': textileDefinition('pants','light-leather'),
   'cloth-duster': textileDefinition('duster','cloth'),
   'light-leather-duster': textileDefinition('duster','light-leather'),
+  'cloth-tuque':textileDefinition('tuque','cloth'),
+  'muffalo-wool-tuque':textileDefinition('tuque','muffalo-wool'),
   'cloth-parka': textileDefinition('parka','cloth'),
   'light-leather-parka': textileDefinition('parka','light-leather'),
   'flak-vest': Object.freeze({label:'Gilet pare-balles',hitPoints:200,equipTicks:30,color:0x626d65,coverage:apparelCoverage(['middle'],['torso','neck']),ratings:Object.freeze({sharp:1,blunt:.36,heat:.27}),moveOffset:-.12,coldInsulation:1,heatInsulation:0}),
@@ -123,16 +128,23 @@ export interface ApparelState {
   forced?:true;
 }
 
-const ITEM_BY_FAMILY: Readonly<Record<ApparelFamily, Readonly<Record<ApparelMaterial, ApparelItem>>>> = Object.freeze({
+const ITEM_BY_FAMILY: Readonly<Record<Exclude<ApparelFamily,'tuque'>, Readonly<Record<ApparelMaterial, ApparelItem>>>> = Object.freeze({
   tribalwear:Object.freeze({cloth:'cloth-tribalwear','light-leather':'light-leather-tribalwear','plainleather':'plainleather-tribalwear','bluefur':'bluefur-tribalwear','camelhide':'camelhide-tribalwear','muffalo-wool':'muffalo-wool-tribalwear',foxfur:'foxfur-tribalwear'}),
   shirt:Object.freeze({cloth:'cloth-shirt','light-leather':'light-leather-shirt','plainleather':'plainleather-shirt','bluefur':'bluefur-shirt','camelhide':'camelhide-shirt','muffalo-wool':'muffalo-wool-shirt',foxfur:'foxfur-shirt'}),
   pants:Object.freeze({cloth:'cloth-pants','light-leather':'light-leather-pants','plainleather':'plainleather-pants','bluefur':'bluefur-pants','camelhide':'camelhide-pants','muffalo-wool':'muffalo-wool-pants',foxfur:'foxfur-pants'}),
   duster:Object.freeze({cloth:'cloth-duster','light-leather':'light-leather-duster','plainleather':'plainleather-duster','bluefur':'bluefur-duster','camelhide':'camelhide-duster','muffalo-wool':'muffalo-wool-duster',foxfur:'foxfur-duster'}),
   parka:Object.freeze({cloth:'cloth-parka','light-leather':'light-leather-parka','plainleather':'plainleather-parka','bluefur':'bluefur-parka','camelhide':'camelhide-parka','muffalo-wool':'muffalo-wool-parka',foxfur:'foxfur-parka'}),
 });
-export const apparelItemFor=(family:ApparelFamily,material:ApparelMaterial):ApparelItem=>ITEM_BY_FAMILY[family][material];
+export function apparelItemFor(family:ApparelFamily,material:ApparelMaterial):ApparelItem {
+  if(family==='tuque'){
+    if(material==='cloth')return 'cloth-tuque';
+    if(material==='muffalo-wool')return 'muffalo-wool-tuque';
+    throw new RangeError('Tuque requires cloth or muffalo wool');
+  }
+  return ITEM_BY_FAMILY[family][material];
+}
 export const isApparelMaterial=(value:unknown):value is ApparelMaterial=>typeof value==='string'&&APPAREL_MATERIALS.includes(value as ApparelMaterial);
-export const isApparelFamily=(value:unknown):value is ApparelFamily=>typeof value==='string'&&APPAREL_FAMILIES.includes(value as ApparelFamily);
+export const isApparelFamily=(value:unknown):value is ApparelFamily=>value==='tuque'||APPAREL_FAMILIES.some(family=>family===value);
 export const isApparelItem=(item:ItemId):item is ApparelItem=>Object.hasOwn(APPAREL,item);
 export const apparelDefinition=(pile:MaterialPile):ApparelDefinition=>APPAREL[pile.item as ApparelItem];
 export const apparelMaterial=(pile:Pick<MaterialPile,'item'|'apparel'>):ApparelMaterial|undefined=>pile.apparel?.material??APPAREL[pile.item as ApparelItem]?.material;

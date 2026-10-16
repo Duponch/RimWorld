@@ -85,11 +85,11 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       if(!sources.length)continue;
       const kibble=isKibbleRecipe(bill.recipe),mealQuota=kibble?KIBBLE_GROUP_UNITS:mixedMealGroupUnits(bill.recipe);
       const ingredientGroup=kibble?kibbleIngredientGroup:fineMealIngredientGroup;
-      const groups=isArtRecipe(bill.recipe)?[...new Set(sources.map(p=>p.item))].map(material=>sources.filter(p=>p.item===material)):[sources];
+      const groups=(isArtRecipe(bill.recipe)||bill.recipe==='tuque')?[...new Set(sources.map(p=>p.item))].map(material=>sources.filter(p=>p.item===material)):[sources];
       for(const group of groups) {
       const ingredients:CookingIngredient[]=[],planned=new Map<string,{item:ProductionIngredient;quantity:number}>();
       let missing:number=PRODUCTION_RECIPES[bill.recipe].units;
-      if(isArtRecipe(bill.recipe)&&group.reduce((n,p)=>n+Math.max(0,p.quantity-reservedSource(world,p.id)),0)<missing)continue;
+      if((isArtRecipe(bill.recipe)||bill.recipe==='tuque')&&group.reduce((n,p)=>n+Math.max(0,p.quantity-reservedSource(world,p.id)),0)<missing)continue;
       const cells=[station,spot,{x:spot.x-1,z:spot.z},{x:spot.x+1,z:spot.z},{x:spot.x,z:spot.z-1},{x:spot.x,z:spot.z+1},...footprintCells(station)]
         .filter((c,i,a)=>allows(c)&&a.findIndex(t=>same(t,c))===i&&(!isCremationRecipe(bill.recipe)||canStandAt(world,c))&&ingredientPlaceFree(world,c,spot,bill.recipe,station));
       let tailoringMaterial:ProductionIngredient|undefined;

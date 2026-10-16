@@ -12,6 +12,7 @@ export const PARKA_HOOD_DYE = -6;
 export const FLAK_HELMET_DYE = -7;
 export const RECON_HELMET_DYE = -8;
 export const RECON_ARMOR_DYE = -9;
+export const TUQUE_DYE = -10;
 // Face variants are resident in the same pawn batch. The vertex shader shows
 // exactly one of them; portraits project the open-eye variant at rest.
 export const PAWN_EYE_OPEN = 60;
@@ -147,6 +148,10 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
     ring(1.415,0,0,.171,.151,.035),ring(1.468,0,0,.103,.103,.025)],
   1,[0,1.04,0],APPAREL['flak-helmet'].color,FLAK_HELMET_DYE);
   addPart([.405,.026,.34],[0,1.304,.018],1,[0,1.04,0],0x424e51,FLAK_HELMET_DYE);
+  // Original soft cap and folded cuff, one continuous resident head shell.
+  addShell([ring(1.285,0,0,.180,.158,.036),ring(1.335,0,0,.184,.163,.038),
+    ring(1.365,0,0,.173,.153,.036),ring(1.445,0,0,.149,.136,.032),
+    ring(1.49,0,0,.072,.073,.020)],1,[0,1.04,0],APPAREL['cloth-tuque'].color,TUQUE_DYE);
   // The enclosed recon shell shares the head bone and the resident pawn rig.
   // Its low visor and cheek guards make it distinct from the open flak helmet.
   addShell([ring(1.065,0,0,.166,.145,.030),ring(1.16,0,0,.180,.162,.036),

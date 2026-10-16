@@ -1,0 +1,111 @@
+import {test,expect,type Page,type TestInfo} from '@playwright/test';
+import {readFile,writeFile} from 'node:fs/promises';
+import {tuqueNativeV384} from '../scenarios/tuque-native-v384';
+import {deserializeWorld,validateWorld} from '../../src/sim/serialization';
+import {decodeStoredSave} from '../../src/ui/save-storage-codec';
+import {apparelInsulation} from '../../src/sim/apparel-rules';
+import {comfortableTemperature} from '../../src/sim/heat-rules';
+import type {Command,World} from '../../src/sim/types';
+import {world,pause,panel,expectWorld,observeErrors} from './helpers';
+import {perform,inspectPerson} from './player-actions';
+
+test.skip(process.env.TUQUE_V384!=='1','ROOT opt-in only; sources/schema245 must be adopted and frozen first.');
+const rawTextile=(w:World)=>w.piles.filter(p=>p.item==='cloth'||p.item==='muffalo-wool').reduce((n,p)=>n+p.quantity,0);
+async function exportReload(page:Page,info:TestInfo,name:string){
+  await pause(page);const before=await world(page);expect(validateWorld(before)).toEqual([]);
+  await page.keyboard.press('Escape');await panel(page,'menu');const manager=page.locator('[data-save-manager]');
+  await manager.locator('[data-save-manager-name]').fill('V384 '+name);
+  await manager.locator('[data-save-manager-action="create"]').click();
+  await expect(manager.locator('[data-save-manager-status]')).toHaveAttribute('data-state','success');
+  const download=page.waitForEvent('download');await manager.locator('[data-save-manager-action="export"]').click();
+  const path=info.outputPath(name+'.json');await(await download).saveAs(path);
+  expect(deserializeWorld(await decodeStoredSave(await readFile(path,'utf8')))).toEqual(before);
+  await page.locator('#browse-saves').click();await page.locator('.front-menu input[type=file]').setInputFiles(path);
+  await expect(page.locator('.front-menu')).toBeHidden({timeout:30_000});await expect(page.locator('#loading')).toHaveCount(0,{timeout:30_000});
+  await pause(page);await expectWorld(page,before);await page.keyboard.press('Escape');
+  await info.attach(name,{path,contentType:'application/json'});return before;
+}
+
+test('V384 prepared wool tuque: paid unfinished/resume, storage, physical helmet conflict, insulation and removal',async({page},info)=>{
+  test.setTimeout(150_000);const errors=observeErrors(page),f=tuqueNativeV384(),rotation={value:0};
+  expect(f.world.schemaVersion).toBe(245);expect(f.world.width).toBe(32);expect(rawTextile(f.world)).toBe(20);
+  expect(f.world.piles.some(p=>p.item===f.product||p.item==='unfinished-tuque')).toBe(false);
+  const helmetBefore=structuredClone(f.world.piles.find(p=>p.id===f.helmetId)!);
+  const act=async(command:Command,reason:string)=>{await pause(page);await perform(page,{command,reason},rotation);await page.keyboard.press('Escape');};
+  const path=info.outputPath('declared-wool-helmet-preparation.json');await writeFile(path,f.initial);
+  await page.goto('/?e2e');const front=page.locator('.front-menu');
+  await front.getByRole('button',{name:'Charger une partie',exact:true}).click();await front.locator('input[type=file]').setInputFiles(path);
+  await expect(page.locator('#loading')).toHaveCount(0,{timeout:60_000});await pause(page);await expectWorld(page,f.world);
+  await act({type:'bill-add',structureId:f.benchId,recipe:'tuque'},'Ajouter une vraie facture de tuque à l’atelier manuel.');
+  let bill=(await world(page)).structures.find(s=>s.id===f.benchId)!.bills!.find(b=>b.recipe==='tuque')!;
+  await act({type:'bill-update',structureId:f.benchId,billId:bill.id,settings:{...bill,mode:'times',target:1,destination:'stockpile',filters:{cloth:false,'muffalo-wool':true}}},'Confectionner exactement une tuque avec20laines homogènes disponibles.');
+  bill=(await world(page)).structures.find(s=>s.id===f.benchId)!.bills!.find(b=>b.id===bill.id)!;
+  expect(bill.filters).toEqual({cloth:false,'muffalo-wool':true});
+  await page.locator('[data-speed="1"]').click();
+  await page.waitForFunction(()=>window.__lisiere.world.piles.some(p=>p.item==='unfinished-tuque'&&(p.unfinished?.progress??0)>0),undefined,{timeout:20_000});await pause(page);
+  const begun=await world(page),unfinished=begun.piles.find(p=>p.item==='unfinished-tuque')!,worker=begun.pawns.find(p=>p.id===f.pawnId)!;
+  expect(unfinished.unfinished).toMatchObject({recipe:'tuque',authorId:f.pawnId,material:'muffalo-wool',units:20,billId:bill.id});
+  expect(unfinished.unfinished!.parts.reduce((n,p)=>n+p,0)).toBe(20);expect(rawTextile(begun)).toBe(0);
+  expect(worker.cooking?.phase).toBe('work');expect(worker.cooking?.recipe).toBe('tuque');
+  expect({x:worker.x,z:worker.z}).toEqual(worker.cooking!.spot);
+  await act({type:'bill-update',structureId:f.benchId,billId:bill.id,settings:{...bill,suspended:true}},'Suspendre l’ouvrage réellement payé sans restituer ni recréer la laine.');
+  const interrupted=await exportReload(page,info,'paid-unfinished-exact');
+  const savedWork=interrupted.piles.find(p=>p.id===unfinished.id)!;
+  expect(savedWork.unfinished!.progress).toBeGreaterThan(0);expect(rawTextile(interrupted)).toBe(0);
+  expect(interrupted.pawns.find(p=>p.id===f.pawnId)!.cooking).toBeNull();
+  await act({type:'bill-update',structureId:f.benchId,billId:bill.id,settings:{...bill,suspended:false}},'Reprendre le même inachevé payé après sa recharge exacte.');
+  await page.locator('[data-speed="1"]').click();
+  await expect.poll(async()=>(await world(page)).piles.find(p=>p.id===unfinished.id)?.unfinished?.progress??0,{timeout:10_000,intervals:[100]}).toBeGreaterThan(savedWork.unfinished!.progress);
+  await page.locator('[data-speed="6"]').click();
+  await page.waitForFunction(({product,storage})=>{const w=window.__lisiere.world;return !w.pawns.some(p=>p.cooking?.recipe==='tuque'||p.haul)&&w.piles.some(p=>p.item===product&&p.owner.type==='ground'&&p.owner.x===storage.x&&p.owner.z===storage.z);},{product:f.product,storage:f.storage},{timeout:30_000});await pause(page);
+  const stocked=await world(page),tuque=stocked.piles.find(p=>p.item===f.product)!;
+  expect(tuque.owner).toEqual({type:'ground',...f.storage});expect(tuque.quantity).toBe(1);expect(tuque.apparel?.material).toBe(f.material);
+  expect(stocked.piles.some(p=>p.id===unfinished.id||p.item==='unfinished-tuque')).toBe(false);expect(rawTextile(stocked)).toBe(0);
+  expect(stocked.tailoring?.completed).toBe(1);
+  const quality=tuque.apparel!.quality,condition=tuque.apparel!.hitPoints,insulation=apparelInsulation(tuque);
+  // Normal9/14 are expected in the separate prepared unit oracles. This native
+  // product keeps its real quality and therefore its actual derived insulation.
+  expect(insulation.cold).toBeGreaterThan(0);expect(insulation.heat).toBe(0);
+
+  await act({type:'order-equipment',pawnId:f.pawnId,itemId:tuque.id,action:'wear',queue:false},'Enfiler la tuque produite et retirer physiquement le casque incompatible.');
+  await expect.poll(async()=>(await world(page)).pawns.find(p=>p.id===f.pawnId)?.equipmentTask?.duration).toBe(14);
+  await page.locator('[data-speed="1"]').click();
+  await page.waitForFunction(id=>{const w=window.__lisiere.world,p=w.pawns.find(p=>p.id===id);return p?.equipmentTask?.action==='wear'&&p.equipmentTask.progress>0;},f.pawnId,{timeout:10_000});await pause(page);
+  const dressing=await world(page),dresser=dressing.pawns.find(p=>p.id===f.pawnId)!,floorTuque=dressing.piles.find(p=>p.id===tuque.id)!;
+  expect(floorTuque.owner.type).toBe('ground');if(floorTuque.owner.type!=='ground')throw Error('The unfinished wear must retain the ground owner.');
+  expect(Math.max(Math.abs(dresser.x-floorTuque.owner.x),Math.abs(dresser.z-floorTuque.owner.z))).toBeLessThanOrEqual(1);
+  const helmetDuring=dressing.piles.find(p=>p.id===f.helmetId)!;
+  if(dresser.equipmentTask!.progress<9)expect(helmetDuring.owner).toEqual({type:'apparel',pawnId:f.pawnId});
+  else expect(helmetDuring.owner.type).toBe('ground');
+  await page.locator('[data-speed="1"]').click();
+  await page.waitForFunction(id=>window.__lisiere.world.piles.find(p=>p.id===id)?.owner.type==='apparel',tuque.id,{timeout:10_000});await pause(page);
+  const worn=await world(page),wornTuque=worn.piles.find(p=>p.id===tuque.id)!,oldHelmet=worn.piles.find(p=>p.id===f.helmetId)!;
+  expect(wornTuque.owner).toEqual({type:'apparel',pawnId:f.pawnId});expect(oldHelmet.owner.type).toBe('ground');
+  expect(oldHelmet.apparel?.quality).toBe(helmetBefore.apparel!.quality);expect(oldHelmet.apparel?.hitPoints).toBe(helmetBefore.apparel!.hitPoints);
+  expect(worn.piles.filter(p=>p.owner.type==='apparel'&&p.owner.pawnId===f.pawnId).map(p=>p.id)).toEqual([tuque.id]);
+  expect(wornTuque.apparel!.quality).toBe(quality);expect(wornTuque.apparel!.hitPoints).toBe(condition);
+  const range=comfortableTemperature(worn,worn.pawns.find(p=>p.id===f.pawnId)!);
+  expect(range.min).toBeCloseTo(16-insulation.cold);expect(range.max).toBe(26);
+  await inspectPerson(page,f.pawnId,'gear');const row=page.locator('.equipment-apparel-row').filter({has:page.locator(`[data-apparel-information="${tuque.id}"]`)});
+  await expect(row).toContainText('Tuque');await row.locator('.equipment-apparel-line').hover();
+  await expect(page.locator('#game-tooltip')).toContainText(`Isolation froid ${insulation.cold.toFixed(1)} °C`);
+  await expect(page.locator('#equipment-comfort')).toContainText(range.min.toFixed(1));
+  await page.screenshot({path:info.outputPath('01-wool-tuque-owned-insulation.png')});
+
+  await act({type:'order-equipment',pawnId:f.pawnId,itemId:tuque.id,action:'remove',queue:false},'Retirer la même tuque au contact, sans perdre son identité ni sa qualité.');
+  await expect.poll(async()=>(await world(page)).pawns.find(p=>p.id===f.pawnId)?.equipmentTask?.duration).toBe(5);
+  await page.locator('[data-speed="1"]').click();
+  await page.waitForFunction(id=>{const w=window.__lisiere.world,p=w.pawns.find(p=>p.id===id);return p?.equipmentTask?.action==='remove'&&p.equipmentTask.progress>0;},f.pawnId,{timeout:5_000});await pause(page);
+  expect((await world(page)).piles.find(p=>p.id===tuque.id)!.owner).toEqual({type:'apparel',pawnId:f.pawnId});
+  await page.locator('[data-speed="1"]').click();await page.waitForFunction(id=>window.__lisiere.world.piles.find(p=>p.id===id)?.owner.type==='ground',tuque.id,{timeout:5_000});await pause(page);
+  const removed=await world(page),removedTuque=removed.piles.find(p=>p.id===tuque.id)!;
+  expect(removedTuque.apparel).toMatchObject({quality,hitPoints:condition,forbidden:true});
+  expect(removed.piles.find(p=>p.id===f.helmetId)!.owner.type).toBe('ground');
+  expect(comfortableTemperature(removed,removed.pawns.find(p=>p.id===f.pawnId)!)).toEqual({min:16,max:26});
+  await inspectPerson(page,f.pawnId,'gear');await expect(page.locator(`[data-apparel-information="${tuque.id}"]`)).toHaveCount(0);
+  await page.screenshot({path:info.outputPath('02-removed-tuque-helmet-preserved.png')});
+  const final=await exportReload(page,info,'removed-tuque-and-helmet-exact');
+  expect(errors).toEqual([]);expect(await page.evaluate(()=>({backend:window.__lisiere.backend,...window.__lisiere.incident})))
+    .toMatchObject({backend:'WebGPU',simulationStopped:false,graphicsFault:false,waiting:0});
+  await writeFile(info.outputPath('tuque-native-summary.json'),JSON.stringify({notice:f.notice,schema:245,start:f.world.tick,unfinishedAt:begun.tick,interruptedAt:interrupted.tick,stockedAt:stocked.tick,wornAt:worn.tick,removedAt:removed.tick,final:final.tick,pawnId:f.pawnId,unfinishedId:unfinished.id,tuqueId:tuque.id,helmetId:f.helmetId,material:f.material,paid:20,quality,insulation,range,errors,scope:'One prepared wool20 workshop with prior helmet, real bill/payment/resume/storage/wear/removal and exact reloads; no natural acquisition, winter survival or performance claim.'},null,2));
+});

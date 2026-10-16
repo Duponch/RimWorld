@@ -1,6 +1,6 @@
 # Ce qui est jouable et ce qui manque
 
-**V383 — schéma 244 :** [bouche d’aération](vent-v383.md) : construction payée, service physique et échange de chaleur entre pièces. Publication commune V382–V383 **31deee1d**, produit `e147f81a`, 120 réponses HTTPS exactes. Construction, services, thermique et recharges qualifiés dans la note canonique. Les états suivants sont historiques.
+**V384 — schéma 245 :** [tuques tissu/laine](tuque-v384.md) : confection payée, reprise, rangement, port/retrait et isolation qualifiés. Publication regroupée suivante ; dernière production V382–V383/31deee1d, schéma244. Les états suivants sont historiques.
 
 **V381 — référence Les Aulnes actualisée :** [atelier, étagères et tenue de garde](aulnes-workshop-v381.md). Patrimoine préparé explicite, habillage et rangement ordinaires observés, anciennes références conservées ; aucune nouvelle mécanique ou campagne entière revendiquée. Les états suivants sont historiques.
 

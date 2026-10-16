@@ -6,7 +6,7 @@ import { isCookingOrder } from './order-types.ts';
 import { groundCapacity,planGroundPlacement } from './ground-placement.ts';
 import { addGroundMaterial,refreshStock } from './materials.ts';
 import { ingredientPlaceFree } from './cooking-bills.ts';
-import { productionWorkTotal,isTailoring,unfinishedItem,PRODUCTION_RECIPES,tailoringMaterialFromIngredients,type TailoringMaterial,type TailoringRecipe } from './production-recipes.ts';
+import { productionWorkTotal,isTailoring,unfinishedItem,PRODUCTION_RECIPES,tailoringMaterialFromIngredients,tailoringMaterialAllowed,type TailoringMaterial,type TailoringRecipe } from './production-recipes.ts';
 import type { Cell,CommandResult,MaterialPile,Pawn,World } from './types.ts';
 
 export interface UnfinishedState {
@@ -16,7 +16,7 @@ export interface UnfinishedState {
   /** V90 owner of all incorporated units. Legacy objects omit it and are cloth. */
   material?:TailoringMaterial;
   /** V90 total; cloth remains readable for the two legacy recipes. */
-  units?:40|45|60|80;
+  units?:20|40|45|60|80;
   cloth?:60|45;
   parts:number[];
   billId?:number;
@@ -39,7 +39,7 @@ export function beginUnfinished(world:World,pawn:Pawn):MaterialPile|null {
   const item=unfinishedItem(recipe),units=PRODUCTION_RECIPES[recipe].units,existing=task.ingredients.length===1?world.piles.find(p=>p.id===task.ingredients[0]!.pileId&&p.unfinished):undefined;
   if(existing){if(existing.unfinished!.authorId!==pawn.id)return null;existing.unfinished!.billId=task.billId;return existing;}
   const material=tailoringMaterialFromIngredients(task.ingredients);
-  if(!material||task.ingredients.some(i=>i.item!==material)||task.ingredients.reduce((n,i)=>n+i.quantity,0)!==units)return null;
+  if(!material||!tailoringMaterialAllowed(recipe,material)||task.ingredients.some(i=>i.item!==material)||task.ingredients.reduce((n,i)=>n+i.quantity,0)!==units)return null;
   const used=new Map<number,number>();for(const i of task.ingredients)used.set(i.pileId,(used.get(i.pileId)??0)+i.quantity);
   const piles=world.piles.map(p=>used.has(p.id)?{...p,quantity:p.quantity-used.get(p.id)!}:p).filter(p=>p.quantity>0),shadow={...world,piles};
   if(piles.length>=32768||!Number.isSafeInteger(world.nextId+1))return null;
@@ -77,7 +77,7 @@ export function validUnfinishedShape(p:Record<string,unknown>,version:number):bo
   if(p.item==='unfinished-flak-vest'||p.item==='unfinished-flak-helmet'||p.item==='unfinished-recon-helmet'||p.item==='unfinished-recon-armor'||p.item==='unfinished-gun'||p.item==='unfinished-sculpture'||p.item==='unfinished-component')return p.unfinished===undefined;
   if(p.kind!=='unfinished')return p.unfinished===undefined;
   const u=p.unfinished;
-  if(version<72||!record(p.owner)||!['ground','pawn'].includes(String(p.owner.type))||p.quantity!==1||!record(u)||!isTailoring(u.recipe))return false;
+  if(version<72||!record(p.owner)||!['ground','pawn'].includes(String(p.owner.type))||p.quantity!==1||!record(u)||!isTailoring(u.recipe)||u.recipe==='tuque'&&version<245)return false;
   const recipe=u.recipe,legacy=version<90,units=PRODUCTION_RECIPES[recipe].units;
   if(legacy)return (p.item==='unfinished-tribalwear'||version>=73&&p.item==='unfinished-shirt')
     &&Object.keys(u).every(k=>['recipe','authorId','progress','cloth','parts','billId'].includes(k))&&(version>=73||recipe==='tribalwear')&&p.item===unfinishedItem(recipe)
@@ -85,7 +85,7 @@ export function validUnfinishedShape(p:Record<string,unknown>,version:number):bo
     &&int(u.progress,0,productionWorkTotal(recipe))&&(u.billId===undefined||int(u.billId,1));
   const material=u.material,storedUnits=u.units;
   return p.item===unfinishedItem(recipe)&&Object.keys(u).every(k=>['recipe','authorId','progress','material','units','cloth','parts','billId'].includes(k))
-    &&(isApparelMaterial(material)&&(version>=91||material==='cloth'||material==='light-leather')&&(version>=120||material!=='muffalo-wool')&&(version>=178||material!=='foxfur'))&&storedUnits===units&&(u.cloth===undefined||material==='cloth'&&(recipe==='tribalwear'||recipe==='shirt')&&u.cloth===units)
+    &&(isApparelMaterial(material)&&tailoringMaterialAllowed(recipe,material)&&(version>=91||material==='cloth'||material==='light-leather')&&(version>=120||material!=='muffalo-wool')&&(version>=178||material!=='foxfur'))&&storedUnits===units&&(u.cloth===undefined||material==='cloth'&&(recipe==='tribalwear'||recipe==='shirt')&&u.cloth===units)
     &&int(u.authorId,1)&&Array.isArray(u.parts)&&u.parts.length>0&&u.parts.length<=80&&u.parts.every(n=>int(n,1,75))&&u.parts.reduce((a:number,b:number)=>a+b,0)===storedUnits
     &&int(u.progress,0,productionWorkTotal(recipe))&&(u.billId===undefined||int(u.billId,1));
 }

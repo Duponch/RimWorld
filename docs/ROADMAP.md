@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 244.** [V383](gameplay/vent-v383.md) ajoute la bouche d’aération : construction payée, ouverture/fermeture au contact et chaleur partagée entre pièces. [V382](gameplay/silver-surface-v382.md) relie l’argent extrait à un achat. Publication commune **31deee1d**, produit `e147f81a`, 120 réponses HTTPS exactes. Les Aulnes V381 restent courantes ; campagne98038 close partielle.
+**16 octobre 2026 — schéma 245.** [V384](gameplay/tuque-v384.md) relie20textiles à la confection d’une tuque, son rangement, port physique et isolation. Publication regroupée suivante ; dernière production V382–V383/31deee1d, schéma244. Les Aulnes V381 restent courantes ; campagne98038 close partielle.
 
 ## Priorité actuelle
 
@@ -13,7 +13,8 @@
 7. **Les Aulnes actualisées V381.** Patrimoine explicite, habillage et rangement observés, anciennes références conservées.
 8. **Argent de surface V382 qualifié.** Extraction finie puis achat avec le produit, reprise et patrimoine historique conservés.
 9. **Bouche d’aération V383 qualifiée.** Deux pièces, construction et ouverture/fermeture physiques, thermique et recharges exactes ; remplacement direct d’un mur encore adapté en démolition préalable.
-10. **Suite : protection textile contre le froid.** Tuque tissu/laine avec confection, stockage, port et isolation ; références Core relues, préparation privée sans résultat acquis. V382–V383 sont publiés ensemble ; avancer sans nouvelle campagne de qualification systématique.
+10. **Protection textile V384 qualifiée.** Tuque tissu/laine, ouvrage/reprise, rangement, port/retrait physiques et isolation ; quantification prospective48→50Core explicitée.
+11. **Suite : sols humides de toundra.** Poches de marais avec contraintes réelles de trajet, culture et construction ; références et préparation privées, aucun résultat V385 acquis. Publication regroupée après qualification, sans hydrologie ou ponts ajoutés par analogie.
 
 **Référence jouable à entretenir : Les Aulnes.** Actualiser régulièrement sa version courante avec les objets et boucles pertinents du catalogue, en conservant une colonie logique et les anciennes versions. Le patrimoine ajouté peut être préparé et explicitement décrit ; il ne devient pas une campagne naturellement acquise. V381 expose les étagères et la tenue de garde ; les prochaines mises à jour suivront les ajouts pertinents.
 

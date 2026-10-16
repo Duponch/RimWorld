@@ -1,5 +1,9 @@
 # Guide joueur
 
+## Confectionner une tuque — V384, proposition
+
+Après **Vêtements complexes**, sélectionnez un établi de tailleur manuel ou électrique puis ajoutez la facture **Tuque**. Rendez disponibles20tissus ou20laines de mufalo d’une seule matière et activez son filtre. L’Artisanat collecte et travaille au poste ; un ouvrage interrompu reste lié à son auteur. Autorisez les vêtements dans une réserve/étagère accessible pour ranger le produit. Au contact, **Porter** remplace un casque incompatible ; **Retirer** dépose la tuque. Une tuque en tissu/laine normale apporte9/14°C d’isolation froide, selon sa qualité ; elle reste compatible avec la parka. Les anciennes politiques ne sont pas élargies au chargement. [Portée et adaptations](tuque-v384.md).
+
 ## Partager la chaleur entre pièces — V383, proposition
 
 Après **Mobilier complexe**, ouvrez **Architecte → Température → Bouche d’aération**. Prévoyez30acier accessibles ; Q/E oriente les deux faces indiquées, qui doivent rester libres. Déconstruisez normalement tout mur à cet emplacement avant la pose. Le colon livre les matières et construit l’objet : le passage demeure bloqué, même ouvert. La bouche ne soutient aucun toit et ne peut pas être emballée.

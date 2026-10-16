@@ -134,7 +134,7 @@ test('recon cargo and portrait keep their own silhouette and item identity',()=>
   const w=prepared(),pawn=w.pawns[0]!;
   const recon:MaterialPile={id:w.nextId++,item:'recon-helmet',kind:'apparel',quantity:1,owner:{type:'apparel',pawnId:pawn.id},apparel:newApparelState('recon-helmet')};
   const flak:MaterialPile={...recon,id:w.nextId++,item:'flak-helmet',apparel:newApparelState('flak-helmet')};
-  expect(Object.keys(APPAREL_CARGO)).toHaveLength(39); // V378 adds the recon suit after the five V190 foxfur garments.
+  expect(Object.keys(APPAREL_CARGO)).toHaveLength(41); // Two prospective V384 fabric tuques follow the historical catalogue.
   expect(Object.keys(APPAREL_CARGO).filter(item=>item.startsWith('foxfur-'))).toHaveLength(5);
   expect(APPAREL_CARGO['recon-helmet']).not.toBe(APPAREL_CARGO['flak-helmet']);
   expect(foldedApparel('recon-helmet')).toHaveLength(3); // coque, rebord et visière fermée
@@ -147,7 +147,7 @@ test('recon cargo and portrait keep their own silhouette and item identity',()=>
   let vertices=0;
   for(let i=0;i<dye.count;i++)if(dye.getX(i)===RECON_HELMET_DYE){vertices++;expect(bone.getX(i)).toBe(1);}
   expect(vertices).toBe(202);
-  expect(geometry.getAttribute('position').count).toBe(3132); // Original2442 plus690 resident recon-suit vertices.
+  expect(geometry.getAttribute('position').count).toBe(3190); // Historical3132 plus58 resident soft-cap vertices; no new actor mesh.
   geometry.dispose();
   w.piles.push(recon);
   const layer=new PawnLayer();layer.update(w,1,true);

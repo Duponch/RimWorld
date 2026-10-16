@@ -4,9 +4,9 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V383, schéma 244 :** [bouche d’aération](docs/gameplay/vent-v383.md) qualifiée : construction payée, service physique et partage de chaleur entre pièces. Publication commune V382–V383 **31deee1d**, 120 HTTPS exacts, produit `e147f81a`. Les Aulnes V381 restent courantes ; campagne98038 close partielle.
+**État V384, schéma 245 :** [tuques tissu/laine](docs/gameplay/tuque-v384.md) qualifiées : confection, ouvrage/reprise, rangement, port/retrait et isolation réels. Publication regroupée suivante ; dernière production V382–V383 **31deee1d**, 120 HTTPS exacts, produit `e147f81a`, schéma244. Les Aulnes V381 restent courantes ; campagne98038 close partielle.
 
-**Ordre courant :** tuque tissu/laine pour les sorties froides, avec chaîne de confection/port/isolation et migration stricte. Préparation privée, aucune livraison V384 acquise. Conserver les mises à jour périodiques et cohérentes des Aulnes. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. Références humaines, `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
+**Ordre courant :** marais physiques de toundra, avec supports, agriculture, feu/neige et coûts de trajets cohérents, après références Core précises. Préparation privée245→246, aucune livraison V385 acquise. Conserver les actualisations périodiques cohérentes des Aulnes. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers reportés. Références humaines, `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
 
 ## Méthode de livraison
 
