@@ -4,9 +4,9 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V395, schéma 251 :** [Brûler des vêtements](docs/gameplay/burn-apparel-v395.md) qualifié : facture physique, filtres et perte unique, reprise au travail. Publication regroupée suivante ; dernière production V394/eefe3715. Les Aulnes10733, archives et campagne98038 close partielle préservées.
+**État V396, schéma 252 :** [Stockage sensible](docs/gameplay/deterioration-v396.md) qualifié : usure au sol, transport, protection et reprise ; coût rare mesuré. Publication regroupée V395–V396 suivante, dernière production V394/eefe3715. Les Aulnes10733, archives et campagne98038 close partielle préservées.
 
-**Ordre courant :** détérioration des réserves sensibles au sol et protection par pièce/étagère, après revue des copies privées V396. Garder transport, météo et propriétaires réels, coût rare borné et migration prospective. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers, `references_UI`, branche UI papier et sessions humaines préservés.
+**Ordre courant :** demande humaine du 16 octobre : après clôture V396, véritable aller-retour et revisite depuis Les Aulnes, travaux payés sur le second site, mêmes personnes/biens et analyse pause/×1/×6. Ne pas ajouter un nouveau catalogue avant ce parcours ; pas de terrain continu prévu. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers, `references_UI`, branche UI papier et sessions humaines préservés.
 
 ## Méthode de livraison
 

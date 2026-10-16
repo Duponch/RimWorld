@@ -59,7 +59,17 @@ export function otherCampaignMap(world:World):World|undefined {
  * shared values stay original references; branding preserves their map owner
  * and global person knowledge. This view is never stepped or persisted. */
 export function secondaryValidationContext(world:World):World|undefined {
-  const root=campaignAuthority(world),local=secondaryContext(root);
-  if(!local)return undefined;
-  const view={...local};authorities.set(view,root);return view;
+  const root=campaignAuthority(world),site=root.secondarySite;
+  if(!site)return undefined;
+  const cached=contexts.get(root);
+  let view:World;
+  // A running producer may have replaced local fields before its final flush.
+  if(cached?.map===site.map)view={...cached.view};
+  else{
+    // Reading an imported world must not install a runtime view that could
+    // retain old fields while a strictly validated migration edits the map.
+    view={...site.map} as World;
+    for(const key of CAMPAIGN_FIELDS)(view as unknown as Record<string,unknown>)[key]=root[key];
+  }
+  authorities.set(view,root);return view;
 }

@@ -2,7 +2,8 @@ import { ITEM_DEFINITIONS } from '../sim/items';
 import { isApparelItem, apparelDefinition, apparelLabel, armorPiece, apparelQualityFactor, apparelInsulation } from '../sim/apparel-rules';
 import { QUALITY_LABELS, isWeaponItem, weaponMaxHitPoints } from '../sim/equipment-rules';
 import { commercialItemMassGrams } from '../sim/commercial-mass';
-import type { MaterialPile } from '../sim/types';
+import type { MaterialPile,World } from '../sim/types';
+import {deteriorationInspection} from './deterioration-inspection';
 import type { ObjectInformationInput, ObjectInformationRow } from './object-information';
 import { BODY_PARTS } from '../sim/body-definition';
 import { mechCorpseMass } from '../sim/mechanoid-corpse';
@@ -14,7 +15,7 @@ import { pileMaxHp,pileDamage } from '../sim/thing-damage-rules';
 import { ROT_DAYS } from '../sim/food-preservation';
 
 /** Only delivered properties, evaluated on explicit inspection of one item. */
-export function itemInformation(pile:MaterialPile):ObjectInformationInput {
+export function itemInformation(pile:MaterialPile,world?:World):ObjectInformationInput {
   const definition=ITEM_DEFINITIONS[pile.item],rows:ObjectInformationRow[]=[];
   const add=(category:string,label:string,value:string,description:string)=>rows.push({category,label,value,description});
   add('Général','Quantité',String(pile.quantity),'Quantité réellement présente dans cette pile.');
@@ -45,6 +46,7 @@ export function itemInformation(pile:MaterialPile):ObjectInformationInput {
     add('Alimentation','Conservation',`${ROT_DAYS.pemmican} jours`,'Durée avant pourriture à 10 °C ou plus. Le froid ralentit cette progression ; la congélation la suspend.');
     add('Alimentation','Usage','Réserve de camp','Aliment préparé pouvant être consommé selon le régime. Les expéditions de cette version demandent toujours des repas de survie.');
   }
+  if(world){const deterioration=deteriorationInspection(world,pile);if(deterioration)rows.push(...deterioration.rows);}
   const quality=pile.weapon?.quality??pile.apparel?.quality;
   if(quality)add('Général','Qualité',QUALITY_LABELS[quality],'Qualité propre à cette instance, conservée pendant les déplacements et l’équipement.');
   if(isWeaponItem(pile.item)&&pile.weapon)add('Général','Points de vie',`${pile.weapon.hitPoints} / ${weaponMaxHitPoints(pile.item)}`,'État réel de l’arme sélectionnée.');

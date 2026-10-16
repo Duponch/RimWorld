@@ -40,7 +40,7 @@ test('firefighting is real ranked work, acts on home fires and forced orders rea
   until(w,()=>!w.fires!.items.some(f=>f.id===second));expect(p.firefighting).toBeUndefined();expect(w.fires!.ledger.extinguished).toBe(2);
   // During a sleep slot a rested pawn can work, while after-work recreation
   // may start. A newly selected firefighting task must dispatch before that fallback.
-  const night=fireCamp(),n=night.pawns[0]!;night.tick=1000;n.schedule.fill('sleep');n.recreation.level=10;n.needCooldown=0;n.planCooldown=0;n.priorities.firefight=1;
+  const night=fireCamp(),n=night.pawns[0]!;night.tick=1000;night.deterioration!.lastTick=night.tick;n.schedule.fill('sleep');n.recreation.level=10;n.needCooldown=0;n.planCooldown=0;n.priorities.firefight=1;
   const close={x:n.x+1,z:n.z},near=woodFire(night,close,.6);night.home=[close.z*night.width+close.x];
   stepWorld(night);expect(n.firefighting?.phase).toBe('beat');expect(n.recreation.task).toBeNull();expect(night.fires!.items.find(f=>f.id===near)!.size).toBeCloseTo(.28);expect(validateWorld(night)).toEqual([]);
 });
@@ -189,7 +189,8 @@ test('strict fire/HP migration rejects old burns and malformed phases or duplica
   expect(validateFires(w,86)).not.toEqual([]);
   const record={tick:0,nextInjuryId:2,injuries:[{id:1,part:'torso',kind:'burn',severity:1000,bornAt:0}],missing:[],bloodLoss:0};
   expect(validateMedicalRecord(record,true,true,true,true,false,false,true,true,false)).not.toBeNull();expect(validateMedicalRecord(record,true,true,true,true,false,false,true,true,true)).toBeNull();
-  const old=withoutPredatorFoodPolicies(stripV120(withoutV90(fireCamp()))) as unknown as Record<string,unknown>;old.schemaVersion=86;
+  const old=withoutPredatorFoodPolicies(stripV120(withoutV90(fireCamp()))) as unknown as Record<string,unknown>;delete old.deterioration;old.schemaVersion=86;
+  for(const policy of (old as unknown as World).foodPolicies??[])policy.allowed=policy.allowed.filter(item=>item!=='pemmican');
   for(const animal of (old as unknown as World).wildlife?.animals??[]){delete (animal as {ageTicks?:number}).ageTicks;delete animal.parents;delete animal.pregnancy;delete animal.mating;}
   for(const p of (old as unknown as World).pawns)delete (p.priorities as Partial<typeof p.priorities>).clean;for(const p of (old as unknown as World).pawns)delete (p.priorities as Partial<typeof p.priorities>).firefight;
   const loaded=deserializeWorld(JSON.stringify(old));expect(loaded.fires).toBeUndefined();expect(loaded.pawns[0]!.priorities.firefight).toBe(1);

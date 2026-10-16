@@ -44,7 +44,7 @@ const report={date:new Date().toISOString(),cpu:os.cpus()[0].model,seconds,switc
 report.browserChannel=browserChannel;
 const browser=await chromium.launch({channel:browserChannel,args:[]});
 try{for(const action of (process.env.HARVEST_ACTIONS??'mine,chop').split(',')){
- const w=createWorld(42,250,250);w.tick=2000;
+ const w=createWorld(42,250,250);w.tick=2000;w.deterioration.lastTick=w.tick; // Declared initial noon, no past exposure.
  const p=w.pawns[0],c=action==='mine'?w.tiles.map((t,i)=>({t,x:i%250,z:Math.floor(i/250)})).filter(v=>v.t.terrain==='rock').sort((a,b)=>(a.x-p.x)**2+(a.z-p.z)**2-((b.x-p.x)**2+(b.z-p.z)**2))[0]:p;
  const command={type:'area',action,from:{x:Math.max(0,c.x-20),z:Math.max(0,c.z-20)},to:{x:Math.min(249,c.x+20),z:Math.min(249,c.z+20)}};
  if(!applyCommand(w,command).ok)throw Error('Designation rejected');

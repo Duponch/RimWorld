@@ -1,3 +1,4 @@
+import {isDeteriorationItem} from './deterioration-content.ts';
 import {destroyMinifiedTree} from './tree-transfer.ts';
 import {commitShelfRemoval} from './shelf-retirement.ts';
 import {removeHydroponicPlants} from './hydroponics.ts';
@@ -76,13 +77,14 @@ function referencesPile(p:Pawn,id:number):boolean {
     ||p.feed&&(p.feed.sourcePileId===id||p.feed.carryPileId===id)||p.ward?.kind==='food'&&(p.ward.sourcePileId===id||p.ward.carryPileId===id));
 }
 /** A destroyed stack loses all its units. Other carried ingredients survive. */
-export function damagePile(world:World,pile:MaterialPile,amount:number,cause:'fire'|'bullet'|'bomb'='fire'):boolean {
-  const max=pileMaxHp(pile,world.schemaVersion);if(!max||!positive(amount)||!world.piles.includes(pile))return false;
+export function damagePile(world:World,pile:MaterialPile,amount:number,cause:'fire'|'bullet'|'bomb'|'deterioration'='fire',knownIndex?:number):boolean {
+  if(cause==='deterioration'&&(world.schemaVersion<252||pile.owner.type!=='ground'||!isDeteriorationItem(pile.item)))return false;
+  const max=pileMaxHp(pile,world.schemaVersion);if(!max||!positive(amount)||!(knownIndex!==undefined&&Number.isInteger(knownIndex)&&knownIndex>=0&&knownIndex<world.piles.length&&world.piles[knownIndex]===pile||world.piles.includes(pile)))return false;
   const damage=pileDamage(pile)+amount;
   if(damage<max){if(pile.apparel)pile.apparel.hitPoints=max-damage;else if(pile.weapon)pile.weapon.hitPoints=max-damage;else pile.damage=damage;return true;}
   if(pile.kind==='plant')return destroyMinifiedTree(world,pile);
   if(pile.humanCorpse){
-    if(!destroyHumanCorpse(world,pile,cause))return false;
+    if(cause==='deterioration'||!destroyHumanCorpse(world,pile,cause))return false;
     for(const p of world.pawns){
       if(referencesPile(p,pile.id))interruptWork(world,p);
       if(p.interruptedCargo&&!world.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)&&!world.packed.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id))delete p.interruptedCargo;
@@ -95,7 +97,7 @@ export function damagePile(world:World,pile:MaterialPile,amount:number,cause:'fi
   world.piles=world.piles.filter(p=>p!==pile);
   for(const p of world.pawns){
     if(p.droppedWeaponId===pile.id)delete p.droppedWeaponId;
-    if(referencesPile(p,pile.id))interruptWork(world,p);
+    if(referencesPile(p,pile.id))interruptWork(world,p,cause==='deterioration');
     if(p.interruptedCargo&&!world.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)&&!world.packed.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id))delete p.interruptedCargo;
   }
   for(const a of world.wildlife?.animals??[])if(a.meal?.kind==='pile'&&a.meal.id===pile.id){delete a.meal;a.path=[];a.nextDecision=world.tick;}

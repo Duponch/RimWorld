@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V396 qualifié — [matières sensibles et stockage protégé](deterioration-v396.md), schéma 252.** Dix matières existantes, perte de PV au sol exposé et protection des pièces sèches/étagères ; transport et recettes conservent les mêmes biens. Couverture limitée, cas ciblés, reprise et court parcours réel qualifiés ; aucune couverture universelle des objets.
+
 **V395 qualifié — [Brûler des vêtements](burn-apparel-v395.md), schéma 251.** Facture au feu de camp/crématorium existants, pièce entière autorisée, filtres PV/qualité, Transport et perte unique sans sortie ni combustible récupéré. Casque acier refusé, anciennes sauvegardes neutres ; perte unique et reprise au travail qualifiées.
 
 **V394 — [Les Aulnes, tenues partagées](aulnes-policy-v394.md).** Référence actualisée au10733 : tuque laine autorisée, ouvrage repris, première tuque toujours rangée ; seconde production et port restent à jouer. Archives et patrimoine déclaré conservés.

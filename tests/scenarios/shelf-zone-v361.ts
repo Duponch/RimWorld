@@ -10,7 +10,7 @@ import type {Cell,Command,Pawn,World} from '../../src/sim/types.ts';
  * Construction, hauling, furniture packing and cooking are played by callers;
  * no finished shelf, escrow, cargo or saved output is fabricated here. */
 export function shelfZoneCamp(count=1,size=32):World {
- const w=deconstructionCamp(count,size);w.tick=3000;w.stockpiles=[];w.growingZones=[];
+ const w=deconstructionCamp(count,size);w.tick=3000;w.deterioration!.lastTick=w.tick;w.stockpiles=[];w.growingZones=[];
  w.research={project:null,points:0,complexFurniture:{points:COMPLEX_FURNITURE_RESEARCH_COST,completedAt:0}};
  for(const [i,p]of w.pawns.entries()){
   Object.assign(p,{x:Math.min(8+i,size-3),z:Math.min(10,size-3),hunger:100,rest:100,background:{childhood:'workshop-child',adulthood:'artisan'}});

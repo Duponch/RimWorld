@@ -1,3 +1,4 @@
+import {createDeteriorationState} from '../src/sim/deterioration-content.ts';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {describe,it,expect} from 'vitest';
 import {prepareGroupScenario} from '../src/sim/group-scenario.ts';
@@ -168,7 +169,7 @@ describe('V377 real second map',()=>{
     // The historical fixture must not inherit a future catalogue permission.
     for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='pemmican');
     for(const policy of old.apparelPolicies)policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-armor'&&item!=='cloth-tuque'&&item!=='muffalo-wool-tuque');
-    old.schemaVersion=239;
+    delete old.deterioration;old.schemaVersion=239;
     const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.secondarySite).toBeUndefined();expect(migrated.rng).toBe(old.rng);expect(migrated.nextId).toBe(old.nextId);
     Object.defineProperty(old,'secondarySite',{value:undefined,enumerable:true});expect(validateWorld(old).length).toBeGreaterThan(0);
     departAndEnter(f);const local=secondaryContext(f.w)!,before=serializeWorld(f.w);
@@ -187,6 +188,7 @@ describe('V377 real second map',()=>{
     for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='pemmican');
     for(const policy of old.apparelPolicies)policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-armor'&&item!=='cloth-tuque'&&item!=='muffalo-wool-tuque');
     for(const map of [old,old.secondarySite.map]){
+      delete map.deterioration;
       // The real current entry creates a prospective unloading marker; the
       // declared old campaign has the same possessions and literal ration ledger.
       if(map.group)delete map.group.provisions;
@@ -194,8 +196,9 @@ describe('V377 real second map',()=>{
     }
     old.schemaVersion=240;
     const raw=JSON.stringify(old),restored=deserializeWorld(raw);
-    expect(restored).toEqual({...old,schemaVersion:SCHEMA_VERSION});
-    expect(restored.secondarySite).toEqual(old.secondarySite);
+    const expected={...old,schemaVersion:SCHEMA_VERSION,deterioration:createDeteriorationState(old.seed,old.tick),secondarySite:{...old.secondarySite,map:{...old.secondarySite.map,deterioration:createDeteriorationState(old.secondarySite.map.seed,old.tick)}}};
+    expect(restored).toEqual(expected);
+    expect(restored.secondarySite).toEqual(expected.secondarySite);
     for(const item of ['uranium','recon-armor','unfinished-recon-armor'] as const){
       const bad=JSON.parse(raw),map=bad.secondarySite.map;
       map.piles.push({id:bad.nextId++,item,kind:item==='uranium'?'uranium':item==='recon-armor'?'apparel':'unfinished',quantity:1,owner:{type:'ground',x:2,z:2},

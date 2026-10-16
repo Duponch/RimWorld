@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+**V396 qualifié — chapitres 10–11, SYS/TEST-051..061 :** adopter propriétaires réels, protection environnementale des dix matières, PV/division/fusion et étagères ; adapter cadence Bernoulli de 25 ticks locaux, flux privé prospectif et inspection ; différer autres objets, inventaires hors carte et ToxicFallout. [Règles Core 1.6.4871, provenance réutilisée et limites](../gameplay/deterioration-v396.md). Contrôles ciblés, corpus public, présentation et parcours natif acquis par reprises ; aucun identifiant global clos, originaux préservés.
+
 **V393 qualifié — SYS-077/TEST-077, continuité V13/V389 :** conserver les règles alimentaires et consolider seulement le constat des piles/régimes et l’action Assignations ; adapter une alerte anticipée de compatibilité, sans déduire accès, réservation ou autonomie. Exclusions et pâte non évaluée explicites. [Références réutilisées et limites](../gameplay/food-readability-v393.md). Aucun identifiant global clos ; aucun nouvel objet ou schéma.
 
 **V392 qualifié — continuité V90/V388, SYS/TEST-055, UI-014/015, CAT-034..037, GAP-007 :** adopter l’édition des critères de la politique partagée sélectionnée ; adapter au catalogue local et au brouillon Appliquer/Annuler, conserver cadence et gestes physiques. Différer création/copie/renommage/suppression et filtres Core exhaustifs. [Relevés datés, décisions et limites](../gameplay/apparel-policy-edit-v392.md). Aucun identifiant global clos, originaux préservés.

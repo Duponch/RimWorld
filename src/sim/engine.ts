@@ -1,6 +1,7 @@
 import {canDesignateBridge,finishBridge,removeBridge} from './bridge.ts';
 import {marshSupportsFootprint} from './marsh.ts';
 import {newVentState,ventPlacementAllowed} from './vent.ts';
+import {advanceDeterioration} from './deterioration.ts';
 import {campaignAuthority,isSecondaryContext,selectedMap,secondaryContext,flushSecondaryContext} from './secondary-site-context.ts';
 import {adoptSecondaryIncidents} from './secondary-incidents.ts';
 import {applySecondarySiteCommand} from './secondary-site.ts';
@@ -904,6 +905,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     if(beforeElectricalRain!==world.structures)thermal=reconcileTemperature(world);
     advanceBreakdowns(world);
     expireFood(world);
+    advanceDeterioration(world,thermal);
     thermal=advanceSurfaceTemperature(world,thermal,getLight);
     if(burnFuel(world))light=undefined; // Empty torches cannot light later work in this same tick.
     const trapContacts=spikeTrapWindow(world);

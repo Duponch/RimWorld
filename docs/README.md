@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V396 qualifié — schéma 252 :** [Matières sensibles et stockage protégé](gameplay/deterioration-v396.md). Dix matières au sol, toit/pièce/pluie/marais et étagères ; calendrier prospectif par carte et diagnostics. Usure, transport, protection et reprise qualifiés ; coût CPU rare mesuré. Publication V395–V396 regroupée suivante ; dernière production V394/eefe3715. Les Aulnes feront ensuite un vrai aller-retour et une revisite avec travaux et mesures.
+
 **V395 — schéma 251 :** [Brûler des vêtements](gameplay/burn-apparel-v395.md) : facture au feu/crématorium, filtres et perte physique d’une pièce entière, sans sortie. Migrations strictes et reprise au travail qualifiées ; publication regroupée suivante, dernière production V394/eefe3715.
 
 **V380 — schéma 242 :** [lisibilité des HUD](gameplay/hover-layout-v380.md). Survol, ressources et dock stabilisés et qualifiés à quatre tailles ; correctif UI sans nouvelle mécanique. Publication regroupée suivante ; dernière production V378/e5ec566c. Les états suivants sont historiques.

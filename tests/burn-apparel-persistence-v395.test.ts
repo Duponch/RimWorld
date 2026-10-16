@@ -1,3 +1,4 @@
+import {createDeteriorationState} from '../src/sim/deterioration-content.ts';
 import {expect,test} from 'vitest';
 import {deserializeWorld,serializeWorld,validateWorld} from '../src/sim/serialization.ts';
 import {validBurnApparelHistoricalTransport,validBurnApparelTransport} from '../src/sim/burn-apparel-save.ts';
@@ -10,7 +11,7 @@ import {equipmentCamp} from './scenarios/equipment.ts';
 import {fixtureBuilding} from './scenarios/deconstruction.ts';
 import {preparedCassandraExpedition} from './scenarios/secondary-incidents-v379.ts';
 
-const as250=(w:World)=>{(w as {schemaVersion:number}).schemaVersion=250;return w;};
+const as250=(w:World)=>{(w as {schemaVersion:number}).schemaVersion=250;delete w.deterioration;if(w.secondarySite)delete w.secondarySite.map.deterioration;return w;};
 /** Declared save-boundary states, not a claimed played production chronology. */
 function prepared(stage:'source'|'held'|'placed'='source'){
  const w=equipmentCamp(1),p=w.pawns[0]!;w.piles=[];p.priorities.haul=1;p.priorities.cook=0;
@@ -47,7 +48,7 @@ test('a prepared queued whole-input reservation survives; duplicate queues and h
 
 test('250 validates both original maps then migrates only the version; inactive corruption is not repaired',()=>{
  const {w}=preparedCassandraExpedition();as250(w);const before=JSON.stringify(w);
- const next=deserializeWorld(before);expect(next).toEqual({...w,schemaVersion:SCHEMA_VERSION});expect(JSON.stringify(w)).toBe(before);
+ const next=deserializeWorld(before);const expected={...w,schemaVersion:SCHEMA_VERSION,deterioration:createDeteriorationState(w.seed,w.tick),secondarySite:{...w.secondarySite!,map:{...w.secondarySite!.map,deterioration:createDeteriorationState(w.secondarySite!.map.seed,w.tick)}}};expect(next).toEqual(expected);expect(JSON.stringify(w)).toBe(before);
  const bad=structuredClone(w);bad.secondarySite!.map.pawns[0]!.orders.queue='bad' as never;
  expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
 });

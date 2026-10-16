@@ -65,7 +65,7 @@ const LOCAL_FIELDS=new Set([
   'prisonDepartures','site','scenario','startingArrival','hunting','butchery','flora','wildlife','heatwaves','raids','fluIncidents','miscIncidents',
   'smallIncidents','flashstorm','podRescues','home','destroyed','arrivals','projectiles','bombWaves','roofing','thermal','packed','snow','snowClearArea',
   'tailoring','deconstructed','seed','width','height','tiles','pawns','resources','structures','jobs','piles','stockpiles','growingZones','growingCursor',
-  'environment','stock','spoiled','events','logisticsCursor',
+  'environment','stock','spoiled','events','logisticsCursor','deterioration',
 ]);
 
 export function secondaryMapForValidation(world:World):World|undefined {

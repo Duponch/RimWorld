@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 251 as const;
+export const SCHEMA_VERSION = 252 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -188,6 +188,8 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  /** Prospective local exposure stream, independent of campaign RNG. */
+  deterioration?:import('./deterioration-content.ts').DeteriorationState;
   secondarySite?:import('./secondary-site-state.ts').SecondarySite;
   /** Real secondary-map provenance; no crash landing or supplies are inferred. */
   expeditionSite?:{tile:number;createdAt:number;calendarOffset:number};

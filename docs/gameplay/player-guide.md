@@ -1,5 +1,9 @@
 # Guide joueur
 
+## Préserver les matières sensibles — V396
+
+Rangez bois, tissu, laine de mufalo, cuirs et composants dans une pièce intérieure couverte sèche ou sur une étagère existante. Un simple auvent extérieur réduit l’usure et arrête le supplément pluie ; un marais nu garde son effet humide, supprimé par un pont fini ou un sol construit. Les filtres et Transport doivent autoriser le vrai rangement. Inspectez la pile pour lire son exposition et son taux moyen : transporter conserve les dommages, et la perte des derniers PV détruit toute la pile. Les étagères ne protègent pas du feu ni de la pourriture. [Périmètre, règles et qualification](deterioration-v396.md).
+
 ## Éliminer un vêtement indésirable — V395
 
 Inspectez un **feu de camp** ou un **crématorium** et ajoutez **Brûler des vêtements**. Aucun type n’est choisi au départ : ouvrez les filtres, cochez les pièces voulues et limitez leurs PV/qualités. Une pièce retirée reste interdite dans le jeu livré ; utilisez **Autoriser cet objet** au sol si vous voulez la brûler. Un habit porté, une cargaison tierce ou un casque pare-balles en acier ne sera pas pris.

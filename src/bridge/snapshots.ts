@@ -1,3 +1,4 @@
+import {validDeteriorationHistoricalTransport,validDeteriorationTransport} from '../sim/deterioration-save.ts';
 import {validBurnApparelHistoricalTransport,validBurnApparelTransport} from '../sim/burn-apparel-save.ts';
 import {validGroupProvisionsHistoricalTransport} from '../sim/group-provisions-save.ts';
 import {validTorchHistoricalTransport,validTorchTransport} from '../sim/torch-save.ts';
@@ -903,6 +904,7 @@ export class SnapshotDecoder {
     if (packet.epoch < this.epoch || (packet.epoch === this.epoch && packet.revision <= this.revision)) return { status: 'stale' };
     if (!Number.isSafeInteger(packet.world.schemaVersion) || packet.world.schemaVersion < 1
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
+    if(!validDeteriorationHistoricalTransport(packet,packet.world.schemaVersion))return resync('État de détérioration futur.');
     if(!validBurnApparelHistoricalTransport(packet,packet.world.schemaVersion))return resync('Recette de destruction de vêtement future.');
     if(!validGroupProvisionsHistoricalTransport(packet,packet.world.schemaVersion))return resync('Provisions mixtes de groupe futures.');
     if(!validTorchHistoricalTransport(packet,packet.world.schemaVersion))return resync('Lampe-torche future.');
@@ -1170,6 +1172,7 @@ export class SnapshotDecoder {
     // properties to infer authority here. Public contexts ignore this fact.
     const geometryReuse:OwnedGeometryReuseWitness|undefined=structureIndices!==undefined&&this.current
       ?{kind:'sparse',previous:this.current,updatedOrdinals:structureIndices}:undefined;
+    if(!validDeteriorationTransport(next,next.schemaVersion))return resync('Horloge ou propriétaire de détérioration invalide.');
     if(!validTorchTransport(next,next.schemaVersion))return resync('Lampe-torche, carburant ou propriétaire de recharge invalide.');
     if(!validPemmicanCatalogueDomains(next,next.schemaVersion)||!validPemmicanResearchTransport(next,next.schemaVersion))return resync('Pemmican, recherche ou production future/invalide.');
     if(!validTundraTransport(next,next.schemaVersion))return resync('Toundra, flore ou climat futur/incohérent.');

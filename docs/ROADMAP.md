@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 251.** [Brûler des vêtements V395](gameplay/burn-apparel-v395.md) : facture physique au feu/crématorium qualifiée, perte unique et reprise au travail. Publication regroupée suivante ; dernière production V394/eefe3715. Ensuite : détérioration des réserves sensibles au sol et intérêt du stockage abrité, après références ciblées.
+**16 octobre 2026 — schéma 252.** [Brûler des vêtements V395](gameplay/burn-apparel-v395.md) : facture physique au feu/crématorium qualifiée, perte unique et reprise au travail. Publication regroupée suivante ; dernière production V394/eefe3715. [Matières sensibles V396](gameplay/deterioration-v396.md) qualifiées dans leur périmètre ; priorité humaine suivante : Les Aulnes, aller-retour, travaux et revisite du même site, conservation et performances.
 
 ## Priorité actuelle
 
@@ -26,7 +26,7 @@
 
 20. **Actualisation Aulnes V394 qualifiée.** Permission laine partagée et ouvrage réellement repris,360ticks ordinaires ; seconde tuque et port encore ouverts.
 21. **Fin du cycle textile V395 qualifiée.** Brûler des vêtements indésirables via une facture physique et filtres existants, sans nouvel objet ; reprise et perte unique observées.
-22. **Stockage sensible V396 en préparation privée.** Détérioration des matières au sol selon toit/pièce/pluie, transport et étagères existantes ; aucune qualification acquise.
+22. **[Stockage sensible V396 qualifié](gameplay/deterioration-v396.md).** Dix matières au sol selon toit/pièce/pluie/marais, transport et étagères existantes ; migration prospective252, contrôles ciblés/natif et coût CPU rare acquis.
 
 **Référence jouable à entretenir : Les Aulnes.** Actualiser régulièrement sa version courante avec les objets et boucles pertinents du catalogue, en conservant une colonie logique et les anciennes versions. Le patrimoine ajouté peut être préparé et explicitement décrit ; il ne devient pas une campagne naturellement acquise. V381 expose les étagères et la tenue de garde, V386 une confection de tuques en cours ; les prochaines mises à jour suivront les ajouts pertinents.
 

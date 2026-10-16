@@ -1,12 +1,15 @@
 import { captureHumanOwners,type HumanOwnershipCapture } from './human-owners.ts';
-import { campaignAuthority,otherCampaignMap } from './secondary-site-context.ts';
+import { campaignAuthority,otherCampaignMap,secondaryValidationContext } from './secondary-site-context.ts';
 import type { Pawn,World } from './types.ts';
 import type { RelationshipPerson } from './relationship-state.ts';
 
 /** Cross-map KNOWLEDGE is separate from physical owner registration. It never
  * inserts a Pawn, cargo, job or local reservation into another map context. */
 export function appendCampaignPeople(world:World,people:Map<number,RelationshipPerson>):void {
-  const root=campaignAuthority(world),other=otherCampaignMap(world);
+  const root=campaignAuthority(world);
+  // Knowledge is read-only: imported-world guards must not install a runtime
+  // map view before prospective migrations replace optional local fields.
+  const other=world===root?secondaryValidationContext(root):root;
   const known:Iterable<readonly [number,RelationshipPerson]>=other?
     captureHumanOwners(other,{},false).people:world.campaignPeople?.map(p=>[p.id,p] as const)??[];
   for(const [id,person] of known){

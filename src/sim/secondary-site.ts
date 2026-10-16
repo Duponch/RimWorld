@@ -1,3 +1,4 @@
+import {createDeteriorationState} from './deterioration-content.ts';
 import { campaignAuthority,captureSecondaryMap,flushSecondaryContext,isSecondaryContext,secondaryContext } from './secondary-site-context.ts';
 import { secondaryCommand,type SecondarySite,type SecondarySiteCommand } from './secondary-site-state.ts';
 import { generateSiteWorld } from './site-generation.ts';
@@ -39,6 +40,7 @@ function draftSite(root:World,tileId:number):{site:SecondarySite;nextId:number}|
   const calendarOffset=(longitudeOffsetCore(tileCoordinates(tile).longitude)-longitudeOffsetCore(homeLongitude))/10;
   generated.tick=root.tick;generated.site=site;generated.expeditionSite={tile:tileId,createdAt:root.tick,calendarOffset};
   generated.snow!.adoptedAt=root.tick;generated.snow!.lastTick=root.tick;
+  generated.deterioration=createDeteriorationState(seed,root.tick);
   for(const collection of [generated.resources,generated.piles])for(const item of collection)item.id+=offset;
   generated.nextId+=offset;
   enableBiomeWildlife(generated,tile.biome);

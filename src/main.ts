@@ -171,6 +171,7 @@ import { installTextSelectionGuard } from './ui/text-selection';
 import { pawnNeedsMarkup, updatePawnInspection } from './ui/pawn-inspection';
 import { openObjectInformation } from './ui/object-information';
 import { itemInformation } from './ui/item-information';
+import {deteriorationInspection} from './ui/deterioration-inspection';
 import {minifiedTreeDescription} from './ui/minified-tree-inspection';
 import { healthCapacityRows } from './ui/health-inspection';
 import {captureFoodReadability,type FoodReadability} from './sim/food-readability';
@@ -1177,7 +1178,7 @@ function rebuildInspector() {
     const heading=panel.querySelector('.cell-heading');
     if(heading){const info=document.createElement('button');info.id='cell-information';info.textContent='i';info.setAttribute('aria-label','Informations sur l’objet');
       info.onclick=()=>{if(!snapshot||!selectedObject)return;const pile=selectedObject.kind==='pile'?snapshot.piles.find(p=>p.id===selectedObject!.id):undefined;
-        if(pile){openObjectInformation(itemInformation(pile));return;}
+        if(pile){openObjectInformation(itemInformation(pile,snapshot));return;}
         const rows=[...panel.querySelectorAll<HTMLElement>('.cell-facts>p')].map(line=>({category:'Propriétés',label:line.querySelector('span')?.textContent?.replace(/\s*:\s*$/,'')??'État',value:line.querySelector('strong')?.textContent??line.textContent??'',description:line.textContent??''}));
         const health=panel.querySelector('.cell-health-caption strong');if(health)rows.unshift({category:'Propriétés',label:'Points de vie',value:health.textContent??'',description:'État réel de cet objet.'});
         openObjectInformation({title:panel.querySelector('#cell-title')?.textContent??'Objet',description:panel.querySelector('#cell-description')?.textContent??'',rows});};
@@ -1429,6 +1430,8 @@ function renderState() {
       let cellDescription = resource ? (isPlant(resource)||resource.kind==='tree') ? plantInspection(world,resource) : `Quantité : ${resource.amount}` : pile ? `Quantité : ${pile.quantity}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:pile.kind==='corpse'?` · ${{fresh:'Fraîche',rotting:'Pourrie (impropre à la boucherie)',desiccated:'Desséchée'}[corpseStage(pile,world.tick)]}`:''}` : structure ? `${structureFootprintLabel(structure)} cases` : job ? queryJobStatus(world,job).reason??'' : zone ? `Culture : ${PLANT_DEFINITIONS[zone.plant].label} · ${zone.cells.length} cases${growingTemperatureInspection(world,selectedCell)}` : storage ? `Taille : ${stockpileZoneCells(world,storageCell!.id).length} cases` : '';
       if(pile&&isMinifiedTree(pile)){cellDescription=minifiedTreeDescription(pile,world.tick);if(pile.plantPack.pendingExpiry)el('cell-title').textContent='Arbre mort · restes en attente';}
       let cellHealth:CellHealth|undefined;
+      const deterioration=pile?deteriorationInspection(world,pile):undefined;
+      if(deterioration){cellDescription+=' · '+deterioration.summary;cellHealth=deterioration.health;}
       if(pile&&isMinifiedTree(pile))cellHealth={current:100-(pile.damage??0),maximum:100,label:'Emballage'};
       const inspectedBuilding=packed?.building??structure;
       if(inspectedBuilding&&inspectedBuilding.kind!=='sleeping-spot'){
