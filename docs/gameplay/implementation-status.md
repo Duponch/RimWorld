@@ -1,6 +1,6 @@
 # Ce qui est jouable et ce qui manque
 
-**V389 — schéma 248 :** [Pemmican, réserve de camp](pemmican-v389.md) : recherche, cuisson payée, stockage/ingestion et reprise active qualifiés. Recettes non recherchées masquées dans Ajouter une facture. Provisions de voyage encore limitées aux repas de survie. Publication V388–V389 à suivre ; production V387/9f9a926a conservée. Les états suivants sont historiques.
+**V389 — schéma 248 :** [Pemmican, réserve de camp](pemmican-v389.md) : recherche, cuisson payée, stockage/ingestion et reprise active qualifiés. Recettes non recherchées masquées dans Ajouter une facture. Provisions de voyage encore limitées aux repas de survie. Produit c6870b74 publié avec V388 en 05b8f6b6,130HTTPS exacts. Les états suivants sont historiques.
 
 **V381 — référence Les Aulnes actualisée :** [atelier, étagères et tenue de garde](aulnes-workshop-v381.md). Patrimoine préparé explicite, habillage et rangement ordinaires observés, anciennes références conservées ; aucune nouvelle mécanique ou campagne entière revendiquée. Les états suivants sont historiques.
 

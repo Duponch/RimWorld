@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 248.** [V389](gameplay/pemmican-v389.md) ajoute une réserve de camp fabricable, stockable et consommable après recherche, avec reprise active exacte. Publication groupée V388–V389 à suivre ; production V387/9f9a926a conservée. Les Aulnes V386 et la campagne98038 close partielle sont préservées.
+**16 octobre 2026 — schéma 248.** [V389](gameplay/pemmican-v389.md) ajoute une réserve de camp fabricable, stockable et consommable après recherche, avec reprise active exacte. Produit c6870b74 publié avec V388 en 05b8f6b6,130HTTPS exacts. Les Aulnes V386 et la campagne98038 close partielle sont préservées.
 
 ## Priorité actuelle
 

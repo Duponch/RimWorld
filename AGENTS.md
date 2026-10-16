@@ -4,9 +4,9 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V389, schéma 248 :** [pemmican de camp](docs/gameplay/pemmican-v389.md) qualifié : recherche, cuisson payée, rangement, ingestion et reprise active. Publication commune V388–V389 suivante ; dernière production V387 **9f9a926a**/`a1092767`,128HTTPS exacts. Les Aulnes V386/tick10373 et archives préservées ; campagne98038 close partielle.
+**État V389, schéma 248 :** [pemmican de camp](docs/gameplay/pemmican-v389.md) qualifié : recherche, cuisson payée, rangement, ingestion et reprise active. Publication commune V388–V389 **05b8f6b6**/`c6870b74`,130HTTPS exacts. Les Aulnes V386/tick10373 et archives préservées ; campagne98038 close partielle.
 
-**Ordre courant :** publier V388–V389 puis lampe-torche au sol pour l’éclairage préindustriel, après revue des copies privées et couplages carburant/lumière/thermique/persistance. Pemmican de voyage, rivières/profondeurs et sous-métiers différés. Actualisations des Aulnes périodiques et cohérentes. Voir [la feuille de route](docs/ROADMAP.md). `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
+**Ordre courant :** lampe-torche au sol pour l’éclairage préindustriel, après revue des copies privées et couplages carburant/lumière/thermique/persistance. Pemmican de voyage, rivières/profondeurs et sous-métiers différés. Actualisations des Aulnes périodiques et cohérentes. Voir [la feuille de route](docs/ROADMAP.md). `references_UI`, branche UI papier `codex/ui-papier-v317` et sessions humaines préservées.
 
 ## Méthode de livraison
 
