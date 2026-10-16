@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 252.** [Alertes V398](gameplay/remote-danger-alerts-v398.md) et [CPU V399](development/structure-adoption-v399.md) qualifiés ; publication regroupée suivante.
+**16 octobre 2026 — schéma 252.** [Alertes V398](gameplay/remote-danger-alerts-v398.md) et [CPU V399](development/structure-adoption-v399.md) qualifiés ; V398–V399 publiés ensemble en 8a146d54, produit 7ee3a889, 134 réponses HTTPS exactes.
 
 **Dernière publication V396.** [Brûler des vêtements V395](gameplay/burn-apparel-v395.md) : facture physique au feu/crématorium qualifiée, perte unique et reprise au travail. V395–V396 publiés ensemble en a02aa932, produit59780d4f,134 réponses HTTPS exactes. [Matières sensibles V396](gameplay/deterioration-v396.md) qualifiées dans leur périmètre ; priorité humaine suivante : Les Aulnes, aller-retour, travaux et revisite du même site, conservation et performances.
 

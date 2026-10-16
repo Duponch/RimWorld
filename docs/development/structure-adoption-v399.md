@@ -10,7 +10,7 @@ Cette optimisation réemploie le contrat MAIN existant (propriété fermée, int
 
 ## Mesure CPU bornée
 
-Rapport complet : `tmp/deterioration-structure-bench/run-ZiZm2c/report.json`, PASS25,500s, sources exactes avant/après. Windows/Node24.11.1, Ryzen5 3600. Classe MAIN avant/après textuellement vérifiée, mêmes Decoder et autres propriétaires ; trois vrais états250² en lecture seule. Cinq paires alternées, huit deltas contigus au même tick par paire. Construction, migration, clonage, encodage et assertions sont hors des temps d’adoption. Aucun tick de simulation, commande ou tirage RNG.
+Rapport complet : `tmp/deterioration-structure-bench/run-ZiZm2c/report.json`, PASS 25,500 s, sources exactes avant/après. Windows/Node24.11.1, Ryzen5 3600. Classe MAIN avant/après textuellement vérifiée, mêmes Decoder et autres propriétaires ; trois vrais états250² en lecture seule. Cinq paires alternées, huit deltas contigus au même tick par paire. Construction, migration, clonage, encodage et assertions sont hors des temps d’adoption. Aucun tick de simulation, commande ou tirage RNG.
 
 | État | Moyenne avant ms/adoption | Après | Différence |
 | --- | ---: | ---: | ---: |
@@ -22,4 +22,8 @@ Les issues et champs dynamiques sont comparés à un témoin indépendant ; iden
 
 Cinq mesures courtes, GC/JIT non contrôlés ; le p95 du rapport est celui de cinq moyennes de lots, pas des ticks individuels. Ce banc Node mesure l’adoption CPU et son cycle de validation, pas le temps MAIN natif, DOM/HUD, le worker complet, le GPU ou les FPS. Aucun gain de fréquence d’images ni débit×6 général établi. Les15–18ms natifs observés en V397 restent les mesures d’avant ; le coût résiduel justifie une prochaine analyse ciblée, pas une promesse de fluidité.
 
-Présentation Chrome commune PASS130,591s ; typage final PASS12,152s, Pages PASS2,212s. Natif V398 réutilisé pour la bascule réelle ; corpus et campagnes non affectés réutilisés. Les gels et échecs sont conservés sous `tmp/remote-alerts-v398/` et `tmp/validation-runs/`.
+Présentation Chrome commune PASS 130,591 s ; typage final PASS 12,152 s, Pages PASS 2,212 s. Natif V398 réutilisé pour la bascule réelle ; corpus et campagnes non affectés réutilisés. Les gels et échecs sont conservés sous `tmp/remote-alerts-v398/` et `tmp/validation-runs/`.
+
+## Livraison commune V398–V399
+
+Produit 7ee3a8893a44ca5af3531c6047cda171ebdd6f6c commité/poussé sur main. Déploiement unique 8a146d54 sur elsewhere-cq7.pages.dev ; 134 réponses HTTPS200/MIME/octets exacts en 9,224 s. Paquet 531 fichiers/126407230 octets, 66 fiches/69 chemins de sauvegarde, toutes archives et Aulnes publiques V394 exactes. Paquet contrôlé en 1,188 s, déploiement 13,122 s. Rapports `tmp/elsewhere-pages/v399-package-ogPkzf` et `tmp/elsewhere-pages/v399-http-2gDjxS`. Aucun nouvel artefact de test public ni instrumentation de banc dans le produit.
