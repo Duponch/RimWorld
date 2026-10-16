@@ -26,3 +26,5 @@ Le défaut visuel découvert aux captures est corrigé par deux déclarations CS
 Gel final `tmp/apparel-policy-v392/freeze04.json` : **3393 chemins uniques exacts** avant/après contrôle géométrique. Pas de nouvel asset ni d’état persistant, aucun banc FPS général. Publication V392 à regrouper avec le prochain lot utile ; dernière production V390–V391/21e3c957, produit1823bc0a,132HTTPS exacts. Les AulnesV386 et les parties personnelles restent intactes.
 
 Typage incluant le nouveau pilote géométrique PASS12,883 s, build Pages PASS2,040 s et documentation PASS1,415 s. Aucun nouveau déploiement : V392 est livré sur Git et attend la prochaine publication groupée.
+
+Clôture publication du16octobre2026 : V392–V393 déployés ensemble en582a4a2b, produit1975e815 ;132réponses HTTPS exactes. [Paquet et limites](food-readability-v393.md). Les mentions d’attente ci-dessus décrivent la qualification antérieure à cette publication.

@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 250.** [V393](gameplay/food-readability-v393.md) consolide la lecture des piles/régimes ; [V392](gameplay/apparel-policy-edit-v392.md) rend les filtres de tenue éditables. Deux parcours natifs courts et reprises acquis ; publication regroupée suivante, dernière production21e3c957. Prochain lot : actualisation périodique et bornée des Aulnes depuis V386, sans dotation ni réveil forcé.
+**16 octobre 2026 — schéma 250.** [V393](gameplay/food-readability-v393.md) consolide la lecture des piles/régimes ; [V392](gameplay/apparel-policy-edit-v392.md) rend les filtres de tenue éditables. Deux parcours natifs courts et reprises acquis ; publication commune582a4a2b,132HTTPS exacts, produit1975e815. Prochain lot : actualisation périodique et bornée des Aulnes depuis V386, sans dotation ni réveil forcé.
 
 ## Priorité actuelle
 

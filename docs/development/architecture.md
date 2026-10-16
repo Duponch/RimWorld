@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-**V393 — schéma 250 :** [Lecture des piles et régimes](../gameplay/food-readability-v393.md) : alerte, guide et diagnostic cohérents, repas engagés préservés ; accès et autonomie non déduits. V392 et V393 qualifiés, publication regroupée suivante ; dernière production V390–V391/21e3c957. Les états suivants sont historiques.
+**V393 — schéma 250 :** [Lecture des piles et régimes](../gameplay/food-readability-v393.md) : alerte, guide et diagnostic cohérents, repas engagés préservés ; accès et autonomie non déduits. V392–V393 publiés ensemble en582a4a2b,132HTTPS exacts, produit1975e815. Les états suivants sont historiques.
 
 **V380 — schéma 242 :** [lisibilité des HUD](../gameplay/hover-layout-v380.md). Survol, ressources et dock stabilisés et qualifiés à quatre tailles ; correctif UI sans nouvelle mécanique. Publication regroupée suivante ; dernière production V378/e5ec566c. Les états suivants sont historiques.
 

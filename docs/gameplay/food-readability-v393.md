@@ -1,6 +1,6 @@
 # Comprendre les piles alimentaires et les régimes — V393
 
-Consolidation UX qualifiée, sans nouvel objet, moteur de repas, état persistant ou changement du schéma 250. Publication regroupée avec V392 prévue après le commit ; dernière production à ce stade : V390–V391/21e3c957.
+Consolidation UX qualifiée, sans nouvel objet, moteur de repas, état persistant ou changement du schéma 250. V392 et V393 sont publiés ensemble en582a4a2b, produit1975e815, le16octobre2026.
 
 Un stock physique abondant ne prouve pas qu’un colon l’autorise. Alerte, guide des premiers jours et diagnostic utilisent une lecture pure commune du snapshot confirmé. Elle décrit les types alimentaires constatés dans les piles fraîches au sol et dans la propre main du colon : aucun chemin, réservation, partage de quantité ou jour d’autonomie n’est déduit. L’action corrective ouvre Assignations, sans changer automatiquement les régimes.
 
@@ -18,4 +18,6 @@ Le court parcours préparé 32² Chrome/WebGPU PASS 38,938 s : vingt rations fin
 
 Après inspection, seule l'explication du guide est raccourcie pour éviter un pavé de texte ; les 26 cas des deux fichiers guide/UI repassent en6,767 s, le parcours fonctionnel inchangé est réutilisé. Sources et entrées finales dans `tmp/food-readability-v393/freeze03.json` ; contrôles et journaux sous `tmp/validation-runs/`, parcours sous `tmp/food-readability-v393/native-01/`. Corpus, présentation temporelle, campagne et banc FPS non affectés ne sont pas rejoués. Aucun chiffre de performance générale annoncé.
 
-Build Pages PASS2,070 s et documentation PASS1,349 s. Publication groupée V392–V393 en attente des vérifications de paquet et HTTPS.
+Build Pages PASS2,070 s et documentation PASS1,349 s. Publication commune V392–V393 vérifiée après ce build.
+
+Paquet PASS1,154 s : 530 fichiers/125810082 octets,65fiches/68chemins publics exacts. Déploiement unique582a4a2b PASS12,646 s,132réponses HTTPS200/MIME/octets exacts PASS8,665 s sur adresse stable et nouvelle URL. Rapports `tmp/elsewhere-pages/v393-package-S1mUWG` et `tmp/elsewhere-pages/v393-http-GS0cPy`, SHAproduit1975e8151cad7e4fbfc65cf0b7649602d632dadf ; aucun changement des Aulnes ni redéploiement pour cette clôture documentaire.
