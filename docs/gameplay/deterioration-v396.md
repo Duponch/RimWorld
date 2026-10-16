@@ -1,6 +1,6 @@
 # Mettre les matières sensibles à l’abri — V396
 
-Qualifié le 16 octobre 2026, schéma 252 ; publication regroupée V395–V396 suivante, dernière production V394/eefe3715. Le joueur peut préserver les mêmes matières en les transportant vers une pièce couverte ou une étagère existante. Les réserves au sol exposé perdent progressivement leurs PV ; la dernière perte détruit la pile entière une seule fois. Les nouvelles inspections expliquent l’exposition et le taux moyen, sans nouvelle alerte ni automatisation.
+Qualifié le 16 octobre 2026, schéma 252 ; produit59780d4f commité/poussé et publié avec V395 en a02aa932. Le joueur peut préserver les mêmes matières en les transportant vers une pièce couverte ou une étagère existante. Les réserves au sol exposé perdent progressivement leurs PV ; la dernière perte détruit la pile entière une seule fois. Les nouvelles inspections expliquent l’exposition et le taux moyen, sans nouvelle alerte ni automatisation.
 
 Le périmètre est fermé à dix matières : bois, tissu, laine de mufalo, cinq cuirs locaux, composants et composants avancés. Acquisition et production restent celles du catalogue existant : les biens finis sont transportés, rangés puis consommés par les recettes ordinaires avec leurs PV conservés. Aucun objet nouveau, stock offert ou mise à jour de la colonie publique des Aulnes. Métaux et blocs restent hors de cette usure ; aliments, médicaments, biocarburant, vêtements/armes finis, paquets, dépouilles, plantes minifiées et inventaires hors carte ne sont pas couverts.
 
@@ -47,3 +47,5 @@ Mesure CPU du chemin rare complet, Ryzen5 3600/Windows/Node24.11.1, Aulnes250² 
 Sources servies, tests, entrées et pilotes : `tmp/deterioration-v396/freeze05.json`,3441 chemins exacts avant/après natif ; rapports sous `tmp/validation-runs`, natif sous `tmp/deterioration-v396/native-01`, mesure `cost.json`. Les archives et les Aulnes courantes restent immuables. Le prochain parcours humain des Aulnes est distinct de cette scène de qualification. Build, documentation et publication sont consignés après exécution dans la clôture ci-dessous.
 
 Clôture locale : Pages3,136s, contrôle documentaire12,336s, diff sans erreur. Publication V395–V396 regroupée après commit produit ; les résultats distants restent à confirmer.
+
+Publication commune V395–V396 : paquet1,137s, déploiement17,415s, HTTPS8,685s ;134 réponses200/MIME/octets exacts sur stable et déploiement. Rapports `tmp/elsewhere-pages/v396-package-vWZFT2` et `v396-http-c7r6Cn`. Les66 fiches/69 fichiers de sauvegarde restent exacts, AulnesV394 inchangées. Aucun résultat V397 encore acquis.

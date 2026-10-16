@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 252.** [Brûler des vêtements V395](gameplay/burn-apparel-v395.md) : facture physique au feu/crématorium qualifiée, perte unique et reprise au travail. Publication regroupée suivante ; dernière production V394/eefe3715. [Matières sensibles V396](gameplay/deterioration-v396.md) qualifiées dans leur périmètre ; priorité humaine suivante : Les Aulnes, aller-retour, travaux et revisite du même site, conservation et performances.
+**16 octobre 2026 — schéma 252.** [Brûler des vêtements V395](gameplay/burn-apparel-v395.md) : facture physique au feu/crématorium qualifiée, perte unique et reprise au travail. V395–V396 publiés ensemble en a02aa932, produit59780d4f,134 réponses HTTPS exactes. [Matières sensibles V396](gameplay/deterioration-v396.md) qualifiées dans leur périmètre ; priorité humaine suivante : Les Aulnes, aller-retour, travaux et revisite du même site, conservation et performances.
 
 ## Priorité actuelle
 

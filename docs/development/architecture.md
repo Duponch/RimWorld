@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-**V396 qualifié — schéma 252 :** [Matières sensibles et stockage protégé](../gameplay/deterioration-v396.md). Dix matières au sol, toit/pièce/pluie/marais et étagères ; calendrier prospectif par carte et diagnostics. Usure, transport, protection et reprise qualifiés ; coût CPU rare mesuré. Publication V395–V396 regroupée suivante ; dernière production V394/eefe3715. Les Aulnes feront ensuite un vrai aller-retour et une revisite avec travaux et mesures.
+**V396 qualifié — schéma 252 :** [Matières sensibles et stockage protégé](../gameplay/deterioration-v396.md). Dix matières au sol, toit/pièce/pluie/marais et étagères ; calendrier prospectif par carte et diagnostics. Usure, transport, protection et reprise qualifiés ; coût CPU rare mesuré. V395–V396 publiés ensemble en a02aa932, produit59780d4f,134 réponses HTTPS exactes. Les Aulnes feront ensuite un vrai aller-retour et une revisite avec travaux et mesures.
 
 **V395 — schéma 251 :** [Brûler des vêtements](../gameplay/burn-apparel-v395.md) : facture au feu/crématorium, filtres et perte physique d’une pièce entière, sans sortie. Migrations strictes et reprise au travail qualifiées ; publication regroupée suivante, dernière production V394/eefe3715.
 

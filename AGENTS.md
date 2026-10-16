@@ -4,7 +4,7 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V396, schéma 252 :** [Stockage sensible](docs/gameplay/deterioration-v396.md) qualifié : usure au sol, transport, protection et reprise ; coût rare mesuré. Publication regroupée V395–V396 suivante, dernière production V394/eefe3715. Les Aulnes10733, archives et campagne98038 close partielle préservées.
+**État V396, schéma 252 :** [Stockage sensible](docs/gameplay/deterioration-v396.md) qualifié : usure au sol, transport, protection et reprise ; coût rare mesuré. V395–V396 publiés ensemble en a02aa932, produit59780d4f,134 réponses HTTPS exactes. Les Aulnes10733, archives et campagne98038 close partielle préservées.
 
 **Ordre courant :** demande humaine du 16 octobre : après clôture V396, véritable aller-retour et revisite depuis Les Aulnes, travaux payés sur le second site, mêmes personnes/biens et analyse pause/×1/×6. Ne pas ajouter un nouveau catalogue avant ce parcours ; pas de terrain continu prévu. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers, `references_UI`, branche UI papier et sessions humaines préservés.
 
