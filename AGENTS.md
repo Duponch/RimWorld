@@ -4,11 +4,11 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V403, schéma 254 :** [Étangs peu profonds et ponts](docs/gameplay/shallow-water-v403.md) qualifiés : nouveaux sites boréaux, marche et supports, vrai paiement/transport/retrait et reprises. Publication en préparation ; dernière production V402/b5b83f4a.
+**État V403, schéma 254 :** [Étangs peu profonds et ponts](docs/gameplay/shallow-water-v403.md) qualifiés : nouveaux sites boréaux, marche et supports, vrai paiement/transport/retrait et reprises. V403 publié en e24c5731, produit0f1a8cc1,134 réponses HTTPS200/MIME/octets exacts.
 
-**Dernière publication V402 :** [Menaces et pause](docs/gameplay/urgent-pause-v402.md), produit5a60e95d/déploiementb5b83f4a,134 réponses HTTPS exactes ; schéma253.
+**Dernière publication V403 :** [Étangs peu profonds](docs/gameplay/shallow-water-v403.md), produit0f1a8cc1/déploiemente24c5731,134 réponses HTTPS exactes ; schéma254.
 
-**Ordre courant :** [Parcours Aulnes V397](docs/gameplay/aulnes-multimap-v397.md) clos partiel : aller-retour/travaux/revisite acquis, branche21483 conservée avec Noé/Iris/Rose à terre sur rage animale non remontée hors carte. Alertes corrigées V398, coûts ciblés réduits V399/V400. Fret collectif bois/acier qualifié V401 ; avertissement urgent et pause configurable qualifiés V402. Étangs peu profonds boréaux/pont standard qualifiés V403 ; copier/renommer une politique de tenue est la prochaine recommandation bornée, sans code adopté ; ne pas enchaîner automatiquement des certificats CPU. Mesures restantes conservées, aucune fluidité générale promise. Ne pas prolonger la campagne ni rejouer un état favorable pour fabriquer un vert. Aulnes publiques V394 inchangées, terrain continu non prévu. Voir [la feuille de route](docs/ROADMAP.md).
+**Ordre courant :** [Parcours Aulnes V397](docs/gameplay/aulnes-multimap-v397.md) clos partiel : aller-retour/travaux/revisite acquis, branche21483 conservée avec Noé/Iris/Rose à terre sur rage animale non remontée hors carte. Alertes corrigées V398, coûts ciblés réduits V399/V400. Fret collectif bois/acier qualifié V401 ; avertissement urgent et pause configurable qualifiés V402. Étangs peu profonds boréaux/pont standard qualifiés V403 ; copier/renommer une politique de tenue est la prochaine tranche V404 autorisée en copies privées, sans code adopté ; ne pas enchaîner automatiquement des certificats CPU. Mesures restantes conservées, aucune fluidité générale promise. Ne pas prolonger la campagne ni rejouer un état favorable pour fabriquer un vert. Aulnes publiques V394 inchangées, terrain continu non prévu. Voir [la feuille de route](docs/ROADMAP.md).
 
 ## Méthode de livraison
 

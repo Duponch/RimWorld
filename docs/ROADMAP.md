@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 254.** [Étangs et ponts V403](gameplay/shallow-water-v403.md) qualifiés : terrain boréal prospectif, marche, chantier payé et conservation après retrait. Publication en préparation ; dernière production V402/b5b83f4a.
+**16 octobre 2026 — schéma 254.** [Étangs et ponts V403](gameplay/shallow-water-v403.md) qualifiés : terrain boréal prospectif, marche, chantier payé et conservation après retrait. V403 publié en e24c5731, produit0f1a8cc1,134 réponses HTTPS200/MIME/octets exacts.
 
 **16 octobre 2026 — schéma 253.** [Fret collectif V401](gameplay/group-freight-v401.md) qualifié : bois/acier pris au contact et rapportés du second site ; reprise active exacte. Publié avec [CPU V400](development/sleeping-provenance-v400.md) en 65bad476, produit 5fdec2e6, 134 réponses HTTPS exactes.
 
@@ -10,7 +10,7 @@
 
 ## Prochaines corrections issues du parcours réel
 
-[Les Aulnes V397](gameplay/aulnes-multimap-v397.md) : aller-retour, travaux et revisite du même site observés ; garde finale rouge sur trois habitants blessés à terre au foyer. Les alertes rage animale/incapacité sont corrigées V398. V399/V400 réduisent deux lectures de structures inchangées, après profil ciblé et comparaison CPU bornée. Aucun gain FPS annoncé. Le chargement/retour de bois et acier est qualifié V401. Avertissement urgent et pause configurable sur nouvelle menace qualifiés V402, quelle que soit la carte affichée. Étangs peu profonds boréaux et pont standard qualifiés V403 ; anciennes eaux/cartes conservées. Prochaine recommandation bornée en revue : copier/renommer une politique de tenue, sans suppression ni nouveau code adopté. Pas de succession automatique de caches par domaine. Garder la branche21483 et les Aulnes publiques V394 distinctes ; pas de nouvelle campagne gagnée exigée pour avancer.
+[Les Aulnes V397](gameplay/aulnes-multimap-v397.md) : aller-retour, travaux et revisite du même site observés ; garde finale rouge sur trois habitants blessés à terre au foyer. Les alertes rage animale/incapacité sont corrigées V398. V399/V400 réduisent deux lectures de structures inchangées, après profil ciblé et comparaison CPU bornée. Aucun gain FPS annoncé. Le chargement/retour de bois et acier est qualifié V401. Avertissement urgent et pause configurable sur nouvelle menace qualifiés V402, quelle que soit la carte affichée. Étangs peu profonds boréaux et pont standard qualifiés V403 ; anciennes eaux/cartes conservées. Prochaine tranche V404 autorisée en copies privées : copier/renommer une politique de tenue, sans suppression ni code encore adopté. Pas de succession automatique de caches par domaine. Garder la branche21483 et les Aulnes publiques V394 distinctes ; pas de nouvelle campagne gagnée exigée pour avancer.
 
 ## Priorité actuelle
 

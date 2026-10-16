@@ -1,6 +1,6 @@
 # Étangs peu profonds boréaux et ponts — V403
 
-Qualifié le16octobre2026, schéma254. Publication en préparation ; dernière production V402/b5b83f4a.
+Qualifié le16octobre2026, schéma254. V403 publié en e24c5731, produit0f1a8cc1,134 réponses HTTPS200/MIME/octets exacts.
 
 Les nouveaux sites boréaux peuvent contenir des étangs statiques d’**eau peu profonde**, distincts de l’ancienne eau infranchissable. Un colon peut les traverser lentement et apporter les12bois d’un **Pont en bois** ; le chantier doit être réellement payé puis terminé pour supprimer le coût humide et fournir le support léger. Le retrait restitue6bois et révèle la même eau. L’ancien terrain water conserve exactement son sens et ses refus.
 
@@ -35,3 +35,5 @@ Mesure descriptive ROOT250² : trois paires de graines42/271828/314159, relief p
 Étangs statiques seulement : rivières mondiales, eau mobile, gel/séchage, hydrologie, franges complètes, plantes aquatiques, pensée mouillée et écologie Core exhaustive hors lot. Aulnes publiques V394 et branche blessée21483 inchangées ; aucun étang forcé dans cette forêt tempérée. Campagne98038 close partielle.
 
 Build Pages PASS2,216s et documentation PASS2,050s ; gel de livraison freeze08 :3506 chemins exacts. Les produits sont inchangés depuis les unités, le corpus, la présentation et le parcours matériel ; seuls les documents et témoins QA expliqués ont évolué. Aucun nouveau build ou banc non affecté nécessaire après clôture documentaire.
+
+Publication V403 confirmée : produit0f1a8cc14404a71a75e3d94a3acafce963f4cdc5 commité/poussé ; paquet PASS1,145s,531fichiers/126430038octets,66fiches/69chemins publics exacts. Déploiement unique e24c5731 PASS14,433s puis134réponses HTTPS200/MIME/octets exacts PASS9,631s sur le déploiement et le domaine stable. Rapports tmp/elsewhere-pages/v403-package-3PE6jh et v403-http-KYNEXR ; archives et Aulnes publiques inchangées. Clôture documentaire sans nouveau build/déploiement ; gel final freeze09 :3506 chemins exacts.
