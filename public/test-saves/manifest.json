@@ -3,9 +3,44 @@
   "saves": [
     {
       "id": "aulnes-current",
+      "release": "v394",
+      "filename": "les-aulnes-integrees.json",
+      "label": "Les Aulnes · atelier et tenues 250×250",
+      "description": "Colonie historique conservée. La politique partagée Défense entretenue autorise maintenant la tuque laine ; seconde confection réellement engagée, première tuque rangée. Noé et Alma dorment encore : aucun port forcé ni produit offert.",
+      "pawns": 15,
+      "colonists": 14,
+      "width": 250,
+      "height": 250,
+      "tick": 10733,
+      "prepared": true,
+      "sha256": "19bd59c90dfbae4983d04cb6eae95a2eb728cd61b59b19172c37366e7704be47",
+      "provenance": "Suite de la référence V381, tick 8794, avec son patrimoine préparé : Dérivé du checkpoint V284, tick8434, SHA e11bdf91…644d, migré strictement au schéma242. Deux étagères en bois,40uranium au sol, une combinaison normale et la seule recherche Recon sont explicitement préparés. Iris libérée par vraie annulation ; Tao reçoit la tenue par ordre/contact ordinaires. Aucune acquisition naturelle, expédition ou nouvelle histoire n’est inventée. Cette mise à jour ajoute seulement une facture de deux tuques laine, puis laisse les habitants collecter, confectionner et ranger par leurs gestes ordinaires. Aucun stock, recherche, travail ou vêtement supplémentaire n’est offert. Au tick 10373, une tuque finie et rangée ; aucune portée. La seconde production et le port restent à jouer. Actualisation V394 depuis le vrai V386/tick10373 : une commande ordinaire ajoute seulement la tuque laine aux filtres de la politique4 partagée. Tous les autres filtres, Auto, marqueurs forcés, tâches, sommeil et échéances sont conservés au clic. Puis360ticks ordinaires jusqu’à10733 : Marin reprend réellement la seconde confection ; aucune nouvelle tuque finie ni port constaté. Le patrimoine préparé antérieur reste déclaré, sans acquisition naturelle inventée.",
+      "focus": [
+        "colonie intégrée",
+        "atelier et étagères",
+        "uranium",
+        "tenue de garde Recon",
+        "fabrication",
+        "hôpital et pharmacie",
+        "élevage",
+        "commerce orbital",
+        "atelier d’hiver",
+        "tuques en laine",
+        "politiques de tenue"
+      ],
+      "steps": [
+        "Dans Assignations, consulter Défense entretenue : seule la tuque en laine de mufalo a été ajoutée. La politique est partagée par Ada, Noé, Sacha, Alma et Marin ; matières, qualités et PV restent ceux de la colonie.",
+        "Au poste manuel20988, la facture26682 demande encore une tuque. Marin travaille réellement au contact sur l’ouvrage28715 ; la première tuque28063 normale reste rangée139,149.",
+        "Noé et Alma dorment encore. Auto est actif mais aucune commande Porter, aucun réveil ni dépose immédiate n’a été imposé. Laisser évoluer les besoins, le travail et les futurs choix de tenue.",
+        "La chemise engagée d’Ada, Tao et sa tenue de garde, les quinze personnes, les neuf domestiques et les autres biens/histoires sont conservés. Les consommations et travaux des360ticks restent réels.",
+        "Le patrimoine déclaré V381 et la confection V386 demeurent les origines de cette référence. Aucun marais, pont ou éclairage préindustriel n’est injecté dans cette forêt déjà équipée."
+      ]
+    },
+    {
+      "id": "aulnes-integrated-v386",
       "release": "v386",
       "filename": "les-aulnes-integrees.json",
-      "label": "Les Aulnes · atelier d’hiver 250×250",
+      "label": "Les Aulnes · référence historique V386 250×250",
       "description": "Colonie historique conservée ; facture limitée de deux tuques en laine ajoutée à l’atelier manuel. Au checkpoint final tick 10373 : 1 tuque(s) laine finie(s), 1 rangée(s), aucune portée. Les objectifs inachevés restent à jouer.",
       "pawns": 15,
       "colonists": 14,

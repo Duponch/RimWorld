@@ -1,6 +1,6 @@
 # Ce qui est jouable et ce qui manque
 
-**V393 — schéma 250 :** [Lecture des piles et régimes](food-readability-v393.md) : alerte, guide et diagnostic cohérents, repas engagés préservés ; accès et autonomie non déduits. V392–V393 publiés ensemble en582a4a2b,132HTTPS exacts, produit1975e815. Les états suivants sont historiques.
+**V394 — schéma 250 :** [Les Aulnes, tenues et ouvrage](aulnes-policy-v394.md) : permission laine partagée, courte évolution ordinaire et diagnostic de production corrigé. Aucun nouveau produit fini ou port annoncé ; archives préservées. Publication suivante ; V392–V393/582a4a2b restent en production.
 
 **V381 — référence Les Aulnes actualisée :** [atelier, étagères et tenue de garde](aulnes-workshop-v381.md). Patrimoine préparé explicite, habillage et rangement ordinaires observés, anciennes références conservées ; aucune nouvelle mécanique ou campagne entière revendiquée. Les états suivants sont historiques.
 

@@ -1,5 +1,7 @@
 # Guide joueur
 
+**Les Aulnes V394 :** dans Assignations, Défense entretenue autorise désormais la tuque laine ; Noé et Alma dorment encore, le renouvellement dépend des besoins et règles ordinaires. Marin poursuit la facture de seconde tuque au poste manuel. [État réel et limites](aulnes-policy-v394.md).
+
 ## Comprendre le stock et les régimes — V393
 
 Le compteur **Stock physique** décrit de la nourriture présente, sans garantir qu’un colon l’autorise ou puisse l’atteindre. L’alerte de régime et le guide signalent les personnes pour lesquelles aucune pile fraîche autorisée n’est constatée au sol ou dans leur propre main. Ouvrez **Assignations**, vérifiez leur régime ou préparez un aliment autorisé. Une simple pile compatible n’est pas une promesse de repas accessible.

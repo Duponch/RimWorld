@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V394 — [Les Aulnes, tenues partagées](aulnes-policy-v394.md).** Référence actualisée au10733 : tuque laine autorisée, ouvrage repris, première tuque toujours rangée ; seconde production et port restent à jouer. Archives et patrimoine déclaré conservés.
+
 **V393 qualifié — [lecture des piles alimentaires et régimes](food-readability-v393.md).** Consolidation UX : stock physique distinct des types autorisés constatés, alerte/guide/diagnostic communs et action Assignations. Accès, partage, pâte produisible et autonomie non évalués ; aucun objet, état ou schéma nouveau.
 
 **V392 qualifié — [filtres des politiques de tenue](apparel-policy-edit-v392.md).** Édition d’une politique partagée existante, pièces/matières/qualité/PV, brouillon Appliquer/Annuler ; gestes futurs à cadence existante et port forcé conservés. Sans CRUD, renommage ou changement de schéma 250.

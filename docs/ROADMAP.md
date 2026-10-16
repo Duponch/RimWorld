@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 250.** [V393](gameplay/food-readability-v393.md) consolide la lecture des piles/régimes ; [V392](gameplay/apparel-policy-edit-v392.md) rend les filtres de tenue éditables. Deux parcours natifs courts et reprises acquis ; publication commune582a4a2b,132HTTPS exacts, produit1975e815. Prochain lot : actualisation périodique et bornée des Aulnes depuis V386, sans dotation ni réveil forcé.
+**16 octobre 2026 — schéma 250.** [Les Aulnes V394](gameplay/aulnes-policy-v394.md) reprennent au10733 : permission laine cohérente, seconde tuque en cours, aucun port imposé ; diagnostic de recette corrigé. Publication suivante ; dernière production582a4a2b. Ensuite : destruction physique des vêtements indésirables aux postes existants, après revue ciblée.
 
 ## Priorité actuelle
 
@@ -24,7 +24,8 @@
 18. **Gestion des tenues V392 qualifiée.** Filtres des politiques existantes, brouillon, cadence et port physique ; aucune création/suppression de politique dans cette tranche.
 19. **Lecture alimentaire V393 qualifiée.** Signaler les piles incompatibles avec les régimes sans prétendre connaître accès, production ou autonomie.
 
-20. **Actualisation Aulnes V394 préparée.** Autoriser la tuque laine dans la politique existante puis laisser le travail et les besoins ordinaires évoluer sur une courte fenêtre ; aucun résultat acquis.
+20. **Actualisation Aulnes V394 qualifiée.** Permission laine partagée et ouvrage réellement repris,360ticks ordinaires ; seconde tuque et port encore ouverts.
+21. **Fin du cycle textile V395 proposée.** Brûler des vêtements indésirables via une facture physique et filtres existants, sans nouvel objet ; préparation privée seulement.
 
 **Référence jouable à entretenir : Les Aulnes.** Actualiser régulièrement sa version courante avec les objets et boucles pertinents du catalogue, en conservant une colonie logique et les anciennes versions. Le patrimoine ajouté peut être préparé et explicitement décrit ; il ne devient pas une campagne naturellement acquise. V381 expose les étagères et la tenue de garde, V386 une confection de tuques en cours ; les prochaines mises à jour suivront les ajouts pertinents.
 
