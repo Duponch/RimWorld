@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — schéma 250.** [Les Aulnes V394](gameplay/aulnes-policy-v394.md) reprennent au10733 : permission laine cohérente, seconde tuque en cours, aucun port imposé ; diagnostic de recette corrigé. Publication suivante ; dernière production582a4a2b. Ensuite : destruction physique des vêtements indésirables aux postes existants, après revue ciblée.
+**16 octobre 2026 — schéma 250.** [Les Aulnes V394](gameplay/aulnes-policy-v394.md) reprennent au10733 : permission laine cohérente, seconde tuque en cours, aucun port imposé ; diagnostic de recette corrigé. Publié en eefe3715, produit b23e178b, 134 réponses HTTPS exactes. Ensuite : destruction physique des vêtements indésirables aux postes existants, après revue ciblée.
 
 ## Priorité actuelle
 

@@ -4,7 +4,7 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V394, schéma 250 :** [Aulnes actualisées](docs/gameplay/aulnes-policy-v394.md) au10733, permission de tuque laine et ouvrage réel ; aucune seconde tuque finie ni port. Publication suivante, dernière production V392–V393/582a4a2b. Archives et campagne98038 close partielle préservées.
+**État V394, schéma 250 :** [Aulnes actualisées](docs/gameplay/aulnes-policy-v394.md) au10733, permission de tuque laine et ouvrage réel ; aucune seconde tuque finie ni port. Publication eefe3715/produit b23e178b, 134 HTTPS exacts. Archives et campagne98038 close partielle préservées.
 
 **Ordre courant :** terminer le cycle textile avec Brûler des vêtements aux postes existants, après revue des copies privées V395 et références Core ciblées. Préserver interdits, propriétaires, filtres et travail physique ; aucune nouvelle construction. Voir [la feuille de route](docs/ROADMAP.md). Sous-métiers, `references_UI`, branche UI papier et sessions humaines préservés.
 

@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-**V394 — schéma 250 :** [Les Aulnes, tenues et ouvrage](../gameplay/aulnes-policy-v394.md) : permission laine partagée, courte évolution ordinaire et diagnostic de production corrigé. Aucun nouveau produit fini ou port annoncé ; archives préservées. Publication suivante ; V392–V393/582a4a2b restent en production.
+**V394 — schéma 250 :** [Les Aulnes, tenues et ouvrage](../gameplay/aulnes-policy-v394.md) : permission laine partagée, courte évolution ordinaire et diagnostic de production corrigé. Aucun nouveau produit fini ou port annoncé ; archives préservées. Publié en eefe3715, produit b23e178b, 134 réponses HTTPS exactes.
 
 **V380 — schéma 242 :** [lisibilité des HUD](../gameplay/hover-layout-v380.md). Survol, ressources et dock stabilisés et qualifiés à quatre tailles ; correctif UI sans nouvelle mécanique. Publication regroupée suivante ; dernière production V378/e5ec566c. Les états suivants sont historiques.
 
