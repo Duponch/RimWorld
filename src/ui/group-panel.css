@@ -57,3 +57,5 @@
 @media(max-width:700px){#world-panel.world-group-active{width:calc(100vw - 24px);max-width:calc(100vw - 24px);max-height:calc(100dvh - 316px)}.group-panel{padding:4px}.group-details>section{padding:8px}.group-panel table{font-size:11px}}
 
 .planet-tile[data-biome=tundra]{fill:#c5cec1;stroke:#8faaa6}
+
+.planet-world-object{stroke:#fff8ea;stroke-width:2;fill:#697f6b;pointer-events:none}.planet-world-object-camp{fill:#b08b4e}.planet-world-object-legacy-site{fill:#7896a0}.planet-world-object-caravan{fill:#8b5962}.planet-world-object[data-active=true]{stroke:#352e28;stroke-width:3}

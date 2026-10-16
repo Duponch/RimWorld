@@ -1,3 +1,4 @@
+import {SETTLEMENT_LIMIT_CHOICES} from './settlement-limit-settings';
 import {THREAT_PAUSE_CHOICES} from './threat-pause-settings';
 import { allowedAreaLayout } from './allowed-area-controls';
 import { SCENARIOS, DEFAULT_SCENARIO } from '../sim/scenario-definitions';
@@ -143,6 +144,7 @@ export function gameLayout(): string {
   return `<main class="game-shell">
     <div id="viewport" aria-label="Carte de la colonie en trois dimensions"></div>
     <header class="colonist-bar" aria-label="Colons"><div id="colonists"></div></header>
+    <div id="map-jump-to-host"></div>
     <aside class="resource-list panel" aria-label="Ressources disponibles" title="Objets au sol et portés. Les matériaux déjà livrés aux chantiers sont comptés séparément.">
       <div class="resource-heading">Ressources</div>
       <div id="resources">
@@ -205,7 +207,7 @@ export function gameLayout(): string {
     <section id="animals-panel" class="management-panel panel" aria-label="Animaux domestiques" hidden><div class="panel-heading"><h2>Animaux domestiques</h2><button data-close-panel aria-label="Fermer">×</button></div><div id="animals-content"></div></section>
     <section id="wildlife-panel" class="management-panel panel" aria-label="Faune" hidden><div class="panel-heading"><h2>Faune</h2><button data-close-panel aria-label="Fermer Faune">×</button></div><div id="wildlife-content"></div></section>
     <section id="research-panel" class="management-panel panel" aria-label="Recherche" hidden><div class="panel-heading"><h2>Recherche</h2><button data-close-panel aria-label="Fermer Recherche">×</button></div><div id="research-content"></div></section>
-    <section id="world-panel" class="management-panel panel" aria-label="Monde" hidden><div class="panel-heading"><h2>Monde</h2><button data-close-panel aria-label="Fermer Monde">×</button></div><nav class="world-tabs" role="tablist" aria-label="Vues du monde"><button id="world-tab-group" role="tab" aria-controls="group-content" aria-selected="false" tabindex="-1" data-world-tab="group">Globe et groupe</button><button id="world-tab-individual" role="tab" aria-controls="individual-world-content" aria-selected="true" data-world-tab="individual">Voyages individuels</button></nav><div id="group-content" role="tabpanel" aria-labelledby="world-tab-group" hidden></div><div id="individual-world-content" role="tabpanel" aria-labelledby="world-tab-individual"><div id="scout-content" class="scout-content"></div><div id="commercial-content" class="scout-content"></div></div></section>
+    <section id="world-panel" class="management-panel panel" aria-label="Monde" hidden><div class="panel-heading"><h2>Monde</h2><button data-close-panel aria-label="Fermer Monde">×</button></div><nav class="world-tabs" role="tablist" aria-label="Vues du monde"><button id="world-tab-maps" role="tab" aria-controls="maps-content" aria-selected="false" tabindex="-1" data-world-tab="maps">Cartes et colonies</button><button id="world-tab-group" role="tab" aria-controls="group-content" aria-selected="false" tabindex="-1" data-world-tab="group">Globe et caravanes</button><button id="world-tab-individual" role="tab" aria-controls="individual-world-content" aria-selected="true" data-world-tab="individual">Voyages individuels</button></nav><div id="maps-content" role="tabpanel" aria-labelledby="world-tab-maps" hidden><div id="maps-globe"></div><div id="maps-list"></div><button id="show-world-globe" type="button">Afficher le globe</button></div><div id="group-content" role="tabpanel" aria-labelledby="world-tab-group" hidden></div><div id="individual-world-content" role="tabpanel" aria-labelledby="world-tab-individual"><div id="scout-content" class="scout-content"></div><div id="commercial-content" class="scout-content"></div></div></section>
     <section id="quests-panel" class="management-panel panel" aria-label="Quêtes" hidden><div class="panel-heading"><h2>Quêtes locales</h2><button data-close-panel aria-label="Fermer Quêtes">×</button></div><div id="quests-content" class="scout-content"></div></section>
     <section id="history-panel" class="management-panel history-panel panel" aria-label="Historique" hidden>
       <div class="panel-heading"><h2>Historique</h2><button data-close-panel aria-label="Fermer Historique">×</button></div>
@@ -216,7 +218,8 @@ export function gameLayout(): string {
       <div class="panel-heading"><h2>Elsewhere</h2><button data-close-panel aria-label="Fermer Menu">×</button></div><p id="scenario-current" class="muted"></p><div id="climate-options"></div>
       <div id="save-management"></div>
       <fieldset class="presentation-settings"><legend>Jeu</legend>
-        <label class="presentation-setting"><span><strong id="threat-pause-label">Pause automatique</strong><small id="threat-pause-description">Nouvelles menaces au foyer ou au second site. La vue actuelle est conservée.</small><small data-threat-pause-status role="status"></small></span><select id="threat-pause-mode" data-threat-pause-mode aria-labelledby="threat-pause-label" aria-describedby="threat-pause-description">${THREAT_PAUSE_CHOICES.map(choice=>`<option value="${choice.value}">${choice.label}</option>`).join('')}</select></label>
+        <label class="presentation-setting"><span><strong id="threat-pause-label">Pause automatique</strong><small id="threat-pause-description">Nouvelles menaces sur les cartes de la partie. La vue actuelle est conservée.</small><small data-threat-pause-status role="status"></small></span><select id="threat-pause-mode" data-threat-pause-mode aria-labelledby="threat-pause-label" aria-describedby="threat-pause-description">${THREAT_PAUSE_CHOICES.map(choice=>`<option value="${choice.value}">${choice.label}</option>`).join('')}</select></label>
+        <label class="presentation-setting"><span><strong id="max-settlements-label">Nombre maximal de colonies</strong><small id="max-settlements-description">Option globale. Les camps ne comptent pas ; diminuer la limite conserve les colonies existantes.</small><small data-max-settlements-status role="status"></small></span><select id="max-settlements" data-max-settlements aria-labelledby="max-settlements-label" aria-describedby="max-settlements-description">${SETTLEMENT_LIMIT_CHOICES.map(value=>`<option value="${value}">${value}</option>`).join('')}</select></label>
       </fieldset>
       <fieldset class="presentation-settings"><legend>Affichage</legend>
         <label class="presentation-setting"><span><strong id="ui-font-label">Typographie</strong><small id="ui-font-description">Police de toute l’interface. Choix conservé dans ce navigateur.</small></span><select id="ui-font" aria-labelledby="ui-font-label" aria-describedby="ui-font-description">${UI_FONT_CHOICES.map(font=>`<option value="${font.id}">${font.label}</option>`).join('')}</select></label>
@@ -245,7 +248,7 @@ export function gameLayout(): string {
     </section>
 
     <aside class="time-panel panel" aria-label="Temps et commandes de vue">
-      ${siteHudLayout()}
+      ${siteHudLayout()}<p id="campaign-clock" hidden></p>
       <div class="time-controls" aria-label="Vitesse de simulation">
         <button data-speed="0" aria-label="Pause" title="Pause · Espace">Ⅱ</button><button data-speed="1" aria-label="Vitesse normale" title="1× · touche 1">▷</button>
         <button data-speed="3" aria-label="Vitesse 3 fois" title="3× · touche 2">▷▷</button><button data-speed="6" aria-label="Vitesse 6 fois" title="6× · touche 3">▷▷▷</button>

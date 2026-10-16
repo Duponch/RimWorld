@@ -1,3 +1,8 @@
+import {createSettlementLimitPreference,readSettlementLimit,SETTLEMENT_LIMIT_PREFERENCE_KEY,type SettlementLimit} from './ui/settlement-limit-settings';
+import type {CampaignSummary} from './sim/world-map-state';
+import {createMapRegistryPanel,createMapJumpTo,type JumpToEntry} from './ui/map-registry-panel';
+import {campaignUIFacts,mapDisplayName,readMapRegistryState,readJumpToEntries,readPlanetObjects,type CampaignUIState} from './ui/map-registry-adapter';
+import {createPlanetView} from './ui/planet-view';
 import type {ThreatPauseMode,ThreatPauseToken,UrgentThreatReceipt} from './bridge/urgent-threats';
 import {THREAT_PAUSE_PREFERENCE_KEY,createThreatPausePreference,readThreatPausePreference,createDeferredResumeGuard} from './ui/threat-pause-settings';
 import {createUrgentThreatFeedback,type UrgentThreatTarget} from './ui/urgent-threat-feedback';
@@ -288,6 +293,7 @@ const client = (() => {
     protected override deliverSnapshot(world: World, cost: number, speed: number, replaced: boolean, motion?: PawnTrack[]): void {
       receiveMainSnapshot(world, cost, speed, replaced, motion);
     }
+    protected override deliverCampaignOnly(summary:CampaignSummary,cost:number,speed:number,replaced:boolean):void {receiveMainCampaignOnly(summary,cost,speed,replaced);}
     protected override deliverAudioCues(cues: readonly AudioCue[]): void { receiveMainAudioCues(cues); }
     protected override deliverUrgentThreats(receipt:UrgentThreatReceipt):void { receiveMainUrgentThreats(receipt); }
   }
@@ -306,8 +312,11 @@ const client = (() => {
     orderOptions: (...args: Parameters<SimulationClient['orderOptions']>) => native.orderOptions(...args),
     setSpeed: (...args: Parameters<SimulationClient['setSpeed']>) => native.setSpeed(...args),
     setThreatPauseMode: (mode:ThreatPauseMode) => native.setThreatPauseMode(mode),
+    setMaxSettlements:(value:SettlementLimit)=>native.setMaxSettlements(value),
     getThreatPauseToken: () => native.getThreatPauseToken(),
     save: () => native.save(),
+    get hasActiveMap(){return native.hasActiveMap;},
+    get campaignSummary(){return native.campaignSummary;},
     load: (...args: Parameters<SimulationClient['load']>) => native.load(...args),
     stop: (...args: Parameters<SimulationClient['stop']>) => native.stop(...args),
     restartForReplacement: () => native.restartForReplacement(),
@@ -323,6 +332,8 @@ const client = (() => {
 const audio = new AudioDirector();
 const music = new MusicDirector();
 let snapshot: World | undefined;
+let campaignOnly:CampaignSummary|undefined;
+const campaignState=():CampaignUIState|undefined=>snapshot??campaignOnly;
 let latestFoodReadability:FoodReadability|undefined;
 function confirmedFoodReadability():FoodReadability|undefined {
   if(!snapshot)return undefined;
@@ -390,38 +401,71 @@ const commercialUI=createCommercialUI(el('commercial-content'),async command=>{
   if(['commercial-start','commercial-return','commercial-unload'].includes(command.type)&&currentSpeed===0&&deferredResumeGuard.allows(resumeRevision))await client.setSpeed(1);
   return result;
 });
-type WorldTab='group'|'individual';
+type WorldTab='maps'|'group'|'individual';
 let worldTab:WorldTab='individual';
 const groupUI=createGroupPanel(el('group-content'),createGroupAdapters({
   blocked:groupCommandsBlocked,
-  send:async command=>{const result=await client.command(command);renderState();return result;},
+  send:sendCampaignCommand,
   inspectPresentPawn:id=>{if(snapshot?.pawns.some(p=>p.id===id))selectPawn(id);},
 }));
 function groupCommandsBlocked():string|undefined {
   if(simulationStopped)return 'La simulation est arrêtée. Chargez ou créez une colonie pour reprendre.';
   if(graphicsFault||graphicsRecovering)return 'Recréez l’affichage avant de commander le groupe.';
   if(replacingWorld||session.busy)return 'Une opération de partie est en cours.';
-  if(!snapshot||frontMenu.isOpen())return 'Ouvrez la colonie avant de commander le groupe.';
+  if(!campaignState()||frontMenu.isOpen())return 'Ouvrez la partie avant de commander le groupe.';
   if(waitingRequests.size)return [...waitingRequests.values()].join(' ');
   return undefined;
 }
-function refreshWorldPanels(world:World):void {
-  const group=worldTab==='group';
-  el('group-content').hidden=!group;el('individual-world-content').hidden=group;
-  el('world-panel').classList.toggle('world-group-active',group);
-  groupUI.setVisible(currentPanel==='world'&&group);
-  for(const button of document.querySelectorAll<HTMLButtonElement>('[data-world-tab]')){
-    const active=button.dataset.worldTab===worldTab;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;
-  }
-  if(group)groupUI.update(readGroupPanelSnapshot(world));else{scoutUI.update(world);commercialUI.update(world);}
+let overviewTile:number|null=null;
+const overviewGlobe=createPlanetView(el('maps-globe'),id=>{overviewTile=id;const state=campaignState();if(state)refreshWorldPanels(state);});overviewGlobe.setVisible(false);
+const mapRegistry=createMapRegistryPanel(el('maps-list'),{
+ view:async mapId=>{const result=await sendCampaignCommand({type:'map-view',mapId});if(snapshot&&campaignUIFacts(snapshot)?.activeMapId===mapId)setPanel(null);return result;},
+ prepare:async mapId=>{await sendCampaignCommand({type:'map-view',mapId});await sendCampaignCommand({type:'group-select',groupId:null});worldTab='group';setPanel('world');},
+ settle:mapId=>sendCampaignCommand({type:'map-settle',mapId}),
+ abandon:mapId=>sendCampaignCommand({type:'map-abandon',mapId,confirm:true}),
+});
+const mapJumpTo=createMapJumpTo(el('map-jump-to-host'),jumpToCampaignTarget);
+el('show-world-globe').onclick=()=>void attempt(()=>sendCampaignCommand({type:'map-view',mapId:null}));
+async function ensureActiveMapView():Promise<void>{
+ if(!client.hasActiveMap||!snapshot||renderer)return;
+ graphicsRecovering=true;syncStorageButtons();
+ try{await prepareWorld();if(client.hasActiveMap&&snapshot&&!renderer)await prepareWorld();}catch(error){notify(error instanceof Error?error.message:String(error),true);}
+ finally{graphicsRecovering=false;syncStorageButtons();}
 }
+async function sendCampaignCommand(command:Parameters<typeof client.command>[0]):Promise<unknown>{
+ deferredResumeGuard.cancel();menuResumeSpeed=undefined;
+ if(command.type==='group-select'&&command.groupId!==null){
+  const state=campaignState(),facts=state?campaignUIFacts(state):undefined,group=facts?.groups.find(group=>group.id===command.groupId);
+  if(group?.localMapId!==null&&group?.localMapId!==undefined&&group.localMapId!==facts?.activeMapId)await client.command({type:'map-view',mapId:group.localMapId});
+ }
+ const result=await client.command(command);await ensureActiveMapView();if(command.type==='group-enter'&&snapshot)setPanel(null);renderState();return result;
+}
+async function jumpToCampaignTarget(target:JumpToEntry):Promise<void>{
+ if(target.kind==='map'){await sendCampaignCommand({type:'map-view',mapId:target.id});if(snapshot&&campaignUIFacts(snapshot)?.activeMapId===target.id)setPanel(null);}
+ else if(target.kind==='group'){await sendCampaignCommand({type:'group-select',groupId:target.id});worldTab='group';setPanel('world');}
+ else {setPanel('quests');}
+}
+function refreshWorldPanels(world:CampaignUIState):void {
+ const group=worldTab==='group',maps=worldTab==='maps',local='width' in world;
+ el('group-content').hidden=!group;el('maps-content').hidden=!maps;el('individual-world-content').hidden=maps||group;
+ el('world-panel').classList.toggle('world-group-active',maps||group);
+ const groupState=readGroupPanelSnapshot(world);groupUI.setVisible(currentPanel==='world'&&group&&!!groupState);
+ if(groupState&&group)groupUI.update(groupState);
+ if(!maps&&!group&&local){scoutUI.update(world);commercialUI.update(world);}
+ const registry=readMapRegistryState(world);if(registry)mapRegistry.update(registry);
+ mapRegistry.setBlocked(groupCommandsBlocked());mapJumpTo.update(readJumpToEntries(world));mapJumpTo.setBlocked(groupCommandsBlocked());
+ overviewGlobe.setVisible(currentPanel==='world'&&maps);
+ if(currentPanel==='world'&&maps){overviewGlobe.setPlanet(world.planet);const facts=campaignUIFacts(world),selected=facts?.groups.find(group=>group.id===facts.selectedGroupId),state=selected?.state;overviewGlobe.setOverlay({selected:overviewTile,route:state&&'route' in state?state.route:[],...readPlanetObjects(world)});}
+ for(const button of document.querySelectorAll<HTMLButtonElement>('[data-world-tab]')){const active=button.dataset.worldTab===worldTab;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;if(button.dataset.worldTab==='individual')button.disabled=!local;}
+}
+const worldTabs:WorldTab[]=['maps','group','individual'];
 for(const button of document.querySelectorAll<HTMLButtonElement>('[data-world-tab]')){
-  button.addEventListener('click',()=>{worldTab=button.dataset.worldTab as WorldTab;if(snapshot)refreshWorldPanels(snapshot);});
-  button.addEventListener('keydown',event=>{
-    if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
-    event.preventDefault();worldTab=event.key==='Home'?'group':event.key==='End'?'individual':worldTab==='group'?'individual':'group';
-    if(snapshot)refreshWorldPanels(snapshot);el<HTMLButtonElement>(`world-tab-${worldTab}`).focus();
-  });
+ button.addEventListener('click',()=>{worldTab=button.dataset.worldTab as WorldTab;const state=campaignState();if(state)refreshWorldPanels(state);});
+ button.addEventListener('keydown',event=>{
+  if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+  event.preventDefault();const available=worldTabs.filter(tab=>snapshot||tab!=='individual'),index=available.indexOf(worldTab);worldTab=event.key==='Home'?available[0]!:event.key==='End'?available.at(-1)!:available[(Math.max(index,0)+(event.key==='ArrowLeft'?available.length-1:1))%available.length]!;
+  const state=campaignState();if(state)refreshWorldPanels(state);el<HTMLButtonElement>(`world-tab-${worldTab}`).focus();
+ });
 }
 let lastCommercialArrivalKey:string|undefined;
 let currentCategory: ArchitectCategory = 'structure';
@@ -496,12 +540,21 @@ const threatPausePreference=createThreatPausePreference({
  initial:readThreatPausePreference(()=>localStorage.getItem(THREAT_PAUSE_PREFERENCE_KEY)),
  confirm:mode=>client.setThreatPauseMode(mode),
  store:mode=>{try{localStorage.setItem(THREAT_PAUSE_PREFERENCE_KEY,mode);return true;}catch{return false;}},
- changed:()=>syncThreatPauseControls(),
+ changed:()=>syncRuntimeOptionControls(),
 });
 function syncThreatPauseControls():void {
- for(const select of document.querySelectorAll<HTMLSelectElement>('[data-threat-pause-mode]')){select.value=threatPausePreference.mode;select.disabled=threatPausePreference.pending;}
- for(const status of document.querySelectorAll<HTMLElement>('[data-threat-pause-status]'))status.textContent=threatPausePreference.pending?'Application du choix en attente…':'';
+ const pending=threatPausePreference.pending||settlementPreference.pending;for(const select of document.querySelectorAll<HTMLSelectElement>('[data-threat-pause-mode]')){select.value=threatPausePreference.mode;select.disabled=pending;}
+ for(const status of document.querySelectorAll<HTMLElement>('[data-threat-pause-status]'))status.textContent=pending?'Application des options en attente…':'';
 }
+const settlementPreference=createSettlementLimitPreference({
+ initial:readSettlementLimit(()=>localStorage.getItem(SETTLEMENT_LIMIT_PREFERENCE_KEY)),confirm:value=>client.setMaxSettlements(value),
+ store:value=>{try{localStorage.setItem(SETTLEMENT_LIMIT_PREFERENCE_KEY,String(value));return true;}catch{return false;}},changed:()=>syncRuntimeOptionControls(),
+});
+function syncSettlementLimitControls():void {
+ const pending=threatPausePreference.pending||settlementPreference.pending;for(const select of document.querySelectorAll<HTMLSelectElement>('[data-max-settlements]')){select.value=String(settlementPreference.value);select.disabled=pending;}
+ for(const status of document.querySelectorAll<HTMLElement>('[data-max-settlements-status]'))status.textContent=pending?'Application des options en attente…':'';
+}
+function syncRuntimeOptionControls():void {syncThreatPauseControls();syncSettlementLimitControls();}
 autosaveScheduler.setMinutes(autosaveIntervalMinutes);
 function setAutosaveMinutes(minutes:number):boolean {
   autosaveIntervalMinutes=autosaveMinutes(minutes);
@@ -700,7 +753,8 @@ let saveManager:ReturnType<typeof createSaveManager>|undefined;
 let saveStorageReady=false;
 const session = new GameSession(client, saveRepository, prepareWorld, () => {
   simulationStopped = false; menuResumeSpeed = undefined; frontMenu.setHasGame(true);
-  groupUI.resetForReplacement();
+  groupUI.resetForReplacement();mapRegistry.resetForReplacement();mapJumpTo.resetForReplacement();
+  if(campaignOnly){worldTab='maps';refreshWorldPanels(campaignOnly);}
   if(snapshot){worldTab=snapshot.scout||snapshot.commercialTrip?'individual':snapshot.planet||snapshot.group?'group':'individual';refreshWorldPanels(snapshot);}
   updateIncident(); syncStorageButtons();
 });
@@ -734,7 +788,8 @@ helpDialog.addEventListener('close',()=>{
 document.querySelector('#app')!.append(el('fps-counter'));
 const frontMenu = createFrontMenu(frontHost, {
   onHelp:openHelp,
-  getThreatPauseMode:()=>threatPausePreference.mode,getThreatPausePending:()=>threatPausePreference.pending,onThreatPauseModeChange:mode=>threatPausePreference.set(mode),
+  getMaxSettlements:()=>settlementPreference.value,getMaxSettlementsPending:()=>settlementPreference.pending||threatPausePreference.pending,onMaxSettlementsChange:value=>settlementPreference.set(value),
+  getThreatPauseMode:()=>threatPausePreference.mode,getThreatPausePending:()=>threatPausePreference.pending||settlementPreference.pending,onThreatPauseModeChange:mode=>threatPausePreference.set(mode),
   getAutosaveMinutes:()=>autosaveIntervalMinutes,onAutosaveMinutesChange:setAutosaveMinutes,
   onExport:exportCurrentColony,
   getShadowSettings:()=>({...shadowSettings}),onShadowSettingsChange:setShadowSettings,
@@ -785,11 +840,11 @@ const frontMenu = createFrontMenu(frontHost, {
     await changeSpeed(deferredResumeGuard.held?0:speed);
   },
 });
-void attempt(()=>threatPausePreference.initialize());
+const initialRuntimeOptions=(async()=>{await attempt(()=>threatPausePreference.initialize());await attempt(()=>settlementPreference.initialize());})();
 async function pauseForMenu(): Promise<void> {
   renderer?.cancelDesignation(); orderMenu.close();
   await menuTransition;
-  if (snapshot && menuResumeSpeed === undefined) {
+  if (campaignState() && menuResumeSpeed === undefined) {
     const speed = currentSpeed,resumeRevision=deferredResumeGuard.capture();
     await client.setSpeed(0); menuResumeSpeed = deferredResumeGuard.allows(resumeRevision)?speed:0;
   }
@@ -809,7 +864,8 @@ async function switchPanel(panel: Panel, preserveTool = false): Promise<void> {
   setPanel(panel, preserveTool);
 }
 async function replaceColony(action: () => Promise<void>): Promise<void> {
-  await threatPausePreference.whenSettled();
+  await initialRuntimeOptions;
+  await Promise.all([threatPausePreference.whenSettled(),settlementPreference.whenSettled()]);
   client.restartForReplacement();
   latestFoodReadability=undefined;
   lastCommercialArrivalKey=undefined;
@@ -820,7 +876,7 @@ async function replaceColony(action: () => Promise<void>): Promise<void> {
     statusAlerts.reset();raidUI.reset();heatwaveUI.reset();flashstormUI.reset();weatherConditionUI.reset();tradeUI.reset();
     guideAfterStartingArrival=false;learningReadout.open=false;firstDayGuide.reset();startingArrivalUI.reset();
     if(snapshot)startingArrivalUI.update(snapshot,currentSpeed);
-    clearSelection(); setPanel(null); frontMenu.hide();
+    clearSelection(); setPanel(campaignOnly?'world':null); frontMenu.hide();
     if (snapshot?.pawns[0]) renderer?.focusPawn(snapshot.pawns[0].id);
     else if(snapshot?.startingArrival&&snapshot.startingArrival.phase!=='opened')renderer?.focusCell(snapshot.startingArrival.pods[0]!.cell);
   } finally { replacingWorld = false; syncStorageButtons(); }
@@ -875,6 +931,8 @@ function syncArchitectAvailability(force=false):void {
 function selectedColonyIds():number[]{return snapshot?.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner).map(p=>p.id)??[];}
 function renderWildlife(world:World){updateWildlifePanel(el('wildlife-content'),world,id=>selectPawn(id),()=>void attempt(async()=>{await client.command({type:'enable-wildlife'});renderState();}),[...selection.ids],id=>void attempt(async()=>{await client.command({type:'shoot',pawnIds:selectedColonyIds(),targetId:id});renderState();}),id=>void attempt(async()=>{await client.command({type:'melee',pawnIds:selectedColonyIds(),targetId:id});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId:id,enabled});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'tame',animalId:id,enabled});renderState();}));}
 function setPanel(panel: Panel, preserveTool = false) {
+  if(!snapshot&&campaignOnly&&panel===null)panel='world';
+  if(!snapshot&&campaignOnly&&panel!==null&&panel!=='world'&&panel!=='menu')return;
   hoverReadoutLayout?.reset();
   architectWorkbench.close();
   dismissTooltip();
@@ -889,8 +947,8 @@ function setPanel(panel: Panel, preserveTool = false) {
   syncStorageButtons();
   scheduleUI.cancel();
   for (const name of ['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research', 'wildlife', 'animals', 'world', 'quests'] as const) el(`${name}-panel`).hidden = panel !== name;
-  groupUI.setVisible(panel==='world'&&worldTab==='group');
-  if(panel==='world'&&snapshot)refreshWorldPanels(snapshot);
+  groupUI.setVisible(panel==='world'&&worldTab==='group');overviewGlobe.setVisible(panel==='world'&&worldTab==='maps');
+  const campaign=campaignState();if(panel==='world'&&campaign)refreshWorldPanels(campaign);
   if(panel==='animals'&&snapshot)updateAnimalsPanel(el('animals-content'),snapshot,id=>selectPawn(id),designateAnimalSlaughter,updateAutoSlaughterPolicy);
   if(panel==='wildlife'&&snapshot)renderWildlife(snapshot);
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]:not(:disabled)')) {
@@ -1325,7 +1383,8 @@ async function updateAutoSlaughterPolicy(config:AutoSlaughterConfig):Promise<voi
 }
 
 function renderState() {
-  if (!snapshot) return;
+  if (!snapshot) {if(campaignOnly)renderCampaignOnly();return;}
+  shell.classList.remove('campaign-only');
   const world = snapshot,food=confirmedFoodReadability()!;
   syncArchitectAvailability();
   const colonists = world.pawns.filter(isColonist);
@@ -1336,6 +1395,7 @@ function renderState() {
   if(currentPanel==='animals')updateAnimalsPanel(el('animals-content'),world,id=>selectPawn(id),designateAnimalSlaughter,updateAutoSlaughterPolicy);
   if(currentPanel==='wildlife')renderWildlife(world);
   if(currentPanel==='research')updateResearchPanel(el('research-content'),world,c=>void attempt(()=>client.command(c)),researchPanelActions);
+  mapJumpTo.update(readJumpToEntries(world));
   if(currentPanel==='world')refreshWorldPanels(world);
   if(world.commercialTrip?.phase==='at-post'){
     const t=world.commercialTrip,key=[world.seed,t.pawn.id,t.departedAt,t.arrivedAt].join(':');
@@ -1608,16 +1668,18 @@ let campaignFocusBusy=false,campaignPresentationEpoch=0;
 async function viewUrgentThreat(target:UrgentThreatTarget):Promise<string|undefined> {
  deferredResumeGuard.cancel();menuResumeSpeed=undefined;
  if(campaignFocusBusy||replacingWorld||frontMenu.isOpen())return 'La carte attend la fin de l’opération en cours.';
- const before=snapshot?.campaignMap;
- if(target.site==='secondary'&&!before)return 'Le second site n’est plus disponible.';
+ const current=campaignState(),before=current?campaignUIFacts(current):undefined;
+ const mapId='mapId' in target?target.mapId:target.site==='home'?0:before?.maps.find(map=>map.kind==='legacy-site')?.id;
+ if(mapId===undefined||!before?.maps.some(map=>map.id===mapId))return 'Cette carte n’est plus disponible.';
  campaignFocusBusy=true;
  try{
-  if(before&&before.active!==target.site){
-   const origin={tile:before.secondaryTile,createdAt:before.createdAt,epoch:campaignPresentationEpoch};
-   await client.command({type:'secondary-view',site:target.site});
-   const map=snapshot?.campaignMap;
-   if(!map||map.active!==target.site||map.secondaryTile!==origin.tile||map.createdAt!==origin.createdAt||campaignPresentationEpoch<=origin.epoch)return 'La carte demandée n’a pas encore été adoptée.';
+  if(before.activeMapId!==mapId){
+   const record=before.maps.find(map=>map.id===mapId)!,epoch=campaignPresentationEpoch;
+   await sendCampaignCommand({type:'map-view',mapId});
+   const state=campaignState(),map=state?campaignUIFacts(state):undefined;
+   if(!map||map.activeMapId!==mapId||map.maps.find(map=>map.id===mapId)?.createdAt!==record.createdAt||campaignPresentationEpoch<=epoch)return 'La carte demandée n’a pas encore été adoptée.';
   }
+  await ensureActiveMapView();
   const next=snapshot;if(!next)return 'La carte n’est pas disponible.';
   const id=target.actorId;if(id===undefined)return 'Cette arrivée ne possède plus de cible à montrer.';
   const person=next.pawns.find(p=>p.id===id);
@@ -1627,7 +1689,7 @@ async function viewUrgentThreat(target:UrgentThreatTarget):Promise<string|undefi
   return undefined;
  }finally{campaignFocusBusy=false;}
 }
-const urgentThreatUI=createUrgentThreatFeedback(el('alerts'),{view:viewUrgentThreat});
+const urgentThreatUI=createUrgentThreatFeedback(el('alerts'),{view:viewUrgentThreat,mapName:id=>{const state=campaignState(),map=state?campaignUIFacts(state)?.maps.find(map=>map.id===id):undefined;return map?mapDisplayName(map):`Carte ${id}`;}});
 function receiveMainUrgentThreats(receipt:UrgentThreatReceipt):void {
  if(receipt.paused){deferredResumeGuard.confirm(true);menuResumeSpeed=undefined;}
  urgentThreatUI.show(receipt);
@@ -1675,20 +1737,21 @@ const arrivalUI=createArrivalUI(command=>client.command(command));
 const questUI=createQuestUI(command=>client.command(command));
 function syncStorageButtons() {
   syncFirstDayGuide();
-  groupUI.setHostBlocked(groupCommandsBlocked());
-  shell.inert = replacingWorld || frontMenu.isOpen() || !snapshot || simulationStopped || graphicsFault || waitingRequests.size > 0;
+  for(const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]')){if(button.dataset.mapOriginalDisabled===undefined){button.dataset.mapOriginalDisabled=String(button.disabled);button.dataset.mapOriginalTitle=button.title;}const local=!['world','menu'].includes(button.dataset.panel??'');button.disabled=button.dataset.mapOriginalDisabled==='true'||local&&!snapshot;button.title=local&&!snapshot?'Affichez une carte locale pour ouvrir ce panneau.':button.dataset.mapOriginalTitle??'';}
+  groupUI.setHostBlocked(groupCommandsBlocked());mapRegistry.setBlocked(groupCommandsBlocked());mapJumpTo.setBlocked(groupCommandsBlocked());
+  shell.inert = replacingWorld || frontMenu.isOpen() || !campaignState() || simulationStopped || graphicsFault || graphicsRecovering || waitingRequests.size > 0;
   for(const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]'))button.disabled=replacingWorld||currentPanel==='menu';
   for (const [id, key] of [['load', SAVE_KEY], ['restore-previous', PREVIOUS_KEY]]) {
     try { el<HTMLButtonElement>(id).disabled = replacingWorld || session.busy || !saveRepository.peekItem(key!); } catch { el<HTMLButtonElement>(id).disabled = true; }
   }
-  el<HTMLButtonElement>('save').disabled=replacingWorld||session.busy||!snapshot||simulationStopped;
-  saveManager?.setBlocked(replacingWorld||session.busy||!snapshot||simulationStopped||waitingRequests.size>0);
+  el<HTMLButtonElement>('save').disabled=replacingWorld||session.busy||!campaignState()||simulationStopped;
+  saveManager?.setBlocked(replacingWorld||session.busy||!campaignState()||simulationStopped||waitingRequests.size>0);
   updateIncident();
 }
 async function save() {
   if (session.busy || replacingWorld) return;
   const saving = session.save(); syncStorageButtons();
-  try { await saving; autosaveScheduler.noteSaved(session.generation,snapshot?.tick??0);notify('Colonie sauvegardée dans ce navigateur.'); }
+  try { await saving; autosaveScheduler.noteSaved(session.generation,campaignState()?.tick??0);notify('Colonie sauvegardée dans ce navigateur.'); }
   finally { syncStorageButtons(); }
 }
 async function load(key = SAVE_KEY) {
@@ -1712,7 +1775,7 @@ saveManager=createSaveManager(el('save-management'),{
   getSaves:()=>saveStorageReady?session.saves():[],
   onSaveNamed:async(label,key,revision)=>{
     const saving=session.saveNamed(label,key,revision);syncStorageButtons();
-    try{await saving;autosaveScheduler.noteSaved(session.generation,snapshot?.tick??0);}
+    try{await saving;autosaveScheduler.noteSaved(session.generation,campaignState()?.tick??0);}
     finally{syncStorageButtons();}
   },
   onDelete:async(key,revision)=>{
@@ -1779,6 +1842,8 @@ for (const { key, slider } of lightingSliders) slider.oninput = () => {
 el<HTMLButtonElement>('lighting-reset').onclick = () => {
   if (!setLightingSettings({ ...DEFAULT_LIGHTING_SETTINGS })) notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.', true);
 };
+const settlementsSelect=el<HTMLSelectElement>('max-settlements');syncSettlementLimitControls();
+settlementsSelect.onchange=()=>{const value=Number(settlementsSelect.value) as SettlementLimit;void attempt(async()=>{if(!await settlementPreference.set(value))notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.',true);});};
 const threatPauseSelect=el<HTMLSelectElement>('threat-pause-mode');syncThreatPauseControls();
 threatPauseSelect.onchange=()=>{const mode=threatPauseSelect.value as ThreatPauseMode;void attempt(async()=>{if(!await threatPausePreference.set(mode))notify('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.',true);});};
 const soundToggle = el<HTMLInputElement>('sound-enabled');
@@ -1848,9 +1913,10 @@ window.addEventListener('keyup',event=>{
 },true);
 window.addEventListener('blur',()=>{altInspectorHeld=false;updateMapCellDetails(true);});
 document.addEventListener('keydown', event => {
-  if(event.defaultPrevented || frontMenu.isOpen() || !snapshot || replacingWorld || graphicsFault || simulationStopped || waitingRequests.size>0)return;
+  if(event.defaultPrevented || frontMenu.isOpen() || !campaignState() || replacingWorld || graphicsFault || simulationStopped || waitingRequests.size>0)return;
   if(document.getElementById('orbital-dialog') instanceof HTMLDialogElement&&(document.getElementById('orbital-dialog') as HTMLDialogElement).open&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();void attempt(save);return;}
   if (document.querySelector('dialog[open]')) return;
+  if(event.key==='F8'){event.preventDefault();worldTab='maps';setPanel(currentPanel==='world'?null:'world');return;}
   const worldControl=event.target instanceof Element&&!!event.target.closest('#world-panel');
   if(worldControl&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();void attempt(save);return;}
   if(worldControl&&event.key==='Escape'){event.preventDefault();void attempt(()=>switchPanel(null));return;}
@@ -1864,6 +1930,7 @@ document.addEventListener('keydown', event => {
   const speeds: Record<string, number> = { '1': 1, '2': 3, '3': 6 };
   if (event.key in speeds) { const token=client.getThreatPauseToken(),speed=speeds[event.key];void attempt(() => changeSpeed(speed,token)); return; }
   if(event.key.toLowerCase()==='r'&&selection.ids.size){event.preventDefault();if(!event.repeat)toggleDraft(snapshot?.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner)??[],c=>void attempt(async()=>{await client.command(c);renderState();}));return;}
+  if(!snapshot)return;
   const shortcuts: Record<string, Tool> = { m:'mine', c: 'chop', r: 'harvest', b: 'wall', l: 'bed', x: 'cancel' };
   const key = event.key.toLowerCase(); if (key in shortcuts) setTool(shortcuts[key]);
   else if (rotatableTools.has(currentTool) && (key === 'q' || key === 'e')) { event.preventDefault(); rotatePlacement(key === 'q' ? -1 : 1); }
@@ -1885,6 +1952,7 @@ client.onFault = () => {
   updateIncident(); syncStorageButtons();
 };
 function receiveMainSnapshot(world: World, cost: number, speed: number, replaced: boolean, motion?: PawnTrack[]): void {
+  campaignOnly=undefined;shell.classList.remove('campaign-only');
   if(replaced){hoveredCell=null;hoverReadoutLayout?.reset();}
   if(replaced)campaignPresentationEpoch++;
   if (replaced) {audio.reset();lastAudioCamera=undefined;lastAudioSourceFocus={x:Infinity,z:Infinity};lastAudioSourceHeight=NaN;}
@@ -1920,6 +1988,24 @@ function receiveMainSnapshot(world: World, cost: number, speed: number, replaced
   if(changed)renderer?.setSelectedPawns(selection.ids);
   updateMapHover();
   snapshotHud.request(changed||roleChanged||speedChanged);
+}
+function renderCampaignOnly():void {
+ const state=campaignOnly;if(!state)return;shell.classList.add('campaign-only');
+ // A confirmed globe-only campaign does not create a terrain renderer. It
+ // must still finish the initial loading presentation and accept real input.
+ el('loading')?.remove();
+ const minute=Math.floor(state.civilTick%TICKS_PER_DAY*1440/TICKS_PER_DAY);el('campaign-clock').textContent=`Temps de campagne · jour ${1+Math.floor(state.civilTick/TICKS_PER_DAY)} · ${String(Math.floor(minute/60)).padStart(2,'0')}:${String(minute%60).padStart(2,'0')}`;el('fps-counter').textContent='— FPS';
+ el('pause-banner').hidden=currentSpeed!==0;
+ for(const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]')){const active=Number(button.dataset.speed)===currentSpeed;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));}
+ statusAlerts.updateCampaign(state);mapJumpTo.update(readJumpToEntries(state));
+ if(currentPanel==='world')refreshWorldPanels(state);
+}
+function receiveMainCampaignOnly(summary:CampaignSummary,cost:number,speed:number,replaced:boolean):void {
+ const hadMap=!!snapshot;if(replaced||hadMap)campaignPresentationEpoch++;
+ if(hadMap||replaced){renderer?.dispose();renderer=undefined;audio.reset();latestMotion=undefined;hoveredCell=null;hoverReadoutLayout?.reset();selection.clear();selectedPawn=undefined;selectedCell=undefined;selectedObject=undefined;selectedObjects=[];orderMenu.close();startingArrivalUI.reset();}
+ snapshot=undefined;latestFoodReadability=undefined;campaignOnly=summary;stepMs=cost;currentSpeed=speed;if(speed>0)deferredResumeGuard.confirm(false);session.hasWorld=true;frontMenu.setHasGame(true);
+ if(currentPanel!=='menu'){if(worldTab==='individual')worldTab='maps';if(currentPanel!=='world')setPanel('world');}
+ if(!frontMenu.isOpen())shell.hidden=false;renderCampaignOnly();syncStorageButtons();
 }
 function receiveMainAudioCues(cues: readonly AudioCue[]): void {
   if (soundEnabled) audio.ingestCues(cues);
@@ -1971,27 +2057,35 @@ function prepareWorld(): Promise<void> {
   return presentationPreparation ??= prepareWorldSafely().finally(() => { presentationPreparation = undefined; });
 }
 async function prepareWorldSafely(): Promise<void> {
+  const epoch=campaignPresentationEpoch;
   try {
     await prepareWorldView();
     graphicsFault = false; graphicsMessage = ''; updateIncident();
   } catch (error) {
+    if(epoch!==campaignPresentationEpoch||!client.hasActiveMap){if(campaignOnly)renderCampaignOnly();return;}
     await handleGraphicsFailure(error instanceof Error ? error.message : String(error));
     throw error;
   }
 }
 async function prepareWorldView(): Promise<void> {
+  if(campaignOnly&&!client.hasActiveMap){shell.hidden=false;worldTab='maps';setPanel('world');renderCampaignOnly();return;}
   if (!snapshot) throw new Error('Aucune colonie à afficher.');
   shell.hidden=false;
+  const epoch=campaignPresentationEpoch;
+  const hasAuthority=()=>epoch===campaignPresentationEpoch&&client.hasActiveMap&&!!snapshot;
   await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+  if(!hasAuthority()){if(campaignOnly)renderCampaignOnly();return;}
   if (!renderer) {
-    renderer = await MainColonyRenderer.create(el('viewport'), pickCell, groundGrassEnabled);
+    const created=await MainColonyRenderer.create(el('viewport'), pickCell, groundGrassEnabled);
+    if(!hasAuthority()){created.dispose();if(campaignOnly)renderCampaignOnly();return;}
+    renderer=created;
     renderer.setDioramaEnabled(dioramaEnabled);
     renderer.setRoomEnabled(roomEnabled);
     renderer.setDecorOcclusion(decorOcclusionPreference);
     renderer.setLightingSettings(lightingSettings);
     renderer.setShadowSettings(shadowSettings);
     renderer.setAnimationSettings(animationSettings);
-    renderer.onFatalError = message => { void handleGraphicsFailure(message); };
+    renderer.onFatalError = message => { if(renderer===created&&client.hasActiveMap&&snapshot)void handleGraphicsFailure(message); };
     renderer.onCompatibilityWarning = message => notify(message, true);
     renderer.setTexturesEnabled(texturesEnabled);
     renderer.setDesignationMinCellPixels(designationIconThreshold);
@@ -2026,10 +2120,14 @@ async function prepareWorldView(): Promise<void> {
       el('area-feedback').hidden = true;
     };
   }
-  renderer.setWorld(snapshot, true, currentSpeed, latestMotion,true);
-  if (renderer.compatibilityWarning) notify(renderer.compatibilityWarning, true);
-  syncAudioSources(snapshot);
-  await renderer.preparePresentation();
+  const activeRenderer=renderer,activeWorld=snapshot;
+  if(!activeRenderer||!activeWorld||!hasAuthority()){if(campaignOnly)renderCampaignOnly();return;}
+  activeRenderer.setWorld(activeWorld, true, currentSpeed, latestMotion,true);
+  if (activeRenderer.compatibilityWarning) notify(activeRenderer.compatibilityWarning, true);
+  syncAudioSources(activeWorld);
+  try{await activeRenderer.preparePresentation();}
+  catch(error){if(renderer===activeRenderer&&hasAuthority())throw error;}
+  if(renderer!==activeRenderer||!hasAuthority()){activeRenderer.dispose();if(renderer===activeRenderer)renderer=undefined;if(campaignOnly)renderCampaignOnly();return;}
   el('loading')?.remove(); renderState();
 }
 async function start() {
@@ -2038,7 +2136,7 @@ async function start() {
   try { await session.initializeStorage();saveStorageReady=true;saveManager?.refresh(); }
   finally { frontMenu.setBusy(false); }
   if (import.meta.env.DEV && params.has('e2e')) Object.defineProperty(window, '__lisiere', { value: {
-    get world() { return structuredClone(snapshot); }, get tick() { return snapshot?.tick ?? 0; }, get backend() { return renderer?.backend; },
+    get world() { return structuredClone(snapshot); }, get tick() { return campaignState()?.tick ?? 0; }, get campaign() { const state=campaignState();return state?structuredClone(campaignUIFacts(state)):undefined; },get hasActiveMap(){return client.hasActiveMap;}, get backend() { return renderer?.backend; },
     get audio() { return { loadedCount: audio.loadedCount, availableSounds: audio.availableSounds, music: music.diagnostics }; },
     saveRepository,
     get incident() { return { simulationStopped, graphicsFault, waiting: waitingRequests.size }; },
@@ -2064,8 +2162,8 @@ async function start() {
 }
 const metricsInterval = setInterval(() => {
   void autosaveScheduler.poll(performance.now(),{
-    generation:session.generation,tick:snapshot?.tick??0,
-    playing:!!snapshot&&currentSpeed>0&&!document.hidden&&!frontMenu.isOpen()&&!graphicsFault&&!simulationStopped,
+    generation:session.generation,tick:campaignState()?.tick??0,
+    playing:!!campaignState()&&currentSpeed>0&&!document.hidden&&!frontMenu.isOpen()&&!graphicsFault&&!simulationStopped,
     available:session.hasWorld&&!session.busy&&!replacingWorld&&!waitingRequests.size&&!graphicsFault&&!simulationStopped,
   },async()=>{
     const saving=session.autosave();syncStorageButtons();

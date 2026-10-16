@@ -6,6 +6,8 @@ export interface PlanetOverlay {
   route:readonly number[];
   previewRoute?:readonly number[];
   groupTile?:number;
+  maps?:readonly {mapId:number;tile:number;label:string;kind:'settlement'|'camp'|'legacy-site';active:boolean}[];
+  groups?:readonly {groupId:number;tile:number;label:string;selected:boolean}[];
 }
 export interface PlanetView {
   setPlanet(planet:PlanetState|undefined):void;
@@ -97,6 +99,7 @@ export function createPlanetView(host:HTMLElement,onSelect:(tileId:number)=>void
   const disc=document.createElementNS(SVG,'circle');disc.setAttribute('cx','250');disc.setAttribute('cy','250');disc.setAttribute('r','220');disc.setAttribute('class','planet-disc');
   const faces=document.createElementNS(SVG,'g'),preview=document.createElementNS(SVG,'path'),route=document.createElementNS(SVG,'path');
   preview.setAttribute('class','planet-route planet-route-preview');route.setAttribute('class','planet-route');
+  const dynamicMarkers=new Map<string,{node:SVGCircleElement;tile:number}>();
   const markers=document.createElementNS(SVG,'g');markers.setAttribute('class','planet-markers');
   const circles=new Map<string,SVGCircleElement>();
   for(const [key,label] of [['home','Foyer'],['civilian','Comptoir civil'],['group','Groupe'],['selection','Case choisie']]) {
@@ -129,12 +132,14 @@ export function createPlanetView(host:HTMLElement,onSelect:(tileId:number)=>void
     }
     route.setAttribute('d',routePath(overlay.route,centres,rotate));
     preview.setAttribute('d',routePath(overlay.previewRoute??[],centres,rotate));
-    const positions:{[key:string]:number|undefined}={home:planet.homeTile,civilian:planet.civilianTile,group:overlay.groupTile,selection:overlay.selected??undefined};
+    const positions:{[key:string]:number|undefined}={home:overlay.maps===undefined?planet.homeTile:undefined,civilian:planet.civilianTile,group:overlay.groups===undefined?overlay.groupTile:undefined,selection:overlay.selected??undefined};
     for(const [key,node] of circles) {
       const id=positions[key],center=id===undefined?undefined:centres.get(id)?.center,p=center?rotate(center):undefined;
       node.style.display=p&&p[2]>=0&&!(options.landing&&key==='home')?'':'none';
       if(p){node.setAttribute('cx',(250+p[0]*220).toFixed(3));node.setAttribute('cy',(250-p[1]*220).toFixed(3));}
     }
+    for(const {node,tile} of dynamicMarkers.values()){const centre=centres.get(tile)?.center,p=centre?rotate(centre):undefined;node.style.display=p&&p[2]>=0?'':'none';if(p){node.setAttribute('cx',(250+p[0]*220).toFixed(3));node.setAttribute('cy',(250-p[1]*220).toFixed(3));}}
+
   }
   function select(id:number):void {
     if(!planet||!centres.has(id))return;
@@ -195,12 +200,15 @@ export function createPlanetView(host:HTMLElement,onSelect:(tileId:number)=>void
       if(planet)for(const path of [next.route,next.previewRoute??[]])for(let i=0;i<path.length;i++) {
         const tile=planet.tiles.find(t=>t.id===path[i]);if(!tile||i>0&&path[i-1]!==path[i]&&!tile.neighbours.includes(path[i-1]!))throw Error('Route géographique non canonique.');
       }
+      const descriptions=[...(next.maps??[]).map(map=>({key:`map:${map.mapId}`,tile:map.tile,label:map.label,kind:map.kind,active:map.active})),...(next.groups??[]).map(group=>({key:`group:${group.groupId}`,tile:group.tile,label:group.label,kind:'caravan',active:group.selected}))];
+      const present=new Set(descriptions.map(entry=>entry.key));for(const [key,entry] of dynamicMarkers)if(!present.has(key)){entry.node.remove();dynamicMarkers.delete(key);}
+      for(const entry of descriptions){let record=dynamicMarkers.get(entry.key);if(!record){const node=document.createElementNS(SVG,'circle'),title=document.createElementNS(SVG,'title');node.append(title);markers.append(node);record={node,tile:entry.tile};dynamicMarkers.set(entry.key,record);}record.tile=entry.tile;record.node.setAttribute('class',`planet-world-object planet-world-object-${entry.kind}`);record.node.setAttribute('r',entry.kind==='caravan'?'5':'8');record.node.setAttribute('data-active',String(entry.active));record.node.firstElementChild!.textContent=entry.label;}
       overlay=next;
       if(planet&&next.selected!==null){choice.value=String(next.selected);selectedText.textContent=labelFor(planet,next.selected);}
       schedule();
     },
     setVisible(next) {visible=next;element.hidden=!next||!planet;if(!next){cancelAnimationFrame(frame);frame=0;}else schedule();},
     focusTile(id) {const p=centres.get(id)?.center;if(!p)return;yaw=Math.atan2(p[0],p[2]);pitch=Math.asin(p[1]);schedule();},
-    dispose() {disposed=true;abort.abort();cancelAnimationFrame(frame);element.remove();nodes.clear();centres.clear();},
+    dispose() {disposed=true;abort.abort();cancelAnimationFrame(frame);element.remove();nodes.clear();centres.clear();dynamicMarkers.clear();},
   };
 }

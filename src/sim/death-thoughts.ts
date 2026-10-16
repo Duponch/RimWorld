@@ -52,7 +52,7 @@ export function notifyDeathThoughts(world:World,deceased:Pawn,capture?:HumanOwne
   };
   const family=relationshipIndex(world);
   for(const {world:observerWorld,owners:physical} of campaignPhysicalCaptures(world))for(const slot of [...physical.local,...physical.away]){
-    const p=slot.pawn!;if(p===deceased||!deathThoughtObserver(p)||p.social?.fight?.opponentId===deceased.id)continue;
+    if(!observerWorld)continue;const p=slot.pawn!;if(p===deceased||!deathThoughtObserver(p)||p.social?.fight?.opponentId===deceased.id)continue;
     const bloodlust=p.traits?.includes('bloodlust');
     if(witnessed(slot,p,observerWorld)){
       if(bloodlust)rememberDeathThought(p,'witnessed-bloodlust-death',deceased.id,world.tick);

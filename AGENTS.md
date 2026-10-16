@@ -4,11 +4,13 @@
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.
 
-**État V404, schéma 254 inchangé :** [Copier et renommer une politique de tenue](docs/gameplay/apparel-policy-copy-v404.md) qualifié : copie des filtres confirmés, autorité partagée, aucune affectation ou tâche modifiée et reprise exacte. Publication groupée avec V405 prévue ; dernière production V403/e24c5731.
+**Étape fondations V407, schéma255 :** [Registre cartes et caravanes](docs/gameplay/world-maps-v407.md) qualifié localement : colonies/camps, abandon jusqu’à campagne sans carte, vrais propriétaires et réinstallation/reprises. Publication différée ; géographie256 et caravanes complètes restent ouvertes. Aucun domaine monde terminé.
+
+**État V404, schéma 254 inchangé :** [Copier et renommer une politique de tenue](docs/gameplay/apparel-policy-copy-v404.md) qualifié : copie des filtres confirmés, autorité partagée, aucune affectation ou tâche modifiée et reprise exacte. Publication à regrouper avec les fondations ; V405 en attente. Dernière production V403/e24c5731.
 
 **Dernière publication V403 :** [Étangs peu profonds](docs/gameplay/shallow-water-v403.md), produit0f1a8cc1/déploiemente24c5731,134 réponses HTTPS exactes ; schéma254.
 
-**Ordre courant — demande humaine du16octobre :** [Audit multicarte/voyages/eau V406](docs/development/multimap-audit-v406.md). Le domaine reste PARTIEL : foyer+un second site persistant+un groupe, pas parité Core complète ni UI exhaustive. Consolider d’abord voyages, persistance, destinations et performances actuelles ; V405 table3×3 reste en attente, copies privées figées non adoptées. Aulnes publiquesV394 et branche blesséeV39721483 distinctes ; aucun rejeu favorable, soin ou régénération rétroactive. Aucun nouveau catalogue avant cette consolidation.
+**Ordre courant — demande humaine du16octobre :** terminer [les fondations monde](docs/development/world-foundations.md) avant toute suite : planète/génération/biomes/reliefs/rivières/côtes/étangs/poches humides, voyages/multicarte/multicolonies/persistance et UI/menus conformes au Core vérifié. L’auditV406 est le point de départ, pas la fin du chantier. V405table3×3 et tout catalogue secondaire restent en attente. Continuer jusqu’à achèvement démontré, arrêter alors l’autonomie et rendre rapport final ; ne pas annoncer une parité non établie. Sauvegardes et branches historiques préservées.
 
 ## Méthode de livraison
 

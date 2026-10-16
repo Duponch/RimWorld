@@ -1,15 +1,17 @@
+import {isMaplessCampaign} from '../sim/world-map-state';
 export const SAVE_COMPRESSION_THRESHOLD = 1024 * 1024;
-export const MAX_DECOMPRESSED_SAVE_BYTES = 32 * 1024 * 1024;
+export const MAX_DECOMPRESSED_SAVE_BYTES = 256 * 1024 * 1024;
 
-const MAX_COMPRESSED_SAVE_BYTES = 16 * 1024 * 1024;
+export const MAX_COMPRESSED_SAVE_BYTES = 128 * 1024 * 1024;
 const STORAGE_FORMAT = 'lisiere-save';
 const STORAGE_VERSION = 1;
 const STORAGE_CODEC = 'gzip-base64';
 
 export interface StoredSaveMetadata {
   readonly tick: number;
-  readonly width: number;
-  readonly height: number;
+  readonly width?: number;
+  readonly height?: number;
+  readonly campaignOnly?: true;
   readonly schemaVersion?: number;
   readonly scenario?: string;
   readonly profile?: true;
@@ -36,14 +38,15 @@ const onlyKeys = (value: Record<string, unknown>, keys: readonly string[]): bool
 };
 
 function metadataFromValue(value: unknown): StoredSaveMetadata | null {
-  if (!object(value) || !nonNegativeSafeInteger(value.tick) || !positiveInteger(value.width) || !positiveInteger(value.height)) return null;
+  if (!object(value) || !nonNegativeSafeInteger(value.tick)) return null;
+  const campaignOnly=isMaplessCampaign(value);
+  if (!campaignOnly && (!positiveInteger(value.width) || !positiveInteger(value.height))) return null;
   if (value.schemaVersion !== undefined && !nonNegativeSafeInteger(value.schemaVersion)) return null;
-  const scenarioValue = object(value.scenario) ? value.scenario.id : undefined;
+  const scenarioValue = 'scenario' in value && object(value.scenario) ? value.scenario.id : undefined;
   if (scenarioValue !== undefined && (typeof scenarioValue !== 'string' || !scenarioValue.length || scenarioValue.length > 64)) return null;
   const metadata: StoredSaveMetadata = {
     tick: value.tick,
-    width: value.width,
-    height: value.height,
+    ...(campaignOnly?{campaignOnly:true as const}:{width:value.width as number,height:value.height as number}),
     ...(value.schemaVersion === undefined ? {} : { schemaVersion: value.schemaVersion }),
     ...(scenarioValue === undefined ? {} : { scenario: scenarioValue }),
     ...(value.gameProfile === undefined ? {} : { profile: true as const }),
@@ -53,10 +56,11 @@ function metadataFromValue(value: unknown): StoredSaveMetadata | null {
 
 function validMetadata(value: unknown): value is StoredSaveMetadata {
   if (!object(value)) return false;
-  const keys = ['tick', 'width', 'height', ...(value.schemaVersion === undefined ? [] : ['schemaVersion']),
+  const keys = ['tick', ...(value.campaignOnly===undefined?['width','height']:['campaignOnly']), ...(value.schemaVersion === undefined ? [] : ['schemaVersion']),
     ...(value.scenario === undefined ? [] : ['scenario']), ...(value.profile === undefined ? [] : ['profile'])];
   return onlyKeys(value, keys)
-    && nonNegativeSafeInteger(value.tick) && positiveInteger(value.width) && positiveInteger(value.height)
+    && nonNegativeSafeInteger(value.tick)
+    && (value.campaignOnly===true?Number.isSafeInteger(value.schemaVersion)&&Number(value.schemaVersion)>=255: value.campaignOnly===undefined&&positiveInteger(value.width)&&positiveInteger(value.height))
     && (value.schemaVersion === undefined || nonNegativeSafeInteger(value.schemaVersion))
     && (value.scenario === undefined || typeof value.scenario === 'string' && value.scenario.length > 0 && value.scenario.length <= 64)
     && (value.profile === undefined || value.profile === true);
@@ -102,7 +106,7 @@ function base64ToBytes(value: string, expectedBytes: number): Uint8Array {
 
 function sameMetadata(left: StoredSaveMetadata, right: StoredSaveMetadata): boolean {
   return left.tick === right.tick && left.width === right.width && left.height === right.height
-    && left.schemaVersion === right.schemaVersion && left.scenario === right.scenario && left.profile === right.profile;
+    && left.campaignOnly === right.campaignOnly && left.schemaVersion === right.schemaVersion && left.scenario === right.scenario && left.profile === right.profile;
 }
 
 function ownedBuffer(bytes: Uint8Array): ArrayBuffer {

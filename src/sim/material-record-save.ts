@@ -21,7 +21,7 @@ const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 const oneOf=(v:unknown,values:string[]):boolean=>typeof v==='string'&&values.includes(v);
 
-export function validatePileRecordShape(item:Record<string,unknown>,world:World,version:number,validationTick=world.tick):string[]{
+export function validatePileRecordShape(item:Record<string,unknown>,world:Pick<World,'width'|'height'|'tick'|'nextId'|'climate'>,version:number,validationTick=world.tick):string[]{
  const input={width:world.width,height:world.height,tick:validationTick};
  const coord=(v:Record<string,unknown>)=>integer(v.x,0,world.width-1)&&integer(v.z,0,world.height-1);
  const errors:string[]=[];

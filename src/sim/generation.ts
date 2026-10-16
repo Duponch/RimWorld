@@ -1,3 +1,4 @@
+import {initialWorldRegistry,finalizeInitialWorldRegistry} from './world-map-context.ts';
 import {createDeteriorationState} from './deterioration-content.ts';
 import { startingPawn } from './starting-pawns.ts';
 import { createDefaultApparelPolicyRegistry } from './apparel-policy.ts';
@@ -152,9 +153,10 @@ export function emptyLandscape(seed: number, width: number, height: number): Wor
     throw new Error(`World dimensions must be integers between ${MIN_MAP_SIZE} and ${MAX_MAP_SIZE}.`);
   }
   const registry=createDefaultApparelPolicyRegistry(),normalizedSeed=seed>>>0;
-  return { schemaVersion: SCHEMA_VERSION, deterioration:createDeteriorationState(normalizedSeed,0), breakdown:newBreakdownCalendar(normalizedSeed,0), apparelWear:createApparelWearCalendar(0,(normalizedSeed^0x0a77e1)>>>0),apparelPolicies:registry.apparelPolicies,nextApparelPolicyId:registry.nextApparelPolicyId,packed:[],deconstructed: { count: 0, lostWood: 0, fuelTicks: 0 }, foodPolicies: initialFoodPolicies(), nextFoodPolicyId: 5, restRules: 'adult', spoiled: emptySpoilage(), foodRules: 'adult', seed: normalizedSeed, rng: normalizedSeed || 0x9e3779b9,
+  const world:World={ schemaVersion: SCHEMA_VERSION, deterioration:createDeteriorationState(normalizedSeed,0), breakdown:newBreakdownCalendar(normalizedSeed,0), apparelWear:createApparelWearCalendar(0,(normalizedSeed^0x0a77e1)>>>0),apparelPolicies:registry.apparelPolicies,nextApparelPolicyId:registry.nextApparelPolicyId,packed:[],deconstructed: { count: 0, lostWood: 0, fuelTicks: 0 }, foodPolicies: initialFoodPolicies(), nextFoodPolicyId: 5, restRules: 'adult', spoiled: emptySpoilage(), foodRules: 'adult', seed: normalizedSeed, rng: normalizedSeed || 0x9e3779b9,
     tick: 0, width, height, tiles: [], pawns: [], resources: [], structures: [], jobs: [],
     piles: [], stockpiles: [], growingZones: [], growingCursor: 0, environment: 'temperate-equinox-v1', stock: { wood: 0, food: 0 }, events: [], nextId: 1, logisticsCursor: 0 };
+  return world;
 }
 
 export function generateWorld(seed: number, width: number, height: number, profile?:GenerationProfile): World {
@@ -225,7 +227,7 @@ export function generateWorld(seed: number, width: number, height: number, profi
   }
   // The natural profile is landscape only. Its scenario factory owns people,
   // possessions and admissible arrival placement without rewriting this terrain.
-  if(profile)return world;
+  if(profile){finalizeInitialWorldRegistry(world);return world;}
   for (const [offset, name] of ['Ada', 'Noé', 'Mina'].entries()) {
     world.pawns.push(startingPawn(world.nextId++,name,cx+offset-1,cz,offset,50+sample(world.seed,offset,0,101)*10,world.seed));
   }
@@ -239,5 +241,5 @@ export function generateWorld(seed: number, width: number, height: number, profi
   addGroundMaterial(world,'weapon',1,{x:cx+3,z:cz+1},'revolver');
   addGroundMaterial(world,'apparel',3,{x:cx-2,z:cz+2},'cloth-shirt');
   addGroundMaterial(world,'apparel',1,{x:cx+2,z:cz+2},'flak-vest');
-  return world;
+  finalizeInitialWorldRegistry(world);return world;
 }

@@ -20,10 +20,10 @@ export function syncPatient(world:World,carrier:Pawn):void {
 }
 /** Civil people can share the floor, including an emergency fall on furniture.
  * A captured edge finishes with both bodies; there is no teleport to its origin. */
-export function releaseRescue(world:World,carrier:Pawn):void {
+export function releaseRescue(world:World,carrier:Pawn,despawning=false):void {
   const task=carrier.rescue;if(!task)return;
   const patient=world.pawns.find(p=>p.id===task.patientId);
-  if(task.phase==='carry'&&patient?.health&&!patient.health.death&&patient.health.tick<world.tick)updatePawnHealth(world,patient);
+  if(!despawning&&task.phase==='carry'&&patient?.health&&!patient.health.death&&patient.health.tick<world.tick)updatePawnHealth(world,patient);
   syncPatient(world,carrier);delete carrier.rescue;
   if(task.phase==='carry'&&patient){patient.planCooldown=0;patient.needCooldown=0;}
 }

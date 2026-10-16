@@ -1,15 +1,17 @@
+import {registeredCampaign,registeredMap,registeredMapForValidation,registeredMapId,registeredMaps,selectedRegisteredMap,captureLocalMap,flushRegisteredMap,boundWorldGroup} from './world-map-context.ts';
 import { CAMPAIGN_FIELDS, type SecondaryMap } from './secondary-site-state.ts';
 import type { World } from './types.ts';
 
 const shared=new Set<string>(CAMPAIGN_FIELDS);
 const contexts=new WeakMap<World,{map:SecondaryMap;view:World}>();
 const authorities=new WeakMap<World,World>();
-export const campaignAuthority=(world:World):World=>authorities.get(world)??world;
-export const isSecondaryContext=(world:World):boolean=>authorities.has(world);
+export const campaignAuthority=(world:World):World=>(registeredCampaign(authorities.get(world)??world) as World);
+export const isSecondaryContext=(world:World):boolean=>authorities.has(world)||!!boundWorldGroup(world)||registeredMapId(world)!==undefined&&registeredMapId(world)!==world.worldMaps?.rootMapId;
 
 /** Transfer references to a serializable LOCAL record. Shared accessors never
  * enter the record or its JSON. The discarded generator owns no live people. */
 export function captureSecondaryMap(world:World):SecondaryMap {
+  if(world.schemaVersion>=255)return captureLocalMap(world) as SecondaryMap;
   const data:Record<string,unknown>={};
   for(const key of Object.keys(world))if(!shared.has(key)&&!['secondarySite','campaignPeople','campaignMap'].includes(key))data[key]=(world as unknown as Record<string,unknown>)[key];
   return data as unknown as SecondaryMap;
@@ -20,7 +22,7 @@ export function captureSecondaryMap(world:World):SecondaryMap {
  * Arrays are original local references. Global fields forward on every read
  * and write; no second RNG, nextId, tick, research or policy registry exists. */
 export function secondaryContext(world:World):World|undefined {
-  const root=campaignAuthority(world),site=root.secondarySite;
+  const root=campaignAuthority(world);if(root.worldMaps){const other=root.worldMaps.sites.find(s=>s.id!==root.worldMaps!.rootMapId);return other?registeredMap(root,other.id):undefined;}const site=root.secondarySite;
   if(!site)return undefined;
   let cached=contexts.get(root);
   if(!cached||cached.map!==site.map){
@@ -35,7 +37,7 @@ export function secondaryContext(world:World):World|undefined {
 /** Existing systems can replace arrays or add/delete optional local fields.
  * Flush at the end of a synchronous command/tick, never after an await. */
 export function flushSecondaryContext(world:World):void {
-  const root=campaignAuthority(world),cached=contexts.get(root);
+  const root=campaignAuthority(world);if(root.worldMaps){for(const map of registeredMaps(root))flushRegisteredMap(map);return;}const cached=contexts.get(root);
   if(!cached||cached.map!==root.secondarySite?.map)return;
   const data=captureSecondaryMap(cached.view) as unknown as Record<string,unknown>;
   const target=cached.map as unknown as Record<string,unknown>;
@@ -43,14 +45,14 @@ export function flushSecondaryContext(world:World):void {
   Object.assign(target,data);
 }
 export function selectedMap(world:World):World {
-  const root=campaignAuthority(world);
+  const root=campaignAuthority(world);if(root.worldMaps){const map=selectedRegisteredMap(root);if(!map)throw Error('Aucune carte locale sélectionnée.');return map;}
   return root.secondarySite?.selected?secondaryContext(root)!:root;
 }
 
 /** The context has no secondarySite field, preventing recursive save/capture.
  * This helper supplies the OTHER actual map, not a projected pawn union. */
 export function otherCampaignMap(world:World):World|undefined {
-  const root=campaignAuthority(world);
+  const root=campaignAuthority(world);if(root.worldMaps)return registeredMaps(root).find(map=>registeredMapId(map)!==registeredMapId(world));
   return world===root?secondaryContext(root):root;
 }
 
@@ -59,7 +61,7 @@ export function otherCampaignMap(world:World):World|undefined {
  * shared values stay original references; branding preserves their map owner
  * and global person knowledge. This view is never stepped or persisted. */
 export function secondaryValidationContext(world:World):World|undefined {
-  const root=campaignAuthority(world),site=root.secondarySite;
+  const root=campaignAuthority(world);if(root.worldMaps){const other=root.worldMaps.sites.find(s=>s.id!==registeredMapId(world));return other?registeredMapForValidation(root,other.id):undefined;}const site=root.secondarySite;
   if(!site)return undefined;
   const cached=contexts.get(root);
   let view:World;

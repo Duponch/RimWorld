@@ -23,6 +23,7 @@ export interface GroupPersonalContext {
   mood:Pick<PersonalMoodContext,'people'|'expectation'|'difficultyMood'>;
   joyToleranceFall:number;
   random():number;
+  lostThoughts?(person:Pawn):readonly import('./mood.ts').MoodThought[];
   notice(person:Pawn,message:string):void;
 }
 export interface GroupPersonalResult {deceased:Pawn[];incapableIds:number[]}
@@ -73,7 +74,7 @@ export function advanceGroupPersonal(group:ActiveGroup,c:GroupPersonalContext):G
     p.rest=groupRestAfterInterval(p,c.resting,c.legacyRest);
     if(p.mental?.cooldown&&!c.resting&&p.state!=='downed'&&!moodFrozen(p,body))p.mental.cooldown--;
     updateRecreation(p,body,c.joyToleranceFall);
-    updateMoodFromThoughts(p,personalMoodThoughts(p,{...c.mood,tick:c.tick,items:group.items}),body);
+    updateMoodFromThoughts(p,personalMoodThoughts(p,{...c.mood,lost:c.lostThoughts?.(p),tick:c.tick,items:group.items}),body);
   }
   // Death leaves immediately for Root's terminal owner at health.death.tick.
   // No terminal mutation, dose, route or ingestion can follow this result.

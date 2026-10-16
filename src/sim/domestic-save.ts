@@ -24,15 +24,15 @@ const keys=(v:Record<string,unknown>,required:string[],optional:string[]=[])=>re
 const productForVersion=(a:WildAnimal,version:number)=>version>=121?productKind(a):a.species==='muffalo'?'shear':a.species==='dromedary'&&a.sex==='female'?'milk':undefined;
 const productReadyForVersion=(a:WildAnimal,version:number)=>!!a.domestic&&!!productForVersion(a,version)&&(a.domestic.productFullness??0)>=1;
 
-function validDomesticOwner(w:World,a:WildAnimal,version:number):boolean {
+function validDomesticOwner(w:Pick<World,'tick'|'nextId'>&Partial<Pick<World,'structures'>>,a:WildAnimal,version:number):boolean {
   const d:unknown=a.domestic;
   return version>=106&&(a.species==='hare'||version>=119&&livestock(a))&&obj(d)&&keys(d,['since','care','tameness','nextDecay'],version>=120?['lastTraining','penMarkerId','productFullness',...(version>=220?['slaughter']:[]),...(version>=221?['bedId']:[])]:version>=119?['lastTraining','penMarkerId']:['lastTraining'])
     &&int(d.since,0,w.tick)&&typeof d.care==='string'&&Object.hasOwn(MEDICAL_CARE,d.care)&&int(d.tameness,1,5)
     &&int(d.nextDecay,0,w.tick+45000)&&(d.lastTraining===undefined||int(d.lastTraining,d.since,w.tick))
     &&(version>=120?(productForVersion(a,version)?finite(d.productFullness,0,1):d.productFullness===undefined):d.productFullness===undefined)
     &&(!Object.hasOwn(d,'slaughter')||version>=220&&d.slaughter===true)
-    &&(!Object.hasOwn(d,'bedId')||version>=221&&int(d.bedId,1,w.nextId-1)&&w.structures.some(s=>s.id===d.bedId&&s.kind==='animal-sleeping-spot'&&!s.medical))
-    &&(d.penMarkerId===undefined||version>=119&&livestock(a)&&int(d.penMarkerId,1,w.nextId-1)&&!!w.structures.find(s=>s.id===d.penMarkerId&&s.kind==='pen-marker'&&s.pen?.accepted.includes(a.species)));
+    &&(!Object.hasOwn(d,'bedId')||version>=221&&int(d.bedId,1,w.nextId-1)&&!!w.structures?.some(s=>s.id===d.bedId&&s.kind==='animal-sleeping-spot'&&!s.medical))
+    &&(d.penMarkerId===undefined||version>=119&&livestock(a)&&int(d.penMarkerId,1,w.nextId-1)&&!!w.structures?.find(s=>s.id===d.penMarkerId&&s.kind==='pen-marker'&&s.pen?.accepted.includes(a.species)));
 }
 
 /** New irreversible work shares the file and transport admission. Availability
@@ -205,3 +205,5 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
   }
   return errors;
 }
+
+export function validDetachedDomesticAnimal(a:WildAnimal,tick:number,nextId:number):boolean {return a.domestic===undefined||validDomesticOwner({tick,nextId},a,255);}

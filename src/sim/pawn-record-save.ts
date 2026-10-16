@@ -50,12 +50,16 @@ const integer = (value: unknown, min: number, max = Number.MAX_SAFE_INTEGER): va
 const bounded = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100;
 const oneOf = (value: unknown, values: string[]): boolean => typeof value === 'string' && values.includes(value);
 
-export function validatePawnRecordShape(item:Record<string,unknown>, world:World, version:number, validationTick=world.tick):string[] {
+export type PawnRecordContext=Pick<World,'width'|'height'|'tick'|'nextId'>;
+export function validatePawnRecordShape(item:Record<string,unknown>,world:World,version:number,validationTick=world.tick):string[] {return pawnRecordShape(item,world,version,validationTick,false);}
+/** Personal record only: detached owners cannot acquire local bed/area authorities. */
+export function validateDetachedPawnRecordShape(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick=context.tick):string[] {return pawnRecordShape(item,context,version,validationTick,true);}
+function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,version:number,validationTick:number,detached:boolean):string[] {
   const input=world as unknown as Record<string,unknown>;
   const legacyV2=version===2, size=world.width*world.height, errors:string[]=[];
   if(!validForcedConsumePawnShape(item,version,world))errors.push('Invalid or future forced consumption marker or mandate.');
-  if(!validAllowedAreaPawnShape(item,world,version))errors.push('Invalid or future allowed area assignment or return shape.');
-  if(!validBedSlotPawnShape(item,world,version))errors.push('Invalid or future bed slot shape.');
+  if(detached?Object.hasOwn(item,'allowedAreaId')||Object.hasOwn(item,'allowedAreaReturn'):!validAllowedAreaPawnShape(item,world as World,version))errors.push('Invalid or future allowed area assignment or return shape.');
+  if(detached?item.bedId!==null||Object.hasOwn(item,'bedSlot')||Object.hasOwn(item,'rescue'):!validBedSlotPawnShape(item,world as World,version))errors.push('Invalid or future bed slot shape.');
   if(Object.hasOwn(item,'animalRescue')&&!validAnimalRescueShape(item.animalRescue,version))errors.push('Invalid or future animal rescue shape.');
   const coord=(value:Record<string,unknown>)=>integer(value.x,0,world.width-1)&&integer(value.z,0,world.height-1);
   if(!validPawnPodRescue(item,version,input as unknown as World))errors.push('Invalid or future pod rescue mandate for schema.');

@@ -1,3 +1,4 @@
+import {canAttachPost} from './world-map-context.ts';
 import { isColonist } from './affiliation.ts';
 import { biologicalYears } from './human-age.ts';
 import { commercialPawnMass,type CommercialMass } from './commercial-mass.ts';
@@ -16,7 +17,7 @@ function random(state:{rng:number}):number {
 /** Call only at an authoritative arrival. Expiration is lazy and strict; a
  * read or an exchange never generates stock. Refusal commits no identities. */
 export function ensureCommercialPost(w:World):boolean {
-  const old=w.civilianPost;
+  const old=w.civilianPost;if(!old&&!canAttachPost(w))return false;
   if(old&&!validCivilianPostShape(old,w.tick,w.nextId))return false;
   if(old&&w.tick-old.stockedAt<=COMMERCIAL_RESTOCK_TICKS)return true;
   if(old&&!Number.isSafeInteger(old.generation+1))return false;

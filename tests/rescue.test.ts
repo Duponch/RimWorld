@@ -1,3 +1,5 @@
+import {registeredMapPresentation} from '../src/sim/world-map-presentation';
+import {createDeteriorationState} from '../src/sim/deterioration-content';
 import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { SCHEMA_VERSION } from '../src/sim/types';
 import { withoutCare } from './scenarios/legacy-skills';
@@ -91,7 +93,7 @@ test('doctor priority, direct-order persistence and malformed rescue/medical sav
   expect(applyCommand(w,{type:'priority',pawnId:a!.id,work:'doctor',value:0}).ok).toBe(true);expect(a!.rescue).toBeDefined();resume(w,1);until(w,()=>a!.rescue?.phase==='carry');
   const corruptions=[(v:World)=>v.pawns[0]!.rescue!.patientId=v.pawns[0]!.id,(v:World)=>v.pawns[1]!.x++,(v:World)=>v.pawns[0]!.rescue!.bedId=99999,(v:World)=>v.structures[0]!.kind='table',(v:World)=>v.pawns[1]!.bedId=v.structures[0]!.id,(v:World)=>v.pawns[0]!.orders.active=null];
   for(const mutate of corruptions){const bad=structuredClone(w);mutate(bad);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();}
-  const old=rescueCamp();old.structures=[];old.pawns.splice(1);(old.schemaVersion=45 as typeof old.schemaVersion,withoutResearch(old));withoutCare(old);delete (old.pawns[0]!.priorities as Partial<typeof a.priorities>).doctor;
+  const old=rescueCamp();old.structures=[];old.pawns.splice(1);(old.schemaVersion=45 as typeof old.schemaVersion,withoutResearch(old));withoutCare(old);delete old.worldMaps;delete old.worldGroups;delete old.deterioration;delete old.spoiled.pemmican;for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='pemmican');delete (old.pawns[0]!.priorities as Partial<typeof a.priorities>).doctor;
   const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);expect(migrated.pawns[0]!.priorities.doctor).toBe(1);expect(migrated.pawns[0]!.rescue).toBeUndefined();
   const future=structuredClone(old);future.pawns[0]!.priorities.doctor=1;expect(()=>deserializeWorld(JSON.stringify(future))).toThrow(/priority/);
   releaseWork(w,a!);valid(w);
@@ -101,17 +103,17 @@ test('doctor priority, direct-order persistence and malformed rescue/medical sav
 });
 
 test('pickup and interruption anchor the old healing posture before the medical clock changes context',()=>{
-  const w=rescueCamp(),[a,p]=w.pawns;w.tick+=p!.id%60-1;p!.health!.tick=w.tick;
+  const w=rescueCamp(),[a,p]=w.pawns;w.tick+=p!.id%60-1;w.deterioration=createDeteriorationState(w.seed,w.tick);p!.health!.tick=w.tick;
   controlledInjury(w,p!,'left-arm',1000);a!.x=p!.x;a!.z=p!.z;expect(order(w).ok).toBe(true);
   const bruise=p!.health!.injuries[0]!;w.tick++;
   processRescue(w,a!,{move:()=>{},search:()=>null,release:()=>releaseWork(w,a!),event:()=>{}});
   expect(a!.rescue?.phase).toBe('carry');expect(bruise.severity).toBe(880);expect(p!.health!.tick).toBe(w.tick);valid(w);
-  w.tick+=60;p!.health!.tick=w.tick-1;releaseWork(w,a!);
+  w.tick+=60;w.deterioration=createDeteriorationState(w.seed,w.tick);p!.health!.tick=w.tick-1;releaseWork(w,a!);
   expect(bruise.severity).toBe(800);expect(p!.health!.tick).toBe(w.tick);valid(w);
 });
 
 test('a fallen hauler keeps its stranded cargo through rescue; worker snapshots observe pickup, role and placement',()=>{
-  const w=medicalCarrier(),patient=w.pawns[0]!,actor=w.pawns[1]!;
+  const w=medicalCarrier();w.deterioration=createDeteriorationState(w.seed,w.tick);const patient=w.pawns[0]!,actor=w.pawns[1]!;
   // Reserve a remote bed area before the incident. Every nearby drop cell at
   // the carrier remains full: its steel cannot disappear into the floor.
   w.piles=w.piles.filter(q=>!(q.owner.type==='ground'&&q.owner.x===14&&(q.owner.z===11||q.owner.z===12)));
@@ -119,7 +121,7 @@ test('a fallen hauler keeps its stranded cargo through rescue; worker snapshots 
   const steel=w.piles.filter(q=>q.item==='steel').reduce((n,q)=>n+q.quantity,0),held=w.piles.find(q=>q.owner.type==='pawn')!;
   controlledInjury(w,patient,'left-leg',30000);controlledInjury(w,patient,'right-leg',30000);expect(patient.interruptedCargo).toBe(true);actor.priorities.doctor=1;
   const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder(),phases=new PresentationChanges();let changes=0;
-  const observe=()=>{changes+=Number(phases.capture(w));const result=decoder.adopt(structuredClone(encoder.encode(w,0,6)));if(result.status==='applied')expect(result.world).toEqual(w);};
+  const observe=()=>{changes+=Number(phases.capture(w));const result=decoder.adopt(structuredClone(encoder.encode(w,0,6)));if(result.status==='applied')expect(result.world).toEqual(registeredMapPresentation(w));};
   observe();expect(applyCommand(w,{type:'order-rescue',pawnId:actor.id,patientId:patient.id,queue:false}).ok).toBe(true);observe();
   until(w,()=>actor.rescue?.phase==='carry');expect(held.owner).toEqual({type:'pawn',pawnId:patient.id});observe();resume(w,10);expect(held.owner).toEqual({type:'pawn',pawnId:patient.id});
   until(w,()=>patient.need?.kind==='sleep');observe();expect(changes).toBe(4);resume(w,10);

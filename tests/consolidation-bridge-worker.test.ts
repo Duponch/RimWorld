@@ -3,6 +3,7 @@ import type { Request, Response } from '../src/bridge/protocol';
 
 const control = vi.hoisted(() => ({ fail: '', steps: 0 }));
 vi.mock('../src/sim/new-game', () => ({ createScenarioWorld: () => ({ tick: 0 }) }));
+vi.mock('../src/sim/serialization', () => ({ deserializeCampaign(data:string) { if(data==='bad')throw Error('invalid'); return JSON.parse(data); }, serializeCampaign:JSON.stringify }));
 vi.mock('../src/sim/index', () => ({
   deserializeWorld: (data: string) => { if (data === 'bad') throw Error('invalid'); return JSON.parse(data); },
   serializeWorld: (world: unknown) => JSON.stringify(world),

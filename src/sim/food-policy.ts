@@ -35,7 +35,7 @@ export const allowedFoodFromPolicies=(policies:readonly FoodPolicy[],pawn:Pawn):
 
 /** The registry is shared, but each person remains in their physical map or
  * travelling owner. Frozen archives retain their historical policy IDs. */
-const policyUsers=(world:World):readonly Pawn[]=>otherCampaignMap(world)?campaignPhysicalCaptures(world).flatMap(({owners})=>[...owners.local,...owners.away].map(slot=>slot.pawn!)):
+const policyUsers=(world:World):readonly Pawn[]=>world.worldMaps||otherCampaignMap(world)?campaignPhysicalCaptures(world).flatMap(({owners})=>[...owners.local,...owners.away].map(slot=>slot.pawn!)):
   world.group&&'members' in world.group?[...world.pawns,...world.group.members]:world.pawns;
 
 /** Policy IDs have their own namespace: migrations never renumber entities. */

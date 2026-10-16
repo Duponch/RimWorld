@@ -1,3 +1,4 @@
+import {lostThoughts} from './world-map-lost.ts';
 import { COLONY_EXPECTATIONS,type ColonyExpectation } from './expectations.ts';
 import { colonyExpectation } from './colony-economy.ts';
 import { malnutritionStage } from './malnutrition.ts';
@@ -58,11 +59,11 @@ export interface PersonalMoodContext {
   items:readonly MaterialPile[];expectation?:ColonyExpectation;difficultyMood:number;
   /** Absent off-map: never reuse the former map room, comfort or beauty. */
   environment?:{comfort:number;beauty:number};housing?:MoodThought;
-  deathSituation?:MoodThought;
+  deathSituation?:MoodThought;lost?:readonly MoodThought[];
 }
 export function moodThoughts(world:World,pawn:Pawn,topology?:RelationshipTopology):readonly MoodThought[] {
   if(pawn.state==='dead')return [];
-  return personalMoodThoughts(pawn,{tick:world.tick,people:{get:id=>world.pawns.find(p=>p.id===id)},
+  return personalMoodThoughts(pawn,{lost:lostThoughts(world,pawn,()=>captureRelationshipPeople(world)),tick:world.tick,people:{get:id=>world.pawns.find(p=>p.id===id)},
     ...(pawn.familyBereavement||pawn.romanceMemories?{relationPeople:captureRelationshipPeople(world)}:{}),
     items:world.piles,expectation:colonyExpectation(world,pawn),difficultyMood:colonistMoodOffset(world,pawn),
     environment:{comfort:pawn.comfort,beauty:pawn.beauty},housing:relationshipHousingThought(world,pawn,topology),deathSituation:colonistUnburiedThought(world,pawn)});
@@ -73,6 +74,7 @@ export function personalMoodThoughts(pawn:Pawn,c:PersonalMoodContext):readonly M
   const thoughts:MoodThought[]=[expectation?expectationThoughts.get(expectation.id)!:camp,...roomMoodThoughtsAt(pawn,c.tick)];
   if(pawn.bereavement)thoughts.push(...bereavementThoughtsAt(pawn,c.tick,c.people));
   if(pawn.deathThoughts)thoughts.push(...deathThoughtsAt(pawn,c.tick,c.people));
+  if(c.lost)thoughts.push(...c.lost);
   if(c.deathSituation)thoughts.push(c.deathSituation);
   if(pawn.familyBereavement)thoughts.push(...familyBereavementThoughtsAt(pawn,c.tick,c.relationPeople??c.people));
   if(pawn.romanceMemories)thoughts.push(...romanceMoodThoughtsAt(pawn,c.tick,c.relationPeople??c.people));

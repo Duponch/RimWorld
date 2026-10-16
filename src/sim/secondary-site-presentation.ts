@@ -1,3 +1,5 @@
+import {registeredMapPresentation} from './world-map-presentation.ts';
+import {validRegisteredPresentation} from './world-map-projection-save.ts';
 import {alertManhunter,alertDownedColonist} from './status-alert-rules.ts';
 import {MAX_WILDLIFE} from './wildlife-state.ts';
 import { captureHumanOwners } from './human-owners.ts';
@@ -38,6 +40,7 @@ const projections=new WeakMap<World,{source:World;view:World}>();
  * Switching source creates a new stable projection, using the existing epoch
  * replacement path. Current campaign save remains the complete authority. */
 export function campaignPresentation(world:World):World {
+  if(world.worldMaps){const view=registeredMapPresentation(world);if(!view)throw Error('Campaign has no selected local map');return view;}
   const root=campaignAuthority(world);if(!root.secondarySite)return root;
   const source=selectedMap(root);let cached=projections.get(root);
   if(!cached||cached.source!==source){cached={source,view:{} as World};projections.set(root,cached);}
@@ -62,6 +65,7 @@ const dense=(v:unknown,max:number):v is unknown[]=>Array.isArray(v)&&v.length<=m
  * prove no physical ownership and are never inserted into byId/pawnOwners. */
 export function validCampaignPresentation(w:Pick<World,'schemaVersion'|'tick'|'nextId'|'width'|'height'|'pawns'|'mechanoids'|'wildlife'|'planet'|'expeditionSite'|'campaignPeople'|'campaignMap'> & {secondarySite?:unknown}):boolean {
   const raw=w as unknown as Record<string,unknown>;
+  if(w.schemaVersion>=255)return validRegisteredPresentation(w as World);
   if(Object.hasOwn(raw,'secondarySite'))return false;
   if(w.schemaVersion<240)return !['expeditionSite','campaignPeople','campaignMap'].some(k=>Object.hasOwn(raw,k));
   if(!Object.hasOwn(raw,'campaignMap'))return !Object.hasOwn(raw,'campaignPeople')&&!Object.hasOwn(raw,'expeditionSite');

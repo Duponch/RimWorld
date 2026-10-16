@@ -1,3 +1,4 @@
+import {registeredCampaign} from './world-map-context.ts';
 import { releaseAllowedAreaReturn } from './allowed-area-state.ts';
 import { scoutActiveTask,scoutPreparationReason,scoutUnstable } from './caravan-trip.ts';
 import { findCivilianReturnEntry } from './civilian-return.ts';
@@ -123,6 +124,7 @@ export function advanceCommercialTrip(w:World):void {
   }
   if(s.phase==='at-post'){if(w.tick>=s.decisionUntil)beginCommercialReturn(w);return;}
   if(w.tick<s.returnAt||s.phase==='awaiting-entry'&&(w.tick-s.returnAt)%20!==0)return;
+  if(w.worldMaps&&registeredCampaign(w).worldGroups?.legacyTravellers.some(r=>r.commercialTrip===s&&!w.worldMaps!.sites.some(m=>m.id===r.originMapId))){s.phase='awaiting-entry';return;}
   if(w.pawns.length+1>w.width*w.height||w.piles.length+s.items.length>32768){s.phase='awaiting-entry';return;}
   const entry=findCivilianReturnEntry(w,s.entry);if(!entry){s.phase='awaiting-entry';return;}
   const p=s.pawn;p.x=entry.x;p.z=entry.z;p.path=[];p.state='idle';p.moveCooldown=0;p.planCooldown=0;delete p.motion;

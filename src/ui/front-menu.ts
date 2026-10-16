@@ -1,3 +1,4 @@
+import {SETTLEMENT_LIMIT_CHOICES,type SettlementLimit} from './settlement-limit-settings';
 import {THREAT_PAUSE_CHOICES,type ThreatPauseMode} from './threat-pause-settings';
 import { DEFAULT_MAP_SIZE } from '../sim/map-config';
 import { AUTOSAVE_MINUTES } from './autosave';
@@ -38,6 +39,7 @@ export interface FrontMenuSave {
 }
 
 export interface FrontMenuOptions {
+  getMaxSettlements?:()=>SettlementLimit;getMaxSettlementsPending?:()=>boolean;onMaxSettlementsChange?:(value:SettlementLimit)=>Promise<boolean>;
   getThreatPauseMode?:()=>ThreatPauseMode;getThreatPausePending?:()=>boolean;onThreatPauseModeChange?:(mode:ThreatPauseMode)=>Promise<boolean>;
   getAutosaveMinutes?:()=>number;
   onAutosaveMinutesChange?:(minutes:number)=>boolean;
@@ -317,7 +319,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
       card.append(element('h2','','Jeu'));
       const setting=element('label','front-relief front-texture-setting'),select=element('select'),text=element('span');select.id='front-threat-pause-mode';select.dataset.threatPauseMode='';
       for(const choice of THREAT_PAUSE_CHOICES){const option=element('option','',choice.label);option.value=choice.value;select.append(option);}
-      const title=element('strong','','Pause automatique'),description=element('span','','Nouvelles menaces au foyer ou au second site. La vue actuelle est conservée.'),status=element('span');status.dataset.threatPauseStatus='';status.setAttribute('role','status');
+      const title=element('strong','','Pause automatique'),description=element('span','','Nouvelles menaces sur les cartes de la partie. La vue actuelle est conservée.'),status=element('span');status.dataset.threatPauseStatus='';status.setAttribute('role','status');
       title.id='front-threat-pause-label';description.id='front-threat-pause-description';select.setAttribute('aria-labelledby',title.id);select.setAttribute('aria-describedby',description.id);
       select.value=options.getThreatPauseMode();select.disabled=options.getThreatPausePending?.()??false;status.textContent=select.disabled?'Application du choix en attente…':'';
       select.addEventListener('change',async()=>{const mode=select.value as ThreatPauseMode;select.value=options.getThreatPauseMode!();select.disabled=true;clearError();
@@ -325,6 +327,16 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
         catch(cause){showError(cause instanceof Error?cause.message:String(cause));}
         finally{select.value=options.getThreatPauseMode!();select.disabled=options.getThreatPausePending?.()??false;}
       });
+      text.append(title,description,status);setting.append(select,text);card.append(setting);
+    }
+    if(options.getMaxSettlements&&options.onMaxSettlementsChange){
+      if(!options.getThreatPauseMode)card.append(element('h2','','Jeu'));
+      const setting=element('label','front-relief front-texture-setting'),select=element('select'),text=element('span');select.id='front-max-settlements';select.dataset.maxSettlements='';
+      for(const value of SETTLEMENT_LIMIT_CHOICES){const option=element('option','',String(value));option.value=String(value);select.append(option);}
+      const title=element('strong','','Nombre maximal de colonies'),description=element('span','','Option globale. Les camps ne comptent pas ; diminuer la limite conserve les colonies existantes.'),status=element('span');status.dataset.maxSettlementsStatus='';status.setAttribute('role','status');
+      title.id='front-max-settlements-label';description.id='front-max-settlements-description';select.setAttribute('aria-labelledby',title.id);select.setAttribute('aria-describedby',description.id);
+      select.value=String(options.getMaxSettlements());select.disabled=options.getMaxSettlementsPending?.()??false;status.textContent=select.disabled?'Application du choix en attente…':'';
+      select.addEventListener('change',async()=>{const value=Number(select.value) as SettlementLimit;select.value=String(options.getMaxSettlements!());select.disabled=true;clearError();try{if(!await options.onMaxSettlementsChange!(value))showError('Le choix s’applique maintenant, mais ce navigateur ne peut pas le conserver pour la prochaine visite.');}catch(cause){showError(cause instanceof Error?cause.message:String(cause));}finally{select.value=String(options.getMaxSettlements!());select.disabled=options.getMaxSettlementsPending?.()??false;}});
       text.append(title,description,status);setting.append(select,text);card.append(setting);
     }
     card.append(element('h2', '', 'Affichage'));

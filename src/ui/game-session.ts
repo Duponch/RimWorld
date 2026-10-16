@@ -56,7 +56,7 @@ export class GameSession {
       if (value) {
         const scenario = isScenarioId(value.scenario) ? SCENARIOS[value.scenario].label : 'Partie historique';
         const civilTick = value.tick + (value.profile ? TICKS_PER_DAY / 4 : 0);
-        detail = `${scenario} · jour ${1 + Math.floor(civilTick / TICKS_PER_DAY)} · ${value.width} × ${value.height} · format ${value.schemaVersion ?? "ancien"}`;
+        detail = value.campaignOnly?`Campagne sans carte locale · format ${value.schemaVersion}`:`${scenario} · jour ${1 + Math.floor(civilTick / TICKS_PER_DAY)} · ${value.width} × ${value.height} · format ${value.schemaVersion ?? "ancien"}`;
       }
       const entry:SavedColony={key,label,detail,kind,...(savedAt===undefined?{}:{savedAt}),...(isManagedSaveKey(key)?{revision:stored}:{})};
       this.listed.set(key,{stored,entry});result.push({...entry});

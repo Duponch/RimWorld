@@ -43,7 +43,7 @@ export function captureHumanGoods(world:World):HumanGoodsCapture {
   const captures=campaignPhysicalCaptures(world);
   captures.forEach(({world:local,owners},index)=>{
     const site:Site=index===0?'home':'secondary';
-    maps.push({site,width:local.width,height:local.height,cells:local.width*local.height,localPawns:local.pawns.length,
+    if(local)maps.push({site,width:local.width,height:local.height,cells:local.width*local.height,localPawns:local.pawns.length,
       localColonists:local.pawns.filter(p=>isColonist(p)&&!p.prisoner&&p.state!=='dead').length,
       localPiles:local.piles.length,resources:local.resources.length,structures:local.structures.length,jobs:local.jobs.length});
     for(const slot of owners.slots){
@@ -57,6 +57,7 @@ export function captureHumanGoods(world:World):HumanGoodsCapture {
         for(const record of slot.packed)packed.push({site,container:slot.kind+':'+slot.id,record:clone(record)});
       }
     }
+    if(!local)return;
     for(const pile of local.piles)piles.push({site,container:'map',pile:clone(pile)});
     for(const record of local.packed)packed.push({site,container:'map',record:clone(record)});
     for(const record of local.structures)structures.push({site,record:clone(record)});

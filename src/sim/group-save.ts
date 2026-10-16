@@ -1,3 +1,4 @@
+import {boundWorldGroup,groupOriginMapTile,projectionAllowsFilth} from './world-map-context.ts';
 import {GROUP_FREIGHT_SCHEMA,groupItemMassGrams} from './group-freight.ts';
 import {validGroupFreightShape} from './group-freight-save.ts';
 /** Raw owner/phase guard. No projected World, registration or mutation. */
@@ -81,7 +82,7 @@ export function validateGroupStateWithPlanet(world:World,version:number,context:
   if(!planet)return ['Invalid group planet authority.'];
   return validateGroupOwners(world,version,planet);
 }
-function validateGroupOwners(world:World,version:number,planet:PlanetState):string[] {
+function validateGroupOwners(world:World,version:number,planet:PlanetState,referencesOnly=false):string[] {
   const raw=world as unknown as Record<string,unknown>,errors:string[]=[];
   const fail=(message:string)=>errors.push(message);
   const group=raw.group,losses=raw.groupLosses;
@@ -113,7 +114,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState):stri
     const shape=validatePawnRecordShape(v,world,version,clock);
     if(shape.length){errors.push(...shape.map(e=>`Group pawn ${v.id}: ${e}`));return false;}
     if(!validMentalShape(v.mental,version,clock,world.width,world.height)||validateRecreationRecordShape(v,version,clock).length
-      ||v.filthFeet!==undefined&&(!world.filth||!validFilthFeet(v.filthFeet))
+      ||v.filthFeet!==undefined&&(!world.filth&&!projectionAllowsFilth(world)||!validFilthFeet(v.filthFeet))
       ||v.deniedJoining!==undefined&&(!dense(v.deniedJoining,1,5)||!v.deniedJoining.every((at,i,all)=>int(at,clock+1,clock+6*TICKS_PER_DAY)&&(i===0||at>(all[i-1] as number)))))return false;
     const p=v as unknown as Pawn;
     const assigned=p.apparelPolicyId!==undefined||p.apparelAutomation!==undefined||p.nextApparelCheckAt!==undefined;
@@ -179,7 +180,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState):stri
     const freight=freighted&&object(group)?group.freight as Record<string,number>:undefined;
     const provisions=provisioned&&object(group)?group.provisions as Record<string,number>:undefined;
     if(originPresent&&(version<240||!object(group)||!place(group.originTile)||group.originTile===planet.homeTile
-      ||group.originTile!==(world.expeditionSite?.tile??world.secondarySite?.tile??world.campaignMap?.secondaryTile)))return ['Invalid group origin map.'];
+      ||group.originTile!==(version>=255&&boundWorldGroup(world)?groupOriginMapTile(world):world.expeditionSite?.tile??world.secondarySite?.tile??(world.campaignMap?.revision===undefined?world.campaignMap?.secondaryTile:undefined))))return ['Invalid group origin map.'];
     if(!object(group)||!groupId(group.id)||!int(group.startedAt,planet.adoptedAt,world.tick)||!place(group.destination)||!ledger(group.ledger))
       return ['Invalid group identity or ledger.'];
     if(oneOf(group.phase,['gathering','loading','leaving'])){
@@ -188,7 +189,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState):stri
         ||!dense(group.exits,(group.memberIds as number[]).length,(group.memberIds as number[]).length)
         ||!dense(group.manifest,0,512)||!int(group.cursor,0,group.manifest.length))return ['Invalid group formation shape.'];
       const members=group.memberIds as number[];
-      if(members.some(id=>!localById.has(id)))return ['Missing local formation member.'];
+      if(members.some(id=>!localById.has(id)&&(!referencesOnly||!world.campaignPeople?.some(p=>p.id===id&&p.status==='away'))))return ['Missing local formation member.'];
       const roster=new Set<number>(),cells=new Set<string>();
       for(const meeting of group.meeting){
         if(!object(meeting)||!keys(meeting,['pawnId','cell'])||!members.includes(meeting.pawnId as number)||roster.has(meeting.pawnId as number)||!point(meeting.cell))return ['Invalid group meeting roster.'];
@@ -215,7 +216,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState):stri
           const key=line.item==='survival-meal'?'food':line.item as 'silver'|'cloth'|'muffalo-wool'|'pemmican'|'wood'|'steel';loaded[key]+=line.quantity;
         }else{const old=future.get(line.pileId)??{item:line.item as string,quantity:0};if(old.item!==line.item)return ['Conflicting group source item.'];old.quantity+=line.quantity;future.set(line.pileId,old);}
       }
-      for(const [id,line] of future){const pile=world.piles.find(p=>p.id===id);if(!pile||pile.owner.type!=='ground'||pile.item!==line.item||pile.foodPoison||pile.quantity<line.quantity)return ['Invalid future group source ownership.'];}
+      if(!referencesOnly)for(const [id,line] of future){const pile=world.piles.find(p=>p.id===id);if(!pile||pile.owner.type!=='ground'||pile.item!==line.item||pile.foodPoison||pile.quantity<line.quantity)return ['Invalid future group source ownership.'];}
       if(provisions&&(provisions.pemmicanLoadedUnits!==loaded.pemmican||provisions.pemmicanConsumedUnits!==0||provisions.pemmicanSpoiledUnits!==0))return ['Invalid formation pemmican contact ledger.'];
       if(freight&&(freight.woodLoaded!==loaded.wood||freight.steelLoaded!==loaded.steel))return ['Invalid formation freight contact ledger.'];
       const l=group.ledger as unknown as GroupState['ledger'];
@@ -225,11 +226,11 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState):stri
     }else if(group.phase==='unloading'){
       if(!keys(group,[...commonKeys,'memberIds','pendingPileIds'])||!ids(group.memberIds)||!ids(group.pendingPileIds,1,256*GROUP_MAX_MEMBERS))return ['Invalid group unloading shape.'];
       const members=group.memberIds as number[];
-      if(members.some(id=>!localById.has(id))||(group.pendingPileIds as number[]).some(id=>!world.piles.some(p=>p.id===id&&p.owner.type==='inventory'&&members.includes(p.owner.pawnId))))return ['Invalid group unloading possession.'];
+      if(!referencesOnly&&(members.some(id=>!localById.has(id))||(group.pendingPileIds as number[]).some(id=>!world.piles.some(p=>p.id===id&&p.owner.type==='inventory'&&members.includes(p.owner.pawnId)))))return ['Invalid group unloading possession.'];
     }else if(oneOf(group.phase,['travelling','at-site','awaiting-entry'])){
       if(!keys(group,[...commonKeys,...AWAY])||!dense(group.members,1,GROUP_MAX_MEMBERS)||!baseline(group.baseline,provisioned,freighted)||!point(group.entry)
         ||!int(group.departedAt,group.startedAt as number,world.tick)||group.lastPersonalTick!==world.tick||!place(group.tile)
-        ||typeof group.paused!=='boolean'||!dense(group.route,1,162))return ['Invalid away group shape or clock.'];
+        ||typeof group.paused!=='boolean'||!dense(group.route,1,version>=255?planet.tiles.length:162))return ['Invalid away group shape or clock.'];
       for(const p of group.members)if(!person(p,world.tick,false))return ['Invalid away group person.',...errors];
       const people=new Set((group.members as Pawn[]).map(p=>p.id));
       if(!piles(group.items,people,world.tick,32768-world.piles.length,freighted))return ['Invalid away group possessions.',...errors];
@@ -267,3 +268,6 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState):stri
   }catch{fail('Invalid group human namespace.');}
   return errors;
 }
+
+/** Batch all literal owner contexts after ONE immutable planet witness check. */
+export function validateGroupContextsWithPlanet(authority:World,views:readonly {world:World;referencesOnly?:boolean}[],version:number,context?:PlanetValidationContext):string[] {const planet=context?validatedPlanetFor(context,authority,version):validatePlanet(authority.planet,authority,version).length?undefined:authority.planet;if(!planet)return views.some(v=>v.world.group||v.world.groupLosses?.length)?['Invalid group planet authority.']:[];const errors:string[]=[];for(const v of views){if(v.world.planet!==authority.planet||v.world.tick!==authority.tick||v.world.nextId!==authority.nextId||v.world.schemaVersion!==authority.schemaVersion)return ['Group metadata disagrees with campaign authority.'];errors.push(...validateGroupOwners(v.world,version,planet,v.referencesOnly));}return errors;}

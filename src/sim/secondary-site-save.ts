@@ -1,3 +1,4 @@
+import {registeredMapId,boundWorldGroup} from './world-map-context.ts';
 import { CAMPAIGN_FIELDS } from './secondary-site-state.ts';
 import { campaignAuthority,isSecondaryContext,secondaryValidationContext } from './secondary-site-context.ts';
 import { isBiomeId } from './biome-flora.ts';
@@ -16,6 +17,8 @@ const point=(v:unknown,w:World)=>object(v)&&exact(v,['x','z'])&&integer(v.x,0,w.
  * nested map can become a context or smuggle future fields through migration. */
 export function validSecondarySiteShape(raw:unknown,version:number):boolean {
   if(!object(raw))return false;
+  if(version<255&&(Object.hasOwn(raw,'worldMaps')||Object.hasOwn(raw,'worldGroups')))return false;
+  if(version>=255&&(registeredMapId(raw as unknown as World)!==undefined||boundWorldGroup(raw as unknown as World)))return !Object.hasOwn(raw,'secondarySite')&&!Object.hasOwn(raw,'campaignMap')&&validExpeditionOrigin(raw.expeditionSite,raw as unknown as World,version);
   if(['campaignPeople','campaignMap'].some(k=>Object.hasOwn(raw,k)))return false;
   if(version<240)return !Object.hasOwn(raw,'secondarySite')&&!Object.hasOwn(raw,'expeditionSite');
   if(isSecondaryContext(raw as unknown as World))return !Object.hasOwn(raw,'secondarySite')&&validExpeditionOrigin(raw.expeditionSite,raw as unknown as World,version);
@@ -51,7 +54,7 @@ export function validSecondarySiteShape(raw:unknown,version:number):boolean {
 
 export function validExpeditionOrigin(value:unknown,w:Pick<World,'tick'|'planet'>,version:number):boolean {
   if(value===undefined)return true;
-  if(version<240||!object(value)||!exact(value,['tile','createdAt','calendarOffset'])||!integer(value.tile,0,161)||!integer(value.createdAt,0,w.tick)||!w.planet||!Array.isArray(w.planet.tiles))return false;
+  if(version<240||!object(value)||!exact(value,['tile','createdAt','calendarOffset'])||!integer(value.tile,0,version>=255?(w.planet?.tiles.length??0)-1:161)||!integer(value.createdAt,0,w.tick)||!w.planet||!Array.isArray(w.planet.tiles))return false;
   const t=w.planet.tiles[value.tile],home=w.planet.tiles[w.planet.homeTile];
   return !!t&&!!home&&t.biome!=='ocean'&&t.hilliness!=='mountainous'&&value.tile!==w.planet.homeTile&&value.tile!==w.planet.civilianTile
     &&value.calendarOffset===(longitudeOffsetCore(tileCoordinates(t).longitude)-longitudeOffsetCore(tileCoordinates(home).longitude))/10;
@@ -59,7 +62,7 @@ export function validExpeditionOrigin(value:unknown,w:Pick<World,'tick'|'planet'
 
 // Explicit map namespace: adding another World domain requires a conscious
 // partition decision. A future field is not accepted because World ignores it.
-const LOCAL_FIELDS=new Set([
+export const LOCAL_FIELDS=new Set([
   'expeditionSite','autoSlaughter','allowedAreas','orbital','deepResources','group','groupLosses','mechSalvage','mechanoids','rainElectrical',
   'commercialTrip','civilianPost','quests','scout','breakdown','economy','apparelWear','filth','visitors','trade','climate','wind','weather','fires',
   'prisonDepartures','site','scenario','startingArrival','hunting','butchery','flora','wildlife','heatwaves','raids','fluIncidents','miscIncidents',

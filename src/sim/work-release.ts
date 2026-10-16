@@ -166,7 +166,7 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
 }
 /** Release task/service claims independently of ownership. Only involuntary or tactical
  * interruption may use this while an object is still carried. */
-export function releaseAssignments(world:World,pawn:Pawn):void {
+export function releaseAssignments(world:World,pawn:Pawn,despawning=false):void {
   releaseAllowedAreaReturn(pawn);
   releaseAnimalRescue(world,pawn);
   if(pawn.animalHandling?.kind==='lead'){
@@ -176,9 +176,9 @@ export function releaseAssignments(world:World,pawn:Pawn):void {
   finishRoomRest(world,pawn);
   if((pawn.recreation.task?.activity==='horseshoes'||pawn.recreation.task?.activity==='chess'||pawn.recreation.task?.activity==='watch-television')&&pawn.recreation.task.phase==='active'&&pawn.recreation.task.elapsed>0)rememberRoomUse(world,pawn,'recreation');
   cancelAutomaticCombat(pawn);cancelHunting(pawn);
-  if(pawn.need?.kind==='sleep'&&pawn.need.medical&&pawn.health&&!pawn.health.death&&pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
+  if(!despawning&&pawn.need?.kind==='sleep'&&pawn.need.medical&&pawn.health&&!pawn.health.death&&pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
   releaseSurgeryState(world,pawn);
-  delete pawn.orbitalTrade;delete pawn.deepWork;delete pawn.animalHandling;delete pawn.animalCare;delete pawn.animalFeed;delete pawn.burial;delete pawn.cleaning;delete pawn.trade;delete pawn.firefighting;delete pawn.ward;delete pawn.heatRefuge;delete pawn.research;releaseRescue(world,pawn);delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
+  delete pawn.orbitalTrade;delete pawn.deepWork;delete pawn.animalHandling;delete pawn.animalCare;delete pawn.animalFeed;delete pawn.burial;delete pawn.cleaning;delete pawn.trade;delete pawn.firefighting;delete pawn.ward;delete pawn.heatRefuge;delete pawn.research;releaseRescue(world,pawn,despawning);delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
   const job=world.jobs.find(j=>j.id===pawn.jobId);
   if(job?.reservedBy===pawn.id){if(job.tree?.kind==='replant'){job.tree.phase='pickup';job.tree.carryPileId=null;job.tree.workCore=0;delete job.tree.durationCore;delete job.clearance;resetWork(job);}delete job.installationWork;delete job.clearance;delete job.pickTicks;job.reservedBy=null;job.status='pending';if(job.repair)delete job.repair.warmed;if(job.kind==='remove-bridge'||job.kind==='remove-floor'||job.kind==='flick'||job.kind==='repair'||job.kind==='fix-breakdown'||job.furniture||job.kind==='mine'||job.kind==='sow'||job.kind==='deconstruct'||isRoofJob(job))resetWork(job);}
   delete pawn.transitExit;

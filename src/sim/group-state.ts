@@ -1,3 +1,4 @@
+import {pawnWorldGroup} from './world-map-context.ts';
 import type { Cell, MaterialPile, Pawn, World } from './types.ts';
 import type { CommercialBuyLine, CommercialTextileTotals } from './commercial-state.ts';
 
@@ -107,16 +108,16 @@ export interface GroupLoss {
 }
 export type GroupCommand =
   | { type: 'planet-adopt' }
-  | { type: 'group-start'; memberIds: number[]; destination: number; sources: CommercialBuyLine[] }
-  | { type: 'group-cancel' }
-  | { type: 'group-pause'; paused: boolean }
-  | { type: 'group-route'; destination: number }
-  | { type: 'group-buy'; lines: CommercialBuyLine[]; quote: string }
-  | { type: 'group-sell'; lines: CommercialBuyLine[]; quote: string }
-  | { type: 'group-unload'; memberIds: number[] };
+  | { type: 'group-start'; originMapId?:number; memberIds: number[]; destination: number; sources: CommercialBuyLine[] }
+  | { type: 'group-cancel'; groupId?:number }
+  | { type: 'group-pause'; groupId?:number; paused: boolean }
+  | { type: 'group-route'; groupId?:number; destination: number }
+  | { type: 'group-buy'; groupId?:number; lines: CommercialBuyLine[]; quote: string }
+  | { type: 'group-sell'; groupId?:number; lines: CommercialBuyLine[]; quote: string }
+  | { type: 'group-unload'; originMapId?:number; groupId?:number; memberIds: number[] };
 
 export const GROUP_MAX_MEMBERS = 8;
 export const GROUP_MAX_LOSSES = 64;
 
 /** A reference held by an actual on-map group intent, after shape validation. */
-export const groupOnMapMember=(world:World,id:number):boolean=>!!world.group&&'memberIds' in world.group&&world.group.memberIds.includes(id);
+export const groupOnMapMember=(world:World,id:number):boolean=>world.worldMaps||world.campaignMap?.revision===2?!!pawnWorldGroup(world,id):!!world.group&&'memberIds' in world.group&&world.group.memberIds.includes(id);

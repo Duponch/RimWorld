@@ -1,3 +1,10 @@
+import {withinSaveTextLimit} from './save-text-limit.ts';
+import {validateCampaignSharedFields} from './campaign-shared-save.ts';
+import {emptyCampaignOwner} from './world-map-owners.ts';
+import {brandCampaignContext} from './world-map-context.ts';
+import {validWorldMapHistorical,validateRegisteredCampaign} from './world-map-save.ts';
+import {migrateWorldRegistry,hasLoadedRoot} from './world-map-context.ts';
+import type {CampaignState} from './world-map-state.ts';
 import {isWetTerrain} from './shallow-water.ts';
 import {validGroupFreightHistoricalTransport} from './group-freight-save.ts';
 import {validDeteriorationHistoricalTransport,validDeteriorationTransport} from './deterioration-save.ts';
@@ -218,10 +225,13 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateCampaignSchema(input,SCHEMA_VERSION);
 }
+function validateSharedCampaign(root:CampaignState):string[] {const view=emptyCampaignOwner(root);brandCampaignContext(view,root);return validateCampaignSharedFields(view);}
 /** Validate BOTH original map namespaces before a historical schema changes.
  * The secondary view forwards the old campaign schema without migrating it. */
 function validateCampaignSchema(input:unknown,version:Parameters<typeof validateSchema>[1]):string[] {
   try{
+    if(!validWorldMapHistorical(input,version))return ['Historical save contains future registry.'];
+    if(version>=255)return validateRegisteredCampaign(input,(local,ids)=>validateSchema(local,version,true,ids),validateSharedCampaign);
     if(!validSecondarySiteShape(input,version))return ['Invalid or future second-site authority.'];
     const homeIds=new Set<number>(),errors=validateSchema(input,version,true,homeIds);
     if(errors.length||!record(input))return errors;
@@ -232,7 +242,7 @@ function validateCampaignSchema(input:unknown,version:Parameters<typeof validate
     return errors;
   }catch{return ['Invalid second-site records or owner namespace.'];}
 }
-function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250 | 251 | 252 | 253 | 254, relationshipContext = true,registeredIds?:Set<number>): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250 | 251 | 252 | 253 | 254 | 255, relationshipContext = true,registeredIds?:Set<number>): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(raw)) return ['World must be an object.'];
@@ -290,7 +300,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if (!stock(input.stock)) errors.push('Invalid derived stock.');
   const coord = (item: Record<string, unknown>): boolean => integer(item.x, 0, (input.width as number) - 1) && integer(item.z, 0, (input.height as number) - 1);
   const ids = new Set<number>();
-  errors.push(...validateCivilianPost(commercialWorld,version,ids));
+  errors.push(...validateCivilianPost(commercialWorld,version,commercialWorld.worldMaps?undefined:ids));
   if(errors.length)return errors;
   for (const key of ['pawns', 'resources', 'structures', 'jobs', 'piles', 'stockpiles'] as const) {
     const items = input[key] as unknown[];
@@ -376,7 +386,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if(groupErrors.length)return groupErrors;
   const planetErrors=validatePlanet(commercialWorld.planet,commercialWorld,version);
   if(planetErrors.length)return planetErrors;
-  const knownPeople=(commercialWorld.group||commercialWorld.groupLosses?.length||commercialWorld.secondarySite||isSecondaryContext(commercialWorld))?captureHumanOwners(commercialWorld).people:undefined;
+  const knownPeople=(commercialWorld.worldMaps||commercialWorld.group||commercialWorld.groupLosses?.length||commercialWorld.secondarySite||isSecondaryContext(commercialWorld))?captureHumanOwners(commercialWorld).people:undefined;
   const world = input as unknown as World;
   errors.push(...validateFlooring(world,version),...validateFilth(world,version,ids),...validateBurials(world,version,ids));
   if(errors.length)return errors;
@@ -662,13 +672,15 @@ function validateV90Persistence(world:World,version:number):string[] {
   return errors;
 }
 
-export function serializeWorld(world: World): string {
-  const errors = validateWorld(world); if (errors.length) throw new Error(`Cannot save invalid world: ${errors.join(' ')}${errors.includes('Missing travel segment for movement delay.')?' Travel diagnostic: '+JSON.stringify(world.pawns.map(p=>({id:p.id,cooldown:p.moveCooldown,motion:p.motion}))):''}`);
-  const serialized = JSON.stringify(world); if (serialized.length > 16_000_000) throw new Error('Save exceeds supported size.'); return serialized;
+export function serializeWorld(world: World): string {return serializeCampaign(world);}
+export function serializeCampaign(world:CampaignState):string {
+  const errors = validateWorld(world); if (errors.length) throw new Error(`Cannot save invalid world: ${errors.join(' ')}${errors.includes('Missing travel segment for movement delay.')?' Travel diagnostic: '+JSON.stringify((world as World).pawns.map(p=>({id:p.id,cooldown:p.moveCooldown,motion:p.motion}))):''}`);
+  const serialized = JSON.stringify(world); if (!withinSaveTextLimit(serialized)) throw new Error('Save exceeds supported size.'); return serialized;
 }
-export function deserializeWorld(serialized: string): World {
-  if (typeof serialized !== 'string' || serialized.length > 16_000_000) throw new Error('Invalid or oversized save.');
+export function deserializeCampaign(serialized: string): CampaignState {
+  if (typeof serialized !== 'string' || !withinSaveTextLimit(serialized)) throw new Error('Invalid or oversized save.');
   let input: unknown = JSON.parse(serialized);
+  if(record(input)&&Number.isInteger(input.schemaVersion)&&!validWorldMapHistorical(input,Number(input.schemaVersion)))throw new Error('Invalid historical map registry.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validGroupFreightHistoricalTransport(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future collective freight.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validDeteriorationHistoricalTransport(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future deterioration state.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validBurnApparelHistoricalTransport(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future apparel-burning recipe.');
@@ -1470,13 +1482,15 @@ export function deserializeWorld(serialized: string): World {
     const old=validateCampaignSchema(input,253);if(old.length)throw new Error('Invalid version253 save: '+old.join(' '));
     input.schemaVersion=254; // Both maps remain literal: no shallow water, bridge, person, stock, ID or draw generated.
   }
+  if(record(input)&&input.schemaVersion===254){const old=validateCampaignSchema(input,254);if(old.length)throw new Error('Invalid version254 save: '+old.join(' '));input.schemaVersion=255;migrateWorldRegistry(input as unknown as World);}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;
-  consolidateLooseRocks(world);
+  if(hasLoadedRoot(world))consolidateLooseRocks(world);
   const normalizedErrors = validateWorld(world);
   if (normalizedErrors.length) throw new Error(`Invalid consolidated save: ${normalizedErrors.join(' ')}`);
   return world;
 }
+export function deserializeWorld(serialized:string):World {const value=deserializeCampaign(serialized);if(!hasLoadedRoot(value))throw new Error('Campaign has no local map; use deserializeCampaign.');return value;}
 /** Deterministic diagnostic fingerprint, not a cryptographic digest. */
 export function hashWorld(world: World): string {
   const serialized = JSON.stringify(world); let hash = 0x811c9dc5;

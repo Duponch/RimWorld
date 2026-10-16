@@ -1,4 +1,9 @@
 /// <reference lib="webworker" />
+import {configureSettlementLimit,validSettlementLimit} from '../sim/world-map-options';
+import type {SettlementLimit,CampaignState} from '../sim/world-map-state';
+import {selectedRegisteredMap} from '../sim/world-map-context';
+import {campaignOnlySummary} from '../sim/world-map-presentation';
+import {deserializeCampaign,serializeCampaign} from '../sim/serialization';
 import { UrgentThreatObserver, validThreatPauseMode, type ThreatPauseMode } from './urgent-threats';
 import {selectedMap} from '../sim/secondary-site-context';
 import {campaignPresentation} from '../sim/secondary-site-presentation';
@@ -15,7 +20,8 @@ import { SnapshotEncoder } from './snapshots';
 import { AudioCueRecorder } from './audio-cues';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
-let world: World | undefined;
+let world: CampaignState | undefined;
+let maxSettlements:SettlementLimit=1;
 let speed = 1;
 let threatPauseMode: ThreatPauseMode = 'major';
 const urgentThreats = new UrgentThreatObserver();
@@ -28,8 +34,9 @@ const snapshots = new SnapshotEncoder({structureDelta:true,minimumStructures:100
 const motion = new MotionRecorder();
 let presentationChanges=new PresentationChanges();
 let observedWorld:World|undefined;
-function visibleWorld():World {
-  const current=campaignPresentation(world!);
+function visibleWorld():World|undefined {
+  if(world?.worldMaps&&!selectedRegisteredMap(world)){observedWorld=undefined;return;}
+  const current=campaignPresentation(world! as World);
   if(current!==observedWorld){motion.reset();audioCues.reset();presentationChanges=new PresentationChanges();observedWorld=current;}
   return current;
 }
@@ -39,7 +46,8 @@ const publishCapturedTick = (checkpoint = false) => {
   let published: { epoch: number; revision: number } | undefined;
   if (world) {
     const cues=audioCues.drain();
-    const packet = snapshots.encode(visibleWorld(), stepMs, speed, checkpoint);
+    const visible=visibleWorld();if(!visible){const header=snapshots.campaignHeader(checkpoint);send({type:'campaign-only',...header,stepMs,speed,summary:campaignOnlySummary(world),urgentThreats:urgentThreats.snapshot()});lastPublishedTick=world.tick;return header;}
+    const packet = snapshots.encode(visible, stepMs, speed, checkpoint);
     send({...packet, urgentThreats: urgentThreats.snapshot(), motion:motion.snapshot(),...cues.length?{audioCues:cues}:{}});
     published = { epoch: packet.epoch, revision: packet.revision };
   }
@@ -47,7 +55,7 @@ const publishCapturedTick = (checkpoint = false) => {
   return published;
 };
 const publish = (checkpoint = false) => {
-  if (world) {urgentThreats.prepareMaps(world);const visible=visibleWorld();presentationChanges.capture(visible);motion.capture(visible);audioCues.capture(visible);}
+  if (world) {urgentThreats.prepareMaps(world);const visible=visibleWorld();if(visible){presentationChanges.capture(visible);motion.capture(visible);audioCues.capture(visible);}}
   return publishCapturedTick(checkpoint);
 };
 
@@ -66,14 +74,16 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
   try {
     let data: string | undefined;
     if (fault && request.type !== 'init' && request.type !== 'load') throw new Error(fault.reason);
-    if (request.type === 'threat-pause-mode') {
+    if(request.type==='settlement-limit'){if(!validSettlementLimit(request.maxSettlements))throw Error('Plafond de colonies invalide.');maxSettlements=request.maxSettlements;if(world?.worldMaps)configureSettlementLimit(world,maxSettlements);
+    }else if (request.type === 'threat-pause-mode') {
       if (!validThreatPauseMode(request.mode)) throw new Error('Mode de pause invalide.');
       threatPauseMode = request.mode;
     } else if (request.type === 'init') {
       if (request.threatPauseMode !== undefined && !validThreatPauseMode(request.threatPauseMode)) throw new Error('Mode de pause invalide.');
+      if(request.maxSettlements!==undefined&&!validSettlementLimit(request.maxSettlements))throw Error('Plafond de colonies invalide.');
       if (request.size !== 32 && !(MAP_SIZE_PRESETS as readonly number[]).includes(request.size)) throw new Error('Taille de carte invalide.');
       const created=createScenarioWorld(request.seed, request.size, request.scenario,request.site,request.startingParty,request.startingWorld,request.surface);
-      world=created;
+      maxSettlements=request.maxSettlements??maxSettlements;configureSettlementLimit(created,maxSettlements);world=created;
       adoptedReplacement = true;
       threatPauseMode = request.threatPauseMode ?? threatPauseMode;
       urgentThreats.bootstrap(world);
@@ -86,10 +96,11 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
       if (request.threatPauseMode !== undefined && !validThreatPauseMode(request.threatPauseMode)) throw new Error('Mode de pause invalide.');
       // A cold load needs no temporary colony. Validate completely before the
       // publication, preserving an existing world and clock on refusal.
-      let restored: World;
-      try { restored = deserializeWorld(request.data); }
+      if(request.maxSettlements!==undefined&&!validSettlementLimit(request.maxSettlements))throw Error('Plafond de colonies invalide.');
+      let restored: CampaignState;
+      try { restored = deserializeCampaign(request.data); }
       catch { throw new Error('Cette sauvegarde est illisible ou incompatible avec cette version. La colonie actuelle et vos sauvegardes sont conservées.'); }
-      world = restored; adoptedReplacement = true; speed = 0; motion.reset();
+      maxSettlements=request.maxSettlements??maxSettlements;configureSettlementLimit(restored,maxSettlements);world = restored; adoptedReplacement = true; speed = 0; motion.reset();
       threatPauseMode = request.threatPauseMode ?? threatPauseMode;
       urgentThreats.bootstrap(world);
       fault = undefined;
@@ -103,14 +114,14 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
     } else {
       if (!world) throw new Error('La simulation ne répond pas encore.');
       if(request.type==='order-options') {
-        data=JSON.stringify(queryOrderOptions(selectedMap(world),request.pawnId,request,request.queue));
+        data=JSON.stringify(queryOrderOptions(selectedMap(world as World),request.pawnId,request,request.queue));
       } else if (request.type === 'command') {
         mutating = true;
-        const result = applyCommand(world, request.command);
+        const result = applyCommand(world as World, request.command);
         if (!result.ok) { mutating = false; throw new Error(result.reason ?? 'Ordre refusé.'); }
         if (result.affected !== undefined) data = JSON.stringify({ affected: result.affected, skipped: result.skipped });
       } else if (request.type === 'save') {
-        data = serializeWorld(world);
+        data = serializeCampaign(world);
       }
     }
     const checkpoint = request.type === 'init' || request.type === 'load' || request.type === 'resync';
@@ -140,9 +151,8 @@ function advanceSimulation(now:number):boolean {
       const started=performance.now();stepWorld(world);simulationMs+=performance.now()-started;stepMs=simulationMs/(i+1);
       const paused = urgentThreats.capture(world, threatPauseMode);
       if (paused) { speed = 0; clock.reset(now); }
-      const visible=visibleWorld();motion.capture(visible);
-      audioCues.capture(visible);
-      const changed = presentationChanges.capture(visible);
+      const visible=visibleWorld();if(visible){motion.capture(visible);audioCues.capture(visible);}
+      const changed = visible?presentationChanges.capture(visible):false;
       if (changed || paused) publishCapturedTick();
       if (paused) break;
     }

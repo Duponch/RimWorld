@@ -1,3 +1,8 @@
+import {registeredMapPresentation} from '../sim/world-map-presentation.ts';
+import type {CampaignOnlyMessage} from './protocol';
+import {validWorldMapHistorical} from '../sim/world-map-save.ts';
+import {validCampaignSummary,registerProjectedGroups} from '../sim/world-map-projection-save.ts';
+import {groupWorld} from '../sim/world-map-authority.ts';
 import {isWetTerrain} from '../sim/shallow-water.ts';
 import {validGroupFreightHistoricalTransport} from '../sim/group-freight-save.ts';
 import {validDeteriorationHistoricalTransport,validDeteriorationTransport} from '../sim/deterioration-save.ts';
@@ -710,6 +715,8 @@ export class SnapshotEncoder<SparseStructures extends boolean = false> {
   private readonly structureDeltaRequested:boolean;
   private readonly minimumStructures:number;
   private structureDelta=false;
+  private campaignOnly=false;
+  campaignHeader(checkpoint=false):{epoch:number;revision:number} {if(!this.campaignOnly||checkpoint){this.epoch++;this.revision=0;}this.campaignOnly=true;this.source=undefined;this.tiles=new TileSnapshotCache();this.resources.clear();this.piles.clear();this.structures.clear();this.orderedResources=[];this.orderedPiles=[];this.orderedStructures=[];return {epoch:this.epoch,revision:++this.revision};}
   constructor(options:{structureDelta?:SparseStructures;minimumStructures?:number} = {}) {
     const minimum=options.minimumStructures??0;
     if(!Number.isSafeInteger(minimum)||minimum<0)throw new RangeError('minimumStructures must be a nonnegative safe integer.');
@@ -719,6 +726,8 @@ export class SnapshotEncoder<SparseStructures extends boolean = false> {
 
   /** postMessage must follow synchronously: it owns cloning the returned dynamic state. */
   encode(world: World, stepMs: number, speed: number, checkpoint = false): SnapshotMessage<SparseStructures> {
+    if(world.worldMaps){const selected=registeredMapPresentation(world);if(!selected)throw Error('No selected map; publish campaignHeader and campaignOnlySummary.');world=selected;}
+    this.campaignOnly=false;
     const replacement = world !== this.source || world.width !== this.width || world.height !== this.height;
     if (replacement) { this.epoch++; this.revision = 0; }
     const baseRevision = this.revision++;
@@ -909,6 +918,16 @@ export class SnapshotDecoder {
   protected validateHumanSleepingSpotTransport(next:World,_structureReuse?:OwnedGeometryReuseWitness):boolean {
     return validHumanSleepingSpotTransport(next,next.schemaVersion);
   }
+  adoptCampaignOnly(packet:CampaignOnlyMessage):{status:'applied';replaced:boolean}|{status:'stale'}|{status:'resync';reason:string} {
+    const refuse=()=>({status:'resync' as const,reason:'Campagne sans carte illisible.'});
+    if(!Number.isSafeInteger(packet.epoch)||packet.epoch<1||!Number.isSafeInteger(packet.revision)||packet.revision<1||!Number.isFinite(packet.stepMs)||packet.stepMs<0||![0,1,3,6].includes(packet.speed))return refuse();
+    if(packet.epoch<this.epoch||packet.epoch===this.epoch&&packet.revision<=this.revision)return {status:'stale'};
+    if(!validCampaignSummary(packet.summary))return refuse();const summary=packet.summary,view=groupWorld(summary,null);if(!view)return refuse();
+    const proof=this.planetValidation.prepare(view,view.schemaVersion,packet.epoch);if(!proof.ok)return refuse();
+    const ids=new Set<number>();
+    if(registerProjectedGroups(view,ids,proof.context,summary).length||!this.planetValidation.commit(proof))return refuse();
+    const replaced=packet.epoch!==this.epoch;this.current=undefined;this.epoch=packet.epoch;this.revision=packet.revision;this.resourceSlots.clear();this.pileSlots.clear();this.expiredTreeSources=undefined;this.expiredTreeWrappers=undefined;return {status:'applied',replaced};
+  }
   adopt(packet: SnapshotMessage<true>): SnapshotAdoption {
     const resync = (reason: string): SnapshotAdoption => ({ status: 'resync', reason });
     if (!Number.isSafeInteger(packet.epoch) || packet.epoch < 1
@@ -916,6 +935,7 @@ export class SnapshotDecoder {
     if (packet.epoch < this.epoch || (packet.epoch === this.epoch && packet.revision <= this.revision)) return { status: 'stale' };
     if (!Number.isSafeInteger(packet.world.schemaVersion) || packet.world.schemaVersion < 1
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
+    if(!validWorldMapHistorical(packet.world,packet.world.schemaVersion))return resync('Registre de cartes futur.');
     if(!validDeteriorationHistoricalTransport(packet,packet.world.schemaVersion))return resync('État de détérioration futur.');
     if(!validBurnApparelHistoricalTransport(packet,packet.world.schemaVersion))return resync('Recette de destruction de vêtement future.');
     if(!validGroupProvisionsHistoricalTransport(packet,packet.world.schemaVersion))return resync('Provisions mixtes de groupe futures.');
@@ -1354,6 +1374,7 @@ export class SnapshotDecoder {
       if(validateMechanoids(next,next.schemaVersion,ids).length)return resync('Identité, cible ou déplacement mécanique invalide.');
       planetCheck=this.planetValidation.prepare(next,next.schemaVersion,message.epoch);
       if(!planetCheck.ok||validateGroupStateWithPlanet(next,next.schemaVersion,planetCheck.context).length)return resync('Planète, groupe ou pertes incohérents.');
+      if(registerProjectedGroups(next,ids,planetCheck.context).length)return resync('Registre projeté de caravanes incohérent.');
       if(registerGroupThingIds(next,ids).length)return resync('Une identité du groupe possède plusieurs propriétaires.');
       if(registerStartingArrivalThingIds(next,ids).length)return resync('Une identité des capsules initiales possède plusieurs propriétaires.');
       if(validateShooting(next,next.schemaVersion,ids).length)return resync('Référence ou autorité de tir humaine invalide.');

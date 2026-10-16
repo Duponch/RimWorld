@@ -1,3 +1,5 @@
+import type {MapIncident,CampaignSummary} from '../sim/world-map-state';
+import {mapDisplayName} from './map-registry-adapter';
 import {alertManhunter,alertDownedColonist} from '../sim/status-alert-rules';
 import { isColonist,activeThreat } from '../sim/affiliation';
 import { isBedKind } from '../sim/bed-kinds';
@@ -25,7 +27,10 @@ import { setTooltip,type TooltipContent } from './tooltip';
 import {readResearchReadiness} from './research-readiness';
 
 export interface NotificationContext { panel:Exclude<Panel,null>;category?:ArchitectCategory;tool?:'stockpile';worldTab?:'group'|'individual'; }
-export interface StatusAlert { key:string;text:string;targets:NotificationTarget[];context?:NotificationContext;tab?:'health'|'needs'|'prisoner';tooltip?:TooltipContent;campaign?:{site:'home'|'secondary';actorId:number}; }
+export interface StatusAlert { key:string;text:string;targets:NotificationTarget[];context?:NotificationContext;tab?:'health'|'needs'|'prisoner';tooltip?:TooltipContent;campaign?:({mapId:number}|{site:'home'|'secondary'})&{actorId:number}; }
+export function readCampaignMapAlerts(summary:Pick<CampaignSummary,'maps'|'incidents'>):StatusAlert[]{
+ return summary.incidents.map(incident=>{const map=summary.maps.find(map=>map.id===incident.mapId),place=map?mapDisplayName(map):`Carte ${incident.mapId}`,label=incident.kind==='raid'?'assaillant(s)':incident.kind==='mechanoid'?'mécanoïde(s)':incident.kind==='manhunter'?'animal(aux) en rage':incident.kind==='downed'?'colon(s) à terre':'visiteur(s)';return {key:`campaign:${incident.mapId}:${incident.kind}:${incident.actorId}`,text:`${place} · ${incident.count} ${label} · voir`,targets:[],campaign:{mapId:incident.mapId,actorId:incident.actorId}};});
+}
 const present=<T>(target:T|undefined):target is T=>target!==undefined;
 const people=(world:World,pawns:readonly Pawn[])=>[...pawns].sort((a,b)=>a.id-b.id).map(p=>personNotificationTarget(world,p.id)).filter(present);
 const actors=(values:readonly {id:number}[])=>[...values].sort((a,b)=>a.id-b.id).map(p=>actorNotificationTarget(p.id));
@@ -61,9 +66,12 @@ export function readAvailabilityStatusAlerts(world:World):StatusAlert[] {
  * never parsed to find an entity, a medical condition or a management panel. */
 export function readStatusAlerts(world:World,food:FoodReadability=captureFoodReadability(world)):StatusAlert[] {
   const rows:StatusAlert[]=readAvailabilityStatusAlerts(world),colonists=world.pawns.filter(isColonist),living=colonists.filter(p=>p.state!=='dead');
-  for(const incident of world.campaignMap?.incidents??[]){
-    const place=incident.site==='home'?'Foyer':'Second site',label=incident.kind==='raid'?'assaillant(s)':incident.kind==='mechanoid'?'mécanoïde(s)':incident.kind==='manhunter'?'animal(aux) en rage':incident.kind==='downed'?'colon(s) à terre':'visiteur(s)';
-    rows.push({key:`campaign:${incident.site}:${incident.kind}:${incident.actorId}`,text:`${place} · ${incident.count} ${label} hors carte · voir`,targets:[],campaign:{site:incident.site,actorId:incident.actorId}});
+  const campaignIncidents:readonly (MapIncident|{site:'home'|'secondary';kind:MapIncident['kind'];count:number;actorId:number})[]=world.campaignMap?.incidents??[];
+  for(const incident of campaignIncidents){
+    const target='mapId' in incident?{mapId:incident.mapId}:{site:incident.site},maps=world.campaignMap&&'maps' in world.campaignMap?world.campaignMap.maps:[];
+    const map='mapId' in incident?maps.find(map=>map.id===incident.mapId):undefined;
+    const place=map?mapDisplayName(map):'mapId' in incident?`Carte ${incident.mapId}`:incident.site==='home'?'Foyer':'Second site',label=incident.kind==='raid'?'assaillant(s)':incident.kind==='mechanoid'?'mécanoïde(s)':incident.kind==='manhunter'?'animal(aux) en rage':incident.kind==='downed'?'colon(s) à terre':'visiteur(s)';
+    rows.push({key:`campaign:${'mapId' in incident?incident.mapId:incident.site}:${incident.kind}:${incident.actorId}`,text:`${place} · ${incident.count} ${label} hors carte · voir`,targets:[],campaign:{...target,actorId:incident.actorId}});
   }
   const add=(key:string,text:string,targets:NotificationTarget[],context?:NotificationContext,tab?:StatusAlert['tab'])=>rows.push({key,text,targets,...context?{context}:{},...tab?{tab}:{}});
   const counted=(key:string,pawns:Pawn[],text:(count:number)=>string,tab?:StatusAlert['tab'])=>{if(pawns.length)add(key,text(pawns.length),people(world,pawns),{panel:'history'},tab);};
@@ -142,13 +150,13 @@ export interface StatusAlertsActions {
   campaign?:(target:NonNullable<StatusAlert['campaign']>)=>void;
 }
 /** Keyed nodes keep keyboard focus and the per-alert ring through tick refreshes. */
-export function createStatusAlerts(host:HTMLElement,jumps:Partial<Record<'inspect-fire'|'inspect-blight'|'inspect-threat',HTMLButtonElement>>,actions:StatusAlertsActions):{update:(world:World,food?:FoodReadability)=>void;reset:()=>void} {
+export function createStatusAlerts(host:HTMLElement,jumps:Partial<Record<'inspect-fire'|'inspect-blight'|'inspect-threat',HTMLButtonElement>>,actions:StatusAlertsActions):{update:(world:World,food?:FoodReadability)=>void;updateCampaign:(summary:Pick<CampaignSummary,'maps'|'incidents'>)=>void;reset:()=>void} {
   const cycle=new NotificationFocusCycle(),nodes=new Map<string,{node:HTMLElement;row:StatusAlert}>();
   const activate=(row:StatusAlert)=>{if(row.campaign){actions.campaign?.(row.campaign);return;}const target=cycle.next(row.key,row.targets);if(target){actions.focus(target);if(row.tab&&target.kind==='actor')actions.tab?.(row.tab);}else if(row.context)actions.context(row.context);};
   let inspection:ReturnType<typeof readInspectAlerts>={};
   for(const [id,button] of Object.entries(jumps))if(button)button.onclick=()=>{const row=inspection[id as keyof typeof inspection];if(row)activate(row);};
-  return {reset:()=>cycle.reset(),update(world,food){
-    const rows=readStatusAlerts(world,food),keys=new Set(rows.map(row=>row.key));
+  function paint(rows:StatusAlert[],nextInspection:ReturnType<typeof readInspectAlerts>={}){
+    const keys=new Set(rows.map(row=>row.key));
     for(const [key,record] of nodes)if(!keys.has(key)){record.node.remove();nodes.delete(key);}
     rows.forEach((row,index)=>{
       let record=nodes.get(row.key);if(!record){
@@ -160,7 +168,8 @@ export function createStatusAlerts(host:HTMLElement,jumps:Partial<Record<'inspec
       if(row.tooltip)setTooltip(node,row.tooltip);
       if(host.children[index]!==node)host.insertBefore(node,host.children[index]??null);
     });
-    inspection=readInspectAlerts(world);
+    inspection=nextInspection;
     for(const [id,button] of Object.entries(jumps)){if(!button)continue;const row=inspection[id as keyof typeof inspection];if(button.hidden!==!row)button.hidden=!row;if(row&&button.textContent!==row.text)button.textContent=row.text;}
-  }};
+  }
+  return {reset:()=>cycle.reset(),update:(world,food)=>paint(readStatusAlerts(world,food),readInspectAlerts(world)),updateCampaign:summary=>paint(readCampaignMapAlerts(summary))};
 }

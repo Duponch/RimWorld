@@ -1,3 +1,4 @@
+import {finalizeInitialWorldRegistry} from './world-map-context.ts';
 import {shallowWaterPatchAt} from './shallow-water-generation.ts';
 import {SHALLOW_WATER_SCHEMA_VERSION} from './shallow-water.ts';
 import {marshPatchAt} from './marsh-generation.ts';
@@ -34,5 +35,5 @@ export function generateSiteWorld(seed:number,width:number,height:number,site:Lo
   generateSiteChunks(world,site,fields.elevation);
   if(isBiomeSite(site)){generateBiomeSiteVegetation(world,site);initializeWildFlora(world,site);}
   else generateSiteVegetation(world);
-  return world;
+  finalizeInitialWorldRegistry(world);return world;
 }

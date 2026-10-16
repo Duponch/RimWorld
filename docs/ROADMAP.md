@@ -1,6 +1,6 @@
 # Plan de développement
 
-**16 octobre 2026 — audit V406, schéma 254 inchangé.** [Voyages, cartes et eau](development/multimap-audit-v406.md) : boucle existante conservée, domaine partiel face au Core ; aucune nouvelle mécanique. Priorité humaine à la consolidation multicarte/persistance/performances. V405 en attente, V404 poussé non publié ; dernière production V403/e24c5731.
+**16 octobre 2026 — schéma 255, fondations à terminer.** [Registre cartes/caravanes V407](gameplay/world-maps-v407.md) qualifié ; aucun achèvement global ni nouvelle publication acquis. Ordre humain : [planète, génération et multicarte conformes Core](development/world-foundations.md) avant tout autre contenu ; auditV406 point de départ. V405 en attente, V404 poussé non publié ; dernière productionV403/e24c5731. Arrêt et rapport final après achèvement démontré.
 
 **16 octobre 2026 — schéma 253.** [Fret collectif V401](gameplay/group-freight-v401.md) qualifié : bois/acier pris au contact et rapportés du second site ; reprise active exacte. Publié avec [CPU V400](development/sleeping-provenance-v400.md) en 65bad476, produit 5fdec2e6, 134 réponses HTTPS exactes.
 

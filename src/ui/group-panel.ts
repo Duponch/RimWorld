@@ -1,7 +1,8 @@
 /** Group travel DOM: all state and eligibility come from confirmed authority projections.
  * All eligibility, route, capacity and price decisions belong to injected
  * projections of the same confirmed snapshot as the authority. */
-import type {SecondarySiteCommand} from '../sim/secondary-site-state.ts';
+import type {WorldMapCommand,CampaignMapPresentation,CampaignSummary,MapAction} from '../sim/world-map-state.ts';
+import {mapDisplayName,groupDisplayLabel,readPlanetObjects} from './map-registry-adapter';
 import type {MaterialPile,Pawn,World} from '../sim/types.ts';
 import {TICKS_PER_DAY} from '../sim/types.ts';
 import {ITEM_DEFINITIONS} from '../sim/items.ts';
@@ -17,7 +18,7 @@ import type {GroupPanelAction,GroupActionPermission,GroupMemberChoice,GroupSourc
 import {createPlanetView,planetTileLabel} from './planet-view.ts';
 import './group-panel.css';
 
-export interface GroupPanelSnapshot {world:World;planet?:PlanetState;group?:GroupState;losses:readonly GroupLoss[]}
+export interface GroupPanelSnapshot {world:World;planet?:PlanetState;group?:GroupState;losses:readonly GroupLoss[];campaign?:CampaignMapPresentation|CampaignSummary;originMapId?:number;entryActions?:Readonly<Record<'visit'|'camp'|'settle',MapAction>>}
 export type GroupAction=GroupPanelAction;
 export type Permission=GroupActionPermission;
 export type MemberChoice=GroupMemberChoice;
@@ -39,7 +40,7 @@ export interface GroupPanelAdapters {
   previewRoute(snapshot:GroupPanelSnapshot,facts:GroupPanelFacts,destination:number):RoutePreview;
   quoteTrade(snapshot:GroupPanelSnapshot,facts:GroupPanelFacts,direction:'buy'|'sell',lines:CommercialBuyLine[]):TradePreview;
   /** Resolution/rejection must follow the authoritative correlated ack. */
-  send(command:GroupCommand|SecondarySiteCommand):Promise<unknown>;
+  send(command:GroupCommand|WorldMapCommand):Promise<unknown>;
   inspectPresentPawn?(pawnId:number):void;
 }
 export interface GroupPanel {
@@ -74,7 +75,7 @@ function stopLabel(s:GroupPanelSnapshot):string {
     case 'paused':return 'Marche suspendue par le joueur. Les besoins continuent.';
     case 'night':return 'Repos nocturne à la case actuelle.';
     case 'at-site':return s.planet&&g.tile===s.planet.civilianTile?'Au comptoir civil. Choisissez les échanges puis une route.':'Halte à la destination choisie. Les besoins continuent ; choisissez une nouvelle route.';
-    case 'awaiting-entry':return 'Entrée du foyer indisponible. Les voyageurs restent hors carte et leurs besoins continuent.';
+    case 'awaiting-entry':return 'Entrée de la carte indisponible. Les voyageurs restent hors carte et leurs besoins continuent.';
     case 'incapacity':return `Marche arrêtée : ${stop.pawnIds.map(id=>{const p=g.members.find(p=>p.id===id);if(!p)throw Error('Membre arrêté absent.');return p.name;}).join(', ')} ne peuvent pas poursuivre.`;
     case 'overload':return `Charge ${kg(stop.grams)} supérieure à la capacité ${kg(stop.capacityGrams)}.`;
     case 'unreachable':return `Destination inaccessible : ${s.planet?planetTileLabel(s.planet,stop.destination):'géographie absente'}.`;
@@ -83,13 +84,13 @@ function stopLabel(s:GroupPanelSnapshot):string {
 function phaseLabel(s:GroupPanelSnapshot):string {
   const g=s.group;if(!g)return 'Aucun groupe engagé. Choisissez les adultes, les sources au sol et la destination.';
   switch(g.phase){
-    case 'gathering':return `Rassemblement à ${g.rendezvous.x}, ${g.rendezvous.z}. Les personnes sont encore dans la colonie.`;
-    case 'loading':return `Chargement au contact : ${g.cursor}/${g.manifest.length} prises terminées. Les personnes sont encore dans la colonie.`;
+    case 'gathering':return `Rassemblement à ${g.rendezvous.x}, ${g.rendezvous.z}. Les personnes sont encore sur leur carte de départ.`;
+    case 'loading':return `Chargement au contact : ${g.cursor}/${g.manifest.length} prises terminées. Les personnes sont encore sur leur carte de départ.`;
     case 'leaving':return 'Sortie physique du groupe avec les biens réellement pris.';
     case 'travelling':return `Groupe à ${s.planet?planetTileLabel(s.planet,g.tile):'géographie absente'}.${g.segment?` Segment engagé : ${hours(g.segment.remainingCore)} restantes.`:''}`;
     case 'at-site':return s.planet&&g.tile===s.planet.civilianTile?'Groupe arrivé au comptoir civil. Le stock et les fonds du poste sont finis.':'Groupe arrivé à la case choisie. Une carte locale peut être ouverte pour cette expédition.';
-    case 'awaiting-entry':return 'Groupe au foyer, en attente de cellules de rentrée accessibles.';
-    case 'unloading':return `${s.world.expeditionSite?'Entrée sur le second site.':'Retour accompli.'} ${g.pendingPileIds.length} piles attendent un dépôt physique.`;
+    case 'awaiting-entry':return 'Groupe à destination, en attente de cellules d’entrée accessibles.';
+    case 'unloading':return `Entrée sur la carte. ${g.pendingPileIds.length} piles attendent un dépôt physique.`;
   }
 }
 function quantityLines(values:ReadonlyMap<number,string>):CommercialBuyLine[] {
@@ -117,13 +118,12 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
   function button(label:string,action:GroupAction){const b=document.createElement('button');b.type='button';b.textContent=label;b.dataset.groupAction=action;actions.append(b);return b;}
   const adopt=button('Ouvrir le globe','adopt'),start=button('Former le groupe','start'),cancel=button('Annuler la formation','cancel'),pause=button('Suspendre la marche','pause'),change=button('Adopter cette route','route'),back=button('Revenir au foyer','return'),unload=button('Décharger les biens portés','unload');
   function section(label:string,parent:HTMLElement=details){const box=document.createElement('section'),title=document.createElement('h3');title.textContent=label;box.append(title);parent.append(box);return box;}
-  const siteActions=document.createElement('div');siteActions.className='group-actions';
-  const enterSite=document.createElement('button'),showHome=document.createElement('button'),showSite=document.createElement('button'),elsewhere=document.createElement('p');
-  for(const b of [enterSite,showHome,showSite])b.type='button';
-  enterSite.textContent='Entrer sur la carte';showHome.textContent='Afficher le foyer';showSite.textContent='Afficher le second site';
-  enterSite.dataset.siteAction='enter';showHome.dataset.siteAction='home';showSite.dataset.siteAction='secondary';
-  siteActions.append(enterSite,showHome,showSite);elsewhere.dataset.campaignElsewhere='';
-  details.append(origin,status,stop,mass,elsewhere,siteActions,routeText,previews,actions);
+  const selectorLabel=document.createElement('label'),groupSelector=document.createElement('select');selectorLabel.textContent='Caravane ';groupSelector.setAttribute('aria-label','Choisir une caravane');selectorLabel.append(groupSelector);
+  const siteActions=document.createElement('div'),elsewhere=document.createElement('p');siteActions.className='group-actions';
+  const entryButtons=new Map<'visit'|'camp'|'settle',HTMLButtonElement>();
+  for(const [mode,label] of [['visit','Entrer sur la carte'],['camp','Former un camp temporaire'],['settle','S’installer']] as const){const b=document.createElement('button');b.type='button';b.textContent=label;b.dataset.siteAction=mode;siteActions.append(b);entryButtons.set(mode,b);}
+  elsewhere.dataset.campaignElsewhere='';
+  details.append(selectorLabel,origin,status,stop,mass,elsewhere,siteActions,routeText,previews,actions);
   const peopleBox=section('Personnes'),sourceBox=section('Sources au sol'),possessionsBox=section('Biens portés'),tradeBox=section('Commerce'),lossesBox=section('Décès hors carte');
   const chosen=document.createElement('p');chosen.dataset.groupChosen='';peopleBox.append(chosen);
   const removeUnavailable=document.createElement('button');removeUnavailable.type='button';removeUnavailable.textContent='Retirer les choix devenus indisponibles';removeUnavailable.dataset.groupDraftCleanup='';peopleBox.append(removeUnavailable);
@@ -146,10 +146,10 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
   const lockReason=()=>stopped??unknown??hostBlocked??(busy?'Une commande est en cours.':waiting.size?[...waiting.values()].join(' '):undefined);
   function invalidatePreview(){plan=routePreview=undefined;previewTick=undefined;}
   const globe=createPlanetView(globeHost,id=>{destination=id;invalidatePreview();renderDraft();});
-  function permission(action:GroupAction):string|undefined {return lockReason()??(!facts?'Les projections métier sont indisponibles.':facts.actions[action].ok?undefined:facts.actions[action].reason??'Action indisponible.');}
+  function permission(action:GroupAction):string|undefined {return lockReason()??((action==='start'||action==='unload')&&snapshot?.campaign?.activeMapId===null?'Affichez une carte locale pour préparer ce chargement.':undefined)??((action==='start'||action==='unload')&&!Number.isSafeInteger(snapshot?.originMapId)?'La carte de départ confirmée est indisponible.':undefined)??(!facts?'Les projections métier sont indisponibles.':facts.actions[action].ok?undefined:facts.actions[action].reason??'Action indisponible.');}
   function available(b:HTMLButtonElement,reason:string|undefined){b.setAttribute('aria-disabled',String(!!reason));setTooltip(b,{body:reason??'Appliquer la commande au monde confirmé.'});}
   function updateRequest(){const message=lockReason();request.hidden=!message;request.textContent=message??'';}
-  async function send(action:GroupAction|null,command:GroupCommand|SecondarySiteCommand){
+  async function send(action:GroupAction|null,command:GroupCommand|WorldMapCommand){
     if(action===null?lockReason():permission(action))return;
     const token=generation;busy=true;updateLocks();
     try{await adapters.send(command);if(token!==generation||disposed)return;error.hidden=true;}
@@ -215,7 +215,7 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
   }
   async function confirmTrade(direction:'buy'|'sell'){
     if(permission(direction)||!snapshot||!facts)return;
-    try{const lines=quantityLines(direction==='buy'?buys:sells),quote=adapters.quoteTrade(snapshot,facts,direction,lines),shown=direction==='buy'?shownBuy:shownSell;if(!quote.ok)throw Error(quote.reason);if(!shown||shown!==quote.signature)throw Error('Le devis a changé. Vérifiez le panier actualisé avant de confirmer.');await send(direction,{type:direction==='buy'?'group-buy':'group-sell',lines:lines.map(l=>({...l})),quote:shown});}
+    try{const lines=quantityLines(direction==='buy'?buys:sells),quote=adapters.quoteTrade(snapshot,facts,direction,lines),shown=direction==='buy'?shownBuy:shownSell;if(!quote.ok)throw Error(quote.reason);if(!shown||shown!==quote.signature)throw Error('Le devis a changé. Vérifiez le panier actualisé avant de confirmer.');await send(direction,{type:direction==='buy'?'group-buy':'group-sell',groupId:snapshot.group!.id,lines:lines.map(l=>({...l})),quote:shown});}
     catch(cause){error.hidden=false;error.textContent=cause instanceof Error?cause.message:String(cause);renderDraft();}
   }
   buyButton.addEventListener('click',()=>void confirmTrade('buy'),{signal:abort.signal});sellButton.addEventListener('click',()=>void confirmTrade('sell'),{signal:abort.signal});
@@ -223,14 +223,13 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
 
   function updateLocks(){
     updateRequest();
-    const view=snapshot?.world.campaignMap,g=snapshot?.group,atFreeSite=groupAway(g)&&g.phase==='at-site'&&g.tile!==snapshot?.planet?.civilianTile;
-    enterSite.hidden=!atFreeSite;
-    showHome.hidden=!view||view.active==='home';showSite.hidden=!view||view.active==='secondary';
-    const tile=atFreeSite?snapshot?.planet?.tiles[g.tile]:undefined;
-    available(enterSite,lockReason()??(view?.visitIds.length?'Une expédition est déjà sur place.':tile?.hilliness==='mountainous'?'Le relief montagneux ne possède pas encore de carte locale.':view&&groupAway(g)&&g.tile!==view.secondaryTile?'Cette première boucle conserve un seul second site.':undefined));
-    available(showHome,lockReason());available(showSite,lockReason());
+    const g=snapshot?.group,away=groupAway(g),atDestination=away&&(g.phase==='at-site'||g.phase==='awaiting-entry');
+    groupSelector.value=snapshot?.group?String(snapshot.group.id):'';groupSelector.disabled=!!lockReason();
+    for(const [mode,button] of entryButtons){const action=snapshot?.entryActions?.[mode];button.hidden=!atDestination;available(button,lockReason()??(!action?.ok?action?.reason??'Cette entrée n’est pas disponible.':undefined));}
     for(const [action,b] of buttons){const previewReason=action==='start'&&!plan?.ok?'Le plan doit être admissible.':action==='route'&&!routePreview?.ok?'La route doit être admissible.':action==='buy'&&!shownBuy||action==='sell'&&!shownSell?'Le panier doit disposer d’un devis courant.':undefined;available(b,permission(action)??previewReason);}
     available(removeUnavailable,lockReason()??(snapshot?.group?'Le groupe est déjà engagé.':undefined));peopleTable.refresh();sourceTable.refresh();buyTable.refresh();sellTable.refresh();
+    const original=snapshot?.campaign?.maps.find(map=>map.id===snapshot?.originMapId);
+    if(snapshot?.campaign&&groupAway(g))available(back,lockReason()??(!original||original.tile===null?'La carte de départ n’est plus disponible.':permission('return')));
     available(checkFormation,permission('start')??(destination===null?'Choisissez une destination.':undefined));
     available(checkRoute,permission('route')??(destination===null?'Choisissez une destination.':undefined));
   }
@@ -238,7 +237,7 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
     if(!snapshot||!facts){updateLocks();return;}
     selectionNotes.textContent='';
     try{
-      if(destination===null&&snapshot.planet)destination=snapshot.world.expeditionSite?snapshot.planet.homeTile:snapshot.planet.civilianTile;
+      if(destination===null&&snapshot.planet)destination=snapshot.planet.civilianTile;
       const projected=facts.mass??(plan?.ok?plan.mass:null);mass.textContent=projected?`Charge ${kg(projected.grams)} / ${kg(projected.capacityGrams)} · ${projected.rations} repas de survie · ${projected.pemmicanUnits} unités de pemmican · nutrition disponible ${(projected.provisionNutrition/100).toLocaleString('fr-FR',{maximumFractionDigits:2})}${facts.mass?' possédée.':' prévue au départ (estimation à vérifier au lancement).'}`:'Charge non calculée : vérifiez la formation choisie.';
       if(plan&&!plan.ok)selectionNotes.textContent=plan.reason;
       const stamp=previewTick!==undefined?` Estimation au J${(previewTick/TICKS_PER_DAY).toLocaleString('fr-FR',{maximumFractionDigits:2})}, revalidée à la commande.`:'';
@@ -248,7 +247,7 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
       if(stale.length)selectionNotes.textContent+=` Sources disparues ou hors sol : ${stale.join(', ')}. Le brouillon est conservé.`;
       goodsTable.update(goods(snapshot,selected));
       unload.hidden=!!snapshot.group||!selected.size;
-      globe.setOverlay({selected:destination,route:facts.confirmedRoute,previewRoute:plan?.ok?plan.route:routePreview?.ok?routePreview.route:[],...(groupAway(snapshot.group)?{groupTile:snapshot.group.tile}:{})});
+      globe.setOverlay({selected:destination,route:facts.confirmedRoute,previewRoute:plan?.ok?plan.route:routePreview?.ok?routePreview.route:[],...(groupAway(snapshot.group)?{groupTile:snapshot.group.tile}:{}),...readPlanetObjects(snapshot.campaign??snapshot.world)});
     }catch(cause){selectionNotes.textContent=cause instanceof Error?cause.message:String(cause);plan=undefined;routePreview=undefined;}
     updateLocks();available(start,permission('start')??(plan?.ok?undefined:selectionNotes.textContent||'Le plan doit être admissible.'));available(change,permission('route')??(routePreview?.ok?undefined:routeText.textContent));
     tradeDraft('buy');tradeDraft('sell');
@@ -269,20 +268,18 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
     try{routePreview=adapters.previewRoute(snapshot,facts,destination);plan=undefined;previewTick=snapshot.world.tick;renderDraft();}
     catch(cause){invalidatePreview();error.hidden=false;error.textContent=cause instanceof Error?cause.message:String(cause);renderDraft();}
   },{signal:abort.signal});
-  enterSite.addEventListener('click',()=>{if(enterSite.getAttribute('aria-disabled')!=='true')void send(null,{type:'secondary-enter'});},{signal:abort.signal});
-  showHome.addEventListener('click',()=>void send(null,{type:'secondary-view',site:'home'}),{signal:abort.signal});
-  showSite.addEventListener('click',()=>void send(null,{type:'secondary-view',site:'secondary'}),{signal:abort.signal});
+  groupSelector.addEventListener('change',()=>{if(lockReason())return;const id=groupSelector.value===''?null:Number(groupSelector.value);if(id!==null&&!Number.isSafeInteger(id))return;void send(null,{type:'group-select',groupId:id});},{signal:abort.signal});
+  for(const [mode,button] of entryButtons)button.addEventListener('click',()=>{const group=snapshot?.group;if(group&&button.getAttribute('aria-disabled')!=='true')void send(null,{type:'group-enter',groupId:group.id,mode});},{signal:abort.signal});
   adopt.addEventListener('click',()=>void send('adopt',{type:'planet-adopt'}),{signal:abort.signal});
-  start.addEventListener('click',()=>{if(permission('start')||!plan?.ok||!snapshot||!facts||destination===null)return;try{const lines=quantityLines(sources),draft={memberIds:[...selected],destination,sources:lines};const check=adapters.previewPlan(snapshot,facts,draft);if(!check.ok)throw Error(check.reason);void send('start',{type:'group-start',...draft});}catch(cause){invalidatePreview();error.hidden=false;error.textContent=cause instanceof Error?cause.message:String(cause);renderDraft();}},{signal:abort.signal});
-  cancel.addEventListener('click',()=>void send('cancel',{type:'group-cancel'}),{signal:abort.signal});
-  pause.addEventListener('click',()=>{const g=snapshot?.group;if(groupAway(g))void send('pause',{type:'group-pause',paused:!g.paused});},{signal:abort.signal});
-  change.addEventListener('click',()=>{if(!snapshot||!facts||destination===null||!routePreview?.ok||permission('route'))return;try{const check=adapters.previewRoute(snapshot,facts,destination);if(!check.ok)throw Error(check.reason);void send('route',{type:'group-route',destination});}catch(cause){invalidatePreview();error.hidden=false;error.textContent=cause instanceof Error?cause.message:String(cause);renderDraft();}},{signal:abort.signal});
-  back.addEventListener('click',()=>{if(snapshot?.planet)void send('return',{type:'group-route',destination:snapshot.planet.homeTile});},{signal:abort.signal});
-  unload.addEventListener('click',()=>{if(snapshot)void send('unload',{type:'group-unload',memberIds:snapshot.group?members(snapshot).map(p=>p.id):[...selected]});},{signal:abort.signal});
+  start.addEventListener('click',()=>{if(permission('start')||!plan?.ok||!snapshot||!facts||destination===null)return;try{const lines=quantityLines(sources),draft={memberIds:[...selected],destination,sources:lines};const check=adapters.previewPlan(snapshot,facts,draft);if(!check.ok)throw Error(check.reason);void send('start',{type:'group-start',originMapId:snapshot.originMapId!,...draft});}catch(cause){invalidatePreview();error.hidden=false;error.textContent=cause instanceof Error?cause.message:String(cause);renderDraft();}},{signal:abort.signal});
+  cancel.addEventListener('click',()=>{if(snapshot?.group)void send('cancel',{type:'group-cancel',groupId:snapshot.group.id});},{signal:abort.signal});
+  pause.addEventListener('click',()=>{const g=snapshot?.group;if(groupAway(g))void send('pause',{type:'group-pause',groupId:g.id,paused:!g.paused});},{signal:abort.signal});
+  change.addEventListener('click',()=>{if(!snapshot||!facts||destination===null||!routePreview?.ok||permission('route'))return;try{const check=adapters.previewRoute(snapshot,facts,destination);if(!check.ok)throw Error(check.reason);void send('route',{type:'group-route',groupId:snapshot.group!.id,destination});}catch(cause){invalidatePreview();error.hidden=false;error.textContent=cause instanceof Error?cause.message:String(cause);renderDraft();}},{signal:abort.signal});
+  back.addEventListener('click',()=>{const origin=snapshot?.campaign?.maps.find(map=>map.id===snapshot?.originMapId);if(snapshot?.group&&origin?.tile!==null&&origin?.tile!==undefined)void send('return',{type:'group-route',groupId:snapshot.group.id,destination:origin.tile});},{signal:abort.signal});
+  unload.addEventListener('click',()=>{if(snapshot)void send('unload',{type:'group-unload',originMapId:snapshot.originMapId!,...(snapshot.group?{groupId:snapshot.group.id}:{}),memberIds:snapshot.group?members(snapshot).map(p=>p.id):[...selected]});},{signal:abort.signal});
   return {
     update(next){
       if(snapshot?.group?.id!==next.group?.id||snapshot?.group?.phase!==next.group?.phase)invalidatePreview();
-      if(next.world.expeditionSite&&next.planet)destination=next.planet.homeTile;
       snapshot=next;facts=undefined;
       try{
         const captured=adapters.capture(next);for(const key of ['adopt','start','cancel','pause','route','return','buy','sell','unload'] as const)if(!captured.actions[key])throw Error(`Projection d'action manquante : ${key}.`);
@@ -291,13 +288,16 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
         for(const c of captured.candidates)if(!next.world.pawns.includes(c.pawn))throw Error('Un candidat ne référence pas une vraie personne présente.');
         if(next.group&&!captured.mass)throw Error('La projection de masse du groupe est manquante.');
         facts=captured;globe.setPlanet(next.planet);origin.textContent=next.planet?`Origine : ${captured.originLabel} · ${planetTileLabel(next.planet,captured.originTile)}`:'La géographie persistée doit être adoptée pour préparer un voyage.';
-        const remote=next.world.expeditionSite,elsewherePeople=next.world.campaignPeople?.filter(p=>p.status==='away')??[];
-        intro.textContent=remote?'Second site persistant. Les travaux ordinaires et les besoins continuent sur les deux cartes. Pour rentrer, choisissez tous les membres vivants, les provisions et le fret au sol, puis formez la caravane vers le foyer.':'Choisissez les personnes et les biens réels. Rassemblement, chargement et sortie se déroulent sur leur carte.';
-        start.textContent=remote?'Former la caravane de retour':'Former le groupe';
-        elsewhere.textContent=elsewherePeople.length?'Sur l’autre carte, indisponibles ici : '+elsewherePeople.map(p=>p.name).join(', ')+'.':'';
-        status.textContent=phaseLabel(next);stop.textContent=stopLabel(next);stop.hidden=!stop.textContent;
-        adopt.hidden=!!next.planet;start.hidden=!!next.group||!next.planet;cancel.hidden=!next.group;pause.hidden=!groupAway(next.group);change.hidden=!groupAway(next.group);back.hidden=!groupAway(next.group);unload.hidden=!!next.group||!selected.size;
-        checkFormation.hidden=!!next.group||!next.planet;checkRoute.hidden=!groupAway(next.group);
+        const elsewherePeople=next.world.campaignPeople?.filter(p=>p.status==='away')??[];
+        intro.textContent='Choisissez les personnes et les biens réels. Rassemblement, chargement et sortie se déroulent sur leur carte. Les autres cartes continuent à évoluer.';
+        start.textContent='Former la caravane';
+        const entries=next.campaign?.groups??[];const selectorKey=JSON.stringify([next.campaign?.selectedGroupId,entries.map(group=>[group.id,group.phase,group.memberIds.length]),next.campaign?.activeMapId]);
+        if(groupSelector.dataset.key!==selectorKey){groupSelector.dataset.key=selectorKey;groupSelector.replaceChildren();const fresh=document.createElement('option');fresh.value='';fresh.textContent='Nouvelle caravane depuis cette carte';fresh.disabled=next.campaign?.activeMapId===null;groupSelector.append(fresh);for(const group of entries){const option=document.createElement('option');option.value=String(group.id);option.textContent=groupDisplayLabel(group);groupSelector.append(option);}groupSelector.value=next.group?String(next.group.id):'';}
+        const returnMap=next.campaign?.maps.find(map=>map.id===next.originMapId);back.textContent=returnMap?`Revenir : ${mapDisplayName(returnMap)}`:'Revenir à la carte de départ';
+        elsewhere.textContent=elsewherePeople.length?'Sur les autres cartes, indisponibles ici : '+elsewherePeople.map(p=>p.name).join(', ')+'.':'';
+        status.textContent=!next.group&&next.campaign?.activeMapId===null?'Aucune caravane engagée. Affichez une carte locale pour préparer un départ.':phaseLabel(next);stop.textContent=stopLabel(next);stop.hidden=!stop.textContent;
+        adopt.hidden=!!next.planet;start.hidden=!!next.group||!next.planet||next.campaign?.activeMapId===null;cancel.hidden=!next.group;pause.hidden=!groupAway(next.group);change.hidden=!groupAway(next.group);back.hidden=!groupAway(next.group);unload.hidden=!!next.group||!selected.size;
+        checkFormation.hidden=!!next.group||!next.planet||next.campaign?.activeMapId===null;checkRoute.hidden=!groupAway(next.group);
         pause.textContent=groupAway(next.group)&&next.group.paused?'Reprendre la marche':'Suspendre la marche';
         peopleTable.update(next.group?members(next).map(pawn=>({pawn,ok:true})):captured.candidates);sourceBox.hidden=!!next.group&&next.group.phase==='unloading';sourceTable.update(next.group?[]:captured.sources);
         manifest.hidden=!next.group||!('manifest' in next.group);manifestTable.update(next.group&&'manifest' in next.group?next.group.manifest.map((line,index)=>({line,index})):[]);
@@ -311,7 +311,7 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
     setRequestStatus(event){if(event.state==='waiting')waiting.set(event.id,event.message??'Attente du résultat autoritatif.');else waiting.delete(event.id);updateLocks();},
     setHostBlocked(reason){hostBlocked=reason;updateLocks();},
     setSimulationStopped(message){stopped=message;updateLocks();},
-    resetForReplacement(){generation++;busy=false;unknown=stopped=undefined;waiting.clear();selected.clear();sources.clear();buys.clear();sells.clear();destination=null;shownBuy=shownSell=undefined;snapshot=facts=undefined;invalidatePreview();peopleTable.update([]);sourceTable.update([]);manifestTable.update([]);goodsTable.update([]);buyTable.update([]);sellTable.update([]);lossesTable.update([]);globe.setPlanet(undefined);origin.textContent=status.textContent=mass.textContent=stop.textContent=routeText.textContent='';error.hidden=true;updateLocks();},
+    resetForReplacement(){generation++;delete groupSelector.dataset.key;groupSelector.replaceChildren();groupSelector.value='';busy=false;unknown=stopped=undefined;waiting.clear();selected.clear();sources.clear();buys.clear();sells.clear();destination=null;shownBuy=shownSell=undefined;snapshot=facts=undefined;invalidatePreview();peopleTable.update([]);sourceTable.update([]);manifestTable.update([]);goodsTable.update([]);buyTable.update([]);sellTable.update([]);lossesTable.update([]);globe.setPlanet(undefined);origin.textContent=status.textContent=mass.textContent=stop.textContent=routeText.textContent='';error.hidden=true;updateLocks();},
     dispose(){disposed=true;generation++;abort.abort();globe.dispose();element.remove();},
   };
 }

@@ -42,7 +42,8 @@ function knownPeople(world:World):{pawn:Pawn;place:string}[] {
   const add=(pawns:readonly Pawn[],place:string)=>{for(const pawn of pawns)if(!seen.has(pawn.id)){
     seen.add(pawn.id);result.push({pawn,place});
   }};
-  add(world.pawns,world.campaignMap?.active==='secondary'?'second site':'foyer');
+  const projection=world.campaignMap;
+  add(world.pawns,projection?.revision===2?`carte ${projection.activeMapId}`:projection?.active==='secondary'?'second site':'foyer');
   if(world.secondarySite)add(world.secondarySite.map.pawns,'second site');
   if(world.group&&'members' in world.group)add(world.group.members,'voyage collectif');
   if(world.scout&&'pawn' in world.scout)add([world.scout.pawn],'reconnaissance');

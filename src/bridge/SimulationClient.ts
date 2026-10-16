@@ -1,3 +1,5 @@
+import type {CampaignSummary,SettlementLimit} from '../sim/world-map-state';
+import {validSettlementLimit} from '../sim/world-map-options';
 import { UrgentThreatDelivery, validThreatPauseMode, type ThreatPauseMode, type ThreatPauseToken, type ThreatSpeedOptions, type UrgentThreatReceipt } from './urgent-threats';
 import type { Command, World } from '../sim/types';
 import { SimulationRequestError, type Request, type Response, type SimulationFault, type SimulationRequestStatus } from './protocol';
@@ -19,6 +21,13 @@ interface PendingRequest {
 export class SimulationClient {
   private worker!: Worker;
   private readonly urgentThreats = new UrgentThreatDelivery();
+  private confirmedCampaign?:CampaignSummary;
+  private activeMap=false;
+  private settlementMaximum:SettlementLimit=1;
+  get hasActiveMap():boolean{return this.activeMap;}
+  get campaignSummary():CampaignSummary|undefined{return this.confirmedCampaign;}
+  get maxSettlements():SettlementLimit{return this.settlementMaximum;}
+  protected deliverCampaignOnly(_summary:CampaignSummary,_stepMs:number,_speed:number,_replaced:boolean):void {}
   private threatPauseMode: ThreatPauseMode = 'major';
   private nextId = 1;
   private snapshots: SnapshotDecoder;
@@ -64,16 +73,21 @@ export class SimulationClient {
         this.onError(data.reason);
         return;
       }
+      if(data.type==='campaign-only'){
+        let result;try{if(!this.urgentThreats.accepts(data.urgentThreats,data.summary.tick,data.speed,data.summary.planet?.tiles.length))result={status:'resync' as const,reason:'Métadonnées de menace illisibles.'};else result=this.snapshots.adoptCampaignOnly(data);}catch{result={status:'resync' as const,reason:'Campagne sans carte illisible.'};}
+        if(result.status==='applied'){const urgent=this.urgentThreats.commit(data.urgentThreats,data.summary.tick);this.adopted={epoch:data.epoch,revision:data.revision};this.activeMap=false;this.confirmedCampaign=data.summary;for(const pending of this.pending.values())if((pending.type==='init'||pending.type==='load')&&result.replaced)pending.replacementEpoch=data.epoch;try{this.deliverCampaignOnly(data.summary,data.stepMs,data.speed,result.replaced);if(urgent)this.deliverUrgentThreats(urgent);}catch(error){this.onError(String(error));}for(const [id,pending]of this.pending)this.finishReply(id,pending);}else if(result.status==='resync'&&!this.resyncing){this.resyncing=true;void this.request({type:'resync'}).catch(error=>this.onError(String(error))).finally(()=>{this.resyncing=false;});}return;
+      }
       if (data.type === 'snapshot') {
         let result;
         try {
           const tick = Object.getOwnPropertyDescriptor(data.world, 'tick');
-          if (!tick || !('value' in tick) || !this.urgentThreats.accepts(data.urgentThreats, tick.value, data.speed)) {
+          if (!tick || !('value' in tick) || !this.urgentThreats.accepts(data.urgentThreats, tick.value, data.speed,data.world.planet?.tiles.length)) {
             result = { status: 'resync' as const, reason: 'Métadonnées de menace illisibles.' };
           } else result = this.snapshots.adopt(data);
         }
         catch { result = { status: 'resync' as const, reason: 'Snapshot illisible.' }; }
         if (result.status === 'applied') {
+          this.activeMap=true;this.confirmedCampaign=undefined;
           const urgentReceipt = this.urgentThreats.commit(data.urgentThreats!, result.world.tick);
           this.adopted = { epoch: data.epoch, revision: data.revision };
           for (const pending of this.pending.values()) if (pending.type === 'init' || pending.type === 'load') {
@@ -176,7 +190,7 @@ export class SimulationClient {
     });
   }
 
-  init(seed: number, size = DEFAULT_MAP_SIZE,scenario:import('../sim/scenario-definitions').ScenarioId='survivors',paused=false,site?:import('../sim/site').SiteOptions,startingParty?:import('../sim/starting-candidates').StartingParty,startingWorld?:import('../sim/starting-world').StartingWorld,surface?:'snow-phased-v1') { return this.request({ type: 'init', threatPauseMode: this.threatPauseMode, seed, size,scenario,paused,...site?{site}:{},...startingParty?{startingParty}:{},...startingWorld?{startingWorld}:{},...surface?{surface}:{} }); }
+  init(seed: number, size = DEFAULT_MAP_SIZE,scenario:import('../sim/scenario-definitions').ScenarioId='survivors',paused=false,site?:import('../sim/site').SiteOptions,startingParty?:import('../sim/starting-candidates').StartingParty,startingWorld?:import('../sim/starting-world').StartingWorld,surface?:'snow-phased-v1') { return this.request({ type: 'init', maxSettlements:this.settlementMaximum,threatPauseMode: this.threatPauseMode, seed, size,scenario,paused,...site?{site}:{},...startingParty?{startingParty}:{},...startingWorld?{startingWorld}:{},...surface?{surface}:{} }); }
   command(command: Command) { return this.request({ type: 'command', command }); }
   async orderOptions(pawnId:number,x:number,z:number,queue=false):Promise<import('../sim/player-orders').OrderOption[]> {
     return JSON.parse((await this.request({type:'order-options',pawnId,x,z,queue}))!);
@@ -192,8 +206,9 @@ export class SimulationClient {
     this.threatPauseMode = mode;
     return result;
   }
+  async setMaxSettlements(value:SettlementLimit):Promise<void> {if(!validSettlementLimit(value))throw Error('Plafond de colonies invalide.');await this.request({type:'settlement-limit',maxSettlements:value});this.settlementMaximum=value;}
   save() { return this.request({ type: 'save' }); }
-  load(data: string) { return this.request({ type: 'load', data, threatPauseMode: this.threatPauseMode }); }
+  load(data: string) { return this.request({ type: 'load', data,maxSettlements:this.settlementMaximum,threatPauseMode: this.threatPauseMode }); }
 
   private rejectPending(reason: Error) {
     for (const [id, pending] of this.pending) {

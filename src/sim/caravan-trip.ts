@@ -1,3 +1,4 @@
+import {registeredCampaign} from './world-map-context.ts';
 import { releaseAllowedAreaReturn } from './allowed-area-state.ts';
 import { commercialRegistryView } from './commercial-trip.ts';
 import { findCivilianReturnEntry } from './civilian-return.ts';
@@ -115,6 +116,7 @@ export function departScout(w:World,p:Pawn):boolean {
 }
 
 function returnEntry(w:World,s:Extract<ScoutState,{phase:'travelling'|'awaiting-entry'}>):Cell|null {
+  if(w.worldMaps&&!w.worldMaps.sites.some(m=>m.id===registeredCampaign(w).worldGroups?.legacyTravellers.find(r=>r.scout===s)?.originMapId)&&registeredCampaign(w).worldGroups?.legacyTravellers.some(r=>r.scout===s))return null;
   if(w.piles.length+s.items.length>32768)return null;
   return findCivilianReturnEntry(w,s.entry,c=>
     !w.piles.some(p=>p.owner.type==='ground'&&same(p.owner,c))

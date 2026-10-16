@@ -1,3 +1,4 @@
+import {registeredMapPresentation} from '../src/sim/world-map-presentation';
 import { withoutResearch,withMigratedResearch } from './scenarios/legacy-skills';
 import { SCHEMA_VERSION } from '../src/sim/types';
 import { withoutPawnSkills } from './scenarios/legacy-skills';
@@ -27,7 +28,7 @@ test('a bed keeps its identity, ownership and resources through uninstall, groun
  until(w,()=>w.packed[0]?.owner.type==='pawn');const copy=deserializeWorld(serializeWorld(w));
  const enc=new SnapshotEncoder(),dec=new SnapshotDecoder();dec.adopt(structuredClone(enc.encode(w,0,1)));
  until(w,()=>!w.jobs.length);stepWorld(copy,w.tick-copy.tick);expect(copy).toEqual(w);expect(w.structures[0]).toBe(bed);expect(bed).toMatchObject({x:23,z:20,orientation:3});expect(pawn.bedId).toBe(bed.id);expect(w.stock.wood).toBe(0);expect(woodAccount(w)).toBe(initial);
- const adopted=dec.adopt(structuredClone(enc.encode(w,0,1)));expect(adopted.status).toBe('applied');if(adopted.status==='applied')expect(adopted.world).toEqual(w);
+ const adopted=dec.adopt(structuredClone(enc.encode(w,0,1)));expect(adopted.status).toBe('applied');if(adopted.status==='applied')expect(adopted.world).toEqual(registeredMapPresentation(w));
 });
 test('direct reinstall clears a planted destination, reserves the source, and cancel while carried retains exactly one recoverable object',()=>{
  const w=deconstructionCamp(2),bed=fixtureBuilding(w,'bed',14,16),pawn=w.pawns[0]!,other=w.pawns[1]!;
@@ -51,7 +52,7 @@ test('full floors and conflicting uses refuse atomically; migration and corrupt 
  const corrupted=JSON.parse(full);corrupted.packed[0].owner.pawnId=999999;expect(()=>deserializeWorld(JSON.stringify(corrupted))).toThrow();
  const duplicate=JSON.parse(full);duplicate.packed.push(duplicate.packed[0]);expect(()=>deserializeWorld(JSON.stringify(duplicate))).toThrow();
  const bad=JSON.parse(full);bad.jobs[0].furniture.structureId=wall.id;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
- const legacy=JSON.parse(before);((legacy.schemaVersion=24,withoutResearch(legacy)),withoutPawnSkills(legacy));for(const a of legacy.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete legacy.packed;const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated.packed).toEqual([]);expect(migrated.structures).toEqual(JSON.parse(before).structures);expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
+ const legacy=JSON.parse(before);((legacy.schemaVersion=24,withoutResearch(legacy)),withoutPawnSkills(legacy));for(const a of legacy.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete legacy.packed;delete legacy.worldMaps;delete legacy.worldGroups;delete legacy.deterioration;delete legacy.spoiled.pemmican;for(const policy of legacy.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='pemmican');const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated.packed).toEqual([]);expect(migrated.structures).toEqual(JSON.parse(before).structures);expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
  legacy.packed=[];expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow();
 });
 

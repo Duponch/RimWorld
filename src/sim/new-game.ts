@@ -1,3 +1,4 @@
+import {finalizeInitialWorldRegistry} from './world-map-context.ts';
 import {initializeSnowSurface} from './snow-surface.ts';
 import { resolveStartingSite,type StartingWorld } from './starting-world.ts';
 import { adoptStartingSiteClimate } from './site-climate.ts';
@@ -151,5 +152,5 @@ export function createScenarioWorld(seed:number,size:number,id:ScenarioId=DEFAUL
   }else initializeCampRelationships(world);
   if(selectedSite&&start)prepareStartingArrival(world,start.pawnIds,start.transportedPileIds);
   if(surface==='snow-phased-v1'||site?.biome==='tundra')initializeSnowSurface(world);
-  return world;
+  finalizeInitialWorldRegistry(world);return world;
 }

@@ -9,7 +9,7 @@ import type {PackedFurniture} from './furniture-rules.ts';
 import type {RelationshipPeople,RelationshipPerson} from './relationship-state.ts';
 import type {GroupDepartureBaseline,GroupLoss,GroupState} from './group-state.ts';
 
-export type HumanOwnerKind='map'|'starting-pod'|'scout-away'|'commercial-away'|'group-away'|'group-loss'
+export type HumanOwnerKind='map'|'world-lost'|'starting-pod'|'scout-away'|'commercial-away'|'group-away'|'group-loss'
   |'visitor-departure'|'pod-departure'|'raid-departure'|'prison-departure';
 export type HumanSimulation='local'|'world'|'frozen'|'identity-only';
 export type HumanPlace={kind:'map'}|{kind:'starting-pod';podId:number}|{kind:'planet';tile:number}|{kind:'legacy-trip'}|{kind:'archive'};
@@ -177,7 +177,7 @@ export function captureHumanOwners(realWorld:World,explicit:ExplicitWorldHumanOw
     frozenPawnArchives:archives.filter(s=>!!s.pawn).length,simpleDepartureIdentities:archives.filter(s=>!s.pawn).length,knownHumans:people.size,
     mapPiles:realWorld.piles.length,legacyTravelPiles:legacy.reduce((n,s)=>n+s.items.length,0),groupTravelPiles:group&&'members' in group?group.items.length:0,
     terminalPiles:(explicit.losses??realWorld.groupLosses??[]).reduce((n,l)=>n+l.items.length,0),archivedPiles:archives.reduce((n,s)=>n+s.items.length,0),
-    postPiles:realWorld.civilianPost?.stock.length??0,archivedPacked:archives.reduce((n,s)=>n+s.packed.length,0)};
+    postPiles:realWorld.worldMaps?0:realWorld.civilianPost?.stock.length??0,archivedPacked:archives.reduce((n,s)=>n+s.packed.length,0)};
   return Object.freeze({byId,people,slots:Object.freeze(slots),pawnOwners:select(s=>s.pawn!==undefined),local,away,contained,terminals,frozen,census:Object.freeze(census),...groupView?{group:groupView}:{}});
 }
 

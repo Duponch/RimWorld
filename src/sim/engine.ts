@@ -1,3 +1,8 @@
+import {legacyTravellerContext} from './world-map-owners.ts';
+import type {CampaignState} from './world-map-state.ts';
+import {applyWorldMapCommand,validWorldMapCommand,removeEmptyCamps,enterRegisteredSite} from './world-map-authority.ts';
+import {applyRegisteredGroupCommand} from './world-map-groups.ts';
+import {registeredCampaign,registeredMaps,registeredMapId,campaignClockContext,selectedRegisteredMap,flushRegisteredMap,withWorldGroup} from './world-map-context.ts';
 import {canDesignateBridge,finishBridge,removeBridge} from './bridge.ts';
 import {marshSupportsFootprint} from './marsh.ts';
 import {newVentState,ventPlacementAllowed} from './vent.ts';
@@ -459,6 +464,7 @@ export function canDesignate(world: World, command: DesignateCommand, installing
   return { ok: true };
 }
 export function applyCommand(world: World, command: Command): CommandResult {
+ if(world.worldMaps){const descriptor=command&&typeof command==='object'&&!Array.isArray(command)?Object.getOwnPropertyDescriptor(command,'type'):undefined;if(!descriptor||!('value'in descriptor)||typeof descriptor.value!=='string')return refusal('invalid-command','Commande invalide.');const root=registeredCampaign(world);if(validWorldMapCommand(command))return applyWorldMapCommand(root,command);if(command&&typeof command==='object'&&typeof command.type==='string'&&(command.type==='planet-adopt'||command.type.startsWith('group-')))return applyRegisteredGroupCommand(root,command as import('./group-state.ts').GroupCommand);if(secondaryCommand(command))return refusal('invalid-command','Choisissez une carte ou un groupe du registre de campagne.');const local=selectedRegisteredMap(root);if(!local)return refusal('invalid-command','Aucune carte locale sélectionnée.');const result=applyLocalCommand(local,command);if(result.ok&&command.type==='commercial-start'){const source=root.worldMaps!.sites.find(s=>s.id===registeredMapId(local))!;if(root.worldGroups!.canonicalPostId===null)delete source.postId;else source.postId=root.worldGroups!.canonicalPostId;}flushRegisteredMap(local);return result;}
   if(!command||typeof command!=='object')return refusal('invalid-command','Commande invalide.');
   if(secondaryCommand(command))return applySecondarySiteCommand(world,command);
   const root=campaignAuthority(world);
@@ -470,6 +476,7 @@ export function applyCommand(world: World, command: Command): CommandResult {
 }
 type LocalCommand=Exclude<Command,SecondarySiteCommand>;
 function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
+  if(command.type==='map-view'||command.type==='map-settle'||command.type==='map-abandon'||command.type==='group-select'||command.type==='group-enter')return refusal('invalid-command','Une commande de campagne valide est requise.');
   // Filter editing changes campaign metadata only. Ordinary due checks own
   // future clothing actions; no task/thermal reconciliation is triggered here.
   if(command.type==='apparel-policy-update')return applyApparelPolicyUpdate(world,command);
@@ -486,7 +493,7 @@ function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
   if(result.ok)reconcileSpikeTrapContacts(world);
   return result;
 }
-function applyCommandInternal(world: World, command: Exclude<LocalCommand,{type:'apparel-policy-update'|'apparel-policy-copy'|'apparel-policy-rename'}>): CommandResult {
+function applyCommandInternal(world: World, command: Exclude<LocalCommand,import('./world-map-state.ts').WorldMapCommand|{type:'apparel-policy-update'|'apparel-policy-copy'|'apparel-policy-rename'}>): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
   if(command.type==='cancel-job'||command.type==='cancel-resource'||command.type==='cancel-pile')return applyDesignationCancel(world,command)??refusal('invalid-command','Annulation inconnue.');
   if(command.type==='extract-tree'||command.type==='replant-tree')return applyTreeCommand(world,command)!;
@@ -856,9 +863,20 @@ function environmentCache(world:World):WorkEnvironmentCache {
 }
 const readPlantLight=(world:World):LightEnvironment=>environmentCache(world).readLight(world);
 const plantLightSourcesKey=(world:World):string=>lightSources(world).map(s=>`${s.cell}:${s.radius}:${s.red}:${s.green}:${s.blue}:${s.overlightRadius??0}`).join('|');
-export function stepWorld(world:World,ticks=1,diagnostics?:import('./work-planner.ts').SearchStats):void {
+export function stepWorld(world:CampaignState,ticks=1,diagnostics?:import('./work-planner.ts').SearchStats):void {
   if(!Number.isInteger(ticks)||ticks<0||ticks>100000)throw new Error('Tick count must be an integer between 0 and 100000.');
-  const root=campaignAuthority(world);
+  const root=campaignAuthority(world as World);
+  if(root.worldMaps){
+    adoptWorldIncidents(campaignClockContext(root));
+    for(let i=0;i<ticks;i++){
+      root.tick++;
+      for(const map of registeredMaps(root)){stepLocalWorld(map,1,diagnostics,false);flushRegisteredMap(map);}
+      for(const g of root.worldGroups!.groups.slice().sort((a,b)=>a.state.id-b.state.id))if('members' in g.state)withWorldGroup(root,g.state.id,advanceGroup);
+      for(const row of root.worldGroups!.groups.slice()){const g=row.state;if('members' in g&&['at-site','awaiting-entry'].includes(g.phase)&&root.worldMaps!.sites.some(m=>m.tile===g.tile&&m.kind==='settlement'))enterRegisteredSite(root,g.id,'visit',false);}
+      for(const old of root.worldGroups!.legacyTravellers){const view=legacyTravellerContext(root,old);advanceScoutTrip(view);advanceCommercialTrip(view);if(view.scout)old.scout=view.scout;else delete old.scout;if(view.commercialTrip)old.commercialTrip=view.commercialTrip;else delete old.commercialTrip;}
+      advanceWorldIncidents(campaignClockContext(root));removeEmptyCamps(root);
+    }return;
+  }
   if(!root.secondarySite){stepLocalWorld(root,ticks,diagnostics);return;}
   // One clock/allocator/PRNG, stable home-then-secondary order. Every map uses
   // the genuine local engine and receives each confirmed campaign tick once.
@@ -900,7 +918,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     if(beforeWeather!==world.structures)thermal=reconcileTemperature(world);
     advancePower(world);advanceHydroponics(world);advanceOrbital(world);
     advanceCropBlight(world);
-    if(!isSecondaryContext(world)&&!world.secondarySite)advanceWorldIncidents(world);
+    if(!world.worldMaps&&!isSecondaryContext(world)&&!world.secondarySite)advanceWorldIncidents(world);
     const beforeElectricalRain=world.structures;
     advanceRainElectrical(world);
     if(beforeElectricalRain!==world.structures)thermal=reconcileTemperature(world);
@@ -1205,7 +1223,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     if(world.hunting)world.hunting.targets=world.hunting.targets.filter(id=>world.wildlife?.animals.some(a=>a.id===id&&a.state!=='dead')||world.pawns.some(p=>p.hunting?.animalId===id));
     // Death is captured before an active traveller becomes an immutable archive.
     if(world.schemaVersion>=236)advanceMinifiedTrees(world);
-    advanceScoutTrip(world);advanceCommercialTrip(world);if(!isSecondaryContext(world))advanceGroup(world);
+    advanceScoutTrip(world);advanceCommercialTrip(world);if(!world.worldMaps&&!isSecondaryContext(world))advanceGroup(world);
     advanceStartingArrival(world);if(world.schemaVersion<236)advanceMinifiedTrees(world);
     refreshStock(world);reconcileSpikeTrapContacts(world);
     if(thermalDirty)thermal=reconcileTemperature(world);

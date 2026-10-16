@@ -1,3 +1,5 @@
+import {lostThoughts} from './world-map-lost.ts';
+import {boundWorldGroup,pawnWorldGroup,localWorldGroups,withWorldGroup} from './world-map-context.ts';
 import {mixedGroupProvisions,groupProvisionMinimum,freshGroupProvision} from './group-provisions.ts';
 import {adoptGroupProvisionClimate,advanceGroupProvisionAges} from './group-provision-age.ts';
 import {campaignAuthority,isSecondaryContext,flushSecondaryContext} from './secondary-site-context.ts';
@@ -34,6 +36,7 @@ const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 const contact=(a:Cell,b:Cell)=>Math.abs(a.x-b.x)+Math.abs(a.z-b.z)<=1;
 /** The ordinary engine owns every movement edge and its global search budget. */
 export function processGroupOnMap(w:World,p:Pawn,ctx:NeedContext):boolean {
+  if(w.worldMaps&&!boundWorldGroup(w)){const owned=pawnWorldGroup(w,p.id);return owned?withWorldGroup(w,owned.state.id,v=>processGroupOnMap(v,p,ctx))??false:false;}
   const g=w.group;if(!g||!('memberIds' in g)||!g.memberIds.includes(p.id))return false;
   if(g.phase==='unloading'){
     if(['dead','downed'].includes(p.state)||hasMentalBreak(p)||p.flee||p.melee||p.shooting){cancelGroupPreparation(w);return false;}
@@ -82,6 +85,7 @@ export function processGroupOnMap(w:World,p:Pawn,ctx:NeedContext):boolean {
 /** At most512 manifest rows/64 source identities. Only future promises are
  * reconciled: contact receipts and actual inventories remain historical. */
 export function reconcileGroupPreparation(w:World):void {
+  if(w.worldMaps&&!boundWorldGroup(w)){for(const g of localWorldGroups(w).slice().sort((a,b)=>a.state.id-b.state.id))withWorldGroup(w,g.state.id,reconcileGroupPreparation);return;}
   const g=w.group;if(!g||!('manifest' in g))return;
   let pileIndex:Map<number,MaterialPile>|undefined;const currentPiles=()=>pileIndex??=new Map(w.piles.map(p=>[p.id,p]));
   if(mixedGroupProvisions(g)&&g.manifest.slice(0,g.cursor).some(line=>{if(line.item!=='pemmican')return false;const p=currentPiles().get(line.carriedPileId!);return !p||p.owner.type!=='inventory'||p.owner.pawnId!==line.carrierId||p.item!=='pemmican'||p.quantity!==line.quantity||!freshGroupProvision(p,w.tick);})){groupLog(w,'Préparation annulée : une provision déjà chargée n’est plus disponible ; les autres biens restent portés.');cancelGroupPreparation(w);return;}
@@ -104,6 +108,7 @@ export function reconcileGroupPreparation(w:World):void {
 
 /** Called after all on-map personal passes. All originals transfer together. */
 export function tryGroupDeparture(w:World):void {
+  if(w.worldMaps&&!boundWorldGroup(w)){for(const g of localWorldGroups(w).slice().sort((a,b)=>a.state.id-b.state.id))withWorldGroup(w,g.state.id,tryGroupDeparture);return;}
   const g=w.group;if(!w.planet||!g||!('manifest' in g)||g.phase!=='leaving')return;
   if(!g.exits.every(e=>{const p=w.pawns.find(p=>p.id===e.pawnId);return !!p&&!!e.cell&&same(p,e.cell)&&p.moveCooldown===0&&!p.path.length&&(p.motion?.end??0)<=w.tick;}))return;
   const base=groupFormationAuthority(w,true);
@@ -116,7 +121,7 @@ export function tryGroupDeparture(w:World):void {
     const people=new Set(plan.capture.members.map(p=>p.id)),items=new Set(plan.capture.items.map(p=>p.id));
     for(const p of plan.capture.members){releaseAllowedAreaReturn(p);if(isSecondaryContext(world))delete p.allowedAreaId;p.bedId=null;delete p.bedSlot;p.path=[];p.moveCooldown=0;p.planCooldown=0;p.state='idle';if(p.mental)p.mental.below=[0,0,0];delete p.motion;delete p.shooting;delete p.stagger;delete p.stun;}
     world.pawns=world.pawns.filter(p=>!people.has(p.id));world.piles=world.piles.filter(p=>!items.has(p.id));
-    if(isSecondaryContext(world)){
+    if(world.worldMaps){const record=boundWorldGroup(world);if(!record)throw Error('Missing group authority');record.localMapId=null;world.group=plan.next;}else if(isSecondaryContext(world)){
       const root=campaignAuthority(world),site=root.secondarySite!;
       plan.next.entry={...site.visit!.homeEntry};root.group=plan.next;delete world.group;
       site.visit=null;site.selected=false;flushSecondaryContext(root);
@@ -155,13 +160,13 @@ export function advanceGroup(w:World):void {
   const stationary=g.phase!=='travelling'||'members' in prospective&&!!prospective.stop,people=captureHumanOwners(w).people,expectation=colonyExpectation(w,g.members[0]!);
   const random=()=>healthRandom(w),notice=(_person:Pawn,message:string)=>groupLog(w,message);
   const result=advanceGroupPersonal(g,{tick:w.tick,schemaVersion:w.schemaVersion,seed:w.seed,legacyFood:w.foodRules==='legacy',legacyRest:w.restRules==='legacy',resting:stationary,
-    infectionChanceFactor:w.gameProfile?.difficulty==='adventure-story'?.75:1,mood:{people,expectation,difficultyMood:colonistMoodOffset(w,g.members[0]!)},joyToleranceFall:(expectation?.joyToleranceDropPerDay??.18)*100/6000,random,notice});
+    infectionChanceFactor:w.gameProfile?.difficulty==='adventure-story'?.75:1,mood:{people,expectation,difficultyMood:colonistMoodOffset(w,g.members[0]!)},lostThoughts:p=>lostThoughts(w,p,people),joyToleranceFall:(expectation?.joyToleranceDropPerDay??.18)*100/6000,random,notice});
   if(!result)return;
   if(result.deceased.length){
     const dead=new Set(result.deceased.map(p=>p.id));
     const actualAway=g;
     const losses=result.deceased.map(p=>({groupId:actualAway.id,tile:actualAway.tile,tick:p.health!.death!.tick,pawn:p,items:actualAway.items.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id)}));
-    w.groupLosses??=[];w.groupLosses.push(...losses);g.members=g.members.filter(p=>!dead.has(p.id));g.items=g.items.filter(i=>!('pawnId' in i.owner)||!dead.has(i.owner.pawnId));
+    if(w.worldGroups){const r=boundWorldGroup(w);if(!r)throw Error('Missing loss context');if(!w.worldGroups.lossContexts.some(c=>c.groupId===g!.id))w.worldGroups.lossContexts.push({groupId:g.id,originMapId:r.originMapId,context:r.context});}w.groupLosses??=[];w.groupLosses.push(...losses);g.members=g.members.filter(p=>!dead.has(p.id));g.items=g.items.filter(i=>!('pawnId' in i.owner)||!dead.has(i.owner.pawnId));
     if(!g.members.length)delete w.group;
     for(const loss of losses){notifyPawnDeath(w,loss.pawn);groupLog(w,`${loss.pawn.name} est décédé pendant le voyage ; son dossier et ses biens sont conservés à cette destination.`);}
     if(!g.members.length)return;
@@ -181,5 +186,5 @@ export function advanceGroup(w:World):void {
     }
   }
   if(g.tile!==provisionTile)adoptGroupProvisionClimate(w,g);
-  returnGroup(w,g);
+  if(!w.worldMaps)returnGroup(w,g);
 }

@@ -29,7 +29,7 @@ const log=(root:World,message:string)=>{root.events.push({tick:root.tick,type:'c
 
 /** A fresh landscape is drafted without changing the campaign. No scenario
  * factory, starting people, goods, research, old-map replay or random draw. */
-function draftSite(root:World,tileId:number):{site:SecondarySite;nextId:number}|undefined {
+export function draftSite(root:World,tileId:number):{site:SecondarySite;nextId:number}|undefined {
   const tile=root.planet?.tiles[tileId];
   if(!tile||tile.biome==='ocean'||tile.hilliness==='mountainous')return undefined;
   const seed=localSeedForTile(root.planet!.generationSeed,tileId),site=resolveSite(seed,{biome:tile.biome,hilliness:tile.hilliness});
@@ -50,7 +50,7 @@ function draftSite(root:World,tileId:number):{site:SecondarySite;nextId:number}|
   generated.apparelWear=createApparelWearCalendar(root.tick,(seed^0x0a77e1)>>>0);
   const definition=planetTileClimateDefinition(tile);
   generated.climate={revision:3,adoptedAt:root.tick,
-    calendarOrigin:climateTick(root)+calendarOffset,definition};
+    calendarOrigin:(root.worldMaps?root.worldMaps.calendarOrigin+root.tick:climateTick(root))+calendarOffset,definition};
   adoptWeather(generated);adoptWind(generated);ensureFireState(generated);
   adoptColonyEconomy(generated);
   // A Cassandra map must own its prospective disease calendar even while

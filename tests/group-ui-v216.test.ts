@@ -40,7 +40,7 @@ function setup(){
     candidates:world.pawns.map(pawn=>({pawn,ok:true})),sources:[]};
   const adapters:GroupPanelAdapters={capture:vi.fn(()=>facts),previewPlan:vi.fn<GroupPanelAdapters['previewPlan']>((_snapshot,_facts,draft)=>({ok:true,route:[world.planet!.civilianTile],carriers:[],mass:{grams:0,capacityGrams:35000,rations:0,pemmicanUnits:0,provisionNutrition:0,byMember:draft.memberIds.map(pawnId=>({pawnId,grams:0,capacityGrams:35000}))}})),
     previewRoute:vi.fn<GroupPanelAdapters['previewRoute']>(()=>({ok:false,reason:'Aucun groupe.'})),quoteTrade:vi.fn<GroupPanelAdapters['quoteTrade']>(()=>({ok:false,reason:'Aucun comptoir.'})),send:vi.fn(()=>Promise.resolve()),inspectPresentPawn:vi.fn()};
-  return {world,facts,adapters,snapshot:{world,planet:world.planet,losses:[]}};
+  return {world,facts,adapters,snapshot:{world,planet:world.planet,losses:[],originMapId:0}};
 }
 const find=(host:NodeFixture,key:string,value?:string)=>host.querySelectorAll('*').find(n=>Object.hasOwn(n.dataset,key)&&(value===undefined||n.dataset[key]===value))!;
 afterEach(()=>vi.unstubAllGlobals());
@@ -62,7 +62,7 @@ test('a pending or unknown command locks double submission across snapshots unti
   const {host}=dom(),{adapters,snapshot}=setup();let reject!:(cause:unknown)=>void;
   adapters.send=vi.fn(()=>new Promise((_resolve,no)=>{reject=no;}));const panel=createGroupPanel(host as unknown as HTMLElement,adapters);panel.update(snapshot);
   const checkbox=find(host,'groupMember').children[0]!.children[0]!;checkbox.checked=true;checkbox.fire('change');find(host,'groupPreview','formation').fire('click');
-  const start=find(host,'groupAction','start');start.fire('click');start.fire('click');expect(adapters.send).toHaveBeenCalledTimes(1);
+  const start=find(host,'groupAction','start');start.fire('click');start.fire('click');expect(adapters.send).toHaveBeenCalledTimes(1);expect(adapters.send).toHaveBeenCalledWith(expect.objectContaining({type:'group-start',originMapId:0}));
   panel.setRequestStatus({id:7,type:'command',state:'waiting',message:'Résultat encore inconnu.'});panel.update(snapshot);expect(start.getAttribute('aria-disabled')).toBe('true');
   reject(new SimulationRequestError('Arrêt pendant la commande.','unknown',true));await Promise.resolve();await Promise.resolve();
   panel.setRequestStatus({id:7,type:'command',state:'settled'});panel.update(snapshot);start.fire('click');expect(adapters.send).toHaveBeenCalledTimes(1);expect(host.textContent).toContain('Résultat de commande inconnu');
@@ -121,4 +121,19 @@ test('V391 draft nutrition is only the injected formation estimate, including an
   facts.mass={grams:0,capacityGrams:35000,rations:0,pemmicanUnits:0,provisionNutrition:0,byMember:[]};panel.update(snapshot);
   expect(find(host,'groupMass').textContent).toContain('0 repas de survie · 0 unités de pemmican · nutrition disponible 0');
   expect(adapters.send).not.toHaveBeenCalled();panel.dispose();
+});
+
+
+test('a refused caravan selection restores the confirmed group, and replacement rebuilds even identical selector keys',async()=>{
+ const {host}=dom(),{world,facts,adapters,snapshot}=setup(),pawn=world.pawns[0]!;
+ facts.mass={grams:0,capacityGrams:35000,rations:0,pemmicanUnits:0,provisionNutrition:0,byMember:[{pawnId:pawn.id,grams:0,capacityGrams:35000}]};
+ const group={id:1,startedAt:world.tick,destination:world.planet!.civilianTile,ledger:emptyGroupLedger(),phase:'loading' as const,memberIds:[pawn.id],rendezvous:{x:pawn.x,z:pawn.z},meeting:[{pawnId:pawn.id,cell:{x:pawn.x,z:pawn.z}}],cursor:0,manifest:[],exits:[{pawnId:pawn.id,cell:null}]};
+ const other={...group,id:2};world.group=group;
+ const campaign={revision:2 as const,campaignSeed:world.seed,mapSize:{width:32,height:32},groupLosses:[],lossContexts:[],lostMemories:[],activeMapId:0,rootMapId:0,maxSettlements:1 as const,selectedGroupId:1,maps:[],incidents:[],groups:[group,other].map(state=>({id:state.id,originMapId:0,localMapId:0,phase:state.phase,originTile:world.planet!.homeTile,filthPresent:!!world.filth,tile:world.planet!.homeTile,memberIds:state.memberIds,mass:null,context:{seed:world.seed,width:32,height:32,climate:world.climate,site:world.site,scenario:world.scenario},entryActions:{visit:{ok:false},camp:{ok:false},settle:{ok:false}},state}))};
+ adapters.send=vi.fn(async command=>{if(command.type==='group-select')throw new SimulationRequestError('Caravane indisponible.','refused');});
+ const panel=createGroupPanel(host as unknown as HTMLElement,adapters),confirmed={...snapshot,group,campaign};panel.update(confirmed);
+ const select=host.querySelectorAll('*').find(n=>n.getAttribute('aria-label')==='Choisir une caravane')!;const option=select.children[1]!;expect(select.children).toHaveLength(3);expect(option.value).toBe('1');expect(select.value).toBe('1');
+ select.value='2';select.fire('change');await Promise.resolve();await Promise.resolve();expect(select.value).toBe('1');panel.update(confirmed);expect(select.value).toBe('1');expect(select.children[1]).toBe(option);
+ find(host,'groupAction','cancel').fire('click');expect(adapters.send).toHaveBeenLastCalledWith({type:'group-cancel',groupId:1});await Promise.resolve();await Promise.resolve();
+ panel.resetForReplacement();expect(select.children).toHaveLength(0);expect(select.dataset.key).toBeUndefined();panel.update(confirmed);expect(select.value).toBe('1');expect(select.children[1]).not.toBe(option);panel.dispose();
 });
