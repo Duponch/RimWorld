@@ -32,11 +32,17 @@ Le test humain remplaçant temporairement le pigment caché par celui de l’or 
 
 Les premiers témoins de matériau n’appelaient pas `EnvironmentLighting.update` avec une couverture naturelle réelle. Ils vérifiaient le mélange et les masques, mais ne pouvaient pas fermer cette interaction. La validation visuelle avait donc été annoncée trop largement ; les anciennes captures et limites restent conservées.
 
-Les matériaux extérieurs des roches ont maintenant une variante d’éclairage qui ignore cette atténuation intérieure. Lumières locales et ombres ordinaires restent raccordées ; les autres matériaux, notamment le sol sous un toit, gardent leur traitement. Aucun changement de toit, de visibilité, de géométrie, de simulation ou de sauvegarde. Le test local en or reste temporaire et séparé du correctif ; il ne crée aucun gisement.
+Les matériaux extérieurs des roches ont maintenant une variante d’éclairage qui ignore cette atténuation intérieure. Lumières locales et ombres ordinaires restent raccordées ; les autres matériaux, notamment le sol sous un toit, gardent leur traitement. Aucun changement de toit, de visibilité, de géométrie, de simulation ou de sauvegarde. Le test local en or était temporaire et séparé du correctif ; il n’a créé aucun gisement.
 
 Contrôles complémentaires :17cas/quatre fichiers PASS19,318s ; type PASS9,889s. Chrome/WebGPU PASS4,744s sur les vraies données de la carte250² au tick1037, dans un rendu isolé en lecture seule. Le champ est réellement actualisé, avec soleil, ombres et textures. Même massif et pigment or pour l’ancienne variante et la correction ; seule la composante graphique de couverture du champ est neutralisée pour le témoin, sans modifier le World. L’ancien rendu change85026pixels quand la couverture est neutralisée ; le rendu corrigé n’en change aucun. Quatre captures, dont avant/après inspectées ROOT, erreurs GPU/console[]. Le choix de ce cas diagnostique ne qualifie pas une campagne ni les performances générales.
 
 Rapports `tmp/world-foundations/rock-roof-exterior/native-01/`, manifeste d’entrée et sources conservés. Les contrôles précédents de visibilité et de conservation restent acquis dans leur périmètre ; aucune campagne ni corpus inchangé rejoué.
+
+## Pigment sombre final
+
+Après confirmation humaine du résultat avec l’or, le pigment temporaire est remplacé par une teinte originale « ardoise d’encre » (`0x3b3d49`). Elle conserve le grain de pierre, les facettes, les poids du mélange entre voisins et l’éclairage extérieur corrigé. Aucun voile, nouvelle texture, nouveau minerai exploitable ou changement de sauvegarde ajouté.
+
+Contrôle Chrome/WebGPU final PASS5,178s sur les mêmes données réelles et le même éclairage naturel : aucune différence due à la couverture intérieure sur les roches corrigées, erreurs GPU/console[]. Capture sombre inspectée ROOT ; rapport `tmp/world-foundations/rock-roof-exterior/native-02-ink-slate/`. Les contrôles de règles, de géométrie et de types inchangés sont réutilisés pour cette seule modification de couleur.
 
 ## Reprise des fondations
 

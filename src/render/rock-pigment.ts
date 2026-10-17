@@ -9,7 +9,9 @@ import { foggedCell256 } from '../sim/exploration-state-256';
 const color=new THREE.Color();
 /** Fog is one more original rock pigment: same corner weights, wash, light
  * and stone texture. It never borrows an undiscovered mineral or geology. */
-export const ROCK_FOG_PIGMENT=0x31383f;
+// Original ink-slate pigment for undiscovered rock. Presentation only: this
+// is not an ore definition and never changes the simulated tile or its yield.
+export const ROCK_FOG_PIGMENT=0x3b3d49;
 
 /** Pigment belongs to a grid corner, just like the shared rock profile. Nearby
  * occupied cells lend their colour with a common irregular brush direction.
