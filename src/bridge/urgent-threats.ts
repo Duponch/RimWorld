@@ -8,7 +8,7 @@ export type ThreatPauseMode = 'never' | 'major' | 'any-threat';
 export interface ThreatPauseToken { generation: number; pauseRevision: number }
 export interface ThreatSpeedOptions { explicit: true; token: ThreatPauseToken }
 export type ThreatSite = 'home' | 'secondary';
-export type ThreatKind = 'raid' | 'mechanoid' | 'manhunter' | 'ancient-shrine';
+export type ThreatKind = 'raid' | 'mechanoid' | 'manhunter' | 'ancient-shrine' | 'camp-detected';
 export interface UrgentThreatRow {
   mapId?:number;tile?:number|null;site: ThreatSite; kind: ThreatKind; totalArrivals: number; lastTick: number;
   lastCount: number; actorId?: number;
@@ -37,14 +37,14 @@ export function validUrgentThreatSnapshot(v: unknown, tick: unknown, speed: unkn
     || !keys(v, ['generation','pauseRevision','serial','urgentHeld','rows'])
     || !integer(v.generation) || v.generation < 1 || !integer(v.pauseRevision) || !integer(v.serial)
     || v.pauseRevision > v.serial || typeof v.urgentHeld !== 'boolean'
-    || (v.urgentHeld && (v.pauseRevision === 0 || speed !== 0)) || !Array.isArray(v.rows) || v.rows.length > (maxTiles===undefined?3_000_000:Math.max(8,(maxTiles+1)*4)) || Reflect.ownKeys(v.rows).length !== v.rows.length + 1) return false;
+    || (v.urgentHeld && (v.pauseRevision === 0 || speed !== 0)) || !Array.isArray(v.rows) || v.rows.length > (maxTiles===undefined?3_000_000:Math.max(8,(maxTiles+1)*5)) || Reflect.ownKeys(v.rows).length !== v.rows.length + 1) return false;
   const seen = new Set<string>(); let total = 0;
   for (let i = 0; i < v.rows.length; i++) {
     const d = Object.getOwnPropertyDescriptor(v.rows, String(i));
     if (!d || !('value' in d)) return false;
     const r = d.value;
     if (!record(r) || !keys(r, ['site','kind','totalArrivals','lastTick','lastCount'], ['actorId','mapId','tile'])
-      || !['home','secondary'].includes(r.site as string) || !['raid','mechanoid','manhunter','ancient-shrine'].includes(r.kind as string)
+      || !['home','secondary'].includes(r.site as string) || !['raid','mechanoid','manhunter','ancient-shrine','camp-detected'].includes(r.kind as string)
       || Object.hasOwn(r,'mapId')!==Object.hasOwn(r,'tile')||r.mapId!==undefined&&(!integer(r.mapId)||r.tile!==null&&(!integer(r.tile)||maxTiles!==undefined&&r.tile>=maxTiles))
       || !integer(r.totalArrivals) || r.totalArrivals < 1 || !integer(r.lastTick) || r.lastTick > tick
       || !integer(r.lastCount) || r.lastCount < 1 || (Object.hasOwn(r, 'actorId') && (!integer(r.actorId) || r.actorId < 1))) return false;
@@ -55,7 +55,7 @@ export function validUrgentThreatSnapshot(v: unknown, tick: unknown, speed: unkn
 }
 
 type LocalMap = Pick<World, 'raids' | 'wildlife' | 'ancientShrineWarnings'>;
-interface MapBaseline { map: LocalMap; raids: Map<ThreatKind, string>; animals: Map<number, number>; warnings:Set<string> }
+interface MapBaseline { map: LocalMap; raids: Map<ThreatKind, string>; animals: Map<number, number>; warnings:Set<string>;detected:boolean }
 /** Only active episodes are retained. Archives cannot become arrivals after eviction. */
 export class UrgentThreatObserver {
   private maps = new Map<ThreatSite|number, MapBaseline>();
@@ -64,8 +64,8 @@ export class UrgentThreatObserver {
     this.state = { generation: this.state.generation + 1, serial: 0, pauseRevision: 0, urgentHeld: false, rows: [] };
     this.maps.clear(); this.prepareMaps(world);
   }
-  private owners(world: CampaignState): [ThreatSite|number,LocalMap,(number|null)?][] {
-    if(world.worldMaps)return registeredMaps(world).map(map=>[registeredMapId(map)!,map,world.worldMaps!.sites.find(s=>s.id===registeredMapId(map))!.tile]);
+  private owners(world: CampaignState): [ThreatSite|number,LocalMap,(number|null)?,boolean?][] {
+    if(world.worldMaps)return registeredMaps(world).map(map=>[registeredMapId(map)!,map,world.worldMaps!.sites.find(s=>s.id===registeredMapId(map))!.tile,!!world.worldMaps!.sites.find(s=>s.id===registeredMapId(map))!.campPressure?.alert]);
     return [['home', world as World], ...(world as World).secondarySite ? [['secondary', (world as World).secondarySite!.map] as [ThreatSite, SecondaryMap]] : []];
   }
   /** Call BEFORE a new map's first step, including command publication. */
@@ -73,15 +73,15 @@ export class UrgentThreatObserver {
     const owners = this.owners(world);
     for (const site of this.maps.keys()) if (!owners.some(([s]) => s === site)) this.maps.delete(site);
     // Registry IDs are monotone physical owners. Promotion only replaces their context views.
-    for (const [site, map] of owners) { const before=this.maps.get(site); if (!before || typeof site!=='number'&&before.map!==map) this.maps.set(site, this.read(map)); }
+    for (const [site, map,,detected] of owners) { const before=this.maps.get(site); if (!before || typeof site!=='number'&&before.map!==map) this.maps.set(site, this.read(map,detected)); }
   }
-  private read(map: LocalMap): MapBaseline {
+  private read(map: LocalMap,detected=false): MapBaseline {
     const raids = new Map<ThreatKind, string>(), animals = new Map<number, number>();
     if (map.raids?.active) raids.set('raid', map.raids.active.id + ':' + map.raids.active.startedAt);
     if (map.raids?.mechActive) raids.set('mechanoid', map.raids.mechActive.id + ':' + map.raids.mechActive.startedAt);
     for (const a of map.wildlife?.animals ?? []) if (a.manhunter) animals.set(a.id, a.manhunter!.startedAtCore);
     const warnings=new Set((map.ancientShrineWarnings?.pairs??[]).filter(p=>p.letter).map(p=>p.triggerId+':'+p.letter!.tick));
-    return { map, raids, animals, warnings };
+    return { map, raids, animals, warnings,detected };
   }
   capture(world: CampaignState, mode: ThreatPauseMode): boolean {
     let pause = false;
@@ -93,10 +93,10 @@ export class UrgentThreatObserver {
       this.state.serial++;
       pause ||= mode === 'any-threat' || (mode === 'major' && kind !== 'manhunter');
     };
-    for (const [site, map,tile] of this.owners(world)) {
+    for (const [site, map,tile,detected] of this.owners(world)) {
       const before = this.maps.get(site);
       if (!before || typeof site!=='number'&&before.map!==map) throw new Error('Threat observer map was not bootstrapped before step.');
-      const after = this.read(map);
+      const after = this.read(map,detected);if(after.detected&&!before.detected)arrive(site,tile,'camp-detected',1);
       for (const kind of ['raid', 'mechanoid'] as const) if (after.raids.has(kind) && after.raids.get(kind) !== before.raids.get(kind)) {
         const raid = kind === 'raid' ? map.raids!.active! : map.raids!.mechActive!;
         arrive(site,tile, kind, Math.max(1, raid.members.length), raid.members[0]);

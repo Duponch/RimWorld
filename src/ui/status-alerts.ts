@@ -28,9 +28,9 @@ import { setTooltip,type TooltipContent } from './tooltip';
 import {readResearchReadiness} from './research-readiness';
 
 export interface NotificationContext { panel:Exclude<Panel,null>;category?:ArchitectCategory;tool?:'stockpile';worldTab?:'group'|'individual'; }
-export interface StatusAlert { key:string;text:string;targets:NotificationTarget[];context?:NotificationContext;tab?:'health'|'needs'|'prisoner';tooltip?:TooltipContent;campaign?:({mapId:number}|{site:'home'|'secondary'})&{actorId:number}; }
+export interface StatusAlert { key:string;text:string;targets:NotificationTarget[];context?:NotificationContext;tab?:'health'|'needs'|'prisoner';tooltip?:TooltipContent;campaign?:({mapId:number}|{site:'home'|'secondary'})&{actorId?:number}; }
 export function readCampaignMapAlerts(summary:Pick<CampaignSummary,'maps'|'incidents'>):StatusAlert[]{
- return summary.incidents.map(incident=>{const map=summary.maps.find(map=>map.id===incident.mapId),place=map?mapDisplayName(map):`Carte ${incident.mapId}`,label=incident.kind==='raid'?'assaillant(s)':incident.kind==='mechanoid'?'mécanoïde(s)':incident.kind==='manhunter'?'animal(aux) en rage':incident.kind==='downed'?'colon(s) à terre':'visiteur(s)';return {key:`campaign:${incident.mapId}:${incident.kind}:${incident.actorId}`,text:`${place} · ${incident.count} ${label} · voir`,targets:[],campaign:{mapId:incident.mapId,actorId:incident.actorId}};});
+ return [...summary.maps.filter(map=>map.campPressure?.alert).map(map=>({key:`camp-pressure:${map.id}`,text:`${mapDisplayName(map)} · détecté · risque mécanique · voir`,targets:[],campaign:{mapId:map.id}})),...summary.incidents.map(incident=>{const map=summary.maps.find(map=>map.id===incident.mapId),place=map?mapDisplayName(map):`Carte ${incident.mapId}`,label=incident.kind==='raid'?'assaillant(s)':incident.kind==='mechanoid'?'mécanoïde(s)':incident.kind==='manhunter'?'animal(aux) en rage':incident.kind==='downed'?'colon(s) à terre':'visiteur(s)';return {key:`campaign:${incident.mapId}:${incident.kind}:${incident.actorId}`,text:`${place} · ${incident.count} ${label} · voir`,targets:[],campaign:{mapId:incident.mapId,actorId:incident.actorId}};})];
 }
 const present=<T>(target:T|undefined):target is T=>target!==undefined;
 const people=(world:World,pawns:readonly Pawn[])=>[...pawns].sort((a,b)=>a.id-b.id).map(p=>personNotificationTarget(world,p.id)).filter(present);
@@ -66,7 +66,7 @@ export function readAvailabilityStatusAlerts(world:World):StatusAlert[] {
 /** All predicates and targets share the same confirmed snapshot. Labels are
  * never parsed to find an entity, a medical condition or a management panel. */
 export function readStatusAlerts(world:World,food:FoodReadability=captureFoodReadability(world,{pileVisible:p=>knownPile256(world,p),structureVisible:s=>knownBuilding256(world,s)})):StatusAlert[] {
-  const rows:StatusAlert[]=readAvailabilityStatusAlerts(world),colonists=world.pawns.filter(isColonist),living=colonists.filter(p=>p.state!=='dead');
+  const rows:StatusAlert[]=[...readAvailabilityStatusAlerts(world),...(world.campaignMap?.revision===2?readCampaignMapAlerts({maps:world.campaignMap.maps,incidents:[]}):[])],colonists=world.pawns.filter(isColonist),living=colonists.filter(p=>p.state!=='dead');
   const campaignIncidents:readonly (MapIncident|{site:'home'|'secondary';kind:MapIncident['kind'];count:number;actorId:number})[]=world.campaignMap?.incidents??[];
   for(const incident of campaignIncidents){
     const target='mapId' in incident?{mapId:incident.mapId}:{site:incident.site},maps=world.campaignMap&&'maps' in world.campaignMap?world.campaignMap.maps:[];

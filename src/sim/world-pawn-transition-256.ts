@@ -29,7 +29,7 @@ export type PassedWorldPreparation256={ok:true;row:WorldPawnOwner256;commit():vo
 export function preparePassedToWorld256(state:WorldPawnsState256,input:WorldPawnOwner256,registry:WorldFactionRegistry256,random:WorldPawnPassRandom256,options:WorldPawnEntryOptions256={}):PassedWorldPreparation256 {
  const nativeBefore=state.nativeOrder;if(!nativeWorldPawnOrderCurrent256(state,nativeBefore))return {ok:false,reason:'Actual native WorldPawn order is not mutable/admitted'};
  if(!plainWorldPawnData256(input))return {ok:false,reason:'PassedToWorld requires admitted original data'};
- if(input.kind==='human'&&(input.actor.visitor||input.actor.podRescue||input.actor.raid||input.actor.prisoner&&!(options.version===259&&input.actor.worldAffiliation259?.guestStatus==='Prisoner')))return {ok:false,reason:'Actual guest HostFaction history must remain with its existing owner'};
+ if(input.kind==='human'&&(input.actor.visitor||input.actor.podRescue||input.actor.raid||input.actor.prisoner&&!((options.version===259||options.version===260)&&input.actor.worldAffiliation259?.guestStatus==='Prisoner')))return {ok:false,reason:'Actual guest HostFaction history must remain with its existing owner'};
  if(Object.hasOwn(input,'destroyed')&&(input.destroyed!==true||input.mode!=='dead'||deadWorldPawn256(input)||input.items.length||input.packed.length))return {ok:false,reason:'Destroyed original cannot carry possessions or invent clinical death'};
  if((input.mode==='dead')!==terminalWorldPawn256(input))return {ok:false,reason:'PassedToWorld terminal mode does not match its original'};
  if(!Object.isExtensible(input.actor)||Reflect.ownKeys(input.actor).some(k=>{const d=Object.getOwnPropertyDescriptor(input.actor,k)!;return !Object.hasOwn(d,'value')||!d.writable||!d.configurable;}))return {ok:false,reason:'PassedToWorld requires its mutable original'};
@@ -39,7 +39,7 @@ export function preparePassedToWorld256(state:WorldPawnsState256,input:WorldPawn
  const effects=prepareWorldPawnEntryEffects256(input,state.atCore,registry,random,options);if(!effects.ok)return effects;const row=effects.row;
  // Actual present colonist at this true PassToWorld only, before SetFaction.
  // This supplies no past history to a load/migration or an already foreign row.
- if(options.version===259&&input.kind==='human'&&row.kind==='human'&&!terminalWorldPawn256(input)&&isColonist(input.actor)&&!input.actor.prisoner&&!input.actor.visitor&&!input.actor.podRescue&&!input.actor.raid&&input.actor.worldAffiliation259?.factionId===registry.playerFactionId&&input.actor.worldAffiliation259.hostFactionId===null&&input.actor.worldAffiliation259.guestStatus==='Guest')row.everColonist=true;
+ if((options.version===259||options.version===260)&&input.kind==='human'&&row.kind==='human'&&!terminalWorldPawn256(input)&&isColonist(input.actor)&&!input.actor.prisoner&&!input.actor.visitor&&!input.actor.podRescue&&!input.actor.raid&&input.actor.worldAffiliation259?.factionId===registry.playerFactionId&&input.actor.worldAffiliation259.hostFactionId===null&&input.actor.worldAffiliation259.guestStatus==='Guest')row.everColonist=true;
  const nativeAfter=nativeBefore?passNativeWorldPawnOrder256(nativeBefore,input.actor.id,terminalWorldPawn256(input)):undefined;
  const atBefore=state.atCore,originals=state.owners.slice(),before=JSON.stringify(input),prepared=JSON.stringify(row);let used=false;
  return {ok:true,row,commit(){if(used||!nativeWorldPawnOrderCurrent256(state,nativeBefore)||state.atCore!==atBefore||JSON.stringify(input)!==before||JSON.stringify(row)!==prepared||state.owners.length!==originals.length||state.owners.some((r,i)=>r!==originals[i]))throw Error('Stale PassedToWorld transaction');used=true;cancelWorldPawnGC256(state);
@@ -57,7 +57,7 @@ export function prepareWorldPawnEntryEffects256(input:WorldPawnOwner256,atCore:n
  const row=structuredClone(input);
 
  if(row.kind==='mechanical'){
-  if(options.version!==259||options.situation!=='Free'||!validMechanicalWorldPawn259(row,259,registry)||!Number.isSafeInteger(row.enteredAtAbsCore)||row.enteredAtAbsCore<0)return {ok:false,reason:'Mechanical PassedToWorld requires its actual cleaned original, faction and DeSpawn clock'};
+  if((options.version!==259&&options.version!==260)||options.situation!=='Free'||!validMechanicalWorldPawn259(row,options.version,registry)||!Number.isSafeInteger(row.enteredAtAbsCore)||row.enteredAtAbsCore<0)return {ok:false,reason:'Mechanical PassedToWorld requires its actual cleaned original, faction and DeSpawn clock'};
   delete row.free;if(!terminalWorldPawn256(row))row.free=true;return {ok:true,row};
  }
  if(options.situation!=='CaravanMember'&&!terminalWorldPawn256(row)&&row.actor.health&&groupPawnInterval256(row.actor.id,atCore,7500,1))for(let n=0;n<30;n++)autoTendWorldPawn256(row.actor.health);
@@ -73,7 +73,7 @@ export function prepareWorldPawnEntryEffects256(input:WorldPawnOwner256,atCore:n
    const medieval=oldFaction!==undefined&&conditions.find(c=>c.factionId===oldFaction.id)!.techLevel>=3;
    factionId=factionChoice(registry,conditions,medieval,false,random);if(factionId===null)factionId=factionChoice(registry,conditions,medieval,true,random);
   }
-  if(row.kind==='animal'&&row.actor.domestic&&factionId!==registry.playerFactionId&&options.version!==259)return {ok:false,reason:'Actual SetFaction of a domesticated animal needs its non-player domestic owner adapter'};
+  if(row.kind==='animal'&&row.actor.domestic&&factionId!==registry.playerFactionId&&(options.version!==259&&options.version!==260))return {ok:false,reason:'Actual SetFaction of a domesticated animal needs its non-player domestic owner adapter'};
  }
  row.factionId=factionId;
  if(row.kind==='human'&&row.actor.worldAffiliation259){row.actor.worldAffiliation259={...row.actor.worldAffiliation259,factionId};if(factionId!==input.factionId){const def=registry.factions.find(f=>f.id===factionId)?.def;row.actor.faction=def&&WORLD_FACTION_DEFINITIONS_256[def].player?'colony':def&&(WORLD_FACTION_DEFINITIONS_256[def].permanentEnemy||WORLD_FACTION_DEFINITIONS_256[def].naturalEnemy)?'outlaws':'outlanders';}}

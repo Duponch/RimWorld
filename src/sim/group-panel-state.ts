@@ -16,13 +16,13 @@ export interface GroupTradeView {
   buys:readonly GroupTradeChoice[];sells:readonly GroupTradeChoice[];
 }
 export interface GroupPermissionView {
-  originTile:number;originLabel:string;maximumSources:number;
+  reform?:boolean;originTile:number;originLabel:string;maximumSources:number;
   mass:GroupMassView|null;confirmedRoute:readonly number[];
   actions:Readonly<Record<GroupPanelAction,GroupActionPermission>>;
   trade:GroupTradeView|null;
 }
 export type GroupFormationPreview=
-  | {ok:true;route:readonly number[];mass:GroupMassView;carriers:readonly {pileId:number;pawnId:number;quantity:number}[]}
+  | {ok:true;quote?:string;route:readonly number[];mass:GroupMassView;carriers:readonly {pileId:number;pawnId:number;quantity:number}[]}
   | {ok:false;reason:string};
 export type GroupRoutePreview={ok:true;route:readonly number[];durationCore:number}|{ok:false;reason:string};
 export type GroupTradePreview={ok:true;signature:string;totalSilver:number;mass:GroupMassView}|{ok:false;reason:string};

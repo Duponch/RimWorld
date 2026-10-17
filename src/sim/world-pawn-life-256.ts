@@ -52,13 +52,13 @@ function animalAge(row:Extract<WorldPawnOwner256,{kind:'animal'}>,toCore:number,
  * This reads actual fields; it does not run a future clinical tick or trial. */
 export function worldPawnActiveBoundary256(row:WorldPawnOwner256,version=256,atCore=row.clockCore):string|null {
  if(terminalWorldPawn256(row)||row.mode==='mothballed')return null;
- if(row.items.length||row.packed.length){if(version!==259)return 'Actual off-map item/gear ticking requires its retained-holder adapter';if(!validSuspendedWorldPawnGoods259(row,atCore))return 'Actual suspended item holder/frontier is not admitted';}
- if(row.kind==='mechanical')return version===259&&row.items.length===0&&row.packed.length===0?null:'Mechanical WorldPawn owner is not admitted';
+ if(row.items.length||row.packed.length){if((version!==259&&version!==260))return 'Actual off-map item/gear ticking requires its retained-holder adapter';if(!validSuspendedWorldPawnGoods259(row,atCore))return 'Actual suspended item holder/frontier is not admitted';}
+ if(row.kind==='mechanical')return (version===259||version===260)&&row.items.length===0&&row.packed.length===0?null:'Mechanical WorldPawn owner is not admitted';
  if(row.kind==='animal'){
   if(row.actor.pregnancy)return 'Actual off-map pregnancy requires miscarriage and newborn WorldPawn-owner adapters';
   const egg=worldPawnEggBoundary256(row.actor,worldPawnMothballReadiness256(row)==='yes');if(egg)return egg;
  }
- if(version===259){const range=offmapThermalRange259(row.actor,row.items);if(typeof range==='string')return range;}
+ if((version===259||version===260)){const range=offmapThermalRange259(row.actor,row.items);if(typeof range==='string')return range;}
  else if(row.actor.health?.heatstroke||row.actor.health?.hypothermia)return 'Actual off-map thermal hediff owner is not bound';
  return null;
 }
@@ -68,7 +68,7 @@ export function advanceWorldPawnRow256(row:WorldPawnOwner256,toCore:number,rando
  if(terminalWorldPawn256(row))return {ok:true};
  if(toCore<row.clockCore||toCore%10)return {ok:false,reason:'Invalid WorldPawn personal clock'};
  const delta=toCore-row.clockCore;if(!delta)return {ok:true};
- if(row.kind==='mechanical'){const reason=version===259?advanceMechanicalWorldPawn259(row,toCore):'Future mechanical WorldPawn';return reason?{ok:false,reason}:{ok:true};}
+ if(row.kind==='mechanical'){const reason=(version===259||version===260)?advanceMechanicalWorldPawn259(row,toCore):'Future mechanical WorldPawn';return reason?{ok:false,reason}:{ok:true};}
  const mothball=row.mode==='mothballed';
  const activeBoundary=worldPawnActiveBoundary256(row,version,toCore);if(activeBoundary)return {ok:false,reason:activeBoundary};
  if(row.kind==='animal'){
@@ -88,7 +88,7 @@ export function advanceWorldPawnRow256(row:WorldPawnOwner256,toCore:number,rando
   const frontier=row.kind==='animal'?worldPawnAnimalConditionFrontier256(row.actor,h,random):humanConditionMedicalFrontier256(row.actor,h,toCore/10,random,{kind:'world-pawn'});
   advanceMedical(h,toCore/10-h.tick,medicalContext,random,frontier);frontier?.commit();
  }
- if(!mothball&&version===259)advanceOffmapThermal259(a,row.items,toCore,WORLD_PAWN_NO_HOLDER_TEMPERATURE_259,()=>row.kind==='animal'?createAnimalMedicalRecord256({schemaVersion:version,tick:toCore/10},row.actor,toCore/10):createMedicalRecord(toCore/10));
+ if(!mothball&&(version===259||version===260))advanceOffmapThermal259(a,row.items,toCore,WORLD_PAWN_NO_HOLDER_TEMPERATURE_259,()=>row.kind==='animal'?createAnimalMedicalRecord256({schemaVersion:version,tick:toCore/10},row.actor,toCore/10):createMedicalRecord(toCore/10));
  h=a.health;
  if(!mothball&&h){const status=medicalStatus(h);if(status==='dead'){commitToxicDeath256(h,random);a.state='dead';row.mode='dead';delete row.free;row.clockCore=h.death!.tick*10;return {ok:true};}a.state=status==='downed'?'downed':'idle';
  }

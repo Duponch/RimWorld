@@ -1,3 +1,6 @@
+import type {ReformDeparture260} from './group-reform-departure-260.ts';
+export type {ReformDeparture260} from './group-reform-departure-260.ts';
+import {prepareReformRemovalAreas260} from './group-reform-removal-areas-260.ts';
 import {brandHeldCasketRemoval259,prepareHeldCasketRemoval259} from './world-pawn-casket-259.ts';
 import {areaRemovalWrites259,removalWritesApplied259,removalWritesMutable259,sealRemovalOriginal259} from './map-removal-writes-259.ts';
 import {prepareRemovedMapBeds256} from './actor-bed-transition-256.ts';
@@ -18,7 +21,7 @@ import {registeredCampaign,registeredMapId,registeredMap} from './world-map-cont
 import {captureHumanOwners} from './human-owners.ts';
 import {captureDuckMapRemovedOwners256} from './duck-owner-capture-256.ts';
 import {cleanMapRemovedAnimal256,cleanMapRemovedHumanRecord259,hasMapRemovalJob259} from './world-lost-owners.ts';
-import {clearReleasedPawnAssignments259,planPawnDrops} from './work-release.ts';
+import {clearReleasedPawnAssignments259,planPawnDrops,planReformRemainingDrops260} from './work-release.ts';
 import {finishRoomRest,rememberRoomUse} from './room-experience.ts';
 import {releaseAllowedAreaReturn} from './allowed-area-state.ts';
 import {cancelAutomaticCombat} from './automatic-combat-state.ts';
@@ -50,20 +53,20 @@ function cleanHumanDraft(map:World,p:Pawn,area:ReturnType<typeof prepareRemovedM
 }
 /** Actual259 MapRemoved, including a final home. Historical missing actor or
  * lifecycle authority refuses BEFORE memories, cleanup, clocks or RNG change. */
-export function prepareMapRemoved259(input:CampaignState,map:World,mapId:number,automatic:boolean):CampMapRemoved256 {
+export function prepareMapRemoved259(input:CampaignState,map:World,mapId:number,automatic:boolean,departure?:ReformDeparture260):CampMapRemoved256 {
  const root=registeredCampaign(input),no=(reason:string):CampMapRemoved256=>({ok:false,reason}),site=root.worldMaps?.sites.find(s=>s.id===mapId);
- if(root.schemaVersion!==259||!site||registeredCampaign(map)!==root||registeredMapId(map)!==mapId||registeredMap(root,mapId)!==map||map.tick!==root.tick)return no('Le retrait doit viser sa vraie carte actuelle.');
+ if((Number(root.schemaVersion)!==259&&root.schemaVersion!==260)||!site||registeredCampaign(map)!==root||registeredMapId(map)!==mapId||registeredMap(root,mapId)!==map||map.tick!==root.tick)return no('Le retrait doit viser sa vraie carte actuelle.');
  // One capture: local physical slots plus knowledge of the actual humans in
  // the campaign. Remembered interlocutors may already be in a true caravan.
- const humans=captureHumanOwners(map),captures=humans.slots.filter(s=>s.kind==='map'&&s.pawn&&alive(s.pawn));
+ const humans=captureHumanOwners(map),captures=humans.slots.filter(s=>s.kind==='map'&&s.pawn&&alive(s.pawn)&&!departure?.ids.has(s.pawn.id));
  const lostColonists=captures.map(s=>s.pawn!).filter(p=>isColonist(p)&&!p.prisoner&&!p.visitor&&p.state!=='dead');
- const animals=[...(map.wildlife?.animals??[]).filter(alive).map(animal=>({animal,clock:map.tick})),...captureDuckMapRemovedOwners256(map)];
+ const animals=[...(map.wildlife?.animals??[]).filter(alive).map(animal=>({animal,clock:map.tick})),...captureDuckMapRemovedOwners256(map)].filter(r=>!departure?.ids.has(r.animal.id));
  const mechanical=map.mechanoids??[];
- if(!captures.length&&!animals.length&&!mechanical.length&&!map.structures.some(c=>isAncientCasket256(c)&&ancientCasketHasContents256(c.casket)))return {ok:true,current:()=>true,commit(){}};
+ if(!departure&&!captures.length&&!animals.length&&!mechanical.length&&!map.structures.some(c=>isAncientCasket256(c)&&ancientCasketHasContents256(c.casket)))return {ok:true,current:()=>true,commit(){}};
  const state=root.worldPawns,factions=root.worldFactions;if(!state||!factions)return no('Les propriétaires WorldPawns et factions réellement nés manquent ; aucun passé n’est créé.');
  const nativeBefore=state.nativeOrder,now=root.tick*10,at=state.atCore;
  if(!Object.isExtensible(state.owners)||!Object.getOwnPropertyDescriptor(state.owners,'length')?.writable)return no('Le vrai registre WorldPawns n’est pas mutable.');
- if(map.pawns.some(p=>p.surgery||p.rescue||p.animalRescue||p.animalHandling?.kind==='lead'))return no('Terminez le soin, portage ou cordage physique entre originaux avant ce retrait de carte.');
+ if(map.pawns.some(p=>!departure?.ids.has(p.id)&&(p.surgery||p.rescue||p.animalRescue||p.animalHandling?.kind==='lead')))return no('Terminez le soin, portage ou cordage physique entre originaux avant ce retrait de carte.');
  if(!nativeWorldPawnOrderCurrent256(state,nativeBefore)||at!==now&&!(automatic&&at+10===now))return no('La frontière réelle WorldPawns/carte ne permet pas ce retrait.');
  let absolute:number;try{absolute=actualCampRemovalAbsCore256(root,map);}catch(e){return no(e instanceof Error?e.message:String(e));}
  if(root.worldFactions?.settlements.some(s=>s.tile===site.tile&&s.factionId!==factions.playerFactionId)&&captures.some(s=>s.pawn!.worldAffiliation259?.factionId===factions.playerFactionId))return no('Le vrai destinataire du kidnapping sur carte-parent hostile manque ; la carte est conservée.');
@@ -74,12 +77,13 @@ export function prepareMapRemoved259(input:CampaignState,map:World,mapId:number,
   if(p.surgery||p.rescue||p.animalRescue||p.animalHandling?.kind==='lead')return no('Terminez le soin, portage ou cordage physique entre originaux avant ce retrait de carte.');
   if(!mutableWorldPawnOriginal256(p)||p.health&&p.health.tick!==map.tick)return no('Le retrait exige l’original humain mutable à son horloge réelle.');
  }
- for(const m of mechanical){if(!plainWorldPawnData256(m)||!mutableWorldPawnOriginal256(m)||!m.worldFaction259||!validMechanicalWorldFaction259(m,259,factions)||!validMechanoidShape(m,259,map.tick))return no('Le mécanique historique ou sa vraie faction/frontière de sortie manque ; aucun dossier n’est reconstruit.');if(map.piles.some(i=>'pawnId'in i.owner&&i.owner.pawnId===m.id)||map.packed.some(p=>p.owner.type!=='ground'&&p.owner.pawnId===m.id))return no('Le vrai holder mécanique de ces biens n’est pas représenté.');}
+ for(const m of mechanical){if(!plainWorldPawnData256(m)||!mutableWorldPawnOriginal256(m)||!m.worldFaction259||!validMechanicalWorldFaction259(m,root.schemaVersion,factions)||!validMechanoidShape(m,root.schemaVersion,map.tick))return no('Le mécanique historique ou sa vraie faction/frontière de sortie manque ; aucun dossier n’est reconstruit.');if(map.piles.some(i=>'pawnId'in i.owner&&i.owner.pawnId===m.id)||map.packed.some(p=>p.owner.type!=='ground'&&p.owner.pawnId===m.id))return no('Le vrai holder mécanique de ces biens n’est pas représenté.');}
  if(mechanical.length&&(!Object.getOwnPropertyDescriptor(map,'mechanoids')?.writable||map.raids?.mechActive&&!Object.getOwnPropertyDescriptor(map.raids,'mechActive')?.configurable))return no('Le propriétaire mécanique local n’est pas mutable.');
- const areaPlan=prepareRemovedMapAreas(root,mapId,new Set((map.allowedAreas??[]).map(a=>a.id))),areaByPawn=new Map(areaPlan.updates.map(u=>[u.pawn,u]));
- const dropping=new Set(map.pawns.filter(hasMapRemovalJob259).map(p=>p.id)),dropPlan=planPawnDrops(map,dropping);if(!dropPlan)return no('Les cargaisons de travail réellement déposées par le retrait n’ont pas de place.');
+ const areaIds=new Set((map.allowedAreas??[]).map(a=>a.id)),areaPlan=departure?prepareReformRemovalAreas260(root,mapId,areaIds,departure):prepareRemovedMapAreas(root,mapId,areaIds),areaByPawn=new Map(areaPlan.updates.map(u=>[u.pawn,u]));
+ const dropping=new Set(map.pawns.filter(p=>!departure?.ids.has(p.id)&&hasMapRemovalJob259(p)).map(p=>p.id)),dropPlan=departure?planReformRemainingDrops260(map,dropping,departure):planPawnDrops(map,dropping);if(!dropPlan)return no('Les cargaisons de travail réellement déposées par le retrait n’ont pas de place.');
+ const dropEntries=[...dropPlan].map(([id,cell])=>({id,cell,x:cell.x,z:cell.z})),dropsCurrent=()=>dropPlan.size===dropEntries.length&&dropEntries.every(r=>dropPlan.get(r.id)===r.cell&&r.cell.x===r.x&&r.cell.z===r.z);
  const areaWrites=areaRemovalWrites259(areaPlan),areaDefinitions=map.allowedAreas,areaDefinitionSeal:(stage:0|1|2)=>boolean=areaDefinitions?sealRemovalOriginal259(areaDefinitions,[],[]):()=>true;let bedPlan:ReturnType<typeof prepareRemovedMapBeds256>;
- try{bedPlan=prepareRemovedMapBeds256(root,map,mapId,new Set(dropPlan.keys()));}catch(e){return no(e instanceof Error?e.message:String(e));}
+ try{bedPlan=prepareRemovedMapBeds256(root,map,mapId,new Set(dropPlan.keys()),departure);}catch(e){return no(e instanceof Error?e.message:String(e));}
  const bedWrites=bedPlan?.removalWrites259??[],recipientsMutable=()=>removalWritesMutable259(areaWrites)&&removalWritesMutable259(bedWrites);
  if(!recipientsMutable())return no('Les références d’aires/lits à retirer ne sont pas mutables.');
  const context={seed:map.seed,width:map.width,height:map.height,...map.climate?{climate:map.climate}:{},...map.site?{site:map.site}:{},...map.scenario?{scenario:map.scenario}:{}};
@@ -90,11 +94,11 @@ export function prepareMapRemoved259(input:CampaignState,map:World,mapId:number,
  const prepared:Prepared[]=[],ids=new Set<number>();
  const add=(original:Pawn|WildAnimal|Mechanoid,kind:'human'|'animal'|'mechanical',actor:Pawn|WildAnimal|Mechanoid,factionId:number|null)=>{
   if(ids.has(original.id)||!mutableWorldPawnOriginal256(original)||state.owners.some(r=>r.actor.id===original.id))throw Error('Duplicate or nonmutable actual MapRemoved original');ids.add(original.id);
-  const items=map.piles.filter(i=>'pawnId'in i.owner&&i.owner.pawnId===original.id&&i.owner.type!=='pawn'),packed=map.packed.filter(p=>p.owner.type==='inventory'&&p.owner.pawnId===original.id);
-  const common={factionId,originMapId:mapId,context,clockCore:now,enteredAtAbsCore:absolute,mode:'active' as const,items:structuredClone(items),packed:structuredClone(packed)};
+  const items=map.piles.filter(i=>'pawnId'in i.owner&&i.owner.pawnId===original.id&&i.owner.type!=='pawn'&&departure?.items.get(i.id)!==null),packed=map.packed.filter(p=>p.owner.type==='inventory'&&p.owner.pawnId===original.id&&!departure?.packedIds.has(p.building.id));
+  const common={factionId,originMapId:mapId,context,clockCore:now,enteredAtAbsCore:absolute,mode:'active' as const,items:structuredClone(items.map(i=>departure?.items.get(i.id)??i)),packed:structuredClone(packed)};
   const row:WorldPawnOwner256=kind==='human'?{...common,kind,actor:actor as Pawn}:kind==='animal'?{...common,kind,actor:actor as WildAnimal}:{...common,kind,actor:actor as Mechanoid,mechanicalTimersAtCore259:now,mode:actor.state==='dead'||actor.health?.death?'dead':'active'};suspendWorldPawnGoods259(row,now);
-  const boundary=worldPawnActiveBoundary256(row,259);if(boundary)throw Error(boundary);
-  const cleaned=JSON.stringify(actor);const pass=preparePassedToWorld256(staged,row,factions,random,{version:259,situation:'Free',conditions});if(!pass.ok)throw Error(pass.reason);pass.commit();prepared.push({original,kind,outcome:pass.row,cleaned,items,packed});
+  const boundary=worldPawnActiveBoundary256(row,root.schemaVersion);if(boundary)throw Error(boundary);
+  const cleaned=JSON.stringify(actor);const pass=preparePassedToWorld256(staged,row,factions,random,{version:root.schemaVersion,situation:'Free',conditions});if(!pass.ok)throw Error(pass.reason);pass.commit();prepared.push({original,kind,outcome:pass.row,cleaned,items,packed});
  };
  try{
   for(const s of captures){const p=s.pawn!;const actor=cleanHumanDraft(map,p,areaByPawn.get(p));add(p,'human',actor,actor.worldAffiliation259!.factionId);}
@@ -106,12 +110,15 @@ export function prepareMapRemoved259(input:CampaignState,map:World,mapId:number,
  const errors=validateWorldPawnOwners256(staged,root,new Set(),undefined,new Set(humans.people.keys()));if(errors.length)return no(errors[0]!);
  if(lostColonists.some(p=>!prepared.some(row=>row.kind==='human'&&row.original===p)))return no('A lost colonist has no actual staged human transfer');
  const rng=root.rng,nextId=root.nextId,owners=state.owners.slice(),before=prepared.map(p=>JSON.stringify(p.original)),heldBefore=prepared.map(p=>JSON.stringify([p.items,p.packed])),beforePawns=map.pawns.slice(),beforeAnimals=map.wildlife?.animals.slice(),beforeFlyers=map.wildlife?.flyers?.slice(),beforeMechs=mechanical.slice();let used=false;
- const sourceSeals=prepared.map(p=>sealRemovalOriginal259(p.original,areaWrites,bedWrites)),areaSourceSeals=areaPlan.updates.map(u=>sealRemovalOriginal259(u.pawn,areaWrites,bedWrites));let phase:'prepared'|'begun'|'areas'|'beds'='prepared';
- const header=()=>!used&&recipientsMutable()&&held.current()&&(map.mechanoids?.length??0)===beforeMechs.length&&!map.mechanoids?.some((m,i)=>m!==beforeMechs[i])&&root.tick*10===now&&root.rng===rng&&root.nextId===nextId&&root.worldPawns===state&&state.atCore===at&&nativeWorldPawnOrderCurrent256(state,nativeBefore)&&state.owners.length===owners.length&&state.owners.every((r,i)=>r===owners[i])&&prepared.every((p,i)=>JSON.stringify([p.items,p.packed])===heldBefore[i])&&map.wildlife?.animals.length===beforeAnimals?.length&&!map.wildlife?.animals.some((a,i)=>a!==beforeAnimals![i])&&map.wildlife?.flyers?.length===beforeFlyers?.length&&!map.wildlife?.flyers?.some((a,i)=>a!==beforeFlyers![i]);
- const rosterCurrent=()=>map.pawns.length===beforePawns.length&&map.pawns.every((p,i)=>p===beforePawns[i]);
+ const sourceSeals=prepared.map(p=>sealRemovalOriginal259(p.original,areaWrites,bedWrites)),areaSourceSeals=areaPlan.updates.filter(u=>!departure?.ids.has(u.pawn.id)).map(u=>sealRemovalOriginal259(u.pawn,areaWrites,bedWrites));let phase:'prepared'|'begun'|'departed'|'areas'|'beds'='prepared',departed=false;
+ const departureSeal=departure?.seal(),departureAreasSeal=departure?.seal(areaWrites);
+ const afterPawns=beforePawns.filter(p=>!departure?.ids.has(p.id)),afterAnimals=beforeAnimals?.filter(a=>!departure?.ids.has(a.id)),heldAfter=prepared.map(p=>JSON.stringify([p.items.map(i=>departure?.items.get(i.id)??i),p.packed]));
+ const header=()=>!used&&recipientsMutable()&&held.current()&&(map.mechanoids?.length??0)===beforeMechs.length&&!map.mechanoids?.some((m,i)=>m!==beforeMechs[i])&&root.tick*10===now&&root.rng===rng&&root.nextId===(departed?departure!.nextId:nextId)&&root.worldPawns===state&&state.atCore===at&&nativeWorldPawnOrderCurrent256(state,nativeBefore)&&state.owners.length===owners.length&&state.owners.every((r,i)=>r===owners[i])&&prepared.every((p,i)=>JSON.stringify([p.items,p.packed])===(departed?heldAfter[i]:heldBefore[i]))&&map.wildlife?.animals.length===(departed?afterAnimals:beforeAnimals)?.length&&!map.wildlife?.animals.some((a,i)=>a!==(departed?afterAnimals:beforeAnimals)![i])&&map.wildlife?.flyers?.length===beforeFlyers?.length&&!map.wildlife?.flyers?.some((a,i)=>a!==beforeFlyers![i]);
+ const rosterCurrent=()=>map.pawns.length===(departed?afterPawns:beforePawns).length&&map.pawns.every((p,i)=>p===(departed?afterPawns:beforePawns)[i]);
  const areaDefinitionsCurrent=()=>map.allowedAreas===areaDefinitions&&areaDefinitionSeal(0);
- const initialCurrent=()=>header()&&rosterCurrent()&&areaDefinitionsCurrent()&&removedMapAreasCurrent(areaPlan)&&(bedPlan?.current?.()??true)&&sourceSeals.every(check=>check(0))&&areaSourceSeals.every(check=>check(0))&&prepared.every((p,i)=>JSON.stringify(p.original)===before[i]);
- const detachCurrent=()=>phase==='areas'&&header()&&rosterCurrent()&&areaDefinitionsCurrent()&&removalWritesApplied259(areaWrites)&&sourceSeals.every(check=>check(1))&&areaSourceSeals.every(check=>check(1));
+ const initialCurrent=()=>dropsCurrent()&&header()&&rosterCurrent()&&areaDefinitionsCurrent()&&(departure?departure.current()&&departureAreasSeal!(0):removedMapAreasCurrent(areaPlan))&&(bedPlan?.current?.()??true)&&sourceSeals.every(check=>check(0))&&areaSourceSeals.every(check=>check(0))&&prepared.every((p,i)=>JSON.stringify(p.original)===before[i]);
+ const departureCurrent=()=>!!departure&&dropsCurrent()&&header()&&rosterCurrent()&&areaDefinitionsCurrent()&&departureSeal!(1)&&sourceSeals.every(check=>check(0))&&areaSourceSeals.every(check=>check(0));
+ const detachCurrent=()=>phase==='areas'&&header()&&rosterCurrent()&&areaDefinitionsCurrent()&&(!departure||departureAreasSeal!(1))&&removalWritesApplied259(areaWrites)&&sourceSeals.every(check=>check(1))&&areaSourceSeals.every(check=>check(1));
  const plan:CampMapRemoved256={ok:true,current:()=>phase==='prepared'&&initialCurrent(),commit(compact:AbandonedMapContents){
   if(phase!=='beds'||!header()||!removalWritesApplied259(areaWrites)||!removalWritesApplied259(bedWrites)||compact.mapId!==mapId||compact.removedAt!==root.tick||Object.hasOwn(compact,'lostColonistIds259'))throw Error('Stale actual259 MapRemoved transaction');
   for(const p of prepared){const count=p.kind==='human'?compact.humans.filter(h=>h.pawn===p.original).length:p.kind==='animal'?compact.animals.filter(a=>a.animal===p.original).length:map.mechanoids?.filter(m=>m===p.original).length;if(count!==1||JSON.stringify(p.original)!==p.cleaned)throw Error('Actual MapRemoved cleanup differs from its admitted original');}
@@ -122,9 +129,10 @@ export function prepareMapRemoved259(input:CampaignState,map:World,mapId:number,
   const moved=new Set(prepared.map(p=>p.original));compact.humans=compact.humans.filter(h=>!h.pawn||!moved.has(h.pawn));compact.animals=compact.animals.filter(a=>!moved.has(a.animal));map.pawns=map.pawns.filter(p=>!moved.has(p));if(map.mechanoids)map.mechanoids=map.mechanoids.filter(m=>!moved.has(m));if(map.wildlife){map.wildlife.animals=map.wildlife.animals.filter(a=>!moved.has(a));if(map.wildlife.flyers)map.wildlife.flyers=map.wildlife.flyers.filter(a=>!moved.has(a.animal));}
  }};
  return brandHeldCasketRemoval259(plan,map,detachCurrent,()=>{
-  // The complete initial seal is consumed BEFORE notify/areas/detach. Only
-  // these preflighted alias writes can cross the subsequent private phases.
+  // Consumed while every true source is still unchanged, before Reform writes.
   if(!plan.ok||!plan.current())throw Error('Stale actual MapRemoved begin');phase='begun';
-  return {areas(){if(phase!=='begun'||!initialCurrent())throw Error('Stale MapRemoved before area commit');commitRemovedMapAreas(areaPlan);held.confirmAreas();phase='areas';if(!detachCurrent())throw Error('Unexpected MapRemoved area result');},beds(){if(phase!=='areas'||!header()||!removalWritesApplied259(areaWrites))throw Error('Stale MapRemoved before bed commit');bedPlan?.commit();held.confirmBeds();phase='beds';if(!header()||!removalWritesApplied259(bedWrites))throw Error('Unexpected MapRemoved bed result');}};
+  return {...departure?{drops260:dropPlan}:{},departed260(){if(!departure||phase!=='begun')throw Error('Unexpected Reform departure phase');departed=true;phase='departed';if(!departureCurrent())throw Error('Unexpected admitted Reform departure');},
+   areas(){if(departure?phase!=='departed'||!departureCurrent():phase!=='begun'||!initialCurrent())throw Error('Stale MapRemoved before area commit');commitRemovedMapAreas(areaPlan);held.confirmAreas();phase='areas';if(!detachCurrent())throw Error('Unexpected MapRemoved area result');},
+   beds(){if(phase!=='areas'||!header()||!removalWritesApplied259(areaWrites))throw Error('Stale MapRemoved before bed commit');bedPlan?.commit();held.confirmBeds();phase='beds';if(!header()||!removalWritesApplied259(bedWrites))throw Error('Unexpected MapRemoved bed result');}};
  },()=>plan.ok&&plan.current());
 }

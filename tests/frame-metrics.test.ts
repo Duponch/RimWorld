@@ -96,3 +96,43 @@ test('the recorded mine diagonal is continuous but a smooth two-cell leap still 
   const teleport=structuredClone(current);teleport.position.x+=1;
   expect(confirmedTravelExcess(previous,teleport,dt)).toBe(false);
 });
+
+
+/** Exact two witnesses from retained V415 presentation02, pawn12409/tick2132.
+ * The original red artifact remains untouched; no new run supplied these data. */
+function mineBoundary415(){
+ const dt=25.099999999998545;
+ const previous:TravelFrameWitness={position:{x:146.9592389947276,z:158.9592389947276},from:{x:146,z:158},to:{x:147,z:159},start:13.223015785217285,end:13.930122375488281,time:13.901300000034098,play:2131.4078000002046,segment:{from:{x:146,z:158},to:{x:147,z:159},start:2127.338095116621,end:2131.58073580374}};
+ const current:TravelFrameWitness={position:{x:147.20875216300215,z:159.20875216300215},from:{x:147,z:159},to:{x:148.21212768554688,z:160.21212768554688},start:13.930122375488281,end:14.637228965759277,time:14.051900000034115,play:2132.3114000002047,segment:{from:{x:147,z:159},to:{x:148,z:160},start:2131.58073580374,end:2135.823376490859}};
+ return {dt,previous,current};
+}
+// Negative fixtures preserve each changed GPU leg's own interpolation so a
+// smooth-looking teleport or altered junction cannot pass merely by being smooth.
+function reposed415(f:TravelFrameWitness){const alpha=(f.time-f.start)/(f.end-f.start);f.position={x:f.from.x+(f.to.x-f.from.x)*alpha,z:f.from.z+(f.to.z-f.from.z)*alpha};}
+test('recorded415 mine crossing exactly one proved grid/GPU boundary is continuous without raising the raw alarm',()=>{
+ const {dt,previous,current}=mineBoundary415();expect(Math.hypot(current.position.x-previous.position.x,current.position.z-previous.position.z)).toBeGreaterThan(dt*.013+.02);
+ expect(previous.segment.to).toEqual(current.segment.from);expect(previous.segment.end).toBe(current.segment.start);expect(previous.to).toEqual(current.from);expect(previous.end).toBe(current.start);
+ expect(confirmedTravelExcess(previous,current,dt)).toBe(true);
+});
+test('one-boundary proof refuses real pose/edge leaps, spatial gaps, timestamp gaps/overlaps, offsets and skipped time',()=>{
+ const mutations:((p:TravelFrameWitness,c:TravelFrameWitness)=>void)[]=[
+  (_p,c)=>{c.position.x+=.1;},
+  (_p,c)=>{c.segment.from.x++;c.segment.to.x++;c.from.x++;c.to.x++;c.position.x++;},
+  (_p,c)=>{c.segment.to.x++;c.to.x++;reposed415(c);},
+  (_p,c)=>{c.from.x+=.01;reposed415(c);},
+  (_p,c)=>{c.segment.start+=.001;c.start+=.001/6;reposed415(c);},
+  (_p,c)=>{c.segment.start-=.001;c.start-=.001/6;reposed415(c);},
+  (_p,c)=>{c.start+=.00001;c.end+=.00001;c.time+=.00001;reposed415(c);},
+  (_p,c)=>{c.to.x+=.01;reposed415(c);},
+  (_p,c)=>{c.end+=.001;reposed415(c);},
+  (_p,c)=>{c.segment.end=c.segment.start;},
+  (_p,c)=>{c.end=c.start;},
+  (_p,c)=>{c.play+=.01;c.time+=.01/6;reposed415(c);},
+ ];
+ for(const mutate of mutations){const {dt,previous,current}=mineBoundary415();mutate(previous,current);expect(Math.hypot(current.position.x-previous.position.x,current.position.z-previous.position.z)).toBeGreaterThan(dt*.013+.02);expect(confirmedTravelExcess(previous,current,dt)).toBe(false);}
+});
+test('one-boundary proof never fills missing/nonfinite witnesses or accepts absent elapsed time',()=>{
+ const {dt,previous,current}=mineBoundary415();for(const key of ['position','from','to','start','end','time','play','segment'] as const){const bad=structuredClone(current) as unknown as Record<string,unknown>;delete bad[key];expect(confirmedTravelExcess(previous,bad as unknown as TravelFrameWitness,dt)).toBe(false);}
+ for(const change of [(f:TravelFrameWitness)=>{f.play=NaN;},(f:TravelFrameWitness)=>{f.time=Infinity;},(f:TravelFrameWitness)=>{f.segment.start=NaN;},(f:TravelFrameWitness)=>{f.from.x=Infinity;}]){const bad=structuredClone(current);change(bad);expect(confirmedTravelExcess(previous,bad,dt)).toBe(false);}
+ expect(confirmedTravelExcess(undefined as unknown as TravelFrameWitness,current,dt)).toBe(false);for(const elapsed of [0,-1,100,NaN])expect(confirmedTravelExcess(previous,current,elapsed)).toBe(false);
+});

@@ -33,6 +33,7 @@ export function stopRaidEngagement(p:Pawn):void {cancelShooting(p);cancelMelee(p
 /** Calendar and group outcomes, once per tick. Pawn controllers own movement. */
 export function advanceRaids(w:World):void {
   const s=w.raids;if(!s)return;
+  if(s.profile==='camp-pressure-v1'){if(s.mechActive)advanceMechanoidRaid(w);return;}
   const cassandra=s.profile==='cassandra-raids-v1',opportunity=cassandra&&consumeCassandraOpportunity(w,s);
   if(s.mechActive){advanceMechanoidRaid(w);return;}
   const a=s.active;

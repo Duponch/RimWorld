@@ -25,7 +25,7 @@ test.runIf(process.env.ELSEWHERE_RUN_OWNER259_EXPIRY==='1')('actual engine last-
  if(!path||!sha)throw Error('Exact acquired259 checkpoint path and SHA256 required; no fixture is synthesized');
  const bytes=readFileSync(path,'utf8');expect(createHash('sha256').update(bytes).digest('hex')).toBe(sha);
  const root=deserializeCampaign(bytes);
- if(root.schemaVersion!==259||root.planet?.revision!==3||!('pawns'in root))throw Error('Expected acquired259 geographic campaign with a loaded map');
+ if(Number(root.schemaVersion)!==259||root.planet?.revision!==3||!('pawns'in root))throw Error('Expected acquired259 geographic campaign with a loaded map');
  const records=root.worldGroups!.groups.filter(r=>r.localMapId===null&&'members'in r.state&&r.state.admission?.revision===2);
  if(records.length!==1)throw Error('Expected one true admission2 away caravan');
  const record=records[0]!,g=record.state as AwayGroup,owners=g.members.filter(groupPlayerOwner256);

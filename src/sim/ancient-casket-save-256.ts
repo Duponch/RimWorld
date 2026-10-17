@@ -15,7 +15,7 @@ import {isAncientCasket256,validAncientCasketState256,validAncientCasketField256
 import type {World} from './types.ts';
 const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype;
-export type AncientCasketRecordContext256=Pick<World,'schemaVersion'|'tick'|'nextId'|'width'|'height'>&Partial<Pick<World,'worldFactions'>>;
+export type AncientCasketRecordContext256=Pick<World,'tick'|'nextId'|'width'|'height'>&{schemaVersion:number}&Partial<Pick<World,'worldFactions'>>;
 /** Shared original record validation. Spatial support belongs to the live map
  * only; this scalar header also validates a real retired holder, never a World. */
 export function validateAncientCasketRecord256(c:AncientCasket256,w:AncientCasketRecordContext256):string[]{
@@ -50,7 +50,7 @@ export function validateAncientCasketRecord256(c:AncientCasket256,w:AncientCaske
    if(!object(o))errors.push('Item has no data-only owner.');
    else if(o.type==='ancient-casket'?o.casketId!==c.id:typeof o.type!=='string'||!['inventory','equipment','apparel'].includes(o.type)||!integer(o.pawnId,1,w.nextId-1)||!humans.has(o.pawnId)&&!(o.type==='inventory'&&animals.has(o.pawnId)))errors.push('Item has no real direct/nested casket owner.');
   }
-  if(w.schemaVersion===259){const possessions=s.items.filter((p):p is MaterialPile=>p.owner.type!=='ancient-casket');errors.push(...validateEquipmentOwners259(s.humans,possessions),...validateApparelOwners259(s.humans,possessions,259));}
+  if(w.schemaVersion===259||w.schemaVersion===260){const possessions=s.items.filter((p):p is MaterialPile=>p.owner.type!=='ancient-casket');errors.push(...validateEquipmentOwners259(s.humans,possessions),...validateApparelOwners259(s.humans,possessions,w.schemaVersion));}
   if(!errors.length){const boundary=ancientSuspensionBoundary256(s);if(boundary)errors.push(boundary);}
  return errors;
 }

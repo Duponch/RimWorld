@@ -10,6 +10,7 @@ export type SettlementLimit=1|2|3|4|5;
 export type WorldMapKind='settlement'|'camp'|'legacy-site';
 export type LocalMapState=Omit<SecondaryMap,'group'|'groupLosses'|'worldMaps'|'worldGroups'|'civilianPost'>;
 export interface WorldMapRecord {
+ campPressure?:import('./camp-pressure-state-260.ts').CampPressure260;
  id:number;tile:number|null;kind:WorldMapKind;createdAt:number;settledAt?:number;
  /** Exactly the rootMapId record omits map: its originals live on the loaded root. */
  map?:LocalMapState;
@@ -39,7 +40,7 @@ export type SharedCampaignState=Pick<World,CampaignField>;
 export type MaplessCampaign=SharedCampaignState&{worldMaps:WorldMapRegistry;worldGroups:WorldGroupRegistry};
 export type CampaignState=World|MaplessCampaign;
 export interface MapAction {ok:boolean;reason?:string}
-export interface CampaignMapSummary {areaIds?:number[];id:number;tile:number|null;kind:WorldMapKind;createdAt:number;settledAt?:number;pawnCount:number;selected:boolean;actions:{view:MapAction;settle:MapAction;abandon:MapAction};abandonConsequences:{pawns:{id:number;name:string}[];groundItems:number;structures:number}}
+export interface CampaignMapSummary {campPressure?:import('./camp-pressure-state-260.ts').CampPressure260;areaIds?:number[];id:number;tile:number|null;kind:WorldMapKind;createdAt:number;settledAt?:number;pawnCount:number;selected:boolean;actions:{view:MapAction;settle:MapAction;abandon:MapAction};abandonConsequences:{pawns:{id:number;name:string}[];groundItems:number;structures:number}}
 export interface CampaignGroupSummary {capturePatients259?:import('./group-human-projection-259.ts').GroupCapturePatients259;memberContexts?:GroupMemberProjectionContext[];id:number;originMapId:number;localMapId:number|null;phase:GroupState['phase'];originTile:number|null;tile:number|null;memberIds:number[];mass:{grams:number;capacityGrams:number}|null;filthPresent:boolean;postId?:number;post?:World['civilianPost'];context:WorldGroupRecord['context'];entryActions:Record<'visit'|'camp'|'settle',MapAction>;state:GroupState}
 export interface MapIncident {mapId:number;kind:'raid'|'mechanoid'|'visitor'|'manhunter'|'downed';count:number;actorId:number}
 export type CampaignLossContext=WorldGroupRegistry['lossContexts'][number]&{filthPresent:boolean;memberContexts?:GroupMemberProjectionContext[]};

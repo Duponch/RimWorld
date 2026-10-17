@@ -6,6 +6,7 @@ import {adoptWind} from './wind.ts';
 import {ensureFireState} from './fire-rules.ts';
 import type {HiveLordIds256} from './cave-hive-lord-ids-256.ts';
 import type {AncientCasketGroupIds256} from './ancient-casket-group-ids-256.ts';
+import {initializeCampRaidOwner260} from './camp-raid-owner-260.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {planVanishGeneratedAncient256} from './generated-ancient-vanish-256.ts';
 import {prepareWorldAnimalGeneration256} from './world-pawn-generation-256.ts';
@@ -66,7 +67,7 @@ export interface CampGenerationSource256 {readonly source:string;readonly atTick
 export interface CampMapInputs256 {
  /** Plain captured shared fields, no World and no live forwarding writers.
   * Arrays/registries remain their original read-only references in generation. */
- readonly campaign:Pick<World,CampaignField> & {readonly schemaVersion:256|257|258|259;readonly planet:GeographicPlanetState;readonly worldFactions:NonNullable<World['worldFactions']>};
+ readonly campaign:Pick<World,CampaignField> & {readonly schemaVersion:256|257|258|259|260;readonly planet:GeographicPlanetState;readonly worldFactions:NonNullable<World['worldFactions']>};
  readonly tile:number;readonly size:200;readonly calendarOrigin:number;
  readonly daysPassedSinceSettle:number;
  readonly provenance:CampGenerationSource256;
@@ -148,7 +149,7 @@ function* assembleArrivalMap257(input:ArrivalMapInputs257,settlement:boolean):Ge
   if(!settlement)w.expeditionSite={tile:input.tile,createdAt:c.tick,calendarOffset:w.climate.calendarOrigin-input.calendarOrigin-c.tick};
   // Same prospective local disease-calendar producer as existing new sites.
   // It does not age people, spend the campaign RNG or replay past checks.
-  if(w.gameProfile)adoptFluIncidents(w);
+  if(w.gameProfile)adoptFluIncidents(w);if(!settlement&&w.schemaVersion===260)initializeCampRaidOwner260(w);
   const stream=(seedPart:number)=>new WorldGenerationRandom(localGenerationStepSeed(description.mapSeed,seedPart,0));
   steps.push({phase,random:composition.random.postTerrain});
   phase='roads390';yield {phase};const roads=populateGeographicRoads256(w,usedRects,input.angular);if(settlement&&roads.edges.cells!==null)working.edgeContext={width:size,height:size,edgeCells:[...roads.edges.cells]};steps.push({phase});
@@ -177,7 +178,7 @@ function* assembleArrivalMap257(input:ArrivalMapInputs257,settlement:boolean):Ge
   if(settlement)wakeUnfoggedTempleMechs256(w);
   phase='flowPostFog1600';yield {phase};let riverFlow:ReturnType<typeof generateLocalRiverFlow256>|null=null;
   if(composition.plans.init.river||composition.plans.river){if(!composition.plans.init.river||!composition.plans.river)throw Error('Actual river Init/node pair is incomplete');riverFlow=generateLocalRiverFlow256({plan:composition.plans.init.river,node:composition.plans.river,isRiver:cell=>{const t=w.tiles[cell]!;return !t.floor&&!t.bridge&&isNaturalTerrain256(t.terrain)&&NATURAL_TERRAIN_DEFINITIONS_256[t.terrain].river;}});w.riverWater=packRiverWater256(riverFlow.values,w.width,w.height);}steps.push({phase});
-  if(settlement){adoptWind(w);ensureFireState(w);if(w.schemaVersion>=259&&w.gameProfile){enableCassandraRaids(w,true);adoptMiscIncidents(w);enableVisitors(w,false,true);adoptColonyEconomy(w);}}
+  if(settlement){adoptWind(w);ensureFireState(w);if((Number(w.schemaVersion)===259||w.schemaVersion===260)&&w.gameProfile){enableCassandraRaids(w,true);adoptMiscIncidents(w);enableVisitors(w,false,true);adoptColonyEconomy(w);}}
   if(w.pawns.length||w.startingArrival||w.jobs.length||w.stockpiles.length||w.growingZones.length||w.planet!==c.planet||w.worldFactions!==c.worldFactions||w.tick!==c.tick||w.rng!==c.rng)throw Error('Local generation acquired a starting scenario, foreign authority or advanced clock');
   // Fresh physical owners only; foreign faction leaders/shared knowledge are
   // references outside this map. Identity holes from true Vanish stay holes.

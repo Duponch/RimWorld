@@ -128,7 +128,7 @@ export interface GroupDepartureCapture extends GroupCandidatesCapture {
   itemSignatures:readonly string[];
   packedSignatures?:readonly string[];
 }
-function departureBaseline(items:readonly MaterialPile[],mixed:boolean,tick:number,freight:boolean):GroupDepartureBaseline|undefined {
+export function departureBaseline(items:readonly MaterialPile[],mixed:boolean,tick:number,freight:boolean):GroupDepartureBaseline|undefined {
   const result:GroupDepartureBaseline={...(freight?{freight:{wood:0,steel:0}}:{}),...(mixed?{pemmican:0}:{}),food:0,silver:0,cargo:{cloth:0,'muffalo-wool':0},medicine:0,component:0};
   for(const item of items){
     if(item.owner.type!=='inventory')continue;

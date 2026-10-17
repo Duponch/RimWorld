@@ -1,4 +1,5 @@
 import {actualMechanicalBirthFaction259} from './mechanoid-world-faction-259.ts';
+import {registeredCampaign,registeredMapId} from './world-map-context.ts';
 import { captureStandability } from './furniture-travel.ts';
 import { raidEntries,atMapEdge } from './raid-space.ts';
 import { raidRandom } from './raid-state.ts';
@@ -23,10 +24,10 @@ export function chooseMechanoidOpportunity(w:World,points:number,random:{rng:num
   if(raidRandom(random)*(mech+pirate)>=mech)return undefined;
   return chooseMechanoidComposition(points,random,w.schemaVersion>=197&&!!policy.ranged);
 }
-export function createMechanoidRaid(w:World,composition:MechanoidRaidComposition,random:{rng:number},sites=raidEntries(w,random.rng,composition.roster.length)):MechanoidRaidGroup|null {
-  const s=w.raids,count=composition.roster.length,worldFaction259=w.schemaVersion>=259?actualMechanicalBirthFaction259(w.worldFactions):undefined;
-  if(w.schemaVersion>=259&&!worldFaction259)return null;
-  if(w.schemaVersion<194||!s?.mechanoid||s.profile!=='cassandra-raids-v1'||!Number.isSafeInteger(w.tick*10+14999)||s.active||s.mechActive||!sites||sites.length!==count
+function adoptMechanoidRaid(w:World,composition:MechanoidRaidComposition,random:{rng:number},sites=raidEntries(w,random.rng,composition.roster.length),source260?:'camp-pressure'):MechanoidRaidGroup|null {
+  const s=w.raids,count=composition.roster.length,worldFaction259=(Number(w.schemaVersion)===259||w.schemaVersion===260)?actualMechanicalBirthFaction259(w.worldFactions):undefined;
+  if((Number(w.schemaVersion)===259||w.schemaVersion===260)&&!worldFaction259)return null;
+  if(w.schemaVersion<194||!s?.mechanoid||(source260?s.profile!=='camp-pressure-v1':s.profile!=='cassandra-raids-v1')||!Number.isSafeInteger(w.tick*10+14999)||s.active||s.mechActive||!sites||sites.length!==count
     ||!Number.isSafeInteger(count)||count<1||!validMechanoidComposition(composition,w.schemaVersion>=197&&!!s.mechanoid.ranged)
     ||!Number.isSafeInteger(s.serial+1)||!Number.isSafeInteger(w.nextId+count)
     ||(w.mechanoids?.length??0)+w.pawns.length+(w.wildlife?.animals.length??0)+count>w.width*w.height)return null;
@@ -43,14 +44,24 @@ export function createMechanoidRaid(w:World,composition:MechanoidRaidComposition
   const draft={rng:random.rng},delayCore=5000+Math.floor(raidRandom(draft)*10000),id=s.serial+1;
   const generated:Mechanoid[]=sites.map((c,i)=>({id:w.nextId+i,mechKind:composition.roster[i]!,...c,state:'idle',...worldFaction259?{worldFaction259:{...worldFaction259}}:{},
     path:[],heading:0,moveCooldown:0,planCooldown:0,raid:{group:id,goal:null}}));
-  const group:MechanoidRaidGroup={id,startedAt:w.tick,members:generated.map(m=>m.id),lost:[],phase:'staging',
+  const group:MechanoidRaidGroup={...source260?{source260}:{},id,startedAt:w.tick,members:generated.map(m=>m.id),lost:[],phase:'staging',
     stage:{point:{...sites[0]!},activatedAtCore:w.tick*10,delayCore},composition:{budget:composition.budget,roster:[...composition.roster]}};
   w.nextId+=count;(w.mechanoids??=[]).push(...generated);s.serial=id;s.nextCheck=null;s.mechActive=group;
-  s.mechanoid.rng=draft.rng;s.mechanoid.lastFaction='mechanoid';random.rng=draft.rng;
+  if(!source260){s.mechanoid.rng=draft.rng;s.mechanoid.lastFaction='mechanoid';}random.rng=draft.rng;
   w.events.push({tick:w.tick,type:'command',message:composition.roster.every(k=>k==='scyther')?`${count} Scyther(s) arrivent et se préparent à attaquer. Leur défense est déjà active.`:
     `${count} mécanoïdes (${composition.roster.map(k=>mechanoidDefinition(k).label).join(', ')}) arrivent et se préparent à attaquer. Leur défense est déjà active.`});
   if(w.events.length>80)w.events.splice(0,w.events.length-80);
   return group;
+}
+export function createMechanoidRaid(w:World,composition:MechanoidRaidComposition,random:{rng:number},sites?:Cell[]):MechanoidRaidGroup|null {
+ return adoptMechanoidRaid(w,composition,random,sites);
+}
+/** Forced actual player-Camp entry; no faction ticket, age gate or agenda RNG. */
+export function createCampPressureMechanoidRaid260(w:World,points:number,random:{rng:number}):MechanoidRaidGroup|null {
+ const root=registeredCampaign(w),mapId=registeredMapId(w),site=root.worldMaps?.sites.find(s=>s.id===mapId),factions=root.worldFactions;
+ if(w.schemaVersion!==260||site?.kind!=='camp'||!site.campPressure||!factions?.factions.some(f=>f.id===factions.playerFactionId&&(f.def==='PlayerColony'||f.def==='PlayerTribe'))||!factions.factions.some(f=>f.def==='Mechanoid')||w.raids?.profile!=='camp-pressure-v1'||!w.raids.mechanoid||w.raids.active||w.raids.mechActive)return null;
+ const draft={rng:random.rng},composition=chooseMechanoidComposition(points,draft,!!w.raids.mechanoid.ranged);if(!composition)return null;
+ const result=adoptMechanoidRaid(w,composition,draft,undefined,'camp-pressure');if(result)random.rng=draft.rng;return result;
 }
 /** The ordinary agenda has already consumed its opportunity before this call. */
 export function advanceMechanoidRaid(w:World,core=w.tick*10):boolean {
@@ -58,7 +69,7 @@ export function advanceMechanoidRaid(w:World,core=w.tick*10):boolean {
   if(g.lost.length===g.members.length){
     s.last={id:g.id,tick:w.tick,reason:'defended',killed:g.members.length,downed:0,escaped:0,
       mechanoid:true,mechComposition:{budget:g.composition.budget,roster:[...g.composition.roster]}};
-    s.completed++;delete s.mechActive;s.nextCheck=s.cassandra!.pending[0]!;
+    s.completed++;delete s.mechActive;s.nextCheck=s.profile==='camp-pressure-v1'?null:s.cassandra!.pending[0]!;
     w.events.push({tick:w.tick,type:'command',message:g.composition.roster.every(k=>k==='scyther')?'Les Scythers sont neutralisés. Leurs carcasses peuvent être récupérées.':'Les mécanoïdes sont neutralisés. Leurs carcasses peuvent être récupérées.'});
     if(w.events.length>80)w.events.splice(0,w.events.length-80);return true;
   }

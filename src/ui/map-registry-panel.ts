@@ -7,7 +7,7 @@ import './map-registry-panel.css';
 export interface MapActionAvailability {ok:boolean;reason?:string}
 export interface MapRegistryRow {
  id:number;tile:number|null;name:string;kind:'settlement'|'camp'|'legacy-site';active:boolean;
- people:number;createdAt:number;
+ people:number;createdAt:number;campPressure?:import('../sim/camp-pressure-state-260').CampPressure260;
  view:MapActionAvailability;settle:MapActionAvailability;abandon:MapActionAvailability;
  abandonedPeople:readonly {id:number;name:string}[];groundItems:number;structures:number;
 }
@@ -47,7 +47,7 @@ export function createMapRegistryPanel(host:HTMLElement,actions:MapRegistryActio
     line.append(name,facts,buttons);record={root:line,name,facts,view,prepare,settle,abandon};records.set(map.id,record);
    }
    const before=rows.children[index];if(before!==record.root)rows.insertBefore(record.root,before??null);
-   record.name.textContent=map.name;record.facts.textContent=`${kindLabel(map.kind)} · ${map.tile===null?'lieu historique':`case ${map.tile}`} · ${map.people} personne(s)${map.active?' · carte active':''}`;
+   record.name.textContent=map.name;record.facts.textContent=`${kindLabel(map.kind)} · ${map.tile===null?'lieu historique':`case ${map.tile}`} · ${map.people} personne(s)${map.active?' · carte active':''}${map.campPressure?` · ${map.campPressure.alert?'Détecté':'Détection dans '+Math.max(0,((map.campPressure.notifyAtCore??0)-state!.tick*10)/2500).toFixed(1)+' h'} · tentative mécanique dans ${Math.max(0,(map.campPressure.raidAtCore-state!.tick*10)/2500).toFixed(1)} h · ${map.campPressure.raidsSent} attaque(s) créée(s)`:''}`;
    record.view.textContent=map.active?'Revenir à cette carte':'Afficher';availability(record.view,map.view);availability(record.prepare,map.view);record.prepare.textContent=map.kind==='camp'?'Reformer une caravane':'Préparer une caravane';availability(record.settle,map.settle);availability(record.abandon,map.abandon);record.settle.hidden=map.kind==='settlement';
   });
  }

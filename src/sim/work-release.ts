@@ -1,3 +1,4 @@
+import type {ReformDeparture260} from './group-reform-departure-260.ts';
 import {hasTravellingCargo} from './interrupted-cargo.ts';
 import { releaseSurgeryState } from './surgery-state.ts';
 import { releaseAllowedAreaReturn } from './allowed-area-state.ts';
@@ -131,19 +132,34 @@ export function planJobDrops(world:World,jobId:number):DropPlan|null {
 export function planPawnDrops(world:World,pawnIds:ReadonlySet<number>):DropPlan|null {
   return planSelectedDrops(world,new Set(),new Set(pawnIds));
 }
-export function planSelectedDrops(world:World,jobs:Set<number>,pawns:Set<number>):DropPlan|null {
+/** Placement-only read of the exact admitted departure writes. No registry,
+ * authority, actor clone, ID, RNG or real-map replacement is created. The
+ * ordinary placement helper still owns capacity, reservations and its private
+ * pile/pack shadow. Departing drops and reduced/source-removed freight already
+ * occupy their planned cells before the remaining actors ask for a slot. */
+export function planReformRemainingDrops260(world:World,pawnIds:ReadonlySet<number>,departure:ReformDeparture260):DropPlan|null {
+ const piles=(departure.valueAfter(world,'piles') as MaterialPile[]).map(p=>({...p,owner:departure.valueAfter(p,'owner') as MaterialPile['owner'],quantity:departure.valueAfter(p,'quantity') as number}));
+ const packed=(departure.valueAfter(world,'packed') as World['packed']).map(p=>({...p,owner:departure.valueAfter(p,'owner') as typeof p.owner}));
+ const placement={...world,pawns:departure.valueAfter(world,'pawns') as Pawn[],piles,packed};
+ return planSelectedDrops(placement,new Set(),new Set(pawnIds),new Set(),new Set(),true);
+}
+/** Human occupied boundary only; animal admission/coordinates stay separate. */
+export function reformHumanOrigin260(world:Pick<World,'tick'>,pawn:Pawn):Cell {const cell=pawn.motion&&pawn.motion.end>world.tick?pawn.motion.from:pawn;return {x:cell.x,z:cell.z};}
+export function planReformDrops260(world:World,pawns:Set<number>,captured:Set<number>,vacated:ReadonlySet<number>=new Set(),origins?:ReadonlyMap<number,Cell>):DropPlan|null {return planSelectedDrops(world,new Set(),pawns,captured,vacated,true,origins);}
+export function planSelectedDrops(world:World,jobs:Set<number>,pawns:Set<number>,captured:Set<number>=new Set(),vacated:ReadonlySet<number>=new Set(),stopDead260=false,origins?:ReadonlyMap<number,Cell>):DropPlan|null {
   const result:DropPlan=new Map();
   if(!jobs.size&&!pawns.size)return result;
-  const shadow={...world,packed:world.packed?.map(p=>({...p,owner:{...p.owner}})),piles:world.piles.map(p=>({...p,owner:{...p.owner}}))};
+  const shadow={...world,packed:world.packed?.filter(p=>!vacated.has(p.building.id)).map(p=>({...p,owner:{...p.owner}})),piles:world.piles.filter(p=>!vacated.has(p.id)).map(p=>({...p,owner:{...p.owner}}))};
   const add=(pile:MaterialPile,origin:Cell)=>{
     if(!dropRetainingIdentity(shadow,pile,origin)||pile.owner.type!=='ground')return false;
     result.set(pile.id,{x:pile.owner.x,z:pile.owner.z});return true;
   };
   for(const pawn of world.pawns)if(pawns.has(pawn.id)) {
-    const pile=shadow.piles.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
-    if(pile&&!add(pile,pawn))return null;
+    const origin=origins?.get(pawn.id)??(stopDead260?reformHumanOrigin260(world,pawn):pawn);
+    const held=shadow.piles.filter(p=>(p.owner.type==='pawn'||captured.has(pawn.id)&&p.owner.type==='equipment')&&p.owner.pawnId===pawn.id);
+    for(const pile of held)if(!add(pile,origin))return null;
     const pack=shadow.packed?.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
-    if(pack){const cell=furnitureDropCell(shadow,pawn,pawn.id);if(!cell)return null;pack.owner={type:'ground',...cell};result.set(pack.building.id,cell);}
+    if(pack){const cell=furnitureDropCell(shadow,origin,pawn.id);if(!cell)return null;pack.owner={type:'ground',...cell};result.set(pack.building.id,cell);}
   }
   for(const pile of shadow.piles)if(pile.owner.type==='job'&&jobs.has(pile.owner.jobId)) {
     const job=world.jobs.find(j=>pile.owner.type==='job'&&j.id===pile.owner.jobId)!;
@@ -151,7 +167,7 @@ export function planSelectedDrops(world:World,jobs:Set<number>,pawns:Set<number>
   }
   return result;
 }
-export function commitDrop(world:World,pile:MaterialPile,origin:Cell,plan?:DropPlan):boolean {
+export function commitDrop(world:World,pile:MaterialPile,origin:Cell,plan?:ReadonlyMap<number,Cell>):boolean {
   const cell=plan?.get(pile.id);
   if(cell){pile.owner={type:'ground',...cell};return true;}
   return dropRetainingIdentity(world,pile,origin);
@@ -180,8 +196,7 @@ export function releaseAssignments(world:World,pawn:Pawn,despawning=false):void 
   releaseSurgeryState(world,pawn);
   delete pawn.openCasket;
   releaseRescue(world,pawn,despawning);
-  const job=world.jobs.find(j=>j.id===pawn.jobId);
-  if(job?.reservedBy===pawn.id){if(job.tree?.kind==='replant'){job.tree.phase='pickup';job.tree.carryPileId=null;job.tree.workCore=0;delete job.tree.durationCore;delete job.clearance;resetWork(job);}delete job.installationWork;delete job.clearance;delete job.pickTicks;job.reservedBy=null;job.status='pending';if(job.repair)delete job.repair.warmed;if(job.kind==='remove-bridge'||job.kind==='remove-floor'||job.kind==='flick'||job.kind==='repair'||job.kind==='fix-breakdown'||job.furniture||job.kind==='mine'||job.kind==='sow'||job.kind==='deconstruct'||isRoofJob(job))resetWork(job);}
+  releasePawnJob259(world.jobs.find(j=>j.id===pawn.jobId),pawn.id);
   clearReleasedPawnAssignments259(pawn);
 }
 
@@ -194,4 +209,18 @@ export function clearReleasedPawnAssignments259(pawn:Pawn):void {
   delete pawn.transitExit;
   pawn.orders.active=null;
   pawn.recreation.task=null;pawn.jobId=null;pawn.haul=null;pawn.cooking=null;pawn.need=null;pawn.path=[];if(pawn.state!=='downed'&&pawn.state!=='dead')pawn.state='idle';pawn.planCooldown=20;pawn.needCooldown=20;
+}
+
+/** Reform leaves unselected inventory on the same real map; no stock credit. */
+export function planReformInventoryDrops260(world:World,piles:readonly MaterialPile[],packs:readonly import('./furniture-rules.ts').PackedFurniture[],prior:DropPlan,vacated:ReadonlySet<number>=new Set(),humanOrigins?:ReadonlyMap<number,Cell>):DropPlan|null {
+ const shadow={...world,piles:world.piles.filter(p=>!vacated.has(p.id)).map(p=>({...p,...piles.find(q=>q.id===p.id),owner:{...p.owner}})),packed:world.packed.filter(p=>!vacated.has(p.building.id)).map(p=>({...p,owner:{...p.owner}}))};
+ for(const [id,cell] of prior){const p=shadow.piles.find(p=>p.id===id);if(p)p.owner={type:'ground',...cell};const pack=shadow.packed.find(p=>p.building.id===id);if(pack)pack.owner={type:'ground',...cell};}
+ const result:DropPlan=new Map();
+ for(const p of piles){if(p.owner.type!=='inventory')return null;const ownerId=p.owner.pawnId,holder=world.pawns.find(q=>q.id===ownerId)??world.wildlife?.animals.find(q=>q.id===ownerId),copy=shadow.piles.find(q=>q.id===p.id);if(!holder||!copy||!dropRetainingIdentity(shadow,copy,humanOrigins?.get(ownerId)??holder)||copy.owner.type!=='ground')return null;result.set(p.id,{x:copy.owner.x,z:copy.owner.z});}
+ for(const p of packs){if(p.owner.type!=='inventory')return null;const ownerId=p.owner.pawnId,holder=world.pawns.find(q=>q.id===ownerId)??world.wildlife?.animals.find(q=>q.id===ownerId),copy=shadow.packed.find(q=>q.building.id===p.building.id);if(!holder||!copy)return null;const cell=furnitureDropCell(shadow,humanOrigins?.get(ownerId)??holder,holder.id);if(!cell)return null;copy.owner={type:'ground',...cell};result.set(p.building.id,cell);}return result;
+}
+
+/** Existing job half of release, also reusable on a private Job record. */
+export function releasePawnJob259(job:import('./types.ts').Job|undefined,pawnId:number):void {
+  if(job?.reservedBy===pawnId){if(job.tree?.kind==='replant'){job.tree.phase='pickup';job.tree.carryPileId=null;job.tree.workCore=0;delete job.tree.durationCore;delete job.clearance;resetWork(job);}delete job.installationWork;delete job.clearance;delete job.pickTicks;job.reservedBy=null;job.status='pending';if(job.repair)delete job.repair.warmed;if(job.kind==='remove-bridge'||job.kind==='remove-floor'||job.kind==='flick'||job.kind==='repair'||job.kind==='fix-breakdown'||job.furniture||job.kind==='mine'||job.kind==='sow'||job.kind==='deconstruct'||isRoofJob(job))resetWork(job);}
 }

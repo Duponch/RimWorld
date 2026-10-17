@@ -81,9 +81,9 @@ function arrive(w:World,kind:VisitorKind,intro=false,exotic=false):boolean {
   const id=s.serial+1,merchant=exotic?0:kind==='visitor'&&visitorRandom(random)<.75?Math.floor(visitorRandom(random)*profiles.length):-1;
   const pawns:Pawn[]=[],piles:MaterialPile[]=[];let nextId=w.nextId;
   for(let i=0;i<profiles.length;i++){
-    const factionId=w.schemaVersion===259&&w.worldFactions?bornFactionForDef259(w,'OutlanderCivil'):undefined;if(w.schemaVersion===259&&w.worldFactions&&factionId===undefined)return false;
+    const factionId=(Number(w.schemaVersion)===259||w.schemaVersion===260)&&w.worldFactions?bornFactionForDef259(w,'OutlanderCivil'):undefined;if((Number(w.schemaVersion)===259||w.schemaVersion===260)&&w.worldFactions&&factionId===undefined)return false;
     const p=startingPawn(nextId++,`${profiles[i]} ${id}.${i+1}`,arrival.sites[i]!.x,arrival.sites[i]!.z,0,55,w.seed,w.tick,w.schemaVersion);
-    p.faction='outlanders';if(w.schemaVersion===259&&w.worldFactions&&!bindBornHumanFaction259(w,p,factionId!))return false;p.foodPolicyId=w.foodPolicies[0]!.id;
+    p.faction='outlanders';if((Number(w.schemaVersion)===259||w.schemaVersion===260)&&w.worldFactions&&!bindBornHumanFaction259(w,p,factionId!))return false;p.foodPolicyId=w.foodPolicies[0]!.id;
     delete p.apparelPolicyId;delete p.apparelAutomation;delete p.nextApparelCheckAt;
     for(const value of Object.values(p.skills))if(typeof value==='object'){value.level=0;value.passion=0;}
     if(w.schemaVersion>=191)generatePawnBackground(p,w.seed,profiles[i]==='Garde',i===merchant);

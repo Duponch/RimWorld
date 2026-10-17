@@ -1,3 +1,4 @@
+import {registeredCampaign,registeredMapId} from './world-map-context.ts';
 import { validateMechanoidRaids } from './mechanoid-raid-save.ts';
 import { validApparelShape,validateApparel } from './apparel-save.ts';
 import { bombRefugeRouteTarget } from './bomb-refuge-route.ts';
@@ -30,7 +31,8 @@ export function validateRaids(w:World,version:number,ids:Set<number>):string[] {
   const cell=(v:unknown):boolean=>object(v)&&Object.keys(v).length===2&&integer(v.x,0,w.width-1)&&integer(v.z,0,w.height-1);
   if(version<68)return state!==undefined||w.pawns.some(p=>p.raid!==undefined)?['Legacy save contains raid state.']:[];
   if(state===undefined)return w.pawns.some(p=>p.raid!==undefined)?['Raider without calendar.']:[];
-  if(!object(state)||!keys(state,['profile','rng','nextCheck','serial','completed','active','last','departed','cassandra',...(version>=194?['mechanoid','mechActive']:[])])||!['camp-raids-v1','cassandra-raids-v1'].includes(String(state.profile))||!integer(state.rng,1,4294967295)||!integer(state.serial,0)||!integer(state.completed,0,state.serial)||!Array.isArray(state.departed)||state.departed.length>w.width*w.height)return ['Invalid raid calendar.'];
+  if(!object(state)||!keys(state,['profile','rng','nextCheck','serial','completed','active','last','departed','cassandra',...(version>=194?['mechanoid','mechActive']:[])])||!['camp-raids-v1','cassandra-raids-v1',...version>=260?['camp-pressure-v1']:[]].includes(String(state.profile))||!integer(state.rng,1,4294967295)||!integer(state.serial,0)||!integer(state.completed,0,state.serial)||!Array.isArray(state.departed)||state.departed.length>w.width*w.height)return ['Invalid raid calendar.'];
+  const pressure=state.profile==='camp-pressure-v1';if(pressure){const root=registeredCampaign(w),mapId=registeredMapId(w),site=root.worldMaps?.sites.find(m=>m.id===mapId);if(version<260||state.active!==undefined||state.cassandra!==undefined||state.nextCheck!==null||!state.mechanoid||state.departed.length!==0||(site?site.kind!=='camp'||!site.campPressure:!w.expeditionSite&&!(w.campaignMap?.revision===2&&w.campaignMap.maps.some(m=>m.kind==='camp'&&w.campaignMap?.revision===2&&m.id===w.campaignMap.activeMapId))))return ['Invalid prospective Camp raid owner.'];}
   const cassandra=state.profile==='cassandra-raids-v1';
   if(cassandra?version<82||!w.gameProfile||!validCassandraAgenda(state.cassandra,w.tick,version):state.cassandra!==undefined)return ['Invalid Cassandra raid agenda.'];
   const s=w.raids!,a:unknown=s.active,last:unknown=s.last;
@@ -39,7 +41,7 @@ export function validateRaids(w:World,version:number,ids:Set<number>):string[] {
   // exceed one cycle; a rolling cycle-length bound would reject that save.
   errors.push(...validateMechanoidRaids(w,version,ids));
   const ongoing=a!==undefined||s.mechActive!==undefined;
-  const validNext=!ongoing?(cassandra?s.nextCheck===s.cassandra!.pending[0]:integer(s.nextCheck,w.tick+1,w.tick+8*TICKS_PER_DAY)):s.nextCheck===null;
+  const validNext=pressure?s.nextCheck===null:!ongoing?(cassandra?s.nextCheck===s.cassandra!.pending[0]:integer(s.nextCheck,w.tick+1,w.tick+8*TICKS_PER_DAY)):s.nextCheck===null;
   if(s.completed!==s.serial-(ongoing?1:0)||!validNext)errors.push('Invalid raid schedule or count.');
   const lastCount=object(last)&&object(last.mechComposition)&&Array.isArray(last.mechComposition.roster)?last.mechComposition.roster.length:object(last)&&object(last.composition)&&Array.isArray(last.composition.roster)?last.composition.roster.length:s.completed===1?1:2;
   const questLast=object(last)&&last.originQuestId!==undefined;

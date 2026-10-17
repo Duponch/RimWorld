@@ -148,13 +148,13 @@ export function depositMaterialPart(world:World,source:MaterialPile,cell:Cell,qu
   while(remaining){const moved=Math.min(remaining,ITEM_DEFINITIONS[source.item].stackLimit);world.piles.push({...source,...copyPileCondition(source),id:world.nextId++,quantity:moved,owner:{type:'ground',x:cell.x,z:cell.z}});remaining-=moved;}
   source.quantity-=quantity;refreshStock(world);return true;
 }
-export function reservedSource(world: World, pileId: number, exceptPawn?: number, exceptTreeJob?:number): number {
+export function reservedSource(world: World, pileId: number, exceptPawn?: number, exceptTreeJob?:number,exceptPawns?:ReadonlySet<number>): number {
   let quantity = commercialReservedQuantity(world,pileId,exceptPawn)+groupReservedQuantity(world,pileId);
-  for(const j of world.jobs)if(j.id!==exceptTreeJob&&j.tree?.kind==='replant'&&j.tree.phase==='pickup'&&j.tree.sourcePileId===pileId&&j.reservedBy!==exceptPawn)quantity++;
+  for(const j of world.jobs)if(j.id!==exceptTreeJob&&j.tree?.kind==='replant'&&j.tree.phase==='pickup'&&j.tree.sourcePileId===pileId&&j.reservedBy!==exceptPawn&&!exceptPawns?.has(j.reservedBy??-1))quantity++;
   if(world.scout?.phase==='loading'&&world.scout.pawnId!==exceptPawn&&world.scout.sourcePileId===pileId)quantity+=world.scout.quantity;
-  for(const a of world.wildlife?.animals??[])if(a.id!==exceptPawn&&a.meal?.kind==='pile'&&a.meal.id===pileId)quantity+=a.meal.quantity;
+  for(const a of world.wildlife?.animals??[])if(a.id!==exceptPawn&&!exceptPawns?.has(a.id)&&a.meal?.kind==='pile'&&a.meal.id===pileId)quantity+=a.meal.quantity;
   for (const pawn of world.pawns) {
-    if (pawn.id !== exceptPawn) {
+    if (pawn.id !== exceptPawn&&!exceptPawns?.has(pawn.id)) {
       if(pawn.burial?.phase==='pickup'&&pawn.burial.corpseId===pileId)quantity++;
       if(pawn.hunting?.animalId===pileId)quantity++;
       if((pawn.equipmentTask?.action==='equip'||pawn.equipmentTask?.action==='wear')&&pawn.equipmentTask.itemId===pileId)quantity++;
@@ -172,7 +172,7 @@ export function reservedSource(world: World, pileId: number, exceptPawn?: number
       if(pawn.haul?.phase==='pickup'&&pawn.haul.sourcePileId===pileId)quantity+=pawn.haul.quantity;
       if (pawn.need?.kind === 'eat' && pawn.need.phase === 'pickup' && pawn.need.sourcePileId === pileId) quantity += pawn.need.quantity ?? 1;
     }
-    const queue=pawn.orders?.queue;
+    const queue=exceptPawns?.has(pawn.id)?undefined:pawn.orders?.queue;
     if(queue?.length)for(const task of queue)if(typeof task!=='number') {
       if(isCookingOrder(task)){for(const i of task.cooking.ingredients)if(i.pileId===pileId)quantity+=i.quantity;}
       else if(task.sourcePileId===pileId)quantity+=task.quantity;

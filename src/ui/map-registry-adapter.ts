@@ -17,7 +17,7 @@ export function groupDisplayLabel(group:CampaignGroupSummary):string {
 export function readMapRegistryState(value:CampaignUIState):MapRegistryState|undefined {
  const facts=campaignUIFacts(value);if(!facts)return;
  return {tick:value.tick,selectedMapId:facts.activeMapId,maxSettlements:facts.maxSettlements,settlements:facts.maps.filter(map=>map.kind==='settlement').length,maps:facts.maps.map(map=>({
-  id:map.id,tile:map.tile,name:mapDisplayName(map),kind:map.kind,active:map.selected,people:map.pawnCount,createdAt:map.createdAt,
+  ...map.campPressure?{campPressure:map.campPressure}:{},id:map.id,tile:map.tile,name:mapDisplayName(map),kind:map.kind,active:map.selected,people:map.pawnCount,createdAt:map.createdAt,
   view:map.actions.view,settle:map.actions.settle,abandon:map.actions.abandon,
   abandonedPeople:map.abandonConsequences.pawns,groundItems:map.abandonConsequences.groundItems,structures:map.abandonConsequences.structures,
  }))};

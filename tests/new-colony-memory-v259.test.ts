@@ -15,7 +15,7 @@ import {SnapshotEncoder,SnapshotDecoder} from '../src/bridge/snapshots';
 import {TICKS_PER_DAY,type World} from '../src/sim/types';
 import {planetTileCount} from '../src/sim/planet-geography-256';
 /** Declared resident Camp checkpoint, not a played abandonment/new generation. */
-function camp(){const w=registryCamp();expect(w.schemaVersion).toBe(259);w.worldMaps!.sites[0]!.kind='camp';stepWorld(w,4);return w;}
+function camp(){const w=registryCamp();expect(w.schemaVersion).toBe(260);w.worldMaps!.sites[0]!.kind='camp';stepWorld(w,4);return w;}
 const thoughts=(w:World,p:World['pawns'][number],tick=w.tick)=>lostThoughtsAt(p,tick,w.worldGroups!.lostMemories,new Map());
 const blankUrgent={generation:1,pauseRevision:0,serial:0,urgentHeld:false,rows:[]};
 test('both actual notification kinds share one family and reset Hope to one fresh Optimism, without changing phase dates',()=>{
@@ -61,6 +61,6 @@ test('installation with an existing home records its own true date without renew
  configureSettlementLimit(w,2);try{command(w,{type:'map-settle',mapId:1});expect(record.settledAt).toBe(w.tick);expect(record.createdAt).toBe(0);expect(w.worldGroups!.lostMemories).toEqual(before);expect(registeredMap(w,1)).toBe(other);}finally{configureSettlementLimit(w,1);}
 });
 test('old258 memory literals remain accepted unchanged; future kind, undefined and hidden clocks never gain old-schema privileges',()=>{
- const old=[{receiverId:1,mapId:0,otherId:null,kind:'new-colony' as const,at:12}],bytes=JSON.stringify(old);expect(validLostMemories(old,20,3,258)).toBe(true);expect(validLostMemories(old,20,3,259)).toBe(true);expect(JSON.stringify(old)).toBe(bytes);expect(validLostMemories([{...old[0]!,kind:'new-colony-settled'}],20,3,258)).toBe(false);expect(validLostMemories(old,20,3,260)).toBe(false);
+ const old=[{receiverId:1,mapId:0,otherId:null,kind:'new-colony' as const,at:12}],bytes=JSON.stringify(old);expect(validLostMemories(old,20,3,258)).toBe(true);expect(validLostMemories(old,20,3,259)).toBe(true);expect(JSON.stringify(old)).toBe(bytes);expect(validLostMemories([{...old[0]!,kind:'new-colony-settled'}],20,3,258)).toBe(false);expect(validLostMemories(old,20,3,261)).toBe(false);
  const w=camp();command(w,{type:'map-settle',mapId:0});const raw=JSON.parse(serializeCampaign(w));Object.defineProperty(raw.worldMaps.sites[0],'settledAt',{value:w.tick,enumerable:false,configurable:true});expect(validWorldMapRegistry(raw)).toBe(false);let reads=0;Object.defineProperty(raw.worldMaps.sites[0],'settledAt',{get(){reads++;return w.tick;},enumerable:true,configurable:true});expect(validWorldMapRegistry(raw)).toBe(false);expect(reads).toBe(0);
 });

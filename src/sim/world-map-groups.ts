@@ -1,3 +1,4 @@
+import type {GroupReformCommand260} from './group-reform-260.ts';
 import type {World,CommandResult} from './types.ts';
 import type {CampaignState} from './world-map-state.ts';
 import type {GroupReorganizationCommand} from './group-reorganization-state.ts';
@@ -7,9 +8,10 @@ import {applyGroupCommand} from './group-authority.ts';
 import {registeredCampaign,registeredMap,registeredMapId,withWorldGroup} from './world-map-context.ts';
 const fail=(reason:string):CommandResult=>({ok:false,code:'invalid-command',reason});
 /** Explicit IDs select the actual owner; no singleton or implicit selected caravan mutates. */
-export function applyRegisteredGroupCommand(input:CampaignState,c:GroupCommand,reorganization?:{apply(root:CampaignState,c:GroupReorganizationCommand):CommandResult}):CommandResult {
+export function applyRegisteredGroupCommand(input:CampaignState,c:GroupCommand,reorganization?:{apply(root:CampaignState,c:GroupReorganizationCommand):CommandResult;reform?(root:CampaignState,c:GroupReformCommand260):CommandResult}):CommandResult {
  const root=registeredCampaign(input),r=root.worldGroups!,maps=root.worldMaps!;
  if(!validGroupCommand(c,root.schemaVersion))return fail('Commande de groupe invalide.');
+ if(c.type==='group-reform'){if(maps.selectedMapId!==c.originMapId)return fail('Le Camp source doit être confirmé et affiché.');return reorganization?.reform?reorganization.reform(root,c):fail('Le vrai contexte de caravane est indisponible.');}
  if(c.type==='group-split'||c.type==='group-merge')return reorganization?reorganization.apply(root,c):fail('Le contexte de mouvement confirme de la caravane est indisponible.');
  if(c.type==='planet-adopt'){const map=maps.selectedMapId===null?undefined:registeredMap(root,maps.selectedMapId);return map?applyGroupCommand(map,c):fail('Sélectionnez une carte réelle.');}
  const creation=c.type==='group-start'||c.type==='group-unload'&&c.groupId===undefined;

@@ -19,7 +19,7 @@ const originalHolderLinks=(value:object)=>{const seal=sealRemovalOriginal259(val
 /** Envelope caller already performed its complete data-only tree admission. */
 export function validHeldCasketEnvelope259(state:WorldPawnsState256,version:number,nowCore:number,nextId:number):boolean{
  const d=Object.getOwnPropertyDescriptor(state,'heldCaskets259');if(!d)return !('heldCaskets259'in state);
- if(version!==259||!d.enumerable||!Object.hasOwn(d,'value')||!dense(d.value,nextId))return false;
+ if((version!==259&&version!==260)||!d.enumerable||!Object.hasOwn(d,'value')||!dense(d.value,nextId))return false;
  return d.value.every(r=>exact(r,['originMapId','registeredAtCore','enteredAtAbsCore','context','casket'])&&int(r.originMapId)&&int(r.registeredAtCore,0,nowCore)&&r.registeredAtCore%10===0&&int(r.enteredAtAbsCore)&&!!r.context&&typeof r.context==='object'&&validAncientCasketBuilding256(r.casket,version,{...(r.context as WorldGroupRecord['context']),nextId},r.registeredAtCore/10));
 }
 type ValidationRoot=Readonly<Pick<World,'schemaVersion'|'tick'|'nextId'|'planet'|'worldMaps'|'worldFactions'|'campaignMap'>>&Partial<Readonly<Pick<World,'worldGroups'>>>;
@@ -29,26 +29,26 @@ const pending=new WeakMap<HeldWorldCasket259,()=>boolean>();
 export function validateHeldWorldCaskets259(state:WorldPawnsState256,root:ValidationRoot,ids:NumericMembershipSink,projection?:CampaignMapPresentation|CampaignSummary):string[]{
  const errors:string[]=[],humanIds=new Set<number>();
  for(const e of state.heldCaskets259??[]){
-  if(root.schemaVersion!==259){errors.push('Future retained casket holder');continue;}
+  if(Number(root.schemaVersion)!==259&&root.schemaVersion!==260){errors.push('Future retained casket holder');continue;}
   const retired=root.worldMaps?.retired.find(m=>m.id===e.originMapId),proof=projection?.worldPawnOrigins?.find(m=>m.mapId===e.originMapId);
   const removedAt=retired?.removedAt??proof?.removedAt;
   if(removedAt===undefined?!pending.get(e)?.():removedAt*10!==e.registeredAtCore)errors.push('Retained casket lacks its actual map-removal receipt');
   const context=e.context,c=context.climate,site=context.site,tile=retired?.tile??proof?.tile;
-  if(!validGroupMapContext(context,e.registeredAtCore/10,259,root)||c?.revision!==4||site?.revision!==3||tile!==undefined&&(site.tileId!==tile||c.tileId!==tile))errors.push('Retained casket actual origin context refused');
+  if(!validGroupMapContext(context,e.registeredAtCore/10,root.schemaVersion,root)||c?.revision!==4||site?.revision!==3||tile!==undefined&&(site.tileId!==tile||c.tileId!==tile))errors.push('Retained casket actual origin context refused');
   if(c?.revision!==4||e.enteredAtAbsCore!==(c.calendarOrigin+e.registeredAtCore/10-c.adoptedAt)*10-geographicLongitudeOffsetCore256(c.definition.longitude))errors.push('Retained casket absolute removal clock refused');
   const archive=root.worldGroups?.abandonedContents.find(a=>a.mapId===e.originMapId);
   if(archive&&JSON.stringify(archive.context)!==JSON.stringify(context))errors.push('Retained casket differs from its actual removed-map context');
-  if(!validAncientCasketBuilding256(e.casket,259,{...context,nextId:root.nextId},e.registeredAtCore/10)||!ancientCasketHasContents256(e.casket.casket))errors.push('Invalid retained physical casket header');
+  if(!validAncientCasketBuilding256(e.casket,root.schemaVersion,{...context,nextId:root.nextId},e.registeredAtCore/10)||!ancientCasketHasContents256(e.casket.casket))errors.push('Invalid retained physical casket header');
   const allocator=root.worldMaps?.nextAncientCasketGroupId??projection?.nextAncientCasketGroupId;
   if(allocator!==undefined&&e.casket.casket.groupId!==-1&&e.casket.casket.groupId>=allocator)errors.push('Retained casket exceeds real group allocator');
-  errors.push(...validateAncientCasketRecord256(e.casket,{...context,nextId:root.nextId,schemaVersion:259,tick:e.registeredAtCore/10,worldFactions:root.worldFactions}));
+  errors.push(...validateAncientCasketRecord256(e.casket,{...context,nextId:root.nextId,schemaVersion:root.schemaVersion,tick:e.registeredAtCore/10,worldFactions:root.worldFactions}));
   for(const id of ancientCasketThingOccurrences256(e.casket)){if(ids.has(id))errors.push('Retained casket Thing has another actual owner');ids.add(id);}
   for(const p of e.casket.casket.humans){if(humanIds.has(p.id))errors.push('Retained casket human duplicated');humanIds.add(p.id);}
  }
  return errors;
 }
 /** Private permit tied to a complete current transaction, never serialized. */
-export interface MapRemovalCommitPhase259 {areas():void;beds():void}
+export interface MapRemovalCommitPhase259 {readonly drops260?:ReadonlyMap<number,import('./types.ts').Cell>;departed260?():void;areas():void;beds():void}
 const removalPermits=new WeakMap<object,{map:World;current:()=>boolean;begin?:()=>MapRemovalCommitPhase259;prepared?:()=>boolean}>();
 export function brandHeldCasketRemoval259<T extends object>(plan:T,map:World,current:()=>boolean,begin?:()=>MapRemovalCommitPhase259,prepared?:()=>boolean):T{removalPermits.set(plan,{map,current,begin,prepared});return plan;}
 export function heldCasketRemovalPermitted259(map:World,plan:object|undefined):boolean{const permit=plan&&removalPermits.get(plan);return !!permit&&permit.map===map&&permit.current();}

@@ -23,6 +23,7 @@ import {advanceAnimalAges256} from './animal-clinical-age-v256.ts';
 import {legacyTravellerContext} from './world-map-owners.ts';
 import type {CampaignState} from './world-map-state.ts';
 import {applyWorldMapCommand,validWorldMapCommand,removeEmptyCamps,enterRegisteredSite} from './world-map-authority.ts';
+import {advanceCampPressure260} from './camp-pressure-260.ts';
 import {applyRegisteredGroupCommand} from './world-map-groups.ts';
 import {registeredCampaign,registeredMaps,registeredMapId,campaignClockContext,selectedRegisteredMap,flushRegisteredMap,withWorldGroup} from './world-map-context.ts';
 import {canDesignateBridge,finishBridge,removeBridge} from './bridge.ts';
@@ -528,7 +529,7 @@ function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
 }
 function applyCommandInternal(world: World, command: Exclude<LocalCommand,import('./world-map-state.ts').WorldMapCommand|{type:'apparel-policy-update'|'apparel-policy-copy'|'apparel-policy-rename'|'egg-forbid'|'material-forbid'}>): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
-  if(command.type==='group-split'||command.type==='group-merge'||command.type==='group-carry-sick')return refusal('invalid-command','Cette commande exige le registre et le contexte réel de caravane.');
+  if(command.type==='group-reform'||command.type==='group-split'||command.type==='group-merge'||command.type==='group-carry-sick')return refusal('invalid-command','Cette commande exige le registre et le contexte réel de caravane.');
   if(command.type==='cancel-job'||command.type==='cancel-resource'||command.type==='cancel-pile')return applyDesignationCancel(world,command)??refusal('invalid-command','Annulation inconnue.');
   if(command.type==='extract-tree'||command.type==='replant-tree')return applyTreeCommand(world,command)!;
   if(command.type==='designate'&&(command.kind==='extract-tree'||command.kind==='replant-tree'))return command.kind==='extract-tree'?applyTreeCommand(world,{type:'extract-tree',resourceId:command.targetId??-1})!:applyTreeCommand(world,{type:'replant-tree',pileId:command.targetId??-1,x:command.x,z:command.z})!;
@@ -916,7 +917,7 @@ export function stepWorld(world:CampaignState,ticks=1,diagnostics?:import('./wor
       else for(const g of root.worldGroups!.groups.slice().sort((a,b)=>a.state.id-b.state.id))if('members' in g.state)withWorldGroup(root,g.state.id,advanceGroup);
       for(const row of root.worldGroups!.groups.slice()){const g=row.state;if('members' in g&&['at-site','awaiting-entry'].includes(g.phase)&&root.worldMaps!.sites.some(m=>m.tile===g.tile&&m.kind==='settlement'))enterRegisteredSite(root,g.id,'visit',false);}
       for(const old of root.worldGroups!.legacyTravellers){const view=legacyTravellerContext(root,old);advanceScoutTrip(view);advanceCommercialTrip(view);if(view.scout)old.scout=view.scout;else delete old.scout;if(view.commercialTrip)old.commercialTrip=view.commercialTrip;else delete old.commercialTrip;}
-      advanceWorldIncidents(campaignClockContext(root));removeEmptyCamps(root);
+      advanceWorldIncidents(campaignClockContext(root));advanceCampPressure260(root);removeEmptyCamps(root);
       advanceActualWorldPawns256(root);
     }return;
   }

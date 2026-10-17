@@ -9,8 +9,10 @@ import { navigationCosts } from './furniture-travel.ts';
 /** With solid diagonal corners, a legal diagonal always has a cardinal detour.
  * Four-neighbour connectivity therefore answers existence exactly, without
  * assigning any unweighted route or distance to the simulation. */
-export function candidateAccess(world:World,start:Cell,blocked:Uint8Array,occupied:ReadonlySet<number>,deferNavigation=false):CandidateAccess {
-  const width=world.width,height=world.height,size=width*height,origin=start.z*width+start.x;
+export function candidateAccess(world:World,start:Cell,blocked:Uint8Array,occupied:ReadonlySet<number>,deferNavigation=false,originCell:Cell=start):CandidateAccess {
+  // Retain the original actor for policy/doors/hostility while an admitted
+  // StopDead query starts at its actual occupied cell, not its future endpoint.
+  const width=world.width,height=world.height,size=width*height,origin=originCell.z*width+originCell.x;
   const policy=navigationAllowedArea(world,start),additive=policy?{maximum:OUTSIDE_ALLOWED_AREA_SEARCH_COST,has:(index:number)=>!policy.has(index),get:(index:number)=>policy.has(index)?0:OUTSIDE_ALLOWED_AREA_SEARCH_COST}:undefined;
   const unavailable=blocked.slice();for(const index of occupied)unavailable[index]=1;addActorObstacles(world,start,unavailable);
   // Public callers retain the full construction-time snapshot. The ordinary

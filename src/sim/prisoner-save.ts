@@ -68,7 +68,7 @@ export function validPrisonerStateRecord259(s:unknown,version:number,w:World,det
 export function validPrisonerPawnShape(p:Record<string,unknown>,version:number,w:World,detached259=false):boolean {
   if(version<86)return p.prisoner===undefined&&p.ward===undefined&&p.recruitment===undefined;
   const s=p.prisoner;
-  if(s!==undefined&&!validPrisonerStateRecord259(s,version,w,version===259&&detached259&&Object.hasOwn(p,'worldAffiliation259')))return false;
+  if(s!==undefined&&!validPrisonerStateRecord259(s,version,w,version>=259&&detached259&&Object.hasOwn(p,'worldAffiliation259')))return false;
   const active=version>=204&&object(s)&&object(s.breakout)&&s.breakout.active!==undefined;
   const colony=object(s)&&isColonist(p as unknown as Pawn);
   if(colony&&(version<213||!['maintain','release'].includes(String(s.mode))||['escape','releasedAt','breakout'].some(k=>Object.hasOwn(s,k))

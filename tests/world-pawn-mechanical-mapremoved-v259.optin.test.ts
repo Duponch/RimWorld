@@ -13,7 +13,7 @@ describe.skipIf(!enabled)('actual producer259 mechanical MapRemoved continuation
  it('refuses missing/forged authority atomically, then transfers the same originals and preserves timers/health through RAW/full/delta/replay',()=>{
   const path=process.env.ELSEWHERE_MECHANICAL259_CHECKPOINT;if(!path)throw Error('Future exact mechanical259 producer checkpoint is required; none is acquired here');
   const raw=readFileSync(path,'utf8'),sha=process.env.ELSEWHERE_MECHANICAL259_CHECKPOINT_SHA256;if(!sha||!/^[a-f0-9]{64}$/.test(sha)||createHash('sha256').update(raw).digest('hex')!==sha)throw Error('Exact future producer checkpoint SHA256 is required');
-  const root=deserializeCampaign(raw);require259(root);if(root.schemaVersion!==259||root.planet?.revision!==3||!root.worldMaps||!root.worldPawns||!root.worldFactions)throw Error('Exact geographic259 campaign required');
+  const root=deserializeCampaign(raw);require259(root);if(Number(root.schemaVersion)!==259||root.planet?.revision!==3||!root.worldMaps||!root.worldPawns||!root.worldFactions)throw Error('Exact geographic259 campaign required');
   const mapId=Number(process.env.ELSEWHERE_MECHANICAL259_MAP_ID);if(!Number.isSafeInteger(mapId))throw Error('Exact actual mechanical source map id required');
   const map=registeredMap(root,mapId);if(!map||registeredMapId(map)!==mapId||!map.mechanoids?.length||map.mechanoids.some(m=>!m.worldFaction259||!root.worldFactions!.factions.some(f=>f.def==='Mechanoid'&&f.id===m.worldFaction259!.factionId)))throw Error('True prospective mechanical birth/header checkpoint required');
   const ids=map.mechanoids.map(m=>m.id),originals=[...map.mechanoids],health=originals.map(m=>JSON.stringify(m.health)),timers=originals.map(m=>JSON.stringify([m.emp,m.stun,m.stagger]));

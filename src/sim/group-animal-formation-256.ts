@@ -32,7 +32,7 @@ export function groupAnimalReason256(w:World,a:WildAnimal,preparing=false):strin
 /** New actual259/admission2 only. The existing ungathered line suppresses later
  * wandering decisions; the handler still waits for BOTH captured edges before
  * contact/gathering. No motion, health, service or dangerous task is cleared. */
-export function groupAnimalFormationReason259(w:World,a:WildAnimal):string|undefined {return animalFormationReason256(w,a,false,w.schemaVersion===259&&!w.group&&prospectiveHuman259(w));}
+export function groupAnimalFormationReason259(w:World,a:WildAnimal):string|undefined {return animalFormationReason256(w,a,false,(Number(w.schemaVersion)===259||w.schemaVersion===260)&&!w.group&&prospectiveHuman259(w));}
 export function previewGroupAnimals256(w:World,ids:readonly number[],members:readonly Pawn[],reachable:(p:Pawn,c:Cell)=>boolean):{kind:'ready';animals:WildAnimal[];preparation?:GroupAnimalPreparation256}|{kind:'refused';reason:string} {
  if(!ids.length)return {kind:'ready',animals:[]};if(w.schemaVersion<256||!members.length||new Set(ids).size!==ids.length)return {kind:'refused',reason:'Sélection animale invalide.'};
  const animals:WildAnimal[]=[],lines:GroupAnimalPreparationLine256[]=[],carriers=new Set<number>();

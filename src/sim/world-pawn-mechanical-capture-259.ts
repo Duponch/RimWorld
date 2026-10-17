@@ -87,7 +87,7 @@ function scan(root:CampaignState,rows:readonly Mechanical[]){
  for(const row of root.worldPawns?.owners??[]){actor(row.actor,'world-pawn:'+row.actor.id,false,row.kind==='mechanical');for(const p of row.items)pile(p,'world-pawn');for(const p of row.packed)packed(p,'world-pawn');}
  for(const held of root.worldPawns?.heldCaskets259??[])structure(held.casket,'actual-retained-cryptosleep-holder');
  const facts=new Map<number,WorldPawnGCFacts256>(),sealed:unknown[]=[];
- for(const row of rows){const admitted=validMechanicalWorldPawn259(row,259,root.worldFactions),reasons=[...keep.get(row.actor.id)!];if(row.keepForever)reasons.push('actual-explicit-keep');if(row.everColonist)reasons.push('actual-explicit-ever-colonist');reasons.sort();
+ for(const row of rows){const admitted=validMechanicalWorldPawn259(row,root.schemaVersion,root.worldFactions),reasons=[...keep.get(row.actor.id)!];if(row.keepForever)reasons.push('actual-explicit-keep');if(row.everColonist)reasons.push('actual-explicit-ever-colonist');reasons.sort();
   // Humanlike-only Colonist/logs, Animal-only bonds, and outgoing native
   // relationship/memory guards do not apply to this real unspawned mechanic.
   const value=admitted?{keep:reasons,unknown:[],relatedIds:[],memoryIds:[]}:unknown;facts.set(row.actor.id,value);
@@ -100,7 +100,7 @@ function scan(root:CampaignState,rows:readonly Mechanical[]){
  * events and historical scalar IDs do not invalidate or manufacture a Keep. */
 export function captureMechanicalWorldPawnFacts259(root:CampaignState){
  const state=root.worldPawns,rows=(state?.owners??[]).filter((r):r is Mechanical=>r.kind==='mechanical'),byId=new Map(rows.map(r=>[r.actor.id,r])),originals=rows.map(r=>r.actor);
- const supported=()=>root.schemaVersion===259&&root.planet?.revision===3&&!!root.worldMaps&&!!root.worldGroups&&!!root.worldFactions&&root.worldPawns===state;
+ const supported=()=>(Number(root.schemaVersion)===259||root.schemaVersion===260)&&root.planet?.revision===3&&!!root.worldMaps&&!!root.worldGroups&&!!root.worldFactions&&root.worldPawns===state;
  const before=supported()?scan(root,rows):undefined;
  return {facts(row:WorldPawnOwner256):WorldPawnGCFacts256{return row.kind==='mechanical'&&byId.get(row.actor.id)===row?before?.facts.get(row.actor.id)??unknown:unknown;},historicalIds:before?.history??new Set<number>(),current():boolean{
   return !!before&&supported()&&rows.every((r,i)=>r.actor===originals[i])&&scan(root,rows).seal===before.seal;

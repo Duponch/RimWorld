@@ -38,7 +38,7 @@ export function checkpoint259(root:CampaignState,label:string):string {
  catch(error){writeTestFileSync(`artifacts/caravan-owners-v259/${label}-INVALID-DIAGNOSTIC.json`,JSON.stringify(root));writeTestFileSync(`artifacts/caravan-owners-v259/${label}-INVALID-ERROR.txt`,String(error));throw error;}
 }
 export function require259(root:CampaignState):asserts root is World {
- if(root.schemaVersion!==259||root.planet?.revision!==3||!root.worldFactions||!root.worldPawns||!root.worldMaps?.generationRuntime||!('pawns'in root))throw Error('True259 geographic campaign producers are required before this QA');
+ if(Number(root.schemaVersion)!==259||root.planet?.revision!==3||!root.worldFactions||!root.worldPawns||!root.worldMaps?.generationRuntime||!('pawns'in root))throw Error('True259 geographic campaign producers are required before this QA');
  expect(validateWorld(root)).toEqual([]);
 }
 /** Exactly one new globe and genuine250² Crashlanded factory per invocation.

@@ -122,7 +122,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
   // must still resolve those IDs in the current, separately numbered registries.
   function person(v:unknown,clock:number,dead:boolean,origin?:GroupMemberOrigin,admission:import('./group-state.ts').GroupAdmission257|undefined=object(group)?group.admission as import('./group-state.ts').GroupAdmission257|undefined:undefined):v is Pawn {
     const personWorld=groupPersonValidationView(world,origin);
-    if(!object(v)||!keys(v,REQUIRED_PAWN,[...PASSIVE_PAWN,...version===259?['worldAffiliation259','prisonerHistory259',...admission?.revision===2?['prisoner']:[]]:[],...version>=256?['mapAreas','caravanCarrySick','mapBed','arrivalRotation','hiveDefeats','nativeHuman']:[]])||!thing(v.id)||ownerIds.has(v.id)||localById.has(v.id)
+    if(!object(v)||!keys(v,REQUIRED_PAWN,[...PASSIVE_PAWN,...(version===259||version===260)?['worldAffiliation259','prisonerHistory259',...admission?.revision===2?['prisoner']:[]]:[],...version>=256?['mapAreas','caravanCarrySick','mapBed','arrivalRotation','hiveDefeats','nativeHuman']:[]])||!thing(v.id)||ownerIds.has(v.id)||localById.has(v.id)
       ||!int(v.x,0,personWorld.width-1)||!int(v.z,0,personWorld.height-1))return false;
     if(!oneOf(v.state,['idle','resting','downed',...(dead?['dead']:[])])||dead!==(v.state==='dead')
       ||v.jobId!==null||v.haul!==null||v.cooking!==null||v.need!==null||v.bedId!==null||v.moveCooldown!==0||v.planCooldown!==0
@@ -144,7 +144,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
     const assigned=p.apparelPolicyId!==undefined||p.apparelAutomation!==undefined||p.nextApparelCheckAt!==undefined;
     if(assigned&&(!int(p.apparelPolicyId,1,(personWorld.nextApparelPolicyId??0)-1)||!dead&&!personWorld.apparelPolicies?.some(policy=>policy.id===p.apparelPolicyId)
       ||typeof p.apparelAutomation!=='boolean'||!int(p.nextApparelCheckAt,0,clock+APPAREL_POLICY_INTERVAL.max)))return false;
-    if((!isColonist(p)||p.prisoner)&&!(version===259&&admission?.revision===2&&hostedCaptive259(world,p))||!validWorldAffiliationForeignKeys259(p,world.worldFactions)||p.health&&(p.health.body!==undefined||p.health.tick!==clock)
+    if((!isColonist(p)||p.prisoner)&&!((version===259||version===260)&&admission?.revision===2&&hostedCaptive259(world,p))||!validWorldAffiliationForeignKeys259(p,world.worldFactions)||p.health&&(p.health.body!==undefined||p.health.tick!==clock)
       ||(dead?(!p.health?.death||p.health.death.tick!==clock):!!p.health?.death))return false;
     // Passive owners have no spatial vomiting driver. A healthy departure
     // cannot export an episode, and ordinary disease remains a clinical record.
@@ -270,7 +270,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
         ||!int(group.departedAt,group.startedAt as number,world.tick)||group.lastPersonalTick!==world.tick||!place(group.tile)
         ||typeof group.paused!=='boolean'||!dense(group.route,1,version>=255?planetTileCount(planet):162))return ['Invalid away group shape or clock.'];
       const prospective=group as unknown as Extract<GroupState,{members:Pawn[]}>;
-      if((group.travel!==undefined||group.packed!==undefined)&&group.reorganization===undefined||!validGroupTravel(group.travel,version)||!validGroupReorganization(group.reorganization,prospective,version,world.tick,world.nextId,o=>groupMemberOriginAuthority(world,o)))return ['Invalid or future group reorganization/travel.'];
+      if((group.travel!==undefined||group.packed!==undefined)&&group.reorganization===undefined||!validGroupTravel(group.travel,version)||!validGroupReorganization(group.reorganization,prospective,version,world.tick,world.nextId,o=>groupMemberOriginAuthority(world,o),source=>{const local=boundWorldGroup(world),projected=world.campaignMap?.revision===2?world.campaignMap.groups.find(r=>r.id===prospective.id):undefined;return source===(local?.originMapId??projected?.originMapId);}))return ['Invalid or future group reorganization/travel.'];
       if(prospective.admission?.revision===2&&(!prospective.reorganization||prospective.reorganization.memberOrigins.some(o=>o.enteredAtAbsCore===undefined)||prospective.animalOwners?.origins.some(o=>o.enteredAtAbsCore===undefined)))return ['Prospective caravan lost a true exit receipt.'];
       if(!validGroupAnimalOwners256(prospective,world,version,o=>groupMemberOriginAuthority(world,o)))return ['Invalid actual animal owners.'];
       for(const a of prospective.animalOwners?.members??[]){if(ownerIds.has(a.id)||localById.has(a.id)||world.wildlife?.animals.some(b=>b.id===a.id))return ['Duplicate animal original.'];ownerIds.add(a.id);}

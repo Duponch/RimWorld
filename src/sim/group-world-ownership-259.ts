@@ -20,9 +20,9 @@ import {groupPlayerOwner256} from './group-route-interval-256.ts';
  * no entry receipt or authority; true exit/removal still require worldMaps. */
 function projectedExitClock259(w:World):{absolute:number;mapId:number} {
  const m=w.campaignMap,c=w.climate,p=w.planet;
- if(w.schemaVersion!==259||Object.hasOwn(w,'worldMaps')||Object.hasOwn(w,'worldGroups')||m?.revision!==2||!Number.isSafeInteger(w.tick)||w.tick<0||m.activeMapId===null||!Number.isSafeInteger(m.activeMapId)||m.activeMapId<0||!Number.isSafeInteger(m.calendarOrigin)||p?.revision!==3||c?.revision!==4||w.site?.revision!==3||w.seed!==(w.site.mapSeed>>>0)||c.tileId!==w.site.tileId)throw Error('Missing confirmed local projection clock');
+ if((Number(w.schemaVersion)!==259&&w.schemaVersion!==260)||Object.hasOwn(w,'worldMaps')||Object.hasOwn(w,'worldGroups')||m?.revision!==2||!Number.isSafeInteger(w.tick)||w.tick<0||m.activeMapId===null||!Number.isSafeInteger(m.activeMapId)||m.activeMapId<0||!Number.isSafeInteger(m.calendarOrigin)||p?.revision!==3||c?.revision!==4||w.site?.revision!==3||w.seed!==(w.site.mapSeed>>>0)||c.tileId!==w.site.tileId)throw Error('Missing confirmed local projection clock');
  const active=m.maps.find(row=>row.id===m.activeMapId);
- if(!active||active.tile!==c.tileId||!validGeographicSiteClimate256(c,259,w))throw Error('Projected local climate differs from its actual map/anchor');
+ if(!active||active.tile!==c.tileId||!validGeographicSiteClimate256(c,w.schemaVersion,w))throw Error('Projected local climate differs from its actual map/anchor');
  const local=(c.calendarOrigin+w.tick-c.adoptedAt)*10-geographicLongitudeOffsetCore256(c.definition.longitude),home=geographicPlanetClimateDefinition256(p,p.homeTile),shared=(m.calendarOrigin!+w.tick)*10-geographicLongitudeOffsetCore256(home.longitude);
  if(!Number.isSafeInteger(local)||local<0||local!==shared)throw Error('Projected absolute clock differs from its confirmed campaign anchor');
  return {absolute:local,mapId:m.activeMapId};
@@ -46,7 +46,7 @@ export function groupExitAuthorityReason259(w:World,members:readonly Pawn[],item
  * synthetic WorldPawn registry membership. CaravanMember never auto-tends,
  * reaffiliates or ClearMind; the real clinical owner stays this caravan. */
 export function captureCaravanEntry259(w:World,g:AwayGroup):number|undefined {
- if(w.schemaVersion!==259||g.admission?.revision!==2)return;
+ if(w.schemaVersion<259||g.admission?.revision!==2)return;
  const root=registeredCampaign(w),factions=root.worldFactions;if(!factions||!root.worldPawns)throw Error('Missing actual prospective entry owner');
  const abs=actualCampRemovalAbsCore256(root,w),mapId=registeredMapId(w);if(mapId===undefined)throw Error('Actual exit map absent');
  const context={seed:w.seed,width:w.width,height:w.height,...w.climate?{climate:w.climate}:{},...w.site?{site:w.site}:{},...w.scenario?{scenario:w.scenario}:{}};
@@ -64,7 +64,7 @@ export function captureCaravanEntry259(w:World,g:AwayGroup):number|undefined {
  * reconstructed entry date is executed here. Base AbandonedAtTile callbacks
  * on the supported inventory Things have no mutation; possessions stay held. */
 export function transferOwnerlessCaravan259(w:World,g:AwayGroup,animalPersonalTick:number):boolean {
- if(w.schemaVersion!==259||g.admission?.revision!==2||g.members.some(groupPlayerOwner256))return false;
+ if(w.schemaVersion<259||g.admission?.revision!==2||g.members.some(groupPlayerOwner256))return false;
  const root=registeredCampaign(w),state=root.worldPawns,factions=root.worldFactions;if(!state||!factions||!nativeWorldPawnOrderCurrent256(state,state.nativeOrder))throw Error('Lost real prospective WorldPawn owner');
  const now=w.tick*10,rows:WorldPawnOwner256[]=[];
  const add=(actor:Pawn|NonNullable<AwayGroup['animalOwners']>['members'][number],origin:GroupMemberOrigin|undefined,clock:number)=>{

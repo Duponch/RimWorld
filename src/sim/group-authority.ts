@@ -65,12 +65,12 @@ export function groupMemberReason(w:World,p:Pawn,preparing=false):string|undefin
 
 /** A shared connectivity capture per member answers all sources and meeting/exit cells.
  * It supplies no unweighted route: the ordinary engine still pays its weighted movement. */
-export function groupFormationAuthority(w:World,preparing=false):GroupFormationAuthority & {reachable(p:Pawn,c:Cell):boolean;stand(c:Cell):boolean} {
+export function groupFormationAuthority(w:World,preparing=false,origins?:ReadonlyMap<number,Cell>):GroupFormationAuthority & {reachable(p:Pawn,c:Cell):boolean;stand(c:Cell):boolean} {
   const blocked=blockedCells(w),stand=captureStandability(w),queries=new Map<number,ReturnType<typeof candidateAccess>>();
   let connectivityQuota=8*w.width*w.height;
   const reachable=(p:Pawn,c:Cell):boolean=>{
     if(!inBounds(w,c.x,c.z))return false;
-    let q=queries.get(p.id);if(!q){q=candidateAccess(w,p,blocked,new Set(),true);queries.set(p.id,q);}
+    let q=queries.get(p.id);if(!q){q=candidateAccess(w,p,blocked,new Set(),true,origins?.get(p.id)??p);queries.set(p.id,q);}
     const before=q.connectivityVisited,result=q.has(c.z*w.width+c.x);connectivityQuota-=q.connectivityVisited-before;
     if(connectivityQuota<0)throw Error('Group connectivity quota exceeded');
     return result;

@@ -15,10 +15,10 @@ export function validGroupTravel(value:unknown,version:number):value is GroupTra
 /** The caller resolves each immutable header to the actual map/archive/group
  * authority. No user-supplied filth boolean is part of this format. */
 export function validGroupMemberOrigin(value:unknown,pawnId:number,nextId:number,originAuthority:(origin:GroupMemberOrigin)=>boolean,version=256):value is GroupMemberOrigin {
- return object(value)&&keys(value,['pawnId','originMapId','context'],version===259?['enteredAtAbsCore']:[])&&(!Object.hasOwn(value,'enteredAtAbsCore')||version===259&&int(value.enteredAtAbsCore))&&value.pawnId===pawnId&&int(value.pawnId,1,nextId-1)&&int(value.originMapId)&&object(value.context)&&originAuthority(value as unknown as GroupMemberOrigin);
+ return object(value)&&keys(value,['pawnId','originMapId','context'],version>=259?['enteredAtAbsCore']:[])&&(!Object.hasOwn(value,'enteredAtAbsCore')||version>=259&&int(value.enteredAtAbsCore))&&value.pawnId===pawnId&&int(value.pawnId,1,nextId-1)&&int(value.originMapId)&&object(value.context)&&originAuthority(value as unknown as GroupMemberOrigin);
 }
 /** Closed shape before the arithmetic or any per-Pawn context is consumed. */
-export function validGroupReorganization(value:unknown,g:Away,version:number,tick:number,nextId:number,originAuthority:(origin:GroupMemberOrigin)=>boolean):value is GroupReorganization|undefined {
+export function validGroupReorganization(value:unknown,g:Away,version:number,tick:number,nextId:number,originAuthority:(origin:GroupMemberOrigin)=>boolean,birthSourceAuthority?:(sourceMapId:number)=>boolean):value is GroupReorganization|undefined {
  if(value===undefined)return true;
  if(version<256||!object(value)||!keys(value,['revision','openedAt','opening','effectsAtOpening','received','sent','memberOrigins'],['birth','pemmicanSinceOpening','foodSinceOpening','packed','inventoryEffects'])||value.revision!==1||!int(value.openedAt,g.departedAt,tick)
   ||!validGroupPackedBalanceShape256(value.packed,nextId)||Object.hasOwn(value,'inventoryEffects')&&!validGroupAdditionalFoodEffects256(value.inventoryEffects)||!validGroupInventoryVector(value.opening)||!validGroupInventoryVector(value.effectsAtOpening,true)||!validGroupInventoryVector(value.received)||!validGroupInventoryVector(value.sent)
@@ -30,7 +30,7 @@ export function validGroupReorganization(value:unknown,g:Away,version:number,tic
  if(g.travel){if(Object.hasOwn(value,'foodSinceOpening'))return false;}
  else {const f=value.foodSinceOpening;if(!object(f)||!keys(f,['consumed','spoiled'])||!validGroupForageUnits256(f.consumed)||!validGroupForageUnits256(f.spoiled))return false;}
  const birth=value.birth;
- if(birth!==undefined&&(!object(birth)||!keys(birth,['kind','parentGroupId','at'])||birth.kind!=='split'||!int(birth.parentGroupId,1)||birth.parentGroupId===g.id||birth.at!==g.startedAt||birth.at!==g.departedAt||birth.at!==value.openedAt))return false;
+ if(birth!==undefined){if(!object(birth)||birth.at!==g.startedAt||birth.at!==g.departedAt||birth.at!==value.openedAt)return false;if(birth.kind==='reform'){if(version<260||!keys(birth,['kind','sourceMapId','at'])||!int(birth.sourceMapId)||!(birthSourceAuthority?birthSourceAuthority(birth.sourceMapId):value.memberOrigins.every(o=>object(o)&&o.originMapId===birth.sourceMapId)))return false;}else if(!keys(birth,['kind','parentGroupId','at'])||birth.kind!=='split'||!int(birth.parentGroupId,1)||birth.parentGroupId===g.id)return false;}
  return true;
 }
 export function validGroupReorganizationCommand(value:unknown,version:number):boolean {

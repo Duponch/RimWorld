@@ -1,3 +1,4 @@
+import {prepareGroupReform260,type GroupReformCommand260} from './group-reform-260.ts';
 import {advanceGroupAnimalPersonal256,advanceGroupAnimalMeters256,advanceLegacyAnimalInterval256} from './group-animal-runtime-256.ts';
 import {recalculateGroupCarried256} from './group-caravan-carry-256.ts';
 import type {CampaignState} from './world-map-state.ts';
@@ -6,7 +7,7 @@ import type {GroupReorganizationCommand} from './group-reorganization-state.ts';
 import type {AwayGroup} from './group-capture.ts';
 import {GroupMotionRuntime,type GroupMotionOwner,type GroupMotionGeometry} from './group-motion-runtime.ts';
 import {prepareGroupSplit,prepareGroupMerge,commitGroupReorganization} from './group-reorganization.ts';
-import {withWorldGroup} from './world-map-context.ts';
+import {registeredMap as importedReformMap260,withWorldGroup} from './world-map-context.ts';
 import {advanceGroup,advanceGroupPersonalFrontier,type GroupPersonalFrontier256} from './group-driver.ts';
 import {groupLog} from './group-authority.ts';
 import {groupCoreTicks256} from './group-core-cadence-256.ts';
@@ -54,6 +55,12 @@ export class GroupCampaignRuntime256 {
    for(const id of prepared.plan.survivors)this.#physicalChanged.add(id);
    return result;
   }catch{return {ok:false,code:'invalid-command',reason:'Le contexte confirme de mouvement ne permet pas cette operation.'};}
+ }
+ reform(root:CampaignState,c:GroupReformCommand260):CommandResult {
+  this.authority(root);const map=importedReformMap260(root,c.originMapId);if(!map)return {ok:false,code:'invalid-command',reason:'Camp source absent.'};
+  const prepared=prepareGroupReform260(map,c);if(prepared.kind!=='ready')return {ok:false,code:'invalid-command',reason:prepared.kind==='refused'?prepared.reason:'Préparation de réforme indisponible.'};if(prepared.plan.quote!==c.quote)return {ok:false,code:'invalid-command',reason:'Le manifeste, les propriétaires, la route ou l’accès ont changé. Vérifiez de nouveau la réforme.'};
+  const g=prepared.plan.record.state as AwayGroup,owner={id:g.id,tile:g.tile,destination:g.destination,moving:g.phase==='travelling',segment:g.segment,nextPassable:true,travel:g.travel!},registration=this.motion.prepareRegistration(owner,[...this.owners(root),owner]);
+  const result=prepared.plan.commit();if(!result.ok)return result;this.motion.commitRegistration(registration);this.#physicalChanged.add(g.id);return result;
  }
  /** Called after real local steps/departures at this single local tick. The
   * caller must replace the former whole group loop, never run both loops. */

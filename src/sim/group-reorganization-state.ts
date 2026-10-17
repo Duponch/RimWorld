@@ -22,7 +22,7 @@ export interface GroupReorganization {
  pemmicanSinceOpening?:{consumed:number;spoiled:number};
  /** Received fruits do not promote a historical group to the forage cadence. */
  foodSinceOpening?:{consumed:GroupForageUnits256;spoiled:GroupForageUnits256};
- birth?:{kind:'split';parentGroupId:number;at:number};
+ birth?:{kind:'split';parentGroupId:number;at:number}|{kind:'reform';sourceMapId:number;at:number};
  memberOrigins:GroupMemberOrigin[];
 }
 /** Native interval accumulator is serialized; the tweener's position is not. */

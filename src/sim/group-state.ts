@@ -131,7 +131,7 @@ export interface GroupLoss {
   pawn: Pawn;
   items: MaterialPile[];
 }
-export type GroupCommand = import('./group-caravan-carry-256.ts').GroupCaravanCarryCommand256 | GroupReorganizationCommand
+export type GroupCommand = import('./group-reform-260.ts').GroupReformCommand260 | import('./group-caravan-carry-256.ts').GroupCaravanCarryCommand256 | GroupReorganizationCommand
   | { type: 'planet-adopt' }
   | { type: 'group-start'; originMapId?:number; memberIds: number[]; destination: number; sources: CommercialBuyLine[];packedIds?:number[];animalIds?:number[] }
   | { type: 'group-cancel'; groupId?:number }

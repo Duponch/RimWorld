@@ -1731,7 +1731,7 @@ async function viewUrgentThreat(target:UrgentThreatTarget):Promise<string|undefi
   }
   await ensureActiveMapView();
   const next=snapshot;if(!next)return 'La carte n’est pas disponible.';
-  const id=target.actorId;if(id===undefined)return 'Cette arrivée ne possède plus de cible à montrer.';
+  const id=target.actorId;if(id===undefined)return; // Map-only Camp warning has no invented actor target.
   const person=next.pawns.find(p=>p.id===id);
   if(!person&&!next.mechanoids?.some(m=>m.id===id)&&!next.wildlife?.animals.some(a=>a.id===id))return 'La dernière cible de cette arrivée n’est plus présente sur la carte.';
   focusNotification({key:`actor:${id}`,kind:'actor',id});

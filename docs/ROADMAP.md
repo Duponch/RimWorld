@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V415 — schéma 260, boucle fonctionnelle acquise par reprises :** [Reformation depuis un camp](gameplay/camp-reform-v415.md) : transfert immédiat des originaux, dépôts partagés et pression prospective des nouveaux camps ;70cas/dixfichiers et UI/recharge exacte736. Présentation partielle : un retard de vitesse179,7ms au minage reste rouge ; abattage acquis séparément. Aucun gainFPS, clôture ou publication ; production V403 inchangée.
+
 **V414 — schéma 259, qualifié par reprises :** [Captifs, retraits et réinstallation](gameplay/caravan-owners-v414.md) : vrais retraits, arrivée3408 puis installation UI250²/recharge exacte avec les originaux ; formation/annulation du captif1807 et dossier/recharge contrôlés sans rejeu. Rouges et pression mémoire conservés. Reformation, rencontres et écarts générateur restent ouverts ; aucune clôture ni publication, production V403 inchangée.
 
 **V413 — schéma 258, qualifié :** [Fret existant et meubles minifiés](gameplay/group-freight-v413.md) : mêmes biens, chargement physique vers les animaux et anciens contrats conservés. 59 cas ciblés acquis par reprises ; même fret humain/animal, départ réel303 et recharge UI exacte304. Fondations ouvertes, aucune publication ; production V403 inchangée. Les états suivants sont historiques.

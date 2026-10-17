@@ -60,3 +60,10 @@ export function validCassandraAgenda(value:unknown,tick:number,version=241):bool
   const pending=s.pending;
   return pending.every((time,i)=>integer(time,Math.max(start,tick+1),end)&&time%INTERVAL===0&&(i===0||time-Number(pending[i-1])>=CASSANDRA_MIN_SPACING));
 }
+
+/** Actual Camp -> settlement conversion. Keep the complete real attack owner. */
+export function convertCampRaidOwner260(w:World):void {
+ const s=w.raids;if(w.schemaVersion<260||s?.profile!=='camp-pressure-v1')return;
+ const agenda:CassandraRaidAgenda={rng:((w.seed^0xc455a82)>>>0)||1,cycle:Math.max(0,Math.floor((w.tick-CASSANDRA_CYCLE_START)/CASSANDRA_CYCLE_TICKS)+1),pending:[]};prepareCycle(agenda);
+ s.profile='cassandra-raids-v1';s.cassandra=agenda;s.nextCheck=s.active||s.mechActive?null:agenda.pending[0]!;
+}

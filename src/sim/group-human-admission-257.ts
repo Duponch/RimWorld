@@ -99,7 +99,7 @@ export function groupHumanPassenger257(w:World,id:number):boolean {const g=pawnW
  * This is not carrierOf: pending bodies stay on their actual map and retain all
  * clinical evolution, needs and dangerous/medical preemption. No saved state. */
 export function groupHumanPendingPassenger259(w:World,id:number):boolean {
- if(w.schemaVersion!==259)return false;const g=pawnWorldGroup(w,id)?.state??w.group;
+ if(Number(w.schemaVersion)!==259&&w.schemaVersion!==260)return false;const g=pawnWorldGroup(w,id)?.state??w.group;
  if(!g||!('manifest'in g)||g.admission?.revision!==2||!g.humanPreparation)return false;
  const row=humanRows257(g.humanPreparation).byPatient.get(id);return !!row&&(row.phase==='approach'||row.phase==='waiting');
 }
@@ -138,19 +138,19 @@ export function processGroupHumanCarry257(w:World,g:PreparingGroup,p:Pawn,ctx:Ne
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype&&Reflect.ownKeys(v).every(k=>typeof k==='string'&&Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)!,'value'));
 const fields=(v:Record<string,unknown>,keys:readonly string[])=>Reflect.ownKeys(v).length===keys.length&&keys.every(k=>Object.hasOwn(v,k));
 const dense=(v:unknown):v is unknown[]=>Array.isArray(v)&&Reflect.ownKeys(v).length===v.length+1&&Array.from({length:v.length},(_,i)=>Object.hasOwn(v,i)&&Object.hasOwn(Object.getOwnPropertyDescriptor(v,String(i))!,'value')).every(Boolean);
-export function validGroupAdmission257(value:unknown,version:number):value is GroupAdmission257|undefined {return value===undefined||[257,258,259].includes(version)&&record(value)&&fields(value,['revision'])&&(value.revision===1||version===259&&value.revision===2);}
+export function validGroupAdmission257(value:unknown,version:number):value is GroupAdmission257|undefined {return value===undefined||[257,258,259,260].includes(version)&&record(value)&&fields(value,['revision'])&&(value.revision===1||version>=259&&value.revision===2);}
 /** Raw references are checked against the actual local owner array. This is
  * not a capability flag that can admit another map's human. */
 export function validGroupHumanPreparation257(value:unknown,w:World,g:PreparingGroup,version:number,referencesOnly=false):boolean {
  if(value===undefined)return !g.admission;
- if(![257,258,259].includes(version)||!g.admission||!record(value)||!fields(value,['revision','releaseIds','passengers'])||value.revision!==1||!dense(value.releaseIds)||!dense(value.passengers))return false;
+ if(![257,258,259,260].includes(version)||!g.admission||!record(value)||!fields(value,['revision','releaseIds','passengers'])||value.revision!==1||!dense(value.releaseIds)||!dense(value.passengers))return false;
  const ids=new Set(g.memberIds),pawns=new Map(w.pawns.map(p=>[p.id,p])),released=new Set<number>(),patients=new Set<number>(),carrying=new Set<number>();
  const members=g.memberIds.map(id=>pawns.get(id));if(!referencesOnly&&(members.some(p=>!p||!!groupHumanAdmissionReason257(w,p))||!members.some(p=>groupFreeHuman257(p!)&&groupHumanMobile257(p!))))return false;
  for(const id of value.releaseIds){if(!Number.isSafeInteger(id)||!ids.has(id as number)||released.has(id as number))return false;released.add(id as number);}
  if(released.size&&g.phase!=='gathering')return false;
  const animalCarriers=new Set(Array.isArray(g.animalPreparation?.lines)?g.animalPreparation.lines.filter(row=>row?.mode==='carry').map(row=>row.handlerId):[]);
  for(const row of value.passengers){
-  if(!record(row)||!fields(row,['pawnId','carrierId','phase',...Object.hasOwn(row,'captureOnPickup259')?['captureOnPickup259']:[]])||Object.hasOwn(row,'captureOnPickup259')&&(version!==259||g.admission.revision!==2||row.captureOnPickup259!==true)||!Number.isSafeInteger(row.pawnId)||!Number.isSafeInteger(row.carrierId)||row.pawnId===row.carrierId||!ids.has(row.pawnId as number)||!ids.has(row.carrierId as number)||patients.has(row.pawnId as number)||!['approach','carry','waiting'].includes(String(row.phase)))return false;
+  if(!record(row)||!fields(row,['pawnId','carrierId','phase',...Object.hasOwn(row,'captureOnPickup259')?['captureOnPickup259']:[]])||Object.hasOwn(row,'captureOnPickup259')&&(version<259||g.admission.revision!==2||row.captureOnPickup259!==true)||!Number.isSafeInteger(row.pawnId)||!Number.isSafeInteger(row.carrierId)||row.pawnId===row.carrierId||!ids.has(row.pawnId as number)||!ids.has(row.carrierId as number)||patients.has(row.pawnId as number)||!['approach','carry','waiting'].includes(String(row.phase)))return false;
   const patientId=row.pawnId as number,carrierId=row.carrierId as number;if(animalCarriers.has(carrierId)||row.phase==='waiting'&&g.phase!=='leaving')return false;patients.add(patientId);
   if(row.phase==='carry'){if(g.phase!=='leaving'||released.size||carrying.has(carrierId))return false;carrying.add(carrierId);}
   if(row.captureOnPickup259){if(!actualReform259(w))return false;if(referencesOnly){if(!projectedCapturePatient259(w,g,patientId))return false;}else{const patient=pawns.get(patientId);if(!patient||(row.phase==='approach'?!autoCapturePatient259(w,patient):!hostedCaptive259(w,patient)||patient.prisoner!.capturedAt>w.tick))return false;}}

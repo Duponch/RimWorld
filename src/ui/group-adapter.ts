@@ -1,3 +1,5 @@
+import {actualCampReform260,reformMemberReason260,reformSourceChoices260,previewGroupReform260} from '../sim/group-reform-260';
+import {validGroupFreightPack258} from '../sim/group-freight-contract-258';
 import {groupAnimalChoices256} from '../sim/group-animal-formation-256';
 import {groupBedrollChoices256} from '../sim/group-bedroll-loading-256';
 import {groupMemberChoices,groupSourceChoices,previewGroupFormation,groupRoutePreview,groupPermission,groupTradeQuote} from '../sim/group-authority.ts';
@@ -25,8 +27,8 @@ export function createGroupAdapters(options:{
  pauseForReorganization?:GroupPanelAdapters['pauseForReorganization'];
 }):GroupPanelAdapters {
  return {
-  capture({world}){return {...groupPermission(world),candidates:groupMemberChoices(world),sources:groupSourceChoices(world),animals:groupAnimalChoices256(world),bedrolls:groupBedrollChoices256(world)};},
-  previewPlan({world},_facts,{memberIds,sources,destination,packedIds,animalIds}){return previewGroupFormation(world,memberIds,sources,destination,packedIds,animalIds);},
+  capture({world}){const reform=actualCampReform260(world)&&!world.group;return {...groupPermission(world),reform,maximumSources:world.piles.length,candidates:reform?world.pawns.filter(p=>p.state!=='dead').map(pawn=>{const reason=reformMemberReason260(world,pawn);return {pawn,ok:!reason,...reason?{reason}:{}};}):groupMemberChoices(world),sources:reform?reformSourceChoices260(world):groupSourceChoices(world),animals:groupAnimalChoices256(world),bedrolls:reform?world.packed.filter(p=>p.owner.type==='ground'||p.owner.type==='inventory').map(pack=>{const ok=validGroupFreightPack258(pack,world,world.schemaVersion);return {pack,ok,...!ok?{reason:'Miniature ou composants inadmissibles.'}:{}};}):groupBedrollChoices256(world)};},
+  previewPlan({world,originMapId},facts,{memberIds,sources,destination,packedIds,animalIds}){return facts.reform?previewGroupReform260(world,{originMapId:originMapId!,memberIds,sources,...destination!==undefined?{destination}:{},packedIds,animalIds}):destination===undefined?{ok:false,reason:'Choisissez une destination.'}:previewGroupFormation(world,memberIds,sources,destination,packedIds,animalIds);},
   previewRoute({world},_facts,destination){return groupRoutePreview(world,destination);},
   quoteTrade({world},_facts,direction,lines){return groupTradeQuote(world,direction,lines);},
   send(command){const blocked=options.blocked();if(blocked)return Promise.reject(new SimulationRequestError(blocked,'refused'));return options.send(command);},

@@ -1,12 +1,13 @@
 import {expect,type Page,type TestInfo} from '@playwright/test';
 import {readFile,writeFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
+import {isDeepStrictEqual} from 'node:util';
 import {deserializeCampaign,serializeCampaign,validateWorld} from '../../src/sim/serialization';
 import {registeredMapPresentation,campaignOnlySummary} from '../../src/sim/world-map-presentation';
 import {campaignUIFacts} from '../../src/ui/map-registry-adapter';
 import type {CampaignState} from '../../src/sim/world-map-state';
 import {decodeStoredSave} from '../../src/ui/save-storage-codec';
-import {pause,panel,expectWorld,observeErrors} from './helpers';
+import {pause,panel,expectWorld,serializedWorld,observeErrors} from './helpers';
 
 export interface Input414 {path:string;sha256:string}
 export interface Manifest414 {revision:1;schemaVersion:259;notice:string;capture:Input414&{mapId:number;captainId:number;captiveId:number;destination:number};settle:Input414&{groupId:number}}
@@ -42,7 +43,7 @@ type Row414={direction:string;worker:number;id?:number;type:string;command?:{typ
 type Hardware414={backend:string;context:string;adapter:{vendor:string;architecture:string;device:string;description:string}|null;maxVertexBuffers:number|null};
 /** Uses the common import/export UI and entire admitted RAW as the save oracle.
  * A mapless input compares the real campaign summary, never a synthetic World. */
-export async function harness414(page:Page,info:TestInfo,scope:string){
+export async function harness414(page:Page,info:TestInfo,scope:string,options:{exactAdoptionOnce415?:true}={}){
  const errors=observeErrors(page),hardware:Hardware414[]=[],transport:Row414[]=[],checkpoints:unknown[]=[];
  const proof:Record<string,unknown>={complete:false,scope,executed:true};let navigation=0;
  page.on('console',message=>{const prefix='Lisière renderer diagnostics',text=message.text();if(text.startsWith(prefix)){try{hardware.push(JSON.parse(text.slice(prefix.length).trim()));}catch{/* Assert the actual diagnostic below. */}}});
@@ -52,6 +53,17 @@ export async function harness414(page:Page,info:TestInfo,scope:string){
  async function adopted(root:CampaignState){
   await expect(page.locator('.game-shell')).toHaveJSProperty('inert',false);
   const projected=registeredMapPresentation(root);
+  if(options.exactAdoptionOnce415){
+   // This415 path always retains the real home map. Await only its confirmed
+   // scalar adoption header; the entire World is read once OUTSIDE polling.
+   // Pause/inert acknowledgement above remains part of the load/export path.
+   const m=projected?.campaignMap;if(!projected||m?.revision!==2)throw Error('Native415 requires its actual remaining registered map');
+   const header={tick:projected.tick,seed:projected.seed,width:projected.width,height:projected.height,mapId:m.activeMapId,waiting:0};
+   await expect.poll(()=>page.evaluate(()=>{const api=window.__lisiere,w=api.world,m=w.campaignMap;return {tick:w.tick,seed:w.seed,width:w.width,height:w.height,mapId:m?.revision===2?m.activeMapId:null,waiting:api.incident.waiting};}),{message:'Native415 confirmed scalar map adoption'}).toEqual(header);
+   const expected=JSON.parse(JSON.stringify(projected)),actual=JSON.parse(await serializedWorld(page)),same=isDeepStrictEqual(actual,expected);
+   if(!same){const path=info.outputPath('save-mismatch.json');await writeFile(path,JSON.stringify({expected,actual,notice:await page.locator('#notice').textContent()}));await info.attach('save-mismatch',{contentType:'application/json',path});}
+   expect(same,'Native415 entire exact World after scalar adoption; no retry of a different state').toBe(true);proof.exactAdoptionOnce415=true;return;
+  }
   if(projected)await expectWorld(page,JSON.parse(JSON.stringify(projected)));
   else {const expected=JSON.parse(JSON.stringify(campaignUIFacts(campaignOnlySummary(root))));await expect.poll(()=>page.evaluate(()=>JSON.stringify((window as unknown as {__lisiere:{campaign:unknown}}).__lisiere.campaign)).then(s=>JSON.parse(s))).toEqual(expected);}
  }

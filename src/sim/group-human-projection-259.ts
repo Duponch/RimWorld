@@ -20,7 +20,7 @@ const same=(a:Patient259,b:Patient259)=>a.pawnId===b.pawnId&&a.state===b.state&&
 /** Called from the real map registry, before any presentation omits its roster. */
 export function captureGroupCapturePatients259(map:World|undefined,mapId:number|null,g:CampaignGroupSummary['state']):GroupCapturePatients259|undefined {
  const rows=captureRows(g);if(!rows.length)return;
- if(map?.schemaVersion!==259||mapId===null)throw Error('Capture preparation has no actual map owner');
+ if(!map||(Number(map.schemaVersion)!==259&&map.schemaVersion!==260)||mapId===null)throw Error('Capture preparation has no actual map owner');
  return {mapId,patients:rows.map(row=>{const p=map.pawns.find(p=>p.id===row.pawnId);if(!p)throw Error('Capture preparation lost its actual human');return facts(p);})};
 }
 /** Exact transport shape plus phase/faction facts. The active map also compares
@@ -28,7 +28,7 @@ export function captureGroupCapturePatients259(map:World|undefined,mapId:number|
 export function validGroupCapturePatients259(value:unknown,w:Authority259,row:Pick<CampaignGroupSummary,'id'|'localMapId'|'state'>,activeMapId:number|null):value is GroupCapturePatients259|undefined {
  const rows=captureRows(row.state);
  if(!rows.length)return value===undefined;
- if(w.schemaVersion!==259||row.state.admission?.revision!==2||row.localMapId===null||!record(value)||!exact(value,['mapId','patients'])||value.mapId!==row.localMapId||!dense(value.patients)||value.patients.length!==rows.length||!w.worldFactions||!Array.isArray(w.worldFactions.factions))return false;
+ if((Number(w.schemaVersion)!==259&&w.schemaVersion!==260)||row.state.admission?.revision!==2||row.localMapId===null||!record(value)||!exact(value,['mapId','patients'])||value.mapId!==row.localMapId||!dense(value.patients)||value.patients.length!==rows.length||!w.worldFactions||!Array.isArray(w.worldFactions.factions))return false;
  const f=w.worldFactions,ids=new Set<number>();
  for(const raw of value.patients){
   if(!record(raw)||!exact(raw,['pawnId','state','affiliation','capturedAt','originQuestId','podRescue'])||!int(raw.pawnId,1,w.nextId-1)||ids.has(raw.pawnId)||!validWorldAffiliation259(raw.affiliation)||raw.originQuestId!==null||raw.podRescue!==false)return false;
@@ -49,7 +49,7 @@ const projections=new WeakMap<World,{group:PreparingGroup;mapId:number;kind:Worl
  * RAW fields alone never satisfy the runtime admission predicates. */
 export function brandGroupCaptureProjection259(view:World,row:CampaignGroupSummary,metadata:CampaignMapPresentation|CampaignSummary):void {
  const bound=boundWorldGroup(view),map=metadata.maps.find(m=>m.id===row.localMapId);
- if(view.schemaVersion!==259||!bound||bound.state!==row.state||view.group!==row.state||row.localMapId===null||bound.localMapId!==row.localMapId||!map||!('manifest'in row.state)||!validGroupCapturePatients259(row.capturePatients259,view,row,metadata.activeMapId))return;
+ if((Number(view.schemaVersion)!==259&&view.schemaVersion!==260)||!bound||bound.state!==row.state||view.group!==row.state||row.localMapId===null||bound.localMapId!==row.localMapId||!map||!('manifest'in row.state)||!validGroupCapturePatients259(row.capturePatients259,view,row,metadata.activeMapId))return;
  projections.set(view,{group:row.state,mapId:row.localMapId,kind:map.kind,patients:row.capturePatients259?.patients??[]});
 }
 export function projectedGroupReform259(w:World):boolean {const proof=projections.get(w),bound=boundWorldGroup(w);return !!proof&&proof.group===w.group&&bound?.state===proof.group&&bound.localMapId===proof.mapId&&(proof.kind==='camp'||proof.kind==='legacy-site');}

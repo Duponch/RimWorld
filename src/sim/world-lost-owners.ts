@@ -10,11 +10,11 @@ import {isAncientCasket256,ancientCasketHasContents256,ancientCasketMapRemovalBo
 import {cancelCryptosleepVomit256} from './cryptosleep-sickness-256.ts';
 import {captureDuckMapRemovedOwners256} from './duck-owner-capture-256.ts';
 import type {WildAnimal} from './wildlife-state.ts';
-import type {World,Pawn} from './types.ts';
+import type {World,Pawn,Cell} from './types.ts';
 import type {AbandonedMapContents,AbandonedWorldPawn,CampaignState} from './world-map-state.ts';
 import type {HumanOwnershipCapture,HumanOwnerSlot} from './human-owners.ts';
 import {captureHumanOwners} from './human-owners.ts';
-import {releaseAssignments} from './work-release.ts';
+import {releaseAssignments,commitDrop} from './work-release.ts';
 import {clearQueuedOrders} from './player-orders.ts';
 import {dropRetainingIdentity} from './ground-placement.ts';
 import {releaseFurniture} from './furniture-transfer.ts';
@@ -27,7 +27,7 @@ export function cleanMapRemovedAnimal256(animal:WildAnimal,tick:number):void {
  if(animal.health){cancelCryptosleepVomit256(animal.health);cancelToxicVomit256(animal.health);}if(animal.motion&&animal.motion.end>tick){animal.x=animal.motion.from.x;animal.z=animal.motion.from.z;}if(animal.wander)delete animal.wander.job;animal.path=[];for(const key of ['motion','meal','predation','exiting','flee','threat','retaliation','strike','stun','stagger','sleepUntilCore','mating','taming','animalRest','eggLay','burning','flight','exitFlight'] as const)delete animal[key];if(animal.domestic){delete animal.domestic.bedId;delete animal.domestic.penMarkerId;delete animal.domestic.slaughter;}if(animal.manhunter){delete animal.manhunter.targetId;delete animal.manhunter.door;}if(animal.state!=='dead'&&animal.state!=='downed')animal.state='idle';
 }
 /** Rare removal transition. Normal interruption/edge continuation is a different contract. */
-export function detachMapOwners(map:World,mapId:number,tile:number,removalPlan?:CampMapRemoved256):AbandonedMapContents {
+export function detachMapOwners(map:World,mapId:number,tile:number,removalPlan?:CampMapRemoved256,drops260?:ReadonlyMap<number,Cell>):AbandonedMapContents {
  if(map.startingArrival?.profile===CORE_STARTING_ARRIVAL_PROFILE_256&&map.startingArrival.phase!=='opened')throw Error('Core initial capsules require actual discharge before MapRemoved');
  const retainedCaskets=heldCasketRemovalPermitted259(map,removalPlan);
  const casketRemoval=ancientCasketMapRemovalBoundary256(map);if(casketRemoval&&!retainedCaskets)throw Error(casketRemoval);
@@ -43,10 +43,18 @@ export function detachMapOwners(map:World,mapId:number,tile:number,removalPlan?:
 
   // Ordinary current jobs drop carry before Despawn. Rescue keeps its held Pawn.
   const hasJob=hasMapRemovalJob259(p);
-  if(hasJob&&!p.rescue&&!p.animalRescue){const carry=map.piles.find(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id);if(carry)dropRetainingIdentity(map,carry,p);releaseFurniture(map,p);}
+  if(hasJob&&!p.rescue&&!p.animalRescue){const carry=map.piles.find(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id);
+   if(drops260){
+    // The source seal was consumed before Reform changed any holder. These
+    // cells are the one jointly admitted plan, never a second placement scan.
+    const pack=map.packed.find(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id);
+    if(carry&&!drops260.has(carry.id)||pack&&!drops260.has(pack.building.id))throw Error('Missing admitted Reform MapRemoved drop');
+    if(carry)commitDrop(map,carry,p,drops260);releaseFurniture(map,p,drops260);
+   }else {if(carry)dropRetainingIdentity(map,carry,p);releaseFurniture(map,p);}
+  }
   clearQueuedOrders(map,p);releaseAssignments(map,p,true);
-  const guest:NonNullable<AbandonedWorldPawn['guest']>={};for(const key of ['prisoner','visitor','podRescue','raid'] as const)if(p[key]!==undefined&&!(map.schemaVersion===259&&p.worldAffiliation259&&key==='prisoner')){Object.assign(guest,{[key]:p[key]});}if(guest.prisoner){delete guest.prisoner.escape;if(guest.prisoner.breakout)delete guest.prisoner.breakout.active;}if(guest.visitor)guest.visitor.goal=null;if(guest.raid)guest.raid.goal=null;if(Object.keys(guest).length)guests.set(p.id,guest);
-  if(map.schemaVersion===259&&p.worldAffiliation259)cleanMapRemovedHumanRecord259(p,map.tick);else {
+  const guest:NonNullable<AbandonedWorldPawn['guest']>={};for(const key of ['prisoner','visitor','podRescue','raid'] as const)if(p[key]!==undefined&&!(map.schemaVersion>=259&&p.worldAffiliation259&&key==='prisoner')){Object.assign(guest,{[key]:p[key]});}if(guest.prisoner){delete guest.prisoner.escape;if(guest.prisoner.breakout)delete guest.prisoner.breakout.active;}if(guest.visitor)guest.visitor.goal=null;if(guest.raid)guest.raid.goal=null;if(Object.keys(guest).length)guests.set(p.id,guest);
+  if(map.schemaVersion>=259&&p.worldAffiliation259)cleanMapRemovedHumanRecord259(p,map.tick);else {
   for(const key of ['prisoner','visitor','podRescue','raid'] as const)delete p[key];
   for(const key of localFields)delete p[key];p.bedId=null;delete p.interruptedCargo;
   if(p.social)delete p.social.fight;
@@ -63,7 +71,7 @@ export function detachMapOwners(map:World,mapId:number,tile:number,removalPlan?:
  });
  const animals:AbandonedMapContents['animals']=animalRows.map(row=>{const animal=row.animal;detachHiveInsect256(map,animal);cleanMapRemovedAnimal256(animal,map.tick);const items=map.schemaVersion>=256?map.piles.filter(i=>i.owner.type==='inventory'&&i.owner.pawnId===animal.id):[],packed=map.schemaVersion>=256?map.packed.filter(p=>p.owner.type==='inventory'&&p.owner.pawnId===animal.id):[];return {...row,animal,...animalHolders.has(animal.id)?{carriedById:animalHolders.get(animal.id)!}:{},...items.length?{items}:{},...packed.length?{packed}:{}};});
  // Real DeSpawn interrupts local jobs/Lord goals but preserves physical timers.
- if(map.schemaVersion===259){for(const m of map.mechanoids??[])cleanMapRemovedMechanical259(m,map.tick);if(map.raids?.mechActive)delete map.raids.mechActive;}
+ if(Number(map.schemaVersion)===259||map.schemaVersion===260){for(const m of map.mechanoids??[])cleanMapRemovedMechanical259(m,map.tick);if(map.raids?.mechActive)delete map.raids.mechActive;}
  const pods=map.startingArrival&&map.startingArrival.phase!=='opened'?map.startingArrival.pods.map(p=>({id:p.id,pawnId:p.pawn.id,items:p.items.filter(i=>i.owner.type==='starting-pod')})):[];
  const retainedItems=new Set([...humans.flatMap(h=>h.items),...animals.flatMap(a=>a.items??[])].map(i=>i.id)),retainedPacked=new Set([...humans.flatMap(h=>h.packed),...animals.flatMap(a=>a.packed??[])].map(p=>p.building.id));
  const lost:AbandonedMapContents['lost']={items:{},structures:map.structures.length-(retainedCaskets?map.structures.filter(s=>isAncientCasket256(s)&&ancientCasketHasContents256(s.casket)).length:0),resources:map.resources.length,packed:map.packed.filter(p=>!retainedPacked.has(p.building.id)).length};

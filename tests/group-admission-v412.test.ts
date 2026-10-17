@@ -36,7 +36,7 @@ test('global preflight refusal preserves the actual task, carried object, orders
  expect(delayed.p.motion!.end).toBeGreaterThan(delayed.w.tick+1);expect(damagePile(delayed.map,promised,10000,'bomb')).toBe(true);expect(delayed.map.piles).not.toContain(promised);flushRegisteredMap(delayed.map);delayed.step();
  expect(delayed.w.worldGroups!.groups.some(r=>r.state.id===delayedId)).toBe(false);expect(delayed.p.haul).toBe(delayedTask);expect(delayed.p.orders).toEqual(delayedOrders);expect(delayed.cargo.owner).toEqual({type:'pawn',pawnId:delayed.p.id});exact(delayed.w,'02-delayed-refusal-keeps-ordinary-work');
  const c=harness(),p=c.map.pawns[1]!;p.faction='outlaws';p.prisoner=createPrisonerState(c.map,p);flushRegisteredMap(c.map);
- const unchanged=JSON.stringify(c.w);expect(groupMemberReason(c.map,p)).toContain('prisonniers');expect(applyCommand(c.w,{type:'group-start',originMapId:0,memberIds:[c.map.pawns[0]!.id,p.id],sources:[],destination:52},c.runtime).ok).toBe(false);expect(JSON.stringify(c.w)).toBe(unchanged);
+ const unchanged=JSON.stringify(c.w);expect(groupMemberReason(c.map,p)).toContain('hôte réel');expect(applyCommand(c.w,{type:'group-start',originMapId:0,memberIds:[c.map.pawns[0]!.id,p.id],sources:[],destination:52},c.runtime).ok).toBe(false);expect(JSON.stringify(c.w)).toBe(unchanged);
 });
 
 test('a declared downed free colon is really picked, carried, departed and returned with the same patient, injury identities and possessions',()=>{
