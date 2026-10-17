@@ -20,6 +20,8 @@ Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` auto
 
 ## Méthode de livraison
 
+**V411, schéma256 inchangé :** [Déplacements sur sol moussu](docs/gameplay/natural-travel-save-v411.md) : coût capturé0,3 et supplément de piège reconnus par la sauvegarde, anciennes frontières strictes conservées. Camp travaillé puis retiré3293 ; mêmes voyageuses et37bois rentrés/déposés au3602, marqueur et deux recharges exactes vérifiés en pause. Parcours acquis par reprises, rouges conservés ; autres fondations ouvertes. ProductionV403 inchangée.
+
 **V410, schéma256 inchangé :** [Palette de précipitations](docs/development/precipitation-palette-v410.md) corrigée pour l’entréeCamp200² ; audit du vrai camp1037 en pause et export complet identique acquis. Travaux/retour encore à poursuivre depuis cet état, sans rejouer le départ. ProductionV403 inchangée.
 
 **Correctif urgent V409, schéma256 inchangé :** [Massifs opaques et inspection des piles](docs/gameplay/rock-fog-v409.md) qualifiés : sommets opaques, brouillard comme pigment dans les transitions, texture et éclairage rocheux existants, sans fuite de minerai. Le fondu ajouté initialement a été remplacé. Inspection Autoriser/Interdire raccordée. Reprendre ensuite les cartes temporaires ; aucun domaine monde terminé, productionV403 inchangée.

@@ -3,6 +3,9 @@
 export function validCapturedTravelDelay(value: unknown, version: number): boolean {
   if (value === undefined) return true;
   if (typeof value !== 'number' || !Number.isFinite(value) || version < 16) return false;
+  // Geographic mossy soil costs 3 Core ticks; a known trap adds 40 Core.
+  // Keep these captured invoices even after the original ground changes.
+  if (version >= 256 && (value === .3 || value === 4.3)) return true;
   // Snow captures survive removal of their source, as do known-trap additions.
   if (version >= 239 && [.4, .8, 1.2, 4.4, 4.8, 5.2].includes(value)) return true;
   // V226 captures the known-trap delay in addition to the historical cost.

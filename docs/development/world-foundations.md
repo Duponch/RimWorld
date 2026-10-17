@@ -26,6 +26,8 @@ Une exigence est fermée seulement avec règle primaire datée, implémentation 
 
 ## Étape actuelle
 
+[V411](../gameplay/natural-travel-save-v411.md) ferme le refus d’export d’une arête sur sol moussu : coût moteur correct, valeur capturée omise de la garde. Le camp a un tabouret payé25bois et une coupe produisant27bois, puis est réellement retiré3293 ; les mêmes personnes et37bois sont revenus/déposés au3602. Marqueur et deux exports/recharges complets exacts qualifiés ensuite en pause. Les reprises ne rendent pas verts les essais rouges antérieurs ; autres frontières et démonstration finale restent ouvertes.
+
 [V410](precipitation-palette-v410.md) corrige le refus matériel de texture de pluie à l’entréeCamp. Le vrai camp200² au1037 est conservé et audité en pause : état affiché et export complet exacts, sans avancement. Le premier timeout UI reste rouge et sa cause n’est pas attribuée sans preuve ; la continuation travaux/retour reste à exécuter depuis le camp existant.
 
 [Correctif V409](../gameplay/rock-fog-v409.md) : les massifs inconnus restent opaques ; le brouillard participe au mélange des pigments et à la texture/éclairage rocheux existants, sans fuite de minerai. Le fondu superposé initial a été remplacé ; inspection Autoriser/Interdire d’une pile raccordée. Le parcoursCamp a atteint une vraie tuile voisine avec les originaux, mais sa qualification complète reste ouverte après un défaut de capacité de palette de pluie. Aucun domaine monde terminé.

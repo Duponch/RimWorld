@@ -1,5 +1,7 @@
 # Plan de développement
 
+**17 octobre 2026 — V411, schéma 256 inchangé.** [Sauvegarde sur sol moussu](gameplay/natural-travel-save-v411.md) : facture physique0,3 admise sans modifier les arêtes ni les anciens formats. Camp réel travaillé/retiré3293, mêmes personnes et37bois rentrés/déposés3602 ; marqueur et deux recharges exactes vérifiés en pause, par reprises avec rouges préservés. Autres fondations ouvertes, productionV403 inchangée.
+
 **17octobre2026 — V410, schéma256 inchangé.** [Palette de précipitations](development/precipitation-palette-v410.md) compatible avec le camp200² ; vrai camp1037 rechargé et export complet identique en pause. Travaux et retour à poursuivre depuis ce checkpoint, aucune boucle entière encore qualifiée ; productionV403 inchangée.
 
 **17octobre2026 — correctif V409, schéma256 inchangé.** [Massifs opaques et inspection des piles](gameplay/rock-fog-v409.md) : sommets opaques et brouillard comme pigment dans le mélange, la texture et l’éclairage rocheux existants, sans révéler les minerais. Fondu ajouté initialement remplacé ; Autoriser/Interdire d’une pile raccordé. Contrôles graphiques et sauvegarde en pause acquis ; voyages encore en cours, productionV403 inchangée.
