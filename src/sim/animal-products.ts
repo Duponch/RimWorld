@@ -1,3 +1,6 @@
+import {animalProductDefinition256} from './animal-products-v256.ts';
+import {isAnimalSpecies256} from './animal-core-v256.ts';
+import {ITEM_DEFINITIONS} from './items.ts';
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { allowedAreaAllows } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
@@ -25,7 +28,8 @@ export const ANIMAL_PRODUCTS = Object.freeze({
 const YIELD_BY_ANIMALS_LEVEL=[.60,.70,.75,.80,.85,.90,.95,.975,1,1.01,1.02,1.03,1.04,1.05,1.06,1.07,1.08,1.09,1.10,1.12,1.13] as const;
 export type AnimalProductKind=keyof typeof ANIMAL_PRODUCTS;
 export type ProductTask=AnimalHandlingTask & {kind:AnimalProductKind;phase:'approach'|'interact'};
-export const productKind=(a:WildAnimal):AnimalProductKind|undefined=>animalLifeStage(a)!=='adult'?undefined:a.species==='muffalo'?'shear':a.species==='dromedary'&&a.sex==='female'?'milk':undefined;
+export const productKind=(a:WildAnimal):AnimalProductKind|undefined=>isAnimalSpecies256(a.species)?animalProductDefinition256(a)?.kind:animalLifeStage(a)!=='adult'?undefined:a.species==='muffalo'?'shear':a.species==='dromedary'&&a.sex==='female'?'milk':undefined;
+export const animalProductDefinition=(a:WildAnimal)=>isAnimalSpecies256(a.species)?animalProductDefinition256(a):productKind(a)?ANIMAL_PRODUCTS[productKind(a)!]:undefined;
 export const productFullness=(a:WildAnimal):number=>a.domestic?.productFullness??0;
 export const productReady=(a:WildAnimal):boolean=>!!a.domestic&&!!productKind(a)&&productFullness(a)>=1;
 
@@ -36,10 +40,10 @@ export function productGrowthFactor(a:WildAnimal):number {
 /** One bounded animal pass per simulation tick, with no map or pile search. */
 export function advanceAnimalProducts(world:World):void {
   for(const a of world.wildlife?.animals??[]){
-    const kind=productKind(a);if(!kind||!a.domestic||a.state==='dead')continue;
+    const kind=productKind(a);if(world.schemaVersion<256&&isAnimalSpecies256(a.species))continue;if(!kind||!a.domestic||a.state==='dead')continue;
     const previous=a.domestic.productFullness??0;
     if(previous>=1)continue;
-    a.domestic.productFullness=Math.min(1,previous+productGrowthFactor(a)/(ANIMAL_PRODUCTS[kind].days*TICKS_PER_DAY));
+    a.domestic.productFullness=Math.min(1,previous+productGrowthFactor(a)/(animalProductDefinition(a)!.days*TICKS_PER_DAY));
   }
 }
 const available=(a:WildAnimal):boolean=>productReady(a)&&a.state!=='dead'&&a.state!=='downed'&&a.state!=='sleeping'&&a.state!=='eating'
@@ -59,7 +63,7 @@ export function productProposal(world:World,pawn:Pawn,reach:Reachability):Produc
   if(!productWanted(world,pawn))return;
   const reserved=claimed(world);
   const animals=world.wildlife!.animals.filter(a=>allowedAreaAllows(world,pawn,a)&&available(a)&&!reserved.has(a.id))
-    .sort((a,b)=>ANIMAL_PRODUCTS[productKind(a)!].rank-ANIMAL_PRODUCTS[productKind(b)!].rank
+    .sort((a,b)=>animalProductDefinition(a)!.rank-animalProductDefinition(b)!.rank
       ||(a.x-pawn.x)**2+(a.z-pawn.z)**2-((b.x-pawn.x)**2+(b.z-pawn.z)**2)||a.id-b.id);
   for(const animal of animals){
     const path=routeToJob(world,animal,reach,false);if(!path)continue;
@@ -74,7 +78,7 @@ export function startProduct(pawn:Pawn,proposal:ProductProposal):void {
 export function processProduct(world:World,pawn:Pawn,task:ProductTask,ctx:NeedContext):void {
   if(!allowedAreaServicesAllowed(world,pawn)){if(!releaseWork(world,pawn))interruptWork(world,pawn);return;}
   const animal=world.wildlife?.animals.find(a=>a.id===task.animalId);
-  if(!animal||!available(animal)||productKind(animal)!==task.kind||!productHandlerAvailable(pawn)) {interruptWork(world,pawn);return;}
+  if(!animal||world.schemaVersion<256&&isAnimalSpecies256(animal.species)||!available(animal)||productKind(animal)!==task.kind||!productHandlerAvailable(pawn)) {interruptWork(world,pawn);return;}
   if(!adjacent(pawn,animal)||(animal.motion?.end??0)>world.tick){
     if(task.phase==='interact')task.progress=0;
     task.phase='approach';
@@ -83,7 +87,7 @@ export function processProduct(world:World,pawn:Pawn,task:ProductTask,ctx:NeedCo
     return;
   }
   task.phase='interact';pawn.path=[];pawn.state='working';
-  const def=ANIMAL_PRODUCTS[task.kind];
+  const def=animalProductDefinition(animal)!;
   const body=pawnBody(pawn).capacities;
   const level=pawn.skills.animals?.level??0,sight=Math.min(1,body.sight);
   const rate=Math.max(.1,(.04+.12*level)*body.manipulation*(.5+.5*sight));
@@ -95,7 +99,7 @@ export function processProduct(world:World,pawn:Pawn,task:ProductTask,ctx:NeedCo
   }
   const chance=Math.min(1,(YIELD_BY_ANIMALS_LEVEL[Math.min(20,level)]??1)*(.7+.3*body.manipulation)*(.8+.2*sight));
   const success=chance>=1||healthRandom(world)<chance;
-  if(success)addGroundMaterial(world,def.item==='milk'?'food':'textile',def.quantity,pawn,def.item);
+  if(success)addGroundMaterial(world,ITEM_DEFINITIONS[def.item].kind,def.quantity,pawn,def.item);
   animal.domestic!.productFullness=0;
   if(pawn.skills.animals)learnSkill(pawn.skills.animals,task.kind==='milk'?40_000:170_000,pawn);
   ctx.event(`${pawn.name} ${success?(task.kind==='milk'?'a trait':'a tondu'):(task.kind==='milk'?'a perdu le lait de':'a perdu la laine de')} ${animal.id}.`);

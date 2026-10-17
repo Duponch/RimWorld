@@ -1,8 +1,9 @@
-import type { BiomeId } from '../sim/biome-flora';
+import type {WorldLandBiome} from '../sim/world-biome-selection';
+export type DioramaBiome=WorldLandBiome;
 import type { DioramaSide } from './diorama-geometry';
 
 export type DioramaDecorPoint = readonly [number, number];
-export type DioramaDecorFlora = 'oak' | 'poplar' | 'pine' | 'birch' | 'saguaro' | 'drago' | 'agave' | 'grass';
+export type DioramaDecorFlora = 'oak' | 'poplar' | 'pine' | 'birch' | 'saguaro' | 'drago' | 'agave' | 'grass' | 'willow' | 'cypress' | 'palm' | 'teak' | 'bamboo' | 'low-shrub' | 'pincushion-cactus';
 export type DioramaDecorKind = 'background-ridge' | 'foreground-ridge' | 'snow' | DioramaDecorFlora
   | 'trunk' | 'cloud' | 'cloud-patch';
 export interface DioramaDecorCutout {
@@ -22,7 +23,7 @@ export interface DioramaDecorFold {
 }
 export interface DioramaDecorOptions {
   readonly seed: number;
-  readonly biome: BiomeId;
+  readonly biome: DioramaBiome;
   readonly side: DioramaSide;
   readonly wallLength: number;
   readonly span: number;
@@ -37,20 +38,37 @@ export interface DioramaDecor {
 /** Fixed ceilings, independent of cells and total map area. All cutouts batch
  * into the existing paper/cardboard lower and upper groups. */
 export const DIORAMA_DECOR_LIMITS = Object.freeze({ cutouts: 64, outlinePoints: 32, triangles: 7000 });
-const PROFILES: Record<BiomeId, {
+export const DIORAMA_DECOR_PROFILES: Readonly<Record<DioramaBiome, {
   ridges: readonly number[]; foreground: readonly number[]; foliage: readonly number[];
   species: readonly DioramaDecorFlora[]; floraCount: number; snow: number;
-}> = {
+}>> = {
   'temperate-forest': { ridges: [0x83927b, 0x909d85, 0x758c77], foreground: [0x60765f, 0x6f805f],
     foliage: [0x466a4b, 0x5d7851, 0x708454], species: ['oak', 'poplar', 'oak', 'poplar'], floraCount: 13, snow: .22 },
   'boreal-forest': { ridges: [0x758a85, 0x879994, 0x697f7c], foreground: [0x4e6d65, 0x5c766c],
     foliage: [0x31584c, 0x456a59, 0x5d7967], species: ['pine', 'pine', 'birch', 'pine'], floraCount: 14, snow: .67 },
   tundra: {ridges:[0xaab8b6,0xbfc9c3,0x97a8a4],foreground:[0x8e9c92,0xa1ab99],foliage:[0x6e8675,0x84917b,0x98a48c],species:['grass','pine','grass','grass','birch'],floraCount:6,snow:.9},
+  // Original paper scenery profiles: they express biome character and never
+  // place a simulated plant, water cell or resource beyond the map boundary.
+  'cold-bog': {ridges:[0x8eaaa4,0xa1b7b0,0x7e9a95],foreground:[0x6e8c83,0x819d8e],foliage:[0x526f66,0x6c8975,0x839782],species:['pine','birch','low-shrub','grass'],floraCount:8,snow:.58},
+  'temperate-swamp': {ridges:[0x849f90,0x9aaf99,0x789889],foreground:[0x587f72,0x6c917a],foliage:[0x46735c,0x61876a,0x7d9875],species:['willow','cypress','willow','grass'],floraCount:12,snow:.12},
+  'tropical-rainforest': {ridges:[0x74977d,0x8ca98a,0x648c78],foreground:[0x3f715c,0x577d5a],foliage:[0x396a50,0x52805b,0x77966b],species:['teak','palm','bamboo','teak'],floraCount:14,snow:0},
+  'tropical-swamp': {ridges:[0x799b8c,0x8ca997,0x688d81],foreground:[0x47776b,0x5f8975],foliage:[0x3b6d59,0x57836b,0x71927a],species:['cypress','palm','bamboo','willow'],floraCount:12,snow:0},
+  desert: {ridges:[0xc4aa86,0xd3b795,0xb89b78],foreground:[0xa68b6b,0xb29a78],foliage:[0x9c9c75,0x8b9470,0xaeaa7d],species:['pincushion-cactus','agave','low-shrub'],floraCount:4,snow:0},
+  'extreme-desert': {ridges:[0xd2b790,0xdfc39e,0xc4a880],foreground:[0xb39772,0xc4aa82],foliage:[0xb4ad8b],species:[],floraCount:0,snow:0},
+  'ice-sheet': {ridges:[0xc3d0d2,0xdce4df,0xb1c4cb],foreground:[0x9fb7c1,0xc4d1d3],foliage:[0xc6d4d2],species:[],floraCount:0,snow:1},
+  'sea-ice': {ridges:[0xb5ced2,0xd7e6e4,0xa8c4cb],foreground:[0x98b8c3,0xb9d0d4],foliage:[0xc4dbdb],species:[],floraCount:0,snow:1},
   'arid-shrubland': { ridges: [0xba9f7d, 0xae9271, 0xc3ad8e], foreground: [0x948565, 0xa49573],
     foliage: [0x79875a, 0x8d955f, 0x5f795b], species: ['saguaro', 'agave', 'drago', 'agave', 'grass'], floraCount: 11, snow: 0 },
 };
 
 const SHAPES: Record<DioramaDecorFlora, readonly DioramaDecorPoint[]> = {
+  willow:[[.45,0],[.55,0],[.55,.40],[.86,.20],[1,.34],[.96,.66],[.82,.91],[.52,1],[.21,.91],[.02,.68],[0,.37],[.14,.22],[.45,.40]],
+  cypress:[[.45,0],[.55,0],[.56,.18],[.83,.16],[.76,.36],[.90,.42],[.69,.61],[.72,.75],[.50,1],[.27,.75],[.29,.61],[.10,.42],[.24,.36],[.17,.16],[.44,.18]],
+  palm:[[.43,0],[.55,0],[.58,.64],[.95,.45],[.84,.70],[1,.77],[.69,.86],[.71,1],[.52,.89],[.34,.99],[.33,.83],[0,.73],[.18,.65],[.06,.47],[.45,.65]],
+  teak:[[.44,0],[.56,0],[.56,.24],[.84,.31],[.95,.52],[.88,.72],[.70,.86],[.53,1],[.31,.94],[.08,.78],[0,.54],[.15,.30],[.44,.25]],
+  bamboo:[[.15,0],[.26,0],[.29,.70],[.41,.54],[.46,.76],[.51,.31],[.60,.34],[.66,.93],[.79,.75],[.95,.88],[.70,1],[.60,.91],[.52,.98],[.42,.81],[.22,.94],[.12,.79]],
+  'low-shrub':[[.05,0],[.95,0],[1,.25],[.85,.60],[.65,.63],[.53,1],[.36,.72],[.11,.73],[0,.43]],
+  'pincushion-cactus':[[.12,0],[.85,0],[1,.23],[.96,.65],[.75,.91],[.52,1],[.27,.94],[.04,.68],[0,.26]],
   oak: [[.46, 0], [.55, 0], [.55, .21], [.76, .18], [.91, .29], [.98, .43], [.94, .55], [.84, .64],
     [.88, .77], [.77, .90], [.62, .92], [.54, 1], [.36, .98], [.29, .90], [.14, .91], [.05, .78],
     [.07, .66], [0, .54], [.02, .39], [.15, .27], [.33, .22], [.46, .22]],
@@ -96,9 +114,9 @@ function paperTint(hex: number, variation: number): number {
 export function createDioramaDecor(options: DioramaDecorOptions): DioramaDecor {
   const { seed, biome, side, wallLength, span } = options;
   if (!Number.isSafeInteger(seed) || !Number.isFinite(wallLength) || !Number.isFinite(span)
-    || span <= 0 || wallLength < span || !Object.hasOwn(PROFILES, biome)
+    || span <= 0 || wallLength < span || !Object.hasOwn(DIORAMA_DECOR_PROFILES, biome)
     || !['north', 'west', 'south', 'east'].includes(side)) throw new RangeError('Invalid diorama decor parameters.');
-  const profile = PROFILES[biome];
+  const profile = DIORAMA_DECOR_PROFILES[biome];
   const key = `${seed}/${biome}/${side}`;
   const sample = (kind: string, index = 0, channel = 0): number => hash(`${key}/${kind}/${index}/${channel}`) / 4294967296;
   const cutouts: DioramaDecorCutout[] = [], folds: DioramaDecorFold[] = [];
@@ -123,7 +141,7 @@ export function createDioramaDecor(options: DioramaDecorOptions): DioramaDecor {
     let h = span * (.081 + sample('ridge-height', i) * .051);
     const y = -span * .006, summit = .38 + sample('summit', i) * .25;
     if (side === 'north' && x + w > reserveU - reserveHalf && x < reserveU + reserveHalf) h = Math.min(h, span * .116);
-    const ridge: readonly DioramaDecorPoint[] = biome === 'arid-shrubland'
+    const ridge: readonly DioramaDecorPoint[] = (biome === 'arid-shrubland'||biome==='desert'||biome==='extreme-desert')
       ? [[0, 0], [.16, .24], [.29, .28], [.33, .75], [.42, .94], [.64, 1], [.71, .70], [.83, .41], [1, 0]]
       : [[0, 0], [.16, .25], [.29, .22], [summit, 1], [.72, .45 + sample('shoulder', i) * .16], [.85, .52], [1, 0]];
     const primary = shape(ridge, x, y, w, h, 'ridge-shape', i);
@@ -145,16 +163,16 @@ export function createDioramaDecor(options: DioramaDecorOptions): DioramaDecor {
     emit('foreground-ridge', front, tint(profile.foreground[i % 2]!, 'foreground', i), i % 2 ? .0071 : .0054);
   }
 
-  const floraCount = Math.min(16, profile.floraCount + Math.floor(sample('flora-count') * 3) - 1);
-  const floraStep = (wallLength - margin * 2) / floraCount;
+  const floraCount = profile.floraCount===0?0:Math.max(0,Math.min(16, profile.floraCount + Math.floor(sample('flora-count') * 3) - 1));
+  const floraStep = floraCount?(wallLength - margin * 2) / floraCount:0;
   const speciesOffset = Math.floor(sample('species-offset') * profile.species.length);
   for (let i = 0; i < floraCount; i++) {
     const species = profile.species[(i + speciesOffset) % profile.species.length]!;
     const center = margin + floraStep * (i + .5 + (sample('flora-position', i) - .5) * .12);
-    const low = species === 'agave' || species === 'grass';
+    const low = species === 'agave' || species === 'grass'||species==='low-shrub'||species==='pincushion-cactus';
     const h = span * (low ? .023 + sample('flora-height', i) * .015 : .047 + sample('flora-height', i) * .032);
     const ratio = species === 'oak' ? .71 : species === 'birch' ? .58 : species === 'poplar' ? .36
-      : species === 'agave' ? 1.25 : species === 'drago' ? .70 : species === 'grass' ? .68 : .46;
+      : species === 'agave' ? 1.25 : species === 'drago' ? .70 : species === 'grass' ? .68 : species==='willow'?.9:species==='teak'?.75:species==='palm'?.85:species==='bamboo'?.55:species==='low-shrub'?1.2:species==='pincushion-cactus'?.95:.46;
     // Leave a real gap between foliage solids in the same depth lane.
     const w = Math.min(h * ratio * (.91 + sample('flora-width', i) * .16), floraStep * .68);
     const y = span * (-.006 + sample('flora-base', i) * .004);
@@ -165,7 +183,7 @@ export function createDioramaDecor(options: DioramaDecorOptions): DioramaDecor {
     });
     const points = shape(stencil, center - w / 2, y, w, h, `flora-${species}`, i, .023);
     emit(species, points, tint(profile.foliage[i % profile.foliage.length]!, species, i), .00885, true);
-    if (species === 'oak' || species === 'poplar' || species === 'pine' || species === 'birch' || species === 'drago') {
+    if (species === 'oak' || species === 'poplar' || species === 'pine' || species === 'birch' || species === 'drago'||species==='willow'||species==='cypress'||species==='palm'||species==='teak'||species==='bamboo') {
       const trunkHeight = h * (species === 'drago' ? .49 : species === 'pine' ? .14 : .23);
       const half = w * (species === 'drago' ? .045 : .033);
       emit('trunk', [[center - half, y], [center + half, y], [center + half * .75, y + trunkHeight],
@@ -173,7 +191,7 @@ export function createDioramaDecor(options: DioramaDecorOptions): DioramaDecor {
     }
   }
 
-  const cloudCount = biome === 'arid-shrubland' ? 2 : 2 + Math.floor(sample('cloud-count') * 2);
+  const cloudCount = biome === 'arid-shrubland'||biome==='desert'||biome==='extreme-desert' ? 2 : 2 + Math.floor(sample('cloud-count') * 2);
   for (let i = 0; i < cloudCount; i++) {
     const w = span * (.087 + sample('cloud-width', i) * .031), h = w * (.28 + sample('cloud-height', i) * .08);
     const northSlots = cloudCount === 3 ? [.15, .40, .87] : [.22, .86];

@@ -46,7 +46,7 @@ export function createDomPort(host:HTMLElement,renderer:THREE.WebGPURenderer):{
     releasePointer(id){if(canvas.hasPointerCapture(id))canvas.releasePointerCapture(id);},
     canMoveCamera:()=>!(host.closest('[inert]')||document.querySelector('dialog[open]')),
     cursor(value){canvas.style.cursor=value;},title(value){canvas.title=value;},
-    drawLabels:(world,camera,cellPixels,width,height)=>labels!.draw(world,camera,cellPixels,width,height),
+    drawLabels:(world,camera,cellPixels,width,height,explorationRevision)=>labels!.draw(world,camera,cellPixels,width,height,explorationRevision),
     disconnectResize:()=>owner?.disconnectResize(),removeInputListeners:()=>owner?.removeInputListeners(),
     disposeLabels:()=>labels?.dispose(),removeSurface:()=>canvas.remove(),
     // The exact loaded Texture instance is delivered unchanged to the resident

@@ -1,4 +1,7 @@
+import {advanceCoreStartingArrival256} from './starting-pod-runtime-256.ts';
+import {CORE_STARTING_ARRIVAL_PROFILE_256} from './starting-pod-state-256.ts';
 import { isConstruction } from './construction-rules.ts';
+import {notifyActualExplorationSpawn256} from './exploration-runtime-256.ts';
 import { footprintContains } from './definitions.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { groundCapacity,groundPile } from './ground-placement.ts';
@@ -13,7 +16,7 @@ import type { Cell,MaterialPile,World } from './types.ts';
  * from a scan that could mistake natural chunks for starting possessions. */
 export function prepareStartingArrival(world:World,selectedPawnIds:readonly number[],transportedPileIds:readonly number[]):void {
   if(world.tick!==0||world.schemaVersion<231||world.scenario?.id!=='crashlanded'||world.scenario.revision!==ARRIVING_CRASHLANDED_REVISION
-    ||world.climate?.revision!==2||!world.planet||world.startingArrival!==undefined
+    ||!(world.climate?.revision===2||world.schemaVersion>=256&&world.climate?.revision===4&&world.site?.revision===3&&world.planet?.revision===3)||!world.planet||world.startingArrival!==undefined
     ||selectedPawnIds.length!==3||new Set(selectedPawnIds).size!==3||new Set(transportedPileIds).size!==transportedPileIds.length
     ||!Number.isSafeInteger(world.nextId+3))throw new Error('Le départ ne peut pas être placé dans les capsules.');
   const pawns=selectedPawnIds.map(id=>world.pawns.find(p=>p.id===id)),items=transportedPileIds.map(id=>world.piles.find(p=>p.id===id));
@@ -46,7 +49,7 @@ function occupiedExit(world:World,cell:Cell):boolean {
   const intersects=(actor:Cell&{motion?:{from:Cell;to:Cell;end:number}|null})=>same(actor,cell)||!!actor.motion&&actor.motion.end>world.tick
     &&cell.x>=Math.min(actor.motion.from.x,actor.motion.to.x)&&cell.x<=Math.max(actor.motion.from.x,actor.motion.to.x)
     &&cell.z>=Math.min(actor.motion.from.z,actor.motion.to.z)&&cell.z<=Math.max(actor.motion.from.z,actor.motion.to.z);
-  return world.pawns.some(p=>!(p.state==='dead'&&(p.body?.pileId!==undefined||p.body?.lostAt!==undefined))&&(intersects(p)||!!serviceCell(p)&&same(serviceCell(p)!,cell)))
+  return world.pawns.some(p=>!(p.state==='dead'&&(p.body?.pileId!==undefined||p.body?.lostAt!==undefined))&&(intersects(p)||!!serviceCell(p,world)&&same(serviceCell(p,world)!,cell)))
     ||!!world.wildlife?.animals.some(a=>a.state!=='dead'&&intersects(a))||!!world.mechanoids?.some(a=>a.state!=='dead'&&intersects(a));
 }
 /** Blueprints remain cancellable by the player while no starting worker exists.
@@ -71,6 +74,7 @@ function canOpen(world:World,state:StartingArrivalPending):boolean {
 /** One confirmed simulation boundary, after actors and before stock refresh.
  * A blocked landing retries at most once per subsequent tick, never reroutes. */
 export function advanceStartingArrival(world:World):void {
+  if(world.startingArrival?.profile===CORE_STARTING_ARRIVAL_PROFILE_256){advanceCoreStartingArrival256(world);return;}
   const state=world.startingArrival;if(!state||state.phase==='opened')return;
   if(world.tick<state.landAt)return;
   state.phase='landed';
@@ -87,4 +91,5 @@ export function advanceStartingArrival(world:World):void {
   world.pawns.push(...state.pods.map(p=>p.pawn));
   for(const pod of state.pods)world.piles.push(...pod.items);
   world.startingArrival={profile:state.profile,phase:'opened',start:state.start,landAt:state.landAt,openAt:state.openAt,openedAt:world.tick,cells:state.pods.map(p=>({...p.cell}))};
+  for(const pod of state.pods)notifyActualExplorationSpawn256(world,pod.pawn);
 }

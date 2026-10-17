@@ -1,3 +1,5 @@
+import {planAnimalDeathExplosion256,isExplosiveAnimal256} from './animal-death-explosion-v256.ts';
+import {animalExecutionPart256} from './animal-execution-v256.ts';
 import { storageCells,storageAt,storageCellAccepts } from './shelf-storage.ts';
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
@@ -81,7 +83,7 @@ function collect(w:World,p:Pawn,ctx:HuntContext):void {
   // read-only condition view prevalidates that existing conversion, without
   // allocating a pile or moving its owner before a destination is available.
   const corpse:MaterialPile=body??{id:retained!.id,kind:'corpse',item:corpseItem,quantity:1,owner:{type:'ground',x:sourceCell.x,z:sourceCell.z},
-    corpse:{animalId:retained!.id,species:retained!.species,sex:retained!.sex,ageTicks:retained!.ageTicks,health:retained!.health!},
+    corpse:{animalId:retained!.id,species:retained!.species,sex:retained!.sex,ageTicks:retained!.ageTicks,...retained!.growthTracker?{growthTracker:retained!.growthTracker,ageCoreRemainder:retained!.ageCoreRemainder}:{},health:retained!.health!},
     rot:retained!.corpseRot??{progress:0,atTick:w.tick}};
   if(p.planCooldown>0){
     if(retained&&p.path.length){ctx.move(sourceCell,true);if(!p.path.length)p.planCooldown=0;}
@@ -126,11 +128,11 @@ export function processHunting(w:World,p:Pawn,ctx:HuntContext):void {
     if((a.motion?.end??0)>w.tick){task.phase='stalk';task.progress=0;p.path=[];p.state='idle';return;}
     task.phase='finish';p.path=[];p.state='working';task.progress++;
     if(task.progress<18)return;
-    const record=a.health!;const remaining=remainingPartHealth(record,'neck');
-    const damage=Math.min(1000,Math.max(0,Math.floor(remaining)-1000)),random={rng:w.rng};
-    if(damage>0)addResolvedInjury(record,'neck','execution-cut',damage,()=>healthRandom(random));
+    const record=a.health!,random={rng:w.rng},part=animalExecutionPart256(record,()=>healthRandom(random));const remaining=remainingPartHealth(record,part);
+    const damage=Math.min(1000,Math.max(0,Math.floor(remaining)-1000));
+    if(damage>0)addResolvedInjury(record,part,'execution-cut',damage,()=>healthRandom(random));
     if(!record.death)record.death={tick:w.tick,cause:'execution'};
-    w.rng=random.rng;reconcileAnimalHealth(w,a);
+    const death=planAnimalDeathExplosion256(w,a,record);death.commit();a.health=record;w.rng=random.rng;reconcileAnimalHealth(w,a);
     // Publish the terminal phase before the dead animal becomes a physical pile.
     // The body conversion can happen in this same tick.
     cancelShooting(p);task.phase='collect';task.progress=0;p.state='idle';

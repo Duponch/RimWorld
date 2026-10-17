@@ -1,3 +1,4 @@
+import {ancientRepairTarget256} from './ancient-monument-runtime-256.ts';
 import {treeWorkTarget} from './tree-transfer.ts';
 import { reservedSource } from './materials.ts';
 import { footprintCells } from './definitions.ts';
@@ -7,10 +8,11 @@ import type { Cell, Job, Pawn, Structure, World } from './types.ts';
 
 export interface FurnitureTarget { structureId: number; kind: Structure['kind'] }
 export interface PackedFurniture { building: Structure; owner: ({type:'ground'} & Cell) | {type:'pawn';pawnId:number} | {type:'inventory';pawnId:number} }
-export const minifiable = (kind: string): boolean => ['shelf','small-shelf','spike-trap','electric-smelter','orbital-beacon','deep-drill','vitals-monitor','drug-lab','tube-television','art-bench','hi-tech-research-bench','multi-analyzer','fabrication-bench','small-sculpture','large-sculpture','machining-table','heater','battery','fueled-stove','electric-stove','butcher-table','research-bench','tailor-bench','electric-tailor-bench','bed','double-bed','hospital-bed','table','table-square','table-long','stool','dining-chair','armchair','end-table','dresser','flower-pot','horseshoes','chess-table','stonecutter','standing-lamp','sun-lamp'].includes(kind);
+export const minifiable = (kind: string): kind is Exclude<Structure['kind'],import('./local-road-data-256.ts').LocalRoadProp256|'ship-chunk'|'ancient-cryptosleep-casket'|'insect-hive'> => ['glow-pod','urn','shelf','small-shelf','spike-trap','electric-smelter','orbital-beacon','deep-drill','vitals-monitor','drug-lab','tube-television','art-bench','hi-tech-research-bench','multi-analyzer','fabrication-bench','small-sculpture','large-sculpture','machining-table','heater','battery','fueled-stove','electric-stove','butcher-table','research-bench','tailor-bench','electric-tailor-bench','bedroll','bed','double-bed','hospital-bed','table','table-square','table-long','stool','dining-chair','armchair','end-table','dresser','flower-pot','horseshoes','chess-table','stonecutter','standing-lamp','sun-lamp'].includes(kind);
 export const packedAt = (world:World, cell:Cell) => world.packed?.find(p=>p.owner.type==='ground'&&p.owner.x===cell.x&&p.owner.z===cell.z);
 export const furnitureObject = (world:World,id:number) => world.structures.find(s=>s.id===id)??world.packed?.find(p=>p.building.id===id)?.building;
-export function furnitureWorkTarget(world:World,job:Job):Cell & {kind?:Job['kind']} {
+export function furnitureWorkTarget(world:World,job:Job):Cell & {kind?:Job['kind']|Structure['kind']} {
+  if(job.kind==='repair')return ancientRepairTarget256(world,job);
   if(job.tree)return treeWorkTarget(world,job)??job;
   if(!job.furniture)return job;
   const source=world.structures.find(s=>s.id===job.furniture!.structureId);

@@ -1,3 +1,4 @@
+import {claimLocalActorBed256,captureActorBeds256,actualBedOwners256,localBedClaimAvailable256,globalCivilBedShare256} from './actor-bed-local-256.ts';
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { captureAllowedArea } from './allowed-area-state.ts';
 import { isBedKind } from './bed-kinds.ts';
@@ -26,17 +27,18 @@ export function processSleeping(world: World, pawn: Pawn, context: NeedContext, 
   if(pawn.need?.kind==='sleep'&&pawn.need.medical)return processPatientRest(world,pawn,context);
   let reach: Reachability | null;
   if (!pawn.need && wantsSleep(world, pawn) && canPlan && (world.restRules === 'legacy' || (pawn.jobId === null && !pawn.haul && !pawn.cooking&&!pawn.ward&&!pawn.feed&&!pawn.tend&&!pawn.rescue))) {
+    const bedOwners=world.schemaVersion>=256?captureActorBeds256(world):undefined;
     const policy=captureAllowedArea(world,pawn);
     const allows=(cell:Cell)=>!policy||policy.has(cell.z*world.width+cell.x);
     const services = reservedServiceCells(world,pawn.id);
     const doublePlaces:{id:number;slot:BedSlot;target:Cell;rank:number}[]=[];
-    for(const bed of world.structures)if(bed.kind==='double-bed'&&civilBedShareAllowed(world,bed,pawn)&&!deconstructionReserved(world,bed.id,pawn.id)){
+    for(const bed of world.structures)if(bed.kind==='double-bed'&&civilBedShareAllowed(world,bed,pawn)&&globalCivilBedShare256(world,bed,pawn,bedOwners)&&!deconstructionReserved(world,bed.id,pawn.id)){
       const owned=pawnBedSlot(pawn,bed);
       for(const slot of [0,1] as const){
         if(owned!==undefined&&owned!==slot)continue;
         const target=bedSlotCell(bed,slot);
-        if(!target||!allows(target)||services.has(target.z*world.width+target.x)||bedSlotClaimed(world,bed,slot,pawn.id))continue;
-        doublePlaces.push({id:bed.id,slot,target,rank:owned===slot?0:world.pawns.some(p=>p.bedId===bed.id&&p.state!=='dead')?1:2});
+        if(!target||!allows(target)||services.has(target.z*world.width+target.x)||bedSlotClaimed(world,bed,slot,pawn.id)||!localBedClaimAvailable256(world,bed,pawn,slot,bedOwners))continue;
+        doublePlaces.push({id:bed.id,slot,target,rank:owned===slot?0:(bedOwners?actualBedOwners256(bedOwners,bed.id).some(p=>p.state!=='dead'):world.pawns.some(p=>p.bedId===bed.id&&p.state!=='dead'))?1:2});
       }
     }
     // Transit does not claim bed ownership; only a sleep reservation excludes another sleeper.
@@ -59,7 +61,7 @@ export function processSleeping(world: World, pawn: Pawn, context: NeedContext, 
     }
     const topology=pawn.prisoner?capturePrisonTopology(world):undefined;
     for (const bed of world.structures) {
-      if(bed.kind==='double-bed'||!allows(bed))continue;
+      if(bed.kind==='double-bed'||!allows(bed)||!localBedClaimAvailable256(world,bed,pawn,undefined,bedOwners))continue;
       if (!isBedKind(bed.kind) || bed.medical || !!bed.prisoner!==!!pawn.prisoner || pawn.prisoner&&(!prisonBedValid(world,bed,topology)||!prisonerAllowedCell(world,pawn,bed,topology)) || world.pawns.some(p=>p.rescue?.bedId===bed.id) || deconstructionReserved(world,bed.id,pawn.id) || reserved.has(bed.id) || services.has(bed.z*world.width+bed.x) || (owners.has(bed.id) && owners.get(bed.id) !== pawn.id)) continue;
       const path = routeToCell(world, bed, reach);
       const rank = pawn.bedId === bed.id?0:2;
@@ -67,8 +69,7 @@ export function processSleeping(world: World, pawn: Pawn, context: NeedContext, 
     }
     if (!context.release()) return true;
     if (best) {
-      pawn.bedId = best.id;
-      if(best.slot!==undefined)pawn.bedSlot=best.slot;else delete pawn.bedSlot;
+      claimLocalActorBed256(world,pawn,world.structures.find(b=>b.id===best!.id)!,best.slot);
       pawn.need = { kind: 'sleep', phase: 'travel', bedId: best.id, target: best.target };
       pawn.path = best.path; pawn.state = 'moving'; pawn.planCooldown = 0;
     } else {
@@ -100,11 +101,11 @@ export function processSleeping(world: World, pawn: Pawn, context: NeedContext, 
     const head=bed&&slot!==undefined?bedSlotCell(bed,slot):undefined;
     if (task.bedId !== null && (!bed || pawn.bedId !== bed.id || !head || !same(head, task.target)||bed.kind==='double-bed'&&(bedAssignmentReason(world,bed,pawn,slot!)!==undefined||bedSlotClaimed(world,bed,slot!,pawn.id)))) { if (!context.release()) return true; return true; }
     if (!same(pawn, task.target)) { context.move(task.target, true); return true; }
-    if((bed?.kind==='double-bed'||bed?.kind==='sleeping-spot')&&(pawn.moveCooldown>0||pawn.motion&&pawn.motion.end>world.tick))return true;
+    if((bed?.kind==='bedroll'||bed?.kind==='double-bed'||bed?.kind==='sleeping-spot')&&(pawn.moveCooldown>0||pawn.motion&&pawn.motion.end>world.tick))return true;
     if (task.phase === 'travel') context.event(`${pawn.name} s’allonge ${bed ? 'dans son lit' : 'au sol'}.`);
     task.phase = 'sleep'; pawn.path = []; pawn.state = 'sleeping'; pawn.collapsePending = false; pawn.restZeroTicks = 0;
     advanceRoomRest(world,pawn);
-    pawn.rest = Math.min(100, pawn.rest + (bed&&bed.kind!=='sleeping-spot' ? BED_REST_PER_TICK * (bed.kind==='hospital-bed'||bed.kind==='double-bed'?bedRestEffectiveness(bed):BUILDING_MATERIALS[bed.material??'wood'].restFactor) : GROUND_REST_PER_TICK));
+    pawn.rest = Math.min(100, pawn.rest + (bed&&bed.kind!=='sleeping-spot' ? BED_REST_PER_TICK * (bed.kind==='bedroll'||bed.kind==='hospital-bed'||bed.kind==='double-bed'?bedRestEffectiveness(bed):BUILDING_MATERIALS[bed.material??'wood'].restFactor) : GROUND_REST_PER_TICK));
     if (pawn.rest >= 100) { finishRoomRest(world,pawn);pawn.need = null; pawn.state = 'idle'; pawn.planCooldown = 0; pawn.needCooldown = 0; }
     return true;
   }

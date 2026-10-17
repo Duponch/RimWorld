@@ -13,7 +13,7 @@ const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.
 const storageKeys=new Set<string>(['furniture','plant',...Object.values(ITEM_DEFINITIONS).map(d=>d.kind)]);
 export function validShelfSettings(value:unknown,version:number):boolean {
   if(version<229||!object(value)||Reflect.ownKeys(value).some(k=>typeof k!=='string'||!['filters','priority','capacity','items','quality','hitPoints','allowFresh','allowRotten'].includes(k)))return false;
-  return object(value.filters)&&Reflect.ownKeys(value.filters).every(k=>typeof k==='string'&&storageKeys.has(k)&&(version>=241||k!=='uranium')&&(version>=235||k!=='plant')&&typeof value.filters![k as never]==='boolean')
+  return object(value.filters)&&Reflect.ownKeys(value.filters).every(k=>typeof k==='string'&&storageKeys.has(k)&&(version>=256||k!=='jade')&&(version>=241||k!=='uranium')&&(version>=235||k!=='plant')&&typeof value.filters![k as never]==='boolean')
     &&integer(value.priority,1,5)&&value.capacity===500&&validStorageItems(value.items,version)&&validStorageConditions(value,version);
 }
 /** Reciprocal building/state admission, shared by files and snapshots. */
@@ -26,7 +26,7 @@ export function validShelfBuildingShape(value:unknown,version:number):boolean {
     ||!Array.isArray(state.cells)||state.cells.length!==(value.kind==='shelf'?2:1)||Reflect.ownKeys(state.cells).length!==state.cells.length+1
     ||state.cells.some((id,i)=>!Object.hasOwn(state.cells as object,i)||!integer(id,1))||new Set(state.cells).size!==state.cells.length
     ||!validShelfSettings(state.settings,version)||!integer(value.orientation,0,3)||value.footprint!=='standard'
-    ||!(value.material==='wood'||value.material==='steel'||isBlockMaterial(value.material))
+    ||!(value.material==='wood'||value.material==='steel'||version>=256&&value.material==='jade'||isBlockMaterial(value.material))
     ||['quality','art','fuel','bills','power','medical','prisoner','spikeTrap'].some(k=>Object.hasOwn(value,k)))return false;
   return !Object.hasOwn(value,'damage')||integer(value.damage,1,structureMaxHp(value as unknown as Structure)-1);
 }
@@ -59,7 +59,7 @@ export function validShelfTransport(w:World,version:number=w.schemaVersion):bool
     for(const j of w.jobs){
       if(Object.hasOwn(j,'shelf'))return false;
       if(isShelfKind(j.kind)&&(!integer(j.orientation,0,3)||j.footprint!=='standard'
-        ||!(j.material==='wood'||j.material==='steel'||isBlockMaterial(j.material))
+        ||!(j.material==='wood'||j.material==='steel'||version>=256&&j.material==='jade'||isBlockMaterial(j.material))
         ||['quality','art','fuel','bills','power','medical','prisoner','damage'].some(k=>Object.hasOwn(j,k))))return false;
       if(noStockpileCells&&(isShelfKind(j.kind)||j.kind==='install'&&isShelfKind(j.furniture?.kind??'')))
         for(const c of footprintCells(j))noStockpileCells.add(c.z*w.width+c.x);

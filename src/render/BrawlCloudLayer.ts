@@ -301,7 +301,7 @@ export class BrawlCloudLayer {
       const combatId=pawn.melee?.order&&!pawn.melee.order.structure?pawn.melee.order.targetId
         :pawn.melee?.strike&&!pawn.melee.strike.structure?pawn.melee.strike.targetId:undefined;
       const targetId=socialId??combatId;
-      if(targetId===undefined)continue;
+      if(targetId==null)continue;
       const target=pawns.get(targetId);
       if(!target||target.pawn.state==='dead'||target.pawn.state==='downed'||target.pawn.stun||target.pawn.body?.pileId!==undefined)continue;
       const social=socialId===targetId&&target.pawn.social?.fight?.opponentId===pawn.id;

@@ -1,3 +1,7 @@
+import {rememberLocalActorBedDeparture256,prepareLocalActorBedReturn256} from './actor-bed-local-256.ts';
+import {commitActorBedEntry256} from './actor-map-bed-256.ts';
+import {notifyActualExplorationSpawn256} from './exploration-runtime-256.ts';
+import {rememberMapAreaDeparture,prepareSameMapAreaReturn,commitMapAreaEntry} from './pawn-map-areas.ts';
 import {registeredCampaign} from './world-map-context.ts';
 import { releaseAllowedAreaReturn } from './allowed-area-state.ts';
 import { commercialRegistryView } from './commercial-trip.ts';
@@ -8,6 +12,7 @@ import { foodAllowed } from './food-policy.ts';
 import { groundCapacity } from './ground-placement.ts';
 import { advanceHumanAge } from './human-age.ts';
 import { medicalStatus } from './injury-state.ts';
+import {pawnBody} from './health-rules.ts';
 import { malnutritionModifiers } from './malnutrition.ts';
 import { expireMealMemories } from './mood.ts';
 import { HUNGER_PER_TICK } from './needs.ts';
@@ -37,7 +42,7 @@ export function scoutRegistryView(w:World):World {
 
 function acuteCondition(p:Pawn):boolean {
   const h=p.health;
-  return !!h&&(!!h.death||h.injuries.length>0||h.missing.length>0||h.bloodLoss>0||!!h.heatstroke||!!h.hypothermia||!!h.malnutrition||!!h.infections||!!h.flu||!!h.immuneDiseases?.malaria?.severity||!!h.immuneDiseases?.plague?.severity||!!h.immuneDiseases?.malaria?.vomit||!!h.foodPoisoning||!!h.anesthetic||medicalStatus(h)!=='mobile');
+  return !!h&&(!!h.death||h.injuries.length>0||h.missing.length>0||h.bloodLoss>0||!!h.heatstroke||!!h.hypothermia||!!h.malnutrition||!!h.infections||!!h.flu||!!h.immuneDiseases?.malaria?.severity||!!h.immuneDiseases?.plague?.severity||!!h.immuneDiseases?.malaria?.vomit||!!h.foodPoisoning||!!h.cryptosleepSickness||!!h.anesthetic||medicalStatus(h)!=='mobile');
 }
 function activeTask(p:Pawn):boolean {
   return p.jobId!==null||p.haul!==null||p.cooking!==null||p.need!==null||p.orders.active!==null||p.orders.queue.length>0
@@ -50,11 +55,11 @@ function unstable(p:Pawn,w:World):boolean {
 
 /** Beginning a trip cannot silently interrupt work or export another cargo. */
 export function scoutEligible(w:World,p:Pawn):string|null {
-  if(w.scout||w.commercialTrip||w.group)return 'Un voyage ou groupe est déjà en cours.';
+  if(w.scout||w.commercialTrip||w.group)return 'Un voyage ou groupe est dÃ©jÃ  en cours.';
   const preparation=scoutPreparationReason(w,p);if(preparation)return preparation;
-  if(activeTask(p)||p.state!=='idle'||p.path.length||p.moveCooldown>0||(p.motion?.end??0)>w.tick)return 'Le colon doit être libre de tout travail ou déplacement.';
-  if(w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)||w.packed.some(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id))return 'Déposez d’abord la cargaison de travail ou le meuble porté.';
-  if(w.piles.some(i=>i.owner.type==='inventory'&&i.owner.pawnId===p.id))return 'L’inventaire doit être vide avant le chargement des rations.';
+  if(activeTask(p)||p.state!=='idle'||p.path.length||p.moveCooldown>0||(p.motion?.end??0)>w.tick)return 'Le colon doit Ãªtre libre de tout travail ou dÃ©placement.';
+  if(w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)||w.packed.some(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id))return 'DÃ©posez dâ€™abord la cargaison de travail ou le meuble portÃ©.';
+  if(w.piles.some(i=>i.owner.type==='inventory'&&i.owner.pawnId===p.id))return 'Lâ€™inventaire doit Ãªtre vide avant le chargement des rations.';
   return null;
 }
 
@@ -63,20 +68,39 @@ export function scoutEligible(w:World,p:Pawn):string|null {
  * and physical ground capacity. */
 export function scoutUnloadEligible(w:World,p:Pawn):string|null {
   if(w.scout||w.commercialTrip)return 'Terminez ou annulez le voyage en cours.';
-  if(!w.pawns.includes(p)||!isColonist(p)||p.prisoner||p.visitor||p.state==='dead'||p.state==='downed')return 'Choisissez un colon libre et présent.';
-  if(unstable(p,w)||activeTask(p)||p.state!=='idle'||p.path.length||p.moveCooldown>0||(p.motion?.end??0)>w.tick)return 'Le colon doit être libre de tout travail, combat ou déplacement.';
-  if(w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)||w.packed.some(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id))return 'Déposez d’abord la cargaison de travail ou le meuble porté.';
+  if(!w.pawns.includes(p)||!isColonist(p)||p.prisoner||p.visitor||p.state==='dead'||p.state==='downed')return 'Choisissez un colon libre et prÃ©sent.';
+  if(unstable(p,w)||activeTask(p)||p.state!=='idle'||p.path.length||p.moveCooldown>0||(p.motion?.end??0)>w.tick)return 'Le colon doit Ãªtre libre de tout travail, combat ou dÃ©placement.';
+  if(w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)||w.packed.some(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id))return 'DÃ©posez dâ€™abord la cargaison de travail ou le meuble portÃ©.';
   return null;
 }
 
 /** A preparation can continue walking while these safety conditions hold. */
 export function scoutPreparationReason(w:World,p:Pawn,requireResident=true,collectivePemmican=false):string|null {
-  if(!w.pawns.includes(p)||!isColonist(p)||p.prisoner||p.visitor||p.state==='dead'||p.state==='downed')return 'Choisissez un colon libre et présent.';
+  if(!w.pawns.includes(p)||!isColonist(p)||p.prisoner||p.visitor||p.state==='dead'||p.state==='downed')return 'Choisissez un colon libre et prÃ©sent.';
   if(requireResident&&w.pawns.filter(other=>other!==p&&isColonist(other)&&!other.prisoner&&other.state!=='dead'&&other.state!=='downed'&&!other.mental?.crisis).length===0)return 'Un autre colon capable doit rester sur la carte.';
-  if(acuteCondition(p))return 'Le colon doit être sain avant de partir.';
-  if(p.rest<50||p.hunger<=20||p.collapsePending)return 'Le colon doit être reposé et nourri avant le départ.';
+  if(acuteCondition(p))return 'Le colon doit Ãªtre sain avant de partir.';
+  if(p.rest<50||p.hunger<=20||p.collapsePending)return 'Le colon doit Ãªtre reposÃ© et nourri avant le dÃ©part.';
+  if(unstable(p,w))return 'Le colon est mobilisÃ©, en crise ou engagÃ© dans un combat.';
+  if(!foodAllowed(w,p,'survival-meal')&&!(collectivePemmican&&foodAllowed(w,p,'pemmican')))return collectivePemmican?'Le rÃ©gime du colon interdit les deux provisions du groupe.':'Le rÃ©gime du colon interdit les repas de survie.';
+  return null;
+}
+
+/** New collective formations only. Illness names and numerical need levels
+ * are not mobility tests. The same medical original continues its existing
+ * physiology in travel; no cure, clock rewrite or task interruption happens.
+ * A real physical episode/reservation must still finish before owner transfer. */
+export function collectiveMobilePreparationReason256(w:World,p:Pawn):string|null {
+  if(w.schemaVersion!==256||!w.pawns.includes(p)||!isColonist(p)||p.prisoner||p.visitor||p.state==='dead'||p.state==='downed'||p.health?.death)return 'Choisissez un colon vivant, libre et présent.';
+  if(p.health&&medicalStatus(p.health)!=='mobile'||pawnBody(p).capacities.moving<=0)return 'Le colon doit pouvoir se déplacer par lui-même ; le portage humain n’est pas encore admis.';
   if(unstable(p,w))return 'Le colon est mobilisé, en crise ou engagé dans un combat.';
-  if(!foodAllowed(w,p,'survival-meal')&&!(collectivePemmican&&foodAllowed(w,p,'pemmican')))return collectivePemmican?'Le régime du colon interdit les deux provisions du groupe.':'Le régime du colon interdit les repas de survie.';
+  if(activeTask(p)||p.deepWork||p.openCasket)return 'Le colon doit terminer son activité avant de rejoindre le groupe.';
+  if(p.collapsePending||p.medicalSleep)return 'Le colon doit terminer son effondrement ou son sommeil médical avant le départ.';
+  const h=p.health;
+  if(h&&(h.foodPoisoning?.vomit||h.cryptosleepSickness?.vomit||h.flu?.vomit||h.immuneDiseases?.malaria?.vomit||h.toxicBuildup?.vomit||h.toxicBuildup?.vomitRequestedAt!==undefined))return 'Le colon doit terminer son épisode physique de vomissement.';
+  if(w.pawns.some(q=>q!==p&&(q.rescue?.patientId===p.id||q.tend?.patientId===p.id||q.feed?.patientId===p.id||q.ward?.patientId===p.id||q.surgery?.patientId===p.id||q.melee?.order?.targetId===p.id||q.melee?.strike?.targetId===p.id||q.shooting?.order?.targetId===p.id)))return 'Une action ou réservation encore active vise ce colon.';
+  // Eligibility is independent of particular food IDs. The real selected
+  // provision quantities and individual diets are checked by the collective
+  // loading/minimum transaction, not by the historical scout food predicate.
   return null;
 }
 
@@ -84,16 +108,16 @@ export function scoutPreparationReason(w:World,p:Pawn,requireResident=true,colle
  * the already loaded food remains the colon's ordinary inventory. */
 export function departureReason(w:World,p:Pawn):string|null {
   const s=w.scout;
-  if(!s||s.phase!=='leaving'||s.pawnId!==p.id||!w.pawns.includes(p))return 'Aucun départ de reconnaissance actif pour ce colon.';
-  if(!visitorAtEdge(w,p))return 'Le colon n’a pas atteint le bord de la carte.';
+  if(!s||s.phase!=='leaving'||s.pawnId!==p.id||!w.pawns.includes(p))return 'Aucun dÃ©part de reconnaissance actif pour ce colon.';
+  if(!visitorAtEdge(w,p))return 'Le colon nâ€™a pas atteint le bord de la carte.';
   const preparation=scoutPreparationReason(w,p);if(preparation)return preparation;
-  if(activeTask(p)||p.state!=='idle'||p.moveCooldown>0||(p.motion?.end??0)>w.tick||p.path.length)return 'Le colon est encore engagé dans une tâche ou une arête.';
+  if(activeTask(p)||p.state!=='idle'||p.moveCooldown>0||(p.motion?.end??0)>w.tick||p.path.length)return 'Le colon est encore engagÃ© dans une tÃ¢che ou une arÃªte.';
   const owned=w.piles.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id);
-  if(owned.length>32)return 'Le voyageur porte trop d’objets pour ce premier circuit.';
+  if(owned.length>32)return 'Le voyageur porte trop dâ€™objets pour ce premier circuit.';
   if(w.pawns.some(q=>q!==p&&(q.rescue?.patientId===p.id||q.tend?.patientId===p.id||q.feed?.patientId===p.id||q.ward?.patientId===p.id||q.surgery?.patientId===p.id||q.melee?.order?.targetId===p.id||q.melee?.strike?.targetId===p.id||q.shooting?.order?.targetId===p.id)))return 'Une action encore active vise ce colon.';
   const inventory=owned.filter(i=>i.owner.type==='inventory');
-  if(inventory.length!==1||inventory[0]?.id!==s.foodPileId||inventory[0].item!=='survival-meal'||inventory[0].quantity!==s.quantity||!!inventory[0].foodPoison)return 'Les rations chargées ne correspondent plus au manifeste.';
-  if(owned.some(i=>i.owner.type==='pawn'||i.owner.type==='inventory'&&i.id!==s.foodPileId)||w.packed.some(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id))return 'Une cargaison incompatible empêche le départ.';
+  if(inventory.length!==1||inventory[0]?.id!==s.foodPileId||inventory[0].item!=='survival-meal'||inventory[0].quantity!==s.quantity||!!inventory[0].foodPoison)return 'Les rations chargÃ©es ne correspondent plus au manifeste.';
+  if(owned.some(i=>i.owner.type==='pawn'||i.owner.type==='inventory'&&i.id!==s.foodPileId)||w.packed.some(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id))return 'Une cargaison incompatible empÃªche le dÃ©part.';
   return null;
 }
 export const scoutDepartureReason=departureReason;
@@ -105,7 +129,8 @@ export function departScout(w:World,p:Pawn):boolean {
   if(!s||s.phase!=='leaving')return false;
   const items=w.piles.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id);
   const entry={x:p.x,z:p.z};
-  releaseAllowedAreaReturn(p);p.bedId=null;delete p.bedSlot;p.path=[];p.state='idle';p.planCooldown=0;p.moveCooldown=0;
+  rememberLocalActorBedDeparture256(w,p);
+  rememberMapAreaDeparture(w,p);releaseAllowedAreaReturn(p);p.bedId=null;delete p.bedSlot;p.path=[];p.state='idle';p.planCooldown=0;p.moveCooldown=0;
   delete p.motion;delete p.shooting;delete p.stagger;delete p.stun;
   w.scout={phase:'travelling',pawn:p,items,foodPileId:s.foodPileId,quantity:s.quantity,startedAt:s.startedAt,departedAt:w.tick,returnAt:w.tick+SCOUT_TRIP_TICKS,consumed:0,entry};
   const ids=new Set(items.map(i=>i.id));
@@ -159,10 +184,13 @@ export function advanceScoutTrip(w:World):void {
   if(s.phase==='awaiting-entry'&&(w.tick-s.returnAt)%SCOUT_RETURN_RETRY_TICKS!==0)return;
   const entry=returnEntry(w,s);
   if(!entry){s.phase='awaiting-entry';return;}
+  const areaPlan=w.schemaVersion>=256?prepareSameMapAreaReturn(w,s.pawn):undefined,bedPlan=prepareLocalActorBedReturn256(w,s.pawn);
+  if(areaPlan)commitMapAreaEntry(s.pawn,areaPlan);if(bedPlan)commitActorBedEntry256(s.pawn,bedPlan);
   s.pawn.x=entry.x;s.pawn.z=entry.z;s.pawn.path=[];s.pawn.state='idle';s.pawn.moveCooldown=0;s.pawn.planCooldown=0;
   delete s.pawn.motion;
   for(const pile of s.items)if(pile.owner.type==='inventory')pile.owner={type:'ground',...entry};
   w.pawns.push(s.pawn);w.piles.push(...s.items);delete w.scout;
+  notifyActualExplorationSpawn256(w,s.pawn);
   log(w,`${s.pawn.name} revient au bord de la colonie avec ses possessions restantes.`);
 }
 

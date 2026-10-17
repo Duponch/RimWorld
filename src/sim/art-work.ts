@@ -37,7 +37,7 @@ export function beginArtWork(world: World, pawn: Pawn): MaterialPile | null {
   }
   if (!task.ingredients.length) return null;
   const material = task.ingredients[0]?.item;
-  if (!isArtMaterial(material)) return null;
+  if (!isArtMaterial(material,world.schemaVersion)) return null;
   const used = new Map<number, number>();
   let total = 0;
   for (const ingredient of task.ingredients) {
@@ -86,7 +86,7 @@ export function cancelArtWork(world: World, itemId: number): CommandResult {
       ? !o.cooking.ingredients.some(i => i.pileId === itemId) : o.sourcePileId !== itemId));
   }
   world.piles = world.piles.filter(p => p !== pile);
-  for (const placement of placements) addMaterial(world,material === 'wood' ? 'wood' : material === 'steel' ? 'steel' : 'blocks',placement.quantity,{type:'ground',...placement.cell},material);
+  for (const placement of placements) addMaterial(world,material === 'wood' ? 'wood' : material === 'steel' ? 'steel' : material === 'jade' ? 'jade' : 'blocks',placement.quantity,{type:'ground',...placement.cell},material);
   world.rng = random.rng;
   return {ok:true};
 }
@@ -103,7 +103,7 @@ export function validArtWorkShape(p: Record<string, unknown>, version: number): 
   if (version < 104 || p.kind !== 'unfinished' || p.quantity !== 1 || !record(owner)
     || !['ground','pawn'].includes(String(owner.type)) || !record(work) || !isArtRecipe(work.recipe)) return false;
   if (Object.keys(work).some(k => !['recipe','authorId','progress','material','parts','billId'].includes(k))
-    || !integer(work.authorId,1) || !isArtMaterial(work.material)
+    || !integer(work.authorId,1) || !isArtMaterial(work.material,version)
     || !integer(work.progress,0,artWorkTotal(work.recipe,work.material))
     || work.billId !== undefined && !integer(work.billId,1)
     || !Array.isArray(work.parts) || work.parts.length < 1 || work.parts.length > 100

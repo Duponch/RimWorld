@@ -1,3 +1,4 @@
+import {actualAnimalName256} from '../sim/starting-pet-state-256';
 import { animalSpecies } from '../sim/animal-species';
 import { animalBodyModel } from '../sim/body-model';
 import { foodPoisoningStage, FOOD_POISON_UNIT } from '../sim/food-poisoning';
@@ -111,7 +112,7 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
   const animal = world.wildlife?.animals.find(candidate => candidate.id === animalId);
   if (!animal) return null;
   const species = animalSpecies(animal.species), health = animal.health,stage=animalLifeStage(animal);
-  const model = animalBodyModel(animal.species), capacities = animalBody(animal).capacities;
+  const model = animalBodyModel(animal.species,animal.ageTicks,animal.growthTracker?.value), capacities = animalBody(animal).capacities;
   const injuries = health?.injuries.map(injury => `${model.byId[injury.part].label} : ${injury.scar?.pain !== undefined ? 'Cicatrice' : INJURY_RULES[injury.kind].label}, −${(injury.severity / HP_UNIT).toFixed(2)} PV${injury.tended !== undefined ? ` (traitée, qualité ${Math.round(injury.tended / 10)} %)` : ''}`) ?? [];
   const missing = health?.missing.map(part => `${model.byId[part.part].label} : partie perdue${part.tended ? ' (plaie traitée)' : ''}`) ?? [];
   const cases = health?.infections?.cases.map(infection => `${model.byId[infection.part].label} : infection ${infectionLabel[infectionStage(infection.severity)]}, ${(infection.severity * 100 / INFECTION_UNIT).toFixed(1)} %`) ?? [];
@@ -120,6 +121,7 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
   ];
   if (animal.state !== 'dead') condition.push(`Conscience ${percent(capacities.consciousness)} · Mobilité ${percent(capacities.moving)} · Vue ${percent(capacities.sight)} · Ouïe ${percent(capacities.hearing)}`);
   if (health?.malnutrition) condition.push(`Malnutrition ${MALNUTRITION_LABELS[malnutritionStage(health.malnutrition)]} : ${(health.malnutrition * 100 / MALNUTRITION_UNIT).toFixed(1)} %`);
+  if (health?.cryptosleepSickness) condition.push(`Mal de cryptosommeil · ${(health.cryptosleepSickness.remainingCore/2500).toFixed(1)} h restantes${health.cryptosleepSickness.vomit?' · Vomit':''}`);
   if (health?.foodPoisoning) condition.push(`Intoxication alimentaire · ${poisonStage[foodPoisoningStage(health.foodPoisoning)]} · ${(health.foodPoisoning.severity * 100 / FOOD_POISON_UNIT).toFixed(1)} %${health.foodPoisoning.vomit ? ' · Vomit' : ''}`);
   if (health?.infections?.cases.length) condition.push(`Immunité ${Math.min(100, health.infections.immunity * 100 / INFECTION_UNIT).toFixed(1)} %`);
   condition.push(...cases, ...injuries, ...missing);
@@ -145,7 +147,7 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
   ]:[];
   return {
     id: animal.id,
-    title: `${species.label[0]!.toLocaleUpperCase('fr-FR')}${species.label.slice(1)} ${animal.id}`,
+    title: actualAnimalName256(animal)??`${species.label[0]!.toLocaleUpperCase('fr-FR')}${species.label.slice(1)} ${animal.id}`,
     identity: `${animal.sex === 'female' ? 'Femelle' : 'Mâle'} · ${stageLabel[stage]} · ${animal.domestic?(penStatus?'domestique':'domestique libre'):'sauvage'}`,
     activity: animalActivity(world,animal),
     position: `${animal.x}, ${animal.z}`,
@@ -162,6 +164,7 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
     dead:animal.state==='dead',
     species: [
       `Espèce : ${species.label}`,
+      ...(animal.startingPet?.masterId!==undefined?[`Maître et lien initial : ${world.pawns.find(p=>p.id===animal.startingPet!.masterId)?.name??world.campaignPeople?.find(p=>p.id===animal.startingPet!.masterId)?.name??'personne hors carte'}`,`Obéissance initiale : 3 / 3 · demandée`]:[]),
       ...(animal.manhunter?['État : rage temporaire · attaque les humains','Récupération : durée variable ; le sommeil ordinaire ne met pas fin à la rage']:[]),
       `Régime : ${species.predator?'carnivore · viande, repas et dépouilles fraîches':'herbivore'}`,
       `Stade de vie : ${stageLabel[stage]}`,

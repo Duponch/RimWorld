@@ -1,3 +1,4 @@
+import {isRoofed} from './roof-rules.ts';
 import {marshSupportsFootprint} from './marsh.ts';
 import { workPriority } from './work-types.ts';
 import { constructionPlantBlocks } from './construction-plants.ts';
@@ -60,13 +61,13 @@ export function constructionSiteFree(world: World, job: Job, workerId?: number, 
     [...(p.cooking&&p.cooking.phase!=='interrupted'?p.cooking.ingredients:[]),...(p.surgery?.ingredients??[])]
       .some(i=>cells.some(c=>c.x===i.cell.x&&c.z===i.cell.z))))return false;
   if((job.furniture?.kind??job.kind)==='spike-trap'&&world.mechanoids?.some(a=>a.state!=='dead'&&cells.some(c=>{const m=a.motion;return a.x===c.x&&a.z===c.z||!!m&&m.end>world.tick&&c.x>=Math.min(m.from.x,m.to.x)&&c.x<=Math.max(m.from.x,m.to.x)&&c.z>=Math.min(m.from.z,m.to.z)&&c.z<=Math.max(m.from.z,m.to.z);})))return false;
-  if(job.kind==='ground-scanner'&&cells.some(c=>world.roofing?.constructed.includes(c.z*world.width+c.x)))return false;
+  if(job.kind==='ground-scanner'&&cells.some(c=>isRoofed(world,c.z*world.width+c.x)))return false;
   if(world.wildlife?.animals.some(a=>cells.some(c=>{
     const m=a.motion;return a.x===c.x&&a.z===c.z||!!m&&m.end>world.tick&&c.x>=Math.min(m.from.x,m.to.x)&&c.x<=Math.max(m.from.x,m.to.x)&&c.z>=Math.min(m.from.z,m.to.z)&&c.z<=Math.max(m.from.z,m.to.z);
   })))return false;
   return !world.pawns.some(p=>p.id!==workerId&&!(p.state==='dead'&&(p.body?.pileId!==undefined||p.body?.lostAt!==undefined))&&cells.some(c=>{
     const edge=p.motion;
-    const service=serviceCell(p);
+    const service=serviceCell(p,world);
     return p.x===c.x&&p.z===c.z || service?.x===c.x&&service.z===c.z || p.feed?.paste&&(p.feed.phase==='pickup'||p.feed.phase==='collect')&&p.feed.spot.x===c.x&&p.feed.spot.z===c.z || !!edge&&edge.end>world.tick&&c.x>=Math.min(edge.from.x,edge.to.x)&&c.x<=Math.max(edge.from.x,edge.to.x)&&c.z>=Math.min(edge.from.z,edge.to.z)&&c.z<=Math.max(edge.from.z,edge.to.z);
   }));
 }

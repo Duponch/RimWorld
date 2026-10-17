@@ -1,3 +1,4 @@
+import {activeHiveInsect256} from './cave-hive-lord-256.ts';
 import { hostileTo,activeThreat } from './affiliation.ts';
 import { clearShotSegment,type ShotGrid } from './combat-space.ts';
 import { captureWorldShotGrid } from './combat-world.ts';
@@ -6,6 +7,7 @@ import { violentWorkRefusal } from './colonist-backgrounds.ts';
 import { isColonist,distanceSquared } from './affiliation.ts';
 import type { Pawn,World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
+import {sleepingTempleMech256} from './temple-mech-duty-256.ts';
 import type { Mechanoid } from './mechanoid-state.ts';
 
 export type LivingTarget=Pawn|WildAnimal|Mechanoid;
@@ -24,12 +26,12 @@ export const combatTargetSize=(p:LivingTarget)=>isAnimalTarget(p)?.2:1;
 /** Hostile mechanical factions share one relation; mental hostility does not
  * turn another machine into an enemy of that faction. */
 export function mechanoidEnemy(w:World,m:Mechanoid,t:LivingTarget):boolean {
-  return t.id!==m.id&&!isMechanoidTarget(t)&&!['dead','downed'].includes(t.state)&&!t.health?.death
-    &&(isAnimalTarget(t)?!!t.domestic||!!t.manhunter:!t.prisoner&&!carrierOf(w,t.id));
+  return !sleepingTempleMech256(m)&&t.id!==m.id&&!isMechanoidTarget(t)&&!['dead','downed'].includes(t.state)&&!t.health?.death
+    &&(isAnimalTarget(t)?!!t.domestic||!!t.manhunter||activeHiveInsect256(t):!t.prisoner&&!carrierOf(w,t.id));
 }
-export const hostileTarget=(p:Pawn,t:LivingTarget)=>isAnimalTarget(t)?p.mental?.crisis?.kind==='berserk'||!!t.manhunter:isMechanoidTarget(t)?!p.prisoner||p.mental?.crisis?.kind==='berserk':hostileTo(p,t);
+export const hostileTarget=(p:Pawn,t:LivingTarget)=>isAnimalTarget(t)?p.mental?.crisis?.kind==='berserk'||!!t.manhunter||activeHiveInsect256(t):isMechanoidTarget(t)?!p.prisoner||p.mental?.crisis?.kind==='berserk':hostileTo(p,t);
 /** The same predicate owns civilian fleeing, defense and auto-order validity. */
-export const activeCombatThreat=(t:LivingTarget)=>isAnimalTarget(t)?!!t.manhunter&&!['dead','downed','sleeping'].includes(t.state):isMechanoidTarget(t)?t.state!=='dead'&&t.state!=='downed'&&!t.health?.death:activeThreat(t);
+export const activeCombatThreat=(t:LivingTarget)=>isAnimalTarget(t)?activeHiveInsect256(t)||!!t.manhunter&&!['dead','downed','sleeping'].includes(t.state):isMechanoidTarget(t)?!sleepingTempleMech256(t)&&t.state!=='dead'&&t.state!=='downed'&&!t.health?.death:activeThreat(t);
 export const hostileCandidates=(w:World,p:Pawn,animals:readonly WildAnimal[]=w.wildlife?.animals??[]):LivingTarget[]=>[
   ...w.pawns.filter(t=>hostileTarget(p,t)&&activeCombatThreat(t)),
   ...animals.filter(t=>hostileTarget(p,t)&&activeCombatThreat(t)),

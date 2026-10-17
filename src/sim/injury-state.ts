@@ -1,3 +1,6 @@
+import {toxicStage256} from './toxic-buildup-256.ts';
+import {animalAgeConditionEffects256,removeAnimalConditionsWithin256} from './animal-age-condition-state-256.ts';
+import {cryptosleepSicknessModifiers256} from './cryptosleep-sickness-256.ts';
 import { MALNUTRITION_UNIT,malnutritionModifiers } from './malnutrition.ts';
 import { anestheticModifiers } from './anesthetic.ts';
 import { foodPoisoningModifiers } from './food-poisoning.ts';
@@ -39,10 +42,11 @@ function injuryBleedUnits(record:MedicalRecord,injury:Injury):number {
 }
 export function medicalPain(record:MedicalRecord):number {
   if(record.death||isMechanoidKind(record.body))return 0;
+  const aging=animalAgeConditionEffects256(record);
   let pain=(heatModifiers(record.heatstroke).pain+coldModifiers(record.hypothermia).pain)*PAIN_UNIT;
   for(const i of record.injuries)if(!artificialPartCovering(record,i.part))pain+=i.severity*(i.scar?.pain!==undefined?5*i.scar.pain:INJURY_RULES[i.kind].painUnits);
   for(const m of record.missing)if(freshMissing(record,m))pain+=medicalModel(record).byId[m.part].hp*10000;
-  return Math.min(1,(pain/PAIN_UNIT/medicalModel(record).healthScale+infectionModifiers(record).pain+foodPoisoningModifiers(record.foodPoisoning).painOffset+fluModifiers(record.flu).pain+immuneDiseaseModifiers(record).pain)*anestheticModifiers(record.anesthetic).painFactor);
+  return Math.min(1,(pain/PAIN_UNIT/medicalModel(record).healthScale+infectionModifiers(record).pain+foodPoisoningModifiers(record.foodPoisoning).painOffset+fluModifiers(record.flu).pain+immuneDiseaseModifiers(record).pain+aging.pain)*anestheticModifiers(record.anesthetic).painFactor);
 }
 export function medicalBleed(record:MedicalRecord):number {
   return medicalBleedUnits(record)*1000/BLOOD_UNIT;
@@ -59,16 +63,18 @@ export function medicalBleedUnits(record:MedicalRecord):number {
 const chronicBody=(badBack:boolean,frail:boolean):BodyAssessment=>assessBody({damage:[],missing:[],pain:0,
   movingOffset:-(badBack?.3:0)-(frail?.3:0),manipulationOffset:-(badBack?.1:0)-(frail?.3:0)},HUMAN_MODEL);
 const CHRONIC_BODIES=[chronicBody(false,false),chronicBody(true,false),chronicBody(false,true),chronicBody(true,true)] as const;
-const chronicOnly=(record:MedicalRecord):boolean=>!!record.ageAilments?.length&&!record.body&&!record.death&&
+const chronicOnly=(record:MedicalRecord):boolean=>!!record.ageAilments?.length&&!record.body&&!Object.hasOwn(record,'humanHealthScale')&&!record.death&&
   !record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.heatstroke&&!record.hypothermia&&
-  !record.malnutrition&&!record.infections&&!record.flu&&!record.immuneDiseases&&!record.foodPoisoning&&!record.anesthetic&&!record.artificialParts?.length;
+  !record.malnutrition&&!record.cryptosleepSickness&&!record.toxicBuildup&&!record.animalAgeConditions&&!record.infections&&!record.flu&&!record.immuneDiseases&&!record.foodPoisoning&&!record.anesthetic&&!record.artificialParts?.length;
 export function assessMedical(record:MedicalRecord):BodyAssessment {
   if(isMechanoidKind(record.body))return projectedMedicalBody(record,{damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),pain:0},medicalModel(record));
   if(chronicOnly(record))return CHRONIC_BODIES[(record.ageAilments!.includes('bad-back')?1:0)+(record.ageAilments!.includes('frail')?2:0)];
   const heat=heatModifiers(record.heatstroke),cold=coldModifiers(record.hypothermia),blood=bloodConsciousness(record.bloodLoss),infection=infectionModifiers(record),flu=fluModifiers(record.flu),diseases=immuneDiseaseModifiers(record),malnutrition=malnutritionModifiers(record.malnutrition),anesthetic=anestheticModifiers(record.anesthetic);
   const badBack=record.ageAilments?.includes('bad-back')??false,frail=record.ageAilments?.includes('frail')??false;
   const {painOffset:_foodPain,...foodFactors}=foodPoisoningModifiers(record.foodPoisoning);
-  return projectedMedicalBody(record,{damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),...(record.artificialParts?{artificialParts:artificialPartEfficiencies(record)}:{}),pain:medicalPain(record),consciousnessOffset:(blood.consciousnessOffset??0)+heat.consciousnessOffset+cold.consciousnessOffset+infection.consciousnessOffset+flu.consciousnessOffset+diseases.consciousnessOffset+malnutrition.consciousnessOffset,consciousnessMax:Math.min(blood.consciousnessMax??Infinity,heat.consciousnessMax,cold.consciousnessMax,infection.consciousnessMax,diseases.consciousnessMax,malnutrition.consciousnessMax,anesthetic.consciousnessMax),movingOffset:heat.movingOffset+cold.movingOffset-(badBack?.3:0)-(frail?.3:0)+anesthetic.movingOffset,manipulationOffset:cold.manipulationOffset+flu.manipulationOffset+diseases.manipulationOffset-(badBack?.1:0)-(frail?.3:0)+anesthetic.manipulationOffset,breathingOffset:infection.breathingOffset+flu.breathingOffset+diseases.breathingOffset,bloodFiltrationOffset:diseases.bloodFiltrationOffset,sightOffset:anesthetic.sightOffset,talkingOffset:anesthetic.talkingOffset,digestionOffset:anesthetic.digestionOffset,...foodFactors},medicalModel(record));
+  const crypto=cryptosleepSicknessModifiers256(record.cryptosleepSickness),combinedFoodFactors={...foodFactors,consciousnessFactor:foodFactors.consciousnessFactor*crypto.consciousnessFactor,movingFactor:foodFactors.movingFactor*crypto.movingFactor,manipulationFactor:foodFactors.manipulationFactor*crypto.manipulationFactor};
+  const aging=animalAgeConditionEffects256(record),toxic=toxicStage256(record.toxicBuildup?.severity??0);
+  return projectedMedicalBody(record,{damage:record.injuries.map(i=>({part:i.part,loss:i.severity/HP_UNIT})),missing:record.missing.map(m=>m.part),...(record.artificialParts?{artificialParts:artificialPartEfficiencies(record)}:{}),pain:medicalPain(record),...(aging.partOffsets.length?{partEfficiencyOffsets:aging.partOffsets}:{}),hearingOffset:aging.hearing,consciousnessOffset:toxic.offset+(blood.consciousnessOffset??0)+heat.consciousnessOffset+cold.consciousnessOffset+infection.consciousnessOffset+flu.consciousnessOffset+diseases.consciousnessOffset+malnutrition.consciousnessOffset,consciousnessMax:Math.min(toxic.max,aging.consciousnessMax,blood.consciousnessMax??Infinity,heat.consciousnessMax,cold.consciousnessMax,infection.consciousnessMax,diseases.consciousnessMax,malnutrition.consciousnessMax,anesthetic.consciousnessMax),movingOffset:aging.moving+heat.movingOffset+cold.movingOffset-(badBack?.3:0)-(frail?.3:0)+anesthetic.movingOffset,manipulationOffset:aging.manipulation+cold.manipulationOffset+flu.manipulationOffset+diseases.manipulationOffset-(badBack?.1:0)-(frail?.3:0)+anesthetic.manipulationOffset,breathingOffset:infection.breathingOffset+flu.breathingOffset+diseases.breathingOffset,bloodFiltrationOffset:diseases.bloodFiltrationOffset,sightOffset:anesthetic.sightOffset,talkingOffset:aging.talking+anesthetic.talkingOffset,digestionOffset:anesthetic.digestionOffset,...combinedFoodFactors,consciousnessFactor:combinedFoodFactors.consciousnessFactor*aging.consciousnessFactor},medicalModel(record));
 }
 export function medicalStatus(record:MedicalRecord,body=assessMedical(record)):'mobile'|'downed'|'dead' {
   return record.death?'dead':body.painShock||!body.canBeAwake||!body.movingCapable?'downed':'mobile';
@@ -79,7 +85,7 @@ export function reconcileMedicalDeath(record:MedicalRecord):void {
     const cause=assessMedical(record).vitalFailure?'vital-failure':record.injuries.reduce((n,i)=>n+i.severity,0)>=150*HP_UNIT*medicalModel(record).healthScale?'trauma':null;
     if(cause)record.death={tick:record.tick,cause};return;
   }
-  const cause=(record.malnutrition??0)>=MALNUTRITION_UNIT?'malnutrition':(record.heatstroke??0)>=HEAT_UNIT?'heatstroke':(record.hypothermia??0)>=HEAT_UNIT?'hypothermia':record.bloodLoss>=BLOOD_UNIT?'blood-loss':record.infections?.cases.some(c=>c.severity>=INFECTION_UNIT)?'infection':(record.flu?.severity??0)>=FLU_UNIT?'flu':(record.immuneDiseases?.malaria?.severity??0)>=IMMUNE_DISEASE_UNIT?'malaria':(record.immuneDiseases?.plague?.severity??0)>=IMMUNE_DISEASE_UNIT?'plague':assessMedical(record).vitalFailure?'vital-failure':record.injuries.reduce((n,i)=>n+i.severity,0)>=150*HP_UNIT*medicalModel(record).healthScale?'trauma':null;
+  const cause=(record.toxicBuildup?.severity??0)>=1?'toxic-buildup':record.animalAgeConditions?.cases.some(c=>c.kind==='HeartAttack'&&c.severity>=1)?'heart-attack':record.animalAgeConditions?.cases.some(c=>c.kind==='HeartArteryBlockage'&&c.severity>=1)?'heart-artery-blockage':(record.malnutrition??0)>=MALNUTRITION_UNIT?'malnutrition':(record.heatstroke??0)>=HEAT_UNIT?'heatstroke':(record.hypothermia??0)>=HEAT_UNIT?'hypothermia':record.bloodLoss>=BLOOD_UNIT?'blood-loss':record.infections?.cases.some(c=>c.severity>=INFECTION_UNIT)?'infection':(record.flu?.severity??0)>=FLU_UNIT?'flu':(record.immuneDiseases?.malaria?.severity??0)>=IMMUNE_DISEASE_UNIT?'malaria':(record.immuneDiseases?.plague?.severity??0)>=IMMUNE_DISEASE_UNIT?'plague':assessMedical(record).vitalFailure?'vital-failure':record.injuries.reduce((n,i)=>n+i.severity,0)>=150*HP_UNIT*medicalModel(record).healthScale?'trauma':null;
   if(cause)record.death={tick:record.tick,cause};
 }
 export function rollScarPain(random:MedicalRandom):ScarPain {const n=random();return n<.5?0:n<.7?1:n<.9?3:6;}
@@ -109,6 +115,7 @@ export function addResolvedInjuryBatch(record:MedicalRecord,hits:readonly Resolv
   reconcileMedicalDeath(record);
 }
 function validateResolvedInjury(record:MedicalRecord,part:BodyPartId,kind:InjuryKind,severity:number):void {
+  if(kind==='frostbite')throw Error('Fresh Frostbite exposure is not bound; only actual initial permanent Frostbite is represented');
   if(!modelHasPart(medicalModel(record),part)||medicalModel(record).byId[part].conceptual||!Object.hasOwn(INJURY_RULES,kind)||!Number.isSafeInteger(severity)||severity<0)throw new Error('Invalid localized injury');
   if(!record.death&&severity>0&&injuryInfectionChance(record,{part,kind})>0&&!Number.isSafeInteger(record.tick*10+INFECTION_DELAY_MAX_CORE))throw new Error('Infection exposure clock exhausted');
 }
@@ -130,6 +137,7 @@ function applyResolvedInjury(record:MedicalRecord,part:BodyPartId,kind:InjuryKin
     record.missing.push({part,bornAt:record.tick,...artificial?{nonFresh:true as const}:{}});
     if(record.artificialParts){record.artificialParts=record.artificialParts.filter(p=>!isWithinPart(p.part,part,medicalModel(record)));if(!record.artificialParts.length)delete record.artificialParts;}
     removeInfectionsWithin(record,part);
+    removeAnimalConditionsWithin256(record,part,medicalModel(record));
     return null;
   }
   if(!existing)initializeInfectionRisk(record,injury,random);

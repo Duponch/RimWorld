@@ -1,3 +1,4 @@
+import {planCurrentMapArea,rememberCurrentMapArea,forgetMapArea} from './pawn-map-areas.ts';
 import { captureHumanOwners } from './human-owners.ts';
 import { validAllowedAreaCell,validAllowedAreaLabel } from './allowed-area-save.ts';
 import type { AllowedArea,AllowedAreaCommand,CommandResult,Pawn,World } from './types.ts';
@@ -39,8 +40,10 @@ export function applyAllowedAreaCommand(world:World,input:unknown,hooks:AllowedA
     if(pawn.allowedAreaId===command.areaId||command.areaId===null&&!Object.hasOwn(pawn,'allowedAreaId'))return {ok:true,affected:0};
     const future={...pawn};if(command.areaId===null)delete future.allowedAreaId;else future.allowedAreaId=command.areaId;
     delete future.allowedAreaReturn;
+    if(world.schemaVersion>=256)future.mapAreas=planCurrentMapArea(world,pawn,command.areaId);
     const next={...world,pawns:world.pawns.map(p=>p===pawn?future:p)},affected=[pawn],plan=hooks.preflight?.(next,affected);
     if(plan===false)return refusal('Pas de place pour conserver le chargement interrompu.','occupied');
+    if(world.schemaVersion>=256)rememberCurrentMapArea(world,pawn,command.areaId);
     if(command.areaId===null)delete pawn.allowedAreaId;else pawn.allowedAreaId=command.areaId;
     clearReturn(pawn);hooks.reconcile?.(world,affected,plan);return {ok:true,affected:1};
   }
@@ -66,6 +69,8 @@ export function applyAllowedAreaCommand(world:World,input:unknown,hooks:AllowedA
   if(!keys(c,['type','areaId']))return refusal('Suppression de zone invalide.');
   const owners=captureHumanOwners(world).pawnOwners,affected=owners.filter(s=>s.pawn!.allowedAreaId===area.id).map(s=>s.pawn!);
   const nextAreas=areas.filter(a=>a!==area);
+  // Deletion removes only this real map/area reference, including off-map owners.
+  if(world.schemaVersion>=256)forgetMapArea(world,area.id);
   // Deletion makes every affected owner unlimited; no work becomes forbidden.
   if(nextAreas.length)world.allowedAreas=nextAreas;else delete world.allowedAreas;
   for(const p of affected){delete p.allowedAreaId;clearReturn(p);}

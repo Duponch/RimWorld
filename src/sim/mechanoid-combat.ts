@@ -1,3 +1,4 @@
+import {mechanicalDuty256,mechanicalOrder256,sleepingTempleMech256} from './temple-mech-duty-256.ts';
 import { mechanoidDefinition } from './mechanoid-definition.ts';
 import { mechanoidBodyModel } from './mechanoid-anatomy.ts';
 import { bodyEfficiencies } from './body-capacities.ts';
@@ -38,7 +39,7 @@ export function mechanoidCombatBatch(w:World,getBlocked:NavigationGrid=()=>block
   const read=()=>grid??=captureWorldShotGrid(w);
   return {blocked:getBlocked,grid:read,targets:()=>targets??=[...w.pawns,...(w.wildlife?.animals??[])],ranged:mechanoidRangedQueries(w,read,getBlocked)};
 }
-export function readMechRaid(w:World,m:Mechanoid){const group=w.raids?.mechActive;return m.raid&&group?.id===m.raid.group&&group.members.includes(m.id)?group:undefined;}
+export const readMechRaid=mechanicalDuty256;
 export function mechanoidMeleeTools(m:Mechanoid):MeleeTool[] {
   const tools:MeleeTool[]=[];
   if(m.mechKind!=='scyther'){
@@ -102,10 +103,11 @@ function travel(w:World,m:Mechanoid,next:Cell,getLight:LightReader,blocked:Uint8
 }
 /** Physical decisions share the caller's terrain/light and acquisition capture. */
 export function processMechanoidCombat(w:World,m:Mechanoid,getBlocked:NavigationGrid,budget:SearchBudget,getLight:LightReader,batch=mechanoidCombatBatch(w,getBlocked)):void {
+  if(sleepingTempleMech256(m))return;
   m.moveCooldown=Math.max(0,(m.motion?.end??w.tick)-w.tick);m.planCooldown=Math.max(0,m.planCooldown-1);
   if(empMechanoidActive(m,w.tick*10))return;
   if(m.melee?.order&&!m.melee.order.structure&&w.tick*10>=m.melee.order.jobUntilCore!){cancelMelee(m);m.path=[];}
-  if(m.ranged?.order&&w.tick*10>=m.ranged.order.jobUntilCore){cancelMechanoidRanged(m);m.path=[];if(m.raid)m.raid.goal=null;}
+  if(m.ranged?.order&&w.tick*10>=m.ranged.order.jobUntilCore){cancelMechanoidRanged(m);m.path=[];if(mechanicalOrder256(m))mechanicalOrder256(m)!.goal=null;}
   if(m.moveCooldown)return;
   if(m.state==='dead'||m.state==='downed')return;
   const group=readMechRaid(w,m);if(!group){cancelMelee(m);cancelMechanoidRanged(m);m.path=[];m.state='idle';return;}
@@ -117,27 +119,27 @@ export function processMechanoidCombat(w:World,m:Mechanoid,getBlocked:Navigation
     const order=m.ranged.order,target=combatTargetByKey(w,order.targetKey),end=m.path.at(-1)??m;
     if(!target||!mechanoidEnemy(w,m,target)||distanceSquared(m,target)>72**2||!mechanoidGunAvailable(w,m,core,q)
       ||!q.stands()(end)){
-      cancelMechanoidRanged(m);m.path=[];m.raid!.goal=null;
+      cancelMechanoidRanged(m);m.path=[];mechanicalOrder256(m)!.goal=null;
     }else{
-      const step=m.path[0];if(step&&!travel(w,m,step,getLight,getBlocked())){cancelMechanoidRanged(m);m.path=[];m.raid!.goal=null;m.planCooldown=0;m.state='idle';}
+      const step=m.path[0];if(step&&!travel(w,m,step,getLight,getBlocked())){cancelMechanoidRanged(m);m.path=[];mechanicalOrder256(m)!.goal=null;m.planCooldown=0;m.state='idle';}
       else if(!step)m.state='idle';return;
     }
   }
   let target:LivingTarget|import('./types.ts').Structure|undefined=m.melee?.order?.structure?w.structures.find(s=>s.id===m.melee!.order!.targetId&&isBarrier(s)):present(w,m,core);
-  if(m.melee?.order&&!target){cancelMelee(m);m.path=[];m.raid!.goal=null;}
+  if(m.melee?.order&&!target){cancelMelee(m);m.path=[];mechanicalOrder256(m)!.goal=null;}
   let searched=false,access:CandidateAccess|undefined;
   if(m.mechKind!=='scyther'&&!target&&!m.planCooldown&&mechanoidGunAvailable(w,m,core,q)){
     const plan=planMechanoidRangedPost(w,m,budget,batch,q,reach=>{access=reach;});
     if(plan===null)return;
     searched=true;m.planCooldown=20;
     if(plan&&admitMechanoidRangedOrder(w,m,plan,core,q)){
-      const step=m.path[0];if(step&&!travel(w,m,step,getLight,getBlocked())){cancelMechanoidRanged(m);m.path=[];m.raid!.goal=null;m.planCooldown=0;m.state='idle';}
+      const step=m.path[0];if(step&&!travel(w,m,step,getLight,getBlocked())){cancelMechanoidRanged(m);m.path=[];mechanicalOrder256(m)!.goal=null;m.planCooldown=0;m.state='idle';}
       else if(!step)m.state='idle';return;
     }
   }
   if(!target&&!m.planCooldown&&!searched){
     const plan=acquire(w,m,budget,batch);
-    if(plan!==null){searched=true;access=plan.access;m.planCooldown=20;if(plan.target){const draft={rng:w.rng};m.melee={order:{targetId:plan.target.id,startedDowned:false,jobUntilCore:core+360+Math.floor(healthRandom(draft)*121)},strike:null};w.rng=draft.rng;m.path=plan.path!;target=plan.target;m.raid!.goal=null;}}
+    if(plan!==null){searched=true;access=plan.access;m.planCooldown=20;if(plan.target){const draft={rng:w.rng};m.melee={order:{targetId:plan.target.id,startedDowned:false,jobUntilCore:core+360+Math.floor(healthRandom(draft)*121)},strike:null};w.rng=draft.rng;m.path=plan.path!;target=plan.target;mechanicalOrder256(m)!.goal=null;}}
   }
   if(target){
     if(meleeTargetContact(w,m,target,batch.blocked())){m.path=[];m.state='idle';return;}
@@ -153,17 +155,18 @@ export function processMechanoidCombat(w:World,m:Mechanoid,getBlocked:Navigation
     if(!access)budget.remaining--;m.planCooldown=20;
     if(group.phase==='staging'){
       const point=group.stage.point,reach=access??candidateAccess(w,m,getBlocked(),EMPTY,true),path=reach.has(point.z*w.width+point.x)?routeToCell(w,point,reach):null;
-      if(!path){m.state='idle';return;}m.path=path;m.raid!.goal={...point};
+      if(!path){m.state='idle';return;}m.path=path;mechanicalOrder256(m)!.goal={...point};
     }else{
-      const route=raidRoute(w,m,false,getBlocked(),access);if(!route){m.state='idle';m.raid!.goal=null;return;}
-      m.path=route.path;m.raid!.goal=route.goal;
+      const route=raidRoute(w,m,false,getBlocked(),access);if(!route){m.state='idle';mechanicalOrder256(m)!.goal=null;return;}
+      m.path=route.path;mechanicalOrder256(m)!.goal=route.goal;
       if(route.barrier)m.melee={order:{targetId:route.barrier.id,startedDowned:false,structure:true},strike:null};
     }
   }
-  const step=m.path[0];if(step&&!travel(w,m,step,getLight,getBlocked())){m.path=[];m.raid!.goal=null;m.planCooldown=0;m.state='idle';}else if(!step)m.state='idle';
+  const step=m.path[0];if(step&&!travel(w,m,step,getLight,getBlocked())){m.path=[];mechanicalOrder256(m)!.goal=null;m.planCooldown=0;m.state='idle';}else if(!step)m.state='idle';
 }
 /** Called exactly once/Core by the common owner scheduler; no second clock. */
 export function advanceMechanoidCombat(w:World,m:Mechanoid,core:number,batch=mechanoidCombatBatch(w)):boolean {
+  if(sleepingTempleMech256(m))return false;
   if(m.stun&&core>=m.stun.untilCore)delete m.stun;if(m.stagger&&core>=m.stagger.untilCore)delete m.stagger;
   const recovery=m.melee?.strike,pause=recovery?.empPause;
   if(recovery&&pause&&core>pause.lastAtCore){

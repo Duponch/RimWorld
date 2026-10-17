@@ -2,8 +2,9 @@ import { planGroundPlacement } from './ground-placement.ts';
 import { addGroundMaterial,materialIdentityCount } from './materials.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { cropProduct } from './crops.ts';
-import { FLORA_DEFINITIONS } from './biome-flora.ts';
-import { isCrop, AFTER_HARVEST_GROWTH, choppable, harvestable, harvestRoll,plantCanYieldNow } from './plants.ts';
+import { FLORA_DEFINITIONS,PROSPECTIVE_PLANT_SPECIES_256 } from './biome-flora.ts';
+import {plantHarvestWorkCore} from './construction-plants.ts';
+import { isCrop, plantGrowth, AFTER_HARVEST_GROWTH, choppable, harvestable, harvestRoll,plantCanYieldNow } from './plants.ts';
 import { interruptWork } from './interrupted-cargo.ts';
 import { releaseWork } from './work-release.ts';
 import { designateBlightedCrops } from './crop-blight-orders.ts';
@@ -55,4 +56,16 @@ export function gatherResource(world: World, resource: Resource, kind:'chop'|'ha
 }
 /** Select at the actual resolution: clearing does not require a mature yield. */
 export const clearingKind=(world:World,resource:Resource):'chop'|'cut'=>resource.kind==='tree'&&choppable(world,resource)?'chop':'cut';
-export const clearingDuration=(resource:Resource):number=>resource.kind==='tree'?100:isCrop(resource)?20:60;
+const prospectiveWorkSpecies256:ReadonlySet<string>=new Set(PROSPECTIVE_PLANT_SPECIES_256);
+/** New identities are admitted only by schema256; no historical work changed. */
+export const prospectivePlantWorkCore256=(resource:Pick<Resource,'kind'|'species'>):number|undefined=>resource.species!==undefined&&prospectiveWorkSpecies256.has(resource.species)?plantHarvestWorkCore(resource):undefined;
+/** One local work unit is ten Core ticks. Work speed is applied by the caller,
+ * not baked into this threshold; all historical durations remain literal. */
+export const clearingDuration=(resource:Resource):number=>{const core=prospectivePlantWorkCore256(resource);return core===undefined?resource.kind==='tree'?100:isCrop(resource)?20:60:core/10;};
+/** Core PlantWork WorkDonePerTick growth multiplier, separate from stat/light.
+ * Float32 arithmetic matches the actual Lerp constants and clamped growth. */
+export function plantWorkGrowthFactor256(world:World,resource:Resource):number {
+ if(world.schemaVersion<256||prospectivePlantWorkCore256(resource)===undefined)return 1;
+ const growth=Math.fround(Math.max(0,Math.min(1,plantGrowth(world,resource)))),start=Math.fround(3.3);
+ return Math.fround(start+Math.fround(Math.fround(1-start)*growth));
+}

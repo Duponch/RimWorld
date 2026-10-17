@@ -1,3 +1,5 @@
+import {footprintContains} from '../sim/definitions';
+import {isAncientCasket256} from '../sim/ancient-casket-state-256';
 import { firePosition } from '../sim/fire-rules';
 import type { SimulationClient } from '../bridge/SimulationClient';
 import type { Cell, Pawn, World } from '../sim/types';
@@ -136,7 +138,7 @@ export class OrderMenu {
     // A turret service is a personal haul order, including while mobilized.
     // Ask the worker for its real eligibility instead of treating the building
     // as a ground movement or a living attack target.
-    if(contextConsumesFood(world,ids,cell,targetId)||targetId===undefined&&world.structures.some(s=>s.kind==='mini-turret'&&s.x===cell.x&&s.z===cell.z)){
+    if(world.structures.some(s=>isAncientCasket256(s)&&footprintContains(s,cell)&&(targetId===undefined||targetId===s.id))||contextConsumesFood(world,ids,cell,targetId)||targetId===undefined&&world.structures.some(s=>s.kind==='mini-turret'&&s.x===cell.x&&s.z===cell.z)){
       await this.open(world,ids,cell,x,y,queue);return;
     }
     this.close();
@@ -222,7 +224,8 @@ export class OrderMenu {
         if(option.cookStationId!==undefined)button.dataset.orderCook=String(option.cookStationId);
         if(option.equipmentItemId!==undefined)button.dataset.orderEquipment=String(option.equipmentItemId);
         if(option.consumePileId!==undefined)button.dataset.orderConsume=String(option.consumePileId);
-        button.textContent=option.enabled?(option.consumePileId!==undefined?option.label:`${queue?'Mettre en file :':'Prioriser :'} ${option.label}`):`${option.label} — ${option.reason}`;
+        if(option.openCasketId!==undefined)button.dataset.orderOpenCasket=String(option.openCasketId);
+        button.textContent=option.enabled?(option.openCasketId!==undefined||option.consumePileId!==undefined?option.label:`${queue?'Mettre en file :':'Prioriser :'} ${option.label}`):`${option.label} — ${option.reason}`;
         if(option.warnings?.length)setTooltip(button,{title:option.label,body:option.warnings.join(' · ')});
         button.disabled=!option.enabled;
         if(option.feedPatientId!==undefined)button.dataset.orderFeed=String(option.feedPatientId);
@@ -231,8 +234,11 @@ export class OrderMenu {
         if(option.capturePatientId!==undefined)button.dataset.orderCapture=String(option.capturePatientId);
         if(option.arrestPatientId!==undefined)button.dataset.orderArrest=String(option.arrestPatientId);
         button.onclick=event=>{
+          if(option.openCasketId!==undefined&&(queue||event.shiftKey)){this.report('Ouvrir est un ordre direct ; relâchez Maj.',true);return;}
           if(option.consumePileId!==undefined&&(queue||event.shiftKey)){this.report('Consommer est un ordre direct ; relâchez Maj.',true);return;}
-          this.close();void this.client.command(option.consumePileId!==undefined
+          this.close();void this.client.command(option.openCasketId!==undefined
+            ? {type:'order-open-casket',pawnId:pawn.id,casketId:option.openCasketId}
+            : option.consumePileId!==undefined
             ? {type:'order-consume',pawnId:pawn.id,pileId:option.consumePileId,queue:false}
             : option.arrestPatientId!==undefined
             ? {type:'order-arrest',pawnId:pawn.id,patientId:option.arrestPatientId,queue:false}
@@ -259,7 +265,7 @@ export class OrderMenu {
       const fire=world.fires?.items.find(f=>{const at=firePosition(world,f);return at?.x===cell.x&&at?.z===cell.z;});
       if(fire){const button=document.createElement('button');button.setAttribute('role','menuitem');button.dataset.orderFire=String(fire.id);button.textContent='Prioriser : éteindre le feu';button.onclick=()=>{this.close();void this.client.command({type:'order-extinguish',pawnId:pawn.id,fireId:fire.id}).then(()=>this.report('Extinction prioritaire demandée.')).catch(error=>this.report(String(error instanceof Error?error.message:error),true));};content.append(button);}
       if(!options.length&&!fire)content.textContent='Aucun travail ni pile à transporter ici. Utilisez les ordres d’Architecte.';
-      const hint=document.createElement('p');hint.className='muted';hint.textContent=options.some(option=>option.consumePileId!==undefined)?'Consommer remplace l’activité en cours, sans mise en file. Un colon mobilisé reste mobilisé et mange au contact de la pile.':options.some(option=>option.arrestPatientId!==undefined)?'Arrestation directe par un colon démobilisé, avec lit de prison accessible. La chance affichée dépend de l’état actuel ; un refus peut provoquer une fureur violente.':fire?'L’extinction est un ordre direct, sans mise en file.':options.some(option=>option.capturePatientId!==undefined)?'La capture est un ordre direct. Préparez un lit de prison dans une pièce fermée.':'Maj : ajouter à la file. Construction et cuisine peuvent se poursuivre sur cette case.';content.append(hint);
+      const hint=document.createElement('p');hint.className='muted';hint.textContent=options.some(option=>option.openCasketId!==undefined)?'Le colon rejoint la capsule et l’ouvre sur place. Ordre direct, sans mise en file.':options.some(option=>option.consumePileId!==undefined)?'Consommer remplace l’activité en cours, sans mise en file. Un colon mobilisé reste mobilisé et mange au contact de la pile.':options.some(option=>option.arrestPatientId!==undefined)?'Arrestation directe par un colon démobilisé, avec lit de prison accessible. La chance affichée dépend de l’état actuel ; un refus peut provoquer une fureur violente.':fire?'L’extinction est un ordre direct, sans mise en file.':options.some(option=>option.capturePatientId!==undefined)?'La capture est un ordre direct. Préparez un lit de prison dans une pièce fermée.':'Maj : ajouter à la file. Construction et cuisine peuvent se poursuivre sur cette case.';content.append(hint);
       this.position(x,y);content.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
     } catch(error) {if(revision===this.revision){content.textContent=String(error instanceof Error?error.message:error);this.position(x,y);}}
   }

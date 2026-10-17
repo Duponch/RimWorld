@@ -3,7 +3,7 @@ import type { BiomeId } from '../src/sim/biome-flora';
 import type { DioramaSide } from '../src/render/diorama-geometry';
 import { createDioramaDecor, DIORAMA_DECOR_LIMITS, type DioramaDecorPoint } from '../src/render/diorama-decor';
 
-const biomes: BiomeId[] = ['temperate-forest', 'boreal-forest', 'arid-shrubland'];
+const biomes = ['temperate-forest', 'boreal-forest', 'arid-shrubland'] as const satisfies readonly BiomeId[];
 const sides: DioramaSide[] = ['north', 'west', 'south', 'east'];
 const options = { seed: 84602, biome: 'temperate-forest' as const, side: 'north' as const,
   span: 250, wallLength: 256.3 };
@@ -91,7 +91,7 @@ test('north decorations preserve the moving sun/moon rail without hiding its noo
 });
 
 test('biome palette and cold snow coverage remain distinct across prepared seeds', () => {
-  const snowy: Record<BiomeId, number> = { 'temperate-forest': 0, 'boreal-forest': 0, 'arid-shrubland': 0 };
+  const snowy: Record<(typeof biomes)[number], number> = { 'temperate-forest': 0, 'boreal-forest': 0, 'arid-shrubland': 0 };
   const palettes = biomes.map(biome => createDioramaDecor({ ...options, biome }).cutouts
     .filter(cutout => cutout.kind === 'background-ridge').map(cutout => cutout.pigment));
   expect(new Set(palettes.map(palette => JSON.stringify(palette))).size).toBe(3);

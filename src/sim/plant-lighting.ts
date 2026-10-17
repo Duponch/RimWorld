@@ -1,5 +1,5 @@
 import { isPlant,plantGrowth } from './plants.ts';
-import { isRoofed } from './roof-rules.ts';
+import { isRoofed,roofCoverage } from './roof-rules.ts';
 import type { LightEnvironment,LightReader } from './light-environment.ts';
 import type { Resource,World } from './types.ts';
 
@@ -15,7 +15,7 @@ interface Binding {
   plants:Resource[];
   artificial:Float32Array|undefined;
   hasCaptured:boolean;
-  constructed:number[]|undefined;
+  constructed:readonly number[]|undefined;
   coverage:number[];
   width:number;
   height:number;
@@ -39,11 +39,11 @@ export function reconcilePlantLighting(world:World,provided:LightEnvironment|Lig
   const hasLamp=world.structures.some(s=>s.kind==='sun-lamp');
   // Historical maps do not acquire new dark states or force a diffusion read.
   // With no sun lamp, all other glowers cap at .5 and cannot supply full light.
-  if(!hasLamp&&!binding.hasCaptured)return;
+  if(world.schemaVersion<256&&!hasLamp&&!binding.hasCaptured)return;
   const artificial=hasLamp?(typeof provided==='function'?provided():provided).artificial:undefined;
-  const constructed=world.roofing?.constructed;
+  const constructed=roofCoverage(world);
   if(binding.artificial===artificial
-    &&binding.constructed===constructed&&binding.width===world.width&&binding.height===world.height
+    &&binding.width===world.width&&binding.height===world.height
     &&sameCoverage(binding.coverage,constructed))return;
   let hasCaptured=false;
   for(const plant of binding.plants) {

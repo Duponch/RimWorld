@@ -1,3 +1,4 @@
+import {legacySite,legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import { describe,expect,it } from 'vitest';
 import { generateWorld } from '../src/sim/generation.ts';
 import { generatePlanet,tileCoordinates } from '../src/sim/planet-generation.ts';
@@ -60,11 +61,11 @@ describe('climat prospectif de la vraie tuile de départ',()=>{
     expect(validSiteClimate({...world.climate,calendarOrigin:0},230,world)).toBe(false);
     expect(validSiteClimate({...world.climate,adoptedAt:1},230,{...world,tick:1})).toBe(false);
     expect(validSiteClimate(world.climate,230,{...world,planet:undefined})).toBe(false);
-    expect(validSiteClimate(world.climate,230,{...world,site:{...world.site!,revision:2,biome:'boreal-forest'}})).toBe(false);
+    expect(validSiteClimate(world.climate,230,{...world,site:{...legacySite(world),revision:2,biome:'boreal-forest'}})).toBe(false);
     expect(validSiteClimate(world.climate,230,{...world,site:{...world.site!,hilliness:'flat'}})).toBe(false);
     expect(validSiteClimate(world.climate,230,{...world,scenario:{...world.scenario!,revision:8}})).toBe(false);
-    expect(validSiteClimate(world.climate,230,{...world,planet:{...world.planet!,adoptedAt:1}})).toBe(false);
-    const changed=structuredClone(world);changed.planet!.homeTile=changed.planet!.civilianTile;
+    expect(validSiteClimate(world.climate,230,{...world,planet:{...legacyPlanet(world),adoptedAt:1}})).toBe(false);
+    const changed=structuredClone(world);legacyPlanet(changed).homeTile=legacyPlanet(changed).civilianTile;
     expect(validSiteClimate(changed.climate,230,changed)).toBe(false);
   });
 
@@ -78,7 +79,7 @@ describe('climat prospectif de la vraie tuile de départ',()=>{
   });
 
   it('renvoie false sans jeter sur un globe brut malformé, même avant validation planétaire',()=>{
-    const world=fixture(),planet=world.planet!,tile=planet.tiles[0]!;
+    const world=fixture(),planet=legacyPlanet(world),tile=planet.tiles[0]!;
     const invalidTiles=[null,{}, {...tile,center:null},{...tile,center:[]},{...tile,center:[0,'1',0]},
       {...tile,center:[NaN,0,1]},{...tile,center:[0,0,0]},{...tile,center:[0,1]},
       {...tile,meanTemperature:'16'},{...tile,rainfall:Infinity},{...tile,id:1},{...tile,biome:'ocean'}];

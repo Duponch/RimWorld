@@ -1,3 +1,4 @@
+import {legacyFlora} from './helpers/legacy-fixture-guards.ts';
 import { expect, test } from 'vitest';
 import { applyCommand, deserializeWorld, serializeWorld, stepWorld } from '../src/sim/index';
 import { createScenarioWorld } from '../src/sim/new-game';
@@ -190,12 +191,12 @@ test('a prepared ecological vacancy can renew healroot prospectively and resume 
   world.packed = [];
   world.growingZones = [];
   world.tiles = world.tiles.map(() => ({ terrain: 'grass' }));
-  world.flora!.capacity = world.width * world.height;
+  legacyFlora(world).capacity = world.width * world.height;
   refreshStock(world);
   const resumed = deserializeWorld(serializeWorld(world));
   for (let i = 0; i < 200 && !world.resources.some(resource => resource.species === 'healroot-wild'); i++) {
-    world.tick = world.flora!.nextCheck;
-    resumed.tick = resumed.flora!.nextCheck;
+    world.tick = legacyFlora(world).nextCheck;
+    resumed.tick = legacyFlora(resumed).nextCheck;
     advanceWildFlora(world);
     advanceWildFlora(resumed);
   }

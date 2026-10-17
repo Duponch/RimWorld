@@ -1,3 +1,4 @@
+import {eggAllowedForPlayer256} from './animal-egg-permission-v256.ts';
 import { storageCells,storageCellAccepts } from './shelf-storage.ts';
 import { workPriority } from './work-types.ts';
 import { allowedAreaAllows,allowedAreaReason,captureAllowedArea } from './allowed-area-state.ts';
@@ -37,6 +38,7 @@ export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget,acces
   if(target.type==='pile'?!workPriority(pawn,'haul'):!Number.isFinite(constructionHaulPriority(pawn)))return no('Ce travail est désactivé dans le tableau Travail.');
   const source=target.type==='pile'?world.piles.find(p=>p.id===target.pileId):undefined;
   const job=target.type==='job'?world.jobs.find(j=>j.id===target.jobId):undefined;
+  if(target.type==='pile'&&source&&!eggAllowedForPlayer256(source))return no('Ce bien est interdit.');
   if(target.type==='pile'&&source?.owner.type!=='ground')return no('La pile n’est plus au sol.');
   if(target.type==='job'&&(!job||!isConstruction(job)))return no('Chantier introuvable.');
   const areaReason=job?allowedAreaReason(world,pawn,job):source?.owner.type==='ground'?allowedAreaReason(world,pawn,source.owner):undefined;if(areaReason)return no(areaReason);
@@ -50,7 +52,7 @@ export function planHaulOrder(world:World,pawn:Pawn,target:HaulOrderTarget,acces
   let best:{task:HaulTask;source:Cell;rank:number;distance:number;id:number}|undefined;
   for(const pile of sources) {
     if(budget.pairs--<=0){budget.pairs=0;return no('Décision reportée : budget de recherche atteint.');}
-    if(pile.owner.type!=='ground'||!allows(pile.owner))continue;
+    if(!eggAllowedForPlayer256(pile)||pile.owner.type!=='ground'||!allows(pile.owner))continue;
     let available=pile.quantity-reservedSource(world,pile.id);if(available<=0)continue;
     if(!canReach(world,pile.owner,reach,true))continue;
     const sourceZone=byCell.get(pile.owner.z*world.width+pile.owner.x);
@@ -81,7 +83,7 @@ export function queuedHaulReason(world:World,task:HaulTask,pawn?:Pawn):string|un
   if(pawn){const source=haulOrderCell(world,task),target=destinationCell(world,task.destination),reason=(source?allowedAreaReason(world,pawn,source):undefined)??(target?allowedAreaReason(world,pawn,target):undefined);if(reason)return reason;}
   if(task.whole)return furnitureHaulValid(withoutQueuedOrder(world,task),task)?undefined:'Le meuble ou son emplacement réservé n’est plus disponible.';
   const view=withoutQueuedOrder(world,task),pile=world.piles.find(p=>p.id===task.sourcePileId);
-  if(pile?.owner.type!=='ground'||pile.quantity-reservedSource(view,pile.id)<task.quantity)return 'La pile ou sa quantité réservée n’est plus disponible.';
+  if(!pile||!eggAllowedForPlayer256(pile)||pile.owner.type!=='ground'||pile.quantity-reservedSource(view,pile.id)<task.quantity)return 'La pile ou sa quantité réservée n’est plus disponible.';
   if(destinationCapacity(view,task.destination,pile.kind,undefined,pile)<task.quantity)return 'La destination n’accepte plus la quantité réservée.';
   const destination=task.destination;
   if(!validSowingClearance(world,destination))return 'Culture supprimée ou semis désactivés.';

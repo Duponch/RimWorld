@@ -1,3 +1,4 @@
+import {isBurialContainer256} from './ancient-monument-runtime-256.ts';
 import { storageAt,storageCellAccepts } from './shelf-storage.ts';
 import { workPriority } from './work-types.ts';
 import { allowedAreaAllows,allowedAreaReason,allowedAreaWorkAllowed,captureAllowedArea } from './allowed-area-state.ts';
@@ -31,7 +32,7 @@ export function burialClaim(w:World,bodyPawnId:number,exceptPawn?:number):Pawn|u
   return w.pawns.find(p=>p.id!==exceptPawn&&p.burial?.bodyPawnId===bodyPawnId);
 }
 export function graveAccepts(w:World,grave:Structure,body:Pawn,exceptPawn?:number):boolean {
-  return grave.kind==='grave'&&!!grave.grave&&grave.grave.corpseId===undefined
+  return isBurialContainer256(grave.kind,w.schemaVersion)&&!!grave.grave&&grave.grave.corpseId===undefined
     &&!w.jobs.some(j=>j.deconstruction?.structureId===grave.id)
     &&!w.pawns.some(p=>p.id!==exceptPawn&&p.burial?.graveId===grave.id)
     &&(grave.grave.assignedPawnId!==undefined?grave.grave.assignedPawnId===body.id:isColonist(body)?grave.grave.colonists:grave.grave.strangers);
@@ -65,7 +66,7 @@ function begin(actor:Pawn,p:BurialProposal,forced:boolean):void {
 }
 /** Called at the ordinary Transport priority, after needs and accepted orders. */
 export function assignBurial(w:World,actor:Pawn,search:()=>Reachability|null):boolean {
-  if(workPriority(actor,'haul')===0||actor.burial||actor.orders.active!==null||actor.orders.queue.length||actor.interruptedCargo||!w.structures.some(s=>s.kind==='grave'&&s.grave?.corpseId===undefined))return false;
+  if(workPriority(actor,'haul')===0||actor.burial||actor.orders.active!==null||actor.orders.queue.length||actor.interruptedCargo||!w.structures.some(s=>isBurialContainer256(s.kind,w.schemaVersion)&&s.grave?.corpseId===undefined))return false;
   const bodies=w.pawns.filter(p=>!burialReason(w,actor,p)).filter(p=>{
     const pile=bodyPile(w,p);if(pile?.owner.type!=='ground')return true;
     // Important grave priority (3) must not silently pull from equal/better storage.
@@ -77,7 +78,7 @@ export function assignBurial(w:World,actor:Pawn,search:()=>Reachability|null):bo
 }
 export function applyBurial(w:World,c:BurialCommand):CommandResult {
   if(c.type!=='order-bury'){
-    const grave=w.structures.find(s=>s.id===c.graveId&&s.kind==='grave');if(!grave?.grave)return fail('Tombe introuvable.');
+    const grave=w.structures.find(s=>s.id===c.graveId&&isBurialContainer256(s.kind,w.schemaVersion));if(!grave?.grave)return fail('Tombe introuvable.');
     if(grave.grave.corpseId!==undefined)return fail('Cette tombe est occupée.');
     if(c.type==='grave-policy'){
       if(typeof c.colonists!=='boolean'||typeof c.strangers!=='boolean')return fail('Filtres funéraires invalides.');
@@ -138,7 +139,7 @@ export function processBurial(w:World,actor:Pawn,context:NeedContext):void {
 export interface GraveReleasePlan {corpseId:number|null;cell?:Cell}
 /** Call against the same shadow world as the other deconstruction drops. */
 export function planGraveRelease(w:World,grave:Structure):GraveReleasePlan|null {
-  if(grave.kind!=='grave'||grave.grave?.corpseId===undefined)return {corpseId:null};
+  if(!isBurialContainer256(grave.kind,w.schemaVersion)||grave.grave?.corpseId===undefined)return {corpseId:null};
   const pile=w.piles.find(p=>p.id===grave.grave!.corpseId);if(!pile||!humanCorpse(pile)||pile.owner.type!=='grave'||pile.owner.graveId!==grave.id)return null;
   const view={...w,structures:w.structures.filter(s=>s.id!==grave.id)};
   const cell=nearbyGround(view,grave).find(c=>groundCapacity(view,c,'human-corpse')>=1);

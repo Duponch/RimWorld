@@ -1,4 +1,10 @@
+import {shipChunkNextRandom256} from './ship-chunk-leavings-256.ts';
+import {drawShipChunkDeconstruction256} from './ship-chunk-leavings-256.ts';
+import {isAncientCasket256} from './ancient-casket-state-256.ts';
+import {planEmptyAncientCasketRemoval256} from './ancient-casket-empty-removal-256.ts';
 import {planShelfRemoval,commitShelfRemoval} from './shelf-retirement.ts';
+import {prepareRemovedFogStructure256,commitRemovedFogBlocker256} from './exploration-runtime-256.ts';
+import {prepareBedOwnershipTransition256} from './actor-bed-transition-256.ts';
 import { removeHydroponicPlants } from './hydroponics.ts';
 import { constructionRecipe } from './construction-materials.ts';
 import { releaseStructureMelee } from './melee-state.ts';
@@ -15,6 +21,9 @@ import type { Job, Pawn, World } from './types.ts';
 export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolean {
   const structure = deconstructionTarget(world, job);
   if (!structure || !deconstructionAvailable(world, job, pawn.id)) return false;
+  if(isAncientCasket256(structure)){const plan=planEmptyAncientCasketRemoval256(world,structure,'deconstruct');return plan.ok&&plan.commit();}
+  const bedOwnership=prepareBedOwnershipTransition256(world,structure,'destroy');
+  const fogRemoval=prepareRemovedFogStructure256(world,structure);
   if(world.jobs.some(j=>j.fixBreakdown?.structureId===structure.id))return false;
   const shelfRemoval=planShelfRemoval(world,structure);if(!shelfRemoval)return false;
   const structures = world.structures.filter(s => s.id !== structure.id);
@@ -28,17 +37,20 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   if(graveRelease.corpseId!==null)view.piles.find(p=>p.id===graveRelease.corpseId)!.owner={type:'ground',...graveRelease.cell!};
   const refunds: { item: ItemId; quantity: number; cell: { x:number; z:number } }[] = [];
   let rng = world.rng, lostWood = 0, lostSteel = 0, lostComponents=0;
+  if(structure.kind==='glow-pod')rng=shipChunkNextRandom256(rng).rng; // actual singleton leavingsRect, no material/filth under Deconstruct
+  const shipRefunds=structure.kind==='ship-chunk'?drawShipChunkDeconstruction256(structure,rng):null;if(shipRefunds)rng=shipRefunds.rng;let shipRefundIndex=0;
   const lostBlocks:Partial<Record<BlockMaterial,number>>={...world.deconstructed.lostBlocks};
   // Prospective accounting only: older textile losses remain unknown.
   const lostTextiles:Partial<Record<UpholsteryMaterial,number>>={...world.deconstructed.lostTextiles};
   for (const cost of structure.kind === 'campfire' || structure.kind === 'passive-cooler' ? [] : constructionRecipe(structure).ingredients) {
     let quantity = structure.kind==='torch-lamp'||structure.kind==='power-conduit'?0:Math.floor(cost.quantity / 2);
-    if (structure.kind!=='torch-lamp'&&structure.kind!=='power-conduit'&&cost.quantity % 2) {
+    const shipRefund=shipRefunds?.entries[shipRefundIndex++];if(shipRefund)quantity=shipRefund.quantity;const refundOrigin=shipRefund?.origin??structure;
+    if (structure.kind!=='ship-chunk'&&structure.kind!=='torch-lamp'&&structure.kind!=='power-conduit'&&cost.quantity % 2) {
       rng ^= rng << 13; rng ^= rng >>> 17; rng ^= rng << 5; rng >>>= 0;
       if (rng / 0x100000000 < .5) quantity++;
     }
-    const drops = !quantity ? [] : groundCapacity(view, structure, cost.item) >= quantity
-      ? [{ cell: { x: structure.x, z: structure.z }, quantity }] : planGroundPlacement(view, quantity, structure, cost.item);
+    const drops = !quantity ? [] : groundCapacity(view, refundOrigin, cost.item) >= quantity
+      ? [{ cell: { x: refundOrigin.x, z: refundOrigin.z }, quantity }] : planGroundPlacement(view, quantity, refundOrigin, cost.item);
     if (!drops) return false;
     const newPiles = drops.filter(d => !groundPile(view, d.cell)).length;
     if (view.piles.length + newPiles > 32768 || !Number.isSafeInteger(view.nextId + newPiles)) return false;
@@ -59,6 +71,7 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   if(!commitGraveRelease(world,structure,graveRelease))return false;
   commitShelfRemoval(world,shelfRemoval);
   world.structures = structures; world.jobs = jobs; world.rng = rng;
+  bedOwnership?.commit();
   releaseStructureMelee(world,structure.id);
   for(const a of world.wildlife?.animals??[])if(a.manhunter?.door?.targetId===structure.id)delete a.manhunter.door;
   for (const d of refunds) addMaterial(world, ITEM_DEFINITIONS[d.item].kind, d.quantity, { type: 'ground', ...d.cell }, d.item);
@@ -78,5 +91,6 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
     if (p.need?.kind === 'eat' && p.need.dining?.tableId === structure.id) p.need.dining.tableId = null;
   }
   if(structure.kind==='hydroponics-basin')removeHydroponicPlants(world,structure);
+  commitRemovedFogBlocker256(world,fogRemoval);
   return true;
 }

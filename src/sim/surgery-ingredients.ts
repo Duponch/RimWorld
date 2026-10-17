@@ -1,3 +1,4 @@
+import {materialAllowedForPlayer256} from './material-permission-256.ts';
 import { allowedAreaAllows } from './allowed-area-state.ts';
 import {shelfAt} from './shelf-storage.ts';
 import {MEDICINES,isMedicine,medicineAllowed,type MedicineItem} from './medicine-rules.ts';
@@ -17,7 +18,7 @@ const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
  * are valid; no synthetic medicine, hidden escrow or inventory owner is used. */
 export function planImplantIngredients(w:World,doctor:Pawn,patient:Pawn,spot:Cell,reach:Reachability):{ingredients:SurgicalIngredient[];path:Cell[]}|undefined {
   const distance=(p:MaterialPile)=>p.owner.type==='ground'?(p.owner.x-patient.x)**2+(p.owner.z-patient.z)**2:Infinity;
-  const sources=w.piles.filter(p=>p.owner.type==='ground'&&allowedAreaAllows(w,doctor,p.owner)&&p.quantity>reservedSource(w,p.id)&&routeToJob(w,p.owner,reach,true));
+  const sources=w.piles.filter(p=>materialAllowedForPlayer256(p)&&p.owner.type==='ground'&&allowedAreaAllows(w,doctor,p.owner)&&p.quantity>reservedSource(w,p.id)&&routeToJob(w,p.owner,reach,true));
   sources.sort((a,b)=>distance(a)-distance(b)||a.id-b.id);
   const wood=sources.find(p=>p.item==='wood');if(!wood)return;
   for(const item of (Object.keys(MEDICINES) as MedicineItem[]).sort((a,b)=>MEDICINES[b].potency-MEDICINES[a].potency)){
@@ -79,7 +80,7 @@ export function gatherImplantIngredient(w:World,doctor:Pawn,task:SurgeryTask,con
   if(!allowedAreaAllows(w,doctor,ingredient.cell))return false;
   const pile=w.piles.find(p=>p.id===ingredient.pileId);if(!pile)return false;
   if(ingredient.stage==='source'){
-    if(pile.owner.type!=='ground'||!allowedAreaAllows(w,doctor,pile.owner)||reservedSource(w,pile.id)>pile.quantity)return false;
+    if(!materialAllowedForPlayer256(pile)||pile.owner.type!=='ground'||!allowedAreaAllows(w,doctor,pile.owner)||reservedSource(w,pile.id)>pile.quantity)return false;
     if(!near(doctor,pile.owner)){context.move(pile.owner,false);return true;}
     if(doctor.moveCooldown>0)return true;
     if(w.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===doctor.id))return false;

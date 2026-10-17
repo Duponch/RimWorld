@@ -17,7 +17,8 @@ export function groupProvisionsWorkshopV391(size=32){
  addMaterial(world,'food',60,{type:'ground',x:3,z:3},'pemmican');const pemmican=world.piles.at(-1)!;pemmican.rot={progress:600,atTick:world.tick};
  addMaterial(world,'food',4,{type:'ground',x:5,z:3},'survival-meal');const rationId=world.piles.at(-1)!.id;
  const adopted=applyCommand(world,{type:'planet-adopt'});if(!adopted.ok)throw Error(adopted.reason);
- const destination=world.planet!.tiles[world.planet!.homeTile]!.neighbours.find(id=>id!==world.planet!.civilianTile&&world.planet!.tiles[id]!.biome!=='ocean');
+  const planet=world.planet;if(!planet||planet.revision===3)throw Error('Historical provisions391 fixture requires its basic revision1/2 planet');
+ const destination=planet.tiles[planet.homeTile]!.neighbours.find(id=>id!==planet.civilianTile&&planet.tiles[id]!.biome!=='ocean');
  if(destination===undefined)throw Error('The prepared planet has no ordinary terrestrial neighbour.');
  refreshStock(world);
  return {world,initial:serializeWorld(world),memberIds:world.pawns.slice(0,2).map(p=>p.id),pemmicanId:pemmican.id,rationId,destination,

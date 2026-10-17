@@ -1,3 +1,4 @@
+import {actorExplorationMaterial256} from './ExplorationMask256';
 import * as THREE from 'three/webgpu';
 import { AnimationDetail } from './AnimationDetail';
 import {ActorAnimationCache,sampleActorRoot} from './ActorAnimationCache';
@@ -46,7 +47,7 @@ class MechanicalRaceBatch {
     if(this.body)return;
     const index=(id:string)=>mechanoidPartIndex(this.kind,id),geometry=this.kind==='scyther'?scytherGeometry(8,index):rangedMechGeometry(this.kind,8,index);
     geometry.userData.animationCache=this.animationCache;
-    const mat=material(0xffffff,{metalness:.24,roughness:.74});this.configure?.(mat);
+    const mat=material(0xffffff,{metalness:.24,roughness:.74});this.configure?.(actorExplorationMaterial256(mat));
     mat.colorNode=attribute('color','vec3');
     // A preparation tint belongs only to the confirmed warmup. Cooldown does
     // not imply an emitted projectile or manufacture recoil/flash.

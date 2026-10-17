@@ -1,3 +1,4 @@
+import {knownCell256} from './exploration-visibility-256.ts';
 import type { Cell,Pawn,Structure,World } from './types.ts';
 import { MENTAL_CRISIS_CATALOG,mentalCrisisLabel } from './mental-catalog.ts';
 import { animalSpecies } from './animal-species.ts';
@@ -8,6 +9,7 @@ export type MentalCrisisKind=keyof typeof MENTAL_CRISIS_CATALOG;
 const descriptions:Readonly<Record<MentalCrisisKind,string>>={
   'sad-wander':'ne travaille plus et refuse les ordres. Cherche encore nourriture et sommeil en cas de besoin extrême.',
   'food-binge':'cherche à manger même rassasié, sans suivre son régime ; les repas restent physiques.',
+  'confused-wander':'se déplace sans but pendant un épisode de confusion lié à la santé.',
   tantrum:'Refuse les ordres et s’en prend aux bâtiments accessibles.',
   berserk:'Refuse les ordres et devient hostile à tous. Ne poursuit pas une victime à terre.',
   'murderous-rage':'Refuse les ordres et cherche à tuer sa cible, même à terre.',
@@ -37,6 +39,7 @@ export function mentalCrisisView(world:World,pawn:Pawn,structureLabel?:(structur
   }
   const aggressive=kind==='tantrum'||kind==='berserk'||kind==='murderous-rage';
   const activity=!aggressive?'':pawn.interruptedCargo?'Cargaison conservée : attend un dépôt sûr.':pawn.melee?.strike?'Récupère après sa frappe.':pawn.path.length||pawn.moveCooldown>0?'Se déplace.':'';
+  if(target&&!knownCell256(world,target.cell.z*world.width+target.cell.x))target=undefined;
   return {kind,label:mentalCrisisLabel(kind),symbol:aggressive?'!':'↝',description:descriptions[kind],activity,...target?{target}:{}};
 }
 

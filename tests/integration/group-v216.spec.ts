@@ -8,6 +8,9 @@ import {writeTestFileSync} from '../test-output.ts';
 import {expectWorld,observeErrors,panel,pause,saveKey,world} from './helpers.ts';
 import {inspectPerson} from './player-actions.ts';
 
+/** Historical basic-globe pilot; never reinterpret geographic revision3. */
+function legacyPlanet(w:Pick<World,'planet'>){const planet=w.planet;if(!planet||planet.revision===3)throw Error('This historical pilot requires a literal revision1/2 planet');return planet;}
+
 type AwayGroup=Extract<GroupState,{members:unknown}>;
 function away(w:World):AwayGroup {
   if(!w.group||!('members' in w.group))throw Error('Le groupe hors carte attendu est absent.');
@@ -93,7 +96,7 @@ test('V216 native globe, two original travellers, physical loading, saved segmen
     expect(hardware.fallback).not.toBe(true);expect(JSON.stringify(hardware)).not.toMatch(/swiftshader|llvmpipe|lavapipe|software adapter|basic render driver/i);proof.hardware=hardware;
     await twoCameras(page,initial,'before-departure',name=>info.outputPath(name));
     await groupPanel(page);await expectWorld(page,initial);await action(page,'adopt');
-    await page.waitForFunction(()=>!!window.__lisiere.world.planet);const adopted=await world(page),planet=adopted.planet!;
+    await page.waitForFunction(()=>!!window.__lisiere.world.planet);const adopted=await world(page),planet=legacyPlanet(adopted);
     expect(adopted.tick).toBe(initial.tick);expect(adopted.rng).toBe(initial.rng);expect(adopted.nextId).toBe(initial.nextId);expect(adopted.pawns).toEqual(initial.pawns);expect(adopted.piles).toEqual(initial.piles);
     expect(planet.tiles).toHaveLength(162);expect(await page.locator('.planet-view svg *').count()).toBeLessThan(512);
     expect(await page.locator('#viewport canvas').count()).toBe(1);
@@ -127,7 +130,7 @@ test('V216 native globe, two original travellers, physical loading, saved segmen
     for(const shirt of originalApparel)expect(departedGroup.items.find(p=>p.id===shirt.id)).toMatchObject({id:shirt.id,item:shirt.item,quantity:shirt.quantity,owner:shirt.owner});
     expect(new Set([...departed.piles,...departedGroup.items].map(p=>p.id)).size).toBe(departed.piles.length+departedGroup.items.length);
     proof.departed={tick:departed.tick,group:departedGroup};
-    const resumed=await saveAndReload(page);expect(away(resumed).segment).toEqual(departedGroup.segment);expect(JSON.stringify(resumed.planet!.tiles)).toBe(geography);proof.midSegmentSaveExact=true;
+    const resumed=await saveAndReload(page);expect(away(resumed).segment).toEqual(departedGroup.segment);expect(JSON.stringify(legacyPlanet(resumed).tiles)).toBe(geography);proof.midSegmentSaveExact=true;
     await groupPanel(page);await action(page,'pause');await page.waitForFunction(()=>{const g=window.__lisiere.world.group;return !!g&&'paused' in g&&g.paused;});
     const stopped=await world(page),stoppedGroup=away(stopped);
     await page.locator('[data-speed="3"]').click();await page.waitForFunction(tick=>window.__lisiere.world.tick>=tick+25,stopped.tick);await pause(page);
@@ -160,7 +163,7 @@ test('V216 native globe, two original travellers, physical loading, saved segmen
     await page.waitForFunction(()=>!window.__lisiere.world.group,undefined,{timeout:180_000});await pause(page);
     const returned=await world(page);expect(returned.pawns.map(p=>p.id).sort((a,b)=>a-b)).toEqual(initial.pawns.map(p=>p.id).sort((a,b)=>a-b));expect(returned.pawns.every(p=>p.state!=='dead'&&p.state!=='downed')).toBe(true);expect(returned.groupLosses??[]).toEqual([]);
     expect(returned.piles.some(p=>p.owner.type==='inventory'&&memberIds.includes(p.owner.pawnId))).toBe(false);
-    expect(itemTotal(returned,'silver')).toBe(money);expect(itemTotal(returned,'cloth')).toBe(textile);expect(JSON.stringify(returned.planet!.tiles)).toBe(geography);
+    expect(itemTotal(returned,'silver')).toBe(money);expect(itemTotal(returned,'cloth')).toBe(textile);expect(JSON.stringify(legacyPlanet(returned).tiles)).toBe(geography);
     expect(returned.piles.filter(p=>p.item==='medicine'&&p.owner.type==='ground').reduce((n,p)=>n+p.quantity,0)).toBe(initial.piles.filter(p=>p.item==='medicine').reduce((n,p)=>n+p.quantity,0)+2);
     await twoCameras(page,returned,'after-return',name=>info.outputPath(name));await saveAndReload(page);await expectWorld(page,returned);
     expect(validateWorld(returned)).toEqual([]);expect(errors).toEqual([]);expect(await page.evaluate(()=>window.__lisiere.incident)).toMatchObject({simulationStopped:false,graphicsFault:false,waiting:0});

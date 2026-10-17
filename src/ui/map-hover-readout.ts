@@ -1,9 +1,12 @@
+import {geyserInspection256} from './geyser-inspection-256';
+import {knownPosition256} from './exploration-readers-256';
+import {UNDISCOVERED_CELL_LABEL_256} from '../sim/exploration-visibility-256';
+import {roofKindAt} from '../sim/roof-rules';
 import { ITEM_DEFINITIONS } from '../sim/items';
-import { terrainTravelDelay } from '../sim/furniture-travel';
 import { LightEnvironmentCache, type LightEnvironment } from '../sim/light-environment';
 import { soilFertility } from '../sim/soil';
 import type { Cell, World } from '../sim/types';
-import { terrainSurfaceLabel,bridgeTerrainNote } from './terrain-inspection';
+import { terrainSurfaceLabel,bridgeTerrainNote,terrainSurfaceSpeed,terrainAffordanceNote } from './terrain-inspection';
 import { mapObjectsAt } from './map-object-selection';
 import { buildingLabels } from './building-labels';
 import { floraDefinition } from '../sim/biome-flora';
@@ -26,6 +29,7 @@ export class MapHoverLightCache {
   private lastWidth=0;
   private lastHeight=0;
   lightAt(world:World,cell:Cell,now:number):number {
+    if(!knownPosition256(world,cell))return 0;
     if(!this.environment||now-this.lastAt>=250||world.tick<this.lastTick||world.seed!==this.lastSeed||world.width!==this.lastWidth||world.height!==this.lastHeight){
       this.environment=this.cache.read(world);
       this.lastAt=now;this.lastTick=world.tick;this.lastSeed=world.seed;this.lastWidth=world.width;this.lastHeight=world.height;
@@ -35,15 +39,17 @@ export class MapHoverLightCache {
 }
 
 /** Mouseover information is independent from selection and has no map overlay. */
-export function mapHoverLines(world:World,cell:Cell,lightLevel=lightCache.read(world).lightAt(cell)):string[] {
+export function mapHoverLines(world:World,cell:Cell,lightLevel?:number):string[] {
   const index=cell.z*world.width+cell.x,tile=world.tiles[index];
   if(!tile)return [];
+  if(!knownPosition256(world,cell))return [UNDISCOVERED_CELL_LABEL_256];
   const label=terrainSurfaceLabel(tile);
-  const speed=tile.terrain==='rock'||tile.terrain==='water'?0:Math.round(300/(3+terrainTravelDelay(world,index)));
-  const ground=`${label} (vitesse de déplacement ${speed} %, fertilité ${tile.floor||tile.bridge?0:Math.round(soilFertility(tile.terrain)*100)} %)`+(tile.terrain==='water-shallow'&&!tile.bridge?' · Marche : +3 ticks · Terrain non cultivable · Support de construction ordinaire absent':'');
-  const light=Math.round(lightLevel*100);
+  const speed=terrainSurfaceSpeed(world,index);
+  const ground=`${label} (vitesse de déplacement ${speed} %, fertilité ${tile.floor||tile.bridge?0:Math.round(soilFertility(tile.terrain)*100)} %)`+(terrainAffordanceNote(tile,world)&&!tile.bridge?` · ${terrainAffordanceNote(tile,world)}`:tile.terrain==='water-shallow'&&!tile.bridge?' · Marche : +3 ticks · Terrain non cultivable · Support de construction ordinaire absent':'');
+  const light=Math.round((lightLevel??lightCache.read(world).lightAt(cell))*100);
   const objects=mapObjectsAt(world,cell).flatMap(selected=>{
     switch(selected.kind){
+      case 'geyser': {const info=geyserInspection256(world,selected.id);return info?[info.title]:[];}
       case 'pile': {const pile=world.piles.find(p=>p.id===selected.id);return pile?[`${ITEM_DEFINITIONS[pile.item].label} ×${pile.quantity}`]:[];}
       case 'packed': {const packed=world.packed.find(p=>p.building.id===selected.id);return packed?[`Meuble emballé · ${buildingLabels[packed.building.kind]}`]:[];}
       case 'structure': {const structure=world.structures.find(s=>s.id===selected.id);return structure?[`${buildingLabels[structure.kind]}${structure.breakdown?' · Panne mécanique':''}`]:[];}
@@ -55,5 +61,5 @@ export function mapHoverLines(world:World,cell:Cell,lightLevel=lightCache.read(w
     }
   });
   for(const mech of world.mechanoids??[])if(mech.x===cell.x&&mech.z===cell.z)objects.push(`${mechanoidDefinition(mech.mechKind).label} ${mech.id} · ${mech.state==='dead'?'neutralisé':mech.state==='downed'?'incapacité mécanique':'hostile'}`);
-  return [ground,...(tile.bridge?[bridgeTerrainNote(tile)]:[]),`Lumière : ${light} %`,...objects,...(world.roofing?.constructed.includes(index)?['Toit']:[])];
+  return [ground,...(tile.bridge?[bridgeTerrainNote(tile)]:[]),`Lumière : ${light} %`,...objects,...(roofKindAt(world,index)?[roofKindAt(world,index)==='natural-thick'?'Toit naturel épais':roofKindAt(world,index)==='natural-thin'?'Toit naturel mince':'Toit']:[])];
 }

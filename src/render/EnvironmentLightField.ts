@@ -1,3 +1,4 @@
+import {roofCoverage} from '../sim/roof-rules';
 import { LocalLightCache } from '../sim/local-light';
 import { RoomTopologyCache, type RoomTopology } from '../sim/room-topology';
 import type { World } from '../sim/types';
@@ -20,7 +21,7 @@ export class EnvironmentLightField {
 
   update(world: World): boolean {
     const topology = this.rooms.read(world), light = this.lights.read(world, topology);
-    const roofs = world.roofing?.constructed ?? [], roofKey = roofs.join(',');
+    const roofs = roofCoverage(world), roofKey = roofs.join(',');
     // Opacity also feeds wall-side shading: it can change outside the lamps'
     // influence while LocalLightCache correctly keeps the same light array.
     if (this.width === world.width && this.height === world.height && this.previousLight === light && this.previousTopology===topology && this.roofKey === roofKey) return false;

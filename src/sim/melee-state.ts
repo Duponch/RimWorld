@@ -3,7 +3,7 @@ import type { World } from './types.ts';
 export interface MeleeState {
   order:{structure?:true;targetId:number;startedDowned:boolean;auto?:'draft'|'response'|'social'|'mental'|'retaliation'|'prison-break';untilCore?:number;jobUntilCore?:number}|null;
   /** Recovery is independent of the order and survives stop/move/undraft. */
-  strike:{structure?:import('./types.ts').Cell;targetId:number;atCore:number;untilCore:number;tool:MeleeToolId;outcome:'hit'|'miss'|'dodge';
+  strike:{structure?:import('./types.ts').Cell;targetId:number|null;atCore:number;untilCore:number;tool:MeleeToolId;outcome:'hit'|'miss'|'dodge';
     /** Mechanical EMP only; historical human/animal and 45-Core recovery stays literal. */
     empPause?:{ticks:number;lastAtCore:number}}|null;
 }
@@ -14,7 +14,8 @@ export function cancelMelee(pawn:{melee?:MeleeState}):void {
 
 /** Removal ends the target's mandate immediately, including owners waiting in
  * recovery or on a committed edge. Those physical consequences remain owned. */
-export function releaseStructureMelee(world:Pick<World,'pawns'|'mechanoids'>,targetId:number):void {
+export function releaseStructureMelee(world:Pick<World,'pawns'|'mechanoids'|'wildlife'|'tick'>,targetId:number):void {
+  for(const a of world.wildlife?.animals??[])if(a.hive){if(a.strike?.structure&&a.strike.targetId===targetId)a.strike.targetId=null;const j=a.hiveJob;if(j?.kind==='attack'&&j.structure&&j.targetId===targetId){delete a.hiveJob;a.path=[];if(!['dead','downed'].includes(a.state))a.state=(a.motion?.end??0)>world.tick?'moving':'idle';a.nextDecision=world.tick;}}
   for(const pawn of world.pawns)if(pawn.melee?.order?.structure&&pawn.melee.order.targetId===targetId){
     cancelMelee(pawn);pawn.path=[];
   }

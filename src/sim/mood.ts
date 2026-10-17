@@ -1,3 +1,5 @@
+import {hiveDefeatThoughts256} from './cave-hive-memories-256.ts';
+import {cryptosleepSick256} from './cryptosleep-sickness-256.ts';
 import {lostThoughts} from './world-map-lost.ts';
 import { COLONY_EXPECTATIONS,type ColonyExpectation } from './expectations.ts';
 import { colonyExpectation } from './colony-economy.ts';
@@ -33,7 +35,7 @@ const comforts=[situation('uncomfortable','Inconfortable',-3,'Confort sous 10 %.
 const beauty=[situation('hideous-environment','Environnement affreux',-15,'Beauté perçue sous 1 %.'),situation('very-ugly-environment','Environnement très laid',-10,'Beauté perçue sous 15 %.'),situation('ugly-environment','Environnement laid',-5,'Beauté perçue sous 35 %.'),situation('pretty-environment','Joli environnement',5,'Beauté perçue d’au moins 65 %.'),situation('beautiful-environment','Bel environnement',10,'Beauté perçue d’au moins 85 %.'),situation('gorgeous-environment','Environnement splendide',15,'Beauté perçue d’au moins 99 %.')];
 const leisure=[situation('recreation-starved','Privé de loisirs',-20,'Loisirs sous 1 %.'),situation('recreation-deprived','Manque important de loisirs',-10,'Loisirs sous 15 %.'),situation('recreation-low','Manque de loisirs',-5,'Loisirs sous 30 %.'),situation('recreation-high','Loisirs satisfaisants',5,'Loisirs d’au moins 70 %.'),situation('recreation-full','Loisirs pleinement satisfaits',10,'Loisirs d’au moins 85 %.')];
 const pains=[situation('minor-pain','Douleur légère',-5,'Douleur présente, sous 15 %.'),situation('serious-pain','Douleur importante',-10,'Douleur d’au moins 15 %.'),situation('intense-pain','Douleur intense',-15,'Douleur d’au moins 40 %.'),situation('extreme-pain','Douleur extrême',-20,'Douleur d’au moins 80 %.')];
-const sick=situation('sick','Malade',-5,'Grippe active ; cette pensée disparaît avec la maladie.');
+const sick=situation('sick','Malade',-5,'Maladie active ; cette pensée disparaît avec la maladie.');
 const apparel=[situation('ratty-apparel','Vêtements abîmés',-3,'Au moins une pièce portée a moins de 50 % de ses PV.'),situation('tattered-apparel','Vêtements en lambeaux',-5,'Au moins une pièce portée a moins de 20 % de ses PV.')];
 const expectationThoughts=new Map(COLONY_EXPECTATIONS.map(e=>[e.id,situation(`expectations-${e.id}`,e.label,e.moodOffset,'Attentes liées au patrimoine évalué de la colonie ; les valeurs inconnues restent exclues.')]));
 const camp=situation('camp-expectations','Attentes extrêmement basses',30,'Profil fixe de ce camp, partagé avec les loisirs ; ne varie pas encore avec la richesse.');
@@ -69,9 +71,10 @@ export function moodThoughts(world:World,pawn:Pawn,topology?:RelationshipTopolog
     environment:{comfort:pawn.comfort,beauty:pawn.beauty},housing:relationshipHousingThought(world,pawn,topology),deathSituation:colonistUnburiedThought(world,pawn)});
 }
 export function personalMoodThoughts(pawn:Pawn,c:PersonalMoodContext):readonly MoodThought[] {
+  if(pawn.mental?.crisis?.kind==='confused-wander')return [];
   if(pawn.state==='dead')return [];
   const expectation=c.expectation;
-  const thoughts:MoodThought[]=[expectation?expectationThoughts.get(expectation.id)!:camp,...roomMoodThoughtsAt(pawn,c.tick)];
+  const thoughts:MoodThought[]=[expectation?expectationThoughts.get(expectation.id)!:camp,...roomMoodThoughtsAt(pawn,c.tick),...hiveDefeatThoughts256(pawn,c.tick)];
   if(pawn.bereavement)thoughts.push(...bereavementThoughtsAt(pawn,c.tick,c.people));
   if(pawn.deathThoughts)thoughts.push(...deathThoughtsAt(pawn,c.tick,c.people));
   if(c.lost)thoughts.push(...c.lost);
@@ -83,7 +86,7 @@ export function personalMoodThoughts(pawn:Pawn,c:PersonalMoodContext):readonly M
   if(difficultyMood)thoughts.push(situation('difficulty-mood','Récit d’aventure',difficultyMood,'Bonus d’humeur du niveau d’aventure choisi.'));
   for(const id of pawn.traits??[]){const trait=TRAITS[id];if(trait.mood)thoughts.push({id:`trait-${id}`,label:trait.label,offset:trait.mood,kind:'situation',description:trait.description});}
   for(const t of [pawn.hunger<=0?starvation[Math.max(0,malnutritionStage(pawn.health?.malnutrition)-1)]:hunger[hungerStage(pawn.hunger)],fatigue[restStage(pawn.rest)],c.environment?comforts[comfortStage(c.environment.comfort)]:undefined,c.environment?beauty[beautyStage(c.environment.beauty)]:undefined,pawn.prisoner?undefined:leisure[joyStage(pawn.recreation.level)],pains[painStage(pawn.health?medicalPain(pawn.health):0)]])if(t)thoughts.push(t);
-  if((pawn.health?.flu?.severity??0)>0||(pawn.health?.immuneDiseases?.malaria?.severity??0)>0||(pawn.health?.immuneDiseases?.plague?.severity??0)>0)thoughts.push(sick);
+  if((pawn.health?.toxicBuildup?.severity??0)>=Math.fround(.04)||cryptosleepSick256(pawn.health?.cryptosleepSickness)||(pawn.health?.flu?.severity??0)>0||(pawn.health?.immuneDiseases?.malaria?.severity??0)>0||(pawn.health?.immuneDiseases?.plague?.severity??0)>0)thoughts.push(sick);
   let condition=1;
   for(const pile of c.items)if(pile.owner.type==='apparel'&&pile.owner.pawnId===pawn.id)condition=Math.min(condition,pile.apparel!.hitPoints/APPAREL[pile.item as keyof typeof APPAREL].hitPoints);
   if(condition<.5)thoughts.push(apparel[condition<.2?1:0]!);

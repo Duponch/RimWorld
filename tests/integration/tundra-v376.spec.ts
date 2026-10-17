@@ -50,7 +50,7 @@ test('V376 native short: real tundra v2 arrival, then explicitly prepared snow c
     await expect(front(page)).toBeHidden({timeout:60_000});await expect(page.locator('.game-shell')).toHaveJSProperty('inert',false,{timeout:60_000});
     const incoming=await world(page);expect(incoming.tick).toBe(0);expect(incoming.width).toBe(250);expect(incoming.schemaVersion).toBe(SCHEMA_VERSION);
     expect(incoming.planet?.revision).toBe(2);expect(incoming.planet?.homeTile).toBe(selected.choice.tile);expect(incoming.site?.biome).toBe('tundra');
-    expect(incoming.flora?.biome).toBe('tundra');expect(incoming.wildlife?.population?.biome).toBe('tundra');expect(incoming.snow?.lastTick).toBe(0);
+    if(incoming.flora?.revision!==1)throw Error('Historical biome pilot requires literal flora revision1');expect(incoming.flora.biome).toBe('tundra');expect(incoming.wildlife?.population?.biome).toBe('tundra');expect(incoming.snow?.lastTick).toBe(0);
     expect(incoming.climate?.revision).toBe(2);if(incoming.climate?.revision!==2)throw Error('Expected geographic climate');
     for(const key of ['meanTemperature','rainfall','latitude','longitude','amplitude'] as const)expect(sameDerivedClimateNumber(incoming.climate.definition[key],selected.resolved.climate[key])).toBe(true);
     expect(incoming.startingArrival?.phase).toBe('incoming');if(incoming.startingArrival?.phase!=='incoming')throw Error('Expected real capsule arrival');

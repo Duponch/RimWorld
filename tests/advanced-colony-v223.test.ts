@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import {expect,test} from 'vitest';
 import {prepareAdvancedColonyScenario} from '../src/sim/advanced-colony-scenario-v223.ts';
 import {SnapshotDecoder,SnapshotEncoder,type SnapshotMessage} from '../src/bridge/snapshots.ts';
@@ -119,7 +120,7 @@ test('the advanced colony has usable production, care, prison, greenhouse and he
     &&isTelevisionCell(tv,seat)&&televisionSameRoom(world,tv,seat,()=>rooms)&&routeToCell(world,seat,reach)!==null)),
   'A prepared TV needs an accessible physical seat in its viewing area and room').toBe(true);
   expect(world.structures.some(s=>s.kind==='fabrication-bench'&&s.bills?.some(b=>b.recipe==='make-advanced-component'&&!b.suspended))).toBe(true);
-  expect(world.planet?.tiles.length).toBeGreaterThan(0);
+  expect(legacyPlanet(world).tiles.length).toBeGreaterThan(0);
   expect(world.group).toBeUndefined();
   for(const item of ['simple-meal','rice','medicine','wood','steel','component','advanced-component','plasteel','gold','cloth'] as const)
     expect(world.stockpiles.some(zone=>storageAccepts(zone,item)),`${item} needs a compatible stock policy`).toBe(true);

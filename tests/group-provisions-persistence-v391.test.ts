@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import {expect,test} from 'vitest';
 import {applyCommand,stepWorld} from '../src/sim/engine.ts';
 import {deserializeWorld,serializeWorld,validateWorld} from '../src/sim/serialization.ts';
@@ -34,7 +35,7 @@ function formation(){
   const {world:w}=commercialCamp(32),members=w.pawns.slice(0,2);
   addMaterial(w,'food',2,{type:'inventory',pawnId:members[0]!.id},'survival-meal');
   expect(applyCommand(w,{type:'planet-adopt'}).ok).toBe(true);
-  expect(applyCommand(w,{type:'group-start',memberIds:members.map(p=>p.id),destination:w.planet!.civilianTile,sources:[]}).ok).toBe(true);
+  expect(applyCommand(w,{type:'group-start',memberIds:members.map(p=>p.id),destination:legacyPlanet(w).civilianTile,sources:[]}).ok).toBe(true);
   const g=w.group as PreparingGroup;if(!g||!('manifest' in g))throw Error('Missing formation');
   expect(g.provisions).toEqual(flag());return {w,g,members};
 }

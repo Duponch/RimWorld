@@ -9,6 +9,9 @@ export function dropIncapacitatedEquipment(world:World,pawn:Pawn,retry=false,wea
   if(!weapon){delete pawn.equipmentDropPending;return;}
   const inBed=pawn.need?.kind==='sleep'&&pawn.need.phase==='sleep'&&pawn.need.bedId!==null;
   if(!pawn.equipmentDropPending&&pawn.state!=='dead'&&!(pawn.state==='downed'&&!inBed)&&pawnBody(pawn).capacities.manipulation>0)return;
+  // A roof can interrupt over a captured edge. Equipment is distinct from
+  // carry cargo, but cannot be dropped at its future destination either.
+  if(world.schemaVersion>=256&&(pawn.motion?.end??0)>world.tick){pawn.equipmentDropPending=true;return;}
   // Only the engine's once-per-pawn tick may retry a previously failed drop.
   // Health/command reconciliation can run several times within that tick.
   if(pawn.equipmentDropPending&&(!retry||world.tick%20!==pawn.id%20))return;

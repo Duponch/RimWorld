@@ -1,6 +1,13 @@
 import type { StructureKind } from '../sim/types';
 
 export const buildingLabels: Readonly<Record<StructureKind, string>> = {
+  'insect-hive':'Ruche souterraine','glow-pod':'Poche luminescente',
+  'ship-chunk':'Débris de vaisseau',
+  'ancient-cryptosleep-casket':'Capsule ancienne de cryptosommeil',
+  column:'Colonne',urn:'Urne','stele-large':'Grande stèle','stele-grand':'Stèle monumentale',sarcophagus:'Sarcophage',
+  'ancient-road-barrier':'Barrière routière ancienne',
+  'ancient-road-lamp':'Réverbère routier hors service',
+  bedroll:'Sac de couchage',
   vent:'Bouche d’aération',
   'spike-trap':'Piège à pointes','electric-crematorium':'Crématorium électrique',
   'electric-smelter':'Fonderie électrique',

@@ -1,3 +1,4 @@
+import {eggAllowedForPlayer256} from './animal-egg-permission-v256.ts';
 import { processFurnitureHaul } from './furniture-hauling.ts';
 import { constructionSiteFree } from './construction-rules.ts';
 import { copyPileCondition } from './pile-condition.ts';
@@ -23,7 +24,7 @@ export function processHaul(world: World, pawn: Pawn, move: (target: Cell, allow
   if (!destinationValid(world, pawn)) { releaseWork(world, pawn); return; }
   if (task.phase === 'pickup') {
     const source = world.piles.find(item => item.id === task.sourcePileId);
-    if (!source || source.owner.type !== 'ground' || source.quantity < task.quantity) { releaseWork(world, pawn); return; }
+    if (!source || !eggAllowedForPlayer256(source)||source.owner.type !== 'ground' || source.quantity < task.quantity) { releaseWork(world, pawn); return; }
     if (!nearby(pawn, source.owner)) { move(source.owner, true); return; }
     if (source.kind!=='plant'&&source.kind!=='corpse'&&source.kind!=='mech-corpse'&&source.kind!=='unfinished'&&source.kind!=='weapon'&&source.kind!=='apparel'&&(!Number.isSafeInteger(world.nextId + 1) || (source.quantity > task.quantity && world.piles.length >= 32768))) { releaseWork(world, pawn); return; }
     task.pickupCell={x:source.owner.x,z:source.owner.z};

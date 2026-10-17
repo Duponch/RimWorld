@@ -17,9 +17,9 @@ const NEARBY:readonly Cell[]=[{x:0,z:0},{x:0,z:1},{x:1,z:0},{x:0,z:-1},{x:-1,z:0
 export function processFoodPoisoningVomit(state:FoodPoisoningState,tick:number,phase:number,context:FoodPoisonVomitContext):{active:boolean;foodLevel:number} {
   return processVomit(state,tick,phase,context,foodPoisonVomitChance(state));
 }
-export function processVomit(state:VomitCarrier,tick:number,phase:number,context:FoodPoisonVomitContext,chance:number):{active:boolean;foodLevel:number} {
-  if(tick%VOMIT_CHECK_INTERVAL===phase%VOMIT_CHECK_INTERVAL){
-    if(chance>0&&context.random()<chance&&context.awake&&(state.vomit||context.start())){
+export function processVomit(state:VomitCarrier,tick:number,phase:number,context:FoodPoisonVomitContext,chance:number,acceptedTrial=false):{active:boolean;foodLevel:number} {
+  if(acceptedTrial||tick%VOMIT_CHECK_INTERVAL===phase%VOMIT_CHECK_INTERVAL){
+    if((acceptedTrial||chance>0&&context.random()<chance)&&context.awake&&(state.vomit||context.start())){
       const remainingCore=300+Math.floor(context.random()*600);
       let cell={...context.position};
       for(let i=0;i<13;i++){

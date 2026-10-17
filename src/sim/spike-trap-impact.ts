@@ -1,3 +1,4 @@
+import {createAnimalMedicalRecord256} from './animal-clinical-age-v256.ts';
 import { seriesApparelProtection } from './apparel-protection.ts';
 import { animalCarrier } from './animal-rest-state.ts';
 import type { ConstructionMaterial } from './building-materials.ts';
@@ -51,7 +52,7 @@ export function planSpikeTrapImpact(world:World,key:LivingTargetKey,material:Con
     if(isAnimalTarget(actor))advanceAnimalHealth(draft,actor);
     else if(isMechanoidTarget(actor))actor.health={...structuredClone(actor.health??createMechaMedicalRecord(draft.tick,actor.mechKind)),tick:draft.tick};
     else if(!actor.health||actor.health.tick<draft.tick)updatePawnHealth(draft,actor);
-    actor.health??=isAnimalTarget(actor)?{...createMedicalRecord(draft.tick),body:actor.species}:createMedicalRecord(draft.tick);
+    actor.health??=isAnimalTarget(actor)?createAnimalMedicalRecord256(draft,actor):createMedicalRecord(draft.tick);
     const impacts:MeleeImpactResult[]=[];
     for(let n=0;n<5&&actor.state!=='dead'&&!actor.health.death;n++){
       const random={rng:draft.rng},draw=()=>healthRandom(random);
@@ -63,7 +64,7 @@ export function planSpikeTrapImpact(world:World,key:LivingTargetKey,material:Con
       // Releasing an equipment task can also release a carried patient whose
       // medical owner is due. Keep that real stream consumption in the group.
       random.rng=draft.rng;
-      if(isAnimalTarget(actor))commitAnimalImpact(draft,actor,impact.record,random);
+      if(isAnimalTarget(actor))commitAnimalImpact(draft,actor,impact.record,random,atCore);
       else if(isMechanoidTarget(actor)){
         if(!commitMechanoidImpact(draft,actor,impact.record,random,atCore))return;
       }else {draft.rng=random.rng;actor.health=impact.record;reconcilePawnHealth(draft,actor,undefined,true);}

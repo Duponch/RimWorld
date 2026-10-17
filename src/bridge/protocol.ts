@@ -3,7 +3,20 @@ import type { ThreatPauseMode, ThreatSpeedOptions } from './urgent-threats';
 import type { Command } from '../sim/types';
 import type { SnapshotMessage } from './snapshots';
 
+export interface CampEntryProgressMessage256 {type:'camp-entry-progress';id:number;groupId:number;progress:import('../sim/camp-map-assembly-256').CampMapProgress256}
+export interface WorldDraftPreviewMessage256 {
+ type:'world-draft-preview';id:number;generation:number;key:string;
+ request:import('../ui/world-creation-contract').WorldCreationRequest256;
+ geography:import('../sim/world-geography-owner-256').GeographyPacket256;
+ factions:readonly import('../ui/world-creation-contract').WorldCreationFaction256[];
+ settlements:readonly import('../ui/world-creation-contract').WorldCreationSettlement256[];
+}
 export type Request =
+  | {id:number;type:'world-draft-generate';generation:number;request:import('../ui/world-creation-contract').WorldCreationRequest256}
+  | {id:number;type:'world-draft-cancel';generation:number;operationId?:number}
+  | {id:number;type:'world-draft-confirm';request:import('../ui/world-creation-contract').WorldCreationSiteRequest256;geographyId:number}
+  | {id:number;type:'world-draft-start';ticket:import('../ui/world-creation-contract').WorldCreationTicket256;startingParty:import('../sim/starting-original-request-256').StartingOriginalRequest256;maxSettlements:SettlementLimit;threatPauseMode:ThreatPauseMode}
+  | {id:number;type:'camp-entry-cancel';operationId:number;groupId:number}
   | { id: number; type: 'init'; maxSettlements?:SettlementLimit; threatPauseMode?: ThreatPauseMode; seed: number; size: number; scenario?:import('../sim/scenario-definitions').ScenarioId; paused?:boolean; site?:import('../sim/site').SiteOptions; startingParty?:import('../sim/starting-candidates').StartingParty; startingWorld?:import('../sim/starting-world').StartingWorld;surface?:'snow-phased-v1' }
   | { id: number; type: 'command'; command: Command }
   | { id: number; type: 'order-options'; pawnId: number; x: number; z: number; queue: boolean }
@@ -15,6 +28,9 @@ export type Request =
   | { id: number; type: 'load'; maxSettlements?:SettlementLimit; data: string; threatPauseMode?: ThreatPauseMode };
 
 export type Response =
+  | WorldDraftPreviewMessage256
+  | {type:'world-draft-progress';id:number;generation:number;progress:import('../ui/world-creation-contract').WorldCreationProgress256}
+  | CampEntryProgressMessage256
   | SnapshotMessage<true>
   | CampaignOnlyMessage
   | { type: 'reply'; id: number; ok: boolean; data?: string; reason?: string; outcome?: 'refused' | 'unknown'; checkpoint?: { epoch: number; revision: number } }
@@ -43,4 +59,4 @@ export class SimulationRequestError extends Error {
   }
 }
 
-export interface CampaignOnlyMessage {type:'campaign-only';epoch:number;revision:number;stepMs:number;speed:number;summary:CampaignSummary;urgentThreats:import('./urgent-threats').UrgentThreatSnapshot}
+export interface CampaignOnlyMessage {geography?:import('./planet-geography-transport-256').PlanetGeographyTransport256;type:'campaign-only';epoch:number;revision:number;stepMs:number;speed:number;summary:CampaignSummary;urgentThreats:import('./urgent-threats').UrgentThreatSnapshot}

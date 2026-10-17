@@ -1,5 +1,6 @@
 import type {NumericMembershipLookup} from './numeric-membership.ts';
 import { BOMB_RADIUS } from './bomb-state.ts';
+import {actualBombWick256,actualBombSourceRadius256} from './ancient-casket-explosive-state-256.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { interruptWork,retryInterruptedCargo } from './interrupted-cargo.ts';
 import { cancelMelee } from './melee-state.ts';
@@ -17,7 +18,7 @@ import { miniTurretExplosive } from './bomb-eligibility.ts';
 
 const distance=(a:Cell,b:Cell)=>(a.x-b.x)**2+(a.z-b.z)**2;
 /** Capture once after combat, then borrow through the actor pass. */
-export const captureBombDangerSources=(w:World):readonly Structure[]=>w.schemaVersion>=193?w.structures.filter(s=>s.turret?.wick):[];
+export const captureBombDangerSources=(w:World):readonly Structure[]=>w.schemaVersion>=193?w.structures.filter(s=>actualBombWick256(s)):[];
 export function validBombRefugeShape(v:unknown,version=193):v is BombRefuge {
   if(version<193||!v||typeof v!=='object'||Array.isArray(v))return false;
   const r=v as Record<string,unknown>,t=r.target as Record<string,unknown>|undefined;
@@ -32,10 +33,10 @@ export function validateBombRefuges(w:World,errors:string[]=[],ids?:NumericMembe
       ||w.pawns.some(a=>a.rescue?.phase==='carry'&&a.rescue.patientId===p.id)){errors.push('Invalid bomb refuge owner/shape.');continue;}
     const end=p.path.at(-1);
     if(end&&(end.x!==r.target.x||end.z!==r.target.z))errors.push('Bomb refuge route misses its target.');
-    const source=w.structures.find(s=>s.id===r.sourceId),wick=source?.turret?.wick;
+    const source=w.structures.find(s=>s.id===r.sourceId),wick=source?actualBombWick256(source):undefined;
     // A detonation may precede completion of this actor's captured edge. Such
     // historical refuge is removed at the next physical decision frontier.
-    if(source&&(source.kind!=='mini-turret'||!wick)||wick&&(wick.endCore!==r.endCore||distance(source!,r.target)<=BOMB_RADIUS**2))errors.push('Invalid bomb refuge source/target.');
+    if(source&&(!['mini-turret','ancient-cryptosleep-casket'].includes(source.kind)||!wick)||wick&&(wick.endCore!==r.endCore||distance(source!,r.target)<=actualBombSourceRadius256(source!)**2))errors.push('Invalid bomb refuge source/target.');
     if(!source){const wave=w.bombWaves?.some(wave=>wave.sourceId===r.sourceId),recovery=p.moveCooldown>0||p.motion&&p.motion.end>w.tick||p.melee?.strike||p.shooting?.stance?.phase==='cooldown'||p.stun;
       const active=ids?.has(r.sourceId)??[...w.pawns,...w.jobs,...w.resources,...w.piles,...w.structures,...w.packed.map(p=>p.building),...(w.wildlife?.animals??[]),...(w.projectiles??[]),...(w.bombWaves??[]),...(w.fires?.items??[])].some(o=>o.id===r.sourceId);
       if(active||!miniTurretExplosive(r.sourceId)||(!wave&&!recovery)||r.endCore>w.tick*10)errors.push('Invalid historical bomb refuge.');}
@@ -50,13 +51,13 @@ export function bombDanger(w:World,p:Pawn,getBlocked:NavigationGrid,budget:Searc
   if(w.schemaVersion<193||!sources.length&&!p.bombRefuge)return false;
   if(p.state==='dead'||p.state==='downed'){delete p.bombRefuge;return false;}
   if(p.moveCooldown>0||p.motion&&p.motion.end>w.tick||p.melee?.strike||p.shooting?.stance?.phase==='cooldown'||p.stun||w.pawns.some(a=>a.rescue?.phase==='carry'&&a.rescue.patientId===p.id))return false;
-  const active=sources.filter(s=>w.structures.includes(s)&&s.turret?.wick&&s.turret.wick.endCore>w.tick*10);
+  const active=sources.filter(s=>w.structures.includes(s)&&(actualBombWick256(s)?.endCore??0)>w.tick*10);
   const old=p.bombRefuge;
-  if(old&&!active.some(s=>s.id===old.sourceId&&s.turret!.wick!.endCore===old.endCore)){delete p.bombRefuge;p.path=[];p.planCooldown=0;p.state='idle';}
-  const source=active.filter(s=>distance(s,p)<=BOMB_RADIUS**2).sort((a,b)=>a.turret!.wick!.endCore-b.turret!.wick!.endCore||a.id-b.id)[0];
+  if(old&&!active.some(s=>s.id===old.sourceId&&actualBombWick256(s)!.endCore===old.endCore)){delete p.bombRefuge;p.path=[];p.planCooldown=0;p.state='idle';}
+  const source=active.filter(s=>distance(s,p)<=actualBombSourceRadius256(s)**2).sort((a,b)=>actualBombWick256(a)!.endCore-actualBombWick256(b)!.endCore||a.id-b.id)[0];
   if(!source&&!p.bombRefuge)return false;
   if(p.bombRefuge&&!source){p.path=[];p.state='idle';retryInterruptedCargo(w,p);return true;}
-  const unsafe=(c:Cell)=>active.some(s=>distance(c,s)<=BOMB_RADIUS**2);
+  const unsafe=(c:Cell)=>active.some(s=>distance(c,s)<=actualBombSourceRadius256(s)**2);
   let refuge=p.bombRefuge;
   if(!refuge||unsafe(refuge.target)||!canStandAt(w,refuge.target)){
     const reserved=reservedServiceCells(w,p.id),reach=searchCandidates(w,p,getBlocked(),CIVIL_TRANSIT_BLOCKERS,budget);
@@ -72,7 +73,7 @@ export function bombDanger(w:World,p:Pawn,getBlocked:NavigationGrid,budget:Searc
     if(w.scout&&'pawnId' in w.scout&&w.scout.pawnId===p.id)applyScoutCommand(w,{type:'scout-cancel'});
     if(w.commercialTrip&&'pawnId' in w.commercialTrip&&w.commercialTrip.pawnId===p.id)applyCommercialPreparation(w,{type:'commercial-cancel'});
     interruptWork(w,p);cancelMelee(p);cancelShooting(p);
-    refuge={sourceId:source!.id,target:plan.target,endCore:source!.turret!.wick!.endCore};p.bombRefuge=refuge;p.path=plan.path;p.planCooldown=0;
+    refuge={sourceId:source!.id,target:plan.target,endCore:actualBombWick256(source!)!.endCore};p.bombRefuge=refuge;p.path=plan.path;p.planCooldown=0;
   }
   if(p.x===refuge.target.x&&p.z===refuge.target.z){p.path=[];p.state='idle';retryInterruptedCargo(w,p);return true;}
   moveToward(w,p,refuge.target,true,getBlocked,budget,true,getLight);return true;

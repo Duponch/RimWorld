@@ -1,3 +1,5 @@
+import {animalNutritionMax} from './animal-life.ts';
+import {validAnimalAgeCoreRemainder256} from './initial-animal-age-owner-256.ts';
 import {captureHumanOwners} from './human-owners.ts';
 import {validFoodPoisoning} from './food-poisoning-save.ts';
 import {TICKS_PER_DAY,type World} from './types.ts';
@@ -96,6 +98,7 @@ function validAnimalFodder(w:World,raw:Record<string,unknown>,version:number):bo
     const pile=piles.find(p=>field(p,'id')===meal.id),item=field(pile,'item');
     const plant=plants.find(r=>field(r,'id')===meal.id);
     if(!fodder(item)&&field(plant,'kind')!=='haygrass')continue;
+    if(!validAnimalAgeCoreRemainder256(record,version,w.tick))return false;
     const animal=record as unknown as WildAnimal,species=animalSpecies(animal.species);
     if(Object.keys(meal).some(key=>!['kind','id','quantity','progress'].includes(key))
       ||meal.kind!=='plant'&&meal.kind!=='pile'||!Number.isSafeInteger(meal.id)||Number(meal.id)<1||Number(meal.id)>=w.nextId
@@ -105,7 +108,7 @@ function validAnimalFodder(w:World,raw:Record<string,unknown>,version:number):bo
       ||!Number.isSafeInteger(animal.x)||animal.x<0||animal.x>=w.width||!Number.isSafeInteger(animal.z)||animal.z<0||animal.z>=w.height
       ||!Array.isArray(animal.path)||animal.state==='moving'&&meal.progress!==0
       ||record.motion!==undefined&&(!object(record.motion)||typeof record.motion.end!=='number'||!Number.isFinite(record.motion.end)||record.motion.end<0))return false;
-    if(meal.kind==='pile'&&fodder(item)&&Number(meal.quantity)>Math.max(1,Math.ceil(species.nutrition/(ITEM_DEFINITIONS[item as 'hay'|'kibble'].nutrition/100))))return false;
+    if(meal.kind==='pile'&&fodder(item)&&Number(meal.quantity)>Math.max(1,Math.ceil((animal.growthTracker?animalNutritionMax(animal):species.nutrition)/(ITEM_DEFINITIONS[item as 'hay'|'kibble'].nutrition/100))))return false;
     const target=animalMealTarget(w,animal);
     if(!target||animal.state==='eating'&&(animal.path.length||Math.abs(animal.x-target.x)+Math.abs(animal.z-target.z)>1
       ||(animal.motion?.end??0)>w.tick))return false;

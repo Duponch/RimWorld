@@ -1,3 +1,6 @@
+import {planAnimalBodyRetirement256} from './animal-body-retirement-256.ts';
+import {animalPlantDiet256,animalItemDiet256,legacyAnimalFungus256} from './animal-diet-v256.ts';
+import {isAnimalSpecies256} from './animal-core-v256.ts';
 import type { Cell,Resource,World } from './types.ts';
 import { ingestFoodRisk } from './food-hygiene.ts';
 import type { WildAnimal } from './wildlife-state.ts';
@@ -28,7 +31,10 @@ export const animalFoodPreference=(item:ItemId):number=>item==='kibble'?100:item
 // become animal food; prepared meals remain admissible under the existing rule.
 const herbivoreFoods:ReadonlySet<ItemId>=new Set(['nutrient-paste-meal','berries','rice','potato','corn','agave-fruit','simple-meal','fine-meal','vegetarian-fine-meal','carnivore-fine-meal','lavish-meal','vegetarian-lavish-meal','carnivore-lavish-meal','survival-meal','pemmican','legacy-portion']);
 const preparedFoods:ReadonlySet<ItemId>=new Set(['nutrient-paste-meal','simple-meal','fine-meal','vegetarian-fine-meal','carnivore-fine-meal','lavish-meal','vegetarian-lavish-meal','carnivore-lavish-meal','survival-meal','pemmican','legacy-portion']);
-export const animalPileFood=(world:World,a:WildAnimal,p:World['piles'][number]):boolean=>p.item==='hay'||p.item==='kibble'
+export const animalPileFood=(world:World,a:WildAnimal,p:World['piles'][number]):boolean=>isAnimalSpecies256(a.species)
+  ?world.schemaVersion>=256&&animalItemDiet256(a,p.item,p.kind==='corpse')===true&&(p.kind==='corpse'?corpseFresh(p,world.tick)&&!!p.corpse&&corpsePartNutrition(p.corpse,'torso')>.001:p.kind==='food')
+  :p.item==='raw-fungus'?p.kind==='food'&&legacyAnimalFungus256(a.species,world.schemaVersion)
+  :p.item==='hay'||p.item==='kibble'
   ?world.schemaVersion>=227&&p.kind==='food'&&(p.item==='kibble'||!animalSpecies(a.species).predator)
   :animalSpecies(a.species).predator
   ?p.kind==='corpse'?world.schemaVersion>=178&&corpseFresh(p,world.tick)&&!!p.corpse&&corpsePartNutrition(p.corpse,'torso')>.001
@@ -65,7 +71,7 @@ export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
   for(const other of world.wildlife?.animals??[])if(other.id!==a.id&&other.meal?.kind==='plant')claimedPlants.add(other.meal.id);
   const reservedPlantCells=new Set<number>();
   for(const job of world.jobs)if(job.reservedBy!==null&&(job.kind==='harvest'||job.kind==='cut'||job.kind==='sow'))reservedPlantCells.add(job.z*world.width+job.x);
-  if(!animalSpecies(a.species).predator)for(const r of world.resources)if((r.kind!=='haygrass'||world.schemaVersion>=227)&&(!pen||pen.has(r.z*world.width+r.x))&&isPlant(r)&&!plantLeafless(world,r)) {
+  if(animalPlantDiet256(a)??!animalSpecies(a.species).predator)for(const r of world.resources)if((r.kind!=='haygrass'||world.schemaVersion>=227)&&(!pen||pen.has(r.z*world.width+r.x))&&isPlant(r)&&(animalPlantDiet256(a,r.kind==='tree')??true)&&!plantLeafless(world,r)) {
     const growth=plantGrowth(world,r);
     if(grazeablePlant(r,growth,world)&&!claimedPlants.has(r.id)&&!reservedPlantCells.has(r.z*world.width+r.x))result.push({id:r.id,kind:'plant',x:r.x,z:r.z,quantity:1});
   }
@@ -86,9 +92,9 @@ export function animalMealTarget(world:World,a:WildAnimal,resourcesById?:Readonl
   const meal=a.meal;if(!meal)return;
   const pen=grazingPen(world,a);
   if(meal.kind==='plant') {
-    if(animalSpecies(a.species).predator)return;
+    if(!(animalPlantDiet256(a)??!animalSpecies(a.species).predator))return;
     const r=resourcesById?resourcesById.get(meal.id):world.resources.find(r=>r.id===meal.id);
-    if(!r||r.kind==='haygrass'&&world.schemaVersion<227||!isPlant(r)||plantLeafless(world,r))return;
+    if(!r||animalPlantDiet256(a,r.kind==='tree')===false||r.kind==='haygrass'&&world.schemaVersion<227||!isPlant(r)||plantLeafless(world,r))return;
     const growth=plantGrowth(world,r);
     return grazeablePlant(r,growth,world)&&unclaimedPlant(world,r,a.id,workCells)&&(!pen||pen.has(r.z*world.width+r.x))?r:undefined;
   }
@@ -120,6 +126,7 @@ export function finishAnimalMeal(world:World,a:WildAnimal):void {
       if(!Number.isFinite(s.eatenNutrition+nutrition)||s.eatenNutrition+nutrition>Number.MAX_SAFE_INTEGER
         ||projection.consumesWhole&&!Number.isSafeInteger(s.eatenItems+1))return;
       if(projection.consumesWhole){
+        if(world.schemaVersion>=256){const contents=planAnimalBodyRetirement256(world,p.id,false);if(!contents||!contents.commit())return;}
         world.piles.splice(world.piles.indexOf(p),1);s.eatenItems++;
         for(const hunter of s.animals)if(hunter.predation?.targetId===p.id){
           delete hunter.predation;hunter.path=[];hunter.nextDecision=world.tick;

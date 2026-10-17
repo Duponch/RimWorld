@@ -1,6 +1,8 @@
+import {pauseGlowPod256,resumeGlowPod256} from './cave-glowpod-minification-256.ts';
 import {clearSnowForStructure} from './snow-surface.ts';
 import {shelfAt} from './shelf-storage.ts';
 import {planShelfRemoval,commitShelfRemoval} from './shelf-retirement.ts';
+import {prepareBedOwnershipTransition256} from './actor-bed-transition-256.ts';
 import { groundCapacity, groundPile, groundPileCells, nearbyGround } from './ground-placement.ts';
 import { MAX_STACK, footprintCells } from './definitions.ts';
 import { furnitureDuration, furnitureReady, furnitureWorkTarget, packedAt, type PackedFurniture } from './furniture-rules.ts';
@@ -49,14 +51,16 @@ function commitFlowerWithdrawal(world:World,plan:FlowerWithdrawalPlan):void {
 
 function detach(world:World,job:Job,owner:PackedFurniture['owner']):PackedFurniture {
   const building=world.structures.find(s=>s.id===job.furniture!.structureId)!;
+  const bedOwnership=prepareBedOwnershipTransition256(world,building,'pack');
   world.structures=world.structures.filter(s=>s!==building);
   if(building.spikeTrap)building.spikeTrap.touching=[];
   for(const p of world.pawns)if(p.need?.kind==='eat'&&p.need.dining?.tableId===building.id)p.need.dining.tableId=null;
   if(building.power){building.power.parentId=null;building.power.on=false;}
-  const pack={building,owner};world.packed.push(pack);return pack;
+  pauseGlowPod256(world,building);
+  const pack={building,owner};world.packed.push(pack);bedOwnership?.commit();return pack;
 }
 /** Returns true only after an authoritative topology/ownership transition. */
-export function advanceFurniture(world:World,pawn:Pawn,job:Job,move:(target:Cell & {kind?:Job['kind']})=>void,release:()=>boolean,workRate:()=>number=()=>1):boolean {
+export function advanceFurniture(world:World,pawn:Pawn,job:Job,move:(target:Cell & {kind?:Job['kind']|Structure['kind']})=>void,release:()=>boolean,workRate:()=>number=()=>1):boolean {
   if(!furnitureReady(world,job,pawn)){release();return false;}
   const target=furnitureWorkTarget(world,job),cells='kind' in target?footprintCells(target as Job):[target];
   if(!cells.some(c=>Math.abs(c.x-pawn.x)+Math.abs(c.z-pawn.z)===1)||cells.some(c=>c.x===pawn.x&&c.z===pawn.z)) {move(target);return false;}
@@ -82,14 +86,16 @@ export function advanceFurniture(world:World,pawn:Pawn,job:Job,move:(target:Cell
   } else if(pack?.owner.type==='ground') {
     pack.owner={type:'pawn',pawnId:pawn.id};resetWork(job);return true;
   } else if(pack?.owner.type==='pawn') {
+    const bedOwnership=prepareBedOwnershipTransition256(world,pack.building,'install');
     // The consulted hauling driver has no timed install work for a blueprint.
     // The 150 WorkTotal field is inspection text, not its execution duration.
     // The same object is installed, not a replacement with copied attributes.
     const retirement=planConstructionPlantRetirement(world,job,job.id);
     if(!retirement||retirement.actors.has(pawn.id)||!commitConstructionPlantRetirement(world,retirement))return false;
-    Object.assign(pack.building,{x:job.x,z:job.z,orientation:job.orientation});
+    Object.assign(pack.building,{x:job.x,z:job.z,orientation:job.orientation});resumeGlowPod256(world,pack.building);
     if(pack.building.kind==='spike-trap')pack.building.spikeTrap=initialSpikeTrapState(world,pack.building);
     world.packed=world.packed.filter(p=>p!==pack);world.structures.push(pack.building);clearSnowForStructure(world,pack.building);
+    bedOwnership?.commit();
   } else {release();return false;}
   world.jobs=world.jobs.filter(j=>j!==job);pawn.jobId=null;pawn.path=[];pawn.state='idle';pawn.planCooldown=0;
   world.events.push({tick:world.tick,type:'job',message:`${pawn.name} a ${job.kind==='uninstall'?'désinstallé':'installé'} le meuble.`});

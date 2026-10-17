@@ -1,3 +1,4 @@
+import {eggSpeciesForItem256} from './animal-egg-content-v256.ts';
 import { isAnimalMeat } from './biome-items.ts';
 import type { ItemId } from './items.ts';
 import type { Cell } from './types.ts';
@@ -32,7 +33,7 @@ export function foodPoisonFromRecipe(cleanliness:number|null,level:number,random
 }
 export function foodCanCarryPoison(item:ItemId):boolean {return item==='pemmican'||item==='nutrient-paste-meal'||item==='simple-meal'||item==='fine-meal'||item==='vegetarian-fine-meal'||item==='carnivore-fine-meal'||item==='lavish-meal'||item==='vegetarian-lavish-meal'||item==='carnivore-lavish-meal'||item==='survival-meal';}
 export function rawFoodPoisonChance(item:ItemId):number {
-  return item==='kibble'||item==='berries'||item==='milk'||item==='rice'||item==='potato'||item==='corn'||item==='agave-fruit'||isAnimalMeat(item)?.02:0;
+  return item==='insect-jelly'||item==='kibble'||item==='berries'||item==='milk'||item==='rice'||item==='potato'||item==='corn'||item==='agave-fruit'||item==='raw-fungus'||isAnimalMeat(item)||!!eggSpeciesForItem256(item) ? .02 : 0;
 }
 export function copyFoodPoison(poison:FoodContamination|undefined):FoodContamination|undefined {return poison?{...poison}:undefined;}
 /** Both quantities are captured before the transfer. Only the incoming amount

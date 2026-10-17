@@ -1,3 +1,5 @@
+import {cancelToxicVomit256} from './toxic-buildup-256.ts';
+import {claimLocalActorBed256,captureActorBeds256} from './actor-bed-local-256.ts';
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { allowedAreaAllows,allowedAreaReason,releaseAllowedAreaReturn } from './allowed-area-state.ts';
 import { isColonist,activeThreat,hostileTo } from './affiliation.ts';
@@ -25,14 +27,14 @@ export function animalRescueActorReady(w:World,p:Pawn):boolean {
 }
 function reason(w:World,p:Pawn,a:WildAnimal|undefined,direct=false,targets?:ReadonlySet<number>):string|undefined {
   if(!animalRescueActorReady(w,p))return 'Un colon libre et apte doit avoir Médecin activé.';
-  if(!a||!w.wildlife?.animals.includes(a)||!a.domestic||!veterinaryCareSpeciesAllowed(a.species,w.schemaVersion)||a.state!=='downed'||a.health?.death||animalRestingSpot(w,a))return 'Cet animal possédé doit être à terre et hors couchage.';
+  if(!a||!w.wildlife?.animals.includes(a)||!a.domestic||!veterinaryCareSpeciesAllowed(a.species,w.schemaVersion,a)||a.state!=='downed'||a.health?.death||animalRestingSpot(w,a))return 'Cet animal possédé doit être à terre et hors couchage.';
   if(!direct&&p.animalRescue?.phase!=='carry'){const refusal=allowedAreaReason(w,p,a);if(refusal)return refusal;}
   if(direct&&a.domestic.care==='none')return 'Les soins de cet animal sont désactivés.';
   // A quota cannot revoke an existing physical rescue. Once deposited, however,
   // the selected patient must not repeatedly acquire a new rescue at that spot.
   // The explicit manual designation remains blocking even during carriage.
   if(a.domestic.slaughter||p.animalRescue?.animalId!==a.id&&slaughterIntent(w,a,w.schemaVersion,targets)
-    ||a.manhunter||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.stun||a.health?.foodPoisoning?.vomit)return 'Le secours est suspendu par l’abattage ou le danger.';
+    ||a.manhunter||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.stun||(a.health?.foodPoisoning?.vomit||a.health?.cryptosleepSickness?.vomit||a.health?.toxicBuildup?.vomit||a.health?.toxicBuildup?.vomitRequestedAt!==undefined))return 'Le secours est suspendu par l’abattage ou le danger.';
   if(animalClaimed(w,a.id,p.id))return 'Un autre service a réservé cet animal.';
   return undefined;
 }
@@ -56,7 +58,8 @@ function proposalFor(w:World,p:Pawn,reach:Reachability,a:WildAnimal,direct=false
   if(reason(w,p,a,direct,targets)||!direct&&enemyNear(w,p,a))return;
   const path=slaughterContact(w,p,a)?[]:routeToJob(w,a,reach,false);if(!path)return;
   const rank=(s:Structure)=>s.medical?0:a.domestic?.bedId===s.id?1:2;
-  const spots=w.structures.filter(s=>allowedAreaAllows(w,p,s)&&animalSpotAvailable(w,s,a,p.id)).sort((x,y)=>rank(x)-rank(y)
+  const bedOwners=w.schemaVersion>=256?captureActorBeds256(w):undefined;
+  const spots=w.structures.filter(s=>allowedAreaAllows(w,p,s)&&animalSpotAvailable(w,s,a,p.id,bedOwners)).sort((x,y)=>rank(x)-rank(y)
     ||(x.x-a.x)**2+(x.z-a.z)**2-((y.x-a.x)**2+(y.z-a.z)**2)||x.id-y.id);
   for(const spot of spots)if(routeToCell(w,spot,reach))return {task:{animalId:a.id,spotId:spot.id,phase:'approach'},path,target:a};
 }
@@ -68,7 +71,7 @@ export function animalRescueProposal(w:World,p:Pawn,reach:Reachability):AnimalRe
 }
 export function startAnimalRescue(w:World,p:Pawn,proposal:AnimalRescueProposal):void {
   const a=proposal.target,s=w.structures.find(s=>s.id===proposal.task.spotId)!;
-  if(!s.medical)a.domestic!.bedId=s.id;
+  if(!s.medical)claimLocalActorBed256(w,a,s);
   p.animalRescue=proposal.task;p.path=proposal.path;p.state='moving';p.planCooldown=0;
 }
 export function reconcileAnimalRescues(w:World,carrier?:Pawn):void {
@@ -90,12 +93,13 @@ export function processAnimalRescue(w:World,p:Pawn,ctx:NeedContext):void {
     if(!slaughterContact(w,p,a)){ctx.move(a,false);return;}
     if((a.motion?.end??0)>w.tick)return;
     delete a.animalRest;delete a.meal;delete a.mating;delete a.exiting;delete a.strike;a.path=[];
+    if(a.health)cancelToxicVomit256(a.health);
     t.phase='carry';p.path=[];syncCarriedAnimals(w,p);ctx.event(`${p.name} porte l’animal ${a.id} vers un couchage.`);
   }
   if(p.x!==s.x||p.z!==s.z){ctx.move(s,true);syncCarriedAnimals(w,p);return;}
   syncCarriedAnimals(w,p);delete p.animalRescue;p.path=[];p.planCooldown=0;p.state='idle';
   delete a.motion;a.path=[];a.animalRest={spotId:s.id,phase:'sleep'};a.nextDecision=w.tick;
-  if(!s.medical)a.domestic!.bedId=s.id;
+  if(!s.medical)claimLocalActorBed256(w,a,s);
 }
 export function applyAnimalRescue(w:World,c:{type:'order-animal-rescue';pawnId:number;animalId:number}):CommandResult {
   const fail=(msg:string):CommandResult=>({ok:false,code:'invalid-command',reason:msg});

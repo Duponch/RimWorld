@@ -1,3 +1,4 @@
+import {planAnimalBodyRetirement256} from './animal-body-retirement-256.ts';
 import { allowedAreaWorkAllowed } from './allowed-area-state.ts';
 import { isColonist } from './affiliation.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
@@ -37,6 +38,8 @@ export function finishCremation(world:World,pawn:Pawn,bill:CookingBill,context:P
   // All non-loss preflights precede the existing whole-human transaction.
   if(corpse.humanCorpse){
     if(!destroyHumanCorpse(world,corpse,'cremation'))return false;
+  }else if(world.schemaVersion>=256){
+    const contents=planAnimalBodyRetirement256(world,corpse.id,true);if(!contents||!contents.commit())return false;
   }else{
     const loss=neutralLossPlan(world,{items:{[corpse.item]:1}});if(!loss)return false;
     world.piles=world.piles.filter(p=>p!==corpse);world.destroyed=loss;

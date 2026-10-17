@@ -1,3 +1,4 @@
+import type {HumanConditionWander256} from './human-condition-mind-256.ts';
 import type { Cell,Pawn,World } from './types.ts';
 import { mentalCrisisLabel } from './mental-catalog.ts';
 import { cancelMelee } from './melee-state.ts';
@@ -8,9 +9,10 @@ export type AggressiveCrisis=
   | (CrisisBase&{kind:'tantrum';targetId:number|null;targetSinceCore:number;attempted:boolean;nextTargetCore:number})
   | (CrisisBase&{kind:'berserk';targetId:number|null;jobUntilCore:number|null})
   | (CrisisBase&{kind:'murderous-rage';targetId:number;nextCheckCore:number});
-export type MentalCrisis=(CrisisBase&{kind:'sad-wander'})|(CrisisBase&{kind:'food-binge'})|AggressiveCrisis;
+export type MentalCrisis=(CrisisBase&{kind:'confused-wander'})|(CrisisBase&{kind:'sad-wander'})|(CrisisBase&{kind:'food-binge'})|AggressiveCrisis;
 
 export interface MentalState {
+  wander?:HumanConditionWander256;
   /** Sampled exposure in Core ticks, saturated once eligible. */
   below:[number,number,number];
   /** Local ticks awake until another mood break is allowed. */
@@ -37,6 +39,7 @@ export function resetMentalBreakForArrest(pawn:Pawn):void {
 export function finishMentalBreak(world:World,pawn:Pawn,reward=true):void {
   const m=pawn.mental;if(!m?.crisis)return;
   const kind=m.crisis.kind;
+  if(kind==='confused-wander'){delete m.crisis;pawn.path=[];pawn.planCooldown=0;pawn.needCooldown=0;if(!['dead','downed','sleeping'].includes(pawn.state))pawn.state=pawn.moveCooldown>0||(pawn.motion?.end??0)>world.tick?'moving':'idle';return;}
   if(pawn.melee?.order?.auto==='mental')cancelMelee(pawn);
   delete m.crisis;pawn.path=[];if(!pawn.need&&pawn.state!=='downed'&&pawn.state!=='dead')pawn.state='idle';pawn.planCooldown=0;pawn.needCooldown=0;
   m.cooldown=1500;

@@ -1,3 +1,6 @@
+import {validCoreStartingArrivalShape256,validateCoreStartingArrivalOwners256} from './starting-pod-save-256.ts';
+import {validCoreStartingArrivalTransition256} from './starting-pod-transition-256.ts';
+import {CORE_STARTING_ARRIVAL_PROFILE_256} from './starting-pod-state-256.ts';
 import { ARRIVING_CRASHLANDED_REVISION } from './scenario-definitions.ts';
 import { STARTING_ARRIVAL_FALL_TICKS,STARTING_ARRIVAL_OPEN_DELAY,STARTING_ARRIVAL_PROFILE,type StartingArrivalState } from './starting-arrival-state.ts';
 import { validatePawnRecordShape } from './pawn-record-save.ts';
@@ -47,6 +50,7 @@ const cell=(v:unknown,w:Pick<World,'width'|'height'>):boolean=>object(v)&&keys(v
  * against the REAL World before human capture or decoder adoption. */
 export function validStartingArrivalShape(value:unknown,version:number,w:Pick<World,'tick'|'width'|'height'>):value is StartingArrivalState|undefined {
   if(value===undefined)return true;
+  if(version===256&&plainData(value)&&object(value)&&value.profile===CORE_STARTING_ARRIVAL_PROFILE_256)return validCoreStartingArrivalShape256(value,version,w);
   if(version<231||!integer(w.tick)||!integer(w.width,1)||!integer(w.height,1)||!plainData(value)||!object(value)
     ||value.profile!==STARTING_ARRIVAL_PROFILE||value.start!==0||value.landAt!==STARTING_ARRIVAL_FALL_TICKS
     ||value.openAt!==STARTING_ARRIVAL_FALL_TICKS+STARTING_ARRIVAL_OPEN_DELAY)return false;
@@ -70,13 +74,17 @@ const INITIAL_PAWN_KEYS=['id','name','x','z','appearance','age','health','medica
   'comfort','beauty','memories','orders','jobId','haul','cooking','need','bedId','needCooldown','state','priorities','path',
   'moveCooldown','planCooldown','traits','background','faction'];
 function freshPawn(p:Record<string,unknown>,world:World,version:number):boolean {
-  if(Object.keys(p).some(k=>!INITIAL_PAWN_KEYS.includes(k))||!integer(p.id,1,world.nextId-1)||p.state!=='idle'
+  if(Object.keys(p).some(k=>!INITIAL_PAWN_KEYS.includes(k)&&!(k==='mental'&&version===256&&world.site?.revision===3&&world.climate?.revision===4&&world.planet?.revision===3))||!integer(p.id,1,world.nextId-1)||p.state!=='idle'
     ||p.faction!==undefined&&p.faction!=='colony'||p.jobId!==null||p.haul!==null||p.cooking!==null||p.need!==null||p.bedId!==null
     ||p.moveCooldown!==0||p.planCooldown!==0||p.needCooldown!==0||p.restZeroTicks!==0||p.collapsePending!==false
     ||!empty(p.path)||!empty(p.memories)||!object(p.orders)||!keys(p.orders,['active','queue'])||p.orders.active!==null||!empty(p.orders.queue)
     ||p.medicalCare!=='industrial'||p.foodPolicyId!==1||p.apparelPolicyId!==1||p.apparelAutomation!==true||p.nextApparelCheckAt!==0
     ||!validSchedule(p.schedule)||!world.foodPolicies.some(policy=>policy.id===p.foodPolicyId)
     ||!world.apparelPolicies?.some(policy=>policy.id===p.apparelPolicyId)||!object(p.recreation))return false;
+  if(Object.hasOwn(p,'mental')){
+    const m=p.mental;
+    if(version!==256||world.site?.revision!==3||world.climate?.revision!==4||world.planet?.revision!==3||!object(m)||!keys(m,['below','cooldown','catharsis','wander'])||!Array.isArray(m.below)||m.below.length!==3||m.below.some(n=>n!==0)||m.cooldown!==0||!empty(m.catharsis)||!object(m.wander)||!keys(m.wander,['revision','nextMoveOrderIsWait'])||m.wander.revision!==1||m.wander.nextMoveOrderIsWait!==false)return false;
+  }
   const joy=p.recreation;
   if(!keys(joy,['level','tolerance','bored','task'])||joy.task!==null||joy.level!==55||!object(joy.tolerance)||!object(joy.bored))return false;
   const tolerance=joy.tolerance,bored=joy.bored;
@@ -102,9 +110,11 @@ export function validateStartingArrivalOwners(w:World,version:number=w.schemaVer
     if(d&&(!Object.hasOwn(d,'value')||d.value===undefined||!d.enumerable))return ['Invalid starting arrival field.'];
     const arriving=w.scenario?.id==='crashlanded'&&w.scenario.revision===ARRIVING_CRASHLANDED_REVISION;
     if(!d)return arriving||'startingArrival' in w?['Physical starting scenario has no arrival owner or receipt.']:[];
-    if(!arriving||version<231||!validStartingArrivalShape(d.value,version,w)||w.site?.revision!==2||w.climate?.revision!==2)
+    const geographic=version>=256&&w.site?.revision===3&&w.climate?.revision===4&&w.planet?.revision===3;
+    if(version===256&&plainData(d.value)&&object(d.value)&&d.value.profile===CORE_STARTING_ARRIVAL_PROFILE_256){if(!arriving||!geographic||!validCoreStartingArrivalShape256(d.value,version,w))return ['Invalid Core starting-arrival header.'];return validateCoreStartingArrivalOwners256(w,d.value);}
+    if(!arriving||version<231||!validStartingArrivalShape(d.value,version,w)||!geographic&&(w.site?.revision!==2||w.climate?.revision!==2))
       return ['Invalid or future starting arrival provenance or phase.'];
-    const a=d.value as StartingArrivalState;if(a.phase==='opened')return [];
+    const a=d.value as Exclude<StartingArrivalState,import('./starting-pod-state-256.ts').CoreStartingArrival256>;if(a.phase==='opened')return [];
     if(!integer(w.nextId,1)||!Array.isArray(w.foodPolicies)||!Array.isArray(w.apparelPolicies))return ['Invalid initial policies or namespace.'];
     const ids=new Set<number>(),dropCells=new Set<string>(),totals=new Map<string,number>();
     const add=(id:unknown)=>integer(id,1,w.nextId-1)&&!ids.has(id)&&(ids.add(id),true);
@@ -142,8 +152,16 @@ export function validateStartingArrivalOwners(w:World,version:number=w.schemaVer
 /** Only live owners reserve Thing IDs. The opened receipt contains just cells
  * and a confirmed tick; it registers no capsule, Pawn or material identity. */
 export function registerStartingArrivalThingIds(w:World,ids:NumericMembershipSink):string[] {
-  const a=w.startingArrival;if(!a||a.phase==='opened')return [];
+  const a=w.startingArrival;if(!a)return [];
   const errors:string[]=[];
+  if(a.profile===CORE_STARTING_ARRIVAL_PROFILE_256){
+    // Tombstone IDs forbid namespace reuse; these scalars are not live owners.
+    for(const receipt of a.destroyedPods??[]){if(!integer(receipt.id,1,w.nextId-1)||ids.has(receipt.id))errors.push('Destroyed capsule identity reused.');else ids.add(receipt.id);}
+    if(a.phase==='opened')return errors;
+    for(const pod of a.pods){const owned=[pod.id,pod.pawn.id,...pod.items.map(p=>p.id),...pod.animals.map(p=>p.id),...(pod.phase==='incoming'?[pod.skyfallerId]:[])];for(const id of owned){if(!integer(id,1,w.nextId-1)||ids.has(id))errors.push('Duplicate or invalid Core starting Thing owner.');else ids.add(id);}}
+    return errors;
+  }
+  if(a.phase==='opened')return errors;
   for(const pod of a.pods)for(const entity of [pod,pod.pawn,...pod.items]){
     if(!integer(entity.id,1,w.nextId-1)||ids.has(entity.id))errors.push('Duplicate or invalid starting arrival Thing owner.');
     else ids.add(entity.id);
@@ -156,6 +174,7 @@ export function registerStartingArrivalThingIds(w:World,ids:NumericMembershipSin
  * Callers replacing/reloading a World must start a new epoch instead. */
 export function validStartingArrivalTransition(previous:World,next:World):boolean {
   const before=previous.startingArrival,after=next.startingArrival;
+  if(before?.profile===CORE_STARTING_ARRIVAL_PROFILE_256||after?.profile===CORE_STARTING_ARRIVAL_PROFILE_256)return validCoreStartingArrivalTransition256(previous,next);
   if(!before&&!after)return true;
   if(!before||!after||!plainData(before)||!plainData(after))return false;
   const same=(a:unknown,b:unknown):boolean=>{

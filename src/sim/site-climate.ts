@@ -1,3 +1,7 @@
+import {evaluateClimateCurve} from './world-climate-settings.ts';
+import {planetTile,planetGeography256} from './planet-geography-256.ts';
+import {worldSurfaceCoordinates} from './world-surface-movement.ts';
+import type {PlanetState} from './planet-state.ts';
 import type { World } from './types.ts';
 import { TICKS_PER_DAY } from './types.ts';
 import { isPlant,plantGrowth } from './plants.ts';
@@ -19,7 +23,8 @@ export interface StartingSiteClimate {
   definition:ClimateDefinition;
 }
 export interface ExpeditionSiteClimate {revision:3;adoptedAt:number;calendarOrigin:number;definition:ClimateDefinition}
-export type SiteClimate=ReferenceSiteClimate|StartingSiteClimate|ExpeditionSiteClimate;
+export interface GeographicSiteClimate256 {revision:4;adoptedAt:number;calendarOrigin:number;tileId:number;definition:ClimateDefinition}
+export type SiteClimate=ReferenceSiteClimate|StartingSiteClimate|ExpeditionSiteClimate|GeographicSiteClimate256;
 
 export type ClimateProfile='temperate-reference'|'boreal-reference'|'arid-reference'|'tundra-preset';
 export interface ClimateDefinition {meanTemperature:number;amplitude:number;rainfall:number;latitude:number;longitude:number}
@@ -41,7 +46,7 @@ export const CLIMATE_DEFINITIONS:Readonly<Record<ClimateProfile,ClimateDefinitio
   'temperate-reference':TEMPERATE_CLIMATE,'boreal-reference':BOREAL_CLIMATE,'arid-reference':ARID_CLIMATE,'tundra-preset':TUNDRA_CLIMATE,
 });
 const climateForBiome:Readonly<Record<BiomeId,ClimateProfile>>={'temperate-forest':'temperate-reference','boreal-forest':'boreal-reference','arid-shrubland':'arid-reference',tundra:'tundra-preset'};
-export const siteClimateDefinition=(world:Pick<World,'climate'>):ClimateDefinition=>world.climate&&(world.climate.revision===2||world.climate.revision===3)?
+export const siteClimateDefinition=(world:Pick<World,'climate'>):ClimateDefinition=>world.climate&&(world.climate.revision===2||world.climate.revision===3||world.climate.revision===4)?
   world.climate.definition:CLIMATE_DEFINITIONS[world.climate?.profile??'temperate-reference'];
 
 /** Persist only the tile's actual climate and its geographic seasonal amplitude. */
@@ -49,6 +54,13 @@ export function planetTileClimateDefinition(tile:PlanetTile):ClimateDefinition {
   const latitude=Math.asin(Math.max(-1,Math.min(1,tile.center[1])))*180/Math.PI;
   const longitude=Math.atan2(tile.center[2],tile.center[0])*180/Math.PI;
   return {meanTemperature:tile.meanTemperature,rainfall:tile.rainfall,latitude,longitude,amplitude:seasonalAmplitude(latitude)};
+}
+
+/** Actual prospective tile, distinct radius/axes from the literal old globe. */
+export function geographicPlanetClimateDefinition256(planet:PlanetState,id:number):ClimateDefinition {
+ if(planet.revision!==3){const tile=planet.tiles[id];if(!tile)throw Error('Unknown literal planet tile');return planetTileClimateDefinition(tile);}
+ const tile=planetGeography256(planet).surface.tiles[id];if(!tile)throw Error('Unknown geographic climate tile');const {latitude,longitude}=worldSurfaceCoordinates(tile);
+ return {meanTemperature:tile.meanTemperature,rainfall:tile.rainfall,latitude,longitude,amplitude:evaluateClimateCurve([[0,3],[.1,4],[1,28]],Math.abs(Math.fround(tile.center[1]/100)))};
 }
 
 /** Trigonometric results can differ by one ULP between JS runtimes. Keep the
@@ -113,6 +125,7 @@ export function startingSiteClimateOrigin(adoptedAt:number,definition:ClimateDef
 
 /** Prospective initialization only: no resource growth or plant-life history is rewritten. */
 export function adoptStartingSiteClimate(world:World,definition:ClimateDefinition):boolean {
+  if(world.planet?.revision===3){if(world.tick!==0||world.climate)return false;const expected=geographicPlanetClimateDefinition256(world.planet,world.planet.homeTile);if(!Object.keys(expected).every(k=>definition[k as keyof ClimateDefinition]===expected[k as keyof ClimateDefinition]))return false;world.climate=createGeographicSiteClimate256(world.planet,world.planet.homeTile,{tick:0,calendarOrigin:startingSiteClimateOrigin(0,expected)});return true;}
   if(world.tick!==0||world.climate||!validClimateDefinition(definition))return false;
   world.climate={revision:2,adoptedAt:world.tick,calendarOrigin:startingSiteClimateOrigin(world.tick,definition),definition:{...definition}};
   return true;
@@ -138,13 +151,36 @@ export function seasonalOutdoorTemperature(world:ClimateWorld,tick=world.tick):n
   const sample=world.climate?tick-((tick-world.climate.adoptedAt)%6+6)%6:tick;
   const civil=climateTick(world,sample);
   const definition=siteClimateDefinition(world);
-  const base=world.climate?seasonTemperature(definition.latitude,definition.meanTemperature,civil):21;
+  const base=world.climate?.revision===4?geographicSeasonTemperature256(definition,civil*10-geographicLongitudeOffsetCore256(definition.longitude)):world.climate?seasonTemperature(definition.latitude,definition.meanTemperature,civil):21;
   return base+7*Math.cos(2*Math.PI*(civil%TICKS_PER_DAY/TICKS_PER_DAY+.32));
 }
 
 export function climateDate(world:ClimateWorld):{year:number;day:number;quadrum:number;season:string} {
   const civil=climateTick(world),day=((Math.floor(civil/TICKS_PER_DAY)%60)+60)%60;
-  const seasonOffset=world.climate&&(world.climate.revision===2||world.climate.revision===3)&&world.climate.definition.latitude<0?2:0;
+  const seasonOffset=world.climate&&(world.climate.revision===2||world.climate.revision===3||world.climate.revision===4)&&world.climate.definition.latitude<0?2:0;
   return {year:5500+Math.floor(civil/TICKS_PER_YEAR),day:day%15+1,quadrum:Math.floor(day/15),
     season:['Printemps','Été','Automne','Hiver'][(Math.floor(day/15)+seasonOffset)%4]!};
+}
+
+/** New geography may have true extreme finite temperatures/rainfall. This
+ * predicate never relaxes validClimateDefinition used by historical1/2/3. */
+export function validGeographicClimateDefinition256(value:unknown):value is ClimateDefinition {
+ if(!value||typeof value!=='object'||Array.isArray(value))return false;const v=value as Record<string,unknown>,keys=['meanTemperature','amplitude','rainfall','latitude','longitude'];
+ if(Reflect.ownKeys(v).length!==keys.length||!keys.every(k=>Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)??{},'value')))return false;
+ return keys.every(k=>typeof v[k]==='number'&&Number.isFinite(v[k]))&&Number(v.rainfall)>=0&&Number(v.latitude)>=-90&&Number(v.latitude)<=90&&Number(v.longitude)>=-180&&Number(v.longitude)<=180&&Number(v.amplitude)>=3&&Number(v.amplitude)<=28;
+}
+/** clock.calendarOrigin is the shared civil anchor at campaign tick0, not
+ * the creation time of this temporary map. No age, season or growth resets. */
+export function createGeographicSiteClimate256(planet:Extract<PlanetState,{revision:3}>,tileId:number,clock:{tick:number;calendarOrigin:number}):GeographicSiteClimate256 {
+ if(!Number.isSafeInteger(clock.tick)||clock.tick<0||!Number.isSafeInteger(clock.calendarOrigin)||!Number.isSafeInteger(tileId)||tileId<0)throw Error('Invalid geographic climate clock/tile');
+ const definition=geographicPlanetClimateDefinition256(planet,tileId),home=geographicPlanetClimateDefinition256(planet,planet.homeTile),offset=(geographicLongitudeOffsetCore256(definition.longitude)-geographicLongitudeOffsetCore256(home.longitude))/10,calendarOrigin=clock.calendarOrigin+clock.tick+offset;
+ if(!Number.isSafeInteger(calendarOrigin))throw Error('Geographic calendar overflow');return {revision:4,tileId,adoptedAt:clock.tick,calendarOrigin,definition};
+}
+export function geographicLongitudeOffsetCore256(longitude:number):number {const n=Math.fround(longitude/15),low=Math.floor(n),fraction=n-low,rounded=fraction<.5?low:fraction>.5?low+1:low%2===0?low:low+1;return rounded*2500;}
+
+/** Geographic annual phase uses the true stored amplitude and Core float32
+ * operations. Historical seasonTemperature remains byte-for-byte unchanged. */
+export function geographicSeasonTemperature256(definition:ClimateDefinition,absoluteCoreTick:number):number {
+ const f=Math.fround,tick=absoluteCoreTick===0?1:absoluteCoreTick,year=f(f(f(f(tick)/60000)%60)/60),angle=f(f(f(Math.PI)*2)*f(year-f(10/12))),amplitude=definition.amplitude*(definition.latitude<0?-1:1);
+ return f(definition.meanTemperature+f(f(Math.cos(angle))*f(-amplitude)));
 }

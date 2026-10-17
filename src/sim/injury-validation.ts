@@ -1,11 +1,18 @@
+import {validHumanHealthScaleHeader256} from './native-human-clinical-scale-256.ts';
+import {validToxicBuildupHeader256} from './toxic-buildup-256.ts';
+import {validAnimalAgeConditions256} from './animal-age-condition-state-256.ts';
+import {validCryptosleepSicknessHeader256} from './cryptosleep-sickness-256.ts';
+import {validAnimalGrowthMedicalHeader256} from './animal-growth-runtime-256.ts';
+import {validAnimalExecutionProof256} from './animal-execution-v256.ts';
+import {isAnimalSpecies256} from './animal-core-v256.ts';
 import { validInfections } from './infection-save.ts';
 import { validFoodPoisoning } from './food-poisoning-save.ts';
 import { validFlu } from './flu-save.ts';
 import { validImmuneDiseases } from './immune-diseases-save.ts';
 import { validAnesthetic } from './anesthetic.ts';
 import { validArtificialParts } from './artificial-parts-save.ts';
-import { HUMAN_MODEL,animalBodyModel,modelHasPart } from './body-model.ts';
-import { isAnimalSpecies,type AnimalSpeciesId } from './animal-species.ts';
+import { medicalModel,modelHasPart } from './body-model.ts';
+import { isAnimalSpecies,isAnimalSpeciesInVersion,type AnimalSpeciesId } from './animal-species.ts';
 import { mechanoidBodyModel } from './mechanoid-anatomy.ts';
 import { isMechanoidKind,type MechanoidKind } from './mechanoid-definition.ts';
 import { BLOOD_UNIT,HP_UNIT,INJURY_RULES,injuryPartRules,isWithinPart } from './injury-rules.ts';
@@ -21,12 +28,17 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
   const mechanicalKind=mechanical===true?'scyther':isMechanoidKind(mechanical)?mechanical:undefined;
   if(mechanical){allowHeat=false;allowCold=false;allowInfection=false;allowMalnutrition=false;allowFoodPoison=false;allowFlu=false;}
   const species=object(value)&&isAnimalSpecies(value.body)?value.body:undefined;
-  const model=mechanicalKind?mechanoidBodyModel(mechanicalKind):animal&&species?animalBodyModel(species):HUMAN_MODEL,BODY_PARTS=model.byId,PART_INJURY_RULES=injuryPartRules(model);
-  const bodyPartExists=(id:unknown)=>modelHasPart(model,id);
   const fail='Invalid medical record';
-  if(!object(value)||!keys(value,[...(animal||mechanical?['body']:[]),'tick','nextInjuryId','injuries','missing','bloodLoss','death',...(allowHeat?['heatstroke']:[]),...(allowCold?['hypothermia']:[]),...(allowInfection?['infections']:[]),...(allowMalnutrition?['malnutrition']:[]),...(allowFoodPoison?['foodPoisoning']:[]),...(allowFlu&&!animal&&!mechanical?['flu']:[]),...(version>=207&&!animal&&!mechanical?['immuneDiseases']:[]),...(version>=138&&!animal&&!mechanical?['ageAilments']:[]),...(version>=179&&!animal&&!mechanical?['anesthetic']:[]),...(version>=210&&!animal&&!mechanical?['artificialParts']:[])])||!integer(value.tick)||!integer(value.nextInjuryId,1)||!integer(value.bloodLoss,0,mechanical?0:BLOOD_UNIT)||!Array.isArray(value.injuries)||!Array.isArray(value.missing))return fail;
+  if(!validHumanHealthScaleHeader256(value,version,!animal&&!mechanical))return fail;
+  const clinicalAnimal=animal&&species&&(isAnimalSpecies256(species)||object(value)&&Object.hasOwn(value,'animalGrowth'));
+  if(!validCryptosleepSicknessHeader256(value,version,!!mechanical)||!validToxicBuildupHeader256(value,version,!!mechanical))return fail;
+  if(!validAnimalGrowthMedicalHeader256(value,version,!!animal&&!!species))return fail;
+  if(clinicalAnimal&&(!object(value)||version<256||!integer(value.tick)||!Number.isSafeInteger(value.animalBirthTick)||Number(value.animalBirthTick)>value.tick||!Number.isSafeInteger(value.tick-Number(value.animalBirthTick))))return fail;
+  const model=mechanicalKind?mechanoidBodyModel(mechanicalKind):animal&&species?medicalModel({body:species,tick:Number((value as Record<string,unknown>).tick),animalBirthTick:(value as Record<string,unknown>).animalBirthTick as number,animalGrowth:(value as Record<string,unknown>).animalGrowth as number}):medicalModel({humanHealthScale:object(value)?value.humanHealthScale as number:undefined}),BODY_PARTS=model.byId,PART_INJURY_RULES=injuryPartRules(model);
+  const bodyPartExists=(id:unknown)=>modelHasPart(model,id);
+  if(!object(value)||!keys(value,[...(animal||mechanical?['body']:[]),...(clinicalAnimal&&version>=256?['animalBirthTick']:[]),...(animal&&species&&version>=256?['animalGrowth','animalAgeConditions']:[]),'tick','nextInjuryId','injuries','missing','bloodLoss','death',...(allowHeat?['heatstroke']:[]),...(allowCold?['hypothermia']:[]),...(allowInfection?['infections']:[]),...(allowMalnutrition?['malnutrition']:[]),...(allowFoodPoison?['foodPoisoning']:[]),...(version>=256&&!mechanical?['cryptosleepSickness','toxicBuildup',...(!animal?['animalAgeConditions','humanHealthScale']:[])]:[]),...(allowFlu&&!animal&&!mechanical?['flu']:[]),...(version>=207&&!animal&&!mechanical?['immuneDiseases']:[]),...(version>=138&&!animal&&!mechanical?['ageAilments']:[]),...(version>=179&&!animal&&!mechanical?['anesthetic']:[]),...(version>=210&&!animal&&!mechanical?['artificialParts']:[])])||!integer(value.tick)||!integer(value.nextInjuryId,1)||!integer(value.bloodLoss,0,mechanical?0:BLOOD_UNIT)||!Array.isArray(value.injuries)||!Array.isArray(value.missing))return fail;
   if(mechanical&&(!mechanicalKind||version<(mechanicalKind==='scyther'?194:197)||value.body!==mechanicalKind||animal))return fail;
-  if(animal&&(!species||version<91&&species!=='hare'||version<178&&species==='red-fox'))return fail;
+  if(animal&&(!species||!isAnimalSpeciesInVersion(species,version)||version<91&&species!=='hare'||version<178&&species==='red-fox'))return fail;
   if(value.heatstroke!==undefined&&(!allowHeat||!integer(value.heatstroke,1,1_000_000_000)))return fail;
   if(value.hypothermia!==undefined&&(!allowCold||!integer(value.hypothermia,1,1_000_000_000)))return fail;
   if(value.malnutrition!==undefined&&(!allowMalnutrition||!integer(value.malnutrition,1,1_000_000_000)))return fail;
@@ -37,7 +49,7 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
   const ids=new Set<number>();let total=0;
   for(const i of value.injuries) {
     if(!object(i)||!keys(i,['id','part','kind','severity','bornAt','scar','tended',...(allowInfection?['infection']:[])])||!integer(i.id,1,value.nextInjuryId-1)||ids.has(i.id)||
-      !bodyPartExists(i.part)||BODY_PARTS[i.part].conceptual||typeof i.kind!=='string'||!Object.hasOwn(INJURY_RULES,i.kind)||version<193&&i.kind==='shredded'||!allowGunshot&&i.kind==='gunshot'||!allowBite&&i.kind==='bite'||!allowBurn&&i.kind==='burn'||!allowStab&&i.kind==='stab'||i.kind==='execution-cut'&&(!animal||!allowExecution||Number(i.severity)>1000||i.scar!==undefined)||!integer(i.severity,1)||!integer(i.bornAt,0,value.tick)||
+      !bodyPartExists(i.part)||BODY_PARTS[i.part].conceptual||typeof i.kind!=='string'||!Object.hasOwn(INJURY_RULES,i.kind)||version<193&&i.kind==='shredded'||i.kind==='frostbite'&&(version!==256||animal||!!mechanical||!Object.hasOwn(value,'humanHealthScale')||!object(i.scar)||i.scar.pain===undefined)||!allowGunshot&&i.kind==='gunshot'||!allowBite&&i.kind==='bite'||!allowBurn&&i.kind==='burn'||!allowStab&&i.kind==='stab'||i.kind==='execution-cut'&&(!animal||!allowExecution||Number(i.severity)>1000||i.scar!==undefined)||!integer(i.severity,1)||!integer(i.bornAt,0,value.tick)||
       i.tended!==undefined&&!integer(i.tended,0,1300))return fail;
     if(mechanical&&(i.tended!==undefined||i.scar!==undefined||i.infection!==undefined||i.kind==='execution-cut'))return fail;
     ids.add(i.id);total+=i.severity;if(!Number.isSafeInteger(total*100))return fail;
@@ -45,23 +57,28 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
       PART_INJURY_RULES[i.part].delicate&&i.scar.pain===undefined||
       i.scar.pain!==undefined&&(![0,1,3,6].includes(i.scar.pain as number)||i.scar.threshold!==i.severity)))return fail;
   }
+  // Initial generation may retain a nonFresh anatomical loss on the same
+  // prospective animal/owner already admitted by its native clinical header.
+  const animalNonFresh=version>=256&&animal&&(!!clinicalAnimal||Object.hasOwn(value,'animalAgeConditions'));
   for(const m of value.missing) {
-    if(!object(m)||!keys(m,['part','bornAt','tended',...(version>=210&&!animal&&!mechanical?['nonFresh']:[])])||!bodyPartExists(m.part)||BODY_PARTS[m.part].parent===null||BODY_PARTS[m.part].conceptual||!BODY_PARTS[m.part].destroyable||!integer(m.bornAt,0,value.tick)||m.tended!==undefined&&(mechanical||m.tended!==true))return fail;
+    if(!object(m)||!keys(m,['part','bornAt','tended',...(version>=210&&!animal&&!mechanical||animalNonFresh?['nonFresh']:[])])||!bodyPartExists(m.part)||BODY_PARTS[m.part].parent===null||BODY_PARTS[m.part].conceptual||!BODY_PARTS[m.part].destroyable&&!(version>=256&&!mechanical&&(Object.hasOwn(value,'animalAgeConditions')||animalNonFresh)&&Object.getOwnPropertyDescriptor(m,'nonFresh')?.value===true)||!integer(m.bornAt,0,value.tick)||m.tended!==undefined&&(mechanical||m.tended!==true))return fail;
   }
+  if(animal)for(const m of value.missing){const descriptor=Object.getOwnPropertyDescriptor(m,'nonFresh');if(descriptor&&(!animalNonFresh||!Object.hasOwn(descriptor,'value')||descriptor.enumerable!==true||descriptor.value!==true))return fail;}
   const record=value as unknown as MedicalRecord;
+  if(!validAnimalAgeConditions256(value,version,animal,record.tick,model,record.missing))return fail;
   for(const [index,m] of record.missing.entries()) {
     if(record.missing.some((other,j)=>j!==index&&(isWithinPart(m.part,other.part,model)||isWithinPart(other.part,m.part,model)))||record.injuries.some(i=>isWithinPart(i.part,m.part,model)))return fail;
   }
   if(!validArtificialParts(record,version,!animal&&!mechanical)||!validInfections(record,model,allowInfection,allowBurn,allowStab,version))return fail;
   for(const i of record.injuries)if(BODY_PARTS[i.part].parent!==null&&remainingPartHealth(record,i.part)===0)return fail;
-  if(value.death!==undefined&&(!object(value.death)||!keys(value.death,['tick','cause'])||value.death.tick!==record.tick||!(mechanical?['vital-failure','trauma','downed']:['blood-loss','vital-failure','trauma',...(animal?['downed',...(allowExecution?['execution']:[])]:[]),...(allowHeat?['heatstroke']:[]),...(allowCold?['hypothermia']:[]),...(allowInfection?['infection']:[]),...(allowMalnutrition?['malnutrition']:[]),...(allowFlu&&!animal?['flu']:[]),...(version>=207&&!animal?['malaria','plague']:[])]).includes(value.death.cause as string)))return fail;
-  const living:MedicalRecord={...createMedicalRecord(record.tick),...(mechanicalKind?{body:mechanicalKind}:animal?{body:species as AnimalSpeciesId}:{}),injuries:record.injuries,missing:record.missing,bloodLoss:record.bloodLoss,...record.heatstroke?{heatstroke:record.heatstroke}:{},...record.hypothermia?{hypothermia:record.hypothermia}:{},...record.infections?{infections:record.infections}:{},...record.malnutrition?{malnutrition:record.malnutrition}:{},...record.foodPoisoning?{foodPoisoning:record.foodPoisoning}:{},...record.flu?{flu:record.flu}:{},...record.immuneDiseases?{immuneDiseases:record.immuneDiseases}:{},...record.ageAilments?{ageAilments:record.ageAilments}:{},...record.anesthetic?{anesthetic:record.anesthetic}:{},...record.artificialParts?{artificialParts:record.artificialParts}:{}};
+  if(value.death!==undefined&&(!object(value.death)||!keys(value.death,['tick','cause'])||value.death.tick!==record.tick||!(mechanical?['vital-failure','trauma','downed']:['blood-loss','vital-failure','trauma',...(version>=256?['toxic-buildup']:[]),...(version===256&&!animal&&Object.hasOwn(value,'humanHealthScale')?['heart-artery-blockage','heart-attack']:[]),...(animal?['downed',...(version>=256?['heart-artery-blockage','heart-attack']:[]),...(allowExecution?['execution']:[])]:[]),...(allowHeat?['heatstroke']:[]),...(allowCold?['hypothermia']:[]),...(allowInfection?['infection']:[]),...(allowMalnutrition?['malnutrition']:[]),...(allowFlu&&!animal?['flu']:[]),...(version>=207&&!animal?['malaria','plague']:[])]).includes(value.death.cause as string)))return fail;
+  const living:MedicalRecord={...createMedicalRecord(record.tick),...record.humanHealthScale!==undefined?{humanHealthScale:record.humanHealthScale}:{},...(mechanicalKind?{body:mechanicalKind}:animal?{body:species as AnimalSpeciesId}:{}),...record.animalBirthTick!==undefined?{animalBirthTick:record.animalBirthTick}:{},...record.animalGrowth!==undefined?{animalGrowth:record.animalGrowth}:{},...record.animalAgeConditions?{animalAgeConditions:record.animalAgeConditions}:{},injuries:record.injuries,missing:record.missing,bloodLoss:record.bloodLoss,...record.heatstroke?{heatstroke:record.heatstroke}:{},...record.hypothermia?{hypothermia:record.hypothermia}:{},...record.infections?{infections:record.infections}:{},...record.malnutrition?{malnutrition:record.malnutrition}:{},...record.foodPoisoning?{foodPoisoning:record.foodPoisoning}:{},...record.cryptosleepSickness?{cryptosleepSickness:record.cryptosleepSickness}:{},...record.toxicBuildup?{toxicBuildup:{severity:record.toxicBuildup.severity,bornAt:record.toxicBuildup.bornAt,...record.toxicBuildup.vomit?{vomit:record.toxicBuildup.vomit}:{}}}:{},...record.flu?{flu:record.flu}:{},...record.immuneDiseases?{immuneDiseases:record.immuneDiseases}:{},...record.ageAilments?{ageAilments:record.ageAilments}:{},...record.anesthetic?{anesthetic:record.anesthetic}:{},...record.artificialParts?{artificialParts:record.artificialParts}:{}};
   reconcileMedicalDeath(living);
   if(record.death?.cause==='execution'){
     // Hunting's historical finishing blow requires a downed animal. V309 also
     // slaughters a mobile owned animal: its terminal neck incision is retained,
     // except when at most one HP remains and a further cut could remove the neck.
-    const slaughter=version>=220&&!living.death&&(record.injuries.some(i=>i.kind==='execution-cut'&&i.part==='neck'&&i.bornAt===record.tick)
+    const slaughter=clinicalAnimal?version>=256&&!living.death&&validAnimalExecutionProof256(record):version>=220&&!living.death&&(record.injuries.some(i=>i.kind==='execution-cut'&&i.part==='neck'&&i.bornAt===record.tick)
       ||remainingPartHealth(record,'neck')<=HP_UNIT);
     return animal&&allowExecution&&(medicalStatus(living)==='downed'||slaughter)?null:fail;
   }

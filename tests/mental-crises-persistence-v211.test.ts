@@ -100,7 +100,7 @@ test('active material, resource and job identities cannot be forged into an aggr
     const jobId=source.jobs.at(-1)!.id;expect(starters[kind](source,pawn)).toBe(true);expect(validateWorld(source)).toEqual([]);
     for(const id of [pileId,tree.id,jobId]){
       const bad=structuredClone(source),crisis=bad.pawns[0]!.mental!.crisis!;
-      if(crisis.kind==='sad-wander'||crisis.kind==='food-binge')throw new Error('Missing aggressive crisis.');
+      if(crisis.kind==='sad-wander'||crisis.kind==='food-binge'||crisis.kind==='confused-wander')throw new Error('Missing aggressive crisis.');
       crisis.targetId=id;
       // Keep the coupled clocks valid so identity, rather than shape, rejects it.
       if(crisis.kind==='berserk')crisis.jobUntilCore=bad.tick*10+600;

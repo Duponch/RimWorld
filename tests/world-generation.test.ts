@@ -135,7 +135,9 @@ describe('seeded temperate valley generation', () => {
         // Compare local agreement to the independent-noise baseline with the SAME terrain shares.
         const counts = { grass: 0, soil: 0, rock: 0, water: 0, 'rough-stone':0, 'rich-soil':0, gravel:0 }; let same = 0; let pairs = 0;
         world.tiles.forEach((tile, index) => {
-          counts[tile.terrain]++;
+          const legacyTerrain=(Object.keys(counts) as (keyof typeof counts)[]).find(kind=>kind===tile.terrain);
+          if(legacyTerrain===undefined)throw Error(`Unexpected legacy generation terrain: ${tile.terrain}`);
+          counts[legacyTerrain]++;
           for (const next of neighbors(world, index)) if (next > index) { pairs++; if (world.tiles[next]!.terrain === tile.terrain) same++; }
         });
         const independentAgreement = Object.values(counts).reduce((sum, count) => sum + (count / world.tiles.length) ** 2, 0);

@@ -20,7 +20,7 @@ export function shelfFixedAccepts(subject:ItemId|MaterialPile):boolean {
   const item=typeof subject==='string'?subject:subject.item,kind=ITEM_DEFINITIONS[item].kind;
   if(kind==='chunk'||kind==='mech-corpse')return false;
   if(kind!=='corpse')return true;
-  if(typeof subject!=='string')return !!subject.corpse&&!subject.humanCorpse&&bodySizeAtAge(subject.corpse.species,subject.corpse.ageTicks??adultAgeTicks(subject.corpse.species))<.75;
+  if(typeof subject!=='string')return !!subject.corpse&&!subject.humanCorpse&&bodySizeAtAge(subject.corpse.species,subject.corpse.ageTicks??adultAgeTicks(subject.corpse.species),subject.corpse.growthTracker?.value)<.75;
   // A string is only a conservative placement prefilter. Real bodies use age.
   return Object.values(ANIMAL_SPECIES).some(s=>s.corpseItem===item&&s.bodySize<.75);
 }

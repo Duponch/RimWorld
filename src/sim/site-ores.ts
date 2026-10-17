@@ -1,4 +1,4 @@
-import type { LocalSite } from './site.ts';
+import type { LegacySite,BiomeSite,Hilliness } from './site.ts';
 import type { Tile,World } from './types.ts';
 import type { StoneKind } from './geology.ts';
 import { siteSample } from './site-noise.ts';
@@ -16,7 +16,7 @@ export interface OreOccasion { mineral:Mineral['id'];center:number;requested:num
 export interface OreGenerationReport { requested:number;occasions:OreOccasion[] }
 const rates={flat:4,'small-hills':8,'large-hills':11} as const;
 const roundEven=(n:number):number=>n-Math.floor(n)===.5?Math.floor(n)+Math.floor(n)%2:Math.round(n);
-export const siteOreBudget=(width:number,height:number,hilliness:LocalSite['hilliness']):number=>roundEven(width*height/roundEven(10000/rates[hilliness]));
+export const siteOreBudget=(width:number,height:number,hilliness:Hilliness):number=>roundEven(width*height/roundEven(10000/rates[hilliness]));
 function chooseMineral(roll:number):Mineral {
   let remaining=roll*2.405;
   for(const mineral of SITE_MINERALS){remaining-=mineral.weight;if(remaining<0)return mineral;}
@@ -30,7 +30,7 @@ function neighbors(i:number,width:number,height:number):number[] {
 /** A common budget, centres in natural rock (including hidden cells), and
  * compact peripheral growth. Our finite candidate order and non-overwrite
  * rule differ from Core's random retry/overwrite implementation. */
-export function generateSiteOres(world:Pick<World,'seed'|'width'|'height'|'tiles'>,site:LocalSite,stoneAt:(x:number,z:number)=>StoneKind):OreGenerationReport {
+export function generateSiteOres(world:Pick<World,'seed'|'width'|'height'|'tiles'>,site:LegacySite|BiomeSite,stoneAt:(x:number,z:number)=>StoneKind):OreGenerationReport {
   const {width,height,seed,tiles}=world,requested=siteOreBudget(width,height,site.hilliness);
   const candidates:number[]=[],used:number[]=[],occasions:OreOccasion[]=[];
   const margin=Math.min(5,Math.floor((Math.min(width,height)-1)/2));

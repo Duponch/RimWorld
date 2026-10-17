@@ -1,3 +1,4 @@
+import {legacySite} from './helpers/legacy-fixture-guards.ts';
 import { expect, test } from 'vitest';
 import { withoutMiningSkill, withoutPredatorDefaults, withoutTelevisionRecreation, withMigratedTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { enableQuests } from '../src/sim/quests.ts';
@@ -94,7 +95,7 @@ test('schema 171 migrates without a quest and rejects either future quest field'
   if(old.raids)delete old.raids.mechanoid;
   // Prepare the historical ecological profile before any future quest field.
   delete old.wildlife;
-  enableBiomeWildlife(old, old.site!.biome);
+  enableBiomeWildlife(old, legacySite(old).biome);
   expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedTelevisionRecreation({...old,schemaVersion:SCHEMA_VERSION}));
 
   const injected = structuredClone(old);

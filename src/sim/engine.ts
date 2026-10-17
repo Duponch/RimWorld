@@ -1,3 +1,24 @@
+import {isCaveHiveKind256} from './cave-hive-state-256.ts';
+import {advanceActualHiveComponents256} from './cave-hive-tick-256.ts';
+import {captureAnimalCombatThreats256} from './cave-hive-lord-256.ts';
+import {applyMaterialPermission256} from './material-permission-256.ts';
+import {isShipChunk256} from './ship-chunk-256.ts';
+import {advanceActualWorldPawns256} from './world-pawn-campaign-256.ts';
+import {applyAncientCasketOpen256,processAncientCasketOpening256,reconcileAncientCasketOpening256} from './ancient-casket-opening-256.ts';
+import {advanceAncientShrineWarnings256} from './ancient-shrine-warning-256.ts';
+import {finishArrivalFacing256} from './arrival-rotation-256.ts';
+import {ancientRepairTarget256,ancientRepairContact256} from './ancient-monument-runtime-256.ts';
+import {isAncientMonumentKind256,ANCIENT_MONUMENT_KINDS_256} from './ancient-monument-props-256.ts';
+import {claimRoadProp256,roadPropCanDeconstruct256} from './local-road-prop-ownership-256.ts';
+import {foggedCell256} from './exploration-state-256.ts';
+import {blindMineDesignation256} from './exploration-visibility-256.ts';
+import {hiddenExplorationCommandTarget256} from './exploration-command-targets-256.ts';
+import {isLocalRoadProp256} from './local-road-props-256.ts';
+import {applyEggPermission256} from './animal-egg-permission-v256.ts';
+import {prepareConfirmedBedAssignment256} from './actor-bed-command-256.ts';
+import {commitActorBedClaim256} from './actor-map-bed-256.ts';
+import {advanceLocalEggs256} from './animal-egg-local-v256.ts';
+import {advanceAnimalAges256} from './animal-clinical-age-v256.ts';
 import {legacyTravellerContext} from './world-map-owners.ts';
 import type {CampaignState} from './world-map-state.ts';
 import {applyWorldMapCommand,validWorldMapCommand,removeEmptyCamps,enterRegisteredSite} from './world-map-authority.ts';
@@ -42,7 +63,7 @@ import { applyCommercialPreparation,processCommercialOnMap,reconcileCommercialOn
 import { applyCommercialReturn,advanceCommercialTrip,departCommercial,commercialOnMapId,commercialPawn } from './commercial-trip.ts';
 import { reconcileDomesticWork } from './domestic-reconcile.ts';
 import { advanceAnimalProducts } from './animal-products.ts';
-import { PEN_ANIMALS, invalidateAnimalPens } from './animal-pens.ts';
+import { PEN_ANIMALS,penAnimalsForVersion, invalidateAnimalPens } from './animal-pens.ts';
 import { applyTaming,processHandling,advanceTameness } from './animal-handling.ts';
 import { designateSlaughter } from './animal-slaughter.ts';
 import { setAutoSlaughterPolicy } from './auto-slaughter.ts';
@@ -172,7 +193,7 @@ import { advancePower, reconcilePower } from './power.ts';
 import { adoptRainElectrical,advanceRainElectrical } from './rain-electric.ts';
 import { isElectrical, newPowerState } from './power-rules.ts';
 import { autoRoofRooms, designateRoofArea, scheduleRoofs, reconcileRoofJobs, reconcileRoofSupport, finishRoofJob } from './roofing.ts';
-import { isRoofArea, isRoofJob, roofJobWanted, RoofContext } from './roof-rules.ts';
+import { isRoofed, isRoofArea, isRoofJob, roofJobWanted, RoofContext } from './roof-rules.ts';
 import { applyDoorCommand, updateDoors } from './doors.ts';
 import { builtDoorState,isRoomDoor,isPassageDoor } from './door-rules.ts';
 import { isBiofuelRecipe, taskWork } from './production-recipes.ts';
@@ -188,7 +209,7 @@ import { removeZonesForPlan } from './construction-zones.ts';
 import { occupancyOf, occupies } from './occupancy.ts';
 import { constructionHaulId, constructionSiteFree, constructionWorkTarget, isConstruction } from './construction-rules.ts';
 import { advanceOrders, applyOrderCommand, reconcileOrders } from './player-orders.ts';
-import { gatherResource, clearingDuration, clearingKind } from './gathering.ts';
+import { gatherResource, clearingDuration, clearingKind,plantWorkGrowthFactor256 } from './gathering.ts';
 import { wallBlueprintForDoor, planBlueprintDoorReplacement, retireWallBlueprint } from './construction-replacement.ts';
 import { processRecreation } from './recreation.ts';
 import { applyScheduleCommand } from './schedule.ts';
@@ -241,7 +262,7 @@ import type { AreaCommand, BuildLineCommand, Cell, Command, CommandResult, Desig
 export { JOB_DURATION, JOB_WOOD_COST } from './definitions.ts';
 
 const PATH_SEARCHES_PER_TICK = 8;
-const JOB_LABEL: Readonly<Record<JobKind, string>> = {'torch-lamp':'construction de lampe-torche','build-bridge':'construction de pont','remove-bridge':'retrait de pont',vent:'construction de bouche d’aération','extract-tree':'extraction arbre','replant-tree':'replantation arbre', shelf:'construction d’étagère','small-shelf':'construction de petite étagère', 'spike-trap':'construction de piège à pointes', 'double-bed':'construction de lit double', 'electric-crematorium':'Construction du crématorium électrique','electric-smelter':'construction de fonderie électrique','sleeping-spot':'couchage au sol','animal-sleeping-spot':'emplacement de couchage animal', 'biofuel-refinery':'construction de raffinerie de biocarburant','chemfuel-generator':'construction de générateur à biocarburant', 'nutrient-paste-dispenser':'construction du distributeur de pâte nutritive',hopper:'construction de trémie', 'orbital-beacon':'construction de balise orbitale','comms-console':'construction de console de communication', 'deep-drill':'construction de foreuse profonde','ground-scanner':'construction du scanner souterrain', 'vitals-monitor':'construction du moniteur vital', 'drug-lab':'construction du laboratoire de chimie', 'hydroponics-basin':'construction du bac hydroponique', 'mini-turret':'construction de mini-tourelle', 'tube-television':'construction de télévision cathodique', sandbags:'construction de sacs de sable', autodoor:'construction de porte automatique', fence:'construction de clôture','fence-gate':'construction de portillon','pen-marker':'construction de marqueur d’enclos', 'art-bench':'construction de l’atelier de sculpture','small-sculpture':'petite sculpture','large-sculpture':'grande sculpture', 'machining-table':'construction de l’atelier d’usinage','fabrication-bench':'construction de l’établi de fabrication','hi-tech-research-bench':'construction du bureau de recherche haute technologie','multi-analyzer':'construction du multi-analyseur', grave:'creusement de tombe','lay-floor':'pose de sol','remove-floor':'retrait de sol',heater:'construction de radiateur','wind-turbine':'construction d’éolienne',flick:'commutation électrique','power-conduit':'construction de conduit','power-switch':'construction d’interrupteur',battery:'construction de batterie','solar-generator':'construction de panneau solaire', 'fueled-stove':'construction de cuisinière à bois','electric-stove':'construction de cuisinière électrique','butcher-table':'construction de table de boucherie', 'butcher-spot':'emplacement de boucherie', cooler:'construction de climatiseur', 'research-bench':'construction de bureau de recherche','tailor-bench':'construction d’établi de tailleur','electric-tailor-bench':'construction d’établi de tailleur électrique', 'crafting-spot':'emplacement d’artisanat', repair:'réparer', 'fix-breakdown':'remplacer un composant en panne', 'wood-generator':'construction de générateur à bois', 'sun-lamp':'construction de lampe horticole', 'standing-lamp':'construction de lampe sur pied', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'pose de toit', 'remove-roof':'retrait de toit', door:'construction de porte', stonecutter:'construction de table de taille de pierre', mine:'minage', uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis', horseshoes: 'construction de piquet de fers à cheval', 'chess-table':'construction de table d’échecs', campfire: 'construction de feu de camp', wall: 'construction de mur', bed: 'construction de lit', 'hospital-bed':'construction de lit d’hôpital', table: 'construction de table','table-square':'construction de table carrée','table-long':'construction de table longue', stool: 'construction de tabouret','dining-chair':'construction de chaise',armchair:'construction de fauteuil','end-table':'construction de table de chevet',dresser:'construction de commode','flower-pot':'construction de pot de fleurs' };
+const JOB_LABEL: Readonly<Record<JobKind, string>> = {column:'construction de colonne',urn:'construction d’urne','stele-large':'construction de grande stèle','stele-grand':'construction de stèle monumentale',sarcophagus:'construction de sarcophage','torch-lamp':'construction de lampe-torche','build-bridge':'construction de pont','remove-bridge':'retrait de pont',vent:'construction de bouche d’aération','extract-tree':'extraction arbre','replant-tree':'replantation arbre', shelf:'construction d’étagère','small-shelf':'construction de petite étagère', 'spike-trap':'construction de piège à pointes', 'double-bed':'construction de lit double', 'electric-crematorium':'Construction du crématorium électrique','electric-smelter':'construction de fonderie électrique','sleeping-spot':'couchage au sol','animal-sleeping-spot':'emplacement de couchage animal', 'biofuel-refinery':'construction de raffinerie de biocarburant','chemfuel-generator':'construction de générateur à biocarburant', 'nutrient-paste-dispenser':'construction du distributeur de pâte nutritive',hopper:'construction de trémie', 'orbital-beacon':'construction de balise orbitale','comms-console':'construction de console de communication', 'deep-drill':'construction de foreuse profonde','ground-scanner':'construction du scanner souterrain', 'vitals-monitor':'construction du moniteur vital', 'drug-lab':'construction du laboratoire de chimie', 'hydroponics-basin':'construction du bac hydroponique', 'mini-turret':'construction de mini-tourelle', 'tube-television':'construction de télévision cathodique', sandbags:'construction de sacs de sable', autodoor:'construction de porte automatique', fence:'construction de clôture','fence-gate':'construction de portillon','pen-marker':'construction de marqueur d’enclos', 'art-bench':'construction de l’atelier de sculpture','small-sculpture':'petite sculpture','large-sculpture':'grande sculpture', 'machining-table':'construction de l’atelier d’usinage','fabrication-bench':'construction de l’établi de fabrication','hi-tech-research-bench':'construction du bureau de recherche haute technologie','multi-analyzer':'construction du multi-analyseur', grave:'creusement de tombe','lay-floor':'pose de sol','remove-floor':'retrait de sol',heater:'construction de radiateur','wind-turbine':'construction d’éolienne',flick:'commutation électrique','power-conduit':'construction de conduit','power-switch':'construction d’interrupteur',battery:'construction de batterie','solar-generator':'construction de panneau solaire', 'fueled-stove':'construction de cuisinière à bois','electric-stove':'construction de cuisinière électrique','butcher-table':'construction de table de boucherie', 'butcher-spot':'emplacement de boucherie', cooler:'construction de climatiseur', 'research-bench':'construction de bureau de recherche','tailor-bench':'construction d’établi de tailleur','electric-tailor-bench':'construction d’établi de tailleur électrique', 'crafting-spot':'emplacement d’artisanat', repair:'réparer', 'fix-breakdown':'remplacer un composant en panne', 'wood-generator':'construction de générateur à bois', 'sun-lamp':'construction de lampe horticole', 'standing-lamp':'construction de lampe sur pied', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'pose de toit', 'remove-roof':'retrait de toit', door:'construction de porte', stonecutter:'construction de table de taille de pierre', mine:'minage', uninstall:'désinstallation', install:'réinstallation', deconstruct: 'déconstruction', chop: 'abattage', harvest: 'récolte', cut: 'coupe de plante', sow: 'semis', horseshoes: 'construction de piquet de fers à cheval', 'chess-table':'construction de table d’échecs', campfire: 'construction de feu de camp', wall: 'construction de mur', bedroll:'construction de sac de couchage', bed: 'construction de lit', 'hospital-bed':'construction de lit d’hôpital', table: 'construction de table','table-square':'construction de table carrée','table-long':'construction de table longue', stool: 'construction de tabouret','dining-chair':'construction de chaise',armchair:'construction de fauteuil','end-table':'construction de table de chevet',dresser:'construction de commode','flower-pot':'construction de pot de fleurs' };
 const sameCell = (a: Cell, b: Cell): boolean => a.x === b.x && a.z === b.z;
 const refusal = (code: RefusalCode, reason: string): CommandResult => ({ ok: false, code, reason });
 function event(world: World, type: 'job' | 'need' | 'command', message: string): void {
@@ -361,7 +382,7 @@ function applyBuildLine(world: World, command: BuildLineCommand): CommandResult 
 
 /** Generated sowing work is an AI intention, not a placed blueprint. A
  * no-zone construction will retire its generating zone through the shared path. */
-function constructionRetiresSowingIntent(job:Job,kind:JobKind):boolean {
+function constructionRetiresSowingIntent(job:Job,kind:JobKind|import('./types.ts').StructureKind):boolean {
   return job.kind==='sow'&&job.growingZoneId!==undefined&&occupancyOf(kind)?.zones===false;
 }
 
@@ -380,14 +401,17 @@ export function buildConstructionCellIndex(world: World, kind: LineBuildKind): C
 }
 
 /** Pure shared rule used by preview and command execution. */
-export function canDesignate(world: World, command: DesignateCommand, installing=false, index?:ConstructionCellIndex): CommandResult {
+export function canDesignate(world: World, command: DesignateCommand|import('./cave-glowpod-minification-256.ts').NaturalInstallPlan256, installing=false, index?:ConstructionCellIndex): CommandResult {
+  if(command&&inBounds(world,command.x,command.z)&&command.kind!=='mine'&&foggedCell256(world,cellIndex(world,command.x,command.z)))return refusal('missing-target','Cette cellule n’est pas encore découverte.');
+  if(isCaveHiveKind256(command?.kind)&&(!installing||command.kind!=='glow-pod'||world.schemaVersion!==256||command.orientation!==0))return refusal('invalid-command','Cet édifice naturel est généré ; seul son vrai paquet peut être réinstallé.');
+  if(isLocalRoadProp256(command?.kind)||isShipChunk256(command?.kind))return refusal('invalid-command','Cet édifice routier est un vestige généré, sans commande de construction.');
   if(command&&Object.hasOwn(command,'bridge'))return refusal('invalid-command','La fondation est un état de terrain, pas un champ de commande.');
   if(command?.kind==='build-bridge'||command?.kind==='remove-bridge')return canDesignateBridge(world,command);
   if(command&&Object.hasOwn(STRUCTURE_DEFINITIONS,command.kind)&&!marshSupportsFootprint(world,footprintCells(command),{kind:command.kind,material:installing?command.material:command.material??'wood'}))return refusal('incompatible-resource','Le terrain ou le pont léger ne porte pas cette construction.');
   if((command?.kind==='orbital-beacon'||command?.kind==='comms-console')&&(world.schemaVersion<216||command.kind==='comms-console'&&installing||!installing&&!microelectronicsUnlocked(world)))return refusal('invalid-command','Recherchez Microélectronique pour construire cet appareil ; la console ne se désinstalle pas.');
   if(command?.kind==='deep-drill'&&(world.schemaVersion<215||!installing&&!deepDrillingUnlocked(world)))return refusal('invalid-command','Recherchez Forage profond pour construire une foreuse.');
   if(command?.kind==='ground-scanner'&&(world.schemaVersion<215||installing||!groundScannerUnlocked(world)))return refusal('invalid-command','Recherchez Scanner souterrain pour construire cet appareil non déplaçable.');
-  if(command?.kind==='ground-scanner'&&footprintCells({...command,orientation:command.orientation??0,footprint:'standard'}).some(c=>world.roofing?.constructed.includes(c.z*world.width+c.x)))return refusal('invalid-command','Le scanner doit être installé à ciel ouvert.');
+  if(command?.kind==='ground-scanner'&&footprintCells({...command,orientation:command.orientation??0,footprint:'standard'}).some(c=>isRoofed(world,c.z*world.width+c.x)))return refusal('invalid-command','Le scanner doit être installé à ciel ouvert.');
   if(command?.kind==='vitals-monitor'&&(world.schemaVersion<211||!installing&&!vitalsMonitorUnlocked(world)))return refusal('invalid-command','Recherchez Moniteur vital pour construire cet appareil.');
   if(command?.kind==='lay-floor'||command?.kind==='remove-floor')return canDesignateFloor(world,command);
   if(command&&isShelfKind(command.kind)&&world.schemaVersion<229)return refusal('invalid-command','L’étagère nécessite le format courant.');
@@ -412,11 +436,13 @@ export function canDesignate(world: World, command: DesignateCommand, installing
   if(command?.kind==='sandbags'&&world.schemaVersion<189)return refusal('invalid-command','Sacs de sable absents de cet ancien schéma.');
   if(command?.kind==='hospital-bed'&&(world.schemaVersion<187||!installing&&!hospitalBedUnlocked(world)))return refusal('invalid-command','Recherchez Lit d’hôpital pour construire ce lit.');
   if((command?.kind==='tailor-bench'||command?.kind==='electric-tailor-bench')&&!clothingUnlocked(world))return refusal('invalid-command','Recherchez Vêtements complexes pour construire cet établi.');
+  if(command&&(command.kind==='stele-large'||command.kind==='stele-grand')&&!complexFurnitureUnlocked(world))return refusal('invalid-command','Recherchez Mobilier complexe pour construire cette stèle.');
+  if(command&&isAncientMonumentKind256(command.kind)&&command.kind!=='sarcophagus'&&command.orientation!==undefined&&command.orientation!==0)return refusal('invalid-command','Cet ouvrage ne se tourne pas.');
   if(command&&isHabitatFurnitureKind(command.kind)&&FURNITURE_DEFINITIONS[command.kind].research==='complex-furniture'&&!complexFurnitureUnlocked(world))return refusal('invalid-command','Recherchez Mobilier complexe pour construire ce meuble.');
   if(command?.kind==='sleeping-spot')return installing?refusal('invalid-command','Cet emplacement ne se transporte pas.'):canPlaceHumanSleepingSpot(world,command);
   if(command?.kind==='animal-sleeping-spot')return installing?refusal('invalid-command','Cet emplacement ne se transporte pas.'):canPlaceAnimalSpot(world,command);
   if(command?.kind==='torch-lamp'&&(world.schemaVersion<249||installing))return refusal('invalid-command','La lampe-torche exige le schéma 249 et ne se transporte pas en paquet.');
-  if (!command || !['torch-lamp','vent','shelf','small-shelf',...(installing?['small-sculpture','large-sculpture']:[]),'spike-trap','electric-crematorium','electric-smelter','biofuel-refinery','chemfuel-generator','nutrient-paste-dispenser','hopper','orbital-beacon','comms-console','deep-drill','ground-scanner','vitals-monitor','drug-lab','hydroponics-basin','mini-turret','tube-television','sandbags','art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench','grave','heater','wind-turbine','power-conduit','power-switch','battery','solar-generator','fueled-stove','electric-stove','butcher-table','butcher-spot','cooler','research-bench','tailor-bench','electric-tailor-bench','crafting-spot','wood-generator','sun-lamp','standing-lamp','passive-cooler','door','autodoor','fence','fence-gate','pen-marker','stonecutter', 'mine', 'uninstall', 'deconstruct', 'chop', 'harvest', 'cut', 'wall', 'bed', 'double-bed', 'hospital-bed', 'table','table-square','table-long', 'stool','dining-chair','armchair','end-table','dresser','flower-pot', 'campfire', 'horseshoes', 'chess-table'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
+  if (!command || ![...(world.schemaVersion>=256?ANCIENT_MONUMENT_KINDS_256:[]),'torch-lamp','vent','shelf','small-shelf',...(installing?['glow-pod','small-sculpture','large-sculpture']:[]),'spike-trap','electric-crematorium','electric-smelter','biofuel-refinery','chemfuel-generator','nutrient-paste-dispenser','hopper','orbital-beacon','comms-console','deep-drill','ground-scanner','vitals-monitor','drug-lab','hydroponics-basin','mini-turret','tube-television','sandbags','art-bench','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench','grave','heater','wind-turbine','power-conduit','power-switch','battery','solar-generator','fueled-stove','electric-stove','butcher-table','butcher-spot','cooler','research-bench','tailor-bench','electric-tailor-bench','crafting-spot','wood-generator','sun-lamp','standing-lamp','passive-cooler','door','autodoor','fence','fence-gate','pen-marker','stonecutter', 'mine', 'uninstall', 'deconstruct', 'chop', 'harvest', 'cut', 'wall', 'bedroll', 'bed', 'double-bed', 'hospital-bed', 'table','table-square','table-long', 'stool','dining-chair','armchair','end-table','dresser','flower-pot', 'campfire', 'horseshoes', 'chess-table'].includes(command.kind)) return refusal('invalid-command', 'Type de travail inconnu.');
   if((command.kind==='torch-lamp'||command.kind==='sandbags'||isRoomDoor(command.kind)||command.kind==='fence-gate'||command.kind==='pen-marker'||command.kind==='passive-cooler'||isElectrical(command.kind)&&command.kind!=='electric-crematorium'&&command.kind!=='electric-smelter'&&command.kind!=='biofuel-refinery'&&command.kind!=='nutrient-paste-dispenser'&&command.kind!=='comms-console'&&command.kind!=='deep-drill'&&command.kind!=='ground-scanner'&&command.kind!=='vitals-monitor'&&command.kind!=='hydroponics-basin'&&command.kind!=='tube-television'&&command.kind!=='machining-table'&&command.kind!=='hi-tech-research-bench'&&command.kind!=='fabrication-bench'&&command.kind!=='cooler'&&command.kind!=='electric-stove'&&command.kind!=='battery'&&command.kind!=='wind-turbine')&&command.orientation!==undefined&&command.orientation!==0)return refusal('invalid-command','Ce bâtiment ne se tourne pas manuellement.');
   if (command.orientation !== undefined && (!Number.isInteger(command.orientation) || command.orientation < 0 || command.orientation > 3)) return refusal('invalid-command', 'Orientation invalide.');
   const material=command.kind==='torch-lamp'?(command.material??'wood'):command.kind==='electric-crematorium'?(command.material??'granite-blocks'):command.kind==='sandbags'?(command.material??'cloth'):command.kind==='electric-smelter'||command.kind==='biofuel-refinery'||command.kind==='chemfuel-generator'||command.kind==='nutrient-paste-dispenser'||command.kind==='hopper'||command.kind==='orbital-beacon'||command.kind==='comms-console'||command.kind==='deep-drill'||command.kind==='ground-scanner'||command.kind==='vitals-monitor'||command.kind==='hydroponics-basin'||command.kind==='mini-turret'||command.kind==='hospital-bed'||command.kind==='tube-television'?(command.material??'steel'):command.material;
@@ -428,6 +454,7 @@ export function canDesignate(world: World, command: DesignateCommand, installing
   if(command.targetId!==undefined&&(!Number.isSafeInteger(command.targetId)||command.targetId<1||command.kind!=='deconstruct'&&command.kind!=='uninstall'))return refusal('invalid-command','Cible de retrait invalide.');
   const target = (command.kind==='deconstruct'||command.kind==='uninstall')?deconstructionAt(world,command):undefined;
   if((command.kind==='deconstruct'||command.kind==='uninstall')&&!target)return refusal('missing-target','Aucun bâtiment à déconstruire ici.');
+  if(target&&command.kind==='deconstruct'&&!roadPropCanDeconstruct256(world,target))return refusal('invalid-command','Ce vestige ne peut pas être déconstruit par cette faction.');
   if(target&&world.jobs.some(j=>j.furniture?.structureId===target.id))return refusal('occupied','Ce meuble a déjà un ordre de déplacement.');
   if(command.kind==='uninstall'&&(!minifiable(target!.kind)||target!.kind==='flower-pot'&&!flowerPotCanUninstall(target!.flower??createFlowerPotState())))return refusal('incompatible-resource','Coupez la plante avant de désinstaller ce pot.');
   const cells = footprintCells(target??command);
@@ -438,11 +465,12 @@ export function canDesignate(world: World, command: DesignateCommand, installing
   }
   if(command.kind==='grave'&&world.jobs.some(j=>j.kind==='lay-floor'&&cells.some(c=>sameCell(c,j))))return refusal('occupied','Un plan de sol occupe la future tombe.');
   if(command.kind==='grave'&&cells.some(c=>{const tile=world.tiles[cellIndex(world,c.x,c.z)]!;return !!tile.floor||!['grass','soil','rich-soil','gravel'].includes(tile.terrain);}))return refusal('incompatible-resource','La tombe exige un terrain meuble à creuser.');
-  const replacing=installing?undefined:wallBlueprintForDoor(world,command);
+  const replacing=installing||command.kind==='glow-pod'?undefined:wallBlueprintForDoor(world,command);
   if (!replacing&&index?.kind===command.kind ? cells.some(cell=>!!(index.flags[cellIndex(world,cell.x,cell.z)]!&1))
     : world.jobs.some(job => job!==replacing && !isRoofJob(job) && !isPlantDesignationJob(job) && !constructionRetiresSowingIntent(job,target?.kind??command.kind) && !(command.kind==='deconstruct'&&(job.kind==='repair'||job.kind==='fix-breakdown'||job.kind==='flick')) && sharesConstructionLayer(job.furniture?.kind??job.deconstruction?.kind??job.flick?.kind??job.fixBreakdown?.kind??job.kind,target?.kind??command.kind) && footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
   if(command.kind==='deconstruct'||command.kind==='uninstall')return {ok:true};
-  if(command.kind==='mine')return world.tiles[cellIndex(world,command.x,command.z)]!.terrain==='rock'?{ok:true}:refusal('incompatible-resource','Désigner un massif rocheux à miner.');
+  if(isAncientMonumentKind256(command.kind)&&!validConstructionMaterial(command.kind,command.material,world.schemaVersion))return refusal('invalid-command','Choisissez une matière admissible explicite pour cet ouvrage.');
+  if(command.kind==='mine')return blindMineDesignation256(world,cellIndex(world,command.x,command.z))||world.tiles[cellIndex(world,command.x,command.z)]!.terrain==='rock'?{ok:true}:refusal('incompatible-resource','Désigner un massif rocheux à miner.');
   if((command.kind==='crafting-spot'||command.kind==='butcher-spot')&&world.resources.some(r=>sameCell(r,command)&&!isConstructionLightPlant(r)))return refusal('occupied','Dégager la plante avant de placer cet emplacement.');
   if (command.kind === 'chop' || command.kind === 'harvest' || command.kind === 'cut') {
     const resource = world.resources.find(candidate => sameCell(candidate, command));
@@ -457,14 +485,14 @@ export function canDesignate(world: World, command: DesignateCommand, installing
       return refusal('occupied', 'Construction impossible : terrain, ouvrage ou réservation incompatible dans l’empreinte.');
     }
   }
-  if(replacing){
+  if(replacing&&command.kind!=='glow-pod'){
     if(!Number.isSafeInteger(world.nextId+1))return refusal('invalid-command','Limite des identités atteinte.');
     if(!planBlueprintDoorReplacement(world,command,replacing))return refusal('occupied','Attendez la fin du transport et une place pour déposer les matériaux du mur.');
   }
   return { ok: true };
 }
-export function applyCommand(world: World, command: Command): CommandResult {
- if(world.worldMaps){const descriptor=command&&typeof command==='object'&&!Array.isArray(command)?Object.getOwnPropertyDescriptor(command,'type'):undefined;if(!descriptor||!('value'in descriptor)||typeof descriptor.value!=='string')return refusal('invalid-command','Commande invalide.');const root=registeredCampaign(world);if(validWorldMapCommand(command))return applyWorldMapCommand(root,command);if(command&&typeof command==='object'&&typeof command.type==='string'&&(command.type==='planet-adopt'||command.type.startsWith('group-')))return applyRegisteredGroupCommand(root,command as import('./group-state.ts').GroupCommand);if(secondaryCommand(command))return refusal('invalid-command','Choisissez une carte ou un groupe du registre de campagne.');const local=selectedRegisteredMap(root);if(!local)return refusal('invalid-command','Aucune carte locale sélectionnée.');const result=applyLocalCommand(local,command);if(result.ok&&command.type==='commercial-start'){const source=root.worldMaps!.sites.find(s=>s.id===registeredMapId(local))!;if(root.worldGroups!.canonicalPostId===null)delete source.postId;else source.postId=root.worldGroups!.canonicalPostId;}flushRegisteredMap(local);return result;}
+export function applyCommand(world: World, command: Command,caravans?:import('./group-campaign-runtime-256.ts').GroupCampaignRuntime256): CommandResult {
+ if(world.worldMaps){const descriptor=command&&typeof command==='object'&&!Array.isArray(command)?Object.getOwnPropertyDescriptor(command,'type'):undefined;if(!descriptor||!('value'in descriptor)||typeof descriptor.value!=='string')return refusal('invalid-command','Commande invalide.');const root=registeredCampaign(world);if(validWorldMapCommand(command))return applyWorldMapCommand(root,command);if(command&&typeof command==='object'&&typeof command.type==='string'&&(command.type==='planet-adopt'||command.type.startsWith('group-')))return applyRegisteredGroupCommand(root,command as import('./group-state.ts').GroupCommand,caravans);if(secondaryCommand(command))return refusal('invalid-command','Choisissez une carte ou un groupe du registre de campagne.');const local=selectedRegisteredMap(root);if(!local)return refusal('invalid-command','Aucune carte locale sélectionnée.');const result=applyLocalCommand(local,command);if(result.ok&&command.type==='commercial-start'){const source=root.worldMaps!.sites.find(s=>s.id===registeredMapId(local))!;if(root.worldGroups!.canonicalPostId===null)delete source.postId;else source.postId=root.worldGroups!.canonicalPostId;}flushRegisteredMap(local);return result;}
   if(!command||typeof command!=='object')return refusal('invalid-command','Commande invalide.');
   if(secondaryCommand(command))return applySecondarySiteCommand(world,command);
   const root=campaignAuthority(world);
@@ -476,6 +504,9 @@ export function applyCommand(world: World, command: Command): CommandResult {
 }
 type LocalCommand=Exclude<Command,SecondarySiteCommand>;
 function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
+  if(command&&typeof command==='object'&&hiddenExplorationCommandTarget256(world,command))return refusal('missing-target','Cette cible n’est pas connue sur la carte actuelle.');
+  if(command.type==='material-forbid')return applyMaterialPermission256(world,command);
+  if(command.type==='egg-forbid')return applyEggPermission256(world,command);
   if(command.type==='map-view'||command.type==='map-settle'||command.type==='map-abandon'||command.type==='group-select'||command.type==='group-enter')return refusal('invalid-command','Une commande de campagne valide est requise.');
   // Filter editing changes campaign metadata only. Ordinary due checks own
   // future clothing actions; no task/thermal reconciliation is triggered here.
@@ -493,8 +524,9 @@ function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
   if(result.ok)reconcileSpikeTrapContacts(world);
   return result;
 }
-function applyCommandInternal(world: World, command: Exclude<LocalCommand,import('./world-map-state.ts').WorldMapCommand|{type:'apparel-policy-update'|'apparel-policy-copy'|'apparel-policy-rename'}>): CommandResult {
+function applyCommandInternal(world: World, command: Exclude<LocalCommand,import('./world-map-state.ts').WorldMapCommand|{type:'apparel-policy-update'|'apparel-policy-copy'|'apparel-policy-rename'|'egg-forbid'|'material-forbid'}>): CommandResult {
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if(command.type==='group-split'||command.type==='group-merge'||command.type==='group-carry-sick')return refusal('invalid-command','Cette commande exige le registre et le contexte réel de caravane.');
   if(command.type==='cancel-job'||command.type==='cancel-resource'||command.type==='cancel-pile')return applyDesignationCancel(world,command)??refusal('invalid-command','Annulation inconnue.');
   if(command.type==='extract-tree'||command.type==='replant-tree')return applyTreeCommand(world,command)!;
   if(command.type==='designate'&&(command.kind==='extract-tree'||command.kind==='replant-tree'))return command.kind==='extract-tree'?applyTreeCommand(world,{type:'extract-tree',resourceId:command.targetId??-1})!:applyTreeCommand(world,{type:'replant-tree',pileId:command.targetId??-1,x:command.x,z:command.z})!;
@@ -537,7 +569,8 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
   // Core's Vomit job is not player-interruptible. Reject the entire group
   // before any early command handler can replace a task or mutate a stance.
   if((typeof command.type==='string'&&command.type.startsWith('order-')||['clean-room','draft','draft-move','draft-stop','fire-at-will','clear-orders','shoot','melee','cancel-trade','trade-execute','cancel-orbital-trade','orbital-trade-execute'].includes(command.type))
-    &&actors.some(id=>{const h=world.pawns.find(p=>p.id===id)?.health;return h?.foodPoisoning?.vomit||h?.flu?.vomit||h?.immuneDiseases?.malaria?.vomit;}))return refusal('invalid-command','Ce colon vomit et ne peut pas interrompre cet épisode.');
+    &&actors.some(id=>{const h=world.pawns.find(p=>p.id===id)?.health;return (h?.foodPoisoning?.vomit||(h?.cryptosleepSickness?.vomit||h?.toxicBuildup?.vomit||h?.toxicBuildup?.vomitRequestedAt!==undefined))||h?.flu?.vomit||h?.immuneDiseases?.malaria?.vomit;}))return refusal('invalid-command','Ce colon vomit et ne peut pas interrompre cet épisode.');
+  if(command.type==='order-open-casket')return applyAncientCasketOpen256(world,command);
   if(command?.type==='order-bury'||command?.type==='grave-policy'||command?.type==='assign-grave')return applyBurial(world,command);
   if(command?.type==='apparel-policy-assign')return applyApparelPolicyAssignment(world,command);
   if(command?.type==='apparel-clear-forced')return applyClearForcedApparel(world,command);
@@ -564,6 +597,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
   if(command.type==='order-orbital-trade'||command.type==='cancel-orbital-trade'||command.type==='orbital-trade-execute')return applyOrbitalTrade(world,command);
   if(command.type==='enable-visitors'||command.type==='order-trade'||command.type==='cancel-trade'||command.type==='trade-execute')return applyTrade(world,command);
   if(command.type==='enable-mech-raids')return enableMechanoidRaids(world)?{ok:true}:{ok:false,code:'invalid-command',reason:'Le calendrier Cassandra est requis pour les menaces mécaniques.'};
+  if(command.type==='claim-road-prop')return claimRoadProp256(world,command);
   if(command.type==='enable-raids'){enableRaids(world);return {ok:true};}
   if(command.type==='enable-arrivals'||command.type==='answer-arrival')return applyArrival(world,command);
   if(command.type==='enable-quests'||command.type==='answer-quest')return applyQuestCommand(world,command);
@@ -600,7 +634,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
     return result;
   }
   if(command.type==='pen-species'){
-    if(!Number.isSafeInteger(command.markerId)||typeof command.accepted!=='boolean'||!PEN_ANIMALS.includes(command.species))return refusal('invalid-command','Réglage d’enclos invalide.');
+    if(!Number.isSafeInteger(command.markerId)||typeof command.accepted!=='boolean'||!penAnimalsForVersion(world.schemaVersion).includes(command.species))return refusal('invalid-command','Réglage d’enclos invalide.');
     const marker=world.structures.find(s=>s.id===command.markerId&&s.kind==='pen-marker');
     if(!marker?.pen)return refusal('missing-target','Marqueur d’enclos introuvable.');
     const selected=new Set(marker.pen.accepted);
@@ -715,20 +749,24 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
       if(command.slot!==0&&command.slot!==1)return refusal('invalid-command','Une place du lit double doit être indiquée.');
       const reason=bedAssignmentReason(world,bed,owner??null,command.slot);if(reason)return refusal('invalid-command',reason);
       if(owner?.bedId===bed.id&&owner.bedSlot===command.slot)return {ok:true};
+      const ownership=prepareConfirmedBedAssignment256(world,bed,owner??null,command.slot);
       const affected=new Set(world.pawns.filter(p=>p.bedId===bed.id&&p.bedSlot===command.slot||p===owner).map(p=>p.id));
       const released=world.pawns.filter(p=>p.need?.kind==='sleep'&&affected.has(p.id)||p.rescue&&(affected.has(p.rescue.patientId)||p.rescue.bedId===bed.id&&p.rescue.bedSlot===command.slot));
       for(const pawn of released)if(!releaseWork(world,pawn,drops))return refusal('occupied','Impossible de libérer le couchage précédent.');
       for(const pawn of world.pawns)if(affected.has(pawn.id)){pawn.bedId=null;delete pawn.bedSlot;pawn.needCooldown=0;}
       if(owner){owner.bedId=bed.id;owner.bedSlot=command.slot;}
+      if(ownership)commitActorBedClaim256(ownership);
       return {ok:true};
     }
     if(command.slot!==undefined)return refusal('invalid-command','Ce lit ne possède qu’une place.');
+    const ownership=prepareConfirmedBedAssignment256(world,bed,owner??null);
     if(owner?.bedSlot!==undefined)for(const carrier of world.pawns)if(carrier.rescue?.patientId===owner.id)releaseWork(world,carrier,drops);
     for (const pawn of world.pawns) if (pawn.bedId === bed.id || pawn === owner) {
       if (pawn.need?.kind === 'sleep') releaseWork(world, pawn,drops);
       pawn.bedId = null;delete pawn.bedSlot; pawn.needCooldown = 0;
     }
     if (owner) owner.bedId = bed.id;
+    if(ownership)commitActorBedClaim256(ownership);
     return { ok: true };
   }
   if (command.type === 'priority') {
@@ -835,7 +873,7 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
     const target=world.structures.find(s=>s.id===job.deconstruction?.structureId);
     if(!finishDeconstruction(world,pawn,job)){releaseWork(world,pawn);return;}
     invalidateAnimalPens(world);reconcileDomesticWork(world);
-    if(target?.kind==='wall'||isRoomDoor(target?.kind))reconcileRoofSupport(world,false,target);
+    if(target?.kind==='wall'||target?.kind==='column'||isRoomDoor(target?.kind))reconcileRoofSupport(world,false,target);
   } else if (job.kind==='mine'||job.kind==='install'||job.kind==='uninstall') {
     return; // Furniture transfers are processed by their physical state machine.
   } else if (job.kind === 'sow') {
@@ -846,9 +884,9 @@ function completeJob(world: World, pawn: Pawn, job: Job): void {
     if(!retirement||!commitConstructionPlantRetirement(world,retirement)){setWorkUnits(job,Math.max(0,Math.round((jobDuration(world,job)-1)*WORK_FRACTIONS)));releaseWork(world,pawn);return;}
     world.piles = world.piles.filter(pile => pile.owner.type !== 'job' || pile.owner.jobId !== job.id);
     if(job.kind==='wind-turbine')adoptWind(world);
-    const qualityStream={rng:world.rng},quality=isHabitatFurnitureKind(job.kind)&&FURNITURE_DEFINITIONS[job.kind].quality?craftingQuality(pawn.skills.construction.level,()=>healthRandom(qualityStream)):undefined;if(quality)world.rng=qualityStream.rng;
+    const qualityStream={rng:world.rng},quality=(job.kind==='sarcophagus'||isHabitatFurnitureKind(job.kind)&&FURNITURE_DEFINITIONS[job.kind].quality)?craftingQuality(pawn.skills.construction.level,()=>healthRandom(qualityStream)):undefined;if(quality)world.rng=qualityStream.rng;
     const builtId=world.nextId++,shelf=isShelfKind(job.kind)?newShelfStorage(footprintCells(job).map(()=>world.nextId++)):undefined;
-    world.structures.push({ ...(job.kind==='vent'?{vent:newVentState()}:{}), ...(shelf?{shelf}:{}), ...(job.kind==='spike-trap'?{spikeTrap:initialSpikeTrapState(world,job)}:{}),...(job.kind==='mini-turret'?{turret:newMiniTurretState()}:{}),...(job.kind==='hospital-bed'?{medical:true as const}:{}),...(job.kind==='grave'?{grave:initialGrave()}:{}),...(job.kind==='pen-marker'?{pen:{accepted:[...PEN_ANIMALS]}}:{}),...(job.kind==='heater'?{heater:newHeaterState()}:{}),...(job.kind==='wind-turbine'?{wind:newWindTurbineState()}:{}),...(job.kind==='battery'?{battery:{stored:0}}:{}),...(job.kind==='cooler'?{cooler:newCoolerState()}:{}),...(job.kind==='flower-pot'?{flower:createFlowerPotState()}:{}),...(quality?{quality}:{}),...(isElectrical(job.kind)?{power:newPowerState(job.kind)}:{}),...(isPassageDoor(job.kind)?{door:builtDoorState(world,job)}:{}),...(job.material?{material:job.material}:{}),...(isFueledBuilding(job.kind)?{fuel:newBuildingFuel(job.kind as import('./types.ts').StructureKind)}:{}),...(job.kind==='electric-crematorium'||job.kind==='electric-smelter'||job.kind==='biofuel-refinery'||job.kind==='drug-lab'||job.kind==='art-bench'||job.kind==='machining-table'||job.kind==='fabrication-bench'||job.kind==='tailor-bench'||job.kind==='electric-tailor-bench'||job.kind==='campfire'||isFoodWorkstation(job.kind)||job.kind==='stonecutter'?{bills:[]}:{}), id: builtId, kind: job.kind as import('./types.ts').StructureKind, x: job.x, z: job.z, orientation: job.orientation, footprint: job.footprint });
+    world.structures.push({ ...(job.kind==='vent'?{vent:newVentState()}:{}), ...(shelf?{shelf}:{}), ...(job.kind==='spike-trap'?{spikeTrap:initialSpikeTrapState(world,job)}:{}),...(job.kind==='mini-turret'?{turret:newMiniTurretState()}:{}),...(job.kind==='hospital-bed'?{medical:true as const}:{}),...(job.kind==='grave'?{grave:initialGrave()}:job.kind==='sarcophagus'?{grave:{colonists:true,strangers:false}}:{}),...(job.kind==='pen-marker'?{pen:{accepted:[...penAnimalsForVersion(world.schemaVersion)]}}:{}),...(job.kind==='heater'?{heater:newHeaterState()}:{}),...(job.kind==='wind-turbine'?{wind:newWindTurbineState()}:{}),...(job.kind==='battery'?{battery:{stored:0}}:{}),...(job.kind==='cooler'?{cooler:newCoolerState()}:{}),...(job.kind==='flower-pot'?{flower:createFlowerPotState()}:{}),...(quality?{quality}:{}),...(isElectrical(job.kind)?{power:newPowerState(job.kind)}:{}),...(isPassageDoor(job.kind)?{door:builtDoorState(world,job)}:{}),...(job.material?{material:job.material}:{}),...(isFueledBuilding(job.kind)?{fuel:newBuildingFuel(job.kind as import('./types.ts').StructureKind)}:{}),...(job.kind==='electric-crematorium'||job.kind==='electric-smelter'||job.kind==='biofuel-refinery'||job.kind==='drug-lab'||job.kind==='art-bench'||job.kind==='machining-table'||job.kind==='fabrication-bench'||job.kind==='tailor-bench'||job.kind==='electric-tailor-bench'||job.kind==='campfire'||isFoodWorkstation(job.kind)||job.kind==='stonecutter'?{bills:[]}:{}), id: builtId, kind: job.kind as import('./types.ts').StructureKind, x: job.x, z: job.z, orientation: job.orientation, footprint: job.footprint });
     clearSnowForStructure(world,world.structures.at(-1)!);
     if(job.kind==='hydroponics-basin')initializeHydroponicBasin(world,world.structures.at(-1)!);
     if(job.kind==='vent'||job.kind==='fence'||job.kind==='fence-gate'||job.kind==='pen-marker'||job.kind==='wall'||isRoomDoor(job.kind)||job.kind==='cooler')invalidateAnimalPens(world);
@@ -863,18 +901,21 @@ function environmentCache(world:World):WorkEnvironmentCache {
 }
 const readPlantLight=(world:World):LightEnvironment=>environmentCache(world).readLight(world);
 const plantLightSourcesKey=(world:World):string=>lightSources(world).map(s=>`${s.cell}:${s.radius}:${s.red}:${s.green}:${s.blue}:${s.overlightRadius??0}`).join('|');
-export function stepWorld(world:CampaignState,ticks=1,diagnostics?:import('./work-planner.ts').SearchStats):void {
+export function stepWorld(world:CampaignState,ticks=1,diagnostics?:import('./work-planner.ts').SearchStats,caravans?:import('./group-campaign-runtime-256.ts').GroupCampaignRuntime256):void {
   if(!Number.isInteger(ticks)||ticks<0||ticks>100000)throw new Error('Tick count must be an integer between 0 and 100000.');
   const root=campaignAuthority(world as World);
   if(root.worldMaps){
+    if(ticks>0&&root.schemaVersion>=256&&!caravans&&root.worldGroups?.groups.some(r=>'members'in r.state?!!r.state.travel:'manifest'in r.state&&r.state.travelPreparation===true))throw Error('Prospective caravan requires its confirmed Core runtime before advancing time');
     adoptWorldIncidents(campaignClockContext(root));
     for(let i=0;i<ticks;i++){
       root.tick++;
       for(const map of registeredMaps(root)){stepLocalWorld(map,1,diagnostics,false);flushRegisteredMap(map);}
-      for(const g of root.worldGroups!.groups.slice().sort((a,b)=>a.state.id-b.state.id))if('members' in g.state)withWorldGroup(root,g.state.id,advanceGroup);
+      if(root.schemaVersion>=256&&caravans)caravans.step(root);
+      else for(const g of root.worldGroups!.groups.slice().sort((a,b)=>a.state.id-b.state.id))if('members' in g.state)withWorldGroup(root,g.state.id,advanceGroup);
       for(const row of root.worldGroups!.groups.slice()){const g=row.state;if('members' in g&&['at-site','awaiting-entry'].includes(g.phase)&&root.worldMaps!.sites.some(m=>m.tile===g.tile&&m.kind==='settlement'))enterRegisteredSite(root,g.id,'visit',false);}
       for(const old of root.worldGroups!.legacyTravellers){const view=legacyTravellerContext(root,old);advanceScoutTrip(view);advanceCommercialTrip(view);if(view.scout)old.scout=view.scout;else delete old.scout;if(view.commercialTrip)old.commercialTrip=view.commercialTrip;else delete old.commercialTrip;}
       advanceWorldIncidents(campaignClockContext(root));removeEmptyCamps(root);
+      advanceActualWorldPawns256(root);
     }return;
   }
   if(!root.secondarySite){stepLocalWorld(root,ticks,diagnostics);return;}
@@ -907,7 +948,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
   let thermal=reconcileTemperature(world);reconcilePlantLighting(world,()=>readPlantLight(world));updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);
   for (let step = 0; step < ticks; step++) {
     flushColonyLosses(world);
-    if(advanceClock)world.tick++;finishSnowSteps(world);
+    if(advanceClock)world.tick++;advanceActualHiveComponents256(world);advanceAnimalAges256(world);finishSnowSteps(world);
     let light:LightEnvironment|undefined,lightKey:string|undefined;
     const getLight=()=>{if(!light){light=readPlantLight(world);lightKey=plantLightSourcesKey(world);}return light;};
     advanceHumanAges(world);
@@ -935,7 +976,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     const structuresBeforeCombat=world.structures;
     reconcileAllowedAreas(world);advanceWorldCombat(world,trapContacts);
     if(trapContacts){advanceWildlife(world);reconcileAnimalRescues(world);reconcileAnimalRest(world);}
-    syncCarriedAnimals(world);reconcileAnimalRescues(world);reconcileAnimalRest(world);advanceCorpses(world,thermal);advanceMechanoidCorpses(world);reconcileDomesticWork(world);advanceAnimalProducts(world);advanceHumanCorpses(world);advanceDeathThoughts(world);reconcileBurials(world);reconcileCommercialOnMap(world);
+    syncCarriedAnimals(world);advanceLocalEggs256(world,thermal);reconcileAnimalRescues(world);reconcileAnimalRest(world);advanceCorpses(world,thermal);advanceMechanoidCorpses(world);reconcileDomesticWork(world);advanceAnimalProducts(world);advanceHumanCorpses(world);advanceDeathThoughts(world);reconcileBurials(world);reconcileCommercialOnMap(world);
     detachMissingBills(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);if(world.tick%20===0)reconcileBreakdownJobs(world);reconcileRepairs(world);reconcilePowerFlicks(world);
     expireStaggers(world);advanceFilth(world,weatherRainRate(world));
     scheduleGrowing(world);
@@ -955,7 +996,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     // Sparse live references for this decision phase. Each consumer still
     // rechecks hostility/state; ordinary fauna is not scanned per colonist.
     const bombSources=captureBombDangerSources(world);
-    const animalThreats=world.wildlife?.animals.filter(a=>a.manhunter&&!['dead','downed'].includes(a.state))??[];
+    const animalThreats=captureAnimalCombatThreats256(world);
     const getThreats=()=>threatQueries(world,animalThreats);
     advanceBeautyNeeds(world,getLight().topology);
     advanceFlowerPots(world,getLight(),new TemperatureView(world,thermal));
@@ -982,7 +1023,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
       const completedEdge=pawn.moveCooldown>0&&(pawn.motion?.end??0)<=world.tick;
       pawn.moveCooldown = Math.max(0, (pawn.motion?.end ?? world.tick) - world.tick); if (pawn.planCooldown > 0) pawn.planCooldown--;
       advanceHeatExposure(world,pawn,()=>new TemperatureView(world,thermal).at(world,pawn));
-      const body=updatePawnHealth(world,pawn);
+      const body=updatePawnHealth(world,pawn);reconcileAncientCasketOpening256(world,pawn);
       reconcileAllowedAreaPawn(world,pawn);
       if(pawn.animalRescue)reconcileAnimalRescues(world,pawn);
       if(prisonBreakActive(pawn)&&(pawn.state==='downed'||pawn.state==='dead'))endPrisonBreak(world,pawn);
@@ -995,7 +1036,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
       if(pawn.health)bleedFilth(world,pawn,medicalBleed(pawn.health),pawn.state==='downed'||pawn.state==='sleeping');
       tickSkills(world,pawn);
       updateNeeds(world, pawn,body,getFurnitureSight,()=>getLight().topology);
-      updateMentalBreak(world,pawn,budget);
+      updateMentalBreak(world,pawn,budget);reconcileAncientCasketOpening256(world,pawn);
       if(prisonBreakActive(pawn)&&(pawn.mental?.crisis||pawn.state==='downed'||pawn.need))endPrisonBreak(world,pawn);
       if(pawn.mental?.crisis){
         if(scoutOnMapId(world)===pawn.id)applyScoutCommand(world,{type:'scout-cancel'});
@@ -1011,7 +1052,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
       if(pawn.need?.kind==='eat' && pawn.need.dining && !validDiningPlace(world,pawn.need.dining)) {pawn.need.phase='choose-spot';pawn.need.dining=null;pawn.need.progress=0;delete pawn.need.workRemainder;pawn.path=[];pawn.state='moving';}
       if(pawn.orbitalTrade)reconcileOrbitalTrade(world,pawn);if(pawn.deepWork)reconcileDeepWork(world,pawn);
       reconcileAllowedAreaPawn(world,pawn);
-      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = groupOnMapMember(world,pawn.id) || scoutOnMapId(world)===pawn.id || commercialOnMapId(world)===pawn.id || pawn.orbitalTrade || pawn.deepWork || pawn.animalHandling || pawn.animalCare || pawn.animalFeed || pawn.animalRescue || pawn.burial || pawn.cleaning || pawn.visitor || pawn.podRescue || pawn.trade || pawn.burning || pawn.firefighting || pawn.hunting || pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.bombRefuge || pawn.heatRefuge || pawn.research || pawn.allowedAreaReturn || pawn.jobId !== null || pawn.equipmentTask || pawn.ward || pawn.feed || pawn.tend || pawn.surgery || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
+      if (pawn.moveCooldown > 0) { if(pawn.draft)pawn.draft.lastActiveTick=world.tick; pawn.state = groupOnMapMember(world,pawn.id) || scoutOnMapId(world)===pawn.id || commercialOnMapId(world)===pawn.id || pawn.orbitalTrade || pawn.deepWork || pawn.animalHandling || pawn.animalCare || pawn.animalFeed || pawn.animalRescue || pawn.burial || pawn.openCasket || pawn.cleaning || pawn.visitor || pawn.podRescue || pawn.trade || pawn.burning || pawn.firefighting || pawn.hunting || pawn.mental?.crisis || pawn.raid || pawn.tactics || pawn.melee || pawn.flee || pawn.draft || pawn.bombRefuge || pawn.heatRefuge || pawn.research || pawn.allowedAreaReturn || pawn.jobId !== null || pawn.equipmentTask || pawn.ward || pawn.feed || pawn.tend || pawn.surgery || pawn.rescue || pawn.haul || pawn.need || pawn.cooking || pawn.recreation.task ? 'moving' : 'idle'; continue; }
       const needsContext = {
         recreationTopology:()=>getLight().topology,
         searchAllowed:(policy:import('./allowed-area-state.ts').AllowedAreaPolicy)=>searchAllowed(world,pawn,getBlocked(),occupied,budget,policy),
@@ -1046,7 +1087,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
       if(processCommercialOnMap(world,pawn,needsContext))continue;
       if(processScoutLoading(world,pawn,needsContext))continue;
       if(processPrisonBreak(world,pawn,getBlocked,budget,getLight,needsContext))continue;
-      if(pawn.prisoner&&!(world.schemaVersion>=213&&isColonist(pawn)&&pawn.mental?.crisis)){processPrisoner(world,pawn,needsContext);continue;}
+      if(pawn.prisoner&&!(world.schemaVersion>=213&&isColonist(pawn)&&pawn.mental?.crisis)&&pawn.mental?.crisis?.kind!=='confused-wander'){processPrisoner(world,pawn,needsContext);continue;}
       if(pawn.mental?.crisis){
         if(isAggressiveCrisis(pawn.mental))processAggressiveCrisis(world,pawn,getBlocked,budget,getLight,needsContext);
         else processMentalBreak(world,pawn,needsContext,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget));
@@ -1080,6 +1121,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
       if(pawn.orbitalTrade&&processOrbitalTrade(world,pawn,needsContext))continue;
       if(pawn.trade&&processTrade(world,pawn,needsContext))continue;
       if(pawn.equipmentTask){processEquipment(world,pawn,needsContext);continue;}
+      if(pawn.openCasket&&processAncientCasketOpening256(world,pawn,needsContext))continue;
       if(pawn.orders.active==='bury'&&pawn.burial){processBurial(world,pawn,needsContext);continue;}
       if(pawn.cleaning?.forced&&processCleaning(world,pawn,needsContext))continue;
       if (advanceOrders(world,pawn,getBlocked,budget)) continue;
@@ -1132,14 +1174,14 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
         const plant=world.resources.find(r=>r.id===job.clearance!.resourceId);
         if(!plant){releaseWork(world,pawn);continue;}
         if(adjacent(pawn,plant)) {
-          pawn.path=[];pawn.state='working';const duration=clearingDuration(plant);
+          pawn.path=[];finishArrivalFacing256(pawn,plant);pawn.state='working';const duration=clearingDuration(plant);
           // Only the exact persisted output boundary uses the planner cooldown.
           // Ordinary assigned jobs already have a cooldown and must still work.
           const outputPending=clearanceOutputPending(job,duration);
           if(outputPending&&pawn.planCooldown>0)continue;
           // The first failed producer already paid the completion work/XP.
           // A retry is output preflight, never another tick of plant work.
-          if(!outputPending)advanceWork(job.clearance,getLight().speedAt(pawn)*plantWorkRate(pawn,body,world.schemaVersion>=235&&clearingKind(world,plant)==='cut'?plantCanYieldNow(world,plant):plant.kind==='tree'&&choppable(world,plant)&&berryYield(world,plant)>0));
+          if(!outputPending)advanceWork(job.clearance,getLight().speedAt(pawn)*plantWorkRate(pawn,body,world.schemaVersion>=235&&clearingKind(world,plant)==='cut'?plantCanYieldNow(world,plant):plant.kind==='tree'&&choppable(world,plant)&&berryYield(world,plant)>0)*plantWorkGrowthFactor256(world,plant));
           if(outputPending||job.clearance.progress>=duration) {
             const quantity=gatherResource(world,plant,clearingKind(world,plant),job.id,pawn);
             if(quantity===null){retainClearingWorkAfterOutputRefusal(job,duration);pawn.planCooldown=20;continue;}
@@ -1150,13 +1192,13 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
         continue;
       }
       if(job.kind==='flick'){
-        if(footprintCells(job).some(c=>adjacent(pawn,c))&&!footprintCells(job).some(c=>sameCell(pawn,c))){pawn.path=[];pawn.state='working';if(advancePowerFlick(world,job)){releaseWork(world,pawn);world.jobs=world.jobs.filter(j=>j!==job);invalidateEnvironment();event(world,'job',`${pawn.name} a actionné l’interrupteur.`);}}
+        if(footprintCells(job).some(c=>adjacent(pawn,c))&&!footprintCells(job).some(c=>sameCell(pawn,c))){pawn.path=[];finishArrivalFacing256(pawn,job);pawn.state='working';if(advancePowerFlick(world,job)){releaseWork(world,pawn);world.jobs=world.jobs.filter(j=>j!==job);invalidateEnvironment();event(world,'job',`${pawn.name} a actionné l’interrupteur.`);}}
         else moveToward(world,pawn,job,false,getBlocked,budget,false,getLight);
         continue;
       }
       if(job.kind==='repair'){
-        if(adjacent(pawn,job)&&!sameCell(pawn,job)){if(advanceRepair(world,pawn,job,getLight().speedAt(pawn),body)){releaseWork(world,pawn);world.jobs=world.jobs.filter(j=>j!==job);event(world,'job',`${pawn.name} a réparé l’ouvrage.`);}}
-        else moveToward(world,pawn,job,false,getBlocked,budget,false,getLight);
+        if(ancientRepairContact256(world,pawn,job)){if(advanceRepair(world,pawn,job,getLight().speedAt(pawn),body)){releaseWork(world,pawn);world.jobs=world.jobs.filter(j=>j!==job);event(world,'job',`${pawn.name} a réparé l’ouvrage.`);}}
+        else moveToward(world,pawn,ancientRepairTarget256(world,job),false,getBlocked,budget,false,getLight);
         continue;
       }
       if(job.kind==='fix-breakdown'){
@@ -1179,7 +1221,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
       }
       const cells = footprintCells(job);
       if (cells.some(cell => adjacent(pawn, cell)) && !cells.some(cell => sameCell(pawn, cell))) {
-        pawn.path = []; pawn.state = 'working';
+        pawn.path = []; finishArrivalFacing256(pawn,job);pawn.state = 'working';
         // Historical frames (including zero-material graves) are not erased
         // during load/designation. Retire their small plants at real work contact.
         const frameCells=isConstruction(job)&&job.construction==='frame'&&job.kind!=='lay-floor'&&job.kind!=='build-bridge'?footprintCells(job):undefined;
@@ -1197,7 +1239,8 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
         // Flower pots and all historical CHOP/HARVEST paths keep their work.
         const cutOutputPending=world.schemaVersion>=235&&job.kind==='cut'&&job.flowerPotId===undefined&&workOutputPending(job,jobDuration(world,job));
         if(cutOutputPending&&pawn.planCooldown>0)continue;
-        if(!cutOutputPending)advanceWork(job,plantJob?getLight().speedAt(pawn)*plantWorkRate(pawn,body,plantLearning):constructionWorkRate(pawn,job,getLight().speedAt(pawn),body));
+        const physicalPlant=job.flowerPotId===undefined&&['harvest','cut','chop'].includes(job.kind)?resourceAt(world,job.z*world.width+job.x):undefined;
+        if(!cutOutputPending)advanceWork(job,plantJob?getLight().speedAt(pawn)*plantWorkRate(pawn,body,plantLearning)*(physicalPlant?plantWorkGrowthFactor256(world,physicalPlant):1):constructionWorkRate(pawn,job,getLight().speedAt(pawn),body));
         if (cutOutputPending||workProgress(job) >= jobDuration(world, job)) {completeJob(world, pawn, job);blocked=undefined;roofs=undefined;invalidateEnvironment();}
       } else moveToward(world, pawn, job, false, getBlocked, budget,false,getLight);
     }
@@ -1224,6 +1267,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     // Death is captured before an active traveller becomes an immutable archive.
     if(world.schemaVersion>=236)advanceMinifiedTrees(world);
     advanceScoutTrip(world);advanceCommercialTrip(world);if(!world.worldMaps&&!isSecondaryContext(world))advanceGroup(world);
+    advanceAncientShrineWarnings256(world);
     advanceStartingArrival(world);if(world.schemaVersion<236)advanceMinifiedTrees(world);
     refreshStock(world);reconcileSpikeTrapContacts(world);
     if(thermalDirty)thermal=reconcileTemperature(world);

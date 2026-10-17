@@ -1,3 +1,4 @@
+import {type BuildableFixtureKind} from './helpers/legacy-fixture-guards.ts';
 import { writeTestFileSync } from './test-output.ts';
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
@@ -16,7 +17,7 @@ const load=()=>deserializeWorld(fixtureBytes.toString('utf8'));
 const accept=(world:World,command:Command)=>expect(applyCommand(world,command),JSON.stringify(command)).toMatchObject({ok:true});
 const living=(world:World)=>world.pawns.filter(p=>isColonist(p)&&p.state!=='dead');
 
-function site(world:World,kind:StructureKind,material:'wood'|'steel',anchor:Cell):Cell {
+function site(world:World,kind:BuildableFixtureKind,material:'wood'|'steel',anchor:Cell):Cell {
   for(let radius=2;radius<=24;radius++)for(let dz=-radius;dz<=radius;dz++)for(let dx=-radius;dx<=radius;dx++){
     if(Math.max(Math.abs(dx),Math.abs(dz))!==radius)continue;
     const command:DesignateCommand={type:'designate',kind,material,x:anchor.x+dx,z:anchor.z+dz,orientation:0};

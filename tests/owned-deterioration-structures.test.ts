@@ -1,3 +1,4 @@
+import {legacyCampaignMap} from './helpers/legacy-fixture-guards.ts';
 import {afterEach,expect,test,vi} from 'vitest';
 import {createOwnedDeteriorationOwner,validDeteriorationHistoricalTransport,validDeteriorationTransport} from '../src/sim/deterioration-save.ts';
 import {createDeteriorationState} from '../src/sim/deterioration-content.ts';
@@ -175,7 +176,7 @@ test('membership/order edits, checkpoints and genuine two-map projections remain
   expect(native.frontiers.at(-1)!.witness).toBe(false);
   if(accepted.status==='applied')seen.push(accepted.world);
  }
- expect(seen[0]!.campaignMap!.active).toBe('home');expect(seen[1]!.campaignMap!.active).toBe('secondary');expect(seen[2]!.campaignMap!.active).toBe('home');
+ expect(legacyCampaignMap(seen[0]!).active).toBe('home');expect(legacyCampaignMap(seen[1]!).active).toBe('secondary');expect(legacyCampaignMap(seen[2]!).active).toBe('home');
  expect(seen[0]).toEqual(seen[2]);expect(seen[0]!.structures).not.toBe(seen[2]!.structures);
 });
 

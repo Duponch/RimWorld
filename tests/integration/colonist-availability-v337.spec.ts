@@ -33,14 +33,15 @@ function groupCheckpoint(){
   const members=w.pawns.slice(0,2),resident=w.pawns[2]!;
   addMaterial(w,'food',members.length,{type:'inventory',pawnId:members[0]!.id},'survival-meal');
   expect(applyCommand(w,{type:'planet-adopt'}).ok).toBe(true);
-  expect(applyCommand(w,{type:'group-start',memberIds:members.map(p=>p.id),destination:w.planet!.civilianTile,sources:[]}).ok).toBe(true);
+  const planet=w.planet;if(!planet||planet.revision===3)throw Error('Historical availability fixture requires its revision1/2 planet');
+  expect(applyCommand(w,{type:'group-start',memberIds:members.map(p=>p.id),destination:planet.civilianTile,sources:[]}).ok).toBe(true);
   const formation=w.group;if(!formation||!('exits' in formation))throw Error('Missing actual group formation');formation.phase='leaving';
   // Only the movement frontier is prepared; original people/possessions are
   // then transferred by the same atomic producer as an ordinary departure.
   for(const exit of formation.exits){const p=w.pawns.find(p=>p.id===exit.pawnId)!;if(!exit.cell)throw Error('Missing legal exit');
     p.x=exit.cell.x;p.z=exit.cell.z;p.state='idle';p.path=[];p.moveCooldown=0;p.planCooldown=0;delete p.motion;}
   tryGroupDeparture(w);const group=w.group;if(!group||!('members' in group))throw Error('Missing original outside owner');
-  group.phase='at-site';group.tile=w.planet!.civilianTile;group.destination=group.tile;group.route=[group.tile];group.segment=null;group.stop={kind:'at-site'};
+  group.phase='at-site';group.tile=planet.civilianTile;group.destination=group.tile;group.route=[group.tile];group.segment=null;group.stop={kind:'at-site'};
   // Admission requires a capable resident. Only after the true departure do
   // we prepare a clinical local death, leaving actual living travellers.
   controlledInjury(w,resident,'head',50000,'crush');expect(resident.state).toBe('dead');

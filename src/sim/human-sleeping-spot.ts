@@ -1,4 +1,5 @@
 import {isWetTerrain} from './shallow-water.ts';
+import {prepareBedOwnershipTransition256} from './actor-bed-transition-256.ts';
 import {hasTravellingCargo,interruptWork} from './interrupted-cargo.ts';
 import { footprintCells } from './definitions.ts';
 import { sharesConstructionLayer } from './power-grid.ts';
@@ -37,10 +38,12 @@ export function removeHumanSleepingSpot(world:World,spot:Structure,planned?:Drop
   const actors=humanSleepingSpotActors(world,new Set([spot.id]));
   const drops=planned??planPawnDrops(world,new Set(actors.filter(p=>!hasTravellingCargo(world,p)).map(p=>p.id)));
   if(!drops)return {ok:false,code:'occupied',reason:'Pas de place pour conserver les objets portés.'};
+  const bedOwnership=prepareBedOwnershipTransition256(world,spot,'destroy');
   // Release while the occupied service still exists, so completed clinical and
   // room observations are settled against the correct original bed.
   for(const p of actors){if(hasTravellingCargo(world,p))interruptWork(world,p,true);else if(!releaseWork(world,p,drops))throw Error('Preflighted sleeping-spot interruption failed.');p.needCooldown=0;}
   for(const p of world.pawns){if(p.bedId===spot.id){p.bedId=null;delete p.bedSlot;}p.planCooldown=0;}
   world.structures=world.structures.filter(s=>s.id!==spot.id);
+  bedOwnership?.commit();
   return {ok:true};
 }

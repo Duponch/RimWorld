@@ -39,7 +39,7 @@ function targetFor(world:World,pawn:Pawn,carried=(id:number)=>!!carrierOf(world,
 }
 function canFight(world:World,pawn:Pawn,carried=(id:number)=>!!carrierOf(world,id)):boolean {
   const order=pawn.melee?.order;
-  return (!violentWorkRefusal(pawn)||!!order&&mentalMeleeOwnership(world,pawn,order))&&!medicallyStopped(pawn)&&pawn.state!=='sleeping'&&!pawn.need&&!pawn.collapsePending&&!carried(pawn.id);
+  return (!violentWorkRefusal(pawn)||!!order&&mentalMeleeOwnership(world,pawn,order))&&!medicallyStopped(pawn)&&!pawn.health?.toxicBuildup?.vomit&&pawn.state!=='sleeping'&&!pawn.need&&!pawn.collapsePending&&!carried(pawn.id);
 }
 function structureTarget(world:World,pawn:Pawn){
   const order=pawn.melee?.order;

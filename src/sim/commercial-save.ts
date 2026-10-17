@@ -1,3 +1,4 @@
+import {validPawnMapAreasRecord,validPawnMapAreaBindings} from './pawn-map-areas.ts';
 import { isColonist } from './affiliation.ts';
 import { scoutActiveTask,scoutUnstable } from './caravan-trip.ts';
 import { commercialMass } from './commercial-mass.ts';
@@ -81,7 +82,7 @@ export function validateCommercialRegistry(w:World,version:number):string[] {
     if(!int(s.leftPostAt,s.arrivedAt as number,Math.min(w.tick,(s.arrivedAt as number)+COMMERCIAL_DECISION_TICKS))||s.returnAt!==(s.leftPostAt as number)+COMMERCIAL_LEG_TICKS
       ||!int(s.returnAt)|| (s.phase==='returning'?w.tick>=s.returnAt:w.tick<s.returnAt))return ['Invalid commercial return clock.'];
   }
-  const p=s.pawn;
+  const p=s.pawn;if(!validPawnMapAreasRecord(p,version,w.nextId)||version>=256&&!validPawnMapAreaBindings(p as unknown as import('./types.ts').Pawn,w,false))return ['Invalid individual per-map area reference.'];
   if(!int(p.id,1,w.nextId-1)||w.pawns.some(q=>q?.id===p.id)||!isColonist(p as unknown as Pawn)||p.prisoner||p.visitor||p.raid||p.podRescue
     ||p.x!==(s.entry as Record<string,unknown>).x||p.z!==(s.entry as Record<string,unknown>).z||p.state!=='idle'||p.bedId!==null||Object.hasOwn(p,'bedSlot')||p.jobId!==null||p.haul!==null||p.cooking!==null||p.need!==null
     ||!Array.isArray(p.path)||p.path.length||p.moveCooldown!==0||p.motion!==undefined||!object(p.orders)||p.orders.active!==null||!Array.isArray(p.orders.queue)||p.orders.queue.length

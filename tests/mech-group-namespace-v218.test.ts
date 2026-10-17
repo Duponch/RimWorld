@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 // Private, unexecuted candidate. Imports target tests/mech-group-namespace-v218.test.ts.
 import { expect,test } from 'vitest';
 import { createScenarioWorld } from '../src/sim/new-game.ts';
@@ -44,7 +45,7 @@ function departure() {
   if(!silver)throw Error('The real inventory silver was not created.');
   checkpoint(w);
   expect(applyCommand(w,{type:'planet-adopt'}).ok).toBe(true);
-  expect(applyCommand(w,{type:'group-start',memberIds:people.map(p=>p.id),destination:w.planet!.civilianTile,sources:[]}).ok).toBe(true);
+  expect(applyCommand(w,{type:'group-start',memberIds:people.map(p=>p.id),destination:legacyPlanet(w).civilianTile,sources:[]}).ok).toBe(true);
   const formation=w.group;
   if(!formation||!('exits' in formation))throw Error('The real group formation is missing.');
   // Prepare only the final legal exit frontier, as in the V216 owner tests.
@@ -63,7 +64,7 @@ function departure() {
   expect(away.members[0]).toBe(person);expect(away.items).toContain(silver);
   expect(w.pawns.some(p=>p.id===person.id)).toBe(false);expect(w.piles.some(p=>p.id===silver.id)).toBe(false);
   // A stationary current site is prepared; no geographic journey is claimed.
-  away.phase='at-site';away.tile=w.planet!.civilianTile;away.destination=away.tile;
+  away.phase='at-site';away.tile=legacyPlanet(w).civilianTile;away.destination=away.tile;
   away.route=[away.tile];away.segment=null;away.stop={kind:'at-site'};
   checkpoint(w);
   return {w,person,silver};

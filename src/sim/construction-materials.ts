@@ -1,9 +1,15 @@
+import {isCaveHiveKind256} from './cave-hive-state-256.ts';
+import {shipChunkRecipe256} from './ship-chunk-256.ts';
+import {isAncientMonumentKind256,ancientMonumentMaterial256,ancientMonumentRecipe256} from './ancient-monument-props-256.ts';
+import {isLocalRoadProp256,localRoadPropRecipe256} from './local-road-props-256.ts';
+import type {LocalRoadProp256} from './local-road-data-256.ts';
+import {BEDROLL_MATERIALS_256} from './bedroll-textiles-256.ts';
 import { JOB_DURATION, JOB_WOOD_COST, STRUCTURE_DEFINITIONS } from './definitions.ts';
 import { reservedDestination } from './materials.ts';
 import type { ItemId } from './items.ts';
 import type { Job, JobKind, StructureKind, World } from './types.ts';
 import { flooringRecipe,type FloorKind } from './flooring.ts';
-import { FURNITURE_DEFINITIONS,isHabitatFurnitureKind,isSculptureMaterial,materialAllowed } from './furniture-stats.ts';
+import { FURNITURE_DEFINITIONS,furnitureWorkToBuildCore,isHabitatFurnitureKind,isSculptureMaterial,materialAllowed } from './furniture-stats.ts';
 import { ART_MATERIALS } from './art-rules.ts';
 import { powerConstructionSkill } from './power-construction.ts';
 import { SCHEMA_VERSION } from './types.ts';
@@ -14,12 +20,15 @@ export interface ConstructionCost { item: ItemId; quantity:number }
 export interface ConstructionRecipe { ingredients:readonly ConstructionCost[]; work:number; coreWork:number }
 /** Replacement component is a physical delivery to a maintenance intention. */
 const BREAKDOWN_RECIPE:ConstructionRecipe=Object.freeze({ingredients:Object.freeze([Object.freeze({item:'component' as const,quantity:1})]),work:100,coreWork:1000});
-type ConstructionObject={kind:JobKind;material?:ConstructionMaterial;floor?:FloorKind};
+type ConstructionObject={kind:JobKind|LocalRoadProp256|'ship-chunk'|'ancient-cryptosleep-casket'|import('./cave-hive-state-256.ts').CaveHiveKind256;material?:ConstructionMaterial;floor?:FloorKind};
 // Core base work before the stuff factor, in Core ticks. Absence of material
 // deliberately keeps the V1–V29 historical recipe on existing objects.
-const costs:Record<StructureKind,number>={'torch-lamp':20,shelf:20,'small-shelf':10,'spike-trap':45,'electric-crematorium':150,'double-bed':85,'electric-smelter':170,'sleeping-spot':0,'animal-sleeping-spot':0,'biofuel-refinery':150,'chemfuel-generator':100,'nutrient-paste-dispenser':125,hopper:15,'orbital-beacon':40,'comms-console':120,'deep-drill':100,'ground-scanner':150,'vitals-monitor':50,'drug-lab':50,'hydroponics-basin':100,'mini-turret':100,'tube-television':80,sandbags:5,fence:1,'fence-gate':25,'pen-marker':30,'art-bench':75,'small-sculpture':50,'large-sculpture':100,'machining-table':150,'fabrication-bench':200,'hi-tech-research-bench':250,'multi-analyzer':40,grave:0,heater:50,'wind-turbine':100,'power-conduit':1,'power-switch':15,battery:70,'solar-generator':100,'fueled-stove':80,'electric-stove':80,'butcher-table':95,'butcher-spot':0,cooler:90,vent:30,'research-bench':75,'tailor-bench':75,'electric-tailor-bench':75,'crafting-spot':0,'wood-generator':100,'standing-lamp':20,'sun-lamp':40,'passive-cooler':50,door:25,autodoor:25,stonecutter:75,wall:5,bed:45,'hospital-bed':40,table:28,'table-square':50,'table-long':95,stool:25,'dining-chair':45,armchair:110,'end-table':30,dresser:50,'flower-pot':20,campfire:20,horseshoes:10,'chess-table':70};
-const work:Record<StructureKind,number>={'torch-lamp':100,shelf:500,'small-shelf':250,'spike-trap':3200,'electric-crematorium':4500,'double-bed':1500,'electric-smelter':3500,'sleeping-spot':0,'animal-sleeping-spot':0,'biofuel-refinery':2000,'chemfuel-generator':2500,'nutrient-paste-dispenser':2200,hopper:300,'orbital-beacon':800,'comms-console':2200,'deep-drill':10000,'ground-scanner':12000,'vitals-monitor':6000,'drug-lab':3500,'hydroponics-basin':2800,'mini-turret':1800,'tube-television':10000,sandbags:180,fence:70,'fence-gate':500,'pen-marker':600,'art-bench':2500,'small-sculpture':0,'large-sculpture':0,'machining-table':3000,'fabrication-bench':5000,'hi-tech-research-bench':5000,'multi-analyzer':10000,grave:800,heater:1000,'wind-turbine':3300,'power-conduit':35,'power-switch':200,battery:800,'solar-generator':2500,'fueled-stove':2000,'electric-stove':2000,'butcher-table':2000,'butcher-spot':0,cooler:1600,vent:400,'research-bench':2800,'tailor-bench':2000,'electric-tailor-bench':2500,'crafting-spot':0,'wood-generator':2500,'standing-lamp':300,'sun-lamp':330,'passive-cooler':200,door:850,autodoor:1100,stonecutter:2000,wall:135,bed:800,'hospital-bed':2800,table:750,'table-square':1500,'table-long':3000,stool:450,'dining-chair':8000,armchair:14000,'end-table':1000,dresser:2000,'flower-pot':250,campfire:200,horseshoes:100,'chess-table':8000};
+const costs:Record<Exclude<StructureKind,LocalRoadProp256|'ship-chunk'|'ancient-cryptosleep-casket'|import('./cave-hive-state-256.ts').CaveHiveKind256>,number>={column:20,urn:20,'stele-large':125,'stele-grand':250,sarcophagus:60,'torch-lamp':20,shelf:20,'small-shelf':10,'spike-trap':45,'electric-crematorium':150,'double-bed':85,'electric-smelter':170,'sleeping-spot':0,'animal-sleeping-spot':0,'biofuel-refinery':150,'chemfuel-generator':100,'nutrient-paste-dispenser':125,hopper:15,'orbital-beacon':40,'comms-console':120,'deep-drill':100,'ground-scanner':150,'vitals-monitor':50,'drug-lab':50,'hydroponics-basin':100,'mini-turret':100,'tube-television':80,sandbags:5,fence:1,'fence-gate':25,'pen-marker':30,'art-bench':75,'small-sculpture':50,'large-sculpture':100,'machining-table':150,'fabrication-bench':200,'hi-tech-research-bench':250,'multi-analyzer':40,grave:0,heater:50,'wind-turbine':100,'power-conduit':1,'power-switch':15,battery:70,'solar-generator':100,'fueled-stove':80,'electric-stove':80,'butcher-table':95,'butcher-spot':0,cooler:90,vent:30,'research-bench':75,'tailor-bench':75,'electric-tailor-bench':75,'crafting-spot':0,'wood-generator':100,'standing-lamp':20,'sun-lamp':40,'passive-cooler':50,door:25,autodoor:25,stonecutter:75,wall:5,bedroll:40,bed:45,'hospital-bed':40,table:28,'table-square':50,'table-long':95,stool:25,'dining-chair':45,armchair:110,'end-table':30,dresser:50,'flower-pot':20,campfire:20,horseshoes:10,'chess-table':70};
+const work:Record<Exclude<StructureKind,LocalRoadProp256|'ship-chunk'|'ancient-cryptosleep-casket'|import('./cave-hive-state-256.ts').CaveHiveKind256>,number>={column:750,urn:500,'stele-large':8000,'stele-grand':16000,sarcophagus:2400,'torch-lamp':100,shelf:500,'small-shelf':250,'spike-trap':3200,'electric-crematorium':4500,'double-bed':1500,'electric-smelter':3500,'sleeping-spot':0,'animal-sleeping-spot':0,'biofuel-refinery':2000,'chemfuel-generator':2500,'nutrient-paste-dispenser':2200,hopper:300,'orbital-beacon':800,'comms-console':2200,'deep-drill':10000,'ground-scanner':12000,'vitals-monitor':6000,'drug-lab':3500,'hydroponics-basin':2800,'mini-turret':1800,'tube-television':10000,sandbags:180,fence:70,'fence-gate':500,'pen-marker':600,'art-bench':2500,'small-sculpture':0,'large-sculpture':0,'machining-table':3000,'fabrication-bench':5000,'hi-tech-research-bench':5000,'multi-analyzer':10000,grave:800,heater:1000,'wind-turbine':3300,'power-conduit':35,'power-switch':200,battery:800,'solar-generator':2500,'fueled-stove':2000,'electric-stove':2000,'butcher-table':2000,'butcher-spot':0,cooler:1600,vent:400,'research-bench':2800,'tailor-bench':2000,'electric-tailor-bench':2500,'crafting-spot':0,'wood-generator':2500,'standing-lamp':300,'sun-lamp':330,'passive-cooler':200,door:850,autodoor:1100,stonecutter:2000,wall:135,bedroll:600,bed:800,'hospital-bed':2800,table:750,'table-square':1500,'table-long':3000,stool:450,'dining-chair':8000,armchair:14000,'end-table':1000,dresser:2000,'flower-pot':250,campfire:200,horseshoes:100,'chess-table':8000};
 const recipes=new Map<string,ConstructionRecipe>();
+/** Only actual construction-table keys participate in stuff recipes. Natural
+ * Hive/GlowPod definitions retain their separate spawn/recovery path. */
+function hasConstructionRecipeStats(kind:JobKind):kind is keyof typeof costs {return Object.hasOwn(costs,kind)&&Object.hasOwn(work,kind);}
 // Physical ingredient provenance for salvage and damage. A sculpture has no
 // construction job: designation and save validation reject those jobs.
 for(const kind of ['small-sculpture','large-sculpture'] as const)
@@ -31,7 +40,9 @@ for(const kind of ['small-sculpture','large-sculpture'] as const)
     }));
   }
 for(const kind of Object.keys(JOB_DURATION) as JobKind[]) {
+  if(isAncientMonumentKind256(kind))continue;
   if(kind==='electric-crematorium'){for(const material of CONSTRUCTION_MATERIALS.filter(isBlockMaterial)){const stats=BUILDING_MATERIALS[material],coreWork=Math.round(4500*stats.workFactor+stats.workOffset);const ingredients:ConstructionCost[]=[{item:material,quantity:150},{item:'steel',quantity:20},{item:'component',quantity:2}];recipes.set(`${kind}:${material}`,Object.freeze({ingredients:Object.freeze(ingredients.map(c=>Object.freeze(c))),work:Math.ceil(coreWork/10),coreWork}));}continue;}
+  if(kind==='bedroll'){for(const material of BEDROLL_MATERIALS_256){const coreWork=furnitureWorkToBuildCore('bedroll',material);recipes.set(`bedroll:${material}`,Object.freeze({ingredients:Object.freeze([Object.freeze({item:material,quantity:40})]),work:Math.ceil(coreWork/10),coreWork}));}continue;}
   if(kind==='torch-lamp'){recipes.set('torch-lamp:wood',Object.freeze({ingredients:Object.freeze([Object.freeze({item:'wood' as const,quantity:20})]),work:10,coreWork:100}));continue;}
   if(kind==='vent'){recipes.set('vent:steel',Object.freeze({ingredients:Object.freeze([Object.freeze({item:'steel' as const,quantity:30})]),work:40,coreWork:400}));continue;}
   if(kind==='electric-smelter'){const ingredients:ConstructionCost[]=[{item:'steel',quantity:170},{item:'component',quantity:2}];recipes.set(`${kind}:steel`,Object.freeze({ingredients:Object.freeze(ingredients.map(c=>Object.freeze(c))),work:350,coreWork:3500}));continue;}
@@ -101,11 +112,13 @@ for(const kind of Object.keys(JOB_DURATION) as JobKind[]) {
     recipes.set(`${kind}:steel`,Object.freeze({ingredients:Object.freeze(ingredients.map(c=>Object.freeze(c))),work:work[kind]/10,coreWork:work[kind]}));continue;
   }
   if(kind!=='research-bench'&&kind!=='tailor-bench'&&kind!=='electric-tailor-bench'&&kind!=='stonecutter'&&kind!=='passive-cooler'&&kind!=='armchair'&&kind!=='autodoor')recipes.set(`${kind}:legacy`,Object.freeze({ingredients:Object.freeze(JOB_WOOD_COST[kind]?[Object.freeze({item:'wood' as const,quantity:JOB_WOOD_COST[kind]})]:[]),work:JOB_DURATION[kind],coreWork:JOB_DURATION[kind]*10}));
-  if(kind in STRUCTURE_DEFINITIONS)for(const material of CONSTRUCTION_MATERIALS) {
+  if(kind in STRUCTURE_DEFINITIONS&&hasConstructionRecipeStats(kind))for(const material of CONSTRUCTION_MATERIALS) {
+    // Only the actual Stony furniture catalogue is broadened by prospective jade.
+    if(material==='jade'&&(!isHabitatFurnitureKind(kind)||!materialAllowed(kind,material)))continue;
     if(kind==='electric-tailor-bench'||kind==='armchair'&&!isUpholsteryMaterial(material)||kind!=='armchair'&&isUpholsteryMaterial(material)||(kind==='campfire'||kind==='passive-cooler')&&material!=='wood'||(kind==='stonecutter'||kind==='tailor-bench')&&isBlockMaterial(material)||kind==='dining-chair'&&isBlockMaterial(material))continue;
-    const k=kind as StructureKind;
+    const k=kind;
     const stats=BUILDING_MATERIALS[material];
-    const coreWork=Math.round(k==='campfire'||k==='passive-cooler'?work[k]:work[k]*stats.workFactor+stats.workOffset);
+    const coreWork=material==='jade'&&isHabitatFurnitureKind(k)?furnitureWorkToBuildCore(k,material):Math.round(k==='campfire'||k==='passive-cooler'?work[k]:work[k]*stats.workFactor+stats.workOffset);
     const amounts=new Map<ConstructionMaterial,number>([[material,costs[k]]]);
     if(k==='research-bench')amounts.set('steel',(amounts.get('steel')??0)+25);
     if(k==='stonecutter')amounts.set('steel',(amounts.get('steel')??0)+30);
@@ -116,6 +129,13 @@ for(const kind of Object.keys(JOB_DURATION) as JobKind[]) {
   }
 }
 export function validConstructionMaterial(kind:unknown,material:unknown,version:number=SCHEMA_VERSION):boolean {
+  if(kind==='ancient-cryptosleep-casket')return version>=256&&material===undefined;
+  if(isAncientMonumentKind256(kind))return ancientMonumentMaterial256(kind,material,version);
+  if(kind==='ship-chunk')return version>=256&&material===undefined;
+  if(isCaveHiveKind256(kind))return version>=256&&material===undefined;
+  if(isLocalRoadProp256(kind))return version>=256&&material===undefined;
+  if(material==='jade')return version>=256&&(kind==='small-sculpture'||kind==='large-sculpture'||isHabitatFurnitureKind(kind)&&materialAllowed(kind,material))&&recipes.has(`${kind}:${material}`);
+  if(kind==='bedroll')return version>=256&&materialAllowed('bedroll',material);
   if(kind==='torch-lamp')return version>=249&&material==='wood';
   if(kind==='shelf'||kind==='small-shelf')return version>=229&&materialAllowed(kind,material);
   if(kind==='double-bed')return version>=224&&materialAllowed('double-bed',material);
@@ -157,9 +177,15 @@ export function validConstructionMaterial(kind:unknown,material:unknown,version:
   if(kind==='passive-cooler')return version>=40&&material==='wood';
   return material===undefined||typeof kind==='string'&&typeof material==='string'&&(CONSTRUCTION_MATERIALS as readonly string[]).includes(material)&&(version>=33||!isBlockMaterial(material))&&recipes.has(`${kind}:${material}`);
 }
-export const constructionMaterials=(kind:string):readonly ConstructionMaterial[]=>CONSTRUCTION_MATERIALS.filter(material=>validConstructionMaterial(kind,material));
-export const constructionSkillRequired=(kind:unknown):number=>kind==='spike-trap'?3:kind==='electric-crematorium'||kind==='electric-smelter'||kind==='biofuel-refinery'?4:kind==='nutrient-paste-dispenser'?5:kind==='comms-console'?5:kind==='drug-lab'?4:kind==='mini-turret'?5:kind==='tube-television'?7:kind==='autodoor'?6:kind==='cooler'?5:kind==='electric-stove'||kind==='electric-tailor-bench'||kind==='machining-table'?4:kind==='fabrication-bench'||kind==='hi-tech-research-bench'?6:kind==='multi-analyzer'?8:isHabitatFurnitureKind(kind)?FURNITURE_DEFINITIONS[kind].constructionSkill:powerConstructionSkill(kind as JobKind);
+export const constructionMaterials=(kind:string):readonly ConstructionMaterial[]=>kind==='bedroll'?BEDROLL_MATERIALS_256:CONSTRUCTION_MATERIALS.filter(material=>validConstructionMaterial(kind,material));
+export const constructionSkillRequired=(kind:unknown):number=>kind==='sarcophagus'?5:kind==='spike-trap'?3:kind==='electric-crematorium'||kind==='electric-smelter'||kind==='biofuel-refinery'?4:kind==='nutrient-paste-dispenser'?5:kind==='comms-console'?5:kind==='drug-lab'?4:kind==='mini-turret'?5:kind==='tube-television'?7:kind==='autodoor'?6:kind==='cooler'?5:kind==='electric-stove'||kind==='electric-tailor-bench'||kind==='machining-table'?4:kind==='fabrication-bench'||kind==='hi-tech-research-bench'?6:kind==='multi-analyzer'?8:isHabitatFurnitureKind(kind)?FURNITURE_DEFINITIONS[kind].constructionSkill:powerConstructionSkill(kind as JobKind);
 export function constructionRecipe(entity:ConstructionObject):ConstructionRecipe {
+  if(entity.kind==='ancient-cryptosleep-casket')return {ingredients:[{item:'steel',quantity:180},{item:'uranium',quantity:5}],work:.1,coreWork:1};
+  if(isAncientMonumentKind256(entity.kind)){if(!ancientMonumentMaterial256(entity.kind,entity.material,256))throw Error('Missing actual ancient Stuff');return ancientMonumentRecipe256(entity.kind,entity.material);}
+  // Fixed ingredients are for recovery/wealth, never Architecte jobs.
+  if(entity.kind==='ship-chunk')return shipChunkRecipe256();
+  if(isCaveHiveKind256(entity.kind))return {ingredients:[],work:0,coreWork:0}; // Natural spawn, never an Architecte recipe.
+  if(isLocalRoadProp256(entity.kind))return localRoadPropRecipe256(entity.kind);
   if(entity.kind==='build-bridge')return {ingredients:[{item:'wood',quantity:12}],work:150,coreWork:1500};
   if(entity.kind==='remove-bridge')return {ingredients:[],work:30,coreWork:300};
   if(entity.kind==='fix-breakdown')return BREAKDOWN_RECIPE;

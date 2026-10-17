@@ -39,7 +39,7 @@ export function applyBillCommand(world:World,command:BillCommand,drops:DropPlan)
     bill.mode=s.mode;bill.target=s.target;bill.suspended=s.suspended;
     bill.filters=Object.fromEntries(PRODUCTION_RECIPES[bill.recipe].inputs.filter(i=>s.filters[i]!==undefined).map(i=>[i,s.filters[i]]));
     bill.radius=s.radius;bill.destination=s.destination;
-    if(isSmeltingRecipe(bill.recipe)||isBurnApparelRecipe(bill.recipe))bill.smeltFilter={...s.smeltFilter!};
+    if(bill.recipe==='smelt-weapon'||isBurnApparelRecipe(bill.recipe))bill.smeltFilter={...s.smeltFilter!};
     if(isCremationRecipe(bill.recipe))bill.cremationFilter={...s.cremationFilter!};
   }
   return {ok:true};

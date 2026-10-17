@@ -1,10 +1,13 @@
+import {canPlaceWorldSettlement} from './world-settlement-placement.ts';
+import {validGeographicPlanetHeader256,planetGeography256} from './planet-geography-256.ts';
+import {planetFactionTargets256} from './planet-faction-targets-256.ts';
+import {worldBiomeCanSettle} from './world-biome-properties.ts';
 /** Strict immutable geography guard; no generation dependency or adoption. */
-import type { PlanetState, PlanetTile } from './planet-state.ts';
-import type { World } from './types.ts';
+import type { PlanetState, LegacyPlanetState, PlanetTile, PlanetValidationWorld } from './planet-state.ts';
 
 export const PLANET_TILE_COUNT = 162;
 export const PLANET_ARC_COUNT = 960;
-const PLANET_KEYS = ['revision', 'adoptedAt', 'generationSeed', 'tiles', 'homeTile', 'civilianTile', 'nextGroupId'] as const satisfies readonly (keyof PlanetState)[];
+const PLANET_KEYS = ['revision', 'adoptedAt', 'generationSeed', 'tiles', 'homeTile', 'civilianTile', 'nextGroupId'] as const satisfies readonly (keyof LegacyPlanetState)[];
 const TILE_KEYS = ['id', 'center', 'neighbours', 'biome', 'hilliness', 'meanTemperature', 'rainfall'] as const satisfies readonly (keyof PlanetTile)[];
 const BIOMES = ['ocean', 'temperate-forest', 'boreal-forest', 'arid-shrubland', 'tundra'] as const;
 const HILLS = ['flat', 'small-hills', 'large-hills', 'mountainous'] as const;
@@ -128,15 +131,30 @@ function reachableTiles(tiles: readonly PlanetTile[], start: number, landOnly: b
   return seen;
 }
 
+/** Owned prospective geometry has already crossed the complete cold boundary.
+ * Warm validation reads the closed header and real settlement targets only;
+ * no geographic column traversal, mesh allocation or PRNG occurs here. */
+export function validateGeographicPlanet256(value:unknown,realWorld:PlanetValidationWorld,version:number):string[] {
+ if(!integer(version,256,Number.MAX_SAFE_INTEGER))return ['Future or invalid geographic planet validation version.'];
+ if(!validGeographicPlanetHeader256(value)||!integer(realWorld.tick,0,Number.MAX_SAFE_INTEGER)||value.adoptedAt>realWorld.tick)return ['Invalid geographic planet header.'];
+ let geography:import('./world-geography-owner-256.ts').CampaignGeography256;try{geography=planetGeography256(value);}catch{return ['Geographic planet requires complete boundary hydration.'];}
+ const tiles=geography.surface.tiles,home=tiles[value.homeTile];if(!home||!worldBiomeCanSettle(home.biome)||home.hilliness==='impassable')return ['Invalid geographic starting tile.'];
+ const targets=planetFactionTargets256(realWorld.worldFactions,tiles);if(!targets)return ['Geographic planet lacks its real faction settlement authority.'];
+ if(!canPlaceWorldSettlement(tiles,value.homeTile,{settlementTiles:targets.occupied}))return ['Geographic starting tile overlaps a foreign settlement admission.'];
+ if(value.civilianTile===null?targets.civilianTiles.length!==0:!targets.civilianTiles.includes(value.civilianTile)||value.civilianTile===value.homeTile)return ['Geographic civilian target is not a real civil settlement.'];
+ return [];
+}
+
 /** Optional adoption: absence is legal after a neutral migration. Root MUST
  * separately reject ['planet','group','groupLosses'].some(key=>Object.hasOwn(realWorld,key))
  * under version<=195, INCLUDING undefined. This value-only guard cannot infer
  * whether undefined was absent or an own future field. No adoption is done. */
-export function validatePlanet(value: unknown, realWorld: World, version: number = realWorld.schemaVersion): string[] {
+export function validatePlanet(value: unknown, realWorld: PlanetValidationWorld, version: number = realWorld.schemaVersion): string[] {
   if (!integer(version, 1, Number.MAX_SAFE_INTEGER)) return ['Invalid planet validation version.'];
   if (value === undefined) return [];
   if (version <= 195) return ['Future planet state in historical schema.'];
   if (!integer(realWorld.tick, 0, Number.MAX_SAFE_INTEGER)) return ['Invalid planet world clock.'];
+  if(record(value)){const revision=Object.getOwnPropertyDescriptor(value,'revision');if(revision&&Object.hasOwn(revision,'value')&&revision.value===3)return validateGeographicPlanet256(value,realWorld,version);if(Object.hasOwn(value,'geography'))return ['Future geographic field in literal legacy planet.'];}
   if (!record(value) || !exactKeys(value, PLANET_KEYS)) return ['Invalid planet state shape.'];
   if (!denseArray(value.tiles, PLANET_TILE_COUNT, PLANET_TILE_COUNT)) return ['Invalid planet tile array.'];
   if (!(value.revision===1||version>=239&&value.revision===2) || !integer(value.generationSeed, 0, 0xffffffff)

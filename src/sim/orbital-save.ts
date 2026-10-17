@@ -118,7 +118,7 @@ export function validOrbitalTransport(w:World,version:number,powerTopology?:Powe
         ||p.rescue||p.tend||p.surgery||p.feed||p.ward||p.equipmentTask||p.burial||p.cleaning||p.firefighting
         ||p.shooting||p.melee||p.flee||p.tactics||p.burning||p.heatRefuge||p.bombRefuge||p.trade
         ||p.recreation.task||p.orders.active!==null||p.orders.queue.length||w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id))return false;
-      for(const other of w.pawns)if(other!==p){const c=serviceCell(other);if(c&&c.x===spot.x&&c.z===spot.z)return false;}
+      for(const other of w.pawns)if(other!==p){const c=serviceCell(other,w);if(c&&c.x===spot.x&&c.z===spot.z)return false;}
       consoles.add(console.id);claimedShips.add(t.shipId);spots.add(index);
     }
     return true;

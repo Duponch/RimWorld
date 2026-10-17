@@ -16,10 +16,10 @@ import type { ItemId } from './items.ts';
 /** Damageable defense structures; low cover is traversable, unlike a breach. */
 export const isBarrier=(s:Pick<Structure,'kind'>):boolean=>s.kind==='wall'||isRoomDoor(s.kind)||(s.kind==='cooler'||s.kind==='vent')||s.kind==='sandbags';
 export const isBreachableBarrier=(s:Pick<Structure,'kind'>):boolean=>s.kind==='wall'||isRoomDoor(s.kind)||(s.kind==='cooler'||s.kind==='vent');
-const FACTORS:Record<ConstructionMaterial,number>={wood:.65,steel:1,'granite-blocks':1.7,'limestone-blocks':1.55,'marble-blocks':1.2,'sandstone-blocks':1.4,'slate-blocks':1.3,cloth:1,'light-leather':1};
-export const barrierMaxHp=(s:Pick<Structure,'kind'|'material'>):number=>(s.kind==='cooler'||s.kind==='vent')?100:Math.round((isRoomDoor(s.kind)?160:300)*FACTORS[s.material??'wood']);
+const FACTORS:Readonly<Partial<Record<ConstructionMaterial,number>>>={wood:.65,steel:1,'granite-blocks':1.7,'limestone-blocks':1.55,'marble-blocks':1.2,'sandstone-blocks':1.4,'slate-blocks':1.3,cloth:1,'light-leather':1};
+export const barrierMaxHp=(s:Pick<Structure,'kind'|'material'>):number=>(s.kind==='cooler'||s.kind==='vent')?100:Math.round((isRoomDoor(s.kind)?160:300)*(FACTORS[s.material??'wood']??NaN));
 export const barrierHp=(s:Structure):number=>barrierMaxHp(s)-(s.damage??0);
-export interface DestructionLedger { count:number; lost:Partial<Record<ConstructionMaterial|'component'|'advanced-component',number>>;fuelTicksLost?:number;fuelTicksBurned?:number;batteryEnergyLost?:number;items?:Partial<Record<ItemId,number>>;resources?:Partial<Record<ResourceKind,number>>;woodPotentialLost?:number }
+export interface DestructionLedger { natural?:import('./cave-hive-loss-256.ts').HiveNaturalLoss256; count:number; lost:Partial<Record<ConstructionMaterial|'component'|'advanced-component'|'uranium',number>>;fuelTicksLost?:number;fuelTicksBurned?:number;batteryEnergyLost?:number;items?:Partial<Record<ItemId,number>>;resources?:Partial<Record<ResourceKind,number>>;woodPotentialLost?:number }
 
 /** Walls/doors drop nothing; cooler, vent and sandbags salvage a recipe quarter.
  * Record only destroyed material, independently of deconstruction losses. */

@@ -1,7 +1,10 @@
+import {startingPetFourNoTamenessDecay256} from './starting-pet-four-tameness-256.ts';
+import {isAnimalSpecies256} from './animal-core-v256.ts';
+import {PEN_ANIMALS_256} from './animal-domestic-v256.ts';
 import { handlingFoodAllowed, handlingFoodCollectable, handlingFeedUnits, handlingStepDuration, canTameSpecies } from './animal-handling.ts';
 import { leadRopees,leadingClaimIds,livestock,MAX_ROPEES } from './animal-leading.ts';
 import { penRegion } from './animal-pens.ts';
-import { ANIMAL_PRODUCTS, productKind } from './animal-products.ts';
+import { animalProductDefinition, productKind } from './animal-products.ts';
 import { isColonist } from './affiliation.ts';
 import { isMedicine, MEDICAL_CARE } from './medicine-rules.ts';
 import { reservedSource } from './materials.ts';
@@ -26,7 +29,7 @@ const productReadyForVersion=(a:WildAnimal,version:number)=>!!a.domestic&&!!prod
 
 function validDomesticOwner(w:Pick<World,'tick'|'nextId'>&Partial<Pick<World,'structures'>>,a:WildAnimal,version:number):boolean {
   const d:unknown=a.domestic;
-  return version>=106&&(a.species==='hare'||version>=119&&livestock(a))&&obj(d)&&keys(d,['since','care','tameness','nextDecay'],version>=120?['lastTraining','penMarkerId','productFullness',...(version>=220?['slaughter']:[]),...(version>=221?['bedId']:[])]:version>=119?['lastTraining','penMarkerId']:['lastTraining'])
+  return (!isAnimalSpecies256(a.species)||version>=256)&&version>=106&&(a.species==='hare'||version>=256&&isAnimalSpecies256(a.species)||version>=119&&livestock(a))&&obj(d)&&keys(d,['since','care','tameness','nextDecay'],version>=120?['lastTraining','penMarkerId','productFullness',...(version>=220?['slaughter']:[]),...(version>=221?['bedId']:[])]:version>=119?['lastTraining','penMarkerId']:['lastTraining'])
     &&int(d.since,0,w.tick)&&typeof d.care==='string'&&Object.hasOwn(MEDICAL_CARE,d.care)&&int(d.tameness,1,5)
     &&int(d.nextDecay,0,w.tick+45000)&&(d.lastTraining===undefined||int(d.lastTraining,d.since,w.tick))
     &&(version>=120?(productForVersion(a,version)?finite(d.productFullness,0,1):d.productFullness===undefined):d.productFullness===undefined)
@@ -74,7 +77,7 @@ function validVeterinaryTask(w:World,p:Pawn,version:number):boolean {
   if(c===undefined)return true;
   if(!obj(c)||!keys(c,['animalId','spot','phase','progress'],['medicine','duration'])||!int(c.animalId,1,w.nextId-1))return false;
   const a=w.wildlife?.animals.find(a=>a.id===c.animalId);
-  if(!a||!veterinaryCareSpeciesAllowed(a.species,version)||!validDomesticOwner(w,a,version)
+  if(!a||!veterinaryCareSpeciesAllowed(a.species,version,a)||!validDomesticOwner(w,a,version)
     ||!obj(c.spot)||!keys(c.spot,['x','z'])||!int(c.spot.x,0,w.width-1)||!int(c.spot.z,0,w.height-1)
     ||!['pickup','approach','treat'].includes(String(c.phase))||!finite(c.progress,0)
     ||(c.phase==='treat'?!finite(c.duration,1,6000)||Number(c.progress)>=Number(c.duration):c.duration!==undefined||c.progress!==0))return false;
@@ -106,7 +109,7 @@ function validAnimalFeedTask(w:World,p:Pawn,version:number):boolean {
     ||!['pickup','deliver','feed'].includes(String(raw.phase))||!int(raw.progress,0,ANIMAL_FEED_TICKS-1)
     ||raw.phase!=='feed'&&raw.progress!==0||(raw.phase==='pickup'?raw.carryPileId!==null:!int(raw.carryPileId,1,w.nextId-1)))return false;
   const a=w.wildlife?.animals.find(a=>a.id===raw.animalId),task=p.animalFeed!;
-  if(!a||!veterinaryCareSpeciesAllowed(a.species,version)||!validDomesticOwner(w,a,version)||!animalFeedPlaceValid(w,task,a))return false;
+  if(!a||!veterinaryCareSpeciesAllowed(a.species,version,a)||!validDomesticOwner(w,a,version)||!animalFeedPlaceValid(w,task,a))return false;
   if(!isColonist(p)||p.prisoner||p.visitor||p.raid||p.podRescue||p.draft||p.mental?.crisis||p.interruptedCargo
     ||p.need||p.haul||p.cooking||p.hunting||p.research||p.ward||p.feed||p.tend||p.surgery||p.rescue||p.animalRescue||p.equipmentTask
     ||p.burial||p.cleaning||p.firefighting||p.jobId!==null||p.melee||p.shooting?.order||p.tactics||p.flee||p.trade
@@ -161,7 +164,7 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
       :product
       ?version>=120&&keys(h,['animalId','kind','sourcePileId','carryPileId','quantity','phase','step','progress'])&&base(h)
         &&['approach','interact'].includes(String(h.phase))&&h.sourcePileId===0&&h.carryPileId===null&&h.quantity===0&&h.step===0
-        &&finite(h.progress,0,ANIMAL_PRODUCTS[h.kind as 'milk'|'shear'].work)&&Number(h.progress)<ANIMAL_PRODUCTS[h.kind as 'milk'|'shear'].work
+        &&finite(h.progress,0,(animalProductDefinition(w.wildlife!.animals.find(a=>a.id===h.animalId)!)?.work??0))&&Number(h.progress)<(animalProductDefinition(w.wildlife!.animals.find(a=>a.id===h.animalId)!)?.work??0)
       :obj(h)&&keys(h,['animalId','kind','sourcePileId','carryPileId','quantity','phase','step','progress'])&&base(h)
       &&['tame','maintain'].includes(String(h.kind))&&['pickup','approach','interact'].includes(String(h.phase))
       &&int(h.sourcePileId,1,w.nextId-1)&&(h.carryPileId===null||int(h.carryPileId,1,w.nextId-1))&&int(h.quantity,0,12)
@@ -195,15 +198,15 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
         continue;
       }
       if(t.kind==='tame'?!a.taming?.designated||!!a.domestic:!a.domestic)errors.push('Animal handling has no matching designation.');
-      if(t.kind==='maintain'&&a.species!=='hare')errors.push('Roaming livestock has no tameness maintenance.');
+      if(t.kind==='maintain'&&(startingPetFourNoTamenessDecay256(a.species)||a.species!=='hare'&&!(version>=256&&isAnimalSpecies256(a.species)&&!PEN_ANIMALS_256.includes(a.species))))errors.push('Roaming livestock or zero-wildness pet has no tameness maintenance.');
       const pile=w.piles.find(i=>i.id===(t.phase==='pickup'?t.sourcePileId:t.carryPileId));
-      const units=handlingFeedUnits(a.species);
+      const units=handlingFeedUnits(a.species,pile?.item);
       if(t.quantity!==(t.step<3?units*2:t.step<5?units:0))errors.push('Animal food does not match interaction stage.');
-      if(t.quantity===0?(t.step!==5||t.carryPileId!==null):!pile||!(t.phase==='pickup'?handlingFoodCollectable(w,pile.item):handlingFoodAllowed(w,pile.item))
+      if(t.quantity===0?(t.step!==5||t.carryPileId!==null):!pile||!(t.phase==='pickup'?handlingFoodCollectable(w,pile.item,a):handlingFoodAllowed(w,pile.item,a))
         ||(t.phase==='pickup'?t.carryPileId!==null||t.quantity!==units*2||pile.owner.type!=='ground'||reservedSource(w,pile.id)>pile.quantity:pile.owner.type!=='pawn'||pile.owner.pawnId!==p.id||pile.quantity!==t.quantity))errors.push('Animal food ownership mismatch.');
     }
   }
   return errors;
 }
 
-export function validDetachedDomesticAnimal(a:WildAnimal,tick:number,nextId:number):boolean {return a.domestic===undefined||validDomesticOwner({tick,nextId},a,255);}
+export function validDetachedDomesticAnimal(a:WildAnimal,tick:number,nextId:number,version=255):boolean {return a.domestic===undefined||validDomesticOwner({tick,nextId},a,version);}

@@ -1,3 +1,4 @@
+import {ANIMAL_MEAT_ITEMS_256,ANIMAL_CORPSE_ITEMS_256,ANIMAL_LEATHER_ITEMS_256} from './animal-items-v256.ts';
 /** Core 1.6.4871 products; source notes: docs/research/biome-products-reference-v91.md. */
 export const BIOME_ITEM_DEFINITIONS = Object.freeze({
   'red-fox-corpse':Object.freeze({label:'Dépouille de renard roux',kind:'corpse',stackLimit:1,nutrition:0,maxIngest:0,color:0x9b9981}),
@@ -40,8 +41,8 @@ export const BIOME_ITEM_DEFINITIONS = Object.freeze({
 } as const);
 export const V190_ITEM_IDS:readonly string[]=Object.freeze(Object.keys(BIOME_ITEM_DEFINITIONS).filter(id=>id.startsWith('red-fox-')||id==='foxfur'||id.startsWith('foxfur-')));
 export const V91_ITEM_IDS:readonly string[]=Object.freeze(Object.keys(BIOME_ITEM_DEFINITIONS).filter(id=>!V190_ITEM_IDS.includes(id)));
-export const ANIMAL_MEAT_ITEMS=['hare-meat','snow-hare-meat','deer-meat','muffalo-meat','gazelle-meat','dromedary-meat','red-fox-meat'] as const;
-export const ANIMAL_CORPSE_ITEMS=['hare-corpse','snow-hare-corpse','deer-corpse','muffalo-corpse','gazelle-corpse','dromedary-corpse','red-fox-corpse'] as const;
-export const ANIMAL_LEATHER_ITEMS=['light-leather','plainleather','bluefur','camelhide','foxfur'] as const;
+export const ANIMAL_MEAT_ITEMS=['hare-meat','snow-hare-meat','deer-meat','muffalo-meat','gazelle-meat','dromedary-meat','red-fox-meat',...ANIMAL_MEAT_ITEMS_256] as const;
+export const ANIMAL_CORPSE_ITEMS=['hare-corpse','snow-hare-corpse','deer-corpse','muffalo-corpse','gazelle-corpse','dromedary-corpse','red-fox-corpse',...ANIMAL_CORPSE_ITEMS_256] as const;
+export const ANIMAL_LEATHER_ITEMS=['light-leather','plainleather','bluefur','camelhide','foxfur',...ANIMAL_LEATHER_ITEMS_256] as const;
 export const isAnimalMeat=(item:string):item is typeof ANIMAL_MEAT_ITEMS[number] => (ANIMAL_MEAT_ITEMS as readonly string[]).includes(item);
 export const isAnimalCorpseItem=(item:string):item is typeof ANIMAL_CORPSE_ITEMS[number] => (ANIMAL_CORPSE_ITEMS as readonly string[]).includes(item);

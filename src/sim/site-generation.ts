@@ -6,7 +6,7 @@ import {MARSH_SCHEMA_VERSION} from './marsh.ts';
 import {SCHEMA_VERSION} from './types.ts';
 import { emptyLandscape } from './generation.ts';
 import { geologicalField } from './geology.ts';
-import { isBiomeSite,type LocalSite } from './site.ts';
+import { isBiomeSite,type LegacySite,type BiomeSite } from './site.ts';
 import { generateSiteFields } from './site-noise.ts';
 import { generateSiteOres } from './site-ores.ts';
 import { generateBiomeSiteVegetation,generateSiteChunks,generateSiteVegetation } from './site-vegetation.ts';
@@ -20,7 +20,7 @@ export const SITE_ELEVATION_FACTORS={flat:.8,'small-hills':.9,'large-hills':1} a
  * ponds use an original prospective field. Historical RAW maps are never regenerated.
  * Terrain is the authority after creation. No clipping to a target rock quota,
  * no cleanup of small mountains, and no clearing resources for a landing spot. */
-export function generateSiteWorld(seed:number,width:number,height:number,site:LocalSite,generationVersion:number=SCHEMA_VERSION):World {
+export function generateSiteWorld(seed:number,width:number,height:number,site:LegacySite|BiomeSite,generationVersion:number=SCHEMA_VERSION):World {
   const world=emptyLandscape(seed,width,height),stoneAt=geologicalField(world.seed,site.stones);
   const fields=generateSiteFields(world.seed,width,height,SITE_ELEVATION_FACTORS[site.hilliness]);
   world.tiles=Array.from(fields.elevation,(elevation,i)=>{

@@ -6,7 +6,10 @@ import { isWaterTerrain } from './surface-height';
 import { clearGroup, type Placement } from './primitives';
 import { mergedInstances, noise } from './StaticGeometry';
 const scratchColor=new THREE.Color();
-export const TERRAIN_COLORS: Record<Terrain, number> = { 'rich-soil':0x665642,gravel:0x999783,'rough-stone':0x899182, grass: 0x81946c, soil: 0xa39b75, marsh: 0x738675, rock: 0x899182, water: 0x78a7a4, 'water-shallow': 0x9ac0b4 };
+/** Original chalk pigments, distinct from the authoritative terrain rules. */
+export const TERRAIN_COLORS: Record<Terrain, number> = { 'packed-dirt':0x9b8c74,'rich-soil':0x665642,gravel:0x999783,'rough-stone':0x899182, grass: 0x81946c, soil: 0xa39b75, marsh: 0x738675, rock: 0x899182, water: 0x78a7a4, 'water-shallow': 0x9ac0b4,
+  'soil-natural':0x9a8b6f,'mossy-soil':0x788b67,'marshy-soil':0x788270,mud:0x7b7565,sand:0xc6b791,'soft-sand':0xcdbd98,ice:0xd4e1de,riverbank:0x817961,
+  'water-deep':0x6f969b,'ocean-shallow':0x8eb9b6,'ocean-deep':0x6a929e,'river-shallow':0x94b9ad,'river-chest-deep':0x79a5a2 };
 export const ARID_GRASS_COLOR = 0xa69772;
 
 /** The visual map is sampled by the existing terrain quads. A texel can borrow
@@ -192,7 +195,8 @@ export function buildTerrain(world: World, group: THREE.Group, surface: THREE.Ma
     // Small spatial chunks keep each instance batch independently cullable.
     const chunkSize = WORLD_SCALE.chunkSize;
     for (let cz = 0; cz < world.height; cz += chunkSize) for (let cx = 0; cx < world.width; cx += chunkSize) {
-      const tileGroups: Record<Terrain, Placement[]> = { grass: [], soil: [], water: [], 'water-shallow': [], marsh: [], rock: [], 'rough-stone':[],'rich-soil':[],gravel:[] };
+      const tileGroups = new Map<Terrain,Placement[]>();
+      for(const terrain of Object.keys(TERRAIN_COLORS) as Terrain[])tileGroups.set(terrain,[]);
       const banks: Placement[] = [];
       for (let z = cz; z < Math.min(cz + chunkSize, world.height); z++) for (let x = cx; x < Math.min(cx + chunkSize, world.width); x++) {
         const type = world.tiles[z * world.width + x].terrain;
@@ -202,7 +206,7 @@ export function buildTerrain(world: World, group: THREE.Group, surface: THREE.Ma
         scratchColor.setHex(terrain==='rough-stone'?stoneColor(world.tiles[z*world.width+x].stone):terrain==='grass'&&world.site?.biome==='arid-shrubland'?ARID_GRASS_COLOR:TERRAIN_COLORS[terrain]).multiplyScalar(0.94 + n * 0.12);
         // Marsh stays on the existing land quad at0; it is walkable wet ground.
         const color = scratchColor.getHex(), level = isWaterTerrain(terrain) ? WORLD_SCALE.waterSurface : 0;
-        tileGroups[terrain].push({ x, z, y: level, color });
+        tileGroups.get(terrain)!.push({ x, z, y: level, color });
         // Top quads replace six-sided ground cubes; exposed bank and perimeter
         // faces retain the original water drop and the slab join without holes.
         for (const [dx, dz, rotation] of [[1, 0, Math.PI / 2], [-1, 0, -Math.PI / 2], [0, 1, 0], [0, -1, Math.PI]] as const) {
@@ -213,10 +217,10 @@ export function buildTerrain(world: World, group: THREE.Group, surface: THREE.Ma
         }
       }
       mergedInstances(group, [
-        { geometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), items: [...tileGroups.grass, ...tileGroups.soil, ...tileGroups.rock,...tileGroups['rough-stone'],...tileGroups['rich-soil'],...tileGroups.gravel,...tileGroups.marsh] },
+        { geometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), items: [...tileGroups].flatMap(([terrain,items])=>isWaterTerrain(terrain)?[]:items) },
         { geometry: new THREE.PlaneGeometry(1, 1), items: banks },
       ], surface, false);
-      mergedInstances(group, [{ geometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), items: [...tileGroups.water,...tileGroups['water-shallow']] }], water, false);
+      mergedInstances(group, [{ geometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), items: [...tileGroups].flatMap(([terrain,items])=>isWaterTerrain(terrain)?items:[]) }], water, false);
     }
     // Identical world-space UVs meet at cell and chunk edges. Plain terrain
     // retains its original vertex layout and does not upload a UV buffer.

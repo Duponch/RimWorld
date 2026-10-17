@@ -1,6 +1,6 @@
 import { isRoomDoor } from './door-rules.ts';
 import { footprintCells } from './definitions.ts';
-import type { World } from './types';
+import type { World } from './types.ts';
 
 export interface RoomSpace {
   readonly kind: 'space';

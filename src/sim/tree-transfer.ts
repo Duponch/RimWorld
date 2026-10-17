@@ -1,5 +1,6 @@
+import {geyserBlocksPlantOrFloor256} from './local-geyser-state-256.ts';
 import {travelPieces} from './travel-timing.ts';
-import {gatherResource,clearingDuration} from './gathering.ts';
+import {gatherResource,clearingDuration,plantWorkGrowthFactor256} from './gathering.ts';
 import {clearanceOutputPending} from './construction-plants.ts';
 import {retainClearingWorkAfterOutputRefusal} from './plant-retirement.ts';
 import {advanceWork,workProgress,resetWork} from './work-progress.ts';
@@ -33,7 +34,7 @@ import type {Cell,World,Pawn,Job,Resource,MaterialPile,MaterialOwner,CommandResu
 export {extractTreeDefinition,treeSelectable} from './tree-transfer-rules.ts';
 export {isMinifiedTree} from './tree-transfer-state.ts';
 const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
-export const isPlantDesignationJob=(j:Pick<Job,'kind'>):boolean=>['chop','cut','harvest','extract-tree'].includes(j.kind);
+export const isPlantDesignationJob=(j:Pick<Job|import('./types.ts').Structure,'kind'>):boolean=>['chop','cut','harvest','extract-tree'].includes(j.kind);
 export const isTreeJob=(j:Job):j is TreeJob=>j.kind==='extract-tree'||j.kind==='replant-tree';
 export const treeJobsForResource=(w:World,id:number):Job[]=>w.jobs.filter(j=>j.tree?.resourceId===id||j.plantTarget?.resourceId===id);
 export function treeWorkTarget(w:World,j:Job):Cell|undefined {
@@ -47,6 +48,7 @@ export function extractTreeReason(w:World,r:Resource|undefined):string|undefined
   if(w.jobs.some(j=>j.tree?.kind==='extract'&&j.tree.resourceId===r.id))return 'Cet arbre possède déjà cet ordre.';
 }
 export function replantTreeReason(w:World,p:MaterialPile|undefined,c:Cell,exceptJob?:number):string|undefined {
+  if(geyserBlocksPlantOrFloor256(w,c))return 'Un geyser empêche la plantation.';
   if(w.schemaVersion<235||!p||!w.piles.includes(p)||!isMinifiedTree(p)||!extractTreeDefinition(p.innerResource))return 'Aucun arbre déraciné disponible.';
   if(!treePackLive(p,w.tick))return 'Cet arbre déraciné est mort.';
   if(!inBounds(w,c.x,c.z)||!Number.isSafeInteger(c.x)||!Number.isSafeInteger(c.z))return 'Emplacement hors carte.';
@@ -194,7 +196,7 @@ export function processTreeWork(w:World,p:Pawn,j:Job,move:(target:Cell,touch:boo
     j.clearance??={resourceId:obstruction.id,progress:0};p.path=[];p.state='working';
     const duration=clearingDuration(obstruction),outputPending=clearanceOutputPending(j,duration);
     if(outputPending&&p.planCooldown>0)return;
-    if(!outputPending)advanceWork(j.clearance,plantWorkRate(p,body,plantCanYieldNow(w,obstruction))*speed);
+    if(!outputPending)advanceWork(j.clearance,plantWorkRate(p,body,plantCanYieldNow(w,obstruction))*speed*plantWorkGrowthFactor256(w,obstruction));
     if(outputPending||workProgress(j.clearance)>=duration){
       if(gatherResource(w,obstruction,'cut',j.id,p)===null){retainClearingWorkAfterOutputRefusal(j,duration);p.planCooldown=20;}
       else delete j.clearance;

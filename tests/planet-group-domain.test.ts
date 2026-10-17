@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import { describe,it,expect } from 'vitest';
 import { commercialCamp } from './helpers/commercial-v193.ts';
 import { addMaterial } from '../src/sim/materials.ts';
@@ -24,7 +25,7 @@ function loading(w:World,foodId:number):PreparingGroup {
   first.x=4;first.z=8;members[1]!.x=3;members[1]!.z=9;
   const preview=previewGroupLoading(w,members.map(p=>p.id),[{pileId:foodId,quantity:2}],groupFormationAuthority(w));
   expect(preview.kind).toBe('ready');if(preview.kind!=='ready')throw Error('Loading preparation refused');
-  const group:PreparingGroup={id:1,startedAt:w.tick,destination:w.planet!.civilianTile,ledger:emptyGroupLedger(),phase:'loading',
+  const group:PreparingGroup={id:1,startedAt:w.tick,destination:legacyPlanet(w).civilianTile,ledger:emptyGroupLedger(),phase:'loading',
     memberIds:members.map(p=>p.id),rendezvous:{x:4,z:8},meeting:members.map(p=>({pawnId:p.id,cell:{x:p.x,z:p.z}})),manifest:preview.manifest,cursor:0,
     exits:members.map((p,i)=>({pawnId:p.id,cell:{x:0,z:8+i}}))};
   w.group=group;return group;
@@ -100,11 +101,11 @@ describe('planet/group domain',()=>{
     const held=w.piles.filter(p=>{const owner=p.owner;return 'pawnId' in owner&&members.some(m=>m.id===owner.pawnId);}),mass=captureGroupMass(members,held)!;
     expect(mass.grams).toBe(4500);expect(mass.capacityGrams).toBe(70000);expect(groupTicksPerMove(mass)).toBeGreaterThan(groupTicksPerMove(light));
     const budget={nodes:161,arcs:960},before=JSON.stringify({w,budget});
-    expect(findPlanetRoute(w.planet!,w.planet!.homeTile,w.planet!.civilianTile,planetCostContext(w,mass),budget)).toEqual({kind:'deferred',nodes:0,arcs:0});
+    expect(findPlanetRoute(legacyPlanet(w),legacyPlanet(w).homeTile,legacyPlanet(w).civilianTile,planetCostContext(w,mass),budget)).toEqual({kind:'deferred',nodes:0,arcs:0});
     expect(JSON.stringify({w,budget})).toBe(before);
-    const real=quota(),found=findPlanetRoute(w.planet!,w.planet!.homeTile,w.planet!.civilianTile,planetCostContext(w,mass),real);
+    const real=quota(),found=findPlanetRoute(legacyPlanet(w),legacyPlanet(w).homeTile,legacyPlanet(w).civilianTile,planetCostContext(w,mass),real);
     expect(found.kind).toBe('found');expect(real.nodes).toBeGreaterThanOrEqual(0);expect(real.arcs).toBeGreaterThanOrEqual(0);
-    if(found.kind==='found'){expect(found.tiles[0]).toBe(w.planet!.homeTile);expect(found.tiles.at(-1)).toBe(w.planet!.civilianTile);expect(found.estimatedCore).toBeGreaterThan(0);}
+    if(found.kind==='found'){expect(found.tiles[0]).toBe(legacyPlanet(w).homeTile);expect(found.tiles.at(-1)).toBe(legacyPlanet(w).civilianTile);expect(found.estimatedCore).toBeGreaterThan(0);}
     const wood:MaterialPile={id:w.nextId,kind:'wood',item:'wood',quantity:1,owner:{type:'inventory',pawnId:members[0]!.id}};
     expect(captureGroupMass(members,[...held,wood])?.grams).toBe(mass.grams+400);
     // Steel is a real catalogue item whose local travel mass remains undefined.
@@ -154,22 +155,22 @@ describe('planet/group domain',()=>{
 
   it('redirects from the engaged boundary, retains its cost, and emits a single arrival after the zero checkpoint',()=>{
     const w=departed(),g=w.group as AwayGroup,capture=captureGroupTravel(g,()=>({incapable:false,restNeed:false}))!,context=planetCostContext(w,capture.mass);
-    const first=advanceGroupRoute(w.planet!,g,context,capture).state as AwayGroup;
+    const first=advanceGroupRoute(legacyPlanet(w),g,context,capture).state as AwayGroup;
     expect(first.segment).not.toBeNull();expect(first.route[0]).toBe(first.segment!.to);
-    const redirect=prepareGroupRedirection(w.planet!,first,w.planet!.homeTile,context,quota());expect(redirect.kind).toBe('ready');
+    const redirect=prepareGroupRedirection(legacyPlanet(w),first,legacyPlanet(w).homeTile,context,quota());expect(redirect.kind).toBe('ready');
     if(redirect.kind!=='ready')throw Error('Redirection refused');expect(redirect.state.route[0]).toBe(first.segment!.to);expect(redirect.state.segment).toBe(first.segment);
-    const atHome:AwayGroup={...redirect.state,tile:first.segment!.to,route:[w.planet!.homeTile],segment:{from:first.segment!.to,to:w.planet!.homeTile,totalCore:2,remainingCore:1}};
-    const zero=advanceGroupRoute(w.planet!,atHome,context,capture);expect(zero.event).toBeNull();expect((zero.state as AwayGroup).segment!.remainingCore).toBe(0);
-    const arrival=advanceGroupRoute(w.planet!,zero.state as AwayGroup,context,capture);expect(arrival.event).toBe('arrived');expect(arrival.state.phase).toBe('awaiting-entry');
-    expect(advanceGroupRoute(w.planet!,arrival.state as AwayGroup,context,capture).event).toBeNull();
-    expect(()=>advanceGroupRoute(w.planet!,g,{...context,mass:{...context.mass}},capture)).toThrow('share one actual mass');
-    const forged=structuredClone(w);(forged.group as AwayGroup).route=[w.planet!.civilianTile];expect(validateGroupState(forged,196).length).toBeGreaterThan(0);
+    const atHome:AwayGroup={...redirect.state,tile:first.segment!.to,route:[legacyPlanet(w).homeTile],segment:{from:first.segment!.to,to:legacyPlanet(w).homeTile,totalCore:2,remainingCore:1}};
+    const zero=advanceGroupRoute(legacyPlanet(w),atHome,context,capture);expect(zero.event).toBeNull();expect((zero.state as AwayGroup).segment!.remainingCore).toBe(0);
+    const arrival=advanceGroupRoute(legacyPlanet(w),zero.state as AwayGroup,context,capture);expect(arrival.event).toBe('arrived');expect(arrival.state.phase).toBe('awaiting-entry');
+    expect(advanceGroupRoute(legacyPlanet(w),arrival.state as AwayGroup,context,capture).event).toBeNull();
+    expect(()=>advanceGroupRoute(legacyPlanet(w),g,{...context,mass:{...context.mass}},capture)).toThrow('share one actual mass');
+    const forged=structuredClone(w);(forged.group as AwayGroup).route=[legacyPlanet(w).civilianTile];expect(validateGroupState(forged,196).length).toBeGreaterThan(0);
   });
 
   it('rests for the whole night even at100 or across95, resumes at06, and keeps the strict22/final-push boundaries',()=>{
     const base=departed();
     function prepared(rest:number,firstCore:number,finalPush=false):World {
-      const w=structuredClone(base),g=w.group as AwayGroup,planet=w.planet!;
+      const w=structuredClone(base),g=w.group as AwayGroup,planet=legacyPlanet(w);
       // Authored healthy clock/segment exposure, not a simulated overnight
       // history. The real pickup and collective ownership come from departed().
       const route=[...g.route],from=finalPush?route.at(-2)!:route[0]!,to=finalPush?route.at(-1)!:route[1]!;
@@ -193,7 +194,7 @@ describe('planet/group domain',()=>{
     }
     const morning=prepared(95,15000),p=(morning.group as AwayGroup).members[0]!,remaining=(morning.group as AwayGroup).segment!.remainingCore;
     const resumed=pass(morning),mass=captureGroupTravel(resumed,()=>({incapable:false,restNeed:true}))!.mass;
-    expect(tileHour(morning.planet!,resumed.tile,planetCostContext(morning,mass).homeCivilCore)).toBe(6);
+    expect(tileHour(legacyPlanet(morning),resumed.tile,planetCostContext(morning,mass).homeCivilCore)).toBe(6);
     expect(resumed.stop).toBeNull();expect(resumed.segment!.remainingCore).toBe(remaining-10);expect(p.rest).toBeLessThan(95);
 
     const edge=prepared(95,55000),edgeRest=(edge.group as AwayGroup).members[0]!;

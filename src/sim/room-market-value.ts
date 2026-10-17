@@ -1,3 +1,4 @@
+import {BEDROLL_TEXTILE_MARKET_VALUES_256} from './bedroll-textiles-256.ts';
 import { FURNITURE_MATERIALS,isSculptureKind,isSculptureMaterial,sculptureWorkToMakeCore } from './furniture-stats.ts';
 import { structureMaxHp } from './thing-damage-rules.ts';
 import { roundTradeSilver, tradeHealthFactor } from './trade-prices.ts';
@@ -10,7 +11,8 @@ import type { Resource, ResourceKind, Structure, StructureKind, Tile } from './t
 const VALUE_PER_WORK = .0036;
 const UNKNOWN_STUFF_VALUE = 2;
 const MATERIAL_VALUE: Readonly<Record<ConstructionMaterial, number>> = Object.freeze({
-  wood: 1.2, steel: 1.9,
+  ...BEDROLL_TEXTILE_MARKET_VALUES_256,
+  wood: 1.2, steel: 1.9, jade:5,
   'granite-blocks': .9, 'limestone-blocks': .9, 'marble-blocks': .9,
   'sandstone-blocks': .9, 'slate-blocks': .9,
   cloth: 1.5, 'light-leather': 1.9,
@@ -20,8 +22,11 @@ type Passability = 'standable' | 'pass-through' | 'impassable';
 interface BuildingValueDef {
   /** Core costStuffCount, separate from fixed costList. */
   readonly stuff: number;
+  /** Explicit Core MarketValue overrides costs/work; zero remains explicit. */
+  readonly baseMarketValue?: number;
   readonly wood: number;
   readonly steel: number;
+  readonly uranium:number;
   readonly plasteel: number;
   readonly gold: number;
   readonly component: number;
@@ -32,21 +37,30 @@ interface BuildingValueDef {
   readonly passability: Passability;
 }
 const def = (stuff: number, work: number, passability: Passability,
-  fixed: Readonly<{wood?: number; steel?: number; plasteel?: number; gold?: number; component?: number; 'advanced-component'?: number}> = {},
+  fixed: Readonly<{uranium?:number; wood?: number; steel?: number; plasteel?: number; gold?: number; component?: number; 'advanced-component'?: number}> = {},
   quality = false): BuildingValueDef => Object.freeze({
     stuff, work, passability, quality,
     wood: fixed.wood ?? 0, steel: fixed.steel ?? 0, plasteel: fixed.plasteel ?? 0, gold: fixed.gold ?? 0,
-    component: fixed.component ?? 0, advancedComponent: fixed['advanced-component'] ?? 0,
+    uranium:fixed.uranium??0,component: fixed.component ?? 0, advancedComponent: fixed['advanced-component'] ?? 0,
   });
 
 /** Resolved Core building Defs. An explicit zero prevents a new kind from
  * inheriting a fictitious value. Historical untyped furniture keeps Core's
  * abstract-stuff estimate rather than receiving a fabricated material. */
 const BUILDINGS: Readonly<Record<StructureKind, BuildingValueDef>> = Object.freeze({
+ // Hive has no cost/recipe/work contribution; GlowPod supplies MarketValue50.
+ 'insect-hive':def(0,1,'pass-through'),
+ 'glow-pod':Object.freeze({...def(0,1,'pass-through'),baseMarketValue:50}),
+ 'ancient-cryptosleep-casket':def(0,1,'pass-through',{steel:180,uranium:5}),
+ column:def(20,750,'pass-through'),urn:def(20,500,'pass-through'),'stele-large':def(125,8000,'pass-through'),'stele-grand':def(250,16000,'pass-through'),sarcophagus:def(60,2400,'pass-through',{},true),
+  'ancient-road-barrier':def(0,600,'pass-through',{steel:15}),
+  'ancient-road-lamp':def(0,400,'pass-through',{steel:15}),
+  'ship-chunk':def(0,12000,'pass-through',{component:11,steel:40}),
   vent:def(0,400,'impassable',{steel:30}),
   shelf:def(20,500,'pass-through'),'small-shelf':def(10,250,'pass-through'),
   'spike-trap':def(45,3200,'standable'),
   'electric-crematorium':def(150,4500,'impassable',{steel:20,component:2}),
+  bedroll:def(40,600,'standable',{},true),
   'double-bed':def(85,1500,'pass-through',{},true),
   'sleeping-spot':def(0,0,'standable'),
   'animal-sleeping-spot':def(0,0,'standable'),
@@ -141,11 +155,11 @@ export function structureRoomMarketValue(structure: Structure): number {
   const factors = material ? FURNITURE_MATERIALS[material] : undefined;
   if (material && !factors) throw new RangeError(`Unmapped building material: ${material}`);
   const stuffValue = d.stuff * (material ? MATERIAL_VALUE[material] : UNKNOWN_STUFF_VALUE);
-  const fixedValue = d.wood * MATERIAL_VALUE.wood + d.steel * MATERIAL_VALUE.steel + d.plasteel * 9 + d.gold * 10 + d.component * 32 + d.advancedComponent * 200;
+  const fixedValue = d.wood * MATERIAL_VALUE.wood + d.steel * MATERIAL_VALUE.steel + d.plasteel * 9 + d.uranium * 6 + d.gold * 10 + d.component * 32 + d.advancedComponent * 200;
   const work = isSculptureKind(structure.kind)&&isSculptureMaterial(material)
     ? sculptureWorkToMakeCore(structure.kind,material)
     : d.work * (factors?.workFactor ?? 1) + (factors?.workOffset ?? 0);
-  let value = stuffValue + fixedValue + (work > 2 ? work * VALUE_PER_WORK : 0);
+  let value = d.baseMarketValue ?? (stuffValue + fixedValue + (work > 2 ? work * VALUE_PER_WORK : 0));
 
   if (d.quality) {
     const quality = structure.quality ?? 'normal';
@@ -163,6 +177,13 @@ export function structureRoomMarketValue(structure: Structure): number {
 /** Terrain values are per cell, including the work of laying a floor. Natural
  * terrain and fire-burned planks have no Core construction cost or market value. */
 const FLOOR_VALUE: Readonly<Record<FloorKind, number>> = Object.freeze({
+  'ancient-tile':0,'ancient-concrete':0,
+  'broken-asphalt':0,
+  'granite-flagstone':4*MATERIAL_VALUE['granite-blocks']+500*VALUE_PER_WORK,
+  'limestone-flagstone':4*MATERIAL_VALUE['limestone-blocks']+500*VALUE_PER_WORK,
+  'marble-flagstone':4*MATERIAL_VALUE['marble-blocks']+500*VALUE_PER_WORK,
+  'sandstone-flagstone':4*MATERIAL_VALUE['sandstone-blocks']+500*VALUE_PER_WORK,
+  'slate-flagstone':4*MATERIAL_VALUE['slate-blocks']+500*VALUE_PER_WORK,
   'wood-planks': 3 * MATERIAL_VALUE.wood + 85 * VALUE_PER_WORK,
   'granite-tile': 4 * MATERIAL_VALUE['granite-blocks'] + 1100 * VALUE_PER_WORK,
   'limestone-tile': 4 * MATERIAL_VALUE['limestone-blocks'] + 1100 * VALUE_PER_WORK,

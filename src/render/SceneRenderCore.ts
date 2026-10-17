@@ -1,3 +1,6 @@
+import {knownPosition256} from '../ui/exploration-readers-256';
+import {knownCell256,UNDISCOVERED_CELL_LABEL_256} from '../sim/exploration-visibility-256';
+import {roofCoverage} from '../sim/roof-rules';
 import {replantTreeReason,isMinifiedTree} from '../sim/tree-transfer';
 import { AllowedAreaLayer } from './AllowedAreaLayer';
 import { DioramaLayer } from './DioramaLayer';
@@ -66,6 +69,7 @@ import { FurniturePresentation } from './FurnitureLayer';
 import { PawnLayer } from './PawnLayer';
 import { FrameMetrics } from './FrameMetrics';
 import { BoxBatches } from './BoxBatches';
+import {GeyserLayer256} from './GeyserLayer256';
 import {SnowSurfaceLayer} from './SnowSurfaceLayer';
 import { ResourceLayer } from './ResourceLayer';
 import { clearGroup, material } from './primitives';
@@ -267,6 +271,7 @@ export class SceneRenderCore {
   protected readonly clouds=new WeatherCloudLayer(this.animationDetail,this.decorOcclusion);
   protected readonly precipitation=new WeatherPrecipitationLayer(this.animationDetail);
   protected readonly boxes = new BoxBatches(this.environmentLighting.configure);
+  protected readonly geysers=new GeyserLayer256(this.boxes);
   protected readonly snowSurface=new SnowSurfaceLayer(this.environmentLighting.configure);
   protected readonly recreationHints = new RecreationHints(this.boxes);
   protected readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial,this.texturedStaticMaterial,this.animationDetail);
@@ -378,6 +383,7 @@ export class SceneRenderCore {
     this.invalidatePausedShadow();
     this.landscape.add(this.plants.group,this.overview.group,this.terrainGroup,this.resourceGroup,this.rocks.group);
     this.scene.add(this.mechanoids.group);
+    this.scene.add(this.geysers.group);
     this.scene.add(this.deepResources.mesh,this.areaPreview.mesh,this.turretRange.mesh,this.orderRockPreview.mesh,this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.allowedAreaLayer.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh,this.precipitation.mesh);
     if (groundGrassEnabled) {
       this.grass = this.createGrass();
@@ -396,7 +402,7 @@ export class SceneRenderCore {
     // A degenerate resident triangle warms the same position-only selection
     // pipeline under loading, before the first object inspection.
     selectionGeometry.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(9),3));
-    this.objectSelection = new THREE.Mesh(selectionGeometry,new THREE.MeshBasicMaterial({color:0xfff5d6,side:THREE.DoubleSide,depthTest:false,depthWrite:false,transparent:true,opacity:1,forceSinglePass:true}));
+    this.objectSelection = new THREE.Mesh(selectionGeometry,new THREE.MeshBasicNodeMaterial({color:0xfff5d6,side:THREE.DoubleSide,depthTest:false,depthWrite:false,transparent:true,opacity:1,forceSinglePass:true}));
     this.objectSelection.visible=false;this.objectSelection.frustumCulled=false;this.objectSelection.renderOrder=GROUND_OVERLAY_RENDER_ORDER.selection;
     this.scene.add(this.hover,this.constructionPreview.group,this.objectSelection,this.recreationHints.group,this.actionFeedback.group,this.actionVfx.group,this.brawlCloud.group,this.structureVfx.group,this.podRescue.group,this.orbitalDelivery.group,this.startingArrival.group);
     } catch (error) {
@@ -492,6 +498,9 @@ export class SceneRenderCore {
     const resourceFrame = this.immutableWorlds.has(world) ? this.sceneResources.adopt(world,resetPoses) : undefined;
     if(!resourceFrame)this.sceneResources.clear();
     this.world = world;
+    this.paintedWater.adoptRiverWater(world);
+    if(this.environmentLighting.exploration.adopt(world,newMap||resetPoses,previousWorld&&this.immutableWorlds.has(previousWorld)&&this.immutableWorlds.has(world)?changedTiles:null))this.invalidatePausedShadow();
+    if(!this.environmentLighting.exploration.surface.parent)this.scene.add(this.environmentLighting.exploration.surface);
     if (newMap) { this.configureDiorama(); this.configureRoom(); }
     this.updateDeepResources();
     this.grass?.update(world,newMap,immutableTileChanges,resourceFrame);
@@ -545,6 +554,7 @@ export class SceneRenderCore {
       ? this.structurePreparation!.signature.readConfirmed(world.structures,prepared.axesKey,packageKey,prepared.indices,resetPoses)
       : this.structureSignature.read(world.structures,[...doorOrientations(world)].join(':'),packageKey,resetPoses);
     if (structureKey !== this.structureKey || newMap) { this.structureKey = structureKey; this.buildStructures(world); }
+    if(this.geysers.adopt(world,newMap))this.invalidatePausedShadow();
     this.turretTops.update(world,this.structureGroup,this.boxes,resetPoses);
     // Quantize presentation of progression to avoid rebuilding static meshes for
     // every work tick. Saved simulation progress remains exact and authoritative.
@@ -553,9 +563,9 @@ export class SceneRenderCore {
     if (jobsChanged) { this.jobKey = jobKey; this.buildJobs(world); }
     // Chunk permissions and unscheduled roof intentions have no Job. Check
     // their small primitive signature at adoption, never in the RAF loop.
-    const designationKey=world.piles.filter(p=>p.kind==='chunk'&&p.haulRequested&&p.owner.type==='ground')
+    const designationKey=`fog:${this.environmentLighting.exploration.field.revision};`+world.piles.filter(p=>p.kind==='chunk'&&p.haulRequested&&p.owner.type==='ground')
       .map(p=>p.owner.type==='ground'?`${p.id}:${p.owner.x}:${p.owner.z}`:'').join('|')
-      +`;${world.roofing?.build.join(',')};${world.roofing?.remove.join(',')};${world.roofing?.constructed.join(',')}`;
+      +`;${world.roofing?.build.join(',')};${world.roofing?.remove.join(',')};${roofCoverage(world).join(',')};${world.roofing?.natural?.thin.join(',')};${world.roofing?.natural?.thick.join(',')}`;
     if(jobsChanged||designationKey!==this.designationKey){this.designationKey=designationKey;this.designations.update(world);}
     if(resetPoses)this.homeSignature.clear();
     const storageKey = `${this.homeSignature.read(world.home)};`+this.storageSignature.read(world.stockpiles,resetPoses)+`;snow:${world.snowClearArea?.join(',')??''};surface:${!!world.snow}`;
@@ -588,6 +598,7 @@ export class SceneRenderCore {
     this.landscape.refresh(this.backend==='WebGPU'&&this.overview.group.visible);
     if(this.selectedObject?.kind!=='growing'||zoneChanged)this.updateSelectedObject();
     this.refreshZonesTint();
+    this.environmentLighting.exploration.bind(this.scene);
     this.updateHover();
   }
 
@@ -612,6 +623,7 @@ export class SceneRenderCore {
     (this.hover.material as THREE.MeshBasicNodeMaterial).color.setHex(color);
     this.hostPort.cursor(tool === 'select' ? 'default' : 'crosshair');
     this.refreshZonesTint();
+    this.environmentLighting.exploration.bind(this.scene);
     this.updateHover();
   }
 
@@ -697,6 +709,7 @@ export class SceneRenderCore {
     this.grass?.setTexturesEnabled(enabled);
     this.podRescue.setTexturesEnabled(enabled);this.orbitalDelivery.setTexturesEnabled(enabled);
     this.startingArrival.setTexturesEnabled(enabled);
+    this.environmentLighting.exploration.bind(this.scene);
     this.landscape.needsUpdate=true;
   }
   protected refreshTerrainPaint(world:World):void {
@@ -937,6 +950,7 @@ export class SceneRenderCore {
         await this.room.prepare(this.renderer, this.rig.orthographic);
         await this.room.prepare(this.renderer, this.rig.perspective);
       }
+      this.environmentLighting.exploration.bind(this.scene);
       await this.renderer.compileAsync(this.scene, this.rig.orthographic);
       await this.renderer.compileAsync(this.scene, this.rig.perspective);
       await this.pawns.prepareBodyPipelines(this.renderer,this.scene,[this.rig.orthographic,this.rig.perspective],async()=>{
@@ -1110,7 +1124,7 @@ export class SceneRenderCore {
     const bodyCarriers=new Map((this.world?.piles??[]).flatMap(p=>p.humanCorpse&&p.owner.type==='pawn'?[[p.humanCorpse.pawnId,p.owner.pawnId] as const]:[]));
     const actors=new Map(this.world?.pawns.map(p=>[p.id,p]));
     for(const [id,visual] of this.pawns.visuals) {
-      if(visual.to.y< -100)continue;
+      if(visual.to.y< -100||!this.world||!knownPosition256(this.world,{x:Math.floor(visual.to.x+.5),z:Math.floor(visual.to.z+.5)}))continue;
       const segment=this.hasTracks?this.timeline.segment(bodyCarriers.get(id)??id):undefined;
       const alpha=segment?THREE.MathUtils.clamp((this.timeline.tick-segment.start)/(segment.end-segment.start),0,1):this.pawns.blend.value;
       const position=new THREE.Vector3().lerpVectors(visual.from,visual.to,alpha);
@@ -1127,6 +1141,7 @@ export class SceneRenderCore {
     const animals=new Map(this.world?.wildlife?.animals.map(a=>[a.id,a]));
     const center=new THREE.Vector3(),edge=new THREE.Vector3(),side=new THREE.Vector3().setFromMatrixColumn(this.camera.matrixWorld,0);
     this.wildlife.forEachPose((id,species,x,y,z,height,radius)=>{
+      if(!this.world||!knownPosition256(this.world,{x:Math.floor(x+.5),z:Math.floor(z+.5)}))return;
       center.set(x,y+height*.5,z).project(this.camera);
       if(center.z< cameraClipNear(this.camera)||center.z>1||Math.abs(center.x)>1||Math.abs(center.y)>1)return;
       edge.set(x,y+height*.5,z).addScaledVector(side,Math.max(height*.5,radius)).project(this.camera);
@@ -1134,6 +1149,7 @@ export class SceneRenderCore {
       result.push({id,x:rect.left+(center.x+1)*rect.width/2,y:rect.top+(1-center.y)*rect.height/2,radius:Math.max(6,Math.abs(edge.x-center.x)*rect.width/2),depth:center.z,group:`${animal?.state==='dead'?'corpse':'animal'}:${species}:${animal?.domestic?'colony':'wild'}`,category:animal?.state==='dead'?3:2});
     });
     this.mechanoids.forEachPose((id,x,y,z,height,radius,dead,kind)=>{
+      if(!this.world||!knownPosition256(this.world,{x:Math.floor(x+.5),z:Math.floor(z+.5)}))return;
       center.set(x,y+height*.5,z).project(this.camera);
       if(center.z<cameraClipNear(this.camera)||center.z>1||Math.abs(center.x)>1||Math.abs(center.y)>1)return;
       edge.set(x,y+height*.5,z).addScaledVector(side,Math.max(height*.5,radius)).project(this.camera);
@@ -1368,7 +1384,7 @@ export class SceneRenderCore {
       const completed=!shadow.needsUpdate;this.shadowRefresh.capture(now,completed);
       if(cacheEligible)this.pausedShadow.capture(completed,this.camera,shadowLight,skyTick,this.pawns.blend.value,distant,this.viewportWidth,this.viewportHeight);
     }
-    this.hostPort.drawLabels(this.world, this.camera, cellPixels, this.viewportWidth, this.viewportHeight);
+    this.hostPort.drawLabels(this.world, this.camera, cellPixels, this.viewportWidth, this.viewportHeight,this.environmentLighting.exploration.field.revision);
     this.stats.drawCalls = this.renderer.info.render.drawCalls;
     this.stats.triangles = this.renderer.info.render.triangles;
     this.frames.record(now, this.hostPort.hidden());
@@ -1438,7 +1454,7 @@ export class SceneRenderCore {
   private updateOrderTargets(world:World,action:AreaAction,cells:readonly number[]):void {
     if(!['mine','chop','cut','harvest','deconstruct','haul-chunks','cancel'].includes(action)){this.clearOrderTargets();return;}
     this.orderTargetIndex??=new OrderTargetIndex(world);
-    const targets=this.orderTargetIndex.select(action,cells);
+    const targets=this.orderTargetIndex.select(action,cells.filter(i=>knownCell256(world,i)));
     this.resources.setTargetPreview(targets.resources);this.crops.setTargetPreview(targets.resources);this.plants.setTargetPreview(targets.resources);
     this.boxes.setTargetPreview(this.structureGroup,targets.structures);
     this.boxes.setTargetPreview(this.jobGroup,targets.jobs);
@@ -1520,6 +1536,10 @@ export class SceneRenderCore {
     this.hostPort.title('');
     if (this.areaDrag) { this.updateAreaPreview(); return; }
     this.surfaceTint.clearPreview();
+    if(this.world&&this.hoverCell&&!knownPosition256(this.world,this.hoverCell)){
+      this.recreationHints.hide();this.turretRange.hide();this.clearOrderTargets();this.constructionPreview.hide();this.hover.visible=false;
+      this.hostPort.title(this.tool==='mine'?'Miner cette zone':UNDISCOVERED_CELL_LABEL_256);return;
+    }
     this.updateTurretPreview();
     const cell = this.hoverCell;
     this.recreationHints.update(this.world, cell && (this.tool==='horseshoes'||this.tool==='install'&&this.furniturePlacement?.kind==='horseshoes'||this.tool==='select'&&this.world?.structures.some(s=>s.kind==='horseshoes'&&s.x===cell.x&&s.z===cell.z)) ? cell : undefined,this.tool==='select');
@@ -1604,7 +1624,7 @@ export class SceneRenderCore {
     this.hostPort.disconnectResize();
     this.rig?.dispose();
     this.hostPort.removeInputListeners();
-    this.boxes.dispose();this.snowSurface.dispose();
+    this.geysers.dispose();this.boxes.dispose();this.snowSurface.dispose();
     this.roofs.dispose();
     this.timber.dispose();
     this.hygiene.dispose();

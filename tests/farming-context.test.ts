@@ -1,9 +1,11 @@
+import {isBuildableFixtureKind} from './helpers/legacy-fixture-guards.ts';
 import { expect,test } from 'vitest';
 import { createWorld } from '../src/sim/engine';
 import { growingJobValid } from '../src/sim/farming';
 import { footprintCells,STRUCTURE_DEFINITIONS } from '../src/sim/definitions';
+import {isAncientMonumentKind256,ANCIENT_MONUMENT_DEFS_256} from '../src/sim/ancient-monument-props-256';
 import { TemperatureView } from '../src/sim/temperature';
-import type { Job,StructureKind,World } from '../src/sim/types';
+import type { Job,Orientation,StructureKind,World } from '../src/sim/types';
 
 /** The pre-V88 full-field capture is an independent oracle for the targeted
  * capture. Both deliberately call the same unchanged intention rules. */
@@ -27,9 +29,14 @@ test('point agricultural validation retains complete-field decisions, neighbour 
   expect(growingJobValid(w,{...base,kind:'chop',x:6,z:6})).toBe(true);
   expect(growingJobValid(w,{...base,kind:'harvest',x:8,z:8})).toBe(true);
   check();
-  for(const kind of Object.keys(STRUCTURE_DEFINITIONS) as StructureKind[])for(const orientation of [0,1,2,3] as const) {
-    w.structures=[{id:904,kind,x:7,z:6,orientation,footprint:'standard'}];check();
-    w.structures=[];w.jobs=[{...base,id:904,kind,growingZoneId:undefined,x:7,z:6,orientation,construction:'frame'}];check();
+  for(const kind of Object.keys(STRUCTURE_DEFINITIONS) as StructureKind[]) {
+    // The generated catalogue includes nonrotatable monuments. Keep every
+    // kind, but instantiate only its actual admissible orientations.
+    const orientations:readonly Orientation[]=isAncientMonumentKind256(kind)&&!ANCIENT_MONUMENT_DEFS_256[kind].rotatable?[0]:[0,1,2,3];
+    for(const orientation of orientations) {
+      w.structures=[{id:904,kind,x:7,z:6,orientation,footprint:'standard'}];check();
+      w.structures=[];if(!isBuildableFixtureKind(kind))continue;w.jobs=[{...base,id:904,kind,growingZoneId:undefined,x:7,z:6,orientation,construction:'frame'}];check();
+    }
   }
   // Each new validation must see the new world even within the same tick.
   w.jobs=[];w.structures=[];w.resources=w.resources.filter(r=>r.kind!=='tree');check();

@@ -88,7 +88,7 @@ export function validDraftedTendingTransport(world:World):boolean {
     for(const actor of world.pawns){
       if(byId.has(actor.id))return false;byId.set(actor.id,actor);
       for(const task of [actor.tend,actor.feed,actor.ward,actor.surgery,actor.rescue])if(task)claim(patients,task.patientId,actor.id);
-      const spot=serviceCell(actor);if(spot)claim(spots,spot.z*world.width+spot.x,actor.id);
+      const spot=serviceCell(actor,world);if(spot)claim(spots,spot.z*world.width+spot.x,actor.id);
       if(actor.rescue){
         beds??=new Map(world.structures.map(b=>[b.id,b]));
         const bed=beds.get(actor.rescue.bedId),target=bed?.kind==='double-bed'&&actor.rescue.bedSlot!==undefined?bedSlotCell(bed,actor.rescue.bedSlot):bed;

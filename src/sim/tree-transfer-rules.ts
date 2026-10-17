@@ -2,7 +2,7 @@
 import { FLORA_DEFINITIONS } from './biome-flora.ts';
 import type { Resource } from './types.ts';
 import { TREE_PACK_LIFETIME,type TreeDefinition,type MinifiedTreePile } from './tree-transfer-state.ts';
-const WORK:Readonly<Record<string,number>>={oak:1400,poplar:800,pine:710,birch:800,drago:660};
+const WORK:Readonly<Record<string,number>>={oak:1400,poplar:800,pine:710,birch:800,drago:660,'bamboo':460,'cecropia':510,'cypress':1800,'maple':800,'palm':510,'teak':1800,'willow':800};
 /** Explicit clone legacy TreeBase. No species conversion, no source record rewrite. */
 export const LEGACY_TREE:Readonly<TreeDefinition>=Object.freeze({label:'Arbre legacy',workCore:800,massGrams:150000,maxHP:200,minimumGrowth:.4,roofBlocked:true});
 export function extractTreeDefinition(resource:Pick<Resource,'kind'|'species'>):TreeDefinition|undefined {
@@ -10,10 +10,10 @@ export function extractTreeDefinition(resource:Pick<Resource,'kind'|'species'>):
   if(resource.species===undefined)return LEGACY_TREE;
   const workCore=WORK[resource.species];if(workCore===undefined)return;
   const def=FLORA_DEFINITIONS[resource.species];
-  return {label:def.label,workCore,massGrams:150000,maxHP:def.hitPoints,minimumGrowth:def.harvestMinGrowth,roofBlocked:true};
+  return {label:def.label,workCore,massGrams:resource.species==='bamboo'?75000:150000,maxHP:def.hitPoints,minimumGrowth:def.harvestMinGrowth,roofBlocked:true};
 }
 export const treeSelectable=(resource:Resource):boolean=>
-  !['grass','tall-grass','brambles','moss'].includes(resource.species??'');
+  !['grass','tall-grass','brambles','moss','astragalus','chokevine','dandelion','low-shrub'].includes(resource.species??'');
 export const treeWorkCorePerTick=(speed:number,growth:number):number=>
   Math.max(0,speed)*(3.3-2.3*Math.max(0,Math.min(1,growth)));
 /** This is captured preparation work, not a fixed Construction150 duration. */

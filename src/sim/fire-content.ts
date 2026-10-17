@@ -1,4 +1,4 @@
-import {isWetTerrain} from './shallow-water.ts';
+import {terrainExtinguishesFire256} from './natural-terrain-runtime-256.ts';
 import { footprintCells } from './definitions.ts';
 import { structureFlammability,pileFlammability,resourceFlammability } from './thing-damage-rules.ts';
 import { firePosition } from './fire-rules.ts';
@@ -24,7 +24,7 @@ export class FireContent {
   solid(c:Cell):boolean{return !this.inside(c)||this.world.tiles[index(this.world,c)]!.terrain==='rock'||this.solids.has(index(this.world,c));}
   allTargets(c:Cell):FireTarget[]{return this.inside(c)?this.contents.get(index(this.world,c))??[]:[];}
   targets(c:Cell):FireTarget[]{
-    if(!this.inside(c)||(['water','rock'].includes(this.world.tiles[index(this.world,c)]!.terrain)||isWetTerrain(this.world.tiles[index(this.world,c)]!.terrain)&&!this.world.tiles[index(this.world,c)]!.bridge))return [];
+    if(!this.inside(c)||(this.world.tiles[index(this.world,c)]!.terrain==='rock'||terrainExtinguishesFire256(this.world.tiles[index(this.world,c)]!)))return [];
     const list=this.contents.get(index(this.world,c))??[];
     // Full edifices shield other content, including the separate conduit layer.
     const full=list.find(t=>t.kind==='structure'&&(t.value.kind==='wall'||isRoomDoor(t.value.kind)||(t.value.kind==='cooler'||t.value.kind==='vent')));

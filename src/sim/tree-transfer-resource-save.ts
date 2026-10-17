@@ -1,3 +1,4 @@
+import {isPlantSpeciesInVersion} from './biome-flora.ts';
 /** Exact contained-Resource guard shared by save and snapshot adapter. */
 import type {Resource,World} from './types.ts';
 import {validPlantGrowthLight} from './plant-light-save.ts';
@@ -13,6 +14,7 @@ export function validOriginalTreeResource(raw:unknown,world:Pick<World,'width'|'
   if(!record(raw)||!Object.keys(raw).every(k=>['id','kind','amount','x','z','species','plantLife','damage','growth','growthTick','growthThermalFactor','growthLight','stone','blight'].includes(k))||
     !integer(raw.id,1,world.nextId-1)||raw.kind!=='tree'||!integer(raw.amount,1,1000000)||
     !integer(raw.x,0,world.width-1)||!integer(raw.z,0,world.height-1))return false;
+  if(raw.species!==undefined&&!isPlantSpeciesInVersion(raw.species,version))return false;
   const resource=raw as unknown as Resource,definition=extractTreeDefinition(resource);if(!definition)return false;
   if(raw.damage!==undefined&&!integer(raw.damage,1,definition.maxHP-1))return false;
   if(!validStoneIdentity(raw.stone,raw.kind,version)||!validCropBlight(raw,version,{tick:clock})||!validPlantThermalFactor(raw,version)||

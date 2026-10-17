@@ -1,8 +1,7 @@
 import * as THREE from 'three/webgpu';
-import { createDioramaDecor } from './diorama-decor';
+import {createDioramaDecor,type DioramaBiome} from './diorama-decor';
 import { DIORAMA_SKY } from './diorama-sky';
 import { createRoomLayout } from './room-layout';
-import type { BiomeId } from '../sim/biome-flora';
 
 export type DioramaSide = 'north' | 'west' | 'south' | 'east';
 export type DioramaMaterialKind = 'cardboard' | 'paper' | 'wood';
@@ -109,7 +108,7 @@ function clipHeight(points: readonly OutlinePoint[], height: number, above: bool
 }
 
 /** One deterministic construction per site. No map-cell iteration or simulation RNG. */
-export function createDioramaGeometry(width: number, height: number, seed = 0, biome: BiomeId = 'temperate-forest'): DioramaGeometry {
+export function createDioramaGeometry(width: number, height: number, seed = 0, biome: DioramaBiome = 'temperate-forest'): DioramaGeometry {
   if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
     throw new RangeError('Diorama map dimensions must be finite and positive.');
   }

@@ -1,8 +1,10 @@
 import { FILTH_KINDS, type FilthKind, type FilthRecord } from '../sim/filth-rules';
 
-export const FILTH_ATLAS = { tileSize: 128, columns: 8, rows: 3, variants: 4 } as const;
+export const FILTH_ATLAS = { tileSize: 128, columns: 8, rows: 5, variants: 4 } as const;
 const colors: Record<FilthKind, readonly [number, number, number, number]> = {
+  slime:[130,142,120,170],
   dirt: [91, 75, 65, 97], trash: [157, 139, 105, 255], blood: [131, 34, 34, 180],
+  'rock-rubble':[117,128,130,255],'building-rubble':[169,151,127,255],
   ash: [111, 108, 103, 220], vomit: [179, 185, 73, 180], 'corpse-bile': [87, 101, 48, 255],
 };
 
@@ -32,7 +34,8 @@ export function createFilthAtlas(): { data: Uint8Array; width: number; height: n
   const data = new Uint8Array(width * height * 4);
   for (const [kindIndex, kind] of FILTH_KINDS.entries()) for (let variant = 0; variant < variants; variant++) {
     const tile = kindIndex * variants + variant, seed = tile + 73, r = (i: number) => sample(seed, i);
-    const powder = kind === 'dirt' || kind === 'ash', debris = kind === 'trash';
+    const rubble=kind==='rock-rubble'||kind==='building-rubble';
+    const powder = kind === 'dirt' || kind === 'ash', debris = kind === 'trash'||rubble;
     const lobes = Array.from({ length: debris ? 15 : powder ? 13 : 9 }, (_, i) => {
       const angle = r(i * 6) * Math.PI * 2, distance = i === 0 ? 0 : !powder && !debris && i >= 5 ? .25 + r(i * 6 + 1) * .15 : r(i * 6 + 1) * .30;
       const radius = debris ? .025 + r(i * 6 + 2) * .045 : i < 5 ? .10 + r(i * 6 + 2) * .13 : .025 + r(i * 6 + 2) * .06;
@@ -45,7 +48,8 @@ export function createFilthAtlas(): { data: Uint8Array; width: number; height: n
       const warp = powder || debris ? 0 : .10 * Math.sin(u * 51 + v * 23 + seed) + .07 * Math.sin(u * 29 - v * 47 + seed);
       let coverage = 0;
       for (const lobe of lobes) {
-        const distance = Math.hypot((u - lobe.x) / lobe.rx, (v - lobe.y) / lobe.ry) + warp;
+        const dx=(u-lobe.x)/lobe.rx,dy=(v-lobe.y)/lobe.ry;
+        const distance = (rubble?Math.max(Math.abs(dx),Math.abs(dy)):Math.hypot(dx,dy)) + warp;
         const edge = smooth((1 - distance) / (powder ? .85 : debris ? .35 : .4));
         coverage = 1 - (1 - coverage) * (1 - edge * lobe.strength);
       }

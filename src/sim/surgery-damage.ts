@@ -1,3 +1,4 @@
+import {medicalModel} from './body-model.ts';
 import { BODY_PARTS,HUMAN_BODY,BODY_INDEX,BODY_COVERAGE,type BodyPartId } from './body-definition.ts';
 import { HP_UNIT,medicalPartInjuryRule,type InjuryKind } from './injury-rules.ts';
 import { addResolvedInjuryBatch,partMissing,remainingPartHealth,type ResolvedInjury } from './injury-state.ts';
@@ -37,7 +38,7 @@ export function applySurgeryDamage(record:MedicalRecord,part:BodyPartId,damage:n
   const preserve=(id:BodyPartId,amount:number,min:number,max:number):number=>{
     const hp=remainingPartHealth(record,id)/HP_UNIT;
     if(id==='torso'||BODY_PARTS[id].depth==='inside'||amount<hp)return amount;
-    return draw()<Math.max(0,Math.min(1,((amount-hp)/BODY_PARTS[id].hp-min)/(max-min)))?amount:Math.max(0,hp-1);
+    return draw()<Math.max(0,Math.min(1,((amount-hp)/medicalModel(record).byId[id].hp-min)/(max-min)))?amount:Math.max(0,hp-1);
   };
   const inner=BODY_PARTS[part].depth==='inside',chain=ancestry(part);
   if(kind==='cut'&&inner){

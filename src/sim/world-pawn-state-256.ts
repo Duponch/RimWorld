@@ -1,0 +1,38 @@
+import {constructNativeWorldPawnOrder256,type NativeWorldPawnOrder256} from './native-world-pawn-order-256.ts';
+import type {Pawn,MaterialPile} from './types.ts';
+import type {WildAnimal} from './wildlife-state.ts';
+import type {PackedFurniture} from './furniture-rules.ts';
+import type {CampaignState,WorldGroupRecord} from './world-map-state.ts';
+interface WorldPawnCommon256 {
+ factionId:number|null;
+ originMapId:number|null;context:WorldGroupRecord['context'];
+ /** Actual observation/biological frontier; mothballed clinical tick may precede it. */
+ clockCore:number;enteredAtAbsCore:number;mode:'active'|'mothballed'|'dead';
+ /** True Thing.Destroy(Vanish), distinct from clinical death. */
+ destroyed?:true;
+ /** Actual PassedToWorld situation, never inferred for older rows. */
+ free?:true;
+ /** Captured true SpawnSetup, never visibility or absent-history inference. */
+ everSeenByPlayer?:true;
+ keepForever?:true;startingPawnLeftBehind?:true;everColonist?:true;
+ items:MaterialPile[];packed:PackedFurniture[];
+}
+export type WorldPawnOwner256=WorldPawnCommon256&({kind:'human';actor:Pawn}|{kind:'animal';actor:WildAnimal});
+export interface WorldPawnsState256 {revision:1;atCore:number;lastSuccessfulCore:number;currentRate:number;owners:WorldPawnOwner256[];nativeOrder?:NativeWorldPawnOrder256}
+export type WorldPawnCampaign256=CampaignState&{worldPawns?:WorldPawnsState256};
+/** Actual campaign birth only. Never called by load, migration or first abandon. */
+export function initialWorldPawns256(atCore=0):WorldPawnsState256 {
+ if(atCore!==0)throw Error('WorldPawns birth requires the true new campaign frontier');
+ return {revision:1,atCore:0,lastSuccessfulCore:0,currentRate:1,owners:[]};
+}
+/** Explicit future native World constructor only. Existing adapted factories
+ * keep initialWorldPawns256 and receive NO inferred slot history. */
+export function initialNativeWorldPawns256(birth:NativeWorldPawnOrder256['birth']):WorldPawnsState256 {return {...initialWorldPawns256(birth.atCore),nativeOrder:constructNativeWorldPawnOrder256(birth)};}
+export const deadWorldPawn256=(row:WorldPawnOwner256):boolean=>row.actor.state==='dead'||!!row.actor.health?.death;
+/** Native Dead cohort includes Destroyed; this never asserts clinical death. */
+export const terminalWorldPawn256=(row:WorldPawnOwner256):boolean=>row.destroyed===true||deadWorldPawn256(row);
+
+/** Worker original preflight, not admission of a JSON shape or MAIN snapshot. */
+export function mutableWorldPawnOriginal256(actor:object):boolean {
+ return Object.isExtensible(actor)&&Reflect.ownKeys(actor).every(k=>{const d=Object.getOwnPropertyDescriptor(actor,k)!;return Object.hasOwn(d,'value')&&d.configurable===true&&d.writable===true;});
+}

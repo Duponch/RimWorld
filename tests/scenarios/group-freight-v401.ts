@@ -13,7 +13,7 @@ import type {Cell} from '../../src/sim/types';
  * No existing campaign/person is healed, no freight transfer has been played. */
 export function groupFreightWorkshopV401(){
  const f=preparedV377LocalCheckpoint(),world=f.initial,local=secondaryContext(world)!;
- if(world.schemaVersion!==253||!world.secondarySite?.selected||local.group)throw Error('Adopt253 and prepare the real local V377 checkpoint first.');
+ if(Number(world.schemaVersion)!==253||!world.secondarySite?.selected||local.group)throw Error('Adopt253 and prepare the real local V377 checkpoint first.');
  const choices=groupMemberChoices(local);
  for(const id of f.memberIds){const choice=choices.find(c=>c.pawn.id===id);if(!choice?.ok)throw Error('Prepared carrier unavailable: '+id+' '+choice?.reason);}
  const origin=local.pawns.find(p=>p.id===f.memberIds[0])!,blocked=blockedCells(local),stand=captureStandability(local),query=candidateAccess(local,origin,blocked,new Set(),true);

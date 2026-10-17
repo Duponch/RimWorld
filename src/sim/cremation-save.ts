@@ -55,7 +55,7 @@ export function validateCremation(w:World,version:number,powerTopology?:PowerPar
     errors.push(...validatePileRecordShape(pile as unknown as Record<string,unknown>,w,version));
     if(pile.humanCorpse){
       const body=w.pawns.find(q=>q.id===pile.humanCorpse!.pawnId);
-      if(!body||!validHumanBodyShape(body.body,version,w.tick)||body.body?.pileId!==pile.id||body.body.lostAt!==undefined||checkedBodies.has(body.id)
+      if(!body||!validHumanBodyShape(body.body,version,w.tick,body.health)||body.body?.pileId!==pile.id||body.body.lostAt!==undefined||checkedBodies.has(body.id)
         ||w.pawns.some(q=>q.burial?.bodyPawnId===body.id))errors.push('Invalid or multiply claimed historical human corpse.');
       checkedBodies.add(pile.humanCorpse.pawnId);
     }

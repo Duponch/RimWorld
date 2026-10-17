@@ -1,3 +1,4 @@
+import {assessNativeAnimalBody256} from './animal-capacities-v256.ts';
 import type { BodyPartId } from './body-definition.ts';
 import { HUMAN_MODEL,type BodyModel } from './body-model.ts';
 import { isMechanoidKind,type MechanoidKind } from './mechanoid-definition.ts';
@@ -11,6 +12,8 @@ export interface BodyAssessmentInput {
    * capacity products, although their natural body parts remain missing. */
   readonly artificialParts?:readonly {readonly part:BodyPartId;readonly efficiency:number}[];
   readonly pain:number;
+  readonly partEfficiencyOffsets?:readonly {readonly part:BodyPartId;readonly offset:number}[];
+  readonly hearingOffset?:number;
   /** Condition modifiers apply after the physiological consciousness formula,
    * before its rounding and before capacities that consume consciousness. */
   readonly consciousnessOffset?:number;
@@ -72,12 +75,14 @@ export function bodyEfficiencies(input:BodyAssessmentInput,model=HUMAN_MODEL):Fl
     // This is unrelated to the separate rule for indestructible internal bones.
     efficiency[i]=(part.depth==='outside'&&parent>=0 ? Math.max(0,(remaining-.1)/.9) : remaining)*(added.get(part.id)??1);
   }
+  if(input.partEfficiencyOffsets)for(let i=0;i<HUMAN_BODY.length;i++){if(missing[i]||underAdded[i])continue;let offset=0;for(const row of input.partEfficiencyOffsets)if(row.part===HUMAN_BODY[i]!.id)offset=Math.fround(offset+row.offset);if(offset)efficiency[i]=Math.max(0,Math.fround(Math.fround(efficiency[i]!)+offset));}
   return efficiency;
 }
 
 function calculate(input:BodyAssessmentInput,model=HUMAN_MODEL):BodyAssessment {
   const efficiency=bodyEfficiencies(input,model),part=(id:BodyPartId)=>efficiency[model.index[id]]!;
   if(isMechanoidKind(model.kind))return calculateMechanical(part,model.kind);
+  if(model.parts[0]?.nativeTags)return assessNativeAnimalBody256(input,model,efficiency);
   const human=model.kind==='human';
   const pair=(a:BodyPartId,b:BodyPartId)=>(part(a)+part(b))/2;
   const bestPair=(a:BodyPartId,b:BodyPartId)=>.75*Math.max(part(a),part(b))+.25*Math.min(part(a),part(b));
@@ -107,7 +112,7 @@ function calculate(input:BodyAssessmentInput,model=HUMAN_MODEL):BodyAssessment {
   }
   const moving=canBeAwake&&functionalLegs>=(human?1:2)?round((legs/(human?2:4)*(human?part('pelvis'):1)*part('spine')*(.8+.2*breathing)*(.8+.2*bloodPumping)*Math.min(1,consciousness)+(input.movingOffset??0))*(input.movingFactor??1)):0;
   const capacities=Object.freeze({consciousness,moving,manipulation:canBeAwake?round((arms/2*consciousness+(input.manipulationOffset??0))*(input.manipulationFactor??1)):0,
-    sight:round(bestPair('left-eye','right-eye')+(input.sightOffset??0)),hearing:round(bestPair('left-ear','right-ear')),
+    sight:round(bestPair('left-eye','right-eye')+(input.sightOffset??0)),hearing:round(bestPair('left-ear','right-ear')+(input.hearingOffset??0)),
     talking:human&&canBeAwake?round((part('jaw')*part('neck')*part('tongue')*consciousness+(input.talkingOffset??0))*(input.talkingFactor??1)):0,
     eating:canBeAwake?round(Math.max(.1,(human?part('jaw'):1)*part('neck')*(human?(.5+.5*part('tongue')):1)*consciousness*(input.eatingFactor??1))):0,
     breathing,bloodPumping,bloodFiltration,digestion});

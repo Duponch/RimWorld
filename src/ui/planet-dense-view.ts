@@ -1,0 +1,77 @@
+import {retiredCampTileInfo256} from './map-registry-adapter';
+import {surfaceVisibilityAxis} from '../sim/world-surface-mesh';
+import {prepareGlobeRivers} from './planet-river-geometry';
+import type {WorldPhysicalSurface} from '../sim/world-surface-geography';
+import type {WorldRoadLink} from '../sim/world-roads';
+import {prepareGlobeRoads} from './planet-road-geometry';
+import type {WorldCreationSettlement256} from './world-creation-contract';
+type DensePlanetSource=WorldPhysicalSurface;
+import type {PlanetView,PlanetOverlay} from './planet-view';
+import {prepareGlobeGeometry,pickGlobeTile,createResidentGlobeSurface,type GlobeGeometry,type GlobeVector} from './planet-surface';
+import './planet-dense-view.css';
+const SVG='http://www.w3.org/2000/svg',PAGE_SIZE=128;
+const labels:Record<string,string>={ocean:'Océan',lake:'Lac','boreal-forest':'Forêt boréale',tundra:'Toundra','cold-bog':'Tourbière froide','ice-sheet':'Calotte glaciaire','sea-ice':'Banquise','temperate-forest':'Forêt tempérée','temperate-swamp':'Marais tempéré','tropical-rainforest':'Forêt tropicale','tropical-swamp':'Marais tropical','arid-shrubland':'Broussailles arides',desert:'Désert','extreme-desert':'Désert extrême'};
+const relief:Record<string,string>={flat:'plat','small-hills':'petites collines','large-hills':'grandes collines',mountainous:'montagnes',impassable:'montagnes infranchissables'};
+const pigments:Record<string,readonly[number,number,number]>={ocean:[123,164,180],lake:[133,183,193],'boreal-forest':[135,158,142],tundra:[181,186,168],'cold-bog':[143,159,154],'ice-sheet':[223,230,225],'sea-ice':[200,221,223],'temperate-forest':[161,184,147],'temperate-swamp':[153,175,152],'tropical-rainforest':[124,167,133],'tropical-swamp':[129,161,143],'arid-shrubland':[196,187,142],desert:[219,194,149],'extreme-desert':[229,201,162]};
+export const denseBiomeLabel=(biome:string)=>labels[biome]??biome;
+export const denseReliefLabel=(value:string)=>relief[value]??value;
+/** First view only. The retained cap is centred on this actual generation
+ * axis; looking at+Z can discard the entire30% surface on the back. */
+export function initialDenseGlobeRotation256(coverage:.3|.5|1):{yaw:number;pitch:number}{const p=surfaceVisibilityAxis(coverage),n=Math.hypot(...p);return {yaw:Math.atan2(p[0],p[2]),pitch:Math.asin(p[1]/n)};}
+const geometries=new WeakMap<object,WeakMap<object,GlobeGeometry>>();
+const NO_ROADS:readonly (readonly WorldRoadLink[])[]=Object.freeze([]);
+const unit=(p:GlobeVector):GlobeVector=>{const n=Math.hypot(...p);return [p[0]/n,p[1]/n,p[2]/n];};
+/** Radius conversion belongs only to presentation. Raw centres remain untouched,
+ * including their sub-radius mean and the separate Core longitude/latitude. */
+function prepare(planet:DensePlanetSource,roads:readonly (readonly WorldRoadLink[])[]):GlobeGeometry {
+ let cache=geometries.get(planet.tiles);const cached=cache?.get(roads);if(cached)return cached;
+ if(planet.revision!==3||planet.radius!==100)throw Error('Géométrie dense non reconnue.');
+ const pigment=(id:number):readonly [number,number,number]=>{const tile=planet.tiles[id]!,base=pigments[tile.biome]??[183,176,165],shade=tile.hilliness==='impassable'?.66:tile.hilliness==='mountainous'?.77:tile.hilliness==='large-hills'?.88:tile.hilliness==='small-hills'?.95:1;return base.map(v=>Math.round(v*shade)) as [number,number,number];};
+ const corners=(id:number)=>planet.tiles[id]!.corners;
+ const geometry=prepareGlobeGeometry({tiles:planet.tiles,radius:100,corners,decorations:[...prepareGlobeRivers(planet.tiles,corners,100),...(roads.length?[prepareGlobeRoads(planet,roads)]:[])],pigment});
+ if(!cache){cache=new WeakMap();geometries.set(planet.tiles,cache);}cache.set(roads,geometry);return geometry;
+}
+export function createDensePlanetView(host:HTMLElement,onSelect:(id:number)=>void,options:{landing?:boolean;roads?:readonly (readonly WorldRoadLink[])[];settlements?:readonly WorldCreationSettlement256[]}={}):Omit<PlanetView,'setPlanet'>&{setPlanet(planet:DensePlanetSource|undefined):void} {
+ const doc=host.ownerDocument,abort=new AbortController(),root=doc.createElement('section');root.className='planet-view planet-dense-view';
+ const viewport=doc.createElement('div');viewport.className='planet-dense-viewport';const canvas=doc.createElement('canvas');canvas.tabIndex=0;canvas.setAttribute('aria-label','Globe : flèches ou WASD pour tourner, molette ou Page précédente/suivante pour le zoom, cliquer pour choisir.');
+ const svg=doc.createElementNS(SVG,'svg');svg.setAttribute('viewBox','0 0 500 500');svg.setAttribute('aria-hidden','true');
+ const route=doc.createElementNS(SVG,'path'),preview=doc.createElementNS(SVG,'path');route.setAttribute('class','planet-route');preview.setAttribute('class','planet-route planet-route-preview');svg.append(preview,route);viewport.append(canvas,svg);
+ const controls=doc.createElement('div');controls.className='planet-dense-controls';const previous=doc.createElement('button'),next=doc.createElement('button'),page=doc.createElement('span'),select=doc.createElement('select'),idInput=doc.createElement('input'),go=doc.createElement('button');
+ previous.type=next.type=go.type='button';previous.textContent='Précédentes';next.textContent='Suivantes';go.textContent='Afficher la case';select.setAttribute('aria-label','Choisir une case dans cette page');select.dataset.planetSelection='';idInput.type='number';idInput.min='0';idInput.step='1';idInput.setAttribute('aria-label','Numéro de case du globe');controls.append(previous,page,next,select,idInput,go);
+ const text=doc.createElement('p'),error=doc.createElement('p');text.className='planet-selection';text.setAttribute('aria-live','polite');error.setAttribute('role','status');error.hidden=true;root.append(viewport,controls,text,error);host.append(root);
+ let planet:DensePlanetSource|undefined,geometry:GlobeGeometry|undefined,surface:ReturnType<typeof createResidentGlobeSurface>|undefined,uploaded:GlobeGeometry|undefined,overlay:PlanetOverlay={selected:null,route:[]},visible=true,disposed=false,frame=0,pageIndex=0,yaw=0,pitch=0,zoom=1;
+ const markers=new Map<string,SVGCircleElement>();let drag:{id:number;x:number;y:number;yaw:number;pitch:number;moved:boolean}|undefined;
+ const rotate=(p:GlobeVector):GlobeVector=>{const x=p[0]*Math.cos(yaw)-p[2]*Math.sin(yaw),z=p[0]*Math.sin(yaw)+p[2]*Math.cos(yaw);return [x,p[1]*Math.cos(pitch)-z*Math.sin(pitch),p[1]*Math.sin(pitch)+z*Math.cos(pitch)];};
+ const center=(id:number):GlobeVector|undefined=>{if(!geometry||geometry.tileIds[id]!==id)return;const offset=id*3;return unit([geometry.centres[offset]!,geometry.centres[offset+1]!,geometry.centres[offset+2]!]);};
+ const label=(id:number)=>{const tile=planet?.tiles[id],base=tile?`Case ${id} · ${denseBiomeLabel(tile.biome)} · ${denseReliefLabel(tile.hilliness)}`:`Case ${id} absente`;return base+retiredCampTileInfo256(overlay.retiredCamps,id);};
+ function schedule(){if(!disposed&&visible&&!frame)frame=requestAnimationFrame(paint);}
+ function list(){if(!planet)return;const count=Math.ceil(planet.tiles.length/PAGE_SIZE);pageIndex=Math.max(0,Math.min(count-1,pageIndex));const start=pageIndex*PAGE_SIZE;select.replaceChildren(...planet.tiles.slice(start,start+PAGE_SIZE).map(tile=>{const option=doc.createElement('option');option.value=String(tile.id);option.textContent=label(tile.id);return option;}));page.textContent=`${pageIndex+1} / ${count}`;previous.disabled=pageIndex===0;next.disabled=pageIndex+1===count;if(overlay.selected!==null)select.value=String(overlay.selected);}
+ function selected(id:number){if(!planet?.tiles[id]||planet.tiles[id]!.id!==id)return;overlay={...overlay,selected:id};pageIndex=Math.floor(id/PAGE_SIZE);list();idInput.value=String(id);text.textContent=label(id);schedule();onSelect(id);}
+ function point(x:number,y:number):GlobeVector|null {const rect=canvas.getBoundingClientRect();const sx=(x-rect.left)/rect.width*2-1,sy=1-(y-rect.top)/rect.height*2,px=sx/(.88*zoom),py=sy/(.88*zoom),r=px*px+py*py;if(r>1)return null;const pz=Math.sqrt(Math.max(0,1-r)),ry=py*Math.cos(pitch)+pz*Math.sin(pitch),rz=-py*Math.sin(pitch)+pz*Math.cos(pitch);return [px*Math.cos(yaw)+rz*Math.sin(yaw),ry,-px*Math.sin(yaw)+rz*Math.cos(yaw)];}
+ function path(ids:readonly number[]){let out='';for(let i=1;i<ids.length;i++){const a=center(ids[i-1]!),b=center(ids[i]!);if(!a||!b)continue;let old=rotate(a);for(let j=1;j<=6;j++){const t=j/6,p=rotate(unit([a[0]*(1-t)+b[0]*t,a[1]*(1-t)+b[1]*t,a[2]*(1-t)+b[2]*t]));if(old[2]>=0&&p[2]>=0)out+=`M${250+old[0]*220*zoom},${250-old[1]*220*zoom}L${250+p[0]*220*zoom},${250-p[1]*220*zoom}`;old=p;}}return out;}
+ function paint(){frame=0;if(disposed||!visible||!planet||!geometry)return;
+  try{surface??=createResidentGlobeSurface(canvas);if(uploaded!==geometry){surface.adopt(geometry);uploaded=geometry;}surface.paint(yaw,pitch,zoom);error.hidden=true;}
+  catch(cause){error.hidden=false;error.textContent=cause instanceof Error?cause.message:String(cause);}
+  route.setAttribute('d',path(overlay.route));preview.setAttribute('d',path(overlay.previewRoute??[]));
+  const desired=new Map<string,{id:number;label:string;kind:string;active?:boolean}>();if(overlay.homeTile!==undefined&&!options.landing&&overlay.maps===undefined)desired.set('home',{id:overlay.homeTile,label:'Foyer',kind:'home'});if(overlay.civilianTile!==undefined&&overlay.civilianTile!==null)desired.set('civilian',{id:overlay.civilianTile,label:'Comptoir civil',kind:'civilian'});if(overlay.selected!==null)desired.set('selection',{id:overlay.selected,label:label(overlay.selected),kind:'selection'});if(overlay.groupTile!==undefined&&overlay.groups===undefined)desired.set('group',{id:overlay.groupTile,label:'Groupe',kind:'group'});
+  for(const settlement of overlay.settlements??options.settlements??[])desired.set(`npc:${settlement.id}`,{id:settlement.tile,label:settlement.name,kind:'settlement'});
+  for(const marker of overlay.retiredCamps??[])desired.set(`retired-camp:${marker.retiredMapId}`,{id:marker.tile,label:marker.label,kind:'abandoned-camp'});
+  for(const map of overlay.maps??[])desired.set(`map:${map.mapId}`,{id:map.tile,label:map.label,kind:map.kind,active:map.active});for(const group of overlay.groups??[])desired.set(`group:${group.groupId}`,{id:group.tile,label:group.label,kind:'caravan',active:group.selected});
+  for(const [key,node] of markers)if(!desired.has(key)){node.remove();markers.delete(key);}for(const [key,value] of desired){let node=markers.get(key);if(!node){node=doc.createElementNS(SVG,'circle');node.append(doc.createElementNS(SVG,'title'));markers.set(key,node);svg.append(node);}node.firstElementChild!.textContent=value.label;const worldObject=['settlement','camp','legacy-site','caravan','abandoned-camp'].includes(value.kind);node.setAttribute('class',worldObject?`planet-world-object planet-world-object-${value.kind}`:`planet-marker planet-marker-${value.kind}`);node.setAttribute('data-active',String(!!value.active));node.setAttribute('r',value.kind==='selection'?'9':worldObject&&value.kind!=='caravan'?'8':'5');const c=center(value.id),p=c?rotate(c):undefined;node.style.display=p&&p[2]>=0?'':'none';if(p){node.setAttribute('cx',String(250+p[0]*220*zoom));node.setAttribute('cy',String(250-p[1]*220*zoom));}}
+ }
+ select.addEventListener('change',()=>selected(Number(select.value)),{signal:abort.signal});previous.onclick=()=>{pageIndex--;list();};next.onclick=()=>{pageIndex++;list();};go.onclick=()=>{const id=Number(idInput.value);if(!idInput.value.trim()||!Number.isSafeInteger(id)||!planet?.tiles[id]){error.textContent='Cette case n’existe pas sur cette planète.';error.hidden=false;return;}selected(id);focus(id);};
+ canvas.addEventListener('pointerdown',event=>{if(event.button!==0||!planet)return;drag={id:event.pointerId,x:event.clientX,y:event.clientY,yaw,pitch,moved:false};canvas.setPointerCapture(event.pointerId);},{signal:abort.signal});
+ canvas.addEventListener('pointermove',event=>{if(drag?.id!==event.pointerId)return;const dx=event.clientX-drag.x,dy=event.clientY-drag.y;if(Math.hypot(dx,dy)>4)drag.moved=true;if(drag.moved){yaw=drag.yaw+dx*.008/zoom;pitch=Math.max(-Math.PI/2,Math.min(Math.PI/2,drag.pitch+dy*.008/zoom));schedule();}},{signal:abort.signal});
+ canvas.addEventListener('pointerup',event=>{if(drag?.id!==event.pointerId)return;const end=drag;drag=undefined;if(canvas.hasPointerCapture(event.pointerId))canvas.releasePointerCapture(event.pointerId);if(!end.moved&&geometry){const p=point(event.clientX,event.clientY),id=p?pickGlobeTile(geometry,p):null;if(id!==null)selected(id);}},{signal:abort.signal});canvas.addEventListener('pointercancel',()=>{drag=undefined;},{signal:abort.signal});
+ canvas.addEventListener('wheel',event=>{event.preventDefault();zoom=Math.max(.7,Math.min(24,zoom*Math.exp(-Math.max(-100,Math.min(100,event.deltaY))*.002)));schedule();},{signal:abort.signal,passive:false});
+ canvas.addEventListener('keydown',event=>{if(event.key==='ArrowLeft'||event.key.toLowerCase()==='a')yaw-=.12/zoom;else if(event.key==='ArrowRight'||event.key.toLowerCase()==='d')yaw+=.12/zoom;else if(event.key==='ArrowUp'||event.key.toLowerCase()==='w')pitch=Math.max(-Math.PI/2,pitch-.12/zoom);else if(event.key==='ArrowDown'||event.key.toLowerCase()==='s')pitch=Math.min(Math.PI/2,pitch+.12/zoom);else if(event.key==='PageUp')zoom=Math.max(.7,zoom/1.2);else if(event.key==='PageDown')zoom=Math.min(24,zoom*1.2);else return;event.preventDefault();schedule();},{signal:abort.signal});
+ canvas.addEventListener('webglcontextlost',schedule,{signal:abort.signal});canvas.addEventListener('webglcontextrestored',()=>{surface?.dispose();surface=undefined;uploaded=undefined;schedule();},{signal:abort.signal});
+ const resize=new ResizeObserver(schedule);resize.observe(canvas);
+ function focus(id:number){const p=center(id);if(p){yaw=Math.atan2(p[0],p[2]);pitch=Math.asin(p[1]);schedule();}}
+ return {
+  setPlanet(next){if(next===planet)return;planet=next;if(!next){geometry=undefined;uploaded=undefined;surface?.dispose();surface=undefined;select.replaceChildren();text.textContent='Géographie non adoptée.';root.hidden=true;return;}geometry=prepare(next,options.roads??NO_ROADS);const initial=initialDenseGlobeRotation256(next.settings.coverage);yaw=initial.yaw;pitch=initial.pitch;if(overlay.selected!==null&&!next.tiles[overlay.selected])overlay={selected:null,route:[]};pageIndex=0;list();root.hidden=!visible;schedule();},
+  setOverlay(next){if(planet)for(const route of [next.route,next.previewRoute??[]])for(let i=0;i<route.length;i++){const tile=planet.tiles[route[i]!];if(!tile||i>0&&route[i-1]!==route[i]&&!tile.neighbours.includes(route[i-1]!))throw Error('Route géographique non canonique.');}overlay=next;if(planet&&next.selected!==null){idInput.value=String(next.selected);text.textContent=label(next.selected);const page=Math.floor(next.selected/PAGE_SIZE);if(page!==pageIndex){pageIndex=page;list();}else select.value=String(next.selected);}schedule();},
+  setVisible(next){visible=next;root.hidden=!next||!planet;if(!next){cancelAnimationFrame(frame);frame=0;}else schedule();},focusTile:focus,
+  dispose(){if(disposed)return;disposed=true;abort.abort();resize.disconnect();cancelAnimationFrame(frame);surface?.dispose();geometry=undefined;planet=undefined;markers.clear();root.remove();},
+ };
+}

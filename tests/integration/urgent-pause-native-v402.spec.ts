@@ -31,19 +31,19 @@ test('V402 prepared two maps: real future arrivals, Never warning, confirmed glo
   const feedback=page.locator('#urgent-threat-feedback');await expect(feedback).toBeVisible({timeout:20_000});await expect(feedback).toContainText('Second site · Raid humain');await expect(feedback).not.toContainText('Jeu mis en pause');
   await expect(page.locator('[data-speed="1"]')).toHaveAttribute('aria-pressed','true');await pause(page);
   const warned=await checkpoint(page,info,'never-warning-complete');proof.first={tick:warned.complete.tick,path:warned.path};
-  expect(warned.complete.secondarySite!.map.raids!.active!.startedAt).toBe(f.secondaryDue);expect(warned.complete.raids!.active).toBeUndefined();expect(warned.active.campaignMap?.active).toBe('home');expect(await sounds(page)).toBe(1);
+  expect(warned.complete.secondarySite!.map.raids!.active!.startedAt).toBe(f.secondaryDue);expect(warned.complete.raids!.active).toBeUndefined();expect((warned.active.campaignMap?.revision===2?undefined:warned.active.campaignMap?.active)).toBe('home');expect(await sounds(page)).toBe(1);
   await page.locator('#threat-pause-mode').selectOption('any-threat');await expect(page.locator('#threat-pause-mode')).toBeEnabled();await expect(page.locator('#threat-pause-mode')).toHaveValue('any-threat');
   const pausedTick=(await world(page)).tick;await page.locator('#menu-panel [data-close-panel]').click();await page.waitForTimeout(250);expect((await world(page)).tick).toBe(pausedTick);await expect(page.locator('[data-speed="0"]')).toHaveAttribute('aria-pressed','true');
-  await feedback.locator('[data-urgent-site="secondary"]').click();await page.waitForFunction(()=>{const w=window.__lisiere.world;return w.campaignMap?.active==='secondary';},undefined,{polling:100});expect((await world(page)).tick).toBe(pausedTick);expect(await sounds(page)).toBe(1);
+  await feedback.locator('[data-urgent-site="secondary"]').click();await page.waitForFunction(()=>{const w=window.__lisiere.world;return (w.campaignMap?.revision===2?undefined:w.campaignMap?.active)==='secondary';},undefined,{polling:100});expect((await world(page)).tick).toBe(pausedTick);expect(await sounds(page)).toBe(1);
   await page.screenshot({path:info.outputPath('01-never-warning-real-secondary-target.png')});
   await page.locator('[data-speed="6"]').click();await expect(feedback).toContainText('Foyer · Raid humain',{timeout:20_000});await expect(feedback).toContainText('Jeu mis en pause');await expect(page.locator('[data-speed="0"]')).toHaveAttribute('aria-pressed','true');
   // Preserve the complete endpoint BEFORE asserting tick cutoff/actor state.
   const urgent=await checkpoint(page,info,'global-pause-at-arrival');proof.second={tick:urgent.complete.tick,path:urgent.path};
-  expect(urgent.complete.tick).toBe(f.homeDue);expect(urgent.complete.raids!.active!.startedAt).toBe(f.homeDue);expect(urgent.active.campaignMap?.active).toBe('secondary');expect(await sounds(page)).toBe(2);
+  expect(urgent.complete.tick).toBe(f.homeDue);expect(urgent.complete.raids!.active!.startedAt).toBe(f.homeDue);expect((urgent.active.campaignMap?.revision===2?undefined:urgent.active.campaignMap?.active)).toBe('secondary');expect(await sounds(page)).toBe(2);
   await page.locator('#menu-panel [data-close-panel]').click();await page.waitForTimeout(250);expect((await world(page)).tick).toBe(f.homeDue);await expect(page.locator('[data-speed="0"]')).toHaveAttribute('aria-pressed','true');
   await page.screenshot({path:info.outputPath('02-global-pause-current-view-preserved.png')});
   const homeActor=urgent.complete.raids!.active!.members[0]!;await feedback.locator('[data-urgent-site="home"]').click();
-  await page.waitForFunction(id=>{const w=window.__lisiere.world;return w.campaignMap?.active==='home'&&w.pawns.some(p=>p.id===id);},homeActor,{polling:100});
+  await page.waitForFunction(id=>{const w=window.__lisiere.world;return (w.campaignMap?.revision===2?undefined:w.campaignMap?.active)==='home'&&w.pawns.some(p=>p.id===id);},homeActor,{polling:100});
   await expect(page.locator('#selected-name')).toHaveText(urgent.complete.pawns.find(p=>p.id===homeActor)!.name);expect((await world(page)).tick).toBe(f.homeDue);expect(await sounds(page)).toBe(2);
   await feedback.getByRole('button',{name:'Fermer les avertissements de menace'}).click();await expect(feedback).toBeHidden();await page.waitForTimeout(250);expect((await world(page)).tick).toBe(f.homeDue);
   // Exercise a real explicit time gesture while the confirmed urgent lock still exists.

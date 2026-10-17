@@ -13,6 +13,7 @@ import type { World } from '../../src/sim/types';
 /** Declared prepared biome context for typed flora. This is not a historical
  * player save or a simulated arrival; its plants start observation now. */
 export function prepareConstructionFlora(world:World):void {
+  if(world.flora?.revision===2)throw Error('Historical construction348 preparation cannot replace prospective flora revision2');
   world.site=resolveSite(world.seed,{biome:'temperate-forest',hilliness:'flat'});
   world.scenario={id:'crashlanded',revision:2,landing:{x:8,z:10}};
   if(!world.gameProfile){
@@ -22,5 +23,5 @@ export function prepareConstructionFlora(world:World):void {
   if(!world.climate&&!adoptEnvironment(world))throw Error('Prepared biome climate could not be adopted');
   for(const plant of world.resources)if(plant.species&&!plant.plantLife)plant.plantLife=createPlantLife(world,plant);
   if(!world.flora)initializeWildFlora(world,world.site as BiomeSite);
-  else world.flora.capacity=Math.max(world.flora.capacity,world.resources.filter(p=>p.species).length);
+  else {if(world.flora.revision!==1)throw Error('Expected literal flora revision1');world.flora.capacity=Math.max(world.flora.capacity,world.resources.filter(p=>p.species).length);}
 }

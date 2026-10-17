@@ -38,7 +38,7 @@ export function validateSmelting(w:World,version:number,powerTopology?:PowerPare
     ||(s.pawn.orders?.queue??[]).some(o=>isCookingOrder(o)&&isSmeltingRecipe(o.cooking.recipe))));
   if(!machinePresent&&!bills.some(prospectiveBill)&&!taskPresent)return errors;
   if(version<222)return ['Future smelting station, recipe or filter.'];
-  for(const b of bills)if(prospectiveBill(b)&&(!obj(b)||!(isSmeltingRecipe(b.recipe)&&validBillSettings(b,'smelt-weapon',version)||version>=251&&isBurnApparelRecipe(b.recipe)&&validBillSettings(b,'burn-apparel',version))))errors.push('Invalid smelting bill or filter attached to another recipe.');
+  for(const b of bills)if(prospectiveBill(b)&&(!obj(b)||!(isSmeltingRecipe(b.recipe)&&validBillSettings(b,b.recipe,version)||version>=251&&isBurnApparelRecipe(b.recipe)&&validBillSettings(b,'burn-apparel',version))))errors.push('Invalid smelting bill or filter attached to another recipe.');
   if(foreign.some(s=>s.pawn&&(isSmeltingRecipe(s.pawn.cooking?.recipe)
     ||(s.pawn.orders?.queue??[]).some(o=>isCookingOrder(o)&&isSmeltingRecipe(o.cooking.recipe)))))errors.push('Off-map owner retains a local smelting task.');
   if(machines.length&&!productionResearchUnlocked(w,'smelt-weapon'))errors.push('Unavailable electric smelter.');
@@ -68,7 +68,7 @@ export function validateSmelting(w:World,version:number,powerTopology?:PowerPare
       const pile=w.piles.find(i=>i.id===part.pileId);
       if(!pile||!smeltingIngredientAllowed(bill,pile)||part.quantity!==1||pile.item!==part.item||pile.owner.type!=='ground'
         ||reservedSource(w,pile.id)>1||part.stage==='source'&&pile.owner.type==='ground'&&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2
-        ||!ingredientWithinReach(part.cell,spot,station)||!ingredientPlaceFree(w,part.cell,spot,'smelt-weapon',station,geometry)){
+        ||!ingredientWithinReach(part.cell,spot,station)||!ingredientPlaceFree(w,part.cell,spot,bill.recipe,station,geometry)){
         errors.push('Invalid queued smelting weapon or staging.');continue;
       }
       errors.push(...validatePileRecordShape(pile as unknown as Record<string,unknown>,w,version));

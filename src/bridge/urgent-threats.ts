@@ -8,7 +8,7 @@ export type ThreatPauseMode = 'never' | 'major' | 'any-threat';
 export interface ThreatPauseToken { generation: number; pauseRevision: number }
 export interface ThreatSpeedOptions { explicit: true; token: ThreatPauseToken }
 export type ThreatSite = 'home' | 'secondary';
-export type ThreatKind = 'raid' | 'mechanoid' | 'manhunter';
+export type ThreatKind = 'raid' | 'mechanoid' | 'manhunter' | 'ancient-shrine';
 export interface UrgentThreatRow {
   mapId?:number;tile?:number|null;site: ThreatSite; kind: ThreatKind; totalArrivals: number; lastTick: number;
   lastCount: number; actorId?: number;
@@ -37,14 +37,14 @@ export function validUrgentThreatSnapshot(v: unknown, tick: unknown, speed: unkn
     || !keys(v, ['generation','pauseRevision','serial','urgentHeld','rows'])
     || !integer(v.generation) || v.generation < 1 || !integer(v.pauseRevision) || !integer(v.serial)
     || v.pauseRevision > v.serial || typeof v.urgentHeld !== 'boolean'
-    || (v.urgentHeld && (v.pauseRevision === 0 || speed !== 0)) || !Array.isArray(v.rows) || v.rows.length > (maxTiles===undefined?3_000_000:Math.max(6,(maxTiles+1)*3)) || Reflect.ownKeys(v.rows).length !== v.rows.length + 1) return false;
+    || (v.urgentHeld && (v.pauseRevision === 0 || speed !== 0)) || !Array.isArray(v.rows) || v.rows.length > (maxTiles===undefined?3_000_000:Math.max(8,(maxTiles+1)*4)) || Reflect.ownKeys(v.rows).length !== v.rows.length + 1) return false;
   const seen = new Set<string>(); let total = 0;
   for (let i = 0; i < v.rows.length; i++) {
     const d = Object.getOwnPropertyDescriptor(v.rows, String(i));
     if (!d || !('value' in d)) return false;
     const r = d.value;
     if (!record(r) || !keys(r, ['site','kind','totalArrivals','lastTick','lastCount'], ['actorId','mapId','tile'])
-      || !['home','secondary'].includes(r.site as string) || !['raid','mechanoid','manhunter'].includes(r.kind as string)
+      || !['home','secondary'].includes(r.site as string) || !['raid','mechanoid','manhunter','ancient-shrine'].includes(r.kind as string)
       || Object.hasOwn(r,'mapId')!==Object.hasOwn(r,'tile')||r.mapId!==undefined&&(!integer(r.mapId)||r.tile!==null&&(!integer(r.tile)||maxTiles!==undefined&&r.tile>=maxTiles))
       || !integer(r.totalArrivals) || r.totalArrivals < 1 || !integer(r.lastTick) || r.lastTick > tick
       || !integer(r.lastCount) || r.lastCount < 1 || (Object.hasOwn(r, 'actorId') && (!integer(r.actorId) || r.actorId < 1))) return false;
@@ -54,8 +54,8 @@ export function validUrgentThreatSnapshot(v: unknown, tick: unknown, speed: unkn
   return Number.isSafeInteger(total) && total === v.serial;
 }
 
-type LocalMap = Pick<World, 'raids' | 'wildlife'>;
-interface MapBaseline { map: LocalMap; raids: Map<ThreatKind, string>; animals: Map<number, number> }
+type LocalMap = Pick<World, 'raids' | 'wildlife' | 'ancientShrineWarnings'>;
+interface MapBaseline { map: LocalMap; raids: Map<ThreatKind, string>; animals: Map<number, number>; warnings:Set<string> }
 /** Only active episodes are retained. Archives cannot become arrivals after eviction. */
 export class UrgentThreatObserver {
   private maps = new Map<ThreatSite|number, MapBaseline>();
@@ -80,7 +80,8 @@ export class UrgentThreatObserver {
     if (map.raids?.active) raids.set('raid', map.raids.active.id + ':' + map.raids.active.startedAt);
     if (map.raids?.mechActive) raids.set('mechanoid', map.raids.mechActive.id + ':' + map.raids.mechActive.startedAt);
     for (const a of map.wildlife?.animals ?? []) if (a.manhunter) animals.set(a.id, a.manhunter!.startedAtCore);
-    return { map, raids, animals };
+    const warnings=new Set((map.ancientShrineWarnings?.pairs??[]).filter(p=>p.letter).map(p=>p.triggerId+':'+p.letter!.tick));
+    return { map, raids, animals, warnings };
   }
   capture(world: CampaignState, mode: ThreatPauseMode): boolean {
     let pause = false;
@@ -101,6 +102,7 @@ export class UrgentThreatObserver {
         arrive(site,tile, kind, Math.max(1, raid.members.length), raid.members[0]);
       }
       for (const a of map.wildlife?.animals ?? []) if (alertManhunter(a) && before.animals.get(a.id) !== a.manhunter!.startedAtCore) arrive(site,tile, 'manhunter', 1, a.id);
+      for(const warning of map.ancientShrineWarnings?.pairs??[])if(warning.letter&&!before.warnings.has(warning.triggerId+':'+warning.letter.tick))arrive(site,tile,'ancient-shrine',1,warning.letter.pawnId);
       this.maps.set(site, after);
     }
     if (pause) { this.state.pauseRevision++; this.state.urgentHeld = true; }

@@ -20,7 +20,7 @@
     "test:campaign": "node scripts/test-campaigns.mjs",
     "test:campaign:diagnostic": "node scripts/test-campaigns.mjs --diagnostic",
     "test:integration": "playwright test",
-    "bench": "node --experimental-strip-types scripts/benchmark.ts",
+    "bench": "node --experimental-transform-types scripts/benchmark.ts",
     "test:presentation": "node scripts/check-presentation.mjs",
     "check:docs": "python scripts/check-docs.py",
     "validate:logged": "node scripts/run-validation.mjs",

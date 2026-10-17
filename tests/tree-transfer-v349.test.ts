@@ -1,3 +1,4 @@
+import {legacyFlora} from './helpers/legacy-fixture-guards.ts';
 import {expect,test} from 'vitest';
 import {treeTransferScene,preparedTreeWrapper} from './scenarios/tree-transfer-v349';
 import {applyCommand,stepWorld} from '../src/sim/engine';
@@ -60,7 +61,7 @@ test('V349 extraction promised under a wall wins source custody once; the builde
 test.each(['rock','water','roof','another-tree','wall-ghost'] as const)('V349 replant refuses %s without consuming a source wrapper',mode=>{
   const {w,pile}=preparedTreeWrapper();const target={x:20,z:14};if(mode==='rock')w.tiles[target.z*w.width+target.x]={terrain:'rock',stone:'granite'};if(mode==='water')w.tiles[target.z*w.width+target.x]={terrain:'water'};
   if(mode==='roof')w.roofing={constructed:[target.z*w.width+target.x],build:[],remove:[],cursor:0};
-  if(mode==='another-tree'){w.resources.push({...structuredClone(pile.innerResource),id:w.nextId++,...target});w.flora!.capacity++;}
+  if(mode==='another-tree'){w.resources.push({...structuredClone(pile.innerResource),id:w.nextId++,...target});legacyFlora(w).capacity++;}
   if(mode==='wall-ghost')accept(w,{type:'designate',kind:'wall',material:'wood',...target});const before=JSON.stringify(w);expect(replantTreeReason(w,pile,target)).toBeTruthy();expect(applyCommand(w,{type:'replant-tree',pileId:pile.id,...target}).ok).toBe(false);expect(JSON.stringify(w)).toBe(before);expect(w.piles[0]).toBe(pile);
 });
 

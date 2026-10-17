@@ -1,3 +1,17 @@
+import {validToxicBuildupTransport256} from './toxic-buildup-save-256.ts';
+import {validGroupAnimalPreparation256,validGroupAnimalOwners256} from './group-animal-save-256.ts';
+import {groupPhysicalPawns256} from './group-mixed-pawns-256.ts';
+import {validGroupCaravanCarryPawnField256} from './group-caravan-carry-256.ts';
+import {validCaravanBedrollPacks256} from './group-bedroll-capture-256.ts';
+import {validPreparingGroupPacked256} from './group-packed-save-256.ts';
+import {planetTile,planetTileCount} from './planet-geography-256.ts';
+import {groupDestinationValid} from './group-capture.ts';
+import {groupCaravanUnitMass256} from './group-caravan-mass-256.ts';
+import {validProspectiveGroupSegment256} from './group-route-interval-256.ts';
+import {validPawnMapAreaBindings,mapAreaReferences} from './pawn-map-areas.ts';
+import type {GroupMemberOrigin} from './group-reorganization-state.ts';
+import {validGroupTravel,validGroupReorganization,validGroupMemberOrigin,groupReorganizationBalance} from './group-reorganization-save.ts';
+import {groupMemberOriginAuthority,groupPersonValidationView} from './group-member-origin.ts';
 import {boundWorldGroup,groupOriginMapTile,projectionAllowsFilth} from './world-map-context.ts';
 import {GROUP_FREIGHT_SCHEMA,groupItemMassGrams} from './group-freight.ts';
 import {validGroupFreightShape} from './group-freight-save.ts';
@@ -6,7 +20,7 @@ import {validGroupProvisionsShape} from './group-provisions-save.ts';
 import type { GroupState } from './group-state.ts';
 import { GROUP_MAX_MEMBERS,GROUP_MAX_LOSSES } from './group-state.ts';
 import type { MaterialPile,Pawn,World } from './types.ts';
-import { validatePawnRecordShape } from './pawn-record-save.ts';
+import { validatePawnRecordShape,validateAwayPawnRecordShape } from './pawn-record-save.ts';
 import { validatePileRecordShape } from './material-record-save.ts';
 import { validateRecreationRecordShape } from './recreation-save.ts';
 import { validateHumanSocial } from './social-save.ts';
@@ -91,41 +105,45 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
   const freighted=object(group)&&Object.hasOwn(group,'freight');
   const commonKeys=[...COMMON,...freighted?['freight']:[],...originPresent&&version>=240?['originTile']:[],...provisioned?['provisions']:[]];
   const point=(v:unknown)=>object(v)&&keys(v,['x','z'])&&int(v.x,0,world.width-1)&&int(v.z,0,world.height-1);
-  const place=(v:unknown)=>int(v,0,planet.tiles.length-1)&&planet.tiles[v]!.biome!=='ocean';
+  const place=(v:unknown)=>int(v,0,planetTileCount(planet)-1)&&groupDestinationValid(planet,v);
   const thing=(v:unknown)=>int(v,1,world.nextId-1);
   const groupId=(v:unknown)=>int(v,1,planet.nextGroupId-1);
-  const ids=(v:unknown,min=1,max=GROUP_MAX_MEMBERS)=>dense(v,min,max)&&unique(v)&&v.every(thing);
+  const ids=(v:unknown,min=1,max=version>=256?world.nextId-1:GROUP_MAX_MEMBERS)=>dense(v,min,max)&&unique(v)&&v.every(thing);
   const localById=new Map(world.pawns.map(p=>[p.id,p]));
   const owners:{pawn:Pawn;clock:number}[]=[],ownerIds=new Set<number>(),pileIds=new Set<number>();
   const retained=new Map<number,MaterialPile[]>();
   // A terminal keeps its historical policy IDs at death. Only a living owner
   // must still resolve those IDs in the current, separately numbered registries.
-  function person(v:unknown,clock:number,dead:boolean):v is Pawn {
-    if(!object(v)||!keys(v,REQUIRED_PAWN,PASSIVE_PAWN)||!thing(v.id)||ownerIds.has(v.id)||localById.has(v.id)
-      ||!int(v.x,0,world.width-1)||!int(v.z,0,world.height-1))return false;
+  function person(v:unknown,clock:number,dead:boolean,origin?:GroupMemberOrigin):v is Pawn {
+    const personWorld=groupPersonValidationView(world,origin);
+    if(!object(v)||!keys(v,REQUIRED_PAWN,[...PASSIVE_PAWN,...version>=256?['mapAreas','caravanCarrySick','mapBed','arrivalRotation','hiveDefeats','nativeHuman']:[]])||!thing(v.id)||ownerIds.has(v.id)||localById.has(v.id)
+      ||!int(v.x,0,personWorld.width-1)||!int(v.z,0,personWorld.height-1))return false;
     if(!oneOf(v.state,['idle','resting','downed',...(dead?['dead']:[])])||dead!==(v.state==='dead')
       ||v.jobId!==null||v.haul!==null||v.cooking!==null||v.need!==null||v.bedId!==null||v.moveCooldown!==0||v.planCooldown!==0
       ||!dense(v.path,0,0)||v.motion!==undefined&&v.motion!==null||!object(v.orders)||!keys(v.orders,['active','queue'])
       ||v.orders.active!==null||!dense(v.orders.queue,0,0)||!object(v.recreation)||v.recreation.task!==null
       ||!validSchedule(v.schedule)||!int(v.restZeroTicks,0,4500)||typeof v.collapsePending!=='boolean'
-      ||v.collapsePending&&(Number(v.rest)>=.01||v.restZeroTicks<=100)||world.restRules==='legacy'&&(v.restZeroTicks!==0||v.collapsePending)
-      ||!int(v.foodPolicyId,1,world.nextFoodPolicyId-1)||!dead&&!world.foodPolicies.some(policy=>policy.id===v.foodPolicyId)
-      ||object(v.social)&&Object.hasOwn(v.social,'fight')||object(v.mental)&&Object.hasOwn(v.mental,'crisis'))return false;
-    const shape=validatePawnRecordShape(v,world,version,clock);
+      ||v.collapsePending&&(Number(v.rest)>=.01||v.restZeroTicks<=100)||personWorld.restRules==='legacy'&&(v.restZeroTicks!==0||v.collapsePending)
+      ||!int(v.foodPolicyId,1,personWorld.nextFoodPolicyId-1)||!dead&&!personWorld.foodPolicies.some(policy=>policy.id===v.foodPolicyId)
+      ||object(v.social)&&Object.hasOwn(v.social,'fight')||object(v.mental)&&Object.hasOwn(v.mental,'crisis')&&!(version>=256&&object(v.mental.crisis)&&v.mental.crisis.kind==='confused-wander'&&v.mental.crisis.target===null&&Number(v.mental.crisis.waitUntil)<=clock))return false;
+    if(!validGroupCaravanCarryPawnField256(v,version)||version>=256&&!validPawnMapAreaBindings(v as unknown as Pawn,personWorld,false))return false;
+    const originId=origin?.originMapId??boundWorldGroup(world)?.originMapId;
+    const areaIds=originId===undefined?[]:mapAreaReferences(world)?.get(originId)??[];
+    const shape=version>=256?validateAwayPawnRecordShape(v,personWorld,version,clock,new Set(areaIds)):validatePawnRecordShape(v,personWorld,version,clock);
     if(shape.length){errors.push(...shape.map(e=>`Group pawn ${v.id}: ${e}`));return false;}
-    if(!validMentalShape(v.mental,version,clock,world.width,world.height)||validateRecreationRecordShape(v,version,clock).length
-      ||v.filthFeet!==undefined&&(!world.filth&&!projectionAllowsFilth(world)||!validFilthFeet(v.filthFeet))
+    if(!validMentalShape(v.mental,version,clock,personWorld.width,personWorld.height)||validateRecreationRecordShape(v,version,clock).length
+      ||v.filthFeet!==undefined&&(!personWorld.filth&&!projectionAllowsFilth(personWorld)||!validFilthFeet(v.filthFeet,version))
       ||v.deniedJoining!==undefined&&(!dense(v.deniedJoining,1,5)||!v.deniedJoining.every((at,i,all)=>int(at,clock+1,clock+6*TICKS_PER_DAY)&&(i===0||at>(all[i-1] as number)))))return false;
-    const p=v as unknown as Pawn;
+    const p=v as unknown as Pawn;if(!validToxicBuildupTransport256(p,version,clock))return false;
     const assigned=p.apparelPolicyId!==undefined||p.apparelAutomation!==undefined||p.nextApparelCheckAt!==undefined;
-    if(assigned&&(!int(p.apparelPolicyId,1,(world.nextApparelPolicyId??0)-1)||!dead&&!world.apparelPolicies?.some(policy=>policy.id===p.apparelPolicyId)
+    if(assigned&&(!int(p.apparelPolicyId,1,(personWorld.nextApparelPolicyId??0)-1)||!dead&&!personWorld.apparelPolicies?.some(policy=>policy.id===p.apparelPolicyId)
       ||typeof p.apparelAutomation!=='boolean'||!int(p.nextApparelCheckAt,0,clock+APPAREL_POLICY_INTERVAL.max)))return false;
     if(!isColonist(p)||p.health&&(p.health.body!==undefined||p.health.tick!==clock)
       ||(dead?(!p.health?.death||p.health.death.tick!==clock):!!p.health?.death))return false;
     // Passive owners have no spatial vomiting driver. A healthy departure
     // cannot export an episode, and ordinary disease remains a clinical record.
     if(p.health&&(!validAnesthetic(p.health.anesthetic,clock,true,p.id%20)
-      ||p.health.foodPoisoning?.vomit!==undefined||p.health.flu?.vomit!==undefined||p.health.immuneDiseases?.malaria?.vomit!==undefined))return false;
+      ||(p.health.foodPoisoning?.vomit||p.health.cryptosleepSickness?.vomit)!==undefined||p.health.flu?.vomit!==undefined||p.health.immuneDiseases?.malaria?.vomit!==undefined))return false;
     if(p.lastAttack&&(!thing(p.lastAttack.targetId)||p.lastAttack.targetId===p.id)
       ||p.meleeThreat&&(!thing(p.meleeThreat.attackerId)||p.meleeThreat.attackerId===p.id)
       ||p.droppedWeaponId!==undefined&&!thing(p.droppedWeaponId))return false;
@@ -133,16 +151,18 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
     if(dead?status!=='dead':(status==='downed')!==(p.state==='downed'))return false;
     ownerIds.add(p.id);owners.push({pawn:p,clock});return true;
   }
-  function piles(v:unknown,people:ReadonlySet<number>,clock:number,max:number,freight=false):v is MaterialPile[] {
+  function piles(v:unknown,people:ReadonlySet<number>,clock:number,max:number,freight=false,animalOrigins?:readonly GroupMemberOrigin[]):v is MaterialPile[] {
     if(!dense(v,0,max))return false;
     const counts=new Map<number,number>(),equipment=new Set<number>(),worn=new Map<number,MaterialPile[]>();
+    const originalAnimalHeaders=animalOrigins?new Map(animalOrigins.map(o=>[o.pawnId,o.context])):undefined;
     for(const item of v){
-      if(!object(item)||!keys(item,PILE_KEYS,version>=235?[...PILE_OPTIONAL,'innerResource','plantPack']:PILE_OPTIONAL)||!thing(item.id)||pileIds.has(item.id)
+      if(!object(item)||!keys(item,PILE_KEYS,version>=235?[...PILE_OPTIONAL,'innerResource','plantPack',...(version>=256?['egg','eggForbidden','forbidden']:[])]:PILE_OPTIONAL)||!thing(item.id)||pileIds.has(item.id)
         ||!object(item.owner)||!keys(item.owner,['type','pawnId'])||!people.has(item.owner.pawnId as number)
         ||!oneOf(item.owner.type,['inventory','equipment','apparel']))return false;
-      const shape=validatePileRecordShape(item,world,version,clock);
+      const animalHeader=originalAnimalHeaders?.get(item.owner.pawnId as number);
+      const shape=validatePileRecordShape(item,animalHeader?{...animalHeader,tick:clock,nextId:world.nextId}:world,version,clock);
       if(shape.length){errors.push(...shape.map(e=>`Group pile ${item.id}: ${e}`));return false;}
-      if(groupItemMassGrams(item.item as MaterialPile['item'],freight,version)===undefined)return false;
+      if((version>=256?groupCaravanUnitMass256(item.item as MaterialPile['item'],freight):groupItemMassGrams(item.item as MaterialPile['item'],freight,version))===undefined)return false;
       const pile=item as unknown as MaterialPile;
       if(item.damage!==undefined&&(pile.apparel||pile.weapon||!int(item.damage,1,pileMaxHp(pile,version)-1)))return false;
       if(isPerishable(pile.item)){
@@ -160,17 +180,18 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
         if(pile.kind!=='apparel'||!isApparelItem(pile.item)||pile.apparel?.forbidden||previous.some(p=>conflictsWith(p,pile)))return false;
         previous.push(pile);worn.set(owner,previous);
       }
-      if(count>256)return false;counts.set(owner,count);pileIds.add(item.id as number);
+      if(version<256&&count>256)return false;counts.set(owner,count);pileIds.add(item.id as number);
     }
     return true;
   }
   if(losses!==undefined){
-    if(!dense(losses,0,GROUP_MAX_LOSSES))return ['Invalid group loss array.'];
+    if(!dense(losses,0,version>=256?world.nextId-1:GROUP_MAX_LOSSES))return ['Invalid group loss array.'];
     for(const loss of losses){
-      if(!object(loss)||!keys(loss,['groupId','tile','tick','pawn','items'])||!groupId(loss.groupId)||!place(loss.tile)
-        ||!int(loss.tick,planet.adoptedAt,world.tick)||!person(loss.pawn,loss.tick,true))return ['Invalid terminal group person.',...errors];
+      if(!object(loss)||!keys(loss,['groupId','tile','tick','pawn','items'],version>=256?['memberOrigin','packed']:[])||!groupId(loss.groupId)||!place(loss.tile)
+        ||!int(loss.tick,planet.adoptedAt,world.tick)||loss.memberOrigin!==undefined&&(version<256||!object(loss.pawn)||!validGroupMemberOrigin(loss.memberOrigin,loss.pawn.id as number,world.nextId,o=>groupMemberOriginAuthority(world,o)))||!person(loss.pawn,loss.tick,true,loss.memberOrigin as GroupMemberOrigin|undefined))return ['Invalid terminal group person.',...errors];
+      if(!validCaravanBedrollPacks256(loss.packed,[loss.pawn as Pawn],world.nextId,version))return ['Invalid terminal packed owners.'];for(const pack of (loss.packed??[]) as import('./furniture-rules.ts').PackedFurniture[]){if(pileIds.has(pack.building.id)||ownerIds.has(pack.building.id))return ['Duplicate terminal packed identity.'];pileIds.add(pack.building.id);}
       const id=(loss.pawn as Pawn).id;
-      if(!piles(loss.items,new Set([id]),loss.tick,256,version>=GROUP_FREIGHT_SCHEMA))return ['Invalid terminal group possessions.',...errors];
+      if(!piles(loss.items,new Set([id]),loss.tick,version>=256?world.nextId-1:256,version>=GROUP_FREIGHT_SCHEMA))return ['Invalid terminal group possessions.',...errors];
       const existing=retained.get(loss.groupId as number)??[];existing.push(...loss.items);retained.set(loss.groupId as number,existing);
     }
   }
@@ -184,17 +205,21 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
     if(!object(group)||!groupId(group.id)||!int(group.startedAt,planet.adoptedAt,world.tick)||!place(group.destination)||!ledger(group.ledger))
       return ['Invalid group identity or ledger.'];
     if(oneOf(group.phase,['gathering','loading','leaving'])){
-      if(!keys(group,[...commonKeys,...PREPARING])||!ids(group.memberIds)||!point(group.rendezvous)
+      if(!keys(group,[...commonKeys,...PREPARING],version>=256?['bedrollLoading','travelPreparation','animalPreparation']:[])||!ids(group.memberIds)||!point(group.rendezvous)
         ||!dense(group.meeting,(group.memberIds as number[]).length,(group.memberIds as number[]).length)
         ||!dense(group.exits,(group.memberIds as number[]).length,(group.memberIds as number[]).length)
-        ||!dense(group.manifest,0,512)||!int(group.cursor,0,group.manifest.length))return ['Invalid group formation shape.'];
+        ||!dense(group.manifest,0,version>=256?world.nextId-1:512)||!int(group.cursor,0,group.manifest.length))return ['Invalid group formation shape.'];
+      const preparation=Object.getOwnPropertyDescriptor(group,'travelPreparation');
+      if(preparation&&(version<256||!Object.hasOwn(preparation,'value')||!preparation.enumerable||preparation.value!==true))return ['Invalid new formation travel contract.'];
+      if(!validPreparingGroupPacked256(group as unknown as import('./group-capture.ts').PreparingGroup,world,version,referencesOnly))return ['Invalid formation packed source or receipt.'];
+      if(!validGroupAnimalPreparation256(group as unknown as import('./group-capture.ts').PreparingGroup,world,version,referencesOnly))return ['Invalid physical animal formation.'];
       const members=group.memberIds as number[];
       if(members.some(id=>!localById.has(id)&&(!referencesOnly||!world.campaignPeople?.some(p=>p.id===id&&p.status==='away'))))return ['Missing local formation member.'];
       const roster=new Set<number>(),cells=new Set<string>();
       for(const meeting of group.meeting){
         if(!object(meeting)||!keys(meeting,['pawnId','cell'])||!members.includes(meeting.pawnId as number)||roster.has(meeting.pawnId as number)||!point(meeting.cell))return ['Invalid group meeting roster.'];
         const c=meeting.cell as unknown as {x:number;z:number},r=group.rendezvous as unknown as {x:number;z:number},key=`${c.x}:${c.z}`;
-        if(cells.has(key)||Math.max(Math.abs(c.x-r.x),Math.abs(c.z-r.z))>2)return ['Invalid group meeting cells.'];
+        if(cells.has(key)||version<256&&Math.max(Math.abs(c.x-r.x),Math.abs(c.z-r.z))>2)return ['Invalid group meeting cells.'];
         roster.add(meeting.pawnId as number);cells.add(key);
       }
       roster.clear();cells.clear();
@@ -204,16 +229,17 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
         if(exit.cell!==null){const c=exit.cell as unknown as {x:number;z:number},key=`${c.x}:${c.z}`;
           if(cells.has(key)||!(c.x===0||c.z===0||c.x===world.width-1||c.z===world.height-1))return ['Invalid group exit cells.'];cells.add(key);}
       }
-      if(group.phase==='gathering'&&group.cursor!==0||group.phase==='leaving'&&group.cursor!==group.manifest.length)return ['Invalid group contact frontier.'];
+      if(group.phase==='gathering'&&group.cursor!==0||group.phase==='leaving'&&(group.cursor!==group.manifest.length||(group as unknown as import('./group-capture.ts').PreparingGroup).manifest.some(l=>l.animalCarrierId!==undefined&&!l.deliveredToAnimal)))return ['Invalid group contact frontier.'];
       const future=new Map<number,{item:string;quantity:number}>(),carried=new Set<number>(),loaded={food:0,pemmican:0,silver:0,cloth:0,'muffalo-wool':0,wood:0,steel:0};
       for(let i=0;i<group.manifest.length;i++){
         const line:unknown=group.manifest[i];
-        if(!object(line)||!keys(line,['pileId','quantity','item','carrierId'],i<(group.cursor as number)?['carriedPileId']:[])
-          ||!thing(line.pileId)||!members.includes(line.carrierId as number)||!oneOf(line.item,['survival-meal','silver','cloth','muffalo-wool',...provisioned?['pemmican']:[],...freighted?['wood','steel']:[]])
+        if(!object(line)||!keys(line,['pileId','quantity','item','carrierId'],[...i<(group.cursor as number)?['carriedPileId']:[],...version>=256&&group.travelPreparation===true?['animalCarrierId',...i<(group.cursor as number)?['deliveredToAnimal']:[]]:[]])
+          ||!thing(line.pileId)||!members.includes(line.carrierId as number)||!(oneOf(line.item,['survival-meal','silver','cloth','muffalo-wool',...provisioned?['pemmican']:[],...freighted?['wood','steel']:[]])||version>=256&&group.travelPreparation===true&&typeof line.item==='string'&&Object.hasOwn(ITEM_DEFINITIONS,line.item)&&ITEM_DEFINITIONS[line.item as MaterialPile['item']].nutrition>0)
           ||!int(line.quantity,1,ITEM_DEFINITIONS[line.item as MaterialPile['item']].stackLimit))return ['Invalid group manifest row.'];
+        if(Object.hasOwn(line,'animalCarrierId')){const preparing=group as unknown as import('./group-capture.ts').PreparingGroup;if(!thing(line.animalCarrierId)||!preparing.animalPreparation?.lines.some(a=>a.animalId===line.animalCarrierId))return ['Invalid animal cargo recipient.'];if(Object.hasOwn(line,'deliveredToAnimal')&&line.deliveredToAnimal!==true)return ['Invalid animal delivery receipt.'];}else if(Object.hasOwn(line,'deliveredToAnimal'))return ['Animal delivery without recipient.'];
         if(i<(group.cursor as number)){
           if(!thing(line.carriedPileId)||carried.has(line.carriedPileId))return ['Invalid group pickup receipt.'];carried.add(line.carriedPileId);
-          const key=line.item==='survival-meal'?'food':line.item as 'silver'|'cloth'|'muffalo-wool'|'pemmican'|'wood'|'steel';loaded[key]+=line.quantity;
+          const key=line.item==='survival-meal'?'food':line.item as 'silver'|'cloth'|'muffalo-wool'|'pemmican'|'wood'|'steel';if(Object.hasOwn(loaded,key))loaded[key]+=line.quantity;
         }else{const old=future.get(line.pileId)??{item:line.item as string,quantity:0};if(old.item!==line.item)return ['Conflicting group source item.'];old.quantity+=line.quantity;future.set(line.pileId,old);}
       }
       if(!referencesOnly)for(const [id,line] of future){const pile=world.piles.find(p=>p.id===id);if(!pile||pile.owner.type!=='ground'||pile.item!==line.item||pile.foodPoison||pile.quantity<line.quantity)return ['Invalid future group source ownership.'];}
@@ -224,31 +250,40 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
         ||l.cargoLoaded.cloth!==loaded.cloth||l.cargoLoaded['muffalo-wool']!==loaded['muffalo-wool']||l.foodConsumed!==0||l.medicineUsed!==0
         ||l.silverPaid!==0||l.silverEarned!==0||l.sold.cloth!==0||l.sold['muffalo-wool']!==0||l.bought.medicine!==0||l.bought.component!==0)return ['Invalid formation contact ledger.'];
     }else if(group.phase==='unloading'){
-      if(!keys(group,[...commonKeys,'memberIds','pendingPileIds'])||!ids(group.memberIds)||!ids(group.pendingPileIds,1,256*GROUP_MAX_MEMBERS))return ['Invalid group unloading shape.'];
+      if(!keys(group,[...commonKeys,'memberIds','pendingPileIds'],version>=256?['pendingPackedIds','animalIds']:[])||!ids(group.memberIds)||!ids(group.pendingPileIds,version>=256?0:1,version>=256?world.nextId-1:256*GROUP_MAX_MEMBERS))return ['Invalid group unloading shape.'];
       const members=group.memberIds as number[];
-      if(!referencesOnly&&(members.some(id=>!localById.has(id))||(group.pendingPileIds as number[]).some(id=>!world.piles.some(p=>p.id===id&&p.owner.type==='inventory'&&members.includes(p.owner.pawnId)))))return ['Invalid group unloading possession.'];
-    }else if(oneOf(group.phase,['travelling','at-site','awaiting-entry'])){
-      if(!keys(group,[...commonKeys,...AWAY])||!dense(group.members,1,GROUP_MAX_MEMBERS)||!baseline(group.baseline,provisioned,freighted)||!point(group.entry)
+      const unloadingOwners=new Set([...members,...(Array.isArray(group.animalIds)?group.animalIds:[]) as number[]]);if(Object.hasOwn(group,'animalIds')&&(version<256||!ids(group.animalIds)||unloadingOwners.size!==members.length+(group.animalIds as number[]).length||!referencesOnly&&(group.animalIds as number[]).some(id=>!world.wildlife?.animals.some(a=>a.id===id))))return ['Invalid animal unloading roster.'];
+      if(group.pendingPackedIds!==undefined&&(version<256||!ids(group.pendingPackedIds,1,world.nextId-1))||!(group.pendingPileIds as number[]).length&&!(Array.isArray(group.pendingPackedIds)&&group.pendingPackedIds.length))return ['Invalid packed unloading references.'];
+      if(!referencesOnly&&Array.isArray(group.pendingPackedIds)&&group.pendingPackedIds.some(id=>!world.packed.some(p=>p.building.id===id&&p.owner.type==='inventory'&&unloadingOwners.has(p.owner.pawnId))))return ['Invalid packed unloading ownership.'];
+      if(!referencesOnly&&(members.some(id=>!localById.has(id))||(group.pendingPileIds as number[]).some(id=>!world.piles.some(p=>p.id===id&&p.owner.type==='inventory'&&unloadingOwners.has(p.owner.pawnId)))))return ['Invalid group unloading possession.'];
+    }else if(oneOf(group.phase,['travelling','at-site','awaiting-entry',...version>=256?['stationary']:[]])){
+      if(!keys(group,[...commonKeys,...AWAY],version>=256?['reorganization','travel','packed','animalOwners']:[])||!dense(group.members,1,version>=256?world.nextId-1:GROUP_MAX_MEMBERS)||!baseline(group.baseline,provisioned,freighted)||!point(group.entry)
         ||!int(group.departedAt,group.startedAt as number,world.tick)||group.lastPersonalTick!==world.tick||!place(group.tile)
-        ||typeof group.paused!=='boolean'||!dense(group.route,1,version>=255?planet.tiles.length:162))return ['Invalid away group shape or clock.'];
-      for(const p of group.members)if(!person(p,world.tick,false))return ['Invalid away group person.',...errors];
-      const people=new Set((group.members as Pawn[]).map(p=>p.id));
-      if(!piles(group.items,people,world.tick,32768-world.piles.length,freighted))return ['Invalid away group possessions.',...errors];
+        ||typeof group.paused!=='boolean'||!dense(group.route,1,version>=255?planetTileCount(planet):162))return ['Invalid away group shape or clock.'];
+      const prospective=group as unknown as Extract<GroupState,{members:Pawn[]}>;
+      if((group.travel!==undefined||group.packed!==undefined)&&group.reorganization===undefined||!validGroupTravel(group.travel,version)||!validGroupReorganization(group.reorganization,prospective,version,world.tick,world.nextId,o=>groupMemberOriginAuthority(world,o)))return ['Invalid or future group reorganization/travel.'];
+      if(!validGroupAnimalOwners256(prospective,world,version,o=>groupMemberOriginAuthority(world,o)))return ['Invalid actual animal owners.'];
+      for(const a of prospective.animalOwners?.members??[]){if(ownerIds.has(a.id)||localById.has(a.id)||world.wildlife?.animals.some(b=>b.id===a.id))return ['Duplicate animal original.'];ownerIds.add(a.id);}
+      for(const p of group.members)if(!person(p,world.tick,false,object(p)?prospective.reorganization?.memberOrigins.find(o=>o.pawnId===p.id):undefined))return ['Invalid away group person.',...errors];
+      if(!validCaravanBedrollPacks256(group.packed,groupPhysicalPawns256(prospective),world.nextId,version))return ['Invalid away packed owners.'];for(const pack of (group.packed??[]) as import('./furniture-rules.ts').PackedFurniture[]){if(pileIds.has(pack.building.id)||ownerIds.has(pack.building.id))return ['Duplicate away packed identity.'];pileIds.add(pack.building.id);}
+      const people=new Set(groupPhysicalPawns256(prospective).map(p=>p.id));
+      if(!piles(group.items,people,world.tick,version>=256?world.nextId-1:32768-world.piles.length,freighted||!!prospective.reorganization,prospective.animalOwners?.origins))return ['Invalid away group possessions.',...errors];
+      if((group.items as MaterialPile[]).some(p=>{const o=p.owner;return 'pawnId'in o&&prospective.animalOwners?.members.some(a=>a.id===o.pawnId)&&o.type!=='inventory';}))return ['Animal possession is not an inventory.'];
       const segment=group.segment;
       if(segment!==null&&(!object(segment)||!keys(segment,['from','to','totalCore','remainingCore'])||segment.from!==group.tile||!place(segment.to)
-        ||!planet.tiles[group.tile as number]!.neighbours.includes(segment.to as number)||!int(segment.totalCore,1,30000)||!int(segment.remainingCore,0,segment.totalCore)))return ['Invalid group captured segment.'];
+        ||!planetTile(planet,group.tile as number)!.neighbours.includes(segment.to as number)||(prospective.travel?!validProspectiveGroupSegment256(segment as unknown as import('./group-state.ts').GroupSegment):!int(segment.totalCore,1,30000)||!int(segment.remainingCore,0,segment.totalCore))))return ['Invalid group captured segment.'];
       const from=object(segment)?segment.to as number:group.tile as number;
       if(!validPlanetRoute(planet,group.route as number[],from,group.destination as number))return ['Invalid persisted group route.'];
       const stop=group.stop;
       if(stop!==null){
         if(!object(stop))return ['Invalid group stop.'];
-        if(oneOf(stop.kind,['paused','night','at-site','awaiting-entry'])){if(!keys(stop,['kind']))return ['Invalid group stop shape.'];}
+        if(oneOf(stop.kind,['paused','night','at-site','awaiting-entry',...version>=256?['stationary']:[]])){if(!keys(stop,['kind']))return ['Invalid group stop shape.'];}
         else if(stop.kind==='incapacity'){if(!keys(stop,['kind','pawnIds'])||!ids(stop.pawnIds)||(stop.pawnIds as number[]).some(id=>!people.has(id)))return ['Invalid group incapacity stop.'];}
         else if(stop.kind==='overload'){if(!keys(stop,['kind','grams','capacityGrams'])||!int(stop.grams)||!int(stop.capacityGrams)||stop.grams<=stop.capacityGrams)return ['Invalid group overload stop.'];}
         else if(stop.kind==='unreachable'){if(!keys(stop,['kind','destination'])||stop.destination!==group.destination)return ['Invalid group blocked destination.'];}
         else return ['Unknown group stop.'];
       }
-      if(group.phase!=='travelling'&&(segment!==null||group.tile!==group.destination||group.route.length!==1||!object(stop)||stop.kind!==group.phase)
+      if(group.phase==='stationary'&&(!prospective.travel||!prospective.reorganization?.birth)||group.phase!=='travelling'&&(segment!==null||group.tile!==group.destination||group.route.length!==1||!object(stop)||stop.kind!==group.phase)
         ||group.phase==='awaiting-entry'&&group.tile!==planet.homeTile||group.phase==='at-site'&&group.tile===planet.homeTile)return ['Invalid group arrival frontier.'];
       if((losses as unknown[]|undefined)?.some(loss=>object(loss)&&loss.groupId===group.id&&(loss.tick as number)<(group.departedAt as number)))return ['Group loss predates its departure.'];
       const all=[...(group.items as MaterialPile[]),...(retained.get(group.id as number)??[])],b=group.baseline as unknown as Extract<GroupState,{members:Pawn[]}>['baseline'],l=group.ledger as unknown as GroupState['ledger'];
@@ -256,7 +291,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
       const equations:[string,bigint][]=[...(freight?[['wood',BigInt(b.freight!.wood)] as [string,bigint],['steel',BigInt(b.freight!.steel)] as [string,bigint]]:[]),...(provisions?[['pemmican',BigInt(b.pemmican!)-BigInt(provisions.pemmicanConsumedUnits!)-BigInt(provisions.pemmicanSpoiledUnits!)] as [string,bigint]]:[]),['survival-meal',BigInt(b.food)-BigInt(l.foodConsumed)],['silver',BigInt(b.silver)+BigInt(l.silverEarned)-BigInt(l.silverPaid)],
         ['cloth',BigInt(b.cargo.cloth)-BigInt(l.sold.cloth)],['muffalo-wool',BigInt(b.cargo['muffalo-wool'])-BigInt(l.sold['muffalo-wool'])],
         ['medicine',BigInt(b.medicine)+BigInt(l.bought.medicine)-BigInt(l.medicineUsed)],['component',BigInt(b.component)+BigInt(l.bought.component)]];
-      if(equations.some(([item,expected])=>{const actual=amount(item);return expected<0n||expected>BigInt(Number.MAX_SAFE_INTEGER)||actual===undefined||BigInt(actual)!==expected;}))return ['Invalid group baseline conservation.'];
+      if(prospective.reorganization?!groupReorganizationBalance(prospective,prospective.reorganization,(losses??[]) as unknown as import('./group-state.ts').GroupLoss[]):equations.some(([item,expected])=>{const actual=amount(item);return expected<0n||expected>BigInt(Number.MAX_SAFE_INTEGER)||actual===undefined||BigInt(actual)!==expected;}))return ['Invalid group baseline conservation.'];
     }else return ['Unknown group phase.'];
   }
   // Contextual memory references use one real capture after all new shapes.

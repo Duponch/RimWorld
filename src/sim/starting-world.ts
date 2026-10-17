@@ -1,12 +1,12 @@
 import { generatePlanet, tileCoordinates } from './planet-generation.ts';
-import type { PlanetState, PlanetTile } from './planet-state.ts';
+import type { LegacyPlanetState, PlanetTile } from './planet-state.ts';
 import { seasonalAmplitude, type ClimateDefinition } from './site-climate.ts';
 import type { SiteOptions } from './site.ts';
 
 /** Prospective choice only. The Worker reconstructs the world; no globe or
  * arbitrary geography received from the UI becomes simulation authority. */
 export interface StartingWorld {version:1|2; seed:number; tile:number}
-export interface StartingSite {seed:number; site:SiteOptions; climate:ClimateDefinition; planet:PlanetState}
+export interface StartingSite {seed:number; site:SiteOptions; climate:ClimateDefinition; planet:LegacyPlanetState}
 const integer=(n:unknown,low:number,high:number):n is number=>typeof n==='number'&&Number.isSafeInteger(n)&&n>=low&&n<=high;
 export function validStartingWorld(value:unknown):value is StartingWorld {
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
@@ -24,14 +24,14 @@ export function parseWorldSeed(text:string):number|undefined {
   for(let i=0;i<source.length;i++){hash^=source.charCodeAt(i);hash=Math.imul(hash,0x01000193);}
   return hash>>>0;
 }
-export function generateStartingWorld(seed:number,version:1|2=1):PlanetState {
+export function generateStartingWorld(seed:number,version:1|2=1):LegacyPlanetState {
   // A full, original 162-tile globe, shared with the caravan system. Its
   // generation is not RimWorld's planet generator or its coverage percentages.
   return generatePlanet(seed,{biome:'temperate-forest',latitude:22.21,longitude:-18.23,meanTemperature:16.2,rainfall:900,hilliness:'small-hills'},0,version);
 }
 /** Land access to the existing civilian destination is required by our
  * current caravan mechanics. One bounded graph walk per generated draft. */
-export function startingSiteChoices(planet:PlanetState):number[] {
+export function startingSiteChoices(planet:LegacyPlanetState):number[] {
   const seen=new Set<number>([planet.civilianTile]),queue=[planet.civilianTile];
   for(let head=0;head<queue.length;head++)for(const id of planet.tiles[queue[head]!]!.neighbours){
     if(seen.has(id)||planet.tiles[id]!.biome==='ocean')continue;

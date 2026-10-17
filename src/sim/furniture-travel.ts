@@ -1,3 +1,5 @@
+import type {DuckTerrainOverride256} from './duck-water-256.ts';
+import {naturalTerrainCosts256} from './natural-terrain-movement-256.ts';
 import {isWetTerrain} from './shallow-water.ts';
 import {MARSH_PATH_COST_CORE,MARSH_PERCEIVED_CORE} from './marsh.ts';
 import {snowTravelDelay,snowSearchCost} from './snow-rules.ts';
@@ -15,6 +17,7 @@ export function terrainTravelDelay(world:World,index:number):number {
   const tile=world.tiles[index],terrain=tile?.terrain;
   if(tile?.bridge)return 0;
   if(tile?.floor)return FLOOR_DEFINITIONS[tile.floor].pathCost/10;
+  const natural=naturalTerrainCosts256(terrain);if(natural)return natural.pathCostCore/10;
   if(isWetTerrain(terrain))return MARSH_PATH_COST_CORE/10;
   return terrain==='rough-stone'||terrain==='rich-soil'||terrain==='gravel'||world.site&&terrain==='grass'?.2:0;
 }
@@ -22,6 +25,9 @@ export function terrainTravelDelay(world:World,index:number):number {
 /** Current Core wiki path costs, converted by the local day/tick ratio (10).
  * Repeat suppression is shared by all qualifying furniture, not by instance. */
 export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:number;stand:boolean;repeat:boolean}>>>=Object.freeze({
+  'insect-hive':{delay:4.2,stand:false,repeat:true},'glow-pod':{delay:0,stand:false,repeat:true},
+  'ancient-cryptosleep-casket':{delay:4.2,stand:false,repeat:true},
+  column:{delay:0,stand:false,repeat:true},urn:{delay:3,stand:false,repeat:true},'stele-large':{delay:5,stand:false,repeat:true},'stele-grand':{delay:5,stand:false,repeat:true},sarcophagus:{delay:4.2,stand:false,repeat:true},
   shelf:{delay:5,stand:false,repeat:true},'small-shelf':{delay:5,stand:false,repeat:true},
   'spike-trap':{delay:0,stand:true,repeat:false},
   'double-bed':{delay:4.2,stand:false,repeat:true},
@@ -39,6 +45,9 @@ export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:numb
   'hydroponics-basin':{delay:3,stand:false,repeat:true},
   'mini-turret':{delay:5,stand:false,repeat:true},
   'tube-television':{delay:4.2,stand:false,repeat:true},
+  'ancient-road-barrier':{delay:4.2,stand:false,repeat:true},
+  'ancient-road-lamp':{delay:4.2,stand:false,repeat:false},
+  'ship-chunk':{delay:4.2,stand:false,repeat:true},
   sandbags:{delay:4.2,stand:false,repeat:true},
   'drug-lab':{delay:5,stand:false,repeat:true},
   'art-bench':{delay:5,stand:false,repeat:true},
@@ -79,6 +88,7 @@ export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:numb
   'pen-marker':{delay:0,stand:true,repeat:false},
   stonecutter:{delay:5,stand:false,repeat:true},
   wall:{delay:0,stand:false,repeat:false},table:{delay:4.2,stand:false,repeat:true},'table-square':{delay:4.2,stand:false,repeat:true},'table-long':{delay:4.2,stand:false,repeat:true},'chess-table':{delay:3,stand:false,repeat:true},
+  bedroll:{delay:1.4,stand:true,repeat:true},
   bed:{delay:4.2,stand:false,repeat:true},
   'hospital-bed':{delay:4.2,stand:false,repeat:true},campfire:{delay:4.2,stand:false,repeat:true},
   stool:{delay:3,stand:true,repeat:true},'dining-chair':{delay:3,stand:true,repeat:true},armchair:{delay:3,stand:true,repeat:true},'end-table':{delay:3,stand:false,repeat:true},dresser:{delay:5,stand:false,repeat:true},'flower-pot':{delay:3,stand:false,repeat:true},horseshoes:{delay:1.4,stand:true,repeat:false},
@@ -99,7 +109,7 @@ export function captureStandability(world:World):(cell:Cell)=>boolean {
   return cell=>Number.isInteger(cell.x)&&Number.isInteger(cell.z)&&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['rock','water'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)&&!denied.has(cell.z*world.width+cell.x);
 }
-export function furnitureDelay(world:World,from:Cell,to:Cell):number {
+export function furnitureDelay(world:World,from:Cell,to:Cell,terrainOverride?:DuckTerrainOverride256):number {
   if(world.schemaVersion<22)return frameAt(world,to)?FRAME_TRAVEL_DELAY:0;
   let target:StructureKind|undefined,previousRepeats=false,trap=false;
   for(const s of world.structures) {
@@ -114,12 +124,12 @@ export function furnitureDelay(world:World,from:Cell,to:Cell):number {
     if(p.owner.x===from.x&&p.owner.z===from.z)previousRepeats=true;
   }
   const materialDelay=world.piles.some(p=>(world.schemaVersion>=29&&p.kind==='steel'||world.schemaVersion>=32&&p.kind==='blocks'||world.schemaVersion>=41&&p.kind==='component'||world.schemaVersion>=123&&(p.kind==='gold'||p.kind==='plasteel'||p.kind==='advanced-component'))&&p.owner.type==='ground'&&p.owner.x===to.x&&p.owner.z===to.z)?1.4:0;
-  const actor=trap?spikeTrapNavigationActor(world,from):undefined;
-  return Math.max(repeats&&previousRepeats?0:objectDelay,materialDelay,terrainTravelDelay(world,to.z*world.width+to.x),world.snow?snowTravelDelay(world.tiles[to.z*world.width+to.x]!.snowDepth??0):0)
+  const actor=trap?spikeTrapNavigationActor(world,from):undefined,overrideCost=terrainOverride?.coreCost(world.tiles[to.z*world.width+to.x]!);
+  return Math.max(repeats&&previousRepeats?0:objectDelay,materialDelay,(overrideCost===undefined?terrainTravelDelay(world,to.z*world.width+to.x):overrideCost/10),world.snow?snowTravelDelay(world.tiles[to.z*world.width+to.x]!.snowDepth??0):0)
     +(actor&&spikeTrapKnowsOf(world,actor)?SPIKE_TRAP_WALK_DELAY:0);
 }
 /** Captured once per synchronous search. No shared mutation or cross-tick cache. */
-export function navigationCosts(world:World,origin?:Cell):{costs:NavigationCostLookup|undefined;repeaters:ReadonlySet<number>;stops:ReadonlySet<number>;floors:NavigationCostLookup} {
+export function navigationCosts(world:World,origin?:Cell,terrainOverride?:DuckTerrainOverride256):{costs:NavigationCostLookup|undefined;repeaters:ReadonlySet<number>;stops:ReadonlySet<number>;floors:NavigationCostLookup} {
   const costs=new Map(frameCosts(world)),repeaters=new Set<number>(),stops=new Set<number>();
   const actor=world.schemaVersion>=226?spikeTrapNavigationActor(world,origin):undefined,knows=!!actor&&spikeTrapKnowsOf(world,actor),traps=new Map<number,number>(),marshPerceptionCosts=new Map<number,number>();
   if(world.schemaVersion>=22) {
@@ -145,9 +155,13 @@ export function navigationCosts(world:World,origin?:Cell):{costs:NavigationCostL
     for(let i=0;i<tiles.length;i++){
       const tile=tiles[i]!,kind=tile.terrain;
       let cost=tile.floor?Math.round(FLOOR_DEFINITIONS[tile.floor].pathCost/10/3*1000):kind==='rough-stone'||kind==='rich-soil'||kind==='gravel'||hasSite&&kind==='grass'?67:0;
-      if(isWetTerrain(kind)&&!tile.bridge&&!tile.floor)cost=Math.round(MARSH_PATH_COST_CORE/30*1000);
+      const natural=naturalTerrainCosts256(kind);
+      if(natural&&!tile.bridge&&!tile.floor)cost=Math.round(natural.pathCostCore/30*1000);
+      else if(isWetTerrain(kind)&&!tile.bridge&&!tile.floor)cost=Math.round(MARSH_PATH_COST_CORE/30*1000);
+      const override=terrainOverride?.coreCost(tile);if(override!==undefined)cost=Math.round(override/30*1000);
       if(world.snow)cost=Math.max(cost,snowSearchCost(tile.snowDepth??0));
-      if(isWetTerrain(kind)&&!tile.bridge&&!tile.floor)marshPerceptionCosts.set(i,Math.round(marshPerception/30*1000));
+      const perception=terrainOverride?.perceivedCore(tile)??(natural?(actor&&'draft' in actor&&actor.draft?natural.perceivedDraftedCore:natural.perceivedCivilCore):isWetTerrain(kind)?marshPerception:0);
+      if(perception&&!tile.bridge&&!tile.floor)marshPerceptionCosts.set(i,Math.round(perception/30*1000));
       if(cost>255&&terrain instanceof Uint8Array){const wide:Uint16Array=new Uint16Array(terrain.length);wide.set(terrain);terrain=wide;}
       if(cost){terrain[i]=cost;if(cost>terrainMaximum)terrainMaximum=cost;}
     }

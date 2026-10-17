@@ -1,4 +1,8 @@
 import { isColonist } from './affiliation.ts';
+import {rememberExplorationApproacher256,consumeExplorationApproacher256} from './exploration-door-256.ts';
+import {resolveActualExplorationApproacher256} from './exploration-actors-256.ts';
+import {captureActualFogPhysical256} from './exploration-physical-256.ts';
+import {finishExplorationReveal256} from './exploration-runtime-256.ts';
 import { prisonDoorPassable } from './prison-space.ts';
 import { prisonBreakActive } from './prison-break-state.ts';
 import { DOOR_CLOSE_DELAY, doorAt, doorOpenness, doorOpenTicks, doorMotionTicks, isPassageDoor } from './door-rules.ts';
@@ -15,8 +19,11 @@ function openDoor(world:World,s:Structure):void {
 /** Called before committing an edge. Waiting consumes no path or travel distance. */
 export function readyDoorEntry(world:World,pawn:Pawn,next:Cell):boolean {
   const s=doorAt(world,next);if(!s)return true;
-  const d=s.door!,breaking=prisonBreakActive(pawn);if(pawn.prisoner&&pawn.prisoner.releasedAt===undefined&&!breaking)return prisonDoorPassable(world,s);if(!isColonist(pawn)&&!pawn.visitor&&pawn.prisoner?.releasedAt===undefined&&!breaking)return d.open&&doorOpenness(s,world.tick)>=1-1e-9;
+  const d=s.door!,breaking=prisonBreakActive(pawn);
+  if(pawn.prisoner&&pawn.prisoner.releasedAt===undefined&&!breaking){rememberExplorationApproacher256(world,d,pawn.id,false);return prisonDoorPassable(world,s);}
+  if(!isColonist(pawn)&&!pawn.visitor&&pawn.prisoner?.releasedAt===undefined&&!breaking){rememberExplorationApproacher256(world,d,pawn.id,false);return d.open&&doorOpenness(s,world.tick)>=1-1e-9;}
   if(d.forbidden&&!breaking)return false;
+  rememberExplorationApproacher256(world,d,pawn.id,true);
   d.lastTouch=world.tick;
   if(!d.open)openDoor(world,s);
   if(doorOpenness(s,world.tick)<1-1e-9)return false;
@@ -30,6 +37,7 @@ export function approachAutodoor(world:World,pawn:Pawn,next:Cell):void {
   const upcoming=pawn.path[1];if(!upcoming||Math.max(Math.abs(upcoming.x-next.x),Math.abs(upcoming.z-next.z))!==1)return;
   const s=doorAt(world,upcoming);
   if(s?.kind!=='autodoor'||!s.power?.on||s.breakdown||isBlockMaterial(s.material)||s.door?.forbidden&&!prisonBreakActive(pawn))return;
+  rememberExplorationApproacher256(world,s.door!,pawn.id,true);
   s.door!.lastTouch=world.tick;openDoor(world,s);
 }
 /** Index bodies/edges/items once, rather than scanning every actor for each door.
@@ -53,6 +61,8 @@ export function updateDoors(world:World):void {
       }
     }
     if(!d.open)continue;
+    finishExplorationReveal256(world,consumeExplorationApproacher256(world,i,d,doorOpenness(s,world.tick),
+      id=>resolveActualExplorationApproacher256(world,id),()=>captureActualFogPhysical256(world)));
     if(bodies.has(i)){if(!d.forbidden&&friendly.has(i))d.lastTouch=world.tick;d.closeAt=world.tick+DOOR_CLOSE_DELAY;}
     if(d.closeAt!==null&&world.tick>=d.closeAt) {
       if(d.holdOpen)d.closeAt=null;

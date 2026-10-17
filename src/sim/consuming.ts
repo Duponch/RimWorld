@@ -29,7 +29,7 @@ function actorReason(world:Pick<World,'schemaVersion'|'tick'>,pawn:Pawn):string|
   if(!isColonist(pawn)||pawn.prisoner||pawn.visitor||pawn.raid||pawn.podRescue)return 'Choisissez un colon humain libre.';
   if(medicallyStopped(pawn)||pawn.health?.death)return 'Ce colon à terre ou décédé ne peut pas consommer directement.';
   if(pawn.mental?.crisis)return 'Ce colon est en crise et ne reçoit pas cet ordre.';
-  if(pawn.health?.foodPoisoning?.vomit||pawn.health?.flu?.vomit||pawn.health?.immuneDiseases?.malaria?.vomit)return 'Attendez la fin du vomissement.';
+  if((pawn.health?.foodPoisoning?.vomit||pawn.health?.cryptosleepSickness?.vomit||pawn.health?.toxicBuildup?.vomit||pawn.health?.toxicBuildup?.vomitRequestedAt!==undefined)||pawn.health?.flu?.vomit||pawn.health?.immuneDiseases?.malaria?.vomit)return 'Attendez la fin du vomissement.';
   const body=pawnBody(pawn);
   if(body.capacities.eating<=0||body.capacities.manipulation<=0)return 'Ce colon doit pouvoir manger et manipuler la portion.';
   if(pawn.burning||pawn.bombRefuge||pawn.heatRefuge||pawn.tactics)return 'Terminez la réaction immédiate avant de consommer.';
@@ -76,7 +76,7 @@ export function consumeReason(world:World,pawn:Pawn,pile:MaterialPile|undefined)
  * ordinary clinical work may displace later in the same tick. */
 function reservedContacts(world:World,pawn:Pawn):Set<number> {
   const reserved=reservedServiceCells(world,pawn.id);
-  for(const other of world.pawns)if(other.id!==pawn.id){const cell=serviceCell(other);if(cell)reserved.add(cell.z*world.width+cell.x);}
+  for(const other of world.pawns)if(other.id!==pawn.id){const cell=serviceCell(other,world);if(cell)reserved.add(cell.z*world.width+cell.x);}
   return reserved;
 }
 export function consumeContactValid(world:World,pawn:Pawn,cell:Cell=pawn):boolean {

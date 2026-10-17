@@ -34,6 +34,7 @@ export function startTravel(world:World,pawn:Pawn,next:Cell,getLight?:LightReade
     if(intervals.length){motion.stagger=mergeSlowIntervals(intervals);motion.end=travelEnd(motion);}
   }
   if(world.snow)motion.snowEntryPending=true;
+  if(next.x!==pawn.x||next.z!==pawn.z)delete pawn.arrivalRotation;
   pawn.motion=motion;
   pawn.x=next.x; pawn.z=next.z; pawn.moveCooldown=Math.max(0,pawn.motion.end-world.tick);
   approachAutodoor(world,pawn,next);

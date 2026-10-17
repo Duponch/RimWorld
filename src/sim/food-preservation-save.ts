@@ -1,3 +1,5 @@
+import {ANIMAL_ITEM_ROT_DAYS_256} from './animal-items-v256.ts';
+import {isFutureEcologyItem256} from './cave-products-256.ts';
 import { emptySpoilage, freshRot, isPerishable, ROT_DAYS, ticksUntilRot } from './food-preservation.ts';
 import { TICKS_PER_DAY, type World } from './types.ts';
 
@@ -9,8 +11,8 @@ export function validatePreservation(world: World, version: number): string[] {
     if (world.spoiled !== undefined || world.piles.some(p => p.rot !== undefined)) errors.push('Legacy save contains food preservation fields.');
     return errors;
   }
-  const permitted=[...(version>=248?['pemmican']:[]),...(version>=227?['hay']:[]),...(version>=217?['nutrient-paste-meal']:[]),'berries','rice','simple-meal',...(version>=178?['red-fox-meat']:[]),...(version>=152?['fine-meal']:[]),...(version>=154?['lavish-meal']:[]),...(version>=155?['vegetarian-fine-meal']:[]),...(version>=156?['carnivore-fine-meal']:[]),...(version>=157?['vegetarian-lavish-meal']:[]),...(version>=159?['carnivore-lavish-meal']:[]),...(version>=120?['milk']:[]),...(version>=51?['herbal-medicine']:[]),...(version>=79?['hare-meat']:[]),...(version>=84?['potato','corn']:[]),...(version>=91?['agave-fruit','snow-hare-meat','deer-meat','muffalo-meat','gazelle-meat','dromedary-meat']:[])];
-  if(!record(world.spoiled)||!['berries','rice','simple-meal'].every(k=>Object.hasOwn(world.spoiled,k))||Object.entries(world.spoiled).some(([k,n])=>!permitted.includes(k)||!Number.isSafeInteger(n)||n!<0))errors.push('Invalid cumulative food spoilage.');
+  const permitted=[...(version>=256?['raw-fungus']:[]),...(version>=256?Object.keys(ANIMAL_ITEM_ROT_DAYS_256).filter(id=>!id.endsWith('-corpse')):[]),...(version>=248?['pemmican']:[]),...(version>=227?['hay']:[]),...(version>=217?['nutrient-paste-meal']:[]),'berries','rice','simple-meal',...(version>=178?['red-fox-meat']:[]),...(version>=152?['fine-meal']:[]),...(version>=154?['lavish-meal']:[]),...(version>=155?['vegetarian-fine-meal']:[]),...(version>=156?['carnivore-fine-meal']:[]),...(version>=157?['vegetarian-lavish-meal']:[]),...(version>=159?['carnivore-lavish-meal']:[]),...(version>=120?['milk']:[]),...(version>=51?['herbal-medicine']:[]),...(version>=79?['hare-meat']:[]),...(version>=84?['potato','corn']:[]),...(version>=91?['agave-fruit','snow-hare-meat','deer-meat','muffalo-meat','gazelle-meat','dromedary-meat']:[])];
+  if(!record(world.spoiled)||!['berries','rice','simple-meal'].every(k=>Object.hasOwn(world.spoiled,k))||Object.entries(world.spoiled).some(([k,n])=>!permitted.includes(k)||version<256&&isFutureEcologyItem256(k)||!Number.isSafeInteger(n)||n!<0))errors.push('Invalid cumulative food spoilage.');
   for (const pile of world.piles) {
     if(pile.kind==='corpse')continue; // Full persistent-corpse contract validates its age separately.
     if (!isPerishable(pile.item)) { if (pile.rot !== undefined) errors.push('Unexpected food age.'); continue; }

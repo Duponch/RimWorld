@@ -69,7 +69,7 @@ export function validCampaignPresentation(w:Pick<World,'schemaVersion'|'tick'|'n
   if(Object.hasOwn(raw,'secondarySite'))return false;
   if(w.schemaVersion<240)return !['expeditionSite','campaignPeople','campaignMap'].some(k=>Object.hasOwn(raw,k));
   if(!Object.hasOwn(raw,'campaignMap'))return !Object.hasOwn(raw,'campaignPeople')&&!Object.hasOwn(raw,'expeditionSite');
-  if(!Array.isArray(w.pawns)||!Array.isArray(w.planet?.tiles))return false;
+  if(!Array.isArray(w.pawns)||!w.planet||w.planet.revision===3||!Array.isArray(w.planet.tiles))return false;
   if(w.mechanoids!==undefined&&!Array.isArray(w.mechanoids))return false;
   if(w.wildlife!==undefined&&(!object(w.wildlife)||!Array.isArray(w.wildlife.animals)))return false;
   const map:unknown=w.campaignMap,people:unknown=w.campaignPeople;

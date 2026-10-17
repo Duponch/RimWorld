@@ -1,3 +1,5 @@
+import {validToxicBuildupTransport256} from './toxic-buildup-save-256.ts';
+import {validCryptosleepSicknessTransport256} from './cryptosleep-sickness-save-256.ts';
 import { medicalStatus } from './injury-state.ts';
 import { pawnBody } from './health-rules.ts';
 import { validAnesthetic } from './anesthetic.ts';
@@ -40,6 +42,8 @@ export function validatePawnHealthRecord(p:Pawn,world:Pick<World,'schemaVersion'
     const h=p.health;
     if(!h){if(p.state==='downed'||p.state==='dead')errors.push('Medical state without a medical record.');return errors;}
     if(!validArtificialPartTransport(p,world.schemaVersion,world.tick))errors.push('Invalid or future artificial part anatomy.');
+    if(!validToxicBuildupTransport256(p,world.schemaVersion,world.tick,world))errors.push('Invalid toxic buildup or actual clinical owner');
+    if(!validCryptosleepSicknessTransport256(p,world.schemaVersion,world.tick,world))errors.push('Invalid or future cryptosleep sickness or episode owner.');
     if(!validAnesthetic(h.anesthetic,h.tick,world.schemaVersion>=179,p.id%20))errors.push('Anesthetic cadence does not match its owner.');
     if(h.death||allowEarlier?h.tick>world.tick:h.tick!==world.tick)errors.push('Medical clock does not match the world.');
     const vomit=h.foodPoisoning?.vomit;

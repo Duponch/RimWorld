@@ -1,3 +1,4 @@
+import type {AnimalPartId256,AnimalBodyGroup256} from './animal-anatomy-v256.ts';
 /** Natural adult human body. Rules/provenance: docs/research/body-reference.md.
  * These IDs describe anatomy, not GPU bones, item IDs or mesh names. */
 type Side = 'left' | 'right';
@@ -11,12 +12,17 @@ export type PikemanPartId='pikeman-thorax'|'pikeman-neck'|'pikeman-head'|'pikema
 type PairedPart = 'eye' | 'ear' | 'lung' | 'kidney' | 'shoulder' | 'clavicle' | 'arm' | 'humerus' | 'radius' | 'hand'
   | 'pinky' | 'ring-finger' | 'middle-finger' | 'index-finger' | 'thumb'
   | 'leg' | 'femur' | 'tibia' | 'foot' | 'little-toe' | 'fourth-toe' | 'middle-toe' | 'second-toe' | 'big-toe';
-export type BodyPartId = 'torso' | 'ribcage' | 'sternum' | 'pelvis' | 'spine' | 'stomach' | 'heart' | 'liver'
+export type BodyPartId = AnimalPartId256 | 'torso' | 'ribcage' | 'sternum' | 'pelvis' | 'spine' | 'stomach' | 'heart' | 'liver'
   | 'neck' | 'head' | 'skull' | 'brain' | 'nose' | 'jaw' | 'tongue' | 'waist' | 'hump' | `${Side}-${PairedPart}`
   | 'tail' | `${Side}-${'front'|'rear'}-${'leg'|'paw'|'hoof'}` | ScytherPartId | LancerPartId | PikemanPartId;
-export type BodyGroup = 'torso' | 'neck' | 'upper-head' | 'full-head' | 'eyes' | 'mouth' | 'teeth'
+export type BodyGroup = AnimalBodyGroup256 | 'torso' | 'neck' | 'upper-head' | 'full-head' | 'eyes' | 'mouth' | 'teeth'
   | 'shoulders' | 'arms' | 'hands' | 'left-hand' | 'right-hand' | 'waist' | 'legs' | 'feet' | 'front-left-leg' | 'front-right-leg';
 export interface BodyPart {
+  /** Only prospective256 animal anatomies publish exact tags/def injury facts. */
+  readonly nativeTags?:readonly string[];
+  readonly nativeDefId?:string;
+  readonly nativeExecutionPriority?:number;
+  readonly nativeInjuryRule?:Readonly<{skin:boolean;solid:boolean;bleed:number;delicate:boolean;scarFactor:number}>;
   readonly id:BodyPartId;
   readonly label:string;
   readonly parent:BodyPartId|null;

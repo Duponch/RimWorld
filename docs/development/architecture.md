@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V408 — schéma 256 :** [Générateur géographique](../gameplay/world-generation-v408.md) raccordé pour Atterrissage forcé250², vraie création et reprise contrôlées. PNJ actuels adaptés ; voyages/cartes temporaires et qualification globale restent à terminer avant la nouvelle démonstration. Non publié, productionV403/e24c5731 inchangée. Les états suivants sont historiques.
+
 **V404 qualifié — schéma 255 inchangé :** [Copier et renommer une politique de tenue](../gameplay/apparel-policy-copy-v404.md). Filtres confirmés indépendants, registre partagé et sauvegarde exacte ; aucune affectation ou tâche changée. V404 attend la publication groupée avec V405 ; dernière production V403/e24c5731, produit0f1a8cc1,134 réponses HTTPS exactes. Les états suivants sont historiques.
 
 **V401 qualifié — schéma 253 :** [Fret collectif bois/acier](../gameplay/group-freight-v401.md). Prises, charge, retour et dépôts physiques avec reprise active exacte ; anciens groupes conservés. V400–V401 publiés ensemble en 65bad476, produit 5fdec2e6, 134 réponses HTTPS exactes. Les états suivants sont historiques.

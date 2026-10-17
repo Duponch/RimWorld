@@ -1,5 +1,5 @@
 /** Original discrete globe. Centers/neighbours are its sole saved geometry. */
-import type { PlanetState, PlanetTile } from './planet-state.ts';
+import type { LegacyPlanetState, PlanetTile } from './planet-state.ts';
 import {selectProspectiveBiome} from './tundra-world.ts';
 import type { World } from './types.ts';
 import { siteClimateDefinition } from './site-climate.ts';
@@ -15,6 +15,8 @@ export interface PlanetHomeInput {
   hilliness?: PlanetTile['hilliness'];
 }
 const biomes = ['temperate-forest', 'boreal-forest', 'arid-shrubland', 'tundra'] as const;
+const isLegacyBiome=(value:unknown):value is PlanetHomeInput['biome']=>biomes.some(b=>b===value);
+function selectLegacyPlanetBiome(temperature:number,rainfall:number):PlanetHomeInput['biome'] {const biome=selectProspectiveBiome(temperature,rainfall);if(!isLegacyBiome(biome))throw Error('Future biome in literal legacy generator');return biome;}
 const hills = ['flat', 'small-hills', 'large-hills', 'mountainous'] as const;
 const finite = (n: unknown, min: number, max: number): n is number =>
   typeof n === 'number' && Number.isFinite(n) && n >= min && n <= max;
@@ -47,13 +49,14 @@ function rotateFromTo(from: Vector, to: Vector): (p: Vector) => Vector {
  * use this explicit reference profile as an adaptation, not thermal identity. */
 export function planetHomeInput(world: World): PlanetHomeInput {
   const c = siteClimateDefinition(world);
-  return { biome: world.site?.revision === 2 ? world.site.biome : 'temperate-forest',
+  const biome=world.site?.revision===2?world.site.biome:'temperate-forest';if(!isLegacyBiome(biome))throw Error('Geographic biome cannot be adopted by the literal old globe');
+  return { biome,
     latitude: c.latitude, longitude: c.longitude, meanTemperature: c.meanTemperature, rainfall: c.rainfall,
     hilliness: 'flat' }; // Existing local site has no hilliness authority.
 }
 
 /** Called only by explicit adoption/new-start dispatcher. No World/Thing draw. */
-export function generatePlanet(seed: number, home: PlanetHomeInput, adoptedAt: number,revision:1|2=1): PlanetState {
+export function generatePlanet(seed: number, home: PlanetHomeInput, adoptedAt: number,revision:1|2=1): LegacyPlanetState {
   if (![1,2].includes(revision)||revision===1&&home?.biome==='tundra'||!Number.isSafeInteger(seed) || seed < 0 || seed > 0xffffffff || !validHome(home)
     || !Number.isSafeInteger(adoptedAt) || adoptedAt < 0) throw new Error('Invalid planet generation input');
   let rng = (seed ^ 0x5c1f73a9) >>> 0; if (!rng) rng = 1;
@@ -85,7 +88,7 @@ export function generatePlanet(seed: number, home: PlanetHomeInput, adoptedAt: n
     const meanTemperature=28-(revision===2?56:40)*Math.abs(center[1])+(draw()-.5)*8, rainfall=(revision===2?600:400)+draw()*1200, relief=draw();
     const land = continents.some(c => dot(center,c) > .55);
     return { id, center, neighbours:[...neighbours[id]!].sort((a,b)=>a-b),
-      biome: land ? revision===2?selectProspectiveBiome(meanTemperature,rainfall):meanTemperature<8 ? 'boreal-forest' : rainfall<700 ? 'arid-shrubland' : 'temperate-forest' : 'ocean',
+      biome: land ? revision===2?selectLegacyPlanetBiome(meanTemperature,rainfall):meanTemperature<8 ? 'boreal-forest' : rainfall<700 ? 'arid-shrubland' : 'temperate-forest' : 'ocean',
       hilliness: relief<.55 ? 'flat' : relief<.8 ? 'small-hills' : relief<.95 ? 'large-hills' : 'mountainous', meanTemperature, rainfall };
   });
   // Original constraint, not Core continent/site frequencies: connected post at three hops.
@@ -95,16 +98,16 @@ export function generatePlanet(seed: number, home: PlanetHomeInput, adoptedAt: n
   }
   const choices=tiles.filter(tile=>distances[tile.id]===3), post=choices[Math.floor(draw()*choices.length)]!.id;
   for (let cursor=post;cursor!==-1;cursor=parents[cursor]!) if (tiles[cursor]!.biome==='ocean') {
-    const tile=tiles[cursor]!; tile.biome=revision===2?selectProspectiveBiome(tile.meanTemperature,tile.rainfall):tile.meanTemperature<8?'boreal-forest':tile.rainfall<700?'arid-shrubland':'temperate-forest';
+    const tile=tiles[cursor]!; tile.biome=revision===2?selectLegacyPlanetBiome(tile.meanTemperature,tile.rainfall):tile.meanTemperature<8?'boreal-forest':tile.rainfall<700?'arid-shrubland':'temperate-forest';
   }
   Object.assign(tiles[0]!, {biome:home.biome,meanTemperature:home.meanTemperature,rainfall:home.rainfall,hilliness:home.hilliness??'flat'});
-  const planet:PlanetState={revision,adoptedAt,generationSeed:seed,tiles,homeTile:0,civilianTile:post,nextGroupId:1};
+  const planet:LegacyPlanetState={revision,adoptedAt,generationSeed:seed,tiles,homeTile:0,civilianTile:post,nextGroupId:1};
   if (!validPlanetTopology(planet)) throw new Error('Invalid original planet topology');
   return planet;
 }
 
 /** Domain topology check; root still owns full version/shape/save guard. */
-export function validPlanetTopology(planet: PlanetState): boolean {
+export function validPlanetTopology(planet: LegacyPlanetState): boolean {
   return validatePlanetTopology(planet.tiles).length===0
     &&Number.isSafeInteger(planet.homeTile)&&Number.isSafeInteger(planet.civilianTile)
     &&!!planet.tiles[planet.homeTile]&&!!planet.tiles[planet.civilianTile]
@@ -113,11 +116,11 @@ export function validPlanetTopology(planet: PlanetState): boolean {
 }
 
 /** Derived presentation values: never another persisted authority. */
-export function tileCoordinates(tile: PlanetTile): {latitude:number;longitude:number} {
+export function tileCoordinates(tile: Pick<PlanetTile,'center'>): {latitude:number;longitude:number} {
   return {latitude:Math.asin(Math.max(-1,Math.min(1,tile.center[1])))*180/Math.PI,
     longitude:Math.atan2(tile.center[2],tile.center[0])*180/Math.PI};
 }
-export function tileCorners(planet: PlanetState, id: number): Vector[] {
+export function tileCorners(planet: LegacyPlanetState, id: number): Vector[] {
   const tile=planet.tiles[id]; if(!tile)throw new Error('Unknown planet tile');
   const corners:Vector[]=[];
   for(let a=0;a<tile.neighbours.length;a++)for(let b=a+1;b<tile.neighbours.length;b++) {

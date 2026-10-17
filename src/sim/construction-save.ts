@@ -1,3 +1,4 @@
+import {validFrameDamage256} from './roof-frame-256.ts';
 import { isRoofJob } from './roof-rules.ts';
 import { containsCell, isConstruction } from './construction-rules.ts';
 import { clearingDuration } from './gathering.ts';
@@ -11,6 +12,7 @@ export function initializeConstruction(world:World):void {
 export function validateConstruction(world:World,version:number):string[] {
   const errors:string[]=[];
   for(const job of world.jobs) {
+    if(!validFrameDamage256(job,version))errors.push('Invalid or future Frame damage.');
     if(version<16){if(job.construction!==undefined||job.clearance!==undefined)errors.push('Legacy save contains construction phases.');continue;}
     if(job.kind==='fix-breakdown'
       ? job.construction!==undefined||job.clearance!==undefined

@@ -1,10 +1,13 @@
+import {materialAllowedForPlayer256} from './material-permission-256.ts';
+import {animalConditionCareTargets256,animalConditionTreatmentBatch256,animalConditionMedicineCount256,type ActualAnimalTreatment256} from './animal-condition-care-256.ts';
+import {tendAnimalAgeCondition256} from './animal-age-condition-runtime-256.ts';
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { allowedAreaAllows } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
 import { isColonist } from './affiliation.ts';
 import { animalClaimed,animalCarrier } from './animal-rest-state.ts';
-import { medicalTendQuality,medicalTendSpeed,treatmentBatch,medicineCount,type RankedTreatment } from './care-rules.ts';
-import { animalBodyModel,modelHasPart } from './body-model.ts';
+import { medicalTendQuality,medicalTendSpeed } from './care-rules.ts';
+import { medicalModel,modelHasPart } from './body-model.ts';
 import { infectionTargets,tendInfection,captureInfectionTendRoom } from './infection-state.ts';
 import { infectionRoomFactor } from './infection-room.ts';
 import { freshMissing,injuryBleed,tendInjury,tendMissingPart } from './injury-state.ts';
@@ -36,9 +39,9 @@ export type AnimalCareContext=NeedContext&{candidates:()=>Reachability|null;bloc
 /** The ordinary patient must belong to the colony and stay physically down.
  * The anatomy comes from the animal record, never a surrogate human Pawn. */
 function patientReady(w:World,a:WildAnimal,doctor?:Pawn):boolean {
-  return (!doctor||allowedAreaAllows(w,doctor,a))&&!a.manhunter&&veterinaryCareSpeciesAllowed(a.species,w.schemaVersion)&&!!a.domestic&&a.domestic.care!=='none'&&
+  return (!doctor||allowedAreaAllows(w,doctor,a))&&!a.manhunter&&veterinaryCareSpeciesAllowed(a.species,w.schemaVersion,a)&&!!a.domestic&&a.domestic.care!=='none'&&
     (a.state==='downed'||a.state==='sleeping')&&(!a.motion||a.motion.end<=w.tick)&&
-    (w.schemaVersion<212||!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike&&!a.stun&&!a.health?.foodPoisoning?.vomit)&&
+    (w.schemaVersion<212||!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike&&!a.stun&&!(a.health?.foodPoisoning?.vomit||a.health?.cryptosleepSickness?.vomit||a.health?.toxicBuildup?.vomit||a.health?.toxicBuildup?.vomitRequestedAt!==undefined))&&
     !!a.health&&!a.health.death&&animalCareTargets(a).length>0&&
     !animalCarrier(w,a.id)&&!animalClaimed(w,a.id,doctor?.id);
 }
@@ -46,14 +49,15 @@ function doctorReady(p:Pawn):boolean {
   return isColonist(p)&&!p.prisoner&&!p.visitor&&!p.draft&&!p.burning&&!p.mental?.crisis&&
     !p.interruptedCargo&&workPriority(p,'doctor')>0&&!medicalWorkRefusal(p);
 }
-export function animalCareTargets(a:WildAnimal):RankedTreatment[] {
+export function animalCareTargets(a:WildAnimal):ActualAnimalTreatment256[] {
   const h=a.health;if(a.manhunter||!h||h.death||h.body!==a.species||!a.domestic||a.domestic.care==='none')return [];
-  const model=animalBodyModel(a.species),rules=injuryPartRules(model),list:RankedTreatment[]=[];
+  const model=medicalModel(h),rules=injuryPartRules(model),list:ActualAnimalTreatment256[]=[];
   for(const i of h.injuries)if(i.tended===undefined&&i.scar?.pain===undefined&&modelHasPart(model,i.part))
     list.push({injuryId:i.id,priority:injuryBleed(h,i)*1.5,severity:i.severity});
   for(const m of h.missing)if(modelHasPart(model,m.part)&&freshMissing(h,m))
     list.push({part:m.part,priority:model.byId[m.part].hp*.12*rules[m.part].bleed*1.5,severity:HP_UNIT});
   for(const i of infectionTargets(h))list.push({infectionId:i.infectionId,priority:i.priority,severity:i.severity});
+  list.push(...animalConditionCareTargets256(h));
   return list.sort((x,y)=>y.priority-x.priority||y.severity-x.severity);
 }
 export function animalCareWanted(w:World,doctor:Pawn):boolean {
@@ -64,9 +68,9 @@ function medicineAllowed(care:MedicalCare,item:MedicineItem):boolean {
 }
 /** A reservation changes only the proposed task. Source stock stays physical. */
 function reserveMedicine(w:World,doctor:Pawn,a:WildAnimal,task:AnimalCareTask,reach:Reachability):Cell[]|undefined {
-  const needed=medicineCount(animalCareTargets(a));if(!needed)return;
+  const needed=animalConditionMedicineCount256(a.health!,animalCareTargets(a));if(!needed)return;
   const care=a.domestic!.care;
-  const sources=w.piles.filter(p=>p.owner.type==='ground'&&allowedAreaAllows(w,doctor,p.owner)&&isMedicine(p.item)&&medicineAllowed(care,p.item)
+  const sources=w.piles.filter(p=>materialAllowedForPlayer256(p)&&p.owner.type==='ground'&&allowedAreaAllows(w,doctor,p.owner)&&isMedicine(p.item)&&medicineAllowed(care,p.item)
     &&p.quantity>reservedSource(w,p.id)&&medicineClaims(w,p.id)<10);
   sources.sort((x,y)=>MEDICINES[y.item as MedicineItem].potency-MEDICINES[x.item as MedicineItem].potency||
     (x.owner.type==='ground'?(x.owner.x-a.x)**2+(x.owner.z-a.z)**2:Infinity)-
@@ -96,8 +100,8 @@ export function startAnimalCare(doctor:Pawn,proposal:AnimalCareProposal):void {
   doctor.animalCare=proposal.task;doctor.path=proposal.path;doctor.state='moving';doctor.planCooldown=0;
 }
 export function animalCareInProgress(w:World,a:WildAnimal):boolean {
-  if(a.manhunter||!veterinaryCareSpeciesAllowed(a.species,w.schemaVersion)||!a.domestic||a.state!=='downed'&&a.state!=='sleeping'||a.burning||a.flee||a.threat||a.retaliation)return false;
-  if(w.schemaVersion>=212&&(a.strike||a.stun||a.health?.foodPoisoning?.vomit||a.health?.death||a.domestic.care==='none'||a.motion&&a.motion.end>w.tick))return false;
+  if(a.manhunter||!veterinaryCareSpeciesAllowed(a.species,w.schemaVersion,a)||!a.domestic||a.state!=='downed'&&a.state!=='sleeping'||a.burning||a.flee||a.threat||a.retaliation)return false;
+  if(w.schemaVersion>=212&&(a.strike||a.stun||(a.health?.foodPoisoning?.vomit||a.health?.cryptosleepSickness?.vomit||a.health?.toxicBuildup?.vomit||a.health?.toxicBuildup?.vomitRequestedAt!==undefined)||a.health?.death||a.domestic.care==='none'||a.motion&&a.motion.end>w.tick))return false;
   return w.pawns.some(p=>p.animalCare?.animalId===a.id&&p.animalCare.phase==='treat'&&doctorReady(p)&&
     p.moveCooldown===0&&(!p.motion||p.motion.end<=w.tick)&&!p.path.length&&
     p.x===p.animalCare.spot.x&&p.z===p.animalCare.spot.z&&adjacent(p,a));
@@ -107,13 +111,13 @@ function taskValid(w:World,doctor:Pawn,a:WildAnimal,task:AnimalCareTask):boolean
   const m=task.medicine;if(!m)return task.phase!=='pickup';
   if(!medicineAllowed(a.domestic!.care,m.item))return false;
   const pile=w.piles.find(p=>p.id===(task.phase==='pickup'?m.sourcePileId:m.carryPileId));
-  return !!pile&&pile.item===m.item&&(task.phase==='pickup'?pile.owner.type==='ground'&&reservedSource(w,pile.id)<=pile.quantity&&medicineClaims(w,pile.id)<=10:
+  return !!pile&&materialAllowedForPlayer256(pile)&&pile.item===m.item&&(task.phase==='pickup'?pile.owner.type==='ground'&&reservedSource(w,pile.id)<=pile.quantity&&medicineClaims(w,pile.id)<=10:
     pile.owner.type==='pawn'&&pile.owner.pawnId===doctor.id&&pile.quantity===m.quantity);
 }
 function releaseCare(w:World,doctor:Pawn):void {if(!releaseWork(w,doctor))interruptWork(w,doctor);}
 function pickup(w:World,doctor:Pawn,task:AnimalCareTask,ctx:NeedContext):void {
   const m=task.medicine!,pile=w.piles.find(p=>p.id===m.sourcePileId);
-  if(!pile||pile.owner.type!=='ground'||reservedSource(w,pile.id)>pile.quantity){interruptWork(w,doctor);return;}
+  if(!pile||!materialAllowedForPlayer256(pile)||pile.owner.type!=='ground'||reservedSource(w,pile.id)>pile.quantity){interruptWork(w,doctor);return;}
   if(!adjacent(doctor,pile.owner)&&(doctor.x!==pile.owner.x||doctor.z!==pile.owner.z)){ctx.move(pile.owner,false);return;}
   if(pile.quantity===m.quantity){pile.owner={type:'pawn',pawnId:doctor.id};m.carryPileId=pile.id;}
   else {
@@ -140,14 +144,19 @@ export function processAnimalCare(w:World,doctor:Pawn,ctx:AnimalCareContext,ligh
   task.duration??=Math.max(1,Math.floor(600/medicalTendSpeed(doctor,light())));
   task.phase='treat';doctor.state='working';doctor.path=[];task.progress+=10;
   if(task.progress<task.duration)return;
-  const batch=treatmentBatch(animalCareTargets(patient),!!task.medicine);
+  const batch=animalConditionTreatmentBatch256(patient.health!,animalCareTargets(patient),!!task.medicine);
   if(!batch.length){releaseCare(w,doctor);return;}
   const item=task.medicine?.item;
   learnSkill(doctor.skills.medicine,tendXp(item),doctor);
   const quality=medicalTendQuality(doctor),record=patient.health!;
   let roomFactor:number|undefined;
   for(const target of batch){
-    if(target.injuryId!==undefined){
+    if('animalConditionId'in target){
+      const rule=item?MEDICINES[item]:{potency:.3,maxQuality:.7},f=Math.fround;
+      const base=f(Math.max(0,Math.min(f(rule.maxQuality),f(f(quality)*f(rule.potency)))));
+      const random={value:()=>healthRandom(w),integer:(a:number,b:number)=>a+Math.floor(healthRandom(w)*(b-a)),float:(a:number,b:number)=>b<=a?a:f(f(f(healthRandom(w))*f(b-a))+a)};
+      tendAnimalAgeCondition256(record,target.animalConditionId,base,rule.maxQuality,random);
+    }else if(target.injuryId!==undefined){
       tendInjury(record,target.injuryId,tendQuality(quality,healthRandom(w),false,item));
       if(record.injuries.some(i=>i.id===target.injuryId&&i.infection)){
         roomFactor??=infectionRoomFactor(w,patient);captureInfectionTendRoom(record,target.injuryId,roomFactor);
@@ -163,7 +172,7 @@ export function processAnimalCare(w:World,doctor:Pawn,ctx:AnimalCareContext,ligh
 }
 export function applyAnimalCarePolicy(w:World,command:{animalId:number;care:MedicalCare}):CommandResult {
   const animal=w.wildlife?.animals.find(a=>a.id===command.animalId);
-  if(!animal||!veterinaryCareSpeciesAllowed(animal.species,w.schemaVersion)||!animal.domestic||!Object.hasOwn(MEDICAL_CARE,command.care))
+  if(!animal||!veterinaryCareSpeciesAllowed(animal.species,w.schemaVersion,animal)||!animal.domestic||!Object.hasOwn(MEDICAL_CARE,command.care))
     return {ok:false,code:'invalid-command',reason:w.schemaVersion>=212?'Animal possédé admissible ou politique médicale introuvable.':'Lièvre possédé ou politique médicale introuvable.'};
   if(animal.domestic.care===command.care)return {ok:true};
   animal.domestic.care=command.care;

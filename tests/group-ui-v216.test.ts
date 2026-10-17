@@ -32,13 +32,14 @@ function dom(){
   vi.stubGlobal('requestAnimationFrame',vi.fn(()=>1));vi.stubGlobal('cancelAnimationFrame',vi.fn());
   return {host:new NodeFixture(),documentFixture};
 }
+function actualCivilianTile(world:import('../src/sim/types.ts').World):number {const tile=world.planet?.civilianTile;if(typeof tile!=='number'||!Number.isSafeInteger(tile))throw Error('Declared UI fixture requires its real civilian tile');return tile;}
 function setup(){
   const world=createScenarioWorld(214,32);world.planet=generatePlanet(world.seed,planetHomeInput(world),world.tick);
   world.pawns[0]!.name='<img src=x> & Ada';
   const actions=Object.fromEntries((['adopt','start','cancel','pause','route','return','buy','sell','unload'] satisfies GroupPanelAction[]).map(k=>[k,{ok:true}])) as GroupPanelFacts['actions'];
   const facts:GroupPanelFacts={originTile:world.planet.homeTile,originLabel:'Foyer',maximumSources:64,mass:null,confirmedRoute:[],actions,trade:null,
     candidates:world.pawns.map(pawn=>({pawn,ok:true})),sources:[]};
-  const adapters:GroupPanelAdapters={capture:vi.fn(()=>facts),previewPlan:vi.fn<GroupPanelAdapters['previewPlan']>((_snapshot,_facts,draft)=>({ok:true,route:[world.planet!.civilianTile],carriers:[],mass:{grams:0,capacityGrams:35000,rations:0,pemmicanUnits:0,provisionNutrition:0,byMember:draft.memberIds.map(pawnId=>({pawnId,grams:0,capacityGrams:35000}))}})),
+  const adapters:GroupPanelAdapters={capture:vi.fn(()=>facts),previewPlan:vi.fn<GroupPanelAdapters['previewPlan']>((_snapshot,_facts,draft)=>({ok:true,route:[actualCivilianTile(world)],carriers:[],mass:{grams:0,capacityGrams:35000,rations:0,pemmicanUnits:0,provisionNutrition:0,byMember:draft.memberIds.map(pawnId=>({pawnId,grams:0,capacityGrams:35000}))}})),
     previewRoute:vi.fn<GroupPanelAdapters['previewRoute']>(()=>({ok:false,reason:'Aucun groupe.'})),quoteTrade:vi.fn<GroupPanelAdapters['quoteTrade']>(()=>({ok:false,reason:'Aucun comptoir.'})),send:vi.fn(()=>Promise.resolve()),inspectPresentPawn:vi.fn()};
   return {world,facts,adapters,snapshot:{world,planet:world.planet,losses:[],originMapId:0}};
 }
@@ -82,7 +83,7 @@ test('two confirmed manifest rows sharing one source retain both porters instead
   const {host}=dom(),{world,facts,adapters,snapshot}=setup(),[a,b]=world.pawns;
   const sourceId=world.nextId++;
   world.piles.push({id:sourceId,kind:'textile',item:'cloth',quantity:75,owner:{type:'ground',x:a!.x,z:a!.z}});
-  world.group={id:1,startedAt:world.tick,destination:world.planet!.civilianTile,ledger:emptyGroupLedger(),phase:'loading',memberIds:[a!.id,b!.id],rendezvous:{x:a!.x,z:a!.z},
+  world.group={id:1,startedAt:world.tick,destination:actualCivilianTile(world),ledger:emptyGroupLedger(),phase:'loading',memberIds:[a!.id,b!.id],rendezvous:{x:a!.x,z:a!.z},
     meeting:[{pawnId:a!.id,cell:{x:a!.x,z:a!.z}},{pawnId:b!.id,cell:{x:b!.x,z:b!.z}}],cursor:0,
     manifest:[{pileId:sourceId,quantity:37,item:'cloth',carrierId:a!.id},{pileId:sourceId,quantity:38,item:'cloth',carrierId:b!.id}],
     exits:[{pawnId:a!.id,cell:null},{pawnId:b!.id,cell:null}]};
@@ -90,7 +91,7 @@ test('two confirmed manifest rows sharing one source retain both porters instead
   const panel=createGroupPanel(host as unknown as HTMLElement,adapters);panel.update({...snapshot,group:world.group});
   const rows=find(host,'groupManifest').querySelectorAll('*').filter(n=>n.tag==='tbody')[0]!.children;
   expect(rows).toHaveLength(2);expect(rows[0]!.textContent).toContain(a!.name);expect(rows[1]!.textContent).toContain(b!.name);
-  expect(rows.every(row=>row.textContent.includes(`#${sourceId}`))).toBe(true);expect(adapters.send).not.toHaveBeenCalled();panel.dispose();
+  expect(rows[0]!.textContent).toContain('37');expect(rows[1]!.textContent).toContain('38');expect(rows.every(row=>!row.textContent.includes(`#${sourceId}`))).toBe(true);expect(adapters.send).not.toHaveBeenCalled();panel.dispose();
 });
 
 
@@ -127,7 +128,7 @@ test('V391 draft nutrition is only the injected formation estimate, including an
 test('a refused caravan selection restores the confirmed group, and replacement rebuilds even identical selector keys',async()=>{
  const {host}=dom(),{world,facts,adapters,snapshot}=setup(),pawn=world.pawns[0]!;
  facts.mass={grams:0,capacityGrams:35000,rations:0,pemmicanUnits:0,provisionNutrition:0,byMember:[{pawnId:pawn.id,grams:0,capacityGrams:35000}]};
- const group={id:1,startedAt:world.tick,destination:world.planet!.civilianTile,ledger:emptyGroupLedger(),phase:'loading' as const,memberIds:[pawn.id],rendezvous:{x:pawn.x,z:pawn.z},meeting:[{pawnId:pawn.id,cell:{x:pawn.x,z:pawn.z}}],cursor:0,manifest:[],exits:[{pawnId:pawn.id,cell:null}]};
+ const group={id:1,startedAt:world.tick,destination:actualCivilianTile(world),ledger:emptyGroupLedger(),phase:'loading' as const,memberIds:[pawn.id],rendezvous:{x:pawn.x,z:pawn.z},meeting:[{pawnId:pawn.id,cell:{x:pawn.x,z:pawn.z}}],cursor:0,manifest:[],exits:[{pawnId:pawn.id,cell:null}]};
  const other={...group,id:2};world.group=group;
  const campaign={revision:2 as const,campaignSeed:world.seed,mapSize:{width:32,height:32},groupLosses:[],lossContexts:[],lostMemories:[],activeMapId:0,rootMapId:0,maxSettlements:1 as const,selectedGroupId:1,maps:[],incidents:[],groups:[group,other].map(state=>({id:state.id,originMapId:0,localMapId:0,phase:state.phase,originTile:world.planet!.homeTile,filthPresent:!!world.filth,tile:world.planet!.homeTile,memberIds:state.memberIds,mass:null,context:{seed:world.seed,width:32,height:32,climate:world.climate,site:world.site,scenario:world.scenario},entryActions:{visit:{ok:false},camp:{ok:false},settle:{ok:false}},state}))};
  adapters.send=vi.fn(async command=>{if(command.type==='group-select')throw new SimulationRequestError('Caravane indisponible.','refused');});

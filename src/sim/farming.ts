@@ -1,10 +1,12 @@
 import {extractTreeDefinition} from './tree-transfer-rules.ts';
-import {clearingDuration} from './gathering.ts';
+import {clearingDuration,prospectivePlantWorkCore256} from './gathering.ts';
+import {terrainGroundFertility256,terrainHasProspectiveRules256} from './natural-terrain-runtime-256.ts';
 import {workOutputPending} from './construction-plants.ts';
 import { furnitureDuration } from './furniture-rules.ts';
 import { constructionRecipe } from './construction-materials.ts';
 import { deconstructionDuration } from './deconstruction-rules.ts';
 import { footprintCells, footprintContains, JOB_DURATION, STRUCTURE_DEFINITIONS } from './definitions.ts';
+import {geyserBlocksPlantOrFloor256} from './local-geyser-state-256.ts';
 import { isCrop, isPlant, plantGrowth, PLANT_DEFINITIONS, sowingTemperatureAllowed } from './plants.ts';
 import { TemperatureView, outdoorTemperature } from './temperature.ts';
 import { releaseWork, type DropPlan } from './work-release.ts';
@@ -64,6 +66,10 @@ export function jobDuration(world: World, job: Job, capturedResource?:Resource|n
   if(job.kind==='repair')return job.repair?.warmed?20:80;
   if(job.kind==='deconstruct')return deconstructionDuration(job);
   if(job.material!==undefined)return constructionRecipe(job).work;
+  if(world.schemaVersion>=256&&job.flowerPotId===undefined&&['harvest','cut','chop'].includes(job.kind)){
+    const source=capturedResource===undefined?resourceCells(world).get(index(world,job)):capturedResource;
+    const core=source&&prospectivePlantWorkCore256(source);if(core!==undefined&&core!==null)return core/10;
+  }
   if(job.kind==='harvest'||job.kind==='cut'){
     const resource=capturedResource===undefined?resourceCells(world).get(index(world,job)):capturedResource;
     // Only a paid ground CUT boundary keeps its healthy duration after an
@@ -94,15 +100,18 @@ function context(world: World, queriedCells?:readonly number[]): Context {
 }
 function intention(world: World, zone: GrowingZone, cell: number, ctx: Context, committed=false): { kind: JobKind; cell: number } | null {
   const position={x:cell%world.width,z:Math.floor(cell/world.width)};
+  if(geyserBlocksPlantOrFloor256(world,position))return null;
   const basin=zone.basinId===undefined?undefined:hydroponicBasinAt(world,position);
   if(zone.basinId!==undefined&&(!basin||basin.id!==zone.basinId||!hydroponicCropAllowed(zone.plant)))return null;
-  if (ctx.fixed.has(cell)&&(!basin||ctx.hydroBlocked?.has(cell))||!basin&&world.tiles[cell]!.floor) return null;
+  if (ctx.fixed.has(cell)&&(!basin||ctx.hydroBlocked?.has(cell))||!basin&&(world.tiles[cell]!.floor||world.tiles[cell]!.bridge&&terrainHasProspectiveRules256(world.tiles[cell]!.terrain,world))) return null;
   const plant = ctx.resources.get(cell);
   if(plant?.blight)return zone.allowCut?{kind:'cut',cell}:null;
   if (plant?.kind === zone.plant || (!zone.allowSow && zone.allowCut && plant && isPlant(plant))) {
     return plantGrowth(world, plant) >= 1 ? { kind: 'harvest', cell } : null;
   }
   if (!zone.allowSow) return null;
+  const soil=world.tiles[cell]!;
+  if(!basin&&terrainHasProspectiveRules256(soil.terrain,world)&&terrainGroundFertility256(soil)<PLANT_DEFINITIONS[zone.plant].minFertility)return null;
   // Temperature gates new sowing work, not harvesting or an accepted job.
   if(!committed&&!sowingTemperatureAllowed(ctx.temperatures.at(world,{x:cell%world.width,z:Math.floor(cell/world.width)})))return null;
   if (plant) return zone.allowCut && plant.kind !== 'rock' ? { kind: plant.kind === 'tree' ? 'chop' : 'cut', cell } : null;
@@ -129,7 +138,7 @@ export function cancelGrowingJobs(world: World, zoneIds: ReadonlySet<number>,dro
   world.jobs = world.jobs.filter(j => !ids.has(j.id));
 }
 export function growingJobValid(world: World, job: Job, shared?:Context): boolean {
-  if(job.flowerPotId!==undefined){const pot=world.structures.find(s=>s.id===job.flowerPotId&&s.kind==='flower-pot'&&s.x===job.x&&s.z===job.z);return !!pot&&(job.kind==='sow'?!!pot.flower?.allowSow&&!pot.flower.plant:job.kind==='cut'&&!!pot.flower?.plant);}
+  if(job.flowerPotId!==undefined){if(geyserBlocksPlantOrFloor256(world,job))return false;const pot=world.structures.find(s=>s.id===job.flowerPotId&&s.kind==='flower-pot'&&s.x===job.x&&s.z===job.z);return !!pot&&(job.kind==='sow'?!!pot.flower?.allowSow&&!pot.flower.plant:job.kind==='cut'&&!!pot.flower?.plant);}
   if (job.growingZoneId === undefined) return job.kind !== 'sow';
   const zone = world.growingZones.find(z => z.id === job.growingZoneId);
   if (!zone) return false;
@@ -178,6 +187,7 @@ export function scheduleGrowing(world: World): void {
   }
 }
 export function finishSowing(world: World, job: Job): void {
+  if(geyserBlocksPlantOrFloor256(world,job))return;
   if(job.flowerPotId!==undefined){const pot=world.structures.find(s=>s.id===job.flowerPotId&&s.kind==='flower-pot');if(pot?.flower&&!pot.flower.plant)pot.flower={...pot.flower,plant:sowDaylily(world.tick)};return;}
   const zone=world.growingZones.find(z=>z.id===job.growingZoneId);
   if(!zone||zone.basinId!==undefined&&(!hydroponicSowingAllowed(world,zone)||!zone.cells.includes(index(world,job))))return;

@@ -5,7 +5,16 @@ import type {MaterialPile,Pawn} from './types.ts';
 
 export const GROUP_PROVISIONS_SCHEMA=250;
 export const newGroupProvisions=():GroupProvisions=>({revision:1,pemmicanLoadedUnits:0,pemmicanConsumedUnits:0,pemmicanSpoiledUnits:0});
-export const mixedGroupProvisions=(g:Pick<GroupState,'provisions'>):boolean=>g.provisions?.revision===1;
+export const mixedGroupProvisions=(g:Pick<GroupState,'provisions'>&{reorganization?:{revision:1}}):boolean=>g.provisions?.revision===1||g.reorganization?.revision===1;
+export function groupPemmicanCounter(g:Extract<GroupState,{members:unknown}>,kind:'consumed'|'spoiled'):number {
+ const value=g.provisions?(kind==='consumed'?g.provisions.pemmicanConsumedUnits:g.provisions.pemmicanSpoiledUnits):g.reorganization?.pemmicanSinceOpening?.[kind];
+ if(value===undefined)throw Error('Missing actual pemmican accounting');return value;
+}
+export function setGroupPemmicanCounter(g:Extract<GroupState,{members:unknown}>,kind:'consumed'|'spoiled',value:number):void {
+ if(!Number.isSafeInteger(value)||value<0)throw Error('Pemmican counter overflow');
+ if(g.provisions){if(kind==='consumed')g.provisions.pemmicanConsumedUnits=value;else g.provisions.pemmicanSpoiledUnits=value;}
+ else if(g.reorganization?.pemmicanSinceOpening)g.reorganization.pemmicanSinceOpening[kind]=value;else throw Error('Missing actual pemmican accounting');
+}
 export const freshGroupProvision=(p:MaterialPile,tick:number):boolean=>!p.foodPoison&&(p.item==='survival-meal'||p.item==='pemmican'&&ticksUntilRot(p,tick)>0);
 /** Inputs are already actual inventories or explicitly selected source quantities. */
 export function groupProvisionCounts(items:readonly MaterialPile[],tick:number){

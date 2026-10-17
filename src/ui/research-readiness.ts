@@ -1,3 +1,4 @@
+import {knownBuilding256} from './exploration-readers-256';
 import { isColonist } from '../sim/affiliation';
 import { backgroundWorkRefusal } from '../sim/colonist-backgrounds';
 import { medicalWorkRefusal } from '../sim/health-rules';
@@ -53,6 +54,7 @@ function captureStations(world:World) {
   const benches:Structure[]=[];
   let simple=false,advanced=false,poweredAdvanced=false;
   for(const structure of world.structures){
+    if(!knownBuilding256(world,structure))continue;
     if((structure.kind!=='research-bench'&&structure.kind!=='hi-tech-research-bench')
       ||(structure.damage??0)>=structureMaxHp(structure)||retiring.has(structure.id))continue;
     benches.push(structure);
@@ -84,7 +86,7 @@ export function captureResearchStationIssues(world:World):ResearchStationCapture
   return {benchIds:sorted(facts.benches.map(bench=>bench.id)),issues,
     // Selection admission intentionally keeps retirement distinct from usage.
     vitalsMonitorAvailable:admitted(world,'vitals-monitor')&&!researchPrerequisite(world,'vitals-monitor')
-      &&world.structures.some(bench=>researchStationUsable(world,bench,'vitals-monitor'))};
+      &&world.structures.some(bench=>knownBuilding256(world,bench)&&researchStationUsable(world,bench,'vitals-monitor'))};
 }
 /** Confirmed facts only. Assignment is not a promise of accessible work.
  * Without the optional panel capture, only the inspected/active project and
@@ -95,7 +97,7 @@ export function readResearchReadiness(world:World,inspectedProject?:ResearchProj
   const benchIds=stationCapture?.benchIds??sorted(facts!.benches.map(bench=>bench.id));
   const benchSet=new Set(benchIds);
   const vitalsAvailable=()=>stationCapture?stationCapture.vitalsMonitorAvailable
-    :world.structures.some(bench=>researchStationUsable(world,bench,'vitals-monitor'));
+    :world.structures.some(bench=>knownBuilding256(world,bench)&&researchStationUsable(world,bench,'vitals-monitor'));
   let remainingCount=0,availableCount=0;
   for(const candidate of researchProjects){
     if(!admitted(world,candidate.id)||researchUnlocked(world,candidate.id))continue;

@@ -1,3 +1,5 @@
+import {groupAnimalChoices256} from '../sim/group-animal-formation-256';
+import {groupBedrollChoices256} from '../sim/group-bedroll-loading-256';
 import {groupMemberChoices,groupSourceChoices,previewGroupFormation,groupRoutePreview,groupPermission,groupTradeQuote} from '../sim/group-authority.ts';
 import {groupWorld,groupEntryActions} from '../sim/world-map-authority.ts';
 import {SimulationRequestError} from '../bridge/protocol.ts';
@@ -20,13 +22,15 @@ export function createGroupAdapters(options:{
  blocked:()=>string|undefined;
  send:GroupPanelAdapters['send'];
  inspectPresentPawn?:GroupPanelAdapters['inspectPresentPawn'];
+ pauseForReorganization?:GroupPanelAdapters['pauseForReorganization'];
 }):GroupPanelAdapters {
  return {
-  capture({world}){return {...groupPermission(world),candidates:groupMemberChoices(world),sources:groupSourceChoices(world)};},
-  previewPlan({world},_facts,{memberIds,sources,destination}){return previewGroupFormation(world,memberIds,sources,destination);},
+  capture({world}){return {...groupPermission(world),candidates:groupMemberChoices(world),sources:groupSourceChoices(world),animals:groupAnimalChoices256(world),bedrolls:groupBedrollChoices256(world)};},
+  previewPlan({world},_facts,{memberIds,sources,destination,packedIds,animalIds}){return previewGroupFormation(world,memberIds,sources,destination,packedIds,animalIds);},
   previewRoute({world},_facts,destination){return groupRoutePreview(world,destination);},
   quoteTrade({world},_facts,direction,lines){return groupTradeQuote(world,direction,lines);},
   send(command){const blocked=options.blocked();if(blocked)return Promise.reject(new SimulationRequestError(blocked,'refused'));return options.send(command);},
   inspectPresentPawn:options.inspectPresentPawn,
+  pauseForReorganization:options.pauseForReorganization,
  };
 }

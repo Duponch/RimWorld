@@ -12,8 +12,9 @@ export function tundraHistoricalFieldsAbsent(raw:unknown,version:number):boolean
 }
 /** Shared RAW/full/delta gate on the fully reconstructed candidate. Other
  * biomes retain their existing admission path; no recomputation or adoption. */
-export function validTundraTransport(w:World,version:number):boolean {
+export function validTundraTransport(w:World,version:number,capturedCalendarOrigin?:number):boolean {
  if(!tundraHistoricalFieldsAbsent(w,version))return false;
- if(w.site?.biome!=='tundra')return w.flora?.biome!=='tundra'&&!(w.climate?.revision===1&&w.climate.profile==='tundra-preset');
+ if(w.site?.revision===3)return version>=256&&w.snow!==undefined&&w.climate?.revision===4&&validSite(w.site,version,w.scenario,w.expeditionSite!==undefined)&&validateWildFlora(w,version)&&validSiteClimate(w.climate,version,w,capturedCalendarOrigin);
+ if(w.site?.biome!=='tundra')return !(w.flora?.revision===1&&w.flora.biome==='tundra')&&!(w.climate?.revision===1&&w.climate.profile==='tundra-preset');
  return version>=239&&w.site.revision===2&&w.snow!==undefined&&w.climate!==undefined&&validSite(w.site,version,w.scenario,w.expeditionSite!==undefined)&&validateWildFlora(w,version)&&validSiteClimate(w.climate,version,w);
 }

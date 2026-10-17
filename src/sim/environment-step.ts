@@ -1,3 +1,4 @@
+import {advanceActualWildFlora256} from './wild-plant-actual-runtime-256.ts';
 import { adoptSiteClimate,siteClimateDefinition } from './site-climate.ts';
 import { adoptWeather,advanceWeather,weatherRainRate } from './weather.ts';
 import { adoptWind,advanceWind } from './wind.ts';
@@ -12,6 +13,7 @@ import { advanceFlashstorm } from './flashstorm.ts';
 import type { ThermalLayout } from './thermal-topology.ts';
 import type { Cell,World } from './types.ts';
 import {stepSnowSurface} from './snow-surface.ts';
+import {advanceLocalGeysers256} from './local-geyser-runtime-256.ts';
 import { advanceWildFlora } from './wild-flora.ts';
 
 /** One explicit adoption, without replaying weather or exposure in old saves. */
@@ -36,6 +38,7 @@ const lightCaches=new WeakMap<World,LightEnvironmentCache>();
 export function advanceSurfaceTemperature(world:World,layout:ThermalLayout,providedLight?:LightReader):ThermalLayout {
   const light=providedLight??(()=>{let cache=lightCaches.get(world);if(!cache){cache=new LightEnvironmentCache();lightCaches.set(world,cache);}return cache.read(world);});
   advanceTemperature(world,layout);
+  advanceLocalGeysers256(world,layout);
   const before=world.structures;
   if(world.fires)advanceFires(world,{rainRate:weatherRainRate(world)},layout);
   if(before!==world.structures)layout=reconcileTemperature(world);
@@ -43,6 +46,6 @@ export function advanceSurfaceTemperature(world:World,layout:ThermalLayout,provi
   updatePlantTemperatures(world,layout);
   if(world.climate)advancePlantLife(world,layout,light);
   stepSnowSurface(world,layout);
-  advanceWildFlora(world);
+  if(world.site?.revision===3)advanceActualWildFlora256(world);else advanceWildFlora(world);
   return layout;
 }

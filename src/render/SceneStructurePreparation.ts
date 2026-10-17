@@ -8,7 +8,7 @@ type Capture = { id:number; kind:Structure['kind']; x:number; z:number; effect:b
 const effectKinds=new Set<string>(['electric-crematorium','electric-smelter','mini-turret','autodoor','machining-table','fabrication-bench','electric-stove',
   'fueled-stove','hi-tech-research-bench','multi-analyzer','battery','biofuel-refinery','chemfuel-generator',
   'wood-generator','campfire','torch-lamp']);
-const effect=(s:Structure)=>effectKinds.has(s.kind)||!!s.breakdown||!!s.emp;
+const effect=(s:Structure)=>effectKinds.has(s.kind)||!!s.casketWick||!!s.breakdown||!!s.emp;
 const capture=(s:Structure):Capture=>({id:s.id,kind:s.kind,x:s.x,z:s.z,effect:effect(s)});
 
 /** Projection owned by the closed MAIN renderer, never an admission capability.

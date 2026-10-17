@@ -3,7 +3,7 @@ import type { Cell, World } from './types.ts';
 /** These values have ONE authority for the whole campaign. A map context has
  * forwarding accessors, never a copied random stream or identity allocator. */
 export const CAMPAIGN_FIELDS = [
-  'schemaVersion','tick','rng','nextId','planet','research','relationships',
+  'schemaVersion','tick','rng','nextId','planet','worldFactions','worldPawns','research','relationships',
   'foodPolicies','nextFoodPolicyId','apparelPolicies','nextApparelPolicyId',
   'foodRules','restRules','gameProfile','worldIncidents',
 ] as const satisfies readonly (keyof World)[];

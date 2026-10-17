@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import {expect,test,vi} from 'vitest';
 import {applyCommand,stepWorld,serializeWorld,deserializeWorld,validateWorld} from '../src/sim/index.ts';
 import {prepareGroupScenario} from '../src/sim/group-scenario.ts';
@@ -67,7 +68,7 @@ test('destroying an unserved source cancels gathering or loading at the tick bou
     const w=prepareGroupScenario(),members=w.pawns.slice(0,2),food=w.piles.filter(p=>p.item==='survival-meal'),cloth=w.piles.find(p=>p.item==='cloth')!;
     const sources=[...food.map(p=>({pileId:p.id,quantity:4})),{pileId:cloth.id,quantity:60}];
     expect(applyCommand(w,{type:'planet-adopt'}).ok).toBe(true);
-    expect(applyCommand(w,{type:'group-start',memberIds:members.map(p=>p.id),sources,destination:w.planet!.civilianTile}).ok).toBe(true);
+    expect(applyCommand(w,{type:'group-start',memberIds:members.map(p=>p.id),sources,destination:legacyPlanet(w).civilianTile}).ok).toBe(true);
     if(phase==='loading'){
       for(let i=0;i<800&&!(w.group&&'cursor' in w.group&&w.group.cursor===1);i++)stepWorld(w);
       expect(w.group).toMatchObject({phase:'loading',cursor:1});

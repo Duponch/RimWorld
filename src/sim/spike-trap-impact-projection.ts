@@ -1,3 +1,5 @@
+import {validBombWaveShape} from './bomb-state.ts';
+import {validAnimalDeathExplosionOwner256} from './animal-death-provenance-v256.ts';
 import { captureHumanOwners } from './human-owners.ts';
 import type { World } from './types.ts';
 
@@ -22,7 +24,8 @@ export function spikeTrapImpactProjection(world:World){
   };
   const view:World={...world,pawns:world.pawns.map(clone),piles:world.piles.map(clone),
     jobs:world.jobs.map(j=>j.reservedBy===null?j:clone(j)),packed:world.packed.map(p=>p.owner.type==='pawn'?clone(p):p),events:[...world.events]};
-  if(world.wildlife)view.wildlife={...world.wildlife,animals:world.wildlife.animals.map(clone)};
+  if(world.wildlife)view.wildlife={...world.wildlife,...world.wildlife.hiveLords?{hiveLords:structuredClone(world.wildlife.hiveLords)}:{},animals:world.wildlife.animals.map(clone)};
+  view.structures=world.structures.map(s=>s.caveHive?clone(s):s);
   if(world.mechanoids)view.mechanoids=world.mechanoids.map(clone);
   // Death memories also belong to actual off-map living owners. Never create
   // a synthetic owner or overwrite a trip/container when adopting a memory.
@@ -32,7 +35,7 @@ export function spikeTrapImpactProjection(world:World){
   captureHumanOwners(view); // Owner/clock failures happen before any real write.
   if(world.economy)view.economy=structuredClone(world.economy);
   if(world.raids)view.raids={...world.raids,...world.raids.mechActive?{mechActive:structuredClone(world.raids.mechActive)}:{}};
-  const roots=['pawns','piles','jobs','packed','wildlife','mechanoids','structures','resources','tiles','events','economy','raids','destroyed','scout','commercialTrip','group'] as const;
+  const roots=['pawns','piles','jobs','packed','wildlife','mechanoids','structures','resources','tiles','events','economy','raids','destroyed','scout','commercialTrip','group','bombWaves','thermal'] as const;
   const refs=roots.map(key=>[key,world[key]] as const);
   const nextId=world.nextId,schemaVersion=world.schemaVersion;
   const collections=[world.pawns,world.piles,world.jobs,world.packed,world.wildlife?.animals,world.mechanoids,
@@ -41,14 +44,19 @@ export function spikeTrapImpactProjection(world:World){
   // Capacity/claims may be read on every nearby cell during involuntary drops.
   // Keep snapshots of those dependencies without cloning the map geometry.
   const dependencies=[world.pawns,world.piles,world.jobs,world.packed,world.wildlife?.animals,world.mechanoids,
-    world.economy,world.raids?.mechActive,world.destroyed];
+    world.economy,world.raids?.mechActive,world.destroyed,world.bombWaves,world.thermal,world.wildlife?.hiveLords];
   const before=dependencies.map(encoded);
   return {view,finish:()=>{
     const patches:Patch[]=pairs.filter(p=>encoded(p.draft)!==p.before).map(p=>({...p,after:p.draft}));
     const originalIds=new Set(world.piles.map(p=>p.id)),draftIds=new Set(view.piles.map(p=>p.id));
     const removedPiles=world.piles.filter(p=>!draftIds.has(p.id));
-    // These producers may remove garments, but never create a Thing or job.
-    if(view.piles.some(p=>!originalIds.has(p.id))||view.nextId!==world.nextId)throw new RangeError('Spike impact allocated a Thing');
+    // Only a true new256 clinical animal death may allocate a Flame wave.
+    // No new pile/job/person is accepted by this retained impact transaction.
+    const priorWaves=world.bombWaves??[],draftWaves=view.bombWaves??[],newWaves=draftWaves.slice(priorWaves.length);
+    if(view.piles.some(p=>!originalIds.has(p.id))||priorWaves.some((wave,index)=>draftWaves[index]!==wave)
+      ||view.nextId!==world.nextId+newWaves.length||newWaves.some((wave,index)=>world.schemaVersion<256||wave.id!==world.nextId+index||!wave.animalDeath||!validBombWaveShape(wave,world.schemaVersion)||!validAnimalDeathExplosionOwner256(view,wave)))throw new RangeError('Spike impact allocated an unauthorised Thing');
+    const wavesChanged=newWaves.length>0,thermalChanged=encoded(view.thermal)!==encoded(world.thermal);
+    const hiveLordsChanged=encoded(view.wildlife?.hiveLords)!==encoded(world.wildlife?.hiveLords);
     const eventsChanged=encoded(view.events)!==encoded(world.events);
     const economyChanged=encoded(view.economy)!==encoded(world.economy);
     const groupChanged=encoded(view.raids?.mechActive)!==encoded(world.raids?.mechActive);
@@ -62,10 +70,13 @@ export function spikeTrapImpactProjection(world:World){
       used=true;
       for(const p of patches)replace(p.original,p.after);
       for(const p of removedPiles){const i=world.piles.indexOf(p);if(i>=0)world.piles.splice(i,1);}
+      if(hiveLordsChanged&&world.wildlife)world.wildlife.hiveLords=view.wildlife?.hiveLords;
       if(eventsChanged)world.events.splice(0,world.events.length,...view.events);
       if(economyChanged)world.economy=view.economy;
       if(groupChanged&&world.raids)world.raids.mechActive=view.raids?.mechActive;
       if(destroyedChanged)world.destroyed=view.destroyed;
+      if(wavesChanged){world.bombWaves=view.bombWaves;world.nextId=view.nextId;}
+      if(thermalChanged){if(view.thermal)world.thermal=view.thermal;else delete world.thermal;}
       return true;
     }};
   }};

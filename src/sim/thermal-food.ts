@@ -1,3 +1,4 @@
+import {animalContentsLocation256} from './animal-local-contents-256.ts';
 import { rotAge, rotRateAtTemperature } from './food-preservation.ts';
 import { TemperatureView } from './temperature.ts';
 import { pawnContentsLocation,updateHumanCorpseTemperatures } from './human-corpses.ts';
@@ -13,8 +14,8 @@ export function updateFoodTemperatures(world:World,layout?:ThermalLayout):void {
   for(const pile of world.piles)if(pile.rot) {
     if(pile.humanCorpse)continue;
     const o=pile.owner,owner='pawnId' in o?pawns.get(o.pawnId):undefined;
-    const contents=owner?.body?pawnContentsLocation(world,owner):null;
-    const cell=o.type==='ground'?o:owner?(contents?.cell??(owner.body?null:owner)):o.type==='job'?jobs.get(o.jobId):null;
+    const contents=owner?.body?pawnContentsLocation(world,owner):!owner&&o.type==='inventory'&&world.schemaVersion>=256?animalContentsLocation256(world,o.pawnId):null;
+    const cell=o.type==='ground'?o:owner?(contents?.cell??(owner.body?null:owner)):contents?.cell??(o.type==='job'?jobs.get(o.jobId):null);
     if(!cell)continue;
     const rate=contents?.suspended?0:rotRateAtTemperature(view.at(world,cell));
     if(rate===(pile.rot.rate??1))continue;

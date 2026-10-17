@@ -1,4 +1,6 @@
-import { BODY_PARTS,type BodyPartId } from './body-definition.ts';
+import {medicalModel} from './body-model.ts';
+import {animalConditionCareTargets256,animalConditionMedicalRest256} from './animal-condition-care-256.ts';
+import { type BodyPartId } from './body-definition.ts';
 import { pawnBody } from './health-rules.ts';
 import { freshMissing,injuryBleed,medicalBleed } from './injury-state.ts';
 import { BLOOD_UNIT,HP_UNIT,PART_INJURY_RULES } from './injury-rules.ts';
@@ -11,16 +13,16 @@ import { immuneDiseaseTargets,immuneDiseasesNeedRest } from './immune-diseases-s
 import type { ImmuneDiseaseKind } from './immune-diseases-types.ts';
 
 export interface TendTask { drafted?:true; patientId:number; spot:Cell; phase:'find-medicine'|'pickup'|'approach'|'tend'; progress:number; duration?:number; urgent?:true; useMedicine?:true; medicine?:TendMedicine }
-export type TreatmentTarget={injuryId:number;part?:never;infectionId?:never;flu?:never;disease?:never}|{part:BodyPartId;injuryId?:never;infectionId?:never;flu?:never;disease?:never}|{infectionId:number;injuryId?:never;part?:never;flu?:never;disease?:never}|{flu:true;injuryId?:never;part?:never;infectionId?:never;disease?:never}|{disease:ImmuneDiseaseKind;injuryId?:never;part?:never;infectionId?:never;flu?:never};
+export type TreatmentTarget={animalConditionId:number;injuryId?:never;part?:never;infectionId?:never;flu?:never;disease?:never}|{injuryId:number;part?:never;infectionId?:never;flu?:never;disease?:never}|{part:BodyPartId;injuryId?:never;infectionId?:never;flu?:never;disease?:never}|{infectionId:number;injuryId?:never;part?:never;flu?:never;disease?:never}|{flu:true;injuryId?:never;part?:never;infectionId?:never;disease?:never}|{disease:ImmuneDiseaseKind;injuryId?:never;part?:never;infectionId?:never;flu?:never};
 export type RankedTreatment=TreatmentTarget&{priority:number;severity:number};
 export function treatmentTargets(p:Pawn):RankedTreatment[] {
   const h=p.health;if(!h||h.death||medicalCare(p)==='none')return [];
   const list:RankedTreatment[]=[];
   for(const i of h.injuries)if(i.tended===undefined&&i.scar?.pain===undefined)list.push({injuryId:i.id,priority:injuryBleed(h,i)*1.5,severity:i.severity});
-  for(const m of h.missing)if(freshMissing(h,m))list.push({part:m.part,priority:BODY_PARTS[m.part].hp*.12*PART_INJURY_RULES[m.part].bleed*1.5,severity:HP_UNIT});
+  for(const m of h.missing)if(freshMissing(h,m))list.push({part:m.part,priority:medicalModel(h).byId[m.part].hp*.12*PART_INJURY_RULES[m.part].bleed*1.5,severity:HP_UNIT});
   if(h.infections)for(const t of infectionTargets(h))list.push({infectionId:t.infectionId,priority:t.priority,severity:t.severity});
   if(fluTendable(h))list.push({flu:true,priority:h.flu!.severity>=833_000_000?1:.025,severity:h.flu!.severity/FLU_UNIT*1000});
-  list.push(...immuneDiseaseTargets(h));
+  list.push(...immuneDiseaseTargets(h),...animalConditionCareTargets256(h));
   return list.sort((a,b)=>b.priority-a.priority||b.severity-a.severity);
 }
 /** One medicine treats the first injury even above 20 HP, then fits later
@@ -45,14 +47,15 @@ export function treatmentTarget(p:Pawn):TreatmentTarget|undefined {
     if(!best||priority>best.priority||priority===best.priority&&severity>best.severity)best={target,priority,severity};
   };
   for(const i of h.injuries)if(i.tended===undefined&&i.scar?.pain===undefined)consider({injuryId:i.id},injuryBleed(h,i)*1.5,i.severity);
-  for(const m of h.missing)if(freshMissing(h,m))consider({part:m.part},BODY_PARTS[m.part].hp*.12*PART_INJURY_RULES[m.part].bleed*1.5,HP_UNIT);
+  for(const m of h.missing)if(freshMissing(h,m))consider({part:m.part},medicalModel(h).byId[m.part].hp*.12*PART_INJURY_RULES[m.part].bleed*1.5,HP_UNIT);
   if(h.infections)for(const t of infectionTargets(h))consider({infectionId:t.infectionId},t.priority,t.severity);
   if(fluTendable(h))consider({flu:true},h.flu!.severity>=833_000_000?1:.025,h.flu!.severity/FLU_UNIT*1000);
   for(const t of immuneDiseaseTargets(h))consider({disease:t.disease},t.priority,t.severity);
+  for(const t of animalConditionCareTargets256(h))consider({animalConditionId:t.animalConditionId},t.priority,t.severity);
   return best?.target;
 }
 export const healingInjury=(p:Pawn):boolean=>!!p.health?.injuries.some(i=>i.tended!==undefined&&i.scar?.pain===undefined);
-export const medicalRestNeeded=(p:Pawn):boolean=>healingInjury(p)||!!p.health&&(infectionNeedsRest(p.health)||fluNeedsRest(p.health)||immuneDiseasesNeedRest(p.health));
+export const medicalRestNeeded=(p:Pawn):boolean=>healingInjury(p)||!!p.health&&(infectionNeedsRest(p.health)||fluNeedsRest(p.health)||immuneDiseasesNeedRest(p.health)||animalConditionMedicalRest256(p.health));
 export const urgentTreatment=(p:Pawn):boolean=>!!treatmentTarget(p)&&!!p.health&&medicalBleed(p.health)>0&&(1-p.health.bloodLoss/BLOOD_UNIT)/medicalBleed(p.health)<.75;
 export function medicalTendSpeed(p:Pawn,light=1):number {
   const c=pawnBody(p).capacities;

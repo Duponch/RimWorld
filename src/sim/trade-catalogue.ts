@@ -20,6 +20,7 @@ function gear(baseMarketValue:number,maxHitPoints:number,visitorHandles:boolean,
 }
 export const TRADE_CATALOGUE:Readonly<Partial<Record<ItemId,TradeCatalogueEntry>>>=Object.freeze({
   pemmican:value(1.4),
+  jade:value(5,false,{playerCanBuy:false,playerCanSell:false}),
   silver:value(1,true),wood:value(1.2),steel:value(1.9),gold:value(10),uranium:value(6),plasteel:value(9),cloth:value(1.5,true),'light-leather':value(1.9),'muffalo-wool':value(2.7),component:value(32,true),'advanced-component':value(200),
   'herbal-medicine':value(10),medicine:value(18,true),'glitterworld-medicine':value(50),
   chemfuel:value(2.3,false,{playerCanBuy:false,playerCanSell:false}),neutroamine:value(6),

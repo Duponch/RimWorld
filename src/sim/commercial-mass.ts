@@ -1,3 +1,5 @@
+import {ANIMAL_ITEM_MASS_GRAMS_256,isAnimalItem256} from './animal-items-v256.ts';
+import {isCoreStartingApparel256} from './starting-gear-256.ts';
 import {physicalTravelUnitMass} from './tree-transfer-mass.ts';
 import {SCHEMA_VERSION} from './types.ts';
 import { apparelFamily,isApparelItem } from './apparel-rules.ts';
@@ -9,13 +11,18 @@ export interface CommercialMass {grams:number;capacityGrams:number}
 const FIXED:Readonly<Partial<Record<ItemId,number>>>=Object.freeze({
   pemmican:18,hay:14,kibble:15,chemfuel:50,'nutrient-paste-meal':440,silver:8,'survival-meal':300,medicine:500,neutroamine:20,component:600,cloth:26,'muffalo-wool':28,
   revolver:1400,'bolt-action-rifle':3500,'plasteel-knife':500,'emp-launcher':3400,
-  'flak-vest':4000,'flak-helmet':1200,'recon-helmet':1000,'recon-armor':9000,uranium:1000,
+  'flak-vest':4000,'flak-helmet':1200,'flak-pants':4000,'plasteel-flak-helmet':1200,'recon-helmet':1000,'recon-armor':9000,uranium:1000,
 });
 const TEXTILE=Object.freeze({tribalwear:500,shirt:300,pants:500,duster:2000,parka:2000,tuque:70});
 
 /** The delivered shirt is Core's CollarShirt, not the lighter BasicShirt.
  * Quality, HP and the seven represented stuffs do not alter these masses. */
 export function commercialItemMassGrams(item:ItemId,version:number=SCHEMA_VERSION):number|undefined {
+  if(version<256&&isCoreStartingApparel256(item))return undefined;
+  if(item==='jade')return version>=256?500:undefined;
+  if(item==='slag-steel-chunk')return version>=256?8000:undefined;
+  if(item==='raw-fungus')return version>=256?30:undefined;
+  if(isAnimalItem256(item))return version>=256?(ANIMAL_ITEM_MASS_GRAMS_256 as Readonly<Partial<Record<ItemId,number>>>)[item]:undefined;
   if(item==='pemmican'&&version<248)return undefined;
   if(item==='minified-tree')return version>=235?150000:undefined;if(item==='wood')return version>=235?400:undefined;
   if(item.endsWith('-tuque')&&version<245)return undefined;

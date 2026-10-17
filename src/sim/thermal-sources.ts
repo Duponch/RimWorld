@@ -13,6 +13,10 @@ export function applyThermalSources(world:World,layout:ThermalLayout):void {
   for(const source of world.structures) {
     if(source.kind==='heater'){applyHeaterHeat(world,source,layout);continue;}
     if(!regions)continue;
+    if(source.kind==='insect-hive') {
+      const id=layout.indices[source.z*world.width+source.x]!;if(id<0)continue;
+      const room=regions[id]!;if(room.temperature<38)room.temperature=Math.min(38,room.temperature+6/6/room.cells.length);continue;
+    }
     if(source.kind==='sun-lamp') {
       if(!sunLampActive(world,source))continue;
       const id=layout.indices[source.z*world.width+source.x]!;if(id<0)continue;

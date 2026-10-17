@@ -1,3 +1,7 @@
+import {advanceToxicBuildupCore256} from './toxic-buildup-256.ts';
+import {animalClinicalRandom256} from './animal-condition-medical-frontier-256.ts';
+import type {AnimalConditionMedicalFrontier256} from './animal-condition-medical-frontier-256.ts';
+import {advanceCryptosleepSickness256,cryptosleepSick256} from './cryptosleep-sickness-256.ts';
 import { medicalModel } from './body-model.ts';
 import { BLOOD_UNIT,HEAL_INTERVAL,MEDICAL_INTERVAL,bloodStage } from './injury-rules.ts';
 import { medicalBleedUnits,reconcileMedicalDeath,rollScarPain } from './injury-state.ts';
@@ -21,7 +25,7 @@ function chosen(list:Injury[],random:MedicalRandom):Injury {return list[Math.flo
 /** Physiological time only. Context is constant over this call; the World adapter
  * must split at hunger/posture changes and handle downing/death at their tick.
  * Mutates its owned record; snapshots and the PRNG remain the caller's concern. */
-export function advanceMedical(record:MedicalRecord,ticks:number,context:MedicalContext,random:MedicalRandom):void {
+export function advanceMedical(record:MedicalRecord,ticks:number,context:MedicalContext,random:MedicalRandom,animalConditions?:AnimalConditionMedicalFrontier256):void {
   if(!Number.isSafeInteger(ticks)||ticks<0||ticks>100000||!Number.isSafeInteger(record.tick+ticks)||
     !Number.isInteger(context.phase)||context.phase<0||context.phase>=HEAL_INTERVAL||
     !['standing','ground','bed'].includes(context.posture)||typeof context.starving!=='boolean'||
@@ -32,16 +36,28 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
     context.infectionSeed!==undefined&&(!Number.isInteger(context.infectionSeed)||context.infectionSeed<0||context.infectionSeed>0xffffffff)||
     context.ageImmunityFactor!==undefined&&(!Number.isFinite(context.ageImmunityFactor)||context.ageImmunityFactor<.5||context.ageImmunityFactor>1)||
     context.bedHealPerDay!==undefined&&context.bedHealPerDay!==0&&context.bedHealPerDay!==4&&context.bedHealPerDay!==10||
-    context.bedImmunityFactor!==undefined&&context.bedImmunityFactor!==1&&context.bedImmunityFactor!==1.07&&context.bedImmunityFactor!==1.11&&context.bedImmunityFactor!==1.13)throw new Error('Invalid medical interval');
+    context.bedImmunityFactor!==undefined&&context.bedImmunityFactor!==1&&context.bedImmunityFactor!==1.05&&context.bedImmunityFactor!==1.07&&context.bedImmunityFactor!==1.11&&context.bedImmunityFactor!==1.13)throw new Error('Invalid medical interval');
   if(record.death||isMechanoidKind(record.body))return;
+  if(record.toxicBuildup&&(!context.toxicOwner||!Number.isSafeInteger(context.toxicOwner.id)||context.toxicOwner.id<1||typeof context.toxicOwner.spawned!=='boolean'||typeof context.toxicOwner.awake!=='boolean'))throw Error('Toxic clinical interval requires its actual original owner');
+  if(record.animalAgeConditions&&!animalConditions)throw Error('Actual conditions require the real owner frontier');
+  if(record.cryptosleepSickness&&typeof context.cryptosleepSicknessSpawned!=='boolean')throw Error('Missing actual cryptosleep sickness physical owner');
   const pending=record.injuries.filter(i=>i.infection&&i.infection.dueCore<=(record.tick+ticks)*10).length;
   if(pending&&!Number.isSafeInteger((record.infections?.nextId??1)+pending))throw new Error('Infection identities exhausted');
   if((record.infections?.cases.length||pending)&&!Number.isSafeInteger((record.tick+ticks)*10))throw new Error('Infection clock exhausted');
   if(record.immuneDiseases&&!Number.isSafeInteger((record.tick+ticks)*10))throw new Error('Immune disease clock exhausted');
-  if(!record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.infections?.cases.length&&!record.infections?.immunity&&!record.foodPoisoning&&!record.flu&&!record.immuneDiseases&&!record.anesthetic&&!(context.malnutritionRate&&(context.starving||record.malnutrition))){record.tick+=ticks;return;}
+  if(!animalConditions&&!record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.infections?.cases.length&&!record.infections?.immunity&&!record.foodPoisoning&&!record.toxicBuildup&&!record.cryptosleepSickness&&!record.flu&&!record.immuneDiseases&&!record.anesthetic&&!(context.malnutritionRate&&(context.starving||record.malnutrition))){record.tick+=ticks;return;}
   const end=record.tick+ticks;
   while(record.tick<end) {
     record.tick++;
+    if(record.cryptosleepSickness){
+      const sickness=record.cryptosleepSickness;
+      // Hediff tests MTB before Spawned/Awake. A non-spawned owner consumes
+      // its trial but never receives a spatial job through a fabricated map.
+      if(!context.cryptosleepSicknessSpawned&&cryptosleepSick256(sickness)&&record.tick%60===context.phase%60)random();
+      if(!advanceCryptosleepSickness256(sickness,10))delete record.cryptosleepSickness;
+    }
+    animalConditions?.step(record);if(record.death)return;
+    if(record.toxicBuildup){const actual=context.toxicOwner!,draw=animalClinicalRandom256(random);for(let core=(record.tick-1)*10+1;core<=record.tick*10&&!record.death;core++){advanceToxicBuildupCore256(record,actual.id,core,draw,actual);reconcileMedicalDeath(record);}if(record.death)return;}
     if(advanceAnesthetic(record,context.phase)){reconcileMedicalDeath(record);if(record.death)return;}
     if(record.foodPoisoning){
       const previous=record.foodPoisoning.severity;

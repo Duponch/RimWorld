@@ -1,3 +1,4 @@
+import {type BuildableFixtureKind} from './helpers/legacy-fixture-guards.ts';
 import { writeTestFileSync } from './test-output.ts';
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
@@ -28,7 +29,7 @@ const accept = (world: World, command: Command) => {
   expect(result, JSON.stringify(command)).toMatchObject({ ok: true });
 };
 
-type Target = { type: 'designate'; kind: StructureKind; material: 'wood'; x: number; z: number; orientation: 0 };
+type Target = { type: 'designate'; kind: BuildableFixtureKind; material: 'wood'; x: number; z: number; orientation: 0 };
 type TargetMap = Partial<Record<'tailor' | 'table' | 'pot' | 'endTable' | 'dresser' | 'chair', Target>>;
 interface Observation { tick: number; living: number; food: number; lightLeather: number; apparel: number; sowed: number; cooked: number; treated: number; diningTables: number; raids: number }
 interface Checkpoint {
@@ -76,7 +77,7 @@ function acquireLeather(world: World, journal: Checkpoint['journal']): void {
   accept(world, hunt); journal.push({ tick: world.tick, command: hunt });
 }
 
-function siteNear(world: World, kind: StructureKind, anchor: Cell): Target {
+function siteNear(world: World, kind: BuildableFixtureKind, anchor: Cell): Target {
   for (let radius = 2; radius <= 40; radius++) {
     for (let dz = -radius; dz <= radius; dz++) for (let dx = -radius; dx <= radius; dx++) {
       if (Math.max(Math.abs(dx), Math.abs(dz)) !== radius) continue;
@@ -164,7 +165,7 @@ test('V90 natural colony continuation: furniture, flower pot and leather apparel
     writeTestFileSync('tmp/habitat-apparel-natural-v90-progress.json', JSON.stringify({ protocol: 'habitat-apparel-natural-v90', startTick: start, horizon, observations }, null, 2));
   };
 
-  const ensure = (key: keyof TargetMap, kind: StructureKind, anchor: Cell) => {
+  const ensure = (key: keyof TargetMap, kind: BuildableFixtureKind, anchor: Cell) => {
     let target = targets[key] ?? (targets[key] = siteNear(world, kind, anchor));
     const blockedPlan = world.jobs.find(job => job.kind === target.kind && sameCell(job, target)
       && job.construction === 'blueprint' && job.reservedBy === null && job.progress === 0

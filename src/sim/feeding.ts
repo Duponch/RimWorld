@@ -1,3 +1,4 @@
+import {eggAllowedForPlayer256} from './animal-egg-permission-v256.ts';
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { workPriority } from './work-types.ts';
 import { bedsideAccess } from './care-access.ts';
@@ -66,7 +67,7 @@ export function processFeeding(world:World,doctor:Pawn,context:NeedContext):void
   const food=world.piles.find(p=>p.id===(t.phase==='pickup'?t.sourcePileId:t.carryPileId));
   if(!food||food.kind!=='food'){interruptWork(world,doctor);return;}
   if(t.phase==='pickup'){
-    if(food.owner.type!=='ground'||reservedSource(world,food.id)>food.quantity){interruptWork(world,doctor);return;}
+    if(!eggAllowedForPlayer256(food)||food.owner.type!=='ground'||reservedSource(world,food.id)>food.quantity){interruptWork(world,doctor);return;}
     if((doctor.x!==food.owner.x||doctor.z!==food.owner.z)&&!adjacent(doctor,food.owner)){context.move(food.owner,false);return;}
     if(food.quantity===t.quantity){food.owner={type:'pawn',pawnId:doctor.id};t.carryPileId=food.id;}
     else {
@@ -76,6 +77,7 @@ export function processFeeding(world:World,doctor:Pawn,context:NeedContext):void
     }
     t.phase='deliver';doctor.path=[];doctor.state='moving';return;
   }
+  if(!eggAllowedForPlayer256(food)){interruptWork(world,doctor);return;}
   if(food.owner.type!=='pawn'||food.owner.pawnId!==doctor.id||food.quantity!==t.quantity){interruptWork(world,doctor);return;}
   if(t.phase==='collect'){
     doctor.path=[];doctor.state='moving';

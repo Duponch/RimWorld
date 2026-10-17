@@ -1,6 +1,14 @@
+import {damageCaveHiveProp256} from './cave-hive-damage-256.ts';
+import {setMaterialForbidden256} from './material-permission-256.ts';
+import {damageEmptyAncientCasket256} from './ancient-casket-empty-removal-256.ts';
+import {isAncientCasket256} from './ancient-casket-state-256.ts';
+import {ancientCasketRemovalRefusal256} from './ancient-casket-physical-256.ts';
+import {commitGraveRelease} from './burial.ts';
+import {planAnimalBodyRetirement256} from './animal-body-retirement-256.ts';
 import {isDeteriorationItem} from './deterioration-content.ts';
 import {destroyMinifiedTree} from './tree-transfer.ts';
 import {commitShelfRemoval} from './shelf-retirement.ts';
+import {prepareRemovedFogStructure256,commitRemovedFogBlocker256} from './exploration-runtime-256.ts';
 import {removeHydroponicPlants} from './hydroponics.ts';
 import {rebuildSpikeTrap} from './spike-trap-rebuild.ts';
 import {detachMissingFlakBills} from './flak-work.ts';
@@ -16,6 +24,7 @@ import { interruptWork,hasTravellingCargo } from './interrupted-cargo.ts';
 import { commitDrop,releaseAssignments } from './work-release.ts';
 import { releaseFurniture } from './furniture-transfer.ts';
 import { planStructureDestruction } from './thing-destruction.ts';
+import {prepareBedOwnershipTransition256} from './actor-bed-transition-256.ts';
 import { reconcileRoofSupport } from './roofing.ts';
 import { reconcilePower } from './power.ts';
 import { detachMissingBills } from './unfinished.ts';
@@ -31,9 +40,9 @@ export { pileDamage,pileMaxHp,resourceMaxHp,structureMaxHp,copyThingDamage,merge
 const positive=(n:number)=>Number.isSafeInteger(n)&&n>0;
 const addSafe=(a:number,b:number)=>Number.isSafeInteger(a+b);
 const at=(a:{x:number;z:number},b:{x:number;z:number})=>a.x===b.x&&a.z===b.z;
-function removeJobs(world:World,ids:Set<number>):void {
+function removeJobs(world:World,ids:Set<number>,retainTravellingCargo=false):void {
   if(!ids.size)return;
-  for(const p of world.pawns)if(p.jobId!==null&&ids.has(p.jobId))interruptWork(world,p);
+  for(const p of world.pawns)if(p.jobId!==null&&ids.has(p.jobId))interruptWork(world,p,retainTravellingCargo);
   for(const p of world.pawns)p.orders.queue=p.orders.queue.filter(o=>typeof o!=='number'||!ids.has(o));
   world.jobs=world.jobs.filter(j=>!ids.has(j.id));
 }
@@ -43,16 +52,16 @@ export function cancelResourceHarvests(world:World,resource:Resource):void {
   removeJobs(world,new Set(world.jobs.filter(job=>job.kind==='harvest'&&at(job,resource)).map(job=>job.id)));
 }
 /** Shared destructive plant boundary; the cause never creates a harvest. */
-export function damageResource(world:World,r:Resource,amount:number,reason:'fire'|'frost'|'darkness'|'age'|'bullet'|'bomb'|'rotting'|'blight'='fire'):boolean {
+export function damageResource(world:World,r:Resource,amount:number,reason:'fire'|'frost'|'darkness'|'age'|'bullet'|'bomb'|'rotting'|'blight'|'roof'='fire'):boolean {
   const max=resourceMaxHp(r);if(!max||!positive(amount)||!world.resources.includes(r))return false;
   const damage=(r.damage??0)+amount;if(damage<max){r.damage=damage;return true;}
   const ledger=reason==='fire'?ensureFireState(world).ledger:undefined;
   const woodPotential=r.kind==='tree'?r.amount:0;
-  const neutral=reason==='bullet'||reason==='bomb'?neutralLossPlan(world,{resources:{[r.kind]:1},...(woodPotential?{woodPotentialLost:woodPotential}:{})}):undefined;
+  const neutral=reason==='bullet'||reason==='bomb'||reason==='roof'?neutralLossPlan(world,{resources:{[r.kind]:1},...(woodPotential?{woodPotentialLost:woodPotential}:{})}):undefined;
   if(neutral===null)return false;
   if(ledger&&(!addSafe(ledger.resources[r.kind]??0,1)||!addSafe(ledger.woodPotentialLost,woodPotential)))return false;
   const jobs=new Set(world.jobs.filter(j=>at(j,r)&&['mine','chop','cut','harvest','extract-tree'].includes(j.kind)).map(j=>j.id));
-  removeJobs(world,jobs);world.resources=world.resources.filter(candidate=>candidate!==r);
+  removeJobs(world,jobs,reason==='roof');world.resources=world.resources.filter(candidate=>candidate!==r);
   // The clearance step ended without a harvest. Keep its construction intent,
   // materials and unrelated queued work, but release this now-obsolete claim:
   // an unsupplied blueprint cannot retain a finishing-work reservation.
@@ -77,18 +86,26 @@ function referencesPile(p:Pawn,id:number):boolean {
     ||p.feed&&(p.feed.sourcePileId===id||p.feed.carryPileId===id)||p.ward?.kind==='food'&&(p.ward.sourcePileId===id||p.ward.carryPileId===id));
 }
 /** A destroyed stack loses all its units. Other carried ingredients survive. */
-export function damagePile(world:World,pile:MaterialPile,amount:number,cause:'fire'|'bullet'|'bomb'|'deterioration'='fire',knownIndex?:number):boolean {
+export function damagePile(world:World,pile:MaterialPile,amount:number,cause:'fire'|'bullet'|'bomb'|'deterioration'|'roof'|'roof-thick'='fire',knownIndex?:number):boolean {
   if(cause==='deterioration'&&(world.schemaVersion<252||pile.owner.type!=='ground'||!isDeteriorationItem(pile.item)))return false;
-  const max=pileMaxHp(pile,world.schemaVersion);if(!max||!positive(amount)||!(knownIndex!==undefined&&Number.isInteger(knownIndex)&&knownIndex>=0&&knownIndex<world.piles.length&&world.piles[knownIndex]===pile||world.piles.includes(pile)))return false;
+  const max=pileMaxHp(pile,world.schemaVersion);if(!max&&cause!=='roof-thick'||!positive(amount)||!(knownIndex!==undefined&&Number.isInteger(knownIndex)&&knownIndex>=0&&knownIndex<world.piles.length&&world.piles[knownIndex]===pile||world.piles.includes(pile)))return false;
   const damage=pileDamage(pile)+amount;
   if(damage<max){if(pile.apparel)pile.apparel.hitPoints=max-damage;else if(pile.weapon)pile.weapon.hitPoints=max-damage;else pile.damage=damage;return true;}
   if(pile.kind==='plant')return destroyMinifiedTree(world,pile);
   if(pile.humanCorpse){
-    if(cause==='deterioration'||!destroyHumanCorpse(world,pile,cause))return false;
+    if(cause==='deterioration'||!destroyHumanCorpse(world,pile,cause==='roof-thick'?'roof':cause))return false;
     for(const p of world.pawns){
-      if(referencesPile(p,pile.id))interruptWork(world,p);
+      if(referencesPile(p,pile.id))interruptWork(world,p,cause==='roof'||cause==='roof-thick');
       if(p.interruptedCargo&&!world.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)&&!world.packed.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id))delete p.interruptedCargo;
     }
+    refreshStock(world);return true;
+  }
+  if(world.schemaVersion>=256&&pile.corpse){
+    const contents=planAnimalBodyRetirement256(world,pile.id,true,cause==='fire'?'fire':'neutral');if(!contents||!contents.commit())return false;
+    for(const p of world.pawns){if(p.droppedWeaponId!==undefined&&contents.pileIds.has(p.droppedWeaponId))delete p.droppedWeaponId;
+      if([...contents.pileIds].some(id=>referencesPile(p,id)))interruptWork(world,p,cause==='roof'||cause==='roof-thick');
+      if(p.interruptedCargo&&!world.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)&&!world.packed.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id))delete p.interruptedCargo;}
+    for(const a of world.wildlife?.animals??[])if(a.meal?.kind==='pile'&&contents.pileIds.has(a.meal.id)){delete a.meal;a.path=[];a.nextDecision=world.tick;}
     refreshStock(world);return true;
   }
   const neutral=cause==='fire'?undefined:neutralLossPlan(world,{items:{[pile.item]:pile.quantity}});if(neutral===null)return false;
@@ -97,7 +114,7 @@ export function damagePile(world:World,pile:MaterialPile,amount:number,cause:'fi
   world.piles=world.piles.filter(p=>p!==pile);
   for(const p of world.pawns){
     if(p.droppedWeaponId===pile.id)delete p.droppedWeaponId;
-    if(referencesPile(p,pile.id))interruptWork(world,p,cause==='deterioration');
+    if(referencesPile(p,pile.id))interruptWork(world,p,cause==='deterioration'||cause==='roof'||cause==='roof-thick');
     if(p.interruptedCargo&&!world.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)&&!world.packed.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id))delete p.interruptedCargo;
   }
   for(const a of world.wildlife?.animals??[])if(a.meal?.kind==='pile'&&a.meal.id===pile.id){delete a.meal;a.path=[];a.nextDecision=world.tick;}
@@ -105,17 +122,22 @@ export function damagePile(world:World,pile:MaterialPile,amount:number,cause:'fi
 }
 /** Damage installed or packed furniture. Salvage is preflighted before a fatal hit.
  * Quarter raw-material restitution follows the existing cooler adaptation. */
-export type StructureDamageCause='fire'|'melee'|'bullet'|'bomb';
+export type StructureDamageCause='fire'|'melee'|'bullet'|'bomb'|'roof'|'roof-thick';
 export interface StructureDamageContext {core:number;rawAmount:number;instigatorKey?:BombInstigatorKey;detonate?:true}
 export function damageStructure(world:World,s:Structure,amount:number,cause:StructureDamageCause='fire',rng=world.rng,external?:StructureDamageContext):boolean {
+  if(s.kind==='insect-hive'||s.kind==='glow-pod')return damageCaveHiveProp256(world,s,amount,cause,rng,external);
+  if(isAncientCasket256(s))return damageEmptyAncientCasket256(world,s,amount,cause,rng,external);
+  if(s.kind==='ship-chunk'&&world.schemaVersion!==256)return false;
   const packed=world.packed.find(p=>p.building===s),installed=world.structures.includes(s),max=structureMaxHp(s);
-  if(!max||!positive(amount)||!installed&&!packed)return false;
+  if(!max&&cause!=='roof-thick'||!positive(amount)||!installed&&!packed)return false;
   if(external&&(!Number.isFinite(external.rawAmount)||external.rawAmount<0||!Number.isSafeInteger(external.core)||external.core<Math.max(0,(world.tick-1)*10)||external.core>world.tick*10))return false;
   const core=external?.core??world.tick*10,explosive=world.schemaVersion>=193&&installed&&s.kind==='mini-turret'&&!!s.turret&&miniTurretExplosive(s.id);
   const detonates=explosive&&(external?.detonate|| (external?.rawAmount??amount)>=max-(s.damage??0));
   if(explosive&&!Number.isSafeInteger(core+240)||detonates&&(!Number.isSafeInteger(core+5)||world.bombWaves&&world.bombWaves.length>=world.width*world.height))return false;
   const damage=detonates?max:(s.damage??0)+amount;
   if(damage<max){s.damage=damage;if(cause!=='fire')world.rng=rng;if(explosive&&max-damage<=Math.round(max*.2))startTurretWick(world,s,core,external?.instigatorKey);return true;}
+  const bedOwnership=prepareBedOwnershipTransition256(world,s,'destroy');
+  const fogRemoval=prepareRemovedFogStructure256(world,s);
   const owner=packed?.owner,origin=owner?.type==='ground'?owner:owner?.type==='pawn'||owner?.type==='inventory'?world.pawns.find(p=>p.id===owner.pawnId)??s:s;
   // Refusing a fatal hit must not create a fire ledger or advance its stream.
   const state=cause==='fire'&&!detonates?(world.fires??ensureFireState({...world})):undefined;
@@ -129,7 +151,7 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
       ||h&&(h.whole&&h.sourcePileId===s.id||(h.destination.type==='fuel'||h.destination.type==='turret')&&h.destination.structureId===s.id||h.destination.type==='job'&&ids.has(h.destination.jobId))
       ||p.need?.kind==='sleep'&&p.need.bedId===s.id||p.recreation.task?.buildingId===s.id||p.recreation.task?.seatId===s.id||p.rescue?.bedId===s.id;
   });
-  const plan=planStructureDestruction(detonates?{...world,nextId:world.nextId+1}:world,s,actors,origin,state?.rng??rng);if(!plan)return false;
+  const plan=planStructureDestruction(detonates?{...world,nextId:world.nextId+1}:world,s,actors,origin,state?.rng??rng,cause==='roof-thick');if(!plan)return false;
   if(detonates&&!Number.isSafeInteger(world.nextId+1+(plan.salvage?.drops.length??0)))return false;
   const {salvage,drops}=plan;
   const destruction=world.destroyed??{count:0,lost:{}},lost={...destruction.lost};
@@ -140,10 +162,13 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   const totals=state?.ledger??destruction;
   if(!addSafe(totals.fuelTicksLost??0,fuelLost)||!addSafe(totals.fuelTicksBurned??0,fuelBurned)||!addSafe(destruction.count,1)||!Object.values(lost).every(Number.isSafeInteger)||!Number.isSafeInteger(((totals.batteryEnergyLost??0)+energy)*2)
     ||state&&(!addSafe(state.ledger.structures,1)||!addSafe(state.ledger.items.component??0,serviceLoss)))return false;
+  if(s.kind==='sarcophagus'&&!commitGraveRelease(world,s,plan.graveRelease))return false;
   if(state)world.fires=state;
   const waveId=detonates?world.nextId++:undefined;
+  if(plan.rubble){world.filth=plan.rubble.filth;world.nextId=plan.rubble.nextId;}
   commitShelfRemoval(world,plan.shelfRemoval);
   world.structures=world.structures.filter(b=>b!==s);world.packed=world.packed.filter(p=>p!==packed);
+  bedOwnership?.commit();
   for(const p of world.pawns)if(p.bombRefuge?.sourceId===s.id){
     p.bombRefuge.endCore=Math.min(p.bombRefuge.endCore,core);
     if(waveId===undefined&&!p.moveCooldown&&!(p.motion&&p.motion.end>world.tick)&&!p.melee?.strike&&!p.shooting?.stance&&!p.stun){delete p.bombRefuge;p.path=[];if(p.state!=='dead'&&p.state!=='downed')p.state='idle';}
@@ -159,11 +184,11 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
     if(pack&&drops.has(pack.building.id))releaseFurniture(world,p,drops);
   }
   if(delivered.length)world.piles=world.piles.filter(p=>!delivered.includes(p));
-  if(state){if(salvage)state.rng=salvage.rng;}else world.rng=salvage?.rng??rng;
-  if(salvage)for(const drop of salvage.drops)addMaterial(world,ITEM_DEFINITIONS[drop.item].kind,drop.quantity,{type:'ground',...drop.cell},drop.item);
+  if(state){if(salvage||plan.rubble)state.rng=salvage?.rng??plan.rubble!.rng;}else world.rng=salvage?.rng??plan.rubble?.rng??rng;
+  if(salvage)for(const drop of salvage.drops){addMaterial(world,ITEM_DEFINITIONS[drop.item].kind,drop.quantity,{type:'ground',...drop.cell},drop.item);if('forbidden'in drop&&typeof drop.forbidden==='boolean'){const pile=world.piles.find(p=>p.item===drop.item&&p.owner.type==='ground'&&p.owner.x===drop.cell.x&&p.owner.z===drop.cell.z)!;setMaterialForbidden256(pile,drop.forbidden);}}
   for(const p of actors)interruptWork(world,p,true);
   for(const a of world.wildlife?.animals??[])if(a.manhunter?.door?.targetId===s.id)delete a.manhunter.door;
-  removeJobs(world,ids);
+  removeJobs(world,ids,cause==='roof'||cause==='roof-thick');
   for(const p of world.pawns){
     if(p.bedId===s.id){p.bedId=null;delete p.bedSlot;}
     if(p.need?.kind==='eat'&&p.need.dining?.tableId===s.id)p.need.dining.tableId=null;
@@ -181,5 +206,6 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   if(s.kind==='hydroponics-basin')removeHydroponicPlants(world,s);
   detachMissingBills(world);detachMissingFlakBills(world);detachMissingGunBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);reconcilePower(world);if(installed)reconcileRoofSupport(world,false,s);refreshStock(world);
   if(installed&&s.kind==='spike-trap')rebuildSpikeTrap(world,s);
-  if(waveId!==undefined)registerBombWave(world,s,waveId,core,external?.instigatorKey??s.turret?.wick?.instigatorKey);return true;
+  if(waveId!==undefined)registerBombWave(world,s,waveId,core,external?.instigatorKey??s.turret?.wick?.instigatorKey);
+  commitRemovedFogBlocker256(world,fogRemoval);return true;
 }

@@ -59,7 +59,7 @@ export function validDeepDrillingTransport(w:World,version:number):boolean {
       // Match the file reader's active-service census. Admission reservations
       // also cover queued work and may waive an urgent bedside visitor.
       for(const other of w.pawns)if(other!==p){
-        const cell=serviceCell(other);if(cell&&cell.x===t.spot.x&&cell.z===t.spot.z)return false;
+        const cell=serviceCell(other,w);if(cell&&cell.x===t.spot.x&&cell.z===t.spot.z)return false;
       }
       claimed.add(s.id);spots.add(spot);
       if(!isColonist(p)||p.prisoner||p.visitor||p.raid||p.podRescue||p.draft||p.mental?.crisis||p.interruptedCargo

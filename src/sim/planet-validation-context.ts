@@ -1,13 +1,16 @@
-/** Owned primitive witnesses for operation-local planet validation.
- * No World/packet references, seed replay, rendering or adoption. */
-import type { PlanetState,PlanetTile } from './planet-state.ts';
-import type { World } from './types.ts';
+import {validGeographicPlanetHeader256,planetGeography256} from './planet-geography-256.ts';
+import {validateGeographicPlanet256} from './planet-save.ts';
+/** Owned witnesses for operation-local planet validation.
+ * Legacy primitive copies or the exact immutable prospective owner. No mutable World/packet reference, seed replay, rendering or adoption. */
+import type { PlanetState,LegacyPlanetState,PlanetTile,PlanetValidationWorld } from './planet-state.ts';
 import { PLANET_TILE_COUNT,validatePlanet } from './planet-save.ts';
 
 type CopiedTile=Readonly<Omit<PlanetTile,'center'|'neighbours'>> & {
   readonly center:readonly [number,number,number];readonly neighbours:readonly number[];
 };
-type CopiedPlanet=Readonly<Omit<PlanetState,'tiles'|'nextGroupId'>> & {readonly tiles:readonly CopiedTile[]};
+type CopiedLegacyPlanet=Readonly<Omit<LegacyPlanetState,'tiles'|'nextGroupId'>> & {readonly tiles:readonly CopiedTile[]};
+interface CopiedGeographicPlanet {readonly revision:3;readonly adoptedAt:number;readonly generationSeed:number;readonly homeTile:number;readonly civilianTile:number|null;readonly owner:import('./world-geography-owner-256.ts').CampaignGeography256}
+type CopiedPlanet=CopiedLegacyPlanet|CopiedGeographicPlanet;
 declare const contextBrand:unique symbol;
 /** Opaque capability; never stored in World, a packet or a save. */
 export interface PlanetValidationContext {readonly [contextBrand]:true}
@@ -28,6 +31,7 @@ function dense(v:unknown,length:number):v is unknown[]{
   return keys.length===length+1&&keys.every(k=>k==='length'||typeof k==='string'&&int(Number(k),0,length-1)&&String(Number(k))===k);
 }
 function copy(p:PlanetState):CopiedPlanet{
+  if(p.revision===3)return Object.freeze({revision:3,adoptedAt:p.adoptedAt,generationSeed:p.generationSeed,homeTile:p.homeTile,civilianTile:p.civilianTile,owner:planetGeography256(p)});
   // Array prototypes are not part of the historical raw shape restrictions.
   // Their map/slice methods may return the borrowed original. Copy indexed
   // primitives into ordinary arrays without invoking methods supplied by raw.
@@ -45,6 +49,7 @@ function copy(p:PlanetState):CopiedPlanet{
  * embedding and land connectivity. Exact keys and dense arrays remain
  * necessary even when every indexed value appears unchanged. */
 function matches(v:unknown,p:CopiedPlanet):v is PlanetState{
+  if(p.revision===3){if(!validGeographicPlanetHeader256(v)||v.adoptedAt!==p.adoptedAt||v.generationSeed!==p.generationSeed||v.homeTile!==p.homeTile||v.civilianTile!==p.civilianTile)return false;try{return planetGeography256(v)===p.owner;}catch{return false;}}
   if(!object(v)||!exact(v,PLANET_KEYS)||v.revision!==p.revision||v.adoptedAt!==p.adoptedAt||v.generationSeed!==p.generationSeed
     ||v.homeTile!==p.homeTile||v.civilianTile!==p.civilianTile||!int(v.nextGroupId,1)||!dense(v.tiles,PLANET_TILE_COUNT))return false;
   for(let i=0;i<PLANET_TILE_COUNT;i++){
@@ -56,8 +61,8 @@ function matches(v:unknown,p:CopiedPlanet):v is PlanetState{
   }
   return true;
 }
-function currentMetadata(v:PlanetState,w:World,version:number):boolean{
-  return int(version,196)&&int(w.tick)&&int(v.adoptedAt,0,w.tick)&&int(v.generationSeed,0,0xffffffff)&&int(v.nextGroupId,1);
+function currentMetadata(v:PlanetState,w:PlanetValidationWorld,version:number):boolean{
+  return (v.revision===3?version>=256&&validateGeographicPlanet256(v,w,version).length===0:true)&&int(version,196)&&int(w.tick)&&int(v.adoptedAt,0,w.tick)&&int(v.generationSeed,0,0xffffffff)&&int(v.nextGroupId,1);
 }
 function lookup(context:unknown):Proof|undefined{
   return object(context)?proofs.get(context):undefined;
@@ -65,9 +70,9 @@ function lookup(context:unknown):Proof|undefined{
 export type PlanetContextResult={readonly ok:false;readonly errors:readonly string[]}|{
   readonly ok:true;readonly context:PlanetValidationContext;readonly present:boolean;readonly nextGroupId:number|undefined;
 };
-/** Previous proof is a hint, never permission to skip comparisons. A decoder
- * must omit it on a new epoch. No input object is retained or mutated. */
-export function validatePlanetContext(w:World,version:number,previous?:PlanetValidationContext):PlanetContextResult{
+/** Previous proof is a hint. Legacy values are compared in full; revision3 compares its exact immutable owner and scalar header. A decoder
+ * must omit it on a new epoch. No mutable input object is retained or mutated. */
+export function validatePlanetContext(w:PlanetValidationWorld,version:number,previous?:PlanetValidationContext):PlanetContextResult{
   if(!int(version,1))return {ok:false,errors:['Invalid planet validation version.']};
   if(version<=195&&['planet','group','groupLosses'].some(k=>Object.hasOwn(w,k)))return {ok:false,errors:['Future planet or group state in historical schema.']};
   const before=lookup(previous),raw=w.planet;
@@ -82,10 +87,10 @@ export function validatePlanetContext(w:World,version:number,previous?:PlanetVal
   proofs.set(context,{geography,version,tick:w.tick,nextGroupId});
   return {ok:true,context,present:geography!==undefined,nextGroupId};
 }
-/** Returns the actual planet only after another complete primitive/shape
+/** Returns the actual planet only after another complete admitted header/owner or legacy primitive/shape
  * comparison. Forged contexts, stale metadata and mutated originals fail;
  * another original with equal values is legal. */
-export function validatedPlanetFor(context:unknown,w:World,version:number):PlanetState|undefined{
+export function validatedPlanetFor(context:unknown,w:PlanetValidationWorld,version:number):PlanetState|undefined{
   const p=lookup(context);
   if(!p?.geography||p.version!==version||p.tick!==w.tick||!matches(w.planet,p.geography)
     ||!currentMetadata(w.planet,w,version)||w.planet.nextGroupId!==p.nextGroupId)return undefined;
@@ -96,10 +101,14 @@ export function validatedPlanetFor(context:unknown,w:World,version:number):Plane
 export function sameValidatedPlanetGeography(a:unknown,b:unknown):boolean{
   const x=lookup(a),y=lookup(b);if(!x||!y)return false;
   const p=x.geography,q=y.geography;if(!p||!q)return p===undefined&&q===undefined;
-  // Only privately owned, never-mutated copies share this identity. Raw
-  // Worlds/packets still undergo the complete matches scan on every use.
+  // Only owned immutable facts share this identity. Legacy values retain
+  // complete comparisons; revision3 headers must bind the exact cold owner.
   if(p===q)return true;
-  if(p.revision!==q.revision||p.adoptedAt!==q.adoptedAt||p.generationSeed!==q.generationSeed||p.homeTile!==q.homeTile||p.civilianTile!==q.civilianTile)return false;
+  if(p.revision!==q.revision||p.adoptedAt!==q.adoptedAt||p.generationSeed!==q.generationSeed||p.homeTile!==q.homeTile)return false;
+  // Revision3 civilianTile is a mutable registry link, admitted separately on
+  // every use. It is not an immutable geographic fact. Legacy remains literal.
+  if(p.revision===3||q.revision===3)return p.revision===3&&q.revision===3&&p.owner===q.owner;
+  if(p.civilianTile!==q.civilianTile)return false;
   for(let i=0;i<PLANET_TILE_COUNT;i++){
     const t=p.tiles[i]!,u=q.tiles[i]!;
     if(t.id!==u.id||t.biome!==u.biome||t.hilliness!==u.hilliness||t.meanTemperature!==u.meanTemperature||t.rainfall!==u.rainfall

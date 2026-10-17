@@ -162,6 +162,9 @@ export class GameSession {
     await this.prepare();
   }
 
+  /** Same recovery/rollback/accepted-checkpoint path, with an already confirmed worker draft. */
+  createConfirmedDraft(operation:()=>Promise<unknown>):Promise<void> {return this.exclusive(()=>this.replace(operation));}
+
   create(seed: number, size: number, scenario: ScenarioId,site?:SiteOptions,startingParty?:StartingParty,startingWorld?:StartingWorld): Promise<void> {
     return this.exclusive(() => this.replace(() => this.client.init(seed, size, scenario, true,site,startingParty,startingWorld,'snow-phased-v1')));
   }

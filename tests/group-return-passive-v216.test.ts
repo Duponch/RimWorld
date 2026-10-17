@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import { expect,test } from 'vitest';
 import { createScenarioWorld } from '../src/sim/new-game.ts';
 import { applyCommand,stepWorld } from '../src/sim/engine.ts';
@@ -39,7 +40,7 @@ function returning(beforeDeparture?:(w:World,p:Pawn)=>void) {
   const weapon=equippedWeapon(w,p)!;weapon.weapon!.quality='good';weapon.weapon!.hitPoints=137;
   addMaterial(w,'food',2,{type:'inventory',pawnId:p.id},'survival-meal');
   expect(applyCommand(w,{type:'planet-adopt'}).ok).toBe(true);
-  expect(applyCommand(w,{type:'group-start',memberIds:members.map(p=>p.id),destination:w.planet!.civilianTile,sources:[]}).ok).toBe(true);
+  expect(applyCommand(w,{type:'group-start',memberIds:members.map(p=>p.id),destination:legacyPlanet(w).civilianTile,sources:[]}).ok).toBe(true);
   const preparing=w.group;if(!preparing||!('manifest' in preparing))throw Error('Missing real formation');
   preparing.phase='leaving';
   for(const exit of preparing.exits){
@@ -49,7 +50,7 @@ function returning(beforeDeparture?:(w:World,p:Pawn)=>void) {
   }
   tryGroupDeparture(w);
   const g=w.group;if(!g||!('members' in g))throw Error('Actual owners did not depart');
-  g.phase='awaiting-entry';g.tile=w.planet!.homeTile;g.destination=g.tile;g.route=[g.tile];g.segment=null;g.stop={kind:'awaiting-entry'};
+  g.phase='awaiting-entry';g.tile=legacyPlanet(w).homeTile;g.destination=g.tile;g.route=[g.tile];g.segment=null;g.stop={kind:'awaiting-entry'};
   const entry=captureCivilianReturnFinder(w)(g.entry);if(!entry)throw Error('Prepared home has no accessible return');g.entry=entry;
   checkpoint(w);return {w,g,p,weapon};
 }
@@ -97,7 +98,7 @@ function terminal(customPolicy=false) {
     policyId=world.nextFoodPolicyId-1;expect(applyCommand(world,{type:'food-policy-assign',pawnId:person.id,policyId}).ok).toBe(true);
     person.apparelPolicyId=2;
   }:undefined);
-  g.phase='at-site';g.tile=w.planet!.civilianTile;g.destination=g.tile;g.route=[g.tile];g.stop={kind:'at-site'};
+  g.phase='at-site';g.tile=legacyPlanet(w).civilianTile;g.destination=g.tile;g.route=[g.tile];g.stop={kind:'at-site'};
   p.health=createMedicalRecord(w.tick);addResolvedInjury(p.health,'left-hand','cut',6000,()=>.999999);p.health.bloodLoss=BLOOD_UNIT-1;p.medicalCare='none';
   expect(medicalBleed(p.health)).toBeGreaterThanOrEqual(.1);
   const status=medicalStatus(p.health);p.state=status==='mobile'?'idle':status;
@@ -110,7 +111,7 @@ function terminal(customPolicy=false) {
 
 test('passive living and terminal owners accept ordinary disease but reject forged spatial vomiting through save and decoder',()=>{
   const live=returning(),dead=terminal();
-  live.g.phase='at-site';live.g.tile=live.w.planet!.civilianTile;live.g.destination=live.g.tile;live.g.route=[live.g.tile];live.g.stop={kind:'at-site'};
+  live.g.phase='at-site';live.g.tile=legacyPlanet(live.w).civilianTile;live.g.destination=live.g.tile;live.g.route=[live.g.tile];live.g.stop={kind:'at-site'};
   for(const fixture of [{w:live.w,p:live.p},{w:dead.w,p:dead.p}])for(const disease of ['foodPoisoning','flu'] as const){
     const clean=structuredClone(fixture.w);
     const person=clean.group&&'members' in clean.group?clean.group.members.find(p=>p.id===fixture.p.id)??clean.groupLosses?.find(l=>l.pawn.id===fixture.p.id)?.pawn:clean.groupLosses?.find(l=>l.pawn.id===fixture.p.id)?.pawn;

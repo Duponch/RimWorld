@@ -1,3 +1,4 @@
+import {eggAllowedForPlayer256} from './animal-egg-permission-v256.ts';
 import { capturePrisonTopology,prisonRoom,prisonerAllowedCell } from './prison-space.ts';
 import type { RoomTopology } from './room-topology.ts';
 import { FOOD_ITEMS,allowedFood } from './food-policy.ts';
@@ -20,14 +21,14 @@ export function prisonFoodChecker(world:World):(pile:MaterialPile)=>boolean {
   };
 }
 export function selfFoodAccessible(world:World,pawn:Pawn,pile:MaterialPile,topology?:RoomTopology):boolean {
-  if(pile.owner.type!=='ground')return false;
+  if(pile.owner.type!=='ground'||!eggAllowedForPlayer256(pile))return false;
   if(!allowedAreaAllows(world,pawn,pile.owner))return false;
   return pawn.prisoner?prisonerAllowedCell(world,pawn,pile.owner,topology):!prisonFood(world,pile,topology);
 }
 /** A supplier may use public food or food reserved for this patient's room,
  * never another prison's stock. This is separate from the patient's diet. */
 export function assistedFoodAccessible(world:World,getter:Pawn,eater:Pawn,pile:MaterialPile,topology?:RoomTopology):boolean {
-  if(pile.owner.type!=='ground')return false;
+  if(pile.owner.type!=='ground'||!eggAllowedForPlayer256(pile))return false;
   if(!allowedAreaAllows(world,getter,pile.owner))return false;
   if(selfFoodAccessible(world,getter,pile,topology))return true;
   const room=eater.prisoner?prisonRoom(world,eater,topology):undefined;

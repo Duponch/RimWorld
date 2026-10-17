@@ -6,9 +6,10 @@ import {validateWorld} from '../../src/sim/serialization';
 
 /** Named prepared boundary, not an acquired colony or naturally discovered vein.
  * Reuse the visitor producer and its finite stock, calendar, actors and IDs. */
+function requireHistoricalSchema243(world:{schemaVersion:number}):void {if(world.schemaVersion!==243)throw Error('Adopt schema243 before this native fixture.');}
 export function silverNativeV382(){
   const {world:initial,pawnId,traderId}=visitorTradeFixture();
-  if(initial.schemaVersion!==243)throw Error('Adopt schema243 before this native fixture.');
+  requireHistoricalSchema243(initial);
   const pawn=initial.pawns.find(p=>p.id===pawnId)!;
   pawn.name='Mineur négociateur préparé';pawn.hunger=100;pawn.rest=100;pawn.recreation.level=100;
   pawn.schedule.fill('work');pawn.skills.mining={level:8,xp:0,dailyXp:0,passion:0};

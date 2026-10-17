@@ -18,7 +18,7 @@ export const TAILORING_RECIPES = ['tribalwear','shirt','pants','duster','parka',
 export type TailoringRecipe = typeof TAILORING_RECIPES[number];
 export type TailoringMaterial = ApparelMaterial;
 export type UnfinishedApparelItem = 'unfinished-tribalwear'|'unfinished-shirt'|'unfinished-pants'|'unfinished-duster'|'unfinished-parka'|'unfinished-tuque';
-export type ProductionIngredient = ApparelItem|'hay'|'human-corpse'|WeaponItem|'herbal-medicine'|'neutroamine'|MechCorpseItem| ArtMaterial|'unfinished-sculpture'|'steel'|'component'|'advanced-component'|'plasteel'|'uranium'|'gold'|'unfinished-gun'|'unfinished-flak-vest'|'unfinished-flak-helmet'|'unfinished-recon-helmet'|'unfinished-recon-armor'|'unfinished-component'|'rice'|'berries'|'milk'|'agave-fruit'|'potato'|'corn'|typeof ANIMAL_MEAT_ITEMS[number]|typeof ANIMAL_CORPSE_ITEMS[number]|TailoringMaterial|UnfinishedApparelItem|StoneIngredient;
+export type ProductionIngredient = 'slag-steel-chunk'|ApparelItem|'hay'|'human-corpse'|WeaponItem|'herbal-medicine'|'neutroamine'|MechCorpseItem| ArtMaterial|'unfinished-sculpture'|'steel'|'component'|'advanced-component'|'plasteel'|'uranium'|'gold'|'unfinished-gun'|'unfinished-flak-vest'|'unfinished-flak-helmet'|'unfinished-recon-helmet'|'unfinished-recon-armor'|'unfinished-component'|'raw-fungus'|'rice'|'berries'|'milk'|'agave-fruit'|'potato'|'corn'|typeof ANIMAL_MEAT_ITEMS[number]|typeof ANIMAL_CORPSE_ITEMS[number]|TailoringMaterial|UnfinishedApparelItem|StoneIngredient;
 export type FlakRecipe='make-flak-vest'|'make-flak-helmet'|'make-recon-helmet'|'make-recon-armor';
 export const isFlakRecipe=(v:unknown):v is FlakRecipe=>v==='make-flak-vest'||v==='make-flak-helmet'||v==='make-recon-helmet'||v==='make-recon-armor';
 export const FLAK_REQUIREMENTS={cloth:30,steel:60,component:1,skill:4} as const;
@@ -31,11 +31,11 @@ export type ComponentRecipe='make-component'|'make-advanced-component';
 export const isComponentRecipe=(v:unknown):v is ComponentRecipe=>v==='make-component'||v==='make-advanced-component';
 export const ADVANCED_COMPONENT_REQUIREMENTS={component:1,steel:20,plasteel:10,gold:3,skill:8} as const;
 export type AdvancedComponentMaterial=Exclude<keyof typeof ADVANCED_COMPONENT_REQUIREMENTS,'skill'>;
-export type ProductionRecipe = 'burn-apparel'|'make-pemmican'|'make-kibble'|CremationRecipe|'smelt-weapon'|BiofuelRecipe|'make-medicine'|'smash-mechanoid'|'shred-mechanoid'|ArtRecipe|GunRecipe|FlakRecipe|ComponentRecipe|'simple-meal'|'cook-simple-meal-bulk'|'fine-meal'|'cook-fine-meal-bulk'|'vegetarian-fine-meal'|'cook-vegetarian-fine-meal-bulk'|'carnivore-fine-meal'|'cook-carnivore-fine-meal-bulk'|'lavish-meal'|'cook-lavish-meal-bulk'|'vegetarian-lavish-meal'|'cook-vegetarian-lavish-meal-bulk'|'cook-carnivore-lavish-meal'|'cook-carnivore-lavish-meal-bulk'|'cook-survival-meal'|'stone-blocks'|TailoringRecipe|'butcher-creature';
+export type ProductionRecipe = 'smelt-slag'|'burn-apparel'|'make-pemmican'|'make-kibble'|CremationRecipe|'smelt-weapon'|BiofuelRecipe|'make-medicine'|'smash-mechanoid'|'shred-mechanoid'|ArtRecipe|GunRecipe|FlakRecipe|ComponentRecipe|'simple-meal'|'cook-simple-meal-bulk'|'fine-meal'|'cook-fine-meal-bulk'|'vegetarian-fine-meal'|'cook-vegetarian-fine-meal-bulk'|'carnivore-fine-meal'|'cook-carnivore-fine-meal-bulk'|'lavish-meal'|'cook-lavish-meal-bulk'|'vegetarian-lavish-meal'|'cook-vegetarian-lavish-meal-bulk'|'cook-carnivore-lavish-meal'|'cook-carnivore-lavish-meal-bulk'|'cook-survival-meal'|'stone-blocks'|TailoringRecipe|'butcher-creature';
 
 export type BiofuelRecipe='chemfuel-from-wood'|'chemfuel-from-organics';
 export const isBiofuelRecipe=(value:unknown):value is BiofuelRecipe=>value==='chemfuel-from-wood'||value==='chemfuel-from-organics';
-export const BIOFUEL_INITIAL_ORGANICS=['rice','berries','potato','corn','agave-fruit'] as const;
+export const BIOFUEL_INITIAL_ORGANICS=['raw-fungus','rice','berries','potato','corn','agave-fruit'] as const;
 export const BIOFUEL_ORGANIC_INPUTS=[...BIOFUEL_INITIAL_ORGANICS,'milk',...ANIMAL_MEAT_ITEMS] as const;
 /** Item nutrition uses hundredths: Core's organic quota is 3.5 nutrition.
  * Each of the thirteen delivered raw foods supplies five hundredths. */
@@ -61,7 +61,7 @@ export function validMedicineIngredients(recipe:ProductionRecipe,parts:readonly 
  * lavish meals ask 0.25 and 0.5 from each group; milk is an animal product. */
 export function fineMealIngredientGroup(item:ProductionIngredient):'protein'|'vegetable'|null {
   if(item==='milk'||isAnimalMeat(item))return 'protein';
-  return item==='rice'||item==='berries'||item==='potato'||item==='corn'||item==='agave-fruit'?'vegetable':null;
+  return item==='raw-fungus'||item==='rice'||item==='berries'||item==='potato'||item==='corn'||item==='agave-fruit'?'vegetable':null;
 }
 /** Core packaged survival meal: 0.3 nutrition in each distinct raw group. */
 export function validSurvivalMealIngredients(ingredients:readonly {item:ProductionIngredient;quantity:number}[]):boolean {
@@ -149,6 +149,7 @@ export const PRODUCTION_RECIPES = Object.freeze({
   'make-kibble':Object.freeze({label:'Fabriquer des croquettes',station:'butcher-table',work:'cook',inputs:KIBBLE_INPUTS as readonly ProductionIngredient[],units:KIBBLE_INPUT_UNITS,workTicks:KIBBLE_WORK_TICKS,outputUnits:KIBBLE_OUTPUT_UNITS}),
   'burn-apparel':Object.freeze({label:'Brûler des vêtements',station:'campfire',work:'haul',inputs:BURN_APPAREL_INPUTS as readonly ProductionIngredient[],units:1,workTicks:BURN_APPAREL_WORK_TICKS,outputUnits:0}),
   'cremate-corpse':Object.freeze({label:'Incinérer une dépouille',station:'electric-crematorium',work:'haul',inputs:CREMATION_INPUTS as readonly ProductionIngredient[],units:1,workTicks:CREMATION_WORK_TICKS,outputUnits:0}),
+  'smelt-slag':Object.freeze({label:'Extraire l’acier des scories',station:'electric-smelter',work:'craft',inputs:['slag-steel-chunk'] as readonly ProductionIngredient[],units:1,workTicks:40,outputUnits:15}),
   'smelt-weapon':Object.freeze({label:'Fondre une arme',station:'electric-smelter',work:'craft',inputs:SMELTING_WEAPONS as readonly ProductionIngredient[],units:1,workTicks:SMELTING_WORK_TICKS,outputUnits:SMELTING_MAX_OUTPUT}),
   'chemfuel-from-wood':Object.freeze({label:'Raffiner du biocarburant à partir de bois',station:'biofuel-refinery',work:'craft',inputs:['wood'] as readonly ProductionIngredient[],units:70,workTicks:200,outputUnits:35}),
   'chemfuel-from-organics':Object.freeze({label:'Raffiner du biocarburant à partir de matières organiques',station:'biofuel-refinery',work:'craft',inputs:BIOFUEL_ORGANIC_INPUTS as readonly ProductionIngredient[],units:70,workTicks:250,outputUnits:35}),
@@ -174,19 +175,19 @@ export const PRODUCTION_RECIPES = Object.freeze({
   tuque:Object.freeze({label:'Tuque',station:'tailor-bench',work:'craft',inputs:['cloth','muffalo-wool'] as readonly ProductionIngredient[],units:20,workTicks:120,outputUnits:1}),
   parka:Object.freeze({label:'Parka',station:'tailor-bench',work:'craft',inputs:APPAREL_MATERIALS as readonly ProductionIngredient[],units:80,workTicks:800,outputUnits:1}),
   // Neutral recipe work, before station/room/light factors; Core ticks / 10.
-  'simple-meal': Object.freeze({label:'Repas simple',station:'campfire',work:'cook',inputs:['rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:10,workTicks:30,outputUnits:1}),
-  'cook-simple-meal-bulk': Object.freeze({label:'Cuisiner des plats simples x4',station:'campfire',work:'cook',inputs:['rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:40,workTicks:120,outputUnits:4}),
-  'cook-survival-meal': Object.freeze({label:'Cuisiner un repas de survie emballé',station:'fueled-stove',work:'cook',inputs:['rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:12,workTicks:45,outputUnits:1}),
-  'fine-meal': Object.freeze({label:'Cuisiner un plat raffiné',station:'fueled-stove',work:'cook',inputs:['rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:10,workTicks:45,outputUnits:1}),
-  'cook-fine-meal-bulk': Object.freeze({label:'Cuisiner des plats raffinés x4',station:'fueled-stove',work:'cook',inputs:['rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:40,workTicks:180,outputUnits:4}),
-  'vegetarian-fine-meal': Object.freeze({label:'Cuisiner un plat raffiné végétarien',station:'fueled-stove',work:'cook',inputs:['rice','berries','milk','potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:15,workTicks:45,outputUnits:1}),
-  'cook-vegetarian-fine-meal-bulk': Object.freeze({label:'Cuisiner des plats raffinés végétariens x4',station:'fueled-stove',work:'cook',inputs:['rice','berries','milk','potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:60,workTicks:180,outputUnits:4}),
+  'simple-meal': Object.freeze({label:'Repas simple',station:'campfire',work:'cook',inputs:['raw-fungus','rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:10,workTicks:30,outputUnits:1}),
+  'cook-simple-meal-bulk': Object.freeze({label:'Cuisiner des plats simples x4',station:'campfire',work:'cook',inputs:['raw-fungus','rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:40,workTicks:120,outputUnits:4}),
+  'cook-survival-meal': Object.freeze({label:'Cuisiner un repas de survie emballé',station:'fueled-stove',work:'cook',inputs:['raw-fungus','rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:12,workTicks:45,outputUnits:1}),
+  'fine-meal': Object.freeze({label:'Cuisiner un plat raffiné',station:'fueled-stove',work:'cook',inputs:['raw-fungus','rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:10,workTicks:45,outputUnits:1}),
+  'cook-fine-meal-bulk': Object.freeze({label:'Cuisiner des plats raffinés x4',station:'fueled-stove',work:'cook',inputs:['raw-fungus','rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:40,workTicks:180,outputUnits:4}),
+  'vegetarian-fine-meal': Object.freeze({label:'Cuisiner un plat raffiné végétarien',station:'fueled-stove',work:'cook',inputs:['raw-fungus','rice','berries','milk','potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:15,workTicks:45,outputUnits:1}),
+  'cook-vegetarian-fine-meal-bulk': Object.freeze({label:'Cuisiner des plats raffinés végétariens x4',station:'fueled-stove',work:'cook',inputs:['raw-fungus','rice','berries','milk','potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:60,workTicks:180,outputUnits:4}),
   'carnivore-fine-meal': Object.freeze({label:'Cuisiner un plat raffiné carnivore',station:'fueled-stove',work:'cook',inputs:ANIMAL_MEAT_ITEMS as readonly ProductionIngredient[],units:15,workTicks:45,outputUnits:1}),
   'cook-carnivore-fine-meal-bulk': Object.freeze({label:'Cuisiner des plats raffinés carnivores x4',station:'fueled-stove',work:'cook',inputs:ANIMAL_MEAT_ITEMS as readonly ProductionIngredient[],units:60,workTicks:180,outputUnits:4}),
-  'lavish-meal': Object.freeze({label:'Cuisiner un plat gastronomique',station:'fueled-stove',work:'cook',inputs:['rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:20,workTicks:80,outputUnits:1}),
-  'cook-lavish-meal-bulk': Object.freeze({label:'Cuisiner des plats gastronomiques x4',station:'fueled-stove',work:'cook',inputs:['rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:80,workTicks:320,outputUnits:4}),
-  'vegetarian-lavish-meal': Object.freeze({label:'Cuisiner un plat gastronomique végétarien',station:'fueled-stove',work:'cook',inputs:['rice','berries','milk','potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:25,workTicks:80,outputUnits:1}),
-  'cook-vegetarian-lavish-meal-bulk': Object.freeze({label:'Cuisiner des plats gastronomiques végétariens x4',station:'fueled-stove',work:'cook',inputs:['rice','berries','milk','potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:100,workTicks:320,outputUnits:4}),
+  'lavish-meal': Object.freeze({label:'Cuisiner un plat gastronomique',station:'fueled-stove',work:'cook',inputs:['raw-fungus','rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:20,workTicks:80,outputUnits:1}),
+  'cook-lavish-meal-bulk': Object.freeze({label:'Cuisiner des plats gastronomiques x4',station:'fueled-stove',work:'cook',inputs:['raw-fungus','rice','berries','milk',...ANIMAL_MEAT_ITEMS,'potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:80,workTicks:320,outputUnits:4}),
+  'vegetarian-lavish-meal': Object.freeze({label:'Cuisiner un plat gastronomique végétarien',station:'fueled-stove',work:'cook',inputs:['raw-fungus','rice','berries','milk','potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:25,workTicks:80,outputUnits:1}),
+  'cook-vegetarian-lavish-meal-bulk': Object.freeze({label:'Cuisiner des plats gastronomiques végétariens x4',station:'fueled-stove',work:'cook',inputs:['raw-fungus','rice','berries','milk','potato','corn','agave-fruit'] as readonly ProductionIngredient[],units:100,workTicks:320,outputUnits:4}),
   'cook-carnivore-lavish-meal': Object.freeze({label:'Cuisiner un plat gastronomique carnivore',station:'fueled-stove',work:'cook',inputs:ANIMAL_MEAT_ITEMS as readonly ProductionIngredient[],units:25,workTicks:80,outputUnits:1}),
   'cook-carnivore-lavish-meal-bulk': Object.freeze({label:'Cuisiner des plats gastronomiques carnivores x4',station:'fueled-stove',work:'cook',inputs:ANIMAL_MEAT_ITEMS as readonly ProductionIngredient[],units:100,workTicks:320,outputUnits:4}),
   'stone-blocks': Object.freeze({label:'Blocs de pierre',station:'stonecutter',work:'craft',inputs:STONE_INPUTS as readonly ProductionIngredient[],units:1,workTicks:160,outputUnits:20}),
@@ -222,6 +223,7 @@ export function recipeProduct(recipe:ProductionRecipe,ingredients:readonly {item
   if(!recipeHasProducts(recipe))throw new RangeError('Destructive recipe has no products');
   if(isPemmicanRecipe(recipe))return 'pemmican';
   if(isKibbleRecipe(recipe))return 'kibble';
+  if(recipe==='smelt-slag')return 'steel';
   if(isSmeltingRecipe(recipe))return smeltingProduct(ingredients[0]!.item as WeaponItem);
   if(isBiofuelRecipe(recipe))return 'chemfuel';
   if(recipe==='make-medicine')return 'medicine';
@@ -238,6 +240,7 @@ export function isRecipeProduct(recipe:ProductionRecipe,item:ItemId):boolean {
   if(!recipeHasProducts(recipe))return false;
   if(isPemmicanRecipe(recipe))return item==='pemmican';
   if(isKibbleRecipe(recipe))return item==='kibble';
+  if(recipe==='smelt-slag')return item==='steel';
   if(isSmeltingRecipe(recipe))return item==='steel'||item==='plasteel';
   if(isBiofuelRecipe(recipe))return item==='chemfuel';
   if(recipe==='make-medicine')return item==='medicine';
@@ -252,7 +255,7 @@ export function isRecipeProduct(recipe:ProductionRecipe,item:ItemId):boolean {
 }
 export function tailoringProduct(recipe:TailoringRecipe,material:TailoringMaterial):ApparelItem { return apparelItemFor(recipe,material); }
 
-export const stationRecipes=(station:Pick<Structure,'kind'>):readonly ProductionRecipe[]=>station.kind==='electric-crematorium'?['cremate-corpse','burn-apparel']:station.kind==='electric-smelter'?['smelt-weapon']:station.kind==='biofuel-refinery'?['chemfuel-from-wood','chemfuel-from-organics']:station.kind==='art-bench'?['small-sculpture','large-sculpture']:station.kind==='machining-table'?['make-revolver','make-bolt-action-rifle','make-emp-launcher','make-flak-vest','make-flak-helmet','shred-mechanoid']:station.kind==='fabrication-bench'?['make-component','make-advanced-component','make-recon-helmet','make-recon-armor']:(station.kind==='tailor-bench'||station.kind==='electric-tailor-bench')?['shirt','pants','duster','parka','tribalwear','tuque']:station.kind==='crafting-spot'?['tribalwear','smash-mechanoid']:isStove(station.kind)?['make-pemmican','simple-meal','cook-simple-meal-bulk','fine-meal','cook-fine-meal-bulk','vegetarian-fine-meal','cook-vegetarian-fine-meal-bulk','carnivore-fine-meal','cook-carnivore-fine-meal-bulk','lavish-meal','cook-lavish-meal-bulk','vegetarian-lavish-meal','cook-vegetarian-lavish-meal-bulk','cook-carnivore-lavish-meal','cook-carnivore-lavish-meal-bulk','cook-survival-meal']:station.kind==='campfire'?['burn-apparel','make-pemmican','simple-meal','cook-simple-meal-bulk']:isButcherStation(station.kind)?['butcher-creature','make-kibble']:stationRecipe(station)?[stationRecipe(station)!]:[];
+export const stationRecipes=(station:Pick<Structure,'kind'>):readonly ProductionRecipe[]=>station.kind==='electric-crematorium'?['cremate-corpse','burn-apparel']:station.kind==='electric-smelter'?['smelt-weapon','smelt-slag']:station.kind==='biofuel-refinery'?['chemfuel-from-wood','chemfuel-from-organics']:station.kind==='art-bench'?['small-sculpture','large-sculpture']:station.kind==='machining-table'?['make-revolver','make-bolt-action-rifle','make-emp-launcher','make-flak-vest','make-flak-helmet','shred-mechanoid']:station.kind==='fabrication-bench'?['make-component','make-advanced-component','make-recon-helmet','make-recon-armor']:(station.kind==='tailor-bench'||station.kind==='electric-tailor-bench')?['shirt','pants','duster','parka','tribalwear','tuque']:station.kind==='crafting-spot'?['tribalwear','smash-mechanoid']:isStove(station.kind)?['make-pemmican','simple-meal','cook-simple-meal-bulk','fine-meal','cook-fine-meal-bulk','vegetarian-fine-meal','cook-vegetarian-fine-meal-bulk','carnivore-fine-meal','cook-carnivore-fine-meal-bulk','lavish-meal','cook-lavish-meal-bulk','vegetarian-lavish-meal','cook-vegetarian-lavish-meal-bulk','cook-carnivore-lavish-meal','cook-carnivore-lavish-meal-bulk','cook-survival-meal']:station.kind==='campfire'?['burn-apparel','make-pemmican','simple-meal','cook-simple-meal-bulk']:isButcherStation(station.kind)?['butcher-creature','make-kibble']:stationRecipe(station)?[stationRecipe(station)!]:[];
 export const stationAccepts=(station:Pick<Structure,'kind'>,recipe:ProductionRecipe):boolean=>stationRecipes(station).includes(recipe);
 
 /** Snapshot-only display total; the authoritative workpiece owns its material. */

@@ -1,3 +1,6 @@
+import type {GroupAnimalOwners256,GroupAnimalPreparation256} from './group-animal-state-256.ts';
+import type {PackedFurniture} from './furniture-rules.ts';
+import type {GroupReorganization,GroupTravelRevision,GroupReorganizationCommand,GroupMemberOrigin} from './group-reorganization-state.ts';
 import {pawnWorldGroup} from './world-map-context.ts';
 import type { Cell, MaterialPile, Pawn, World } from './types.ts';
 import type { CommercialBuyLine, CommercialTextileTotals } from './commercial-state.ts';
@@ -5,7 +8,10 @@ import type { CommercialBuyLine, CommercialTextileTotals } from './commercial-st
 export interface GroupSource {
   pileId: number;
   quantity: number;
-  item: 'pemmican' | 'survival-meal' | 'silver' | 'cloth' | 'muffalo-wool' | 'wood' | 'steel';
+  item: MaterialPile['item'];
+  /** Human pickup and subsequent real contact with this actual animal. */
+  animalCarrierId?:number;
+  deliveredToAnimal?:true;
   carrierId: number;
   carriedPileId?: number;
 }
@@ -51,7 +57,7 @@ export interface GroupSegment {
   remainingCore: number;
 }
 export type GroupStop =
-  | { kind: 'paused' | 'night' | 'at-site' | 'awaiting-entry' }
+  | { kind: 'paused' | 'night' | 'at-site' | 'awaiting-entry' | 'stationary' }
   | { kind: 'incapacity'; pawnIds: number[] }
   | { kind: 'overload'; grams: number; capacityGrams: number }
   | { kind: 'unreachable'; destination: number };
@@ -70,15 +76,23 @@ interface GroupCommon {
 export type GroupState =
   | (GroupCommon & {
       phase: 'gathering' | 'loading' | 'leaving';
+      /** Actual new formation intent; absent on migrated engaged groups. */
+      travelPreparation?:true;
+      animalPreparation?:GroupAnimalPreparation256;
       memberIds: number[];
       rendezvous: Cell;
       meeting: { pawnId: number; cell: Cell }[];
+      bedrollLoading?:import('./group-bedroll-loading-256.ts').GroupBedrollLoading256;
       manifest: GroupSource[];
       cursor: number;
       exits: { pawnId: number; cell: Cell | null }[];
     })
   | (GroupCommon & {
-      phase: 'travelling' | 'at-site' | 'awaiting-entry';
+      phase: 'travelling' | 'at-site' | 'awaiting-entry' | 'stationary';
+      reorganization?:GroupReorganization;
+      travel?:GroupTravelRevision;
+      packed?:PackedFurniture[];
+      animalOwners?:GroupAnimalOwners256;
       members: Pawn[]; // Original, exclusive owners.
       items: MaterialPile[];
       departedAt: number;
@@ -94,27 +108,32 @@ export type GroupState =
   | (GroupCommon & {
       phase: 'unloading';
       memberIds: number[];
+      pendingPackedIds?:number[];
+      animalIds?:number[];
       pendingPileIds: number[];
     });
 
 /** A retained dead human identity and possessions, not a playable Corpse.
  * This owner is frozen at the clinical death; it cannot act, ingest or return. */
 export interface GroupLoss {
+  /** Present only for a real prospective death after members of different origins met. */
+  memberOrigin?:GroupMemberOrigin;
+  packed?:PackedFurniture[];
   groupId: number;
   tile: number;
   tick: number;
   pawn: Pawn;
   items: MaterialPile[];
 }
-export type GroupCommand =
+export type GroupCommand = import('./group-caravan-carry-256.ts').GroupCaravanCarryCommand256 | GroupReorganizationCommand
   | { type: 'planet-adopt' }
-  | { type: 'group-start'; originMapId?:number; memberIds: number[]; destination: number; sources: CommercialBuyLine[] }
+  | { type: 'group-start'; originMapId?:number; memberIds: number[]; destination: number; sources: CommercialBuyLine[];packedIds?:number[];animalIds?:number[] }
   | { type: 'group-cancel'; groupId?:number }
   | { type: 'group-pause'; groupId?:number; paused: boolean }
   | { type: 'group-route'; groupId?:number; destination: number }
   | { type: 'group-buy'; groupId?:number; lines: CommercialBuyLine[]; quote: string }
   | { type: 'group-sell'; groupId?:number; lines: CommercialBuyLine[]; quote: string }
-  | { type: 'group-unload'; originMapId?:number; groupId?:number; memberIds: number[] };
+  | { type: 'group-unload'; originMapId?:number; groupId?:number; memberIds: number[];animalIds?:number[] };
 
 export const GROUP_MAX_MEMBERS = 8;
 export const GROUP_MAX_LOSSES = 64;

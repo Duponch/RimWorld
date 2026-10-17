@@ -1,3 +1,4 @@
+import {isBurialContainer256} from '../sim/ancient-monument-runtime-256';
 import { isColonist } from '../sim/affiliation';
 import { corpseStage } from '../sim/corpses';
 import { footprintCells } from '../sim/definitions';
@@ -10,7 +11,7 @@ export function burialMoodGuidance(world:Pick<World,'schemaVersion'>):string {
 export function bodyDescription(world:World,pawn:Pawn):string {
   if(pawn.body?.lostAt!==undefined)return 'Décédé · dépouille détruite';
   const pile=world.piles.find(p=>p.id===pawn.body?.pileId);
-  if(pile?.owner.type==='grave')return 'Décédé · inhumé dans une tombe';
+  if(pile?.owner.type==='grave'){const graveId=pile.owner.graveId;return world.structures.find(s=>s.id===graveId)?.kind==='sarcophagus'?'Décédé · inhumé dans un sarcophage':'Décédé · inhumé dans une tombe';}
   const stage=pile?` · ${{fresh:'dépouille fraîche',rotting:'dépouille en décomposition',desiccated:'dépouille desséchée'}[corpseStage(pile,world.tick)]}`:'';
   return pile?.owner.type==='pawn'?`Décédé · porté par ${world.pawns.find(p=>pile.owner.type==='pawn'&&p.id===pile.owner.pawnId)?.name??'un colon'}${stage}`:`Décédé · dépouille sur place${stage}`;
 }
@@ -19,14 +20,14 @@ export function bodyDescription(world:World,pawn:Pawn):string {
  * empty assignment. All player names enter the page through textContent. */
 export function updateBurialControls(panel:HTMLElement,world:World,selection:Cell|Pawn|undefined,send:(c:Command)=>void):void {
   let root=panel.querySelector<HTMLElement>('#burial-controls');
-  const grave=selection&&world.structures.find(s=>s.kind==='grave'&&footprintCells(s).some(c=>c.x===selection.x&&c.z===selection.z));
+  const grave=selection&&world.structures.find(s=>isBurialContainer256(s.kind,world.schemaVersion)&&footprintCells(s).some(c=>c.x===selection.x&&c.z===selection.z));
   const selectedPawn=selection&&'state' in selection?selection:undefined;
   const pile=selection&&!selectedPawn?world.piles.find(p=>p.humanCorpse&&p.owner.type==='ground'&&p.owner.x===selection.x&&p.owner.z===selection.z):undefined;
   const body=selectedPawn?.state==='dead'?selectedPawn:pile?world.pawns.find(p=>p.id===pile.humanCorpse!.pawnId):undefined;
   if(!grave&&!body){if(root)root.hidden=true;return;}
   if(!root){root=document.createElement('section');root.id='burial-controls';root.className='burial-controls';panel.append(root);}
   root.hidden=false;
-  const key=`${grave?.id??''}:${body?.id??''}:${world.pawns.filter(isColonist).map(p=>`${p.id}:${p.name}:${p.state==='dead'}`).join('|')}:${world.structures.filter(s=>s.kind==='grave').map(s=>s.id).join(',')}`;
+  const key=`${grave?.id??''}:${body?.id??''}:${world.pawns.filter(isColonist).map(p=>`${p.id}:${p.name}:${p.state==='dead'}`).join('|')}:${world.structures.filter(s=>isBurialContainer256(s.kind,world.schemaVersion)).map(s=>`${s.id}:${s.kind}`).join(',')}`;
   if(root.dataset.key!==key){
     root.dataset.key=key;root.replaceChildren();
     const title=document.createElement('h3');title.textContent=grave?'Sépulture':'Dépouille humaine';root.append(title);
@@ -34,7 +35,7 @@ export function updateBurialControls(panel:HTMLElement,world:World,selection:Cel
     const guidance=document.createElement('p');guidance.dataset.burialMood='';root.append(guidance);
     if(grave){
       for(const [kind,label] of [['colonists','Colons'],['strangers','Étrangers']] as const){const field=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.dataset.graveFilter=kind;field.append(input,` ${label}`);root.append(field);}
-      const label=document.createElement('label');label.textContent='Attribuer la tombe ';const choice=document.createElement('select');choice.id='grave-assignment';
+      const label=document.createElement('label');label.textContent=grave.kind==='sarcophagus'?'Attribuer le sarcophage ':'Attribuer la tombe ';const choice=document.createElement('select');choice.id='grave-assignment';
       const none=document.createElement('option');none.value='';none.textContent='Aucune attribution';choice.append(none);
       for(const p of world.pawns.filter(isColonist)){const option=document.createElement('option');option.value=String(p.id);option.textContent=p.name+(p.state==='dead'?' · décédé':'');choice.append(option);}
       label.append(choice);root.append(label);
@@ -43,15 +44,16 @@ export function updateBurialControls(panel:HTMLElement,world:World,selection:Cel
       const label=document.createElement('label');label.textContent='Porteur ';const choice=document.createElement('select');choice.id='burial-carrier';
       for(const p of world.pawns.filter(p=>isColonist(p)&&p.state!=='dead'&&p.state!=='downed'&&!p.prisoner)){const option=document.createElement('option');option.value=String(p.id);option.textContent=p.name;choice.append(option);}
       label.append(choice);root.append(label);
-      const destination=document.createElement('label');destination.textContent='Tombe ';const target=document.createElement('select');target.id='burial-target';
+      const destination=document.createElement('label');destination.textContent='Sépulture ';const target=document.createElement('select');target.id='burial-target';
       const automatic=document.createElement('option');automatic.value='';automatic.textContent='Disponible et compatible';target.append(automatic);
-      for(const g of world.structures.filter(s=>s.kind==='grave')){const option=document.createElement('option');option.value=String(g.id);option.textContent=`Tombe ${g.x}, ${g.z}`;target.append(option);}
+      for(const g of world.structures.filter(s=>isBurialContainer256(s.kind,world.schemaVersion))){const option=document.createElement('option');option.value=String(g.id);option.textContent=`${g.kind==='sarcophagus'?'Sarcophage':'Tombe'} ${g.x}, ${g.z}`;target.append(option);}
       destination.append(target);const button=document.createElement('button');button.id='bury-body';button.textContent='Inhumer';root.append(destination,button);
     }
   }
   if(grave){
     const stored=world.piles.find(p=>p.id===grave.grave?.corpseId),occupant=stored?.humanCorpse&&world.pawns.find(p=>p.id===stored.humanCorpse!.pawnId);
-    root.querySelector('[data-burial-status]')!.textContent=occupant?`Tombe occupée · ${occupant.name}`:'Tombe vide · un corps · transport et inhumation par un colon';
+    const name=grave.kind==='sarcophagus'?'Sarcophage':'Tombe';
+    root.querySelector('[data-burial-status]')!.textContent=occupant?`${name} occupé${grave.kind==='grave'?'e':''} · ${occupant.name}`:`${name} vide · un corps · transport et inhumation par un colon`;
     for(const input of root.querySelectorAll<HTMLInputElement>('[data-grave-filter]')){
       input.checked=!!grave.grave?.[input.dataset.graveFilter as 'colonists'|'strangers'];
       input.disabled=grave.grave?.corpseId!==undefined;

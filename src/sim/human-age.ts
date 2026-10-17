@@ -1,3 +1,5 @@
+import {nativeHumanBiologicalCore256,type NativeHumanIdentity256} from './native-human-identity-256.ts';
+import {syncNativeHumanClinicalScale256} from './native-human-clinical-scale-256.ts';
 import { createMedicalRecord } from './injury-state.ts';
 import { TICKS_PER_DAY, type Pawn, type World } from './types.ts';
 
@@ -106,17 +108,25 @@ export function advanceHumanAge(world:World,pawn:Pawn):void {
 export function advanceHumanAgeAt(pawn:Pawn,c:HumanAgeContext):void {
   if(c.schemaVersion<138)return;
     const age=pawn.age;if(!age)return;
+    if(pawn.nativeHuman&&pawn.state!=='dead'&&!pawn.health?.death){
+      const before=nativeHumanBiologicalCore256(pawn),after=before+10;
+      if(pawn.health?.animalAgeConditions?.cases.some(c=>c.kind==='Alzheimers'))throw Error('Actual native Human Alzheimer memory/conditional-thought owner is not bound');
+      if(!Number.isSafeInteger(after))throw Error('Native biological age exhausted');
+      if(Math.floor(before/3600000)!==Math.floor(after/3600000))throw Error('Actual native Human living birthday/notification frontier is not bound; historical birthdayAt is not a substitute');
+    }
     if(age.chronologicalTicks<Number.MAX_SAFE_INTEGER)age.chronologicalTicks++;
     if(pawn.state==='dead'||age.biologicalTicks>=Number.MAX_SAFE_INTEGER)return;
     age.biologicalTicks++;
+    if(pawn.nativeHuman)syncNativeHumanClinicalScale256(pawn,nativeHumanBiologicalCore256(pawn));
     if(age.biologicalTicks%HUMAN_YEAR_TICKS===0)birthdayAt(pawn,biologicalYears(age),c);
 }
 
-export function validHumanAge(value:unknown,version:number):boolean {
+export function validHumanAge(value:unknown,version:number,native?:NativeHumanIdentity256):boolean {
+  if(native&&version!==256)return false;
   if(version<138)return value===undefined;
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
   const age=value as Record<string,unknown>;
   return Object.keys(age).length===2&&Object.hasOwn(age,'biologicalTicks')&&Object.hasOwn(age,'chronologicalTicks')&&
-    Number.isSafeInteger(age.biologicalTicks)&&Number(age.biologicalTicks)>=18*HUMAN_YEAR_TICKS&&
+    Number.isSafeInteger(age.biologicalTicks)&&Number(age.biologicalTicks)>=(native?13:18)*HUMAN_YEAR_TICKS&&
     Number.isSafeInteger(age.chronologicalTicks)&&Number(age.chronologicalTicks)>=Number(age.biologicalTicks);
 }

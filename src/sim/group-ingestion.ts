@@ -1,4 +1,4 @@
-import {mixedGroupProvisions} from './group-provisions.ts';
+import {mixedGroupProvisions,groupPemmicanCounter,setGroupPemmicanCounter} from './group-provisions.ts';
 import {foodScore} from './food-selection.ts';
 import {ticksUntilRot} from './food-preservation.ts';
 import {TICKS_PER_DAY} from './types.ts';
@@ -14,6 +14,8 @@ import { rememberIngestionAt } from './wellbeing.ts';
 import type { ConsumedGroupMass } from './group-care.ts';
 type ActiveGroup=Extract<GroupState,{members:unknown}>;
 export interface GroupIngestionContext {
+  /** One actual owner only, for the prospective per-Pawn Core needs order. */
+  onlyPerson256?:Pawn;
   tick:number;schemaVersion:number;foodPolicies:readonly FoodPolicy[];foodPoisonFactor:number;
   random():number;notice(person:Pawn,message:string):void;
 }
@@ -22,7 +24,8 @@ export interface GroupIngestionContext {
 export function advanceGroupIngestion(group:ActiveGroup,c:GroupIngestionContext):ConsumedGroupMass {
   if(group.lastPersonalTick!==c.tick)throw Error('Ingestion precedes personal frontier');
   const removed:ConsumedGroupMass['removed']=[];
-  for(const person of group.members){
+  if(c.onlyPerson256&&(c.schemaVersion<256||!group.members.includes(c.onlyPerson256)))throw Error('Invalid prospective ingestion owner');
+  for(const person of c.onlyPerson256?[c.onlyPerson256]:group.members){
     if(person.state==='dead'||person.health?.death||adultHungerFactor(person.hunger)>=1)continue;
     const mixed=mixedGroupProvisions(group),allowed=allowedFoodFromPolicies(c.foodPolicies,person);
     if(!mixed&&!allowed.includes('survival-meal'))continue;
@@ -33,14 +36,14 @@ export function advanceGroupIngestion(group:ActiveGroup,c:GroupIngestionContext)
     if(!pile)continue;
     const owner=pile.owner,index=group.items.indexOf(pile),mass=commercialItemMassGrams(pile.item);
     if(owner.type!=='inventory'||index<0||mass===undefined||!Number.isSafeInteger(pile.quantity)||pile.quantity<1)throw Error('Invalid group food ownership');
-    const quantity=mealQuantity(person,pile,pile.quantity),pemmican=mixed&&pile.item==='pemmican',consumed=(pemmican?group.provisions!.pemmicanConsumedUnits:group.ledger.foodConsumed)+quantity;
+    const quantity=mealQuantity(person,pile,pile.quantity),pemmican=mixed&&pile.item==='pemmican',consumed=(pemmican?groupPemmicanCounter(group,'consumed'):group.ledger.foodConsumed)+quantity;
     if((!mixed&&quantity!==1)||!Number.isSafeInteger(quantity)||quantity<1||quantity>pile.quantity||!Number.isSafeInteger(consumed)||consumed<0)throw Error('Invalid food consumption counter');
     const cause=c.schemaVersion>=89?ingestionFoodPoison(pile,true,c.foodPoisonFactor,c.random):undefined;
     if(pile.quantity===quantity)group.items.splice(index,1);else pile.quantity-=quantity;
     person.hunger=Math.min(100,person.hunger+ITEM_DEFINITIONS[pile.item].nutrition*quantity);
     // No dining-room observation or missing-table thought without that job.
     rememberIngestionAt(person,c.tick,{raw:false,food:pile.item});
-    if(pemmican)group.provisions!.pemmicanConsumedUnits=consumed;else group.ledger.foodConsumed=consumed;
+    if(pemmican)setGroupPemmicanCounter(group,'consumed',consumed);else group.ledger.foodConsumed=consumed;
     removed.push({pawnId:owner.pawnId,grams:mass*quantity});
     if(cause){
       person.health??=createMedicalRecord(c.tick);

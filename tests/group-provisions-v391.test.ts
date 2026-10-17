@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import {expect,test} from 'vitest';
 import {applyCommand,stepWorld,serializeWorld,deserializeWorld,validateWorld} from '../src/sim/index.ts';
 import {groupProvisionMinimum,groupProvisionCounts} from '../src/sim/group-provisions.ts';
@@ -42,7 +43,7 @@ test('collective-only admission, actual pickup receipts and quantities retain ag
 test('mixed off-map meals, exact save and real return/unloading close independent item conservation',()=>{
  const f=depart(),w=f.w;until(w,()=>!!w.group&&'members' in w.group&&w.group.ledger.foodConsumed>=1&&w.group.provisions!.pemmicanConsumedUnits>1);
  const g=w.group as AwayGroup;expect(g.members.find(p=>p.id===f.memberIds[0])!.hunger).toBeGreaterThan(80);expect(g.ledger.foodConsumed).toBe(1);expect(g.provisions!.pemmicanConsumedUnits).toBeGreaterThan(1);
- const saved=deserializeWorld(serializeWorld(w));expect(saved).toEqual(w);accept(w,{type:'group-route',destination:w.planet!.homeTile});accept(saved,{type:'group-route',destination:saved.planet!.homeTile});const at=w.tick;
+ const saved=deserializeWorld(serializeWorld(w));expect(saved).toEqual(w);accept(w,{type:'group-route',destination:legacyPlanet(w).homeTile});accept(saved,{type:'group-route',destination:legacyPlanet(saved).homeTile});const at=w.tick;
  until(w,()=>w.group?.phase==='unloading');stepWorld(saved,w.tick-at);expect(serializeWorld(saved)).toBe(serializeWorld(w));
  const ledger=structuredClone(w.group!.ledger),provisions=structuredClone(w.group!.provisions!);expect(all(w,'pemmican')).toBe(60-provisions.pemmicanConsumedUnits-provisions.pemmicanSpoiledUnits);expect(all(w,'survival-meal')).toBe(4-ledger.foodConsumed);
  until(w,()=>!w.group);expect(w.pawns.filter(p=>f.memberIds.includes(p.id))).toHaveLength(2);expect(w.piles.filter(p=>p.item==='pemmican').every(p=>p.owner.type==='ground')).toBe(true);expect(w.piles.filter(p=>p.item==='survival-meal').every(p=>p.owner.type==='ground')).toBe(true);expect(validateWorld(w)).toEqual([]);
@@ -51,7 +52,7 @@ test('mixed off-map meals, exact save and real return/unloading close independen
 test('expiry after a cold-owner boundary occurs before eating, removes real mass and resumes exactly without rejuvenation',()=>{
  const f=depart(),w=f.w;until(w,()=>w.group?.phase==='at-site');const g=w.group as AwayGroup;for(const p of g.members)p.hunger=100;
  // Declared warm planetary tile + near-expiry carried checkpoint; no voyage age is credited to this preparation.
- w.planet!.tiles[g.tile]!.meanTemperature=100;const p=g.items.find(p=>p.item==='pemmican')!,units=p.quantity;
+ legacyPlanet(w).tiles[g.tile]!.meanTemperature=100;const p=g.items.find(p=>p.item==='pemmican')!,units=p.quantity;
  p.rot={progress:ROT_DAYS.pemmican*6000-1,atTick:w.tick,rate:0};const age=rotAge(p,w.tick);adoptGroupProvisionClimate(w,g);expect(rotAge(p,w.tick)).toBe(age);expect(p.rot.rate).toBeUndefined();
  g.members.find(v=>p.owner.type==='inventory'&&v.id===p.owner.pawnId)!.hunger=23;const before=structuredClone(g.provisions!),mass=captureGroupMass(g.members,g.items)!.grams;
  const saved=deserializeWorld(serializeWorld(w));stepWorld(w);stepWorld(saved);expect(serializeWorld(saved)).toBe(serializeWorld(w));

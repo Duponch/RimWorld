@@ -1,3 +1,4 @@
+import {roofCoverage} from '../sim/roof-rules';
 import { RoomQualityCapture,type RoomQuality } from '../sim/room-quality';
 import { structureBeauty,filthBeauty,type BeautyCell } from '../sim/room-beauty';
 import { daylilyBeauty } from '../sim/flower-pot';
@@ -24,7 +25,7 @@ export class RoomBeautyInspection {
       world.piles.flatMap(p=>p.owner.type==='ground'?[[p.owner.x,p.owner.z,p.kind]]:[]),
       world.packed.flatMap(p=>p.owner.type==='ground'?[[p.owner.x,p.owner.z]]:[]),
       world.resources.flatMap(r=>r.kind==='tree'?[r.z*world.width+r.x]:[]),
-      world.jobs.filter(j=>j.construction==='frame').map(j=>[j.kind,j.x,j.z,j.orientation,j.footprint]),world.roofing?.constructed,
+      world.jobs.filter(j=>j.construction==='frame').map(j=>[j.kind,j.x,j.z,j.orientation,j.footprint]),roofCoverage(world),
     ]);
     if(this.tiles!==world.tiles||this.signature!==signature||this.capture?.topology!==topology){
       this.capture=new RoomQualityCapture(world,topology);this.count++;

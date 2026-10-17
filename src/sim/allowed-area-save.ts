@@ -1,3 +1,4 @@
+import {validPawnMapAreasRecord,validPawnMapAreaBindings} from './pawn-map-areas.ts';
 import { captureHumanOwners,everyHumanPawnOwner } from './human-owners.ts';
 import type { AllowedArea,Cell,Pawn,World } from './types.ts';
 
@@ -19,6 +20,7 @@ export function validAllowedAreaRecord(v:unknown,w:Pick<World,'width'|'height'|'
 /** Presence, including undefined, is prospective. References remain on original
  * living and frozen owners; a return is a separate local spatial intention. */
 export function validAllowedAreaPawnShape(p:Record<string,unknown>,w:World,version:number):boolean {
+  if(!validPawnMapAreasRecord(p,version,w.nextId))return false;
   if(version<223)return !Object.hasOwn(p,'allowedAreaId')&&!Object.hasOwn(p,'allowedAreaReturn');
   if(Object.hasOwn(p,'allowedAreaId')&&(!int(p.allowedAreaId,1,w.nextId-1)||!Array.isArray(w.allowedAreas)||!w.allowedAreas.some(a=>object(a)&&a.id===p.allowedAreaId)))return false;
   return !Object.hasOwn(p,'allowedAreaReturn')||object(p.allowedAreaReturn)&&keys(p.allowedAreaReturn,['target'])&&validAllowedAreaCell(p.allowedAreaReturn.target,w);
@@ -33,7 +35,7 @@ function returnExclusive(w:World,p:Pawn):boolean {
     &&!p.health?.death&&!p.medicalSleep&&!p.collapsePending&&!p.transitExit&&!p.burning&&!p.flee&&!p.bombRefuge&&!p.heatRefuge
     &&!p.interruptedCargo&&!p.equipmentDropPending&&['idle','moving'].includes(p.state)
     &&p.jobId===null&&!p.haul&&!p.cooking&&!p.need&&!p.hunting&&!p.animalHandling&&!p.animalCare&&!p.animalFeed&&!p.animalRescue
-    &&!p.burial&&!p.cleaning&&!p.firefighting&&!p.research&&!p.deepWork&&!p.orbitalTrade&&!p.trade&&!p.ward&&!p.feed&&!p.tend&&!p.surgery&&!p.rescue
+    &&!p.openCasket&&!p.burial&&!p.cleaning&&!p.firefighting&&!p.research&&!p.deepWork&&!p.orbitalTrade&&!p.trade&&!p.ward&&!p.feed&&!p.tend&&!p.surgery&&!p.rescue
     &&!p.equipmentTask&&!p.recreation.task&&!p.priorityWork&&p.orders.active===null&&!p.orders.queue.length
     &&(p.tactics?.targetId===undefined||p.tactics.targetId===null)&&!p.tactics?.post&&!p.social?.fight
     &&!p.melee?.order&&!p.melee?.strike&&!p.shooting?.order&&!p.shooting?.stance
@@ -43,7 +45,7 @@ function returnExclusive(w:World,p:Pawn):boolean {
 /** No path search, health evaluation, random draw or repair. Topology and
  * temporary ability are reconciled by runtime, not inferred at admission. */
 export function validateAllowedAreas(w:World,version:number):string[] {
-  if(!Object.hasOwn(w,'allowedAreas'))return everyHumanPawnOwner(w,p=>!Object.hasOwn(p,'allowedAreaId')&&!Object.hasOwn(p,'allowedAreaReturn'))
+  if(!Object.hasOwn(w,'allowedAreas'))return everyHumanPawnOwner(w,p=>!Object.hasOwn(p,'allowedAreaId')&&!Object.hasOwn(p,'allowedAreaReturn')&&validPawnMapAreasRecord(p as unknown as Record<string,unknown>,version,w.nextId)&&validPawnMapAreaBindings(p,w,w.pawns.includes(p)))
     ?[]:['Invalid or future allowed area assignment or return without definitions.'];
   const owners=captureHumanOwners(w),errors:string[]=[];
   if(Object.hasOwn(w,'allowedAreas')){
@@ -63,7 +65,7 @@ export function validateAllowedAreas(w:World,version:number):string[] {
   }
   for(const slot of owners.pawnOwners){
     const p=slot.pawn!;
-    if(!validAllowedAreaPawnShape(p as unknown as Record<string,unknown>,w,version)){errors.push('Invalid or future allowed area assignment or return shape.');continue;}
+    if(!validAllowedAreaPawnShape(p as unknown as Record<string,unknown>,w,version)||!validPawnMapAreaBindings(p,w,slot.kind==='map')){errors.push('Invalid or future allowed area assignment or return shape.');continue;}
     if(!Object.hasOwn(p,'allowedAreaReturn'))continue;
     const t=p.allowedAreaReturn!,area=w.allowedAreas?.find(a=>a.id===p.allowedAreaId);
     if(slot.kind!=='map'||!area?.cells.length||!returnExclusive(w,p)||!area.cells.includes(t.target.z*w.width+t.target.x)

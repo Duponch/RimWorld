@@ -20,6 +20,9 @@ import {installAulnesPerformanceProbe,captureAulnesPerformance,assertComparableA
 import {captureHumanGoods,assertHumanGoodsPeople} from './aulnes-multimap-conservation-v397';
 import type {Pawn,World} from '../../src/sim/types';
 
+/** Historical basic-globe pilot; never reinterpret geographic revision3. */
+function legacyPlanet(w:Pick<World,'planet'>){const planet=w.planet;if(!planet||planet.revision===3)throw Error('This historical pilot requires a literal revision1/2 planet');return planet;}
+
 // One ROOT-only intervention; no scenario factory, stepWorld, favorable clone or RNG search.
 test.skip(process.env.AULNES_MULTIMAP_V397!=='1','ROOT opt-in only after V396 is adopted, validated and frozen.');
 const resumeNative01=process.env.AULNES_MULTIMAP_V397_RESUME_NATIVE01==='1';
@@ -151,7 +154,7 @@ async function enter(page:Page,tile:number,ids:number[],info:TestInfo,label:stri
   const button=page.locator('[data-site-action="enter"]');await expect(button).toHaveAttribute('aria-disabled','false');await button.click();
   await page.waitForFunction(tile=>{const w=window.__lisiere.world;return w.expeditionSite?.tile===tile;},tile,{polling:100,timeout:15_000});
   await page.locator('[data-speed="6"]').click();await page.waitForFunction(()=>{const w=window.__lisiere.world;return !w.group;},undefined,{polling:100,timeout:15_000});await pause(page);
-  const current=await world(page);expect(current.campaignMap?.active).toBe('secondary');
+  const current=await world(page);expect((current.campaignMap?.revision===2?undefined:current.campaignMap?.active)).toBe('secondary');
   expect(current.pawns.map(p=>p.id).sort()).toEqual([...ids].sort());expect(Object.hasOwn(current,'secondarySite')).toBe(false);
   await page.keyboard.press('Escape');if(await page.locator('#world-panel').isVisible())await page.locator('#world-panel [data-close-panel]').click();await expect(page.locator('#world-panel')).toBeHidden();
   await inspectPerson(page,ids[0]!,'gear');await page.screenshot({path:info.outputPath(label+'-site.png')});
@@ -281,7 +284,7 @@ test('V397 actual Aulnes250²: one real round trip, local paid work, exact two-m
   if(resumeNative02){proof.outbound=parentProof!.outbound;proof.preflight=parentProof!.preflight;proof.leisureInterruption=parentProof!.leisureInterruption;}
   const historical=JSON.parse(raw) as World;expect(historical.schemaVersion).toBe(resumeExisting?252:250);expect(historical.tick).toBe(resumeNative02?14500:resumeNative01?12303:10733);
   initial=deserializeWorld(raw);expect(initial.schemaVersion).toBe(252);expect(validateWorld(initial)).toEqual([]);expect([initial.width,initial.height]).toEqual([250,250]);
-  expect(initial.pawns).toHaveLength(resumeNative02?14:15);expect(initial.planet?.tiles).toHaveLength(162);expect(initial.planet?.homeTile).toBe(0);expect(initial.planet?.civilianTile).toBe(70);expect(initial.group).toBeUndefined();if(resumeNative02){expect(initial.secondarySite).toMatchObject({tile:65,selected:true});expect(initial.secondarySite!.map.pawns.map(p=>p.id)).toEqual([20331]);expect(initial.secondarySite!.map.group).toBeUndefined();}else expect(initial.secondarySite).toBeUndefined();
+  expect(initial.pawns).toHaveLength(resumeNative02?14:15);expect(legacyPlanet(initial).tiles).toHaveLength(162);expect(initial.planet?.homeTile).toBe(0);expect(initial.planet?.civilianTile).toBe(70);expect(initial.group).toBeUndefined();if(resumeNative02){expect(initial.secondarySite).toMatchObject({tile:65,selected:true});expect(initial.secondarySite!.map.pawns.map(p=>p.id)).toEqual([20331]);expect(initial.secondarySite!.map.group).toBeUndefined();}else expect(initial.secondarySite).toBeUndefined();
   if(!resumeNative02)expect(initial.piles.filter(p=>p.item==='survival-meal'&&p.owner.type==='ground').reduce((n,p)=>n+p.quantity,0)).toBe(40);
   const originalIds=resumeExisting?parentProof!.initialPeople.map((p:{id:number})=>p.id) as number[]:initial.pawns.map(p=>p.id),
    initialCensus=resumeExisting?parentProof!.initialGoods as ReturnType<typeof captureHumanGoods>:captureHumanGoods(initial);
@@ -307,10 +310,10 @@ test('V397 actual Aulnes250²: one real round trip, local paid work, exact two-m
   if(!resumeNative02){
   const owned=readyWorld.piles.filter(p=>'pawnId' in p.owner&&p.owner.pawnId===id),mass=captureGroupMass([readyWorld.pawns.find(p=>p.id===id)!],owned);expect(mass).toBeDefined();
   const route=findPlanetRoute(readyWorld.planet!,0,65,planetCostContext(readyWorld,mass!),{nodes:PLANET_QUERY_NODES,arcs:PLANET_QUERY_ARCS});expect(route.kind).toBe('found');if(route.kind!=='found')throw Error('Route65 refusée.');
-  expect(route.tiles).toEqual([0,59,65]);expect(readyWorld.planet!.tiles[65]).toMatchObject({biome:'temperate-forest',hilliness:'small-hills'});
+  expect(route.tiles).toEqual([0,59,65]);expect(legacyPlanet(readyWorld).tiles[65]).toMatchObject({biome:'temperate-forest',hilliness:'small-hills'});
   const sources=readyWorld.piles.filter(p=>p.owner.type==='ground'&&p.item==='survival-meal'&&!p.foodPoison).slice(0,2).map(p=>({pileId:p.id,quantity:4}));
   const preview=previewGroupFormation(readyWorld,ids,sources,65);expect(preview.ok).toBe(true);
-  proof.preflight={route,preview,apparel:worn.map(p=>({id:p.id,item:p.item,owner:p.owner,insulation:apparelInsulation(p)})),equipment:equipment.map(p=>({id:p.id,item:p.item,owner:p.owner})),tiles:route.tiles.map(i=>readyWorld.planet!.tiles[i]),policy:readyWorld.foodPolicies.find(p=>p.id===2),note:'No admissible direct neighbour: four oceans and mountain59. Choose existing temperate65 via59; no map regenerated, clothes unchanged.'};
+  proof.preflight={route,preview,apparel:worn.map(p=>({id:p.id,item:p.item,owner:p.owner,insulation:apparelInsulation(p)})),equipment:equipment.map(p=>({id:p.id,item:p.item,owner:p.owner})),tiles:route.tiles.map(i=>legacyPlanet(readyWorld).tiles[i]),policy:readyWorld.foodPolicies.find(p=>p.id===2),note:'No admissible direct neighbour: four oceans and mountain59. Choose existing temperate65 via59; no map regenerated, clothes unchanged.'};
   await inspectPerson(page,id,'gear');await page.screenshot({path:info.outputPath('01-actual-traveller-before-formation.png')});
   proof.outbound=await form(page,ids,65,8,info,'outbound');await assertSafe(page);await enter(page,65,ids,info,'first-entry');await assertSafe(page);
   }
@@ -321,7 +324,7 @@ test('V397 actual Aulnes250²: one real round trip, local paid work, exact two-m
   const saved=await exactReload(page,info,'two-map-after-work');proof.twoMapReloadExact=true;const siteCensus=captureHumanGoods(saved.complete);proof.siteGoods=siteCensus;assertHumanGoodsPeople(initialCensus,siteCensus,originalIds);
   proof.performance.push(await captureAulnesPerformance(page,{label:'secondary-two-maps',speed:6,windowMs:3000,campaign:siteCensus}));await assertSafe(page);
   proof.returnPreparation=await form(page,ids,0,1,info,'return');
-  await page.waitForFunction(ids=>{const w=window.__lisiere.world,g=w.group;return w.campaignMap?.active==='home'&&(!!g&&'members' in g&&g.members.every(p=>ids.includes(p.id))||!g&&ids.every(id=>w.pawns.some(p=>p.id===id)));},ids,{polling:100,timeout:75_000});
+  await page.waitForFunction(ids=>{const w=window.__lisiere.world,g=w.group;return (w.campaignMap?.revision===2?undefined:w.campaignMap?.active)==='home'&&(!!g&&'members' in g&&g.members.every(p=>ids.includes(p.id))||!g&&ids.every(id=>w.pawns.some(p=>p.id===id)));},ids,{polling:100,timeout:75_000});
   await page.waitForFunction(ids=>{const w=window.__lisiere.world;return !w.group&&ids.every(id=>w.pawns.some(p=>p.id===id));},ids,{polling:100,timeout:120_000});await pause(page);await assertSafe(page);
   const returned=await exportCampaign(page,info,'home-returned');proof.returnedAt=returned.complete.tick;const returnedCensus=captureHumanGoods(returned.complete);proof.returnedGoods=returnedCensus;assertHumanGoodsPeople(initialCensus,returnedCensus,originalIds);
   expect(returned.complete.piles.some(p=>p.owner.type==='inventory'&&ids.includes(p.owner.pawnId))).toBe(false);

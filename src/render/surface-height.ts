@@ -3,8 +3,9 @@ import { WORLD_SCALE } from '../world/scale';
 
 /** Shared with the constructed floor placements, whose bottom is .024. */
 export const FLOOR_SURFACE_Y = .062;
-/** Both water identities share the existing flat fluid surface and material. */
-export const isWaterTerrain=(terrain:Terrain):boolean=>terrain==='water'||terrain==='water-shallow';
+/** Fluid surface shares resident geometry; marsh keeps its historical ground
+ * quad. Water depth affects rules and pigment, not a fabricated raised river. */
+export const isWaterTerrain=(terrain:Terrain):boolean=>terrain==='water'||terrain==='water-shallow'||terrain==='water-deep'||terrain==='ocean-shallow'||terrain==='ocean-deep'||terrain==='river-shallow'||terrain==='river-chest-deep';
 export const FILTH_SURFACE_OFFSET = .009;
 export type FilthSurface = Pick<World, 'width' | 'height' | 'tiles'>;
 export interface SurfaceBounds { minX: number; minZ: number; maxX: number; maxZ: number }

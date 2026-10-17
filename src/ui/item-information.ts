@@ -1,3 +1,6 @@
+import {knownPile256} from './exploration-readers-256';
+import {UNDISCOVERED_CELL_LABEL_256} from '../sim/exploration-visibility-256';
+import {eggSpeciesForItem256} from '../sim/animal-egg-content-v256';
 import { ITEM_DEFINITIONS } from '../sim/items';
 import { isApparelItem, apparelDefinition, apparelLabel, armorPiece, apparelQualityFactor, apparelInsulation } from '../sim/apparel-rules';
 import { QUALITY_LABELS, isWeaponItem, weaponMaxHitPoints } from '../sim/equipment-rules';
@@ -16,8 +19,14 @@ import { ROT_DAYS } from '../sim/food-preservation';
 
 /** Only delivered properties, evaluated on explicit inspection of one item. */
 export function itemInformation(pile:MaterialPile,world?:World):ObjectInformationInput {
+  if(world&&!knownPile256(world,pile))return {title:UNDISCOVERED_CELL_LABEL_256,description:'',rows:[]};
   const definition=ITEM_DEFINITIONS[pile.item],rows:ObjectInformationRow[]=[];
   const add=(category:string,label:string,value:string,description:string)=>rows.push({category,label,value,description});
+  if(eggSpeciesForItem256(pile.item)){
+    add('Œuf','Permission',pile.eggForbidden?'Interdit':'Autorisé','Les œufs pondus par un animal sauvage restent interdits au travail de la colonie jusqu’à votre autorisation.');
+    add('Œuf','Masse',`${(pile.quantity*.15).toLocaleString('fr-FR')} kg`,'150 g par œuf. Le transport local conserve l’identité, la quantité et l’incubation ; le chargement en caravane attend son propriétaire biologique complet.');
+    if(pile.egg){add('Œuf','Incubation',`${Math.min(100,Math.floor(pile.egg.progress*100))} %`,'L’incubation suit la température réelle de son emplacement. Si aucune place d’éclosion n’est libre, tous les œufs sont conservés.');add('Œuf','Dommages thermiques',`${Math.floor(pile.egg.temperatureDamage*100)} %`,'Sous 0 °C ou au-dessus de 50 °C, la pile peut perdre sa fécondation.');}
+  }
   add('Général','Quantité',String(pile.quantity),'Quantité réellement présente dans cette pile.');
   add('Général','Limite de pile',String(definition.stackLimit),'Quantité maximale d’une pile de cet objet.');
   if(isMinifiedTree(pile)){

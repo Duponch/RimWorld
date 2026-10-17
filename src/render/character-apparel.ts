@@ -1,3 +1,4 @@
+import {packStartingApparelTint256,startingApparelTintHex256} from '../sim/starting-apparel-color-256';
 import { APPAREL,apparelLabel,type ApparelItem } from '../sim/apparel-rules';
 import type { World,MaterialPile } from '../sim/types';
 
@@ -11,15 +12,17 @@ export function apparelProjection(world:World):ReadonlyMap<number,readonly Mater
 }
 export function apparelAppearance(pieces:readonly MaterialPile[]=[]) {
   const family=(name:string)=>pieces.find(p=>APPAREL[p.item as ApparelItem]?.family===name);
-  const tuque=family('tuque');
-  const shirt=family('shirt'),tribal=family('tribalwear'),pants=family('pants'),outer=family('duster')??family('parka');
+  const tuque=family('tuque'),vest=pieces.find(p=>p.item==='flak-vest');
+  const shirt=family('shirt'),tribal=family('tribalwear'),pants=pieces.find(p=>p.item==='flak-pants')??family('pants'),outer=family('duster')??family('parka');
   const recon=pieces.find(p=>p.item==='recon-armor'),top=recon??outer??tribal??shirt,definition=top?APPAREL[top.item as ApparelItem]:undefined;
   return {shirt:!!shirt,tribal:!!tribal,vest:pieces.some(p=>p.item==='flak-vest')&&!outer,
-    helmet:pieces.some(p=>p.item==='flak-helmet'||p.item==='recon-helmet'),
+    helmet:pieces.some(p=>p.item==='flak-helmet'||p.item==='plasteel-flak-helmet'||p.item==='recon-helmet'),
+    plasteelHelmet:pieces.some(p=>p.item==='plasteel-flak-helmet'),
     reconHelmet:pieces.some(p=>p.item==='recon-helmet'),tuque:tuque?(tuque.item==='muffalo-wool-tuque'?2:1):0,
     silhouette:recon?5:outer?(definition!.family==='parka'?4:3):tribal?2:shirt?1:0,
-    pants:pants?((['cloth','light-leather','plainleather','bluefur','camelhide','muffalo-wool','foxfur'].indexOf(APPAREL[pants.item as ApparelItem].material??'cloth')+1)):0,
-    color:definition?.color,signature:pieces.map(p=>p.item).sort().join(' '),description:pieces.map(apparelLabel).join(', ')||'Aucun vêtement équipé'};
+    pants:pants?(pants.item==='flak-pants'?(pants.apparel?.birthColor?(pants.apparel.birthColor.r===Math.fround(.62)?9:10):8):(['cloth','light-leather','plainleather','bluefur','camelhide','muffalo-wool','foxfur'].indexOf(APPAREL[pants.item as ApparelItem].material??'cloth')+1)):0,
+    ...(vest?.apparel?.birthColor&&!outer?{vestTintCode:packStartingApparelTint256(vest.apparel.birthColor),vestTintColor:startingApparelTintHex256(vest.apparel.birthColor)}:{}),
+    color:definition?.color,signature:pieces.map(p=>p.item+(p.apparel?.birthColor?':'+Object.values(p.apparel.birthColor).join(','):'')).sort().join(' '),description:pieces.map(apparelLabel).join(', ')||'Aucun vêtement équipé'};
 }
 export const APPAREL_CARGO:Readonly<Record<ApparelItem,number>>=Object.freeze({
   'foxfur-tribalwear':76,'foxfur-shirt':77,'foxfur-pants':78,'foxfur-duster':79,'foxfur-parka':80,
@@ -44,6 +47,7 @@ export const APPAREL_CARGO:Readonly<Record<ApparelItem,number>>=Object.freeze({
   'muffalo-wool-duster':57,
   'muffalo-wool-parka':58,
   'flak-helmet':59,
+  'flak-pants':84,'plasteel-flak-helmet':85,
   'recon-helmet':72,'recon-armor':81,'cloth-tuque':82,'muffalo-wool-tuque':83,
   'cloth-shirt':22,'flak-vest':23,'cloth-tribalwear':26,'light-leather-shirt':31,'light-leather-tribalwear':32,
   'cloth-pants':33,'light-leather-pants':34,'cloth-duster':35,'light-leather-duster':36,'cloth-parka':37,'light-leather-parka':38,
@@ -52,7 +56,7 @@ export const APPAREL_CARGO:Readonly<Record<ApparelItem,number>>=Object.freeze({
 export function foldedApparel(item:ApparelItem) {
   const color=APPAREL[item].color;
   if(item.endsWith('-tuque'))return [{size:[.34,.18,.33],center:[0,.045,0],color},{size:[.40,.06,.37],center:[0,-.045,0],color}];
-  if(item==='flak-helmet')return [{size:[.34,.14,.33],center:[0,.04,0],color},
+  if(item==='flak-helmet'||item==='plasteel-flak-helmet')return [{size:[.34,.14,.33],center:[0,.04,0],color},
     {size:[.42,.035,.36],center:[0,-.01,.03],color:0x424e51}];
   if(item==='recon-armor')return [{size:[.46,.16,.58],center:[0,0,0],color},{size:[.30,.04,.32],center:[0,.1,0],color:0x536a74}];
   if(item==='recon-helmet')return [{size:[.36,.19,.35],center:[0,.025,0],color},

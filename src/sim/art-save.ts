@@ -8,7 +8,7 @@ export function validateArtObjects(world:World,version:number):string[] {
   for(const s of [...world.structures,...(world.packed??[]).map(p=>p.building)]) {
     if(!isArtRecipe(s.kind)){if(s.art!==undefined)errors.push('Art provenance on a non-sculpture.');continue;}
     const a=s.art;
-    if(version<104||!isArtMaterial(s.material)||!isFurnitureQuality(s.quality)||s.orientation!==0||s.footprint!=='standard'
+    if(version<104||!isArtMaterial(s.material,version)||!isFurnitureQuality(s.quality)||s.orientation!==0||s.footprint!=='standard'
       ||!a||Object.keys(a).some(k=>!['authorId','createdAt'].includes(k))||!Number.isSafeInteger(a.authorId)
       ||!world.pawns.some(p=>p.id===a.authorId)||!Number.isSafeInteger(a.createdAt)||a.createdAt<0||a.createdAt>world.tick)
       errors.push('Invalid sculpture provenance, material or quality.');

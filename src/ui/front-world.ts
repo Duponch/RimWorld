@@ -1,5 +1,5 @@
 import { generateStartingWorld,localSeedForTile,parseWorldSeed,startingSiteChoices,startingTileClimate } from '../sim/starting-world';
-import type { PlanetState } from '../sim/planet-state';
+import type { LegacyPlanetState } from '../sim/planet-state';
 import { HILLINESS_LABELS,resolveSite } from '../sim/site';
 import { STONE_LABELS } from '../sim/geology';
 import { automaticStartDay,seasonalAmplitude } from '../sim/site-climate';
@@ -52,7 +52,7 @@ export function createWorldParameters(options:{seed:string;onSeed:(seed:string)=
   return {element:root,validate(){const seed=parseWorldSeed(input.value);if(seed===undefined){input.setAttribute('aria-invalid','true');options.onError('Saisissez une graine de 1 à 64 caractères.');input.focus();}return seed;},dispose(){if(dialog){dialog.close();dialog.remove();dialog=undefined;}}};
 }
 
-export function createStartingSiteConfiguration(options:{planet:PlanetState;selected:number|null;onSelected:(id:number)=>void;onError:(message:string)=>void}):{element:HTMLElement;validate():number|undefined;dispose():void}{
+export function createStartingSiteConfiguration(options:{planet:LegacyPlanetState;selected:number|null;onSelected:(id:number)=>void;onError:(message:string)=>void}):{element:HTMLElement;validate():number|undefined;dispose():void}{
   const root=node('div',undefined,'front-landing-layout'),info=node('section',undefined,'front-landing-info'),globe=node('div',undefined,'front-landing-globe');
   const eligible=new Set(startingSiteChoices(options.planet));let selected=options.selected;
   const facts=node('dl',undefined,'front-map-facts');facts.id='front-site-facts';const reason=node('p',undefined,'front-site-reason');reason.setAttribute('role','status');

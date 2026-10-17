@@ -171,7 +171,7 @@ for(const {kind,rng} of cases)test(`V211 native ${kind}: mood entry, physical in
       await expect(page.locator('.cell-health-caption strong')).toContainText(`${structureMaxHp(damaged)-damaged.damage!}/${structureMaxHp(damaged)} PV`);
       proof.consequence={tick:consequence.tick,strike,building:{id:damaged.id,damage:damaged.damage,maximumHp:structureMaxHp(damaged)}};
     }else{
-      const victim=person(consequence,strike.targetId);expect(injuryCount(victim)).toBeGreaterThan(0);
+      if(strike.targetId===null)throw Error('An actual human hit requires its physical target ID');const victim=person(consequence,strike.targetId);expect(injuryCount(victim)).toBeGreaterThan(0);
       expect(Math.max(Math.abs(attacker.x-victim.x),Math.abs(attacker.z-victim.z))).toBeLessThanOrEqual(1);
       await inspectPerson(page,victim.id,'health');await expect(page.locator('[data-health="injuries"]')).not.toBeEmpty();
       proof.consequence={tick:consequence.tick,strike,victimId:victim.id,health:victim.health};

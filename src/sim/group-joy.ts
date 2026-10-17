@@ -1,9 +1,10 @@
+import {groupPawnInterval256} from './group-core-cadence-256.ts';
 import type { AwayGroup } from './group-capture.ts';
 import type { Pawn } from './types.ts';
 import { hasMentalBreak } from './mental-state.ts';
 import { gainRecreation, type RecreationKind } from './recreation-rules.ts';
 
-export interface GroupJoyContext {tick:number;stationary:boolean;random():number}
+export interface GroupJoyContext {tick:number;stationary:boolean;core256?:{tick:number;delta:number};onlyPerson256?:Pawn;random():number}
 /** Ten Core per published tick; no overflow from multiplying a large clock. */
 export const groupJoyDue=(person:Pawn,tick:number):boolean=>((tick%125)*10+person.id%1250)%1250<10;
 
@@ -13,8 +14,9 @@ export function advanceGroupJoy(group:AwayGroup,c:GroupJoyContext):void {
   if(group.lastPersonalTick!==c.tick)throw Error('Joy precedes group personal frontier');
   if(!c.stationary)return;
   const socialAvailable=group.members.filter(p=>p.state!=='dead'&&p.state!=='downed'&&!p.health?.death&&!hasMentalBreak(p)).length>=2;
-  for(const person of group.members){
-    if(person.state==='dead'||person.health?.death||!groupJoyDue(person,c.tick))continue;
+  if(c.onlyPerson256&&!group.members.includes(c.onlyPerson256))throw Error('Invalid prospective joy owner');
+  for(const person of c.onlyPerson256?[c.onlyPerson256]:group.members){
+    if(person.state==='dead'||person.health?.death||!(c.core256?groupPawnInterval256(person.id,c.core256.tick,1250,c.core256.delta):groupJoyDue(person,c.tick)))continue;
     const choices:{kind:RecreationKind;weight:number}[]=[];
     for(const kind of ['solitary','social'] as const){
       const joy=person.recreation,weight=Math.max(0,1-joy.tolerance[kind]/100);

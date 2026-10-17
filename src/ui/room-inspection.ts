@@ -1,7 +1,7 @@
 import { WorkEnvironmentCache, ROOM_ROLE_LABEL } from '../sim/work-environment';
 import { cookingSpot } from '../sim/cooking-bills';
 import { footprintCells } from '../sim/definitions';
-import { isRoofed, roofIndex } from '../sim/roof-rules';
+import { isRoofed, roofIndex,roofKindAt } from '../sim/roof-rules';
 import type { Cell, World } from '../sim/types';
 import { TemperatureView } from '../sim/temperature';
 import { roomCleanliness } from '../sim/filth';
@@ -36,7 +36,7 @@ export class RoomInspection {
       : `Pièce non couverte · ${room.cellCount} case${room.cellCount > 1 ? 's' : ''}.`;
     const i=roofIndex(world,cell);
     if(room&&room.kind!=='solid')text+=` Température : ${new TemperatureView(world).at(world,cell).toFixed(1)} °C.`;
-    if(isRoofed(world,i))text+=' Toit construit sur cette case.';
+    if(isRoofed(world,i)){const roof=roofKindAt(world,i);text+=roof==='natural-thick'?' Toit naturel épais sur cette case.':roof==='natural-thin'?' Toit naturel mince sur cette case.':' Toit construit sur cette case.';}
     if(world.roofing?.remove.includes(i))text+=' Zone : retirer le toit.';
     else if(world.roofing?.build.includes(i))text+=' Zone : construire un toit.';
     if(properties&&properties.role!=='none')text+=` ${ROOM_ROLE_LABEL[properties.role]}.`;
@@ -58,7 +58,7 @@ export class RoomInspection {
     }
     if (line.dataset.copy !== text) {
       line.dataset.copy=text;
-      const facts=text.split(/ (?=Température :|Propreté :|Beauté :|Impression :|Richesse :|Espace :|Lumière :|Vitesse de travail|Production :|Toit construit|Zone :)/).map(part=>{
+      const facts=text.split(/ (?=Température :|Propreté :|Beauté :|Impression :|Richesse :|Espace :|Lumière :|Vitesse de travail|Production :|Toit construit|Toit naturel|Zone :)/).map(part=>{
         const item=document.createElement('span');item.className='room-fact';
         const separator=part.indexOf(' : ');
         if(separator>0){const label=document.createElement('span');label.textContent=part.slice(0,separator+3);const value=document.createElement('strong');value.textContent=part.slice(separator+3);item.append(label,value);}

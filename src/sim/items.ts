@@ -1,3 +1,6 @@
+import {CAVE_ITEM_DEFINITIONS_256} from './cave-products-256.ts';
+import {eggSpeciesForItem256} from './animal-egg-content-v256.ts';
+import {ANIMAL_ITEM_DEFINITIONS_256} from './animal-items-v256.ts';
 import type { MaterialKind, MaterialPile, Pawn, World } from './types.ts';
 import { BIOME_ITEM_DEFINITIONS,isAnimalMeat } from './biome-items.ts';
 import { ANIMAL_PRODUCT_ITEM_DEFINITIONS } from './animal-product-items.ts';
@@ -15,6 +18,8 @@ export const ITEM_DEFINITIONS = Object.freeze({
   hay:Object.freeze({label:'Foin',kind:'food',stackLimit:200,nutrition:5,maxIngest:200,color:0xc3aa59}),
   pemmican:Object.freeze({label:'Pemmican',kind:'food',stackLimit:75,nutrition:5,maxIngest:75,color:0xaf7958}),
   kibble:Object.freeze({label:'Croquettes',kind:'food',stackLimit:75,nutrition:5,maxIngest:75,color:0xa98355}),
+  ...CAVE_ITEM_DEFINITIONS_256,
+  ...ANIMAL_ITEM_DEFINITIONS_256,
   ...BIOME_ITEM_DEFINITIONS,
   ...ANIMAL_PRODUCT_ITEM_DEFINITIONS,
   'scyther-corpse':Object.freeze({label:'Carcasse de Scyther',kind:'mech-corpse',stackLimit:1,nutrition:0,maxIngest:0,color:0x93a4a5}),
@@ -51,6 +56,8 @@ export const ITEM_DEFINITIONS = Object.freeze({
   'cloth-parka':Object.freeze({label:'Parka en tissu',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0xd8c8a2}),
   'light-leather-parka':Object.freeze({label:'Parka en cuir léger',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0xad8a61}),
   'flak-vest':Object.freeze({label:'Gilet pare-balles',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0x626d65}),
+  'flak-pants':Object.freeze({label:'Pantalon pare-balles',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0x707070}),
+  'plasteel-flak-helmet':Object.freeze({label:'Casque pare-balles en plastacier',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0xa0b2b5}),
   'flak-helmet':Object.freeze({label:'Casque pare-balles',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0x626d65}),
   'recon-armor':Object.freeze({label:'Combinaison de reconnaissance',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0x879da4}),
   'recon-helmet':Object.freeze({label:'Casque de reconnaissance',kind:'apparel',stackLimit:1,nutrition:0,maxIngest:0,color:0x879da4}),
@@ -72,11 +79,13 @@ export const ITEM_DEFINITIONS = Object.freeze({
   component: Object.freeze({label:'Composants',kind:'component',stackLimit:50,nutrition:0,maxIngest:0,color:0xbe914c}),
   'advanced-component':Object.freeze({label:'Composants avancés',kind:'advanced-component',stackLimit:50,nutrition:0,maxIngest:0,color:0xb7c9c1}),
   steel: Object.freeze({label:'Acier',kind:'steel',stackLimit:75,nutrition:0,maxIngest:0,color:0x839399}),
+  jade:Object.freeze({label:'Jade',kind:'jade',stackLimit:75,nutrition:0,maxIngest:0,color:0x79a996}),
   gold: Object.freeze({label:'Or',kind:'gold',stackLimit:500,nutrition:0,maxIngest:0,color:0xd8b85d}),
   uranium:Object.freeze({label:'Uranium',kind:'uranium',stackLimit:75,nutrition:0,maxIngest:0,color:0x777d73}),
   plasteel: Object.freeze({label:'Plastacier',kind:'plasteel',stackLimit:75,nutrition:0,maxIngest:0,color:0x93b8bd}),
   'granite-chunk': Object.freeze({label:'Fragment de granite',kind:'chunk',stackLimit:1,nutrition:0,maxIngest:0,color:0x99958d}),
   'limestone-chunk': Object.freeze({label:'Fragment de calcaire',kind:'chunk',stackLimit:1,nutrition:0,maxIngest:0,color:0xafad8b}),
+  'slag-steel-chunk':Object.freeze({label:'Scorie d’acier',kind:'chunk',stackLimit:1,nutrition:0,maxIngest:0,color:0x718582}),
   'marble-chunk': Object.freeze({label:'Fragment de marbre',kind:'chunk',stackLimit:1,nutrition:0,maxIngest:0,color:0xc5c4b5}),
   'sandstone-chunk': Object.freeze({label:'Fragment de grès',kind:'chunk',stackLimit:1,nutrition:0,maxIngest:0,color:0xb99d76}),
   'slate-chunk': Object.freeze({label:'Fragment d’ardoise',kind:'chunk',stackLimit:1,nutrition:0,maxIngest:0,color:0x737f83}),
@@ -100,8 +109,8 @@ export const ITEM_DEFINITIONS = Object.freeze({
 } as const);
 export type ItemId = keyof typeof ITEM_DEFINITIONS;
 /** These raw foods cause the shared raw-meal thought, independently of policy. */
-export const rawFoodThought = (item: ItemId): boolean => item === 'rice' || item === 'potato' || item === 'corn' || item === 'agave-fruit' || isAnimalMeat(item);
-export const legacyItem = (kind: MaterialKind): ItemId => kind==='chemfuel'?'chemfuel':kind==='neutroamine'?'neutroamine':kind==='silver'?'silver':kind==='uranium'?'uranium':kind==='corpse'||kind==='mech-corpse'?missingEquipmentType():kind==='unfinished'?missingEquipmentType():kind==='textile'?'cloth':kind==='apparel'||kind==='weapon'?missingEquipmentType():kind==='medicine'?missingMedicineType():kind==='component'?'component':kind==='advanced-component'?'advanced-component':kind==='gold'?'gold':kind==='plasteel'?'plasteel':kind==='blocks'?missingBlockType(): kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
+export const rawFoodThought = (item: ItemId): boolean => item === 'rice' || item === 'potato' || item === 'corn' || item === 'agave-fruit' || item === 'raw-fungus' || isAnimalMeat(item)||!!eggSpeciesForItem256(item);
+export const legacyItem = (kind: MaterialKind): ItemId => kind==='chemfuel'?'chemfuel':kind==='neutroamine'?'neutroamine':kind==='silver'?'silver':kind==='uranium'?'uranium':kind==='corpse'||kind==='mech-corpse'?missingEquipmentType():kind==='unfinished'?missingEquipmentType():kind==='textile'?'cloth':kind==='apparel'||kind==='weapon'?missingEquipmentType():kind==='medicine'?missingMedicineType():kind==='component'?'component':kind==='advanced-component'?'advanced-component':kind==='jade'?'jade':kind==='gold'?'gold':kind==='plasteel'?'plasteel':kind==='blocks'?missingBlockType(): kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
 export const nutritionOf = (pile: MaterialPile): number => ITEM_DEFINITIONS[pile.item].nutrition * pile.quantity;
 export function availableNutrition(world: World): number {
   return world.piles.reduce((sum, pile) => sum + (pile.item==='hay'||pile.owner.type === 'job'||pile.owner.type==='inventory'||pile.owner.type==='pawn'&&!world.pawns.some(p=>p.id===('pawnId' in pile.owner?pile.owner.pawnId:-1)&&(p.faction??'colony')==='colony') ? 0 : nutritionOf(pile)), 0) / 100;

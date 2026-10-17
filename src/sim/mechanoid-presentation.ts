@@ -1,3 +1,4 @@
+import {sleepingTempleMech256,mechanicalOrder256} from './temple-mech-duty-256.ts';
 import { mechanoidBodyModel } from './mechanoid-anatomy.ts';
 import { mechanoidDefinition,type MechanoidKind } from './mechanoid-definition.ts';
 import { mechanoidGunId,mechanoidRangedProfile } from './mechanoid-ranged-profile.ts';
@@ -50,9 +51,9 @@ export function mechanoidRangedView(world:World,actor:Mechanoid) {
 export function mechanoidView(world:World,actor:Mechanoid) {
   const targetId=actor.melee?.order?.targetId??actor.melee?.strike?.targetId;
   const ranged=mechanoidRangedView(world,actor);
-  const target=targetId===undefined?ranged?.orderTarget??ranged?.target??null:mechanoidTargetView(world,targetId);
+  const target=targetId==null?ranged?.orderTarget??ranged?.target??null:mechanoidTargetView(world,targetId);
   const active=world.raids?.mechActive,group=active&&actor.raid?.group===active.id?active:undefined;
-  const action=actor.state==='dead'?'Neutralisé':actor.state==='downed'?'Incapacité mécanique':empMechanoidActive(actor,world.tick*10)?'Neutralisé temporairement par EMP':actor.stun?'Immobilisé':
+  const action=actor.state==='dead'?'Neutralisé':actor.state==='downed'?'Incapacité mécanique':sleepingTempleMech256(actor)?'Mécanoïde dormant du temple':empMechanoidActive(actor,world.tick*10)?'Neutralisé temporairement par EMP':actor.stun?'Immobilisé':
     actor.melee?.strike?'Récupère après son coup':actor.melee?.order?actor.state==='working'?'Frappe au contact':'Approche sa cible':
     ranged?.phase==='warmup'?'Prépare son tir':ranged?.phase==='cooldown'?'Récupère après son essai de tir':
     actor.state==='moving'?group?.phase==='staging'?'Rejoint le point de regroupement':'Avance vers la colonie':group?.phase==='staging'?'Se regroupe avant l’assaut':'Cherche une cible';
@@ -63,6 +64,6 @@ export function mechanoidView(world:World,actor:Mechanoid) {
     return {id:part.id,label:part.label,maximum:part.hp,health,absent,injuries};
   });
   return {id:actor.id,label:`${definition.label} ${actor.id}`,action,target,ranged,hostile:true,group:group?.phase??null,
-    goal:actor.raid?.goal?{...actor.raid.goal}:null,capacities:assessment.capacities,parts,mass:mechaMass(actor),
+    goal:mechanicalOrder256(actor)?.goal?{...mechanicalOrder256(actor)!.goal!}:null,capacities:assessment.capacities,parts,mass:mechaMass(actor),
     armor:definition.armor,position:{x:actor.x,z:actor.z},dead:actor.state==='dead'};
 }

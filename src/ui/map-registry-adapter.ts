@@ -1,6 +1,7 @@
 import type {World} from '../sim/types';
 import type {CampaignSummary,CampaignMapSummary,CampaignMapPresentation,CampaignGroupSummary} from '../sim/world-map-state';
 import type {MapRegistryState,JumpToEntry} from './map-registry-panel';
+import type {PlanetOverlay} from './planet-view';
 export type CampaignUIState=World|CampaignSummary;
 export function campaignUIFacts(value:CampaignUIState):CampaignSummary|CampaignMapPresentation|undefined {
  return 'activeMapId' in value?value:value.campaignMap?.revision===2?value.campaignMap:undefined;
@@ -10,7 +11,7 @@ export function mapDisplayName(map:Pick<CampaignMapSummary,'id'|'tile'|'kind'>):
  return map.tile===null?kind:`${kind} · case ${map.tile}`;
 }
 export function groupDisplayLabel(group:CampaignGroupSummary):string {
- const phases={gathering:'Rassemblement',loading:'Chargement',leaving:'Sortie',travelling:'En voyage','at-site':'À destination','awaiting-entry':'Entrée en attente',unloading:'Dépôt'};
+ const phases={gathering:'Rassemblement',loading:'Chargement',leaving:'Sortie',travelling:'En voyage',stationary:'À l’arrêt','at-site':'À destination','awaiting-entry':'Entrée en attente',unloading:'Dépôt'};
  return `${group.localMapId===null?'Caravane':'Formation'} ${group.id} · ${phases[group.phase]} · ${group.memberIds.length} personne(s)`;
 }
 export function readMapRegistryState(value:CampaignUIState):MapRegistryState|undefined {
@@ -27,7 +28,10 @@ export function readJumpToEntries(value:CampaignUIState):JumpToEntry[] {
  for(const group of facts.groups)result.push({kind:'group',id:group.id,label:groupDisplayLabel(group),active:facts.activeMapId===null&&facts.selectedGroupId===group.id});
  return result;
 }
-export function readPlanetObjects(value:CampaignUIState|CampaignMapPresentation){
+/** Scalar confirmed object information, never a map-view/entry action. */
+export function retiredCampTileInfo256(markers:readonly {tile:number;label:string}[]|undefined,tile:number):string {const marker=markers?.find(m=>m.tile===tile);return marker?` · ${marker.label}. Aucune carte locale. Ce marqueur disparaît 30 jours après le retrait.`:'';}
+export function readPlanetObjects(value:CampaignUIState|CampaignMapPresentation):Pick<PlanetOverlay,'settlements'|'maps'|'groups'|'retiredCamps'>{
  const facts='tick' in value?campaignUIFacts(value):value;if(!facts)return {};
- return {maps:facts.maps.flatMap(map=>map.tile===null?[]:[{mapId:map.id,tile:map.tile,label:mapDisplayName(map),kind:map.kind,active:map.selected}]),groups:facts.groups.flatMap(group=>group.tile===null?[]:[{groupId:group.id,tile:group.tile,label:groupDisplayLabel(group),selected:group.id===facts.selectedGroupId}])};
+ const registry='worldFactions' in value?value.worldFactions:undefined;
+ return {...(registry?{settlements:registry.settlements.map(s=>({id:s.id,factionId:s.factionId,tile:s.tile,name:s.name}))}:{}),...(facts.retiredCamps?.length?{retiredCamps:facts.retiredCamps.map(marker=>({retiredMapId:marker.retiredMapId,tile:marker.tile,label:`Camp abandonné · case ${marker.tile}`}))}:{}),maps:facts.maps.flatMap(map=>map.tile===null?[]:[{mapId:map.id,tile:map.tile,label:mapDisplayName(map),kind:map.kind,active:map.selected}]),groups:facts.groups.flatMap(group=>group.tile===null?[]:[{groupId:group.id,tile:group.tile,label:groupDisplayLabel(group),selected:group.id===facts.selectedGroupId}])};
 }

@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import { expect,test } from 'vitest';
 import { createScenarioWorld } from '../src/sim/new-game.ts';
 import { applyCommand,stepWorld } from '../src/sim/engine.ts';
@@ -43,7 +44,7 @@ function visiting() {
   addMaterial(w,'silver',1000,{type:'inventory',pawnId:patient.id},'silver');
   checkpoint(w);
   expect(applyCommand(w,{type:'planet-adopt'}).ok).toBe(true);
-  expect(applyCommand(w,{type:'group-start',memberIds:members.map(p=>p.id),destination:w.planet!.civilianTile,sources:[]}).ok).toBe(true);
+  expect(applyCommand(w,{type:'group-start',memberIds:members.map(p=>p.id),destination:legacyPlanet(w).civilianTile,sources:[]}).ok).toBe(true);
   const preparing=w.group;if(!preparing||!('manifest' in preparing))throw Error('Missing actual formation');
   preparing.phase='leaving';
   for(const exit of preparing.exits){
@@ -52,7 +53,7 @@ function visiting() {
   }
   tryGroupDeparture(w);const group=active(w);
   expect(group.members[0]).toBe(survivor);expect(group.members[1]).toBe(patient);
-  group.phase='at-site';group.tile=w.planet!.civilianTile;group.destination=group.tile;group.route=[group.tile];group.segment=null;group.stop={kind:'at-site'};
+  group.phase='at-site';group.tile=legacyPlanet(w).civilianTile;group.destination=group.tile;group.route=[group.tile];group.segment=null;group.stop={kind:'at-site'};
   expect(ensureCommercialPost(w)).toBe(true);checkpoint(w);
   return {w,survivor,patient};
 }

@@ -62,9 +62,9 @@ test('V380 real HUD layout: expanded ledger, large dossier, orders, hover, four 
       await page.locator('#zones-open').click();
     }
     await panel(page,'world');await page.locator('[data-world-tab="group"]').click();await page.locator('[data-site-action="home"]').click();
-    await page.waitForFunction(()=>window.__lisiere.world.campaignMap?.active==='home');await page.keyboard.press('Escape');
+    await page.waitForFunction(()=>(window.__lisiere.world.campaignMap?.revision===2?undefined:window.__lisiere.world.campaignMap?.active)==='home');await page.keyboard.press('Escape');
     await expect(page.locator('#map-hover-readout')).toBeHidden();await hoverCanvas(page);
-    expect((await world(page)).campaignMap?.active).toBe('home');expect(errors).toEqual([]);proof.errors=errors;
+    const home=await world(page);expect(home.campaignMap?.revision===2?undefined:home.campaignMap?.active).toBe('home');expect(errors).toEqual([]);proof.errors=errors;
     const incident=await page.evaluate(()=>window.__lisiere.incident);expect(incident.graphicsFault||incident.simulationStopped).toBe(false);proof.incident=incident;proof.complete=true;
   }finally{await writeFile(info.outputPath('proof.json'),JSON.stringify(proof,null,2));}
 });

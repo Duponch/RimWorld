@@ -1,6 +1,7 @@
+import {medicalModel} from './body-model.ts';
 import { apparelProtection } from './apparel-protection.ts';
 import { disturbanceEvents,isLying } from './disturbance.ts';
-import { BODY_COVERAGE,BODY_PARTS,HUMAN_BODY } from './body-definition.ts';
+import { BODY_COVERAGE,HUMAN_BODY } from './body-definition.ts';
 import { HP_UNIT,medicalPartInjuryRule } from './injury-rules.ts';
 import { createMedicalRecord,partMissing,remainingPartHealth,addResolvedInjuryBatch } from './injury-state.ts';
 import { healthRandom,reconcilePawnHealth,updatePawnHealth } from './health.ts';
@@ -24,7 +25,7 @@ export function damageFromRoofCollapse(world:World,cells:ReadonlySet<number>):vo
     amount=(protection.protect?.(part.id,amount/HP_UNIT).amount??amount/HP_UNIT)*HP_UNIT;
     const hp=remainingPartHealth(health,part.id);
     if(amount>=hp) {
-      const excess=(amount-hp)/(BODY_PARTS[part.id].hp*HP_UNIT),chance=Math.max(0,Math.min(1,(excess-.4)/.6));
+      const excess=(amount-hp)/(medicalModel(health).byId[part.id].hp*HP_UNIT),chance=Math.max(0,Math.min(1,(excess-.4)/.6));
       if(healthRandom(randomState)>=chance)amount=Math.max(0,hp-HP_UNIT);
     }
     const traits=medicalPartInjuryRule(health,part.id);

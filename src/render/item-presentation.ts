@@ -1,3 +1,5 @@
+import {eggSpeciesForItem256} from '../sim/animal-egg-content-v256';
+import {ANIMAL_MEAT_ITEMS_256} from '../sim/animal-items-v256';
 import {treeCargoKind,treeVisualParts,type TreeVisualTraits} from './tree-presentation';
 import {ITEM_DEFINITIONS,type ItemId} from '../sim/items';
 import {blockParts} from './block-presentation';
@@ -28,6 +30,9 @@ export function itemGeometry(item:ItemId,quantity:number=ITEM_DEFINITIONS[item].
   else if(definition.kind==='blocks')return centreItemParts(blockParts(anchor?.x??0,anchor?.z??0,item,Math.min(75,quantity)));
   else if(item==='steel'){
     add('item-nugget',-.12,.10,-.06,.39,.20,.31,color,.22);add('item-nugget',.16,.08,.07,.31,.16,.25,0x687c85,-.42);add('item-nugget',.02,.23,.01,.26,.20,.22,0x9cabb1,.35);
+  }else if(item==='jade'){
+    // Original faceted pieces, distinct from metal bars and cut blocks.
+    add('item-nugget',-.12,.10,-.05,.32,.20,.29,color,.4);add('item-nugget',.15,.08,.08,.27,.16,.24,0x8bb7a1,-.3);add('item-nugget',0,.23,0,.23,.19,.20,0x689582,.1);
   }else if(item==='gold'||item==='plasteel'||item==='uranium'){
     for(const side of [-1,1])add('item-ingot',side*.15,.075,0,.25,.14,.44,color);
     add('item-ingot',0,.19,0,.27,.10,.40,color);
@@ -74,6 +79,13 @@ export function itemGeometry(item:ItemId,quantity:number=ITEM_DEFINITIONS[item].
     }
   }else if(item==='unfinished-sculpture'){
     add('item-nugget',0,.19,0,.40,.38,.34);add('item-ingot',0,.055,0,.46,.11,.42);
+  }else if(eggSpeciesForItem256(item)){
+    // Original oval shells reuse the resident round mesh, never the meal plate.
+    for(const [x,y,z] of [[-.13,.14,-.06],[.13,.14,.06],[0,.35,0]])round(x!,y!,z!,.23,.28,.20,color);
+  }else if((ANIMAL_MEAT_ITEMS_256 as readonly string[]).includes(item)){
+    // New meat has no invented legacy hare bone or species-index fallback.
+    add('item-nugget',-.07,.11,0,.44,.20,.31,color,.20);
+    add('item-nugget',.15,.09,.08,.27,.15,.25,color,-.35);
   }else if(item.endsWith('-meat')){
     const species=['hare','snow-hare','deer','muffalo','gazelle','dromedary','red-fox'].indexOf(item.replace('-meat',''));
     add('item-nugget',-.05,.10,0,.42,.18,.29,color,.15+species*.13);

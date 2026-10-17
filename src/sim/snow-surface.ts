@@ -1,4 +1,4 @@
-import {isWetTerrain} from './shallow-water.ts';
+import {terrainHoldsSnow256} from './natural-terrain-runtime-256.ts';
 import {animalBodySize} from './animal-life.ts';
 import {footprintCells} from './definitions.ts';
 import {STRUCTURE_SHOT_FILL} from './combat-content.ts';
@@ -13,13 +13,21 @@ import type {TravelSegment} from './travel-timing.ts';
 interface Runtime {active:Set<number>;sweep:SnowSweepRuntime;full:Set<number>;structures:Structure[];structureCount:number;outside:number;layout?:ThermalLayout}
 const runtimes=new WeakMap<World,Runtime>();
 export const snowDepthAt=(w:Pick<World,'tiles'>,index:number):number=>w.tiles[index]?.snowDepth??0;
-export const terrainRetainsSnow=(terrain:string,bridge=false):boolean=>terrain!=='rock'&&terrain!=='water'&&(!isWetTerrain(terrain)||bridge);
+export const terrainRetainsSnow=(terrain:string,bridge=false):boolean=>terrainHoldsSnow256(terrain,bridge);
 export function snowFullCells(w:Pick<World,'structures'|'width'>):Set<number>{const full=new Set<number>();for(const s of w.structures)if(STRUCTURE_SHOT_FILL[s.kind]>=1)for(const c of footprintCells(s))full.add(c.z*w.width+c.x);return full;}
 /** Explicit creation path only. Historical migration never calls this. */
-export function initializeSnowSurface(w:World):void {
- if(w.tick!==0||w.snow!==undefined||w.tiles.length!==w.width*w.height||w.tiles.some(t=>'snowDepth' in t))throw new Error('Snow requires a fresh complete landscape');
+export type FreshSnowLandscape256=Pick<World,'tick'|'seed'|'snow'|'tiles'|'width'|'height'>&{schemaVersion:number;site?:{revision:number};climate?:{revision:number;adoptedAt:number}};
+function initializeSnowAt(w:Pick<World,'tick'|'seed'|'snow'|'tiles'|'width'|'height'>,at:number):void {
+ if(w.tick!==at||w.snow!==undefined||w.tiles.length!==w.width*w.height||w.tiles.some(t=>'snowDepth' in t))throw new Error('Snow requires a fresh complete landscape');
  const seed=((w.seed^0x7b74ad19)>>>0)||0x6d2b79f5;
- w.snow={revision:1,adoptedAt:0,lastTick:0,cursor:0,seed};
+ w.snow={revision:1,adoptedAt:at,lastTick:at,cursor:0,seed};
+}
+export function initializeSnowSurface(w:World):void {initializeSnowAt(w,0);}
+/** Fresh prospective map only, including a camp created at its real tick.
+ * No historical migration/load/catch-up enters this explicit creation path. */
+export function initializeGeographicSnowSurface256(w:FreshSnowLandscape256):void {
+ if(w.schemaVersion!==256||w.site?.revision!==3||w.climate?.revision!==4||w.climate.adoptedAt!==w.tick||!Number.isSafeInteger(w.tick)||w.tick<0)throw Error('Fresh geographic snow adoption requires its actual climate/tick');
+ initializeSnowAt(w,w.tick);
 }
 function runtime(w:World):Runtime {
  let r=runtimes.get(w);if(r)return r;

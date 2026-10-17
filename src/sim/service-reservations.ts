@@ -1,3 +1,4 @@
+import {isAncientCasket256,ancientCasketInteraction256} from './ancient-casket-state-256.ts';
 import { isCookingOrder } from './order-types.ts';
 import { urgentTreatment } from './care-rules.ts';
 import { bedSlotCell } from './bed-slots.ts';
@@ -6,7 +7,8 @@ import type { Cell, Pawn, World } from './types.ts';
 /** Exclusive use of a workstation, dining place or bed. This is not physical
  * occupancy: a passer-by can cross any of these cells without claiming its use.
  * Sleeping/collapsing on the floor does not acquire furniture or a work spot. */
-export function serviceCell(pawn: Pawn): Cell | null {
+export function serviceCell(pawn: Pawn,world?:Pick<World,'structures'>): Cell | null {
+  if(pawn.openCasket&&world){const c=world.structures.find(s=>s.id===pawn.openCasket!.casketId);if(c&&isAncientCasket256(c))return ancientCasketInteraction256(c);}
   if(pawn.need?.kind==='eat'&&pawn.need.paste&&(pawn.need.phase==='pickup'||pawn.need.phase==='collect'))return pawn.need.paste.spot;
   if(pawn.feed?.paste&&(pawn.feed.phase==='pickup'||pawn.feed.phase==='collect'))return pawn.feed.paste.spot;
   if(pawn.orbitalTrade)return pawn.orbitalTrade.spot;
@@ -31,7 +33,7 @@ export function reservedServiceCells(world: World, exceptPawn?: number): Set<num
     // emergency treatment becomes due later in the same confirmed tick.
     const visit=pawn.recreation?.task;
     if(visit?.activity==='visit-sick'&&world.pawns.some(p=>p.id===visit.patientId&&urgentTreatment(p)))continue;
-    const cell = serviceCell(pawn); if (cell) reserved.add(cell.z*world.width+cell.x);
+    const cell = serviceCell(pawn,world); if (cell) reserved.add(cell.z*world.width+cell.x);
     if(pawn.feed?.paste&&(pawn.feed.phase==='pickup'||pawn.feed.phase==='collect'))reserved.add(pawn.feed.spot.z*world.width+pawn.feed.spot.x);
   }
   for(const pawn of world.pawns)if(pawn.id!==exceptPawn&&pawn.animalRescue){const spot=world.structures.find(s=>s.id===pawn.animalRescue!.spotId);if(spot)reserved.add(spot.z*world.width+spot.x);}

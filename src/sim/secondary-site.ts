@@ -29,14 +29,16 @@ const log=(root:World,message:string)=>{root.events.push({tick:root.tick,type:'c
 
 /** A fresh landscape is drafted without changing the campaign. No scenario
  * factory, starting people, goods, research, old-map replay or random draw. */
-export function draftSite(root:World,tileId:number):{site:SecondarySite;nextId:number}|undefined {
-  const tile=root.planet?.tiles[tileId];
+export function draftSite(root:World,tileId:number,kind:'camp'|'settlement'='camp'):{site:SecondarySite;nextId:number}|undefined {
+  // This function is the literal legacy landscape adapter. ROOT must wire
+  // generateGeographicSiteWorld256 before enabling fresh Planet3 map entry.
+  const planet=root.planet;if(!planet||planet.revision===3)return undefined;const tile=planet.tiles[tileId];
   if(!tile||tile.biome==='ocean'||tile.hilliness==='mountainous')return undefined;
-  const seed=localSeedForTile(root.planet!.generationSeed,tileId),site=resolveSite(seed,{biome:tile.biome,hilliness:tile.hilliness});
+  const seed=localSeedForTile(planet.generationSeed,tileId),site=resolveSite(seed,{biome:tile.biome,hilliness:tile.hilliness});
   const generated=generateSiteWorld(seed,root.width,root.height,site),offset=root.nextId-1;
   if(!Number.isSafeInteger(generated.nextId+offset))return undefined;
   initializeSnowSurface(generated);
-  const homeLongitude=tileCoordinates(root.planet!.tiles[root.planet!.homeTile]!).longitude;
+  const homeLongitude=tileCoordinates(planet.tiles[planet.homeTile]!).longitude;
   const calendarOffset=(longitudeOffsetCore(tileCoordinates(tile).longitude)-longitudeOffsetCore(homeLongitude))/10;
   generated.tick=root.tick;generated.site=site;generated.expeditionSite={tile:tileId,createdAt:root.tick,calendarOffset};
   generated.snow!.adoptedAt=root.tick;generated.snow!.lastTick=root.tick;
@@ -45,7 +47,7 @@ export function draftSite(root:World,tileId:number):{site:SecondarySite;nextId:n
   generated.nextId+=offset;
   enableBiomeWildlife(generated,tile.biome);
   for(const plant of generated.resources)if(isPlant(plant)){plant.growthTick=root.tick;plant.plantLife=createPlantLife(generated,plant);}
-  if(generated.flora){generated.flora.adoptedAt=root.tick;generated.flora.nextCheck=root.tick+60;}
+  if(generated.flora?.revision===1){generated.flora.adoptedAt=root.tick;generated.flora.nextCheck=root.tick+60;}
   generated.breakdown=newBreakdownCalendar(seed,root.tick);
   generated.apparelWear=createApparelWearCalendar(root.tick,(seed^0x0a77e1)>>>0);
   const definition=planetTileClimateDefinition(tile);

@@ -1,3 +1,4 @@
+import {claimLocalActorBed256,forgetLocalActorBed256,forgetLocalBedOwners256,localBedClaimAvailable256,type ActualActorBeds256,captureActorBeds256} from './actor-bed-local-256.ts';
 import { canStandAt } from './furniture-travel.ts';
 import { veterinaryCareSpeciesAllowed,veterinaryNeedsRest } from './veterinary-rules.ts';
 import { autoSlaughterTargets,slaughterIntent } from './auto-slaughter.ts';
@@ -6,11 +7,11 @@ import type { Cell,Structure,World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 
 const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
-export function animalSpotAvailable(w:World,s:Structure,a:WildAnimal,exceptPawn?:number):boolean {
+export function animalSpotAvailable(w:World,s:Structure,a:WildAnimal,exceptPawn?:number,bedOwners?:ActualActorBeds256):boolean {
   if(w.schemaVersion<221||s.kind!=='animal-sleeping-spot'||!a.domestic||a.state==='dead'||a.health?.death
-    ||!veterinaryCareSpeciesAllowed(a.species,w.schemaVersion)||!canStandAt(w,s)||animalSpotClaimed(w,s.id,a.id,exceptPawn))return false;
+    ||!veterinaryCareSpeciesAllowed(a.species,w.schemaVersion,a)||!canStandAt(w,s)||animalSpotClaimed(w,s.id,a.id,exceptPawn))return false;
   if(s.medical&&(a.domestic.care==='none'||a.domestic.slaughter||!(a.state==='downed'||a.health&&veterinaryNeedsRest(a.health))))return false;
-  if(!s.medical&&w.wildlife?.animals.some(other=>other!==a&&other.domestic?.bedId===s.id))return false;
+  if(!s.medical&&(w.wildlife?.animals.some(other=>other!==a&&other.domestic?.bedId===s.id)||!localBedClaimAvailable256(w,s,a,undefined,bedOwners)))return false;
   return !w.wildlife?.animals.some(other=>other!==a&&same(other,s))
     &&(a.animalRest?.phase==='sleep'&&same(a,s)||!w.pawns.some(p=>p.id!==exceptPawn&&p.state!=='dead'&&same(p,s)));
 }
@@ -24,6 +25,7 @@ function clearRest(w:World,a:WildAnimal):void {
   if(a.state==='sleeping')a.state='idle';
 }
 export function releaseAnimalSpotBindings(w:World,id:number):void {
+  forgetLocalBedOwners256(w,id);
   for(const p of w.pawns)if(p.animalRescue?.spotId===id)releaseAnimalRescue(w,p);
   for(const a of w.wildlife?.animals??[]){
     if(a.animalRest?.spotId===id)clearRest(w,a);
@@ -34,7 +36,7 @@ export function reconcileAnimalRest(w:World):void {
   if(w.schemaVersion<221)return;
   const targets=autoSlaughterTargets(w);
   for(const a of w.wildlife?.animals??[]){
-    if(a.domestic?.bedId!==undefined&&(a.state==='dead'||a.health?.death||!w.structures.some(s=>s.id===a.domestic!.bedId&&s.kind==='animal-sleeping-spot'&&!s.medical)))delete a.domestic.bedId;
+    if(a.domestic?.bedId!==undefined&&(a.state==='dead'||a.health?.death||!w.structures.some(s=>s.id===a.domestic!.bedId&&s.kind==='animal-sleeping-spot'&&!s.medical)))forgetLocalActorBed256(w,a);
     const t=a.animalRest;if(!t)continue;
     const s=w.structures.find(s=>s.id===t.spotId);
     if(!s||!animalSpotAvailable(w,s,a)||animalCarrier(w,a.id)||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.manhunter||slaughterIntent(w,a,w.schemaVersion,targets)
@@ -64,14 +66,15 @@ export function processAnimalRest(w:World,a:WildAnimal,ctx:AnimalRestContext):bo
   }
   if(!wanted||a.meal||a.path.length||a.nextDecision>w.tick)return false;
   const rank=(s:Structure)=>s.medical?0:a.domestic?.bedId===s.id?1:2;
-  const spots=w.structures.filter(s=>animalSpotAvailable(w,s,a)&&ctx.free(s)).sort((x,y)=>rank(x)-rank(y)
+  const bedOwners=w.schemaVersion>=256?captureActorBeds256(w):undefined;
+  const spots=w.structures.filter(s=>animalSpotAvailable(w,s,a,undefined,bedOwners)&&ctx.free(s)).sort((x,y)=>rank(x)-rank(y)
     ||(x.x-a.x)**2+(x.z-a.z)**2-((y.x-a.x)**2+(y.z-a.z)**2)||x.id-y.id);
   // One flood finds all available ranks, including a fallback if medical is unreachable.
   if(!spots.length)return false;
   const ranks=new Map(spots.map(s=>[s.z*w.width+s.x,rank(s)]));
   const path=ctx.route(spots,c=>ranks.get(c.z*w.width+c.x)??2);if(!path)return false;
   const end=path.at(-1)??a,spot=spots.find(s=>same(s,end));if(!spot)return false;
-  if(!spot.medical)a.domestic.bedId=spot.id;
+  if(!spot.medical)claimLocalActorBed256(w,a,spot);
   a.animalRest={spotId:spot.id,phase:path.length?'travel':'sleep'};a.path=path;a.state=path.length?'moving':'sleeping';
   if(path.length)ctx.move();return true;
 }

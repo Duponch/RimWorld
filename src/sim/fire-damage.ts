@@ -1,3 +1,5 @@
+import {planAnimalDeathExplosion256,isExplosiveAnimal256,requireAnimalDeathCapacity256} from './animal-death-explosion-v256.ts';
+import {createAnimalMedicalRecord256} from './animal-clinical-age-v256.ts';
 import { apparelProtection,type ImpactProtection } from './apparel-protection.ts';
 import { selectBulletPart } from './bullet-impact.ts';
 import { medicalModel } from './body-model.ts';
@@ -45,10 +47,11 @@ export function burnPawn(world:World,pawn:Pawn,amount:number):boolean {
 }
 export function burnAnimal(world:World,animal:WildAnimal,amount:number):void {
   if(animal.state==='dead'||!Number.isSafeInteger(amount)||amount<1)return;
-  advanceAnimalHealth(world,animal);if(animal.health?.death)return;
-  const state=ensureFireState(world),random=()=>fireRandom(state),record=structuredClone(animal.health??{...createMedicalRecord(world.tick),body:animal.species});
+  requireAnimalDeathCapacity256(world,animal);advanceAnimalHealth(world,animal);if(animal.health?.death)return;
+  const state=ensureFireState(world),privateRandom={rng:state.rng},atomic=world.schemaVersion>=256&&isExplosiveAnimal256(animal.species),random=()=>fireRandom(atomic?privateRandom:state),record=structuredClone(animal.health??createAnimalMedicalRecord256(world,animal));
   localizedBurn(record,amount,random);
   if(animal.state!=='downed'&&medicalStatus(record)==='downed'&&random()<.5)record.death={tick:world.tick,cause:'downed'};
+  const death=planAnimalDeathExplosion256(world,animal,record);death.commit();if(atomic)state.rng=privateRandom.rng;
   animal.health=record;reconcileAnimalHealth(world,animal);
 }
 

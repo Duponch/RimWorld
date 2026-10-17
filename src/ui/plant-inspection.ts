@@ -1,3 +1,6 @@
+import {plantCompletelyIgnoresFertility256} from '../sim/plant-substrate-256';
+import {isCavePlant256} from '../sim/cave-flora-256';
+import {effectivePlantAgeCore256} from '../sim/initial-plant-age-256';
 import { floraDefinition } from '../sim/biome-flora';
 import { plantLeafless } from '../sim/plant-life';
 import { resourceMaxHp } from '../sim/thing-damage-rules';
@@ -25,11 +28,14 @@ export function plantInspection(world:World,plant:Resource):string {
   if(plantLeafless(world,plant))constraints.push(plant.kind==='healroot'?'Sans feuilles · broutage suspendu · récolte possible si croissance suffisante':'Sans feuilles · broutage suspendu');
   if(plant.damage)constraints.push(`État ${resourceMaxHp(plant)-plant.damage}/${resourceMaxHp(plant)}`);
   if(plantResting(calendarTick(world)))constraints.push('Repos nocturne');
-  const light=plantLight(world,plant);if(light<=.51)constraints.push('Lumière insuffisante');else if(plant.growthLight==='artificial-full')constraints.push('Lumière horticole 100 %');
+  const cave=isCavePlant256(plant.species,world.schemaVersion);
+  if(cave){let cache=lightCaches.get(world);if(!cache){cache=new LightEnvironmentCache();lightCaches.set(world,cache);}const exposure=cache.read(world).lightAtIgnoringCavePlants(plant);constraints.push(exposure>0?'Plante de grotte · dépérit au soleil ou à la lumière artificielle':'Plante de grotte · pousse dans l’obscurité');}
+  if(plant.plantLife?.initialAgeCore!==undefined)constraints.push(`Âge : ${(effectivePlantAgeCore256(plant.plantLife)/60000).toFixed(1)} jours`);
+  const light=plantLight(world,plant);if(!cave&&light<=.51)constraints.push('Lumière insuffisante');else if(plant.growthLight==='artificial-full')constraints.push('Lumière horticole 100 %');
   if(factor<1)constraints.push(`Température ${temperature.toFixed(1)} °C · Croissance thermique ${Math.round(factor*100)} %`);
   if(isPlant(plant)) {
     const def=floraDefinition(plant)??PLANT_DEFINITIONS[plant.kind as keyof typeof PLANT_DEFINITIONS],fertility=plantFertility(world,plant);
-    const growthFactor=fertility<def.minFertility?0:1-def.sensitivity+fertility*def.sensitivity;
+    const growthFactor=plantCompletelyIgnoresFertility256(plant.species,world.schemaVersion)?1:fertility<def.minFertility?0:1-def.sensitivity+fertility*def.sensitivity;
     soil=` · Fertilité ${Math.round(fertility*100)} % · Effet sur cette plante ${Math.round(growthFactor*100)} %`;
   }
   const medicine=plant.kind==='healroot'?' · Racine médicinale cultivée · Plantes 8 pour commencer le semis seulement, sans minimum à la récolte · Travail de base : semis 80 ticks, récolte 40 ticks · Produit : médicament à base de plantes · Coupe sans dose':'';

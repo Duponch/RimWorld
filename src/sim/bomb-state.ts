@@ -1,4 +1,6 @@
+import {animalDeathExplosionRadius256,isExplosiveAnimal256,validAnimalDeathExplosionOwner256,type AnimalDeathExplosion256} from './animal-death-provenance-v256.ts';
 import type { BombInstigatorKey } from './mini-turret-state.ts';
+import {ANCIENT_CASKET_FLAME_RADIUS_256,type AncientCasketExplosion256} from './ancient-casket-explosive-state-256.ts';
 import type { Cell,World } from './types.ts';
 import type { NumericMembershipSink } from './numeric-membership.ts';
 import { miniTurretExplosive } from './bomb-eligibility.ts';
@@ -14,18 +16,26 @@ export interface MiniTurretBombWave {
   startedAtCore:number;advancedAtCore:number;cells:number[];nextCell:number;damagedThingKeys:string[];
   shortCircuit?:{damage:'flame'|'bomb';radius:number;seed:number};
   emp?:{quality:WeaponQuality};
+  animalDeath?:AnimalDeathExplosion256;
+  casketExplosion?:AncientCasketExplosion256;
 }
-export const bombWaveRadius=(wave:MiniTurretBombWave):number=>wave.emp?1.1:wave.shortCircuit?.radius??BOMB_RADIUS;
+export const bombWaveRadius=(wave:MiniTurretBombWave):number=>wave.casketExplosion?ANCIENT_CASKET_FLAME_RADIUS_256:wave.animalDeath?animalDeathExplosionRadius256(wave.animalDeath):wave.emp?1.1:wave.shortCircuit?.radius??BOMB_RADIUS;
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 const keys=(v:Record<string,unknown>,allowed:readonly string[])=>Object.keys(v).every(k=>allowed.includes(k));
 const dense=(v:unknown[])=>Object.keys(v).length===v.length&&Object.keys(v).every((key,index)=>key===String(index));
-export const bombThingKey=(v:unknown,version=194):v is string=>typeof v==='string'&&(version>=194||!v.startsWith('mech:'))&&/^(pawn|animal|mech|structure|resource|pile|fire):[1-9]\d*$/.test(v)&&integer(Number(v.slice(v.indexOf(':')+1)),1);
+export const bombThingKey=(v:unknown,version=194):v is string=>typeof v==='string'&&(version>=194||!v.startsWith('mech:'))&&(version===256||!v.startsWith('starting-pod:'))&&/^(pawn|animal|mech|structure|resource|pile|fire|starting-pod):[1-9]\d*$/.test(v)&&integer(Number(v.slice(v.indexOf(':')+1)),1);
 export const bombInstigatorKey=(v:unknown,version=194):v is BombInstigatorKey=>bombThingKey(v,version)&&/^(pawn|animal|mech|structure):/.test(v);
 export const bombCellCore=(w:Pick<World,'width'>,wave:MiniTurretBombWave,index:number)=>wave.startedAtCore+Math.floor(Math.hypot(index%w.width-wave.center.x,Math.floor(index/w.width)-wave.center.z)*1.5);
 export function validBombWaveShape(value:unknown,version=193):value is MiniTurretBombWave {
-  if(version<193||!object(value)||!keys(value,['id','sourceId','instigatorKey','center','startedAtCore','advancedAtCore','cells','nextCell','damagedThingKeys',...version>=201?['shortCircuit']:[],...version>=208?['emp']:[]]))return false;
+  if(version<193||!object(value)||!keys(value,['id','sourceId','instigatorKey','center','startedAtCore','advancedAtCore','cells','nextCell','damagedThingKeys',...version>=201?['shortCircuit']:[],...version>=208?['emp']:[],...version>=256?['animalDeath','casketExplosion']:[]]))return false;
+  if(Object.hasOwn(value,'casketExplosion')){
+    const d=Object.getOwnPropertyDescriptor(value,'casketExplosion');if(version!==256||!d?.enumerable||!Object.hasOwn(d,'value')||!object(d.value)||Object.getPrototypeOf(d.value)!==Object.prototype||Reflect.ownKeys(d.value).length!==1)return false;
+    const a=Object.getOwnPropertyDescriptor(d.value,'ignoredThingKeys');if(!a?.enumerable||!Object.hasOwn(a,'value')||!Array.isArray(a.value)||Object.getPrototypeOf(a.value)!==Array.prototype||!dense(a.value)||a.value.length!==3||Reflect.ownKeys(a.value).some(k=>typeof k!=='string'||!Object.hasOwn(Object.getOwnPropertyDescriptor(a.value,k)!,'value')))return false;
+    if(a.value.some((key,n,all)=>typeof key!=='string'||!/^pile:[1-9]\d*$/.test(key)||!integer(Number(key.slice(5)),1,Number(value.id)-1)||Number(key.slice(5))===value.sourceId||n>0&&all[n-1]>=key)||Object.hasOwn(value,'animalDeath')||Object.hasOwn(value,'shortCircuit')||Object.hasOwn(value,'emp'))return false;
+  }
   const variant=value.shortCircuit;
+  if(Object.hasOwn(value,'animalDeath')&&(!object(value.animalDeath)||!keys(value.animalDeath,['species','lifeStage','deathTick'])||Object.keys(value.animalDeath).length!==3||!isExplosiveAnimal256(value.animalDeath.species)||!['baby','juvenile','adult'].includes(String(value.animalDeath.lifeStage))||!integer(value.animalDeath.deathTick)||Object.hasOwn(value,'shortCircuit')||Object.hasOwn(value,'emp')||Object.hasOwn(value,'instigatorKey')||Number(value.startedAtCore)<Math.max(0,(Number(value.animalDeath.deathTick)-1)*10)||Number(value.startedAtCore)>Number(value.animalDeath.deathTick)*10))return false;
   if(Object.hasOwn(value,'emp')&&(!object(value.emp)||!keys(value.emp,['quality'])
     ||!WEAPON_QUALITIES.includes(value.emp.quality as WeaponQuality)||Object.hasOwn(value,'shortCircuit')
     ||typeof value.instigatorKey!=='string'||!/^pawn:[1-9]\d*$/.test(value.instigatorKey)
@@ -40,7 +50,7 @@ export function validBombWaveShape(value:unknown,version=193):value is MiniTurre
     &&Array.isArray(value.cells)&&value.cells.length>0&&value.cells.length<=(value.emp?9:variant?961:81)&&value.cells.every(i=>integer(i))&&new Set(value.cells).size===value.cells.length
     &&integer(value.nextCell,0,value.cells.length)&&Array.isArray(value.damagedThingKeys)&&value.damagedThingKeys.length<=131072
     &&value.damagedThingKeys.every(k=>bombThingKey(k,version))&&new Set(value.damagedThingKeys).size===value.damagedThingKeys.length
-    &&(!value.emp||dense(value.cells)&&dense(value.damagedThingKeys));
+    &&(!value.emp&&!value.animalDeath&&!value.casketExplosion||dense(value.cells)&&dense(value.damagedThingKeys));
 }
 /** Captured LOS is historical. Validate geometry/cursor, never recompute it from
  * today's opened walls. Completed waves stay inert through their arrival tick. */
@@ -67,6 +77,8 @@ export function validateBombWaves(w:World,errors:string[],ids?:NumericMembership
         ||wave.shortCircuit.damage==='flame'&&wave.advancedAtCore===wave.startedAtCore&&report?.bombRadius!==undefined&&!bomb)
         errors.push('Invalid short-circuit wave pair.');
     }
+    if(wave.casketExplosion&&(waves.some(other=>other!==wave&&validBombWaveShape(other,w.schemaVersion)&&other.sourceId===wave.sourceId)||wave.casketExplosion.ignoredThingKeys.some(key=>wave.damagedThingKeys.includes(key))))errors.push('Invalid duplicate casket source/ignored target.');
+    if(wave.animalDeath&&!validAnimalDeathExplosionOwner256(w,wave))errors.push('Invalid animal death explosion provenance.');
     if(wave.emp){
       const source=w.projectiles?.find(p=>p&&p.id===wave.sourceId);
       if(source?(!validWorldProjectile(source,w,w.schemaVersion)||source.weaponItem!=='emp-launcher'||source.quality!==wave.emp.quality||source.flight.launcherKey!==wave.instigatorKey
@@ -76,7 +88,7 @@ export function validateBombWaves(w:World,errors:string[],ids?:NumericMembership
     }
     if(wave.id<=prior||wave.id>=w.nextId||seen.has(wave.id)||wave.center.x>=w.width||wave.center.z>=w.height||wave.startedAtCore>end||wave.advancedAtCore>end
       ||(wave.shortCircuit?seen.has(wave.sourceId)&&!w.structures.some(s=>s.id===wave.sourceId&&s.kind==='power-conduit'&&s.x===wave.center.x&&s.z===wave.center.z)
-        :wave.emp?false:seen.has(wave.sourceId)||!miniTurretExplosive(wave.sourceId))||wave.cells.length>w.width*w.height||wave.nextCell<wave.cells.length&&wave.advancedAtCore!==end
+        :wave.emp||wave.animalDeath?false:wave.casketExplosion?seen.has(wave.sourceId):seen.has(wave.sourceId)||!miniTurretExplosive(wave.sourceId))||wave.cells.length>w.width*w.height||wave.nextCell<wave.cells.length&&wave.advancedAtCore!==end
       ||wave.nextCell===wave.cells.length&&wave.advancedAtCore<=end-10)errors.push('Invalid bomb wave ownership/clock.');
     seen.add(wave.id);prior=wave.id;
     let last=-1,lastCore=-1;

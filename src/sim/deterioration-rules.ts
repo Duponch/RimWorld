@@ -1,4 +1,5 @@
-import {isWetTerrain} from './shallow-water.ts';
+import {terrainExtraDeterioration256} from './natural-terrain-runtime-256.ts';
+import {isFutureEcologyItem256} from './cave-products-256.ts';
 import {footprintCells} from './definitions.ts';
 import {isShelfKind} from './shelf-storage.ts';
 import {isRoofed} from './roof-rules.ts';
@@ -18,11 +19,11 @@ function containsSorted(cells:readonly number[],cell:number):boolean {let low=0,
 /** Snapshot path uses serialized retained thermal regions, not a new layout build. */
 export function deteriorationExposure(w:World,pile:MaterialPile,environment?:DeteriorationEnvironment):DeteriorationExposure {
  const neutral={baseRate:0,rate:0,roofed:false,usesOutdoorTemperature:true,terrainFactor:0};
- if(w.schemaVersion<252||!isDeteriorationItem(pile.item))return {status:'out-of-scope',...neutral};
+ if(w.schemaVersion<252||w.schemaVersion<256&&isFutureEcologyItem256(pile.item)||!isDeteriorationItem(pile.item))return {status:'out-of-scope',...neutral};
  const baseRate=DETERIORATION_RATES[pile.item];if(pile.owner.type!=='ground')return {status:'not-ground',...neutral,baseRate};
  const e=environment??captureDeteriorationEnvironment(w),cell=pile.owner.z*w.width+pile.owner.x;
  const roofed=isRoofed(w,cell),inside=e.layout?(e.layout.indices[cell]??-1)>=0:(w.thermal?.regions??[]).some(r=>containsSorted(r.cells,cell));
- const tile=w.tiles[cell],terrainFactor=tile&&(isWetTerrain(tile.terrain)||tile.terrain==='water')&&!tile.bridge&&!tile.floor?3:0;
+ const tile=w.tiles[cell],terrainFactor=tile?terrainExtraDeterioration256(tile):0;
  const flags={baseRate,roofed,usesOutdoorTemperature:!inside,terrainFactor};
  if(e.shelves.has(cell))return {status:'protected-shelf',...flags,rate:0};
  const rate=baseRate*((roofed?0:.5)+(inside?0:.5)+terrainFactor)*(roofed?1:1+4*e.rain);

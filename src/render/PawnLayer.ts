@@ -1,3 +1,7 @@
+import {arrivalRotationYaw256} from '../sim/arrival-rotation-256';
+import {actorExplorationMaterial256} from './ExplorationMask256';
+import {isAnimalSpecies256} from '../sim/animal-core-v256';
+import {BEDROLL_SURFACE_HEIGHT} from './bedroll-parts';
 import {treeCargoKind} from './tree-presentation';
 import { appearanceOf } from '../sim/pawn-appearance';
 import { AnimationDetail } from './AnimationDetail';
@@ -108,7 +112,7 @@ function cargoAppearance(load:MaterialPile|undefined):readonly [number,number] {
   if(!load)return [0,0];
   // The dedicated mechanical rig follows this owner's existing cargo handoff.
   // No generic food/material proxy may duplicate the entire carcass.
-  if(load.mechCorpse)return [0,0];
+  if(load.mechCorpse||load.corpse&&isAnimalSpecies256(load.corpse.species))return [0,0];
   const kind=load.kind==='corpse'?(BIOME_CARGO[load.item]??27):load.item==='minified-tree'?treeCargoKind(load.innerResource):itemCargoKind(load.item);
   // Corpse loads are indivisible. Negative y encodes their exact anatomical
   // mask in the existing actor stream; no extra per-actor GPU attribute.
@@ -288,7 +292,7 @@ export class PawnLayer {
     geometry.setAttribute('aCargo', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
     for (const name of ['aFrom', 'aTo', 'aMotion', 'aCargo', 'aTravel']) (geometry.getAttribute(name) as THREE.InstancedBufferAttribute).setUsage(THREE.StaticDrawUsage);
     const mat = material(0xffffff);
-    this.configure?.(mat);
+    this.configure?.(actorExplorationMaterial256(mat));
     // One factory for both graphs. The original clock deliberately has no
     // animationCache, so the native body has no retained flag/root read at all.
     const originalClock = { travelTime: this.travelTime, blend: this.blend };
@@ -494,7 +498,7 @@ export class PawnLayer {
       If(attribute('dye','float').equal(-3).and(attribute('aEquipment','vec4').y.notEqual(2).and(attribute('aEquipment','vec4').y.notEqual(3))),()=>{animated.assign(vec3(0));});
       // Vest is bit0. Mutually exclusive headgear occupies even codes:
       // flak2, recon4, cloth tuque6, wool tuque8. No new actor buffer.
-      const wornFlags=attribute('aEquipment','vec4').z,helmet=wornFlags.greaterThan(1.5),recon=wornFlags.greaterThan(3.5).and(wornFlags.lessThan(5.5)),tuque=wornFlags.greaterThan(5.5);
+      const wornFlags=attribute('aEquipment','vec4').z.floor(),helmet=wornFlags.greaterThan(1.5),recon=wornFlags.greaterThan(3.5).and(wornFlags.lessThan(5.5)),tuque=wornFlags.greaterThan(5.5);
       If(attribute('dye','float').equal(-2).and(wornFlags.mod(2).lessThan(.5)),()=>{animated.assign(vec3(0));});
       If(attribute('dye','float').equal(FLAK_HELMET_DYE).and(helmet.not().or(wornFlags.greaterThan(3.5))),()=>{animated.assign(vec3(0));});
       If(attribute('dye','float').equal(RECON_ARMOR_DYE).and(attribute('aEquipment','vec4').y.notEqual(5)),()=>{animated.assign(vec3(0));});
@@ -539,15 +543,20 @@ export class PawnLayer {
       If(attribute('aEquipment','vec4').y.equal(2).and(fragmentBone.greaterThanEqual(2)).and(fragmentBone.lessThanEqual(3)),()=>{ tint.assign(attribute('aSkin','vec3')); });
       If(fragmentDye.equal(2),()=>{ tint.assign(attribute('aSkin','vec3')); });
       If(fragmentDye.greaterThanEqual(100),()=>{ tint.assign(attribute('aHairBlood','vec4').xyz); });
-      const legs=fragmentBone.greaterThanEqual(4).and(fragmentDye.equal(0));
+      const legs=fragmentBone.greaterThanEqual(4).and(fragmentDye.equal(0)),pants=attribute('aEquipment','vec4').w.floor();
+      {const color=new THREE.Color(0xa0b2b5);If(fragmentDye.equal(FLAK_HELMET_DYE).and(attribute('aEquipment','vec4').w.fract().greaterThan(.25)),()=>{tint.assign(vec3(color.r,color.g,color.b));});}
       const cloth=new THREE.Color(0xd8c8a2),leather=new THREE.Color(0xad8a61);
-      If(legs.and(attribute('aEquipment','vec4').w.equal(1)),()=>{ tint.assign(vec3(cloth.r,cloth.g,cloth.b)); });
-      If(legs.and(attribute('aEquipment','vec4').w.equal(2)),()=>{ tint.assign(vec3(leather.r,leather.g,leather.b)); });
-      {const color=new THREE.Color(0xa88b63);If(legs.and(attribute('aEquipment','vec4').w.equal(3)),()=>{ tint.assign(vec3(color.r,color.g,color.b)); });}
-      {const color=new THREE.Color(0x839ac5);If(legs.and(attribute('aEquipment','vec4').w.equal(4)),()=>{ tint.assign(vec3(color.r,color.g,color.b)); });}
-      {const color=new THREE.Color(0xc3a375);If(legs.and(attribute('aEquipment','vec4').w.equal(5)),()=>{ tint.assign(vec3(color.r,color.g,color.b)); });}
-      {const color=new THREE.Color(0xb3c0ba);If(legs.and(attribute('aEquipment','vec4').w.equal(6)),()=>{ tint.assign(vec3(color.r,color.g,color.b)); });}
-      {const color=new THREE.Color(0xb26422);If(legs.and(attribute('aEquipment','vec4').w.equal(7)),()=>{ tint.assign(vec3(color.r,color.g,color.b)); });}
+      If(legs.and(pants.equal(1)),()=>{ tint.assign(vec3(cloth.r,cloth.g,cloth.b)); });
+      If(legs.and(pants.equal(2)),()=>{ tint.assign(vec3(leather.r,leather.g,leather.b)); });
+      {const color=new THREE.Color(0xa88b63);If(legs.and(pants.equal(3)),()=>{ tint.assign(vec3(color.r,color.g,color.b)); });}
+      {const color=new THREE.Color(0x839ac5);If(legs.and(pants.equal(4)),()=>{ tint.assign(vec3(color.r,color.g,color.b)); });}
+      {const color=new THREE.Color(0xc3a375);If(legs.and(pants.equal(5)),()=>{ tint.assign(vec3(color.r,color.g,color.b)); });}
+      {const color=new THREE.Color(0xb3c0ba);If(legs.and(pants.equal(6)),()=>{ tint.assign(vec3(color.r,color.g,color.b)); });}
+      {const color=new THREE.Color(0xb26422);If(legs.and(pants.equal(7)),()=>{ tint.assign(vec3(color.r,color.g,color.b)); });}
+      {const color=new THREE.Color(0x707070);If(legs.and(pants.equal(8)),()=>{ tint.assign(vec3(color.r,color.g,color.b)); });}
+      {const color=new THREE.Color(0xcecece);If(legs.and(pants.equal(9)),()=>{tint.assign(vec3(color.r,color.g,color.b));});}
+      {const color=new THREE.Color(0xb1b1b1);If(legs.and(pants.equal(10)),()=>{tint.assign(vec3(color.r,color.g,color.b));});}
+      {const word=attribute('aEquipment','vec4').z.fract().mul(65536).round(),code=word.sub(1);If(fragmentDye.equal(-2).and(word.greaterThan(0)),()=>{tint.assign(vec3(code.div(1024).floor().div(31),code.div(32).floor().mod(32).div(31),code.mod(32).div(31)));});}
       const stage=attribute('aShape','vec4').x.div(10).floor().mod(10);
       {const red=new THREE.Color(0x965f58);If(stage.equal(1),()=>{ tint.assign(mix(tint,vec3(red.r,red.g,red.b),.7)); });}
       {const bone=new THREE.Color(0xc9bd9b),dark=new THREE.Color(0x554e43);
@@ -564,12 +573,12 @@ export class PawnLayer {
       return bodyBloodPigment(tint,region,1,dye.equal(-3).or(dye.equal(-2)).or(dye.greaterThanEqual(0).and(dye.lessThan(3))).select(float(1),float(0)),attribute('aHairBlood','vec4').w);})();
     mat.colorNode = baseColor;
     const textured = material(0xffffff);
-    this.configure?.(textured);
+    this.configure?.(actorExplorationMaterial256(textured));
     textured.positionNode = mat.positionNode;
     textured.colorNode = baseColor.mul(pawnSurfaceShade(this.surfaceTexture));
     const nativePlain = material(0xffffff), nativeTextured = material(0xffffff);
-    this.configure?.(nativePlain);
-    this.configure?.(nativeTextured);
+    this.configure?.(actorExplorationMaterial256(nativePlain));
+    this.configure?.(actorExplorationMaterial256(nativeTextured));
     // Instantiate separately from the LOD Else node: lazy TSL Fn state must
     // not reuse a branch-built root in the independent native pipeline.
     nativePlain.positionNode = makeOriginalPosition();
@@ -611,7 +620,7 @@ export class PawnLayer {
     cargo.setAttribute('aHandoffFrom',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.StaticDrawUsage));
     cargo.setAttribute('aHandoffTo',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.StaticDrawUsage));
     const cargoMat = material(0xffffff);
-    this.configure?.(cargoMat);
+    this.configure?.(actorExplorationMaterial256(cargoMat));
     cargoMat.colorNode = attribute('color', 'vec3');
     cargoMat.positionNode = Fn(() => {
       const cached=this.animationCache.cached().toVar(),pose=pawnPresentationPose(this,instanceIndex,cached);
@@ -660,7 +669,7 @@ export class PawnLayer {
     partial.setAttribute('aTransferFrom',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.StaticDrawUsage));
     partial.setAttribute('aTransferTo',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.StaticDrawUsage));
     partial.setAttribute('aTransferCargo',new THREE.InstancedBufferAttribute(new Float32Array(count*4),4).setUsage(THREE.StaticDrawUsage));
-    const partialMat=material(0xffffff);this.configure?.(partialMat);
+    const partialMat=material(0xffffff);this.configure?.(actorExplorationMaterial256(partialMat));
     partialMat.colorNode=attribute('color','vec3');
     partialMat.positionNode=Fn(()=>{
       const from=attribute('aTransferFrom','vec4'),to=attribute('aTransferTo','vec4'),load=attribute('aTransferCargo','vec4');
@@ -711,7 +720,7 @@ export class PawnLayer {
       If(motion.z.equal(1).or(motion.z.equal(5)).or(motion.z.equal(POSE_SLEEP)).or(motion.z.equal(POSE_DEAD)),()=>{const y=animated.y.toVar();animated.y.assign(animated.z.add(.19));animated.z.assign(float(.65).sub(y));});
       If(motion.z.equal(POSE_DEAD),()=>{animated.z.assign(animated.z.mul(.78));});
       If(motion.z.equal(6),()=>{const x=animated.x.toVar(),y=animated.y.toVar(),z=animated.z.toVar();animated.assign(vec3(float(.65).sub(y),z.add(.19+.95/PAWN_MODEL_SCALE),x.add(.3)));});
-      const equipment=attribute('aEquipment','vec4'),worn=equipment.z,helmet=worn.greaterThan(1.5),recon=worn.greaterThan(3.5).and(worn.lessThan(5.5)),tuque=worn.greaterThan(5.5);
+      const equipment=attribute('aEquipment','vec4'),worn=equipment.z.floor(),helmet=worn.greaterThan(1.5),recon=worn.greaterThan(3.5).and(worn.lessThan(5.5)),tuque=worn.greaterThan(5.5);
       If(dye.equal(-3).and(equipment.y.notEqual(2).and(equipment.y.notEqual(3))),()=>{animated.assign(vec3(0));});
       If(dye.equal(-2).and(worn.mod(2).lessThan(.5)),()=>{animated.assign(vec3(0));});
       If(dye.equal(FLAK_HELMET_DYE).and(helmet.not().or(worn.greaterThan(3.5))),()=>{animated.assign(vec3(0));});
@@ -877,7 +886,7 @@ export class PawnLayer {
       const previous = newMap ? undefined : this.visuals.get(pawn.id);
       // A stationary actor retains its last travel heading after a save reload.
       // Work with an external target and bed posture override it below.
-      const initialYaw=pawn.motion?Math.atan2(pawn.motion.to.x-pawn.motion.from.x,pawn.motion.to.z-pawn.motion.from.z):Math.PI*.2+(pawn.state==='dead'?(pawn.id%5-2)*.14:0);
+      const initialYaw=pawn.motion?Math.atan2(pawn.motion.to.x-pawn.motion.from.x,pawn.motion.to.z-pawn.motion.from.z):arrivalRotationYaw256(pawn)??Math.PI*.2+(pawn.state==='dead'?(pawn.id%5-2)*.14:0);
       const from = previous ? previous.from.clone().lerp(previous.to, oldBlend) : new THREE.Vector4(pawn.x, 0, pawn.z, initialYaw);
       const lastShown=presented.get(pawn.id);
       if(lastShown){from.x=lastShown.x;from.z=lastShown.z;}
@@ -907,7 +916,7 @@ export class PawnLayer {
         const slot=pawnBedSlot(pawn,bed),center=bed.kind==='double-bed'&&slot!==undefined?bedSlotBodyCenter(bed,slot):undefined;
         if(center){px=center.x;pz=center.z;}
         else {const cells = footprintCells(bed), last = cells[cells.length - 1]!;px = (bed.x + last.x) / 2;pz = (bed.z + last.z) / 2;}
-        py = bed.kind==='sleeping-spot'?0:WORLD_SCALE.bedSurfaceHeight;
+        py = bed.kind==='sleeping-spot'?0:bed.kind==='bedroll'?BEDROLL_SURFACE_HEIGHT:WORLD_SCALE.bedSurfaceHeight;
         const target = bed.orientation * Math.PI / 2;
         yaw = from.w + Math.atan2(Math.sin(target - from.w), Math.cos(target - from.w));
       }
@@ -961,7 +970,7 @@ export class PawnLayer {
       if(leisureTarget)yaw=Math.atan2(leisureTarget.x-pawn.x,leisureTarget.z-pawn.z);
       const melee=pawn.melee?.strike;
       const shotTarget=pawn.shooting?.stance?pawn.shooting.order?.targetId??(pawn.shooting.stance.phase==='cooldown'?pawn.lastAttack?.targetId:undefined):undefined;
-      const aim=melee?(melee.structure??pawnsById.get(melee.targetId)??world.wildlife?.animals.find(a=>a.id===melee.targetId)??world.raids?.departed.find(d=>d.pawnId===melee.targetId)?.cell):humanOpponent??(shotTarget?(pawnsById.get(shotTarget)??world.wildlife?.animals.find(a=>a.id===shotTarget)):undefined);
+      const aim=melee?(melee.structure??(melee.targetId===null?undefined:pawnsById.get(melee.targetId))??world.wildlife?.animals.find(a=>a.id===melee.targetId)??world.raids?.departed.find(d=>d.pawnId===melee.targetId)?.cell):humanOpponent??(shotTarget?(pawnsById.get(shotTarget)??world.wildlife?.animals.find(a=>a.id===shotTarget)):undefined);
       if(aim)yaw=Math.atan2(aim.x-pawn.x,aim.z-pawn.z);
       const to = new THREE.Vector4(px, py, pz, yaw);
       if (!previous||hiddenBody||previous.to.y< -100) from.copy(to);
@@ -981,7 +990,7 @@ export class PawnLayer {
       scratchColor.setHex(look.color??(isColonist(pawn)?pawnBaseColor(pawn.id):pawn.visitor&&!world.visitors?.groups.find(g=>g.id===pawn.visitor!.group)?.hostile?0x77958f:0xb74736));
       if(pawn.state==='dead')scratchColor.setHex(0x73756c);
       tint.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
-      equipment.setXYZW(index,weaponVisual(gears.get(pawn.id)?.item)?.equipment??0,look.silhouette,(look.vest?1:0)+(look.reconHelmet?4:look.helmet?2:look.tuque===2?8:look.tuque===1?6:0),look.pants);
+      equipment.setXYZW(index,weaponVisual(gears.get(pawn.id)?.item)?.equipment??0,look.silhouette,(look.vest?1:0)+(look.reconHelmet?4:look.helmet?2:look.tuque===2?8:look.tuque===1?6:0)+(look.vestTintCode??0)/65536,look.pants+(look.plasteelHelmet?.5:0));
       const load = carried.get(pawn.id);
       const packed=world.packed?.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
       const handoff=this.handoffs.active.get(pawn.id);

@@ -1,3 +1,8 @@
+import {ancientCasketParts256} from './ancient-casket-parts-256';
+import {shipChunkParts256} from './ship-chunk-parts-256';
+import {ancientMonumentParts256} from './ancient-monument-parts-256';
+import {localRoadPropParts256} from './local-road-prop-parts-256';
+import {bedrollParts,packedBedrollParts} from './bedroll-parts';
 import {ventParts} from './vent-parts';
 import { foodWorkstationParts } from './food-workstation-parts';
 import { graveParts } from './grave-parts';
@@ -82,12 +87,13 @@ export function buildFurniture(world: World, group: THREE.Group, cutaway: boolea
     for(const p of world.packed)if(p.owner.type==='ground') {
       const s=surfaces.get(p.owner.z*world.width+p.owner.x),scale=s?.scale??1;
       const x=p.owner.x+(s?.x??0),z=p.owner.z+(s?.z??0),y=s?.y??0;
+      if(p.building.kind==='bedroll'){parcels.push(...packedBedrollParts(p.building,x,z,y,scale));continue;}
       parcels.push({targetId:p.building.id,x,z,y:y+.24*scale,sx:.64*scale,sy:.48*scale,sz:.64*scale,color:0xb6996c},
         {targetId:p.building.id,x,z,y:y+.49*scale,sx:.13*scale,sy:.03*scale,sz:.67*scale,color:buildingMaterialColor(p.building.material,0x6f634e)});
     }
     batches.set(group, 'furniture', [
       ...ventParts(world,cutaway), ...graveParts(world), ...foodWorkstationParts(world), ...electricalParts(contextWorld,cutaway,world.structures), ...passiveCoolerParts(world), ...doorParts(contextWorld,cutaway,world.structures), ...penParts(contextWorld,world.structures,cutaway), ...campfireParts(world), ...torchLampParts(world), ...recreationParts(world), ...stonecutterParts(world), ...craftingSpotParts(world), ...animalSleepingSpotParts(world), ...researchTailorParts(world), ...industryParts(world), ...habitatParts(world), ...artParts(world), ...drugLabParts(world),
-      ...hospitalBedParts(world), ...doubleBedParts(world), ...sleepingSpotParts(world), ...vitalsMonitorParts(world), ...deepDrillingParts(world), ...orbitalParts(world), ...nutrientPasteParts(world), ...biofuelParts(world), ...smeltingParts(world), ...crematoriumParts(world), ...spikeTrapParts(world), ...hydroponicsParts(world), ...miniTurretBaseParts(world), ...parcels,
+      ...shipChunkParts256(world), ...ancientCasketParts256(world), ...ancientMonumentParts256(world), ...localRoadPropParts256(world), ...bedrollParts(world), ...hospitalBedParts(world), ...doubleBedParts(world), ...sleepingSpotParts(world), ...vitalsMonitorParts(world), ...deepDrillingParts(world), ...orbitalParts(world), ...nutrientPasteParts(world), ...biofuelParts(world), ...smeltingParts(world), ...crematoriumParts(world), ...spikeTrapParts(world), ...hydroponicsParts(world), ...miniTurretBaseParts(world), ...parcels,
       ...woodParts.map(p => ({ ...p, color: p.color ?? 0xa38559 })),
       ...walls.map(p => ({ ...p, sx: 1, sy: wallHeight - 0.09, sz: 1, color: p.color ?? 0xa6916e })),
       ...wallCaps.map(p => ({ ...p, sx: 1, sy: 0.09, sz: 1, color: p.color ?? 0xc3af86 })),

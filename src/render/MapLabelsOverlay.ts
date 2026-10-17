@@ -1,3 +1,5 @@
+import {knownPile256,knownPosition256} from '../ui/exploration-readers-256';
+import {explorationEnabled256} from '../sim/exploration-state-256';
 import { Box3, Frustum, Matrix4, PerspectiveCamera, Vector3, type OrthographicCamera } from 'three/webgpu';
 import { cameraClipNear } from './camera-clip';
 import { QUALITY_LABELS, type WeaponQuality } from '../sim/equipment-rules';
@@ -67,6 +69,9 @@ export class MapLabelsOverlay {
   private sourcePacked: World['packed'] | undefined;
   private sourceStructures:World['structures']|undefined;
   private shelfSignature='';
+  private sourceWorld:World|undefined;
+  private explorationRevision:number|undefined;
+  private explorationEnabled=false;
   private sourceWidth = -1;
   private chunks: { bounds: Box3; entries: { x: number; y:number; z: number; label: string;pileId?:number;shelf?:boolean }[] }[] = [];
   private width = 0;
@@ -94,12 +99,15 @@ export class MapLabelsOverlay {
     host.after(this.canvas);
   }
 
-  private index(world: World): boolean {
+  private index(world: World,explorationRevision?:number): boolean {
     // Structure snapshots are immutable in the private MAIN. Policy, HP and
     // unrelated buildings do not move supports and must not redraw labels.
     const shelfSignature=this.sourceStructures===world.structures?this.shelfSignature:world.structures.filter(s=>isShelfKind(s.kind)).map(s=>`${s.id}:${s.kind}:${s.x}:${s.z}:${s.orientation}`).join('|');
-    const unchanged = this.sourceWidth === world.width &&
+    const enabled=explorationEnabled256(world);
+    const sameExploration=this.explorationEnabled===enabled&&(!enabled||(explorationRevision===undefined?this.sourceWorld===world:this.explorationRevision===explorationRevision));
+    const unchanged = sameExploration && this.sourceWidth === world.width &&
       this.shelfSignature===shelfSignature&&samePileLabels(this.sourcePiles, world.piles,!!shelfSignature) && samePackedLabels(this.sourcePacked, world.packed);
+    this.sourceWorld=world;this.explorationEnabled=enabled;this.explorationRevision=explorationRevision;
     this.sourcePiles = world.piles; this.sourcePacked = world.packed; this.sourceWidth = world.width;
     this.sourceStructures=world.structures;this.shelfSignature=shelfSignature;
     if (unchanged) return false;
@@ -118,17 +126,17 @@ export class MapLabelsOverlay {
       chunk.entries.push({ x,y, z, label,pileId,shelf });
     };
     const supports=pileIdentitySurfaces(world);
-    for (const pile of world.piles) if (pile.owner.type === 'ground'){
+    for (const pile of world.piles) if (pile.owner.type === 'ground'&&knownPile256(world,pile)){
       const support=supports.get(pile.id);
       add(pile.owner.x+(support?.x??0),pile.owner.z+(support?.z??0),pileCaption(pile),support?support.y+.18:.32,pile.id,!!support);
     }
-    for (const packed of world.packed) if (packed.owner.type === 'ground')
+    for (const packed of world.packed) if (packed.owner.type === 'ground'&&knownPosition256(world,packed.owner))
       add(packed.owner.x, packed.owner.z, packedCaption(packed));
     this.chunks = [...chunks.values()];
     return true;
   }
 
-  draw(world: World | null | undefined, camera: OrthographicCamera | PerspectiveCamera, cellPixels: number, width: number, height: number): void {
+  draw(world: World | null | undefined, camera: OrthographicCamera | PerspectiveCamera, cellPixels: number, width: number, height: number,explorationRevision?:number): void {
     // RimWorld shows item overlays at its closest detail levels. At other
     // scales the early exit avoids the pile scan and all canvas operations.
     if (!world || cellPixels < this.minCellPixels || !width || !height) {
@@ -146,7 +154,7 @@ export class MapLabelsOverlay {
       this.canvas.height = Math.ceil(height * ratio);
     }
     camera.updateMatrixWorld();
-    const indexed = this.index(world);
+    const indexed = this.index(world,explorationRevision);
     if (this.drawn && !becameVisible && !resized && !indexed && this.lastCamera === camera &&
       this.lastView.equals(camera.matrixWorldInverse) && this.lastProjection.equals(camera.projectionMatrix) &&
       this.lastPosition.equals(camera.position)) return;

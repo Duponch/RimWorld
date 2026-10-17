@@ -1,3 +1,4 @@
+import {claimLocalActorBed256} from './actor-bed-local-256.ts';
 import {isWetTerrain} from './shallow-water.ts';
 import { footprintCells } from './definitions.ts';
 import { sharesConstructionLayer } from './power-grid.ts';
@@ -48,7 +49,7 @@ export function applyAnimalSpotMedical(world:World,c:{type:'animal-spot-medical'
   if(occupant&&same(occupant,spot)&&animalSpotAvailable(world,spot,occupant)){
     occupant.animalRest={spotId:spot.id,phase:'sleep'};
     if(wasSleeping)occupant.state='sleeping';
-    if(!spot.medical&&occupant.domestic)occupant.domestic.bedId=spot.id;
+    if(!spot.medical&&occupant.domestic)claimLocalActorBed256(world,occupant,spot);
   }
   for(const p of world.pawns)p.planCooldown=0;
   return {ok:true};

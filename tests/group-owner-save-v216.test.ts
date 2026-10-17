@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import { expect,test } from 'vitest';
 import { createScenarioWorld } from '../src/sim/new-game.ts';
 import { applyCommand,stepWorld } from '../src/sim/engine.ts';
@@ -75,7 +76,7 @@ function joined() {
 function depart(w:World,members:Pawn[]) {
   addMaterial(w,'food',members.length,{type:'inventory',pawnId:members[0]!.id},'survival-meal');
   expect(applyCommand(w,{type:'planet-adopt'}).ok).toBe(true);
-  expect(applyCommand(w,{type:'group-start',memberIds:members.map(p=>p.id),destination:w.planet!.civilianTile,sources:[]}).ok).toBe(true);
+  expect(applyCommand(w,{type:'group-start',memberIds:members.map(p=>p.id),destination:legacyPlanet(w).civilianTile,sources:[]}).ok).toBe(true);
   const g=w.group;if(!g||!('exits' in g))throw Error('Missing real group formation');
   g.phase='leaving';
   for(const exit of g.exits){
@@ -85,7 +86,7 @@ function depart(w:World,members:Pawn[]) {
   tryGroupDeparture(w);
   const away=w.group;if(!away||!('members' in away))throw Error('Atomic original-owner departure missing');
   // Prepare a stationary site, not a claim that the geographic route was played.
-  away.phase='at-site';away.tile=w.planet!.civilianTile;away.destination=away.tile;away.route=[away.tile];away.segment=null;away.stop={kind:'at-site'};
+  away.phase='at-site';away.tile=legacyPlanet(w).civilianTile;away.destination=away.tile;away.route=[away.tile];away.segment=null;away.stop={kind:'at-site'};
   checkpoint(w);return away;
 }
 

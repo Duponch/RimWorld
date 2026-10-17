@@ -1,3 +1,11 @@
+import {detachHiveInsect256} from './cave-hive-lifecycle-256.ts';
+import {CORE_STARTING_ARRIVAL_PROFILE_256} from './starting-pod-state-256.ts';
+import {cancelToxicVomit256} from './toxic-buildup-256.ts';
+/** Map removal freezes the same episode and strips only its spatial job. */
+import {ancientCasketMapRemovalBoundary256} from './ancient-casket-state-256.ts';
+import {cancelCryptosleepVomit256} from './cryptosleep-sickness-256.ts';
+import {captureDuckMapRemovedOwners256} from './duck-owner-capture-256.ts';
+import type {WildAnimal} from './wildlife-state.ts';
 import type {World,Pawn} from './types.ts';
 import type {AbandonedMapContents,AbandonedWorldPawn,CampaignState} from './world-map-state.ts';
 import type {HumanOwnershipCapture,HumanOwnerSlot} from './human-owners.ts';
@@ -6,14 +14,25 @@ import {releaseAssignments} from './work-release.ts';
 import {clearQueuedOrders} from './player-orders.ts';
 import {dropRetainingIdentity} from './ground-placement.ts';
 import {releaseFurniture} from './furniture-transfer.ts';
+import {animalCarrier} from './animal-rest-state.ts';
 const localFields=['allowedAreaId','allowedAreaReturn','bedSlot','priorityWork','transitExit','draft','flee','bombRefuge','tactics','melee','shooting','stagger','stun','meleeThreat','equipmentDropPending','droppedWeaponId','surgeryRequest','burning','filthFeet'] as const;
 function stopAtOccupiedCell(p:Pawn,tick:number):void {if(p.motion&&p.motion.end>tick){p.x=p.motion.from.x;p.z=p.motion.from.z;}delete p.motion;p.path=[];p.moveCooldown=0;}
+/** One actual DeSpawn/StopDead cleanup, shared by the real removal and its
+ * per-record private preflight. No World clone or future-cell arrival. */
+export function cleanMapRemovedAnimal256(animal:WildAnimal,tick:number):void {
+ if(animal.health){cancelCryptosleepVomit256(animal.health);cancelToxicVomit256(animal.health);}if(animal.motion&&animal.motion.end>tick){animal.x=animal.motion.from.x;animal.z=animal.motion.from.z;}if(animal.wander)delete animal.wander.job;animal.path=[];for(const key of ['motion','meal','predation','exiting','flee','threat','retaliation','strike','stun','stagger','sleepUntilCore','mating','taming','animalRest','eggLay','burning','flight','exitFlight'] as const)delete animal[key];if(animal.domestic){delete animal.domestic.bedId;delete animal.domestic.penMarkerId;delete animal.domestic.slaughter;}if(animal.manhunter){delete animal.manhunter.targetId;delete animal.manhunter.door;}if(animal.state!=='dead'&&animal.state!=='downed')animal.state='idle';
+}
 /** Rare removal transition. Normal interruption/edge continuation is a different contract. */
 export function detachMapOwners(map:World,mapId:number,tile:number):AbandonedMapContents {
+ if(map.startingArrival?.profile===CORE_STARTING_ARRIVAL_PROFILE_256&&map.startingArrival.phase!=='opened')throw Error('Core initial capsules require actual discharge before MapRemoved');
+ const casketRemoval=ancientCasketMapRemovalBoundary256(map);if(casketRemoval)throw Error(casketRemoval);
+ const heldAnimals=captureDuckMapRemovedOwners256(map),animalRows:AbandonedMapContents['animals']=[...(map.wildlife?.animals??[]).map(animal=>({animal})),...heldAnimals];
+ const animalIds=new Set<number>();for(const row of animalRows){if(animalIds.has(row.animal.id))throw Error('Duplicate actual MapRemoved animal owner');animalIds.add(row.animal.id);}
  const before=captureHumanOwners(map,{},false),holders=new Map<number,number>(),animalHolders=new Map<number,number>();
  for(const p of map.pawns){if(p.rescue?.phase==='carry')holders.set(p.rescue.patientId,p.id);if(p.animalRescue?.phase==='carry')animalHolders.set(p.animalRescue.animalId,p.id);}
+ if(map.schemaVersion>=256)for(const a of map.wildlife?.animals??[]){const carrier=animalCarrier(map,a.id);if(carrier)animalHolders.set(a.id,carrier.id);}
  // StopDead before cleanup or cargo search; no prospective endpoint is reached.
- for(const p of map.pawns)stopAtOccupiedCell(p,map.tick);
+ for(const p of map.pawns){stopAtOccupiedCell(p,map.tick);if(p.health){cancelCryptosleepVomit256(p.health);cancelToxicVomit256(p.health);}}
  const guests=new Map<number,AbandonedWorldPawn['guest']>();
  for(const p of map.pawns){
 
@@ -25,6 +44,7 @@ export function detachMapOwners(map:World,mapId:number,tile:number):AbandonedMap
   for(const key of ['prisoner','visitor','podRescue','raid'] as const)delete p[key];
   for(const key of localFields)delete p[key];p.bedId=null;delete p.interruptedCargo;
   if(p.social)delete p.social.fight;
+  if(p.mental?.crisis?.kind==='confused-wander'){p.mental.crisis.target=null;p.mental.crisis.waitUntil=map.tick;}
  }
  // Rescue cleanup can copy the carrier's idle `null` edge to a patient that
  // appeared earlier in the array. No local motion survives either ordering.
@@ -34,10 +54,11 @@ export function detachMapOwners(map:World,mapId:number,tile:number):AbandonedMap
   if(local&&pawn&&(items.some(i=>i.owner.type==='pawn')||packed.some(i=>i.owner.type==='pawn')))pawn.interruptedCargo=true;
   return {id:s.id,name:s.name,kind:local?'world-lost':s.kind,clock:s.validationTick,...pawn?{pawn}:{},items,packed,...holders.has(s.id)?{carriedById:holders.get(s.id)!}:{},...s.place.kind==='starting-pod'?{podId:s.place.podId}:{},...guests.has(s.id)?{guest:guests.get(s.id)!}:{}};
  });
- const animals=(map.wildlife?.animals??[]).map(animal=>{if(animal.motion&&animal.motion.end>map.tick){animal.x=animal.motion.from.x;animal.z=animal.motion.from.z;}animal.path=[];for(const key of ['motion','meal','predation','exiting','flee','threat','retaliation','strike','stun','stagger','sleepUntilCore','mating','taming','animalRest','burning'] as const)delete animal[key];if(animal.domestic){delete animal.domestic.bedId;delete animal.domestic.penMarkerId;delete animal.domestic.slaughter;}if(animal.manhunter){delete animal.manhunter.targetId;delete animal.manhunter.door;}if(animal.state!=='dead'&&animal.state!=='downed')animal.state='idle';return {animal,...animalHolders.has(animal.id)?{carriedById:animalHolders.get(animal.id)!}:{}};});
+ const animals:AbandonedMapContents['animals']=animalRows.map(row=>{const animal=row.animal;detachHiveInsect256(map,animal);cleanMapRemovedAnimal256(animal,map.tick);const items=map.schemaVersion>=256?map.piles.filter(i=>i.owner.type==='inventory'&&i.owner.pawnId===animal.id):[],packed=map.schemaVersion>=256?map.packed.filter(p=>p.owner.type==='inventory'&&p.owner.pawnId===animal.id):[];return {...row,animal,...animalHolders.has(animal.id)?{carriedById:animalHolders.get(animal.id)!}:{},...items.length?{items}:{},...packed.length?{packed}:{}};});
  const pods=map.startingArrival&&map.startingArrival.phase!=='opened'?map.startingArrival.pods.map(p=>({id:p.id,pawnId:p.pawn.id,items:p.items.filter(i=>i.owner.type==='starting-pod')})):[];
- const lost:AbandonedMapContents['lost']={items:{},structures:map.structures.length,resources:map.resources.length,packed:map.packed.filter(p=>p.owner.type==='ground').length};
- for(const pile of map.piles){const pawnId='pawnId'in pile.owner?pile.owner.pawnId:undefined;if(pawnId===undefined||!humans.some(h=>h.id===pawnId))lost.items[pile.item]=(lost.items[pile.item]??0)+pile.quantity;}
+ const retainedItems=new Set([...humans.flatMap(h=>h.items),...animals.flatMap(a=>a.items??[])].map(i=>i.id)),retainedPacked=new Set([...humans.flatMap(h=>h.packed),...animals.flatMap(a=>a.packed??[])].map(p=>p.building.id));
+ const lost:AbandonedMapContents['lost']={items:{},structures:map.structures.length,resources:map.resources.length,packed:map.packed.filter(p=>!retainedPacked.has(p.building.id)).length};
+ for(const pile of map.piles)if(!retainedItems.has(pile.id))lost.items[pile.item]=(lost.items[pile.item]??0)+pile.quantity;
  return {mapId,tile,removedAt:map.tick,context:{seed:map.seed,width:map.width,height:map.height,...map.climate?{climate:map.climate}:{},...map.site?{site:map.site}:{},...map.scenario?{scenario:map.scenario}:{}},filthPresent:!!map.filth,humans,animals,pods,lost};
 }
 /** Compact physical owners. A known world Pawn never becomes a local actor or a caravan. */

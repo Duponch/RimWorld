@@ -1,3 +1,6 @@
+import {retainedCorpseDamage256,type RetainedCorpseDamage256} from './retained-corpse-damage-256.ts';
+import {neutralLossPlan} from './destruction-losses.ts';
+import type {Mechanoid} from './mechanoid-state.ts';
 import { groundCapacity } from './ground-placement.ts';
 import { mechaMass } from './mechanoid-health.ts';
 import { cancelMelee } from './melee-state.ts';
@@ -37,11 +40,23 @@ export function advanceMechanoidCorpses(w:World):void {
     if(m.state!=='dead'||!m.health?.death||(m.motion?.end??0)>w.tick||m.moveCooldown>0
       ||(m.melee?.strike?.untilCore??0)>w.tick*10||m.ranged?.stance||w.piles.length>=32768
       ||groundCapacity(w,m,mechCorpseItem(m.mechKind))<1||w.piles.some(p=>p.id===m.id))continue;
-    w.piles.push({id:m.id,kind:'mech-corpse',item:mechCorpseItem(m.mechKind),quantity:1,
+    w.piles.push({...retainedCorpseDamage256(m)?{damage:retainedCorpseDamage256(m)}:{},id:m.id,kind:'mech-corpse',item:mechCorpseItem(m.mechKind),quantity:1,
       owner:{type:'ground',x:m.x,z:m.z},mechCorpse:{mechKind:m.mechKind,health:m.health,heading:m.heading}});
     const group=w.raids?.mechActive;
     if(group?.members.includes(m.id)&&!group.lost.includes(m.id)){group.lost.push(m.id);group.lost.sort((a,b)=>a-b);}
     removed.add(m.id);releaseTargets(w,m.id);
   }
   if(removed.size)w.mechanoids=w.mechanoids.filter(m=>!removed.has(m.id));
+}
+
+export function destroyRetainedMechanoidBody256(w:World,m:Mechanoid):boolean {
+ if(w.schemaVersion<256||!w.mechanoids?.includes(m)||m.state!=='dead'||!m.health?.death)return false;
+ const plan=neutralLossPlan(w,{items:{[mechCorpseItem(m.mechKind)]:1}});if(!plan)return false;
+ const group=w.raids?.mechActive;if(group?.members.includes(m.id)&&!group.lost.includes(m.id)){group.lost.push(m.id);group.lost.sort((a,b)=>a-b);}
+ w.destroyed=plan;w.mechanoids.splice(w.mechanoids.indexOf(m),1);releaseTargets(w,m.id);return true;
+}
+
+export function damageRetainedMechanoidBody256(w:World,m:Mechanoid,amount:number):boolean {
+ if(w.schemaVersion<256||!w.mechanoids?.includes(m)||m.state!=='dead'||!m.health?.death||!Number.isSafeInteger(amount)||amount<=0)return false;
+ const damage=retainedCorpseDamage256(m)+amount;if(damage>=100)return destroyRetainedMechanoidBody256(w,m);(m as Mechanoid&RetainedCorpseDamage256).corpseDamage=damage;return true;
 }

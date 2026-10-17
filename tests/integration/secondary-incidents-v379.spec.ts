@@ -25,10 +25,10 @@ test('V379 prepared off-map raid: actionable alert, real map and focus, live act
     expect(await page.evaluate(()=>window.__lisiere.backend)).toBe('WebGPU');
     const hardware=await page.evaluate(async()=>{const a=await navigator.gpu?.requestAdapter();return {vendor:a?.info.vendor,architecture:a?.info.architecture,description:a?.info.description};});
     expect(JSON.stringify(hardware)).not.toMatch(/swiftshader|llvmpipe|lavapipe|software adapter|basic render driver/i);proof.hardware=hardware;
-    const before=await world(page);expect(before.campaignMap?.active).toBe('home');expect(before.pawns.some(p=>p.id===f.hostileId)).toBe(false);
+    const before=await world(page);expect((before.campaignMap?.revision===2?undefined:before.campaignMap?.active)).toBe('home');expect(before.pawns.some(p=>p.id===f.hostileId)).toBe(false);
     const alert=page.locator(`[data-alert="campaign:secondary:raid:${f.hostileId}"]`);await expect(alert).toBeVisible();await expect(alert).toHaveAttribute('role','button');
     await page.screenshot({path:info.outputPath('home-remote-alert.png')});await alert.click();
-    await page.waitForFunction(id=>window.__lisiere.world.campaignMap?.active==='secondary'&&window.__lisiere.world.pawns.some(p=>p.id===id),f.hostileId);
+    await page.waitForFunction(id=>(window.__lisiere.world.campaignMap?.revision===2?undefined:window.__lisiere.world.campaignMap?.active)==='secondary'&&window.__lisiere.world.pawns.some(p=>p.id===id),f.hostileId);
     await expect(page.locator('#selected-name')).toHaveText(f.local.pawns.find(p=>p.id===f.hostileId)!.name);await centered(page,f.hostileId);
     const initial=await world(page),enemy=initial.pawns.find(p=>p.id===f.hostileId)!;proof.entry={tick:initial.tick,x:enemy.x,z:enemy.z};
     await page.screenshot({path:info.outputPath('secondary-actual-target.png')});
@@ -43,7 +43,7 @@ test('V379 prepared off-map raid: actionable alert, real map and focus, live act
     await page.locator('#save').click();await page.locator('#load').click();await expectWorld(page,active);await page.keyboard.press('Escape');proof.exactReload=true;
     await panel(page,'world');const tab=page.locator('[data-world-tab="group"]');if(await tab.count())await tab.click();
     const home=page.locator('[data-site-action="home"]');await expect(home).toBeVisible();await home.click();
-    await page.waitForFunction(()=>window.__lisiere.world.campaignMap?.active==='home');await page.keyboard.press('Escape');
+    await page.waitForFunction(()=>(window.__lisiere.world.campaignMap?.revision===2?undefined:window.__lisiere.world.campaignMap?.active)==='home');await page.keyboard.press('Escape');
     await expect(page.locator(`[data-alert="campaign:secondary:raid:${f.hostileId}"]`)).toBeVisible();
     await page.screenshot({path:info.outputPath('home-alert-after-reload.png')});
     const incident=await page.evaluate(()=>window.__lisiere.incident);expect(incident.graphicsFault).toBe(false);expect(incident.simulationStopped).toBe(false);

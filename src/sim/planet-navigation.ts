@@ -1,7 +1,12 @@
+import {planetTile,planetTileCount,planetGeography256} from './planet-geography-256.ts';
+import {worldSurfaceCoordinates,worldSurfaceDifficulty} from './world-surface-movement.ts';
+import {WORLD_ROADS,visibleWorldRoads} from './world-roads.ts';
+import {findGeographicPlanetRoute256,geographicPlanetQueryBudget256} from './planet-route-256.ts';
 /** Shared planetary edge costs and bounded route searches. */
 import type { PlanetState } from './planet-state.ts';
 import type { World } from './types.ts';
 import type { GroupMassCapture } from './group-capture.ts';
+import {geographicLongitudeOffsetCore256} from './site-climate.ts';
 import { calendarTick } from './calendar.ts';
 import { seasonTemperature } from './site-climate.ts';
 import { tileCoordinates } from './planet-generation.ts';
@@ -11,7 +16,7 @@ export interface PlanetSearchBudget { nodes:number; arcs:number }
 export type PlanetRouteResult =
   | {kind:'found';tiles:number[];estimatedCore:number;nodes:number;arcs:number}
   | {kind:'unreachable';nodes:number;arcs:number}
-  | {kind:'deferred';nodes:0;arcs:0};
+  | {kind:'deferred';nodes:number;arcs:number};
 export const PLANET_QUERY_NODES=162,PLANET_QUERY_ARCS=960;
 const clamp=(x:number,a:number,b:number)=>Math.max(a,Math.min(b,x));
 const mod=(x:number,n:number)=>((x%n)+n)%n;
@@ -21,11 +26,11 @@ export function roundEven(x:number):number {const lower=Math.floor(x),fraction=x
 export const longitudeOffsetCore=(longitude:number)=>roundEven(longitude/15)*2500;
 /** One actual mass capture reused by UI, overload and edge cost. No climate adoption. */
 export function planetCostContext(world:World,mass:GroupMassCapture):PlanetCostContext {
-  return {homeCivilCore:(calendarTick(world)-(world.expeditionSite?.calendarOffset??0))*10,mass};
+  return {homeCivilCore:planetHomeCivilCore(world),mass};
 }
 export function tileCivilCore(planet:PlanetState,id:number,homeCivilCore:number):number {
-  const tile=planet.tiles[id],home=planet.tiles[planet.homeTile];if(!tile||!home)throw new Error('Unknown planet tile');
-  return homeCivilCore+longitudeOffsetCore(tileCoordinates(tile).longitude)-longitudeOffsetCore(tileCoordinates(home).longitude);
+  const tile=planetTile(planet,id),home=planetTile(planet,planet.homeTile);if(!tile||!home)throw new Error('Unknown planet tile');
+  const offset=planet.revision===3?geographicLongitudeOffsetCore256:longitudeOffsetCore;return homeCivilCore+offset(planetTileCoordinates(planet,tile.id).longitude)-offset(planetTileCoordinates(planet,home.id).longitude);
 }
 export function tileHour(planet:PlanetState,id:number,homeCivilCore:number):number {
   const ticks=mod(tileCivilCore(planet,id,homeCivilCore),60000);return (ticks===0?1:ticks)/2500;
@@ -48,6 +53,7 @@ export function winterWeights(latitude:number,yearFraction:number):{winter:numbe
   return {winter:(north*seasonalWinter(year)+(1-north)*seasonalWinter(mod(year+.5,1)))*seasonal,permanentWinter:polar};
 }
 export function planetDifficulty(planet:PlanetState,id:number,context:PlanetCostContext):number {
+  if(planet.revision===3){const owner=planetGeography256(planet),tile=owner.surface.tiles[id];if(!tile)throw Error('Unknown geographic tile');return worldSurfaceDifficulty(tile,owner.surface.settings.temperature,planetAbsoluteCore256(planet,context.homeCivilCore));}
   const tile=planet.tiles[id];if(!tile)throw new Error('Unknown planet tile');if(tile.biome==='ocean')return 1000;
   const {latitude}=tileCoordinates(tile),year=mod(tileCivilCore(planet,id,context.homeCivilCore),3600000)/3600000;
   const {winter,permanentWinter}=winterWeights(latitude,year);
@@ -59,13 +65,14 @@ export function planetDifficulty(planet:PlanetState,id:number,context:PlanetCost
 export function groupTicksPerMove(mass:GroupMassCapture):number {
   if(!Number.isSafeInteger(mass.grams)||!Number.isSafeInteger(mass.capacityGrams)||mass.grams<0||mass.capacityGrams<0)throw new Error('Invalid captured mass');
   const factor=mass.capacityGrams<=0?1:2-clamp(mass.grams/mass.capacityGrams,0,1);
-  return Math.max(roundEven(4420/factor),1);
+  return Math.max(roundEven(4420/(factor*(mass.ridingFactor??1))),1);
 }
 export function planetEdgeCost(planet:PlanetState,from:number,to:number,context:PlanetCostContext):number|undefined {
   if(!Number.isSafeInteger(from)||!Number.isSafeInteger(to))return undefined;
-  const a=planet.tiles[from],b=planet.tiles[to];if(!a||!b||a.biome==='ocean'||b.biome==='ocean')return undefined;
+  const a=planetTile(planet,from),b=planetTile(planet,to);if(!a||!b||a.biome==='ocean'||b.biome==='ocean'||planet.revision===3&&(a.biome==='lake'||b.biome==='lake'||a.hilliness==='impassable'||b.hilliness==='impassable'))return undefined;
   if(from===to)return 0;if(!a.neighbours.includes(to))return undefined;
-  // No road field exists in root type: absence has Core factor1, not1.5.
+  if(planet.revision===3)return Math.max(1,Math.min(30000,geographicPlanetEdgeSearchCost256(planet,from,to,context)));
+  // No road field exists in the literal old type: absence has Core factor1.
   return clamp(Math.trunc(groupTicksPerMove(context.mass)*planetDifficulty(planet,to,context)),1,30000);
 }
 
@@ -73,6 +80,7 @@ export function planetEdgeCost(planet:PlanetState,from:number,to:number,context:
  * Insufficient admission consumes nothing: unknown/deferred, not unreachable.
  * Once admitted, charge actual work; no retrying partial prefix or hidden budget. */
 export function findPlanetRoute(planet:PlanetState,from:number,to:number,context:PlanetCostContext,budget:PlanetSearchBudget):PlanetRouteResult {
+  if(planet.revision===3)return findGeographicPlanetRoute256(planet,from,to,context,budget);
   if(planet.tiles.length!==162||planet.tiles.reduce((n,t)=>n+t.neighbours.length,0)!==960)throw new Error('Unvalidated planet topology');
   if(!Number.isSafeInteger(budget.nodes)||!Number.isSafeInteger(budget.arcs)||budget.nodes<0||budget.arcs<0)throw new Error('Invalid planet quota');
   if(budget.nodes<PLANET_QUERY_NODES||budget.arcs<PLANET_QUERY_ARCS)return {kind:'deferred',nodes:0,arcs:0};
@@ -95,7 +103,28 @@ export function findPlanetRoute(planet:PlanetState,from:number,to:number,context
 
 /** Existing persisted path is used at boundaries, never silently replaced. */
 export function validPlanetRoute(planet:PlanetState,route:readonly number[],from:number,to:number):boolean {
-  return route.length>0&&route.length<=162&&route[0]===from&&route.at(-1)===to&&new Set(route).size===route.length
-    &&route.every((id,i)=>Number.isSafeInteger(id)&&!!planet.tiles[id]&&planet.tiles[id]!.biome!=='ocean'
-      &&(i===0||planet.tiles[route[i-1]!]!.neighbours.includes(id)));
+  return route.length>0&&route.length<=planetTileCount(planet)&&route[0]===from&&route.at(-1)===to&&new Set(route).size===route.length
+    &&route.every((id,i)=>Number.isSafeInteger(id)&&!!planetTile(planet,id)&&planetTile(planet,id)!.biome!=='ocean'&&(planet.revision!==3||planetTile(planet,id)!.biome!=='lake'&&planetTile(planet,id)!.hilliness!=='impassable')
+      &&(i===0||planetTile(planet,route[i-1]!)!.neighbours.includes(id)));
 }
+
+/** Coordinates dispatch does not reinterpret the saved legacy radius/axes. */
+export function planetTileCoordinates(planet:PlanetState,id:number):{latitude:number;longitude:number}{if(planet.revision===3){const tile=planetGeography256(planet).surface.tiles[id];if(!tile)throw Error('Unknown geographic tile');return worldSurfaceCoordinates(tile);}const tile=planet.tiles[id];if(!tile)throw Error('Unknown literal tile');return tileCoordinates(tile);}
+/** Full-query admission derived from the admitted graph, no graph enumeration. */
+export function planetQueryBudget(planet:PlanetState):PlanetSearchBudget{return planet.revision===3?geographicPlanetQueryBudget256(planet):{nodes:PLANET_QUERY_NODES,arcs:PLANET_QUERY_ARCS};}
+/** Search uses the real unclamped Core cost; captured movement edges retain
+ * their own1..30000 physical clamp. Only the actual reciprocal road is read. */
+export function geographicPlanetEdgeSearchCost256(planet:Extract<PlanetState,{revision:3}>,from:number,to:number,context:PlanetCostContext):number {
+ const owner=planetGeography256(planet),tile=owner.surface.tiles[from];if(!tile||!tile.neighbours.includes(to))throw Error('Invalid geographic edge');
+ const road=visibleWorldRoads(tile,owner.roads[from]!).find(link=>link.neighbour===to),f=Math.fround;
+ return Math.trunc(f(f(groupTicksPerMove(context.mass)*planetDifficulty(planet,to,context))*(road?WORLD_ROADS[road.road].movement:1)));
+}
+
+/** A caravan keeps its source climate header; that source need not be home.
+ * Read the shared anchor, or remove the actual source-tile longitude from4. */
+export function planetHomeCivilCore(world:World):number {
+ const p=world.planet;if(p?.revision===3){if(world.worldMaps)return (world.worldMaps.calendarOrigin+world.tick)*10;if(world.campaignMap?.revision===2&&world.campaignMap.calendarOrigin!==undefined)return (world.campaignMap.calendarOrigin+world.tick)*10;
+  if(world.climate?.revision===4){const home=planetTileCoordinates(p,p.homeTile).longitude,source=planetTileCoordinates(p,world.climate.tileId).longitude;return calendarTick(world)*10-geographicLongitudeOffsetCore256(source)+geographicLongitudeOffsetCore256(home);}}
+ return (calendarTick(world)-(world.expeditionSite?.calendarOffset??0))*10;
+}
+export function planetAbsoluteCore256(planet:Extract<PlanetState,{revision:3}>,homeCivilCore:number):number {return homeCivilCore-geographicLongitudeOffsetCore256(planetTileCoordinates(planet,planet.homeTile).longitude);}

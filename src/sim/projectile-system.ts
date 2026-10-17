@@ -1,3 +1,4 @@
+import {landedStartingPods256,damageStartingPod256} from './starting-pod-damage-256.ts';
 import { damageAnimalWithBullet } from './wildlife-health.ts';
 import { animalImpactNoise } from './wildlife-noise.ts';
 import { damageBarrier,isBarrier } from './barriers.ts';
@@ -76,7 +77,8 @@ export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>b
     const packed=world.schemaVersion>=193&&a.targetKey?.startsWith('packed:')?world.packed.find(pack=>`packed:${pack.building.id}`===a.targetKey&&pack.owner.type==='ground'&&structureMaxHp(pack.building)>0):undefined;
     const pile=world.schemaVersion>=193&&a.targetKey?.startsWith('pile:')?world.piles.find(pile=>`pile:${pile.id}`===a.targetKey&&pile.owner.type==='ground'&&pileMaxHp(pile,world.schemaVersion)>0):undefined;
     const resource=world.schemaVersion>=193&&a.targetKey?.startsWith('resource:')?world.resources.find(r=>`resource:${r.id}`===a.targetKey&&r.kind!=='rock'&&resourceMaxHp(r)>0):undefined;
-    p.arrival={...a,effect:a.kind==='exit'?'exit':pawn?'pawn':animal?'animal':mech?'mech':barrier?'barrier':structure?'structure':packed?'packed':pile?'pile':resource?'resource':a.targetKey?'unsupported-object':'ground'};
+    const pod=a.targetKey?.startsWith('starting-pod:')?landedStartingPods256(world).find(p=>`starting-pod:${p.id}`===a.targetKey):undefined;
+    p.arrival={...a,effect:a.kind==='exit'?'exit':pawn?'pawn':animal?'animal':mech?'mech':barrier?'barrier':structure?'structure':packed?'packed':pile?'pile':resource?'resource':pod?'starting-pod':a.targetKey?'unsupported-object':'ground'};
     const wasLying=!!pawn&&isLying(pawn);
     if(a.kind!=='exit'&&disturbance.impact({x:Math.floor(a.point.x),z:Math.floor(a.point.z)},core))impact();
     if(a.kind!=='exit'&&animalImpactNoise(world,{x:Math.floor(a.point.x),z:Math.floor(a.point.z)},p.flight.launcherKey,core))impact();
@@ -84,6 +86,7 @@ export function advanceWorldProjectiles(world:World,beforeCore?:(core:number)=>b
       if(a.kind!=='exit'){if(!startEmpExplosion(world,p,core))throw new RangeError('Cannot commit EMP impact');impact();}
       continue;
     }
+    if(pod){if(!damageStartingPod256(world,pod,profile.damage,core))throw new RangeError('Cannot commit Bullet active transporter impact');impact();}
     if(animal){
       const launcher=world.pawns.find(pawn=>`pawn:${pawn.id}`===p.flight.launcherKey);
       damageAnimalWithBullet(world,animal,{damage:profile.damage},core,launcher,launcher?.id);

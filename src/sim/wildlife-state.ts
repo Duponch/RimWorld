@@ -4,13 +4,23 @@ import type { MedicalRecord } from './injury-types.ts';
 import type { StaggerState } from './stagger.ts';
 import { ANIMAL_SPECIES,type AnimalSpeciesId,type FaunaBiomeId } from './animal-species.ts';
 
-export interface WildAnimal extends Cell {
+export interface WildAnimal extends Cell { hiveThink?:import('./cave-hive-think-256.ts').HiveThinkData256; hiveJob?:import('./cave-hive-lord-256.ts').HiveDutyJob256; hive?:import('./cave-insect-constructor-256.ts').HiveInsectMembership256; startingPet?:import("./starting-pet-state-256.ts").StartingPetState256; arrivalRotation?:import('./types.ts').Orientation; growthTracker?:import("./animal-growth-runtime-256.ts").AnimalGrowthTracker256; caravanCarrySick?:boolean; corpseDamage?:number;
+  wander?:import('./animal-condition-mental-state-256.ts').AnimalWanderState256;
+  confusion?:import('./animal-condition-mental-state-256.ts').AnimalConfusion256;
+  mapBed?:import('./actor-map-bed-256.ts').ActorMapBed256;
+  /** Real prospective Duck tracker, absent on historical actors. */
+  exitFlight?:import('./duck-flyer-state-256.ts').DuckExitFlight256;
+  flight?:import('./duck-flight-state-256.ts').DuckFlight256;
+  eggLayer?:import('./animal-egg-state-v256.ts').AnimalEggLayer256;
+  eggLay?:{target:Cell;progress:number};
   animalRest?:import('./animal-rest-state.ts').AnimalRestTask;
   domestic?:import('./domestic-state.ts').DomesticAnimal;
   taming?:import('./domestic-state.ts').TamingDesignation;
   id:number; species:AnimalSpeciesId; sex:'female'|'male';
   /** Biological age in local ticks. Historical animals enter V121 as adults. */
   ageTicks:number;
+  /** Prospective exact Core age remainder, never installed by migration. */
+  ageCoreRemainder?:number;
   /** Identity survives even after either parent leaves the map. */
   parents?:{motherId:number;fatherId:number};
   /** A full gestation waits for a physical, available birth cell. */
@@ -39,7 +49,9 @@ export interface WildAnimal extends Cell {
   exiting?:{destination:Cell;nextFoodCheck:number};
 }
 export interface WildlifeState {
-  profile:'temperate-hares-v1'|'biome-herbivores-v1'|'biome-fauna-v2'; rng:number; animals:WildAnimal[];
+  hiveLords?:import('./cave-hive-state-256.ts').HiveLord256[];
+  flyers?:import('./duck-flyer-state-256.ts').DuckFlyer256[];
+  profile:'temperate-hares-v1'|'biome-herbivores-v1'|'biome-fauna-v2'|'geographic-fauna-v3'; rng:number; animals:WildAnimal[];
   eatenPlants:number; eatenNutrition:number; eatenItems:number;
   exitedAnimals?:number;
   population?:{biome:FaunaBiomeId;fullTargetWeight:number;targetWeight:number;nextCheck:number;checks:number;arrivals:number};

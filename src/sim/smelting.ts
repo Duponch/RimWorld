@@ -1,3 +1,4 @@
+import type {WeaponItem} from './equipment-rules.ts';
 import { healthRandom } from './health.ts';
 import { reservedSource,refreshStock } from './materials.ts';
 import { productionStationUsable,productionWorkTotal } from './production-recipes.ts';
@@ -14,20 +15,20 @@ import type { Pawn,World } from './types.ts';
 /** One indivisible weapon becomes one metal pile only after every preflight passes. */
 export function finishSmelting(world:World,pawn:Pawn,bill:CookingBill,context:ProductionContext):boolean {
   const task=pawn.cooking;
-  if(world.schemaVersion<222||!task||!isSmeltingRecipe(task.recipe)||task.phase!=='work'||task.progress!==productionWorkTotal(task.recipe)
-    ||!validSmeltingIngredients(task.ingredients)||task.ingredients[0]!.stage!=='placed'||(pawn.motion?.end??0)>world.tick||pawn.stun||pawn.draft
+  if(world.schemaVersion<222||!task||task.recipe==='smelt-slag'&&world.schemaVersion!==256||!isSmeltingRecipe(task.recipe)||task.phase!=='work'||task.progress!==productionWorkTotal(task.recipe)
+    ||!validSmeltingIngredients(task.ingredients,task.recipe)||task.ingredients[0]!.stage!=='placed'||(pawn.motion?.end??0)>world.tick||pawn.stun||pawn.draft
     ||pawn.state==='dead'||pawn.state==='downed'||pawnBody(pawn).capacities.manipulation<=0||backgroundWorkRefusal(pawn,'craft'))return false;
   const station=world.structures.find(s=>s.id===task.stationId),ingredient=task.ingredients[0]!,weapon=world.piles.find(p=>p.id===ingredient.pileId);
   if(!station||station.kind!=='electric-smelter'||!productionStationUsable(station)||!station.bills?.includes(bill)
-    ||bill.id!==task.billId||!isSmeltingRecipe(bill.recipe)||bill.suspended||!['times','forever'].includes(bill.mode)
+    ||bill.id!==task.billId||bill.recipe!==task.recipe||!isSmeltingRecipe(bill.recipe)||bill.suspended||!(task.recipe==='smelt-slag'?['times','until','forever']:['times','forever']).includes(bill.mode)
     ||!Number.isSafeInteger(bill.target)||bill.target<0||bill.target>9999||bill.mode==='times'&&bill.target<=0
     ||workPriority(pawn,'craft')===0&&pawn.orders.active!=='cook'
     ||task.spot.x!==cookingSpot(station).x||task.spot.z!==cookingSpot(station).z||!ingredientWithinReach(ingredient.cell,task.spot,station)
-    ||pawn.x!==task.spot.x||pawn.z!==task.spot.z||!weapon||!isWeaponItem(weapon.item)||weapon.item!==ingredient.item
+    ||pawn.x!==task.spot.x||pawn.z!==task.spot.z||!weapon||!(task.recipe==='smelt-slag'?weapon.item==='slag-steel-chunk':isWeaponItem(weapon.item))||weapon.item!==ingredient.item
     ||!smeltingIngredientAllowed(bill,weapon)||weapon.owner.type!=='ground'||weapon.owner.x!==ingredient.cell.x||weapon.owner.z!==ingredient.cell.z
     ||reservedSource(world,weapon.id,pawn.id)>0||world.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)
     ||world.piles.length>32768||!Number.isSafeInteger(world.nextId+1))return false;
-  const random={rng:world.rng},quantity=smeltingYield(weapon.item,()=>healthRandom(random)),item=smeltingProduct(weapon.item);
+  const random={rng:world.rng},quantity=task.recipe==='smelt-slag'?15:smeltingYield(weapon.item as WeaponItem,()=>healthRandom(random)),item=task.recipe==='smelt-slag'?'steel':smeltingProduct(weapon.item as WeaponItem);
   // Consuming this whole input frees the single output slot, including at the pile limit.
   world.piles=world.piles.filter(p=>p!==weapon);
   const id=world.nextId++;world.piles.push({id,item,kind:item,quantity,owner:{type:'pawn',pawnId:pawn.id}});
@@ -35,6 +36,6 @@ export function finishSmelting(world:World,pawn:Pawn,bill:CookingBill,context:Pr
   delete task.workTicks;delete task.storageQuantity;
   pawn.path=[];pawn.planCooldown=0;
   if(bill.mode==='times')bill.target--;
-  refreshStock(world);context.event(`${pawn.name} a fondu une arme et récupéré ${quantity} ${item==='steel'?'acier':'plastacier'}.`);
+  refreshStock(world);context.event(task.recipe==='smelt-slag'?`${pawn.name} a extrait 15 acier d’une scorie.`:`${pawn.name} a fondu une arme et récupéré ${quantity} ${item==='steel'?'acier':'plastacier'}.`);
   return true;
 }

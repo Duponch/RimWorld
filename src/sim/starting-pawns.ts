@@ -1,3 +1,4 @@
+import {constructHumanConditionMind256} from './human-condition-mind-256.ts';
 import {createPawnAppearance} from './pawn-appearance.ts';
 import { initialHumanAge,initialHumanAilments } from './human-age.ts';
 import { createMedicalRecord } from './injury-state.ts';
@@ -10,9 +11,9 @@ import type { Pawn } from './types.ts';
  * In Node 24.11.1/V8 13.6, optimized literal allocation there reproduced shared
  * mutable numeric defaults across successive worlds. This small factory also
  * keeps scenario profiles separate from terrain/geology generation. */
-export function startingPawn(id:number,name:string,x:number,z:number,index:number,recreation:number,seed?:number,currentTick=0):Pawn {
+export function startingPawn(id:number,name:string,x:number,z:number,index:number,recreation:number,seed?:number,currentTick=0,version=255):Pawn {
   const age=initialHumanAge(seed??0,id),ailments=initialHumanAilments(seed??0,id,age);
-  return {
+  const pawn:Pawn={
     ...(seed===undefined?{}:{appearance:createPawnAppearance(seed,id,name)}),
     age,...(ailments.length?{health:{...createMedicalRecord(currentTick),ageAilments:ailments}}:{}),
     medicalCare:'industrial',skills:startingSkills(index),recreation:initialRecreation(recreation),foodPolicyId:1,apparelPolicyId:1,apparelAutomation:true,nextApparelCheckAt:0,
@@ -23,4 +24,5 @@ export function startingPawn(id:number,name:string,x:number,z:number,index:numbe
     priorities:{handle:3,art:3,clean:3,firefight:1,warden:3,basic:3,hunt:2,research:3,patient:1,bedrest:3,doctor:1,mine:2,gather:2,build:2,haul:3,grow:2,cook:2,craft:2},
     path:[],moveCooldown:0,planCooldown:0,
   };
+  if(version===256)constructHumanConditionMind256(pawn,version);return pawn;
 }

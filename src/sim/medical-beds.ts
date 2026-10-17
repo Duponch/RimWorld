@@ -1,4 +1,7 @@
 import { isBedKind } from './bed-kinds.ts';
+import {localBedClaimAvailable256} from './actor-bed-local-256.ts';
+import {prepareConfirmedBedAssignment256} from './actor-bed-command-256.ts';
+import {commitActorBedClaim256} from './actor-map-bed-256.ts';
 import { bedSlotCell,bedSlotClaimed,bedSlotForPatient,pawnBedSlot } from './bed-slots.ts';
 import { isColonist } from './affiliation.ts';
 import { deconstructionReserved } from './deconstruction-rules.ts';
@@ -13,6 +16,7 @@ export const medicalBedPreference=(bed:Structure):number=>bed.medical?(bed.kind=
 
 export type MedicalBedCommand={type:'medical-bed';bedId:number;enabled:boolean};
 export function rescueBedAvailable(world:World,bed:Structure,patient:Pawn,carrierId:number,capture=false,slot?:BedSlot):boolean {
+  if(world.schemaVersion>=256&&isBedKind(bed.kind)&&!bed.medical&&!localBedClaimAvailable256(world,bed,patient,bed.kind==='double-bed'?(slot??pawnBedSlot(patient,bed)):undefined))return false;
   if(bed.kind==='double-bed'){
     const place=slot??pawnBedSlot(patient,bed);
     return world.schemaVersion>=224&&!bed.medical&&!bed.prisoner&&!capture&&isColonist(patient)&&!patient.prisoner&&!patient.visitor&&!patient.raid&&!patient.podRescue
@@ -40,6 +44,8 @@ export function applyMedicalBed(world:World,command:MedicalBedCommand):CommandRe
   if(!bed||typeof command.enabled!=='boolean')return {ok:false,code:'invalid-command',reason:'Lit ou usage médical invalide.'};
   if(bed.kind==='double-bed')return {ok:false,code:'invalid-command',reason:'Le lit double est réservé au couchage civil.'};
   if(!!bed.medical===command.enabled)return {ok:true};
+  const staying=!command.enabled?world.pawns.find(p=>p.state==='downed'&&p.need?.kind==='sleep'&&p.need.bedId===bed.id&&p.need.phase==='sleep')??null:null;
+  const ownership=prepareConfirmedBedAssignment256(world,bed,staying);
   if(command.enabled)bed.medical=true;else delete bed.medical;
   // Core changing the role removes durable owners. A patient already lying in
   // the bed keeps its actual use; returning to normal claims it for that patient.
@@ -52,5 +58,6 @@ export function applyMedicalBed(world:World,command:MedicalBedCommand):CommandRe
   }
   for(const p of world.pawns)if(p.rescue?.bedId===bed.id){releaseRescue(world,p);p.path=[];p.orders.active=null;p.state='idle';p.planCooldown=0;}
   for(const p of world.pawns)p.planCooldown=0;
+  if(ownership)commitActorBedClaim256(ownership);
   return {ok:true};
 }

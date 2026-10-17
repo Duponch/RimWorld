@@ -1,3 +1,5 @@
+import {requireAnimalDeathCapacity256} from './animal-death-explosion-v256.ts';
+import {createAnimalMedicalRecord256} from './animal-clinical-age-v256.ts';
 import { fragmentedApparelProtection } from './apparel-protection.ts';
 import { resolveBombImpact,type BombImpactResult } from './bomb-impact.ts';
 import { BOMB_AMOUNT,BOMB_AP } from './bomb-state.ts';
@@ -23,15 +25,15 @@ export function damagePawnWithBomb(w:World,p:Pawn,core:number,amount=BOMB_AMOUNT
   if(impact.layers.some(l=>l.severity>0)){if(!impact.record.death)applyBulletStagger(w,p,core,1);disturbanceEvents(w).damage(p,core,lying);}
   return impact;
 }
-export function damageAnimalWithBomb(w:World,a:WildAnimal,core:number,center:Cell,amount=BOMB_AMOUNT):BombImpactResult|null {
+export function damageAnimalWithBomb(w:World,a:WildAnimal,core:number,center:Cell,amount=BOMB_AMOUNT,instigator?:import('./mini-turret-state.ts').BombInstigatorKey):BombImpactResult|null {
   if(!validAmount(amount))throw new RangeError('Invalid Bomb damage amount');
   if(!Number.isSafeInteger(core)||core<Math.max(0,(w.tick-1)*10)||core>w.tick*10)throw new RangeError('Invalid Bomb impact clock');
   if(w.schemaVersion<193||!w.wildlife?.animals.includes(a))throw new Error('Invalid Bomb animal owner');
   if(a.state==='dead')return null;
-  advanceAnimalHealth(w,a);if(a.health?.death)return null;
-  const random={rng:w.rng},record=a.health??{...createMedicalRecord(w.tick),body:a.species};
+  requireAnimalDeathCapacity256(w,a);advanceAnimalHealth(w,a);if(a.health?.death)return null;
+  const random={rng:w.rng},record=a.health??createAnimalMedicalRecord256(w,a);
   const impact=resolveBombImpact(record,{damage:amount},()=>healthRandom(random));
-  commitAnimalImpact(w,a,impact.record,random);
+  commitAnimalImpact(w,a,impact.record,random,core,instigator);
   if(impact.layers.some(l=>l.severity>0)){scareAnimal(w,a,center,core);delayAnimalImpact(a,core);}
   return impact;
 }

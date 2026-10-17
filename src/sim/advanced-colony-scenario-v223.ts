@@ -415,7 +415,7 @@ export function prepareAdvancedColonyScenario(): World {
       domestic: { since: 0, care: 'herbal', tameness: 5, nextDecay: 45000, penMarkerId: marker.id, productFullness: index < 4 ? .8 : .6 } };
     animal.food = animalNutritionMax(animal) * .9; world.wildlife.animals.push(animal);
   }
-  if (world.flora) world.flora.capacity = Math.max(world.flora.capacity, world.resources.filter(resource => resource.species !== undefined).length);
+  if (world.flora?.revision===1) world.flora.capacity = Math.max(world.flora.capacity, world.resources.filter(resource => resource.species !== undefined).length);
 
   world.research = { project: 'recon-armor', points: researchCost('complex-clothing'), completedAt: 0 };
   for (const [project, key] of [

@@ -4,6 +4,17 @@ import type { Cell, JobKind, StructureKind, World } from './types.ts';
 /** Core coexistence rules are distinct from our current planar transit rules.
  * Surface Eat admits existing items, but is not a storage-zone surface. */
 export const OCCUPANCY = Object.freeze({
+  'insect-hive':Object.freeze({clearItems:true,items:false,zones:false,store:false}),'glow-pod':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
+  'ancient-cryptosleep-casket':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
+  column:Object.freeze({clearItems:true,items:false,zones:false,store:false}),
+  urn:Object.freeze({clearItems:true,items:false,zones:false,store:false}),
+  'stele-large':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
+  'stele-grand':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
+  sarcophagus:Object.freeze({clearItems:true,items:false,zones:false,store:false}),
+  'ancient-road-barrier':Object.freeze({clearItems:false,items:true,zones:true,store:true}),
+  'ancient-road-lamp':Object.freeze({clearItems:false,items:true,zones:true,store:true}),
+  'ship-chunk':Object.freeze({clearItems:false,items:true,zones:true,store:true}),
+  bedroll:Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   'build-bridge':Object.freeze({clearItems:false,items:true,zones:true,store:true}),
   'remove-bridge':Object.freeze({clearItems:false,items:true,zones:true,store:true}),
   shelf:Object.freeze({clearItems:true,items:true,zones:false,store:true}),
@@ -83,8 +94,8 @@ export const OCCUPANCY = Object.freeze({
   horseshoes: Object.freeze({clearItems:false,items:true,zones:true,store:true}),
   'chess-table': Object.freeze({clearItems:false,items:true,zones:false,store:false}),
 });
-export const occupancyOf=(kind:JobKind)=>kind in OCCUPANCY?OCCUPANCY[kind as StructureKind]:undefined;
-export const clearsGroundItems=(world:World,kind:JobKind)=>world.schemaVersion<21||occupancyOf(kind)?.clearItems!==false;
+export const occupancyOf=(kind:JobKind|StructureKind)=>kind in OCCUPANCY?OCCUPANCY[kind as StructureKind]:undefined;
+export const clearsGroundItems=(world:World,kind:JobKind|StructureKind)=>world.schemaVersion<21||occupancyOf(kind)?.clearItems!==false;
 export const occupies=footprintContains;
 /** Quantitative capacity and reservations are checked by ground-placement. */
 export function groundOccupancyAllows(world:World,cell:Cell):boolean {

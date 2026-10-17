@@ -1,3 +1,4 @@
+import {naturalTerrainWalkable256} from './natural-terrain-movement-256.ts';
 import { addActorObstacles,actorStepAllowed,openHostileDoor } from './combat-navigation.ts';
 import { doorCorners,isPassageDoor } from './door-rules.ts';
 import { WeightedSearch } from './weighted-search.ts';
@@ -20,7 +21,7 @@ export function blockedCells(world: World, physical=false): Uint8Array {
   const blocked = new Uint8Array(world.width * world.height);
   for (let i = 0; i < world.tiles.length; i++) {
     const terrain = world.tiles[i]!.terrain;
-    if (terrain === 'water' || terrain === 'rock') blocked[i] = 1;
+    if (!naturalTerrainWalkable256(terrain)) blocked[i] = 1;
   }
   for (const structure of world.structures) {
     if (!physical&&isPassageDoor(structure.kind)&&structure.door?.forbidden)blocked[cellIndex(world,structure.x,structure.z)]=1;

@@ -1,3 +1,4 @@
+import {eggAllowedForPlayer256} from './animal-egg-permission-v256.ts';
 import {isBurnApparelRecipe,burnApparelIngredientAllowed,validBurnApparelIngredients} from './burn-apparel-rules.ts';
 import {isPemmicanRecipe,validPemmicanIngredients} from './pemmican-content.ts';
 import { shelfAt } from './shelf-storage.ts';
@@ -49,7 +50,7 @@ import type { MaterialPile, Pawn, World } from './types.ts';
 
 const near=(a:{x:number;z:number},b:{x:number;z:number})=>Math.abs(a.x-b.x)+Math.abs(a.z-b.z)<=1;
 function take(world:World,pawn:Pawn,pile:MaterialPile,quantity:number):MaterialPile|null {
-  if(pile.quantity<quantity||pile.owner.type!=='ground'||world.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id))return null;
+  if(!eggAllowedForPlayer256(pile)||pile.quantity<quantity||pile.owner.type!=='ground'||world.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id))return null;
   if(pile.quantity===quantity){pile.owner={type:'pawn',pawnId:pawn.id};return pile;}
   if(world.piles.length>=32768||!Number.isSafeInteger(world.nextId+1))return null;
   pile.quantity-=quantity;
@@ -79,7 +80,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(kibble&&!validKibbleIngredients(task.ingredients)){context.release();return;}
   if(medicine&&!validMedicineIngredients(taskRecipe(task),task.ingredients)){context.release();return;}
   if(biofuel&&!validBiofuelIngredients(taskRecipe(task),task.ingredients)){context.release();return;}
-  if(smelting&&(!validSmeltingIngredients(task.ingredients)||bill.mode==='until')){context.release();return;}
+  if(smelting&&(!validSmeltingIngredients(task.ingredients,task.recipe)||task.recipe==='smelt-weapon'&&bill.mode==='until')){context.release();return;}
   if(burningApparel&&(!validBurnApparelIngredients(task.ingredients)||bill.mode==='until'||bill.destination!=='drop'||bill.mode==='times'&&bill.target<=0)){context.release();return;}
   if(cremation&&(!validCremationIngredients(task.ingredients)||bill.mode==='until'||bill.destination!=='drop'||bill.mode==='times'&&bill.target<=0)){context.release();return;}
   if((pemmican||task.recipe==='cook-survival-meal'||task.recipe==='cook-simple-meal-bulk'||task.recipe==='cook-fine-meal-bulk'||task.recipe==='cook-lavish-meal-bulk'||task.recipe==='vegetarian-fine-meal'||task.recipe==='cook-vegetarian-fine-meal-bulk'||task.recipe==='carnivore-fine-meal'||task.recipe==='cook-carnivore-fine-meal-bulk'||task.recipe==='vegetarian-lavish-meal'||task.recipe==='cook-vegetarian-lavish-meal-bulk'||task.recipe==='cook-carnivore-lavish-meal'||task.recipe==='cook-carnivore-lavish-meal-bulk')&&bill.recipe!==task.recipe){context.release();return;}

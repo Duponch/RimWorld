@@ -1,3 +1,5 @@
+import {cancelToxicVomit256} from './toxic-buildup-256.ts';
+import {claimLocalActorBed256,captureActorBeds256,localBedClaimAvailable256} from './actor-bed-local-256.ts';
 import { interruptWork } from './interrupted-cargo.ts';
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { allowedAreaAllows,allowedAreaReason } from './allowed-area-state.ts';
@@ -71,8 +73,9 @@ function rescueReasonFor(world:World,actor:Pawn,patient:Pawn|undefined,forced:bo
 export function rescueProposal(world:World,actor:Pawn,patient:Pawn,reach:Reachability,forced=false):RescueProposal|undefined {
   if(rescueReason(world,actor,patient,forced))return;
   const path=routeToCell(world,patient,reach);if(!path)return;
+  const bedOwners=world.schemaVersion>=256?captureActorBeds256(world):undefined;
   const rank=(bed:import('./types.ts').Structure)=>bed.medical?medicalBedPreference(bed):patient.bedId===bed.id?2:3;
-  const beds=world.structures.flatMap(b=>rescueBedPlaces(world,b,patient,actor.id).filter(place=>allowedAreaAllows(world,actor,place.cell)).map(place=>({bed:b,cell:place.cell,slot:place.bedSlot})))
+  const beds=world.structures.flatMap(b=>rescueBedPlaces(world,b,patient,actor.id).filter(place=>allowedAreaAllows(world,actor,place.cell)&&localBedClaimAvailable256(world,b,patient,place.bedSlot,bedOwners)).map(place=>({bed:b,cell:place.cell,slot:place.bedSlot})))
     .sort((a,b)=>rank(a.bed)-rank(b.bed)||(a.cell.x-patient.x)**2+(a.cell.z-patient.z)**2-(b.cell.x-patient.x)**2-(b.cell.z-patient.z)**2||a.bed.id-b.bed.id||(a.slot??0)-(b.slot??0));
   for(const {bed,cell,slot} of beds)if(routeToCell(world,cell,reach))return {patientId:patient.id,bedId:bed.id,path,...(slot!==undefined?{bedSlot:slot}:{})};
 }
@@ -81,7 +84,7 @@ export function startRescue(world:World,actor:Pawn,proposal:RescueProposal,force
   if(bed.kind==='double-bed'&&(capture||proposal.bedSlot===undefined||!rescueBedAvailable(world,bed,patient,actor.id,false,proposal.bedSlot)))return;
   // The accepted rescue itself reserves a new visitor's destination. Do not
   // leave an ordinary bed owner behind if the order is cancelled before pickup.
-  if(!bed.medical&&!capture&&(!isRescuableVisitor(patient)||isAdmittedVisitorGuest(patient))){patient.bedId=bed.id;if(bed.kind==='double-bed')patient.bedSlot=proposal.bedSlot;else delete patient.bedSlot;}
+  if(!bed.medical&&!capture&&(!isRescuableVisitor(patient)||isAdmittedVisitorGuest(patient)))claimLocalActorBed256(world,patient,bed,bed.kind==='double-bed'?proposal.bedSlot:undefined);
   actor.rescue={patientId:proposal.patientId,bedId:proposal.bedId,phase:'approach',...(bed.kind==='double-bed'?{bedSlot:proposal.bedSlot}:{}),...(capture?{capture:true as const}:{})};
   actor.path=proposal.path;actor.state='moving';actor.planCooldown=0;
   if(forced)actor.orders.active='rescue';
@@ -140,8 +143,9 @@ export function processRescue(world:World,actor:Pawn,context:NeedContext):void {
     // inventory, visit group or phase. A later interruption retains admission.
     if(!task.capture&&actor.orders.active==='rescue'&&isRescuableVisitor(patient)){
       patient.visitor!.medicalGuestAt??=world.tick;patient.visitor!.goal=null;
-      if(!bed.medical){patient.bedId=bed.id;delete patient.bedSlot;}
+      if(!bed.medical)claimLocalActorBed256(world,patient,bed);
     }
+    if(patient.health)cancelToxicVomit256(patient.health);
     task.phase='carry';actor.path=[];actor.planCooldown=0;syncPatient(world,actor);
     context.event(`${actor.name} prend ${patient.name} pour le porter vers un lit.`);
   }
@@ -154,7 +158,7 @@ export function processRescue(world:World,actor:Pawn,context:NeedContext):void {
   // The mover has completed the captured edge before entering this processor.
   delete actor.rescue;actor.orders.active=null;actor.path=[];actor.state='idle';actor.planCooldown=0;
   patient.motion=null;patient.moveCooldown=0;
-  if(!bed.medical){patient.bedId=bed.id;if(bed.kind==='double-bed')patient.bedSlot=task.bedSlot;else delete patient.bedSlot;}
+  if(!bed.medical)claimLocalActorBed256(world,patient,bed,bed.kind==='double-bed'?task.bedSlot:undefined);
   // Admission may finish after a captive recovers during transport. Only a
   // still-downed patient is installed in the lying service immediately; a
   // mobile captive chooses medical rest, sleep or food on its next turn.

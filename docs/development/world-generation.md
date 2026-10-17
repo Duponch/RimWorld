@@ -1,5 +1,7 @@
 # Génération des cartes — sites et profils tempérés
 
+Le [premier lot V408 au schéma256](../gameplay/world-generation-v408.md) utilise une [population PNJ et un butin anciens provisoires explicitement adaptés](../gameplay/functional-ancient-population-v256.md). Les mêmes règles de terrain, de monde et de voyage sont visées ; l’identité des tirages internes des personnages et du catalogue ancien n’est pas revendiquée. Les sections historiques ci-dessous décrivent leurs versions livrées.
+
 V91 ajoute une révision 2 du site pour les trois milieux biologiques. Les arbres portent une espèce et un âge observé, les plantes sauvages des propriétés fonctionnelles ; les anciennes cartes révision 1 ne sont pas régénérées. La taille, le relief, les roches locales et le budget de minerais restent indépendants du choix de milieu. La génération géographique complète demeure partielle.
 
 **Calibration relue le 20 septembre :** la [comparaison Core 1.6.4871](../research/map-calibration-reference.md) confirme 250², mais identifie les écarts de contexte de site, eau, sols, maturité sauvage et budget de minerais. Les règles ci-dessous décrivent le générateur livré, pas une génération Core déjà équivalente. Les anciennes cartes restent conservées.

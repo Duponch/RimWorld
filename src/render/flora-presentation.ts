@@ -13,11 +13,11 @@ export const isResidentCrop=(r:Pick<Resource,'kind'>):boolean=>(RESIDENT_CROP_KI
 export const isMedicinalPlant=(r:Pick<Resource,'kind'|'species'>):boolean=>r.kind==='healroot'||r.species==='healroot-wild';
 /** Four visible growth steps keep the forest resident between shape changes. */
 export const floraSize=(world:World,r:Resource):number=>!r.species&&!isMedicinalPlant(r)?1:(r.growth??1)===1?1:.3+.7*Math.ceil(plantGrowth(world,r)*4)/4;
-const FLORA_COLORS={pine:0x47684c,birch:0x8fa467,oak:0x57754d,poplar:0x849752,drago:0x728966,saguaro:0x698661,agave:0x839c89,moss:0x718356,grass:0x929357,'tall-grass':0x7d8a4f,brambles:0x556648,'berry-bush':0x677b55,'healroot-wild':0x829b74};
+const FLORA_COLORS={glowstool:0xa79583,agarilux:0xb6a1bc,bryolux:0x7b8eaa,pine:0x47684c,birch:0x8fa467,oak:0x57754d,poplar:0x849752,drago:0x728966,saguaro:0x698661,agave:0x839c89,moss:0x718356,grass:0x929357,'tall-grass':0x7d8a4f,brambles:0x556648,'berry-bush':0x677b55,'healroot-wild':0x829b74,'alocasia':0x789c80,'astragalus':0xb2a6bd,'bush':0x687c58,'chokevine':0x69745a,'clivia':0x9c9a72,'dandelion':0xc6b567,'pincushion-cactus':0x88a381,'rafflesia':0xb67874,'low-shrub':0x879573,'bamboo':0x899c66,'cecropia':0x729977,'cypress':0x678c76,'maple':0xaa986b,'palm':0x8da170,'teak':0x65816b,'willow':0x8fa58a};
 export const BLIGHT_COLOR=0xa26b32;
 export const floraColor=(r:Resource):number=>r.blight?BLIGHT_COLOR:FLORA_COLORS[isMedicinalPlant(r)?'healroot-wild':r.species??'berry-bush'];
 export const isClusterPlantSpecies=(species:Resource['species']):boolean=>species==='grass'||species==='tall-grass';
-export const floraTreeHeight=(r:Resource):number=>r.species==='saguaro'?2.2:r.species==='drago'?3.25:r.species==='pine'?4.6:r.species==='poplar'?4.3:3.8;
+export const floraTreeHeight=(r:Resource):number=>r.species==='saguaro'?2.2:r.species==='drago'?3.25:r.species==='pine'?4.6:r.species==='poplar'?4.3:r.species==='bamboo'?3.4:r.species==='palm'?4.5:r.species==='cypress'?4.8:r.species==='willow'?3.6:3.8;
 export const hydroponicFloraHeight=(world:World,r:Resource):number=>r.kind==='healroot'&&hydroponicBasinAt(world,r)?HYDROPONIC_SUPPORT_HEIGHT:0;
 export const floraIdentity=(world:World,r:Resource):string=>{
   const support=hydroponicFloraHeight(world,r);
@@ -42,14 +42,22 @@ export function appendFlora(parts:FloraParts,world:World,r:Resource,turn:number)
     } else {
       const drago=r.species==='drago';
       add(parts.trunks,{y:height*(drago?.36:.25),sx:r.species==='birch'?.85:1,sy:height*(drago?.72:.5),sz:1,color:r.species==='birch'?0xcac9b4:0x70573e,key:r.id});
-      if(r.species==='pine') {
+      if(r.species==='pine'||r.species==='cypress') {
         add(parts.cones,{y:height*.53,sx:1,sy:height*.6,sz:1,ry:turn});
         add(parts.cones,{y:height*.70,sx:.7,sy:height*.4,sz:.7,ry:turn+.3});
+      } else if(r.species==='palm'||r.species==='bamboo') {
+        // Original compressed crown; no new batch, texture or material.
+        add(parts.crowns,{y:height*.88,sx:r.species==='palm'?1.2:.55,sy:height*.13,sz:r.species==='palm'?1.2:.55,ry:turn});
       } else {
         add(parts.crowns,{y:height*(drago?.79:.65),sx:drago?1.43:r.species==='poplar'?.7:1,sy:height*(drago?.16:.24),sz:drago?1.43:r.species==='poplar'?.7:1,ry:turn});
         if(!drago)add(parts.crowns,{y:height*.87,sx:.66,sy:height*.16,sz:.66,ry:turn+.5});
       }
     }
+  } else if(r.species==='glowstool'||r.species==='agarilux'||r.species==='bryolux') {
+    const h=r.species==='agarilux'?.62:r.species==='bryolux'?.3:.4;
+    add(parts.trunks,{y:h*.43,sx:.12,sy:h*.75,sz:.12,color:0xc6bd9e,key:r.id});
+    add(parts.crowns,{y:h*.83,sx:h*.85,sy:h*.26,sz:h*.85,ry:turn});
+    if(r.species==='bryolux')add(parts.crowns,{dx:.18,dz:.12,y:h*.6,sx:.17,sy:.10,sz:.17,ry:turn+.5});
   } else if(isMedicinalPlant(r)) {
     // A low rosette and three pale leaves share the existing bush geometry and
     // chunk buffers. The mauve crown distinguishes the medicinal plant from
@@ -61,6 +69,8 @@ export function appendFlora(parts:FloraParts,world:World,r:Resource,turn:number)
         sx:.12,sy:.20,sz:.23,ry:angle,color:r.blight?BLIGHT_COLOR:0xa6b896});
     }
     add(parts.bushes,{y:.37,sx:.10,sy:.10,sz:.10,color:r.blight?0x68513a:0xb7a5b9});
+  } else if(r.species==='pincushion-cactus') {
+    add(parts.cacti,{y:.18,sx:.35,sy:.36,sz:.35,key:r.id});
   } else if(r.species==='agave') {
     const h=.4;
     for(let i=0;i<6;i++) {const angle=turn+i*Math.PI/3;add(parts.blades,{dx:Math.sin(angle)*.13,dz:Math.cos(angle)*.13,y:h*.5,sx:.15,sy:h,sz:.65,ry:angle});}

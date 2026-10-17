@@ -1,14 +1,17 @@
+import {cachedAnimalShape256} from './animal-shape-v256';
+import type {BodyPartId} from '../sim/body-definition';
 import { HARE_PARTS,type HarePart } from './hare-shape';
 
 export interface AnimalCoreRing {
   z:number; halfWidth:number; bottom:number; top:number;
   /** Fraction of the confirmed head pose, blended across the continuous neck. */
-  headWeight:number; color:number;
+  headWeight:number; color:number;part?:BodyPartId;
 }
 
 /** One shared faceted back, neck and head for living and dead bodies.
  * Anatomical absence is derived by the resident species rig. */
 export function animalCoreProfile(species:string):{rings:readonly AnimalCoreRing[];headPivot:readonly [number,number,number]} {
+  const prospective=cachedAnimalShape256(species);if(prospective)return prospective;
   if(species==='red-fox')return {headPivot:[0,.52,.29],rings:[
     {z:-.46,halfWidth:.10,bottom:.34,top:.62,headWeight:0,color:0xc48757},
     {z:-.30,halfWidth:.18,bottom:.31,top:.68,headWeight:0,color:0xc48757},
@@ -54,6 +57,7 @@ export function animalCoreProfile(species:string):{rings:readonly AnimalCoreRing
 
 /** Original low-poly silhouettes supply the same limbs and details to every owner. */
 export function animalParts(species:string):readonly HarePart[] {
+  const prospective=cachedAnimalShape256(species);if(prospective)return prospective.parts;
   if(species==='red-fox')return FOX_PARTS;
   if(species==='hare')return HARE_PARTS;
   if(species==='snow-hare')return HARE_PARTS.map(p=>({...p,color:p.color===0x302d29?p.color:p.color===0xc19583?0xd4b6ad:0xe3e0d5}));

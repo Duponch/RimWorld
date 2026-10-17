@@ -1,3 +1,4 @@
+import type {GroupMemberProjectionContext} from './group-reorganization-state.ts';
 import {calendarTick} from './calendar.ts';
 import {CAMPAIGN_FIELDS} from './secondary-site-state.ts';
 import type {World} from './types.ts';
@@ -6,16 +7,22 @@ const shared=new Set<string>([...CAMPAIGN_FIELDS,'worldMaps','worldGroups']);
 const presentation=new Set(['secondarySite','campaignPeople','campaignMap','group','groupLosses','civilianPost']);
 const authorities=new WeakMap<object,CampaignState>(),mapIds=new WeakMap<object,number>(),groupBindings=new WeakMap<object,WorldGroupRecord>();
 const groupSources=new WeakMap<object,number|null>(),projectionOrigins=new WeakMap<object,number|null>(),projectionFilth=new WeakSet<object>();
+const groupMemberProjectionContexts=new WeakMap<World,ReadonlyMap<number,GroupMemberProjectionContext>>();
+export function brandGroupMemberProjection(view:World,rows:readonly GroupMemberProjectionContext[]):void {groupMemberProjectionContexts.set(view,new Map(rows.map(r=>[r.pawnId,r])));}
+export function projectedGroupMemberContext(view:World,pawnId:number):GroupMemberProjectionContext|undefined {return groupMemberProjectionContexts.get(view)?.get(pawnId);}
 export function brandGroupProjection(view:World,record:WorldGroupRecord,originTile:number|null,filthPresent=false):void {if(filthPresent)projectionFilth.add(view);groupBindings.set(view,record);projectionOrigins.set(view,originTile);}
 export const brandLossProjection=(w:World,filthPresent:boolean):void=>{if(filthPresent)projectionFilth.add(w);};
 export const projectionAllowsFilth=(w:World):boolean=>projectionFilth.has(w);
 export function groupOriginMapTile(view:World):number|null|undefined {if(projectionOrigins.has(view))return projectionOrigins.get(view);const r=groupBindings.get(view),root=registeredCampaign(view);return r?(root.worldMaps?.sites.find(s=>s.id===r.originMapId)?.tile??root.worldMaps?.retired.find(s=>s.id===r.originMapId)?.tile):undefined;}
 const contexts=new WeakMap<object,Map<number,{record:WorldMapRecord;body:LocalMapState|World;world:World;stamp:Map<string,unknown>}>>();
 export const registeredCampaign=(w:CampaignState):CampaignState=>authorities.get(w)??w;
-export const registeredMapId=(w:World):number|undefined=>mapIds.get(w)??(authorities.has(w)?undefined:w.worldMaps?.rootMapId??undefined);
-export function forwardCampaignFields(view:World,root:CampaignState):void {for(const key of shared)Object.defineProperty(view,key,{enumerable:true,configurable:true,get:()=>(root as unknown as Record<string,unknown>)[key],set:value=>{(root as unknown as Record<string,unknown>)[key]=value;}});authorities.set(view,root);}
+/** The existing unregistered, loaded single-map root is actual map0, as in
+ * registeredMap(root,0). Away/clock projections and mapless roots never get it.
+ * Historical callers keep their old undefined result until prospective256. */
+export const registeredMapId=(w:World):number|undefined=>mapIds.get(w)??(authorities.has(w)?undefined:w.worldMaps?.rootMapId??(!w.worldMaps&&w.schemaVersion>=256&&Array.isArray(w.tiles)?0:undefined));
+export function forwardCampaignFields(view:World,root:CampaignState):void {for(const key of shared)if((key!=='worldFactions'&&key!=='worldPawns')||Object.hasOwn(root,key))Object.defineProperty(view,key,{enumerable:true,configurable:true,get:()=>(root as unknown as Record<string,unknown>)[key],set:value=>{(root as unknown as Record<string,unknown>)[key]=value;}});authorities.set(view,root);}
 export function brandCampaignContext(view:World,root:CampaignState,mapId?:number,group?:WorldGroupRecord):void {authorities.set(view,root);if(mapId!==undefined)mapIds.set(view,mapId);if(group)groupBindings.set(view,group);}
-export function campaignClockContext(input:CampaignState):World {const root=registeredCampaign(input),view={...root,seed:root.worldMaps!.campaignSeed,events:root.worldGroups!.events} as World;for(const key of shared)Object.defineProperty(view,key,{enumerable:true,configurable:true,get:()=>(root as unknown as Record<string,unknown>)[key],set:value=>{(root as unknown as Record<string,unknown>)[key]=value;}});authorities.set(view,root);return view;}
+export function campaignClockContext(input:CampaignState):World {const root=registeredCampaign(input),view={...root,seed:root.worldMaps!.campaignSeed,events:root.worldGroups!.events} as World;for(const key of shared)if((key!=='worldFactions'&&key!=='worldPawns')||Object.hasOwn(root,key))Object.defineProperty(view,key,{enumerable:true,configurable:true,get:()=>(root as unknown as Record<string,unknown>)[key],set:value=>{(root as unknown as Record<string,unknown>)[key]=value;}});authorities.set(view,root);return view;}
 export const boundWorldGroup=(w:World):WorldGroupRecord|undefined=>groupBindings.get(w);
 export const hasLoadedRoot=(w:CampaignState):w is World=>w.worldMaps?w.worldMaps.rootMapId!==null:Array.isArray((w as World).tiles);
 export function captureLocalMap(w:World):LocalMapState {
@@ -43,7 +50,7 @@ export function registeredMap(w:CampaignState,id:number):World|undefined {
  const record=maps.sites.find(s=>s.id===id);if(!record)return;
  const body=id===maps.rootMapId&&hasLoadedRoot(root)?root:record.map;if(!body)return;
  let table=contexts.get(root);if(!table){table=new Map();contexts.set(root,table);}let cached=table.get(id);
- if(!cached||cached.record!==record||cached.body!==body){const view={...body} as World;for(const key of shared)Object.defineProperty(view,key,{enumerable:true,configurable:false,get:()=>(root as unknown as Record<string,unknown>)[key],set:value=>{(root as unknown as Record<string,unknown>)[key]=value;}});authorities.set(view,root);mapIds.set(view,id);attachPost(view,root,record);cached={record,body,world:view,stamp:new Map(Object.entries(captureLocalMap(view)))};table.set(id,cached);}
+ if(!cached||cached.record!==record||cached.body!==body){const view={...body} as World;for(const key of shared)if((key!=='worldFactions'&&key!=='worldPawns')||Object.hasOwn(root,key))Object.defineProperty(view,key,{enumerable:true,configurable:false,get:()=>(root as unknown as Record<string,unknown>)[key],set:value=>{(root as unknown as Record<string,unknown>)[key]=value;}});authorities.set(view,root);mapIds.set(view,id);attachPost(view,root,record);cached={record,body,world:view,stamp:new Map(Object.entries(captureLocalMap(view)))};table.set(id,cached);}
  else {const data=currentLocalData(cached);for(const k of Object.keys(cached.world))if(!shared.has(k)&&!presentation.has(k)&&!Object.hasOwn(data,k))delete (cached.world as unknown as Record<string,unknown>)[k];Object.assign(cached.world,data);cached.stamp=new Map(Object.entries(captureLocalMap(body as World)));}
  return cached.world;
 }
@@ -62,7 +69,7 @@ export function worldGroupContext(rootInput:CampaignState,id:number,validation=f
  const empty={seed:maps.campaignSeed,width:maps.mapSize.width,height:maps.mapSize.height,tiles:[],pawns:[],resources:[],structures:[],jobs:[],piles:[],stockpiles:[],growingZones:[],growingCursor:0,environment:'temperate-equinox-v1',stock:{wood:0,food:0},spoiled:{wood:0,food:0},events:[],logisticsCursor:0,packed:[],deconstructed:{count:0,lostWood:0,fuelTicks:0}};
  const origin=local??empty;const view={...origin,...(record.localMapId===null?empty:{}),...record.context,...sharedCampaignData(root),events:record.localMapId===null?root.worldGroups!.events:local!.events,group:record.state,groupLosses:root.worldGroups!.losses.filter(l=>l.groupId===record.state.id)} as World;
  if(record.localMapId===null)for(const key of ['startingArrival','scout','commercialTrip','visitors','podRescues','raids','prisonDepartures','wildlife','mechanoids','orbital'])delete (view as unknown as Record<string,unknown>)[key];
- for(const key of shared)Object.defineProperty(view,key,{enumerable:true,configurable:false,get:()=>(root as unknown as Record<string,unknown>)[key],set:value=>{(root as unknown as Record<string,unknown>)[key]=value;}});
+ for(const key of shared)if((key!=='worldFactions'&&key!=='worldPawns')||Object.hasOwn(root,key))Object.defineProperty(view,key,{enumerable:true,configurable:false,get:()=>(root as unknown as Record<string,unknown>)[key],set:value=>{(root as unknown as Record<string,unknown>)[key]=value;}});
  if(!live&&archived?.filthPresent)brandLossProjection(view,true);authorities.set(view,root);mapIds.set(view,record.localMapId??record.originMapId);groupBindings.set(view,record);attachPost(view,root,record);groupSources.set(view,record.localMapId);return view;
 }
 export function commitWorldGroupContext(view:World):void {

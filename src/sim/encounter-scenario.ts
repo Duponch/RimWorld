@@ -22,7 +22,7 @@ export function setupEncounter(world:World):void {
   candidates.sort((a,b)=>distanceSquared(leader,a)-distanceSquared(leader,b)||a.z-b.z||a.x-b.x);
   const site=candidates.find(c=>reach.has(c.z*world.width+c.x));
   if(!site)throw new Error('Aucun emplacement accessible pour la sentinelle sur cette graine.');
-  const enemy=startingPawn(world.nextId++,'Sentinelle',site.x,site.z,0,55,world.seed,world.tick);enemy.faction='outlaws';enemy.tactics=newTactics();
+  const enemy=startingPawn(world.nextId++,'Sentinelle',site.x,site.z,0,55,world.seed,world.tick,world.schemaVersion);enemy.faction='outlaws';enemy.tactics=newTactics();
   if(world.schemaVersion>=191)generatePawnBackground(enemy,world.seed,true);
   world.pawns.push(enemy);
   world.piles.push({id:world.nextId++,kind:'weapon',item:'revolver',quantity:1,owner:{type:'equipment',pawnId:enemy.id},weapon:newWeaponState()});

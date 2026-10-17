@@ -61,9 +61,9 @@ test('V401 prepared second site: partial wood and whole steel pickup, exact acti
   const wood=held.active.piles.find(p=>p.id===receipt.carriedPileId)!;expect(wood).toMatchObject({item:'wood',quantity:f.woodQuantity,owner:{type:'inventory',pawnId:receipt.carrierId}});
   expect(held.active.piles.find(p=>p.id===f.woodId)).toMatchObject({item:'wood',quantity:12-f.woodQuantity,owner:{type:'ground',...f.woodCell}});
   expect(group.freight?.woodLoaded).toBe(f.woodQuantity);assertHumanGoodsPeople(initial,captureHumanGoods(held.complete));
-  await groupPanel(page);await expect(page.locator('[data-group-manifest]')).toContainText('Pile prise #'+wood.id);
+  await groupPanel(page);await expect(page.locator('[data-group-manifest]')).toContainText('Pris au contact');
   const goods=page.locator('.group-details > section').filter({has:page.getByRole('heading',{name:'Biens portés',exact:true})});
-  await expect(goods.locator('tbody tr').filter({hasText:'#'+wood.id}).locator('td').nth(3)).toHaveText(kg(f.woodQuantity*400));
+  await expect(goods.locator(`[data-group-goods="${wood.id}"]`).locator('td').nth(3)).toHaveText(kg(f.woodQuantity*400));
   await page.screenshot({path:info.outputPath('02-active-pickup-reloaded-real-owner.png')});
   await speed(page,'6');
   await page.waitForFunction(()=>{
@@ -84,6 +84,7 @@ test('V401 prepared second site: partial wood and whole steel pickup, exact acti
    return !w.group&&ids.every(id=>w.pawns.some(p=>p.id===id))&&[woodId,steelId].every(id=>w.piles.some(p=>p.id===id&&p.owner.type==='ground'));
   },{ids:f.memberIds,woodId:wood.id,steelId:f.steelId},{polling:100,timeout:40_000});
   const deposited=await checkpoint(page,info,'home-materials-physically-deposited');proof.depositedCheckpoint={tick:deposited.complete.tick,path:deposited.path};
+  if(deposited.active.campaignMap?.revision===2)throw Error('This historical V401 pilot requires its original home/secondary presentation.');
   expect(deposited.active.campaignMap?.active).toBe('home');expect(deposited.active.group).toBeUndefined();
   expect(deposited.active.piles.find(p=>p.id===wood.id)).toMatchObject({item:'wood',quantity:7,owner:{type:'ground'}});
   expect(deposited.active.piles.find(p=>p.id===f.steelId)).toMatchObject({item:'steel',quantity:4,owner:{type:'ground'}});

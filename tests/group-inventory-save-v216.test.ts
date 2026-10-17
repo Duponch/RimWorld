@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import { expect,test } from 'vitest';
 import { createScenarioWorld } from '../src/sim/new-game.ts';
 import { applyCommand,stepWorld } from '../src/sim/engine.ts';
@@ -35,7 +36,7 @@ function loaded() {
   addMaterial(w,'food',6,{type:'ground',...cell},'survival-meal');
   const food=w.piles.find(i=>i.item==='survival-meal'&&i.owner.type==='ground'&&i.owner.x===cell.x&&i.owner.z===cell.z)!;
   expect(applyCommand(w,{type:'planet-adopt'}).ok).toBe(true);
-  expect(applyCommand(w,{type:'group-start',memberIds:members.map(p=>p.id),destination:w.planet!.civilianTile,sources:[{pileId:food.id,quantity:6}]}).ok).toBe(true);
+  expect(applyCommand(w,{type:'group-start',memberIds:members.map(p=>p.id),destination:legacyPlanet(w).civilianTile,sources:[{pileId:food.id,quantity:6}]}).ok).toBe(true);
   for(let i=0;i<700&&!(w.group&&'cursor' in w.group&&w.group.cursor===1);i++)stepWorld(w);
   const g=w.group;if(!g||!('cursor' in g)||g.cursor!==1)throw Error('Physical pickup missing');
   expect(g.phase).toBe('leaving');expect(g.ledger.foodLoaded).toBe(6);
@@ -67,7 +68,7 @@ test('six returned rations retain original owners through unloading cancellation
   tryGroupDeparture(w);
   const away=w.group;if(!away||!('members' in away))throw Error('Actual departure missing');
   expect(away.members.every((p,i)=>p===members[i])).toBe(true);expect(away.items).toContain(food);expect(away.baseline.food).toBe(6);
-  away.phase='awaiting-entry';away.tile=w.planet!.homeTile;away.destination=away.tile;away.route=[away.tile];away.segment=null;away.stop={kind:'awaiting-entry'};
+  away.phase='awaiting-entry';away.tile=legacyPlanet(w).homeTile;away.destination=away.tile;away.route=[away.tile];away.segment=null;away.stop={kind:'awaiting-entry'};
   const twin=checkpoint(w);stepWorld(w);stepWorld(twin);expect(w).toEqual(twin);
   expect(w.group?.phase).toBe('unloading');expect(w.piles).toContain(food);
   for(const p of members)expect(w.pawns.find(q=>q.id===p.id)).toBe(p);

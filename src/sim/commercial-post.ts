@@ -1,3 +1,4 @@
+import {draftCommercialPostStock} from './commercial-post-stock.ts';
 import {canAttachPost} from './world-map-context.ts';
 import { isColonist } from './affiliation.ts';
 import { biologicalYears } from './human-age.ts';
@@ -7,36 +8,15 @@ import { negotiatorRefusal,tradeImprovement } from './trade-negotiator.ts';
 import { validCivilianPostShape } from './commercial-post-rules.ts';
 import { quoteOwnerTrade,draftOwnerTrade,type CommercialOwnerContext,type OwnerQuote } from './commercial-owner-kernel.ts';
 import type { CommandResult,World } from './types.ts';
-import { COMMERCIAL_MAX_STOCK,COMMERCIAL_RESTOCK_TICKS,type CommercialStockPile } from './commercial-state.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 export { validCivilianPostShape,validateCivilianPost } from './commercial-post-rules.ts';
 const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
-function random(state:{rng:number}):number {
-  let n=state.rng;n^=n<<13;n^=n>>>17;n^=n<<5;state.rng=n>>>0;return state.rng/0x100000000;
-}
 /** Call only at an authoritative arrival. Expiration is lazy and strict; a
  * read or an exchange never generates stock. Refusal commits no identities. */
 export function ensureCommercialPost(w:World):boolean {
   const old=w.civilianPost;if(!old&&!canAttachPost(w))return false;
-  if(old&&!validCivilianPostShape(old,w.tick,w.nextId))return false;
-  if(old&&w.tick-old.stockedAt<=COMMERCIAL_RESTOCK_TICKS)return true;
-  if(old&&!Number.isSafeInteger(old.generation+1))return false;
-  const state={rng:old?.rng??(((w.seed^0x43a71d9b)>>>0)||1)},stock:CommercialStockPile[]=[];
-  let nextId=w.nextId;
-  const add=(item:'silver'|CommercialProduct,min:number,max:number):boolean=>{
-    let total=min+Math.floor(random(state)*(max-min+1));
-    while(total>0){
-      if(!integer(nextId,1)||!Number.isSafeInteger(nextId+1)||stock.length>=COMMERCIAL_MAX_STOCK)return false;
-      const quantity=Math.min(total,ITEM_DEFINITIONS[item].stackLimit);
-      stock.push({id:nextId++,kind:ITEM_DEFINITIONS[item].kind,item,quantity});total-=quantity;
-    }
-    return true;
-  };
-  if(!add('silver',800,3000)||!add('component',20,70)||!add('medicine',25,50))return false;
-  w.civilianPost={stockedAt:w.tick,rng:state.rng,generation:(old?.generation??0)+1,stock,
-    transactions:old?.transactions??0,silverReceived:old?.silverReceived??0,bought:{medicine:old?.bought.medicine??0,component:old?.bought.component??0},recent:old?structuredClone(old.recent):[],
-    ...old?.sold?{sold:{...old.sold},silverPaid:old.silverPaid!}:{}};
-  w.nextId=nextId;return true;
+  const draft=draftCommercialPostStock(w,old);if(!draft)return false;if(!draft.changed)return true;
+  w.civilianPost=draft.post;w.nextId=draft.nextId;return true;
 }
 
 export interface CommercialGood {pileId:number;item:CommercialProduct;available:number;unitPrice:number}

@@ -1,3 +1,5 @@
+import {geyserOwnedId256,geyserCells256,type GeyserWorld256} from '../sim/local-geyser-state-256';
+import {knownPosition256} from './exploration-readers-256';
 import { apparelFamily, isApparelItem } from '../sim/apparel-rules';
 import { footprintCells, STRUCTURE_DEFINITIONS } from '../sim/definitions';
 import type { Cell, Job, MaterialPile, Resource, World } from '../sim/types';
@@ -35,8 +37,9 @@ function jobIdentity(job:Job):Identity {
   return playerDefinition(`order:${job.kind}`);
 }
 
-function targetIdentity(world:World,target:MapObjectSelection):Identity|undefined {
+function targetIdentity(world:GeyserWorld256,target:MapObjectSelection):Identity|undefined {
   switch(target.kind) {
+    case 'geyser':return geyserOwnedId256(world,target.id)?naturalDefinition('SteamGeyser'):undefined;
     case 'structure': {const object=world.structures.find(s=>s.id===target.id);return object?playerDefinition(`building:${object.kind}`):undefined;}
     case 'packed': {const object=world.packed.find(p=>p.building.id===target.id&&p.owner.type==='ground');return object?playerDefinition(`building:${object.building.kind}`):undefined;}
     case 'pile': {const object=world.piles.find(p=>p.id===target.id&&p.owner.type==='ground');return object?pileIdentity(object):undefined;}
@@ -56,13 +59,17 @@ function targetIdentity(world:World,target:MapObjectSelection):Identity|undefine
  * Trees, natural rocks, walls and map orders are deliberate user-requested
  * extensions of Core's neverMultiSelect exclusions.
  */
-export function matchingMapObjects(world:World,target:MapObjectSelection,visibleCell:(cell:Cell)=>boolean):MapObjectSelection[] {
+export function matchingMapObjects(world:GeyserWorld256,target:MapObjectSelection,visibleCell:(cell:Cell)=>boolean):MapObjectSelection[] {
+  if(!mapObjectCells(world,target).length)return [];
   const identity=targetIdentity(world,target);if(!identity)return [];
   const candidates:Candidate[]=[];
   const add=(selected:MapObjectSelection,value:Identity,cells:Cell[])=>{
     if(sameIdentity(identity,value))candidates.push({selected,identity:value,cells});
   };
   switch(target.kind) {
+    case 'geyser':
+      for(const g of world.geysers?.items??[])add({kind:'geyser',id:g.id},naturalDefinition('SteamGeyser'),geyserCells256(world.width,g).map(i=>({x:i%world.width,z:Math.floor(i/world.width)})));
+      break;
     case 'structure': case 'packed':
       for(const object of world.structures)add({kind:'structure',id:object.id},playerDefinition(`building:${object.kind}`),footprintCells(object));
       for(const object of world.packed)if(object.owner.type==='ground')add({kind:'packed',id:object.building.id},playerDefinition(`building:${object.building.kind}`),[cellOf(object.owner)]);
@@ -85,7 +92,7 @@ export function matchingMapObjects(world:World,target:MapObjectSelection,visible
   }
   const visible=candidates.flatMap(candidate=>{
     let firstCell=Infinity;
-    for(const cell of candidate.cells)if(cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height&&visibleCell(cell)) {
+    for(const cell of candidate.cells)if(cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height&&knownPosition256(world,cell)&&visibleCell(cell)) {
       firstCell=Math.min(firstCell,cell.z*world.width+cell.x);
     }
     return Number.isFinite(firstCell)?[{selected:candidate.selected,firstCell}]:[];
@@ -105,12 +112,14 @@ export function matchingMapObjects(world:World,target:MapObjectSelection,visible
 }
 
 /** One adoption-local scan per requested family, avoiding N repeated finds. */
-export function mapObjectGroupCells(world:World,selections:readonly MapObjectSelection[]):Cell[][] {
+export function mapObjectGroupCells(world:GeyserWorld256,selections:readonly MapObjectSelection[]):Cell[][] {
   const indexes=new Map<MapObjectSelection['kind'],Map<number,Cell[]>>();
   for(const selected of selections) {
     let index=indexes.get(selected.kind);if(!index)indexes.set(selected.kind,index=new Map());
     index.set(selected.id,[]);
   }
+  const geysers=indexes.get('geyser');
+  if(geysers)for(const g of world.geysers?.items??[])if(geysers.has(g.id))geysers.set(g.id,geyserCells256(world.width,g).map(i=>({x:i%world.width,z:Math.floor(i/world.width)})));
   const structures=indexes.get('structure');
   if(structures)for(const object of world.structures)if(structures.has(object.id))structures.set(object.id,footprintCells(object));
   const jobs=indexes.get('job');
@@ -124,5 +133,5 @@ export function mapObjectGroupCells(world:World,selections:readonly MapObjectSel
   const rocks=indexes.get('rock');
   if(rocks)for(const id of rocks.keys())if(world.tiles[id]?.terrain==='rock')rocks.set(id,[{x:id%world.width,z:Math.floor(id/world.width)}]);
   for(const selected of selections)if(selected.kind==='growing'||selected.kind==='stockpile')indexes.get(selected.kind)!.set(selected.id,mapObjectCells(world,selected));
-  return selections.map(selected=>indexes.get(selected.kind)!.get(selected.id)!.map(cellOf));
+  return selections.map(selected=>{const cells=indexes.get(selected.kind)!.get(selected.id)!;return cells.some(c=>knownPosition256(world,c))?cells.map(cellOf):[];});
 }

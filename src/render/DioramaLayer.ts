@@ -4,7 +4,7 @@ import { createDioramaGeometry, type DioramaGeometryPart, type DioramaMaterialKi
 import type { SceneTextureLoader } from './scene-render-ports';
 import { DioramaOcclusion } from './diorama-occlusion';
 import { DioramaSkyMotion } from './diorama-sky';
-import type { BiomeId } from '../sim/biome-flora';
+import type {DioramaBiome} from './diorama-decor';
 
 const BOX_FACES = [[0, 1, 3, 2], [4, 6, 7, 5], [0, 4, 5, 1],
   [2, 3, 7, 6], [0, 2, 6, 4], [1, 5, 7, 3]] as const;
@@ -17,7 +17,7 @@ export class DioramaLayer {
   private width = 0;
   private height = 0;
   private seed = 0;
-  private biome: BiomeId = 'temperate-forest';
+  private biome: DioramaBiome = 'temperate-forest';
   private skyFront = -Infinity;
   private readonly sky = new DioramaSkyMotion();
   private parts: { spec: DioramaGeometryPart; mesh: THREE.Mesh }[] = [];
@@ -86,7 +86,7 @@ export class DioramaLayer {
     }))).then(() => {});
   }
 
-  configure(width: number, height: number, texturesEnabled: boolean, seed = 0, biome: BiomeId = 'temperate-forest'): void {
+  configure(width: number, height: number, texturesEnabled: boolean, seed = 0, biome: DioramaBiome = 'temperate-forest'): void {
     if (this.disposed) return;
     this.setTexturesEnabled(texturesEnabled);
     if (width === this.width && height === this.height && seed === this.seed && biome === this.biome) return;

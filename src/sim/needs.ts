@@ -1,3 +1,4 @@
+import {eggAllowedForPlayer256} from './animal-egg-permission-v256.ts';
 import { isBedKind } from './bed-kinds.ts';
 import { bedAssignmentReason,bedSlotCell,bedSlotClaimed,pawnBedSlot } from './bed-slots.ts';
 import { colonyExpectation } from './colony-economy.ts';
@@ -74,9 +75,9 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
     // Its old haul will be released atomically if this replacement is selected.
     const allowed = selfAllowedFood(world, pawn);
     const topology=pawn.prisoner||world.structures.some(s=>s.prisoner)?capturePrisonTopology(world):undefined;
-    const sources = world.piles.filter(pile => pile.kind === 'food' && allowed.includes(pile.item as FoodItemId) && selfFoodAccessible(world,pawn,pile,topology) && pile.quantity > reservedSource(world, pile.id, pawn.id));
+    const sources = world.piles.filter(pile => pile.kind === 'food' && eggAllowedForPlayer256(pile)&&allowed.includes(pile.item as FoodItemId) && selfFoodAccessible(world,pawn,pile,topology) && pile.quantity > reservedSource(world, pile.id, pawn.id));
     // A hungry hauler already holding food may reserve a meal quantity for ingestion.
-    const held = world.piles.find(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id && pile.kind === 'food' && allowed.includes(pile.item as FoodItemId));
+    const held = world.piles.find(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id && pile.kind === 'food' && eggAllowedForPlayer256(pile)&&allowed.includes(pile.item as FoodItemId));
     const pasteAvailable=world.structures.some(s=>s.kind==='nutrient-paste-dispenser'&&planPasteRequest(world,pawn,s,pawn,topology));
     if (sources.length || held || pasteAvailable) {
       reach = context.search(foodSourceSearchGoals(world, pawn, sources,topology));

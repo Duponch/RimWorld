@@ -15,7 +15,7 @@ export const TOLERANCE_FALL = 18 / TICKS_PER_DAY;
 export const recreationKind = (activity: RecreationActivity): RecreationKind => activity === 'horseshoes' ? 'dexterity' : activity === 'chess' ? 'cerebral' : activity === 'watch-television' ? 'television' : activity === 'social-relax'||activity === 'visit-sick' ? 'social' : 'solitary';
 export const initialRecreation = (level = 55): RecreationNeed => ({level, tolerance: {solitary: 0, dexterity: 0, cerebral: 0, social: 0, television:0}, bored: {solitary: false, dexterity: false, cerebral: false, social: false, television:false}, task: null});
 
-export function updateRecreation(pawn: Pawn,body?:import('./body-capacities.ts').BodyAssessment,toleranceFall=TOLERANCE_FALL): void {
+export function updateRecreation(pawn: Pawn,body?:import('./body-capacities.ts').BodyAssessment,toleranceFall=TOLERANCE_FALL,elapsedLocal=1): void {
   if (pawn.mental?.crisis||pawn.state === 'sleeping'||pawn.state==='dead'||pawn.medicalSleep||pawn.health&&(body??pawnBody(pawn)).capacities.consciousness<.3) return;
   const joy = pawn.recreation;
   for (const kind of RECREATION_KINDS) {
@@ -26,7 +26,7 @@ export function updateRecreation(pawn: Pawn,body?:import('./body-capacities.ts')
   }
   if (pawn.state !== 'recreating' || joy.task?.phase !== 'active') {
     const factor = joy.level < 1 ? 1 : joy.level < 15 ? .4 : joy.level < 30 ? .7 : 1;
-    joy.level = Math.max(0, joy.level - 60 / TICKS_PER_DAY * factor);
+    joy.level = Math.max(0, joy.level - 60 / TICKS_PER_DAY * factor * elapsedLocal);
   }
 }
 export function gainRecreation(joy: RecreationNeed, kind: RecreationKind, amount = RECREATION_GAIN): number {

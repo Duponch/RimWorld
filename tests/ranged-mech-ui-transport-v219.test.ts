@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import {afterEach,expect,test,vi} from 'vitest';
 import {SnapshotDecoder,SnapshotEncoder,type SnapshotMessage} from '../src/bridge/snapshots.ts';
 import {serializeWorld,deserializeWorld,validateWorld} from '../src/sim/serialization.ts';
@@ -57,7 +58,7 @@ test('196 keeps Scyther legal but refuses ranged bodies, actors and own future c
 test('historical cooldown cannot alias any collective member or item after its real physical departure',()=>{
   const world=prepareGroupScenario();expect(applyCommand(world,{type:'planet-adopt'}).ok).toBe(true);
   const foods=world.piles.filter(p=>p.item==='survival-meal');
-  expect(applyCommand(world,{type:'group-start',memberIds:world.pawns.slice(0,2).map(p=>p.id),destination:world.planet!.civilianTile,sources:[{pileId:foods[0]!.id,quantity:4}]}).ok).toBe(true);
+  expect(applyCommand(world,{type:'group-start',memberIds:world.pawns.slice(0,2).map(p=>p.id),destination:legacyPlanet(world).civilianTile,sources:[{pileId:foods[0]!.id,quantity:4}]}).ok).toBe(true);
   for(let i=0;i<800&&!(world.group&&'members' in world.group);i++)stepWorld(world);
   const group=world.group;if(!group||!('members' in group))throw Error('Real collective departure did not finish.');
   const core=world.tick*10,actor:Mechanoid={id:world.nextId++,mechKind:'lancer',x:1,z:1,state:'idle',heading:0,path:[],moveCooldown:0,planCooldown:0,

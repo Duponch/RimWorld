@@ -1,3 +1,4 @@
+import {rememberMapAreaDeparture,prepareSameMapAreaReturn,commitMapAreaEntry} from './pawn-map-areas.ts';
 import {registeredCampaign} from './world-map-context.ts';
 import { releaseAllowedAreaReturn } from './allowed-area-state.ts';
 import { scoutActiveTask,scoutPreparationReason,scoutUnstable } from './caravan-trip.ts';
@@ -74,7 +75,7 @@ export function departCommercial(w:World,p:Pawn):boolean {
   if(commercialDepartureReason(w,p))return false;
   const s=w.commercialTrip;if(s?.phase!=='leaving')return false;
   const items=w.piles.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id),ids=new Set(items.map(i=>i.id)),entry={x:p.x,z:p.z};
-  releaseAllowedAreaReturn(p);p.bedId=null;delete p.bedSlot;p.path=[];p.state='idle';p.planCooldown=0;p.moveCooldown=0;
+  rememberMapAreaDeparture(w,p);releaseAllowedAreaReturn(p);p.bedId=null;delete p.bedSlot;p.path=[];p.state='idle';p.planCooldown=0;p.moveCooldown=0;
   delete p.motion;delete p.shooting;delete p.stagger;delete p.stun;
   w.commercialTrip={phase:'outbound',pawn:p,items,foodPileId:s.foodPileId,foodQuantity:s.foodQuantity,silverQuantity:s.silverQuantity,
     startedAt:s.startedAt,departedAt:w.tick,arrivesAt:w.tick+COMMERCIAL_LEG_TICKS,entry,consumed:0,silverPaid:0,bought:{medicine:0,component:0},
@@ -127,6 +128,7 @@ export function advanceCommercialTrip(w:World):void {
   if(w.worldMaps&&registeredCampaign(w).worldGroups?.legacyTravellers.some(r=>r.commercialTrip===s&&!w.worldMaps!.sites.some(m=>m.id===r.originMapId))){s.phase='awaiting-entry';return;}
   if(w.pawns.length+1>w.width*w.height||w.piles.length+s.items.length>32768){s.phase='awaiting-entry';return;}
   const entry=findCivilianReturnEntry(w,s.entry);if(!entry){s.phase='awaiting-entry';return;}
+  const areaPlan=w.schemaVersion>=256?prepareSameMapAreaReturn(w,s.pawn):undefined;if(areaPlan)commitMapAreaEntry(s.pawn,areaPlan);
   const p=s.pawn;p.x=entry.x;p.z=entry.z;p.path=[];p.state='idle';p.moveCooldown=0;p.planCooldown=0;delete p.motion;
   w.pawns.push(p);w.piles.push(...s.items);
   const pendingPileIds=s.items.filter(i=>i.owner.type==='inventory').map(i=>i.id);

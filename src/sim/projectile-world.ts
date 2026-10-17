@@ -1,3 +1,4 @@
+import {landedStartingPods256} from './starting-pod-damage-256.ts';
 import { FRAME_SHOT_FILL,resourceShotFill,SHOT_LAYER,STRUCTURE_SHOT_FILL,itemShotFill,structureShotLayer } from './combat-content.ts';
 import { isRoomDoor } from './door-rules.ts';
 import { footprintCells } from './definitions.ts';
@@ -15,7 +16,7 @@ export interface WorldProjectileTargets {
    * factions and are non-hostile; no inference from being in world.pawns. */
   scene(friendlyPawnIds:ReadonlySet<number>,friendlyFireFactor:number,friendlyTargetKeys?:ReadonlySet<LivingTargetKey>):ProjectileScene;
 }
-const PREFIX=['','structure','frame','resource','pile','packed','pawn','animal','mech'] as const;
+const PREFIX=['','structure','frame','resource','pile','packed','pawn','animal','mech','starting-pod'] as const;
 const EMPTY:readonly ProjectileTarget[]=Object.freeze([]);
 
 /** Captures all current map candidates, including zero-fill targetable objects.
@@ -24,7 +25,8 @@ const EMPTY:readonly ProjectileTarget[]=Object.freeze([]);
  * Numeric columns and lazy immutable records avoid a JS object per plant. */
 export function captureWorldProjectileTargets(world:World):WorldProjectileTargets {
   const {width,height,tick:capturedAt}=world,n=width*height;
-  const capacity=world.structures.length+world.jobs.length+world.resources.length+world.piles.length+world.packed.length+world.pawns.length+(world.schemaVersion>=77?world.wildlife?.animals.length??0:0)+(world.schemaVersion>=194?world.mechanoids?.length??0:0)+1;
+  const pods=landedStartingPods256(world);
+  const capacity=pods.length+world.structures.length+world.jobs.length+world.resources.length+world.piles.length+world.packed.length+world.pawns.length+(world.schemaVersion>=77?world.wildlife?.animals.length??0:0)+(world.schemaVersion>=194?world.mechanoids?.length??0:0)+1;
   const ids=new Float64Array(capacity),fills=new Float64Array(capacity),bodySizes=new Float64Array(capacity),xs=new Int32Array(capacity),zs=new Int32Array(capacity);
   const kinds=new Uint8Array(capacity),layers=new Uint8Array(capacity),flags=new Uint8Array(capacity),heads=new Int32Array(n),rocks=new Uint8Array(n);
   const links=[0],next=[0],byId=new Map<number,Map<number,number>>(),ranges=PREFIX.map(()=>({start:0,end:0,ordered:true})),footprints=new Map<number,readonly Cell[]>();
@@ -51,6 +53,7 @@ export function captureWorldProjectileTargets(world:World):WorldProjectileTarget
   for(const p of world.pawns)if(p.state!=='dead'&&!p.health?.death&&!carried.has(p.id))append(6,p.id,p.x,p.z,0,SHOT_LAYER.pawn,['sleeping','resting','downed'].includes(p.state)?0:2);
   if(world.schemaVersion>=77)for(const a of world.wildlife?.animals??[])if(a.state!=='dead')append(7,a.id,a.x,a.z,0,SHOT_LAYER.pawn,['sleeping','downed'].includes(a.state)?0:2,undefined,animalBodySize(a));
   if(world.schemaVersion>=194)for(const m of world.mechanoids??[])if(m.state!=='dead'&&!m.health?.death)append(8,m.id,m.x,m.z,0,SHOT_LAYER.pawn,m.state==='downed'?0:2,undefined,1);
+  for(const p of pods)append(9,p.id,p.cell.x,p.cell.z,0,SHOT_LAYER.item);
   const coveredAt=(slot:number,c:Cell)=>{
     if(!inBounds(c))return false;const i=cellIndex(c.x,c.z);
     if(rocks[i]&&SHOT_LAYER.building>=layers[slot])return true;
@@ -66,7 +69,7 @@ export function captureWorldProjectileTargets(world:World):WorldProjectileTarget
     } else {
       const cell=Object.freeze({x:xs[slot],z:zs[slot]}),cells=footprints.get(slot),covered=cells?cells.every(c=>coveredAt(slot,c)):coveredAt(slot,cell);
       const base={key:`${PREFIX[kinds[slot]]}:${ids[slot]}`,cell,covered,fill:fills[slot],openDoor:!!(flags[slot]&1)};
-      record=kinds[slot]>=6?Object.freeze({...base,kind:'pawn',bodySize:kinds[slot]===7?bodySizes[slot]:1,standing:!!(flags[slot]&2),friendly:false}):Object.freeze({...base,kind:'object'});
+      record=kinds[slot]>=6&&kinds[slot]<=8?Object.freeze({...base,kind:'pawn',bodySize:kinds[slot]===7?bodySizes[slot]:1,standing:!!(flags[slot]&2),friendly:false}):Object.freeze({...base,kind:'object'});
     }
     records.set(slot,record);return record;
   };

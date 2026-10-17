@@ -8,9 +8,11 @@ const integer=(v:unknown,lo:number,hi=Number.MAX_SAFE_INTEGER):v is number=>Numb
 const keys=(v:Record<string,unknown>,allowed:readonly string[])=>Object.keys(v).every(k=>allowed.includes(k));
 export function validMentalShape(value:unknown,version:number,tick:number,width:number,height:number):boolean {
   if(value===undefined)return true;
-  if(version<65||!object(value)||!keys(value,['below','cooldown','catharsis','crisis'])||!Array.isArray(value.below)||value.below.length!==3||!value.below.every(n=>integer(n,0,2100)&&n%150===0)||Number(value.below[0])<Number(value.below[1])||Number(value.below[1])<Number(value.below[2])||!integer(value.cooldown,0,1500)||!Array.isArray(value.catharsis)||value.catharsis.length>5||!value.catharsis.every((n,i,a)=>integer(n,tick+1,tick+18000)&&(i===0||n>Number(a[i-1]))))return false;
+  if(version<65||!object(value)||!keys(value,['below','cooldown','catharsis','crisis',...(version>=256?['wander']:[])])||!Array.isArray(value.below)||value.below.length!==3||!value.below.every(n=>integer(n,0,2100)&&n%150===0)||Number(value.below[0])<Number(value.below[1])||Number(value.below[1])<Number(value.below[2])||!integer(value.cooldown,0,1500)||!Array.isArray(value.catharsis)||value.catharsis.length>5||!value.catharsis.every((n,i,a)=>integer(n,tick+1,tick+18000)&&(i===0||n>Number(a[i-1]))))return false;
+  if(Object.hasOwn(value,'wander')){const d=Object.getOwnPropertyDescriptor(value,'wander');if(version<256||!d||!('value'in d)||!d.enumerable||!object(d.value)||Reflect.ownKeys(d.value).length!==2||!Reflect.ownKeys(d.value).every(k=>{const p=Object.getOwnPropertyDescriptor(d.value,k)!;return typeof k==='string'&&['revision','nextMoveOrderIsWait'].includes(k)&&'value'in p&&p.enumerable;})||d.value.revision!==1||typeof d.value.nextMoveOrderIsWait!=='boolean')return false;}else if('wander'in value)return false;
   const c=value.crisis;if(c===undefined)return true;
   if(!object(c)||typeof c.kind!=='string'||!Object.hasOwn(MENTAL_CRISIS_CATALOG,c.kind)||c.kind==='food-binge'&&version<150||!['sad-wander','food-binge'].includes(c.kind)&&version<192)return false;
+  if(c.kind==='confused-wander'&&(version<256||!Object.hasOwn(value,'wander')))return false;
   const rules=MENTAL_CRISIS_CATALOG[c.kind as keyof typeof MENTAL_CRISIS_CATALOG];
   if(!integer(c.age,0,rules.maxCore+(c.kind==='murderous-rage'?19:-1))||c.age%30!==0||typeof c.waitUntil!=='number'||!Number.isFinite(c.waitUntil)||c.waitUntil<0||c.waitUntil>tick+20.1||!(c.target===null||object(c.target)&&keys(c.target,['x','z'])&&integer(c.target.x,0,width-1)&&integer(c.target.z,0,height-1)))return false;
   const base=['kind','age','target','waitUntil'];
@@ -27,9 +29,9 @@ export function validateMental(world:World,version:number):string[] {
   for(const p of world.pawns) {
     if(p.meleeThreat&&(p.meleeThreat.attackerId===p.id||p.meleeThreat.attackerId>=world.nextId||[world.structures,world.resources,world.jobs].some(items=>items.some(item=>item.id===p.meleeThreat!.attackerId))||world.piles.some(item=>item.id===p.meleeThreat!.attackerId&&item.corpse?.animalId!==item.id&&!(version>=194&&item.mechCorpse))||world.packed.some(item=>item.building.id===p.meleeThreat!.attackerId)))errors.push('Invalid melee threat identity.');
     const m=p.mental;if(m===undefined)continue;
-    if(!isColonist(p)||!validMentalShape(m,version,world.tick,world.width,world.height)){errors.push('Invalid mental state.');continue;}
+    if(!isColonist(p)&&!(version>=256&&m.wander&&(!m.crisis||m.crisis.kind==='confused-wander'))||!validMentalShape(m,version,world.tick,world.width,world.height)){errors.push('Invalid mental state.');continue;}
     const c=m.crisis;if(!c)continue;
-    const aggressive=c.kind!=='sad-wander'&&c.kind!=='food-binge';
+    const aggressive=c.kind!=='sad-wander'&&c.kind!=='food-binge'&&c.kind!=='confused-wander';
     if(aggressive&&(p.prisoner||p.visitor||p.podRescue||p.raid))errors.push('Invalid aggressive crisis owner.');
     if('targetId' in c&&c.targetId!==null) {
       if(c.targetId>=world.nextId||c.targetId===p.id)errors.push('Invalid mental target identity.');

@@ -1,3 +1,4 @@
+import {roadPropCanRepair256} from './local-road-prop-ownership-256.ts';
 import { isBarrier } from './barriers.ts';
 import { isRepairableStructure } from './thing-damage-rules.ts';
 import { constructionSpeed,learnSkill } from './skills.ts';
@@ -11,7 +12,7 @@ export interface RepairTarget { structureId:number; warmed?:true }
 export function inHome(world:World,index:number):boolean {const a=world.home??[];let lo=0,hi=a.length;while(lo<hi){const mid=(lo+hi)>>>1;if(a[mid]!<index)lo=mid+1;else hi=mid;}return a[lo]===index;}
 export function repairWanted(world:World,j:Job):boolean {
   const s=world.structures.find(s=>s.id===j.repair?.structureId);
-  return !!s&&!s.breakdown&&(world.schemaVersion>=87?isRepairableStructure(s):isBarrier(s))&&!!s.damage&&inHome(world,s.z*world.width+s.x)&&!world.jobs.some(other=>other.deconstruction?.structureId===s.id);
+  return !!s&&roadPropCanRepair256(world,s)&&!s.breakdown&&(world.schemaVersion>=87?isRepairableStructure(s):isBarrier(s))&&!!s.damage&&inHome(world,s.z*world.width+s.x)&&!world.jobs.some(other=>other.deconstruction?.structureId===s.id);
 }
 /** Sparse automatic intentions reuse construction priorities, reservations and
  * direct/queued orders. No scan per pawn, no terrain-sized work per tick. */
@@ -23,14 +24,14 @@ export function reconcileRepairs(world:World):void {
     world.jobs=world.jobs.filter(j=>!removed.has(j.id));
   }
   const busy=new Set(world.jobs.map(j=>j.z*world.width+j.x));
-  for(const s of world.structures)if(!s.breakdown&&(world.schemaVersion>=87?isRepairableStructure(s):isBarrier(s))&&s.damage&&inHome(world,s.z*world.width+s.x)&&!busy.has(s.z*world.width+s.x)&&Number.isSafeInteger(world.nextId+1)) {
+  for(const s of world.structures)if(roadPropCanRepair256(world,s)&&!s.breakdown&&(world.schemaVersion>=87?isRepairableStructure(s):isBarrier(s))&&s.damage&&inHome(world,s.z*world.width+s.x)&&!busy.has(s.z*world.width+s.x)&&Number.isSafeInteger(world.nextId+1)) {
     world.jobs.push({id:world.nextId++,kind:'repair',repair:{structureId:s.id},x:s.x,z:s.z,orientation:s.orientation,footprint:s.footprint,status:'pending',reservedBy:null,progress:0,escrow:{wood:0,food:0}});
   }
 }
 /** 80 Core work before the first HP, then 20, ConstructionSpeed x1.7.
  * Simulate ten Core substeps: at most one HP per Core tick, including extreme stats. */
 export function advanceRepair(world:World,pawn:Pawn,job:Job,light:number,body:BodyAssessment|undefined):boolean {
-  const s=world.structures.find(s=>s.id===job.repair?.structureId);if(!s?.damage)return true;
+  const s=world.structures.find(s=>s.id===job.repair?.structureId);if(!s?.damage||!roadPropCanRepair256(world,s))return true;
   pawn.path=[];pawn.state='working';
   for(let core=0;core<10;core++){
     advanceWork(job,1.7*light*constructionSpeed(pawn)*physicalWorkFactor(pawn,'build',body));

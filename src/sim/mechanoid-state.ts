@@ -9,13 +9,14 @@ import type { MechanoidRangedState } from './mechanoid-ranged-state.ts';
 import type { EmpAdaptationState } from './emp-state.ts';
 
 /** Mechanical map owner. No human or animal needs, skills or inventory. */
-export interface Mechanoid extends Cell {
+export interface Mechanoid extends Cell { corpseDamage?:number;
   id:number;mechKind:MechanoidKind;
   state:'idle'|'moving'|'working'|'downed'|'dead';
   /** Absence is the healthy mechanical body; first impact installs the record. */
   health?:MedicalRecord;
   path:Cell[];motion?:TravelSegment;heading:number;moveCooldown:number;planCooldown:number;
   raid?:{group:number;goal:Cell|null};
+  temple?:import('./temple-mech-duty-256.ts').TempleMechDuty256;
   melee?:MeleeState;
   stagger?:StaggerState;stun?:StunState;
   emp?:EmpAdaptationState;

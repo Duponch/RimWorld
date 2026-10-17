@@ -1,13 +1,14 @@
 import {expect,vi} from 'vitest';
 import {ITEM_DEFINITIONS} from '../../src/sim/items.ts';
 import type {ItemId} from '../../src/sim/items.ts';
-import type {MentalCrisisKind} from '../../src/sim/mental-catalog.ts';
+import type {MentalCrisis} from '../../src/sim/mental-state.ts';
+type RecordedMentalKind=MentalCrisis['kind'];
 import type {World} from '../../src/sim/types.ts';
 
 export const RATION_DEADLINE=17*6000;
 export interface IngestionRecord {
   tick:number;pawnId:number;portionId:number;item:ItemId;quantity:number;
-  source:'self'|'assisted';mentalKind:MentalCrisisKind|null;
+  source:'self'|'assisted';mentalKind:RecordedMentalKind|null;
 }
 interface LegacyBoundary {
   tick:number;rawLastSurvivalMealTick:number;checkpointSha256:string;
@@ -21,12 +22,12 @@ export interface IngestionLedger {
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 const keys=(v:Record<string,unknown>,allowed:readonly string[],required:readonly string[]=allowed)=>Object.keys(v).every(k=>allowed.includes(k))&&required.every(k=>Object.hasOwn(v,k));
-const kinds:readonly (MentalCrisisKind|null)[]=[null,'sad-wander','food-binge','tantrum','berserk','murderous-rage'];
+const kinds:readonly (RecordedMentalKind|null)[]=[null,'sad-wander','food-binge','tantrum','berserk','murderous-rage','confused-wander'];
 function validRecord(v:unknown,tick:number,nextId:number):v is IngestionRecord {
   return object(v)&&keys(v,['tick','pawnId','portionId','item','quantity','source','mentalKind'])
     &&integer(v.tick,0,tick)&&integer(v.pawnId,1,nextId-1)&&integer(v.portionId,1,nextId-1)&&integer(v.quantity,1)
     &&typeof v.item==='string'&&Object.hasOwn(ITEM_DEFINITIONS,v.item)&&ITEM_DEFINITIONS[v.item as ItemId].nutrition>0
-    &&(v.source==='self'||v.source==='assisted')&&kinds.includes(v.mentalKind as MentalCrisisKind|null);
+    &&(v.source==='self'||v.source==='assisted')&&kinds.includes(v.mentalKind as RecordedMentalKind|null);
 }
 const impulsive=(r:IngestionRecord)=>r.source==='self'&&r.mentalKind==='food-binge';
 export function createIngestionLedger(observedFromTick=0):IngestionLedger {
@@ -95,6 +96,8 @@ vi.mock('../../src/sim/eating.ts',async importOriginal=>{
     const [world,pawn]=args;
     if(ingestionProbe.world!==world)return actual.processEating(...args);
     const task=pawn.need,portion=task?.kind==='eat'&&task.phase==='ingest'?world.piles.find(p=>p.id===task.carryPileId):undefined;
+    // Capture the actual mental kind at physical ingestion; confused-wander
+    // remains ordinary consumption. Only food-binge is impulsive below.
     const before=task?.kind==='eat'&&portion?.owner.type==='pawn'&&portion.owner.pawnId===pawn.id&&portion.quantity===task.quantity
       ?{tick:world.tick,pawnId:pawn.id,portionId:portion.id,item:portion.item,quantity:portion.quantity,source:'self' as const,mentalKind:pawn.mental?.crisis?.kind??null}:null;
     actual.processEating(...args);

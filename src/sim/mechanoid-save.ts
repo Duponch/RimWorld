@@ -1,3 +1,5 @@
+import {mechanicalOrder256,mechanicalDuty256,validTempleMechField256,validateTempleMechGroups256} from './temple-mech-duty-256.ts';
+import {validRetainedCorpseDamage256} from './retained-corpse-damage-256.ts';
 import { validateMechanoidMedicalRecord } from './injury-validation.ts';
 import { isMechanoidKind,mechanoidDefinition,type MechanoidKind } from './mechanoid-definition.ts';
 import { validMechanoidRangedShape,validateMechanoidRanged } from './mechanoid-ranged-save.ts';
@@ -29,7 +31,7 @@ export function validMechaMedicalRecord(value:unknown,worldTick:number,dead:bool
   return record.tick<=worldTick&&!!record.death===dead;
 }
 export function validMechanoidShape(value:unknown,version:number,tick:number):value is Mechanoid {
-  if(version<194||!integer(tick)||!object(value)||!keys(value,['id','mechKind','x','z','state','health','path','motion','heading','moveCooldown','planCooldown','raid','melee','stagger','stun',...(version>=197?['ranged','meleeThreat']:[]),...(version>=208?['emp']:[])])
+  if(version<194||!integer(tick)||!object(value)||!validRetainedCorpseDamage256(value,version)||!validTempleMechField256(value,version,tick)||!keys(value,['id','mechKind','x','z','state','health','path','motion','heading','moveCooldown','planCooldown','raid','melee','stagger','stun',...(version>=197?['ranged','meleeThreat']:[]),...(version>=208?['emp']:[]),...(version>=256?['corpseDamage','temple']:[])])
     ||!integer(value.id,1)||!isMechanoidKind(value.mechKind)||version<197&&value.mechKind!=='scyther'||!integer(value.x)||!integer(value.z)
     ||typeof value.state!=='string'||!['idle','moving','working','downed','dead'].includes(value.state)||!finite(value.heading,-Math.PI*2,Math.PI*2)
     ||!finite(value.moveCooldown,0,1000)||!integer(value.planCooldown,0,1000)||!Array.isArray(value.path)||!value.path.every(cell)
@@ -62,7 +64,7 @@ export function validMechanoidShape(value:unknown,version:number,tick:number):va
     const validPause=version>=208&&object(s)&&object(pause)&&keys(pause,['ticks','lastAtCore'])
       &&pause.lastAtCore===tick*10&&integer(pause.lastAtCore,Number(s.atCore))&&integer(pause.ticks,0,pause.lastAtCore-Number(s.atCore));
     const pausedTicks=validPause&&object(pause)?Number(pause.ticks):0;
-    if(s!==null&&(!object(s)||!keys(s,['structure','targetId','atCore','untilCore','tool','outcome',...(version>=208?['empPause']:[])])||!integer(s.targetId,1)
+    if(s!==null&&(!object(s)||!keys(s,['structure','targetId','atCore','untilCore','tool','outcome',...(version>=208?['empPause']:[])])||!(integer(s.targetId,1)||version>=256&&s.targetId===null&&s.structure===undefined)
       ||Object.hasOwn(s,'empPause')&&!validPause||!integer(s.atCore,0,tick*10)||!integer(s.untilCore,tick*10+1)
       ||s.untilCore-s.atCore!==(m.mechKind==='pikeman'&&(s.tool==='barrel'||s.tool==='barrel-poke')?156:120)+pausedTicks||typeof s.tool!=='string'||!tools(m.mechKind).includes(s.tool)
       ||typeof s.outcome!=='string'||!['hit','miss','dodge'].includes(s.outcome)||s.structure!==undefined&&(!cell(s.structure)||s.outcome!=='hit')))return false;
@@ -76,17 +78,18 @@ export function validateMechanoids(w:World,version:number=w.schemaVersion,ids:Nu
   const errors:string[]=[];
   if(w.mechanoids===undefined)return errors;
   if(version<194||!Array.isArray(w.mechanoids)){errors.push('Invalid mechanoid population.');return errors;}
+  errors.push(...validateTempleMechGroups256(w));
   const inBounds=(c:{x:number;z:number})=>c.x>=0&&c.z>=0&&c.x<w.width&&c.z<w.height;
   for(const m of w.mechanoids){
     if(!validMechanoidShape(m,version,w.tick)){errors.push('Invalid mechanoid shape.');continue;}
     if(m.id>=w.nextId||ids.has(m.id))errors.push('Invalid mechanoid identity.');ids.add(m.id);
     if(m.meleeThreat&&(m.meleeThreat.attackerId>=w.nextId||m.meleeThreat.attackerId===m.id))errors.push('Invalid mechanical melee threat identity.');
     errors.push(...validateMechanoidRanged(w,m,version));
-    if(!inBounds(m)||m.path.length>w.width*w.height||m.path.some(c=>!inBounds(c))||m.motion&&(!inBounds(m.motion.from)||!inBounds(m.motion.to))||m.raid?.goal&&!inBounds(m.raid.goal))errors.push('Mechanoid position is outside the map.');
+    if(!inBounds(m)||m.path.length>w.width*w.height||m.path.some(c=>!inBounds(c))||m.motion&&(!inBounds(m.motion.from)||!inBounds(m.motion.to))||mechanicalOrder256(m)?.goal&&!inBounds(mechanicalOrder256(m)!.goal!))errors.push('Mechanoid position is outside the map.');
     let previous={x:m.x,z:m.z};for(const c of m.path){if(Math.max(Math.abs(c.x-previous.x),Math.abs(c.z-previous.z))!==1)errors.push('Disconnected mechanoid route.');previous=c;}
     const status=m.health?medicalStatus(m.health):'mobile',stopped=status!=='mobile';
     if(stopped?m.state!==status:m.state==='dead'||m.state==='downed')errors.push('Inconsistent mechanoid medical state.');
-    if(stopped&&(m.path.length||m.melee?.order||m.raid?.goal||m.stun))errors.push('Incapacitated mechanoid retains an intention.');
+    if(stopped&&(m.path.length||m.melee?.order||mechanicalOrder256(m)?.goal||m.stun))errors.push('Incapacitated mechanoid retains an intention.');
     if(m.motion&&m.motion.end>w.tick&&!['moving','downed','dead'].includes(m.state))errors.push('Mechanoid edge has no movement owner.');
     const group=w.raids?.mechActive;
     if(m.raid&&(stopped?m.raid.group>(w.raids?.serial??0):!group||group.id!==m.raid.group||!group.members.includes(m.id)))errors.push('Mechanoid raid has no owner.');
@@ -94,17 +97,17 @@ export function validateMechanoids(w:World,version:number=w.schemaVersion,ids:Nu
     if(o){
       if(o.targetId>=w.nextId||o.targetId===m.id)errors.push('Invalid mechanoid melee target.');
       if(o.structure){
-        if(w.raids?.mechActive?.phase!=='assault'||!w.structures.some(t=>t.id===o.targetId&&isBarrier(t)))errors.push('Invalid mechanoid barrier order.');
+        if(mechanicalDuty256(w,m)?.phase!=='assault'||!w.structures.some(t=>t.id===o.targetId&&isBarrier(t)))errors.push('Invalid mechanoid barrier order.');
       }else if(!w.pawns.some(t=>t.id===o.targetId)&&!w.wildlife?.animals.some(t=>t.id===o.targetId))errors.push('Mechanoid living target is missing.');
     }
     if(s){
-      if(s.targetId>=w.nextId||s.targetId===m.id||m.path.length||(m.motion?.end??0)>w.tick)errors.push('Invalid mechanoid recovery.');
+      if(s.targetId!==null&&s.targetId>=w.nextId||s.targetId===m.id||m.path.length||(m.motion?.end??0)>w.tick)errors.push('Invalid mechanoid recovery.');
       if(s.structure){
         const structure=w.structures.find(t=>t.id===s.targetId);
         if(!inBounds(s.structure)||structure&&(!isBarrier(structure)||!footprintCells(structure).some(c=>c.x===s.structure!.x&&c.z===s.structure!.z))
           ||!structure&&[w.pawns,w.mechanoids??[],w.piles,w.jobs,w.resources,w.wildlife?.animals??[]].some(owners=>owners.some(t=>t.id===s.targetId))
           ||w.packed.some(p=>p.building.id===s.targetId))errors.push('Invalid mechanoid barrier recovery.');
-      }else if(!w.pawns.some(t=>t.id===s.targetId)&&!w.wildlife?.animals.some(t=>t.id===s.targetId)
+      }else if(!(version>=256&&s.targetId===null)&&!w.pawns.some(t=>t.id===s.targetId)&&!w.wildlife?.animals.some(t=>t.id===s.targetId)
         &&!w.piles.some(p=>p.id===s.targetId&&(!!p.corpse||!!p.humanCorpse||!!p.mechCorpse))&&!w.raids?.departed.some(t=>t.pawnId===s.targetId))errors.push('Mechanoid recovery has no historical target.');
     }
   }

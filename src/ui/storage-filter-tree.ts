@@ -33,7 +33,7 @@ export const STORAGE_FILTER_TREE:readonly StorageFilterNode[]=[
   ]),
   branch('raw-resources','Ressources brutes',[
     branch('stone-blocks','Blocs de pierre',kind('blocks')),
-    ...leaves((_id,k)=>['steel','gold','uranium','plasteel','silver','wood'].includes(k)),
+    ...leaves((_id,k)=>['jade','steel','gold','uranium','plasteel','silver','wood'].includes(k)),
   ]),
   branch('plants','Plantes déracinées',kind('plant')),
   branch('objects','Objets',[branch('unfinished','Inachevé',kind('unfinished'))]),

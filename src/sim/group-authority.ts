@@ -1,3 +1,10 @@
+import {ITEM_DEFINITIONS} from './items.ts';
+import {groupCaravanUnitMass256} from './group-caravan-mass-256.ts';
+import {previewGroupAnimals256,releaseGroupAnimals256,groupAnimalReason256} from './group-animal-formation-256.ts';
+import {setGroupCaravanCarrySick256} from './group-caravan-carry-256.ts';
+import {validCaravanBedrollPacks256} from './group-bedroll-capture-256.ts';
+import {previewGroupBedrollLoading256} from './group-bedroll-loading-256.ts';
+import {groupGeographicTradeTarget256,commitGeographicGroupPost256} from './group-geographic-post-256.ts';
 import {registeredCampaign,registeredMapId,pawnWorldGroup,boundWorldGroup,initialWorldRegistry} from './world-map-context.ts';
 import {GROUP_FREIGHT_SCHEMA,newGroupFreight,freightGroup} from './group-freight.ts';
 import {GROUP_PROVISIONS_SCHEMA,newGroupProvisions,mixedGroupProvisions,groupProvisionCounts,groupProvisionMinimum,freshGroupProvision} from './group-provisions.ts';
@@ -15,33 +22,37 @@ import { emptyGroupLedger, previewGroupLoading, groupReservedSources } from './g
 import { captureHumanOwners } from './human-owners.ts';
 import { isColonist } from './affiliation.ts';
 import { biologicalYears } from './human-age.ts';
-import { scoutActiveTask, scoutPreparationReason, scoutUnstable } from './caravan-trip.ts';
+import { scoutActiveTask, scoutPreparationReason, scoutUnstable, collectiveMobilePreparationReason256 } from './caravan-trip.ts';
 import { reservedSource } from './materials.ts';
 import { candidateAccess } from './candidate-access.ts';
 import { blockedCells, inBounds, workNeighbours } from './pathfinding.ts';
 import { captureStandability } from './furniture-travel.ts';
 import { generatePlanet, planetHomeInput } from './planet-generation.ts';
-import { findPlanetRoute, PLANET_QUERY_ARCS, PLANET_QUERY_NODES, planetCostContext } from './planet-navigation.ts';
+import { findPlanetRoute, planetQueryBudget, planetCostContext } from './planet-navigation.ts';
 import { prepareGroupRedirection } from './group-trip.ts';
 import type { GroupFormationPreview, GroupMassView, GroupMemberChoice, GroupPermissionView, GroupRoutePreview, GroupSourceChoice, GroupTradePreview, GroupPanelAction, GroupActionPermission } from './group-panel-state.ts';
 
+const groupCaravanFood256=(item:MaterialPile['item'])=>ITEM_DEFINITIONS[item].nutrition>0&&groupCaravanUnitMass256(item,true)!==undefined;
 const fail=(reason:string):CommandResult=>({ok:false,code:'invalid-command',reason});
 const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
-const queryBudget=()=>({nodes:PLANET_QUERY_NODES,arcs:PLANET_QUERY_ARCS});
+const queryBudget=(w:World)=>planetQueryBudget(w.planet!);
 const away=(g:GroupState|undefined):g is AwayGroup=>!!g&&'members' in g;
 export { groupOnMapMember } from './group-state.ts';
 export function groupLog(w:World,message:string):void {w.events.push({tick:w.tick,type:'command',message});if(w.events.length>80)w.events.splice(0,w.events.length-80);}
 
-/** Initial adult/healthy admission is deliberately narrower than Core's formation UI. */
+/** Collective256 uses actual mobility; historical formations retain scout admission. */
 export function groupMemberReason(w:World,p:Pawn,preparing=false):string|undefined {
   if(!w.pawns.includes(p)||!isColonist(p)||p.prisoner||p.visitor)return 'Choisissez un colon libre et présent.';
   const engaged=pawnWorldGroup(w,p.id);if(engaged&&engaged!==boundWorldGroup(w)&&(!preparing||engaged.state.id!==w.group?.id))return 'Ce colon appartient déjà à un autre groupe.';
   if(w.scout||w.commercialTrip)return 'Terminez le voyage individuel en cours.';
-  if(p.age&&biologicalYears(p.age)<18)return 'Le groupe accepte actuellement des adultes.';
-  const reason=scoutPreparationReason(w,p,w.schemaVersion<255&&!w.expeditionSite,w.schemaVersion>=GROUP_PROVISIONS_SCHEMA&&(!preparing||!!w.group&&mixedGroupProvisions(w.group)));if(reason)return reason;
+  // Absence of travelPreparation is the old engaged formation contract, even
+  // after a neutral schema migration. Only a real new256 start owns this flag.
+  const current=w.group,prospective=w.schemaVersion===256&&(current&&'manifest'in current?current.travelPreparation===true:!preparing&&!current);
+  if(!prospective&&p.age&&biologicalYears(p.age)<18)return 'Le groupe accepte actuellement des adultes.';
+  const reason=prospective?collectiveMobilePreparationReason256(w,p):scoutPreparationReason(w,p,w.schemaVersion<255&&!w.expeditionSite,w.schemaVersion>=GROUP_PROVISIONS_SCHEMA&&(!preparing||!!w.group&&mixedGroupProvisions(w.group)));if(reason)return reason;
   if(scoutActiveTask(p))return 'Le colon doit terminer son activité avant de rejoindre le groupe.';
   if(!preparing&&(p.state!=='idle'||p.path.length||p.moveCooldown>0||(p.motion?.end??0)>w.tick))return 'Le colon doit avoir terminé son déplacement.';
-  if(w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)||w.packed.some(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id))return 'Déposez la cargaison de travail avant de partir.';
+  if(w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)||w.packed.some(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id&&(w.schemaVersion<256||i.owner.type!=='inventory'||i.building.kind!=='bedroll')))return 'Déposez la cargaison de travail avant de partir.';
   return undefined;
 }
 
@@ -70,9 +81,9 @@ export function groupFormationAuthority(w:World,preparing=false):GroupFormationA
     sourceAccess:(_world,p,pile)=>pile.owner.type==='ground'&&[pile.owner,...workNeighbours(pile.owner)].some(c=>reachable(p,c))?'reachable':'unreachable',
     namespaceReason:(world,{additionalPiles,members,items})=>{
       try {captureHumanOwners(world);}catch {return 'Une identité humaine possède plusieurs propriétaires.';}
-      if((registeredCampaign(world).worldGroups?.losses.length??campaignAuthority(world).groupLosses?.length??0)+members.length>GROUP_MAX_LOSSES)return 'Les dossiers de pertes conservés ne permettent plus ce départ.';
+      if(world.schemaVersion<256&&(registeredCampaign(world).worldGroups?.losses.length??campaignAuthority(world).groupLosses?.length??0)+members.length>GROUP_MAX_LOSSES)return 'Les dossiers de pertes conservés ne permettent plus ce départ.';
       if(world.piles.length+additionalPiles>32768||!Number.isSafeInteger(world.nextId+additionalPiles))return 'Le nombre de biens ou d’identités disponibles est dépassé.';
-      if(members.some(p=>items.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id).length>256))return 'Un inventaire dépasse 256 piles.';
+      if(world.schemaVersion<256&&members.some(p=>items.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id).length>256))return 'Un inventaire dépasse 256 piles.';
       return undefined;
     },
   };
@@ -84,7 +95,7 @@ export function groupMemberChoices(w:World):readonly GroupMemberChoice[] {
   });
 }
 export function groupSourceChoices(w:World):readonly GroupSourceChoice[] {
-  return w.piles.filter(p=>p.owner.type==='ground'&&['survival-meal','silver','cloth','muffalo-wool',...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA&&(!w.group||freightGroup(w.group))?['wood','steel']:[]),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA&&(!w.group||mixedGroupProvisions(w.group))?['pemmican']:[])].includes(p.item)).map(p=>{
+  return w.piles.filter(p=>p.owner.type==='ground'&&(w.schemaVersion>=256&&groupCaravanFood256(p.item)||['survival-meal','silver','cloth','muffalo-wool',...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA&&(!w.group||freightGroup(w.group))?['wood','steel']:[]),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA&&(!w.group||mixedGroupProvisions(w.group))?['pemmican']:[])].includes(p.item))).map(p=>{
     const reserved=reservedSource(w,p.id);return {pile:p,reserved,available:Math.max(0,p.quantity-reserved),...p.foodPoison?{reason:'Provision contaminée.'}:p.item==='pemmican'&&!freshGroupProvision(p,w.tick)?{reason:'Provision périmée.'}:{}};
   });
 }
@@ -92,7 +103,7 @@ function viewMass(mass:GroupMassCapture,items:readonly MaterialPile[],tick:numbe
   const counts=groupProvisionCounts(items.filter(p=>p.owner.type==='inventory'&&(mixed||p.item!=='pemmican')),tick);
   return {grams:mass.grams,capacityGrams:mass.capacityGrams,byMember:mass.carriers,...counts};
 }
-function previewFormation(w:World,ids:readonly number[],sources:readonly CommercialBuyLine[],destination:number) {
+function previewFormation(w:World,ids:readonly number[],sources:readonly CommercialBuyLine[],destination:number,packedIds:readonly number[]=[],animalIds:readonly number[]=[]) {
   const campaignMap=w.campaignMap,legacyMap=campaignMap&&campaignMap.revision!==2?campaignMap:undefined;
   const origin=w.worldMaps?w.worldMaps.sites.find(s=>s.id===registeredMapId(w))?.tile:campaignMap?.revision===2?campaignMap.maps.find(s=>s.id===campaignMap.activeMapId)?.tile:w.expeditionSite?.tile??w.planet?.homeTile;
   if(!w.planet||!groupDestinationValid(w.planet,destination)||destination===origin)return {kind:'refused' as const,reason:'Choisissez une destination terrestre différente de la carte actuelle.'};
@@ -106,16 +117,17 @@ function previewFormation(w:World,ids:readonly number[],sources:readonly Commerc
   }
   if(w.group||w.scout||w.commercialTrip)return {kind:'refused' as const,reason:'Un groupe ou voyage est déjà engagé.'};
   if(!Number.isSafeInteger(w.planet.nextGroupId+1))return {kind:'refused' as const,reason:'Le registre des groupes est plein.'};
-  const authority=groupFormationAuthority(w),loading=previewGroupLoading(w,ids,sources,authority);
-  if(loading.kind!=='ready')return loading;
-  if(loading.capture.members.some(p=>loading.capture.items.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id).length+loading.manifest.filter(l=>l.carrierId===p.id).length>256))return {kind:'refused' as const,reason:'Un inventaire dépasserait 256 piles.'};
+  const authority=groupFormationAuthority(w),selected=ids.map(id=>w.pawns.find(p=>p.id===id)).filter((p):p is Pawn=>!!p);const animal=previewGroupAnimals256(w,animalIds,selected,(p,c)=>authority.reachable(p,c));if(animal.kind!=='ready')return animal;
+  const piles=previewGroupLoading(w,ids,sources,authority,animalIds);if(piles.kind!=='ready')return piles;
+  const beds=w.schemaVersion>=256?previewGroupBedrollLoading256(w,packedIds,piles.capture.members,piles.mass,(p,c)=>authority.reachable(p,c)?'reachable':'unreachable'):packedIds.length?{kind:'refused' as const,reason:'Chargement de couchages futur.'}:undefined;if(beds&&beds.kind!=='ready')return beds;const loading=beds?{...piles,mass:beds.preview.mass}:piles;const bedrollLoading=beds?.preview.loading.manifest.length?beds.preview.loading:undefined;
+  if(w.schemaVersion<256&&loading.capture.members.some(p=>loading.capture.items.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id).length+loading.manifest.filter(l=>l.carrierId===p.id).length>256))return {kind:'refused' as const,reason:'Un inventaire dépasserait 256 piles.'};
   const food=loading.capture.items.filter(p=>p.owner.type==='inventory'&&p.item==='survival-meal'&&!p.foodPoison).reduce((n,p)=>n+p.quantity,0)+loading.manifest.filter(l=>l.item==='survival-meal').reduce((n,l)=>n+l.quantity,0);
-  if(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?!groupProvisionMinimum(loading.capture.members,[...loading.capture.items.filter(p=>p.owner.type==='inventory'),...loading.manifest.map(line=>({...loading.capture.sources.get(line.pileId)!,quantity:line.quantity}))],w.foodPolicies,w.tick):food<loading.capture.members.length)return {kind:'refused' as const,reason:w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?'Les provisions doivent fournir au moins 0,9 nutrition saine par membre selon les régimes, sans partager deux fois les mêmes unités.':'Chargez au moins une ration saine par membre.'};
-  const route=findPlanetRoute(w.planet,origin!,destination,planetCostContext(w,loading.mass),queryBudget());
+  if(w.schemaVersion<256&&(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?!groupProvisionMinimum(loading.capture.members,[...loading.capture.items.filter(p=>p.owner.type==='inventory'),...loading.manifest.map(line=>({...loading.capture.sources.get(line.pileId)!,quantity:line.quantity}))],w.foodPolicies,w.tick):food<loading.capture.members.length))return {kind:'refused' as const,reason:w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?'Les provisions doivent fournir au moins 0,9 nutrition saine par membre selon les régimes, sans partager deux fois les mêmes unités.':'Chargez au moins une ration saine par membre.'};
+  const route=findPlanetRoute(w.planet,origin!,destination,planetCostContext(w,loading.mass),queryBudget(w));
   if(route.kind!=='found')return {kind:'refused' as const,reason:route.kind==='deferred'?'Le calcul de route attend une nouvelle tentative.':'Cette destination est inaccessible.'};
   const rendezvous={x:loading.capture.members[0]!.x,z:loading.capture.members[0]!.z},used=new Set<number>();
   const others=new Set(w.pawns.filter(p=>!ids.includes(p.id)).map(p=>p.z*w.width+p.x));
-  const spots:Cell[]=[];for(let z=rendezvous.z-2;z<=rendezvous.z+2;z++)for(let x=rendezvous.x-2;x<=rendezvous.x+2;x++)spots.push({x,z});
+  const spots:Cell[]=[];const radius=w.schemaVersion>=256?Math.max(w.width,w.height):2;for(let z=Math.max(0,rendezvous.z-radius);z<=Math.min(w.height-1,rendezvous.z+radius);z++)for(let x=Math.max(0,rendezvous.x-radius);x<=Math.min(w.width-1,rendezvous.x+radius);x++)spots.push({x,z});
   spots.sort((a,b)=>((a.x-rendezvous.x)**2+(a.z-rendezvous.z)**2)-((b.x-rendezvous.x)**2+(b.z-rendezvous.z)**2)||a.z-b.z||a.x-b.x);
   const meeting:{pawnId:number;cell:Cell}[]=[];
   for(const p of loading.capture.members){const cell=spots.find(c=>authority.stand(c)&&!used.has(c.z*w.width+c.x)&&!others.has(c.z*w.width+c.x)&&authority.reachable(p,c));
@@ -129,10 +141,10 @@ function previewFormation(w:World,ids:readonly number[],sources:readonly Commerc
     if(!cell)return {kind:'refused' as const,reason:'Tous les membres doivent disposer d’une sortie accessible.'};
     edgeUsed.add(cell.z*w.width+cell.x);exits.push({pawnId:p.id,cell:{...cell}});
   }
-  return {kind:'ready' as const,loading,route,rendezvous,meeting,exits};
+  return {kind:'ready' as const,loading,route,rendezvous,meeting,exits,bedrollLoading,animalPreparation:animal.preparation};
 }
-export function previewGroupFormation(w:World,ids:readonly number[],sources:readonly CommercialBuyLine[],destination:number):GroupFormationPreview {
-  const p=previewFormation(w,ids,sources,destination);if(p.kind!=='ready')return {ok:false,reason:p.kind==='deferred'?'La préparation attend une nouvelle tentative.':p.reason};
+export function previewGroupFormation(w:World,ids:readonly number[],sources:readonly CommercialBuyLine[],destination:number,packedIds:readonly number[]=[],animalIds:readonly number[]=[]):GroupFormationPreview {
+  const p=previewFormation(w,ids,sources,destination,packedIds,animalIds);if(p.kind!=='ready')return {ok:false,reason:p.kind==='deferred'?'La préparation attend une nouvelle tentative.':p.reason};
   const mass=viewMass(p.loading.mass,p.loading.capture.items,w.tick,w.schemaVersion>=GROUP_PROVISIONS_SCHEMA);
   const selected=groupProvisionCounts(p.loading.manifest.map(line=>({...p.loading.capture.sources.get(line.pileId)!,quantity:line.quantity})),w.tick);
   mass.rations+=selected.rations;mass.pemmicanUnits+=selected.pemmicanUnits;mass.provisionNutrition+=selected.provisionNutrition;
@@ -140,38 +152,39 @@ export function previewGroupFormation(w:World,ids:readonly number[],sources:read
 }
 export function groupRoutePreview(w:World,destination:number):GroupRoutePreview {
   const g=w.group;if(!w.planet||!away(g))return {ok:false,reason:'Aucun groupe hors carte.'};
-  const mass=captureGroupMass(g.members,g.items,freightGroup(g));if(!mass)return {ok:false,reason:'Inventaire du groupe invalide.'};
-  const context=planetCostContext(w,mass),from=g.segment?.to??g.tile,route=findPlanetRoute(w.planet,from,destination,context,queryBudget());
+  const mass=captureGroupMass(g.members,g.items,freightGroup(g),w.schemaVersion,g.packed,g.animalOwners?.members);if(!mass)return {ok:false,reason:'Inventaire du groupe invalide.'};
+  const context=planetCostContext(w,mass),from=g.segment?.to??g.tile,route=findPlanetRoute(w.planet,from,destination,context,queryBudget(w));
   return route.kind==='found'?{ok:true,route:route.tiles,durationCore:route.estimatedCore+(g.segment?.remainingCore??0)}:{ok:false,reason:'Cette destination est inaccessible.'};
 }
 function tradeEnvironment(w:World,mass:GroupMassCapture):GroupTradeEnvironment {
-  return {tick:w.tick,nextId:w.nextId,version:w.schemaVersion,siteTile:w.planet!.civilianTile,siteOpen:true,post:w.civilianPost,mass,pileCountElsewhere:w.piles.length+(w.scout&&'items' in w.scout?w.scout.items.length:0)+(w.commercialTrip&&'items' in w.commercialTrip?w.commercialTrip.items.length:0)};
+  if(w.planet?.revision===3){const g=w.group;if(!away(g))throw Error('No actual trade group');const target=groupGeographicTradeTarget256(w,g);return {tick:w.tick,nextId:w.nextId,version:w.schemaVersion,siteTile:g.tile,siteOpen:!!target,post:target?.post,mass,pileCountElsewhere:w.piles.length,...target?{siteOwner:{settlementId:target.settlementId,factionId:target.factionId,postId:target.postId}}:{}};}
+  return {tick:w.tick,nextId:w.nextId,version:w.schemaVersion,siteTile:(()=>{const tile=w.planet!.civilianTile;if(tile===null)throw Error('No real civilian destination');return tile;})(),siteOpen:true,post:w.civilianPost,mass,pileCountElsewhere:w.piles.length+(w.scout&&'items' in w.scout?w.scout.items.length:0)+(w.commercialTrip&&'items' in w.commercialTrip?w.commercialTrip.items.length:0)};
 }
 export function groupTradeQuote(w:World,direction:'buy'|'sell',lines:readonly CommercialBuyLine[]):GroupTradePreview {
-  const g=w.group;if(!w.planet||!away(g))return {ok:false,reason:'Le groupe doit rejoindre le comptoir civil.'};
-  const mass=captureGroupMass(g.members,g.items,freightGroup(g));if(!mass)return {ok:false,reason:'Inventaire du groupe invalide.'};
+  const g=w.group;if(!w.planet||!away(g))return {ok:false,reason:'Le groupe doit rejoindre un vrai comptoir civil.'};
+  const mass=captureGroupMass(g.members,g.items,freightGroup(g),w.schemaVersion,g.packed,g.animalOwners?.members);if(!mass)return {ok:false,reason:'Inventaire du groupe invalide.'};
   const env=tradeEnvironment(w,mass),q=quoteGroupTrade(g,env,direction,lines);if(!q.ok)return q;
   // A private draft gives an exact reviewable distribution; no World ID or
   // stock is adopted by a preview and the command rebuilds the entire draft.
   const draft=lines.length?draftGroupTrade(g,env,direction,lines,q.signature):null;
   if(lines.length&&!draft)return {ok:false,reason:'Ce panier ne peut pas être réparti dans les inventaires disponibles.'};
-  const final=draft?captureGroupMass(draft.group.members,draft.group.items,freightGroup(draft.group)):mass;if(!final)return {ok:false,reason:'La charge du panier est invalide.'};
+  const final=draft?captureGroupMass(draft.group.members,draft.group.items,freightGroup(draft.group),w.schemaVersion,draft.group.packed,draft.group.animalOwners?.members):mass;if(!final)return {ok:false,reason:'La charge du panier est invalide.'};
   return {ok:true,signature:q.signature,totalSilver:q.totalSilver,mass:viewMass(final,draft?.group.items??g.items,w.tick,mixedGroupProvisions(g))};
 }
 export function groupPermission(w:World):GroupPermissionView {
   const legacyMap=w.campaignMap&&w.campaignMap.revision!==2?w.campaignMap:undefined;
-  const g=w.group,ids=g&&!away(g)?new Set(g.memberIds):undefined;
+  const g=w.group,animalIds=g?away(g)?g.animalOwners?.members.map(a=>a.id)??[]:'manifest'in g?g.animalPreparation?.lines.map(l=>l.animalId)??[]:g.animalIds??[]:[],ids=g&&!away(g)?new Set([...g.memberIds,...animalIds]):undefined;
   const members=away(g)?g.members:ids?w.pawns.filter(p=>ids.has(p.id)):[],items=away(g)?g.items:ids?w.piles.filter(p=>'pawnId' in p.owner&&ids.has(p.owner.pawnId)):[];
-  const mass=g?captureGroupMass(members,items,freightGroup(g)):undefined;
+  const mass=g?captureGroupMass(members,items,freightGroup(g),w.schemaVersion,away(g)?g.packed:w.packed.filter(p=>p.owner.type==='inventory'&&ids?.has(p.owner.pawnId)),away(g)?g.animalOwners?.members:w.wildlife?.animals.filter(a=>animalIds.includes(a.id))):undefined;
   const actions:Record<GroupPanelAction,GroupActionPermission>={adopt:{ok:!w.planet},start:{ok:!!w.planet&&!g&&!w.scout&&!w.commercialTrip&&(w.schemaVersion>=255||!!w.expeditionSite||!(w.secondarySite?.visit||legacyMap?.visitIds.length))},cancel:{ok:!!g&&!away(g)},pause:{ok:away(g)},route:{ok:away(g)},return:{ok:away(g)},buy:{ok:false},sell:{ok:false},unload:{ok:!!w.planet&&(!g||g.phase==='unloading')}};
   let trade:GroupPermissionView['trade']=null;
-  if(w.planet&&away(g)&&g.phase==='at-site'&&g.tile===w.planet.civilianTile&&mass){
+  if(w.planet&&away(g)&&g.phase==='at-site'&&(w.planet.revision===3||w.planet.civilianTile!==null&&g.tile===w.planet.civilianTile)&&mass){
     const env=tradeEnvironment(w,mass),buy=quoteGroupTrade(g,env,'buy',[]),sell=quoteGroupTrade(g,env,'sell',[]),negotiator=bestGroupNegotiator(g.members)??null;
-    const goods=(q:typeof buy,direction:'buy'|'sell')=>q.ok?q.goods.map(good=>({pile:(direction==='buy'?w.civilianPost!.stock:g.items).find(p=>p.id===good.pileId)!,available:good.available,unitPrice:good.unitPrice})):[];
-    trade={negotiator,...!buy.ok?{refusal:buy.reason}:{},groupSilver:g.items.filter(p=>p.owner.type==='inventory'&&p.item==='silver').reduce((n,p)=>n+p.quantity,0),postSilver:w.civilianPost?.stock.filter(p=>p.item==='silver').reduce((n,p)=>n+p.quantity,0)??0,buys:goods(buy,'buy'),sells:goods(sell,'sell')};
+    const goods=(q:typeof buy,direction:'buy'|'sell')=>q.ok?q.goods.map(good=>({pile:(direction==='buy'?env.post!.stock:g.items).find(p=>p.id===good.pileId)!,available:good.available,unitPrice:good.unitPrice})):[];
+    trade={negotiator,...!buy.ok?{refusal:buy.reason}:{},groupSilver:g.items.filter(p=>p.owner.type==='inventory'&&p.item==='silver').reduce((n,p)=>n+p.quantity,0),postSilver:env.post?.stock.filter(p=>p.item==='silver').reduce((n,p)=>n+p.quantity,0)??0,buys:goods(buy,'buy'),sells:goods(sell,'sell')};
     actions.buy={ok:buy.ok,...!buy.ok?{reason:buy.reason}:{}};actions.sell={ok:sell.ok,...!sell.ok?{reason:sell.reason}:{}};
   }
-  return {originTile:away(g)?g.tile:w.expeditionSite?.tile??w.planet?.homeTile??0,originLabel:away(g)?'Groupe':w.expeditionSite?'Expédition':'Foyer',maximumSources:64,mass:mass?viewMass(mass,items,w.tick,!!g&&mixedGroupProvisions(g)):null,confirmedRoute:away(g)?g.route:[],actions,trade};
+  return {originTile:away(g)?g.tile:w.expeditionSite?.tile??w.planet?.homeTile??0,originLabel:away(g)?'Groupe':w.expeditionSite?'Expédition':'Foyer',maximumSources:w.schemaVersion>=256?w.piles.length:64,mass:mass?viewMass(mass,items,w.tick,!!g&&mixedGroupProvisions(g)):null,confirmedRoute:away(g)?g.route:[],actions,trade};
 }
 export function cancelGroupPreparation(w:World):void {
   const g=w.group;if(!g||away(g))return;
@@ -181,46 +194,50 @@ export function cancelGroupPreparation(w:World):void {
     if(p.flee||p.melee||p.shooting||p.burning||p.bombRefuge||p.heatRefuge)continue;
     p.path=[];p.planCooldown=0;if(!['dead','downed'].includes(p.state))p.state='idle';
   }
+  if('manifest'in g)releaseGroupAnimals256(w,g);
   delete w.group;
 }
 export function applyGroupCommand(w:World,c:GroupCommand):CommandResult {
   if(w.schemaVersion<255&&!secondaryLocalGroupAllowed(w,c.type))return fail('Sur le second site, formez une caravane vers le foyer ou terminez le chargement en cours.');
   if(w.schemaVersion<255&&c.type==='group-start'&&!w.expeditionSite&&campaignAuthority(w).secondarySite?.visit)return fail('Une expédition est déjà présente sur le second site.');
   if(c.type==='planet-adopt'){if(!w.planet){w.planet=generatePlanet(w.seed,planetHomeInput(w),w.tick,w.site?.biome==='tundra'?2:1);initialWorldRegistry(w);groupLog(w,'La planète et ses destinations sont maintenant accessibles.');}return {ok:true};}
+  if(c.type==='group-carry-sick')return setGroupCaravanCarrySick256(w,c);
   if(c.type==='group-start'){
-    const p=previewFormation(w,c.memberIds,c.sources,c.destination);if(p.kind!=='ready')return fail(p.kind==='deferred'?'La préparation attend une nouvelle tentative.':p.reason);
+    const p=previewFormation(w,c.memberIds,c.sources,c.destination,c.packedIds??[],c.animalIds??[]);if(p.kind!=='ready')return fail(p.kind==='deferred'?'La préparation attend une nouvelle tentative.':p.reason);
     const id=w.planet!.nextGroupId;
-    w.group={...(w.worldMaps&&w.worldMaps.sites.find(s=>s.id===registeredMapId(w))?.tile!==w.planet!.homeTile?{originTile:w.worldMaps.sites.find(s=>s.id===registeredMapId(w))!.tile!}:w.expeditionSite?{originTile:w.expeditionSite.tile}:{}),id,startedAt:w.tick,destination:c.destination,ledger:emptyGroupLedger(),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?{provisions:newGroupProvisions()}:{}),...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA?{freight:newGroupFreight()}:{}),phase:'gathering',memberIds:p.loading.capture.members.map(p=>p.id),rendezvous:p.rendezvous,meeting:p.meeting,manifest:p.loading.manifest,cursor:0,exits:p.exits};
+    w.group={...(w.worldMaps&&w.worldMaps.sites.find(s=>s.id===registeredMapId(w))?.tile!==w.planet!.homeTile?{originTile:w.worldMaps.sites.find(s=>s.id===registeredMapId(w))!.tile!}:w.expeditionSite?{originTile:w.expeditionSite.tile}:{}),id,startedAt:w.tick,destination:c.destination,ledger:emptyGroupLedger(),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?{provisions:newGroupProvisions()}:{}),...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA?{freight:newGroupFreight()}:{}),...p.bedrollLoading?{bedrollLoading:p.bedrollLoading}:{},...p.animalPreparation?{animalPreparation:p.animalPreparation}:{},...(w.schemaVersion>=256?{travelPreparation:true as const}:{}),phase:'gathering',memberIds:p.loading.capture.members.map(p=>p.id),rendezvous:p.rendezvous,meeting:p.meeting,manifest:p.loading.manifest,cursor:0,exits:p.exits};
     w.planet!.nextGroupId++;groupLog(w,'Le groupe se rassemble avant le chargement des provisions.');return {ok:true};
   }
   if(c.type==='group-cancel'){if(!w.group||away(w.group))return fail('Aucune préparation ou décharge à annuler.');cancelGroupPreparation(w);return {ok:true};}
   if(c.type==='group-pause'){if(!away(w.group))return fail('Aucun groupe hors carte.');w.group.paused=c.paused;return {ok:true};}
   if(c.type==='group-route'){
     const g=w.group;if(!w.planet||!away(g))return fail('Aucun groupe hors carte.');
-    const mass=captureGroupMass(g.members,g.items,freightGroup(g));if(!mass)return fail('Inventaire du groupe invalide.');
-    const p=prepareGroupRedirection(w.planet,g,c.destination,planetCostContext(w,mass),queryBudget());
+    const mass=captureGroupMass(g.members,g.items,freightGroup(g),w.schemaVersion,g.packed,g.animalOwners?.members);if(!mass)return fail('Inventaire du groupe invalide.');
+    const p=prepareGroupRedirection(w.planet,g,c.destination,planetCostContext(w,mass),queryBudget(w));
     if(p.kind!=='ready')return fail(p.kind==='deferred'?'Le calcul de route attend une nouvelle tentative.':p.reason);
     w.group=p.state;return {ok:true};
   }
   if(c.type==='group-unload'){
     const current=w.group;
     if(current?.phase==='unloading')return c.memberIds.length===current.memberIds.length&&c.memberIds.every(id=>current.memberIds.includes(id))?{ok:true}:fail('Ce déchargement appartient à un autre groupe.');
-    if(!w.planet||w.group||w.scout||w.commercialTrip||!Array.isArray(c.memberIds)||!c.memberIds.length||c.memberIds.length>8||new Set(c.memberIds).size!==c.memberIds.length)return fail('Choisissez un à huit colons présents pour décharger.');
+    if(!w.planet||w.group||w.scout||w.commercialTrip||!Array.isArray(c.memberIds)||!c.memberIds.length||c.memberIds.length>(w.schemaVersion>=256?w.nextId-1:8)||new Set(c.memberIds).size!==c.memberIds.length)return fail('Choisissez des colons présents pour décharger.');
     const members=c.memberIds.map(id=>w.pawns.find(p=>p.id===id));
     if(members.some(p=>!p||!isColonist(p)||p.prisoner||p.visitor||scoutUnstable(p,w)||scoutActiveTask(p)||p.state!=='idle'))return fail('Les porteurs doivent être libres et présents.');
-    const ids=new Set(c.memberIds),items=w.piles.filter(p=>p.owner.type==='inventory'&&ids.has(p.owner.pawnId));
-    if(!items.length||items.some(p=>!['survival-meal','silver','cloth','muffalo-wool','medicine','component',...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA?['wood','steel']:[]),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?['pemmican']:[])].includes(p.item)))return fail('Aucune provision admissible à décharger.');
+    const animals=(c.animalIds??[]).map(id=>w.wildlife?.animals.find(a=>a.id===id));if(animals.some(a=>!a||groupAnimalReason256(w,a)))return fail('Les animaux à décharger doivent être présents et disponibles.');
+    const ids=new Set([...c.memberIds,...c.animalIds??[]]),items=w.piles.filter(p=>p.owner.type==='inventory'&&ids.has(p.owner.pawnId));
+    const packs=w.packed.filter(p=>p.owner.type==='inventory'&&ids.has(p.owner.pawnId));if(!validCaravanBedrollPacks256(packs,[...members as Pawn[],...animals.filter((a):a is import('./wildlife-state.ts').WildAnimal=>!!a)],w.nextId,w.schemaVersion))return fail('Couchage porté inadmissible.');
+    if(!items.length&&!packs.length||items.some(p=>!(w.schemaVersion>=256&&groupCaravanFood256(p.item))&&!['survival-meal','silver','cloth','muffalo-wool','medicine','component',...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA?['wood','steel']:[]),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?['pemmican']:[])].includes(p.item)))return fail('Aucune provision admissible à décharger.');
     if(!Number.isSafeInteger(w.planet.nextGroupId+1))return fail('Le registre des groupes est plein.');
-    w.group={id:w.planet.nextGroupId++,startedAt:w.tick,destination:w.planet.homeTile,ledger:emptyGroupLedger(),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?{provisions:newGroupProvisions()}:{}),...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA?{freight:newGroupFreight()}:{}),phase:'unloading',memberIds:[...c.memberIds].sort((a,b)=>a-b),pendingPileIds:items.map(p=>p.id)};return {ok:true};
+    w.group={id:w.planet.nextGroupId++,startedAt:w.tick,destination:w.planet.homeTile,ledger:emptyGroupLedger(),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?{provisions:newGroupProvisions()}:{}),...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA?{freight:newGroupFreight()}:{}),phase:'unloading',memberIds:[...c.memberIds].sort((a,b)=>a-b),...c.animalIds?.length?{animalIds:[...c.animalIds]}:{},pendingPileIds:items.map(p=>p.id),...packs.length?{pendingPackedIds:packs.map(p=>p.building.id)}:{}};return {ok:true};
   }
   if(c.type==='group-buy'||c.type==='group-sell'){
     const g=w.group;if(!w.planet||!away(g))return fail('Le commerce exige un groupe présent au comptoir civil.');
-    const mass=captureGroupMass(g.members,g.items,freightGroup(g));if(!mass)return fail('Inventaire du groupe invalide.');
+    const mass=captureGroupMass(g.members,g.items,freightGroup(g),w.schemaVersion,g.packed,g.animalOwners?.members);if(!mass)return fail('Inventaire du groupe invalide.');
     const env=tradeEnvironment(w,mass),direction=c.type==='group-buy'?'buy':'sell',draft=draftGroupTrade(g,env,direction,c.lines,c.quote);
     if(!draft)return fail('Le devis, le stock, les fonds ou la charge du groupe ont changé.');
     // Pure transfer draft is complete before this closed adoption. Original
     // Pawn owners never change, and all goods/currency/counters adopt together.
-    w.group=draft.group;w.civilianPost=draft.post;w.nextId=draft.nextId;
+    if(env.siteOwner)commitGeographicGroupPost256(w,env.siteOwner.postId,draft.post);else w.civilianPost=draft.post;w.group=draft.group;w.nextId=draft.nextId;
     groupLog(w,direction==='buy'?'Le groupe a acheté les marchandises au comptoir.':'Le groupe a vendu son fret au comptoir.');return {ok:true};
   }
   return fail('Commande de groupe inconnue.');

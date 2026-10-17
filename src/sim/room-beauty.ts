@@ -1,3 +1,5 @@
+import {isAncientMonumentKind256,ANCIENT_MONUMENT_DEFS_256} from './ancient-monument-props-256.ts';
+import {QUALITY_BEAUTY,furnitureQuality} from './furniture-stats.ts';
 import { furnitureBeauty,isFurnitureMaterial,isHabitatFurnitureKind,isSculptureKind,sculptureBeauty,FURNITURE_MATERIALS,type FurnitureLike } from './furniture-stats.ts';
 import type { RoomTopology } from './room-topology.ts';
 
@@ -15,9 +17,11 @@ export interface BeautyInput {
 }
 
 export const FLOOR_BEAUTY=Object.freeze({
+  'ancient-tile':0,'ancient-concrete':-1,
+  'broken-asphalt':-1,'granite-flagstone':0,'limestone-flagstone':0,'marble-flagstone':0,'sandstone-flagstone':0,'slate-flagstone':0,
   'wood-planks':0,'granite-tile':1,'limestone-tile':1,'marble-tile':1,'sandstone-tile':1,'slate-tile':1,'steel-tile':0,'sterile-tile':-1,'burned-wood':-6,
 } as const);
-export const FILTH_BEAUTY=Object.freeze({dirt:-15,trash:-15,blood:-30,ash:-10,vomit:-40,'corpse-bile':-50} as const);
+export const FILTH_BEAUTY=Object.freeze({slime:-25,dirt:-15,trash:-15,blood:-30,ash:-10,vomit:-40,'corpse-bile':-50,'rock-rubble':-15,'building-rubble':-15} as const);
 export type BeautyBand='hideous'|'ugly'|'neutral'|'pretty'|'beautiful'|'very-beautiful'|'extremely-beautiful'|'unbelievably-beautiful';
 export const BEAUTY_BAND_LABEL:Readonly<Record<BeautyBand,string>>=Object.freeze({
   hideous:'hideuse',ugly:'laide',neutral:'neutre',pretty:'jolie',beautiful:'belle',
@@ -25,6 +29,7 @@ export const BEAUTY_BAND_LABEL:Readonly<Record<BeautyBand,string>>=Object.freeze
 });
 
 export function floorBeauty(tile:BeautyTile,outdoors=false):number {
+  if(tile.terrain==='packed-dirt'&&!tile.floor)return -1;
   if(tile.floor&&Object.hasOwn(FLOOR_BEAUTY,tile.floor))return FLOOR_BEAUTY[tile.floor as keyof typeof FLOOR_BEAUTY];
   if(tile.floor)return 0;
   if(tile.terrain==='grass'||tile.terrain==='soil'||tile.terrain==='rich-soil'||tile.terrain==='gravel')return outdoors?0:-3;
@@ -32,11 +37,14 @@ export function floorBeauty(tile:BeautyTile,outdoors=false):number {
   return 0;
 }
 export function filthBeauty(filth:Pick<BeautyFilth,'kind'>,outdoors=false):number {
+  if(outdoors&&filth.kind==='rock-rubble')return -4;
   if(outdoors&&(filth.kind==='dirt'||filth.kind==='trash'))return -1;
   return Object.hasOwn(FILTH_BEAUTY,filth.kind)?FILTH_BEAUTY[filth.kind as keyof typeof FILTH_BEAUTY]:0;
 }
 export function groundObjectBeauty(object:BeautyObject):number {return object.visible===false?0:object.beauty??-4;}
 export function structureBeauty(structure:BeautyStructure):number {
+  if(isAncientMonumentKind256(structure.kind)){const m=isFurnitureMaterial(structure.material)?FURNITURE_MATERIALS[structure.material]:undefined,d=ANCIENT_MONUMENT_DEFS_256[structure.kind];return d.beauty*(m?.beautyFactor??1)*(d.quality?QUALITY_BEAUTY[furnitureQuality(structure.quality)]:1)+(m?.beautyOffset??0);}
+  if(structure.kind==='ship-chunk')return -20;
   if(structure.kind==='chemfuel-generator')return -20;
   if(structure.kind==='deep-drill')return -25;
   if(structure.kind==='ground-scanner')return -8;
@@ -44,7 +52,8 @@ export function structureBeauty(structure:BeautyStructure):number {
   if(structure.kind==='spike-trap')return -18;
   if(structure.kind==='mini-turret')return -20;
   if(structure.kind==='tube-television')return 0;
-  if(structure.kind==='sandbags')return -10;
+  if(structure.kind==='sandbags'||structure.kind==='ancient-road-barrier')return -10;
+  if(structure.kind==='ancient-road-lamp')return 0;
   if(isHabitatFurnitureKind(structure.kind))return furnitureBeauty(structure);
   if(isSculptureKind(structure.kind))return sculptureBeauty(structure);
   const material=isFurnitureMaterial(structure.material)?FURNITURE_MATERIALS[structure.material]:undefined;

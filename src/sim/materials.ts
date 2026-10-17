@@ -1,10 +1,14 @@
+import {animalContentsOwner256,animalContentsLocation256} from './animal-local-contents-256.ts';
+import {isFutureEcologyItem256} from './cave-products-256.ts';
+import {canMergeEggPile256} from './animal-egg-permission-v256.ts';
+import {validEggPile256} from './animal-egg-save-v256.ts';
 import { groupReservedQuantities,groupReservedQuantity } from './group-reservations.ts';
 import { commercialReservedQuantity,commercialReservedSources } from './commercial-reservations.ts';
 import { removeIdentity } from './collection-remove.ts';
 import { pawnContentsLocation } from './human-corpses.ts';
-import { copyPileCondition,mergePileContamination } from './pile-condition.ts';
+import { copyPileCondition,mergePileContamination,mergePileEgg256 } from './pile-condition.ts';
 import { isColonist } from './affiliation.ts';
-import { mergeThingDamage } from './thing-damage-rules.ts';
+import { mergeThingDamage,pileMaxHp } from './thing-damage-rules.ts';
 import { newApparelState,isApparelItem,APPAREL } from './apparel-rules.ts';
 import { apparelCompatible } from './armor.ts';
 import { groundCapacity, planGroundPlacement } from './ground-placement.ts';
@@ -28,7 +32,7 @@ function validOrbitalOwner(world:World,owner:MaterialOwner):boolean {
 export function pileCell(world: World, pile: MaterialPile): Cell | null {
   const owner = pile.owner;
   if (owner.type === 'ground') return { x: owner.x, z: owner.z };
-  if (owner.type === 'pawn'||owner.type==='equipment'||owner.type==='apparel'||owner.type==='inventory'){const pawn=world.pawns.find(pawn=>pawn.id===owner.pawnId);return pawn?pawnContentsLocation(world,pawn)?.cell??null:null;}
+  if (owner.type === 'pawn'||owner.type==='equipment'||owner.type==='apparel'||owner.type==='inventory'){const pawn=world.pawns.find(p=>p.id===owner.pawnId);return pawn?pawnContentsLocation(world,pawn)?.cell??null:owner.type==='inventory'?animalContentsLocation256(world,owner.pawnId)?.cell??null:null;}
   if(owner.type==='grave'||owner.type==='orbital-ship'||owner.type==='orbital-cargo'||owner.type==='starting-pod')return null;
   return world.jobs.find(job => job.id === owner.jobId) ?? null;
 }
@@ -58,56 +62,58 @@ const sameOwner = (a: MaterialOwner, b: MaterialOwner): boolean => a.type === b.
       : a.type === 'job' && b.type === 'job' && a.jobId === b.jobId);
 
 /** Number of new physical identities after filling every compatible stack. */
-export function materialIdentityCount(world:World,quantity:number,owner:MaterialOwner,item:ItemId):number {
+export function materialIdentityCount(world:World,quantity:number,owner:MaterialOwner,item:ItemId,condition:Pick<MaterialPile,'egg'|'eggForbidden'>={}):number {
   const limit=ITEM_DEFINITIONS[item].stackLimit;
   let remaining=quantity;
-  for(const pile of world.piles)if(pile.item===item&&sameOwner(pile.owner,owner))remaining-=Math.max(0,limit-pile.quantity);
+  for(const pile of world.piles)if(pile.item===item&&sameOwner(pile.owner,owner)&&canMergeEggPile256(pile,condition))remaining-=Math.max(0,limit-pile.quantity);
   return Math.ceil(Math.max(0,remaining)/limit);
 }
 export function materialCanFit(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner, item: ItemId = legacyItem(kind),subject?:MaterialPile): boolean {
-  if(!validOrbitalOwner(world,owner))return false;
+  if(world.schemaVersion<256&&(isFutureEcologyItem256(item)||item==='slag-steel-chunk')||!validOrbitalOwner(world,owner))return false;
   if((kind==='corpse'||kind==='mech-corpse'||kind==='weapon'||kind==='apparel')&&owner.type==='job')return false;
   if(owner.type==='apparel'&&(kind!=='apparel'||quantity!==1||!isApparelItem(item)||world.piles.some(p=>p.owner.type==='apparel'&&p.owner.pawnId===owner.pawnId&&!apparelCompatible(APPAREL[p.item as keyof typeof APPAREL].coverage,APPAREL[item].coverage))))return false;
   if(owner.type==='equipment'&&(kind!=='weapon'||quantity!==1||world.piles.some(p=>p.owner.type==='equipment'&&p.owner.pawnId===owner.pawnId)))return false;
   if (owner.type === 'ground' && quantity > groundCapacity(world, owner, subject??item)) return false;
-  const needed=materialIdentityCount(world,quantity,owner,item);
+  const needed=materialIdentityCount(world,quantity,owner,item,subject??{});
   return world.piles.length + needed <= 32768 && Number.isSafeInteger(world.nextId + needed);
 }
 
-export function addMaterial(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner, item: ItemId = legacyItem(kind)): void {
+export function addMaterial(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner, item: ItemId = legacyItem(kind),condition:Pick<MaterialPile,'egg'|'eggForbidden'>={}): void {
+  if(world.schemaVersion<256&&(isFutureEcologyItem256(item)||item==='slag-steel-chunk'))throw Error('Future animal item.');
   if(kind==='plant')throw new Error('A minified tree requires an original Resource.');
   if(kind==='corpse'||kind==='mech-corpse')throw new Error('A corpse requires an existing dead owner identity.');
   if (!Number.isSafeInteger(quantity) || quantity < 0 || quantity > MAX_STACK * 32768) throw new Error('Material quantity exceeds supported range.');
   if (!Object.hasOwn(ITEM_DEFINITIONS, item) || ITEM_DEFINITIONS[item].kind !== kind) throw new Error('Unknown or incompatible item.');
+  if(!validEggPile256({item,...condition},world.schemaVersion,world.tick,world.nextId))throw Error('Invalid egg creation context.');
   const limit = ITEM_DEFINITIONS[item].stackLimit;
   if (owner.type === 'ground' && (!Number.isInteger(owner.x) || !Number.isInteger(owner.z) || owner.x < 0 || owner.z < 0 || owner.x >= world.width || owner.z >= world.height)) throw new Error('Invalid material position.');
   if (owner.type === 'ground' && (['water', 'rock'].includes(world.tiles[owner.z * world.width + owner.x]!.terrain)
     || world.structures.some(item => (item.kind === 'wall'||item.kind==='cooler') && item.x === owner.x && item.z === owner.z)
     || world.schemaVersion<16&&world.jobs.some(item => (item.kind === 'wall'||item.kind==='cooler') && item.x === owner.x && item.z === owner.z))) throw new Error('Material destination is impassable.');
-  if ((owner.type === 'pawn'||owner.type==='equipment'||owner.type==='apparel'||owner.type==='inventory') && !world.pawns.some(pawn => pawn.id === owner.pawnId)) throw new Error('Material carrier does not exist.');
+  if ((owner.type === 'pawn'||owner.type==='equipment'||owner.type==='apparel'||owner.type==='inventory') && !world.pawns.some(pawn => pawn.id === owner.pawnId)&&!(owner.type==='inventory'&&world.schemaVersion>=256&&animalContentsOwner256(world,owner.pawnId)!==undefined)) throw new Error('Material carrier does not exist.');
   if (owner.type === 'job' && !world.jobs.some(job => job.id === owner.jobId)) throw new Error('Material construction does not exist.');
-  if (!materialCanFit(world, kind, quantity, owner, item)) throw new Error('Material pile limit exceeded.');
+  if (!materialCanFit(world, kind, quantity, owner, item,{item,kind,quantity,owner,id:0,...condition})) throw new Error('Material pile limit exceeded.');
   for (const pile of world.piles) {
     if (!quantity) break;
-    if (pile.item !== item || !sameOwner(pile.owner, owner)) continue;
+    if (pile.item !== item || !sameOwner(pile.owner, owner)||!canMergeEggPile256(pile,condition)) continue;
     const moved = Math.min(limit - pile.quantity, quantity);
-    mergePileContamination(pile,moved);mergeThingDamage(pile,moved);mergeRot(pile, moved, 0, world.tick);
+    mergePileEgg256(pile,moved,condition.egg);mergePileContamination(pile,moved);mergeThingDamage(pile,moved,0,pileMaxHp(pile,world.schemaVersion));mergeRot(pile, moved, 0, world.tick);
     pile.quantity += moved; quantity -= moved;
   }
   while (quantity > 0) {
     const moved = Math.min(limit, quantity);
-    world.piles.push({ id: world.nextId++, kind, item, quantity: moved, owner: { ...owner }, ...freshRot(item, world.tick),...kind==='weapon'&&isWeaponItem(item)?{weapon:newWeaponState(item)}:kind==='apparel'&&isApparelItem(item)?{apparel:newApparelState(item)}:{}});
+    world.piles.push({ id: world.nextId++, kind, item, quantity: moved, owner: { ...owner },...copyPileCondition(condition), ...freshRot(item, world.tick),...kind==='weapon'&&isWeaponItem(item)?{weapon:newWeaponState(item)}:kind==='apparel'&&isApparelItem(item)?{apparel:newApparelState(item)}:{}});
     quantity -= moved;
   }
   refreshStock(world);
 }
-export function addGroundMaterial(world: World, kind: MaterialKind, quantity: number, cell: Cell, item: ItemId = legacyItem(kind)): void {
+export function addGroundMaterial(world: World, kind: MaterialKind, quantity: number, cell: Cell, item: ItemId = legacyItem(kind),condition:Pick<MaterialPile,'egg'|'eggForbidden'>={}): void {
   if (!Number.isSafeInteger(quantity) || quantity < 0 || quantity > MAX_STACK * 32768) throw new Error('Invalid ground quantity.');
   if (!Object.hasOwn(ITEM_DEFINITIONS,item) || ITEM_DEFINITIONS[item].kind!==kind) throw new Error('Invalid ground item.');
   const plan = planGroundPlacement(world, quantity, cell, item);
-  const needed=plan?.reduce((n,p)=>n+materialIdentityCount(world,p.quantity,{type:'ground',...p.cell},item),0)??0;
+  const needed=plan?.reduce((n,p)=>n+materialIdentityCount(world,p.quantity,{type:'ground',...p.cell},item,condition),0)??0;
   if (!plan || world.piles.length + needed > 32768 || !Number.isSafeInteger(world.nextId + needed)) throw new Error('No room for ground material.');
-  for (const part of plan) addMaterial(world, kind, part.quantity, { type:'ground', ...part.cell }, item);
+  for (const part of plan) addMaterial(world, kind, part.quantity, { type:'ground', ...part.cell }, item,condition);
 }
 /** Move the existing stack, merging only when possible. No allocation or identity budget needed. */
 export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):boolean {
@@ -119,26 +125,26 @@ export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):
   if(owner.type==='ground'&&groundCapacity(world,owner,pile,carrier)<pile.quantity)return false;
   if(owner.type==='ground'&&shelfAt(world,owner)){
     let remaining=pile.quantity;
-    for(const target of world.piles)if(target!==pile&&target.item===pile.item&&sameOwner(target.owner,owner)){
+    for(const target of world.piles)if(target!==pile&&target.item===pile.item&&sameOwner(target.owner,owner)&&canMergeEggPile256(target,pile)){
       const moved=Math.min(remaining,ITEM_DEFINITIONS[pile.item].stackLimit-target.quantity);if(moved<=0)continue;
-      mergePileContamination(target,moved,pile.foodPoison);mergeThingDamage(target,moved,pile.damage);mergeRot(target,moved,rotAge(pile,world.tick),world.tick);target.quantity+=moved;remaining-=moved;if(!remaining)break;
+      mergePileEgg256(target,moved,pile.egg);mergePileContamination(target,moved,pile.foodPoison);mergeThingDamage(target,moved,pile.damage,pileMaxHp(target,world.schemaVersion));mergeRot(target,moved,rotAge(pile,world.tick),world.tick);target.quantity+=moved;remaining-=moved;if(!remaining)break;
     }
     if(remaining){pile.quantity=remaining;pile.owner={...owner};}else removeIdentity(world.piles,pile);
     refreshStock(world);return true;
   }
-  const target=world.piles.find(p=>p!==pile&&p.item===pile.item&&sameOwner(p.owner,owner)&&p.quantity+pile.quantity<=ITEM_DEFINITIONS[pile.item].stackLimit);
-  if(target){mergePileContamination(target,pile.quantity,pile.foodPoison);mergeThingDamage(target,pile.quantity,pile.damage);mergeRot(target,pile.quantity,rotAge(pile,world.tick),world.tick);target.quantity+=pile.quantity;removeIdentity(world.piles,pile);}else pile.owner={...owner};
+  const target=world.piles.find(p=>p!==pile&&p.item===pile.item&&sameOwner(p.owner,owner)&&canMergeEggPile256(p,pile)&&p.quantity+pile.quantity<=ITEM_DEFINITIONS[pile.item].stackLimit);
+  if(target){mergePileEgg256(target,pile.quantity,pile.egg);mergePileContamination(target,pile.quantity,pile.foodPoison);mergeThingDamage(target,pile.quantity,pile.damage,pileMaxHp(target,world.schemaVersion));mergeRot(target,pile.quantity,rotAge(pile,world.tick),world.tick);target.quantity+=pile.quantity;removeIdentity(world.piles,pile);}else pile.owner={...owner};
   refreshStock(world);return true;
 }
 /** Split only the delivered fraction. The held source identity and its states survive. */
 export function depositMaterialPart(world:World,source:MaterialPile,cell:Cell,quantity:number,exceptPawn?:number):boolean {
   if(!world.piles.includes(source)||!Number.isSafeInteger(quantity)||quantity<1||quantity>source.quantity||groundCapacity(world,cell,source,exceptPawn)<quantity)return false;
   if(quantity===source.quantity)return transferPile(world,source,{type:'ground',x:cell.x,z:cell.z});
-  const targets=world.piles.filter(p=>p!==source&&p.owner.type==='ground'&&p.owner.x===cell.x&&p.owner.z===cell.z&&p.item===source.item&&p.quantity<ITEM_DEFINITIONS[source.item].stackLimit);
+  const targets=world.piles.filter(p=>p!==source&&p.owner.type==='ground'&&p.owner.x===cell.x&&p.owner.z===cell.z&&p.item===source.item&&canMergeEggPile256(p,source)&&p.quantity<ITEM_DEFINITIONS[source.item].stackLimit);
   const residual=targets.reduce((n,p)=>n+ITEM_DEFINITIONS[source.item].stackLimit-p.quantity,0),needed=Math.ceil(Math.max(0,quantity-residual)/ITEM_DEFINITIONS[source.item].stackLimit);
   if(world.piles.length+needed>32768||!Number.isSafeInteger(world.nextId+needed))return false;
   let remaining=quantity;
-  for(const target of targets){const moved=Math.min(remaining,ITEM_DEFINITIONS[source.item].stackLimit-target.quantity);mergePileContamination(target,moved,source.foodPoison);mergeThingDamage(target,moved,source.damage);mergeRot(target,moved,rotAge(source,world.tick),world.tick);target.quantity+=moved;remaining-=moved;if(!remaining)break;}
+  for(const target of targets){const moved=Math.min(remaining,ITEM_DEFINITIONS[source.item].stackLimit-target.quantity);mergePileEgg256(target,moved,source.egg);mergePileContamination(target,moved,source.foodPoison);mergeThingDamage(target,moved,source.damage,pileMaxHp(target,world.schemaVersion));mergeRot(target,moved,rotAge(source,world.tick),world.tick);target.quantity+=moved;remaining-=moved;if(!remaining)break;}
   while(remaining){const moved=Math.min(remaining,ITEM_DEFINITIONS[source.item].stackLimit);world.piles.push({...source,...copyPileCondition(source),id:world.nextId++,quantity:moved,owner:{type:'ground',x:cell.x,z:cell.z}});remaining-=moved;}
   source.quantity-=quantity;refreshStock(world);return true;
 }

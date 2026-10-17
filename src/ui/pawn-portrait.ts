@@ -69,12 +69,14 @@ function visible(face: Face, variant: readonly [number, number, number, number],
 }
 
 function colorOf(face: Face, appearance: PawnAppearance, look: ApparelLook): number {
+  if(face.dye===-2&&look.vestTintColor!==undefined)return look.vestTintColor;
+  if(face.dye===FLAK_HELMET_DYE&&look.plasteelHelmet)return 0xa0b2b5;
   if (face.dye === TUQUE_DYE) return look.tuque===2?0xb3c0ba:0xd8c8a2;
   if (face.dye === RECON_ARMOR_DYE) return face.color;
   if (face.dye >= 100) return appearance.hairColor;
   if (face.dye === 2 || look.silhouette === 2 && (face.bone === 2 || face.bone === 3)) return appearance.skinColor;
   if (face.dye === 1 || face.dye === -3 || face.dye === -6) return look.color ?? 0x789082;
-  if (face.bone >= 4 && look.pants) return [0, 0xd8c8a2, 0xad8a61, 0xa88b63, 0x839ac5, 0xc3a375][look.pants] ?? face.color;
+  if (face.bone >= 4 && look.pants) return [0, 0xd8c8a2, 0xad8a61, 0xa88b63, 0x839ac5, 0xc3a375,0xb3c0ba,0xb26422,0x707070,0xcecece,0xb1b1b1][look.pants] ?? face.color;
   return face.color;
 }
 

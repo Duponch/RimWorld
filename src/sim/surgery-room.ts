@@ -1,4 +1,4 @@
-import { isRoofed } from './roof-rules.ts';
+import { isRoofed,roofCoverage } from './roof-rules.ts';
 import type { CleanlinessCapture } from './filth-room.ts';
 import type { Cell,World } from './types.ts';
 
@@ -10,7 +10,7 @@ export function surgeryOutdoors(world:World,bed:Cell,capture:CleanlinessCapture)
   if(!space||space.kind!=='space')return false;
   if(!isRoofed(world,bed.z*world.width+bed.x))return true;
   let covered=0;
-  for(const index of world.roofing?.constructed??[]){const room=capture.topology.at(index%world.width,Math.floor(index/world.width));if(room?.kind==='space'&&room.id===space.id)covered++;}
+  for(const index of roofCoverage(world)){const room=capture.topology.at(index%world.width,Math.floor(index/world.width));if(room?.kind==='space'&&room.id===space.id)covered++;}
   const open=space.cellCount-covered;
   return open>100||open>space.cellCount*.25;
 }

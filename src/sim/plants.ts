@@ -1,3 +1,6 @@
+import {plantCompletelyIgnoresFertility256,plantSubstrateAllowed256} from './plant-substrate-256.ts';
+import {naturalPlantSubstrate256} from './natural-terrain-runtime-256.ts';
+import {isCavePlant256} from './cave-flora-256.ts';
 import { TICKS_PER_DAY, type Pawn, type Resource, type World } from './types.ts';
 import { plantHarvestYield } from './plant-skills.ts';
 import { isRoofed, roofIndex } from './roof-rules.ts';
@@ -43,7 +46,7 @@ export function plantGrowthRate(light: number, temperature: number, fertility: n
 export const plantFertility = (world: World, plant: Resource): number => {
   if(isCrop(plant)) {const fertility=hydroponicFertility(world,plant);if(fertility!==undefined)return fertility;}
   const tile = world.tiles[plant.z * world.width + plant.x]!;
-  return tile.floor?0:soilFertility(tile.terrain);
+  return world.schemaVersion>=256?naturalPlantSubstrate256(tile).fertility:tile.floor?0:soilFertility(tile.terrain);
 };
 export const plantResting = (tick: number): boolean => {
   const day = tick % TICKS_PER_DAY / TICKS_PER_DAY;
@@ -77,13 +80,15 @@ export function plantGrowth(world: World, plant: Resource): number {
   if (!isPlant(plant)) return 1;
   const base = plant.growth ?? 1;
   if(plant.blight)return base;
-  if(plant.growthLight==='dark'||plant.growthLight!=='artificial-full'&&isRoofed(world,roofIndex(world,plant)))return base;
+  const cave=isCavePlant256(plant.species,world.schemaVersion);
+  if(!cave&&(plant.growthLight==='dark'||plant.growthLight!=='artificial-full'&&isRoofed(world,roofIndex(world,plant))))return base;
   if (base >= 1) return 1;
   const def = plant.species?FLORA_DEFINITIONS[plant.species]:PLANT_DEFINITIONS[plant.kind as keyof typeof PLANT_DEFINITIONS], fertility = plantFertility(world, plant);
-  if (fertility < def.minFertility) return base;
-  const integral=plant.growthLight==='artificial-full'?fullGrowingLightIntegral:annualGrowingLightIntegral;
+  const ignoreFertility=plantCompletelyIgnoresFertility256(plant.species,world.schemaVersion);
+  if(!ignoreFertility&&fertility<def.minFertility||world.schemaVersion>=256&&plantSubstrateAllowed256(plant.species,world.schemaVersion,naturalPlantSubstrate256(world.tiles[plant.z*world.width+plant.x]!))===false)return base;
+  const integral=cave||plant.growthLight==='artificial-full'?fullGrowingLightIntegral:annualGrowingLightIntegral;
   const lightTime = integral(world) - integral(world, plant.growthTick ?? world.tick);
-  const factor = (plant.growthThermalFactor ?? 1) * (1 - def.sensitivity + fertility * def.sensitivity);
+  const factor = (plant.growthThermalFactor ?? 1) * (ignoreFertility?1:1 - def.sensitivity + fertility * def.sensitivity);
   return clamp(base + lightTime * factor / (def.growDays * TICKS_PER_DAY));
 }
 export const choppable=(world:World,plant:Resource):boolean=>plant.kind==='tree'&&(!plant.species||plantGrowth(world,plant)>=FLORA_DEFINITIONS[plant.species].harvestMinGrowth);

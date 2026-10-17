@@ -1,3 +1,4 @@
+import {ancientCasketHumanOwnersForWorld256} from './ancient-casket-state-256.ts';
 /** Human owner capture shared by runtime and save guards.
  * Root owns final types, guards and caps. Terminal freezes at its real death tick.
  * Preconditions: owner/container/Thing shapes already validated on REAL World.
@@ -9,10 +10,10 @@ import type {PackedFurniture} from './furniture-rules.ts';
 import type {RelationshipPeople,RelationshipPerson} from './relationship-state.ts';
 import type {GroupDepartureBaseline,GroupLoss,GroupState} from './group-state.ts';
 
-export type HumanOwnerKind='map'|'world-lost'|'starting-pod'|'scout-away'|'commercial-away'|'group-away'|'group-loss'
-  |'visitor-departure'|'pod-departure'|'raid-departure'|'prison-departure';
+export type HumanOwnerKind='map'|'world-lost'|'ancient-casket'|'starting-pod'|'scout-away'|'commercial-away'|'group-away'|'group-loss'
+  |'visitor-departure'|'pod-departure'|'raid-departure'|'prison-departure'|'world-pawn';
 export type HumanSimulation='local'|'world'|'frozen'|'identity-only';
-export type HumanPlace={kind:'map'}|{kind:'starting-pod';podId:number}|{kind:'planet';tile:number}|{kind:'legacy-trip'}|{kind:'archive'};
+export type HumanPlace={kind:'map'}|{kind:'ancient-casket';casketId:number}|{kind:'starting-pod';podId:number}|{kind:'planet';tile:number}|{kind:'legacy-trip'}|{kind:'archive'}|{kind:'world-pawn'};
 export interface HumanOwnerSlot {
   readonly id:number;readonly name:string;readonly kind:HumanOwnerKind;
   readonly simulation:HumanSimulation;readonly place:HumanPlace;
@@ -26,6 +27,7 @@ export interface HumanOwnerSlot {
   readonly lastPersonalTick?:number; // Only when explicitly owned by the new live group.
 }
 export interface HumanOwnerCensus {
+  worldPawnOwned?:number;worldPawnLiving?:number;worldPawnDead?:number;
   localOwned:number;localLiving:number;localDead:number;
   containedOwned:number;containedLiving:number;containedPiles:number;
   legacyAwayOwned:number;legacyAwayLiving:number;
@@ -71,6 +73,7 @@ function indexHumanPossessions(items:readonly MaterialPile[]):ReadonlyMap<number
  * References and identity-only departures are excluded; no possessions are read. */
 export function everyHumanPawnOwner(realWorld:World,predicate:(pawn:Pawn,kind:HumanOwnerKind)=>boolean,explicit:ExplicitWorldHumanOwners={}):boolean {
   for(const pawn of realWorld.pawns)if(!predicate(pawn,'map'))return false;
+  for(const held of ancientCasketHumanOwnersForWorld256(realWorld))if(!predicate(held.pawn,'ancient-casket'))return false;
   if(realWorld.startingArrival&&realWorld.startingArrival.phase!=='opened')for(const pod of realWorld.startingArrival.pods)
     if(!predicate(pod.pawn,'starting-pod'))return false;
   const scout=realWorld.scout,commercial=realWorld.commercialTrip;
@@ -117,12 +120,14 @@ export function captureHumanOwners(realWorld:World,explicit:ExplicitWorldHumanOw
     if(kind==='group-away'&&dead)fail('group-owns-dead','Group living roster still owns a dead human; complete the terminal transfer before capture.');
     if(kind==='group-loss'&&(pawn.state!=='dead'||deathAt===undefined))
       fail('missing-terminal-death','New terminal requires the real dead Pawn and clinical death clock; do not invent either.');
-    const status=dead?'dead':kind==='map'?'present':kind==='starting-pod'||simulation==='world'?'away':'departed';
+    const status=dead?'dead':kind==='map'?'present':kind==='starting-pod'||kind==='ancient-casket'||simulation==='world'?'away':'departed';
     add({id:pawn.id,name:pawn.name,kind,simulation,place,validationTick:tick,pawn,status,
       ...deathAt!==undefined?{deathAt}:{},items:Object.freeze([...items]),packed:Object.freeze([...packed]),...extra});
   };
   const localPossessions=indexHumanPossessions(realWorld.piles);
   for(const pawn of realWorld.pawns)addPawn(pawn,'map','local',{kind:'map'},realWorld.tick,localPossessions.get(pawn.id)??[]);
+  const casketOwners=ancientCasketHumanOwnersForWorld256(realWorld);
+  for(const held of casketOwners)addPawn(held.pawn,held.kind,held.simulation,held.place,held.validationTick,held.items);
   const arrival=realWorld.startingArrival;
   if(arrival&&arrival.phase!=='opened')for(const pod of arrival.pods){
     if(arrival.personalTick!==0)fail('starting-personal-clock','Initial capsule requires its explicit personal tick zero.');
@@ -149,13 +154,13 @@ export function captureHumanOwners(realWorld:World,explicit:ExplicitWorldHumanOw
       baseline:Object.freeze({...b,cargo:Object.freeze({...b.cargo})})});
     const groupPossessions=indexHumanPossessions(group.items);
     for(const pawn of group.members)addPawn(pawn,'group-away','world',{kind:'planet',tile:group.tile},group.lastPersonalTick,
-      groupPossessions.get(pawn.id)??[],[],{groupId:group.id,lastPersonalTick:group.lastPersonalTick});
+      groupPossessions.get(pawn.id)??[],(group.packed??[]).filter(pack=>pack.owner.type==='inventory'&&pack.owner.pawnId===pawn.id),{groupId:group.id,lastPersonalTick:group.lastPersonalTick});
   }
   for(const loss of explicit.losses??realWorld.groupLosses??[]){
     clock(loss.tick,'group-loss clinical death');
     if(loss.pawn?.health?.death?.tick!==loss.tick)
       fail('terminal-clock','Terminal loss.tick must equal its real clinical death and validation clock.');
-    addPawn(loss.pawn,'group-loss','frozen',{kind:'planet',tile:loss.tile},loss.tick,loss.items,[],{groupId:loss.groupId,lossAt:loss.tick});
+    addPawn(loss.pawn,'group-loss','frozen',{kind:'planet',tile:loss.tile},loss.tick,loss.items,loss.packed??[],{groupId:loss.groupId,lossAt:loss.tick});
   }
   for(const departure of realWorld.visitors?.departed??[])addPawn(departure.pawn,'visitor-departure','frozen',{kind:'archive'},departure.tick,departure.items,departure.packed??[]);
   for(const departure of realWorld.podRescues?.departed??[])addPawn(departure.pawn,'pod-departure','frozen',{kind:'archive'},departure.tick,departure.items,departure.packed??[]);
@@ -167,12 +172,12 @@ export function captureHumanOwners(realWorld:World,explicit:ExplicitWorldHumanOw
   // complete guards retain the actual owning context for jobs and possessions.
   if(includeCampaignKnowledge)appendCampaignPeople(realWorld,people);
   const select=(predicate:(slot:HumanOwnerSlot)=>boolean)=>Object.freeze(slots.filter(predicate));
-  const local=select(s=>s.kind==='map'),away=select(s=>s.simulation==='world'),contained=select(s=>s.kind==='starting-pod'),terminals=select(s=>s.kind==='group-loss'),
-    frozen=select(s=>s.kind!=='group-loss'&&s.kind!=='starting-pod'&&(s.simulation==='frozen'||s.simulation==='identity-only'));
+  const local=select(s=>s.kind==='map'),away=select(s=>s.simulation==='world'),contained=select(s=>s.kind==='starting-pod'||s.kind==='ancient-casket'),terminals=select(s=>s.kind==='group-loss'),
+    frozen=select(s=>s.kind!=='group-loss'&&s.kind!=='starting-pod'&&s.kind!=='ancient-casket'&&(s.simulation==='frozen'||s.simulation==='identity-only'));
   const legacy=away.filter(s=>s.kind!=='group-away'),groupAway=away.filter(s=>s.kind==='group-away'),archives=frozen;
   const countLiving=(list:readonly HumanOwnerSlot[])=>list.filter(s=>s.status!=='dead').length;
   const census:HumanOwnerCensus={localOwned:local.length,localLiving:countLiving(local),localDead:local.length-countLiving(local),
-    containedOwned:contained.length,containedLiving:countLiving(contained),containedPiles:arrival&&arrival.phase!=='opened'?arrival.pods.reduce((n,p)=>n+p.items.length,0):0,
+    containedOwned:contained.length,containedLiving:countLiving(contained),containedPiles:(arrival&&arrival.phase!=='opened'?arrival.pods.reduce((n,p)=>n+p.items.length,0):0)+casketOwners.reduce((n,h)=>n+h.items.length,0),
     legacyAwayOwned:legacy.length,legacyAwayLiving:countLiving(legacy),groupAwayOwned:groupAway.length,groupAwayLiving:countLiving(groupAway),terminalOwned:terminals.length,
     frozenPawnArchives:archives.filter(s=>!!s.pawn).length,simpleDepartureIdentities:archives.filter(s=>!s.pawn).length,knownHumans:people.size,
     mapPiles:realWorld.piles.length,legacyTravelPiles:legacy.reduce((n,s)=>n+s.items.length,0),groupTravelPiles:group&&'members' in group?group.items.length:0,

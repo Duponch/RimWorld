@@ -11,7 +11,7 @@ import { initialFoodPolicies } from './food-policy.ts';
 import { emptySpoilage } from './food-preservation.ts';
 import type { ResourceKind, Terrain, World } from './types.ts';
 import { addGroundMaterial } from './materials.ts';
-import { MAX_MAP_SIZE, MIN_MAP_SIZE, validMapDimension } from './map-config.ts';
+import { MAX_MAP_SIZE, MIN_MAP_SIZE, validMapDimension,validMapDimensionForSchema } from './map-config.ts';
 import { temperateVegetation,type GenerationProfile } from './generation-profile.ts';
 
 /** Coordinate-based randomness: adding a presentation sample cannot shift later terrain rolls. */
@@ -152,7 +152,17 @@ export function emptyLandscape(seed: number, width: number, height: number): Wor
   if (![width, height].every(validMapDimension)) {
     throw new Error(`World dimensions must be integers between ${MIN_MAP_SIZE} and ${MAX_MAP_SIZE}.`);
   }
-  const registry=createDefaultApparelPolicyRegistry(),normalizedSeed=seed>>>0;
+  return emptyLandscapeState(seed,width,height);
+}
+/** A genuine new-map constructor at the chosen dimensions. It shares only
+ * neutral initialization with the historical factory: no old terrain is
+ * generated, no map is resized and no arrival clearing is performed. */
+export function emptyGeographicLandscape256(seed:number,width:number,height:number):World {
+  if(SCHEMA_VERSION<256||!Number.isInteger(seed)||seed< -2147483648||seed>0xffffffff||!validMapDimensionForSchema(width,256)||!validMapDimensionForSchema(height,256))throw Error('Invalid prospective geographic map dimensions or seed');
+  return emptyLandscapeState(seed,width,height,true);
+}
+function emptyLandscapeState(seed:number,width:number,height:number,coreStartingGear=false):World {
+  const registry=createDefaultApparelPolicyRegistry(true,true,true,true,coreStartingGear),normalizedSeed=seed>>>0;
   const world:World={ schemaVersion: SCHEMA_VERSION, deterioration:createDeteriorationState(normalizedSeed,0), breakdown:newBreakdownCalendar(normalizedSeed,0), apparelWear:createApparelWearCalendar(0,(normalizedSeed^0x0a77e1)>>>0),apparelPolicies:registry.apparelPolicies,nextApparelPolicyId:registry.nextApparelPolicyId,packed:[],deconstructed: { count: 0, lostWood: 0, fuelTicks: 0 }, foodPolicies: initialFoodPolicies(), nextFoodPolicyId: 5, restRules: 'adult', spoiled: emptySpoilage(), foodRules: 'adult', seed: normalizedSeed, rng: normalizedSeed || 0x9e3779b9,
     tick: 0, width, height, tiles: [], pawns: [], resources: [], structures: [], jobs: [],
     piles: [], stockpiles: [], growingZones: [], growingCursor: 0, environment: 'temperate-equinox-v1', stock: { wood: 0, food: 0 }, events: [], nextId: 1, logisticsCursor: 0 };
@@ -229,7 +239,7 @@ export function generateWorld(seed: number, width: number, height: number, profi
   // possessions and admissible arrival placement without rewriting this terrain.
   if(profile){finalizeInitialWorldRegistry(world);return world;}
   for (const [offset, name] of ['Ada', 'Noé', 'Mina'].entries()) {
-    world.pawns.push(startingPawn(world.nextId++,name,cx+offset-1,cz,offset,50+sample(world.seed,offset,0,101)*10,world.seed));
+    world.pawns.push(startingPawn(world.nextId++,name,cx+offset-1,cz,offset,50+sample(world.seed,offset,0,101)*10,world.seed,0,world.schemaVersion));
   }
   // Preserved tutorial targets, with a guaranteed adjacent walkable work cell.
   for (const [x, z, kind] of [[cx - 2, cz - 2, 'tree'], [cx + 2, cz - 2, 'berries'], [cx - 3, cz + 2, 'tree']] as const) {

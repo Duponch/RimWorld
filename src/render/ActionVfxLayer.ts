@@ -66,7 +66,7 @@ export function actionFxForPawn(
       if (distance <= 1.6) {const impactCore=pairHit(pawn,opponent);return { kind: ACTION_FX.brawl, x: opponent.x, z: opponent.z,...(impactCore===undefined?{}:{impactCore}) };}
     }
     const strike = pawn.melee?.strike;
-    const meleeTarget = strike && !strike.structure ? pawnsById.get(strike.targetId) : undefined;
+    const meleeTarget = strike && strike.targetId!==null && !strike.structure ? pawnsById.get(strike.targetId) : undefined;
     if (meleeTarget && meleeTarget.state !== 'dead' &&
       (meleeTarget.melee?.strike?.targetId !== pawn.id || pawn.id < meleeTarget.id) &&
       Math.hypot(meleeTarget.x - pawn.x, meleeTarget.z - pawn.z) <= 1.6){

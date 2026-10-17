@@ -1,3 +1,5 @@
+import {naturalTerrainWalkable256} from './natural-terrain-movement-256.ts';
+import {foggedCell256} from './exploration-state-256.ts';
 import {canDesignateBridge} from './bridge.ts';
 import {isPlantDesignationJob} from './tree-transfer.ts';
 import { validStorageItems } from './storage-filters.ts';
@@ -22,6 +24,7 @@ export type AreaQuery = { ok: false; reason: string; code: CommandResult['code']
   | { ok: true; bounds: AreaBounds; cells: number[]; selected: number; skipped: number; targetZoneId?:number };
 
 export function validStorageSettings(settings: StorageSettings,version:number=SCHEMA_VERSION): boolean {
+  if(settings.filters&&Object.hasOwn(settings.filters,'jade')&&(version<256||typeof settings.filters.jade!=='boolean'))return false;
   if(settings.filters&&Object.hasOwn(settings.filters,'plant')&&(version<235||typeof settings.filters.plant!=='boolean'))return false;
   if(settings.filters?.corpse!==undefined&&(version<79||typeof settings.filters.corpse!=='boolean'))return false;
   if(settings.filters&&Object.hasOwn(settings.filters,'chemfuel')&&(version<218||typeof settings.filters.chemfuel!=='boolean'))return false;
@@ -34,7 +37,7 @@ export function validStorageSettings(settings: StorageSettings,version:number=SC
 export function buildAreaIndex(world: World): AreaIndex {
   const flags = new Uint16Array(world.width * world.height);
   const index = (cell: Cell) => cell.z * world.width + cell.x;
-  for (let i = 0; i < flags.length; i++) if (world.tiles[i]!.terrain === 'water' || world.tiles[i]!.terrain === 'rock') flags[i] = BLOCKED | (world.tiles[i]!.terrain==='rock'?ROCK:0);
+  for (let i = 0; i < flags.length; i++) if (!naturalTerrainWalkable256(world.tiles[i]!.terrain)) flags[i] = BLOCKED | (world.tiles[i]!.terrain==='rock'?ROCK:0);
   for(let i=0;i<flags.length;i++)if(world.tiles[i]!.terrain==='rough-stone'||world.tiles[i]!.floor||world.schemaVersion>=219&&soilFertility(world.tiles[i]!.terrain)<.7)flags[i]!|=GROW_BLOCKED;
   for(const pile of world.piles)if(pile.owner.type==='ground'){if(pile.kind==='chunk'&&!pile.haulRequested)flags[index(pile.owner)]!|=CHUNK;if(pile.haulRequested)flags[index(pile.owner)]!|=HAUL;}
   // Core's CanOverlapZones exempts plants from the impassable-thing rule.
@@ -86,6 +89,12 @@ export function queryArea(world: World, command: AreaCommand, index?: AreaIndex)
   const cells: number[] = [],home=new Set(world.home);
   for (let z = bounds.minZ; z <= bounds.maxZ; z++) for (let x = bounds.minX; x <= bounds.maxX; x++) {
     const i = z * world.width + x, value = flags[i]!;
+    const hidden=foggedCell256(world,i);
+    if(hidden&&command.action!=='mine'&&!['cancel','remove-stockpile','remove-growing','remove-home','remove-roof','ignore-roof','remove-snow-clear'].includes(command.action))continue;
+    if(hidden&&command.action==='mine'){
+      if(!world.jobs.some(j=>j.kind==='mine'&&j.x===x&&j.z===z))cells.push(i);
+      continue;
+    }
     const eligible = command.action==='build-bridge'||command.action==='remove-bridge'?canDesignateBridge(world,{type:'designate',kind:command.action,x,z}).ok:command.action==='snow-clear'?!(world.snowClearArea??[]).includes(i)&&!(value&BLOCKED):command.action==='remove-snow-clear'?(world.snowClearArea??[]).includes(i):command.action==='lay-floor'||command.action==='remove-floor'?canDesignateFloor(world,{type:'designate',kind:command.action,x,z,...command.action==='lay-floor'?{floor:command.floor}:{}}).ok:command.action==='home'?!home.has(i):command.action==='remove-home'?home.has(i):isRoofArea(command.action) ? true : command.action === 'mine' ? (value & ROCK) && !(value & JOB)
       : command.action === 'haul-chunks' ? value & CHUNK
       : command.action === 'deconstruct' ? (value & DECONSTRUCTIBLE) && !(value & JOB)

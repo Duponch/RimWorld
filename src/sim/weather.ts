@@ -1,3 +1,4 @@
+import {biomeWeatherCommonality256,WEATHER_ORDER_256} from './biome-weather-256.ts';
 import { captureStandability } from './furniture-travel.ts';
 import { isRoofed } from './roof-rules.ts';
 import { preventsRain } from './flashstorm.ts';
@@ -34,10 +35,12 @@ export function perceivedWeather(w:World):WeatherKind {
 }
 export function weatherWeights(w:World,temperature:number,rainfall:number):Array<{kind:WeatherKind;weight:number}> {
   const s=w.weather,dry=preventsRain(w);
-  return WEATHER_KINDS.map(kind=>{const d=WEATHER[kind];
+  const site=worldWeatherSite256(w);
+  return (site?WEATHER_ORDER_256:WEATHER_KINDS).map(kind=>{const d=WEATHER[kind];
     const allowed=(kind==='clear'||kind!==s?.current)&&temperature>=d.minimum&&temperature<=d.maximum&&(!d.storm||w.tick>=48000)
       &&(!dry||d.rain<=.1);
-    return {kind,weight:allowed?d.weight*rainfallWeight(kind,rainfall)*(s?.largeFire&&d.rain>.1?15:1):0};
+    const base=site?biomeWeatherCommonality256(site.biome,kind,rainfall):d.weight*rainfallWeight(kind,rainfall);
+    return {kind,weight:allowed?(site?Math.fround(base*(s?.largeFire&&d.rain>.1?15:1)):base*(s?.largeFire&&d.rain>.1?15:1)):0};
   });
 }
 function nextWeather(w:World,inputs:WeatherInputs):void {
@@ -79,3 +82,5 @@ export function advanceWeather(w:World,inputs:WeatherInputs):void {
     s.lastCoreTick=core;
   }
 }
+
+function worldWeatherSite256(w:World){return w.schemaVersion>=256&&w.site?.revision===3?w.site:undefined;}

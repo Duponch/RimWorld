@@ -1,3 +1,4 @@
+import {legacyCampaignMap} from './helpers/legacy-fixture-guards.ts';
 import {expect,test} from 'vitest';
 import {preparedCassandraExpedition,incidentCommand} from './scenarios/secondary-incidents-v379.ts';
 import {flushSecondaryContext} from '../src/sim/secondary-site-context.ts';
@@ -23,7 +24,7 @@ function packet(w:World){const result=structuredClone(new SnapshotEncoder().enco
 
 test('V398 remote knowledge shares active predicates and transports only counted real identities without save state',()=>{
  const {w,local,a,p}=fixture();expect(startAnimalManhunter(local,a)).toBe(true);wound(local,p);flushSecondaryContext(w);
- const before=serializeWorld(w),shown=campaignPresentation(w),rows=shown.campaignMap!.incidents!;
+ const before=serializeWorld(w),shown=campaignPresentation(w),rows=legacyCampaignMap(shown).incidents!;
  expect(rows.find(r=>r.kind==='manhunter')).toEqual({site:'secondary',kind:'manhunter',count:1,actorId:a.id});
  expect(rows.find(r=>r.kind==='downed')).toEqual({site:'secondary',kind:'downed',count:1,actorId:p.id});
  expect(shown.wildlife?.animals.some(x=>x.id===a.id)).toBe(false);expect(shown.secondarySite).toBeUndefined();expect(serializeWorld(w)).toBe(before);
@@ -38,13 +39,13 @@ test('V398 bounded transport rejects aliases, false human/animal identities, ext
  const {w,local,a,p}=fixture();expect(startAnimalManhunter(local,a)).toBe(true);wound(local,p);flushSecondaryContext(w);const source=packet(w);
  const bads:Array<(v:World)=>void>=[
   v=>{(v as unknown as {wildlife:unknown}).wildlife=null;},
-  v=>{v.campaignMap!.incidents!.find(r=>r.kind==='manhunter')!.actorId=p.id;},
-  v=>{v.campaignMap!.incidents!.find(r=>r.kind==='downed')!.actorId=a.id;},
-  v=>{v.campaignMap!.incidents!.find(r=>r.kind==='manhunter')!.actorId=v.pawns[0]!.id;},
-  v=>{v.campaignMap!.incidents!.find(r=>r.kind==='manhunter')!.count=257;},
+  v=>{legacyCampaignMap(v).incidents!.find(r=>r.kind==='manhunter')!.actorId=p.id;},
+  v=>{legacyCampaignMap(v).incidents!.find(r=>r.kind==='downed')!.actorId=a.id;},
+  v=>{legacyCampaignMap(v).incidents!.find(r=>r.kind==='manhunter')!.actorId=v.pawns[0]!.id;},
+  v=>{legacyCampaignMap(v).incidents!.find(r=>r.kind==='manhunter')!.count=257;},
   v=>{v.wildlife!.animals=[null] as never;},
-  v=>{v.campaignMap!.incidents!.push({...v.campaignMap!.incidents![0]!});},
-  v=>{Object.assign(v.campaignMap!.incidents![0]!,{tiles:[]});},
+  v=>{legacyCampaignMap(v).incidents!.push({...legacyCampaignMap(v).incidents![0]!});},
+  v=>{Object.assign(legacyCampaignMap(v).incidents![0]!,{tiles:[]});},
   v=>{(v as {schemaVersion:number}).schemaVersion=251;},
  ];
  for(const corrupt of bads){const bad=structuredClone(source);corrupt(bad.world);expect(validCampaignPresentation(bad.world)).toBe(false);expect(new SnapshotDecoder().adopt(bad).status).toBe('resync');}

@@ -1,3 +1,6 @@
+import {planAnimalDeathExplosion256,isExplosiveAnimal256} from './animal-death-explosion-v256.ts';
+import {animalExecutionPart256} from './animal-execution-v256.ts';
+import {createAnimalMedicalRecord256} from './animal-clinical-age-v256.ts';
 import { allowedAreaAllows } from './allowed-area-state.ts';
 import { isColonist } from './affiliation.ts';
 import { violentWorkRefusal } from './colonist-backgrounds.ts';
@@ -9,7 +12,7 @@ import { addFilth } from './filth.ts';
 import type { AnimalHandlingTask, DomesticCommand } from './domestic-state.ts';
 import { medicalWorkRefusal,pawnBody } from './health-rules.ts';
 import { healthRandom } from './health.ts';
-import { addResolvedInjury,createMedicalRecord,remainingPartHealth } from './injury-state.ts';
+import { addResolvedInjury,remainingPartHealth } from './injury-state.ts';
 import { interruptWork } from './interrupted-cargo.ts';
 import { meleeContact } from './melee-space.ts';
 import type { NeedContext } from './needs.ts';
@@ -38,7 +41,7 @@ export function slaughterHandlerAvailable(pawn:Pawn):boolean {
 export function slaughterTargetAvailable(world:World,animal:WildAnimal,exceptPawn?:Pawn,targets?:ReadonlySet<number>):boolean {
   return (!exceptPawn||allowedAreaAllows(world,exceptPawn,animal))&&slaughterIntent(world,animal,world.schemaVersion,targets)&&animal.state!=='dead'&&!animal.health?.death
     &&!animal.manhunter&&!animal.burning&&!animal.flee&&!animal.threat&&!animal.retaliation&&!animal.strike&&!animal.stun
-    &&!animal.health?.foodPoisoning?.vomit
+    &&!(animal.health?.foodPoisoning?.vomit||animal.health?.cryptosleepSickness?.vomit||animal.health?.toxicBuildup?.vomit||animal.health?.toxicBuildup?.vomitRequestedAt!==undefined)
     &&!animalClaimed(world,animal.id,exceptPawn?.id);
 }
 export function slaughterHolding(world:World,pawn:Pawn,animal:WildAnimal):boolean {
@@ -95,12 +98,13 @@ export function processSlaughter(world:World,pawn:Pawn,task:SlaughterTask,contex
   }
   task.phase='interact';pawn.path=[];pawn.state='working';
   if(++task.progress<SLAUGHTER_WORK_TICKS)return;
-  const record=animal.health??{...createMedicalRecord(world.tick),body:animal.species};
-  const remaining=remainingPartHealth(record,'neck'),damage=Math.min(1000,Math.max(0,Math.floor(remaining)-1000));
-  const random={rng:world.rng};
+  const record=animal.health?(world.schemaVersion>=256&&isExplosiveAnimal256(animal.species)?structuredClone(animal.health):animal.health):createAnimalMedicalRecord256(world,animal);
+  const random={rng:world.rng},part=animalExecutionPart256(record,()=>healthRandom(random));
+  const remaining=remainingPartHealth(record,part),damage=Math.min(1000,Math.max(0,Math.floor(remaining)-1000));
   const blood=Math.max(1,roundYield(animalBodySize(animal)*8,()=>healthRandom(random)));
-  if(damage>0)addResolvedInjury(record,'neck','execution-cut',damage,()=>healthRandom(random));
+  if(damage>0)addResolvedInjury(record,part,'execution-cut',damage,()=>healthRandom(random));
   if(!record.death)record.death={tick:world.tick,cause:'execution'};
+  const death=planAnimalDeathExplosion256(world,animal,record);death.commit();
   animal.health=record;world.rng=random.rng;delete animal.domestic!.slaughter;
   reconcileAnimalHealth(world,animal);
   // Local filth uses layers at the contact cell and spills only to its eight

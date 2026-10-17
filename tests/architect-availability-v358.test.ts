@@ -43,7 +43,7 @@ function freeze(value:unknown,seen=new WeakSet<object>()):void {
 }
 
 test('V358 complete catalogue agrees with physical command research gates on admissible sites',()=>{
-  expect(toolDefinitions).toHaveLength(101);
+  expect(toolDefinitions).toHaveLength(102);
   const locked=camp(),known=camp(true),hidden:Tool[]=[];
   for(const tool of constructionTools){
     const initial=engineAvailable(locked,tool.id),completed=engineAvailable(known,tool.id);
@@ -91,7 +91,7 @@ test('V358 historical format boundaries agree with command and canonical-materia
   const world=camp(true);
   // Before and at every current construction-format boundary; these worlds
   // test pure admission, not adoption of impossible future records in a save.
-  const epochs=[1,39,40,41,42,72,73,74,75,83,84,85,86,87,88,89,90,100,101,103,104,118,119,121,122,123,142,143,176,177,186,187,188,189,190,192,193,202,203,205,206,210,211,214,215,216,217,218,220,221,222,223,224,225,226,228,229,231,232,236,246,247,248,249];
+  const epochs=[1,39,40,41,42,72,73,74,75,83,84,85,86,87,88,89,90,100,101,103,104,118,119,121,122,123,142,143,176,177,186,187,188,189,190,192,193,202,203,205,206,210,211,214,215,216,217,218,220,221,222,223,224,225,226,228,229,231,232,236,246,247,248,249,255,256];
   for(const schemaVersion of epochs){
     Object.assign(world,{schemaVersion});
     for(const tool of constructionTools)

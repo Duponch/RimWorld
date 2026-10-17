@@ -1,15 +1,16 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 255 as const;
+export const SCHEMA_VERSION = 256 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
-export type Terrain = 'water-shallow' | 'marsh' | 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone' | 'rich-soil' | 'gravel';
+export type Terrain = import('./local-terrain-definitions-256.ts').NaturalTerrainId256 | 'packed-dirt' | 'water-shallow' | 'marsh' | 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone' | 'rich-soil' | 'gravel';
 export type ResourceKind = 'wild-plant' | 'potato' | 'corn' | 'tree' | 'berries' | 'rock' | 'rice' | 'cotton' | 'healroot' | 'haygrass';
-export type MaterialKind = 'plant' | 'chemfuel' | 'neutroamine' | 'mech-corpse' | 'silver' | 'corpse' | 'wood' | 'food' | 'chunk' | 'steel' | 'gold' | 'uranium' | 'plasteel' | 'advanced-component' | 'blocks' | 'component' | 'medicine' | 'weapon' | 'apparel' | 'textile' | 'unfinished';
+export type MaterialKind = 'jade' | 'plant' | 'chemfuel' | 'neutroamine' | 'mech-corpse' | 'silver' | 'corpse' | 'wood' | 'food' | 'chunk' | 'steel' | 'gold' | 'uranium' | 'plasteel' | 'advanced-component' | 'blocks' | 'component' | 'medicine' | 'weapon' | 'apparel' | 'textile' | 'unfinished';
 export type BedSlot = 0 | 1;
-export type StructureKind = 'torch-lamp' | 'vent' | 'shelf' | 'small-shelf' | 'spike-trap' | 'electric-crematorium' | 'double-bed' | 'electric-smelter' | 'sleeping-spot' | 'animal-sleeping-spot' | 'biofuel-refinery' | 'chemfuel-generator' | 'nutrient-paste-dispenser' | 'hopper' | 'orbital-beacon' | 'comms-console' | 'deep-drill' | 'ground-scanner' | 'vitals-monitor' | 'drug-lab' | 'hydroponics-basin' | 'mini-turret' | 'tube-television' | 'sandbags' | 'art-bench' | 'small-sculpture' | 'large-sculpture' | 'machining-table' | 'fabrication-bench' | 'hi-tech-research-bench' | 'multi-analyzer' | 'grave' | 'heater' | 'wind-turbine' | 'power-conduit' | 'power-switch' | 'battery' | 'solar-generator' | 'fueled-stove' | 'electric-stove' | 'butcher-table' | 'butcher-spot' | 'cooler' | 'research-bench' | 'tailor-bench' | 'electric-tailor-bench' | 'crafting-spot' | 'wood-generator' | 'sun-lamp' | 'standing-lamp' | 'passive-cooler' | 'door' | 'autodoor' | 'wall' | 'fence' | 'fence-gate' | 'pen-marker' | 'bed' | 'hospital-bed' | 'table' | 'table-square' | 'table-long' | 'stool' | 'dining-chair' | 'armchair' | 'end-table' | 'dresser' | 'flower-pot' | 'campfire' | 'horseshoes' | 'chess-table' | 'stonecutter';
-export type JobKind = 'build-bridge' | 'remove-bridge' | 'extract-tree' | 'replant-tree' | 'lay-floor' | 'remove-floor' | 'flick' | 'repair' | 'fix-breakdown' | 'build-roof' | 'remove-roof' | 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | StructureKind;
+export type LocalRoadProp256 = import('./local-road-data-256.ts').LocalRoadProp256;
+export type StructureKind = import('./cave-hive-state-256.ts').CaveHiveKind256 | 'ship-chunk' | 'ancient-cryptosleep-casket' | import('./ancient-monument-props-256.ts').AncientMonumentKind256 | LocalRoadProp256 | 'torch-lamp' | 'vent' | 'shelf' | 'small-shelf' | 'spike-trap' | 'electric-crematorium' | 'double-bed' | 'electric-smelter' | 'sleeping-spot' | 'animal-sleeping-spot' | 'biofuel-refinery' | 'chemfuel-generator' | 'nutrient-paste-dispenser' | 'hopper' | 'orbital-beacon' | 'comms-console' | 'deep-drill' | 'ground-scanner' | 'vitals-monitor' | 'drug-lab' | 'hydroponics-basin' | 'mini-turret' | 'tube-television' | 'sandbags' | 'art-bench' | 'small-sculpture' | 'large-sculpture' | 'machining-table' | 'fabrication-bench' | 'hi-tech-research-bench' | 'multi-analyzer' | 'grave' | 'heater' | 'wind-turbine' | 'power-conduit' | 'power-switch' | 'battery' | 'solar-generator' | 'fueled-stove' | 'electric-stove' | 'butcher-table' | 'butcher-spot' | 'cooler' | 'research-bench' | 'tailor-bench' | 'electric-tailor-bench' | 'crafting-spot' | 'wood-generator' | 'sun-lamp' | 'standing-lamp' | 'passive-cooler' | 'door' | 'autodoor' | 'wall' | 'fence' | 'fence-gate' | 'pen-marker' | 'bedroll' | 'bed' | 'hospital-bed' | 'table' | 'table-square' | 'table-long' | 'stool' | 'dining-chair' | 'armchair' | 'end-table' | 'dresser' | 'flower-pot' | 'campfire' | 'horseshoes' | 'chess-table' | 'stonecutter';
+export type JobKind = 'build-bridge' | 'remove-bridge' | 'extract-tree' | 'replant-tree' | 'lay-floor' | 'remove-floor' | 'flick' | 'repair' | 'fix-breakdown' | 'build-roof' | 'remove-roof' | 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | Exclude<StructureKind,LocalRoadProp256|'ship-chunk'|'ancient-cryptosleep-casket'|import('./cave-hive-state-256.ts').CaveHiveKind256>;
 export type WorkType = 'handle' | 'art' | 'clean' | 'firefight' | 'warden' | 'basic' | 'hunt' | 'research' | 'patient' | 'bedrest' | 'doctor' | 'mine' | 'gather' | 'build' | 'haul' | 'grow' | 'cook' | 'craft';
 export type Orientation = 0 | 1 | 2 | 3;
 export type Footprint = 'standard' | 'legacy-single';
@@ -23,13 +24,15 @@ export type AllowedAreaCommand =
   | {type:'allowed-area-paint';areaId:number;enabled:boolean;from:Cell;to:Cell}
   | {type:'allowed-area-delete';areaId:number}
   | {type:'assign-allowed-area';pawnId:number;areaId:number|null};
-export interface Tile { /** Finished foundation only; the original wet terrain below remains literal. */ bridge?:true; snowDepth?:number; floor?:import('./flooring.ts').FloorKind; ore?: 'steel' | 'machinery' | 'gold' | 'silver' | 'uranium' | 'plasteel'; miningDamage?: number; /** Prospective yield weighted by the fraction of ore HP actually mined. */ miningYield?: number; terrain: Terrain; stone?: import('./geology.ts').StoneKind }
+export interface Tile { mineable?:import('./local-mineable-owner-256.ts').LocalMineableOwner256; fogged?:true; collapsedRock?:import('./collapsed-rocks-256.ts').CollapsedRock256; /** Finished foundation only; the original wet terrain below remains literal. */ bridge?:true; snowDepth?:number; floor?:import('./flooring.ts').FloorKind; ore?: 'jade' | 'steel' | 'machinery' | 'gold' | 'silver' | 'uranium' | 'plasteel'; miningDamage?: number; /** Prospective yield weighted by the fraction of ore HP actually mined. */ miningYield?: number; terrain: Terrain; stone?: import('./geology.ts').StoneKind }
 export interface Resource extends Cell { blight?:import('./plant-blight.ts').CropBlightState; species?:import('./biome-flora.ts').PlantSpecies; plantLife?:import('./plant-life.ts').PlantLife; damage?:number; id: number; kind: ResourceKind; amount: number; growth?: number; growthTick?: number; growthThermalFactor?:number; growthLight?:'dark'|'artificial-full'; stone?: import('./geology.ts').StoneKind }
-export interface Structure extends Cell { vent?:import('./vent.ts').VentState; shelf?:import('./shelf-storage.ts').ShelfStorageState; spikeTrap?:import('./spike-trap-state.ts').SpikeTrapState; deepDrill?:import('./deep-drilling-rules.ts').DeepDrillState; deepScanner?:import('./deep-drilling-rules.ts').DeepScannerState; emp?:{sinceCore:number;untilCore:number}; turret?:import('./mini-turret-state.ts').MiniTurretState; breakdown?:import('./breakdowns.ts').BreakdownState; gatherSpot?:boolean; pen?:{accepted:import('./animal-species.ts').AnimalSpeciesId[]}; art?:{authorId:number;createdAt:number}; flower?:import('./flower-pot.ts').FlowerPotState; quality?:import('./equipment-rules.ts').WeaponQuality; grave?:import('./burial.ts').GraveState; heater?:import('./heater.ts').HeaterState; wind?:import('./wind.ts').WindTurbineState; prisoner?:true; battery?:import('./power-battery.ts').BatteryState; cooler?:import('./cooler.ts').CoolerState; damage?:number; medical?:true; power?:import('./power-rules.ts').PowerState; door?:import('./door-rules.ts').DoorState; material?:import('./construction-materials.ts').ConstructionMaterial; bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
+export interface Structure extends Cell { caveHive?:import('./cave-hive-state-256.ts').CaveHiveComponents256; glowPod?:import('./cave-hive-state-256.ts').GlowPodComponents256; casketWick?:import('./ancient-casket-explosive-state-256.ts').AncientCasketWick256; casket?:import('./ancient-casket-state-256.ts').AncientCasketState256; factionId?:number|null; vent?:import('./vent.ts').VentState; shelf?:import('./shelf-storage.ts').ShelfStorageState; spikeTrap?:import('./spike-trap-state.ts').SpikeTrapState; deepDrill?:import('./deep-drilling-rules.ts').DeepDrillState; deepScanner?:import('./deep-drilling-rules.ts').DeepScannerState; emp?:{sinceCore:number;untilCore:number}; turret?:import('./mini-turret-state.ts').MiniTurretState; breakdown?:import('./breakdowns.ts').BreakdownState; gatherSpot?:boolean; pen?:{accepted:import('./animal-species.ts').AnimalSpeciesId[]}; art?:{authorId:number;createdAt:number}; flower?:import('./flower-pot.ts').FlowerPotState; quality?:import('./equipment-rules.ts').WeaponQuality; grave?:import('./burial.ts').GraveState; heater?:import('./heater.ts').HeaterState; wind?:import('./wind.ts').WindTurbineState; prisoner?:true; battery?:import('./power-battery.ts').BatteryState; cooler?:import('./cooler.ts').CoolerState; damage?:number; medical?:true; power?:import('./power-rules.ts').PowerState; door?:import('./door-rules.ts').DoorState; material?:import('./construction-materials.ts').ConstructionMaterial; bills?: import('./cooking-types.ts').CookingBill[]; fuel?: import('./fuel.ts').FuelState; id: number; kind: StructureKind; orientation: Orientation; footprint: Footprint }
 export interface Stock { wood: number; food: number }
 export type MaterialOwner = {type:'starting-pod';podId:number} | {type:'orbital-ship';shipId:number} | {type:'orbital-cargo';deliveryId:number} | {type:'grave';graveId:number} | ({ type: 'ground' } & Cell) | { type: 'pawn'; pawnId: number } | {type:'inventory';pawnId:number} | {type:'equipment';pawnId:number} | {type:'apparel';pawnId:number} | { type: 'job'; jobId: number };
-export interface MaterialPile { innerResource?:Resource; plantPack?:import('./tree-transfer-state.ts').TreePack; mechCorpse?:import('./mechanoid-corpse.ts').MechanoidCorpseState; componentWork?:import('./component-work.ts').ComponentWork; flakWork?:import('./flak-work.ts').FlakWork; artWork?:import('./art-work.ts').ArtWork; gunWork?:import('./gun-work.ts').GunWork; humanCorpse?:import('./human-corpses.ts').HumanCorpseState; foodPoison?:import('./food-poisoning.ts').FoodContamination; damage?:number; corpse?:import('./corpses.ts').CorpseState; unfinished?:import('./unfinished.ts').UnfinishedState; apparel?:import('./apparel-rules.ts').ApparelState; weapon?:import('./equipment-rules.ts').WeaponState; haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
-export type StorageFilters = { plant?:boolean; chemfuel?:boolean; neutroamine?:boolean; 'mech-corpse'?:boolean; silver?:boolean; corpse?:boolean; wood:boolean; food:boolean; unfinished?:boolean; textile?:boolean; chunk?:boolean; steel?:boolean; gold?:boolean; uranium?:boolean; plasteel?:boolean; component?:boolean; 'advanced-component'?:boolean; medicine?:boolean; weapon?:boolean; apparel?:boolean; blocks?:boolean; furniture?:boolean };
+export interface MaterialPile { /** Actual CompForbiddable on prospective ordinary Things; never migration enrichment. */ forbidden?:true; egg?:import('./animal-egg-state-v256.ts').FertilizedEggState256;
+  /** Permission only; wild egg ownership and incubation are separate. */
+  eggForbidden?:true; innerResource?:Resource; plantPack?:import('./tree-transfer-state.ts').TreePack; mechCorpse?:import('./mechanoid-corpse.ts').MechanoidCorpseState; componentWork?:import('./component-work.ts').ComponentWork; flakWork?:import('./flak-work.ts').FlakWork; artWork?:import('./art-work.ts').ArtWork; gunWork?:import('./gun-work.ts').GunWork; humanCorpse?:import('./human-corpses.ts').HumanCorpseState; foodPoison?:import('./food-poisoning.ts').FoodContamination; damage?:number; corpse?:import('./corpses.ts').CorpseState; unfinished?:import('./unfinished.ts').UnfinishedState; apparel?:import('./apparel-rules.ts').ApparelState; weapon?:import('./equipment-rules.ts').WeaponState; haulRequested?: true; id: number; kind: MaterialKind; item: ItemId; quantity: number; owner: MaterialOwner; rot?: import('./food-preservation.ts').RotState }
+export type StorageFilters = { jade?:boolean; plant?:boolean; chemfuel?:boolean; neutroamine?:boolean; 'mech-corpse'?:boolean; silver?:boolean; corpse?:boolean; wood:boolean; food:boolean; unfinished?:boolean; textile?:boolean; chunk?:boolean; steel?:boolean; gold?:boolean; uranium?:boolean; plasteel?:boolean; component?:boolean; 'advanced-component'?:boolean; medicine?:boolean; weapon?:boolean; apparel?:boolean; blocks?:boolean; furniture?:boolean };
 export interface StockpileCell extends Cell, StorageConditions { /** Logical zone identity; physical cell IDs remain haul destinations. */ zoneId?:number; items?:Partial<Record<ItemId,boolean>>; id: number; filters: StorageFilters; priority: number; capacity: number }
 export interface GrowingZone { basinId?:number; id: number; cells: number[]; plant: 'rice' | 'cotton' | 'potato' | 'corn' | 'healroot' | 'haygrass'; allowSow: boolean; allowCut: boolean }
 export type HaulDestination = {type:'hopper';structureId:number} | { type:'turret';structureId:number;forced?:true } | { type: 'fuel'; structureId: number; forced?: boolean; forCooking?: boolean } | { type: 'stockpile'; stockpileId: number; forHunting?: true } | { type: 'job'; jobId: number; forConstruction?: boolean } | ({ type: 'aside'; growingZoneId?: number; sowCell?: Cell; constructionId?: number; forConstruction?: boolean } & Cell);
@@ -50,7 +53,7 @@ export interface Memory { kind: 'ate-without-table' | 'ate-raw-food' | 'ate-fine
 export type NeedTask =
   | { kind: 'eat'; forced?:true; phase: 'pickup' | 'collect' | 'choose-spot' | 'travel' | 'ingest'; sourcePileId: number | null; paste?:import('./nutrient-paste.ts').PasteRequest; carryPileId: number | null; quantity: number; progress: number; workRemainder?:number; dining: DiningPlace | null }
   | { kind: 'sleep'; roomRest?:import('./room-experience.ts').RoomRest; medical?:'patient'|'bedrest'; phase: 'travel' | 'sleep'; bedId: number | null; target: Cell };
-export interface Job extends Cell {
+export interface Job extends Cell { frameDamage?:number;
   tree?:import('./tree-transfer-state.ts').TreeTask; plantTarget?:{resourceId:number};
   fixBreakdown?:import('./breakdowns.ts').BreakdownTarget;
   floor?:import('./flooring.ts').FloorKind;
@@ -78,7 +81,11 @@ export interface Job extends Cell {
   progress: number;
   escrow: Stock;
 }
-export interface Pawn extends Cell {
+export interface Pawn extends Cell { nativeHuman?:import('./native-human-identity-256.ts').NativeHumanIdentity256; hiveDefeats?:number[];
+  /** Initial actual Camp Spawn facing; absent on historical actors. */
+  arrivalRotation?:Orientation;
+  /** One true global bed owner; local bedId/bedSlot remain map-local aliases. */
+  mapBed?:import('./actor-map-bed-256.ts').ActorMapBed256;
   allowedAreaId?:number;
   allowedAreaReturn?:AllowedAreaReturn;
   animalRescue?:import('./animal-rest-state.ts').AnimalRescueTask;
@@ -93,6 +100,7 @@ export interface Pawn extends Cell {
   body?:import('./human-corpses.ts').HumanBodyState;
   burial?:import('./burial.ts').BurialTask;
   cleaning?:import('./cleaning.ts').CleaningTask;
+  openCasket?:import('./ancient-casket-state-256.ts').AncientCasketOpening256;
   filthFeet?:import('./filth.ts').FilthFeet;
   visitor?:import('./visitor-state.ts').VisitorState;
   trade?:import('./trade-state.ts').TradeTask;
@@ -160,6 +168,8 @@ export interface Pawn extends Cell {
   mood: number;
   comfort: number;
   beauty: number;
+  mapAreas?:import('./pawn-map-areas.ts').PawnMapAreas;
+  caravanCarrySick?:boolean;
   apparelPolicyId?:number;
   apparelAutomation?:boolean;
   nextApparelCheckAt?:number;
@@ -188,6 +198,11 @@ export interface Pawn extends Cell {
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  ancientShrineWarnings?:import('./ancient-shrine-warning-state-256.ts').AncientShrineWarnings256;
+  exploration?:import('./exploration-state-256.ts').ExplorationState256;
+  geysers?:import('./local-geyser-state-256.ts').LocalGeysers256;
+  riverWater?:import('./river-water-owner-256.ts').StoredRiverWater256;
+  roadInfo?:import('./local-road-info-256.ts').LocalRoadInfo256;
   worldMaps?:import('./world-map-state.ts').WorldMapRegistry;
   worldGroups?:import('./world-map-state.ts').WorldGroupRegistry;
   /** Prospective local exposure stream, independent of campaign RNG. */
@@ -207,6 +222,8 @@ export interface World {
   orbital?:import('./orbital-state.ts').OrbitalState;
   deepResources?:import('./deep-resources.ts').DeepResourceState;
   planet?:import('./planet-state.ts').PlanetState;
+  worldFactions?:import('./world-faction-state.ts').WorldFactionRegistry256;
+  worldPawns?:import('./world-pawn-state-256.ts').WorldPawnsState256;
   group?:import('./group-state.ts').GroupState;
   groupLosses?:import('./group-state.ts').GroupLoss[];
   relationships?:import('./relationship-state.ts').RelationshipState;
@@ -236,7 +253,7 @@ export interface World {
   startingArrival?:import('./starting-arrival-state.ts').StartingArrivalState;
   hunting?:{targets:number[];completed:number};
   butchery?:{completed:number;meat:number;leather:number};
-  flora?:import('./wild-flora.ts').WildFloraState;
+  flora?:import('./wild-flora.ts').WildFloraState|import('./wild-plant-runtime-256.ts').WildFloraState256;
   wildlife?:import('./wildlife-state.ts').WildlifeState;
   heatwaves?:import('./heatwave.ts').HeatwaveCalendar;
   research?:import('./research.ts').ResearchState;
@@ -291,7 +308,7 @@ export type AreaAction = 'build-bridge' | 'remove-bridge' | 'snow-clear' | 'remo
 export interface StorageSettings extends StorageConditions { items?:Partial<Record<ItemId,boolean>>; filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell; targetZoneId?:number; floor?: import('./flooring.ts').FloorKind }
 export interface BuildLineCommand { type: 'build-line'; kind: import('./construction-line.ts').LineBuildKind; from: Cell; to: Cell; material?: import('./construction-materials.ts').ConstructionMaterial }
-export type Command = import('./world-map-state.ts').WorldMapCommand | import('./secondary-site-state.ts').SecondarySiteCommand | import('./tree-transfer-state.ts').TreeCommand | import('./orbital-state.ts').OrbitalCommand | import('./group-state.ts').GroupCommand | {type:'enable-mech-raids'} | import('./commercial-state.ts').CommercialCommand | import('./surgery-state.ts').SurgeryCommand | import('./quest-state.ts').QuestCommand | import('./caravan-state.ts').ScoutCommand | import('./domestic-state.ts').DomesticCommand | import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
+export type Command = import('./material-permission-256.ts').MaterialPermissionCommand256 | import('./ancient-casket-state-256.ts').AncientCasketCommand256 | import('./local-road-prop-ownership-256.ts').ClaimRoadPropCommand256 | import('./animal-egg-permission-v256.ts').EggPermissionCommand256 | import('./world-map-state.ts').WorldMapCommand | import('./secondary-site-state.ts').SecondarySiteCommand | import('./tree-transfer-state.ts').TreeCommand | import('./orbital-state.ts').OrbitalCommand | import('./group-state.ts').GroupCommand | {type:'enable-mech-raids'} | import('./commercial-state.ts').CommercialCommand | import('./surgery-state.ts').SurgeryCommand | import('./quest-state.ts').QuestCommand | import('./caravan-state.ts').ScoutCommand | import('./domestic-state.ts').DomesticCommand | import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
   | import('./auto-slaughter-state.ts').AutoSlaughterCommand
   | {type:'spike-trap-auto-rebuild';structureId:number;on:boolean}
   | {type:'shelf-policy';structureId:number;settings:StorageSettings}

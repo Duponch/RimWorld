@@ -1,9 +1,12 @@
+import {PEN_ANIMALS_256} from './animal-domestic-v256.ts';
+import {isAnimalSpeciesInVersion} from './animal-species.ts';
 import type { AnimalSpeciesId } from './animal-species.ts';
 import { footprintCells } from './definitions.ts';
 import { isPassageDoor } from './door-rules.ts';
 import type { Cell, Structure, World } from './types.ts';
 
-export const PEN_ANIMALS:readonly AnimalSpeciesId[] = Object.freeze(['deer','gazelle','muffalo','dromedary']);
+export const PEN_ANIMALS:readonly AnimalSpeciesId[] = Object.freeze(['deer','gazelle','muffalo','dromedary',...PEN_ANIMALS_256]);
+export const penAnimalsForVersion=(version:number):readonly AnimalSpeciesId[]=>PEN_ANIMALS.filter(id=>isAnimalSpeciesInVersion(id,version));
 
 /** A marker names a connected area of real map cells, never a food counter. */
 export interface PenRegion {

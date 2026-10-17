@@ -1,3 +1,4 @@
+import {knownPosition256,knownBuilding256,knownNutrition256,knownPile256} from './exploration-readers-256';
 import type {MapIncident,CampaignSummary} from '../sim/world-map-state';
 import {mapDisplayName} from './map-registry-adapter';
 import {alertManhunter,alertDownedColonist} from '../sim/status-alert-rules';
@@ -12,7 +13,7 @@ import { IMMUNE_DISEASE_UNIT,immuneDiseaseStage } from '../sim/immune-diseases-r
 import { IMMUNE_DISEASE_KINDS } from '../sim/immune-diseases-types';
 import { INFECTION_UNIT,infectionStage } from '../sim/infection-rules';
 import { medicalBleed } from '../sim/injury-state';
-import {availableNutrition} from '../sim/items';
+
 import {captureFoodReadability,type FoodReadability} from '../sim/food-readability';
 import { mentalCrisisView } from '../sim/mental-presentation';
 import { prisonBreakActive } from '../sim/prison-break-state';
@@ -64,7 +65,7 @@ export function readAvailabilityStatusAlerts(world:World):StatusAlert[] {
 
 /** All predicates and targets share the same confirmed snapshot. Labels are
  * never parsed to find an entity, a medical condition or a management panel. */
-export function readStatusAlerts(world:World,food:FoodReadability=captureFoodReadability(world)):StatusAlert[] {
+export function readStatusAlerts(world:World,food:FoodReadability=captureFoodReadability(world,{pileVisible:p=>knownPile256(world,p),structureVisible:s=>knownBuilding256(world,s)})):StatusAlert[] {
   const rows:StatusAlert[]=readAvailabilityStatusAlerts(world),colonists=world.pawns.filter(isColonist),living=colonists.filter(p=>p.state!=='dead');
   const campaignIncidents:readonly (MapIncident|{site:'home'|'secondary';kind:MapIncident['kind'];count:number;actorId:number})[]=world.campaignMap?.incidents??[];
   for(const incident of campaignIncidents){
@@ -79,18 +80,19 @@ export function readStatusAlerts(world:World,food:FoodReadability=captureFoodRea
   counted('food-binge',living.filter(p=>p.mental?.crisis?.kind==='food-binge'),n=>`${n} colon(s) en frénésie alimentaire`,'needs');
   for(const pawn of living.filter(p=>p.mental?.crisis&&['tantrum','berserk','murderous-rage'].includes(p.mental.crisis.kind))){
     const crisis=mentalCrisisView(world,pawn,s=>buildingLabels[s.kind])!;
-    add(`mental:${pawn.id}`,`${pawn.name} · ${crisis.label}${crisis.target?` · cible : ${crisis.target.label}${crisis.target.type==='structure'?` (${crisis.target.cell.x}, ${crisis.target.cell.z})`:''}`:''}`,people(world,[pawn]),undefined,'needs');
+    add(`mental:${pawn.id}`,`${pawn.name} · ${crisis.label}${crisis.target&&knownPosition256(world,crisis.target.cell)?` · cible : ${crisis.target.label}${crisis.target.type==='structure'?` (${crisis.target.cell.x}, ${crisis.target.cell.z})`:''}`:''}`,people(world,[pawn]),undefined,'needs');
   }
   rows.push(...readMoodRiskAlerts(world));
-  const rebels=world.pawns.filter(p=>prisonBreakActive(p)&&activeThreat(p));
+  const rebels=world.pawns.filter(p=>prisonBreakActive(p)&&activeThreat(p)&&knownPosition256(world,p));
   if(rebels.length)add('prison-break',`Révolte de prison · ${rebels.length} détenu${rebels.length>1?'s':''} en fuite`,people(world,rebels));
-  const machines=world.mechanoids?.filter(m=>m.state!=='dead'&&m.state!=='downed')??[];
+  const machines=world.mechanoids?.filter(m=>m.state!=='dead'&&m.state!=='downed'&&knownPosition256(world,m))??[];
   if(machines.length)add('mechanical-threat',`${machines.length} machine(s) hostiles${world.raids?.mechActive?.phase==='staging'?' · regroupement avant assaut':world.raids?.mechActive?.phase==='assault'?' · assaut mécanique':''}`,actors(machines));
-  for(const structure of world.structures)if(structure.turret?.wick){
+  for(const structure of world.structures)if(structure.turret?.wick&&knownBuilding256(world,structure)){
     const view=miniTurretView(world,structure)!;
     add(`turret-wick:${structure.id}`,`Mini-tourelle (${structure.x}, ${structure.z}) · mèche engagée · danger 3,9 · ${turretSeconds(view.wick!.remainingCore)}`,[objectNotificationTarget('structure',structure.id,structure)]);
   }
-  const enraged=world.wildlife?.animals.filter(alertManhunter)??[];
+  for(const structure of world.structures)if(structure.kind==='ancient-cryptosleep-casket'&&structure.casketWick&&knownBuilding256(world,structure))add(`casket-wick:${structure.id}`,`Capsule ancienne (${structure.x}, ${structure.z}) · mèche engagée · danger 2,66 · ${turretSeconds(Math.max(0,structure.casketWick.endCore-world.tick*10))}`,[objectNotificationTarget('structure',structure.id,structure)]);
+  const enraged=world.wildlife?.animals.filter(a=>alertManhunter(a)&&knownPosition256(world,a))??[];
   if(enraged.length)add('manhunter',`${enraged.length} ${enraged.length>1?'animaux':'animal'} en rage`,actors(enraged));
   counted('malnutrition',living.filter(p=>(p.health?.malnutrition??0)>0),n=>`${n} colon(s) en malnutrition`,'health');
   counted('hypothermia',living.filter(p=>(p.health?.hypothermia??0)>=40000000),n=>`${n} colon(s) en hypothermie`,'health');
@@ -108,7 +110,7 @@ export function readStatusAlerts(world:World,food:FoodReadability=captureFoodRea
   counted('downed',living.filter(alertDownedColonist),n=>`${n} colon(s) à terre`,'health');
   counted('bleeding',living.filter(p=>p.health&&medicalBleed(p.health)>=.1),n=>`${n} colon(s) saignent`,'health');
   counted('deaths',colonists.filter(p=>p.state==='dead'),n=>`${n} colon(s) décédé(s)`,'health');
-  if(availableNutrition(world)<living.length*1.6)add('food-reserves','Réserves de nourriture faibles',[],{panel:'assign'});
+  if(knownNutrition256(world)<living.length*1.6)add('food-reserves','Réserves de nourriture faibles',[],{panel:'assign'});
   if(food.blockedPawnIds.length){
     const ids=new Set(food.blockedPawnIds),names=world.pawns.filter(p=>ids.has(p.id)).map(p=>p.name);
     rows.push({key:'food-policy-blocked',text:`Régime alimentaire à vérifier · ${food.blockedPawnIds.length} colon(s)`,targets:[],context:{panel:'assign'},tooltip:{title:'Aucun type autorisé parmi les piles évaluées',body:`Personnes concernées : ${names.join(', ')}. Les piles fraîches au sol et leur propre portion portée ne contiennent aucun type autorisé par le régime. Accès, réservations, partage et autonomie non évalués. Les repas déjà engagés sont conservés.`}});
@@ -116,14 +118,14 @@ export function readStatusAlerts(world:World,food:FoodReadability=captureFoodRea
   counted('hungry',living.filter(p=>p.hunger<25),n=>`${n} colon(s) affamé(s)`,'needs');
   const research=world.research?.project?undefined:readResearchReadiness(world);
   if(research?.needProject)rows.push({key:'research-project',text:'Choisir une recherche',targets:[],context:{panel:'research'},tooltip:{title:'Choisir une recherche',body:'Un bureau physique est présent et un projet est sélectionnable, mais aucun projet n’est choisi. Ouvrir Recherche permet de consulter les prérequis et de choisir ; cela n’affecte personne et ne garantit pas un travail au bureau.'}});
-  const pending=world.jobs.filter(j=>j.status==='pending');
+  const pending=world.jobs.filter(j=>j.status==='pending'&&knownPosition256(world,j));
   if(pending.length)add('pending-jobs',`${pending.length} ordre(s) en attente`,pending.map(j=>objectNotificationTarget('job',j.id,j)),{panel:'work'});
-  if(!world.stockpiles.length&&!storageCells(world).length)add('no-stockpile','Aucune réserve de stockage',[],{panel:'architect',tool:'stockpile'});
-  if(world.jobs.some(j=>constructionRecipe(j).ingredients.length>0)&&world.pawns.every(p=>p.priorities.haul===0&&p.priorities.build===0))add('disabled-construction','Construction/transport désactivés : chantiers non approvisionnés',[],{panel:'work'});
+  if(!world.stockpiles.length&&!storageCells(world).some(c=>knownPosition256(world,c)))add('no-stockpile','Aucune réserve de stockage',[],{panel:'architect',tool:'stockpile'});
+  if(world.jobs.some(j=>knownPosition256(world,j)&&constructionRecipe(j).ingredients.length>0)&&world.pawns.every(p=>p.priorities.haul===0&&p.priorities.build===0))add('disabled-construction','Construction/transport désactivés : chantiers non approvisionnés',[],{panel:'work'});
   const interrupted=world.pawns.filter(p=>p.interruptedCargo);
   if(interrupted.length)add('interrupted-cargo',`${interrupted.length} cargaison(s) conservée(s) : fin de déplacement ou sol proche à libérer`,people(world,interrupted),{panel:'work'});
   counted('idle',world.pawns.filter(p=>isColonist(p)&&!p.prisoner&&p.state==='idle'&&!p.draft&&!p.flee&&!p.mental?.crisis&&!p.interruptedCargo),n=>`${n} colon(s) disponible(s)`);
-  const beds=world.structures.filter(s=>isBedKind(s.kind)&&!s.medical&&!s.prisoner).reduce((n,s)=>n+bedSlotsCount(s),0);
+  const beds=world.structures.filter(s=>knownBuilding256(world,s)&&isBedKind(s.kind)&&!s.medical&&!s.prisoner).reduce((n,s)=>n+bedSlotsCount(s),0);
   if(beds<living.length)add('beds',`${living.length-beds} couchage(s) manquant(s)`,[],{panel:'architect',category:'furniture'});
   const prisoners=world.pawns.filter(p=>p.prisoner&&p.state!=='dead');
   if(prisoners.length)add('prisoners',`${prisoners.length} prisonnier(s) · ${living.some(p=>p.priorities.warden>0)?'Geôlier activé':'Geôlier désactivé'}`,people(world,prisoners),{panel:'work'},'prisoner');
@@ -131,15 +133,15 @@ export function readStatusAlerts(world:World,food:FoodReadability=captureFoodRea
 }
 
 export function readInspectAlerts(world:World):Partial<Record<'inspect-fire'|'inspect-blight'|'inspect-threat',StatusAlert>> {
-  const result:ReturnType<typeof readInspectAlerts>={},fires=world.fires?.items??[],blighted=world.resources.filter(r=>!!r.blight);
+  const result:ReturnType<typeof readInspectAlerts>={},fires=(world.fires?.items??[]).filter(f=>{const p=firePosition(world,f);return !!p&&knownPosition256(world,p);}),blighted=world.resources.filter(r=>!!r.blight&&knownPosition256(world,r));
   if(fires.length)result['inspect-fire']={key:'fire',text:`Incendie · ${fires.length} foyer${fires.length>1?'s':''} · voir`,targets:fires.map(f=>{
     if(f.attachedPawnId!==undefined)return personNotificationTarget(world,f.attachedPawnId);
     if(f.attachedAnimalId!==undefined)return world.wildlife?.animals.some(a=>a.id===f.attachedAnimalId)?actorNotificationTarget(f.attachedAnimalId):undefined;
     const cell=firePosition(world,f);return cell?cellNotificationTarget(`fire:${f.id}`,cell):undefined;
   }).filter(present),context:{panel:'work'}};
   if(blighted.length)result['inspect-blight']={key:'blight',text:`Fléau des cultures · ${blighted.length} plant(s) · voir`,targets:blighted.map(r=>objectNotificationTarget('resource',r.id,r)),context:{panel:'architect',category:'orders'}};
-  const enemies=world.pawns.filter(p=>p.faction==='outlaws'&&!p.prisoner&&activeThreat(p)),rebels=world.pawns.filter(p=>prisonBreakActive(p)&&activeThreat(p));
-  const machines=world.mechanoids?.filter(m=>m.state!=='dead'&&m.state!=='downed')??[],mental=world.pawns.filter(p=>isColonist(p)&&p.state!=='dead'&&p.mental?.crisis&&['tantrum','berserk','murderous-rage'].includes(p.mental.crisis.kind)),animals=world.wildlife?.animals.filter(alertManhunter)??[];
+  const enemies=world.pawns.filter(p=>p.faction==='outlaws'&&!p.prisoner&&activeThreat(p)&&knownPosition256(world,p)),rebels=world.pawns.filter(p=>prisonBreakActive(p)&&activeThreat(p)&&knownPosition256(world,p));
+  const machines=world.mechanoids?.filter(m=>m.state!=='dead'&&m.state!=='downed'&&knownPosition256(world,m))??[],mental=world.pawns.filter(p=>isColonist(p)&&p.state!=='dead'&&p.mental?.crisis&&['tantrum','berserk','murderous-rage'].includes(p.mental.crisis.kind)),animals=world.wildlife?.animals.filter(a=>alertManhunter(a)&&knownPosition256(world,a))??[];
   const targets=[...people(world,enemies),...people(world,rebels),...actors(machines),...people(world,mental),...actors(animals)];
   if(targets.length)result['inspect-threat']={key:'threat',text:enemies.length?'Menace armée · voir':rebels.length?'Révolte de prison · voir':machines.length?'Menace mécanique · voir':mental.length?`${mentalCrisisView(world,mental[0]!)!.label} · voir`:'Animal en rage · voir',targets};
   return result;

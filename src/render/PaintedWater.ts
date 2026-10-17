@@ -2,6 +2,7 @@ import * as THREE from 'three/webgpu';
 import { Fn, If, float, mix, positionWorld, sin, smoothstep, texture, uniform, uv, vec3 } from 'three/tsl';
 import type { AnimationDetail } from './AnimationDetail';
 import { NaturalAnimationCache, NaturalPhasePalette } from './natural-animation-cache';
+import {RiverWaterField256,type RiverWaterVisualSource256} from './river-water-bake-256';
 
 /** One shaded material for every water quad. Its single resident paint sample
  * carries both pigment (RGB) and baked shore proximity (A). Motion is wholly
@@ -15,15 +16,30 @@ export class PaintedWater {
   private readonly ripplePhase = uniform(0);
   private readonly wind = uniform(new THREE.Vector2(.8,.6));
   private readonly windStrength = uniform(0);
+  private readonly riverField=new RiverWaterField256();
+  private readonly riverTexture=new THREE.DataTexture(this.riverField.data,1,1,THREE.RGFormat,THREE.FloatType);
+  private readonly riverSize=uniform(new THREE.Vector2(1,1));
   private readonly middleWater = new NaturalAnimationCache();
   private readonly middlePalette?: NaturalPhasePalette;
   private lastSeconds: number | undefined;
 
   constructor(paint:THREE.DataTexture,configure:(material:THREE.MeshStandardNodeMaterial)=>void,private readonly detail?:AnimationDetail){
     if(detail)this.middlePalette=new NaturalPhasePalette();
+    // DATA only: no pigment or Core texture. Nearest RGFloat avoids requiring
+    // optional float32 filtering on either backend; the CPU bake is smoothed.
+    this.riverTexture.colorSpace=THREE.NoColorSpace;
+    this.riverTexture.minFilter=this.riverTexture.magFilter=THREE.NearestFilter;
+    this.riverTexture.generateMipmaps=false;this.riverTexture.flipY=false;
+    this.riverTexture.wrapS=this.riverTexture.wrapT=THREE.ClampToEdgeWrapping;
+    this.riverTexture.needsUpdate=true;
+    const flow=texture(this.riverTexture,positionWorld.xz.add(.5).div(this.riverSize)).level(float(0)).rg;
     const pigment=texture(paint,uv());
     this.material.colorNode=Fn(()=>{
       const sample=pigment.toVar(),p=positionWorld.xz;
+      // Original 3D interpretation: directional chalk ripples, not transport
+      // of pigment, objects or people. The existing confirmed phase is reused.
+      const riverWave=()=>sin(p.x.mul(flow.x).add(p.y.mul(flow.y)).mul(6.2).sub(this.time))
+        .mul(flow.x.abs().add(flow.y.abs()).min(1)).mul(.045);
       // The two scales move at visibly different speeds, but both use the
       // confirmed game clock so a pause freezes the surface exactly in place.
       const complete=()=>{
@@ -34,7 +50,7 @@ export class PaintedWater {
       };
       if(!detail){
         const {swell,ripple}=complete();
-        const light=swell.mul(.055).add(ripple.mul(.027)).add(.96);
+        const light=swell.mul(.055).add(ripple.mul(.027)).add(.96).add(riverWave());
         const foam=sample.a.mul(mix(.57,.96,smoothstep(-.8,.85,ripple)));
         return mix(sample.rgb.mul(light),vec3(.81,.92,.87),foam.mul(.83));
       }
@@ -48,7 +64,9 @@ export class PaintedWater {
           swell.assign(a.x.mul(this.middleWater.phaseA.y).sub(a.y.mul(this.middleWater.phaseA.x)));
           ripple.assign(b.x.mul(this.middleWater.phaseB.y).sub(b.y.mul(this.middleWater.phaseB.x)));
         });
-      const light=swell.mul(.055).add(ripple.mul(.027)).add(.96);
+      const river=float(0).toVar();
+      If(level.lessThan(2),()=>{river.assign(riverWave());});
+      const light=swell.mul(.055).add(ripple.mul(.027)).add(.96).add(river);
       const foam=sample.a.mul(mix(.57,.96,smoothstep(-.8,.85,ripple)));
       return mix(sample.rgb.mul(light),vec3(.81,.92,.87),foam.mul(.83));
     })();
@@ -56,6 +74,15 @@ export class PaintedWater {
     this.material.userData.rendererOwned=true;
   }
 
+  /** Cold scene adoption only. Identical confirmed owner/map does not unpack,
+   * scan terrain or upload pixels, even when other snapshots are replaced. */
+  adoptRiverWater(world:RiverWaterVisualSource256):void {
+    if(!this.riverField.adopt(world))return;
+    const {width,height,data}=this.riverField;
+    if(this.riverTexture.image.width!==width||this.riverTexture.image.height!==height)this.riverTexture.dispose();
+    this.riverTexture.image={data,width,height};this.riverSize.value.set(width,height);
+    this.riverTexture.needsUpdate=true;
+  }
   present(seconds:number):void {
     if(!Number.isFinite(seconds))return;
     const tau=2*Math.PI,previous=this.lastSeconds;
@@ -75,5 +102,5 @@ export class PaintedWater {
     this.wind.value.set(directionX,directionZ);
     this.windStrength.value=Math.max(0,strength);
   }
-  dispose():void {this.middlePalette?.dispose();this.material.dispose();}
+  dispose():void {this.riverField.clear();this.riverTexture.dispose();this.riverTexture.image={data:this.riverField.data,width:1,height:1};this.middlePalette?.dispose();this.material.dispose();}
 }

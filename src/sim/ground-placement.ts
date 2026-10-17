@@ -1,3 +1,4 @@
+import {canMergeEggPile256,EMPTY_EGG_CONDITION_256} from './animal-egg-permission-v256.ts';
 import { groundOccupancyAllows, storageOccupancyAllows } from './occupancy.ts';
 import { isCookingOrder } from './order-types.ts';
 import { blockedCells, cellIndex, inBounds } from './pathfinding.ts';
@@ -70,7 +71,7 @@ function shelfCapacity(world:World,cell:Cell,subject:ItemId|MaterialPile,exceptP
     reserved.set(r.item,(reserved.get(r.item)??0)+r.quantity);
   }
   const residual=new Map<ItemId,number>();
-  for(const p of piles)residual.set(p.item,(residual.get(p.item)??0)+Math.max(0,ITEM_DEFINITIONS[p.item].stackLimit-p.quantity));
+  for(const p of piles)if(p.item!==(typeof subject==='string'?subject:subject.item)||canMergeEggPile256(p,typeof subject==='string'?EMPTY_EGG_CONDITION_256:subject))residual.set(p.item,(residual.get(p.item)??0)+Math.max(0,ITEM_DEFINITIONS[p.item].stackLimit-p.quantity));
   let free=3-piles.length;
   for(const [item,n] of reserved){
     const stack=ITEM_DEFINITIONS[item].stackLimit,available=residual.get(item)??0,extra=Math.max(0,n-available),newStacks=Math.ceil(extra/stack);
@@ -86,10 +87,10 @@ export function groundPileCells(world:World):ReadonlySet<number> {
   for(const p of world.piles)if(p.owner.type==='ground')cells.add(p.owner.z*world.width+p.owner.x);
   return cells;
 }
-function cellCapacity(world: World, cell: Cell, item: ItemId, limit: number, exceptPawn?: number, zone:StockpileCell|null|undefined=world.stockpiles.find(z=>z.x===cell.x&&z.z===cell.z),geometry?:StagingGeometryReader): number {
+function cellCapacity(world: World, cell: Cell, item: ItemId, limit: number, exceptPawn?: number, zone:StockpileCell|null|undefined=world.stockpiles.find(z=>z.x===cell.x&&z.z===cell.z),geometry?:StagingGeometryReader,condition:Pick<MaterialPile,'egg'|'eggForbidden'>=EMPTY_EGG_CONDITION_256): number {
   if(world.packed?.some(p=>p.owner.type==='ground'&&p.owner.x===cell.x&&p.owner.z===cell.z))return 0;
   const pile = groundPile(world, cell);
-  if (pile && pile.item!==item) return 0;
+  if (pile && (pile.item!==item||!canMergeEggPile256(pile,condition))) return 0;
   let capacity = Math.min(limit,ITEM_DEFINITIONS[item].stackLimit)-(pile?.quantity??0);
   if(capacity<=0||world.schemaVersion>=21&&(!(geometry?geometry.groundAllows(cell):groundOccupancyAllows(world,cell))||zone&&!(geometry?.storageAllows?geometry.storageAllows(cell):storageOccupancyAllows(world,cell))))return 0;
   // Hot capacity queries must not allocate an array/generator of every transport.
@@ -124,11 +125,11 @@ function reservedAt(world:World,task:HaulTask,cell:Cell,item:ItemId,zone?:Stockp
 }
 export function groundCapacity(world: World, cell: Cell, subject: ItemId|MaterialPile, exceptPawn?: number,geometry?:StagingGeometryReader,reader?:GroundCapacityReader): number {
   const item=typeof subject==='string'?subject:subject.item,zone=reader?reader.storage.get(cell.z*world.width+cell.x):geometry?.storageAt?geometry.storageAt(cell):storageAt(world,cell);
-  return zone?.shelfId!==undefined?shelfCapacity(world,cell,subject,exceptPawn,zone,geometry,reader,false):cellCapacity(world,cell,item,ITEM_DEFINITIONS[item].stackLimit,exceptPawn,reader?zone??null:undefined,geometry);
+  return zone?.shelfId!==undefined?shelfCapacity(world,cell,subject,exceptPawn,zone,geometry,reader,false):cellCapacity(world,cell,item,ITEM_DEFINITIONS[item].stackLimit,exceptPawn,reader?zone??null:undefined,geometry,typeof subject==='string'?EMPTY_EGG_CONDITION_256:subject);
 }
 export function storageCapacity(world: World, zone: StorageCell, subject: ItemId|MaterialPile, exceptPawn?: number,geometry?:StagingGeometryReader,reader?:GroundCapacityReader): number {
   const item=typeof subject==='string'?subject:subject.item;
-  return zone.shelfId!==undefined?shelfCapacity(world,zone,subject,exceptPawn,zone,geometry,reader):storageAccepts(zone,subject,world.tick) ? cellCapacity(world,zone,item,zone.capacity,exceptPawn,zone,geometry) : 0;
+  return zone.shelfId!==undefined?shelfCapacity(world,zone,subject,exceptPawn,zone,geometry,reader):storageAccepts(zone,subject,world.tick) ? cellCapacity(world,zone,item,zone.capacity,exceptPawn,zone,geometry,typeof subject==='string'?EMPTY_EGG_CONDITION_256:subject) : 0;
 }
 export function planGroundPlacement(world: World, quantity: number, origin: Cell, item: ItemId, reachable?: (cell:Cell)=>boolean): {cell:Cell; quantity:number}[] | null {
   const result: {cell:Cell;quantity:number}[]=[];

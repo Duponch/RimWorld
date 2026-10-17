@@ -1,3 +1,4 @@
+import {eggAllowedForPlayer256} from './animal-egg-permission-v256.ts';
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { allowedAreaAllows } from './allowed-area-state.ts';
 import { ANIMAL_FEED_TICKS,animalFeedingDoctorReady,animalFeedingReason,animalFeedPlaceValid,animalFeedQuantity,type AnimalFeedTask } from './animal-feeding-rules.ts';
@@ -37,7 +38,7 @@ export function animalFeedingProposal(w:World,doctor:Pawn,reach:Reachability):An
     }
     if(!bedside)continue;
     let food:{id:number;quantity:number;path:Cell[];cost:number}|undefined;
-    for(const pile of w.piles)if(pile.kind==='food'&&pile.owner.type==='ground'&&allowedAreaAllows(w,doctor,pile.owner)&&animalPileFood(w,target,pile)){
+    for(const pile of w.piles)if(pile.kind==='food'&&eggAllowedForPlayer256(pile)&&pile.owner.type==='ground'&&allowedAreaAllows(w,doctor,pile.owner)&&animalPileFood(w,target,pile)){
       const available=pile.quantity-reservedSource(w,pile.id),quantity=animalFeedQuantity(target,pile,available);if(!quantity)continue;
       const path=routeToJob(w,pile.owner,reach,true);if(!path)continue;
       const cost=routeCost(w,path,reach);
@@ -78,7 +79,7 @@ export function processAnimalFeeding(w:World,doctor:Pawn,ctx:NeedContext):void {
   if(doctor.moveCooldown>0||(doctor.motion?.end??0)>w.tick||(doctor.stun?.untilCore??0)>w.tick*10)return;
   const food=w.piles.find(p=>p.id===(t.phase==='pickup'?t.sourcePileId:t.carryPileId))!;
   if(t.phase==='pickup'){
-    if(food.owner.type!=='ground')return;
+    if(food.owner.type!=='ground'||!eggAllowedForPlayer256(food)){releaseFeeding(w,doctor);return;}
     if(!adjacent(doctor,food.owner)&&(doctor.x!==food.owner.x||doctor.z!==food.owner.z)){ctx.move(food.owner,false);return;}
     if(food.quantity===t.quantity){food.owner={type:'pawn',pawnId:doctor.id};t.carryPileId=food.id;}
     else{

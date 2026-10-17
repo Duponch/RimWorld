@@ -1,3 +1,5 @@
+import {actualAnimalName256} from '../sim/starting-pet-state-256';
+import {knownPosition256} from './exploration-readers-256';
 import type { World } from '../sim/types';
 import { animalSpecies } from '../sim/animal-species';
 import { canTameSpecies } from '../sim/animal-handling';
@@ -23,7 +25,7 @@ export function updateWildlifePanel(root:HTMLElement,world:World,focus:(id:numbe
     root.querySelector<HTMLButtonElement>('[data-fauna-enable]')!.onclick=enable;
   }
   root.querySelector<HTMLButtonElement>('[data-fauna-enable]')!.hidden=world.wildlife!==undefined;
-  const list=root.querySelector<HTMLElement>('[data-fauna-list]')!,animals=world.wildlife?.animals.filter(a=>!a.domestic)??[];
+  const list=root.querySelector<HTMLElement>('[data-fauna-list]')!,animals=world.wildlife?.animals.filter(a=>!a.domestic&&knownPosition256(world,a))??[];
   const signature=animals.map(a=>`${a.id}:${a.species}`).join(',');
   if(list.dataset.ids!==signature){
     list.dataset.ids=signature;
@@ -35,7 +37,7 @@ export function updateWildlifePanel(root:HTMLElement,world:World,focus:(id:numbe
       const row=body.insertRow();row.className='fauna-row';row.dataset.animal=String(a.id);
       const huntCell=row.insertCell(),huntLabel=document.createElement('label'),huntCheck=document.createElement('input');
       huntCheck.type='checkbox';huntCheck.dataset.animalHunt=String(a.id);huntCheck.setAttribute('aria-label',`Chasser ${animalSpecies(a.species).label} ${a.id}`);huntLabel.append(huntCheck);huntCell.append(huntLabel);
-      const nameCell=row.insertCell(),name=document.createElement('button');name.className='fauna-focus';name.textContent=`${animalSpecies(a.species).label} ${a.id}`;name.setAttribute('aria-label',`Repérer ${animalSpecies(a.species).label} ${a.id}`);name.onclick=()=>focus(a.id);nameCell.append(name);
+      const nameCell=row.insertCell(),name=document.createElement('button');name.className='fauna-focus';name.textContent=actualAnimalName256(a)??`${animalSpecies(a.species).label} ${a.id}`;name.setAttribute('aria-label',`Repérer ${animalSpecies(a.species).label} ${a.id}`);name.onclick=()=>focus(a.id);nameCell.append(name);
       row.insertCell().textContent=a.sex==='female'?'Femelle':'Mâle';
       const activity=row.insertCell();activity.dataset.animalActivity=String(a.id);
       const position=row.insertCell();position.dataset.animalPosition=String(a.id);position.className='fauna-position';

@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import {expect,test} from 'vitest';
 import {SnapshotDecoder,SnapshotEncoder,type SnapshotMessage} from '../src/bridge/snapshots.ts';
 import {applyCommand,createWorld,stepWorld,validateWorld} from '../src/sim/index.ts';
@@ -41,7 +42,7 @@ function startGroup():World {
   if(explosiveId===undefined)throw Error('No eligible real source in the bounded prepared stock');
   sources.push({pileId:explosiveId,quantity:1});
   expect(applyCommand(world,{type:'planet-adopt'}).ok).toBe(true);
-  expect(applyCommand(world,{type:'group-start',memberIds:world.pawns.slice(0,2).map(p=>p.id),destination:world.planet!.civilianTile,sources}).ok).toBe(true);
+  expect(applyCommand(world,{type:'group-start',memberIds:world.pawns.slice(0,2).map(p=>p.id),destination:legacyPlanet(world).civilianTile,sources}).ok).toBe(true);
   return world;
 }
 function departedGroup():World {
@@ -132,7 +133,7 @@ test.each([false,true])('same-epoch cancellation removes sparse preparation owne
   expect(Object.hasOwn(good.world,'group')).toBe(false);expect(Object.hasOwn(good.world,'groupLosses')).toBe(false);
   const missing=structuredClone(good);delete missing.world.planet;
   refuse(decoder,missing,before,frozen,'La géographie confirmée a changé sans remplacement.');
-  const changed=structuredClone(good);changed.world.planet!.generationSeed^=1;
+  const changed=structuredClone(good);legacyPlanet(changed.world).generationSeed^=1;
   refuse(decoder,changed,before,frozen,'La géographie confirmée a changé sans remplacement.');
   const next=adopt(decoder,good);expect(next).toEqual(world);expect(next.planet).toEqual(before.planet);expect(world.tick).toBe(tick);
   expect(Object.hasOwn(next,'group')).toBe(false);expect(Object.hasOwn(next,'groupLosses')).toBe(false);

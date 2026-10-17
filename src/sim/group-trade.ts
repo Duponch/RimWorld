@@ -9,13 +9,15 @@ export interface GroupTradeEnvironment {
   tick:number;nextId:number;version:number;siteTile:number;siteOpen:boolean;post:CivilianPost|undefined;
   /** Root's single actual decision capture; route context must reference this object too. */
   mass:GroupMassCapture;pileCountElsewhere:number;
+  siteOwner?:{settlementId:number;factionId:number;postId:number};
 }
 function captureGroupTrade(group:AwayGroup,e:GroupTradeEnvironment):CommercialOwnerContext|undefined {
   if(group.phase!=='at-site'||group.tile!==e.siteTile||!e.siteOpen||!e.post||group.lastPersonalTick!==e.tick)return;
   const negotiator=bestGroupNegotiator(group.members);if(!negotiator)return;
-  return {tick:e.tick,nextId:e.nextId,version:e.version,scope:`group:${group.id}:site:${e.siteTile}`,members:group.members,negotiator,items:group.items,post:e.post,mass:e.mass,
+  return {tick:e.tick,nextId:e.nextId,version:e.version,scope:`group:${group.id}:site:${e.siteTile}`,members:group.members,...group.animalOwners?{additionalInventoryOwners:group.animalOwners.members}:{},negotiator,items:group.items,post:e.post,mass:e.mass,
+    ...(e.version>=256&&(group.travel||group.reorganization)?{groupProspective:true as const}:{}),
     ...(e.version>=GROUP_FREIGHT_SCHEMA&&freightGroup(group)?{groupFreight:true as const}:{}),
-    ledgerStamp:[group.baseline,group.ledger,group.freight],pileCountElsewhere:e.pileCountElsewhere,inventoryLimit:256};
+    ledgerStamp:[group.baseline,group.ledger,group.freight,group.reorganization,group.travel,group.packed,group.animalOwners,...e.siteOwner?[e.siteOwner]:[]],pileCountElsewhere:e.pileCountElsewhere,inventoryLimit:e.version>=256?Number.MAX_SAFE_INTEGER:256};
 }
 export function quoteGroupTrade(group:AwayGroup,e:GroupTradeEnvironment,direction:CommercialDirection,lines:readonly CommercialBuyLine[]):OwnerQuote {
   const context=captureGroupTrade(group,e);

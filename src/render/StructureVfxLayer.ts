@@ -1,3 +1,8 @@
+import {knownSpawnedThing256} from '../sim/exploration-visibility-256';
+import {geyserCells256} from '../sim/local-geyser-state-256';
+import type {GeyserWorld256} from '../sim/local-geyser-state-256';
+import {bombWaveRadius} from '../sim/bomb-state';
+import {actualBombWick256} from '../sim/ancient-casket-explosive-state-256';
 import * as THREE from 'three/webgpu';
 import { Fn, attribute, cameraPosition, cross, float, mix, positionLocal, sin, smoothstep, uniform, uv, varying, vec2, vec3 } from 'three/tsl';
 import { BATTERY_CAPACITY } from '../sim/power-battery.ts';
@@ -159,7 +164,7 @@ export class StructureVfxLayer {
    * RAW adopt below remains literal, including its reads and construction.
    * A miss deliberately pays this decision again in RAW adopt; a hit never
    * constructs glow/smoke/fire arrays or evaluates their geometry. */
-  adoptNative(world:World,reset=false,preparedDoorAxes?:ReadonlyMap<number,0|1>,subjects:ReadonlyArray<World['structures'][number]>=world.structures):void {
+  adoptNative(world:GeyserWorld256,reset=false,preparedDoorAxes?:ReadonlyMap<number,0|1>,subjects:ReadonlyArray<World['structures'][number]>=world.structures):void {
     // A reset is always a miss, exactly like RAW's key=null before capture.
     // Avoid a second decision pass on that already-known cold branch.
     if(reset){this.adopt(world,true);return;}
@@ -169,7 +174,7 @@ export class StructureVfxLayer {
     let doorAxes=preparedDoorAxes;
     for(const s of subjects){
       const on=isPowerActive(s),work=working.has(s.id);
-      if(s.kind==='mini-turret'&&s.turret?.wick)tokens.push(`${s.id}:turret-wick:${s.turret.wick.startedAtCore}`);
+      const wick=actualBombWick256(s);if(wick)tokens.push(`${s.id}:turret-wick:${wick.startedAtCore}`);
       if(s.kind==='autodoor'){
         doorAxes??=doorOrientations(world);
         const axis=doorAxes.get(s.z*world.width+s.x)??0;
@@ -211,17 +216,18 @@ export class StructureVfxLayer {
     for(const p of world.projectiles??[])if(p.weaponItem==='mini-turret-gun'&&Math.ceil(p.emittedAtCore/10)===world.tick)tokens.push(`turret-shot:${p.id}`);
     for(const wave of world.bombWaves??[])if(Math.ceil(wave.startedAtCore/10)===world.tick){
       if(wave.emp){tokens.push(`emp-flash:${wave.id}`);continue;}
-      const radius=wave.shortCircuit?.radius;
-      const flame=wave.shortCircuit?.damage==='flame';
+      const radius=wave.animalDeath||wave.casketExplosion?bombWaveRadius(wave):wave.shortCircuit?.radius;
+      const flame=!!wave.animalDeath||!!wave.casketExplosion||wave.shortCircuit?.damage==='flame';
       tokens.push(radius===undefined?`bomb-flash:${wave.id}`:`bomb-flash:${wave.id}:${radius}:${flame}`);
     }
+    for(const g of world.geysers?.items??[])tokens.push(`geyser:${g.id}:${g.x}:${g.z}:${g.sprayTicksLeft>0}:${knownSpawnedThing256(world,geyserCells256(world.width,g))}`);
     for(const fire of world.fires?.items??[])if(fire.attachedPawnId===undefined&&fire.attachedAnimalId===undefined)tokens.push(`${fire.id}:ground-fire:${fire.x}:${fire.z}:${fire.size}`);
     if(tokens.join('|')===this.key)return;
     this.adopt(world);
   }
   // V299_NATIVE_END
 
-  adopt(world:World,reset=false):void {
+  adopt(world:GeyserWorld256,reset=false):void {
     if(reset)this.key=null;
     const working=new Set<number>();
     for(const pawn of world.pawns)if(pawn.state==='working'&&pawn.cooking?.phase==='work')working.add(pawn.cooking.stationId);
@@ -233,14 +239,16 @@ export class StructureVfxLayer {
           size:size*(.53+phase(id,i+41)*.94),opacityBias,rise:rise*(.78+shape*.42)});
       }
     };
+    for(const g of world.geysers?.items??[]){tokens.push(`geyser:${g.id}:${g.x}:${g.z}:${g.sprayTicksLeft>0}:${knownSpawnedThing256(world,geyserCells256(world.width,g))}`);if(g.sprayTicksLeft>0&&knownSpawnedThing256(world,geyserCells256(world.width,g)))puff(g.x+.5,.16,g.z+.5,g.id,.48,0,1.32,10);}
     const h=WORLD_SCALE.stonecutterHeight;
     let doorAxes:ReadonlyMap<number,0|1>|undefined;
     for(const s of world.structures){
       const on=isPowerActive(s),work=working.has(s.id);
-      if(s.kind==='mini-turret'&&s.turret?.wick){
-        tokens.push(`${s.id}:turret-wick:${s.turret.wick.startedAtCore}`);
-        glow.push({x:s.x,y:1.43,z:s.z-.09,sx:.12,sy:.045,sz:.25,ry:0,color:0xf0a176},
-          {x:s.x,y:1.43,z:s.z+.15,sx:.12,sy:.045,sz:.08,ry:0,color:0xffd19a});
+      const wick=actualBombWick256(s);if(wick){
+        tokens.push(`${s.id}:turret-wick:${wick.startedAtCore}`);
+        const y=s.kind==='ancient-cryptosleep-casket'?.94:1.43;
+        glow.push({x:s.x,y,z:s.z-.09,sx:.12,sy:.045,sz:.25,ry:0,color:0xf0a176},
+          {x:s.x,y,z:s.z+.15,sx:.12,sy:.045,sz:.08,ry:0,color:0xffd19a});
       }
       if(s.kind==='autodoor'){
         doorAxes??=doorOrientations(world);
@@ -347,8 +355,8 @@ export class StructureVfxLayer {
     }
     for(const wave of world.bombWaves??[])if(Math.ceil(wave.startedAtCore/10)===world.tick){
       if(wave.emp){tokens.push(`emp-flash:${wave.id}`);glow.push({x:wave.center.x,y:.68,z:wave.center.z,sx:1.5,sy:.45,sz:1.5,ry:0,color:0x8cefff});continue;}
-      const radius=wave.shortCircuit?.radius,scale=radius===undefined?1:Math.max(.5,Math.min(3,radius/3.9));
-      const flame=wave.shortCircuit?.damage==='flame';
+      const radius=wave.animalDeath||wave.casketExplosion?bombWaveRadius(wave):wave.shortCircuit?.radius,scale=radius===undefined?1:Math.max(.5,Math.min(3,radius/3.9));
+      const flame=!!wave.animalDeath||!!wave.casketExplosion||wave.shortCircuit?.damage==='flame';
       tokens.push(radius===undefined?`bomb-flash:${wave.id}`:`bomb-flash:${wave.id}:${radius}:${flame}`);glow.push({x:wave.center.x,y:.68,z:wave.center.z,sx:.95*scale,sy:1.1*scale,sz:.95*scale,ry:0,color:flame?0xffb35b:0xffe7b4});
     }
     for(const fire of world.fires?.items??[])if(fire.attachedPawnId===undefined&&fire.attachedAnimalId===undefined){

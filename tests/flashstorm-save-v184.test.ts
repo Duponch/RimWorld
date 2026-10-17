@@ -1,3 +1,4 @@
+import {legacySite} from './helpers/legacy-fixture-guards.ts';
 import { expect,test } from 'vitest';
 import { withoutMiningSkill, withoutPredatorDefaults, withoutTelevisionRecreation } from './scenarios/legacy-skills.ts';
 import { createWorld } from '../src/sim/engine.ts';
@@ -106,7 +107,7 @@ test('a valid version 172 save migrates neutrally and a forged same-tick bridge 
   // Build the ecological profile under its own historical schema. A current
   // v2 population must not masquerade as the old herbivore-only population.
   const historical=legacy as unknown as World;
-  delete historical.wildlife;enableBiomeWildlife(historical,historical.site!.biome);
+  delete historical.wildlife;enableBiomeWildlife(historical,legacySite(historical).biome);
   const migrated=deserializeWorld(JSON.stringify(legacy));
   expect(migrated.flashstorm).toBeUndefined();
   const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder();

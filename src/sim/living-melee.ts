@@ -1,3 +1,10 @@
+import {combatTargetKey} from './combat-target.ts';
+import {applyToxicBite256} from './toxic-buildup-256.ts';
+import {animalBodySize} from './animal-life.ts';
+import {toxicResistance256} from './toxic-victim-256.ts';
+import {reconcileMedicalDeath} from './injury-state.ts';
+import {requireAnimalDeathCapacity256} from './animal-death-explosion-v256.ts';
+import {createAnimalMedicalRecord256} from './animal-clinical-age-v256.ts';
 import { isAnimalTarget,isMechanoidTarget,isPawnTarget,type LivingTarget } from './combat-target.ts';
 import { apparelProtection } from './apparel-protection.ts';
 import { disturbanceEvents,isLying } from './disturbance.ts';
@@ -19,7 +26,8 @@ import { delayMechanoidImpact,mechanoidProtection } from './mechanoid-impact.ts'
 
 /** The same anatomical transaction serves both directions of interspecies
  * combat. Recovery is installed before injury can interrupt either actor. */
-export function strikeLivingTarget(w:World,attacker:LivingTarget,target:LivingTarget,tool:MeleeTool,core:number,randomState:{rng:number},disturbance=disturbanceEvents(w),options:{surprise?:boolean;surpriseStun?:number}={}):void {
+export function strikeLivingTarget(w:World,attacker:LivingTarget,target:LivingTarget,tool:MeleeTool,core:number,randomState:{rng:number},disturbance=disturbanceEvents(w),options:{surprise?:boolean;surpriseStun?:number;huntingForFood?:boolean}={}):void {
+  if(isAnimalTarget(target))requireAnimalDeathCapacity256(w,target);
   const animal=isAnimalTarget(target),animalAttacker=isAnimalTarget(attacker),random=()=>healthRandom(randomState);
   if((w.schemaVersion>=192&&isPawnTarget(target)||w.schemaVersion>=197&&isMechanoidTarget(target))
     &&(!isPawnTarget(attacker)||attacker.melee?.order?.auto!=='social'))target.meleeThreat={attackerId:attacker.id,atCore:core};
@@ -52,13 +60,14 @@ export function strikeLivingTarget(w:World,attacker:LivingTarget,target:LivingTa
     w.rng=randomState.rng;
     if(isAnimalTarget(target))advanceAnimalHealth(w,target);else if(isPawnTarget(target)&&(!target.health||target.health.tick<w.tick))updatePawnHealth(w,target);
     randomState.rng=w.rng;
-    const category=['bite','cut','stab','scratch'].includes(tool.kind)?'sharp':'blunt';
+    const category=['toxic-bite','bite','cut','stab','scratch'].includes(tool.kind)?'sharp':'blunt';
     const protection=isPawnTarget(target)?apparelProtection(w,target,category,tool.penetration,random):undefined;
-    const record=target.health??{...createMedicalRecord(w.tick),...(isAnimalTarget(target)?{body:target.species}:isMechanoidTarget(target)?{body:target.mechKind}:{})};
+    const record=target.health??(isAnimalTarget(target)?createAnimalMedicalRecord256(w,target):{...createMedicalRecord(w.tick),...(isMechanoidTarget(target)?{body:target.mechKind}:{})});
     const input=isMechanoidTarget(target)?{...structuredClone(record),tick:w.tick}:record;
     const impact=resolveUnarmoredMelee(input,{damage,kind:tool.kind},random,isMechanoidTarget(target)?mechanoidProtection(category,tool.penetration,random,target.mechKind):protection?.protect);
+    if(w.schemaVersion>=256&&tool.kind==='toxic-bite'&&!isMechanoidTarget(target)){applyToxicBite256(impact.record,impact.totalDamageDealt,isAnimalTarget(target)?animalBodySize(target):1,toxicResistance256(target),random,!!options.huntingForFood);reconcileMedicalDeath(impact.record);}
     protection?.commit();injured=impact.layers.length>0;stun=impact.stun;
-    if(isAnimalTarget(target))commitAnimalImpact(w,target,impact.record,randomState);
+    if(isAnimalTarget(target))commitAnimalImpact(w,target,impact.record,randomState,core,combatTargetKey(attacker));
     else if(isMechanoidTarget(target)){if(!commitMechanoidImpact(w,target,impact.record,randomState,core))throw new Error('Mechanical melee transaction refused');}
     else target.health=impact.record;
   }

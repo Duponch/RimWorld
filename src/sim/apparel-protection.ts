@@ -48,19 +48,19 @@ export function fragmentedApparelProtection(world:World,pawn:Pawn,penetration:nu
 /** Sequential Stab producer. Each commit publishes only this hit's wear, so a
  * destroyed garment cannot protect the next hit. This runs on the producer's
  * private World projection; Bullet and Bomb keep their historical contracts. */
-export function seriesApparelProtection(world:World,pawn:Pawn,penetration:number,random:()=>number){
+export function seriesApparelProtection(world:World,pawn:Pawn,penetration:number,random:()=>number,category:ArmorCategory='sharp'){
   if(!Number.isFinite(penetration)||penetration<0)throw new RangeError('Invalid penetration');
   const piles=wornApparel(world,pawn),pieces=piles.map(armorPiece);
   let wear:readonly ArmorWear[]=[];
   const protect:ImpactProtection|undefined=pieces.length?(part,amount)=>{
-    const result=resolveArmor({part,amount,category:'sharp',penetration},pieces,{sharp:0,blunt:0,heat:0},random);
-    wear=result.wear;return {amount:result.amount,converted:result.category==='blunt'};
+    const result=resolveArmor({part,amount,category,penetration},pieces,{sharp:0,blunt:0,heat:0},random);
+    wear=result.wear;return {amount:result.amount,converted:category==='sharp'&&result.category==='blunt'};
   }:undefined;
   return {protect,commit:()=>{
     const items:NonNullable<NonNullable<World['destroyed']>['items']>={};
     for(const entry of wear)if(!entry.remaining){const p=piles.find(p=>p.id===entry.id)!;items[p.item]=(items[p.item]??0)+p.quantity;}
     const ledger=Object.keys(items).length?neutralLossPlan(world,{items}):undefined;
-    if(ledger===null)throw new RangeError('Stab apparel losses exhausted');
+    if(ledger===null)throw new RangeError('Sequential apparel losses exhausted');
     for(const entry of wear){const p=piles.find(p=>p.id===entry.id)!;
       if(entry.remaining)p.apparel!.hitPoints=entry.remaining;
       else {removeIdentity(world.piles,p);if(pawn.equipmentTask?.itemId===p.id)releaseAssignments(world,pawn);}

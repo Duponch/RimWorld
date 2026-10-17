@@ -1,7 +1,11 @@
+import {validExplorationDoorApproacher256,type ResolveExplorationApproacher256} from './exploration-door-256.ts';
+import {captureActualExplorationApproachers256} from './exploration-actors-256.ts';
+import {explorationEnabled256} from './exploration-state-256.ts';
 import { doorOpenness, doorMotionTicks, manualDoorOpenTicks } from './door-rules.ts';
 import type { World } from './types.ts';
-export function validateDoors(world:World,version:number):string[] {
-  const errors:string[]=[];
+export function validateDoors(world:World,version:number,providedResolver?:ResolveExplorationApproacher256):string[] {
+  const errors:string[]=[];let actual:ResolveExplorationApproacher256|undefined;
+  const resolve:ResolveExplorationApproacher256=providedResolver??(id=>{actual??=captureActualExplorationApproachers256(world);return actual(id);});
   for(const s of [...world.structures,...world.jobs]) {
     const d=(s as import('./types.ts').Structure).door;
     const isDoor=s.kind==='door'||version>=119&&s.kind==='fence-gate'||version>=143&&s.kind==='autodoor';
@@ -9,7 +13,9 @@ export function validateDoors(world:World,version:number):string[] {
     if(!isDoor||!world.structures.includes(s as import('./types.ts').Structure)||version<34) {
       if(d!==undefined)errors.push('Unexpected door state.');continue;
     }
-    if(!d||typeof d!=='object'||Array.isArray(d)||Object.keys(d).length!==(s.kind==='autodoor'?8:7)||!['open','holdOpen','forbidden'].every(k=>typeof d[k as keyof typeof d]==='boolean')
+    const approach=!!d&&Object.hasOwn(d,'explorationApproacherId');
+    try{if(d&&!validExplorationDoorApproacher256(d,version,explorationEnabled256(world),world.nextId,resolve)){errors.push('Invalid actual exploration door approach owner.');continue;}}catch{errors.push('Unresolved actual exploration actor owner.');continue;}
+    if(!d||typeof d!=='object'||Array.isArray(d)||Object.keys(d).length!==(s.kind==='autodoor'?8:7)+(approach?1:0)||!['open','holdOpen','forbidden'].every(k=>typeof d[k as keyof typeof d]==='boolean')
       ||!Number.isSafeInteger(d.changedAt)||d.changedAt<0||d.changedAt>world.tick||!Number.isFinite(d.from)||d.from<0||d.from>1
       ||!Number.isSafeInteger(d.lastTouch)||d.lastTouch< -12||d.lastTouch>world.tick
       ||!(d.closeAt===null||Number.isFinite(d.closeAt)&&d.closeAt>=world.tick&&d.closeAt<=world.tick+21)

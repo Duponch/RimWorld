@@ -1,3 +1,6 @@
+import {arrivalRotationYaw256} from '../sim/arrival-rotation-256';
+import {actorExplorationMaterial256} from './ExplorationMask256';
+import {isAnimalSpecies256} from '../sim/animal-core-v256';
 import { attachedFireMesh,presentAttachedFire, setFireTexturesEnabled } from './FireLayer';
 import { AnimationDetail } from './AnimationDetail';
 import {ActorAnimationCache,sampleActorRoot} from './ActorAnimationCache';
@@ -33,7 +36,7 @@ import { growPawnBuffers } from './pawn-buffers';
 import { pileSurfaces,pileIdentitySurfaces,type PileSurface } from './pile-surfaces';
 import { PAWN_MODEL_SCALE,WORLD_SCALE } from '../world/scale';
 
-type VisualAnimal=Pick<WildAnimal,'id'|'species'|'state'|'x'|'z'|'sex'|'ageTicks'|'motion'|'meal'|'strike'|'stun'|'threat'|'predation'|'manhunter'|'health'|'domestic'>&{corpsePile?:MaterialPile;carrierId?:number};
+type VisualAnimal=Pick<WildAnimal,'id'|'species'|'state'|'x'|'z'|'sex'|'ageTicks'|'growthTracker'|'arrivalRotation'|'motion'|'meal'|'strike'|'stun'|'threat'|'predation'|'manhunter'|'health'|'domestic'>&{corpsePile?:MaterialPile;carrierId?:number};
 
 /** Resident capacity and node graph. CPU supplies edges/phases at snapshots
  * and segment boundaries; continuous translation and the rig run on the GPU. */
@@ -63,7 +66,7 @@ class SpeciesRig {
   constructor(readonly travelTime:WildlifeLayer['travelTime'],private readonly species:string,surfaceTexture:THREE.Texture,style:AnimalSlaughterMarkerStyle,private readonly animationDetail:AnimationDetail,configure?:(m:THREE.MeshStandardNodeMaterial)=>void) {
     this.animationCache=new ActorAnimationCache(animationDetail);
     this.gaitRate=animalGaitRadiansPerUnit(species);
-    const geometry=hareGeometry(MAX_WILDLIFE,species);
+    const geometry=hareGeometry(isAnimalSpecies256(species)?16:MAX_WILDLIFE,species);
     geometry.userData.animationCache=this.animationCache;
     const part=geometry.getAttribute('animalPart');this.sampledBones=[...new Set(Array.from({length:part.count},(_,i)=>part.getX(i)))].sort((a,b)=>a-b);
     bakeAnimalCoatCoordinates(geometry,species);
@@ -74,7 +77,7 @@ class SpeciesRig {
     const restFloor=.025-bounds.min.x,bodyCenter=animalParts(species)[0]!.center[1];
     this.restingHeight=bounds.max.x+restFloor;
     this.restingRadius=Math.max(Math.abs(bodyCenter-bounds.min.y),Math.abs(bodyCenter-bounds.max.y),Math.abs(bounds.min.z),Math.abs(bounds.max.z))+.1;
-    const mat=material(0xffffff);configure?.(mat);
+    const mat=material(0xffffff);configure?.(actorExplorationMaterial256(mat));
     mat.colorNode=bodyBloodPigment(attribute('color','vec3'),attribute('animalPart','vec4').z,species==='hare'||species==='snow-hare'?2:1,attribute('animalPart','vec4').w.lessThan(0).select(float(1),float(0)),attribute('aBiology','vec3').y);
     mat.positionNode=Fn(()=>{
       const cached=this.animationCache.cached().toVar();
@@ -154,7 +157,7 @@ class SpeciesRig {
       });
       return result;
     })();
-    const textured=material(0xffffff);configure?.(textured);
+    const textured=material(0xffffff);configure?.(actorExplorationMaterial256(textured));
     textured.positionNode=mat.positionNode;
     textured.colorNode=mat.colorNode.mul(animalCoatShade(surfaceTexture));
     this.plainMaterial=mat;this.texturedMaterial=textured;
@@ -237,7 +240,7 @@ class SpeciesRig {
         const sourceFrom=source?.getAttribute('aFrom'),sourceTo=source?.getAttribute('aTo'),sourceTravel=source?.getAttribute('aTravel'),motion=source?.getAttribute('aMotion');
         const signature=[origin,held,handoff?.start,handoff?.end,...[sourceFrom,sourceTo,sourceTravel,motion].flatMap(attr=>attr?[attr.getX(index),attr.getY(index),attr.getZ(index),attr.getW(index)]:[])].join(':');
         if(this.keys.get(a.id)===signature)return;this.keys.set(a.id,signature);dirty=true;
-        const size=bodySizeAtAge(corpse.species,corpse.ageTicks)/animalSpecies(corpse.species).bodySize;
+        const size=bodySizeAtAge(corpse.species,corpse.ageTicks,corpse.growthTracker?.value)/animalSpecies(corpse.species).bodySize;
         scale.setX(i,size);state.setXYZW(i,0,0,2,0);
         blood.setX(i,bodyBloodWord(corpse.health,part=>corpsePartAbsent(corpse,part)));absent.setX(i,corpseVisualMask(corpse));
         carrierState.setXYZW(i,held&&carrier?1:0,motion?.getZ(index)??0,motion?.getW(index)??0,0);
@@ -264,9 +267,9 @@ class SpeciesRig {
         const carrier=pawns?.animalCorpseCarrier(a.carrierId),source=carrier?.geometry,index=carrier?.index??0;
         if(carrier)this.carrierSlots.set(i,index);else this.carrierSlots.delete(i);
         const f=source?.getAttribute('aFrom'),t=source?.getAttribute('aTo'),travel=source?.getAttribute('aTravel'),motion=source?.getAttribute('aMotion');
-        const signature=['rescue',i,origin,a.carrierId,a.state,...[f,t,travel,motion].flatMap(attr=>attr?[attr.getX(index),attr.getY(index),attr.getZ(index),attr.getW(index)]:[])].join(':');
+        const signature=['rescue',i,origin,a.carrierId,a.state,a.growthTracker?.value,...[f,t,travel,motion].flatMap(attr=>attr?[attr.getX(index),attr.getY(index),attr.getZ(index),attr.getW(index)]:[])].join(':');
         if(this.keys.get(a.id)===signature)return;this.keys.set(a.id,signature);dirty=true;
-        const growth=bodySizeAtAge(a.species,a.ageTicks)/animalSpecies(a.species).bodySize;
+        const growth=bodySizeAtAge(a.species,a.ageTicks,a.growthTracker?.value)/animalSpecies(a.species).bodySize;
         scale.setX(i,growth);state.setXYZW(i,0,0,1,0);blood.setX(i,bodyBloodWord(a.health));
         absent.setX(i,a.health?corpseVisualMask({animalId:a.id,species:a.species,sex:a.sex,ageTicks:a.ageTicks,health:a.health}):0);
         transfer.setXY(i,0,0);carrierState.setXYZW(i,carrier?1:0,motion?.getZ(index)??0,motion?.getW(index)??0,0);
@@ -275,7 +278,7 @@ class SpeciesRig {
         return;
       }
       const edge=timeline?.segment(a.id)??a.motion,active=!!edge&&tick>=edge.start&&tick<edge.end;
-      const growth=bodySizeAtAge(a.species,a.ageTicks)/animalSpecies(a.species).bodySize;
+      const growth=bodySizeAtAge(a.species,a.ageTicks,a.growthTracker?.value)/animalSpecies(a.species).bodySize;
       const fromFraction=edge&&'fromFraction' in edge?edge.fromFraction:undefined,toFraction=edge&&'toFraction' in edge?edge.toFraction:undefined;
       const key=`${i}:${origin}:${edge?.start}:${edge?.end}:${fromFraction}:${toFraction}:${active}:${a.state}:${a.meal?.id}:${a.strike?.atCore}:${a.stun?.untilCore}:${a.threat?.targetId}:${a.predation?.targetId}:${a.manhunter?.targetId}:${a.manhunter?.door?.targetId}:${growth}`;if(this.keys.get(a.id)===key)return;this.keys.set(a.id,key);dirty=true;
       carrierState.setXYZW(i,0,0,0,0);transfer.setXY(i,0,0);
@@ -284,7 +287,7 @@ class SpeciesRig {
       const fallen=a.state==='dead'||a.state==='downed';
       const traveling=!!edge&&(active||a.state==='moving'&&world.tick<edge.end);
       const f=traveling?edge.from:a,t=traveling?edge.to:a;
-      let yaw=edge?Math.atan2(edge.to.x-edge.from.x,edge.to.z-edge.from.z):0;
+      let yaw=edge?Math.atan2(edge.to.x-edge.from.x,edge.to.z-edge.from.z):arrivalRotationYaw256(a)??0;
       if(!traveling&&a.meal){const m=a.meal,target=m.kind==='plant'?world.resources.find(r=>r.id===m.id):world.piles.find(p=>p.id===m.id)?.owner;if(target&&'x' in target&&(target.x!==a.x||target.z!==a.z))yaw=Math.atan2(target.x-a.x,target.z-a.z);}
       if(!traveling&&(a.strike||a.threat||a.predation||a.manhunter?.targetId)){const targetId=a.strike?.targetId??a.threat?.targetId??a.predation?.targetId??a.manhunter?.door?.targetId??a.manhunter?.targetId;
         const target=a.strike?.structure??world.pawns.find(p=>p.id===targetId)??world.wildlife?.animals.find(p=>p.id===targetId)??world.structures.find(s=>s.id===a.manhunter?.door?.targetId);
@@ -329,7 +332,8 @@ class SpeciesRig {
   }
 }
 
-/** Seven resident species batches; all owners share each exact body and coat. */
+/** Resident species batches; prospective species start at16, grow together,
+ * and participate in the existing initial shadow preparation. */
 export class WildlifeLayer {
   readonly mesh=new THREE.Group();readonly flames=new THREE.Group();readonly travelTime=uniform(0).setGroup(renderGroup);
   private readonly surfaceTextures={soft:createAnimalCoatTexture('soft'),short:createAnimalCoatTexture('short'),shaggy:createAnimalCoatTexture('shaggy')};

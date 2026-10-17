@@ -118,7 +118,7 @@ export function validForcedConsumeTransport(world:World,knownConsumers?:readonly
     }
     for(const actor of world.pawns){
       if(actors.has(actor.id))return false;actors.set(actor.id,actor);
-      const s=serviceCell(actor);if(s)claim(services,key(s),actor.id);
+      const s=serviceCell(actor,world);if(s)claim(services,key(s),actor.id);
       if(actor.feed?.paste&&(actor.feed.phase==='pickup'||actor.feed.phase==='collect'))claim(services,key(actor.feed.spot),actor.id);
       for(const order of actor.orders?.queue??[])if(isCookingOrder(order))claim(services,key(order.cooking.spot),actor.id);
       for(const task of [actor.tend,actor.feed,actor.ward,actor.surgery,actor.rescue])if(task)claim(patients,task.patientId,actor.id);

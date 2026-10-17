@@ -5,7 +5,7 @@ import { FILTH_ATLAS,createFilthAtlas,filthDecal } from '../src/render/filth-app
 import { FilthLayer } from '../src/render/FilthLayer.ts';
 
 const record=(kind:FilthKind,x=7,z=11):FilthRecord=>({id:42,kind,x,z,thickness:1,grownCore:123,expiresAfterCore:456,nextCheckCore:789});
-const limits:Record<FilthKind,number>={dirt:97,trash:255,blood:180,ash:220,vomit:180,'corpse-bile':255};
+const limits:Record<FilthKind,number>={dirt:97,trash:255,blood:180,ash:220,vomit:180,'corpse-bile':255,'building-rubble':255,'rock-rubble':255,slime:170};
 
 function usedTiles(kind:FilthKind):number[] {
   const tiles=new Set<number>();
@@ -20,11 +20,11 @@ function alphas(data:Uint8Array,width:number,tile:number):number[] {
 }
 
 describe('aspect physique des salissures V107',()=>{
-  it('produit les 24 tuiles RGBA attendues, avec bords transparents et silhouettes non rectangulaires',()=>{
+  it('produit les 36 tuiles RGBA attendues, avec bords transparents et silhouettes non rectangulaires',()=>{
     const {data,width,height}=createFilthAtlas(),{tileSize,columns,rows,variants}=FILTH_ATLAS;
-    expect({tileSize,columns,rows,variants}).toEqual({tileSize:128,columns:8,rows:3,variants:4});
-    expect({width,height,length:data.length}).toEqual({width:1024,height:384,length:1024*384*4});
-    for(let tile=0;tile<columns*rows;tile++){
+    expect({tileSize,columns,rows,variants}).toEqual({tileSize:128,columns:8,rows:5,variants:4});
+    expect({width,height,length:data.length}).toEqual({width:1024,height:640,length:1024*640*4});
+    for(let tile=0;tile<FILTH_KINDS.length*variants;tile++){
       const a=alphas(data,width,tile);
       let left:number=tileSize,top:number=tileSize,right:number=-1,bottom:number=-1;
       for(let y=0;y<tileSize;y++)for(let x=0;x<tileSize;x++)if(a[y*tileSize+x]!>0){left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x);bottom=Math.max(bottom,y);}
@@ -40,6 +40,8 @@ describe('aspect physique des salissures V107',()=>{
       for(let y=top;y<=bottom&&!transparentInside;y++)for(let x=left;x<=right;x++)if(a[y*tileSize+x]===0){transparentInside=true;break;}
       expect(transparentInside,`silhouette carrée ${tile}`).toBe(true);
     }
+    // The final atlas row has four intentionally unused transparent tiles.
+    for(let tile=FILTH_KINDS.length*variants;tile<columns*rows;tile++)expect(alphas(data,width,tile).every(a=>a===0)).toBe(true);
   });
 
   it('offre quatre variantes par espèce, des alphas nuancés et une terre moins dense que le sang',()=>{
@@ -54,7 +56,7 @@ describe('aspect physique des salissures V107',()=>{
         expect(a.some(v=>v>0&&v<limit),`${kind} sans alpha intermédiaire`).toBe(true);
       }
     }
-    expect(all.size).toBe(24);
+    expect(all.size).toBe(36);
     const mass=(kind:FilthKind)=>groups.get(kind)!.reduce((sum,tile)=>sum+alphas(atlas.data,atlas.width,tile).reduce((s,a)=>s+a,0),0);
     expect(mass('dirt')).toBeLessThan(mass('blood'));
   });

@@ -3,7 +3,7 @@ import {allowedFood,type FoodItemId} from './food-policy.ts';
 import {ITEM_DEFINITIONS,nutritionOf} from './items.ts';
 import {ticksUntilRot} from './food-preservation.ts';
 import {groupOnMapMember} from './group-state.ts';
-import type {Pawn,World} from './types.ts';
+import type {Pawn,World,MaterialPile,Structure} from './types.ts';
 
 export type FoodReadabilityStatus='matched'|'blocked'|'empty'|'engaged'|'paste-unchecked'|'excluded';
 export interface FoodPersonReadability {readonly pawnId:number;readonly status:FoodReadabilityStatus;readonly freshPileCount:number}
@@ -28,18 +28,19 @@ const bucket=():Bucket=>({items:new Set(),count:0});
 /** Pure, deliberately incomplete presentation reading of one confirmed map.
  * No reachability, prison topology, reservation, paste production or allocation
  * is inferred. Callers explicitly share this capture for the adoption cycle. */
-export function captureFoodReadability(world:World):FoodReadability {
+export interface FoodReadabilityVisibility {pileVisible?(pile:MaterialPile):boolean;structureVisible?(structure:Structure):boolean}
+export function captureFoodReadability(world:World,visibility:FoodReadabilityVisibility={}):FoodReadability {
  const people=world.pawns.filter(civil),ids=new Set(people.map(p=>p.id)),ground=bucket(),held=new Map<number,Bucket>();
  let freshNutrition=0,survivalMeals=0,freshPileCount=0;
  for(const pile of world.piles){
-  if(pile.kind!=='food'||pile.item==='hay'||pile.quantity<=0||!ITEM_DEFINITIONS[pile.item].nutrition||ticksUntilRot(pile,world.tick)<=0)continue;
+  if(visibility.pileVisible?.(pile)===false||pile.kind!=='food'||pile.item==='hay'||pile.quantity<=0||!ITEM_DEFINITIONS[pile.item].nutrition||ticksUntilRot(pile,world.tick)<=0)continue;
   const owner=pile.owner;
   if(owner.type!=='ground'&&(owner.type!=='pawn'||!ids.has(owner.pawnId)))continue;
   freshNutrition+=nutritionOf(pile)/100;freshPileCount++;if(pile.item==='survival-meal')survivalMeals+=pile.quantity;
   const target=owner.type==='ground'?ground:held.get(owner.pawnId)??bucket();target.items.add(pile.item as FoodItemId);target.count++;
   if(owner.type==='pawn')held.set(owner.pawnId,target);
  }
- const pasteExists=world.structures.some(s=>s.kind==='nutrient-paste-dispenser');
+ const pasteExists=world.structures.some(s=>visibility.structureVisible?.(s)!==false&&s.kind==='nutrient-paste-dispenser');
  const byPawn=new Map<number,FoodPersonReadability>(),blockedPawnIds:number[]=[],evaluatedPawnIds:number[]=[],engagedPawnIds:number[]=[],pasteUncheckedPawnIds:number[]=[],excludedPawnIds:number[]=[];
  for(const pawn of people){
   const own=held.get(pawn.id),count=ground.count+(own?.count??0);let status:FoodReadabilityStatus;

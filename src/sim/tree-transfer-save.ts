@@ -67,7 +67,7 @@ export function validTreeJobShape(job:unknown,version:number,nextId:number):bool
   if(task.phase==='pickup')return task.carryPileId===null&&task.workCore===0&&!Object.hasOwn(task,'durationCore');
   if(task.carryPileId!==task.sourcePileId)return false; // Whole identity; no cloned carry ID.
   if(task.phase==='carry')return task.workCore===0&&!Object.hasOwn(task,'durationCore');
-  return integer(task.durationCore,1,17500)&&task.workCore<=task.durationCore;
+  return integer(task.durationCore,1,version>=256?22500:17500)&&task.workCore<=task.durationCore;
 }
 export interface TreeDomainInput {
   version:number;tick:number;nextId:number;occurrences:readonly TreeOwnerOccurrence[];

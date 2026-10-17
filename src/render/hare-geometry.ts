@@ -23,10 +23,10 @@ export function hareGeometry(capacity:number,species='hare'):THREE.InstancedBuff
     const length=Math.hypot(nx,ny,nz)||1;nx/=length;ny/=length;nz/=length;
     const headWeight=(a.ring.headWeight+b.ring.headWeight+c.ring.headWeight+d.ring.headWeight)/4,z=(az+bz+cz+d.position[2])/4;
     const jawStart=species==='hare'||species==='snow-hare'?.365:species==='red-fox'?.55:core.rings[core.rings.length-2]!.z;
-    const part:BodyPartId=species==='red-fox'&&z>.69?'nose':headWeight>=.75&&z>jawStart?'jaw':headWeight>=.75?'head':headWeight>0?'neck':species==='dromedary'&&ny>.3&&z>-.45&&z<.26?'hump':'torso';
+    const part:BodyPartId=a.ring.part??(species==='red-fox'&&z>.69?'nose':headWeight>=.75&&z>jawStart?'jaw':headWeight>=.75?'head':headWeight>0?'neck':species==='dromedary'&&ny>.3&&z>-.45&&z<.26?'hump':'torso');
     for(const point of [a,b,c,a,c,d]){
       const tint=new THREE.Color(point.ring.color),[x,y,z]=point.position;
-      data.push(x,y,z,nx,ny,nz,tint.r,tint.g,tint.b,4+point.ring.headWeight,corpseVisualPartBit(part),bodyBloodRegion(part,true),-1,...core.headPivot);
+      data.push(x,y,z,nx,ny,nz,tint.r,tint.g,tint.b,4+point.ring.headWeight,corpseVisualPartBit(part,species),bodyBloodRegion(part,true),-1,...core.headPivot);
     }
   };
   const rings=core.rings;
@@ -47,7 +47,7 @@ export function hareGeometry(capacity:number,species='hare'):THREE.InstancedBuff
     }g.computeVertexNormals();}
     if(roll)g.rotateX(roll);
     const n=g.getAttribute('normal');
-    for(let i=0;i<p.count;i++)data.push(p.getX(i)+at[0]!,p.getY(i)+at[1]!,p.getZ(i)+at[2]!,n.getX(i),n.getY(i),n.getZ(i),c.r,c.g,c.b,bone,corpseVisualPartBit(bodyPart),bodyBloodRegion(bodyPart,true),eye,...pivot);
+    for(let i=0;i<p.count;i++)data.push(p.getX(i)+at[0]!,p.getY(i)+at[1]!,p.getZ(i)+at[2]!,n.getX(i),n.getY(i),n.getZ(i),c.r,c.g,c.b,bone,corpseVisualPartBit(bodyPart,species),bodyBloodRegion(bodyPart,true),eye,...pivot);
     g.dispose();
   }
   for(const p of animalParts(species))if(!p.core){

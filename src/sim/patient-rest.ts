@@ -1,3 +1,4 @@
+import {claimLocalActorBed256,captureActorBeds256,localBedClaimAvailable256} from './actor-bed-local-256.ts';
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { allowedAreaAllows } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
@@ -25,10 +26,11 @@ export function patientWork(p:Pawn):'patient'|'bedrest'|undefined {
 export function patientProposal(world:World,pawn:Pawn,reach:Reachability):PatientRestProposal|undefined {
   if(lyingBlocked(world,pawn))return;
   let work=patientWork(pawn);if(!work)return;
+  const bedOwners=world.schemaVersion>=256?captureActorBeds256(world):undefined;
   if(work==='patient'&&!pawn.surgeryRequest&&!urgentTreatment(pawn)&&!world.pawns.some(p=>p!==pawn&&workPriority(p,'doctor')>0&&!medicalWorkRefusal(p)&&p.state!=='sleeping'&&p.state!=='resting'&&!p.medicalSleep&&!(p.need?.kind==='sleep'&&p.need.phase==='sleep')&&routeToCell(world,p,reach)!==null)){
     if(!pawn.prisoner&&!isAdmittedGuest(pawn)&&workPriority(pawn,'bedrest')===0)return;work='bedrest';
   }
-  const beds=world.structures.flatMap(b=>rescueBedPlaces(world,b,pawn,pawn.id).filter(place=>allowedAreaAllows(world,pawn,place.cell)).map(place=>({bed:b,cell:place.cell,slot:place.bedSlot})))
+  const beds=world.structures.flatMap(b=>rescueBedPlaces(world,b,pawn,pawn.id).filter(place=>allowedAreaAllows(world,pawn,place.cell)&&localBedClaimAvailable256(world,b,pawn,place.bedSlot,bedOwners)).map(place=>({bed:b,cell:place.cell,slot:place.bedSlot})))
     .sort((a,b)=>medicalBedPreference(a.bed)-medicalBedPreference(b.bed)||Number(a.bed.id!==pawn.bedId)-Number(b.bed.id!==pawn.bedId)
       ||(a.cell.x-pawn.x)**2+(a.cell.z-pawn.z)**2-(b.cell.x-pawn.x)**2-(b.cell.z-pawn.z)**2||a.bed.id-b.bed.id||(a.slot??0)-(b.slot??0));
   // An actual occupied bed remains the service until it becomes invalid.
@@ -44,7 +46,7 @@ export function startPatientRest(world:World,pawn:Pawn,proposal:PatientRestPropo
   if(bed.kind==='double-bed'&&(proposal.bedSlot===undefined||!!pawn.surgeryRequest||!rescueBedAvailable(world,bed,pawn,pawn.id,false,proposal.bedSlot)))return;
   const target=bed.kind==='double-bed'&&proposal.bedSlot!==undefined?bedSlotCell(bed,proposal.bedSlot):bed;
   if(!target)return;
-  if(!bed.medical){pawn.bedId=bed.id;if(bed.kind==='double-bed')pawn.bedSlot=proposal.bedSlot;else delete pawn.bedSlot;}
+  if(!bed.medical)claimLocalActorBed256(world,pawn,bed,bed.kind==='double-bed'?proposal.bedSlot:undefined);
   pawn.need={kind:'sleep',phase:'travel',bedId:bed.id,target:{x:target.x,z:target.z},medical:proposal.work};
   pawn.path=proposal.path;pawn.state='moving';pawn.planCooldown=0;
 }

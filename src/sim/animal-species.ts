@@ -1,16 +1,21 @@
+import {ANIMAL_SPECIES_256,type AnimalLeatherItem256} from './animal-species-v256.ts';
+import {ANIMAL_SPECIES_IDS_256,isAnimalSpecies256} from './animal-core-v256.ts';
+import type {AnimalBodyDef256} from './animal-anatomy-data-v256.ts';
 import type { BodyPartId } from './body-definition.ts';
 import type { MeleeDamage, MeleeToolId } from './melee-statistics.ts';
 
-export const ANIMAL_SPECIES_IDS = ['hare','snow-hare','deer','muffalo','gazelle','dromedary','red-fox'] as const;
+export const LEGACY_ANIMAL_SPECIES_IDS = ['hare','snow-hare','deer','muffalo','gazelle','dromedary','red-fox'] as const;
+export const ANIMAL_SPECIES_IDS=[...LEGACY_ANIMAL_SPECIES_IDS,...ANIMAL_SPECIES_IDS_256] as const;
 export type AnimalSpeciesId = typeof ANIMAL_SPECIES_IDS[number];
 export type AnimalCorpseItem = `${AnimalSpeciesId}-corpse`;
-export type AnimalMeatItem = `${AnimalSpeciesId}-meat`;
-export type AnimalLeatherItem = 'light-leather'|'plainleather'|'bluefur'|'camelhide'|'foxfur';
+export type AnimalMeatItem = `${AnimalSpeciesId}-meat`|'pig-meat';
+export type AnimalLeatherItem = AnimalLeatherItem256 | 'light-leather'|'plainleather'|'bluefur'|'camelhide'|'foxfur';
 export type FaunaBiomeId = 'temperate-forest'|'boreal-forest'|'arid-shrubland'|'tundra';
 
 export interface AnimalMeleeProfile {
   readonly id:MeleeToolId;
   readonly sourcePart:BodyPartId;
+  readonly sourceParts?:readonly BodyPartId[];
   readonly damage:number;
   readonly penetration:number;
   readonly kind:MeleeDamage;
@@ -26,7 +31,8 @@ export interface AnimalSpeciesProfile {
   readonly combatPower:number;
   readonly predator?:true;
   readonly maxPreySize?:number;
-  readonly bodyTemplate:'paws'|'hooves'|'camelid';
+  readonly bodyTemplate:'paws'|'hooves'|'camelid'|AnimalBodyDef256;
+  readonly core256?:true;
   /** Maximum stored nutrition for one adult. */
   readonly nutrition:number;
   readonly foodPerDay:number;
@@ -38,7 +44,7 @@ export interface AnimalSpeciesProfile {
   readonly wildGroupSize:readonly [number,number];
   readonly corpseItem:AnimalCorpseItem;
   readonly meatItem:AnimalMeatItem;
-  readonly leatherItem:AnimalLeatherItem;
+  readonly leatherItem:AnimalLeatherItem|null;
   readonly rawMeat:number;
   readonly rawLeather:number;
   readonly melee:readonly AnimalMeleeProfile[];
@@ -84,6 +90,7 @@ const foxMelee=Object.freeze([
 /** Effective adult rates are the local Core declarations after the shared
  * ×1.6 need factor, rounded as the UI values used by the V76 hare contract. */
 export const ANIMAL_SPECIES:Readonly<Record<AnimalSpeciesId,AnimalSpeciesProfile>>=Object.freeze({
+  ...ANIMAL_SPECIES_256,
   hare:profile({id:'hare',label:'lièvre',combatPower:33,bodySize:.2,healthScale:.4,bodyTemplate:'paws',nutrition:.2,foodPerDay:.18,moveTicks:1,walkTicks:5,ingestTicks:50,ecoSystemWeight:.25,wildGroupSize:[1,1],leatherItem:'light-leather',melee:HARE_MELEE}),
   'snow-hare':profile({id:'snow-hare',label:'lièvre des neiges',combatPower:33,bodySize:.2,healthScale:.4,bodyTemplate:'paws',nutrition:.2,foodPerDay:.18,moveTicks:1,walkTicks:5,ingestTicks:50,ecoSystemWeight:.25,wildGroupSize:[1,1],leatherItem:'light-leather',melee:HARE_MELEE}),
   deer:profile({id:'deer',label:'cerf',combatPower:50,bodySize:1.2,healthScale:.9,bodyTemplate:'hooves',nutrition:1.2,foodPerDay:.32,moveTicks:6/5.5,walkTicks:30/5.5,ingestTicks:50,ecoSystemWeight:.5,wildGroupSize:[3,9],leatherItem:'plainleather',melee:deerMelee}),
@@ -93,6 +100,7 @@ export const ANIMAL_SPECIES:Readonly<Record<AnimalSpeciesId,AnimalSpeciesProfile
   'red-fox':profile({id:'red-fox',label:'renard roux',combatPower:45,predator:true,maxPreySize:.8,bodySize:.55,healthScale:.7,bodyTemplate:'paws',nutrition:.55,foodPerDay:.16,moveTicks:6/4.6,walkTicks:30/4.6,ingestTicks:50,ecoSystemWeight:.25,wildGroupSize:[1,1],leatherItem:'foxfur',melee:foxMelee}),
 });
 export const isAnimalSpecies=(value:unknown):value is AnimalSpeciesId=>typeof value==='string'&&(ANIMAL_SPECIES_IDS as readonly string[]).includes(value);
+export const isAnimalSpeciesInVersion=(value:unknown,version:number):value is AnimalSpeciesId=>isAnimalSpecies(value)&&(version>=256||!isAnimalSpecies256(value));
 export const animalSpecies=(id:AnimalSpeciesId):AnimalSpeciesProfile=>ANIMAL_SPECIES[id];
 
 export interface BiomeFaunaEntry {readonly species:AnimalSpeciesId;readonly commonality:number}

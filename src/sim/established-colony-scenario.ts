@@ -293,7 +293,7 @@ export function prepareEstablishedColonyScenario(): World {
       domestic: { since: 0, care: 'herbal', tameness: 4, nextDecay: 45000, penMarkerId: marker.id, productFullness: .6 } };
     animal.food = animalNutritionMax(animal) * .9; world.wildlife.animals.push(animal);
   }
-  if (world.flora) world.flora.capacity = Math.max(world.flora.capacity, world.resources.filter(resource => resource.species !== undefined).length);
+  if (world.flora?.revision===1) world.flora.capacity = Math.max(world.flora.capacity, world.resources.filter(resource => resource.species !== undefined).length);
 
   // Explicit prepared technologies are distinct from the real future project.
   world.research = { project: 'fabrication', points: researchCost('complex-clothing'), completedAt: 0 };

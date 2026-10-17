@@ -1,3 +1,10 @@
+import {validNativeHumanField256,validHumanAgeForPawn256} from './native-human-identity-256.ts';
+import {validHiveDefeatMemory256} from './cave-hive-memories-256.ts';
+import {validAncientOpeningField256} from './ancient-casket-state-256.ts';
+import {validArrivalRotation256} from './arrival-rotation-256.ts';
+import {validActorMapBedField256} from './actor-map-bed-256.ts';
+import {validGroupCaravanCarryPawnField256} from './group-caravan-carry-256.ts';
+import {validPawnMapAreasRecord} from './pawn-map-areas.ts';
 import { validForcedConsumePawnShape } from './consume-save.ts';
 import { validAllowedAreaPawnShape } from './allowed-area-save.ts';
 import { validBedSlotPawnShape } from './double-bed-save.ts';
@@ -8,7 +15,7 @@ import { validFamilyBereavementShape } from './family-bereavement-save.ts';
 import { validDeathThoughtsPawnShape } from './death-thoughts-save.ts';
 import { validRomanceMemoryShape } from './romance-memories.ts';
 import {validatePawnAppearance} from './pawn-appearance.ts';
-import { legacyHumanAge, validHumanAge } from './human-age.ts';
+import { legacyHumanAge } from './human-age.ts';
 import { validRoomExperience } from './room-experience.ts';
 import { validHumanBodyShape,validHumanCorpseShape,validGraveShape,validBurialTaskShape,validateBurials } from './burial-save.ts';
 import { validVisitorShape,validateVisitors } from './visitor-save.ts';
@@ -54,16 +61,25 @@ export type PawnRecordContext=Pick<World,'width'|'height'|'tick'|'nextId'>;
 export function validatePawnRecordShape(item:Record<string,unknown>,world:World,version:number,validationTick=world.tick):string[] {return pawnRecordShape(item,world,version,validationTick,false);}
 /** Personal record only: detached owners cannot acquire local bed/area authorities. */
 export function validateDetachedPawnRecordShape(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick=context.tick):string[] {return pawnRecordShape(item,context,version,validationTick,true);}
-function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,version:number,validationTick:number,detached:boolean):string[] {
+/** Away ownership has real origin IDs, never manufactured Area objects. */
+export function validateAwayPawnRecordShape(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick:number,areaIds:ReadonlySet<number>):string[] {return pawnRecordShape(item,context,version,validationTick,true,areaIds);}
+function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,version:number,validationTick:number,detached:boolean,awayAreaIds?:ReadonlySet<number>):string[] {
   const input=world as unknown as Record<string,unknown>;
   const legacyV2=version===2, size=world.width*world.height, errors:string[]=[];
+  if(!validNativeHumanField256(item,version))errors.push('Invalid or future actual native human identity.');
+  if(!validHiveDefeatMemory256(item,version,validationTick))errors.push('Invalid or future Hive defeat memory.');
+  if(!validArrivalRotation256(item,version))errors.push('Invalid or future arrival rotation.');
+  if(!validAncientOpeningField256(item,version,validationTick,world.nextId))errors.push('Invalid or future actual casket opening.');
+  if(!validActorMapBedField256(item,version,world.nextId))errors.push('Invalid or future original bed reference.');
+  if(!validGroupCaravanCarryPawnField256(item,version))errors.push('Invalid or future caravan carrying preference.');
+  if(!validPawnMapAreasRecord(item,version,world.nextId))errors.push('Invalid or future per-map area settings.');
   if(!validForcedConsumePawnShape(item,version,world))errors.push('Invalid or future forced consumption marker or mandate.');
-  if(detached?Object.hasOwn(item,'allowedAreaId')||Object.hasOwn(item,'allowedAreaReturn'):!validAllowedAreaPawnShape(item,world as World,version))errors.push('Invalid or future allowed area assignment or return shape.');
+  if(detached?(Object.hasOwn(item,'allowedAreaReturn')||Object.hasOwn(item,'allowedAreaId')&&(awayAreaIds===undefined||!integer(item.allowedAreaId,1,world.nextId-1)||!awayAreaIds.has(item.allowedAreaId))):!validAllowedAreaPawnShape(item,world as World,version))errors.push('Invalid or future allowed area assignment or return shape.');
   if(detached?item.bedId!==null||Object.hasOwn(item,'bedSlot')||Object.hasOwn(item,'rescue'):!validBedSlotPawnShape(item,world as World,version))errors.push('Invalid or future bed slot shape.');
   if(Object.hasOwn(item,'animalRescue')&&!validAnimalRescueShape(item.animalRescue,version))errors.push('Invalid or future animal rescue shape.');
   const coord=(value:Record<string,unknown>)=>integer(value.x,0,world.width-1)&&integer(value.z,0,world.height-1);
   if(!validPawnPodRescue(item,version,input as unknown as World))errors.push('Invalid or future pod rescue mandate for schema.');
-  if(!validHumanAge(item.age,version))errors.push('Invalid or future human age.');
+  if(!validHumanAgeForPawn256(item,version))errors.push('Invalid or future human age.');
   if(!validDeathThoughtsPawnShape(item,version,validationTick))errors.push('Invalid or future perceived death memory.');
   if(version<195&&(Object.hasOwn(item,'familyBereavement')||Object.hasOwn(item,'romanceMemories'))
     ||!validFamilyBereavementShape(item.familyBereavement,version,validationTick)||!validRomanceMemoryShape(item.romanceMemories,version,validationTick))errors.push('Invalid or future family/romance memory shape.');
@@ -72,7 +88,7 @@ function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,ver
   if(version>=90?(typeof item.beauty!=='number'||!Number.isFinite(item.beauty)||item.beauty<0||item.beauty>100):item.beauty!==undefined)errors.push('Invalid or future beauty need.');
   for(const field of ['apparelPolicyId','apparelAutomation','nextApparelCheckAt'])if(version<90&&item[field]!==undefined)errors.push('Legacy pawn contains apparel policy state.');
   if(!validPrisonerPawnShape(item,version,input as unknown as World))errors.push('Invalid prisoner, warden or recruitment shape for schema.');
-  if(!validHumanBodyShape(item.body,version,validationTick)||!validBurialTaskShape(item.burial,version))errors.push('Invalid body or burial shape.');
+  if(!validHumanBodyShape(item.body,version,validationTick,item.health)||!validBurialTaskShape(item.burial,version))errors.push('Invalid body or burial shape.');
   const art=(item.priorities as Record<string,unknown>)?.art;if(version>=104?!integer(art,0,4):art!==undefined)errors.push('Invalid art priority for schema.');
   const clean=(item.priorities as Record<string,unknown>)?.clean;if(version>=89?!integer(clean,0,4):clean!==undefined)errors.push('Invalid cleaning priority for schema.');
   const firefight=(item.priorities as Record<string,unknown>)?.firefight;

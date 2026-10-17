@@ -13,6 +13,9 @@ import {blockedCells,workNeighbours} from '../../src/sim/pathfinding.ts';
 import {choppable} from '../../src/sim/plants.ts';
 import type {World} from '../../src/sim/types.ts';
 
+/** Historical basic-globe pilot; never reinterpret geographic revision3. */
+function legacyPlanet(w:Pick<World,'planet'>){const planet=w.planet;if(!planet||planet.revision===3)throw Error('This historical pilot requires a literal revision1/2 planet');return planet;}
+
 async function groupPanel(page:Page){await panel(page,'world');await page.locator('#world-tab-group').click();await expect(page.locator('[data-group-panel]')).toBeVisible();}
 async function action(page:Page,name:string){const button=page.locator(`[data-group-action="${name}"]`);await expect(button).toHaveAttribute('aria-disabled','false');await button.click();}
 
@@ -95,7 +98,7 @@ async function enter(page:Page,tile:number,ids:number[],info:TestInfo,label:stri
   const button=page.locator('[data-site-action="enter"]');await expect(button).toHaveAttribute('aria-disabled','false');await button.click();
   await page.waitForFunction(tile=>window.__lisiere.world.expeditionSite?.tile===tile,tile);
   await page.locator('[data-speed="6"]').click();await page.waitForFunction(()=>!window.__lisiere.world.group,undefined,{timeout:15_000});await pause(page);
-  const current=await world(page);expect(current.campaignMap?.active).toBe('secondary');
+  const current=await world(page);expect((current.campaignMap?.revision===2?undefined:current.campaignMap?.active)).toBe('secondary');
   expect(current.pawns.map(p=>p.id).sort()).toEqual([...ids].sort());expect(Object.hasOwn(current,'secondarySite')).toBe(false);
   await inspectPerson(page,ids[0]!,'gear');await page.screenshot({path:info.outputPath(label+'-site.png')});
   return current;
@@ -159,7 +162,7 @@ test(resumeOnly?'V377 exact native04 checkpoint: physical return and revisit':lo
       }
       proof.timeControlsUncovered=true;
       await action(page,'adopt');await page.waitForFunction(()=>!!window.__lisiere.world.planet);
-      expect((await world(page)).planet!.tiles[(await world(page)).planet!.homeTile]!.neighbours).toContain(f.tile);
+      const adopted=await world(page),planet=legacyPlanet(adopted);expect(planet.tiles[planet.homeTile]!.neighbours).toContain(f.tile);
       proof.outbound=await form(page,ids,f.tile,8,info,'outbound');await enter(page,f.tile,ids,info,'first-entry');
     }
     let exported:Pick<Awaited<ReturnType<typeof exportCampaign>>,'complete'|'active'>,cutTreeId:number;
@@ -182,8 +185,8 @@ test(resumeOnly?'V377 exact native04 checkpoint: physical return and revisit':lo
     const cut=await world(page);expect(cut.piles.some(p=>p.item==='wood'&&p.quantity>0&&p.owner.type==='ground')).toBe(true);
     for(const pawnId of ids)await perform(page,{reason:'Terminer la coupe avant le retour',command:{type:'priority',pawnId,work:'gather',value:0}},{value:0});
     proof.cut={tick:cut.tick,treeId:tree.id,jobId:chop.id};
-    await groupPanel(page);await page.locator('[data-site-action="home"]').click();await page.waitForFunction(()=>window.__lisiere.world.campaignMap?.active==='home');
-    expect((await world(page)).pawns.map(p=>p.id)).toEqual([f.residentId]);await groupPanel(page);await page.locator('[data-site-action="secondary"]').click();await page.waitForFunction(()=>window.__lisiere.world.campaignMap?.active==='secondary');
+    await groupPanel(page);await page.locator('[data-site-action="home"]').click();await page.waitForFunction(()=>(window.__lisiere.world.campaignMap?.revision===2?undefined:window.__lisiere.world.campaignMap?.active)==='home');
+    expect((await world(page)).pawns.map(p=>p.id)).toEqual([f.residentId]);await groupPanel(page);await page.locator('[data-site-action="secondary"]').click();await page.waitForFunction(()=>(window.__lisiere.world.campaignMap?.revision===2?undefined:window.__lisiere.world.campaignMap?.active)==='secondary');
     await panel(page,'menu');const name='V377-'+(localOnly?'prepared-local':'full-ui'),manager=page.locator('[data-save-manager]');
     await manager.locator('[data-save-manager-name]').fill(name);await manager.locator('[data-save-manager-action="create"]').click();await expect(manager.locator('[data-save-manager-status]')).toHaveAttribute('data-state','success');
     exported=await exportCampaign(page,info,'expedition-complete');
@@ -197,7 +200,7 @@ test(resumeOnly?'V377 exact native04 checkpoint: physical return and revisit':lo
     }
     await page.keyboard.press('Escape');
     proof.returnPreparation=await form(page,ids,exported.complete.planet!.homeTile,ids.length,info,'return');
-    await page.waitForFunction(()=>window.__lisiere.world.campaignMap?.active==='home'&&!!window.__lisiere.world.group&&'members' in window.__lisiere.world.group,undefined,{timeout:25_000});
+    await page.waitForFunction(()=>(window.__lisiere.world.campaignMap?.revision===2?undefined:window.__lisiere.world.campaignMap?.active)==='home'&&!!window.__lisiere.world.group&&'members' in window.__lisiere.world.group,undefined,{timeout:25_000});
     await page.waitForFunction(ids=>{const w=window.__lisiere.world;return !w.group&&ids.every(id=>w.pawns.some(p=>p.id===id));},ids,{timeout:50_000});await pause(page);
     const returned=await world(page);expect(returned.pawns.map(p=>p.id).sort()).toEqual([...ids,f.residentId].sort());
     expect(returned.piles.some(p=>p.owner.type==='inventory'&&ids.includes(p.owner.pawnId))).toBe(false);

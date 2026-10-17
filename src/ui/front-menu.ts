@@ -1,3 +1,8 @@
+import {startingOriginalRequestFromRoster256} from '../sim/starting-original-request-256';
+import {createWorldCreationFlow256} from './world-creation-flow';
+import {createWorldDraftParameters,defaultWorldCreationSettings,type WorldDraftParameters} from './world-draft-controls';
+import {createWorldCreationSite256} from './world-creation-site';
+import type {WorldCreationCallbacks256,WorldCreationPlayer256,WorldCreationProgress256} from './world-creation-contract';
 import {SETTLEMENT_LIMIT_CHOICES,type SettlementLimit} from './settlement-limit-settings';
 import {THREAT_PAUSE_CHOICES,type ThreatPauseMode} from './threat-pause-settings';
 import { DEFAULT_MAP_SIZE } from '../sim/map-config';
@@ -9,12 +14,11 @@ import {UI_FONT_CHOICES,DEFAULT_UI_FONT,type UiFontId} from './ui-fonts';
 import {DEFAULT_LIGHTING_SETTINGS,LIGHTING_CONTROLS,parseLightingSettings,lightingPercentLabel,type LightingSettings} from '../render/lighting-settings';
 import {UI_ATLAS_URL} from './pictograms';
 import { randomSiteSeed } from './front-site';
-import { createWorldParameters,createStartingSiteConfiguration,generateStartingWorld } from './front-world';
+import './front-world.css';
 import { createStartingPawnsConfiguration,type StartingPawnsConfiguration } from './front-starting-pawns';
 import { createStartingCandidateRoster,startingPartyFromRoster,startingPartyMissingWork,type StartingCandidateDescriptor,type StartingParty } from '../sim/starting-candidates';
 import { BACKGROUND_WORK_LABELS } from '../sim/colonist-backgrounds';
-import { resolveStartingSite,startingSiteChoices,type StartingWorld } from '../sim/starting-world';
-import type { PlanetState } from '../sim/planet-state';
+import type {StartingWorld} from '../sim/starting-world';
 import { testColonyUrl, type TestColony } from './test-colonies';
 import './front-menu.css';
 import { renderPerformanceLayout, bindRenderPerformanceControls } from './render-performance-controls';
@@ -39,6 +43,8 @@ export interface FrontMenuSave {
 }
 
 export interface FrontMenuOptions {
+  worldCreation?:WorldCreationCallbacks256;
+  getWorldCreationPlayer?:()=>WorldCreationPlayer256;
   getMaxSettlements?:()=>SettlementLimit;getMaxSettlementsPending?:()=>boolean;onMaxSettlementsChange?:(value:SettlementLimit)=>Promise<boolean>;
   getThreatPauseMode?:()=>ThreatPauseMode;getThreatPausePending?:()=>boolean;onThreatPauseModeChange?:(mode:ThreatPauseMode)=>Promise<boolean>;
   getAutosaveMinutes?:()=>number;
@@ -188,8 +194,10 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
   let previousFocus: HTMLElement | null = null;
   let enabledBeforeBusy: Control[] = [];
   let seed = '';
-  let site: SiteOptions = { hilliness: 'small-hills', biome:'temperate-forest' };
-  let planet:PlanetState|undefined;
+  const backend=options.worldCreation;
+  const worldCreation=backend&&typeof backend.generate==='function'&&typeof backend.confirmSite==='function'&&typeof backend.start==='function'?createWorldCreationFlow256(backend):undefined;
+  let worldParameters:WorldDraftParameters={seed:'',settings:defaultWorldCreationSettings(),size:250};
+  let worldGenerationRun=0;
   let selectedTile:number|null=null;
   let teamSeed=0;
   let roster:StartingCandidateDescriptor[]=[];
@@ -254,6 +262,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     if (busy || operationPending) return;
     disposeDialog?.();disposeDialog=undefined;
     disposePage?.();disposePage=undefined;pawnsPage=undefined;
+    if((page==='site'&&next==='world')||(['world','site','pawns'].includes(page)&&!['world','site','pawns'].includes(next))){worldCreation?.cancel();selectedTile=null;}
     page = next;
     clearError();
     content.replaceChildren();
@@ -657,19 +666,21 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
   }
 
   function renderWorld():void {
-    const parameters=createWorldParameters({seed,onSeed:next=>{seed=next;clearError();},onRandom:()=>{seed=randomSiteSeed();clearError();return seed;},onError:showError});
+    const parameters=createWorldDraftParameters({value:worldParameters,onChange:next=>{worldParameters=next;seed=next.seed;worldCreation?.cancel();selectedTile=null;clearError();},onRandom:()=>randomSiteSeed(),onError:showError});
     content.append(parameters.element);disposePage=parameters.dispose;
     addNavigation(()=>navigate('story'),'Générer',()=>{
-      const parsed=parameters.validate();if(parsed===undefined)return;
-      try{
-        if(!planet||planet.generationSeed!==parsed){planet=generateStartingWorld(parsed,2);selectedTile=planet.homeTile;}
-        if(selectedTile===null||!startingSiteChoices(planet).includes(selectedTile))selectedTile=startingSiteChoices(planet)[0]??null;
-        navigate('site');
-      }catch(cause){showError(cause instanceof Error?cause.message:'Le monde n’a pas pu être généré.');}
+      const input=parameters.validate();if(!input||!worldCreation||!options.getWorldCreationPlayer)return;
+      let player:WorldCreationPlayer256;try{player=options.getWorldCreationPlayer();}catch(cause){showError(cause instanceof Error?cause.message:'Le scénario de départ est indisponible.');return;}worldParameters=input;selectedTile=null;const mine=++worldGenerationRun;
+      clearError();setBusy(true,'Préparation de la planète…');
+      const cancel=action('Annuler la génération',()=>{if(mine!==worldGenerationRun)return;worldGenerationRun++;worldCreation.cancel();setBusy(false);navigate('world');});
+      cancel.id='front-cancel-world-generation';footer.append(cancel);cancel.focus();
+      const progress=(p:WorldCreationProgress256)=>{if(mine!==worldGenerationRun)return;const phases:Record<string,string>={mesh:'Géométrie de la planète',terrain:'Reliefs et biomes',lakes:'Lacs',rivers:'Rivières','ancient-sites':'Sites anciens','foreign-factions':'Factions et implantations','ancient-roads':'Anciennes routes',roads:'Routes','terrain-modifiers':'Particularités du terrain'};status.textContent=`${phases[p.phase]??'Génération du monde'}${p.total?` · ${p.completed} / ${p.total}`:''}…`;};
+      void worldCreation.generate({seed:input.seed,settings:input.settings,player},progress).then(()=>{
+        if(mine!==worldGenerationRun)return;setBusy(false);navigate('site');
+      }).catch(cause=>{if(mine!==worldGenerationRun)return;setBusy(false);showError(cause instanceof Error?cause.message:'Le monde n’a pas pu être généré.');}).finally(()=>cancel.remove());
     });
-    const resets=element('div','front-world-resets');
-    resets.append(action('Réinitialiser tout',()=>{try{seed=randomSiteSeed();planet=undefined;selectedTile=null;navigate('world');}catch{showError('La génération aléatoire est indisponible.');}}),unavailable('Réinitialiser les factions'));
-    footer.insertBefore(resets,footer.lastElementChild);
+    if(!worldCreation||typeof options.getWorldCreationPlayer!=='function'){footer.querySelector<HTMLButtonElement>('.front-next')!.disabled=true;showError('La préparation du monde n’est pas disponible. Vous pouvez conserver vos paramètres.');}
+    const resets=element('div','front-world-resets');resets.append(action('Réinitialiser tout',()=>{try{worldCreation?.cancel();worldParameters={seed:randomSiteSeed(),settings:defaultWorldCreationSettings(),size:250};seed=worldParameters.seed;selectedTile=null;navigate('world');}catch{showError('La graine aléatoire est indisponible.');}}));footer.insertBefore(resets,footer.lastElementChild);
   }
 
   function confirmDraft(message:string,accept:()=>void):void {
@@ -683,24 +694,37 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
   }
 
   function renderSite():void {
-    if(!planet){navigate('world');return;}
-    const configuration=createStartingSiteConfiguration({planet,selected:selectedTile,onSelected:id=>{selectedTile=id;clearError();},onError:showError});
+    const preview=worldCreation?.preview;if(!preview){navigate('world');return;}
+    const configuration=createWorldCreationSite256({preview,selected:selectedTile,onSelected:id=>{selectedTile=id;clearError();const next=footer.querySelector<HTMLButtonElement>('.front-next');if(next)next.disabled=!configuration.canContinue();},onError:showError});
     content.append(configuration.element);disposePage=configuration.dispose;
-    addNavigation(()=>navigate('world'),'Suivant',()=>{
+    addNavigation(()=>{worldCreation!.cancel();navigate('world');},'Suivant',()=>{
       const tile=configuration.validate();if(tile===undefined)return;
-      confirmDraft('Commencer la colonie sur ce lieu de départ ?',()=>navigate('pawns'));
+      confirmDraft('Confirmer ce lieu de départ avant de choisir les personnages ?',()=>{
+        // Navigation follows an actual worker ACK; selecting a tile alone
+        // never creates a local map or invents a confirmed colony.
+        const mine=worldGenerationRun;setBusy(true,'Confirmation du lieu de départ…');
+        void worldCreation!.confirmSite(tile).then(()=>{if(mine!==worldGenerationRun||root.hidden)return;setBusy(false);navigate('pawns');}).catch(cause=>{if(mine!==worldGenerationRun||root.hidden)return;worldCreation!.cancel();selectedTile=null;setBusy(false);navigate('world');showError(cause instanceof Error?cause.message:'Le lieu n’a pas pu être confirmé. Générez le monde à nouveau.');});
+      });
     });
+    footer.querySelector<HTMLButtonElement>('.front-next')!.disabled=!configuration.canContinue();
   }
 
   function renderPawns():void {
-    if(!planet||selectedTile===null){navigate('world');return;}
+    if(!worldCreation?.preview||!worldCreation.ticket){navigate('world');return;}
     const configuration=createStartingPawnsConfiguration({seed:teamSeed,roster,onRosterChange:next=>{roster=next;clearError();},onError:showError});
     content.append(configuration.element);pawnsPage=configuration;disposePage=configuration.dispose;
     addNavigation(()=>navigate('site'),'Démarrer',()=>{
       if(!configuration.validate())return;
-      const startingParty=startingPartyFromRoster(teamSeed,roster),startingWorld:StartingWorld={version:planet!.revision,seed:planet!.generationSeed,tile:selectedTile!};
-      const resolved=resolveStartingSite(startingWorld);site=resolved.site;
-      const launch=()=>void run(()=>options.onStart({seed:resolved.seed,size:DEFAULT_MAP_SIZE,site:{...site},startingParty,startingWorld}),'Génération de la carte et préparation de la colonie…');
+      const startingParty=startingOriginalRequestFromRoster256(teamSeed,roster);
+      const launch=()=>void run(async()=>{
+        const progressBar=element('progress','front-creation-progress');progressBar.setAttribute('aria-label','Préparation de la colonie');progressBar.max=1;progressBar.value=0;
+        const cancel=action('Annuler la préparation',()=>{cancel.disabled=true;worldCreation.cancel();status.textContent='Annulation demandée…';progressBar.removeAttribute('value');});cancel.id='front-cancel-local-generation';
+        footer.append(progressBar,cancel);cancel.focus();
+        try{await worldCreation.start(startingParty,p=>{
+          const phases:Record<string,string>={'physical10-220':'Terrain et reliefs',Roads390:'Routes',ScatterShrines750:'Sites anciens',ScatterRuinsSimple750:'Ruines',FindPlayerStartSpot850:'Lieu d’arrivée',ScenParts875:'Personnages et possessions',Plants900:'Végétation',SteamGeysers950:'Geysers',RockChunks970:'Roches et débris',CaveHives1120:'Grottes',Snow1150:'Neige',Animals1200:'Faune',Fog1500:'Exploration',MutatorFinal1600:'Finitions','validated-private-candidate':'Vérification de la colonie'};
+          status.textContent=`${phases[p.phase]??'Préparation de la colonie'}…`;progressBar.max=Math.max(1,p.total);progressBar.value=p.completed;
+        });}catch(cause){worldCreation.cancel();selectedTile=null;throw cause;}finally{cancel.remove();progressBar.remove();}
+      },'Génération de la carte et préparation de la colonie…').then(()=>{if(!root.hidden&&!worldCreation.ticket){const failure=error.hidden?undefined:error.textContent;navigate('world');showError(failure??'Le monde préparé n’est plus disponible. Générez-le à nouveau.');}});
       const missing=startingPartyMissingWork(teamSeed,startingParty.selected);
       if(missing.length)confirmDraft(`Personne dans cette équipe ne peut assurer : ${missing.map(work=>BACKGROUND_WORK_LABELS[work]).join(', ')}. Commencer malgré ces incapacités ?`,launch);
       else launch();
@@ -822,9 +846,9 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     difficultyChosen = false;
     reloadChosen = false;
     seed = '';
-    site = { hilliness: 'small-hills', biome:'temperate-forest' };
-    planet=undefined;selectedTile=null;
+    worldCreation?.cancel();selectedTile=null;
     try { seed = randomSiteSeed();teamSeed=Number(randomSiteSeed()); } catch {teamSeed=0; /* Manual entry remains available. */ }
+    worldParameters={seed,settings:defaultWorldCreationSettings(),size:250};
     roster=createStartingCandidateRoster(teamSeed);
     navigate('scenario');
   }
@@ -834,6 +858,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
   }
 
   function hide(): void {
+    worldGenerationRun++;worldCreation?.cancel();if(busy&&!operationPending)setBusy(false);
     disposeDialog?.();disposeDialog=undefined;
     disposePage?.();disposePage=undefined;pawnsPage=undefined;
     root.hidden = true;

@@ -1,3 +1,5 @@
+import {isCavePlant256,CAVE_PLANT_FACTS_256,caveLightDamage256} from './cave-flora-256.ts';
+import {effectivePlantAgeCore256} from './initial-plant-age-256.ts';
 import {resumedTreeElapsed,recordResumedTreeCheck,recordResumedTreeFrost,clearResumedTreeLeafless} from './tree-transfer-clock.ts';
 import type { Resource,World } from './types.ts';
 import type { ThermalLayout } from './thermal-topology.ts';
@@ -11,6 +13,8 @@ import type { LightEnvironment,LightReader } from './light-environment.ts';
 
 /** since starts observation. bornAt exists only when actual sowing is known. */
 export interface PlantLife {
+  /** Actual initial Core age on newly generated256 plants; never migration. */
+  initialAgeCore?:number;
   pausedTicks?:number;ageTick?:number;leaflessPausedTicks?:number;
   since:number;
   bornAt?:number;
@@ -42,6 +46,7 @@ export function applyPlantFrost(world:World,plant:Resource,usesOutside:boolean,t
   if(usesOutside&&temperature<plantFrostThreshold(plant.id)) {
     if(!plant.species&&plant.kind!=='berries'&&plant.kind!=='healroot')return damageResource(world,plant,100000,'frost');
     if(plant.species&&!FLORA_DEFINITIONS[plant.species].coldLeafless)return false;
+    if(isCavePlant256(plant.species,world.schemaVersion)&&CAVE_PLANT_FACTS_256[plant.species].dieIfLeafless)return damageResource(world,plant,100000,'frost');
     life.leaflessAt=world.tick;recordResumedTreeFrost(plant);
   } else if(life.leaflessAt!==undefined&&world.tick-life.leaflessAt>=6000){delete life.leaflessAt;clearResumedTreeLeafless(plant);}
   return false;
@@ -63,7 +68,7 @@ export function advancePlantLife(world:World,layout:ThermalLayout,providedLight?
   const due=index.buckets[world.tick%PLANT_LIFE_INTERVAL]!;
   if(!due.length)return;
   const outside=outdoorTemperature(world),light=annualNaturalLight(world);
-  const needsArtificial=providedLight!==undefined&&world.structures.some(s=>s.kind==='sun-lamp');
+  const needsArtificial=providedLight!==undefined&&(world.schemaVersion>=256||world.structures.some(s=>s.kind==='sun-lamp'));
   // Older direct callers retain their natural-light rules. Resolve an actual
   // environment lazily, only when a living plant reaches its individual check.
   let environment:LightEnvironment|undefined;
@@ -76,10 +81,12 @@ export function advancePlantLife(world:World,layout:ThermalLayout,providedLight?
     if(applyPlantFrost(world,plant,outdoors,outside))continue;
     if(needsArtificial&&!environment)environment=typeof providedLight==='function'?providedLight():providedLight;
     const glow=environment?environment.lightAt(plant):isRoofed(world,cell)?0:light;
+    const cave=isCavePlant256(plant.species,world.schemaVersion);
     const sufficientlyLit=Math.max(0,(glow-.51)/.49)>.001;
-    life.darkTicks=sufficientlyLit?0:life.darkTicks+elapsed;
+    life.darkTicks=cave||sufficientlyLit?0:life.darkTicks+elapsed;
     const definition=plant.species?FLORA_DEFINITIONS[plant.species]:PLANT_DEFINITIONS[plant.kind as keyof typeof PLANT_DEFINITIONS];
-    const aged=life.age>definition.growDays*(plant.species?FLORA_DEFINITIONS[plant.species].lifespanMultiplier:8)*6000;
-    if(aged||life.darkTicks>45000)damageResource(world,plant,10,aged?'age':'darkness');
+    const aged=effectivePlantAgeCore256(life)>definition.growDays*(plant.species?FLORA_DEFINITIONS[plant.species].lifespanMultiplier:8)*60000;
+    const caveDamage=cave?caveLightDamage256(environment?environment.lightAtIgnoringCavePlants(plant):isRoofed(world,cell)?0:light):0;
+    if(aged||life.darkTicks>45000||caveDamage)damageResource(world,plant,Math.max(aged||life.darkTicks>45000?10:0,caveDamage),aged?'age':cave?'rotting':'darkness');
   }
 }

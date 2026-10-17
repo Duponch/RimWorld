@@ -1,3 +1,4 @@
+import {CORE_STARTING_ARRIVAL_PROFILE_256} from '../sim/starting-pod-state-256';
 import * as THREE from 'three/webgpu';
 import { Fn,attribute,cos,float,instanceIndex,mat4,normalLocal,positionLocal,sin,smoothstep,texture,transformNormal,uint,uniform,vec3,vec4 } from 'three/tsl';
 import type { World } from '../sim/types';
@@ -35,6 +36,8 @@ export class StartingArrivalLayer {
   readonly opening=uniform(new THREE.Vector2());
   private readonly times=uniform(new THREE.Vector2(0,15));
   private readonly landed=uniform(0);
+  private readonly coreArrival=uniform(0);
+  private readonly corePods=new Map<number,{fallCore:number;landed:boolean;remainingCore:number}>();
   private readonly base=new THREE.BoxGeometry(1,1,1);
   private readonly paint=createStylizedSurfaceTexture();
   private readonly plain=material(0xffffff,{transparent:true,depthWrite:false,forceSinglePass:true});
@@ -54,7 +57,7 @@ export class StartingArrivalLayer {
     this.animation.reconcile([0,1,2].map(id=>({id,x:0,y:1,z:0})));this.animation.reset();
     const open=smoothstep(this.opening.x,this.opening.x.add(STARTING_ARRIVAL_OPENING_TICKS),this.tick).mul(this.opening.y);
     const fall=float(1).sub(smoothstep(this.times.x,this.times.y,this.tick)).mul(STARTING_ARRIVAL_HEIGHT).mul(float(1).sub(this.landed));
-    const basis=this.animation.choose(()=>{const angle=open.mul(-Math.PI*.56);return vec4(open,fall,cos(angle),sin(angle));},uint(instanceIndex.div(STARTING_ARRIVAL_PARTS)));
+    const basis=this.animation.choose(()=>{const angle=open.mul(-Math.PI*.56);return vec4(open,this.coreArrival.greaterThan(.5).select(attribute('arrivalCenter','vec3').y,fall),cos(angle),sin(angle));},uint(instanceIndex.div(STARTING_ARRIVAL_PARTS)));
     const position=Fn(()=>{
       const transform=mat4(attribute('boxMatrix0','vec4'),attribute('boxMatrix1','vec4'),attribute('boxMatrix2','vec4'),attribute('boxMatrix3','vec4')).toVar();
       const side=attribute('arrivalLidSide','float'),c=float(1).add(basis.z.sub(1).mul(side.mul(side))),s=basis.w.mul(side);
@@ -62,7 +65,7 @@ export class StartingArrivalLayer {
       const point=vec3(local.x.mul(c).sub(local.y.mul(s)),local.x.mul(s).add(local.y.mul(c)),local.z).add(hinge);
       const normal=transformNormal(normalLocal,transform);
       normalLocal.assign(vec3(normal.x.mul(c).sub(normal.y.mul(s)),normal.x.mul(s).add(normal.y.mul(c)),normal.z));
-      return point.add(vec3(0,basis.y,0)).add(attribute('arrivalCenter','vec3'));
+      return point.add(vec3(0,basis.y,0)).add(vec3(attribute('arrivalCenter','vec3').x,0,attribute('arrivalCenter','vec3').z));
     })();
     for(const surface of [this.plain,this.painted]){
       configure?.(surface);surface.userData.rendererOwned=true;surface.positionNode=position;
@@ -90,7 +93,9 @@ export class StartingArrivalLayer {
   }
 
   adopt(world:World,reset=false):boolean {
-    const arrival=world.startingArrival;this.confirmedTick=world.tick;
+    const arrival=world.startingArrival;this.confirmedTick=world.tick;this.corePods.clear();
+    const core=arrival?.profile===CORE_STARTING_ARRIVAL_PROFILE_256&&arrival.phase!=='opened'?arrival:undefined;this.coreArrival.value=core?1:0;
+    if(core)for(const p of core.pods)this.corePods.set(p.id,{fallCore:p.fallCore,landed:p.phase==='landed',remainingCore:p.remainingCore});
     if(reset){this.key='';this.cellsKey='';this.animation.reset();}
     if(!arrival){
       const changed=this.mesh.activeCount>0;this.key='';this.cellsKey='';this.phase='none';this.fadeUntil=undefined;
@@ -105,7 +110,7 @@ export class StartingArrivalLayer {
       }return changed;
     }
     const cells=arrival.phase==='opened'?arrival.cells:arrival.pods.map(pod=>pod.cell);
-    const cellsKey=cells.map(cell=>`${cell.x}:${cell.z}`).join('|');
+    const cellsKey=cells.map(cell=>`${cell.x}:${cell.z}`).join('|')+(core?':'+core.pods.map(p=>`${p.id}:${p.phase}:${p.remainingCore}`).join('|'):'');
     const key=`${arrival.phase}:${arrival.start}:${arrival.landAt}:${arrival.openAt}:${arrival.phase==='opened'?arrival.openedAt:''}:${cellsKey}`;
     if(key===this.key)return false;
     this.key=key;this.revision++;this.tick.value=world.tick;
@@ -120,14 +125,16 @@ export class StartingArrivalLayer {
       this.cellsKey=cellsKey;const centers=this.mesh.geometry.getAttribute('arrivalCenter') as THREE.InstancedBufferAttribute;
       this.mesh.boundingSphere.makeEmpty();
       cells.forEach((cell,capsule)=>{
-        for(let part=0;part<STARTING_ARRIVAL_PARTS;part++)centers.setXYZ(capsule*STARTING_ARRIVAL_PARTS+part,cell.x,0,cell.z);
+        for(let part=0;part<STARTING_ARRIVAL_PARTS;part++)centers.setXYZ(capsule*STARTING_ARRIVAL_PARTS+part,cell.x,core?this.coreHeight(core.pods[capsule]!.id,world.tick):0,cell.z);
         this.mesh.boundingSphere.union(new THREE.Sphere(new THREE.Vector3(cell.x,12.5,cell.z),13.5));
       });centers.needsUpdate=true;
     }
     this.mesh.activeCount=cells.length*STARTING_ARRIVAL_PARTS;
-    this.animation.reconcile(cells.map((cell,id)=>({id,x:cell.x,y:1,z:cell.z})));
+    this.animation.reconcile(cells.map((cell,id)=>({id:core?.pods[id]?.id??id,x:cell.x,y:1,z:cell.z})));
     return true;
   }
+
+  private coreHeight(id:number,tick:number):number {const p=this.corePods.get(id);if(!p||p.landed||p.remainingCore===0)return 0;const t=Math.max(0,Math.min(1,tick*10/p.fallCore));return (1-t*t*(3-2*t))*STARTING_ARRIVAL_HEIGHT;}
 
   present(tick:number):boolean {
     if(!this.mesh.activeCount)return false;
@@ -139,7 +146,7 @@ export class StartingArrivalLayer {
     const smooth=(a:number,b:number,t:number)=>{const f=Math.max(0,Math.min(1,(t-a)/(b-a)));return f*f*(3-2*f);};
     this.animation.present(owner=>{
       const open=smooth(this.opening.value.x,this.opening.value.x+STARTING_ARRIVAL_OPENING_TICKS,this.tick.value)*this.opening.value.y,angle=open*(-Math.PI*.56);
-      owner.values[0]=open;owner.values[1]=(1-smooth(this.times.value.x,this.times.value.y,this.tick.value))*STARTING_ARRIVAL_HEIGHT*(1-this.landed.value);
+      owner.values[0]=open;owner.values[1]=this.coreArrival.value?this.coreHeight(owner.id,this.tick.value):(1-smooth(this.times.value.x,this.times.value.y,this.tick.value))*STARTING_ARRIVAL_HEIGHT*(1-this.landed.value);
       owner.values[2]=Math.cos(angle);owner.values[3]=Math.sin(angle);
     });return false;
   }

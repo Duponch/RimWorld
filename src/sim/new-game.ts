@@ -86,7 +86,7 @@ function survivalStart(world:World,commerce=false,party?:StartingParty):{landing
   const stacks=supplies.reduce((n,[item,q])=>n+Math.ceil(q/ITEM_DEFINITIONS[item].stackLimit),0);
   const {landing,cells}=landingSite(world,stacks);
   for(const [index,name] of ['Ada','Noé','Mina'].entries()) {
-    const cell=cells[index]!,pawn=party?materializeStartingCandidate(party.seed,party.selected[index]!,world.nextId++,cell.x,cell.z):startingPawn(world.nextId++,name,cell.x,cell.z,index,55,world.seed);
+    const cell=cells[index]!,pawn=party?materializeStartingCandidate(party.seed,party.selected[index]!,world.nextId++,cell.x,cell.z,world.schemaVersion):startingPawn(world.nextId++,name,cell.x,cell.z,index,55,world.seed,0,world.schemaVersion);
     if(commerce&&!party)pawn.age=crashlandedHumanAge(world.seed,pawn.id,pawn.age!);
     world.pawns.push(pawn);
     pawnIds.push(pawn.id);

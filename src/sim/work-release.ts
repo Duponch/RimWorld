@@ -38,7 +38,7 @@ export function humanSleepingSpotActors(world:World,ids:ReadonlySet<number>):Paw
 
 /** Plan only ownership released by this command, before any command mutation.
  * Store the selected cells so a later greedy search cannot invalidate the plan. */
-export function planCommandDrops(world:World,command:Command):DropPlan|null {
+export function planCommandDrops(world:World,command:Command|import('./cave-glowpod-minification-256.ts').NaturalInstallPlan256):DropPlan|null {
   if(command.type==='designate'&&(command.kind==='sleeping-spot'||command.kind==='animal-sleeping-spot'))return new Map();
   const jobs=new Set<number>(),zones=new Set<number>(),pawns=new Set<number>();
   let retiringGrowingActors:Set<number>|undefined;
@@ -178,6 +178,7 @@ export function releaseAssignments(world:World,pawn:Pawn,despawning=false):void 
   cancelAutomaticCombat(pawn);cancelHunting(pawn);
   if(!despawning&&pawn.need?.kind==='sleep'&&pawn.need.medical&&pawn.health&&!pawn.health.death&&pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
   releaseSurgeryState(world,pawn);
+  delete pawn.openCasket;
   delete pawn.orbitalTrade;delete pawn.deepWork;delete pawn.animalHandling;delete pawn.animalCare;delete pawn.animalFeed;delete pawn.burial;delete pawn.cleaning;delete pawn.trade;delete pawn.firefighting;delete pawn.ward;delete pawn.heatRefuge;delete pawn.research;releaseRescue(world,pawn,despawning);delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
   const job=world.jobs.find(j=>j.id===pawn.jobId);
   if(job?.reservedBy===pawn.id){if(job.tree?.kind==='replant'){job.tree.phase='pickup';job.tree.carryPileId=null;job.tree.workCore=0;delete job.tree.durationCore;delete job.clearance;resetWork(job);}delete job.installationWork;delete job.clearance;delete job.pickTicks;job.reservedBy=null;job.status='pending';if(job.repair)delete job.repair.warmed;if(job.kind==='remove-bridge'||job.kind==='remove-floor'||job.kind==='flick'||job.kind==='repair'||job.kind==='fix-breakdown'||job.furniture||job.kind==='mine'||job.kind==='sow'||job.kind==='deconstruct'||isRoofJob(job))resetWork(job);}

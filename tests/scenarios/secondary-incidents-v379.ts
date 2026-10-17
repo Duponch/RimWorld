@@ -27,7 +27,8 @@ export function preparedCassandraExpedition(){
     const ids=w.pawns.slice(0,2).map(p=>p.id),command=(c:Command)=>incidentCommand(w,c);
     const until=(done:()=>boolean)=>{let n=0;while(!done()&&n++<12000)stepWorld(w);if(!done())throw Error('Préparation V379 interrompue au tick '+w.tick);};
     command({type:'planet-adopt'});
-    if(!w.planet!.tiles[w.planet!.homeTile]!.neighbours.includes(52)||w.planet!.tiles[52]!.biome!=='temperate-forest')throw Error('Le voisin tempéré52 de216 a changé.');
+    const planet=w.planet;if(!planet||planet.revision===3)throw Error('Historical incidents379 fixture requires its basic revision1/2 planet');
+    if(!planet.tiles[planet.homeTile]!.neighbours.includes(52)||planet.tiles[52]!.biome!=='temperate-forest')throw Error('Le voisin tempéré52 de216 a changé.');
     until(()=>ids.every(id=>groupMemberChoices(w).some(c=>c.pawn.id===id&&c.ok)));
     const food=w.piles.find(p=>p.owner.type==='ground'&&p.item==='survival-meal'&&p.quantity>=8);if(!food)throw Error('Huit rations préparées requises.');
     command({type:'group-start',memberIds:ids,destination:52,sources:[{pileId:food.id,quantity:8}]});

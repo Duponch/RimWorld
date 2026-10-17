@@ -1,4 +1,6 @@
+import {landedStartingPods256,damageStartingPod256} from './starting-pod-damage-256.ts';
 import {destroyBridge} from './bridge.ts';
+import {actualBombWick256} from './ancient-casket-explosive-state-256.ts';
 import { BOMB_AMOUNT,BOMB_RADIUS,bombCellCore,validBombWaveShape,type MiniTurretBombWave } from './bomb-state.ts';
 import { SHOT_LAYER,structureShotLayer } from './combat-content.ts';
 import { STRUCTURE_DEFINITIONS } from './definitions.ts';
@@ -66,7 +68,7 @@ export function applyStructureExternalDamage(w:World,s:Structure,rawAmount:numbe
 }
 /** Called in the source's global-ID owner slot. No recursive wave draining. */
 export function advanceBombWick(w:World,s:Structure,core:number):boolean {
-  const wick=s.turret?.wick;if(!wick||!w.structures.includes(s)||wick.endCore>core)return false;
+  const wick=actualBombWick256(s);if(!wick||!w.structures.includes(s)||wick.endCore>core)return false;
   if(!damageStructure(w,s,structureMaxHp(s)-(s.damage??0),'bomb',w.rng,{core,rawAmount:0,detonate:true,...wick.instigatorKey?{instigatorKey:wick.instigatorKey}:{}}))throw new RangeError('Cannot commit Bomb detonation');
   return true;
 }
@@ -76,7 +78,7 @@ export function advanceBombWicks(w:World,core:number):boolean {
 const idOf=(key:string)=>Number(key.slice(key.indexOf(':')+1));
 function layer(w:World,key:string,shortCircuit=false):number {
   if(key.startsWith('pawn:')||key.startsWith('animal:')||key.startsWith('mech:'))return SHOT_LAYER.pawn;
-  if(key.startsWith('pile:')||key.startsWith('packed:'))return SHOT_LAYER.item;
+  if(key.startsWith('pile:')||key.startsWith('packed:')||key.startsWith('starting-pod:'))return SHOT_LAYER.item;
   if(key.startsWith('structure:')){const s=w.structures.find(s=>s.id===idOf(key));return shortCircuit&&s?.kind==='power-conduit'?5:s?structureShotLayer(s.kind):SHOT_LAYER.building;}
   if(key.startsWith('resource:'))return w.resources.find(r=>r.id===idOf(key))?.kind==='tree'?SHOT_LAYER.building:SHOT_LAYER.lowPlant;
   return SHOT_LAYER.building;
@@ -93,7 +95,7 @@ export function advanceBombWave(w:World,wave:MiniTurretBombWave,core:number,read
   const invalidate=()=>{changed=true;local=undefined;afterImpact?.();};
   while(wave.nextCell<wave.cells.length&&bombCellCore(w,wave,wave.cells[wave.nextCell]!)<=core){
     const index=wave.cells[wave.nextCell]!,cell={x:index%w.width,z:Math.floor(index/w.width)},snapshot=[...scene().at(cell)];
-    const altitude=(key:string)=>layer(w,key,!!wave.shortCircuit);
+    const altitude=(key:string)=>layer(w,key,!!wave.shortCircuit||!!wave.animalDeath||!!wave.casketExplosion);
     const full=snapshot.reduce((max,t)=>t.fill>.99?Math.max(max,altitude(t.key)):max,-Infinity);
     if(wave.emp){
       const amount=projectileProfile('emp-launcher',wave.emp.quality)!.damage;
@@ -105,9 +107,10 @@ export function advanceBombWave(w:World,wave:MiniTurretBombWave,core:number,read
       }
       wave.nextCell++;continue;
     }
-    if(wave.shortCircuit?.damage==='flame') {
-      const allowed=new Set(snapshot.filter(t=>altitude(t.key)>=full).map(t=>t.key.startsWith('packed:')?`structure:${idOf(t.key)}`:t.key));
-      if(applyFlameWaveCell(w,cell,core,affected,allowed))invalidate();
+    if(wave.shortCircuit?.damage==='flame'||wave.animalDeath||wave.casketExplosion) {
+      const ignored=new Set(wave.casketExplosion?.ignoredThingKeys??[]);
+      const allowed=new Set(snapshot.filter(t=>altitude(t.key)>=full&&!ignored.has(t.key)).map(t=>t.key.startsWith('packed:')?`structure:${idOf(t.key)}`:t.key));
+      if(applyFlameWaveCell(w,cell,core,affected,allowed,wave.casketExplosion?wave.instigatorKey:undefined))invalidate();
       wave.nextCell++;continue;
     }
     const fireIds=(w.fires?.items??[]).filter(f=>{const p=firePosition(w,f);return p?.x===cell.x&&p.z===cell.z;}).map(f=>f.id);
@@ -116,12 +119,14 @@ export function advanceBombWave(w:World,wave:MiniTurretBombWave,core:number,read
       if(affected.has(key)||altitude(t.key)<full)continue;
       const id=idOf(t.key);let attempted=false;
       if(t.key.startsWith('pawn:')){const p=w.pawns.find(p=>p.id===id);if(p&&p.state!=='dead'){damagePawnWithBomb(w,p,core);attempted=true;}}
-      else if(t.key.startsWith('animal:')){const a=w.wildlife?.animals.find(a=>a.id===id);if(a&&a.state!=='dead'){damageAnimalWithBomb(w,a,core,wave.center);attempted=true;}}
+      else if(t.key.startsWith('animal:')){const a=w.wildlife?.animals.find(a=>a.id===id);if(a&&a.state!=='dead'){damageAnimalWithBomb(w,a,core,wave.center,undefined,wave.instigatorKey);attempted=true;}}
       else if(t.key.startsWith('mech:')){const m=w.mechanoids?.find(m=>m.id===id);if(m&&m.state!=='dead'){damageMechanoidWithBomb(w,m,core);attempted=true;}}
       else if(t.key.startsWith('structure:')||t.key.startsWith('packed:')){
         const packed=t.key.startsWith('packed:')?w.packed.find(p=>p.building.id===id&&p.owner.type==='ground'):undefined;
         const s=packed?.building??(t.key.startsWith('structure:')?w.structures.find(s=>s.id===id):undefined);
         if(s&&structureMaxHp(s)>0){if(!applyStructureExternalDamage(w,s,BOMB_AMOUNT,BOMB_AMOUNT*(packed?1:bombBuildingFactor(s)),'bomb',w.rng,core,wave.instigatorKey))throw new RangeError('Cannot commit Bomb structure impact');attempted=true;}
+      }else if(t.key.startsWith('starting-pod:')){
+        const p=landedStartingPods256(w).find(p=>p.id===id);if(p){if(!damageStartingPod256(w,p,BOMB_AMOUNT,core))throw new RangeError('Cannot commit Bomb active transporter impact');attempted=true;}
       }else if(t.key.startsWith('resource:')){
         const r=w.resources.find(r=>r.id===id);if(r&&r.kind!=='rock'&&resourceMaxHp(r)>0){if(!damageResource(w,r,BOMB_AMOUNT*4,'bomb'))throw new RangeError('Cannot commit Bomb plant impact');attempted=true;}
       }else if(t.key.startsWith('pile:')){

@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import {roofCoverage,roofKindAt} from '../sim/roof-rules';
 import { isRoomDoor } from '../sim/door-rules';
 import type { World } from '../sim/types';
 import type { BoxBatches } from './BoxBatches';
@@ -32,8 +33,8 @@ export function roofSlabCellBounds(cells: readonly RoofCell[], top: number): Roo
  * authoritative constructed cells as the adjacency source. */
 export function roofSurfaceCells(world: World): RoofCell[] {
   const width = world.width, height = world.height;
-  const built = new Set(world.roofing?.constructed ?? []), cells = new Set(built);
-  if (!built.size) return [];
+  const built = new Set(world.roofing?.constructed ?? []), cells = new Set(roofCoverage(world));
+  if (!cells.size) return [];
   for (const s of world.structures) {
     if (s.kind !== 'wall' && !isRoomDoor(s.kind)) continue;
     let near = false;
@@ -49,7 +50,7 @@ export function roofSurfaceCells(world: World): RoofCell[] {
 /** One continuous upper plane. Interior tile boundaries have no sides,
  * bevels, elevation changes or material splits. Only the outer contour drops
  * into a thick, lightly overhanging fascia. */
-export function roofSlabGeometry(cells: readonly RoofCell[], top: number): THREE.BufferGeometry {
+export function roofSlabGeometry(cells: readonly RoofCell[], top: number,kindAt?:(cell:RoofCell)=>'constructed'|'natural-thin'|'natural-thick'|undefined): THREE.BufferGeometry {
   const positions: number[] = [], normals: number[] = [], colors: number[] = [], uvs: number[] = [];
   const tint = new THREE.Color();
   function triangle(a: Point, b: Point, c: Point, normal: Point, shade: number): void {
@@ -63,15 +64,16 @@ export function roofSlabGeometry(cells: readonly RoofCell[], top: number): THREE
       uvs.push(p[0] / 8, p[2] / 8);
     }
   }
-  for (const { w, e, s, n, bottom, west, east, south, north } of roofSlabCellBounds(cells, top)) {
+  for (const { x,z,w, e, s, n, bottom, west, east, south, north } of roofSlabCellBounds(cells, top)) {
+    const kind=kindAt?.({x,z}),topPigment=kind==='natural-thick'?0x7f8586:kind==='natural-thin'?0xa3a59a:0xe6bc83,underPigment=kind?.startsWith('natural')?0x656e70:0x806044,sidePigment=kind?.startsWith('natural')?0x7f8782:0xa77b4e;
     const sw: Point = [w, top, s], se: Point = [e, top, s];
     const ne: Point = [e, top, n], nw: Point = [w, top, n];
-    triangle(sw, ne, se, [0, 1, 0], 0xe6bc83);
-    triangle(sw, nw, ne, [0, 1, 0], 0xe6bc83);
+    triangle(sw, ne, se, [0, 1, 0], topPigment);
+    triangle(sw, nw, ne, [0, 1, 0], topPigment);
     const underSW:Point=[w,bottom,s],underSE:Point=[e,bottom,s];
     const underNE:Point=[e,bottom,n],underNW:Point=[w,bottom,n];
-    triangle(underSW,underSE,underNE,[0,-1,0],0x806044);
-    triangle(underSW,underNE,underNW,[0,-1,0],0x806044);
+    triangle(underSW,underSE,underNE,[0,-1,0],underPigment);
+    triangle(underSW,underNE,underNW,[0,-1,0],underPigment);
     const edges: Array<{ exposed: boolean; a: Point; b: Point; normal: Point }> = [
       { exposed: south, a: sw, b: se, normal: [0, 0, -1] },
       { exposed: east, a: se, b: ne, normal: [1, 0, 0] },
@@ -82,8 +84,8 @@ export function roofSlabGeometry(cells: readonly RoofCell[], top: number): THREE
       if (!edge.exposed) continue;
       const belowA: Point = [edge.a[0], bottom, edge.a[2]];
       const belowB: Point = [edge.b[0], bottom, edge.b[2]];
-      triangle(edge.a, edge.b, belowB, edge.normal, 0xa77b4e);
-      triangle(edge.a, belowB, belowA, edge.normal, 0xa77b4e);
+      triangle(edge.a, edge.b, belowB, edge.normal, sidePigment);
+      triangle(edge.a, belowB, belowA, edge.normal, sidePigment);
     }
   }
   const geometry = new THREE.BufferGeometry();
@@ -132,7 +134,7 @@ export class RoofLayer {
   constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void) {
     for (const mat of [this.textured, this.plain]) { configure?.(mat); mat.userData.rendererOwned = true; }
     this.mesh = new THREE.Mesh(roofSlabGeometry([], WORLD_SCALE.wallHeight + .08), this.textured);
-    this.mesh.name = 'continuous-constructed-roof';
+    this.mesh.name = 'continuous-roof-coverage';
     this.mesh.castShadow = this.mesh.receiveShadow = true;
     this.mesh.visible = false; this.surface.add(this.mesh);
     this.surface.visible = this.areas.visible = false;
@@ -146,13 +148,13 @@ export class RoofLayer {
     const state = world.roofing;
     const supports = world.structures.filter(s => s.kind === 'wall' || isRoomDoor(s.kind))
       .map(s => `${s.kind}:${s.x}:${s.z}`).join(',');
-    const key = `${world.width}|${cutaway}|${state?.constructed.join(',')}|${supports}`;
+    const key = `${world.width}|${cutaway}|${roofCoverage(world).join(',')}|${state?.natural?.thin.join(',')}|${state?.natural?.thick.join(',')}|${supports}`;
     if (reset || this.surfaceKey !== key) {
       this.surfaceKey = key;
       const cells = roofSurfaceCells(world);
       const top = (cutaway ? WORLD_SCALE.wallCutawayHeight : WORLD_SCALE.wallHeight) + .08;
       const old = this.mesh.geometry;
-      this.mesh.geometry = roofSlabGeometry(cells, top);
+      this.mesh.geometry = roofSlabGeometry(cells, top,cell=>roofKindAt(world,cell.z*world.width+cell.x));
       old.dispose(); this.mesh.visible = cells.length > 0;
     }
     const areaCells=[...(state?.build??[]),...(state?.remove??[])];

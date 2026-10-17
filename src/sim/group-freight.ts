@@ -13,7 +13,7 @@ export function validGroupFreight(value:unknown):value is GroupFreight {
   return fields.every(d=>!!d&&Object.hasOwn(d,'value')&&d.enumerable)&&fields[0]!.value===1
     &&fields.slice(1).every(d=>Number.isSafeInteger(d!.value)&&d!.value>=0);
 }
-export const freightGroup=(g:Pick<GroupState,'freight'>):boolean=>validGroupFreight(g.freight);
+export const freightGroup=(g:Pick<GroupState,'freight'>&{reorganization?:{revision:1}}):boolean=>validGroupFreight(g.freight)||g.reorganization?.revision===1;
 /** Steel mass is admitted only by the new collective contract. Individual
  * travel and every commercial offer keep their existing catalogues. */
 export function groupItemMassGrams(item:ItemId,freight=false,version:number=SCHEMA_VERSION):number|undefined {

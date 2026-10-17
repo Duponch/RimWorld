@@ -1,17 +1,21 @@
+import {geyserAt256,geyserOwnedId256,geyserCells256} from '../sim/local-geyser-state-256';
+import {knownPosition256} from './exploration-readers-256';
 import { footprintCells } from '../sim/definitions';
 import type { Cell, Resource, World } from '../sim/types';
 import { stockpileZoneCells } from '../sim/stockpile-zones';
 
 /** Core's incidental foliage remains a hover readout, not a selectable Thing. */
-export const mapResourceSelectable=(resource:Resource):boolean=>!['grass','tall-grass','brambles','moss'].includes(resource.species??'');
+export const mapResourceSelectable=(resource:Resource):boolean=>!['grass','tall-grass','brambles','moss','astragalus','chokevine','dandelion','low-shrub'].includes(resource.species??'');
 
 /** Terrain and constructed floors are readouts, never selection targets. */
-export type MapObjectSelection = { kind:'packed'|'pile'|'structure'|'resource'|'rock'|'job'|'growing'|'stockpile'; id:number };
+export type MapObjectSelection = { kind:'geyser'|'packed'|'pile'|'structure'|'resource'|'rock'|'job'|'growing'|'stockpile'; id:number };
 
 export function mapObjectsAt(world:World,cell:Cell):MapObjectSelection[] {
   const same=(other:Cell)=>other.x===cell.x&&other.z===cell.z;
   const inFootprint=(object:World['structures'][number]|World['jobs'][number])=>footprintCells(object).some(same);
+  const geyser=geyserAt256(world,cell);
   return [
+    ...(geyser?[{kind:'geyser' as const,id:geyser.id}]:[]),
     ...world.packed.filter(p=>p.owner.type==='ground'&&same(p.owner)).map(p=>({kind:'packed' as const,id:p.building.id})),
     ...world.piles.filter(p=>p.owner.type==='ground'&&same(p.owner)).map(p=>({kind:'pile' as const,id:p.id})),
     ...world.structures.filter(inFootprint).sort((a,b)=>Number(a.kind==='power-conduit')-Number(b.kind==='power-conduit')).map(s=>({kind:'structure' as const,id:s.id})),
@@ -20,11 +24,12 @@ export function mapObjectsAt(world:World,cell:Cell):MapObjectSelection[] {
     ...world.jobs.filter(inFootprint).map(j=>({kind:'job' as const,id:j.id})),
     ...world.growingZones.filter(z=>z.cells.includes(cell.z*world.width+cell.x)).map(z=>({kind:'growing' as const,id:z.id})),
     ...world.stockpiles.filter(same).map(s=>({kind:'stockpile' as const,id:s.id})),
-  ];
+  ].filter(selected=>mapObjectExists(world,selected));
 }
 
-export function mapObjectCells(world:World,selected:MapObjectSelection):Cell[] {
+function physicalMapObjectCells(world:World,selected:MapObjectSelection):Cell[] {
   switch(selected.kind) {
+    case 'geyser': {const g=geyserOwnedId256(world,selected.id);return g?geyserCells256(world.width,g).map(i=>({x:i%world.width,z:Math.floor(i/world.width)})):[];}
     case 'packed': {const packed=world.packed.find(p=>p.building.id===selected.id);return packed?.owner.type==='ground'?[packed.owner]:[];}
     case 'pile': {const pile=world.piles.find(p=>p.id===selected.id);return pile?.owner.type==='ground'?[pile.owner]:[];}
     case 'structure': {const structure=world.structures.find(s=>s.id===selected.id);return structure?footprintCells(structure):[];}
@@ -36,8 +41,13 @@ export function mapObjectCells(world:World,selected:MapObjectSelection):Cell[] {
   }
 }
 
+export function mapObjectCells(world:World,selected:MapObjectSelection):Cell[] {
+ const cells=physicalMapObjectCells(world,selected);return cells.some(c=>knownPosition256(world,c))?cells:[];
+}
 export function mapObjectExists(world:World,selected:MapObjectSelection):boolean {
+  if(!mapObjectCells(world,selected).length)return false;
   switch(selected.kind){
+    case 'geyser':return !!geyserOwnedId256(world,selected.id);
     case 'packed':return world.packed.some(p=>p.building.id===selected.id&&p.owner.type==='ground');
     case 'pile':return world.piles.some(p=>p.id===selected.id&&p.owner.type==='ground');
     case 'structure':return world.structures.some(s=>s.id===selected.id);

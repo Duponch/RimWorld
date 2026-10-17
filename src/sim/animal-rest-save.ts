@@ -50,7 +50,7 @@ export function validAnimalCarrierMotion(w:World,a:WildAnimal,version:number):bo
   }
   return true;
 }
-const aliveOwned=(a:WildAnimal)=>!!a.domestic&&veterinaryCareSpeciesAllowed(a.species,221)&&a.state!=='dead'&&!a.health?.death;
+const aliveOwned=(a:WildAnimal,version:number)=>!!a.domestic&&veterinaryCareSpeciesAllowed(a.species,version,a)&&a.state!=='dead'&&!a.health?.death;
 function validSpot(w:World,s:Structure,version:number):boolean {
   return version>=221&&keys(s as unknown as Record<string,unknown>,['id','kind','x','z','orientation','footprint'],['medical'])
     &&id(s.id,w.nextId-1)&&Number.isSafeInteger(s.x)&&s.x>=0&&s.x<w.width&&Number.isSafeInteger(s.z)&&s.z>=0&&s.z<w.height
@@ -81,14 +81,14 @@ export function validateAnimalRest(w:World,version:number):string[] {
   for(const a of w.wildlife?.animals??[]){
     if(a.domestic&&Object.hasOwn(a.domestic,'bedId')){
       const target=w.structures.find(s=>s.id===a.domestic!.bedId);
-      if(version<221||!id(a.domestic.bedId,w.nextId-1)||!aliveOwned(a)||!target||target.kind!=='animal-sleeping-spot'||target.medical||assignments.has(target.id))errors.push('Invalid or duplicate normal animal sleeping assignment.');
+      if(version<221||!id(a.domestic.bedId,w.nextId-1)||!aliveOwned(a,version)||!target||target.kind!=='animal-sleeping-spot'||target.medical||assignments.has(target.id))errors.push('Invalid or duplicate normal animal sleeping assignment.');
       if(target)assignments.add(target.id);
     }
     if(!Object.hasOwn(a,'animalRest'))continue;
     const t:unknown=a.animalRest;
     if(version<221||!object(t)||!keys(t,['spotId','phase'])||!id(t.spotId,w.nextId-1)||!['travel','sleep'].includes(String(t.phase))){errors.push('Invalid or future animal rest task.');continue;}
     const spot=w.structures.find(s=>s.id===t.spotId);
-    if(!aliveOwned(a)||slaughterIntent(w,a,version,slaughterTargets)||!spot||spot.kind!=='animal-sleeping-spot'
+    if(!aliveOwned(a,version)||slaughterIntent(w,a,version,slaughterTargets)||!spot||spot.kind!=='animal-sleeping-spot'
       ||a.meal||a.mating||a.exiting||(spot.medical?a.domestic?.care==='none':a.domestic?.bedId!==t.spotId))errors.push('Invalid animal rest ownership.');
     if(!spot)continue;
     if(spots.has(spot.id))errors.push('Animal sleeping place occupied twice.');spots.add(spot.id);
@@ -100,7 +100,7 @@ export function validateAnimalRest(w:World,version:number):string[] {
     const t=p.animalRescue;
     if(!validAnimalRescueShape(t,version)){errors.push('Invalid or future animal rescue task.');continue;}
     const a=w.wildlife?.animals.find(a=>a.id===t!.animalId),spot=w.structures.find(s=>s.id===t!.spotId);
-    if(!actorExclusive(w,p)||!a||!aliveOwned(a)||a.state!=='downed'||a.domestic!.slaughter||a.animalRest||!spot||spot.kind!=='animal-sleeping-spot'
+    if(!actorExclusive(w,p)||!a||!aliveOwned(a,version)||a.state!=='downed'||a.domestic!.slaughter||a.animalRest||!spot||spot.kind!=='animal-sleeping-spot'
       ||spot.medical&&a.domestic!.care==='none'||!spot.medical&&a.domestic!.bedId!==spot.id
       ||patients.has(t!.animalId)||spots.has(t!.spotId)||animalClaimed(w,t!.animalId,p.id)||animalSpotClaimed(w,t!.spotId,a?.id,p.id))errors.push('Invalid or duplicate animal rescue owner.');
     patients.add(t!.animalId);spots.add(t!.spotId);

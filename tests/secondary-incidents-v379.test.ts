@@ -1,3 +1,4 @@
+import {legacyCampaignMap} from './helpers/legacy-fixture-guards.ts';
 import {createDeteriorationState} from '../src/sim/deterioration-content.ts';
 import {expect,test} from 'vitest';
 import {preparedCassandraExpedition,incidentCommand} from './scenarios/secondary-incidents-v379.ts';
@@ -81,7 +82,7 @@ test('V379 real raid admissions share IDs, stay physical on their maps, publish 
   const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder(),packet=structuredClone(encoder.encode(campaignPresentation(w),0,0,true));
   if(packet.kind!=='checkpoint')throw Error('Expected full checkpoint');
   expect(decoder.adopt(packet).status).toBe('applied');expect(packet.world.pawns.some(p=>p.id===remote.members[0])).toBe(false);
-  const incident=packet.world.campaignMap!.incidents!.find(i=>i.kind==='raid')!;
+  const incident=legacyCampaignMap(packet.world).incidents!.find(i=>i.kind==='raid')!;
   expect(incident).toEqual({site:'secondary',kind:'raid',count:1,actorId:remote.members[0]});
   expect(Object.keys(incident).sort()).toEqual(['actorId','count','kind','site']);expect(packet.world.secondarySite).toBeUndefined();
   expect(readStatusAlerts(packet.world).find(r=>r.key===`campaign:secondary:raid:${remote.members[0]}`)).toMatchObject({targets:[],campaign:{site:'secondary',actorId:remote.members[0]}});
@@ -137,11 +138,11 @@ test('V379 remote transport rejects future format on241, extra data, duplicate k
   const {w,local}=preparedCassandraExpedition();preparedRaid(local);flushSecondaryContext(w);incidentCommand(w,{type:'secondary-view',site:'home'});
   const packet=snapshot(w);expect(validCampaignPresentation(packet.world)).toBe(true);
   const values=[
-    (p:World)=>{p.campaignMap!.incidents![0]!.count=0;},
-    (p:World)=>{p.campaignMap!.incidents![0]!.site='home';},
-    (p:World)=>{p.campaignMap!.incidents![0]!.actorId=p.pawns[0]!.id;},
-    (p:World)=>{p.campaignMap!.incidents!.push({...p.campaignMap!.incidents![0]!});},
-    (p:World)=>{Object.assign(p.campaignMap!.incidents![0]!,{tiles:[]});},
+    (p:World)=>{legacyCampaignMap(p).incidents![0]!.count=0;},
+    (p:World)=>{legacyCampaignMap(p).incidents![0]!.site='home';},
+    (p:World)=>{legacyCampaignMap(p).incidents![0]!.actorId=p.pawns[0]!.id;},
+    (p:World)=>{legacyCampaignMap(p).incidents!.push({...legacyCampaignMap(p).incidents![0]!});},
+    (p:World)=>{Object.assign(legacyCampaignMap(p).incidents![0]!,{tiles:[]});},
     (p:World)=>{(p as {schemaVersion:number}).schemaVersion=241;},
   ];
   for(const corrupt of values){const bad=structuredClone(packet);corrupt(bad.world);expect(validCampaignPresentation(bad.world)).toBe(false);expect(new SnapshotDecoder().adopt(bad).status).toBe('resync');}

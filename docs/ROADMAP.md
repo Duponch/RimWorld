@@ -1,5 +1,9 @@
 # Plan de développement
 
+**17octobre2026 — premier lot V408, schéma 256.** [Générateur géographique](gameplay/world-generation-v408.md) raccordé pour Atterrissage forcé250², vraie création par menus et recharge complète contrôlées. PNJ actuels et butin ancien adaptés ; voyages/cartes temporaires restent à terminer avant la démonstration finale. Premier lot main, aucune publicationV408 ; productionV403 inchangée.
+
+**Clarification humaine du17octobre : mêmes règles monde/voyages, PNJ actuels provisoires.** Les producteurs de personnages existants sont autorisés pour terminer la génération et les voyages ; leurs noms, tirages internes, relations, clinique et équipement ne bloquent plus ce lot. Ces adaptations restent déclarées et les travaux natifs conservés. Les règles planète→terrain, cycle des cartes temporaires, conservation, menus et mesures composées restent à terminer avant la nouvelle démonstration et l'arrêt demandé.
+
 **Dernière priorité humaine du16octobre : une colonie.** Terminer le lot engagé de fondations, puis concentrer génération/monde/voyages sur une seule implantation. Conserver le réglage1–5 déjà livré V407 avec défaut1, mais différer tout approfondissement multicolonie et ses nouveaux bancs. Les cartes temporaires et voyages d'une colonie restent distincts de plusieurs colonies permanentes ; les acquis et sauvegardes existants sont préservés.
 
 **Complément humain :** terminer et vérifier ensemble générateur et voyages/cartes temporaires, puis créer une nouvelle colonie de démonstration cohérente sur le générateur final, en conservant Les Aulnes et leurs archives. Aucun contenu secondaire avant ; arrêter ensuite l’autonomie et remettre le rapport. Les composants privés ne constituent pas encore le générateur jouable conforme.

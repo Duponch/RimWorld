@@ -1,3 +1,5 @@
+import {actualPlanetOrigin,actualPlanetGroupRuntime,onlyPlanetGroup,planetGroupValidationView} from './helpers/planet-cache-registry-v217.ts';
+import {assertLegacyPlanet,legacyPlanet,type LegacyPlanetWorld} from './helpers/legacy-fixture-guards.ts';
 import {expect,test} from 'vitest';
 import {applyCommand,createWorld,deserializeWorld,serializeWorld,stepWorld,validateWorld} from '../src/sim/index.ts';
 import {validatePlanet} from '../src/sim/planet-save.ts';
@@ -7,10 +9,10 @@ import {commercialCamp} from './helpers/commercial-v193.ts';
 import {SCHEMA_VERSION,type World} from '../src/sim/types.ts';
 import type {PlanetTile} from '../src/sim/planet-state.ts';
 
-function adopted(seed=42):World{
+function adopted(seed=42):LegacyPlanetWorld{
   const w=createWorld(seed,16,16),rng=w.rng,nextId=w.nextId;
   expect(applyCommand(w,{type:'planet-adopt'}).ok).toBe(true);
-  expect(w.rng).toBe(rng);expect(w.nextId).toBe(nextId);return w;
+  expect(w.rng).toBe(rng);expect(w.nextId).toBe(nextId);assertLegacyPlanet(w);return w;
 }
 function context(w:World,previous?:PlanetValidationContext):PlanetValidationContext{
   const result=validatePlanetContext(w,SCHEMA_VERSION,previous);
@@ -67,7 +69,7 @@ test.each(['inherited slice','inherited map'] as const)('legal raw arrays cannot
 
 test('every immutable field and ordered array is compared after same-tick in-place mutation',()=>{
   const original=adopted(),frozen=structuredClone(original),proof=context(original),tick=original.tick;
-  const mutations:((w:World)=>void)[]=[
+  const mutations:((w:LegacyPlanetWorld)=>void)[]=[
     w=>{(w.planet as unknown as Record<string,unknown>).revision=2;},
     w=>{w.planet!.adoptedAt=w.tick+1;},w=>{w.planet!.generationSeed^=1;},
     w=>{[w.planet!.homeTile,w.planet!.civilianTile]=[w.planet!.civilianTile,w.planet!.homeTile];},
@@ -92,7 +94,7 @@ test('every immutable field and ordered array is compared after same-tick in-pla
 
 test('cold and reused proofs preserve V216 strict own-key and dense-array rejection, including raw JS keys',()=>{
   const original=adopted(),proof=context(original);
-  const corruptions:((w:World)=>void)[]=[
+  const corruptions:((w:LegacyPlanetWorld)=>void)[]=[
     w=>{delete (w.planet!.tiles as unknown[])[7];},
     w=>{delete (w.planet!.tiles[0]!.center as unknown[])[1];},
     w=>{delete (w.planet!.tiles[0]!.neighbours as unknown[])[1];},
@@ -157,45 +159,46 @@ test('real group formation and physical departure retain all owner and conservat
   for(const p of w.pawns){p.hunger=95;p.rest=95;p.state='idle';p.path=[];p.moveCooldown=0;delete p.motion;}
   expect(validateWorld(w)).toEqual([]);
   expect(applyCommand(w,{type:'planet-adopt'}).ok).toBe(true);
-  const originals=w.pawns.slice(0,2),stale=context(w);
-  expect(applyCommand(w,{type:'group-start',memberIds:originals.map(p=>p.id),destination:w.planet!.civilianTile,sources:[{pileId:foodId,quantity:4}]}).ok).toBe(true);
-  expect(validateGroupStateWithPlanet(w,SCHEMA_VERSION,stale)).toEqual(['Invalid group planet authority.']);
+  const originals=w.pawns.slice(0,2),stale=context(w),runtime=actualPlanetGroupRuntime(w);
+  const step=()=>stepWorld(w,1,undefined,runtime),view=()=>planetGroupValidationView(w);
+  expect(applyCommand(w,{type:'group-start',originMapId:actualPlanetOrigin(w),memberIds:originals.map(p=>p.id),destination:legacyPlanet(w).civilianTile,sources:[{pileId:foodId,quantity:4}]}).ok).toBe(true);
+  expect(validateGroupStateWithPlanet(view(),SCHEMA_VERSION,stale)).toEqual(['Invalid group planet authority.']);
   for(const fake of [{},{...stale},null]){
-    expect(validateGroupStateWithPlanet(w,SCHEMA_VERSION,fake as unknown as PlanetValidationContext)).toEqual(['Invalid group planet authority.']);
+    expect(validateGroupStateWithPlanet(view(),SCHEMA_VERSION,fake as unknown as PlanetValidationContext)).toEqual(['Invalid group planet authority.']);
   }
-  let proof=context(w,stale),phase=w.group!.phase;
-  expect(validateGroupStateWithPlanet(w,SCHEMA_VERSION,proof)).toEqual(validateGroupState(w,SCHEMA_VERSION));
-  expect(validateGroupState(w,SCHEMA_VERSION)).toEqual([]);
-  for(let i=0;i<600&&!(w.group&&'members' in w.group);i++){
-    stepWorld(w);
-    if(!w.group)throw Error('Actual group formation was cancelled');
-    if(w.group?.phase!==phase){
-      phase=w.group!.phase;proof=context(w,proof);
-      expect(validateGroupStateWithPlanet(w,SCHEMA_VERSION,proof)).toEqual([]);
-      expect(validateGroupState(w,SCHEMA_VERSION)).toEqual([]);
+  let proof=context(w,stale),phase=onlyPlanetGroup(w).state.phase;
+  expect(validateGroupStateWithPlanet(view(),SCHEMA_VERSION,proof)).toEqual(validateGroupState(view(),SCHEMA_VERSION));
+  expect(validateGroupState(view(),SCHEMA_VERSION)).toEqual([]);
+  for(let i=0;i<600&&!('members' in onlyPlanetGroup(w).state);i++){
+    step();
+    const current=onlyPlanetGroup(w).state;
+    if(current.phase!==phase){
+      phase=current.phase;proof=context(w,proof);
+      expect(validateGroupStateWithPlanet(view(),SCHEMA_VERSION,proof)).toEqual([]);
+      expect(validateGroupState(view(),SCHEMA_VERSION)).toEqual([]);
     }
   }
-  const group=w.group;expect(group&&'members' in group).toBe(true);
+  const group=onlyPlanetGroup(w).state;expect('members' in group).toBe(true);
   if(!group||!('members' in group))throw Error('Actual group departure did not finish');
   expect(group.members.every((p,i)=>p===originals[i])).toBe(true);
   expect(w.pawns.some(p=>originals.includes(p))).toBe(false);
-  proof=context(w,proof);expect(validateGroupStateWithPlanet(w,SCHEMA_VERSION,proof)).toEqual([]);
+  proof=context(w,proof);expect(validateGroupStateWithPlanet(view(),SCHEMA_VERSION,proof)).toEqual([]);
   const frozen=serializeWorld(w),resumed=deserializeWorld(frozen),copyProof=context(resumed,proof);
   expect(validatedPlanetFor(proof,resumed,SCHEMA_VERSION)).toBe(resumed.planet);
-  expect(validateGroupStateWithPlanet(resumed,SCHEMA_VERSION,copyProof)).toEqual([]);
+  expect(validateGroupStateWithPlanet(planetGroupValidationView(resumed),SCHEMA_VERSION,copyProof)).toEqual([]);
   const index=group.items.findIndex(p=>p.item==='survival-meal');expect(index).toBeGreaterThanOrEqual(0);
   for(const corrupt of [
-    (v:World)=>{if(v.group&&'items' in v.group)v.group.items[index]!.owner={type:'inventory',pawnId:v.pawns[0]!.id};},
+    (v:World)=>{if(v.group&&'items' in v.group)v.group.items[index]!.owner={type:'inventory',pawnId:w.pawns[0]!.id};},
     (v:World)=>{if(v.group&&'items' in v.group)v.group.items[index]!.quantity++;},
     (v:World)=>{if(v.group&&'members' in v.group)v.group.lastPersonalTick--;},
   ]){
-    const bad=structuredClone(w);corrupt(bad);
-    const expected=validateGroupState(bad,SCHEMA_VERSION);
-    expect(expected.length).toBeGreaterThan(0);expect(validateGroupStateWithPlanet(bad,SCHEMA_VERSION,proof)).toEqual(expected);
+    const bad=structuredClone(w),badView=planetGroupValidationView(bad);corrupt(badView);
+    const expected=validateGroupState(badView,SCHEMA_VERSION);
+    expect(expected.length).toBeGreaterThan(0);expect(validateGroupStateWithPlanet(badView,SCHEMA_VERSION,proof)).toEqual(expected);
   }
   expect(serializeWorld(w)).toBe(frozen);
-  stepWorld(w);stepWorld(resumed);
+  const resumedRuntime=actualPlanetGroupRuntime(resumed);step();stepWorld(resumed,1,undefined,resumedRuntime);
   expect(serializeWorld(resumed)).toBe(serializeWorld(w));expect(validateWorld(w)).toEqual([]);
-  expect(validateGroupStateWithPlanet(w,SCHEMA_VERSION,proof)).toEqual(['Invalid group planet authority.']);
-  const current=context(w,proof);expect(validateGroupStateWithPlanet(w,SCHEMA_VERSION,current)).toEqual([]);
+  expect(validateGroupStateWithPlanet(view(),SCHEMA_VERSION,proof)).toEqual(['Invalid group planet authority.']);
+  const current=context(w,proof);expect(validateGroupStateWithPlanet(view(),SCHEMA_VERSION,current)).toEqual([]);
 },15000);

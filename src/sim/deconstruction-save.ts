@@ -1,3 +1,5 @@
+import {isLocalRoadProp256} from './local-road-props-256.ts';
+import {isProspectiveFurnitureTextile256} from './bedroll-textiles-256.ts';
 import { STRUCTURE_DEFINITIONS } from './definitions.ts';
 import { isBlockMaterial,isUpholsteryMaterial } from './building-materials.ts';
 import { validConstructionMaterial } from './construction-materials.ts';
@@ -16,13 +18,14 @@ export function validateDeconstruction(world: World, version: number, shapesOnly
     || ledger.lostSteel!==undefined&&(version<30||!Number.isSafeInteger(ledger.lostSteel)||ledger.lostSteel<0)
     || ledger.lostSilver!==undefined&&(version<211||!Number.isSafeInteger(ledger.lostSilver)||ledger.lostSilver<0)
     || ledger.lostBlocks!==undefined&&(version<33||!ledger.lostBlocks||typeof ledger.lostBlocks!=='object'||Array.isArray(ledger.lostBlocks)||Object.entries(ledger.lostBlocks).some(([item,n])=>!isBlockMaterial(item)||!Number.isSafeInteger(n)||n<0))
-    || ledger.lostTextiles!==undefined&&(version<189||!ledger.lostTextiles||typeof ledger.lostTextiles!=='object'||Array.isArray(ledger.lostTextiles)||!Object.keys(ledger.lostTextiles).length||Object.entries(ledger.lostTextiles).some(([item,n])=>!isUpholsteryMaterial(item)||!Number.isSafeInteger(n)||n<=0))
-    || Object.keys(ledger).some(k => !['count', 'lostWood', 'fuelTicks',...(version>=42?['lostComponents']:[]),...(version>=30?['lostSteel']:[]),...(version>=211?['lostSilver']:[]),...(version>=33?['lostBlocks']:[]),...(version>=189?['lostTextiles']:[])].includes(k))) errors.push('Invalid deconstruction ledger.');
+    || ledger.lostTextiles!==undefined&&(version<189||!ledger.lostTextiles||typeof ledger.lostTextiles!=='object'||Array.isArray(ledger.lostTextiles)||!Object.keys(ledger.lostTextiles).length||Object.entries(ledger.lostTextiles).some(([item,n])=>!isUpholsteryMaterial(item)||version<256&&isProspectiveFurnitureTextile256(item)||!Number.isSafeInteger(n)||n<=0))
+    || Object.keys(ledger).some(k => !['count', 'lostWood', 'fuelTicks',...(version>=42?['lostComponents']:[]),...(version>=30?['lostSteel']:[]),...(version>=211?['lostSilver']:[]),...(version>=256?['lostUranium']:[]),...(version>=33?['lostBlocks']:[]),...(version>=189?['lostTextiles']:[])].includes(k))) errors.push('Invalid deconstruction ledger.');
+  if(ledger&&typeof ledger==='object'&&'lostUranium'in ledger){const d=Object.getOwnPropertyDescriptor(ledger,'lostUranium');if(version<256||!d||!('value'in d)||!d.enumerable||!Number.isSafeInteger(d.value)||d.value<=0)errors.push('Invalid or future deconstructed uranium loss.');}
   for (const j of world.jobs) {
     const d = j.deconstruction;
     if (j.kind !== 'deconstruct') { if (d !== undefined) errors.push('Unexpected deconstruction target.'); continue; }
     if (!d || typeof d !== 'object' || Array.isArray(d) || !Number.isSafeInteger(d.structureId)
-      || version<224&&d.kind==='double-bed' || !Object.hasOwn(STRUCTURE_DEFINITIONS, d.kind) || !validConstructionMaterial(d.kind,d.material,version) || d.material!==undefined&&version<30 || Object.keys(d).some(k => !['structureId', 'kind',...(version>=30?['material']:[])].includes(k))) {
+      || version<256&&(isLocalRoadProp256(d.kind)||d.kind==='ship-chunk') || version<224&&d.kind==='double-bed' || !Object.hasOwn(STRUCTURE_DEFINITIONS, d.kind) || !validConstructionMaterial(d.kind,d.material,version) || d.material!==undefined&&version<30 || Object.keys(d).some(k => !['structureId', 'kind',...(version>=30?['material']:[])].includes(k))) {
       errors.push('Invalid deconstruction target.'); continue;
     }
     const s = deconstructionTarget(world, j);

@@ -1,4 +1,4 @@
-import type { Pawn } from './types';
+import type { Pawn } from './types.ts';
 
 /** Persisted visual identity. Sex is a drawing choice, not a biological or gameplay field. */
 export interface PawnAppearance {

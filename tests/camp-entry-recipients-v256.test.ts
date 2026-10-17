@@ -1,0 +1,5 @@
+import {expect,test} from 'vitest';
+import {campAnimalArrayWritable256} from '../src/sim/camp-entry-recipients-256';
+// Plain recipient objects only: no World-shaped fixture or simulation.
+test('read-only same-reference animals slot is refused without invoking an accessor',()=>{const animals:unknown[]=[],recipient={animals};expect(campAnimalArrayWritable256(recipient)).toBe(true);Object.defineProperty(recipient,'animals',{value:animals,writable:false});expect(recipient.animals).toBe(animals);expect(campAnimalArrayWritable256(recipient)).toBe(false);let reads=0;const getter=Object.defineProperty({},'animals',{get(){reads++;return animals;},enumerable:true});expect(campAnimalArrayWritable256(getter)).toBe(false);expect(reads).toBe(0);});
+test('freezing the replaced old array does not prohibit writing the real writable replacement slot',()=>{const recipient={animals:Object.freeze([])};expect(campAnimalArrayWritable256(recipient)).toBe(true);Object.freeze(recipient);expect(campAnimalArrayWritable256(recipient)).toBe(false);});

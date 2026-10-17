@@ -1,3 +1,6 @@
+import {tendAnimalAgeCondition256} from './animal-age-condition-runtime-256.ts';
+import {animalClinicalRandom256} from './animal-condition-medical-frontier-256.ts';
+import {MEDICINES} from './medicine-rules.ts';
 import { medicalTendQuality,treatmentTargets,type RankedTreatment } from './care-rules.ts';
 import { learnSkill } from './skills.ts';
 import { tendQuality,tendXp,type MedicineItem } from './medicine-rules.ts';
@@ -16,7 +19,7 @@ export interface HumanTendContext {
   bedOffset:number;
   infectionRoomFactor():number;
 }
-const key=(t:RankedTreatment)=>t.injuryId!==undefined?`injury:${t.injuryId}`:
+const key=(t:RankedTreatment)=>'animalConditionId'in t?`condition:${t.animalConditionId}`:t.injuryId!==undefined?`injury:${t.injuryId}`:
   t.infectionId!==undefined?`infection:${t.infectionId}`:t.flu?'flu':t.disease?`disease:${t.disease}`:`missing:${t.part}`;
 
 /** Shared finished-treatment kernel. Caller owns the actual patient, dose,
@@ -30,7 +33,11 @@ export function resolveHumanTendBatch(patient:Pawn,doctor:Pawn,batch:readonly Ra
   let roomFactor:number|undefined;
   for(const target of batch){
     let applied:boolean;
-    if(target.injuryId!==undefined){
+    if('animalConditionId'in target){
+      const rule=c.medicine?MEDICINES[c.medicine]:{potency:.3,maxQuality:.7},f=Math.fround;
+      const base=f(Math.max(0,Math.min(f(rule.maxQuality),f(f(f(f(quality)*f(rule.potency))+f(c.bedOffset))*f(doctor===patient?.7:1)))));
+      applied=tendAnimalAgeCondition256(patient.health,target.animalConditionId,base,rule.maxQuality,animalClinicalRandom256(c.random));
+    }else if(target.injuryId!==undefined){
       applied=tendInjury(patient.health,target.injuryId,tendQuality(quality,c.random(),doctor===patient,c.medicine,c.bedOffset));
       if(patient.health.injuries.some(i=>i.id===target.injuryId&&i.infection)){
         roomFactor??=c.infectionRoomFactor();

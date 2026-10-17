@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import { expect,test } from 'vitest';
 import { applyCommand,deserializeWorld,serializeWorld,stepWorld,validateWorld } from '../src/sim/index.ts';
 import { addMaterial,refreshStock } from '../src/sim/materials.ts';
@@ -34,9 +35,9 @@ function start(f:ReturnType<typeof camp>):void {
   const rng=w.rng,nextId=w.nextId;
   expect(applyCommand(w,{type:'planet-adopt'}).ok).toBe(true);
   expect(w.rng).toBe(rng);expect(w.nextId).toBe(nextId);
-  const before=serializeWorld(w),preview=previewGroupFormation(w,memberIds,sources,w.planet!.civilianTile);
+  const before=serializeWorld(w),preview=previewGroupFormation(w,memberIds,sources,legacyPlanet(w).civilianTile);
   expect(preview.ok).toBe(true);expect(serializeWorld(w)).toBe(before);
-  expect(applyCommand(w,{type:'group-start',memberIds,sources,destination:w.planet!.civilianTile}).ok).toBe(true);
+  expect(applyCommand(w,{type:'group-start',memberIds,sources,destination:legacyPlanet(w).civilianTile}).ok).toBe(true);
   expect(validateWorld(w)).toEqual([]);
 }
 function actualPiles(w:World){return [...w.piles,...(w.group&&'items' in w.group?w.group.items:[]),...(w.civilianPost?.stock??[])];}
@@ -44,7 +45,7 @@ const itemTotal=(w:World,item:string)=>actualPiles(w).filter(p=>p.item===item).r
 
 test('two originals physically load, leave, trade at the finite post, resume identically and unload after their actual return',()=>{
   const f=camp(),{w,originals,memberIds}=f;start(f);
-  const geography=JSON.stringify(w.planet!.tiles),phases=new Set<string>();
+  const geography=JSON.stringify(legacyPlanet(w).tiles),phases=new Set<string>();
   until(w,()=>w.group?.phase==='travelling',2000,p=>phases.add(p));
   const g=w.group;if(!g||!('members' in g))throw Error('Departure missing');
   expect(g.members).toEqual(originals);expect(g.members.every((p,i)=>p===originals[i])).toBe(true);
@@ -54,7 +55,7 @@ test('two originals physically load, leave, trade at the finite post, resume ide
   const fork=deserializeWorld(serializeWorld(w));
   stepWorld(w,37);stepWorld(fork,37);expect(serializeWorld(fork)).toBe(serializeWorld(w));
   until(w,()=>w.group?.phase==='at-site',7000,p=>phases.add(p));
-  expect(w.group).toMatchObject({tile:w.planet!.civilianTile});
+  expect(w.group).toMatchObject({tile:legacyPlanet(w).civilianTile});
   const at=w.group;if(!at||!('members' in at))throw Error('Visit missing');
   expect(at.members[0]).toBe(originals[0]);
   const cloth=at.items.find(p=>p.item==='cloth')!,sale=[{pileId:cloth.id,quantity:5}];
@@ -68,13 +69,13 @@ test('two originals physically load, leave, trade at the finite post, resume ide
   expect(itemTotal(w,'silver')).toBe(money);expect(validateWorld(w)).toEqual([]);
   const visit=deserializeWorld(serializeWorld(w));stepWorld(w,43);stepWorld(visit,43);
   expect(serializeWorld(visit)).toBe(serializeWorld(w));expect(w.group?.phase).toBe('at-site');
-  expect(applyCommand(w,{type:'group-route',destination:w.planet!.homeTile}).ok).toBe(true);
+  expect(applyCommand(w,{type:'group-route',destination:legacyPlanet(w).homeTile}).ok).toBe(true);
   until(w,()=>!w.group,9000,p=>phases.add(p));
   for(const p of originals)expect(w.pawns.find(q=>q.id===p.id)).toBe(p);
   expect(w.piles.some(p=>p.owner.type==='inventory'&&memberIds.includes(p.owner.pawnId))).toBe(false);
   expect(w.piles.filter(p=>p.item==='medicine'&&p.owner.type==='ground').reduce((n,p)=>n+p.quantity,0)).toBe(2);
   expect(itemTotal(w,'cloth')).toBe(textiles);expect(itemTotal(w,'silver')).toBe(money);
-  expect(JSON.stringify(w.planet!.tiles)).toBe(geography);expect(validateWorld(w)).toEqual([]);
+  expect(JSON.stringify(legacyPlanet(w).tiles)).toBe(geography);expect(validateWorld(w)).toEqual([]);
   expect(phases).toEqual(new Set(['gathering','loading','leaving','travelling','at-site','unloading','none']));
 },60000);
 
@@ -127,7 +128,7 @@ test('195 validates before the neutral migration chain and refuses future JSON o
 test('malformed formation commands refuse atomically before generation, reservation, IDs or ownership change',()=>{
   const f=camp(),{w}=f;expect(applyCommand(w,{type:'planet-adopt'}).ok).toBe(true);
   const before=serializeWorld(w);
-  const c={type:'group-start',memberIds:f.memberIds,sources:f.sources,destination:w.planet!.civilianTile};
+  const c={type:'group-start',memberIds:f.memberIds,sources:f.sources,destination:legacyPlanet(w).civilianTile};
   for(const bad of [{...c,extra:true},{...c,memberIds:[f.memberIds[0],f.memberIds[0]]},{...c,sources:[{pileId:f.sources[0]!.pileId,quantity:1,extra:true}]}]){
     expect(applyCommand(w,bad as Command).ok).toBe(false);expect(serializeWorld(w)).toBe(before);
   }

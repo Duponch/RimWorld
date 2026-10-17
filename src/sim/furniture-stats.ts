@@ -1,12 +1,13 @@
+import {BEDROLL_TEXTILES_256,type BedrollTextile256} from './bedroll-textiles-256.ts';
 import { isBedKind } from './bed-kinds.ts';
 import { WEAPON_QUALITIES,type WeaponQuality } from './equipment-rules.ts';
 
 /** Core 1.6.4871 names adapted to the stable ids proposed for V90. */
-export const HABITAT_FURNITURE_KINDS=['shelf','small-shelf','double-bed','bed','hospital-bed','table','stool','dining-chair','armchair','end-table','dresser','table-square','table-long','flower-pot','chess-table'] as const;
+export const HABITAT_FURNITURE_KINDS=['shelf','small-shelf','double-bed','bedroll','bed','hospital-bed','table','stool','dining-chair','armchair','end-table','dresser','table-square','table-long','flower-pot','chess-table'] as const;
 export type HabitatFurnitureKind=typeof HABITAT_FURNITURE_KINDS[number];
 export type FurnitureQuality=WeaponQuality;
 export const FURNITURE_QUALITIES=WEAPON_QUALITIES;
-export type FurnitureMaterial='wood'|'steel'|'granite-blocks'|'limestone-blocks'|'marble-blocks'|'sandstone-blocks'|'slate-blocks'|'cloth'|'light-leather';
+export type FurnitureMaterial='jade'|'wood'|'steel'|'granite-blocks'|'limestone-blocks'|'marble-blocks'|'sandstone-blocks'|'slate-blocks'|BedrollTextile256;
 export type FurnitureStuffCategory='woody'|'metallic'|'stony'|'fabric'|'leathery';
 
 export interface FurnitureDefinition {
@@ -36,6 +37,7 @@ export const FURNITURE_DEFINITIONS:Readonly<Record<HabitatFurnitureKind,Furnitur
   'small-shelf':definition({label:'Petite étagère',width:1,depth:1,stuff:10,categories:hard,coreWork:250,constructionSkill:0,research:'complex-furniture',maxHitPoints:50,beauty:0,quality:false}),
   // Core gates the bed behind Complex furniture. Lisière already shipped it;
   // V90 keeps it unlocked while retaining the reference prerequisite here.
+  bedroll:definition({label:'Sac de couchage',width:1,depth:2,stuff:40,categories:['fabric','leathery'],coreWork:600,constructionSkill:0,research:null,maxHitPoints:75,beauty:0,comfort:.68,restEffectiveness:.95,quality:true}),
   bed:definition({label:'Lit',width:1,depth:2,stuff:45,categories:hard,coreWork:800,constructionSkill:0,research:null,coreResearch:'complex-furniture',maxHitPoints:140,beauty:1,comfort:.75,restEffectiveness:1,quality:true}),
   'double-bed':definition({label:'Lit double',width:2,depth:2,stuff:85,categories:hard,coreWork:1500,constructionSkill:0,research:'complex-furniture',coreResearch:'complex-furniture',maxHitPoints:200,beauty:2,comfort:.75,restEffectiveness:1,quality:true}),
   'hospital-bed':definition({label:'Lit d’hôpital',width:1,depth:2,stuff:40,categories:['metallic'],coreWork:2800,constructionSkill:8,research:'hospital-bed',coreResearch:'hospital-bed',maxHitPoints:150,beauty:2,comfort:.8,restEffectiveness:1,quality:true}),
@@ -65,6 +67,8 @@ const material=(value:FurnitureMaterialFactors):FurnitureMaterialFactors=>Object
 /** Hard-stuff work/rest values already used by construction-materials.ts;
  * HP, fire and beauty are the matching current Core stuff factors. */
 export const FURNITURE_MATERIALS:Readonly<Record<FurnitureMaterial,FurnitureMaterialFactors>>=Object.freeze({
+  ...BEDROLL_TEXTILES_256,
+  jade:material({category:'stony',workFactor:5,workOffset:0,hitPointsFactor:.5,flammabilityFactor:0,beautyFactor:2.5,beautyOffset:10,restFactor:1}),
   wood:material({category:'woody',workFactor:.7,workOffset:0,hitPointsFactor:.65,flammabilityFactor:1,beautyFactor:1,beautyOffset:0,restFactor:1}),
   steel:material({category:'metallic',workFactor:1,workOffset:0,hitPointsFactor:1,flammabilityFactor:.4,beautyFactor:1,beautyOffset:0,restFactor:1}),
   'granite-blocks':material({category:'stony',workFactor:6,workOffset:140,hitPointsFactor:1.7,flammabilityFactor:0,beautyFactor:1,beautyOffset:0,restFactor:.9}),
@@ -87,10 +91,11 @@ export const SCULPTURE_DEFINITIONS=Object.freeze({
   'large-sculpture':Object.freeze({stuff:100,coreWorkToMake:30000,maxHitPoints:150,beauty:100}),
 });
 export type SculptureKind=keyof typeof SCULPTURE_DEFINITIONS;
-export type SculptureMaterial=Extract<FurnitureMaterial,'wood'|'steel'|'granite-blocks'|'limestone-blocks'|'marble-blocks'|'sandstone-blocks'|'slate-blocks'>;
+export type SculptureMaterial=Extract<FurnitureMaterial,'jade'|'wood'|'steel'|'granite-blocks'|'limestone-blocks'|'marble-blocks'|'sandstone-blocks'|'slate-blocks'>;
 /** WorkToMake and Beauty are not the WorkToBuild/Beauty factors of ordinary
  * furniture. Core stones have no WorkToMake offset. */
 export const SCULPTURE_MATERIALS:Readonly<Record<SculptureMaterial,Readonly<{makeFactor:number;beautyFactor:number;beautyOffset:number}>>>=Object.freeze({
+  jade:Object.freeze({makeFactor:1.4,beautyFactor:2.5,beautyOffset:10}),
   wood:Object.freeze({makeFactor:.7,beautyFactor:1,beautyOffset:0}),
   steel:Object.freeze({makeFactor:1,beautyFactor:1,beautyOffset:0}),
   'sandstone-blocks':Object.freeze({makeFactor:1.1,beautyFactor:1.1,beautyOffset:0}),

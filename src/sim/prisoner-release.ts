@@ -1,3 +1,4 @@
+import {forgetLocalActorBed256} from './actor-bed-local-256.ts';
 import { isColonist } from './affiliation.ts';
 import { allowedAreaAllows } from './allowed-area-state.ts';
 import { prisonBreakActive } from './prison-break-state.ts';
@@ -107,13 +108,13 @@ export function processPrisonerRelease(world:World,actor:Pawn,context:NeedContex
   if(!releaseWork(world,patient))return;
   syncPatient(world,actor);delete actor.rescue;
   actor.orders.active=null;actor.path=[];actor.state='idle';actor.planCooldown=0;
-  patient.motion=null;patient.moveCooldown=0;patient.bedId=null;delete patient.bedSlot;patient.need=null;
+  patient.motion=null;patient.moveCooldown=0;forgetLocalActorBed256(world,patient);patient.need=null;
   patient.state='idle';patient.planCooldown=0;patient.needCooldown=0;
   if(world.schemaVersion>=213&&isColonist(patient)){
     delete patient.prisoner;
-    context.event(`${actor.name} a libéré ${patient.name}, qui retrouve sa liberté dans la colonie.`);
+    context.event(`${actor.name} a libÃ©rÃ© ${patient.name}, qui retrouve sa libertÃ© dans la colonie.`);
   }else{
     patient.prisoner!.releasedAt=world.tick;patient.prisoner!.escape={...exit};
-    context.event(`${actor.name} a libéré ${patient.name}, qui rejoint la sortie de la carte.`);
+    context.event(`${actor.name} a libÃ©rÃ© ${patient.name}, qui rejoint la sortie de la carte.`);
   }
 }

@@ -1,3 +1,6 @@
+import {geographicLongitudeOffsetCore256} from './site-climate.ts';
+import {planetTile,planetTileCount} from './planet-geography-256.ts';
+import {planetTileCoordinates} from './planet-navigation.ts';
 import {registeredMapId,boundWorldGroup} from './world-map-context.ts';
 import { CAMPAIGN_FIELDS } from './secondary-site-state.ts';
 import { campaignAuthority,isSecondaryContext,secondaryValidationContext } from './secondary-site-context.ts';
@@ -26,7 +29,7 @@ export function validSecondarySiteShape(raw:unknown,version:number):boolean {
   if(!Object.hasOwn(raw,'secondarySite'))return true;
   const s=raw.secondarySite,w=raw as unknown as World;
   if(!object(s)||!exact(s,['revision','tile','createdAt','selected','map','visit'])||s.revision!==1||!integer(s.tile,0,161)
-    ||!integer(s.createdAt,0,Number(raw.tick))||typeof s.selected!=='boolean'||!object(s.map)||!object(raw.planet)||!Array.isArray(raw.planet.tiles))return false;
+    ||!integer(s.createdAt,0,Number(raw.tick))||typeof s.selected!=='boolean'||!object(s.map)||!object(raw.planet)||raw.planet.revision===3||!Array.isArray(raw.planet.tiles))return false;
   const tile=raw.planet.tiles[s.tile];
   if(!object(tile)||!isBiomeId(tile.biome)||tile.hilliness==='mountainous'||s.tile===raw.planet.homeTile||s.tile===raw.planet.civilianTile)return false;
   const map=s.map;
@@ -54,10 +57,10 @@ export function validSecondarySiteShape(raw:unknown,version:number):boolean {
 
 export function validExpeditionOrigin(value:unknown,w:Pick<World,'tick'|'planet'>,version:number):boolean {
   if(value===undefined)return true;
-  if(version<240||!object(value)||!exact(value,['tile','createdAt','calendarOffset'])||!integer(value.tile,0,version>=255?(w.planet?.tiles.length??0)-1:161)||!integer(value.createdAt,0,w.tick)||!w.planet||!Array.isArray(w.planet.tiles))return false;
-  const t=w.planet.tiles[value.tile],home=w.planet.tiles[w.planet.homeTile];
-  return !!t&&!!home&&t.biome!=='ocean'&&t.hilliness!=='mountainous'&&value.tile!==w.planet.homeTile&&value.tile!==w.planet.civilianTile
-    &&value.calendarOffset===(longitudeOffsetCore(tileCoordinates(t).longitude)-longitudeOffsetCore(tileCoordinates(home).longitude))/10;
+  if(version<240||!object(value)||!exact(value,['tile','createdAt','calendarOffset'])||!integer(value.tile,0,version>=255?(w.planet?planetTileCount(w.planet):0)-1:161)||!integer(value.createdAt,0,w.tick)||!w.planet||version<256&&w.planet.revision===3)return false;
+  const t=planetTile(w.planet,value.tile),home=planetTile(w.planet,w.planet.homeTile),offset=w.planet.revision===3?geographicLongitudeOffsetCore256:longitudeOffsetCore;
+  return !!t&&!!home&&t.biome!=='ocean'&&(w.planet.revision===3?t.biome!=='lake'&&t.hilliness!=='impassable':t.hilliness!=='mountainous')&&value.tile!==w.planet.homeTile&&value.tile!==w.planet.civilianTile
+    &&value.calendarOffset===(offset(planetTileCoordinates(w.planet,t.id).longitude)-offset(planetTileCoordinates(w.planet,home.id).longitude))/10;
 }
 
 // Explicit map namespace: adding another World domain requires a conscious
@@ -68,7 +71,7 @@ export const LOCAL_FIELDS=new Set([
   'prisonDepartures','site','scenario','startingArrival','hunting','butchery','flora','wildlife','heatwaves','raids','fluIncidents','miscIncidents',
   'smallIncidents','flashstorm','podRescues','home','destroyed','arrivals','projectiles','bombWaves','roofing','thermal','packed','snow','snowClearArea',
   'tailoring','deconstructed','seed','width','height','tiles','pawns','resources','structures','jobs','piles','stockpiles','growingZones','growingCursor',
-  'environment','stock','spoiled','events','logisticsCursor','deterioration',
+  'ancientShrineWarnings','geysers','roadInfo','riverWater','exploration','environment','stock','spoiled','events','logisticsCursor','deterioration',
 ]);
 
 export function secondaryMapForValidation(world:World):World|undefined {

@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import {expect,test} from 'vitest';
 import {applyCommand,stepWorld} from '../src/sim/engine.ts';
 import {serializeWorld,deserializeWorld,validateWorld} from '../src/sim/serialization.ts';
@@ -28,7 +29,7 @@ function camp(){
   addMaterial(w,'steel',20,{type:'ground',x:5,z:5},'steel');const steel=w.piles.at(-1)!; // Steel has no admissible positive damage in this catalogue.
   refreshStock(w);return {...f,w,wood,steel,lines:[{pileId:f.rationId,quantity:4},{pileId:wood.id,quantity:12},{pileId:steel.id,quantity:20}]};
 }
-function formation(){const f=camp();accept(f.w,{type:'group-start',memberIds:f.memberIds,destination:f.w.planet!.civilianTile,sources:f.lines});return {...f,g:f.w.group as PreparingGroup};}
+function formation(){const f=camp();accept(f.w,{type:'group-start',memberIds:f.memberIds,destination:legacyPlanet(f.w).civilianTile,sources:f.lines});return {...f,g:f.w.group as PreparingGroup};}
 /** Prepared contact positions only; pickup/ID allocation/receipt/ledger use the
  * real synchronous producer. The separate transition test walks normally. */
 function pickup(f:ReturnType<typeof formation>){
@@ -77,7 +78,7 @@ test('ordinary loading/exit and physical return/deposit resume exactly, with ind
   until(w,()=>!!w.group&&'members' in w.group);stepWorld(twin,w.tick-at);expect(serializeWorld(twin)).toBe(serializeWorld(w));
   const g=w.group as AwayGroup;expect(g.freight).toEqual({revision:1,woodLoaded:12,steelLoaded:20});expect(g.baseline.freight).toEqual({wood:15,steel:20});
   const roster=[...g.members];
-  accept(w,{type:'group-route',destination:w.planet!.homeTile});until(w,()=>!w.group);checkpoint(w);
+  accept(w,{type:'group-route',destination:legacyPlanet(w).homeTile});until(w,()=>!w.group);checkpoint(w);
   expect(roster.every(p=>w.pawns.includes(p))).toBe(true);// The ordinary ground transfer may merge compatible stacks and retire a receipt ID.
   expect(w.piles.filter(i=>i.item==='wood'||i.item==='steel').every(i=>i.owner.type==='ground')).toBe(true);expect(amount(w,'wood')).toBe(33);expect(amount(w,'steel')).toBe(20);
 });
@@ -89,9 +90,9 @@ test('steel cargo leaves ordinary textile commerce working, binds fresh contract
   // Declared actual inventory rations; sources[] credits no new pickup.
   addMaterial(w,'food',4,{type:'inventory',pawnId:f.memberIds[0]!},'survival-meal');
   addMaterial(w,'steel',2,{type:'inventory',pawnId:f.memberIds[0]!},'steel');addMaterial(w,'textile',40,{type:'inventory',pawnId:f.memberIds[0]!},'cloth');addMaterial(w,'silver',1000,{type:'inventory',pawnId:f.memberIds[0]!},'silver');
-  accept(w,{type:'group-start',memberIds:f.memberIds,destination:w.planet!.civilianTile,sources:[]});const preparing=w.group as PreparingGroup;preparing.phase='leaving';
+  accept(w,{type:'group-start',memberIds:f.memberIds,destination:legacyPlanet(w).civilianTile,sources:[]});const preparing=w.group as PreparingGroup;preparing.phase='leaving';
   for(const e of preparing.exits){if(!e.cell)throw Error('Exit');const p=w.pawns.find(q=>q.id===e.pawnId)!;Object.assign(p,e.cell,{path:[],moveCooldown:0,planCooldown:0,state:'idle'});delete p.motion;}
-  tryGroupDeparture(w);const g=w.group as AwayGroup;Object.assign(g,{phase:'at-site',tile:w.planet!.civilianTile,route:[w.planet!.civilianTile],segment:null,stop:{kind:'at-site'}});expect(ensureCommercialPost(w)).toBe(true);expect(g.baseline.food).toBe(4);expect(g.ledger.foodLoaded).toBe(0);checkpoint(w);
+  tryGroupDeparture(w);const g=w.group as AwayGroup;Object.assign(g,{phase:'at-site',tile:legacyPlanet(w).civilianTile,route:[legacyPlanet(w).civilianTile],segment:null,stop:{kind:'at-site'}});expect(ensureCommercialPost(w)).toBe(true);expect(g.baseline.food).toBe(4);expect(g.ledger.foodLoaded).toBe(0);checkpoint(w);
   const steel=g.items.find(i=>i.item==='steel')!,cloth=g.items.find(i=>i.item==='cloth')!,sell=[{pileId:cloth.id,quantity:5}],q=groupTradeQuote(w,'sell',sell);if(!q.ok)throw Error(q.reason);
   g.freight!.woodLoaded++;expect(applyCommand(w,{type:'group-sell',lines:sell,quote:q.signature}).ok).toBe(false);g.freight!.woodLoaded--;
   const current=groupTradeQuote(w,'sell',sell);if(!current.ok)throw Error(current.reason);accept(w,{type:'group-sell',lines:sell,quote:current.signature});

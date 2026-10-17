@@ -1,4 +1,6 @@
+import {validStartingApparelColor256} from './starting-apparel-color-256.ts';
 import { V91_ITEM_IDS } from './biome-items.ts';
+import {isCoreStartingApparel256} from './starting-gear-256.ts';
 import { V120_ANIMAL_PRODUCT_ITEMS } from './animal-product-items.ts';
 import { adjacent } from './pathfinding.ts';
 import { APPAREL,apparelDefinition,conflictsWith,isApparelItem,newApparelState,type ApparelItem } from './apparel-rules.ts';
@@ -10,6 +12,7 @@ const capturedApparel=(item:ApparelItem):MaterialPile=>({id:0,kind:'apparel',ite
 const capturedApparelCandidates=(version:number):MaterialPile[]=>{
   const seen=new Set<string>(),out:MaterialPile[]=[];
   for(const item of Object.keys(APPAREL) as ApparelItem[]){
+    if(version<256&&isCoreStartingApparel256(item))continue;
     const historical=item==='flak-vest'||item==='cloth-shirt'||version>=72&&item==='cloth-tribalwear';
     if(version<90&&!historical||version<91&&V91_ITEM_IDS.includes(item)||version<120&&V120_ANIMAL_PRODUCT_ITEMS.includes(item)||version<141&&item==='flak-helmet'||version<148&&item==='recon-helmet'||version<241&&item==='recon-armor'||version<245&&item.endsWith('-tuque')||version<178&&item.startsWith('foxfur-'))continue;
     const key=APPAREL[item].family??item;
@@ -23,9 +26,11 @@ export function validApparelShape(p:Record<string,unknown>,version:number):boole
   const a=p.apparel;
   if(version<63||typeof p.item!=='string'||!Object.hasOwn(APPAREL,p.item)||!record(a))return false;
   const item=p.item as ApparelItem,definition=APPAREL[item];
+  if(!validStartingApparelColor256(a,item,version))return false;
+  if(version<256&&isCoreStartingApparel256(item))return false;
   const historical=item==='flak-vest'||item==='cloth-shirt'||version>=72&&item==='cloth-tribalwear';
   if(version<90&&!historical||version<91&&V91_ITEM_IDS.includes(item)||version<120&&V120_ANIMAL_PRODUCT_ITEMS.includes(item)||version<141&&item==='flak-helmet'||version<148&&item==='recon-helmet'||version<241&&item==='recon-armor'||version<245&&item.endsWith('-tuque')||version<178&&item.startsWith('foxfur-'))return false;
-  return Object.keys(a).every(k=>['quality','hitPoints','forbidden',...(version>=90?['material','forced']:[])].includes(k))
+  return Object.keys(a).every(k=>['quality','hitPoints','forbidden',...(version>=90?['material','forced']:[]),...(version===256?['birthColor']:[])].includes(k))
     &&typeof a.quality==='string'&&(WEAPON_QUALITIES as readonly string[]).includes(a.quality)
     &&typeof a.hitPoints==='number'&&Number.isInteger(a.hitPoints)&&a.hitPoints>0&&a.hitPoints<=definition.hitPoints
     &&(version<90?a.material===undefined:definition.material===undefined?a.material===undefined:a.material===definition.material)

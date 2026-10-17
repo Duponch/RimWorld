@@ -91,7 +91,7 @@ export function validateSurgeries(w:World,version:number,onlyBedIds?:ReadonlySet
     if(!bed||bed.kind==='double-bed'||bed.prisoner||!patient||!rescueBedAvailable(w,bed,patient,p.id)||!lyingPatient(patient)||patient.need?.kind!=='sleep'||patient.need.bedId!==bed.id||patient.x!==bed.x||patient.z!==bed.z
       ||Math.abs(t.spot.x-bed.x)+Math.abs(t.spot.z-bed.z)!==1||!canStandAt(w,t.spot))errors.push('Surgical patient or bedside is not physically installed.');
     if(w.pawns.some(other=>other!==p&&(other.tend?.patientId===t.patientId||other.feed?.patientId===t.patientId||other.ward?.patientId===t.patientId||other.rescue?.patientId===t.patientId
-      ||serviceCell(other)&&serviceKey(serviceCell(other)!)===serviceKey(t.spot))))errors.push('Surgery conflicts with a patient or bedside reservation.');
+      ||serviceCell(other,w)&&serviceKey(serviceCell(other,w)!)===serviceKey(t.spot))))errors.push('Surgery conflicts with a patient or bedside reservation.');
     // A queued sustaining command retains its independent priority intent.
     // The engine suspends that provider while this physical service is active.
     if(p.jobId!==null||p.haul||p.cooking||p.need||p.recreation.task||p.tend||p.feed||p.rescue||p.ward||p.research||p.animalCare||p.animalHandling||p.equipmentTask||p.hunting||p.burial||p.cleaning||p.firefighting||p.interruptedCargo)errors.push('Surgery conflicts with another doctor activity.');

@@ -13,10 +13,11 @@ export const BLOOD_UNIT=300_000_000;
 export const MEDICAL_INTERVAL=6; // 60 Core ticks, day preserved at 6000 local ticks
 export const HEAL_INTERVAL=60;
 export const FRESH_MISSING_TICKS=9000;
-export type InjuryKind='stab'|'burn'|'execution-cut'|'cut'|'crush'|'crack'|'bruise'|'gunshot'|'bite'|'shredded';
+export type InjuryKind='stab'|'burn'|'execution-cut'|'cut'|'crush'|'crack'|'bruise'|'gunshot'|'bite'|'shredded'|'frostbite';
 export type ScarPain=0|1|3|6;
 /** Per milli-HP: numerator of pain / PAIN_UNIT, and blood units per interval. */
 export const INJURY_RULES=Object.freeze({
+  frostbite:Object.freeze({label:'Gelure',painUnits:10,bleedUnits:0,scar:true,merge:true}),
   shredded:Object.freeze({label:'Lacération',painUnits:10,bleedUnits:18,scar:true,merge:true}),
   burn:Object.freeze({label:'Brûlure',painUnits:15,bleedUnits:0,scar:true,merge:true}),
   'execution-cut':Object.freeze({label:'Entaille d’achèvement',painUnits:10,bleedUnits:18,scar:false,merge:false}),
@@ -30,6 +31,7 @@ export const INJURY_RULES=Object.freeze({
 });
 const bone=(id:BodyPartId)=>['ribcage','sternum','pelvis','spine','skull','nose','jaw'].includes(id)||/-(clavicle|humerus|radius|femur|tibia)$/.test(id);
 function partRules(model:BodyModel){return Object.freeze(Object.fromEntries(model.parts.map(part=>{
+  if(part.nativeInjuryRule)return [part.id,Object.freeze({...part.nativeInjuryRule})];
   if(isMechanoidKind(model.kind))return [part.id,Object.freeze({solid:true,skin:false,bleed:0,delicate:false,scarFactor:0})];
   const solid=bone(part.id),eye=part.id.endsWith('-eye');
   const skin=part.depth==='outside'&&!eye&&!['jaw','tongue','waist'].includes(part.id);

@@ -1,7 +1,11 @@
+import {removedMineableTile256} from './local-mineable-owner-256.ts';
+import {collapsedRockAt256,excavatedCollapsedRock256,isNaturalRockTile256} from './collapsed-rocks-256.ts';
+import {retainExplorationCell256} from './exploration-state-256.ts';
 import type { Tile, World } from './types.ts';
 
 /** Core resource rock; it inherits natural-rock pick damage (80), not 40. */
 export const ORE_DEFINITIONS = Object.freeze({
+  jade:Object.freeze({hp:1500,yield:40,item:'jade',label:'Gisement de jade',color:0x78a28c}),
   steel: Object.freeze({hp:1500,yield:40,item:'steel',label:'Acier compacté',color:0x725c53}),
   machinery: Object.freeze({hp:2000,yield:2,item:'component',label:'Machines compactées',color:0xb38d53}),
   silver: Object.freeze({hp:1500,yield:40,item:'silver',label:'Minerai d’argent',color:0x8f918f}),
@@ -11,7 +15,7 @@ export const ORE_DEFINITIONS = Object.freeze({
 } as const);
 export const STEEL_ORE = ORE_DEFINITIONS.steel;
 export function validOre(tile: {terrain:unknown;ore?:unknown}, version:number):boolean {
-  return tile.ore===undefined || tile.terrain==='rock' && (version>=243 && tile.ore==='silver' || version>=241 && tile.ore==='uranium' || version>=29 && tile.ore==='steel' || version>=41 && tile.ore==='machinery' || version>=123 && (tile.ore==='gold'||tile.ore==='plasteel'));
+  return tile.ore===undefined || tile.terrain==='rock' && (version>=256 && tile.ore==='jade' || version>=243 && tile.ore==='silver' || version>=241 && tile.ore==='uranium' || version>=29 && tile.ore==='steel' || version>=41 && tile.ore==='machinery' || version>=123 && (tile.ore==='gold'||tile.ore==='plasteel'));
 }
 
 function sample(seed:number,cell:number):number {
@@ -32,15 +36,15 @@ function generateDeposit(world:GenerationWorld,ore:NonNullable<Tile['ore']>,min:
     if(x)out.push(i-1);if(x+1<width)out.push(i+1);if(z)out.push(i-width);if(z+1<height)out.push(i+width);
     return out;
   };
-  const rocks=tiles.reduce((n,t)=>n+(t.terrain==='rock'?1:0),0);
+  const rocks=tiles.reduce((n,t)=>n+(isNaturalRockTile256(t)?1:0),0);
   if(rocks<min)return;
-  const candidates=tiles.flatMap((t,i)=>t.terrain==='rock'&&neighbors(i).some(j=>tiles[j]!.terrain!=='rock'&&tiles[j]!.terrain!=='water')?[i]:[])
+  const candidates=tiles.flatMap((t,i)=>isNaturalRockTile256(t)&&neighbors(i).some(j=>tiles[j]!.terrain!=='rock'&&tiles[j]!.terrain!=='water')?[i]:[])
     .sort((a,b)=>sample(seed,a)-sample(seed,b)||a-b);
   const budget=Math.max(1,Math.floor(rocks/500));
   let deposits=0,attempts=0;
   for(const origin of candidates) {
     if(deposits>=budget||attempts++>=budget*24)break;
-    const eligible=(i:number)=>tiles[i]!.terrain==='rock'&&!tiles[i]!.ore&&!neighbors(i).some(j=>tiles[j]!.ore);
+    const eligible=(i:number)=>isNaturalRockTile256(tiles[i]!)&&!tiles[i]!.ore&&!neighbors(i).some(j=>tiles[j]!.ore);
     if(!eligible(origin))continue;
     const target=min+Math.floor(sample(seed^0x3391,origin)*(max-min+1)),chosen:number[]=[],seen=new Set<number>([origin]),frontier=[origin];
     const ox=origin%width,oz=Math.floor(origin/width);
@@ -56,4 +60,7 @@ function generateDeposit(world:GenerationWorld,ore:NonNullable<Tile['ore']>,min:
   }
 }
 
-export const minedFloor=(tile:Tile):Tile=>({terrain:'rough-stone',...tile.stone?{stone:tile.stone}:{}});
+export function minedFloor(tile:Tile):Tile {
+ if(tile.mineable){const actual=removedMineableTile256(tile,tile.mineable.id);if(!actual)throw Error('Invalid actual Mineable original');return actual;}
+ return retainExplorationCell256(tile,collapsedRockAt256(tile)?excavatedCollapsedRock256(tile):({terrain:'rough-stone',...tile.stone?{stone:tile.stone}:{}}));
+}

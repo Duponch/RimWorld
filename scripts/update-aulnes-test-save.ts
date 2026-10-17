@@ -7,6 +7,7 @@ import {existsSync,mkdirSync,mkdtempSync,readFileSync,writeFileSync} from 'node:
 import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {isColonist} from '../src/sim/affiliation.ts';
+import {planetTiles} from '../src/sim/planet-geography-256.ts';
 import {addDeepDeposit} from '../src/sim/deep-resources.ts';
 import {applyCommand,stepWorld} from '../src/sim/engine.ts';
 import {refreshStock} from '../src/sim/materials.ts';
@@ -79,7 +80,7 @@ export function auditCoverage(world:World):Record<string,boolean> {
     orbitalTrade:has('comms-console')&&has('orbital-beacon')&&!!world.orbital,
     nutrientPaste:has('nutrient-paste-dispenser')&&has('hopper'),
     biofuel:has('biofuel-refinery')&&has('chemfuel-generator')&&bill('chemfuel-from-wood'),
-    social:!!world.relationships?.links.length,planet:!!world.planet?.tiles.length,
+    social:!!world.relationships?.links.length,planet:!!world.planet&&planetTiles(world.planet).length>0,
     quests:!!world.quests,incidents:!!world.raids&&!!world.miscIncidents&&!!world.worldIncidents,
   };
 }

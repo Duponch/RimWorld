@@ -3,6 +3,7 @@ import { isBlockMaterial } from './building-materials.ts';
 
 /** Timed leaf segment, distinct from permission and logical opening. */
 export interface DoorState {
+  explorationApproacherId?:number;
   open:boolean;
   holdOpen:boolean;
   forbidden:boolean;

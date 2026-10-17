@@ -1,4 +1,4 @@
-import {isWetTerrain} from './shallow-water.ts';
+import {terrainAcceptsFilth256} from './natural-terrain-runtime-256.ts';
 import { isRoofed } from './roof-rules.ts';
 import { isGrowingTerrain } from './soil.ts';
 import { captureCleanliness } from './filth-room.ts';
@@ -12,7 +12,7 @@ const inside=(w:World,c:Cell)=>Number.isInteger(c.x)&&Number.isInteger(c.z)&&c.x
 /** Filth needs walkable ground, not an empty storage slot. Tables/chunks can
  * carry traces; walls, cooler shells and natural rock cannot. */
 function filthWalkable(w:World,c:Cell):boolean {
-  if(!inside(w,c)||(['rock','water'].includes(w.tiles[c.z*w.width+c.x]!.terrain)||isWetTerrain(w.tiles[c.z*w.width+c.x]!.terrain)&&!w.tiles[c.z*w.width+c.x]!.bridge))return false;
+  if(!inside(w,c)||!terrainAcceptsFilth256(w.tiles[c.z*w.width+c.x]!))return false;
   return !w.structures.some(s=>(s.kind==='vent'||s.kind==='wall'||s.kind==='cooler')&&same(s,c));
 }
 function accepted(w:World,c:Cell,kind:FilthKind,spontaneous=false):boolean {
@@ -26,7 +26,7 @@ function put(w:World,c:Cell,kind:FilthKind,spontaneous=false):boolean {
   if(!filthWalkable(w,c))return false;
   const found=w.filth?.items.find(f=>same(f,c)&&f.kind===kind);
   if(found){if(found.thickness>=5)return false;found.thickness++;found.grownCore=w.tick*10;return true;}
-  if(!accepted(w,c,kind,spontaneous)||!Number.isSafeInteger(w.nextId+1)||(w.filth?.items.length??0)>=w.width*w.height*6)return false;
+  if(!accepted(w,c,kind,spontaneous)||!Number.isSafeInteger(w.nextId+1)||(w.filth?.items.length??0)>=w.width*w.height*(w.schemaVersion>=256?9:6))return false;
   const state=ensureFilth(w),d=FILTH_DEFINITIONS[kind],period=filthCheckPeriod(w),now=w.tick*10;
   // A cell's phase is stable; adding another trace never rerolls rain chronology.
   const phase=((Math.imul(c.z*w.width+c.x,1103515245)>>>0)%(period));
@@ -36,7 +36,7 @@ function put(w:World,c:Cell,kind:FilthKind,spontaneous=false):boolean {
 /** Actual deposits only. A blocked/full cell tries the eight neighbors in a
  * private shuffled order; rejected terrain alone does not spill outward. */
 export function addFilth(w:World,c:Cell,kind:FilthKind,count=1,spontaneous=false):boolean {
-  if(w.schemaVersion<89||!inside(w,c)||!Object.hasOwn(FILTH_DEFINITIONS,kind)||!Number.isSafeInteger(count)||count<1||count>100)return false;
+  if(w.schemaVersion<89||w.schemaVersion<256&&(kind==='rock-rubble'||kind==='building-rubble'||kind==='slime')||!inside(w,c)||!Object.hasOwn(FILTH_DEFINITIONS,kind)||!Number.isSafeInteger(count)||count<1||count>100)return false;
   let made=false;
   for(let n=0;n<count;n++){
     if(put(w,c,kind,spontaneous)){made=true;continue;}
@@ -71,8 +71,8 @@ export function recordFilthMovement(w:World,p:Pawn):void {
   if(filthRandom(state)<.05)for(let i=feet.carried.length-1;i>=0;i--){const c=feet.carried[i]!;if(filthWalkable(w,p)&&accepted(w,p,c.kind)&&addFilth(w,p,c.kind)){if(--c.thickness===0)feet.carried.splice(i,1);}}
   const gain=(kind:FilthKind)=>{const held=feet.carried.find(c=>c.kind===kind);if(held){if(held.thickness<5)held.thickness++;}else feet.carried.push({kind,thickness:1});};
   if(filthRandom(state)<.1){
-    if(!tile.floor&&isGrowingTerrain(tile.terrain)){feet.lastTerrain='dirt';if(!feet.carried.some(c=>c.kind==='dirt'))gain('dirt');}
-    for(const f of [...state.items])if(same(f,p)&&f.thickness>1&&w.tick*10-f.grownCore>400){gain(f.kind);thinFilth(w,f);}
+    if(!tile.floor&&!tile.bridge&&isGrowingTerrain(tile.terrain)){feet.lastTerrain='dirt';if(!feet.carried.some(c=>c.kind==='dirt'))gain('dirt');}
+    for(const f of [...state.items])if(f.kind!=='rock-rubble'&&f.kind!=='building-rubble'&&same(f,p)&&f.thickness>1&&w.tick*10-f.grownCore>400){gain(f.kind);thinFilth(w,f);}
   }
   if(filthRandom(state)<.005)addFilth(w,p,feet.lastTerrain&&filthRandom(state)<.66?'dirt':'trash',1,true);
   if(!feet.carried.length&&!feet.lastTerrain)delete p.filthFeet;

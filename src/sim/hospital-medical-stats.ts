@@ -30,6 +30,6 @@ function monitored(bed:BedDefinition,world:World|undefined):boolean {
   return !!current&&!!activeVitalsMonitor(world,current);
 }
 export const bedTendOffset=(bed:BedDefinition|undefined,world?:World):number=>bed?.kind==='hospital-bed'?(monitored(bed,world)?.17:.1):0;
-export const bedImmunityFactor=(bed:BedDefinition,world?:World):1|1.07|1.11|1.13=>bed.kind==='sleeping-spot'?1:bed.kind==='hospital-bed'?(monitored(bed,world)?1.13:1.11):1.07;
+export const bedImmunityFactor=(bed:BedDefinition,world?:World):1|1.05|1.07|1.11|1.13=>bed.kind==='sleeping-spot'?1:bed.kind==='bedroll'?1.05:bed.kind==='hospital-bed'?(monitored(bed,world)?1.13:1.11):1.07;
 export const bedHealPerDay=(bed:BedDefinition):0|4|10=>bed.kind==='sleeping-spot'?0:bed.kind==='hospital-bed'?10:4;
 export const bedSurgeryFactor=(bed:BedDefinition,world?:World):number=>bed.kind==='sleeping-spot'?.7:bed.kind==='hospital-bed'?(monitored(bed,world)?1.15:1.1):1;

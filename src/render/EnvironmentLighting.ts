@@ -1,3 +1,4 @@
+import {ExplorationMask256} from './ExplorationMask256';
 import { DataTexture, LinearFilter, RGBAFormat, UnsignedByteType, Vector2, Vector4, type MeshStandardNodeMaterial, type Node } from 'three/webgpu';
 import { Fn, If, diffuseColor, float, mix, normalWorldGeometry, output, positionWorld, renderGroup, smoothstep, texture, uniform, vec2, vec3, vec4 } from 'three/tsl';
 import type { World } from '../sim/types';
@@ -8,6 +9,7 @@ import { EnvironmentLightField } from './EnvironmentLightField';
  * Materials sample the final GPU pose, including animated pawns and cargo.
  * These artistic coefficients never feed back into simulation light levels. */
 export class EnvironmentLighting {
+  readonly exploration = new ExplorationMask256();
   readonly field = new EnvironmentLightField();
   readonly map = new DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1, RGBAFormat, UnsignedByteType);
   private readonly size = uniform(new Vector2(1, 1)).setGroup(renderGroup);
@@ -46,6 +48,7 @@ export class EnvironmentLighting {
     this.map.generateMipmaps = false; this.map.needsUpdate = true;
   }
   readonly configure = (material: MeshStandardNodeMaterial): void => {
+    this.exploration.configure(material);
     if (this.configured.has(material)) return;
     if (material.outputNode) throw new Error('Environment lighting requires an unclaimed material output.');
     material.outputNode = this.shade; this.configured.add(material);
@@ -54,6 +57,7 @@ export class EnvironmentLighting {
    * Their authored root precedes sway; geometric blade faces must not attenuate
    * the lamp fill or shift the source/roof sample into a neighbouring cell. */
   readonly configureGrounded = (material:MeshStandardNodeMaterial,root:Node):void => {
+    this.exploration.configure(material);
     if(this.configured.has(material))return;
     if(material.outputNode)throw new Error('Environment lighting requires an unclaimed material output.');
     const p=vec2(root as ReturnType<typeof vec2>);
@@ -69,5 +73,5 @@ export class EnvironmentLighting {
     const b = this.field.bounds; this.bounds.value.set(b.minX, b.minZ, b.maxX, b.maxZ);
     this.map.needsUpdate = true;
   }
-  dispose(): void { this.map.dispose(); }
+  dispose(): void { this.map.dispose();this.exploration.dispose(); }
 }

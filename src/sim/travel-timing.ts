@@ -1,7 +1,7 @@
 import type { Cell } from './types.ts';
 
 export interface SlowInterval { start:number; end:number }
-export interface TravelSegment { snowEntryPending?:true; from:Cell; to:Cell; start:number; end:number; terrainDelay?:number; speedFactor?:number; stagger?:SlowInterval[]; stuns?:SlowInterval[] }
+export interface TravelSegment { animalFlight?:true; snowEntryPending?:true; from:Cell; to:Cell; start:number; end:number; terrainDelay?:number; speedFactor?:number; stagger?:SlowInterval[]; stuns?:SlowInterval[] }
 export interface PresentationSegment extends TravelSegment { edgeStart?:number; fromFraction?:number; toFraction?:number }
 export const TRAVEL_TICKS=3;
 export const edgeLength=(a:Cell,b:Cell):number=>Math.hypot(b.x-a.x,b.z-a.z);

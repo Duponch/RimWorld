@@ -10,7 +10,7 @@ import { applyCommand,deserializeWorld,serializeWorld,stepWorld } from '../src/s
 import { createScenarioWorld } from '../src/sim/new-game';
 import { generateSiteWorld } from '../src/sim/site-generation';
 import { resolveSite } from '../src/sim/site';
-import { BIOME_FLORA,FLORA_DEFINITIONS,PLANT_SPECIES,grazingResult,plantNutrition,type BiomeId,type PlantSpecies } from '../src/sim/biome-flora';
+import { BIOME_FLORA,FLORA_DEFINITIONS,LEGACY_PLANT_SPECIES,grazingResult,plantNutrition,type BiomeId,type PlantSpecies } from '../src/sim/biome-flora';
 import { plantGrowth,choppable } from '../src/sim/plants';
 import { damageResource } from '../src/sim/thing-damage';
 import { resourceFlammability } from '../src/sim/thing-damage-rules';
@@ -21,7 +21,7 @@ import { applyPlantFrost,plantLeafless } from '../src/sim/plant-life';
 import { updatePlantTemperatures } from '../src/sim/thermal-plants';
 import { SCHEMA_VERSION, type Resource, type World } from '../src/sim/types';
 
-const biomes:BiomeId[]=['temperate-forest','boreal-forest','arid-shrubland'];
+const biomes=['temperate-forest','boreal-forest','arid-shrubland'] as const;
 
 function biomeWorld(biome:BiomeId):World {
   return createScenarioWorld(42,32,'crashlanded',{hilliness:'small-hills',biome});
@@ -75,7 +75,7 @@ test('three explicit biomes generate deterministic, distinct and fully identifie
     expect(world.climate?.revision===1?world.climate.profile:undefined).toBe(profile);expect(climate).toMatchObject(expected);
     signatures.push([...new Set(plants.map(plant=>plant.species))].sort().join(','));
   }
-  expect(new Set(signatures).size).toBe(3);expect([...observed].sort()).toEqual([...PLANT_SPECIES].sort());
+  expect(new Set(signatures).size).toBe(3);expect([...observed].sort()).toEqual([...LEGACY_PLANT_SPECIES].sort());
 });
 
 test('low vegetation grows, feeds grazers, burns and is cleared by real construction work',()=>{
@@ -125,7 +125,8 @@ test('agave harvest and mature tree cutting create their physical products acros
 });
 
 test('renewal is prospective, bounded, excludes occupied habitat and invalidates resource indexes',()=>{
-  const world=biomeWorld('arid-shrubland'),state=world.flora!;
+  const world=biomeWorld('arid-shrubland'),state=world.flora;
+  if(state?.revision!==1)throw Error('Expected the literal legacy flora state');
   world.resources=[];world.structures=[];world.jobs=[];world.piles=[];world.packed=[];world.tiles=world.tiles.map(()=>({terrain:'grass'}));
   world.growingZones=[{id:world.nextId++,cells:world.tiles.map((_,index)=>index),plant:'rice',allowSow:true,allowCut:true}];
   state.rng=1;
@@ -147,7 +148,8 @@ test('flora state and its private stream resume exactly without retroactive lega
   const world=biomeWorld('boreal-forest'),removed=world.resources.find(resource=>resource.species)!;
   world.resources=world.resources.filter(resource=>resource!==removed);
   const resumed=deserializeWorld(serializeWorld(world));
-  world.tick=world.flora!.nextCheck;resumed.tick=resumed.flora!.nextCheck;
+  if(world.flora?.revision!==1||resumed.flora?.revision!==1)throw Error('Expected legacy flora states');
+  world.tick=world.flora.nextCheck;resumed.tick=resumed.flora.nextCheck;
   advanceWildFlora(world);advanceWildFlora(resumed);
   expect(resumed.resources).toEqual(world.resources);expect(resumed.flora).toEqual(world.flora);
   expect(validateWildFlora(world,SCHEMA_VERSION)).toBe(true);
@@ -173,7 +175,8 @@ test.each(BIOME_READINESS_CASES)('V375 short biome $seed/$biome: deterministic g
   const plantSpecies = new Set(Object.keys(BIOME_FLORA[biome].weights));
   expect(plants.length).toBeGreaterThan(0);
   expect(plants.every(plant => plantSpecies.has(plant.species!))).toBe(true);
-  expect(world.flora?.biome).toBe(biome);
+  if(world.flora?.revision!==1)throw Error('Expected legacy flora state');
+  expect(world.flora.biome).toBe(biome);
   const fauna = world.wildlife!, allowedAnimals = new Set(faunaBiome(biome).entries.map(entry => entry.species));
   expect(fauna.profile).toBe('biome-fauna-v2');
   expect(fauna.population?.biome).toBe(biome);
@@ -181,7 +184,7 @@ test.each(BIOME_READINESS_CASES)('V375 short biome $seed/$biome: deterministic g
   expect(fauna.animals.every(animal => allowedAnimals.has(animal.species))).toBe(true);
 
   const pending = world.startingArrival;
-  if (!pending || pending.phase === 'opened') throw Error('Expected actual initial capsule custody');
+  if (!pending || pending.profile !== 'crashlanded-pods-v1' || pending.phase === 'opened') throw Error('Expected actual legacy initial capsule custody');
   const original = structuredClone(pending), loose = structuredClone(world.piles);
   expect(world.pawns).toEqual([]);
   expect(pending.pods).toHaveLength(3);

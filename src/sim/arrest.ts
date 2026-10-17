@@ -1,3 +1,4 @@
+import {claimLocalActorBed256,captureActorBeds256,localBedClaimAvailable256} from './actor-bed-local-256.ts';
 import { allowedAreaAllows,allowedAreaReason } from './allowed-area-state.ts';
 import { hostileTo,isColonist } from './affiliation.ts';
 import { arrestAcceptedAutomatically,arrestSuccessChance } from './arrest-rules.ts';
@@ -55,7 +56,8 @@ export function arrestReason(world:World,actor:Pawn,patient:Pawn|undefined,accep
 export function arrestProposal(world:World,actor:Pawn,patient:Pawn,reach:Reachability):ArrestProposal|undefined {
   if(arrestReason(world,actor,patient))return;
   const path=routeToCell(world,patient,reach);if(!path)return;
-  const beds=world.structures.filter(b=>allowedAreaAllows(world,actor,b)&&rescueBedAvailable(world,b,patient,actor.id,true)).sort((a,b)=>
+  const bedOwners=world.schemaVersion>=256?captureActorBeds256(world):undefined;
+  const beds=world.structures.filter(b=>allowedAreaAllows(world,actor,b)&&rescueBedAvailable(world,b,patient,actor.id,true)&&localBedClaimAvailable256(world,b,patient,undefined,bedOwners)).sort((a,b)=>
     medicalBedPreference(a)-medicalBedPreference(b)||(a.x-patient.x)**2+(a.z-patient.z)**2-(b.x-patient.x)**2-(b.z-patient.z)**2||a.id-b.id);
   for(const bed of beds)if(routeToCell(world,bed,reach))return {patientId:patient.id,bedId:bed.id,path};
 }
@@ -126,7 +128,7 @@ export function processArrest(world:World,actor:Pawn,context:NeedContext):void {
   }
   if(!same(actor,bed)){context.move(bed,true);syncPatient(world,actor);return;}
   delete actor.rescue;actor.orders.active=null;actor.path=[];actor.state='idle';actor.planCooldown=0;
-  patient.motion=null;patient.moveCooldown=0;if(!bed.medical){patient.bedId=bed.id;delete patient.bedSlot;}
+  patient.motion=null;patient.moveCooldown=0;if(!bed.medical)claimLocalActorBed256(world,patient,bed);
   if(patient.state==='downed')patient.need={kind:'sleep',phase:'sleep',bedId:bed.id,target:{x:bed.x,z:bed.z}};
   else {patient.need=null;patient.state='idle';patient.planCooldown=0;patient.needCooldown=0;}
   context.event(`${actor.name} a installé ${patient.name} dans un lit de prison${bed.medical?' médical':''}.`);

@@ -1,3 +1,4 @@
+import {knownCell256} from '../sim/exploration-visibility-256';
 import * as THREE from 'three/webgpu';
 import { deepScannerOverlayPowered } from '../sim/deep-resources';
 import type { World } from '../sim/types';
@@ -13,7 +14,7 @@ export function deepResourceOverlayCells(world:World,context:DeepResourceContext
   const selected=world.structures.find(s=>s.id===context.selectedId);
   if(context.placement!=='deep-drill'&&selected?.kind!=='deep-drill'&&selected?.kind!=='ground-scanner')return [];
   if(!deepScannerOverlayPowered(world))return [];
-  return (world.deepResources?.cells??[]).filter(c=>c.count>0).map(c=>({...c,selected:selected?.kind==='deep-drill'&&
+  return (world.deepResources?.cells??[]).filter(c=>c.count>0&&knownCell256(world,c.index)).map(c=>({...c,selected:selected?.kind==='deep-drill'&&
     (c.index%world.width-selected.x)**2+(Math.floor(c.index/world.width)-selected.z)**2<=2.6**2}));
 }
 

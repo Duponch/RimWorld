@@ -50,7 +50,7 @@ vi.mock('../../src/sim/wild-flora.ts',async importOriginal=>{
   const actual=await importOriginal<typeof import('../../src/sim/wild-flora.ts')>();
   const {FLORA_DEFINITIONS}=await import('../../src/sim/biome-flora.ts');
   return {...actual,advanceWildFlora:(world:World)=>{
-    if(!regrowProbe.active||!world.flora||world.tick<world.flora.nextCheck)return actual.advanceWildFlora(world);
+    if(!regrowProbe.active||!world.flora||world.flora.revision!==1||world.tick<world.flora.nextCheck)return actual.advanceWildFlora(world);
     const firstId=world.nextId;actual.advanceWildFlora(world);
     for(const tree of world.resources)if(tree.id>=firstId&&tree.kind==='tree'){
       expect(tree.plantLife?.bornAt,'Unconfirmed new tree').toBe(world.tick);

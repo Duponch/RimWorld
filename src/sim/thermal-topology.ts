@@ -1,3 +1,5 @@
+import {roofCells} from './roof-rules.ts';
+import {START_STRUCTURE_PHYSICS_256} from './player-start-physics-256.ts';
 import { isRoomDoor } from './door-rules.ts';
 import { ventFaces } from './vent.ts';
 import { footprintCells,STRUCTURE_DEFINITIONS } from './definitions.ts';
@@ -18,7 +20,7 @@ export class ThermalTopologyCache {
   private key='';
   private checks=new Map<number,number>();
   read(world:World):ThermalLayout {
-    const roofs=new Set(world.roofing?.constructed??[]),doors=world.structures.filter(s=>isRoomDoor(s.kind));
+    const roofs=roofCells(world),doors=world.structures.filter(s=>isRoomDoor(s.kind));
     const vents=world.structures.flatMap((s,i)=>s.kind==='vent'?[{s,i}]:[]);
     // Face admission is stricter than room boundaries: e.g. the dispenser
     // blocks a face without becoming a new room-wall kind. One footprint
@@ -27,8 +29,9 @@ export class ThermalTopologyCache {
     if(vents.length)for(const s of world.structures)if(STRUCTURE_DEFINITIONS[s.kind].blocksMovement)for(const c of footprintCells(s))faceSolids.add(c.z*world.width+c.x);
     const faceKey=vents.flatMap(({s})=>ventFaces(s).map(c=>{const i=c.z*world.width+c.x;return c.x<0||c.z<0||c.x>=world.width||c.z>=world.height?'out':i+':'+(faceSolids.has(i)||world.tiles[i]!.terrain==='rock');}));
     const key=[world.width,world.height,...roofs,'doors',...doors.map(s=>s.id+'@'+s.x+':'+s.z),'vents',...vents.map(({s,i})=>i+'@'+s.id+':'+s.x+':'+s.z+':'+s.orientation),...faceKey].join(',');
-    const buildings=new Map(world.structures.filter(s=>s.kind==='vent'||s.kind==='wall'||s.kind==='cooler'||s.kind==='electric-crematorium'||isRoomDoor(s.kind)).flatMap(s=>s.kind==='electric-crematorium'?footprintCells(s).map(c=>[c.z*world.width+c.x,1] as const):[[s.z*world.width+s.x,isRoomDoor(s.kind)?2:1] as const]));
-    const kind=(i:number)=>buildings.get(i)??(world.tiles[i]!.terrain==='rock'?1:0);
+    const geographic=world.schemaVersion===256&&world.site?.revision===3;
+    const buildings=geographic?new Map(world.structures.flatMap(s=>{const fact=START_STRUCTURE_PHYSICS_256[s.kind];if(!fact)throw Error('Unresolved actual thermal structure');return fact.door||fact.fullFill?footprintCells(s).map(c=>[c.z*world.width+c.x,fact.door?2:1] as const):[];})):new Map(world.structures.filter(s=>s.kind==='vent'||s.kind==='wall'||s.kind==='cooler'||s.kind==='electric-crematorium'||isRoomDoor(s.kind)).flatMap(s=>s.kind==='electric-crematorium'?footprintCells(s).map(c=>[c.z*world.width+c.x,1] as const):[[s.z*world.width+s.x,isRoomDoor(s.kind)?2:1] as const]));
+    const kind=(i:number)=>buildings.get(i)??(world.tiles[i]!.terrain==='rock'||geographic&&world.tiles[i]!.collapsedRock?1:0);
     if(this.layout&&key===this.key&&[...this.checks].every(([i,k])=>kind(i)===k))return this.layout;
     const checks=new Map<number,number>();
     const read=(i:number)=>{const k=kind(i);checks.set(i,k);return k;};

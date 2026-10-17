@@ -1,6 +1,8 @@
-import {HUMAN_MODEL,modelHasPart} from './body-model.ts';
+/** Prospective direct tumor loss reuses MissingPart, never an installed prosthesis. */
+import {HUMAN_MODEL,modelHasPart,medicalModel} from './body-model.ts';
 import {isWithinPart} from './injury-rules.ts';
 import {WOODEN_PARTS,isWoodenPartKind,isWoodenPartSite} from './artificial-parts-rules.ts';
+import {validHumanHealthScaleHeader256} from './native-human-clinical-scale-256.ts';
 import type {ArtificialPart} from './artificial-parts-types.ts';
 import type {MedicalRecord} from './injury-types.ts';
 
@@ -14,6 +16,7 @@ export function validArtificialParts(record:MedicalRecord,version:number,human=t
   const raw=record as unknown as Record<string,unknown>,value=raw.artificialParts;
   if(Object.hasOwn(raw,'artificialParts')&&(version<210||!human||!Array.isArray(value)||!value.length||value.length>4||!dense(value)))return false;
   const parts:ArtificialPart[]=value===undefined?[]:value as ArtificialPart[];
+  const nativeHuman=version===256&&human&&Object.hasOwn(raw,'humanHealthScale')&&validHumanHealthScaleHeader256(raw,version);
   if(parts.length&&record.infections!==undefined&&(!object(record.infections)||!Array.isArray(record.infections.cases)))return false;
   const sites=new Set<string>();
   for(const part of parts){
@@ -33,6 +36,7 @@ export function validArtificialParts(record:MedicalRecord,version:number,human=t
   }
   for(const marker of record.missing){
     if(!Object.hasOwn(marker,'nonFresh'))continue;
+    if(version>=256&&(nativeHuman||record.animalAgeConditions||!human&&record.body&&medicalModel(record).byId[marker.part]?.nativeDefId)){const d=Object.getOwnPropertyDescriptor(marker,'nonFresh');if(!d||!Object.hasOwn(d,'value')||d.enumerable!==true||d.value!==true||Object.hasOwn(marker,'tended'))return false;continue;}
     if(version<210||!human||marker.nonFresh!==true||Object.hasOwn(marker,'tended'))return false;
     const parent=parts.find(p=>HUMAN_MODEL.byId[marker.part]?.parent===p.part);
     if(parent?marker.bornAt!==parent.installedAt:!isWoodenPartSite(marker.part)||parts.some(p=>isWithinPart(marker.part,p.part,HUMAN_MODEL)))return false;

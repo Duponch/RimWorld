@@ -1,3 +1,12 @@
+import {createMainWorldCreationCallbacks256} from './ui/world-creation-main';
+import type {WorldCreationCallbacks256,WorldCreationTicket256} from './ui/world-creation-contract';
+import {ancientMonumentDescription256} from './ui/ancient-monument-inspection-256';
+import {geyserInspection256} from './ui/geyser-inspection-256';
+import {knownPosition256,knownPile256,knownBuilding256,knownNutrition256} from './ui/exploration-readers-256';
+import {explorationEnabled256} from './sim/exploration-state-256';
+import {knownNotificationTarget256} from './ui/notification-focus';
+import {localRoadPropDescription256} from './ui/local-road-prop-inspection-256';
+import {eggSpeciesForItem256} from './sim/animal-egg-content-v256';
 import {createSettlementLimitPreference,readSettlementLimit,SETTLEMENT_LIMIT_PREFERENCE_KEY,type SettlementLimit} from './ui/settlement-limit-settings';
 import type {CampaignSummary} from './sim/world-map-state';
 import {createMapRegistryPanel,createMapJumpTo,type JumpToEntry} from './ui/map-registry-panel';
@@ -82,6 +91,7 @@ import { createSolarFlareUI } from './ui/solar-flare';
 import { updateResearchPanel,type ResearchPanelActions } from './ui/research-panel';
 import { specificWorkActivity } from './ui/work-activity';
 import { createScoutUI } from './ui/scout-panel';
+import {createCampPreparationView256} from './ui/camp-preparation-view-256';
 import { createGroupPanel } from './ui/group-panel';
 import { createGroupAdapters, readGroupPanelSnapshot } from './ui/group-adapter';
 import { createQuestUI } from './ui/quests';
@@ -219,9 +229,9 @@ import './ui/resource-ledger.css';
 import './ui/architect-workbench.css';
 import './ui/time-controls.css';
 import './ui/first-day-guide.css';
-const jobLabels: Record<JobKind, string> = { 'torch-lamp':'Construction de la lampe-torche', 'build-bridge':'Construction du pont','remove-bridge':'Retrait du pont', vent:'Construction de la bouche d’aération', 'extract-tree':'Déracinement de l’arbre','replant-tree':'Replantation de l’arbre', 'sleeping-spot':'Couchage au sol', shelf:'Construction de l’étagère', 'small-shelf':'Construction de la petite étagère', 'spike-trap':'Construction du piège à pointes', 'electric-crematorium':'Construction du crématorium électrique','electric-smelter':'Construction de fonderie électrique','animal-sleeping-spot':'Emplacement de couchage animal', 'biofuel-refinery':'Construction de la raffinerie de biocarburant','chemfuel-generator':'Construction du générateur à biocarburant', 'nutrient-paste-dispenser':'Construction du distributeur de pâte nutritive',hopper:'Construction de la trémie', 'orbital-beacon':'Construction de la balise orbitale','comms-console':'Construction de la console de communication', 'deep-drill':'Construction de foreuse profonde','ground-scanner':'Construction du scanner souterrain', 'vitals-monitor':'Construction du moniteur vital', 'drug-lab':'Construction du laboratoire de chimie', 'hydroponics-basin':'Construction du bac hydroponique', 'mini-turret':'Construction de mini-tourelle automatique', 'tube-television':'Construction de télévision cathodique', sandbags: 'sacs de sable', fence:'Clôture','fence-gate':'Portillon',autodoor:'Porte automatique','pen-marker':'Marqueur d’enclos', 'art-bench':'Atelier de sculpture','small-sculpture':'Petite sculpture','large-sculpture':'Grande sculpture', 'machining-table':'Atelier d’usinage','fabrication-bench':'Établi de fabrication','hi-tech-research-bench':'Bureau de recherche haute technologie','multi-analyzer':'Multi-analyseur', grave:'Creuser une tombe','lay-floor':'Pose de sol','remove-floor':'Retrait de sol', heater:'Radiateur','wind-turbine':'Éolienne',flick:'Actionner un interrupteur', 'power-conduit':'Construction du câble', 'power-switch':'Construction de l’interrupteur', battery:'Construction de la batterie', 'solar-generator':'Construction du générateur solaire', 'fueled-stove':'Cuisinière à bois','electric-stove':'Cuisinière électrique','butcher-table':'Table de boucherie', 'butcher-spot':'Emplacement de boucherie', cooler:'Climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur','electric-tailor-bench':'Établi de tailleur électrique', 'crafting-spot':'Emplacement d’artisanat', repair:'Réparation', 'fix-breakdown':'Remplacement du composant', 'wood-generator':'Construction du générateur à bois', 'sun-lamp':'Construction de la lampe horticole', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis', wall: 'Construction du mur', 'double-bed':'Construction du lit double', bed: 'Construction du lit', 'hospital-bed':'Construction du lit d’hôpital', table: 'Construction de la table','table-square':'Construction de la table carrée','table-long':'Construction de la table longue', stool: 'Construction du tabouret','dining-chair':'Construction de la chaise',armchair:'Construction du fauteuil','end-table':'Construction de la table de chevet',dresser:'Construction de la commode','flower-pot':'Construction du pot de fleurs', horseshoes: 'Construction du piquet de fers à cheval', 'chess-table': 'Construction de la table d’échecs', campfire: 'Construction du feu de camp' };
+const jobLabels: Record<JobKind, string> = { column:'Construction de la colonne',urn:'Construction de l’urne','stele-large':'Construction de la grande stèle','stele-grand':'Construction de la stèle monumentale',sarcophagus:'Construction du sarcophage', 'torch-lamp':'Construction de la lampe-torche', 'build-bridge':'Construction du pont','remove-bridge':'Retrait du pont', vent:'Construction de la bouche d’aération', 'extract-tree':'Déracinement de l’arbre','replant-tree':'Replantation de l’arbre', 'sleeping-spot':'Couchage au sol', shelf:'Construction de l’étagère', 'small-shelf':'Construction de la petite étagère', 'spike-trap':'Construction du piège à pointes', 'electric-crematorium':'Construction du crématorium électrique','electric-smelter':'Construction de fonderie électrique','animal-sleeping-spot':'Emplacement de couchage animal', 'biofuel-refinery':'Construction de la raffinerie de biocarburant','chemfuel-generator':'Construction du générateur à biocarburant', 'nutrient-paste-dispenser':'Construction du distributeur de pâte nutritive',hopper:'Construction de la trémie', 'orbital-beacon':'Construction de la balise orbitale','comms-console':'Construction de la console de communication', 'deep-drill':'Construction de foreuse profonde','ground-scanner':'Construction du scanner souterrain', 'vitals-monitor':'Construction du moniteur vital', 'drug-lab':'Construction du laboratoire de chimie', 'hydroponics-basin':'Construction du bac hydroponique', 'mini-turret':'Construction de mini-tourelle automatique', 'tube-television':'Construction de télévision cathodique', sandbags: 'sacs de sable', fence:'Clôture','fence-gate':'Portillon',autodoor:'Porte automatique','pen-marker':'Marqueur d’enclos', 'art-bench':'Atelier de sculpture','small-sculpture':'Petite sculpture','large-sculpture':'Grande sculpture', 'machining-table':'Atelier d’usinage','fabrication-bench':'Établi de fabrication','hi-tech-research-bench':'Bureau de recherche haute technologie','multi-analyzer':'Multi-analyseur', grave:'Creuser une tombe','lay-floor':'Pose de sol','remove-floor':'Retrait de sol', heater:'Radiateur','wind-turbine':'Éolienne',flick:'Actionner un interrupteur', 'power-conduit':'Construction du câble', 'power-switch':'Construction de l’interrupteur', battery:'Construction de la batterie', 'solar-generator':'Construction du générateur solaire', 'fueled-stove':'Cuisinière à bois','electric-stove':'Cuisinière électrique','butcher-table':'Table de boucherie', 'butcher-spot':'Emplacement de boucherie', cooler:'Climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur','electric-tailor-bench':'Établi de tailleur électrique', 'crafting-spot':'Emplacement d’artisanat', repair:'Réparation', 'fix-breakdown':'Remplacement du composant', 'wood-generator':'Construction du générateur à bois', 'sun-lamp':'Construction de la lampe horticole', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis', wall: 'Construction du mur', 'double-bed':'Construction du lit double', bedroll:'Construction du sac de couchage', bed: 'Construction du lit', 'hospital-bed':'Construction du lit d’hôpital', table: 'Construction de la table','table-square':'Construction de la table carrée','table-long':'Construction de la table longue', stool: 'Construction du tabouret','dining-chair':'Construction de la chaise',armchair:'Construction du fauteuil','end-table':'Construction de la table de chevet',dresser:'Construction de la commode','flower-pot':'Construction du pot de fleurs', horseshoes: 'Construction du piquet de fers à cheval', 'chess-table': 'Construction de la table d’échecs', campfire: 'Construction du feu de camp' };
 const stateLabels: Record<Pawn['state'], string> = { resting:'Au lit pour soins', downed:'À terre', dead:'Décédé', idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
-const rotatableTools=new Set<Tool>(['vent','sleeping-spot','shelf','small-shelf','electric-crematorium','electric-smelter','biofuel-refinery','nutrient-paste-dispenser','hopper','comms-console','deep-drill','ground-scanner','vitals-monitor','drug-lab','hydroponics-basin','tube-television','art-bench','machining-table','hi-tech-research-bench','fabrication-bench','grave','wind-turbine','battery','fueled-stove','electric-stove','butcher-table','install','bed','double-bed','hospital-bed','table','table-square','table-long','dining-chair','armchair','end-table','dresser','campfire','stonecutter','butcher-spot','crafting-spot','research-bench','tailor-bench','electric-tailor-bench','cooler']);
+const rotatableTools=new Set<Tool>(['vent','sleeping-spot','shelf','small-shelf','electric-crematorium','electric-smelter','biofuel-refinery','nutrient-paste-dispenser','hopper','comms-console','deep-drill','ground-scanner','vitals-monitor','drug-lab','hydroponics-basin','tube-television','art-bench','machining-table','hi-tech-research-bench','fabrication-bench','grave','wind-turbine','battery','fueled-stove','electric-stove','butcher-table','install','bedroll','bed','double-bed','hospital-bed','table','table-square','table-long','dining-chair','armchair','end-table','dresser','campfire','stonecutter','butcher-spot','crafting-spot','research-bench','tailor-bench','electric-tailor-bench','cooler']);
 const resourceLabels = { 'wild-plant':'Plante sauvage', healroot:'Racine médicinale', haygrass:'Herbe à foin', potato:'Plant de pommes de terre',corn:'Plant de maïs', tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz', cotton: 'Cotonnier' };
 const params = new URLSearchParams(location.search);
 const diagnosticStart = params.has('scenario');
@@ -301,14 +311,22 @@ const client = (() => {
   let onError: SimulationClient['onError'] = () => {};
   let onFault: SimulationClient['onFault'] = () => {};
   let onRequestStatus: SimulationClient['onRequestStatus'] = () => {};
+  let onCampProgress:SimulationClient['onCampProgress']=()=>{};
   // Invoke facade listeners as plain functions so their `this` cannot expose
   // the private client through the base client's method-style notification.
   native.onError = message => onError(message);
   native.onFault = fault => onFault(fault);
   native.onRequestStatus = status => onRequestStatus(status);
+  native.onCampProgress=message=>onCampProgress(message);
   return {
+    generateWorldDraft256:(...args:Parameters<SimulationClient['generateWorldDraft256']>)=>native.generateWorldDraft256(...args),
+    confirmWorldDraftSite256:(...args:Parameters<SimulationClient['confirmWorldDraftSite256']>)=>native.confirmWorldDraftSite256(...args),
+    startWorldDraft256:(...args:Parameters<SimulationClient['startWorldDraft256']>)=>native.startWorldDraft256(...args),
+    hasConfirmedWorldDraft256:(...args:Parameters<SimulationClient['hasConfirmedWorldDraft256']>)=>native.hasConfirmedWorldDraft256(...args),
     init: (...args: Parameters<SimulationClient['init']>) => native.init(...args),
     command: (...args: Parameters<SimulationClient['command']>) => native.command(...args),
+    cancelCampEntry256:(...args:Parameters<SimulationClient['cancelCampEntry256']>)=>native.cancelCampEntry256(...args),
+    get hasCampPreparation(){return native.hasCampPreparation;},
     orderOptions: (...args: Parameters<SimulationClient['orderOptions']>) => native.orderOptions(...args),
     setSpeed: (...args: Parameters<SimulationClient['setSpeed']>) => native.setSpeed(...args),
     setThreatPauseMode: (mode:ThreatPauseMode) => native.setThreatPauseMode(mode),
@@ -327,6 +345,8 @@ const client = (() => {
     set onFault(callback: SimulationClient['onFault']) { onFault = callback; },
     get onRequestStatus() { return onRequestStatus; },
     set onRequestStatus(callback: SimulationClient['onRequestStatus']) { onRequestStatus = callback; },
+    get onCampProgress(){return onCampProgress;},
+    set onCampProgress(callback:SimulationClient['onCampProgress']){onCampProgress=callback;},
   };
 })();
 const audio = new AudioDirector();
@@ -337,7 +357,7 @@ const campaignState=():CampaignUIState|undefined=>snapshot??campaignOnly;
 let latestFoodReadability:FoodReadability|undefined;
 function confirmedFoodReadability():FoodReadability|undefined {
   if(!snapshot)return undefined;
-  return latestFoodReadability??=captureFoodReadability(snapshot);
+  return latestFoodReadability??=captureFoodReadability(snapshot,{pileVisible:p=>knownPile256(snapshot!,p),structureVisible:s=>knownBuilding256(snapshot!,s)});
 }
 let guideAfterStartingArrival=false;
 let selectedPawn: number | undefined;
@@ -406,9 +426,13 @@ let worldTab:WorldTab='individual';
 const groupUI=createGroupPanel(el('group-content'),createGroupAdapters({
   blocked:groupCommandsBlocked,
   send:sendCampaignCommand,
+  pauseForReorganization:()=>{const token=client.getThreatPauseToken();return client.setSpeed(0,{explicit:true,token});},
   inspectPresentPawn:id=>{if(snapshot?.pawns.some(p=>p.id===id))selectPawn(id);},
 }));
+const campPreparationUI256=createCampPreparationView256(el('group-content'),(id,groupId)=>client.cancelCampEntry256(id,groupId));
+client.onCampProgress=message=>campPreparationUI256.update(message);
 function groupCommandsBlocked():string|undefined {
+ if(client.hasCampPreparation)return 'La pr\u00e9paration du camp attend encore sa d\u00e9cision.';
   if(simulationStopped)return 'La simulation est arrêtée. Chargez ou créez une colonie pour reprendre.';
   if(graphicsFault||graphicsRecovering)return 'Recréez l’affichage avant de commander le groupe.';
   if(replacingWorld||session.busy)return 'Une opération de partie est en cours.';
@@ -786,7 +810,18 @@ helpDialog.addEventListener('close',()=>{
 });
 // The measured counter remains visible over both the colony and the menu.
 document.querySelector('#app')!.append(el('fps-counter'));
+const worldCreationPlayer256=Object.freeze({scenario:'crashlanded',playerDef:'PlayerColony' as const,playerName:'Nouvelle colonie'});
+const worldCreationBackend256:WorldCreationCallbacks256={
+ generate:async(request,context)=>{await initialRuntimeOptions;await Promise.all([threatPausePreference.whenSettled(),settlementPreference.whenSettled()]);return client.generateWorldDraft256(request,context);},
+ confirmSite:request=>client.confirmWorldDraftSite256(request),
+ start:(ticket,party,context)=>session.createConfirmedDraft(()=>client.startWorldDraft256(ticket,party,context)),
+};
 const frontMenu = createFrontMenu(frontHost, {
+  getWorldCreationPlayer:()=>({...worldCreationPlayer256}),
+  worldCreation:createMainWorldCreationCallbacks256(worldCreationBackend256,{
+    replaceConfirmedDraft:(ticket,operation)=>replaceColony(operation,ticket),
+    afterCreated:()=>{guideAfterStartingArrival=!!snapshot?.startingArrival&&snapshot.startingArrival.phase!=='opened';learningReadout.open=!guideAfterStartingArrival;syncFirstDayGuide();},
+  }),
   onHelp:openHelp,
   getMaxSettlements:()=>settlementPreference.value,getMaxSettlementsPending:()=>settlementPreference.pending||threatPausePreference.pending,onMaxSettlementsChange:value=>settlementPreference.set(value),
   getThreatPauseMode:()=>threatPausePreference.mode,getThreatPausePending:()=>threatPausePreference.pending||settlementPreference.pending,onThreatPauseModeChange:mode=>threatPausePreference.set(mode),
@@ -863,10 +898,11 @@ async function switchPanel(panel: Panel, preserveTool = false): Promise<void> {
   if (panel === 'menu') { await pauseForMenu();await session.refreshSaves();saveManager?.refresh(); }
   setPanel(panel, preserveTool);
 }
-async function replaceColony(action: () => Promise<void>): Promise<void> {
+async function replaceColony(action: () => Promise<void>,confirmedDraft?:WorldCreationTicket256): Promise<void> {
   await initialRuntimeOptions;
   await Promise.all([threatPausePreference.whenSettled(),settlementPreference.whenSettled()]);
-  client.restartForReplacement();
+  if(confirmedDraft){if(!client.hasConfirmedWorldDraft256(confirmedDraft))throw Error('La préparation est perdue. Générez le monde à nouveau.');}
+  else client.restartForReplacement();
   latestFoodReadability=undefined;
   lastCommercialArrivalKey=undefined;
   replacingWorld = true; syncStorageButtons();
@@ -1052,7 +1088,7 @@ function updateMapCellDetails(force=false):void {
 function selectPawns(gesture:SelectionGesture,focus=false) {
   if(!snapshot||replacingWorld||frontMenu.isOpen())return;
   shootingControls.cancel();
-  selection.apply(gesture,new Set([...snapshot.pawns.map(p=>p.id),...(snapshot.wildlife?.animals??[]).map(a=>a.id),...(snapshot.mechanoids??[]).map(m=>m.id)]));
+  selection.apply(gesture,new Set([...snapshot.pawns.filter(p=>knownPosition256(snapshot!,p)).map(p=>p.id),...(snapshot.wildlife?.animals??[]).filter(a=>knownPosition256(snapshot!,a)).map(a=>a.id),...(snapshot.mechanoids??[]).filter(m=>knownPosition256(snapshot!,m)).map(m=>m.id)]));
   selectedPawn=selection.single;selectedCell=undefined;
   selectedObject=undefined;selectedObjects=[];renderer?.setSelectedObject(undefined);
   renderer?.setSelectedPawns(selection.ids);
@@ -1063,6 +1099,7 @@ function selectPawns(gesture:SelectionGesture,focus=false) {
 function pickCell(x: number, z: number) {
   if (!snapshot || replacingWorld || frontMenu.isOpen()) return;
   if(shootingControls.active){
+    if(!knownPosition256(snapshot,{x,z})){shootingControls.cancel();renderState();return;}
     const target=shootingControls.mode==='melee'?snapshot.structures.find(s=>isBarrier(s)&&s.x===x&&s.z===z):undefined;
     shootingControls.cancel();if(target)void attempt(async()=>{await client.command({type:'melee',pawnIds:selectedColonyIds(),targetId:target.id,structure:true});renderState();});else renderState();return;
   }
@@ -1386,6 +1423,13 @@ function renderState() {
   if (!snapshot) {if(campaignOnly)renderCampaignOnly();return;}
   shell.classList.remove('campaign-only');
   const world = snapshot,food=confirmedFoodReadability()!;
+  if(explorationEnabled256(world)){
+    const visibleActors=new Set([...world.pawns,...(world.wildlife?.animals??[]),...(world.mechanoids??[])].filter(a=>knownPosition256(world,a)).map(a=>a.id));
+    const keptActors=new Set([...selection.ids].filter(id=>visibleActors.has(id)));
+    if(keptActors.size!==selection.ids.size){selection.ids=keptActors;selectedPawn=selection.single;renderer?.setSelectedPawns(selection.ids);rebuildInspector();}
+    const keptObjects=selectedObjects.filter(o=>mapObjectExists(world,o));
+    if(keptObjects.length!==selectedObjects.length){selectedObjects=keptObjects;selectedObject=selectedObjects[0];renderer?.setSelectedObjects(selectedObjects);rebuildInspector();}
+  }
   syncArchitectAvailability();
   const colonists = world.pawns.filter(isColonist);
   const living = colonists.filter(pawn => pawn.state !== 'dead');
@@ -1411,6 +1455,7 @@ function renderState() {
   const totals = {blocks:0,medicine:0,silver:0,component:0,cloth:0,steel:0,chemfuel:0,gold:0,uranium:0,plasteel:0,'advanced-component':0,carried:0,delivered:0};
   const stockCounts = new Map<World['piles'][number]['item'],number>();
   for (const pile of world.piles) {
+    if(!knownPile256(world,pile))continue;
     const owner = pile.owner;
     if (owner.type === 'job') totals.delivered += pile.quantity;
     const colony = owner.type === 'ground' || ('pawnId' in owner && colonistIds.has(owner.pawnId));
@@ -1432,7 +1477,7 @@ function renderState() {
   el('cloth').textContent=String(totals.cloth);el('cloth-stock').hidden=totals.cloth===0;
   el('steel').textContent=String(totals.steel);
   for(const item of ['chemfuel','gold','uranium','plasteel','advanced-component'] as const){el(item).textContent=String(totals[item]);el(`${item}-stock`).hidden=totals[item]===0;}
-  el('wood').textContent = String(world.stock.wood); const nutrition = availableNutrition(world);el('food').textContent = nutrition.toFixed(1);
+  el('wood').textContent = String(explorationEnabled256(world)?stockCounts.get('wood')??0:world.stock.wood); const nutrition = explorationEnabled256(world)?knownNutrition256(world):availableNutrition(world);el('food').textContent = nutrition.toFixed(1);
   const physicalFoodLabel=el('food').previousElementSibling;if(physicalFoodLabel)physicalFoodLabel.textContent='Stock physique';
   setTooltip(el('food').parentElement!,{title:'Stock physique de nutrition',body:'Compteur physique existant, indépendant des régimes. Il ne mesure ni fraîcheur, accès, réservation, partage ni autonomie.'});
   resourceLedger.update(stockCounts);
@@ -1495,7 +1540,7 @@ function renderState() {
     else {
       el('selected-name').textContent = pawn.name; el('selected-action').textContent = actionLabel(pawn,carriedPatients);
       el('selected-orders').textContent=`${pawn.orders.active!==null?'Travail imposé · ':''}${pawn.orders.queue.length} ordre(s) en file${pawn.priorityWork?` · Priorité case ${pawn.priorityWork.cell.x}, ${pawn.priorityWork.cell.z}`:''}`;
-      el<HTMLButtonElement>('clear-orders').disabled=pawn.orders.active===null&&!pawn.orders.queue.length&&!pawn.priorityWork&&!pawn.animalRescue;
+      el<HTMLButtonElement>('clear-orders').disabled=pawn.orders.active===null&&!pawn.orders.queue.length&&!pawn.priorityWork&&!pawn.animalRescue&&!pawn.openCasket;
     }
     if(pawn){
       updatePawnInspection(el('inspector'),world,pawn,c=>void attempt(()=>client.command(c)));
@@ -1511,6 +1556,7 @@ function renderState() {
     const { x, z } = selectedCell;
     if (x >= world.width || z >= world.height || !selectedObject || !mapObjectExists(world,selectedObject)) clearSelection();
     else {
+      const geyser=selectedObject.kind==='geyser'?geyserInspection256(world,selectedObject.id):undefined;
       const resource = selectedObject.kind==='resource'?world.resources.find(item=>item.id===selectedObject!.id):undefined;
       const structure = selectedObject.kind==='structure'?world.structures.find(item=>item.id===selectedObject!.id):undefined;
       const job = selectedObject.kind==='job'?world.jobs.find(item=>item.id===selectedObject!.id):structure||selectedObject.kind==='packed'?world.jobs.find(item=>item.furniture?.structureId===selectedObject!.id):undefined;
@@ -1525,8 +1571,8 @@ function renderState() {
       if(structure){updateDoorControls(el('inspector'),world,selectedCell);updatePenControls(el('inspector'),world,selectedCell);roomInspection.update(el('inspector'), world, selectedCell);}
       updateShelfInspection(el('inspector'),world,structure,id=>selectObjects([{kind:'pile',id}]));
       const zone=selectedObject.kind==='growing'?world.growingZones.find(z=>z.id===selectedObject!.id):undefined;
-      el('cell-title').textContent = packed ? `Meuble emballé · ${buildingLabels[packed.building.kind]}` : pile ? ITEM_DEFINITIONS[pile.item].label : structure ? buildingLabels[structure.kind] : resource ? (floraDefinition(resource)?.label??resourceLabels[resource.kind]) : job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]}` : zone ? 'Zone de culture' : storage ? `Zone de stockage ${stockpileZoneId(storageCell!)}` : 'Massif rocheux';
-      let cellDescription = resource ? (isPlant(resource)||resource.kind==='tree') ? plantInspection(world,resource) : `Quantité : ${resource.amount}` : pile ? `Quantité : ${pile.quantity}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:pile.kind==='corpse'?` · ${{fresh:'Fraîche',rotting:'Pourrie (impropre à la boucherie)',desiccated:'Desséchée'}[corpseStage(pile,world.tick)]}`:''}` : structure ? `${structureFootprintLabel(structure)} cases` : job ? queryJobStatus(world,job).reason??'' : zone ? `Culture : ${PLANT_DEFINITIONS[zone.plant].label} · ${zone.cells.length} cases${growingTemperatureInspection(world,selectedCell)}` : storage ? `Taille : ${stockpileZoneCells(world,storageCell!.id).length} cases` : '';
+      el('cell-title').textContent = geyser?geyser.title:packed ? `Meuble emballé · ${buildingLabels[packed.building.kind]}` : pile ? ITEM_DEFINITIONS[pile.item].label : structure ? buildingLabels[structure.kind] : resource ? (floraDefinition(resource)?.label??resourceLabels[resource.kind]) : job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]}` : zone ? 'Zone de culture' : storage ? `Zone de stockage ${stockpileZoneId(storageCell!)}` : 'Massif rocheux';
+      let cellDescription = geyser?geyser.description:resource ? (isPlant(resource)||resource.kind==='tree') ? plantInspection(world,resource) : `Quantité : ${resource.amount}` : pile ? `Quantité : ${pile.quantity}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:pile.kind==='corpse'?` · ${{fresh:'Fraîche',rotting:'Pourrie (impropre à la boucherie)',desiccated:'Desséchée'}[corpseStage(pile,world.tick)]}`:''}` : structure ? `${structureFootprintLabel(structure)} cases` : job ? queryJobStatus(world,job).reason??'' : zone ? `Culture : ${PLANT_DEFINITIONS[zone.plant].label} · ${zone.cells.length} cases${growingTemperatureInspection(world,selectedCell)}` : storage ? `Taille : ${stockpileZoneCells(world,storageCell!.id).length} cases` : '';
       if(pile&&isMinifiedTree(pile)){cellDescription=minifiedTreeDescription(pile,world.tick);if(pile.plantPack.pendingExpiry)el('cell-title').textContent='Arbre mort · restes en attente';}
       let cellHealth:CellHealth|undefined;
       const deterioration=pile?deteriorationInspection(world,pile):undefined;
@@ -1543,6 +1589,8 @@ function renderState() {
         cellDescription=cellDescription.replace(/ · État \d+\/\d+/, '');
       }
       if(inspectedBuilding?.kind==='spike-trap')cellDescription+=' · Usage unique · Risque allié : 0,5 % par entrée · Aucun effet sur les visiteurs neutres · Reconstruction : 45 matériaux';
+      if(structure){const road=localRoadPropDescription256(structure);if(road)cellDescription+=' · '+road;}
+      if(structure){const monument=ancientMonumentDescription256(structure);if(monument)cellDescription+=' · '+monument;}
       if(structure?.kind==='sandbags')cellDescription+=' · Couvert 55 % (selon la direction du tir) · Traversée ralentie, sans arrêt sur cette case';
       if(structure&&isBarrier(structure)){
         const current=barrierHp(structure),maximum=barrierMaxHp(structure);
@@ -1560,8 +1608,9 @@ function renderState() {
           cellDescription=cellDescription.replace(/^(?:Roche : )?\d+ \/ \d+ PV\. ?/, '');
         }
       }
-      const weapon=piles.find(p=>p.kind==='weapon'||p.kind==='apparel'),permission=el<HTMLButtonElement>('weapon-permission');permission.hidden=!weapon;
-      if(weapon){const forbidden=!!(weapon.weapon??weapon.apparel)?.forbidden;permission.textContent=forbidden?'Autoriser cet objet':'Interdire cet objet';permission.onclick=()=>void attempt(()=>client.command({type:weapon.kind==='apparel'?'apparel-permission':'weapon-permission',itemId:weapon.id,allowed:forbidden}));}
+      const weapon=piles.find(p=>p.kind==='weapon'||p.kind==='apparel'),egg=pile&&eggSpeciesForItem256(pile.item)?pile:undefined,permission=el<HTMLButtonElement>('weapon-permission');permission.hidden=!weapon&&!egg;
+      if(egg){const forbidden=!!egg.eggForbidden;permission.textContent=forbidden?'Permettre cet œuf':'Interdire cet œuf';permission.onclick=()=>void attempt(()=>client.command({type:'egg-forbid',pileId:egg.id,forbidden:!forbidden}));}
+      else if(weapon){const forbidden=!!(weapon.weapon??weapon.apparel)?.forbidden;permission.textContent=forbidden?'Autoriser cet objet':'Interdire cet objet';permission.onclick=()=>void attempt(()=>client.command({type:weapon.kind==='apparel'?'apparel-permission':'weapon-permission',itemId:weapon.id,allowed:forbidden}));}
       const plantOrder=(kind:'chop'|'harvest'|'cut')=>{if(resource)void attempt(()=>client.command({type:'designate',kind,x:resource.x,z:resource.z}));};
       const chop=el<HTMLButtonElement>('cell-chop'),harvest=el<HTMLButtonElement>('cell-harvest'),cut=el<HTMLButtonElement>('cell-cut');
       chop.hidden=!resource||!choppable(world,resource);harvest.hidden=!resource||!harvestable(world,resource);cut.hidden=!resource||!isPlant(resource);
@@ -1655,6 +1704,7 @@ function renderState() {
   economyUI.update(world);arrivalUI.update(world);questUI.update(world);raidUI.update(world);heatwaveUI.update(world);flashstormUI.update(world);solarFlareUI.update(world);weatherConditionUI.update(world);shortCircuitUI.update(world);tradeUI.update(world);orbitalUI.update(world);
 }
 function focusNotification(target:NotificationTarget):void {
+  if(snapshot&&!knownNotificationTarget256(snapshot,target))return;
   if(!snapshot||replacingWorld||frontMenu.isOpen())return;
   shootingControls.cancel();applyTool('select');
   if(target.kind==='actor'){selectPawn(target.id);return;}
@@ -2060,6 +2110,10 @@ async function prepareWorldSafely(): Promise<void> {
   const epoch=campaignPresentationEpoch;
   try {
     await prepareWorldView();
+    // A superseded preparation cannot clear a newer map's graphics incident.
+    if(epoch!==campaignPresentationEpoch)return;
+    // The fatal callback may have retired this renderer during warmup.
+    if(client.hasActiveMap&&(!renderer||renderer.fatalError))throw new Error(renderer?.fatalError||graphicsMessage||'La préparation de l’affichage a été interrompue.');
     graphicsFault = false; graphicsMessage = ''; updateIncident();
   } catch (error) {
     if(epoch!==campaignPresentationEpoch||!client.hasActiveMap){if(campaignOnly)renderCampaignOnly();return;}
@@ -2126,7 +2180,7 @@ async function prepareWorldView(): Promise<void> {
   if (activeRenderer.compatibilityWarning) notify(activeRenderer.compatibilityWarning, true);
   syncAudioSources(activeWorld);
   try{await activeRenderer.preparePresentation();}
-  catch(error){if(renderer===activeRenderer&&hasAuthority())throw error;}
+  catch(error){if(hasAuthority())throw error;}
   if(renderer!==activeRenderer||!hasAuthority()){activeRenderer.dispose();if(renderer===activeRenderer)renderer=undefined;if(campaignOnly)renderCampaignOnly();return;}
   el('loading')?.remove(); renderState();
 }

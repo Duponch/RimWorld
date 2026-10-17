@@ -1,3 +1,4 @@
+import {planAnimalBodyRetirement256} from './animal-body-retirement-256.ts';
 import { butcherStationEfficiency } from './food-workstations.ts';
 import { corpseFresh,corpseProducts } from './corpses.ts';
 import { butcheryEfficiency,completedCookingSkill,roundYield } from './cooking-statistics.ts';
@@ -21,21 +22,23 @@ export function finishButchery(world:World,pawn:Pawn,bill:CookingBill,context:Pr
   const raw=corpseProducts(corpse);if(!raw)return false;
   const factor=butcheryEfficiency(worker)*butcherStationEfficiency(station),random={rng:world.rng};
   const meat=roundYield(raw.meat.quantity*factor,()=>healthRandom(random)),leather=roundYield(raw.leather.quantity*factor,()=>healthRandom(random));
-  const meatItem=raw.meat.item as ItemId,leatherItem=raw.leather.item as ItemId,primaryQuantity=Math.min(meat,ITEM_DEFINITIONS[meatItem].stackLimit);
+  const meatItem=raw.meat.item as ItemId,leatherItem=raw.leather.item,primaryQuantity=Math.min(meat,ITEM_DEFINITIONS[meatItem].stackLimit);
   const ledger=world.butchery??{completed:0,meat:0,leather:0};
   if(![ledger.completed+1,ledger.meat+meat,ledger.leather+leather].every(Number.isSafeInteger))return false;
-  const piles=world.piles.filter(p=>p!==corpse),projected={...world,jobs:world.jobs.map(j=>({...j,escrow:{...j.escrow}})),piles:piles.map(p=>({...p,owner:{...p.owner}}))};
+  const contents=world.schemaVersion>=256?planAnimalBodyRetirement256(world,corpse.id,false):undefined;if(world.schemaVersion>=256&&!contents)return false;
+  const piles=world.piles.filter(p=>p!==corpse&&!contents?.pileIds.has(p.id)),projected={...world,jobs:world.jobs.map(j=>({...j,escrow:{...j.escrow}})),piles:piles.map(p=>({...p,owner:{...p.owner}}))};
   const placements:{item:ItemId;cell:Cell;quantity:number}[]=[];
   const reserve=(item:ItemId,quantity:number):boolean=>{
     if(quantity<=0)return true;const plan=planGroundPlacement(projected,quantity,pawn,item);if(!plan)return false;
     for(const entry of plan){if(!materialCanFit(projected,ITEM_DEFINITIONS[item].kind,entry.quantity,{type:'ground',...entry.cell},item))return false;placements.push({item,...entry});addMaterial(projected,ITEM_DEFINITIONS[item].kind,entry.quantity,{type:'ground',...entry.cell},item);}
     return true;
   };
-  if(!reserve(meatItem,meat-primaryQuantity)||!reserve(leatherItem,leather))return false;
+  if(!reserve(meatItem,meat-primaryQuantity)||(leather>0&&(leatherItem===null||!reserve(leatherItem,leather))))return false;
   const identities=(primaryQuantity?1:0)+projected.nextId-world.nextId;
   if(piles.length+identities>32768||!Number.isSafeInteger(world.nextId+identities))return false;
   // From this point nothing can fail: no actor, source, RNG or learning was
   // mutated before every product and capacity was proven possible.
+  if(contents&&!contents.commit())return false;
   world.piles=piles;world.rng=random.rng;pawn.skills.cooking=skill;
   world.butchery={completed:ledger.completed+1,meat:ledger.meat+meat,leather:ledger.leather+leather};
   for(const placement of placements){

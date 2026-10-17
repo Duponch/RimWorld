@@ -67,7 +67,7 @@ export function draftedTendingProposal(world:World,doctor:Pawn,patient:Pawn,reac
   // in an immediate command checkpoint; another free bedside cell may be used.
   const additionalReserved=new Set<number>();
   for(const actor of world.pawns)if(actor.id!==doctor.id){
-    const cell=serviceCell(actor);if(cell)additionalReserved.add(cell.z*world.width+cell.x);
+    const cell=serviceCell(actor,world);if(cell)additionalReserved.add(cell.z*world.width+cell.x);
   }
   const best=bedsideAccess(world,doctor,patient,reach,additionalReserved);
   return best?{task:{drafted:true,patientId:patient.id,spot:best.spot,phase:'approach',progress:0},path:best.path}:undefined;

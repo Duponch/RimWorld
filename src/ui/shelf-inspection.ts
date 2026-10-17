@@ -1,3 +1,4 @@
+import {knownPile256,knownBuilding256} from './exploration-readers-256';
 import { shelfFixedAccepts,shelfStorageCells,isShelfKind } from '../sim/shelf-storage';
 import { ITEM_DEFINITIONS } from '../sim/items';
 import { ANIMAL_SPECIES } from '../sim/animal-species';
@@ -8,10 +9,10 @@ import type { StorageControlOptions } from './storage-item-controls';
 export const SHELF_FIXED_EXPLANATION='Exclusions physiques : fragments, meubles emballés, corps humains et gros corps. Les petites dépouilles restent soumises aux filtres ; la taille de chaque corps dépend de son âge. Copier les réglages ne lie pas les stockages.';
 export const shelfControlOptions:StorageControlOptions={fixedAllows:item=>item!=='furniture'&&(shelfFixedAccepts(item)||Object.values(ANIMAL_SPECIES).some(species=>species.corpseItem===item&&bodySizeAtAge(species.id,0)<.75)),fixedReason:'Exclusion physique de l’étagère, indépendante des réglages copiés.'};
 export interface ShelfInspection { capacity:number;piles:MaterialPile[];cellIds:readonly number[] }
-export function readShelfInspection(world:Pick<World,'piles'>,structure:Structure):ShelfInspection|undefined {
-  if(!isShelfKind(structure.kind)||!structure.shelf)return;
+export function readShelfInspection(world:World,structure:Structure):ShelfInspection|undefined {
+  if(!isShelfKind(structure.kind)||!structure.shelf||!knownBuilding256(world,structure))return;
   const cells=shelfStorageCells(structure),positions=new Set(cells.map(cell=>`${cell.x},${cell.z}`));
-  return {capacity:cells.length*3,cellIds:[...structure.shelf.cells],piles:world.piles.filter(p=>p.owner.type==='ground'&&positions.has(`${p.owner.x},${p.owner.z}`)).sort((a,b)=>a.id-b.id)};
+  return {capacity:cells.length*3,cellIds:[...structure.shelf.cells],piles:world.piles.filter(p=>knownPile256(world,p)&&p.owner.type==='ground'&&positions.has(`${p.owner.x},${p.owner.z}`)).sort((a,b)=>a.id-b.id)};
 }
 /** Keyed buttons retain focus across confirmed stock updates. */
 export function updateShelfInspection(panel:HTMLElement,world:World,structure:Structure|undefined,onSelect:(pileId:number)=>void):void {

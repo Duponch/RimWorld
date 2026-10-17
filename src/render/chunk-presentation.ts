@@ -1,10 +1,11 @@
+import {slagSteelChunkParts256} from './ship-chunk-parts-256';
 import { ITEM_DEFINITIONS, type ItemId } from '../sim/items';
 import type { Placement } from './primitives';
 import { stonePileColor } from './stone-palette';
 import { noise } from './StaticGeometry';
 import { CHUNK_SMALL_MAX_SCALE, chunkContourPoints } from './chunk-shape';
 
-export const CHUNK_ITEMS = ['granite-chunk','limestone-chunk','marble-chunk','sandstone-chunk','slate-chunk','legacy-chunk'] as const;
+export const CHUNK_ITEMS = ['granite-chunk','limestone-chunk','marble-chunk','sandstone-chunk','slate-chunk','legacy-chunk','slag-steel-chunk'] as const;
 export const chunkCargoKind=(item:ItemId):number=>5+CHUNK_ITEMS.indexOf(item as typeof CHUNK_ITEMS[number]);
 type Outline = readonly (readonly [number,number])[];
 
@@ -43,6 +44,7 @@ function contactDistance(a: Outline,b: Outline,dx:number,dz:number): number {
 /** Dominant boulder plus bounded satellites. Scale is isotropic; contour and
  * assembly variation are deterministic presentation choices, baked at adoption. */
 export function chunkParts(x:number,z:number,item:ItemId):Placement[] {
+  if(item==='slag-steel-chunk')return slagSteelChunkParts256(x,z);
   const color=ITEM_DEFINITIONS[item].color;
   const salt=77+Math.max(0,CHUNK_ITEMS.indexOf(item as typeof CHUNK_ITEMS[number]))*19;
   const n=(i:number)=>noise(x,z,salt+i),assembly=n(10);

@@ -1,4 +1,33 @@
+import {freezeAdmittedNativeWorldPawnOrder256} from './world-pawn-native-order-256.ts';
+import {validateCaveHiveOwners256} from './cave-hive-save-256.ts';
+import {validateActualStartingPetLinks256} from './starting-pet-owners-256.ts';
+import {campaignAuthority} from './secondary-site-context.ts';
+import {validWorldPawnsEnvelope256,validateWorldPawnOwners256} from './world-pawn-save-256.ts';
+import {validCobraClinicalWorld256} from './toxic-buildup-save-256.ts';
+import {validAncientCasketBuilding256,validateAncientCasketPhysical256} from './ancient-casket-physical-256.ts';
+import {validAncientCasketField256,registerAncientCasketThingIds256} from './ancient-casket-save-256.ts';
+import {validateAncientOpeningOwners256} from './ancient-casket-opening-256.ts';
+import {validCryptosleepSicknessWorldTransport256} from './cryptosleep-sickness-save-256.ts';
+import {validRiverWaterCampaignRaw256,validRiverWaterEnvelope256,freezeAdmittedRiverWaterCampaign256} from './river-water-owner-256.ts';
+import {ANCIENT_MONUMENT_KINDS_256} from './ancient-monument-props-256.ts';
+import {validAncientMonumentState256} from './ancient-monument-save-256.ts';
+import {validMineableTile256,registerMineableIdentities256,validMineableCampaignRaw256} from './local-mineable-save-256.ts';
+import {validLocalRoadInfoCampaignRaw256,validLocalRoadInfoEnvelope256} from './local-road-info-256.ts';
+import {validAncientShrineWarningCampaignRaw256,validAncientShrineWarningEnvelope256,registerAncientShrineWarningIds256} from './ancient-shrine-warning-save-256.ts';
+import {validLocalGeyserCampaignRaw256,validLocalGeyserEnvelope256} from './local-geyser-campaign-save-256.ts';
+import {registerGeyserIdentities256} from './local-geyser-save-256.ts';
+import {animalContentsOwner256} from './animal-local-contents-256.ts';
+import {validExplorationCampaignRaw256} from './exploration-campaign-save-256.ts';
+import {validateExploration256} from './exploration-save-256.ts';
+import {validLocalRoadPropsState256} from './local-road-props-save-256.ts';
+import {validGroupForageHistoricalTransport256} from './group-forage-save-256.ts';
+import {validCollapsedRock256,registerCollapsedRockIdentities256,excavatedCollapsedRock256,admittedRoofTerrain256} from './collapsed-rocks-256.ts';
+import {validGeographicSiteBinding256} from './site-geographic-256.ts';
+import {validPlanetGeographyHistorical256} from './planet-geography-historical-256.ts';
+import {preparePlanetNavigation256} from './planet-route-256.ts';
+import {preparePlanetHydration256} from './planet-geography-256.ts';
 import {withinSaveTextLimit} from './save-text-limit.ts';
+import {validateCampaignActorBeds256} from './actor-bed-save-256.ts';
 import {validateCampaignSharedFields} from './campaign-shared-save.ts';
 import {emptyCampaignOwner} from './world-map-owners.ts';
 import {brandCampaignContext} from './world-map-context.ts';
@@ -16,7 +45,7 @@ import {validPemmicanHistoricalTransport,validPemmicanCatalogueDomains} from './
 import {validBridgeTile,validateBridgeTransport} from './bridge-rules.ts';
 import {validVentTransport} from './vent.ts';
 import {tundraHistoricalFieldsAbsent,validTundraTransport} from './tundra-save.ts';
-import {validateMarshTransport} from './marsh.ts';
+import {validateMarshTransport,validMarshTile} from './marsh.ts';
 import {validTuqueCatalogueTransport,validTuqueCatalogueDomains} from './tuque-catalogue-save.ts';
 import {validReconCatalogueTransport} from './recon-catalogue-save.ts';
 import {isConstructionLightPlant,constructionFinalWipesPlants} from './construction-plants.ts';
@@ -43,6 +72,7 @@ import { validateMechanoidRaids } from './mechanoid-raid-save.ts';
 import { initializeTelevisionRecreation, validTelevisionState } from './television-save.ts';
 import { validSandbagsState } from './sandbags-save.ts';
 import { validPackagedSurvivalState } from './packaged-survival-save.ts';
+import {validBedrollState256} from './bedroll-save-256.ts';
 import { validHospitalBedState } from './hospital-bed-save.ts';
 import { isBedKind } from './bed-kinds.ts';
 import { validHumanSleepingSpotProvenance,validHumanSleepingSpotTransport } from './human-sleeping-spot-save.ts';
@@ -157,7 +187,7 @@ import { validateTemperature } from './temperature-save.ts';
 import { initializeLightWork, validateWorkProgress } from './work-progress-save.ts';
 import { workProgress } from './work-progress.ts';
 import { legacyProductionTicks, productionWorkTotal, taskRecipe, PRODUCTION_RECIPES } from './production-recipes.ts';
-import { validateRoofing } from './roof-save.ts';
+import {validateRoofing,validNaturalRoofState256} from './roof-save.ts';
 import { isRoofJob } from './roof-rules.ts';
 import { validateDoors } from './door-save.ts';
 import { validateCoolers } from './cooler.ts';
@@ -201,6 +231,7 @@ import { validMapDimension } from './map-config.ts';
 import { INGEST_TICKS } from './eating.ts';
 import { validDiningPlace } from './dining.ts';
 import { ITEM_DEFINITIONS,V219_ITEM_IDS } from './items.ts';
+import {isCoreStartingApparel256} from './starting-gear-256.ts';
 import { validPlantGrowthLight } from './plant-light-save.ts';
 import { SCHEMA_VERSION, TICKS_PER_DAY } from './types.ts';
 import { validateScoutRegistry } from './caravan-save.ts';
@@ -225,13 +256,33 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateCampaignSchema(input,SCHEMA_VERSION);
 }
+/** Unpublished geographic factory output, before a map registry owns it.
+ * Reuse the complete local-schema guard without synthesizing a campaign,
+ * colony, group or registry. This never authorizes save/load or adoption;
+ * those still require the complete registered campaign validator above. */
+export function validateGeneratedLocalMap256(input:unknown,context:{readonly calendarOrigin:number}):string[] {
+  try {
+    if(!record(input)||input.schemaVersion!==256||!record(input.planet)||input.planet.revision!==3
+      ||!record(input.site)||input.site.revision!==3||Object.hasOwn(input,'worldMaps')||Object.hasOwn(input,'worldGroups')||!context||!Number.isSafeInteger(context.calendarOrigin))return ['Expected an unpublished geographic local-map candidate with its actual campaign clock.'];
+    return validateSchema(input,256,false,undefined,context);
+  }catch{return ['Invalid unpublished geographic local-map candidate.'];}
+}
 function validateSharedCampaign(root:CampaignState):string[] {const view=emptyCampaignOwner(root);brandCampaignContext(view,root);return validateCampaignSharedFields(view);}
 /** Validate BOTH original map namespaces before a historical schema changes.
  * The secondary view forwards the old campaign schema without migrating it. */
 function validateCampaignSchema(input:unknown,version:Parameters<typeof validateSchema>[1]):string[] {
   try{
+    if(!input||typeof input!=='object'||!validWorldPawnsEnvelope256(input,version,Number((input as Record<string,unknown>).tick)*10,Number((input as Record<string,unknown>).nextId)))return ['Invalid or future WorldPawns header.'];
+    if(!validGroupForageHistoricalTransport256(input,version))return ['Future local caravan foraged ownership.'];
+    if(!validPlanetGeographyHistorical256(input,version))return ['Historical save contains future geographic owners.'];
     if(!validWorldMapHistorical(input,version))return ['Historical save contains future registry.'];
-    if(version>=255)return validateRegisteredCampaign(input,(local,ids)=>validateSchema(local,version,true,ids),validateSharedCampaign);
+    if(!validMineableCampaignRaw256(input,version))return ['Invalid original Mineable ownership.'];
+    if(!validExplorationCampaignRaw256(input,version))return ['Invalid original exploration namespace.'];
+    if(!validRiverWaterCampaignRaw256(input,version))return ['Invalid original river water namespace.'];
+    if(!validLocalRoadInfoCampaignRaw256(input,version))return ['Invalid original road namespace.'];
+    if(!validLocalGeyserCampaignRaw256(input,version))return ['Invalid original geyser namespace.'];
+    if(!validAncientShrineWarningCampaignRaw256(input,version))return ['Invalid original ancient shrine warning namespace.'];
+    if(version>=255){const errors=validateRegisteredCampaign(input,(local,ids)=>validateSchema(local,version,true,ids),validateSharedCampaign);if(!errors.length&&version>=256)errors.push(...validateCampaignActorBeds256(input as CampaignState));return errors;}
     if(!validSecondarySiteShape(input,version))return ['Invalid or future second-site authority.'];
     const homeIds=new Set<number>(),errors=validateSchema(input,version,true,homeIds);
     if(errors.length||!record(input))return errors;
@@ -242,10 +293,19 @@ function validateCampaignSchema(input:unknown,version:Parameters<typeof validate
     return errors;
   }catch{return ['Invalid second-site records or owner namespace.'];}
 }
-function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250 | 251 | 252 | 253 | 254 | 255, relationshipContext = true,registeredIds?:Set<number>): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250 | 251 | 252 | 253 | 254 | 255 | 256, relationshipContext = true,registeredIds?:Set<number>,generatedContext?:{readonly calendarOrigin:number}): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(raw)) return ['World must be an object.'];
+  const worldPawnRoot=campaignAuthority(raw as unknown as World);
+  if(!validWorldPawnsEnvelope256(worldPawnRoot,version,Number(raw.tick)*10,Number(raw.nextId)))return ['Invalid or future WorldPawns header.'];
+  if(Object.hasOwn(raw,'explorationApproachers'))return ['Transport-only exploration actors in RAW.'];
+  if(!validRiverWaterEnvelope256(raw,version))return ['Invalid local river water.'];
+  if(!validLocalRoadInfoEnvelope256(raw,version))return ['Invalid local road state.'];
+  if(!validLocalGeyserEnvelope256(raw,version,Number(raw.tick),Number(raw.nextId)))return ['Invalid local geyser state.'];
+  if(!validAncientShrineWarningEnvelope256(raw,version,Number(raw.tick),Number(raw.nextId)))return ['Invalid or future ancient shrine warning.'];
+  const explorationErrors=validateExploration256(raw,version);if(explorationErrors.length)return explorationErrors;
+  if(!validGroupForageHistoricalTransport256(raw,version))return ['Future local caravan foraged ownership.'];
   if(!validSecondarySiteShape(raw,version))return ['Invalid or future second-site authority.'];
   if(!validTuqueCatalogueDomains(raw,version))return ['Future tuque catalogue content.'];
   if(!validGroupProvisionsHistoricalTransport(raw,version))return ['Future mixed group provisions.'];
@@ -270,9 +330,10 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if (!validMapDimension(input.width) || !validMapDimension(input.height)) return [...errors, 'Invalid dimensions.'];
   if(!validScenario(input.scenario,version,input.width,input.height))errors.push('Invalid scenario provenance for schema.');
   if(!validGameProfile(input.gameProfile,version,input.scenario,input.expeditionSite!==undefined))errors.push('Invalid game profile for schema.');
-  if(!validSite(input.site,version,input.scenario as World['scenario'],input.expeditionSite!==undefined))errors.push('Invalid local site provenance for schema.');
-  if(!validSiteClimate(input.climate,version,input as unknown as World))errors.push('Invalid site climate for schema.');
+  if(!validSite(input.site,version,input.scenario as World['scenario'],input.expeditionSite!==undefined)||version>=256&&!validGeographicSiteBinding256(input as unknown as World))errors.push('Invalid local site provenance for schema.');
+  if(!validSiteClimate(input.climate,version,input as unknown as World,generatedContext?.calendarOrigin))errors.push('Invalid site climate for schema.');
   const size = input.width * input.height;
+  if(!validNaturalRoofState256(input.roofing,version,size))return [...errors,'Invalid or future natural roofing.'];
   if(!validPodRescueShape(input.podRescues,version,input as unknown as World))errors.push('Invalid or future pod rescue state for schema.');
   if(input.mechanoids!==undefined&&(version<194||!Array.isArray(input.mechanoids)||input.mechanoids.length>size||input.mechanoids.some(m=>!validMechanoidShape(m,version,input.tick as number))))errors.push('Invalid or future mechanoid population.');
   if(!validMechSalvageLedger(input as unknown as World,version))errors.push('Invalid or future mechanoid salvage ledger.');
@@ -296,10 +357,14 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   const offMapScout=input.scout&&record(input.scout)&&record(input.scout.pawn)?input.scout.pawn:input.commercialTrip&&record(input.commercialTrip)&&record(input.commercialTrip.pawn)?input.commercialTrip.pawn:undefined;
   input=scoutRegistryView(input as unknown as World) as unknown as Record<string,unknown>;
   const tiles = input.tiles as unknown[];
-  if (tiles.length !== size || tiles.some(tile => !record(tile) || !oneOf(tile.terrain, ['grass', 'soil', 'water', 'rock', ...(version>=28?['rough-stone']:[]), ...(version>=83?['rich-soil','gravel']:[]),...(version>=246?['marsh']:[]),...(version>=254?['water-shallow']:[])]) || !validStoneIdentity(tile.stone, tile.terrain, version)||!validBridgeTile(tile,version)||isWetTerrain(tile.terrain)&&(tile.floor!==undefined||!tile.bridge&&tile.snowDepth!==undefined))) errors.push('Invalid terrain grid.');
+  if (tiles.length !== size || tiles.some(tile => !record(tile) || !validMineableTile256(tile,version,(input.site as World['site'])?.revision===3,Number(input.nextId)) || !validCollapsedRock256(tile,version,Number(input.nextId),v=>admittedRoofTerrain256(v,version)) || !validMarshTile(tile as unknown as import('./types.ts').Tile,version,{schemaVersion:version,site:input.site as World['site']}) || !validStoneIdentity(tile.stone,tile.collapsedRock?(tile.collapsedRock as import('./collapsed-rocks-256.ts').CollapsedRock256).terrain:tile.terrain,version)||!validBridgeTile(tile,version))) errors.push('Invalid terrain grid.');
   if (!stock(input.stock)) errors.push('Invalid derived stock.');
   const coord = (item: Record<string, unknown>): boolean => integer(item.x, 0, (input.width as number) - 1) && integer(item.z, 0, (input.height as number) - 1);
   const ids = new Set<number>();
+  if(!errors.length&&!registerMineableIdentities256((tiles as import('./types.ts').Tile[]).flatMap(t=>t.mineable?[t.mineable]:[]),ids))errors.push('Duplicate Mineable identity.');
+  if(input.geysers&&!registerGeyserIdentities256(input.geysers as import('./local-geyser-state-256.ts').LocalGeysers256,ids))errors.push('Duplicate geyser identity.');
+  if(input.ancientShrineWarnings&&!registerAncientShrineWarningIds256(input.ancientShrineWarnings as import('./ancient-shrine-warning-state-256.ts').AncientShrineWarnings256,ids))errors.push('Duplicate ancient shrine warning Thing identity.');
+  if(!errors.length&&!registerCollapsedRockIdentities256(tiles as import('./types.ts').Tile[],ids))errors.push('Duplicate collapsed rock identity.');
   errors.push(...validateCivilianPost(commercialWorld,version,commercialWorld.worldMaps?undefined:ids));
   if(errors.length)return errors;
   for (const key of ['pawns', 'resources', 'structures', 'jobs', 'piles', 'stockpiles'] as const) {
@@ -307,6 +372,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
     if (items.length > (key === 'piles' ? 32768 : key==='jobs'&&version>=35?size*(version>=85?3:2):key==='structures'&&version>=85?size*2:size)) errors.push(`Too many ${key}.`);
     for (const item of items) {
       if (!record(item) || !integer(item.id, 1) || (key !== 'piles' && !coord(item))) { errors.push(`Invalid ${key} identity or cell.`); continue; }
+      if((key==='structures'||key==='jobs')&&!validAncientCasketField256(item,version,input.tick as number))errors.push('Invalid or future actual casket field.');
       if (ids.has(item.id)) errors.push('Duplicate entity ID.'); ids.add(item.id);
       if (integer(input.nextId, 1) && item.id >= input.nextId) errors.push('nextId must exceed all entity IDs.');
       if(key==='jobs'&&(!validTreeJobShape(item,version,Number(input.nextId))||!validPlantTargetShape(item,version,Number(input.nextId))))errors.push('Invalid or future plant designation.');
@@ -324,6 +390,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
         }
         if(version<91&&item.species!==undefined||version<167&&item.species==='healroot-wild')errors.push('Future flora species in older save.');
       } else if (key === 'structures' || key === 'jobs') {
+        if(!validAncientCasketBuilding256(item,version,input as unknown as World,Number(input.tick)))errors.push('Invalid actual casket geometry/state.');
         if(Object.hasOwn(item,'turret')&&(key!=='structures'||item.kind!=='mini-turret'||!validMiniTurretShape(item.turret,version,Number(input.tick)*10,Number(input.nextId))))errors.push('Invalid turret state for schema.');
         if(item.gatherSpot!==undefined&&(version<124||key!=='structures'||!['campfire','table','table-square','table-long'].includes(String(item.kind))||typeof item.gatherSpot!=='boolean'))errors.push('Invalid or future gathering spot.');
         const flowerPotId=item.flowerPotId;
@@ -332,14 +399,14 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
           const flower=pot&&record(pot.flower)?pot.flower:undefined,plant=flower?.plant;
           if(version<90||key!=='jobs'||!integer(flowerPotId,1)||!pot||pot.x!==item.x||pot.z!==item.z||item.kind!=='sow'&&item.kind!=='cut'||item.kind==='sow'&&(plant!==undefined||flower?.allowSow!==true)||item.kind==='cut'&&plant===undefined)errors.push('Invalid flower pot work target.');
         }
-        const qualityKinds=['bed',...(version>=187?['hospital-bed']:[]),...(version>=224?['double-bed']:[]),'table','stool','dining-chair','armchair','end-table','dresser','table-square','table-long','flower-pot',...(version>=122?['chess-table']:[])];
+        const qualityKinds=['bed',...(version>=187?['hospital-bed']:[]),...(version>=224?['double-bed']:[]),...(version>=256?['bedroll','sarcophagus']:[]),'table','stool','dining-chair','armchair','end-table','dresser','table-square','table-long','flower-pot',...(version>=122?['chess-table']:[])];
         if(version<90?item.quality!==undefined:key==='structures'&&(qualityKinds.includes(String(item.kind))||version>=104&&['small-sculpture','large-sculpture'].includes(String(item.kind)))?!isFurnitureQuality(item.quality):item.quality!==undefined)errors.push('Invalid furniture quality for schema.');
         if(item.flower!==undefined&&(version<90||key!=='structures'||item.kind!=='flower-pot'||validateFlowerPotState(item.flower,input.tick as number).length>0))errors.push('Invalid flower pot state for schema.');
         if(version>=90&&key==='structures'&&item.kind==='flower-pot'&&item.flower===undefined)errors.push('Flower pot lacks its physical plant state.');
-        if(item.kind==='grave'&&key==='structures'?!validGraveShape(item.grave,version):item.grave!==undefined)errors.push('Invalid grave state.');
+        if((item.kind==='grave'||version>=256&&item.kind==='sarcophagus')&&key==='structures'?!validGraveShape(item.grave,version):item.grave!==undefined)errors.push('Invalid grave state.');
         if(item.medical!==undefined&&(version<46||key!=='structures'||(!isBedKind(item.kind)&&!(version>=221&&item.kind==='animal-sleeping-spot'))||item.kind==='hospital-bed'&&version<187||item.medical!==true))errors.push('Invalid medical bed role.');
         if(item.prisoner!==undefined&&(version<86||key!=='structures'||!isBedKind(item.kind)||item.kind==='hospital-bed'&&version<187||item.prisoner!==true))errors.push('Invalid prisoner bed role.');
-        if (!oneOf(item.kind, key === 'structures' ? (version < 4 ? ['wall', 'bed'] : ['wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[]), ...(version>=31?['stonecutter']:[]), ...(version>=34?['door']:[]),...(version>=143?['autodoor']:[]), ...(version>=40?['passive-cooler']:[]),...(version>=42?['wood-generator','standing-lamp']:[]),...(version>=177?['sun-lamp']:[]),...(version>=187?['hospital-bed']:[]),...(version>=224?['double-bed']:[]),...(version>=75?['cooler']:[]),...(version>=73?['research-bench','tailor-bench']:[]),...(version>=72?['crafting-spot']:[]),...(version>=79?['butcher-spot']:[]),...(version>=84?['fueled-stove','electric-stove','butcher-table']:[]),...(version>=85?['power-conduit','power-switch','battery','solar-generator']:[]),...(version>=87?['heater','wind-turbine']:[]),...(version>=89?['grave']:[]),...(version>=104?['art-bench','small-sculpture','large-sculpture']:[]),...(version>=101?['machining-table']:[]),...(version>=123?['hi-tech-research-bench','multi-analyzer','fabrication-bench']:[]),...(version>=90?['electric-tailor-bench','table-square','table-long','dining-chair','armchair','end-table','dresser','flower-pot']:[]),...(version>=122?['chess-table']:[]),...(version>=119?['fence','fence-gate','pen-marker']:[]),...(version>=189?['sandbags']:[]),...(version>=190?['tube-television']:[]),...(version>=193?['mini-turret']:[]),...(version>=203?['hydroponics-basin']:[]),...(version>=206?['drug-lab']:[]),...(version>=211?['vitals-monitor']:[]),...(version>=215?['deep-drill','ground-scanner']:[]),...(version>=216?['orbital-beacon','comms-console']:[]),...(version>=217?['nutrient-paste-dispenser','hopper']:[]),...(version>=249?['torch-lamp']:[]),...(version>=244?['vent']:[]),...(version>=229?['shelf','small-shelf']:[]),...(version>=226?['spike-trap']:[]),...(version>=225?['electric-crematorium']:[]),...(version>=222?['electric-smelter']:[]),...(version>=218?['biofuel-refinery','chemfuel-generator']:[]),...(version>=221?['animal-sleeping-spot']:[]),...(version>=232?['sleeping-spot']:[])]) : (version < 4 ? ['chop', 'harvest', 'wall', 'bed'] : [...(version>=247?['build-bridge','remove-bridge']:[]),...(version>=249?['torch-lamp']:[]),...(version>=244?['vent']:[]),...(version>=229?['shelf','small-shelf']:[]),...(version>=84?['fueled-stove','electric-stove','butcher-table']:[]),...(version>=85?['power-conduit','power-switch','battery','solar-generator']:[]),...(version>=87?['heater','wind-turbine']:[]),...(version>=89?['grave','lay-floor','remove-floor']:[]),...(version>=104?['art-bench']:[]),...(version>=101?['machining-table']:[]),...(version>=123?['hi-tech-research-bench','multi-analyzer','fabrication-bench']:[]),...(version>=90?['electric-tailor-bench','table-square','table-long','dining-chair','armchair','end-table','dresser','flower-pot']:[]),...(version>=122?['chess-table']:[]),...(version>=119?['fence','fence-gate','pen-marker']:[]),...(version>=189?['sandbags']:[]),...(version>=190?['tube-television']:[]),...(version>=193?['mini-turret']:[]),...(version>=203?['hydroponics-basin']:[]),...(version>=206?['drug-lab']:[]),...(version>=211?['vitals-monitor']:[]),...(version>=215?['deep-drill','ground-scanner']:[]),...(version>=216?['orbital-beacon','comms-console']:[]),...(version>=217?['nutrient-paste-dispenser','hopper']:[]),...(version>=226?['spike-trap']:[]),...(version>=225?['electric-crematorium']:[]),...(version>=222?['electric-smelter']:[]),...(version>=218?['biofuel-refinery','chemfuel-generator']:[]),...(version>=35?['build-roof','remove-roof']:[]), ...(version>=28?['mine']:[]), ...(version>=25?['install','uninstall']:[]), ...(version>=75?['cooler']:[]),...(version>=73?['research-bench','tailor-bench']:[]),...(version>=67?['repair']:[]),...(version>=144?['fix-breakdown']:[]),...(version>=85?['flick']:[]), ...(version>=24?['deconstruct']:[]), ...(version>=235?['extract-tree','replant-tree']:[]),'chop', 'harvest', ...(version >= 7 ? ['cut'] : []), ...(version >= 8 ? ['sow'] : []), 'wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[]), ...(version>=31?['stonecutter']:[]), ...(version>=34?['door']:[]),...(version>=143?['autodoor']:[]), ...(version>=40?['passive-cooler']:[]),...(version>=42?['wood-generator','standing-lamp']:[]),...(version>=177?['sun-lamp']:[]),...(version>=187?['hospital-bed']:[]),...(version>=224?['double-bed']:[])])) || !integer(item.orientation, 0, 3)
+        if (!oneOf(item.kind, key === 'structures' ? (version < 4 ? ['wall', 'bed'] : ['wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[]), ...(version>=31?['stonecutter']:[]), ...(version>=34?['door']:[]),...(version>=143?['autodoor']:[]), ...(version>=40?['passive-cooler']:[]),...(version>=42?['wood-generator','standing-lamp']:[]),...(version>=177?['sun-lamp']:[]),...(version>=187?['hospital-bed']:[]),...(version>=224?['double-bed']:[]),...(version>=256?['ship-chunk','bedroll','insect-hive','glow-pod','ancient-road-barrier','ancient-road-lamp','ancient-cryptosleep-casket',...ANCIENT_MONUMENT_KINDS_256]:[]),...(version>=75?['cooler']:[]),...(version>=73?['research-bench','tailor-bench']:[]),...(version>=72?['crafting-spot']:[]),...(version>=79?['butcher-spot']:[]),...(version>=84?['fueled-stove','electric-stove','butcher-table']:[]),...(version>=85?['power-conduit','power-switch','battery','solar-generator']:[]),...(version>=87?['heater','wind-turbine']:[]),...(version>=89?['grave']:[]),...(version>=104?['art-bench','small-sculpture','large-sculpture']:[]),...(version>=101?['machining-table']:[]),...(version>=123?['hi-tech-research-bench','multi-analyzer','fabrication-bench']:[]),...(version>=90?['electric-tailor-bench','table-square','table-long','dining-chair','armchair','end-table','dresser','flower-pot']:[]),...(version>=122?['chess-table']:[]),...(version>=119?['fence','fence-gate','pen-marker']:[]),...(version>=189?['sandbags']:[]),...(version>=190?['tube-television']:[]),...(version>=193?['mini-turret']:[]),...(version>=203?['hydroponics-basin']:[]),...(version>=206?['drug-lab']:[]),...(version>=211?['vitals-monitor']:[]),...(version>=215?['deep-drill','ground-scanner']:[]),...(version>=216?['orbital-beacon','comms-console']:[]),...(version>=217?['nutrient-paste-dispenser','hopper']:[]),...(version>=249?['torch-lamp']:[]),...(version>=244?['vent']:[]),...(version>=229?['shelf','small-shelf']:[]),...(version>=226?['spike-trap']:[]),...(version>=225?['electric-crematorium']:[]),...(version>=222?['electric-smelter']:[]),...(version>=218?['biofuel-refinery','chemfuel-generator']:[]),...(version>=221?['animal-sleeping-spot']:[]),...(version>=232?['sleeping-spot']:[])]) : (version < 4 ? ['chop', 'harvest', 'wall', 'bed'] : [...(version>=247?['build-bridge','remove-bridge']:[]),...(version>=249?['torch-lamp']:[]),...(version>=244?['vent']:[]),...(version>=229?['shelf','small-shelf']:[]),...(version>=84?['fueled-stove','electric-stove','butcher-table']:[]),...(version>=85?['power-conduit','power-switch','battery','solar-generator']:[]),...(version>=87?['heater','wind-turbine']:[]),...(version>=89?['grave','lay-floor','remove-floor']:[]),...(version>=104?['art-bench']:[]),...(version>=101?['machining-table']:[]),...(version>=123?['hi-tech-research-bench','multi-analyzer','fabrication-bench']:[]),...(version>=90?['electric-tailor-bench','table-square','table-long','dining-chair','armchair','end-table','dresser','flower-pot']:[]),...(version>=122?['chess-table']:[]),...(version>=119?['fence','fence-gate','pen-marker']:[]),...(version>=189?['sandbags']:[]),...(version>=190?['tube-television']:[]),...(version>=193?['mini-turret']:[]),...(version>=203?['hydroponics-basin']:[]),...(version>=206?['drug-lab']:[]),...(version>=211?['vitals-monitor']:[]),...(version>=215?['deep-drill','ground-scanner']:[]),...(version>=216?['orbital-beacon','comms-console']:[]),...(version>=217?['nutrient-paste-dispenser','hopper']:[]),...(version>=226?['spike-trap']:[]),...(version>=225?['electric-crematorium']:[]),...(version>=222?['electric-smelter']:[]),...(version>=218?['biofuel-refinery','chemfuel-generator']:[]),...(version>=35?['build-roof','remove-roof']:[]), ...(version>=28?['mine']:[]), ...(version>=25?['install','uninstall']:[]), ...(version>=75?['cooler']:[]),...(version>=73?['research-bench','tailor-bench']:[]),...(version>=67?['repair']:[]),...(version>=144?['fix-breakdown']:[]),...(version>=85?['flick']:[]), ...(version>=24?['deconstruct']:[]), ...(version>=235?['extract-tree','replant-tree']:[]),'chop', 'harvest', ...(version >= 7 ? ['cut'] : []), ...(version >= 8 ? ['sow'] : []), 'wall', 'bed', 'table', 'stool', ...(version>=10?['campfire']:[]), ...(version>=15?['horseshoes']:[]), ...(version>=31?['stonecutter']:[]), ...(version>=34?['door']:[]),...(version>=143?['autodoor']:[]), ...(version>=40?['passive-cooler']:[]),...(version>=42?['wood-generator','standing-lamp']:[]),...(version>=177?['sun-lamp']:[]),...(version>=187?['hospital-bed']:[]),...(version>=224?['double-bed']:[]),...(version>=256?['bedroll',...ANCIENT_MONUMENT_KINDS_256]:[])])) || !integer(item.orientation, 0, 3)
           || !oneOf(item.footprint, ['standard', 'legacy-single']) || (item.footprint === 'legacy-single' && item.kind !== 'bed' && !(version>=24&&item.kind==='deconstruct'||version>=25&&['install','uninstall'].includes(String(item.kind))))) errors.push('Invalid structure definition or footprint.');
         if (key==='structures' && isFueledBuilding(item.kind)) {
           const f=item.fuel;
@@ -348,7 +415,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
         if (key === 'jobs' && (!oneOf(item.status, ['pending', 'active']) || !(item.reservedBy === null || integer(item.reservedBy, 1)) || !stock(item.escrow) || !integer(item.progress, 0, version>=31?Number.MAX_SAFE_INTEGER:119))) errors.push('Invalid job.');
       } else if (key === 'piles') {
         errors.push(...validatePileRecordShape(item, input as unknown as World, version));
-      } else if (item.items!==undefined&&(version<197&&V219_ITEM_IDS.some(i=>Object.hasOwn(item.items as object,i))||version<194&&Object.hasOwn(item.items as object,'scyther-corpse')||version<101||version<178&&Object.keys(item.items as object).some(i=>V190_ITEM_IDS.includes(i))||!validStorageItems(item.items,version)||version<104&&Object.hasOwn(item.items as object,'unfinished-sculpture')||version<120&&Object.keys(item.items as object).some(i=>V120_ANIMAL_PRODUCT_ITEMS.includes(i))||version<123&&Object.keys(item.items as object).some(i=>['gold','plasteel','advanced-component'].includes(i))||version<141&&Object.keys(item.items as object).some(i=>i==='flak-helmet'||i==='unfinished-flak-helmet')||version<148&&Object.keys(item.items as object).some(i=>i==='recon-helmet'||i==='unfinished-recon-helmet')||version<152&&Object.hasOwn(item.items as object,'fine-meal')||version<154&&Object.hasOwn(item.items as object,'lavish-meal')||version<155&&Object.hasOwn(item.items as object,'vegetarian-fine-meal')||version<156&&Object.hasOwn(item.items as object,'carnivore-fine-meal')||version<157&&Object.hasOwn(item.items as object,'vegetarian-lavish-meal')||version<159&&Object.hasOwn(item.items as object,'carnivore-lavish-meal'))||record(item.filters)&&Object.hasOwn(item.filters,'plant')&&(version<235||typeof (item.filters as Record<string,unknown>).plant!=='boolean')||!record(item.filters) || typeof item.filters.wood !== 'boolean' || typeof item.filters.food !== 'boolean' || item.filters['mech-corpse']!==undefined&&(version<194||typeof item.filters['mech-corpse']!=='boolean') || item.filters.silver!==undefined&&(version<88||typeof item.filters.silver!=='boolean') || item.filters.corpse!==undefined&&(version<79||typeof item.filters.corpse!=='boolean') || item.filters.unfinished!==undefined&&(version<72||typeof item.filters.unfinished!=='boolean') || item.filters.textile!==undefined&&(version<71||typeof item.filters.textile!=='boolean') || item.filters.apparel!==undefined&&(version<63||typeof item.filters.apparel!=='boolean') || item.filters.weapon!==undefined&&(version<52||typeof item.filters.weapon!=='boolean') || Object.hasOwn(item.filters,'chemfuel')&&(version<218||typeof item.filters.chemfuel!=='boolean') || Object.hasOwn(item.filters,'neutroamine')&&(version<206||typeof item.filters.neutroamine!=='boolean') || item.filters.medicine!==undefined&&(version<51||typeof item.filters.medicine!=='boolean') || item.filters.component!==undefined&&(version<41||typeof item.filters.component!=='boolean') || item.filters.blocks!==undefined&&(version<32||typeof item.filters.blocks!=='boolean') || Object.hasOwn(item.filters,'uranium')&&(version<241||typeof item.filters.uranium!=='boolean') || item.filters.gold!==undefined&&(version<123||typeof item.filters.gold!=='boolean') || item.filters.plasteel!==undefined&&(version<123||typeof item.filters.plasteel!=='boolean') || item.filters['advanced-component']!==undefined&&(version<123||typeof item.filters['advanced-component']!=='boolean') || item.filters.steel!==undefined&&(version<29||typeof item.filters.steel!=='boolean') || item.filters.chunk!==undefined&&(version<28||typeof item.filters.chunk!=='boolean') || item.filters.furniture!==undefined&&(version<26||typeof item.filters.furniture!=='boolean')
+      } else if (item.items!==undefined&&(version<197&&V219_ITEM_IDS.some(i=>Object.hasOwn(item.items as object,i))||version<194&&Object.hasOwn(item.items as object,'scyther-corpse')||version<101||version<178&&Object.keys(item.items as object).some(i=>V190_ITEM_IDS.includes(i))||!validStorageItems(item.items,version)||version<104&&Object.hasOwn(item.items as object,'unfinished-sculpture')||version<120&&Object.keys(item.items as object).some(i=>V120_ANIMAL_PRODUCT_ITEMS.includes(i))||version<123&&Object.keys(item.items as object).some(i=>['gold','plasteel','advanced-component'].includes(i))||version<141&&Object.keys(item.items as object).some(i=>i==='flak-helmet'||i==='unfinished-flak-helmet')||version<148&&Object.keys(item.items as object).some(i=>i==='recon-helmet'||i==='unfinished-recon-helmet')||version<152&&Object.hasOwn(item.items as object,'fine-meal')||version<154&&Object.hasOwn(item.items as object,'lavish-meal')||version<155&&Object.hasOwn(item.items as object,'vegetarian-fine-meal')||version<156&&Object.hasOwn(item.items as object,'carnivore-fine-meal')||version<157&&Object.hasOwn(item.items as object,'vegetarian-lavish-meal')||version<159&&Object.hasOwn(item.items as object,'carnivore-lavish-meal'))||record(item.filters)&&Object.hasOwn(item.filters,'plant')&&(version<235||typeof (item.filters as Record<string,unknown>).plant!=='boolean')||!record(item.filters) || typeof item.filters.wood !== 'boolean' || typeof item.filters.food !== 'boolean' || item.filters['mech-corpse']!==undefined&&(version<194||typeof item.filters['mech-corpse']!=='boolean') || item.filters.silver!==undefined&&(version<88||typeof item.filters.silver!=='boolean') || Object.hasOwn(item.filters,'jade')&&(version<256||typeof item.filters.jade!=='boolean') || item.filters.corpse!==undefined&&(version<79||typeof item.filters.corpse!=='boolean') || item.filters.unfinished!==undefined&&(version<72||typeof item.filters.unfinished!=='boolean') || item.filters.textile!==undefined&&(version<71||typeof item.filters.textile!=='boolean') || item.filters.apparel!==undefined&&(version<63||typeof item.filters.apparel!=='boolean') || item.filters.weapon!==undefined&&(version<52||typeof item.filters.weapon!=='boolean') || Object.hasOwn(item.filters,'chemfuel')&&(version<218||typeof item.filters.chemfuel!=='boolean') || Object.hasOwn(item.filters,'neutroamine')&&(version<206||typeof item.filters.neutroamine!=='boolean') || item.filters.medicine!==undefined&&(version<51||typeof item.filters.medicine!=='boolean') || item.filters.component!==undefined&&(version<41||typeof item.filters.component!=='boolean') || item.filters.blocks!==undefined&&(version<32||typeof item.filters.blocks!=='boolean') || Object.hasOwn(item.filters,'uranium')&&(version<241||typeof item.filters.uranium!=='boolean') || item.filters.gold!==undefined&&(version<123||typeof item.filters.gold!=='boolean') || item.filters.plasteel!==undefined&&(version<123||typeof item.filters.plasteel!=='boolean') || item.filters['advanced-component']!==undefined&&(version<123||typeof item.filters['advanced-component']!=='boolean') || item.filters.steel!==undefined&&(version<29||typeof item.filters.steel!=='boolean') || item.filters.chunk!==undefined&&(version<28||typeof item.filters.chunk!=='boolean') || item.filters.furniture!==undefined&&(version<26||typeof item.filters.furniture!=='boolean')
         || !validStorageConditions(item,version) || !integer(item.priority, 1, version>=219?5:4) || !integer(item.capacity, 1, version>=88?ITEM_DEFINITIONS.silver.stackLimit:MAX_STACK)) errors.push('Invalid storage policy.');
     }
   }
@@ -379,7 +446,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if(!errors.length)errors.push(...validateRoofing(input as unknown as World,version));
   if(!errors.length)errors.push(...validatePlayerOrders(input as unknown as World,version));
   if(!errors.length&&!validateWildFlora(input as unknown as World,version))errors.push('Invalid wild flora.');
-  if(!errors.length&&!validTundraTransport(input as unknown as World,version))errors.push('Invalid tundra provenance.');
+  if(!errors.length&&!validTundraTransport(input as unknown as World,version,generatedContext?.calendarOrigin))errors.push('Invalid tundra provenance.');
   if(!errors.length)errors.push(...validateV90Persistence(input as unknown as World,version));
   if (errors.length) return errors;
   const groupErrors=validateGroupState(commercialWorld,version);
@@ -404,6 +471,8 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   for(const pawn of world.pawns)if(!validBereavement(pawn.bereavement,pawn.id,version,world,knownPeople))errors.push('Invalid bereavement memory.');
   if(!validDeathThoughtsTransport(commercialWorld,version))errors.push('Invalid perceived death memory or owner.');
   if(!validArtificialPartsWorldTransport(commercialWorld,version))errors.push('Invalid artificial anatomy or owner clock.');
+  if(!validCobraClinicalWorld256(commercialWorld,version))errors.push('Invalid Cobra clinical owner frontier');
+  if(!validCryptosleepSicknessWorldTransport256(commercialWorld,version))errors.push('Invalid cryptosleep sickness or physical owner clock.');
   if(version>=44)errors.push(...validateInterruptedCargo(world));
   if(version>=45)errors.push(...validatePawnHealth(world));
   if(version>=46)errors.push(...validateRescues(world));
@@ -435,8 +504,11 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if(!validNutrientPasteTransport(commercialWorld,version))errors.push('Invalid nutrient paste content, source or transport.');
   if(!validOrbitalTransport(commercialWorld,version))errors.push('Invalid orbital state, ownership or task.');
   if(!validDeepDrillingTransport(world,version)||!validDeepResearchTransport(world,version))errors.push('Invalid deep resources, work or research.');
+  if(!errors.length)errors.push(...validateCaveHiveOwners256(world,version));
+  if(!errors.length&&!validLocalRoadPropsState256(world,version))errors.push('Invalid or future road edifice.');
   if(!errors.length&&!validSandbagsState(world,version))errors.push('Invalid sandbags state.');
   if(!errors.length&&!validTelevisionState(world,version))errors.push('Invalid television state.');
+  if(!errors.length&&(!validBedrollState256(world,version)||!validAncientMonumentState256(world,version)))errors.push('Invalid or future bedroll.');
   if(!errors.length&&!validHospitalBedState(world,version))errors.push('Invalid hospital bed state.');
   if(!errors.length&&!validPackagedSurvivalState(world,version))errors.push('Invalid packaged survival state.');
   errors.push(...validateUnfinished(world,version),...validateGunWorks(world,version),...validateFlakWorks(world,version),...validateComponentWorks(world,version),...validateArtWorks(world,version),...validateArtObjects(world,version));
@@ -453,6 +525,8 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if(!errors.length)errors.push(...validateFires(world,version,ids),...validateThingDamage(world,version));
   if(!errors.length)errors.push(...registerGroupThingIds(commercialWorld,ids));
   if(!errors.length)errors.push(...registerStartingArrivalThingIds(commercialWorld,ids));
+  if(!errors.length&&version===256)errors.push(...validateActualStartingPetLinks256(commercialWorld));
+  if(!errors.length)errors.push(...registerAncientCasketThingIds256(world,ids),...validateAncientOpeningOwners256(world));
   if(!errors.length&&version>=56)errors.push(...validateShooting(world,version,ids));
   if(!errors.length&&world.raids?.mechActive)errors.push(...validateMechanoidRaids(world,version,ids));
   if(!errors.length)for(const mech of world.mechanoids??[])errors.push(...validateMechanoidRanged(world,mech,version,ids));
@@ -492,7 +566,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   for (const resource of world.resources) if (structureCells.has(cellKey(resource))&&!(version>=235&&isConstructionLightPlant(resource)&&!constructionFinalWipesPlants(structureCells.get(cellKey(resource))!.kind))&&!conduitKeepsPlant(structureCells.get(cellKey(resource))!.kind,resource.kind)&&!(version>=221&&structureCells.get(cellKey(resource))!.kind==='animal-sleeping-spot'&&resource.kind!=='rock')&&!(version>=232&&structureCells.get(cellKey(resource))!.kind==='sleeping-spot'&&!['rock','tree'].includes(resource.kind))&&!(version>=203&&structureCells.get(cellKey(resource))!.kind==='hydroponics-basin'&&hydroponicPlantAllowed(world,structureCells.get(cellKey(resource))!.id,resource))) errors.push('Resource overlaps a structure.');
   for (const zone of world.stockpiles) if ((version>=219?resourceCells.get(cellKey(zone))?.kind==='rock':resourceCells.has(cellKey(zone))) || (version<21?structureCells.has(cellKey(zone))||jobCells.has(cellKey(zone)) : occupancyOf(structureCells.get(cellKey(zone))?.kind??'cut')?.zones===false || jobCells.has(cellKey(zone))&&!['deconstruct','uninstall'].includes(jobCells.get(cellKey(zone))!.kind)&&(version>=219?occupancyOf(jobCells.get(cellKey(zone))!.furniture?.kind??jobCells.get(cellKey(zone))!.kind)?.zones===false:occupancyOf(jobCells.get(cellKey(zone))!.furniture?.kind??jobCells.get(cellKey(zone))!.kind)?.zones!==true))) errors.push('Storage overlaps fixed content.');
   if(version>=21)for(const zone of world.growingZones)if(zone.cells.some(c=>occupancyOf(structureCells.get(c)?.kind??'cut')?.zones===false&&!(version>=203&&structureCells.get(c)?.kind==='hydroponics-basin'&&zone.basinId===structureCells.get(c)!.id)||occupancyOf(jobCells.get(c)?.furniture?.kind??jobCells.get(c)?.kind??'cut')?.zones===false))errors.push('Growing zone overlaps incompatible construction.');
-  errors.push(...validateMarshTransport(world,version,[]),...validateBridgeTransport(world,version,[]));
+  errors.push(...validateAncientCasketPhysical256(world),...validateMarshTransport(world,version,[]),...validateBridgeTransport(world,version,[]));
   const pawnCells = new Set<number>();
   const bedOwners = new Set<number>();
   const sleepingBeds = new Set<number>();
@@ -503,12 +577,12 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
     const spatial=spatialPawnSet.has(pawn);
     if(version>=22&&pawn.transitExit&&!pawn.motion)errors.push('Furniture exit lacks a physical edge.');
     if(version>=14) {
-      const service=serviceCell(pawn);
+      const service=serviceCell(pawn,world);
       if(service) {const target=cellKey(service);if(serviceCells.has(target))errors.push('Conflicting service reservation.');serviceCells.add(target);}
     }
     if (spatial) {if (version < 14 && pawnCells.has(key)) errors.push('Pawns overlap.'); pawnCells.add(key);}
     if (spatial&&((version<22?['wall', 'table']:['wall']).includes(structureCells.get(key)?.kind ?? '') || version<16&&['wall', 'table'].includes(jobCells.get(key)?.kind ?? ''))) errors.push('Pawn occupies a wall target.');
-    if (Number(version>=221&&!!pawn.animalRescue) + Number(version>=216&&!!pawn.orbitalTrade) + Number(version>=215&&!!pawn.deepWork) + Number(version>=214&&!!pawn.animalFeed) + Number(version>=179&&!!pawn.surgery) + Number(version>=106&&!!pawn.animalHandling) + Number(version>=106&&!!pawn.animalCare) + Number(version>=86&&!!pawn.ward) + Number(version>=52&&!!pawn.equipmentTask) + Number(version>=48&&!!pawn.feed) + Number(version>=47&&!!pawn.tend) + Number(version>=46&&!!pawn.rescue) + Number(version>=10&&!!pawn.cooking) + Number(pawn.jobId !== null) + Number(pawn.haul !== null) + Number(!legacyV2 && pawn.need !== null) > 1) errors.push('Pawn has two simultaneous tasks.');
+    if (Number(version>=256&&!!pawn.openCasket)+Number(version>=221&&!!pawn.animalRescue) + Number(version>=216&&!!pawn.orbitalTrade) + Number(version>=215&&!!pawn.deepWork) + Number(version>=214&&!!pawn.animalFeed) + Number(version>=179&&!!pawn.surgery) + Number(version>=106&&!!pawn.animalHandling) + Number(version>=106&&!!pawn.animalCare) + Number(version>=86&&!!pawn.ward) + Number(version>=52&&!!pawn.equipmentTask) + Number(version>=48&&!!pawn.feed) + Number(version>=47&&!!pawn.tend) + Number(version>=46&&!!pawn.rescue) + Number(version>=10&&!!pawn.cooking) + Number(pawn.jobId !== null) + Number(pawn.haul !== null) + Number(!legacyV2 && pawn.need !== null) > 1) errors.push('Pawn has two simultaneous tasks.');
     if (pawn.jobId !== null) {
       const job = jobById.get(pawn.jobId);
       if (!job || job.reservedBy !== pawn.id || job.status !== 'active') errors.push('Pawn/job reservation mismatch.');
@@ -517,7 +591,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
     const owned = world.piles.filter(pile => pile.owner.type === 'pawn' && pile.owner.pawnId === pawn.id);
     if (owned.length > 1 || (owned.length === 1 && !(version>=214&&pawn.animalFeed&&pawn.animalFeed.phase!=='pickup') && !(version>=210&&pawn.surgery?.implant&&pawn.surgery.phase==='approach'&&Array.isArray(pawn.surgery.ingredients)&&pawn.surgery.ingredients.some(i=>i?.stage==='held')) && !(version>=179&&pawn.surgery?.medicine&&pawn.surgery.phase==='approach') && !(version>=106&&pawn.animalHandling&&pawn.animalHandling.phase!=='pickup') && !(version>=106&&pawn.animalCare?.medicine&&pawn.animalCare.phase!=='pickup') && !(version>=89&&pawn.burial&&pawn.burial.phase!=='pickup') && !(version>=86&&pawn.ward?.kind==='food'&&pawn.ward.phase==='deliver') && !(version>=51&&pawn.tend?.medicine&&pawn.tend.phase!=='pickup') && !(version>=48&&pawn.feed&&pawn.feed.phase!=='pickup') && !(version>=44&&pawn.interruptedCargo) && !(version >= 10 && pawn.cooking) &&!(version>=235&&world.jobs.some(j=>j.id===pawn.jobId&&j.tree?.kind==='replant'&&j.tree.phase!=='pickup'))&& pawn.haul?.phase !== 'deliver' && (legacyV2 || pawn.need?.kind !== 'eat' || pawn.need.phase === 'pickup'))) errors.push('Carried ownership mismatch.');
     if (version>=215&&pawn.deepWork || version>=179&&pawn.surgery || version>=86&&pawn.ward || version>=73&&pawn.research || pawn.jobId !== null || pawn.haul !== null || version>=52&&pawn.equipmentTask || version>=48&&pawn.feed || version>=47&&pawn.tend || version>=46&&pawn.rescue || version >= 10 && pawn.cooking) { if (!['moving', 'working'].includes(pawn.state)) errors.push('Assigned pawn has incompatible state.'); }
-    else if (!(version>=223&&pawn.allowedAreaReturn)&&!(version>=221&&pawn.animalRescue)&&!(version>=216&&pawn.orbitalTrade)&&!(version>=215&&pawn.deepWork)&&!(version>=214&&pawn.animalFeed)&&!(version>=196&&groupOnMapMember(world,pawn.id))&&!(version>=193&&pawn.bombRefuge)&&!(version>=171&&scoutOnMapId(world)===pawn.id||version>=180&&commercialOnMapId(world)===pawn.id)&&!(version>=106&&(pawn.animalHandling||pawn.animalCare))&&!(version>=89&&(pawn.burial||pawn.cleaning))&&!(version>=88&&(pawn.visitor||pawn.trade))&&!(version>=87&&(pawn.burning||pawn.firefighting))&&!(version>=86&&pawn.prisoner)&&!(version>=79&&pawn.hunting)&&!(version>=74&&pawn.heatRefuge)&&!(version>=68&&pawn.raid)&&!(version>=65&&pawn.mental?.crisis)&&!(version>=61&&pawn.tactics)&&!(version>=59&&pawn.melee)&&!(version>=58&&pawn.flee) && !(version>=53&&pawn.draft) && !(version>=15&&pawn.recreation.task) && (legacyV2 || pawn.need === null) && (pawn.path.length || ['moving', 'working'].includes(pawn.state)) && !(version>=22&&pawn.transitExit&&pawn.state!=='working')) errors.push('Unassigned pawn has path or work state.');
+    else if (!(version>=256&&pawn.openCasket)&&!(version>=223&&pawn.allowedAreaReturn)&&!(version>=221&&pawn.animalRescue)&&!(version>=216&&pawn.orbitalTrade)&&!(version>=215&&pawn.deepWork)&&!(version>=214&&pawn.animalFeed)&&!(version>=196&&groupOnMapMember(world,pawn.id))&&!(version>=193&&pawn.bombRefuge)&&!(version>=171&&scoutOnMapId(world)===pawn.id||version>=180&&commercialOnMapId(world)===pawn.id)&&!(version>=106&&(pawn.animalHandling||pawn.animalCare))&&!(version>=89&&(pawn.burial||pawn.cleaning))&&!(version>=88&&(pawn.visitor||pawn.trade))&&!(version>=87&&(pawn.burning||pawn.firefighting))&&!(version>=86&&pawn.prisoner)&&!(version>=79&&pawn.hunting)&&!(version>=74&&pawn.heatRefuge)&&!(version>=68&&pawn.raid)&&!(version>=65&&pawn.mental?.crisis)&&!(version>=61&&pawn.tactics)&&!(version>=59&&pawn.melee)&&!(version>=58&&pawn.flee) && !(version>=53&&pawn.draft) && !(version>=15&&pawn.recreation.task) && (legacyV2 || pawn.need === null) && (pawn.path.length || ['moving', 'working'].includes(pawn.state)) && !(version>=22&&pawn.transitExit&&pawn.state!=='working')) errors.push('Unassigned pawn has path or work state.');
     if (!legacyV2) {
       if (pawn.bedId !== null) {
         const ownedBed=[...world.structures,...(world.packed??[]).map(p=>p.building)].find(bed => isBedKind(bed.kind) && !bed.medical && bed.id === pawn.bedId);
@@ -622,8 +696,8 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
       if (version>=21&&!groundOccupancyAllows(world,owner) || isImpassable(owner) || structureCells.get(cellKey(owner))?.kind === 'wall' || version<16&&jobCells.get(cellKey(owner))?.kind === 'wall') errors.push('Pile on impassable cell.');
       if(pile.kind==='wood'||pile.kind==='food')available[pile.kind] += pile.quantity;
     } else if (owner.type === 'pawn') { if (!pawnById.has(owner.pawnId)) errors.push('Pile references missing carrier.'); if((pile.kind==='wood'||pile.kind==='food')&&(version<88||(pawnById.get(owner.pawnId)?.faction??'colony')==='colony'))available[pile.kind] += pile.quantity; }
-    else if(owner.type==='equipment'||owner.type==='apparel'||owner.type==='inventory'){if(!pawnById.has(owner.pawnId))errors.push('Missing equipment owner.');}
-    else if(owner.type==='grave'){if(!world.structures.some(s=>s.kind==='grave'&&s.id===owner.graveId))errors.push('Missing grave owner.');}
+    else if(owner.type==='equipment'||owner.type==='apparel'||owner.type==='inventory'){if(!pawnById.has(owner.pawnId)&&!(owner.type==='inventory'&&version>=256&&animalContentsOwner256(world,owner.pawnId)!==undefined))errors.push('Missing equipment owner.');}
+    else if(owner.type==='grave'){if(!world.structures.some(s=>(s.kind==='grave'||version>=256&&s.kind==='sarcophagus')&&s.id===owner.graveId))errors.push('Missing grave owner.');}
     else if(owner.type==='starting-pod')errors.push('Contained starting material occurs in map piles.');
     else if(owner.type==='orbital-ship'||owner.type==='orbital-cargo'){/* Checked by the shared real-owner contract. */}
     else if (!jobById.has(owner.jobId)) errors.push('Pile references missing construction.');
@@ -648,7 +722,7 @@ function validateV90Persistence(world:World,version:number):string[] {
     else {
       const ids=new Set<number>(),allowed=['id','label','allowedItems','allowedMaterials','minQuality','maxQuality','minHitPointsPercent','maxHitPointsPercent'];
       for(const policy of policies){
-        if(!record(policy)||Object.keys(policy).length!==allowed.length||Object.keys(policy).some(key=>!allowed.includes(key))||!validApparelPolicy(policy as never)||version<120&&(Array.isArray(policy.allowedItems)&&policy.allowedItems.some(i=>V120_ANIMAL_PRODUCT_ITEMS.includes(String(i)))||Array.isArray(policy.allowedMaterials)&&policy.allowedMaterials.includes('muffalo-wool'))||version<141&&Array.isArray(policy.allowedItems)&&policy.allowedItems.includes('flak-helmet')||version<148&&Array.isArray(policy.allowedItems)&&policy.allowedItems.includes('recon-helmet')||version<178&&(Array.isArray(policy.allowedItems)&&policy.allowedItems.some(i=>V190_ITEM_IDS.includes(String(i)))||Array.isArray(policy.allowedMaterials)&&policy.allowedMaterials.includes('foxfur'))||String(policy.label).length>60||ids.has(Number(policy.id)))errors.push('Invalid apparel policy.');
+        if(!record(policy)||version<256&&Array.isArray(policy.allowedItems)&&policy.allowedItems.some(isCoreStartingApparel256)||Object.keys(policy).length!==allowed.length||Object.keys(policy).some(key=>!allowed.includes(key))||!validApparelPolicy(policy as never)||version<120&&(Array.isArray(policy.allowedItems)&&policy.allowedItems.some(i=>V120_ANIMAL_PRODUCT_ITEMS.includes(String(i)))||Array.isArray(policy.allowedMaterials)&&policy.allowedMaterials.includes('muffalo-wool'))||version<141&&Array.isArray(policy.allowedItems)&&policy.allowedItems.includes('flak-helmet')||version<148&&Array.isArray(policy.allowedItems)&&policy.allowedItems.includes('recon-helmet')||version<178&&(Array.isArray(policy.allowedItems)&&policy.allowedItems.some(i=>V190_ITEM_IDS.includes(String(i)))||Array.isArray(policy.allowedMaterials)&&policy.allowedMaterials.includes('foxfur'))||String(policy.label).length>60||ids.has(Number(policy.id)))errors.push('Invalid apparel policy.');
         else ids.add(Number(policy.id));
       }
       if(ids.size&&Number(world.nextApparelPolicyId)<=Math.max(...ids))errors.push('Apparel policy identity was reused.');
@@ -662,7 +736,7 @@ function validateV90Persistence(world:World,version:number):string[] {
       }
     }
   }
-  const qualityKinds=new Set(['bed',...(version>=187?['hospital-bed']:[]),...(version>=224?['double-bed']:[]),'table','stool','dining-chair','armchair','end-table','dresser','table-square','table-long','flower-pot',...(version>=122?['chess-table']:[])]);
+  const qualityKinds=new Set(['bed',...(version>=187?['hospital-bed']:[]),...(version>=224?['double-bed']:[]),...(version>=256?['bedroll','sarcophagus']:[]),'table','stool','dining-chair','armchair','end-table','dresser','table-square','table-long','flower-pot',...(version>=122?['chess-table']:[])]);
   for(const pack of world.packed??[]){
     const building=pack.building;
     if(version<90?building.quality!==undefined:(qualityKinds.has(building.kind)||version>=104&&['small-sculpture','large-sculpture'].includes(building.kind))?!isFurnitureQuality(building.quality):building.quality!==undefined)errors.push('Invalid packed furniture quality for schema.');
@@ -680,6 +754,9 @@ export function serializeCampaign(world:CampaignState):string {
 export function deserializeCampaign(serialized: string): CampaignState {
   if (typeof serialized !== 'string' || !withinSaveTextLimit(serialized)) throw new Error('Invalid or oversized save.');
   let input: unknown = JSON.parse(serialized);
+  if(!input||typeof input!=='object'||!validWorldPawnsEnvelope256(input,Number((input as Record<string,unknown>).schemaVersion),Number((input as Record<string,unknown>).tick)*10,Number((input as Record<string,unknown>).nextId)))throw Error('Invalid or future WorldPawns header before geographic hydration.');
+  if(record(input)&&Number.isInteger(input.schemaVersion)&&!validPlanetGeographyHistorical256(input,Number(input.schemaVersion)))throw new Error('Invalid historical geographic ownership.');
+  if(record(input)&&input.schemaVersion===256&&record(input.planet)&&input.planet.revision===3){const staged=preparePlanetHydration256(input.planet,256);preparePlanetNavigation256(staged.planet);input={...input,planet:staged.planet};}
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validWorldMapHistorical(input,Number(input.schemaVersion)))throw new Error('Invalid historical map registry.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validGroupFreightHistoricalTransport(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future collective freight.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validDeteriorationHistoricalTransport(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future deterioration state.');
@@ -1483,11 +1560,14 @@ export function deserializeCampaign(serialized: string): CampaignState {
     input.schemaVersion=254; // Both maps remain literal: no shallow water, bridge, person, stock, ID or draw generated.
   }
   if(record(input)&&input.schemaVersion===254){const old=validateCampaignSchema(input,254);if(old.length)throw new Error('Invalid version254 save: '+old.join(' '));input.schemaVersion=255;migrateWorldRegistry(input as unknown as World);}
+  if(record(input)&&input.schemaVersion===255){const old=validateCampaignSchema(input,255);if(old.length)throw new Error('Invalid version255 save: '+old.join(' '));input.schemaVersion=256; /* No geography, faction, leader, history or draw is offered. */}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;
   if(hasLoadedRoot(world))consolidateLooseRocks(world);
   const normalizedErrors = validateWorld(world);
   if (normalizedErrors.length) throw new Error(`Invalid consolidated save: ${normalizedErrors.join(' ')}`);
+  freezeAdmittedNativeWorldPawnOrder256(world);
+  freezeAdmittedRiverWaterCampaign256(world);
   return world;
 }
 export function deserializeWorld(serialized:string):World {const value=deserializeCampaign(serialized);if(!hasLoadedRoot(value))throw new Error('Campaign has no local map; use deserializeCampaign.');return value;}

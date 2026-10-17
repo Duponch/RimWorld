@@ -1,3 +1,4 @@
+import {eggAllowedForPlayer256} from './animal-egg-permission-v256.ts';
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { copyPileCondition } from './pile-condition.ts';
 import { ingestFoodRisk } from './food-hygiene.ts';
@@ -36,7 +37,7 @@ export function processEating(world: World, pawn: Pawn, context: NeedContext): v
     task.carryPileId=meal.id;task.phase='collect';pawn.path=[];pawn.state='moving';return;
   }
   const pile = world.piles.find(item => item.id === (task.phase === 'pickup' ? task.sourcePileId : task.carryPileId));
-  if (!pile || pile.kind !== 'food') { release(); return; }
+  if (!pile || pile.kind !== 'food'||!eggAllowedForPlayer256(pile)) { release(); return; }
   if (task.phase === 'pickup') {
     if (pile.owner.type !== 'ground' || reservedSource(world, pile.id) > pile.quantity) { release(); return; }
     if(task.forced&&!consumeContactValid(world,pawn)){

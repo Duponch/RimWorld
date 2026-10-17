@@ -1,3 +1,4 @@
+import {mechanicalDuty256,mechanicalOrder256} from './temple-mech-duty-256.ts';
 import { combatTargetByKey,combatTargetKey,combatTargetSize,isAnimalTarget,mechanoidEnemy,meleeThreatTarget,type LivingTarget,type LivingTargetKey } from './combat-target.ts';
 import { clearShotSegment,findShotLine,type ShotGrid } from './combat-space.ts';
 import { captureWorldProjectileTargets } from './projectile-world.ts';
@@ -64,7 +65,7 @@ export interface MechanoidRangedPost {targetKey:LivingTargetKey;cell:Cell;path:C
 export function planMechanoidRangedPost(w:World,m:Mechanoid,budget:SearchBudget,batch:MechanoidCombatBatch,
   q:MechanoidRangedQueries,onAccess?:(access:CandidateAccess)=>void):MechanoidRangedPost|null|undefined {
   if(!mechanoidGunAvailable(w,m,w.tick*10,q))return;
-  const profile=mechanoidRangedProfile(m.mechKind)!,group=w.raids?.mechActive;
+  const profile=mechanoidRangedProfile(m.mechKind)!,group=mechanicalDuty256(w,m);
   const candidates:LivingTarget[]=[];
   for(const t of batch.targets?.()??[...w.pawns,...(w.wildlife?.animals??[])]){
     if(budget.pairs<=0)return null;budget.pairs--;
@@ -105,9 +106,9 @@ export function planMechanoidRangedPost(w:World,m:Mechanoid,budget:SearchBudget,
 export function admitMechanoidRangedOrder(w:World,m:Mechanoid,plan:MechanoidRangedPost,core:number,q:MechanoidRangedQueries):boolean {
   if(core!==w.tick*10||!Number.isSafeInteger(core+550)||m.ranged||m.melee?.strike||(m.motion?.end??0)>w.tick
     ||m.stun&&core<m.stun.untilCore||empMechanoidActive(m,core)
-    ||!mechanoidGunAvailable(w,m,core,q)||m.raid?.group!==w.raids?.mechActive?.id||!w.raids?.mechActive?.members.includes(m.id))return false;
+    ||!mechanoidGunAvailable(w,m,core,q)||!mechanicalDuty256(w,m))return false;
   const target=combatTargetByKey(w,plan.targetKey),profile=mechanoidRangedProfile(m.mechKind)!;
-  const group=w.raids!.mechActive!;
+  const group=mechanicalDuty256(w,m)!;
   if(!target||!mechanoidEnemy(w,m,target)||distanceSquared(m,target)>72**2||!q.stands()(plan.cell)
     ||group.phase==='staging'&&distanceSquared(plan.cell,group.stage.point)>28**2
     ||!findShotLine(q.grid(),plan.cell,{cell:target,leans:!isAnimalTarget(target)&&!['resting','sleeping'].includes(target.state)},profile.range).ok)return false;
@@ -115,7 +116,7 @@ export function admitMechanoidRangedOrder(w:World,m:Mechanoid,plan:MechanoidRang
   if(previous.x!==plan.cell.x||previous.z!==plan.cell.z)return false;
   const random={rng:w.rng},jobUntilCore=core+450+Math.floor(healthRandom(random)*101);
   cancelMelee(m);m.ranged={order:{targetKey:plan.targetKey,admittedAtCore:core,jobUntilCore},stance:null};
-  m.path=plan.path.map(c=>({...c}));m.raid!.goal={...plan.cell};w.rng=random.rng;
+  m.path=plan.path.map(c=>({...c}));mechanicalOrder256(m)!.goal={...plan.cell};w.rng=random.rng;
   beginWarmup(w,m,core,q);
   return true;
 }
@@ -136,13 +137,13 @@ export function reconcileMechanoidRanged(w:World,m:Mechanoid,core:number,q:Mecha
   const target=combatTargetByKey(w,state.order.targetKey);
   const invalid=!target||!mechanoidEnemy(w,m,target)||distanceSquared(m,target)>72**2;
   const lostAim=state.stance?.phase==='warmup'&&('reason' in planMechanoidShot(w,m,state.stance.targetKey,q,'warmup',core));
-  if(invalid||lostAim){cancelMechanoidRanged(m);m.path=[];if(m.raid)m.raid.goal=null;}
+  if(invalid||lostAim){cancelMechanoidRanged(m);m.path=[];if(mechanicalOrder256(m))mechanicalOrder256(m)!.goal=null;}
 }
 /** Tick only the stance present at entry. Stun advances the checkpoint watermark
  * but never a timer; a newly installed cooldown stays full until the next Core. */
 export function advanceMechanoidRanged(w:World,m:Mechanoid,core:number,q:MechanoidRangedQueries):void {
   const state=m.ranged;if(!state)return;
-  if(state.order&&core>=state.order.jobUntilCore){cancelMechanoidRanged(m);m.path=[];if(m.raid)m.raid.goal=null;}
+  if(state.order&&core>=state.order.jobUntilCore){cancelMechanoidRanged(m);m.path=[];if(mechanicalOrder256(m))mechanicalOrder256(m)!.goal=null;}
   if(!m.ranged)return;
   reconcileMechanoidRanged(w,m,core,q);
   if(!m.ranged)return;

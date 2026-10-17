@@ -1,4 +1,7 @@
+import {humanConditionMedicalFrontier256} from './human-condition-frontier-256.ts';
+import {commitToxicDeath256} from './toxic-buildup-256.ts';
 import type { GroupState } from './group-state.ts';
+import type {MedicalContext} from './injury-types.ts';
 import type { Pawn } from './types.ts';
 import { advanceMedical } from './injury-evolution.ts';
 import { createMedicalRecord,medicalStatus } from './injury-state.ts';
@@ -15,6 +18,10 @@ import { depletedHumanHunger,groupRestAfterInterval } from './human-need-rates.t
 type ActiveGroup=Extract<GroupState,{members:unknown}>;
 export interface GroupPersonalContext {
   tick:number;schemaVersion:number;seed:number;
+  seedFor?(person:Pawn):number;
+  clinicalRestFor256?(person:Pawn):Pick<MedicalContext,'posture'|'restingBonus'|'bedHealPerDay'|'bedImmunityFactor'>;
+  /** Only a validated prospective travel owner delegates meters to Core150. */
+  deferNeedMeters256?:true;
   legacyFood:boolean;legacyRest:boolean;
   /** Captured from the real group before this pass. No old map job/state/bed lookup. */
   resting:boolean;
@@ -32,6 +39,7 @@ export interface GroupPersonalResult {deceased:Pawn[];incapableIds:number[]}
  * Root's fatal-tick barrier preserves the last confirmed publication/save;
  * it does not roll back a failed in-progress World or its RNG mutations. */
 export function advanceGroupPersonal(group:ActiveGroup,c:GroupPersonalContext):GroupPersonalResult|null {
+  if(c.deferNeedMeters256&&c.schemaVersion<256)throw Error('Future caravan needs cadence');
   if(group.lastPersonalTick===c.tick)return null;
   if(group.lastPersonalTick!==c.tick-1||!Number.isSafeInteger(c.tick)||c.tick<1||!group.members.length||new Set(group.members.map(p=>p.id)).size!==group.members.length||group.members.some(p=>p.state==='dead'||p.health?.death))throw Error('Invalid group personal frontier');
   const deceased:Pawn[]=[],incapableIds:number[]=[];
@@ -46,12 +54,13 @@ export function advanceGroupPersonal(group:ActiveGroup,c:GroupPersonalContext):G
     if(p.health){
       if(p.health.body||p.health.tick!==group.lastPersonalTick&&!(healthBefore===undefined&&p.health.tick===c.tick))throw Error('Invalid human clinical frontier');
       const firstInfection=p.health.infections?.nextId??1;
-      advanceMedical(p.health,c.tick-p.health.tick,{phase:p.id%60,posture:c.resting?'ground':'standing',starving:p.hunger<=0,
+      const conditionFrontier=humanConditionMedicalFrontier256(p,p.health,c.tick,c.random,{kind:'caravan'});
+      advanceMedical(p.health,c.tick-p.health.tick,{phase:p.id%60,toxicOwner:{id:p.id,spawned:false,awake:p.state!=='sleeping'},cryptosleepSicknessSpawned:false,posture:c.resting?'ground':'standing',starving:p.hunger<=0,
         malnutritionRate:malnutritionRate(p.id),infectionChanceFactor:c.infectionChanceFactor,hunger:p.hunger,rest:p.rest,
-        restingBonus:c.resting&&p.state!=='downed',infectionSeed:(c.seed^Math.imul(p.id,0x9e3779b1))>>>0,
-        ageImmunityFactor:humanAgeImmunityFactor(p.age)},c.random);
+        restingBonus:c.resting&&p.state!=='downed',infectionSeed:((c.seedFor?.(p)??c.seed)^Math.imul(p.id,0x9e3779b1))>>>0,
+        ageImmunityFactor:humanAgeImmunityFactor(p.age),...c.deferNeedMeters256?c.clinicalRestFor256?.(p):{}},c.random,conditionFrontier);conditionFrontier?.commit();
       for(const infection of p.health.infections?.cases??[])if(infection.id>=firstInfection)c.notice(p,`${p.name} souffre d’une infection.`);
-      if(p.health.death){
+      if(p.health.death){commitToxicDeath256(p.health,c.random);
         // Terminal validation uses the death tick, including expirations that
         // were still valid at the previous living frontier. No age or XP now.
         p.state='dead';expireMealMemoriesAt(p,c.tick);expireSocialMemories(p,c.tick);expireMentalCatharsisAt(p,c.tick);
@@ -70,10 +79,9 @@ export function advanceGroupPersonal(group:ActiveGroup,c:GroupPersonalContext):G
     else if(!hasMentalBreak(p))p.state=c.resting?'resting':'idle';
     // This bounded owner does not admit new spatial crisis jobs or accumulate
     // map exposure for replay on return. Existing personal thoughts still act.
-    p.hunger=depletedHumanHunger(p,c.legacyFood);
-    p.rest=groupRestAfterInterval(p,c.resting,c.legacyRest);
+    if(!c.deferNeedMeters256){p.hunger=depletedHumanHunger(p,c.legacyFood);p.rest=groupRestAfterInterval(p,c.resting,c.legacyRest);}
     if(p.mental?.cooldown&&!c.resting&&p.state!=='downed'&&!moodFrozen(p,body))p.mental.cooldown--;
-    updateRecreation(p,body,c.joyToleranceFall);
+    if(!c.deferNeedMeters256)updateRecreation(p,body,c.joyToleranceFall);
     updateMoodFromThoughts(p,personalMoodThoughts(p,{...c.mood,lost:c.lostThoughts?.(p),tick:c.tick,items:group.items}),body);
   }
   // Death leaves immediately for Root's terminal owner at health.death.tick.

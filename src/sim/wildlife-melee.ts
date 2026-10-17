@@ -1,3 +1,7 @@
+import {hiveAttackTarget256,advanceHiveStructureMelee256} from './cave-hive-lord-256.ts';
+import {notifyDuckFlightJob256} from './duck-flight-runtime-256.ts';
+import {wildlifeRandom} from './wildlife-state.ts';
+import {duckTerrainOverride256} from './duck-water-256.ts';
 import { clearShotSegment,type ShotGrid } from './combat-space.ts';
 import { captureWorldShotGrid } from './combat-world.ts';
 import { carrierOf } from './rescue-state.ts';
@@ -12,7 +16,7 @@ import { furnitureDelay } from './furniture-travel.ts';
 import type { disturbanceEvents } from './disturbance.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import type { Cell,World } from './types.ts';
-import { animalSpecies } from './animal-species.ts';
+import {actualAnimalMeleeProfile256,actualAnimalMeleeDamageFactor256} from './actual-animal-profile-256.ts';
 import { combatTarget,isAnimalTarget,isPawnTarget } from './combat-target.ts';
 import { animalPredationTarget,cancelAnimalPredation,reconcileAnimalPredation } from './wildlife-predation.ts';
 import { animalManhunterTarget } from './animal-manhunter.ts';
@@ -21,8 +25,8 @@ import { damageBarrier } from './barriers.ts';
 
 export function animalMeleeTools(a:WildAnimal):MeleeTool[]{
   const tools:MeleeTool[]=[];
-  for(const tool of animalSpecies(a.species).melee)
-    if(!a.health||!partMissing(a.health,tool.sourcePart))tools.push({id:tool.id,damage:tool.damage,penetration:tool.penetration,kind:tool.kind,cooldownCore:tool.cooldownCore,weight:tool.damage*(1+tool.penetration)/(tool.cooldownCore/60)*tool.chanceFactor});
+  for(const tool of actualAnimalMeleeProfile256(a))
+    if(!a.health||(tool.sourceParts??[tool.sourcePart]).some(part=>!partMissing(a.health!,part)))tools.push({id:tool.id,damage:tool.damage*actualAnimalMeleeDamageFactor256(a),penetration:tool.penetration,kind:tool.kind,cooldownCore:tool.cooldownCore,weight:tool.damage*(1+tool.penetration)/(tool.cooldownCore/60)*tool.chanceFactor});
   return rankMeleeTools(tools);
 }
 /** Threat memory is not a manhunter state. Exact distance/expiry boundaries,
@@ -44,7 +48,7 @@ function approach(w:World,a:WildAnimal,target:Cell,nav:ReturnType<typeof animalN
     for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){
       if(!dx&&!dz)continue;const c={x:n.cell.x+dx,z:n.cell.z+dz};
       if((c.x-target.x)**2+(c.z-target.z)**2>9||!nav.step(n.cell,c))continue;
-      const cost=n.cost+Math.hypot(dx,dz)/moving+furnitureDelay(w,n.cell,c),id=key(c);
+      const cost=n.cost+Math.hypot(dx,dz)/moving+furnitureDelay(w,n.cell,c,duckTerrainOverride256(w,a)),id=key(c);
       if(cost>=(costs.get(id)??Infinity))continue;costs.set(id,cost);queue.push({cell:c,cost,path:[...n.path,c]});
     }
   }
@@ -63,7 +67,7 @@ export function moveAnimalMelee(w:World,a:WildAnimal,nav:()=>ReturnType<typeof a
   if(!target){delete a.threat;delete a.retaliation;a.path=[];}
   if(a.strike||a.stun){a.path=[];if(a.state!=='sleeping')a.state='idle';return true;}
   if(!target)return false;
-  if(!a.retaliation||a.retaliation.untilCore<=w.tick*10)a.retaliation={targetId:target.id,untilCore:w.tick*10+200};
+  if(!a.retaliation||a.retaliation.untilCore<=w.tick*10){notifyDuckFlightJob256(w,a,'AttackMelee',()=>wildlifeRandom(w.wildlife!));a.retaliation={targetId:target.id,untilCore:w.tick*10+200};}
   if(meleeContact(w,a,target,blocked())){a.path=[];a.state='idle';return true;}
   const n=nav();a.path=approach(w,a,target,n,blocked())??[];
   if(a.path.length)moveAnimal(w,a,n.step,animalBody(a).capacities.moving);else a.state='idle';
@@ -73,7 +77,7 @@ export function advanceAnimalMelee(w:World,a:WildAnimal,core:number,blocked:()=>
   if(a.stun&&core>=a.stun.untilCore)delete a.stun;
   if(a.state==='dead'||a.state==='downed')return false;
   if(a.strike&&core>=a.strike.untilCore)delete a.strike;
-  if(a.burning||a.health?.foodPoisoning?.vomit)return false;
+  if(a.burning||(a.health?.foodPoisoning?.vomit||a.health?.cryptosleepSickness?.vomit||a.health?.toxicBuildup?.vomit||a.health?.toxicBuildup?.vomitRequestedAt!==undefined))return false;
   const m=a.manhunter;
   if(m?.exhausted)return false;
   if(m?.door){
@@ -93,20 +97,23 @@ export function advanceAnimalMelee(w:World,a:WildAnimal,core:number,blocked:()=>
   // The job may expire mid-edge. Release its intent without discarding the
   // captured physical movement; a later decision may start a fresh response.
   if(a.retaliation&&core>=a.retaliation.untilCore){delete a.retaliation;a.path=[];}
-  const hunt=a.predation,target=m?animalManhunterTarget(w,a):hunt?animalPredationTarget(w,a,core):a.threat?animalMeleeTarget(w,a,core,grid()):undefined;
+  if(advanceHiveStructureMelee256(w,a,core,blocked()))return true;
+  const duty=hiveAttackTarget256(w,a);
+  const hunt=a.predation,target=m?animalManhunterTarget(w,a):hunt?animalPredationTarget(w,a,core):a.threat?animalMeleeTarget(w,a,core,grid()):duty;
   if(!target){
     if(!hunt){if(a.threat||a.retaliation)a.path=[];delete a.threat;delete a.retaliation;}
     return false;
   }
   if(a.strike||a.stun&&a.stun.untilCore>core||(a.motion?.end??0)>core/10)return false;
   if((hunt||m)&&(target.motion?.end??0)>core/10)return false;
-  if(!hunt&&!m&&(!a.retaliation||core>=a.retaliation.untilCore))a.retaliation={targetId:target.id,untilCore:core+200};
+  if(!hunt&&!m&&!duty&&(!a.retaliation||core>=a.retaliation.untilCore)){notifyDuckFlightJob256(w,a,'AttackMelee',()=>wildlifeRandom(w.wildlife!));a.retaliation={targetId:target.id,untilCore:core+200};}
   if(!meleeContact(w,a,target,blocked()))return false;
   const state={rng:w.rng},tool=chooseMeleeTool(animalMeleeTools(a),()=>healthRandom(state));
   if(!tool){if(hunt)cancelAnimalPredation(w,a);return false;}
   const surprise=!!hunt?.firstHit;
-  const surpriseStun=surprise?animalSpecies(a.species).melee.find(t=>t.id===tool.id)?.surpriseStun:undefined;
-  strikeLivingTarget(w,a,target,tool,core,state,disturbance,{surprise,surpriseStun});
+  const surpriseStun=surprise?actualAnimalMeleeProfile256(a).find(t=>t.id===tool.id)?.surpriseStun:undefined;
+  strikeLivingTarget(w,a,target,tool,core,state,disturbance,{surprise,surpriseStun,huntingForFood:!!hunt});
   if(hunt)hunt.firstHit=false;
+  if(duty&&['dead','downed'].includes(duty.state))delete a.hiveJob;
   return true;
 }

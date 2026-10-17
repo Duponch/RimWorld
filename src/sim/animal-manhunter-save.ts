@@ -1,7 +1,9 @@
+import {validHiveStructureStrike256} from './cave-hive-strike-save-256.ts';
 import type { World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import { isRoomDoor } from './door-rules.ts';
-import { animalSpecies,isAnimalSpecies } from './animal-species.ts';
+import {isAnimalSpecies} from './animal-species.ts';
+import {actualAnimalMeleeProfile256} from './actual-animal-profile-256.ts';
 
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
@@ -10,11 +12,12 @@ type BoundaryWorld=Pick<World,'tick'|'nextId'|'pawns'|'structures'|'raids'|'widt
 /** Recovery survives loss of its door and mental state. It still owns a
  * valid past contact and cannot borrow a live actor's global identity. */
 function validDoorStrike(w:BoundaryWorld,version:number,a:WildAnimal):boolean {
+  const actualHiveStrike=validHiveStructureStrike256(w,version,a);if(actualHiveStrike!==undefined)return actualHiveStrike;
   const s=a.strike;if(s?.structure===undefined)return true;
   if(version<183||!isAnimalSpecies(a.species)||!Array.isArray(a.path)||!object(s)||!keys(s,['targetId','atCore','untilCore','tool','outcome','structure'])
     ||!object(s.structure)||!keys(s.structure,['x','z'])||!int(s.structure.x,0,w.width-1)||!int(s.structure.z,0,w.height-1)
     ||!int(s.targetId,1,w.nextId-1)||!int(s.atCore,0,w.tick*10)||!int(s.untilCore,w.tick*10+1)
-    ||s.outcome!=='hit'||!animalSpecies(a.species).melee.some(t=>t.id===s.tool&&s.untilCore-s.atCore===t.cooldownCore)
+    ||s.outcome!=='hit'||!actualAnimalMeleeProfile256(a).some(t=>t.id===s.tool&&s.untilCore-s.atCore===t.cooldownCore)
     ||!['idle','sleeping'].includes(a.state)||a.path.length||(a.motion?.end??0)>w.tick||a.meal)return false;
   const door=w.structures.find(d=>d.id===s.targetId),c=s.structure;
   if(door&&(!isRoomDoor(door.kind)||door.x!==c.x||door.z!==c.z))return false;

@@ -38,7 +38,7 @@ export function pasteHoppers(world:World,dispenser:Structure):Structure[] {
     .sort((a,b)=>a.id-b.id);
 }
 export function hopperAccepts(item:string):boolean {
-  return item==='rice'||item==='potato'||item==='corn'||item==='berries'||item==='agave-fruit'||item==='milk'||isAnimalMeat(item);
+  return item==='raw-fungus'||item==='rice'||item==='potato'||item==='corn'||item==='berries'||item==='agave-fruit'||item==='milk'||isAnimalMeat(item);
 }
 export function hopperCapacity(world:World,hopperId:number,item:ItemId,exceptPawn?:number):number {
   const hopper=world.structures.find(s=>s.id===hopperId&&s.kind==='hopper');

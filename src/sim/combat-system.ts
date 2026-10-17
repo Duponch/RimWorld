@@ -23,13 +23,13 @@ export function advanceWorldCombat(world:World,contacts?:SpikeTrapWindow):void {
   const people=world.pawns.filter(p=>p.shooting||p.melee),targets=new Set(people.map(p=>p.melee?.order?.targetId));
   const animalTargets=new Set(world.wildlife?.animals.flatMap(a=>a.predation?[a.predation.targetId]:[])??[]);
   const shooters=[...people,...(world.mechanoids?.filter(m=>m.melee||m.ranged||m.stun||m.emp||m.stagger)??[]),...(world.wildlife?.animals.filter(a=>a.predation||a.manhunter||a.threat||a.strike||a.retaliation||a.stun||targets.has(a.id)||animalTargets.has(a.id))??[])].sort((a,b)=>a.id-b.id);
-  const turrets=world.structures.filter(s=>s.kind==='mini-turret'&&s.turret);
-  if(!shooters.length&&!turrets.length){const emp=world.structures.some(s=>s.emp)||world.packed.some(p=>p.building.emp);
+  const turrets=world.structures.filter(s=>s.kind==='mini-turret'&&s.turret),explosiveCaskets=world.structures.filter(s=>s.kind==='ancient-cryptosleep-casket'&&s.casketWick);
+  if(!shooters.length&&!turrets.length&&!explosiveCaskets.length){const emp=world.structures.some(s=>s.emp)||world.packed.some(p=>p.building.emp);
     advanceWorldProjectiles(world,contacts||world.raids?.mechActive||emp?core=>{
       const changed=contacts?.advance(core)??false,before=world.mechanoids?.length;
       advanceEmp(world,core);advanceMechanoidRaid(world,core);if(before!==world.mechanoids?.length)contacts?.refresh();return changed;
     }:undefined,contacts?()=>contacts.refresh():undefined,disturbance);return;}
-  const owners=[...shooters.map(pawn=>({id:pawn.id,pawn})),...turrets.map(structure=>({id:structure.id,structure}))].sort((a,b)=>a.id-b.id);
+  const owners=[...shooters.map(pawn=>({id:pawn.id,pawn})),...[...turrets,...explosiveCaskets].map(structure=>({id:structure.id,structure}))].sort((a,b)=>a.id-b.id);
   const batch=combatShotBatch(world);
   let physical:Uint8Array|undefined;const contactGrid=()=>physical??=blockedCells(world,true);
   const capture=()=>{let index:ReturnType<typeof captureTurretTargets>|undefined;
@@ -55,7 +55,7 @@ export function advanceWorldCombat(world:World,contacts?:SpikeTrapWindow):void {
     let changed=empChanged||trapChanged;for(const owner of owners){
     if('structure' in owner){const s=owner.structure;
       if(advanceBombWick(world,s,core)){changed=true;invalidated();continue;}
-      advanceTurretOwner(world,s,core,queries,admitted.has(s.id)?budget:{remaining:0,pairs:0});continue;
+      if(s.kind==='mini-turret')advanceTurretOwner(world,s,core,queries,admitted.has(s.id)?budget:{remaining:0,pairs:0});continue;
     }
     const pawn=owner.pawn;
     if(isMechanoidTarget(pawn)?advanceMechanoidCombat(world,pawn,core,{blocked:contactGrid,grid:queries.grid,ranged:queries.mechanoid}):isAnimalTarget(pawn)?advanceAnimalMelee(world,pawn,core,contactGrid,queries.grid,disturbance):advanceMelee(world,pawn,core,contactGrid,queries,disturbance)){changed=true;invalidated();}

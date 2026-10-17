@@ -1,4 +1,5 @@
-import { BIOME_FLORA,FLORA_DEFINITIONS,isBiomeId,isPlantSpecies,weightedSpecies,type BiomeId } from './biome-flora.ts';
+import {validateWildFlora256} from './wild-plant-runtime-256.ts';
+import { BIOME_FLORA,FLORA_DEFINITIONS,isBiomeId,isPlantSpeciesInVersion,weightedSpecies,type BiomeId } from './biome-flora.ts';
 import { createPlantLife } from './plant-life.ts';
 import { footprintCells } from './definitions.ts';
 import { isRoofed } from './roof-rules.ts';
@@ -28,6 +29,8 @@ export function initializeWildFlora(world:World,site:BiomeSite):void {
 
 export function validateWildFlora(world:Pick<World,'flora'|'site'|'tick'|'width'|'height'|'resources'>,version:number):boolean {
   const state=world.flora;
+  if(world.site?.revision===3||state?.revision===2)return validateWildFlora256(world,version);
+  if(state&&['cycleIndex','desired','desiredTmp','fertile','fertileTmp','hasCalculated','lastTick'].some(key=>Object.hasOwn(state,key)))return false;
   if(state===undefined)return world.site?.revision!==2&&world.resources.every(resource=>resource.species===undefined);
   if(version<91||world.site?.revision!==2||!record(state)||Object.keys(state).length!==6||
     !Object.keys(state).every(key=>['revision','biome','rng','nextCheck','adoptedAt','capacity'].includes(key)))return false;
@@ -37,7 +40,7 @@ export function validateWildFlora(world:Pick<World,'flora'|'site'|'tick'|'width'
     !Number.isSafeInteger(state.capacity)||state.capacity<0||state.capacity>world.width*world.height)return false;
   let present=0;
   for(const resource of world.resources)if(resource.species!==undefined) {
-    if(!isPlantSpecies(resource.species))return false;
+    if(!isPlantSpeciesInVersion(resource.species,version))return false;
     if(resource.species==='healroot-wild'&&version<167)return false;
     const definition=FLORA_DEFINITIONS[resource.species];
     const growthTick=resource.growthTick;
@@ -71,7 +74,9 @@ function spawn(world:World,index:number,species:ReturnType<typeof weightedSpecie
 /** One bounded prospective renewal. It approaches the generation capacity over
  * the biome's declared regrow interval and never restores a specific old plant. */
 export function advanceWildFlora(world:World):void {
-  const state=world.flora;if(!state||world.tick<state.nextCheck)return;
+  const state=world.flora;if(!state)return;
+  if(state.revision!==1||world.site?.revision===3)throw Error('Geographic flora requires its actual physical reader');
+  if(world.tick<state.nextCheck)return;
   while(state.nextCheck<=world.tick)state.nextCheck+=CHECK_INTERVAL;
   const present=world.resources.reduce((count,resource)=>count+(resource.species!==undefined?1:0),0),missing=Math.max(0,state.capacity-present);
   if(!missing||!Number.isSafeInteger(world.nextId+1))return;

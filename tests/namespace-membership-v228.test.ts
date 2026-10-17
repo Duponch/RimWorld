@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import { expect, test } from 'vitest';
 import { SnapshotDecoder, SnapshotEncoder, readSnapshotChanges, type SnapshotMessage } from '../src/bridge/snapshots.ts';
 import { NumericMembership, type NumericMembershipWriter } from '../src/sim/numeric-membership.ts';
@@ -59,7 +60,7 @@ function group(): Fixture {
   addMaterial(world, 'food', members.length, { type: 'inventory', pawnId: members[0]!.id }, 'survival-meal');
   expect(applyCommand(world, { type: 'planet-adopt' }).ok).toBe(true);
   expect(applyCommand(world, { type: 'group-start', memberIds: members.map(p => p.id),
-    destination: world.planet!.civilianTile, sources: [] }).ok).toBe(true);
+    destination: legacyPlanet(world).civilianTile, sources: [] }).ok).toBe(true);
   const formation = world.group;
   if (!formation || !('exits' in formation)) throw Error('Real group formation missing');
   // Only the final exit frontier is authored. The departure producer transfers
@@ -74,7 +75,7 @@ function group(): Fixture {
   tryGroupDeparture(world);
   const away = world.group;
   if (!away || !('members' in away)) throw Error('Original group owners not transferred');
-  away.phase = 'at-site'; away.tile = world.planet!.civilianTile; away.destination = away.tile;
+  away.phase = 'at-site'; away.tile = legacyPlanet(world).civilianTile; away.destination = away.tile;
   away.route = [away.tile]; away.segment = null; away.stop = { kind: 'at-site' };
   expect(away.members).toHaveLength(2); expect(away.items.length).toBeGreaterThan(0);
   return { world, ownedIds: [...away.members, ...away.items].map(owner => owner.id), write: registerGroupThingIds,

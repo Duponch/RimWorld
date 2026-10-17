@@ -1,7 +1,8 @@
-import { animalSpecies } from './animal-species.ts';
+import {animalCore256,isAnimalSpecies256} from './animal-core-v256.ts';
+import {actualAnimalProfile256} from './actual-animal-profile-256.ts';
 import { animalBodySize,animalLifeStage } from './animal-life.ts';
 import { freshMissing,partMissing } from './injury-state.ts';
-import { animalBodyModel,animalPartBaseHp } from './body-model.ts';
+import { medicalModel,animalPartBaseHp } from './body-model.ts';
 import { HP_UNIT,injuryPartRules,isWithinPart } from './injury-rules.ts';
 import type { World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
@@ -11,7 +12,7 @@ export const PREDATION_MAX_CORE=5000;
 export function animalSummaryHealth(a:WildAnimal):number {
   if(a.state==='dead'||a.health?.death)return 0;
   const record=a.health;if(!record)return 1;
-  const model=animalBodyModel(a.species),rules=injuryPartRules(model);
+  const model=medicalModel(record),rules=injuryPartRules(model);
   let result=1;
   for(const injury of record.injuries)if(injury.scar?.pain===undefined)
     result*=1-Math.min(injury.severity/HP_UNIT/(75*model.healthScale),.95);
@@ -19,16 +20,17 @@ export function animalSummaryHealth(a:WildAnimal):number {
     if(!freshMissing(record,missing)||record.missing.some(parent=>parent!==missing&&isWithinPart(missing.part,parent.part,model)))continue;
     const part=model.byId[missing.part];
     if(!part.groups.length&&!model.parts.some(child=>child.parent===part.id)&&rules[part.id].bleed<=0)continue;
-    result*=1-Math.min(animalPartBaseHp(a.species,part.id)/(75*model.healthScale),.95);
+    result*=1-Math.min(animalPartBaseHp(a.species,part.id,a.growthTracker?.value)/(75*model.healthScale),.95);
   }
   return Math.max(.05,Math.min(1,result));
 }
 
 export function acceptableAnimalPrey(predator:WildAnimal,prey:WildAnimal):boolean {
-  const p=animalSpecies(predator.species),t=animalSpecies(prey.species);
+  const p=actualAnimalProfile256(predator),t=actualAnimalProfile256(prey);
+  if(isAnimalSpecies256(prey.species)&&!animalCore256(prey.species).race.canBePredatorPrey)return false;
   if(!p.predator||predator.domestic||predator.id===prey.id||['dead','downed'].includes(predator.state)
     ||prey.state==='dead'||animalBodySize(prey)>(p.maxPreySize??0)
-    ||!p.melee.some(tool=>!predator.health||!partMissing(predator.health,tool.sourcePart)))return false;
+    ||!p.melee.some(tool=>!predator.health||(tool.sourceParts??[tool.sourcePart]).some(part=>!partMissing(predator.health!,part))))return false;
   const health=animalSummaryHealth(predator);
   if(health<.25&&prey.state!=='downed')return false;
   if(prey.state!=='downed'&&(t.combatPower>2*p.combatPower
@@ -40,7 +42,7 @@ export function animalPreyScore(predator:WildAnimal,prey:WildAnimal):number {
   const health=Math.min(animalSummaryHealth(prey),prey.state==='downed'?.2:1);
   const stage=({baby:.2,juvenile:.5,adult:1} as const)[animalLifeStage(prey)];
   return -Math.hypot(prey.x-predator.x,prey.z-predator.z)
-    -56*health*health*(animalSpecies(prey.species).combatPower/animalSpecies(predator.species).combatPower)*stage;
+    -56*health*health*(actualAnimalProfile256(prey).combatPower/actualAnimalProfile256(predator).combatPower)*stage;
 }
 /** Biological order only. The caller filters contact places with one shared field. */
 export function animalPreyCandidates(w:World,predator:WildAnimal):WildAnimal[] {
@@ -66,6 +68,6 @@ export function reconcileAnimalPredation(w:World,a:WildAnimal,core=w.tick*10):vo
   const target=w.wildlife?.animals.find(t=>t.id===hunt.targetId&&t.id!==a.id);
   const corpse=!target?w.piles.find(p=>p.id===hunt.targetId&&p.corpse?.animalId===hunt.targetId&&p.owner.type==='ground'):undefined;
   const cell=target??(corpse?.owner.type==='ground'?corpse.owner:undefined);
-  if(!animalSpecies(a.species).predator||a.domestic||a.meal||a.burning||a.flee||['dead','downed'].includes(a.state)
+  if(!actualAnimalProfile256(a).predator||a.domestic||a.meal||a.burning||a.flee||['dead','downed'].includes(a.state)
     ||!cell||core>hunt.startedAtCore+PREDATION_MAX_CORE&&(cell.x-a.x)**2+(cell.z-a.z)**2>4)cancelAnimalPredation(w,a);
 }

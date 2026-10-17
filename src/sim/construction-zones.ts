@@ -8,7 +8,7 @@ import type { DesignateCommand, World } from './types.ts';
 
 /** A blueprint removes incompatible zone cells immediately, not the items.
  * The caller preflights cargo drops before any mutation. */
-export function zonesUnderPlan(world:World,command:DesignateCommand):{storage:Set<number>;deliveries:Set<number>;growing:Set<number>;cells:Set<number>} {
+export function zonesUnderPlan(world:World,command:DesignateCommand|import('./cave-glowpod-minification-256.ts').NaturalInstallPlan256):{storage:Set<number>;deliveries:Set<number>;growing:Set<number>;cells:Set<number>} {
   // This is also called during preflight, before command validation.
   const valid=Number.isInteger(command.x)&&Number.isInteger(command.z)&&command.x>=0&&command.z>=0&&command.x<world.width&&command.z<world.height
     &&(command.orientation===undefined||Number.isInteger(command.orientation)&&command.orientation>=0&&command.orientation<=3);
@@ -31,7 +31,7 @@ export function zonesUnderPlan(world:World,command:DesignateCommand):{storage:Se
     ||profile?.store===false&&footprint.has(z.z*world.width+z.x)).map(z=>z.id));
   return {cells,storage,deliveries,growing:new Set(world.growingZones.filter(z=>z.cells.some(c=>cells.has(c))).map(z=>z.id))};
 }
-export function removeZonesForPlan(world:World,command:DesignateCommand,drops:DropPlan):void {
+export function removeZonesForPlan(world:World,command:DesignateCommand|import('./cave-glowpod-minification-256.ts').NaturalInstallPlan256,drops:DropPlan):void {
   const {storage,deliveries,growing,cells}=zonesUnderPlan(world,command);
   if(storage.size)world.stockpiles=world.stockpiles.filter(z=>!storage.has(z.id));
   if(deliveries.size) {

@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import { expect,test } from 'vitest';
 import { SnapshotDecoder,SnapshotEncoder,type SnapshotMessage } from '../src/bridge/snapshots.ts';
 import { applyCommand,createWorld } from '../src/sim/index.ts';
@@ -123,7 +124,7 @@ test('reconstructed structures retain turret/business and complete shared-namesp
   const collision:Structure={id:world.pawns[0]!.id,kind:'wall',x:2,z:2,orientation:0,footprint:'standard'};
   badNamespace.structures!.upserted.push(collision);
   expect(decoder.adopt(badNamespace).status).toBe('resync');
-  const latePlanet=structuredClone(good);latePlanet.world.planet!.tiles[0]!.rainfall+=1;
+  const latePlanet=structuredClone(good);legacyPlanet(latePlanet.world).tiles[0]!.rainfall+=1;
   expect(decoder.adopt(latePlanet).status).toBe('resync');
   expect(before).toStrictEqual(saved);
   expect(applied(decoder,good)).toStrictEqual(world);

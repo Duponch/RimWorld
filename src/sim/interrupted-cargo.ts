@@ -1,3 +1,4 @@
+import {cancelToxicVomit256} from './toxic-buildup-256.ts';
 import { releaseFurniture } from './furniture-transfer.ts';
 import { pawnBody } from './health-rules.ts';
 import { clearQueuedOrders } from './player-orders.ts';
@@ -8,6 +9,7 @@ import type { Pawn,World } from './types.ts';
  * survives without preserving the task, destination, workstation or queue. */
 export const hasTravellingCargo=(world:World,pawn:Pawn):boolean=>(pawn.motion?.end??0)>world.tick&&(world.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)||world.packed.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id));
 export function interruptWork(world:World,pawn:Pawn,retainTravellingCargo=false):void {
+  if(pawn.health)cancelToxicVomit256(pawn.health);
   clearQueuedOrders(world,pawn);delete pawn.priorityWork;
   // Destruction explicitly retains any in-flight cargo. Other callers keep
   // their existing explicit-meal/tree exceptions over a captured edge.

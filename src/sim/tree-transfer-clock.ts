@@ -1,3 +1,5 @@
+import {isPlantSpeciesInVersion} from './biome-flora.ts';
+import {validInitialPlantAge256} from './initial-plant-age-256.ts';
 /** Versioned clock extension only for physically replanted species trees. */
 import type {Resource,World} from './types.ts';
 import {PLANT_LIFE_INTERVAL} from './plant-life.ts';
@@ -10,11 +12,13 @@ export function hasPausedTreeClock(plant:Partial<Resource>):boolean {
   const life:unknown=plant.plantLife;return record(life)&&['pausedTicks','ageTick','leaflessPausedTicks'].some(k=>Object.hasOwn(life,k));
 }
 export function validPausedTreeLife(plant:Partial<Resource>,version:number,world:Pick<World,'tick'|'climate'>):boolean {
+  if(plant.species!==undefined&&!isPlantSpeciesInVersion(plant.species,version))return false;
   if(!hasPausedTreeClock(plant))return validOrdinaryPlantLife(plant,version,world);
   const life:unknown=plant.plantLife;
+  if(!validInitialPlantAge256(plant,version))return false;
   if(version<235||plant.kind!=='tree'||plant.species===undefined||!extractTreeDefinition(plant as Resource)||!world.climate||!record(life)||
-    !Object.keys(life).every(k=>['since','bornAt','age','darkTicks','leaflessAt','nextCheck','pausedTicks','ageTick','leaflessPausedTicks'].includes(k))||
-    !integer(life.since,world.climate.adoptedAt,world.tick)||!integer(life.pausedTicks,0,world.tick-life.since)||
+    !Object.keys(life).every(k=>['initialAgeCore','since','bornAt','age','darkTicks','leaflessAt','nextCheck','pausedTicks','ageTick','leaflessPausedTicks'].includes(k))||
+    !integer(life.since,version>=256&&Object.hasOwn(life,'initialAgeCore')?0:world.climate.adoptedAt,world.tick)||!integer(life.pausedTicks,0,world.tick-life.since)||
     !integer(life.ageTick,life.since+life.pausedTicks,world.tick)||!integer(life.age,0,world.tick-life.since-life.pausedTicks)||
     life.age!==life.ageTick-life.since-life.pausedTicks||!integer(life.darkTicks,0,life.age)||
     !integer(life.nextCheck,world.tick+1,world.tick+PLANT_LIFE_INTERVAL)||

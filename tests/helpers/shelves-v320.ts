@@ -4,7 +4,7 @@ import { decodeStoredSave } from '../../src/ui/save-storage-codec';
 import { deserializeWorld,validateWorld } from '../../src/sim/serialization';
 import { canDesignate } from '../../src/sim/engine';
 import { footprintCells } from '../../src/sim/definitions';
-import type { Cell,StructureKind } from '../../src/sim/types';
+import type { Cell } from '../../src/sim/types';
 
 /** Immutable historical village; only candidate sites are derived here. */
 export async function shelvesAulnes(){
@@ -12,7 +12,7 @@ export async function shelvesAulnes(){
   const sha=createHash('sha256').update(raw).digest('hex');if(sha!=='6d75f98d4435e8b4569f11fce1969a71d31ba523fcf36ad864f35ba3191eedb1')throw Error('Historical Aulnes changed');
   const world=deserializeWorld(await decodeStoredSave(raw));if(validateWorld(world).length||world.tick!==8434||world.width!==250||world.pawns.length!==15)throw Error('Historical village differs');
   const station=world.structures.find(s=>s.kind==='electric-stove')??world.structures.find(s=>s.kind==='fueled-stove');if(!station)throw Error('No historical cooking station');
-  function site(kind:StructureKind,avoid:Cell[],minimum:number){
+  function site(kind:'shelf'|'small-shelf',avoid:Cell[],minimum:number){
     const candidates:Cell[]=[];
     for(let z=station!.z-10;z<=station!.z+10;z++)for(let x=station!.x-10;x<=station!.x+10;x++){
       const c={x,z},command={type:'designate' as const,kind,material:'wood' as const,orientation:1 as const,...c};

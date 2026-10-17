@@ -10,7 +10,7 @@ import { deconstructionCamp } from './scenarios/deconstruction.ts';
 import type { Orientation,Structure } from '../src/sim/types.ts';
 
 test('hydroponics uses the pinned Core construction, damage and power catalogue',()=>{
-  const basin:Structure={id:1,kind:'hydroponics-basin',x:5,z:5,orientation:0,footprint:'standard',material:'steel',power:newPowerState('hydroponics-basin')};
+  const basin={id:1,kind:'hydroponics-basin',x:5,z:5,orientation:0,footprint:'standard',material:'steel',power:newPowerState('hydroponics-basin')} satisfies Structure;
   expect(STRUCTURE_DEFINITIONS[basin.kind]).toMatchObject({width:1,depth:4,blocksMovement:false});
   expect(constructionRecipe(basin)).toEqual({ingredients:[{item:'steel',quantity:100},{item:'component',quantity:1}],work:280,coreWork:2800});
   expect(JOB_DURATION[basin.kind]).toBe(280);expect(constructionSkillRequired(basin.kind)).toBe(4);

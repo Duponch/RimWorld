@@ -1,4 +1,5 @@
-import { climateOriginAtAdoption,planetTileClimateDefinition,sameDerivedClimateNumber,startingSiteClimateOrigin,validClimateDefinition,type ClimateProfile } from './site-climate.ts';
+import {planetTile} from './planet-geography-256.ts';
+import { climateOriginAtAdoption,createGeographicSiteClimate256,validGeographicClimateDefinition256,geographicPlanetClimateDefinition256,planetTileClimateDefinition,sameDerivedClimateNumber,startingSiteClimateOrigin,validClimateDefinition,type ClimateProfile,type ClimateDefinition } from './site-climate.ts';
 import type { World } from './types.ts';
 import type { PlanetTile } from './planet-state.ts';
 import { PREPARED_CRASHLANDED_REVISION,ARRIVING_CRASHLANDED_REVISION } from './scenario-definitions.ts';
@@ -6,8 +7,9 @@ import { PREPARED_CRASHLANDED_REVISION,ARRIVING_CRASHLANDED_REVISION } from './s
 const record=(value:unknown):value is Record<string,unknown>=>typeof value==='object'&&value!==null&&!Array.isArray(value);
 const finite=(value:unknown,min:number,max:number):value is number=>typeof value==='number'&&Number.isFinite(value)&&value>=min&&value<=max;
 
-export function validSiteClimate(value:unknown,version:number,world:Pick<World,'tick'|'gameProfile'|'site'>&Partial<Pick<World,'planet'|'scenario'|'expeditionSite'>>):boolean {
+export function validSiteClimate(value:unknown,version:number,world:Pick<World,'tick'|'gameProfile'|'site'>&Partial<Pick<World,'planet'|'scenario'|'expeditionSite'|'worldMaps'|'campaignMap'>>,capturedCalendarOrigin?:number):boolean {
   if(version<239&&(world.site?.biome==='tundra'||record(value)&&value.profile==='tundra-preset'))return false;
+  if(record(value)&&value.revision===4)return validGeographicSiteClimate256(value,version,world,capturedCalendarOrigin);
   const prepared=world.scenario?.revision===PREPARED_CRASHLANDED_REVISION||world.scenario?.revision===ARRIVING_CRASHLANDED_REVISION;
   if(prepared&&(!record(value)||value.revision!==2))return false;
   if(value===undefined)return true;
@@ -18,8 +20,8 @@ export function validSiteClimate(value:unknown,version:number,world:Pick<World,'
     if(version<240||!origin||!planet||!validClimateDefinition(definition)||v.adoptedAt!==origin.createdAt
       ||Reflect.ownKeys(v).length!==4||!['revision','adoptedAt','calendarOrigin','definition'].every(k=>Object.hasOwn(v,k))
       ||!Number.isSafeInteger(v.calendarOrigin)||!Number.isSafeInteger(v.adoptedAt)||Number(v.adoptedAt)<0||Number(v.adoptedAt)>world.tick)return false;
-    const tile=planet.tiles[origin.tile];if(!tile||tile.biome!==world.site?.biome||tile.hilliness!==world.site.hilliness)return false;
-    const expected=planetTileClimateDefinition(tile);
+    const tile=planetTile(planet,origin.tile);if(!tile||tile.biome!==world.site?.biome||tile.hilliness!==world.site.hilliness)return false;
+    const expected=geographicPlanetClimateDefinition256(planet,origin.tile);
     return definition.meanTemperature===expected.meanTemperature&&definition.rainfall===expected.rainfall
       &&(['latitude','longitude','amplitude'] as const).every(k=>sameDerivedClimateNumber(definition[k],expected[k]));
   }
@@ -45,4 +47,22 @@ export function validSiteClimate(value:unknown,version:number,world:Pick<World,'
   return !(version<239&&(v.profile==='tundra-preset'||world.site?.biome==='tundra'))&&Object.keys(v).length===4&&Object.keys(v).every(k=>['revision','profile','adoptedAt','calendarOrigin'].includes(k))&&
     v.revision===1&&v.profile===expected&&typeof v.adoptedAt==='number'&&Number.isSafeInteger(v.adoptedAt)&&v.adoptedAt>=0&&v.adoptedAt<=world.tick&&
     v.calendarOrigin===climateOriginAtAdoption(world,v.adoptedAt,expected);
+}
+
+/** Full RAW/map admission compares the actual immutable owner, never a
+ * caller-selected biome/profile or a guessed geographic tile. */
+export function validGeographicSiteClimate256(v:unknown,version:number,world:Pick<World,'tick'|'site'>&Partial<Pick<World,'planet'|'worldMaps'|'expeditionSite'|'campaignMap'>>,capturedCalendarOrigin?:number):boolean {
+ if(version<256||!record(v)||Reflect.ownKeys(v).length!==5||!['revision','adoptedAt','calendarOrigin','tileId','definition'].every(k=>Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)??{},'value'))||v.revision!==4||!Number.isSafeInteger(v.adoptedAt)||Number(v.adoptedAt)<0||Number(v.adoptedAt)>world.tick||!Number.isSafeInteger(v.calendarOrigin)||!Number.isSafeInteger(v.tileId)||Number(v.tileId)<0||!validGeographicClimateDefinition256(v.definition)||world.planet?.revision!==3)return false;
+ const planet=world.planet,id=Number(v.tileId),tile=planetTile(planet,id);if(!tile||tile.biome==='ocean'||tile.biome==='lake'||tile.hilliness==='impassable'||tile.biome!==world.site?.biome||tile.hilliness!==world.site.hilliness||world.expeditionSite&&(world.expeditionSite.tile!==id||v.adoptedAt!==world.expeditionSite.createdAt))return false;
+ const expected=geographicPlanetClimateDefinition256(planet,id),definition=v.definition;if(!Object.keys(expected).every(k=>definition[k as keyof ClimateDefinition]===expected[k as keyof ClimateDefinition]))return false;
+ const registeredAnchor=world.worldMaps?.calendarOrigin??(world.campaignMap?.revision===2?world.campaignMap.calendarOrigin:undefined);
+ if(capturedCalendarOrigin!==undefined&&(!Number.isSafeInteger(capturedCalendarOrigin)||registeredAnchor!==undefined&&capturedCalendarOrigin!==registeredAnchor))return false;
+ // A fresh unpublished map has no registry yet. Its real generation caller
+ // supplies the captured campaign clock, never the climate's own phase.
+ // RAW/adoption callers omit this argument and still require their registry.
+ const anchor=registeredAnchor??capturedCalendarOrigin;
+ if(anchor!==undefined){return v.calendarOrigin===createGeographicSiteClimate256(planet,id,{tick:Number(v.adoptedAt),calendarOrigin:anchor}).calendarOrigin;}
+ // Detached metadata must have a real campaign clock; definition equality
+ // alone cannot admit a shifted phase.
+ return false;
 }

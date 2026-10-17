@@ -11,8 +11,8 @@ import {pause,panel,observeErrors} from './helpers';
 
 test.skip(process.env.WORLD_MAP_REGISTRY_255!=='1','ROOT: frozen registry sources and inputs; no historical campaign replay.');
 function preparation(){
- const w=prepareGroupScenario(),run=(c:Parameters<typeof applyCommand>[1])=>{const r=applyCommand(w,c);if(!r.ok)throw Error(r.reason);};run({type:'planet-adopt'});configureSettlementLimit(w,5);
- const choices=w.planet!.tiles.filter(t=>settlementTileAction(w,t.id).ok);if(choices.length<2)throw Error('No two admissible declared destinations.');
+ const w=prepareGroupScenario(),run=(c:Parameters<typeof applyCommand>[1])=>{const r=applyCommand(w,c);if(!r.ok)throw Error(r.reason);};run({type:'planet-adopt'});const planet=w.planet;if(!planet||planet.revision===3)throw Error('Historical registry255 fixture requires its basic revision1/2 planet');configureSettlementLimit(w,5);
+ const choices=planet.tiles.filter(t=>settlementTileAction(w,t.id).ok);if(choices.length<2)throw Error('No two admissible declared destinations.');
  const members=w.pawns.slice(0,2),ids:number[]=[];
  for(let i=0;i<2;i++){const source=w.piles.filter(p=>p.item==='survival-meal'&&p.owner.type==='ground'&&p.quantity===10)[i]!;run({type:'group-start',originMapId:0,memberIds:[members[i]!.id],sources:[{pileId:source.id,quantity:8}],destination:choices[i]!.id});ids.push(w.worldGroups!.selectedGroupId!);}
  const ready=()=>w.worldGroups!.groups.length===2&&w.worldGroups!.groups.every(r=>'members'in r.state&&r.state.phase==='at-site');

@@ -1,3 +1,4 @@
+import {legacySite} from './helpers/legacy-fixture-guards.ts';
 import { describe, expect, test } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { createWorld } from '../src/sim/engine';
@@ -243,7 +244,7 @@ describe('decorative GPU soil grass', () => {
         changedTiles = [index];
       } else if (operation === 14) {
         world.seed = random(1_000_000);
-        world.site = { ...world.site!, revision: 2,
+        world.site = { ...legacySite(world), revision: 2,
           biome: random(2) ? 'temperate-forest' : 'arid-shrubland' };
       } // Operation 15 is a paused snapshot with identical references.
       const version = layer.map.version;

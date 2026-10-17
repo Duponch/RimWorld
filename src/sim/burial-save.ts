@@ -1,3 +1,4 @@
+import {isBurialContainer256} from './ancient-monument-runtime-256.ts';
 import { isColonist } from './affiliation.ts';
 import { BURIAL_TICKS,graveAccepts } from './burial.ts';
 import { validCorpseRot } from './corpse-save.ts';
@@ -7,10 +8,11 @@ import type { World } from './types.ts';
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 const keys=(v:Record<string,unknown>,allowed:string[])=>Object.keys(v).every(k=>allowed.includes(k));
-export function validHumanBodyShape(v:unknown,version:number,tick:number):boolean {
+export function validHumanBodyShape(v:unknown,version:number,tick:number,medical?:unknown):boolean {
   if(v===undefined)return true;
-  return version>=89&&object(v)&&keys(v,['observedAt','pileId','lostAt','rot'])&&int(v.observedAt,0,tick)
-    &&(v.pileId===undefined? v.lostAt===undefined&&validCorpseRot(v.rot,tick,Number(v.observedAt))
+  if(object(v)&&Object.hasOwn(v,'damage')){const d=Object.getOwnPropertyDescriptor(v,'damage');if(version<256||!d||!Object.hasOwn(d,'value')||!int(d.value,1,99)||v.pileId!==undefined||v.lostAt!==undefined)return false;}
+  return version>=89&&object(v)&&keys(v,['observedAt','pileId','lostAt','rot',...(version>=256?['damage']:[])])&&int(v.observedAt,0,tick)
+    &&(v.pileId===undefined? v.lostAt===undefined?validCorpseRot(v.rot,tick,Number(v.observedAt),medical):version>=256&&int(v.lostAt,Number(v.observedAt),tick)&&v.rot===undefined
       :int(v.pileId,1)&&v.rot===undefined&&(v.lostAt===undefined||int(v.lostAt,Number(v.observedAt),tick)));
 }
 export function validHumanCorpseShape(v:unknown,version:number,tick:number):boolean {
@@ -34,9 +36,10 @@ export function validateBurials(w:World,version:number,ids?:Set<number>):string[
   const errors:string[]=[],people=new Map(w.pawns.map(p=>[p.id,p])),piles=new Map(w.piles.map(p=>[p.id,p]));
   const bodies=new Set<number>(),graveBodies=new Set<number>(),assigned=new Set<number>(),bodyClaims=new Set<number>(),graveClaims=new Set<number>();
   for(const p of w.pawns){
-    if(!validHumanBodyShape(p.body,version,w.tick)){errors.push('Invalid human body state.');continue;}
+    if(!validHumanBodyShape(p.body,version,w.tick,p.health)){errors.push('Invalid human body state.');continue;}
     const b=p.body;if(!b)continue;
     if(p.state!=='dead'||!p.health?.death||b.observedAt<p.health.death.tick)errors.push('Living or retroactive human body.');
+    if(version>=256&&b.lostAt!==undefined&&(w.packed.some(i=>(i.owner.type==='inventory'||i.owner.type==='pawn')&&i.owner.pawnId===p.id)||w.piles.some(i=>['pawn','inventory','equipment','apparel'].includes(i.owner.type)&&'pawnId' in i.owner&&i.owner.pawnId===p.id)))errors.push('Destroyed body still owns possessions.');
     if(b.pileId!==undefined){
       if(b.pileId>=w.nextId||bodies.has(b.pileId))errors.push('Duplicate human corpse identity.');bodies.add(b.pileId);
       const pile=piles.get(b.pileId);
@@ -55,14 +58,14 @@ export function validateBurials(w:World,version:number,ids?:Set<number>):string[
       errors.push('Invalid human corpse shape.');continue;
     }
     const p=people.get(pile.humanCorpse!.pawnId);
-    if(!p?.body||p.body.pileId!==pile.id||p.body.lostAt!==undefined||!validCorpseRot(pile.rot,w.tick,p.body.observedAt))errors.push('Invalid human corpse provenance or age.');
+    if(!p?.body||p.body.pileId!==pile.id||p.body.lostAt!==undefined||!validCorpseRot(pile.rot,w.tick,p.body.observedAt,p.health))errors.push('Invalid human corpse provenance or age.');
     if(pile.owner.type==='grave'){
       const graveId=pile.owner.graveId,grave=w.structures.find(s=>s.id===graveId);
-      if(grave?.kind!=='grave'||grave.grave?.corpseId!==pile.id||pile.rot?.rate!==0)errors.push('Invalid buried corpse ownership or suspended age.');
+      if(!isBurialContainer256(grave?.kind,version)||grave?.grave?.corpseId!==pile.id||pile.rot?.rate!==0)errors.push('Invalid buried corpse ownership or suspended age.');
     }
   }
   for(const s of w.structures){
-    if(s.kind!=='grave'){if(s.grave!==undefined)errors.push('Unexpected grave state.');continue;}
+    if(!isBurialContainer256(s.kind,version)){if(s.grave!==undefined)errors.push('Unexpected grave state.');continue;}
     if(!validGraveShape(s.grave,version)){errors.push('Invalid grave state.');continue;}
     const g=s.grave!;
     if(g.assignedPawnId!==undefined){

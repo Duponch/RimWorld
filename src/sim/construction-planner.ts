@@ -1,3 +1,4 @@
+import {materialAllowedForPlayer256} from './material-permission-256.ts';
 import { workPriority } from './work-types.ts';
 import {plantExecutionReserved} from './construction-plants.ts';
 import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
@@ -34,7 +35,7 @@ export function constructionCandidates(world:World,pawn:Pawn,blocked:Uint8Array,
       const target={x:plant.x,z:plant.z};
       if(allows(target)&&(workPriority(pawn,'build')>0||job.kind==='install'&&workPriority(pawn,'haul')>0)&&plant.kind!=='rock'&&canReach(world,target,reach,false))result.push({...base,priority:job.kind==='install'?constructionHaulPriority(pawn):workPriority(pawn,'build'),target,job,clearance:{resourceId:plant.id,progress:0}});
     } else if(pile?.owner.type==='ground') {
-      if(!allows(pile.owner)||reservedSource(world,pile.id)>0||!canReach(world,pile.owner,reach,true))continue;
+      if(!materialAllowedForPlayer256(pile)||!allows(pile.owner)||reservedSource(world,pile.id)>0||!canReach(world,pile.owner,reach,true))continue;
       const quantity=Math.min(CARRY_CAPACITY,pile.quantity),destination=findAsideDestination(world,pile.owner,pile,quantity,blocked,budget,pawn);
       if(destination)result.push({...base,priority:constructionHaulPriority(pawn),target:pile.owner,sourceId:pile.id,quantity,destination:{...destination,constructionId:job.id,forConstruction:asBuilder(pawn)}});
     } else if(obstacle.pack) {

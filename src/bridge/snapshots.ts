@@ -1,3 +1,46 @@
+import {isAncientGeneratedFloor256} from '../sim/ancient-generated-floor-state-256.ts';
+import {validNaturalHiveLoss256} from '../sim/cave-hive-loss-256.ts';
+import {validCaveHiveBuilding256,validateCaveHiveOwners256} from '../sim/cave-hive-save-256.ts';
+import {validateHiveRuntimeOwners256} from '../sim/cave-hive-runtime-save-256.ts';
+import {validMaterialPermission256} from '../sim/material-permission-256.ts';
+import {validNativeHumanField256,validHumanAgeForPawn256} from '../sim/native-human-identity-256';
+import {freezeAdmittedNativeWorldPawnOrder256,captureNativeWorldPawnBirth256,sameNativeWorldPawnBirth256} from '../sim/world-pawn-native-order-256';
+import {validWorldPawnsEnvelope256} from '../sim/world-pawn-save-256';
+import {registerProjectedWorldPawns256} from '../sim/world-pawn-transport-save-256';
+import {validCobraClinicalWorld256} from '../sim/toxic-buildup-save-256.ts';
+import {validAncientCasketBuilding256,validateAncientCasketPhysical256} from '../sim/ancient-casket-physical-256.ts';
+import {isAncientCasket256} from '../sim/ancient-casket-state-256.ts';
+import {validAncientCasketField256,registerAncientCasketThingIds256} from '../sim/ancient-casket-save-256.ts';
+import {validateAncientOpeningOwners256} from '../sim/ancient-casket-opening-256.ts';
+import {validCryptosleepSicknessWorldTransport256} from '../sim/cryptosleep-sickness-save-256.ts';
+import {validArrivalRotation256} from '../sim/arrival-rotation-256';
+import {prepareRiverWaterSnapshot256} from './river-water-transport-256.ts';
+import {freezeAdmittedRiverWater256} from '../sim/river-water-owner-256.ts';
+import {validAncientMonumentBuilding256,validAncientMonumentState256} from '../sim/ancient-monument-save-256.ts';
+import {validLocalRoadInfoEnvelope256} from '../sim/local-road-info-256.ts';
+import {heldDuckInventoryClock256} from '../sim/duck-held-item-clock-256.ts';
+import {validMineableTile256} from '../sim/local-mineable-save-256.ts';
+import {validAncientShrineWarningEnvelope256,registerAncientShrineWarningIds256} from '../sim/ancient-shrine-warning-save-256.ts';
+import {validLocalGeyserEnvelope256} from '../sim/local-geyser-campaign-save-256.ts';
+import {registerGeyserIdentities256} from '../sim/local-geyser-save-256.ts';
+import {validateDuckFlyers256} from '../sim/duck-flyer-save-256.ts';
+import {animalContentsOwner256} from '../sim/animal-local-contents-256.ts';
+import {captureExplorationTransport256,prepareExplorationTransport256,validExplorationTransportEnvelope256} from './exploration-transport-256.ts';
+import {validExplorationHeader256,validExplorationTile256,validateExploration256} from '../sim/exploration-save-256.ts';
+import {validateDoors} from '../sim/door-save.ts';
+import {validBlindMineTransport256} from '../sim/mining-save.ts';
+import {validLocalRoadPropStructure256,validLocalRoadPropsState256} from '../sim/local-road-props-save-256.ts';
+import {validGroupForageHistoricalTransport256} from '../sim/group-forage-save-256.ts';
+import {validCollapsedRock256,registerCollapsedRockIdentities256,admittedRoofTerrain256} from '../sim/collapsed-rocks-256.ts';
+import {validNaturalRoofState256} from '../sim/roof-save.ts';
+import {validGeographicSiteBinding256} from '../sim/site-geographic-256.ts';
+import {validEggPile256} from '../sim/animal-egg-save-v256.ts';
+import {isFutureEcologyItem256} from '../sim/cave-products-256.ts';
+import {registerProjectedFactionOwners256} from '../sim/world-faction-projection-save-256.ts';
+import {captureFactionInitializations256,sameFactionInitializations256,type ConfirmedFactionInitializations256} from '../sim/world-faction-no-expansion-ideo-256.ts';
+import {PlanetGeographyTransportEncoder256,PlanetGeographyTransportDecoder256,type PlanetGeographyTransport256} from './planet-geography-transport-256.ts';
+import {validPlanetGeographyHistorical256} from '../sim/planet-geography-historical-256.ts';
+import type {CampaignSummary} from '../sim/world-map-state.ts';
 import {registeredMapPresentation} from '../sim/world-map-presentation.ts';
 import type {CampaignOnlyMessage} from './protocol';
 import {validWorldMapHistorical} from '../sim/world-map-save.ts';
@@ -51,13 +94,14 @@ import { validBombRefugeShape,validateBombRefuges } from '../sim/bomb-danger.ts'
 import { validateProjectiles } from '../sim/projectile-save.ts';
 import { validSandbagsState } from '../sim/sandbags-save.ts';
 import { validPackagedSurvivalState } from '../sim/packaged-survival-save.ts';
+import {validBedrollState256,validBedrollStructureEntry256} from '../sim/bedroll-save-256.ts';
 import { validHospitalBedState } from '../sim/hospital-bed-save.ts';
 import { validArtWorkShape } from '../sim/art-work.ts';
 import { validStorageConditions } from '../sim/storage-condition.ts';
 import { validStockpileZones } from '../sim/stockpile-zones.ts';
 import { validFlakWorkShape } from '../sim/flak-work.ts';
 import { validComponentWorkShape } from '../sim/component-work.ts';
-import { isFloorKind } from '../sim/flooring.ts';
+import { floorAvailable } from '../sim/flooring.ts';
 import { sterileMaterialsUnlocked } from '../sim/research.ts';
 import { validPlantLife } from '../sim/plant-life-save.ts';
 import { validCropBlight } from '../sim/plant-blight-save.ts';
@@ -115,7 +159,8 @@ import { validMiningDamage } from '../sim/mining-rules.ts';
 import { validStoneIdentity } from '../sim/geology.ts';
 import { ITEM_DEFINITIONS,V219_ITEM_IDS } from '../sim/items.ts';
 import { validFoodContamination } from '../sim/food-poisoning-save.ts';
-import { validHumanCorpseShape } from '../sim/burial-save.ts';
+import { validHumanCorpseShape,validHumanBodyShape } from '../sim/burial-save.ts';
+import {validFrameDamage256} from '../sim/roof-frame-256.ts';
 import { validCorpseShape } from '../sim/corpse-save.ts';
 import { validGunWorkShape } from '../sim/gun-work.ts';
 import { validUnfinishedShape } from '../sim/unfinished.ts';
@@ -129,7 +174,7 @@ import { STRUCTURE_DEFINITIONS } from '../sim/definitions.ts';
 import { TileSnapshotCache, type TileDelta } from '../bridge/tile-snapshot-cache.ts';
 import { PlanetValidationCache, type PlanetPreparation } from '../bridge/planet-validation-cache.ts';
 import { validBackground } from '../sim/colonist-backgrounds.ts';
-import { validHumanAge, type HumanAge } from '../sim/human-age.ts';
+import type { HumanAge } from '../sim/human-age.ts';
 import { validOfferedBackground } from '../sim/background-save.ts';
 import { validMentalShape, validMeleeThreatShape, validateMental } from '../sim/mental-save.ts';
 import { validMeleeShape, validStunShape, validateMelee } from '../sim/melee-save.ts';
@@ -424,7 +469,7 @@ type StructurelessDynamicWorld = Omit<DynamicWorld, 'structures'> & { readonly s
 interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: number[]; growth?:Float64Array }
 interface PileChanges { removed: number[]; upserted: MaterialPile[]; order?: number[] }
 export interface StructureChanges { removed: number[]; upserted: Structure[]; order?: number[] }
-interface SnapshotHeader { urgentThreats?:import('./urgent-threats').UrgentThreatSnapshot; motion?:import('../bridge/motion-tracks.ts').PawnTrack[]; audioCues?:import('../bridge/audio-cues.ts').AudioCue[]; type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
+interface SnapshotHeader { explorationApproachers?:import('../sim/exploration-door-256.ts').ExplorationApproacher256[]; geography?:PlanetGeographyTransport256; urgentThreats?:import('./urgent-threats').UrgentThreatSnapshot; motion?:import('../bridge/motion-tracks.ts').PawnTrack[]; audioCues?:import('../bridge/audio-cues.ts').AudioCue[]; type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
 function validMiningTransport(pawn:Pawn,version:number):boolean {
   return !(version<186&&pawn.skills&&Object.hasOwn(pawn.skills,'mining'))&&validMiningSkill(pawn.skills?.mining,version);
 }
@@ -446,7 +491,7 @@ function validBackgroundTransport(value:unknown,version:number,offer=false):bool
     if(version<191&&Object.hasOwn(person,'age'))return false;
     return validOfferedBackground(person,version);
   }
-  return validHumanAge(person.age,version)&&validBackground(person.background,version,person.age);
+  return validHumanAgeForPawn256(person,version)&&validBackground(person.background,version,person.age);
 }
 /** The default type remains the complete historical protocol. Structure deltas
  * are an explicit opt-in transport form, never a partial World-field patch. */
@@ -508,7 +553,7 @@ function validImmuneDiseaseTransport(pawn:Pawn,world:Pick<World,'schemaVersion'|
 
 const equalResourceBase = (a: Resource, b: Resource): boolean => a.id === b.id && a.kind === b.kind && a.species === b.species
   && a.growthLight === b.growthLight && a.x === b.x && a.z === b.z && a.amount === b.amount && a.stone === b.stone && a.damage === b.damage
-  && a.plantLife?.since === b.plantLife?.since && a.plantLife?.bornAt === b.plantLife?.bornAt
+  && a.plantLife?.initialAgeCore === b.plantLife?.initialAgeCore && a.plantLife?.since === b.plantLife?.since && a.plantLife?.bornAt === b.plantLife?.bornAt
   && a.plantLife?.pausedTicks === b.plantLife?.pausedTicks && a.plantLife?.ageTick === b.plantLife?.ageTick && a.plantLife?.leaflessPausedTicks === b.plantLife?.leaflessPausedTicks
   && a.plantLife?.age === b.plantLife?.age && a.plantLife?.darkTicks === b.plantLife?.darkTicks
   && a.plantLife?.leaflessAt === b.plantLife?.leaflessAt && a.plantLife?.nextCheck === b.plantLife?.nextCheck
@@ -531,9 +576,10 @@ function denseArray(value:unknown):value is unknown[] {
   return Array.isArray(value)&&Object.keys(value).length===value.length
     &&Object.keys(value).every((key,index)=>key===String(index));
 }
-function validStructurePatchEntry(value:unknown,world:Pick<World,'nextId'|'width'|'height'|'schemaVersion'>):value is Structure {
+function validStructurePatchEntry(value:unknown,world:Pick<World,'nextId'|'width'|'height'|'schemaVersion'|'tick'>):value is Structure {
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
-  if(!validHumanSleepingSpotStructureEntry(value,world.schemaVersion,world))return false;
+  if(!validCaveHiveBuilding256(value,world.schemaVersion,world)||!validAncientCasketField256(value,world.schemaVersion)||!validLocalRoadPropStructure256(value,world.schemaVersion,world)||!validHumanSleepingSpotStructureEntry(value,world.schemaVersion,world)||!validBedrollStructureEntry256(value,world.schemaVersion,world)||!validAncientMonumentBuilding256(value,world.schemaVersion))return false;
+  if(!validAncientCasketBuilding256(value,world.schemaVersion,world))return false;
   const s=value as Structure;
   return Number.isSafeInteger(s.id)&&s.id>=1&&s.id<world.nextId
     &&typeof s.kind==='string'&&Object.hasOwn(STRUCTURE_DEFINITIONS,s.kind)
@@ -546,7 +592,7 @@ function validStructurePatchEntry(value:unknown,world:Pick<World,'nextId'|'width
 /** Only reconstructs a private candidate. All ordinary business/namespace
  * guards still run below, including for unchanged retained structures. */
 interface PreparedStructureChanges { structures: Structure[]; structureIndices: number[] | undefined }
-function prepareStructureChanges(previous:World,world:Pick<World,'nextId'|'width'|'height'|'schemaVersion'>,value:unknown):PreparedStructureChanges|undefined {
+function prepareStructureChanges(previous:World,world:Pick<World,'nextId'|'width'|'height'|'schemaVersion'|'tick'>,value:unknown):PreparedStructureChanges|undefined {
   if(!value||typeof value!=='object'||Array.isArray(value))return;
   const patch=value as StructureChanges;
   if(Object.keys(value).some(key=>!['removed','upserted','order'].includes(key))
@@ -589,7 +635,7 @@ function prepareStructureChanges(previous:World,world:Pick<World,'nextId'|'width
 }
 
 /** Check a transported pile using the same item and optional-state contracts as saves. */
-function validPile(pile:MaterialPile,world:World|DynamicWorld):boolean {
+function validPile(pile:MaterialPile,world:World|DynamicWorld,deferAnimalHolder=false):boolean {
   if(!pile||typeof pile!=='object'||Array.isArray(pile)||!Number.isSafeInteger(pile.id)||pile.id<1||pile.id>=world.nextId
     ||typeof pile.item!=='string'||!Object.hasOwn(ITEM_DEFINITIONS,pile.item))return false;
   if(pile.item==='pemmican'&&world.schemaVersion<248)return false;
@@ -603,11 +649,11 @@ function validPile(pile:MaterialPile,world:World|DynamicWorld):boolean {
     if(!Number.isSafeInteger(owner.x)||!Number.isSafeInteger(owner.z)||owner.x<0||owner.z<0||owner.x>=world.width||owner.z>=world.height
       ||Object.keys(owner).some(key=>!['type','x','z'].includes(key)))return false;
   }else if(owner.type==='pawn'||owner.type==='inventory'||owner.type==='equipment'||owner.type==='apparel'){
-    if(!Number.isSafeInteger(owner.pawnId)||owner.pawnId<1||!world.pawns.some(p=>p.id===owner.pawnId)
+    if(!Number.isSafeInteger(owner.pawnId)||owner.pawnId<1||!world.pawns.some(p=>p.id===owner.pawnId)&&!(owner.type==='inventory'&&world.schemaVersion>=256&&(deferAnimalHolder||animalContentsOwner256(world,owner.pawnId)!==undefined))
       ||Object.keys(owner).some(key=>!['type','pawnId'].includes(key)))return false;
     if(pile.item==='pemmican'&&owner.type==='inventory'){
       const pawn=world.pawns.find(p=>p.id===owner.pawnId)!;
-      if(!pawn.visitor&&(world.schemaVersion<250||Object.hasOwn(pawn,'mechKind')||pawn.health?.body!==undefined))return false;
+      if(!pawn&&!(world.schemaVersion>=256&&(deferAnimalHolder||animalContentsOwner256(world,owner.pawnId)!==undefined))||pawn&&!pawn.visitor&&(world.schemaVersion<250||Object.hasOwn(pawn,'mechKind')||pawn.health?.body!==undefined))return false;
     }
   }else if(owner.type==='job'){
     if(!Number.isSafeInteger(owner.jobId)||owner.jobId<1||!world.jobs.some(job=>job.id===owner.jobId)
@@ -617,10 +663,12 @@ function validPile(pile:MaterialPile,world:World|DynamicWorld):boolean {
   }else if(owner.type==='orbital-cargo'){
     if(world.schemaVersion<216||!Number.isSafeInteger(owner.deliveryId)||!Array.isArray(world.orbital?.pending)||!world.orbital!.pending.some(d=>d?.id===owner.deliveryId)||Object.keys(owner).some(k=>!['type','deliveryId'].includes(k)))return false;
   }else if(owner.type==='grave'){
-    if(world.schemaVersion<89||!Number.isSafeInteger(owner.graveId)||owner.graveId<1||!world.structures.some(s=>s.id===owner.graveId&&s.kind==='grave')
+    if(world.schemaVersion<89||!Number.isSafeInteger(owner.graveId)||owner.graveId<1||!world.structures.some(s=>s.id===owner.graveId&&(s.kind==='grave'||world.schemaVersion>=256&&s.kind==='sarcophagus'))
       ||Object.keys(owner).some(key=>!['type','graveId'].includes(key)))return false;
   }else return false;
-  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','mechCorpse','damage','unfinished','gunWork','flakWork','componentWork','artWork','apparel','weapon','haulRequested','innerResource','plantPack'].includes(key)))return false;
+  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','mechCorpse','damage','unfinished','gunWork','flakWork','componentWork','artWork','apparel','weapon','haulRequested','innerResource','plantPack','egg','eggForbidden','forbidden'].includes(key)))return false;
+  if(!validMaterialPermission256(pile,world.schemaVersion))return false;
+  if(!validEggPile256(pile,world.schemaVersion,heldDuckInventoryClock256(world,pile,world.schemaVersion,world.tick),world.nextId)||world.schemaVersion<256&&isFutureEcologyItem256(pile.item))return false;
   if(world.schemaVersion<194&&Object.hasOwn(pile,'mechCorpse'))return false;
   if(pile.haulRequested!==undefined&&(world.schemaVersion<28||pile.kind!=='chunk'||pile.haulRequested!==true))return false;
   if(pile.damage!==undefined&&(world.schemaVersion<87||!Number.isSafeInteger(pile.damage)||pile.damage<1||pile.damage>=pileMaxHp(pile,world.schemaVersion)))return false;
@@ -704,6 +752,7 @@ export class SnapshotEncoder<SparseStructures extends boolean = false> {
   private revision = 0;
   private width = 0;
   private height = 0;
+  private riverWater:World['riverWater'];
   private tiles = new TileSnapshotCache();
   private resources = new Map<number, Resource>();
   private orderedResources: Resource[] = [];
@@ -716,7 +765,12 @@ export class SnapshotEncoder<SparseStructures extends boolean = false> {
   private readonly minimumStructures:number;
   private structureDelta=false;
   private campaignOnly=false;
-  campaignHeader(checkpoint=false):{epoch:number;revision:number} {if(!this.campaignOnly||checkpoint){this.epoch++;this.revision=0;}this.campaignOnly=true;this.source=undefined;this.tiles=new TileSnapshotCache();this.resources.clear();this.piles.clear();this.structures.clear();this.orderedResources=[];this.orderedPiles=[];this.orderedStructures=[];return {epoch:this.epoch,revision:++this.revision};}
+  private readonly geographicTransport=new PlanetGeographyTransportEncoder256();
+  reserveDraftPreview(owner:import('../sim/world-geography-owner-256.ts').CampaignGeography256){return this.geographicTransport.reserveDraftPreview(owner);}
+  authorizeDraftPreview(owner:import('../sim/world-geography-owner-256.ts').CampaignGeography256,id:number):void {this.geographicTransport.authorizeDraftPreview(owner,id);}
+  discardDraftPreview():void {this.geographicTransport.discardDraftPreview();}
+  encodeCampaignSummary(summary:CampaignSummary,checkpoint=false){return this.geographicTransport.encode(summary,checkpoint);}
+  campaignHeader(checkpoint=false):{epoch:number;revision:number} {if(!this.campaignOnly||checkpoint){this.epoch++;this.revision=0;}this.campaignOnly=true;this.source=undefined;this.riverWater=undefined;this.tiles=new TileSnapshotCache();this.resources.clear();this.piles.clear();this.structures.clear();this.orderedResources=[];this.orderedPiles=[];this.orderedStructures=[];return {epoch:this.epoch,revision:++this.revision};}
   constructor(options:{structureDelta?:SparseStructures;minimumStructures?:number} = {}) {
     const minimum=options.minimumStructures??0;
     if(!Number.isSafeInteger(minimum)||minimum<0)throw new RangeError('minimumStructures must be a nonnegative safe integer.');
@@ -726,16 +780,19 @@ export class SnapshotEncoder<SparseStructures extends boolean = false> {
 
   /** postMessage must follow synchronously: it owns cloning the returned dynamic state. */
   encode(world: World, stepMs: number, speed: number, checkpoint = false): SnapshotMessage<SparseStructures> {
+    const actualExplorationWorld=world;
     if(world.worldMaps){const selected=registeredMapPresentation(world);if(!selected)throw Error('No selected map; publish campaignHeader and campaignOnlySummary.');world=selected;}
     this.campaignOnly=false;
-    const replacement = world !== this.source || world.width !== this.width || world.height !== this.height;
+    const replacement = world !== this.source || world.width !== this.width || world.height !== this.height || this.riverWater!==undefined&&world.riverWater===undefined;
     if (replacement) { this.epoch++; this.revision = 0; }
     const baseRevision = this.revision++;
-    const header: SnapshotHeader = { type: 'snapshot', epoch: this.epoch, revision: this.revision, stepMs, speed };
+    const geographic=this.geographicTransport.encode(world,replacement||checkpoint);
+    const explorationApproachers=captureExplorationTransport256(actualExplorationWorld,world);
+    const header: SnapshotHeader = { type: 'snapshot', epoch: this.epoch, revision: this.revision, stepMs, speed,...geographic.geography?{geography:geographic.geography}:{},...explorationApproachers?{explorationApproachers}:{} };
     if (replacement || checkpoint) {
       // Keep the protocol mode stable until an explicit full checkpoint.
       this.structureDelta=this.structureDeltaRequested&&world.structures.length>=this.minimumStructures;
-      this.source = world; this.width = world.width; this.height = world.height;
+      this.source = world; this.width = world.width; this.height = world.height; this.riverWater=world.riverWater;
       this.tiles.reset(world.tiles);
       this.orderedResources = world.resources.map(copyResource);
       this.resources = new Map(this.orderedResources.map(resource => [resource.id, resource]));
@@ -747,7 +804,7 @@ export class SnapshotEncoder<SparseStructures extends boolean = false> {
       }else if(this.orderedStructures.length){
         this.orderedStructures=[];this.structures.clear();
       }
-      return { ...header, kind: 'checkpoint', world } as SnapshotMessage<SparseStructures>;
+      return { ...header, kind: 'checkpoint', world:geographic.state } as SnapshotMessage<SparseStructures>;
     }
 
     const tiles = this.tiles.diff(world.tiles);
@@ -827,7 +884,9 @@ export class SnapshotEncoder<SparseStructures extends boolean = false> {
       for(const pile of pileUpserts)this.piles.set(pile.id,pile);
       if(nextPileOrder)this.orderedPiles=nextPileOrder;
     }
-    const { tiles: _tiles, resources: _resources, piles: _piles, ...dynamic } = world;
+    const { tiles: _tiles, resources: _resources, piles: _piles, riverWater:_riverWater, ...dynamicWithoutRiver } = geographic.state;
+    const dynamic={...dynamicWithoutRiver,..._riverWater!==this.riverWater&&_riverWater?{riverWater:_riverWater}:{}};
+    this.riverWater=_riverWater;
     if(this.structureDelta){
       const upserted:Structure[]=[],cacheUpdates:Structure[]=[];
       let nextOrder:Structure[]|undefined=world.structures.length!==this.orderedStructures.length?[]:undefined;
@@ -884,10 +943,31 @@ interface ExpiredTreeFact {wrapperId:number;resourceId:number;quantity:number;pa
 const expiredTreeSource=(pile:MinifiedTreePile):string=>JSON.stringify(pile.innerResource,(_key,value)=>
   value&&typeof value==='object'&&!Array.isArray(value)?Object.fromEntries(Object.keys(value).sort().map(k=>[k,value[k]])):value);
 export class SnapshotDecoder {
+  private collapsedRockIds=new Map<number,number>();
+  private mineableIds=new Map<number,number>();
+  private geographicCalendar?:{epoch:number;origin:number};
+  private validGeographicCalendar(view:World,epoch:number,summary?:CampaignSummary):boolean {
+    if(view.planet?.revision!==3)return true;
+    const origin=summary?.calendarOrigin??(view.campaignMap?.revision===2?view.campaignMap.calendarOrigin:undefined);
+    return Number.isSafeInteger(origin)&&(!this.geographicCalendar||this.geographicCalendar.epoch!==epoch||this.geographicCalendar.origin===origin);
+  }
+  private adoptGeographicCalendar(view:World,epoch:number,summary?:CampaignSummary):void {
+    if(view.planet?.revision!==3){this.geographicCalendar=undefined;return;}
+    const origin=summary?.calendarOrigin??(view.campaignMap?.revision===2?view.campaignMap.calendarOrigin:undefined);
+    if(!Number.isSafeInteger(origin))throw Error('Unconfirmed geographic clock');
+    this.geographicCalendar={epoch,origin:origin!};
+  }
   private epoch = 0;
   private revision = 0;
   private current: World | undefined;
+  // Independent causal values survive a campaign-only view; no validation cache.
+  private confirmedNativeWorldPawnBirth:ReturnType<typeof captureNativeWorldPawnBirth256>;
+  private confirmedFactionInitializations:ConfirmedFactionInitializations256|undefined;
   private readonly planetValidation = new PlanetValidationCache();
+  private readonly geographicTransport=new PlanetGeographyTransportDecoder256();
+  prepareDraftPreview(packet:unknown){return this.geographicTransport.prepareDraftPreview(packet);}
+  authorizeDraftPreview(preview:import('../sim/world-geography-owner-256.ts').DraftGeographyPreview256):void {this.geographicTransport.authorizeDraftPreview(preview);}
+  discardDraftPreview():void {this.geographicTransport.discardDraftPreview();}
   readonly #snapshotChanges = new SnapshotChangeJournal();
   readonly #structureChanges = new StructureChangeJournal();
   readonly #resourceStructure = new ResourceStructureJournal();
@@ -918,23 +998,46 @@ export class SnapshotDecoder {
   protected validateHumanSleepingSpotTransport(next:World,_structureReuse?:OwnedGeometryReuseWitness):boolean {
     return validHumanSleepingSpotTransport(next,next.schemaVersion);
   }
-  adoptCampaignOnly(packet:CampaignOnlyMessage):{status:'applied';replaced:boolean}|{status:'stale'}|{status:'resync';reason:string} {
+  adoptCampaignOnly(packet:CampaignOnlyMessage,acceptExtra?:(view:World)=>boolean):{status:'applied';replaced:boolean;summary:CampaignSummary}|{status:'stale'}|{status:'resync';reason:string} {
     const refuse=()=>({status:'resync' as const,reason:'Campagne sans carte illisible.'});
     if(!Number.isSafeInteger(packet.epoch)||packet.epoch<1||!Number.isSafeInteger(packet.revision)||packet.revision<1||!Number.isFinite(packet.stepMs)||packet.stepMs<0||![0,1,3,6].includes(packet.speed))return refuse();
     if(packet.epoch<this.epoch||packet.epoch===this.epoch&&packet.revision<=this.revision)return {status:'stale'};
-    if(!validCampaignSummary(packet.summary))return refuse();const summary=packet.summary,view=groupWorld(summary,null);if(!view)return refuse();
+    if(!validWorldPawnsEnvelope256(packet.summary,packet.summary.schemaVersion,packet.summary.tick*10,packet.summary.nextId))return refuse();
+    if(!validPlanetGeographyHistorical256(packet.summary,packet.summary.schemaVersion))return refuse();
+    const geographic=this.geographicTransport.prepare(packet.summary,packet.geography,Object.hasOwn(packet,'geography'),packet.epoch!==this.epoch);if(!geographic.ok)return refuse();
+    if(!validCampaignSummary(geographic.state))return refuse();const summary=geographic.state.worldPawns?.nativeOrder?{...geographic.state}:geographic.state,view=groupWorld(summary,null);if(!view||!this.validGeographicCalendar(view,packet.epoch,summary))return refuse();
     const proof=this.planetValidation.prepare(view,view.schemaVersion,packet.epoch);if(!proof.ok)return refuse();
+    if(packet.epoch===this.epoch&&!sameNativeWorldPawnBirth256(this.confirmedNativeWorldPawnBirth,view.worldPawns))return refuse();
+    if(packet.epoch===this.epoch&&!sameFactionInitializations256(this.confirmedFactionInitializations,view.worldFactions))return refuse();
     const ids=new Set<number>();
-    if(registerProjectedGroups(view,ids,proof.context,summary).length||!this.planetValidation.commit(proof))return refuse();
-    const replaced=packet.epoch!==this.epoch;this.current=undefined;this.epoch=packet.epoch;this.revision=packet.revision;this.resourceSlots.clear();this.pileSlots.clear();this.expiredTreeSources=undefined;this.expiredTreeWrappers=undefined;return {status:'applied',replaced};
+    if(registerProjectedGroups(view,ids,proof.context,summary).length||registerProjectedFactionOwners256(view,ids,summary).length||registerProjectedWorldPawns256(view,ids,summary).length||acceptExtra&&!acceptExtra(view)||!this.geographicTransport.canCommit(geographic)||!this.planetValidation.commit(proof))return refuse();
+    if(!this.geographicTransport.commit(geographic))throw Error('Lost private geographic preparation after commit');
+    freezeAdmittedNativeWorldPawnOrder256(summary);view.worldPawns=summary.worldPawns;
+    this.adoptGeographicCalendar(view,packet.epoch,summary);
+    this.confirmedNativeWorldPawnBirth=captureNativeWorldPawnBirth256(view.worldPawns);
+    this.confirmedFactionInitializations=captureFactionInitializations256(view.worldFactions);
+    const replaced=packet.epoch!==this.epoch;this.current=undefined;this.epoch=packet.epoch;this.revision=packet.revision;this.resourceSlots.clear();this.pileSlots.clear();this.expiredTreeSources=undefined;this.expiredTreeWrappers=undefined;return {status:'applied',replaced,summary};
   }
-  adopt(packet: SnapshotMessage<true>): SnapshotAdoption {
+  adopt(packet: SnapshotMessage<true>,acceptExtra?:(view:World)=>boolean): SnapshotAdoption {
     const resync = (reason: string): SnapshotAdoption => ({ status: 'resync', reason });
     if (!Number.isSafeInteger(packet.epoch) || packet.epoch < 1
       || !Number.isSafeInteger(packet.revision) || packet.revision < 1) return resync('Révision de snapshot invalide.');
     if (packet.epoch < this.epoch || (packet.epoch === this.epoch && packet.revision <= this.revision)) return { status: 'stale' };
     if (!Number.isSafeInteger(packet.world.schemaVersion) || packet.world.schemaVersion < 1
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
+    if(packet.world.destroyed!==undefined&&!validNaturalHiveLoss256(packet.world.destroyed,packet.world.schemaVersion))return resync('Invalid or future natural Hive loss counter.');
+    if(!validWorldPawnsEnvelope256(packet.world,packet.world.schemaVersion,packet.world.tick*10,packet.world.nextId))return resync('Invalid or future WorldPawns header.');
+    if(!validPlanetGeographyHistorical256(packet.world,packet.world.schemaVersion))return resync('Géographie ou factions futures.');
+    if(!validLocalRoadInfoEnvelope256(packet.world,packet.world.schemaVersion))return resync('Invalid local road state.');
+    if(!validLocalGeyserEnvelope256(packet.world,packet.world.schemaVersion,packet.world.tick,packet.world.nextId))return resync('Invalid local geyser state.');
+    if(!validExplorationTransportEnvelope256(packet,packet.world.schemaVersion)||Object.hasOwn(packet.world,'explorationApproachers')||!validExplorationHeader256(packet.world,packet.world.schemaVersion))return resync('Invalid exploration header or actor witness.');
+    if(!validAncientShrineWarningEnvelope256(packet.world,packet.world.schemaVersion,packet.world.tick,packet.world.nextId))return resync('Invalid or future ancient shrine warning.');
+    const geographic=this.geographicTransport.prepare(packet.world,packet.geography,Object.hasOwn(packet,'geography'),packet.epoch!==this.epoch);if(!geographic.ok)return resync(geographic.reason);
+    packet={...packet,world:geographic.state} as SnapshotMessage<true>;
+    const riverWater=prepareRiverWaterSnapshot256(packet.world,packet.world.schemaVersion,this.current,{kind:packet.kind,epoch:packet.epoch,revision:packet.revision,...packet.kind==='delta'?{baseRevision:packet.baseRevision}:{},previousEpoch:this.epoch,previousRevision:this.revision});
+    if(!riverWater.ok)return resync('Invalid river water definition or predecessor.');
+    if(riverWater.inherited)packet={...packet,world:{...packet.world,riverWater:riverWater.owner!}} as SnapshotMessage<true>;
+    if(!validGroupForageHistoricalTransport256(packet.world,packet.world.schemaVersion,packet.kind==='delta'?packet.piles?.upserted:undefined))return resync('Propriétaire de récolte de caravane futur.');
     if(!validWorldMapHistorical(packet.world,packet.world.schemaVersion))return resync('Registre de cartes futur.');
     if(!validDeteriorationHistoricalTransport(packet,packet.world.schemaVersion))return resync('État de détérioration futur.');
     if(!validBurnApparelHistoricalTransport(packet,packet.world.schemaVersion))return resync('Recette de destruction de vêtement future.');
@@ -971,18 +1074,21 @@ export class SnapshotDecoder {
         ||!Array.isArray(packet.world.structures))return resync('Forme de transport des structures ambiguë.');
       message=packet as SnapshotMessage;
     }
+    if(!validNaturalRoofState256(message.world.roofing,message.world.schemaVersion,message.world.width*message.world.height))return resync('Toiture naturelle future ou invalide.');
     if(!validVentTransport(message.world,message.world.schemaVersion))return resync('Bouche d’aération, état ou service futur/invalide.');
     if(message.world.schemaVersion<=195&&['planet','group','groupLosses'].some(key=>Object.hasOwn(message.world,key)))return resync('Planète ou propriétaire de groupe futur.');
     if(message.world.schemaVersion<194&&(Object.hasOwn(message.world,'mechanoids')||Object.hasOwn(message.world,'mechSalvage')
       ||['mechanoid','mechActive'].some(k=>Object.hasOwn(message.world.raids??{},k))
       ||['mechanoid','mechComposition'].some(k=>Object.hasOwn(message.world.raids?.last??{},k))))return resync('Propriétaire ou calendrier mécanique futur.');
     if(Object.hasOwn(message.world,'mechanoids')&&(!Array.isArray(message.world.mechanoids)||message.world.mechanoids.some(m=>!validMechanoidShape(m,message.world.schemaVersion,message.world.tick))))return resync('Forme mécanique invalide.');
+    if(validateDuckFlyers256(message.world,message.world.schemaVersion).length)return resync('Invalid actual Duck holder before pile owner lookup.');
     if(message.world.wildlife?.animals.some(a=>isMechanoidKind(a.health?.body)))return resync('Dossier mécanique attribué à un animal.');
     if(message.world.schemaVersion<194&&[...message.world.structures,...message.world.packed.map(p=>p.building)].some(s=>s.bills?.some(b=>['smash-mechanoid','shred-mechanoid'].includes(b.recipe))))return resync('Facture mécanique future.');
     if(message.world.schemaVersion<197&&[...message.world.structures,...message.world.packed.map(p=>p.building)].some(s=>s.bills?.some(b=>V219_ITEM_IDS.some(item=>Object.hasOwn(b.filters??{},item)))))return resync('Filtre de facture mécanique futur.');
     if(!Array.isArray(message.world.stockpiles)||message.world.stockpiles.some(zone=>!validStorageConditions(zone,message.world.schemaVersion)))return resync('Plages de qualité ou de PV de réserve invalides pour ce snapshot.');
     if(!validStockpileZones(message.world,message.world.schemaVersion)||message.world.stockpiles.some(zone=>!Number.isInteger(zone.priority)||zone.priority<1||zone.priority>(message.world.schemaVersion>=219?5:4)))return resync('Identité de zone ou priorité de réserve invalide pour ce snapshot.');
     for(const zone of message.world.stockpiles){
+      if(Object.hasOwn(zone.filters??{},'jade')&&(message.world.schemaVersion<256||typeof zone.filters.jade!=='boolean'))return resync('Filtre de jade invalide ou futur.');
       if(Object.hasOwn(zone.filters??{},'neutroamine')&&(message.world.schemaVersion<206||typeof zone.filters.neutroamine!=='boolean')
         ||Object.hasOwn(zone.items??{},'neutroamine')&&(message.world.schemaVersion<206||typeof zone.items!.neutroamine!=='boolean'))return resync('Filtre de neutroamine invalide ou futur.');
       if(message.world.schemaVersion<194&&(Object.hasOwn(zone.filters??{},'mech-corpse')||Object.hasOwn(zone.items??{},'scyther-corpse')))return resync('Filtre mécanique futur.');
@@ -996,6 +1102,8 @@ export class SnapshotDecoder {
     if(Object.hasOwn(message.world,'bombWaves')&&(!Array.isArray(message.world.bombWaves)||message.world.bombWaves.some(w=>!validBombWaveShape(w,message.world.schemaVersion))))return resync('Forme de vague Bomb invalide.');
     let hasDraftedTend=false;const forcedConsumers:Pawn[]=[];
     for(const pawn of message.world.pawns){
+      if(!validNativeHumanField256(pawn,message.world.schemaVersion))return resync('Identité humaine native invalide ou future.');
+      if(!validArrivalRotation256(pawn,message.world.schemaVersion))return resync('Orientation d’arrivée invalide ou future.');
       if(!pawn||typeof pawn!=='object'||Array.isArray(pawn))return resync('Personne locale invalide pour ce snapshot.');
       if(hasVisitorMedicalGuestMarker(pawn)&&!validVisitorShape(pawn as unknown as Record<string,unknown>,message.world.schemaVersion,message.world as World))
         return resync('Admission médicale de visiteur invalide ou future.');
@@ -1041,7 +1149,7 @@ export class SnapshotDecoder {
     if((message.world.schemaVersion<181&&Object.hasOwn(message.world,'rainElectrical'))
       ||!validRainElectrical(message.world.rainElectrical,message.world.schemaVersion,message.world))return resync('Exposition électrique aux précipitations invalide pour ce snapshot.');
     if(!validPodRescueTransportBindings(message.world))return resync('Secours civil invalide pour ce snapshot.');
-    if(message.kind==='checkpoint'&&(!Array.isArray(message.world.tiles)||message.world.tiles.some(tile=>!tile||!validMarshTile(tile,message.world.schemaVersion)||!validBridgeTile(tile,message.world.schemaVersion)||!validOre(tile,message.world.schemaVersion)||!validMiningDamage(tile,message.world.schemaVersion)||tile.floor==='sterile-tile'&&!sterileMaterialsUnlocked(message.world))))return resync('Rendement ou dégâts miniers invalides pour ce snapshot.');
+    if(message.kind==='checkpoint'&&(!Array.isArray(message.world.tiles)||message.world.tiles.some(tile=>!tile||!validCollapsedRock256(tile,message.world.schemaVersion,message.world.nextId,v=>admittedRoofTerrain256(v,message.world.schemaVersion))||!validMarshTile(tile,message.world.schemaVersion,message.world)||!validBridgeTile(tile,message.world.schemaVersion)||!validOre(tile,message.world.schemaVersion)||!validMiningDamage(tile,message.world.schemaVersion)||tile.floor!==undefined&&!floorAvailable(tile.floor,message.world.schemaVersion)||tile.floor==='sterile-tile'&&!sterileMaterialsUnlocked(message.world))))return resync('Rendement ou dégâts miniers invalides pour ce snapshot.');
     let next: World;
     let planetCheck: PlanetPreparation | undefined;
     let reindexResources = message.kind === 'checkpoint';
@@ -1053,9 +1161,11 @@ export class SnapshotDecoder {
     let resourceStructureRemoved: SnapshotResourceRemoval[] = [];
     let resourceStructureAllowed = this.#resourceStructureReady;
     if (message.kind === 'checkpoint') {
+      if(message.world.tiles.some(t=>!validMineableTile256(t,message.world.schemaVersion,message.world.site?.revision===3,message.world.nextId)))return resync('Invalid full Mineable owner.');
+      if(validateExploration256(message.world,message.world.schemaVersion).length)return resync('Invalid full exploration cells.');
       if (message.world.tiles.length !== message.world.width * message.world.height) return resync('Dimensions du checkpoint invalides.');
       if(!Array.isArray(message.world.piles)||message.world.piles.some(pile=>!validPile(pile,message.world)))return resync('Pile de checkpoint invalide.');
-      next = message.world;
+      next = message.world.worldPawns?.nativeOrder?{...message.world}:message.world;
     } else {
       const previous = this.current;
       if (!previous || message.epoch !== this.epoch || message.baseRevision !== this.revision
@@ -1065,15 +1175,23 @@ export class SnapshotDecoder {
       let tiles = previous.tiles;
       if (message.tiles?.length) {
         const touched = new Set<number>();
-        if(message.tiles.some(tile=>!Array.isArray(tile)||tile.length>(message.world.schemaVersion>=247?9:message.world.schemaVersion>=239?8:message.world.schemaVersion>=186?7:6)))return resync('Future snow/terrain tuple.');
+        if(message.tiles.some(tile=>!Array.isArray(tile)||Reflect.ownKeys(tile).some(k=>k!=='length'&&(typeof k!=='string'||!/^\d+$/.test(k)||Number(k)>=tile.length||(!Object.hasOwn(Object.getOwnPropertyDescriptor(tile,k)!,'value')||Object.getOwnPropertyDescriptor(tile,k)!.enumerable!==true)))||Array.from({length:tile.length},(_,i)=>i).some(i=>!Object.hasOwn(tile,i))||tile.length>(message.world.schemaVersion>=256?12:message.world.schemaVersion>=247?9:message.world.schemaVersion>=239?8:message.world.schemaVersion>=186?7:6)))return resync('Future snow/terrain tuple.');
         if(message.world.schemaVersion<186&&message.tiles.some(tile=>tile.length>6))return resync('Rendement minier futur dans ce delta.');
-        for (const [index, terrain, stone, miningDamage, ore, floor, miningYield, snowDepth, bridge] of message.tiles) {
-          if (bridge!==undefined&&(message.world.schemaVersion<247||bridge!==true||!isWetTerrain(terrain)||terrain==='water-shallow'&&message.world.schemaVersion<254||floor!==undefined) || snowDepth!==undefined&&(message.world.schemaVersion<239||typeof snowDepth!=='number'||!Number.isFinite(snowDepth)||snowDepth<=0||snowDepth>1) || !Number.isInteger(index) || index < 0 || index >= tiles.length || touched.has(index)
-            || !['grass', 'soil', 'water', 'rock', ...(message.world.schemaVersion>=28?['rough-stone']:[]), ...(message.world.schemaVersion>=83?['rich-soil','gravel']:[]),...(message.world.schemaVersion>=246?['marsh']:[]),...(message.world.schemaVersion>=254?['water-shallow']:[])].includes(terrain) || floor!==undefined&&(message.world.schemaVersion<89||!isFloorKind(floor)||floor==='sterile-tile'&&!sterileMaterialsUnlocked(message.world)||terrain==='water'||terrain==='rock'||isWetTerrain(terrain)) || !validOre({terrain,ore},message.world.schemaVersion) || !validMiningDamage({terrain,stone,miningDamage,ore,...miningYield===undefined?{}:{miningYield}},message.world.schemaVersion) || !validStoneIdentity(stone, terrain, message.world.schemaVersion)) return resync('Delta de terrain invalide.');
+        for (const tuple of message.tiles) {
+          const [index, terrain, stone, miningDamage, ore, floor, miningYield, snowDepth, bridge, collapsedRock,fogged,mineable]=tuple;
+          if(tuple.length===10&&collapsedRock===undefined)return resync('Empty collapsed rock tuple.');
+          if(tuple.length===11&&fogged===undefined)return resync('Empty exploration tuple.');
+          if(tuple.length===12&&mineable===undefined)return resync('Empty Mineable tuple.');
+          const candidate={terrain,...stone===undefined?{}:{stone},...miningDamage===undefined?{}:{miningDamage},...ore===undefined?{}:{ore},...miningYield===undefined?{}:{miningYield},...floor===undefined?{}:{floor},...snowDepth===undefined?{}:{snowDepth},...bridge===undefined?{}:{bridge},...collapsedRock===undefined?{}:{collapsedRock},...fogged===undefined?{}:{fogged},...mineable===undefined?{}:{mineable}};
+          if(!validMineableTile256(candidate,message.world.schemaVersion,message.world.site?.revision===3,message.world.nextId))return resync('Invalid or future Mineable owner.');
+          if(!validExplorationTile256(candidate,message.world.schemaVersion,Object.hasOwn(message.world,'exploration')))return resync('Invalid or future fog cell.');
+          if(!validCollapsedRock256(candidate,message.world.schemaVersion,message.world.nextId,v=>admittedRoofTerrain256(v,message.world.schemaVersion)))return resync('Invalid or future collapsed rock.');
+          if (!validBridgeTile(candidate,message.world.schemaVersion)||!validMarshTile(candidate,message.world.schemaVersion,message.world)||snowDepth!==undefined&&(message.world.schemaVersion<239||typeof snowDepth!=='number'||!Number.isFinite(snowDepth)||snowDepth<=0||snowDepth>1) || !Number.isInteger(index) || index < 0 || index >= tiles.length || touched.has(index)
+            || floor!==undefined&&(message.world.schemaVersion<89||!floorAvailable(floor,message.world.schemaVersion)||floor==='sterile-tile'&&!sterileMaterialsUnlocked(message.world)) || !validOre({terrain,ore},message.world.schemaVersion) || !validMiningDamage(candidate,message.world.schemaVersion) || !validStoneIdentity(stone,collapsedRock?.terrain??terrain,message.world.schemaVersion)) return resync('Delta de terrain invalide.');
           touched.add(index);
         }
         tiles = tiles.slice();
-        for (const [index, terrain, stone, miningDamage, ore, floor, miningYield, snowDepth, bridge] of message.tiles) tiles[index] = {terrain,...stone===undefined?{}:{stone},...miningDamage===undefined?{}:{miningDamage},...ore===undefined?{}:{ore},...floor===undefined?{}:{floor},...miningYield===undefined?{}:{miningYield},...snowDepth===undefined?{}:{snowDepth},...bridge===undefined?{}:{bridge}};
+        for (const [index, terrain, stone, miningDamage, ore, floor, miningYield, snowDepth, bridge, collapsedRock,fogged,mineable] of message.tiles) tiles[index] = {terrain,...stone===undefined?{}:{stone},...miningDamage===undefined?{}:{miningDamage},...ore===undefined?{}:{ore},...floor===undefined?{}:{floor},...miningYield===undefined?{}:{miningYield},...snowDepth===undefined?{}:{snowDepth},...bridge===undefined?{}:{bridge},...collapsedRock===undefined?{}:{collapsedRock:{id:collapsedRock.id,terrain:collapsedRock.terrain}},...fogged===undefined?{}:{fogged},...mineable===undefined?{}:{mineable:{id:mineable.id,def:mineable.def,terrain:mineable.terrain}}};
         changedTileIndices = [...touched];
       }
       let resources = previous.resources;
@@ -1171,7 +1289,7 @@ export class SnapshotDecoder {
           touched.add(id);
         }
         for(const pile of upserted){
-          if(!validPile(pile,message.world)||touched.has(pile.id))return resync('Pile modifiée invalide.');
+          if(!validPile(pile,message.world,true)||touched.has(pile.id))return resync('Pile modifiée invalide.');
           touched.add(pile.id);
           if(byId)byId.set(pile.id,pile);else patches.set(pile.id,pile);
         }
@@ -1212,6 +1330,7 @@ export class SnapshotDecoder {
     if(!validTorchTransport(next,next.schemaVersion))return resync('Lampe-torche, carburant ou propriétaire de recharge invalide.');
     if(!validPemmicanCatalogueDomains(next,next.schemaVersion)||!validPemmicanResearchTransport(next,next.schemaVersion))return resync('Pemmican, recherche ou production future/invalide.');
     if(!validTundraTransport(next,next.schemaVersion))return resync('Toundra, flore ou climat futur/incohérent.');
+    if(validateAncientCasketPhysical256(next).length)return resync('Invalid actual casket physical owner.');
     if(validateBridgeTransport(next,next.schemaVersion,message.kind==='delta'?changedTileIndices:[]).length)return resync('Fondation future, chantier ou support invalide.');
     if(validateMarshTransport(next,next.schemaVersion,message.kind==='delta'?changedTileIndices:[]).length)return resync('Marais futur, sans support ou fertile invalide.');
     if(validateSnowTransport(next,next.schemaVersion, message.kind==='delta'&&!!this.current?.snow===!!next.snow?changedTileIndices:undefined).length)return resync('Snow surface clock, depth or owner invalid.');
@@ -1225,7 +1344,12 @@ export class SnapshotDecoder {
     if(!this.validateHumanSleepingSpotTransport(next,geometryReuse))return resync('Couchage au sol humain, propriétaire, rôle ou réservation physique invalide ou futur.');
     if(this.current&&message.epoch===this.epoch&&!validStartingArrivalTransition(this.current,next))
       return resync('Contenu ou transfert des capsules initiales réécrit dans cette partie.');
+    if(!validGroupForageHistoricalTransport256(next,next.schemaVersion))return resync('Propriétaire de récolte de caravane futur.');
+    if(message.kind==='delta'&&this.current&&Object.hasOwn(this.current,'exploration')!==Object.hasOwn(next,'exploration')&&validateExploration256(next,next.schemaVersion).length)return resync('Invalid exploration ownership transition.');
+    const exploration=prepareExplorationTransport256(message,next);
+    if(!exploration.ok||validateDoors(next,next.schemaVersion,exploration.resolve).length||!validBlindMineTransport256(next))return resync('Invalid exploration actor, door or blind mining intent.');
     const validation=this.createValidationContext(next,resourceReuse,geometryReuse),powerTopology=validation.powerParents;
+    if(next.schemaVersion<256&&([...next.structures,...next.jobs,...next.packed.map(pack=>pack.building)].some(entity=>entity.material==='jade')||next.piles.some(pile=>pile.item==='jade'||pile.kind==='jade'||pile.artWork?.material==='jade')))return resync('Jade ou matière future dans un ancien snapshot.');
     const identities=new ValidationIdentityContext(next,validation.resourceFacts);
     const oldDeadWrappers=message.epoch===this.epoch?this.expiredTreeWrappers:undefined;
     const oldDeadSources=message.epoch===this.epoch?this.expiredTreeSources:undefined;
@@ -1269,7 +1393,11 @@ export class SnapshotDecoder {
     if(!validMedicineTransport(next))return resync('Production pharmaceutique invalide.');
     if(next.schemaVersion<206&&[next.trade?.bought,next.trade?.sold,next.fires?.ledger?.items,next.destroyed?.items].some(items=>items&&Object.hasOwn(items,'neutroamine'))
       ||next.schemaVersion<206&&Array.isArray(next.trade?.recent)&&next.trade.recent.some(receipt=>receipt&&Array.isArray(receipt.lines)&&receipt.lines.some(line=>line&&typeof line==='object'&&'item' in line&&line.item==='neutroamine')))return resync('Historique de neutroamine futur.');
-    for(const pile of next.piles)if(pile.kind==='mech-corpse'||Object.hasOwn(pile,'mechCorpse')){if(mechanicalCorpseIds.has(pile.id)||!validPile(pile,next))return resync('Carcasse mécanique invalide.');mechanicalCorpseIds.add(pile.id);}
+    for(const pile of next.piles){
+      const owner=pile.owner;
+      if(next.schemaVersion>=256&&owner.type==='inventory'&&!next.pawns.some(p=>p.id===owner.pawnId)&&!validPile(pile,next))return resync('Inventaire sans propriétaire animal réel.');
+      if(pile.kind==='mech-corpse'||Object.hasOwn(pile,'mechCorpse')){if(mechanicalCorpseIds.has(pile.id)||!validPile(pile,next))return resync('Carcasse mécanique invalide.');mechanicalCorpseIds.add(pile.id);}
+    }
     if(validateMiniTurrets(next).length)return resync('Propriétaire ou cible de mini-tourelle invalide.');
     if(validateCommercialRegistry(next,next.schemaVersion).length)return resync('Registre commercial invalide.');
     const postIds=new Set<number>();
@@ -1292,13 +1420,22 @@ export class SnapshotDecoder {
         ||[next.visitors?.departed??[],next.podRescues?.departed??[]].some(records=>records.some(d=>foreignIds.has(d.pawn.id)||collides(d.items)||(d.packed??[]).some(p=>foreignIds.has(p.building.id)||collides(p.building.bills??[])))))return resync('Identité commerciale dupliquée dans une archive.');
       if(next.scout&&'pawn' in next.scout&&(postIds.has(next.scout.pawn.id)||next.scout.items.some(i=>postIds.has(i.id))))return resync('Stock commercial dupliqué dans la reconnaissance.');
     }
+    if(next.destroyed!==undefined&&!validNaturalHiveLoss256(next.destroyed,next.schemaVersion))return resync('Invalid or future reconstructed natural Hive loss counter.');
+    if(validateCaveHiveOwners256(next,next.schemaVersion).length||validateHiveRuntimeOwners256(next).length)return resync('Invalid actual Hive/GlowPod/Lord continuation.');
+    if(!validLocalRoadPropsState256(next,next.schemaVersion))return resync('Édifice routier invalide ou futur.');
     if(!validSandbagsState(next,next.schemaVersion))return resync('Sacs de sable ou bilan textile invalides ou futurs.');
     if(!validTelevisionState(next,next.schemaVersion))return resync('Télévision ou loisir télévisé invalide ou futur.');
+    if((!validBedrollState256(next,next.schemaVersion)||!validAncientMonumentState256(next,next.schemaVersion)))return resync('Sac de couchage invalide ou futur.');
     if(!validHospitalBedState(next,next.schemaVersion))return resync('Lit d’hôpital invalide ou futur.');
     if(!validPackagedSurvivalState(next,next.schemaVersion))return resync('Production de repas de survie invalide ou future.');
     if(next.schemaVersion<177&&[...next.structures,...next.jobs,...(next.packed??[]).map(p=>p.building)].some(s=>s.kind==='sun-lamp'))return resync('Lampe horticole future.');
     if(validateScoutRegistry(next,next.schemaVersion).length)return resync('Registre de reconnaissance invalide.');
     if(!validWildlifeExitState(next,next.schemaVersion))return resync('Départ de faune invalide.');
+    if(next.jobs.some(j=>isAncientGeneratedFloor256(j.floor)&&(next.schemaVersion<256||j.kind!=='remove-floor'||next.tiles[j.z*next.width+j.x]?.floor!==j.floor)))return resync('Invalid generated ancient floor work.');
+    if(next.jobs.some(j=>!validFrameDamage256(j,next.schemaVersion)))return resync('Dégâts de cadre invalides ou futurs.');
+    for(const pawn of next.pawns)if(pawn.body&&Object.hasOwn(pawn.body,'damage')&&(!validHumanBodyShape(pawn.body,next.schemaVersion,next.tick,pawn.health)||pawn.state!=='dead'||!pawn.health?.death||pawn.body.observedAt<pawn.health.death.tick))return resync('Dégâts de corps retenu invalides.');
+    if(next.pawns.some(p=>!validNativeHumanField256(p,next.schemaVersion)))return resync('Identité humaine native retenue invalide ou future.');
+    if(next.pawns.some(p=>!validArrivalRotation256(p,next.schemaVersion)))return resync('Orientation d’arrivée retenue invalide ou future.');
     if(!validWildlifePredationState(next,next.schemaVersion))return resync('Prédation de faune invalide.');
     if(!validWildlifeManhunterState(next,next.schemaVersion))return resync('Rage de faune invalide.');
     if(validateQuests(next,next.schemaVersion).length)return resync('Dossier de quête invalide.');
@@ -1327,6 +1464,12 @@ export class SnapshotDecoder {
         if(Object.hasOwn(departure.pawn,'bombRefuge'))return resync('Refuge Bomb archivé hors carte.');
       }
     for(const departure of next.podRescues?.departed??[])if(!validSurgeryTransport(departure.pawn,{schemaVersion:next.schemaVersion,tick:departure.tick,width:next.width,height:next.height,nextId:next.nextId}))return resync('Dossier chirurgical civil archivé invalide.');
+    let mineableIds=message.kind==='checkpoint'?new Map<number,number>():this.mineableIds;
+    if(message.kind==='checkpoint'){for(let i=0;i<next.tiles.length;i++){const owner=next.tiles[i]!.mineable;if(owner)mineableIds.set(i,owner.id);}}
+    else {let copied=false;for(const i of changedTileIndices??[]){const id=next.tiles[i]!.mineable?.id;if(mineableIds.get(i)===id)continue;if(!copied){mineableIds=new Map(mineableIds);copied=true;}if(id===undefined)mineableIds.delete(i);else mineableIds.set(i,id);}}
+    const collapsedRockIds=new Map(message.kind==='checkpoint'?[]:this.collapsedRockIds);
+    if(message.kind==='checkpoint'){for(let i=0;i<next.tiles.length;i++){const rock=next.tiles[i]!.collapsedRock;if(rock)collapsedRockIds.set(i,rock.id);}}
+    else for(const i of changedTileIndices??[]){const rock=next.tiles[i]!.collapsedRock;if(rock)collapsedRockIds.set(i,rock.id);else collapsedRockIds.delete(i);}
     const relationMemories=(p:Pawn):boolean=>Object.hasOwn(p,'romanceMemories')||Object.hasOwn(p,'familyBereavement');
     const relationships=Object.hasOwn(next,'planet')||Object.hasOwn(next,'group')||Object.hasOwn(next,'groupLosses')||Object.hasOwn(next,'relationships')||next.pawns.some(relationMemories)
       ||[next.scout,next.commercialTrip].some(owner=>owner&&'pawn' in owner&&relationMemories(owner.pawn))
@@ -1336,11 +1479,11 @@ export class SnapshotDecoder {
     // capture. Foreign registries above are already validated; their historical
     // owners reserve the same namespace as the map and cannot become a wave.
     const shelves=next.structures.some(s=>s.shelf!==undefined)||next.packed.some(p=>p.building.shelf!==undefined);
-    const startingArrival=Object.hasOwn(next,'startingArrival');
-    if(next.jobs.some(j=>j.tree)||next.piles.some(p=>p.innerResource)||startingArrival||shelves||relationships||Object.hasOwn(next,'orbital')||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
+    const startingArrival=Object.hasOwn(next,'startingArrival'),ancientCaskets=next.structures.some(isAncientCasket256);
+    if(next.ancientShrineWarnings||mineableIds.size||next.geysers||next.wildlife?.flyers?.length||collapsedRockIds.size||next.jobs.some(j=>j.tree)||next.piles.some(p=>p.innerResource)||startingArrival||ancientCaskets||shelves||relationships||Object.hasOwn(next,'orbital')||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
       // Only the closed MAIN context can reuse its resource facts. Keep RAW
       // and non-strict collection/getter evaluation on the historical path.
-      const owned=validation.resourceFacts&&(startingArrival||shelves||relationships||Object.hasOwn(next,'orbital'))
+      const owned=validation.resourceFacts&&(startingArrival||ancientCaskets||shelves||relationships||Object.hasOwn(next,'orbital'))
         ?captureOwnedStrictNamespace(next,validation.resourceFacts,mechanicalCorpseIds):undefined;
       let ids:NumericMembershipSink&Iterable<number>,strictIds:boolean;
       if(owned!==undefined){
@@ -1352,9 +1495,14 @@ export class SnapshotDecoder {
           ...(next.wildlife?.animals??[]),...(next.filth?.items??[]),...(next.fires?.items??[]),...(next.fires?.embers??[]),
           ...next.packed.map(p=>p.building),...shelfIdentityOwners(next),...next.structures.flatMap(s=>s.bills??[]),...next.packed.flatMap(p=>p.building.bills??[]),
         ];
-        ids=new NumericMembership();strictIds=startingArrival||shelves||relationships||Object.hasOwn(next,'orbital')||next.schemaVersion>=235&&(next.jobs.some(j=>j.tree!==undefined||j.plantTarget!==undefined)||next.piles.some(p=>p.kind==='plant')||next.resources.some(hasPausedTreeClock));
+        ids=new NumericMembership();strictIds=!!next.ancientShrineWarnings||mineableIds.size>0||!!next.geysers||!!next.wildlife?.flyers?.length||collapsedRockIds.size>0||startingArrival||ancientCaskets||shelves||relationships||Object.hasOwn(next,'orbital')||next.schemaVersion>=235&&(next.jobs.some(j=>j.tree!==undefined||j.plantTarget!==undefined)||next.piles.some(p=>p.kind==='plant')||next.resources.some(hasPausedTreeClock));
         for(const owner of owners){if(strictIds&&(!Number.isSafeInteger(owner.id)||owner.id<1||owner.id>=next.nextId||ids.has(owner.id)))return resync('Identité dupliquée ou invalide dans le registre relationnel.');if(mechanicalCorpseIds.has(owner.id)&&ids.has(owner.id))return resync('Identité de carcasse mécanique dupliquée.');ids.add(owner.id);}
       }
+      if(next.geysers&&!registerGeyserIdentities256(next.geysers,ids))return resync('Duplicate geyser identity.');
+      if(next.ancientShrineWarnings&&!registerAncientShrineWarningIds256(next.ancientShrineWarnings,ids))return resync('Duplicate ancient shrine warning Thing identity.');
+      if(validateDuckFlyers256(next,next.schemaVersion,ids).length)return resync('Propriétaire de transit animal dupliqué ou invalide.');
+      for(const id of mineableIds.values()){if(ids.has(id))return resync('Duplicate Mineable owner.');ids.add(id);}
+      for(const id of collapsedRockIds.values()){if(ids.has(id))return resync('Duplicate collapsed rock owner.');ids.add(id);}
       if(registerTreeThingIds(next,ids).length)return resync('Duplicate contained tree identity.');
       const addId=(id:unknown):boolean=>{if(!Number.isSafeInteger(id)||Number(id)<1||Number(id)>=next.nextId||ids.has(Number(id))&&(strictIds||mechanicalCorpseIds.has(Number(id))))return false;ids.add(Number(id));return true;};
       const addItems=(items:unknown):boolean=>Array.isArray(items)&&items.every(item=>item&&typeof item==='object'&&addId(item.id));
@@ -1364,7 +1512,12 @@ export class SnapshotDecoder {
       // are registered once by the next loop, including the strict orbital path.
       else for(const id of postIds)ids.add(id);
       for(const owner of [next.scout,next.commercialTrip])if(owner&&'pawn' in owner){if(!addId(owner.pawn.id)||!addItems(owner.items))return resync('Identité hors carte invalide pour les projectiles.');}
-      for(const pawn of next.pawns)if(pawn.body?.lostAt!==undefined&&!addId(pawn.body.pileId))return resync('Identité de dépouille perdue invalide.');
+      for(const pawn of next.pawns)if(pawn.body?.lostAt!==undefined){
+        if(pawn.body.pileId!==undefined){if(!addId(pawn.body.pileId))return resync('Identité de dépouille perdue invalide.');}
+        else if(next.schemaVersion<256||!validHumanBodyShape(pawn.body,next.schemaVersion,next.tick,pawn.health)||pawn.state!=='dead'||!pawn.health?.death||pawn.body.observedAt<pawn.health.death.tick
+          ||next.piles.some(p=>['pawn','equipment','apparel','inventory'].includes(p.owner.type)&&'pawnId' in p.owner&&p.owner.pawnId===pawn.id)
+          ||next.packed.some(p=>(p.owner.type==='pawn'||p.owner.type==='inventory')&&p.owner.pawnId===pawn.id))return resync('Corps perdu avant matérialisation invalide.');
+      }
       for(const records of [next.raids?.departed??[],next.prisonDepartures??[]])for(const d of records)
         if(!addId(d.pawnId)||!addItems(d.items))return resync('Identité de départ historique invalide.');
       for(const records of [next.visitors?.departed??[],next.podRescues?.departed??[]])for(const d of records){
@@ -1377,6 +1530,7 @@ export class SnapshotDecoder {
       if(registerProjectedGroups(next,ids,planetCheck.context).length)return resync('Registre projeté de caravanes incohérent.');
       if(registerGroupThingIds(next,ids).length)return resync('Une identité du groupe possède plusieurs propriétaires.');
       if(registerStartingArrivalThingIds(next,ids).length)return resync('Une identité des capsules initiales possède plusieurs propriétaires.');
+      if(registerAncientCasketThingIds256(next,ids).length)return resync('Propriétaire ou identité de capsule ancienne invalide.');
       if(validateShooting(next,next.schemaVersion,ids).length)return resync('Référence ou autorité de tir humaine invalide.');
       if(validateMechanoidRaids(next,next.schemaVersion,ids).length)return resync('Identité mécanique historique réutilisée dans un autre propriétaire.');
       for(const actor of next.mechanoids??[])if(validateMechanoidRanged(next,actor,next.schemaVersion,ids).length)return resync('Référence ou phase de tir mécanique invalide.');
@@ -1384,10 +1538,14 @@ export class SnapshotDecoder {
       const bombErrors:string[]=[];validateBombWaves(next,bombErrors,ids);if(bombErrors.length)return resync('Vague Bomb ou identité invalide.');
       if(registerOrbitalThingIds(next,ids).length)return resync('Une identité orbitale possède plusieurs propriétaires.');
       if(validateBombRefuges(next,[],ids).length)return resync('Refuge ou danger Bomb incohérent.');
+      if(registerProjectedFactionOwners256(next,ids).length)return resync('Faction, chef ou propriétaire projeté incohérent.');
+      if(registerProjectedWorldPawns256(next,ids).length)return resync('Invalid projected WorldPawns owner or namespace.');
     }
     // An absent planet also belongs to the accepted epoch. A replacement
     // without planetary owners must clear the previous witness atomically.
     planetCheck??=this.planetValidation.prepareAbsence(message.epoch);
+    if(message.epoch===this.epoch&&!sameNativeWorldPawnBirth256(this.confirmedNativeWorldPawnBirth,next.worldPawns))return resync('Naissance WorldPawns native réécrite sans remplacement.');
+    if(message.epoch===this.epoch&&!sameFactionInitializations256(this.confirmedFactionInitializations,next.worldFactions))return resync('Initialisation culturelle de faction réécrite sans remplacement.');
     if(!planetCheck.ok)return resync('Planète, groupe ou pertes incohérents.');
     if(planetCheck.geographyChanged)return resync('La géographie confirmée a changé sans remplacement.');
     // Rev1 transport retains its historical presentation-fixture admission.
@@ -1403,10 +1561,21 @@ export class SnapshotDecoder {
     if(validateRelationshipWorld(next,next.schemaVersion).length)return resync('Liens, annonce ou souvenirs relationnels incohérents.');
     if(!validDeathThoughtsTransport(next,next.schemaVersion))return resync('Souvenirs de décès perçus ou propriétaires incohérents.');
     if(!validArtificialPartsWorldTransport(next,next.schemaVersion))return resync('Anatomie artificielle ou horloge de son propriétaire invalide.');
+    if(!validCobraClinicalWorld256(next,next.schemaVersion))return resync('Propriétaire clinique toxique invalide.');
+    if(!validCryptosleepSicknessWorldTransport256(next,next.schemaVersion))return resync('Mal de cryptosommeil ou propriétaire clinique invalide.');
+    if(validateAncientOpeningOwners256(next).length)return resync('Ouverture de capsule ancienne ou propriétaire incohérent.');
     if(next.pawns.some(p=>p.surgery?.implant!==undefined||p.surgeryRequest?.implant!==undefined)
       &&validateSurgeries(next,next.schemaVersion).length)return resync('Prothèse demandée ou ingrédients chirurgicaux incohérents.');
     // Commit only after every patch is checked. A refusal preserves both state and revision.
+    if(next.schemaVersion>=256&&!validGeographicSiteBinding256(next))return resync('Provenance locale distincte de la vraie planète.');
+    if(!this.validGeographicCalendar(next,message.epoch))return resync('Origine du calendrier géographique réécrite.');
+    if(acceptExtra&&!acceptExtra(next))return resync('Métadonnées supplémentaires incompatibles avec la carte confirmée.');
+    freezeAdmittedNativeWorldPawnOrder256(next);
+    if(!riverWater.inherited&&next.riverWater)freezeAdmittedRiverWater256(next.riverWater);
+    if(!this.geographicTransport.canCommit(geographic))return resync('Préparation géographique périmée.');
     if(!this.planetValidation.commit(planetCheck))return resync('Planète, groupe ou pertes incohérents.');
+    if(!this.geographicTransport.commit(geographic))throw Error('Lost private geographic preparation after commit');
+    this.adoptGeographicCalendar(next,message.epoch);
     const replaced = message.epoch !== this.epoch;
     if(reindexResources){
       // Reuse the historical reindex traversal, keeping the old private slots
@@ -1462,6 +1631,9 @@ export class SnapshotDecoder {
       deadWrappers=wrappers;deadSources=sources;
     }
     this.expiredTreeWrappers=deadWrappers;this.expiredTreeSources=deadSources;
+    this.collapsedRockIds=collapsedRockIds;this.mineableIds=mineableIds;
+    this.confirmedNativeWorldPawnBirth=captureNativeWorldPawnBirth256(next.worldPawns);
+    this.confirmedFactionInitializations=captureFactionInitializations256(next.worldFactions);
     this.current = next; this.epoch = message.epoch; this.revision = message.revision;
     // Publish only at the confirmed boundary, after every guard and planet commit.
     if (message.kind === 'checkpoint' || !previous) this.#snapshotChanges.reset(next, message.epoch, message.revision);

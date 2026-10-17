@@ -1,3 +1,4 @@
+import {constructHumanConditionMind256} from './human-condition-mind-256.ts';
 import { assignBackground,generateBackground } from './background-generation.ts';
 import { BACKGROUND_SKILL_IDS,backgroundSkillRefusal,backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { crashlandedHumanAge } from './human-age.ts';
@@ -154,10 +155,10 @@ export function previewStartingCandidate(seed:number,descriptor:StartingCandidat
 
 /** Only these allocation-dependent fields change. All birth data, nested
  * records and needs are freshly owned and identical to the advertised person. */
-export function materializeStartingCandidate(seed:number,descriptor:StartingCandidateDescriptor,id:number,x:number,z:number):Pawn {
+export function materializeStartingCandidate(seed:number,descriptor:StartingCandidateDescriptor,id:number,x:number,z:number,version=255):Pawn {
   if(!Number.isSafeInteger(id)||id<=0||!Number.isInteger(x)||!Number.isInteger(z)||x<0||z<0)throw new Error('Placement du candidat invalide.');
   const pawn=previewStartingCandidate(seed,descriptor);
-  pawn.id=id;pawn.x=x;pawn.z=z;
+  pawn.id=id;pawn.x=x;pawn.z=z;if(version===256)constructHumanConditionMind256(pawn,version);
   return pawn;
 }
 export function previewStartingParty(seed:number,selected:readonly StartingCandidateDescriptor[]):StartingPartyPreview {

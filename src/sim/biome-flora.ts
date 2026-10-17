@@ -1,14 +1,23 @@
+import {CAVE_PLANT_SPECIES_256,CAVE_FLORA_DEFINITIONS_256} from './cave-flora-256.ts';
 import type { ItemId } from './items.ts';
 import type { Resource } from './types.ts';
 
 export const BIOMES = ['temperate-forest','boreal-forest','arid-shrubland','tundra'] as const;
 export type BiomeId = typeof BIOMES[number];
 
-export const PLANT_SPECIES = [
+export const LEGACY_PLANT_SPECIES = [
   'grass','tall-grass','brambles','berry-bush','oak','poplar',
   'moss','pine','birch','agave','saguaro','drago','healroot-wild',
 ] as const;
+export const PROSPECTIVE_PLANT_SPECIES_256 = [
+  'alocasia','astragalus','bush','chokevine','clivia','dandelion','pincushion-cactus','rafflesia','low-shrub','bamboo','cecropia','cypress','maple','palm','teak','willow',...CAVE_PLANT_SPECIES_256,
+] as const;
+export const PLANT_SPECIES = [...LEGACY_PLANT_SPECIES,...PROSPECTIVE_PLANT_SPECIES_256] as const;
 export type PlantSpecies = typeof PLANT_SPECIES[number];
+export const PLANT_SPECIES_SCHEMA=256;
+export const isPlantSpeciesInVersion=(value:unknown,version:number):value is PlantSpecies=>
+  isPlantSpecies(value)&&(version>=256||(LEGACY_PLANT_SPECIES as readonly unknown[]).includes(value))
+  &&(value!=='healroot-wild'||version>=167)&&version>=91;
 
 export interface FloraDefinition {
   label:string;
@@ -32,6 +41,7 @@ export interface FloraDefinition {
  * common growth curve and its 0/6/42/max interpolation; species still retain
  * their fertility, duration, physical yield, nutrition, HP and fire profile. */
 export const FLORA_DEFINITIONS:Readonly<Record<PlantSpecies,FloraDefinition>>=Object.freeze({
+  ...CAVE_FLORA_DEFINITIONS_256,
   grass:{label:'Herbe',kind:'wild-plant',growDays:2.5,minFertility:.05,sensitivity:.3,harvestMinGrowth:1,yield:0,product:null,persistent:false,nutrition:.5,hitPoints:85,flammability:1.3,maxGrowthTemperature:75,coldLeafless:true,lifespanMultiplier:8},
   'tall-grass':{label:'Herbe haute',kind:'wild-plant',growDays:3,minFertility:.7,sensitivity:.7,harvestMinGrowth:1,yield:0,product:null,persistent:false,nutrition:.5,hitPoints:90,flammability:1.3,maxGrowthTemperature:75,coldLeafless:false,lifespanMultiplier:8},
   brambles:{label:'Ronces',kind:'wild-plant',growDays:3,minFertility:.7,sensitivity:.7,harvestMinGrowth:1,yield:0,product:null,persistent:false,nutrition:.5,hitPoints:100,flammability:1,maxGrowthTemperature:58,coldLeafless:true,lifespanMultiplier:8},
@@ -45,6 +55,22 @@ export const FLORA_DEFINITIONS:Readonly<Record<PlantSpecies,FloraDefinition>>=Ob
   saguaro:{label:'Saguaro',kind:'tree',growDays:5,minFertility:.05,sensitivity:0,harvestMinGrowth:.2,yield:15,product:'wood',persistent:false,nutrition:2,hitPoints:130,flammability:.8,maxGrowthTemperature:75,coldLeafless:true,lifespanMultiplier:40},
   drago:{label:'Drago',kind:'tree',growDays:15,minFertility:.7,sensitivity:.5,harvestMinGrowth:.4,yield:25,product:'wood',persistent:false,nutrition:2,hitPoints:200,flammability:.8,maxGrowthTemperature:75,coldLeafless:false,lifespanMultiplier:9},
   'healroot-wild':{label:'Racine de guérison sauvage',kind:'wild-plant',growDays:10,minFertility:.7,sensitivity:1,harvestMinGrowth:.65,yield:1,product:'herbal-medicine',persistent:false,nutrition:.2,hitPoints:60,flammability:1,maxGrowthTemperature:58,coldLeafless:true,lifespanMultiplier:8},
+  'alocasia':{label:"Alocasia",kind:"wild-plant",growDays:3,minFertility:0.7,sensitivity:0.5,harvestMinGrowth:0.65,yield:0,product:null,persistent:false,nutrition:0.5,hitPoints:120,flammability:1,maxGrowthTemperature:75,coldLeafless:true,lifespanMultiplier:8},
+  'astragalus':{label:"Astragale",kind:"wild-plant",growDays:2.5,minFertility:0.05,sensitivity:0,harvestMinGrowth:0.65,yield:0,product:null,persistent:false,nutrition:0.25,hitPoints:85,flammability:1,maxGrowthTemperature:58,coldLeafless:false,lifespanMultiplier:8},
+  'bush':{label:"Buisson",kind:"wild-plant",growDays:3,minFertility:0.7,sensitivity:0.5,harvestMinGrowth:0.65,yield:0,product:null,persistent:false,nutrition:0.5,hitPoints:120,flammability:1,maxGrowthTemperature:58,coldLeafless:true,lifespanMultiplier:8},
+  'chokevine':{label:"Liane étouffante",kind:"wild-plant",growDays:5,minFertility:0.7,sensitivity:0.7,harvestMinGrowth:0.65,yield:0,product:null,persistent:false,nutrition:0.25,hitPoints:100,flammability:1,maxGrowthTemperature:58,coldLeafless:true,lifespanMultiplier:8},
+  'clivia':{label:"Clivia",kind:"wild-plant",growDays:3,minFertility:0.7,sensitivity:0.5,harvestMinGrowth:0.65,yield:0,product:null,persistent:false,nutrition:0.5,hitPoints:120,flammability:1,maxGrowthTemperature:58,coldLeafless:false,lifespanMultiplier:8},
+  'dandelion':{label:"Pissenlit",kind:"wild-plant",growDays:2.5,minFertility:0.05,sensitivity:0,harvestMinGrowth:0.65,yield:0,product:null,persistent:false,nutrition:0.25,hitPoints:85,flammability:1,maxGrowthTemperature:58,coldLeafless:false,lifespanMultiplier:8},
+  'pincushion-cactus':{label:"Cactus coussin",kind:"wild-plant",growDays:2.5,minFertility:0.05,sensitivity:0,harvestMinGrowth:0.65,yield:0,product:null,persistent:false,nutrition:0.25,hitPoints:150,flammability:1,maxGrowthTemperature:75,coldLeafless:false,lifespanMultiplier:8},
+  'rafflesia':{label:"Rafflésie",kind:"wild-plant",growDays:3,minFertility:0.7,sensitivity:0.5,harvestMinGrowth:0.65,yield:0,product:null,persistent:false,nutrition:0.5,hitPoints:120,flammability:1,maxGrowthTemperature:58,coldLeafless:false,lifespanMultiplier:8},
+  'low-shrub':{label:"Arbuste bas",kind:"wild-plant",growDays:3,minFertility:0.7,sensitivity:0.7,harvestMinGrowth:0.65,yield:0,product:null,persistent:false,nutrition:0.25,hitPoints:90,flammability:1,maxGrowthTemperature:58,coldLeafless:false,lifespanMultiplier:8},
+  'bamboo':{label:"Bambou",kind:"tree",growDays:12,minFertility:0.7,sensitivity:0.5,harvestMinGrowth:0.4,yield:10,product:"wood",persistent:false,nutrition:1.5,hitPoints:200,flammability:0.8,maxGrowthTemperature:58,coldLeafless:true,lifespanMultiplier:9},
+  'cecropia':{label:"Cécropia",kind:"tree",growDays:14,minFertility:0.7,sensitivity:0.5,harvestMinGrowth:0.4,yield:18,product:"wood",persistent:false,nutrition:1.5,hitPoints:200,flammability:0.8,maxGrowthTemperature:58,coldLeafless:true,lifespanMultiplier:9},
+  'cypress':{label:"Cyprès",kind:"tree",growDays:35,minFertility:0.7,sensitivity:0.5,harvestMinGrowth:0.4,yield:60,product:"wood",persistent:false,nutrition:2,hitPoints:200,flammability:0.8,maxGrowthTemperature:58,coldLeafless:true,lifespanMultiplier:9},
+  'maple':{label:"Érable",kind:"tree",growDays:27,minFertility:0.7,sensitivity:0.5,harvestMinGrowth:0.4,yield:27,product:"wood",persistent:false,nutrition:2,hitPoints:200,flammability:0.8,maxGrowthTemperature:58,coldLeafless:true,lifespanMultiplier:9},
+  'palm':{label:"Palmier",kind:"tree",growDays:14,minFertility:0.7,sensitivity:0.5,harvestMinGrowth:0.4,yield:18,product:"wood",persistent:false,nutrition:1.5,hitPoints:200,flammability:0.8,maxGrowthTemperature:75,coldLeafless:false,lifespanMultiplier:9},
+  'teak':{label:"Teck",kind:"tree",growDays:32.5,minFertility:0.7,sensitivity:0.5,harvestMinGrowth:0.4,yield:60,product:"wood",persistent:false,nutrition:2,hitPoints:200,flammability:0.8,maxGrowthTemperature:58,coldLeafless:true,lifespanMultiplier:9},
+  'willow':{label:"Saule",kind:"tree",growDays:13,minFertility:0.7,sensitivity:0.5,harvestMinGrowth:0.4,yield:27,product:"wood",persistent:false,nutrition:2,hitPoints:200,flammability:0.8,maxGrowthTemperature:58,coldLeafless:true,lifespanMultiplier:9},
 });
 
 export interface BiomeFloraProfile {

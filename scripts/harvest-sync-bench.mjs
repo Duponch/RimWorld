@@ -2,7 +2,7 @@ import { assertHarvestPhase,confirmedTravelExcess,presentationStarvations,visibl
 import { writeTestFile, testOutputPath } from '../tests/test-output.ts';
 import { resolve } from 'node:path';
 import os from 'node:os';
-import { createWorld,applyCommand,serializeWorld } from '../src/sim/index.ts';
+import {writeFile} from 'node:fs/promises';
 process.env.PLAYWRIGHT_BROWSERS_PATH??=resolve('.playwright');
 const {chromium}=await import('@playwright/test');
 const label=process.argv[2]??'verification',seconds=Number(process.env.HARVEST_SECONDS??45),switches=process.env.HARVEST_SWITCHES!=='0';
@@ -16,7 +16,7 @@ const stats=a=>{if(!a.length)return null;const s=a.slice().sort((a,b)=>a-b);retu
 const probe=`
 const visibleSpeedResponse=${visibleSpeedResponse.toString()};
 const confirmedTravelExcess=${confirmedTravelExcess.toString()};
-window.__sync={view:null,active:false,frames:[],snapshots:[],removals:[],previous:null,poses:new Map(),jumps:[],rawJumpCount:0,continuousTravelExcess:[],contactStalls:[],gaps:[],solidOccupancy:[],controls:[],lastPlay:null};
+window.__sync={view:null,active:false,frames:[],snapshots:[],removals:[],previous:null,poses:new Map(),jumps:[],rawJumpCount:0,continuousTravelExcess:[],contactStalls:[],gaps:[],solidOccupancy:[],controls:[],lastPlay:null,receptions:0};
 ${process.env.HARVEST_TRACE==='1'?`window.__sync.longTasks=[];new PerformanceObserver(list=>{for(const e of list.getEntries())window.__sync.longTasks.push({at:e.startTime,duration:e.duration});}).observe({type:'longtask'});`:''}
 document.addEventListener('click',e=>{const button=e.target.closest?.('[data-speed]');if(!button||!window.__sync.active)return;const b=window.__sync,speed=Number(button.dataset.speed),old=b.view.received?.speed;if(speed>0&&old>0&&speed!==old)b.controls.push({speed,previousSpeed:old,at:performance.now(),delay:null,fullRateDelay:null});},true);
 for(const method of ['frame','setWorld','applyWorld']){const original=ColonyRenderer.prototype[method];if(!original)continue;ColonyRenderer.prototype[method]=function(...args){
@@ -40,6 +40,15 @@ b.poses.set(p.id,witness);});
 ${process.env.HARVEST_CONTACT_STALL==='1'?`if(!b.contactStalls.length&&this.timeline.tick>=2744.5&&this.timeline.tick<2746&&this.received?.speed===6){b.contactStalls.push({at:now,play:this.timeline.tick,milliseconds:30});const until=performance.now()+30;while(performance.now()<until){}}`:''}
 return result;};}
 `;
+const probeTail=`\nconst originalSync=receiveMainSnapshot;receiveMainSnapshot=function(...args){window.__sync.stepMs=args[1];window.__sync.receptions++;return originalSync.apply(this,args);};`;
+// Keep one probe for development ESM and compiled QA packages. Inject before
+// bundling so module bindings are renamed together by Vite, never by a regexp.
+if(process.env.HARVEST_EMIT_PROBE){
+ await writeFile(testOutputPath(process.env.HARVEST_EMIT_PROBE),JSON.stringify({prefix:probe,suffix:probeTail}));
+ process.exit(0);
+}
+if(process.env.HARVEST_PREINSTRUMENTED==='1'&&process.env.HARVEST_TRACE==='1')throw Error('Compiled presentation probe does not contain the optional worker trace');
+const {createWorld,applyCommand,serializeWorld}=await import('../src/sim/index.ts');
 const report={date:new Date().toISOString(),cpu:os.cpus()[0].model,seconds,switches,initialSpeed,speedCycle,viewport:{width:1440,height:1000},contactStallDiagnostic:process.env.HARVEST_CONTACT_STALL==='1',protocol:'Native Chromium WebGPU, seed 42 / 250² / 3 colonists, rectangular designations, actual worker at initialSpeed; switches=true uses speedCycle every 2 seconds. Frame pose read from shared GPU inputs; no full-world serialization in frames. Runtime clock: 6 local ticks/s at 1x. 13 cells/s candidate bound includes neutral 6x travel (12 cells/s). An excess is continuous only when both frames retain identical confirmed segment and GPU endpoints, stay within the contact envelope and match independent time/pose bounds; raw candidates are reported separately.',phases:[]};
 report.browserChannel=browserChannel;
 const browser=await chromium.launch({channel:browserChannel,args:[]});
@@ -68,9 +77,10 @@ const originalTraceAdvance=advanceSimulation;advanceSimulation=now=>{const at=pe
   await page.addInitScript(()=>{const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',({data})=>{const b=window.__sync;if(!b?.active)return;if(data.__publishedAt!==undefined)(b.workerSnapshots??=[]).push({tick:data.world.tick,speed:data.speed,stepMs:data.stepMs,published:data.__publishedAt-performance.timeOrigin,received:performance.now()});if(data.type==='trace-batch')(b.workerBatches??=[]).push({...data.batch,at:data.batch.at-performance.timeOrigin});});}};});
  }
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
- await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()+`\nconst originalSync=client.onSnapshot;client.onSnapshot=(...args)=>{window.__sync.stepMs=args[1];return originalSync(...args);};`});});
+ if(process.env.HARVEST_PREINSTRUMENTED!=='1')await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()+probeTail});});
  await page.addInitScript(data=>localStorage.setItem('lisiere.save.v1',data),serializeWorld(w));
- await page.goto('http://127.0.0.1:5173/?scenario=camp&e2e&size=250');await page.waitForFunction(()=>!!window.__lisiere);
+ await page.goto(process.env.HARVEST_URL??'http://127.0.0.1:5173/?scenario=camp&e2e&size=250');await page.waitForFunction(()=>!!window.__lisiere);
+ await page.waitForFunction(()=>!!window.__sync);
  const prepareStarted=performance.now();
  await page.waitForFunction(()=>!document.querySelector('.game-shell').inert&&!document.querySelector('[data-speed="0"]').disabled,undefined,{timeout:60000}).catch(async error=>{
   report.preparationFailure={action,errors,elapsed:performance.now()-prepareStarted,state:await page.evaluate(()=>({preparing:window.__sync?.view?.preparing,backend:window.__lisiere?.backend,tick:window.__lisiere?.world?.tick,text:document.querySelector('.front-menu')?.textContent}))};
@@ -90,7 +100,8 @@ const originalTraceAdvance=advanceSimulation;advanceSimulation=now=>{const at=pe
  if(switches)await page.evaluate(speeds=>{let i=0;window.__sync.switchTimer=setInterval(()=>document.querySelector('[data-speed="'+speeds[i++%speeds.length]+'"]').click(),2000);},speedCycle);
  await page.waitForFunction(start=>performance.now()-start>=0,await page.evaluate(s=>performance.now()+s*1000,seconds),{timeout:(seconds+15)*1000,polling:200});
  await page.evaluate(()=>clearInterval(window.__sync.switchTimer));await page.locator('[data-speed="0"]').click();
- const data=await page.evaluate(()=>{const b=window.__sync;b.active=false;const d=b.view.renderer.getContext().getConfiguration().device;return {workerBatches:b.workerBatches,workerSnapshots:b.workerSnapshots,adapter:{vendor:d.adapterInfo.vendor,architecture:d.adapterInfo.architecture},longTasks:b.longTasks,frames:b.frames,snapshots:b.snapshots,controls:b.controls,removals:b.removals,jumps:b.jumps,rawJumpCount:b.rawJumpCount,continuousTravelExcess:b.continuousTravelExcess,contactStalls:b.contactStalls,gaps:b.gaps,solidOccupancy:b.solidOccupancy,stepMs:b.stepMs,tick:b.view.world.tick,jobs:b.view.world.jobs.length};});
+ const data=await page.evaluate(()=>{const b=window.__sync;b.active=false;const d=b.view.renderer.getContext().getConfiguration().device;return {workerBatches:b.workerBatches,workerSnapshots:b.workerSnapshots,adapter:{vendor:d.adapterInfo.vendor,architecture:d.adapterInfo.architecture},longTasks:b.longTasks,frames:b.frames,snapshots:b.snapshots,controls:b.controls,removals:b.removals,jumps:b.jumps,rawJumpCount:b.rawJumpCount,continuousTravelExcess:b.continuousTravelExcess,contactStalls:b.contactStalls,gaps:b.gaps,solidOccupancy:b.solidOccupancy,stepMs:b.stepMs,receptions:b.receptions,tick:b.view.world.tick,jobs:b.view.world.jobs.length};});
+ if(!Number.isFinite(data.stepMs)||data.receptions<1)throw Error('Presentation probe did not observe the actual MAIN snapshot reception');
  const starvation=presentationStarvations(data.frames);
  const starvedFrames=starvation.length;
  const trace=process.env.HARVEST_TRACE==='1'?{longTasks:data.longTasks,workerBatchMs:Object.fromEntries(['wakeGap','simulation','encoding','sending','elapsed'].map(k=>[k,stats((data.workerBatches??[]).filter(b=>b.speed>0).map(b=>b[k]))])),slowWorkerBatches:(data.workerBatches??[]).filter(b=>b.speed>0&&(b.elapsed>20||b.wakeGap>50)),workerDeliveryMs:stats((data.workerSnapshots??[]).map(s=>s.received-s.published)),workerPublicationGapMs:stats((data.workerSnapshots??[]).flatMap((s,i,a)=>i&&s.speed===a[i-1].speed?[s.published-a[i-1].published]:[])),starvationContext:starvation.slice(0,10).map(s=>({frames:data.frames.filter(f=>Math.abs(f.at-s.current.at)<300),snapshots:data.snapshots.filter(f=>Math.abs(f.at-s.current.at)<300),worker:(data.workerSnapshots??[]).filter(f=>Math.abs(f.received-s.current.at)<300),batches:(data.workerBatches??[]).filter(b=>Math.abs(b.at-s.current.at)<300)}))}:{};

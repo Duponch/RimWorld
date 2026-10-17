@@ -1,6 +1,9 @@
+import {cancelToxicVomit256} from './toxic-buildup-256.ts';
+import {notifyDuckFlightJob256} from './duck-flight-runtime-256.ts';
+import {wildlifeRandom} from './wildlife-state.ts';
 import { carrierOf } from './rescue-state.ts';
 import { partMissing } from './injury-state.ts';
-import { animalSpecies } from './animal-species.ts';
+import {actualAnimalMeleeProfile256} from './actual-animal-profile-256.ts';
 import { animalBody } from './wildlife-health.ts';
 import { isRoomDoor,doorOpenness } from './door-rules.ts';
 import { meleeContact } from './melee-space.ts';
@@ -28,7 +31,9 @@ export function recoverAnimalManhunter(w:World,a:WildAnimal):void {
 export function startAnimalManhunter(w:World,a:WildAnimal,core=w.tick*10):boolean {
   if(w.schemaVersion<183||!w.wildlife?.animals.includes(a)||a.domestic||a.manhunter||a.retaliation||a.state==='dead'||a.state==='downed'
     ||!Number.isSafeInteger(core)||core<0||core>w.tick*10||animalBody(a).capacities.moving<=0
-    ||!animalSpecies(a.species).melee.some(t=>!a.health||!partMissing(a.health,t.sourcePart)))return false;
+    ||!actualAnimalMeleeProfile256(a).some(t=>!a.health||(t.sourceParts??[t.sourcePart]).some(part=>!partMissing(a.health!,part))))return false;
+  if(a.health)cancelToxicVomit256(a.health);
+  delete a.confusion;if(a.wander)delete a.wander.job;
   a.manhunter={startedAtCore:core,rng:(w.seed^Math.imul(a.id,0x9e3779b1)^core^0x73b914f5)>>>0||1,zeroRestTicks:0};
   delete a.meal;delete a.predation;delete a.exiting;delete a.mating;delete a.flee;delete a.threat;delete a.retaliation;delete a.taming;delete a.sleepUntilCore;
   a.path=[];a.state=(a.motion?.end??0)>w.tick?'moving':'idle';a.nextDecision=w.tick;return true;
@@ -95,7 +100,7 @@ export function processAnimalManhunter(w:World,a:WildAnimal,nav:ReturnType<typeo
     const candidates=w.pawns.filter(p=>p.state!=='dead'&&p.state!=='downed'&&!carrierOf(w,p.id));
     // Keep an engaged target when reachable; alternatives reuse the same field.
     const route=nav.humanPursuitRoute(a,target?[target,...candidates.filter(p=>p!==target)]:candidates,physical,!!target);
-    if(route){m.targetId=route.targetId;a.path=route.path;}else{delete m.targetId;a.path=[];}
+    if(route){if(m.targetId!==route.targetId)notifyDuckFlightJob256(w,a,'AttackMelee',()=>wildlifeRandom(w.wildlife!));m.targetId=route.targetId;a.path=route.path;}else{delete m.targetId;a.path=[];}
     a.nextDecision=w.tick+25;
   }
   if(a.path.length){if(moveAnimal(w,a,nav.step,animalBody(a).capacities.moving)&&!a.path.length)a.nextDecision=w.tick;}else a.state='idle';return true;

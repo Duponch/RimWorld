@@ -1,8 +1,10 @@
 import type { BedSlot,Cell,Pawn,Structure,World } from './types.ts';
+import {actualBedOwners256,captureActorBeds256,globalCivilBedShare256} from './actor-bed-local-256.ts';
+import {registeredCampaign} from './world-map-context.ts';
 export type { BedSlot } from './types.ts';
 
 const directions:readonly Cell[]=[{x:0,z:1},{x:1,z:0},{x:0,z:-1},{x:-1,z:0}];
-const bedKind=(bed:Structure)=>bed.kind==='sleeping-spot'||bed.kind==='bed'||bed.kind==='hospital-bed'||bed.kind==='double-bed';
+const bedKind=(bed:Structure)=>bed.kind==='sleeping-spot'||bed.kind==='bedroll'||bed.kind==='bed'||bed.kind==='hospital-bed'||bed.kind==='double-bed';
 const civil=(pawn:Pawn)=> (pawn.faction??'colony')==='colony'&&!pawn.prisoner&&!pawn.visitor&&!pawn.raid&&!pawn.podRescue&&pawn.state!=='dead';
 const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 
@@ -37,13 +39,14 @@ export function bedSlotClaimed(world:World,bed:Structure,slot:BedSlot,exceptPawn
     const rescue=pawn.rescue;
     if(rescue&&rescue.patientId!==exceptPawnId&&rescue.bedId===bed.id&&(bed.kind==='double-bed'?rescue.bedSlot===slot:slot===0))return true;
   }
-  return false;
+  return world.schemaVersion>=256&&!bed.medical&&actualBedOwners256(captureActorBeds256(registeredCampaign(world)),bed.id,bed.kind==='double-bed'?slot:undefined).some(p=>p.id!==exceptPawnId&&p.state!=='dead'&&!p.health?.death);
 }
 /** Manual assignments do not require a relationship. This rule is only the
  * admission of a new owner by a sleep/patient provider into a shared bed. */
 export function civilBedShareAllowed(world:World,bed:Structure,pawn:Pawn):boolean {
   if(bed.kind!=='double-bed'||bed.medical||bed.prisoner||!civil(pawn)||!world.pawns.some(p=>p.id===pawn.id))return false;
   if(pawnBedSlot(pawn,bed)!==undefined)return true;
+  if(world.schemaVersion>=256)return globalCivilBedShare256(world,bed,pawn);
   const owners=world.pawns.filter(p=>p.bedId===bed.id&&p.state!=='dead');
   if(!owners.length)return true;
   return owners.every(owner=>civil(owner)&&world.relationships?.links.some(link=>

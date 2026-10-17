@@ -1,0 +1,13 @@
+# Population et butin anciens — adaptation prospective256
+
+Producteurs prospectifs du premier lot V408 : contrôles ciblés et création composée acquis, sans campagne complète ni parité des PNJ. Le choix humain du17octobre2026 privilégie les mêmes règles monde/voyages avec les PNJ actuels provisoires.
+
+Les nouveaux sanctuaires du foyer Base_Player utilisent les personnes jouables existantes : âge et apparence, compétences et passé, santé, vêtements et armes. Leurs noms originaux et leurs profils ne reproduisent pas les tirages internes de PawnGenerator. Aucun genre biologique, relation, maladie native ou historique non produit n'est ajouté. Les anciens mondes et les PNJ déjà sauvegardés restent inchangés.
+
+Chaque capsule contient un véritable individu et ses biens. Neutres, hostiles, blessés et captifs restent des branches distinctes. Les blessés ont un profil original de contusions : leur incapacité et leur guérison relèvent du noyau médical réel. Le tirage de décès des captifs demeure50% et crée un dossier terminal avec un véritable corps. La variante attaquée garde ses3–5 mégascarabées hostiles. Les factions locales emploient les catégories neutre/hostile déjà jouables ; la tactique et les relations sociales exhaustives des Ancients ne sont pas reproduites.
+
+L'ouverture conserve l'accès, la réservation et les300ticks Core de travail, la libération des mêmes personnes/objets, les positions admissibles et la vraie maladie de cryptosommeil. La santé et l'âge biologique restent suspendus dans le holder ; aucun soin ni nouvelle personne n'est créé à l'ouverture. Une transaction encore non représentée refuse explicitement plutôt que perdre son contenu. Le secours colonial des nouveaux neutres, sans groupe de visite ni incident de capsule fictif, reste absent ; leur physiologie continue normalement après sortie. Les hostiles à terre restent capturables par les règles existantes.
+
+Le « butin ancien jouable v1 » est une table originale : composants avancés1–4 à35%, médicaments ultratech2–8 à35%, or20–50 à50%, plastacier30–60 à50%. Les quatre options sont mélangées puis tirées une fois ; aucune n'est garantie. Les vrais objets et leurs identités sont placés dans la carte, puis leurs usages, transports et stocks suivent les règles existantes. Cette table ne promet ni Luciferium, ni sérum, ni implant ou artefact absent du jeu.
+
+Le vrai scatter750, ses pièces/sols/bâtiments/capsules et ses propriétaires restent raccordés. Le hasard interne des personnes et du butin étant adapté, l'ensemble ne garantit pas un résultat Core identique par graine. Les camps Encounter ne gagnent pas ces sanctuaires Base_Player. Les menaces dormantes Mech/Hive sont composées séparément avant qualification d'une usine entière.

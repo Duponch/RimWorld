@@ -5,8 +5,10 @@ import type {Job,JobKind,Resource,StructureKind,World} from './types.ts';
 /** Resolved Core1.6.4871 harvestWork metadata, not the clone's timed cut work.
  * In particular Grass40Core cannot be inferred from clearingDuration60local. */
 const FLORA_WORK:Readonly<Record<PlantSpecies,number>>=Object.freeze({
+  glowstool:200,agarilux:200,bryolux:200,
   grass:40,'tall-grass':60,brambles:60,moss:60,'berry-bush':250,
   oak:1400,poplar:800,pine:710,birch:800,agave:300,saguaro:210,drago:660,'healroot-wild':400,
+  'alocasia':200,'astragalus':200,'bush':200,'chokevine':150,'clivia':200,'dandelion':200,'pincushion-cactus':200,'rafflesia':200,'low-shrub':60,'bamboo':460,'cecropia':510,'cypress':1800,'maple':800,'palm':510,'teak':1800,'willow':800,
 });
 const LEGACY_WORK:Readonly<Record<string,number>>=Object.freeze({
   tree:800,berries:250,rice:200,potato:200,corn:200,cotton:200,haygrass:200,healroot:400,
@@ -33,7 +35,7 @@ const KEEP_PLANTS:ReadonlySet<StructureKind>=new Set([
   'hydroponics-basin','flower-pot',
 ]);
 export const constructionFinalWipesPlants=(kind:JobKind|StructureKind):boolean=>
-  kind==='lay-floor'||kind in STRUCTURE_DEFINITIONS&&!KEEP_PLANTS.has(kind as StructureKind);
+  kind==='lay-floor'||kind==='build-bridge'||kind in STRUCTURE_DEFINITIONS&&!KEEP_PLANTS.has(kind as StructureKind);
 
 /** The generated Thing Frame has fill0.2 and no copied sowTag. Unlike the
  * final SupportsPlants entity, every physical Thing Frame blocks planting.

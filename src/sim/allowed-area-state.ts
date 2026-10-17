@@ -1,3 +1,4 @@
+import {isAncientCasket256,ancientCasketInteraction256} from './ancient-casket-state-256.ts';
 import { storageCellById } from './shelf-storage.ts';
 import type { Cell, Pawn, World } from './types.ts';
 export type { AllowedArea, AllowedAreaReturn } from './types.ts';
@@ -38,7 +39,7 @@ export function releaseAllowedAreaReturn(pawn:Pawn):void {
   if(!allowedAreaOtherActivity(pawn)){pawn.path=[];pawn.planCooldown=0;if(pawn.state==='moving')pawn.state='idle';}
 }
 export function allowedAreaOtherActivity(pawn:Pawn):boolean {
-  return pawn.jobId!==null||!!(pawn.haul||pawn.cooking||pawn.need||pawn.recreation.task||pawn.rescue||pawn.tend||pawn.surgery||pawn.feed||pawn.ward||pawn.research||pawn.hunting||pawn.animalHandling||pawn.animalCare||pawn.animalFeed||pawn.animalRescue||pawn.burial||pawn.cleaning||pawn.firefighting||pawn.deepWork||pawn.orbitalTrade||pawn.trade||pawn.equipmentTask||pawn.equipmentDropPending||pawn.interruptedCargo||pawn.transitExit||pawn.social?.fight||pawn.flee||pawn.bombRefuge||pawn.heatRefuge||pawn.burning||pawn.priorityWork||pawn.shooting?.order||pawn.shooting?.stance||pawn.melee?.order||pawn.melee?.strike||pawn.tactics?.targetId!==undefined&&pawn.tactics.targetId!==null||pawn.tactics?.post||pawn.orders.active!==null||pawn.orders.queue.length);
+  return pawn.jobId!==null||!!(pawn.haul||pawn.cooking||pawn.need||pawn.recreation.task||pawn.rescue||pawn.tend||pawn.surgery||pawn.feed||pawn.ward||pawn.research||pawn.hunting||pawn.animalHandling||pawn.animalCare||pawn.animalFeed||pawn.animalRescue||pawn.openCasket||pawn.burial||pawn.cleaning||pawn.firefighting||pawn.deepWork||pawn.orbitalTrade||pawn.trade||pawn.equipmentTask||pawn.equipmentDropPending||pawn.interruptedCargo||pawn.transitExit||pawn.social?.fight||pawn.flee||pawn.bombRefuge||pawn.heatRefuge||pawn.burning||pawn.priorityWork||pawn.shooting?.order||pawn.shooting?.stance||pawn.melee?.order||pawn.melee?.strike||pawn.tactics?.targetId!==undefined&&pawn.tactics.targetId!==null||pawn.tactics?.post||pawn.orders.active!==null||pawn.orders.queue.length);
 }
 /** Cell callers retain baseline navigation; full actors capture their current policy. */
 export function navigationAllowedArea(world:World,start:Cell):AllowedAreaPolicy|undefined {
@@ -51,6 +52,7 @@ export function allowedAreaWorkAllowed(world:World,pawn:Pawn):boolean {
   const policy=captureAllowedArea(world,pawn);if(!policy)return true;
   const allows=(cell:Cell|undefined|null)=>!cell||allowedAreaAllows(world,pawn,cell,policy);
   const ground=(id:number|null|undefined)=>{const pile=world.piles.find(p=>p.id===id);return pile?.owner.type!=='ground'||allows(pile.owner);};
+  if(pawn.openCasket){const c=world.structures.find(s=>s.id===pawn.openCasket!.casketId);if(!c||!isAncientCasket256(c)||!allows(ancientCasketInteraction256(c)))return false;}
   if(pawn.priorityWork&&!allows(pawn.priorityWork.cell))return false;
   if(pawn.jobId!==null){const job=world.jobs.find(j=>j.id===pawn.jobId);if(!allows(job))return false;
     if(job?.clearance&&!allows(world.resources.find(r=>r.id===job.clearance!.resourceId)))return false;

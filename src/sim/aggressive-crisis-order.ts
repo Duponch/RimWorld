@@ -5,7 +5,7 @@ import type { Pawn,World } from './types.ts';
 /** A serialized flag never grants involuntary violence by itself: the current
  * crisis owns its primary target or a real door blocking that pursuit. */
 export function mentalMeleeOwnership(w:World,p:Pawn,order:NonNullable<MeleeState['order']>):boolean {
-  const c=p.mental?.crisis;if(order.auto!=='mental'||!c||c.kind==='sad-wander'||c.kind==='food-binge')return false;
+  const c=p.mental?.crisis;if(order.auto!=='mental'||!c||c.kind==='sad-wander'||c.kind==='food-binge'||c.kind==='confused-wander')return false;
   if(c.kind==='tantrum')return !!order.structure&&order.targetId===c.targetId&&order.untilCore===undefined;
   if(c.kind==='berserk'&&(c.jobUntilCore===null||order.untilCore!==c.jobUntilCore))return false;
   if(c.kind==='murderous-rage'&&order.untilCore!==undefined)return false;

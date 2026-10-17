@@ -1,0 +1,34 @@
+import {expect,test} from 'vitest';
+import {WorldGenerationRandom} from '../src/sim/world-generation-random.ts';
+import {generateForeignWorldFactions256,completeWorldFactionRegistry256} from '../src/sim/world-faction-generation.ts';
+import {validateWorldFactionRegistry256} from '../src/sim/world-faction-save.ts';
+import {CORE_CULTURES_256,CORE_CLASSIC_PRECEPTS_256,constructCoreNoExpansionIdeoIds256,constructFactionNoExpansionIdeo256,validFactionNoExpansionIdeos256,factionPrimaryCultureBinding256,captureFactionInitializations256,sameFactionInitializations256} from '../src/sim/world-faction-no-expansion-ideo-256.ts';
+const ordered=['NutrientPasteEating_Disgusting','Cannibalism_Classic','Corpses_Ugly','InsectMeatEating_Despised_Classic','Lovin_Free','MarriageName_UsuallyMans','OrganUse_Classic','Execution_Classic','Slavery_Classic','SpouseCount_Male_MaxOne','SpouseCount_Female_MaxOne'];
+const tiles=Array.from({length:128},(_,i)=>({biome:'temperate-forest' as const,hilliness:'flat' as const,neighbours:[(i+127)%128,(i+1)%128]}));
+function prepared(){const foreign=generateForeignWorldFactions256({version:256,tick:0,tiles,selection:['Mechanoid','Insect','Ancients','AncientsHostile'],population:3,nextFactionId:1,nextSettlementId:1,nextThingId:1000,random:new WorldGenerationRandom(718)});if(!foreign.ok)throw Error(foreign.reason);const before=structuredClone(foreign.draft),post=new WorldGenerationRandom(991),result=completeWorldFactionRegistry256({version:256,draft:foreign.draft,playerDef:'PlayerColony',name:'Préparation culture',postWorldRandom:post});if(!result.ok)throw Error(result.reason);return {foreign,before,registry:result.registry};}
+const header={present:true,tick:0,width:16,height:8,nextId:1000,tileCount:128,postIds:new Set<number>(),knownHumanIds:new Set<number>(),occupiedThingIds:new Set<number>()};
+test('native observed order, fixed culture and nonhuman branch own the exact eleven causal draws',()=>{
+ expect(CORE_CLASSIC_PRECEPTS_256).toEqual(ordered);expect(CORE_CULTURES_256).toEqual(['Astropolitan','Corunan','Rustican','Kriminul']);
+ const ids=constructCoreNoExpansionIdeoIds256(),r=new WorldGenerationRandom(118),witness=new WorldGenerationRandom(118);
+ expect(constructFactionNoExpansionIdeo256('Mechanoid',ids,r)).toBeUndefined();expect(ids).toEqual({revision:1,nextIdeoId:0,nextPreceptId:0});expect(r.state).toEqual(witness.state);
+ const actual=constructFactionNoExpansionIdeo256('OutlanderCivil',ids,r)!;expect(actual.cultureDef).toBe('Rustican');expect(actual.id).toBe(0);expect(actual.precepts).toEqual(ordered.map((def,id)=>({id,def,randomSeed:witness.integerValue()})));expect(r.state).toEqual(witness.state);expect(ids).toEqual({revision:1,nextIdeoId:1,nextPreceptId:11});
+});
+test('Ancients random culture comes before actual precept seeds and continued player IDs',()=>{
+ const ids=constructCoreNoExpansionIdeoIds256(),r=new WorldGenerationRandom(771),witness=new WorldGenerationRandom(771),culture=CORE_CULTURES_256[witness.integer(0,4)]!;
+ const first=constructFactionNoExpansionIdeo256('AncientsHostile',ids,r)!;expect(first.cultureDef).toBe(culture);expect(first.precepts.map(p=>p.randomSeed)).toEqual(ordered.map(()=>witness.integerValue()));
+ const second=constructFactionNoExpansionIdeo256('PlayerTribe',ids,r)!;expect(second.id).toBe(1);expect(second.cultureDef).toBe('Corunan');expect(second.precepts).toEqual(ordered.map((def,i)=>({id:i+11,def,randomSeed:witness.integerValue()})));expect(r.state).toEqual(witness.state);expect(ids.nextPreceptId).toBe(22);
+});
+test('real foreign/postworld producers retain source originals and counter continuation without a World proxy',()=>{
+ const p=prepared(),d=p.foreign.draft;expect(d).toEqual(p.before);expect(d.noExpansionIdeoIds).toEqual({revision:1,nextIdeoId:2,nextPreceptId:22});expect(p.registry.noExpansionIdeoIds).toEqual({revision:1,nextIdeoId:3,nextPreceptId:33});expect(p.registry.noExpansionIdeoIds).not.toBe(d.noExpansionIdeoIds);expect(p.registry.factions.slice(0,-1).every((a,i)=>a===d.factions[i])).toBe(true);expect(p.registry.factions.at(-1)!.noExpansionIdeo!.id).toBe(2);expect(validateWorldFactionRegistry256(p.registry,256,header)).toEqual([]);
+});
+test('historical absence remains unknown and future owner/descriptor inputs are refused before reads',()=>{
+ const p=prepared(),legacy=structuredClone(p.registry);delete legacy.noExpansionIdeoIds;for(const a of legacy.factions)delete a.noExpansionIdeo;const before=JSON.stringify(legacy);expect(validateWorldFactionRegistry256(legacy,256,header)).toEqual([]);expect(legacy.factions.map(factionPrimaryCultureBinding256)).toEqual(legacy.factions.map(()=>({kind:'unresolved'})));expect(JSON.stringify(legacy)).toBe(before);expect(validateWorldFactionRegistry256(p.registry,255,header).length).toBeGreaterThan(0);
+ const owned=structuredClone(legacy);Object.assign(owned,{noExpansionIdeoIds:undefined});expect(validateWorldFactionRegistry256(owned,256,header).length).toBeGreaterThan(0);
+ let reads=0;const getter=structuredClone(p.registry);Object.defineProperty(getter.factions[2]!.noExpansionIdeo!,'cultureDef',{enumerable:true,get(){reads++;return 'Astropolitan';}});expect(validateWorldFactionRegistry256(getter,256,header).length).toBeGreaterThan(0);expect(reads).toBe(0);
+});
+test('ordered IDs, fixed culture, exact precept Defs and signed integer seed bounds are real RAW invariants',()=>{
+ const {registry}=prepared(),before=JSON.stringify(registry);for(const change of [(r:typeof registry)=>{r.noExpansionIdeoIds!.nextPreceptId++;},(r:typeof registry)=>{r.factions.at(-1)!.noExpansionIdeo!.cultureDef='Rustican';},(r:typeof registry)=>{r.factions[2]!.noExpansionIdeo!.precepts.reverse();},(r:typeof registry)=>{r.factions[2]!.noExpansionIdeo!.precepts[0]!.randomSeed=.5;},(r:typeof registry)=>{r.factions[0]!.noExpansionIdeo=structuredClone(r.factions[2]!.noExpansionIdeo!);}]){const bad=structuredClone(registry);change(bad);expect(validFactionNoExpansionIdeos256(bad,256)).toBe(false);expect(validateWorldFactionRegistry256(bad,256,header).length).toBeGreaterThan(0);}expect(JSON.stringify(registry)).toBe(before);
+});
+test('confirmed independent values refuse same-epoch culture/seed rewrites and survive absence of local World view',()=>{
+ const {registry}=prepared(),values=captureFactionInitializations256(registry)!;expect(sameFactionInitializations256(values,structuredClone(registry))).toBe(true);const bad=structuredClone(registry);bad.factions[2]!.noExpansionIdeo!.precepts[0]!.randomSeed^=1;expect(validFactionNoExpansionIdeos256(bad,256)).toBe(true);expect(sameFactionInitializations256(values,bad)).toBe(false);expect(sameFactionInitializations256(undefined,registry)).toBe(false);expect(sameFactionInitializations256(values,undefined)).toBe(false);registry.factions[2]!.noExpansionIdeo!.precepts[0]!.randomSeed^=1;expect(sameFactionInitializations256(values,registry)).toBe(false);
+});

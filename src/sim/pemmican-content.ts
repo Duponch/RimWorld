@@ -4,7 +4,7 @@ import {ANIMAL_MEAT_ITEMS,isAnimalMeat} from './biome-items.ts';
 export const PEMMICAN_SCHEMA_VERSION=248;
 export const PEMMICAN_RECIPE='make-pemmican' as const;
 export const PEMMICAN_GROUP_UNITS=5,PEMMICAN_INPUT_UNITS=10,PEMMICAN_OUTPUT_UNITS=16,PEMMICAN_WORK_TICKS=70;
-export const PEMMICAN_VEGETABLE_INPUTS=['rice','berries','potato','corn','agave-fruit'] as const;
+export const PEMMICAN_VEGETABLE_INPUTS=['raw-fungus','rice','berries','potato','corn','agave-fruit'] as const;
 export const PEMMICAN_INPUTS=[...ANIMAL_MEAT_ITEMS,...PEMMICAN_VEGETABLE_INPUTS] as const;
 export const isPemmicanRecipe=(value:unknown):value is typeof PEMMICAN_RECIPE=>value===PEMMICAN_RECIPE;
 export function validPemmicanIngredients(parts:readonly {item:string;quantity:number}[]):boolean {

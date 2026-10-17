@@ -1,3 +1,4 @@
+import {actualAnimalName256} from '../sim/starting-pet-state-256';
 import {animalSpecies} from '../sim/animal-species';
 import {MEDICAL_CARE} from '../sim/medicine-rules';
 import {TICKS_PER_DAY,type World} from '../sim/types';
@@ -64,7 +65,7 @@ export function updateAnimalsPanel(root:HTMLElement,world:World,focus:(id:number
   for(const a of animals){
     const species=animalSpecies(a.species);
     const row=rows?.get(a.id);if(!row)continue;
-    row.locate.textContent=`${species.label} ${a.id}`;
+    row.locate.textContent=actualAnimalName256(a)??`${species.label} ${a.id}`;
     row.locate.setAttribute('aria-label',`Repérer ${species.label} ${a.id}`);
     const condition=animalActivity(world,a,quotaTargets);
     const mobility=Math.round(animalBody(a).capacities.moving*100);

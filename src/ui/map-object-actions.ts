@@ -1,3 +1,5 @@
+import {materialAllowedForPlayer256} from '../sim/material-permission-256';
+import {roadPropCanClaim256,roadPropCanDeconstruct256} from '../sim/local-road-prop-ownership-256';
 import { footprintCells } from '../sim/definitions';
 import { choppable, harvestable, isPlant } from '../sim/plants';
 import { sharesConstructionLayer } from '../sim/power-grid';
@@ -8,7 +10,7 @@ import type { Cell, Command, Job, MaterialPile, Resource, Structure, World } fro
 import { mapObjectCells, type MapObjectSelection } from './map-object-selection';
 import { mapObjectGroupCells } from './map-object-group-selection';
 
-export type MapObjectActionId = 'mine' | 'chop' | 'harvest' | 'cut' | 'haul-chunks' | 'deconstruct' | 'cancel' | 'extract' | 'replant';
+export type MapObjectActionId = 'material-permission' | 'claim' | 'mine' | 'chop' | 'harvest' | 'cut' | 'haul-chunks' | 'deconstruct' | 'cancel' | 'extract' | 'replant';
 export interface MapObjectAction { id: MapObjectActionId; label: string; command?: Command; placementPileId?:number }
 export interface MapObjectGroupAction { id: MapObjectActionId; label: string; commands: Command[] }
 const same = (a: Cell, b: Cell) => a.x === b.x && a.z === b.z;
@@ -34,7 +36,7 @@ function actionsFor(world: World, selected: MapObjectSelection, cells: readonly 
   const cell = cells[0];
   if (!cell) return [];
   const actions: MapObjectAction[] = [];
-  const blocked = (kind: Job['kind'], targets: readonly Cell[], deconstruct = false) => world.jobs.some(job => !isRoofJob(job)
+  const blocked = (kind: Job['kind']|Structure['kind'], targets: readonly Cell[], deconstruct = false) => world.jobs.some(job => !isRoofJob(job)
     && !(deconstruct && ['repair', 'fix-breakdown', 'flick'].includes(job.kind))
     && sharesConstructionLayer(job.furniture?.kind ?? job.deconstruction?.kind ?? job.flick?.kind ?? job.fixBreakdown?.kind ?? job.kind, kind)
     && footprintCells(job).some(at => targets.some(target => same(at, target))));
@@ -59,6 +61,7 @@ function actionsFor(world: World, selected: MapObjectSelection, cells: readonly 
     }
   } else if (selected.kind === 'pile') {
     const pile = lookups?.piles ? lookups.piles.get(selected.id) : world.piles.find(pile => pile.id === selected.id);
+    if(world.schemaVersion===256&&pile&&pile.owner.type==='ground'&&!pile.apparel&&!pile.weapon&&!Object.hasOwn(pile,'eggForbidden')){const forbidden=!materialAllowedForPlayer256(pile);actions.push({id:'material-permission',label:forbidden?'Autoriser':'Interdire',command:{type:'material-forbid',pileId:pile.id,forbidden:!forbidden}});}
     if (pile?.kind === 'chunk' && pile.owner.type === 'ground' && !pile.haulRequested) {
       actions.push({ id: 'haul-chunks', label: 'Transporter',
         command: { type: 'area', action: 'haul-chunks', from: { x: cell.x, z: cell.z }, to: { x: cell.x, z: cell.z } } });
@@ -68,7 +71,8 @@ function actionsFor(world: World, selected: MapObjectSelection, cells: readonly 
     if(pile&&isMinifiedTree(pile)&&treePackLive(pile,world.tick)&&pile.owner.type==='ground'&&!world.jobs.some(j=>j.tree?.kind==='replant'&&j.tree.sourcePileId===pile.id))actions.push({id:'replant',label:'Replanter',placementPileId:pile.id});
   } else if (selected.kind === 'structure') {
     const structure = lookups?.structures ? lookups.structures.get(selected.id) : world.structures.find(structure => structure.id === selected.id);
-    if (structure && !world.jobs.some(job => job.furniture?.structureId === structure.id) && !blocked(structure.kind, cells, true)) {
+    if(structure&&roadPropCanClaim256(world,structure))actions.push({id:'claim',label:'Revendiquer',command:{type:'claim-road-prop',structureId:structure.id}});
+    if (structure && roadPropCanDeconstruct256(world,structure)&&!world.jobs.some(job => job.furniture?.structureId === structure.id) && !blocked(structure.kind, cells, true)) {
       actions.push({ id: 'deconstruct', label: structure.kind==='sleeping-spot'?'Retirer l’emplacement':'Déconstruire',
         command: { type: 'designate', kind: 'deconstruct', targetId: structure.id, x: structure.x, z: structure.z } });
     }

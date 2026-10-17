@@ -1,3 +1,5 @@
+import {groupCaravanUnitMass256} from './group-caravan-mass-256.ts';
+import {ITEM_DEFINITIONS} from './items.ts';
 import {GROUP_FREIGHT_SCHEMA,freightGroup,groupItemMassGrams} from './group-freight.ts';
 /** Physical formation/loading and closed collective departure preflight. */
 import {GROUP_PROVISIONS_SCHEMA,mixedGroupProvisions,freshGroupProvision} from './group-provisions.ts';
@@ -15,7 +17,7 @@ import { findPlanetRoute, planetCostContext, type PlanetSearchBudget } from './p
 export const GROUP_MAX_SOURCES=64,GROUP_MAX_MANIFEST=512;
 export const emptyGroupLedger=():GroupLedger=>({foodLoaded:0,foodConsumed:0,medicineUsed:0,silverLoaded:0,silverPaid:0,silverEarned:0,
   cargoLoaded:{cloth:0,'muffalo-wool':0},sold:{cloth:0,'muffalo-wool':0},bought:{medicine:0,component:0}});
-const loadItem=(item:MaterialPile['item'],mixed:boolean,freight:boolean):item is GroupSource['item']=>
+const loadItem=(item:MaterialPile['item'],mixed:boolean,freight:boolean):boolean=>
   freight&&(item==='wood'||item==='steel')||mixed&&item==='pemmican'||item==='survival-meal'||item==='silver'||item==='cloth'||item==='muffalo-wool';
 const fail=(reason:string)=>({kind:'refused' as const,reason});
 const contact=(pawn:Pawn,cell:Cell)=>Math.abs(pawn.x-cell.x)+Math.abs(pawn.z-cell.z)<=1;
@@ -27,38 +29,39 @@ export type GroupLoadingPreview=
 /** Real owners/catalogue only; pure, no IDs/reservations/RNG consumed.
  * Explicit local greedy policy: least current grams thenID, fill that carrier
  * by a batch, then choose again. It is not per-unit load balancing. */
-export function previewGroupLoading(world:World,memberIds:readonly number[],lines:readonly CommercialBuyLine[],authority:GroupFormationAuthority):GroupLoadingPreview {
-  if(lines.length>GROUP_MAX_SOURCES||new Set(lines.map(l=>l.pileId)).size!==lines.length
+export function previewGroupLoading(world:World,memberIds:readonly number[],lines:readonly CommercialBuyLine[],authority:GroupFormationAuthority,animalIds:readonly number[]=[]):GroupLoadingPreview {
+  if(lines.length>(world.schemaVersion>=256?world.piles.length:GROUP_MAX_SOURCES)||new Set(lines.map(l=>l.pileId)).size!==lines.length
     ||lines.some(l=>!Number.isSafeInteger(l.pileId)||l.pileId<1||!Number.isSafeInteger(l.quantity)||l.quantity<1))return fail('lines');
-  const result=captureGroupCandidates(world,memberIds,authority);if(result.kind!=='ready')return result;
+  const result=captureGroupCandidates(world,memberIds,authority,animalIds);if(result.kind!=='ready')return result;
   const capture=result.capture,carriers=capture.mass.carriers.map(c=>({...c})),manifest:GroupSource[]=[],remainingBySource=new Map<number,number>();
   const freight=world.schemaVersion>=GROUP_FREIGHT_SCHEMA&&(!world.group||freightGroup(world.group));
   const access=new Map<string,'reachable'|'unreachable'|'deferred'>();let additionalPiles=0;
   for(const line of [...lines].sort((a,b)=>a.pileId-b.pileId)){
     const source=capture.sources.get(line.pileId);
-    if(!source||source.owner.type!=='ground'||!loadItem(source.item,world.schemaVersion>=GROUP_PROVISIONS_SCHEMA,freight)||source.foodPoison||source.item==='pemmican'&&!freshGroupProvision(source,world.tick))return fail('source');
-    const unit=groupItemMassGrams(source.item,freight,world.schemaVersion),reserved=authority.reservedQuantity(world,source.id);
+    if(!source||source.owner.type!=='ground'||!(loadItem(source.item,world.schemaVersion>=GROUP_PROVISIONS_SCHEMA,freight)||world.schemaVersion>=256&&ITEM_DEFINITIONS[source.item].nutrition>0)||source.foodPoison||source.item==='pemmican'&&!freshGroupProvision(source,world.tick))return fail('source');
+    const unit=world.schemaVersion>=256?groupCaravanUnitMass256(source.item,freight):groupItemMassGrams(source.item,freight,world.schemaVersion),reserved=authority.reservedQuantity(world,source.id);
     if(unit===undefined||!Number.isSafeInteger(reserved)||reserved<0||source.quantity-reserved<line.quantity)return fail('source-reserved');
     remainingBySource.set(source.id,source.quantity);let remaining=line.quantity;
     while(remaining){
-      const ranked=[...carriers].filter(c=>c.capacityGrams-c.grams>=unit).sort((a,b)=>a.grams-b.grams||a.pawnId-b.pawnId);
-      let selected:typeof carriers[number]|undefined;
+      const ranked=[...carriers].filter(c=>c.capacityGrams-c.grams>=unit).sort((a,b)=>Number(capture.members.some(p=>p.id===a.pawnId))-Number(capture.members.some(p=>p.id===b.pawnId))||a.grams-b.grams||a.pawnId-b.pawnId);
+      let selected:typeof carriers[number]|undefined,handler:Pawn|undefined;
       for(const carrier of ranked){
-        const pawn=capture.members.find(p=>p.id===carrier.pawnId)!;
+        const pawn=capture.members.find(p=>p.id===carrier.pawnId)??capture.members.find(p=>carriers.find(c=>c.pawnId===p.id)!.capacityGrams-carriers.find(c=>c.pawnId===p.id)!.grams>=unit);if(!pawn)continue;
         if(authority.sourceReason(world,source,pawn))continue;
         const key=`${source.id}:${pawn.id}`;let reach=access.get(key);
         if(reach===undefined){reach=authority.sourceAccess(world,pawn,source);access.set(key,reach);}
-        if(reach==='deferred')return {kind:'deferred'};if(reach==='reachable'){selected=carrier;break;}
+        if(reach==='deferred')return {kind:'deferred'};if(reach==='reachable'){selected=carrier;handler=pawn;break;}
       }
       if(!selected)return fail('source-or-carrier-capacity');
-      const quantity=Math.min(remaining,Math.floor((selected.capacityGrams-selected.grams)/unit));
-      if(manifest.length>=GROUP_MAX_MANIFEST)return fail('manifest-cap');
-      manifest.push({pileId:source.id,item:source.item,quantity,carrierId:selected.pawnId});
+      const human=carriers.find(c=>c.pawnId===handler!.id)!;const animal=selected.pawnId!==handler!.id;
+      const quantity=Math.min(remaining,Math.floor((selected.capacityGrams-selected.grams)/unit),animal?Math.floor((human.capacityGrams-human.grams)/unit):Number.MAX_SAFE_INTEGER);if(quantity<1)return fail('handler-capacity');
+      if(world.schemaVersion<256&&manifest.length>=GROUP_MAX_MANIFEST)return fail('manifest-cap');
+      manifest.push({pileId:source.id,item:source.item,quantity,carrierId:handler!.id,...animal?{animalCarrierId:selected.pawnId}:{}});
       const left=remainingBySource.get(source.id)!;if(quantity<left)additionalPiles++;
       remainingBySource.set(source.id,left-quantity);selected.grams+=quantity*unit;remaining-=quantity;
     }
   }
-  const mass:GroupMassCapture=Object.freeze({grams:carriers.reduce((n,c)=>n+c.grams,0),capacityGrams:capture.mass.capacityGrams,
+  const mass:GroupMassCapture=Object.freeze({grams:carriers.reduce((n,c)=>n+c.grams,0),capacityGrams:capture.mass.capacityGrams,...capture.mass.ridingFactor!==undefined?{ridingFactor:capture.mass.ridingFactor}:{},
     carriers:Object.freeze(carriers.map(c=>Object.freeze(c)))});
   if(!Number.isSafeInteger(mass.grams)||world.piles.length+additionalPiles>32768||!Number.isSafeInteger(world.nextId+additionalPiles))return fail('pile-or-id-cap');
   const reason=authority.namespaceReason(world,{additionalPiles,members:capture.members,items:capture.items});if(reason)return fail(reason);
@@ -108,14 +111,14 @@ export function prepareGroupPickup(world:World,group:PreparingGroup,authority:Gr
   |{kind:'ready';plan:GroupPickupPlan}|{kind:'refused';reason:string} {
   if(group.phase!=='loading')return fail('phase');
   const line=group.manifest[group.cursor];if(!line)return fail('cursor');
-  const result=captureGroupCandidates(world,group.memberIds,authority);if(result.kind!=='ready')return result;
+  const result=captureGroupCandidates(world,group.memberIds,authority,group.animalPreparation?.lines.map(l=>l.animalId));if(result.kind!=='ready')return result;
   const capture=result.capture,pawn=capture.members.find(p=>p.id===line.carrierId),source=capture.sources.get(line.pileId);
   if(!pawn||!source||source.owner.type!=='ground'||source.item!==line.item||source.foodPoison||line.item==='pemmican'&&(!mixedGroupProvisions(group)||!freshGroupProvision(source,world.tick))||!contact(pawn,source.owner)
     ||pawn.motion&&pawn.motion.end>world.tick||pawn.moveCooldown>0)return fail('physical-contact');
   const policy=authority.sourceReason(world,source,pawn);if(policy)return fail(policy);
   const reserved=authority.reservedQuantity(world,source.id,group.id),future=groupReservedSources(group).get(source.id)??0;
   if(!Number.isSafeInteger(reserved)||reserved<0||future<line.quantity||source.quantity-reserved<future)return fail('reservation');
-  const unit=groupItemMassGrams(source.item,freightGroup(group),world.schemaVersion),carrier=capture.mass.carriers.find(c=>c.pawnId===pawn.id)!;
+  const unit=world.schemaVersion>=256?groupCaravanUnitMass256(source.item,freightGroup(group)):groupItemMassGrams(source.item,freightGroup(group),world.schemaVersion),carrier=capture.mass.carriers.find(c=>c.pawnId===pawn.id)!;
   if(unit===undefined||carrier.grams+line.quantity*unit>carrier.capacityGrams)return fail('mass');
   const transfer=planInventoryPickup(world,source,pawn.id,line.quantity);if(!transfer)return fail('transfer');
   const namespace=authority.namespaceReason(world,{additionalPiles:Number(transfer.split),members:capture.members,items:capture.items});if(namespace)return fail(namespace);
@@ -128,7 +131,7 @@ export function prepareGroupPickup(world:World,group:PreparingGroup,authority:Gr
   else if(line.item==='wood'||line.item==='steel'){
     if(world.schemaVersion<GROUP_FREIGHT_SCHEMA||!freightGroup(group)||!nextFreight)return fail('freight-contract');
     nextFreight[line.item==='wood'?'woodLoaded':'steelLoaded']+=line.quantity;
-  }else nextLedger.cargoLoaded[line.item]+=line.quantity;
+  }else if(line.item==='cloth'||line.item==='muffalo-wool')nextLedger.cargoLoaded[line.item]+=line.quantity;
   if(![nextFreight?.woodLoaded??0,nextFreight?.steelLoaded??0,nextProvisions?.pemmicanLoadedUnits??0,nextLedger.foodLoaded,nextLedger.silverLoaded,nextLedger.cargoLoaded.cloth,nextLedger.cargoLoaded['muffalo-wool']].every(Number.isSafeInteger))return fail('ledger');
   const possessions=capture.items.filter(p=>'pawnId' in p.owner&&p.owner.pawnId===pawn.id);
   return {kind:'ready',plan:{group,expectedGroup:JSON.stringify(group),cursor:group.cursor,transfer,nextLedger,...nextProvisions?{nextProvisions}:{},...nextFreight?{nextFreight}:{},tick:world.tick,
@@ -174,7 +177,7 @@ export function prepareGroupDeparture(world:World,planet:PlanetState,group:Prepa
   const route=findPlanetRoute(planet,group.originTile??planet.homeTile,group.destination,planetCostContext(world,capture.mass),budget);
   if(route.kind==='deferred')return {kind:'deferred'};if(route.kind!=='found')return fail('unreachable');
   const next:AwayGroup={...group.originTile!==undefined?{originTile:group.originTile}:{},id:group.id,startedAt:group.startedAt,destination:group.destination,ledger:group.ledger,...group.provisions?{provisions:{...group.provisions}}:{},...group.freight?{freight:{...group.freight}}:{},phase:'travelling',
-    members:[...capture.members],items:[...capture.items],departedAt:world.tick,lastPersonalTick:world.tick,baseline:capture.baseline,
+    members:[...capture.members],...capture.animals?.length?{animalOwners:{revision:1 as const,members:[...capture.animals],origins:[],order:[...capture.members,...capture.animals].map(p=>p.id)}}:{},items:[...capture.items],...capture.packed?.length?{packed:[...capture.packed]}:{},departedAt:world.tick,lastPersonalTick:world.tick,baseline:capture.baseline,
     entry:{...capture.exitCells[0]!.cell},tile:group.originTile??planet.homeTile,route:route.tiles,segment:null,paused:false,stop:null};
   const plan:GroupDeparturePlan={group,expectedGroup:JSON.stringify(group),capture,next};
   const reason=authority.departureReason(world,plan);return reason?fail(reason):{kind:'ready',plan};

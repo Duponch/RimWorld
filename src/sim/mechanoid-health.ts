@@ -1,3 +1,4 @@
+import {mechanicalOrder256,wakeTempleMechGroup256} from './temple-mech-duty-256.ts';
 import { assessBody,HEALTHY_BODY_INPUT,type BodyAssessment } from './body-capacities.ts';
 import { mechanoidBodyModel } from './mechanoid-anatomy.ts';
 import { isMechanoidKind,mechanoidDefinition,type MechanoidKind } from './mechanoid-definition.ts';
@@ -64,9 +65,11 @@ export function commitMechanoidImpact(w:World,m:Mechanoid,record:MedicalRecord,r
   if(!adopted.death&&m.state!=='downed'&&medicalStatus(adopted)==='downed'&&(context.externalViolence??true))
     adopted.death={tick:adopted.tick,cause:'downed'};
   const status=medicalStatus(adopted),changed=m.state!==status;
+  const harmed=adopted.missing.length>(m.health?.missing.length??0)||adopted.injuries.some(i=>i.severity>(m.health?.injuries.find(old=>old.id===i.id)?.severity??0));
   w.rng=random.rng;m.health=adopted;
+  if(harmed&&(context.externalViolence??true))wakeTempleMechGroup256(w,m,atCore);
   if(status!=='mobile'){
-    m.state=status;m.path=[];if(m.raid)m.raid.goal=null;cancelMelee(m);cancelMechanoidRanged(m);stopMechanoidEmpStun(m,atCore,w.tick);delete m.stun;
+    m.state=status;m.path=[];if(mechanicalOrder256(m))mechanicalOrder256(m)!.goal=null;cancelMelee(m);cancelMechanoidRanged(m);stopMechanoidEmpStun(m,atCore,w.tick);delete m.stun;
     const group=w.raids?.mechActive;
     if(status==='dead'&&group?.members.includes(m.id)&&!group.lost.includes(m.id)){group.lost.push(m.id);group.lost.sort((a,b)=>a-b);}
     if(changed){w.events.push({tick:w.tick,type:'command',message:`${mechanoidDefinition(m.mechKind).label} ${m.id} ${status==='dead'?'est neutralisé':'est immobilisé'}.`});if(w.events.length>80)w.events.splice(0,w.events.length-80);}

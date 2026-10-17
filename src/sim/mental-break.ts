@@ -1,3 +1,4 @@
+import {processHumanConfusedWander256,recoverHumanConfusion256} from './human-condition-mind-256.ts';
 import { expireMentalCatharsisAt } from './mental-state.ts';
 import { BREAK_MTB_DAYS,finishMentalBreak,mentalState } from './mental-state.ts';
 import { breakThresholds,minorBreakThreshold } from './traits.ts';
@@ -58,6 +59,7 @@ export function updateMentalBreak(world:World,pawn:Pawn,budget?:SearchBudget):vo
   let m=pawn.mental;
   expireMentalCatharsisAt(pawn,world.tick);
   if(pawn.state==='dead'){if(m?.crisis)finishMentalBreak(world,pawn,false);return;}
+  if(m?.crisis?.kind==='confused-wander'){if(pawn.state==='downed')recoverHumanConfusion256(pawn,world);return;}
   if(!isColonist(pawn))return;
   if(m?.cooldown&&!moodFrozen(pawn))m.cooldown--;
   // The arrested person's current interval stays clinical, while no new
@@ -111,6 +113,7 @@ export function updateMentalBreak(world:World,pawn:Pawn,budget?:SearchBudget):vo
 
 export function processMentalBreak(world:World,pawn:Pawn,context:NeedContext,candidatesReach:()=>Reachability|null):void {
   const crisis=pawn.mental?.crisis;if(!crisis)return;
+  if(crisis.kind==='confused-wander'){processHumanConfusedWander256(world,pawn,context,candidatesReach);return;}
   collapseFromExhaustion(world,pawn,context);
   if(moodFrozen(pawn)){finishMentalBreak(world,pawn);return;}
   retryInterruptedCargo(world,pawn);

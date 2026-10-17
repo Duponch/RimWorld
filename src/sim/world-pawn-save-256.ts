@@ -1,0 +1,86 @@
+import {validPhysicalWorldPawnOrder256} from './world-pawn-native-order-256.ts';
+import {worldPawnRetiredOriginMatches256} from './world-pawn-origin-projection-256.ts';
+import {validMentalShape} from './mental-save.ts';
+import {validToxicBuildupTransport256} from './toxic-buildup-save-256.ts';
+import {validateRecreationRecordShape} from './recreation-save.ts';
+import {validateHumanSocial} from './social-save.ts';
+import {validSchedule} from './schedule.ts';
+import {APPAREL_POLICY_INTERVAL} from './apparel-renewal.ts';
+import type {NumericMembershipSink} from './numeric-membership.ts';
+import type {CampaignMapPresentation,CampaignSummary} from './world-map-state.ts';
+import {worldPawnMothballReadiness256} from './world-pawn-life-256.ts';
+import {validateDetachedPawnRecordShape} from './pawn-record-save.ts';
+import {validatePawnHealthRecord} from './health-save.ts';
+import {validCaravanAnimalRecord256} from './group-animal-record-save-256.ts';
+import {validatePileRecordShape} from './material-record-save.ts';
+import {validatePackedFurnitureRecords} from './furniture-transfer-save.ts';
+import {validGroupMapContext} from './world-map-context-save.ts';
+import {deadWorldPawn256,terminalWorldPawn256,type WorldPawnsState256,type WorldPawnOwner256} from './world-pawn-state-256.ts';
+import type {World} from './types.ts';
+const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&Object.getPrototypeOf(v)===Object.prototype&&Reflect.ownKeys(v).every(k=>typeof k==='string'&&Object.getOwnPropertyDescriptor(v,k)?.enumerable===true&&Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)!,'value'));
+const exact=(v:Record<string,unknown>,required:readonly string[],optional:readonly string[]=[])=>required.every(k=>Object.hasOwn(v,k))&&Reflect.ownKeys(v).every(k=>typeof k==='string'&&(required.includes(k)||optional.includes(k)));
+const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
+function dense(v:unknown,max:number):v is unknown[]{if(!Array.isArray(v)||Object.getPrototypeOf(v)!==Array.prototype||v.length>max||Reflect.ownKeys(v).length!==v.length+1)return false;for(let i=0;i<v.length;i++){const d=Object.getOwnPropertyDescriptor(v,String(i));if(!d||!Object.hasOwn(d,'value')||!d.enumerable)return false;}return true;}
+
+/** Data admission before nested clinical/item readers. Shared scalar headers
+ * are allowed; cycles, accessors, non-enumerable fields and NaN are refused. */
+export function plainWorldPawnData256(value:unknown):boolean {
+ const active=new WeakSet<object>(),done=new WeakSet<object>();
+ const stack:{v:unknown;exit?:boolean}[]=[{v:value}];
+ while(stack.length){const {v,exit}=stack.pop()!;if(v===null||typeof v==='string'||typeof v==='boolean')continue;if(typeof v==='number'){if(!Number.isFinite(v))return false;continue;}if(typeof v!=='object')return false;if(exit){active.delete(v);done.add(v);continue;}if(active.has(v))return false;if(done.has(v))continue;
+  const array=Array.isArray(v);if(array?!dense(v,Number.MAX_SAFE_INTEGER):!object(v))return false;
+  active.add(v);stack.push({v,exit:true});for(const key of Reflect.ownKeys(v)){if(array&&key==='length')continue;const d=Object.getOwnPropertyDescriptor(v,key)!;if(!Object.hasOwn(d,'value')||!d.enumerable)return false;stack.push({v:d.value});}
+ }return true;
+}
+
+/** Owner header only; validates original descriptors before any consumer. */
+export function validWorldPawnsEnvelope256(raw:object,version:number,nowCore:number,nextId:number):boolean {
+ const d=Object.getOwnPropertyDescriptor(raw,'worldPawns');if(!d)return !('worldPawns'in raw);
+ if(version!==256||!d.enumerable||!Object.hasOwn(d,'value')||!plainWorldPawnData256(d.value)||!object(d.value))return false;const s=d.value;
+ if(!exact(s,['revision','atCore','lastSuccessfulCore','currentRate','owners'],['nativeOrder'])||s.revision!==1||!int(s.atCore,0,nowCore)||s.atCore!==nowCore||s.atCore%10||!int(s.lastSuccessfulCore,0,s.atCore)||!int(s.currentRate,1,16777216)||(s.currentRate&(s.currentRate-1))!==0||!dense(s.owners,nextId))return false;
+ const ids=new Set<number>();for(const row of s.owners){if(!object(row)||!exact(row,['factionId','originMapId','context','clockCore','enteredAtAbsCore','mode','items','packed','kind','actor'],['keepForever','startingPawnLeftBehind','everColonist','destroyed','free','everSeenByPlayer'])||row.factionId!==null&&!int(row.factionId,1)||row.originMapId!==null&&!int(row.originMapId)||!object(row.context)||!int(row.clockCore,0,s.atCore)||row.clockCore%10||!int(row.enteredAtAbsCore)||!['active','mothballed','dead'].includes(String(row.mode))||!['human','animal'].includes(String(row.kind))||!object(row.actor)||!int(row.actor.id,1,nextId-1)||ids.has(row.actor.id)||!dense(row.items,nextId)||!dense(row.packed,nextId))return false;
+  ids.add(row.actor.id);for(const k of ['keepForever','startingPawnLeftBehind','everColonist','destroyed','free','everSeenByPlayer'])if(Object.hasOwn(row,k)&&row[k]!==true)return false;
+  if(row.destroyed&&(row.mode!=='dead'||row.items.length||row.packed.length))return false;
+  if(row.free&&(row.mode==='dead'||row.destroyed||row.startingPawnLeftBehind))return false;
+  if(Object.hasOwn(row,'everSeenByPlayer')&&row.kind!=='animal')return false;
+  if(row.startingPawnLeftBehind&&(row.kind!=='human'||row.keepForever!==true)||row.everColonist&&row.kind!=='human'||row.mode==='active'&&row.clockCore!==s.atCore)return false;
+ }return validPhysicalWorldPawnOrder256(s as unknown as WorldPawnsState256,nextId);
+}
+/** All caller-owned originals and namespaces must already be enumerated. The
+ * scalar headers below are validation contexts, never local World objects. */
+export function validateWorldPawnOwners256(s:WorldPawnsState256,root:Readonly<Pick<World,'schemaVersion'|'tick'|'nextId'|'planet'|'worldMaps'|'worldFactions'|'campaignMap'>>&Partial<Readonly<Pick<World,'foodPolicies'|'apparelPolicies'>>>,ids:NumericMembershipSink,projection?:CampaignMapPresentation|CampaignSummary,knownHumanIds?:ReadonlySet<number>):string[]{
+ const humans=new Set(knownHumanIds);for(const row of s.owners)if(row.kind==='human')humans.add(row.actor.id);for(const row of root.worldFactions?.leaders??[])humans.add(row.pawn.id);
+ const errors:string[]=[];if(!validPhysicalWorldPawnOrder256(s,root.nextId))errors.push('Native WorldPawn slots do not match actual owners');if(root.schemaVersion!==256)return ['WorldPawns require prospective256'];const factions=root.worldFactions;const add=(id:number)=>{if(!int(id,1,root.nextId-1)||ids.has(id))errors.push('Duplicate or invalid WorldPawn Thing');ids.add(id);};
+ for(const row of s.owners){if(row.factionId!==null&&!factions?.factions.some(f=>f.id===row.factionId))errors.push('WorldPawn actual faction foreign key refused');if(row.startingPawnLeftBehind&&row.factionId!==factions?.playerFactionId)errors.push('Left-behind starter lost actual player faction');const tick=row.clockCore/10,c={...row.context,tick,nextId:root.nextId,schemaVersion:256 as const};
+  if(!validGroupMapContext(row.context,tick,256,root))errors.push('WorldPawn actual origin context refused');
+  if(row.mode==='mothballed'&&worldPawnMothballReadiness256(row)!=='yes')errors.push('Unclosed actual mothball flags');
+  if(row.destroyed===true&&(row.mode!=='dead'||row.items.length||row.packed.length||deadWorldPawn256(row)))errors.push('Destroyed WorldPawn cannot invent clinical death or keep possessions');
+  if((row.mode==='dead')!==terminalWorldPawn256(row))errors.push('WorldPawn terminal mode mismatch');
+  if(row.free&&(terminalWorldPawn256(row)||row.startingPawnLeftBehind))errors.push('Free situation conflicts with actual terminal/starter owner');
+  if(Object.hasOwn(row,'everSeenByPlayer')&&row.kind!=='animal')errors.push('Actual seen witness is currently animal-only');
+  if(row.originMapId===null&&!row.startingPawnLeftBehind)errors.push('WorldPawn missing actual origin map');
+  if(row.originMapId!==null){
+   const retired=root.worldMaps?.retired.find(m=>m.id===row.originMapId),proof=projection?.worldPawnOrigins?.find(m=>m.mapId===row.originMapId);
+   const origin=root.worldMaps?(root.worldMaps.sites.find(m=>m.id===row.originMapId)??retired):(projection?.maps.find(m=>m.id===row.originMapId)??proof);
+   if(!origin||origin.tile!==null&&row.context.site?.revision===3&&origin.tile!==row.context.site.tileId)errors.push('WorldPawn actual origin identity/tile refused');
+   const retiredProof=retired&&retired.tile!==null?{mapId:retired.id,tile:retired.tile,removedAt:retired.removedAt}:proof;
+   if(retired&&!retiredProof||retiredProof&&!worldPawnRetiredOriginMatches256(row,retiredProof))errors.push('WorldPawn retired origin/absolute entry provenance refused');
+  }
+  add(row.actor.id);if(!validToxicBuildupTransport256(row.actor,256,tick))errors.push('Invalid actual unspawned clinical condition owner');
+  if(row.kind==='animal'){
+   if(!row.actor.growthTracker||row.actor.domestic&&row.factionId!==factions?.playerFactionId)errors.push('WorldPawn prospective animal/faction refused');
+   if(!validCaravanAnimalRecord256(row.actor,{context:row.context,tick,nextId:root.nextId,version:256,...row.mode==='mothballed'?{mothballedWorldPawn256:true as const}:{}}))errors.push('Invalid actual world animal');
+  }else {const a=row.actor;
+   if(!validMentalShape(a.mental,256,tick,c.width,c.height))errors.push('Invalid retained human mental state');
+   errors.push(...validateRecreationRecordShape(a as unknown as Record<string,unknown>,256,tick),...validateHumanSocial(a,256,tick,humans,[]));
+   if(!validSchedule(a.schedule)||!int(a.restZeroTicks,0,4500)||typeof a.collapsePending!=='boolean')errors.push('Invalid retained human schedule/exhaustion');
+   if(root.foodPolicies&&!root.foodPolicies.some(p=>p.id===a.foodPolicyId))errors.push('Missing actual retained food policy');
+   if(root.apparelPolicies&&(!root.apparelPolicies.some(p=>p.id===a.apparelPolicyId)||typeof a.apparelAutomation!=='boolean'||!int(a.nextApparelCheckAt,0,tick+APPAREL_POLICY_INTERVAL.max)))errors.push('Missing actual retained apparel policy');
+   if(a.prisoner||a.visitor||a.podRescue||a.raid)errors.push('WorldPawn guest HostFaction producer is not represented');if(a.jobId!==null||a.path.length||a.motion||a.moveCooldown||a.need||a.haul||a.rescue||a.animalRescue||a.medicalSleep||a.bedId!==null||a.orders.active||a.orders.queue.length)errors.push('WorldPawn retains a local task/alias');errors.push(...validateDetachedPawnRecordShape(a as unknown as Record<string,unknown>,c,256,tick),...validatePawnHealthRecord(a,c,row.mode==='mothballed'));}
+  const h=row.actor.health;if(h?.cryptosleepSickness?.vomit||h?.foodPoisoning?.vomit||h?.flu?.vomit||h?.immuneDiseases?.malaria?.vomit||h?.toxicBuildup?.vomit||h?.toxicBuildup?.vomitRequestedAt!==undefined)errors.push('Unspawned WorldPawn retains a physical vomit job');
+  for(const pile of row.items){add(pile.id);errors.push(...validatePileRecordShape(pile as unknown as Record<string,unknown>,c,256,tick));if(!('pawnId'in pile.owner)||pile.owner.pawnId!==row.actor.id||!['inventory','equipment','apparel','pawn'].includes(pile.owner.type))errors.push('WorldPawn item lost actual holder');}
+  const packedIds=new Set<number>();errors.push(...validatePackedFurnitureRecords(row.packed,c,256,packedIds));for(const id of packedIds)add(id);for(const p of row.packed)if(p.owner.type==='ground'||p.owner.pawnId!==row.actor.id)errors.push('WorldPawn package lost actual holder');
+ }
+ if(projection?.worldPawnOrigins?.some(origin=>!s.owners.some(row=>row.originMapId===origin.mapId)))errors.push('Unreferenced WorldPawn retired origin metadata');
+ return errors;
+}

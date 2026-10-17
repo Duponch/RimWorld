@@ -1,3 +1,4 @@
+import {BIOME_DISEASE_FACTS_256,biomeDiseaseChoice256} from './biome-disease-facts-256.ts';
 import { isPlayerPatient } from './affiliation.ts';
 import { acquireFlu } from './flu-state.ts';
 import { acquireImmuneDisease } from './immune-diseases-state.ts';
@@ -146,9 +147,18 @@ export function advanceFluIncidents(world:World):void {
   const state=world.fluIncidents;if(!state||world.tick<state.nextCheck)return;
   state.nextCheck=world.tick+FLU_CHECK_INTERVAL;
   state.checks++;
-  const biome=BIOMES[world.site?.biome??'temperate-forest'];
+  const site=world.site;
+  const biome=site?.revision===3?BIOME_DISEASE_FACTS_256[site.biome]:BIOMES[site?.biome??'temperate-forest'];
   const mtbTicks=biome.mtbDays*DISEASE_INTERVAL_FACTOR*TICKS_PER_DAY;
   if(random(state)>=-Math.expm1(-FLU_CHECK_INTERVAL/mtbTicks))return;
+  if(site?.revision===3){
+    const selected=biomeDiseaseChoice256(site.biome,random(state));
+    if(selected==='Disease_Flu'){state.fluDraws++;resolveFluIncident(world,state);}
+    else if(state.immuneDiseases&&(selected==='Disease_Plague'||selected==='Disease_Malaria')){state.immuneDiseases.draws++;resolveImmuneDiseaseIncident(world,selected==='Disease_Plague'?'plague':'malaria',state.immuneDiseases);}
+    // Other selected diseases consume their opportunity, as in the existing
+    // bounded implementation. This does not claim a complete storyteller.
+    return;
+  }
   // Core chooses a weighted, currently usable disease after the category
   // event. These static human weights preserve category frequency; other
   // diseases have not yet been implemented or dynamically filtered here.

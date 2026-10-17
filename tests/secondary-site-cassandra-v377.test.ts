@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import {expect,test} from 'vitest';
 import {createScenarioWorld} from '../src/sim/new-game.ts';
 import {applyCommand,stepWorld} from '../src/sim/engine.ts';
@@ -31,8 +32,8 @@ function expedition(){
   }
   addMaterial(w,'food',8,{type:'ground',x:13,z:20},'survival-meal');refreshStock(w);
   const ids=w.pawns.slice(0,2).map(p=>p.id);command(w,{type:'planet-adopt'});
-  const tile=52;expect(w.planet!.tiles[w.planet!.homeTile]!.neighbours).toContain(tile);
-  expect(w.planet!.tiles[tile]!.biome).toBe('temperate-forest');
+  const tile=52;expect(legacyPlanet(w).tiles[legacyPlanet(w).homeTile]!.neighbours).toContain(tile);
+  expect(legacyPlanet(w).tiles[tile]!.biome).toBe('temperate-forest');
   until(w,()=>ids.every(id=>groupMemberChoices(w).some(c=>c.pawn.id===id&&c.ok)));
   const food=w.piles.find(p=>p.owner.type==='ground'&&p.item==='survival-meal'&&p.quantity>=8)!;
   command(w,{type:'group-start',memberIds:ids,destination:tile,sources:[{pileId:food.id,quantity:8}]});

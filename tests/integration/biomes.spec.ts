@@ -79,7 +79,7 @@ test('V375 short native: three fixed biomes, real new-game arrival and exact sav
       const incoming = await world(page);
       expect(incoming.tick).toBe(0); expect(incoming.schemaVersion).toBe(SCHEMA_VERSION); expect(incoming.width).toBe(250); expect(incoming.seed).toBe(selected.resolved.seed);
       expect(incoming.site?.biome).toBe(biome); expect(incoming.planet?.homeTile).toBe(selected.choice.tile);
-      expect(incoming.flora?.biome).toBe(biome); expect(incoming.wildlife?.population?.biome).toBe(biome);
+      if(incoming.flora?.revision!==1)throw Error('Historical biome pilot requires literal flora revision1');expect(incoming.flora.biome).toBe(biome); expect(incoming.wildlife?.population?.biome).toBe(biome);
       expect(incoming.resources.some(resource => resource.species !== undefined)).toBe(true);
       expect(incoming.wildlife!.animals.length).toBeGreaterThan(0);
       row.ecology = { plants: incoming.resources.filter(resource => resource.species !== undefined).length, animals: incoming.wildlife!.animals.length };

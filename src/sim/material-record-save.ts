@@ -1,3 +1,7 @@
+import {validMaterialPermission256} from './material-permission-256.ts';
+import {heldDuckInventoryClock256} from './duck-held-item-clock-256.ts';
+import {validEggPile256} from './animal-egg-save-v256.ts';
+import {isFutureEcologyItem256} from './cave-products-256.ts';
 import {validTreePileShape} from './tree-transfer-save.ts';
 import {validOriginalTreeResource} from './tree-transfer-resource-save.ts';
 import { validMechCorpseShape } from './mechanoid-corpse-save.ts';
@@ -21,10 +25,14 @@ const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 const oneOf=(v:unknown,values:string[]):boolean=>typeof v==='string'&&values.includes(v);
 
-export function validatePileRecordShape(item:Record<string,unknown>,world:Pick<World,'width'|'height'|'tick'|'nextId'|'climate'>,version:number,validationTick=world.tick):string[]{
+export function validatePileRecordShape(item:Record<string,unknown>,world:Pick<World,'width'|'height'|'tick'|'nextId'|'climate'>&Partial<Pick<World,'wildlife'>>,version:number,validationTick=world.tick,ancientCasketId?:number):string[]{
  const input={width:world.width,height:world.height,tick:validationTick};
  const coord=(v:Record<string,unknown>)=>integer(v.x,0,world.width-1)&&integer(v.z,0,world.height-1);
  const errors:string[]=[];
+ if(!validMaterialPermission256(item,version))return ['Invalid or future ordinary Thing permission.'];
+ if(!validEggPile256(item as unknown as import('./types.ts').MaterialPile,version,heldDuckInventoryClock256(world,item,version,validationTick),world.nextId))errors.push('Invalid or future egg state.');
+ if(version<256&&item.item==='slag-steel-chunk')errors.push('Future actual steel slag in older save.');
+ if(version<256&&isFutureEcologyItem256(item.item))errors.push('Future animal product in older save.');
  if(!validTreePileShape(item,version,validationTick,world.nextId,(raw,tick)=>validOriginalTreeResource(raw,world,version,tick)))errors.push('Invalid or future minified tree.');
 if(!validMechCorpseShape(item,version,input.tick as number))errors.push('Invalid or future mechanoid carcass.');
 if(!validFoodContamination(item.foodPoison,item.item as keyof typeof ITEM_DEFINITIONS,version>=89))errors.push('Invalid food contamination.');
@@ -52,7 +60,7 @@ if(version<79&&['hare-corpse','hare-meat','light-leather'].includes(String(item.
 if(!validUnfinishedShape(item,version)||!validGunWorkShape(item,version)||!validFlakWorkShape(item,version)||!validComponentWorkShape(item,version))errors.push('Invalid unfinished item.');
 if(!validApparelShape(item,version))errors.push('Invalid apparel state for schema.');
 if(!validWeaponShape(item,version))errors.push('Invalid weapon state for schema.');
-if (!oneOf(item.kind, ['wood', 'food', ...(version>=241?['uranium']:[]), ...(version>=235?['plant']:[]), ...(version>=218?['chemfuel']:[]), ...(version>=206?['neutroamine']:[]), ...(version>=28?['chunk']:[]), ...(version>=29?['steel']:[]),...(version>=123?['gold','plasteel','advanced-component']:[]), ...(version>=32?['blocks']:[]), ...(version>=41?['component']:[]), ...(version>=51?['medicine']:[]), ...(version>=52?['weapon']:[]), ...(version>=63?['apparel']:[]), ...(version>=71?['textile']:[]), ...(version>=72?['unfinished']:[]),...(version>=79?['corpse']:[]),...(version>=194?['mech-corpse']:[]),...(version>=88?['silver']:[])]) || !integer(item.quantity, 1, version>=227&&item.item==='hay'?200:version>=218&&item.item==='chemfuel'?150:version>=206&&item.item==='neutroamine'?150:version>=120&&item.item==='muffalo-wool'?100:version>=88&&item.item==='silver'||version>=123&&item.item==='gold'?500:MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
+if (!oneOf(item.kind, ['wood', 'food', ...(version>=256?['jade']:[]), ...(version>=241?['uranium']:[]), ...(version>=235?['plant']:[]), ...(version>=218?['chemfuel']:[]), ...(version>=206?['neutroamine']:[]), ...(version>=28?['chunk']:[]), ...(version>=29?['steel']:[]),...(version>=123?['gold','plasteel','advanced-component']:[]), ...(version>=32?['blocks']:[]), ...(version>=41?['component']:[]), ...(version>=51?['medicine']:[]), ...(version>=52?['weapon']:[]), ...(version>=63?['apparel']:[]), ...(version>=71?['textile']:[]), ...(version>=72?['unfinished']:[]),...(version>=79?['corpse']:[]),...(version>=194?['mech-corpse']:[]),...(version>=88?['silver']:[])]) || !integer(item.quantity, 1, version>=227&&item.item==='hay'?200:version>=218&&item.item==='chemfuel'?150:version>=206&&item.item==='neutroamine'?150:version>=256&&isFutureEcologyItem256(item.item)&&item.kind==='textile'?100:version>=120&&item.item==='muffalo-wool'?100:version>=88&&item.item==='silver'||version>=123&&item.item==='gold'?500:MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
 else {
   if (version >= 5) {
     if (typeof item.item !== 'string' || !Object.hasOwn(ITEM_DEFINITIONS, item.item)) errors.push('Unknown item definition.');
@@ -66,7 +74,10 @@ else {
     }
   } else if (item.item !== undefined) errors.push('Legacy save contains version 5 item.');
   const owner = item.owner;
-  if (owner.type === 'ground' ? !coord(owner) || Object.keys(owner).some(key => !['type', 'x', 'z'].includes(key))
+  // A direct held owner is admissible ONLY to the actual casket validator.
+  // Ordinary map/full/delta calls omit this explicit original holder ID.
+  if (owner.type === 'ancient-casket' ? version!==256||!integer(ancientCasketId,1,world.nextId-1)||owner.casketId!==ancientCasketId||Object.keys(owner).some(key=>!['type','casketId'].includes(key))
+    : owner.type === 'ground' ? !coord(owner) || Object.keys(owner).some(key => !['type', 'x', 'z'].includes(key))
     : (owner.type === 'pawn'||version>=52&&owner.type==='equipment'||version>=63&&owner.type==='apparel'||version>=88&&owner.type==='inventory') ? !integer(owner.pawnId, 1) || Object.keys(owner).some(key => !['type', 'pawnId'].includes(key))
       : version>=231&&owner.type==='starting-pod' ? !integer(owner.podId,1,world.nextId-1)||Object.keys(owner).some(key=>!['type','podId'].includes(key))
       : version>=216&&owner.type==='orbital-ship' ? !integer(owner.shipId,1,world.nextId-1)||Object.keys(owner).some(key=>!['type','shipId'].includes(key))

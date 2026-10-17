@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import {expect,test} from 'vitest';
 import {readColonistAvailability,isLocallyControllableColonist,type ColonistAvailability} from '../src/ui/colonist-availability';
 import {draftablePawns} from '../src/ui/drafting-controls';
@@ -221,7 +222,7 @@ function departedGroup(){
   // that resident only after the original travellers actually leave.
   const originals=w.pawns.slice(0,2);addMaterial(w,'food',originals.length,{type:'inventory',pawnId:originals[0]!.id},'survival-meal');
   expect(applyCommand(w,{type:'planet-adopt'}).ok).toBe(true);
-  expect(applyCommand(w,{type:'group-start',memberIds:originals.map(p=>p.id),destination:w.planet!.civilianTile,sources:[]}).ok).toBe(true);
+  expect(applyCommand(w,{type:'group-start',memberIds:originals.map(p=>p.id),destination:legacyPlanet(w).civilianTile,sources:[]}).ok).toBe(true);
   expect(readColonistAvailability(w)).toEqual({kind:'available',pawnIds:w.pawns.map(p=>p.id).sort((a,b)=>a-b)});
   const blockedPreparation=structuredClone(w);disableLocals(blockedPreparation);
   expect(unavailable(blockedPreparation).local).toHaveLength(w.pawns.length);expect(unavailable(blockedPreparation).away).toEqual([]);
@@ -231,7 +232,7 @@ function departedGroup(){
   for(const exit of forming.exits){const p=w.pawns.find(p=>p.id===exit.pawnId)!;if(!exit.cell)throw Error('Expected legal exit');
     p.x=exit.cell.x;p.z=exit.cell.z;p.state='idle';p.path=[];p.moveCooldown=0;p.planCooldown=0;delete p.motion;}
   tryGroupDeparture(w);const group=w.group;if(!group||!('members' in group))throw Error('Expected atomic departure');
-  group.phase='at-site';group.tile=w.planet!.civilianTile;group.destination=group.tile;group.route=[group.tile];group.segment=null;group.stop={kind:'at-site'};
+  group.phase='at-site';group.tile=legacyPlanet(w).civilianTile;group.destination=group.tile;group.route=[group.tile];group.segment=null;group.stop={kind:'at-site'};
   disableLocals(w);
   return {w,group,originals};
 }
@@ -248,7 +249,7 @@ test('group formation references become real original owners, including a stoppe
 test('actual group entry transfers originals back to map; unloading contains references only',()=>{
   const {w,group,originals}=departedGroup();
   // Prepare the arrival frontier; this is not certification of a played route.
-  group.phase='awaiting-entry';group.tile=w.planet!.homeTile;group.destination=group.tile;
+  group.phase='awaiting-entry';group.tile=legacyPlanet(w).homeTile;group.destination=group.tile;
   group.route=[group.tile];group.stop={kind:'awaiting-entry'};
   expect(unavailable(w).away.map(p=>p.phase)).toEqual(originals.map(()=>'awaiting-entry'));checkpoint(w);
   stepWorld(w);expect(w.group?.phase).toBe('unloading');

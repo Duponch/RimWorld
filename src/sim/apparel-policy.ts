@@ -1,4 +1,5 @@
 import { apparelCompatible } from './armor.ts';
+import {CORE_STARTING_APPAREL_256,isCoreStartingApparel256} from './starting-gear-256.ts';
 import { APPAREL, isApparelFamily, APPAREL_MATERIALS, type ApparelFamily, type ApparelItem, type ApparelMaterial, type ApparelState } from './apparel-rules.ts';
 import { WEAPON_QUALITIES, type WeaponQuality } from './equipment-rules.ts';
 
@@ -31,7 +32,7 @@ export type ApparelReplacementChoice=
 
 const qualities=WEAPON_QUALITIES as readonly WeaponQuality[];
 export const DEFAULT_APPAREL_POLICY:ApparelPolicy=Object.freeze({
-  id:1,label:'Tout vêtement',allowedItems:Object.freeze(Object.keys(APPAREL) as ApparelItem[]),allowedMaterials:APPAREL_MATERIALS,
+  id:1,label:'Tout vêtement',allowedItems:Object.freeze((Object.keys(APPAREL) as ApparelItem[]).filter(item=>!isCoreStartingApparel256(item))),allowedMaterials:APPAREL_MATERIALS,
   minQuality:'awful',maxQuality:'legendary',minHitPointsPercent:0,maxHitPointsPercent:1,
 });
 export const TEXTILE_APPAREL_POLICY:ApparelPolicy=Object.freeze({
@@ -41,9 +42,9 @@ export interface ApparelPolicyRegistry {apparelPolicies:ApparelPolicy[];nextAppa
 const clonePolicy=(policy:ApparelPolicy):ApparelPolicy=>({...policy,allowedItems:[...policy.allowedItems],allowedMaterials:[...policy.allowedMaterials]});
 // The pre-V90 migration requests the old catalogue via includeWool=false.
 // It must not acquire later V141 headgear before its own strict validation.
-export const createDefaultApparelPolicyRegistry=(includeWool=true,includeHelmet=includeWool,includePredators=true,includeTuque=includeHelmet):ApparelPolicyRegistry=>({apparelPolicies:[DEFAULT_APPAREL_POLICY,TEXTILE_APPAREL_POLICY].map(policy=>{
+export const createDefaultApparelPolicyRegistry=(includeWool=true,includeHelmet=includeWool,includePredators=true,includeTuque=includeHelmet,includeCoreStartingGear=false):ApparelPolicyRegistry=>({apparelPolicies:[DEFAULT_APPAREL_POLICY,TEXTILE_APPAREL_POLICY].map(policy=>{
   const copy=clonePolicy(policy);
-  return {...copy,allowedItems:copy.allowedItems.filter(item=>(includeTuque||APPAREL[item].family!=='tuque')&&(includePredators||APPAREL[item].material!=='foxfur')&&(includeWool||APPAREL[item].material!=='muffalo-wool')&&(includeHelmet||item!=='flak-helmet'&&item!=='recon-helmet'&&item!=='recon-armor')),
+  return {...copy,allowedItems:[...copy.allowedItems.filter(item=>(includeTuque||APPAREL[item].family!=='tuque')&&(includePredators||APPAREL[item].material!=='foxfur')&&(includeWool||APPAREL[item].material!=='muffalo-wool')&&(includeHelmet||item!=='flak-helmet'&&item!=='recon-helmet'&&item!=='recon-armor')),...includeCoreStartingGear?CORE_STARTING_APPAREL_256:[]],
     allowedMaterials:copy.allowedMaterials.filter(material=>(includeWool||material!=='muffalo-wool')&&(includePredators||material!=='foxfur'))};
 }),nextApparelPolicyId:3});
 

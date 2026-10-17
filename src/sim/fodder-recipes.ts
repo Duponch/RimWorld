@@ -4,7 +4,7 @@ import type { Structure } from './types.ts';
 export const KIBBLE_RECIPE='make-kibble' as const;
 export const KIBBLE_SCHEMA_VERSION=227;
 export const KIBBLE_GROUP_UNITS=20,KIBBLE_INPUT_UNITS=40,KIBBLE_WORK_TICKS=45,KIBBLE_OUTPUT_UNITS=50;
-export const KIBBLE_VEGETABLE_INPUTS=['rice','berries','potato','corn','agave-fruit','hay'] as const;
+export const KIBBLE_VEGETABLE_INPUTS=['raw-fungus','rice','berries','potato','corn','agave-fruit','hay'] as const;
 export const KIBBLE_PROTEIN_INPUTS=['milk',...ANIMAL_MEAT_ITEMS] as const;
 export const KIBBLE_INPUTS=[...KIBBLE_PROTEIN_INPUTS,...KIBBLE_VEGETABLE_INPUTS] as const;
 export const isKibbleRecipe=(value:unknown):value is typeof KIBBLE_RECIPE=>value===KIBBLE_RECIPE;

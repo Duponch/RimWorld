@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import {describe,expect,it} from 'vitest';
 import {createScenarioWorld} from '../src/sim/new-game.ts';
 import {createStartingCandidateRoster,startingPartyFromRoster} from '../src/sim/starting-candidates.ts';
@@ -20,8 +21,8 @@ function fixture():World {
     const choice={version:1 as const,seed:42,tile:81},site=resolveStartingSite(choice);
     const party=startingPartyFromRoster(333,createStartingCandidateRoster(333));
     base=createScenarioWorld(site.seed,32,'crashlanded',site.site,party,choice);
-    const tile=base.planet!.tiles[81]!;
-    base.planet!.tiles[81]={...tile,center:[...NATIVE_CENTER],
+    const tile=legacyPlanet(base).tiles[81]!;
+    legacyPlanet(base).tiles[81]={...tile,center:[...NATIVE_CENTER],
       meanTemperature:NATIVE_CLIMATE.definition.meanTemperature,rainfall:NATIVE_CLIMATE.definition.rainfall};
     base.climate=structuredClone(NATIVE_CLIMATE);
   }

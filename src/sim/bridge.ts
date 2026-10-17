@@ -1,4 +1,8 @@
-import {isWetTerrain,SHALLOW_WATER_SCHEMA_VERSION} from './shallow-water.ts';
+import {refreshDuckWaterCell256} from './duck-water-256.ts';
+import {registeredMapId,registeredMap,registeredMapForValidation,captureLocalMap,registeredCampaign} from './world-map-context.ts';
+import {terrainBridgeable256,terrainHoldsSnow256,terrainAcceptsFilth256} from './natural-terrain-runtime-256.ts';
+import {constructionPlantBlocks} from './construction-plants.ts';
+import {planConstructionPlantRetirement,commitConstructionPlantRetirement} from './plant-retirement.ts';
 import {campaignAuthority,captureSecondaryMap,isSecondaryContext,secondaryContext} from './secondary-site-context.ts';
 import {hasTravellingCargo} from './interrupted-cargo.ts';
 import {footprintContains,STRUCTURE_DEFINITIONS} from './definitions.ts';
@@ -23,6 +27,7 @@ const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 const supportedPlan=(j:Job)=>j.kind==='install'||Object.hasOwn(STRUCTURE_DEFINITIONS,j.kind);
 const supportedPlans=(w:World,c:Cell)=>w.jobs.filter(j=>supportedPlan(j)&&footprintContains(j,c));
 const buildings=(w:World,c:Cell)=>w.structures.filter(s=>footprintContains(s,c));
+const below=(terrain:unknown)=>terrain==='water-shallow'?'eau peu profonde':terrain==='marsh'?'marais':'terrain sous-jacent';
 function announce(w:World,message:string):void {w.events.push({tick:w.tick,type:'job',message});if(w.events.length>80)w.events.splice(0,w.events.length-80);}
 /** A voluntary removal cannot destroy a dependent building, blueprint or frame.
  * Exact refund space is preflighted again only at paid contact completion. */
@@ -31,7 +36,7 @@ export function canDesignateBridge(w:World,c:DesignateCommand,exceptJob?:number)
   if(w.schemaVersion<BRIDGE_SCHEMA_VERSION||!isBridgeJob(c)||Object.keys(c).some(k=>!['type','kind','x','z','orientation'].includes(k))||c.orientation!==undefined&&c.orientation!==0)return fail('Ordre de fondation invalide.');
   if(!Number.isInteger(c.x)||!Number.isInteger(c.z)||c.x<0||c.z<0||c.x>=w.width||c.z>=w.height)return fail('Case hors carte.','out-of-bounds');
   const tile=w.tiles[c.z*w.width+c.x]!;
-  if(!isWetTerrain(tile.terrain)||tile.terrain==='water-shallow'&&w.schemaVersion<SHALLOW_WATER_SCHEMA_VERSION||tile.floor!==undefined)return fail('Le pont standard exige un marais ou une eau peu profonde, sans sol construit.','incompatible-resource');
+  if(!terrainBridgeable256(tile.terrain,w.schemaVersion)||tile.floor!==undefined)return fail('Le pont standard exige un terrain permettant un pont, sans sol construit.','incompatible-resource');
   if(c.kind==='build-bridge'?tile.bridge!==undefined:tile.bridge!==true)return fail(c.kind==='build-bridge'?'Une fondation occupe déjà cette case.':'Aucun pont à retirer.','occupied');
   if(w.jobs.some(j=>j.id!==exceptJob&&same(j,c)&&isBridgeJob(j)))return fail('Un travail de pont occupe déjà cette case.','occupied');
   if(buildings(w,c).length||supportedPlans(w,c).length)return fail(c.kind==='remove-bridge'?'Retirez d’abord les bâtiments et leurs plans portés par ce pont.':'Dégagez bâtiments et plans avant de construire le pont.','occupied');
@@ -42,14 +47,17 @@ export function finishBridge(w:World,job:Job):boolean {
   if(job.kind!=='build-bridge'||!canDesignateBridge(w,{type:'designate',kind:job.kind,x:job.x,z:job.z},job.id).ok)return false;
   const held=w.piles.filter(p=>p.owner.type==='job'&&p.owner.jobId===job.id);
   if(held.some(p=>p.item!=='wood')||held.reduce((n,p)=>n+p.quantity,0)!==BRIDGE_WOOD)return false;
+  if(w.resources.some(r=>same(r,job)&&constructionPlantBlocks(job,r)))return false;
+  const retirement=planConstructionPlantRetirement(w,job,job.id);if(!retirement||!commitConstructionPlantRetirement(w,retirement))return false;
   w.piles=w.piles.filter(p=>p.owner.type!=='job'||p.owner.jobId!==job.id);
-  w.tiles[job.z*w.width+job.x]!.bridge=true;job.escrow.wood=job.escrow.food=0;refreshStock(w);
-  announce(w,w.tiles[job.z*w.width+job.x]!.terrain==='water-shallow'?'Pont terminé ; l’eau peu profonde reste sous la fondation.':'Pont terminé ; le marais reste sous la fondation.');return true;
+  w.tiles[job.z*w.width+job.x]!.bridge=true;job.escrow.wood=job.escrow.food=0;refreshDuckWaterCell256(w,job);refreshStock(w);
+  announce(w,'Pont termine ; '+below(w.tiles[job.z*w.width+job.x]!.terrain)+' conserve sous la fondation.');return true;
 }
 function revealWetGround(w:World,c:Cell):void {
   const index=c.z*w.width+c.x;
-  setSnowDepth(w,index,0);delete w.tiles[index]!.snowDepth;delete w.tiles[index]!.bridge;
-  for(const f of [...w.filth?.items??[]])if(same(f,c))removeFilth(w,f);
+  const tile=w.tiles[index]!;delete tile.bridge;refreshDuckWaterCell256(w,c);
+  if(!terrainHoldsSnow256(tile.terrain)){setSnowDepth(w,index,0);delete tile.snowDepth;}
+  if(!terrainAcceptsFilth256(tile))for(const f of [...w.filth?.items??[]])if(same(f,c))removeFilth(w,f);
 }
 export function removeBridge(w:World,job:Job):boolean {
   if(job.kind!=='remove-bridge'||!canDesignateBridge(w,{type:'designate',kind:job.kind,x:job.x,z:job.z},job.id).ok)return false;
@@ -61,7 +69,7 @@ export function removeBridge(w:World,job:Job):boolean {
   for(const d of drops){const owner={type:'ground' as const,...d.cell};if(!materialCanFit(view,'wood',d.quantity,owner,'wood'))return false;addMaterial(view,'wood',d.quantity,owner,'wood');}
   for(const d of drops)addMaterial(w,'wood',d.quantity,{type:'ground',...d.cell},'wood');
   revealWetGround(w,job);ledger.count++;ledger.lostWood+=BRIDGE_WOOD-refund;refreshStock(w);
-  announce(w,w.tiles[job.z*w.width+job.x]!.terrain==='water-shallow'?'Pont retiré ; 6 bois récupérés et eau peu profonde révélée.':'Pont retiré ; 6 bois récupérés et marais révélé.');return true;
+  announce(w,'Pont retire ; 6 bois recuperes et '+below(w.tiles[job.z*w.width+job.x]!.terrain)+' revele.');return true;
 }
 /** Forced disappearance differs from voluntary removal. Cancel dependent
  * construction with its exact custody, then use ordinary killed-building
@@ -83,7 +91,7 @@ function commitDestroyed(w:World,c:Cell,cause:'fire'|'bomb'):boolean {
   if(cause==='fire'){
     const state=ensureFireState(w),lost=(state.ledger.items.wood??0)+BRIDGE_WOOD;if(!Number.isSafeInteger(lost))return false;state.ledger.items.wood=lost;
   }else{const loss=neutralLossPlan(w,{items:{wood:BRIDGE_WOOD}});if(!loss)return false;w.destroyed=loss;}
-  refreshStock(w);announce(w,'Pont détruit ; fondation perdue et marais révélé.');return true;
+  refreshStock(w);announce(w,'Pont detruit ; fondation perdue et '+below(w.tiles[c.z*w.width+c.x]!.terrain)+' revele.');return true;
 }
 /** This synchronous destruction closure writes only its target tile. Roof
  * reconciliation replaces Resource records, and turret waves are registered,
@@ -96,6 +104,15 @@ function copyDestructionMap<T extends World|SecondaryMap>(source:T,target?:numbe
   return {...structuredClone(mutable),tiles:nextTiles,resources:resources.slice(),...(planet?{planet}:{})} as T;
 }
 function destructionPreview(w:World,c:Cell):World {
+  const campaign=registeredCampaign(w),target=registeredMapId(w);
+  if(campaign.worldMaps&&target!==undefined){
+    const bodies=new Map<number,ReturnType<typeof captureLocalMap>>();for(const row of campaign.worldMaps.sites)if(row.id!==campaign.worldMaps.rootMapId){const live=registeredMapForValidation(campaign,row.id);if(!live)throw Error('Bridge preview map missing');bodies.set(row.id,captureLocalMap(live));}
+    // Exclude inactive terrain arrays from the root deep clone. Their local
+    // mutable domains are copied once below, sharing untouched grid cells.
+    const rootSource=campaign as World,{worldMaps,...withoutMaps}=rootSource,clone=copyDestructionMap(withoutMaps as World,target===worldMaps!.rootMapId?c.z*w.width+c.x:undefined);
+    clone.worldMaps={...structuredClone({...worldMaps!,sites:[]}),sites:worldMaps!.sites.map(({map,...row})=>({...structuredClone(row),...row.id!==worldMaps!.rootMapId?{map:copyDestructionMap(bodies.get(row.id)! as World,row.id===target?c.z*w.width+c.x:undefined)}:{}}))};
+    const local=registeredMap(clone,target);if(!local)throw Error('Bridge preview target map unavailable');return local;
+  }
   const root=campaignAuthority(w),secondary=isSecondaryContext(w),index=c.z*w.width+c.x;
   const copy=copyDestructionMap(root,secondary?undefined:index);
   if(root.secondarySite){

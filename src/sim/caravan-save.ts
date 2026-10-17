@@ -1,3 +1,4 @@
+import {validPawnMapAreasRecord,validPawnMapAreaBindings} from './pawn-map-areas.ts';
 import { isColonist } from './affiliation.ts';
 import type { World } from './types.ts';
 
@@ -29,7 +30,7 @@ export function validateScoutRegistry(w:World,version:number):string[] {
     ||!object(s.pawn)||!Array.isArray(s.items)||s.items.length>32||(s.quantity!==2&&s.quantity!==3)||!integer(s.foodPileId,1,w.nextId-1)
     ||!integer(s.departedAt,s.startedAt as number,w.tick)||s.returnAt!==(s.departedAt as number)+1500||!integer(s.consumed,0,s.quantity as number)||!edge(s.entry,w)
     ||(s.phase==='travelling'?w.tick>=Number(s.returnAt):w.tick<Number(s.returnAt)))return ['Invalid off-map scout.'];
-  const p=s.pawn;
+  const p=s.pawn;if(!validPawnMapAreasRecord(p,version,w.nextId)||version>=256&&!validPawnMapAreaBindings(p as unknown as import('./types.ts').Pawn,w,false))return ['Invalid individual per-map area reference.'];
   if(!integer(p.id,1,w.nextId-1)||w.pawns.some(q=>q?.id===p.id)||!isColonist(p as unknown as World['pawns'][number])||p.prisoner||p.visitor
     ||p.x!==(s.entry as Record<string,unknown>).x||p.z!==(s.entry as Record<string,unknown>).z||p.state!=='idle'||p.bedId!==null||Object.hasOwn(p,'bedSlot')||p.jobId!==null||p.haul!==null||p.cooking!==null||p.need!==null
     ||!Array.isArray(p.path)||p.path.length||p.moveCooldown!==0||p.motion!==undefined||!object(p.orders)||p.orders.active!==null||!Array.isArray(p.orders.queue)||p.orders.queue.length

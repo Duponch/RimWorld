@@ -1,3 +1,4 @@
+import {medicalModel} from './body-model.ts';
 import { BODY_PARTS,HUMAN_BODY,BODY_INDEX,BODY_COVERAGE,type BodyPartId } from './body-definition.ts';
 import { HP_UNIT,isWithinPart } from './injury-rules.ts';
 import { partMissing,remainingPartHealth,reconcileMedicalDeath } from './injury-state.ts';
@@ -20,7 +21,7 @@ export function surgeryDamageCandidates(record:MedicalRecord,part:BodyPartId,who
   return HUMAN_BODY.filter(p=>!p.conceptual&&!partMissing(record,p.id)&&
     (wholeBody||p.id===part||p.parent===part||p.id===BODY_PARTS[part].parent)&&
     surgeryMinimumProtectedHealth(record,p.id)>=2&&
-    (p.id!=='brain'||remainingPartHealth(record,p.id)/HP_UNIT>=p.hp/2+1)).map(p=>p.id);
+    (p.id!=='brain'||remainingPartHealth(record,p.id)/HP_UNIT>=medicalModel(record).byId[p.id].hp/2+1)).map(p=>p.id);
 }
 const roundEven=(n:number):number=>{const floor=Math.floor(n);return n-floor===.5?floor+floor%2:Math.round(n);};
 /** This guard applies before damage-worker propagation, as in HealthUtility;
@@ -28,7 +29,7 @@ const roundEven=(n:number):number=>{const floor=Math.floor(n);return n-floor===.
 export function surgeryProtectedDamage(record:MedicalRecord,part:BodyPartId,damage:number):number {
   const minimum=surgeryMinimumProtectedHealth(record,part);
   if(minimum-damage<1)damage=roundEven(minimum-1);
-  const hp=remainingPartHealth(record,part)/HP_UNIT,max=BODY_PARTS[part].hp;
+  const hp=remainingPartHealth(record,part)/HP_UNIT,max=medicalModel(record).byId[part].hp;
   if(part==='brain'&&hp-damage<max*.5)damage=Math.max(roundEven(hp-max*.5),1);
   return Math.max(0,damage);
 }

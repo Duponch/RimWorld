@@ -1,3 +1,5 @@
+import {knownPosition256} from '../ui/exploration-readers-256';
+import {roofCells as actualRoofCells,roofKindAt} from '../sim/roof-rules';
 import type {SceneTextureLoader} from './scene-render-ports';
 import * as THREE from 'three/webgpu';
 import { attribute, cameraPosition, cameraViewMatrix, texture, uniform, uv, vec2, vec4 } from 'three/tsl';
@@ -52,8 +54,9 @@ function treeFallbackAtlas():THREE.DataTexture {
 
 export interface DesignationIconInstance { x: number; y: number; z: number; icon: number }
 function instancesForTargets(world: World, targets: readonly MarkerTarget[]): DesignationIconInstance[] {
-  const trees=targets.some(j=>j.kind==='chop'||j.kind==='extract-tree')?new Map(world.resources.filter(r=>r.kind==='tree').map(r=>[r.z*world.width+r.x,r])):undefined;
-  return targets.map(job => {
+  const visibleTargets=targets.filter(job=>job.kind==='mine'||knownPosition256(world,job));
+  const trees=visibleTargets.some(j=>j.kind==='chop'||j.kind==='extract-tree')?new Map(world.resources.filter(r=>r.kind==='tree').map(r=>[r.z*world.width+r.x,r])):undefined;
+  return visibleTargets.map(job => {
     const tree=trees?.get(job.z*world.width+job.x);
     const treeHeight=tree?.species?floraTreeHeight(tree)*floraSize(world,tree)
       :tree?WORLD_SCALE.treeMinHeight+noise(tree.x,tree.z,77)*(WORLD_SCALE.treeMaxHeight-WORLD_SCALE.treeMinHeight)
@@ -84,11 +87,11 @@ function committedTargets(world: World): MarkerTarget[] {
   // Roof intentions exist before the bounded scheduler generates jobs. Retain
   // unfinished intentions, including unsupported cells, without work queries.
   if (world.roofing) {
-    const constructed = new Set(world.roofing.constructed);
+    const constructed = actualRoofCells(world);
     for (const kind of ['build-roof', 'remove-roof'] as const) {
       for (const cell of world.roofing[kind === 'build-roof' ? 'build' : 'remove']) {
         const key = `${kind}:${cell}`;
-        if (constructed.has(cell) === (kind === 'build-roof') || roofCells.has(key)) continue;
+        if (kind==='remove-roof'&&roofKindAt(world,cell)==='natural-thick'||constructed.has(cell) === (kind === 'build-roof') || roofCells.has(key)) continue;
         roofCells.add(key);
         targets.push({ kind, x: cell % world.width, z: Math.floor(cell / world.width) });
       }
@@ -123,10 +126,10 @@ function previewTargets(world: World, action: AreaAction, cells: readonly number
     }
     return targets;
   }
-  const constructed = action === 'build-roof' || action === 'remove-roof' ? new Set(world.roofing?.constructed) : undefined;
+  const constructed = action === 'build-roof' || action === 'remove-roof' ? actualRoofCells(world) : undefined;
   for (const cell of cells) {
     if (!Number.isSafeInteger(cell) || cell < 0 || cell >= world.width * world.height || occupied.has(cell)) continue;
-    if (constructed && constructed.has(cell) === (action === 'build-roof')) continue;
+    if (action==='remove-roof'&&roofKindAt(world,cell)==='natural-thick'||constructed && constructed.has(cell) === (action === 'build-roof')) continue;
     occupied.add(cell);
     targets.push({ kind: action, x: cell % world.width, z: Math.floor(cell / world.width) });
   }
@@ -217,6 +220,8 @@ export class DesignationIconLayer {
     geometry.setAttribute('designationPosition', new THREE.InstancedBufferAttribute(new Float32Array(this.capacity * 3), 3).setUsage(THREE.StaticDrawUsage));
     geometry.setAttribute('designationIcon', new THREE.InstancedBufferAttribute(new Float32Array(this.capacity), 1).setUsage(THREE.StaticDrawUsage));
     const material = new THREE.SpriteNodeMaterial({ transparent: true, depthTest: false, depthWrite: false, alphaTest: .12 });
+    // Only intentional Mine survives fog; other targets are filtered before upload.
+    material.userData.explorationIntent=true;
     const anchor = attribute('designationPosition', 'vec3');
     material.positionNode = anchor;
     const depth = cameraViewMatrix.mul(vec4(anchor, 1)).z.negate();

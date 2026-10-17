@@ -1,3 +1,4 @@
+import {ANIMAL_EGG_CONTENT_256,eggSpeciesForItem256} from './animal-egg-content-v256.ts';
 import { isAnimalMeat } from './biome-items.ts';
 import { interactionGoals, routeCost, routeToJob, routeToCell, type Reachability } from './pathfinding.ts';
 import { planPasteRequest,type PasteRequest } from './nutrient-paste.ts';
@@ -18,7 +19,9 @@ const FOOD_OFFSETS: Readonly<Partial<Record<ItemId, number>>> = {
   wood: -Infinity, 'nutrient-paste-meal': -49, 'simple-meal': 16, 'fine-meal': 20, 'vegetarian-fine-meal': 20, 'carnivore-fine-meal': 20, 'lavish-meal': 24, 'vegetarian-lavish-meal': 24, 'carnivore-lavish-meal': 24, berries: 0, milk: 0, rice: -82, potato: -82, corn: -82, 'hare-meat': -82, 'survival-meal': -5, 'legacy-portion': 0,
 };
 export function foodScore(item: ItemId, distance: number): number {
-  return (FOOD_OFFSETS[item] ?? (isAnimalMeat(item)||item==='agave-fruit'?-82:-Infinity)) - distance;
+  const species=eggSpeciesForItem256(item);
+  if(species)return -distance-82-(item===ANIMAL_EGG_CONTENT_256[species].fertilizedItem?150:0);
+  return (FOOD_OFFSETS[item] ?? (isAnimalMeat(item)||item==='agave-fruit'||item==='raw-fungus'?-82:-Infinity)) - distance;
 }
 export function pileFoodScore(world: World, pile: MaterialPile, distance: number): number {
   return foodScore(pile.item, distance) + (ticksUntilRot(pile, world.tick) < TICKS_PER_DAY / 2 ? 12 : 0);

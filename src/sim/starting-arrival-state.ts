@@ -18,4 +18,4 @@ export interface StartingArrivalOpened {
   profile:typeof STARTING_ARRIVAL_PROFILE;phase:'opened';
   start:0;landAt:number;openAt:number;openedAt:number;cells:Cell[];
 }
-export type StartingArrivalState=StartingArrivalPending|StartingArrivalOpened;
+export type StartingArrivalState=StartingArrivalPending|StartingArrivalOpened|import("./starting-pod-state-256.ts").CoreStartingArrival256;

@@ -30,7 +30,7 @@ import {pawnBody} from '../../src/sim/health-rules';
 import {currentMedicalBed} from '../../src/sim/hospital-medical-stats';
 import {electricityDisabledAtCore} from '../../src/sim/cassandra-world';
 import {empStructureActive} from '../../src/sim/emp-state';
-import type {World,MaterialPile,StructureKind,Command,Orientation} from '../../src/sim/types';
+import type {World,MaterialPile,DesignateCommand,Command,Orientation} from '../../src/sim/types';
 
 const ORIGINALS=[18530,18532,18534],RESEARCHER=18534,ORIGIN_SEED=3398550437;
 const GAP=8,PROTOCOL='productive-research-v2',COMPLETE_EVENT='Recherche achevée : Batteries. Stockage électrique débloqué.';
@@ -45,7 +45,7 @@ const person=(w:World,id:number)=>w.pawns.find(p=>p.id===id)??w.visitors?.depart
 const possessions=(w:World,id:number)=>[...w.piles,...(w.visitors?.departed.find(d=>d.pawn.id===id)?.items??[])].filter(p=>'pawnId' in p.owner&&p.owner.pawnId===id);
 const at=(s:{x:number;z:number},p:{x:number;z:number})=>s.x===p.x&&s.z===p.z;
 class Stop extends Error{constructor(readonly reason:string,readonly detail:unknown){super(reason);}}
-interface Build {key:string;kind:StructureKind;x:number;z:number;orientation:Orientation;material:'wood'|'steel'}
+interface Build {key:string;kind:'wall'|'door'|'research-bench'|'battery'|'standing-lamp'|'wood-generator'|'power-conduit';x:number;z:number;orientation:Orientation;material:'wood'|'steel'}
 const WALLS:Build[]=[...Array.from({length:6},(_,i)=>({x:120+i,z:119})),...Array.from({length:3},(_,i)=>({x:120,z:116+i})),...Array.from({length:3},(_,i)=>({x:i===0?124:125,z:116+i}))].map<Build>(p=>({...p,key:`wall-${p.x}-${p.z}`,kind:'wall',orientation:0,material:'wood'}));
 const DOOR:Build={key:'annex-door',kind:'door',x:123,z:115,orientation:0,material:'wood'};
 const BENCH:Build={key:'bench',kind:'research-bench',x:122,z:117,orientation:0,material:'steel'};
@@ -244,7 +244,7 @@ export async function runProductiveResearch(page:Page,info:TestInfo){
  const planBuild=async(b:Build)=>{let w=await read();const id=ledger.ids[b.key],s=buildStructure(w,b),j=w.jobs.find(j=>j.id===id);
   if(UNQUALIFIED_WALL_KEYS.has(b.key)){expect(s).toEqual(ledger.inheritedUnqualified.buildings[b.key]);return;}
   if(s){expect(s.id).toBe(id);expect(ledger.finished[b.key]).toBeDefined();return;}if(j){expect(j).toMatchObject({kind:b.kind,x:b.x,z:b.z,orientation:b.orientation,material:b.material});return;}
-  if(id)throw new Stop('planned-object-lost',{key:b.key,id,tick:w.tick});const command:Command={type:'designate',kind:b.kind,x:b.x,z:b.z,orientation:b.orientation,material:b.material};const skill=constructionSkillRequired(b.kind),builders=w.pawns.filter(p=>ORIGINALS.includes(p.id)&&p.skills.construction.level>=skill&&p.priorities.build>0&&!p.draft);if(!builders.length)throw new Stop('no-admissible-builder',{key:b.key,skill,tick:w.tick});const admission=canDesignate(w,command);if(!admission.ok)throw new Stop('build-admission-refused',{key:b.key,admission,tick:w.tick});
+  if(id)throw new Stop('planned-object-lost',{key:b.key,id,tick:w.tick});const command:DesignateCommand={type:'designate',kind:b.kind,x:b.x,z:b.z,orientation:b.orientation,material:b.material};const skill=constructionSkillRequired(b.kind),builders=w.pawns.filter(p=>ORIGINALS.includes(p.id)&&p.skills.construction.level>=skill&&p.priorities.build>0&&!p.draft);if(!builders.length)throw new Stop('no-admissible-builder',{key:b.key,skill,tick:w.tick});const admission=canDesignate(w,command);if(!admission.ok)throw new Stop('build-admission-refused',{key:b.key,admission,tick:w.tick});
   w=await act(command,`Construction réelle payée : ${b.key}`);const job=w.jobs.find(j=>j.kind===b.kind&&at(j,b)&&j.material===b.material&&j.orientation===b.orientation);expect(job).toBeDefined();ledger.ids[b.key]=job!.id;push(journal,{kind:'blueprint-observed',key:b.key,tick:w.tick,job});
  };
  const fuelPolicy=async(enabled:boolean)=>{await pause(page);let w=await read(),g=ownedStructure(w,'generator')!;if(g.fuel?.autoRefuel===enabled)return;if(!enabled&&autoFuelBusy(w,g.id))throw new Stop('would-cancel-real-automatic-fuel-trip',{tick:w.tick,generatorId:g.id});await page.keyboard.press('Escape');

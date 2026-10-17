@@ -63,7 +63,7 @@ export function resolveSelectedPodRescue(w:World,seed:number):boolean {
 }
 function openPod(w:World,pending:PodRescuePending):boolean {
   if(!civilianAdmissionFits(w,1,1)||!Number.isSafeInteger(w.nextId+2)||!openingFree(w,pending))return false;
-  const rng={rng:pending.seed},p=startingPawn(w.nextId,`Naufragé ${pending.id}`,pending.cell.x,pending.cell.z,0,55,pending.seed,w.tick);
+  const rng={rng:pending.seed},p=startingPawn(w.nextId,`Naufragé ${pending.id}`,pending.cell.x,pending.cell.z,0,55,pending.seed,w.tick,w.schemaVersion);
   p.faction='outlanders';p.foodPolicyId=w.foodPolicies[0]!.id;p.podRescue={incidentId:pending.id};
   delete p.apparelPolicyId;delete p.apparelAutomation;delete p.nextApparelCheckAt;
   // Historical capsules keep their exact generation; new people retain their

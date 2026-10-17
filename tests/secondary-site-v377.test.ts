@@ -1,3 +1,4 @@
+import {legacyPlanet} from './helpers/legacy-fixture-guards.ts';
 import {createDeteriorationState} from '../src/sim/deterioration-content.ts';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {describe,it,expect} from 'vitest';
@@ -44,7 +45,7 @@ function preparation(){
   for(const pawn of w.pawns)pawn.health=createMedicalRecord(w.tick);
   // Fixed warm neighbour for this transport/work fixture. The initial cold42
   // failure is retained separately; this is not a winter survival campaign.
-  const tile=52;expect(w.planet!.tiles[w.planet!.homeTile]!.neighbours).toContain(tile);
+  const tile=52;expect(legacyPlanet(w).tiles[legacyPlanet(w).homeTile]!.neighbours).toContain(tile);
   expect(tile).toBeDefined();if(tile===undefined)throw Error('Prepared geography has no neighbouring terrestrial site');
   return {w,tile,originals:w.pawns.slice(0,2),ids:w.pawns.slice(0,2).map(p=>p.id)};
 }
@@ -74,7 +75,7 @@ describe('V377 real second map',()=>{
     for(const pawnId of ids)command(w,{type:'priority',pawnId,work:'gather',value:0});
     expect(validateWorld(w)).toEqual([]);
     const restored=deserializeWorld(serializeWorld(w));stepWorld(w,7);stepWorld(restored,7);expect(hashWorld(restored)).toBe(hashWorld(w));
-    ready(w,ids);command(w,{type:'group-start',memberIds:ids,destination:w.planet!.homeTile,sources:provisions(w,ids.length)});
+    ready(w,ids);command(w,{type:'group-start',memberIds:ids,destination:legacyPlanet(w).homeTile,sources:provisions(w,ids.length)});
     expect(local.group&&'manifest' in local.group).toBe(true);
     until(w,()=>!!w.group&&'members' in w.group);
     expect(w.group&&'members' in w.group&&w.group.originTile).toBe(f.tile);

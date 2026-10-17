@@ -1,4 +1,4 @@
-import {isWetTerrain} from './shallow-water.ts';
+import {terrainAcceptsFilth256} from './natural-terrain-runtime-256.ts';
 import { isColonist } from './affiliation.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { FILTH_DEFINITIONS,filthCheckPeriod,isFilthKind,type FilthFeet } from './filth-rules.ts';
@@ -6,27 +6,27 @@ import type { World } from './types.ts';
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const keys=(v:object,names:readonly string[])=>Object.keys(v).every(k=>names.includes(k));
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
-export function validFilthFeet(v:unknown):v is FilthFeet {
-  if(!object(v)||!keys(v,['lastTerrain','carried'])||v.lastTerrain!==undefined&&v.lastTerrain!=='dirt'||!Array.isArray(v.carried)||v.carried.length>6)return false;
-  const kinds=new Set<string>();for(const f of v.carried){if(!object(f)||!keys(f,['kind','thickness'])||!isFilthKind(f.kind)||!int(f.thickness,1,5)||kinds.has(f.kind))return false;kinds.add(f.kind);}return !!v.carried.length||v.lastTerrain!==undefined;
+export function validFilthFeet(v:unknown,version=255):v is FilthFeet {
+  if(!object(v)||!keys(v,['lastTerrain','carried'])||v.lastTerrain!==undefined&&v.lastTerrain!=='dirt'||!Array.isArray(v.carried)||v.carried.length>(version>=256?7:6))return false;
+  const kinds=new Set<string>();for(const f of v.carried){if(!object(f)||!keys(f,['kind','thickness'])||!isFilthKind(f.kind)||version<256&&f.kind==='slime'||(f.kind==='rock-rubble'||f.kind==='building-rubble')||!int(f.thickness,1,5)||kinds.has(f.kind))return false;kinds.add(f.kind);}return !!v.carried.length||v.lastTerrain!==undefined;
 }
 /** Call after ordinary World/Pawn collection shapes, before accepting current
  * saves. Legacy validation rejects the domain before any neutral migration. */
 export function validateFilth(w:World,version:number,ids?:Set<number>):string[] {
   const errors:string[]=[],s=w.filth,now=w.tick*10,seen=ids??new Set<number>(),cells=new Set<string>();
   if(s!==undefined){
-    if(version<89||!object(s)||!keys(s,['rng','items','cleaned'])||!int(s.rng,1,0xffffffff)||!int(s.cleaned)||!Array.isArray(s.items)||s.items.length>w.width*w.height*6)return ['Invalid filth state.'];
+    if(version<89||!object(s)||!keys(s,['rng','items','cleaned'])||!int(s.rng,1,0xffffffff)||!int(s.cleaned)||!Array.isArray(s.items)||s.items.length>w.width*w.height*(version>=256?9:6))return ['Invalid filth state.'];
     const period=filthCheckPeriod(w);
     for(const f of s.items){
-      if(!object(f)||!keys(f,['id','kind','x','z','thickness','grownCore','expiresAfterCore','nextCheckCore'])||!isFilthKind(f.kind)||!int(f.id,1,w.nextId-1)||seen.has(f.id)||!int(f.x,0,w.width-1)||!int(f.z,0,w.height-1)||!int(f.thickness,1,5)||!int(f.grownCore,0,now)||!int(f.nextCheckCore,now+1,now+period)){errors.push('Invalid filth record.');continue;}
+      if(!object(f)||!keys(f,['id','kind','x','z','thickness','grownCore','expiresAfterCore','nextCheckCore'])||!isFilthKind(f.kind)||version<256&&(f.kind==='rock-rubble'||f.kind==='building-rubble'||f.kind==='slime')||!int(f.id,1,w.nextId-1)||seen.has(f.id)||!int(f.x,0,w.width-1)||!int(f.z,0,w.height-1)||!int(f.thickness,1,5)||!int(f.grownCore,0,now)||!int(f.nextCheckCore,now+1,now+period)){errors.push('Invalid filth record.');continue;}
       const d=FILTH_DEFINITIONS[f.kind],key=`${f.x}:${f.z}:${f.kind}`;
-      if(!int(f.expiresAfterCore,d.minDays*60000,d.maxDays*60000-1)||cells.has(key)||(['rock','water'].includes(w.tiles[f.z*w.width+f.x]!.terrain)||isWetTerrain(w.tiles[f.z*w.width+f.x]!.terrain)&&!w.tiles[f.z*w.width+f.x]!.bridge))errors.push('Invalid filth lifetime or position.');
+      if(!int(f.expiresAfterCore,d.minDays*60000,d.maxDays*60000-(version>=256&&f.kind==='rock-rubble'?0:1))||cells.has(key)||!terrainAcceptsFilth256(w.tiles[f.z*w.width+f.x]!))errors.push('Invalid filth lifetime or position.');
       seen.add(f.id);cells.add(key);
     }
   }
   const reserved=new Set<number>();
   for(const p of w.pawns){
-    if(p.filthFeet!==undefined&&(version<89||!s||!validFilthFeet(p.filthFeet)))errors.push('Invalid carried filth.');
+    if(p.filthFeet!==undefined&&(version<89||!s||!validFilthFeet(p.filthFeet,version)))errors.push('Invalid carried filth.');
     const t=p.cleaning;if(t===undefined)continue;
     if(t.snowCell!==undefined){
       if(version<239||!w.snow||!object(t)||!keys(t,['snowCell','targets','forced','phase','progress'])||!int(t.snowCell,0,w.tiles.length-1)||!w.snowClearArea?.includes(t.snowCell)||!Array.isArray(t.targets)||t.targets.length||t.forced!==false||!['approach','clean'].includes(String(t.phase))||typeof t.progress!=='number'||!Number.isFinite(t.progress)||t.progress<0||t.progress>50||!isColonist(p)||p.prisoner||p.draft||p.mental?.crisis||p.burning||medicalWorkRefusal(p)||!p.priorities.clean||reserved.has(-t.snowCell-1))errors.push('Invalid snow cleaning activity.');

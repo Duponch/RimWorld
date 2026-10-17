@@ -1,3 +1,4 @@
+import {isAnimalItem256} from './animal-items-v256.ts';
 import { V91_ITEM_IDS,V190_ITEM_IDS } from './biome-items.ts';
 import { campaignPhysicalCaptures } from './campaign-people.ts';
 import { otherCampaignMap } from './secondary-site-context.ts';
@@ -15,8 +16,8 @@ export type FoodPolicyCommand =
   | {type: 'food-policy-delete'; policyId: number}
   | {type: 'food-policy-assign'; pawnId: number; policyId: number};
 
-export function initialFoodPolicies(includeMeat=true,includeFoodCrops=true,includeBiomes=true,includeMilk=true,includePredators=true,includePaste=true,includeFodder=true,includePemmican=true): FoodPolicy[] {
-  const items=FOOD_ITEMS.filter(id=>(includePemmican||id!=='pemmican')&&(includeFodder||id!=='kibble')&&(includePaste||id!=='nutrient-paste-meal')&&(includePredators||!V190_ITEM_IDS.includes(id))&&(includeBiomes||!V91_ITEM_IDS.includes(id))&&(includeMeat||id!=='hare-meat')&&(includeFoodCrops||id!=='potato'&&id!=='corn')&&(includeMilk||id!=='milk'));
+export function initialFoodPolicies(includeMeat=true,includeFoodCrops=true,includeBiomes=true,includeMilk=true,includePredators=true,includePaste=true,includeFodder=true,includePemmican=true,includeFauna256=false,includeCave256=false): FoodPolicy[] {
+  const items=FOOD_ITEMS.filter(id=>(includeCave256||id!=='raw-fungus')&&(includeFauna256||!isAnimalItem256(id))&&(includePemmican||id!=='pemmican')&&(includeFodder||id!=='kibble')&&(includePaste||id!=='nutrient-paste-meal')&&(includePredators||!V190_ITEM_IDS.includes(id))&&(includeBiomes||!V91_ITEM_IDS.includes(id))&&(includeMeat||id!=='hare-meat')&&(includeFoodCrops||id!=='potato'&&id!=='corn')&&(includeMilk||id!=='milk'));
   return [
     {id: 1, name: 'Sans restriction', allowed: [...items]},
     {id: 2, name: 'Repas uniquement', allowed: [...(includePemmican?['pemmican' as const]:[]),'simple-meal', 'fine-meal', 'vegetarian-fine-meal', 'carnivore-fine-meal', 'lavish-meal', 'vegetarian-lavish-meal', 'carnivore-lavish-meal', 'survival-meal', 'legacy-portion', ...(includePaste?['nutrient-paste-meal' as const]:[])]},
@@ -41,11 +42,12 @@ const policyUsers=(world:World):readonly Pawn[]=>world.worldMaps||otherCampaignM
 /** Policy IDs have their own namespace: migrations never renumber entities. */
 export function applyFoodPolicyCommand(world: World, command: FoodPolicyCommand): CommandResult {
   const invalid = (reason: string): CommandResult => ({ok: false, code: 'invalid-command', reason});
+  if(world.schemaVersion<256&&command.type==='food-policy-update'&&command.allowed.includes('raw-fungus'))return invalid('Aliment futur non admis.');
   if (command.type === 'food-policy-create') {
     const source = command.copyFromId === undefined ? undefined : world.foodPolicies.find(p => p.id === command.copyFromId);
     if (!validPolicyName(command.name) || (command.copyFromId !== undefined && !source)) return invalid('Nom ou régime à copier invalide.');
     if (world.foodPolicies.length >= MAX_FOOD_POLICIES || !Number.isSafeInteger(world.nextFoodPolicyId + 1)) return invalid('Limite de régimes atteinte.');
-    world.foodPolicies.push({id: world.nextFoodPolicyId++, name: command.name.trim(), allowed: [...(source?.allowed ?? FOOD_ITEMS)]});
+    world.foodPolicies.push({id: world.nextFoodPolicyId++, name: command.name.trim(), allowed: [...(source?.allowed ?? FOOD_ITEMS.filter(id=>world.schemaVersion>=256||id!=='raw-fungus'))]});
     return {ok: true};
   }
   const policy = world.foodPolicies.find(p => p.id === command.policyId);

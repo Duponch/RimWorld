@@ -1,13 +1,13 @@
+import {knownPosition256} from './exploration-readers-256';
 import { captureWorldBeauty } from '../sim/beauty-need';
 import type { RoomBeautyCapture } from '../sim/room-beauty';
 import { captureRoomQuality } from '../sim/room-quality';
-import { terrainTravelDelay } from '../sim/furniture-travel';
-import { isRoofed } from '../sim/roof-rules';
+import { roofKindAt } from '../sim/roof-rules';
 import { soilFertility } from '../sim/soil';
 import { TemperatureView } from '../sim/temperature';
 import { ROOM_ROLE_LABEL, WorkEnvironmentCache } from '../sim/work-environment';
 import type { Cell, World } from '../sim/types';
-import { terrainSurfaceLabel } from './terrain-inspection';
+import {terrainSurfaceLabel,terrainSurfaceSpeed} from './terrain-inspection';
 import { mapHoverLines } from './map-hover-readout';
 
 const environmentCache = new WorkEnvironmentCache();
@@ -22,16 +22,16 @@ export interface MapCellDetails {
 /** Alt inspector: read-only and invoked only while the pointer/key is active. */
 export function mapCellDetails(world: World, cell: Cell, lightLevel: number): MapCellDetails | null {
   const index = cell.z * world.width + cell.x, tile = world.tiles[index];
-  if (!tile) return null;
+  if (!tile||!knownPosition256(world,cell)) return null;
   const environment = environmentCache.read(world);
   const room = environment.room(cell);
   const qualityCapture = captureRoomQuality(world);
   const quality = room && !room.space.touchesMapEdge ? qualityCapture.room(cell) : null;
   let beautyView = beautyViews.get(world);
   if (!beautyView) { beautyView = captureWorldBeauty(world, qualityCapture.topology); beautyViews.set(world, beautyView); }
-  const speed = tile.terrain === 'rock' || tile.terrain === 'water' ? 0 : Math.round(300 / (3 + terrainTravelDelay(world, index)));
+  const speed = terrainSurfaceSpeed(world,index);
   const terrain = terrainSurfaceLabel(tile);
-  const objects = mapHoverLines(world, cell, lightLevel).slice(tile.bridge?3:2).filter(line => line !== 'Toit');
+  const objects = mapHoverLines(world, cell, lightLevel).slice(tile.bridge?3:2).filter(line => !line.startsWith('Toit'));
   const temperature = new TemperatureView(world).at(world, cell);
   const rows: MapCellDetails['rows'] = [];
   if (room && !room.psychologicallyOutdoors && room.role !== 'none') rows.push({ label: 'Pièce', value: ROOM_ROLE_LABEL[room.role] });
@@ -46,9 +46,9 @@ export function mapCellDetails(world: World, cell: Cell, lightLevel: number): Ma
   rows.push({ label: 'Terrain', value: terrain });
   rows.push({ label: 'Vitesse de déplacement', value: `${speed} %` });
   if(tile.terrain==='water-shallow')rows.push({label:'Support',value:tile.bridge?'Léger uniquement':'Absent · Pont en bois possible'},{label:'Culture',value:'Terrain non cultivable'});
-  if (!tile.floor) rows.push({ label: 'Fertilité', value: `${Math.round(soilFertility(tile.terrain) * 100)} %` });
+  if (!tile.floor) rows.push({ label: 'Fertilité', value: `${tile.bridge||tile.collapsedRock?0:Math.round(soilFertility(tile.terrain) * 100)} %` });
   rows.push({ label: 'Température', value: `${Math.round(temperature)} °C` });
   rows.push({ label: 'Luminosité', value: `${Math.round(lightLevel * 100)} %` });
-  if (isRoofed(world, index)) rows.push({ label: 'Toit', value: 'Construit' });
+  const roof=roofKindAt(world,index);if(roof)rows.push({label:'Toit',value:roof==='natural-thick'?'Naturel épais':roof==='natural-thin'?'Naturel mince':'Construit'});
   return { heading: objects[0] ?? terrain, things: objects.slice(1), rows };
 }

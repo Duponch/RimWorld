@@ -1,3 +1,4 @@
+import {materialAllowedForPlayer256} from './material-permission-256.ts';
 import { roundYield } from './cooking-statistics.ts';
 import { WEAPON_QUALITIES,isWeaponItem,weaponMaxHitPoints,type WeaponItem } from './equipment-rules.ts';
 import { pawnBody } from './health-rules.ts';
@@ -21,6 +22,7 @@ export function smeltingHitPointsPercent(hitPoints:number,maxHitPoints:number):n
 }
 /** Ownership belongs to the caller: this same filter applies to ground and held stages. */
 export function smeltingIngredientAllowed(bill:CookingBill,pile:MaterialPile):boolean {
+  if(bill.recipe==='smelt-slag')return materialAllowedForPlayer256(pile)&&pile.item==='slag-steel-chunk'&&pile.kind==='chunk'&&pile.quantity===1&&bill.filters['slag-steel-chunk']===true&&pile.weapon===undefined&&pile.apparel===undefined&&pile.corpse===undefined&&(pile.damage===undefined||Number.isSafeInteger(pile.damage)&&pile.damage>=1&&pile.damage<300);
   if(!isSmeltingRecipe(bill.recipe)||!validSmeltFilter(bill.smeltFilter)||!isWeaponItem(pile.item)
     ||pile.kind!=='weapon'||pile.quantity!==1||bill.filters[pile.item]!==true||!record(pile.weapon)
     ||!Object.hasOwn(pile.weapon,'quality')||!Object.hasOwn(pile.weapon,'hitPoints')
@@ -30,8 +32,8 @@ export function smeltingIngredientAllowed(bill:CookingBill,pile:MaterialPile):bo
   const hp=smeltingHitPointsPercent(weapon.hitPoints,max),filter=bill.smeltFilter;
   return hp>=filter.hpMin&&hp<=filter.hpMax&&quality>=WEAPON_QUALITIES.indexOf(filter.qualityMin)&&quality<=WEAPON_QUALITIES.indexOf(filter.qualityMax);
 }
-export function validSmeltingIngredients(parts:readonly {item:unknown;quantity:number}[]):boolean {
-  return parts.length===1&&parts[0]!.quantity===1&&isWeaponItem(parts[0]!.item);
+export function validSmeltingIngredients(parts:readonly {item:unknown;quantity:number}[],recipe:unknown='smelt-weapon'):boolean {
+  return parts.length===1&&parts[0]!.quantity===1&&(recipe==='smelt-slag'?parts[0]!.item==='slag-steel-chunk':isWeaponItem(parts[0]!.item));
 }
 /** Smelting has no skill or learning; delivered WorkSpeedGlobal remains neutral. */
 export function smeltingSpeed(pawn:Pawn):number {
@@ -42,6 +44,7 @@ export function smeltingSpeed(pawn:Pawn):number {
 export function smeltingYield(item:WeaponItem,random:()=>number):number {
   return roundYield((item==='bolt-action-rifle'?60:item==='emp-launcher'?75:30)*.25,random);
 }
-export function validSmeltingProduct(item:unknown,quantity:unknown):boolean {
+export function validSmeltingProduct(item:unknown,quantity:unknown,recipe:unknown='smelt-weapon'):boolean {
+  if(recipe==='smelt-slag')return item==='steel'&&typeof quantity==='number'&&Number.isInteger(quantity)&&quantity>=1&&quantity<=15;
   return typeof quantity==='number'&&Number.isInteger(quantity)&&quantity>=1&&(item==='steel'?quantity<=19:item==='plasteel'&&quantity<=8);
 }

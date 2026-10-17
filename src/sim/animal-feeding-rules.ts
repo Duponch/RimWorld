@@ -27,10 +27,10 @@ export function animalFeedingDoctorReady(w:World,p:Pawn):boolean {
 /** Local adaptation: the five owned species rest on the ground because animal
  * beds are not delivered. Medicine policy does not govern bringing food. */
 export function animalFeedingPatientReady(w:World,a:WildAnimal,doctor?:Pawn):boolean {
-  return w.schemaVersion>=214&&veterinaryCareSpeciesAllowed(a.species,w.schemaVersion)&&!!a.domestic&&!a.manhunter
+  return w.schemaVersion>=214&&veterinaryCareSpeciesAllowed(a.species,w.schemaVersion,a)&&!!a.domestic&&!a.manhunter
     &&(a.state==='downed'||a.state==='sleeping')&&!!a.health&&!a.health.death&&a.health.body===a.species
     &&(a.state==='downed'||veterinaryNeedsRest(a.health))&&(!a.motion||a.motion.end<=w.tick)
-    &&!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike&&!a.stun&&!a.health.foodPoisoning?.vomit
+    &&!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike&&!a.stun&&!(a.health.foodPoisoning?.vomit||(a.health.cryptosleepSickness?.vomit||a.health.toxicBuildup?.vomit||a.health.toxicBuildup?.vomitRequestedAt!==undefined))
     &&!animalCarrier(w,a.id)&&!animalClaimed(w,a.id,doctor?.id);
 }
 export function animalFeedingReason(w:World,doctor:Pawn,a:WildAnimal|undefined,accepted=false):string|undefined {

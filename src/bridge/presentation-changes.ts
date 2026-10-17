@@ -10,7 +10,7 @@ export class PresentationChanges {
   private relationshipLinks:NonNullable<World['relationships']>['links']|undefined;
   private relationshipSignature:string|undefined;
   protected readStructures(world:World):unknown {
-    return world.structures.map(s=>[s.id,s.x,s.z,s.medical,s.prisoner,s.emp,s.fuel? s.fuel.ticks>0:undefined,s.door?.changedAt,s.door?.open,s.power?.on,s.power?.parentId,s.power?.switchOn,
+    return world.structures.map(s=>[s.id,s.x,s.z,s.casketWick,s.medical,s.prisoner,s.emp,s.fuel? s.fuel.ticks>0:undefined,s.door?.changedAt,s.door?.open,s.power?.on,s.power?.parentId,s.power?.switchOn,
         s.turret?[s.turret.ammoQ,s.turret.autoReload,s.turret.holdFire,s.turret.targetKey,!!s.turret.warmup,
           s.turret.burst?.targetKey,!!s.turret.burst,s.turret.cooldownCore>0,s.turret.wick]:undefined]);
   }
@@ -37,7 +37,7 @@ export class PresentationChanges {
       world.projectiles?.map(p=>[p.id,p.emittedAtCore,p.arrival]),
       world.bombWaves?.map(w=>w.emp?[w.id,w.sourceId,w.startedAtCore,w.emp]:w.shortCircuit?[w.id,w.sourceId,w.startedAtCore,w.shortCircuit]:[w.id,w.sourceId,w.startedAtCore]),
       world.raids?.mechActive,
-      world.mechanoids?.map(m=>[m.id,m.mechKind,m.state,m.melee,m.stun,m.emp,m.raid?.goal,m.health?.nextInjuryId,m.health?.missing,
+      world.mechanoids?.map(m=>[m.id,m.mechKind,m.state,m.melee,m.stun,m.emp,m.raid?.goal,m.temple,m.health?.nextInjuryId,m.health?.missing,
         // Busy clocks decrease continuously; only real admissions, phase/focus
         // changes and suspension boundaries request an immediate publication.
         m.ranged?.order,m.ranged?.stance?[m.ranged.stance.phase,m.ranged.stance.targetKey,m.ranged.stance.startedAtCore]:undefined]),
@@ -59,7 +59,7 @@ export class PresentationChanges {
       world.piles.map(p=>[p.id,p.item,p.quantity,p.owner]),
       this.readStructures(world),
       (world.packed??[]).map(p=>[p.building.id,p.owner]),
-      world.roofing?.constructed,
+      [world.roofing?.constructed,world.roofing?.natural?.thin,world.roofing?.natural?.thick],
     ]);
     // Value comparison also works on immutable worlds decoded across a worker.
     const changed=this.signature!==signature;this.signature=signature;return changed;

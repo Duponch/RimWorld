@@ -27,7 +27,7 @@ export function secondaryContext(world:World):World|undefined {
   let cached=contexts.get(root);
   if(!cached||cached.map!==site.map){
     const view={...site.map} as World;
-    for(const key of CAMPAIGN_FIELDS)Object.defineProperty(view,key,{enumerable:true,configurable:false,
+    for(const key of CAMPAIGN_FIELDS)if(key!=='worldPawns'||Object.hasOwn(root,key))Object.defineProperty(view,key,{enumerable:true,configurable:false,
       get:()=>root[key],set:value=>{(root as unknown as Record<string,unknown>)[key]=value;}});
     authorities.set(view,root);cached={map:site.map,view};contexts.set(root,cached);
   }
