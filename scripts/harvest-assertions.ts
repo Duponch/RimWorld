@@ -35,7 +35,7 @@ export function confirmedTravelExcess(previous:TravelFrameWitness,current:Travel
     ||previous.to.x!==current.to.x||previous.to.z!==current.to.z
     ||previous.start!==current.start||previous.end!==current.end)return false;
   if(!Number.isInteger(a.from.x)||!Number.isInteger(a.from.z)||!Number.isInteger(a.to.x)||!Number.isInteger(a.to.z)
-    ||Math.abs(a.to.x-a.from.x)+Math.abs(a.to.z-a.from.z)!==1||a.end<=a.start
+    ||Math.max(Math.abs(a.to.x-a.from.x),Math.abs(a.to.z-a.from.z))!==1||a.end<=a.start
     ||previous.end<=previous.start)return false;
   // Contact is presentation-only and must remain inside 0.30 map cell of
   // each authoritative endpoint; a distant but smoothly animated warp fails.

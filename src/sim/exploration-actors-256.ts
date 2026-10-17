@@ -39,6 +39,7 @@ export function captureActualExplorationApproachers256(world:World):ResolveExplo
  for(const actor of captureActorBeds256(root).actors){const row=worldRows.get(actor);
   add(actor,row?{id:actor.id,playerOwned:row.factionId===root.worldFactions?.playerFactionId,hostPlayer:false}:actualExplorationAffiliation256(actor,guestByActor.get(actor as Pawn)));
  }
+ for(const row of root.worldPawns?.owners??[])if(row.kind==='mechanical')add(row.actor,actualExplorationAffiliation256(row.actor));
  for(const c of physical){
   for(const m of c.world?.mechanoids??[])add(m,actualExplorationAffiliation256(m));
   // These are actual frozen identity owners, not campaign knowledge. Their

@@ -1,3 +1,4 @@
+import {groupHumanPendingPassenger259} from './group-human-admission-257.ts';
 import { isBedKind } from './bed-kinds.ts';
 import { bedSlotCell,pawnBedSlot } from './bed-slots.ts';
 import { fallingAsleepBlocked } from './disturbance-state.ts';
@@ -29,7 +30,7 @@ export function updateRest(world: World, pawn: Pawn): void {
     pawn.restZeroTicks=0;pawn.collapsePending=false;
     if(pawn.moveCooldown>0){delete pawn.medicalSleep;return;}
     if(pawn.medicalSleep&&pawn.rest>=100)delete pawn.medicalSleep;
-    else if(!pawn.medicalSleep&&pawn.rest<75&&pawn.hunger>0&&!fallingAsleepBlocked(world,pawn))pawn.medicalSleep=true;
+    else if(!pawn.medicalSleep&&pawn.rest<75&&pawn.hunger>0&&!fallingAsleepBlocked(world,pawn)&&!groupHumanPendingPassenger259(world,pawn.id))pawn.medicalSleep=true;
     const need=pawn.need,bed=pawn.moveCooldown===0&&need?.kind==='sleep'&&need.phase==='sleep'&&need.bedId!==null?world.structures.find(s=>{
       if(s.id!==need.bedId||!isBedKind(s.kind))return false;
       if(s.kind==='double-bed'){

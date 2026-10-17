@@ -1,4 +1,5 @@
 import {notifyDuckFlightJob256} from './duck-flight-runtime-256.ts';
+import {prospectiveHuman259} from './group-human-admission-259.ts';
 import {healthRandom} from './health.ts';
 import {cancelGroupPreparation} from './group-authority.ts';
 import {captureGroupMass} from './group-capture.ts';
@@ -18,17 +19,24 @@ export function groupAnimalPreparation(w:World,id:number):{group:PreparingGroup;
  const g=w.group;if(g&&'manifest'in g){const line=g.animalPreparation?.lines.find(l=>l.animalId===id);if(line)return {group:g,line};}return;
 }
 /** Active services/captured edges are never erased to obtain an eligible animal. */
-export function groupAnimalReason256(w:World,a:WildAnimal,preparing=false):string|undefined {
+function animalFormationReason256(w:World,a:WildAnimal,preparing:boolean,ordinaryAdmission=false):string|undefined {
  if(w.schemaVersion<256||!w.wildlife?.animals.includes(a)||!a.domestic||a.state==='dead'||a.health?.death)return 'Animal domestique vivant et présent requis.';
  const held=groupAnimalPreparation(w,a.id);if(held&&(!preparing||held.group!==w.group))return 'Cet animal appartient déjà à une formation.';
  if(animalClaimed(w,a.id,preparing?held?.line.handlerId:undefined)||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.stun||a.predation||a.mating||a.exiting||a.manhunter||a.confusion||a.eggLay||a.exitFlight||(a.health?.foodPoisoning?.vomit||a.health?.cryptosleepSickness?.vomit||a.health?.toxicBuildup?.vomit||a.health?.toxicBuildup?.vomitRequestedAt!==undefined)||a.domestic.slaughter)return 'Cet animal doit terminer son activité ou son danger.';
- if(!preparing&&(a.path.length||!finished(w,a)||!['idle','sleeping','downed'].includes(a.state)))return 'Cet animal doit terminer son déplacement.';
+ const ordinary=ordinaryAdmission&&a.state==='moving'&&a.wander?.job?.kind==='goto'&&!a.meal&&!a.animalRest&&!a.flight&&!a.motion?.animalFlight&&!a.hiveJob;
+ if(!preparing&&!ordinary&&(a.path.length||!finished(w,a)||!['idle','sleeping','downed'].includes(a.state)))return 'Cet animal doit terminer son déplacement.';
  return;
 }
+/** Historical admission, unloading and existing formations keep this contract. */
+export function groupAnimalReason256(w:World,a:WildAnimal,preparing=false):string|undefined {return animalFormationReason256(w,a,preparing);}
+/** New actual259/admission2 only. The existing ungathered line suppresses later
+ * wandering decisions; the handler still waits for BOTH captured edges before
+ * contact/gathering. No motion, health, service or dangerous task is cleared. */
+export function groupAnimalFormationReason259(w:World,a:WildAnimal):string|undefined {return animalFormationReason256(w,a,false,w.schemaVersion===259&&!w.group&&prospectiveHuman259(w));}
 export function previewGroupAnimals256(w:World,ids:readonly number[],members:readonly Pawn[],reachable:(p:Pawn,c:Cell)=>boolean):{kind:'ready';animals:WildAnimal[];preparation?:GroupAnimalPreparation256}|{kind:'refused';reason:string} {
  if(!ids.length)return {kind:'ready',animals:[]};if(w.schemaVersion<256||!members.length||new Set(ids).size!==ids.length)return {kind:'refused',reason:'Sélection animale invalide.'};
  const animals:WildAnimal[]=[],lines:GroupAnimalPreparationLine256[]=[],carriers=new Set<number>();
- for(const id of ids){const a=w.wildlife?.animals.find(a=>a.id===id);if(!Number.isSafeInteger(id)||id<1||id>=w.nextId||!a)return {kind:'refused',reason:'Animal original absent.'};const reason=groupAnimalReason256(w,a);if(reason)return {kind:'refused',reason};
+ for(const id of ids){const a=w.wildlife?.animals.find(a=>a.id===id);if(!Number.isSafeInteger(id)||id<1||id>=w.nextId||!a)return {kind:'refused',reason:'Animal original absent.'};const reason=groupAnimalFormationReason259(w,a);if(reason)return {kind:'refused',reason};
   const carry=a.state==='downed'||animalBody(a).capacities.moving<=0,handler=members.find(p=>(!carry||!carriers.has(p.id))&&reachable(p,a));if(!handler)return {kind:'refused',reason:'Un conducteur accessible est requis pour chaque animal ; chaque patient doit avoir son propre porteur.'};
   if(carry)carriers.add(handler.id);animals.push(a);lines.push({animalId:id,handlerId:handler.id,mode:carry?'carry':'lead',gathered:false});
  }
@@ -77,7 +85,7 @@ export function processGroupAnimalDelivery256(w:World,g:PreparingGroup,p:Pawn,ct
 }
 export const pendingGroupAnimalDeliveries256=(g:PreparingGroup):boolean=>g.manifest.slice(0,g.cursor).some(l=>l.animalCarrierId!==undefined&&!l.deliveredToAnimal);
 
-export function groupAnimalChoices256(w:World):readonly {animal:WildAnimal;ok:boolean;reason?:string}[] {return (w.wildlife?.animals??[]).filter(a=>!!a.domestic&&a.state!=='dead').map(animal=>{const reason=w.group?'Un groupe est déjà engagé.':groupAnimalReason256(w,animal);return {animal,ok:!reason,...reason?{reason}:{}};});}
+export function groupAnimalChoices256(w:World):readonly {animal:WildAnimal;ok:boolean;reason?:string}[] {return (w.wildlife?.animals??[]).filter(a=>!!a.domestic&&a.state!=='dead').map(animal=>{const reason=w.group?'Un groupe est déjà engagé.':groupAnimalFormationReason259(w,animal);return {animal,ok:!reason,...reason?{reason}:{}};});}
 export function groupAnimalClaimed256(w:World,id:number,exceptPawn?:number):boolean {
  for(const row of localWorldGroups(w)){const g=row.state;if('manifest'in g){const l=g.animalPreparation?.lines.find(l=>l.animalId===id);if(l&&l.handlerId!==exceptPawn)return true;}else if(g.phase==='unloading'&&g.animalIds?.includes(id)&&!(exceptPawn!==undefined&&g.memberIds.includes(exceptPawn)))return true;}return false;
 }

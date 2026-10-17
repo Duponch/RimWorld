@@ -1,3 +1,4 @@
+import {bindBornHumanFaction259} from './world-affiliation-259.ts';
 import { arrivalTraits } from './traits.ts';
 import { offeredBackground,assignOfferedBackground } from './background-generation.ts';
 import { relationshipOfferCandidates,chooseOfferedRelationship,prepareRelationshipAdmission } from './relationship-generation.ts';
@@ -51,6 +52,7 @@ export function applyArrival(world:World,command:ArrivalCommand):CommandResult {
   if(!civilianAdmissionFits(world,1,1)||world.nextId>Number.MAX_SAFE_INTEGER-2)return refuse('La carte ne peut plus accueillir cette personne.');
   const entry=arrivalEntry(world,s!.rng);if(!entry)return refuse('Aucune entrée libre et accessible depuis la colonie. La demande reste ouverte.');
   const pawn=startingPawn(world.nextId,o.name,entry.x,entry.z,o.profile,55,world.seed,world.tick,world.schemaVersion);
+  if(world.schemaVersion===259&&world.worldFactions&&!bindBornHumanFaction259(world,pawn,world.worldFactions.playerFactionId))return refuse('L’instance de faction réelle manque pour cette arrivée.');
   assignOfferedBackground(pawn,o,world.seed,world.tick);
   if(o.traits)pawn.traits=[...o.traits];
   pawn.hunger=75;pawn.rest=80;pawn.foodPolicyId=world.foodPolicies[0]!.id;

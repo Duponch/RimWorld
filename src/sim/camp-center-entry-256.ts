@@ -32,12 +32,12 @@ const cellInRect=(c:RandomClosewalkCapture256,b:Readonly<{minX:number;maxX:numbe
 const anyCell=(c:RandomClosewalkCapture256,r:CampArrivalRandom256)=>{const x=r.integer(0,c.width),z=r.integer(0,c.height);return z*c.width+x;};
 /** Fresh closed doors only, as enforced by the existing capture. A normal
  * district can reach the edge without portals/fences iff it touches it. */
-export function drawCampCenterCell256(c:RandomClosewalkCapture256,r:CampArrivalRandom256):number {
+export function drawCampCenterCell256(c:RandomClosewalkCapture256,r:CampArrivalRandom256,accept:(cell:number)=>boolean=()=>true):number {
  const cx=Math.floor(c.width/2),cz=Math.floor(c.height/2);let radius=Math.max(3,Math.min(25,Math.trunc(Math.max(c.width,c.height)/20))),tries=0;
  for(;;){
   tries++;if(tries>30){if(radius>c.width*2&&radius>c.height*2)break;radius=Math.trunc(Math.fround(Math.fround(radius)*Math.fround(1.5)));tries=0;}
   const cell=cellInRect(c,{minX:Math.max(0,cx-radius),maxX:Math.min(c.width-1,cx+radius),minZ:Math.max(0,cz-radius),maxZ:Math.min(c.height-1,cz+radius)},r),d=c.physical.district(cell);
-  if(c.physical.standable(cell)&&d?.type==='normal'&&d.touchesMapEdge)return cell;
+  if(c.physical.standable(cell)&&d?.type==='normal'&&d.touchesMapEdge&&accept(cell))return cell;
  }
  return anyCell(c,r);
 }
@@ -93,9 +93,9 @@ const prepared=new WeakMap<PreparedCampCenterEntry256,{map:World;tiles:World['ti
 /** Does not transfer or mutate any actor, item, root, or campaign RNG. Fog is
  * computed from original affiliations onto a projection of this NEW map's
  * tiles only. There are no new-map mine intents to retire in this boundary. */
-export function prepareCampCenterEntry256(input:CampaignState,map:World,group:AwayGroup):PreparedCampCenterEntry256 {
+export function prepareCampCenterEntry256(input:CampaignState,map:World,group:AwayGroup,settlement=false):PreparedCampCenterEntry256 {
  const root=registeredCampaign(input);
- if(!isSchema256Or257(root.schemaVersion)||root.planet?.revision!==3||!isSchema256Or257(map.schemaVersion)||map.site?.revision!==3||map.site.tileId!==group.tile||map.planet!==root.planet||map.worldFactions!==root.worldFactions||map.width!==200||map.height!==200||!explorationEnabled256(map)||map.jobs.length||map.pawns.length||map.startingArrival||!root.worldGroups?.groups.some(row=>row.localMapId===null&&row.state===group))throw Error('Actual unpublished new Camp and away group required');
+ if(!isSchema256Or257(root.schemaVersion)||root.planet?.revision!==3||!isSchema256Or257(map.schemaVersion)||map.site?.revision!==3||map.site.tileId!==group.tile||map.planet!==root.planet||map.worldFactions!==root.worldFactions||map.width!==(settlement?250:200)||map.height!==(settlement?250:200)||!explorationEnabled256(map)||map.jobs.length||map.pawns.length||map.startingArrival||!root.worldGroups?.groups.some(row=>row.localMapId===null&&row.state===group))throw Error('Actual unpublished new Camp and away group required');
  const animals=group.animalOwners?.members??[];
  if(duckPhysicalOwnerCount256(map)+animals.length>MAX_WILDLIFE)throw Error('Actual arriving animal capacity exceeded');
  const originals:CampArrivalActor256[]=[...group.members,...animals],byId=new Map(originals.map(a=>[a.id,a]));
@@ -104,7 +104,8 @@ export function prepareCampCenterEntry256(input:CampaignState,map:World,group:Aw
  if(order.length!==originals.length||new Set(order).size!==order.length||order.some(id=>!byId.has(id)))throw Error('Actual mixed arrival order is incomplete');
  const geometry=captureRandomClosewalk256(map); // keeps its real open/hold-open refusal
  const fog={schemaVersion:map.schemaVersion,site:map.site,exploration:map.exploration,width:map.width,height:map.height,tiles:map.tiles.map(t=>({...t}))};
- const physical=captureActualFogPhysical256(map),random=stagedCampArrivalRandom256(root.rng),center=drawCampCenterCell256(geometry,random);
+ const physical=captureActualFogPhysical256(map),random=stagedCampArrivalRandom256(root.rng),center=drawCampCenterCell256(geometry,random,cell=>!settlement||(geometry.physical.district(cell)?.cellCount??0)>=600);
+ if(settlement){const district=geometry.physical.district(center);if(!district||district.type!=='normal'||district.cellCount<600)throw Error('La zone d’arrivée de colonie ne possède pas600cellules accessibles.');}
  const occupied=new Set([...map.pawns,...map.wildlife?.animals??[],...map.mechanoids??[]].filter(a=>a.state!=='dead').map(a=>a.z*map.width+a.x));
  const placements:CampArrivalPlacement256[]=[],revealed=new Set<number>();
  for(const id of order){const actor=byId.get(id)!,at=drawCampSpawnCell256(geometry,center,occupied,c=>foggedCell256(fog,c),random),rotation=random.integer(0,4) as Orientation;

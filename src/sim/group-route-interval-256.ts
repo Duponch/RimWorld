@@ -8,7 +8,7 @@ import {hasMentalBreak} from './mental-state.ts';
 const f=Math.fround;
 /** Current human ownership, never mere faction colour or capacity of any one
  * passenger. Animal owners are an explicit separate raccord. */
-export const groupPlayerOwner256=(p:Pawn):boolean=>isColonist(p)&&!p.prisoner&&!p.visitor&&p.state!=='dead'&&!p.health?.death;
+export const groupPlayerOwner256=(p:Pawn):boolean=>isColonist(p)&&!p.prisoner&&!p.visitor&&(!p.worldAffiliation259||p.worldAffiliation259.hostFactionId===null&&p.worldAffiliation259.guestStatus==='Guest')&&p.state!=='dead'&&!p.health?.death;
 export function groupOwnersCannotMove256(members:readonly Pawn[]):readonly number[] {
  const owners=members.filter(groupPlayerOwner256);
  return !owners.length||owners.every(p=>p.state==='downed')||owners.every(hasMentalBreak)?owners.map(p=>p.id):[];

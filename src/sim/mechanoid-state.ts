@@ -1,3 +1,4 @@
+import type {MechanicalWorldFaction259} from './mechanoid-world-faction-259.ts';
 import type { Cell } from './types.ts';
 import type { MedicalRecord } from './injury-types.ts';
 import type { MeleeState } from './melee-state.ts';
@@ -11,6 +12,8 @@ import type { EmpAdaptationState } from './emp-state.ts';
 /** Mechanical map owner. No human or animal needs, skills or inventory. */
 export interface Mechanoid extends Cell { corpseDamage?:number;
   id:number;mechKind:MechanoidKind;
+  /** True prospective faction instance, never synthesized for historical mechs. */
+  worldFaction259?:MechanicalWorldFaction259;
   state:'idle'|'moving'|'working'|'downed'|'dead';
   /** Absence is the healthy mechanical body; first impact installs the record. */
   health?:MedicalRecord;

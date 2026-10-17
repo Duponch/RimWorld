@@ -1,3 +1,4 @@
+import {heldCasketLivingIds259} from './world-pawn-casket-membership-259.ts';
 import {captureNativeWorldPawnFinderIds256,validNativeWorldPawnOrder256,restoreNativeWorldPawnOrder256,type NativeWorldPawnOrder256} from './native-world-pawn-order-256.ts';
 import type {WorldPawnsState256,WorldPawnOwner256} from './world-pawn-state-256.ts';
 /** Shape admission is performed by the envelope BEFORE this physical binding.
@@ -8,13 +9,15 @@ export function validPhysicalWorldPawnOrder256(state:WorldPawnsState256,nextId:n
  try{orderedWorldPawnRows256(state);return true;}catch{return false;}
 }
 /** Legacy absence keeps the literal physical order. Native presence reads the
- * three REAL sets; the physical array remains their sole payload owner. */
+ * three REAL sets; ordinary rows and retained caskets own their unique payloads. */
 export function orderedWorldPawnRows256(state:WorldPawnsState256):readonly WorldPawnOwner256[]{
  if(!Object.hasOwn(state,'nativeOrder')){if('nativeOrder'in state)throw Error('Inherited native WorldPawn order');return state.owners;}
  const order=state.nativeOrder;if(!order)throw Error('Missing actual native WorldPawn order');
  const rows=new Map<number,WorldPawnOwner256>();for(const r of state.owners){if(rows.has(r.actor.id))throw Error('Duplicate actual WorldPawn original');rows.set(r.actor.id,r);}
+ const held=new Set(heldCasketLivingIds259(state));if([...held].some(id=>rows.has(id)))throw Error('Contained WorldPawn also has an active owner');
  const out:WorldPawnOwner256[]=[];
- for(const [key,mode] of [['alive','active'],['mothballed','mothballed'],['dead','dead']] as const)for(const id of order[key].slots){if(id===null)continue;const row=rows.get(id);if(!row||row.mode!==mode)throw Error('Native WorldPawn slot has no matching physical owner');rows.delete(id);out.push(row);}
+ for(const [key,mode] of [['alive','active'],['mothballed','mothballed'],['dead','dead']] as const)for(const id of order[key].slots){if(id===null)continue;if(held.has(id)){if(mode!=='active')throw Error('Suspended held WorldPawn requires its actual alive slot');held.delete(id);continue;}const row=rows.get(id);if(!row||row.mode!==mode)throw Error('Native WorldPawn slot has no matching physical owner');rows.delete(id);out.push(row);}
+ if(held.size)throw Error('Contained WorldPawn missing actual alive slot');
  if(rows.size)throw Error('Physical WorldPawn missing its actual native slot');return out;
 }
 export function nativeWorldPawnOrderMutable256(state:WorldPawnsState256):boolean {

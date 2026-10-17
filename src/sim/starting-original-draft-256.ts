@@ -1,3 +1,4 @@
+import {SCHEMA_VERSION} from './types.ts';
 import {constructDeliveredStartingOriginalRoster256,type StartingOriginalRoster256} from './starting-original-roster-256.ts';
 import type {StartingOriginalRequest256} from './starting-original-request-256.ts';
 import {isCampaignGeography256,type CampaignGeography256} from './world-geography-owner-256.ts';
@@ -16,5 +17,5 @@ export function prepareStartingOriginalDraft256(draft:GeographicWorldDraft256,ge
   for(const id of [leader.pawn.id,...leader.items.map(p=>p.id),...leader.packed.map(p=>p.building.id)]){if(knownThingIds.has(id)||id>=draft.nextThingId)throw Error('Actual world draft identity frontier is inconsistent');knownThingIds.add(id);}
   knownPeople.set(leader.pawn.id,{id:leader.pawn.id,name:leader.pawn.name,status:'away'});
  }
- return constructDeliveredStartingOriginalRoster256(request,{nextId:draft.nextThingId,factions:draft.factions,knownPeople,knownThingIds,context:{seed:site.mapSeed>>>0,width:250,height:250},absoluteCore});
+ return constructDeliveredStartingOriginalRoster256(request,{version:SCHEMA_VERSION,nextId:draft.nextThingId,factions:draft.factions,knownPeople,knownThingIds,context:{seed:site.mapSeed>>>0,width:250,height:250},absoluteCore});
 }

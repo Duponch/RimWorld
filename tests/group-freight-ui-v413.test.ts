@@ -58,7 +58,7 @@ function setup(){
 /** Prepared UI-only confirmations. No simulation/camp/contact proof is claimed.
  * Expected masses come from MASSES-01.tsv, not from the tested mass helpers. */
 test('258 exposes actual freight rows, original minified labels and masses, preserves focus/draft and forwards IDs only',()=>{
- const {host,documentFixture}=dom(),f=setup();f.world.schemaVersion=258;
+ const {host,documentFixture}=dom(),f=setup();(f.world as {schemaVersion:number}).schemaVersion=258;
  const table:import('../src/sim/furniture-rules').PackedFurniture={building:{...f.pack.building,id:f.world.nextId++,kind:'table',material:'wood'},owner:{type:'ground',x:6,z:4}};
  f.world.packed.push(table);f.facts.bedrolls=[{pack:f.pack,ok:true},{pack:table,ok:true}];
  const medicine:import('../src/sim/types').MaterialPile={id:f.world.nextId++,kind:'medicine',item:'medicine',quantity:4,owner:{type:'ground',x:6,z:5}};
@@ -82,7 +82,7 @@ test('258 exposes actual freight rows, original minified labels and masses, pres
 
 test('258 manifest resolves a real divided or whole receipt and cannot retain stale pile metadata after snapshot adoption',()=>{
  for(const whole of [false,true]){
-  const {host}=dom(),f=setup();f.world.schemaVersion=258;const pawn=f.world.pawns[0]!,sourceId=f.world.nextId++,carriedId=whole?sourceId:f.world.nextId++;
+  const {host}=dom(),f=setup();(f.world as {schemaVersion:number}).schemaVersion=258;const pawn=f.world.pawns[0]!,sourceId=f.world.nextId++,carriedId=whole?sourceId:f.world.nextId++;
   const received:import('../src/sim/types').MaterialPile={id:carriedId,kind:'weapon',item:'revolver',quantity:1,owner:{type:'inventory',pawnId:pawn.id},weapon:{quality:'excellent',hitPoints:83}};
   f.world.piles=[received];f.facts.sources=[];f.facts.bedrolls=[];f.facts.animals=[];
   f.facts.mass={grams:1400,capacityGrams:35000,rations:0,pemmicanUnits:0,provisionNutrition:0,byMember:[{pawnId:pawn.id,grams:1400,capacityGrams:35000}]};
@@ -95,7 +95,7 @@ test('258 manifest resolves a real divided or whole receipt and cannot retain st
 });
 
 test('258 revision2 minified loading displays the original package and its actual carrier without altering owners',()=>{
- const {host}=dom(),f=setup();f.world.schemaVersion=258;const pawn=f.world.pawns[0]!;
+ const {host}=dom(),f=setup();(f.world as {schemaVersion:number}).schemaVersion=258;const pawn=f.world.pawns[0]!;
  const chair:import('../src/sim/furniture-rules').PackedFurniture={building:{...f.pack.building,id:f.world.nextId++,kind:'stool',material:'wood'},owner:{type:'inventory',pawnId:pawn.id}};
  f.world.packed=[chair];f.facts.sources=[];f.facts.bedrolls=[];f.facts.animals=[];
  f.facts.mass={grams:3000,capacityGrams:35000,rations:0,pemmicanUnits:0,provisionNutrition:0,byMember:[{pawnId:pawn.id,grams:3000,capacityGrams:35000}]};

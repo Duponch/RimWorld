@@ -1,0 +1,3 @@
+import {defineConfig} from '@playwright/test';
+// ROOT owns the separately started frozen source server. No webServer here.
+export default defineConfig({testDir:'./tests/integration',testMatch:'owners-v414-native.spec.ts',fullyParallel:false,workers:1,retries:0,timeout:240_000,expect:{timeout:15_000},reporter:[['list']],outputDir:process.env.OWNERS414_OUTPUT??'tmp/world-foundations/owners-v414/native',use:{baseURL:process.env.OWNERS414_BASE_URL??'http://127.0.0.1:5173',viewport:{width:1440,height:1000},channel:'chrome',headless:true,trace:'retain-on-failure',screenshot:'only-on-failure',launchOptions:{args:['--enable-unsafe-webgpu']}}});

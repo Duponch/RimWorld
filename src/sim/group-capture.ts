@@ -1,6 +1,7 @@
+import {groupExitAuthorityReason259} from './group-world-ownership-259.ts';
 import {validLoadedGroupFreight258} from './group-freight-contract-258.ts';
 import {groupPackedMassGrams258} from './group-freight-contract-258.ts';
-import {groupAnimalReason256} from './group-animal-formation-256.ts';
+import {groupAnimalReason256,groupAnimalFormationReason259} from './group-animal-formation-256.ts';
 import {caravanPawnCapacityGrams256,caravanRidingFactor256} from './group-animal-capacity-256.ts';
 import type {WildAnimal} from './wildlife-state.ts';
 import {validGroupBedrollLoadingField256} from './group-bedroll-loading-256.ts';
@@ -97,7 +98,7 @@ export function captureGroupCandidates(world:World,memberIds:readonly number[],a
     if(!pawn||!slot?.local||slot.pawn!==pawn)return fail('exclusive-human-owner');
     const reason=authority.memberReason(world,pawn);if(reason)return fail(reason);members.push(pawn);
   }
-  const animals:WildAnimal[]=[];if(animalIds.length){if(world.schemaVersion<256||new Set(animalIds).size!==animalIds.length)return fail('animals');for(const id of animalIds){const a=world.wildlife?.animals.find(a=>a.id===id);if(!a||groupAnimalReason256(world,a,!!world.group))return fail('animal-owner');animals.push(a);}}
+  const animals:WildAnimal[]=[];if(animalIds.length){if(world.schemaVersion<256||new Set(animalIds).size!==animalIds.length)return fail('animals');for(const id of animalIds){const a=world.wildlife?.animals.find(a=>a.id===id);if(!a||(world.group?groupAnimalReason256(world,a,true):groupAnimalFormationReason259(world,a)))return fail('animal-owner');animals.push(a);}}
   const ids=new Set([...memberIds,...animalIds]);
   if(authority.requireResident!==false&&!world.pawns.some(p=>!ids.has(p.id)&&authority.residentCapable(world,p)))return fail('resident');
   const sources=new Map<number,MaterialPile>(),items:MaterialPile[]=[];
@@ -106,6 +107,7 @@ export function captureGroupCandidates(world:World,memberIds:readonly number[],a
     if(possession(pile,ids)){if(!allowedOwner(pile)){const releasing=world.schemaVersion>=257&&(!world.group||'manifest'in world.group&&world.group.humanPreparation?.releaseIds.includes('pawnId'in pile.owner?pile.owner.pawnId:-1));if(pile.owner.type==='pawn'&&releasing)continue;return fail('temporary-cargo');}items.push(pile);}
   }
   const packed=world.packed.filter(p=>'pawnId'in p.owner&&ids.has(p.owner.pawnId)&&!(world.schemaVersion>=257&&p.owner.type==='pawn'&&(!world.group||'manifest'in world.group&&world.group.humanPreparation?.releaseIds.includes(p.owner.pawnId))));if(packed.length&&(world.schemaVersion<256||!validCaravanBedrollPacks256(packed,[...members,...animals],world.nextId,world.schemaVersion,world.tick)))return fail('packed-cargo');
+  const exitReason=groupExitAuthorityReason259(world,members,items,animals);if(exitReason)return fail(exitReason);
   const mass=captureGroupMass(members,items,world.schemaVersion>=GROUP_FREIGHT_SCHEMA&&(!world.group||freightGroup(world.group)),world.schemaVersion,packed,animals);if(!mass)return fail('unknown-mass');
   if(mass.carriers.some(c=>c.grams>c.capacityGrams))return fail('overload');
   const reason=authority.namespaceReason(world,{additionalPiles:0,members,items});if(reason)return fail(reason);

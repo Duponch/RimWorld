@@ -220,7 +220,7 @@ export class SimulationClient {
     if ((payload.type === 'init' || payload.type === 'load' || payload.type === 'world-draft-start') && [...this.pending.values()].some(p => p.type === 'init' || p.type === 'load' || p.type === 'world-draft-start')) {
       return Promise.reject(new SimulationRequestError('Un remplacement de colonie attend encore sa décision.', 'refused'));
     }
-    if(this.hasCampPreparation&&payload.type!=='camp-entry-cancel'&&payload.type!=='resync')return Promise.reject(new SimulationRequestError('La préparation du camp attend encore sa décision.', 'refused'));
+    if(this.hasCampPreparation&&payload.type!=='camp-entry-cancel'&&payload.type!=='resync')return Promise.reject(new SimulationRequestError('La préparation de la carte locale attend encore sa décision.', 'refused'));
     if([...this.pending.values()].some(p=>p.type==='world-draft-start')&&payload.type!=='world-draft-cancel'&&payload.type!=='resync')return Promise.reject(new SimulationRequestError('La création de la colonie attend encore sa décision.','refused'));
     if([...this.pending.values()].some(p=>p.type==='world-draft-generate')&&!['world-draft-generate','world-draft-cancel','resync'].includes(payload.type))return Promise.reject(new SimulationRequestError('La préparation du monde attend encore sa décision.','refused'));
     const id = this.nextId++;
@@ -234,7 +234,7 @@ export class SimulationClient {
         this.onRequestStatus({ id, type: payload.type, state: 'waiting', message });
         this.onError(message);
       }, 15_000);
-      this.pending.set(id, { type: payload.type, resolve, reject, timer,...draft?{draft}:{},...draftStart?{draftStart}:{},...payload.type==='command'&&payload.command.type==='group-enter'&&payload.command.mode==='camp'?{campGroupId:payload.command.groupId}:{} });
+      this.pending.set(id, { type: payload.type, resolve, reject, timer,...draft?{draft}:{},...draftStart?{draftStart}:{},...payload.type==='command'&&payload.command.type==='group-enter'&&['camp','settle'].includes(payload.command.mode)?{campGroupId:payload.command.groupId}:{} });
       try { this.worker.postMessage({ ...payload, id } satisfies Request); }
       catch (error) {
         clearTimeout(timer);
@@ -247,7 +247,7 @@ export class SimulationClient {
   private clearWorldDraft256():void {const held=!!this.draftAbortCleanup||!!this.worldDraft;this.draftAbortCleanup?.();this.draftAbortCleanup=undefined;this.worldDraft=undefined;if(held)this.snapshots.discardDraftPreview();}
   async generateWorldDraft256(input:WorldCreationRequest256,context:{signal:AbortSignal;onProgress:(progress:WorldCreationProgress256)=>void}):Promise<WorldCreationPreview256> {
     if(context.signal.aborted)throw new DOMException('Préparation annulée.','AbortError');
-    if(this.hasCampPreparation)throw new SimulationRequestError('La préparation du camp attend encore sa décision.','refused');
+    if(this.hasCampPreparation)throw new SimulationRequestError('La préparation de la carte locale attend encore sa décision.','refused');
     if(!input||!validWorldGenerationSettings(input.settings)||typeof input.seed!=='string'||!sameDraftPlayer256(input.player,input.player)||input.player.scenario!=='crashlanded'||input.player.playerDef!=='PlayerColony')throw Error('Paramètres de création invalides.');
     if([...this.pending.values()].some(p=>p.type==='init'||p.type==='load'||p.type==='world-draft-start'))throw Error('Un remplacement attend encore sa décision.');
     // A previous fatal worker may be retired before a NEW generation only.

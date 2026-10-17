@@ -12,7 +12,7 @@ import {adultAgeTicks} from '../src/sim/animal-life';
 import type {WildAnimal} from '../src/sim/wildlife-state';
 import {reorganizationCamp256} from './helpers/group-reorganization-v256';
 import {readGroupPanelSnapshot} from '../src/ui/group-adapter';
-import {registeredMapPresentation} from '../src/sim/world-map-presentation';
+import {registeredMapPresentation,campaignOnlySummary} from '../src/sim/world-map-presentation';
 function projectedSnapshot256(w:import('../src/sim/types').World){const view=registeredMapPresentation(w);if(!view)throw Error('Declared UI fixture has no selected actual map');const snapshot=readGroupPanelSnapshot(view);if(!snapshot)throw Error('Missing confirmed group projection');return snapshot;}
 vi.mock('../src/ui/planet-view',()=>({createPlanetView:()=>({setPlanet(){},setOverlay(){},setVisible(){},dispose(){},focusTile(){}}),planetTileLabel:()=> 'Destination'}));
 class NodeFixture {
@@ -138,4 +138,20 @@ test('stationary owner on an existing map keeps the Camp action refused and emit
  const camp=all(host).find(n=>n.dataset.siteAction==='camp')!;
  expect(camp.hidden).toBe(false);expect(camp.getAttribute('aria-disabled')).toBe('true');
  camp.fire('click');expect(send).not.toHaveBeenCalled();ui.dispose();
+});
+
+/** Declared group-only presentation of the existing stationary owner. This
+ * exercises no map removal, map generation or acquired3408 chronology. */
+test('group-only caravan with zero local source slots keeps its confirmed selector and permitted entry action',async()=>{
+ const {host}=dom(),f=preparedStationaryEntry256(true),snapshot=readGroupPanelSnapshot(campaignOnlySummary(f.world));
+ if(!snapshot||!snapshot.group)throw Error('Missing declared group-only owner projection');
+ expect(snapshot.campaign?.activeMapId).toBeNull();expect(snapshot.world.piles).toEqual([]);
+ const send=vi.fn(async()=>{}),adapters=createGroupAdapters({blocked:()=>undefined,send});
+ expect(adapters.capture(snapshot).maximumSources).toBe(0);
+ const before=JSON.stringify(f.world),projectedBefore=JSON.stringify(snapshot),ui=createGroupPanel(host as unknown as HTMLElement,adapters);ui.update(snapshot);
+ const error=all(host).find(n=>n.className==='group-error')!,selector=all(host).find(n=>n.getAttribute('aria-label')==='Choisir une caravane')!;
+ expect(error.hidden).toBe(true);expect(selector.children.map(n=>n.value)).toEqual(['',...f.world.worldGroups!.groups.map(r=>String(r.state.id))]);expect(selector.value).toBe(String(f.child.id));expect(selector.children[0]!.disabled).toBe(true);
+ const camp=all(host).find(n=>n.dataset.siteAction==='camp')!;expect(camp.hidden).toBe(false);expect(camp.getAttribute('aria-disabled')).toBe('false');
+ expect(send).not.toHaveBeenCalled();camp.fire('click');await flush();expect(send).toHaveBeenCalledExactlyOnceWith({type:'group-enter',groupId:f.child.id,mode:'camp'});
+ expect(JSON.stringify(f.world)).toBe(before);expect(JSON.stringify(snapshot)).toBe(projectedBefore);ui.dispose();
 });

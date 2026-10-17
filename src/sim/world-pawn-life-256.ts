@@ -1,3 +1,7 @@
+import {advanceOffmapThermal259,offmapThermalRange259,WORLD_PAWN_NO_HOLDER_TEMPERATURE_259} from './offmap-thermal-259.ts';
+import {createAnimalMedicalRecord256} from './animal-clinical-age-v256.ts';
+import {advanceMechanicalWorldPawn259} from './world-pawn-mechanical-259.ts';
+import {validSuspendedWorldPawnGoods259} from './world-pawn-held-259.ts';
 import {nativeWorldPawnOrderCurrent256,commitNativeWorldPawnOrder256,orderedWorldPawnRows256} from './world-pawn-native-order-256.ts';
 import {destroyNativeWorldPawnOrder256,mothballNativeWorldPawnOrder256} from './native-world-pawn-order-256.ts';
 import {advanceWorldPawnEggLayer256,worldPawnEggBoundary256,worldPawnEggIntervalBoundary256} from './world-pawn-egg-comp-256.ts';
@@ -15,7 +19,7 @@ import {animalGrowthFactor,animalNutritionMax} from './animal-life.ts';
 import {INITIAL_ANIMAL_FACTS_256} from './initial-animal-data-256.ts';
 import {advanceHumanAgeAt} from './human-age.ts';
 import {advanceMedical} from './injury-evolution.ts';
-import {medicalStatus,freshMissing} from './injury-state.ts';
+import {medicalStatus,freshMissing,createMedicalRecord} from './injury-state.ts';
 import {groupPawnInterval256} from './group-core-cadence-256.ts';
 import {autoTendWorldPawn256} from './world-pawn-auto-tend-256.ts';
 import {terminalWorldPawn256,mutableWorldPawnOriginal256,type WorldPawnOwner256,type WorldPawnsState256} from './world-pawn-state-256.ts';
@@ -24,7 +28,7 @@ export type WorldPawnLifeResult256={ok:true}|{ok:false;reason:string};
 /** Exact supported permanent dossiers; other defs need their REAL mothball
  * flags before they may freeze. Unknown is not converted into false/healthy. */
 export function worldPawnMothballReadiness256(row:WorldPawnOwner256):'yes'|'blocked'{
- if(row.kind==='human'||row.actor.pregnancy)return 'blocked';
+ if(row.kind!=='animal'||row.actor.pregnancy)return 'blocked';
  const h=row.actor.health;if(!h)return 'yes';
  if(h.bloodLoss||h.injuries.some(i=>i.scar?.pain===undefined)||h.missing.some(m=>freshMissing(h,m)))return 'blocked';
  const allowed=new Set(['tick','nextInjuryId','injuries','missing','bloodLoss','body','animalBirthTick','animalGrowth','death']);
@@ -46,24 +50,27 @@ function animalAge(row:Extract<WorldPawnOwner256,{kind:'animal'}>,toCore:number,
 }
 /** Existing active-owner frontiers, also checked BEFORE a MapRemoved commit.
  * This reads actual fields; it does not run a future clinical tick or trial. */
-export function worldPawnActiveBoundary256(row:WorldPawnOwner256):string|null {
+export function worldPawnActiveBoundary256(row:WorldPawnOwner256,version=256,atCore=row.clockCore):string|null {
  if(terminalWorldPawn256(row)||row.mode==='mothballed')return null;
- if(row.items.length||row.packed.length)return 'Actual off-map item/gear ticking requires its retained-holder adapter';
+ if(row.items.length||row.packed.length){if(version!==259)return 'Actual off-map item/gear ticking requires its retained-holder adapter';if(!validSuspendedWorldPawnGoods259(row,atCore))return 'Actual suspended item holder/frontier is not admitted';}
+ if(row.kind==='mechanical')return version===259&&row.items.length===0&&row.packed.length===0?null:'Mechanical WorldPawn owner is not admitted';
  if(row.kind==='animal'){
   if(row.actor.pregnancy)return 'Actual off-map pregnancy requires miscarriage and newborn WorldPawn-owner adapters';
   const egg=worldPawnEggBoundary256(row.actor,worldPawnMothballReadiness256(row)==='yes');if(egg)return egg;
  }
- if(row.actor.health?.heatstroke||row.actor.health?.hypothermia)return 'Actual off-map thermal hediff owner is not bound';
+ if(version===259){const range=offmapThermalRange259(row.actor,row.items);if(typeof range==='string')return range;}
+ else if(row.actor.health?.heatstroke||row.actor.health?.hypothermia)return 'Actual off-map thermal hediff owner is not bound';
  return null;
 }
 /** Pure preparation on an ACTUAL row projection; caller commits originals only
  * after every row succeeded. Free needs are frozen by current Need.IsFrozen. */
-export function advanceWorldPawnRow256(row:WorldPawnOwner256,toCore:number,random:()=>number,notices:string[]=[]):WorldPawnLifeResult256 {
+export function advanceWorldPawnRow256(row:WorldPawnOwner256,toCore:number,random:()=>number,notices:string[]=[],version=256):WorldPawnLifeResult256 {
  if(terminalWorldPawn256(row))return {ok:true};
  if(toCore<row.clockCore||toCore%10)return {ok:false,reason:'Invalid WorldPawn personal clock'};
  const delta=toCore-row.clockCore;if(!delta)return {ok:true};
+ if(row.kind==='mechanical'){const reason=version===259?advanceMechanicalWorldPawn259(row,toCore):'Future mechanical WorldPawn';return reason?{ok:false,reason}:{ok:true};}
  const mothball=row.mode==='mothballed';
- const activeBoundary=worldPawnActiveBoundary256(row);if(activeBoundary)return {ok:false,reason:activeBoundary};
+ const activeBoundary=worldPawnActiveBoundary256(row,version,toCore);if(activeBoundary)return {ok:false,reason:activeBoundary};
  if(row.kind==='animal'){
   if(!mothball){const interval=worldPawnEggIntervalBoundary256(row.actor,row.clockCore,toCore);if(interval)return {ok:false,reason:interval};advanceWorldPawnEggLayer256(row.actor,row.clockCore,toCore);}
   const age=animalAge(row,toCore,mothball,random);if(!age.ok)return age;
@@ -74,13 +81,16 @@ export function advanceWorldPawnRow256(row:WorldPawnOwner256,toCore:number,rando
   advanceHumanAgeAt(row.actor,{tick:toCore/10,schemaVersion:256,random,notice:message=>notices.push(message)});
   tickSkillsAt(row.actor,toCore/10);expireMealMemoriesAt(row.actor,toCore/10);expireSocialMemories(row.actor,toCore/10);expireMentalCatharsisAt(row.actor,toCore/10);
  }
- const a=row.actor,h=a.health;
+ const a=row.actor;let h=a.health;
  if(!mothball&&h){
   if(h.tick!==row.clockCore/10&&h.tick!==toCore/10)return {ok:false,reason:'WorldPawn clinical clock skipped'};
   const medicalContext={cryptosleepSicknessSpawned:false,...h.toxicBuildup?{toxicOwner:{id:a.id,spawned:false,awake:a.state!=='sleeping'}}:{},phase:a.id%60,posture:'standing' as const,starving:row.kind==='animal'?row.actor.food<=0:row.actor.hunger<=0,hunger:row.kind==='animal'?row.actor.food/animalNutritionMax(row.actor)*100:row.actor.hunger,rest:row.kind==='animal'?row.actor.rest*100:row.actor.rest,infectionSeed:(row.context.seed^Math.imul(a.id,0x9e3779b1))>>>0};
   const frontier=row.kind==='animal'?worldPawnAnimalConditionFrontier256(row.actor,h,random):humanConditionMedicalFrontier256(row.actor,h,toCore/10,random,{kind:'world-pawn'});
   advanceMedical(h,toCore/10-h.tick,medicalContext,random,frontier);frontier?.commit();
-  const status=medicalStatus(h);if(status==='dead'){commitToxicDeath256(h,random);a.state='dead';row.mode='dead';delete row.free;row.clockCore=h.death!.tick*10;return {ok:true};}a.state=status==='downed'?'downed':'idle';
+ }
+ if(!mothball&&version===259)advanceOffmapThermal259(a,row.items,toCore,WORLD_PAWN_NO_HOLDER_TEMPERATURE_259,()=>row.kind==='animal'?createAnimalMedicalRecord256({schemaVersion:version,tick:toCore/10},row.actor,toCore/10):createMedicalRecord(toCore/10));
+ h=a.health;
+ if(!mothball&&h){const status=medicalStatus(h);if(status==='dead'){commitToxicDeath256(h,random);a.state='dead';row.mode='dead';delete row.free;row.clockCore=h.death!.tick*10;return {ok:true};}a.state=status==='downed'?'downed':'idle';
  }
  row.clockCore=toCore;
  if(!mothball&&h&&groupPawnInterval256(a.id,toCore,7500,Math.min(delta,10)))autoTendWorldPawn256(h);
@@ -99,7 +109,7 @@ export function prepareWorldPawnRemoval256(row:WorldPawnOwner256,atCore:number):
  return {ok:true,draft};
 }
 /** Transaction preparation only; does not clone geography or any map. */
-export function prepareWorldPawnLife256(state:WorldPawnsState256,atCore:number,randomOwner:{rng:number}):{ok:true;notices:readonly string[];commit():void}|{ok:false;reason:string}{
+export function prepareWorldPawnLife256(state:WorldPawnsState256,atCore:number,randomOwner:{rng:number},version=256):{ok:true;notices:readonly string[];commit():void}|{ok:false;reason:string}{
  const nativeBefore=state.nativeOrder;if(!nativeWorldPawnOrderCurrent256(state,nativeBefore))return {ok:false,reason:'Actual native life order is not mutable/admitted'};
  let nativeAfter=nativeBefore;
  if(atCore!==state.atCore+10)return {ok:false,reason:'WorldPawn runtime requires the next actual local frontier'};
@@ -110,7 +120,7 @@ export function prepareWorldPawnLife256(state:WorldPawnsState256,atCore:number,r
  // Preflight every coupled interval before changing even an earlier PRIVATE
  // row outcome or consuming a birthday trial. Original/RNG adoption is later.
  for(const {draft} of pairs)if(draft.kind==='animal'&&draft.mode==='active'&&atCore>draft.clockCore){const interval=worldPawnEggIntervalBoundary256(draft.actor,draft.clockCore,atCore);if(interval)return {ok:false,reason:interval};}
- for(const {draft} of pairs){const result=advanceWorldPawnRow256(draft,atCore,random,notices);if(!result.ok)return result;}
+ for(const {draft} of pairs){const result=advanceWorldPawnRow256(draft,atCore,random,notices,version);if(!result.ok)return result;}
  if(nativeAfter)for(const {row,draft} of pairs)if(row.mode!=='dead'&&draft.mode==='dead')nativeAfter=destroyNativeWorldPawnOrder256(nativeAfter,row.actor.id);
  if(atCore%15000===0)for(const {draft} of pairs)if(draft.mode==='active'&&worldPawnMothballReadiness256(draft)==='yes'){if(nativeAfter)nativeAfter=mothballNativeWorldPawnOrder256(nativeAfter,draft.actor.id);draft.mode='mothballed';}
  // True clinical death removes the durable Free authority with the same actor.
@@ -120,7 +130,7 @@ export function prepareWorldPawnLife256(state:WorldPawnsState256,atCore:number,r
  // Unsupported true hediff flags stay ACTIVE conservatively. This does not
  // certify their native mothball eligibility or silently suspend them.
  let used=false;return {ok:true,notices:Object.freeze(notices.slice()),commit(){if(used||!nativeWorldPawnOrderCurrent256(state,nativeBefore)||state.atCore!==atBefore||state.owners.length!==membership.length||state.owners.some((r,i)=>r!==membership[i])||pairs.some(p=>JSON.stringify(p.row)!==p.before)||randomOwner.rng!==rngBefore||!canAdoptFree())throw Error('Stale WorldPawn life transaction');used=true;
-  for(const {row,draft:d} of pairs){for(const k of Object.keys(row.actor))delete (row.actor as unknown as Record<string,unknown>)[k];Object.assign(row.actor,d.actor);row.clockCore=d.clockCore;row.mode=d.mode;if(!Object.hasOwn(d,'free'))delete row.free;}
+  for(const {row,draft:d} of pairs){const prisoner=row.kind==='human'?row.actor.prisoner:undefined,history=row.kind==='human'?row.actor.prisonerHistory259:undefined;for(const k of Object.keys(row.actor))delete (row.actor as unknown as Record<string,unknown>)[k];Object.assign(row.actor,d.actor);if(row.kind==='human'){if(prisoner)row.actor.prisoner=prisoner;if(history)row.actor.prisonerHistory259=history;}row.clockCore=d.clockCore;row.mode=d.mode;if(!Object.hasOwn(d,'free'))delete row.free;}
   commitNativeWorldPawnOrder256(state,nativeBefore,nativeAfter);state.atCore=atCore;randomOwner.rng=randomState.rng;
  }};
 }

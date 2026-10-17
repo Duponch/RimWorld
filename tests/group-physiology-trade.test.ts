@@ -38,7 +38,8 @@ function add(world:World,group:AwayGroup,item:MaterialPile['item'],kind:Material
 }
 const random=(world:World)=>()=>{let n=world.rng;n^=n<<13;n^=n>>>17;n^=n<<5;world.rng=n>>>0;return world.rng/0x100000000;};
 function personal(world:World,group:AwayGroup,resting=true):GroupPersonalContext {
-  return {tick:world.tick,schemaVersion:SCHEMA_VERSION,seed:world.seed,legacyFood:false,legacyRest:false,resting,infectionChanceFactor:1,
+  // Prepared personal API context; no geographic temperature/route claimed.
+  return {tick:world.tick,schemaVersion:SCHEMA_VERSION,ambientTemperature259:21,seed:world.seed,legacyFood:false,legacyRest:false,resting,infectionChanceFactor:1,
     mood:{people:new Map([...world.pawns,...group.members].map(p=>[p.id,p])),expectation:COLONY_EXPECTATIONS[0],difficultyMood:0},
     joyToleranceFall:18/TICKS_PER_DAY,random:random(world),notice:()=>{}};
 }

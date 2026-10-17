@@ -26,6 +26,11 @@ Une exigence est fermée seulement avec règle primaire datée, implémentation 
 
 ## Étape actuelle
 
+[V414](../gameplay/caravan-owners-v414.md), schéma 259, est qualifié par reprises : captifs et propriétaires terminaux, caissons et souvenirs conservés, retraits exclusifs, arrivée3408 puis vraie installation UI250²/export-recharge exacts avec les originaux. La formation/annulation au1807 et le dossier du captif sont contrôlés par reprise depuis ses exports réels. Le générateur, le départ et la capture ne sont pas rejoués pour contourner les refus. Les rouges restent conservés ; aucune clôture ni publication.
+
+La revue statique de clôture conserve quatre écarts fonctionnels du générateur : choix200/225 encore bloqué dans la chaîne de création, saison encore imposéeAuto, composante thermique irrégulière absente et renouvellement spontané des animaux géographiques non raccordé. Le socle biomes/côtes/rivières et sa provenance commune foyer/Camp ne sont pas à reconstruire. Ces écarts, la reformation et les rencontres doivent être fermés avant la démonstration ; les producteursPNJ provisoires ne sont pas une raison de les différer.
+
+
 [V413](../gameplay/group-freight-v413.md), qualifié au schéma 258, étend le fret collectif existant et les meubles minifiés. Les prises, poses historiques et propriétaires conservent leurs gardes ; 59 cas distincts sont acquis par reprises ; portage réel du même lit vers le muffalo, départ303 et recharge UI complète exacte304 qualifiés. La place finale des animaux et l’allocation gloutonne restent des adaptations déclarées. Aucune clôture du tableau ni publication de ce lot.
 
 [V412](../gameplay/group-admission-v412.md), qualifié au schéma257, admet le travail ordinaire et les colons libres à terre dans les nouvelles formations. Libération après arêtes, portage au contact, annulation physique/recharge62, départ343/recharge344, retour et décharge ciblés conservent les mêmes propriétaires. 48cas/8fichiers par reprises et présentation163,045s ; vrais rouges conservés, anciens256 stricts avant migration neutre. Captifs, fret complet, propriétaires terminaux et autres parcours monde restent ouverts. Aucun achèvement global, publication ou gain général de performances déduit de ce lot.

@@ -1,3 +1,4 @@
+import {advanceOffmapThermal259} from './offmap-thermal-259.ts';
 import {humanConditionMedicalFrontier256} from './human-condition-frontier-256.ts';
 import {commitToxicDeath256} from './toxic-buildup-256.ts';
 import type { GroupState } from './group-state.ts';
@@ -18,6 +19,8 @@ import { depletedHumanHunger,groupRestAfterInterval } from './human-need-rates.t
 type ActiveGroup=Extract<GroupState,{members:unknown}>;
 export interface GroupPersonalContext {
   tick:number;schemaVersion:number;seed:number;
+  /** Actual current caravan tile; never a former map or fallback temperature. */
+  ambientTemperature259?:number;
   seedFor?(person:Pawn):number;
   clinicalRestFor256?(person:Pawn):Pick<MedicalContext,'posture'|'restingBonus'|'bedHealPerDay'|'bedImmunityFactor'>;
   /** Only a validated prospective travel owner delegates meters to Core150. */
@@ -60,12 +63,13 @@ export function advanceGroupPersonal(group:ActiveGroup,c:GroupPersonalContext):G
         restingBonus:c.resting&&p.state!=='downed',infectionSeed:((c.seedFor?.(p)??c.seed)^Math.imul(p.id,0x9e3779b1))>>>0,
         ageImmunityFactor:humanAgeImmunityFactor(p.age),...c.deferNeedMeters256?c.clinicalRestFor256?.(p):{}},c.random,conditionFrontier);conditionFrontier?.commit();
       for(const infection of p.health.infections?.cases??[])if(infection.id>=firstInfection)c.notice(p,`${p.name} souffre d’une infection.`);
-      if(p.health.death){commitToxicDeath256(p.health,c.random);
+    }
+    if(c.schemaVersion===259)advanceOffmapThermal259(p,group.items,c.tick*10,c.ambientTemperature259!,()=>createMedicalRecord(c.tick));
+    if(p.health?.death){commitToxicDeath256(p.health,c.random);
         // Terminal validation uses the death tick, including expirations that
         // were still valid at the previous living frontier. No age or XP now.
         p.state='dead';expireMealMemoriesAt(p,c.tick);expireSocialMemories(p,c.tick);expireMentalCatharsisAt(p,c.tick);
         deceased.push(p);continue;
-      }
     }
     // Exact extracted kernels. Positive/negative disabled XP and existing
     // historical birthdays/memories keep their rules and single World RNG.

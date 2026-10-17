@@ -1,3 +1,4 @@
+import {actualMechanicalBirthFaction259} from './mechanoid-world-faction-259.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Finite Temple750 producers. Existing NPC bodies/AI are provisional by
  * explicit scope; real map owners, sleeping threats and production persist. */
@@ -23,12 +24,14 @@ export function spawnFunctionalTempleThreat256(w:World,rect:AncientRect256,threa
  if(!isSchema256Or257(w.schemaVersion)||w.site?.revision!==3||w.jobs.length||w.exploration||w.snow||!Number.isInteger(threat.count)||threat.count<1||threat.count>(threat.kind==='mechs'?5:2)||!owners?.lordIds||!Number.isInteger(owners.lordIds.nextId)||owners.lordIds.nextId<0||owners.lordIds.nextId>=2147483646)throw Error('Missing real Temple threat generation owners');
  if(threat.kind==='mechs'){
   if(w.worldFactions?.factions.filter(f=>f.def==='Mechanoid').length!==1)throw Error('Selected Temple mechanical faction is absent');
+  const worldFaction259=w.schemaVersion>=259?actualMechanicalBirthFaction259(w.worldFactions):undefined;
+  if(w.schemaVersion>=259&&!worldFaction259)throw Error('Selected Temple actual mechanical faction birth is absent');
   const group=owners.lordIds.nextId++;
   for(let i=0;i<threat.count;i++){
    const cell=choose(w,rect,random);if(cell===null)throw Error('Temple mechanical rectangle has no Standable spawn cell');
    if(!Number.isSafeInteger(w.nextId+1))throw Error('Temple mechanical identity frontier exhausted');
    const mechKind=pool[random.integer(0,pool.length)]!;
-   (w.mechanoids??=[]).push({id:w.nextId++,mechKind,x:cell%w.width,z:Math.floor(cell/w.width),state:'idle',path:[],heading:0,moveCooldown:0,planCooldown:0,temple:{group,madeAtCore:w.tick*10,awakeAtCore:null,goal:null}});
+   (w.mechanoids??=[]).push({id:w.nextId++,mechKind,x:cell%w.width,z:Math.floor(cell/w.width),state:'idle',...worldFaction259?{worldFaction259:{...worldFaction259}}:{},path:[],heading:0,moveCooldown:0,planCooldown:0,temple:{group,madeAtCore:w.tick*10,awakeAtCore:null,goal:null}});
   }return;
  }
  if(w.worldFactions?.factions.filter(f=>f.def==='Insect').length!==1)throw Error('Selected Temple insect faction is absent');

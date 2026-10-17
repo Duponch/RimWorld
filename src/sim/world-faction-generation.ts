@@ -36,13 +36,14 @@ function placementFaction(a:WorldFactionInstance256):InitializedSettlementFactio
  const def=WORLD_FACTION_DEFINITIONS_256[a.def];if(def.player)return;
  return {id:a.id,def:a.def as ConfigurableWorldFaction,player:false,hidden:a.hidden,temporary:false,layerCompatible:true};
 }
-function originalLeader(faction:WorldFactionInstance256,id:number,tick:number,r:WorldGenerationRandom):WorldFactionLeader256|undefined {
+function originalLeader(faction:WorldFactionInstance256,id:number,tick:number,r:WorldGenerationRandom,version:number):WorldFactionLeader256|undefined {
  const d=WORLD_FACTION_DEFINITIONS_256[faction.def];if(!d.leaderKinds.length)return;
  // This draw selects the actual referenced role, including duplicate entries.
  const role=d.leaderKinds[r.integer(0,d.leaderKinds.length)]!;
  const name=people[r.integer(0,people.length)]+' '+roots[r.integer(0,roots.length)];
- const seed=r.integerValue(),index=r.integer(0,3),pawn=startingPawn(id,name,0,0,index,.65,seed>>>0,tick,256);
+ const seed=r.integerValue(),index=r.integer(0,3),pawn=startingPawn(id,name,0,0,index,.65,seed>>>0,tick,version);
  pawn.faction=d.permanentEnemy||d.naturalEnemy?'outlaws':'outlanders';
+ if(version===259)pawn.worldAffiliation259={revision:1,factionId:faction.id,hostFactionId:null,guestStatus:'Guest'};
  // Role is a source reference, not a promise of Core loadout/biography. The
  // current real person constructor supplies age/health/skills/appearance.
  if(!role)throw Error('Missing leader role');return {factionId:faction.id,clock:tick,pawn,items:[],packed:[]};
@@ -75,13 +76,13 @@ export function generateForeignWorldFactions256(input:WorldForeignFactionGenerat
   const d=WORLD_FACTION_DEFINITIONS_256[def];
   // Actual Core initialization precedes faction names. Seeds/IDs remain owned.
   const noExpansionIdeo=constructFactionNoExpansionIdeo256(def,registry.noExpansionIdeoIds!,r);
-  const faction:WorldFactionInstance256={id,def,hidden:d.hidden,name:factionName(def,id,r,registry.factions),randomKey,colorFromSpectrum,leaderOwnerId:null,...noExpansionIdeo?{noExpansionIdeo}:{}};
+  const faction:WorldFactionInstance256={...input.version===259?{lifecycle259:{revision:1 as const,defeated:false,temporary:false}}:{},id,def,hidden:d.hidden,name:factionName(def,id,r,registry.factions),randomKey,colorFromSpectrum,leaderOwnerId:null,...noExpansionIdeo?{noExpansionIdeo}:{}};
   for(const other of registry.factions){const goodwill=initialWorldGoodwill256(def,other.def);
    registry.relations.push({aId:Math.min(id,other.id),bId:Math.max(id,other.id),goodwill,kind:worldRelationKind256(goodwill)});}
   if(!faction.hidden){const choice=pickWorldSettlementTile(input.tiles,r,admission);
    if(!choice.found||!addSettlement(faction,choice.tile))return {ok:false,reason:'No admissible initial settlement'};}
   if(d.leaderKinds.length){if(!int(nextThingId+1,1))return {ok:false,reason:'Person identity exhausted'};
-   const owner=originalLeader(faction,nextThingId,input.tick,r);if(!owner)return {ok:false,reason:'Leader producer missing'};
+   const owner=originalLeader(faction,nextThingId,input.tick,r,input.version);if(!owner)return {ok:false,reason:'Leader producer missing'};
    nextThingId++;faction.leaderOwnerId=owner.pawn.id;registry.leaders.push(owner);}
   registry.factions.push(faction);
  }
@@ -110,7 +111,7 @@ export function completeWorldFactionRegistry256(input:{version:number;draft:Worl
  // Capture the unpublished continuation; completion never mutates its input.
  const noExpansionIdeoIds=d.noExpansionIdeoIds?{...d.noExpansionIdeoIds}:undefined;
  const noExpansionIdeo=noExpansionIdeoIds?constructFactionNoExpansionIdeo256(input.playerDef,noExpansionIdeoIds,r):undefined;
- const player:WorldFactionInstance256={id,def:input.playerDef,hidden:false,name:input.name,randomKey,colorFromSpectrum,leaderOwnerId:null,...noExpansionIdeo?{noExpansionIdeo}:{}};
+ const player:WorldFactionInstance256={...input.version===259?{lifecycle259:{revision:1 as const,defeated:false,temporary:false}}:{},id,def:input.playerDef,hidden:false,name:input.name,randomKey,colorFromSpectrum,leaderOwnerId:null,...noExpansionIdeo?{noExpansionIdeo}:{}};
  const relations=[...d.relations];
  for(const other of d.factions){const goodwill=initialWorldGoodwill256(input.playerDef,other.def);
   relations.push({aId:Math.min(id,other.id),bId:Math.max(id,other.id),goodwill,kind:worldRelationKind256(goodwill)});}

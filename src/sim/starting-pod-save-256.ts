@@ -87,7 +87,7 @@ export function validateCoreStartingArrivalContents256(w:World,a:CoreStartingArr
  const add=(id:number)=>{if(!int(id,1,w.nextId-1)||ids.has(id))errors.push('Duplicate initial Thing');ids.add(id);};
  for(const pod of a.pods){add(pod.id);add(pod.skyfallerId);add(pod.pawn.id);
   if(pod.pawn.x!==pod.cell.x||pod.pawn.z!==pod.cell.z||pod.pawn.state!=='idle'||pod.pawn.jobId!==null||pod.pawn.path.length||pod.pawn.motion||pod.pawn.orders.active||pod.pawn.orders.queue.length||pod.pawn.haul||pod.pawn.cooking||pod.pawn.need)errors.push('Initial original retained a spawned local action');
-  errors.push(...validatePawnRecordShape(pod.pawn as unknown as Record<string,unknown>,w,256,0),...validatePawnHealthRecord(pod.pawn,{schemaVersion:256,tick:0,width:w.width,height:w.height}));
+  errors.push(...validatePawnRecordShape(pod.pawn as unknown as Record<string,unknown>,w,w.schemaVersion,0),...validatePawnHealthRecord(pod.pawn,{schemaVersion:w.schemaVersion,tick:0,width:w.width,height:w.height}));
   const humanRefs=pod.order.filter(r=>r.kind==='human');if(humanRefs.length!==1||humanRefs[0]!.id!==pod.pawn.id||pod.order[0]?.kind!=='human')errors.push('Initial human order is not original');
   const loose=pod.items.filter(p=>p.owner.type==='starting-pod'),groupIndex=loose.some(p=>p.item==='silver')?0:loose.some(p=>p.item==='survival-meal')?1:2,group=CORE_STARTING_SUPPLIES_256.filter((_,i)=>i%3===groupIndex);
   if(groups.has(groupIndex))errors.push('Duplicate initial supply group');groups.add(groupIndex);

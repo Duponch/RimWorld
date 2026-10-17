@@ -14,8 +14,8 @@ export function validGroupTravel(value:unknown,version:number):value is GroupTra
 }
 /** The caller resolves each immutable header to the actual map/archive/group
  * authority. No user-supplied filth boolean is part of this format. */
-export function validGroupMemberOrigin(value:unknown,pawnId:number,nextId:number,originAuthority:(origin:GroupMemberOrigin)=>boolean):value is GroupMemberOrigin {
- return object(value)&&keys(value,['pawnId','originMapId','context'])&&value.pawnId===pawnId&&int(value.pawnId,1,nextId-1)&&int(value.originMapId)&&object(value.context)&&originAuthority(value as unknown as GroupMemberOrigin);
+export function validGroupMemberOrigin(value:unknown,pawnId:number,nextId:number,originAuthority:(origin:GroupMemberOrigin)=>boolean,version=256):value is GroupMemberOrigin {
+ return object(value)&&keys(value,['pawnId','originMapId','context'],version===259?['enteredAtAbsCore']:[])&&(!Object.hasOwn(value,'enteredAtAbsCore')||version===259&&int(value.enteredAtAbsCore))&&value.pawnId===pawnId&&int(value.pawnId,1,nextId-1)&&int(value.originMapId)&&object(value.context)&&originAuthority(value as unknown as GroupMemberOrigin);
 }
 /** Closed shape before the arithmetic or any per-Pawn context is consumed. */
 export function validGroupReorganization(value:unknown,g:Away,version:number,tick:number,nextId:number,originAuthority:(origin:GroupMemberOrigin)=>boolean):value is GroupReorganization|undefined {
@@ -24,7 +24,7 @@ export function validGroupReorganization(value:unknown,g:Away,version:number,tic
   ||!validGroupPackedBalanceShape256(value.packed,nextId)||Object.hasOwn(value,'inventoryEffects')&&!validGroupAdditionalFoodEffects256(value.inventoryEffects)||!validGroupInventoryVector(value.opening)||!validGroupInventoryVector(value.effectsAtOpening,true)||!validGroupInventoryVector(value.received)||!validGroupInventoryVector(value.sent)
   ||!dense(value.memberOrigins,g.members.length)||value.memberOrigins.length!==g.members.length)return false;
  const ids=new Set<number>();
- for(const entry of value.memberOrigins){if(!object(entry)||!int(entry.pawnId,1,nextId-1)||ids.has(entry.pawnId)||!g.members.some(p=>object(p)&&p.id===entry.pawnId)||!validGroupMemberOrigin(entry,entry.pawnId,nextId,originAuthority))return false;ids.add(entry.pawnId);}
+ for(const entry of value.memberOrigins){if(!object(entry)||!int(entry.pawnId,1,nextId-1)||ids.has(entry.pawnId)||!g.members.some(p=>object(p)&&p.id===entry.pawnId)||!validGroupMemberOrigin(entry,entry.pawnId,nextId,originAuthority,version))return false;ids.add(entry.pawnId);}
  if(g.provisions){if(Object.hasOwn(value,'pemmicanSinceOpening'))return false;}
  else {const p=value.pemmicanSinceOpening;if(!object(p)||!keys(p,['consumed','spoiled'])||!int(p.consumed)||!int(p.spoiled))return false;}
  if(g.travel){if(Object.hasOwn(value,'foodSinceOpening'))return false;}

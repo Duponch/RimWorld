@@ -5,6 +5,8 @@ import type {WorldGroupRecord} from './world-map-state.ts';
 export type GroupInventoryVector=Partial<Record<ItemId,number>>;
 export interface GroupMemberOrigin {
  pawnId:number;originMapId:number;context:WorldGroupRecord['context'];
+ /** Only an actual new259 ExitMap may write this absolute entry receipt. */
+ enteredAtAbsCore?:number;
 }
 export interface GroupMemberProjectionContext extends GroupMemberOrigin {filthPresent:boolean}
 /** Created by an actual operation only; it does not rewrite former departure receipts. */

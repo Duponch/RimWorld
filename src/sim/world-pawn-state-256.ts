@@ -1,3 +1,5 @@
+import type {Mechanoid} from './mechanoid-state.ts';
+import type {MechanoidKind} from './mechanoid-definition.ts';
 import {constructNativeWorldPawnOrder256,type NativeWorldPawnOrder256} from './native-world-pawn-order-256.ts';
 import type {Pawn,MaterialPile} from './types.ts';
 import type {WildAnimal} from './wildlife-state.ts';
@@ -7,7 +9,11 @@ interface WorldPawnCommon256 {
  factionId:number|null;
  originMapId:number|null;context:WorldGroupRecord['context'];
  /** Actual observation/biological frontier; mothballed clinical tick may precede it. */
- clockCore:number;enteredAtAbsCore:number;mode:'active'|'mothballed'|'dead';
+ clockCore:number;enteredAtAbsCore:number;
+ /** Actual exclusive transfer after a previously captured CaravanMember entry. */
+ entryKind259?:'caravan-exit';
+ /** Real start of suspended held components, never an invented entry date. */
+ heldAtCore259?:number;mode:'active'|'mothballed'|'dead';
  /** True Thing.Destroy(Vanish), distinct from clinical death. */
  destroyed?:true;
  /** Actual PassedToWorld situation, never inferred for older rows. */
@@ -17,8 +23,10 @@ interface WorldPawnCommon256 {
  keepForever?:true;startingPawnLeftBehind?:true;everColonist?:true;
  items:MaterialPile[];packed:PackedFurniture[];
 }
-export type WorldPawnOwner256=WorldPawnCommon256&({kind:'human';actor:Pawn}|{kind:'animal';actor:WildAnimal});
-export interface WorldPawnsState256 {revision:1;atCore:number;lastSuccessfulCore:number;currentRate:number;owners:WorldPawnOwner256[];nativeOrder?:NativeWorldPawnOrder256}
+export type WorldPawnOwner256=WorldPawnCommon256&({kind:'human';actor:Pawn}|{kind:'animal';actor:WildAnimal}|{kind:'mechanical';actor:Mechanoid;mechanicalTimersAtCore259:number});
+/** Scalar receipt after actual Destroy(Vanish)/Discard, never a living owner. */
+export interface DiscardedMechanical259 {id:number;mechKind:MechanoidKind;factionId:number;originMapId:number;enteredAtAbsCore:number;discardedAtCore:number}
+export interface WorldPawnsState256 {revision:1;atCore:number;lastSuccessfulCore:number;currentRate:number;owners:WorldPawnOwner256[];heldCaskets259?:import('./world-pawn-casket-259.ts').HeldWorldCasket259[];nativeOrder?:NativeWorldPawnOrder256;discardedMechanical259?:DiscardedMechanical259[]}
 export type WorldPawnCampaign256=CampaignState&{worldPawns?:WorldPawnsState256};
 /** Actual campaign birth only. Never called by load, migration or first abandon. */
 export function initialWorldPawns256(atCore=0):WorldPawnsState256 {

@@ -1,3 +1,4 @@
+import {SCHEMA_VERSION} from './types.ts';
 /** Original composition of the prospective physical/world-object stages.
  * Actual step order and isolated random streams follow Core4871 facts.
  * Original names/people mean composed seed output is not a Core certificate.
@@ -30,7 +31,7 @@ export function* generateGeographicWorldDraft256(input:{seed:string;settings:Wor
  for(let i=0;i<count;i++){const choice=pickWorldSettlementTile(tiles,ancient,{settlementTiles:new Set()});if(!choice.found)throw Error('No admissible ancient-road anchor');anchors.push(choice.tile);yield {phase:'ancient-sites',completed:i+1,total:count};}
  yield* generateAncientWorldRoads(tiles,difficulties,anchors,roads);
  yield {phase:'foreign-factions',completed:0,total:settings.factions.length};
- const foreign=generateForeignWorldFactions256({version:256,tick:input.tick,tiles,selection:settings.factions,population:settings.population,nextFactionId:1,nextSettlementId:1,nextThingId:input.nextThingId,random:new WorldGenerationRandom(combineWorldSeed(rootSeed,777998381))});
+ const foreign=generateForeignWorldFactions256({version:SCHEMA_VERSION,tick:input.tick,tiles,selection:settings.factions,population:settings.population,nextFactionId:1,nextSettlementId:1,nextThingId:input.nextThingId,random:new WorldGenerationRandom(combineWorldSeed(rootSeed,777998381))});
  if(!foreign.ok)throw Error(foreign.reason);
  yield {phase:'foreign-factions',completed:settings.factions.length,total:settings.factions.length};
  const occupied=new Set(foreign.draft.settlements.map(s=>s.tile));
@@ -39,7 +40,7 @@ export function* generateGeographicWorldDraft256(input:{seed:string;settings:Wor
  const mutators=generateCoreWorldMutators256(tiles,rootSeed);yield {phase:'terrain-modifiers',completed:tiles.length,total:tiles.length};
  // The real player faction is a post-world hook, not the first faction of
  // step500. It consumes its own actual post-world stream after root reset.
- const completed=completeWorldFactionRegistry256({version:256,draft:foreign.draft,playerDef:input.playerDef,name:input.playerName,postWorldRandom:new WorldGenerationRandom(rootSeed)});
+ const completed=completeWorldFactionRegistry256({version:SCHEMA_VERSION,draft:foreign.draft,playerDef:input.playerDef,name:input.playerName,postWorldRandom:new WorldGenerationRandom(rootSeed)});
  if(!completed.ok)throw Error(completed.reason);
  return {revision:1,key,surface,roads,settings,factions:completed.registry,nextThingId:foreign.nextThingId,mutators:mutators.codes};
 }

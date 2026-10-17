@@ -361,7 +361,7 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
       snapshot=next;facts=undefined;pilesById=new Map(next.world.piles.map(p=>[p.id,p]));
       try{
         const captured=adapters.capture(next);for(const key of ['adopt','start','cancel','pause','route','return','buy','sell','unload'] as const)if(!captured.actions[key])throw Error(`Projection d'action manquante : ${key}.`);
-        if(!Number.isSafeInteger(captured.maximumSources)||captured.maximumSources<1)throw Error('La borne métier de manifeste est absente.');
+        if(!Number.isSafeInteger(captured.maximumSources)||captured.maximumSources<0)throw Error('La borne métier de manifeste est absente.');
         for(const source of captured.sources)if(source.pile.owner.type!=='ground'||!next.world.piles.includes(source.pile))throw Error('La source proposée ne référence pas sa vraie pile au sol.');
         for(const c of captured.candidates)if(!next.world.pawns.includes(c.pawn))throw Error('Un candidat ne référence pas une vraie personne présente.');
         if(next.group&&!captured.mass)throw Error('La projection de masse du groupe est manquante.');

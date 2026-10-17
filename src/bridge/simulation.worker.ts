@@ -11,7 +11,7 @@ import {validateWorld} from '../sim/serialization';
 import {validStartingOriginalRequest256} from '../sim/starting-original-request-256';
 import {ACTUAL_SHRINES_750_256} from '../sim/ancient-temple-orchestration-256';
 
-import {prepareActualCampEntry256} from '../sim/group-camp-entry-256';
+import {prepareActualCampEntry256,prepareActualSettlementEntry257} from '../sim/group-camp-entry-256';
 import {registeredCampaign} from '../sim/world-map-context';
 import {groupEntryActions,validWorldMapCommand} from '../sim/world-map-authority';
 import {GroupCampaignRuntime256} from '../sim/group-campaign-runtime-256';
@@ -104,7 +104,7 @@ function cancelCamp256(request:Extract<Request,{type:'camp-entry-cancel'}>):void
  send({type:'reply',id:request.id,ok:true,data:JSON.stringify({cancelRequested:true})});
 }
 function newCampCommand256(request:Request):boolean {
- if(request.type!=='command'||!validWorldMapCommand(request.command)||request.command.type!=='group-enter'||request.command.mode!=='camp'||!isSchema256Or257(world?.schemaVersion)||world.planet?.revision!==3||!world.worldMaps)return false;
+ if(request.type!=='command'||!validWorldMapCommand(request.command)||request.command.type!=='group-enter'||!['camp','settle'].includes(request.command.mode)||!isSchema256Or257(world?.schemaVersion)||world.planet?.revision!==3||!world.worldMaps)return false;
  const id=request.command.groupId,g=world.worldGroups?.groups.find(r=>r.state.id===id)?.state;
  return !world.worldMaps.sites.some(s=>s.tile===(g&&'tile'in g?g.tile:undefined));
 }
@@ -113,24 +113,24 @@ async function handleCamp256(request:Extract<Request,{type:'command'}>):Promise<
  try {
   if(fault)throw Error(fault.reason);
   if(activeCamp256)throw Error('Une préparation attend encore sa décision.');
-  if(!world||!validWorldMapCommand(request.command)||request.command.type!=='group-enter'||request.command.mode!=='camp')throw Error('Commande de camp invalide.');
-  const root=registeredCampaign(world),groupId=request.command.groupId,permission=groupEntryActions(root,groupId).camp;
+  if(!world||!validWorldMapCommand(request.command)||request.command.type!=='group-enter'||!['camp','settle'].includes(request.command.mode))throw Error('Commande de création locale invalide.');
+  const root=registeredCampaign(world),groupId=request.command.groupId,mode=request.command.mode==='settle'?'settle':'camp',permission=groupEntryActions(root,groupId)[mode];
   owned={id:request.id,groupId,root,cancelled:false};activeCamp256=owned;
   speed=0;clock.reset(performance.now());try{publish();}catch(error){stopFatal(error);throw error;}
   if(!permission.ok)throw Error(permission.reason??'Cette entrée est refusée.');
   send({type:'camp-entry-progress',id:request.id,groupId,progress:{phase:'preparing'}});
-  const iterator=prepareActualCampEntry256(root,groupId);let completed=false;
+  const iterator=mode==='settle'?prepareActualSettlementEntry257(root,groupId):prepareActualCampEntry256(root,groupId);let completed=false;
   try {
    for(;;){
     const currentFault=readSimulationFault256();if(currentFault)throw Error(currentFault.reason);
-    if(activeCamp256!==owned||owned.cancelled||world!==root)throw Error('La préparation du camp a été annulée.');
+    if(activeCamp256!==owned||owned.cancelled||world!==root)throw Error('La préparation de la carte locale a été annulée.');
     const step=iterator.next();
     if(step.done){
      completed=true;if(step.value.status==='blocked')throw Error(step.value.reason);
-     if(activeCamp256!==owned||owned.cancelled||world!==root)throw Error('La préparation du camp a été annulée.');
+     if(activeCamp256!==owned||owned.cancelled||world!==root)throw Error('La préparation de la carte locale a été annulée.');
      committing=true;const result=step.value.commit(true);
-     if(!result.ok){committing=false;throw Error(result.reason??'Entrée du camp refusée.');}
-     const checkpoint=publish(true);if(!checkpoint)throw Error('Le camp confirmé n’a pas été publié.');
+     if(!result.ok){committing=false;throw Error(result.reason??'Entrée de la carte locale refusée.');}
+     const checkpoint=publish(true);if(!checkpoint)throw Error('La carte confirmée n’a pas été publiée.');
      send({type:'reply',id:request.id,ok:true,checkpoint});return;
     }
     send({type:'camp-entry-progress',id:request.id,groupId,progress:step.value});await nextCampTurn256();
@@ -176,7 +176,7 @@ async function handleWorldDraft256(request:DraftRequest256):Promise<void> {
    send({type:'reply',id:request.id,ok:true,data:JSON.stringify({cancelRequested:true})});return;
   }
   {const actualFault=readSimulationFault256();if(actualFault)throw Error(actualFault.reason);}
-  if(activeCamp256)throw Error('La préparation du camp attend encore sa décision.');
+  if(activeCamp256)throw Error('La préparation de la carte locale attend encore sa décision.');
   if(request.type==='world-draft-generate'){
    if(creatingDraftColony)throw Error('La création d’une colonie attend encore sa décision.');
    if(world&&speed!==0)throw Error('Mettez la partie en pause avant de préparer un monde.');
@@ -232,7 +232,7 @@ async function handleWorldDraft256(request:DraftRequest256):Promise<void> {
 
 scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
   if(request.type==='camp-entry-cancel'){cancelCamp256(request);return;}
-  if(activeCamp256&&request.type!=='resync'){send({type:'reply',id:request.id,ok:false,outcome:'refused',reason:'La préparation du camp doit se terminer ou être annulée.'});return;}
+  if(activeCamp256&&request.type!=='resync'){send({type:'reply',id:request.id,ok:false,outcome:'refused',reason:'La préparation de la carte locale doit se terminer ou être annulée.'});return;}
   if(request.type==='world-draft-cancel'){void handleWorldDraft256(request);return;}
   if((creatingDraftColony||preparingWorldDraft)&&request.type!=='resync'&&!(request.type==='world-draft-generate'&&!creatingDraftColony)){send({type:'reply',id:request.id,ok:false,outcome:'refused',reason:'La préparation de la nouvelle colonie attend encore sa décision.'});return;}
   if(request.type==='world-draft-generate'||request.type==='world-draft-confirm'||request.type==='world-draft-start'){void handleWorldDraft256(request);return;}

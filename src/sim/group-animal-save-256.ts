@@ -29,7 +29,7 @@ export function validGroupAnimalOwners256(g:AwayGroup,w:World,version:number,aut
  const d=Object.getOwnPropertyDescriptor(g,'animalOwners');if(!d)return true;if(version<256||!Object.hasOwn(d,'value')||!d.enumerable||!g.reorganization||!object(d.value))return false;const own=d.value;
  if(!keys(own,['revision','members','origins','order'],['interval'])||own.revision!==1||!dense(own.members,w.nextId-1)||!dense(own.origins,own.members.length)||own.origins.length!==own.members.length||!dense(own.order,w.nextId-1))return false;
  const ids=new Set(g.members.map(p=>p.id));for(const a of own.members){if(!object(a)||!integer(a.id,1,w.nextId-1)||ids.has(a.id)||a.state==='dead'||a.manhunter!==undefined)return false;const origin=own.origins.find(o=>object(o)&&o.pawnId===a.id);
-  if(!validGroupMemberOrigin(origin,a.id,w.nextId,authority)||!validCaravanAnimalRecord256(a,{context:origin.context,tick:w.tick,nextId:w.nextId,version}))return false;ids.add(a.id);
+  if(!validGroupMemberOrigin(origin,a.id,w.nextId,authority,version)||!validCaravanAnimalRecord256(a,{context:origin.context,tick:w.tick,nextId:w.nextId,version}))return false;ids.add(a.id);
  }
  if(own.order.length!==ids.size||new Set(own.order).size!==ids.size||own.order.some(id=>!integer(id,1,w.nextId-1)||!ids.has(id)))return false;
  if(g.travel)return !Object.hasOwn(own,'interval');const i=own.interval;return object(i)&&keys(i,['revision','startedAt','atCore','tickDelta'])&&i.revision===1&&integer(i.startedAt,g.departedAt,w.tick)&&i.atCore===w.tick*10&&integer(i.tickDelta,0,15);
@@ -37,7 +37,7 @@ export function validGroupAnimalOwners256(g:AwayGroup,w:World,version:number,aut
 /** One real terminal animal and its possessions, checked only against the
  * scalar original header. No local map, clock advance or owner is fabricated. */
 export function validGroupAnimalLossRecord256(loss:unknown,w:Pick<World,'tick'|'nextId'|'planet'>,version:number,authority:(origin:GroupMemberOrigin)=>boolean):loss is import('./group-animal-state-256.ts').GroupAnimalLoss256 {
- if(version<256||!object(loss)||!keys(loss,['reason','groupId','tile','tick','animal','origin','items'],['packed'])||!['death','caravan-lost'].includes(String(loss.reason))||!integer(loss.groupId,1,(w.planet?.nextGroupId??1)-1)||!integer(loss.tile)||!w.planet||!planetTile(w.planet,loss.tile)||!integer(loss.tick,0,w.tick)||!object(loss.animal)||!integer(loss.animal.id,1,w.nextId-1)||!validGroupMemberOrigin(loss.origin,loss.animal.id,w.nextId,authority))return false;
+ if(version<256||!object(loss)||!keys(loss,['reason','groupId','tile','tick','animal','origin','items'],['packed'])||!['death','caravan-lost'].includes(String(loss.reason))||!integer(loss.groupId,1,(w.planet?.nextGroupId??1)-1)||!integer(loss.tile)||!w.planet||!planetTile(w.planet,loss.tile)||!integer(loss.tick,0,w.tick)||!object(loss.animal)||!integer(loss.animal.id,1,w.nextId-1)||!validGroupMemberOrigin(loss.origin,loss.animal.id,w.nextId,authority,version))return false;
  const origin=loss.origin,a=loss.animal,animalId=loss.animal.id;
  if(!integer(animalId,1,w.nextId-1))return false;
  if(!validCaravanAnimalRecord256(a,{context:origin.context,tick:loss.tick,nextId:w.nextId,version})||loss.reason==='death'&&(a.state!=='dead'||!object(a.health)||!object(a.health.death)||a.health.death.tick!==loss.tick)||loss.reason==='caravan-lost'&&a.state==='dead')return false;

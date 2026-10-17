@@ -10,14 +10,14 @@ export type SettlementLimit=1|2|3|4|5;
 export type WorldMapKind='settlement'|'camp'|'legacy-site';
 export type LocalMapState=Omit<SecondaryMap,'group'|'groupLosses'|'worldMaps'|'worldGroups'|'civilianPost'>;
 export interface WorldMapRecord {
- id:number;tile:number|null;kind:WorldMapKind;createdAt:number;
+ id:number;tile:number|null;kind:WorldMapKind;createdAt:number;settledAt?:number;
  /** Exactly the rootMapId record omits map: its originals live on the loaded root. */
  map?:LocalMapState;
  /** Historical reference roster only, never another owner. New formations do not require it. */
  postId?:number;
  visit:null|{groupId:number;memberIds:number[];homeEntry:Cell};
 }
-export interface RetiredWorldMap {id:number;tile:number|null;kind:WorldMapKind;createdAt:number;removedAt:number;reason:'abandon'|'camp-empty';markerUntilCore?:number}
+export interface RetiredWorldMap {id:number;tile:number|null;kind:WorldMapKind;createdAt:number;settledAt?:number;removedAt:number;reason:'abandon'|'camp-empty';markerUntilCore?:number}
 export interface WorldMapRegistry {
  /** Prospective creation statics; never installed by historical migration. */
  nextLordId?:number;
@@ -31,7 +31,7 @@ export interface WorldMapRegistry {
 export interface WorldGroupRecord {postId?:number;originMapId:number;localMapId:number|null;context:Pick<World,'seed'|'width'|'height'|'climate'|'site'|'scenario'>;state:GroupState}
 /** The original holder remains explicit after local DeSpawn. No local map is retained. */
 export interface AbandonedWorldPawn {id:number;name:string;kind:import('./human-owners.ts').HumanOwnerKind;clock:number;pawn?:Pawn;items:MaterialPile[];packed:PackedFurniture[];carriedById?:number;podId?:number;guest?:Pick<Pawn,'prisoner'|'visitor'|'podRescue'|'raid'>}
-export interface AbandonedMapContents {mapId:number;tile:number;removedAt:number;context:WorldGroupRecord['context'];filthPresent:boolean;humans:AbandonedWorldPawn[];animals:{animal:import('./wildlife-state.ts').WildAnimal;carriedById?:number;clock?:number;items?:MaterialPile[];packed?:PackedFurniture[]}[];pods:{id:number;pawnId:number;items:MaterialPile[]}[];lost:{items:import('./thing-damage-rules.ts').FireItemLoss;structures:number;resources:number;packed:number}}
+export interface AbandonedMapContents {/** Durable identities of actual living free colonists lost and transferred at this removal; no Thing ownership. */lostColonistIds259?:number[];mapId:number;tile:number;removedAt:number;context:WorldGroupRecord['context'];filthPresent:boolean;humans:AbandonedWorldPawn[];animals:{animal:import('./wildlife-state.ts').WildAnimal;carriedById?:number;clock?:number;items?:MaterialPile[];packed?:PackedFurniture[]}[];pods:{id:number;pawnId:number;items:MaterialPile[]}[];lost:{items:import('./thing-damage-rules.ts').FireItemLoss;structures:number;resources:number;packed:number}}
 export interface LegacyWorldTraveller {originMapId:number;postId?:number;context:WorldGroupRecord['context'];scout?:World['scout'];commercialTrip?:World['commercialTrip']}
 export interface WorldGroupRegistry {revision:1;animalLosses?:import('./group-animal-state-256.ts').GroupAnimalLoss256[];lostMemories:import('./world-map-lost.ts').LostCampaignMemory[];events:import('./types.ts').WorldEvent[];posts:{id:number;state:NonNullable<World['civilianPost']>}[];nextPostId:number;canonicalPostId:number|null;legacyTravellers:LegacyWorldTraveller[];selectedGroupId:number|null;groups:WorldGroupRecord[];losses:GroupLoss[];lossContexts:{groupId:number;context:WorldGroupRecord['context'];originMapId:number}[];abandonedPawns:AbandonedWorldPawn[];abandonedContents:AbandonedMapContents[]}
 export type SharedCampaignState=Pick<World,CampaignField>;
@@ -39,8 +39,8 @@ export type SharedCampaignState=Pick<World,CampaignField>;
 export type MaplessCampaign=SharedCampaignState&{worldMaps:WorldMapRegistry;worldGroups:WorldGroupRegistry};
 export type CampaignState=World|MaplessCampaign;
 export interface MapAction {ok:boolean;reason?:string}
-export interface CampaignMapSummary {areaIds?:number[];id:number;tile:number|null;kind:WorldMapKind;createdAt:number;pawnCount:number;selected:boolean;actions:{view:MapAction;settle:MapAction;abandon:MapAction};abandonConsequences:{pawns:{id:number;name:string}[];groundItems:number;structures:number}}
-export interface CampaignGroupSummary {memberContexts?:GroupMemberProjectionContext[];id:number;originMapId:number;localMapId:number|null;phase:GroupState['phase'];originTile:number|null;tile:number|null;memberIds:number[];mass:{grams:number;capacityGrams:number}|null;filthPresent:boolean;postId?:number;post?:World['civilianPost'];context:WorldGroupRecord['context'];entryActions:Record<'visit'|'camp'|'settle',MapAction>;state:GroupState}
+export interface CampaignMapSummary {areaIds?:number[];id:number;tile:number|null;kind:WorldMapKind;createdAt:number;settledAt?:number;pawnCount:number;selected:boolean;actions:{view:MapAction;settle:MapAction;abandon:MapAction};abandonConsequences:{pawns:{id:number;name:string}[];groundItems:number;structures:number}}
+export interface CampaignGroupSummary {capturePatients259?:import('./group-human-projection-259.ts').GroupCapturePatients259;memberContexts?:GroupMemberProjectionContext[];id:number;originMapId:number;localMapId:number|null;phase:GroupState['phase'];originTile:number|null;tile:number|null;memberIds:number[];mass:{grams:number;capacityGrams:number}|null;filthPresent:boolean;postId?:number;post?:World['civilianPost'];context:WorldGroupRecord['context'];entryActions:Record<'visit'|'camp'|'settle',MapAction>;state:GroupState}
 export interface MapIncident {mapId:number;kind:'raid'|'mechanoid'|'visitor'|'manhunter'|'downed';count:number;actorId:number}
 export type CampaignLossContext=WorldGroupRegistry['lossContexts'][number]&{filthPresent:boolean;memberContexts?:GroupMemberProjectionContext[]};
 /** Transport-only projection of an actual terminal owner and its source witness. */

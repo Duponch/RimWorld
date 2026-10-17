@@ -72,7 +72,7 @@ export function captureActorBeds256(input:CampaignState):ActualActorBeds256 {
    if(mapId!==undefined){for(const a of captured.world.wildlife?.animals??[])actor(a,mapId);for(const held of captureDuckFlyerOwners256(captured.world)){identity(held.holderId,held.holder);actor(held.animal,null);}}
   }
  }
- for(const owner of root.worldPawns?.owners??[]){actor(owner.actor,null);for(const p of owner.packed)packed(p);}
+ for(const owner of root.worldPawns?.owners??[]){if(owner.kind!=='mechanical')actor(owner.actor,null);for(const p of owner.packed)packed(p);}
  for(const owner of root.worldFactions?.leaders??[])actor(owner.pawn,null);
  for(const record of root.worldGroups?.groups??[])if('members' in record.state){
   const state=record.state as typeof record.state&{animalOwners?:GroupAnimalOwners256};

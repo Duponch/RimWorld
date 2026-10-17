@@ -1,3 +1,4 @@
+import {clearActualGuest259} from './world-affiliation-259.ts';
 import {forgetLocalActorBed256} from './actor-bed-local-256.ts';
 import { isColonist } from './affiliation.ts';
 import { allowedAreaAllows } from './allowed-area-state.ts';
@@ -111,7 +112,7 @@ export function processPrisonerRelease(world:World,actor:Pawn,context:NeedContex
   patient.motion=null;patient.moveCooldown=0;forgetLocalActorBed256(world,patient);patient.need=null;
   patient.state='idle';patient.planCooldown=0;patient.needCooldown=0;
   if(world.schemaVersion>=213&&isColonist(patient)){
-    delete patient.prisoner;
+    if(world.schemaVersion===259&&patient.worldAffiliation259)clearActualGuest259(patient);else delete patient.prisoner;
     context.event(`${actor.name} a libÃ©rÃ© ${patient.name}, qui retrouve sa libertÃ© dans la colonie.`);
   }else{
     patient.prisoner!.releasedAt=world.tick;patient.prisoner!.escape={...exit};

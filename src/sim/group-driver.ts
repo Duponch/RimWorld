@@ -1,9 +1,12 @@
+import {groupAmbientTemperature256} from './group-provision-age.ts';
+import {captureCaravanEntry259,transferOwnerlessCaravan259} from './group-world-ownership-259.ts';
+import {groupPlayerOwner256} from './group-route-interval-256.ts';
 import {processGroupPackedDelivery258,pendingGroupPackedDeliveries258,reconcileGroupPackedHandoffs258} from './group-packed-animal-loading-258.ts';
 import {validLoadedGroupFreight258} from './group-freight-contract-258.ts';
 import {materialAllowedForPlayer256} from './material-permission-256.ts';
 import {groupHasAdmission257,groupHumanHandler257,groupHumanPassenger257,releaseGroupHumanWork257,processGroupHumanCarry257} from './group-human-admission-257.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
-import {adoptCaravanOtherFoodClimate256} from './group-animal-runtime-256.ts';
+import {adoptCaravanOtherFoodClimate256,advanceCaravanOtherFoodAges256} from './group-animal-runtime-256.ts';
 import {stripTerminalCaravanMember256,archiveOwnerlessCaravanAnimals256} from './group-animal-terminal-256.ts';
 import {processGroupAnimalHandler256,processGroupAnimalDelivery256,pendingGroupAnimalDeliveries256,groupAnimalsReadyForDeparture256,groupAnimalReason256} from './group-animal-formation-256.ts';
 import {rememberActorBedDeparture256,unclaimDetachedActorBed256} from './actor-map-bed-256.ts';
@@ -174,14 +177,15 @@ export function tryGroupDeparture(w:World):void {
     return undefined;
   },adoptDeparture:(world,plan)=>{
     if(world.group!==g)return false;
+    const enteredAtAbsCore=captureCaravanEntry259(world,plan.next);
     adoptGroupProvisionClimate(world,plan.next);if(g.travelPreparation===true)adoptCaravanOtherFoodClimate256(world,plan.next);
-    if(world.schemaVersion>=256&&g.travelPreparation===true){const originMapId=world.worldMaps?boundWorldGroup(world)?.originMapId:undefined;if(originMapId===undefined)throw Error('Missing actual departure map');const context={seed:world.seed,width:world.width,height:world.height,...world.climate?{climate:world.climate}:{},...world.site?{site:world.site}:{},...world.scenario?{scenario:world.scenario}:{}};plan.next.travel={revision:1,tickDelta:0,forage:newGroupForageRevision256(plan.next.items)};plan.next.reorganization=openGroupReorganization(plan.next,[],world.tick,plan.next.members.map(p=>({pawnId:p.id,originMapId,context})));}
+    if(world.schemaVersion>=256&&g.travelPreparation===true){const originMapId=world.worldMaps?boundWorldGroup(world)?.originMapId:undefined;if(originMapId===undefined)throw Error('Missing actual departure map');const context={seed:world.seed,width:world.width,height:world.height,...world.climate?{climate:world.climate}:{},...world.site?{site:world.site}:{},...world.scenario?{scenario:world.scenario}:{}};plan.next.travel={revision:1,tickDelta:0,forage:newGroupForageRevision256(plan.next.items)};plan.next.reorganization=openGroupReorganization(plan.next,[],world.tick,plan.next.members.map(p=>({pawnId:p.id,originMapId,context,...enteredAtAbsCore!==undefined?{enteredAtAbsCore}:{}})));}
 
     const bedCapture=world.schemaVersion>=256?captureActorBeds256(registeredCampaign(world)):undefined;
     const mapId=world.schemaVersion>=256?registeredMapId(world):undefined;if(bedCapture&&mapId===undefined)throw Error('Missing actual bed departure map');
-    if(plan.next.animalOwners){const context={seed:world.seed,width:world.width,height:world.height,...world.climate?{climate:world.climate}:{},...world.site?{site:world.site}:{},...world.scenario?{scenario:world.scenario}:{}};plan.next.animalOwners.origins=plan.next.animalOwners.members.map(a=>({pawnId:a.id,originMapId:mapId!,context}));}
+    if(plan.next.animalOwners){const context={seed:world.seed,width:world.width,height:world.height,...world.climate?{climate:world.climate}:{},...world.site?{site:world.site}:{},...world.scenario?{scenario:world.scenario}:{}};plan.next.animalOwners.origins=plan.next.animalOwners.members.map(a=>({pawnId:a.id,originMapId:mapId!,context,...enteredAtAbsCore!==undefined?{enteredAtAbsCore}:{}}));}
     const people=new Set(plan.capture.members.map(p=>p.id)),items=new Set(plan.capture.items.map(p=>p.id));
-    for(const p of plan.capture.members){rememberMapAreaDeparture(world,p);releaseAllowedAreaReturn(p);if(isSecondaryContext(world))delete p.allowedAreaId;if(bedCapture)rememberActorBedDeparture256(p,mapId!,bedCapture.refs,world.schemaVersion);else {p.bedId=null;delete p.bedSlot;}p.path=[];p.moveCooldown=0;p.planCooldown=0;if(p.state!=='downed')p.state='idle';if(p.mental)p.mental.below=[0,0,0];delete p.motion;delete p.shooting;delete p.stagger;delete p.stun;}
+    for(const p of plan.capture.members){rememberMapAreaDeparture(world,p);releaseAllowedAreaReturn(p);if(isSecondaryContext(world))delete p.allowedAreaId;if(bedCapture)rememberActorBedDeparture256(p,mapId!,bedCapture.refs,world.schemaVersion);else {p.bedId=null;delete p.bedSlot;}p.path=[];p.moveCooldown=0;p.planCooldown=0;if(p.state!=='downed')p.state='idle';if(p.mental)p.mental.below=[0,0,0];delete p.motion;delete p.shooting;delete p.stagger;delete p.stun;if(world.schemaVersion===259&&g.admission?.revision===2&&p.prisoner){delete p.prisoner.escape;if(p.prisoner.breakout)delete p.prisoner.breakout.active;delete p.raid;delete p.visitor;}}
     for(const a of plan.capture.animals??[]){if(bedCapture)rememberActorBedDeparture256(a,mapId!,bedCapture.refs,world.schemaVersion);if(a.wander)delete a.wander.job;a.path=[];delete a.motion;delete a.animalRest;delete a.meal;delete a.eggLay;delete a.flight;delete a.stagger;delete a.stun;delete a.sleepUntilCore;if(a.domestic)delete a.domestic.penMarkerId;if(a.state!=='downed')a.state='idle';a.nextDecision=world.tick;}
     if(world.wildlife&&plan.capture.animals){const ids=new Set(plan.capture.animals.map(a=>a.id));world.wildlife.animals=world.wildlife.animals.filter(a=>!ids.has(a.id));}
     world.pawns=world.pawns.filter(p=>!people.has(p.id));world.piles=world.piles.filter(p=>!items.has(p.id));const packs=new Set(plan.capture.packed??[]);world.packed=world.packed.filter(p=>!packs.has(p));
@@ -220,6 +224,10 @@ export function advanceGroupPersonalFrontier(w:World,prospective?:GroupPersonalF
   const animalPersonalTick=g.lastPersonalTick;
   if(w.schemaVersion>=256&&(g.travel||g.reorganization))advanceGroupForagedAges256(w,g,groupProvisionClimateRate(w,g));
   advanceGroupProvisionAges(w,g);
+  // A true prospective owner loss may end the caravan during the clinical
+  // pass below. Settle its other live food here, beside fruit and pemmican,
+  // before either survivor suspension or terminal ownership can occur.
+  if(w.schemaVersion===259&&g.admission?.revision===2)advanceCaravanOtherFoodAges256(w,g);
   for(const p of g.members)if(p.droppedWeaponId!==undefined&&(g.items.some(i=>i.owner.type==='equipment'&&i.owner.pawnId===p.id)||!w.piles.some(i=>i.id===p.droppedWeaponId&&i.kind==='weapon'&&i.owner.type==='ground')))delete p.droppedWeaponId;
   // Reused Core V182 Caravan_NeedsTracker.AnyPawnsNeedRest tests whether
   // Rest exists. Every admitted human has it, including one at rest100.
@@ -229,17 +237,18 @@ export function advanceGroupPersonalFrontier(w:World,prospective?:GroupPersonalF
   const stationary=prospective?.resting??(g.phase!=='travelling'||!!routePreview&&'members' in routePreview&&!!routePreview.stop),people=captureHumanOwners(w).people,expectation=colonyExpectation(w,g.members[0]!);
   const random=()=>healthRandom(w),notice=(_person:Pawn,message:string)=>groupLog(w,message);
   if(prospective&&(!g.travel||w.schemaVersion<256))throw Error('Missing prospective personal owner');
-  const result=advanceGroupPersonal(g,{...prospective?{deferNeedMeters256:true as const,clinicalRestFor256:prospective.clinicalRestFor256}:{},tick:w.tick,schemaVersion:w.schemaVersion,seed:w.seed,seedFor:p=>g!.reorganization?.memberOrigins.find(o=>o.pawnId===p.id)?.context.seed??w.seed,legacyFood:w.foodRules==='legacy',legacyRest:w.restRules==='legacy',resting:stationary,
+  const result=advanceGroupPersonal(g,{...prospective?{deferNeedMeters256:true as const,clinicalRestFor256:prospective.clinicalRestFor256}:{},tick:w.tick,schemaVersion:w.schemaVersion,...w.schemaVersion===259?{ambientTemperature259:groupAmbientTemperature256(w,g)}:{},seed:w.seed,seedFor:p=>g!.reorganization?.memberOrigins.find(o=>o.pawnId===p.id)?.context.seed??w.seed,legacyFood:w.foodRules==='legacy',legacyRest:w.restRules==='legacy',resting:stationary,
     infectionChanceFactor:w.gameProfile?.difficulty==='adventure-story'?.75:1,mood:{people,expectation,difficultyMood:colonistMoodOffset(w,g.members[0]!)},lostThoughts:p=>lostThoughts(w,p,people),joyToleranceFall:(expectation?.joyToleranceDropPerDay??.18)*100/6000,random,notice});
   if(!result)return;
   if(result.deceased.length){
     const dead=new Set(result.deceased.map(p=>p.id));
     const actualAway=g;
-    if(w.schemaVersion>=256&&g.reorganization&&g.members.some(p=>!dead.has(p.id)))for(const p of result.deceased)stripTerminalCaravanMember256(w,g,p.id);
+    if(w.schemaVersion>=256&&g.reorganization&&g.members.some(p=>!dead.has(p.id)&&(g.admission?.revision!==2||groupPlayerOwner256(p))))for(const p of result.deceased)stripTerminalCaravanMember256(w,g,p.id);
     const losses=result.deceased.map(p=>({...actualAway.admission?{admission:actualAway.admission}:{},...actualAway.packed?.some(pack=>pack.owner.type==='inventory'&&pack.owner.pawnId===p.id)?{packed:actualAway.packed.filter(pack=>pack.owner.type==='inventory'&&pack.owner.pawnId===p.id)}:{},...actualAway.reorganization?{memberOrigin:actualAway.reorganization.memberOrigins.find(o=>o.pawnId===p.id)!}:{},groupId:actualAway.id,tile:actualAway.tile,tick:p.health!.death!.tick,pawn:p,items:actualAway.items.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id)}));
     if(w.worldGroups){const r=boundWorldGroup(w);if(!r)throw Error('Missing loss context');if(!w.worldGroups.lossContexts.some(c=>c.groupId===g!.id))w.worldGroups.lossContexts.push({groupId:g.id,originMapId:r.originMapId,context:r.context});}w.groupLosses??=[];w.groupLosses.push(...losses);g.members=g.members.filter(p=>!dead.has(p.id));if(g.reorganization)g.reorganization.memberOrigins=g.reorganization.memberOrigins.filter(o=>!dead.has(o.pawnId));g.items=g.items.filter(i=>!('pawnId' in i.owner)||!dead.has(i.owner.pawnId));if(g.packed){g.packed=g.packed.filter(pack=>pack.owner.type!=='inventory'||!dead.has(pack.owner.pawnId));if(!g.packed.length)delete g.packed;}
     if(g.animalOwners)g.animalOwners.order=g.animalOwners.order.filter(id=>!dead.has(id));
-    if(!g.members.length){if(w.schemaVersion>=256)archiveOwnerlessCaravanAnimals256(w,g,animalPersonalTick);delete w.group;}
+    const transferred=transferOwnerlessCaravan259(w,g,animalPersonalTick);
+    if(!transferred&&!g.members.length){if(w.schemaVersion>=256)archiveOwnerlessCaravanAnimals256(w,g,animalPersonalTick);delete w.group;}
     for(const loss of losses){if(w.schemaVersion>=256)unclaimDetachedActorBed256(loss.pawn);notifyPawnDeath(w,loss.pawn);groupLog(w,`${loss.pawn.name} est décédé pendant le voyage ; son dossier et ses biens sont conservés à cette destination.`);}
     if(!g.members.length)return;
     travel=captureGroupTravel(g,p=>({incapable:p.state==='downed'||hasMentalBreak(p)||pawnBody(p).capacities.moving<=0,restNeed:true}),w.schemaVersion);if(!travel)throw Error('Invalid surviving group');

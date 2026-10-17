@@ -1,8 +1,10 @@
+import {captureCampaignLordIds256} from './cave-hive-lord-ids-256.ts';
+import {captureAncientCasketGroupIds256} from './ancient-casket-group-ids-256.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Boundary adapter only: real campaign -> unpublished Encounter candidate.
  * The ordered worker owns the shared generation runtime and final entry.
  * Neither a progress yield nor a ready draft is a campaign adoption. */
-import {assembleEncounterCamp256,type CampMapInputs256,type CampMapProgress256,type CampMapResult256} from './camp-map-assembly-256.ts';
+import {assembleEncounterCamp256,assembleSettlementMap257,type CampMapInputs256,type CampMapProgress256,type CampMapResult256} from './camp-map-assembly-256.ts';
 import {campAnimalArrayWritable256} from './camp-entry-recipients-256.ts';
 import {CAMPAIGN_FIELDS,type CampaignField} from './secondary-site-state.ts';
 import {captureSecondaryMap} from './secondary-site-context.ts';
@@ -27,6 +29,7 @@ export interface ActualCampGenerationRuntime256 {
 }
 export type ReadyCampDraft256={
  readonly status:'ready';readonly groupId:number;
+ readonly settlement?:{readonly size:250;readonly nextLordId:number;readonly nextAncientCasketGroupId:number};
  readonly draft:NonNullable<ReturnType<typeof draftSite>>;
  /** Closed-over actual source, not a client-provided boolean certificate. */
  current(input:CampaignState):boolean;
@@ -56,7 +59,7 @@ function sharedMutableStamp(root:CampaignState):string {
 }
 function mapRegistryStamp(root:CampaignState):string {
  const maps=root.worldMaps!;
- return JSON.stringify({nextMapId:maps.nextMapId,campaignSeed:maps.campaignSeed,calendarOrigin:maps.calendarOrigin,mapSize:maps.mapSize,
+ return JSON.stringify({nextMapId:maps.nextMapId,campaignSeed:maps.campaignSeed,calendarOrigin:maps.calendarOrigin,mapSize:maps.mapSize,nextLordId:maps.nextLordId,nextAncientCasketGroupId:maps.nextAncientCasketGroupId,
   sites:maps.sites.map(s=>({id:s.id,tile:s.tile,kind:s.kind,createdAt:s.createdAt})),retired:maps.retired});
 }
 function planetScalarStamp(planet:NonNullable<CampaignState['planet']>):string {
@@ -66,8 +69,8 @@ function planetScalarStamp(planet:NonNullable<CampaignState['planet']>):string {
 /** No shared authority, retained Pawn or supplied static state is written.
  * Cancellation is simply generator.return()/discard; there is no rollback
  * that rewrites the real allocator, PRNG or player map. */
-export function* draftActualGroupCamp256(input:CampaignState,groupId:number,runtime:ActualCampGenerationRuntime256|undefined):Generator<CampMapProgress256,GroupCampDraftResult256,void> {
- const root=registeredCampaign(input),permission=groupEntryActions(root,groupId).camp;
+export function* draftActualGroupCamp256(input:CampaignState,groupId:number,runtime:ActualCampGenerationRuntime256|undefined,mode:'camp'|'settle'='camp'):Generator<CampMapProgress256,GroupCampDraftResult256,void> {
+ const root=registeredCampaign(input),permission=groupEntryActions(root,groupId)[mode];
  const blocked=(phase:string,reason:string):GroupCampDraftResult256=>({status:'blocked',phase,reason});
  if(!permission.ok)return blocked('entry-preflight',permission.reason??'Actual Camp entry refused');
  if(!isSchema256Or257(root.schemaVersion)||root.planet?.revision!==3||!root.worldFactions||!root.worldMaps||!root.worldGroups)return blocked('entry-preflight','Actual Planet3 campaign authority required');
@@ -76,7 +79,7 @@ export function* draftActualGroupCamp256(input:CampaignState,groupId:number,runt
  if(!record||!g||!('members'in g))return blocked('entry-preflight','Actual away group required');
  const planet=root.planet,geography=planet.geography,tile=g.tile,calendarOrigin=maps.calendarOrigin;
  // Read authoritative CAMPAIGN_FIELDS, not a group projection's local header.
- const campaign=Object.fromEntries(CAMPAIGN_FIELDS.filter(k=>Object.hasOwn(root,k)).map(k=>[k,root[k]])) as Pick<World,CampaignField>&{schemaVersion:256|257|258;planet:typeof planet;worldFactions:NonNullable<World['worldFactions']>};
+ const campaign=Object.fromEntries(CAMPAIGN_FIELDS.filter(k=>Object.hasOwn(root,k)).map(k=>[k,root[k]])) as Pick<World,CampaignField>&{schemaVersion:256|257|258|259;planet:typeof planet;worldFactions:NonNullable<World['worldFactions']>};
  const captured=sharedMutableStamp(root),planetStamp=planetScalarStamp(planet),mapStamp=mapRegistryStamp(root),groupStamp=JSON.stringify(g),sites=maps.sites.slice();
  const retained=captureCampRetainedAnimals256(root),retainedStamp=JSON.stringify(retained);
  const runtimeStamp=JSON.stringify({adjacent:runtime.adjacentPermutation,fog:runtime.fog,context:runtime.context,rng:runtime.animalRuntimeRng});
@@ -86,19 +89,22 @@ export function* draftActualGroupCamp256(input:CampaignState,groupId:number,runt
   &&sharedMutableStamp(root)===captured&&JSON.stringify(retained)===retainedStamp
   &&JSON.stringify({adjacent:runtime.adjacentPermutation,fog:runtime.fog,context:runtime.context,rng:runtime.animalRuntimeRng})===runtimeStamp
   &&(()=>{const now=captureCampRetainedAnimals256(root);return now.length===retained.length&&now.every((a,i)=>a===retained[i]);})()
-  &&groupEntryActions(root,groupId).camp.ok;}catch{return false;}};
+  &&groupEntryActions(root,groupId)[mode].ok;}catch{return false;}};
  // These labels describe this actual capture only; preflight additionally
  // checks the scalar frontier. They never fabricate external provenance.
- const provenance={source:'actual ordered group Camp capture',atTick:root.tick,nextId:root.nextId,tile};
+ const provenance={source:mode==='camp'?'actual ordered group Camp capture':'actual ordered group settlement capture',atTick:root.tick,nextId:root.nextId,tile};
  // This Core-only campaign starts at TicksGame0 and has no NewColony quest
  // reset producer. Ordinary settling does NOT reset TickManager's clock.
  // The closed profile therefore retains the actual initial settleTick0;
  // never substitute this Camp's createdAt or add elapsed travel twice.
  const daysPassedSinceSettle=Math.floor(root.tick/6000);
- const generator=assembleEncounterCamp256({campaign,tile,size:200,calendarOrigin,provenance,daysPassedSinceSettle,
+ const common={campaign,tile,calendarOrigin,provenance,daysPassedSinceSettle,
   angular:runtime.angular,context:runtime.context,chunks:{adjacentPermutation:runtime.adjacentPermutation,provenance},
   animals:{pawnKindOrder:CORE_4871_PAWN_KIND_ORDER,unspawned:retained,runtimeRng:runtime.animalRuntimeRng,provenance},
-  fog:{...runtime.fog,provenance},...(runtime.monumentCatalogue?{monumentCatalogue:runtime.monumentCatalogue}:{})});
+  fog:{...runtime.fog,provenance},...(runtime.monumentCatalogue?{monumentCatalogue:runtime.monumentCatalogue}:{})};
+ let settlement:{size:250;lordIds:ReturnType<typeof captureCampaignLordIds256>;casketGroupIds:ReturnType<typeof captureAncientCasketGroupIds256>}|undefined;
+ try{if(mode==='settle'){if(maps.mapSize.width!==250||maps.mapSize.height!==250)return blocked('settlement-size','La taille de colonie géographique admise est250×250.');settlement={size:250,lordIds:captureCampaignLordIds256(root),casketGroupIds:captureAncientCasketGroupIds256(root)};}}catch(error){return blocked('settlement-allocators',error instanceof Error?error.message:String(error));}
+ const generator=settlement?assembleSettlementMap257({...common,size:250,settlement}):assembleEncounterCamp256({...common,size:200});
  let result:CampMapResult256;
  try {
   for(;;){if(!current(root))return blocked('stale-capture','Camp source changed before adoption');const step=generator.next();if(step.done){result=step.value;break;}yield step.value;}
@@ -110,7 +116,8 @@ export function* draftActualGroupCamp256(input:CampaignState,groupId:number,runt
  if(result.riverFlow&&!w.riverWater)throw Error('Actual Camp factory omitted its produced river owner');
  const wildlife=w.wildlife!,draftAnimals=wildlife.animals,worldAnimals=result.worldAnimalGeneration,body=captureSecondaryMap(w);
  const currentWithAnimals=(input:CampaignState)=>current(input)&&worldAnimals.current()&&Object.getOwnPropertyDescriptor(w,'wildlife')?.value===wildlife&&Object.getOwnPropertyDescriptor(body,'wildlife')?.value===wildlife&&Object.getOwnPropertyDescriptor(wildlife,'animals')?.value===draftAnimals&&campAnimalArrayWritable256(wildlife);
- const adoptWorldAnimals=()=>{if(!currentWithAnimals(root))throw Error('Stale Camp WorldPawn adoption');wildlife.animals=worldAnimals.commit();};
- return {status:'ready',groupId,current:currentWithAnimals,adoptWorldAnimals,draft:{site:{revision:1,tile,createdAt:root.tick,selected:false,map:body,visit:null},nextId:result.nextId},
+ const generatedWild=new Set(worldAnimals.candidateAnimals),otherAnimals=draftAnimals.filter(a=>!generatedWild.has(a));
+ const adoptWorldAnimals=()=>{if(!currentWithAnimals(root))throw Error('Stale local-map WorldPawn adoption');wildlife.animals=[...otherAnimals,...worldAnimals.commit()];};
+ return {status:'ready',groupId,...settlement?{settlement:{size:250 as const,nextLordId:settlement.lordIds.nextId,nextAncientCasketGroupId:settlement.casketGroupIds.nextId}}:{},current:currentWithAnimals,adoptWorldAnimals,draft:{site:{revision:1,tile,createdAt:root.tick,selected:false,map:body,visit:null},nextId:result.nextId},
   runtimeAfter:{initialGrowth:result.initialGrowth,adjacentPermutation:result.adjacentPermutation,adjacentUses:result.adjacentUses,...result.edgeContext?{edgeContext:result.edgeContext}:{},initialization:result.initialization,steps:result.steps}};
 }

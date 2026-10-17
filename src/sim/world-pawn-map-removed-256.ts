@@ -1,3 +1,4 @@
+import {prepareMapRemoved259} from './world-pawn-map-removed-259.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {nativeWorldPawnOrderCurrent256,commitNativeWorldPawnOrder256} from './world-pawn-native-order-256.ts';
 import {registeredCampaign,registeredMap,registeredMapId} from './world-map-context.ts';
@@ -34,7 +35,7 @@ export function actualCampRemovalAbsCore256(root:CampaignState,map:World):number
  * immediate GC, KeepForever, archive promotion, new ID or source World clone.
  * Unsupported actual owners refuse BEFORE memories/cleanup/removal start. */
 export function prepareCampMapRemoved256(input:CampaignState,map:World,mapId:number,automatic:boolean):CampMapRemoved256 {
- const root=registeredCampaign(input),site=root.worldMaps?.sites.find(s=>s.id===mapId);
+ const root=registeredCampaign(input);if(root.schemaVersion===259&&root.planet?.revision===3)return prepareMapRemoved259(root,map,mapId,automatic);const site=root.worldMaps?.sites.find(s=>s.id===mapId);
  const no=(reason:string):CampMapRemoved256=>({ok:false,reason});
  const noop:CampMapRemoved256={ok:true,current:()=>true,commit(){}};
  if(!isSchema256Or257(root.schemaVersion)||site?.kind!=='camp')return noop; // literal older/other-map path

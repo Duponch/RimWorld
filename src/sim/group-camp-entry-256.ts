@@ -15,17 +15,20 @@ import type {CommandResult} from './types.ts';
 type Entry256={status:'ready';commit(select?:boolean):CommandResult}|{status:'blocked';phase:string;reason:string};
 /** The existing AdventureStory profile is Core Medium: its
  * nomadicMineableResourcesFactor is0.5. No other/tutorial profile is guessed. */
-export function* prepareActualCampEntry256(input:CampaignState,groupId:number):Generator<CampMapProgress256,Entry256,void> {
+export function* prepareActualCampEntry256(input:CampaignState,groupId:number):Generator<CampMapProgress256,Entry256,void> {return yield* prepareActualLocalEntry257(input,groupId,'camp');}
+export function* prepareActualSettlementEntry257(input:CampaignState,groupId:number):Generator<CampMapProgress256,Entry256,void> {return yield* prepareActualLocalEntry257(input,groupId,'settle');}
+function* prepareActualLocalEntry257(input:CampaignState,groupId:number,mode:'camp'|'settle'):Generator<CampMapProgress256,Entry256,void> {
  const root=registeredCampaign(input),registry=root.worldMaps,state=registry?.generationRuntime;
  const blocked=(phase:string,reason:string):Entry256=>({status:'blocked',phase,reason});
  if(!isSchema256Or257(root.schemaVersion)||root.planet?.revision!==3||!registry||!state||!validMapGenerationRuntime256(state))return blocked('runtime-owner','Actual geographic campaign generation owner is missing');
  if(root.gameProfile?.revision!==1||root.gameProfile.storyteller!=='cassandra-partial'||root.gameProfile.difficulty!=='adventure-story')return blocked('generation-profile','Actual admitted no-tutorial AdventureStory context required');
- const before=JSON.stringify(state),captured=captureMapGenerationRuntime256(state,200,200);
+ if(mode==='settle'&&(registry.mapSize.width!==250||registry.mapSize.height!==250))return blocked('settlement-size','La taille de colonie géographique admise est250×250.');
+ const size=mode==='settle'?250:200,before=JSON.stringify(state),captured=captureMapGenerationRuntime256(state,size,size);
  const same=()=>registeredCampaign(input)===root&&root.worldMaps===registry&&registry.generationRuntime===state&&JSON.stringify(state)===before;
  // These new-map working arrays are created by the actual generation call,
  // mirroring ClearWorkingData. They are not a filtered WorldPawns roster.
  const generator=draftActualGroupCamp256(root,groupId,{angular:portableLocalRoadAngular256,context:{tutorial:false,nomadicFactor:0.5,layoutRects:[],usedRects:[]},
-  adjacentPermutation:captured.adjacentPermutation,fog:{rootsToUnfog:[],...captured.edgeContext?{edgeContext:captured.edgeContext}:{}},animalRuntimeRng:root.rng});
+  adjacentPermutation:captured.adjacentPermutation,fog:{rootsToUnfog:[],...captured.edgeContext?{edgeContext:captured.edgeContext}:{}},animalRuntimeRng:root.rng},mode);
  let result:ReturnType<typeof generator.next>;
  try {
   for(;;){if(!same())return blocked('stale-generation-owner','Actual generation owner changed');result=generator.next();if(result.done)break;yield result.value;}
@@ -37,8 +40,8 @@ export function* prepareActualCampEntry256(input:CampaignState,groupId:number):G
  const next=finishMapGenerationRuntime256(state,draft.runtimeAfter);
  let used=false;
  return {status:'ready',commit(select=true){
-  if(used||!same()||!draft.current(root)||!campRuntimeSlotWritable256(root))return {ok:false,reason:'Le camp préparé ne correspond plus au groupe courant.'};
-  used=true;const result=enterRegisteredSite(root,groupId,'camp',select,draft);
+  if(used||!same()||!draft.current(root)||!campRuntimeSlotWritable256(root))return {ok:false,reason:'La carte préparée ne correspond plus au groupe courant.'};
+  used=true;const result=enterRegisteredSite(root,groupId,mode,select,draft);
   if(result.ok)registry.generationRuntime=next;
   return result;
  }};

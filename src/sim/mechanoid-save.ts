@@ -1,3 +1,4 @@
+import {validMechanicalWorldFactionField259,validMechanicalWorldFaction259} from './mechanoid-world-faction-259.ts';
 import {mechanicalOrder256,mechanicalDuty256,validTempleMechField256,validateTempleMechGroups256} from './temple-mech-duty-256.ts';
 import {validRetainedCorpseDamage256} from './retained-corpse-damage-256.ts';
 import { validateMechanoidMedicalRecord } from './injury-validation.ts';
@@ -31,7 +32,7 @@ export function validMechaMedicalRecord(value:unknown,worldTick:number,dead:bool
   return record.tick<=worldTick&&!!record.death===dead;
 }
 export function validMechanoidShape(value:unknown,version:number,tick:number):value is Mechanoid {
-  if(version<194||!integer(tick)||!object(value)||!validRetainedCorpseDamage256(value,version)||!validTempleMechField256(value,version,tick)||!keys(value,['id','mechKind','x','z','state','health','path','motion','heading','moveCooldown','planCooldown','raid','melee','stagger','stun',...(version>=197?['ranged','meleeThreat']:[]),...(version>=208?['emp']:[]),...(version>=256?['corpseDamage','temple']:[])])
+  if(version<194||!integer(tick)||!object(value)||!validMechanicalWorldFactionField259(value,version)||!validRetainedCorpseDamage256(value,version)||!validTempleMechField256(value,version,tick)||!keys(value,['id','mechKind','x','z','state','health','path','motion','heading','moveCooldown','planCooldown','raid','melee','stagger','stun',...(version>=197?['ranged','meleeThreat']:[]),...(version>=208?['emp']:[]),...(version>=256?['corpseDamage','temple']:[]),...(version>=259?['worldFaction259']:[])])
     ||!integer(value.id,1)||!isMechanoidKind(value.mechKind)||version<197&&value.mechKind!=='scyther'||!integer(value.x)||!integer(value.z)
     ||typeof value.state!=='string'||!['idle','moving','working','downed','dead'].includes(value.state)||!finite(value.heading,-Math.PI*2,Math.PI*2)
     ||!finite(value.moveCooldown,0,1000)||!integer(value.planCooldown,0,1000)||!Array.isArray(value.path)||!value.path.every(cell)
@@ -82,6 +83,7 @@ export function validateMechanoids(w:World,version:number=w.schemaVersion,ids:Nu
   const inBounds=(c:{x:number;z:number})=>c.x>=0&&c.z>=0&&c.x<w.width&&c.z<w.height;
   for(const m of w.mechanoids){
     if(!validMechanoidShape(m,version,w.tick)){errors.push('Invalid mechanoid shape.');continue;}
+    if(!validMechanicalWorldFaction259(m,version,w.worldFactions))errors.push('Invalid actual mechanical faction foreign key.');
     if(m.id>=w.nextId||ids.has(m.id))errors.push('Invalid mechanoid identity.');ids.add(m.id);
     if(m.meleeThreat&&(m.meleeThreat.attackerId>=w.nextId||m.meleeThreat.attackerId===m.id))errors.push('Invalid mechanical melee threat identity.');
     errors.push(...validateMechanoidRanged(w,m,version));

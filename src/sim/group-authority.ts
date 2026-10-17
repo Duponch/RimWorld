@@ -1,3 +1,4 @@
+import {newGroupAdmissionRevision259,autoCapturePatient259} from './group-human-admission-259.ts';
 import {regularGroupFreight258} from './group-freight-contract-258.ts';
 import {materialAllowedForPlayer256} from './material-permission-256.ts';
 import {groupHumanAdmissionReason257,groupHasAdmission257,groupHumanHandler257,previewGroupHumanPreparation257,releaseGroupHumanPassengers257} from './group-human-admission-257.ts';
@@ -96,7 +97,7 @@ export function groupFormationAuthority(w:World,preparing=false):GroupFormationA
 }
 
 export function groupMemberChoices(w:World):readonly GroupMemberChoice[] {
-  return w.pawns.filter(p=>w.schemaVersion>=257?isColonist(p)||!!p.prisoner:isColonist(p)&&!p.prisoner&&!p.visitor).map(p=>{
+  return w.pawns.filter(p=>w.schemaVersion>=257?isColonist(p)||!!p.prisoner||autoCapturePatient259(w,p):isColonist(p)&&!p.prisoner&&!p.visitor).map(p=>{
     const reason=w.group?'Un groupe est déjà engagé.':groupMemberReason(w,p);return {pawn:p,ok:!reason,...reason?{reason}:{}};
   });
 }
@@ -215,7 +216,7 @@ export function applyGroupCommand(w:World,c:GroupCommand):CommandResult {
   if(c.type==='group-start'){
     const p=previewFormation(w,c.memberIds,c.sources,c.destination,c.packedIds??[],c.animalIds??[]);if(p.kind!=='ready')return fail(p.kind==='deferred'?'La préparation attend une nouvelle tentative.':p.reason);
     const id=w.planet!.nextGroupId;
-    w.group={...(w.worldMaps&&w.worldMaps.sites.find(s=>s.id===registeredMapId(w))?.tile!==w.planet!.homeTile?{originTile:w.worldMaps.sites.find(s=>s.id===registeredMapId(w))!.tile!}:w.expeditionSite?{originTile:w.expeditionSite.tile}:{}),id,startedAt:w.tick,destination:c.destination,ledger:emptyGroupLedger(),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?{provisions:newGroupProvisions()}:{}),...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA?{freight:newGroupFreight()}:{}),...p.bedrollLoading?{bedrollLoading:p.bedrollLoading}:{},...p.animalPreparation?{animalPreparation:p.animalPreparation}:{},...p.humanPreparation?{admission:{revision:1 as const},humanPreparation:p.humanPreparation}:{},...(w.schemaVersion>=256?{travelPreparation:true as const}:{}),phase:'gathering',memberIds:p.loading.capture.members.map(p=>p.id),rendezvous:p.rendezvous,meeting:p.meeting,manifest:p.loading.manifest,cursor:0,exits:p.exits};
+    w.group={...(w.worldMaps&&w.worldMaps.sites.find(s=>s.id===registeredMapId(w))?.tile!==w.planet!.homeTile?{originTile:w.worldMaps.sites.find(s=>s.id===registeredMapId(w))!.tile!}:w.expeditionSite?{originTile:w.expeditionSite.tile}:{}),id,startedAt:w.tick,destination:c.destination,ledger:emptyGroupLedger(),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?{provisions:newGroupProvisions()}:{}),...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA?{freight:newGroupFreight()}:{}),...p.bedrollLoading?{bedrollLoading:p.bedrollLoading}:{},...p.animalPreparation?{animalPreparation:p.animalPreparation}:{},...p.humanPreparation?{admission:{revision:newGroupAdmissionRevision259(w)},humanPreparation:p.humanPreparation}:{},...(w.schemaVersion>=256?{travelPreparation:true as const}:{}),phase:'gathering',memberIds:p.loading.capture.members.map(p=>p.id),rendezvous:p.rendezvous,meeting:p.meeting,manifest:p.loading.manifest,cursor:0,exits:p.exits};
     w.planet!.nextGroupId++;groupLog(w,'Le groupe se rassemble avant le chargement des provisions.');return {ok:true};
   }
   if(c.type==='group-cancel'){if(!w.group||away(w.group))return fail('Aucune préparation ou décharge à annuler.');cancelGroupPreparation(w);return {ok:true};}

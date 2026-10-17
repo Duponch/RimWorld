@@ -27,12 +27,8 @@ export function validWeaponShape(p:Record<string,unknown>,version:number):boolea
     &&(w.forbidden===undefined||w.forbidden===true)&&p.quantity===1;
 }
 export function validateEquipment(world:World):string[] {
-  const errors:string[]=[],owners=new Set<number>();
-  for(const pile of world.piles)if(pile.owner.type==='equipment'){
-    const owner=pile.owner.pawnId;
-    if(pile.kind!=='weapon'||!world.pawns.some(p=>p.id===owner)||owners.has(owner)||pile.weapon?.forbidden)errors.push('Invalid primary equipment owner.');
-    owners.add(owner);
-  }
+  const errors:string[]=[];
+  errors.push(...validateEquipmentOwners259(world.pawns,world.piles));
   for(const p of world.pawns){
     const weapon=equippedWeapon(world,p),t=p.equipmentTask;
     if(p.equipmentDropPending&&!weapon)errors.push('Pending equipment drop without weapon.');
@@ -47,3 +43,12 @@ export function validateEquipment(world:World):string[] {
   }
   return errors;
 }
+
+/** Same actual gear owners, without local task/clinical projection. */
+export function validateEquipmentOwners259(pawns:readonly {id:number}[],piles:readonly import('./types.ts').MaterialPile[]):string[]{const errors:string[]=[],owners=new Set<number>();
+  for(const pile of piles)if(pile.owner.type==='equipment'){
+    const owner=pile.owner.pawnId;
+    if(pile.kind!=='weapon'||!pawns.some(p=>p.id===owner)||owners.has(owner)||pile.weapon?.forbidden)errors.push('Invalid primary equipment owner.');
+    owners.add(owner);
+  }
+return errors;}

@@ -1,3 +1,5 @@
+import {hostedCaptive259} from './group-human-admission-259.ts';
+import {validWorldAffiliationForeignKeys259} from './world-affiliation-259.ts';
 import {validateGroupPackedComponents258} from './group-packed-components-258.ts';
 import {regularGroupFreightItem258,validLoadedGroupFreight258} from './group-freight-contract-258.ts';
 import {validGroupAdmission257,validGroupHumanPreparation257} from './group-human-admission-257.ts';
@@ -118,9 +120,9 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
   const retained=new Map<number,MaterialPile[]>();
   // A terminal keeps its historical policy IDs at death. Only a living owner
   // must still resolve those IDs in the current, separately numbered registries.
-  function person(v:unknown,clock:number,dead:boolean,origin?:GroupMemberOrigin):v is Pawn {
+  function person(v:unknown,clock:number,dead:boolean,origin?:GroupMemberOrigin,admission:import('./group-state.ts').GroupAdmission257|undefined=object(group)?group.admission as import('./group-state.ts').GroupAdmission257|undefined:undefined):v is Pawn {
     const personWorld=groupPersonValidationView(world,origin);
-    if(!object(v)||!keys(v,REQUIRED_PAWN,[...PASSIVE_PAWN,...version>=256?['mapAreas','caravanCarrySick','mapBed','arrivalRotation','hiveDefeats','nativeHuman']:[]])||!thing(v.id)||ownerIds.has(v.id)||localById.has(v.id)
+    if(!object(v)||!keys(v,REQUIRED_PAWN,[...PASSIVE_PAWN,...version===259?['worldAffiliation259','prisonerHistory259',...admission?.revision===2?['prisoner']:[]]:[],...version>=256?['mapAreas','caravanCarrySick','mapBed','arrivalRotation','hiveDefeats','nativeHuman']:[]])||!thing(v.id)||ownerIds.has(v.id)||localById.has(v.id)
       ||!int(v.x,0,personWorld.width-1)||!int(v.z,0,personWorld.height-1))return false;
     if(!oneOf(v.state,['idle','resting','downed',...(dead?['dead']:[])])||dead!==(v.state==='dead')
       ||v.jobId!==null||v.haul!==null||v.cooking!==null||v.need!==null||v.bedId!==null||v.moveCooldown!==0||v.planCooldown!==0
@@ -142,7 +144,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
     const assigned=p.apparelPolicyId!==undefined||p.apparelAutomation!==undefined||p.nextApparelCheckAt!==undefined;
     if(assigned&&(!int(p.apparelPolicyId,1,(personWorld.nextApparelPolicyId??0)-1)||!dead&&!personWorld.apparelPolicies?.some(policy=>policy.id===p.apparelPolicyId)
       ||typeof p.apparelAutomation!=='boolean'||!int(p.nextApparelCheckAt,0,clock+APPAREL_POLICY_INTERVAL.max)))return false;
-    if(!isColonist(p)||p.prisoner||p.health&&(p.health.body!==undefined||p.health.tick!==clock)
+    if((!isColonist(p)||p.prisoner)&&!(version===259&&admission?.revision===2&&hostedCaptive259(world,p))||!validWorldAffiliationForeignKeys259(p,world.worldFactions)||p.health&&(p.health.body!==undefined||p.health.tick!==clock)
       ||(dead?(!p.health?.death||p.health.death.tick!==clock):!!p.health?.death))return false;
     // Passive owners have no spatial vomiting driver. A healthy departure
     // cannot export an episode, and ordinary disease remains a clinical record.
@@ -192,7 +194,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
     if(!dense(losses,0,version>=256?world.nextId-1:GROUP_MAX_LOSSES))return ['Invalid group loss array.'];
     for(const loss of losses){
       if(!object(loss)||!keys(loss,['groupId','tile','tick','pawn','items'],version>=256?['memberOrigin','packed',...version>=257?['admission']:[]]:[])||!groupId(loss.groupId)||!place(loss.tile)
-        ||Object.hasOwn(loss,'admission')&&(!object(loss.admission)||!validGroupAdmission257(loss.admission,version))||!int(loss.tick,planet.adoptedAt,world.tick)||loss.memberOrigin!==undefined&&(version<256||!object(loss.pawn)||!validGroupMemberOrigin(loss.memberOrigin,loss.pawn.id as number,world.nextId,o=>groupMemberOriginAuthority(world,o)))||!person(loss.pawn,loss.tick,true,loss.memberOrigin as GroupMemberOrigin|undefined))return ['Invalid terminal group person.',...errors];
+        ||Object.hasOwn(loss,'admission')&&(!object(loss.admission)||!validGroupAdmission257(loss.admission,version))||!int(loss.tick,planet.adoptedAt,world.tick)||loss.memberOrigin!==undefined&&(version<256||!object(loss.pawn)||!validGroupMemberOrigin(loss.memberOrigin,loss.pawn.id as number,world.nextId,o=>groupMemberOriginAuthority(world,o),version))||!person(loss.pawn,loss.tick,true,loss.memberOrigin as GroupMemberOrigin|undefined,loss.admission as import('./group-state.ts').GroupAdmission257|undefined))return ['Invalid terminal group person.',...errors];
       if(!validCaravanBedrollPacks256(loss.packed,[loss.pawn as Pawn],world.nextId,version,Number(loss.tick)))return ['Invalid terminal packed owners.'];if(!referencesOnly)errors.push(...validateGroupPackedComponents258(world,(loss.packed??[]) as import('./furniture-rules.ts').PackedFurniture[],version,Number(loss.tick)));for(const pack of (loss.packed??[]) as import('./furniture-rules.ts').PackedFurniture[]){if(pileIds.has(pack.building.id)||ownerIds.has(pack.building.id))return ['Duplicate terminal packed identity.'];pileIds.add(pack.building.id);}
       const id=(loss.pawn as Pawn).id;
       if(!piles(loss.items,new Set([id]),loss.tick,version>=256?world.nextId-1:256,version>=GROUP_FREIGHT_SCHEMA))return ['Invalid terminal group possessions.',...errors];
@@ -269,10 +271,11 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
         ||typeof group.paused!=='boolean'||!dense(group.route,1,version>=255?planetTileCount(planet):162))return ['Invalid away group shape or clock.'];
       const prospective=group as unknown as Extract<GroupState,{members:Pawn[]}>;
       if((group.travel!==undefined||group.packed!==undefined)&&group.reorganization===undefined||!validGroupTravel(group.travel,version)||!validGroupReorganization(group.reorganization,prospective,version,world.tick,world.nextId,o=>groupMemberOriginAuthority(world,o)))return ['Invalid or future group reorganization/travel.'];
+      if(prospective.admission?.revision===2&&(!prospective.reorganization||prospective.reorganization.memberOrigins.some(o=>o.enteredAtAbsCore===undefined)||prospective.animalOwners?.origins.some(o=>o.enteredAtAbsCore===undefined)))return ['Prospective caravan lost a true exit receipt.'];
       if(!validGroupAnimalOwners256(prospective,world,version,o=>groupMemberOriginAuthority(world,o)))return ['Invalid actual animal owners.'];
       for(const a of prospective.animalOwners?.members??[]){if(ownerIds.has(a.id)||localById.has(a.id)||world.wildlife?.animals.some(b=>b.id===a.id))return ['Duplicate animal original.'];ownerIds.add(a.id);}
       for(const p of group.members)if(!person(p,world.tick,false,object(p)?prospective.reorganization?.memberOrigins.find(o=>o.pawnId===p.id):undefined))return ['Invalid away group person.',...errors];
-      if(admissionPresent&&!prospective.members.some(p=>isColonist(p)&&!p.prisoner&&!p.visitor&&!p.health?.death&&p.state!=='dead'))return ['Away group lacks a free player owner.'];
+      if(admissionPresent&&!prospective.members.some(p=>isColonist(p)&&!p.prisoner&&!p.visitor&&(!p.worldAffiliation259||p.worldAffiliation259.hostFactionId===null)&&!p.health?.death&&p.state!=='dead'))return ['Away group lacks a free player owner.'];
       if(!validCaravanBedrollPacks256(group.packed,groupPhysicalPawns256(prospective),world.nextId,version,world.tick))return ['Invalid away packed owners.'];if(!referencesOnly)errors.push(...validateGroupPackedComponents258(world,(group.packed??[]) as import('./furniture-rules.ts').PackedFurniture[],version));for(const pack of (group.packed??[]) as import('./furniture-rules.ts').PackedFurniture[]){if(pileIds.has(pack.building.id)||ownerIds.has(pack.building.id))return ['Duplicate away packed identity.'];pileIds.add(pack.building.id);}
       const people=new Set(groupPhysicalPawns256(prospective).map(p=>p.id));
       if(!piles(group.items,people,world.tick,version>=256?world.nextId-1:32768-world.piles.length,freighted||!!prospective.reorganization,prospective.animalOwners?.origins))return ['Invalid away group possessions.',...errors];

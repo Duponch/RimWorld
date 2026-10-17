@@ -1,3 +1,4 @@
+import {commitJoinedPlayer259} from './world-affiliation-259.ts';
 import { comfortableTemperature,nextHeatSeverity } from './heat-rules.ts';
 import { nextColdSeverity } from './cold-rules.ts';
 import { medicalStatus } from './injury-state.ts';
@@ -59,7 +60,7 @@ export function reconcilePodRescueJoining(w:World):void {
     // A guest's bare path is an exit intention. A real meal/medical/rest task
     // retains its path, bed, ownership and other actors' treatment commitments.
     if(!p.need){p.path=[];if(p.state==='moving')p.state='idle';}
-    p.faction='colony';p.foodPolicyId=food.id;p.apparelPolicyId=apparel.id;
+    commitJoinedPlayer259(w,p);p.faction='colony';p.foodPolicyId=food.id;p.apparelPolicyId=apparel.id;
     p.apparelAutomation=true;p.nextApparelCheckAt=w.tick;
     // Same defaults as startingPawn; background work restrictions remain
     // enforced by workPriority. Skills, traits and all possessions stay intact.

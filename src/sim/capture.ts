@@ -1,3 +1,4 @@
+import {commitCapturedGuest259} from './world-affiliation-259.ts';
 import { allowedAreaAllows,allowedAreaReason } from './allowed-area-state.ts';
 import { factionOf,isColonist } from './affiliation.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
@@ -54,15 +55,15 @@ export function planCaptureDrops(world:World,patient:Pawn):DropPlan|null {
   for(const [id,cell] of placements)drops.set(id,cell);
   return drops;
 }
-export function completeCapture(world:World,patient:Pawn,planned?:DropPlan):boolean {
-  if(patient.prisoner)return true;
+export function completeCapture(world:World,patient:Pawn,planned?:DropPlan,recapture259=false):boolean {
+  if(patient.prisoner&&!recapture259)return true;
   const drops=planned??planCaptureDrops(world,patient);if(!drops)return false;
   const held=world.piles.filter(p=>(p.owner.type==='pawn'||p.owner.type==='equipment')&&p.owner.pawnId===patient.id);
   if(held.some(item=>!drops.has(item.id)))return false;
   if(!releaseWork(world,patient,drops))return false;
   for(const item of held)item.owner={type:'ground',...drops.get(item.id)!};
   clearQueuedOrders(world,patient);delete patient.priorityWork;delete patient.draft;delete patient.flee;delete patient.equipmentDropPending;
-  patient.prisoner=createPrisonerState(world,patient);patient.bedId=null;delete patient.bedSlot;
+  patient.prisoner=createPrisonerState(world,patient);commitCapturedGuest259(world,patient);patient.bedId=null;delete patient.bedSlot;
   if(patient.raid){patient.raid.goal=null;patient.raid.exiting=true;}
   return true;
 }

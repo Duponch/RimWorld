@@ -74,3 +74,25 @@ test('a recorded chop contact edge exceeds the raw speed alarm yet follows one u
   const invalidTime=structuredClone(current);invalidTime.time=NaN;
   expect(confirmedTravelExcess(previous,invalidTime,dt)).toBe(false);
 });
+
+test('the recorded mine diagonal is continuous but a smooth two-cell leap still refuses',()=>{
+  // Exact two witnesses from V414 presentation01, pawn12409 at53266.
+  // The preserved red artifact is not rewritten/reclassified by this fixture.
+  const dt=62.400000000001455,segment={from:{x:147,z:159},to:{x:148,z:160},start:2131.58073580374,end:2135.823376490859};
+  const previous:TravelFrameWitness={position:{x:147.15715450592484,z:159.15715450592484},
+    from:{x:147,z:159},to:{x:148.21212768554688,z:160.21212768554688},start:13.930122375488281,end:14.637228965759277,
+    time:14.021800000011885,play:2132.1308000000713,segment};
+  const current:TravelFrameWitness={...previous,position:{x:147.79895393434597,z:159.79895393434597},time:14.396200000011882,play:2134.3772000000713};
+  expect(Math.hypot(current.position.x-previous.position.x,current.position.z-previous.position.z)).toBeGreaterThan(dt*.013+.02);
+  expect(confirmedTravelExcess(previous,current,dt)).toBe(true);
+
+  // Keep clocks, endpoints across both frames, contact envelope, and exact
+  // interpolation coherent; only the confirmed grid edge becomes a 2x1 leap.
+  const leap=[structuredClone(previous),structuredClone(current)];
+  for(const frame of leap){frame.segment.to.x++;frame.to.x++;const alpha=(frame.time-frame.start)/(frame.end-frame.start);
+    frame.position={x:frame.from.x+(frame.to.x-frame.from.x)*alpha,z:frame.from.z+(frame.to.z-frame.from.z)*alpha};}
+  expect(confirmedTravelExcess(leap[0]!,leap[1]!,dt)).toBe(false);
+
+  const teleport=structuredClone(current);teleport.position.x+=1;
+  expect(confirmedTravelExcess(previous,teleport,dt)).toBe(false);
+});

@@ -1,3 +1,4 @@
+import {commitMedicalGuest259} from './world-affiliation-259.ts';
 import {cancelToxicVomit256} from './toxic-buildup-256.ts';
 import {claimLocalActorBed256,captureActorBeds256,localBedClaimAvailable256} from './actor-bed-local-256.ts';
 import { interruptWork } from './interrupted-cargo.ts';
@@ -142,7 +143,7 @@ export function processRescue(world:World,actor:Pawn,context:NeedContext):void {
     // Core's invitation precedes the real carry, without changing faction,
     // inventory, visit group or phase. A later interruption retains admission.
     if(!task.capture&&actor.orders.active==='rescue'&&isRescuableVisitor(patient)){
-      patient.visitor!.medicalGuestAt??=world.tick;patient.visitor!.goal=null;
+      patient.visitor!.medicalGuestAt??=world.tick;patient.visitor!.goal=null;commitMedicalGuest259(world,patient);
       if(!bed.medical)claimLocalActorBed256(world,patient,bed);
     }
     if(patient.health)cancelToxicVomit256(patient.health);
@@ -154,7 +155,7 @@ export function processRescue(world:World,actor:Pawn,context:NeedContext):void {
   if(task.capture&&!completeCapture(world,patient))return;
   // Historical capsule admission remains at deposit; visitor admission above
   // follows its separate pickup timing and never fabricates a capsule record.
-  if(!task.capture&&patient.faction==='outlanders'&&patient.podRescue)patient.podRescue.admittedAt??=world.tick;
+  if(!task.capture&&patient.faction==='outlanders'&&patient.podRescue){patient.podRescue.admittedAt??=world.tick;commitMedicalGuest259(world,patient);}
   // The mover has completed the captured edge before entering this processor.
   delete actor.rescue;actor.orders.active=null;actor.path=[];actor.state='idle';actor.planCooldown=0;
   patient.motion=null;patient.moveCooldown=0;

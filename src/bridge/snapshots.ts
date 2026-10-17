@@ -1,3 +1,5 @@
+import {validWorldAffiliationFields259,validWorldAffiliationForeignKeys259} from '../sim/world-affiliation-259.ts';
+import {validPrisonerStateRecord259} from '../sim/prisoner-save.ts';
 import {isAncientGeneratedFloor256} from '../sim/ancient-generated-floor-state-256.ts';
 import {validNaturalHiveLoss256} from '../sim/cave-hive-loss-256.ts';
 import {validCaveHiveBuilding256,validateCaveHiveOwners256} from '../sim/cave-hive-save-256.ts';
@@ -141,7 +143,7 @@ import { validateGroupStateWithPlanet } from '../sim/group-save.ts';
 import { registerGroupThingIds } from '../sim/group-namespace-save.ts';
 import { validStartingArrivalShape,validateStartingArrivalOwners,registerStartingArrivalThingIds,validStartingArrivalTransition } from '../sim/starting-arrival-save.ts';
 import { validHumanSleepingSpotProvenance,validHumanSleepingSpotStructureEntry,validHumanSleepingSpotTransport } from '../sim/human-sleeping-spot-save.ts';
-import { captureHumanOwners } from '../sim/human-owners.ts';
+import { captureHumanOwners,everyHumanPawnOwner } from '../sim/human-owners.ts';
 import { validateSocial } from '../sim/social-save.ts';
 import { validPawnSurgeryShape,validateSurgeries } from '../sim/surgery-save.ts';
 import { validArtificialPartTransport,validArtificialPartsWorldTransport } from '../sim/health-save.ts';
@@ -1115,6 +1117,7 @@ export class SnapshotDecoder {
         if(!validForcedConsumePawnShape(pawn,message.world.schemaVersion,message.world))return resync('Forme de consommation forcée invalide ou future.');
         forcedConsumers.push(pawn);
       }
+      if(!validWorldAffiliationFields259(pawn as unknown as Record<string,unknown>,message.world.schemaVersion))return resync('Affiliation ou dossier captif futur/invalide.');
       if(Object.hasOwn(pawn,'emp'))return resync('Un effet EMP mécanique ne peut pas appartenir à une personne.');
       if(!validDeathThoughtsPawnShape(pawn as unknown as Record<string,unknown>,message.world.schemaVersion,message.world.tick))return resync('Souvenir de décès perçu invalide ou futur.');
       if(Object.hasOwn(pawn,'bombRefuge')&&!validBombRefugeShape(pawn.bombRefuge,message.world.schemaVersion))return resync('Refuge Bomb futur ou invalide.');
@@ -1382,7 +1385,7 @@ export class SnapshotDecoder {
     if(!validAnimalRestTransport(next,next.schemaVersion))return resync('Couchage, secours ou propriétaire animal incohérent ou futur.');
     if(!validArrestRescueTransport(next))return resync('Mandat d’arrestation, portage ou libération locale incohérent.');
     if(!validEmpStructureTransport(next,next.schemaVersion)||!validEmpProductionTransport(next,next.schemaVersion))return resync('État EMP ou production future invalide.');
-    for(const pawn of next.pawns)if(!validPrisonerPawnShape(pawn as unknown as Record<string,unknown>,next.schemaVersion,next))return resync('Prisonnier, geôlier ou provenance de recrutement invalide.');
+    for(const pawn of next.pawns)if(!validWorldAffiliationFields259(pawn as unknown as Record<string,unknown>,next.schemaVersion)||pawn.prisonerHistory259&&!validPrisonerStateRecord259(pawn.prisonerHistory259,next.schemaVersion,next,true)||!validPrisonerPawnShape(pawn as unknown as Record<string,unknown>,next.schemaVersion,next))return resync('Prisonnier, geôlier ou provenance de recrutement invalide.');
     if(!validPrisonBreakBindings(next,next.schemaVersion))return resync('Révolte de prisonniers et service médical simultanés.');
     if(validateMental(next,next.schemaVersion).length||next.schemaVersion>=192&&validateMelee(next).length)return resync('Cible de crise mentale ou autorité de mêlée incohérente.');
     if(!validMechSalvageLedger(next,next.schemaVersion)||validateMechanoidRaids(next,next.schemaVersion).length)return resync('Récupération ou mandat mécanique invalide.');
@@ -1541,6 +1544,7 @@ export class SnapshotDecoder {
       if(registerProjectedFactionOwners256(next,ids).length)return resync('Faction, chef ou propriétaire projeté incohérent.');
       if(registerProjectedWorldPawns256(next,ids).length)return resync('Invalid projected WorldPawns owner or namespace.');
     }
+    if(!everyHumanPawnOwner(next,p=>validWorldAffiliationFields259(p as unknown as Record<string,unknown>,next.schemaVersion)&&validWorldAffiliationForeignKeys259(p,next.worldFactions)))return resync('Faction/hôte d’un original invalide.');
     // An absent planet also belongs to the accepted epoch. A replacement
     // without planetary owners must clear the previous witness atomically.
     planetCheck??=this.planetValidation.prepareAbsence(message.epoch);

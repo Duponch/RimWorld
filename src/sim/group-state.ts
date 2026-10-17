@@ -61,8 +61,8 @@ export type GroupStop =
   | { kind: 'incapacity'; pawnIds: number[] }
   | { kind: 'overload'; grams: number; capacityGrams: number }
   | { kind: 'unreachable'; destination: number };
-export interface GroupAdmission257 {revision:1}
-export interface GroupHumanPreparation257 {revision:1;releaseIds:number[];passengers:{pawnId:number;carrierId:number;phase:'approach'|'carry'|'waiting'}[]}
+export interface GroupAdmission257 {revision:1|2}
+export interface GroupHumanPreparation257 {revision:1;releaseIds:number[];passengers:{pawnId:number;carrierId:number;phase:'approach'|'carry'|'waiting';captureOnPickup259?:true}[]}
 interface GroupCommon {
   /** Present only on formations genuinely created after admission257. */
   admission?:GroupAdmission257;

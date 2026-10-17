@@ -21,9 +21,11 @@ export interface NativeFreight413Manifest {
 export function preparedNativeFreight413(){
  // Literal registryCamp construction, with ordinary assertions instead of a
  // runtime Vitest import. No preparation transition is replaced by an edit.
- const root=prepareGroupScenario(),adoption=applyCommand(root,{type:'planet-adopt'});if(!adoption.ok)throw Error(adoption.reason??'The actual planet-adopt command refused');
+ // Historical V413 preparation before its validation baseline. No step or
+ // prospective259 field is granted; later guards still reject future data.
+ const root=prepareGroupScenario();(root as {schemaVersion:number}).schemaVersion=258;const adoption=applyCommand(root,{type:'planet-adopt'});if(!adoption.ok)throw Error(adoption.reason??'The actual planet-adopt command refused');
  const mapId=root.worldMaps!.rootMapId!,map=registeredMap(root,mapId)!;
- if(root.schemaVersion!==258||map.width!==32||map.height!==32||root.tick!==0)throw Error('V413 requires the actual unplayed258 registryCamp32²');
+ if(Number(root.schemaVersion)!==258||map.width!==32||map.height!==32||root.tick!==0)throw Error('V413 requires the actual unplayed258 registryCamp32²');
  root.research={project:null,points:0,complexFurniture:{points:COMPLEX_FURNITURE_RESEARCH_COST,completedAt:root.tick}};
  const animal:WildAnimal={id:map.nextId++,species:'muffalo',sex:'female',ageTicks:adultAgeTicks('muffalo'),x:16,z:15,food:1,rest:1,state:'idle',path:[],nextDecision:map.tick,
   domestic:{since:map.tick,care:'herbal',tameness:5,nextDecay:map.tick+6000,productFullness:0}};

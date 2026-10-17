@@ -1,6 +1,8 @@
 /** Prospective, explicitly adapted NPC population. This is the same authored
  * person/health/equipment pipeline as existing visitors and raids, NOT a native
  * PawnGenerator receipt. Failure discards the entire unpublished map. */
+import {bindBornHumanFaction259} from './world-affiliation-259.ts';
+import type {WorldFactionRegistry256} from './world-faction-state.ts';
 import {startingPawn} from './starting-pawns.ts';
 import {generatePawnBackground} from './background-generation.ts';
 import {newApparelState} from './apparel-rules.ts';
@@ -26,6 +28,7 @@ import type {Cell,Pawn,World} from './types.ts';
 
 export const FUNCTIONAL_ANCIENT_POPULATION_256='existing-npc-population-v1' as const;
 export type FunctionalAncientContents256='ancient-friendly'|'ancient-incapped'|'ancient-half-eaten'|'ancient-hostile'|'slave';
+export interface FunctionalAncientBirth259 {factions:WorldFactionRegistry256;factionId:number}
 const contents=new Set<FunctionalAncientContents256>(['ancient-friendly','ancient-incapped','ancient-half-eaten','ancient-hostile','slave']);
 
 /** Existing capsule profile, adapted to contusions for this authored suspended
@@ -41,12 +44,15 @@ function injuredProfile(p:Pawn,random:WorldGenerationRandom):void {
 
 /** Prepare one original human and every owned item, keeping the real allocator
  * private until the casket and all branch-specific actors can be committed. */
-export function prepareFunctionalAncientHuman256(input:{id:number;nextId:number;cell:Cell;tick:number;contents:FunctionalAncientContents256;random:WorldGenerationRandom}):{pawn:Pawn;items:AncientHeldPile256[];nextId:number} {
+export function prepareFunctionalAncientHuman256(input:{id:number;nextId:number;cell:Cell;tick:number;contents:FunctionalAncientContents256;random:WorldGenerationRandom;birth259?:FunctionalAncientBirth259}):{pawn:Pawn;items:AncientHeldPile256[];nextId:number} {
  const {id,cell,tick,contents:kind,random}=input;
  if(!(random instanceof WorldGenerationRandom)||!contents.has(kind)||!Number.isSafeInteger(id)||id<1||!Number.isSafeInteger(input.nextId)||input.nextId<=id||!Number.isSafeInteger(tick)||tick<0||!Number.isSafeInteger(cell.x)||!Number.isSafeInteger(cell.z)||cell.x<0||cell.z<0)throw Error('Invalid prospective functional NPC birth inputs');
  const seed=random.integerValue()>>>0,profile=random.integer(0,3),slave=kind==='slave';
  const p=startingPawn(id,`${slave?'Captif ancien':'Veilleur ancien'} ${id}`,cell.x,cell.z,profile,55,seed,tick,256);
  p.faction=kind==='ancient-hostile'?'outlaws':'outlanders';
+ // Prospective creation only. The caller supplies its actual instance; the
+ // old display alias is never converted into authority on an existing Pawn.
+ if(input.birth259){const b=input.birth259,expected=kind==='ancient-hostile'?'AncientsHostile':'Ancients',instance=b.factions.factions.find(f=>f.id===b.factionId);if(!instance||instance.def!==expected||!bindBornHumanFaction259({schemaVersion:259,worldFactions:b.factions},p,b.factionId))throw Error('Actual ancient birth faction instance refused');}
  generatePawnBackground(p,seed,!slave);
  // These neutral/hostile outsiders do not acquire a colony policy/task.
  delete p.apparelPolicyId;delete p.apparelAutomation;delete p.nextApparelCheckAt;
@@ -81,7 +87,7 @@ function retainFreshCorpse(p:Pawn,casketId:number,id:number,tick:number):Ancient
 /** Same unpublished real Site3 map, original casket and actual phase750 stream.
  * Existing generated props may Vanish only through their real no-product plan.
  * No conflicting live/cargo/job owner is removed to make the selected pod fit. */
-export function spawnFunctionalAncientCasket256(w:World,placement:AncientShrinePlacement256,kind:FunctionalAncientContents256,groupId:number,casketId:number,random:WorldGenerationRandom):AncientCasket256 {
+export function spawnFunctionalAncientCasket256(w:World,placement:AncientShrinePlacement256,kind:FunctionalAncientContents256,groupId:number,casketId:number,random:WorldGenerationRandom,birth259?:FunctionalAncientBirth259):AncientCasket256 {
  if(!unpublishedAncientGeneration256(w,true)||!(random instanceof WorldGenerationRandom)||!contents.has(kind)||!Number.isSafeInteger(groupId)||groupId<0||!Number.isSafeInteger(casketId)||casketId<1||casketId!==w.nextId-1)throw Error('Actual unpublished functional population/casket allocator required');
  const cells=ancientCasketCells256(placement.casket.cell,placement.casket.orientation),removals=new Map<number,NonNullable<ReturnType<typeof planVanishGeneratedAncient256>>>();
  for(const c of cells){
@@ -90,11 +96,12 @@ export function spawnFunctionalAncientCasket256(w:World,placement:AncientShrineP
   if(conflict||t.terrain==='rock'||t.collapsedRock||!terrainSupportsAffordance256(t,'Medium',w))throw Error('Actual casket cell refused: '+(conflict??'Medium substrate absent'));
   for(const s of w.structures)if(footprintCells(s).some(p=>p.x===c.x&&p.z===c.z)&&!removals.has(s.id)){const plan=planVanishGeneratedAncient256(w,cell,true);if(!plan)throw Error('Actual casket encounters an unsupported edifice owner');removals.set(s.id,plan);}
  }
+ if(w.schemaVersion===259?(!birth259||birth259.factions!==w.worldFactions):birth259!==undefined)throw Error('Actual schema259 ancient birth context required, never retrofit a prior person');
  let next=w.nextId;const pId=next++;
- const prepared=prepareFunctionalAncientHuman256({id:pId,nextId:next,cell:placement.casket.cell,tick:w.tick,contents:kind,random});next=prepared.nextId;
+ const prepared=prepareFunctionalAncientHuman256({id:pId,nextId:next,cell:placement.casket.cell,tick:w.tick,contents:kind,random,...birth259?{birth259}:{}});next=prepared.nextId;
  if(prepared.pawn.state==='dead'){if(!Number.isSafeInteger(next+1))throw Error('Held corpse Thing allocator exhausted');prepared.items.push(retainFreshCorpse(prepared.pawn,casketId,next++,w.tick));}
  const casket:AncientCasket256={id:casketId,kind:'ancient-cryptosleep-casket',...placement.casket.cell,orientation:placement.casket.orientation,footprint:'standard',factionId:null,casket:{revision:1,groupId,contentsKnown:false,heldAt:w.tick,humans:[prepared.pawn],animals:[],items:prepared.items}};
- if(!validAncientCasketBuilding256(casket,256,{width:w.width,height:w.height,nextId:next},w.tick))throw Error('Functional population created an invalid physical casket');
+ if(!validAncientCasketBuilding256(casket,w.schemaVersion,{width:w.width,height:w.height,nextId:next},w.tick))throw Error('Functional population created an invalid physical casket');
  // Half-eaten retains its distinct insect branch. These are actual independently
  // spawned originals, as in the source producer, not animals frozen in casket.
  const insects:WildAnimal[]=[];

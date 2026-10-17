@@ -1,3 +1,5 @@
+import {groupPlayerOwner256} from './group-route-interval-256.ts';
+import {validWorldAffiliationForeignKeys259} from './world-affiliation-259.ts';
 import {validGroupAdmission257} from './group-human-admission-257.ts';
 import {groupPhysicalPawns256} from './group-mixed-pawns-256.ts';
 import {validCaravanAnimalRecord256} from './group-animal-record-save-256.ts';
@@ -18,7 +20,7 @@ import {isColonist} from './affiliation.ts';
 import type {GroupMotionRuntime} from './group-motion-runtime.ts';
 type Away=Extract<GroupState,{members:unknown}>;
 const fail=(reason:string)=>({kind:'refused' as const,reason});
-const owner=(p:Pawn)=>isColonist(p)&&!p.prisoner&&!p.visitor;
+const owner=groupPlayerOwner256;
 const capableOwner=(p:Pawn)=>owner(p)&&p.state!=='downed'&&p.state!=='dead'&&!p.health?.death;
 const originals=(r:WorldGroupRecord):r is WorldGroupRecord&{state:Away}=>r.localMapId===null&&'members'in r.state;
 const origins=(r:WorldGroupRecord&{state:Away}):GroupMemberOrigin[]=>r.state.members.map(p=>{if(!r.state.reorganization)return {pawnId:p.id,originMapId:r.originMapId,context:r.context};const o=r.state.reorganization.memberOrigins.find(o=>o.pawnId===p.id);if(!o)throw Error('Missing original member context');return o;});
@@ -42,7 +44,7 @@ function planBase(root:CampaignState):GroupReorganizationPlan {
 }
 function knownOriginals(root:CampaignState,records:readonly (WorldGroupRecord&{state:Away})[]):boolean {
  const ids=new Set<number>(),piles=new Set<number>();
- for(const r of records){if(r.state.lastPersonalTick!==root.tick||!validGroupAdmission257(r.state.admission,root.schemaVersion)||!r.state.members.some(owner)||r.state.members.some(p=>!owner(p)||p.state==='dead'||p.health?.death||ids.has(p.id)||piles.has(p.id)||p.id<1||p.id>=root.nextId))return false;for(const p of r.state.members)ids.add(p.id);
+ for(const r of records){if(r.state.lastPersonalTick!==root.tick||!validGroupAdmission257(r.state.admission,root.schemaVersion)||!r.state.members.some(owner)||r.state.members.some(p=>!owner(p)&&!(root.schemaVersion===259&&r.state.admission?.revision===2&&p.worldAffiliation259?.guestStatus==='Prisoner'&&p.worldAffiliation259.hostFactionId===root.worldFactions?.playerFactionId&&validWorldAffiliationForeignKeys259(p,root.worldFactions))||p.state==='dead'||p.health?.death||ids.has(p.id)||piles.has(p.id)||p.id<1||p.id>=root.nextId))return false;for(const p of r.state.members)ids.add(p.id);
   const physical=groupPhysicalPawns256(r.state);for(const a of r.state.animalOwners?.members??[]){const origin=r.state.animalOwners!.origins.find(o=>o.pawnId===a.id);if(!origin||ids.has(a.id)||piles.has(a.id)||a.state==='dead'||a.health?.death||!validCaravanAnimalRecord256(a,{context:origin.context,tick:root.tick,nextId:root.nextId,version:root.schemaVersion}))return false;ids.add(a.id);}
   for(const p of r.state.items){const ownerId='pawnId'in p.owner?p.owner.pawnId:undefined;if(piles.has(p.id)||ids.has(p.id)||p.id<1||p.id>=root.nextId||ownerId===undefined||!physical.some(m=>m.id===ownerId))return false;piles.add(p.id);}
   if(!validCaravanBedrollPacks256(r.state.packed,physical,root.nextId,root.schemaVersion))return false;for(const p of r.state.packed??[]){if(ids.has(p.building.id)||piles.has(p.building.id))return false;piles.add(p.building.id);}
@@ -65,7 +67,7 @@ export function prepareGroupSplit(root:CampaignState,c:Extract<GroupReorganizati
   if(g.animalOwners){const old=g.animalOwners;sourceNext.animalOwners={...old,members:old.members.filter(a=>!animalIds.has(a.id)),origins:old.origins.filter(o=>!animalIds.has(o.pawnId)),order:old.order.filter(id=>!childIds.has(id))};}
   const childId=root.planet.nextGroupId,childNext:Away={id:childId,startedAt:root.tick,destination:g.tile,ledger:emptyGroupLedger(),provisions:newGroupProvisions(),freight:newGroupFreight(),phase:'stationary',members:childMembers,items:inventory.child,...inventory.childPacked.length?{packed:inventory.childPacked}:{},departedAt:root.tick,lastPersonalTick:root.tick,baseline:baseline(values(inventory.child)),entry:{...g.entry},tile:g.tile,route:[g.tile],segment:null,paused:false,stop:{kind:'stationary'},travel:{revision:1,tickDelta:0,forage:newGroupForageRevision256(values(inventory.child))}};
   if(g.animalOwners&&animalIds.size)childNext.animalOwners={revision:1,members:g.animalOwners.members.filter(a=>animalIds.has(a.id)),origins:g.animalOwners.origins.filter(o=>animalIds.has(o.pawnId)),order:g.animalOwners.order.filter(id=>childIds.has(id))};
-  if(g.admission)childNext.admission={revision:1};
+  if(g.admission)childNext.admission={revision:g.admission.revision};
   childNext.reorganization=openGroupReorganization({...childNext,items:values(inventory.child)},[],root.tick,childOrigins);childNext.reorganization.birth={kind:'split',parentGroupId:g.id,at:root.tick};
   if(!groupReorganizationBalance({...sourceNext,items:values(inventory.source)},sourceBalance,root.worldGroups.losses)||!groupReorganizationBalance({...childNext,items:values(inventory.child)},childNext.reorganization,[]))return fail('Bilan des deux moitiés non fermé.');
   const plan=planBase(root);plan.inventory=inventory;plan.nextThingId=inventory.nextId;plan.nextRng=inventory.rng;plan.receipts=inventory.receipts;plan.changes.push({record:r,beforeState:g,signature:JSON.stringify(g),next:sourceNext});plan.created.push({...r,state:childNext,localMapId:null});plan.survivors=[g.id,childId];return {kind:'ready',plan};
@@ -76,6 +78,7 @@ export function prepareGroupMerge(root:CampaignState,c:Extract<GroupReorganizati
   if(!validGroupReorganizationCommand(c,root.schemaVersion)||!root.worldMaps||!root.worldGroups||!root.planet)return fail('Commande de fusion invalide.');
   const records=c.groupIds.map(id=>root.worldGroups!.groups.find(r=>r.state.id===id));if(records.some(r=>!r||!originals(r)))return fail('Une caravane sélectionnée n’existe plus.');
   const selected=records as (WorldGroupRecord&{state:Away})[];if(!knownOriginals(root,selected))return fail('Propriétaires de caravanes invalides.');
+  if(selected.some(r=>r.state.admission?.revision===2)&&selected.some(r=>r.state.admission?.revision!==2||r.state.reorganization?.memberOrigins.some(o=>o.enteredAtAbsCore===undefined)||r.state.animalOwners?.origins.some(o=>o.enteredAtAbsCore===undefined)))return fail('La fusion mélange des entrées mondiales historiques sans reçu : aucune date n’est reconstruite ni aucun bien déplacé.');
   const pending=[...selected],plan=planBase(root);
   while(pending.length){
    const first=pending.shift()!,cohort=[first];
@@ -85,7 +88,7 @@ export function prepareGroupMerge(root:CampaignState,c:Extract<GroupReorganizati
    const absorbed=cohort.filter(r=>r!==survivor),members=[...survivor.state.members,...absorbed.flatMap(r=>r.state.members)],items=[...survivor.state.items,...absorbed.flatMap(r=>r.state.items)],incoming=absorbed.flatMap(r=>r.state.items);
    const balance=withGroupExchange(opening(root,survivor),'received',incoming);const packed=[...(survivor.state.packed??[]),...absorbed.flatMap(r=>r.state.packed??[])];balance.packed=exchangeGroupPackedBalance256(balance.packed,'received',absorbed.flatMap(r=>r.state.packed??[]));if(balance.packed===undefined)delete balance.packed;balance.memberOrigins=[...origins(survivor),...absorbed.flatMap(origins)];
    const next:Away={...survivor.state,members,items,...packed.length?{packed}:{},reorganization:balance};
-   if(cohort.some(r=>r.state.admission))next.admission={revision:1};
+   if(cohort.some(r=>r.state.admission))next.admission={revision:cohort.every(r=>r.state.admission?.revision===2)?2:1};
    const animalMembers=[...survivor.state.animalOwners?.members??[],...absorbed.flatMap(r=>r.state.animalOwners?.members??[])];
    if(animalMembers.length||survivor.state.animalOwners||absorbed.some(r=>r.state.animalOwners)){const old=survivor.state.animalOwners;next.animalOwners={revision:1,members:animalMembers,origins:[...old?.origins??[],...absorbed.flatMap(r=>r.state.animalOwners?.origins??[])],order:[...groupPhysicalPawns256(survivor.state),...absorbed.flatMap(r=>groupPhysicalPawns256(r.state))].map(p=>p.id),...!next.travel?{interval:old?.interval??{revision:1,startedAt:root.tick,atCore:root.tick*10,tickDelta:0}}:{}};}
    if(!groupReorganizationBalance(next,balance,root.worldGroups.losses))return fail('Bilan de fusion non fermé.');

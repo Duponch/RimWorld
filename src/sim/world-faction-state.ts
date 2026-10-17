@@ -3,7 +3,7 @@ import type {PackedFurniture} from './furniture-rules.ts';
 import type {WorldFactionDef256,WorldFactionRelationKind256} from './world-faction-catalog.ts';
 import type {CoreNoExpansionIdeo256,CoreNoExpansionIdeoIds256} from './world-faction-no-expansion-ideo-256.ts';
 export const WORLD_FACTION_SCHEMA=256;
-export interface WorldFactionInstance256 {id:number;def:WorldFactionDef256;hidden:boolean;name:string;randomKey:number;colorFromSpectrum:number;leaderOwnerId:number|null;noExpansionIdeo?:CoreNoExpansionIdeo256}
+export interface WorldFactionInstance256 {lifecycle259?:{revision:1;defeated:boolean;temporary:boolean};id:number;def:WorldFactionDef256;hidden:boolean;name:string;randomKey:number;colorFromSpectrum:number;leaderOwnerId:number|null;noExpansionIdeo?:CoreNoExpansionIdeo256}
 export interface WorldFactionRelation256 {aId:number;bId:number;goodwill:number;kind:WorldFactionRelationKind256}
 /** Physical owner, not a name-only leader or a second copy of a local Pawn. */
 export interface WorldFactionLeader256 {factionId:number;clock:number;pawn:Pawn;items:MaterialPile[];packed:PackedFurniture[]}

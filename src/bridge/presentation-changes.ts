@@ -45,7 +45,7 @@ export class PresentationChanges {
         p.mental?.crisis&&'targetId' in p.mental.crisis?p.mental.crisis.targetId:undefined,
         p.mental?.crisis?.kind==='tantrum'?p.mental.crisis.attempted:undefined,
         p.meleeThreat,p.bombRefuge,p.bedId,p.social?.last,p.romanceMemories,p.familyBereavement,p.deathThoughts,
-        p.jobId,p.faction,p.prisoner?.capturedAt,p.prisoner?.mode,p.prisoner?.lastChatTick,p.prisoner?.escape,p.ward?.kind,p.ward?.patientId,p.ward?.phase,p.hostilityResponse,p.draft?.holdFire,p.tactics?.targetId,p.tactics?.post,p.flee,p.melee,p.stun,
+        p.jobId,p.faction,p.worldAffiliation259,p.prisonerHistory259?.capturedAt,p.prisoner?.capturedAt,p.prisoner?.mode,p.prisoner?.lastChatTick,p.prisoner?.escape,p.ward?.kind,p.ward?.patientId,p.ward?.phase,p.hostilityResponse,p.draft?.holdFire,p.tactics?.targetId,p.tactics?.post,p.flee,p.melee,p.stun,
         // Human Busy clocks pay every Core. Publish real orders/phases and
         // stun boundaries, leaving continuous watermarks to periodic snapshots.
         p.shooting?[p.shooting.order,p.shooting.stance?[p.shooting.stance.phase,p.shooting.stance.startedAtCore,p.shooting.stance.weaponItem,p.shooting.stance.phase==='aim'?p.shooting.stance.targetStartedDowned:undefined]:null]:undefined,

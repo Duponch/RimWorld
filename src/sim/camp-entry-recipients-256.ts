@@ -12,12 +12,13 @@ function append(a:readonly unknown[],n:number):boolean {return Array.isArray(a)&
 export function campAnimalArrayWritable256(wildlife:object):boolean {return write(wildlife,'animals');}
 export function campRuntimeSlotWritable256(root:CampaignState):boolean {return !!root.worldMaps&&write(root.worldMaps,'generationRuntime');}
 type BedAlias256={actor:Pawn|WildAnimal;alias:{bedId:number|null;slot?:0|1}};
-export function actualNewCampEntryRecipients256(root:CampaignState,body:LocalMapState,g:AwayGroup,select:boolean,center:PreparedCampCenterEntry256,areas:readonly MapAreaEntryPlan[]|undefined,beds:readonly BedAlias256[]):boolean {
+export function actualNewCampEntryRecipients256(root:CampaignState,body:LocalMapState,g:AwayGroup,select:boolean,center:PreparedCampCenterEntry256,areas:readonly MapAreaEntryPlan[]|undefined,beds:readonly BedAlias256[],settlement=false):boolean {
  const maps=root.worldMaps,groups=root.worldGroups;
  if(!maps||!groups||!append(maps.sites,1)||!write(maps,'nextMapId')||!write(root,'nextId')||!write(root,'rng')||!campRuntimeSlotWritable256(root)||!write(groups,'groups')||groups.selectedGroupId===g.id&&!write(groups,'selectedGroupId')||select&&!write(maps,'selectedMapId'))return false;
  // events.push and possible splice(0, excess) both write the real array.
  const events=groups.events;if(!append(events,1))return false;
  if(events.length+1>80)for(let i=0;i<events.length;i++){const d=Object.getOwnPropertyDescriptor(events,String(i));if(!d||!Object.hasOwn(d,'value')||!d.writable||!d.configurable)return false;}
+ if(settlement&&(!write(maps,'nextLordId')||!write(maps,'nextAncientCasketGroupId')||[...body.piles,...g.items,...body.packed,...g.packed??[]].some(p=>!write(p,'owner'))))return false;
  if(!body.wildlife||!campAnimalArrayWritable256(body.wildlife)||!append(body.pawns,g.members.length)||!append(body.piles,g.items.length)||g.packed&&!append(body.packed,g.packed.length)||body.jobs.length)return false;
  // The wildlife array is replaced by the private phase's fresh map result,
  // so its former array is not an append recipient.

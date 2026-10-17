@@ -49,7 +49,7 @@ export function validateProjectedActorBeds256(w:World,views:readonly {world:Worl
   for(const row of views)if(!row.referencesOnly){everyHumanPawnOwner(row.world,(p,kind)=>{add(p,kind==='map'?activeMapId:null);return true;});
    const group=row.world.group as typeof row.world.group&{animalOwners?:import('./group-animal-state-256.ts').GroupAnimalOwners256};for(const a of group?.animalOwners?.members??[])add(a,null);}
   for(const a of terminalAnimals)add(a,null);
-  for(const row of w.worldPawns?.owners??[])add(row.actor,null);
+  for(const row of w.worldPawns?.owners??[])if(row.kind!=='mechanical')add(row.actor,null);
   const expected=actualBedReferences256(activeMapId??0,w.structures,w.packed);
   for(const actual of expected){const row=refs.find(r=>r.id===actual.id);if(!row||row.mapId!==actual.mapId||row.slots!==actual.slots||row.animal!==actual.animal)return ['Projected bed metadata disagrees with the actual local original.'];}
   if(activeMapId!==null&&refs.some(ref=>ref.mapId===activeMapId&&!expected.some(actual=>actual.id===ref.id)))return ['Projected active bed has no local original.'];

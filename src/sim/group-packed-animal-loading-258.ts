@@ -7,7 +7,7 @@ import {groupPackedMassGrams258} from './group-freight-contract-258.ts';
 import {groupCaravanPileMass256} from './group-caravan-mass-256.ts';
 import {groupHumanHandler257} from './group-human-admission-257.ts';
 import {pawnBody} from './health-rules.ts';
-import {groupAnimalReason256} from './group-animal-formation-256.ts';
+import {groupAnimalReason256,groupAnimalFormationReason259} from './group-animal-formation-256.ts';
 import {animalCaravanCapacityGrams256} from './group-animal-capacity-256.ts';
 import {animalBody} from './wildlife-health.ts';
 import {slaughterContact} from './animal-slaughter.ts';
@@ -16,7 +16,7 @@ export const GROUP_PACK_HANDOFF_CORE_258=25;
 /** One minified wrapper: stackLimit1, VolumePerUnit1. CarryingCapacity75 is
  * quantity/volume for the existing human body, never a75kg mass allowance. */
 export const groupPackHandler258=(p:Pawn):boolean=>groupHumanHandler257(p)&&Math.round(75*pawnBody(p).capacities.manipulation)>=1;
-export const usableGroupPackAnimal258=(w:World,a:WildAnimal,preparing=false):boolean=>!groupAnimalReason256(w,a,preparing)&&a.state!=='downed'&&animalBody(a).capacities.moving>0&&animalCaravanCapacityGrams256(a)>0;
+export const usableGroupPackAnimal258=(w:World,a:WildAnimal,preparing=false):boolean=>!(preparing?groupAnimalReason256(w,a,true):groupAnimalFormationReason259(w,a))&&a.state!=='downed'&&animalBody(a).capacities.moving>0&&animalCaravanCapacityGrams256(a)>0;
 export function selectedGroupPackAnimal258(w:World,g:PreparingGroup,id:number):WildAnimal|undefined {
  const row=g.animalPreparation?.lines.find(l=>l.animalId===id&&l.mode==='lead'),a=w.wildlife?.animals.find(a=>a.id===id);return row&&a&&usableGroupPackAnimal258(w,a,true)?a:undefined;
 }

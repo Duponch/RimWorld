@@ -1,3 +1,4 @@
+import {bindBornHumanFaction259} from './world-affiliation-259.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {materializeStartingCandidate,type StartingCandidateDescriptor} from './starting-candidates.ts';
 import {validStartingOriginalRequest256,type StartingOriginalRequest256} from './starting-original-request-256.ts';
@@ -23,20 +24,21 @@ const attachedWorlds=new WeakMap<World,StartingOriginalRoster256>();
 const owners=new WeakMap<StartingOriginalRoster256,RosterOwner256>();
 /** These are ACTUAL pre-map headers/owners from the world draft, not a local
  * World with fabricated cells. Caller owns the unpublished creation operation. */
-export interface StartingRosterBirthContext256 {nextId:number;factions:WorldFactionRegistry256;relationships?:RelationshipState;knownPeople:ReadonlyMap<number,RelationshipPerson>;knownThingIds:ReadonlySet<number>;context:WorldGroupRecord['context'];absoluteCore:number}
+export interface StartingRosterBirthContext256 {version?:256|257|258|259;nextId:number;factions:WorldFactionRegistry256;relationships?:RelationshipState;knownPeople:ReadonlyMap<number,RelationshipPerson>;knownThingIds:ReadonlySet<number>;context:WorldGroupRecord['context'];absoluteCore:number}
 /** Adapted constructor, called ONCE per final chooser entry before terrain.
  * Hash birth channels are the existing delivered model. No Rand counter is
  * manufactured, and this is explicitly NOT the complete Core PawnGenerator. */
 export function constructDeliveredStartingOriginalRoster256(request:StartingOriginalRequest256,input:StartingRosterBirthContext256):StartingOriginalRoster256 {
  if(!validStartingOriginalRequest256(request)||!Number.isSafeInteger(input.nextId)||input.nextId<1||!Number.isSafeInteger(input.nextId+8)||!Number.isSafeInteger(input.absoluteCore)||input.absoluteCore<0||!plainWorldPawnData256(input.context))throw Error('Invalid actual initial roster frontier');
+ const version=input.version??256;
  const player=input.factions.factions.find(f=>f.id===input.factions.playerFactionId);if(player?.def!=='PlayerColony')throw Error('Actual PlayerColony faction is required');
  const bySerial=new Map<number,StartingOriginal256>();let nextId=input.nextId;
  // UI reordering cannot allocate a different identity. Earlier chooser rerolls
  // are descriptors in this adapted model, not unrecorded physical births.
  for(const d of request.roster.slice().sort((a,b)=>a.serial-b.serial)){
   if(input.knownThingIds.has(nextId))throw Error('Initial roster allocator collides with a true existing Thing');
-  const pawn=materializeStartingCandidate(request.seed,d,nextId++,0,0,256),entry:StartingOriginal256=Object.freeze({serial:d.serial,descriptor:Object.freeze({...d}),pawn,items:[],packed:[]});
-  const c={...input.context,tick:0,nextId};const errors=[...validateDetachedPawnRecordShape(pawn as unknown as Record<string,unknown>,c,256,0),...validatePawnHealthRecord(pawn,{...c,schemaVersion:256})];if(errors.length)throw Error('Adapted original constructor refused: '+errors[0]);bySerial.set(d.serial,entry);
+  const pawn=materializeStartingCandidate(request.seed,d,nextId++,0,0,version);if(!bindBornHumanFaction259({schemaVersion:version,worldFactions:input.factions},pawn,player.id))throw Error('Actual starting faction binding failed');const entry:StartingOriginal256=Object.freeze({serial:d.serial,descriptor:Object.freeze({...d}),pawn,items:[],packed:[]});
+  const c={...input.context,tick:0,nextId};const errors=[...validateDetachedPawnRecordShape(pawn as unknown as Record<string,unknown>,c,version,0),...validatePawnHealthRecord(pawn,{...c,schemaVersion:version})];if(errors.length)throw Error('Adapted original constructor refused: '+errors[0]);bySerial.set(d.serial,entry);
  }
  const ordered=request.roster.map(d=>bySerial.get(d.serial)!),selected=ordered.slice(0,3),reserves=ordered.slice(3),allocated=new Map(ordered.map(e=>[e.serial,e.pawn.id]));
  // Read only the existing originals' ages; this helper accepts identity/age

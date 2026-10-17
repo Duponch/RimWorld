@@ -34,3 +34,6 @@ export function worldFactionPigment256(def:WorldFactionDef256,spectrum:number):n
  const i=Object.keys(WORLD_FACTION_DEFINITIONS_256).indexOf(def),base=PIGMENTS[Math.max(0,i-2)%PIGMENTS.length]!,t=Math.max(0,Math.min(1,spectrum));
  const channel=(shift:number)=>Math.round(((base>>>shift)&255)*(.84+.16*t));return channel(16)<<16|channel(8)<<8|channel(0);
 }
+
+/** Core FactionDefs inheritance, read17Oct2026. Definition facts only. */
+export const WORLD_FACTION_TECH_LEVEL_259:Readonly<Record<WorldFactionDef256,number>>=Object.freeze({"PlayerColony":4,"PlayerTribe":2,"OutlanderCivil":4,"OutlanderRough":4,"TribeCivil":2,"TribeRough":2,"TribeSavage":2,"Pirate":5,"Mechanoid":6,"Insect":1,"Ancients":5,"AncientsHostile":5});

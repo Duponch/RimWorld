@@ -20,6 +20,9 @@ Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` auto
 
 ## Méthode de livraison
 
+**V414 qualifié par reprises, schéma 259 :** [Captifs, retraits et réinstallation](docs/gameplay/caravan-owners-v414.md). Vrais retraits et arrivée3408, installation UI250² puis recharge complète exacte ; captif formé/annulé1807 et dossier/recharge exacts par reprise sans rejeu. Caissons, souvenirs et biens conservés ; rouges et pression mémoire restent nommés. Non publié, aucune clôture des fondations. Reformation/rencontres et écarts générateur taille/saison/température/faune encore à fermer.
+
+
 **V413 qualifié, schéma 258 :** [Fret et meubles minifiés](docs/gameplay/group-freight-v413.md). 59cas/11fichiers acquis par reprises ; contact/attente25Core, même lit50kg/médicaments vers animal, départ303/recharge exacte304. Ancien257 strict puis numéroseul258, rouges conservés. Publication regroupée différée, propriétaires terminaux/reformation/rencontres encore ouverts ; aucun gain FPS ni clôture des fondations.
 
 **V412 qualifié, schéma257 :** [Formation depuis le travail et portage humain](docs/gameplay/group-admission-v412.md). Arêtes et tâches libérées transactionnellement ; même patient porté, annulation/recharge exacte au62, vrai départ343/recharge344. 48cas/8fichiers acquis par reprises, présentation163,045s ; rouges conservés, aucun gain FPS démontré. Migration256 stricte toutes cartes puis numéro seul. Captifs/fret complet/propriétaires terminaux restent ouverts ; publication regroupée différée, aucune clôture des fondations.

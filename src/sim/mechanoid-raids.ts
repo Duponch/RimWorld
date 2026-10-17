@@ -1,3 +1,4 @@
+import {actualMechanicalBirthFaction259} from './mechanoid-world-faction-259.ts';
 import { captureStandability } from './furniture-travel.ts';
 import { raidEntries,atMapEdge } from './raid-space.ts';
 import { raidRandom } from './raid-state.ts';
@@ -23,7 +24,8 @@ export function chooseMechanoidOpportunity(w:World,points:number,random:{rng:num
   return chooseMechanoidComposition(points,random,w.schemaVersion>=197&&!!policy.ranged);
 }
 export function createMechanoidRaid(w:World,composition:MechanoidRaidComposition,random:{rng:number},sites=raidEntries(w,random.rng,composition.roster.length)):MechanoidRaidGroup|null {
-  const s=w.raids,count=composition.roster.length;
+  const s=w.raids,count=composition.roster.length,worldFaction259=w.schemaVersion>=259?actualMechanicalBirthFaction259(w.worldFactions):undefined;
+  if(w.schemaVersion>=259&&!worldFaction259)return null;
   if(w.schemaVersion<194||!s?.mechanoid||s.profile!=='cassandra-raids-v1'||!Number.isSafeInteger(w.tick*10+14999)||s.active||s.mechActive||!sites||sites.length!==count
     ||!Number.isSafeInteger(count)||count<1||!validMechanoidComposition(composition,w.schemaVersion>=197&&!!s.mechanoid.ranged)
     ||!Number.isSafeInteger(s.serial+1)||!Number.isSafeInteger(w.nextId+count)
@@ -39,7 +41,7 @@ export function createMechanoidRaid(w:World,composition:MechanoidRaidComposition
     used.add(key);
   }
   const draft={rng:random.rng},delayCore=5000+Math.floor(raidRandom(draft)*10000),id=s.serial+1;
-  const generated:Mechanoid[]=sites.map((c,i)=>({id:w.nextId+i,mechKind:composition.roster[i]!,...c,state:'idle',
+  const generated:Mechanoid[]=sites.map((c,i)=>({id:w.nextId+i,mechKind:composition.roster[i]!,...c,state:'idle',...worldFaction259?{worldFaction259:{...worldFaction259}}:{},
     path:[],heading:0,moveCooldown:0,planCooldown:0,raid:{group:id,goal:null}}));
   const group:MechanoidRaidGroup={id,startedAt:w.tick,members:generated.map(m=>m.id),lost:[],phase:'staging',
     stage:{point:{...sites[0]!},activatedAtCore:w.tick*10,delayCore},composition:{budget:composition.budget,roster:[...composition.roster]}};

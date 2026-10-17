@@ -261,11 +261,12 @@ export function validateWorld(input: unknown): string[] {
  * Reuse the complete local-schema guard without synthesizing a campaign,
  * colony, group or registry. This never authorizes save/load or adoption;
  * those still require the complete registered campaign validator above. */
-export function validateGeneratedLocalMap256(input:unknown,context:{readonly calendarOrigin:number}):string[] {
+export function validateGeneratedLocalMap256(input:unknown,context:{readonly calendarOrigin:number;readonly settlement?:true}):string[] {
   try {
     if(!record(input)||!isSchema256Or257(input.schemaVersion)||!record(input.planet)||input.planet.revision!==3
       ||!record(input.site)||input.site.revision!==3||Object.hasOwn(input,'worldMaps')||Object.hasOwn(input,'worldGroups')||!context||!Number.isSafeInteger(context.calendarOrigin))return ['Expected an unpublished geographic local-map candidate with its actual campaign clock.'];
-    return validateSchema(input,input.schemaVersion as 256|257|258,false,undefined,context);
+    if(context.settlement&&(Number(input.schemaVersion)<259||input.width!==250||input.height!==250||['scenario','expeditionSite','startingArrival'].some(k=>Object.hasOwn(input,k))))return ['A non-starting settlement must have its actual new geographic body, without arrival or Camp provenance.'];
+    return validateSchema(input,input.schemaVersion as 256|257|258|259,false,undefined,context);
   }catch{return ['Invalid unpublished geographic local-map candidate.'];}
 }
 function validateSharedCampaign(root:CampaignState):string[] {const view=emptyCampaignOwner(root);brandCampaignContext(view,root);return validateCampaignSharedFields(view);}
@@ -283,7 +284,7 @@ function validateCampaignSchema(input:unknown,version:Parameters<typeof validate
     if(!validLocalRoadInfoCampaignRaw256(input,version))return ['Invalid original road namespace.'];
     if(!validLocalGeyserCampaignRaw256(input,version))return ['Invalid original geyser namespace.'];
     if(!validAncientShrineWarningCampaignRaw256(input,version))return ['Invalid original ancient shrine warning namespace.'];
-    if(version>=255){const errors=validateRegisteredCampaign(input,(local,ids)=>validateSchema(local,version,true,ids),validateSharedCampaign);if(!errors.length&&version>=256)errors.push(...validateCampaignActorBeds256(input as CampaignState));return errors;}
+    if(version>=255){const errors=validateRegisteredCampaign(input,(local,ids,later)=>validateSchema(local,version,true,ids,undefined,later),validateSharedCampaign);if(!errors.length&&version>=256)errors.push(...validateCampaignActorBeds256(input as CampaignState));return errors;}
     if(!validSecondarySiteShape(input,version))return ['Invalid or future second-site authority.'];
     const homeIds=new Set<number>(),errors=validateSchema(input,version,true,homeIds);
     if(errors.length||!record(input))return errors;
@@ -294,7 +295,7 @@ function validateCampaignSchema(input:unknown,version:Parameters<typeof validate
     return errors;
   }catch{return ['Invalid second-site records or owner namespace.'];}
 }
-function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250 | 251 | 252 | 253 | 254 | 255 | 256 | 257 | 258, relationshipContext = true,registeredIds?:Set<number>,generatedContext?:{readonly calendarOrigin:number}): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250 | 251 | 252 | 253 | 254 | 255 | 256 | 257 | 258 | 259, relationshipContext = true,registeredIds?:Set<number>,generatedContext?:{readonly calendarOrigin:number;readonly settlement?:true},registeredNonStartingSettlement=false): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(raw)) return ['World must be an object.'];
@@ -330,7 +331,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if (!integer(input.logisticsCursor, 0)) errors.push('Invalid logistics search cursor.');
   if (!validMapDimension(input.width) || !validMapDimension(input.height)) return [...errors, 'Invalid dimensions.'];
   if(!validScenario(input.scenario,version,input.width,input.height))errors.push('Invalid scenario provenance for schema.');
-  if(!validGameProfile(input.gameProfile,version,input.scenario,input.expeditionSite!==undefined))errors.push('Invalid game profile for schema.');
+  if(!validGameProfile(input.gameProfile,version,input.scenario,input.expeditionSite!==undefined,registeredNonStartingSettlement||generatedContext?.settlement===true))errors.push('Invalid game profile for schema.');
   if(!validSite(input.site,version,input.scenario as World['scenario'],input.expeditionSite!==undefined)||version>=256&&!validGeographicSiteBinding256(input as unknown as World))errors.push('Invalid local site provenance for schema.');
   if(!validSiteClimate(input.climate,version,input as unknown as World,generatedContext?.calendarOrigin))errors.push('Invalid site climate for schema.');
   const size = input.width * input.height;
@@ -1567,6 +1568,7 @@ export function deserializeCampaign(serialized: string): CampaignState {
     input.schemaVersion=257; // Every map/group stays literal: no admission, actor, permission, task, owner, ID or random draw is created.
   }
   if(record(input)&&input.schemaVersion===257){const old=validateCampaignSchema(input,257);if(old.length)throw new Error('Invalid version257 save: '+old.join(' '));input.schemaVersion=258; /* No freight, package, receipt, opening, owner or random draw is created. */}
+  if(record(input)&&input.schemaVersion===258){const old=validateCampaignSchema(input,258);if(old.length)throw new Error('Invalid version258 save: '+old.join(' '));input.schemaVersion=259; /* No affiliation, prisoner history, admission2, exit receipt, lifecycle or random draw is offered. */}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;
   if(hasLoadedRoot(world))consolidateLooseRocks(world);

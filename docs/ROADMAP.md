@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V414 — schéma 259, qualifié par reprises :** [Captifs, retraits et réinstallation](gameplay/caravan-owners-v414.md) : vrais retraits, arrivée3408 puis installation UI250²/recharge exacte avec les originaux ; formation/annulation du captif1807 et dossier/recharge contrôlés sans rejeu. Rouges et pression mémoire conservés. Reformation, rencontres et écarts générateur restent ouverts ; aucune clôture ni publication, production V403 inchangée.
+
 **V413 — schéma 258, qualifié :** [Fret existant et meubles minifiés](gameplay/group-freight-v413.md) : mêmes biens, chargement physique vers les animaux et anciens contrats conservés. 59 cas ciblés acquis par reprises ; même fret humain/animal, départ réel303 et recharge UI exacte304. Fondations ouvertes, aucune publication ; production V403 inchangée. Les états suivants sont historiques.
 
 **17 octobre 2026 — V412 qualifié, schéma 257.** [Formation et portage humain](gameplay/group-admission-v412.md) : libération du travail après les arêtes réelles, même passager libre porté au contact, annulation/recharge exacte au62, départ343/recharge344. 48cas/8fichiers acquis par reprises et contrôle de fin de tick social ; présentation163,045s, rouges conservés. Publication différée, captifs/fret complet et autres fondations à terminer ; aucun gain FPS démontré.

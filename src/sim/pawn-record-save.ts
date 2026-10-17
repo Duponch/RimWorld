@@ -1,3 +1,5 @@
+import {validWorldAffiliationFields259,validWorldAffiliationForeignKeys259} from './world-affiliation-259.ts';
+import {validPrisonerStateRecord259} from './prisoner-save.ts';
 import {validNativeHumanField256,validHumanAgeForPawn256} from './native-human-identity-256.ts';
 import {validHiveDefeatMemory256} from './cave-hive-memories-256.ts';
 import {validAncientOpeningField256} from './ancient-casket-state-256.ts';
@@ -57,7 +59,7 @@ const integer = (value: unknown, min: number, max = Number.MAX_SAFE_INTEGER): va
 const bounded = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100;
 const oneOf = (value: unknown, values: string[]): boolean => typeof value === 'string' && values.includes(value);
 
-export type PawnRecordContext=Pick<World,'width'|'height'|'tick'|'nextId'>;
+export type PawnRecordContext=Pick<World,'width'|'height'|'tick'|'nextId'>&Partial<Pick<World,'worldFactions'>>;
 export function validatePawnRecordShape(item:Record<string,unknown>,world:World,version:number,validationTick=world.tick):string[] {return pawnRecordShape(item,world,version,validationTick,false);}
 /** Personal record only: detached owners cannot acquire local bed/area authorities. */
 export function validateDetachedPawnRecordShape(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick=context.tick):string[] {return pawnRecordShape(item,context,version,validationTick,true);}
@@ -66,6 +68,8 @@ export function validateAwayPawnRecordShape(item:Record<string,unknown>,context:
 function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,version:number,validationTick:number,detached:boolean,awayAreaIds?:ReadonlySet<number>):string[] {
   const input=world as unknown as Record<string,unknown>;
   const legacyV2=version===2, size=world.width*world.height, errors:string[]=[];
+  if(!validWorldAffiliationFields259(item,version)||Object.hasOwn(item,'prisonerHistory259')&&!validPrisonerStateRecord259(item.prisonerHistory259,version,input as unknown as World,true))return ['Invalid or future actual guest affiliation/history.'];
+  if((!detached||Object.hasOwn(world,'worldFactions'))&&!validWorldAffiliationForeignKeys259(item as unknown as import('./types.ts').Pawn,world.worldFactions))return ['Invalid actual Pawn faction/host foreign key.'];
   if(!validNativeHumanField256(item,version))errors.push('Invalid or future actual native human identity.');
   if(!validHiveDefeatMemory256(item,version,validationTick))errors.push('Invalid or future Hive defeat memory.');
   if(!validArrivalRotation256(item,version))errors.push('Invalid or future arrival rotation.');
@@ -87,7 +91,7 @@ function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,ver
   if(!validRoomExperience(item,version,validationTick))errors.push('Invalid or future room experience.');
   if(version>=90?(typeof item.beauty!=='number'||!Number.isFinite(item.beauty)||item.beauty<0||item.beauty>100):item.beauty!==undefined)errors.push('Invalid or future beauty need.');
   for(const field of ['apparelPolicyId','apparelAutomation','nextApparelCheckAt'])if(version<90&&item[field]!==undefined)errors.push('Legacy pawn contains apparel policy state.');
-  if(!validPrisonerPawnShape(item,version,input as unknown as World))errors.push('Invalid prisoner, warden or recruitment shape for schema.');
+  if(!validPrisonerPawnShape(item,version,input as unknown as World,detached))errors.push('Invalid prisoner, warden or recruitment shape for schema.');
   if(!validHumanBodyShape(item.body,version,validationTick,item.health)||!validBurialTaskShape(item.burial,version))errors.push('Invalid body or burial shape.');
   const art=(item.priorities as Record<string,unknown>)?.art;if(version>=104?!integer(art,0,4):art!==undefined)errors.push('Invalid art priority for schema.');
   const clean=(item.priorities as Record<string,unknown>)?.clean;if(version>=89?!integer(clean,0,4):clean!==undefined)errors.push('Invalid cleaning priority for schema.');

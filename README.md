@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V414 — schéma 259, en qualification :** [Captifs, retraits et réinstallation](docs/gameplay/caravan-owners-v414.md) : propriétaires conservés et nouvelle colonie250² sans rejouer le départ. Les contrôles composés sont en cours, avec un raccord thermique hors carte encore à fermer. Aucun achèvement des fondations ni publication ; production V403 inchangée.
+
 **V413 — schéma 258, qualifié :** [Fret existant et meubles minifiés](docs/gameplay/group-freight-v413.md) : mêmes biens, chargement physique vers les animaux et anciens contrats conservés. 59 cas ciblés acquis par reprises ; même fret humain/animal, départ réel303 et recharge UI exacte304. Fondations ouvertes, aucune publication ; production V403 inchangée. Les états suivants sont historiques.
 
 **V412 — schéma 257 :** [Formation et portage humain](docs/gameplay/group-admission-v412.md) qualifiés par reprises : travail libéré après les arêtes, même passager porté, annulation/recharges exactes et vrai départ. Captifs, fret complet et autres fondations restent ouverts. Non publié, productionV403 inchangée. Les états suivants sont historiques.

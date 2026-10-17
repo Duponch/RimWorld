@@ -29,7 +29,10 @@ export function advanceCaravanOtherFoodAges256(w:World,g:AwayGroup):void {
  if(expired.length){g.reorganization=clone.reorganization;const remove=new Set(expired);g.items=g.items.filter(p=>!remove.has(p));for(const [item,n]of units)w.spoiled[item]=(w.spoiled[item]??0)+n;}
 }
 export function advanceGroupAnimalPersonal256(w:World,g:AwayGroup,clinicalRest:(a:WildAnimal)=>{resting:boolean;carried:boolean}):void {
- if(!g.travel&&!g.animalOwners)return;advanceCaravanOtherFoodAges256(w,g);
+ if(!g.travel&&!g.animalOwners)return;
+ // Admission2 already settled this same interval before human clinical death.
+ // Historical owners retain their previous ordering and pay this pass here.
+ if(w.schemaVersion!==259||g.admission?.revision!==2)advanceCaravanOtherFoodAges256(w,g);
  const env=groupAnimalEnvironment256(w,g);advanceCaravanAnimalBiology256(w,g,{...env,random:()=>healthRandom(w),clinicalRest,originForInventory:id=>g.animalOwners?.origins.find(o=>o.pawnId===id)??g.reorganization?.memberOrigins.find(o=>o.pawnId===id),retire:(a,o)=>retireCaravanAnimal256(w,g,a,o)});
 }
 export function advanceGroupAnimalMeters256(g:AwayGroup,coreTick:number,marks:GroupRestMarks256):void {for(const a of g.animalOwners?.members??[])if(a.ageTicks>0)advanceCaravanAnimalNeed150256(a,coreTick,marks.effectiveness(a.id,coreTick));}

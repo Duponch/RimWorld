@@ -42,14 +42,8 @@ export function validApparelShape(p:Record<string,unknown>,version:number):boole
     &&(a.forced===undefined||p.owner.type==='apparel');
 }
 export function validateApparel(world:World,version:number=world.schemaVersion):string[] {
-  const errors:string[]=[],byPawn=new Map<number,MaterialPile[]>();
-  for(const pile of world.piles)if(pile.owner.type==='apparel') {
-    const id=pile.owner.pawnId,pawn=world.pawns.find(p=>p.id===id);
-    if(!pawn||!isApparelItem(pile.item)||pile.kind!=='apparel'||!pile.apparel||pile.apparel.forbidden||version>=90&&pile.apparel.material!==APPAREL[pile.item].material){errors.push('Invalid worn apparel owner.');continue;}
-    const worn=byPawn.get(pawn.id)??[];
-    if(worn.some(p=>conflictsWith(p,pile)))errors.push('Incompatible worn apparel.');
-    worn.push(pile);byPawn.set(pawn.id,worn);
-  }
+  const errors:string[]=[];
+  errors.push(...validateApparelOwners259(world.pawns,world.piles,version));
   for(const pawn of world.pawns){
     const t=pawn.equipmentTask;if(t?.action!=='wear'&&t?.action!=='remove')continue;
     const pile=world.piles.find(p=>p.id===t.itemId);if(!pile||!isApparelItem(pile.item)){errors.push('Missing apparel task target.');continue;}
@@ -76,3 +70,14 @@ export function validateApparel(world:World,version:number=world.schemaVersion):
   }
   return errors;
 }
+
+/** Same actual worn-item rules, no active map task is fabricated. */
+export function validateApparelOwners259(pawns:readonly {id:number}[],piles:readonly MaterialPile[],version:number):string[]{const errors:string[]=[],byPawn=new Map<number,MaterialPile[]>();
+  for(const pile of piles)if(pile.owner.type==='apparel') {
+    const id=pile.owner.pawnId,pawn=pawns.find(p=>p.id===id);
+    if(!pawn||!isApparelItem(pile.item)||pile.kind!=='apparel'||!pile.apparel||pile.apparel.forbidden||version>=90&&pile.apparel.material!==APPAREL[pile.item].material){errors.push('Invalid worn apparel owner.');continue;}
+    const worn=byPawn.get(pawn.id)??[];
+    if(worn.some(p=>conflictsWith(p,pile)))errors.push('Incompatible worn apparel.');
+    worn.push(pile);byPawn.set(pawn.id,worn);
+  }
+return errors;}

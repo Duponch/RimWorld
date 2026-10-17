@@ -9,7 +9,7 @@ import {unpublishedAncientGeneration256} from './ancient-generation-frontier-256
 import {CORE_MONUMENT_CATALOGUE_256,type MonumentBuildable256} from './ancient-monument-plan-256.ts';
 import {spawnAncientTempleEnvelope256,spawnResolvedAncientTempleEnvelope256} from './ancient-temple-envelope-256.ts';
 import {spawnAncientShrineWarning256} from './ancient-shrine-warning-256.ts';
-import {generateActualAncientTempleLoot256,spawnActualAncientTempleLoot256} from './ancient-temple-loot-spawn-256.ts';
+import {generateActualAncientTempleLoot256,spawnActualAncientTempleLoot256,type NonStartingTempleBirth256} from './ancient-temple-loot-spawn-256.ts';
 import {planAncientShrinesGroup256,ancientShrineExecutionOrder256,type AncientSharedPodContents256,type AncientShrinePlacement256} from './ancient-shrine-group-plan-256.ts';
 import {spawnGeneratedAncientFloor256} from './ancient-generated-floors-256.ts';
 import {captureActualLocalDistricts256} from './actual-local-districts-256.ts';
@@ -21,7 +21,7 @@ import type {StartingOriginalRoster256} from './starting-original-roster-256.ts'
 import type {AncientHumanNameWorking256} from './ancient-human-name-256.ts';
 import type {World} from './types.ts';
 
-export interface ActualTempleOwners256 {lordIds?:{nextId:number};working?:HiveAdjacentRuntime256;casketGroupIds:AncientCasketGroupIds256;absoluteCore?:number;roster?:StartingOriginalRoster256;humanNames?:AncientHumanNameWorking256}
+export interface ActualTempleOwners256 {lordIds?:{nextId:number};working?:HiveAdjacentRuntime256;casketGroupIds:AncientCasketGroupIds256;absoluteCore?:number;roster?:StartingOriginalRoster256;humanNames?:AncientHumanNameWorking256;nonStartingBirth?:NonStartingTempleBirth256}
 export type ActualTempleThreat256={kind:'mechs'|'hives';count:number}|null;
 const podTypes=['ancient-friendly','ancient-incapped','ancient-half-eaten','ancient-hostile','slave'] as const;
 function frontier(w:World,owners:ActualTempleOwners256){return {nextThingId:w.nextId,nextCasketGroupId:owners.casketGroupIds.nextId};}
@@ -66,13 +66,15 @@ function resolveActualShrine256(w:World,placement:AncientShrinePlacement256,shar
  // Human population is the explicitly authored existing-NPC adaptation.
  // The same real casket child, original identity and branch remain; no native
  // prefix/replayed receipt or ready-but-empty holder is admitted.
- spawnFunctionalAncientCasket256(w,placement,contents,groupId,casketId,random);
+ const bornDef=contents==='ancient-hostile'?'AncientsHostile':'Ancients',birth=w.schemaVersion===259?w.worldFactions!.factions.find(f=>f.def===bornDef):undefined;
+ if(w.schemaVersion===259&&!birth)throw Error('Selected future ancient birth lacks its actual faction instance');
+ spawnFunctionalAncientCasket256(w,placement,contents,groupId,casketId,random,birth?{factions:w.worldFactions!,factionId:birth.id}:undefined);
 }
 /** The BaseGen LIFO order is explicit and finite: casket group children first,
  * then the already chosen threat, finally the real allocated loot Things. */
 export function resolveActualAncientTempleInterior256(w:World,rect:AncientRect256,owners:ActualTempleOwners256,random:WorldGenerationRandom):void {
  admitted(w,owners,random);
- const loot=generateActualAncientTempleLoot256(w,random);
+ const loot=generateActualAncientTempleLoot256(w,random,owners.nonStartingBirth);
  if(loot.status==='blocked'){
   // The parent returns the real partial MakeThing STOP frontier without
   // committing a ready plan. This candidate is being discarded, but its
@@ -89,7 +91,7 @@ export function resolveActualAncientTempleInterior256(w:World,rect:AncientRect25
   for(const placement of ancientShrineExecutionOrder256(plan))resolveActualShrine256(w,placement,plan.sharedContents,plan.groupId,owners,random);
  }
  if(threat){if(!owners.lordIds||!owners.working)throw Error('Selected Temple threat lacks its true group/static owners');spawnFunctionalTempleThreat256(w,rect,threat,random,{lordIds:owners.lordIds,working:owners.working});}
- spawnActualAncientTempleLoot256(w,loot,rect,random);
+ spawnActualAncientTempleLoot256(w,loot,rect,random,owners.nonStartingBirth);
 }
 function finishEnvelope(w:World,envelope:ReturnType<typeof spawnAncientTempleEnvelope256>,owners:ActualTempleOwners256,random:WorldGenerationRandom):'committed' {
  // The warning pair is created AFTER the interior symbol is pushed but BEFORE
@@ -112,6 +114,7 @@ export function spawnResolvedActualAncientTemple256(w:World,rect:AncientRect256,
  * dependency above. It never catches/refilters/rerolls a selected branch. */
 export function generateActualShrines750256(w:World,context:AncientPlacementContext256,random:WorldGenerationRandom,owners:ActualTempleOwners256){
  admitted(w,owners,random);
+ if(context.startingMap?owners.nonStartingBirth!==undefined:owners.nonStartingBirth===undefined)throw Error('Actual initial/later Temple750 birth lane differs from map generation context');
  return scatterAncient750256(w,'shrines',context,random,(rect,same)=>spawnActualAncientTemple256(w,rect,owners,same));
 }
 export const ACTUAL_SHRINES_750_256=Object.freeze({generate:generateActualShrines750256});

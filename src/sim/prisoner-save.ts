@@ -51,17 +51,24 @@ export function validPrisonBreakBindings(w:World,version:number):boolean {
     &&w.pawns.every(p=>![p.ward,p.feed,p.tend,p.surgery,p.rescue].some(t=>t&&active.has(t.patientId)));
 }
 
-/** Optional V86 records stay absent on older schemas, before migration. */
-export function validPrisonerPawnShape(p:Record<string,unknown>,version:number,w:World):boolean {
-  if(version<86)return p.prisoner===undefined&&p.ward===undefined&&p.recruitment===undefined;
-  const s=p.prisoner;
-  if(s!==undefined&&(!object(s)||!keys(s,['capturedAt','initialResistance','resistance','mode','lastChatTick','chatDay','chatCount','rng','escape',...(version>=202?['releasedAt']:[]),...(version>=204?['breakout']:[])])
+/** Same dossier shape, also used for the real dormant former-prisoner record.
+ * Detached conversation history may predate today; no chat is replayed. */
+export function validPrisonerStateRecord259(s:unknown,version:number,w:World,detached=false):boolean {
+  if(!object(s)||!keys(s,['capturedAt','initialResistance','resistance','mode','lastChatTick','chatDay','chatCount','rng','escape',...(version>=202?['releasedAt']:[]),...(version>=204?['breakout']:[])])
     ||!integer(s.capturedAt,0,w.tick)||!integer(s.initialResistance,7,12)||typeof s.resistance!=='number'||!Number.isFinite(s.resistance)||s.resistance<0||s.resistance>s.initialResistance
-    ||typeof s.mode!=='string'||!['maintain','reduce','recruit',...(version>=202?['release']:[])].includes(s.mode)||!integer(s.rng,1,0xffffffff)||!integer(s.chatDay,0,prisonDay(w))||s.chatDay!==prisonDay(w)||!integer(s.chatCount,0,2)
+    ||typeof s.mode!=='string'||!['maintain','reduce','recruit',...(version>=202?['release']:[])].includes(s.mode)||!integer(s.rng,1,0xffffffff)||!integer(s.chatDay,0,prisonDay(w))||(!detached&&s.chatDay!==prisonDay(w))||!integer(s.chatCount,0,2)
     ||s.lastChatTick!==undefined&&!integer(s.lastChatTick,s.capturedAt,w.tick)||s.chatCount>0&&s.lastChatTick===undefined
     ||s.escape!==undefined&&(!cell(s.escape,w)||!edge(s.escape,w))
     ||s.releasedAt!==undefined&&(!integer(s.releasedAt,s.capturedAt,w.tick)||s.mode!=='release'||s.lastChatTick!==undefined&&Number(s.lastChatTick)>s.releasedAt)
-    ||!validBreakout(s.breakout,version,s.capturedAt,w)))return false;
+    ||!validBreakout(s.breakout,version,s.capturedAt,w))return false;
+  return !detached||!object(s)||s.escape===undefined&&(!object(s.breakout)||s.breakout.active===undefined);
+}
+
+/** Optional V86 records stay absent on older schemas, before migration. */
+export function validPrisonerPawnShape(p:Record<string,unknown>,version:number,w:World,detached259=false):boolean {
+  if(version<86)return p.prisoner===undefined&&p.ward===undefined&&p.recruitment===undefined;
+  const s=p.prisoner;
+  if(s!==undefined&&!validPrisonerStateRecord259(s,version,w,version===259&&detached259&&Object.hasOwn(p,'worldAffiliation259')))return false;
   const active=version>=204&&object(s)&&object(s.breakout)&&s.breakout.active!==undefined;
   const colony=object(s)&&isColonist(p as unknown as Pawn);
   if(colony&&(version<213||!['maintain','release'].includes(String(s.mode))||['escape','releasedAt','breakout'].some(k=>Object.hasOwn(s,k))
