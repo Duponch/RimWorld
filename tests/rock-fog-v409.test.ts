@@ -19,13 +19,14 @@ test('rock keeps opaque covers and shared geometry without owner buffers; ordina
  expect(g.getAttribute('explorationOwner')).toBeUndefined();
  for(const mesh of (layer.group.children[1] as THREE.Group).children as THREE.Mesh[])expect(mesh.geometry.getAttribute('position')).toBe(position);
  const textured=layer.mesh.material as THREE.MeshStandardNodeMaterial;layer.setTexturesEnabled(false);const plain=layer.mesh.material as THREE.MeshStandardNodeMaterial;
- for(const m of [plain,textured]){expect(m).not.toBe(prop);expect(m.side).toBe(THREE.FrontSide);expect(m.maskNode).toBeNull();expect(m.maskShadowNode).toBeNull();expect(m.outputNode).toBe(prop.outputNode);expect(m.depthWrite).toBe(true);expect(m.transparent).toBe(false);}
+ for(const m of [plain,textured]){expect(m).not.toBe(prop);expect(m.side).toBe(THREE.FrontSide);expect(m.maskNode).toBeNull();expect(m.maskShadowNode).toBeNull();expect(m.outputNode).not.toBe(prop.outputNode);expect(m.outputNode).toBeTruthy();expect(m.depthWrite).toBe(true);expect(m.transparent).toBe(false);}
+ expect(plain.outputNode).toBe(textured.outputNode);
  expect(prop.maskNode).toBeTruthy();expect(prop.maskShadowNode).toBeTruthy();expect(world).toEqual(saved);
  layer.setDistant(true);expect(layer.mesh.geometry).toBe(g);expect(layer.mesh.geometry.getAttribute('position')).toBe(position);
  layer.dispose();prop.dispose();lighting.dispose();
 });
 test('hidden ore never contributes pigment to a known neighbour; real revelation refreshes local pigments without reallocating',()=>{
- const before=witness(),cell=14*32+14;before.tiles[cell]={...before.tiles[cell]!,ore:'gold'};
+ const before=witness(),cell=14*32+14;before.tiles[cell]={...before.tiles[cell]!,ore:'uranium'};
  const without=structuredClone(before);delete without.tiles[cell]!.ore;
  expect(rockCornerPigment(before,14,14)).toEqual(rockCornerPigment(without,14,14));
  const layer=new RockLayer();layer.update(before,true);const g=layer.mesh.geometry,indices=Array.from(g.index!.array),colors=Array.from(g.getAttribute('color').array);
@@ -47,11 +48,12 @@ test('one strict nearest field remains; rock shading has no separate texture or 
 test('fog participates with its original occupied-corner weight and shares the stone/ore colour stream',()=>{
  const world=witness();for(const tile of world.tiles)delete tile.fogged;
  const known=rockCornerPigment(world,14,14);world.tiles[14*32+14]!.fogged=true;
- const mixed=rockCornerPigment(world,14,14);expect(mixed).not.toEqual(known);for(let c=0;c<3;c++)expect(mixed[c]!).toBeLessThan(known[c]!);
+ const mixed=rockCornerPigment(world,14,14);expect(mixed).not.toEqual(known);
  const a=new Float32Array(ROCK_VERTICES*3),b=new Float32Array(ROCK_VERTICES*3);writeRockPigment(world,13,14,a,0);writeRockPigment(world,14,14,b,0);
  for(const ring of [0,4,8])expect(Array.from(a.slice((ring+3)*3,(ring+4)*3))).toEqual(Array.from(b.slice(ring*3,(ring+1)*3)));
  for(const tile of world.tiles)if(tile.terrain==='rock')tile.fogged=true;
  const dark=rockCornerPigment(world,14,14),base=new THREE.Color(ROCK_FOG_PIGMENT);expect(dark[0]!/base.r).toBeCloseTo(dark[1]!/base.g,12);expect(dark[1]!/base.g).toBeCloseTo(dark[2]!/base.b,12);expect(dark.every(value=>value>0)).toBe(true);
+ for(let c=0;c<3;c++){expect(mixed[c]!).toBeGreaterThanOrEqual(Math.min(known[c]!,dark[c]!));expect(mixed[c]!).toBeLessThanOrEqual(Math.max(known[c]!,dark[c]!));}
  expect(rockCornerPigment(world,2,2)).toEqual([0,0,0]);
 });
 

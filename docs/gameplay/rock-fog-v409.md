@@ -26,6 +26,18 @@ L’inspection d’une pile utilise l’offre Autoriser/Interdire et sa commande
 
 Rapports finaux sous `tmp/world-foundations/rock-caps-v409/native-04-pigment/` et `game-native-03-pigment/`, logs `tmp/validation-runs/rock-fog-pigment-v410-*`. Le nom privéV410 ne crée pas un nouveau lot fonctionnel : il désigne l’itération corrective deV409. Sources et entrées servies figées, captures, rouges et exports conservés sous `tmp/`. Les contrôles généraux non affectés ne sont pas rejoués pour cette correction cosmétique. Revue indépendante statique sans anomalie bloquante. Pages final PASS5,571s ; documentation contrôlée. Comparaison supplémentaire sous `native-06-dark-ore-equivalence/`.
 
+## Correction complémentaire : éclairage des toits naturels
+
+Le test humain remplaçant temporairement le pigment caché par celui de l’or a révélé un défaut supplémentaire, indépendant du mélange des couleurs. Le champ d’éclairage inclut les toits naturels. Il assombrissait aussi la surface extérieure des massifs quand leurs facettes passaient sous la hauteur graphique des bâtiments : effet intérieur plein à2,7 et nul à2,82, alors que les caps rocheux traversent ces hauteurs. D’où les plages sombres malgré le pigment exact de l’or.
+
+Les premiers témoins de matériau n’appelaient pas `EnvironmentLighting.update` avec une couverture naturelle réelle. Ils vérifiaient le mélange et les masques, mais ne pouvaient pas fermer cette interaction. La validation visuelle avait donc été annoncée trop largement ; les anciennes captures et limites restent conservées.
+
+Les matériaux extérieurs des roches ont maintenant une variante d’éclairage qui ignore cette atténuation intérieure. Lumières locales et ombres ordinaires restent raccordées ; les autres matériaux, notamment le sol sous un toit, gardent leur traitement. Aucun changement de toit, de visibilité, de géométrie, de simulation ou de sauvegarde. Le test local en or reste temporaire et séparé du correctif ; il ne crée aucun gisement.
+
+Contrôles complémentaires :17cas/quatre fichiers PASS19,318s ; type PASS9,889s. Chrome/WebGPU PASS4,744s sur les vraies données de la carte250² au tick1037, dans un rendu isolé en lecture seule. Le champ est réellement actualisé, avec soleil, ombres et textures. Même massif et pigment or pour l’ancienne variante et la correction ; seule la composante graphique de couverture du champ est neutralisée pour le témoin, sans modifier le World. L’ancien rendu change85026pixels quand la couverture est neutralisée ; le rendu corrigé n’en change aucun. Quatre captures, dont avant/après inspectées ROOT, erreurs GPU/console[]. Le choix de ce cas diagnostique ne qualifie pas une campagne ni les performances générales.
+
+Rapports `tmp/world-foundations/rock-roof-exterior/native-01/`, manifeste d’entrée et sources conservés. Les contrôles précédents de visibilité et de conservation restent acquis dans leur périmètre ; aucune campagne ni corpus inchangé rejoué.
+
 ## Reprise des fondations
 
 Le premier essai d’entréeCamp a rencontré un défaut distinct : une palette de pluie6×16384 dépasse la limite de texture8192 du périphérique demandé. Le dernier export complet avant cette entrée reste le vrai1037 ; aucun export complet post-entrée ni boucle gagnée annoncé. La correction de capacité est préparée pour reprendre ce parcours, séparément du futur diagnostic global de performances.

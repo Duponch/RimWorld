@@ -17,7 +17,8 @@ export class EnvironmentLighting {
   private readonly sample = texture(this.map);
   private readonly configured = new WeakSet<MeshStandardNodeMaterial>();
   private readonly shade = this.createShade(positionWorld, normalWorldGeometry);
-  private createShade(position:Node,normal:Node):Node {return Fn(() => {
+  private readonly rockShade = this.createShade(positionWorld, normalWorldGeometry,true);
+  private createShade(position:Node,normal:Node,exteriorRock=false):Node {return Fn(() => {
     const p = vec3(position as ReturnType<typeof vec3>).toVar(), n = vec3(normal as ReturnType<typeof vec3>).toVar(), result = output.toVar();
     // Most forest fragments have no local source/roof, or lie above its height.
     // Keep this a uniform-driven branch: no new material/pipeline on ignition.
@@ -35,7 +36,10 @@ export class EnvironmentLighting {
         .and(q.x.lessThan(this.size.x.sub(.5))).and(q.y.lessThan(this.size.y.sub(.5)));
       // Roof tops and canopies above house height retain the outdoor lighting.
       const below = float(1).sub(smoothstep(WORLD_SCALE.wallHeight - .1, WORLD_SCALE.wallHeight + .02, p.y)).mul(within.select(1, 0));
-      const covered = roof.mul(below), warm = glow.mul(below);
+      // A solid massif is the exterior of its natural roof, even where its
+      // authored facets dip below house height. Keep local lamps and ordinary
+      // scene shadows, but never shade its surface as an interior below itself.
+      const covered = exteriorRock?float(0):roof.mul(below), warm = glow.mul(below);
       const facets = n.y.abs().mul(.3).add(.7);
       const fill = vec3(.11, .13, .18).mul(covered).add(vec3(1.35, .76, .32).mul(warm)).mul(facets);
       result.assign(vec4(output.rgb.mul(mix(1, .12, covered)).add(diffuseColor.rgb.mul(fill)), output.a));
@@ -51,7 +55,7 @@ export class EnvironmentLighting {
     this.exploration.configure(material);
     if (this.configured.has(material)) return;
     if (material.outputNode) throw new Error('Environment lighting requires an unclaimed material output.');
-    material.outputNode = this.shade; this.configured.add(material);
+    material.outputNode = material.userData.explorationOpaqueRock?this.rockShade:this.shade; this.configured.add(material);
   };
   /** Decorative blades borrow the horizontal surface's local-light response.
    * Their authored root precedes sway; geometric blade faces must not attenuate
