@@ -17,6 +17,8 @@ const bodies:Readonly<Record<string,string>>={
   'haul-chunks':'<path d="m8 21 39 4-5 19H16z" fill="#bc813a"/><path d="m47 25 5-12h8M7 22l6 3M18 44h24"/><circle cx="19" cy="49" r="6" fill="#62778c"/><circle cx="40" cy="49" r="6" fill="#62778c"/><path d="M10 12h23m-7-6 7 6-7 6" stroke="#2b9b78"/>',
   uninstall:'<path d="m24 30 16-8 17 8v23l-17 8-16-8z" fill="#bb8548"/><path d="m24 30 16 8 17-8M40 38v23M33 26l17 8"/><path d="M6 12h14v24m-7-7 7 7 7-7" stroke="#3e9bff" stroke-width="5"/>',
   deconstruct:`<path d="m13 53 7 4 29-32-7-7z" fill="${wood}"/><path d="m30 13 12-9 15 16-12 11z" fill="${metal}"/>`,
+  allow:'<circle cx="32" cy="32" r="25" fill="#fff7e9"/><path d="m17 32 10 11 21-23" stroke="#2fc98e" stroke-width="7"/>',
+  forbid:'<circle cx="32" cy="32" r="25" fill="#fff7e9"/><path d="M14 50 50 14" stroke="#ff6b5e" stroke-width="7"/>',
   cancel:'<path d="m16 9 16 16L48 9l8 8-16 16 16 16-8 8-16-16-16 16-8-8 16-16L8 17z" fill="#ff6b5e"/>',
   home:'<path d="m5 31 27-23 27 23-6 6-4-3v23H15V34l-4 3z" fill="#efc05b"/><path d="M27 57V41h12v16" fill="#fff7e9"/>',
   clock:'<circle cx="32" cy="32" r="25" fill="#fff7e9"/><path d="M32 15v18l14 8" stroke="#3e9bff" stroke-width="5"/>',

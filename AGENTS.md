@@ -20,6 +20,8 @@ Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` auto
 
 ## Méthode de livraison
 
+**Correctif urgent V409, schéma256 inchangé :** [Massifs opaques et inspection des piles](docs/gameplay/rock-fog-v409.md) qualifiés : sommets opaques et lisière peinte progressive sans fuite de minerai, inspection Autoriser/Interdire raccordée. Reprendre ensuite les cartes temporaires ; aucun domaine monde terminé, productionV403 inchangée.
+
 - Cadrer une fois chaque boucle : résultat joueur, quelques invariants, fichiers concernés et critères de fin. Réutiliser les helpers et résultats existants. Pas de nouveau protocole de preuve pour chaque incident, portion ou checkpoint.
 - Comparer régulièrement règles ET expérience utilisateur au RimWorld Vanilla courant : recherche Internet ciblée, sources primaires et captures/vidéos identifiées. Réutiliser les références datées tant que la règle ne change pas ; distinguer fait vérifié, adaptation et inconnu. Ne pas copier de code ou d’assets propriétaires dans le produit.
 - Agents sur tâches indépendantes bornées (recherche, revue, code), ROOT seul pour contrôles lourds séquentiels. Geler les sources servies avant le navigateur ; les agents peuvent préparer des copies privées pendant les contrôles.

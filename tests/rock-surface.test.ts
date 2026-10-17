@@ -10,7 +10,7 @@ test('terrain and rocks share sparse tile changes without rescanning unchanged c
   before.tiles=before.tiles.map(()=>({terrain:'soil'}));
   for(let z=12;z<=18;z++)for(let x=12;x<=18;x++)before.tiles[z*32+x]={terrain:'rock'};
   const material=new THREE.MeshStandardNodeMaterial();
-  const sparse=new RockLayer(material),reference=new RockLayer(material);
+  const sparse=new RockLayer(),reference=new RockLayer();
   sparse.update(before,true);reference.update(before,true);
   const changedIndex=15*32+15;
   const compare=(world:typeof before,expectedCells:number)=>{
@@ -64,7 +64,7 @@ test('continuous faceted cells: shared seams, winding, local excavation/restorat
   }
   const points=[0,1,2].map(i=>new THREE.Vector3().fromArray(a,faces[i]!*3));
   expect(points[1]!.clone().sub(points[0]!).cross(points[2]!.clone().sub(points[0]!)).y).toBeGreaterThan(0);
-  const material=new THREE.MeshStandardNodeMaterial(),layer=new RockLayer(material),before=JSON.stringify(world);
+  const material=new THREE.MeshStandardNodeMaterial(),layer=new RockLayer(),before=JSON.stringify(world);
   layer.update(world,true);expect(JSON.stringify(world)).toBe(before);
   const geometry=layer.mesh.geometry,position=geometry.getAttribute('position') as THREE.BufferAttribute,index=geometry.index,original=Array.from(index!.array).slice(0,geometry.drawRange.count);
   const textured=layer.mesh.material;
@@ -73,8 +73,9 @@ test('continuous faceted cells: shared seams, winding, local excavation/restorat
   expect(geometry.getAttribute('uv')).toBeUndefined(); // position supplies painted coordinates without another buffer
   expect(localMaterials()).toEqual([textured,textured]);
   layer.setTexturesEnabled(false);
-  expect(layer.mesh.material).toBe(material);
-  expect(localMaterials()).toEqual([material,material]);
+  const plain=layer.mesh.material;
+  expect(plain).not.toBe(material);expect(plain).not.toBe(textured);
+  expect(localMaterials()).toEqual([plain,plain]);
   layer.setTexturesEnabled(true);
   expect(layer.mesh.material).toBe(textured);
   expect(localMaterials()).toEqual([textured,textured]);

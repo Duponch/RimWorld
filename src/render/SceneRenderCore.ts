@@ -280,7 +280,7 @@ export class SceneRenderCore {
   protected readonly crops = new CropLayer(this.staticMaterial,this.texturedStaticMaterial);
   protected readonly growing = new GrowingZoneLayer(this.boxes);
   protected readonly allowedAreaLayer=new AllowedAreaLayer(this.boxes);
-  protected readonly rocks = new RockLayer(this.staticMaterial,this.environmentLighting.configure);
+  protected readonly rocks = new RockLayer(this.environmentLighting.configure);
   protected readonly plants = new PlantClusterLayer(this.staticMaterial,this.texturedStaticMaterial,this.animationDetail);
   protected readonly designations:DesignationIconLayer;
   protected readonly daylight: DayNightLayer;

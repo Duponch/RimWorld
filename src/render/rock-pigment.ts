@@ -4,6 +4,7 @@ import type { World } from '../sim/types';
 import { noise } from './StaticGeometry';
 import { isRock } from './RockSurface';
 import { stoneColor } from './stone-palette';
+import { foggedCell256 } from '../sim/exploration-state-256';
 
 const color=new THREE.Color();
 
@@ -15,15 +16,19 @@ const color=new THREE.Color();
 export function rockCornerPigment(world:World,gx:number,gz:number):readonly [number,number,number] {
   const pushX=(noise(gx,gz,world.seed+829)-.5)*.7;
   const pushZ=(noise(gx,gz,world.seed+863)-.5)*.7;
-  let r=0,g=0,b=0,total=0;
+  let r=0,g=0,b=0,total=0,hasRock=false;
   for(const dx of [-1,0])for(const dz of [-1,0]) {
-    const x=gx+dx,z=gz+dz;if(!isRock(world,x,z))continue;
+    const x=gx+dx,z=gz+dz;if(!isRock(world,x,z))continue;hasRock=true;
+    // Unknown neighbours must not tint a discovered shared corner.
+    if(foggedCell256(world,z*world.width+x))continue;
     const tile=world.tiles[z*world.width+x]!;
     const weight=(1+(dx*2+1)*pushX)*(1+(dz*2+1)*pushZ);
     color.setHex(tile.ore?ORE_DEFINITIONS[tile.ore].color:stoneColor(tile.stone));
     r+=color.r*weight;g+=color.g*weight;b+=color.b*weight;total+=weight;
   }
-  if(!total)return [0,0,0];
+  // A soft painted edge can extend into an unknown cell. Give it neutral
+  // stone, never the hidden cell's actual stone/ore and never a black seam.
+  if(!total){if(!hasRock)return [0,0,0];color.setHex(stoneColor());r=color.r;g=color.g;b=color.b;total=1;}
   // Broad facet wash and small glints share the corner's identity too. A
   // neighbouring cell cannot create a different brightness at this seam.
   const wash=.96+noise(Math.floor(gx/3),Math.floor(gz/3),world.seed+211)*.08;

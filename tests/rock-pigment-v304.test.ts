@@ -32,7 +32,7 @@ test('boundary pigment blends occupied colours while empty and map-edge cells ca
 });
 
 test('sparse ore changes match full colour rebuild without touching topology or creating extra draws',()=>{
-  const before=scene(),material=new THREE.MeshStandardNodeMaterial(),sparse=new RockLayer(material),full=new RockLayer(material);
+  const before=scene(),material=new THREE.MeshStandardNodeMaterial(),sparse=new RockLayer(),full=new RockLayer();
   try{
     sparse.update(before,true);full.update(before,true);const geometry=sparse.mesh.geometry;
     const positions=Array.from(geometry.getAttribute('position').array),indices=Array.from(geometry.index!.array),children=(sparse.group.children[1] as THREE.Group).children.length;

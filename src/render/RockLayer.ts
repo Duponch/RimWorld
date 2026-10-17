@@ -5,6 +5,8 @@ import { writeRockPigment } from './rock-pigment';
 import { WORLD_SCALE } from '../world/scale';
 import { STONE_KINDS } from '../sim/geology';
 import { material } from './primitives';
+import { opaqueRockExplorationMaterial256 } from './ExplorationMask256';
+import { foggedCell256 } from '../sim/exploration-state-256';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { positionLocal, texture, varying, vec2 } from 'three/tsl';
 
@@ -29,8 +31,10 @@ export class RockLayer {
   private distant=false;
   private texturesEnabled=true;
   private readonly stonePaint=createStylizedSurfaceTexture('stone');
-  private readonly texturedMaterial=material(0xffffff,{vertexColors:true});
-  constructor(private readonly plainMaterial:THREE.Material,configure?: (material:THREE.MeshStandardNodeMaterial)=>void) {
+  // Clean dedicated materials: shared props already have exploration masks.
+  private readonly plainMaterial=opaqueRockExplorationMaterial256(material(0xffffff,{vertexColors:true}));
+  private readonly texturedMaterial=opaqueRockExplorationMaterial256(material(0xffffff,{vertexColors:true}));
+  constructor(configure?: (material:THREE.MeshStandardNodeMaterial)=>void) {
     // Coordinates come from the existing world-space position attribute, so
     // even a vast continuous cliff adds no UV buffer, vertices or draw calls.
     // The varying moves coordinate arithmetic out of the fragment stage.
@@ -40,7 +44,7 @@ export class RockLayer {
     // NodeMaterial applies vertexColors after colorNode; multiplying the
     // color attribute here too would darken the stone twice.
     this.texturedMaterial.colorNode=texture(this.stonePaint,paintedUv).rgb;
-    configure?.(this.texturedMaterial);
+    configure?.(this.plainMaterial);configure?.(this.texturedMaterial);
     this.mesh=new THREE.Mesh(new THREE.BufferGeometry(),this.texturedMaterial);
     this.mesh.name='Continuous rock surface';this.mesh.castShadow=true;this.mesh.receiveShadow=true;
     this.mesh.matrixAutoUpdate=false;
@@ -116,7 +120,8 @@ export class RockLayer {
       const i=inspect?inspect[n]!:n;
       const tile=world.tiles[i]!;
       const rock=tile.terrain==='rock'?(tile.ore?tile.ore==='machinery'?9:tile.ore==='gold'?10:tile.ore==='plasteel'?11:tile.ore==='uranium'?12:tile.ore==='jade'?13:8:tile.stone?2+STONE_KINDS.indexOf(tile.stone):1):0;
-      if(rock!==this.rockMask[i]) {changed.push(i);this.rockMask[i]=rock;}
+      const state=rock+(rock&&foggedCell256(world,i)?16:0);
+      if(state!==this.rockMask[i]) {changed.push(i);this.rockMask[i]=state;}
       if(rock&&!this.slots.has(i))this.slots.set(i,{slot:this.slots.size,indices:[]});
     }
     let reallocated=false;
@@ -146,5 +151,5 @@ export class RockLayer {
     }
     this.tiles=world.tiles;
   }
-  dispose():void {this.clearLocal();this.mesh.geometry.dispose();this.texturedMaterial.dispose();this.stonePaint.dispose();}
+  dispose():void {this.clearLocal();this.mesh.geometry.dispose();this.plainMaterial.dispose();this.texturedMaterial.dispose();this.stonePaint.dispose();}
 }
