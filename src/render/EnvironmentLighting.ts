@@ -51,7 +51,7 @@ export class EnvironmentLighting {
     this.exploration.configure(material);
     if (this.configured.has(material)) return;
     if (material.outputNode) throw new Error('Environment lighting requires an unclaimed material output.');
-    material.outputNode = material.userData.explorationOpaqueRock ? this.exploration.opaqueRockOutput(this.shade) : this.shade; this.configured.add(material);
+    material.outputNode = this.shade; this.configured.add(material);
   };
   /** Decorative blades borrow the horizontal surface's local-light response.
    * Their authored root precedes sway; geometric blade faces must not attenuate

@@ -26,7 +26,7 @@ Une exigence est fermée seulement avec règle primaire datée, implémentation 
 
 ## Étape actuelle
 
-[Correctif V409](../gameplay/rock-fog-v409.md) : les massifs inconnus restent opaques avec une lisière peinte progressive sans fuite de minerai ; inspection Autoriser/Interdire d’une pile raccordée. Le parcoursCamp a atteint une vraie tuile voisine avec les originaux, mais sa qualification complète reste ouverte après un défaut de capacité de palette de pluie. Aucun domaine monde terminé.
+[Correctif V409](../gameplay/rock-fog-v409.md) : les massifs inconnus restent opaques ; le brouillard participe au mélange des pigments et à la texture/éclairage rocheux existants, sans fuite de minerai. Le fondu superposé initial a été remplacé ; inspection Autoriser/Interdire d’une pile raccordée. Le parcoursCamp a atteint une vraie tuile voisine avec les originaux, mais sa qualification complète reste ouverte après un défaut de capacité de palette de pluie. Aucun domaine monde terminé.
 
 [Registre V407](../gameplay/world-maps-v407.md) qualifié localement au schéma255 : plusieurs cartes/groupes, colonies1–5, camp200², abandon sans racine obligatoire et reprise complète avec les mêmes propriétaires. Publication255 différée. Le développement courant conserve1colonie comme référence. Cette étape ne ferme pas le tableau : géographie/local256, animaux/cadence voyage, WorldPawns évolutifs et UI Vanilla complète restent ouverts. Les lignes « état initial » ci-dessus décrivent volontairement le point de départ, pas les acquis récents.
 

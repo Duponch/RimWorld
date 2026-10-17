@@ -1,6 +1,6 @@
 # Plan de développement
 
-**17octobre2026 — correctif V409, schéma256 inchangé.** [Massifs opaques et inspection des piles](gameplay/rock-fog-v409.md) : caps inconnus opaques et lisière peinte progressive sans révéler les minerais, vrai raccord Autoriser/Interdire d’une pile. Contrôles graphiques et sauvegarde en pause acquis ; voyages encore en cours, productionV403 inchangée.
+**17octobre2026 — correctif V409, schéma256 inchangé.** [Massifs opaques et inspection des piles](gameplay/rock-fog-v409.md) : sommets opaques et brouillard comme pigment dans le mélange, la texture et l’éclairage rocheux existants, sans révéler les minerais. Fondu ajouté initialement remplacé ; Autoriser/Interdire d’une pile raccordé. Contrôles graphiques et sauvegarde en pause acquis ; voyages encore en cours, productionV403 inchangée.
 
 **17octobre2026 — premier lot V408, schéma 256.** [Générateur géographique](gameplay/world-generation-v408.md) raccordé pour Atterrissage forcé250², vraie création par menus et recharge complète contrôlées. PNJ actuels et butin ancien adaptés ; voyages/cartes temporaires restent à terminer avant la démonstration finale. Premier lot main, aucune publicationV408 ; productionV403 inchangée.
 
