@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import type {WeaponItem} from './equipment-rules.ts';
 import { healthRandom } from './health.ts';
 import { reservedSource,refreshStock } from './materials.ts';
@@ -15,7 +16,7 @@ import type { Pawn,World } from './types.ts';
 /** One indivisible weapon becomes one metal pile only after every preflight passes. */
 export function finishSmelting(world:World,pawn:Pawn,bill:CookingBill,context:ProductionContext):boolean {
   const task=pawn.cooking;
-  if(world.schemaVersion<222||!task||task.recipe==='smelt-slag'&&world.schemaVersion!==256||!isSmeltingRecipe(task.recipe)||task.phase!=='work'||task.progress!==productionWorkTotal(task.recipe)
+  if(world.schemaVersion<222||!task||task.recipe==='smelt-slag'&&!isSchema256Or257(world.schemaVersion)||!isSmeltingRecipe(task.recipe)||task.phase!=='work'||task.progress!==productionWorkTotal(task.recipe)
     ||!validSmeltingIngredients(task.ingredients,task.recipe)||task.ingredients[0]!.stage!=='placed'||(pawn.motion?.end??0)>world.tick||pawn.stun||pawn.draft
     ||pawn.state==='dead'||pawn.state==='downed'||pawnBody(pawn).capacities.manipulation<=0||backgroundWorkRefusal(pawn,'craft'))return false;
   const station=world.structures.find(s=>s.id===task.stationId),ingredient=task.ingredients[0]!,weapon=world.piles.find(p=>p.id===ingredient.pileId);

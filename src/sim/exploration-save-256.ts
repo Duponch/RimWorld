@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Strict independent guards; ROOT owns RAW/Decoder insertion and ordering.
  * Header O(1), per-tile O(1); full wrapper is for full RAW/checkpoints only. */
 const record=(value:unknown):value is object=>!!value&&typeof value==='object'&&!Array.isArray(value)&&Object.getPrototypeOf(value)===Object.prototype;
@@ -9,13 +10,13 @@ export function validExplorationHeader256(raw:unknown,version:number):boolean {
  const site=data(raw,'site');if(!site.valid)return false;let site3=false;
  if(site.present&&record(site.value)){const revision=data(site.value,'revision');if(!revision.valid)return false;site3=revision.value===3;}
  if(version<=255||!site3)return !marker.present;
- if(version!==256||!marker.present||!record(marker.value))return false;
+ if(!isSchema256Or257(version)||!marker.present||!record(marker.value))return false;
  const revision=data(marker.value,'revision');return revision.valid&&revision.present&&revision.value===1&&Reflect.ownKeys(marker.value).length===1;
 }
 /** enabled must come from the already-validated actual map header. False and
  * undefined are not alternate serialized spellings of zero: absence alone. */
 export function validExplorationTile256(tile:unknown,version:number,enabled:boolean):boolean {
- if(!record(tile))return false;const fog=data(tile,'fogged');return fog.valid&&(!fog.present||version===256&&enabled&&fog.value===true);
+ if(!record(tile))return false;const fog=data(tile,'fogged');return fog.valid&&(!fog.present||isSchema256Or257(version)&&enabled&&fog.value===true);
 }
 export function validateExploration256(raw:unknown,version:number):string[] {
  if(!validExplorationHeader256(raw,version))return ['Invalid local exploration marker/version.'];

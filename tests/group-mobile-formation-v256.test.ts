@@ -41,12 +41,12 @@ test('a real new collective formation admits mobile sickness/low needs without c
  const result=f.startOne(52,2),record=f.w.worldGroups!.groups.find(g=>g.state.id===result.id)!,context=worldGroupContext(f.w,result.id);if(!context)throw Error('Actual preparing group context missing');
  expect('manifest'in record.state&&record.state.travelPreparation).toBe(true);expect(f.p.health).toBe(health);expect(groupMemberReason(context,f.p,true)).toBeUndefined();expect(JSON.stringify({health:f.p.health,age:f.p.age,rest:f.p.rest,hunger:f.p.hunger})).toBe(before);
  // Counterfactual absence fence: an engaged historical preparation cannot be
- // promoted merely because its World now has schema256. No migration is run.
- if(!('manifest'in record.state))throw Error('Actual new preparation missing');delete record.state.travelPreparation;
+ // promoted merely because its World now uses the current schema. No migration is run.
+ if(!('manifest'in record.state))throw Error('Actual new preparation missing');delete record.state.travelPreparation;delete record.state.admission;delete record.state.humanPreparation;
  expect(groupMemberReason(context,f.p,true)).toBeDefined();expect(f.p.health).toBe(health);expect(scoutPreparationReason(f.map,f.p)).not.toBeNull();
 });
 
-test('real outgoing work, physical vomiting and incoming patient reservations still refuse without effects',()=>{
+test('physical vomiting and incoming patient reservations refuse while outgoing releasable work remains prospective',()=>{
  const f=local();sick(f.p,f.w.tick);const h=f.p.health!,ill=h.cryptosleepSickness!;
  ill.vomit={remainingCore:100,cell:{x:f.p.x,z:f.p.z}};const vomiting=JSON.stringify(f.w);expect(groupMemberReason(f.map,f.p)).toContain('vomissement');expect(JSON.stringify(f.w)).toBe(vomiting);delete ill.vomit;
  // Enable the real patient provider first while doctors are still disabled,
@@ -61,15 +61,24 @@ test('real outgoing work, physical vomiting and incoming patient reservations st
  expect(doctor.tend).toBeUndefined();
  f.command({type:'order-tend',pawnId:doctor.id,patientId:f.p.id,queue:false});expect(doctor.tend?.patientId).toBe(f.p.id);
  expect(doctor.tend?.medicine?.sourcePileId).toBe(medicine.id);expect(doctor.tend?.medicine?.quantity).toBeGreaterThan(0);
- // Ordinary tending requires a bed-use task; admission sees that outgoing
- // activity before the still-real incoming reservation. Do not falsify sleep.
- const reserved=JSON.stringify(f.w);expect(groupMemberReason(f.map,f.p)).toContain('activité');expect(groupMemberReason(f.map,doctor)).toBeDefined();expect(JSON.stringify(f.w)).toBe(reserved);expect(f.p.health).toBe(h);
+ // The actual incoming service still reserves the patient, even when both
+ // people are selected. The doctor's outgoing ordinary task is now releasable
+ // by a later global preflight; this pure preview must not release it itself.
+ const reserved=JSON.stringify(f.w),tending=doctor.tend;
+ expect(groupMemberReason(f.map,f.p)).toContain('soin ou transport physique');
+ expect(groupMemberReason(f.map,doctor)).toBeUndefined();
+ const refusal=previewGroupFormation(f.map,[f.p.id,doctor.id],[],52);expect(refusal.ok).toBe(false);if(refusal.ok)throw Error('An actual incoming patient service was not refused');expect(refusal.reason).toContain('soin ou transport physique');
+ expect(doctor.tend).toBe(tending);expect(JSON.stringify(f.w)).toBe(reserved);expect(f.p.health).toBe(h);
 });
 
-test('a physically downed or terminal original remains ineligible; no human carrying or prisoner lane is offered',()=>{
+test('a downed free original is a prospective passenger requiring a mobile owner; a terminal original stays refused',()=>{
  const f=local();f.p.health=createMedicalRecord(f.w.tick);
  for(const part of ['left-arm','right-arm','left-leg','right-leg'] as const)addResolvedInjury(f.p.health,part,'bruise',16000,()=>.9);addResolvedInjury(f.p.health,'torso','bruise',8000,()=>.9);
- expect(medicalStatus(f.p.health)).toBe('downed');f.p.state='downed';let before=JSON.stringify(f.w);expect(groupMemberReason(f.map,f.p)).toBeDefined();expect(JSON.stringify(f.w)).toBe(before);
+ expect(medicalStatus(f.p.health)).toBe('downed');f.p.state='downed';let before=JSON.stringify(f.w);
+ expect(groupMemberReason(f.map,f.p)).toBeUndefined();
+ const alone=previewGroupFormation(f.map,[f.p.id],[],52);expect(alone.ok).toBe(false);if(alone.ok)throw Error('A patient alone was offered a caravan');expect(alone.reason).toContain('colon libre capable de marcher');
+ const carrier=f.map.pawns[1]!;expect(previewGroupFormation(f.map,[carrier.id,f.p.id],[],52).ok).toBe(true);
+ expect(JSON.stringify(f.w)).toBe(before);
  addResolvedInjury(f.p.health,'head','bruise',25000,()=>.9);expect(medicalStatus(f.p.health)).toBe('dead');f.p.state='dead';before=JSON.stringify(f.w);expect(groupMemberReason(f.map,f.p)).toBeDefined();expect(JSON.stringify(f.w)).toBe(before);
 });
 

@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {planVanishGeneratedAncient256} from './generated-ancient-vanish-256.ts';
 import {prepareWorldAnimalGeneration256} from './world-pawn-generation-256.ts';
 import {actualCampWorldPawnSituation256,actualCampWorldPawnWeight256} from './camp-world-pawn-authority-256.ts';
@@ -51,7 +52,7 @@ export interface CampGenerationSource256 {readonly source:string;readonly atTick
 export interface CampMapInputs256 {
  /** Plain captured shared fields, no World and no live forwarding writers.
   * Arrays/registries remain their original read-only references in generation. */
- readonly campaign:Pick<World,CampaignField> & {readonly schemaVersion:256;readonly planet:GeographicPlanetState;readonly worldFactions:NonNullable<World['worldFactions']>};
+ readonly campaign:Pick<World,CampaignField> & {readonly schemaVersion:256|257;readonly planet:GeographicPlanetState;readonly worldFactions:NonNullable<World['worldFactions']>};
  readonly tile:number;readonly size:200;readonly calendarOrigin:number;
  readonly daysPassedSinceSettle:number;
  readonly provenance:CampGenerationSource256;
@@ -89,7 +90,7 @@ export function preflightCampMap256(input:CampMapInputs256):void {
  const c=input?.campaign;
  if(!c||typeof c!=='object'||Array.isArray(c))throw Error('Missing captured campaign data');
  for(const key of Reflect.ownKeys(c)){const d=Object.getOwnPropertyDescriptor(c,key)!;if(typeof key!=='string'||!(CAMPAIGN_FIELDS as readonly string[]).includes(key)||!Object.hasOwn(d,'value')||!d.enumerable)throw Error('Camp shared input must be captured data, never a World/accessor');}
- if(c.schemaVersion!==256||input.size!==200||!Number.isSafeInteger(c.tick)||c.tick<0||!Number.isSafeInteger(c.tick*10)||!Number.isSafeInteger(c.nextId)||c.nextId<1||!Number.isSafeInteger(c.rng)||c.rng<1||c.rng>0xffffffff||!Number.isSafeInteger(input.calendarOrigin)||!sourced(input.provenance,input))throw Error('Missing captured Camp256 ownership/clock frontier');
+ if(!isSchema256Or257(c.schemaVersion)||input.size!==200||!Number.isSafeInteger(c.tick)||c.tick<0||!Number.isSafeInteger(c.tick*10)||!Number.isSafeInteger(c.nextId)||c.nextId<1||!Number.isSafeInteger(c.rng)||c.rng<1||c.rng>0xffffffff||!Number.isSafeInteger(input.calendarOrigin)||!sourced(input.provenance,input))throw Error('Missing captured Camp256 ownership/clock frontier');
  for(const key of ['schemaVersion','tick','rng','nextId','planet','worldFactions','foodPolicies','nextFoodPolicyId','apparelPolicies','nextApparelPolicyId','foodRules','restRules'] as const)if(!Object.hasOwn(c,key))throw Error('Captured campaign shared authority is incomplete');
  if(c.planet.revision!==3||!c.worldFactions||c.worldFactions.generatedAt>c.tick)throw Error('Missing actual geographic/faction authority');
  if(!c.worldPawns||c.worldPawns.atCore!==c.tick*10)throw Error('Actual Camp1200 WorldPawns owner is absent or stale');

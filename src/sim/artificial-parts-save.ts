@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Prospective direct tumor loss reuses MissingPart, never an installed prosthesis. */
 import {HUMAN_MODEL,modelHasPart,medicalModel} from './body-model.ts';
 import {isWithinPart} from './injury-rules.ts';
@@ -16,7 +17,7 @@ export function validArtificialParts(record:MedicalRecord,version:number,human=t
   const raw=record as unknown as Record<string,unknown>,value=raw.artificialParts;
   if(Object.hasOwn(raw,'artificialParts')&&(version<210||!human||!Array.isArray(value)||!value.length||value.length>4||!dense(value)))return false;
   const parts:ArtificialPart[]=value===undefined?[]:value as ArtificialPart[];
-  const nativeHuman=version===256&&human&&Object.hasOwn(raw,'humanHealthScale')&&validHumanHealthScaleHeader256(raw,version);
+  const nativeHuman=isSchema256Or257(version)&&human&&Object.hasOwn(raw,'humanHealthScale')&&validHumanHealthScaleHeader256(raw,version);
   if(parts.length&&record.infections!==undefined&&(!object(record.infections)||!Array.isArray(record.infections.cases)))return false;
   const sites=new Set<string>();
   for(const part of parts){

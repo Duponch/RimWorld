@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Actual KillFinalize leavings, reused by the ordinary structure transaction.
  * No recipe-quarter refund is invented for Hive or GlowPod. */
 import {addFilth} from './filth.ts';
@@ -9,7 +10,7 @@ import type {ItemId} from './items.ts';
 import type {Cell,MaterialPile,Structure,World} from './types.ts';
 export interface HiveKilledProduct256 {id:number;targetId:number|null;before:number;quantity:number;cell:Cell;forbidden:boolean}
 export function planCaveHiveKill256(w:World,s:Structure,at:Cell,rng:number,spawned:boolean){
- if(w.schemaVersion!==256||s.kind!=='insect-hive'&&s.kind!=='glow-pod')throw Error('Actual Hive/GlowPod kill required');
+ if(!isSchema256Or257(w.schemaVersion)||s.kind!=='insect-hive'&&s.kind!=='glow-pod')throw Error('Actual Hive/GlowPod kill required');
  if(!spawned)return {rng,drops:[],returned:new Map<ItemId,number>(),hiveProducts:[] as HiveKilledProduct256[],rubble:undefined};
  const view:World={...w,piles:w.piles.map(p=>({...p,owner:{...p.owner}})),filth:w.filth?{...w.filth,items:w.filth.items.map(f=>({...f}))}:undefined};
  // BuildingNaturalBase really leaves Filth_RubbleRock, including GlowPod.

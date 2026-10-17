@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {mentalState} from './mental-state.ts';
 import {interruptDraftWork} from './drafting.ts';
 import {cancelMelee} from './melee-state.ts';
@@ -17,13 +18,13 @@ export interface HumanConditionWander256 {revision:1;nextMoveOrderIsWait:boolean
 /** True NEW original construction only. TryStart/Load/Recover never call it:
  * primary TryStartMentalState and StopAll do not reset Pawn_MindState. */
 export function constructHumanConditionMind256(p:Pawn,version:number):void {
- if(version!==256||p.mental?.wander)throw Error('Clinical mind must be constructed once with the actual new human');
+ if(!isSchema256Or257(version)||p.mental?.wander)throw Error('Clinical mind must be constructed once with the actual new human');
  mentalState(p).wander={revision:1,nextMoveOrderIsWait:false};
 }
 export function hasHumanConditionMind256(p:Pawn):boolean {return p.mental?.wander?.revision===1;}
 export function validHumanClinicalConditionOwner256(p:Pawn,version:number,clock:number,spatial=false):boolean {
  const h=p.health;if(!h?.animalAgeConditions&&!h?.toxicBuildup&&p.mental?.crisis?.kind!=='confused-wander')return true;
- if(version!==256||!hasHumanConditionMind256(p)||!h||h.body||h.tick>clock)return false;
+ if(!isSchema256Or257(version)||!hasHumanConditionMind256(p)||!h||h.body||h.tick>clock)return false;
  for(const c of h.animalAgeConditions?.cases??[])for(const key of Object.keys(c.skillDecayRemainders??{}))if(!Object.hasOwn(p.skills,key))return false;
  const c=p.mental?.crisis;
  if(c?.kind==='confused-wander'&&(!spatial&&(c.target!==null||c.waitUntil>clock)||p.state==='dead'||p.state==='downed'))return false;

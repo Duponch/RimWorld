@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {validAncientCasketGroupIdsEnvelope256} from './ancient-casket-group-ids-256.ts';
 import {validWorldPawnOriginProjection256} from './world-pawn-origin-projection-256.ts';
 import {validRetiredCampMarkerProjection256} from './retired-camp-markers-256.ts';
@@ -48,7 +49,7 @@ function metadata(value:unknown,w:Pick<World,'schemaVersion'|'tick'|'nextId'|'pl
 }
 export function validRegisteredPresentation(w:World):boolean {if(!obj(w)||['worldMaps','worldGroups','secondarySite'].some(k=>Object.hasOwn(w,k))||!int(w.tick)||!int(w.nextId,1)||!metadata(w.campaignMap,w)||!people(w.campaignPeople,w.nextId,w.tick))return false;if(w.campaignMap!.revision!==2)return false;const known=new Set([...(w.pawns??[]).map(p=>p.id),...(w.campaignPeople??[]).map(p=>p.id)]);return w.campaignMap.lostMemories.every(m=>known.has(m.receiverId));}
 export function validCampaignSummary(value:unknown):value is CampaignSummary {
- if(!obj(value)||!(value.schemaVersion===255||value.schemaVersion===256)||!int(value.tick)||!int(value.nextId,1)||!int(value.rng,1,0xffffffff)||!Number.isSafeInteger(value.civilTick)||value.activeMapId!==null||!people(value.people,Number(value.nextId),Number(value.tick)))return false;
+ if(!obj(value)||!(value.schemaVersion===255||isSchema256Or257(value.schemaVersion))||!int(value.tick)||!int(value.nextId,1)||!int(value.rng,1,0xffffffff)||!Number.isSafeInteger(value.civilTick)||value.activeMapId!==null||!people(value.people,Number(value.nextId),Number(value.tick)))return false;
  const originField=Object.getOwnPropertyDescriptor(value,'worldPawnOrigins');
  if(originField?originField.enumerable!==true||!Object.hasOwn(originField,'value'):'worldPawnOrigins' in value)return false;
  const animalField=Object.getOwnPropertyDescriptor(value,'animalLosses');

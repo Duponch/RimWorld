@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {nativeWorldPawnOrderCurrent256,commitNativeWorldPawnOrder256} from './world-pawn-native-order-256.ts';
 import {registeredCampaign,registeredMap,registeredMapId} from './world-map-context.ts';
 import {GEOGRAPHIC_FAUNA_PROFILE_256} from './geographic-fauna-profile-256.ts';
@@ -36,7 +37,7 @@ export function prepareCampMapRemoved256(input:CampaignState,map:World,mapId:num
  const root=registeredCampaign(input),site=root.worldMaps?.sites.find(s=>s.id===mapId);
  const no=(reason:string):CampMapRemoved256=>({ok:false,reason});
  const noop:CampMapRemoved256={ok:true,current:()=>true,commit(){}};
- if(root.schemaVersion!==256||site?.kind!=='camp')return noop; // literal older/other-map path
+ if(!isSchema256Or257(root.schemaVersion)||site?.kind!=='camp')return noop; // literal older/other-map path
  if(registeredCampaign(map)!==root||registeredMapId(map)!==mapId||registeredMap(root,mapId)!==map||map.tick!==root.tick)return no('MapRemoved requires its actual current registered Camp');
  const humans=captureHumanOwners(map,{},false).slots.filter(s=>s.pawn&&alive(s.pawn)&&!['scout-away','commercial-away','group-away','group-loss'].includes(s.kind));
  if(humans.length)return no('Les personnes restantes exigent leur vraie affiliation mondiale et transition Free ; le camp est conservé.');

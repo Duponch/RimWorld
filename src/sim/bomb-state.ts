@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {animalDeathExplosionRadius256,isExplosiveAnimal256,validAnimalDeathExplosionOwner256,type AnimalDeathExplosion256} from './animal-death-provenance-v256.ts';
 import type { BombInstigatorKey } from './mini-turret-state.ts';
 import {ANCIENT_CASKET_FLAME_RADIUS_256,type AncientCasketExplosion256} from './ancient-casket-explosive-state-256.ts';
@@ -24,13 +25,13 @@ const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&
 const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 const keys=(v:Record<string,unknown>,allowed:readonly string[])=>Object.keys(v).every(k=>allowed.includes(k));
 const dense=(v:unknown[])=>Object.keys(v).length===v.length&&Object.keys(v).every((key,index)=>key===String(index));
-export const bombThingKey=(v:unknown,version=194):v is string=>typeof v==='string'&&(version>=194||!v.startsWith('mech:'))&&(version===256||!v.startsWith('starting-pod:'))&&/^(pawn|animal|mech|structure|resource|pile|fire|starting-pod):[1-9]\d*$/.test(v)&&integer(Number(v.slice(v.indexOf(':')+1)),1);
+export const bombThingKey=(v:unknown,version=194):v is string=>typeof v==='string'&&(version>=194||!v.startsWith('mech:'))&&(isSchema256Or257(version)||!v.startsWith('starting-pod:'))&&/^(pawn|animal|mech|structure|resource|pile|fire|starting-pod):[1-9]\d*$/.test(v)&&integer(Number(v.slice(v.indexOf(':')+1)),1);
 export const bombInstigatorKey=(v:unknown,version=194):v is BombInstigatorKey=>bombThingKey(v,version)&&/^(pawn|animal|mech|structure):/.test(v);
 export const bombCellCore=(w:Pick<World,'width'>,wave:MiniTurretBombWave,index:number)=>wave.startedAtCore+Math.floor(Math.hypot(index%w.width-wave.center.x,Math.floor(index/w.width)-wave.center.z)*1.5);
 export function validBombWaveShape(value:unknown,version=193):value is MiniTurretBombWave {
   if(version<193||!object(value)||!keys(value,['id','sourceId','instigatorKey','center','startedAtCore','advancedAtCore','cells','nextCell','damagedThingKeys',...version>=201?['shortCircuit']:[],...version>=208?['emp']:[],...version>=256?['animalDeath','casketExplosion']:[]]))return false;
   if(Object.hasOwn(value,'casketExplosion')){
-    const d=Object.getOwnPropertyDescriptor(value,'casketExplosion');if(version!==256||!d?.enumerable||!Object.hasOwn(d,'value')||!object(d.value)||Object.getPrototypeOf(d.value)!==Object.prototype||Reflect.ownKeys(d.value).length!==1)return false;
+    const d=Object.getOwnPropertyDescriptor(value,'casketExplosion');if(!isSchema256Or257(version)||!d?.enumerable||!Object.hasOwn(d,'value')||!object(d.value)||Object.getPrototypeOf(d.value)!==Object.prototype||Reflect.ownKeys(d.value).length!==1)return false;
     const a=Object.getOwnPropertyDescriptor(d.value,'ignoredThingKeys');if(!a?.enumerable||!Object.hasOwn(a,'value')||!Array.isArray(a.value)||Object.getPrototypeOf(a.value)!==Array.prototype||!dense(a.value)||a.value.length!==3||Reflect.ownKeys(a.value).some(k=>typeof k!=='string'||!Object.hasOwn(Object.getOwnPropertyDescriptor(a.value,k)!,'value')))return false;
     if(a.value.some((key,n,all)=>typeof key!=='string'||!/^pile:[1-9]\d*$/.test(key)||!integer(Number(key.slice(5)),1,Number(value.id)-1)||Number(key.slice(5))===value.sourceId||n>0&&all[n-1]>=key)||Object.hasOwn(value,'animalDeath')||Object.hasOwn(value,'shortCircuit')||Object.hasOwn(value,'emp'))return false;
   }

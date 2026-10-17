@@ -1,3 +1,4 @@
+import {isSchema256Or257} from '../sim/schema-compatibility-257.ts';
 /** Narrow delta omission adapter. No cache, index or public certificate. */
 import {validRiverWaterEnvelope256,type StoredRiverWater256} from '../sim/river-water-owner-256.ts';
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype;
@@ -31,7 +32,7 @@ export function prepareRiverWaterSnapshot256(raw:unknown,version:number,previous
   const old=read(previous,'riverWater');if(!old.ok)return {ok:false};
   if(old.present){
    const planet=read(raw,'planet'),planetRevision=object(planet.value)?read(planet.value,'revision'):undefined;
-   if(version!==256||!planet.ok||!planetRevision?.ok||planetRevision.value!==3||!object(old.value)||!Object.isFrozen(old.value)||!meta.baseRevision||meta.epoch!==meta.previousEpoch||meta.baseRevision!==meta.previousRevision||meta.revision!==meta.baseRevision+1||!sameHeader(raw,previous))return {ok:false};
+   if(!isSchema256Or257(version)||!planet.ok||!planetRevision?.ok||planetRevision.value!==3||!object(old.value)||!Object.isFrozen(old.value)||!meta.baseRevision||meta.epoch!==meta.previousEpoch||meta.baseRevision!==meta.previousRevision||meta.revision!==meta.baseRevision+1||!sameHeader(raw,previous))return {ok:false};
    // Only the exact deeply frozen confirmed owner may bypass the cold walk.
    // No Object.isFrozen() walk: the decoder froze it at its successful commit.
    return {ok:true,inherited:true,owner:old.value as unknown as StoredRiverWater256};

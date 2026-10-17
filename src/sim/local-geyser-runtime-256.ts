@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Original deterministic local sprayer. Ten Core substeps per real local tick.
  * Persistent phase is an explicit continuation adaptation: Core respawn resets
  * its unsaved sprayer. Camera-dependent fleck draws are presentation only here. */
@@ -35,7 +36,7 @@ export function geyserAdjacentCells256(width:number,height:number,g:Pick<Natural
  * named topology patch); never substitute a fake room or an outdoor fallback. */
 export function advanceLocalGeysers256(world:GeyserWorld256,layout:ThermalLayout):void {
  const state=world.geysers;if(!state)return;
- if(world.schemaVersion!==256||world.site?.revision!==3||!validLocalGeyserState256(state,world.width,world.height,state.atTick,world.nextId))throw Error('Invalid actual geyser owner');
+ if(!isSchema256Or257(world.schemaVersion)||world.site?.revision!==3||!validLocalGeyserState256(state,world.width,world.height,state.atTick,world.nextId))throw Error('Invalid actual geyser owner');
  if(world.tick===state.atTick)return;
  if(world.tick!==state.atTick+1)throw Error('Geyser phase requires one real local step, never catch-up');
  if(world.tiles.length!==world.width*world.height||state.items.length&&!world.snow)throw Error('Actual geyser surface/snow owner absent');

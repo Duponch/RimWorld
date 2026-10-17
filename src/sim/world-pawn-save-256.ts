@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {validPhysicalWorldPawnOrder256} from './world-pawn-native-order-256.ts';
 import {worldPawnRetiredOriginMatches256} from './world-pawn-origin-projection-256.ts';
 import {validMentalShape} from './mental-save.ts';
@@ -36,7 +37,7 @@ export function plainWorldPawnData256(value:unknown):boolean {
 /** Owner header only; validates original descriptors before any consumer. */
 export function validWorldPawnsEnvelope256(raw:object,version:number,nowCore:number,nextId:number):boolean {
  const d=Object.getOwnPropertyDescriptor(raw,'worldPawns');if(!d)return !('worldPawns'in raw);
- if(version!==256||!d.enumerable||!Object.hasOwn(d,'value')||!plainWorldPawnData256(d.value)||!object(d.value))return false;const s=d.value;
+ if(!isSchema256Or257(version)||!d.enumerable||!Object.hasOwn(d,'value')||!plainWorldPawnData256(d.value)||!object(d.value))return false;const s=d.value;
  if(!exact(s,['revision','atCore','lastSuccessfulCore','currentRate','owners'],['nativeOrder'])||s.revision!==1||!int(s.atCore,0,nowCore)||s.atCore!==nowCore||s.atCore%10||!int(s.lastSuccessfulCore,0,s.atCore)||!int(s.currentRate,1,16777216)||(s.currentRate&(s.currentRate-1))!==0||!dense(s.owners,nextId))return false;
  const ids=new Set<number>();for(const row of s.owners){if(!object(row)||!exact(row,['factionId','originMapId','context','clockCore','enteredAtAbsCore','mode','items','packed','kind','actor'],['keepForever','startingPawnLeftBehind','everColonist','destroyed','free','everSeenByPlayer'])||row.factionId!==null&&!int(row.factionId,1)||row.originMapId!==null&&!int(row.originMapId)||!object(row.context)||!int(row.clockCore,0,s.atCore)||row.clockCore%10||!int(row.enteredAtAbsCore)||!['active','mothballed','dead'].includes(String(row.mode))||!['human','animal'].includes(String(row.kind))||!object(row.actor)||!int(row.actor.id,1,nextId-1)||ids.has(row.actor.id)||!dense(row.items,nextId)||!dense(row.packed,nextId))return false;
   ids.add(row.actor.id);for(const k of ['keepForever','startingPawnLeftBehind','everColonist','destroyed','free','everSeenByPlayer'])if(Object.hasOwn(row,k)&&row[k]!==true)return false;
@@ -50,8 +51,8 @@ export function validWorldPawnsEnvelope256(raw:object,version:number,nowCore:num
  * scalar headers below are validation contexts, never local World objects. */
 export function validateWorldPawnOwners256(s:WorldPawnsState256,root:Readonly<Pick<World,'schemaVersion'|'tick'|'nextId'|'planet'|'worldMaps'|'worldFactions'|'campaignMap'>>&Partial<Readonly<Pick<World,'foodPolicies'|'apparelPolicies'>>>,ids:NumericMembershipSink,projection?:CampaignMapPresentation|CampaignSummary,knownHumanIds?:ReadonlySet<number>):string[]{
  const humans=new Set(knownHumanIds);for(const row of s.owners)if(row.kind==='human')humans.add(row.actor.id);for(const row of root.worldFactions?.leaders??[])humans.add(row.pawn.id);
- const errors:string[]=[];if(!validPhysicalWorldPawnOrder256(s,root.nextId))errors.push('Native WorldPawn slots do not match actual owners');if(root.schemaVersion!==256)return ['WorldPawns require prospective256'];const factions=root.worldFactions;const add=(id:number)=>{if(!int(id,1,root.nextId-1)||ids.has(id))errors.push('Duplicate or invalid WorldPawn Thing');ids.add(id);};
- for(const row of s.owners){if(row.factionId!==null&&!factions?.factions.some(f=>f.id===row.factionId))errors.push('WorldPawn actual faction foreign key refused');if(row.startingPawnLeftBehind&&row.factionId!==factions?.playerFactionId)errors.push('Left-behind starter lost actual player faction');const tick=row.clockCore/10,c={...row.context,tick,nextId:root.nextId,schemaVersion:256 as const};
+ const errors:string[]=[];if(!validPhysicalWorldPawnOrder256(s,root.nextId))errors.push('Native WorldPawn slots do not match actual owners');if(!isSchema256Or257(root.schemaVersion))return ['WorldPawns require prospective256'];const factions=root.worldFactions;const add=(id:number)=>{if(!int(id,1,root.nextId-1)||ids.has(id))errors.push('Duplicate or invalid WorldPawn Thing');ids.add(id);};
+ for(const row of s.owners){if(row.factionId!==null&&!factions?.factions.some(f=>f.id===row.factionId))errors.push('WorldPawn actual faction foreign key refused');if(row.startingPawnLeftBehind&&row.factionId!==factions?.playerFactionId)errors.push('Left-behind starter lost actual player faction');const tick=row.clockCore/10,c={...row.context,tick,nextId:root.nextId,schemaVersion:root.schemaVersion};
   if(!validGroupMapContext(row.context,tick,256,root))errors.push('WorldPawn actual origin context refused');
   if(row.mode==='mothballed'&&worldPawnMothballReadiness256(row)!=='yes')errors.push('Unclosed actual mothball flags');
   if(row.destroyed===true&&(row.mode!=='dead'||row.items.length||row.packed.length||deadWorldPawn256(row)))errors.push('Destroyed WorldPawn cannot invent clinical death or keep possessions');

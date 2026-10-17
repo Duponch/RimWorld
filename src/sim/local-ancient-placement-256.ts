@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {unpublishedAncientGeneration256} from './ancient-generation-frontier-256.ts';
 /** Specific Core-only GenStep750 placement. No monument, owner or terrain is
  * synthesized here. Call on the SAME fresh physical map after phase700. */
@@ -36,7 +37,7 @@ export function sampleAncientExtent256(kind:AncientStep256,random:Pick<WorldGene
  * of guessing an alphabetical or inherited-list order for equal750 steps. */
 export function ancientStepOrder256(indices:Readonly<Record<AncientStep256,number>>):readonly AncientStep256[] {if(!int(indices.ruins)||!int(indices.shrines)||indices.ruins===indices.shrines)throw Error('Missing distinct actual GenStep Def indices');return indices.ruins<indices.shrines?['ruins','shrines']:['shrines','ruins'];}
 export interface AncientPlacementContext256 {startingMap:boolean;waterCovered:boolean;mapInitializing:true;layoutRects:readonly AncientRect256[];usedRects:AncientRect256[]}
-function admitted(w:World,context:AncientPlacementContext256):void {assertLocalDimensions256(w.width,w.height);if(w.schemaVersion!==256||w.site?.revision!==3||w.planet?.revision!==3||context.mapInitializing!==true||typeof context.startingMap!=='boolean'||typeof context.waterCovered!=='boolean'||!unpublishedAncientGeneration256(w,context.mapInitializing))throw Error('Ancient placement requires the true fresh750 frontier');for(const r of [...context.layoutRects,...context.usedRects])if(![r.minX,r.minZ,r.maxX,r.maxZ].every(Number.isInteger)||r.minX>r.maxX||r.minZ>r.maxZ)throw Error('Invalid actual generation rectangle');}
+function admitted(w:World,context:AncientPlacementContext256):void {assertLocalDimensions256(w.width,w.height);if(!isSchema256Or257(w.schemaVersion)||w.site?.revision!==3||w.planet?.revision!==3||context.mapInitializing!==true||typeof context.startingMap!=='boolean'||typeof context.waterCovered!=='boolean'||!unpublishedAncientGeneration256(w,context.mapInitializing))throw Error('Ancient placement requires the true fresh750 frontier');for(const r of [...context.layoutRects,...context.usedRects])if(![r.minX,r.minZ,r.maxX,r.maxZ].every(Number.isInteger)||r.minX>r.maxX||r.minZ>r.maxZ)throw Error('Invalid actual generation rectangle');}
 /** Current CanBuildOnTerrain(Wall, stuff=null) tests Wall.Heavy; planned wall
  * Stuff is evaluated separately by the actual spawn transaction. */
 export const ancientGenerationGround256=(tile:Tile):Tile=>tile.mineable?{...tile,terrain:tile.mineable.terrain}:tile;

@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {nearbyGround,groundCapacity,groundPile} from './ground-placement.ts';
 import {canStandAt,FURNITURE_TRAVEL} from './furniture-travel.ts';
 import {FILTH_DEFINITIONS,ensureFilth} from './filth-rules.ts';
@@ -38,7 +39,7 @@ export function applyAncientHumanEjectionSickness256(pawn:Pawn,clock:number,rand
 export function planAncientCasketRelease256(w:World,target:AncientCasket256,releaseRng=w.rng):AncientReleasePlan256 {
  if(!Number.isSafeInteger(releaseRng)||releaseRng<0||releaseRng>0xffffffff)return {ok:false,reason:'Invalid actual incoming casket gameplay stream.'};
  const all=w.structures.filter(isAncientCasket256) as unknown as AncientCasket256[];
- if(w.schemaVersion!==256||!all.includes(target)||!ancientCasketHasContents256(target.casket))return {ok:false,reason:'Actual nonempty ancient casket required.'};
+ if(!isSchema256Or257(w.schemaVersion)||!all.includes(target)||!ancientCasketHasContents256(target.casket))return {ok:false,reason:'Actual nonempty ancient casket required.'};
  if(!Object.hasOwn(FURNITURE_TRAVEL,'ancient-cryptosleep-casket')||!Object.hasOwn(FILTH_DEFINITIONS,'slime'))return {ok:false,reason:'Named casket geometry/Slime integration splices are not installed.'};
  const errors=validateAncientCasketOwners256(w);if(errors.length)return {ok:false,reason:errors[0]!};
  const group=ancientCasketOpeningGroup256(all,target),unknown=!target.casket.contentsKnown;

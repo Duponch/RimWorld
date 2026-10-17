@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import { bulletPosition,validateBulletFlight } from './bullet-flight.ts';
 import { CORE_TICKS_PER_LOCAL,projectileProfile } from './ranged-statistics.ts';
 import type { WorldProjectile } from './projectile-state.ts';
@@ -7,7 +8,7 @@ import type { NumericMembershipSink } from './numeric-membership.ts';
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 const keys=(v:Record<string,unknown>,allowed:string[])=>Object.keys(v).every(k=>allowed.includes(k));
-const identity=(v:unknown,version=67)=>v===null||typeof v==='string'&&(version>=77||!v.startsWith('animal:'))&&(version>=194||!v.startsWith('mech:'))&&(version===256||!v.startsWith('starting-pod:'))&&(/^(pawn|animal|mech|structure|frame|resource|pile|packed|starting-pod):[1-9]\d*$/.test(v)&&integer(Number(v.slice(v.indexOf(':')+1)),1)||/^rock:(0|[1-9]\d*)$/.test(v)&&integer(Number(v.slice(5)),0));
+const identity=(v:unknown,version=67)=>v===null||typeof v==='string'&&(version>=77||!v.startsWith('animal:'))&&(version>=194||!v.startsWith('mech:'))&&(isSchema256Or257(version)||!v.startsWith('starting-pod:'))&&(/^(pawn|animal|mech|structure|frame|resource|pile|packed|starting-pod):[1-9]\d*$/.test(v)&&integer(Number(v.slice(v.indexOf(':')+1)),1)||/^rock:(0|[1-9]\d*)$/.test(v)&&integer(Number(v.slice(5)),0));
 const samePoint=(a:{x:number;z:number},b:unknown)=>record(b)&&keys(b,['x','z'])&&b.x===a.x&&b.z===a.z;
 
 /** Unknown JSON is rejected before touching references or calling the resolver. */
@@ -38,7 +39,7 @@ export function validWorldProjectile(value:unknown,world:Pick<World,'width'|'hei
     if(a.kind!=='impact'||p.flight.remainingCoreTicks!==total-elapsed)return false;
     return a.targetKey===null?a.effect==='ground':String(a.targetKey).startsWith('pawn:')?a.effect==='pawn':String(a.targetKey).startsWith('animal:')?version>=77&&a.effect==='animal':String(a.targetKey).startsWith('mech:')?version>=194&&a.effect==='mech':a.effect==='unsupported-object'
       ||version>=67&&String(a.targetKey).startsWith('structure:')&&a.effect==='barrier'
-      ||version===256&&String(a.targetKey).startsWith('starting-pod:')&&a.effect==='starting-pod'
+      ||isSchema256Or257(version)&&String(a.targetKey).startsWith('starting-pod:')&&a.effect==='starting-pod'
       ||version>=193&&(['structure','pile','resource','packed'] as const).some(kind=>String(a.targetKey).startsWith(`${kind}:`)&&a.effect===kind);
   } catch {return false;}
 }

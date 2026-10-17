@@ -1,3 +1,5 @@
+import {preparedSchema256} from './helpers/legacy-fixture-guards.ts';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 import {planNaturalHiveLoss256,validNaturalHiveLoss256} from '../src/sim/cave-hive-loss-256.ts';
 import {hiveReproductionFactor256} from '../src/sim/cave-hive-profile-256.ts';
 import {validHiveDefeatMemory256,hiveDefeatThoughts256} from '../src/sim/cave-hive-memories-256.ts';
@@ -44,10 +46,10 @@ describe('Hive runtime narrow closed facts, no activation claim',()=>{
  });
  it('suspends the SAME minified GlowPod counter without catch-up or a new identity',()=>{
   const s:Structure={id:31,kind:'glow-pod',x:10,z:10,orientation:0,footprint:'standard',factionId:null,glowPod:{revision:1,madeAtCore:0,ageCore:-1}};
-  pauseGlowPod256({schemaVersion:256,tick:2},s);const original=s.glowPod;
+  pauseGlowPod256(preparedSchema256({schemaVersion:SCHEMA_VERSION,tick:2}),s);const original=s.glowPod;
   expect(validGlowPodPacked256(s,256,{width:250,height:250,tick:200,nextId:40})).toBe(true);
   expect(validGlowPodPacked256(s,255,{width:250,height:250,tick:200,nextId:40})).toBe(false);
-  resumeGlowPod256({schemaVersion:256,tick:200},s);expect(s.id).toBe(31);expect(s.glowPod).toBe(original);expect(s.glowPod!.ageCore).toBe(-1);expect(s.glowPod!.lastCore).toBe(2000);
+  resumeGlowPod256(preparedSchema256({schemaVersion:SCHEMA_VERSION,tick:200}),s);expect(s.id).toBe(31);expect(s.glowPod).toBe(original);expect(s.glowPod!.ageCore).toBe(-1);expect(s.glowPod!.lastCore).toBe(2000);
   expect(validGlowPodPacked256({...s,glowPod:{...s.glowPod!,lastCore:undefined}},256,{width:250,height:250,tick:200,nextId:40})).toBe(false);
  });
  it('keeps the actual memory cap, expiration and future descriptor fences',()=>{

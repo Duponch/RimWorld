@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import type {Cell,MaterialOwner,MaterialPile,Pawn,Structure} from './types.ts';
 import type {WildAnimal} from './wildlife-state.ts';
 import {validAncientCasketWickField256} from './ancient-casket-explosive-state-256.ts';
@@ -60,7 +61,7 @@ function dataOnly(value:unknown):boolean {
  };return visit(value,0);
 }
 export function validAncientCasketState256(raw:unknown,version:number,tick:number):raw is AncientCasketState256 {
- if(version!==256||!integer(tick)||!dataOnly(raw)||!object(raw)||Reflect.ownKeys(raw).length!==7||!['revision','groupId','contentsKnown','heldAt','humans','animals','items'].every(k=>Object.hasOwn(raw,k)))return false;
+ if(!isSchema256Or257(version)||!integer(tick)||!dataOnly(raw)||!object(raw)||Reflect.ownKeys(raw).length!==7||!['revision','groupId','contentsKnown','heldAt','humans','animals','items'].every(k=>Object.hasOwn(raw,k)))return false;
  return raw.revision===1&&integer(raw.groupId,-1)&&typeof raw.contentsKnown==='boolean'&&integer(raw.heldAt,0,tick)&&Array.isArray(raw.humans)&&raw.humans.every(object)&&Array.isArray(raw.animals)&&raw.animals.every(object)&&Array.isArray(raw.items)&&raw.items.every(object);
 }
 /** Presence fence for RAW/full/delta entries, before any property read.
@@ -95,7 +96,7 @@ export function ancientCasketMapRemovalBoundary256(w:{schemaVersion:number;tick:
 }
 
 export function validAncientOpening256(raw:unknown,version:number,tick:number,nextId:number):boolean {
- if(raw===undefined)return true;if(version!==256||!raw||typeof raw!=='object'||Array.isArray(raw)||Object.getPrototypeOf(raw)!==Object.prototype)return false;
+ if(raw===undefined)return true;if(!isSchema256Or257(version)||!raw||typeof raw!=='object'||Array.isArray(raw)||Object.getPrototypeOf(raw)!==Object.prototype)return false;
  const keys=Reflect.ownKeys(raw);if(keys.length!==4||keys.some(k=>typeof k!=='string'||!['casketId','phase','progressCore','lastWorkedAt'].includes(k)||!Object.getOwnPropertyDescriptor(raw,k)?.enumerable||!('value'in Object.getOwnPropertyDescriptor(raw,k)!)))return false;
  const t=raw as AncientCasketOpening256;
  return Number.isSafeInteger(t.casketId)&&t.casketId>0&&t.casketId<nextId&&['approach','opening'].includes(t.phase)&&Number.isSafeInteger(t.progressCore)&&t.progressCore>=0&&t.progressCore<300&&t.progressCore%10===0&&(t.phase!=='approach'||t.progressCore===0)&&Number.isSafeInteger(t.lastWorkedAt)&&t.lastWorkedAt>=0&&t.lastWorkedAt<=tick;

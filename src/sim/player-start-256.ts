@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Original bounded Core-only FindPlayerStartSpot, actual-map readers only. */
 import {captureActualLocalDistricts256,type ActualStartMap256} from './actual-local-districts-256.ts';
 import {assertLocalDimensions256,findLocalCentralCell256} from './local-cell-selection-256.ts';
@@ -10,7 +11,7 @@ export interface PlayerStartResult256 {readonly cell:number|null;readonly random
  * Rectangles are actual Layout containers / MapGenerator UsedRects. */
 export function findPlayerStartSpot256(input:{map:ActualStartMap256;layoutRects:readonly ActualStartRect256[];usedRects:readonly ActualStartRect256[];existingStart?:number|null},random:WorldGenerationRandom):PlayerStartResult256 {
  const {map}=input;assertLocalDimensions256(map.width,map.height);if(map.tiles.length!==map.width*map.height)throw Error('Invalid actual start-map cell count');
- if(map.schemaVersion!==256||map.site?.revision!==3)throw Error('Player start requires an actual prospective Site3 map');
+ if(!isSchema256Or257(map.schemaVersion)||map.site?.revision!==3)throw Error('Player start requires an actual prospective Site3 map');
  const existing=input.existingStart;
  if(existing!==undefined&&existing!==null){
   if(!Number.isInteger(existing)||existing<0||existing>=map.width*map.height)throw Error('Invalid actual existing start');

@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {damageCaveHiveProp256} from './cave-hive-damage-256.ts';
 import {setMaterialForbidden256} from './material-permission-256.ts';
 import {damageEmptyAncientCasket256} from './ancient-casket-empty-removal-256.ts';
@@ -127,7 +128,7 @@ export interface StructureDamageContext {core:number;rawAmount:number;instigator
 export function damageStructure(world:World,s:Structure,amount:number,cause:StructureDamageCause='fire',rng=world.rng,external?:StructureDamageContext):boolean {
   if(s.kind==='insect-hive'||s.kind==='glow-pod')return damageCaveHiveProp256(world,s,amount,cause,rng,external);
   if(isAncientCasket256(s))return damageEmptyAncientCasket256(world,s,amount,cause,rng,external);
-  if(s.kind==='ship-chunk'&&world.schemaVersion!==256)return false;
+  if(s.kind==='ship-chunk'&&!isSchema256Or257(world.schemaVersion))return false;
   const packed=world.packed.find(p=>p.building===s),installed=world.structures.includes(s),max=structureMaxHp(s);
   if(!max&&cause!=='roof-thick'||!positive(amount)||!installed&&!packed)return false;
   if(external&&(!Number.isFinite(external.rawAmount)||external.rawAmount<0||!Number.isSafeInteger(external.core)||external.core<Math.max(0,(world.tick-1)*10)||external.core>world.tick*10))return false;

@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {nativeHumanBiologicalCore256,type NativeHumanIdentity256} from './native-human-identity-256.ts';
 import {syncNativeHumanClinicalScale256} from './native-human-clinical-scale-256.ts';
 import { createMedicalRecord } from './injury-state.ts';
@@ -122,7 +123,7 @@ export function advanceHumanAgeAt(pawn:Pawn,c:HumanAgeContext):void {
 }
 
 export function validHumanAge(value:unknown,version:number,native?:NativeHumanIdentity256):boolean {
-  if(native&&version!==256)return false;
+  if(native&&!isSchema256Or257(version))return false;
   if(version<138)return value===undefined;
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
   const age=value as Record<string,unknown>;

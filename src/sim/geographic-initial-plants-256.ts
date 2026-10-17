@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Real generation-to-owner transfer. The private step stream and planned
  * plants are not a second runtime flora authority or a saved history. */
 import type {World,Resource} from './types.ts';
@@ -9,7 +10,7 @@ import {attachInitialPlantAge256} from './initial-plant-age-256.ts';
 
 export function* populateGeographicInitialPlants256(world:World):Generator<{phase:'plants';completed:number;total:number},{count:number;stepState:Readonly<{seed:number;counter:number}>},void>{
  const site=world.site,planet=world.planet;
- if(world.schemaVersion!==256||site?.revision!==3||planet?.revision!==3||world.flora!==undefined)throw Error('Initial plants require an unfinished actual geographic map');
+ if(!isSchema256Or257(world.schemaVersion)||site?.revision!==3||planet?.revision!==3||world.flora!==undefined)throw Error('Initial plants require an unfinished actual geographic map');
  const step=generateInitialWildPlants256({...actualWildPlantReader256.capture(world),
   stepSeed:localGenerationStepSeed(site.mapSeed,INITIAL_PLANTS_SEED_PART_256,0),worldSeed:planet.generationSeed,tileHash:surfaceTileHash(site.tileId)});
  let next=step.next();while(!next.done){yield {phase:'plants',completed:next.value.visited,total:next.value.total};next=step.next();}

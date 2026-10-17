@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {captureActualLocalDistricts256} from './actual-local-districts-256.ts';
 import {footprintCells} from './definitions.ts';
 import {setMaterialForbidden256} from './material-permission-256.ts';
@@ -14,7 +15,7 @@ const created=new WeakMap<AncientTempleLootReady256,{world:World;signature:strin
  * all other currently generated envelope/road/casket Things have None. */
 const kinds=new Set(['wall','door','table','table-square','column','urn','stele-large','stele-grand','sarcophagus','ancient-cryptosleep-casket','ancient-road-barrier','ancient-road-lamp','insect-hive','glow-pod']);
 function actualPhase750(world:World):void {
- if(world.schemaVersion!==256||world.site?.revision!==3||world.planet?.revision!==3||world.tick!==0||world.jobs.length||world.resources.length||world.startingArrival||world.exploration||world.geysers||world.snow||world.fires)throw Error('Actual unpublished initial temple750 map required');
+ if(!isSchema256Or257(world.schemaVersion)||world.site?.revision!==3||world.planet?.revision!==3||world.tick!==0||world.jobs.length||world.resources.length||world.startingArrival||world.exploration||world.geysers||world.snow||world.fires)throw Error('Actual unpublished initial temple750 map required');
  if(world.structures.some(s=>!kinds.has(s.kind)))throw Error('Temple item SurfaceType is unresolved for an actual generated structure');
 }
 /** Allocate the original playable-loot v1 Things, BEFORE casket/threat symbols.

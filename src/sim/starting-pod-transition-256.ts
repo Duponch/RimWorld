@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {registeredCampaign} from './world-map-context.ts';
 import {CORE_STARTING_ARRIVAL_PROFILE_256} from './starting-pod-state-256.ts';
 import {plainWorldPawnData256} from './world-pawn-save-256.ts';
@@ -28,7 +29,7 @@ function destroyedActorOutcome(actor:Pawn|WildAnimal,clearMaster:boolean):Pawn|W
 export function validCoreStartingArrivalTransition256(previous:World,next:World):boolean {
  const a=previous.startingArrival,b=next.startingArrival;
  if(a?.profile!==CORE_STARTING_ARRIVAL_PROFILE_256)return b?.profile!==CORE_STARTING_ARRIVAL_PROFILE_256;
- if(b?.profile!==CORE_STARTING_ARRIVAL_PROFILE_256||next.schemaVersion!==256||next.tick<previous.tick||!plainWorldPawnData256(a)||!plainWorldPawnData256(b))return false;
+ if(b?.profile!==CORE_STARTING_ARRIVAL_PROFILE_256||!isSchema256Or257(next.schemaVersion)||next.tick<previous.tick||!plainWorldPawnData256(a)||!plainWorldPawnData256(b))return false;
  if(a.phase==='opened')return b.phase==='opened'&&equal(a,b);
  if(a.landAt!==b.landAt||a.openAt!==b.openAt||a.start!==b.start)return false;
  const remaining=b.phase==='opened'?[]:b.pods,opened=b.phase==='opened'?b.cells:b.openedCells;

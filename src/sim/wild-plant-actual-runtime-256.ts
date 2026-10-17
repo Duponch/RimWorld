@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import type {World} from './types.ts';
 import {actualPlantPhysicalMasks256} from './actual-plant-physical-masks-256.ts';
 import {createWildPlantMapReader256} from './wild-plant-runtime-map-256.ts';
@@ -10,7 +11,7 @@ import {advanceWildFlora256,createWildFloraState256} from './wild-plant-runtime-
  * when its real persistent definition and effects are introduced. */
 export function actualPlantDensity256(world:World):number {
  const site=world.site;
- if(world.schemaVersion!==256||site?.revision!==3||!Number.isInteger(site.mutatorCode)||site.mutatorCode<0||site.mutatorCode>15)throw Error('Missing actual plant-density definitions');
+ if(!isSchema256Or257(world.schemaVersion)||site?.revision!==3||!Number.isInteger(site.mutatorCode)||site.mutatorCode<0||site.mutatorCode>15)throw Error('Missing actual plant-density definitions');
  return 1;
 }
 export const actualWildPlantReader256=createWildPlantMapReader256(actualPlantPhysicalMasks256,actualPlantDensity256);

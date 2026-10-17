@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Original nearby-cell sampler over the actual fresh generation regions.
  * Call capture once after physical edits; spawned Pawns do not change regions. */
 import {captureGeographicGenerationReachability256,type ActualGenerationRegion256} from './geographic-generation-reachability-256.ts';
@@ -12,7 +13,7 @@ export type RandomClosewalkCapture256=ReturnType<typeof captureRandomClosewalk25
  * the same adjustment regardless of their registration order; distinct ones
  * explicitly refuse if this exceptional non-Standable root is requested. */
 export function captureRandomClosewalk256(map:ActualStartMap256,reachability=captureGeographicGenerationReachability256(map)){
- if(map.width!==reachability.physical.width||map.height!==reachability.physical.height||map.schemaVersion!==256||map.site?.revision!==3)throw Error('Closewalk requires its actual fresh Site3 capture');
+ if(map.width!==reachability.physical.width||map.height!==reachability.physical.height||!isSchema256Or257(map.schemaVersion)||map.site?.revision!==3)throw Error('Closewalk requires its actual fresh Site3 capture');
  const width=map.width,height=map.height,n=width*height,blocking=new Map<number,Rectangle|null>();
  const valid=(c:number)=>Number.isInteger(c)&&c>=0&&c<n;
  const rectangle=(cells:readonly {x:number;z:number}[]):Rectangle=>Object.freeze({minX:Math.min(...cells.map(c=>c.x)),maxX:Math.max(...cells.map(c=>c.x)),minZ:Math.min(...cells.map(c=>c.z)),maxZ:Math.max(...cells.map(c=>c.z))});

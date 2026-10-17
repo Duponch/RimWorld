@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import type {WorldGenerationRandom} from './world-generation-random.ts';
 export interface StartingApparelColor256 {r:number;g:number;b:number}
 /** Presentation only: the exact Float32 state above stays saved. The existing
@@ -24,7 +25,7 @@ export function drawStartingApparelColor256(item:string,random:Pick<WorldGenerat
  * inferred or installed from a current definition or a purported seed. */
 export function validStartingApparelColor256(apparel:unknown,item:unknown,version:number):boolean {
  if(!apparel||typeof apparel!=='object')return false;const d=Object.getOwnPropertyDescriptor(apparel,'birthColor');if(!d)return !('birthColor'in apparel);
- if(version!==256||!d.enumerable||!Object.hasOwn(d,'value')||!d.value||typeof d.value!=='object'||Object.getPrototypeOf(d.value)!==Object.prototype||Reflect.ownKeys(d.value).length!==3)return false;
+ if(!isSchema256Or257(version)||!d.enumerable||!Object.hasOwn(d,'value')||!d.value||typeof d.value!=='object'||Object.getPrototypeOf(d.value)!==Object.prototype||Reflect.ownKeys(d.value).length!==3)return false;
  const c=d.value,values:number[]=[];for(const key of ['r','g','b']){const a=Object.getOwnPropertyDescriptor(c,key);if(!a?.enumerable||!Object.hasOwn(a,'value')||typeof a.value!=='number'||!Number.isFinite(a.value)||f(a.value)!==a.value||Object.is(a.value,-0))return false;values.push(a.value);}
  const gray=(n:number)=>values.every(v=>v===f(n));
  return item==='flak-pants'?(gray(.44)||gray(.62)):item==='flak-vest'&&(gray(.33)||gray(.65)||values.every(v=>v>=f(.3)&&v<=f(.5)));

@@ -101,9 +101,9 @@ export function captureGroupCandidates(world:World,memberIds:readonly number[],a
   const sources=new Map<number,MaterialPile>(),items:MaterialPile[]=[];
   for(const pile of world.piles){
     if(sources.has(pile.id))return fail('duplicate-map-pile');sources.set(pile.id,pile);
-    if(possession(pile,ids)){if(!allowedOwner(pile))return fail('temporary-cargo');items.push(pile);}
+    if(possession(pile,ids)){if(!allowedOwner(pile)){const releasing=world.schemaVersion>=257&&(!world.group||'manifest'in world.group&&world.group.humanPreparation?.releaseIds.includes('pawnId'in pile.owner?pile.owner.pawnId:-1));if(pile.owner.type==='pawn'&&releasing)continue;return fail('temporary-cargo');}items.push(pile);}
   }
-  const packed=world.packed.filter(p=>'pawnId'in p.owner&&ids.has(p.owner.pawnId));if(packed.length&&(world.schemaVersion<256||!validCaravanBedrollPacks256(packed,[...members,...animals],world.nextId,world.schemaVersion)))return fail('packed-cargo');
+  const packed=world.packed.filter(p=>'pawnId'in p.owner&&ids.has(p.owner.pawnId)&&!(world.schemaVersion>=257&&p.owner.type==='pawn'&&(!world.group||'manifest'in world.group&&world.group.humanPreparation?.releaseIds.includes(p.owner.pawnId))));if(packed.length&&(world.schemaVersion<256||!validCaravanBedrollPacks256(packed,[...members,...animals],world.nextId,world.schemaVersion)))return fail('packed-cargo');
   const mass=captureGroupMass(members,items,world.schemaVersion>=GROUP_FREIGHT_SCHEMA&&(!world.group||freightGroup(world.group)),world.schemaVersion,packed,animals);if(!mass)return fail('unknown-mass');
   if(mass.carriers.some(c=>c.grams>c.capacityGrams))return fail('overload');
   const reason=authority.namespaceReason(world,{additionalPiles:0,members,items});if(reason)return fail(reason);

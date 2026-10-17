@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Saved reference to the last actual door approach; no route, clock or load cleanup. */
 import type {DoorState} from './door-rules.ts';
 import {explorationEnabled256,type ExplorationMap256} from './exploration-state-256.ts';
@@ -20,7 +21,7 @@ export function validExplorationDoorApproacher256(value:unknown,version:number,e
  if(!value||typeof value!=='object'||Array.isArray(value)||Object.getPrototypeOf(value)!==Object.prototype)return false;
  const key='explorationApproacherId',d=Object.getOwnPropertyDescriptor(value,key);
  if(!d)return !(key in value);
- return version===256&&enabled&&d.enumerable===true&&Object.hasOwn(d,'value')&&validId(d.value)&&Number.isSafeInteger(nextId)&&d.value<nextId&&resolved(d.value,resolve)!==undefined;
+ return isSchema256Or257(version)&&enabled&&d.enumerable===true&&Object.hasOwn(d,'value')&&validId(d.value)&&Number.isSafeInteger(nextId)&&d.value<nextId&&resolved(d.value,resolve)!==undefined;
 }
 /** Call only at real Notify_PawnApproaching equivalent, after actual permission.
  * Foreign actors also replace this reference if they can open or door is open. */

@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {isCaveHiveKind256} from './cave-hive-state-256.ts';
 import {advanceActualHiveComponents256} from './cave-hive-tick-256.ts';
 import {captureAnimalCombatThreats256} from './cave-hive-lord-256.ts';
@@ -49,8 +50,9 @@ import { adoptDeepResources } from './deep-resources.ts';
 import { adoptOrbital,advanceOrbital,applyOrbitalTrade,processOrbitalTrade,reconcileOrbitalTrade } from './orbital.ts';
 import { reconcilePasteRequests } from './nutrient-paste.ts';
 import { validGroupCommand } from './group-command-shape.ts';
-import { applyGroupCommand,groupOnMapMember,cancelGroupPreparation } from './group-authority.ts';
-import { processGroupOnMap,tryGroupDeparture,advanceGroup,reconcileGroupPreparation } from './group-driver.ts';
+import { applyGroupCommand,groupOnMapMember,cancelGroupPreparation,cancelPawnGroupPreparation257 } from './group-authority.ts';
+import {groupHumanPassenger257} from './group-human-admission-257.ts';
+import { processGroupOnMap,tryGroupDeparture,advanceGroup,reconcileGroupPreparation,reconcileGroupAdmission257 } from './group-driver.ts';
 import { processMechanoidCombat,mechanoidCombatBatch } from './mechanoid-combat.ts';
 import {isMechSalvageRecipe} from './mechanoid-salvage.ts';
 import {advanceMechanoidCorpses} from './mechanoid-corpse.ts';
@@ -403,7 +405,7 @@ export function buildConstructionCellIndex(world: World, kind: LineBuildKind): C
 /** Pure shared rule used by preview and command execution. */
 export function canDesignate(world: World, command: DesignateCommand|import('./cave-glowpod-minification-256.ts').NaturalInstallPlan256, installing=false, index?:ConstructionCellIndex): CommandResult {
   if(command&&inBounds(world,command.x,command.z)&&command.kind!=='mine'&&foggedCell256(world,cellIndex(world,command.x,command.z)))return refusal('missing-target','Cette cellule n’est pas encore découverte.');
-  if(isCaveHiveKind256(command?.kind)&&(!installing||command.kind!=='glow-pod'||world.schemaVersion!==256||command.orientation!==0))return refusal('invalid-command','Cet édifice naturel est généré ; seul son vrai paquet peut être réinstallé.');
+  if(isCaveHiveKind256(command?.kind)&&(!installing||command.kind!=='glow-pod'||!isSchema256Or257(world.schemaVersion)||command.orientation!==0))return refusal('invalid-command','Cet édifice naturel est généré ; seul son vrai paquet peut être réinstallé.');
   if(isLocalRoadProp256(command?.kind)||isShipChunk256(command?.kind))return refusal('invalid-command','Cet édifice routier est un vestige généré, sans commande de construction.');
   if(command&&Object.hasOwn(command,'bridge'))return refusal('invalid-command','La fondation est un état de terrain, pas un champ de commande.');
   if(command?.kind==='build-bridge'||command?.kind==='remove-bridge')return canDesignateBridge(world,command);
@@ -1029,7 +1031,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
       if(prisonBreakActive(pawn)&&(pawn.state==='downed'||pawn.state==='dead'))endPrisonBreak(world,pawn);
       if(scoutOnMapId(world)===pawn.id&&(pawn.state==='dead'||pawn.state==='downed'))applyScoutCommand(world,{type:'scout-cancel'});
       if(commercialOnMapId(world)===pawn.id&&(pawn.state==='dead'||pawn.state==='downed'))applyCommercialPreparation(world,{type:'commercial-cancel'});
-      if(groupOnMapMember(world,pawn.id)&&(pawn.state==='dead'||pawn.state==='downed'||pawn.mental?.crisis))cancelGroupPreparation(world);
+      if(groupOnMapMember(world,pawn.id)&&(pawn.state==='dead'||pawn.state==='downed'&&!groupHumanPassenger257(world,pawn.id)||pawn.mental?.crisis))cancelPawnGroupPreparation257(world,pawn.id);
       if(pawn.equipmentDropPending)dropIncapacitatedEquipment(world,pawn,true);
       if(pawn.state==='dead'){expireMealMemories(world,pawn);updateMentalBreak(world,pawn);continue;}
       if(completedEdge)recordFilthMovement(world,pawn);
@@ -1274,6 +1276,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     updateFoodTemperatures(world,thermal);
     if(light&&lightKey!==plantLightSourcesKey(world))light=undefined;
     reconcilePlantLighting(world,getLight);updatePlantTemperatures(world,thermal);reconcilePrisoners(world);reconcileRescues(world);reconcileWarden(world);reconcilePatientRest(world);reconcileTending(world);reconcileSurgery(world);reconcilePasteRequests(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns){if(pawn.orbitalTrade)reconcileOrbitalTrade(world,pawn);if(pawn.deepWork)reconcileDeepWork(world,pawn);reconcileWeaponMemory(world,pawn);}
+    reconcileGroupAdmission257(world);
   }
 }
 import { updatePawnHealth,reconcilePawnHealth } from './health.ts';

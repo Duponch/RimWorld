@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {validHumanHealthScaleHeader256} from './native-human-clinical-scale-256.ts';
 import {clinicalConditionPartFacts256} from './clinical-condition-parts-256.ts';
 import type {BodyPartId} from './body-definition.ts';
@@ -25,7 +26,7 @@ export function validAnimalAgeConditions256(value:unknown,version:number,animal:
  if(!value||typeof value!=='object')return false;const d=Object.getOwnPropertyDescriptor(value,'animalAgeConditions');if(!d)return !('animalAgeConditions'in value);
  if(version<256||!Object.hasOwn(d,'value')||!d.enumerable||!fields(d.value,['revision','nextId','cases'])||!animal&&model.kind!=='human')return false;
  const state=d.value;if(state.revision!==1||!integer(state.nextId,1)||!dense(state.cases)||!integer(tick)||!Number.isSafeInteger(tick*10))return false;
- const nativeHuman=model.kind==='human'&&version===256&&Object.hasOwn(value,'humanHealthScale')&&validHumanHealthScaleHeader256(value,version);
+ const nativeHuman=model.kind==='human'&&isSchema256Or257(version)&&Object.hasOwn(value,'humanHealthScale')&&validHumanHealthScaleHeader256(value,version);
  const nativeRows=clinicalConditionPartFacts256(model,value),restricted=model.kind==='human'?!nativeHuman:!isAnimalSpecies256(model.kind)&&!Object.hasOwn(value,'animalGrowth');
  const ids=new Set<number>(),parts=new Set<string>();
  const lost=(part:BodyPartId)=>{for(let p:BodyPartId|null=part;p!==null;p=model.byId[p]!.parent)if(missing.some(m=>m.part===p))return true;return false;};

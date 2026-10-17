@@ -59,7 +59,7 @@ test('Bridgeable is independent of water: exact fire/snow/filth/deterioration pr
 
 test('bridge removal keeps real mud/marshy substrate, traces and snow; water reveals without them and refunds only six',()=>{
  for(const terrain of ['mud','marshy-soil','river-chest-deep'] as const){
-  const {world:w,bridgeCell}=bridgeWorkshopV387(16),i=bridgeCell.z*w.width+bridgeCell.x;w.schemaVersion=256;w.tiles[i]={terrain,bridge:true};w.piles=[];refreshStock(w);
+  const {world:w,bridgeCell}=bridgeWorkshopV387(16),i=bridgeCell.z*w.width+bridgeCell.x;w.tiles[i]={terrain,bridge:true};w.piles=[];refreshStock(w);
   initializeSnowSurface(w);setSnowDepth(w,i,.4);expect(addFilth(w,bridgeCell,'blood')).toBe(true);
   expect(canDesignateFloor(w,{type:'designate',kind:'lay-floor',floor:'wood-planks',...bridgeCell}).ok).toBe(false);
   accept(w,{type:'designate',kind:'remove-bridge',...bridgeCell});const j=w.jobs.at(-1)!;expect(removeBridge(w,j)).toBe(true);
@@ -69,7 +69,7 @@ test('bridge removal keeps real mud/marshy substrate, traces and snow; water rev
 });
 
 test('Cypress substrate is narrow and construction clearance is its own real build-bridge work, with exact reload continuation',()=>{
- const {world:w,bridgeCell,pawnId}=bridgeWorkshopV387(32),i=bridgeCell.z*w.width+bridgeCell.x;w.schemaVersion=256;
+ const {world:w,bridgeCell,pawnId}=bridgeWorkshopV387(32),i=bridgeCell.z*w.width+bridgeCell.x;
  // Declared physical work fixture, not a claim of new Site3 generation.
  // Species observation requires a real legacy biome/clinical clock owner.
  w.scenario={id:'crashlanded',revision:6,landing:{...bridgeCell}};w.gameProfile=crashlandedProfile();enableCassandraRaids(w);adoptFluIncidents(w);adoptMiscIncidents(w);w.site=resolveSite(w.seed,{hilliness:'flat',biome:'temperate-forest'});adoptSiteClimate(w);w.tiles[i]={terrain:'mud'};
@@ -86,7 +86,7 @@ test('Cypress substrate is narrow and construction clearance is its own real bui
 });
 
 test('RAW and checkpoint/delta keep actual terrain; old envelope and same-tick unsupported object refuse before adoption',()=>{
- const {world:w}=bridgeWorkshopV387(16);w.schemaVersion=256;const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder();
+ const {world:w}=bridgeWorkshopV387(16);const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder();
  const first=decoder.adopt(structuredClone(encoder.encode(w,0,0)));expect(first.status,JSON.stringify(first)).toBe('applied');
  const index=3*w.width+3;w.tiles[index]={terrain:'river-chest-deep'};const packet=structuredClone(encoder.encode(w,0,0));expect(packet.kind).toBe('delta');const next=decoder.adopt(packet);expect(next.status,JSON.stringify(next)).toBe('applied');if(next.status!=='applied')throw Error('Expected current terrain delta');expect(next.world.tiles[index]).toEqual(w.tiles[index]);
  const raw=serializeWorld(w);expect(serializeWorld(deserializeWorld(raw))).toBe(raw);

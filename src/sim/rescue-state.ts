@@ -1,3 +1,4 @@
+import {groupHumanCarrierOf257} from './group-human-admission-257.ts';
 import type { Cell,Pawn,World } from './types.ts';
 import { updatePawnHealth } from './health.ts';
 
@@ -8,7 +9,7 @@ export interface RescueTask {
   /** A release uses no bed (bedId=0), and cannot also capture the person. */
   release?:{drop:Cell;exit:Cell};
 }
-export const carrierOf=(world:World,patientId:number):Pawn|undefined=>world.pawns.find(p=>p.rescue?.phase==='carry'&&p.rescue.patientId===patientId);
+export const carrierOf=(world:World,patientId:number):Pawn|undefined=>world.pawns.find(p=>p.rescue?.phase==='carry'&&p.rescue.patientId===patientId)??groupHumanCarrierOf257(world,patientId);
 export const rescueClaim=(world:World,patientId:number,except?:number):Pawn|undefined=>world.pawns.find(p=>p.id!==except&&p.rescue?.patientId===patientId);
 export function syncPatient(world:World,carrier:Pawn):void {
   if(carrier.rescue?.phase!=='carry')return;

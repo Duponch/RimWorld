@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Real prospective Mineable identity above the existing Tile representation.
  * Only creation/explicit removal owns these transitions; never migration. */
 import type {Tile,World} from './types.ts';
@@ -28,7 +29,7 @@ export function removedMineableTile256(tile:MineableTile256,expectedId:number):T
  * commit succeeds only while this exact original owner remains at its cell.
  * Never use this no-product Vanish as an alias for paid/player mining. */
 export function planVanishMineable256(world:MineableWorld256,cell:number,expectedId:number,mapInitializing:true):{id:number;commit():void}|null {
- if(mapInitializing!==true||world.schemaVersion!==256||world.site?.revision!==3||!Number.isSafeInteger(cell)||cell<0||cell>=world.width*world.height||!Number.isSafeInteger(expectedId)||expectedId<1)return null;
+ if(mapInitializing!==true||!isSchema256Or257(world.schemaVersion)||world.site?.revision!==3||!Number.isSafeInteger(cell)||cell<0||cell>=world.width*world.height||!Number.isSafeInteger(expectedId)||expectedId<1)return null;
  const source=world.tiles[cell],next=source&&removedMineableTile256(source,expectedId);if(!source||!next)return null;
  const owner=source.mineable!,def=owner.def,terrain=owner.terrain;
  return {id:expectedId,commit(){if(world.tiles[cell]!==source||source.mineable!==owner||owner.id!==expectedId||owner.def!==def||owner.terrain!==terrain)throw Error('Actual Mineable changed after Vanish preflight');const current=removedMineableTile256(source,expectedId);if(!current)throw Error('Actual Mineable definition changed after Vanish preflight');world.tiles[cell]=current;}};

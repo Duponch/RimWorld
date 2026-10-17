@@ -1,3 +1,4 @@
+import {preparedSchema256} from './helpers/legacy-fixture-guards.ts';
 import {expect,test} from 'vitest';
 import {generateWorld} from '../src/sim/generation.ts';
 import {startingPawn} from '../src/sim/starting-pawns.ts';
@@ -38,7 +39,7 @@ import type {FoodPoisonVomitContext} from '../src/sim/food-poisoning-runtime.ts'
 // Prepared landscape and original factory actors, never a fabricated World or
 // a claim that the final starter/PawnGenerator pipeline has been exercised.
 function scene(){
- const w=generateWorld(82011,32,32,'temperate-crashlanded-v1');w.schemaVersion=256;w.tick=100;
+ const w=generateWorld(82011,32,32,'temperate-crashlanded-v1');preparedSchema256(w);w.tick=100;
  w.deterioration!.lastTick=w.tick;
  w.resources=[];w.piles=[];w.structures=[];w.jobs=[];for(const tile of w.tiles)tile.terrain='soil';
  const p=startingPawn(w.nextId++,'Cible préparée',12,12,0,55,w.seed,w.tick,256);delete p.health;w.pawns.push(p);enableWildlife(w,0);

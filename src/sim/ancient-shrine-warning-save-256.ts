@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import type {AncientShrineWarnings256} from './ancient-shrine-warning-state-256.ts';
 const plain=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype;
 function own(v:object,k:string){const d=Object.getOwnPropertyDescriptor(v,k);return d?{ok:'value'in d&&d.enumerable===true,present:true,value:'value'in d?d.value:undefined}:{ok:!(k in v),present:k in v,value:undefined};}
@@ -13,7 +14,7 @@ export function validAncientShrineWarnings256(v:unknown,width:number,height:numb
 }
 export function validAncientShrineWarningEnvelope256(raw:unknown,version:number,tick:number,nextId:number):boolean {
  if(!plain(raw))return false;const d=own(raw,'ancientShrineWarnings');if(!d.ok)return false;if(!d.present)return true;
- const site=own(raw,'site'),width=own(raw,'width'),height=own(raw,'height');return version===256&&site.ok&&plain(site.value)&&own(site.value,'revision').ok&&own(site.value,'revision').value===3&&width.ok&&height.ok&&validAncientShrineWarnings256(d.value,Number(width.value),Number(height.value),tick,nextId);
+ const site=own(raw,'site'),width=own(raw,'width'),height=own(raw,'height');return isSchema256Or257(version)&&site.ok&&plain(site.value)&&own(site.value,'revision').ok&&own(site.value,'revision').value===3&&width.ok&&height.ok&&validAncientShrineWarnings256(d.value,Number(width.value),Number(height.value),tick,nextId);
 }
 /** Before RAW projections, inspect all original local descriptor namespaces. */
 export function validAncientShrineWarningCampaignRaw256(raw:unknown,version:number):boolean {

@@ -14,7 +14,7 @@ function metadata(world:World){if(world.campaignMap?.revision!==2)throw Error('R
  * The empty Camp is an actual registered map; its true removal creates the
  * sole retired record used below. People/goods remain their original owners. */
 function retired(){
- const w=registryCamp();w.schemaVersion=256;const camp=preparedMap(w,52,'camp',false),id=w.worldMaps!.sites.find(s=>s.tile===52)!.id;
+ const w=registryCamp();const camp=preparedMap(w,52,'camp',false),id=w.worldMaps!.sites.find(s=>s.tile===52)!.id;
  expect(camp.pawns).toEqual([]);removeEmptyCamps(w);
  const row=w.worldMaps!.retired.find(r=>r.id===id)!;expect(row).toBeDefined();expect(w.worldMaps!.sites.some(s=>s.id===id)).toBe(false);
  return {w,id,row};

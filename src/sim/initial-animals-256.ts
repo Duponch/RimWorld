@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {cobraAdmissionReason256} from './cobra-admission-256.ts';
 import type {prepareWorldAnimalGeneration256} from './world-pawn-generation-256.ts';
 /** Actual GenStep1200 producer over a genuine fresh map. Physical capture is
@@ -53,7 +54,7 @@ export type InitialAnimalsResult256=
  * order, and actual campaign-retained animals (never projected people). */
 export function produceInitialAnimals256(world:World,options:{random:WorldGenerationRandom;pawnKindOrder:readonly string[];unspawnedAnimals:readonly WildAnimal[];closewalk?:RandomClosewalkCapture256;worldGeneration?:ReturnType<typeof prepareWorldAnimalGeneration256>}):InitialAnimalsResult256 {
  const {random}=options,site=world.site;
- if(world.schemaVersion!==256||site?.revision!==3||world.climate?.revision!==4||world.climate.tileId!==site.tileId)throw Error('Initial fauna requires actual fresh256 Site3/climate4');
+ if(!isSchema256Or257(world.schemaVersion)||site?.revision!==3||world.climate?.revision!==4||world.climate.tileId!==site.tileId)throw Error('Initial fauna requires actual fresh256 Site3/climate4');
  if(!Number.isSafeInteger(world.nextId)||world.nextId<1)throw Error('Invalid initial fauna namespace');
  const rules=localBiomeRules256(site.biome,world.schemaVersion);if(!rules)throw Error('Missing actual geographic biome fauna');
  // The only four active Core-only modifiers currently represented by Site3

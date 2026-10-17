@@ -35,7 +35,7 @@ export function validArtificialPartsWorldTransport(world:World,version:number=wo
 /** Called after the isolated records and ordinary pawn shapes are validated. */
 export function validatePawnHealth(world:World):string[] {return world.pawns.flatMap(p=>validatePawnHealthRecord(p,world));}
 /** Clinical validation at the actual frozen owner clock, with no map reconstruction. */
-export function validatePawnHealthRecord(p:Pawn,world:Pick<World,'schemaVersion'|'tick'|'width'|'height'>,allowEarlier=false):string[] {
+export function validatePawnHealthRecord(p:Pawn,world:Pick<World,'tick'|'width'|'height'>&{schemaVersion:number},allowEarlier=false):string[] {
   const errors:string[]=[];
 
     if(p.medicalSleep&&((p.state!=='downed'&&p.state!=='resting')||p.moveCooldown>0))errors.push('Invalid medical sleep posture.');

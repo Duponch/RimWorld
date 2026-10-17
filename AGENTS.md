@@ -20,6 +20,8 @@ Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` auto
 
 ## Méthode de livraison
 
+**V412 qualifié, schéma257 :** [Formation depuis le travail et portage humain](docs/gameplay/group-admission-v412.md). Arêtes et tâches libérées transactionnellement ; même patient porté, annulation/recharge exacte au62, vrai départ343/recharge344. 48cas/8fichiers acquis par reprises, présentation163,045s ; rouges conservés, aucun gain FPS démontré. Migration256 stricte toutes cartes puis numéro seul. Captifs/fret complet/propriétaires terminaux restent ouverts ; publication regroupée différée, aucune clôture des fondations.
+
 **V411, schéma256 inchangé :** [Déplacements sur sol moussu](docs/gameplay/natural-travel-save-v411.md) : coût capturé0,3 et supplément de piège reconnus par la sauvegarde, anciennes frontières strictes conservées. Camp travaillé puis retiré3293 ; mêmes voyageuses et37bois rentrés/déposés au3602, marqueur et deux recharges exactes vérifiés en pause. Parcours acquis par reprises, rouges conservés ; autres fondations ouvertes. ProductionV403 inchangée.
 
 **V410, schéma256 inchangé :** [Palette de précipitations](docs/development/precipitation-palette-v410.md) corrigée pour l’entréeCamp200² ; audit du vrai camp1037 en pause et export complet identique acquis. Travaux/retour encore à poursuivre depuis cet état, sans rejouer le départ. ProductionV403 inchangée.

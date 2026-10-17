@@ -1,5 +1,7 @@
 # Ce qui est jouable et ce qui manque
 
+**V412 — schéma 257 :** [Formation et portage humain](group-admission-v412.md) qualifiés : travail ordinaire interrompu après les arêtes, passager libre réellement porté, annulation/reprise et vrai départ avec mêmes biens. Captifs/fret complet et autres fondations restent ouverts ; aucun gain FPS démontré. Non publié, productionV403 inchangée. Les états suivants sont historiques.
+
 **V408 — schéma 256 :** [Générateur géographique](world-generation-v408.md) raccordé pour Atterrissage forcé250², vraie création et reprise contrôlées. PNJ actuels adaptés ; voyages/cartes temporaires et qualification globale restent à terminer avant la nouvelle démonstration. Non publié, productionV403/e24c5731 inchangée. Les états suivants sont historiques.
 
 **V404 qualifié — schéma 255 inchangé :** [Copier et renommer une politique de tenue](apparel-policy-copy-v404.md). Filtres confirmés indépendants, registre partagé et sauvegarde exacte ; aucune affectation ou tâche changée. V404 attend la publication groupée avec V405 ; dernière production V403/e24c5731, produit0f1a8cc1,134 réponses HTTPS exactes. [Audit V406](../development/multimap-audit-v406.md) : voyages/multicarte restent partiels ; consolidation prioritaire et V405 en attente. Les états suivants sont historiques.

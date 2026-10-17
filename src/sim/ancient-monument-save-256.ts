@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {isCaveHiveKind256} from './cave-hive-state-256.ts';
 import {isAncientMonumentKind256,ancientMonumentMaterial256,ancientMonumentMaxHp256,ancientMonumentCells256,ANCIENT_MONUMENT_DEFS_256} from './ancient-monument-props-256.ts';
 import {isAncientNeutralKind256} from './ancient-monument-runtime-256.ts';
@@ -9,7 +10,7 @@ const data=(v:object)=>Reflect.ownKeys(v).every(k=>{const d=Object.getOwnPropert
 const int=(v:unknown,a:number,b=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=a&&v<=b;
 /** Can be composed with the existing neutral road-prop owner guard. */
 export function validAncientFactionField256(v:unknown,version:number):boolean {
- if(v&&typeof v==='object'&&isCaveHiveKind256(Object.getOwnPropertyDescriptor(v,'kind')?.value))return version===256;
+ if(v&&typeof v==='object'&&isCaveHiveKind256(Object.getOwnPropertyDescriptor(v,'kind')?.value))return isSchema256Or257(version);
  if(!object(v)||!data(v))return false;
  if(!Object.hasOwn(v,'factionId'))return true;
  if(read(v,'kind')==='ancient-cryptosleep-casket')return version>=256&&v.factionId===null;

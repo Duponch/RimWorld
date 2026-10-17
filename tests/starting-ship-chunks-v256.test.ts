@@ -1,3 +1,4 @@
+import {preparedSchema256} from './helpers/legacy-fixture-guards.ts';
 import {describe,it,expect} from 'vitest';
 import {deconstructionCamp} from './scenarios/deconstruction.ts';
 import {createShipChunk256,validShipChunkStructure256} from '../src/sim/ship-chunk-256.ts';
@@ -29,13 +30,13 @@ import type {Structure,World} from '../src/sim/types.ts';
 /** Existing true prepared deconstructionCamp, not a generator875, seed parity,
  * walking timeline or new colony. All tested commits act on these originals. */
 function prepared(){
- const w=deconstructionCamp();w.schemaVersion=256;const s=createShipChunk256(w.nextId++,{x:16,z:16});w.structures.push(s);
+ const w=deconstructionCamp();preparedSchema256(w);const s=createShipChunk256(w.nextId++,{x:16,z:16});w.structures.push(s);
  const p=w.pawns[0]!;p.x=15;p.z=16;p.path=[];return {w,s,p};
 }
 const snapshot=(w:World)=>JSON.stringify(w);
 function sealed(w:World){w.tiles=w.tiles.map(()=>({terrain:'rock'}));}
 function workFixture(){
- const w=deconstructionCamp();w.schemaVersion=256;const p=w.pawns[0]!;p.jobId=null;p.haul=null;p.need=null;p.path=[];p.state='working';
+ const w=deconstructionCamp();preparedSchema256(w);const p=w.pawns[0]!;p.jobId=null;p.haul=null;p.need=null;p.path=[];p.state='working';
  const fuel=newBuildingFuel('wood-generator');fuel.ticks=600;
  const generator:Structure={id:w.nextId++,kind:'wood-generator',x:6,z:6,orientation:0,footprint:'standard',fuel,power:newPowerState('wood-generator')};
  const bill=newCookingBill(w.nextId++,'smelt-slag',256);bill.mode='until';bill.target=30;

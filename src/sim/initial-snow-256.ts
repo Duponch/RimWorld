@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Original Core-only initial snow calculation on a fresh real geographic
  * landscape. Physical depths use the existing Tile/SnowState authority. */
 import {createWorldPerlin} from './world-coherent-noise.ts';
@@ -69,7 +70,7 @@ export function addInitialSnowRadial256(input:{width:number;height:number;depths
  * not on migration, import, reload or selection of an already-created map. */
 export function prepareInitialSnow256(map:InitialSnowLandscape256,random:WorldGenerationRandom):InitialSnowPlan256 {
  const {width,height}=map,n=width*height,climate=map.climate;
- if(map.schemaVersion!==256||map.site?.revision!==3||!climate||climate.revision!==4||climate.tileId!==map.site.tileId||climate.adoptedAt!==map.tick||!Number.isSafeInteger(map.tick)||map.tick<0||!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||width>400||height>400||map.tiles.length!==n||map.snow!==undefined||map.tiles.some(t=>'snowDepth' in t))throw Error('Initial snow requires a fresh real geographic map and its actual climate');
+ if(!isSchema256Or257(map.schemaVersion)||map.site?.revision!==3||!climate||climate.revision!==4||climate.tileId!==map.site.tileId||climate.adoptedAt!==map.tick||!Number.isSafeInteger(map.tick)||map.tick<0||!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||width>400||height>400||map.tiles.length!==n||map.snow!==undefined||map.tiles.some(t=>'snowDepth' in t))throw Error('Initial snow requires a fresh real geographic map and its actual climate');
  const civil=climate.calendarOrigin+map.tick-climate.adoptedAt,localCore=civil*10,absoluteCore=localCore-geographicLongitudeOffsetCore256(climate.definition.longitude);
  const season=initialSnowSeason256(climate.definition,localCore,absoluteCore),depths=new Float32Array(n),roofs=roofCells(map),full=snowFullCells(map),radii=new Float32Array(n);
  for(let i=0;i<n;i++)radii[i]=initialTerrainMeltSnowRadius256(map.tiles[i]!);

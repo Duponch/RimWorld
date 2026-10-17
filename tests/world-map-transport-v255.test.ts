@@ -1,5 +1,9 @@
 import {expect,test} from 'vitest';
-import {registryCamp,preparedMap,command,startOne,until} from './helpers/world-maps-v255.ts';
+import {stepWorld} from '../src/sim/index.ts';
+import {GroupCampaignRuntime256} from '../src/sim/group-campaign-runtime-256.ts';
+import {GroupCaravanPhysical256} from '../src/sim/group-caravan-physical-256.ts';
+import {createGroupCampaignGeometry256} from '../src/sim/group-campaign-geometry-256.ts';
+import {registryCamp,preparedMap,command,startOne} from './helpers/world-maps-v255.ts';
 import {SnapshotEncoder,SnapshotDecoder} from '../src/bridge/snapshots.ts';
 import {registeredMap,flushRegisteredMap} from '../src/sim/world-map-context.ts';
 import {registeredMapPresentation,campaignOnlySummary} from '../src/sim/world-map-presentation.ts';
@@ -20,6 +24,13 @@ test('active local formations use actual owners and inactive formations are only
 
 test('physical camp-root promotion retains pre-tick episodes and reports a simultaneous new arrival once',()=>{const w=registryCamp(),other=preparedMap(w,52,'settlement'),source=registeredMap(w,0)!;for(const pawn of source.pawns.splice(0)){pawn.x=other.pawns[0]!.x+1; pawn.z=other.pawns[0]!.z;pawn.bedId=null;other.pawns.push(pawn);}source.piles=[];w.worldMaps!.sites[0]!.kind='camp';flushRegisteredMap(source);flushRegisteredMap(other);const observer=new UrgentThreatObserver();observer.bootstrap(w);observer.prepareMaps(w);w.tick++;other.raids={profile:'camp-raids-v1',rng:1,nextCheck:null,serial:1,completed:0,departed:[],active:{id:1,startedAt:w.tick,members:[w.nextId++],lost:[],phase:'assault',deadline:w.tick+1000,lossPermille:500}};flushRegisteredMap(other);removeEmptyCamps(w);expect(w.worldMaps!.rootMapId).toBe(1);expect(observer.capture(w,'major')).toBe(true);expect(observer.snapshot().rows).toMatchObject([{mapId:1,tile:52,kind:'raid',lastTick:w.tick,totalArrivals:1}]);observer.prepareMaps(w);expect(observer.capture(w,'major')).toBe(false);});
 
-test('last-map campaign packet stays usable for actual caravan and post state, with no active map invented',()=>{const w=registryCamp(),g=startOne(w);until(w,()=>w.worldGroups!.groups.some(r=>r.state.id===g.id&&'members'in r.state),3000);command(w,{type:'map-abandon',mapId:0,confirm:true});const summary=campaignOnlySummary(w);expect(summary.maps).toEqual([]);expect(summary.activeMapId).toBeNull();expect(summary.groups[0]!.id).toBe(g.id);expect(summary.people.some(p=>p.id===g.person.id)).toBe(true);const encoder=new SnapshotEncoder(),header=encoder.campaignHeader(),decoder=new SnapshotDecoder();const packet:CampaignOnlyMessage={type:'campaign-only',...header,summary,stepMs:0,speed:0,urgentThreats:blankUrgent};expect(decoder.adoptCampaignOnly(structuredClone(packet)).status).toBe('applied');const bad=structuredClone(packet);bad.revision++;bad.summary.groups[0]!.state.ledger.foodConsumed++;expect(decoder.adoptCampaignOnly(bad).status).toBe('resync');packet.revision++;expect(decoder.adoptCampaignOnly(structuredClone(packet)).status).toBe('applied');},30000);
+test('last-map campaign packet stays usable for actual caravan and post state, with no active map invented',()=>{
+ const w=registryCamp(),runtime=new GroupCampaignRuntime256(createGroupCampaignGeometry256(w),new GroupCaravanPhysical256());runtime.bootstrap(w);
+ const g=startOne(w),departed=()=>w.worldGroups!.groups.some(r=>r.state.id===g.id&&'members'in r.state);
+ // The actual prospective departure requires its one confirmed runtime. Do
+ // not remove travelPreparation/admission or use the historical no-runtime loop.
+ for(let tick=0;tick<3000&&!departed();tick++)stepWorld(w,1,undefined,runtime);
+ expect(departed()).toBe(true);
+ command(w,{type:'map-abandon',mapId:0,confirm:true});const summary=campaignOnlySummary(w);expect(summary.maps).toEqual([]);expect(summary.activeMapId).toBeNull();expect(summary.groups[0]!.id).toBe(g.id);expect(summary.people.some(p=>p.id===g.person.id)).toBe(true);const encoder=new SnapshotEncoder(),header=encoder.campaignHeader(),decoder=new SnapshotDecoder();const packet:CampaignOnlyMessage={type:'campaign-only',...header,summary,stepMs:0,speed:0,urgentThreats:blankUrgent};expect(decoder.adoptCampaignOnly(structuredClone(packet)).status).toBe('applied');const bad=structuredClone(packet);bad.revision++;bad.summary.groups[0]!.state.ledger.foodConsumed++;expect(decoder.adoptCampaignOnly(bad).status).toBe('resync');packet.revision++;expect(decoder.adoptCampaignOnly(structuredClone(packet)).status).toBe('applied');},30000);
 
 test('the explicit text limit counts UTF8 including paired and isolated surrogates without allocating a byte clone',()=>{expect(withinSaveTextLimit('abcd',4)).toBe(true);expect(withinSaveTextLimit('éé',4)).toBe(true);expect(withinSaveTextLimit('éé',3)).toBe(false);expect(withinSaveTextLimit('😀',4)).toBe(true);expect(withinSaveTextLimit('😀',3)).toBe(false);expect(withinSaveTextLimit('\ud800',3)).toBe(true);expect(withinSaveTextLimit('\ud800',2)).toBe(false);});

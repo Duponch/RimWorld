@@ -1,3 +1,4 @@
+import {isSchema256Or257} from '../sim/schema-compatibility-257.ts';
 /** Original visual data bake. No World, clock, random stream or pigment. */
 import {unpackRiverWater256,type StoredRiverWater256} from '../sim/river-water-owner-256';
 import type {Terrain} from '../sim/types';
@@ -33,7 +34,7 @@ export class RiverWaterField256 {
  private mapKey='';
  width=1;height=1;data=new Float32Array(2);
  adopt(w:RiverWaterVisualSource256):boolean {
-  const owner=w.schemaVersion===256&&w.site?.revision===3&&w.planet?.revision===3?w.riverWater:undefined;
+  const owner=isSchema256Or257(w.schemaVersion)&&w.site?.revision===3&&w.planet?.revision===3?w.riverWater:undefined;
   if(!owner)return this.clear();
   const key=JSON.stringify([w.seed,w.site?.tileId,w.site?.mapSeed,w.campaignMap?.revision===2?w.campaignMap.activeMapId:null,w.width,w.height]);
   if(owner===this.owner&&key===this.mapKey)return false;

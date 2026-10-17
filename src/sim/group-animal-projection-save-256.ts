@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Transport-only validation of actual terminal animal owners. No World,
  * map, clinical advance or replacement original is constructed here. */
 import {validProjectedMemberContexts,sameGroupHeaderValue} from './group-member-origin.ts';
@@ -12,7 +13,7 @@ const fields=(v:Record<string,unknown>,required:readonly string[],optional:reado
 export function validProjectedAnimalLosses256(metadata:object,w:Pick<World,'schemaVersion'|'tick'|'nextId'|'planet'>):boolean {
  const d=Object.getOwnPropertyDescriptor(metadata,'animalLosses');
  if(!d)return !('animalLosses' in metadata);
- if(w.schemaVersion!==256||!Object.hasOwn(d,'value')||d.enumerable!==true||!Array.isArray(d.value)||Object.getPrototypeOf(d.value)!==Array.prototype||d.value.length>w.nextId-1||Reflect.ownKeys(d.value).length!==d.value.length+1)return false;
+ if(!isSchema256Or257(w.schemaVersion)||!Object.hasOwn(d,'value')||d.enumerable!==true||!Array.isArray(d.value)||Object.getPrototypeOf(d.value)!==Array.prototype||d.value.length>w.nextId-1||Reflect.ownKeys(d.value).length!==d.value.length+1)return false;
  const seen=new Set<number>();
  for(let i=0;i<d.value.length;i++){
   const slot=Object.getOwnPropertyDescriptor(d.value,String(i));if(!slot||!Object.hasOwn(slot,'value')||slot.enumerable!==true||!object(slot.value))return false;

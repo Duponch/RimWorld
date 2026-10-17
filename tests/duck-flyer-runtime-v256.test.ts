@@ -1,3 +1,4 @@
+import {preparedSchema256} from './helpers/legacy-fixture-guards.ts';
 import {expect,test} from 'vitest';
 import {holdNewDuckArrival256,beginDuckFlyExit256,commitDuckFlyExits256,advanceDuckFlyers256,captureDuckFlyerOwners256,duckFlyExitUnsupportedReason256} from '../src/sim/duck-flyer-runtime-256.ts';
 import {validateDuckFlyers256,validDuckExitFlight256} from '../src/sim/duck-flyer-save-256.ts';
@@ -9,7 +10,7 @@ import {animalSpecies} from '../src/sim/animal-species.ts';
 import {adultAgeTicks} from '../src/sim/animal-life.ts';
 import {BLOOD_UNIT} from '../src/sim/injury-rules.ts';
 import {huntingCamp} from './scenarios/hunting.ts';
-function prepared(){const w=huntingCamp(),a=w.wildlife!.animals[0]!;w.schemaVersion=256;w.resources=[];w.structures=[];w.jobs=[];delete w.roofing;w.wildlife!.animals=[a];a.species='duck';a.sex='female';a.ageTicks=adultAgeTicks('duck');a.x=10;a.z=10;a.food=animalSpecies('duck').nutrition*.8;a.rest=1;a.state='idle';a.path=[];a.nextDecision=w.tick+1;delete a.health;delete a.motion;initializeAnimalEggLayer256(a);return {w,a};}
+function prepared(){const w=huntingCamp(),a=w.wildlife!.animals[0]!;preparedSchema256(w);w.resources=[];w.structures=[];w.jobs=[];delete w.roofing;w.wildlife!.animals=[a];a.species='duck';a.sex='female';a.ageTicks=adultAgeTicks('duck');a.x=10;a.z=10;a.food=animalSpecies('duck').nutrition*.8;a.rest=1;a.state='idle';a.path=[];a.nextDecision=w.tick+1;delete a.health;delete a.motion;initializeAnimalEggLayer256(a);return {w,a};}
 test('a real holder owns one original; pause/reload preserve IDs, duration and continuation through arrival',()=>{const {w,a}=prepared(),before=w.nextId,id=a.id;expect(holdNewDuckArrival256(w,a)).toBe(true);const f=w.wildlife!.flyers![0]!;expect(f.id).toBe(before);expect(w.nextId).toBe(before+1);expect(f.animal).toBe(a);expect(w.wildlife!.animals).toHaveLength(0);expect(validateDuckFlyers256(w,256)).toEqual([]);const paused=JSON.stringify(w);advanceDuckFlyers256(w);expect(JSON.stringify(w)).toBe(paused);const copy=JSON.parse(JSON.stringify(w)),rng=w.wildlife!.rng;
  for(let i=0;i<66;i++){w.tick++;copy.tick++;advanceDuckFlyers256(w);advanceDuckFlyers256(copy);expect(w.wildlife).toEqual(copy.wildlife);}
  expect(w.wildlife!.flyers).toBeUndefined();expect(w.wildlife!.animals.map(a=>a.id)).toEqual([id]);expect(w.wildlife!.animals[0]).toBe(a);expect(w.wildlife!.rng).toBe(rng);expect(w.nextId).toBe(before+1);

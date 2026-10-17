@@ -1,3 +1,4 @@
+import {syncGroupHumanPassenger257,groupHumanCarrying257} from './group-human-admission-257.ts';
 import {finishSnowStep} from './snow-surface.ts';
 import { apparelMoveFactor } from './apparel-rules.ts';
 import { weatherMoveFactor } from './weather-exposure.ts';
@@ -24,7 +25,7 @@ export function startTravel(world:World,pawn:Pawn,next:Cell,getLight?:LightReade
   const door=doorAt(world,next);if(door)start=Math.max(start,door.door!.changedAt+(1-door.door!.from)*importDoorDuration(door));
   const terrainDelay=furnitureDelay(world,pawn,next);
   let speedFactor=(getLight?.()??new LightEnvironmentCache().read(world)).speedAt(pawn)*pawnBody(pawn).capacities.moving*apparelMoveFactor(world,pawn)*weatherMoveFactor(world,pawn);
-  if(world.schemaVersion>=86){if(pawn.prisoner)speedFactor*=.35;if(pawn.rescue?.phase==='carry')speedFactor*=.6;}
+  if(world.schemaVersion>=86){if(pawn.prisoner)speedFactor*=.35;if(pawn.rescue?.phase==='carry'||groupHumanCarrying257(world,pawn.id))speedFactor*=.6;}
   if((pawn.mental?.crisis?.kind==='sad-wander'||pawn.mental?.crisis?.kind==='food-binge')&&!pawn.need)speedFactor=Math.min(speedFactor/2,TRAVEL_TICKS/5);
   const duration = TRAVEL_TICKS * edgeLength(pawn,next)/speedFactor+terrainDelay;
   const motion:TravelSegment={from:{x:pawn.x,z:pawn.z},to:{x:next.x,z:next.z},start,end:start+duration,...terrainDelay?{terrainDelay}:{},...speedFactor!==1?{speedFactor}:{}};
@@ -38,5 +39,5 @@ export function startTravel(world:World,pawn:Pawn,next:Cell,getLight?:LightReade
   pawn.motion=motion;
   pawn.x=next.x; pawn.z=next.z; pawn.moveCooldown=Math.max(0,pawn.motion.end-world.tick);
   approachAutodoor(world,pawn,next);
-  finishSnowStep(world,pawn);syncPatient(world,pawn);return true;
+  finishSnowStep(world,pawn);syncPatient(world,pawn);syncGroupHumanPassenger257(world,pawn);return true;
 }

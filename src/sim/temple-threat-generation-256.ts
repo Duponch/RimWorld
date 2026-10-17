@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Finite Temple750 producers. Existing NPC bodies/AI are provisional by
  * explicit scope; real map owners, sleeping threats and production persist. */
 import type {World} from './types.ts';
@@ -19,7 +20,7 @@ function choose(w:World,rect:AncientRect256,random:WorldGenerationRandom):number
  return cells.length?cells[random.integer(0,cells.length)]!:null;
 }
 export function spawnFunctionalTempleThreat256(w:World,rect:AncientRect256,threat:{kind:'mechs'|'hives';count:number},random:WorldGenerationRandom,owners:TempleThreatOwners256):void {
- if(w.schemaVersion!==256||w.site?.revision!==3||w.jobs.length||w.exploration||w.snow||!Number.isInteger(threat.count)||threat.count<1||threat.count>(threat.kind==='mechs'?5:2)||!owners?.lordIds||!Number.isInteger(owners.lordIds.nextId)||owners.lordIds.nextId<0||owners.lordIds.nextId>=2147483646)throw Error('Missing real Temple threat generation owners');
+ if(!isSchema256Or257(w.schemaVersion)||w.site?.revision!==3||w.jobs.length||w.exploration||w.snow||!Number.isInteger(threat.count)||threat.count<1||threat.count>(threat.kind==='mechs'?5:2)||!owners?.lordIds||!Number.isInteger(owners.lordIds.nextId)||owners.lordIds.nextId<0||owners.lordIds.nextId>=2147483646)throw Error('Missing real Temple threat generation owners');
  if(threat.kind==='mechs'){
   if(w.worldFactions?.factions.filter(f=>f.def==='Mechanoid').length!==1)throw Error('Selected Temple mechanical faction is absent');
   const group=owners.lordIds.nextId++;

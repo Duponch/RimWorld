@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {constructHumanConditionMind256} from './human-condition-mind-256.ts';
 import { assignBackground,generateBackground } from './background-generation.ts';
 import { BACKGROUND_SKILL_IDS,backgroundSkillRefusal,backgroundWorkRefusal } from './colonist-backgrounds.ts';
@@ -158,7 +159,7 @@ export function previewStartingCandidate(seed:number,descriptor:StartingCandidat
 export function materializeStartingCandidate(seed:number,descriptor:StartingCandidateDescriptor,id:number,x:number,z:number,version=255):Pawn {
   if(!Number.isSafeInteger(id)||id<=0||!Number.isInteger(x)||!Number.isInteger(z)||x<0||z<0)throw new Error('Placement du candidat invalide.');
   const pawn=previewStartingCandidate(seed,descriptor);
-  pawn.id=id;pawn.x=x;pawn.z=z;if(version===256)constructHumanConditionMind256(pawn,version);
+  pawn.id=id;pawn.x=x;pawn.z=z;if(isSchema256Or257(version))constructHumanConditionMind256(pawn,version);
   return pawn;
 }
 export function previewStartingParty(seed:number,selected:readonly StartingCandidateDescriptor[]):StartingPartyPreview {

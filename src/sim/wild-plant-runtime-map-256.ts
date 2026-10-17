@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {actualAdditionalPlantOwners256} from './actual-plant-physical-masks-256.ts';
 import type {World} from './types.ts';
 import {localBiomeRules256} from './local-biome-rules-v256.ts';
@@ -26,7 +27,7 @@ const ranges=new WeakMap<object,Readonly<{min:number;max:number}>>();
 export function createWildPlantMapReader256(physical:(world:World)=>PlantPhysicalMasks256,densityFactor:(world:World)=>number):WildPlantMapReader256 {
  return {densityFactor,cell:runtimePlantCell256,capture(world){
   const site=world.site,planet=world.planet,rules=site?.revision===3?localBiomeRules256(site.biome,world.schemaVersion):undefined;
-  if(world.schemaVersion!==256||site?.revision!==3||planet?.revision!==3||!rules)throw Error('Missing actual geographic plant map');
+  if(!isSchema256Or257(world.schemaVersion)||site?.revision!==3||planet?.revision!==3||!rules)throw Error('Missing actual geographic plant map');
   const owner=planetGeography256(planet),tile=owner.surface.tiles[site.tileId];if(!tile||tile.id!==site.tileId||tile.biome!==site.biome)throw Error('Plant biome differs from actual surface owner');
   let range=ranges.get(tile);if(!range){range=plantSeasonRange256(tile,owner.surface.radius);ranges.set(tile,range);}
   const masks=physical(world),n=world.width*world.height;

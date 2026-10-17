@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Profile admission only. The three historical families keep their literal
  * versions and population contracts. No creation, density or arrival is
  * inferred from the presence of this new name. */
@@ -10,7 +11,7 @@ export function validWildlifeProfileVersion256(world:{site?:{revision:number}},v
   case 'temperate-hares-v1':return version>=76;
   case 'biome-herbivores-v1':return version>=91;
   case 'biome-fauna-v2':return version>=178;
-  case GEOGRAPHIC_FAUNA_PROFILE_256:return version===256&&world.site?.revision===3&&!Object.hasOwn(s,'population');
+  case GEOGRAPHIC_FAUNA_PROFILE_256:return isSchema256Or257(version)&&world.site?.revision===3&&!Object.hasOwn(s,'population');
   default:return false;
  }
 }

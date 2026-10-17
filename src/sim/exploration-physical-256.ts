@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Actual rare-capture edifice facts. Nothing is inferred from roof, water,
  * pawn access, light, hostility, closed/open door state or camera visibility. */
 import {footprintCells} from './definitions.ts';
@@ -9,7 +10,7 @@ export type ActualFogMap256=ExplorationMap256&Pick<World,'structures'|'jobs'>;
 const EMPTY_FOOTPRINT:readonly number[]=Object.freeze([]);
 const definitions=new Map<string,StartThingPhysics256>(Object.entries(START_STRUCTURE_PHYSICS_256));
 export function captureActualFogPhysical256(map:ActualFogMap256):FogPhysicalReaders256 {
- assertExplorationDimensions256(map);if(map.schemaVersion!==256||map.site?.revision!==3)throw Error('Actual Site3 fog geometry required');
+ assertExplorationDimensions256(map);if(!isSchema256Or257(map.schemaVersion)||map.site?.revision!==3)throw Error('Actual Site3 fog geometry required');
  const n=map.tiles.length,flags=new Uint8Array(n),edifices=new Uint8Array(n),large=new Map<number,readonly number[]>();
  const valid=(cell:number)=>Number.isInteger(cell)&&cell>=0&&cell<n;
  const cells=(owner:Parameters<typeof footprintCells>[0])=>footprintCells(owner).map(c=>{if(!Number.isInteger(c.x)||!Number.isInteger(c.z)||c.x<0||c.z<0||c.x>=map.width||c.z>=map.height)throw Error('Fog owner outside actual map');return c.z*map.width+c.x;});

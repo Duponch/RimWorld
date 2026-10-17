@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** The genuine campaign-wide UniqueIDsManager casket-group counter. This is
  * NOT a Thing ID, a per-map index or a history reconstructed from caskets. */
 import {registeredMapForValidation} from './world-map-context.ts';
@@ -16,7 +17,7 @@ export function validAncientCasketGroupIdsEnvelope256(owner:unknown,version:numb
  if(!owner||typeof owner!=='object'||Array.isArray(owner))return false;
  const d=Object.getOwnPropertyDescriptor(owner,'nextAncientCasketGroupId');
  if(!d)return !('nextAncientCasketGroupId'in owner);
- return version===256&&planetRevision===3&&d.enumerable===true&&Object.hasOwn(d,'value')&&valid(d.value);
+ return isSchema256Or257(version)&&planetRevision===3&&d.enumerable===true&&Object.hasOwn(d,'value')&&valid(d.value);
 }
 /** Detached continuation for an unpublished candidate. Refuses a missing
  * authority; it does not infer one from max(groupId) or choose zero. */

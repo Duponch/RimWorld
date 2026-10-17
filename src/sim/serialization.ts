@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {freezeAdmittedNativeWorldPawnOrder256} from './world-pawn-native-order-256.ts';
 import {validateCaveHiveOwners256} from './cave-hive-save-256.ts';
 import {validateActualStartingPetLinks256} from './starting-pet-owners-256.ts';
@@ -262,9 +263,9 @@ export function validateWorld(input: unknown): string[] {
  * those still require the complete registered campaign validator above. */
 export function validateGeneratedLocalMap256(input:unknown,context:{readonly calendarOrigin:number}):string[] {
   try {
-    if(!record(input)||input.schemaVersion!==256||!record(input.planet)||input.planet.revision!==3
+    if(!record(input)||!isSchema256Or257(input.schemaVersion)||!record(input.planet)||input.planet.revision!==3
       ||!record(input.site)||input.site.revision!==3||Object.hasOwn(input,'worldMaps')||Object.hasOwn(input,'worldGroups')||!context||!Number.isSafeInteger(context.calendarOrigin))return ['Expected an unpublished geographic local-map candidate with its actual campaign clock.'];
-    return validateSchema(input,256,false,undefined,context);
+    return validateSchema(input,input.schemaVersion as 256|257,false,undefined,context);
   }catch{return ['Invalid unpublished geographic local-map candidate.'];}
 }
 function validateSharedCampaign(root:CampaignState):string[] {const view=emptyCampaignOwner(root);brandCampaignContext(view,root);return validateCampaignSharedFields(view);}
@@ -293,7 +294,7 @@ function validateCampaignSchema(input:unknown,version:Parameters<typeof validate
     return errors;
   }catch{return ['Invalid second-site records or owner namespace.'];}
 }
-function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250 | 251 | 252 | 253 | 254 | 255 | 256, relationshipContext = true,registeredIds?:Set<number>,generatedContext?:{readonly calendarOrigin:number}): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250 | 251 | 252 | 253 | 254 | 255 | 256 | 257, relationshipContext = true,registeredIds?:Set<number>,generatedContext?:{readonly calendarOrigin:number}): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(raw)) return ['World must be an object.'];
@@ -525,7 +526,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if(!errors.length)errors.push(...validateFires(world,version,ids),...validateThingDamage(world,version));
   if(!errors.length)errors.push(...registerGroupThingIds(commercialWorld,ids));
   if(!errors.length)errors.push(...registerStartingArrivalThingIds(commercialWorld,ids));
-  if(!errors.length&&version===256)errors.push(...validateActualStartingPetLinks256(commercialWorld));
+  if(!errors.length&&isSchema256Or257(version))errors.push(...validateActualStartingPetLinks256(commercialWorld));
   if(!errors.length)errors.push(...registerAncientCasketThingIds256(world,ids),...validateAncientOpeningOwners256(world));
   if(!errors.length&&version>=56)errors.push(...validateShooting(world,version,ids));
   if(!errors.length&&world.raids?.mechActive)errors.push(...validateMechanoidRaids(world,version,ids));
@@ -756,7 +757,7 @@ export function deserializeCampaign(serialized: string): CampaignState {
   let input: unknown = JSON.parse(serialized);
   if(!input||typeof input!=='object'||!validWorldPawnsEnvelope256(input,Number((input as Record<string,unknown>).schemaVersion),Number((input as Record<string,unknown>).tick)*10,Number((input as Record<string,unknown>).nextId)))throw Error('Invalid or future WorldPawns header before geographic hydration.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validPlanetGeographyHistorical256(input,Number(input.schemaVersion)))throw new Error('Invalid historical geographic ownership.');
-  if(record(input)&&input.schemaVersion===256&&record(input.planet)&&input.planet.revision===3){const staged=preparePlanetHydration256(input.planet,256);preparePlanetNavigation256(staged.planet);input={...input,planet:staged.planet};}
+  if(record(input)&&isSchema256Or257(input.schemaVersion)&&record(input.planet)&&input.planet.revision===3){const staged=preparePlanetHydration256(input.planet,Number(input.schemaVersion));preparePlanetNavigation256(staged.planet);input={...input,planet:staged.planet};}
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validWorldMapHistorical(input,Number(input.schemaVersion)))throw new Error('Invalid historical map registry.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validGroupFreightHistoricalTransport(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future collective freight.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validDeteriorationHistoricalTransport(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future deterioration state.');
@@ -1561,6 +1562,10 @@ export function deserializeCampaign(serialized: string): CampaignState {
   }
   if(record(input)&&input.schemaVersion===254){const old=validateCampaignSchema(input,254);if(old.length)throw new Error('Invalid version254 save: '+old.join(' '));input.schemaVersion=255;migrateWorldRegistry(input as unknown as World);}
   if(record(input)&&input.schemaVersion===255){const old=validateCampaignSchema(input,255);if(old.length)throw new Error('Invalid version255 save: '+old.join(' '));input.schemaVersion=256; /* No geography, faction, leader, history or draw is offered. */}
+  if(record(input)&&input.schemaVersion===256){
+    const old=validateCampaignSchema(input,256);if(old.length)throw new Error('Invalid version256 save: '+old.join(' '));
+    input.schemaVersion=257; // Every map/group stays literal: no admission, actor, permission, task, owner, ID or random draw is created.
+  }
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;
   if(hasLoadedRoot(world))consolidateLooseRocks(world);

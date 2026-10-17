@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Strict descriptor-only future field guard; never enrich an old Tile. */
 import {NATURAL_TERRAIN_DEFINITIONS_256} from './local-terrain-definitions-256.ts';
 import {actualMineableDef256,type LocalMineableOwner256} from './local-mineable-owner-256.ts';
@@ -15,7 +16,7 @@ export function validMineableOwner256(value:unknown,nextId:number):value is Loca
 export function validMineableTile256(tile:unknown,version:number,site3:boolean,nextId:number):boolean {
  if(!plain(tile))return false;const field=own(tile,'mineable');if(!field.valid)return false;
  if(version<=255||!site3)return !field.present;
- if(version!==256)return false;
+ if(!isSchema256Or257(version))return false;
  const terrain=own(tile,'terrain'),collapsed=own(tile,'collapsedRock'),ore=own(tile,'ore'),stone=own(tile,'stone');
  if(!terrain.valid||!terrain.present||!collapsed.valid||!ore.valid||!stone.valid)return false;
  if(terrain.value!=='rock'||collapsed.present)return !field.present;

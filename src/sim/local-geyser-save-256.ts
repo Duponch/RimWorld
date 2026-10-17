@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Guards add no geyser/timer during old migration or load. */
 import type {LocalGeysers256} from './local-geyser-state-256.ts';
 const plain=(v:unknown):v is object=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype;
@@ -20,7 +21,7 @@ export function validLocalGeyserState256(value:unknown,width:number,height:numbe
 export function validLocalGeyserHeader256(raw:unknown,version:number,width:number,height:number,tick:number,nextId:number,site3:boolean):boolean {
  if(!plain(raw))return false;const d=own(raw,'geysers');if(!d.valid)return false;
  if(version<=255||!site3)return !d.present;
- return version===256&&d.present&&validLocalGeyserState256(d.value,width,height,tick,nextId);
+ return isSchema256Or257(version)&&d.present&&validLocalGeyserState256(d.value,width,height,tick,nextId);
 }
 /** Called after the shape guard, on the same global validation namespace used
  * by real pawns, structures, resources, piles and inactive local owners. */

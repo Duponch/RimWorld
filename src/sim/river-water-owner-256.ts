@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Map-local, creation-time WaterInfo values. The existing save envelope owns
  * compression; this reuses geographic IEEE754 bit columns and preserves -0.
  * No seed, reconstruction noise, river mask or renderer belongs to this owner. */
@@ -38,7 +39,7 @@ export function freezeAdmittedRiverWater256(value:StoredRiverWater256):void {Obj
 export function validRiverWaterEnvelope256(raw:unknown,version:number,campaignPlanet?:unknown):boolean {
  if(!plain(raw))return false;const water=field(raw,'riverWater');if(!water.ok)return false;
  if(!water.present)return true;
- if(version!==256)return false;
+ if(!isSchema256Or257(version))return false;
  const site=field(raw,'site'),planet=field(raw,'planet');if(!site.ok||!planet.ok||!plain(site.value)||!plain(planet.present?planet.value:campaignPlanet))return false;
  const siteRevision=field(site.value,'revision'),planetRevision=field((planet.present?planet.value:campaignPlanet) as object,'revision');if(!siteRevision.ok||siteRevision.value!==3||!planetRevision.ok||planetRevision.value!==3)return false;
  const w=field(raw,'width'),h=field(raw,'height');return w.ok&&h.ok&&typeof w.value==='number'&&typeof h.value==='number'&&validStoredRiverWater256(water.value,w.value,h.value);

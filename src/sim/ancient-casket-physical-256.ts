@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {validAncientCasketGroupIdsEnvelope256,validAncientCasketGroupLinks256} from './ancient-casket-group-ids-256.ts';
 import {validAncientCasketField256,isAncientCasket256,type AncientCasket256} from './ancient-casket-state-256.ts';
 import {terrainSupportsAffordance256} from './natural-terrain-runtime-256.ts';
@@ -16,7 +17,7 @@ export function validAncientCasketBuilding256(v:unknown,version:number,h:Pick<He
  const allowed=['id','kind','x','z','orientation','footprint','damage','factionId','casket','casketWick'];
  if(Reflect.ownKeys(v).some(k=>typeof k!=='string'||!allowed.includes(k)||!Object.getOwnPropertyDescriptor(v,k)?.enumerable||!('value'in Object.getOwnPropertyDescriptor(v,k)!)))return false;
  const s=v as AncientCasket256;
- return version===256&&int(s.id,1,h.nextId-1)&&int(s.x,0,h.width-1)&&int(s.z,0,h.height-1)&&int(s.orientation,0,3)&&s.footprint==='standard'
+ return isSchema256Or257(version)&&int(s.id,1,h.nextId-1)&&int(s.x,0,h.width-1)&&int(s.z,0,h.height-1)&&int(s.orientation,0,3)&&s.footprint==='standard'
   &&(!Object.hasOwn(s,'damage')||int(s.damage,1,249))&&(!Object.hasOwn(s,'factionId')||s.factionId===null)
   &&(!s.casketWick||s.casket.humans.length+s.casket.animals.length+s.casket.items.length===0&&(!s.casketWick.instigatorKey||Number(s.casketWick.instigatorKey.slice(s.casketWick.instigatorKey.indexOf(':')+1))<h.nextId))
   &&ancientCasketCells256(s,s.orientation).every(c=>int(c.x,0,h.width-1)&&int(c.z,0,h.height-1));

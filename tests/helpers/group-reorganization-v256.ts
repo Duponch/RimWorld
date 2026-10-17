@@ -11,14 +11,14 @@ import {openGroupReorganization,groupInventoryVector} from '../../src/sim/group-
 import {addMaterial,refreshStock} from '../../src/sim/materials.ts';
 import {GroupMotionRuntime,type GroupMotionGeometry} from '../../src/sim/group-motion-runtime.ts';
 import {validateWorld} from '../../src/sim/index.ts';
-import type {World} from '../../src/sim/types.ts';
+import {SCHEMA_VERSION,type World} from '../../src/sim/types.ts';
 import type {WorldGroupRecord} from '../../src/sim/world-map-state.ts';
 import type {AwayGroup} from '../../src/sim/group-capture.ts';
 /** Prepared physical owners only: no claimed loading, trip, health treatment,
  * elapsed tick or acquisition history. Commands under test perform the real
  * transactions; arrays below contain the actual prepared people's originals. */
 export function reorganizationCamp256(prospective=true,originArea=false){
- const w=registryCamp(),map=registeredMap(w,w.worldMaps!.rootMapId!)!;expect(w.schemaVersion).toBe(256);
+ const w=registryCamp(),map=registeredMap(w,w.worldMaps!.rootMapId!)!;expect(w.schemaVersion).toBe(SCHEMA_VERSION);
  if(originArea){expect(applyAllowedAreaCommand(map,{type:'allowed-area-create',label:'Original area'})?.ok).toBe(true);expect(applyAllowedAreaCommand(map,{type:'assign-allowed-area',pawnId:map.pawns[0]!.id,areaId:map.allowedAreas![0]!.id})?.ok).toBe(true);}
  const members=map.pawns.slice(0,2);for(const p of members)rememberMapAreaDeparture(map,p);
  // Prepared inventory is created while its true carrier is still locally
@@ -29,6 +29,9 @@ export function reorganizationCamp256(prospective=true,originArea=false){
  const items=map.piles.filter(p=>'pawnId'in p.owner&&ids.has(p.owner.pawnId));map.piles=map.piles.filter(p=>!items.includes(p));refreshStock(map);
  const context={seed:map.seed,width:map.width,height:map.height,...map.climate?{climate:map.climate}:{},...map.site?{site:map.site}:{},...map.scenario?{scenario:map.scenario}:{}},q=groupInventoryVector(items),id=w.planet!.nextGroupId++;
  const g:AwayGroup={id,startedAt:w.tick,destination:w.planet!.homeTile,ledger:emptyGroupLedger(),provisions:newGroupProvisions(),freight:newGroupFreight(),phase:'awaiting-entry',members,items,departedAt:w.tick,lastPersonalTick:w.tick,baseline:{food:q['survival-meal']??0,pemmican:q.pemmican??0,silver:q.silver??0,cargo:{cloth:q.cloth??0,'muffalo-wool':q['muffalo-wool']??0},medicine:q.medicine??0,component:q.component??0,freight:{wood:q.wood??0,steel:q.steel??0}},entry:{x:members[0]!.x,z:members[0]!.z},tile:w.planet!.homeTile,route:[w.planet!.homeTile],segment:null,paused:false,stop:{kind:'awaiting-entry'},...prospective?{travel:{revision:1,tickDelta:0,forage:newGroupForageRevision256(items)}}:{}};
+ // This is a prepared away contract, not a new on-map admission. Its fresh
+ // World uses the current schema without grafting formation privileges/history.
+ expect(g).not.toHaveProperty('admission');expect(g).not.toHaveProperty('humanPreparation');
  const record:WorldGroupRecord={originMapId:w.worldMaps!.rootMapId!,localMapId:null,context,state:g};w.worldGroups!.groups.push(record);w.worldGroups!.selectedGroupId=id;
  if(prospective)g.reorganization=openGroupReorganization(g,[],w.tick,members.map(p=>({pawnId:p.id,originMapId:record.originMapId,context})));
  flushRegisteredMap(map);expect(validateWorld(w)).toEqual([]);return {w,map,g,record,members,items};

@@ -1,3 +1,4 @@
+import {isSchema256Or257} from '../sim/schema-compatibility-257.ts';
 /** Door-reference witnesses are transport metadata only. They never enter World
  * or a save, and are captured from actual owners in the worker. */
 import {heldDuckAnimal256} from '../sim/duck-owner-capture-256.ts';
@@ -27,7 +28,7 @@ function references(w:World):number[]|undefined {
 function rows(packet:object,version:number):ExplorationApproacher256[]|null|undefined {
  const field=datum(packet,key);if(!field.ok)return;
  if(!field.present)return null;
- if(version!==256||!Array.isArray(field.value)||Object.getPrototypeOf(field.value)!==Array.prototype)return;
+ if(!isSchema256Or257(version)||!Array.isArray(field.value)||Object.getPrototypeOf(field.value)!==Array.prototype)return;
  const values=field.value;if(Reflect.ownKeys(values).length!==values.length+1)return;
  const out:ExplorationApproacher256[]=[];let last=0;
  for(let i=0;i<values.length;i++){

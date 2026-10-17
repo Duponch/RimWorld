@@ -23,7 +23,7 @@ import type {MedicalContext} from '../src/sim/injury-types';
 const random=(duration=8001,seed=-17)=>({integer:(min:number,max:number)=>{expect([min,max]).toEqual([8000,12001]);return duration;},integerValue:()=>seed});
 const clinical:MedicalContext={phase:17,posture:'standing',starving:false,cryptosleepSicknessSpawned:false};
 const validate=(h:unknown,version=256)=>validateMedicalRecord(h,true,true,true,true,false,false,true,true,true,true,true,version,true);
-function prepared(){const w=huntingCamp();w.schemaVersion=256;w.deterioration!.lastTick=w.tick;const p=w.pawns[0]!;p.health=createMedicalRecord(w.tick);return {w,p,h:p.health};}
+function prepared(){const w=huntingCamp();w.deterioration!.lastTick=w.tick;const p=w.pawns[0]!;p.health=createMedicalRecord(w.tick);return {w,p,h:p.health};}
 
 describe('prospective cryptosleep sickness with actual clinical and physical owners',()=>{
  it('draws MakeHediff duration then noise, and preserves the old component when the new one merges',()=>{
@@ -74,7 +74,7 @@ describe('prospective cryptosleep sickness with actual clinical and physical own
   expect(processVomit(state,1,0,{...context,foodLevel:96},0).active).toBe(true);expect(state.vomit).toBeUndefined();expect(starts).toBe(1);expect(deposits).toBe(1);
  });
  it('interrupts at real local contact, keeps one physical job with an independent disease, and cancels it on actual death',()=>{
-  const w=huntingCamp();w.schemaVersion=256;const p=w.pawns[0]!;w.tick+=((p.id%60-w.tick%60+60)%60);const h=p.health=createMedicalRecord(w.tick);p.hunger=100;p.moveCooldown=0;p.state='idle';p.path=[];
+  const w=huntingCamp();const p=w.pawns[0]!;w.tick+=((p.id%60-w.tick%60+60)%60);const h=p.health=createMedicalRecord(w.tick);p.hunger=100;p.moveCooldown=0;p.state='idle';p.path=[];
   addCryptosleepSickness256(h,random(),256);w.rng=1;const possessions=w.piles.slice();
   expect(processPawnVomiting(w,p)).toBe(true);expect(h.foodPoisoning).toBeUndefined();expect(p.hunger).toBe(96);expect(w.filth?.items.some(f=>f.kind==='vomit')).toBe(true);expect(w.piles).toEqual(possessions);
   const episode=h.cryptosleepSickness!.vomit!,remaining=episode.remainingCore;expect(Math.max(Math.abs(episode.cell.x-p.x),Math.abs(episode.cell.z-p.z))).toBeLessThanOrEqual(1);
@@ -84,7 +84,7 @@ describe('prospective cryptosleep sickness with actual clinical and physical own
   h.bloodLoss=BLOOD_UNIT;reconcileMedicalDeath(h);reconcilePawnHealth(w,p);expect(p.state).toBe('dead');expect(h.cryptosleepSickness!.vomit).toBeUndefined();expect(h.cryptosleepSickness!.remainingCore).toBe(7991);
  });
  it('reuses the animal physical driver on the same real original without an invented poisoned food or holder',()=>{
-  const w=huntingCamp();w.schemaVersion=256;const a=w.wildlife!.animals[0]!;w.tick+=((a.id%60-w.tick%60+60)%60);a.health=createAnimalMedicalRecord256(w,a);a.food=.2;a.state='idle';a.path=[];delete a.motion;
+  const w=huntingCamp();const a=w.wildlife!.animals[0]!;w.tick+=((a.id%60-w.tick%60+60)%60);a.health=createAnimalMedicalRecord256(w,a);a.food=.2;a.state='idle';a.path=[];delete a.motion;
   addCryptosleepSickness256(a.health,random(),256);w.rng=1;expect(processAnimalVomiting(w,a)).toBe(true);expect(a.health.foodPoisoning).toBeUndefined();expect(a.food).toBeCloseTo(.192,7);expect(a.health.cryptosleepSickness!.vomit).toBeDefined();
  });
 });

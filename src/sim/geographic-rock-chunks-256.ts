@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Creation-only GenStep970 join. The ORIGINAL physical result supplies its
  * elevation and rock identities; every mask below is captured from its SAME
  * current World after750/875/900/950, never from a terrain-only replacement. */
@@ -18,7 +19,7 @@ type PhysicalResult256=ReturnType<typeof prepareGeographicPhysicalMap256>;
  * belongs to the generation context; there is deliberately no0..7 fallback. */
 export function populateGeographicRockChunks256(physical:PhysicalResult256,context:{adjacentPermutation:readonly number[]},random:WorldGenerationRandom){
  const {world,description,composition}=physical,{width,height}=world,n=width*height;
- if(world.schemaVersion!==256||world.site?.revision!==3||world.planet?.revision!==3||world.site.tileId!==description.tileId||world.seed!==(description.mapSeed>>>0)||composition.elevation.length!==n||world.jobs.length||world.exploration||world.snow)throw Error('RockChunks requires its actual unpublished970 map and retained physical result');
+ if(!isSchema256Or257(world.schemaVersion)||world.site?.revision!==3||world.planet?.revision!==3||world.site.tileId!==description.tileId||world.seed!==(description.mapSeed>>>0)||composition.elevation.length!==n||world.jobs.length||world.exploration||world.snow)throw Error('RockChunks requires its actual unpublished970 map and retained physical result');
  const capture=captureActualLocalDistricts256(world),edifices=new Uint8Array(n),items=new Uint8Array(n),doors=new Uint8Array(n),heavy=new Uint8Array(n),rubbleBlocked=new Uint8Array(n),walkableByAny=new Uint8Array(n),vacuum=new Uint8Array(n),acceptsUnnaturalFilth=new Uint8Array(n),filthMultiplier=new Float32Array(n);
  // Admitted Core-only SURFACE definitions expose no vacuum. All currently
  // supported generated floors have inherited FilthMultiplier1; StrawMatting

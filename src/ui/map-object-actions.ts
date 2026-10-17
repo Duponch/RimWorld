@@ -1,3 +1,4 @@
+import {isSchema256Or257} from '../sim/schema-compatibility-257.ts';
 import {materialAllowedForPlayer256} from '../sim/material-permission-256';
 import {roadPropCanClaim256,roadPropCanDeconstruct256} from '../sim/local-road-prop-ownership-256';
 import { footprintCells } from '../sim/definitions';
@@ -61,7 +62,7 @@ function actionsFor(world: World, selected: MapObjectSelection, cells: readonly 
     }
   } else if (selected.kind === 'pile') {
     const pile = lookups?.piles ? lookups.piles.get(selected.id) : world.piles.find(pile => pile.id === selected.id);
-    if(world.schemaVersion===256&&pile&&pile.owner.type==='ground'&&!pile.apparel&&!pile.weapon&&!Object.hasOwn(pile,'eggForbidden')){const forbidden=!materialAllowedForPlayer256(pile);actions.push({id:'material-permission',label:forbidden?'Autoriser':'Interdire',command:{type:'material-forbid',pileId:pile.id,forbidden:!forbidden}});}
+    if(isSchema256Or257(world.schemaVersion)&&pile&&pile.owner.type==='ground'&&!pile.apparel&&!pile.weapon&&!Object.hasOwn(pile,'eggForbidden')){const forbidden=!materialAllowedForPlayer256(pile);actions.push({id:'material-permission',label:forbidden?'Autoriser':'Interdire',command:{type:'material-forbid',pileId:pile.id,forbidden:!forbidden}});}
     if (pile?.kind === 'chunk' && pile.owner.type === 'ground' && !pile.haulRequested) {
       actions.push({ id: 'haul-chunks', label: 'Transporter',
         command: { type: 'area', action: 'haul-chunks', from: { x: cell.x, z: cell.z }, to: { x: cell.x, z: cell.z } } });

@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Original GenStep950 adaptation using the caller's real generation stream. */
 import {captureActualLocalDistricts256,type ActualStartMap256} from './actual-local-districts-256.ts';
 import {findLocalNotEdgeCell256,assertLocalDimensions256} from './local-cell-selection-256.ts';
@@ -36,7 +37,7 @@ export function geyserCount256(width:number,rate:number,biomeFactor:number,mutat
  * Never grants resources for vanished generation plants/edifices. */
 export function generateLocalGeysers256(map:GeyserGenerationMap256,context:GeyserGenerationContext256,random:WorldGenerationRandom):{requested:number;exhausted:boolean;placements:GeyserPlacementPlan256[];random:Readonly<{seed:number;counter:number}>} {
  assertLocalDimensions256(map.width,map.height);
- if(map.schemaVersion!==256||map.site?.revision!==3||'geysers' in map||context.mapInitializing!==true||typeof context.waterCovered!=='boolean'||typeof context.planEdificeRemoval!=='function'||!Number.isSafeInteger(map.nextId)||map.nextId<1||map.nextId>2147483647)throw Error('Geysers require a fresh actual Site3 generation owner');
+ if(!isSchema256Or257(map.schemaVersion)||map.site?.revision!==3||'geysers' in map||context.mapInitializing!==true||typeof context.waterCovered!=='boolean'||typeof context.planEdificeRemoval!=='function'||!Number.isSafeInteger(map.nextId)||map.nextId<1||map.nextId>2147483647)throw Error('Geysers require a fresh actual Site3 generation owner');
  for(const rect of [...context.layoutRects,...context.usedRects])if(![rect.minX,rect.minZ,rect.maxX,rect.maxZ].every(Number.isInteger)||rect.minX>rect.maxX||rect.minZ>rect.maxZ)throw Error('Invalid actual layout rectangle');
  if(context.ancientCaskets.some(g=>!Number.isSafeInteger(g.id)||g.id<1||![g.x,g.z,g.width,g.height].every(Number.isInteger)||g.width<1||g.height<1))throw Error('Invalid actual special Thing');
  // Validate factor inputs even if water-covered, but consume no generation draw.

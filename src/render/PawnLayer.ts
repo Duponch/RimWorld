@@ -1,3 +1,4 @@
+import {groupHumanCarryPairs257} from '../sim/group-human-admission-257.ts';
 import {arrivalRotationYaw256} from '../sim/arrival-rotation-256';
 import {actorExplorationMaterial256} from './ExplorationMask256';
 import {isAnimalSpecies256} from '../sim/animal-core-v256';
@@ -208,6 +209,7 @@ export class PawnLayer {
   hiddenPileQuantity(pileId:number):number {return this.handoffs.hiddenQuantity(pileId);}
   hiddenPileQuantities():ReadonlyMap<number,number> {return this.handoffs.hiddenQuantities();}
   private travelSurfaces:ReadonlyMap<number,number>=new Map();
+  private groupHumanCarrierIds=new Set<number>();
   private rescuePairs:readonly (readonly [number,number])[]=[];
   constructor(private readonly configure?: (material: THREE.MeshStandardNodeMaterial) => void,private readonly animationDetail=new AnimationDetail()) {this.animationCache=new ActorAnimationCache(animationDetail);this.partialAnimationCache=new ActorAnimationCache(animationDetail);}
   cpuPoseForId(id:number){const slot=this.pawnIndices.get(id);return slot===undefined?undefined:this.animationCache.cpuPose(slot);}
@@ -844,7 +846,9 @@ export class PawnLayer {
     if(newMap){this.headings.clear();this.approachTransitions.clear();this.departureOffsets.clear();this.workOffsets.clear();this.crouchTransitions.clear();this.shownPoses.clear();this.gait.clear();this.handoffs.clear();}
     const indices=new Map<number,number>(),pawnsById=new Map<number,Pawn>();
     world.pawns.forEach((p,i)=>{indices.set(p.id,i);pawnsById.set(p.id,p);});
-    this.rescuePairs=world.pawns.flatMap((p,i)=>p.rescue?.phase==='carry'&&indices.has(p.rescue.patientId)?[[i,indices.get(p.rescue.patientId)!] as const]:[]);
+    const humanCarry=groupHumanCarryPairs257(world);
+    this.rescuePairs=[...world.pawns.flatMap((p,i)=>p.rescue?.phase==='carry'&&indices.has(p.rescue.patientId)?[[i,indices.get(p.rescue.patientId)!] as const]:[]),...humanCarry.filter(pair=>indices.has(pair.carrierId)&&indices.has(pair.patientId)).map(pair=>[indices.get(pair.carrierId)!,indices.get(pair.patientId)!] as const)];
+    this.groupHumanCarrierIds=new Set(humanCarry.map(pair=>pair.carrierId));
     this.rescuePairs=[...this.rescuePairs,...world.piles.flatMap(p=>p.humanCorpse&&p.owner.type==='pawn'&&indices.has(p.owner.pawnId)&&indices.has(p.humanCorpse.pawnId)?[[indices.get(p.owner.pawnId)!,indices.get(p.humanCorpse.pawnId)!] as const]:[])];
     const bodies=new Map(world.piles.filter(p=>p.humanCorpse).map(p=>[p.humanCorpse!.pawnId,p]));
     const retainedOffsets=retainedHumanCorpseOffsets(world);
@@ -996,7 +1000,7 @@ export class PawnLayer {
       const handoff=this.handoffs.active.get(pawn.id);
       const mainHandoff=handoff?.partial?undefined:handoff;
       const [kind,size]=cargoAppearance(mainHandoff?.direction==='drop'?mainHandoff.pile:load);
-      cargo.setXYZW(index,pawn.rescue?.phase==='carry'||pawn.animalRescue?.phase==='carry'||load?.humanCorpse?-1:packed?4:kind,packed?1:size,
+      cargo.setXYZW(index,pawn.rescue?.phase==='carry'||this.groupHumanCarrierIds.has(pawn.id)||pawn.animalRescue?.phase==='carry'||load?.humanCorpse?-1:packed?4:kind,packed?1:size,
         mainHandoff?localTimeSeconds(mainHandoff.start,this.carryOrigin):0,
         mainHandoff?(mainHandoff.direction==='pickup'?1:-1)*localTimeSeconds(mainHandoff.end,this.carryOrigin):0);
       if(mainHandoff){

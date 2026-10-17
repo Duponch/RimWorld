@@ -1,4 +1,5 @@
 /// <reference lib="webworker" />
+import {isSchema256Or257} from '../sim/schema-compatibility-257.ts';
 import {generateGeographicWorldDraft256,type GeographicWorldDraft256} from '../sim/world-geographic-draft';
 import {captureGeneratedGeography256,type CampaignGeography256} from '../sim/world-geography-owner-256';
 import {planetGeography256} from '../sim/planet-geography-256';
@@ -103,7 +104,7 @@ function cancelCamp256(request:Extract<Request,{type:'camp-entry-cancel'}>):void
  send({type:'reply',id:request.id,ok:true,data:JSON.stringify({cancelRequested:true})});
 }
 function newCampCommand256(request:Request):boolean {
- if(request.type!=='command'||!validWorldMapCommand(request.command)||request.command.type!=='group-enter'||request.command.mode!=='camp'||world?.schemaVersion!==256||world.planet?.revision!==3||!world.worldMaps)return false;
+ if(request.type!=='command'||!validWorldMapCommand(request.command)||request.command.type!=='group-enter'||request.command.mode!=='camp'||!isSchema256Or257(world?.schemaVersion)||world.planet?.revision!==3||!world.worldMaps)return false;
  const id=request.command.groupId,g=world.worldGroups?.groups.find(r=>r.state.id===id)?.state;
  return !world.worldMaps.sites.some(s=>s.tile===(g&&'tile'in g?g.tile:undefined));
 }
@@ -211,7 +212,7 @@ async function handleWorldDraft256(request:DraftRequest256):Promise<void> {
    for(;;){{const actualFault=readSimulationFault256();if(actualFault)throw Error(actualFault.reason);}if(heldWorldDraft!==d)throw Error('La création de la colonie a été annulée.');const result=iterator.next();if(result.done){created=result.value;completed=true;break;}send({type:'world-draft-progress',id:request.id,generation:d.generation,progress:result.value});await nextDraftTurn();}
   }finally{if(!completed)iterator.return(undefined as never);}
   if(heldWorldDraft!==d||!created)throw Error('La préparation est perdue. Générez le monde à nouveau.');
-  if(created.schemaVersion!==256||created.width!==250||created.height!==250||created.planet?.revision!==3||planetGeography256(created.planet)!==owner||created.site?.revision!==3||created.site.tileId!==request.ticket.tile||created.scenario?.id!==d.request.player.scenario||created.worldFactions!==draft.factions||created.nextId<nextThingId||created.worldFactions.playerFactionId!==playerFactionId||!created.worldFactions.factions.some(f=>f.id===playerFactionId&&f.def===d.request.player.playerDef&&f.name===d.request.player.playerName))throw Error('L’usine locale n’a pas conservé les propriétaires du monde confirmé.');
+  if(!isSchema256Or257(created.schemaVersion)||created.width!==250||created.height!==250||created.planet?.revision!==3||planetGeography256(created.planet)!==owner||created.site?.revision!==3||created.site.tileId!==request.ticket.tile||created.scenario?.id!==d.request.player.scenario||created.worldFactions!==draft.factions||created.nextId<nextThingId||created.worldFactions.playerFactionId!==playerFactionId||!created.worldFactions.factions.some(f=>f.id===playerFactionId&&f.def===d.request.player.playerDef&&f.name===d.request.player.playerName))throw Error('L’usine locale n’a pas conservé les propriétaires du monde confirmé.');
   configureSettlementLimit(created,request.maxSettlements);const errors=validateWorld(created);if(errors.length)throw Error(`La colonie produite est invalide : ${errors[0]}`);
   // Sole authoritative replacement boundary. No old colony, clock or RNG was
   // touched before the complete local World and every owner passed validation.

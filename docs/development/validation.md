@@ -1,5 +1,7 @@
 # Validation courante — V349–V350
 
+**V412 — schéma 257 :** [Formation et portage humain](../gameplay/group-admission-v412.md) : 48cas/8fichiers acquis par reprises, portage/recharge/annulation physiques au62, départ343/recharge344, présentation163,045s. Rouges conservés, préparation32² déclarée, aucun gain général FPS démontré. Non publié, productionV403 inchangée. Les états suivants sont historiques.
+
 **V408 — schéma 256 :** [Générateur géographique](../gameplay/world-generation-v408.md) raccordé pour Atterrissage forcé250², vraie création et reprise contrôlées. PNJ actuels adaptés ; voyages/cartes temporaires et qualification globale restent à terminer avant la nouvelle démonstration. Non publié, productionV403/e24c5731 inchangée. Les états suivants sont historiques.
 
 **V404 qualifié — schéma 255 inchangé :** [Copier et renommer une politique de tenue](../gameplay/apparel-policy-copy-v404.md). Filtres confirmés indépendants, registre partagé et sauvegarde exacte ; aucune affectation ou tâche changée. V404 attend la publication groupée avec V405 ; dernière production V403/e24c5731, produit0f1a8cc1,134 réponses HTTPS exactes. Les états suivants sont historiques.

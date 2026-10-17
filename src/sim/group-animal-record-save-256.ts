@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {validDetachedHiveInsect256} from './cave-hive-save-256.ts';
 import {validHiveRuntimeFields256} from './cave-hive-runtime-save-256.ts';
 import {validStartingPetHeader256} from './starting-pet-state-256.ts';
@@ -27,7 +28,7 @@ const dense=(v:unknown,max:number):v is unknown[]=>Array.isArray(v)&&Object.getP
 const animalKeys=['id','species','sex','x','z','food','rest','state','path','nextDecision','health','corpseRot','domestic','ageTicks','parents','pregnancy','manhunter'];
 /** Shape only, with true personal clock. No terrain, pathfinder, climate generation or passive advance. */
 export function validCaravanAnimalRecord256(a:unknown,c:GroupAnimalRecordContext256):boolean {
- const {nextId,version}=c;if(c.mothballedWorldPawn256&&version!==256)return false;
+ const {nextId,version}=c;if(c.mothballedWorldPawn256&&!isSchema256Or257(version))return false;
  if(!obj(a)||!validDetachedHiveInsect256(a,version,nextId)||!validHiveRuntimeFields256(a,version,c.tick,nextId)||!validStartingPetHeader256(a,version)||!validAnimalMindFields256(a,version,c.tick,c.context.width,c.context.height,false)||!validArrivalRotation256(a,version)||!validAnimalAgeCoreRemainder256(a,version,c.tick)||!keys(a,['id','species','sex','x','z','food','rest','state','path','nextDecision','ageTicks'],[...animalKeys,...(version>=256?['corpseDamage','eggLayer','mapBed','caravanCarrySick','ageCoreRemainder','growthTracker','arrivalRotation','wander','confusion','startingPet','hive','hiveThink']:[])])||!int(a.id,1,nextId-1)||!isAnimalSpeciesInVersion(a.species,version)||!int(a.x,0,c.context.width-1)||!int(a.z,0,c.context.height-1)||!['female','male'].includes(String(a.sex))||!finite(a.food,0,a.growthTracker?animalNutritionMax(a as unknown as import('./wildlife-state.ts').WildAnimal):animalSpecies(a.species).nutrition)||!finite(a.rest,0,1)||!['idle','downed','dead'].includes(String(a.state))||!dense(a.path,0)||!int(a.nextDecision,0,c.tick+100)||!int(a.ageTicks))return false;
  const animal=a as unknown as import('./wildlife-state.ts').WildAnimal,h=animal.health;if(!validToxicBuildupTransport256(animal,version,c.tick))return false;if(a.health!==undefined&&!obj(a.health))return false;
  if(!validActorMapBedField256(animal,version,nextId)||Object.hasOwn(a,'caravanCarrySick')&&typeof a.caravanCarrySick!=='boolean'||!validRetainedCorpseDamage256(animal,version)||!validAnimalEggState256(animal,version,{width:c.context.width,height:c.context.height,nextId,tick:c.tick}))return false;

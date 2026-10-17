@@ -1,3 +1,4 @@
+import {preparedSchema256} from './helpers/legacy-fixture-guards.ts';
 import {expect,test} from 'vitest';
 import {detachMapOwners} from '../src/sim/world-lost-owners.ts';
 import {huntingCamp} from './scenarios/hunting.ts';
@@ -22,7 +23,7 @@ import {rotAge} from '../src/sim/food-preservation.ts';
 import {wildlifeRandom} from '../src/sim/wildlife-state.ts';
 function prepared(){
  const w=huntingCamp(),a=w.wildlife!.animals[0]!;
- w.schemaVersion=256;w.resources=[];w.structures=[];w.jobs=[];delete w.roofing;w.wildlife!.animals=[a];
+ preparedSchema256(w);w.resources=[];w.structures=[];w.jobs=[];delete w.roofing;w.wildlife!.animals=[a];
  a.species='duck';a.sex='female';a.ageTicks=adultAgeTicks('duck');a.x=10;a.z=10;a.food=animalSpecies('duck').nutrition*.8;a.rest=1;a.state='idle';a.path=[];a.nextDecision=w.tick+1;delete a.health;delete a.motion;
  initializeAnimalEggLayer256(a);return {w,a};
 }

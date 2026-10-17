@@ -1,3 +1,4 @@
+import {preparedSchema256} from './helpers/legacy-fixture-guards.ts';
 import {expect,test} from 'vitest';
 import {huntingCamp} from './scenarios/hunting';
 import {attachGeneratedAnimalGrowth256} from '../src/sim/animal-growth-runtime-256.ts';
@@ -7,7 +8,7 @@ import {animalNavigation,moveAnimal} from '../src/sim/wildlife-navigation.ts';
 import {validateWildlife} from '../src/sim/wildlife-save.ts';
 import {groupPawnInterval256} from '../src/sim/group-core-cadence-256.ts';
 test('prepared actual original admits and recovers confusion on the same unfinished physical edge with valid RAW',()=>{
- const w=huntingCamp();w.schemaVersion=256;const a=w.wildlife!.animals[0]!;
+ const w=huntingCamp();preparedSchema256(w);const a=w.wildlife!.animals[0]!;
  // Align this explicitly prepared clock before the real edge is made.
  // One legitimate ten-Core interval crosses the actual hash30; no played time is advanced.
  const preparedTick=[w.tick,w.tick+1,w.tick+2].find(t=>groupPawnInterval256(a.id,t*10,30,10));if(preparedTick===undefined)throw Error('Missing actual hash frontier');w.tick=preparedTick;

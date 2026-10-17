@@ -1,3 +1,5 @@
+import {preparedSchema256} from './helpers/legacy-fixture-guards.ts';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 import {describe,it,expect} from 'vitest';
 import {validStartingParty} from '../src/sim/starting-candidates';
 import {startingOriginalRequestFromRoster256,validStartingOriginalRequest256} from '../src/sim/starting-original-request-256';
@@ -24,7 +26,7 @@ describe('eight original starters before map generation (adapted births)',()=>{
   for(let i=0;i<5;i++){const row=roster.worldPawns.owners[i]!,e=roster.reserves[i]!;expect(row.actor).toBe(e.pawn);expect(row.items).toBe(e.items);expect(row.packed).toBe(e.packed);expect(row).toMatchObject({kind:'human',factionId:11,originMapId:null,clockCore:0,enteredAtAbsCore:3600000,keepForever:true,startingPawnLeftBehind:true});expect(Object.hasOwn(row,'everColonist')).toBe(false);}
   expect(roster.reserves[0]!.pawn.name).toBe('Réserve <quatre>');expect(roster.selected.every(e=>!roster.worldPawns.owners.some(row=>row.actor===e.pawn))).toBe(true);
   expect(validWorldPawnsEnvelope256({worldPawns:roster.worldPawns},256,0,roster.nextId)).toBe(true);expect(validWorldPawnsEnvelope256({worldPawns:roster.worldPawns},255,0,roster.nextId)).toBe(false);
-  expect(validateWorldPawnOwners256(roster.worldPawns,{schemaVersion:256,tick:0,nextId:roster.nextId,worldFactions:factions},new Set(roster.selected.map(e=>e.pawn.id)))).toEqual([]);
+  expect(validateWorldPawnOwners256(roster.worldPawns,preparedSchema256({schemaVersion:SCHEMA_VERSION,tick:0,nextId:roster.nextId,worldFactions:factions}),new Set(roster.selected.map(e=>e.pawn.id)))).toEqual([]);
  });
  it('refuses duplicate chooser entries or allocator collisions before changing supplied owners',()=>{
   const factions=player(),before=JSON.stringify(factions),r=request(),input={nextId:1007,factions,knownPeople:new Map(),knownThingIds:new Set([1007]),context:{seed:123,width:250,height:250},absoluteCore:0};

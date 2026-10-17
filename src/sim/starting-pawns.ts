@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {constructHumanConditionMind256} from './human-condition-mind-256.ts';
 import {createPawnAppearance} from './pawn-appearance.ts';
 import { initialHumanAge,initialHumanAilments } from './human-age.ts';
@@ -24,5 +25,5 @@ export function startingPawn(id:number,name:string,x:number,z:number,index:numbe
     priorities:{handle:3,art:3,clean:3,firefight:1,warden:3,basic:3,hunt:2,research:3,patient:1,bedrest:3,doctor:1,mine:2,gather:2,build:2,haul:3,grow:2,cook:2,craft:2},
     path:[],moveCooldown:0,planCooldown:0,
   };
-  if(version===256)constructHumanConditionMind256(pawn,version);return pawn;
+  if(isSchema256Or257(version))constructHumanConditionMind256(pawn,version);return pawn;
 }

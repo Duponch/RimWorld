@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {captureRandomClosewalk256,randomClosewalkCellNear256} from './random-closewalk-256.ts';
 import {claimCoreStartingScatterFrontier256} from './starting-pod-birth-256.ts';
 import {divideStartingScatterCount256} from './starting-scatter-stacks-256.ts';
@@ -27,7 +28,7 @@ const inside=(r:StartingScatterRectangle256,c:Readonly<Cell>)=>c.x>=r.minX&&c.x<
  * No state reset per embedded scatterer: their SeedPart is not pushed by the
  * ScenPart caller. Failure discards this unpublished creation candidate. */
 export function applyCoreStartingScatter256(world:World,arrival:CoreStartingArrivalPending256,start850:number,layoutRects:readonly StartingScatterRectangle256[],random:WorldGenerationRandom){
- if(world.startingArrival!==arrival||world.schemaVersion!==256||world.tick!==0||world.site?.revision!==3||world.pawns.length||world.jobs.length||!Number.isInteger(start850)||start850<0||start850>=world.tiles.length||!Array.isArray(layoutRects)||layoutRects.some(r=>![r.minX,r.maxX,r.minZ,r.maxZ].every(Number.isInteger)||r.minX>r.maxX||r.minZ>r.maxZ))throw Error('Missing actual875 scatter frontier');
+ if(world.startingArrival!==arrival||!isSchema256Or257(world.schemaVersion)||world.tick!==0||world.site?.revision!==3||world.pawns.length||world.jobs.length||!Number.isInteger(start850)||start850<0||start850>=world.tiles.length||!Array.isArray(layoutRects)||layoutRects.some(r=>![r.minX,r.maxX,r.minZ,r.maxZ].every(Number.isInteger)||r.minX>r.maxX||r.minZ>r.maxZ))throw Error('Missing actual875 scatter frontier');
  claimCoreStartingScatterFrontier256(arrival,random);
  const width=world.width,height=world.height,start={x:start850%width,z:Math.floor(start850/width)},roofs=roofCells(world),report:{item:string;requested:number;placed:number}[]=[];
  for(const spec of SCATTER){

@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {captureStartingPlacePhysics256} from './starting-place-physics-256.ts';
 import {findStartingPlaceNear256,planStartingPlaceDirect256,type StartingPlaceThing256} from './starting-place-near-256.ts';
 import {ITEM_DEFINITIONS} from './items.ts';
@@ -12,7 +13,7 @@ import type {World,MaterialPile,Cell} from './types.ts';
  * real arrival owner. This is not an atomic transaction on a running campaign:
  * the factory discards the entire unpublished candidate on an exception. */
 export function captureStartingGeneratedPlacement256(world:World,arrival:CoreStartingArrivalPending256,center:Readonly<Cell>){
- if(world.schemaVersion!==256||world.tick!==0||world.site?.revision!==3||world.startingArrival!==arrival)throw Error('Starting placement requires its actual unpublished map');
+ if(!isSchema256Or257(world.schemaVersion)||world.tick!==0||world.site?.revision!==3||world.startingArrival!==arrival)throw Error('Starting placement requires its actual unpublished map');
  const ground=new Map<number,MaterialPile[]>();
  for(const p of world.piles)if(p.owner.type==='ground'){const i=p.owner.z*world.width+p.owner.x,list=ground.get(i)??[];list.push(p);ground.set(i,list);}
  const read=captureStartingPlacePhysics256(world,arrival,center,ground,[]);

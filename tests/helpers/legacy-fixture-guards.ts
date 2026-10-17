@@ -21,3 +21,11 @@ export function legacySite(world:Pick<World,'site'>) {
 }
 export type BuildableFixtureKind=Extract<StructureKind,JobKind>;
 export function isBuildableFixtureKind(kind:StructureKind):kind is BuildableFixtureKind {return Object.hasOwn(JOB_DURATION,kind);}
+
+/** QA preparation for existing ISOLATED minimum256 records only. The World
+ * interface follows the current schema, so the declared older scalar is written
+ * through its numeric header. Same object/value256 as the former assignment;
+ * never use for RAW load/migration, archived fixtures or a current full World. */
+export function preparedSchema256<T extends {schemaVersion:World['schemaVersion']}>(value:T):T {
+ const header:{schemaVersion:number}=value;header.schemaVersion=256;return value;
+}

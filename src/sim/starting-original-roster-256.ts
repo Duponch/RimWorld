@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {materializeStartingCandidate,type StartingCandidateDescriptor} from './starting-candidates.ts';
 import {validStartingOriginalRequest256,type StartingOriginalRequest256} from './starting-original-request-256.ts';
 import {generateStartingCandidateRelationships} from './relationship-generation.ts';
@@ -57,7 +58,7 @@ export function constructDeliveredStartingOriginalRoster256(request:StartingOrig
 /** Validate actual reference binding before the first875 write. Never accepts
  * a UI-provided token, a same-looking owner copy, or an old World replacement. */
 export function requireOriginalStartingRoster256(world:World,roster:StartingOriginalRoster256):void {
- const owner=owners.get(roster);if(!owner||owner.stage!=='prepared'||world.tick!==0||world.schemaVersion!==256||world.worldFactions!==roster.factions||world.worldPawns!==roster.worldPawns||world.relationships!==roster.relationships||world.nextId<roster.nextId)throw Error('Actual pre-map original roster binding is missing or consumed');
+ const owner=owners.get(roster);if(!owner||owner.stage!=='prepared'||world.tick!==0||!isSchema256Or257(world.schemaVersion)||world.worldFactions!==roster.factions||world.worldPawns!==roster.worldPawns||world.relationships!==roster.relationships||world.nextId<roster.nextId)throw Error('Actual pre-map original roster binding is missing or consumed');
  if(world.seed!==owner.context.seed||world.width!==owner.context.width||world.height!==owner.context.height)throw Error('Roster birth header does not match the actual generated map');
  for(let i=0;i<roster.all.length;i++){const e=roster.all[i]!;if(JSON.stringify({pawn:e.pawn,items:e.items,packed:e.packed})!==owner.source[i])throw Error('A starting original changed during map generation');}
  if(roster.worldPawns.owners.length!==5||roster.reserves.some((e,i)=>roster.worldPawns.owners[i]?.actor!==e.pawn||!roster.worldPawns.owners[i]?.keepForever||!roster.worldPawns.owners[i]?.startingPawnLeftBehind)||roster.selected.some(e=>roster.worldPawns.owners.some(r=>r.actor===e.pawn)))throw Error('Initial eight originals have contradictory owners');
@@ -79,7 +80,7 @@ export function requireConsumedStartingOriginalRoster256(world:World,roster:Star
  * unpublished, owner-free creation state can accept this prepared roster. */
 export function attachStartingOriginalRoster256(world:World,roster:StartingOriginalRoster256):void {
  const owner=owners.get(roster);
- if(!owner||owner.stage!=='prepared'||world.schemaVersion!==256||world.tick!==0||world.site?.revision!==3||world.planet?.revision!==3||world.worldFactions!==roster.factions||world.nextId<roster.nextId||world.seed!==owner.context.seed||world.width!==owner.context.width||world.height!==owner.context.height||Object.hasOwn(world,'worldPawns')||Object.hasOwn(world,'relationships')||Object.hasOwn(world,'startingArrival')||world.pawns.some(p=>roster.all.some(e=>e.pawn.id===p.id)))throw Error('Cannot attach initial originals to an existing owner or mismatched generated map');
+ if(!owner||owner.stage!=='prepared'||!isSchema256Or257(world.schemaVersion)||world.tick!==0||world.site?.revision!==3||world.planet?.revision!==3||world.worldFactions!==roster.factions||world.nextId<roster.nextId||world.seed!==owner.context.seed||world.width!==owner.context.width||world.height!==owner.context.height||Object.hasOwn(world,'worldPawns')||Object.hasOwn(world,'relationships')||Object.hasOwn(world,'startingArrival')||world.pawns.some(p=>roster.all.some(e=>e.pawn.id===p.id)))throw Error('Cannot attach initial originals to an existing owner or mismatched generated map');
  for(let i=0;i<roster.all.length;i++){const e=roster.all[i]!;if(JSON.stringify({pawn:e.pawn,items:e.items,packed:e.packed})!==owner.source[i])throw Error('Starting original changed before actual map adoption');}
  if(roster.worldPawns.owners.length!==5||roster.reserves.some((e,i)=>roster.worldPawns.owners[i]?.actor!==e.pawn||!roster.worldPawns.owners[i]?.keepForever||!roster.worldPawns.owners[i]?.startingPawnLeftBehind)||roster.selected.some(e=>e.items.length||e.packed.length||roster.worldPawns.owners.some(r=>r.actor===e.pawn)))throw Error('Original roster owners changed before adoption');
  world.worldPawns=roster.worldPawns;world.relationships=roster.relationships;

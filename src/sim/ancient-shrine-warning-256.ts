@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {isColonist} from './affiliation.ts';
 import {foggedCell256,explorationEnabled256} from './exploration-state-256.ts';
 import {groupCoreTicks256,groupPawnInterval256} from './group-core-cadence-256.ts';
@@ -10,7 +11,7 @@ import type {World} from './types.ts';
  * No signal-tag counter is introduced: the private pair is its exact link,
  * so its matching string has no independent persisted or gameplay meaning. */
 export function spawnAncientShrineWarning256(w:World,wallBounds:AncientRect256):AncientShrineWarning256 {
- if(w.schemaVersion!==256||w.site?.revision!==3||w.planet?.revision!==3||w.exploration||!Number.isSafeInteger(w.nextId)||w.nextId<1||!Number.isSafeInteger(w.nextId+2))throw Error('Actual private AncientTemple warning generation frontier required');
+ if(!isSchema256Or257(w.schemaVersion)||w.site?.revision!==3||w.planet?.revision!==3||w.exploration||!Number.isSafeInteger(w.nextId)||w.nextId<1||!Number.isSafeInteger(w.nextId+2))throw Error('Actual private AncientTemple warning generation frontier required');
  if(![wallBounds.minX,wallBounds.minZ,wallBounds.maxX,wallBounds.maxZ].every(Number.isSafeInteger)||wallBounds.minX<0||wallBounds.minZ<0||wallBounds.maxX>=w.width||wallBounds.maxZ>=w.height||wallBounds.maxX<wallBounds.minX||wallBounds.maxZ<wallBounds.minZ)throw Error('Invalid actual Temple wall bounds');
  const rect={minX:Math.max(0,wallBounds.minX-1),minZ:Math.max(0,wallBounds.minZ-1),maxX:Math.min(w.width-1,wallBounds.maxX+1),maxZ:Math.min(w.height-1,wallBounds.maxZ+1)},center=rectCenter256(wallBounds);
  const pair:AncientShrineWarning256={triggerId:w.nextId,actionId:w.nextId+1,rect,center,triggerAlive:true,actionAlive:true};
@@ -22,7 +23,7 @@ export function spawnAncientShrineWarning256(w:World,wallBounds:AncientRect256):
  * Core PawnTrigger tests Humanlike + player faction ONLY, including downed
  * and mentally broken pawns; animals/guests/foreign prisoners do not qualify. */
 export function advanceAncientShrineWarnings256(w:World):void {
- const state=w.ancientShrineWarnings;if(!state||w.schemaVersion!==256||!explorationEnabled256(w)||w.tick<1)return;
+ const state=w.ancientShrineWarnings;if(!state||!isSchema256Or257(w.schemaVersion)||!explorationEnabled256(w)||w.tick<1)return;
  let byCell:Map<number,World['pawns']>|undefined;
  for(const pair of state.pairs){if(!pair.triggerAlive)continue;
   const middle=rectCenter256(pair.rect);if(!foggedCell256(w,middle.z*w.width+middle.x)){pair.triggerAlive=false;continue;}

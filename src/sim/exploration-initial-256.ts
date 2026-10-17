@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Original initial fog, exact physical roots and explicit reachability.
  * Initial-cell RNG belongs to the caller's actual GenStep stream. */
 import {caveRadialPattern256} from './local-cave-radial-256.ts';
@@ -52,7 +53,7 @@ export interface InitialExplorationResult256 {readonly root:number|null;readonly
  * genuinely leaves all fogged, apart from any explicit real rootsToUnfog. */
 export function initializeExploration256(map:ExplorationMap256,input:{start:number|null;rootsToUnfog:readonly number[];readers:FogInitialReaders256;edgeContext?:FogEdgeSelectionContext256},physical:FogPhysicalReaders256,random:WorldGenerationRandom,effects:ExplorationEffects256={}):InitialExplorationResult256 {
  assertExplorationDimensions256(map);
- if(map.schemaVersion!==256||map.site?.revision!==3||'exploration' in map||map.tiles.some(t=>'fogged' in t)||input.start!==null&&!validExplorationCell256(map,input.start)||input.rootsToUnfog.some(c=>!validExplorationCell256(map,c)))throw Error('Exploration requires an actual fresh Site3 map and roots');
+ if(!isSchema256Or257(map.schemaVersion)||map.site?.revision!==3||'exploration' in map||map.tiles.some(t=>'fogged' in t)||input.start!==null&&!validExplorationCell256(map,input.start)||input.rootsToUnfog.some(c=>!validExplorationCell256(map,c)))throw Error('Exploration requires an actual fresh Site3 map and roots');
  if(input.start===null&&typeof input.readers.canReachMapEdgeNoPassClosedDoorsOrWater!=='function')throw Error('Actual fog fallback MapEdge reachability is unavailable');
  let context=input.edgeContext;
  if(context&&(context.width!==map.width||context.height!==map.height||context.edgeCells.some(c=>!validExplorationCell256(map,c)||c%map.width!==0&&c%map.width!==map.width-1&&Math.floor(c/map.width)!==0&&Math.floor(c/map.width)!==map.height-1)))throw Error('Invalid actual CellFinder edge context');

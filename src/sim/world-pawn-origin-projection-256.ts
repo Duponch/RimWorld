@@ -1,10 +1,11 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {geographicLongitudeOffsetCore256} from './site-climate.ts';
 import type {CampaignState} from './world-map-state.ts';
 import type {WorldPawnOwner256} from './world-pawn-state-256.ts';
 /** Foreign-key evidence only. Never a live map, marker, grid or UI action. */
 export interface WorldPawnOriginMap256 {mapId:number;tile:number;removedAt:number}
 export function worldPawnOriginProjection256(root:CampaignState):{worldPawnOrigins?:WorldPawnOriginMap256[]} {
- if(root.schemaVersion!==256||!root.worldPawns||!root.worldMaps)return {};
+ if(!isSchema256Or257(root.schemaVersion)||!root.worldPawns||!root.worldMaps)return {};
  const needed=new Set(root.worldPawns.owners.flatMap(r=>r.originMapId===null||root.worldMaps!.sites.some(m=>m.id===r.originMapId)?[]:[r.originMapId]));
  const worldPawnOrigins=root.worldMaps.retired.flatMap(r=>needed.has(r.id)&&r.tile!==null?[{mapId:r.id,tile:r.tile,removedAt:r.removedAt}]:[]);
  return worldPawnOrigins.length?{worldPawnOrigins}:{};
@@ -15,7 +16,7 @@ const data=(v:object,k:PropertyKey)=>{const d=Object.getOwnPropertyDescriptor(v,
  * accessor/inherited/hidden metadata refusal. No Thing/map namespace merge. */
 export function validWorldPawnOriginProjection256(value:object,version:number,tick:number,nextId:number,tileCount:number,liveMapIds:ReadonlySet<number>):boolean {
  const field=Object.getOwnPropertyDescriptor(value,'worldPawnOrigins');if(!field)return !('worldPawnOrigins'in value);
- if(version!==256||!('value'in field)||!field.enumerable||!Array.isArray(field.value)||field.value.length>nextId||Reflect.ownKeys(field.value).length!==field.value.length+1)return false;
+ if(!isSchema256Or257(version)||!('value'in field)||!field.enumerable||!Array.isArray(field.value)||field.value.length>nextId||Reflect.ownKeys(field.value).length!==field.value.length+1)return false;
  const ids=new Set<number>();
  for(let i=0;i<field.value.length;i++){
   const entry=data(field.value,String(i));if(!entry)return false;const r=entry.value;

@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Fresh physical capture for Site3 generation/rare decisions. No World is
  * manufactured, stepped, changed or retained. Re-capture after any mutation. */
 import {footprintCells} from './definitions.ts';
@@ -46,7 +47,7 @@ function structurePhysics(kind:string):StartThingPhysics256 {
  * default Set_Passable. This is not a standability or pawn reachability flood. */
 export function captureActualLocalDistricts256(map:ActualStartMap256):ActualLocalDistrictCapture256 {
  const {width,height}=map;assertLocalDimensions256(width,height);const n=width*height;
- if(map.schemaVersion!==256||map.site?.revision!==3||map.tiles.length!==n)throw Error('Actual Site3 map required for prospective district capture');
+ if(!isSchema256Or257(map.schemaVersion)||map.site?.revision!==3||map.tiles.length!==n)throw Error('Actual Site3 map required for prospective district capture');
  const walk=new Uint8Array(n),nonStand=new Uint8Array(n),edifice=new Uint8Array(n),door=new Uint8Array(n),fence=new Uint8Array(n),full=new Uint8Array(n),heavy=new Uint8Array(n),roof=new Uint8Array(n);
  const index=(cell:Cell)=>{if(!Number.isInteger(cell.x)||!Number.isInteger(cell.z)||cell.x<0||cell.z<0||cell.x>=width||cell.z>=height)throw Error('Physical owner outside its actual map');return cell.z*width+cell.x;};
  const valid=(cell:number)=>Number.isInteger(cell)&&cell>=0&&cell<n;

@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import type {MedicalRecord} from './injury-types.ts';
 const f=Math.fround,year=3600000;
 /** Only the real prospective Human Adult-development stages (13..18, 18+).
@@ -12,12 +13,12 @@ export function validHumanHealthScaleHeader256(record:unknown,version:number,hum
  if(record===undefined)return true;
  if(!record||typeof record!=='object'||Array.isArray(record))return false;
  const d=Object.getOwnPropertyDescriptor(record,'humanHealthScale');
- return !d?!('humanHealthScale'in record):version===256&&human&&!Object.hasOwn(record,'ageAilments')&&'value'in d&&d.enumerable===true&&(Object.is(d.value,f(.9))||d.value===1);
+ return !d?!('humanHealthScale'in record):isSchema256Or257(version)&&human&&!Object.hasOwn(record,'ageAilments')&&'value'in d&&d.enumerable===true&&(Object.is(d.value,f(.9))||d.value===1);
 }
 export function validNativeHumanClinicalScale256(record:unknown,version:number,coreAge?:number):boolean {
  if(!validHumanHealthScaleHeader256(record,version))return false;
  if(coreAge===undefined)return record===undefined||!Object.hasOwn(record as object,'humanHealthScale');
- if(version!==256||!record||typeof record!=='object'||Array.isArray(record)||Object.hasOwn(record,'body'))return false;
+ if(!isSchema256Or257(version)||!record||typeof record!=='object'||Array.isArray(record)||Object.hasOwn(record,'body'))return false;
  if(!Number.isSafeInteger(coreAge)||coreAge<13*year)return false;
  return Object.getOwnPropertyDescriptor(record,'humanHealthScale')?.value===nativeHumanHealthScaleForCore256(coreAge);
 }

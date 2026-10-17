@@ -61,7 +61,11 @@ export type GroupStop =
   | { kind: 'incapacity'; pawnIds: number[] }
   | { kind: 'overload'; grams: number; capacityGrams: number }
   | { kind: 'unreachable'; destination: number };
+export interface GroupAdmission257 {revision:1}
+export interface GroupHumanPreparation257 {revision:1;releaseIds:number[];passengers:{pawnId:number;carrierId:number;phase:'approach'|'carry'|'waiting'}[]}
 interface GroupCommon {
+  /** Present only on formations genuinely created after admission257. */
+  admission?:GroupAdmission257;
   /** Absence preserves the engaged historical formation through its return. */
   freight?:GroupFreight;
   /** Absence preserves the historical ration-only expedition through return. */
@@ -78,6 +82,7 @@ export type GroupState =
       phase: 'gathering' | 'loading' | 'leaving';
       /** Actual new formation intent; absent on migrated engaged groups. */
       travelPreparation?:true;
+      humanPreparation?:GroupHumanPreparation257;
       animalPreparation?:GroupAnimalPreparation256;
       memberIds: number[];
       rendezvous: Cell;
@@ -116,6 +121,7 @@ export type GroupState =
 /** A retained dead human identity and possessions, not a playable Corpse.
  * This owner is frozen at the clinical death; it cannot act, ingest or return. */
 export interface GroupLoss {
+  admission?:GroupAdmission257;
   /** Present only for a real prospective death after members of different origins met. */
   memberOrigin?:GroupMemberOrigin;
   packed?:PackedFurniture[];

@@ -1,3 +1,4 @@
+import {groupHumanHandler257} from './group-human-admission-257.ts';
 import {campaignAuthority} from './secondary-site-context.ts';
 import type {World,Pawn,Cell} from './types.ts';
 import type {PreparingGroup,GroupMassCapture} from './group-capture.ts';
@@ -20,7 +21,7 @@ export function previewGroupBedrollLoading256(w:World,ids:readonly number[],memb
  const carriers=mass.carriers.map(c=>({...c})),manifest:GroupBedrollLoading256['manifest']=[];
  for(const id of ids){const pack=w.packed.find(p=>p.building.id===id);if(!pack||pack.owner.type!=='ground'||pack.building.kind!=='bedroll'||!validBedrollBuilding256(pack.building,w.schemaVersion)||reserved(w,id))return fail('Le sac de couchage doit être disponible au sol.');
   let carrier:typeof carriers[number]|undefined;
-  for(const c of [...carriers].sort((a,b)=>a.grams-b.grams||a.pawnId-b.pawnId)){if(c.capacityGrams-c.grams<BEDROLL_MASS_GRAMS_256)continue;const person=members.find(p=>p.id===c.pawnId);if(!person||allowedAreaReason(w,person,pack.owner))continue;const access=reachable(person,pack.owner);if(access==='deferred')return {kind:'deferred'};if(access==='reachable'){carrier=c;break;}}
+  for(const c of [...carriers].sort((a,b)=>a.grams-b.grams||a.pawnId-b.pawnId)){if(c.capacityGrams-c.grams<BEDROLL_MASS_GRAMS_256)continue;const person=members.find(p=>p.id===c.pawnId);if(!person||w.schemaVersion>=257&&!groupHumanHandler257(person)||allowedAreaReason(w,person,pack.owner))continue;const access=reachable(person,pack.owner);if(access==='deferred')return {kind:'deferred'};if(access==='reachable'){carrier=c;break;}}
   if(!carrier)return fail('Aucun porteur admissible ne peut charger ce couchage.');carrier.grams+=BEDROLL_MASS_GRAMS_256;manifest.push({structureId:id,carrierId:carrier.pawnId,loaded:false});
  }
  const grams=carriers.reduce((n,p)=>n+p.grams,0);if(!Number.isSafeInteger(grams))return fail('Masse de chargement invalide.');

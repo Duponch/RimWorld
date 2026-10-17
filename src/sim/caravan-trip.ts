@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {rememberLocalActorBedDeparture256,prepareLocalActorBedReturn256} from './actor-bed-local-256.ts';
 import {commitActorBedEntry256} from './actor-map-bed-256.ts';
 import {notifyActualExplorationSpawn256} from './exploration-runtime-256.ts';
@@ -90,7 +91,7 @@ export function scoutPreparationReason(w:World,p:Pawn,requireResident=true,colle
  * physiology in travel; no cure, clock rewrite or task interruption happens.
  * A real physical episode/reservation must still finish before owner transfer. */
 export function collectiveMobilePreparationReason256(w:World,p:Pawn):string|null {
-  if(w.schemaVersion!==256||!w.pawns.includes(p)||!isColonist(p)||p.prisoner||p.visitor||p.state==='dead'||p.state==='downed'||p.health?.death)return 'Choisissez un colon vivant, libre et présent.';
+  if(!isSchema256Or257(w.schemaVersion)||!w.pawns.includes(p)||!isColonist(p)||p.prisoner||p.visitor||p.state==='dead'||p.state==='downed'||p.health?.death)return 'Choisissez un colon vivant, libre et présent.';
   if(p.health&&medicalStatus(p.health)!=='mobile'||pawnBody(p).capacities.moving<=0)return 'Le colon doit pouvoir se déplacer par lui-même ; le portage humain n’est pas encore admis.';
   if(unstable(p,w))return 'Le colon est mobilisé, en crise ou engagé dans un combat.';
   if(activeTask(p)||p.deepWork||p.openCasket)return 'Le colon doit terminer son activité avant de rejoindre le groupe.';

@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Actual1120 join; same unpublished physical map and exact step stream.
  * The caller discards its private whole-map candidate on a blocked result. */
 import type {prepareGeographicPhysicalMap256} from './geographic-map-physical-256.ts';
@@ -8,7 +9,7 @@ import {spawnActualHive256,type HiveSpawnContext256} from './cave-hive-spawn-256
 import type {WorldGenerationRandom} from './world-generation-random.ts';
 export function populateGeographicCaveHives256(physical:ReturnType<typeof prepareGeographicPhysicalMap256>,context:HiveSpawnContext256&{allowCaveHives:boolean},random:WorldGenerationRandom):{status:'ready';hiveIds:number[];adjacentPermutation:number[];adjacentUses:number;nextLordId:number}|{status:'blocked';reason:string} {
  const w=physical.world,n=w.width*w.height,caves=physical.composition.caves,elevation=physical.composition.elevation;
- if(w.schemaVersion!==256||w.site?.revision!==3||w.planet?.revision!==3||w.site.tileId!==physical.description.tileId||w.seed!==(physical.description.mapSeed>>>0)||elevation.length!==n||caves.length!==n||w.jobs.length||w.exploration||w.snow||typeof context.allowCaveHives!=='boolean')throw Error('CaveHives requires its true unpublished1120 physical map');
+ if(!isSchema256Or257(w.schemaVersion)||w.site?.revision!==3||w.planet?.revision!==3||w.site.tileId!==physical.description.tileId||w.seed!==(physical.description.mapSeed>>>0)||elevation.length!==n||caves.length!==n||w.jobs.length||w.exploration||w.snow||typeof context.allowCaveHives!=='boolean')throw Error('CaveHives requires its true unpublished1120 physical map');
  const faction=w.worldFactions?.factions.filter(f=>f.def==='Insect');if(!w.worldFactions||faction!.length>1)return {status:'blocked',reason:'Missing actual faction registry or duplicate Insect faction'};
  const factionCells=new Set<number>();for(const s of w.structures)if(s.factionId!==undefined&&s.factionId!==null)for(const cell of footprintCells(s))factionCells.add(cell.z*w.width+cell.x);
  // Actual Pawn owners always have a faction (legacy colonist/outlander

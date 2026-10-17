@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Two real generation statics, owned by the campaign registry. Working
  * roots/rectangles are cleared per map and are deliberately not stored here.
  * Persisting these small lists is an Elsewhere deterministic-save adaptation:
@@ -30,7 +31,7 @@ export function validMapGenerationRuntimeEnvelope256(registry:unknown,version:nu
  if(!registry||typeof registry!=='object')return false;
  const d=Object.getOwnPropertyDescriptor(registry,'generationRuntime');
  if(!d)return !('generationRuntime'in registry);
- return version===256&&planetRevision===3&&d.enumerable===true&&Object.hasOwn(d,'value')&&validMapGenerationRuntime256(d.value);
+ return isSchema256Or257(version)&&planetRevision===3&&d.enumerable===true&&Object.hasOwn(d,'value')&&validMapGenerationRuntime256(d.value);
 }
 /** Only the real new-campaign producer calls this; never a load/migration. */
 export function initialMapGenerationRuntime256():MapGenerationRuntime256 {return Object.freeze({revision:1,adjacentPermutation:null});}

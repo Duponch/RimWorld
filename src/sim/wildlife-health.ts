@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {activeHiveInsect256,hiveInstigatorFaction256,notifyHivePawnHarmed256,receiveHiveMemo256,combatTargetKeyForHive256} from './cave-hive-lord-256.ts';
 import {detachHiveInsect256} from './cave-hive-lifecycle-256.ts';
 import {commitToxicDeath256,cancelToxicVomit256} from './toxic-buildup-256.ts';
@@ -37,7 +38,7 @@ export function reconcileAnimalHealth(w:World,a:WildAnimal):void {
   if(status!=='mobile') {
     // A real downing also releases the implicit Hive job reservation now;
     // Lord membership and the captured physical edge keep their own owners.
-    if(w.schemaVersion===256)delete a.hiveJob;
+    if(isSchema256Or257(w.schemaVersion))delete a.hiveJob;
     cancelCryptosleepVomit256(a.health);if(a.state!==status||status==='dead'||!assessMedical(a.health).canBeAwake)cancelToxicVomit256(a.health);
     recoverAnimalManhunter(w,a);
     delete a.confusion;if(a.wander)delete a.wander.job;

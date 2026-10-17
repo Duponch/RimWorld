@@ -26,6 +26,8 @@ Une exigence est fermée seulement avec règle primaire datée, implémentation 
 
 ## Étape actuelle
 
+[V412](../gameplay/group-admission-v412.md), qualifié au schéma257, admet le travail ordinaire et les colons libres à terre dans les nouvelles formations. Libération après arêtes, portage au contact, annulation physique/recharge62, départ343/recharge344, retour et décharge ciblés conservent les mêmes propriétaires. 48cas/8fichiers par reprises et présentation163,045s ; vrais rouges conservés, anciens256 stricts avant migration neutre. Captifs, fret complet, propriétaires terminaux et autres parcours monde restent ouverts. Aucun achèvement global, publication ou gain général de performances déduit de ce lot.
+
 [V411](../gameplay/natural-travel-save-v411.md) ferme le refus d’export d’une arête sur sol moussu : coût moteur correct, valeur capturée omise de la garde. Le camp a un tabouret payé25bois et une coupe produisant27bois, puis est réellement retiré3293 ; les mêmes personnes et37bois sont revenus/déposés au3602. Marqueur et deux exports/recharges complets exacts qualifiés ensuite en pause. Les reprises ne rendent pas verts les essais rouges antérieurs ; autres frontières et démonstration finale restent ouvertes.
 
 [V410](precipitation-palette-v410.md) corrige le refus matériel de texture de pluie à l’entréeCamp. Le vrai camp200² au1037 est conservé et audité en pause : état affiché et export complet exacts, sans avancement. Le premier timeout UI reste rouge et sa cause n’est pas attribuée sans preuve ; la continuation travaux/retour reste à exécuter depuis le camp existant.

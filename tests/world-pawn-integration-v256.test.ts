@@ -1,3 +1,5 @@
+import {preparedSchema256} from './helpers/legacy-fixture-guards.ts';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 import {describe,it,expect} from 'vitest';
 import {constructDeliveredStartingOriginalRoster256} from '../src/sim/starting-original-roster-256';
 import {startingOriginalRequestFromRoster256} from '../src/sim/starting-original-request-256';
@@ -10,7 +12,7 @@ function prepared(){
  const factions:WorldFactionRegistry256={revision:1,contentModel:'original-faction-content-v1',generatedAt:0,playerFactionId:11,nextFactionId:12,nextSettlementId:1,factions:[{id:11,def:'PlayerColony',hidden:false,name:'Prepared actual player',randomKey:1,colorFromSpectrum:0,leaderOwnerId:null}],relations:[],settlements:[],leaders:[]};
  const request=startingOriginalRequestFromRoster256(359,Array.from({length:8},(_,i)=>({serial:i+1,generation:0})));
  const roster=constructDeliveredStartingOriginalRoster256(request,{nextId:1007,factions,knownPeople:new Map(),knownThingIds:new Set(),context:{seed:123,width:250,height:250},absoluteCore:3600000});
- return {roster,factions,header:{schemaVersion:256 as const,tick:0,nextId:roster.nextId,worldFactions:factions}};
+ return {roster,factions,header:preparedSchema256({schemaVersion:SCHEMA_VERSION,tick:0,nextId:roster.nextId,worldFactions:factions})};
 }
 describe('WorldPawns actual original starters and admission boundaries (prepared)',()=>{
  it('keeps five real original reserves and advances one private10Core outcome exactly once',()=>{

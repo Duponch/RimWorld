@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {addFilth} from './filth.ts';
 import {groundCapacity,planGroundPlacement,groundPile} from './ground-placement.ts';
 import {addMaterial,materialCanFit} from './materials.ts';
@@ -26,7 +27,7 @@ export function drawShipChunkDeconstruction256(s:Structure,rng:number){
 /** KillFinalize only. No source mutation, material production or RNG advance on
  * a failed Near preflight. Existing unrelated originals remain read-only. */
 export function planShipChunkKill256(w:World,s:Structure,at:Cell,rng:number){
- if(w.schemaVersion!==256||s.kind!=='ship-chunk')throw Error('Actual256 ShipChunk required');
+ if(!isSchema256Or257(w.schemaVersion)||s.kind!=='ship-chunk')throw Error('Actual256 ShipChunk required');
  const view:World={...w,piles:w.piles.map(p=>({...p,owner:{...p.owner}})),jobs:w.jobs.map(j=>({...j,escrow:{...j.escrow}})),filth:w.filth?{...w.filth,items:w.filth.items.map(f=>({...f}))}:undefined};
  const cells=footprintCells(s).map(c=>({x:c.x-s.x+at.x,z:c.z-s.z+at.z}));
  for(const c of cells){const next=shipChunkNextRandom256(rng);rng=next.rng;addFilth(view,c,'building-rubble',1+Math.abs((next.rng|0)%3));}

@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V412 — schéma 257 :** [Admission des caravanes](../gameplay/group-admission-v412.md), marqueur prospectif et références locales de portage, anciens256 stricts avant migration scalaire. Une garde finale traite les réactions tardives sans rejouer manifeste ou départ. Fondations encore partielles ; productionV403 inchangée. Les états suivants sont historiques.
+
 **V408 — schéma 256 :** [Générateur géographique](../gameplay/world-generation-v408.md) raccordé pour Atterrissage forcé250², vraie création et reprise contrôlées. PNJ actuels adaptés ; voyages/cartes temporaires et qualification globale restent à terminer avant la nouvelle démonstration. Non publié, productionV403/e24c5731 inchangée. Les états suivants sont historiques.
 
 **V404 qualifié — schéma 255 inchangé :** [Copier et renommer une politique de tenue](../gameplay/apparel-policy-copy-v404.md). Filtres confirmés indépendants, registre partagé et sauvegarde exacte ; aucune affectation ou tâche changée. V404 attend la publication groupée avec V405 ; dernière production V403/e24c5731, produit0f1a8cc1,134 réponses HTTPS exactes. Les états suivants sont historiques.

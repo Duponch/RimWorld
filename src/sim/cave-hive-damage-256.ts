@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {planNaturalHiveLoss256} from './cave-hive-loss-256.ts';
 import {findActualHiveLord256} from './cave-hive-lord-search-256.ts';
 import {hasTravellingCargo,interruptWork} from './interrupted-cargo.ts';
@@ -29,7 +30,7 @@ export function notifyRemovedHiveProp256(w:World,s:Structure,core:number,collaps
 /** No lethal hit is accepted before all real leavings/cargo/IDs fit. */
 export function damageCaveHiveProp256(w:World,s:Structure,amount:number,cause:StructureDamageCause,rng:number,external?:StructureDamageContext):boolean {
  const max=s.kind==='insect-hive'?130:s.kind==='glow-pod'?50:0,pack=w.packed.find(p=>p.building===s),spawned=w.structures.includes(s);
- if(!max||w.schemaVersion!==256||!spawned&&!pack||!Number.isSafeInteger(amount)||amount<1||!validCaveHiveBuilding256(s,256,w,!!pack))return false;
+ if(!max||!isSchema256Or257(w.schemaVersion)||!spawned&&!pack||!Number.isSafeInteger(amount)||amount<1||!validCaveHiveBuilding256(s,256,w,!!pack))return false;
  const core=external?.core??w.tick*10;if(!Number.isSafeInteger(core)||core<Math.max(0,(w.tick-1)*10)||core>w.tick*10)return false;
  const next=(s.damage??0)+amount;
  if(next<max){s.damage=next;if(cause!=='fire')w.rng=rng;

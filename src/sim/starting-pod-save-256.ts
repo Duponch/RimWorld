@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {registeredCampaign,registeredMapId} from './world-map-context.ts';
 import {plainWorldPawnData256} from './world-pawn-save-256.ts';
 import {CORE_STARTING_ARRIVAL_PROFILE_256,type CoreStartingArrival256} from './starting-pod-state-256.ts';
@@ -25,7 +26,7 @@ const cell=(c:unknown,w:Pick<World,'width'|'height'>)=>object(c)&&keys(c,['x','z
 /** Header BEFORE any owner/geography hydration. The generic plain-data walk
  * is bounded, descriptor-only and rejects accessors, holes, symbols and NaN. */
 export function validCoreStartingArrivalShape256(value:unknown,version:number,w:Pick<World,'tick'|'width'|'height'>):value is CoreStartingArrival256 {
- if(version!==256||!int(w.tick)||!int(w.tick*10)||!int(w.width,1)||!int(w.height,1)||!plainWorldPawnData256(value)||!object(value)||value.profile!==CORE_STARTING_ARRIVAL_PROFILE_256||value.start!==0||!int(value.landAt,12,20)||!int(value.openAt,24,32))return false;
+ if(!isSchema256Or257(version)||!int(w.tick)||!int(w.tick*10)||!int(w.width,1)||!int(w.height,1)||!plainWorldPawnData256(value)||!object(value)||value.profile!==CORE_STARTING_ARRIVAL_PROFILE_256||value.start!==0||!int(value.landAt,12,20)||!int(value.openAt,24,32))return false;
  if(value.openAt<value.landAt+11||value.openAt>value.landAt+12)return false;
  const destroyed=value.destroyedPods;
  if(Object.hasOwn(value,'destroyedPods')&&(!Array.isArray(destroyed)||destroyed.length<1||destroyed.length>3))return false;
@@ -64,7 +65,7 @@ function validBornSupply(pile:MaterialPile,podId:number,item:typeof CORE_STARTIN
  * controls oversized contents; IDs and owners remain globally registered by
  * the existing arrival namespace callsite after this validation. */
 export function validateCoreStartingArrivalOwners256(w:World,a:CoreStartingArrival256):string[] {
- if(w.schemaVersion!==256||w.site?.revision!==3||w.planet?.revision!==3||w.climate?.revision!==4||!validCoreStartingArrivalShape256(a,256,w))return ['Invalid Core starting-arrival provenance'];
+ if(!isSchema256Or257(w.schemaVersion)||w.site?.revision!==3||w.planet?.revision!==3||w.climate?.revision!==4||!validCoreStartingArrivalShape256(a,256,w))return ['Invalid Core starting-arrival provenance'];
  return validateCoreStartingArrivalContents256(w,a);
 }
 /** Worker substep preflight of actual held records; not a RAW header gate. */

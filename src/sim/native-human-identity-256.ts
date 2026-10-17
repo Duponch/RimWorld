@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import type {AncientHumanNameTriple256} from './ancient-human-bio-types-256.ts';
 import {ancientHumanNameLabel256} from './ancient-human-name-256.ts';
 import {validHumanAge} from './human-age.ts';
@@ -31,7 +32,7 @@ export function nativeHumanBiologicalCore256(pawn:{age?:{biologicalTicks:number}
 export function validNativeHumanField256(raw:unknown,version:number):boolean {
  if(!raw||typeof raw!=='object'||Array.isArray(raw))return false;
  const d=Object.getOwnPropertyDescriptor(raw,'nativeHuman');if(!d)return !('nativeHuman'in raw);
- if(version!==256||!d.enumerable||!Object.hasOwn(d,'value')||!validNativeHumanIdentity256(d.value)||'mechKind'in raw)return false;
+ if(!isSchema256Or257(version)||!d.enumerable||!Object.hasOwn(d,'value')||!validNativeHumanIdentity256(d.value)||'mechKind'in raw)return false;
  const label=Object.getOwnPropertyDescriptor(raw,'name');return !!label&&label.enumerable===true&&Object.hasOwn(label,'value')&&typeof label.value==='string'&&label.value.length>0&&label.value.length<=80&&label.value===ancientHumanNameLabel256(d.value.name);
 }
 /** Contextual gate; the third argument is accepted by River's coordinated

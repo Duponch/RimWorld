@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Specific creation-only composition boundary for750/950. It does not
  * certify a save, clone a World or authorize a played campaign transaction.
  * Every affected cell/source still has its own real-owner preflight. */
@@ -7,7 +8,7 @@ import {animalCarrier} from './animal-rest-state.ts';
 import {footprintCells} from './definitions.ts';
 type Header256=Pick<World,'schemaVersion'|'seed'|'tick'|'width'|'height'|'site'|'planet'|'worldMaps'|'worldGroups'|'exploration'|'snow'|'geysers'>;
 export function unpublishedAncientGeneration256(w:Header256,mapInitializing:boolean):boolean {
- return mapInitializing===true&&w.schemaVersion===256&&w.site?.revision===3&&w.planet?.revision===3&&w.seed===(w.site.mapSeed>>>0)&&Number.isSafeInteger(w.tick)&&w.tick>=0&&Number.isInteger(w.width)&&w.width>=8&&w.width<=400&&Number.isInteger(w.height)&&w.height>=8&&w.height<=400&&!('worldMaps'in w)&&!('worldGroups'in w)&&w.exploration===undefined&&w.snow===undefined&&w.geysers===undefined;
+ return mapInitializing===true&&isSchema256Or257(w.schemaVersion)&&w.site?.revision===3&&w.planet?.revision===3&&w.seed===(w.site.mapSeed>>>0)&&Number.isSafeInteger(w.tick)&&w.tick>=0&&Number.isInteger(w.width)&&w.width>=8&&w.width<=400&&Number.isInteger(w.height)&&w.height>=8&&w.height<=400&&!('worldMaps'in w)&&!('worldGroups'in w)&&w.exploration===undefined&&w.snow===undefined&&w.geysers===undefined;
 }
 const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 const occupies=(a:Cell&{motion?:{end:number;from:Cell}|null},c:Cell,tick:number)=>same(a,c)||!!a.motion&&a.motion.end>tick&&same(a.motion.from,c);

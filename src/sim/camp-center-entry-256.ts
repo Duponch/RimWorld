@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Original Center/nearby arrival sampling over one actual unpublished Camp.
  * No former World, favorable retry, terrain edit or global RNG is used. */
 import {captureRandomClosewalk256,type RandomClosewalkCapture256} from './random-closewalk-256.ts';
@@ -94,7 +95,7 @@ const prepared=new WeakMap<PreparedCampCenterEntry256,{map:World;tiles:World['ti
  * tiles only. There are no new-map mine intents to retire in this boundary. */
 export function prepareCampCenterEntry256(input:CampaignState,map:World,group:AwayGroup):PreparedCampCenterEntry256 {
  const root=registeredCampaign(input);
- if(root.schemaVersion!==256||root.planet?.revision!==3||map.schemaVersion!==256||map.site?.revision!==3||map.site.tileId!==group.tile||map.planet!==root.planet||map.worldFactions!==root.worldFactions||map.width!==200||map.height!==200||!explorationEnabled256(map)||map.jobs.length||map.pawns.length||map.startingArrival||!root.worldGroups?.groups.some(row=>row.localMapId===null&&row.state===group))throw Error('Actual unpublished new Camp and away group required');
+ if(!isSchema256Or257(root.schemaVersion)||root.planet?.revision!==3||!isSchema256Or257(map.schemaVersion)||map.site?.revision!==3||map.site.tileId!==group.tile||map.planet!==root.planet||map.worldFactions!==root.worldFactions||map.width!==200||map.height!==200||!explorationEnabled256(map)||map.jobs.length||map.pawns.length||map.startingArrival||!root.worldGroups?.groups.some(row=>row.localMapId===null&&row.state===group))throw Error('Actual unpublished new Camp and away group required');
  const animals=group.animalOwners?.members??[];
  if(duckPhysicalOwnerCount256(map)+animals.length>MAX_WILDLIFE)throw Error('Actual arriving animal capacity exceeded');
  const originals:CampArrivalActor256[]=[...group.members,...animals],byId=new Map(originals.map(a=>[a.id,a]));

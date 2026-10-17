@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {hitSkyfallerRoof256} from './roofing.ts';
 import {prepareStartingPodDischarge256} from './starting-pod-discharge-256.ts';
 import {CORE_STARTING_ARRIVAL_PROFILE_256,CORE_STARTING_OPEN_DELAY_256,finishCoreStartingArrival256,type CoreStartingArrivalPending256} from './starting-pod-state-256.ts';
@@ -8,7 +9,7 @@ import type {World} from './types.ts';
 export function advanceCoreStartingArrival256(world:World):void {
  const value=world.startingArrival;if(!value||value.profile!==CORE_STARTING_ARRIVAL_PROFILE_256||value.phase==='opened')return;
  const arrival=value as CoreStartingArrivalPending256;
- if(world.schemaVersion!==256||world.site?.revision!==3||world.planet?.revision!==3||world.tick<1||arrival.atCore!==(world.tick-1)*10)throw Error('Core initial arrival lost its actual confirmed frontier');
+ if(!isSchema256Or257(world.schemaVersion)||world.site?.revision!==3||world.planet?.revision!==3||world.tick<1||arrival.atCore!==(world.tick-1)*10)throw Error('Core initial arrival lost its actual confirmed frontier');
  const failedRoofs=new Set<number>(),failedOpenings=new Set<number>();
  for(let core=(world.tick-1)*10+1;core<=world.tick*10;core++){
   // Snapshot membership only. A completed pod leaves this actual owner list

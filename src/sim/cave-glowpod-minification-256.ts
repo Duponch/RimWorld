@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** CompLifespan is not ticked inside the real minified wrapper. Its original
  * counter stays on the same building; installation resumes, never catches up. */
 import type {Structure,World} from './types.ts';
@@ -7,7 +8,7 @@ export type NaturalInstallPlan256=Omit<import('./types.ts').DesignateCommand,'ki
 import {validCaveHiveBuilding256} from './cave-hive-save-256.ts';
 export function pauseGlowPod256(w:Pick<World,'schemaVersion'|'tick'>,s:Structure):void {
  if(s.kind!=='glow-pod')return;
- if(w.schemaVersion!==256||!s.glowPod)throw Error('Missing actual GlowPod component');
+ if(!isSchema256Or257(w.schemaVersion)||!s.glowPod)throw Error('Missing actual GlowPod component');
  s.glowPod.lastCore=w.tick*10;
 }
 export const resumeGlowPod256=pauseGlowPod256;
@@ -22,5 +23,5 @@ export function validGlowPodPacked256(value:unknown,version:number,h:Pick<World,
 export function glowPodPackedFaction256(value:unknown,version:number):boolean {
  if(!value||typeof value!=='object')return false;
  const d=Object.getOwnPropertyDescriptors(value),kind=d.kind;
- return version===256&&!!kind&&'value'in kind&&kind.value==='glow-pod'&&Reflect.ownKeys(value).every(k=>typeof k==='string'&&'value'in d[k]!&&d[k]!.enumerable)&&!!d.factionId&&'value'in d.factionId&&(d.factionId.value===null||Number.isSafeInteger(d.factionId.value)&&d.factionId.value>0);
+ return isSchema256Or257(version)&&!!kind&&'value'in kind&&kind.value==='glow-pod'&&Reflect.ownKeys(value).every(k=>typeof k==='string'&&'value'in d[k]!&&d[k]!.enumerable)&&!!d.factionId&&'value'in d.factionId&&(d.factionId.value===null||Number.isSafeInteger(d.factionId.value)&&d.factionId.value>0);
 }

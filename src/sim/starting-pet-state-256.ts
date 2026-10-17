@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import type {WildAnimal} from './wildlife-state.ts';
 /** Actual initial pet name and direct links. This does not copy a human into
  * the animal, or place an animal among campaignPeople. No migration adds it. */
@@ -12,7 +13,7 @@ const id=(n:unknown):n is number=>typeof n==='number'&&Number.isSafeInteger(n)&&
 export function validStartingPetHeader256(animal:unknown,version:number):boolean {
  if(!animal||typeof animal!=='object')return false;
  const d=Object.getOwnPropertyDescriptor(animal,'startingPet');if(!d)return !('startingPet'in animal);
- if(version!==256||!d.enumerable||!Object.hasOwn(d,'value')||!d.value||typeof d.value!=='object'||Object.getPrototypeOf(d.value)!==Object.prototype)return false;
+ if(!isSchema256Or257(version)||!d.enumerable||!Object.hasOwn(d,'value')||!d.value||typeof d.value!=='object'||Object.getPrototypeOf(d.value)!==Object.prototype)return false;
  const p=d.value,keys=Reflect.ownKeys(p);if(keys.some(k=>typeof k!=='string'||!['revision','name','masterId','bondedPawnId','obedience'].includes(k)||!data(p,k as string)))return false;
  const name=data(p,'name')?.value;if(data(p,'revision')?.value!==1||typeof name!=='string'||!name.length||name.length>80||name.trim()!==name||/[\u0000-\u001f\u007f-\u009f]/.test(name))return false;
  const master=data(p,'masterId'),bond=data(p,'bondedPawnId'),obedience=data(p,'obedience');

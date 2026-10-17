@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {nativeWorldPawnOrderCurrent256,commitNativeWorldPawnOrder256} from './world-pawn-native-order-256.ts';
 import {CORE_STARTING_ARRIVAL_PROFILE_256,finishCoreStartingArrival256,type CoreStartingPod256} from './starting-pod-state-256.ts';
 import {validateCoreStartingArrivalContents256} from './starting-pod-save-256.ts';
@@ -19,7 +20,7 @@ import type {World,MaterialPile,Pawn} from './types.ts';
 
 export const STARTING_POD_MAX_HP_256=500;
 export function landedStartingPods256(w:Pick<World,'schemaVersion'|'startingArrival'>):readonly CoreStartingPod256[] {
- const a=w.startingArrival;return w.schemaVersion===256&&a?.profile===CORE_STARTING_ARRIVAL_PROFILE_256&&a.phase!=='opened'?a.pods.filter(p=>p.phase==='landed'):[];
+ const a=w.startingArrival;return isSchema256Or257(w.schemaVersion)&&a?.profile===CORE_STARTING_ARRIVAL_PROFILE_256&&a.phase!=='opened'?a.pods.filter(p=>p.phase==='landed'):[];
 }
 export type StartingPodDamagePreparation256={ok:false;reason:string}|{ok:true;current():boolean;commit():void};
 const ownMutable=(o:object)=>mutableWorldPawnOriginal256(o);
@@ -45,7 +46,7 @@ function adopt<T extends object>(original:T,next:T):void {for(const k of Object.
  * Unrepresented held jobs/possessions refuse before the first original edit. */
 export function prepareStartingPodDamage256(w:World,pod:CoreStartingPod256,amount:number,mode:'kill'|'vanish'='kill',atCore=w.tick*10):StartingPodDamagePreparation256 {
  const no=(reason:string):StartingPodDamagePreparation256=>({ok:false,reason}),a=w.startingArrival;
- if(w.schemaVersion!==256||a?.profile!==CORE_STARTING_ARRIVAL_PROFILE_256||a.phase==='opened'||!a.pods.includes(pod)||pod.phase!=='landed'||!Number.isSafeInteger(amount)||amount<=0||!['kill','vanish'].includes(mode)||!Number.isSafeInteger(atCore)||atCore<Math.max(0,(w.tick-1)*10)||atCore>w.tick*10||atCore<pod.fallCore)return no('No actual landed active transporter damage target');
+ if(!isSchema256Or257(w.schemaVersion)||a?.profile!==CORE_STARTING_ARRIVAL_PROFILE_256||a.phase==='opened'||!a.pods.includes(pod)||pod.phase!=='landed'||!Number.isSafeInteger(amount)||amount<=0||!['kill','vanish'].includes(mode)||!Number.isSafeInteger(atCore)||atCore<Math.max(0,(w.tick-1)*10)||atCore>w.tick*10||atCore<pod.fallCore)return no('No actual landed active transporter damage target');
  const damage=(pod.damage??0)+amount;
  if(!Number.isSafeInteger(damage)||!ownMutable(pod))return no('Active transporter damage owner is not mutable');
  const beforePod=JSON.stringify(pod),tick=w.tick;

@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import type {LocalBiomeRules256} from './local-biome-rules-v256.ts';
 import {WILD_PLANT_GENERATION_FACTS_256 as FACTS,type WildPlantGenerationDef256 as Def} from './wild-plant-generation-data-256.ts';
 import {WorldGenerationRandom} from './world-generation-random.ts';
@@ -37,7 +38,7 @@ export interface InitialWildPlantsProgress256 {readonly phase:'plants';readonly 
 
 export function validatePlantMap256(input:WildPlantMapInput256):readonly Def[] {
  const n=input.width*input.height;
- if(input.schemaVersion!==256||![input.width,input.height].every(v=>Number.isSafeInteger(v)&&v>0&&v<=400)||
+ if(!isSchema256Or257(input.schemaVersion)||![input.width,input.height].every(v=>Number.isSafeInteger(v)&&v>0&&v<=400)||
  !Number.isFinite(input.densityFactor)||input.densityFactor<0||!Number.isFinite(input.tileMinTemperature)||!Number.isFinite(input.tileMaxTemperature)||input.tileMinTemperature>input.tileMaxTemperature)throw Error('Invalid initial plant map authority');
  const arrays=[input.fertility,input.naturalRoof,input.water,input.baseWater,input.terrainDefIds,input.terrainTags,input.regionTypes,input.walkableNoDoor,input.occupied,input.blocksPlanting,input.snowDepth,input.sandDepth];
  if(arrays.some(a=>a.length!==n))throw Error('Plant generation grids differ from the real map');

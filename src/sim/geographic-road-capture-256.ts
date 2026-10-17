@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Actual FRESH generation map at GenStep390, before ruins, plants, animals,
  * scenario and initial snow. This never answers a live map path request.
  * The first ConnectivitySource.ComputeAll is neighbour/border connectivity,
@@ -12,7 +13,7 @@ const OFFSETS=[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,-1],[-1,1]] as const;
 export interface GenerationUsedRect256 {minX:number;minZ:number;maxX:number;maxZ:number}
 export function captureFreshGeographicRoadMap256(world:World,usedRects:readonly GenerationUsedRect256[]) {
  const {width,height}=world,n=width*height;
- if(world.schemaVersion!==256||world.site?.revision!==3||world.planet?.revision!==3||world.tiles.length!==n)throw Error('Road generation needs its actual fresh geographic map');
+ if(!isSchema256Or257(world.schemaVersion)||world.site?.revision!==3||world.planet?.revision!==3||world.tiles.length!==n)throw Error('Road generation needs its actual fresh geographic map');
  // These absences are enforced on the real owner at this exact phase, not
  // stand-ins for unknown grids or permissions. Later phases must not call it.
  if(world.pawns.length||world.structures.length||world.resources.length||world.jobs.length||world.piles.length||world.packed.length||world.stockpiles.length||world.growingZones.length||world.wildlife||world.fires||world.snow||world.geysers||world.exploration)throw Error('Road capture requested outside its empty-Thing generation frontier');

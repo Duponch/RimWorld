@@ -1,3 +1,4 @@
+import {validGroupAdmission257,validGroupHumanPreparation257} from './group-human-admission-257.ts';
 import {validToxicBuildupTransport256} from './toxic-buildup-save-256.ts';
 import {validGroupAnimalPreparation256,validGroupAnimalOwners256} from './group-animal-save-256.ts';
 import {groupPhysicalPawns256} from './group-mixed-pawns-256.ts';
@@ -103,7 +104,8 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
   const originPresent=object(group)&&Object.hasOwn(group,'originTile');
   const provisioned=object(group)&&Object.hasOwn(group,'provisions');
   const freighted=object(group)&&Object.hasOwn(group,'freight');
-  const commonKeys=[...COMMON,...freighted?['freight']:[],...originPresent&&version>=240?['originTile']:[],...provisioned?['provisions']:[]];
+  const admissionPresent=object(group)&&Object.hasOwn(group,'admission');
+  const commonKeys=[...COMMON,...admissionPresent&&version>=257?['admission']:[],...freighted?['freight']:[],...originPresent&&version>=240?['originTile']:[],...provisioned?['provisions']:[]];
   const point=(v:unknown)=>object(v)&&keys(v,['x','z'])&&int(v.x,0,world.width-1)&&int(v.z,0,world.height-1);
   const place=(v:unknown)=>int(v,0,planetTileCount(planet)-1)&&groupDestinationValid(planet,v);
   const thing=(v:unknown)=>int(v,1,world.nextId-1);
@@ -138,7 +140,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
     const assigned=p.apparelPolicyId!==undefined||p.apparelAutomation!==undefined||p.nextApparelCheckAt!==undefined;
     if(assigned&&(!int(p.apparelPolicyId,1,(personWorld.nextApparelPolicyId??0)-1)||!dead&&!personWorld.apparelPolicies?.some(policy=>policy.id===p.apparelPolicyId)
       ||typeof p.apparelAutomation!=='boolean'||!int(p.nextApparelCheckAt,0,clock+APPAREL_POLICY_INTERVAL.max)))return false;
-    if(!isColonist(p)||p.health&&(p.health.body!==undefined||p.health.tick!==clock)
+    if(!isColonist(p)||p.prisoner||p.health&&(p.health.body!==undefined||p.health.tick!==clock)
       ||(dead?(!p.health?.death||p.health.death.tick!==clock):!!p.health?.death))return false;
     // Passive owners have no spatial vomiting driver. A healthy departure
     // cannot export an episode, and ordinary disease remains a clinical record.
@@ -187,8 +189,8 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
   if(losses!==undefined){
     if(!dense(losses,0,version>=256?world.nextId-1:GROUP_MAX_LOSSES))return ['Invalid group loss array.'];
     for(const loss of losses){
-      if(!object(loss)||!keys(loss,['groupId','tile','tick','pawn','items'],version>=256?['memberOrigin','packed']:[])||!groupId(loss.groupId)||!place(loss.tile)
-        ||!int(loss.tick,planet.adoptedAt,world.tick)||loss.memberOrigin!==undefined&&(version<256||!object(loss.pawn)||!validGroupMemberOrigin(loss.memberOrigin,loss.pawn.id as number,world.nextId,o=>groupMemberOriginAuthority(world,o)))||!person(loss.pawn,loss.tick,true,loss.memberOrigin as GroupMemberOrigin|undefined))return ['Invalid terminal group person.',...errors];
+      if(!object(loss)||!keys(loss,['groupId','tile','tick','pawn','items'],version>=256?['memberOrigin','packed',...version>=257?['admission']:[]]:[])||!groupId(loss.groupId)||!place(loss.tile)
+        ||Object.hasOwn(loss,'admission')&&(!object(loss.admission)||!validGroupAdmission257(loss.admission,version))||!int(loss.tick,planet.adoptedAt,world.tick)||loss.memberOrigin!==undefined&&(version<256||!object(loss.pawn)||!validGroupMemberOrigin(loss.memberOrigin,loss.pawn.id as number,world.nextId,o=>groupMemberOriginAuthority(world,o)))||!person(loss.pawn,loss.tick,true,loss.memberOrigin as GroupMemberOrigin|undefined))return ['Invalid terminal group person.',...errors];
       if(!validCaravanBedrollPacks256(loss.packed,[loss.pawn as Pawn],world.nextId,version))return ['Invalid terminal packed owners.'];for(const pack of (loss.packed??[]) as import('./furniture-rules.ts').PackedFurniture[]){if(pileIds.has(pack.building.id)||ownerIds.has(pack.building.id))return ['Duplicate terminal packed identity.'];pileIds.add(pack.building.id);}
       const id=(loss.pawn as Pawn).id;
       if(!piles(loss.items,new Set([id]),loss.tick,version>=256?world.nextId-1:256,version>=GROUP_FREIGHT_SCHEMA))return ['Invalid terminal group possessions.',...errors];
@@ -196,6 +198,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
     }
   }
   if(group!==undefined){
+    if(!object(group)||!validGroupAdmission257(group.admission,version)||Object.hasOwn(group,'admission')&&!object(group.admission))return ['Invalid or future group admission.'];
     if(!validGroupProvisionsShape(group,version))return ['Invalid or future group provisions.'];
     if(!validGroupFreightShape(group,version))return ['Invalid or future group freight.'];
     const freight=freighted&&object(group)?group.freight as Record<string,number>:undefined;
@@ -205,10 +208,11 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
     if(!object(group)||!groupId(group.id)||!int(group.startedAt,planet.adoptedAt,world.tick)||!place(group.destination)||!ledger(group.ledger))
       return ['Invalid group identity or ledger.'];
     if(oneOf(group.phase,['gathering','loading','leaving'])){
-      if(!keys(group,[...commonKeys,...PREPARING],version>=256?['bedrollLoading','travelPreparation','animalPreparation']:[])||!ids(group.memberIds)||!point(group.rendezvous)
+      if(!keys(group,[...commonKeys,...PREPARING],version>=256?['bedrollLoading','travelPreparation','animalPreparation',...version>=257?['humanPreparation']:[]]:[])||!ids(group.memberIds)||!point(group.rendezvous)
         ||!dense(group.meeting,(group.memberIds as number[]).length,(group.memberIds as number[]).length)
         ||!dense(group.exits,(group.memberIds as number[]).length,(group.memberIds as number[]).length)
         ||!dense(group.manifest,0,version>=256?world.nextId-1:512)||!int(group.cursor,0,group.manifest.length))return ['Invalid group formation shape.'];
+      if(!validGroupHumanPreparation257(group.humanPreparation,world,group as unknown as import('./group-capture.ts').PreparingGroup,version,referencesOnly))return ['Invalid or future human formation.'];
       const preparation=Object.getOwnPropertyDescriptor(group,'travelPreparation');
       if(preparation&&(version<256||!Object.hasOwn(preparation,'value')||!preparation.enumerable||preparation.value!==true))return ['Invalid new formation travel contract.'];
       if(!validPreparingGroupPacked256(group as unknown as import('./group-capture.ts').PreparingGroup,world,version,referencesOnly))return ['Invalid formation packed source or receipt.'];
@@ -265,6 +269,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
       if(!validGroupAnimalOwners256(prospective,world,version,o=>groupMemberOriginAuthority(world,o)))return ['Invalid actual animal owners.'];
       for(const a of prospective.animalOwners?.members??[]){if(ownerIds.has(a.id)||localById.has(a.id)||world.wildlife?.animals.some(b=>b.id===a.id))return ['Duplicate animal original.'];ownerIds.add(a.id);}
       for(const p of group.members)if(!person(p,world.tick,false,object(p)?prospective.reorganization?.memberOrigins.find(o=>o.pawnId===p.id):undefined))return ['Invalid away group person.',...errors];
+      if(admissionPresent&&!prospective.members.some(p=>isColonist(p)&&!p.prisoner&&!p.visitor&&!p.health?.death&&p.state!=='dead'))return ['Away group lacks a free player owner.'];
       if(!validCaravanBedrollPacks256(group.packed,groupPhysicalPawns256(prospective),world.nextId,version))return ['Invalid away packed owners.'];for(const pack of (group.packed??[]) as import('./furniture-rules.ts').PackedFurniture[]){if(pileIds.has(pack.building.id)||ownerIds.has(pack.building.id))return ['Duplicate away packed identity.'];pileIds.add(pack.building.id);}
       const people=new Set(groupPhysicalPawns256(prospective).map(p=>p.id));
       if(!piles(group.items,people,world.tick,version>=256?world.nextId-1:32768-world.piles.length,freighted||!!prospective.reorganization,prospective.animalOwners?.origins))return ['Invalid away group possessions.',...errors];

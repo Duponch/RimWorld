@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {spawnEnabledHivePawn256,enabledHivePoints256,enabledHiveChildCell256} from './temple-hive-production-256.ts';
 import {spawnActualHive256} from './cave-hive-spawn-256.ts';
 import {planNaturalHiveLoss256} from './cave-hive-loss-256.ts';
@@ -52,7 +53,7 @@ function productCell(w:World,s:ActualHive256,edifice:boolean,count:number,random
 export function planActualHiveRuntime256(w:World,frontier:HiveRuntimeFrontier256):HiveRuntimePlan256 {
  const originals=w.structures.filter(s=>hive(s)||pod(s));if(!originals.length)return {status:'ready',commit:()=>true};
  const end=w.tick*10,start=end-10;
- if(w.schemaVersion!==256||w.site?.revision!==3||w.planet?.revision!==3||start<0||!Number.isFinite(frontier.enemyReproductionRateFactor)||frontier.enemyReproductionRateFactor<0||frontier.adjacentPermutation.length!==8||new Set(frontier.adjacentPermutation).size!==8||frontier.adjacentPermutation.some(i=>!Number.isInteger(i)||i<0||i>7)||!Number.isSafeInteger(frontier.adjacentUses)||frontier.adjacentUses<0)return {status:'blocked',reason:'Missing actual Site3 Hive runtime clock/GenAdj/difficulty'};
+ if(!isSchema256Or257(w.schemaVersion)||w.site?.revision!==3||w.planet?.revision!==3||start<0||!Number.isFinite(frontier.enemyReproductionRateFactor)||frontier.enemyReproductionRateFactor<0||frontier.adjacentPermutation.length!==8||new Set(frontier.adjacentPermutation).size!==8||frontier.adjacentPermutation.some(i=>!Number.isInteger(i)||i<0||i>7)||!Number.isSafeInteger(frontier.adjacentUses)||frontier.adjacentUses<0)return {status:'blocked',reason:'Missing actual Site3 Hive runtime clock/GenAdj/difficulty'};
  if(originals.some(s=>hive(s)?(s.caveHive.lastCore??s.caveHive.madeAtCore)!==start:pod(s)&&(s.glowPod.lastCore??s.glowPod.madeAtCore)!==start))return {status:'blocked',reason:'Hive/GlowPod continuation is not at its actual current Core boundary'};
  const enabled=originals.some(s=>hive(s)&&s.caveHive.temple);
  if(enabled&&(!frontier.lordIds||!Number.isInteger(frontier.lordIds.nextId)||frontier.lordIds.nextId<0||frontier.lordIds.nextId>=2147483646))return {status:'blocked',reason:'Missing actual enabled Hive Lord counter'};

@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {CORE_STARTING_ARRIVAL_PROFILE_256} from './starting-pod-state-256.ts';
 import {hasCryptosleepSickness256,validCryptosleepSicknessHeader256} from './cryptosleep-sickness-256.ts';
 import {validateMedicalRecord} from './injury-validation.ts';
@@ -32,7 +33,7 @@ export function validCryptosleepSicknessWorldTransport256(world:World,version:nu
    // Only the newly represented Core holder can own the real PostMapGenerate
    // sickness at its explicit frozen clock0. Historical capsules stay strict.
    const arrival=world.startingArrival,place=slot.place;
-   const coreHeld=version===256&&world.schemaVersion===256&&world.site?.revision===3&&world.planet?.revision===3&&world.climate?.revision===4
+   const coreHeld=isSchema256Or257(version)&&isSchema256Or257(world.schemaVersion)&&world.site?.revision===3&&world.planet?.revision===3&&world.climate?.revision===4
     &&slot.kind==='starting-pod'&&place.kind==='starting-pod'&&slot.validationTick===0
     &&arrival?.profile===CORE_STARTING_ARRIVAL_PROFILE_256&&arrival.phase!=='opened'&&arrival.personalTick===0
     &&arrival.pods.some(pod=>pod.id===place.podId&&pod.pawn===p);

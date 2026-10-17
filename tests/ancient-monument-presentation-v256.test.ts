@@ -1,3 +1,4 @@
+import {preparedSchema256} from './helpers/legacy-fixture-guards.ts';
 import {afterEach,expect,test,vi} from 'vitest';
 import {ancientMonumentCells256,ANCIENT_MONUMENT_KINDS_256} from '../src/sim/ancient-monument-props-256';
 import {ancientMonumentParts256,ancientMonumentPartsForStructure256} from '../src/render/ancient-monument-parts-256';
@@ -61,7 +62,7 @@ afterEach(()=>vi.unstubAllGlobals());
 test('confirmed sarcophagus opens existing assignment/policy controls and sends its real ID, old255 refuses its kind',()=>{
  vi.stubGlobal('document',{activeElement:null,createElement:()=>new ElementFixture()});
  // Declared empty UI fixture only. No generated ruin, corpse or burial is claimed.
- const w=createWorld(77,32,32);w.schemaVersion=256;const s={...prop('sarcophagus'),grave:{colonists:true,strangers:false}};w.structures=[s];
+ const w=createWorld(77,32,32);preparedSchema256(w);const s={...prop('sarcophagus'),grave:{colonists:true,strangers:false}};w.structures=[s];
  const host=new ElementFixture(),sent:Command[]=[];updateBurialControls(host as unknown as HTMLElement,w,s,c=>sent.push(c));
  expect(host.textContent).toContain('Sarcophage vide');expect(host.textContent).toContain('Attribuer le sarcophage');expect(sent).toEqual([]);
  const choice=host.querySelector('#grave-assignment')!;choice.value=String(w.pawns[0]!.id);choice.onchange!();

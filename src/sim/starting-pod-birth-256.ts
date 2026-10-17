@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {requireOriginalStartingRoster256,consumeOriginalStartingRoster256,type StartingOriginalRoster256} from './starting-original-roster-256.ts';
 import {prepareStartingPetBirth256} from './starting-pet-birth-256.ts';
 import {captureStartingDropPhysics256} from './starting-drop-physics-256.ts';
@@ -25,7 +26,7 @@ export function claimCoreStartingScatterFrontier256(arrival:CoreStartingArrivalP
 export function applyCoreStartingPodBirth256(world:World,roster:StartingOriginalRoster256,start850:number,random:WorldGenerationRandom):CoreStartingArrivalPending256 {
  requireOriginalStartingRoster256(world,roster);
  if(!(random instanceof WorldGenerationRandom)||random.state.seed!==(localGenerationStepSeed(world.seed,CORE_STARTING_SCENPARTS_SEED_PART_256,0)>>>0)||random.state.counter!==0)throw Error('Actual initial875 seed/counter frontier is missing');
- if(world.schemaVersion!==256||world.tick!==0||world.site?.revision!==3||world.planet?.revision!==3||Object.hasOwn(world,'startingArrival')||!Number.isInteger(start850)||start850<0||start850>=world.tiles.length||!Number.isSafeInteger(world.nextId+17))throw Error('Actual initial875 frontier is missing');
+ if(!isSchema256Or257(world.schemaVersion)||world.tick!==0||world.site?.revision!==3||world.planet?.revision!==3||Object.hasOwn(world,'startingArrival')||!Number.isInteger(start850)||start850<0||start850>=world.tiles.length||!Number.isSafeInteger(world.nextId+17))throw Error('Actual initial875 frontier is missing');
  for(const [item] of CORE_STARTING_SUPPLIES_256)if(!Object.hasOwn(ITEM_DEFINITIONS,item))throw Error('Actual875 supply definition missing: '+item);
  const center={x:start850%world.width,z:Math.floor(start850/world.width)},capture=captureStartingDropPhysics256(world,center);
  // Actual MakeThing sequence, BEFORE the pet and the three transporters.

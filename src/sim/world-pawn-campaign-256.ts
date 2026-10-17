@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import type {CampaignState} from './world-map-state.ts';
 import {prepareWorldPawnLife256} from './world-pawn-life-256.ts';
 /** Called once from the actual campaign local-tick loop, after local/caravan
@@ -6,7 +7,7 @@ import {prepareWorldPawnLife256} from './world-pawn-life-256.ts';
  * Conditional MapRemoved and redress use their own actual-owner guards. */
 export function advanceActualWorldPawns256(root:CampaignState):void {
  const state=root.worldPawns;if(!state)return;
- if(root.schemaVersion!==256||root.planet?.revision!==3||!root.worldMaps||!root.worldGroups)throw Error('WorldPawns requires its actual geographic campaign');
+ if(!isSchema256Or257(root.schemaVersion)||root.planet?.revision!==3||!root.worldMaps||!root.worldGroups)throw Error('WorldPawns requires its actual geographic campaign');
  const atCore=root.tick*10;
  if(!Number.isSafeInteger(atCore)||state.atCore+10!==atCore)throw Error('WorldPawns actual campaign interval skipped or duplicated');
  const plan=prepareWorldPawnLife256(state,atCore,root);if(!plan.ok)throw Error(plan.reason);

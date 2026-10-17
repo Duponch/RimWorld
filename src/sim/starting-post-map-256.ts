@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {addCryptosleepSickness256} from './cryptosleep-sickness-256.ts';
 import {createMedicalRecord} from './injury-state.ts';
 import {CORE_STARTING_ARRIVAL_PROFILE_256} from './starting-pod-state-256.ts';
@@ -17,7 +18,7 @@ export function applyCoreStartingPostMap256(world:World,roster:StartingOriginalR
 }):void {
  requireConsumedStartingOriginalRoster256(world,roster);
  const arrival=world.startingArrival,state=input.random.state,frontier=input.outerAfterWeather;
- if(completed.has(world)||world.tick!==0||world.schemaVersion!==256||!arrival||arrival.profile!==CORE_STARTING_ARRIVAL_PROFILE_256||arrival.phase==='opened'
+ if(completed.has(world)||world.tick!==0||!isSchema256Or257(world.schemaVersion)||!arrival||arrival.profile!==CORE_STARTING_ARRIVAL_PROFILE_256||arrival.phase==='opened'
   ||state.seed!==frontier.seed||state.counter!==frontier.counter)throw Error('Actual outer PostMapGenerate frontier is missing or consumed');
  const current=arrival as CoreStartingArrivalPending256;
  if(current.pods.length!==3||current.pods.some((p,i)=>p.pawn!==roster.selected[i]!.pawn))throw Error('PostMapGenerate did not retain the selected originals');

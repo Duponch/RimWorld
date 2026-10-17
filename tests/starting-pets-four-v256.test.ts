@@ -1,3 +1,4 @@
+import {preparedSchema256} from './helpers/legacy-fixture-guards.ts';
 import {describe,it,expect} from 'vitest';
 import {huntingCamp} from './scenarios/hunting.ts';
 import {STARTING_PET_FOUR_IDS_256} from '../src/sim/starting-pet-four-data-256.ts';
@@ -42,7 +43,7 @@ class LowerEndpoints extends WorldGenerationRandom {
  * map. Reserve its real next ID and put this SAME constructor original at10,10.
  * Its true healthy clinical record is created only for the RAW owner checks. */
 function prepared(def:typeof sourceRows[number][0]){
- const w=huntingCamp();w.schemaVersion=256;w.resources=[];w.piles=[];
+ const w=huntingCamp();preparedSchema256(w);w.resources=[];w.piles=[];
  const random=new LowerEndpoints(),made=constructFreshInitialWildAnimal256({fact:INITIAL_ANIMAL_FACTS_256[def],id:w.nextId,cell:{x:10,z:10},tick:w.tick,random});
  expect(made.status).toBe('ready');if(made.status!=='ready')throw Error('Lower source endpoint blocked: '+made.reason);
  const a=made.animal;w.nextId++;a.health=createAnimalMedicalRecord256(w,a);w.wildlife!.animals=[a];
@@ -100,7 +101,7 @@ describe('four real starting pets: native owners, food and identities',()=>{
   const {w,a}=prepared('Cat');w.tick=45000;a.domestic={since:0,care:'best',tameness:5,nextDecay:45000};
   const before=JSON.stringify(a.domestic);advanceTameness(w);expect(JSON.stringify(a.domestic)).toBe(before);expect(w.wildlife!.animals[0]).toBe(a);
   for(const id of ids)expect(startingPetFourNoTamenessDecay256(id)).toBe(true);expect(startingPetFourNoTamenessDecay256('hare')).toBe(false);expect(startingPetFourNoTamenessDecay256('cobra')).toBe(false);
-  const old=huntingCamp();old.schemaVersion=256;old.tick=45000;const hare=old.wildlife!.animals[0]!;hare.species='hare';hare.state='idle';hare.domestic={since:0,care:'best',tameness:5,nextDecay:45000};
+  const old=huntingCamp();preparedSchema256(old);old.tick=45000;const hare=old.wildlife!.animals[0]!;hare.species='hare';hare.state='idle';hare.domestic={since:0,care:'best',tameness:5,nextDecay:45000};
   advanceTameness(old);expect(hare.domestic!.tameness).toBe(4);expect(hare.domestic!.nextDecay).toBe(90000);
  });
 

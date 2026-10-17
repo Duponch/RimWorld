@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {advanceAnimalAgeConditionInterval256,tickAnimalConditionTends256} from './animal-age-condition-runtime-256.ts';
 import {destroyAnimalConditionPart256} from './animal-condition-missing-part-256.ts';
 import {animalClinicalRandom256,type AnimalConditionMedicalFrontier256} from './animal-condition-medical-frontier-256.ts';
@@ -17,7 +18,7 @@ export function humanConditionMedicalFrontier256(p:Pawn,record:MedicalRecord,clo
  if(record.humanHealthScale!==undefined&&record.animalAgeConditions?.cases.some(c=>c.kind==='Alzheimers'))throw Error('Actual native Human Alzheimer memories and conditional thoughts are not bound');
  if(!hasHumanConditionMind256(p))throw Error('Historical human clinical wander authority is unavailable');
  const local=owner.kind==='map'?owner.world:undefined,commitPawn=actualCommitPawn??p;
- if(actualCommitPawn&&(owner.kind!=='map'||!local||local.schemaVersion!==256||actualCommitPawn===p||p.id!==actualCommitPawn.id||p.health!==record||actualCommitPawn.health===record||local.tick!==clock||!local.pawns.includes(actualCommitPawn)||local.pawns.some(a=>a!==actualCommitPawn&&a.id===p.id)))throw Error('Private clinical outcome lacks its actual original map owner');
+ if(actualCommitPawn&&(owner.kind!=='map'||!local||!isSchema256Or257(local.schemaVersion)||actualCommitPawn===p||p.id!==actualCommitPawn.id||p.health!==record||actualCommitPawn.health===record||local.tick!==clock||!local.pawns.includes(actualCommitPawn)||local.pawns.some(a=>a!==actualCommitPawn&&a.id===p.id)))throw Error('Private clinical outcome lacks its actual original map owner');
  const random=animalClinicalRandom256(draw);
  let last=record.tick,done=false,episode=p.mental?.crisis?.kind==='confused-wander'?{revision:1 as const,ageCore:p.mental.crisis.age}:undefined,started=false,recovered=false;
  return {
@@ -46,7 +47,7 @@ export function humanConditionMedicalFrontier256(p:Pawn,record:MedicalRecord,clo
    }
   },
   commit(){
-   if(done||(record.death?record.tick>clock:record.tick!==clock)||actualCommitPawn&&(!local||local.schemaVersion!==256||!local.pawns.includes(actualCommitPawn)||local.pawns.some(a=>a!==actualCommitPawn&&a.id===p.id)||local.tick!==clock||actualCommitPawn.health!==record||actualCommitPawn.id!==p.id))throw Error('Human condition outcome has an invalid owner clock/adoption');done=true;
+   if(done||(record.death?record.tick>clock:record.tick!==clock)||actualCommitPawn&&(!local||!isSchema256Or257(local.schemaVersion)||!local.pawns.includes(actualCommitPawn)||local.pawns.some(a=>a!==actualCommitPawn&&a.id===p.id)||local.tick!==clock||actualCommitPawn.health!==record||actualCommitPawn.id!==p.id))throw Error('Human condition outcome has an invalid owner clock/adoption');done=true;
    if(record.death||recovered&&!episode){recoverHumanConfusion256(commitPawn,local);return;}
    if(started&&episode&&!startHumanConfusion256(commitPawn,clock,local))throw Error('Human clinical admission changed before actual commit');
    if(episode&&commitPawn.mental?.crisis?.kind==='confused-wander')commitPawn.mental.crisis.age=episode.ageCore;

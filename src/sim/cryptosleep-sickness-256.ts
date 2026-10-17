@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Prospective clinical state only. No scenario, Pawn, holder, clock or RNG is
  * invented here. Historical absent fields stay absent at every boundary. */
 import type {VomitState} from './food-poisoning.ts';
@@ -48,7 +49,7 @@ export function makeCryptosleepSickness256(random:CryptosleepSicknessRandom256):
 /** Complete the actual new Hediff's draws even if it merges. Core's merge
  * retains the old initial/noise and only raises remaining to the larger one. */
 export function addCryptosleepSickness256(record:MedicalRecord,random:CryptosleepSicknessRandom256,version:number):void {
- if(version!==256||record.death||['scyther','lancer','pikeman'].includes(record.body??'')||!validCryptosleepSicknessHeader256(record,version))throw Error('Invalid prospective flesh sickness owner');
+ if(!isSchema256Or257(version)||record.death||['scyther','lancer','pikeman'].includes(record.body??'')||!validCryptosleepSicknessHeader256(record,version))throw Error('Invalid prospective flesh sickness owner');
  const made=makeCryptosleepSickness256(random),old=record.cryptosleepSickness;
  if(old)old.remainingCore=Math.max(old.remainingCore,made.remainingCore);else record.cryptosleepSickness=made;
 }

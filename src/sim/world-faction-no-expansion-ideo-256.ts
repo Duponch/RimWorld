@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import type {WorldGenerationRandom} from './world-generation-random.ts';
 import type {WorldFactionDef256} from './world-faction-catalog.ts';
 import type {WorldFactionInstance256,WorldFactionRegistry256} from './world-faction-state.ts';
@@ -35,7 +36,7 @@ export function validFactionNoExpansionIdeos256(registry:unknown,version:number)
  if(!object(registry)||!dense(registry.factions))return false;
  const present=Object.hasOwn(registry,'noExpansionIdeoIds');
  if(!present)return !('noExpansionIdeoIds'in registry)&&registry.factions.every(a=>object(a)&&!('noExpansionIdeo'in a));
- if(version!==256||!validCoreNoExpansionIdeoIds256(registry.noExpansionIdeoIds))return false;
+ if(!isSchema256Or257(version)||!validCoreNoExpansionIdeoIds256(registry.noExpansionIdeoIds))return false;
  const ids=registry.noExpansionIdeoIds;let nextIdeoId=0,nextPreceptId=0;
  for(const a of registry.factions){
   if(!object(a)||!isFactionDef(a.def))return false;

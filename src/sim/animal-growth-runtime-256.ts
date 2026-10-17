@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Prospective biological owner, not a phase derived from id/tick or a cache.
  * Definition facts are immutable; the only mutable state is on the original. */
 import {constructAnimalMind256} from './animal-condition-mental-state-256.ts';
@@ -63,7 +64,7 @@ export function validAnimalGrowthClinicalOwner256(value:unknown,version:number):
 /** Creation operation only. Constructor outputs are forwarded verbatim,
  * including an adult's still-finite FIRST deadline. No migration calls this. */
 export function attachActualAnimalGrowth256(a:GrowthAnimal256,initial:{value:number;nextCheckCore:number},version:number):void {
- if(version!==256||Object.hasOwn(a,'growthTracker'))throw Error('Growth creation requires a new prospective original');
+ if(!isSchema256Or257(version)||Object.hasOwn(a,'growthTracker'))throw Error('Growth creation requires a new prospective original');
  const trial={...a,ageCoreRemainder:a.ageCoreRemainder??0,growthTracker:{revision:1 as const,value:initial.value,nextCheckCore:initial.nextCheckCore}};
  if(!validAnimalGrowthTracker256(trial,version))throw Error('Invalid actual constructor growth');
  a.ageCoreRemainder=trial.ageCoreRemainder;a.growthTracker=trial.growthTracker;

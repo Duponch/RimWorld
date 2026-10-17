@@ -68,7 +68,7 @@ test('caravan clinical binding updates original condition and mental episode, th
  const clone=JSON.parse(JSON.stringify(a));expect(clone).toEqual(a);expect(validAnimalMindFields256(clone,256,tick,32,32,false)).toBe(true);
 });
 test('prepared veterinary camp traverses real pickup/contact, reloads actual carried medicine and tends both asthma lungs',()=>{
- const f=herdCareCamp(),w=f.world,a=w.wildlife!.animals[0]!;w.schemaVersion=256;
+ const f=herdCareCamp(),w=f.world,a=w.wildlife!.animals[0]!;
  delete a.health;attachActualAnimalGrowth256(a,{value:1,nextCheckCore:w.tick*10+240},256);constructAnimalMind256(a,256);a.health=createAnimalMedicalRecord256(w,a);tryApplyAnimalAgeCondition256(a.health,'Asthma',random());
  const units=(world:typeof w)=>world.piles.filter(p=>p.item==='medicine').reduce((n,p)=>n+p.quantity,0),initial=units(w);
  let current=w,reloaded=false,sawContact=false;

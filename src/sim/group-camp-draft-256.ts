@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Boundary adapter only: real campaign -> unpublished Encounter candidate.
  * The ordered worker owns the shared generation runtime and final entry.
  * Neither a progress yield nor a ready draft is a campaign adoption. */
@@ -69,13 +70,13 @@ export function* draftActualGroupCamp256(input:CampaignState,groupId:number,runt
  const root=registeredCampaign(input),permission=groupEntryActions(root,groupId).camp;
  const blocked=(phase:string,reason:string):GroupCampDraftResult256=>({status:'blocked',phase,reason});
  if(!permission.ok)return blocked('entry-preflight',permission.reason??'Actual Camp entry refused');
- if(root.schemaVersion!==256||root.planet?.revision!==3||!root.worldFactions||!root.worldMaps||!root.worldGroups)return blocked('entry-preflight','Actual Planet3 campaign authority required');
+ if(!isSchema256Or257(root.schemaVersion)||root.planet?.revision!==3||!root.worldFactions||!root.worldMaps||!root.worldGroups)return blocked('entry-preflight','Actual Planet3 campaign authority required');
  if(!runtime||!runtime.context||!runtime.angular||!Array.isArray(runtime.adjacentPermutation)||runtime.adjacentPermutation.length!==8||!runtime.fog||!Array.isArray(runtime.fog.rootsToUnfog)||!Number.isSafeInteger(runtime.animalRuntimeRng)||runtime.animalRuntimeRng<1||runtime.animalRuntimeRng>0xffffffff)return blocked('runtime-preflight','Actual shared Camp generation runtime is unavailable; no default order or RNG is supplied');
  const maps=root.worldMaps,groups=root.worldGroups,record=groups.groups.find(r=>r.state.id===groupId),g=record?.state;
  if(!record||!g||!('members'in g))return blocked('entry-preflight','Actual away group required');
  const planet=root.planet,geography=planet.geography,tile=g.tile,calendarOrigin=maps.calendarOrigin;
  // Read authoritative CAMPAIGN_FIELDS, not a group projection's local header.
- const campaign=Object.fromEntries(CAMPAIGN_FIELDS.filter(k=>Object.hasOwn(root,k)).map(k=>[k,root[k]])) as Pick<World,CampaignField>&{schemaVersion:256;planet:typeof planet;worldFactions:NonNullable<World['worldFactions']>};
+ const campaign=Object.fromEntries(CAMPAIGN_FIELDS.filter(k=>Object.hasOwn(root,k)).map(k=>[k,root[k]])) as Pick<World,CampaignField>&{schemaVersion:256|257;planet:typeof planet;worldFactions:NonNullable<World['worldFactions']>};
  const captured=sharedMutableStamp(root),planetStamp=planetScalarStamp(planet),mapStamp=mapRegistryStamp(root),groupStamp=JSON.stringify(g),sites=maps.sites.slice();
  const retained=captureCampRetainedAnimals256(root),retainedStamp=JSON.stringify(retained);
  const runtimeStamp=JSON.stringify({adjacent:runtime.adjacentPermutation,fog:runtime.fog,context:runtime.context,rng:runtime.animalRuntimeRng});

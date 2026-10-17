@@ -1,3 +1,5 @@
+import {groupHasAdmission257,groupHumanHandler257,groupHumanPassenger257,releaseGroupHumanWork257,processGroupHumanCarry257} from './group-human-admission-257.ts';
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {adoptCaravanOtherFoodClimate256} from './group-animal-runtime-256.ts';
 import {stripTerminalCaravanMember256,archiveOwnerlessCaravanAnimals256} from './group-animal-terminal-256.ts';
 import {processGroupAnimalHandler256,processGroupAnimalDelivery256,pendingGroupAnimalDeliveries256,groupAnimalsReadyForDeparture256,groupAnimalReason256} from './group-animal-formation-256.ts';
@@ -25,8 +27,8 @@ import type { NeedContext } from './needs.ts';
 import type { AwayGroup } from './group-capture.ts';
 import { captureGroupTravel } from './group-capture.ts';
 import { cancelGroupPreparation, groupFormationAuthority, groupLog, groupMemberReason } from './group-authority.ts';
-import { commitGroupPickup, departGroup, prepareGroupPickup, type DepartureAuthority } from './group-loading.ts';
-import { planetCostContext, planetQueryBudget } from './planet-navigation.ts';
+import { commitGroupPickup, departGroup, prepareGroupPickup,previewGroupLoading, type DepartureAuthority } from './group-loading.ts';
+import { planetCostContext, planetQueryBudget,findPlanetRoute } from './planet-navigation.ts';
 import { advanceGroupRoute } from './group-trip.ts';
 import { advanceGroupPersonal } from './group-personal.ts';
 import { advanceGroupIngestion } from './group-ingestion.ts';
@@ -54,18 +56,20 @@ export function processGroupOnMap(w:World,p:Pawn,ctx:NeedContext):boolean {
   if(w.worldMaps&&!boundWorldGroup(w)){const owned=pawnWorldGroup(w,p.id);return owned?withWorldGroup(w,owned.state.id,v=>processGroupOnMap(v,p,ctx))??false:false;}
   const g=w.group;if(!g||!('memberIds' in g)||!g.memberIds.includes(p.id))return false;
   if(g.phase==='unloading'){
+    if(g.admission&&!groupHumanHandler257(p))return true;
     if(['dead','downed'].includes(p.state)||hasMentalBreak(p)||p.flee||p.melee||p.shooting){cancelGroupPreparation(w);return false;}
     g.pendingPileIds=g.pendingPileIds.filter(id=>w.piles.some(i=>i.id===id&&i.owner.type==='inventory'&&[...g.memberIds,...g.animalIds??[]].includes(i.owner.pawnId)));
     g.pendingPackedIds=g.pendingPackedIds?.filter(id=>w.packed.some(i=>i.building.id===id&&i.owner.type==='inventory'&&[...g.memberIds,...g.animalIds??[]].includes(i.owner.pawnId)));if(!g.pendingPackedIds?.length)delete g.pendingPackedIds;
     if(!g.pendingPileIds.length&&!g.pendingPackedIds?.length){cancelGroupPreparation(w);return false;}
-    if(!g.pendingPileIds.length){const pack=w.packed.find(i=>g.pendingPackedIds?.includes(i.building.id)&&i.owner.type==='inventory'&&(i.owner.pawnId===p.id||g.animalIds?.includes(i.owner.pawnId)));if(pack?.owner.type==='inventory'&&g.animalIds?.includes(pack.owner.pawnId)){const animal=w.wildlife?.animals.find(a=>a.id===(pack.owner as {pawnId:number}).pawnId);if(!animal){cancelGroupPreparation(w);return true;}if((animal.motion?.end??0)>w.tick||(p.motion?.end??0)>w.tick||p.moveCooldown>0)return true;if(!contact(p,animal)){ctx.move(animal,false);return true;}}if(!pack){p.path=[];p.state='idle';return true;}const cell=furnitureDropCell(w,p,p.id);if(!cell){p.path=[];p.state='idle';return true;}if(contact(p,cell)&&(p.motion?.end??0)<=w.tick&&p.moveCooldown===0){pack.owner={type:'ground',...cell};g.pendingPackedIds=g.pendingPackedIds!.filter(id=>id!==pack.building.id);if(!g.pendingPackedIds.length){delete g.pendingPackedIds;cancelGroupPreparation(w);}p.path=[];p.state='idle';}else ctx.move(cell,false);return true;}
-    const pile=w.piles.find(i=>g.pendingPileIds.includes(i.id)&&i.owner.type==='inventory'&&(i.owner.pawnId===p.id||g.animalIds?.includes(i.owner.pawnId)));
+    if(!g.pendingPileIds.length){const pack=w.packed.find(i=>g.pendingPackedIds?.includes(i.building.id)&&i.owner.type==='inventory'&&(i.owner.pawnId===p.id||g.animalIds?.includes(i.owner.pawnId)||!!g.admission&&g.memberIds.includes(i.owner.pawnId)));if(pack?.owner.type==='inventory'&&g.admission&&pack.owner.pawnId!==p.id){const owner=w.pawns.find(q=>q.id===(pack.owner as {pawnId:number}).pawnId)??w.wildlife?.animals.find(q=>q.id===(pack.owner as {pawnId:number}).pawnId);if(!owner){cancelGroupPreparation(w);return true;}if((owner.motion?.end??0)>w.tick||(p.motion?.end??0)>w.tick||p.moveCooldown>0)return true;if(!contact(p,owner)){ctx.move(owner,false);return true;}}if(pack?.owner.type==='inventory'&&g.animalIds?.includes(pack.owner.pawnId)){const animal=w.wildlife?.animals.find(a=>a.id===(pack.owner as {pawnId:number}).pawnId);if(!animal){cancelGroupPreparation(w);return true;}if((animal.motion?.end??0)>w.tick||(p.motion?.end??0)>w.tick||p.moveCooldown>0)return true;if(!contact(p,animal)){ctx.move(animal,false);return true;}}if(!pack){p.path=[];p.state='idle';return true;}const cell=furnitureDropCell(w,p,p.id);if(!cell){p.path=[];p.state='idle';return true;}if(g.admission&&pack.owner.type==='inventory'&&pack.owner.pawnId!==p.id&&!contact(p,cell)){p.path=[];p.state='idle';return true;}if(contact(p,cell)&&(p.motion?.end??0)<=w.tick&&p.moveCooldown===0){pack.owner={type:'ground',...cell};g.pendingPackedIds=g.pendingPackedIds!.filter(id=>id!==pack.building.id);if(!g.pendingPackedIds.length){delete g.pendingPackedIds;cancelGroupPreparation(w);}p.path=[];p.state='idle';}else ctx.move(cell,false);return true;}
+    const pile=w.piles.find(i=>g.pendingPileIds.includes(i.id)&&i.owner.type==='inventory'&&(i.owner.pawnId===p.id||g.animalIds?.includes(i.owner.pawnId)||!!g.admission&&g.memberIds.includes(i.owner.pawnId)));
+    if(pile?.owner.type==='inventory'&&g.admission&&pile.owner.pawnId!==p.id){const owner=w.pawns.find(q=>q.id===(pile.owner as {pawnId:number}).pawnId)??w.wildlife?.animals.find(q=>q.id===(pile.owner as {pawnId:number}).pawnId);if(!owner){cancelGroupPreparation(w);return true;}if((owner.motion?.end??0)>w.tick||(p.motion?.end??0)>w.tick||p.moveCooldown>0)return true;if(!contact(p,owner)){ctx.move(owner,false);return true;}}
     if(pile?.owner.type==='inventory'&&g.animalIds?.includes(pile.owner.pawnId)){const animal=w.wildlife?.animals.find(a=>a.id===(pile.owner as {pawnId:number}).pawnId);if(!animal){cancelGroupPreparation(w);return false;}if((animal.motion?.end??0)>w.tick||(p.motion?.end??0)>w.tick||p.moveCooldown>0)return true;if(!contact(p,animal)){ctx.move(animal,false);return true;}}
     if(!pile){p.path=[];p.state='idle';return true;}
     const access=candidateAccess(w,p,blockedCells(w),new Set(),true),stand=captureStandability(w);
     // This is admission only. Ordinary ctx.move owns the weighted route and
     // global PATH quota; even quota0 must not hide a second weighted search.
-    const cell=nearbyGround(w,p).find(c=>groundCapacity(w,c,pile,p.id)>=pile.quantity
+    const cell=nearbyGround(w,p).find(c=>(!g.admission||pile.owner.type!=='inventory'||pile.owner.pawnId===p.id||contact(p,c))&&groundCapacity(w,c,pile,p.id)>=pile.quantity
       &&[c,...workNeighbours(c)].some(stop=>inBounds(w,stop.x,stop.z)&&stand(stop)&&access.has(stop.z*w.width+stop.x)));
     if(!cell){p.path=[];p.state='idle';return true;}
     if(contact(p,cell)){
@@ -75,14 +79,24 @@ export function processGroupOnMap(w:World,p:Pawn,ctx:NeedContext):boolean {
     }else ctx.move(cell,false);
     return true;
   }
+  const release=releaseGroupHumanWork257(w,g,()=>{
+    if(!w.planet||!validGroupBedrollLoadingField256(g,w,w.schemaVersion)||g.animalPreparation?.lines.some(line=>{const animal=w.wildlife?.animals.find(a=>a.id===line.animalId);return !animal||!!groupAnimalReason256(w,animal,true);}))return false;const baseAuthority=groupFormationAuthority(w,true),authority={...baseAuthority,reservedQuantity:(world:World,id:number)=>baseAuthority.reservedQuantity(world,id,g.id)},lines=new Map<number,number>();
+    for(const line of g.manifest)lines.set(line.pileId,(lines.get(line.pileId)??0)+line.quantity);
+    const ready=previewGroupLoading(w,g.memberIds,[...lines].map(([pileId,quantity])=>({pileId,quantity})),authority,g.animalPreparation?.lines.map(l=>l.animalId));
+    if(ready.kind!=='ready'||ready.manifest.length!==g.manifest.length||ready.manifest.some((line,i)=>{const old=g.manifest[i]!;return line.pileId!==old.pileId||line.quantity!==old.quantity||line.carrierId!==old.carrierId||line.animalCarrierId!==old.animalCarrierId;}))return false;
+    if(g.bedrollLoading?.manifest.some(line=>{const pack=w.packed.find(item=>item.building.id===line.structureId),carrier=w.pawns.find(q=>q.id===line.carrierId);return !pack||pack.owner.type!=='ground'||!carrier||!groupHumanHandler257(carrier)||!authority.reachable(carrier,pack.owner);}))return false;
+    if(findPlanetRoute(w.planet,g.originTile??w.planet.homeTile,g.destination,planetCostContext(w,ready.mass),planetQueryBudget(w.planet)).kind!=='found')return false;
+    return [...g.meeting,...g.exits].every(target=>{const member=w.pawns.find(q=>q.id===target.pawnId),carrierId=g.humanPreparation?.passengers.find(row=>row.pawnId===target.pawnId)?.carrierId,actor=member?.state==='downed'?w.pawns.find(q=>q.id===carrierId):member;return !!actor&&!!target.cell&&authority.stand(target.cell)&&authority.reachable(actor,target.cell);});
+  });if(release!=='ready'){if(release==='refused')cancelGroupPreparation(w);return true;}
   const reason=groupMemberReason(w,p,true);if(reason){groupLog(w,`Préparation annulée : ${reason}`);cancelGroupPreparation(w);return false;}
+  const human=processGroupHumanCarry257(w,g,p,ctx);if(human==='refused'){cancelGroupPreparation(w);return true;}if(human==='handled')return true;
   if(processGroupAnimalHandler256(w,g,p,ctx))return true;
   if(processGroupAnimalDelivery256(w,g,p,ctx))return true;
   if(g.phase==='gathering'){
     const spot=g.meeting.find(e=>e.pawnId===p.id)!.cell;
     if(!same(p,spot)){ctx.move(spot,true);return true;}
     p.path=[];p.state='idle';
-    if(g.meeting.every(e=>{const q=w.pawns.find(q=>q.id===e.pawnId);return !!q&&same(q,e.cell)&&q.moveCooldown===0&&(q.motion?.end??0)<=w.tick;}))g.phase=g.manifest.length||g.bedrollLoading?.manifest.some(r=>!r.loaded)?'loading':'leaving';
+    if(g.meeting.every(e=>{const q=w.pawns.find(q=>q.id===e.pawnId),passenger=g.humanPreparation?.passengers.find(row=>row.pawnId===e.pawnId);if(q&&passenger&&(q.state==='downed'||passenger.phase==='carry'))return true;return !!q&&same(q,e.cell)&&q.moveCooldown===0&&(q.motion?.end??0)<=w.tick;}))g.phase=g.manifest.length||g.bedrollLoading?.manifest.some(r=>!r.loaded)?'loading':'leaving';
     return true;
   }
   if(g.phase==='loading'){
@@ -102,11 +116,25 @@ export function processGroupOnMap(w:World,p:Pawn,ctx:NeedContext):boolean {
   return true;
 }
 
+/** Cancel only new local human intents. This small guard is also the final
+ * tick boundary after social/danger producers; no manifest or departure runs. */
+export function reconcileGroupAdmission257(w:World):void {
+  if(w.worldMaps&&!boundWorldGroup(w)){
+    for(const row of localWorldGroups(w).filter(row=>'manifest'in row.state&&groupHasAdmission257(row.state)).sort((a,b)=>a.state.id-b.state.id))withWorldGroup(w,row.state.id,reconcileGroupAdmission257);
+    return;
+  }
+  const g=w.group;if(!g||!('manifest'in g)||!groupHasAdmission257(g))return;
+  for(const id of g.memberIds){const member=w.pawns.find(p=>p.id===id),reason=member?groupMemberReason(w,member,true):'Un membre réel de la formation est absent.';
+    if(reason){groupLog(w,`Préparation annulée : ${reason}`);cancelGroupPreparation(w);return;}
+  }
+}
+
 /** At most512 manifest rows/64 source identities. Only future promises are
  * reconciled: contact receipts and actual inventories remain historical. */
 export function reconcileGroupPreparation(w:World):void {
   if(w.worldMaps&&!boundWorldGroup(w)){for(const g of localWorldGroups(w).slice().sort((a,b)=>a.state.id-b.state.id))withWorldGroup(w,g.state.id,reconcileGroupPreparation);return;}
   const g=w.group;if(!g||!('manifest' in g))return;
+  reconcileGroupAdmission257(w);if(w.group!==g)return;
   if(!validGroupBedrollLoadingField256(g,w,w.schemaVersion)){groupLog(w,'Préparation annulée : un couchage promis a changé ; les biens déjà détenus restent portés.');cancelGroupPreparation(w);return;}
   if(g.animalPreparation?.lines.some(l=>{const a=w.wildlife?.animals.find(a=>a.id===l.animalId);return !a||!!groupAnimalReason256(w,a,true);})){groupLog(w,'Préparation annulée : un animal ne peut plus suivre ; les originaux et les biens restent présents.');cancelGroupPreparation(w);return;}
   let pileIndex:Map<number,MaterialPile>|undefined;const currentPiles=()=>pileIndex??=new Map(w.piles.map(p=>[p.id,p]));
@@ -133,10 +161,10 @@ export function tryGroupDeparture(w:World):void {
   if(w.worldMaps&&!boundWorldGroup(w)){for(const g of localWorldGroups(w).slice().sort((a,b)=>a.state.id-b.state.id))withWorldGroup(w,g.state.id,tryGroupDeparture);return;}
   const g=w.group;if(!w.planet||!g||!('manifest' in g)||g.phase!=='leaving')return;
   if(!g.exits.every(e=>{const p=w.pawns.find(p=>p.id===e.pawnId);return !!p&&!!e.cell&&same(p,e.cell)&&p.moveCooldown===0&&!p.path.length&&(p.motion?.end??0)<=w.tick;}))return;
-  if(!groupAnimalsReadyForDeparture256(w,g))return;
+  if(!groupAnimalsReadyForDeparture256(w,g)||g.humanPreparation?.releaseIds.length||g.humanPreparation?.passengers.some(row=>row.phase!=='waiting'))return;
   const base=groupFormationAuthority(w,true);
   const authority:DepartureAuthority={...base,personalPassTick:()=>w.tick,departureReason:(_world,plan)=>{
-    if(!(w.schemaVersion===256&&g.travelPreparation===true)&&(mixedGroupProvisions(plan.next)?!groupProvisionMinimum(plan.next.members,plan.next.items.filter(p=>p.owner.type==='inventory'),w.foodPolicies,w.tick):plan.next.baseline.food<plan.next.members.length))return mixedGroupProvisions(plan.next)?'Les provisions saines doivent couvrir les régimes de tous les membres avant le départ.':'Chargez au moins une ration saine par membre avant le départ.';
+    if(!(isSchema256Or257(w.schemaVersion)&&g.travelPreparation===true)&&(mixedGroupProvisions(plan.next)?!groupProvisionMinimum(plan.next.members,plan.next.items.filter(p=>p.owner.type==='inventory'),w.foodPolicies,w.tick):plan.next.baseline.food<plan.next.members.length))return mixedGroupProvisions(plan.next)?'Les provisions saines doivent couvrir les régimes de tous les membres avant le départ.':'Chargez au moins une ration saine par membre avant le départ.';
     return undefined;
   },adoptDeparture:(world,plan)=>{
     if(world.group!==g)return false;
@@ -147,7 +175,7 @@ export function tryGroupDeparture(w:World):void {
     const mapId=world.schemaVersion>=256?registeredMapId(world):undefined;if(bedCapture&&mapId===undefined)throw Error('Missing actual bed departure map');
     if(plan.next.animalOwners){const context={seed:world.seed,width:world.width,height:world.height,...world.climate?{climate:world.climate}:{},...world.site?{site:world.site}:{},...world.scenario?{scenario:world.scenario}:{}};plan.next.animalOwners.origins=plan.next.animalOwners.members.map(a=>({pawnId:a.id,originMapId:mapId!,context}));}
     const people=new Set(plan.capture.members.map(p=>p.id)),items=new Set(plan.capture.items.map(p=>p.id));
-    for(const p of plan.capture.members){rememberMapAreaDeparture(world,p);releaseAllowedAreaReturn(p);if(isSecondaryContext(world))delete p.allowedAreaId;if(bedCapture)rememberActorBedDeparture256(p,mapId!,bedCapture.refs,world.schemaVersion);else {p.bedId=null;delete p.bedSlot;}p.path=[];p.moveCooldown=0;p.planCooldown=0;p.state='idle';if(p.mental)p.mental.below=[0,0,0];delete p.motion;delete p.shooting;delete p.stagger;delete p.stun;}
+    for(const p of plan.capture.members){rememberMapAreaDeparture(world,p);releaseAllowedAreaReturn(p);if(isSecondaryContext(world))delete p.allowedAreaId;if(bedCapture)rememberActorBedDeparture256(p,mapId!,bedCapture.refs,world.schemaVersion);else {p.bedId=null;delete p.bedSlot;}p.path=[];p.moveCooldown=0;p.planCooldown=0;if(p.state!=='downed')p.state='idle';if(p.mental)p.mental.below=[0,0,0];delete p.motion;delete p.shooting;delete p.stagger;delete p.stun;}
     for(const a of plan.capture.animals??[]){if(bedCapture)rememberActorBedDeparture256(a,mapId!,bedCapture.refs,world.schemaVersion);if(a.wander)delete a.wander.job;a.path=[];delete a.motion;delete a.animalRest;delete a.meal;delete a.eggLay;delete a.flight;delete a.stagger;delete a.stun;delete a.sleepUntilCore;if(a.domestic)delete a.domestic.penMarkerId;if(a.state!=='downed')a.state='idle';a.nextDecision=world.tick;}
     if(world.wildlife&&plan.capture.animals){const ids=new Set(plan.capture.animals.map(a=>a.id));world.wildlife.animals=world.wildlife.animals.filter(a=>!ids.has(a.id));}
     world.pawns=world.pawns.filter(p=>!people.has(p.id));world.piles=world.piles.filter(p=>!items.has(p.id));const packs=new Set(plan.capture.packed??[]);world.packed=world.packed.filter(p=>!packs.has(p));
@@ -171,7 +199,7 @@ function returnGroup(w:World,g:AwayGroup):boolean {
   for(const {pawn,cell} of placements){pawn.x=cell.x;pawn.z=cell.z;pawn.path=[];pawn.moveCooldown=0;pawn.planCooldown=0;delete pawn.motion;if(pawn.state!=='downed')pawn.state='idle';}
   w.pawns.push(...g.members);w.piles.push(...g.items);if(g.packed)w.packed.push(...g.packed);
   const pending=g.items.filter(i=>i.owner.type==='inventory').map(i=>i.id),pendingPacked=g.packed?.map(p=>p.building.id)??[];
-  if(pending.length||pendingPacked.length)w.group={id:g.id,startedAt:g.startedAt,destination:g.destination,ledger:g.ledger,...g.provisions?{provisions:g.provisions}:{},...g.freight?{freight:g.freight}:{},phase:'unloading',memberIds:g.members.map(p=>p.id),pendingPileIds:pending,...pendingPacked.length?{pendingPackedIds:pendingPacked}:{}};else delete w.group;
+  if(pending.length||pendingPacked.length)w.group={...g.admission?{admission:g.admission}:{},id:g.id,startedAt:g.startedAt,destination:g.destination,ledger:g.ledger,...g.provisions?{provisions:g.provisions}:{},...g.freight?{freight:g.freight}:{},phase:'unloading',memberIds:g.members.map(p=>p.id),pendingPileIds:pending,...pendingPacked.length?{pendingPackedIds:pendingPacked}:{}};else delete w.group;
   // Reinsert the real owners together before the local physical drop. A full
   // floor keeps the same disabled weapon with equipmentDropPending for retry.
   for(const {pawn} of placements)dropIncapacitatedEquipment(w,pawn);
@@ -202,7 +230,7 @@ export function advanceGroupPersonalFrontier(w:World,prospective?:GroupPersonalF
     const dead=new Set(result.deceased.map(p=>p.id));
     const actualAway=g;
     if(w.schemaVersion>=256&&g.reorganization&&g.members.some(p=>!dead.has(p.id)))for(const p of result.deceased)stripTerminalCaravanMember256(w,g,p.id);
-    const losses=result.deceased.map(p=>({...actualAway.packed?.some(pack=>pack.owner.type==='inventory'&&pack.owner.pawnId===p.id)?{packed:actualAway.packed.filter(pack=>pack.owner.type==='inventory'&&pack.owner.pawnId===p.id)}:{},...actualAway.reorganization?{memberOrigin:actualAway.reorganization.memberOrigins.find(o=>o.pawnId===p.id)!}:{},groupId:actualAway.id,tile:actualAway.tile,tick:p.health!.death!.tick,pawn:p,items:actualAway.items.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id)}));
+    const losses=result.deceased.map(p=>({...actualAway.admission?{admission:actualAway.admission}:{},...actualAway.packed?.some(pack=>pack.owner.type==='inventory'&&pack.owner.pawnId===p.id)?{packed:actualAway.packed.filter(pack=>pack.owner.type==='inventory'&&pack.owner.pawnId===p.id)}:{},...actualAway.reorganization?{memberOrigin:actualAway.reorganization.memberOrigins.find(o=>o.pawnId===p.id)!}:{},groupId:actualAway.id,tile:actualAway.tile,tick:p.health!.death!.tick,pawn:p,items:actualAway.items.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id)}));
     if(w.worldGroups){const r=boundWorldGroup(w);if(!r)throw Error('Missing loss context');if(!w.worldGroups.lossContexts.some(c=>c.groupId===g!.id))w.worldGroups.lossContexts.push({groupId:g.id,originMapId:r.originMapId,context:r.context});}w.groupLosses??=[];w.groupLosses.push(...losses);g.members=g.members.filter(p=>!dead.has(p.id));if(g.reorganization)g.reorganization.memberOrigins=g.reorganization.memberOrigins.filter(o=>!dead.has(o.pawnId));g.items=g.items.filter(i=>!('pawnId' in i.owner)||!dead.has(i.owner.pawnId));if(g.packed){g.packed=g.packed.filter(pack=>pack.owner.type!=='inventory'||!dead.has(pack.owner.pawnId));if(!g.packed.length)delete g.packed;}
     if(g.animalOwners)g.animalOwners.order=g.animalOwners.order.filter(id=>!dead.has(id));
     if(!g.members.length){if(w.schemaVersion>=256)archiveOwnerlessCaravanAnimals256(w,g,animalPersonalTick);delete w.group;}

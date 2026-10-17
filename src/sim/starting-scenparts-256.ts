@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Creation-only extraction of the DELIVERED partial Crashlanded profile.
  * Operates on the actual unpublished geographic World and actual850 start.
  * No terrain generator, largest-component relocation or migration is called. */
@@ -37,7 +38,7 @@ export interface StartingScenPartsReceipt256 {
 }
 function requireFresh(world:World,start850:number,party:StartingParty):void {
  const player=world.worldFactions?.factions.find(f=>f.id===world.worldFactions!.playerFactionId);
- if(world.schemaVersion!==256||world.tick!==0||world.site?.revision!==3||world.planet?.revision!==3||world.climate?.revision!==4||world.site.tileId!==world.planet.homeTile||!validGeographicSiteBinding256(world)||player?.def!=='PlayerColony'||!validStartingParty(party))throw Error('Starting scenario requires the actual fresh geographic colony, chosen party and player faction');
+ if(!isSchema256Or257(world.schemaVersion)||world.tick!==0||world.site?.revision!==3||world.planet?.revision!==3||world.climate?.revision!==4||world.site.tileId!==world.planet.homeTile||!validGeographicSiteBinding256(world)||player?.def!=='PlayerColony'||!validStartingParty(party))throw Error('Starting scenario requires the actual fresh geographic colony, chosen party and player faction');
  if(!Number.isSafeInteger(world.nextId)||world.nextId<1)throw Error('Invalid actual starting identity frontier');
  if(!Number.isSafeInteger(start850)||start850<0||start850>=world.width*world.height||world.tiles.length!==world.width*world.height)throw Error('Missing actual850 player start');
  // An empty tick0 save is not an implicit admission to acquire this profile.
@@ -129,7 +130,7 @@ export function applyStartingOriginalScenParts256(world:World,input:{start850:nu
  * faithful875 possessions/arrival. Initial human birth/research/storyteller
  * tuning remains an explicit adaptation; no Core global completion is claimed. */
 export function adoptDeliveredStartingSystems256(world:World,landing:Cell):void {
- if(world.schemaVersion!==256||world.tick!==0||world.site?.revision!==3||world.planet?.revision!==3||!world.startingArrival||Object.hasOwn(world,'gameProfile')&&!validGameProfile(world.gameProfile,256,{id:'crashlanded'})||['scenario','research','raids','visitors','fluIncidents','miscIncidents','economy'].some(k=>Object.hasOwn(world,k)))throw Error('Starting systems already owned');
+ if(!isSchema256Or257(world.schemaVersion)||world.tick!==0||world.site?.revision!==3||world.planet?.revision!==3||!world.startingArrival||Object.hasOwn(world,'gameProfile')&&!validGameProfile(world.gameProfile,256,{id:'crashlanded'})||['scenario','research','raids','visitors','fluIncidents','miscIncidents','economy'].some(k=>Object.hasOwn(world,k)))throw Error('Starting systems already owned');
  world.research={project:null,points:CLOTHING_RESEARCH_COST,completedAt:0,airConditioning:{points:AIR_CONDITIONING_COST,completedAt:0},stonecutting:{points:STONECUTTING_RESEARCH_COST,completedAt:0},complexFurniture:{points:COMPLEX_FURNITURE_RESEARCH_COST,completedAt:0}};
  world.gameProfile??=crashlandedProfile();world.scenario={id:'crashlanded',revision:ARRIVING_CRASHLANDED_REVISION,landing:{...landing}};
  enableCassandraRaids(world);adoptFluIncidents(world);adoptMiscIncidents(world);enableVisitors(world,true);adoptColonyEconomy(world);

@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Closed optional runtime data. Only the real local decision creates these
  * fields; load/migration never supply a first decision or reset its timestamp. */
 import {isCaveInsectSpecies256} from './cave-insect-constructor-256.ts';
@@ -12,7 +13,7 @@ export function validHiveRuntimeFields256(v:unknown,version:number,tick:number,n
  for(const field of ['hiveThink','hiveJob']){
   const d=Object.getOwnPropertyDescriptor(v,field);if(!d){if(field in v)return false;continue;}
   const species=Object.getOwnPropertyDescriptor(v,'species'),membership=Object.getOwnPropertyDescriptor(v,'hive');
-  if(version!==256||!Object.hasOwn(d,'value')||!d.enumerable||!species||!('value'in species)||!isCaveInsectSpecies256(species.value)||!membership||!('value'in membership)||!object(membership.value))return false;
+  if(!isSchema256Or257(version)||!Object.hasOwn(d,'value')||!d.enumerable||!species||!('value'in species)||!isCaveInsectSpecies256(species.value)||!membership||!('value'in membership)||!object(membership.value))return false;
   if(field==='hiveThink'){
    if(!exact(d.value,['maintenanceLastTryCore'])||!int(d.value.maintenanceLastTryCore,-99999,tick*10))return false;
   }else {

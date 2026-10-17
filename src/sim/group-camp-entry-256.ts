@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Ordered SIM entry of one real away group. A yielded generation candidate
  * never becomes a map; source, generation statics and allocation commit once.
  * No bootstrap/migration synthesizes the required registry owner here. */
@@ -17,7 +18,7 @@ type Entry256={status:'ready';commit(select?:boolean):CommandResult}|{status:'bl
 export function* prepareActualCampEntry256(input:CampaignState,groupId:number):Generator<CampMapProgress256,Entry256,void> {
  const root=registeredCampaign(input),registry=root.worldMaps,state=registry?.generationRuntime;
  const blocked=(phase:string,reason:string):Entry256=>({status:'blocked',phase,reason});
- if(root.schemaVersion!==256||root.planet?.revision!==3||!registry||!state||!validMapGenerationRuntime256(state))return blocked('runtime-owner','Actual geographic campaign generation owner is missing');
+ if(!isSchema256Or257(root.schemaVersion)||root.planet?.revision!==3||!registry||!state||!validMapGenerationRuntime256(state))return blocked('runtime-owner','Actual geographic campaign generation owner is missing');
  if(root.gameProfile?.revision!==1||root.gameProfile.storyteller!=='cassandra-partial'||root.gameProfile.difficulty!=='adventure-story')return blocked('generation-profile','Actual admitted no-tutorial AdventureStory context required');
  const before=JSON.stringify(state),captured=captureMapGenerationRuntime256(state,200,200);
  const same=()=>registeredCampaign(input)===root&&root.worldMaps===registry&&registry.generationRuntime===state&&JSON.stringify(state)===before;

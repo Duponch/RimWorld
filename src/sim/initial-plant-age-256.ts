@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {WILD_PLANT_GENERATION_FACTS_256 as FACTS} from './wild-plant-generation-data-256.ts';
 import type {PlantLife} from './plant-life.ts';
 import type {Resource} from './types.ts';
@@ -17,7 +18,7 @@ export function validInitialPlantAge256(plant:Partial<Resource>,version:number):
 /** Production-only guard. Ordinary/paused save validators deliberately do NOT
  * require since==adoptedAt after a real cross-clock transfer or replanting. */
 export function attachInitialPlantAge256(plant:Resource,version:number,initialAgeCore:number,adoptedAt:number):void {
- const life=plant.plantLife;if(version!==256||!life||life.since!==adoptedAt||life.age!==0||life.darkTicks!==0||own(life,'bornAt')||own(life,'initialAgeCore')||own(life,'pausedTicks'))throw Error('Initial plant age requires the actual new map production clock');
+ const life=plant.plantLife;if(!isSchema256Or257(version)||!life||life.since!==adoptedAt||life.age!==0||life.darkTicks!==0||own(life,'bornAt')||own(life,'initialAgeCore')||own(life,'pausedTicks'))throw Error('Initial plant age requires the actual new map production clock');
  const candidate={...plant,plantLife:{...life,initialAgeCore}};
  if(!validInitialPlantAge256(candidate,version))throw Error('Invalid initial Core plant age');
  life.initialAgeCore=initialAgeCore;

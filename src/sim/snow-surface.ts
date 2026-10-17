@@ -1,3 +1,4 @@
+import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {terrainHoldsSnow256} from './natural-terrain-runtime-256.ts';
 import {animalBodySize} from './animal-life.ts';
 import {footprintCells} from './definitions.ts';
@@ -26,7 +27,7 @@ export function initializeSnowSurface(w:World):void {initializeSnowAt(w,0);}
 /** Fresh prospective map only, including a camp created at its real tick.
  * No historical migration/load/catch-up enters this explicit creation path. */
 export function initializeGeographicSnowSurface256(w:FreshSnowLandscape256):void {
- if(w.schemaVersion!==256||w.site?.revision!==3||w.climate?.revision!==4||w.climate.adoptedAt!==w.tick||!Number.isSafeInteger(w.tick)||w.tick<0)throw Error('Fresh geographic snow adoption requires its actual climate/tick');
+ if(!isSchema256Or257(w.schemaVersion)||w.site?.revision!==3||w.climate?.revision!==4||w.climate.adoptedAt!==w.tick||!Number.isSafeInteger(w.tick)||w.tick<0)throw Error('Fresh geographic snow adoption requires its actual climate/tick');
  initializeSnowAt(w,w.tick);
 }
 function runtime(w:World):Runtime {

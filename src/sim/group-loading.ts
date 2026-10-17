@@ -1,3 +1,4 @@
+import {groupHumanHandler257} from './group-human-admission-257.ts';
 import {groupCaravanUnitMass256} from './group-caravan-mass-256.ts';
 import {ITEM_DEFINITIONS} from './items.ts';
 import {GROUP_FREIGHT_SCHEMA,freightGroup,groupItemMassGrams} from './group-freight.ts';
@@ -43,10 +44,10 @@ export function previewGroupLoading(world:World,memberIds:readonly number[],line
     if(unit===undefined||!Number.isSafeInteger(reserved)||reserved<0||source.quantity-reserved<line.quantity)return fail('source-reserved');
     remainingBySource.set(source.id,source.quantity);let remaining=line.quantity;
     while(remaining){
-      const ranked=[...carriers].filter(c=>c.capacityGrams-c.grams>=unit).sort((a,b)=>Number(capture.members.some(p=>p.id===a.pawnId))-Number(capture.members.some(p=>p.id===b.pawnId))||a.grams-b.grams||a.pawnId-b.pawnId);
+      const ranked=[...carriers].filter(c=>c.capacityGrams-c.grams>=unit&&(world.schemaVersion<257||!capture.members.some(p=>p.id===c.pawnId)||capture.members.some(p=>p.id===c.pawnId&&groupHumanHandler257(p)))).sort((a,b)=>Number(capture.members.some(p=>p.id===a.pawnId))-Number(capture.members.some(p=>p.id===b.pawnId))||a.grams-b.grams||a.pawnId-b.pawnId);
       let selected:typeof carriers[number]|undefined,handler:Pawn|undefined;
       for(const carrier of ranked){
-        const pawn=capture.members.find(p=>p.id===carrier.pawnId)??capture.members.find(p=>carriers.find(c=>c.pawnId===p.id)!.capacityGrams-carriers.find(c=>c.pawnId===p.id)!.grams>=unit);if(!pawn)continue;
+        const pawn=capture.members.find(p=>p.id===carrier.pawnId)??capture.members.find(p=>(world.schemaVersion<257||groupHumanHandler257(p))&&carriers.find(c=>c.pawnId===p.id)!.capacityGrams-carriers.find(c=>c.pawnId===p.id)!.grams>=unit);if(!pawn)continue;
         if(authority.sourceReason(world,source,pawn))continue;
         const key=`${source.id}:${pawn.id}`;let reach=access.get(key);
         if(reach===undefined){reach=authority.sourceAccess(world,pawn,source);access.set(key,reach);}
@@ -176,7 +177,7 @@ export function prepareGroupDeparture(world:World,planet:PlanetState,group:Prepa
   if(authority.personalPassTick(world,capture.members)!==world.tick)return fail('personal-pass');
   const route=findPlanetRoute(planet,group.originTile??planet.homeTile,group.destination,planetCostContext(world,capture.mass),budget);
   if(route.kind==='deferred')return {kind:'deferred'};if(route.kind!=='found')return fail('unreachable');
-  const next:AwayGroup={...group.originTile!==undefined?{originTile:group.originTile}:{},id:group.id,startedAt:group.startedAt,destination:group.destination,ledger:group.ledger,...group.provisions?{provisions:{...group.provisions}}:{},...group.freight?{freight:{...group.freight}}:{},phase:'travelling',
+  const next:AwayGroup={...group.admission?{admission:group.admission}:{},...group.originTile!==undefined?{originTile:group.originTile}:{},id:group.id,startedAt:group.startedAt,destination:group.destination,ledger:group.ledger,...group.provisions?{provisions:{...group.provisions}}:{},...group.freight?{freight:{...group.freight}}:{},phase:'travelling',
     members:[...capture.members],...capture.animals?.length?{animalOwners:{revision:1 as const,members:[...capture.animals],origins:[],order:[...capture.members,...capture.animals].map(p=>p.id)}}:{},items:[...capture.items],...capture.packed?.length?{packed:[...capture.packed]}:{},departedAt:world.tick,lastPersonalTick:world.tick,baseline:capture.baseline,
     entry:{...capture.exitCells[0]!.cell},tile:group.originTile??planet.homeTile,route:route.tiles,segment:null,paused:false,stop:null};
   const plan:GroupDeparturePlan={group,expectedGroup:JSON.stringify(group),capture,next};

@@ -1,3 +1,4 @@
+import {preparedSchema256} from './helpers/legacy-fixture-guards.ts';
 import {describe,it,expect} from 'vitest';
 import {huntingCamp} from './scenarios/hunting.ts';
 import {ANIMAL_SPECIES_IDS,LEGACY_ANIMAL_SPECIES_IDS,animalSpecies,type AnimalSpeciesId} from '../src/sim/animal-species.ts';
@@ -17,7 +18,7 @@ import type {World} from '../src/sim/types.ts';
  * Its real World/IDs are retained; only the animal and food preconditions below
  * are prepared. Producers and RAW guards then operate on these same originals. */
 function prepared(species:AnimalSpeciesId){
- const w=huntingCamp();w.schemaVersion=256;w.resources=[];w.piles=[];
+ const w=huntingCamp();preparedSchema256(w);w.resources=[];w.piles=[];
  const a:WildAnimal={id:w.wildlife!.animals[0]!.id,species,sex:'female',ageTicks:2000000,x:10,z:10,food:0,rest:1,state:'idle',path:[],nextDecision:w.tick+1};
  attachGeneratedAnimalGrowth256(a,w.tick*10,256);a.health=createAnimalMedicalRecord256(w,a);w.wildlife!.animals=[a];
  return {w,a};
