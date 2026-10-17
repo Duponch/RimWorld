@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V413 — schéma 258, qualifié :** [Fret existant et meubles minifiés](gameplay/group-freight-v413.md) : mêmes biens, chargement physique vers les animaux et anciens contrats conservés. 59 cas ciblés acquis par reprises ; même fret humain/animal, départ réel303 et recharge UI exacte304. Fondations ouvertes, aucune publication ; production V403 inchangée. Les états suivants sont historiques.
+
 **17 octobre 2026 — V412 qualifié, schéma 257.** [Formation et portage humain](gameplay/group-admission-v412.md) : libération du travail après les arêtes réelles, même passager libre porté au contact, annulation/recharge exacte au62, départ343/recharge344. 48cas/8fichiers acquis par reprises et contrôle de fin de tick social ; présentation163,045s, rouges conservés. Publication différée, captifs/fret complet et autres fondations à terminer ; aucun gain FPS démontré.
 
 **17 octobre 2026 — V411, schéma 256 inchangé.** [Sauvegarde sur sol moussu](gameplay/natural-travel-save-v411.md) : facture physique0,3 admise sans modifier les arêtes ni les anciens formats. Camp réel travaillé/retiré3293, mêmes personnes et37bois rentrés/déposés3602 ; marqueur et deux recharges exactes vérifiés en pause, par reprises avec rouges préservés. Autres fondations ouvertes, productionV403 inchangée.

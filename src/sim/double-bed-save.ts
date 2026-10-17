@@ -39,12 +39,19 @@ export function validateDoubleBeds(w:World,version:number):string[] {
   const content=[...physical,...w.jobs.flatMap(j=>[j.furniture,j.deconstruction,j.flick,j.repair,j.fixBreakdown].filter(Boolean))];
   if(!content.some(b=>b&&'kind' in b&&b.kind==='double-bed')&&everyHumanPawnOwner(w,p=>!prospectivePawn(p)))return [];
   if(version<224)return ['Future double bed or bed slot.'];
+  // Inner minified coordinates are literal provenance, not the current map.
+  // Installed buildings and jobs still require their complete local footprint.
+  const packedBuildings=version>=258?new Set<object>([...(w.packed??[]),...archivedPacks].map(p=>p.building)):undefined;
+  const spatialBuildings=version>=258?new Set<object>([...w.structures,...w.jobs]):undefined;
   const errors:string[]=[],owners=captureHumanOwners(w),beds=normalBeds(w);
   if(content.some(b=>b&&'kind' in b&&b.kind==='double-bed')&&w.research?.complexFurniture?.completedAt===undefined)errors.push('Locked double bed.');
   for(const bed of physical)if(bed.kind==='double-bed'){
     const material=bed.material,geometry={id:bed.id,kind:'double-bed' as const,x:bed.x,z:bed.z,orientation:bed.orientation,footprint:bed.footprint},head0=bedSlotCell(geometry,0),head1=bedSlotCell(geometry,1),d=[{x:0,z:1},{x:1,z:0},{x:0,z:-1},{x:-1,z:0}][bed.orientation];
+    const literalInnerPose=!!packedBuildings?.has(bed)&&!spatialBuildings?.has(bed);
     if(bed.footprint!=='standard'||!Number.isInteger(bed.orientation)||bed.orientation<0||bed.orientation>3||Object.hasOwn(bed,'medical')||Object.hasOwn(bed,'prisoner')
-      ||!materialAllowed('double-bed',material)||!head0||!head1||!d||[head0,head1,{x:head0.x+d.x,z:head0.z+d.z},{x:head1.x+d.x,z:head1.z+d.z}].some(c=>!Number.isSafeInteger(c.x)||!Number.isSafeInteger(c.z)||c.x<0||c.z<0||c.x>=w.width||c.z>=w.height))errors.push('Invalid double bed footprint, material or civil role.');
+      ||!materialAllowed('double-bed',material)||!head0||!head1||!d||(literalInnerPose
+        ?!Number.isSafeInteger(bed.x)||!Number.isSafeInteger(bed.z)||bed.x<0||bed.z<0
+        :[head0,head1,{x:head0.x+d.x,z:head0.z+d.z},{x:head1.x+d.x,z:head1.z+d.z}].some(c=>!Number.isSafeInteger(c.x)||!Number.isSafeInteger(c.z)||c.x<0||c.z<0||c.x>=w.width||c.z>=w.height)))errors.push('Invalid double bed footprint, material or civil role.');
   }
   for(const bed of built)if(bed.kind==='double-bed'&&(!isFurnitureQuality(bed.quality)
     ||bed.damage!==undefined&&(!Number.isSafeInteger(bed.damage)||bed.damage<0||!materialAllowed('double-bed',bed.material)||bed.damage>=furnitureMaxHitPoints('double-bed',bed.material))))errors.push('Invalid double bed quality or damage.');

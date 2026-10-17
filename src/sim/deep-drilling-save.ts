@@ -1,3 +1,4 @@
+import type {PackedFurniture} from './furniture-rules.ts';
 import { isColonist } from './affiliation.ts';
 import { deepWorkSpot } from './deep-drilling-rules.ts';
 import { serviceCell } from './service-reservations.ts';
@@ -11,15 +12,16 @@ const kinds=['deep-drill','ground-scanner'];
 
 /** One transport/file contract for acquired reserves, building work and real
  * operator claims. Temporary power, light and roof conditions reconcile in play. */
-export function validDeepDrillingTransport(w:World,version:number):boolean {
+export function validDeepDrillingTransport(w:World,version:number,packedRecords?:readonly PackedFurniture[],clock:number=w.tick):boolean {
   try {
-    const archived=[...(w.visitors?.departed??[]),...(w.podRescues?.departed??[])];
-    const buildings=[...w.structures.map(s=>({s,tick:w.tick})),...(w.packed??[]).map(p=>({s:p.building,tick:w.tick})),
+    const archived=packedRecords?[]:[...(w.visitors?.departed??[]),...(w.podRescues?.departed??[])];
+    const buildings=packedRecords?packedRecords.map(p=>({s:p.building,tick:clock})):[...w.structures.map(s=>({s,tick:w.tick})),...(w.packed??[]).map(p=>({s:p.building,tick:w.tick})),
       ...archived.flatMap(d=>(d.packed??[]).map(p=>({s:p.building,tick:d.tick})))];
-    if(archived.some(d=>Object.hasOwn(d.pawn,'deepWork'))||w.jobs.some(j=>Object.hasOwn(j,'deepDrill')||Object.hasOwn(j,'deepScanner')))return false;
+    if(!packedRecords&&(archived.some(d=>Object.hasOwn(d.pawn,'deepWork'))||w.jobs.some(j=>Object.hasOwn(j,'deepDrill')||Object.hasOwn(j,'deepScanner'))))return false;
     if(version<215)return !Object.hasOwn(w,'deepResources')
       &&w.pawns.every(p=>!Object.hasOwn(p,'deepWork'))
       &&[...buildings.map(p=>p.s),...w.jobs].every(s=>!kinds.includes(s.kind)&&!Object.hasOwn(s,'deepDrill')&&!Object.hasOwn(s,'deepScanner'));
+    if(!packedRecords){
     const state:unknown=w.deepResources;
     if(state!==undefined){
       if(!obj(state)||!keys(state,['adoptedAt','rng','discoveries','cells'])||!int(state.adoptedAt,0,w.tick)
@@ -31,6 +33,7 @@ export function validDeepDrillingTransport(w:World,version:number):boolean {
         last=c.index;
       }
     }else if(Object.hasOwn(w,'deepResources'))return false;
+    }
     for(const {s,tick} of buildings){
       const drill:unknown=s.deepDrill,scanner:unknown=s.deepScanner;
       if(Object.hasOwn(s,'deepDrill')){
@@ -45,6 +48,7 @@ export function validDeepDrillingTransport(w:World,version:number):boolean {
           ||(scanner.lastScanAt===undefined)!==(scanner.lastUserSpeed===undefined))return false;
       }
     }
+    if(packedRecords)return true;
     const claimed=new Set<number>(),spots=new Set<number>();
     for(const p of w.pawns){
       if(!Object.hasOwn(p,'deepWork'))continue;

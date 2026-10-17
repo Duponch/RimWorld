@@ -1,3 +1,5 @@
+import {validateGroupPackedComponents258} from './group-packed-components-258.ts';
+import {regularGroupFreightItem258,validLoadedGroupFreight258} from './group-freight-contract-258.ts';
 import {validGroupAdmission257,validGroupHumanPreparation257} from './group-human-admission-257.ts';
 import {validToxicBuildupTransport256} from './toxic-buildup-save-256.ts';
 import {validGroupAnimalPreparation256,validGroupAnimalOwners256} from './group-animal-save-256.ts';
@@ -7,7 +9,7 @@ import {validCaravanBedrollPacks256} from './group-bedroll-capture-256.ts';
 import {validPreparingGroupPacked256} from './group-packed-save-256.ts';
 import {planetTile,planetTileCount} from './planet-geography-256.ts';
 import {groupDestinationValid} from './group-capture.ts';
-import {groupCaravanUnitMass256} from './group-caravan-mass-256.ts';
+import {groupCaravanPileMass256} from './group-caravan-mass-256.ts';
 import {validProspectiveGroupSegment256} from './group-route-interval-256.ts';
 import {validPawnMapAreaBindings,mapAreaReferences} from './pawn-map-areas.ts';
 import type {GroupMemberOrigin} from './group-reorganization-state.ts';
@@ -164,7 +166,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
       const animalHeader=originalAnimalHeaders?.get(item.owner.pawnId as number);
       const shape=validatePileRecordShape(item,animalHeader?{...animalHeader,tick:clock,nextId:world.nextId}:world,version,clock);
       if(shape.length){errors.push(...shape.map(e=>`Group pile ${item.id}: ${e}`));return false;}
-      if((version>=256?groupCaravanUnitMass256(item.item as MaterialPile['item'],freight):groupItemMassGrams(item.item as MaterialPile['item'],freight,version))===undefined)return false;
+      if((version>=256?groupCaravanPileMass256(item as unknown as MaterialPile,freight,version):groupItemMassGrams(item.item as MaterialPile['item'],freight,version))===undefined)return false;
       const pile=item as unknown as MaterialPile;
       if(item.damage!==undefined&&(pile.apparel||pile.weapon||!int(item.damage,1,pileMaxHp(pile,version)-1)))return false;
       if(isPerishable(pile.item)){
@@ -191,7 +193,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
     for(const loss of losses){
       if(!object(loss)||!keys(loss,['groupId','tile','tick','pawn','items'],version>=256?['memberOrigin','packed',...version>=257?['admission']:[]]:[])||!groupId(loss.groupId)||!place(loss.tile)
         ||Object.hasOwn(loss,'admission')&&(!object(loss.admission)||!validGroupAdmission257(loss.admission,version))||!int(loss.tick,planet.adoptedAt,world.tick)||loss.memberOrigin!==undefined&&(version<256||!object(loss.pawn)||!validGroupMemberOrigin(loss.memberOrigin,loss.pawn.id as number,world.nextId,o=>groupMemberOriginAuthority(world,o)))||!person(loss.pawn,loss.tick,true,loss.memberOrigin as GroupMemberOrigin|undefined))return ['Invalid terminal group person.',...errors];
-      if(!validCaravanBedrollPacks256(loss.packed,[loss.pawn as Pawn],world.nextId,version))return ['Invalid terminal packed owners.'];for(const pack of (loss.packed??[]) as import('./furniture-rules.ts').PackedFurniture[]){if(pileIds.has(pack.building.id)||ownerIds.has(pack.building.id))return ['Duplicate terminal packed identity.'];pileIds.add(pack.building.id);}
+      if(!validCaravanBedrollPacks256(loss.packed,[loss.pawn as Pawn],world.nextId,version,Number(loss.tick)))return ['Invalid terminal packed owners.'];if(!referencesOnly)errors.push(...validateGroupPackedComponents258(world,(loss.packed??[]) as import('./furniture-rules.ts').PackedFurniture[],version,Number(loss.tick)));for(const pack of (loss.packed??[]) as import('./furniture-rules.ts').PackedFurniture[]){if(pileIds.has(pack.building.id)||ownerIds.has(pack.building.id))return ['Duplicate terminal packed identity.'];pileIds.add(pack.building.id);}
       const id=(loss.pawn as Pawn).id;
       if(!piles(loss.items,new Set([id]),loss.tick,version>=256?world.nextId-1:256,version>=GROUP_FREIGHT_SCHEMA))return ['Invalid terminal group possessions.',...errors];
       const existing=retained.get(loss.groupId as number)??[];existing.push(...loss.items);retained.set(loss.groupId as number,existing);
@@ -238,7 +240,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
       for(let i=0;i<group.manifest.length;i++){
         const line:unknown=group.manifest[i];
         if(!object(line)||!keys(line,['pileId','quantity','item','carrierId'],[...i<(group.cursor as number)?['carriedPileId']:[],...version>=256&&group.travelPreparation===true?['animalCarrierId',...i<(group.cursor as number)?['deliveredToAnimal']:[]]:[]])
-          ||!thing(line.pileId)||!members.includes(line.carrierId as number)||!(oneOf(line.item,['survival-meal','silver','cloth','muffalo-wool',...provisioned?['pemmican']:[],...freighted?['wood','steel']:[]])||version>=256&&group.travelPreparation===true&&typeof line.item==='string'&&Object.hasOwn(ITEM_DEFINITIONS,line.item)&&ITEM_DEFINITIONS[line.item as MaterialPile['item']].nutrition>0)
+          ||!thing(line.pileId)||!members.includes(line.carrierId as number)||!(version>=258&&group.travelPreparation===true&&typeof line.item==='string'&&Object.hasOwn(ITEM_DEFINITIONS,line.item)&&regularGroupFreightItem258(line.item as MaterialPile['item'],version)||oneOf(line.item,['survival-meal','silver','cloth','muffalo-wool',...provisioned?['pemmican']:[],...freighted?['wood','steel']:[]])||version>=256&&group.travelPreparation===true&&typeof line.item==='string'&&Object.hasOwn(ITEM_DEFINITIONS,line.item)&&ITEM_DEFINITIONS[line.item as MaterialPile['item']].nutrition>0)
           ||!int(line.quantity,1,ITEM_DEFINITIONS[line.item as MaterialPile['item']].stackLimit))return ['Invalid group manifest row.'];
         if(Object.hasOwn(line,'animalCarrierId')){const preparing=group as unknown as import('./group-capture.ts').PreparingGroup;if(!thing(line.animalCarrierId)||!preparing.animalPreparation?.lines.some(a=>a.animalId===line.animalCarrierId))return ['Invalid animal cargo recipient.'];if(Object.hasOwn(line,'deliveredToAnimal')&&line.deliveredToAnimal!==true)return ['Invalid animal delivery receipt.'];}else if(Object.hasOwn(line,'deliveredToAnimal'))return ['Animal delivery without recipient.'];
         if(i<(group.cursor as number)){
@@ -247,6 +249,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
         }else{const old=future.get(line.pileId)??{item:line.item as string,quantity:0};if(old.item!==line.item)return ['Conflicting group source item.'];old.quantity+=line.quantity;future.set(line.pileId,old);}
       }
       if(!referencesOnly)for(const [id,line] of future){const pile=world.piles.find(p=>p.id===id);if(!pile||pile.owner.type!=='ground'||pile.item!==line.item||pile.foodPoison||pile.quantity<line.quantity)return ['Invalid future group source ownership.'];}
+      if(!referencesOnly&&!validLoadedGroupFreight258(group as unknown as import('./group-capture.ts').PreparingGroup,new Map(world.piles.map(p=>[p.id,p])),version))return ['Invalid actual freight pickup receipt.'];
       if(provisions&&(provisions.pemmicanLoadedUnits!==loaded.pemmican||provisions.pemmicanConsumedUnits!==0||provisions.pemmicanSpoiledUnits!==0))return ['Invalid formation pemmican contact ledger.'];
       if(freight&&(freight.woodLoaded!==loaded.wood||freight.steelLoaded!==loaded.steel))return ['Invalid formation freight contact ledger.'];
       const l=group.ledger as unknown as GroupState['ledger'];
@@ -270,7 +273,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
       for(const a of prospective.animalOwners?.members??[]){if(ownerIds.has(a.id)||localById.has(a.id)||world.wildlife?.animals.some(b=>b.id===a.id))return ['Duplicate animal original.'];ownerIds.add(a.id);}
       for(const p of group.members)if(!person(p,world.tick,false,object(p)?prospective.reorganization?.memberOrigins.find(o=>o.pawnId===p.id):undefined))return ['Invalid away group person.',...errors];
       if(admissionPresent&&!prospective.members.some(p=>isColonist(p)&&!p.prisoner&&!p.visitor&&!p.health?.death&&p.state!=='dead'))return ['Away group lacks a free player owner.'];
-      if(!validCaravanBedrollPacks256(group.packed,groupPhysicalPawns256(prospective),world.nextId,version))return ['Invalid away packed owners.'];for(const pack of (group.packed??[]) as import('./furniture-rules.ts').PackedFurniture[]){if(pileIds.has(pack.building.id)||ownerIds.has(pack.building.id))return ['Duplicate away packed identity.'];pileIds.add(pack.building.id);}
+      if(!validCaravanBedrollPacks256(group.packed,groupPhysicalPawns256(prospective),world.nextId,version,world.tick))return ['Invalid away packed owners.'];if(!referencesOnly)errors.push(...validateGroupPackedComponents258(world,(group.packed??[]) as import('./furniture-rules.ts').PackedFurniture[],version));for(const pack of (group.packed??[]) as import('./furniture-rules.ts').PackedFurniture[]){if(pileIds.has(pack.building.id)||ownerIds.has(pack.building.id))return ['Duplicate away packed identity.'];pileIds.add(pack.building.id);}
       const people=new Set(groupPhysicalPawns256(prospective).map(p=>p.id));
       if(!piles(group.items,people,world.tick,version>=256?world.nextId-1:32768-world.piles.length,freighted||!!prospective.reorganization,prospective.animalOwners?.origins))return ['Invalid away group possessions.',...errors];
       if((group.items as MaterialPile[]).some(p=>{const o=p.owner;return 'pawnId'in o&&prospective.animalOwners?.members.some(a=>a.id===o.pawnId)&&o.type!=='inventory';}))return ['Animal possession is not an inventory.'];

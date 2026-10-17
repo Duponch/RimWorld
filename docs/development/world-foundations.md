@@ -26,6 +26,8 @@ Une exigence est fermée seulement avec règle primaire datée, implémentation 
 
 ## Étape actuelle
 
+[V413](../gameplay/group-freight-v413.md), qualifié au schéma 258, étend le fret collectif existant et les meubles minifiés. Les prises, poses historiques et propriétaires conservent leurs gardes ; 59 cas distincts sont acquis par reprises ; portage réel du même lit vers le muffalo, départ303 et recharge UI complète exacte304 qualifiés. La place finale des animaux et l’allocation gloutonne restent des adaptations déclarées. Aucune clôture du tableau ni publication de ce lot.
+
 [V412](../gameplay/group-admission-v412.md), qualifié au schéma257, admet le travail ordinaire et les colons libres à terre dans les nouvelles formations. Libération après arêtes, portage au contact, annulation physique/recharge62, départ343/recharge344, retour et décharge ciblés conservent les mêmes propriétaires. 48cas/8fichiers par reprises et présentation163,045s ; vrais rouges conservés, anciens256 stricts avant migration neutre. Captifs, fret complet, propriétaires terminaux et autres parcours monde restent ouverts. Aucun achèvement global, publication ou gain général de performances déduit de ce lot.
 
 [V411](../gameplay/natural-travel-save-v411.md) ferme le refus d’export d’une arête sur sol moussu : coût moteur correct, valeur capturée omise de la garde. Le camp a un tabouret payé25bois et une coupe produisant27bois, puis est réellement retiré3293 ; les mêmes personnes et37bois sont revenus/déposés au3602. Marqueur et deux exports/recharges complets exacts qualifiés ensuite en pause. Les reprises ne rendent pas verts les essais rouges antérieurs ; autres frontières et démonstration finale restent ouvertes.

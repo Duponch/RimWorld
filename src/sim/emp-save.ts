@@ -1,3 +1,4 @@
+import type {PackedFurniture} from './furniture-rules.ts';
 import { microelectronicsUnlocked } from './research.ts';
 import { validCookingOrder } from './player-cooking-save.ts';
 import { validBillSettings } from './cooking-bills.ts';
@@ -43,12 +44,13 @@ export function validStructureEmpState(value:unknown,kind:unknown,version:number
 
 /** Installed devices and minified batteries retain the absolute disable clock.
  * Plans are references and never own an additional transient state. */
-export function validEmpStructureTransport(w:World,version:number=w.schemaVersion):boolean {
-  for(const s of w.structures)if(Object.hasOwn(s,'emp')&&(s.emp===undefined||!validStructureEmpState(s.emp,s.kind,version,w.tick)))return false;
+export function validEmpStructureTransport(w:World,version:number=w.schemaVersion,packedRecords?:readonly PackedFurniture[],clock:number=w.tick):boolean {
+  if(!packedRecords)for(const s of w.structures)if(Object.hasOwn(s,'emp')&&(s.emp===undefined||!validStructureEmpState(s.emp,s.kind,version,w.tick)))return false;
   const copied=(v:unknown)=>object(v)&&Object.hasOwn(v,'emp');
   const packed=(p:unknown,tick:number)=>!copied(p)&&object(p)&&object(p.building)
     &&(!copied(p.building)||p.building.kind==='battery'&&p.building.emp!==undefined&&validStructureEmpState(p.building.emp,'battery',version,tick));
-  for(const p of w.packed??[])if(!packed(p,w.tick))return false;
+  for(const p of packedRecords??w.packed??[])if(!packed(p,packedRecords?clock:w.tick))return false;
+  if(packedRecords)return true;
   for(const j of w.jobs)if(copied(j)||copied(j.furniture)||copied(j.deconstruction))return false;
   for(const records of [w.visitors?.departed??[],w.podRescues?.departed??[]])for(const departure of records)
     for(const p of departure.packed??[])if(!packed(p,departure.tick))return false;
@@ -57,10 +59,11 @@ export function validEmpStructureTransport(w:World,version:number=w.schemaVersio
 
 /** Prospective content gate shared by save and sparse transport. Existing
  * production guards still validate the common gun task/ingredients/claims. */
-export function validEmpProductionTransport(w:World,version:number=w.schemaVersion):boolean {
+export function validEmpProductionTransport(w:World,version:number=w.schemaVersion,packedRecords?:readonly PackedFurniture[]):boolean {
   const allowed=version>=208&&microelectronicsUnlocked(w);
-  for(const station of [...w.structures,...(w.packed??[]).map(p=>p.building)])for(const bill of station.bills??[])
+  for(const station of packedRecords?packedRecords.map(p=>p.building):[...w.structures,...(w.packed??[]).map(p=>p.building)])for(const bill of station.bills??[])
     if(bill.recipe==='make-emp-launcher'&&(!allowed||station.kind!=='machining-table'||!validBillSettings(bill,bill.recipe,version)))return false;
+  if(packedRecords)return true;
   for(const pile of w.piles)if(pile.gunWork?.recipe==='make-emp-launcher'&&!allowed)return false;
   for(const p of w.pawns){
     if(p.cooking?.recipe==='make-emp-launcher'&&!allowed)return false;

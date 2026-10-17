@@ -1,3 +1,4 @@
+import type {PackedFurniture} from './furniture-rules.ts';
 import {isBurnApparelRecipe} from './burn-apparel-content.ts';
 import {burnApparelIngredientAllowed,validBurnApparelIngredients} from './burn-apparel-rules.ts';
 import {isPemmicanRecipe,validPemmicanIngredients} from './pemmican-content.ts';
@@ -30,12 +31,12 @@ import type { Cell,World } from './types.ts';
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 /** Called after the base schema's structures/pawns/piles are shape-checked. */
-export function validateCooking(input:unknown,version:number,ids:Set<number>,memoizeStaging=false,indexStaging=false,geometry?:StagingGeometryReader):string[] {
+export function validateCooking(input:unknown,version:number,ids:Set<number>,memoizeStaging=false,indexStaging=false,geometry?:StagingGeometryReader,packedRecords?:readonly PackedFurniture[]):string[] {
   const w=input as World,errors:string[]=[];
   const cell=(v:unknown)=>record(v)&&Object.keys(v).every(key=>key==='x'||key==='z')&&int(v.x,0,w.width-1)&&int(v.z,0,w.height-1);
   const taskKeys=new Set(['recipe','stationId','billId','spot','actionCell','phase','ingredients','progress','productId','storageId',...(version>=79?['workTicks']:[]),...(version>=32?['storageQuantity']:[])]);
   const ingredientKeys=new Set(['pileId','item','quantity','stage','cell']);
-  for(const s of [...w.structures,...(version>=32?w.packed.map(p=>p.building):[])]) {
+  for(const s of packedRecords?packedRecords.map(p=>p.building):[...w.structures,...(version>=32?w.packed.map(p=>p.building):[])]) {
     const recipe=stationRecipe(s);
     if(s.kind==='electric-crematorium'&&version<225){errors.push('Future electric crematorium.');continue;}
     if(s.kind==='electric-smelter'&&version<222){errors.push('Future electric smelter.');continue;}
@@ -56,6 +57,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>,mem
       else {if(ids.has(b.id))errors.push('Duplicate bill identity.');ids.add(b.id);}
     }
   }
+  if(packedRecords)return errors;
   for(const p of w.pawns) {
     if(version<32?p.priorities.craft!==undefined:!int(p.priorities.craft,0,4))errors.push('Invalid or future craft priority.');
     if(version<10) {if(p.cooking!==undefined||p.priorities.cook!==undefined)errors.push('Legacy save contains cooking fields.');continue;}

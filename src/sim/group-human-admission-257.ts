@@ -125,12 +125,12 @@ export function processGroupHumanCarry257(w:World,g:PreparingGroup,p:Pawn,ctx:Ne
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype&&Reflect.ownKeys(v).every(k=>typeof k==='string'&&Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)!,'value'));
 const fields=(v:Record<string,unknown>,keys:readonly string[])=>Reflect.ownKeys(v).length===keys.length&&keys.every(k=>Object.hasOwn(v,k));
 const dense=(v:unknown):v is unknown[]=>Array.isArray(v)&&Reflect.ownKeys(v).length===v.length+1&&Array.from({length:v.length},(_,i)=>Object.hasOwn(v,i)&&Object.hasOwn(Object.getOwnPropertyDescriptor(v,String(i))!,'value')).every(Boolean);
-export function validGroupAdmission257(value:unknown,version:number):value is GroupAdmission257|undefined {return value===undefined||version===257&&record(value)&&fields(value,['revision'])&&value.revision===1;}
+export function validGroupAdmission257(value:unknown,version:number):value is GroupAdmission257|undefined {return value===undefined||(version===257||version===258)&&record(value)&&fields(value,['revision'])&&value.revision===1;}
 /** Raw references are checked against the actual local owner array. This is
  * not a capability flag that can admit another map's human. */
 export function validGroupHumanPreparation257(value:unknown,w:World,g:PreparingGroup,version:number,referencesOnly=false):boolean {
  if(value===undefined)return !g.admission;
- if(version!==257||!g.admission||!record(value)||!fields(value,['revision','releaseIds','passengers'])||value.revision!==1||!dense(value.releaseIds)||!dense(value.passengers))return false;
+ if((version!==257&&version!==258)||!g.admission||!record(value)||!fields(value,['revision','releaseIds','passengers'])||value.revision!==1||!dense(value.releaseIds)||!dense(value.passengers))return false;
  const ids=new Set(g.memberIds),pawns=new Map(w.pawns.map(p=>[p.id,p])),released=new Set<number>(),patients=new Set<number>(),carrying=new Set<number>();
  const members=g.memberIds.map(id=>pawns.get(id));if(!referencesOnly&&(members.some(p=>!p||!groupFreeHuman257(p)||!!groupHumanAdmissionReason257(w,p))||!members.some(p=>groupFreeHuman257(p!)&&groupHumanMobile257(p!))))return false;
  for(const id of value.releaseIds){if(!Number.isSafeInteger(id)||!ids.has(id as number)||released.has(id as number))return false;released.add(id as number);}

@@ -1,3 +1,4 @@
+import {buildingLabels} from './building-labels';
 /** Snapshot-only travel readers. Never create/step a World or invent an owner. */
 import {animalSpecies} from '../sim/animal-species';
 import {animalLifeStage,animalNutritionMax} from '../sim/animal-life';
@@ -25,6 +26,6 @@ export function travelPacks256(s:GroupPanelSnapshot,ids:ReadonlySet<number>):rea
  if(s.group&&'members'in s.group)return s.group.packed??[];
  return s.world.packed.filter(p=>p.owner.type!=='ground'&&ids.has(p.owner.pawnId));
 }
-export const travelPackLabel256=(p:PackedFurniture):string=>`Sac de couchage${p.building.material?` · ${ITEM_DEFINITIONS[p.building.material].label}`:''}${p.building.quality?` · ${QUALITY_LABELS[p.building.quality]}`:''}`;
+export const travelPackLabel256=(p:PackedFurniture):string=>`${buildingLabels[p.building.kind]??'Meuble minifié'}${p.building.material?` · ${ITEM_DEFINITIONS[p.building.material].label}`:''}${p.building.quality?` · ${QUALITY_LABELS[p.building.quality]}`:''}`;
 export function travelRidingFactor256(people:number,animals:readonly WildAnimal[]):number {return caravanRidingFactor256(people,animals);}
 export const travelCapacity256=(p:Pawn|WildAnimal):number=>caravanPawnCapacityGrams256(p);

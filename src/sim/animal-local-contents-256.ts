@@ -1,3 +1,4 @@
+import {groupPackedMassGrams258} from './group-freight-mass-258.ts';
 import {captureDuckFlyerOwners256,heldDuckAnimal256} from './duck-owner-capture-256.ts';
 import type {DuckFlyer256} from './duck-flyer-state-256.ts';
 import {refreshStock} from './materials.ts';
@@ -8,7 +9,7 @@ import type {WildAnimal} from './wildlife-state.ts';
 import {pawnContentsLocation} from './human-corpses.ts';
 import {dropRetainingIdentity} from './ground-placement.ts';
 import {furnitureDropCell} from './furniture-transfer.ts';
-import {groupCaravanUnitMass256} from './group-caravan-mass-256.ts';
+import {groupCaravanPileMass256} from './group-caravan-mass-256.ts';
 const data=(v:unknown,key:string):unknown=>{if(!v||typeof v!=='object')return undefined;const d=Object.getOwnPropertyDescriptor(v,key);return d&&Object.hasOwn(d,'value')?d.value:undefined;};
 const corpseId=(pile:MaterialPile):number|undefined=>{const id=data(data(pile,'corpse'),'animalId');return typeof id==='number'&&Number.isSafeInteger(id)&&id>0&&data(pile,'id')===id?id:undefined;};
 export type ActualAnimalContentsOwner256={kind:'animal';animal:WildAnimal;holder?:DuckFlyer256}|{kind:'corpse';pile:MaterialPile};
@@ -43,8 +44,8 @@ export function dropAnimalContentsOnDeath256(w:World,a:WildAnimal,wasSpawned:boo
  * already resolved bare corpse mass once; this helper does not admit freight. */
 export function animalContentsMassGrams256(w:World,id:number):number|undefined {
  if(!animalContentsOwner256(w,id))return;let grams=0;const ids=new Set<number>();
- for(const p of w.piles)if(p.owner.type==='inventory'&&p.owner.pawnId===id){const unit=groupCaravanUnitMass256(p.item,true);if(unit===undefined||ids.has(p.id)||!Number.isSafeInteger(p.quantity)||p.quantity<1)return;ids.add(p.id);grams+=unit*p.quantity;if(!Number.isSafeInteger(grams))return;}
- for(const p of w.packed)if(p.owner.type==='inventory'&&p.owner.pawnId===id){if(p.building.kind!=='bedroll'||ids.has(p.building.id))return;ids.add(p.building.id);grams+=2500;if(!Number.isSafeInteger(grams))return;}return grams;
+ for(const p of w.piles)if(p.owner.type==='inventory'&&p.owner.pawnId===id){const unit=groupCaravanPileMass256(p,true,w.schemaVersion);if(unit===undefined||ids.has(p.id)||!Number.isSafeInteger(p.quantity)||p.quantity<1)return;ids.add(p.id);grams+=unit*p.quantity;if(!Number.isSafeInteger(grams))return;}
+ for(const p of w.packed)if(p.owner.type==='inventory'&&p.owner.pawnId===id){const unit=groupPackedMassGrams258(p,w.schemaVersion);if(unit===undefined||ids.has(p.building.id))return;ids.add(p.building.id);grams+=unit;if(!Number.isSafeInteger(grams))return;}return grams;
 }
 
 /** Retire only the local intention whose actual referenced animal died.

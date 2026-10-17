@@ -1,9 +1,11 @@
+import {SCHEMA_VERSION} from './types.ts';
+import {groupPackedMassGrams258} from './group-freight-mass-258.ts';
 import {canMergeEggPile256} from './animal-egg-permission-v256.ts';
 import {caravanPawnCapacityGrams256} from './group-animal-capacity-256.ts';
 import type {CaravanPhysicalPawn256} from './group-animal-state-256.ts';
 import type {PackedFurniture} from './furniture-rules.ts';
 import {validCaravanBedrollPacks256} from './group-bedroll-capture-256.ts';
-import {groupCaravanUnitMass256} from './group-caravan-mass-256.ts';
+import {groupCaravanPileMass256} from './group-caravan-mass-256.ts';
 import type {MaterialPile,Pawn} from './types.ts';
 import {ITEM_DEFINITIONS} from './items.ts';
 import {mergePileContamination,mergePileEgg256} from './pile-condition.ts';
@@ -25,24 +27,24 @@ const owner=(p:MaterialPile)=>'pawnId'in p.owner?p.owner.pawnId:undefined;
 /** Only the current admitted adult-human domain. Animals supply their own real
  * carriers in the subsequent fauna raccord; never turn an animal into a Pawn. */
 function canCarry(p:CaravanPhysicalPawn256):boolean{return caravanPawnCapacityGrams256(p)>0;}
-function inventoryMass(items:readonly MaterialPile[],id:number):number|undefined {
+function inventoryMass(items:readonly MaterialPile[],id:number,version:number):number|undefined {
  let grams=0;
- for(const p of items)if(owner(p)===id){const mass=groupCaravanUnitMass256(p.item,true);if(mass===undefined)return;grams+=mass*p.quantity;if(!Number.isSafeInteger(grams))return;}
+ for(const p of items)if(owner(p)===id){const mass=groupCaravanPileMass256(p,true,version);if(mass===undefined)return;grams+=mass*p.quantity;if(!Number.isSafeInteger(grams))return;}
  return grams;
 }
 /** Preflight is private data only. RNG belongs to this draft until all command
  * preconditions are rechecked and the enclosing transaction commits. */
-export function draftSplitInventory(members:readonly CaravanPhysicalPawn256[],items:readonly MaterialPile[],childIds:ReadonlySet<number>,lines:readonly {pileId:number;quantity:number}[],nextId:number,rng:number,tick:number,packed:readonly PackedFurniture[]=[],packedIds:readonly number[]=[],stripOwnerId?:number):GroupInventorySplitDraft|undefined {
+export function draftSplitInventory(members:readonly CaravanPhysicalPawn256[],items:readonly MaterialPile[],childIds:ReadonlySet<number>,lines:readonly {pileId:number;quantity:number}[],nextId:number,rng:number,tick:number,packed:readonly PackedFurniture[]=[],packedIds:readonly number[]=[],stripOwnerId?:number,version:number=SCHEMA_VERSION):GroupInventorySplitDraft|undefined {
  try{
  if(!whole(nextId)||!whole(rng)||rng>0xffffffff||!Number.isSafeInteger(tick)||tick<0||members.length<2||new Set(members.map(p=>p.id)).size!==members.length)return;
  const memberIds=new Set(members.map(p=>p.id)),sourceMembers=members.filter(p=>!childIds.has(p.id)),childMembers=members.filter(p=>childIds.has(p.id));
  if(!sourceMembers.length||!childMembers.length||childMembers.length!==childIds.size||new Set(items.map(p=>p.id)).size!==items.length||new Set(lines.map(l=>l.pileId)).size!==lines.length)return;
  for(const p of items)if(!whole(p.id)||p.id>=nextId||!whole(p.quantity)||!['inventory','apparel','equipment'].includes(p.owner.type)||!memberIds.has(owner(p)??-1))return;
  for(const l of lines){const p=items.find(p=>p.id===l.pileId);if(!p||p.owner.type!=='inventory'||!whole(l.quantity)||l.quantity>p.quantity)return;}
- if(!validCaravanBedrollPacks256(packed,members,nextId,256)||new Set(packedIds).size!==packedIds.length||packedIds.some(id=>!packed.some(p=>p.building.id===id)))return;
+ if(!validCaravanBedrollPacks256(packed,members,nextId,version,tick)||new Set(packedIds).size!==packedIds.length||packedIds.some(id=>!packed.some(p=>p.building.id===id)))return;
  const draftPacks=packed.map(p=>({...p,owner:{...p.owner}})),packedReceipts:GroupInventorySplitDraft['packedReceipts']=[];
  const draft=items.map(p=>{const q=structuredClone(p);if(stripOwnerId!==undefined&&'pawnId'in q.owner&&q.owner.pawnId===stripOwnerId)q.owner={type:'inventory',pawnId:stripOwnerId};return q;}),shares=new Map(items.map(p=>[p.id,new Map([[p.id,p.quantity]])])),receipts:GroupInventoryReceipt[]=[],randomState={rng};let freshId=nextId;
- const mass=(id:number)=>{const grams=inventoryMass(draft,id);if(grams===undefined)return;const total=grams+draftPacks.filter(p=>p.owner.type==='inventory'&&p.owner.pawnId===id).length*2500;return Number.isSafeInteger(total)?total:undefined;};
+ const mass=(id:number)=>{const grams=inventoryMass(draft,id,version);if(grams===undefined)return;let total=grams;for(const pack of draftPacks)if(pack.owner.type==='inventory'&&pack.owner.pawnId===id){const unit=groupPackedMassGrams258(pack,version);if(unit===undefined)return;total+=unit;}return Number.isSafeInteger(total)?total:undefined;};
  if(members.some(p=>mass(p.id)===undefined))return;
  const choose=(current:number,candidates:readonly CaravanPhysicalPawn256[]):CaravanPhysicalPawn256=>{
   const others=candidates.filter(p=>p.id!==current&&(stripOwnerId===undefined||p.state!=='dead'&&!p.health?.death)),capable=others.filter(canCarry),light=capable.filter(p=>mass(p.id)!<=caravanPawnCapacityGrams256(p)),pool=light.length?light:capable.length?capable:others;

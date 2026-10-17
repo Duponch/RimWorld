@@ -1,3 +1,6 @@
+import {processGroupPackedDelivery258,pendingGroupPackedDeliveries258,reconcileGroupPackedHandoffs258} from './group-packed-animal-loading-258.ts';
+import {validLoadedGroupFreight258} from './group-freight-contract-258.ts';
+import {materialAllowedForPlayer256} from './material-permission-256.ts';
 import {groupHasAdmission257,groupHumanHandler257,groupHumanPassenger257,releaseGroupHumanWork257,processGroupHumanCarry257} from './group-human-admission-257.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {adoptCaravanOtherFoodClimate256} from './group-animal-runtime-256.ts';
@@ -92,6 +95,7 @@ export function processGroupOnMap(w:World,p:Pawn,ctx:NeedContext):boolean {
   const human=processGroupHumanCarry257(w,g,p,ctx);if(human==='refused'){cancelGroupPreparation(w);return true;}if(human==='handled')return true;
   if(processGroupAnimalHandler256(w,g,p,ctx))return true;
   if(processGroupAnimalDelivery256(w,g,p,ctx))return true;
+  const packedDelivery=processGroupPackedDelivery258(w,g,p,ctx);if(packedDelivery==='refused'){cancelGroupPreparation(w);return true;}if(packedDelivery==='handled')return true;
   if(g.phase==='gathering'){
     const spot=g.meeting.find(e=>e.pawnId===p.id)!.cell;
     if(!same(p,spot)){ctx.move(spot,true);return true;}
@@ -100,7 +104,7 @@ export function processGroupOnMap(w:World,p:Pawn,ctx:NeedContext):boolean {
     return true;
   }
   if(g.phase==='loading'){
-    const line=g.manifest[g.cursor];if(!line){const next=nextGroupBedrollPickup256(w,g);if(!next){if(!pendingGroupAnimalDeliveries256(g))g.phase='leaving';return true;}if(next.carrier!==p){p.path=[];p.state='idle';return true;}if(next.pack.owner.type!=='ground'){cancelGroupPreparation(w);return false;}if(!contact(p,next.pack.owner)){ctx.move(next.pack.owner,false);return true;}if(!commitGroupBedrollPickup256(w,g,p))return true;if(!g.bedrollLoading!.manifest.some(r=>!r.loaded))if(!pendingGroupAnimalDeliveries256(g))g.phase='leaving';return true;}
+    const line=g.manifest[g.cursor];if(!line){if(!validGroupBedrollLoadingField256(g,w,w.schemaVersion)){cancelGroupPreparation(w);return true;}const next=nextGroupBedrollPickup256(w,g);if(!next){if(!pendingGroupAnimalDeliveries256(g)&&!pendingGroupPackedDeliveries258(g))g.phase='leaving';return true;}if(next.carrier!==p){p.path=[];p.state='idle';return true;}if(next.pack.owner.type!=='ground'){cancelGroupPreparation(w);return false;}if(!contact(p,next.pack.owner)){ctx.move(next.pack.owner,false);return true;}if(!commitGroupBedrollPickup256(w,g,p)){if(p.moveCooldown===0&&(p.motion?.end??0)<=w.tick)cancelGroupPreparation(w);return true;}if(!g.bedrollLoading!.manifest.some(r=>!r.loaded))if(!pendingGroupAnimalDeliveries256(g)&&!pendingGroupPackedDeliveries258(g))g.phase='leaving';return true;}
     if(line.carrierId!==p.id){p.path=[];p.state='idle';return true;}
     const source=w.piles.find(i=>i.id===line.pileId);
     if(!source||source.owner.type!=='ground'||source.item!==line.item||source.foodPoison){cancelGroupPreparation(w);return false;}
@@ -108,7 +112,7 @@ export function processGroupOnMap(w:World,p:Pawn,ctx:NeedContext):boolean {
     const plan=prepareGroupPickup(w,g,groupFormationAuthority(w,true));
     if(plan.kind!=='ready'){groupLog(w,'Le chargement ne peut plus être confirmé ; les biens déjà portés sont conservés.');cancelGroupPreparation(w);return false;}
     if(!commitGroupPickup(w,g,plan.plan))throw Error('Synchronous group pickup changed');
-    p.path=[];p.state='idle';if(g.cursor===g.manifest.length&&!g.bedrollLoading?.manifest.some(r=>!r.loaded))if(!pendingGroupAnimalDeliveries256(g))g.phase='leaving';return true;
+    p.path=[];p.state='idle';if(g.cursor===g.manifest.length&&!g.bedrollLoading?.manifest.some(r=>!r.loaded))if(!pendingGroupAnimalDeliveries256(g)&&!pendingGroupPackedDeliveries258(g))g.phase='leaving';return true;
   }
   const exit=g.exits.find(e=>e.pawnId===p.id)?.cell;
   if(!exit){cancelGroupPreparation(w);return false;}
@@ -135,9 +139,11 @@ export function reconcileGroupPreparation(w:World):void {
   if(w.worldMaps&&!boundWorldGroup(w)){for(const g of localWorldGroups(w).slice().sort((a,b)=>a.state.id-b.state.id))withWorldGroup(w,g.state.id,reconcileGroupPreparation);return;}
   const g=w.group;if(!g||!('manifest' in g))return;
   reconcileGroupAdmission257(w);if(w.group!==g)return;
+  reconcileGroupPackedHandoffs258(w,g);
   if(!validGroupBedrollLoadingField256(g,w,w.schemaVersion)){groupLog(w,'Préparation annulée : un couchage promis a changé ; les biens déjà détenus restent portés.');cancelGroupPreparation(w);return;}
   if(g.animalPreparation?.lines.some(l=>{const a=w.wildlife?.animals.find(a=>a.id===l.animalId);return !a||!!groupAnimalReason256(w,a,true);})){groupLog(w,'Préparation annulée : un animal ne peut plus suivre ; les originaux et les biens restent présents.');cancelGroupPreparation(w);return;}
   let pileIndex:Map<number,MaterialPile>|undefined;const currentPiles=()=>pileIndex??=new Map(w.piles.map(p=>[p.id,p]));
+  if(!validLoadedGroupFreight258(g,currentPiles(),w.schemaVersion)){groupLog(w,'Préparation annulée : un bien déjà chargé a changé ; les possessions réelles restent conservées.');cancelGroupPreparation(w);return;}
   if(mixedGroupProvisions(g)&&g.manifest.slice(0,g.cursor).some(line=>{if(line.item!=='pemmican')return false;const p=currentPiles().get(line.carriedPileId!);return !p||p.owner.type!=='inventory'||p.owner.pawnId!==line.carrierId||p.item!=='pemmican'||p.quantity!==line.quantity||!freshGroupProvision(p,w.tick);})){groupLog(w,'Préparation annulée : une provision déjà chargée n’est plus disponible ; les autres biens restent portés.');cancelGroupPreparation(w);return;}
   const future=new Map<number,{item:MaterialPile['item'];quantity:number}>();
   for(let i=g.cursor;i<g.manifest.length;i++){
@@ -149,7 +155,7 @@ export function reconcileGroupPreparation(w:World):void {
   const piles=currentPiles();
   for(const [id,promised] of future){
     const source=piles.get(id);
-    if(!source||source.owner.type!=='ground'||source.item!==promised.item||source.foodPoison||source.quantity<promised.quantity){
+    if(!source||source.owner.type!=='ground'||source.item!==promised.item||source.foodPoison||w.schemaVersion>=258&&!materialAllowedForPlayer256(source)||source.quantity<promised.quantity){
       groupLog(w,'Préparation annulée : une provision promise n’est plus disponible ; les biens déjà portés sont conservés.');
       cancelGroupPreparation(w);return;
     }

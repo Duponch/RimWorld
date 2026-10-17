@@ -1,9 +1,13 @@
+import {structureMaxHp} from './thing-damage-rules.ts';
+import {validateFlowerPotState} from './flower-pot.ts';
+import {isHabitatFurnitureKind,FURNITURE_DEFINITIONS} from './furniture-stats.ts';
 import {validGlowPodPacked256} from './cave-glowpod-minification-256.ts';
 import {validAncientMonumentBuilding256} from './ancient-monument-save-256.ts';
 import {validAncientCasketWickField256} from './ancient-casket-explosive-state-256.ts';
 import {animalContentsOwner256} from './animal-local-contents-256.ts';
 import {validLocalRoadPropPackedBuilding256} from './local-road-props-save-256.ts';
 import {validBedrollBuilding256} from './bedroll-save-256.ts';
+import {groupPackedMassGrams258} from './group-freight-mass-258.ts';
 import {validShelfBuildingShape} from './shelf-save.ts';
 import {isShelfKind,shelfAt} from './shelf-storage.ts';
 import { isBedKind } from './bed-kinds.ts';
@@ -55,8 +59,12 @@ export function validateFurniture(world:World,version:number,ids:Set<number>,sha
       ground.add(key);
     } else if(o.type==='inventory') {
       const trader=world.pawns.find(p=>p.id===o.pawnId);
-      const caravanBedroll=version>=256&&pack.building.kind==='bedroll'&&(world.pawns.some(p=>p.id===o.pawnId)||animalContentsOwner256(world,o.pawnId)!==undefined);
-      if(!caravanBedroll&&(version<105||!isSculptureKind(pack.building.kind)||trader?.visitor?.role!=='trader'||trader.body?.lostAt!==undefined))errors.push('Invalid merchant furniture inventory.');
+      // Cancellation may leave the same acquired package with its real local
+      // holder.258 admits only the existing freight set; old bedroll/trade
+      // permissions and the full component/identity guards above stay literal.
+      const caravanPack=(version>=258?groupPackedMassGrams258(pack,version)!==undefined:version>=256&&pack.building.kind==='bedroll')
+        &&(world.pawns.some(p=>p.id===o.pawnId)||animalContentsOwner256(world,o.pawnId)!==undefined);
+      if(!caravanPack&&(version<105||!isSculptureKind(pack.building.kind)||trader?.visitor?.role!=='trader'||trader.body?.lostAt!==undefined))errors.push('Invalid merchant furniture inventory.');
     } else {
       const pawn=world.pawns.find(p=>p.id===o.pawnId),job=world.jobs.find(j=>j.id===pawn?.jobId);
       const artOutput=version>=104&&isSculptureKind(pack.building.kind)&&isArtRecipe(pawn?.cooking?.recipe)
@@ -77,9 +85,18 @@ export function validatePackedFurnitureRecords(packed:readonly import('./furnitu
     if(record(pack)&&record(pack.building)&&(pack.building.kind==='vent'||Object.hasOwn(pack.building,'vent'))){errors.push('Invalid vent state on packed furniture.');continue;}
     if(!record(pack)||!record(pack.building)||!record(pack.owner)) {errors.push('Invalid furniture package.');continue;}
     const b=pack.building,o:Record<string,unknown>=pack.owner;
+    // A minified inner pose is historical data, independent of the receiving map.
+    const literalInnerPose=version>=258||version>=256&&b.kind==='bedroll';
     if(!validGlowPodPacked256(b,version,world))errors.push('Invalid or future packed Hive/GlowPod component.');
     if(!validAncientCasketWickField256(b,version,world.tick)){errors.push('Invalid future/extraneous casket wick on packed furniture.');continue;}
     if(!validBedrollBuilding256(b,version)||!validAncientMonumentBuilding256(b,version))errors.push('Invalid or future packed bedroll.');
+    if(version>=258){
+      if(Reflect.ownKeys(b).some(k=>typeof k!=='string'||!['id','kind','x','z','orientation','footprint','material','quality','damage','medical','prisoner','fuel','bills','flower','gatherSpot','shelf','spikeTrap','art','power','battery','heater','breakdown','deepDrill','emp','factionId','glowPod'].includes(k)))errors.push('Unknown packed building field.');
+      if(b.damage!==undefined&&(!integer(b.damage,1)||b.damage>=structureMaxHp(b as unknown as import('./types.ts').Structure)))errors.push('Invalid packed building damage.');
+      if(isHabitatFurnitureKind(b.kind)&&FURNITURE_DEFINITIONS[b.kind].quality||isSculptureKind(b.kind)){if(!isFurnitureQuality(b.quality))errors.push('Invalid packed furniture quality.');}else if(b.quality!==undefined)errors.push('Unexpected packed furniture quality.');
+      if(b.flower!==undefined&&(b.kind!=='flower-pot'||validateFlowerPotState(b.flower,world.tick).length)||b.kind==='flower-pot'&&b.flower===undefined)errors.push('Invalid packed flower pot state.');
+      if(b.gatherSpot!==undefined&&(!['table','table-square','table-long'].includes(b.kind)||typeof b.gatherSpot!=='boolean'))errors.push('Invalid packed gathering spot.');
+    }
     if(!validShelfBuildingShape(b,version))errors.push('Invalid packed shelf storage state.');
     if(!validSpikeTrapBuildingShape(b,version,true))errors.push('Invalid packed spike trap state.');
     if(isSculptureKind(b.kind)){
@@ -91,7 +108,7 @@ export function validatePackedFurnitureRecords(packed:readonly import('./furnitu
     }else if(b.art!==undefined)errors.push('Unexpected packed artwork.');
     if(b.medical!==undefined&&(version<46||!isBedKind(b.kind)||version<187&&b.kind==='hospital-bed'||b.medical!==true))errors.push('Invalid packed medical bed role.');
     if(b.prisoner!==undefined&&(version<86||!isBedKind(b.kind)||version<187&&b.kind==='hospital-bed'||b.prisoner!==true))errors.push('Invalid packed prisoner bed role.');
-    if(!validLocalRoadPropPackedBuilding256(b,version)||!integer(b.id,1)||b.id>=world.nextId||!minifiable(b.kind)||version<256&&(b.kind==='bedroll'||b.kind==='glow-pod')||version<229&&isShelfKind(b.kind)||version<226&&b.kind==='spike-trap'||version<224&&b.kind==='double-bed'||version<222&&b.kind==='electric-smelter'||version<206&&b.kind==='drug-lab'||version<190&&b.kind==='tube-television'||version<187&&b.kind==='hospital-bed'||version<122&&b.kind==='chess-table'||version<31&&b.kind==='stonecutter'||version<73&&(b.kind==='research-bench'||b.kind==='tailor-bench')||version<177&&b.kind==='sun-lamp'||version<42&&b.kind==='standing-lamp'||version<85&&b.kind==='battery'||version<84&&isFoodWorkstation(b.kind)||version<90&&b.kind==='electric-tailor-bench'||version<101&&b.kind==='machining-table'||version<104&&['art-bench','small-sculpture','large-sculpture'].includes(b.kind)||(version>=256&&b.kind==='bedroll'?!integer(b.x)||!integer(b.z):!cell(b))||!integer(b.orientation)||b.orientation>3||!(version>=256&&b.kind==='bedroll')&&footprintCells(b).some(c=>!cell({x:c.x,z:c.z}))||!['standard','legacy-single'].includes(b.footprint)||b.footprint==='legacy-single'&&b.kind!=='bed'||b.fuel!==undefined&&b.kind!=='fueled-stove'||b.bills!==undefined&&(version<32||b.kind!=='stonecutter'&&!(version>=222&&b.kind==='electric-smelter')&&!(version>=73&&b.kind==='tailor-bench')&&!(version>=90&&b.kind==='electric-tailor-bench')&&!(version>=101&&b.kind==='machining-table')&&!(version>=104&&b.kind==='art-bench')&&!(version>=206&&b.kind==='drug-lab')&&!(version>=123&&b.kind==='fabrication-bench')&&!(version>=84&&isFoodWorkstation(b.kind))))errors.push('Invalid packed building.');
+    if(!validLocalRoadPropPackedBuilding256(b,version)||!integer(b.id,1)||b.id>=world.nextId||!minifiable(b.kind)||version<256&&(b.kind==='bedroll'||b.kind==='glow-pod')||version<229&&isShelfKind(b.kind)||version<226&&b.kind==='spike-trap'||version<224&&b.kind==='double-bed'||version<222&&b.kind==='electric-smelter'||version<206&&b.kind==='drug-lab'||version<190&&b.kind==='tube-television'||version<187&&b.kind==='hospital-bed'||version<122&&b.kind==='chess-table'||version<31&&b.kind==='stonecutter'||version<73&&(b.kind==='research-bench'||b.kind==='tailor-bench')||version<177&&b.kind==='sun-lamp'||version<42&&b.kind==='standing-lamp'||version<85&&b.kind==='battery'||version<84&&isFoodWorkstation(b.kind)||version<90&&b.kind==='electric-tailor-bench'||version<101&&b.kind==='machining-table'||version<104&&['art-bench','small-sculpture','large-sculpture'].includes(b.kind)||(literalInnerPose?!integer(b.x)||!integer(b.z):!cell(b))||!integer(b.orientation)||b.orientation>3||!literalInnerPose&&footprintCells(b).some(c=>!cell({x:c.x,z:c.z}))||!['standard','legacy-single'].includes(b.footprint)||b.footprint==='legacy-single'&&b.kind!=='bed'||b.fuel!==undefined&&b.kind!=='fueled-stove'||b.bills!==undefined&&(version<32||b.kind!=='stonecutter'&&!(version>=222&&b.kind==='electric-smelter')&&!(version>=73&&b.kind==='tailor-bench')&&!(version>=90&&b.kind==='electric-tailor-bench')&&!(version>=101&&b.kind==='machining-table')&&!(version>=104&&b.kind==='art-bench')&&!(version>=206&&b.kind==='drug-lab')&&!(version>=123&&b.kind==='fabrication-bench')&&!(version>=84&&isFoodWorkstation(b.kind))))errors.push('Invalid packed building.');
     if(b.kind==='fueled-stove'){const f=b.fuel;if(version<84||!record(f)||!integer(f.ticks)||f.ticks>fuelLimit(b.kind)||!integer(f.burned)||f.burned>world.tick*16||typeof f.autoRefuel!=='boolean'||Object.keys(f).some(k=>!['ticks','burned','autoRefuel'].includes(k)))errors.push('Invalid packed stove fuel.');}
     if(shapesOnly){if(ids.has(b.id))errors.push('Duplicate furniture identity.');ids.add(b.id);}
     if(Object.keys(pack).some(k=>!['building','owner'].includes(k))||Object.keys(o).some(k=>!(o.type==='ground'?['type','x','z']:['type','pawnId']).includes(k))||(o.type==='ground'?!cell(o):o.type==='pawn'||version>=105&&o.type==='inventory'?!integer(o.pawnId,1):true))errors.push('Invalid furniture owner.');

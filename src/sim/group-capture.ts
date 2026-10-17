@@ -1,3 +1,5 @@
+import {validLoadedGroupFreight258} from './group-freight-contract-258.ts';
+import {groupPackedMassGrams258} from './group-freight-contract-258.ts';
 import {groupAnimalReason256} from './group-animal-formation-256.ts';
 import {caravanPawnCapacityGrams256,caravanRidingFactor256} from './group-animal-capacity-256.ts';
 import type {WildAnimal} from './wildlife-state.ts';
@@ -5,7 +7,7 @@ import {validGroupBedrollLoadingField256} from './group-bedroll-loading-256.ts';
 import type {PackedFurniture} from './furniture-rules.ts';
 import {validCaravanBedrollPacks256} from './group-bedroll-capture-256.ts';
 import {planetTile} from './planet-geography-256.ts';
-import {groupCaravanUnitMass256} from './group-caravan-mass-256.ts';
+import {groupCaravanPileMass256} from './group-caravan-mass-256.ts';
 import {SCHEMA_VERSION} from './types.ts';
 import {GROUP_FREIGHT_SCHEMA,freightGroup,groupItemMassGrams} from './group-freight.ts';
 /** Real-owner operation captures, never parallel saved state. */
@@ -71,12 +73,12 @@ export function captureGroupMass(members:readonly Pawn[],items:readonly Material
   for(const pile of items){
     if(pileIds.has(pile.id)||!Number.isSafeInteger(pile.id)||pile.id<1||!Number.isSafeInteger(pile.quantity)||pile.quantity<1
       ||!allowedOwner(pile)||!('pawnId' in pile.owner))return undefined;
-    pileIds.add(pile.id);const owner=byId.get(pile.owner.pawnId),unit=version>=256?groupCaravanUnitMass256(pile.item,freight):groupItemMassGrams(pile.item,freight,version);
+    pileIds.add(pile.id);const owner=byId.get(pile.owner.pawnId),unit=version>=256?groupCaravanPileMass256(pile,freight,version):groupItemMassGrams(pile.item,freight,version);
     if(!owner||unit===undefined||animals.some(a=>a.id===owner.pawnId)&&pile.owner.type!=='inventory'||pile.owner.type!=='inventory'&&pile.quantity!==1)return undefined;
     const count=(counts.get(owner.pawnId)??0)+1;if(version<256&&count>256)return undefined;counts.set(owner.pawnId,count);
     owner.grams+=unit*pile.quantity;if(!Number.isSafeInteger(owner.grams))return undefined;
   }
-  if(packed.length&&!validCaravanBedrollPacks256(packed,all,Number.MAX_SAFE_INTEGER,version))return;for(const pack of packed){const id=pack.building.id;if(pileIds.has(id)||byId.has(id)||pack.owner.type!=='inventory')return;pileIds.add(id);const owner=byId.get(pack.owner.pawnId);if(!owner)return;owner.grams+=2500;if(!Number.isSafeInteger(owner.grams))return;}
+  if(packed.length&&!validCaravanBedrollPacks256(packed,all,Number.MAX_SAFE_INTEGER,version))return;for(const pack of packed){const id=pack.building.id;if(pileIds.has(id)||byId.has(id)||pack.owner.type!=='inventory')return;pileIds.add(id);const owner=byId.get(pack.owner.pawnId);if(!owner)return;const packMass=groupPackedMassGrams258(pack,version);if(packMass===undefined)return;owner.grams+=packMass;if(!Number.isSafeInteger(owner.grams))return;}
   const carriers=[...byId.values()],grams=carriers.reduce((n,c)=>n+c.grams,0),capacityGrams=carriers.reduce((n,c)=>n+c.capacityGrams,0);
   if(!Number.isSafeInteger(grams)||!Number.isSafeInteger(capacityGrams))return undefined;
   return Object.freeze({grams,capacityGrams,...animals.length?{ridingFactor:caravanRidingFactor256(members.length,animals)}:{},carriers:Object.freeze(carriers.map(c=>Object.freeze(c)))});
@@ -103,7 +105,7 @@ export function captureGroupCandidates(world:World,memberIds:readonly number[],a
     if(sources.has(pile.id))return fail('duplicate-map-pile');sources.set(pile.id,pile);
     if(possession(pile,ids)){if(!allowedOwner(pile)){const releasing=world.schemaVersion>=257&&(!world.group||'manifest'in world.group&&world.group.humanPreparation?.releaseIds.includes('pawnId'in pile.owner?pile.owner.pawnId:-1));if(pile.owner.type==='pawn'&&releasing)continue;return fail('temporary-cargo');}items.push(pile);}
   }
-  const packed=world.packed.filter(p=>'pawnId'in p.owner&&ids.has(p.owner.pawnId)&&!(world.schemaVersion>=257&&p.owner.type==='pawn'&&(!world.group||'manifest'in world.group&&world.group.humanPreparation?.releaseIds.includes(p.owner.pawnId))));if(packed.length&&(world.schemaVersion<256||!validCaravanBedrollPacks256(packed,[...members,...animals],world.nextId,world.schemaVersion)))return fail('packed-cargo');
+  const packed=world.packed.filter(p=>'pawnId'in p.owner&&ids.has(p.owner.pawnId)&&!(world.schemaVersion>=257&&p.owner.type==='pawn'&&(!world.group||'manifest'in world.group&&world.group.humanPreparation?.releaseIds.includes(p.owner.pawnId))));if(packed.length&&(world.schemaVersion<256||!validCaravanBedrollPacks256(packed,[...members,...animals],world.nextId,world.schemaVersion,world.tick)))return fail('packed-cargo');
   const mass=captureGroupMass(members,items,world.schemaVersion>=GROUP_FREIGHT_SCHEMA&&(!world.group||freightGroup(world.group)),world.schemaVersion,packed,animals);if(!mass)return fail('unknown-mass');
   if(mass.carriers.some(c=>c.grams>c.capacityGrams))return fail('overload');
   const reason=authority.namespaceReason(world,{additionalPiles:0,members,items});if(reason)return fail(reason);
@@ -142,7 +144,7 @@ function departureBaseline(items:readonly MaterialPile[],mixed:boolean,tick:numb
  * Root checks no future personal tick and initializes lastPersonalTick to tick. */
 export function captureGroupDeparture(world:World,group:PreparingGroup,authority:GroupFormationAuthority):CaptureResult<GroupDepartureCapture> {
   const fail=(reason:string):CaptureResult<GroupDepartureCapture>=>({kind:'refused',reason});
-  if(group.phase!=='leaving'||group.cursor!==group.manifest.length||!validGroupBedrollLoadingField256(group,world,world.schemaVersion))return fail('phase');
+  if(!validLoadedGroupFreight258(group,new Map(world.piles.map(p=>[p.id,p])),world.schemaVersion)||group.phase!=='leaving'||group.cursor!==group.manifest.length||!validGroupBedrollLoadingField256(group,world,world.schemaVersion))return fail('phase');
   const result=captureGroupCandidates(world,group.memberIds,authority,group.animalPreparation?.lines.map(l=>l.animalId));if(result.kind!=='ready')return result;
   const capture=result.capture,ids=new Set(group.memberIds),exits=new Map<number,Cell>(),exitKeys=new Set<string>();
   if(group.exits.length!==capture.members.length)return fail('exit-roster');

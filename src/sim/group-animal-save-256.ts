@@ -1,3 +1,4 @@
+import {validateGroupPackedComponents258} from './group-packed-components-258.ts';
 import {pileMaxHp} from './thing-damage-rules.ts';
 import {isPerishable,ROT_DAYS,ticksUntilRot} from './food-preservation.ts';
 import {TICKS_PER_DAY} from './types.ts';
@@ -51,13 +52,13 @@ export function validGroupAnimalLossRecord256(loss:unknown,w:Pick<World,'tick'|'
    const rot=p.rot;if(!object(rot)||!keys(rot,['progress','atTick'],['rate'])||!integer(rot.atTick,0,loss.tick)||typeof rot.progress!=='number'||!Number.isFinite(rot.progress)||rot.progress<0||rot.progress>=ROT_DAYS[pile.item]*TICKS_PER_DAY||rot.rate!==undefined&&(typeof rot.rate!=='number'||!Number.isFinite(rot.rate)||rot.rate<0||rot.rate>=1)||ticksUntilRot(pile,loss.tick)<=0)return false;
   }else if(p.rot!==undefined)return false;
   ids.add(p.id);if(p.item==='minified-tree'){if(!object(p.innerResource)||!integer(p.innerResource.id,1,w.nextId-1)||ids.has(p.innerResource.id))return false;ids.add(p.innerResource.id);}}
- if(!validCaravanBedrollPacks256(loss.packed,[a as unknown as import('./wildlife-state.ts').WildAnimal],w.nextId,version))return false;
+ if(!validCaravanBedrollPacks256(loss.packed,[a as unknown as import('./wildlife-state.ts').WildAnimal],w.nextId,version,Number(loss.tick)))return false;
  for(const p of loss.packed??[]){if(ids.has(p.building.id))return false;ids.add(p.building.id);}return true;
 }
 /** Shared Thing namespace for actual terminal records; references never enter. */
 export function registerGroupAnimalLossRows256(losses:readonly import('./group-animal-state-256.ts').GroupAnimalLoss256[],nextId:number,ids:import('./numeric-membership.ts').NumericMembershipSink):string[] {
  const errors:string[]=[],add=(id:number)=>{if(!integer(id,1,nextId-1)||ids.has(id))errors.push('Duplicate or invalid animal terminal Thing owner.');else ids.add(id);};
- for(const loss of losses){add(loss.animal.id);for(const p of loss.items){add(p.id);if(isMinifiedTree(p)){if(!p.innerResource)errors.push('Missing animal-contained tree original.');else add(p.innerResource.id);}}for(const p of loss.packed??[])add(p.building.id);}return errors;
+ for(const loss of losses){add(loss.animal.id);for(const p of loss.items){add(p.id);if(isMinifiedTree(p)){if(!p.innerResource)errors.push('Missing animal-contained tree original.');else add(p.innerResource.id);}}for(const p of loss.packed??[]){add(p.building.id);for(const b of p.building.bills??[])add(b.id);for(const id of p.building.shelf?.cells??[])add(id);}}return errors;
 }
 /** Invoke ONCE on the campaign, not once per local map/projection. */
 export function validateGroupAnimalLosses256(w:World,version:number):string[] {
@@ -66,6 +67,7 @@ export function validateGroupAnimalLosses256(w:World,version:number):string[] {
  const ids=new Set<number>();
  for(const loss of d.value){
   if(!validGroupAnimalLossRecord256(loss,root,version,o=>groupMemberOriginAuthority(w,o)))return ['Invalid animal terminal identity, personal record or provenance.'];
+  if(validateGroupPackedComponents258(w,loss.packed??[],version,loss.tick).length)return ['Invalid animal terminal packed components.'];
   if(registerGroupAnimalLossRows256([loss],root.nextId,ids).length)return ['Duplicate animal terminal Thing owner.'];
  }
  return [];

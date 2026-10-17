@@ -11,7 +11,7 @@ import {unclaimDetachedActorBed256} from './actor-map-bed-256.ts';
  * and fragment IDs are committed with the same originals, never fake stock. */
 export function stripTerminalCaravanMember256(w:World,g:AwayGroup,id:number):void {
  const members=groupPhysicalPawns256(g);if(!members.some(p=>p.id===id)||!g.members.some(p=>p.id!==id&&p.state!=='dead'&&!p.health?.death))throw Error('Terminal strip needs another actual Owner');
- const draft=draftSplitInventory(members,g.items,new Set([id]),[],w.nextId,w.rng,w.tick,g.packed??[],[],id);if(!draft||draft.child.length||draft.childPacked.length||!splitInventoryDraftCurrent(g.items,draft,g.packed??[]))throw Error('Actual terminal possessions cannot transfer');
+ const draft=draftSplitInventory(members,g.items,new Set([id]),[],w.nextId,w.rng,w.tick,g.packed??[],[],id,w.schemaVersion);if(!draft||draft.child.length||draft.childPacked.length||!splitInventoryDraftCurrent(g.items,draft,g.packed??[]))throw Error('Actual terminal possessions cannot transfer');
  const intoInventory=g.items.filter(p=>(p.owner.type==='apparel'||p.owner.type==='equipment')&&p.owner.pawnId===id);const staged={...g,reorganization:g.reorganization?{...g.reorganization,inventoryEffects:{...g.reorganization.inventoryEffects}}:undefined};for(const p of intoInventory)recordCaravanInventoryEffect256(staged,p.item,p.quantity);
  commitSplitInventory(draft);if(staged.reorganization)g.reorganization=staged.reorganization;g.items=draft.source;if(draft.sourcePacked.length)g.packed=draft.sourcePacked;else delete g.packed;w.nextId=draft.nextId;w.rng=draft.rng;
 }

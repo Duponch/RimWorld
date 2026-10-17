@@ -1,6 +1,9 @@
 import {groupCaravanUnitMass256} from '../sim/group-caravan-mass-256';
 import {BEDROLL_MASS_GRAMS_256} from '../sim/group-bedroll-capture-256';
-import {travelAnimalLabel256,travelAnimalNeeds256,travelActorLabel256,travelAnimals256,travelPacks256,travelPackLabel256,travelRidingFactor256,travelCapacity256,travelGroupLabel256,type GroupAnimalChoice256,type GroupBedrollChoice256} from './group-travel-readers-256';
+import {groupFreightUnitMass258,groupPackedMassGrams258} from '../sim/group-freight-contract-258';
+import {QUALITY_LABELS} from '../sim/equipment-rules';
+import {buildingLabels} from './building-labels';
+import {travelAnimalLabel256,travelAnimalNeeds256,travelActorLabel256,travelAnimals256,travelPacks256,travelRidingFactor256,travelCapacity256,travelGroupLabel256,type GroupAnimalChoice256,type GroupBedrollChoice256} from './group-travel-readers-256';
 import type {WildAnimal} from '../sim/wildlife-state';
 import type {PackedFurniture} from '../sim/furniture-rules';
 import {createGroupReorganizationPanel256} from './group-reorganization-panel-256';
@@ -65,6 +68,7 @@ export interface GroupPanel {
 const kg=(g:number)=>`${(g/1000).toLocaleString('fr-FR',{maximumFractionDigits:3})} kg`;
 const hours=(core:number)=>`${(core/10*24/TICKS_PER_DAY).toLocaleString('fr-FR',{maximumFractionDigits:1})} h de jeu`;
 const itemLabel=(p:Pick<MaterialPile,'item'>)=>ITEM_DEFINITIONS[p.item].label;
+const packedLabel=(p:PackedFurniture):string=>`${buildingLabels[p.building.kind]}${p.building.material?` · ${ITEM_DEFINITIONS[p.building.material].label}`:''}${p.building.quality?` · ${QUALITY_LABELS[p.building.quality]}`:''}`;
 const needs=(p:Pawn)=>`${p.age?`${Math.floor(biologicalYears(p.age))} ans · `:'Âge non renseigné · '}faim ${Math.round(p.hunger)} % · repos ${Math.round(p.rest)} %`;
 const groupAway=(g:GroupState|undefined):g is Extract<GroupState,{members:Pawn[]}>=>!!g&&'members' in g;
 function members(s:GroupPanelSnapshot):readonly Pawn[] {
@@ -102,7 +106,7 @@ function phaseLabel(s:GroupPanelSnapshot):string {
     case 'stationary':return 'Caravane à l’arrêt sur sa case actuelle ; ses besoins continuent.';
     case 'at-site':return s.planet&&g.tile===s.planet.civilianTile?'Groupe arrivé au comptoir civil. Le stock et les fonds du poste sont finis.':'Groupe arrivé à la case choisie. Une carte locale peut être ouverte pour cette expédition.';
     case 'awaiting-entry':return 'Groupe à destination, en attente de cellules d’entrée accessibles.';
-    case 'unloading':return `Entrée sur la carte. ${g.pendingPileIds.length} piles et ${g.pendingPackedIds?.length??0} couchages attendent un dépôt physique.`;
+    case 'unloading':return `Entrée sur la carte. ${g.pendingPileIds.length} piles et ${g.pendingPackedIds?.length??0} meubles minifiés attendent un dépôt physique.`;
   }
 }
 function quantityLines(values:ReadonlyMap<number,string>):CommercialBuyLine[] {
@@ -136,7 +140,7 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
   for(const [mode,label] of [['visit','Entrer sur la carte'],['camp','Former un camp temporaire'],['settle','S’installer']] as const){const b=document.createElement('button');b.type='button';b.textContent=label;b.dataset.siteAction=mode;siteActions.append(b);entryButtons.set(mode,b);}
   elsewhere.dataset.campaignElsewhere='';
   details.append(selectorLabel,origin,status,stop,mass,elsewhere,siteActions,routeText,previews,actions);
-  const peopleBox=section('Personnes'),animalBox=section('Animaux domestiques'),bedrollBox=section('Sacs de couchage'),sourceBox=section('Sources au sol'),possessionsBox=section('Biens portés'),tradeBox=section('Commerce'),lossesBox=section('Décès hors carte');
+  const peopleBox=section('Personnes'),animalBox=section('Animaux domestiques'),bedrollBox=section('Meubles minifiés'),sourceBox=section('Sources au sol'),possessionsBox=section('Biens portés'),tradeBox=section('Commerce'),lossesBox=section('Décès hors carte');
   const chosen=document.createElement('p');chosen.dataset.groupChosen='';peopleBox.append(chosen);
   const removeUnavailable=document.createElement('button');removeUnavailable.type='button';removeUnavailable.textContent='Retirer les choix devenus indisponibles';removeUnavailable.dataset.groupDraftCleanup='';peopleBox.append(removeUnavailable);
   const selectionNotes=document.createElement('p');selectionNotes.className='group-refusal';sourceBox.append(selectionNotes);
@@ -149,12 +153,21 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
   let plan:PlanPreview|undefined,routePreview:RoutePreview|undefined,previewTick:number|undefined;
   const selectedAnimals=new Set<number>(),selectedPacks=new Set<number>();
   const selected=new Set<number>(),sources=new Map<number,string>(),buys=new Map<number,string>(),sells=new Map<number,string>(),waiting=new Map<number,string>();
-  function lineMass(item:MaterialPile['item'],quantity:number):string {
+  // Actual pile index is rebuilt only on confirmed snapshot adoption. Manifest
+  // receipts resolve the real divided/whole pile; no metadata is invented.
+  let pilesById:ReadonlyMap<number,MaterialPile>=new Map();
+  function lineMass(pile:MaterialPile|undefined,quantity:number):string {
+    if(!pile)return 'Masse indisponible';
+    const item=pile.item;
     const version=snapshot?.world.schemaVersion??0,freight=snapshot?.group?freightGroup(snapshot.group):version>=GROUP_FREIGHT_SCHEMA;
-    const unit=version>=256?groupCaravanUnitMass256(item,freight):groupItemMassGrams(item,freight,version);
+    const unit=version>=258?groupFreightUnitMass258(pile,version):version>=256?groupCaravanUnitMass256(item,freight):groupItemMassGrams(item,freight,version);
     if(unit===undefined)return 'Masse indisponible';
     if(!Number.isSafeInteger(quantity)||quantity<0||!Number.isSafeInteger(unit*quantity))return 'Quantité à corriger';
     return kg(unit*quantity);
+  }
+  function packedMass(pack:PackedFurniture):string {
+    const version=snapshot?.world.schemaVersion??0,mass=version>=258?groupPackedMassGrams258(pack,version):pack.building.kind==='bedroll'&&version>=256?BEDROLL_MASS_GRAMS_256:undefined;
+    return mass===undefined?'Masse indisponible':kg(mass);
   }
   const buttons=new Map<GroupAction,HTMLButtonElement>([['adopt',adopt],['start',start],['cancel',cancel],['pause',pause],['route',change],['return',back],['unload',unload]]);
   const lockReason=(includeReorganization=true)=>stopped??unknown??hostBlocked??(includeReorganization&&reorganizationLocked?'Un partage de caravane est ouvert.':undefined)??(busy?'Une commande est en cours.':waiting.size?[...waiting.values()].join(' '):undefined);
@@ -211,13 +224,13 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
       carry.hidden=!groupAway(g)||snapshot!.world.schemaVersion<256;carry.checked=a.caravanCarrySick!==false;carry.disabled=!!lockReason()||!groupAway(g)||g.travel?.revision!==1&&!g.animalOwners?.interval;carry.setAttribute('aria-label',`Porter ${travelAnimalLabel256(a)} si malade`);setTooltip(carry,{body:'Autoriser le portage si une maladie bénéficie du repos et qu’un porteur peut aider.'});
     }};
   });
-  const bedrollTable=paged<GroupBedrollChoice256>(bedrollBox,['Choix','Couchage réel','Propriétaire / chargement','Masse'],c=>c.pack.building.id,()=>{
+  const bedrollTable=paged<GroupBedrollChoice256>(bedrollBox,['Choix','Meuble minifié réel','Propriétaire / chargement','Masse'],c=>c.pack.building.id,()=>{
     const {row,cells}=rowCells(4),check=document.createElement('input');check.type='checkbox';cells[0]!.append(check);let current:GroupBedrollChoice256;
     check.addEventListener('change',()=>{if(lockReason()||snapshot?.group||current.pack.owner.type!=='ground'||check.checked&&!current.ok){check.checked=selectedPacks.has(current.pack.building.id);return;}if(check.checked)selectedPacks.add(current.pack.building.id);else selectedPacks.delete(current.pack.building.id);invalidatePreview();renderDraft();},{signal:abort.signal});
-    return {row,paint(value){current=value;const p=value.pack;row.dataset.groupBedroll=String(p.building.id);check.checked=selectedPacks.has(p.building.id);check.hidden=!!snapshot?.group||p.owner.type!=='ground';check.disabled=!!lockReason()||!value.ok;check.setAttribute('aria-label',`Charger ${travelPackLabel256(p)}`);setTooltip(check,{body:lockReason()??value.reason??'Ce paquet original sera ramassé au contact ; l’accès et la capacité sont vérifiés avec la formation.'});cells[1]!.textContent=travelPackLabel256(p);cells[3]!.textContent=kg(BEDROLL_MASS_GRAMS_256);
+    return {row,paint(value){current=value;const p=value.pack;row.dataset.groupBedroll=String(p.building.id);row.dataset.groupPacked=String(p.building.id);check.checked=selectedPacks.has(p.building.id);check.hidden=!!snapshot?.group||p.owner.type!=='ground';check.disabled=!!lockReason()||!value.ok;check.setAttribute('aria-label',`Charger ${packedLabel(p)}`);setTooltip(check,{body:lockReason()??value.reason??'Ce paquet original sera ramassé au contact ; l’accès et la capacité sont vérifiés avec la formation.'});cells[1]!.textContent=packedLabel(p);cells[3]!.textContent=packedMass(p);
       const g=snapshot?.group,line=g&&'manifest'in g?g.bedrollLoading?.manifest.find(l=>l.structureId===p.building.id):undefined;
       if(p.owner.type==='ground')cells[2]!.textContent=`Au sol : ${p.owner.x}, ${p.owner.z}${line?' · prise en attente':''}${value.reason?` · ${value.reason}`:''}`;
-      else{const id=p.owner.pawnId,actor=snapshot&&physical(snapshot,selected,selectedAnimals).find(a=>a.id===id);if(!actor)throw Error('Le couchage a perdu son propriétaire affiché.');cells[2]!.textContent=`${travelActorLabel256(actor)} · ${p.owner.type==='inventory'?'Inventaire':'Portage'}${line?.loaded?' · pris au contact':''}`;}
+      else{const id=p.owner.pawnId,actor=snapshot&&physical(snapshot,selected,selectedAnimals).find(a=>a.id===id);if(!actor)throw Error('Le meuble minifié a perdu son propriétaire affiché.');cells[2]!.textContent=`${travelActorLabel256(actor)} · ${p.owner.type==='inventory'?'Inventaire':'Portage'}${line?.loaded?' · pris au contact':''}${line?.animalCarrierId!==undefined?line.deliveredToAnimal?' · remis au contact':line.handoffReadyCore!==undefined?' · attente de remise': ' · remise à l’animal prévue':''}`;}
     }};
   });
   function updateTravelRows(){
@@ -227,7 +240,7 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
     const carried=travelPacks256(snapshot,new Set(physical(snapshot,selected,selectedAnimals).map(a=>a.id))),packs=new Map<number,GroupBedrollChoice256>();
     if(!g)for(const choice of facts.bedrolls??[])packs.set(choice.pack.building.id,choice);
     for(const pack of carried)packs.set(pack.building.id,{pack,ok:true});
-    if(g&&'manifest'in g)for(const line of g.bedrollLoading?.manifest??[]){const pack=snapshot.world.packed.find(p=>p.building.id===line.structureId);if(!pack)throw Error('Un couchage du chargement n’est plus présent.');packs.set(pack.building.id,{pack,ok:true});}
+    if(g&&'manifest'in g)for(const line of g.bedrollLoading?.manifest??[]){const pack=snapshot.world.packed.find(p=>p.building.id===line.structureId);if(!pack)throw Error('Un meuble minifié du chargement a disparu.');packs.set(pack.building.id,{pack,ok:true});}
     bedrollTable.update([...packs.values()]);
   }
   function quantityTable(box:HTMLElement,kind:'source'|'buy'|'sell',values:Map<number,string>){
@@ -237,7 +250,7 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
       remove.addEventListener('click',()=>{if(lockReason()||kind==='source'&&snapshot?.group)return;values.delete(current.pile.id);input.value='';if(kind==='source')invalidatePreview();renderDraft();},{signal:abort.signal});
       return {row,paint(value){current=value;const pile=value.pile;row.dataset.groupPile=String(pile.id);cells[0]!.textContent=itemLabel(pile);
         cells[1]!.textContent='reserved' in value?('owner' in pile&&pile.owner.type==='ground'?`${pile.owner.x}, ${pile.owner.z} · ${value.reserved} réservés`:'Propriétaire de sol absent'):`${value.unitPrice} argent / unité`;
-        cells[2]!.textContent=String(value.available);if(kind==='source')cells[4]!.textContent=`Unité : ${lineMass(pile.item,1)} · Choisi : ${lineMass(pile.item,Number(values.get(pile.id)??'0'))}`;if(document.activeElement!==input)input.value=values.get(pile.id)??'';input.max=String(value.available);input.readOnly=!!lockReason()||!!value.reason||kind==='source'&&!!snapshot?.group;input.setAttribute('aria-label',`${kind==='buy'?'Acheter':kind==='sell'?'Vendre':'Charger'} ${itemLabel(pile)} ${'owner'in pile&&pile.owner.type==='ground'?`au sol en ${pile.owner.x}, ${pile.owner.z}`:''}`);setTooltip(input,{body:lockReason()??value.reason??(kind==='source'?'La quantité sera prise au contact dans cette pile.':'Le devis courant sera vérifié avant l’échange.')});remove.hidden=!values.has(pile.id);remove.setAttribute('aria-label',`Retirer la quantité choisie ${'owner'in pile&&pile.owner.type==='ground'?`au sol en ${pile.owner.x}, ${pile.owner.z}`:''}`);available(remove,lockReason()??(kind==='source'&&snapshot?.group?'Le chargement engagé est confirmé.':undefined));}};
+        cells[2]!.textContent=String(value.available);if(kind==='source')cells[4]!.textContent=`Unité : ${lineMass('owner'in pile?pile:undefined,1)} · Choisi : ${lineMass('owner'in pile?pile:undefined,Number(values.get(pile.id)??'0'))}`;if(document.activeElement!==input)input.value=values.get(pile.id)??'';input.max=String(value.available);input.readOnly=!!lockReason()||!!value.reason||kind==='source'&&!!snapshot?.group;input.setAttribute('aria-label',`${kind==='buy'?'Acheter':kind==='sell'?'Vendre':'Charger'} ${itemLabel(pile)} ${'owner'in pile&&pile.owner.type==='ground'?`au sol en ${pile.owner.x}, ${pile.owner.z}`:''}`);setTooltip(input,{body:lockReason()??value.reason??(kind==='source'?'La quantité sera prise au contact dans cette pile.':'Le devis courant sera vérifié avant l’échange.')});remove.hidden=!values.has(pile.id);remove.setAttribute('aria-label',`Retirer la quantité choisie ${'owner'in pile&&pile.owner.type==='ground'?`au sol en ${pile.owner.x}, ${pile.owner.z}`:''}`);available(remove,lockReason()??(kind==='source'&&snapshot?.group?'Le chargement engagé est confirmé.':undefined));}};
     },20);
   }
   const sourceTable=quantityTable(sourceBox,'source',sources);
@@ -245,10 +258,10 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
     const {row,cells}=rowCells(4);return {row,paint({line:m}){
       const carrier=members(snapshot!).find(p=>p.id===m.carrierId);if(!carrier)throw Error('Porteur du manifeste absent.');
       cells[0]!.textContent=`${m.quantity} ${ITEM_DEFINITIONS[m.item].label}`;
-      cells[1]!.textContent=carrier.name;cells[2]!.textContent=m.carriedPileId!==undefined?m.animalCarrierId!==undefined?m.deliveredToAnimal?'Transmis à l’animal':'Pris · remise à l’animal en attente':'Pris au contact':'Prise en attente';cells[3]!.textContent=lineMass(m.item,m.quantity);
+      cells[1]!.textContent=carrier.name;cells[2]!.textContent=m.carriedPileId!==undefined?m.animalCarrierId!==undefined?m.deliveredToAnimal?'Transmis à l’animal':'Pris · remise à l’animal en attente':'Pris au contact':'Prise en attente';const pile=pilesById.get(m.carriedPileId??m.pileId)??pilesById.get(m.pileId);cells[3]!.textContent=lineMass(pile?.item===m.item?pile:undefined,m.quantity);
     }};
   },20);
-  const goodsTable=paged<MaterialPile>(possessionsBox,['Bien réel','Quantité','Propriétaire','Masse'],p=>p.id,()=>{const {row,cells}=rowCells(4);return {row,paint(p){row.dataset.groupGoods=String(p.id);cells[0]!.textContent=itemLabel(p);cells[1]!.textContent=String(p.quantity);cells[3]!.textContent=lineMass(p.item,p.quantity);if(!('pawnId' in p.owner))throw Error('Un bien porté a perdu son propriétaire.');const ownerId=p.owner.pawnId,owner=physical(snapshot!,selected,selectedAnimals).find(m=>m.id===ownerId);if(!owner)throw Error('Propriétaire de possession absent des personnes affichées.');cells[2]!.textContent=`${travelActorLabel256(owner)} · ${p.owner.type==='inventory'?'Inventaire':p.owner.type==='equipment'?'Équipement':p.owner.type==='apparel'?'Vêtement':'Portage'}`;}};},20);
+  const goodsTable=paged<MaterialPile>(possessionsBox,['Bien réel','Quantité','Propriétaire','Masse'],p=>p.id,()=>{const {row,cells}=rowCells(4);return {row,paint(p){row.dataset.groupGoods=String(p.id);cells[0]!.textContent=itemLabel(p);cells[1]!.textContent=String(p.quantity);cells[3]!.textContent=lineMass(p,p.quantity);if(!('pawnId' in p.owner))throw Error('Un bien porté a perdu son propriétaire.');const ownerId=p.owner.pawnId,owner=physical(snapshot!,selected,selectedAnimals).find(m=>m.id===ownerId);if(!owner)throw Error('Propriétaire de possession absent des personnes affichées.');cells[2]!.textContent=`${travelActorLabel256(owner)} · ${p.owner.type==='inventory'?'Inventaire':p.owner.type==='equipment'?'Équipement':p.owner.type==='apparel'?'Vêtement':'Portage'}`;}};},20);
   const tradeStatus=document.createElement('p');tradeBox.append(tradeStatus);const purchaseBox=section('Acheter',tradeBox),saleBox=section('Vendre',tradeBox),buyTable=quantityTable(purchaseBox,'buy',buys),sellTable=quantityTable(saleBox,'sell',sells);
   const buyTotal=document.createElement('p'),sellTotal=document.createElement('p'),buyButton=document.createElement('button'),sellButton=document.createElement('button');buyButton.type=sellButton.type='button';buyButton.textContent='Confirmer les achats';sellButton.textContent='Confirmer les ventes';buyButton.dataset.groupAction='buy';sellButton.dataset.groupAction='sell';purchaseBox.append(buyTotal,buyButton);saleBox.append(sellTotal,sellButton);buttons.set('buy',buyButton);buttons.set('sell',sellButton);
   let shownBuy:string|undefined,shownSell:string|undefined;
@@ -273,7 +286,7 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
   merge.addEventListener('click',()=>{if(merge.getAttribute('aria-disabled')!=='true')void reorganization.open('merge');},{signal:abort.signal});
   const lossesTable=paged<GroupLoss>(lossesBox,['Personne','Lieu / décès confirmé','Biens retenus'],x=>x.pawn.id,()=>{const {row,cells}=rowCells(3);return {row,paint(loss){cells[0]!.textContent=loss.pawn.name;cells[1]!.textContent=`${planetTileLabel(snapshot!.planet!,loss.tile)} · J${(loss.tick/TICKS_PER_DAY).toLocaleString('fr-FR',{maximumFractionDigits:2})}`;cells[2]!.textContent=loss.items.slice(0,8).map(p=>`${p.quantity} ${itemLabel(p)}`).join(', ')+(loss.items.length>8?` · ${loss.items.length-8} autres piles retenues`:'');if(!loss.items.length)cells[2]!.textContent='Aucun bien retenu';}};},8);
 
-  const animalLossesTable=paged<CampaignAnimalLoss256>(lossesBox,['Animal','Lieu / issue confirmée','Biens retenus'],x=>x.animal.id,()=>{const {row,cells}=rowCells(3);return {row,paint(loss){cells[0]!.textContent=travelAnimalLabel256(loss.animal);cells[1]!.textContent=`${planetTileLabel(snapshot!.planet!,loss.tile)} · ${loss.reason==='death'?'Décès confirmé':'Caravane perdue'} · J${(loss.tick/TICKS_PER_DAY).toLocaleString('fr-FR',{maximumFractionDigits:2})}`;cells[2]!.textContent=[...loss.items.slice(0,8).map(p=>`${p.quantity} ${itemLabel(p)}`),...(loss.packed??[]).slice(0,4).map(travelPackLabel256)].join(', ')||'Aucun bien retenu';}};},8);
+  const animalLossesTable=paged<CampaignAnimalLoss256>(lossesBox,['Animal','Lieu / issue confirmée','Biens retenus'],x=>x.animal.id,()=>{const {row,cells}=rowCells(3);return {row,paint(loss){cells[0]!.textContent=travelAnimalLabel256(loss.animal);cells[1]!.textContent=`${planetTileLabel(snapshot!.planet!,loss.tile)} · ${loss.reason==='death'?'Décès confirmé':'Caravane perdue'} · J${(loss.tick/TICKS_PER_DAY).toLocaleString('fr-FR',{maximumFractionDigits:2})}`;cells[2]!.textContent=[...loss.items.slice(0,8).map(p=>`${p.quantity} ${itemLabel(p)}`),...(loss.packed??[]).slice(0,4).map(packedLabel)].join(', ')||'Aucun bien retenu';}};},8);
 
 
   function updateLocks(){
@@ -306,9 +319,9 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
       goodsTable.update(goods(snapshot,selected,selectedAnimals));updateTravelRows();
       const animalSelection=snapshot.group?travelAnimals256(snapshot):travelAnimals256(snapshot,new Set([...selectedAnimals].filter(id=>facts!.animals?.some(c=>c.animal.id===id))));
       const humans=snapshot.group?members(snapshot).length:selected.size,ride=travelRidingFactor256(humans,animalSelection);
-      mass.textContent+=` · ${animalSelection.length} animaux · monte moyenne ×${ride.toLocaleString('fr-FR',{maximumFractionDigits:2})}${snapshot.group?'':` · ${selectedPacks.size} couchages au sol choisis`}.`;
+      mass.textContent+=` · ${animalSelection.length} animaux · monte moyenne ×${ride.toLocaleString('fr-FR',{maximumFractionDigits:2})}${snapshot.group?'':` · ${selectedPacks.size} meubles minifiés au sol choisis`}.`;
       const unavailableAnimals=[...selectedAnimals].filter(id=>!facts!.animals?.some(c=>c.animal.id===id&&c.ok)),unavailablePacks=[...selectedPacks].filter(id=>!facts!.bedrolls?.some(c=>c.pack.building.id===id&&c.ok));
-      if(!snapshot.group&&(unavailableAnimals.length||unavailablePacks.length))selectionNotes.textContent+=` ${unavailableAnimals.length} choix d’animaux et ${unavailablePacks.length} couchages demandent une correction.`;
+      if(!snapshot.group&&(unavailableAnimals.length||unavailablePacks.length))selectionNotes.textContent+=` ${unavailableAnimals.length} choix d’animaux et ${unavailablePacks.length} meubles minifiés demandent une correction.`;
       unload.hidden=snapshot.group?snapshot.group.phase!=='unloading':!selected.size;
       globe.setOverlay({selected:destination,route:facts.confirmedRoute,previewRoute:plan?.ok?plan.route:routePreview?.ok?routePreview.route:[],...(groupAway(snapshot.group)?{groupTile:snapshot.group.tile}:{}),...readPlanetObjects(snapshot.campaign??snapshot.world)});
     }catch(cause){selectionNotes.textContent=cause instanceof Error?cause.message:String(cause);plan=undefined;routePreview=undefined;}
@@ -345,7 +358,7 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
   return {
     update(next){
       if(snapshot?.group?.id!==next.group?.id||snapshot?.group?.phase!==next.group?.phase)invalidatePreview();
-      snapshot=next;facts=undefined;
+      snapshot=next;facts=undefined;pilesById=new Map(next.world.piles.map(p=>[p.id,p]));
       try{
         const captured=adapters.capture(next);for(const key of ['adopt','start','cancel','pause','route','return','buy','sell','unload'] as const)if(!captured.actions[key])throw Error(`Projection d'action manquante : ${key}.`);
         if(!Number.isSafeInteger(captured.maximumSources)||captured.maximumSources<1)throw Error('La borne métier de manifeste est absente.');
@@ -353,7 +366,7 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
         for(const c of captured.candidates)if(!next.world.pawns.includes(c.pawn))throw Error('Un candidat ne référence pas une vraie personne présente.');
         if(next.group&&!captured.mass)throw Error('La projection de masse du groupe est manquante.');
         for(const c of captured.animals??[])if(!next.world.wildlife?.animals.includes(c.animal))throw Error('Un animal proposé n’est pas présent sur cette carte.');
-        for(const c of captured.bedrolls??[])if(!next.world.packed.includes(c.pack)||c.pack.owner.type!=='ground')throw Error('Un couchage proposé n’est pas au sol.');
+        for(const c of captured.bedrolls??[])if(!next.world.packed.includes(c.pack)||c.pack.owner.type!=='ground')throw Error('Un meuble minifié proposé doit être au sol.');
         facts=captured;globe.setPlanet(next.planet);origin.textContent=next.planet?`Origine : ${captured.originLabel} · ${planetTileLabel(next.planet,captured.originTile)}`:'La géographie persistée doit être adoptée pour préparer un voyage.';
         const elsewherePeople=next.world.campaignPeople?.filter(p=>p.status==='away')??[];
         intro.textContent='Choisissez les personnes et les biens réels. Rassemblement, chargement et sortie se déroulent sur leur carte. Les autres cartes continuent à évoluer.';
@@ -378,7 +391,7 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
     setRequestStatus(event){if(event.state==='waiting')waiting.set(event.id,event.message??'Attente du résultat autoritatif.');else waiting.delete(event.id);updateLocks();reorganization.update();},
     setHostBlocked(reason){hostBlocked=reason;updateLocks();reorganization.update();},
     setSimulationStopped(message){stopped=message;updateLocks();reorganization.update();},
-    resetForReplacement(){reorganization.reset();generation++;delete groupSelector.dataset.key;groupSelector.replaceChildren();groupSelector.value='';busy=false;unknown=stopped=undefined;waiting.clear();selected.clear();selectedAnimals.clear();selectedPacks.clear();sources.clear();buys.clear();sells.clear();destination=null;shownBuy=shownSell=undefined;snapshot=facts=undefined;invalidatePreview();peopleTable.update([]);animalTable.update([]);bedrollTable.update([]);sourceTable.update([]);manifestTable.update([]);goodsTable.update([]);buyTable.update([]);sellTable.update([]);lossesTable.update([]);animalLossesTable.update([]);globe.setPlanet(undefined);origin.textContent=status.textContent=mass.textContent=stop.textContent=routeText.textContent='';error.hidden=true;updateLocks();},
+    resetForReplacement(){reorganization.reset();generation++;delete groupSelector.dataset.key;groupSelector.replaceChildren();groupSelector.value='';busy=false;unknown=stopped=undefined;waiting.clear();selected.clear();selectedAnimals.clear();selectedPacks.clear();sources.clear();buys.clear();sells.clear();destination=null;shownBuy=shownSell=undefined;snapshot=facts=undefined;pilesById=new Map();invalidatePreview();peopleTable.update([]);animalTable.update([]);bedrollTable.update([]);sourceTable.update([]);manifestTable.update([]);goodsTable.update([]);buyTable.update([]);sellTable.update([]);lossesTable.update([]);animalLossesTable.update([]);globe.setPlanet(undefined);origin.textContent=status.textContent=mass.textContent=stop.textContent=routeText.textContent='';error.hidden=true;updateLocks();},
     dispose(){disposed=true;generation++;abort.abort();reorganization.dispose();globe.dispose();element.remove();},
   };
 }

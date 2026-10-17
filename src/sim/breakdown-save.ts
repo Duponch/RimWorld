@@ -1,3 +1,4 @@
+import type {PackedFurniture} from './furniture-rules.ts';
 import { BREAKDOWN_CHECK_CORE_TICKS,breakdownEligible } from './breakdowns.ts';
 import { footprintCells } from './definitions.ts';
 import type { World } from './types.ts';
@@ -5,23 +6,24 @@ import type { World } from './types.ts';
 const record=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value);
 const int=(value:unknown,min=0,max=Number.MAX_SAFE_INTEGER):value is number=>Number.isSafeInteger(value)&&Number(value)>=min&&Number(value)<=max;
 /** Historical saves are rejected before any neutral V143→V144 adoption. */
-export function validateBreakdowns(world:World,version:number):string[] {
+export function validateBreakdowns(world:World,version:number,packedRecords?:readonly PackedFurniture[],clock:number=world.tick):string[] {
   const errors:string[]=[],raw:unknown=world.breakdown;
   if(version<144){
     if(raw!==undefined||[...world.structures,...(world.packed??[]).map(p=>p.building)].some(s=>s.breakdown!==undefined)||world.jobs.some(j=>j.fixBreakdown!==undefined||j.kind==='fix-breakdown'))errors.push('Future breakdown state in older schema.');
     return errors;
   }
   const coreTick=world.tick*10;
-  if(!record(raw)||Object.keys(raw).some(k=>!['rng','nextCheckCore'].includes(k))||!int(raw.rng,1,0xffffffff)
+  if(!packedRecords&&(!record(raw)||Object.keys(raw).some(k=>!['rng','nextCheckCore'].includes(k))||!int(raw.rng,1,0xffffffff)
     // Diagnostic tools may advance the confirmed tick without running the
     // scheduler. An overdue pulse is replayed on the next normal step.
     ||!int(raw.nextCheckCore,1)||raw.nextCheckCore>coreTick+BREAKDOWN_CHECK_CORE_TICKS
-    ||raw.nextCheckCore%BREAKDOWN_CHECK_CORE_TICKS!==0)errors.push('Invalid mechanical breakdown calendar.');
-  for(const s of [...world.structures,...(world.packed??[]).map(p=>p.building)])if(s.breakdown!==undefined){
+    ||raw.nextCheckCore%BREAKDOWN_CHECK_CORE_TICKS!==0))errors.push('Invalid mechanical breakdown calendar.');
+  for(const s of packedRecords?packedRecords.map(p=>p.building):[...world.structures,...(world.packed??[]).map(p=>p.building)])if(s.breakdown!==undefined){
     const state:unknown=s.breakdown;
-    if(!breakdownEligible(s)||!record(state)||Object.keys(state).some(k=>k!=='brokenAt')||!int(state.brokenAt,0,world.tick)
+    if(!breakdownEligible(s)||!record(state)||Object.keys(state).some(k=>k!=='brokenAt')||!int(state.brokenAt,0,clock)
       ||s.power?.on!==false||s.battery&&(s.battery.stored!==0||s.battery.half!==undefined))errors.push('Invalid mechanical breakdown.');
   }
+  if(packedRecords)return errors;
   const seen=new Set<number>();
   for(const j of world.jobs){
     const target:unknown=j.fixBreakdown;

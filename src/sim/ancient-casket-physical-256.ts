@@ -28,7 +28,7 @@ export function validateAncientCasketPhysical256(w:World):string[]{
  const next=allocator&&Object.getOwnPropertyDescriptor(allocator,'nextAncientCasketGroupId');
  if(next&&!validAncientCasketGroupLinks256(w.structures,next.value))return ['Casket group exceeds its actual confirmed campaign allocator.'];
  for(const s of w.structures){if(!validAncientCasketBuilding256(s,w.schemaVersion,w,w.tick))return ['Invalid actual ancient casket physical definition.'];if(isAncientCasket256(s)&&ancientCasketCells256(s,s.orientation).some(c=>{const t=w.tiles[c.z*w.width+c.x];return !t||['rock','water'].includes(t.terrain)||!terrainSupportsAffordance256(t,'Medium',w);}))return ['Actual ancient casket lacks Medium support.'];}
- for(const p of w.packed)if(isAncientCasket256(p.building)||p.building&&'casket'in p.building)return ['An ancient casket is not minifiable.'];
+ for(const p of w.packed??[])if(isAncientCasket256(p.building)||p.building&&'casket'in p.building)return ['An ancient casket is not minifiable.'];
  for(const j of w.jobs){if(isAncientCasket256(j)||j.furniture?.kind==='ancient-cryptosleep-casket')return ['Ancient casket construction/minification is not offered.'];if(j.deconstruction?.kind==='ancient-cryptosleep-casket'){const s=w.structures.find(s=>s.id===j.deconstruction!.structureId);if(j.kind!=='deconstruct'||!isAncientCasket256(s)||s.casket.humans.length||s.casket.animals.length||s.casket.items.length)return ['Actual casket deconstruction requires the completely empty original.'];}}
  return [];
 }

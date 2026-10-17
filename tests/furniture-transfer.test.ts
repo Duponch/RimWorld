@@ -19,7 +19,7 @@ test('a bed keeps its identity, ownership and resources through uninstall, groun
  expect(applyCommand(w,{type:'designate',kind:'uninstall',x:15,z:16}).ok).toBe(true);
  until(w,()=>w.packed.length===1);expect(w.structures).toHaveLength(0);expect(pawn.bedId).toBe(bed.id);expect(w.packed[0]!.building).toBe(bed);expect(woodAccount(w)).toBe(initial);
  const owner=w.packed[0]!.owner;if(owner.type!=='ground')throw Error('Expected a real ground package');expect(groundCapacity(w,owner,'wood')).toBe(0);
- const invalidPack=JSON.parse(serializeWorld(w));invalidPack.packed[0].building.x=w.width-1;expect(()=>deserializeWorld(JSON.stringify(invalidPack))).toThrow();invalidPack.packed[0].building.x=14;invalidPack.packed[0].building.orientation=99;expect(validateWorld(invalidPack).length).toBeGreaterThan(0);
+ const invalidPack=JSON.parse(serializeWorld(w));invalidPack.schemaVersion=257;invalidPack.packed[0].building.x=w.width-1;expect(()=>deserializeWorld(JSON.stringify(invalidPack))).toThrow();invalidPack.packed[0].building.x=14;invalidPack.packed[0].building.orientation=99;expect(validateWorld(invalidPack).length).toBeGreaterThan(0);
  expect(applyCommand(w,{type:'install',structureId:bed.id,x:23,z:20,orientation:3}).ok).toBe(true);
  const job=w.jobs[0]!;expect(footprintCells(job)).toEqual([{x:23,z:20},{x:22,z:20}]);
  expect(queryOrderOptions(w,pawn.id,job).some(o=>o.enabled)).toBe(true);
@@ -52,7 +52,7 @@ test('full floors and conflicting uses refuse atomically; migration and corrupt 
  const corrupted=JSON.parse(full);corrupted.packed[0].owner.pawnId=999999;expect(()=>deserializeWorld(JSON.stringify(corrupted))).toThrow();
  const duplicate=JSON.parse(full);duplicate.packed.push(duplicate.packed[0]);expect(()=>deserializeWorld(JSON.stringify(duplicate))).toThrow();
  const bad=JSON.parse(full);bad.jobs[0].furniture.structureId=wall.id;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();
- const legacy=JSON.parse(before);((legacy.schemaVersion=24,withoutResearch(legacy)),withoutPawnSkills(legacy));for(const a of legacy.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete legacy.packed;delete legacy.worldMaps;delete legacy.worldGroups;delete legacy.deterioration;delete legacy.spoiled.pemmican;for(const policy of legacy.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='pemmican');const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated.packed).toEqual([]);expect(migrated.structures).toEqual(JSON.parse(before).structures);expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
+ const legacy=JSON.parse(before);((legacy.schemaVersion=24,withoutResearch(legacy)),withoutPawnSkills(legacy));for(const a of legacy.pawns){delete a.priorities.mine;delete a.priorities.craft;delete a.mental;}delete legacy.packed;delete legacy.worldMaps;delete legacy.worldGroups;delete legacy.deterioration;delete legacy.spoiled.pemmican;for(const policy of legacy.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='pemmican');const migrated=deserializeWorld(JSON.stringify(legacy));expect(migrated.packed).toEqual([]);expect(migrated.structures).toEqual(JSON.parse(before).structures);expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
  legacy.packed=[];expect(()=>deserializeWorld(JSON.stringify(legacy))).toThrow();
 });
 

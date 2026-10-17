@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V413 — schéma 258, qualifié :** [Fret existant et meubles minifiés](docs/gameplay/group-freight-v413.md) : mêmes biens, chargement physique vers les animaux et anciens contrats conservés. 59 cas ciblés acquis par reprises ; même fret humain/animal, départ réel303 et recharge UI exacte304. Fondations ouvertes, aucune publication ; production V403 inchangée. Les états suivants sont historiques.
+
 **V412 — schéma 257 :** [Formation et portage humain](docs/gameplay/group-admission-v412.md) qualifiés par reprises : travail libéré après les arêtes, même passager porté, annulation/recharges exactes et vrai départ. Captifs, fret complet et autres fondations restent ouverts. Non publié, productionV403 inchangée. Les états suivants sont historiques.
 
 **V408 — schéma 256 :** [Générateur géographique](docs/gameplay/world-generation-v408.md) raccordé pour Atterrissage forcé250², vraie création et reprise contrôlées. PNJ actuels adaptés ; voyages/cartes temporaires et qualification globale restent à terminer avant la nouvelle démonstration. Non publié, productionV403/e24c5731 inchangée. Les états suivants sont historiques.

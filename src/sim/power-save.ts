@@ -1,3 +1,4 @@
+import type {PackedFurniture} from './furniture-rules.ts';
 import type { PowerParentReader } from './power-parent-validation.ts';
 import { isElectrical,isFlickable,isPowerTrader } from './power-rules.ts';
 import { isPowerConnector,isPowerTransmitter } from './power-grid.ts';
@@ -6,11 +7,11 @@ import { PowerTopologyCache, validPowerParent } from './power-topology.ts';
 import { isBlockMaterial } from './building-materials.ts';
 import type { StructureKind,World } from './types.ts';
 
-export function validatePower(world:World,version:number,onlyKind?:StructureKind,topologyCache?:PowerParentReader):string[] {
-  const errors:string[]=[],topology=(topologyCache??new PowerTopologyCache()).read(world);
-  for(const s of [...world.structures,...(world.packed??[]).map(p=>p.building)]) {
+export function validatePower(world:World,version:number,onlyKind?:StructureKind,topologyCache?:PowerParentReader,packedRecords?:readonly PackedFurniture[]):string[] {
+  const errors:string[]=[],topology=packedRecords?undefined:(topologyCache??new PowerTopologyCache()).read(world);
+  for(const s of packedRecords?packedRecords.map(p=>p.building):[...world.structures,...(world.packed??[]).map(p=>p.building)]) {
     if(onlyKind!==undefined&&s.kind!==onlyKind)continue;
-    const p=s.power,packed=!world.structures.includes(s);
+    const p=s.power,packed=!!packedRecords||!world.structures.includes(s);
     const battery=s.battery;
     if(s.kind==='battery'){
       if(version<85||!battery||typeof battery!=='object'||Array.isArray(battery)||Object.keys(battery).some(k=>k!=='stored'&&(k!=='half'||version<87))||!Number.isSafeInteger(battery.stored)||battery.stored<0||battery.stored>BATTERY_CAPACITY||battery.half!==undefined&&(battery.half!==true||battery.stored===BATTERY_CAPACITY))errors.push('Invalid battery energy.');
@@ -21,8 +22,9 @@ export function validatePower(world:World,version:number,onlyKind?:StructureKind
       ||p.switchOn!==undefined&&typeof p.switchOn!=='boolean'||p.switchOn===false&&p.on
       ||!(p.parentId===null||Number.isSafeInteger(p.parentId)&&p.parentId>0)) {errors.push('Invalid electrical state.');continue;}
     if(isPowerTransmitter(s.kind)&&p.parentId!==null||!isPowerTrader(s.kind)&&p.on||packed&&(p.on||p.parentId!==null))errors.push('Invalid power owner.');
-    if(isPowerConnector(s.kind)&&(s.kind!=='electric-tailor-bench'||version>=181)&&(p.on&&p.parentId===null||p.parentId!==null&&!validPowerParent(topology,s,p.parentId)))errors.push('Invalid electrical parent.');
+    if(!packedRecords&&isPowerConnector(s.kind)&&(s.kind!=='electric-tailor-bench'||version>=181)&&(p.on&&p.parentId===null||p.parentId!==null&&!validPowerParent(topology!,s,p.parentId)))errors.push('Invalid electrical parent.');
   }
+  if(packedRecords)return errors;
   for(const j of world.jobs)if('power' in j||'battery' in j)errors.push('Blueprint cannot supply power.');
   return errors;
 }

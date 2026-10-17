@@ -1,4 +1,5 @@
 import {expect,test} from 'vitest';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 import {harness,carryingWork,downed,preparing,away,exact,resumed,contact,reachCarry} from './helpers/group-admission-v412.ts';
 import {preparedMap} from './helpers/world-maps-v255.ts';
 import {applyCommand,deserializeCampaign,serializeCampaign,validateWorld} from '../src/sim/index.ts';
@@ -88,8 +89,8 @@ test('strict old256 validates two maps and both historical groups before the sca
  // is not a migration helper and never edits an archived/public fixture.
  const old=JSON.parse(serializeCampaign(f.w));old.schemaVersion=256;for(const r of old.worldGroups.groups){delete r.state.admission;delete r.state.humanPreparation;}
  const literal=JSON.stringify(old),groupBefore=structuredClone(old.worldGroups.groups),otherBefore=structuredClone(old.worldMaps.sites[1].map),loaded=deserializeCampaign(literal);
- expect(loaded.schemaVersion).toBe(257);expect(loaded.worldGroups!.groups).toEqual(groupBefore);expect(loaded.worldMaps!.sites[1]!.map).toEqual(otherBefore);expect(JSON.parse(serializeCampaign(loaded))).toEqual({...old,schemaVersion:257});
- for(const mutate of [(r:typeof old)=>r.worldGroups.groups[0].state.admission={revision:1},(r:typeof old)=>r.worldGroups.groups[1].state.humanPreparation={revision:1,releaseIds:[],passengers:[]},(r:typeof old)=>r.worldMaps.sites[1].map.pawns[0].jobId=r.nextId+100,(r:typeof old)=>r.schemaVersion=258]){const bad=structuredClone(old);mutate(bad);expect(()=>deserializeCampaign(JSON.stringify(bad))).toThrow();expect(serializeCampaign(loaded)).toBe(serializeCampaign(deserializeCampaign(literal)));}
+ expect(loaded.schemaVersion).toBe(SCHEMA_VERSION);expect(loaded.worldGroups!.groups).toEqual(groupBefore);expect(loaded.worldMaps!.sites[1]!.map).toEqual(otherBefore);expect(JSON.parse(serializeCampaign(loaded))).toEqual({...old,schemaVersion:SCHEMA_VERSION});
+ for(const mutate of [(r:typeof old)=>r.worldGroups.groups[0].state.admission={revision:1},(r:typeof old)=>r.worldGroups.groups[1].state.humanPreparation={revision:1,releaseIds:[],passengers:[]},(r:typeof old)=>r.worldMaps.sites[1].map.pawns[0].jobId=r.nextId+100,(r:typeof old)=>r.schemaVersion=SCHEMA_VERSION+1]){const bad=structuredClone(old);mutate(bad);expect(()=>deserializeCampaign(JSON.stringify(bad))).toThrow();expect(serializeCampaign(loaded)).toBe(serializeCampaign(deserializeCampaign(literal)));}
  exact(loaded,'06-migrated-two-map-literal-groups');
 });
 

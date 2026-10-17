@@ -1,3 +1,4 @@
+import {groupFreightUnitMass258,groupPackedMassGrams258} from '../sim/group-freight-contract-258';
 /** Confirmed-owner Split/Merge dialogue. No private motion or CampaignState is reconstructed. */
 import {SimulationRequestError} from '../bridge/protocol';
 import {isColonist} from '../sim/affiliation';
@@ -19,7 +20,7 @@ export function groupSplitCommand256(s:GroupPanelSnapshot,selection:GroupSplitSe
  const people=g.members.filter(p=>selection.people.has(p.id)),remaining=g.members.filter(p=>!selection.people.has(p.id));
  if(people.length!==selection.people.size||!people.some(capable)||!remaining.some(capable))throw Error('Chaque caravane doit conserver un colon capable, libre et vivant.');
  const animals=g.animalOwners?.members??[];if([...selection.animals].some(id=>!animals.some(a=>a.id===id)))throw Error('Un animal choisi n’appartient plus à cette caravane.');
- if([...selection.packs].some(id=>!(g.packed??[]).some(p=>p.building.id===id)))throw Error('Un couchage choisi n’appartient plus à cette caravane.');
+ if([...selection.packs].some(id=>!(g.packed??[]).some(p=>p.building.id===id)))throw Error('Un meuble minifié choisi n’appartient plus à cette caravane.');
  const inventory:{pileId:number;quantity:number}[]=[];
  for(const [pileId,text]of selection.inventory){if(text.trim()==='')continue;const quantity=Number(text),p=g.items.find(p=>p.id===pileId&&p.owner.type==='inventory');if(!Number.isSafeInteger(quantity)||quantity<0||!p||quantity>p.quantity)throw Error('Une quantité ne correspond plus à son inventaire confirmé.');if(quantity)inventory.push({pileId,quantity});}
  return {type:'group-split',groupId:g.id,memberIds:people.map(p=>p.id),inventory,packedIds:[...selection.packs],animalIds:[...selection.animals]};
@@ -50,7 +51,7 @@ export function createGroupReorganizationPanel256(host:HTMLElement,options:{
   try{if(!reason)command();}catch(cause){reason=cause instanceof Error?cause.message:String(cause);}
   confirm.disabled=opening||sending||!!reason;cancel.disabled=sending;for(const input of inputs)input.disabled=sending||!!options.blocked();
   message.textContent=reason??lastRefusal??'';
-  if(mode==='split')summary.textContent=`Nouvelle caravane : ${people.size} personnes, ${animals.size} animaux, ${packs.size} couchages. Les inventaires seront répartis entre leurs porteurs. La charge ou les provisions peuvent arrêter la marche.`;
+  if(mode==='split')summary.textContent=`Nouvelle caravane : ${people.size} personnes, ${animals.size} animaux, ${packs.size} meubles minifiés. Les inventaires seront répartis entre leurs porteurs. La charge ou les provisions peuvent arrêter la marche.`;
   else summary.textContent=`${merge.length} caravanes choisies. La proximité réelle et le groupe conservé seront vérifiés à la confirmation.`;
  }
  function close(){generation++;opening=false;if(dialog.open)dialog.close();options.onLock(false);}
@@ -69,9 +70,9 @@ export function createGroupReorganizationPanel256(host:HTMLElement,options:{
   heading('Animaux');for(const a of g.animalOwners?.members??[])check(`${travelAnimalLabel256(a)} · ${travelAnimalNeeds256(a)}`,false,on=>on?animals.add(a.id):animals.delete(a.id)).dataset.splitAnimal=String(a.id);
   heading('Inventaires à partager');
   for(const p of g.items)if(p.owner.type==='inventory'){
-   const row=document.createElement('label'),input=document.createElement('input'),text=document.createElement('span');row.className='group-reorganization-row';const unit=groupCaravanUnitMass256(p.item,freightGroup(g));text.textContent=`${ITEM_DEFINITIONS[p.item].label} · ${p.quantity} disponibles${unit===undefined?' · masse indisponible':` · ${(unit/1000).toLocaleString('fr-FR')} kg/unité`}`;input.type='number';input.min='0';input.max=String(p.quantity);input.step='1';input.value='0';input.setAttribute('aria-label',`Transférer ${ITEM_DEFINITIONS[p.item].label}`);input.dataset.splitPile=String(p.id);input.addEventListener('input',()=>{lastRefusal=undefined;inventory.set(p.id,input.value);paint();},{signal:controller.signal});row.append(input,text);body.append(row);inputs.push(input);
+   const row=document.createElement('label'),input=document.createElement('input'),text=document.createElement('span');row.className='group-reorganization-row';const unit=s.world.schemaVersion>=258?groupFreightUnitMass258(p,s.world.schemaVersion):groupCaravanUnitMass256(p.item,freightGroup(g));text.textContent=`${ITEM_DEFINITIONS[p.item].label} · ${p.quantity} disponibles${unit===undefined?' · masse indisponible':` · ${(unit/1000).toLocaleString('fr-FR')} kg/unité`}`;input.type='number';input.min='0';input.max=String(p.quantity);input.step='1';input.value='0';input.setAttribute('aria-label',`Transférer ${ITEM_DEFINITIONS[p.item].label}`);input.dataset.splitPile=String(p.id);input.addEventListener('input',()=>{lastRefusal=undefined;inventory.set(p.id,input.value);paint();},{signal:controller.signal});row.append(input,text);body.append(row);inputs.push(input);
   }
-  heading('Sacs de couchage');for(const pack of g.packed??[])check(`${travelPackLabel256(pack)} · 2,5 kg`,false,on=>on?packs.add(pack.building.id):packs.delete(pack.building.id)).dataset.splitPack=String(pack.building.id);
+  heading('Meubles minifiés');for(const pack of g.packed??[]){const grams=groupPackedMassGrams258(pack,s.world.schemaVersion);check(`${travelPackLabel256(pack)} · ${grams===undefined?'masse indisponible':`${(grams/1000).toLocaleString('fr-FR')} kg`}`,false,on=>on?packs.add(pack.building.id):packs.delete(pack.building.id)).dataset.splitPack=String(pack.building.id);}
  }
  cancel.addEventListener('click',()=>{if(!sending)close();},{signal:controller.signal});
  dialog.addEventListener('cancel',event=>{event.preventDefault();if(!sending)close();},{signal:controller.signal});

@@ -1,5 +1,6 @@
+import {regularGroupFreight258} from './group-freight-contract-258.ts';
 import {groupHumanHandler257} from './group-human-admission-257.ts';
-import {groupCaravanUnitMass256} from './group-caravan-mass-256.ts';
+import {groupCaravanPileMass256} from './group-caravan-mass-256.ts';
 import {ITEM_DEFINITIONS} from './items.ts';
 import {GROUP_FREIGHT_SCHEMA,freightGroup,groupItemMassGrams} from './group-freight.ts';
 /** Physical formation/loading and closed collective departure preflight. */
@@ -39,8 +40,8 @@ export function previewGroupLoading(world:World,memberIds:readonly number[],line
   const access=new Map<string,'reachable'|'unreachable'|'deferred'>();let additionalPiles=0;
   for(const line of [...lines].sort((a,b)=>a.pileId-b.pileId)){
     const source=capture.sources.get(line.pileId);
-    if(!source||source.owner.type!=='ground'||!(loadItem(source.item,world.schemaVersion>=GROUP_PROVISIONS_SCHEMA,freight)||world.schemaVersion>=256&&ITEM_DEFINITIONS[source.item].nutrition>0)||source.foodPoison||source.item==='pemmican'&&!freshGroupProvision(source,world.tick))return fail('source');
-    const unit=world.schemaVersion>=256?groupCaravanUnitMass256(source.item,freight):groupItemMassGrams(source.item,freight,world.schemaVersion),reserved=authority.reservedQuantity(world,source.id);
+    if(!source||source.owner.type!=='ground'||!(regularGroupFreight258(source,world.schemaVersion)||loadItem(source.item,world.schemaVersion>=GROUP_PROVISIONS_SCHEMA,freight)||world.schemaVersion>=256&&ITEM_DEFINITIONS[source.item].nutrition>0)||source.foodPoison||source.item==='pemmican'&&!freshGroupProvision(source,world.tick))return fail('source');
+    const unit=world.schemaVersion>=256?groupCaravanPileMass256(source,freight,world.schemaVersion):groupItemMassGrams(source.item,freight,world.schemaVersion),reserved=authority.reservedQuantity(world,source.id);
     if(unit===undefined||!Number.isSafeInteger(reserved)||reserved<0||source.quantity-reserved<line.quantity)return fail('source-reserved');
     remainingBySource.set(source.id,source.quantity);let remaining=line.quantity;
     while(remaining){
@@ -119,7 +120,7 @@ export function prepareGroupPickup(world:World,group:PreparingGroup,authority:Gr
   const policy=authority.sourceReason(world,source,pawn);if(policy)return fail(policy);
   const reserved=authority.reservedQuantity(world,source.id,group.id),future=groupReservedSources(group).get(source.id)??0;
   if(!Number.isSafeInteger(reserved)||reserved<0||future<line.quantity||source.quantity-reserved<future)return fail('reservation');
-  const unit=world.schemaVersion>=256?groupCaravanUnitMass256(source.item,freightGroup(group)):groupItemMassGrams(source.item,freightGroup(group),world.schemaVersion),carrier=capture.mass.carriers.find(c=>c.pawnId===pawn.id)!;
+  const unit=world.schemaVersion>=256?groupCaravanPileMass256(source,freightGroup(group),world.schemaVersion):groupItemMassGrams(source.item,freightGroup(group),world.schemaVersion),carrier=capture.mass.carriers.find(c=>c.pawnId===pawn.id)!;
   if(unit===undefined||carrier.grams+line.quantity*unit>carrier.capacityGrams)return fail('mass');
   const transfer=planInventoryPickup(world,source,pawn.id,line.quantity);if(!transfer)return fail('transfer');
   const namespace=authority.namespaceReason(world,{additionalPiles:Number(transfer.split),members:capture.members,items:capture.items});if(namespace)return fail(namespace);

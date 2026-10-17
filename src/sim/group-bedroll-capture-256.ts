@@ -1,3 +1,5 @@
+import {validatePackedFurnitureRecords} from './furniture-transfer-save.ts';
+import {groupPackedMassGrams258} from './group-freight-mass-258.ts';
 import type {CaravanPhysicalPawn256} from './group-animal-state-256.ts';
 import type {Pawn,World} from './types.ts';
 import type {PackedFurniture} from './furniture-rules.ts';
@@ -7,13 +9,13 @@ const integer=(v:unknown,min=0)=>typeof v==='number'&&Number.isSafeInteger(v)&&v
 export const BEDROLL_MASS_GRAMS_256=2500;
 /** Inventory inner-building pose is not a position on the current map. The
  * actual package owner remains strictly bound to an original current member. */
-export function validCaravanBedrollPacks256(value:unknown,members:readonly CaravanPhysicalPawn256[],nextId:number,version:number):value is PackedFurniture[]|undefined {
+export function validCaravanBedrollPacks256(value:unknown,members:readonly CaravanPhysicalPawn256[],nextId:number,version:number,tick:number=Number.MAX_SAFE_INTEGER):value is PackedFurniture[]|undefined {
  if(value===undefined)return true;
  if(version<256||!Array.isArray(value)||Object.getPrototypeOf(value)!==Array.prototype||value.length>nextId-1||Reflect.ownKeys(value).length!==value.length+1)return false;
  const owners=new Set(members.map(p=>p.id)),ids=new Set<number>();
  for(let i=0;i<value.length;i++){const d=Object.getOwnPropertyDescriptor(value,String(i));if(!d||!Object.hasOwn(d,'value')||!object(d.value))return false;const pack=d.value;
   if(Reflect.ownKeys(pack).length!==2||!Object.hasOwn(pack,'building')||!Object.hasOwn(pack,'owner')||!object(pack.building)||!object(pack.owner))return false;
-  const b=pack.building,o=pack.owner;if(b.kind!=='bedroll'||!validBedrollBuilding256(b,version)||!integer(b.id,1)||Number(b.id)>=nextId||ids.has(Number(b.id))||!integer(b.x)||!integer(b.z)||Reflect.ownKeys(o).length!==2||o.type!=='inventory'||!integer(o.pawnId,1)||!owners.has(Number(o.pawnId)))return false;ids.add(Number(b.id));
+  const b=pack.building,o=pack.owner;if((version<258?b.kind!=='bedroll'||!validBedrollBuilding256(b,version):groupPackedMassGrams258(pack as unknown as PackedFurniture,version)===undefined||validatePackedFurnitureRecords([pack as unknown as PackedFurniture],{width:1,height:1,tick,nextId},version,new Set()).length>0)||!integer(b.id,1)||Number(b.id)>=nextId||ids.has(Number(b.id))||!integer(b.x)||!integer(b.z)||Reflect.ownKeys(o).length!==2||o.type!=='inventory'||!integer(o.pawnId,1)||!owners.has(Number(o.pawnId)))return false;ids.add(Number(b.id));
  }
  return true;
 }
@@ -23,7 +25,7 @@ export interface GroupBedrollDeparture256 {readonly atTick:number;readonly array
 export function captureGroupBedrollDeparture256(w:World,members:readonly CaravanPhysicalPawn256[]):GroupBedrollDeparture256|undefined {
  if(w.schemaVersion<256||members.some(p=>'species'in p?!w.wildlife?.animals.includes(p):!w.pawns.includes(p)))return;
  const ids=new Set(members.map(p=>p.id)),packs=w.packed.filter(p=>p.owner.type==='inventory'&&ids.has(p.owner.pawnId));
- if(!validCaravanBedrollPacks256(packs,members,w.nextId,w.schemaVersion))return;
+ if(!validCaravanBedrollPacks256(packs,members,w.nextId,w.schemaVersion,w.tick))return;
  return {atTick:w.tick,array:w.packed,members:[...members],packs,stamps:packs.map(p=>JSON.stringify(p))};
 }
 export function groupBedrollDepartureCurrent256(w:World,c:GroupBedrollDeparture256):boolean {
@@ -37,5 +39,5 @@ export function detachGroupBedrollDeparture256(w:World,c:GroupBedrollDeparture25
 /** Pure local-entry namespace preflight. Inner pose remains literal; package
  * inventory ownership follows the same actual person through entry. */
 export function canReturnGroupBedrolls256(w:World,packs:readonly PackedFurniture[],members:readonly CaravanPhysicalPawn256[]):boolean {
- return w.schemaVersion>=256&&validCaravanBedrollPacks256(packs,members,w.nextId,w.schemaVersion)&&packs.every(p=>!w.packed.some(q=>q.building.id===p.building.id)&&!w.structures.some(s=>s.id===p.building.id));
+ return w.schemaVersion>=256&&validCaravanBedrollPacks256(packs,members,w.nextId,w.schemaVersion,w.tick)&&packs.every(p=>!w.packed.some(q=>q.building.id===p.building.id)&&!w.structures.some(s=>s.id===p.building.id));
 }

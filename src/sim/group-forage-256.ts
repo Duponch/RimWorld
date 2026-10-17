@@ -49,7 +49,7 @@ export function advanceGroupForage256(w:World,g:GroupForageOwner256,c:GroupForag
  let sum=0;for(const p of g.members)sum=f(sum+groupForagedNutritionPerDay256(p,c.carriedBefore));
  let count=f(sum/6);count=f(count*f(factor));count=f(count*f(c.playerDef==='PlayerTribe'?1.7:1));count=f(count/f(ITEM_DEFINITIONS[item].nutrition/100));
  if(!Number.isFinite(count)||count<0)throw Error('Invalid forage yield');
- const mass=captureProspectiveGroupMass256(g);if(!mass)throw Error('Invalid caravan forage mass');
+ const mass=captureProspectiveGroupMass256(g,w.schemaVersion);if(!mass)throw Error('Invalid caravan forage mass');
  const allowed=Math.max(0,Math.floor(f(f((mass.capacityGrams-mass.grams)/1000)/f(GROUP_FORAGED_MASS_256[item]/1000))));
  const maximum=Math.min(Math.ceil(count),allowed),stacks=Math.ceil(maximum/ITEM_DEFINITIONS[item].stackLimit);
  if(stacks>c.availablePileSlots||!Number.isSafeInteger(w.nextId+stacks*(1+g.items.length))||!Number.isSafeInteger(g.travel.forage.gathered[item]+maximum))throw Error('Caravan forage namespace exhausted');

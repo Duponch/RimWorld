@@ -52,7 +52,7 @@ export interface CampGenerationSource256 {readonly source:string;readonly atTick
 export interface CampMapInputs256 {
  /** Plain captured shared fields, no World and no live forwarding writers.
   * Arrays/registries remain their original read-only references in generation. */
- readonly campaign:Pick<World,CampaignField> & {readonly schemaVersion:256|257;readonly planet:GeographicPlanetState;readonly worldFactions:NonNullable<World['worldFactions']>};
+ readonly campaign:Pick<World,CampaignField> & {readonly schemaVersion:256|257|258;readonly planet:GeographicPlanetState;readonly worldFactions:NonNullable<World['worldFactions']>};
  readonly tile:number;readonly size:200;readonly calendarOrigin:number;
  readonly daysPassedSinceSettle:number;
  readonly provenance:CampGenerationSource256;

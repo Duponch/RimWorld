@@ -1,3 +1,5 @@
+import {regularGroupFreight258} from './group-freight-contract-258.ts';
+import {materialAllowedForPlayer256} from './material-permission-256.ts';
 import {groupHumanAdmissionReason257,groupHasAdmission257,groupHumanHandler257,previewGroupHumanPreparation257,releaseGroupHumanPassengers257} from './group-human-admission-257.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {ITEM_DEFINITIONS} from './items.ts';
@@ -77,7 +79,7 @@ export function groupFormationAuthority(w:World,preparing=false):GroupFormationA
     namespace:world=>({byId:new Map(captureHumanOwners(world).slots.map(s=>[s.id,{pawn:s.pawn,local:s.kind==='map'}]))}),
     memberReason:(world,p)=>groupMemberReason(world,p,preparing),
     residentCapable:(_world,p)=>isColonist(p)&&!p.prisoner&&!p.visitor&&!['dead','downed'].includes(p.state)&&!p.mental?.crisis,
-    sourceReason:(world,pile)=>pile.owner.type!=='ground'||pile.foodPoison||pile.item==='pemmican'&&!freshGroupProvision(pile,world.tick)?'Choisissez une provision saine au sol.':undefined,
+    sourceReason:(world,pile)=>world.schemaVersion>=258&&!materialAllowedForPlayer256(pile)?'Ce bien est interdit.':pile.owner.type!=='ground'||pile.foodPoison||pile.item==='pemmican'&&!freshGroupProvision(pile,world.tick)?'Choisissez une provision saine au sol.':undefined,
     reservedQuantity:(world,id,exceptGroupId)=>{
       const own=world.group&&'manifest' in world.group&&world.group.id===exceptGroupId?groupReservedSources(world.group).get(id)??0:0;
       return reservedSource(world,id)-own;
@@ -99,8 +101,8 @@ export function groupMemberChoices(w:World):readonly GroupMemberChoice[] {
   });
 }
 export function groupSourceChoices(w:World):readonly GroupSourceChoice[] {
-  return w.piles.filter(p=>p.owner.type==='ground'&&(w.schemaVersion>=256&&groupCaravanFood256(p.item)||['survival-meal','silver','cloth','muffalo-wool',...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA&&(!w.group||freightGroup(w.group))?['wood','steel']:[]),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA&&(!w.group||mixedGroupProvisions(w.group))?['pemmican']:[])].includes(p.item))).map(p=>{
-    const reserved=reservedSource(w,p.id);return {pile:p,reserved,available:Math.max(0,p.quantity-reserved),...p.foodPoison?{reason:'Provision contaminée.'}:p.item==='pemmican'&&!freshGroupProvision(p,w.tick)?{reason:'Provision périmée.'}:{}};
+  return w.piles.filter(p=>p.owner.type==='ground'&&(regularGroupFreight258(p,w.schemaVersion)&&(!['wood','steel'].includes(p.item)||!w.group||freightGroup(w.group))||w.schemaVersion>=256&&groupCaravanFood256(p.item)||['survival-meal','silver','cloth','muffalo-wool',...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA&&(!w.group||freightGroup(w.group))?['wood','steel']:[]),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA&&(!w.group||mixedGroupProvisions(w.group))?['pemmican']:[])].includes(p.item))).map(p=>{
+    const reserved=reservedSource(w,p.id);return {pile:p,reserved,available:Math.max(0,p.quantity-reserved),...w.schemaVersion>=258&&!materialAllowedForPlayer256(p)?{reason:'Ce bien est interdit.'}:p.foodPoison?{reason:'Provision contaminée.'}:p.item==='pemmican'&&!freshGroupProvision(p,w.tick)?{reason:'Provision périmée.'}:{}};
   });
 }
 function viewMass(mass:GroupMassCapture,items:readonly MaterialPile[],tick:number,mixed:boolean):GroupMassView {
@@ -124,7 +126,7 @@ function previewFormation(w:World,ids:readonly number[],sources:readonly Commerc
   const authority=groupFormationAuthority(w),selected=ids.map(id=>w.pawns.find(p=>p.id===id)).filter((p):p is Pawn=>!!p);const animal=previewGroupAnimals256(w,animalIds,w.schemaVersion>=257?selected.filter(groupHumanHandler257):selected,(p,c)=>authority.reachable(p,c));if(animal.kind!=='ready')return animal;
   const human=w.schemaVersion>=257?previewGroupHumanPreparation257(w,selected,(p,c)=>authority.reachable(p,c),animal.preparation?.lines.filter(l=>l.mode==='carry').map(l=>l.handlerId)):undefined;if(human&&!human.ok)return {kind:'refused' as const,reason:human.reason};
   const piles=previewGroupLoading(w,ids,sources,authority,animalIds);if(piles.kind!=='ready')return piles;
-  const beds=w.schemaVersion>=256?previewGroupBedrollLoading256(w,packedIds,piles.capture.members,piles.mass,(p,c)=>authority.reachable(p,c)?'reachable':'unreachable'):packedIds.length?{kind:'refused' as const,reason:'Chargement de couchages futur.'}:undefined;if(beds&&beds.kind!=='ready')return beds;const loading=beds?{...piles,mass:beds.preview.mass}:piles;const bedrollLoading=beds?.preview.loading.manifest.length?beds.preview.loading:undefined;
+  const beds=w.schemaVersion>=256?previewGroupBedrollLoading256(w,packedIds,piles.capture.members,piles.mass,(p,c)=>authority.reachable(p,c)?'reachable':'unreachable',piles.capture.animals??[],animal.preparation?.lines.filter(l=>l.mode==='carry').map(l=>l.handlerId)??[]):packedIds.length?{kind:'refused' as const,reason:'Chargement de couchages futur.'}:undefined;if(beds&&beds.kind!=='ready')return beds;const loading=beds?{...piles,mass:beds.preview.mass}:piles;const bedrollLoading=beds?.preview.loading.manifest.length?beds.preview.loading:undefined;
   if(w.schemaVersion<256&&loading.capture.members.some(p=>loading.capture.items.filter(i=>'pawnId' in i.owner&&i.owner.pawnId===p.id).length+loading.manifest.filter(l=>l.carrierId===p.id).length>256))return {kind:'refused' as const,reason:'Un inventaire dépasserait 256 piles.'};
   const food=loading.capture.items.filter(p=>p.owner.type==='inventory'&&p.item==='survival-meal'&&!p.foodPoison).reduce((n,p)=>n+p.quantity,0)+loading.manifest.filter(l=>l.item==='survival-meal').reduce((n,l)=>n+l.quantity,0);
   if(w.schemaVersion<256&&(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?!groupProvisionMinimum(loading.capture.members,[...loading.capture.items.filter(p=>p.owner.type==='inventory'),...loading.manifest.map(line=>({...loading.capture.sources.get(line.pileId)!,quantity:line.quantity}))],w.foodPolicies,w.tick):food<loading.capture.members.length))return {kind:'refused' as const,reason:w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?'Les provisions doivent fournir au moins 0,9 nutrition saine par membre selon les régimes, sans partager deux fois les mêmes unités.':'Chargez au moins une ration saine par membre.'};

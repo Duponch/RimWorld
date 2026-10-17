@@ -64,7 +64,7 @@ export class GroupCampaignRuntime256 {
   let owners=this.owners(root);
   for(const owner of owners)if(!this.motion.position(owner.id)){
    const g=root.worldGroups!.groups.find(r=>r.state.id===owner.id)!.state as AwayGroup;
-   if(!g.travel||g.departedAt!==root.tick||g.lastPersonalTick!==root.tick)throw Error('Unconfirmed caravan motion birth');this.motion.register(owner,owners);this.#physicalChanged.add(owner.id);
+   if(g.departedAt!==root.tick||g.lastPersonalTick!==root.tick)throw Error('Unconfirmed caravan motion birth');this.motion.register(owner,owners);this.#physicalChanged.add(owner.id);
   }
   for(const row of root.worldGroups!.groups.slice())if(row.localMapId===null&&'members'in row.state){
    const g=row.state;if(g.travel&&this.#physicalChanged.delete(g.id))this.physical.rebuild(g as GroupForageOwner256);

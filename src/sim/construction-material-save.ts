@@ -1,10 +1,11 @@
+import type {PackedFurniture} from './furniture-rules.ts';
 import { constructionRecipe, validConstructionMaterial } from './construction-materials.ts';
 import type { World } from './types.ts';
 
 /** Runs after collection shapes, before any planner-based order validation. */
-export function validateConstructionMaterials(world:World,version:number):string[] {
+export function validateConstructionMaterials(world:World,version:number,packedRecords?:readonly PackedFurniture[]):string[] {
   const errors:string[]=[];
-  for(const entity of [...world.jobs,...world.structures,...(world.packed??[]).map(p=>p.building)]) {
+  for(const entity of packedRecords?packedRecords.map(p=>p.building):[...world.jobs,...world.structures,...(world.packed??[]).map(p=>p.building)]) {
     if(entity.kind==='torch-lamp'&&(version<249||entity.material!=='wood'||entity.orientation!==0||entity.footprint!=='standard'))errors.push('Torch lamp requires V249, wood and fixed orientation.');
     if(entity.kind==='vitals-monitor'&&(version<211||entity.material!=='steel'||entity.footprint!=='standard'))errors.push('Vitals monitor requires V211 and steel.');
     if(entity.kind==='drug-lab'&&(version<206||!validConstructionMaterial(entity.kind,entity.material,version)||entity.footprint!=='standard'))errors.push('Drug lab requires V206, wood or steel and its standard footprint.');
@@ -28,6 +29,7 @@ export function validateConstructionMaterials(world:World,version:number):string
     if(entity.kind==='stonecutter'&&(version<31||entity.material===undefined))errors.push('Stonecutter requires V31 and an explicit material.');
     if(entity.material!==undefined&&(version<30||!validConstructionMaterial(entity.kind,entity.material,version)||entity.footprint==='legacy-single'))errors.push('Invalid or future construction material.');
   }
+  if(packedRecords)return errors;
   if(world.jobs.some(job=>job.kind==='small-sculpture'||job.kind==='large-sculpture'))errors.push('Sculptures cannot be construction jobs.');
   // V2–V4 do not have ItemId; their kind/escrow checks remain in validateSchema.
   if(errors.length||version<5)return errors;

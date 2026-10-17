@@ -1,7 +1,7 @@
 import {isCoreStartingApparel256} from './starting-gear-256.ts';
 import {animalContentsOwner256} from './animal-local-contents-256.ts';
 import { roundTradeSilver } from './trade-prices.ts';
-import {groupCaravanUnitMass256} from './group-caravan-mass-256.ts';
+import {groupCaravanPileMass256} from './group-caravan-mass-256.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { isColonist } from './affiliation.ts';
 import { isArtMaterial,isArtRecipe } from './art-rules.ts';
@@ -32,7 +32,7 @@ export function validateTrade(w:World,version:number):string[] {
     const groupInventory=version>=196&&!!p&&!Object.hasOwn(p,'mechKind')&&p.health?.body===undefined
       &&(['survival-meal','silver','medicine','component','cloth','muffalo-wool'].includes(pile.item)||version>=250&&pile.item==='pemmican'||version>=253&&(pile.item==='wood'||pile.item==='steel')||version>=256&&(pile.item==='berries'||pile.item==='agave-fruit'));
     const animal=version>=256?animalContentsOwner256(w,('pawnId'in pile.owner?pile.owner.pawnId:-1)):undefined;
-    const prospectiveInventory=version>=256&&(animal!==undefined||!!p&&!Object.hasOwn(p,'mechKind')&&p.health?.body===undefined)&&groupCaravanUnitMass256(pile.item,true)!==undefined;
+    const prospectiveInventory=version>=256&&(animal!==undefined||!!p&&!Object.hasOwn(p,'mechKind')&&p.health?.body===undefined)&&groupCaravanPileMass256(pile,true,version)!==undefined;
     if(!p?.visitor&&!scoutRation&&!commercialInventory&&!groupInventory&&!prospectiveInventory||pile.kind==='corpse'||pile.kind==='mech-corpse'||pile.kind==='unfinished')errors.push('Invalid inventory ownership.');
   }
   const ledger:unknown=w.trade;if(ledger===undefined)return errors;
