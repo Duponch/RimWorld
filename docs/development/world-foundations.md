@@ -26,6 +26,8 @@ Une exigence est fermée seulement avec règle primaire datée, implémentation 
 
 ## Étape actuelle
 
+[V410](precipitation-palette-v410.md) corrige le refus matériel de texture de pluie à l’entréeCamp. Le vrai camp200² au1037 est conservé et audité en pause : état affiché et export complet exacts, sans avancement. Le premier timeout UI reste rouge et sa cause n’est pas attribuée sans preuve ; la continuation travaux/retour reste à exécuter depuis le camp existant.
+
 [Correctif V409](../gameplay/rock-fog-v409.md) : les massifs inconnus restent opaques ; le brouillard participe au mélange des pigments et à la texture/éclairage rocheux existants, sans fuite de minerai. Le fondu superposé initial a été remplacé ; inspection Autoriser/Interdire d’une pile raccordée. Le parcoursCamp a atteint une vraie tuile voisine avec les originaux, mais sa qualification complète reste ouverte après un défaut de capacité de palette de pluie. Aucun domaine monde terminé.
 
 [Registre V407](../gameplay/world-maps-v407.md) qualifié localement au schéma255 : plusieurs cartes/groupes, colonies1–5, camp200², abandon sans racine obligatoire et reprise complète avec les mêmes propriétaires. Publication255 différée. Le développement courant conserve1colonie comme référence. Cette étape ne ferme pas le tableau : géographie/local256, animaux/cadence voyage, WorldPawns évolutifs et UI Vanilla complète restent ouverts. Les lignes « état initial » ci-dessus décrivent volontairement le point de départ, pas les acquis récents.

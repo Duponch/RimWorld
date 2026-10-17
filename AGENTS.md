@@ -20,6 +20,8 @@ Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` auto
 
 ## Méthode de livraison
 
+**V410, schéma256 inchangé :** [Palette de précipitations](docs/development/precipitation-palette-v410.md) corrigée pour l’entréeCamp200² ; audit du vrai camp1037 en pause et export complet identique acquis. Travaux/retour encore à poursuivre depuis cet état, sans rejouer le départ. ProductionV403 inchangée.
+
 **Correctif urgent V409, schéma256 inchangé :** [Massifs opaques et inspection des piles](docs/gameplay/rock-fog-v409.md) qualifiés : sommets opaques, brouillard comme pigment dans les transitions, texture et éclairage rocheux existants, sans fuite de minerai. Le fondu ajouté initialement a été remplacé. Inspection Autoriser/Interdire raccordée. Reprendre ensuite les cartes temporaires ; aucun domaine monde terminé, productionV403 inchangée.
 
 - Cadrer une fois chaque boucle : résultat joueur, quelques invariants, fichiers concernés et critères de fin. Réutiliser les helpers et résultats existants. Pas de nouveau protocole de preuve pour chaque incident, portion ou checkpoint.

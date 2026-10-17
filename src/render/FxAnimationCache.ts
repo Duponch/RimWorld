@@ -4,13 +4,18 @@ import type { AnimationDetail, AnimationSampleHandle } from './AnimationDetail';
 import { sampleActorRoot, type ActorAnimationCache, type CachedActorPose } from './ActorAnimationCache';
 import type { PresentationClock } from './pawn-presentation';
 
-/** A batch owns this palette. Rows identify emitters, never particle draw slots
+// Pack logical emitter rows in 2D before they exceed the WebGL2-safe edge.
+// Capacity stays a power of two, so both row packing and height divide exactly.
+const PALETTE_MAX_HEIGHT=2048;
+
+/** A batch owns this palette. Logical rows identify emitters, never particle draw slots
  * or World objects. Only medium-detail publications upload changing values. */
 export class FxAnimationCache {
   private capacity=1;
   private values:Float32Array;
   private image:DataTexture;
   private readonly node;
+  private readonly emittersPerRow=uniform(1).setGroup(renderGroup);
   private readonly handles:(AnimationSampleHandle|undefined)[]=[];
   private readonly linkedPublications:(number|undefined)[]=[];
   private dirty=false;
@@ -20,13 +25,17 @@ export class FxAnimationCache {
     this.values=new Float32Array(cells*4);this.image=this.makeTexture();this.node=texture(this.image);
   }
   private makeTexture():DataTexture {
-    const result=new DataTexture(this.values,this.cells,this.capacity,RGBAFormat,FloatType);
+    const columns=this.emittersPerRow.value;
+    const result=new DataTexture(this.values,this.cells*columns,this.capacity/columns,RGBAFormat,FloatType);
     result.minFilter=result.magFilter=NearestFilter;result.generateMipmaps=false;
     result.colorSpace=NoColorSpace;result.needsUpdate=true;return result;
   }
   ensure(count:number):void {
     if(count<=this.capacity)return;
     this.capacity=2**Math.ceil(Math.log2(count));
+    // Only the physical layout changes: linear emitter/cell storage, handles,
+    // sampled values and the existing shader/texture node keep their identity.
+    this.emittersPerRow.value=Math.max(1,this.capacity/PALETTE_MAX_HEIGHT);
     const values=new Float32Array(this.capacity*this.cells*4);values.set(this.values);this.values=values;
     const old=this.image;this.image=this.makeTexture();this.node.value=this.image;old.dispose();
   }
@@ -67,7 +76,11 @@ export class FxAnimationCache {
     if(this.values[at+3]!==fw){this.values[at+3]=fw;this.dirty=true;}
   }
   get(row:number,cell:number,component=0):number{return this.values[(row*this.cells+cell)*4+component]!;}
-  cell(cell:number|Node<'int'>,row:Node<'uint'>=this.slot):Node<'vec4'> {const read=this.node.load(ivec2(cell,int(row)));read.updateMatrix=false;return read;}
+  cell(cell:number|Node<'int'>,row:Node<'uint'>=this.slot):Node<'vec4'> {
+    const columns=uint(this.emittersPerRow);
+    const x=int(row.mod(columns)).mul(this.cells).add(cell),y=int(row.div(columns));
+    const read=this.node.load(ivec2(x,y));read.updateMatrix=false;return read;
+  }
   choose<T extends 'float'|'vec2'|'vec3'|'vec4'>(original:()=>Node<T>,cached:()=>Node<T>,initial:Node<T>=vec3(0) as unknown as Node<T>,row:Node<'uint'>=this.slot):Node<T> {
     if(!this.detail)return original();
     // Retain one result in the caller's shader stack. Reusing a bare
