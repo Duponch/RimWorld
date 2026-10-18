@@ -1,5 +1,8 @@
 # Travail sur Elsewhere
 
+**V419 — schéma 263 :** [Fondations monde et Les Éclaircies](docs/gameplay/foundations-demo-v419.md). Socle fonctionnel pour une colonie/max1 qualifié par reprises : générateur, caravanes, camps/sites temporaires et conservation. Nouvelle démonstration créée par les menus, patrimoine préparé déclaré, usages partiels réels et recharge complète exacte1730. Catalogue67fiches, archives/Aulnes préservées ; publication en préparation. Performances et confort restent ouverts, prochaine priorité autonome. Aucune parité exhaustive annoncée.
+
+
 ## Consigne courante — 15 octobre 2026 au soir
 
 Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` autorisés explicitement. Une nouvelle pause humaine prime. Livrer plus de gameplay concret en réduisant fortement le cadrage et les campagnes de tests répétées ; qualité, règles et performances restent requises.

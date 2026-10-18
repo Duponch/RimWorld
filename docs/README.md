@@ -1,4 +1,7 @@
 # Documentation d’Elsewhere
+
+**V419 — schéma 263 :** [Fondations monde et Les Éclaircies](gameplay/foundations-demo-v419.md). Socle fonctionnel pour une colonie/max1 qualifié par reprises : générateur, caravanes, camps/sites temporaires et conservation. Nouvelle démonstration créée par les menus, patrimoine préparé déclaré, usages partiels réels et recharge complète exacte1730. Catalogue67fiches, archives/Aulnes préservées ; publication en préparation. Performances et confort restent ouverts, prochaine priorité autonome. Aucune parité exhaustive annoncée.
+
 **V418 — schéma 263, qualification ciblée acquise par reprises :** [Établissements étrangers et Sites mondiaux](gameplay/world-targets-v418.md). Entrée, retrait, reformation et retour des mêmes personnes/biens acquis jusqu’au dépôt15165 ; archives et présentation contrôlées. Non publié ; nouvelle démonstration et rapport des fondations restent à faire, aucun gain FPS annoncé.
 
 **V417 — schéma 262, qualification ciblée acquise par reprises :** [Choix de départ et écologie géographique](gameplay/geographic-continuation-v417.md). Six tailles normales, saison et date confirmées, température et faune prospectives ; 47cas/dixfichiers, vraie création325² en hiver et recharge complète exacte. Migration261 neutre sur deux cartes ; rouges et limites de confort conservés. Non publié, productionV403 inchangée ; établissements étrangers et sites de quête encore ouverts avant démonstration.

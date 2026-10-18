@@ -1,0 +1,3 @@
+import {defineConfig} from '@playwright/test';
+// Future ROOT-only real helper03 output. No server/factory/fixture is started.
+export default defineConfig({testDir:'./tests/integration',testMatch:'final-demonstration263-usages-native.spec.ts',fullyParallel:false,workers:1,retries:0,timeout:420_000,expect:{timeout:12_000},reporter:[['list']],outputDir:process.env.FINAL_DEMO263_USAGES_OUTPUT??'tmp/world-foundations/final-demonstration263/usages-native',use:{baseURL:process.env.FINAL_DEMO263_USAGES_BASE_URL??'http://127.0.0.1:5173',viewport:{width:1440,height:1000},channel:'chrome',headless:true,trace:'off',screenshot:'only-on-failure',launchOptions:{args:['--enable-unsafe-webgpu']}}});

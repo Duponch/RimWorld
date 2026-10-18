@@ -272,14 +272,15 @@ export async function perform(page: Page, decision: Decision, rotation: { value:
     await cell(page,c.x,c.z);
   } else if(c.type==='bill-add'||c.type==='bill-update'||c.type==='bill-move') {
     const w=await world(page),station=w.structures.find(s=>s.id===c.structureId)!;
+    const recipe=c.type==='bill-add'?(c.recipe??stationRecipes(station)[0]):undefined;
+    const requested=c.type==='bill-add'?page.locator(`[data-add-recipe="${recipe}"]`):page.locator(`[data-bill="${c.billId}"]`);
     await page.keyboard.press('Escape');await revealCells(page,[station]);
     // As for furniture installation, an overlapping pawn can be selected first.
     // Its inspector can cover the next click; pan before cycling the selection.
-    for(let i=0;i<=w.pawns.length;i++){await revealCells(page,[station]);await cell(page,station.x,station.z);if(await page.locator('#add-cooking-bill').isVisible())break;}
-    await expect(page.locator('#add-cooking-bill')).toBeVisible();
+    for(let i=0;i<=w.pawns.length;i++){await revealCells(page,[station]);await cell(page,station.x,station.z);if(await requested.isVisible())break;}
+    await expect(requested).toBeVisible();
     if(c.type==='bill-add'){
-      const first=stationRecipes(station)[0];
-      await page.locator(!c.recipe||c.recipe===first?'#add-cooking-bill':`#add-bill-${c.recipe}`).click();
+      await requested.click();
     }
     else if(c.type==='bill-update')await editBill(page,c.billId,c.settings);
     else {

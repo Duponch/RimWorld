@@ -2,6 +2,39 @@
   "version": 2,
   "saves": [
     {
+      "id": "eclaircies-v419",
+      "release": "v419",
+      "filename": "les-eclaircies.json",
+      "label": "Les Éclaircies · fondations 250×250",
+      "description": "Nouvelle forêt tempérée créée par les menus du générateur géographique, trois colons originaux. Habitat, cuisine, ateliers et stocks en quantités finies préparés explicitement ; semis, alimentation électrique, début de taille de pierre et port des trois tuques préparées réellement joués. Aucun repas, bloc de pierre ou chemise terminé. Une seule colonie, départs et cartes temporaires disponibles depuis Monde.",
+      "pawns": 3,
+      "colonists": 3,
+      "width": 250,
+      "height": 250,
+      "tick": 1730,
+      "prepared": true,
+      "sha256": "49e5d50abfac5a2ac0e609378877bb645da3e4559286cff706a33dc00f0df19f",
+      "provenance": "Une seule vraie création finale263, graine « Fondations263 · démonstration une colonie », couverture30 %, printemps, première tuile admissible0, forêt tempérée plate sans rivière ni côte ni route. Gaël7, Eden8 et Robin9 sont les originaux, les cinq réserves mondiales sont conservées. Capsules réellement ouvertes au35, recharge complète exacte748409f4… ; aucun nouveau tirage ni régénération des Aulnes. Habitat, cuisine, atelier, réserve, électricité et deux recherches supplémentaires (batteries et énergie solaire) sont un patrimoine préparé ; les recherches initiales du scénario restent conservées, avec des stocks préparés en quantités finies. Le défrichage des seules emprises est déclaré sans bois, récolte, XP ni histoire acquise ; le vrai terrain, les autres végétaux, personnes, biens et géographie sont préservés. Générateur/cuisinière initialement vides et batterie vide. Le tick1730 provient ensuite des usages ordinaires conservés dans la note V419, avec recharge complète exacte :19semis (14pommes de terre et5cotons),30bois réellement payés au générateur et énergie stockée en batterie,20bois payés à la cuisinière mais aucun brûlé, taille de pierre commencée. Les tuques37880/37881/37882 du patrimoine préparé sont maintenant portées par les mêmes trois originaux ; aucune confection de ces tuques n’est revendiquée. Aucun repas, bloc de pierre ni chemise n’est terminé ; les factures de6repas,3tailles de pierre et1chemise restent pendantes. Le bruit et les personnages provisoires sont des adaptations déclarées, pas une égalité de graines avec RimWorld.",
+      "focus": [
+        "nouveau générateur",
+        "forêt tempérée 250×250",
+        "une colonie",
+        "voyages et camps temporaires",
+        "cuisine et énergie",
+        "atelier de pierre",
+        "confection et tenue",
+        "premiers semis",
+        "sauvegarde complète"
+      ],
+      "steps": [
+        "Ouvrir Monde pour consulter la vraie planète et préparer un voyage ; une colonie au maximum est le réglage de référence. Les camps et rencontres ne sont pas de nouvelles colonies.",
+        "Inspecter les quatre pièces, les stocks préparés en quantités finies et les champs :19semis réels,14pommes de terre et5cotons. Bâtiments, recherches et défrichage initial sont préparés explicitement ; aucune campagne naturelle de construction n’est revendiquée.",
+        "Inspecter le générateur alimenté avec30bois et la batterie chargée, puis la cuisinière alimentée avec20bois mais sans combustible encore brûlé. Un ouvrage de pierre est commencé ; aucun repas, bloc ou chemise n’est terminé. Les factures6repas/3tailles de pierre/1chemise restent pendantes. Les trois tuques préparées37880/37881/37882 sont réellement portées par les trois originaux.",
+        "Reprendre la partie avec les trois originaux pour continuer les besoins, tâches et cultures. Aucun patient, blessure, animal domestique ou victoire n’a été ajouté pour décorer la scène.",
+        "Les Aulnes historiques restent une fiche distincte et conservent leur carte, leurs habitants, biens et archives."
+      ]
+    },
+    {
       "id": "aulnes-current",
       "release": "v394",
       "filename": "les-aulnes-integrees.json",

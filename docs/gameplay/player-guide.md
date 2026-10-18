@@ -1,5 +1,24 @@
 # Guide joueur
 
+## Choisir son terrain et voyager — V408 à V418
+
+Dans **Nouvelle partie**, choisissez le scénario et le narrateur, puis **Créer un monde → Générer**. Sur **Choisir un lieu de départ**, sélectionnez une vraie tuile terrestre et lisez son biome, son relief, son climat et ses eaux avant **Suivant → Confirmer**. Une rivière ou une côte doit figurer dans les caractéristiques du lieu ; une étendue d’eau locale ne suffit pas à en faire une rivière. Vérifiez aussi la taille et la saison. La référence de jeu reste **une colonie, maximum 1**. [Génération](world-generation-v408.md), [tailles et saisons](geographic-continuation-v417.md).
+
+Dans **Monde**, choisissez les personnes, animaux et biens réels, puis **Vérifier la formation** avant **Former la caravane**. Contrôlez masse, provisions, destination et avertissements : depuis une colonie, chargement et sortie sont physiques. Une quantité affichée n’est pas un objet déjà chargé. **Calculer l’itinéraire**, puis **Adopter cette route**, confirme un nouvel ordre ; le choix affiché sous « Nouvel ordre (non confirmé) » ne remplace pas l’intention déjà confirmée.
+
+À destination, utilisez **Entrer sur la carte** pour une carte existante ou **Former un camp temporaire** lorsque l’action est admissible. Depuis le camp ou un Site approprié, **Reformer une caravane** dans le registre ouvre le panneau, puis **Reformer la caravane** transfère immédiatement les originaux choisis si les conditions et l’accès le permettent. Choisissez bien les biens à emporter : les inventaires non retenus restent déposés sur place. Une menace peut interdire la réforme ; **Fuir par le bord** exige de vraies sorties. **S’installer** crée ou convertit une colonie seulement si la limite et les conditions sont respectées.
+
+Un camp ou Site retiré n’est pas une réserve à retrouver intacte : les biens laissés peuvent être perdus, sans retour automatique au foyer. Un marqueur mondial n’est pas la garantie d’une carte locale conservée. En revanche, votre foyer persiste même vide tant que vous ne confirmez pas **Abandonner**. **Afficher** change la vue sans déplacer les personnes. Les Sites de quête raccordés sont actuellement les **ItemStash** ; le catalogue complet de quêtes et la reproduction exhaustive des PNJ ne sont pas promis. [Camps](camp-reform-v415.md), [rencontres](caravan-encounters-v416.md), [établissements et Sites](world-targets-v418.md).
+
+## Les Éclaircies · fondations 250×250 — V419
+
+Dans **Charger une partie → Colonies de test**, choisissez **Les Éclaircies · fondations 250×250 → Charger cette colonie**. Les Aulnes et leurs archives restent disponibles séparément.
+
+Cette nouvelle partie vient d’une vraie création en forêt tempérée plate, au printemps : ni rivière ni côte ni route, mais une grande eau locale au nord-est. Ses quatre pièces, équipements, stocks en quantités finies, deux recherches supplémentaires et défrichage des seules emprises sont un **patrimoine préparé déclaré**, pas une construction ou une récolte gagnée en jouant.
+
+Au dernier état réel **1730**, le ravitaillement au contact et le paiement du bois ont eu lieu, le générateur fonctionne et la batterie contient de l’énergie. **19 plantes sont semées : 14 pommes de terre et 5 cotons.** Les trois tuques préparées sont réellement portées. Le travail de pierre est commencé ; repas, blocs et chemise restent **en cours, sans produit fini constaté**. Reprendre le temps poursuit les travaux et besoins ordinaires, sans garantie d’autonomie alimentaire. [État, provenance et limites](foundations-demo-v419.md).
+
+
 ## Copier ou renommer une tenue — V404
 
 Dans **Assignations → filtres de tenue**, sélectionnez une politique. Appliquez ou annulez d’abord tout brouillon de filtre. **Copier** demande un nom puis crée une politique indépendante à partir des critères confirmés ; affectez-la ensuite aux personnes voulues. **Renommer** conserve la politique et ses utilisateurs. **Annuler** avant confirmation ne change rien.
