@@ -27,7 +27,7 @@ const roomCaches=new WeakMap<World,RoomTopologyCache>();
 export function threatQueries(world:World,animalThreats?:readonly WildAnimal[]) {
   const queries=shootingQueries(world);
   const hostiles=(p:Pawn)=>{
-    const targets=hostileCandidates(world,p,animalThreats),threat=meleeThreatTarget(world,p,world.tick*10,queries.grid());
+    const targets=hostileCandidates(world,p,animalThreats),threat=meleeThreatTarget(world,p,world.tick*10,undefined,queries.grid);
     if(threat&&!targets.some(t=>t.id===threat.id))targets.push(threat);
     return targets;
   };

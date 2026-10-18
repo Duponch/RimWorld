@@ -1,4 +1,4 @@
-import { expect,test } from 'vitest';
+import { expect,test,vi } from 'vitest';
 import { startBerserk,startMurderousRage } from '../src/sim/mental-break.ts';
 import { finishMentalBreak } from '../src/sim/mental-state.ts';
 import { strikeLivingTarget } from '../src/sim/living-melee.ts';
@@ -25,6 +25,10 @@ import { visitorTradeFixture } from './scenarios/visitors.ts';
 import { enclosedRoom } from './scenarios/cleanliness.ts';
 import { woodFire } from './scenarios/fire.ts';
 import { makeCrisisPacifist,mentalCrisesCamp } from './helpers/mental-crises-v211.ts';
+import {createDeteriorationState} from '../src/sim/deterioration-content.ts';
+import { captureWorldShotGrid } from '../src/sim/combat-world.ts';
+import { fixtureBuilding } from './scenarios/deconstruction.ts';
+import { encounterCamp } from './scenarios/encounter.ts';
 
 const fist:MeleeTool={id:'left-fist',damage:8.2,penetration:.123,kind:'blunt',cooldownCore:120,weight:1};
 function attempt(outcome:'miss'|'dodge'='miss'){
@@ -94,6 +98,8 @@ test('retaliation respects voluntary violence, drafted and queued control, LOS, 
 test('actual direct trade, cleaning and extinguish jobs survive a personal threat without RNG or retaliation',()=>{
   for(const forced of ['trade','clean','fire'] as const){
     const fixture=forced==='trade'?visitorTradeFixture(2):undefined,w=fixture?.world??mentalCrisesCamp(2),attacker=w.pawns[0]!,victim=w.pawns[1]!;
+    // The old trade fixture positions its clock at the visitor opportunity; anchor its own calendar before this test baseline.
+    if(fixture)w.deterioration=createDeteriorationState(w.seed,w.tick);
     victim.x=attacker.x+1;victim.z=attacker.z;victim.hostilityResponse='attack';attacker.skills.melee.level=0;
     if(forced==='clean'){
       const room=enclosedRoom(w,{x:9,z:10});w.home=[...room.cells].sort((a,b)=>a-b);victim.priorities.clean=1;
@@ -140,4 +146,67 @@ test('a domestic animal real counterattack permits private human retaliation and
   const peer=deserializeWorld(serializeWorld(w));stepWorld(w);stepWorld(peer);expect(peer).toEqual(w);
   expect(p.melee?.strike?.targetId).toBe(animal.id);expect(p.melee?.order).toBeNull();expect(validateWorld(w)).toEqual([]);
   const before=JSON.stringify(w);expect(applyCommand(w,{type:'melee',pawnIds:[p.id],targetId:animal.id}).ok).toBe(false);expect(JSON.stringify(w)).toBe(before);
+});
+
+test('V421 personal-threat guards refuse before reading a grid and leave the World unchanged',()=>{
+ for(const guard of ['absent','expired','future','missing','self','dead','downed','sleeping','distant','carried'] as const){
+  const {w,attacker,victim,witness}=attempt(),core=w.tick*10;
+  if(guard==='absent')delete victim.meleeThreat;
+  if(guard==='expired')victim.meleeThreat!.atCore=core-401;
+  if(guard==='future')victim.meleeThreat!.atCore=core+1;
+  if(guard==='missing')victim.meleeThreat!.attackerId=w.nextId;
+  if(guard==='self')victim.meleeThreat!.attackerId=victim.id;
+  if(guard==='dead')attacker.state='dead';
+  if(guard==='downed')attacker.state='downed';
+  if(guard==='sleeping')attacker.state='sleeping';
+  if(guard==='distant')attacker.x=victim.x-4;
+  if(guard==='carried')witness.rescue={patientId:attacker.id,bedId:0,phase:'carry'};
+  const before=JSON.stringify(w),read=vi.fn(()=>captureWorldShotGrid(w));
+  expect(meleeThreatTarget(w,victim,core,undefined,read),guard).toBeUndefined();expect(read,guard).not.toHaveBeenCalled();
+  expect(meleeThreatTarget(w,victim,core),guard).toBeUndefined();expect(JSON.stringify(w),guard).toBe(before);
+ }
+});
+
+test('V421 real allied melee attempts keep the inclusive400-Core window and the same physical obstacle verdict',()=>{
+ for(const blocked of [false,true]){
+  const {w,attacker,victim}=attempt();attacker.x=victim.x-3;
+  if(blocked)fixtureBuilding(w,'wall',victim.x-1,victim.z);
+  expect(hostileTo(victim,attacker)).toBe(false);
+  const core=w.tick*10+400,explicit=captureWorldShotGrid(w),before=JSON.stringify(w),read=vi.fn(()=>captureWorldShotGrid(w));
+  const original=meleeThreatTarget(w,victim,core,explicit);
+  expect(original).toBe(blocked?undefined:attacker);
+  expect(meleeThreatTarget(w,victim,core,undefined,read)).toBe(original);expect(read).toHaveBeenCalledTimes(1);
+  expect(meleeThreatTarget(w,victim,core)).toBe(original);expect(JSON.stringify(w)).toBe(before);
+ }
+});
+
+test('V421 an explicit fourth-argument grid retains priority and a required reader exception commits nothing',()=>{
+ const {w,attacker,victim}=attempt(),core=w.tick*10,grid=captureWorldShotGrid(w),before=JSON.stringify(w);
+ const read=vi.fn(()=>{throw Error('actual grid reader failure');});
+ expect(meleeThreatTarget(w,victim,core,grid,read)).toBe(attacker);expect(read).not.toHaveBeenCalled();
+ expect(meleeThreatTarget(w,victim,core,grid)).toBe(attacker);expect(JSON.stringify(w)).toBe(before);
+ expect(()=>meleeThreatTarget(w,victim,core,undefined,read)).toThrow('actual grid reader failure');
+ expect(read).toHaveBeenCalledTimes(1);expect(JSON.stringify(w)).toBe(before);
+ const invalid=vi.fn(()=>undefined as never);
+ expect(()=>meleeThreatTarget(w,victim,core,undefined,invalid)).toThrow(TypeError);
+ expect(invalid).toHaveBeenCalledTimes(1);expect(JSON.stringify(w)).toBe(before);
+});
+
+test('V421 genuine nearby queries skip a quiet grid but still read it for an existing visible faction enemy',()=>{
+ const quiet=mentalCrisesCamp(),civilian=quiet.pawns[0]!;delete civilian.hostilityResponse;
+ expect(quiet.pawns.every(p=>p.meleeThreat===undefined)).toBe(true);
+ const quietBefore=JSON.stringify(quiet),quietContext=threatQueries(quiet),quietGrid=vi.spyOn(quietContext.queries,'grid');
+ try{
+  considerFlee(quiet,civilian,quietContext);expect(quietContext.hostiles(civilian)).toEqual([]);expect(quietContext.nearby(civilian)).toEqual([]);
+  expect(quietGrid).not.toHaveBeenCalled();expect(JSON.stringify(quiet)).toBe(quietBefore);
+ }finally{quietGrid.mockRestore();}
+ // The existing declared encounter supplies the outlaw. Only the civilian's
+ // initial unit-fixture position changes; no owner is removed or made hostile.
+ const w=encounterCamp(),p=w.pawns[1]!,enemy=w.pawns[3]!;p.x=enemy.x-4;p.z=enemy.z;
+ expect(p.meleeThreat).toBeUndefined();expect(hostileTo(p,enemy)).toBe(true);
+ const before=JSON.stringify(w),context=threatQueries(w),grid=vi.spyOn(context.queries,'grid');
+ try{
+  expect(context.hostiles(p)).toEqual([enemy]);expect(grid).not.toHaveBeenCalled();
+  expect(context.nearby(p)).toEqual([enemy]);expect(grid).toHaveBeenCalledTimes(1);expect(JSON.stringify(w)).toBe(before);
+ }finally{grid.mockRestore();}
 });

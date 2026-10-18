@@ -9,6 +9,7 @@ import {planetFactionTargets256} from '../src/sim/planet-faction-targets-256.ts'
 import {canPlaceWorldSettlement} from '../src/sim/world-settlement-placement.ts';
 import {createWildFloraState256,advanceWildFlora256,validWildFloraState256,validateWildFlora256,plantRegrowthMtb256,rebaseWildFloraClock256} from '../src/sim/wild-plant-runtime-256.ts';
 import {createWildPlantMapReader256} from '../src/sim/wild-plant-runtime-map-256.ts';
+import {actualPlantPhysicalMasks256} from '../src/sim/actual-plant-physical-masks-256.ts';
 import {PlantRegionCache256} from '../src/sim/wild-plant-spawner-256.ts';
 import {healthRandom} from '../src/sim/health.ts';
 import type {World} from '../src/sim/types.ts';
@@ -77,4 +78,34 @@ describe('Site3 actual-tick wild renewal256',()=>{
   expect(cache.read(24,12,types,base)).toBe(a);base[0]=.5;const b=cache.read(24,12,types,base);expect(b).not.toBe(a);expect(b.regions[0]!.baseDesired).toBe(143.5);
   types[11]=0;expect(cache.read(24,12,types,base)).not.toBe(b);
  });
+});
+
+it('V421 refuses every malformed physical-mask tail before committing an actual renewal attempt',()=>{
+ const {w}=prepare();if(w.flora?.revision!==2)throw Error('Missing actual unit renewal state');
+ w.rng=firstAttemptSeed(w.flora.desired/w.flora.fertile);w.tick++;
+ const before=signature(w),tiles=structuredClone(w.tiles),tail=w.width*w.height-1;
+ for(const key of ['normalWalkable','door','fence','fullFill','coverOrEdifice','blocksPlanting'] as const){
+  let captures=0;
+  const reader=createWildPlantMapReader256(world=>{
+   captures++;const masks=actualPlantPhysicalMasks256(world);(masks[key] as Uint8Array)[tail]=2;return masks;
+  },()=>1);
+  expect(()=>reader.capture(w)).toThrow('Invalid physical plant classification');
+  expect(()=>advanceWildFlora256(w,reader)).toThrow('Invalid physical plant classification');expect(captures).toBe(2);
+  expect(signature(w)).toEqual(before);expect(w.tiles).toEqual(tiles);
+ }
+});
+
+it('V421 retains a malformed substrate tail refusal before the physical-mask refusal without changing World',()=>{
+ const {w}=prepare();if(w.flora?.revision!==2)throw Error('Missing actual unit renewal state');
+ w.rng=firstAttemptSeed(w.flora.desired/w.flora.fertile);w.tick++;
+ const tail=w.width*w.height-1;w.tiles[tail]={terrain:'soil-natural',stone:1 as never};
+ const before=signature(w),tiles=structuredClone(w.tiles);
+ const reader=createWildPlantMapReader256(world=>{
+  // A declared malformed unit mask at the same final cell must not hide the
+  // original naturalPlantSubstrate/DTO failure that occurs first.
+  const n=world.width*world.height,normal=new Uint8Array(n).fill(1);normal[tail]=2;
+  return {normalWalkable:normal,door:new Uint8Array(n),fence:new Uint8Array(n),fullFill:new Uint8Array(n),coverOrEdifice:new Uint8Array(n),blocksPlanting:new Uint8Array(n),sandDepth:new Float32Array(n)};
+ },()=>1);
+ expect(()=>reader.capture(w)).toThrow(TypeError);expect(()=>advanceWildFlora256(w,reader)).toThrow(TypeError);
+ expect(signature(w)).toEqual(before);expect(w.tiles).toEqual(tiles);
 });

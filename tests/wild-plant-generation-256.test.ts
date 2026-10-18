@@ -1,5 +1,6 @@
 import {describe,it,expect} from 'vitest';
-import {generateInitialWildPlants256,type InitialWildPlantsInput256} from '../src/sim/wild-plant-generation-256.ts';
+import {generateInitialWildPlants256,validatePlantMap256,type InitialWildPlantsInput256} from '../src/sim/wild-plant-generation-256.ts';
+import {WILD_PLANT_GENERATION_FACTS_256} from '../src/sim/wild-plant-generation-data-256.ts';
 import {createPlantGenerationRegions256,plantRegionsNear256,touchablePlantRegions256} from '../src/sim/wild-plant-regions-256.ts';
 import {plantCellOrder256,chooseInitialPlant256} from '../src/sim/wild-plant-generation-math-256.ts';
 import {WorldGenerationRandom} from '../src/sim/world-generation-random.ts';
@@ -54,4 +55,48 @@ describe('initial real-map wild plants256',()=>{
   expect(tree.plantLife.initialAgeCore).toBe(12347);expect(effectivePlantAgeCore256(tree.plantLife)).toBe(initial);expect(validInitialPlantAge256(tree,256)).toBe(true);expect(validInitialPlantAge256(tree,255)).toBe(false);
   const malformed={...tree,plantLife:{...tree.plantLife,initialAgeCore:undefined}};expect(validInitialPlantAge256(malformed,255)).toBe(false);expect(validInitialPlantAge256(malformed,256)).toBe(false);
  });
+});
+
+it('V421 rejects malformed numeric, strict-bit and tag tails before definitions or generation, without changing input',()=>{
+ type NumericGrid='fertility'|'snowDepth'|'sandDepth'|'naturalRoof'|'water'|'baseWater'|'walkableNoDoor'|'occupied'|'blocksPlanting';
+ const cases:readonly (readonly [NumericGrid,unknown])[]=[['fertility',NaN],['snowDepth',-1],['sandDepth',Infinity],
+  ['naturalRoof',2],['water',false],['baseWater',undefined],['walkableNoDoor',true],['occupied','0'],['blocksPlanting',null]];
+ for(const [field,bad] of cases){
+  const ordinary=input(),grid:unknown[]=Array.from(ordinary[field]);grid[grid.length-1]=bad;let definitions=0;
+  const value=input({[field]:grid,hasDefinition:()=>{definitions++;return true;}} as unknown as Partial<InitialWildPlantsInput256>);
+  const {hasDefinition,...data}=value,before=structuredClone(data);
+  expect(()=>validatePlantMap256(value)).toThrow('Invalid initial plant cell');
+  expect(()=>run(value)).toThrow('Invalid initial plant cell');
+  expect(definitions).toBe(0);expect(data).toEqual(before);
+ }
+ for(const bad of [undefined,'Soil',['Soil',7],['',false]]){
+  const tags:unknown[]=Array.from({length:576},()=>[]);tags[575]=bad;let definitions=0;
+  const value=input({terrainTags:tags as InitialWildPlantsInput256['terrainTags'],hasDefinition:()=>{definitions++;return true;}});
+  const {hasDefinition,...data}=value,before=structuredClone(data);
+  expect(()=>run(value)).toThrow('Invalid initial plant cell');expect(definitions).toBe(0);expect(data).toEqual(before);
+ }
+});
+
+it('V421 preserves eager tail read groups, tag rereads, empty strings and sparse tag semantics',()=>{
+ for(const refusal of ['number','bit','none'] as const){
+  const ordinary=input(),tail=575,reads:string[]=[];
+  const grid=(name:string,values:ArrayLike<number>,last:number)=>{
+   const copy=Array.from(values);Object.defineProperty(copy,tail,{enumerable:true,configurable:true,get(){reads.push(name);return last;}});return copy;
+  };
+  const ids=[...ordinary.terrainDefIds];Object.defineProperty(ids,tail,{enumerable:true,get(){reads.push('def');return 'Soil';}});
+  const tags=[...ordinary.terrainTags];Object.defineProperty(tags,tail,{enumerable:true,get(){reads.push('tags');return [''];}});
+  const value=input({fertility:grid('fertility',ordinary.fertility,refusal==='number'?NaN:1),snowDepth:grid('snow',ordinary.snowDepth,0),sandDepth:grid('sand',ordinary.sandDepth,0),
+   naturalRoof:grid('roof',ordinary.naturalRoof,refusal==='bit'?2:0),water:grid('water',ordinary.water,0),baseWater:grid('baseWater',ordinary.baseWater,0),
+   walkableNoDoor:grid('walkable',ordinary.walkableNoDoor,1),occupied:grid('occupied',ordinary.occupied,0),blocksPlanting:grid('blocks',ordinary.blocksPlanting,0),terrainDefIds:ids,terrainTags:tags});
+  if(refusal==='none')expect(validatePlantMap256(value)).toEqual(Object.keys(WILD_PLANT_GENERATION_FACTS_256));
+  else expect(()=>validatePlantMap256(value)).toThrow('Invalid initial plant cell');
+  const expected=['fertility','snow','sand'];
+  if(refusal!=='number')expected.push('roof','water','baseWater','walkable','occupied','blocks');
+  if(refusal==='none')expected.push('def','tags','tags');
+  expect(reads).toEqual(expected);
+ }
+ // Array.every has always skipped absent tag slots. Keep its literal public
+ // semantics rather than introducing a stricter tag census for this change.
+ const tags=Array.from({length:576},()=>new Array<string>(2)),value=input({terrainTags:tags});
+ expect(run(value)).toEqual(run(input()));expect(tags.every(row=>row.length===2&&!Object.hasOwn(row,0)&&!Object.hasOwn(row,1))).toBe(true);
 });

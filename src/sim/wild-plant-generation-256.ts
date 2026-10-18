@@ -6,6 +6,9 @@ import {createWildPlantSpawner256} from './wild-plant-spawner-256.ts';
 import {clampPlant256,plantCellOrder256} from './wild-plant-generation-math-256.ts';
 
 const f=Math.fround;
+const finiteNonnegative=(value:unknown):boolean=>typeof value==='number'&&Number.isFinite(value)&&value>=0;
+const binaryClassification=(value:unknown):boolean=>value===0||value===1;
+const stringTag=(value:unknown):boolean=>typeof value==='string';
 export const INITIAL_PLANTS_SEED_PART_256=578415222;
 type Fact=typeof FACTS[Def];
 export interface ExistingGenerationPlant256 {readonly cell:number;readonly defId:string;readonly nonStump:boolean}
@@ -43,9 +46,13 @@ export function validatePlantMap256(input:WildPlantMapInput256):readonly Def[] {
  const arrays=[input.fertility,input.naturalRoof,input.water,input.baseWater,input.terrainDefIds,input.terrainTags,input.regionTypes,input.walkableNoDoor,input.occupied,input.blocksPlanting,input.snowDepth,input.sandDepth];
  if(arrays.some(a=>a.length!==n))throw Error('Plant generation grids differ from the real map');
  for(let c=0;c<n;c++){
-  if(![input.fertility[c],input.snowDepth[c],input.sandDepth[c]].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0)||
-   ![input.naturalRoof[c],input.water[c],input.baseWater[c],input.walkableNoDoor[c],input.occupied[c],input.blocksPlanting[c]].every(v=>v===0||v===1)||
-   typeof input.terrainDefIds[c]!=='string'||!Array.isArray(input.terrainTags[c])||!input.terrainTags[c]!.every(t=>typeof t==='string'))throw Error('Invalid initial plant cell');
+  // Each old Array literal read its whole group before .every could refuse.
+  // Retain that order and the boundary between the numeric and binary groups.
+  const fertility=input.fertility[c],snow=input.snowDepth[c],sand=input.sandDepth[c];
+  if(!finiteNonnegative(fertility)||!finiteNonnegative(snow)||!finiteNonnegative(sand))throw Error('Invalid initial plant cell');
+  const roof=input.naturalRoof[c],water=input.water[c],baseWater=input.baseWater[c],walkable=input.walkableNoDoor[c],occupied=input.occupied[c],blocks=input.blocksPlanting[c];
+  if(!binaryClassification(roof)||!binaryClassification(water)||!binaryClassification(baseWater)||!binaryClassification(walkable)||!binaryClassification(occupied)||!binaryClassification(blocks)
+   ||typeof input.terrainDefIds[c]!=='string'||!Array.isArray(input.terrainTags[c])||!input.terrainTags[c]!.every(stringTag))throw Error('Invalid initial plant cell');
  }
  const order=input.definitionOrder??Object.keys(FACTS) as Def[];
  if(order.length!==Object.keys(FACTS).length||new Set(order).size!==order.length||order.some(d=>!Object.hasOwn(FACTS,d)))throw Error('Incomplete initial plant definition order');

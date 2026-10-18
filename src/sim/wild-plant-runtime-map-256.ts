@@ -21,6 +21,7 @@ export interface PlantPhysicalMasks256 {
  readonly coverOrEdifice:ArrayLike<number>;readonly blocksPlanting:ArrayLike<number>;readonly sandDepth:ArrayLike<number>;
 }
 const ranges=new WeakMap<object,Readonly<{min:number;max:number}>>();
+const binaryClassificationAt=(grid:ArrayLike<number>,cell:number):boolean=>grid[cell]===0||grid[cell]===1;
 /** Pure captured grids from a real World; no terrain generation, World clone,
  * PRNG, cell reweighting or climate substitution. Used only at generation or
  * an actual sparse runtime attempt, never per frame. */
@@ -36,7 +37,12 @@ export function createWildPlantMapReader256(physical:(world:World)=>PlantPhysica
   for(let c=0;c<n;c++){
    const actual=world.tiles[c];if(!actual)throw Error('Actual plant terrain is absent');
    const substrate=naturalPlantSubstrate256(actual),roof=roofKindAt(world,c);
-   for(const grid of [masks.normalWalkable,masks.door,masks.fence,masks.fullFill,masks.coverOrEdifice,masks.blocksPlanting])if(grid[c]!==0&&grid[c]!==1)throw Error('Invalid physical plant classification');
+   // Preserve the original six reference reads before testing any cell, and
+   // the conditional second read of each nonzero classification, without a
+   // temporary six-element Array for every cell.
+   const normal=masks.normalWalkable,door=masks.door,fence=masks.fence,full=masks.fullFill,cover=masks.coverOrEdifice,blocks=masks.blocksPlanting;
+   if(!binaryClassificationAt(normal,c)||!binaryClassificationAt(door,c)||!binaryClassificationAt(fence,c)
+    ||!binaryClassificationAt(full,c)||!binaryClassificationAt(cover,c)||!binaryClassificationAt(blocks,c))throw Error('Invalid physical plant classification');
    fertility[c]=substrate.fertility;naturalRoof[c]=roof==='natural-thin'||roof==='natural-thick'?1:0;
    baseWater[c]=terrainIsWater256(actual.terrain)?1:0;water[c]=!actual.bridge&&!actual.floor?baseWater[c]!:0;
    terrainDefIds.push(substrate.terrainDefId);terrainTags.push(substrate.tags);snowDepth[c]=actual.snowDepth??0;

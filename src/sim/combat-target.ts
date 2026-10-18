@@ -43,9 +43,9 @@ export const retaliationPermission=(p:Pawn):boolean=>isColonist(p)&&!p.prisoner&
   &&!p.orbitalTrade&&!p.trade&&!p.cleaning?.forced&&!p.firefighting?.forced;
 /** A real attempt establishes this short-lived threat even between allies.
  * It is distinct from faction hostility and cannot turn Flee/Ignore into Attack. */
-export function meleeThreatTarget(w:World,p:Pawn|Mechanoid,core=w.tick*10,grid?:ShotGrid):LivingTarget|undefined {
+export function meleeThreatTarget(w:World,p:Pawn|Mechanoid,core=w.tick*10,grid?:ShotGrid,readGrid?:()=>ShotGrid):LivingTarget|undefined {
   const threat=p.meleeThreat;if(!threat||core<threat.atCore||core-threat.atCore>400)return;
   const attacker=combatTarget(w,threat.attackerId);
   if(!attacker||attacker===p||['dead','downed','sleeping'].includes(attacker.state)||distanceSquared(p,attacker)>9||isPawnTarget(attacker)&&carrierOf(w,attacker.id))return;
-  return clearShotSegment(grid??captureWorldShotGrid(w),p,attacker)?attacker:undefined;
+  return clearShotSegment(grid??(readGrid?readGrid():captureWorldShotGrid(w)),p,attacker)?attacker:undefined;
 }

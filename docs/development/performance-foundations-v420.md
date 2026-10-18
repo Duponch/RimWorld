@@ -71,9 +71,26 @@ Les cinq paires ont une moyenne plus faible après correction. Les petits échan
 
 Le natif GPU et ses recharges ont été acquis avant cette extension ; les sept cas et la paire réelle Encoder/Decoder couvrent les frontières modifiées ensuite. Présentation V418, archives publiques et démonstration V419 sont réutilisées : aucune horloge, interpolation, phase de travail, format ou donnée publique modifiée. Les anciens six rouges et les essais d'infrastructure restent conservés. Pas de nouvelle campagne, corpus inchangé ou banc FPS automatique.
 
+## Effet dans Chrome après publication
+
+Comparaison ROOT compilée PASS308,586s : référence avant extension sparse puis produit courant, mêmes entrées, réglages, caméra et observateur CPU, tracker GPU désactivé. Deux projets successifs réemploient le pilote419 intact, chacun avec quatre fenêtres de5s. Les1739sources, deux entrées et huit fichiers compilés restent exacts après le parcours ; le seul changement SRC entre builds est `deterioration-save.ts`. Worker et CSS identiques, exports complets et erreurs vides. Les contextes A sont égaux ; les caméras B diffèrent de moins de0,00002unité après les mêmes gestes UI.
+
+| Fenêtre ×1 | Référence | Produit courant |
+| --- | ---: | ---: |
+| Aulnes, Decoder moyen / p95 | 32,917 / 38,7ms | 27,983 / 34,1ms |
+| Aulnes, adoptions / ticks observés | 30 / 30 | 30 / 30 |
+| Aulnes, RAF/s / intervalle p99 | 117,90 / 54,2ms | 118,80 / 45,9ms |
+| Départ3colons, Decoder moyen / p95 | 23,697 / 27,7ms | 30,662 / 44,8ms |
+| Départ3colons, adoptions / ticks observés | 30 / 30 | 29 / 29 |
+| Départ3colons, RAF/s / intervalle p99 | 92,05 / 41,7ms | 57,99 / 87,5ms |
+
+Le résultat est mitigé : adoption plus courte sur A, fenêtre B dégradée. B possède162structures et ne bénéficie pas du chemin sparse attendu au-delà de1000 ; le walker complet reste le même, avec un petit contrôle local supplémentaire dont le coût n'est pas isolé. Son coût de pas Worker déclaré augmente aussi39,05→65,70ms malgré le même binaire Worker ; cela ne démontre ni une cause système ni une régression causée par le correctif MAIN. Ordre fixe référence/puis courant, JIT/GC, charge extérieure et frontières de pause non contrôlés ; aucun gain général ou confort validé. Les quatre fenêtres ×1 demandé gardent `speedTargetReached=false` ; ce ne sont pas des preuves de maintien du débit cible. Les états B finissent au même73 avec SHA identique ; A finit10771/10770 après ses pauses respectives, sans prétendre deux continuations finales identiques. Aucun rejeu favorable. Revue indépendante statique cohérente avec ces limites.
+
+Les pauses restent environ240/239RAF/s sur A et223/233 sur B dans ces seules fenêtres headless. Ces chiffres ne promettent aucun débit sur le poste du joueur. Réception, adoption différée et CPU image peuvent se recouvrir ; les moyennes de pas Worker sont échantillonnées par publication et excluent encodage, envoi et autres travaux Worker. Cette attribution et sa première correction ciblée sont maintenant consignées dans [V421](worker-idle-costs-v421.md), avec leur résultat navigateur également mixte. Reçu `tmp/world-foundations/demonstration-v419/cpu421-pair-acquired01.json`, gel `cpu421-pair-freeze01.json`, sorties privées `c420p01`.
+
 ## Ce qui reste ouvert
 
-Mesurer l'effet du correctif dans le navigateur, puis attribuer les coûts résiduels : validation/adoption MAIN de la partie neuve, préparation des ressources/HUD, simulation/Worker, encodage/transit et CPU de soumission du rendu. Le relevé GPU actuel ne couvre pas les autres vues, résolutions ou le poste exact du joueur. Les temps de création/import et l'action Reform restent des sujets de confort distincts. Aucun contenu secondaire repris pour cette consolidation.
+Attribuer les coûts résiduels : validation/adoption MAIN de la partie neuve, préparation des ressources/HUD, simulation/Worker, encodage/transit et CPU de soumission du rendu. Le relevé GPU actuel ne couvre pas les autres vues, résolutions ou le poste exact du joueur. Les temps de création/import et l'action Reform restent des sujets de confort distincts. Aucun contenu secondaire repris pour cette consolidation.
 
 Preuves locales : `tmp/world-foundations/demonstration-v419/performance-baseline01.json`, `main-profile-acquired01.json`, `main-profile-analysis01.json`, `legacy-baseline-comparison01.json`, `gpu-acquired02.json`, `sparse-adoption01.json`, `sparse-owner-bench02-report.json`, `sparse-owner-bench02-summary.json` et leurs gels de sources/entrées. Sorties privées `p419n01`, `p419p01`, `p420n01`, `g420n02`. Aucun gain FPS acquis à ce stade.
 
