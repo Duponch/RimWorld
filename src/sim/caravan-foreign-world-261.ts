@@ -19,7 +19,7 @@ export type ForeignWorldPlan261={ok:true;nextRng:number;current():boolean;commit
  * the whole transaction has validated. Their finite stocks follow their holders. */
 export function prepareEncounterForeignWorld261(root:CampaignState,record:EncounterGroup261,initialRng=root.rng):ForeignWorldPlan261 {
  const pending=record.pending261,state=root.worldPawns,factions=root.worldFactions,context=worldGroupContext(root,record.state.id),group=record.state;
- if((Number(root.schemaVersion)!==261&&root.schemaVersion!==262)||!pending||pending.animalAmbush261||!state||!factions||!context||!('members'in group)||state.atCore!==root.tick*10||!nativeWorldPawnOrderCurrent256(state,state.nativeOrder))return {ok:false,reason:'Les destinataires mondiaux de la rencontre sont indisponibles.'};
+ if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&Number(root.schemaVersion)!==263))||!pending||pending.animalAmbush261||!state||!factions||!context||!('members'in group)||state.atCore!==root.tick*10||!nativeWorldPawnOrderCurrent256(state,state.nativeOrder))return {ok:false,reason:'Les destinataires mondiaux de la rencontre sont indisponibles.'};
  const tick=root.tick,rng=root.rng,before=JSON.stringify(pending),membership=state.owners.slice(),nativeBefore=state.nativeOrder;
  const staged:WorldPawnsState256={...state,owners:state.owners.slice()},random={rng:initialRng};
  const conditions:WorldPawnFactionCondition256[]=[];

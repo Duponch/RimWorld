@@ -16,7 +16,7 @@ import type {World,Pawn} from './types.ts';
 /** Prospective native Lord/Trigger data, never inferred from an old assault. */
 export interface KidnapLord261 {revision:1;pawnCycleIndex:number;lastPawnHarmCore:number;phase:'assault'|'cover'|'take';enteredAtCore:number;kidnapDutyIds:number[];exitJobs:{pawnId:number;untilCore:number}[]}
 export const bornKidnapLord261=(atCore:number):KidnapLord261=>({revision:1,pawnCycleIndex:0,lastPawnHarmCore:-99999,phase:'assault',enteredAtCore:atCore,kidnapDutyIds:[],exitJobs:[]});
-const source=(w:World,p:Pawn)=>(Number(w.schemaVersion)===261||w.schemaVersion===262)?raidKidnapSource261(raidGroup261(w,p.raid?.group)):undefined;
+const source=(w:World,p:Pawn)=>(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||Number(w.schemaVersion)===263))?raidKidnapSource261(raidGroup261(w,p.raid?.group)):undefined;
 const caches=new WeakMap<World,RoomTopologyCache>();
 /** Current room topology substitutes for Core's nine-region traversal inside
  * one room. Radius is strict12 and sleeping humans remain dangerous. This is
@@ -57,7 +57,7 @@ function duties(w:World,l:KidnapLord261,members:Pawn[],all:boolean):void {
  * at scale10;1200 transition is relative to actual entry, not raid birth. */
 export function advanceKidnapLord261(w:World):void {for(const a of raidGroups261(w))advanceLord(w,a);}
 function advanceLord(w:World,a:RaidGroup):void {
- const s=(Number(w.schemaVersion)===261||w.schemaVersion===262)?raidKidnapSource261(a):undefined,l=s?.kidnapLord261;if(!s||!l||a.phase!=='assault')return;
+ const s=(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||Number(w.schemaVersion)===263))?raidKidnapSource261(a):undefined,l=s?.kidnapLord261;if(!s||!l||a.phase!=='assault')return;
  // The trigger indexes the ordered owned roster before testing Downed.
  // Duty assignments retain their separate collection of mobile members.
  const core=w.tick*10,roster=a.members.flatMap(id=>{const p=w.pawns.find(p=>p.id===id&&p.raid?.group===a.id&&!p.prisoner&&p.state!=='dead');return p?[p]:[];}),members=roster.filter(p=>p.state!=='downed');

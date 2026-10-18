@@ -37,7 +37,16 @@ export function selectManhunterKind261(points:number,temperature:{season:number;
  * WorldPawn reuse/random/name parity). Unsupported history is visible/repeatable;
  * it is never retried with a healthy replacement or another species. */
 export function draftManhunterRoster261(root:CampaignState,tile:number,basePoints:number,initialRng:number,canFireChecked=false):{animals:WildAnimal[];nextId:number;rng:number}|undefined {
- const points=f(basePoints*.75),stream=stagedCampArrivalRandom256(initialRng),random={value:stream.value,integer:stream.integer,float:(min:number,max:number)=>max<=min?f(min):f(f(stream.value()*f(f(max)-f(min)))+f(min))};
+ return draftManhunterAnimalsAtPoints261(root,tile,f(basePoints*.75),initialRng,canFireChecked);
+}
+/** Site GenStep/SignalAction supplies its actual budget without the distinct
+ * caravan-incident factor0.75. Same provisional animal producer and draws. */
+export function draftSiteManhunterRoster263(root:CampaignState,tile:number,points:number,initialRng:number):{animals:WildAnimal[];nextId:number;rng:number}|undefined {
+ if(Number(root.schemaVersion)!==263||!Number.isFinite(points)||points<0||points>10000)return;
+ return draftManhunterAnimalsAtPoints261(root,tile,f(points),initialRng,true);
+}
+function draftManhunterAnimalsAtPoints261(root:CampaignState,tile:number,points:number,initialRng:number,canFireChecked:boolean):{animals:WildAnimal[];nextId:number;rng:number}|undefined {
+ const stream=stagedCampArrivalRandom256(initialRng),random={value:stream.value,integer:stream.integer,float:(min:number,max:number)=>max<=min?f(min):f(f(stream.value()*f(f(max)-f(min)))+f(min))};
  if(!canFireChecked&&!selectManhunterKind261(points,undefined,random.value))return;
  const temperature=manhunterTileTemperatures261(root,tile);if(!temperature)throw Error('Missing actual Manhunter tile climate');
  const kind=selectManhunterKind261(points,temperature,random.value)??selectManhunterKind261(points,undefined,random.value);if(!kind)return;

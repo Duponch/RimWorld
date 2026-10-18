@@ -1,4 +1,5 @@
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
+import {targetBuildingPlayerUse263} from './world-target-building-263.ts';
 import { allowedAreaAllows,allowedAreaReason,captureAllowedArea } from './allowed-area-state.ts';
 import { deconstructionReserved } from './deconstruction-rules.ts';
 import { haulReservations } from './haul-reservations.ts';
@@ -14,7 +15,7 @@ import type { HaulProposal } from './player-hauling.ts';
 import type { Pawn,Structure,World } from './types.ts';
 
 export const TURRET_RELOAD_WORK_TICKS=24;
-export const reloadableTurret=(w:World,id:number):Structure|undefined=>w.structures.find(s=>s.id===id&&s.kind==='mini-turret'&&s.turret);
+export const reloadableTurret=(w:World,id:number):Structure|undefined=>w.structures.find(s=>s.id===id&&s.kind==='mini-turret'&&s.turret&&targetBuildingPlayerUse263(w,s));
 /** The sole civil provider currently permitted while mobilized. */
 export function draftTurretService(w:World,p:Pawn):boolean {
   return w.schemaVersion>=193&&(p.haul?.destination.type==='turret'

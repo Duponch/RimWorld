@@ -54,7 +54,7 @@ export function mechanoidView(world:World,actor:Mechanoid) {
   const ranged=mechanoidRangedView(world,actor);
   const target=targetId==null?ranged?.orderTarget??ranged?.target??null:mechanoidTargetView(world,targetId);
   const group=mechRaidGroup261(world,actor.raid?.group);
-  const action=actor.state==='dead'?'Neutralisé':actor.state==='downed'?'Incapacité mécanique':sleepingTempleMech256(actor)?'Mécanoïde dormant du temple':empMechanoidActive(actor,world.tick*10)?'Neutralisé temporairement par EMP':actor.stun?'Immobilisé':
+  const action=actor.state==='dead'?'Neutralisé':actor.state==='downed'?'Incapacité mécanique':sleepingTempleMech256(actor)?actor.site263?'Mécanoïde dormant du site':'Mécanoïde dormant du temple':actor.site263&&world.tick*10<actor.site263.releaseAtCore?'Attend avant son assaut':empMechanoidActive(actor,world.tick*10)?'Neutralisé temporairement par EMP':actor.stun?'Immobilisé':
     actor.melee?.strike?'Récupère après son coup':actor.melee?.order?actor.state==='working'?'Frappe au contact':'Approche sa cible':
     ranged?.phase==='warmup'?'Prépare son tir':ranged?.phase==='cooldown'?'Récupère après son essai de tir':
     actor.state==='moving'?group?.phase==='staging'?'Rejoint le point de regroupement':'Avance vers la colonie':group?.phase==='staging'?'Se regroupe avant l’assaut':'Cherche une cible';

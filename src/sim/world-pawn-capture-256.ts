@@ -14,7 +14,7 @@ export function captureWorldPawnOwners256(input:WorldPawnCampaign256){
  * their real containers and are not copied into this registry. */
 export type ActualWorldPawnSituation256='Dead'|'StartingPawnLeftBehind'|'FactionLeader'|'Kidnapped'|'CaravanMember'|'ReservedByQuest'|'Borrowed'|'InTravelingTransportPod'|'ForSaleBySettlement'|'Teleporting'|'Free';
 export function worldPawnSituation256(row:WorldPawnOwner256,version=256):'Dead'|'StartingPawnLeftBehind'|'Kidnapped'|'Free'|undefined {
- return terminalWorldPawn256(row)?'Dead':row.startingPawnLeftBehind?'StartingPawnLeftBehind':(version===261||version===262)&&row.captivity261?'Kidnapped':row.free===true?'Free':undefined;
+ return terminalWorldPawn256(row)?'Dead':row.startingPawnLeftBehind?'StartingPawnLeftBehind':(version===261||(Number(version)===262||Number(version)===263))&&row.captivity261?'Kidnapped':row.free===true?'Free':undefined;
 }
 /** Unrepresented quest/borrowed/for-sale authorities do not become false. */
 export type ActualWorldPawnSituationReader256=(row:WorldPawnOwner256)=>ActualWorldPawnSituation256|undefined;

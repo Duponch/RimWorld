@@ -1,3 +1,4 @@
+import {registerProjectedWorldSites263} from '../sim/world-sites-projection-save-263.ts';
 import {validWorldAffiliationFields259,validWorldAffiliationForeignKeys259} from '../sim/world-affiliation-259.ts';
 import {validPrisonerStateRecord259} from '../sim/prisoner-save.ts';
 import {isAncientGeneratedFloor256} from '../sim/ancient-generated-floor-state-256.ts';
@@ -1012,7 +1013,7 @@ export class SnapshotDecoder {
     if(packet.epoch===this.epoch&&!sameNativeWorldPawnBirth256(this.confirmedNativeWorldPawnBirth,view.worldPawns))return refuse();
     if(packet.epoch===this.epoch&&!sameFactionInitializations256(this.confirmedFactionInitializations,view.worldFactions))return refuse();
     const ids=new Set<number>();
-    if(registerProjectedGroups(view,ids,proof.context,summary).length||registerProjectedFactionOwners256(view,ids,summary).length||registerProjectedWorldPawns256(view,ids,summary).length||acceptExtra&&!acceptExtra(view)||!this.geographicTransport.canCommit(geographic)||!this.planetValidation.commit(proof))return refuse();
+    if(registerProjectedGroups(view,ids,proof.context,summary).length||registerProjectedFactionOwners256(view,ids,summary).length||registerProjectedWorldPawns256(view,ids,summary).length||registerProjectedWorldSites263(view,ids,summary).length||acceptExtra&&!acceptExtra(view)||!this.geographicTransport.canCommit(geographic)||!this.planetValidation.commit(proof))return refuse();
     if(!this.geographicTransport.commit(geographic))throw Error('Lost private geographic preparation after commit');
     freezeAdmittedNativeWorldPawnOrder256(summary);view.worldPawns=summary.worldPawns;
     this.adoptGeographicCalendar(view,packet.epoch,summary);
@@ -1544,6 +1545,7 @@ export class SnapshotDecoder {
       if(validateBombRefuges(next,[],ids).length)return resync('Refuge ou danger Bomb incohérent.');
       if(registerProjectedFactionOwners256(next,ids).length)return resync('Faction, chef ou propriétaire projeté incohérent.');
       if(registerProjectedWorldPawns256(next,ids).length)return resync('Invalid projected WorldPawns owner or namespace.');
+      if(registerProjectedWorldSites263(next,ids).length)return resync('Invalid projected263 Site holder or map parent.');
     }
     if(!everyHumanPawnOwner(next,p=>validWorldAffiliationFields259(p as unknown as Record<string,unknown>,next.schemaVersion)&&validWorldAffiliationForeignKeys259(p,next.worldFactions)))return resync('Faction/hôte d’un original invalide.');
     // An absent planet also belongs to the accepted epoch. A replacement

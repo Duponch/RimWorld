@@ -1,3 +1,4 @@
+import {targetBuildingPlayerUse263} from './world-target-building-263.ts';
 import {captureCoreStartingAnimals256} from './starting-pod-state-256.ts';
 import {captureDuckFlyerOwners256} from './duck-owner-capture-256.ts';
 /** Actual physical bed/actor capture and local attribution only. No fabricated
@@ -73,7 +74,7 @@ export function captureActorBeds256(input:CampaignState):ActualActorBeds256 {
   }
  }
  for(const owner of root.worldPawns?.owners??[]){if(owner.kind!=='mechanical')actor(owner.actor,null);for(const p of owner.packed)packed(p);}
- if((Number(root.schemaVersion)===261||root.schemaVersion===262))for(const group of root.worldGroups?.groups??[]){for(const a of group.pending261?.animals??[])actor(a,null);for(const p of group.pending261?.packed??[])packed(p);}
+ if((Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||Number(root.schemaVersion)===263)))for(const group of root.worldGroups?.groups??[]){for(const a of group.pending261?.animals??[])actor(a,null);for(const p of group.pending261?.packed??[])packed(p);}
  for(const owner of root.worldFactions?.leaders??[])actor(owner.pawn,null);
  for(const record of root.worldGroups?.groups??[])if('members' in record.state){
   const state=record.state as typeof record.state&{animalOwners?:GroupAnimalOwners256};
@@ -87,6 +88,7 @@ export function captureActorBeds256(input:CampaignState):ActualActorBeds256 {
  return {actors,refs,localMapFor:a=>places.get(a)??null};
 }
 export function claimLocalActorBed256(w:World,a:BedActor256,b:Structure,slot?:0|1):void {
+ if(!targetBuildingPlayerUse263(w,b))throw Error('Actual bed is not owned by the player');
  if(w.schemaVersion<256){alias(a,b.id,slot);return;}
  if(isAnimal(a)&&!a.domestic)throw Error('Local animal bed claim lacks actual player settings');
  const mapId=registeredMapId(w);
@@ -171,6 +173,7 @@ export function globalCivilBedShare256(w:World,b:Structure,p:Pawn,
 }
 export function localBedClaimAvailable256(w:World,b:Structure,p:BedActor256,
  slot?:0|1,capture?:ActualActorBeds256):boolean {
+ if(!targetBuildingPlayerUse263(w,b))return false;
  if(w.schemaVersion<256||b.medical)return true;
  // A validated continuing local alias already owns this actual place. A true
  // later attribution clears it atomically, including historical aliases.

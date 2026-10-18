@@ -66,7 +66,7 @@ export function validExpeditionOrigin(value:unknown,w:Pick<World,'tick'|'planet'
 // Explicit map namespace: adding another World domain requires a conscious
 // partition decision. A future field is not accepted because World ignores it.
 export const LOCAL_FIELDS=new Set([
-  'expeditionSite','autoSlaughter','allowedAreas','orbital','deepResources','group','groupLosses','mechSalvage','mechanoids','rainElectrical',
+  'worldSiteThreat263','worldDefence263','expeditionSite','autoSlaughter','allowedAreas','orbital','deepResources','group','groupLosses','mechSalvage','mechanoids','rainElectrical',
   'commercialTrip','civilianPost','quests','scout','breakdown','economy','apparelWear','filth','visitors','trade','climate','wind','weather','fires',
   'prisonDepartures','site','scenario','startingArrival','hunting','butchery','flora','wildlife','heatwaves','raids','fluIncidents','miscIncidents',
   'smallIncidents','flashstorm','podRescues','home','destroyed','arrivals','projectiles','bombWaves','roofing','thermal','packed','snow','snowClearArea',

@@ -1,3 +1,4 @@
+import {targetBuildingPlayerUse263} from './world-target-building-263.ts';
 import { validStorageSettings } from './designation.ts';
 import { patchStockpilePolicy } from './stockpile-zones.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
@@ -8,6 +9,7 @@ export type ShelfPolicyResult = { ok: true } | { ok: false; reason: string };
  * and refresh after its common drop preflight; this never moves a pile. */
 export function patchShelfPolicy(world: World, structureId: number, settings: StorageSettings): ShelfPolicyResult {
   const structure = world.structures.find(s => s.id === structureId && (s.kind === 'shelf' || s.kind === 'small-shelf'));
+  if(structure&&!targetBuildingPlayerUse263(world,structure))return {ok:false,reason:'Cette étagère appartient à une autre faction.'};
   if (!structure?.shelf) return { ok: false, reason: 'Étagère installée absente.' };
   const keys = new Set(['filters', 'items', 'priority', 'capacity', 'quality', 'hitPoints', 'allowFresh', 'allowRotten']);
   const filterKeys = new Set<string>(['furniture',...Object.values(ITEM_DEFINITIONS).map(item=>item.kind)]);

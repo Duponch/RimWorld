@@ -1,3 +1,4 @@
+import {targetDoorCanOpen263} from './world-target-building-263.ts';
 import { hostileTo,isColonist } from './affiliation.ts';
 import { isRoomDoor,isPassageDoor } from './door-rules.ts';
 import { prisonDoorPassable } from './prison-space.ts';
@@ -25,15 +26,17 @@ export function addActorObstacles(world:World,origin:Cell,grid:Uint8Array):void 
   const pawn=actor(world,origin);if(!pawn)return;
   if(!isMechanoidTarget(pawn)&&prisonBreakActive(pawn))for(const s of world.structures)if(isPassageDoor(s.kind))grid[s.z*world.width+s.x]=0;
   if(!opensDoors(pawn))for(const s of world.structures)if(isRoomDoor(s.kind))grid[s.z*world.width+s.x]=(!isMechanoidTarget(pawn)&&pawn.prisoner?prisonDoorPassable(world,s):s.door?.open)?0:1;
+  if(!isMechanoidTarget(pawn))for(const s of world.structures){const may=targetDoorCanOpen263(world,pawn,s);if(may!==undefined&&(!pawn.prisoner||pawn.prisoner.releasedAt!==undefined||prisonBreakActive(pawn)))grid[s.z*world.width+s.x]=s.door?.open||may&&!s.door?.forbidden?0:1;}
   for(const i of hostileCells(world,pawn))grid[i]=1;
 }
 export function actorStepAllowed(world:World,origin:Cell,next:Cell):boolean {
   const pawn=actor(world,origin);if(!pawn)return true;
   const occupied=hostileCells(world,pawn),dx=next.x-origin.x,dz=next.z-origin.z;
-  const free=(c:Cell)=>!occupied.has(c.z*world.width+c.x)&&(!opensDoors(pawn)?!world.structures.some(s=>isRoomDoor(s.kind)&&s.x===c.x&&s.z===c.z&&!(!isMechanoidTarget(pawn)&&pawn.prisoner?prisonDoorPassable(world,s):s.door?.open)):true);
+  const free=(c:Cell)=>!occupied.has(c.z*world.width+c.x)&&(!opensDoors(pawn)?!world.structures.some(s=>(isMechanoidTarget(pawn)||targetDoorCanOpen263(world,pawn,s)!==true)&&isRoomDoor(s.kind)&&s.x===c.x&&s.z===c.z&&!(!isMechanoidTarget(pawn)&&pawn.prisoner?prisonDoorPassable(world,s):s.door?.open)):true);
+  if(!isMechanoidTarget(pawn))for(const s of world.structures)if((s.x===next.x&&s.z===next.z||dx&&dz&&(s.x===next.x&&s.z===origin.z||s.x===origin.x&&s.z===next.z))&&targetDoorCanOpen263(world,pawn,s)===false&&!s.door?.open)return false;
   return free(next)&&(!dx||!dz||free({x:next.x,z:origin.z})&&free({x:origin.x,z:next.z}));
 }
 
 export function openHostileDoor(world:World,origin:Cell,x:number,z:number):boolean {
-  const p=actor(world,origin);return !!p&&world.structures.some(s=>(!isMechanoidTarget(p)&&prisonBreakActive(p)?isPassageDoor(s.kind):isRoomDoor(s.kind))&&s.x===x&&s.z===z&&(!isMechanoidTarget(p)&&prisonBreakActive(p)||!opensDoors(p)&&(!isMechanoidTarget(p)&&p.prisoner?prisonDoorPassable(world,s):s.door?.open)));
+  const p=actor(world,origin);if(p&&!isMechanoidTarget(p)&&world.structures.some(s=>s.x===x&&s.z===z&&targetDoorCanOpen263(world,p,s)===true&&(!s.door?.forbidden||!isColonist(p))))return true;return !!p&&world.structures.some(s=>(!isMechanoidTarget(p)&&prisonBreakActive(p)?isPassageDoor(s.kind):isRoomDoor(s.kind))&&s.x===x&&s.z===z&&(!isMechanoidTarget(p)&&prisonBreakActive(p)||!opensDoors(p)&&(!isMechanoidTarget(p)&&p.prisoner?prisonDoorPassable(world,s):s.door?.open)));
 }

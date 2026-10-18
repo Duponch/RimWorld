@@ -1,3 +1,4 @@
+import {notifySiteAmbushExplosion263} from './world-site-ambush-state-263.ts';
 import {landedStartingPods256,damageStartingPod256} from './starting-pod-damage-256.ts';
 import {destroyBridge} from './bridge.ts';
 import {actualBombWick256} from './ancient-casket-explosive-state-256.ts';
@@ -95,6 +96,7 @@ export function advanceBombWave(w:World,wave:MiniTurretBombWave,core:number,read
   const invalidate=()=>{changed=true;local=undefined;afterImpact?.();};
   while(wave.nextCell<wave.cells.length&&bombCellCore(w,wave,wave.cells[wave.nextCell]!)<=core){
     const index=wave.cells[wave.nextCell]!,cell={x:index%w.width,z:Math.floor(index/w.width)},snapshot=[...scene().at(cell)];
+    notifySiteAmbushExplosion263(w,cell,core);
     const altitude=(key:string)=>layer(w,key,!!wave.shortCircuit||!!wave.animalDeath||!!wave.casketExplosion);
     const full=snapshot.reduce((max,t)=>t.fill>.99?Math.max(max,altitude(t.key)):max,-Infinity);
     if(wave.emp){

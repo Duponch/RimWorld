@@ -1,3 +1,4 @@
+import {siteAmbushWaiting263} from './world-site-ambush-263.ts';
 import {advanceGeographicRenewal262} from './geographic-renewal-runtime-262.ts';
 import {processHivePriority256,processHiveWander256} from './cave-hive-lord-256.ts';
 import {reconcileHiveMaintenance256} from './cave-hive-maintenance-256.ts';
@@ -225,6 +226,7 @@ export function advanceWildlife(world:World,duckFlyerServices:DuckFlyerServices2
     // Transport owns position only: life, health, bleeding and needs still advance.
     if(world.schemaVersion>=221&&animalCarrier(world,a.id))continue;
     if(a.exitFlight)continue;
+    if(!a.burning&&!a.flee&&!a.retaliation&&siteAmbushWaiting263(world,a.id,'animal')){a.path=[];if(!a.motion||a.motion.end<=world.tick)a.state='idle';continue;}
     advanceAnimalManhunter(world,a);
     if(a.flee&&world.tick>=a.flee.until){delete a.flee;a.path=[];if(!a.motion||a.motion.end<=world.tick)a.state='idle';}
     if(processAnimalVomiting(world,a))continue;

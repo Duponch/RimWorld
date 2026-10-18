@@ -5,7 +5,7 @@ import type { Cell, World } from './types.ts';
 export const CAMPAIGN_FIELDS = [
   'schemaVersion','tick','rng','nextId','planet','worldFactions','worldPawns','research','relationships',
   'foodPolicies','nextFoodPolicyId','apparelPolicies','nextApparelPolicyId',
-  'foodRules','restRules','gameProfile','worldIncidents',
+  'foodRules','restRules','gameProfile','worldIncidents','worldSites263',
 ] as const satisfies readonly (keyof World)[];
 export type CampaignField = typeof CAMPAIGN_FIELDS[number];
 export type SecondaryMap = Omit<World, CampaignField | 'secondarySite' | 'campaignPeople' | 'campaignMap'>;

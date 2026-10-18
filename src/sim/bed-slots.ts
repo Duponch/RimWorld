@@ -1,3 +1,4 @@
+import {targetBuildingPlayerUse263} from './world-target-building-263.ts';
 import type { BedSlot,Cell,Pawn,Structure,World } from './types.ts';
 import {actualBedOwners256,captureActorBeds256,globalCivilBedShare256} from './actor-bed-local-256.ts';
 import {registeredCampaign} from './world-map-context.ts';
@@ -68,6 +69,7 @@ export function bedSlotForPatient(world:World,bed:Structure,patient:Pawn,carrier
   return bedSlotClaimed(world,bed,0,patient.id)?undefined:0;
 }
 export function bedAssignmentReason(world:World,bed:Structure,pawn:Pawn|null,slot:BedSlot):string|undefined {
+  if(!targetBuildingPlayerUse263(world,bed))return 'Ce lit appartient à une autre faction.';
   if(!bedKind(bed)||!bedSlotCell(bed,slot))return 'Place de lit invalide.';
   if(bed.medical||bed.prisoner)return 'Ce lit ne permet pas une affectation civile.';
   if(bed.kind==='double-bed'&&pawn&&(!civil(pawn)||!world.pawns.some(p=>p.id===pawn.id)))return 'Cette place nécessite un colon libre présent.';

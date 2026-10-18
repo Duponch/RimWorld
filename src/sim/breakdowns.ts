@@ -1,3 +1,4 @@
+import {targetBuildingPlayerUse263} from './world-target-building-263.ts';
 import { pawnBody } from './health-rules.ts';
 import { inHome } from './repairs.ts';
 import { commitDrop,planJobDrops,releaseAssignments,releaseWork } from './work-release.ts';
@@ -61,7 +62,7 @@ export function advanceBreakdowns(world:World):void {
 
 export function fixBreakdownWanted(world:World,job:Job):boolean {
   const s=world.structures.find(s=>s.id===job.fixBreakdown?.structureId);
-  return !!s&&!!s.breakdown&&inHome(world,s.z*world.width+s.x)
+  return !!s&&targetBuildingPlayerUse263(world,s)&&!!s.breakdown&&inHome(world,s.z*world.width+s.x)
     &&!world.fires?.items.some(f=>f.attachedAnimalId===undefined&&f.attachedPawnId===undefined&&footprintContains(s,f))
     &&!world.jobs.some(other=>other!==job&&(other.deconstruction?.structureId===s.id||other.furniture?.structureId===s.id));
 }
@@ -84,7 +85,7 @@ export function retireBreakdownJob(world:World,job:Job):boolean {
 export function reconcileBreakdownJobs(world:World):void {
   if(!world.structures.some(s=>s.breakdown)&&!world.jobs.some(j=>j.fixBreakdown))return;
   for(const job of [...world.jobs])if(job.fixBreakdown&&!fixBreakdownWanted(world,job))retireBreakdownJob(world,job);
-  for(const s of world.structures)if(s.breakdown&&inHome(world,s.z*world.width+s.x)
+  for(const s of world.structures)if(s.breakdown&&targetBuildingPlayerUse263(world,s)&&inHome(world,s.z*world.width+s.x)
     &&!world.fires?.items.some(f=>f.attachedAnimalId===undefined&&f.attachedPawnId===undefined&&footprintContains(s,f))
     &&!world.jobs.some(j=>j.fixBreakdown?.structureId===s.id||j.deconstruction?.structureId===s.id||j.furniture?.structureId===s.id)){
     if(!Number.isSafeInteger(world.nextId+1))continue;
@@ -104,7 +105,7 @@ export function fixBreakdownSuccessChance(pawn:Pawn,body?:BodyAssessment):number
  * either result. Failure leaves the building broken for the next delivery. */
 export function advanceBreakdownFix(world:World,pawn:Pawn,job:Job,body?:BodyAssessment):'success'|'failure'|null {
   const s=world.structures.find(s=>s.id===job.fixBreakdown?.structureId);
-  if(!s?.breakdown||deliveredMaterial(world,job,'component')!==1)return null;
+  if(!s?.breakdown||!targetBuildingPlayerUse263(world,s)||deliveredMaterial(world,job,'component')!==1)return null;
   pawn.path=[];pawn.state='working';job.progress++;
   if(job.progress<BREAKDOWN_FIX_TICKS)return null;
   const component=world.piles.find(p=>p.item==='component'&&p.owner.type==='job'&&p.owner.jobId===job.id)!;

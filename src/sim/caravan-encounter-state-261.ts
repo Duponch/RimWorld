@@ -14,7 +14,7 @@ export interface CaravanStory261 {
  revision:1;lastFire:Partial<Record<CaravanIncident261,number>>;
  lastThreatCore?:number;lastFactionId?:number;recent:CaravanIncident261[];
 }
-export type RetainedArrival261=null|{kind:'enter';mapId:number}|{kind:'trade';settlementId:number;factionId:number;postId:number|null};
+export type RetainedArrival261=null|{kind:'enter';mapId:number}|{kind:'trade';settlementId:number;factionId:number;postId:number|null}|import('./world-sites-state-263.ts').WorldEntryTarget263;
 export interface RetainedCaravan261 {
  passStory:boolean;
  next:null|{tile:number;leftFraction:number;paused:boolean};

@@ -17,7 +17,7 @@ export function validProspectiveGroupSegment256(s:GroupSegment,version=256):bool
  if(!Number.isSafeInteger(s.from)||s.from<0||!Number.isSafeInteger(s.to)||s.to<0||![s.totalCore,s.remainingCore].every(v=>Number.isFinite(v)&&Math.abs(v)<=Number.MAX_SAFE_INTEGER&&f(v)===v)||s.totalCore<=0||s.remainingCore>s.totalCore)return false;
  // Reform applies the signed retained fraction to the NEW cost. Its legitimate
  // negative result may exceed one ordinary overshoot; never clamp paid progress.
- return s.remainingCore>=((version===261||version===262)?-f(s.totalCore*16):-f(f(Math.max(1,f(s.totalCore/30000)))*16));
+ return s.remainingCore>=((version===261||(Number(version)===262||Number(version)===263))?-f(s.totalCore*16):-f(f(Math.max(1,f(s.totalCore/30000)))*16));
 }
 export interface GroupRouteIntervalContext256 {
  version?:number;

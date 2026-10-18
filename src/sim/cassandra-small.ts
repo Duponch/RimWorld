@@ -1,4 +1,4 @@
-import {tempMapModern261} from './temp-map-incidents-261.ts';
+import {homeIncidentsBlocked261} from './temp-map-incidents-261.ts';
 import { isColonist } from './affiliation.ts';
 import { ANIMAL_SPECIES } from './animal-species.ts';
 import { startAnimalManhunter } from './animal-manhunter.ts';
@@ -50,7 +50,7 @@ export function smallAcceptance(points:number):number {
 /** Loading/migrating alone must not adopt. A resumed colony skips the entire
  * already-started cycle and consumes no retrospective random draws. */
 export function adoptSmallIncidents(world:World):void {
-  if(tempMapModern261(world)||world.schemaVersion<183||!world.gameProfile||world.smallIncidents)return;
+  if(homeIncidentsBlocked261(world)||world.schemaVersion<183||!world.gameProfile||world.smallIncidents)return;
   world.smallIncidents={profile:'cassandra-small-v1',adoptedAt:world.tick,
     rng:((world.seed^0x5a11c201)>>>0)||1,nextCheck:smallNextCheck(world.tick),
     cycle:smallCycleAt(world.tick),pending:[],introDone:world.tick>=SMALL_INTRO_TICK,
@@ -118,7 +118,7 @@ function prepareCycle(world:World,state:CassandraSmallCalendar):void {
 /** O(1) between checks; points are read only at a future cycle opening and the
  * animal list only at an actual opportunity. A jumped span is never replayed. */
 export function advanceSmallIncidents(world:World):void {
-  if(tempMapModern261(world))return;
+  if(homeIncidentsBlocked261(world))return;
   const state=world.smallIncidents;
   if(!state||!world.gameProfile||world.schemaVersion<183)return;
   if(!state.introDone&&world.tick>=SMALL_INTRO_TICK){

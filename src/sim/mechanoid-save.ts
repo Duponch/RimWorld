@@ -1,3 +1,4 @@
+import {validSiteMechField263,validateSiteMechGroups263} from './world-site-mechanoids-263.ts';
 import {mechRaidGroup261} from './mechanical-raid-groups-261.ts';
 import {validMechanicalWorldFactionField259,validMechanicalWorldFaction259} from './mechanoid-world-faction-259.ts';
 import {mechanicalOrder256,mechanicalDuty256,validTempleMechField256,validateTempleMechGroups256} from './temple-mech-duty-256.ts';
@@ -33,7 +34,7 @@ export function validMechaMedicalRecord(value:unknown,worldTick:number,dead:bool
   return record.tick<=worldTick&&!!record.death===dead;
 }
 export function validMechanoidShape(value:unknown,version:number,tick:number):value is Mechanoid {
-  if(version<194||!integer(tick)||!object(value)||!validMechanicalWorldFactionField259(value,version)||!validRetainedCorpseDamage256(value,version)||!validTempleMechField256(value,version,tick)||!keys(value,['id','mechKind','x','z','state','health','path','motion','heading','moveCooldown','planCooldown','raid','melee','stagger','stun',...(version>=197?['ranged','meleeThreat']:[]),...(version>=208?['emp']:[]),...(version>=256?['corpseDamage','temple']:[]),...(version>=259?['worldFaction259']:[])])
+  if(version<194||!integer(tick)||!object(value)||!validMechanicalWorldFactionField259(value,version)||!validRetainedCorpseDamage256(value,version)||!validTempleMechField256(value,version,tick)||!validSiteMechField263(value,version,tick)||!keys(value,['id','mechKind','x','z','state','health','path','motion','heading','moveCooldown','planCooldown','raid','melee','stagger','stun',...(version>=197?['ranged','meleeThreat']:[]),...(version>=208?['emp']:[]),...(version>=256?['corpseDamage','temple']:[]),...(version>=259?['worldFaction259']:[]),...(version===263?['site263']:[])])
     ||!integer(value.id,1)||!isMechanoidKind(value.mechKind)||version<197&&value.mechKind!=='scyther'||!integer(value.x)||!integer(value.z)
     ||typeof value.state!=='string'||!['idle','moving','working','downed','dead'].includes(value.state)||!finite(value.heading,-Math.PI*2,Math.PI*2)
     ||!finite(value.moveCooldown,0,1000)||!integer(value.planCooldown,0,1000)||!Array.isArray(value.path)||!value.path.every(cell)
@@ -81,6 +82,7 @@ export function validateMechanoids(w:World,version:number=w.schemaVersion,ids:Nu
   if(w.mechanoids===undefined)return errors;
   if(version<194||!Array.isArray(w.mechanoids)){errors.push('Invalid mechanoid population.');return errors;}
   errors.push(...validateTempleMechGroups256(w));
+  errors.push(...validateSiteMechGroups263(w));
   const inBounds=(c:{x:number;z:number})=>c.x>=0&&c.z>=0&&c.x<w.width&&c.z<w.height;
   for(const m of w.mechanoids){
     if(!validMechanoidShape(m,version,w.tick)){errors.push('Invalid mechanoid shape.');continue;}

@@ -181,7 +181,7 @@ export function validGeographicClimateDefinition256(value:unknown):value is Clim
 export function createGeographicSiteClimate256(planet:Extract<PlanetState,{revision:3}>,tileId:number,clock:{tick:number;calendarOrigin:number;schemaVersion?:number}):GeographicSiteClimate256 {
  if(!Number.isSafeInteger(clock.tick)||clock.tick<0||!Number.isSafeInteger(clock.calendarOrigin)||!Number.isSafeInteger(tileId)||tileId<0)throw Error('Invalid geographic climate clock/tile');
  const definition=geographicPlanetClimateDefinition256(planet,tileId),home=geographicPlanetClimateDefinition256(planet,planet.homeTile),offset=(geographicLongitudeOffsetCore256(definition.longitude)-geographicLongitudeOffsetCore256(home.longitude))/10,calendarOrigin=clock.calendarOrigin+clock.tick+offset;
- if(!Number.isSafeInteger(calendarOrigin))throw Error('Geographic calendar overflow');return {revision:4,tileId,adoptedAt:clock.tick,calendarOrigin,definition,...clock.schemaVersion===262?{irregular262:true as const}:{}};
+ if(!Number.isSafeInteger(calendarOrigin))throw Error('Geographic calendar overflow');return {revision:4,tileId,adoptedAt:clock.tick,calendarOrigin,definition,...(Number(clock.schemaVersion)===262||Number(clock.schemaVersion)===263?{irregular262:true as const}:{})};
 }
 export function geographicLongitudeOffsetCore256(longitude:number):number {const n=Math.fround(longitude/15),low=Math.floor(n),fraction=n-low,rounded=fraction<.5?low:fraction>.5?low+1:low%2===0?low:low+1;return rounded*2500;}
 

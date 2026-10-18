@@ -1,3 +1,5 @@
+import {targetBuildingPlayerUse263} from '../sim/world-target-building-263';
+import {roadPropCanDeconstruct256} from '../sim/local-road-prop-ownership-256';
 import { footprintContains } from '../sim/definitions';
 import { canFlickDevice, actualDeviceSwitch } from '../sim/power-flick';
 import { isElectrical } from '../sim/power-rules';
@@ -43,11 +45,11 @@ export function updatePowerControls(root: HTMLElement, world: World, cell: Cell,
     const removing = world.jobs.some(j => j.deconstruction?.structureId === structure.id);
     card.querySelector('[data-power-request]')!.textContent = pending ? `${structure.kind==='vent'?(pending.flick!.on?'Ouverture':'Fermeture'):(pending.flick!.on?'Mise en marche':'Arrêt')} demandé${structure.kind==='vent'?'e':''} · attend l’intervention d’un colon (Manutention).` : '';
     const flick = card.querySelector<HTMLButtonElement>('[data-power-flick]')!;
-    flick.hidden = !canFlickDevice(structure); flick.disabled = removing;
+    flick.hidden = !canFlickDevice(structure); flick.disabled = removing||!targetBuildingPlayerUse263(world,structure);
     flick.textContent = pending ? 'Annuler la demande' : structure.kind==='vent'?(actualDeviceSwitch(structure)?'Demander la fermeture':'Demander l’ouverture'):actualDeviceSwitch(structure) ? 'Demander l’arrêt' : 'Demander la mise en marche';
     flick.onclick = () => send({type: 'power-flick', structureId: structure.id, on: pending ? actualDeviceSwitch(structure) : !actualDeviceSwitch(structure)});
     const remove = card.querySelector<HTMLButtonElement>('[data-power-remove]')!;
-    remove.hidden = structure.kind !== 'power-conduit'; remove.disabled = removing;
+    remove.hidden = structure.kind !== 'power-conduit'; remove.disabled = removing||!roadPropCanDeconstruct256(world,structure);
     remove.onclick = () => send({type: 'designate', kind: 'deconstruct', targetId: structure.id, x: structure.x, z: structure.z});
     const thermostat = card.querySelector<HTMLElement>('[data-heater-controls]')!;
     thermostat.hidden = structure.kind !== 'heater'; thermostat.dataset.target = String(structure.heater?.target ?? '');

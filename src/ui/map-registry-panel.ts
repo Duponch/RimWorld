@@ -1,3 +1,4 @@
+import type {WorldMapKind} from '../sim/world-map-state';
 import {SimulationRequestError} from '../bridge/protocol';
 import {setTooltip} from './tooltip';
 import './map-registry-panel.css';
@@ -6,9 +7,11 @@ import './map-registry-panel.css';
  * derive these facts from the same confirmed projection as the command owner. */
 export interface MapActionAvailability {ok:boolean;reason?:string}
 export interface MapRegistryRow {
- id:number;tile:number|null;name:string;kind:'settlement'|'camp'|'legacy-site'|'battlefield';active:boolean;
+ id:number;tile:number|null;name:string;kind:WorldMapKind;active:boolean;
  people:number;createdAt:number;campPressure?:import('../sim/camp-pressure-state-260').CampPressure260;
  view:MapActionAvailability;settle:MapActionAvailability;abandon:MapActionAvailability;
+ /** Deliberate confirmation only: no graph work while painting snapshots. */
+ settleWarning263?:()=>string;
  abandonedPeople:readonly {id:number;name:string}[];groundItems:number;structures:number;
 }
 export interface MapRegistryState {
@@ -21,7 +24,7 @@ export interface MapRegistryActions {
  settle:(mapId:number)=>Promise<unknown>;
  abandon:(mapId:number)=>Promise<unknown>;
 }
-const kindLabel=(kind:MapRegistryRow['kind'])=>kind==='settlement'?'Colonie':kind==='camp'?'Camp temporaire':kind==='battlefield'?'Champ de bataille':'Site conservé';
+const kindLabel=(kind:MapRegistryRow['kind'])=>kind==='settlement'?'Colonie':kind==='camp'?'Camp temporaire':kind==='battlefield'?'Champ de bataille':kind==='foreign-settlement'?'Établissement étranger':kind==='quest-site'?'Site temporaire':'Site conservé';
 
 export function createMapRegistryPanel(host:HTMLElement,actions:MapRegistryActions){
  const doc=host.ownerDocument,root=doc.createElement('section'),title=doc.createElement('h3'),summary=doc.createElement('p'),status=doc.createElement('p'),rows=doc.createElement('div');
@@ -48,7 +51,7 @@ export function createMapRegistryPanel(host:HTMLElement,actions:MapRegistryActio
    }
    const before=rows.children[index];if(before!==record.root)rows.insertBefore(record.root,before??null);
    record.name.textContent=map.name;record.facts.textContent=`${kindLabel(map.kind)} · ${map.tile===null?'lieu historique':`case ${map.tile}`} · ${map.people} personne(s)${map.active?' · carte active':''}${map.campPressure?` · ${map.campPressure.alert?'Détecté':'Détection dans '+Math.max(0,((map.campPressure.notifyAtCore??0)-state!.tick*10)/2500).toFixed(1)+' h'} · tentative mécanique dans ${Math.max(0,(map.campPressure.raidAtCore-state!.tick*10)/2500).toFixed(1)} h · ${map.campPressure.raidsSent} attaque(s) créée(s)`:''}`;
-   record.view.textContent=map.active?'Revenir à cette carte':'Afficher';availability(record.view,map.view);availability(record.prepare,map.view);record.prepare.textContent=(map.kind==='camp'||map.kind==='battlefield')?'Reformer une caravane':'Préparer une caravane';availability(record.settle,map.settle);availability(record.abandon,map.abandon);record.settle.hidden=map.kind==='settlement';
+   record.view.textContent=map.active?'Revenir à cette carte':'Afficher';availability(record.view,map.view);availability(record.prepare,map.view);record.prepare.textContent=(['camp','battlefield','foreign-settlement','quest-site'].includes(map.kind))?'Reformer une caravane':'Préparer une caravane';availability(record.settle,map.settle);availability(record.abandon,map.abandon);record.settle.hidden=map.kind==='settlement';
   });
  }
  function closeConfirmation(){if(dialog){dialog.close();dialog.remove();dialog=undefined;}}
@@ -61,12 +64,13 @@ export function createMapRegistryPanel(host:HTMLElement,actions:MapRegistryActio
  }
  function confirm(mapId:number,action:'settle'|'abandon'){
   const map=current(mapId);if(disposed||dialog||lock()||!map||!map[action].ok)return;
-  const confirmedKey=JSON.stringify([map.id,map.createdAt,map.tile,map.kind,map.abandonedPeople,map.groundItems,map.structures]);
+  const warning263=action==='settle'?map.settleWarning263?.()??'':'';
+  const confirmedKey=JSON.stringify([map.id,map.createdAt,map.tile,map.kind,map.abandonedPeople,map.groundItems,map.structures,warning263]);
   const previous=doc.activeElement,panel=doc.createElement('dialog'),heading=doc.createElement('h3'),text=doc.createElement('p'),cancel=doc.createElement('button'),accept=doc.createElement('button');dialog=panel;panel.className='map-registry-confirmation';panel.setAttribute('aria-label',action==='settle'?'S’installer sur cette carte':'Abandonner cette carte');
   heading.textContent=map.name;
-  text.textContent=action==='settle'?'Transformer ce lieu en colonie en conservant son terrain, ses personnes et ses biens ?':`Abandonner cette carte ? La carte locale sera retirée. ${map.groundItems} unité(s) au sol et ${map.structures} construction(s) seront abandonnées ; ces biens ne seront pas rapatriés.${map.abandonedPeople.length?` Personnes laissées sur place : ${map.abandonedPeople.map(person=>person.name).join(', ')}. Elles seront bannies.`:''}`;
+  text.textContent=action==='settle'?'Transformer ce lieu en colonie en conservant son terrain, ses personnes et ses biens ?'+(warning263?' '+warning263:''):`Abandonner cette carte ? La carte locale sera retirée. ${map.groundItems} unité(s) au sol et ${map.structures} construction(s) seront abandonnées ; ces biens ne seront pas rapatriés.${map.abandonedPeople.length?` Personnes laissées sur place : ${map.abandonedPeople.map(person=>person.name).join(', ')}. Elles seront bannies.`:''}`;
   const close=()=>{closeConfirmation();if(previous instanceof HTMLElement&&previous.isConnected)previous.focus({preventScroll:true});};
-  cancel.type=accept.type='button';cancel.textContent='Annuler';accept.textContent=action==='settle'?'S’installer':'Abandonner';cancel.onclick=close;accept.onclick=()=>{const latest=current(mapId);close();if(!latest||JSON.stringify([latest.id,latest.createdAt,latest.tile,latest.kind,latest.abandonedPeople,latest.groundItems,latest.structures])!==confirmedKey){error='La situation de cette carte a changé. Vérifiez-la avant de confirmer de nouveau.';paint();return;}void send(mapId,action);};panel.append(heading,text,cancel,accept);
+  cancel.type=accept.type='button';cancel.textContent='Annuler';accept.textContent=action==='settle'?'S’installer':'Abandonner';cancel.onclick=close;accept.onclick=()=>{const latest=current(mapId);close();if(!latest||JSON.stringify([latest.id,latest.createdAt,latest.tile,latest.kind,latest.abandonedPeople,latest.groundItems,latest.structures,action==='settle'?latest.settleWarning263?.()??'':''])!==confirmedKey){error='La situation de cette carte a changé. Vérifiez-la avant de confirmer de nouveau.';paint();return;}void send(mapId,action);};panel.append(heading,text,cancel,accept);
   panel.addEventListener('cancel',event=>{event.preventDefault();close();});panel.addEventListener('keydown',event=>event.stopPropagation());root.append(panel);panel.showModal();cancel.focus();
  }
  return {

@@ -1,0 +1,3 @@
+import {defineConfig} from '@playwright/test';
+// ROOT-only frozen server and future ROOT-completed valid10500 path+SHA; read-only UI.
+export default defineConfig({testDir:'./tests/integration',testMatch:'world-sites263-confirmed-labels-native.spec.ts',fullyParallel:false,workers:1,retries:0,timeout:180_000,expect:{timeout:15_000},reporter:[['list']],outputDir:process.env.WORLD_SITES263_LABELS_NATIVE_OUTPUT??'tmp/world-foundations/world-sites263/confirmed-labels',use:{baseURL:process.env.WORLD_TARGET263_NATIVE_BASE_URL??'http://127.0.0.1:5173',viewport:{width:1440,height:1000},channel:'chrome',headless:true,trace:'off',screenshot:'only-on-failure',launchOptions:{args:['--enable-unsafe-webgpu']}}});

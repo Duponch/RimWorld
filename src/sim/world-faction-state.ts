@@ -9,7 +9,7 @@ export interface WorldFactionRelation256 {aId:number;bId:number;goodwill:number;
 export interface WorldFactionLeader256 {factionId:number;clock:number;pawn:Pawn;items:MaterialPile[];packed:PackedFurniture[]}
 /** Generated foreign settlements. Player maps remain their existing worldMaps
  * owners and are combined for globe admission/presentation by the caller. */
-export interface WorldFactionSettlement256 {id:number;factionId:number;tile:number;name:string;postId:number|null}
+export interface WorldFactionSettlement256 {attack263?:import('./world-sites-state-263.ts').ForeignSettlementAdmission263;id:number;factionId:number;tile:number;name:string;postId:number|null}
 export interface WorldFactionRegistry256 {
  revision:1;contentModel:'original-faction-content-v1';generatedAt:number;playerFactionId:number;
  noExpansionIdeoIds?:CoreNoExpansionIdeoIds256;

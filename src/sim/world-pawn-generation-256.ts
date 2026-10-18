@@ -13,10 +13,10 @@ import type {WildAnimal} from './wildlife-state.ts';
 /** A single PRIVATE1200 phase. Only the small owner roster is projected. The
  * actual registry and originals remain untouched until all generated phases
  * and candidate guards succeeded. No map, old archive or geometry is cloned. */
-export function prepareWorldAnimalGeneration256(state:WorldPawnsState256,input:{tick:number;nextId:number;situation:ActualWorldPawnSituationReader256;weight:ActualWorldPawnSelectionWeight256;random:InitialAnimalRandom256}) {
+export function prepareWorldAnimalGeneration256(state:WorldPawnsState256,input:{tick:number;nextId:number;situation:ActualWorldPawnSituationReader256;weight:ActualWorldPawnSelectionWeight256;random:InitialAnimalRandom256;version?:number}) {
  if(!Object.getOwnPropertyDescriptor(state,'owners')?.writable)throw Error('Animal generation needs its mutable actual registry');
  if(state.atCore!==input.tick*10||!Number.isSafeInteger(input.nextId)||input.nextId<1)throw Error('Animal generation lacks actual WorldPawn frontier');
- const nativeBefore=state.nativeOrder;if(!nativeWorldPawnOrderCurrent256(state,nativeBefore))throw Error('Actual native generation order is not mutable/admitted');
+ const version=input.version??256,nativeBefore=state.nativeOrder;if(!nativeWorldPawnOrderCurrent256(state,nativeBefore))throw Error('Actual native generation order is not mutable/admitted');
  const before=state.owners.slice(),atBefore=state.atCore,working={...state,owners:state.owners.slice()},selected:WorldPawnOwner256[]=[],plans:Extract<PreparedWorldAnimalRedress256,{ok:true}>[]=[],animals:WildAnimal[]=[];
  let nextId=input.nextId,closed=false,blocked=false;
  return {
@@ -27,7 +27,7 @@ export function prepareWorldAnimalGeneration256(state:WorldPawnsState256,input:{
    const choice=selectWorldAnimalToRedress256(working,fact,input.random,input.weight,input.situation);
    if(choice.status==='blocked')return fail(choice.reason);
    if(choice.status==='selected'){
-    const plan=prepareWorldAnimalRedress256(working,choice.row,fact,{tick:input.tick,cell,random:input.random,situation:input.situation});if(!plan.ok)return fail(plan.reason);
+    const plan=prepareWorldAnimalRedress256(working,choice.row,fact,{tick:input.tick,cell,random:input.random,situation:input.situation,version});if(!plan.ok)return fail(plan.reason);
     plans.push(plan);selected.push(choice.row);animals.push(plan.draft);working.owners=working.owners.filter(r=>r!==choice.row);if(working.nativeOrder)working.nativeOrder=removeNativeWorldPawnOrder256(working.nativeOrder,choice.row.actor.id);return {status:'ready',animal:plan.draft,source:'world'};
    }
    if(!Number.isSafeInteger(nextId+1))return fail('Fresh animal namespace exhausted');

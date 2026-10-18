@@ -2122,19 +2122,30 @@ function prepareWorld(): Promise<void> {
   return presentationPreparation ??= prepareWorldSafely().finally(() => { presentationPreparation = undefined; });
 }
 async function prepareWorldSafely(): Promise<void> {
+ for(;;){
   const epoch=campaignPresentationEpoch;
   try {
     await prepareWorldView();
-    // A superseded preparation cannot clear a newer map's graphics incident.
-    if(epoch!==campaignPresentationEpoch)return;
+    // Automatic entry can replace the map while its first renderer warms up.
+    // The same preparation promise must finish the latest confirmed view.
+    if(epoch!==campaignPresentationEpoch){
+      if((client.hasActiveMap&&snapshot)||campaignOnly)continue;
+      return;
+    }
     // The fatal callback may have retired this renderer during warmup.
     if(client.hasActiveMap&&(!renderer||renderer.fatalError))throw new Error(renderer?.fatalError||graphicsMessage||'La préparation de l’affichage a été interrompue.');
     graphicsFault = false; graphicsMessage = ''; updateIncident();
   } catch (error) {
-    if(epoch!==campaignPresentationEpoch||!client.hasActiveMap){if(campaignOnly)renderCampaignOnly();return;}
+    if(epoch!==campaignPresentationEpoch){
+      if((client.hasActiveMap&&snapshot)||campaignOnly)continue;
+      return;
+    }
+    if(!client.hasActiveMap){if(campaignOnly)renderCampaignOnly();return;}
     await handleGraphicsFailure(error instanceof Error ? error.message : String(error));
     throw error;
   }
+  return;
+ }
 }
 async function prepareWorldView(): Promise<void> {
   if(campaignOnly&&!client.hasActiveMap){shell.hidden=false;worldTab='maps';setPanel('world');renderCampaignOnly();return;}

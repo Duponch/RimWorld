@@ -40,12 +40,16 @@ export interface TurretTargetIndex {
  * other owners there have identical range/LOS and lose the specified ID tie. */
 export function captureTurretTargets(w:World):TurretTargetIndex {
   const owners=new Map<TurretLivingKey,LivingTarget>(),cells=new Map<string,LivingTarget>();
+  // Existing player-only maps retain their literal cell/ID collapse. A real
+  // foreign263 gun needs faction-dependent candidates from the SAME batch;
+  // actors sharing a cell need not have identical hostility to that gun.
+  const foreign=Number(w.schemaVersion)===263&&w.structures.some(s=>s.kind==='mini-turret'&&s.factionId!==undefined&&s.factionId!==w.worldFactions?.playerFactionId);
   const carried=new Set(w.pawns.filter(p=>p.rescue?.phase==='carry').map(p=>p.rescue!.patientId));
   for(const list of [w.pawns,w.wildlife?.animals??[],w.mechanoids??[]])for(const t of list) {
     if(t.state==='dead'||t.health?.death||isPawnTarget(t)&&carried.has(t.id))continue;
     owners.set(keyOf(t),t);
-    if(!turretTargetAllowed(t))continue;
-    const key=`${t.x}:${t.z}:${leans(t)?1:0}`,prior=cells.get(key);
+    if(!foreign&&!turretTargetAllowed(t))continue;
+    const key=foreign?keyOf(t):`${t.x}:${t.z}:${leans(t)?1:0}`,prior=cells.get(key);
     if(!prior||t.id<prior.id)cells.set(key,t);
   }
   const size=8,columns=Math.ceil(w.width/size),buckets=new Map<number,LivingTarget[]>();
@@ -71,9 +75,31 @@ export function turretTargetAllowed(t:LivingTarget):boolean {
   if(t.state==='dead'||t.state==='downed'||t.health?.death)return false;
   return isAnimalTarget(t)?!t.domestic&&!!t.manhunter:isMechanoidTarget(t)?true:prisonBreakActive(t)||!t.prisoner&&factionRelation('colony',factionOf(t))==='hostile';
 }
+/** Actual faction relation for a genuine foreign263 original. Player guns and
+ * historical saves retain the old rule. Factionless wildlife isn't a colony
+ * target; manhunters remain mentally hostile to any defended faction. */
+export function turretOwnerTargetAllowed263(w:World,s:Structure,t:LivingTarget):boolean {
+  const f=w.worldFactions,id=s.factionId;
+  if(Number(w.schemaVersion)!==263||id===undefined||id===f?.playerFactionId)return turretTargetAllowed(t);
+  if(id===null||!f||t.state==='dead'||t.state==='downed'||t.health?.death)return false;
+  let targetId:number|null;
+  if(isPawnTarget(t)){
+    if(prisonBreakActive(t)&&t.worldAffiliation259?.hostFactionId===id)return true;
+    if(t.prisoner)return false;
+    if(t.mental?.crisis?.kind==='berserk')return true;
+    targetId=t.worldAffiliation259?.factionId??(factionOf(t)==='colony'?f.playerFactionId:null);
+  }else if(isMechanoidTarget(t))targetId=t.worldFaction259?.factionId??null;
+  else {if(t.manhunter)return true;targetId=t.domestic?f.playerFactionId:t.hive?f.factions.find(v=>v.def==='Insect')?.id??null:null;}
+  return targetId!==null&&targetId!==id&&f.relations.some(r=>r.aId===Math.min(id,targetId!)&&r.bId===Math.max(id,targetId!)&&r.kind==='hostile');
+}
+function turretFriendlyHuman263(w:World,s:Structure,p:World['pawns'][number]):boolean {
+  const f=w.worldFactions,id=s.factionId;if(Number(w.schemaVersion)!==263||id===undefined||id===f?.playerFactionId)return factionRelation('colony',factionOf(p))!=='hostile';
+  const targetId=p.worldAffiliation259?.factionId??(factionOf(p)==='colony'?f?.playerFactionId:null);
+  return !f||id===null||targetId===null||targetId===undefined||targetId===id||!f.relations.some(r=>r.aId===Math.min(id,targetId)&&r.bId===Math.max(id,targetId)&&r.kind==='hostile');
+}
 export interface TurretShotPlan { target:LivingTarget;line:Extract<ShotLine,{ok:true}>;key:TurretLivingKey }
-export function turretShotPlan(_w:World,s:Structure,key:TurretLivingKey,queries:TurretQueries):TurretShotPlan|{reason:'target'|'bounds'|'range'|'blocked'} {
-  const target=presentTarget(key,queries);if(!target)return {reason:'target'} as const;
+export function turretShotPlan(w:World,s:Structure,key:TurretLivingKey,queries:TurretQueries):TurretShotPlan|{reason:'target'|'bounds'|'range'|'blocked'} {
+  const target=presentTarget(key,queries);if(!target||Number(w.schemaVersion)===263&&s.factionId!==undefined&&s.factionId!==w.worldFactions?.playerFactionId&&!turretOwnerTargetAllowed263(w,s,target))return {reason:'target'} as const;
   const line=findShotLine(queries.grid(),s,{cell:target,leans:leans(target)},MINI_TURRET_PROFILE.range,0,false);
   return line.ok?{target,line,key}:{reason:line.reason} as const;
 }
@@ -86,6 +112,7 @@ export function turretCandidate(w:World,s:Structure,queries:TurretQueries,budget
   for(const target of queries.turretTargets().near(s,MINI_TURRET_PROFILE.range)) {
     if(budget&&budget.pairs<2)return null;
     if(budget)budget.pairs-=2; // one indexed owner and its physical line
+    if(!turretOwnerTargetAllowed263(w,s,target))continue;
     const plan=turretShotPlan(w,s,keyOf(target),queries);if(!('reason' in plan))return plan;
   }
 }
@@ -107,7 +134,7 @@ function emit(w:World,s:Structure,core:number,plan:TurretShotPlan,queries:Turret
     target:{key,cell:target,full:false,canBenefitFromCover:true},aim,cover,profile,canHitOtherPawns:true,preventFriendlyFire:false,
     coverAnchor:key=>queries.targets().anchor(key)},()=>healthRandom(draft));
   const projectile=registerWorldProjectile(w,emission.flight,'normal',{
-    friendlyPawnIds:w.pawns.filter(p=>factionRelation('colony',factionOf(p))!=='hostile').map(p=>p.id),friendlyFireFactor:friendlyFireFactor(w),
+    friendlyPawnIds:w.pawns.filter(p=>turretFriendlyHuman263(w,s,p)).map(p=>p.id),friendlyFireFactor:friendlyFireFactor(w),
   },draft.rng,core,'mini-turret-gun');
   s.turret!.ammoQ-=4;return projectile.id;
 }

@@ -1,3 +1,4 @@
+import {validTargetBuildingFactionShape263} from './world-target-building-263.ts';
 import {isBlockMaterial} from './building-materials.ts';
 import {footprintCells} from './definitions.ts';
 import {ITEM_DEFINITIONS} from './items.ts';
@@ -20,7 +21,8 @@ export function validShelfSettings(value:unknown,version:number):boolean {
 export function validShelfBuildingShape(value:unknown,version:number):boolean {
   if(!object(value))return false;
   if(!isShelfKind(String(value.kind)))return !Object.hasOwn(value,'shelf');
-  if(Reflect.ownKeys(value).some(k=>typeof k!=='string'||!['id','kind','x','z','orientation','footprint','material','shelf','damage'].includes(k)))return false;
+  if(Reflect.ownKeys(value).some(k=>typeof k!=='string'||!['id','kind','x','z','orientation','footprint','material','shelf','damage',...(version===263?['factionId']:[])].includes(k)))return false;
+  if(Object.hasOwn(value,'factionId')&&!validTargetBuildingFactionShape263(value,version))return false;
   const state=value.shelf;
   if(version<229||!object(state)||Reflect.ownKeys(state).length!==2||!Object.hasOwn(state,'cells')||!Object.hasOwn(state,'settings')
     ||!Array.isArray(state.cells)||state.cells.length!==(value.kind==='shelf'?2:1)||Reflect.ownKeys(state.cells).length!==state.cells.length+1

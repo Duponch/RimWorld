@@ -1,3 +1,4 @@
+import {validTargetBuildingFactionShape263} from './world-target-building-263.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {isCaveHiveKind256} from './cave-hive-state-256.ts';
 import {isAncientMonumentKind256,ancientMonumentMaterial256,ancientMonumentMaxHp256,ancientMonumentCells256,ANCIENT_MONUMENT_DEFS_256} from './ancient-monument-props-256.ts';
@@ -13,6 +14,7 @@ export function validAncientFactionField256(v:unknown,version:number):boolean {
  if(v&&typeof v==='object'&&isCaveHiveKind256(Object.getOwnPropertyDescriptor(v,'kind')?.value))return isSchema256Or257(version);
  if(!object(v)||!data(v))return false;
  if(!Object.hasOwn(v,'factionId'))return true;
+ if(validTargetBuildingFactionShape263(v,version))return true;
  if(read(v,'kind')==='ancient-cryptosleep-casket')return version>=256&&v.factionId===null;
  return version>=256&&isAncientNeutralKind256(read(v,'kind'))&&(v.factionId===null||int(v.factionId,1));
 }
@@ -31,7 +33,7 @@ export function validAncientMonumentState256(w:Pick<World,'structures'|'packed'|
  for(const b of [...w.structures,...packed.map(p=>p.building)]){
   if(!validAncientMonumentBuilding256(b,version))return false;
   if(isAncientMonumentKind256(b.kind)&&(!int(b.id,1,w.nextId-1)||(!nonSpatial?.has(b)||installed?.has(b))&&ancientMonumentCells256(b.kind,b,b.orientation).some(c=>!int(c.x,0,w.width-1)||!int(c.z,0,w.height-1))))return false;
-  if(Object.hasOwn(b,'factionId')&&isAncientNeutralKind256(b.kind)&&b.factionId!==null){const r=w.worldFactions;if(!r||b.factionId!==r.playerFactionId||!r.factions.some(f=>f.id===b.factionId&&(f.def==='PlayerColony'||f.def==='PlayerTribe')))return false;}
+  if(Object.hasOwn(b,'factionId')&&isAncientNeutralKind256(b.kind)&&b.factionId!==null&&!validTargetBuildingFactionShape263(b,version)){const r=w.worldFactions;if(!r||b.factionId!==r.playerFactionId||!r.factions.some(f=>f.id===b.factionId&&(f.def==='PlayerColony'||f.def==='PlayerTribe')))return false;}
  }
  for(const p of packed)if(isAncientMonumentKind256(p.building.kind)&&p.building.kind!=='urn')return false;
  for(const j of w.jobs){if(isAncientMonumentKind256(j.kind)&&(version<256||!ancientMonumentMaterial256(j.kind,j.material,version)||j.footprint!=='standard'||!int(j.orientation,0,ANCIENT_MONUMENT_DEFS_256[j.kind].rotatable?3:0)||ancientMonumentCells256(j.kind,j,j.orientation).some(c=>!int(c.x,0,w.width-1)||!int(c.z,0,w.height-1))))return false;for(const t of [j.furniture,j.deconstruction])if(t&&isAncientMonumentKind256(t.kind)&&(version<256||t.kind!=='urn'&&!!j.furniture))return false;}

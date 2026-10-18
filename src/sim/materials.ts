@@ -33,7 +33,7 @@ export function pileCell(world: World, pile: MaterialPile): Cell | null {
   const owner = pile.owner;
   if (owner.type === 'ground') return { x: owner.x, z: owner.z };
   if (owner.type === 'pawn'||owner.type==='equipment'||owner.type==='apparel'||owner.type==='inventory'){const pawn=world.pawns.find(p=>p.id===owner.pawnId);return pawn?pawnContentsLocation(world,pawn)?.cell??null:owner.type==='inventory'?animalContentsLocation256(world,owner.pawnId)?.cell??null:null;}
-  if(owner.type==='grave'||owner.type==='orbital-ship'||owner.type==='orbital-cargo'||owner.type==='starting-pod')return null;
+  if(owner.type==='grave'||owner.type==='orbital-ship'||owner.type==='orbital-cargo'||owner.type==='starting-pod'||owner.type==='world-site263')return null;
   return world.jobs.find(job => job.id === owner.jobId) ?? null;
 }
 export function deliveredStock(world: World, jobId: number): Stock {

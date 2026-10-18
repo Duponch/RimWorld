@@ -6,6 +6,8 @@ import {findPlanetRoute,planetQueryBudget,planetEdgeCost,planetCostContext} from
 import {copiedCaravanStory261,type EncounterMap261,type EncounterGroup261,type RetainedArrival261,type RetainedCaravan261,type CaravanStory261} from './caravan-encounter-state-261.ts';
 import {validRetainedArrival261} from './caravan-encounter-save-261.ts';
 import {registeredMap} from './world-map-context.ts';
+import {temporaryRetainedOwner263} from './world-target-retained-263.ts';
+import {worldTargetActions263} from './world-target-access-263.ts';
 const f=Math.fround;
 /** Capture the action of the actual order; ordinary historical orders retain
  * their existing automatic entry into the live origin map. */
@@ -28,7 +30,7 @@ export type RetainedReformPlan261={kind:'ready';state:AwayGroup;retained:Retaine
  * Same mass capture controls new cost and later overload; no distance is paid.
  * No source map, record, inventory, allocator or RNG is written by this function. */
 export function prepareRetainedReform261(root:CampaignState,site:EncounterMap261,next:AwayGroup,mass:GroupMassCapture,calendar:World):RetainedReformPlan261 {
- const old=site.battlefield261?.retained,planet=root.planet;
+ const old=temporaryRetainedOwner263(root,site)?.retained,planet=root.planet;
  if(!old||!planet)throw Error('Actual Battlefield retained owner required');
  const retained:RetainedCaravan261={passStory:false,next:old.next?{...old.next}:null,destination:old.destination?{tile:old.destination.tile,action:old.destination.action?{...old.destination.action}:null}:null};
  const projectedMaps=calendar.campaignMap?.revision===2?calendar.campaignMap.maps:[];
@@ -50,9 +52,10 @@ export function prepareRetainedReform261(root:CampaignState,site:EncounterMap261
  if(old.destination&&old.destination.tile!==next.tile){
   const d=old.destination,action=d.action;
   const validAction=validRetainedArrival261(action,{version:root.schemaVersion,atCore:root.tick*10,tileCount:Number.MAX_SAFE_INTEGER,
-   factionIds:new Set(root.worldFactions?.factions.map(f=>f.id)),mapIds:new Set(root.worldMaps?.sites.map(s=>s.id)??projectedMaps.map(s=>s.id)),settlements:root.worldFactions?.settlements??[]})
+   factionIds:new Set(root.worldFactions?.factions.map(f=>f.id)),mapIds:new Set(root.worldMaps?.sites.map(s=>s.id)??projectedMaps.map(s=>s.id)),siteIds263:new Set(root.worldSites263?.entries.filter(s=>s.kind==='item-stash'&&!s.closed).map(s=>s.id)),settlements:root.worldFactions?.settlements??[]})
    &&(action?.kind!=='enter'||(root.worldMaps?.sites??projectedMaps).some(s=>s.id===action.mapId&&s.tile===d.tile))
-   &&(action?.kind!=='trade'||root.worldFactions!.settlements.some(s=>s.id===action.settlementId&&s.tile===d.tile));
+   &&(action?.kind!=='trade'||root.worldFactions!.settlements.some(s=>s.id===action.settlementId&&s.tile===d.tile))
+   &&(action?.kind!=='attack-settlement'&&action?.kind!=='visit-site'||worldTargetActions263(root,action,d.tile).ok);
   retained.destination=null;
   // Native StartPath resets pause before checking the action/route, even when
   // that validation fails. Existing engaged fraction remains otherwise intact.

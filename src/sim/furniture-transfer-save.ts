@@ -1,3 +1,4 @@
+import {targetBuildingPlayerUse263} from './world-target-building-263.ts';
 import {structureMaxHp} from './thing-damage-rules.ts';
 import {validateFlowerPotState} from './flower-pot.ts';
 import {isHabitatFurnitureKind,FURNITURE_DEFINITIONS} from './furniture-stats.ts';
@@ -40,6 +41,7 @@ export function validateFurniture(world:World,version:number,ids:Set<number>,sha
     if(!record(f)||!integer(f.structureId,1)||!minifiable(f.kind)||version<256&&(f.kind==='bedroll'||f.kind==='glow-pod')||version<229&&isShelfKind(f.kind)||version<226&&f.kind==='spike-trap'||version<224&&f.kind==='double-bed'||version<206&&f.kind==='drug-lab'||version<190&&f.kind==='tube-television'||version<187&&f.kind==='hospital-bed'||version<122&&f.kind==='chess-table'||version<31&&f.kind==='stonecutter'||version<73&&(f.kind==='research-bench'||f.kind==='tailor-bench')||version<177&&f.kind==='sun-lamp'||version<42&&f.kind==='standing-lamp'||version<85&&f.kind==='battery'||version<84&&isFoodWorkstation(f.kind)||version<90&&f.kind==='electric-tailor-bench'||version<101&&f.kind==='machining-table'||version<104&&['art-bench','small-sculpture','large-sculpture'].includes(f.kind)||Object.keys(f).some(k=>!['structureId','kind'].includes(k))){errors.push('Invalid furniture target.');continue;}
     const source=furnitureObject(world,f.structureId);
     if(world.packed.some(p=>p.building.id===f.structureId&&p.owner.type==='inventory'))errors.push('Merchant possession has a colonial furniture order.');
+    if(source&&!targetBuildingPlayerUse263(world,source))errors.push('Furniture job does not own its actual original');
     if(!source||source.kind!==f.kind||source.footprint!==job.footprint||seen.has(f.structureId)||job.deconstruction!==undefined||job.growingZoneId!==undefined||job.escrow.wood||job.escrow.food)errors.push('Invalid or duplicated furniture intent.');
     seen.add(f.structureId);
     if(['spike-trap','sun-lamp','standing-lamp','small-sculpture','large-sculpture'].includes(f.kind)&&job.orientation!==0)errors.push('Furniture installation cannot rotate.');

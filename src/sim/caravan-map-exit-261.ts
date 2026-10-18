@@ -35,7 +35,7 @@ export function prepareMapRaiderWorldExit261(w:World,carrier:Pawn,patient?:Pawn)
  const root=registeredCampaign(w),mapId=registeredMapId(w),state=root.worldPawns,factions=root.worldFactions;
  const calendar=w.raids,group=carrier.raid?.group,active=raidGroup261(w,group);
  const source=raidSource261(w,group),captor=source?.caravan261??source?.tempIncident261;
- if((Number(w.schemaVersion)!==261&&w.schemaVersion!==262)||(Number(root.schemaVersion)!==261&&root.schemaVersion!==262)||!w.pawns.includes(carrier)||mapId===undefined||registeredMap(root,mapId)!==w||w.tick!==root.tick||!root.worldMaps?.sites.some(s=>s.id===mapId)||!state||!factions||!captor||group===undefined||active?.id===group&&!active.members?.includes(carrier.id))return no('La sortie ne possède pas ses vrais propriétaires carte/faction/assaut.');
+ if((Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&Number(w.schemaVersion)!==263))||(Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&Number(root.schemaVersion)!==263))||!w.pawns.includes(carrier)||mapId===undefined||registeredMap(root,mapId)!==w||w.tick!==root.tick||!root.worldMaps?.sites.some(s=>s.id===mapId)||!state||!factions||!captor||group===undefined||active?.id===group&&!active.members?.includes(carrier.id))return no('La sortie ne possède pas ses vrais propriétaires carte/faction/assaut.');
  if('kind'in captor&&captor.kind==='pressure'&&captor.sourceMapId!==mapId)return no('La pression ne provient pas de cette vraie carte Battlefield.');
  const released=!!carrier.prisoner&&carrier.prisoner.mode==='release'&&carrier.prisoner.releasedAt!==undefined&&carrier.prisoner.releasedAt<=root.tick&&!!carrier.prisoner.escape;
  const now=root.tick*10;

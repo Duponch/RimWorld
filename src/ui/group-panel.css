@@ -73,3 +73,5 @@
 .group-reorganization :focus-visible{outline:3px solid #6c8a7b;outline-offset:2px}
 .camp-entry-preparation{padding:12px;margin:12px 0;border:1px solid var(--line);border-radius:8px;background:#fff9ec;color:var(--ink)}.camp-entry-preparation[hidden]{display:none}.camp-entry-preparation progress{display:block;width:100%;height:14px;margin:8px 0}.camp-entry-preparation p{overflow-wrap:anywhere}
 
+
+.planet-world-object-foreign-settlement{fill:#a36559}.planet-world-object-quest-site,.planet-world-object-item-stash{fill:#a28b52}.planet-world-object-destroyed-settlement{fill:#9b998b;stroke:#554e45;stroke-dasharray:2 2}

@@ -43,7 +43,7 @@ export type GeographicRenewalOutcome262='absent'|'same-tick'|'not-due'|'full'|'c
  * deliberately preserves the authorized provisional character producer. */
 export function advanceGeographicRenewal262(w:World,spawn:(species:AnimalSpeciesId,cell:Cell,nextDecision:number,flyIn:boolean)=>boolean):GeographicRenewalOutcome262 {
  const s=w.wildlife,state=s?.geographicRenewal262;if(!state)return 'absent';
- if(Number(w.schemaVersion)!==262||s.profile!=='geographic-fauna-v3'||state.revision!==1||!Number.isSafeInteger(state.adoptedAt)||state.adoptedAt<0||state.adoptedAt>state.lastTick)throw Error('Invalid prospective renewal owner');
+ if((Number(w.schemaVersion)!==262&&Number(w.schemaVersion)!==263)||s.profile!=='geographic-fauna-v3'||state.revision!==1||!Number.isSafeInteger(state.adoptedAt)||state.adoptedAt<0||state.adoptedAt>state.lastTick)throw Error('Invalid prospective renewal owner');
  if(state.lastTick===w.tick)return 'same-tick';const due=geographicRenewalDue262(state.lastTick,w.tick);if(!due){state.lastTick=w.tick;return 'not-due';}
  const target=geographicRenewalTarget262(w);if(target.current>=target.weight){state.lastTick=w.tick;return 'full';}
  const staged=stagedCampArrivalRandom256(s.rng),random={value:staged.value,integer:staged.integer,float:(min:number,max:number)=>max<=min?min:f(f(staged.value()*f(f(max)-f(min)))+f(min))};

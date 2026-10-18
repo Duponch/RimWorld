@@ -7,9 +7,10 @@ import type {GroupState,GroupLoss} from './group-state.ts';
 import type {PackedFurniture} from './furniture-rules.ts';
 export const WORLD_MAP_SCHEMA=255;
 export type SettlementLimit=1|2|3|4|5;
-export type WorldMapKind='settlement'|'camp'|'legacy-site'|'battlefield';
+export type WorldMapKind='settlement'|'camp'|'legacy-site'|'battlefield'|'foreign-settlement'|'quest-site';
 export type LocalMapState=Omit<SecondaryMap,'group'|'groupLosses'|'worldMaps'|'worldGroups'|'civilianPost'>;
 export interface WorldMapRecord {
+ target263?:import('./world-sites-state-263.ts').LocalWorldTarget263;
  tempIncidents261?:import('./temp-map-incidents-261.ts').TempIncidents261;
  encounters261?:import('./caravan-encounter-state-261.ts').EncounterAdmission261;
  story261?:import('./caravan-encounter-state-261.ts').CaravanStory261;
@@ -34,6 +35,7 @@ export interface WorldMapRegistry {
 }
 /** State is the existing literal contract, including absent old freight/provisions. */
 export interface WorldGroupRecord {
+ pendingEntry263?:import('./world-sites-state-263.ts').PendingWorldEntry263;
  /** Preparing intent; autoJoinable born only on its true physical CREATE. */
  retreat261?:{revision:1;autoJoinable?:true};
  encounters261?:import('./caravan-encounter-state-261.ts').EncounterAdmission261;
@@ -51,8 +53,8 @@ export type SharedCampaignState=Pick<World,CampaignField>;
 export type MaplessCampaign=SharedCampaignState&{worldMaps:WorldMapRegistry;worldGroups:WorldGroupRegistry};
 export type CampaignState=World|MaplessCampaign;
 export interface MapAction {ok:boolean;reason?:string}
-export interface CampaignMapSummary {tempIncidents261?:import('./temp-map-incidents-261.ts').TempIncidents261;encounters261?:import('./caravan-encounter-state-261.ts').EncounterAdmission261;story261?:import('./caravan-encounter-state-261.ts').CaravanStory261;battlefield261?:import('./caravan-encounter-state-261.ts').CaravanBattlefield261;campPressure?:import('./camp-pressure-state-260.ts').CampPressure260;areaIds?:number[];id:number;tile:number|null;kind:WorldMapKind;createdAt:number;settledAt?:number;pawnCount:number;selected:boolean;actions:{view:MapAction;settle:MapAction;abandon:MapAction};abandonConsequences:{pawns:{id:number;name:string}[];groundItems:number;structures:number}}
-export interface CampaignGroupSummary {capturePatients259?:import('./group-human-projection-259.ts').GroupCapturePatients259;encounters261?:import('./caravan-encounter-state-261.ts').EncounterAdmission261;story261?:import('./caravan-encounter-state-261.ts').CaravanStory261;pending261?:import('./caravan-encounter-state-261.ts').PendingCaravanEncounter261;arrival261?:{tile:number;action:NonNullable<import('./caravan-encounter-state-261.ts').RetainedArrival261>};memberContexts?:GroupMemberProjectionContext[];id:number;originMapId:number;localMapId:number|null;phase:GroupState['phase'];originTile:number|null;tile:number|null;memberIds:number[];mass:{grams:number;capacityGrams:number}|null;filthPresent:boolean;postId?:number;post?:World['civilianPost'];context:WorldGroupRecord['context'];entryActions:Record<'visit'|'camp'|'settle',MapAction>;state:GroupState}
+export interface CampaignMapSummary {target263?:import('./world-sites-state-263.ts').LocalWorldTarget263;tempIncidents261?:import('./temp-map-incidents-261.ts').TempIncidents261;encounters261?:import('./caravan-encounter-state-261.ts').EncounterAdmission261;story261?:import('./caravan-encounter-state-261.ts').CaravanStory261;battlefield261?:import('./caravan-encounter-state-261.ts').CaravanBattlefield261;campPressure?:import('./camp-pressure-state-260.ts').CampPressure260;areaIds?:number[];id:number;tile:number|null;kind:WorldMapKind;createdAt:number;settledAt?:number;pawnCount:number;selected:boolean;actions:{view:MapAction;settle:MapAction;abandon:MapAction};abandonConsequences:{pawns:{id:number;name:string}[];groundItems:number;structures:number}}
+export interface CampaignGroupSummary {retreat261?:WorldGroupRecord['retreat261'];pendingEntry263?:import('./world-sites-state-263.ts').PendingWorldEntry263;capturePatients259?:import('./group-human-projection-259.ts').GroupCapturePatients259;encounters261?:import('./caravan-encounter-state-261.ts').EncounterAdmission261;story261?:import('./caravan-encounter-state-261.ts').CaravanStory261;pending261?:import('./caravan-encounter-state-261.ts').PendingCaravanEncounter261;arrival261?:{tile:number;action:NonNullable<import('./caravan-encounter-state-261.ts').RetainedArrival261>};memberContexts?:GroupMemberProjectionContext[];id:number;originMapId:number;localMapId:number|null;phase:GroupState['phase'];originTile:number|null;tile:number|null;memberIds:number[];mass:{grams:number;capacityGrams:number}|null;filthPresent:boolean;postId?:number;post?:World['civilianPost'];context:WorldGroupRecord['context'];entryActions:Record<'visit'|'camp'|'settle',MapAction>;state:GroupState}
 export interface MapIncident {mapId:number;kind:'raid'|'mechanoid'|'visitor'|'manhunter'|'downed';count:number;actorId:number}
 export type CampaignLossContext=WorldGroupRegistry['lossContexts'][number]&{filthPresent:boolean;memberContexts?:GroupMemberProjectionContext[]};
 /** Transport-only projection of an actual terminal owner and its source witness. */
@@ -70,7 +72,7 @@ const dataRecord=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='objec
 /** Pure envelope attestation; the complete worker save guard remains authoritative. */
 export function isMaplessCampaign(value:unknown):value is MaplessCampaign {
  if(!dataRecord(value)||!Number.isSafeInteger(value.schemaVersion)||Number(value.schemaVersion)<255||!dataRecord(value.worldMaps)||!dataRecord(value.worldGroups))return false;
- const allowed=['schemaVersion','tick','rng','nextId','planet','research','relationships','foodPolicies','nextFoodPolicyId','apparelPolicies','nextApparelPolicyId','foodRules','restRules','gameProfile','worldIncidents','worldMaps','worldGroups',...(Number(value.schemaVersion)>=256?['worldFactions','worldPawns']:[])];
+ const allowed=['schemaVersion','tick','rng','nextId','planet','research','relationships','foodPolicies','nextFoodPolicyId','apparelPolicies','nextApparelPolicyId','foodRules','restRules','gameProfile','worldIncidents','worldMaps','worldGroups',...(Number(value.schemaVersion)>=256?['worldFactions','worldPawns']:[]),...(Number(value.schemaVersion)===263?['worldSites263']:[])];
  if(Reflect.ownKeys(value).some(k=>typeof k!=='string'||!allowed.includes(k)))return false;
  const m=value.worldMaps,g=value.worldGroups;return m.revision===1&&m.rootMapId===null&&m.selectedMapId===null&&Array.isArray(m.sites)&&m.sites.length===0&&Reflect.ownKeys(m.sites).length===1&&g.revision===1&&Array.isArray(g.groups)&&Array.isArray(g.losses)&&Array.isArray(g.abandonedPawns)&&Array.isArray(g.abandonedContents)&&Array.isArray(g.legacyTravellers)&&Array.isArray(g.events);
 }

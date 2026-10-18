@@ -22,5 +22,5 @@ export function irregularTemperatureOffset262(tileId:number,absoluteCore:number)
 /** Exact optional true marker. Old schemas reject it before their neutral
  * migration; accessors, inherited/hidden/undefined/false markers never admit. */
 export function validIrregularClimateMarker262(value:object,version:number):boolean {
- const d=Object.getOwnPropertyDescriptor(value,'irregular262');return d?version===262&&d.enumerable===true&&Object.hasOwn(d,'value')&&d.value===true:!('irregular262'in value);
+ const d=Object.getOwnPropertyDescriptor(value,'irregular262');return d?(Number(version)===262||Number(version)===263)&&d.enumerable===true&&Object.hasOwn(d,'value')&&d.value===true:!('irregular262'in value);
 }

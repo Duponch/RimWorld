@@ -1,4 +1,6 @@
 # Elsewhere
+**V418 — schéma 263, qualification ciblée acquise par reprises :** [Établissements étrangers et Sites mondiaux](docs/gameplay/world-targets-v418.md). Entrée, retrait, reformation et retour des mêmes personnes/biens acquis jusqu’au dépôt15165 ; archives et présentation contrôlées. Non publié ; nouvelle démonstration et rapport des fondations restent à faire, aucun gain FPS annoncé.
+
 **V417 — schéma 262, qualification ciblée acquise par reprises :** [Choix de départ et écologie géographique](docs/gameplay/geographic-continuation-v417.md). Six tailles normales, saison et date confirmées, température et faune prospectives ; 47cas/dixfichiers, vraie création325² en hiver et recharge complète exacte. Migration261 neutre sur deux cartes ; rouges et limites de confort conservés. Non publié, productionV403 inchangée ; établissements étrangers et sites de quête encore ouverts avant démonstration.
 
 **V416 — schéma 261, qualification fonctionnelle ciblée :** [Rencontres et sorties de caravane](docs/gameplay/caravan-encounters-v416.md). Rencontres, commerce/cession, sortie physique et entrée animale acquis par reprises ; mêmes propriétaires, annulation et recharges exactes UI. Adaptation PNJ/animaux déclarée, rouges et limites de confort conservés. Non publié, productionV403 inchangée ; compléments générateur et sites encore ouverts avant démonstration.

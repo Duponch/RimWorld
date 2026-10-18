@@ -20,6 +20,7 @@ export interface Mechanoid extends Cell { corpseDamage?:number;
   path:Cell[];motion?:TravelSegment;heading:number;moveCooldown:number;planCooldown:number;
   raid?:{group:number;goal:Cell|null};
   temple?:import('./temple-mech-duty-256.ts').TempleMechDuty256;
+  site263?:import('./world-site-mechanoids-263.ts').SiteMechDuty263;
   melee?:MeleeState;
   stagger?:StaggerState;stun?:StunState;
   emp?:EmpAdaptationState;

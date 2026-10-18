@@ -1,4 +1,5 @@
 import { minifiable } from '../sim/furniture-rules';
+import {targetBuildingPlayerUse263} from '../sim/world-target-building-263';
 import { footprintCells } from '../sim/definitions';
 import type { Cell, Command, World } from '../sim/types';
 
@@ -15,7 +16,7 @@ export function furnitureControls(panel:HTMLElement,world:()=>World|undefined,ce
       const w=world(),c=cell();if(!w||!c)return;
       const selected=selectedFurniture(w,c,selection());
       const object=id==='cell-install'?selected.target:selected.object;
-      if(!object)return;
+      if(!object||!targetBuildingPlayerUse263(w,object))return;
       if(id==='cell-install')place(object.id);else send({type:'designate',kind:'uninstall',targetId:object.id,x:c.x,z:c.z});
     };
     panel.append(button);
@@ -25,6 +26,6 @@ export function updateFurnitureControls(panel:HTMLElement,world:World,cell:Cell,
   const {object,pack,target}=selectedFurniture(world,cell,selection);
   const busy=(id:number)=>world.jobs.some(j=>j.flick?.structureId===id||j.furniture?.structureId===id||j.deconstruction?.structureId===id);
   const uninstall=panel.querySelector<HTMLButtonElement>('#cell-uninstall')!;
-  uninstall.hidden=!object||!minifiable(object.kind)||busy(object.id);uninstall.dataset.furnitureId=object?String(object.id):'';
-  const install=panel.querySelector<HTMLButtonElement>('#cell-install')!;install.hidden=!target||!minifiable(target.kind)||busy(target.id);install.textContent=pack?'Installer':'Réinstaller';install.dataset.furnitureId=target?String(target.id):'';
+  uninstall.hidden=!object||!targetBuildingPlayerUse263(world,object)||!minifiable(object.kind)||busy(object.id);uninstall.dataset.furnitureId=object?String(object.id):'';
+  const install=panel.querySelector<HTMLButtonElement>('#cell-install')!;install.hidden=!target||!targetBuildingPlayerUse263(world,target)||!minifiable(target.kind)||busy(target.id);install.textContent=pack?'Installer':'Réinstaller';install.dataset.furnitureId=target?String(target.id):'';
 }

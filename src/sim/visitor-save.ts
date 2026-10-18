@@ -26,7 +26,7 @@ import { pileMaxHp } from './thing-damage-rules.ts';
 import { INTRO_VISITOR_TICK,VISITOR_FLOWS,VISITOR_INTERVAL,VISITOR_YEAR,type VisitorAgendaKind } from './visitor-state.ts';
 import { TICKS_PER_DAY,type Cell,type MaterialPile,type Pawn,type World } from './types.ts';
 import { APPAREL_POLICY_INTERVAL } from './apparel-renewal.ts';
-import { validMeleeThreatShape } from './mental-save.ts';
+import { validMentalShape,validMeleeThreatShape } from './mental-save.ts';
 import {validTempTravelerHeader261,visitorAgendaClock261} from './temp-travelers-save-261.ts';
 
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
@@ -43,6 +43,18 @@ export function validArchivedMeleeThreat(value:unknown,w:Pick<World,'schemaVersi
   if(!object(value)||w.schemaVersion<192&&Object.hasOwn(value,'meleeThreat')||!validMeleeThreatShape(value.meleeThreat,w.schemaVersion,tick))return false;
   const threat=value.meleeThreat;
   return threat===undefined||object(threat)&&threat.attackerId!==value.id&&integer(threat.attackerId,1,w.nextId-1);
+}
+
+/** A frozen visitor may carry its already-constructed256 wander only.
+ * It is checked at the real departure clock, never expired/recovered now.
+ * Older archives retain their literal no-mental contract. No crisis departs. */
+export function validArchivedVisitorMental(value:unknown,w:Pick<World,'schemaVersion'|'width'|'height'>,tick:number):boolean {
+  if(!object(value))return false;
+  const d=Object.getOwnPropertyDescriptor(value,'mental');if(!d)return !('mental'in value);
+  if(w.schemaVersion<256||!d.enumerable||!Object.hasOwn(d,'value')||!object(d.value)||!Object.hasOwn(d.value,'wander')||'crisis'in d.value)return false;
+  const mental=d.value;
+  if(![Object.prototype,null].includes(Object.getPrototypeOf(mental))||Reflect.ownKeys(mental).length!==4||!['below','cooldown','catharsis','wander'].every(k=>{const slot=Object.getOwnPropertyDescriptor(mental,k);return !!slot&&slot.enumerable&&Object.hasOwn(slot,'value');}))return false;
+  return validMentalShape(mental,w.schemaVersion,tick,w.width,w.height);
 }
 
 /** Presence is prospective even when the value is undefined or inherited. */
@@ -77,7 +89,7 @@ function validArchivedPawn(value:unknown,w:World,tick:number):boolean {
   if(object(value)&&value.filthFeet!==undefined){if(w.schemaVersion<89||!validFilthFeet(value.filthFeet,w.schemaVersion))return false;const copy={...value};delete copy.filthFeet;value=copy;}
   if(object(value)&&value.appearance!==undefined&&(w.schemaVersion<109||validatePawnAppearance(value.appearance).length))return false;
   const medicalGuest=object(value)&&w.schemaVersion>=237&&hasVisitorMedicalGuestMarker(value as unknown as Pick<Pawn,'visitor'>);
-  if(!object(value)||!keys(value,[...(medicalGuest?['careDisabled']:[]),...(w.schemaVersion>=223?['allowedAreaId']:[]),...(w.schemaVersion>=109?['appearance']:[]),...(w.schemaVersion>=138?['age']:[]),...(w.schemaVersion>=191?['background']:[]),...(w.schemaVersion>=192?['meleeThreat']:[]),...(w.schemaVersion>=195?['familyBereavement','romanceMemories']:[]),...(w.schemaVersion>=209?['deathThoughts']:[]),...w.schemaVersion>=259?['worldAffiliation259','prisonerHistory259']:[],'id','name','x','z','visitor','faction','medicalCare','skills','recreation','foodPolicyId','schedule','restZeroTicks','collapsePending','hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty','apparelPolicyId','apparelAutomation','nextApparelCheckAt']:[]),'memories','orders','jobId','haul','cooking','need','bedId','needCooldown','state','priorities','path','moveCooldown','planCooldown','health','lastAttack','disturbance'])||!validHumanAge(value.age,w.schemaVersion)||!validBackground(value.background,w.schemaVersion,value.age as import('./human-age.ts').HumanAge|undefined)||!validArchivedMeleeThreat(value,w,tick))return false;
+  if(!object(value)||!keys(value,[...(medicalGuest?['careDisabled']:[]),...(w.schemaVersion>=223?['allowedAreaId']:[]),...(w.schemaVersion>=109?['appearance']:[]),...(w.schemaVersion>=138?['age']:[]),...(w.schemaVersion>=191?['background']:[]),...(w.schemaVersion>=192?['meleeThreat']:[]),...(w.schemaVersion>=195?['familyBereavement','romanceMemories']:[]),...(w.schemaVersion>=209?['deathThoughts']:[]),...(w.schemaVersion>=256?['mental']:[]),...w.schemaVersion>=259?['worldAffiliation259','prisonerHistory259']:[],'id','name','x','z','visitor','faction','medicalCare','skills','recreation','foodPolicyId','schedule','restZeroTicks','collapsePending','hunger','rest','mood','comfort',...(w.schemaVersion>=90?['beauty','apparelPolicyId','apparelAutomation','nextApparelCheckAt']:[]),'memories','orders','jobId','haul','cooking','need','bedId','needCooldown','state','priorities','path','moveCooldown','planCooldown','health','lastAttack','disturbance'])||!validHumanAge(value.age,w.schemaVersion)||!validBackground(value.background,w.schemaVersion,value.age as import('./human-age.ts').HumanAge|undefined)||!validArchivedMeleeThreat(value,w,tick)||!validArchivedVisitorMental(value,w,tick))return false;
   if(!validWorldAffiliationFields259(value,w.schemaVersion)||!validWorldAffiliationForeignKeys259(value as unknown as Pawn,w.worldFactions))return false;
   if(value.prisonerHistory259!==undefined&&!validPrisonerStateRecord259(value.prisonerHistory259,w.schemaVersion,{...w,tick},true))return false;
   const careValid=medicalGuest?(value.medicalCare===undefined?(value.careDisabled===undefined||value.careDisabled===true):typeof value.medicalCare==='string'&&Object.hasOwn(MEDICAL_CARE,value.medicalCare)&&value.careDisabled===undefined):value.medicalCare==='industrial';

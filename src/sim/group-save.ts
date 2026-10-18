@@ -17,7 +17,7 @@ import {validPawnMapAreaBindings,mapAreaReferences} from './pawn-map-areas.ts';
 import type {GroupMemberOrigin} from './group-reorganization-state.ts';
 import {validGroupTravel,validGroupReorganization,validGroupMemberOrigin,groupReorganizationBalance} from './group-reorganization-save.ts';
 import {groupMemberOriginAuthority,groupPersonValidationView} from './group-member-origin.ts';
-import {boundWorldGroup,groupOriginMapTile,projectionAllowsFilth} from './world-map-context.ts';
+import {boundWorldGroup,groupOriginMapTile,projectionAllowsFilth,registeredCampaign} from './world-map-context.ts';
 import {GROUP_FREIGHT_SCHEMA,groupItemMassGrams} from './group-freight.ts';
 import {validGroupFreightShape} from './group-freight-save.ts';
 /** Raw owner/phase guard. No projected World, registration or mutation. */
@@ -101,6 +101,32 @@ export function validateGroupStateWithPlanet(world:World,version:number,context:
   if(!planet)return ['Invalid group planet authority.'];
   return validateGroupOwners(world,version,planet);
 }
+/** Only the existing actual263 escape receipt may own a stationary caravan
+ * without a split/reform birth. Other validators already check every original,
+ * origin context, clinical/clock boundary and inventory equation. No migration,
+ * historical fallback, new birth or default receipt is installed here. */
+export function validStationaryRetreat263(world:World,g:GroupState):boolean {
+ if(Number(world.schemaVersion)!==263||world.group!==g||!('members'in g)||g.phase!=='stationary'||g.admission?.revision!==2||!g.travel||!g.reorganization||g.reorganization.birth!==undefined)return false;
+ const r=boundWorldGroup(world),receipt=r?.retreat261,admission=r?.encounters261;
+ if(!r||r.state!==g||r.localMapId!==null||!object(receipt)||!keys(receipt,['revision','autoJoinable'])||receipt.revision!==1||receipt.autoJoinable!==true||!object(admission)||!keys(admission,['revision'])||admission.revision!==1)return false;
+ if(g.reorganization.memberOrigins.some(o=>!Number.isSafeInteger(o.enteredAtAbsCore)||o.enteredAtAbsCore!<0)||g.animalOwners?.origins.some(o=>!Number.isSafeInteger(o.enteredAtAbsCore)||o.enteredAtAbsCore!<0))return false;
+ const root=registeredCampaign(world),allowed=(kind:string)=>kind==='foreign-settlement'||kind==='quest-site'||kind==='battlefield';
+ if(root.worldMaps){
+  if(!root.worldGroups?.groups.includes(r))return false;
+  const source=root.worldMaps.sites.find(s=>s.id===r.originMapId)??root.worldMaps.retired.find(s=>s.id===r.originMapId);
+  return !!source&&allowed(source.kind)&&source.tile===g.originTile;
+ }
+ // MAIN reads its admitted transport only. The row is the original metadata
+ // object retained by groupViews; a copied record or state is not authority.
+ const m=world.campaignMap?.revision===2?world.campaignMap:undefined,row=m?.groups.find(row=>row.id===g.id);
+ if(!m||!row||row.state!==g||row.originMapId!==r.originMapId||row.localMapId!==null||row.context!==r.context||row.retreat261!==receipt||row.encounters261!==admission||row.originTile!==g.originTile)return false;
+ const live=m.maps.find(s=>s.id===r.originMapId);
+ if(live)return allowed(live.kind)&&live.tile===g.originTile;
+ // The existing retired-origin scalar is captured from the true retired map.
+ // It proves ID/tile/removal, not a graphical claim about that former kind.
+ return !!m.worldPawnOrigins?.some(s=>s.mapId===r.originMapId&&s.tile===g.originTile);
+}
+
 function validateGroupOwners(world:World,version:number,planet:PlanetState,referencesOnly=false):string[] {
   const raw=world as unknown as Record<string,unknown>,errors:string[]=[];
   const fail=(message:string)=>errors.push(message);
@@ -122,7 +148,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
   // must still resolve those IDs in the current, separately numbered registries.
   function person(v:unknown,clock:number,dead:boolean,origin?:GroupMemberOrigin,admission:import('./group-state.ts').GroupAdmission257|undefined=object(group)?group.admission as import('./group-state.ts').GroupAdmission257|undefined:undefined):v is Pawn {
     const personWorld=groupPersonValidationView(world,origin);
-    if(!object(v)||!keys(v,REQUIRED_PAWN,[...PASSIVE_PAWN,...(version===259||version===260||(version===261||version===262))?['worldAffiliation259','prisonerHistory259',...admission?.revision===2?['prisoner']:[]]:[],...version>=256?['mapAreas','caravanCarrySick','mapBed','arrivalRotation','hiveDefeats','nativeHuman']:[]])||!thing(v.id)||ownerIds.has(v.id)||localById.has(v.id)
+    if(!object(v)||!keys(v,REQUIRED_PAWN,[...PASSIVE_PAWN,...(version===259||version===260||(version===261||(Number(version)===262||Number(version)===263)))?['worldAffiliation259','prisonerHistory259',...admission?.revision===2?['prisoner']:[]]:[],...version>=256?['mapAreas','caravanCarrySick','mapBed','arrivalRotation','hiveDefeats','nativeHuman']:[]])||!thing(v.id)||ownerIds.has(v.id)||localById.has(v.id)
       ||!int(v.x,0,personWorld.width-1)||!int(v.z,0,personWorld.height-1))return false;
     if(!oneOf(v.state,['idle','resting','downed',...(dead?['dead']:[])])||dead!==(v.state==='dead')
       ||v.jobId!==null||v.haul!==null||v.cooking!==null||v.need!==null||v.bedId!==null||v.moveCooldown!==0||v.planCooldown!==0
@@ -144,7 +170,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
     const assigned=p.apparelPolicyId!==undefined||p.apparelAutomation!==undefined||p.nextApparelCheckAt!==undefined;
     if(assigned&&(!int(p.apparelPolicyId,1,(personWorld.nextApparelPolicyId??0)-1)||!dead&&!personWorld.apparelPolicies?.some(policy=>policy.id===p.apparelPolicyId)
       ||typeof p.apparelAutomation!=='boolean'||!int(p.nextApparelCheckAt,0,clock+APPAREL_POLICY_INTERVAL.max)))return false;
-    if((!isColonist(p)||p.prisoner)&&!((version===259||version===260||(version===261||version===262))&&admission?.revision===2&&hostedCaptive259(world,p))||!validWorldAffiliationForeignKeys259(p,world.worldFactions)||p.health&&(p.health.body!==undefined||p.health.tick!==clock)
+    if((!isColonist(p)||p.prisoner)&&!((version===259||version===260||(version===261||(Number(version)===262||Number(version)===263)))&&admission?.revision===2&&hostedCaptive259(world,p))||!validWorldAffiliationForeignKeys259(p,world.worldFactions)||p.health&&(p.health.body!==undefined||p.health.tick!==clock)
       ||(dead?(!p.health?.death||p.health.death.tick!==clock):!!p.health?.death))return false;
     // Passive owners have no spatial vomiting driver. A healthy departure
     // cannot export an episode, and ordinary disease remains a clinical record.
@@ -294,7 +320,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
         else if(stop.kind==='unreachable'){if(!keys(stop,['kind','destination'])||stop.destination!==group.destination)return ['Invalid group blocked destination.'];}
         else return ['Unknown group stop.'];
       }
-      if(group.phase==='stationary'&&(!prospective.travel||!prospective.reorganization?.birth)||group.phase!=='travelling'&&(segment!==null||group.tile!==group.destination||group.route.length!==1||!object(stop)||stop.kind!==group.phase)
+      if(group.phase==='stationary'&&(!prospective.travel||!prospective.reorganization?.birth&&!validStationaryRetreat263(world,prospective))||group.phase!=='travelling'&&(segment!==null||group.tile!==group.destination||group.route.length!==1||!object(stop)||stop.kind!==group.phase)
         ||group.phase==='awaiting-entry'&&group.tile!==planet.homeTile||group.phase==='at-site'&&group.tile===planet.homeTile)return ['Invalid group arrival frontier.'];
       if((losses as unknown[]|undefined)?.some(loss=>object(loss)&&loss.groupId===group.id&&(loss.tick as number)<(group.departedAt as number)))return ['Group loss predates its departure.'];
       const all=[...(group.items as MaterialPile[]),...(retained.get(group.id as number)??[])],b=group.baseline as unknown as Extract<GroupState,{members:Pawn[]}>['baseline'],l=group.ledger as unknown as GroupState['ledger'];

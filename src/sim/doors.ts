@@ -1,3 +1,4 @@
+import {targetDoorCanOpen263,targetBuildingPlayerUse263} from './world-target-building-263.ts';
 import { isColonist } from './affiliation.ts';
 import {rememberExplorationApproacher256,consumeExplorationApproacher256} from './exploration-door-256.ts';
 import {resolveActualExplorationApproacher256} from './exploration-actors-256.ts';
@@ -19,7 +20,8 @@ function openDoor(world:World,s:Structure):void {
 /** Called before committing an edge. Waiting consumes no path or travel distance. */
 export function readyDoorEntry(world:World,pawn:Pawn,next:Cell):boolean {
   const s=doorAt(world,next);if(!s)return true;
-  const d=s.door!,breaking=prisonBreakActive(pawn);
+  const d=s.door!,breaking=prisonBreakActive(pawn),permission=targetDoorCanOpen263(world,pawn,s);
+  if(permission!==undefined&&!(pawn.prisoner&&pawn.prisoner.releasedAt===undefined&&!breaking)){if(!permission)return d.open&&doorOpenness(s,world.tick)>=1-1e-9;if(d.forbidden&&isColonist(pawn)&&!breaking)return false;rememberExplorationApproacher256(world,d,pawn.id,isColonist(pawn));d.lastTouch=world.tick;if(!d.open)openDoor(world,s);if(doorOpenness(s,world.tick)<1-1e-9)return false;d.closeAt=world.tick+DOOR_CLOSE_DELAY;return true;}
   if(pawn.prisoner&&pawn.prisoner.releasedAt===undefined&&!breaking){rememberExplorationApproacher256(world,d,pawn.id,false);return prisonDoorPassable(world,s);}
   if(!isColonist(pawn)&&!pawn.visitor&&pawn.prisoner?.releasedAt===undefined&&!breaking){rememberExplorationApproacher256(world,d,pawn.id,false);return d.open&&doorOpenness(s,world.tick)>=1-1e-9;}
   if(d.forbidden&&!breaking)return false;
@@ -35,7 +37,7 @@ export function readyDoorEntry(world:World,pawn:Pawn,next:Cell):boolean {
 export function approachAutodoor(world:World,pawn:Pawn,next:Cell):void {
   if(!isColonist(pawn)&&!pawn.visitor&&pawn.prisoner?.releasedAt===undefined&&!prisonBreakActive(pawn)||pawn.path[0]?.x!==next.x||pawn.path[0]?.z!==next.z)return;
   const upcoming=pawn.path[1];if(!upcoming||Math.max(Math.abs(upcoming.x-next.x),Math.abs(upcoming.z-next.z))!==1)return;
-  const s=doorAt(world,upcoming);
+  const s=doorAt(world,upcoming);if(s&&targetDoorCanOpen263(world,pawn,s)===false)return;
   if(s?.kind!=='autodoor'||!s.power?.on||s.breakdown||isBlockMaterial(s.material)||s.door?.forbidden&&!prisonBreakActive(pawn))return;
   rememberExplorationApproacher256(world,s.door!,pawn.id,true);
   s.door!.lastTouch=world.tick;openDoor(world,s);
@@ -74,6 +76,7 @@ export function updateDoors(world:World):void {
 export function applyDoorCommand(world:World,c:DoorCommand):CommandResult {
   if(!Number.isSafeInteger(c.structureId)||typeof c.value!=='boolean'||!['holdOpen','forbidden'].includes(c.setting))return {ok:false,code:'invalid-command',reason:'Réglage de porte invalide.'};
   const s=world.structures.find(s=>s.id===c.structureId&&isPassageDoor(s.kind));
+  if(s&&!targetBuildingPlayerUse263(world,s))return {ok:false,code:'invalid-command',reason:'Cette porte appartient à une autre faction.'};
   if(!s)return {ok:false,code:'missing-target',reason:'Cette porte n’existe plus.'};
   s.door![c.setting]=c.value;
   invalidateAnimalPens(world);

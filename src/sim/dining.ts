@@ -1,4 +1,5 @@
 import { allowedAreaAllows } from './allowed-area-state.ts';
+import { targetBuildingPlayerUse263 } from './world-target-building-263.ts';
 import { deconstructionReserved } from './deconstruction-rules.ts';
 import { capturePrisonTopology,prisonerAllowedCell } from './prison-space.ts';
 import { canStandAt } from './furniture-travel.ts';
@@ -20,7 +21,7 @@ export const isDiningSeat=(kind:unknown):boolean=>kind==='stool'||kind==='dining
 /** Any cardinal eating surface works; a stool's orientation is not a rule. */
 export function adjacentTable(world: World, cell: Cell): { id: number; cell: Cell } | null {
   for (const neighbor of neighbors(cell)) {
-    const table = world.structures.find(item => isDiningTable(item.kind) && footprintCells(item).some(part => same(part, neighbor)));
+    const table = world.structures.find(item => isDiningTable(item.kind) && targetBuildingPlayerUse263(world,item) && footprintCells(item).some(part => same(part, neighbor)));
     if (table) return { id: table.id, cell: neighbor };
   }
   return null;
@@ -28,8 +29,8 @@ export function adjacentTable(world: World, cell: Cell): { id: number; cell: Cel
 
 export function validDiningPlace(world: World, place: DiningPlace): boolean {
   if(world.schemaVersion>=22&&!canStandAt(world,place.target))return false;
-  if (place.seatId !== null && !world.structures.some(item => isDiningSeat(item.kind) && item.id === place.seatId && same(item, place.target))) return false;
-  return place.tableId === null || world.structures.some(item => item.id === place.tableId && isDiningTable(item.kind) && footprintCells(item).some(cell => adjacent(cell, place.target)));
+  if (place.seatId !== null && !world.structures.some(item => isDiningSeat(item.kind) && targetBuildingPlayerUse263(world,item) && item.id === place.seatId && same(item, place.target))) return false;
+  return place.tableId === null || world.structures.some(item => item.id === place.tableId && isDiningTable(item.kind) && targetBuildingPlayerUse263(world,item) && footprintCells(item).some(cell => adjacent(cell, place.target)));
 }
 
 /** Runs only after pickup, not at the original hunger decision. Candidate radius
@@ -43,7 +44,7 @@ export function chooseDiningPlace(world: World, pawn: Pawn, context: NeedContext
   const surfaces = new Map<number, number>();
   const fixed = new Set<number>();
   for (const item of world.structures) for (const cell of footprintCells(item)) {
-    if (isDiningTable(item.kind)) surfaces.set(key(cell), item.id);
+    if (isDiningTable(item.kind) && targetBuildingPlayerUse263(world,item)) surfaces.set(key(cell), item.id);
     if (!isDiningSeat(item.kind)) fixed.add(key(cell));
   }
   for (const item of world.jobs) if (item.kind === 'wall' || isDiningTable(item.kind)) for (const cell of footprintCells(item)) fixed.add(key(cell));
@@ -52,7 +53,7 @@ export function chooseDiningPlace(world: World, pawn: Pawn, context: NeedContext
   for (const seat of world.structures) {
     if(!allowedAreaAllows(world,pawn,seat))continue;
     if(!prisonerAllowedCell(world,pawn,seat,topology))continue;
-    if (!isDiningSeat(seat.kind) || deconstructionReserved(world,seat.id,pawn.id) || world.schemaVersion>=22&&!canStandAt(world,seat) || reserved.has(key(seat)) || distance(pawn, seat) > MATERIAL_DEFINITIONS.food.chairSearchRadius ** 2) continue;
+    if (!isDiningSeat(seat.kind) || !targetBuildingPlayerUse263(world,seat) || deconstructionReserved(world,seat.id,pawn.id) || world.schemaVersion>=22&&!canStandAt(world,seat) || reserved.has(key(seat)) || distance(pawn, seat) > MATERIAL_DEFINITIONS.food.chairSearchRadius ** 2) continue;
     const surface = neighbors(seat).find(cell => inBounds(world, cell.x, cell.z) && surfaces.has(key(cell)));
     if (surface) candidates.push({ target: { x: seat.x, z: seat.z }, seatId: seat.id, tableId: surfaces.get(key(surface))! });
   }

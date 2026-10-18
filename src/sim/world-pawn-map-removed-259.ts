@@ -56,7 +56,7 @@ function cleanHumanDraft(map:World,p:Pawn,area:ReturnType<typeof prepareRemovedM
  * lifecycle authority refuses BEFORE memories, cleanup, clocks or RNG change. */
 export function prepareMapRemoved259(input:CampaignState,map:World,mapId:number,automatic:boolean,departure?:ReformDeparture260):CampMapRemoved256 {
  const root=registeredCampaign(input),no=(reason:string):CampMapRemoved256=>({ok:false,reason}),site=root.worldMaps?.sites.find(s=>s.id===mapId);
- if((Number(root.schemaVersion)!==259&&Number(root.schemaVersion)!==260&&(Number(root.schemaVersion)!==261&&root.schemaVersion!==262))||!site||registeredCampaign(map)!==root||registeredMapId(map)!==mapId||registeredMap(root,mapId)!==map||map.tick!==root.tick)return no('Le retrait doit viser sa vraie carte actuelle.');
+ if((Number(root.schemaVersion)!==259&&Number(root.schemaVersion)!==260&&(Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&Number(root.schemaVersion)!==263)))||!site||registeredCampaign(map)!==root||registeredMapId(map)!==mapId||registeredMap(root,mapId)!==map||map.tick!==root.tick)return no('Le retrait doit viser sa vraie carte actuelle.');
  // One capture: local physical slots plus knowledge of the actual humans in
  // the campaign. Remembered interlocutors may already be in a true caravan.
  const humans=captureHumanOwners(map),captures=humans.slots.filter(s=>s.kind==='map'&&s.pawn&&alive(s.pawn)&&!departure?.ids.has(s.pawn.id));

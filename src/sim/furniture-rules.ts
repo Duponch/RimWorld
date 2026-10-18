@@ -1,3 +1,4 @@
+import {targetBuildingPlayerUse263} from './world-target-building-263.ts';
 import {ancientRepairTarget256} from './ancient-monument-runtime-256.ts';
 import {treeWorkTarget} from './tree-transfer.ts';
 import { reservedSource } from './materials.ts';
@@ -26,6 +27,7 @@ export function furnitureDuration(world:World,job:Job):number {
 export function furnitureReady(world:World,job:Job,pawn:Pawn):boolean {
   const id=job.furniture?.structureId;if(!id)return false;
   const source=world.structures.find(s=>s.id===id),pack=world.packed?.find(p=>p.building.id===id);
+  if((source??pack?.building)&&!targetBuildingPlayerUse263(world,(source??pack!.building)))return false;
   if(source&&world.jobs.some(j=>j.fixBreakdown?.structureId===id))return false;
   if(!source&&!pack||pack?.owner.type==='inventory'||pack?.owner.type==='pawn'&&pack.owner.pawnId!==pawn.id||reservedSource(world,id,pawn.id)>0)return false;
   if(source&&!deconstructionAvailable(world,{...job,deconstruction:{structureId:id,kind:source.kind}},pawn.id))return false;

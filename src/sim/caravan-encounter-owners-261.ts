@@ -7,7 +7,7 @@ import type {RelationshipPerson} from './relationship-state.ts';
 export function captureEncounterHumans261(root:CampaignState):HumanOwnershipCapture {
  const slots:HumanOwnerSlot[]=[],byId=new Map<number,HumanOwnerSlot>(),people=new Map<number,RelationshipPerson>();
  const rows=root.worldGroups?.groups??('campaignMap'in root&&root.campaignMap?.revision===2?root.campaignMap.groups:[]);
- if((Number(root.schemaVersion)===261||root.schemaVersion===262))for(const record of rows){
+ if((Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||Number(root.schemaVersion)===263)))for(const record of rows){
   const p=record.pending261,g=record.state;if(!p)continue;
   if(!('members'in g)||record.localMapId!==null||p.atCore!==root.tick*10)throw Error('Actual pending encounter frontier is not paused');
   for(const pawn of p.people){

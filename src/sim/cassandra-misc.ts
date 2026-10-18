@@ -1,4 +1,4 @@
-import {tempMapModern261} from './temp-map-incidents-261.ts';
+import {homeIncidentsBlocked261} from './temp-map-incidents-261.ts';
 import { climateTick,seasonTemperature,siteClimateDefinition } from './site-climate.ts';
 import { eligibleFlashstorm,resolveSelectedFlashstorm } from './flashstorm.ts';
 import { resolveSelectedPodRescue } from './pod-rescue.ts';
@@ -62,7 +62,7 @@ function emit(world:World,message:string):void {
 
 /** A continuation starts from the next check, with no retrospective draws. */
 export function adoptMiscIncidents(world:World):void {
-  if(tempMapModern261(world)||!world.gameProfile||world.miscIncidents)return;
+  if(homeIncidentsBlocked261(world)||!world.gameProfile||world.miscIncidents)return;
   world.miscIncidents={profile:'cassandra-misc-v1',adoptedAt:world.tick,
     rng:((world.seed^0x4c5ca180)>>>0)||1,
     nextCheck:Math.max(MISC_FIRST_CHECK,(Math.floor(world.tick/MISC_CHECK_INTERVAL)+1)*MISC_CHECK_INTERVAL),
@@ -158,7 +158,7 @@ export function advanceMiscIncidents(world:World):void {
     checkpointEclipseGrowth(world);delete weather.eclipse;
     emit(world,'L’éclipse se termine. La lumière naturelle et les générateurs solaires retrouvent leur fonctionnement habituel.');
   }
-  if(tempMapModern261(world))return;
+  if(homeIncidentsBlocked261(world))return;
   if(!state.introDone&&world.tick>=MISC_INTRO_TICK){
     state.introDone=true;
     if(world.tick===MISC_INTRO_TICK)consumeOpportunity(world,state);

@@ -34,7 +34,7 @@ export function groupHumanAdmissionReason257(w:World,p:Pawn,newIntent261=false):
  if(p.prisoner&&!captive&&!capture)return 'Le captif doit avoir un hôte réel et être sécurisé, ou relever du reformage de ce site.';
  if(!captive&&!capture&&(p.visitor||p.originQuestId!==undefined||!isColonist(p)))return 'Le transport des visiteurs et personnes de quête n’est pas disponible.';
  const group=p.draft?(pawnWorldGroup(w,p.id)?.state??w.group):undefined;
- const retainedDraft=(Number(w.schemaVersion)===261||w.schemaVersion===262)&&(newIntent261||!!group&&'manifest'in group&&!!group.humanPreparation?.undraftIds261?.includes(p.id));
+ const retainedDraft=(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||Number(w.schemaVersion)===263))&&(newIntent261||!!group&&'manifest'in group&&!!group.humanPreparation?.undraftIds261?.includes(p.id));
  // Mobilisation by itself (including its ordinary movement queue) is allowed.
  // A drafted service/physical-care owner is outside this narrow admission.
  const draftedService=p.tend||p.feed||p.ward||p.surgery||p.surgeryRequest||p.rescue||p.animalRescue||p.animalHandling||p.animalCare||p.animalFeed||p.firefighting||p.haul||p.equipmentTask||p.orders.active;
@@ -62,7 +62,7 @@ export function previewGroupHumanPreparation257(w:World,members:readonly Pawn[],
   if(!carrier)return {ok:false,reason:'Aucun colon libre ne peut rejoindre et porter cette personne à terre.'};
   passengers.push({pawnId:p.id,carrierId:carrier.id,phase:'approach',...autoCapturePatient259(w,p)?{captureOnPickup259:true as const}:{}});
  }
- const undraftIds=(Number(w.schemaVersion)===261||w.schemaVersion===262)?members.filter(p=>p.draft).map(p=>p.id):[];
+ const undraftIds=(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||Number(w.schemaVersion)===263))?members.filter(p=>p.draft).map(p=>p.id):[];
  return {ok:true,preparation:{revision:1,...undraftIds.length?{undraftIds261:undraftIds}:{},releaseIds:members.filter(p=>undraftIds.includes(p.id)||scoutActiveTask(p)||p.deepWork||p.openCasket||p.medicalSleep||p.path.length||p.moveCooldown>0||(p.motion?.end??0)>w.tick||w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)||w.packed.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)).map(p=>p.id),passengers}};
 }
 
@@ -105,7 +105,7 @@ export function groupHumanPassenger257(w:World,id:number):boolean {const g=pawnW
  * This is not carrierOf: pending bodies stay on their actual map and retain all
  * clinical evolution, needs and dangerous/medical preemption. No saved state. */
 export function groupHumanPendingPassenger259(w:World,id:number):boolean {
- if(Number(w.schemaVersion)!==259&&Number(w.schemaVersion)!==260&&(Number(w.schemaVersion)!==261&&w.schemaVersion!==262))return false;const g=pawnWorldGroup(w,id)?.state??w.group;
+ if(Number(w.schemaVersion)!==259&&Number(w.schemaVersion)!==260&&(Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&Number(w.schemaVersion)!==263)))return false;const g=pawnWorldGroup(w,id)?.state??w.group;
  if(!g||!('manifest'in g)||g.admission?.revision!==2||!g.humanPreparation)return false;
  const row=humanRows257(g.humanPreparation).byPatient.get(id);return !!row&&(row.phase==='approach'||row.phase==='waiting');
 }
@@ -144,14 +144,14 @@ export function processGroupHumanCarry257(w:World,g:PreparingGroup,p:Pawn,ctx:Ne
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype&&Reflect.ownKeys(v).every(k=>typeof k==='string'&&Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)!,'value'));
 const fields=(v:Record<string,unknown>,keys:readonly string[])=>Reflect.ownKeys(v).length===keys.length&&keys.every(k=>Object.hasOwn(v,k));
 const dense=(v:unknown):v is unknown[]=>Array.isArray(v)&&Reflect.ownKeys(v).length===v.length+1&&Array.from({length:v.length},(_,i)=>Object.hasOwn(v,i)&&Object.hasOwn(Object.getOwnPropertyDescriptor(v,String(i))!,'value')).every(Boolean);
-export function validGroupAdmission257(value:unknown,version:number):value is GroupAdmission257|undefined {return value===undefined||[257,258,259,260,261,262].includes(version)&&record(value)&&fields(value,['revision'])&&(value.revision===1||version>=259&&value.revision===2);}
+export function validGroupAdmission257(value:unknown,version:number):value is GroupAdmission257|undefined {return value===undefined||[257,258,259,260,261,262,263].includes(version)&&record(value)&&fields(value,['revision'])&&(value.revision===1||version>=259&&value.revision===2);}
 /** Raw references are checked against the actual local owner array. This is
  * not a capability flag that can admit another map's human. */
 export function validGroupHumanPreparation257(value:unknown,w:World,g:PreparingGroup,version:number,referencesOnly=false):boolean {
  if(value===undefined)return !g.admission;
- if(![257,258,259,260,261,262].includes(version)||!g.admission||!record(value)||!fields(value,['revision','releaseIds','passengers',...Object.hasOwn(value,'undraftIds261')?['undraftIds261']:[]])||value.revision!==1||!dense(value.releaseIds)||!dense(value.passengers))return false;
+ if(![257,258,259,260,261,262,263].includes(version)||!g.admission||!record(value)||!fields(value,['revision','releaseIds','passengers',...Object.hasOwn(value,'undraftIds261')?['undraftIds261']:[]])||value.revision!==1||!dense(value.releaseIds)||!dense(value.passengers))return false;
  const undraft=Object.hasOwn(value,'undraftIds261')?value.undraftIds261:undefined;
- if(Object.hasOwn(value,'undraftIds261')&&((version!==261&&version!==262)||!dense(undraft)||!undraft.length||undraft.some(id=>!Number.isSafeInteger(id)||!g.memberIds.includes(id as number))||new Set(undraft).size!==undraft.length))return false;
+ if(Object.hasOwn(value,'undraftIds261')&&((version!==261&&(Number(version)!==262&&Number(version)!==263))||!dense(undraft)||!undraft.length||undraft.some(id=>!Number.isSafeInteger(id)||!g.memberIds.includes(id as number))||new Set(undraft).size!==undraft.length))return false;
  const ids=new Set(g.memberIds),pawns=new Map(w.pawns.map(p=>[p.id,p])),released=new Set<number>(),patients=new Set<number>(),carrying=new Set<number>();
  const members=g.memberIds.map(id=>pawns.get(id));if(!referencesOnly&&(members.some(p=>!p||!!groupHumanAdmissionReason257(w,p,Array.isArray(undraft)&&undraft.includes(p.id)))||!members.some(p=>groupFreeHuman257(p!)&&groupHumanMobile257(p!))))return false;
  for(const id of value.releaseIds){if(!Number.isSafeInteger(id)||!ids.has(id as number)||released.has(id as number))return false;released.add(id as number);}

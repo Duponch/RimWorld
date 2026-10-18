@@ -1,3 +1,4 @@
+import {targetBuildingPlayerUse263} from './world-target-building-263.ts';
 import { isBedKind } from './bed-kinds.ts';
 import {localBedClaimAvailable256} from './actor-bed-local-256.ts';
 import {prepareConfirmedBedAssignment256} from './actor-bed-command-256.ts';
@@ -16,6 +17,7 @@ export const medicalBedPreference=(bed:Structure):number=>bed.medical?(bed.kind=
 
 export type MedicalBedCommand={type:'medical-bed';bedId:number;enabled:boolean};
 export function rescueBedAvailable(world:World,bed:Structure,patient:Pawn,carrierId:number,capture=false,slot?:BedSlot):boolean {
+  if(!targetBuildingPlayerUse263(world,bed))return false;
   if(world.schemaVersion>=256&&isBedKind(bed.kind)&&!bed.medical&&!localBedClaimAvailable256(world,bed,patient,bed.kind==='double-bed'?(slot??pawnBedSlot(patient,bed)):undefined))return false;
   if(bed.kind==='double-bed'){
     const place=slot??pawnBedSlot(patient,bed);
@@ -41,6 +43,7 @@ export function rescueBedPlaces(world:World,bed:Structure,patient:Pawn,carrierId
 }
 export function applyMedicalBed(world:World,command:MedicalBedCommand):CommandResult {
   const bed=world.structures.find(s=>s.id===command.bedId&&isBedKind(s.kind));
+  if(bed&&!targetBuildingPlayerUse263(world,bed))return {ok:false,code:'invalid-command',reason:'Ce lit appartient à une autre faction.'};
   if(!bed||typeof command.enabled!=='boolean')return {ok:false,code:'invalid-command',reason:'Lit ou usage médical invalide.'};
   if(bed.kind==='double-bed')return {ok:false,code:'invalid-command',reason:'Le lit double est réservé au couchage civil.'};
   if(!!bed.medical===command.enabled)return {ok:true};

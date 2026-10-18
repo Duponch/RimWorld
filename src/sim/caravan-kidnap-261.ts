@@ -63,7 +63,7 @@ export function releaseKidnap261(w:World,carrier:Pawn):void {
  * native admission owner. These physical checks neither invent trigger policy
  * nor reinterpret a player's captive as a member of the captor's faction. */
 export function physicalKidnapReason261(w:World,carrier:Pawn,patient:Pawn,continuing=false):string|undefined {
- if((Number(w.schemaVersion)!==261&&w.schemaVersion!==262)||carrier===patient||!w.pawns.includes(carrier)||!w.pawns.includes(patient)||!carrier.raid||!actualKidnapAssault261(w,carrier))return 'Les deux personnes originales ne possèdent plus ce vrai mandat d’assaut.';
+ if((Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&Number(w.schemaVersion)!==263))||carrier===patient||!w.pawns.includes(carrier)||!w.pawns.includes(patient)||!carrier.raid||!actualKidnapAssault261(w,carrier))return 'Les deux personnes originales ne possèdent plus ce vrai mandat d’assaut.';
  if(carrier.state==='dead'||carrier.state==='downed'||carrier.state==='sleeping'||carrier.need||carrier.health?.death||carrier.prisoner||carrier.visitor||carrier.mental?.crisis||carrier.burning||carrier.flee||carrier.collapsePending||medicalWorkRefusal(carrier)||pawnBody(carrier).capacities.moving<=0)return 'Le ravisseur ne peut plus porter cette personne.';
  if(carrierOf(w,carrier.id)||kidnapCarrierOf261(w,carrier.id)||groupHumanPassenger257(w,carrier.id)||groupHumanCarrying257(w,carrier.id)||carrier.rescue||carrier.animalRescue||carrier.surgery||carrier.interruptedCargo||carrier.equipmentDropPending)return 'Le ravisseur possède un autre engagement physique.';
  if(patient.state==='dead'||patient.health?.death||!continuing&&patient.state!=='downed')return 'La victime ne relève plus de la prise à terre.';

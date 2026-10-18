@@ -26,7 +26,7 @@ const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 const oneOf=(v:unknown,values:string[]):boolean=>typeof v==='string'&&values.includes(v);
 
-export function validatePileRecordShape(item:Record<string,unknown>,world:Pick<World,'width'|'height'|'tick'|'nextId'|'climate'>&Partial<Pick<World,'wildlife'>>,version:number,validationTick=world.tick,ancientCasketId?:number):string[]{
+export function validatePileRecordShape(item:Record<string,unknown>,world:Pick<World,'width'|'height'|'tick'|'nextId'|'climate'>&Partial<Pick<World,'wildlife'>>,version:number,validationTick=world.tick,ancientCasketId?:number,worldSiteId263?:number):string[]{
  const input={width:world.width,height:world.height,tick:validationTick};
  const coord=(v:Record<string,unknown>)=>integer(v.x,0,world.width-1)&&integer(v.z,0,world.height-1);
  const errors:string[]=[];
@@ -77,7 +77,8 @@ else {
   const owner = item.owner;
   // A direct held owner is admissible ONLY to the actual casket validator.
   // Ordinary map/full/delta calls omit this explicit original holder ID.
-  if (owner.type === 'ancient-casket' ? !isSchema256Or257(version)||!integer(ancientCasketId,1,world.nextId-1)||owner.casketId!==ancientCasketId||Object.keys(owner).some(key=>!['type','casketId'].includes(key))
+  if (owner.type === 'world-site263' ? version!==263||!integer(worldSiteId263,1)||owner.siteId!==worldSiteId263||Object.keys(owner).length!==2||Object.keys(owner).some(key=>!['type','siteId'].includes(key))
+    : owner.type === 'ancient-casket' ? !isSchema256Or257(version)||!integer(ancientCasketId,1,world.nextId-1)||owner.casketId!==ancientCasketId||Object.keys(owner).some(key=>!['type','casketId'].includes(key))
     : owner.type === 'ground' ? !coord(owner) || Object.keys(owner).some(key => !['type', 'x', 'z'].includes(key))
     : (owner.type === 'pawn'||version>=52&&owner.type==='equipment'||version>=63&&owner.type==='apparel'||version>=88&&owner.type==='inventory') ? !integer(owner.pawnId, 1) || Object.keys(owner).some(key => !['type', 'pawnId'].includes(key))
       : version>=231&&owner.type==='starting-pod' ? !integer(owner.podId,1,world.nextId-1)||Object.keys(owner).some(key=>!['type','podId'].includes(key))

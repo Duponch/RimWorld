@@ -1,3 +1,6 @@
+import {settlementProximityOffsets263} from '../sim/world-settlement-proximity-263';
+import {isWorldFactionDef256,WORLD_FACTION_DEFINITIONS_256} from '../sim/world-faction-catalog';
+import {settlementProximityText263} from './settlement-proximity-263';
 import {worldCreationCalendarFacts262} from './world-creation-calendar-262';
 import type {GeographicCreationSeason262} from '../sim/geographic-creation-options-262';
 import {canPlaceWorldSettlement} from '../sim/world-settlement-placement';
@@ -26,6 +29,7 @@ export function createWorldCreationSite256(options:{preview:WorldCreationPreview
   const site=describeWorldSite(surface,roads,tile.id);heading.textContent=denseBiomeLabel(tile.biome);fact('Case',String(tile.id));fact('Coordonnées',`${site.latitude.toFixed(2)}° / ${site.longitude.toFixed(2)}°`);fact('Relief',denseReliefLabel(site.hilliness));fact('Altitude',`${Math.round(site.elevation)} m`);fact('Température moyenne',`${site.meanTemperature.toFixed(1)} °C`);fact('Précipitations',`${Math.round(site.rainfall)} mm/an`);
   fact('Roches naturelles',site.hasBedrock?site.naturalRocks.map(r=>rockNames[r]??r).join(', '):'Aucune roche de sous-sol');fact('Côte océanique',site.coastAngle===null?'Non':'Oui');fact('Cours d’eau',site.rivers.length?[...new Set(site.rivers.map(r=>riverNames[r.river]??r.river))].join(', '):'Aucun');fact('Routes',site.roads.length?[...new Set(site.roads.map(r=>roadNames[r.road]??r.road))].join(', '):'Aucune');fact('Voisins',tile.neighbours.join(', '));fact('Taille de la carte',`${options.choices.size} × ${options.choices.size}`);const calendar=worldCreationCalendarFacts262(tile,options.choices.season);fact('Saison choisie',calendar.choice);fact('Date de départ',calendar.date);fact('Cycle saisonnier',calendar.seasonalRange+' · hors cycle journalier et incidents');
   const settlement=options.preview.settlements.find(s=>s.tile===tile.id);if(settlement)fact('Implantation',settlement.name);
+  const excluded=new Set(options.preview.factions.filter(f=>isWorldFactionDef256(f.def)&&WORLD_FACTION_DEFINITIONS_256[f.def].permanentEnemy).map(f=>f.id)),proximity=settlementProximityOffsets263(surface.tiles,tile.id,options.preview.settlements,excluded);if(proximity.length)fact('Proximité des établissements',settlementProximityText263(proximity));
   reason.textContent=allowed(tile.id)?'':!worldBiomeCanSettle(tile.biome)?'Ce lieu est couvert d’eau.':tile.hilliness==='impassable'?'Ces montagnes sont infranchissables.':occupied.has(tile.id)?'Ce lieu est déjà occupé.':'Ce lieu est adjacent à une implantation.';reason.classList.toggle('front-error',!allowed(tile.id));
  }
  function choose(id:number){if(!Number.isSafeInteger(id)||!surface.tiles[id])return;selected=id;options.onSelected(id);describe();}

@@ -1,8 +1,10 @@
-import {takeCaravanTradeArrivals261} from '../sim/caravan-arrival-261';
+/// <reference lib="webworker" />
+import {pendingWorldEntry263} from '../sim/world-target-access-263';
+import {prepareWorldTargetEntry263} from '../sim/world-target-entry-263';
+import {validCaravanArrivalCommand261,takeCaravanTradeArrivals261} from '../sim/caravan-arrival-261';
 import {validGeographicCreationSize262,validGeographicCreationSeason262} from '../sim/geographic-creation-options-262';
 import {configuredGeographicStartClock256} from '../sim/geographic-start-clock-256';
 import {geographicSurfaceTileClimateDefinition256} from '../sim/site-climate';
-/// <reference lib="webworker" />
 import {pendingCaravan261} from '../sim/caravan-incidents-261';
 import {validCaravanCommand261} from '../sim/caravan-commands-261';
 import {prepareActualBattlefieldEntry261} from '../sim/caravan-battlefield-entry-261';
@@ -199,6 +201,37 @@ function startEncounter261():void {
  })();
 }
 
+/** Same progress channel and one-attempt rule as actual Battlefield entry. */
+const attemptedWorldEntry263=new WeakSet<object>();
+let activeWorldEntry263:{root:CampaignState;pending:object;groupId:number}|undefined;
+function worldTargetOrder263(request:Request):boolean {
+ if(!world||request.type!=='command'||!validCaravanArrivalCommand261(request.command,world.schemaVersion))return false;
+ const held=pendingWorldEntry263(world),c=request.command,g=held&&world.worldGroups?.groups.find(r=>r.state.id===held.groupId)?.state;
+ return !!held&&!!g&&'members'in g&&c.groupId===held.groupId&&c.destination===g.tile&&(c.action===null||JSON.stringify(c.action)===JSON.stringify(held.pending.target));
+}
+function holdWorldEntry263(now:number):void {neutralResume261=undefined;speed=0;clock.reset(now);}
+function startWorldEntry263():void {
+ const root=world,held=root&&pendingWorldEntry263(root);if(!root||!held)return;
+ holdWorldEntry263(performance.now());if(activeWorldEntry263||activeEncounter261||activeCamp256||attemptedWorldEntry263.has(held.pending))return;
+ attemptedWorldEntry263.add(held.pending);const owner={root,pending:held.pending,groupId:held.groupId};activeWorldEntry263=owner;
+ void(async()=>{
+  let committed=false,finished=false;const iterator=prepareWorldTargetEntry263(root,owner.groupId);
+  try{
+   send({type:'caravan-encounter-progress',groupId:owner.groupId,phase:'preparing'});
+   for(;;){
+    if(fault)throw Error(fault.reason);
+    if(world!==root||activeWorldEntry263!==owner||pendingWorldEntry263(root)?.pending!==owner.pending)throw Error('La préparation de cette entrée a été remplacée ou annulée.');
+    const step=iterator.next();if(step.done){finished=true;if(step.value.status==='blocked')throw Error(step.value.reason);
+     const result=step.value.commit();if(!result.ok)throw Error(result.reason??'Entrée refusée.');committed=true;
+     caravans?.encounterChanged261(root,owner.groupId);publish(true);send({type:'caravan-encounter-progress',groupId:owner.groupId,phase:'complete'});return;
+    }
+    send({type:'caravan-encounter-progress',groupId:owner.groupId,phase:step.value.phase});await nextCampTurn256();
+   }
+  }catch(error){if(committed)stopFatal(error);if(world===root&&pendingWorldEntry263(root)?.pending===owner.pending)send({type:'caravan-encounter-progress',groupId:owner.groupId,phase:'refused',reason:error instanceof Error?error.message:String(error)});
+  }finally{if(!finished)iterator.return({status:'blocked',phase:'cancelled',reason:'Unpublished world target discarded'});if(activeWorldEntry263===owner)activeWorldEntry263=undefined;clock.reset(performance.now());if(!fault)startWorldEntry263();}
+ })();
+}
+
 type DraftRequest256=Extract<Request,{type:'world-draft-generate'|'world-draft-cancel'|'world-draft-confirm'|'world-draft-start'}>;
 interface HeldWorldDraft256 {
  generation:number;request:WorldCreationRequest256;key:string;creationId?:number;cancelled?:boolean;
@@ -285,6 +318,10 @@ async function handleWorldDraft256(request:DraftRequest256):Promise<void> {
 }
 
 scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
+  const targetOrder=worldTargetOrder263(request);
+  const cancelTarget=targetOrder&&request.type==='command'&&validCaravanArrivalCommand261(request.command,world!.schemaVersion)&&request.command.action===null;
+  if(activeWorldEntry263&&!['save','resync','init','load'].includes(request.type)&&!cancelTarget){send({type:'reply',id:request.id,ok:false,outcome:'refused',reason:'La préparation de ce site doit se terminer ou être annulée.'});return;}
+  if(world&&pendingWorldEntry263(world)&&request.type==='command'&&!targetOrder){send({type:'reply',id:request.id,ok:false,outcome:'refused',reason:'Terminez ou annulez l’entrée réelle avant un autre ordre.'});return;}
   if(activeEncounter261&&!['save','resync','init','load'].includes(request.type)){send({type:'reply',id:request.id,ok:false,outcome:'refused',reason:'La préparation du champ de bataille doit se terminer.'});return;}
   if(world&&pendingCaravan261(world)&&request.type==='command'&&!validCaravanCommand261(request.command)){send({type:'reply',id:request.id,ok:false,outcome:'refused',reason:'Résolvez la rencontre réelle avant de donner un autre ordre.'});return;}
   if(request.type==='camp-entry-cancel'){cancelCamp256(request);return;}
@@ -335,7 +372,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
       if (![0, 1, 3, 6].includes(request.speed)) throw new Error('Vitesse invalide.');
       const beforeAdvance = urgentThreats.token();
       if (!advanceSimulation(performance.now())) throw new Error(fault!.reason);
-      if(world&&pendingCaravan261(world)&&request.speed!==0)throw Error('La rencontre réelle conserve la simulation en pause jusqu’à sa décision.');
+      if(world&&(pendingCaravan261(world)||pendingWorldEntry263(world))&&request.speed!==0)throw Error('La rencontre réelle conserve la simulation en pause jusqu’à sa décision.');
       speed = urgentThreats.requestedSpeed(request.speed, request.options, beforeAdvance);
       if(request.speed===0&&neutralResume261&&neutralResume261.root===world)neutralResume261.speed=0;
     } else {
@@ -346,8 +383,10 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
         mutating = true;
         const retry=validCaravanCommand261(request.command)&&request.command.type==='caravan-encounter-choice'&&request.command.choice==='retry'?pendingCaravan261(world)?.pending261:undefined;
         const previousEncounter=pendingCaravan261(world)?.pending261;
+        const previousTarget=targetOrder?pendingWorldEntry263(world)?.pending:undefined;
         const result = applyCommand(world as World, request.command,caravans);
         if(result.ok&&retry)attemptedEncounter261.delete(retry);
+        if(result.ok&&previousTarget&&pendingWorldEntry263(world)?.pending===previousTarget)attemptedWorldEntry263.delete(previousTarget);
         if (!result.ok) { mutating = false; throw new Error(result.reason ?? 'Ordre refusé.'); }
         resumeNeutralEncounter261(previousEncounter);
         if (result.affected !== undefined) data = JSON.stringify({ affected: result.affected, skipped: result.skipped });
@@ -358,11 +397,11 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
     const checkpoint = request.type === 'init' || request.type === 'load' || request.type === 'resync';
     // An observer/encoder/publication failure must stop further mutation too.
     let publication: { epoch: number; revision: number } | undefined;
-    try { if(world&&pendingCaravan261(world))holdEncounterPause261(performance.now());if(request.type!=='order-options')publication = publish(checkpoint); }
+    try { if(world&&pendingCaravan261(world))holdEncounterPause261(performance.now());if(world&&pendingWorldEntry263(world))holdWorldEntry263(performance.now());if(request.type!=='order-options')publication = publish(checkpoint); }
     catch (error) { stopFatal(error); throw error; }
     if (adoptedReplacement) fault = undefined;
     send({ type: 'reply', id: request.id, ok: true, data, ...(checkpoint && publication ? { checkpoint: publication } : {}) });
-    startEncounter261();
+    startEncounter261();startWorldEntry263();
   } catch (error) {
     if (mutating || adoptedReplacement) stopFatal(error);
     const unknown = adoptedReplacement || mutating || (fault && request.type !== 'init' && request.type !== 'load');
@@ -374,7 +413,8 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
 function advanceSimulation(now:number):boolean {
   if(fault){clock.reset(now);return false;}
   if(world&&pendingCaravan261(world)){holdEncounterPause261(now);startEncounter261();return true;}
-  if(!world||activeEncounter261||activeCamp256||creatingDraftColony||preparingWorldDraft){clock.reset(now);return true;}
+  if(world&&pendingWorldEntry263(world)){holdWorldEntry263(now);startWorldEntry263();return true;}
+  if(!world||activeEncounter261||activeWorldEntry263||activeCamp256||creatingDraftColony||preparingWorldDraft){clock.reset(now);return true;}
   try {
   const ticks=clock.advance(now,speed);
   if (ticks > 0) {
@@ -383,13 +423,13 @@ function advanceSimulation(now:number):boolean {
       urgentThreats.prepareMaps(world);
       const started=performance.now();stepWorld(world,1,undefined,caravans);simulationMs+=performance.now()-started;stepMs=simulationMs/(i+1);
       const encounter=pendingCaravan261(world);
-      const threatPaused=urgentThreats.capture(world, threatPauseMode),paused=!!encounter||threatPaused;
+      const entry=pendingWorldEntry263(world),threatPaused=urgentThreats.capture(world, threatPauseMode),paused=!!encounter||!!entry||threatPaused;
       if(threatPaused){speed=0;clock.reset(now);}
-      if(encounter)holdEncounterPause261(now);
+      if(encounter)holdEncounterPause261(now);if(entry)holdWorldEntry263(now);
       const visible=visibleWorld();if(visible){motion.capture(visible);audioCues.capture(visible);}
       const changed = visible?presentationChanges.capture(visible):false;
       if (changed || paused) publishCapturedTick();
-      if (paused) {if(encounter)startEncounter261();break;}
+      if (paused) {if(encounter)startEncounter261();if(entry)startWorldEntry263();break;}
     }
   }
   // Supply confirmed motion every active batch (20 ms), including batches

@@ -1,3 +1,4 @@
+import {targetBuildingPlayerUse263} from './world-target-building-263.ts';
 import {claimLocalActorBed256,captureActorBeds256,actualBedOwners256,localBedClaimAvailable256,globalCivilBedShare256} from './actor-bed-local-256.ts';
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { captureAllowedArea } from './allowed-area-state.ts';
@@ -99,7 +100,7 @@ export function processSleeping(world: World, pawn: Pawn, context: NeedContext, 
     const bed = task.bedId === null ? null : world.structures.find(item => item.id === task.bedId && isBedKind(item.kind));
     const slot=bed?pawnBedSlot(pawn,bed):undefined;
     const head=bed&&slot!==undefined?bedSlotCell(bed,slot):undefined;
-    if (task.bedId !== null && (!bed || pawn.bedId !== bed.id || !head || !same(head, task.target)||bed.kind==='double-bed'&&(bedAssignmentReason(world,bed,pawn,slot!)!==undefined||bedSlotClaimed(world,bed,slot!,pawn.id)))) { if (!context.release()) return true; return true; }
+    if (task.bedId !== null && (!bed || !targetBuildingPlayerUse263(world,bed)|| pawn.bedId !== bed.id || !head || !same(head, task.target)||bed.kind==='double-bed'&&(bedAssignmentReason(world,bed,pawn,slot!)!==undefined||bedSlotClaimed(world,bed,slot!,pawn.id)))) { if (!context.release()) return true; return true; }
     if (!same(pawn, task.target)) { context.move(task.target, true); return true; }
     if((bed?.kind==='bedroll'||bed?.kind==='double-bed'||bed?.kind==='sleeping-spot')&&(pawn.moveCooldown>0||pawn.motion&&pawn.motion.end>world.tick))return true;
     if (task.phase === 'travel') context.event(`${pawn.name} s’allonge ${bed ? 'dans son lit' : 'au sol'}.`);

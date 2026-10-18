@@ -64,9 +64,9 @@ export function resolveSelectedPodRescue(w:World,seed:number):boolean {
 }
 function openPod(w:World,pending:PodRescuePending):boolean {
   if(!civilianAdmissionFits(w,1,1)||!Number.isSafeInteger(w.nextId+2)||!openingFree(w,pending))return false;
-  const factionId=pending.origin==='independent'?null:bornFactionForDef259(w,'OutlanderCivil');if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||w.schemaVersion===262))&&w.worldFactions&&factionId===undefined)return false;
+  const factionId=pending.origin==='independent'?null:bornFactionForDef259(w,'OutlanderCivil');if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||Number(w.schemaVersion)===263)))&&w.worldFactions&&factionId===undefined)return false;
   const rng={rng:pending.seed},p=startingPawn(w.nextId,`Naufragé ${pending.id}`,pending.cell.x,pending.cell.z,0,55,pending.seed,w.tick,w.schemaVersion);
-  p.faction='outlanders';if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||w.schemaVersion===262))&&w.worldFactions&&!bindBornHumanFaction259(w,p,factionId!))return false;p.foodPolicyId=w.foodPolicies[0]!.id;p.podRescue={incidentId:pending.id};
+  p.faction='outlanders';if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||Number(w.schemaVersion)===263)))&&w.worldFactions&&!bindBornHumanFaction259(w,p,factionId!))return false;p.foodPolicyId=w.foodPolicies[0]!.id;p.podRescue={incidentId:pending.id};
   delete p.apparelPolicyId;delete p.apparelAutomation;delete p.nextApparelCheckAt;
   // Historical capsules keep their exact generation; new people retain their
   // starting skills and the ordinary background gains, whichever their origin.

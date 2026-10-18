@@ -1,4 +1,5 @@
 import {mechRaidGroup261} from './mechanical-raid-groups-261.ts';
+import {sleepingSiteMech263,siteMechanicalDuty263} from './world-site-mechanoids-263.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Temple-only sleep/assault membership over existing mechanical originals.
  * Pool and assault planning are declared provisional adaptations; no raid is
@@ -7,12 +8,15 @@ import type {World,Cell} from './types.ts';
 import type {Mechanoid} from './mechanoid-state.ts';
 import {foggedCell256} from './exploration-state-256.ts';
 export interface TempleMechDuty256 {group:number;madeAtCore:number;awakeAtCore:number|null;goal:Cell|null}
-export const mechanicalOrder256=(m:Mechanoid)=>m.raid??m.temple;
+export const mechanicalOrder256=(m:Mechanoid)=>m.raid??m.temple??m.site263;
 export function mechanicalDuty256(w:World,m:Mechanoid){
+ if(m.site263)return siteMechanicalDuty263(w,m);
  if(m.temple)return m.temple.awakeAtCore===null?undefined:{phase:'assault' as const};
  const group=mechRaidGroup261(w,m.raid?.group);return group?.members.includes(m.id)?group:undefined;
 }
-export const sleepingTempleMech256=(m:Mechanoid)=>m.temple?.awakeAtCore===null;
+/** Historical public predicate also guards distinct Site sleepers in existing
+ * combat consumers. The actual Temple wake/defog authority below stays literal. */
+export const sleepingTempleMech256=(m:Mechanoid)=>m.temple?.awakeAtCore===null||sleepingSiteMech263(m);
 export function wakeTempleMechGroup256(w:World,member:Mechanoid,atCore:number):void {
  const duty=member.temple;if(!duty||duty.awakeAtCore!==null)return;
  if(!isSchema256Or257(w.schemaVersion)||!w.mechanoids?.includes(member)||!Number.isSafeInteger(atCore)||atCore<Math.max(duty.madeAtCore,(w.tick-1)*10,0)||atCore>w.tick*10)throw Error('Invalid actual Temple mechanical wake');
@@ -23,7 +27,7 @@ export function wakeTempleMechGroup256(w:World,member:Mechanoid,atCore:number):v
 /** Invoke only after the real fog transaction, including initial Fog1500. */
 export function wakeUnfoggedTempleMechs256(w:World):void {
  if(!isSchema256Or257(w.schemaVersion)||!w.exploration)return;
- for(const m of w.mechanoids??[])if(sleepingTempleMech256(m)&&m.state!=='dead'&&!foggedCell256(w,m.z*w.width+m.x))wakeTempleMechGroup256(w,m,w.tick*10);
+ for(const m of w.mechanoids??[])if(m.temple?.awakeAtCore===null&&m.state!=='dead'&&!foggedCell256(w,m.z*w.width+m.x))wakeTempleMechGroup256(w,m,w.tick*10);
 }
 const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 export function validTempleMechField256(v:unknown,version:number,tick:number):boolean {

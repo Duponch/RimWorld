@@ -7,13 +7,15 @@ import {validToxicBuildupTransport256} from './toxic-buildup-save-256.ts';
 import {validAnimalMindFields256} from './animal-condition-mental-state-256.ts';
 import {validArrivalRotation256} from './arrival-rotation-256.ts';
 import {validAnimalAgeCoreRemainder256} from './initial-animal-age-owner-256.ts';
-import {actualAnimalMeleeProfile256} from './actual-animal-profile-256.ts';
+import {actualAnimalMeleeProfile256,actualAnimalProfile256} from './actual-animal-profile-256.ts';
+import {CORE_ANIMAL_LIFE_STAGES_256} from './animal-core-data-v256.ts';
+import {WEATHER} from './weather-definitions.ts';
 import {validWildlifeProfileVersion256} from './geographic-fauna-profile-256.ts';
 import {validDuckExitFlight256,validateDuckFlyers256} from './duck-flyer-save-256.ts';
 import {validDuckFlightFields256} from './duck-flight-save-256.ts';
 import {duckTerrainWalkable256} from './duck-water-256.ts';
 import {animalMechanicalReadiness256} from './animal-readiness-v256.ts';
-import {isAnimalSpecies256} from './animal-core-v256.ts';
+import {isAnimalSpecies256,animalCore256} from './animal-core-v256.ts';
 import {validAnimalEggState256} from './animal-egg-save-v256.ts';
 import {validAnimalClinicalOwner256} from './animal-clinical-age-v256.ts';
 import {validRetainedCorpseDamage256} from './retained-corpse-damage-256.ts';
@@ -23,7 +25,7 @@ import { validateMedicalRecord } from './injury-validation.ts';
 import { validAnimalCarrierMotion } from './animal-rest-save.ts';
 import { medicalStatus } from './injury-state.ts';
 import { validStagger } from './stagger.ts';
-import { travelEnd,validSlowIntervals } from './travel-timing.ts';
+import { travelEnd,validSlowIntervals,type TravelSegment } from './travel-timing.ts';
 import type { World } from './types.ts';
 import {validActorMapBedField256} from './actor-map-bed-256.ts';
 import { MAX_WILDLIFE, type WildAnimal } from './wildlife-state.ts';
@@ -37,6 +39,37 @@ const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 const finite=(v:unknown,min:number,max:number)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
 const keys=(v:object,allowed:string[])=>Object.keys(v).every(k=>allowed.includes(k));
+const capturedWeatherMoves256=Object.values(WEATHER).map(row=>row.movement);
+const capturedWeatherMin256=Math.min(1,...capturedWeatherMoves256),capturedWeatherMax256=Math.max(1,...capturedWeatherMoves256);
+/** Captured edge admission, never a recomputation from current health, weather,
+ * intent or stage. Mobile Moving is rounded to hundredths and strictly >.15,
+ * so its existing producer range is [.16,1]. The seven tracked originals use
+ * Baby/Juvenile/Adult exactly as trackedAnimalLifeStage256; explicit species
+ * use their own stage definitions. No animal, clock or RNG is modified. */
+export function validWildlifeMotionTiming(tick:number,version:number,a:Pick<WildAnimal,'species'|'growthTracker'>,m:TravelSegment):boolean {
+  if(Object.hasOwn(m,'animalFlight')&&(version<256||a.species!=='duck'||m.animalFlight!==true))return false;
+  if(!finite(m.start,0,tick)||!finite(m.terrainDelay,0,50)
+    ||!validSlowIntervals(m.stagger,version,m.start,tick)||!validSlowIntervals(m.stuns,version,m.start,tick))return false;
+  let endLimit=tick+100;
+  // Migrated, unmarked original seven have no persisted receipt identifying
+  // the profile that captured their edge. Keep their historical envelope.
+  if(version>=256&&(isAnimalSpecies256(a.species)||a.growthTracker)){
+    if(m.animalFlight!==undefined&&(a.species!=='duck'||m.animalFlight!==true))return false;
+    const profile=actualAnimalProfile256(a),stages:readonly (keyof typeof CORE_ANIMAL_LIFE_STAGES_256)[]=isAnimalSpecies256(a.species)
+      ?animalCore256(a.species).lifeStages.map(row=>row.defId)
+      :a.growthTracker?['AnimalBaby','AnimalJuvenile','AnimalAdult']:[];
+    const factors=stages.length?stages.map(id=>(CORE_ANIMAL_LIFE_STAGES_256[id].statFactors as Readonly<Record<string,number>>).MoveSpeed??1):[1];
+    const flight=m.animalFlight===true?animalCore256('duck').race.flightSpeedFactor:1;
+    const minimum=3/(Math.max(profile.moveTicks,profile.walkTicks)/(.16*capturedWeatherMin256*Math.min(...factors))/flight);
+    const maximum=3/(Math.min(profile.moveTicks,profile.walkTicks)/(capturedWeatherMax256*Math.max(...factors))/flight);
+    if(!finite(m.speedFactor,minimum,maximum))return false;
+    // Every admitted stagger/stun window ends by tick+9.5. After that frontier
+    // the remaining cost cannot exceed one full diagonal edge plus the already
+    // bounded captured terrain delay. Slow animals need no arbitrary +100 cap.
+    endLimit=tick+9.5+3*Math.SQRT2/m.speedFactor!+50;
+  }else if(!(version>=77?finite(m.speedFactor,version>=87?.096*.8:.096,3):[3,.6].includes(m.speedFactor!)))return false;
+  return finite(m.end,0,endLimit)&&m.end>m.start&&Math.abs(m.end-travelEnd(m))<=1e-7;
+}
 /** Cheap transport/save check; no route search or mutable World reference. */
 export function validAnimalExit(w:Pick<World,'width'|'height'|'tick'>,version:number,a:WildAnimal):boolean {
   const exit:unknown=a.exiting;
@@ -81,7 +114,7 @@ export function validateWildlife(w:World,version:number,ids:Set<number>):string[
   if(!validWildlifeManhunterState(w,version))errors.push('Invalid wildlife manhunter state.');
   if(!validWildlifeExitState(w,version))errors.push('Invalid wildlife exit state.');
   if(version<76||!object(s)||!validWildlifeProfileVersion256(w,version,s)
-    ||!keys(s,['profile','rng','animals','eatenPlants','eatenNutrition','eatenItems',...(version>=174?['exitedAnimals']:[]),...(version>=256?['flyers','hiveLords']:[]),...(version===262?['geographicRenewal262']:[]),...(['biome-herbivores-v1','biome-fauna-v2'].includes(s.profile)?['population']:[])])
+    ||!keys(s,['profile','rng','animals','eatenPlants','eatenNutrition','eatenItems',...(version>=174?['exitedAnimals']:[]),...(version>=256?['flyers','hiveLords']:[]),...((Number(version)===262||Number(version)===263)?['geographicRenewal262']:[]),...(['biome-herbivores-v1','biome-fauna-v2'].includes(s.profile)?['population']:[])])
     ||!int(s.rng,1,0xffffffff)||!Array.isArray(s.animals)||s.animals.length>MAX_WILDLIFE||!int(s.eatenPlants)||!int(s.eatenItems)||!finite(s.eatenNutrition,0,Number.MAX_SAFE_INTEGER))return ['Invalid wildlife state.'];
   if(['biome-herbivores-v1','biome-fauna-v2'].includes(s.profile)){
     const p=s.population;if(!object(p)||!keys(p,['biome','fullTargetWeight','targetWeight','nextCheck','checks','arrivals'])||!['temperate-forest','boreal-forest','arid-shrubland','tundra'].includes(String(p.biome)))return ['Invalid wildlife population state.'];
@@ -153,7 +186,7 @@ export function validateWildlife(w:World,version:number,ids:Set<number>):string[
     if(a.strike!==undefined&&(!object(a.strike)||!keys(a.strike,['targetId','atCore','untilCore','tool','outcome',...(version>=183?['structure']:[])])||a.strike.structure!==undefined&&(version<183||!cell(a.strike.structure)||a.strike.outcome!=='hit')||!(int(a.strike.targetId,1)||version>=256&&a.strike.targetId===null&&(a.strike.structure===undefined||version>=256&&isCaveInsectSpecies256(a.species)&&!!a.hive))||!int(a.strike.atCore,0,w.tick*10)||!int(a.strike.untilCore,w.tick*10+1)||!['hit','miss','dodge'].includes(String(a.strike.outcome))||!actualAnimalMeleeProfile256(a).some(t=>t.id===a.strike!.tool&&a.strike!.untilCore-a.strike!.atCore===t.cooldownCore)||!(version>=256&&a.strike.targetId===null)&&!a.strike.structure&&!w.pawns.some(p=>p.id===a.strike!.targetId)&&!w.raids?.departed.some(d=>d.pawnId===a.strike!.targetId)&&!(version>=256&&a.hive&&w.mechanoids?.some(m=>m.id===a.strike!.targetId))&&!(version>=178&&(s.animals.some(other=>other.id===a.strike!.targetId&&other.id!==a.id)||w.piles.some(p=>p.corpse?.animalId===a.strike!.targetId)))||a.meal||a.path.length||(a.motion?.end??0)>w.tick||!(version>=183?['idle','sleeping']:['idle']).includes(a.state)))errors.push('Invalid animal melee recovery.');
     const m=a.motion;
     if(m!==undefined&&!validAnimalCarrierMotion(w,a,version)) {
-      if(!object(m)||Object.hasOwn(m,'animalFlight')&&(version<256||a.species!=='duck'||m.animalFlight!==true)||!keys(m,['from','to','start','end','speedFactor','terrainDelay',...(version>=77?['stagger']:[]),...(version>=78?['stuns']:[]),...(version>=239?['snowEntryPending']:[]),...(version>=256?['animalFlight']:[])])||!cell(m.from)||!cell(m.to)||!finite(m.start,0,w.tick)||!finite(m.end,0,w.tick+100)||m.end<=m.start||Math.max(Math.abs(m.from.x-m.to.x),Math.abs(m.from.z-m.to.z))!==1||m.to.x!==a.x||m.to.z!==a.z||!(version>=77?finite(m.speedFactor,version>=87?.096*.8:.096,3):[3,.6].includes(m.speedFactor!))||!finite(m.terrainDelay,0,50)||!validSlowIntervals(m.stagger,version,m.start,w.tick)||!validSlowIntervals(m.stuns,version,m.start,w.tick)||Math.abs(m.end-travelEnd(m))>1e-7)errors.push('Invalid wildlife motion.');
+      if(!object(m)||!keys(m,['from','to','start','end','speedFactor','terrainDelay',...(version>=77?['stagger']:[]),...(version>=78?['stuns']:[]),...(version>=239?['snowEntryPending']:[]),...(version>=256?['animalFlight']:[])])||!cell(m.from)||!cell(m.to)||Math.max(Math.abs(m.from.x-m.to.x),Math.abs(m.from.z-m.to.z))!==1||m.to.x!==a.x||m.to.z!==a.z||!validWildlifeMotionTiming(w.tick,version,a,m))errors.push('Invalid wildlife motion.');
       else if(m.end>w.tick){
         if(!['moving','downed','dead'].includes(a.state))errors.push('Active wildlife edge without movement.');
         const pathNavigation=version>=256&&a.species==='duck'?animalNavigation(w,false,true,a,m.animalFlight===true):a.species==='hare'||a.species==='snow-hare'||animalSpecies(a.species).predator

@@ -1,3 +1,4 @@
+import {targetBuildingPlayerUse263} from './world-target-building-263.ts';
 import { footprintCells,footprintContains } from './definitions.ts';
 import { bodySizeAtAge,adultAgeTicks } from './animal-life.ts';
 import { ANIMAL_SPECIES } from './animal-species.ts';
@@ -33,15 +34,15 @@ export function shelfStorageCells(s:Structure):StorageCell[] {
   return footprintCells(s).map((c,i)=>({id:s.shelf!.cells[i]!,...c,...s.shelf!.settings,shelfId:s.id}));
 }
 /** A read-only decision view, never a second mutable storage registry. */
-export function storageCells(world:Pick<World,'stockpiles'|'structures'>):StorageCell[] {
-  return [...world.stockpiles,...world.structures.flatMap(shelfStorageCells)];
+export function storageCells(world:Pick<World,'stockpiles'|'structures'>&Partial<Pick<World,'schemaVersion'|'worldFactions'>>):StorageCell[] {
+  return [...world.stockpiles,...world.structures.filter(s=>targetBuildingPlayerUse263(world,s)).flatMap(shelfStorageCells)];
 }
-export function storageCellById(world:Pick<World,'stockpiles'|'structures'>,id:number):StorageCell|undefined {
+export function storageCellById(world:Pick<World,'stockpiles'|'structures'>&Partial<Pick<World,'schemaVersion'|'worldFactions'>>,id:number):StorageCell|undefined {
   const zone=world.stockpiles.find(z=>z.id===id);if(zone)return zone;
-  for(const s of world.structures)if(isShelfKind(s.kind)&&s.shelf?.cells.includes(id))return shelfStorageCells(s).find(c=>c.id===id);
+  for(const s of world.structures)if(targetBuildingPlayerUse263(world,s)&&isShelfKind(s.kind)&&s.shelf?.cells.includes(id))return shelfStorageCells(s).find(c=>c.id===id);
 }
-export function storageAt(world:Pick<World,'stockpiles'|'structures'>,cell:Cell):StorageCell|undefined {
-  const s=shelfAt(world,cell);return s?shelfStorageCells(s).find(c=>c.x===cell.x&&c.z===cell.z):world.stockpiles.find(z=>z.x===cell.x&&z.z===cell.z);
+export function storageAt(world:Pick<World,'stockpiles'|'structures'>&Partial<Pick<World,'schemaVersion'|'worldFactions'>>,cell:Cell):StorageCell|undefined {
+  const s=shelfAt(world,cell);if(s&&!targetBuildingPlayerUse263(world,s))return;return s?shelfStorageCells(s).find(c=>c.x===cell.x&&c.z===cell.z):world.stockpiles.find(z=>z.x===cell.x&&z.z===cell.z);
 }
 export function storageCellAccepts(world:Pick<World,'tick'>,cell:StorageCell,subject:ItemId|MaterialPile):boolean {
   return (cell.shelfId===undefined||shelfFixedAccepts(subject))&&storageAccepts(cell,subject,world.tick);

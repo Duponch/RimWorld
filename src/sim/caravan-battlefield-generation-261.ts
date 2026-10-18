@@ -16,7 +16,7 @@ export type BattlefieldGeneration261={status:'ready';result:Generated261;runtime
 export function* prepareBattlefieldGeneration261(input:CampaignState,groupId:number,size:number):Generator<CampMapProgress256,BattlefieldGeneration261,void> {
  const root=registeredCampaign(input),maps=root.worldMaps,groups=root.worldGroups,runtime=maps?.generationRuntime;
  const blocked=(phase:string,reason:string):BattlefieldGeneration261=>({status:'blocked',phase,reason});
- if((Number(root.schemaVersion)!==261&&root.schemaVersion!==262)||root.planet?.revision!==3||!root.worldFactions||!maps||!groups||!runtime||!validMapGenerationRuntime256(runtime)||!Number.isInteger(size)||size<75||size>110)return blocked('owner','Actual261 geographical encounter owner required');
+ if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&Number(root.schemaVersion)!==263))||root.planet?.revision!==3||!root.worldFactions||!maps||!groups||!runtime||!validMapGenerationRuntime256(runtime)||!Number.isInteger(size)||size<75||size>110)return blocked('owner','Actual261 geographical encounter owner required');
  const record=groups.groups.find(r=>r.state.id===groupId) as EncounterGroup261|undefined,g=record?.state;
  if(!record||record.localMapId!==null||!record.encounters261||!g||!('members'in g)||!['travelling','at-site','stationary','awaiting-entry'].includes(g.phase))return blocked('group','Actual admitted away caravan required');
  if(maps.sites.some(s=>s.tile===g.tile)||root.worldFactions.settlements.some(s=>s.tile===g.tile)||maps.retired.some(s=>s.tile===g.tile&&s.reason!=='battlefield-empty'&&(s.markerUntilCore===undefined||s.markerUntilCore>root.tick*10)))return blocked('tile-owner','An existing world object prevents a new encounter map');

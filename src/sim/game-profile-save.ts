@@ -11,7 +11,8 @@ export function validGameProfile(value:unknown,version:number,scenario:unknown,e
   return Object.keys(value).length===4&&Object.keys(value).every(k=>['revision','storyteller','difficulty','saveMode'].includes(k))&&
     value.revision===1&&value.storyteller==='cassandra-partial'&&value.difficulty==='adventure-story'&&value.saveMode==='reloadable';
 }
-export function validateGameProfile(world:World):string[] {
+export function validateGameProfile(world:World,temporaryTarget263=false):string[] {
+  if(temporaryTarget263&&Number(world.schemaVersion)===263)return [];
   if(!world.gameProfile||world.expeditionSite&&world.schemaVersion>=240)return [];
   return world.arrivals!==undefined||world.heatwaves!==undefined||world.raids?.profile!=='cassandra-raids-v1'?['Core creation profile must retain its own incident calendar.']:[];
 }

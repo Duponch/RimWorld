@@ -1,4 +1,5 @@
 import {mechRaidGroup261} from './mechanical-raid-groups-261.ts';
+import {wakeSiteMechGroup263} from './world-site-mechanoids-263.ts';
 import {mechanicalOrder256,wakeTempleMechGroup256} from './temple-mech-duty-256.ts';
 import { assessBody,HEALTHY_BODY_INPUT,type BodyAssessment } from './body-capacities.ts';
 import { mechanoidBodyModel } from './mechanoid-anatomy.ts';
@@ -69,6 +70,7 @@ export function commitMechanoidImpact(w:World,m:Mechanoid,record:MedicalRecord,r
   const harmed=adopted.missing.length>(m.health?.missing.length??0)||adopted.injuries.some(i=>i.severity>(m.health?.injuries.find(old=>old.id===i.id)?.severity??0));
   w.rng=random.rng;m.health=adopted;
   if(harmed&&(context.externalViolence??true))wakeTempleMechGroup256(w,m,atCore);
+  if(context.externalViolence??true)wakeSiteMechGroup263(w,m,atCore);
   if(status!=='mobile'){
     m.state=status;m.path=[];if(mechanicalOrder256(m))mechanicalOrder256(m)!.goal=null;cancelMelee(m);cancelMechanoidRanged(m);stopMechanoidEmpStun(m,atCore,w.tick);delete m.stun;
     const group=mechRaidGroup261(w,m.raid?.group);

@@ -7,7 +7,7 @@ function own(v:object,key:string){const d=Object.getOwnPropertyDescriptor(v,key)
 export function validGeographicRenewal262(w:{tick:number;site?:{revision:number};wildlife?:unknown},version:number):boolean {
  if(w.wildlife===undefined)return true;if(!plain(w.wildlife))return false;
  const field=own(w.wildlife,'geographicRenewal262');if(!field.ok)return false;if(!field.present)return true;
- const profile=own(w.wildlife,'profile'),v=field.value;if(version<262||version>262||w.site?.revision!==3||!profile.ok||profile.value!=='geographic-fauna-v3'||!plain(v)||Reflect.ownKeys(v).length!==3)return false;
+ const profile=own(w.wildlife,'profile'),v=field.value;if(version!==262&&version!==263||w.site?.revision!==3||!profile.ok||profile.value!=='geographic-fauna-v3'||!plain(v)||Reflect.ownKeys(v).length!==3)return false;
  const r=own(v,'revision'),a=own(v,'adoptedAt'),last=own(v,'lastTick');
  return r.ok&&a.ok&&last.ok&&r.present&&a.present&&last.present&&r.value===1&&Number.isSafeInteger(w.tick)&&w.tick>=0&&Number.isSafeInteger(a.value)&&Number(a.value)>=0&&Number(a.value)<=w.tick&&last.value===w.tick;
 }
@@ -28,6 +28,6 @@ export function validGeographicRenewalCampaignRaw262(raw:unknown,version:number)
 /** Called only by the two actual unpublished map constructors, after1200. */
 export function initializeGeographicRenewal262(w:World):void {
  if(Number(w.schemaVersion)<262)return;
- const s=w.wildlife;if(Number(w.schemaVersion)!==262||w.site?.revision!==3||w.climate?.revision!==4||w.climate.tileId!==w.site.tileId||!s||s.profile!=='geographic-fauna-v3'||Object.hasOwn(s,'geographicRenewal262')||!Number.isSafeInteger(w.tick)||w.tick<0)throw Error('Renewal requires its actual new geographic map after initial fauna');
+ const s=w.wildlife;if((Number(w.schemaVersion)!==262&&Number(w.schemaVersion)!==263)||w.site?.revision!==3||w.climate?.revision!==4||w.climate.tileId!==w.site.tileId||!s||s.profile!=='geographic-fauna-v3'||Object.hasOwn(s,'geographicRenewal262')||!Number.isSafeInteger(w.tick)||w.tick<0)throw Error('Renewal requires its actual new geographic map after initial fauna');
  s.geographicRenewal262={revision:1,adoptedAt:w.tick,lastTick:w.tick};
 }

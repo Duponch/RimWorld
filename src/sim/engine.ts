@@ -1,3 +1,11 @@
+import {advanceSettlementProximity263} from './world-settlement-proximity-263.ts';
+import {advanceSiteMechanoids263} from './world-site-mechanoids-263.ts';
+import {advanceSiteAmbush263,isSiteAmbushHuman263,processSiteAmbushHuman263} from './world-site-ambush-263.ts';
+import {targetBuildingPlayerUse263} from './world-target-building-263.ts';
+import {advanceWorldSites263} from './world-sites-runtime-263.ts';
+import {advanceForeignSettlementDefeat263} from './world-target-lifecycle-263.ts';
+import {pendingWorldEntry263} from './world-target-access-263.ts';
+import {isWorldTargetDefender263,processWorldTargetDefender263} from './world-target-defence-263.ts';
 import {adoptTempMapIncidents261,advanceTempMapIncidents261,tempMapModern261} from './temp-map-incidents-261.ts';
 import {advanceCaravanMapExits261} from './caravan-map-exits-261.ts';
 import {validCaravanArrivalCommand261,applyCaravanArrivalCommand261,advanceCaravanArrivals261} from './caravan-arrival-261.ts';
@@ -466,6 +474,7 @@ export function canDesignate(world: World, command: DesignateCommand|import('./c
   if((command.kind==='deconstruct'||command.kind==='uninstall')&&!target)return refusal('missing-target','Aucun bâtiment à déconstruire ici.');
   if(target&&command.kind==='deconstruct'&&!roadPropCanDeconstruct256(world,target))return refusal('invalid-command','Ce vestige ne peut pas être déconstruit par cette faction.');
   if(target&&world.jobs.some(j=>j.furniture?.structureId===target.id))return refusal('occupied','Ce meuble a déjà un ordre de déplacement.');
+  if(target&&command.kind==='uninstall'&&!targetBuildingPlayerUse263(world,target))return refusal('invalid-command','Ce meuble doit être réellement revendiqué avant sa minification.');
   if(command.kind==='uninstall'&&(!minifiable(target!.kind)||target!.kind==='flower-pot'&&!flowerPotCanUninstall(target!.flower??createFlowerPotState())))return refusal('incompatible-resource','Coupez la plante avant de désinstaller ce pot.');
   const cells = footprintCells(target??command);
   if (cells.some(cell => !inBounds(world, cell.x, cell.z))) return refusal('out-of-bounds', 'Empreinte hors de la carte.');
@@ -502,7 +511,7 @@ export function canDesignate(world: World, command: DesignateCommand|import('./c
   return { ok: true };
 }
 export function applyCommand(world: World, command: Command,caravans?:import('./group-campaign-runtime-256.ts').GroupCampaignRuntime256): CommandResult {
- if(world.worldMaps){const descriptor=command&&typeof command==='object'&&!Array.isArray(command)?Object.getOwnPropertyDescriptor(command,'type'):undefined;if(!descriptor||!('value'in descriptor)||typeof descriptor.value!=='string')return refusal('invalid-command','Commande invalide.');const root=registeredCampaign(world);if(validCaravanArrivalCommand261(command))return applyCaravanArrivalCommand261(root,command);if(validCaravanCommand261(command)){const result=applyCaravanCommand261(root,command);if(result.ok)caravans?.encounterChanged261(root,command.groupId);return result;}if(validWorldMapCommand(command))return applyWorldMapCommand(root,command);if(command&&typeof command==='object'&&typeof command.type==='string'&&(command.type==='planet-adopt'||command.type.startsWith('group-')))return applyRegisteredGroupCommand(root,command as import('./group-state.ts').GroupCommand,caravans);if(secondaryCommand(command))return refusal('invalid-command','Choisissez une carte ou un groupe du registre de campagne.');const local=selectedRegisteredMap(root);if(!local)return refusal('invalid-command','Aucune carte locale sélectionnée.');const result=applyLocalCommand(local,command);if(result.ok&&command.type==='commercial-start'){const source=root.worldMaps!.sites.find(s=>s.id===registeredMapId(local))!;if(root.worldGroups!.canonicalPostId===null)delete source.postId;else source.postId=root.worldGroups!.canonicalPostId;}flushRegisteredMap(local);return result;}
+ if(world.worldMaps){const descriptor=command&&typeof command==='object'&&!Array.isArray(command)?Object.getOwnPropertyDescriptor(command,'type'):undefined;if(!descriptor||!('value'in descriptor)||typeof descriptor.value!=='string')return refusal('invalid-command','Commande invalide.');const root=registeredCampaign(world);if(validCaravanArrivalCommand261(command,Number(world.schemaVersion)))return applyCaravanArrivalCommand261(root,command);if(validCaravanCommand261(command)){const result=applyCaravanCommand261(root,command);if(result.ok)caravans?.encounterChanged261(root,command.groupId);return result;}if(validWorldMapCommand(command))return applyWorldMapCommand(root,command);if(command&&typeof command==='object'&&typeof command.type==='string'&&(command.type==='planet-adopt'||command.type.startsWith('group-')))return applyRegisteredGroupCommand(root,command as import('./group-state.ts').GroupCommand,caravans);if(secondaryCommand(command))return refusal('invalid-command','Choisissez une carte ou un groupe du registre de campagne.');const local=selectedRegisteredMap(root);if(!local)return refusal('invalid-command','Aucune carte locale sélectionnée.');const result=applyLocalCommand(local,command);if(result.ok&&command.type==='commercial-start'){const source=root.worldMaps!.sites.find(s=>s.id===registeredMapId(local))!;if(root.worldGroups!.canonicalPostId===null)delete source.postId;else source.postId=root.worldGroups!.canonicalPostId;}flushRegisteredMap(local);return result;}
   if(!command||typeof command!=='object')return refusal('invalid-command','Commande invalide.');
   if(secondaryCommand(command))return applySecondarySiteCommand(world,command);
   const root=campaignAuthority(world);
@@ -754,6 +763,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
   if (command.type === 'assign-bed') {
     const bed = world.structures.find(item => item.id === command.bedId && isBedKind(item.kind));
     const owner = world.pawns.find(item => item.id === command.pawnId);
+    if(bed&&!targetBuildingPlayerUse263(world,bed))return refusal('invalid-command','Ce lit appartient à une autre faction.');
     if (!bed || bed.medical || bed.prisoner || (command.pawnId !== null && (!owner||owner.state==='dead'))) return refusal('missing-target', 'Lit ou colon introuvable.');
     if(bed.kind==='double-bed'){
       if(command.slot!==0&&command.slot!==1)return refusal('invalid-command','Une place du lit double doit être indiquée.');
@@ -916,7 +926,7 @@ export function stepWorld(world:CampaignState,ticks=1,diagnostics?:import('./wor
   if(!Number.isInteger(ticks)||ticks<0||ticks>100000)throw new Error('Tick count must be an integer between 0 and 100000.');
   const root=campaignAuthority(world as World);
   if(root.worldMaps){
-    if(pendingCaravan261(root))return;
+    if(pendingCaravan261(root)||pendingWorldEntry263(root))return;
     if(ticks>0&&root.schemaVersion>=256&&!caravans&&root.worldGroups?.groups.some(r=>'members'in r.state?!!r.state.travel:'manifest'in r.state&&r.state.travelPreparation===true))throw Error('Prospective caravan requires its confirmed Core runtime before advancing time');
     if(ticks)for(const map of registeredMaps(root)){adoptTempMapIncidents261(map);flushRegisteredMap(map);}
     adoptWorldIncidents(campaignClockContext(root));
@@ -925,13 +935,13 @@ export function stepWorld(world:CampaignState,ticks=1,diagnostics?:import('./wor
       for(const map of registeredMaps(root)){stepLocalWorld(map,1,diagnostics,false);flushRegisteredMap(map);}
       if(root.schemaVersion>=256&&caravans)caravans.step(root);
       else for(const g of root.worldGroups!.groups.slice().sort((a,b)=>a.state.id-b.state.id))if('members' in g.state)withWorldGroup(root,g.state.id,advanceGroup);
-      if((Number(root.schemaVersion)===261||root.schemaVersion===262)&&caravans)for(const map of registeredMaps(root)){tryGroupDeparture(map,caravans);flushRegisteredMap(map);}
+      if((Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||Number(root.schemaVersion)===263))&&caravans)for(const map of registeredMaps(root)){tryGroupDeparture(map,caravans);flushRegisteredMap(map);}
       for(const id of advanceCaravanArrivals261(root))caravans?.encounterChanged261(root,id);
       for(const row of root.worldGroups!.groups.slice()){const g=row.state;if(!row.encounters261&&'members' in g&&['at-site','awaiting-entry'].includes(g.phase)&&root.worldMaps!.sites.some(m=>m.tile===g.tile&&m.kind==='settlement'))enterRegisteredSite(root,g.id,'visit',false);}
       for(const old of root.worldGroups!.legacyTravellers){const view=legacyTravellerContext(root,old);advanceScoutTrip(view);advanceCommercialTrip(view);if(view.scout)old.scout=view.scout;else delete old.scout;if(view.commercialTrip)old.commercialTrip=view.commercialTrip;else delete old.commercialTrip;}
-      advanceWorldIncidents(campaignClockContext(root));advanceBattlefieldVictory261(root);advanceCampPressure260(root);removeEmptyCamps(root);advanceTempMapIncidents261(root);
+      advanceWorldSites263(root);advanceForeignSettlementDefeat263(root);advanceSettlementProximity263(root);advanceWorldIncidents(campaignClockContext(root));advanceBattlefieldVictory261(root);advanceCampPressure260(root);removeEmptyCamps(root);advanceTempMapIncidents261(root);
       advanceActualWorldPawns256(root);advanceCaravanMapExits261(root);
-      if(advanceCaravanIncidents261(root))break;
+      if(pendingWorldEntry263(root)||advanceCaravanIncidents261(root))break;
     }return;
   }
   if(!root.secondarySite){stepLocalWorld(root,ticks,diagnostics);return;}
@@ -983,6 +993,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     if(burnFuel(world))light=undefined; // Empty torches cannot light later work in this same tick.
     const trapContacts=spikeTrapWindow(world);
     advanceTameness(world);reconcileDomesticWork(world);syncCarriedAnimals(world);reconcileAnimalRescues(world);reconcileAnimalRest(world);
+    advanceSiteAmbush263(world);advanceSiteMechanoids263(world);
     if(!trapContacts){advanceWildlife(world);reconcileAnimalRescues(world);reconcileAnimalRest(world);}
     updateDoors(world);
     advancePrisonBreaks(world);
@@ -1107,6 +1118,8 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
         continue;
       }
       if(pawn.visitor){processVisitor(world,pawn,needsContext);continue;}
+      if(isSiteAmbushHuman263(world,pawn)){if(!processDraftSleep(world,pawn,needsContext))processSiteAmbushHuman263(world,pawn,getBlocked,budget,getLight);continue;}
+      if(isWorldTargetDefender263(world,pawn)){if(!processDraftSleep(world,pawn,needsContext))processWorldTargetDefender263(world,pawn,getBlocked,budget,getLight);continue;}
       if(pawn.raid){if(!processDraftSleep(world,pawn,needsContext))processRaider(world,pawn,getBlocked,budget,getLight);continue;}
       if(pawn.tactics&&(!pawn.allowedAreaId||pawn.tactics.targetId!==null||pawn.tactics.post!==null)){if(!processDraftSleep(world,pawn,needsContext))processTactics(world,pawn,getBlocked,budget,getLight);continue;}
       if(pawn.melee&&(!pawn.allowedAreaId||pawn.melee.order||pawn.melee.strike)){if(!processDraftSleep(world,pawn,needsContext)&&pawn.melee)processMelee(world,pawn,getBlocked,budget,getLight);continue;}

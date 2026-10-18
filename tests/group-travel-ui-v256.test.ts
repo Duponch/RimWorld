@@ -1,3 +1,5 @@
+import {worldTargetChoices263,createWorldTargetConfirmation263} from '../src/ui/world-target-ui-263';
+import * as targetAdmission263 from '../src/sim/world-target-access-263';
 import {prepareGroupSplit,commitGroupReorganization} from '../src/sim/group-reorganization';
 import {groupEntryActions} from '../src/sim/world-map-authority';
 import {createGroupAdapters} from '../src/ui/group-adapter';
@@ -14,11 +16,14 @@ import {reorganizationCamp256} from './helpers/group-reorganization-v256';
 import {readGroupPanelSnapshot} from '../src/ui/group-adapter';
 import {registeredMapPresentation,campaignOnlySummary} from '../src/sim/world-map-presentation';
 function projectedSnapshot256(w:import('../src/sim/types').World){const view=registeredMapPresentation(w);if(!view)throw Error('Declared UI fixture has no selected actual map');const snapshot=readGroupPanelSnapshot(view);if(!snapshot)throw Error('Missing confirmed group projection');return snapshot;}
-vi.mock('../src/ui/planet-view',()=>({createPlanetView:()=>({setPlanet(){},setOverlay(){},setVisible(){},dispose(){},focusTile(){}}),planetTileLabel:()=> 'Destination'}));
+let choosePlanetDOM263:((id:number)=>void)|undefined;
+vi.mock('../src/ui/planet-view',()=>({createPlanetView:(_host:HTMLElement,onSelect:(id:number)=>void)=>{choosePlanetDOM263=onSelect;return {setPlanet(){},setOverlay(){},setVisible(){},dispose(){},focusTile(){}};},planetTileLabel:()=> 'Destination'}));
 class NodeFixture {
   children:NodeFixture[]=[];parentElement:NodeFixture|null=null;dataset:Record<string,string>={};style:Record<string,string>={};
   attributes=new Map<string,string>();listeners=new Map<string,Array<(event:Record<string,unknown>)=>void>>();
   open=false;showModal(){this.open=true;}close(){this.open=false;}
+  get ownerDocument(){return document;}get isConnected(){return this.parentElement!==null;}focus(){}
+  onclick:((event:Record<string,unknown>)=>void)|null=null;
   className='';type='';value='';hidden=false;disabled=false;readOnly=false;checked=false;tabIndex=0;
   private text='';constructor(readonly tag='div'){}
   set textContent(text:string){this.text=text;this.replaceChildren();}get textContent():string{return this.text+this.children.map(c=>c.textContent).join(' ');}
@@ -33,17 +38,17 @@ class NodeFixture {
   querySelector(selector:string):NodeFixture|null {if(selector!=='h3')throw Error('Unexpected fixture selector '+selector);return this.querySelectorAll('*').find(n=>n.tag===selector)??null;}
   get options():NodeFixture[]{return this.children.filter(n=>n.tag==='option');}
   addEventListener(type:string,listener:(event:Record<string,unknown>)=>void){const listeners=this.listeners.get(type)??[];listeners.push(listener);this.listeners.set(type,listeners);}
-  fire(type:string,event:Record<string,unknown>={}){for(const listener of this.listeners.get(type)??[])listener({target:this,...event});}
+  fire(type:string,event:Record<string,unknown>={}){const e={target:this,...event};if(type==='click')this.onclick?.(e);for(const listener of this.listeners.get(type)??[])listener(e);}
 }
 function dom(){
   const documentFixture={activeElement:null as NodeFixture|null,createElement:(tag:string)=>new NodeFixture(tag),createElementNS:(_ns:string,tag:string)=>new NodeFixture(tag),createTextNode:(text:string)=>{const node=new NodeFixture('#text');node.textContent=text;return node;}};
-  vi.stubGlobal('document',documentFixture);vi.stubGlobal('Element',NodeFixture);
+  vi.stubGlobal('document',documentFixture);vi.stubGlobal('Element',NodeFixture);vi.stubGlobal('HTMLElement',NodeFixture);
   vi.stubGlobal('Option',class extends NodeFixture {constructor(label:string,value:string){super('option');this.textContent=label;this.value=value;}});
   vi.stubGlobal('requestAnimationFrame',vi.fn(()=>1));vi.stubGlobal('cancelAnimationFrame',vi.fn());
   return {host:new NodeFixture(),documentFixture};
 }
 
-afterEach(()=>vi.unstubAllGlobals());
+afterEach(()=>{vi.restoreAllMocks();vi.unstubAllGlobals();choosePlanetDOM263=undefined;});
 const all=(host:NodeFixture)=>host.querySelectorAll('*');
 const find=(host:NodeFixture,key:string)=>all(host).find(n=>Object.hasOwn(n.dataset,key))!;
 function chooseInput(row:NodeFixture){const input=all(row).find(n=>n.tag==='input'&&n.type==='checkbox'&&/^(Choisir|Charger) /.test(n.getAttribute('aria-label')??''));if(!input)throw Error('Actual labelled person/animal/pack choice absent');return input;}
@@ -179,4 +184,73 @@ test('group-only caravan with zero local source slots keeps its confirmed select
  const camp=all(host).find(n=>n.dataset.siteAction==='camp')!;expect(camp.hidden).toBe(false);expect(camp.getAttribute('aria-disabled')).toBe('false');
  expect(send).not.toHaveBeenCalled();camp.fire('click');await flush();expect(send).toHaveBeenCalledExactlyOnceWith({type:'group-enter',groupId:f.child.id,mode:'camp'});
  expect(JSON.stringify(f.world)).toBe(before);expect(JSON.stringify(snapshot)).toBe(projectedBefore);ui.dispose();
+});
+
+/** Prepared transport/DOM witness only. The real split fixture supplies the
+ * group; the arrival field is a scalar projection presented to the UI, not a
+ * claim of a travelled/reformed World or a test of SIM order acceptance. */
+test('arrival dropdown is explicitly a new-order draft while the confirmed enter intent stays visible and unchanged',()=>{
+ const {host}=dom(),f=preparedStationaryEntry256(true),snapshot=f.snapshot;
+ const confirmed=snapshot.campaign!.groups.find(g=>g.id===f.child.id)!;
+ confirmed.arrival261={tile:f.child.destination,action:{kind:'enter',mapId:0}};
+ const send=vi.fn(async()=>{}),ui=createGroupPanel(host as unknown as HTMLElement,createGroupAdapters({blocked:()=>undefined,send})),before=JSON.stringify(snapshot);
+ ui.update(snapshot);
+ const saved=find(host,'groupArrivalConfirmed'),draft=all(host).find(n=>n.tag==='select'&&n.getAttribute('aria-label')==='Action à l’arrivée du nouvel ordre')!;
+ expect(saved.hidden).toBe(false);expect(saved.textContent).toContain('Ordre d’arrivée confirmé : entrer sur Foyer');expect(draft.parentElement!.textContent).toContain('Nouvel ordre (non confirmé)');
+ draft.value='none';draft.fire('change');ui.update(snapshot);
+ expect(draft.value).toBe('none');expect(saved.textContent).toContain('Ordre d’arrivée confirmé : entrer sur Foyer');expect(confirmed.arrival261).toEqual({tile:f.child.destination,action:{kind:'enter',mapId:0}});expect(JSON.stringify(snapshot)).toBe(before);expect(send).not.toHaveBeenCalled();
+ ui.resetForReplacement();expect(saved.hidden).toBe(true);expect(saved.textContent).toBe('');ui.dispose();
+});
+
+/** DOM ADAPTATION ONLY. Reuse the existing stationary UI fixture and actual
+ * modal/panel/choice readers. The independent geographic SIM admission alone
+ * is stubbed successful; route preview is a scalar UI stub, send is never
+ * applied. No World is played, actual save rerouted or faction changed. */
+function attackConfirmationDOM263(kind:'neutral'|'ally',planned=false,send=vi.fn(async()=>{})){
+ const {host}=dom(),f=preparedStationaryEntry256(true),tile=f.child.tile;
+ const admission=vi.spyOn(targetAdmission263,'worldTargetActions263').mockReturnValue({ok:true});
+ const factions:NonNullable<typeof f.snapshot.world.worldFactions>={revision:1,contentModel:'original-faction-content-v1',generatedAt:0,playerFactionId:1,nextFactionId:3,nextSettlementId:5,factions:[{id:1,def:'PlayerColony',hidden:false,name:'Projection joueur',randomKey:1,colorFromSpectrum:1,leaderOwnerId:null},{id:2,def:'OutlanderCivil',hidden:false,name:'Projection étrangère',randomKey:2,colorFromSpectrum:2,leaderOwnerId:null}],relations:[{aId:1,bId:2,goodwill:kind==='ally'?80:0,kind}],settlements:[{id:4,factionId:2,tile,name:'Établissement <literal>',postId:null}],leaders:[]};
+ const snapshot:GroupPanelSnapshot={...f.snapshot,world:{...f.snapshot.world,schemaVersion:263,worldFactions:factions}};
+ const base=createGroupAdapters({blocked:()=>undefined,send}),captured=base.capture(f.snapshot),facts={...captured,actions:{...captured.actions,route:{ok:true}}};
+ const previewRoute=vi.fn<GroupPanelAdapters['previewRoute']>(()=>({ok:true,route:[tile],durationCore:0})),adapters:GroupPanelAdapters={...base,capture:()=>facts,previewRoute},ui=createGroupPanel(host as unknown as HTMLElement,adapters);
+ const before=JSON.stringify(snapshot),worldBefore=JSON.stringify(f.world),relationsBefore=JSON.stringify(factions.relations);ui.update(snapshot);
+ expect(all(host).find(n=>n.className==='group-error')!.hidden).toBe(true);expect(worldTargetChoices263(snapshot.world,tile)).toContainEqual(expect.objectContaining({key:'attack:4',confirmAttack:true,target:{kind:'attack-settlement',settlementId:4,factionId:2,confirmed:true}}));
+ let order:NodeFixture;
+ if(planned){
+  expect(choosePlanetDOM263).toBeTypeOf('function');choosePlanetDOM263!(tile);const draft=all(host).find(n=>n.tag==='select'&&n.getAttribute('aria-label')==='Action à l’arrivée du nouvel ordre')!;draft.value='attack:4';draft.fire('change');all(host).find(n=>n.dataset.groupPreview==='route')!.fire('click');order=all(host).find(n=>n.dataset.groupAction==='route')!;
+ }else order=all(host).find(n=>n.dataset.worldTarget==='attack:4')!;
+ expect(order.getAttribute('aria-disabled')).toBe('false');
+ const unchanged=()=>{expect(JSON.stringify(snapshot)).toBe(before);expect(JSON.stringify(f.world)).toBe(worldBefore);expect(JSON.stringify(factions.relations)).toBe(relationsBefore);};
+ const modal=()=>all(host).find(n=>n.tag==='dialog'&&n.getAttribute('aria-label')==='Confirmer l’attaque de cet établissement'&&n.open)!;
+ return {host,f,snapshot,tile,send,ui,order,modal,unchanged,admission,previewRoute};
+}
+const modalAction263=(dialog:NodeFixture,label:string)=>all(dialog).find(n=>n.tag==='button'&&n.textContent===label)!;
+
+test('DOM adaptation263: actual owned modal resolves Annuler, Escape cancel and Confirmer clicks',async()=>{
+ const {host}=dom(),modal=createWorldTargetConfirmation263(host as unknown as HTMLElement);
+ let pending=modal.ask('Cible <literal>'),dialog=all(host).find(n=>n.tag==='dialog'&&n.open)!;expect(dialog.textContent).toContain('Cible <literal>');modalAction263(dialog,'Annuler').fire('click');expect(await pending).toBe(false);expect(dialog.open).toBe(false);
+ pending=modal.ask('Même cible');dialog=all(host).find(n=>n.tag==='dialog'&&n.open)!;const preventDefault=vi.fn();dialog.fire('cancel',{preventDefault});expect(await pending).toBe(false);expect(preventDefault).toHaveBeenCalledTimes(1);
+ pending=modal.ask('Même cible');dialog=all(host).find(n=>n.tag==='dialog'&&n.open)!;modalAction263(dialog,'Confirmer l’attaque').fire('click');expect(await pending).toBe(true);expect(dialog.open).toBe(false);modal.close();
+});
+
+for(const [kind,planned]of [['neutral',false],['ally',true]]as const)test(`DOM adaptation263 ${kind}/${planned?'arrival-route':'target-button'}: waiting, Annuler and Escape send nothing and keep snapshot/order/relations exact`,async()=>{
+ const f=attackConfirmationDOM263(kind,planned);try{
+  f.order.fire('click');expect(f.modal()).toBeDefined();expect(f.send).not.toHaveBeenCalled();f.unchanged();modalAction263(f.modal(),'Annuler').fire('click');await flush();expect(f.send).not.toHaveBeenCalled();f.unchanged();
+  f.order.fire('click');const dialog=f.modal();expect(dialog).toBeDefined();expect(f.send).not.toHaveBeenCalled();dialog.fire('cancel',{preventDefault:vi.fn()});await flush();expect(f.send).not.toHaveBeenCalled();f.unchanged();
+ }finally{f.ui.dispose();}
+});
+
+for(const [kind,planned]of [['neutral',false],['ally',true]]as const)test(`DOM adaptation263 ${kind}/${planned?'arrival-route':'target-button'}: one accepted modal sends one confirmed order until ACK`,async()=>{
+ let ack!:()=>void;const send=vi.fn(()=>new Promise<void>(resolve=>{ack=resolve;})),f=attackConfirmationDOM263(kind,planned,send);try{
+  f.order.fire('click');const accept=modalAction263(f.modal(),'Confirmer l’attaque');expect(send).not.toHaveBeenCalled();f.unchanged();accept.fire('click');accept.fire('click');await flush();expect(send).toHaveBeenCalledExactlyOnceWith({type:'caravan-order',groupId:f.f.child.id,destination:f.tile,action:{kind:'attack-settlement',settlementId:4,factionId:2,confirmed:true}});f.unchanged();f.order.fire('click');await flush();expect(send).toHaveBeenCalledTimes(1);ack();await flush();f.unchanged();
+ }finally{f.ui.dispose();}
+});
+
+test('DOM adaptation263: changed group or changed arrival draft refuses an accepted stale attack without command/faction mutation',async()=>{
+ const direct=attackConfirmationDOM263('neutral');try{
+  direct.order.fire('click');const dialog=direct.modal(),next={...direct.snapshot,group:{...direct.snapshot.group!,id:direct.f.child.id+1}} as GroupPanelSnapshot;direct.ui.update(next);modalAction263(dialog,'Confirmer l’attaque').fire('click');await flush();expect(direct.send).not.toHaveBeenCalled();direct.unchanged();expect(all(direct.host).find(n=>n.className==='group-error')!.textContent).toContain('choix de destination a changé');
+ }finally{direct.ui.dispose();}
+ const planned=attackConfirmationDOM263('ally',true);try{
+  planned.order.fire('click');const dialog=planned.modal(),draft=all(planned.host).find(n=>n.tag==='select'&&n.getAttribute('aria-label')==='Action à l’arrivée du nouvel ordre')!;draft.value='none';draft.fire('change');modalAction263(dialog,'Confirmer l’attaque').fire('click');await flush();expect(planned.send).not.toHaveBeenCalled();planned.unchanged();expect(all(planned.host).find(n=>n.className==='group-error')!.textContent).toContain('choix de destination a changé');
+ }finally{planned.ui.dispose();}
 });

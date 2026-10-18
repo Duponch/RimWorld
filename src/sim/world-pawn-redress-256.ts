@@ -43,17 +43,17 @@ export type PreparedWorldAnimalRedress256={ok:true;draft:WildAnimal;original:Wil
 /** This first closed redress path is a genuinely healthy neutral original.
  * An injured selected animal is blocked, not healed, skipped or rerolled: its
  * actual Hediff removeOnRedress curves and gear effects must be supplied first. */
-export function prepareWorldAnimalRedress256(state:WorldPawnsState256,row:Extract<WorldPawnOwner256,{kind:'animal'}>,fact:InitialAnimalFact256,input:{tick:number;cell:{x:number;z:number};random:InitialAnimalRandom256;situation:ActualWorldPawnSituationReader256}):PreparedWorldAnimalRedress256 {
+export function prepareWorldAnimalRedress256(state:WorldPawnsState256,row:Extract<WorldPawnOwner256,{kind:'animal'}>,fact:InitialAnimalFact256,input:{tick:number;cell:{x:number;z:number};random:InitialAnimalRandom256;situation:ActualWorldPawnSituationReader256;version?:number}):PreparedWorldAnimalRedress256 {
  const nativeBefore=state.nativeOrder;if(!nativeWorldPawnOrderCurrent256(state,nativeBefore))return {ok:false,reason:'Actual native redress order is not mutable/admitted'};
  if(!state.owners.includes(row)||(worldPawnSituation256(row)??input.situation(row))!=='Free'||row.factionId!==null||row.actor.species!==fact.species||state.atCore!==input.tick*10)return {ok:false,reason:'Redress requires its actual current Free neutral owner'};
- const h=row.actor.health;
+ const actor=row.actor,h=actor.health;
  if(h&&(h.injuries.length||h.missing.length||h.bloodLoss||Object.keys(h).some(k=>!['tick','nextInjuryId','injuries','missing','bloodLoss','body','animalBirthTick','animalGrowth'].includes(k))))return {ok:false,reason:'Chosen WorldPawn has actual clinical redress curves not yet represented'};
  if(row.items.length||row.packed.length||row.actor.domestic||row.actor.pregnancy||row.actor.manhunter||row.actor.confusion)return {ok:false,reason:'Chosen WorldPawn has actual held/mental/reproductive redress effects not yet represented'};
  // Core RedressPawn resets needs BEFORE RemovePawn's mothball remainder.
  // That new Food category is therefore the true growth hunger multiplier.
  const redressed=structuredClone(row),foodPercentage=input.random.float(.5,.9),rest=fact.needsRest?input.random.float(.9,1):1;
  redressed.actor.food=f(foodPercentage*animalNutritionMax(redressed.actor));redressed.actor.rest=rest;
- const removal=prepareWorldPawnRemoval256(redressed,state.atCore);if(!removal.ok)return removal;if(removal.draft.kind!=='animal')throw Error('Actual redress owner changed kind');
+ const removal=prepareWorldPawnRemoval256(redressed,state.atCore,input.version===263?{version:input.version,state,original:row}:undefined);if(!removal.ok)return removal;if(removal.draft.kind!=='animal')throw Error('Actual redress owner changed kind');
  // No MakeThing, sex/age/scar/chronological/growth initializer, gear or fresh
  // identity is replayed. Core neutral animal SetFaction is already null.
  const animal=removal.draft.actor;animal.x=input.cell.x;animal.z=input.cell.z;animal.path=[];animal.state='idle';animal.nextDecision=input.tick+1;
@@ -61,7 +61,7 @@ export function prepareWorldAnimalRedress256(state:WorldPawnsState256,row:Extrac
  // for these neutral non-human originals; it does not Reset the mind again.
  const nativeAfter=nativeBefore?removeNativeWorldPawnOrder256(nativeBefore,row.actor.id):undefined;
  const atBefore=state.atCore,members=state.owners.slice(),before=JSON.stringify(row),prepared=JSON.stringify(animal);let used=false;
- const current=()=>!used&&state.atCore===atBefore&&JSON.stringify(row)===before&&JSON.stringify(animal)===prepared&&Object.isExtensible(row.actor)&&Reflect.ownKeys(row.actor).every(k=>{const d=Object.getOwnPropertyDescriptor(row.actor,k)!;return Object.hasOwn(d,'value')&&d.configurable&&d.writable;});
- const adoptOriginal=()=>{if(!current())throw Error('Stale WorldPawn redress original');used=true;const original=row.actor;for(const k of Object.keys(original))delete (original as unknown as Record<string,unknown>)[k];Object.assign(original,animal);return original;};
- return {ok:true,draft:animal,original:row.actor,current,adoptOriginal,commit(){if(!current()||!nativeWorldPawnOrderCurrent256(state,nativeBefore)||state.owners.length!==members.length||state.owners.some((r,i)=>r!==members[i]))throw Error('Stale WorldPawn redress');cancelWorldPawnGC256(state);const original=adoptOriginal();state.owners=state.owners.filter(r=>r!==row);commitNativeWorldPawnOrder256(state,nativeBefore,nativeAfter);return original;}};
+ const current=()=>!used&&state.atCore===atBefore&&row.actor===actor&&JSON.stringify(row)===before&&JSON.stringify(animal)===prepared&&Object.isExtensible(row.actor)&&Reflect.ownKeys(row.actor).every(k=>{const d=Object.getOwnPropertyDescriptor(row.actor,k)!;return Object.hasOwn(d,'value')&&d.configurable&&d.writable;});
+ const adoptOriginal=()=>{if(!current())throw Error('Stale WorldPawn redress original');used=true;const original=actor;for(const k of Object.keys(original))delete (original as unknown as Record<string,unknown>)[k];Object.assign(original,animal);return original;};
+ return {ok:true,draft:animal,original:actor,current,adoptOriginal,commit(){if(!current()||!nativeWorldPawnOrderCurrent256(state,nativeBefore)||state.owners.length!==members.length||state.owners.some((r,i)=>r!==members[i]))throw Error('Stale WorldPawn redress');cancelWorldPawnGC256(state);const original=adoptOriginal();state.owners=state.owners.filter(r=>r!==row);commitNativeWorldPawnOrder256(state,nativeBefore,nativeAfter);return original;}};
 }

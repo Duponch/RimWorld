@@ -1,3 +1,4 @@
+import {targetBuildingPlayerUse263} from './world-target-building-263.ts';
 import type {PackedFurniture} from './furniture-rules.ts';
 import { BREAKDOWN_CHECK_CORE_TICKS,breakdownEligible } from './breakdowns.ts';
 import { footprintCells } from './definitions.ts';
@@ -32,7 +33,7 @@ export function validateBreakdowns(world:World,version:number,packedRecords?:rea
       errors.push('Invalid breakdown job.');continue;
     }
     const s=world.structures.find(s=>s.id===target.structureId);
-    if(!s||!s.breakdown||seen.has(s.id)||target.kind!==s.kind||j.x!==s.x||j.z!==s.z||j.orientation!==s.orientation||j.footprint!==s.footprint
+    if(!s||!targetBuildingPlayerUse263(world,s)||!s.breakdown||seen.has(s.id)||target.kind!==s.kind||j.x!==s.x||j.z!==s.z||j.orientation!==s.orientation||j.footprint!==s.footprint
       ||j.material!==undefined||j.construction!==undefined||j.repair!==undefined||j.deconstruction!==undefined||j.flick!==undefined||j.furniture!==undefined||j.clearance!==undefined
       ||j.growingZoneId!==undefined||j.flowerPotId!==undefined||j.workRemainder!==undefined||!int(j.progress,0,99)||j.reservedBy===null&&j.progress!==0
       // A fire or full ground can temporarily suspend retirement after Home

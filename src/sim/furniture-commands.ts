@@ -1,3 +1,4 @@
+import {targetBuildingPlayerUse263} from './world-target-building-263.ts';
 import { footprintCells } from './definitions.ts';
 import { furnitureObject, minifiable } from './furniture-rules.ts';
 import { canDesignate } from './engine.ts';
@@ -15,6 +16,7 @@ export function installCommand(world:World,command:Extract<Command,{type:'instal
   const fail=(reason:string):CommandResult=>({ok:false,code:'invalid-command',reason});
   if(!Number.isSafeInteger(command.structureId))return fail('Identité de meuble invalide.');
   const source=furnitureObject(world,command.structureId);
+  if(source&&!targetBuildingPlayerUse263(world,source))return fail('Ce meuble doit être réellement revendiqué avant sa minification.');
   if(!source||!minifiable(source.kind))return fail('Ce meuble ne peut pas être installé.');
   if(world.jobs.some(j=>j.flick?.structureId===source.id||j.furniture?.structureId===source.id||j.deconstruction?.structureId===source.id))return fail('Un ordre existe déjà pour ce meuble.');
   const pack=world.packed.find(p=>p.building.id===source.id);

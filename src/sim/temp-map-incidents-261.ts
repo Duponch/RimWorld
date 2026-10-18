@@ -19,9 +19,18 @@ export function tempMapRecord261(w:World):WorldMapRecord|undefined {
  const root=registeredCampaign(w),id=registeredMapId(w);
  return root.worldMaps?.sites.find(m=>m.id===id)??(w.campaignMap?.revision===2?w.campaignMap.maps.find(m=>w.campaignMap?.revision===2&&m.id===w.campaignMap.activeMapId) as unknown as WorldMapRecord:undefined);
 }
-export const tempMapTarget261=(w:World):boolean=>(Number(w.schemaVersion)===261||w.schemaVersion===262)&&['camp','battlefield'].includes(tempMapRecord261(w)?.kind??'');
-export const tempMapAdoptedAtCore261=(w:World):number|undefined=>(Number(w.schemaVersion)===261||w.schemaVersion===262)?tempMapRecord261(w)?.tempIncidents261?.adoptedAtCore:undefined;
+export const tempMapTarget261=(w:World):boolean=>(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||Number(w.schemaVersion)===263))&&['camp','battlefield'].includes(tempMapRecord261(w)?.kind??'');
+export const tempMapAdoptedAtCore261=(w:World):number|undefined=>(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||Number(w.schemaVersion)===263))?tempMapRecord261(w)?.tempIncidents261?.adoptedAtCore:undefined;
 export const tempMapModern261=(w:World):boolean=>tempMapTarget261(w)&&tempMapAdoptedAtCore261(w)!==undefined;
+/** Home-only opportunities exclude Map_Misc targets. A truly destroyed
+ * settlement is Map_PlayerHome before Settle; no TempIncident alias or clock. */
+export function homeIncidentsBlocked261(w:World):boolean {
+ if(tempMapModern261(w))return true;
+ if(Number(w.schemaVersion)!==263)return false;
+ const record=tempMapRecord261(w);
+ return record?.kind==='quest-site'||record?.kind==='foreign-settlement'&&!(record.target263?.kind==='foreign-settlement'&&record.target263.destroyedSiteId!==undefined);
+}
+
 /** Called before advancing time, never by serialization/bootstrap. */
 export function adoptTempMapIncidents261(w:World):void {
  if(!tempMapTarget261(w)||!w.gameProfile)return;const record=tempMapRecord261(w)!;
@@ -44,7 +53,7 @@ function visibility(w:World):number {
 /** Only three Core MTB defs. Component order first, then stable real maps;
  * no home tickets, map generation, deferred favorable retry or fake Caravan. */
 export function advanceTempMapIncidents261(root:CampaignState):void {
- const core=root.tick*10;if((Number(root.schemaVersion)!==261&&root.schemaVersion!==262)||core%1000||!root.worldMaps||root.planet?.revision!==3||!root.worldFactions)return;
+ const core=root.tick*10;if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&Number(root.schemaVersion)!==263))||core%1000||!root.worldMaps||root.planet?.revision!==3||!root.worldFactions)return;
  const records=root.worldMaps.sites.slice().sort((a,b)=>a.id-b.id);
  for(const kind of ['meeting','ambush','manhunter-ambush'] as const)for(const record of records){
   const state=record.tempIncidents261;if(!state||core<=state.adoptedAtCore||record.tile===null||!['camp','battlefield'].includes(record.kind))continue;

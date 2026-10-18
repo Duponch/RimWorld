@@ -7,7 +7,7 @@ const own=(v:object,key:PropertyKey)=>Object.getOwnPropertyDescriptor(v,key);
  * its full original field allowlist, IDs, ownership and context validation. */
 export function validMapExitHeader261(raw:object,version:number):boolean {
  const d=own(raw,'entryKind261');if(!d)return !('entryKind261'in raw);
- if((version!==261&&version!==262)||!d.enumerable||!Object.hasOwn(d,'value')||d.value!=='map-exit')return false;
+ if((version!==261&&(Number(version)!==262&&Number(version)!==263))||!d.enumerable||!Object.hasOwn(d,'value')||d.value!=='map-exit')return false;
  const origin=own(raw,'originMapId');
  return !!origin&&Object.hasOwn(origin,'value')&&Number.isSafeInteger(origin.value)&&origin.value>=0&&!('entryKind259'in raw)&&!('encounterBirth261'in raw)&&!('startingPawnLeftBehind'in raw);
 }

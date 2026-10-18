@@ -1,3 +1,4 @@
+import type {WorldMapKind} from '../sim/world-map-state';
 import type {PlanetState} from '../sim/planet-state';
 import {planetGeography256} from '../sim/planet-geography-256';
 import {createDensePlanetView,denseBiomeLabel,denseReliefLabel} from './planet-dense-view';
@@ -7,7 +8,8 @@ export interface PlanetOverlay {
   route:readonly number[];
   previewRoute?:readonly number[];
   groupTile?:number;
-  maps?:readonly {mapId:number;tile:number;label:string;kind:'settlement'|'camp'|'legacy-site'|'battlefield';active:boolean}[];
+  maps?:readonly {mapId:number;tile:number;label:string;kind:WorldMapKind;active:boolean}[];
+  worldSites?:readonly {siteId:number;tile:number;label:string;kind:'item-stash'|'destroyed-settlement'}[];
   retiredCamps?:readonly {retiredMapId:number;tile:number;label:string}[];
   homeTile?:number;
   civilianTile?:number|null;
