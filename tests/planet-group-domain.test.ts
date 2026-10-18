@@ -163,7 +163,8 @@ describe('planet/group domain',()=>{
     const zero=advanceGroupRoute(legacyPlanet(w),atHome,context,capture);expect(zero.event).toBeNull();expect((zero.state as AwayGroup).segment!.remainingCore).toBe(0);
     const arrival=advanceGroupRoute(legacyPlanet(w),zero.state as AwayGroup,context,capture);expect(arrival.event).toBe('arrived');expect(arrival.state.phase).toBe('awaiting-entry');
     expect(advanceGroupRoute(legacyPlanet(w),arrival.state as AwayGroup,context,capture).event).toBeNull();
-    expect(()=>advanceGroupRoute(legacyPlanet(w),g,{...context,mass:{...context.mass}},capture)).toThrow('share one actual mass');
+    const actualMass=context.mass;if(!actualMass)throw Error('Actual captured caravan mass required');
+    expect(()=>advanceGroupRoute(legacyPlanet(w),g,{homeCivilCore:context.homeCivilCore,mass:{...actualMass}},capture)).toThrow('share one actual mass');
     const forged=structuredClone(w);(forged.group as AwayGroup).route=[legacyPlanet(w).civilianTile];expect(validateGroupState(forged,196).length).toBeGreaterThan(0);
   });
 

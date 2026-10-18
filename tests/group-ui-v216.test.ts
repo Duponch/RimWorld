@@ -22,11 +22,13 @@ class NodeFixture {
   setAttribute(key:string,value:string){this.attributes.set(key,value);if(key.startsWith('data-'))this.dataset[key.slice(5).replace(/-([a-z])/g,(_,c:string)=>c.toUpperCase())]=value;}
   getAttribute(key:string){return this.attributes.get(key)??null;}hasAttribute(key:string){return this.attributes.has(key);}removeAttribute(key:string){this.attributes.delete(key);}
   querySelectorAll(selector:string):NodeFixture[]{if(selector!=='*')throw Error('Only node inventory is used by the SVG view.');return this.children.flatMap(c=>[c,...c.querySelectorAll('*')]);}
+  querySelector(selector:string):NodeFixture|null {if(selector!=='h3')throw Error('Unexpected fixture selector '+selector);return this.querySelectorAll('*').find(n=>n.tag===selector)??null;}
+  get options():NodeFixture[]{return this.children.filter(n=>n.tag==='option');}
   addEventListener(type:string,listener:(event:Record<string,unknown>)=>void){const listeners=this.listeners.get(type)??[];listeners.push(listener);this.listeners.set(type,listeners);}
   fire(type:string,event:Record<string,unknown>={}){for(const listener of this.listeners.get(type)??[])listener({target:this,...event});}
 }
 function dom(){
-  const documentFixture={activeElement:null as NodeFixture|null,createElement:(tag:string)=>new NodeFixture(tag),createElementNS:(_ns:string,tag:string)=>new NodeFixture(tag)};
+  const documentFixture={activeElement:null as NodeFixture|null,createElement:(tag:string)=>new NodeFixture(tag),createElementNS:(_ns:string,tag:string)=>new NodeFixture(tag),createTextNode:(text:string)=>{const node=new NodeFixture('#text');node.textContent=text;return node;}};
   vi.stubGlobal('document',documentFixture);vi.stubGlobal('Element',NodeFixture);
   vi.stubGlobal('Option',class extends NodeFixture {constructor(label:string,value:string){super('option');this.textContent=label;this.value=value;}});
   vi.stubGlobal('requestAnimationFrame',vi.fn(()=>1));vi.stubGlobal('cancelAnimationFrame',vi.fn());
@@ -44,12 +46,13 @@ function setup(){
   return {world,facts,adapters,snapshot:{world,planet:world.planet,losses:[],originMapId:0}};
 }
 const find=(host:NodeFixture,key:string,value?:string)=>host.querySelectorAll('*').find(n=>Object.hasOwn(n.dataset,key)&&(value===undefined||n.dataset[key]===value))!;
+function chooseInput(row:NodeFixture){const input=row.querySelectorAll('*').find(n=>n.tag==='input'&&n.type==='checkbox'&&n.getAttribute('aria-label')?.startsWith('Choisir '));if(!input)throw Error('Actual labelled person choice absent');return input;}
 afterEach(()=>vi.unstubAllGlobals());
 
 test('opening and rotating the canonical globe changes no World, command or route query; confirmed row identity and literal names survive refresh',()=>{
   const {host,documentFixture}=dom(),{world,adapters,snapshot}=setup(),before=JSON.stringify(world),panel=createGroupPanel(host as unknown as HTMLElement,adapters);
   panel.update(snapshot);panel.setVisible(true);
-  const svg=host.querySelectorAll('*').find(n=>n.tag==='svg')!,row=find(host,'groupMember',String(world.pawns[0]!.id)),checkbox=row.children[0]!.children[0]!;
+  const svg=host.querySelectorAll('*').find(n=>n.tag==='svg')!,row=find(host,'groupMember',String(world.pawns[0]!.id)),checkbox=chooseInput(row);
   expect(svg.querySelectorAll('*').length+1).toBeLessThanOrEqual(512);expect(row.textContent).toContain('<img src=x> & Ada');
   let prevented=false;svg.fire('keydown',{key:'ArrowLeft',preventDefault(){prevented=true;}});expect(prevented).toBe(true);
   documentFixture.activeElement=checkbox;checkbox.checked=true;checkbox.fire('change');panel.update(snapshot);
@@ -62,7 +65,7 @@ test('opening and rotating the canonical globe changes no World, command or rout
 test('a pending or unknown command locks double submission across snapshots until a validated replacement, while a host lock clears without solving routes',async()=>{
   const {host}=dom(),{adapters,snapshot}=setup();let reject!:(cause:unknown)=>void;
   adapters.send=vi.fn(()=>new Promise((_resolve,no)=>{reject=no;}));const panel=createGroupPanel(host as unknown as HTMLElement,adapters);panel.update(snapshot);
-  const checkbox=find(host,'groupMember').children[0]!.children[0]!;checkbox.checked=true;checkbox.fire('change');find(host,'groupPreview','formation').fire('click');
+  const checkbox=chooseInput(find(host,'groupMember'));checkbox.checked=true;checkbox.fire('change');find(host,'groupPreview','formation').fire('click');
   const start=find(host,'groupAction','start');start.fire('click');start.fire('click');expect(adapters.send).toHaveBeenCalledTimes(1);expect(adapters.send).toHaveBeenCalledWith(expect.objectContaining({type:'group-start',originMapId:0}));
   panel.setRequestStatus({id:7,type:'command',state:'waiting',message:'Résultat encore inconnu.'});panel.update(snapshot);expect(start.getAttribute('aria-disabled')).toBe('true');
   reject(new SimulationRequestError('Arrêt pendant la commande.','unknown',true));await Promise.resolve();await Promise.resolve();
@@ -102,12 +105,12 @@ test('V391 mixed provision counts and nutrition follow the confirmed projection,
   facts.mass={grams:1080,capacityGrams:35000,rations:2,pemmicanUnits:60,provisionNutrition:480,byMember:[]};
   const before=JSON.stringify(world),panel=createGroupPanel(host as unknown as HTMLElement,adapters);panel.update(snapshot);
   const mass=find(host,'groupMass'),row=find(host,'groupPile',String(source.id)),input=row.children[3]!.children[0]!;
-  expect(mass.textContent).toContain('2 repas de survie · 60 unités de pemmican · nutrition disponible 4,8');
+  expect(mass.textContent).toContain('2 repas de survie · 60 unités de pemmican · nutrition des rations et du pemmican 4,8');
   expect(mass.textContent).toContain('possédée');expect(mass.textContent).not.toMatch(/jour|autonomie/);
   documentFixture.activeElement=input;input.value='37';input.fire('input');
   facts.mass={...facts.mass,rations:1,pemmicanUnits:37,provisionNutrition:275};panel.update(snapshot);
   expect(find(host,'groupPile',String(source.id))).toBe(row);expect(documentFixture.activeElement).toBe(input);expect(input.value).toBe('37');
-  expect(mass.textContent).toContain('1 repas de survie · 37 unités de pemmican · nutrition disponible 2,75');
+  expect(mass.textContent).toContain('1 repas de survie · 37 unités de pemmican · nutrition des rations et du pemmican 2,75');
   expect(adapters.send).not.toHaveBeenCalled();expect(adapters.previewPlan).not.toHaveBeenCalled();expect(adapters.previewRoute).not.toHaveBeenCalled();expect(JSON.stringify(world)).toBe(before);panel.dispose();
 });
 
@@ -117,10 +120,10 @@ test('V391 draft nutrition is only the injected formation estimate, including an
   const panel=createGroupPanel(host as unknown as HTMLElement,adapters);panel.update(snapshot);
   expect(find(host,'groupMass').textContent).toContain('Charge non calculée');
   find(host,'groupPreview','formation').fire('click');
-  expect(find(host,'groupMass').textContent).toContain('1 repas de survie · 50 unités de pemmican · nutrition disponible 3,4');
+  expect(find(host,'groupMass').textContent).toContain('1 repas de survie · 50 unités de pemmican · nutrition des rations et du pemmican 3,4');
   expect(find(host,'groupMass').textContent).toContain('estimation à vérifier au lancement');
   facts.mass={grams:0,capacityGrams:35000,rations:0,pemmicanUnits:0,provisionNutrition:0,byMember:[]};panel.update(snapshot);
-  expect(find(host,'groupMass').textContent).toContain('0 repas de survie · 0 unités de pemmican · nutrition disponible 0');
+  expect(find(host,'groupMass').textContent).toContain('0 repas de survie · 0 unités de pemmican · nutrition des rations et du pemmican 0');
   expect(adapters.send).not.toHaveBeenCalled();panel.dispose();
 });
 

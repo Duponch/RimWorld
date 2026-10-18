@@ -1,3 +1,4 @@
+import {mechRaidGroup261} from './mechanical-raid-groups-261.ts';
 import {sleepingTempleMech256,mechanicalOrder256} from './temple-mech-duty-256.ts';
 import { mechanoidBodyModel } from './mechanoid-anatomy.ts';
 import { mechanoidDefinition,type MechanoidKind } from './mechanoid-definition.ts';
@@ -52,7 +53,7 @@ export function mechanoidView(world:World,actor:Mechanoid) {
   const targetId=actor.melee?.order?.targetId??actor.melee?.strike?.targetId;
   const ranged=mechanoidRangedView(world,actor);
   const target=targetId==null?ranged?.orderTarget??ranged?.target??null:mechanoidTargetView(world,targetId);
-  const active=world.raids?.mechActive,group=active&&actor.raid?.group===active.id?active:undefined;
+  const group=mechRaidGroup261(world,actor.raid?.group);
   const action=actor.state==='dead'?'Neutralisé':actor.state==='downed'?'Incapacité mécanique':sleepingTempleMech256(actor)?'Mécanoïde dormant du temple':empMechanoidActive(actor,world.tick*10)?'Neutralisé temporairement par EMP':actor.stun?'Immobilisé':
     actor.melee?.strike?'Récupère après son coup':actor.melee?.order?actor.state==='working'?'Frappe au contact':'Approche sa cible':
     ranged?.phase==='warmup'?'Prépare son tir':ranged?.phase==='cooldown'?'Récupère après son essai de tir':

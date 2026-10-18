@@ -6,7 +6,7 @@ import {planetGeography256} from './planet-geography-256.ts';
 import {worldSurfaceAverageTileSize,worldSurfaceApproxDistance} from './world-surface-distances.ts';
 import {evaluateClimateCurve} from './world-climate-settings.ts';
 import {roundWorldInteger} from './world-rivers.ts';
-import {geographicPlanetEdgeSearchCost256,groupTicksPerMove,type PlanetCostContext,type PlanetSearchBudget,type PlanetRouteResult} from './planet-navigation.ts';
+import {geographicPlanetEdgeSearchCost256,planetTicksPerMove,type PlanetCostContext,type PlanetSearchBudget,type PlanetRouteResult} from './planet-navigation.ts';
 const geometry=new WeakMap<CampaignGeography256,{average:number;arcs:number}>();
 /** One immutable owner scan. Call at cold load/draft adoption before admission;
  * no clock, RNG, mutable World, climate capture or faction is retained. */
@@ -41,7 +41,7 @@ export function findGeographicPlanetRoute256(planet:GeographicPlanetState,from:n
  if(budget.nodes<count||budget.arcs<prepared.arcs)return {kind:'deferred',nodes:0,arcs:0};
  const passable=(id:number)=>Number.isSafeInteger(id)&&id>=0&&id<count&&tiles[id]!.biome!=='ocean'&&tiles[id]!.biome!=='lake'&&tiles[id]!.hilliness!=='impassable';
  if(!passable(from)||!passable(to))return {kind:'unreachable',nodes:0,arcs:0};
- const f=Math.fround,distance=(a:number,b:number)=>worldSurfaceApproxDistance(tiles[a]!.center,tiles[b]!.center,prepared.average),strength=roundWorldInteger(evaluateClimateCurve([[30,1],[40,1.3],[130,2]],distance(from,to))),ticks=groupTicksPerMove(context.mass);
+ const f=Math.fround,distance=(a:number,b:number)=>worldSurfaceApproxDistance(tiles[a]!.center,tiles[b]!.center,prepared.average),strength=roundWorldInteger(evaluateClimateCurve([[30,1],[40,1.3],[130,2]],distance(from,to))),ticks=planetTicksPerMove(context);
  const frontier=new Frontier(),states=new Map<number,Node>();states.set(from,{known:0,heuristic:0,priority:0,parent:from,closed:false});frontier.push(from,0);let nodes=0,arcs=0,processed=0;
  while(frontier.size){const [id,priority]=frontier.pop(),current=states.get(id)!;if(current.closed||current.priority!==priority)continue;
   nodes++;budget.nodes--;

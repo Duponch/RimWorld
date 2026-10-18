@@ -1,3 +1,4 @@
+import {mechRaidGroups261} from './mechanical-raid-groups-261.ts';
 /** True-collapse-only sibling of spikeTrapImpactProjection. The local physical
  * domains and all actual death-memory recipients are isolated. Planet, map
  * cells and immutable geography are NEVER structured-cloned. No worker state,
@@ -54,7 +55,9 @@ export function roofCollapseProjection256(world:World){
  if(world.mechanoids)view.mechanoids=world.mechanoids.map(own);
  if(world.filth)view.filth={...world.filth,items:world.filth.items.map(own)};
  if(world.fires)view.fires={...structuredClone(world.fires),items:world.fires.items.map(own)};
- if(world.raids)view.raids={...world.raids,...world.raids.mechActive?{mechActive:structuredClone(world.raids.mechActive)}:{}};
+ const mechPrimary=world.raids?.mechActive,mechExtras=world.raids?.extraMechActive261,mechOwners=mechRaidGroups261(world);
+ const sameMechanicalOwners=()=>world.raids?.mechActive===mechPrimary&&world.raids?.extraMechActive261===mechExtras&&mechRaidGroups261(world).length===mechOwners.length&&mechRaidGroups261(world).every((g,i)=>g===mechOwners[i]);
+ if(world.raids)view.raids={...world.raids,...mechPrimary?{mechActive:structuredClone(mechPrimary)}:{},...mechExtras!==undefined?{extraMechActive261:structuredClone(mechExtras)}:{}};
  // Registry metadata is read-only to collapse. Only the real Pawn recipients
  // of death memories are copied; terminal archives and post stocks stay literal.
  if(root.worldPawns){
@@ -90,7 +93,7 @@ export function roofCollapseProjection256(world:World){
  const sameObservers=()=>{const current=campaignLivingObservers(world).map(slot=>slot.pawn);return current.length===observers.length&&current.every((p,i)=>p===observers[i]);};
  // No giant terrain/planet JSON: guards retain exact source identities and
  // encoded MUTABLE domains only, so a delayed plan refuses changed owners.
- const guardDomains=[...world.pawns,...world.resources,...world.structures,...world.jobs,...world.piles,...world.packed,...world.stockpiles,...world.growingZones,world.wildlife,world.mechanoids,world.filth,world.fires,world.raids?.mechActive,...mutableState.map(key=>world[key])];
+ const guardDomains=[...world.pawns,...world.resources,...world.structures,...world.jobs,...world.piles,...world.packed,...world.stockpiles,...world.growingZones,world.wildlife,world.mechanoids,world.filth,world.fires,world.raids?.mechActive,world.raids?.extraMechActive261,...mutableState.map(key=>world[key])];
  const before=guardDomains.map(encoded),registry=root.worldMaps,groups=root.worldGroups,relationships=root.relationships,relationshipValues=encoded(root.relationships),thermal=world.thermal,heat=world.thermal?.regions.map(r=>({cells:r.cells,temperature:r.temperature}));
  let finished=false;
  return {view,finish:()=>{
@@ -115,7 +118,7 @@ export function roofCollapseProjection256(world:World){
   const tiles=view.tiles,states=Object.fromEntries(mutableState.map(key=>[key,key==='startingArrival'&&view.startingArrival===world.startingArrival?world.startingArrival:translated(view[key])])),wildlife=view.wildlife?translated(view.wildlife):undefined;
   const mechanoids=view.mechanoids?.map(a=>originalForDraft.get(a)??a),filth=view.filth?{...view.filth,items:view.filth.items.map(f=>originalForDraft.get(f)??f)}:undefined;
   const fires=view.fires?{...view.fires,items:view.fires.items.map(f=>originalForDraft.get(f)??f)}:undefined;
-  const thermalAfter=view.thermal,rngAfter=privateRoot.rng,nextAfter=privateRoot.nextId,mechActive=view.raids?.mechActive;
+  const thermalAfter=view.thermal,rngAfter=privateRoot.rng,nextAfter=privateRoot.nextId,mechActive=view.raids?.mechActive,extraMechActive261=view.raids?.extraMechActive261;
   // A spread gives private slots fresh writable descriptors. Prove the REAL
   // recipients again at adoption, before cancelGC or the first original patch.
   const actualSlotsMutable=()=>localCollections.every(key=>writableSlot(world,key))&&writableSlot(world,'tiles')
@@ -123,11 +126,11 @@ export function roofCollapseProjection256(world:World){
    &&(thermalAfter?writableSlot(world,'thermal'):deletableSlot(world,'thermal'))
    &&(!wildlife||writableSlot(world,'wildlife'))&&(!mechanoids||writableSlot(world,'mechanoids'))
    &&(filth?writableSlot(world,'filth'):deletableSlot(world,'filth'))&&(fires?writableSlot(world,'fires'):deletableSlot(world,'fires'))
-   &&(!world.raids||writableSlot(world.raids,'mechActive'))&&writableSlot(root,'rng')&&writableSlot(root,'nextId')
+   &&(!world.raids||writableSlot(world.raids,'mechActive')&&(mechExtras===undefined||writableSlot(world.raids,'extraMechActive261')))&&writableSlot(root,'rng')&&writableSlot(root,'nextId')
    &&(!root.worldPawns||!privateRoot.worldPawns||encoded(root.worldPawns)===encoded(privateRoot.worldPawns)||writableSlot(root.worldPawns,'currentRate'));
   let used=false;
   return {adopt:()=>{
-   if(used||root.rng!==rootRng||root.nextId!==nextId||root.tick!==tick||world.schemaVersion!==schema||root.worldMaps!==registry||root.worldGroups!==groups||root.relationships!==relationships||encoded(root.relationships)!==relationshipValues||world.thermal!==thermal||heat?.some((r,i)=>!thermal||thermal.regions[i]?.cells!==r.cells||thermal.regions[i]?.temperature!==r.temperature)
+   if(used||root.rng!==rootRng||root.nextId!==nextId||root.tick!==tick||world.schemaVersion!==schema||root.worldMaps!==registry||root.worldGroups!==groups||root.relationships!==relationships||encoded(root.relationships)!==relationshipValues||!sameMechanicalOwners()||world.thermal!==thermal||heat?.some((r,i)=>!thermal||thermal.regions[i]?.cells!==r.cells||thermal.regions[i]?.temperature!==r.temperature)
      ||references.some(([key,ref])=>world[key]!==ref)||collections.some((a,i)=>a&&(a.length!==memberships[i]!.length||a.some((value,n)=>value!==memberships[i]![n])))||!sameObservers()||world.tiles.length!==tileRefs.length||world.tiles.some((tile,i)=>tile!==tileRefs[i])
      ||guardDomains.some((value,i)=>encoded(value)!==before[i])||patches.some(pair=>!mutableRecipient(pair.original)||encoded(pair.original)!==pair.before)||!actualSlotsMutable())return false;
    used=true;
@@ -140,6 +143,7 @@ export function roofCollapseProjection256(world:World){
    if(filth)world.filth=filth as World['filth'];else delete world.filth;
    if(fires)world.fires=fires as World['fires'];else delete world.fires;
    if(world.raids)world.raids.mechActive=mechActive;
+   if(world.raids&&mechExtras!==undefined)world.raids.extraMechActive261=extraMechActive261;
    root.rng=rngAfter;root.nextId=nextAfter;invalidateAnimalPens(world);return true;
   }};
  }};

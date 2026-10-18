@@ -5,6 +5,10 @@ import type {Pawn,MaterialPile} from './types.ts';
 import type {WildAnimal} from './wildlife-state.ts';
 import type {PackedFurniture} from './furniture-rules.ts';
 import type {CampaignState,WorldGroupRecord} from './world-map-state.ts';
+/** Reference in the real captor's KidnappedPawnsTracker; never Guest ownership. */
+export interface WorldPawnCaptivity261 {factionId:number;atCore:number}
+/** Prospective foreign birth off-map, copied from the actual pending encounter. */
+export interface WorldPawnEncounterBirth261 {groupId:number;tile:number;atCore:number;kind:'ambush'|'meeting'|'demand'}
 interface WorldPawnCommon256 {
  factionId:number|null;
  originMapId:number|null;context:WorldGroupRecord['context'];
@@ -12,8 +16,12 @@ interface WorldPawnCommon256 {
  clockCore:number;enteredAtAbsCore:number;
  /** Actual exclusive transfer after a previously captured CaravanMember entry. */
  entryKind259?:'caravan-exit';
+ /** True physical map ExitMap, distinct from caravan entry or MapRemoved. */
+ entryKind261?:'map-exit';
  /** Real start of suspended held components, never an invented entry date. */
  heldAtCore259?:number;mode:'active'|'mothballed'|'dead';
+ captivity261?:WorldPawnCaptivity261;
+ encounterBirth261?:WorldPawnEncounterBirth261;
  /** True Thing.Destroy(Vanish), distinct from clinical death. */
  destroyed?:true;
  /** Actual PassedToWorld situation, never inferred for older rows. */

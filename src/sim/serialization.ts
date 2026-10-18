@@ -1,3 +1,4 @@
+import {validCaravan261Historical} from './caravan-schema-historical-261.ts';
 import {validCamp260Historical} from './camp-schema-historical-260.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {freezeAdmittedNativeWorldPawnOrder256} from './world-pawn-native-order-256.ts';
@@ -266,8 +267,8 @@ export function validateGeneratedLocalMap256(input:unknown,context:{readonly cal
   try {
     if(!record(input)||!isSchema256Or257(input.schemaVersion)||!record(input.planet)||input.planet.revision!==3
       ||!record(input.site)||input.site.revision!==3||Object.hasOwn(input,'worldMaps')||Object.hasOwn(input,'worldGroups')||!context||!Number.isSafeInteger(context.calendarOrigin))return ['Expected an unpublished geographic local-map candidate with its actual campaign clock.'];
-    if(context.settlement&&(![259,260].includes(Number(input.schemaVersion))||input.width!==250||input.height!==250||['scenario','expeditionSite','startingArrival'].some(k=>Object.hasOwn(input,k))))return ['A non-starting settlement must have its actual new geographic body, without arrival or Camp provenance.'];
-    return validateSchema(input,input.schemaVersion as 256|257|258|259|260,false,undefined,context);
+    if(context.settlement&&(![259,260,261].includes(Number(input.schemaVersion))||input.width!==250||input.height!==250||['scenario','expeditionSite','startingArrival'].some(k=>Object.hasOwn(input,k))))return ['A non-starting settlement must have its actual new geographic body, without arrival or Camp provenance.'];
+    return validateSchema(input,input.schemaVersion as 256|257|258|259|260|261,false,undefined,context);
   }catch{return ['Invalid unpublished geographic local-map candidate.'];}
 }
 function validateSharedCampaign(root:CampaignState):string[] {const view=emptyCampaignOwner(root);brandCampaignContext(view,root);return validateCampaignSharedFields(view);}
@@ -275,6 +276,7 @@ function validateSharedCampaign(root:CampaignState):string[] {const view=emptyCa
  * The secondary view forwards the old campaign schema without migrating it. */
 function validateCampaignSchema(input:unknown,version:Parameters<typeof validateSchema>[1]):string[] {
   try{
+    if(!validCaravan261Historical(input,version))return ['Historical save contains future caravan261 state.'];
     if(!validCamp260Historical(input,version))return ['Historical save contains future Camp260 state.'];
     if(!input||typeof input!=='object'||!validWorldPawnsEnvelope256(input,version,Number((input as Record<string,unknown>).tick)*10,Number((input as Record<string,unknown>).nextId)))return ['Invalid or future WorldPawns header.'];
     if(!validGroupForageHistoricalTransport256(input,version))return ['Future local caravan foraged ownership.'];
@@ -297,7 +299,7 @@ function validateCampaignSchema(input:unknown,version:Parameters<typeof validate
     return errors;
   }catch{return ['Invalid second-site records or owner namespace.'];}
 }
-function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250 | 251 | 252 | 253 | 254 | 255 | 256 | 257 | 258 | 259 | 260, relationshipContext = true,registeredIds?:Set<number>,generatedContext?:{readonly calendarOrigin:number;readonly settlement?:true},registeredNonStartingSettlement=false): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250 | 251 | 252 | 253 | 254 | 255 | 256 | 257 | 258 | 259 | 260 | 261, relationshipContext = true,registeredIds?:Set<number>,generatedContext?:{readonly calendarOrigin:number;readonly settlement?:true},registeredNonStartingSettlement=false): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(raw)) return ['World must be an object.'];
@@ -532,7 +534,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   if(!errors.length&&isSchema256Or257(version))errors.push(...validateActualStartingPetLinks256(commercialWorld));
   if(!errors.length)errors.push(...registerAncientCasketThingIds256(world,ids),...validateAncientOpeningOwners256(world));
   if(!errors.length&&version>=56)errors.push(...validateShooting(world,version,ids));
-  if(!errors.length&&world.raids?.mechActive)errors.push(...validateMechanoidRaids(world,version,ids));
+  if(!errors.length&&(world.raids?.mechActive||world.raids?.extraMechActive261?.length))errors.push(...validateMechanoidRaids(world,version,ids));
   if(!errors.length)for(const mech of world.mechanoids??[])errors.push(...validateMechanoidRanged(world,mech,version,ids));
   if(!errors.length&&relationshipContext)errors.push(...validateRelationshipWorld(commercialWorld,version));
   if(!errors.length)errors.push(...validateProjectiles(world,version,ids));
@@ -1572,6 +1574,7 @@ export function deserializeCampaign(serialized: string): CampaignState {
   if(record(input)&&input.schemaVersion===257){const old=validateCampaignSchema(input,257);if(old.length)throw new Error('Invalid version257 save: '+old.join(' '));input.schemaVersion=258; /* No freight, package, receipt, opening, owner or random draw is created. */}
   if(record(input)&&input.schemaVersion===258){const old=validateCampaignSchema(input,258);if(old.length)throw new Error('Invalid version258 save: '+old.join(' '));input.schemaVersion=259; /* No affiliation, prisoner history, admission2, exit receipt, lifecycle or random draw is offered. */}
   if(record(input)&&input.schemaVersion===259){const old=validateCampaignSchema(input,259);if(old.length)throw new Error('Invalid version259 save: '+old.join(' '));input.schemaVersion=260; /* No Reform birth, pressure, raid or random draw is offered. */}
+  if(record(input)&&input.schemaVersion===260){const old=validateCampaignSchema(input,260);if(old.length)throw new Error('Invalid version260 save: '+old.join(' '));input.schemaVersion=261; /* Number only. No encounter, story, route action, birth, captivity or role is offered. */}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;
   if(hasLoadedRoot(world))consolidateLooseRocks(world);

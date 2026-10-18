@@ -1,3 +1,6 @@
+import {groupGeographicTradeTarget256} from './sim/group-geographic-post-256';
+import {groupWorld} from './sim/world-map-authority';
+import {CaravanEncounterDialog261} from './ui/caravan-encounter-dialog-261';
 import {createMainWorldCreationCallbacks256} from './ui/world-creation-main';
 import type {WorldCreationCallbacks256,WorldCreationTicket256} from './ui/world-creation-contract';
 import {ancientMonumentDescription256} from './ui/ancient-monument-inspection-256';
@@ -312,12 +315,16 @@ const client = (() => {
   let onFault: SimulationClient['onFault'] = () => {};
   let onRequestStatus: SimulationClient['onRequestStatus'] = () => {};
   let onCampProgress:SimulationClient['onCampProgress']=()=>{};
+  let onCaravanEncounterProgress:SimulationClient['onCaravanEncounterProgress']=()=>{};
+  let onCaravanTradeArrival:SimulationClient['onCaravanTradeArrival']=()=>{};
   // Invoke facade listeners as plain functions so their `this` cannot expose
   // the private client through the base client's method-style notification.
   native.onError = message => onError(message);
   native.onFault = fault => onFault(fault);
   native.onRequestStatus = status => onRequestStatus(status);
   native.onCampProgress=message=>onCampProgress(message);
+  native.onCaravanEncounterProgress=message=>onCaravanEncounterProgress(message);
+  native.onCaravanTradeArrival=message=>onCaravanTradeArrival(message);
   return {
     generateWorldDraft256:(...args:Parameters<SimulationClient['generateWorldDraft256']>)=>native.generateWorldDraft256(...args),
     confirmWorldDraftSite256:(...args:Parameters<SimulationClient['confirmWorldDraftSite256']>)=>native.confirmWorldDraftSite256(...args),
@@ -345,6 +352,10 @@ const client = (() => {
     set onFault(callback: SimulationClient['onFault']) { onFault = callback; },
     get onRequestStatus() { return onRequestStatus; },
     set onRequestStatus(callback: SimulationClient['onRequestStatus']) { onRequestStatus = callback; },
+    get onCaravanTradeArrival(){return onCaravanTradeArrival;},
+    set onCaravanTradeArrival(callback:SimulationClient['onCaravanTradeArrival']){onCaravanTradeArrival=callback;},
+    get onCaravanEncounterProgress(){return onCaravanEncounterProgress;},
+    set onCaravanEncounterProgress(callback:SimulationClient['onCaravanEncounterProgress']){onCaravanEncounterProgress=callback;},
     get onCampProgress(){return onCampProgress;},
     set onCampProgress(callback:SimulationClient['onCampProgress']){onCampProgress=callback;},
   };
@@ -353,6 +364,8 @@ const audio = new AudioDirector();
 const music = new MusicDirector();
 let snapshot: World | undefined;
 let campaignOnly:CampaignSummary|undefined;
+const caravanEncounterDialog261=new CaravanEncounterDialog261(c=>client.command(c));
+client.onCaravanEncounterProgress=message=>caravanEncounterDialog261.progress(message);
 const campaignState=():CampaignUIState|undefined=>snapshot??campaignOnly;
 let latestFoodReadability:FoodReadability|undefined;
 function confirmedFoodReadability():FoodReadability|undefined {
@@ -469,6 +482,7 @@ async function jumpToCampaignTarget(target:JumpToEntry):Promise<void>{
  else if(target.kind==='group'){await sendCampaignCommand({type:'group-select',groupId:target.id});worldTab='group';setPanel('world');}
  else {setPanel('quests');}
 }
+client.onCaravanTradeArrival=notice=>{const state=campaignState(),view=state&&groupWorld(state,notice.groupId),g=view?.group;if(!view||!g||!('members'in g))return;const target=groupGeographicTradeTarget256(view,g);if(!target||target.settlementId!==notice.settlementId||target.factionId!==notice.factionId||target.postId!==notice.postId)return;worldTab='group';setPanel('world');refreshWorldPanels(state!);groupUI.focusTrade261();};
 function refreshWorldPanels(world:CampaignUIState):void {
  const group=worldTab==='group',maps=worldTab==='maps',local='width' in world;
  el('group-content').hidden=!group;el('maps-content').hidden=!maps;el('individual-world-content').hidden=maps||group;
@@ -1420,6 +1434,7 @@ async function updateAutoSlaughterPolicy(config:AutoSlaughterConfig):Promise<voi
 }
 
 function renderState() {
+  caravanEncounterDialog261.update(snapshot??campaignOnly);
   if (!snapshot) {if(campaignOnly)renderCampaignOnly();return;}
   shell.classList.remove('campaign-only');
   const world = snapshot,food=confirmedFoodReadability()!;
@@ -2040,7 +2055,7 @@ function receiveMainSnapshot(world: World, cost: number, speed: number, replaced
   snapshotHud.request(changed||roleChanged||speedChanged);
 }
 function renderCampaignOnly():void {
- const state=campaignOnly;if(!state)return;shell.classList.add('campaign-only');
+ const state=campaignOnly;if(!state)return;caravanEncounterDialog261.update(state);shell.classList.add('campaign-only');
  // A confirmed globe-only campaign does not create a terrain renderer. It
  // must still finish the initial loading presentation and accept real input.
  el('loading')?.remove();

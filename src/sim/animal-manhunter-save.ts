@@ -1,3 +1,4 @@
+import {validPermanentManhunter261} from './animal-scaria-261.ts';
 import {validHiveStructureStrike256} from './cave-hive-strike-save-256.ts';
 import type { World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
@@ -8,7 +9,7 @@ import {actualAnimalMeleeProfile256} from './actual-animal-profile-256.ts';
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 const keys=(v:Record<string,unknown>,allowed:string[])=>Object.keys(v).every(k=>allowed.includes(k));
-type BoundaryWorld=Pick<World,'tick'|'nextId'|'pawns'|'structures'|'raids'|'width'|'height'|'wildlife'|'jobs'|'piles'|'resources'|'packed'>;
+type BoundaryWorld=Pick<World,'tick'|'nextId'|'pawns'|'structures'|'raids'|'width'|'height'|'wildlife'|'jobs'|'piles'|'resources'|'packed'|'mechanoids'>;
 /** Recovery survives loss of its door and mental state. It still owns a
  * valid past contact and cannot borrow a live actor's global identity. */
 function validDoorStrike(w:BoundaryWorld,version:number,a:WildAnimal):boolean {
@@ -26,15 +27,15 @@ function validDoorStrike(w:BoundaryWorld,version:number,a:WildAnimal):boolean {
 }
 /** Closed sparse shape, with no navigation or medical mutation at transport. */
 export function validAnimalManhunter(w:BoundaryWorld,version:number,a:WildAnimal):boolean {
-  if(!validDoorStrike(w,version,a))return false;
+  if(!validDoorStrike(w,version,a)||!validPermanentManhunter261(a,version))return false;
   const m:unknown=a.manhunter;if(m===undefined)return true;
-  if(version<183||!object(m)||!keys(m,['startedAtCore','rng','zeroRestTicks','exhausted','targetId','door'])
+  if(version<183||!object(m)||!keys(m,['startedAtCore','rng','zeroRestTicks','exhausted','targetId','door',...(version===261?['permanent261']:[])])
     ||!int(m.startedAtCore,0,w.tick*10)||!int(m.rng,1,0xffffffff)
     ||!int(m.zeroRestTicks,0,w.tick*10-m.startedAtCore+150)||m.zeroRestTicks%150!==0
     ||a.domestic||a.meal||a.predation||a.exiting||a.flee||a.threat||a.retaliation||a.mating||a.taming
-    ||!['idle','moving','sleeping'].includes(a.state))return false;
+    ||!['idle','moving','sleeping',...(m.permanent261?['downed']:[])].includes(a.state))return false;
   if(m.exhausted!==undefined&&(m.exhausted!==true||m.zeroRestTicks<=1000||a.rest>=.0001||a.path.length||m.targetId!==undefined||m.door!==undefined))return false;
-  if(m.targetId!==undefined&&(!int(m.targetId,1,w.nextId-1)||!w.pawns.some(p=>p.id===m.targetId)&&!w.raids?.departed.some(p=>p.pawnId===m.targetId)))return false;
+  if(m.targetId!==undefined&&(!int(m.targetId,1,w.nextId-1)||!w.pawns.some(p=>p.id===m.targetId)&&!w.raids?.departed.some(p=>p.pawnId===m.targetId)&&!(m.permanent261&&((w.wildlife?.animals??[]).some(a=>a.id===m.targetId)||(w.mechanoids??[]).some(a=>a.id===m.targetId)||w.piles.some(p=>p.kind==='corpse'&&p.id===m.targetId)))))return false;
   if(m.door!==undefined){
     const d=m.door;
     if(!object(d)||!keys(d,['targetId','remaining','untilCore'])||!int(d.targetId,1,w.nextId-1)||!int(d.remaining,0,5)

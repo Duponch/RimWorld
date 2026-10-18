@@ -1,6 +1,6 @@
 import type { Cell,MaterialPile } from './types.ts';
 
-export interface RaiderState { group:number; exiting:boolean; goal:Cell|null }
+export interface RaiderState { group:number; exiting:boolean; goal:Cell|null; kidnap261?:import('./caravan-kidnap-261.ts').RaiderKidnap261 }
 export interface RaidDeparture { group:number; pawnId:number; name:string; cell:Cell; tick:number; items:MaterialPile[];reason?:'released';capturedAt?:number;releasedAt?:number }
 /** Available pirate projections only; these are Core pawn-kind combatPower
  * costs, not the market prices of their limited local equipment. */
@@ -18,7 +18,9 @@ export function pirateMaxPawnCost(points:number):number {
   }
   return Math.max(35*1.2,value);
 }
-export interface RaidGroup { id:number; startedAt:number; deadline:number; lossPermille:number; members:number[]; lost:number[]; phase:'assault'|'withdraw'; reason?:'losses'|'timeout'|'colony-down'; composition?:RaidComposition; originQuestId?:number }
-export interface RaidResult { mechanoid?:true;mechComposition?:import('./mechanoid-raid-state.ts').MechanoidRaidComposition; id:number; tick:number; reason:'defended'|'withdrawn'|'colony-down'; killed:number; downed:number; escaped:number;captured?:number;composition?:RaidComposition; originQuestId?:number }
-export interface RaidCalendar { mechanoid?:import('./mechanoid-raid-state.ts').MechanoidRaidPolicy;mechActive?:import('./mechanoid-raid-state.ts').MechanoidRaidGroup; profile:'camp-raids-v1'|'cassandra-raids-v1'|'camp-pressure-v1'; rng:number; nextCheck:number|null; serial:number; completed:number; active?:RaidGroup; last?:RaidResult; departed:RaidDeparture[];cassandra?:import('./cassandra-raids.ts').CassandraRaidAgenda }
+export type CaravanRaidProvenance261={revision:1;bornAtCore:number;factionId:number}&(
+ |{kind:'assault';sourceGroupId:number;kidnapLord261?:import('./caravan-kidnap-lord-261.ts').KidnapLord261}|{kind:'defend-caravan';sourceGroupId:number;traderId:number;guardIds:number[];defendSpot:Cell}|{kind:'pressure';sourceMapId:number});
+export interface RaidGroup {tempIncident261?:import('./temp-map-raids-261.ts').TempRaidSource261; id:number; startedAt:number; deadline:number|null; lossPermille:number|null; members:number[]; lost:number[]; phase:'assault'|'withdraw'; reason?:'losses'|'timeout'|'colony-down'|'trader-lost'|'non-hostile'; composition?:RaidComposition; originQuestId?:number;caravan261?:CaravanRaidProvenance261 }
+export interface RaidResult {tempIncident261?:import('./temp-map-raids-261.ts').TempRaidSource261; mechanoid?:true;mechComposition?:import('./mechanoid-raid-state.ts').MechanoidRaidComposition; id:number; tick:number; reason:'defended'|'withdrawn'|'colony-down'; killed:number; downed:number; escaped:number;captured?:number;composition?:RaidComposition; originQuestId?:number;caravan261?:CaravanRaidProvenance261;memberCount261?:number }
+export interface RaidCalendar {extraMechActive261?:import('./mechanoid-raid-state.ts').MechanoidRaidGroup[];extraActive261?:RaidGroup[];extraResults261?:RaidResult[]; mechanoid?:import('./mechanoid-raid-state.ts').MechanoidRaidPolicy;mechActive?:import('./mechanoid-raid-state.ts').MechanoidRaidGroup; profile:'camp-raids-v1'|'cassandra-raids-v1'|'camp-pressure-v1'; rng:number; nextCheck:number|null; serial:number; completed:number; active?:RaidGroup; last?:RaidResult; departed:RaidDeparture[];cassandra?:import('./cassandra-raids.ts').CassandraRaidAgenda }
 export function raidRandom(s:Pick<RaidCalendar,'rng'>):number {let x=s.rng;x^=x<<13;x^=x>>>17;x^=x<<5;s.rng=x>>>0;return s.rng/4294967296;}

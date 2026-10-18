@@ -8,7 +8,12 @@ export interface VisitorGroup {id:number;kind:VisitorKind;members:number[];entry
 /** Frozen departure evidence, not a simulated world population. */
 export interface VisitorDeparture {group:number;tick:number;pawn:Pawn;items:MaterialPile[];packed?:import('./furniture-rules.ts').PackedFurniture[]}
 export interface VisitorAgenda {rng:number;cycle:number;last:number;pending:number[]}
-export interface VisitorCalendar {profile:'cassandra-visitors-v1';adoptedAt:number;rng:number;serial:number;introAt:number|null;traveler:VisitorAgenda;visitor:VisitorAgenda;exotic?:VisitorAgenda;groups:VisitorGroup[];departed:VisitorDeparture[]}
+interface VisitorOwner {adoptedAt:number;rng:number;serial:number;groups:VisitorGroup[];departed:VisitorDeparture[]}
+export interface HomeVisitorCalendar extends VisitorOwner {profile:'cassandra-visitors-v1';introAt:number|null;traveler:VisitorAgenda;visitor:VisitorAgenda;exotic?:VisitorAgenda}
+/** Created only by an actual TempMap arrival. The RNG is a receipt of that
+ * admission, never a second incident stream. No home opportunity is installed. */
+export interface TempTravelerCalendar261 extends VisitorOwner {profile:'temp-travelers261-v1';introAt?:never;traveler?:never;visitor?:never;exotic?:never}
+export type VisitorCalendar=HomeVisitorCalendar|TempTravelerCalendar261;
 export const VISITOR_YEAR=60*TICKS_PER_DAY;
 export const VISITOR_INTERVAL=100;
 export const INTRO_VISITOR_TICK=2.5*TICKS_PER_DAY;

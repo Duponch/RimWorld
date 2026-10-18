@@ -41,6 +41,20 @@ export class GroupCampaignRuntime256 {
  bootstrap(root:CampaignState):void {this.#root=root;this.restMarks.clear();this.physical.clear();this.#physicalChanged.clear();this.motion.bootstrap(this.owners(root));for(const r of root.worldGroups!.groups)if('members'in r.state&&r.state.travel)this.physical.rebuild(r.state as GroupForageOwner256);}
  setGlobeSelected(root:CampaignState,selected:boolean):void {this.authority(root);this.motion.setGlobeSelected(selected);}
  private authority(root:CampaignState):void {if(root!==this.#root||!root.worldMaps||!root.worldGroups)throw Error('Missing confirmed caravan generation');}
+ /** A confirmed encounter command invalidates only its real physical capture.
+  * Survivor draw positions, committed segment and cadence are never reset. */
+ /** Preflight one true physical exit AFTER this tick's personal pass. */
+ preparePlayerRetreat261(root:CampaignState,g:AwayGroup,targetId?:number){
+  this.authority(root);if(root.schemaVersion!==261)throw Error('Actual261 retreat runtime required');
+  const owner={id:g.id,tile:g.tile,destination:g.destination,moving:g.phase==='travelling'&&!g.paused&&g.stop===null,segment:g.segment,nextPassable:!g.segment||this.geometry.passable(root,g.segment.to),...g.travel?{travel:g.travel}:{}};
+  const registration=targetId===undefined?this.motion.prepareRegistration(owner,[...this.owners(root),owner]):undefined;
+  return {commit:()=>{if(registration)this.motion.commitRegistration(registration);if(targetId!==undefined){this.motion.remove(g.id);this.physical.remove(g.id);}this.#physicalChanged.add(targetId??g.id);}};
+ }
+ encounterChanged261(root:CampaignState,id:number):void {
+  this.authority(root);const row=root.worldGroups!.groups.find(r=>r.state.id===id);
+  if(row&&'members'in row.state)this.#physicalChanged.add(id);
+  else{this.motion.remove(id);this.physical.remove(id);this.#physicalChanged.delete(id);}
+ }
  /** Shape/proximity/RNG/fragment checks precede the first owner write. */
  apply(root:CampaignState,c:GroupReorganizationCommand):CommandResult {
   try{
@@ -88,7 +102,7 @@ export class GroupCampaignRuntime256 {
     withWorldGroup(root,id,w=>{
      const g=w.group as AwayGroup,travel=captureGroupTravel(g,p=>({incapable:p.state==='downed'||hasMentalBreak(p)||pawnBody(p).capacities.moving<=0,restNeed:true}),w.schemaVersion);if(!travel)throw Error('Invalid actual caravan mass');
      const cost=planetCostContext(w,travel.mass);cost.homeCivilCore-=w.tick*10-coreTick;
-     const next=advanceGroupRouteInterval256(w.planet!,g,{travel,cost,deltaCore,validFinalPushDestination:tile=>this.geometry.finalPushDestination(root,tile)});if(!('members'in next.state))throw Error('Invalid caravan route result');w.group=next.state;
+     const next=advanceGroupRouteInterval256(w.planet!,g,{travel,cost,deltaCore,version:root.schemaVersion,validFinalPushDestination:tile=>this.geometry.finalPushDestination(root,tile)});if(!('members'in next.state))throw Error('Invalid caravan route result');w.group=next.state;
      if(next.state.tile!==g.tile)adoptGroupProvisionClimate(w,next.state);
      if(next.event==='arrived')groupLog(w,'La caravane est arrivee a sa destination.');
     });

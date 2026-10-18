@@ -27,7 +27,11 @@ export type Request =
   | { id: number; type: 'resync' }
   | { id: number; type: 'load'; maxSettlements?:SettlementLimit; data: string; threatPauseMode?: ThreatPauseMode };
 
+export interface CaravanEncounterProgressMessage261 {type:'caravan-encounter-progress';groupId:number;phase:string;reason?:string}
+export interface CaravanTradeArrivalMessage261 {type:'caravan-trade-arrival';groupId:number;settlementId:number;factionId:number;postId:number;checkpoint:{epoch:number;revision:number}}
 export type Response =
+  | CaravanTradeArrivalMessage261
+  | CaravanEncounterProgressMessage261
   | WorldDraftPreviewMessage256
   | {type:'world-draft-progress';id:number;generation:number;progress:import('../ui/world-creation-contract').WorldCreationProgress256}
   | CampEntryProgressMessage256

@@ -1,3 +1,4 @@
+import {mechRaidGroup261} from './mechanical-raid-groups-261.ts';
 import {mechanicalOrder256,wakeTempleMechGroup256} from './temple-mech-duty-256.ts';
 import { assessBody,HEALTHY_BODY_INPUT,type BodyAssessment } from './body-capacities.ts';
 import { mechanoidBodyModel } from './mechanoid-anatomy.ts';
@@ -70,7 +71,7 @@ export function commitMechanoidImpact(w:World,m:Mechanoid,record:MedicalRecord,r
   if(harmed&&(context.externalViolence??true))wakeTempleMechGroup256(w,m,atCore);
   if(status!=='mobile'){
     m.state=status;m.path=[];if(mechanicalOrder256(m))mechanicalOrder256(m)!.goal=null;cancelMelee(m);cancelMechanoidRanged(m);stopMechanoidEmpStun(m,atCore,w.tick);delete m.stun;
-    const group=w.raids?.mechActive;
+    const group=mechRaidGroup261(w,m.raid?.group);
     if(status==='dead'&&group?.members.includes(m.id)&&!group.lost.includes(m.id)){group.lost.push(m.id);group.lost.sort((a,b)=>a-b);}
     if(changed){w.events.push({tick:w.tick,type:'command',message:`${mechanoidDefinition(m.mechKind).label} ${m.id} ${status==='dead'?'est neutralisé':'est immobilisé'}.`});if(w.events.length>80)w.events.splice(0,w.events.length-80);}
   }else if(m.state==='downed'){m.state='idle';m.planCooldown=0;}

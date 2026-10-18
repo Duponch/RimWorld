@@ -1,3 +1,4 @@
+import {captureEncounterHumans261} from './caravan-encounter-owners-261.ts';
 import {captureWorldPawnHumans256} from './world-pawn-human-capture-256.ts';
 import {captureLostOwners} from './world-lost-owners.ts';
 import {registeredMaps,registeredMapId,registeredMapForValidation,boundWorldGroup} from './world-map-context.ts';
@@ -16,6 +17,7 @@ export function appendCampaignPeople(world:World,people:Map<number,RelationshipP
   // map. Other contexts receive only knowledge, never another Pawn/cargo.
   if(root.schemaVersion>=256&&root.worldFactions)for(const owner of root.worldFactions.leaders){const p=owner.pawn;if(people.has(p.id))throw Error('Faction leader also has a local or travelling human owner.');const person:RelationshipPerson={id:p.id,name:p.name,status:p.state==='dead'?'dead':'away',...(p.health?.death?{deathAt:p.health.death.tick}:{})};people.set(p.id,person);factionKnowledge.set(p.id,person);}
   const worldPawnKnowledge=captureWorldPawnHumans256(root).people;
+  for(const [id,p] of captureEncounterHumans261(root).people){if(people.has(id))throw Error('Encounter human also has another physical owner');people.set(id,p);}
   for(const [id,p] of worldPawnKnowledge){if(people.has(id))throw Error('WorldPawn human also has another physical owner');people.set(id,p);}
   if(root.worldMaps){const ownGroup=boundWorldGroup(world),ownMap=registeredMapId(world),key=campaignOwnerKey(world);const others=[...root.worldMaps.sites.filter(m=>key!==`map:${m.id}`&&(!ownGroup||ownGroup.localMapId===null||m.id!==ownGroup.localMapId)).map(m=>registeredMapForValidation(root,m.id)!),...globalOwnerContexts(root,true).filter(v=>campaignOwnerKey(v)!==key&&(!ownGroup||campaignOwnerKey(v)!==`losses:${ownGroup.state.id}`))];for(const [id,p] of captureLostOwners(root).people){if(people.has(id))throw Error('Human identity owned twice');people.set(id,p);}for(const other of others)for(const [id,p] of captureHumanOwners(other,{},false).people){if(people.has(id))throw Error('Human identity owned by two campaign contexts');people.set(id,{...p,status:p.status==='present'?'away':p.status});}return;}
   // Knowledge is read-only: imported-world guards must not install a runtime
@@ -44,7 +46,7 @@ export function appendCampaignPeople(world:World,people:Map<number,RelationshipP
 
 export function campaignPhysicalCaptures(world:World):readonly {world:World|undefined;owners:HumanOwnershipCapture}[] {
   const root=campaignAuthority(world),other=root.worldMaps?undefined:otherCampaignMap(root);
-  const physical=(root.worldMaps?[...root.worldMaps.sites.map(m=>registeredMapForValidation(root,m.id)!),...globalOwnerContexts(root,true)]:[root,...other?[other]:[]]).map(local=>({world:local as World|undefined,owners:captureHumanOwners(local,{},false)}));return [...(root.worldMaps?[...physical,{world:undefined,owners:captureLostOwners(root)}]:physical),...(root.worldPawns?[{world:undefined,owners:captureWorldPawnHumans256(root)}]:[])];
+  const physical=(root.worldMaps?[...root.worldMaps.sites.map(m=>registeredMapForValidation(root,m.id)!),...globalOwnerContexts(root,true)]:[root,...other?[other]:[]]).map(local=>({world:local as World|undefined,owners:captureHumanOwners(local,{},false)}));return [...(root.worldMaps?[...physical,{world:undefined,owners:captureLostOwners(root)}]:physical),...(root.worldPawns?[{world:undefined,owners:captureWorldPawnHumans256(root)}]:[]),...(root.schemaVersion===261?[{world:undefined,owners:captureEncounterHumans261(root)}]:[])];
 }
 
 /** Global notifications use actual live owners. Clinical/local work guards

@@ -1,3 +1,4 @@
+import {mechRaidGroups261} from './mechanical-raid-groups-261.ts';
 import {validBombWaveShape} from './bomb-state.ts';
 import {validAnimalDeathExplosionOwner256} from './animal-death-provenance-v256.ts';
 import { captureHumanOwners } from './human-owners.ts';
@@ -6,6 +7,7 @@ import type { World } from './types.ts';
 type RecordObject=Record<string,unknown>;
 type Patch={original:RecordObject;before:string;after:RecordObject};
 const encoded=(value:unknown)=>JSON.stringify(value);
+const writableSlot=(o:object,key:PropertyKey)=>{const d=Object.getOwnPropertyDescriptor(o,key);return d?Object.hasOwn(d,'value')&&d.writable===true:Object.isExtensible(o)&&!(key in o);};
 const replace=(target:RecordObject,source:RecordObject)=>{
   for(const key of Object.keys(target))if(!Object.hasOwn(source,key))delete target[key];
   Object.assign(target,source);
@@ -34,7 +36,9 @@ export function spikeTrapImpactProjection(world:World){
   if(world.group&&'members' in world.group)view.group={...world.group,members:world.group.members.map(clone)};
   captureHumanOwners(view); // Owner/clock failures happen before any real write.
   if(world.economy)view.economy=structuredClone(world.economy);
-  if(world.raids)view.raids={...world.raids,...world.raids.mechActive?{mechActive:structuredClone(world.raids.mechActive)}:{}};
+  const mechPrimary=world.raids?.mechActive,mechExtras=world.raids?.extraMechActive261,mechOwners=mechRaidGroups261(world);
+  const sameMechanicalOwners=()=>world.raids?.mechActive===mechPrimary&&world.raids?.extraMechActive261===mechExtras&&mechRaidGroups261(world).length===mechOwners.length&&mechRaidGroups261(world).every((g,i)=>g===mechOwners[i]);
+  if(world.raids)view.raids={...world.raids,...mechPrimary?{mechActive:structuredClone(mechPrimary)}:{},...mechExtras!==undefined?{extraMechActive261:structuredClone(mechExtras)}:{}};
   const roots=['pawns','piles','jobs','packed','wildlife','mechanoids','structures','resources','tiles','events','economy','raids','destroyed','scout','commercialTrip','group','bombWaves','thermal'] as const;
   const refs=roots.map(key=>[key,world[key]] as const);
   const nextId=world.nextId,schemaVersion=world.schemaVersion;
@@ -44,7 +48,7 @@ export function spikeTrapImpactProjection(world:World){
   // Capacity/claims may be read on every nearby cell during involuntary drops.
   // Keep snapshots of those dependencies without cloning the map geometry.
   const dependencies=[world.pawns,world.piles,world.jobs,world.packed,world.wildlife?.animals,world.mechanoids,
-    world.economy,world.raids?.mechActive,world.destroyed,world.bombWaves,world.thermal,world.wildlife?.hiveLords];
+    world.economy,world.raids?.mechActive,world.raids?.extraMechActive261,world.raids?.active,world.raids?.extraActive261,world.destroyed,world.bombWaves,world.thermal,world.wildlife?.hiveLords];
   const before=dependencies.map(encoded);
   return {view,finish:()=>{
     const patches:Patch[]=pairs.filter(p=>encoded(p.draft)!==p.before).map(p=>({...p,after:p.draft}));
@@ -60,10 +64,14 @@ export function spikeTrapImpactProjection(world:World){
     const eventsChanged=encoded(view.events)!==encoded(world.events);
     const economyChanged=encoded(view.economy)!==encoded(world.economy);
     const groupChanged=encoded(view.raids?.mechActive)!==encoded(world.raids?.mechActive);
+    const extraMechChanged=encoded(view.raids?.extraMechActive261)!==encoded(world.raids?.extraMechActive261);
+    const humanLordChanged=encoded(view.raids?.active)!==encoded(world.raids?.active);
+    const extraLordsChanged=encoded(view.raids?.extraActive261)!==encoded(world.raids?.extraActive261);
     const destroyedChanged=encoded(view.destroyed)!==encoded(world.destroyed);
     let used=false;
     return {adopt:()=>{
-      if(used||world.nextId!==nextId||world.schemaVersion!==schemaVersion||refs.some(([key,ref])=>world[key]!==ref)
+      if(used||world.nextId!==nextId||world.schemaVersion!==schemaVersion||refs.some(([key,ref])=>world[key]!==ref)||!sameMechanicalOwners()
+        ||world.raids&&(groupChanged&&!writableSlot(world.raids,'mechActive')||extraMechChanged&&!writableSlot(world.raids,'extraMechActive261'))
         ||collections.some((a,i)=>a&&(a.length!==identities[i]!.length||a.some((item,n)=>item!==identities[i]![n])))
         ||dependencies.some((d,i)=>encoded(d)!==before[i])
         ||patches.some(p=>encoded(p.original)!==p.before))return false;
@@ -74,6 +82,9 @@ export function spikeTrapImpactProjection(world:World){
       if(eventsChanged)world.events.splice(0,world.events.length,...view.events);
       if(economyChanged)world.economy=view.economy;
       if(groupChanged&&world.raids)world.raids.mechActive=view.raids?.mechActive;
+      if(extraMechChanged&&world.raids)world.raids.extraMechActive261=view.raids?.extraMechActive261;
+      if(humanLordChanged&&world.raids)world.raids.active=view.raids?.active;
+      if(extraLordsChanged&&world.raids)world.raids.extraActive261=view.raids?.extraActive261;
       if(destroyedChanged)world.destroyed=view.destroyed;
       if(wavesChanged){world.bombWaves=view.bombWaves;world.nextId=view.nextId;}
       if(thermalChanged){if(view.thermal)world.thermal=view.thermal;else delete world.thermal;}

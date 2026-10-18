@@ -50,7 +50,8 @@ export function captureCampRetainedAnimals256(root:CampaignState):WildAnimal[] {
  const caravan=new Set<WildAnimal>();
  for(const record of root.worldGroups?.groups??[])if('members'in record.state)
   for(const animal of record.state.animalOwners?.members??[])caravan.add(animal);
- return capture.actors.filter((a):a is WildAnimal=>'species'in a&&capture.localMapFor(a)===null&&!caravan.has(a));
+ const pending=new Set((root.worldGroups?.groups??[]).flatMap(record=>record.pending261?.animals??[]));
+ return capture.actors.filter((a):a is WildAnimal=>'species'in a&&capture.localMapFor(a)===null&&!caravan.has(a)&&!pending.has(a));
 }
 function sharedMutableStamp(root:CampaignState):string {
  // Planet.geography is immutable and potentially dense: never stringify it.
@@ -79,7 +80,7 @@ export function* draftActualGroupCamp256(input:CampaignState,groupId:number,runt
  if(!record||!g||!('members'in g))return blocked('entry-preflight','Actual away group required');
  const planet=root.planet,geography=planet.geography,tile=g.tile,calendarOrigin=maps.calendarOrigin;
  // Read authoritative CAMPAIGN_FIELDS, not a group projection's local header.
- const campaign=Object.fromEntries(CAMPAIGN_FIELDS.filter(k=>Object.hasOwn(root,k)).map(k=>[k,root[k]])) as Pick<World,CampaignField>&{schemaVersion:256|257|258|259|260;planet:typeof planet;worldFactions:NonNullable<World['worldFactions']>};
+ const campaign=Object.fromEntries(CAMPAIGN_FIELDS.filter(k=>Object.hasOwn(root,k)).map(k=>[k,root[k]])) as Pick<World,CampaignField>&{schemaVersion:256|257|258|259|260|261;planet:typeof planet;worldFactions:NonNullable<World['worldFactions']>};
  const captured=sharedMutableStamp(root),planetStamp=planetScalarStamp(planet),mapStamp=mapRegistryStamp(root),groupStamp=JSON.stringify(g),sites=maps.sites.slice();
  const retained=captureCampRetainedAnimals256(root),retainedStamp=JSON.stringify(retained);
  const runtimeStamp=JSON.stringify({adjacent:runtime.adjacentPermutation,fog:runtime.fog,context:runtime.context,rng:runtime.animalRuntimeRng});

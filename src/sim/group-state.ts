@@ -62,7 +62,7 @@ export type GroupStop =
   | { kind: 'overload'; grams: number; capacityGrams: number }
   | { kind: 'unreachable'; destination: number };
 export interface GroupAdmission257 {revision:1|2}
-export interface GroupHumanPreparation257 {revision:1;releaseIds:number[];passengers:{pawnId:number;carrierId:number;phase:'approach'|'carry'|'waiting';captureOnPickup259?:true}[]}
+export interface GroupHumanPreparation257 {revision:1;/** Only a real new261 formation may retain mobilisation until actual departure. */undraftIds261?:number[];releaseIds:number[];passengers:{pawnId:number;carrierId:number;phase:'approach'|'carry'|'waiting';captureOnPickup259?:true}[]}
 interface GroupCommon {
   /** Present only on formations genuinely created after admission257. */
   admission?:GroupAdmission257;
@@ -131,9 +131,9 @@ export interface GroupLoss {
   pawn: Pawn;
   items: MaterialPile[];
 }
-export type GroupCommand = import('./group-reform-260.ts').GroupReformCommand260 | import('./group-caravan-carry-256.ts').GroupCaravanCarryCommand256 | GroupReorganizationCommand
+export type GroupCommand = import('./caravan-arrival-261.ts').CaravanArrivalCommand261 | import('./group-reform-260.ts').GroupReformCommand260 | import('./group-caravan-carry-256.ts').GroupCaravanCarryCommand256 | GroupReorganizationCommand
   | { type: 'planet-adopt' }
-  | { type: 'group-start'; originMapId?:number; memberIds: number[]; destination: number; sources: CommercialBuyLine[];packedIds?:number[];animalIds?:number[] }
+  | { type: 'group-start'; retreat261?:true; originMapId?:number; memberIds: number[]; destination: number; sources: CommercialBuyLine[];packedIds?:number[];animalIds?:number[] }
   | { type: 'group-cancel'; groupId?:number }
   | { type: 'group-pause'; groupId?:number; paused: boolean }
   | { type: 'group-route'; groupId?:number; destination: number }

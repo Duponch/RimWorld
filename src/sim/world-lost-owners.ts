@@ -71,7 +71,10 @@ export function detachMapOwners(map:World,mapId:number,tile:number,removalPlan?:
  });
  const animals:AbandonedMapContents['animals']=animalRows.map(row=>{const animal=row.animal;detachHiveInsect256(map,animal);cleanMapRemovedAnimal256(animal,map.tick);const items=map.schemaVersion>=256?map.piles.filter(i=>i.owner.type==='inventory'&&i.owner.pawnId===animal.id):[],packed=map.schemaVersion>=256?map.packed.filter(p=>p.owner.type==='inventory'&&p.owner.pawnId===animal.id):[];return {...row,animal,...animalHolders.has(animal.id)?{carriedById:animalHolders.get(animal.id)!}:{},...items.length?{items}:{},...packed.length?{packed}:{}};});
  // Real DeSpawn interrupts local jobs/Lord goals but preserves physical timers.
- if(Number(map.schemaVersion)===259||map.schemaVersion===260){for(const m of map.mechanoids??[])cleanMapRemovedMechanical259(m,map.tick);if(map.raids?.mechActive)delete map.raids.mechActive;}
+ if(Number(map.schemaVersion)===259||Number(map.schemaVersion)===260||map.schemaVersion===261){for(const m of map.mechanoids??[])cleanMapRemovedMechanical259(m,map.tick);if(map.raids?.mechActive)delete map.raids.mechActive;}
+ // The actual261 removal retires the additional local Lord header too. Its
+ // original actors are transferred by MapRemoved; the array owns no copies.
+ if(map.schemaVersion===261&&map.raids&&Object.hasOwn(map.raids,'extraMechActive261'))delete map.raids.extraMechActive261;
  const pods=map.startingArrival&&map.startingArrival.phase!=='opened'?map.startingArrival.pods.map(p=>({id:p.id,pawnId:p.pawn.id,items:p.items.filter(i=>i.owner.type==='starting-pod')})):[];
  const retainedItems=new Set([...humans.flatMap(h=>h.items),...animals.flatMap(a=>a.items??[])].map(i=>i.id)),retainedPacked=new Set([...humans.flatMap(h=>h.packed),...animals.flatMap(a=>a.packed??[])].map(p=>p.building.id));
  const lost:AbandonedMapContents['lost']={items:{},structures:map.structures.length-(retainedCaskets?map.structures.filter(s=>isAncientCasket256(s)&&ancientCasketHasContents256(s.casket)).length:0),resources:map.resources.length,packed:map.packed.filter(p=>!retainedPacked.has(p.building.id)).length};

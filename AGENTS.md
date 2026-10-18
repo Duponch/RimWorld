@@ -20,6 +20,8 @@ Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` auto
 
 ## Méthode de livraison
 
+**V416 — schéma 261, qualification fonctionnelle ciblée :** [Rencontres et sorties de caravane](docs/gameplay/caravan-encounters-v416.md). Rencontres, commerce/cession, sortie physique et entrée animale acquis par reprises ; mêmes propriétaires, annulation et recharges exactes UI. Adaptation PNJ/animaux déclarée, rouges et limites de confort conservés. Non publié, productionV403 inchangée ; compléments générateur et sites encore ouverts avant démonstration.
+
 **V415 fonctionnel acquis par reprises, schéma260 :** [Reformation depuis un camp](docs/gameplay/camp-reform-v415.md). Sortie immédiate, propriétaires, dépôts partagés et pression prospective ;70cas/dixfichiers et UI/recharge exacte736 acquis. Présentation partielle : minage sans saut mais un retard de vitesse179,7ms reste rouge, abattage acquis séparément sans rejouer le minage. Aucun gainFPS, publication ou clôture des fondations ; rencontres et compléments générateur restent prioritaires.
 
 **V414 qualifié par reprises, schéma 259 :** [Captifs, retraits et réinstallation](docs/gameplay/caravan-owners-v414.md). Vrais retraits et arrivée3408, installation UI250² puis recharge complète exacte ; captif formé/annulé1807 et dossier/recharge exacts par reprise sans rejeu. Caissons, souvenirs et biens conservés ; rouges et pression mémoire restent nommés. Non publié, aucune clôture des fondations. Reformation/rencontres et écarts générateur taille/saison/température/faune encore à fermer.

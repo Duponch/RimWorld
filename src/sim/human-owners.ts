@@ -11,7 +11,7 @@ import type {RelationshipPeople,RelationshipPerson} from './relationship-state.t
 import type {GroupDepartureBaseline,GroupLoss,GroupState} from './group-state.ts';
 
 export type HumanOwnerKind='map'|'world-lost'|'ancient-casket'|'starting-pod'|'scout-away'|'commercial-away'|'group-away'|'group-loss'
-  |'visitor-departure'|'pod-departure'|'raid-departure'|'prison-departure'|'world-pawn';
+  |'visitor-departure'|'pod-departure'|'raid-departure'|'prison-departure'|'world-pawn'|'caravan-encounter';
 export type HumanSimulation='local'|'world'|'frozen'|'identity-only';
 export type HumanPlace={kind:'map'}|{kind:'ancient-casket';casketId:number}|{kind:'starting-pod';podId:number}|{kind:'planet';tile:number}|{kind:'legacy-trip'}|{kind:'archive'}|{kind:'world-pawn'};
 export interface HumanOwnerSlot {

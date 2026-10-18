@@ -1,3 +1,4 @@
+import {mechRaidGroup261} from './mechanical-raid-groups-261.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Temple-only sleep/assault membership over existing mechanical originals.
  * Pool and assault planning are declared provisional adaptations; no raid is
@@ -9,7 +10,7 @@ export interface TempleMechDuty256 {group:number;madeAtCore:number;awakeAtCore:n
 export const mechanicalOrder256=(m:Mechanoid)=>m.raid??m.temple;
 export function mechanicalDuty256(w:World,m:Mechanoid){
  if(m.temple)return m.temple.awakeAtCore===null?undefined:{phase:'assault' as const};
- const group=w.raids?.mechActive;return m.raid&&group?.id===m.raid.group&&group.members.includes(m.id)?group:undefined;
+ const group=mechRaidGroup261(w,m.raid?.group);return group?.members.includes(m.id)?group:undefined;
 }
 export const sleepingTempleMech256=(m:Mechanoid)=>m.temple?.awakeAtCore===null;
 export function wakeTempleMechGroup256(w:World,member:Mechanoid,atCore:number):void {

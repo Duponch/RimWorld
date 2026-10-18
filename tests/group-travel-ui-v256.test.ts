@@ -2,7 +2,7 @@ import {prepareGroupSplit,commitGroupReorganization} from '../src/sim/group-reor
 import {groupEntryActions} from '../src/sim/world-map-authority';
 import {createGroupAdapters} from '../src/ui/group-adapter';
 import {emptyGroupLedger} from '../src/sim/group-loading';
-import {travelGroupLabel256} from '../src/ui/group-travel-readers-256';
+import {travelGroupLabel256,travelElsewhereColonists256} from '../src/ui/group-travel-readers-256';
 import {afterEach,expect,test,vi} from 'vitest';
 import {createGroupPanel,type GroupPanelFacts,type GroupPanelAdapters,type GroupPanelSnapshot} from '../src/ui/group-panel';
 import {createGroupReorganizationPanel256,groupSplitCommand256,groupMergeCommand256} from '../src/ui/group-reorganization-panel-256';
@@ -31,6 +31,7 @@ class NodeFixture {
   getAttribute(key:string){return this.attributes.get(key)??null;}hasAttribute(key:string){return this.attributes.has(key);}removeAttribute(key:string){this.attributes.delete(key);}
   querySelectorAll(selector:string):NodeFixture[]{if(selector!=='*')throw Error('Only node inventory is used by the SVG view.');return this.children.flatMap(c=>[c,...c.querySelectorAll('*')]);}
   querySelector(selector:string):NodeFixture|null {if(selector!=='h3')throw Error('Unexpected fixture selector '+selector);return this.querySelectorAll('*').find(n=>n.tag===selector)??null;}
+  get options():NodeFixture[]{return this.children.filter(n=>n.tag==='option');}
   addEventListener(type:string,listener:(event:Record<string,unknown>)=>void){const listeners=this.listeners.get(type)??[];listeners.push(listener);this.listeners.set(type,listeners);}
   fire(type:string,event:Record<string,unknown>={}){for(const listener of this.listeners.get(type)??[])listener({target:this,...event});}
 }
@@ -45,7 +46,30 @@ function dom(){
 afterEach(()=>vi.unstubAllGlobals());
 const all=(host:NodeFixture)=>host.querySelectorAll('*');
 const find=(host:NodeFixture,key:string)=>all(host).find(n=>Object.hasOwn(n.dataset,key))!;
+function chooseInput(row:NodeFixture){const input=all(row).find(n=>n.tag==='input'&&n.type==='checkbox'&&/^(Choisir|Charger) /.test(n.getAttribute('aria-label')??''));if(!input)throw Error('Actual labelled person/animal/pack choice absent');return input;}
 const flush=async()=>{await Promise.resolve();await Promise.resolve();};
+/** Declared transport-only witness: relationship knowledge is deliberately
+ * broader than the confirmed spawned-colonist roster. No casket is opened,
+ * owner allocated, map generated or campaign history claimed by this fixture. */
+test('other-map label ignores sealed/foreign social knowledge and follows only actual map colonist summaries',()=>{
+ const {host}=dom(),f=setup(),remote={id:f.world.nextId++,name:'Veilleur provisoire'},held={id:f.world.nextId++,name:'Dormeur inconnu'},foreign={id:f.world.nextId++,name:'Interlocuteur étranger'};
+ f.world.campaignPeople=[remote,held,foreign].map(p=>({...p,status:'away' as const}));
+ const map=(id:number,pawns:{id:number;name:string}[]):import('../src/sim/world-map-state').CampaignMapSummary=>({id,tile:id,kind:'camp',createdAt:0,pawnCount:pawns.length,selected:id===0,actions:{view:{ok:true},settle:{ok:false},abandon:{ok:true}},abandonConsequences:{pawns,groundItems:0,structures:0}});
+ f.snapshot.campaign={revision:2,activeMapId:0,rootMapId:0,campaignSeed:f.world.seed,mapSize:{width:32,height:32},maxSettlements:1,selectedGroupId:null,maps:[map(0,[f.world.pawns[0]!]),map(1,[remote])],groups:[],groupLosses:[],lossContexts:[],lostMemories:[],incidents:[]};
+ const before=JSON.stringify(f.snapshot),ui=createGroupPanel(host as unknown as HTMLElement,f.adapters);ui.update(f.snapshot);
+ expect(travelElsewhereColonists256(f.snapshot)).toEqual([remote]);
+ const label=find(host,'campaignElsewhere');expect(label.textContent).toBe('Sur les autres cartes, indisponibles ici : Veilleur provisoire.');
+ expect(label.textContent).not.toContain(held.name);expect(label.textContent).not.toContain(foreign.name);expect(JSON.stringify(f.snapshot)).toBe(before);expect(f.adapters.send).not.toHaveBeenCalled();
+ // Same social knowledge, but the real map roster changed: no stale names.
+ f.snapshot.campaign.maps[1]!.abandonConsequences.pawns=[];ui.update(f.snapshot);expect(label.textContent).toBe('');
+ delete f.snapshot.campaign;expect(travelElsewhereColonists256(f.snapshot)).toEqual([]);ui.dispose();
+});
+test('other-map reader never consults generic social knowledge and excludes actors already owned by the current map',()=>{
+ const f=setup();Object.defineProperty(f.world,'campaignPeople',{get(){throw Error('Social knowledge is not a map colonist roster');}});
+ expect(travelElsewhereColonists256(f.snapshot)).toEqual([]);
+ const current=f.world.pawns[0]!;f.snapshot.campaign={revision:2,activeMapId:0,rootMapId:0,campaignSeed:f.world.seed,mapSize:{width:32,height:32},maxSettlements:1,selectedGroupId:null,maps:[{id:1,tile:1,kind:'camp',createdAt:0,pawnCount:1,selected:false,actions:{view:{ok:true},settle:{ok:false},abandon:{ok:true}},abandonConsequences:{pawns:[{id:current.id,name:current.name}],groundItems:0,structures:0}}],groups:[],groupLosses:[],lossContexts:[],lostMemories:[],incidents:[]};
+ expect(travelElsewhereColonists256(f.snapshot)).toEqual([]);
+});
 function setup(){
  const world=createScenarioWorld(214,32);world.planet=generatePlanet(world.seed,planetHomeInput(world),world.tick);
  const a:WildAnimal={id:world.nextId++,species:'muffalo',sex:'female',ageTicks:adultAgeTicks('muffalo'),x:4,z:4,food:1,rest:1,state:'idle',path:[],nextDecision:world.tick,domestic:{since:world.tick,care:'best',tameness:1,nextDecay:world.tick+100}};
@@ -58,7 +82,7 @@ function setup(){
 }
 test('formation forwards actual human, animal and whole pack IDs; unavailable choices retain draft until explicit cleanup',()=>{
  const {host}=dom(),f=setup(),before=JSON.stringify(f.world),ui=createGroupPanel(host as unknown as HTMLElement,f.adapters);ui.update(f.snapshot);
- const human=find(host,'groupMember').children[0]!.children[0]!,animal=find(host,'groupAnimal').children[0]!.children[0]!,pack=find(host,'groupBedroll').children[0]!.children[0]!;
+ const human=chooseInput(find(host,'groupMember')),animal=chooseInput(find(host,'groupAnimal')),pack=chooseInput(find(host,'groupBedroll'));
  for(const input of[human,animal,pack]){input.checked=true;input.fire('change');}
  const preview=all(host).find(n=>n.dataset.groupPreview==='formation')!;preview.fire('click');
  expect(f.adapters.previewPlan).toHaveBeenLastCalledWith(f.snapshot,f.facts,expect.objectContaining({animalIds:[f.a.id],packedIds:[f.pack.building.id]}));
@@ -68,7 +92,7 @@ test('formation forwards actual human, animal and whole pack IDs; unavailable ch
 });
 test('prospective formation has no obsolete eight-human UI cap and does not recalculate a preview on snapshot refresh',()=>{
  const {host}=dom(),f=setup(),first=f.world.pawns[0]!;while(f.world.pawns.length<9)f.world.pawns.push({...structuredClone(first),id:f.world.nextId++,name:'Voyageur '+f.world.pawns.length});f.facts.candidates=f.world.pawns.map(pawn=>({pawn,ok:true}));
- const ui=createGroupPanel(host as unknown as HTMLElement,f.adapters);ui.update(f.snapshot);for(const row of all(host).filter(n=>n.dataset.groupMember!==undefined)){const c=row.children[0]!.children[0]!;c.checked=true;c.fire('change');}all(host).find(n=>n.dataset.groupPreview==='formation')!.fire('click');
+ const ui=createGroupPanel(host as unknown as HTMLElement,f.adapters);ui.update(f.snapshot);for(const row of all(host).filter(n=>n.dataset.groupMember!==undefined)){const c=chooseInput(row);c.checked=true;c.fire('change');}all(host).find(n=>n.dataset.groupPreview==='formation')!.fire('click');
  expect(vi.mocked(f.adapters.previewPlan).mock.calls[0]![2].memberIds).toHaveLength(9);ui.update(f.snapshot);expect(f.adapters.previewPlan).toHaveBeenCalledTimes(1);ui.dispose();
 });
 test('split builder transfers only real selected inventory/animals/packs and refuses stale quantity or an ownerless half without mutation',()=>{

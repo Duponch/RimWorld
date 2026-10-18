@@ -1,3 +1,4 @@
+import {notifyKidnapLordHarm261} from './caravan-kidnap-lord-261.ts';
 import {commitCapturedGuest259} from './world-affiliation-259.ts';
 import { allowedAreaAllows,allowedAreaReason } from './allowed-area-state.ts';
 import { factionOf,isColonist } from './affiliation.ts';
@@ -63,6 +64,7 @@ export function completeCapture(world:World,patient:Pawn,planned?:DropPlan,recap
   if(!releaseWork(world,patient,drops))return false;
   for(const item of held)item.owner={type:'ground',...drops.get(item.id)!};
   clearQueuedOrders(world,patient);delete patient.priorityWork;delete patient.draft;delete patient.flee;delete patient.equipmentDropPending;
+  notifyKidnapLordHarm261(world,patient);
   patient.prisoner=createPrisonerState(world,patient);commitCapturedGuest259(world,patient);patient.bedId=null;delete patient.bedSlot;
   if(patient.raid){patient.raid.goal=null;patient.raid.exiting=true;}
   return true;

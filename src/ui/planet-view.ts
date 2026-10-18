@@ -7,7 +7,7 @@ export interface PlanetOverlay {
   route:readonly number[];
   previewRoute?:readonly number[];
   groupTile?:number;
-  maps?:readonly {mapId:number;tile:number;label:string;kind:'settlement'|'camp'|'legacy-site';active:boolean}[];
+  maps?:readonly {mapId:number;tile:number;label:string;kind:'settlement'|'camp'|'legacy-site'|'battlefield';active:boolean}[];
   retiredCamps?:readonly {retiredMapId:number;tile:number;label:string}[];
   homeTile?:number;
   civilianTile?:number|null;

@@ -1,4 +1,5 @@
 import {bindBornHumanFaction259,bornFactionForDef259} from './world-affiliation-259.ts';
+import {tempMapModern261,tempMapAdoptedAtCore261,tempMapTarget261} from './temp-map-incidents-261.ts';
 import { releaseAllowedAreaReturn } from './allowed-area-state.ts';
 import { activeThreat,hostileTo,isColonist,isAdmittedVisitorGuest } from './affiliation.ts';
 import { treatmentTarget,medicalRestNeeded } from './care-rules.ts';
@@ -26,6 +27,7 @@ import type { MaterialPile,Pawn,World } from './types.ts';
 const log=(w:World,message:string)=>{w.events.push({tick:w.tick,type:'command',message});if(w.events.length>80)w.events.splice(0,w.events.length-80);};
 export function enableVisitors(w:World,withIntro=false,prospective=false):void {
   if(w.visitors)return;
+  if(tempMapModern261(w))return;
   w.visitors={profile:'cassandra-visitors-v1',adoptedAt:w.tick,rng:((w.seed^0x88c0173)>>>0)||1,serial:0,
     introAt:!prospective&&withIntro&&w.tick===0?INTRO_VISITOR_TICK:null,traveler:newVisitorAgenda(w.seed,'traveler',w.tick,prospective),visitor:newVisitorAgenda(w.seed,'visitor',w.tick,prospective),
     ...w.schemaVersion>=123?{exotic:newVisitorAgenda(w.seed,'exotic',w.tick,prospective)}:{},groups:[],departed:[]};
@@ -33,7 +35,15 @@ export function enableVisitors(w:World,withIntro=false,prospective=false):void {
 /** V122→V123 migration: discard past exotic opportunities without touching the
  * old visitor agendas, stock, actor identities, or the business RNG. */
 export function adoptExoticMerchantSchedule(w:World):void {
-  if(w.visitors&&!w.visitors.exotic)w.visitors.exotic=newVisitorAgenda(w.seed,'exotic',w.tick);
+  if(w.visitors?.profile==='cassandra-visitors-v1'&&!tempMapModern261(w)&&!w.visitors.exotic)w.visitors.exotic=newVisitorAgenda(w.seed,'exotic',w.tick);
+}
+/** Real Camp→Settlement commit only, never a load or an adoption. Old agendas
+ * are replaced prospectively without replaying RNG or admitting past tickets. */
+export function resumeProspectiveVisitorSchedule261(w:World):void {
+  if(w.schemaVersion<261||tempMapTarget261(w)||tempMapAdoptedAtCore261(w)===undefined)return;
+  const s=w.visitors;if(!s){enableVisitors(w,false,true);return;}
+  w.visitors={...s,profile:'cassandra-visitors-v1',introAt:null,
+    traveler:newVisitorAgenda(w.seed,'traveler',w.tick,true),visitor:newVisitorAgenda(w.seed,'visitor',w.tick,true),exotic:newVisitorAgenda(w.seed,'exotic',w.tick,true)};
 }
 const groupOf=(w:World,p:Pawn)=>w.visitors?.groups.find(g=>g.id===p.visitor?.group);
 export function visitorMayTrade(w:World,p:Pawn):boolean {
@@ -63,7 +73,7 @@ function leaveGroup(w:World,g:VisitorGroup,reason:VisitorGroup['reason']):void {
 
 /** Adult Peaceful options, Core weights20/10/10 and costs45/60/40. Their
  * biographies and equipment remain explicitly limited local profiles. */
-function groupProfiles(random:{rng:number},points:number):string[] {
+export function groupProfiles(random:{rng:number},points:number):string[] {
   const kinds=[{name:'Villageois',cost:45,weight:20},{name:'Garde',cost:60,weight:10},{name:'Conseiller',cost:40,weight:10}],out:string[]=[];
   // MinPointsToGenerateAnything prefers the sole fighter (guard60), ×1.2.
   const maximum=Math.max(72,points<=70?35+points*15/70:50+(points-70)*50/630);
@@ -81,9 +91,9 @@ function arrive(w:World,kind:VisitorKind,intro=false,exotic=false):boolean {
   const id=s.serial+1,merchant=exotic?0:kind==='visitor'&&visitorRandom(random)<.75?Math.floor(visitorRandom(random)*profiles.length):-1;
   const pawns:Pawn[]=[],piles:MaterialPile[]=[];let nextId=w.nextId;
   for(let i=0;i<profiles.length;i++){
-    const factionId=(Number(w.schemaVersion)===259||w.schemaVersion===260)&&w.worldFactions?bornFactionForDef259(w,'OutlanderCivil'):undefined;if((Number(w.schemaVersion)===259||w.schemaVersion===260)&&w.worldFactions&&factionId===undefined)return false;
+    const factionId=(Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||w.schemaVersion===261)&&w.worldFactions?bornFactionForDef259(w,'OutlanderCivil'):undefined;if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||w.schemaVersion===261)&&w.worldFactions&&factionId===undefined)return false;
     const p=startingPawn(nextId++,`${profiles[i]} ${id}.${i+1}`,arrival.sites[i]!.x,arrival.sites[i]!.z,0,55,w.seed,w.tick,w.schemaVersion);
-    p.faction='outlanders';if((Number(w.schemaVersion)===259||w.schemaVersion===260)&&w.worldFactions&&!bindBornHumanFaction259(w,p,factionId!))return false;p.foodPolicyId=w.foodPolicies[0]!.id;
+    p.faction='outlanders';if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||w.schemaVersion===261)&&w.worldFactions&&!bindBornHumanFaction259(w,p,factionId!))return false;p.foodPolicyId=w.foodPolicies[0]!.id;
     delete p.apparelPolicyId;delete p.apparelAutomation;delete p.nextApparelCheckAt;
     for(const value of Object.values(p.skills))if(typeof value==='object'){value.level=0;value.passion=0;}
     if(w.schemaVersion>=191)generatePawnBackground(p,w.seed,profiles[i]==='Garde',i===merchant);
@@ -122,6 +132,9 @@ export function advanceVisitors(w:World):void {
     if(g.phase==='staying'&&(w.tick-g.arrivedAt!)*10>g.durationCore)leaveGroup(w,g,'timeout');
   }
   s.groups=s.groups.filter(g=>w.pawns.some(p=>p.visitor?.group===g.id));
+  // Maintain the same real groups above, but leave historical home tickets
+  // literally dormant. TempMap MTB admissions own their separate shared RNG.
+  if(s.profile==='temp-travelers261-v1'||tempMapModern261(w))return;
   if(s.introAt!==null&&w.tick>=s.introAt){const due=w.tick===s.introAt;s.introAt=null;if(due)arrive(w,'visitor',true);}
   if(consumeVisitorOpportunity(s.traveler,'traveler',w.tick))arrive(w,'traveler');
   if(consumeVisitorOpportunity(s.visitor,'visitor',w.tick))arrive(w,'visitor');

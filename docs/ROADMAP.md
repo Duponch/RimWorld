@@ -1,4 +1,6 @@
 # Plan de développement
+**V416 — schéma 261, qualification fonctionnelle ciblée :** [Rencontres et sorties de caravane](gameplay/caravan-encounters-v416.md). Rencontres, commerce/cession, sortie physique et entrée animale acquis par reprises ; mêmes propriétaires, annulation et recharges exactes UI. Adaptation PNJ/animaux déclarée, rouges et limites de confort conservés. Non publié, productionV403 inchangée ; compléments générateur et sites encore ouverts avant démonstration.
+
 
 **V415 — schéma 260, boucle fonctionnelle acquise par reprises :** [Reformation depuis un camp](gameplay/camp-reform-v415.md) : transfert immédiat des originaux, dépôts partagés et pression prospective des nouveaux camps ;70cas/dixfichiers et UI/recharge exacte736. Présentation partielle : un retard de vitesse179,7ms au minage reste rouge ; abattage acquis séparément. Aucun gainFPS, clôture ou publication ; production V403 inchangée.
 

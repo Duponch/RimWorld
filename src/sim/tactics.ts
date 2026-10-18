@@ -18,14 +18,15 @@ import { firingPosition,tacticalClaims } from './tactical-positions.ts';
 import { resetTactics } from './tactics-state.ts';
 import type { LightReader } from './light-environment.ts';
 import type { NavigationGrid,SearchBudget } from './work-planner.ts';
-import type { Pawn,World } from './types.ts';
+import type { Cell,Pawn,World } from './types.ts';
+export interface TacticalDefenseArea261 {center:Cell;radius:28}
 
 const EMPTY:ReadonlySet<number>=new Set();
 function clearEngagement(p:Pawn):void {cancelShooting(p);cancelMelee(p);p.path=[];resetTactics(p);}
 /** Visible human threats only. Group orders, unseen colony targets and raids
  * will have their own controller; do not turn this scenario into an omniscient AI. */
-function acquire(world:World,p:Pawn,range:number,blocked:Uint8Array):Pawn|undefined {
-  const candidates=world.pawns.filter(q=>hostileTo(p,q)&&assaultTarget(p,q)&&distanceSquared(p,q)<=56**2).sort((a,b)=>distanceSquared(p,a)-distanceSquared(p,b)||a.id-b.id);
+function acquire(world:World,p:Pawn,range:number,blocked:Uint8Array,defense?:TacticalDefenseArea261):Pawn|undefined {
+  const candidates=world.pawns.filter(q=>hostileTo(p,q)&&assaultTarget(p,q)&&distanceSquared(p,q)<=56**2&&(!defense||distanceSquared(defense.center,q)<=defense.radius**2)).sort((a,b)=>distanceSquared(p,a)-distanceSquared(p,b)||a.id-b.id);
   if(!candidates.length)return;
   const margin=59,queries=shootingQueries(world,()=>captureWorldShotGrid(world,{minX:p.x-margin,minZ:p.z-margin,maxX:p.x+margin,maxZ:p.z+margin}));
   const visible=candidates.filter(q=>!queries.carried(q.id)&&clearShotSegment(queries.grid(),p,q));
@@ -45,10 +46,10 @@ function reviewAt(world:World,melee=false):number {
 }
 /** Called only after a captured edge. Movement, impacts and stances remain in
  * their shared systems; this controller only chooses intent and a physical post. */
-export function processTactics(world:World,p:Pawn,getBlocked:NavigationGrid,budget:SearchBudget,getLight:LightReader):void {
+export function processTactics(world:World,p:Pawn,getBlocked:NavigationGrid,budget:SearchBudget,getLight:LightReader,defense?:TacticalDefenseArea261):void {
   const t=p.tactics!;
   let target=world.pawns.find(q=>q.id===t.targetId&&hostileTo(p,q)&&assaultTarget(p,q));
-  if(t.targetId!==null&&(!target||distanceSquared(p,target)>65**2))clearEngagement(p);
+  if(t.targetId!==null&&(!target||distanceSquared(p,target)>65**2||defense&&distanceSquared(defense.center,target)>defense.radius**2))clearEngagement(p);
   if(startSentryMelee(world,p)) {
     const id=p.melee!.order!.targetId;
     if(t.targetId!==id||t.post){t.targetId=id;t.post=null;t.reviewAtCore=reviewAt(world,true);}
@@ -63,7 +64,7 @@ export function processTactics(world:World,p:Pawn,getBlocked:NavigationGrid,budg
     // Keep the current intent while this query is throttled; a same-target
     // result preserves its route/stance instead of inheriting an idle backoff.
     budget.remaining--;p.planCooldown=20;
-    const reviewed=acquire(world,p,range,getBlocked());
+    const reviewed=acquire(world,p,range,getBlocked(),defense);
     if(!reviewed){clearEngagement(p);p.state='idle';return;}
     if(reviewed.id!==t.targetId)clearEngagement(p);
     else if(p.melee&&range&&!meleeContact(world,p,reviewed,getBlocked())){
@@ -74,7 +75,7 @@ export function processTactics(world:World,p:Pawn,getBlocked:NavigationGrid,budg
   if(!t.targetId) {
     if(!budget.remaining||p.planCooldown){p.state='idle';return;}
     budget.remaining--;p.planCooldown=20;
-    target=acquire(world,p,range,getBlocked());
+    target=acquire(world,p,range,getBlocked(),defense);
     if(!target){p.state='idle';return;}
     t.targetId=target.id;t.reviewAtCore=reviewAt(world,!range);p.planCooldown=0;
   } else target=world.pawns.find(q=>q.id===t.targetId)!;

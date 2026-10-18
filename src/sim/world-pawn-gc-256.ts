@@ -26,7 +26,7 @@ function* makePass(state:WorldPawnsState256,snapshot:readonly WorldPawnOwner256[
  // These participants retain their one true holder. Its unresolved political/
  // terminal authority is Unknown, never KeepForever or a fabricated Free row.
  for(const [id,f] of heldCasketGCUnknown259(state)){facts.set(id,f);kept.add(id);}
- for(const row of ordered){const f=reader.facts(row);facts.set(row.actor.id,f);if(row.keepForever||row.everColonist||f.keep.length||f.unknown.length)kept.add(row.actor.id);}
+ for(const row of ordered){const f=reader.facts(row);facts.set(row.actor.id,f);if(row.keepForever||row.everColonist||row.captivity261||f.keep.length||f.unknown.length)kept.add(row.actor.id);}
  let additional=0;
  for(const row of ordered)if(row.kind==='human'&&!terminalWorldPawn256(row)&&!kept.has(row.actor.id)&&new WorldGenerationRandom(row.actor.id^0x3a73ecfd).value()<Math.fround(.25)){kept.add(row.actor.id);if(++additional===10)break;}
  // Freeze critical roots BEFORE adding their dependencies. No invented

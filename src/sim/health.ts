@@ -1,3 +1,4 @@
+import {notifyKidnapLordHarm261} from './caravan-kidnap-lord-261.ts';
 import {humanConditionMedicalFrontier256} from './human-condition-frontier-256.ts';
 import {recoverHumanConfusion256} from './human-condition-mind-256.ts';
 import {commitToxicDeath256,cancelToxicVomit256} from './toxic-buildup-256.ts';
@@ -28,6 +29,7 @@ function announce(world:World,message:string):void {world.events.push({tick:worl
  * no new edge, work or ingestion is performed during it (documented 3D choice). */
 export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn),externalViolence=false,retainTravellingCargo=false):void {
   if(!pawn.health)return;
+  if(externalViolence)notifyKidnapLordHarm261(world,pawn);
   const status=medicalStatus(pawn.health,body);if(status==='dead')commitToxicDeath256(pawn.health,()=>healthRandom(world));
   if(status!=='mobile') {
     cancelCryptosleepVomit256(pawn.health);if(pawn.state!==status||status==='dead'||!body.canBeAwake)cancelToxicVomit256(pawn.health);
@@ -35,6 +37,7 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn),ex
     if(pawn.mental?.crisis?.kind==='confused-wander')recoverHumanConfusion256(pawn);else finishMentalBreak(world,pawn,status!=='dead');
     delete pawn.draft;delete pawn.shooting;delete pawn.flee;delete pawn.melee;resetTactics(pawn);if(pawn.raid)pawn.raid.goal=null;delete pawn.stun;
     if(pawn.state!==status) {
+      notifyKidnapLordHarm261(world,pawn);
       if(status==='dead'||externalViolence)notifyColonyLoss(world,pawn,status==='dead'?'died':'downed');
       const wasSleeping=pawn.state==='sleeping';
       const bed=pawn.need?.kind==='sleep'&&pawn.need.phase==='sleep'&&pawn.need.bedId!==null?pawn.need:null;

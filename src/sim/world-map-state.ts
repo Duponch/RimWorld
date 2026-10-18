@@ -7,9 +7,13 @@ import type {GroupState,GroupLoss} from './group-state.ts';
 import type {PackedFurniture} from './furniture-rules.ts';
 export const WORLD_MAP_SCHEMA=255;
 export type SettlementLimit=1|2|3|4|5;
-export type WorldMapKind='settlement'|'camp'|'legacy-site';
+export type WorldMapKind='settlement'|'camp'|'legacy-site'|'battlefield';
 export type LocalMapState=Omit<SecondaryMap,'group'|'groupLosses'|'worldMaps'|'worldGroups'|'civilianPost'>;
 export interface WorldMapRecord {
+ tempIncidents261?:import('./temp-map-incidents-261.ts').TempIncidents261;
+ encounters261?:import('./caravan-encounter-state-261.ts').EncounterAdmission261;
+ story261?:import('./caravan-encounter-state-261.ts').CaravanStory261;
+ battlefield261?:import('./caravan-encounter-state-261.ts').CaravanBattlefield261;
  campPressure?:import('./camp-pressure-state-260.ts').CampPressure260;
  id:number;tile:number|null;kind:WorldMapKind;createdAt:number;settledAt?:number;
  /** Exactly the rootMapId record omits map: its originals live on the loaded root. */
@@ -18,7 +22,7 @@ export interface WorldMapRecord {
  postId?:number;
  visit:null|{groupId:number;memberIds:number[];homeEntry:Cell};
 }
-export interface RetiredWorldMap {id:number;tile:number|null;kind:WorldMapKind;createdAt:number;settledAt?:number;removedAt:number;reason:'abandon'|'camp-empty';markerUntilCore?:number}
+export interface RetiredWorldMap {id:number;tile:number|null;kind:WorldMapKind;createdAt:number;settledAt?:number;removedAt:number;reason:'abandon'|'camp-empty'|'battlefield-empty';markerUntilCore?:number}
 export interface WorldMapRegistry {
  /** Prospective creation statics; never installed by historical migration. */
  nextLordId?:number;
@@ -29,7 +33,14 @@ export interface WorldMapRegistry {
  campaignSeed:number;calendarOrigin:number;mapSize:{width:number;height:number};sites:WorldMapRecord[];retired:RetiredWorldMap[];
 }
 /** State is the existing literal contract, including absent old freight/provisions. */
-export interface WorldGroupRecord {postId?:number;originMapId:number;localMapId:number|null;context:Pick<World,'seed'|'width'|'height'|'climate'|'site'|'scenario'>;state:GroupState}
+export interface WorldGroupRecord {
+ /** Preparing intent; autoJoinable born only on its true physical CREATE. */
+ retreat261?:{revision:1;autoJoinable?:true};
+ encounters261?:import('./caravan-encounter-state-261.ts').EncounterAdmission261;
+ story261?:import('./caravan-encounter-state-261.ts').CaravanStory261;
+ pending261?:import('./caravan-encounter-state-261.ts').PendingCaravanEncounter261;
+ arrival261?:{tile:number;action:NonNullable<import('./caravan-encounter-state-261.ts').RetainedArrival261>};
+ postId?:number;originMapId:number;localMapId:number|null;context:Pick<World,'seed'|'width'|'height'|'climate'|'site'|'scenario'>;state:GroupState}
 /** The original holder remains explicit after local DeSpawn. No local map is retained. */
 export interface AbandonedWorldPawn {id:number;name:string;kind:import('./human-owners.ts').HumanOwnerKind;clock:number;pawn?:Pawn;items:MaterialPile[];packed:PackedFurniture[];carriedById?:number;podId?:number;guest?:Pick<Pawn,'prisoner'|'visitor'|'podRescue'|'raid'>}
 export interface AbandonedMapContents {/** Durable identities of actual living free colonists lost and transferred at this removal; no Thing ownership. */lostColonistIds259?:number[];mapId:number;tile:number;removedAt:number;context:WorldGroupRecord['context'];filthPresent:boolean;humans:AbandonedWorldPawn[];animals:{animal:import('./wildlife-state.ts').WildAnimal;carriedById?:number;clock?:number;items?:MaterialPile[];packed?:PackedFurniture[]}[];pods:{id:number;pawnId:number;items:MaterialPile[]}[];lost:{items:import('./thing-damage-rules.ts').FireItemLoss;structures:number;resources:number;packed:number}}
@@ -40,8 +51,8 @@ export type SharedCampaignState=Pick<World,CampaignField>;
 export type MaplessCampaign=SharedCampaignState&{worldMaps:WorldMapRegistry;worldGroups:WorldGroupRegistry};
 export type CampaignState=World|MaplessCampaign;
 export interface MapAction {ok:boolean;reason?:string}
-export interface CampaignMapSummary {campPressure?:import('./camp-pressure-state-260.ts').CampPressure260;areaIds?:number[];id:number;tile:number|null;kind:WorldMapKind;createdAt:number;settledAt?:number;pawnCount:number;selected:boolean;actions:{view:MapAction;settle:MapAction;abandon:MapAction};abandonConsequences:{pawns:{id:number;name:string}[];groundItems:number;structures:number}}
-export interface CampaignGroupSummary {capturePatients259?:import('./group-human-projection-259.ts').GroupCapturePatients259;memberContexts?:GroupMemberProjectionContext[];id:number;originMapId:number;localMapId:number|null;phase:GroupState['phase'];originTile:number|null;tile:number|null;memberIds:number[];mass:{grams:number;capacityGrams:number}|null;filthPresent:boolean;postId?:number;post?:World['civilianPost'];context:WorldGroupRecord['context'];entryActions:Record<'visit'|'camp'|'settle',MapAction>;state:GroupState}
+export interface CampaignMapSummary {tempIncidents261?:import('./temp-map-incidents-261.ts').TempIncidents261;encounters261?:import('./caravan-encounter-state-261.ts').EncounterAdmission261;story261?:import('./caravan-encounter-state-261.ts').CaravanStory261;battlefield261?:import('./caravan-encounter-state-261.ts').CaravanBattlefield261;campPressure?:import('./camp-pressure-state-260.ts').CampPressure260;areaIds?:number[];id:number;tile:number|null;kind:WorldMapKind;createdAt:number;settledAt?:number;pawnCount:number;selected:boolean;actions:{view:MapAction;settle:MapAction;abandon:MapAction};abandonConsequences:{pawns:{id:number;name:string}[];groundItems:number;structures:number}}
+export interface CampaignGroupSummary {capturePatients259?:import('./group-human-projection-259.ts').GroupCapturePatients259;encounters261?:import('./caravan-encounter-state-261.ts').EncounterAdmission261;story261?:import('./caravan-encounter-state-261.ts').CaravanStory261;pending261?:import('./caravan-encounter-state-261.ts').PendingCaravanEncounter261;arrival261?:{tile:number;action:NonNullable<import('./caravan-encounter-state-261.ts').RetainedArrival261>};memberContexts?:GroupMemberProjectionContext[];id:number;originMapId:number;localMapId:number|null;phase:GroupState['phase'];originTile:number|null;tile:number|null;memberIds:number[];mass:{grams:number;capacityGrams:number}|null;filthPresent:boolean;postId?:number;post?:World['civilianPost'];context:WorldGroupRecord['context'];entryActions:Record<'visit'|'camp'|'settle',MapAction>;state:GroupState}
 export interface MapIncident {mapId:number;kind:'raid'|'mechanoid'|'visitor'|'manhunter'|'downed';count:number;actorId:number}
 export type CampaignLossContext=WorldGroupRegistry['lossContexts'][number]&{filthPresent:boolean;memberContexts?:GroupMemberProjectionContext[]};
 /** Transport-only projection of an actual terminal owner and its source witness. */

@@ -13,11 +13,14 @@ export function groupOwnersCannotMove256(members:readonly Pawn[]):readonly numbe
  const owners=members.filter(groupPlayerOwner256);
  return !owners.length||owners.every(p=>p.state==='downed')||owners.every(hasMentalBreak)?owners.map(p=>p.id):[];
 }
-export function validProspectiveGroupSegment256(s:GroupSegment):boolean {
+export function validProspectiveGroupSegment256(s:GroupSegment,version=256):boolean {
  if(!Number.isSafeInteger(s.from)||s.from<0||!Number.isSafeInteger(s.to)||s.to<0||![s.totalCore,s.remainingCore].every(v=>Number.isFinite(v)&&Math.abs(v)<=Number.MAX_SAFE_INTEGER&&f(v)===v)||s.totalCore<=0||s.remainingCore>s.totalCore)return false;
- return s.remainingCore>=-f(f(Math.max(1,f(s.totalCore/30000)))*16);
+ // Reform applies the signed retained fraction to the NEW cost. Its legitimate
+ // negative result may exceed one ordinary overshoot; never clamp paid progress.
+ return s.remainingCore>=(version>=261?-f(s.totalCore*16):-f(f(Math.max(1,f(s.totalCore/30000)))*16));
 }
 export interface GroupRouteIntervalContext256 {
+ version?:number;
  /** Existing actual mass capture, shared by overload and cost. */
  travel:GroupTravelCapture;cost:PlanetCostContext;deltaCore:number;
  /** Query the real destination world object/settlement registry. */
@@ -41,7 +44,7 @@ export function advanceGroupRouteInterval256(planet:PlanetState,g:AwayGroup,c:Gr
  const hour=tileHour(planet,g.tile,c.cost.homeCivilCore);
  if(c.travel.anyRestNeed&&(hour<6||hour>22)&&!finalPush)return halt({kind:'night'});
  if(g.segment){
-  if(!validProspectiveGroupSegment256(g.segment))throw Error('Invalid prospective caravan segment');
+  if(!validProspectiveGroupSegment256(g.segment,c.version))throw Error('Invalid prospective caravan segment');
   if(g.segment.remainingCore>0){const payment=f(f(Math.max(1,f(g.segment.totalCore/30000)))*c.deltaCore);
    return {state:{...g,stop:null,segment:{...g.segment,remainingCore:f(g.segment.remainingCore-payment)}},event:null};}
  }

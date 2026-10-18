@@ -7,7 +7,7 @@ export function campaignUIFacts(value:CampaignUIState):CampaignSummary|CampaignM
  return 'activeMapId' in value?value:value.campaignMap?.revision===2?value.campaignMap:undefined;
 }
 export function mapDisplayName(map:Pick<CampaignMapSummary,'id'|'tile'|'kind'>):string {
- const kind=map.kind==='settlement'?(map.id===0?'Foyer':'Colonie'):map.kind==='camp'?'Camp temporaire':'Site conservé';
+ const kind=map.kind==='settlement'?(map.id===0?'Foyer':'Colonie'):map.kind==='camp'?'Camp temporaire':map.kind==='battlefield'?'Champ de bataille':'Site conservé';
  return map.tile===null?kind:`${kind} · case ${map.tile}`;
 }
 export function groupDisplayLabel(group:CampaignGroupSummary):string {

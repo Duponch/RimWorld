@@ -7,6 +7,7 @@ export interface GroupActionPermission {ok:boolean;reason?:string}
 export interface GroupMemberChoice extends GroupActionPermission {pawn:Pawn}
 export interface GroupSourceChoice {pile:MaterialPile;reserved:number;available:number;reason?:string}
 export interface GroupMassView {
+  ridingFactor?:number;
   grams:number;capacityGrams:number;rations:number;pemmicanUnits:number;provisionNutrition:number;
   byMember:readonly {pawnId:number;grams:number;capacityGrams:number}[];
 }
@@ -22,7 +23,7 @@ export interface GroupPermissionView {
   trade:GroupTradeView|null;
 }
 export type GroupFormationPreview=
-  | {ok:true;quote?:string;route:readonly number[];mass:GroupMassView;carriers:readonly {pileId:number;pawnId:number;quantity:number}[]}
+  | {ok:true;quote?:string;route:readonly number[];mass:GroupMassView;carriers:readonly {pileId:number;pawnId:number;quantity:number}[];provisions?:import('./group-travel-estimate.ts').GroupTravelEstimateResult}
   | {ok:false;reason:string};
-export type GroupRoutePreview={ok:true;route:readonly number[];durationCore:number}|{ok:false;reason:string};
+export type GroupRoutePreview={ok:true;route:readonly number[];durationCore:number;provisions?:import('./group-travel-estimate.ts').GroupTravelEstimateResult}|{ok:false;reason:string};
 export type GroupTradePreview={ok:true;signature:string;totalSilver:number;mass:GroupMassView}|{ok:false;reason:string};

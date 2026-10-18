@@ -1,3 +1,4 @@
+import {validPermanentManhunter261} from './animal-scaria-261.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {validDetachedHiveInsect256} from './cave-hive-save-256.ts';
 import {validHiveRuntimeFields256} from './cave-hive-runtime-save-256.ts';
@@ -40,5 +41,6 @@ export function validCaravanAnimalRecord256(a:unknown,c:GroupAnimalRecordContext
  if(a.corpseRot!==undefined&&(animal.state!=='dead'||!h?.death||!validCorpseRot(a.corpseRot,c.tick,h.death.tick,h)))return false;
  const parents=a.parents;if(parents!==undefined&&(!obj(parents)||!keys(parents,['motherId','fatherId'])||!int(parents.motherId,1,animal.id-1)||!int(parents.fatherId,1,animal.id-1)||parents.motherId===parents.fatherId))return false;
  const pregnancy=a.pregnancy;if(pregnancy!==undefined&&(!obj(pregnancy)||!keys(pregnancy,['fatherId','progress'])||!int(pregnancy.fatherId,1,nextId-1)||pregnancy.fatherId===animal.id||!int(pregnancy.progress,0,gestationTicks(animal.species))||animal.sex!=='female'||animal.ageTicks<adultAgeTicks(animal.species)))return false;
- const m=a.manhunter;return m===undefined||obj(m)&&keys(m,['startedAtCore','rng','zeroRestTicks'],['exhausted'])&&int(m.startedAtCore,0,c.tick*10)&&int(m.rng,1,0xffffffff)&&int(m.zeroRestTicks,0,c.tick*10-m.startedAtCore+150)&&m.zeroRestTicks%150===0&&!animal.domestic&&animal.state==='idle'&&(m.exhausted===undefined||m.exhausted===true&&m.zeroRestTicks>1000&&animal.rest<.0001);
+ if(!validPermanentManhunter261(animal,version))return false;
+ const m=a.manhunter;return m===undefined||obj(m)&&keys(m,['startedAtCore','rng','zeroRestTicks'],['exhausted',...(version===261?['permanent261']:[])])&&int(m.startedAtCore,0,c.tick*10)&&int(m.rng,1,0xffffffff)&&int(m.zeroRestTicks,0,c.tick*10-m.startedAtCore+150)&&m.zeroRestTicks%150===0&&!animal.domestic&&(animal.state==='idle'||m.permanent261===true&&animal.state==='downed')&&(m.exhausted===undefined||m.exhausted===true&&m.zeroRestTicks>1000&&animal.rest<.0001);
 }

@@ -27,6 +27,7 @@ import { INTRO_VISITOR_TICK,VISITOR_FLOWS,VISITOR_INTERVAL,VISITOR_YEAR,type Vis
 import { TICKS_PER_DAY,type Cell,type MaterialPile,type Pawn,type World } from './types.ts';
 import { APPAREL_POLICY_INTERVAL } from './apparel-renewal.ts';
 import { validMeleeThreatShape } from './mental-save.ts';
+import {validTempTravelerHeader261,visitorAgendaClock261} from './temp-travelers-save-261.ts';
 
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
@@ -66,7 +67,7 @@ export function validVisitorShape(p:Record<string,unknown>,version:number,w:Worl
     &&(v.merchantKind===undefined||version>=123&&v.role==='trader'&&v.merchantKind==='exotic')
     &&Array.isArray(v.personalFoodIds)&&v.personalFoodIds.length<=8&&new Set(v.personalFoodIds).size===v.personalFoodIds.length&&v.personalFoodIds.every(id=>integer(id,1,w.nextId-1));
 }
-function validAgenda(value:unknown,kind:VisitorAgendaKind,w:World):boolean {
+function validAgenda(value:unknown,kind:VisitorAgendaKind,w:Pick<World,'tick'>):boolean {
   if(!object(value)||Object.keys(value).length!==4||!keys(value,['rng','cycle','last','pending'])||!integer(value.rng,1,0xffffffff)||!integer(value.cycle,0)||!Array.isArray(value.pending))return false;
   const rule=VISITOR_FLOWS[kind],start=rule.minimum+value.cycle*VISITOR_YEAR,end=start+VISITOR_YEAR;
   return Number.isSafeInteger(end)&&start<=w.tick+VISITOR_YEAR+rule.minimum&&value.pending.length>=1&&value.pending.length<=rule.count&&integer(value.last,start,end)&&value.last===value.pending.at(-1)
@@ -146,9 +147,12 @@ export function validateVisitors(w:World,version:number,ids:Set<number>):string[
   const state:unknown=w.visitors;
   if(version<88)return state!==undefined||w.pawns.some(p=>p.visitor)?['Legacy save contains visitor state.']:[];
   if(state===undefined)return w.pawns.some(p=>p.visitor)?['Visitor without calendar.']:[];
-  if(!object(state)||Object.keys(state).length!==9+(version>=123?1:0)||!keys(state,['profile','adoptedAt','rng','serial','introAt','traveler','visitor',...(version>=123?['exotic']:[]),'groups','departed'])||state.profile!=='cassandra-visitors-v1'||!integer(state.adoptedAt,0,w.tick)||!integer(state.rng,1,0xffffffff)||!integer(state.serial,0)
-    ||state.introAt!==null&&(state.adoptedAt!==0||state.introAt!==INTRO_VISITOR_TICK||w.tick>=INTRO_VISITOR_TICK)||!validAgenda(state.traveler,'traveler',w)||!validAgenda(state.visitor,'visitor',w)||version>=123&&!validAgenda(state.exotic,'exotic',w)||!Array.isArray(state.groups)||state.groups.length>w.width*w.height||!Array.isArray(state.departed)||state.departed.length>w.width*w.height)return ['Invalid visitor calendar.'];
+  const agendaClock=visitorAgendaClock261(w,version),agendaWorld={tick:agendaClock};
+  const temp=object(state)&&Object.getOwnPropertyDescriptor(state,'profile')?.value==='temp-travelers261-v1';
+  if(temp?!validTempTravelerHeader261(state,w,version):!object(state)||Object.keys(state).length!==9+(version>=123?1:0)||!keys(state,['profile','adoptedAt','rng','serial','introAt','traveler','visitor',...(version>=123?['exotic']:[]),'groups','departed'])||state.profile!=='cassandra-visitors-v1'||!integer(state.adoptedAt,0,w.tick)||!integer(state.rng,1,0xffffffff)||!integer(state.serial,0)
+    ||state.introAt!==null&&(state.adoptedAt!==0||state.introAt!==INTRO_VISITOR_TICK||agendaClock>=INTRO_VISITOR_TICK)||!validAgenda(state.traveler,'traveler',agendaWorld)||!validAgenda(state.visitor,'visitor',agendaWorld)||version>=123&&!validAgenda(state.exotic,'exotic',agendaWorld)||!Array.isArray(state.groups)||state.groups.length>w.width*w.height||!Array.isArray(state.departed)||state.departed.length>w.width*w.height)return ['Invalid visitor calendar.'];
   const errors:string[]=[],s=w.visitors!,groups=new Set<number>(),members=new Set<number>(),departed=new Set<number>();
+  if(temp&&(s.groups.some(g=>!object(g)||g.kind!=='traveler')||s.departed.some(d=>!object(d)||!object(d.pawn)||!object(d.pawn.visitor)||d.pawn.visitor.role!=='traveler')))errors.push('TempMap owner contains a non-traveler.');
   for(const d of s.departed){
     if(!object(d)||!keys(d,['group','tick','pawn','items',...(version>=105?['packed']:[])])||d.packed!==undefined&&(version<105||!Array.isArray(d.packed)||d.packed.length===0||d.packed.length>32768)||!integer(d.group,1,s.serial)||!integer(d.tick,s.adoptedAt,w.tick)||!validArchivedPawn(d.pawn,w,d.tick)||!Array.isArray(d.items)||d.items.length>32768){errors.push('Invalid frozen visitor departure.');continue;}
     const p=d.pawn;if(ids.has(p.id)||p.visitor!.group!==d.group||departed.has(p.id)){errors.push('Duplicate visitor departure identity.');continue;}ids.add(p.id);departed.add(p.id);
@@ -166,6 +170,7 @@ export function validateVisitors(w:World,version:number,ids:Set<number>):string[
     if(!p.visitor!.personalFoodIds.every(id=>d.items.some(i=>i.id===id&&i.kind==='food'&&i.owner.type==='inventory')))errors.push('Invalid exported visitor food.');
   }
   for(const g of s.groups){
+    if(temp&&(!object(g)||!cell(g.spot,w)||!edge(g.spot,w)))errors.push('TempMap traveler has no physical edge destination.');
     if(!object(g)||!keys(g,['id','kind','members','entry','spot','phase','startedAt','arrivedAt','durationCore','hostile','reason'])||!integer(g.id,1,s.serial)||groups.has(g.id)||!['traveler','visitor'].includes(String(g.kind))||!Array.isArray(g.members)||!g.members.length||g.members.length>12||new Set(g.members).size!==g.members.length||!g.members.every(id=>integer(id,1,w.nextId-1))||!cell(g.entry,w)||!edge(g.entry,w)||!cell(g.spot,w)||!phases.includes(String(g.phase))||!integer(g.startedAt,s.adoptedAt,w.tick)||g.arrivedAt!==null&&!integer(g.arrivedAt,g.startedAt,w.tick)||typeof g.hostile!=='boolean'||(g.kind==='traveler'?g.durationCore!==0:g.durationCore<8000||g.durationCore>=22000)||!integer(g.durationCore,0)||g.phase==='staying'&&(g.arrivedAt===null||g.kind!=='visitor')||g.phase==='arriving'&&g.arrivedAt!==null||(g.phase==='leaving'?!['timeout','danger','hostile','blocked'].includes(String(g.reason)):g.reason!==undefined)){errors.push('Invalid visitor group.');continue;}
     groups.add(g.id);
     if(g.hostile&&g.reason!=='hostile')errors.push('Hostile visitor group without hostile departure.');

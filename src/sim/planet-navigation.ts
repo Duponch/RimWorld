@@ -5,13 +5,26 @@ import {findGeographicPlanetRoute256,geographicPlanetQueryBudget256} from './pla
 /** Shared planetary edge costs and bounded route searches. */
 import type { PlanetState } from './planet-state.ts';
 import type { World } from './types.ts';
+import type { CampaignState } from './world-map-state.ts';
 import type { GroupMassCapture } from './group-capture.ts';
 import {geographicLongitudeOffsetCore256} from './site-climate.ts';
 import { calendarTick } from './calendar.ts';
 import { seasonTemperature } from './site-climate.ts';
 import { tileCoordinates } from './planet-generation.ts';
 
-export interface PlanetCostContext { homeCivilCore:number; mass:GroupMassCapture }
+/** Generic planner scalars are Core ticks/movement, never a fabricated mass.
+ * Null-caravan path search uses3300; generic arrival estimates use3464. */
+export type PlanetCostContext={homeCivilCore:number}&(
+  |{mass:GroupMassCapture;genericTicksPerMove?:never}
+  |{genericTicksPerMove:3300|3464;mass?:never});
+export function planetTicksPerMove(context:PlanetCostContext):number {
+  if(context.genericTicksPerMove!==undefined){
+    if(context.mass!==undefined||![3300,3464].includes(context.genericTicksPerMove))throw Error('Invalid generic planner movement scalar');
+    return context.genericTicksPerMove;
+  }
+  if(!context.mass)throw Error('Actual movement mass is missing');
+  return groupTicksPerMove(context.mass);
+}
 export interface PlanetSearchBudget { nodes:number; arcs:number }
 export type PlanetRouteResult =
   | {kind:'found';tiles:number[];estimatedCore:number;nodes:number;arcs:number}
@@ -73,7 +86,7 @@ export function planetEdgeCost(planet:PlanetState,from:number,to:number,context:
   if(from===to)return 0;if(!a.neighbours.includes(to))return undefined;
   if(planet.revision===3)return Math.max(1,Math.min(30000,geographicPlanetEdgeSearchCost256(planet,from,to,context)));
   // No road field exists in the literal old type: absence has Core factor1.
-  return clamp(Math.trunc(groupTicksPerMove(context.mass)*planetDifficulty(planet,to,context)),1,30000);
+  return clamp(Math.trunc(planetTicksPerMove(context)*planetDifficulty(planet,to,context)),1,30000);
 }
 
 /** A query is admitted ONLY with enough remaining quota for the whole graph.
@@ -117,13 +130,15 @@ export function planetQueryBudget(planet:PlanetState):PlanetSearchBudget{return 
 export function geographicPlanetEdgeSearchCost256(planet:Extract<PlanetState,{revision:3}>,from:number,to:number,context:PlanetCostContext):number {
  const owner=planetGeography256(planet),tile=owner.surface.tiles[from];if(!tile||!tile.neighbours.includes(to))throw Error('Invalid geographic edge');
  const road=visibleWorldRoads(tile,owner.roads[from]!).find(link=>link.neighbour===to),f=Math.fround;
- return Math.trunc(f(f(groupTicksPerMove(context.mass)*planetDifficulty(planet,to,context))*(road?WORLD_ROADS[road.road].movement:1)));
+ return Math.trunc(f(f(planetTicksPerMove(context)*planetDifficulty(planet,to,context))*(road?WORLD_ROADS[road.road].movement:1)));
 }
 
 /** A caravan keeps its source climate header; that source need not be home.
  * Read the shared anchor, or remove the actual source-tile longitude from4. */
-export function planetHomeCivilCore(world:World):number {
- const p=world.planet;if(p?.revision===3){if(world.worldMaps)return (world.worldMaps.calendarOrigin+world.tick)*10;if(world.campaignMap?.revision===2&&world.campaignMap.calendarOrigin!==undefined)return (world.campaignMap.calendarOrigin+world.tick)*10;
+export function planetHomeCivilCore(world:CampaignState):number {
+ const p=world.planet;if(p?.revision===3&&world.worldMaps)return (world.worldMaps.calendarOrigin+world.tick)*10;
+ if(!('pawns'in world))throw Error('Actual campaign calendar anchor required');
+ if(p?.revision===3){if(world.campaignMap?.revision===2&&world.campaignMap.calendarOrigin!==undefined)return (world.campaignMap.calendarOrigin+world.tick)*10;
   if(world.climate?.revision===4){const home=planetTileCoordinates(p,p.homeTile).longitude,source=planetTileCoordinates(p,world.climate.tileId).longitude;return calendarTick(world)*10-geographicLongitudeOffsetCore256(source)+geographicLongitudeOffsetCore256(home);}}
  return (calendarTick(world)-(world.expeditionSite?.calendarOffset??0))*10;
 }

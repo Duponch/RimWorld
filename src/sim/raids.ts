@@ -1,3 +1,9 @@
+import {mechRaidGroups261,multiRaid261} from './mechanical-raid-groups-261.ts';
+import {retainRaidResult261} from './temp-map-raids-261.ts';
+import {advanceKidnapLord261} from './caravan-kidnap-lord-261.ts';
+import {advanceTempMapRaids261,raidSource261} from './temp-map-raids-261.ts';
+import {tempMapModern261} from './temp-map-incidents-261.ts';
+import {advanceCaravanRaid261} from './caravan-raid-261.ts';
 import { chooseMechanoidOpportunity,createMechanoidRaid,advanceMechanoidRaid } from './mechanoid-raids.ts';
 import { isColonist } from './affiliation.ts';
 import { carrierOf } from './rescue-state.ts';
@@ -32,26 +38,30 @@ export function enableRaids(w:World):void {
 export function stopRaidEngagement(p:Pawn):void {cancelShooting(p);cancelMelee(p);delete p.tactics;p.path=[];if(p.raid)p.raid.goal=null;p.planCooldown=0;}
 /** Calendar and group outcomes, once per tick. Pawn controllers own movement. */
 export function advanceRaids(w:World):void {
-  const s=w.raids;if(!s)return;
-  if(s.profile==='camp-pressure-v1'){if(s.mechActive)advanceMechanoidRaid(w);return;}
-  const cassandra=s.profile==='cassandra-raids-v1',opportunity=cassandra&&consumeCassandraOpportunity(w,s);
-  if(s.mechActive){advanceMechanoidRaid(w);return;}
+  const s=w.raids;if(!s)return;advanceKidnapLord261(w);advanceTempMapRaids261(w);
+  const multi=multiRaid261(w);if(multi)advanceMechanoidRaid(w);
+  if(advanceCaravanRaid261(w))return;
+  if(s.profile==='camp-pressure-v1'&&!s.active){if(!multi&&s.mechActive)advanceMechanoidRaid(w);return;}
+  const cassandra=s.profile==='cassandra-raids-v1',opportunity=cassandra&&!tempMapModern261(w)&&consumeCassandraOpportunity(w,s);
+  if(!multi&&s.mechActive){advanceMechanoidRaid(w);return;}
+  if(multi&&!s.active&&mechRaidGroups261(w).length)return;
   const a=s.active;
   if(a){
     const members=w.pawns.filter(p=>a.members.includes(p.id));
     for(const p of members)if((p.state==='dead'||p.state==='downed'||p.prisoner||p.recruitment?.raidGroup===a.id)&&!a.lost.includes(p.id))a.lost.push(p.id);a.lost.sort((a,b)=>a-b);
     if(a.phase==='assault'){
-      const reason=a.lost.length*1000>=a.members.length*a.lossPermille?'losses':w.tick>=a.deadline?'timeout':!w.pawns.some(p=>isColonist(p)&&p.state!=='dead'&&p.state!=='downed')?'colony-down':undefined;
+      const reason=a.lossPermille!==null&&a.lost.length*1000>=a.members.length*a.lossPermille?'losses':a.deadline!==null&&w.tick>=a.deadline?'timeout':!w.pawns.some(p=>isColonist(p)&&p.state!=='dead'&&p.state!=='downed')?'colony-down':undefined;
       if(reason){a.phase='withdraw';a.reason=reason;for(const p of members)if(p.raid&&!p.prisoner){p.raid.exiting=true;stopRaidEngagement(p);}log(w,reason==='losses'?'Les assaillants battent en retraite après leurs pertes.':reason==='timeout'?'Les assaillants abandonnent et cherchent une sortie.':'La défense est tombée. Les assaillants se retirent ; les victimes restent sur place.');}
     }
     if(!members.some(p=>p.state!=='dead'&&p.state!=='downed'&&!p.prisoner&&!isColonist(p))){
       const captured=members.filter(p=>p.state!=='dead'&&(p.prisoner||p.recruitment?.raidGroup===a.id)).length;
-      s.last={id:a.id,tick:w.tick,reason:a.reason==='colony-down'?'colony-down':s.departed.some(d=>a.members.includes(d.pawnId))?'withdrawn':'defended',killed:members.filter(p=>p.state==='dead').length,downed:members.filter(p=>p.state==='downed'&&!p.prisoner&&!p.recruitment).length,escaped:a.members.length-members.length,...captured?{captured}:{},...a.composition?{composition:a.composition}:{},...a.originQuestId!==undefined?{originQuestId:a.originQuestId}:{}};
+      s.last={id:a.id,tick:w.tick,reason:a.reason==='colony-down'?'colony-down':s.departed.some(d=>a.members.includes(d.pawnId))?'withdrawn':'defended',killed:members.filter(p=>p.state==='dead').length,downed:members.filter(p=>p.state==='downed'&&!p.prisoner&&!p.recruitment).length,escaped:a.members.length-members.length,...captured?{captured}:{},...a.composition?{composition:a.composition}:{},...a.originQuestId!==undefined?{originQuestId:a.originQuestId}:{},...a.caravan261?{caravan261:a.caravan261,memberCount261:a.members.length}:{}};
       for(const p of members)if(p.raid&&!p.prisoner){p.raid.exiting=true;stopRaidEngagement(p);}
-      s.completed++;delete s.active;s.nextCheck=cassandra?s.cassandra!.pending[0]!:w.tick+Math.floor(TICKS_PER_DAY*(6+raidRandom(s)*2));log(w,'Assaut terminé. Vérifiez les blessés, les stocks et les ouvrages endommagés.');
+      retainRaidResult261(w);s.completed++;delete s.active;if(!tempMapModern261(w)&&!mechRaidGroups261(w).length&&!s.extraActive261?.length)s.nextCheck=s.profile==='camp-pressure-v1'?null:cassandra?s.cassandra!.pending[0]!:w.tick+Math.floor(TICKS_PER_DAY*(6+raidRandom(s)*2));log(w,'Assaut terminé. Vérifiez les blessés, les stocks et les ouvrages endommagés.');
     }
     return;
   }
+  if(tempMapModern261(w))return;
   if(cassandra?!opportunity||!w.pawns.some(p=>isColonist(p)&&p.state!=='dead'):s.nextCheck===null||w.tick<s.nextCheck)return;
   // Only adopted Cassandra colonies use the new wealth budget. The fixed
   // introductory raid and every legacy calendar retain their exact draws.
@@ -83,6 +93,7 @@ export function advanceRaids(w:World):void {
  * Export carried equipment with identity/quality/HP; ground loot stays here. */
 export function exitRaider(w:World,p:Pawn):boolean {
   if(!w.pawns.includes(p))return false;
+  if(p.raid&&(raidSource261(w,p.raid.group)?.tempIncident261||raidSource261(w,p.raid.group)?.caravan261))return false; // True WorldPawn exit follows the global pass.
   if(isColonist(p)||p.prisoner&&!p.prisoner.escape||carrierOf(w,p.id))return false;
   if(!p.raid?.exiting||!atMapEdge(w,p)||p.moveCooldown>0||(p.motion?.end??0)>w.tick||p.melee?.strike||p.shooting?.stance||p.need||p.state==='sleeping'||(p.stun?.untilCore??0)>w.tick*10||p.state==='dead'||p.state==='downed')return false;
   const items=w.piles.filter(i=>(i.owner.type==='apparel'||i.owner.type==='equipment')&&i.owner.pawnId===p.id);

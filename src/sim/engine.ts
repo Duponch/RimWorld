@@ -1,9 +1,15 @@
+import {adoptTempMapIncidents261,advanceTempMapIncidents261,tempMapModern261} from './temp-map-incidents-261.ts';
+import {advanceCaravanMapExits261} from './caravan-map-exits-261.ts';
+import {validCaravanArrivalCommand261,applyCaravanArrivalCommand261,advanceCaravanArrivals261} from './caravan-arrival-261.ts';
+import {advanceBattlefieldVictory261} from './caravan-battlefield-rules-261.ts';
+import {validCaravanCommand261,applyCaravanCommand261} from './caravan-commands-261.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {isCaveHiveKind256} from './cave-hive-state-256.ts';
 import {advanceActualHiveComponents256} from './cave-hive-tick-256.ts';
 import {captureAnimalCombatThreats256} from './cave-hive-lord-256.ts';
 import {applyMaterialPermission256} from './material-permission-256.ts';
 import {isShipChunk256} from './ship-chunk-256.ts';
+import {advanceCaravanIncidents261,pendingCaravan261} from './caravan-incidents-261.ts';
 import {advanceActualWorldPawns256} from './world-pawn-campaign-256.ts';
 import {applyAncientCasketOpen256,processAncientCasketOpening256,reconcileAncientCasketOpening256} from './ancient-casket-opening-256.ts';
 import {advanceAncientShrineWarnings256} from './ancient-shrine-warning-256.ts';
@@ -145,6 +151,7 @@ import { advanceHumanAges } from './human-age.ts';
 import { reconcileRepairs,advanceRepair } from './repairs.ts';
 import { advanceBreakdowns,reconcileBreakdownJobs,advanceBreakdownFix,retireBreakdownJob } from './breakdowns.ts';
 import { adoptColonyEconomy,sampleColonyEconomy,flushColonyLosses,advanceColonyAdaptation } from './colony-economy.ts';
+import {reconcileKidnapParticipant261} from './caravan-kidnap-261.ts';
 import { advanceRaids,enableRaids,exitRaider } from './raids.ts';
 import { processRaider } from './raid-behavior.ts';
 import { advanceArrivals,applyArrival } from './arrivals.ts';
@@ -495,7 +502,7 @@ export function canDesignate(world: World, command: DesignateCommand|import('./c
   return { ok: true };
 }
 export function applyCommand(world: World, command: Command,caravans?:import('./group-campaign-runtime-256.ts').GroupCampaignRuntime256): CommandResult {
- if(world.worldMaps){const descriptor=command&&typeof command==='object'&&!Array.isArray(command)?Object.getOwnPropertyDescriptor(command,'type'):undefined;if(!descriptor||!('value'in descriptor)||typeof descriptor.value!=='string')return refusal('invalid-command','Commande invalide.');const root=registeredCampaign(world);if(validWorldMapCommand(command))return applyWorldMapCommand(root,command);if(command&&typeof command==='object'&&typeof command.type==='string'&&(command.type==='planet-adopt'||command.type.startsWith('group-')))return applyRegisteredGroupCommand(root,command as import('./group-state.ts').GroupCommand,caravans);if(secondaryCommand(command))return refusal('invalid-command','Choisissez une carte ou un groupe du registre de campagne.');const local=selectedRegisteredMap(root);if(!local)return refusal('invalid-command','Aucune carte locale sélectionnée.');const result=applyLocalCommand(local,command);if(result.ok&&command.type==='commercial-start'){const source=root.worldMaps!.sites.find(s=>s.id===registeredMapId(local))!;if(root.worldGroups!.canonicalPostId===null)delete source.postId;else source.postId=root.worldGroups!.canonicalPostId;}flushRegisteredMap(local);return result;}
+ if(world.worldMaps){const descriptor=command&&typeof command==='object'&&!Array.isArray(command)?Object.getOwnPropertyDescriptor(command,'type'):undefined;if(!descriptor||!('value'in descriptor)||typeof descriptor.value!=='string')return refusal('invalid-command','Commande invalide.');const root=registeredCampaign(world);if(validCaravanArrivalCommand261(command))return applyCaravanArrivalCommand261(root,command);if(validCaravanCommand261(command)){const result=applyCaravanCommand261(root,command);if(result.ok)caravans?.encounterChanged261(root,command.groupId);return result;}if(validWorldMapCommand(command))return applyWorldMapCommand(root,command);if(command&&typeof command==='object'&&typeof command.type==='string'&&(command.type==='planet-adopt'||command.type.startsWith('group-')))return applyRegisteredGroupCommand(root,command as import('./group-state.ts').GroupCommand,caravans);if(secondaryCommand(command))return refusal('invalid-command','Choisissez une carte ou un groupe du registre de campagne.');const local=selectedRegisteredMap(root);if(!local)return refusal('invalid-command','Aucune carte locale sélectionnée.');const result=applyLocalCommand(local,command);if(result.ok&&command.type==='commercial-start'){const source=root.worldMaps!.sites.find(s=>s.id===registeredMapId(local))!;if(root.worldGroups!.canonicalPostId===null)delete source.postId;else source.postId=root.worldGroups!.canonicalPostId;}flushRegisteredMap(local);return result;}
   if(!command||typeof command!=='object')return refusal('invalid-command','Commande invalide.');
   if(secondaryCommand(command))return applySecondarySiteCommand(world,command);
   const root=campaignAuthority(world);
@@ -794,6 +801,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
     if (command.value === 0 && ((job && workType(job) === command.work && pawn.orders.active===null) || (pawn.haul && pawn.orders.active!=='haul' && command.work === haulingWork(pawn.haul.destination)) || (pawn.cooking && pawn.orders.active!=='cook' && command.work === taskWork(pawn.cooking)))) releaseWork(world, pawn,drops);
     pawn.planCooldown = 0; refreshStock(world); return { ok: true };
   }
+  if(command.type==='caravan-order'||command.type==='caravan-encounter-choice'||command.type==='caravan-meeting-trade')return refusal('invalid-command','La commande exige le vrai registre de caravanes.');
   if (!['designate', 'cancel', 'stockpile'].includes(command.type)) return refusal('invalid-command', 'Commande inconnue.');
   if (!inBounds(world, command.x, command.z)) return refusal('out-of-bounds', 'Cellule hors de la carte.');
   if (command.type === 'stockpile') {
@@ -908,17 +916,22 @@ export function stepWorld(world:CampaignState,ticks=1,diagnostics?:import('./wor
   if(!Number.isInteger(ticks)||ticks<0||ticks>100000)throw new Error('Tick count must be an integer between 0 and 100000.');
   const root=campaignAuthority(world as World);
   if(root.worldMaps){
+    if(pendingCaravan261(root))return;
     if(ticks>0&&root.schemaVersion>=256&&!caravans&&root.worldGroups?.groups.some(r=>'members'in r.state?!!r.state.travel:'manifest'in r.state&&r.state.travelPreparation===true))throw Error('Prospective caravan requires its confirmed Core runtime before advancing time');
+    if(ticks)for(const map of registeredMaps(root)){adoptTempMapIncidents261(map);flushRegisteredMap(map);}
     adoptWorldIncidents(campaignClockContext(root));
     for(let i=0;i<ticks;i++){
       root.tick++;
       for(const map of registeredMaps(root)){stepLocalWorld(map,1,diagnostics,false);flushRegisteredMap(map);}
       if(root.schemaVersion>=256&&caravans)caravans.step(root);
       else for(const g of root.worldGroups!.groups.slice().sort((a,b)=>a.state.id-b.state.id))if('members' in g.state)withWorldGroup(root,g.state.id,advanceGroup);
-      for(const row of root.worldGroups!.groups.slice()){const g=row.state;if('members' in g&&['at-site','awaiting-entry'].includes(g.phase)&&root.worldMaps!.sites.some(m=>m.tile===g.tile&&m.kind==='settlement'))enterRegisteredSite(root,g.id,'visit',false);}
+      if(root.schemaVersion===261&&caravans)for(const map of registeredMaps(root)){tryGroupDeparture(map,caravans);flushRegisteredMap(map);}
+      for(const id of advanceCaravanArrivals261(root))caravans?.encounterChanged261(root,id);
+      for(const row of root.worldGroups!.groups.slice()){const g=row.state;if(!row.encounters261&&'members' in g&&['at-site','awaiting-entry'].includes(g.phase)&&root.worldMaps!.sites.some(m=>m.tile===g.tile&&m.kind==='settlement'))enterRegisteredSite(root,g.id,'visit',false);}
       for(const old of root.worldGroups!.legacyTravellers){const view=legacyTravellerContext(root,old);advanceScoutTrip(view);advanceCommercialTrip(view);if(view.scout)old.scout=view.scout;else delete old.scout;if(view.commercialTrip)old.commercialTrip=view.commercialTrip;else delete old.commercialTrip;}
-      advanceWorldIncidents(campaignClockContext(root));advanceCampPressure260(root);removeEmptyCamps(root);
-      advanceActualWorldPawns256(root);
+      advanceWorldIncidents(campaignClockContext(root));advanceBattlefieldVictory261(root);advanceCampPressure260(root);removeEmptyCamps(root);advanceTempMapIncidents261(root);
+      advanceActualWorldPawns256(root);advanceCaravanMapExits261(root);
+      if(advanceCaravanIncidents261(root))break;
     }return;
   }
   if(!root.secondarySite){stepLocalWorld(root,ticks,diagnostics);return;}
@@ -937,13 +950,10 @@ export function stepWorld(world:CampaignState,ticks=1,diagnostics?:import('./wor
 function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-planner.ts').SearchStats,advanceClock=true): void {
   if (!Number.isInteger(ticks) || ticks < 0 || ticks > 100000) throw new Error('Tick count must be an integer between 0 and 100000.');
   if(!ticks)return;
-  adoptSecondaryIncidents(world);
+  adoptTempMapIncidents261(world);adoptSecondaryIncidents(world);
   // Old profiles start this new stream prospectively, when play resumes.
   // Loading or pausing never invents a past opportunity or heat exposure.
-  adoptMiscIncidents(world);
-  adoptWeatherIncidents(world);
-  adoptShortCircuits(world);
-  adoptCropBlights(world);
+  if(!tempMapModern261(world)){adoptMiscIncidents(world);adoptWeatherIncidents(world);adoptShortCircuits(world);adoptCropBlights(world);}
   adoptDeepResources(world);adoptOrbital(world);
   if(!isSecondaryContext(world))adoptWorldIncidents(world);
   adoptSmallIncidents(world);
@@ -1026,7 +1036,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
       const completedEdge=pawn.moveCooldown>0&&(pawn.motion?.end??0)<=world.tick;
       pawn.moveCooldown = Math.max(0, (pawn.motion?.end ?? world.tick) - world.tick); if (pawn.planCooldown > 0) pawn.planCooldown--;
       advanceHeatExposure(world,pawn,()=>new TemperatureView(world,thermal).at(world,pawn));
-      const body=updatePawnHealth(world,pawn);reconcileAncientCasketOpening256(world,pawn);
+      const body=updatePawnHealth(world,pawn);reconcileKidnapParticipant261(world,pawn);reconcileAncientCasketOpening256(world,pawn);
       reconcileAllowedAreaPawn(world,pawn);
       if(pawn.animalRescue)reconcileAnimalRescues(world,pawn);
       if(prisonBreakActive(pawn)&&(pawn.state==='downed'||pawn.state==='dead'))endPrisonBreak(world,pawn);

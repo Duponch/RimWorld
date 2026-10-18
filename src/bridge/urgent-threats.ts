@@ -1,3 +1,4 @@
+import {mechRaidGroups261} from '../sim/mechanical-raid-groups-261';
 import type {CampaignState} from '../sim/world-map-state';
 import {registeredMaps,registeredMapId} from '../sim/world-map-context';
 import type { World } from '../sim/types';
@@ -55,7 +56,7 @@ export function validUrgentThreatSnapshot(v: unknown, tick: unknown, speed: unkn
 }
 
 type LocalMap = Pick<World, 'raids' | 'wildlife' | 'ancientShrineWarnings'>;
-interface MapBaseline { map: LocalMap; raids: Map<ThreatKind, string>; animals: Map<number, number>; warnings:Set<string>;detected:boolean }
+interface MapBaseline { map: LocalMap; raids: Map<string,{kind: 'raid'|'mechanoid';startedAt:number;count:number;actorId?:number}>; animals: Map<number, number>; warnings:Set<string>;detected:boolean }
 /** Only active episodes are retained. Archives cannot become arrivals after eviction. */
 export class UrgentThreatObserver {
   private maps = new Map<ThreatSite|number, MapBaseline>();
@@ -76,9 +77,9 @@ export class UrgentThreatObserver {
     for (const [site, map,,detected] of owners) { const before=this.maps.get(site); if (!before || typeof site!=='number'&&before.map!==map) this.maps.set(site, this.read(map,detected)); }
   }
   private read(map: LocalMap,detected=false): MapBaseline {
-    const raids = new Map<ThreatKind, string>(), animals = new Map<number, number>();
-    if (map.raids?.active) raids.set('raid', map.raids.active.id + ':' + map.raids.active.startedAt);
-    if (map.raids?.mechActive) raids.set('mechanoid', map.raids.mechActive.id + ':' + map.raids.mechActive.startedAt);
+    const raids:MapBaseline['raids'] = new Map(), animals = new Map<number, number>();
+    for(const group of [...map.raids?.active?[map.raids.active]:[],...map.raids?.extraActive261??[]])raids.set('raid:'+group.id,{kind:'raid',startedAt:group.startedAt,count:group.members.length,actorId:group.members[0]});
+    for(const group of mechRaidGroups261(map))raids.set('mechanoid:'+group.id,{kind:'mechanoid',startedAt:group.startedAt,count:group.members.length,actorId:group.members[0]});
     for (const a of map.wildlife?.animals ?? []) if (a.manhunter) animals.set(a.id, a.manhunter!.startedAtCore);
     const warnings=new Set((map.ancientShrineWarnings?.pairs??[]).filter(p=>p.letter).map(p=>p.triggerId+':'+p.letter!.tick));
     return { map, raids, animals, warnings,detected };
@@ -97,10 +98,7 @@ export class UrgentThreatObserver {
       const before = this.maps.get(site);
       if (!before || typeof site!=='number'&&before.map!==map) throw new Error('Threat observer map was not bootstrapped before step.');
       const after = this.read(map,detected);if(after.detected&&!before.detected)arrive(site,tile,'camp-detected',1);
-      for (const kind of ['raid', 'mechanoid'] as const) if (after.raids.has(kind) && after.raids.get(kind) !== before.raids.get(kind)) {
-        const raid = kind === 'raid' ? map.raids!.active! : map.raids!.mechActive!;
-        arrive(site,tile, kind, Math.max(1, raid.members.length), raid.members[0]);
-      }
+      for(const [key,raid] of after.raids)if(before.raids.get(key)?.startedAt!==raid.startedAt)arrive(site,tile,raid.kind,Math.max(1,raid.count),raid.actorId);
       for (const a of map.wildlife?.animals ?? []) if (alertManhunter(a) && before.animals.get(a.id) !== a.manhunter!.startedAtCore) arrive(site,tile, 'manhunter', 1, a.id);
       for(const warning of map.ancientShrineWarnings?.pairs??[])if(warning.letter&&!before.warnings.has(warning.triggerId+':'+warning.letter.tick))arrive(site,tile,'ancient-shrine',1,warning.letter.pawnId);
       this.maps.set(site, after);

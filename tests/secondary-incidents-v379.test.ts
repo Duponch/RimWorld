@@ -97,9 +97,9 @@ test('V379 failed entry is atomic; empty-map real opportunities are consumed wit
   expect(createRaidGroup(local,{count:1,sites:[{x:16,z:16}],random:{rng:379}})).toBeNull();expect(serializeWorld(w)).toBe(before);
   expect(createMechanoidRaid(local,{budget:150,roster:['scyther']},{rng:379},[{x:16,z:16}])).toBeNull();expect(w.nextId).toBe(id);expect(w.rng).toBe(rng);
   const due=local.raids!.cassandra!.pending[0]!;w.tick=due;local.pawns=[];local.piles=[];
-  const pending=JSON.stringify(local.raids!.cassandra!.pending),visitor=local.visitors!,visitorDue=visitor.visitor.pending[0]!;
+  const pending=JSON.stringify(local.raids!.cassandra!.pending),visitor=local.visitors!,opportunity=visitor.visitor;if(!opportunity)throw Error('Actual visitor opportunity required');const visitorDue=opportunity.pending[0]!;
   advanceRaids(local);expect(JSON.stringify(local.raids!.cassandra!.pending)).not.toBe(pending);expect(local.raids!.serial).toBe(0);
-  w.tick=visitorDue;advanceVisitors(local);expect(visitor.visitor.pending[0]).toBeGreaterThan(visitorDue);expect(visitor.serial).toBe(0);
+  w.tick=visitorDue;advanceVisitors(local);expect(opportunity.pending[0]).toBeGreaterThan(visitorDue);expect(visitor.serial).toBe(0);
   expect(local.pawns).toHaveLength(0);expect(local.piles).toHaveLength(0);expect(w.nextId).toBe(id);
   // Isolated incident admissions, no claim that deleting expedition owners
   // or jumping independent clocks forms a valid saved campaign.
@@ -117,7 +117,7 @@ test('V379 a genuine future secondary raid opportunity uses local defenders and 
 });
 
 test('V379 visitors and mechanical producers retain local admissions and common IDs',()=>{
-  const {w,local}=preparedCassandraExpedition(),v=local.visitors!,due=v.visitor.pending[0]!;
+  const {w,local}=preparedCassandraExpedition(),v=local.visitors!,opportunity=v.visitor;if(!opportunity)throw Error('Actual visitor opportunity required');const due=opportunity.pending[0]!;
   w.tick=due;const before=w.nextId;advanceVisitors(local);expect(v.serial).toBeGreaterThan(0);
   const guests=local.pawns.filter(p=>p.visitor);expect(guests.length).toBeGreaterThan(0);expect(guests.every(p=>p.id>=before&&!w.pawns.some(q=>q.id===p.id))).toBe(true);
   expect(validateVisitors(local,242,new Set())).toEqual([]);

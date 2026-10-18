@@ -17,6 +17,7 @@ export interface Injury {
 }
 export interface MissingPart {part:BodyPartId;bornAt:number;tended?:true;nonFresh?:true}
 export interface MedicalRecord {
+  scaria261?:import('./animal-scaria-261.ts').AnimalScaria261;
   /** Prospective nativeHuman current scale, parent checked against actual biological age. */
   humanHealthScale?:number;
   toxicBuildup?:ToxicBuildup256;
@@ -50,7 +51,7 @@ export interface MedicalRecord {
   /** V84: hunger damage independent of wounds, billionths of severity. */
   malnutrition?:number;
   infections?:InfectionState;
-  death?:{tick:number;cause:'execution'|'blood-loss'|'vital-failure'|'trauma'|'heatstroke'|'hypothermia'|'downed'|'infection'|'malnutrition'|'flu'|'malaria'|'plague'|'heart-artery-blockage'|'heart-attack'|'toxic-buildup'};
+  death?:{tick:number;cause:'execution'|'blood-loss'|'vital-failure'|'trauma'|'heatstroke'|'hypothermia'|'downed'|'infection'|'malnutrition'|'flu'|'malaria'|'plague'|'heart-artery-blockage'|'heart-attack'|'toxic-buildup'|'scaria'};
 }
 export interface MedicalContext {
   /** Actual owner witness when cryptosleep sickness exists; never a fake map. */

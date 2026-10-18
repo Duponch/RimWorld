@@ -1079,6 +1079,7 @@ export class SnapshotDecoder {
     if(!validNaturalRoofState256(message.world.roofing,message.world.schemaVersion,message.world.width*message.world.height))return resync('Toiture naturelle future ou invalide.');
     if(!validVentTransport(message.world,message.world.schemaVersion))return resync('Bouche d’aération, état ou service futur/invalide.');
     if(message.world.schemaVersion<=195&&['planet','group','groupLosses'].some(key=>Object.hasOwn(message.world,key)))return resync('Planète ou propriétaire de groupe futur.');
+    if(message.world.schemaVersion<=260&&Object.hasOwn(message.world.raids??{},'extraMechActive261'))return resync('Groupes mécaniques prospectifs futurs.');
     if(message.world.schemaVersion<194&&(Object.hasOwn(message.world,'mechanoids')||Object.hasOwn(message.world,'mechSalvage')
       ||['mechanoid','mechActive'].some(k=>Object.hasOwn(message.world.raids??{},k))
       ||['mechanoid','mechComposition'].some(k=>Object.hasOwn(message.world.raids?.last??{},k))))return resync('Propriétaire ou calendrier mécanique futur.');
@@ -1483,7 +1484,7 @@ export class SnapshotDecoder {
     // owners reserve the same namespace as the map and cannot become a wave.
     const shelves=next.structures.some(s=>s.shelf!==undefined)||next.packed.some(p=>p.building.shelf!==undefined);
     const startingArrival=Object.hasOwn(next,'startingArrival'),ancientCaskets=next.structures.some(isAncientCasket256);
-    if(next.ancientShrineWarnings||mineableIds.size||next.geysers||next.wildlife?.flyers?.length||collapsedRockIds.size||next.jobs.some(j=>j.tree)||next.piles.some(p=>p.innerResource)||startingArrival||ancientCaskets||shelves||relationships||Object.hasOwn(next,'orbital')||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
+    if(next.ancientShrineWarnings||mineableIds.size||next.geysers||next.wildlife?.flyers?.length||collapsedRockIds.size||next.jobs.some(j=>j.tree)||next.piles.some(p=>p.innerResource)||startingArrival||ancientCaskets||shelves||relationships||Object.hasOwn(next,'orbital')||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||next.raids?.extraMechActive261?.length||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
       // Only the closed MAIN context can reuse its resource facts. Keep RAW
       // and non-strict collection/getter evaluation on the historical path.
       const owned=validation.resourceFacts&&(startingArrival||ancientCaskets||shelves||relationships||Object.hasOwn(next,'orbital'))

@@ -1,3 +1,4 @@
+import {mechRaidGroups261} from './mechanical-raid-groups-261.ts';
 import {registeredMaps} from './world-map-context.ts';
 import {campaignPhysicalCaptures} from './campaign-people.ts';
 import {captureDuckFlyerOwners256} from './duck-owner-capture-256.ts';
@@ -66,7 +67,7 @@ function scan(root:CampaignState,rows:readonly Mechanical[]){
   const arrival=map.startingArrival;if(arrival?.profile==='crashlanded-pods-core256-v1'&&arrival.phase!=='opened')for(const pod of arrival.pods){ref(pod.id,'initial-pod-holder');ref(pod.skyfallerId,'initial-skyfaller');for(const p of pod.items)pile(p,'initial-pod');}
   for(const q of map.quests?.entries??[]){ref(q.pawnId,'actual-joiner-quest');ref(q.relationship?.otherId,'actual-quest-offer');}
   ref(map.arrivals?.pending?.relationship?.otherId,'actual-arrival-offer');
-  for(const id of map.raids?.active?.members??[])ref(id,'actual-raid-member');for(const id of map.raids?.mechActive?.members??[])ref(id,'actual-mechanical-lord');
+  for(const id of map.raids?.active?.members??[])ref(id,'actual-raid-member');for(const group of mechRaidGroups261(map))for(const id of group.members)ref(id,'actual-mechanical-lord');
   for(const projectile of map.projectiles??[]){ref(projectile.id,'projectile-namespace');key(projectile.flight.launcherKey,'actual-projectile-launcher');key(projectile.flight.intendedKey,'actual-projectile-intended');key(projectile.flight.usedKey,'actual-projectile-used');key(projectile.arrival?.targetKey,'actual-projectile-arrival');for(const k of projectile.relations.friendlyTargetKeys??[])key(k,'projectile-launch-relation',false);}
   for(const wave of map.bombWaves??[]){ref(wave.id,'bomb-namespace');ref(wave.sourceId,'actual-bomb-source');key(wave.instigatorKey,'actual-bomb-instigator');for(const k of wave.damagedThingKeys)key(k,'bomb-impact-history',false);}
   for(const ship of map.orbital?.pending??[])ref(ship.negotiatorId,'actual-orbital-negotiator');
@@ -100,7 +101,7 @@ function scan(root:CampaignState,rows:readonly Mechanical[]){
  * events and historical scalar IDs do not invalidate or manufacture a Keep. */
 export function captureMechanicalWorldPawnFacts259(root:CampaignState){
  const state=root.worldPawns,rows=(state?.owners??[]).filter((r):r is Mechanical=>r.kind==='mechanical'),byId=new Map(rows.map(r=>[r.actor.id,r])),originals=rows.map(r=>r.actor);
- const supported=()=>(Number(root.schemaVersion)===259||root.schemaVersion===260)&&root.planet?.revision===3&&!!root.worldMaps&&!!root.worldGroups&&!!root.worldFactions&&root.worldPawns===state;
+ const supported=()=>(Number(root.schemaVersion)===259||Number(root.schemaVersion)===260||root.schemaVersion===261)&&root.planet?.revision===3&&!!root.worldMaps&&!!root.worldGroups&&!!root.worldFactions&&root.worldPawns===state;
  const before=supported()?scan(root,rows):undefined;
  return {facts(row:WorldPawnOwner256):WorldPawnGCFacts256{return row.kind==='mechanical'&&byId.get(row.actor.id)===row?before?.facts.get(row.actor.id)??unknown:unknown;},historicalIds:before?.history??new Set<number>(),current():boolean{
   return !!before&&supported()&&rows.every((r,i)=>r.actor===originals[i])&&scan(root,rows).seal===before.seal;

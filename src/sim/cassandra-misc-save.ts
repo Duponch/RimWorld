@@ -1,3 +1,4 @@
+import {tempMapModern261,tempMapAdoptedAtCore261} from './temp-map-incidents-261.ts';
 import { MISC_CHECK_INTERVAL,MISC_FIRST_CHECK,MISC_HEAT_COOLDOWN,MISC_INTRO_TICK } from './cassandra-misc.ts';
 import { TICKS_PER_DAY,type World } from './types.ts';
 import {validWeatherIncidents} from './weather-incident-save.ts';
@@ -9,18 +10,19 @@ const integer=(value:unknown,min=0,max=Number.MAX_SAFE_INTEGER):value is number=
 const keys=(value:Record<string,unknown>,allowed:readonly string[])=>Object.keys(value).every(key=>allowed.includes(key));
 
 /** Called on the serialized source before a neutral 168→169 migration too. */
-export function validMiscIncidents(value:unknown,version:number,world:Pick<World,'tick'|'gameProfile'|'heatwaves'>&Partial<Pick<World,'width'|'height'|'nextId'>>):boolean {
+export function validMiscIncidents(value:unknown,version:number,world:Pick<World,'tick'|'gameProfile'|'heatwaves'>&Partial<World>):boolean {
+  const scheduleTick=tempMapModern261(world as World)?tempMapAdoptedAtCore261(world as World)!/10:world.tick;
   if(value===undefined)return true;
   if(version<169||!world.gameProfile||!object(value)||
     !keys(value,['profile','adoptedAt','rng','nextCheck','introDone','checks','opportunities','heatwaves','lastHeatwaveStart','active',...version>=200?['weather']:[],...version>=201?['shortCircuits']:[],...version>=205?['cropBlights']:[]])||
     value.profile!=='cassandra-misc-v1'||!integer(value.adoptedAt,0,world.tick)||!integer(value.rng,1,0xffffffff)||
     !integer(value.nextCheck,MISC_FIRST_CHECK)||value.nextCheck%MISC_CHECK_INTERVAL!==0||
-    value.nextCheck!==Math.max(MISC_FIRST_CHECK,(Math.floor(world.tick/MISC_CHECK_INTERVAL)+1)*MISC_CHECK_INTERVAL)||
+    value.nextCheck!==Math.max(MISC_FIRST_CHECK,(Math.floor(scheduleTick/MISC_CHECK_INTERVAL)+1)*MISC_CHECK_INTERVAL)||
     typeof value.introDone!=='boolean'||!integer(value.checks)||!integer(value.opportunities)||!integer(value.heatwaves)||
-    value.checks>Math.max(0,Math.floor((world.tick-Math.max(MISC_FIRST_CHECK,(Math.floor(value.adoptedAt/MISC_CHECK_INTERVAL)+1)*MISC_CHECK_INTERVAL))/MISC_CHECK_INTERVAL)+1)||
+    value.checks>Math.max(0,Math.floor((scheduleTick-Math.max(MISC_FIRST_CHECK,(Math.floor(value.adoptedAt/MISC_CHECK_INTERVAL)+1)*MISC_CHECK_INTERVAL))/MISC_CHECK_INTERVAL)+1)||
     value.opportunities>value.checks+(value.introDone&&value.adoptedAt<MISC_INTRO_TICK?1:0)||
     value.heatwaves>value.opportunities||
-    value.introDone!==(world.tick>=MISC_INTRO_TICK)||
+    value.introDone!==(scheduleTick>=MISC_INTRO_TICK)||
     world.heatwaves!==undefined)return false;
   if(value.lastHeatwaveStart!==undefined&&(!integer(value.lastHeatwaveStart,value.adoptedAt,world.tick)||
     value.heatwaves===0||

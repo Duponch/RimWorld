@@ -1,3 +1,4 @@
+import {permanentManhunterTarget261,permanentManhunterTargets261} from './animal-scaria-261.ts';
 import {cancelToxicVomit256} from './toxic-buildup-256.ts';
 import {notifyDuckFlightJob256} from './duck-flight-runtime-256.ts';
 import {wildlifeRandom} from './wildlife-state.ts';
@@ -28,47 +29,51 @@ export function recoverAnimalManhunter(w:World,a:WildAnimal):void {
     if(shooting||melee){p.path=[];p.planCooldown=0;if(p.state!=='dead'&&p.state!=='downed')p.state=(p.motion?.end??0)>w.tick?'moving':'idle';}
   }
 }
-export function startAnimalManhunter(w:World,a:WildAnimal,core=w.tick*10):boolean {
+export function startAnimalManhunter(w:World,a:WildAnimal,core=w.tick*10,permanent261=false):boolean {
+  if(permanent261&&w.schemaVersion!==261)return false;
   if(w.schemaVersion<183||!w.wildlife?.animals.includes(a)||a.domestic||a.manhunter||a.retaliation||a.state==='dead'||a.state==='downed'
     ||!Number.isSafeInteger(core)||core<0||core>w.tick*10||animalBody(a).capacities.moving<=0
     ||!actualAnimalMeleeProfile256(a).some(t=>!a.health||(t.sourceParts??[t.sourcePart]).some(part=>!partMissing(a.health!,part))))return false;
   if(a.health)cancelToxicVomit256(a.health);
   delete a.confusion;if(a.wander)delete a.wander.job;
-  a.manhunter={startedAtCore:core,rng:(w.seed^Math.imul(a.id,0x9e3779b1)^core^0x73b914f5)>>>0||1,zeroRestTicks:0};
+  a.manhunter={...permanent261?{permanent261:true as const}:{},startedAtCore:core,rng:(w.seed^Math.imul(a.id,0x9e3779b1)^core^0x73b914f5)>>>0||1,zeroRestTicks:0};
   delete a.meal;delete a.predation;delete a.exiting;delete a.mating;delete a.flee;delete a.threat;delete a.retaliation;delete a.taming;delete a.sleepUntilCore;
   a.path=[];a.state=(a.motion?.end??0)>w.tick?'moving':'idle';a.nextDecision=w.tick;return true;
 }
 export function animalManhunterTarget(w:World,a:WildAnimal){
   if(a.manhunter?.exhausted)return;
+  if(a.manhunter?.permanent261)return permanentManhunterTarget261(w,a.manhunter.targetId);
   const p=w.pawns.find(p=>p.id===a.manhunter?.targetId);
   return p&&p.state!=='dead'&&p.state!=='downed'&&!carrierOf(w,p.id)?p:undefined;
 }
 /** Once per confirmed tick, including ticks inside a captured movement edge. */
 export function advanceAnimalManhunter(w:World,a:WildAnimal,core=w.tick*10):void {
   const m=a.manhunter;if(!m)return;
-  if(a.state==='dead'||a.state==='downed'){recoverAnimalManhunter(w,a);return;}
+  if(a.state==='dead'){recoverAnimalManhunter(w,a);return;}
+  if(a.state==='downed'){if(!m.permanent261)recoverAnimalManhunter(w,a);else{delete m.targetId;delete m.door;a.path=[];}return;}
   if(m.door&&(core>=m.door.untilCore||!w.structures.some(s=>s.id===m.door!.targetId&&s.door)))delete m.door;
   if(m.targetId!==undefined&&!animalManhunterTarget(w,a)){delete m.targetId;delete m.door;a.path=[];}
   if(m.exhausted){
     a.path=[];
-    if((a.motion?.end??0)<=core/10){recoverAnimalManhunter(w,a);a.state='sleeping';}
+    if((a.motion?.end??0)<=core/10){if(!m.permanent261)recoverAnimalManhunter(w,a);else{delete m.exhausted;m.zeroRestTicks=0;}a.state='sleeping';}
     return;
   }
   const age=core-m.startedAtCore;
   // Local hash phases retain the Core 30/150 cadences at clock scale ten.
-  if(age>=99999999||age>=10000&&(w.tick+a.id)%3===0&&random(a)<1/600){recoverAnimalManhunter(w,a);return;}
+  if(!m.permanent261&&(age>=99999999||age>=10000&&(w.tick+a.id)%3===0&&random(a)<1/600)){recoverAnimalManhunter(w,a);return;}
   if((w.tick+a.id)%15!==0)return;
   m.zeroRestTicks=a.rest<.0001?m.zeroRestTicks+150:0;
   if(m.zeroRestTicks<=1000||a.state==='sleeping')return;
   const chance=m.zeroRestTicks<15000?.01:m.zeroRestTicks<30000?.02:m.zeroRestTicks<45000?.03:.04;
   if(random(a)<chance){
     m.exhausted=true;delete m.targetId;delete m.door;a.path=[];
-    if((a.motion?.end??0)<=core/10){recoverAnimalManhunter(w,a);a.state='sleeping';}
+    if((a.motion?.end??0)<=core/10){if(!m.permanent261)recoverAnimalManhunter(w,a);else{delete m.exhausted;m.zeroRestTicks=0;}a.state='sleeping';}
   }
 }
 /** No search occurs without the rotating wildlife caller granting its token. */
 export function processAnimalManhunter(w:World,a:WildAnimal,nav:ReturnType<typeof animalNavigation>,physical:Uint8Array,takeSearch:()=>boolean):boolean {
   const m=a.manhunter;if(!m)return false;
+  if(m.permanent261&&a.state==='sleeping'){if(a.rest<1&&!a.sleepUntilCore)return true;a.state='idle';a.nextDecision=w.tick;}
   if(a.strike||a.stun){a.path=[];a.state='idle';return true;}
   const target=animalManhunterTarget(w,a);
   // Only a previously captured pursuit route can expose a blocking door.
@@ -97,7 +102,7 @@ export function processAnimalManhunter(w:World,a:WildAnimal,nav:ReturnType<typeo
   if(target&&meleeContact(w,a,target,physical)){a.path=[];a.state='idle';return true;}
   const end=a.path.at(-1),review=!target||!end||!meleeContact(w,end,target,physical)||w.tick>=a.nextDecision;
   if(review&&(target&&!end||w.tick>=a.nextDecision)&&takeSearch()){
-    const candidates=w.pawns.filter(p=>p.state!=='dead'&&p.state!=='downed'&&!carrierOf(w,p.id));
+    const candidates=m.permanent261?permanentManhunterTargets261(w):w.pawns.filter(p=>p.state!=='dead'&&p.state!=='downed'&&!carrierOf(w,p.id));
     // Keep an engaged target when reachable; alternatives reuse the same field.
     const route=nav.humanPursuitRoute(a,target?[target,...candidates.filter(p=>p!==target)]:candidates,physical,!!target);
     if(route){if(m.targetId!==route.targetId)notifyDuckFlightJob256(w,a,'AttackMelee',()=>wildlifeRandom(w.wildlife!));m.targetId=route.targetId;a.path=route.path;}else{delete m.targetId;a.path=[];}

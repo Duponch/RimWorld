@@ -70,8 +70,22 @@ export function prepareGroupSplit(root:CampaignState,c:Extract<GroupReorganizati
   if(g.admission)childNext.admission={revision:g.admission.revision};
   childNext.reorganization=openGroupReorganization({...childNext,items:values(inventory.child)},[],root.tick,childOrigins);childNext.reorganization.birth={kind:'split',parentGroupId:g.id,at:root.tick};
   if(!groupReorganizationBalance({...sourceNext,items:values(inventory.source)},sourceBalance,root.worldGroups.losses)||!groupReorganizationBalance({...childNext,items:values(inventory.child)},childNext.reorganization,[]))return fail('Bilan des deux moitiés non fermé.');
-  const plan=planBase(root);plan.inventory=inventory;plan.nextThingId=inventory.nextId;plan.nextRng=inventory.rng;plan.receipts=inventory.receipts;plan.changes.push({record:r,beforeState:g,signature:JSON.stringify(g),next:sourceNext});plan.created.push({...r,state:childNext,localMapId:null});plan.survivors=[g.id,childId];return {kind:'ready',plan};
+  const plan=planBase(root);plan.inventory=inventory;plan.nextThingId=inventory.nextId;plan.nextRng=inventory.rng;plan.receipts=inventory.receipts;plan.changes.push({record:r,beforeState:g,signature:JSON.stringify(g),next:sourceNext});const childRecord={...r,state:childNext,localMapId:null};if(root.schemaVersion===261)delete childRecord.retreat261;plan.created.push(childRecord);plan.survivors=[g.id,childId];return {kind:'ready',plan};
  }catch{return fail('Séparation refusée sans modification des propriétaires.');}
+}
+/** Shared pure merge result; caller owns real references and commit preflight.
+ * Survivor ledger/provisions/freight/travel remain literal. No progress added. */
+export function mergedGroupState261(root:CampaignState,survivor:WorldGroupRecord&{state:Away},absorbed:readonly (WorldGroupRecord&{state:Away})[]):Away|undefined {
+ if(!root.worldGroups)return;const cohort=[survivor,...absorbed];
+ if(cohort.some(r=>r.state.admission?.revision===2)&&cohort.some(r=>r.state.admission?.revision!==2||r.state.reorganization?.memberOrigins.some(o=>o.enteredAtAbsCore===undefined)||r.state.animalOwners?.origins.some(o=>o.enteredAtAbsCore===undefined)))return;
+ const members=[...survivor.state.members,...absorbed.flatMap(r=>r.state.members)],items=[...survivor.state.items,...absorbed.flatMap(r=>r.state.items)],incoming=absorbed.flatMap(r=>r.state.items);
+   const balance=withGroupExchange(opening(root,survivor),'received',incoming);const packed=[...(survivor.state.packed??[]),...absorbed.flatMap(r=>r.state.packed??[])];balance.packed=exchangeGroupPackedBalance256(balance.packed,'received',absorbed.flatMap(r=>r.state.packed??[]));if(balance.packed===undefined)delete balance.packed;balance.memberOrigins=[...origins(survivor),...absorbed.flatMap(origins)];
+   const next:Away={...survivor.state,members,items,...packed.length?{packed}:{},reorganization:balance};
+   if(cohort.some(r=>r.state.admission))next.admission={revision:cohort.every(r=>r.state.admission?.revision===2)?2:1};
+   const animalMembers=[...survivor.state.animalOwners?.members??[],...absorbed.flatMap(r=>r.state.animalOwners?.members??[])];
+   if(animalMembers.length||survivor.state.animalOwners||absorbed.some(r=>r.state.animalOwners)){const old=survivor.state.animalOwners;next.animalOwners={revision:1,members:animalMembers,origins:[...old?.origins??[],...absorbed.flatMap(r=>r.state.animalOwners?.origins??[])],order:[...groupPhysicalPawns256(survivor.state),...absorbed.flatMap(r=>groupPhysicalPawns256(r.state))].map(p=>p.id),...!next.travel?{interval:old?.interval??{revision:1,startedAt:root.tick,atCore:root.tick*10,tickDelta:0}}:{}};}
+ if(!groupReorganizationBalance(next,balance,root.worldGroups!.losses))return;
+ return next;
 }
 export function prepareGroupMerge(root:CampaignState,c:Extract<GroupReorganizationCommand,{type:'group-merge'}>,motion:GroupMotionRuntime):{kind:'ready';plan:GroupReorganizationPlan}|{kind:'refused';reason:string} {
  try{
@@ -85,13 +99,7 @@ export function prepareGroupMerge(root:CampaignState,c:Extract<GroupReorganizati
    for(let i=pending.length-1;i>=0;i--){const other=pending[i]!;if(motion.closeTo(first.state,other.state)){cohort.push(other);pending.splice(i,1);}}
    if(cohort.length<2)continue;
    let survivor=cohort[0]!;for(const r of cohort)if(groupPhysicalPawns256(r.state).length>groupPhysicalPawns256(survivor.state).length)survivor=r;
-   const absorbed=cohort.filter(r=>r!==survivor),members=[...survivor.state.members,...absorbed.flatMap(r=>r.state.members)],items=[...survivor.state.items,...absorbed.flatMap(r=>r.state.items)],incoming=absorbed.flatMap(r=>r.state.items);
-   const balance=withGroupExchange(opening(root,survivor),'received',incoming);const packed=[...(survivor.state.packed??[]),...absorbed.flatMap(r=>r.state.packed??[])];balance.packed=exchangeGroupPackedBalance256(balance.packed,'received',absorbed.flatMap(r=>r.state.packed??[]));if(balance.packed===undefined)delete balance.packed;balance.memberOrigins=[...origins(survivor),...absorbed.flatMap(origins)];
-   const next:Away={...survivor.state,members,items,...packed.length?{packed}:{},reorganization:balance};
-   if(cohort.some(r=>r.state.admission))next.admission={revision:cohort.every(r=>r.state.admission?.revision===2)?2:1};
-   const animalMembers=[...survivor.state.animalOwners?.members??[],...absorbed.flatMap(r=>r.state.animalOwners?.members??[])];
-   if(animalMembers.length||survivor.state.animalOwners||absorbed.some(r=>r.state.animalOwners)){const old=survivor.state.animalOwners;next.animalOwners={revision:1,members:animalMembers,origins:[...old?.origins??[],...absorbed.flatMap(r=>r.state.animalOwners?.origins??[])],order:[...groupPhysicalPawns256(survivor.state),...absorbed.flatMap(r=>groupPhysicalPawns256(r.state))].map(p=>p.id),...!next.travel?{interval:old?.interval??{revision:1,startedAt:root.tick,atCore:root.tick*10,tickDelta:0}}:{}};}
-   if(!groupReorganizationBalance(next,balance,root.worldGroups.losses))return fail('Bilan de fusion non fermé.');
+   const absorbed=cohort.filter(r=>r!==survivor),next=mergedGroupState261(root,survivor,absorbed);if(!next)return fail('Bilan de fusion non fermé.');
    plan.changes.push({record:survivor,beforeState:survivor.state,signature:JSON.stringify(survivor.state),next});plan.removed.push(...absorbed);for(const r of absorbed)plan.changes.push({record:r,beforeState:r.state,signature:JSON.stringify(r.state),next:r.state});plan.survivors.push(survivor.state.id);
   }
   if(!plan.removed.length)return fail('Aucune paire sélectionnée n’est assez proche.');return {kind:'ready',plan};

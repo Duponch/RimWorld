@@ -85,7 +85,7 @@ test('group losses stay cumulative after recovery; timeout and colony defeat sel
   pair[1]!.state='idle';expect(validateWorld(w)).toEqual([]);replay(w,10);
   const defeated=attackCamp();for(const p of defeated.pawns.filter(p=>!p.raid))injurePawn(defeated,p,'brain','crush',99*HP_UNIT);
   advanceRaids(defeated);expect(defeated.raids!.active?.reason).toBe('colony-down');expect(defeated.pawns.filter(p=>p.state==='dead')).toHaveLength(3);until(defeated,()=>!defeated.raids!.active);expect(defeated.raids!.last?.reason).toBe('colony-down');
-  const timed=attackCamp();timed.tick=timed.raids!.active!.deadline;advanceRaids(timed);expect(timed.raids!.active?.reason).toBe('timeout');expect(timed.pawns.some(p=>p.raid)).toBe(true);
+  const timed=attackCamp(),deadline=timed.raids!.active!.deadline;if(deadline===null)throw Error('Actual finite assault deadline required');timed.tick=deadline;advanceRaids(timed);expect(timed.raids!.active?.reason).toBe('timeout');expect(timed.pawns.some(p=>p.raid)).toBe(true);
 });
 
 test('exit waits for unconscious sleep and stun; an existing blow may recover toward a departed target without retaining an attack',()=>{

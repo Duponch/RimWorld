@@ -1,3 +1,4 @@
+import {advanceAnimalScaria261,commitScariaDeath261,scariaCorpseRot261} from './animal-scaria-261.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {activeHiveInsect256,hiveInstigatorFaction256,notifyHivePawnHarmed256,receiveHiveMemo256,combatTargetKeyForHive256} from './cave-hive-lord-256.ts';
 import {detachHiveInsect256} from './cave-hive-lifecycle-256.ts';
@@ -33,22 +34,23 @@ export const animalBody=(a:WildAnimal)=>{
 export function reconcileAnimalHealth(w:World,a:WildAnimal):void {
   if(!a.health)return;
   if(a.health.death&&isAnimalSpecies256(a.species))a.ageTicks=a.health.death.tick-a.health.animalBirthTick!;
-  const status=medicalStatus(a.health);if(status==='dead')commitToxicDeath256(a.health,()=>healthRandom(w));
+  const status=medicalStatus(a.health);if(status==='dead'){commitToxicDeath256(a.health,()=>healthRandom(w));commitScariaDeath261(a.health,w.gameProfile?.difficulty==='adventure-story'?.333:undefined,()=>healthRandom(w));if(a.health.scaria261)a.corpseRot=scariaCorpseRot261(a.health,a.corpseRot??{progress:0,atTick:w.tick});}
   if(w.schemaVersion>=256&&status==='dead'){if(a.state!=='dead'){detachHiveInsect256(w,a);const wasSpawned=!animalCarrier(w,a.id);dropAnimalContentsOnDeath256(w,a,wasSpawned);cancelAnimalLocalGroupIntents256(w,a.id);}delete a.mapBed;if(a.domestic)delete a.domestic.bedId;}
   if(status!=='mobile') {
     // A real downing also releases the implicit Hive job reservation now;
     // Lord membership and the captured physical edge keep their own owners.
     if(isSchema256Or257(w.schemaVersion))delete a.hiveJob;
     cancelCryptosleepVomit256(a.health);if(a.state!==status||status==='dead'||!assessMedical(a.health).canBeAwake)cancelToxicVomit256(a.health);
-    recoverAnimalManhunter(w,a);
+    if(status==='dead'||!a.manhunter?.permanent261)recoverAnimalManhunter(w,a);else{delete a.manhunter.targetId;delete a.manhunter.door;}
     delete a.confusion;if(a.wander)delete a.wander.job;
     const changed=a.state!==status;
-    a.state=status;a.path=[];delete a.exitFlight;delete a.meal;delete a.flee;delete a.threat;delete a.retaliation;delete a.strike;delete a.stun;delete a.exiting;delete a.eggLay;delete a.predation;delete a.manhunter;
+    a.state=status;a.path=[];delete a.exitFlight;delete a.meal;delete a.flee;delete a.threat;delete a.retaliation;delete a.strike;delete a.stun;delete a.exiting;delete a.eggLay;delete a.predation;if(!a.manhunter?.permanent261||status==='dead')delete a.manhunter;
     // Keep a captured edge. Presentation finishes its continuous falling path.
     if(changed){w.events.push({tick:w.tick,type:'need',message:`${animalSpecies(a.species).label} ${a.id} ${status==='dead'?'est mort':'est à terre'}.`});if(w.events.length>80)w.events.splice(0,w.events.length-80);}
   } else if(a.state==='downed'){a.state='idle';a.nextDecision=w.tick;}
 }
 export function advanceAnimalHealth(w:World,a:WildAnimal):void {
+  advanceAnimalScaria261(w,a);if(a.health?.scaria261&&a.health.death){reconcileAnimalHealth(w,a);return;}
   if(w.schemaVersion>=256&&a.health?.toxicBuildup&&!a.health.death&&a.state!=='dead'){advanceExplosiveAnimalHealth256(w,a,true);return;}
   if(w.schemaVersion>=256&&isExplosiveAnimal256(a.species)){advanceExplosiveAnimalHealth256(w,a);return;}
   if(w.schemaVersion>=84&&a.food<=0&&a.state!=='dead')a.health??=createAnimalMedicalRecord256(w,a,Math.max(0,w.tick-1));
@@ -96,7 +98,11 @@ export function commitAnimalImpact(w:World,a:WildAnimal,record:import('./injury-
   const lordId=a.hive?.lordId;
   if(a.state!=='downed'&&medicalStatus(record)==='downed'&&healthRandom(random)<.5)record.death={tick:w.tick,cause:'downed'};
   const death=planAnimalDeathExplosion256(w,a,record,core);death.commit();
-  commitToxicDeath256(record,()=>healthRandom(random));w.rng=random.rng;a.health=record;reconcileAnimalHealth(w,a);
+  commitToxicDeath256(record,()=>healthRandom(random));
+  // Death decisions belong to this same impact stream, including callers
+  // which retain it after reconciliation (melee, explosions and Hive hooks).
+  commitScariaDeath261(record,w.gameProfile?.difficulty==='adventure-story'?.333:undefined,()=>healthRandom(random));
+  w.rng=random.rng;a.health=record;reconcileAnimalHealth(w,a);
   if(lordId!==null&&lordId!==undefined){if(a.state==='dead'){if(!collapse)receiveHiveMemo256(w,'pawn-lost',core,lordId);}else{const f=hiveInstigatorFaction256(w,instigator);notifyHivePawnHarmed256(w,lordId,f.hasFaction,f.parentFaction,core,()=>healthRandom(random));}w.rng=random.rng;}
 }
 export function delayAnimalImpact(a:WildAnimal,core:number,stun=false,stunDurationCore=45):void {

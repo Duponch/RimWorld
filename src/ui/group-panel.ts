@@ -1,9 +1,12 @@
+import {worldSettlementAccess256} from '../sim/world-faction-access';
+import {createGroupRoutePlanner,type GroupRoutePlanner} from './group-route-planner';
+import type {GroupItineraryResult,GroupTravelEstimate,TravelWarning} from '../sim/group-travel-estimate';
 import {groupCaravanUnitMass256} from '../sim/group-caravan-mass-256';
 import {BEDROLL_MASS_GRAMS_256} from '../sim/group-bedroll-capture-256';
 import {groupFreightUnitMass258,groupPackedMassGrams258} from '../sim/group-freight-contract-258';
 import {QUALITY_LABELS} from '../sim/equipment-rules';
 import {buildingLabels} from './building-labels';
-import {travelAnimalLabel256,travelAnimalNeeds256,travelActorLabel256,travelAnimals256,travelPacks256,travelRidingFactor256,travelCapacity256,travelGroupLabel256,type GroupAnimalChoice256,type GroupBedrollChoice256} from './group-travel-readers-256';
+import {travelAnimalLabel256,travelAnimalNeeds256,travelActorLabel256,travelAnimals256,travelPacks256,travelRidingFactor256,travelCapacity256,travelGroupLabel256,travelElsewhereColonists256,type GroupAnimalChoice256,type GroupBedrollChoice256} from './group-travel-readers-256';
 import type {WildAnimal} from '../sim/wildlife-state';
 import type {PackedFurniture} from '../sim/furniture-rules';
 import {createGroupReorganizationPanel256} from './group-reorganization-panel-256';
@@ -37,6 +40,7 @@ export type TradeChoice=GroupTradeChoice;
 /** Capture these once per snapshot; source rows retain the real pile object,
  * actual reservation total and availability. Unknown masses are errors. */
 export interface GroupPanelFacts extends GroupPermissionView {
+  retreat?:boolean;canRetreat?:boolean;retreatTile?:number;
   candidates:readonly MemberChoice[];sources:readonly SourceChoice[];
   animals?:readonly GroupAnimalChoice256[];bedrolls?:readonly GroupBedrollChoice256[];
 }
@@ -45,9 +49,11 @@ export type PlanPreview=GroupFormationPreview;
 export type RoutePreview=GroupRoutePreview;
 export type TradePreview=GroupTradePreview;
 export interface GroupPanelAdapters {
-  capture(snapshot:GroupPanelSnapshot):GroupPanelFacts;
+  capture(snapshot:GroupPanelSnapshot,mode?:'retreat'):GroupPanelFacts;
   previewPlan(snapshot:GroupPanelSnapshot,facts:GroupPanelFacts,draft:GroupDraft):PlanPreview;
   previewRoute(snapshot:GroupPanelSnapshot,facts:GroupPanelFacts,destination:number):RoutePreview;
+  previewWaypoints?(snapshot:GroupPanelSnapshot,points:readonly number[],mass:MassView):GroupItineraryResult;
+  previewGenericWaypoints?(snapshot:GroupPanelSnapshot,points:readonly number[]):GroupItineraryResult;
   quoteTrade(snapshot:GroupPanelSnapshot,facts:GroupPanelFacts,direction:'buy'|'sell',lines:CommercialBuyLine[]):TradePreview;
   /** Resolution/rejection must follow the authoritative correlated ack. */
   send(command:GroupCommand|WorldMapCommand):Promise<unknown>;
@@ -58,6 +64,7 @@ export interface GroupPanelAdapters {
 export interface GroupPanel {
   update(snapshot:GroupPanelSnapshot):void;
   setVisible(visible:boolean):void;
+  focusTrade261():void;
   setRequestStatus(status:SimulationRequestStatus):void;
   setHostBlocked(reason:string|undefined):void;
   setSimulationStopped(message:string):void;
@@ -126,12 +133,16 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
   const origin=document.createElement('p'),status=document.createElement('p'),stop=document.createElement('p'),mass=document.createElement('p');
   status.className='group-phase';status.dataset.groupStatus='';stop.className='group-stop';stop.dataset.groupStop='';mass.dataset.groupMass='';
   const routeText=document.createElement('p');routeText.dataset.groupRoute='';
+  const provisionsText=document.createElement('p');provisionsText.dataset.groupProvisions='';
+  const departureNotice=document.createElement('dialog'),departureTitle=document.createElement('h3'),departureBody=document.createElement('p'),departureConfirm=document.createElement('button'),departureCancel=document.createElement('button');
+  departureNotice.dataset.groupDepartureNotice='';departureNotice.className='group-reorganization';departureTitle.textContent='Vérifier les provisions';departureConfirm.type=departureCancel.type='button';departureConfirm.textContent='Former malgré ces avertissements';departureConfirm.dataset.groupDepartureConfirm='';departureCancel.textContent='Annuler';departureCancel.dataset.groupDepartureCancel='';departureNotice.append(departureTitle,departureBody,departureConfirm,departureCancel);element.append(departureNotice);
   const previews=document.createElement('div');previews.className='group-actions';
   const checkFormation=document.createElement('button'),checkRoute=document.createElement('button');
   checkFormation.type=checkRoute.type='button';checkFormation.textContent='Vérifier la formation';checkRoute.textContent='Calculer l’itinéraire';
   checkFormation.dataset.groupPreview='formation';checkRoute.dataset.groupPreview='route';previews.append(checkFormation,checkRoute);
   const actions=document.createElement('div');actions.className='group-actions';
   function button(label:string,action:GroupAction){const b=document.createElement('button');b.type='button';b.textContent=label;b.dataset.groupAction=action;actions.append(b);return b;}
+  const retreatChoice=document.createElement('button');retreatChoice.type='button';retreatChoice.dataset.groupRetreatChoice='';retreatChoice.textContent='Fuir par le bord';retreatChoice.hidden=true;actions.append(retreatChoice);let retreatMode=false;
   const stayLabel=document.createElement('label'),stay=document.createElement('input');stay.type='checkbox';stay.checked=true;stayLabel.hidden=true;stay.dataset.groupReformStationary='';stayLabel.append(stay,document.createTextNode('Sans destination : rester sur la case du camp'));actions.append(stayLabel);
   const adopt=button('Ouvrir le globe','adopt'),start=button('Former le groupe','start'),cancel=button('Annuler la formation','cancel'),pause=button('Suspendre la marche','pause'),change=button('Adopter cette route','route'),back=button('Revenir au foyer','return'),unload=button('Décharger les biens portés','unload');
   function section(label:string,parent:HTMLElement=details){const box=document.createElement('section'),title=document.createElement('h3');title.textContent=label;box.append(title);parent.append(box);return box;}
@@ -140,7 +151,8 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
   const entryButtons=new Map<'visit'|'camp'|'settle',HTMLButtonElement>();
   for(const [mode,label] of [['visit','Entrer sur la carte'],['camp','Former un camp temporaire'],['settle','S’installer']] as const){const b=document.createElement('button');b.type='button';b.textContent=label;b.dataset.siteAction=mode;siteActions.append(b);entryButtons.set(mode,b);}
   elsewhere.dataset.campaignElsewhere='';
-  details.append(selectorLabel,origin,status,stop,mass,elsewhere,siteActions,routeText,previews,actions);
+  const arrivalLabel=document.createElement('label'),arrivalAction=document.createElement('select');arrivalLabel.textContent='À l’arrivée ';arrivalAction.setAttribute('aria-label','Action réelle à l’arrivée');arrivalLabel.append(arrivalAction);
+  details.append(arrivalLabel,selectorLabel,origin,status,stop,mass,elsewhere,siteActions,routeText,provisionsText,previews,actions);
   const peopleBox=section('Personnes'),animalBox=section('Animaux domestiques'),bedrollBox=section('Meubles minifiés'),sourceBox=section('Sources au sol'),possessionsBox=section('Biens portés'),tradeBox=section('Commerce'),lossesBox=section('Décès hors carte');
   const chosen=document.createElement('p');chosen.dataset.groupChosen='';peopleBox.append(chosen);
   const removeUnavailable=document.createElement('button');removeUnavailable.type='button';removeUnavailable.textContent='Retirer les choix devenus indisponibles';removeUnavailable.dataset.groupDraftCleanup='';peopleBox.append(removeUnavailable);
@@ -149,7 +161,9 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
   const lossesNote=document.createElement('p');lossesNote.textContent='Les identités et biens indiqués restent à leur case. Une dépouille récupérable et un camp ne sont pas ouverts par cette vue.';lossesBox.append(lossesNote);
   element.append(heading,intro,error,request,grid);host.append(element);
   let snapshot:GroupPanelSnapshot|undefined,facts:GroupPanelFacts|undefined,destination:number|null=null;
-  let reorganizationLocked=false;
+  let reorganizationLocked=false,plannerLocked=false;
+  let planner:GroupRoutePlanner|undefined,plannerRoute:readonly number[]=[];
+  let departureAcknowledgement:{draft:string;warnings:string}|undefined;
   let busy=false,unknown:string|undefined,stopped:string|undefined,hostBlocked:string|undefined,generation=0,disposed=false;
   let plan:PlanPreview|undefined,routePreview:RoutePreview|undefined,previewTick:number|undefined;
   const selectedAnimals=new Set<number>(),selectedPacks=new Set<number>();
@@ -171,9 +185,25 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
     return mass===undefined?'Masse indisponible':kg(mass);
   }
   const buttons=new Map<GroupAction,HTMLButtonElement>([['adopt',adopt],['start',start],['cancel',cancel],['pause',pause],['route',change],['return',back],['unload',unload]]);
-  const lockReason=(includeReorganization=true)=>stopped??unknown??hostBlocked??(includeReorganization&&reorganizationLocked?'Un partage de caravane est ouvert.':undefined)??(busy?'Une commande est en cours.':waiting.size?[...waiting.values()].join(' '):undefined);
-  function invalidatePreview(){plan=routePreview=undefined;previewTick=undefined;}
-  const globe=createPlanetView(globeHost,id=>{destination=id;stay.checked=false;invalidatePreview();renderDraft();});stay.addEventListener('change',()=>{invalidatePreview();renderDraft();},{signal:abort.signal});
+  const lockReason=(includeReorganization=true,includePlanner=true)=>stopped??unknown??hostBlocked??(includePlanner&&plannerLocked?'Un planificateur de voyage est ouvert.':undefined)??(includeReorganization&&reorganizationLocked?'Un partage de caravane est ouvert.':undefined)??(busy?'Une commande est en cours.':waiting.size?[...waiting.values()].join(' '):undefined);
+  function closeDepartureNotice(){departureAcknowledgement=undefined;if(departureNotice.open)departureNotice.close();}
+  function invalidatePreview(){plan=routePreview=undefined;previewTick=undefined;closeDepartureNotice();}
+  const globe=createPlanetView(globeHost,id=>{if(planner?.choose(id))return;destination=id;stay.checked=false;invalidatePreview();renderDraft();});
+  planner=createGroupRoutePlanner(details,{
+    current(){
+      if(!snapshot||!facts)return;const g=snapshot.group;if(g&&!groupAway(g))return;
+      const projected=facts.mass??(plan?.ok?plan.mass:undefined),key=`${snapshot.originMapId??'none'}:${g?.id??'new'}:${g?.phase??'new'}`;
+      if(projected&&adapters.previewWaypoints){const origin=groupAway(g)?g.segment?.to??g.tile:snapshot.campaign?.maps.find(m=>m.id===snapshot!.originMapId)?.tile??facts.originTile;return {tick:snapshot.world.tick,key:key+':group',origin,mass:projected};}
+      if(!g&&snapshot.planet&&adapters.previewGenericWaypoints)return {mode:'generic' as const,tick:snapshot.world.tick,key:key+':generic'};
+    },
+    pause:adapters.pauseForReorganization,blocked:()=>lockReason(true,false),
+    query:(points,projected)=>snapshot&&adapters.previewWaypoints?adapters.previewWaypoints(snapshot,points,projected):{ok:false,reason:'Projection d’itinéraire indisponible.'},
+    queryGeneric:points=>snapshot&&adapters.previewGenericWaypoints?adapters.previewGenericWaypoints(snapshot,points):{ok:false,reason:'Estimation générique indisponible.'},
+    label:tile=>snapshot?.planet?planetTileLabel(snapshot.planet,tile):String(tile),
+    accept(first){destination=first;stay.checked=false;invalidatePreview();renderDraft();},
+    overlay(route){plannerRoute=route;renderDraft();},lock(active){plannerLocked=active;updateLocks();},
+  });
+stay.addEventListener('change',()=>{invalidatePreview();renderDraft();},{signal:abort.signal});
   function permission(action:GroupAction):string|undefined {return lockReason()??((action==='start'||action==='unload')&&snapshot?.campaign?.activeMapId===null?'Affichez une carte locale pour préparer ce chargement.':undefined)??((action==='start'||action==='unload')&&!Number.isSafeInteger(snapshot?.originMapId)?'La carte de départ confirmée est indisponible.':undefined)??(!facts?'Les projections métier sont indisponibles.':facts.actions[action].ok?undefined:facts.actions[action].reason??'Action indisponible.');}
   function available(b:HTMLButtonElement,reason:string|undefined){b.setAttribute('aria-disabled',String(!!reason));setTooltip(b,{body:reason??'Appliquer la commande au monde confirmé.'});}
   function updateRequest(){const message=lockReason();request.hidden=!message;request.textContent=message??'';}
@@ -291,6 +321,7 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
 
 
   function updateLocks(){
+    planner?.update();
     updateRequest();
     const g=snapshot?.group,away=groupAway(g),atDestination=away&&(g.phase==='at-site'||g.phase==='awaiting-entry'||snapshot!.world.schemaVersion>=256&&g.phase==='stationary');
     groupSelector.value=snapshot?.group?String(snapshot.group.id):'';groupSelector.disabled=!!lockReason();
@@ -310,10 +341,13 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
     selectionNotes.textContent='';
     try{
       if(destination===null&&snapshot.planet&&!facts.reform)destination=snapshot.planet.civilianTile;
-      const projected=facts.mass??(plan?.ok?plan.mass:null);mass.textContent=projected?`Charge ${kg(projected.grams)} / ${kg(projected.capacityGrams)} · ${projected.rations} repas de survie · ${projected.pemmicanUnits} unités de pemmican · nutrition disponible ${(projected.provisionNutrition/100).toLocaleString('fr-FR',{maximumFractionDigits:2})}${facts.mass?' possédée.':' prévue au départ (estimation à vérifier au lancement).'}${facts.reform&&projected.grams>projected.capacityGrams?' · SURCHARGE : sortie autorisée, marche bloquée avant tout segment.':''}`:'Charge non calculée : vérifiez la formation choisie.';
+      const estimate=plan?.ok?plan.provisions:routePreview?.ok?routePreview.provisions:undefined;
+      const projected=facts.mass??(plan?.ok?plan.mass:null);mass.textContent=projected?`Charge ${kg(projected.grams)} / ${kg(projected.capacityGrams)} · ${projected.rations} repas de survie · ${projected.pemmicanUnits} unités de pemmican · nutrition ${estimate?.ok?'alimentaire totale':'des rations et du pemmican'} ${(estimate?.ok?estimate.nutrition:projected.provisionNutrition/100).toLocaleString('fr-FR',{maximumFractionDigits:2})}${facts.mass?' possédée.':' prévue au départ (estimation à vérifier au lancement).'}${facts.reform&&projected.grams>projected.capacityGrams?' · SURCHARGE : sortie autorisée, marche bloquée avant tout segment.':''}`:'Charge non calculée : vérifiez la formation choisie.';
       if(plan&&!plan.ok)selectionNotes.textContent=plan.reason;
       const stamp=previewTick!==undefined?` Estimation au J${(previewTick/TICKS_PER_DAY).toLocaleString('fr-FR',{maximumFractionDigits:2})}, revalidée à la commande.`:'';
       routeText.textContent=routePreview?.ok?`Route proposée : ${routePreview.route.length} cases · ${hours(routePreview.durationCore)}.${stamp} Le segment engagé reste conservé.`:routePreview&&!routePreview.ok?routePreview.reason:plan?.ok?`Route proposée : ${plan.route.length} cases.${stamp}`:snapshot.group?'Choisissez une destination puis calculez l’itinéraire.':'Vérifiez la formation pour examiner la route et la charge.';
+      const days=(n:number)=>n>=600?'600 j ou plus (limite d’estimation)':`${n.toLocaleString('fr-FR',{maximumFractionDigits:1})} j`;
+      provisionsText.textContent=estimate?.ok?`Autonomie estimée : ${days(estimate.foodDays)} · pourriture de la moitié de la nutrition : ${days(estimate.rotDays)} · forage ${estimate.forageNutritionPerDay.toLocaleString('fr-FR',{maximumFractionDigits:2})} nutrition/j au biome de départ. Marche projetée, régimes actuels, pâturage et biomes du trajet pris en compte ; la pourriture est affichée séparément.${stamp}`:estimate&&!estimate.ok?estimate.reason:'Vérifiez le départ ou calculez une route pour estimer les provisions.';
       const missing=[...selected].filter(id=>!facts!.candidates.some(c=>c.pawn.id===id));const stale=[...sources.keys()].filter(id=>!facts!.sources.some(c=>c.pile.id===id));
       chosen.textContent=snapshot.group?`${members(snapshot).length} personnes engagées.`:`${selected.size}${snapshot.world.schemaVersion>=256?'':`/${GROUP_MAX_MEMBERS}`} personnes choisies.${missing.length?` ${missing.length} personne(s) ne sont plus disponibles. Le choix est conservé jusqu'à votre correction.`:''}`;
       if(stale.length)selectionNotes.textContent+=` ${stale.length} source(s) ne sont plus disponibles au sol. Le brouillon est conservé.`;
@@ -324,9 +358,10 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
       const unavailableAnimals=[...selectedAnimals].filter(id=>!facts!.animals?.some(c=>c.animal.id===id&&c.ok)),unavailablePacks=[...selectedPacks].filter(id=>!facts!.bedrolls?.some(c=>c.pack.building.id===id&&c.ok));
       if(!snapshot.group&&(unavailableAnimals.length||unavailablePacks.length))selectionNotes.textContent+=` ${unavailableAnimals.length} choix d’animaux et ${unavailablePacks.length} meubles minifiés demandent une correction.`;
       unload.hidden=snapshot.group?snapshot.group.phase!=='unloading':!selected.size;
-      globe.setOverlay({selected:destination,route:facts.confirmedRoute,previewRoute:plan?.ok?plan.route:routePreview?.ok?routePreview.route:[],...(groupAway(snapshot.group)?{groupTile:snapshot.group.tile}:{}),...readPlanetObjects(snapshot.campaign??snapshot.world)});
+      globe.setOverlay({selected:destination,route:facts.confirmedRoute,previewRoute:planner?.active?plannerRoute:plan?.ok?plan.route:routePreview?.ok?routePreview.route:[],...(groupAway(snapshot.group)?{groupTile:snapshot.group.tile}:{}),...readPlanetObjects(snapshot.campaign??snapshot.world)});
     }catch(cause){selectionNotes.textContent=cause instanceof Error?cause.message:String(cause);plan=undefined;routePreview=undefined;}
     updateLocks();available(start,permission('start')??(plan?.ok?undefined:selectionNotes.textContent||'Le plan doit être admissible.'));available(change,permission('route')??(routePreview?.ok?undefined:routeText.textContent));
+    if(snapshot){const current=arrivalAction.value;arrivalAction.replaceChildren();const option=(value:string,label:string)=>{const o=document.createElement('option');o.value=value;o.textContent=label;arrivalAction.append(o);};option('none','S’arrêter sur la tuile');if(snapshot.world.schemaVersion>=261&&groupAway(snapshot.group)&&destination!==null){for(const m of snapshot.campaign?.maps??[])if(m.tile===destination)option(`enter:${m.id}`,'Entrer sur la carte');for(const settlement of snapshot.world.worldFactions?.settlements??[])if(settlement.tile===destination){const access=worldSettlementAccess256(snapshot.world.worldFactions!,settlement.id);if(access.ok&&access.canTrade)option(`trade:${settlement.id}`,'Faire du commerce');}}arrivalLabel.hidden=snapshot.world.schemaVersion<261||!groupAway(snapshot.group);if([...arrivalAction.options].some(o=>o.value===current))arrivalAction.value=current;}
     tradeDraft('buy');tradeDraft('sell');
   }
   removeUnavailable.addEventListener('click',()=>{
@@ -350,18 +385,44 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
   groupSelector.addEventListener('change',()=>{if(lockReason())return;const id=groupSelector.value===''?null:Number(groupSelector.value);if(id!==null&&!Number.isSafeInteger(id))return;void send(null,{type:'group-select',groupId:id});},{signal:abort.signal});
   for(const [mode,button] of entryButtons)button.addEventListener('click',()=>{const group=snapshot?.group;if(group&&button.getAttribute('aria-disabled')!=='true')void send(null,{type:'group-enter',groupId:group.id,mode});},{signal:abort.signal});
   adopt.addEventListener('click',()=>void send('adopt',{type:'planet-adopt'}),{signal:abort.signal});
-  start.addEventListener('click',()=>{if(permission('start')||!plan?.ok||!snapshot||!facts||destination===null&&!facts.reform)return;try{const lines=quantityLines(sources),draft={memberIds:[...selected],sources:lines,...!facts.reform||!stay.checked?{destination:destination??undefined}:{},...snapshot.world.schemaVersion>=256?{animalIds:[...selectedAnimals],packedIds:[...selectedPacks]}:{}};const check=adapters.previewPlan(snapshot,facts,draft);if(!check.ok)throw Error(check.reason);if(facts.reform){if(!plan.quote||check.quote!==plan.quote)throw Error('Le manifeste, les détenteurs ou l’accès ont changé. Vérifiez de nouveau la réforme.');void send('start',{type:'group-reform',originMapId:snapshot.originMapId!,...draft,quote:plan.quote});}else if(draft.destination!==undefined)void send('start',{type:'group-start',originMapId:snapshot.originMapId!,...draft,destination:draft.destination});}catch(cause){invalidatePreview();error.hidden=false;error.textContent=cause instanceof Error?cause.message:String(cause);renderDraft();}},{signal:abort.signal});
+  const warningText:Record<TravelWarning,string>={
+    'no-food':'La caravane ne possède presque aucune nourriture admissible.',
+    'short-food':'La nourriture couvre moins de cinq jours estimés.',
+    'rot-soon':'Au moins75% de la nutrition sélectionnée risque de pourrir avant cinq jours.',
+    'disliked-food':'Au moins la moitié des aliments humains sélectionnés risque de déplaire.',
+    'no-social':'Aucun propriétaire sélectionné ne peut assurer les échanges sociaux.',
+  };
+  function departureDraft():GroupDraft {if(!snapshot||!facts||destination===null&&!facts.reform)throw Error('Départ absent.');return {memberIds:[...selected],...!facts.reform||!stay.checked?{destination:destination??undefined}:{},sources:quantityLines(sources),...snapshot.world.schemaVersion>=256?{animalIds:[...selectedAnimals],packedIds:[...selectedPacks]}:{}};}
+  const departureKey=(d:GroupDraft)=>`${d.memberIds.join(',')}|${d.destination}|${d.sources.map(s=>`${s.pileId}:${s.quantity}`).join(',')}|${d.animalIds?.join(',')??''}|${d.packedIds?.join(',')??''}`;
+  function tryDeparture(accepted?:{draft:string;warnings:string}){
+    if(permission('start')||!plan?.ok||!snapshot||!facts||destination===null&&!facts.reform)return;
+    try{
+      const draft=departureDraft(),key=departureKey(draft);if(accepted&&accepted.draft!==key)throw Error('Le choix de départ a changé. Vérifiez de nouveau la formation.');
+      const check=adapters.previewPlan(snapshot,facts,draft);if(!check.ok)throw Error(check.reason);if(facts.reform&&(!plan.quote||check.quote!==plan.quote))throw Error('Le manifeste, les détenteurs ou l’accès ont changé. Vérifiez de nouveau la réforme.');plan=check;previewTick=snapshot.world.tick;
+      if(check.provisions&&!check.provisions.ok)throw Error(check.provisions.reason);
+      const estimate=check.provisions as GroupTravelEstimate|undefined,warnings=estimate?.warnings??[],warningKey=warnings.join(',');
+      if(warnings.length&&(!accepted||accepted.warnings!==warningKey)){
+        departureAcknowledgement={draft:key,warnings:warningKey};departureBody.textContent=warnings.map(w=>warningText[w]).join(' ');if(!departureNotice.open)departureNotice.showModal();renderDraft();return;
+      }
+      closeDepartureNotice();if(facts.reform){if(!check.quote)throw Error('Le devis réel de réforme est absent.');void send('start',{type:'group-reform',originMapId:snapshot.originMapId!,...draft,quote:check.quote});}else if(draft.destination!==undefined)void send('start',{type:'group-start',...facts.retreat?{retreat261:true as const}:{},originMapId:snapshot.originMapId!,...draft,destination:draft.destination});
+    }catch(cause){invalidatePreview();error.hidden=false;error.textContent=cause instanceof Error?cause.message:String(cause);renderDraft();}
+  }
+  start.addEventListener('click',()=>tryDeparture(),{signal:abort.signal});
+  departureConfirm.addEventListener('click',()=>{const accepted=departureAcknowledgement;if(accepted)tryDeparture(accepted);},{signal:abort.signal});
+  departureCancel.addEventListener('click',closeDepartureNotice,{signal:abort.signal});
+  departureNotice.addEventListener('cancel',closeDepartureNotice,{signal:abort.signal});
   cancel.addEventListener('click',()=>{if(snapshot?.group)void send('cancel',{type:'group-cancel',groupId:snapshot.group.id});},{signal:abort.signal});
   pause.addEventListener('click',()=>{const g=snapshot?.group;if(groupAway(g))void send('pause',{type:'group-pause',groupId:g.id,paused:!g.paused});},{signal:abort.signal});
-  change.addEventListener('click',()=>{if(!snapshot||!facts||destination===null||!routePreview?.ok||permission('route'))return;try{const check=adapters.previewRoute(snapshot,facts,destination);if(!check.ok)throw Error(check.reason);void send('route',{type:'group-route',groupId:snapshot.group!.id,destination});}catch(cause){invalidatePreview();error.hidden=false;error.textContent=cause instanceof Error?cause.message:String(cause);renderDraft();}},{signal:abort.signal});
+  change.addEventListener('click',()=>{if(!snapshot||!facts||destination===null||!routePreview?.ok||permission('route'))return;try{const check=adapters.previewRoute(snapshot,facts,destination);if(!check.ok)throw Error(check.reason);if(snapshot.world.schemaVersion>=261){let action:import('../sim/caravan-encounter-state-261').RetainedArrival261=null;if(arrivalAction.value.startsWith('enter:'))action={kind:'enter',mapId:Number(arrivalAction.value.slice(6))};else if(arrivalAction.value.startsWith('trade:')){const settlement=snapshot.world.worldFactions?.settlements.find(s=>s.id===Number(arrivalAction.value.slice(6)));if(!settlement)throw Error('Établissement absent.');action={kind:'trade',settlementId:settlement.id,factionId:settlement.factionId,postId:settlement.postId};}void send('route',{type:'caravan-order',groupId:snapshot.group!.id,destination,action});}else void send('route',{type:'group-route',groupId:snapshot.group!.id,destination});}catch(cause){invalidatePreview();error.hidden=false;error.textContent=cause instanceof Error?cause.message:String(cause);renderDraft();}},{signal:abort.signal});
   back.addEventListener('click',()=>{const origin=snapshot?.campaign?.maps.find(map=>map.id===snapshot?.originMapId);if(snapshot?.group&&origin?.tile!==null&&origin?.tile!==undefined)void send('return',{type:'group-route',groupId:snapshot.group.id,destination:origin.tile});},{signal:abort.signal});
   unload.addEventListener('click',()=>{if(snapshot)void send('unload',{type:'group-unload',originMapId:snapshot.originMapId!,...(snapshot.group?{groupId:snapshot.group.id}:{}),memberIds:snapshot.group?members(snapshot).map(p=>p.id):[...selected],...snapshot.world.schemaVersion>=256?{animalIds:travelAnimals256(snapshot,selectedAnimals).map(a=>a.id)}:{}});},{signal:abort.signal});
-  return {
+  retreatChoice.addEventListener('click',()=>{if(!snapshot||!facts?.canRetreat||lockReason(true,false))return;retreatMode=!retreatMode;destination=retreatMode?facts.retreatTile??null:null;sources.clear();invalidatePreview();api.update(snapshot);},{signal:abort.signal});
+  const api:GroupPanel={
     update(next){
       if(snapshot?.group?.id!==next.group?.id||snapshot?.group?.phase!==next.group?.phase)invalidatePreview();
-      snapshot=next;facts=undefined;pilesById=new Map(next.world.piles.map(p=>[p.id,p]));
+      if(snapshot?.originMapId!==next.originMapId)retreatMode=false;snapshot=next;facts=undefined;pilesById=new Map(next.world.piles.map(p=>[p.id,p]));
       try{
-        const captured=adapters.capture(next);for(const key of ['adopt','start','cancel','pause','route','return','buy','sell','unload'] as const)if(!captured.actions[key])throw Error(`Projection d'action manquante : ${key}.`);
+        const captured=adapters.capture(next,retreatMode?'retreat':undefined);for(const key of ['adopt','start','cancel','pause','route','return','buy','sell','unload'] as const)if(!captured.actions[key])throw Error(`Projection d'action manquante : ${key}.`);
         if(!Number.isSafeInteger(captured.maximumSources)||captured.maximumSources<0)throw Error('La borne métier de manifeste est absente.');
         for(const source of captured.sources)if((!captured.reform&&source.pile.owner.type!=='ground')||pilesById.get(source.pile.id)!==source.pile)throw Error('La source proposée ne référence pas sa vraie pile au sol.');
         for(const c of captured.candidates)if(!next.world.pawns.includes(c.pawn))throw Error('Un candidat ne référence pas une vraie personne présente.');
@@ -369,10 +430,11 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
         for(const c of captured.animals??[])if(!next.world.wildlife?.animals.includes(c.animal))throw Error('Un animal proposé n’est pas présent sur cette carte.');
         for(const c of captured.bedrolls??[])if(!next.world.packed.includes(c.pack)||!captured.reform&&c.pack.owner.type!=='ground')throw Error('Un meuble minifié proposé doit être au sol.');
         facts=captured;globe.setPlanet(next.planet);origin.textContent=next.planet?`Origine : ${captured.originLabel} · ${planetTileLabel(next.planet,captured.originTile)}`:'La géographie persistée doit être adoptée pour préparer un voyage.';
-        const elsewherePeople=next.world.campaignPeople?.filter(p=>p.status==='away')??[];
+        const elsewherePeople=travelElsewhereColonists256(next);
         intro.textContent='Choisissez les personnes et les biens réels. Rassemblement, chargement et sortie se déroulent sur leur carte. Les autres cartes continuent à évoluer.';
-        start.textContent=captured.reform?'Reformer la caravane':'Former la caravane';stayLabel.hidden=!captured.reform;sourceBox.querySelector('h3')!.textContent=captured.reform?'Biens au sol et inventaires réels':'Sources au sol';
+        retreatChoice.hidden=!captured.canRetreat||!!next.group;retreatChoice.textContent=captured.retreat?'Choisir la réforme':'Fuir par le bord';retreatChoice.setAttribute('aria-pressed',String(!!captured.retreat));start.textContent=captured.retreat?'Commencer la fuite':captured.reform?'Reformer la caravane':'Former la caravane';stayLabel.hidden=!captured.reform;sourceBox.querySelector('h3')!.textContent=captured.reform?'Biens au sol et inventaires réels':'Sources au sol';
         if(captured.reform)intro.textContent='Réforme immédiate : les originaux choisis sont transférés ensemble, sans rassemblement ni marche au bord. L’accès au sol est vérifié. Les inventaires non retenus restent déposés dans ce Camp. Aucune provision n’est ajoutée. Sans destination, la caravane reste à l’arrêt.';
+        if(captured.retreat)intro.textContent='Fuite physique : chaque colon autonome part dès sa propre sortie, avec ses passagers et animaux réellement transportés. Les autres restent sur la carte. Les biens au sol exigent un vrai ramassage ; les inventaires tenus restent portés. La menace continue.';
         const entries=next.campaign?.groups??[],knownPeople=[...next.world.pawns,...next.world.campaignPeople??[]],labels=new Map(entries.map(group=>[group.id,travelGroupLabel256(group.state,knownPeople)]));const selectorKey=JSON.stringify([next.campaign?.selectedGroupId,entries.map(group=>[group.id,group.phase,labels.get(group.id)]),next.campaign?.activeMapId]);
         if(groupSelector.dataset.key!==selectorKey){groupSelector.dataset.key=selectorKey;groupSelector.replaceChildren();const fresh=document.createElement('option');fresh.value='';fresh.textContent='Nouvelle caravane depuis cette carte';fresh.disabled=next.campaign?.activeMapId===null;groupSelector.append(fresh);for(const group of entries){const option=document.createElement('option');option.value=String(group.id);option.textContent=labels.get(group.id)!;groupSelector.append(option);}groupSelector.value=next.group?String(next.group.id):'';}
         const returnMap=next.campaign?.maps.find(map=>map.id===next.originMapId);back.textContent=returnMap?`Revenir : ${mapDisplayName(returnMap)}`:'Revenir à la carte de départ';
@@ -389,11 +451,13 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
         if(!unknown&&!stopped)error.hidden=true;renderDraft();reorganization.update();
       }catch(cause){facts=undefined;invalidatePreview();globe.setPlanet(undefined);peopleTable.update([]);animalTable.update([]);bedrollTable.update([]);sourceTable.update([]);manifestTable.update([]);goodsTable.update([]);buyTable.update([]);sellTable.update([]);lossesTable.update([]);animalLossesTable.update([]);tradeBox.hidden=lossesBox.hidden=true;tradeStatus.textContent=buyTotal.textContent=sellTotal.textContent=selectionNotes.textContent=chosen.textContent='';origin.textContent=status.textContent=mass.textContent=stop.textContent=routeText.textContent='';error.hidden=false;error.textContent=`Données de présentation indisponibles : ${cause instanceof Error?cause.message:String(cause)}`;updateLocks();}
     },
-    setVisible(visible){element.hidden=!visible;globe.setVisible(visible);},
+    setVisible(visible){if(!visible){planner?.close();closeDepartureNotice();}element.hidden=!visible;globe.setVisible(visible);},
     setRequestStatus(event){if(event.state==='waiting')waiting.set(event.id,event.message??'Attente du résultat autoritatif.');else waiting.delete(event.id);updateLocks();reorganization.update();},
     setHostBlocked(reason){hostBlocked=reason;updateLocks();reorganization.update();},
     setSimulationStopped(message){stopped=message;updateLocks();reorganization.update();},
-    resetForReplacement(){reorganization.reset();generation++;delete groupSelector.dataset.key;groupSelector.replaceChildren();groupSelector.value='';busy=false;unknown=stopped=undefined;waiting.clear();selected.clear();selectedAnimals.clear();selectedPacks.clear();sources.clear();buys.clear();sells.clear();destination=null;stay.checked=true;shownBuy=shownSell=undefined;snapshot=facts=undefined;pilesById=new Map();invalidatePreview();peopleTable.update([]);animalTable.update([]);bedrollTable.update([]);sourceTable.update([]);manifestTable.update([]);goodsTable.update([]);buyTable.update([]);sellTable.update([]);lossesTable.update([]);animalLossesTable.update([]);globe.setPlanet(undefined);origin.textContent=status.textContent=mass.textContent=stop.textContent=routeText.textContent='';error.hidden=true;updateLocks();},
-    dispose(){disposed=true;generation++;abort.abort();reorganization.dispose();globe.dispose();element.remove();},
+    focusTrade261(){if(!tradeBox.hidden){tradeBox.tabIndex=-1;tradeBox.scrollIntoView({block:'nearest'});tradeBox.focus();}},
+    resetForReplacement(){planner?.reset();reorganization.reset();generation++;delete groupSelector.dataset.key;groupSelector.replaceChildren();groupSelector.value='';busy=false;unknown=stopped=undefined;waiting.clear();selected.clear();selectedAnimals.clear();selectedPacks.clear();sources.clear();buys.clear();sells.clear();destination=null;stay.checked=true;retreatMode=false;shownBuy=shownSell=undefined;snapshot=facts=undefined;pilesById=new Map();invalidatePreview();peopleTable.update([]);animalTable.update([]);bedrollTable.update([]);sourceTable.update([]);manifestTable.update([]);goodsTable.update([]);buyTable.update([]);sellTable.update([]);lossesTable.update([]);animalLossesTable.update([]);globe.setPlanet(undefined);origin.textContent=status.textContent=mass.textContent=stop.textContent=routeText.textContent=provisionsText.textContent='';error.hidden=true;updateLocks();},
+    dispose(){disposed=true;generation++;planner?.dispose();closeDepartureNotice();abort.abort();reorganization.dispose();globe.dispose();element.remove();},
   };
+  return api;
 }

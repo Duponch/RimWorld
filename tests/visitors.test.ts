@@ -35,7 +35,9 @@ test('neutral calendars retain yearly counts/spacing, independent RNG and explic
       expect(a).toEqual(copy);
     }
   }
-  const w=deconstructionCamp();w.tick=12000;enableVisitors(w);expect(w.visitors!.introAt).toBeNull();expect(w.visitors!.traveler.pending[0]).toBeGreaterThan(w.tick);
+  const w=deconstructionCamp();w.tick=12000;enableVisitors(w);
+  if(w.visitors?.profile!=='cassandra-visitors-v1')throw Error('This historical fixture requires its home visitor calendar.');
+  expect(w.visitors.introAt).toBeNull();expect(w.visitors.traveler.pending[0]).toBeGreaterThan(w.tick);
   expect(w.visitors!.visitor.pending[0]).toBeGreaterThan(w.tick);const before=JSON.stringify(w.visitors);enableVisitors(w,true);expect(JSON.stringify(w.visitors)).toBe(before);
   expect(validateVisitors({...w,schemaVersion:87} as unknown as World,87,new Set())).toEqual(['Legacy save contains visitor state.']);
 });

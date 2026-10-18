@@ -58,6 +58,7 @@ export function prepareReformDeparture260(w:World,input:ReformDepartureInput260)
   const active=w.jobs.find(j=>j.id===p.jobId);if(active)releasePawnJob259(jobCopy(active),p.id);
   const d=structuredClone(p),oldMemories=d.roomMemories;
   d.x=origin.x;d.z=origin.z;delete d.motion;d.path=[];d.moveCooldown=0;
+  if(w.schemaVersion===261){delete d.draft;del(p,'draft');}
   releaseAllowedAreaReturn(d);finishRoomRest(w,d);
   const task=d.recreation.task;if((task?.activity==='horseshoes'||task?.activity==='chess'||task?.activity==='watch-television')&&task.phase==='active'&&task.elapsed>0)rememberRoomUse(w,d,'recreation');
   cancelAutomaticCombat(d);cancelHunting(d);clearReleasedPawnAssignments259(d);

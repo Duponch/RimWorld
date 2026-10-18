@@ -42,7 +42,7 @@ export interface WildAnimal extends Cell { hiveThink?:import('./cave-hive-think-
   /** Physical predator hunt; never a reservation of the living prey. */
   predation?:{targetId:number;startedAtCore:number;firstHit:boolean};
   /** Temporary mental hostility, distinct from retaliation and predation. */
-  manhunter?:{startedAtCore:number;rng:number;zeroRestTicks:number;exhausted?:true;targetId?:number;door?:{targetId:number;remaining:number;untilCore:number}};
+  manhunter?:{permanent261?:true;startedAtCore:number;rng:number;zeroRestTicks:number;exhausted?:true;targetId?:number;door?:{targetId:number;remaining:number;untilCore:number}};
   sleepUntilCore?:number;
   path:Cell[]; motion?:TravelSegment; nextDecision:number;
   meal?:{kind:'plant'|'pile';id:number;quantity:number;progress:number};

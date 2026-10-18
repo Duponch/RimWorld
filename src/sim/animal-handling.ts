@@ -1,3 +1,5 @@
+// Scaria remains a real illness even after actual ClearMind.
+
 import {tameHiveInsect256} from './cave-hive-lifecycle-256.ts';
 import {startingPetFourNoTamenessDecay256} from './starting-pet-four-tameness-256.ts';
 import {animalHandlingSkill256,tameWildnessFactor256,animalHandlingFood256,PEN_ANIMALS_256} from './animal-domestic-v256.ts';
@@ -118,6 +120,7 @@ export function startHandling(p:Pawn,proposal:HandlingProposal):void {
 }
 export function tameRefusal(_w:World,a:WildAnimal|undefined):string|undefined {
   return !a||a.state==='dead'?'Animal vivant introuvable.'
+    :a.health?.scaria261?'Cet animal souffre de scaria et ne peut pas être apprivoisé.'
     :a.manhunter?'Cet animal est en rage.'
     :!canTameSpecies(a.species)||_w.schemaVersion<256&&isAnimalSpecies256(a.species)?'Cette espèce n’est pas apprivoisable ici.'
     :a.domestic?'Cet animal appartient déjà à la colonie.':undefined;

@@ -64,7 +64,7 @@ export function advanceGroupPersonal(group:ActiveGroup,c:GroupPersonalContext):G
         ageImmunityFactor:humanAgeImmunityFactor(p.age),...c.deferNeedMeters256?c.clinicalRestFor256?.(p):{}},c.random,conditionFrontier);conditionFrontier?.commit();
       for(const infection of p.health.infections?.cases??[])if(infection.id>=firstInfection)c.notice(p,`${p.name} souffre d’une infection.`);
     }
-    if(c.schemaVersion===259||c.schemaVersion===260)advanceOffmapThermal259(p,group.items,c.tick*10,c.ambientTemperature259!,()=>createMedicalRecord(c.tick));
+    if(c.schemaVersion===259||c.schemaVersion===260||c.schemaVersion===261)advanceOffmapThermal259(p,group.items,c.tick*10,c.ambientTemperature259!,()=>createMedicalRecord(c.tick));
     if(p.health?.death){commitToxicDeath256(p.health,c.random);
         // Terminal validation uses the death tick, including expirations that
         // were still valid at the previous living frontier. No age or XP now.

@@ -1,3 +1,4 @@
+import {mechRaidGroups261} from './mechanical-raid-groups-261.ts';
 import { advanceMechanoidCombat } from './mechanoid-combat.ts';
 import { mechanoidRangedQueries,reconcileMechanoidRanged } from './mechanoid-ranged.ts';
 import { advanceMechanoidRaid } from './mechanoid-raids.ts';
@@ -25,7 +26,7 @@ export function advanceWorldCombat(world:World,contacts?:SpikeTrapWindow):void {
   const shooters=[...people,...(world.mechanoids?.filter(m=>m.melee||m.ranged||m.stun||m.emp||m.stagger)??[]),...(world.wildlife?.animals.filter(a=>a.predation||a.manhunter||a.threat||a.strike||a.retaliation||a.stun||targets.has(a.id)||animalTargets.has(a.id))??[])].sort((a,b)=>a.id-b.id);
   const turrets=world.structures.filter(s=>s.kind==='mini-turret'&&s.turret),explosiveCaskets=world.structures.filter(s=>s.kind==='ancient-cryptosleep-casket'&&s.casketWick);
   if(!shooters.length&&!turrets.length&&!explosiveCaskets.length){const emp=world.structures.some(s=>s.emp)||world.packed.some(p=>p.building.emp);
-    advanceWorldProjectiles(world,contacts||world.raids?.mechActive||emp?core=>{
+    advanceWorldProjectiles(world,contacts||mechRaidGroups261(world).length>0||emp?core=>{
       const changed=contacts?.advance(core)??false,before=world.mechanoids?.length;
       advanceEmp(world,core);advanceMechanoidRaid(world,core);if(before!==world.mechanoids?.length)contacts?.refresh();return changed;
     }:undefined,contacts?()=>contacts.refresh():undefined,disturbance);return;}

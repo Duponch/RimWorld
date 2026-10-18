@@ -1,4 +1,6 @@
 # Ce qui est jouable et ce qui manque
+**V416 — schéma 261, qualification fonctionnelle ciblée :** [Rencontres et sorties de caravane](caravan-encounters-v416.md). Rencontres, commerce/cession, sortie physique et entrée animale acquis par reprises ; mêmes propriétaires, annulation et recharges exactes UI. Adaptation PNJ/animaux déclarée, rouges et limites de confort conservés. Non publié, productionV403 inchangée ; compléments générateur et sites encore ouverts avant démonstration.
+
 
 **V415 — schéma 260, boucle fonctionnelle acquise :** [Reformation depuis un camp](camp-reform-v415.md), propriétaires et dépôts partagés ; ciblés et recharge UI exacte acquis par reprises. Présentation partielle avec un retard de vitesse conservé ; aucun gainFPS, clôture des fondations ou publication, production V403 inchangée.
 

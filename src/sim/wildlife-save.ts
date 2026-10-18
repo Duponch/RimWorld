@@ -143,7 +143,7 @@ export function validateWildlife(w:World,version:number,ids:Set<number>):string[
       if(a.health.death?a.health.tick>w.tick:a.health.tick!==w.tick)errors.push('Invalid animal medical clock.');
       const status=medicalStatus(a.health);if(status==='mobile'?a.state==='dead'||a.state==='downed':a.state!==status)errors.push('Invalid animal medical state.');
     } else if(a.state==='dead'||a.state==='downed')errors.push('Animal stopped without health record.');
-    if((a.state==='dead'||a.state==='downed')&&(a.path.length||a.meal||a.predation||a.manhunter||a.flee||a.threat||a.retaliation||a.strike||a.stun))errors.push('Incapacitated animal retains activity.');
+    if((a.state==='dead'||a.state==='downed')&&(a.path.length||a.meal||a.predation||a.manhunter&&!a.manhunter.permanent261||a.flee||a.threat||a.retaliation||a.strike||a.stun))errors.push('Incapacitated animal retains activity.');
     if(!validStagger(a.stagger,version,w.tick)||a.sleepUntilCore!==undefined&&!int(a.sleepUntilCore,w.tick*10+1,w.tick*10+1000))errors.push('Invalid animal impact delay.');
     if(a.flee!==undefined&&(!object(a.flee)||!keys(a.flee,['danger','until'])||!cell(a.flee.danger)||!int(a.flee.until,w.tick+1,w.tick+600)||a.meal||!['idle','moving'].includes(a.state)))errors.push('Invalid animal flight.');
     if(!validStunShape(a.stun,version,w.tick,version>=178?420:45))errors.push('Invalid animal stun.');

@@ -35,7 +35,7 @@ export function actualCampRemovalAbsCore256(root:CampaignState,map:World):number
  * immediate GC, KeepForever, archive promotion, new ID or source World clone.
  * Unsupported actual owners refuse BEFORE memories/cleanup/removal start. */
 export function prepareCampMapRemoved256(input:CampaignState,map:World,mapId:number,automatic:boolean):CampMapRemoved256 {
- const root=registeredCampaign(input);if((Number(root.schemaVersion)===259||root.schemaVersion===260)&&root.planet?.revision===3)return prepareMapRemoved259(root,map,mapId,automatic);const site=root.worldMaps?.sites.find(s=>s.id===mapId);
+ const root=registeredCampaign(input);if((Number(root.schemaVersion)===259||Number(root.schemaVersion)===260||root.schemaVersion===261)&&root.planet?.revision===3)return prepareMapRemoved259(root,map,mapId,automatic);const site=root.worldMaps?.sites.find(s=>s.id===mapId);
  const no=(reason:string):CampMapRemoved256=>({ok:false,reason});
  const noop:CampMapRemoved256={ok:true,current:()=>true,commit(){}};
  if(!isSchema256Or257(root.schemaVersion)||site?.kind!=='camp')return noop; // literal older/other-map path

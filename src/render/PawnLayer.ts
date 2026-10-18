@@ -846,7 +846,7 @@ export class PawnLayer {
     if(newMap){this.headings.clear();this.approachTransitions.clear();this.departureOffsets.clear();this.workOffsets.clear();this.crouchTransitions.clear();this.shownPoses.clear();this.gait.clear();this.handoffs.clear();}
     const indices=new Map<number,number>(),pawnsById=new Map<number,Pawn>();
     world.pawns.forEach((p,i)=>{indices.set(p.id,i);pawnsById.set(p.id,p);});
-    const humanCarry=groupHumanCarryPairs257(world);
+    const humanCarry=[...groupHumanCarryPairs257(world),...world.pawns.flatMap(p=>p.raid?.kidnap261?.phase==='carry'?[{carrierId:p.id,patientId:p.raid.kidnap261.patientId}]:[])];
     this.rescuePairs=[...world.pawns.flatMap((p,i)=>p.rescue?.phase==='carry'&&indices.has(p.rescue.patientId)?[[i,indices.get(p.rescue.patientId)!] as const]:[]),...humanCarry.filter(pair=>indices.has(pair.carrierId)&&indices.has(pair.patientId)).map(pair=>[indices.get(pair.carrierId)!,indices.get(pair.patientId)!] as const)];
     this.groupHumanCarrierIds=new Set(humanCarry.map(pair=>pair.carrierId));
     this.rescuePairs=[...this.rescuePairs,...world.piles.flatMap(p=>p.humanCorpse&&p.owner.type==='pawn'&&indices.has(p.owner.pawnId)&&indices.has(p.humanCorpse.pawnId)?[[indices.get(p.owner.pawnId)!,indices.get(p.humanCorpse.pawnId)!] as const]:[])];

@@ -20,7 +20,7 @@ import {groupPlayerOwner256} from './group-route-interval-256.ts';
  * no entry receipt or authority; true exit/removal still require worldMaps. */
 function projectedExitClock259(w:World):{absolute:number;mapId:number} {
  const m=w.campaignMap,c=w.climate,p=w.planet;
- if((Number(w.schemaVersion)!==259&&w.schemaVersion!==260)||Object.hasOwn(w,'worldMaps')||Object.hasOwn(w,'worldGroups')||m?.revision!==2||!Number.isSafeInteger(w.tick)||w.tick<0||m.activeMapId===null||!Number.isSafeInteger(m.activeMapId)||m.activeMapId<0||!Number.isSafeInteger(m.calendarOrigin)||p?.revision!==3||c?.revision!==4||w.site?.revision!==3||w.seed!==(w.site.mapSeed>>>0)||c.tileId!==w.site.tileId)throw Error('Missing confirmed local projection clock');
+ if((Number(w.schemaVersion)!==259&&Number(w.schemaVersion)!==260&&w.schemaVersion!==261)||Object.hasOwn(w,'worldMaps')||Object.hasOwn(w,'worldGroups')||m?.revision!==2||!Number.isSafeInteger(w.tick)||w.tick<0||m.activeMapId===null||!Number.isSafeInteger(m.activeMapId)||m.activeMapId<0||!Number.isSafeInteger(m.calendarOrigin)||p?.revision!==3||c?.revision!==4||w.site?.revision!==3||w.seed!==(w.site.mapSeed>>>0)||c.tileId!==w.site.tileId)throw Error('Missing confirmed local projection clock');
  const active=m.maps.find(row=>row.id===m.activeMapId);
  if(!active||active.tile!==c.tileId||!validGeographicSiteClimate256(c,w.schemaVersion,w))throw Error('Projected local climate differs from its actual map/anchor');
  const local=(c.calendarOrigin+w.tick-c.adoptedAt)*10-geographicLongitudeOffsetCore256(c.definition.longitude),home=geographicPlanetClimateDefinition256(p,p.homeTile),shared=(m.calendarOrigin!+w.tick)*10-geographicLongitudeOffsetCore256(home.longitude);
@@ -38,9 +38,9 @@ export function groupExitAuthorityReason259(w:World,members:readonly Pawn[],item
  for(const p of members){if(!validWorldAffiliationForeignKeys259(p,factions)||p.prisoner&&!p.worldAffiliation259)return 'Le captif historique ne possède pas de preuve de faction et d’hôte ; aucun statut n’est reconstruit.';
   if(p.originQuestId!==undefined||p.podRescue)return 'Terminez le mandat local ou de quête avant ce départ mondial.';
   const row:WorldPawnOwner256={kind:'human',actor:p,factionId:(p.worldAffiliation259?p.worldAffiliation259.factionId:factions.playerFactionId),originMapId:mapId,context,clockCore:w.tick*10,enteredAtAbsCore:abs,mode:'active',items:structuredClone(items.filter(i=>'pawnId'in i.owner&&i.owner.pawnId===p.id)),packed:structuredClone(w.packed.filter(i=>i.owner.type==='inventory'&&i.owner.pawnId===p.id))};
-  suspendWorldPawnGoods259(row,w.tick*10);const boundary=worldPawnActiveBoundary256(row,259);if(boundary)return boundary;
+  suspendWorldPawnGoods259(row,w.tick*10);const boundary=worldPawnActiveBoundary256(row,w.schemaVersion);if(boundary)return boundary;
  }
- for(const a of animals){if(!a.growthTracker)return 'L’animal historique ne possède pas de vrai propriétaire prospectif complet.';const row:WorldPawnOwner256={kind:'animal',actor:a,factionId:a.domestic?factions.playerFactionId:null,originMapId:mapId,context,clockCore:w.tick*10,enteredAtAbsCore:abs,mode:'active',items:structuredClone(items.filter(i=>'pawnId'in i.owner&&i.owner.pawnId===a.id)),packed:structuredClone(w.packed.filter(i=>i.owner.type==='inventory'&&i.owner.pawnId===a.id))};suspendWorldPawnGoods259(row,w.tick*10);const boundary=worldPawnActiveBoundary256(row,259);if(boundary)return boundary;}
+ for(const a of animals){if(!a.growthTracker)return 'L’animal historique ne possède pas de vrai propriétaire prospectif complet.';const row:WorldPawnOwner256={kind:'animal',actor:a,factionId:a.domestic?factions.playerFactionId:null,originMapId:mapId,context,clockCore:w.tick*10,enteredAtAbsCore:abs,mode:'active',items:structuredClone(items.filter(i=>'pawnId'in i.owner&&i.owner.pawnId===a.id)),packed:structuredClone(w.packed.filter(i=>i.owner.type==='inventory'&&i.owner.pawnId===a.id))};suspendWorldPawnGoods259(row,w.tick*10);const boundary=worldPawnActiveBoundary256(row,w.schemaVersion);if(boundary)return boundary;}
 }
 /** TRUE local exit. Entry effects are prepared without creating/removing a
  * synthetic WorldPawn registry membership. CaravanMember never auto-tends,
@@ -53,7 +53,7 @@ export function captureCaravanEntry259(w:World,g:AwayGroup):number|undefined {
  for(const p of [...g.members,...g.animalOwners?.members??[]]){
   const common={originMapId:mapId,context,clockCore:w.tick*10,enteredAtAbsCore:abs,mode:'active' as const,items:[],packed:[]};
   const row:WorldPawnOwner256='species'in p?{...common,kind:'animal',actor:p,factionId:p.domestic?factions.playerFactionId:null}:{...common,kind:'human',actor:p,factionId:(p.worldAffiliation259?p.worldAffiliation259.factionId:factions.playerFactionId)};
-  const effects=prepareWorldPawnEntryEffects256(row,w.tick*10,factions,{float(){throw Error('CaravanMember must not draw faction RNG');}},{version:259,situation:'CaravanMember'});if(!effects.ok)throw Error(effects.reason);
+  const effects=prepareWorldPawnEntryEffects256(row,w.tick*10,factions,{float(){throw Error('CaravanMember must not draw faction RNG');}},{version:w.schemaVersion,situation:'CaravanMember'});if(!effects.ok)throw Error(effects.reason);
   // For the supported CaravanMember contract all owned fields stay literal.
   if(JSON.stringify(effects.row.actor)!==JSON.stringify(p))throw Error('CaravanMember entry unexpectedly changed its true original');
  }
@@ -74,7 +74,7 @@ export function transferOwnerlessCaravan259(w:World,g:AwayGroup,animalPersonalTi
   const row:WorldPawnOwner256='species'in actor?{...common,kind:'animal',actor,factionId:actor.domestic?factions.playerFactionId:null}:{...common,kind:'human',actor,factionId:actor.worldAffiliation259!.factionId};
   if(state.owners.some(r=>r.actor===actor||r.actor.id===actor.id))throw Error('Surviving original already owned by WorldPawns');
   // Seal only at commit below; preparation must not mutate a real held pile.
-  const preview={...row,items:structuredClone(items),packed:structuredClone(packed)};suspendWorldPawnGoods259(preview,now);const boundary=worldPawnActiveBoundary256(preview,259,now);if(boundary)throw Error(boundary);rows.push(row);
+  const preview={...row,items:structuredClone(items),packed:structuredClone(packed)};suspendWorldPawnGoods259(preview,now);const boundary=worldPawnActiveBoundary256(preview,w.schemaVersion,now);if(boundary)throw Error(boundary);rows.push(row);
  };
  for(const p of g.members){if(p.state==='dead'||p.health?.death)throw Error('Terminal human not removed before exclusive survivor transfer');if(!p.worldAffiliation259||!validWorldAffiliationForeignKeys259(p,factions))throw Error('Lost actual survivor faction/host');add(p,g.reorganization?.memberOrigins.find(o=>o.pawnId===p.id),w.tick);}
  for(const a of g.animalOwners?.members??[]){if(a.state==='dead'||a.health?.death)throw Error('Terminal animal not retired before exclusive survivor transfer');add(a,g.animalOwners!.origins.find(o=>o.pawnId===a.id),animalPersonalTick);}

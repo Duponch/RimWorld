@@ -15,7 +15,7 @@ import type {MaterialPile} from '../src/sim/types.ts';
 /** Write-set unit fixture from the existing prepared registry. The deliberately
  * minimal private next record is NOT a saved caravan, full Reform admission,
  * played Camp retirement, or a migration proof. Full integration remains QA. */
-function fixture(){const root=registryCamp();root.schemaVersion=260;const map=registeredMap(root,0)!,p=map.pawns[0]!;
+function fixture(){const root=registryCamp();(root as {schemaVersion:number}).schemaVersion=260;const map=registeredMap(root,0)!,p=map.pawns[0]!;
  const next={id:root.planet!.nextGroupId,members:[p],items:[]} as unknown as AwayGroup,record={originMapId:0,localMapId:null,context:{seed:map.seed,width:map.width,height:map.height},state:next};
  const input:ReformDepartureInput260={people:[p],animals:[],captured:new Set(),drops:new Map(),inventoryDrops:new Map(),transfers:[],intrinsic:[],packs:[],packUpdates:[],next,record,nextId:root.nextId,mapId:0};
  return {root,map,p,next,record,input};}

@@ -19,11 +19,16 @@ const plants=new Set<ItemId>(['rice','corn','potato','berries','agave-fruit','ra
 /** Positive Core categories only, no corpse-as-stack or inappropriate drug. */
 export function caravanAnimalFood256(a:WildAnimal,p:MaterialPile,tick:number):boolean {
  if(p.kind!=='food'||!ITEM_DEFINITIONS[p.item].nutrition||ticksUntilRot(p,tick)<=0)return false;
- const exact=animalItemDiet256(a,p.item);if(exact!==undefined)return exact;
- if(p.item==='kibble')return true;if(p.item==='hay')return !animalSpecies(a.species).predator;
- return animalSpecies(a.species).predator?isAnimalMeat(p.item)||p.item.endsWith('-meal')||p.item==='pemmican':plants.has(p.item)||p.item.endsWith('-meal')||p.item==='pemmican'||p.item==='milk';
+ return caravanAnimalFoodEver256(a,p.item);
 }
-export function caravanAnimalFoodScore256(p:MaterialPile):number {
+/** Definition-only diet shared by the preview; freshness belongs to the actual
+ * stack check above, independently of future rot duration. */
+export function caravanAnimalFoodEver256(a:WildAnimal,item:ItemId):boolean {
+ const exact=animalItemDiet256(a,item);if(exact!==undefined)return exact;
+ if(item==='kibble')return true;if(item==='hay')return !animalSpecies(a.species).predator;
+ return animalSpecies(a.species).predator?isAnimalMeat(item)||item.endsWith('-meal')||item==='pemmican':plants.has(item)||item.endsWith('-meal')||item==='pemmican'||item==='milk';
+}
+export function caravanAnimalFoodScore256(p:Pick<MaterialPile,'item'>):number {
  const item=p.item,base=item==='kibble'||item==='hay'?5:isAnimalMeat(item)?4:plants.has(item)&&item!=='berries'?3:eggSpeciesForItem256(item)?3:item==='berries'||item==='milk'?2:item==='pemmican'||item==='survival-meal'||item==='simple-meal'||item==='nutrient-paste-meal'?1:0;
  return Math.fround(base+Math.min(Math.fround(ITEM_DEFINITIONS[item].nutrition/10000),.999));
 }

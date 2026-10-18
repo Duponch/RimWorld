@@ -132,5 +132,7 @@ export function observeTrade(w:World,s:TradePlayerState):void {
   }
 }
 export function tradeJourneyComplete(s:TradePlayerState):boolean {return ['adopted','visitorSeen','contact','exchanged','stored','merchantDeparted'].every(k=>s.milestones[k]!==undefined)&&s.soldRevolvers>0&&s.boughtMedicine>0;}
-export function tradePlayerSummary(w:World,s:TradePlayerState){return {tick:w.tick,elapsedDays:(w.tick-s.startTick)/6000,milestones:{...s.milestones},traderId:s.traderId,soldRevolvers:s.soldRevolvers,boughtMedicine:s.boughtMedicine,storedMedicine:s.storedMedicine,minimumLiving:s.minimumLiving,
+export function tradePlayerSummary(w:World,s:TradePlayerState){
+  if(w.visitors&&w.visitors.profile!=='cassandra-visitors-v1')throw Error('This home-trade scenario requires its home visitor calendar.');
+  return {tick:w.tick,elapsedDays:(w.tick-s.startTick)/6000,milestones:{...s.milestones},traderId:s.traderId,soldRevolvers:s.soldRevolvers,boughtMedicine:s.boughtMedicine,storedMedicine:s.storedMedicine,minimumLiving:s.minimumLiving,
   people:living(w).map(p=>({id:p.id,hunger:p.hunger,rest:p.rest,state:p.state})),visitors:w.visitors?{groups:w.visitors.groups.length,departures:w.visitors.departed.length,nextVisitor:w.visitors.visitor.pending[0],nextTraveler:w.visitors.traveler.pending[0]}:null,trade:w.trade??null};}

@@ -1,3 +1,4 @@
+import {mechRaidGroup261} from './mechanical-raid-groups-261.ts';
 import {validMechanicalWorldFactionField259,validMechanicalWorldFaction259} from './mechanoid-world-faction-259.ts';
 import {mechanicalOrder256,mechanicalDuty256,validTempleMechField256,validateTempleMechGroups256} from './temple-mech-duty-256.ts';
 import {validRetainedCorpseDamage256} from './retained-corpse-damage-256.ts';
@@ -93,7 +94,7 @@ export function validateMechanoids(w:World,version:number=w.schemaVersion,ids:Nu
     if(stopped?m.state!==status:m.state==='dead'||m.state==='downed')errors.push('Inconsistent mechanoid medical state.');
     if(stopped&&(m.path.length||m.melee?.order||mechanicalOrder256(m)?.goal||m.stun))errors.push('Incapacitated mechanoid retains an intention.');
     if(m.motion&&m.motion.end>w.tick&&!['moving','downed','dead'].includes(m.state))errors.push('Mechanoid edge has no movement owner.');
-    const group=w.raids?.mechActive;
+    const group=mechRaidGroup261(w,m.raid?.group);
     if(m.raid&&(stopped?m.raid.group>(w.raids?.serial??0):!group||group.id!==m.raid.group||!group.members.includes(m.id)))errors.push('Mechanoid raid has no owner.');
     const o=m.melee?.order,s=m.melee?.strike;
     if(o){

@@ -1,0 +1,11 @@
+import {raidGroup261,raidKidnapSource261} from './temp-map-raids-261.ts';
+import type {World} from './types.ts';
+const plain=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype&&Reflect.ownKeys(v).every(k=>{const d=Object.getOwnPropertyDescriptor(v,k)!;return typeof k==='string'&&d.enumerable&&Object.hasOwn(d,'value');});
+const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
+export function validKidnapLord261(value:unknown,w:World,startedAt:number,members?:readonly number[],atTick=w.tick):boolean {
+ if(!plain(value)||Reflect.ownKeys(value).length!==7||!['revision','pawnCycleIndex','lastPawnHarmCore','phase','enteredAtCore','kidnapDutyIds','exitJobs'].every(k=>Object.hasOwn(value,k)))return false;
+ const ids=value.kidnapDutyIds,jobs=value.exitJobs;
+ if(!(value.revision===1&&int(value.pawnCycleIndex,0,w.nextId-1)&&(value.lastPawnHarmCore===-99999||int(value.lastPawnHarmCore,startedAt*10,atTick*10))&&['assault','cover','take'].includes(String(value.phase))&&int(value.enteredAtCore,startedAt*10,atTick*10)&&(value.phase!=='assault'||value.enteredAtCore===startedAt*10)&&Array.isArray(ids)&&Reflect.ownKeys(ids).length===ids.length+1&&ids.length<w.nextId&&new Set(ids).size===ids.length&&ids.every((id,i)=>Object.hasOwn(ids,i)&&Object.hasOwn(Object.getOwnPropertyDescriptor(ids,String(i))!,'value')&&int(id,1,w.nextId-1)&&(!members||members.includes(id)))&&(value.phase!=='assault'||ids.length===0)))return false;
+ return Array.isArray(jobs)&&jobs.length<=ids.length&&Reflect.ownKeys(jobs).length===jobs.length+1&&new Set(jobs.map(j=>plain(j)?j.pawnId:undefined)).size===jobs.length&&jobs.every((job,i)=>Object.hasOwn(jobs,i)&&Object.hasOwn(Object.getOwnPropertyDescriptor(jobs,String(i))!,'value')&&plain(job)&&Reflect.ownKeys(job).length===2&&ids.includes(job.pawnId)&&int(job.untilCore,startedAt*10,atTick*10+200));
+}
+export function kidnapDutyExiting261(w:World,id:number):boolean {const p=w.pawns.find(p=>p.id===id),s=raidKidnapSource261(raidGroup261(w,p?.raid?.group));return !!s?.kidnapLord261?.exitJobs.some(j=>j.pawnId===id);}

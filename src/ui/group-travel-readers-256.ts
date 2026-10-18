@@ -12,6 +12,16 @@ import type {GroupState} from '../sim/group-state';
 import type {GroupPanelSnapshot} from './group-panel';
 export type GroupAnimalChoice256={animal:WildAnimal;ok:boolean;reason?:string};
 export type GroupBedrollChoice256={pack:PackedFurniture;ok:boolean;reason?:string};
+/** This label describes actual living colonists spawned on other maps. The
+ * social campaignPeople registry also knows foreigners and sealed casket
+ * contents; relationship status alone never proves map/player membership.
+ * Reuse the confirmed mapChoices colonist projection, without new transport. */
+export function travelElsewhereColonists256(s:GroupPanelSnapshot):readonly Pick<Pawn,'id'|'name'>[] {
+ const present=new Set(s.world.pawns.map(p=>p.id));
+ if(s.group)for(const id of 'members'in s.group?s.group.members.map(p=>p.id):s.group.memberIds)present.add(id);
+ const currentMap=s.originMapId??s.campaign?.activeMapId;
+ return (s.campaign?.maps??[]).filter(map=>map.id!==currentMap).flatMap(map=>map.abandonConsequences.pawns).filter(p=>!present.has(p.id));
+}
 export const travelAnimalLabel256=(a:WildAnimal):string=>`${animalSpecies(a.species).label} · ${a.sex==='female'?'femelle':'mâle'} · ${{baby:'jeune',juvenile:'juvénile',adult:'adulte'}[animalLifeStage(a)]}`;
 export const travelActorLabel256=(a:Pawn|WildAnimal):string=>'species'in a?travelAnimalLabel256(a):a.name;
 export const travelAnimalNeeds256=(a:WildAnimal):string=>`Nutrition ${(a.food).toLocaleString('fr-FR',{maximumFractionDigits:2})} / ${animalNutritionMax(a).toLocaleString('fr-FR',{maximumFractionDigits:2})} · repos ${Math.round(a.rest*100)} % · ${a.state==='downed'?'À terre':a.state==='dead'?'Décédé':a.state==='sleeping'?'Endormi':'Vivant'}`;

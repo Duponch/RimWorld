@@ -1,3 +1,4 @@
+import {validScariaRecord261} from './animal-scaria-261.ts';
 import {toxicCorpseRotAllowance256} from './toxic-victim-256.ts';
 import {validAnimalAgeCoreRemainder256} from './initial-animal-age-owner-256.ts';
 import {validAnimalClinicalOwner256} from './animal-clinical-age-v256.ts';
@@ -12,8 +13,9 @@ const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(v)
 /** Corpses may keep ageing beyond either rotting threshold. The body remains an
  * object; time changes its usability, not its existence or its owner. */
 export function validCorpseRot(v:unknown,tick:number,death:number,medical?:unknown):boolean {
+  const scaria=object(medical)&&object(medical.death)&&medical.death.tick===death&&validScariaRecord261(medical,261,true)&&object(medical.scaria261)&&medical.scaria261.deathRot===true?15000:0;
   return object(v)&&Object.keys(v).every(k=>['progress','atTick','rate'].includes(k))&&int(v.atTick,death,tick)
-    &&typeof v.progress==='number'&&Number.isFinite(v.progress)&&v.progress>=0&&v.progress<=Number(v.atTick)-death+toxicCorpseRotAllowance256(medical,death)
+    &&typeof v.progress==='number'&&Number.isFinite(v.progress)&&v.progress>=0&&v.progress<=Number(v.atTick)-death+Math.max(scaria,toxicCorpseRotAllowance256(medical,death))
     &&(v.rate===undefined||typeof v.rate==='number'&&Number.isFinite(v.rate)&&v.rate>=0&&v.rate<1);
 }
 export function validCorpseShape(p:Record<string,unknown>,version:number):boolean {

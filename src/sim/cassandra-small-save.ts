@@ -1,3 +1,4 @@
+import {tempMapModern261,tempMapAdoptedAtCore261} from './temp-map-incidents-261.ts';
 import { SMALL_ACTIVE_TICKS,SMALL_CHECK_INTERVAL,SMALL_CYCLE_START,SMALL_CYCLE_TICKS,
   SMALL_INTRO_TICK,SMALL_REFIRE_TICKS,smallCycleAt,smallNextCheck } from './cassandra-small.ts';
 import type { World } from './types.ts';
@@ -16,22 +17,23 @@ function validIncidentTick(tick:number,adoptedAt:number):boolean {
 
 /** Validate the source before neutral 182→183 migration too. No hidden future
  * state, pending past date or impossible count can survive a save/snapshot. */
-export function validSmallIncidents(value:unknown,version:number,world:Pick<World,'tick'|'gameProfile'>):boolean {
+export function validSmallIncidents(value:unknown,version:number,world:Pick<World,'tick'|'gameProfile'>&Partial<World>):boolean {
+  const scheduleTick=tempMapModern261(world as World)?tempMapAdoptedAtCore261(world as World)!/10:world.tick;
   if(value===undefined)return true;
   if(version<183||!world.gameProfile||!object(value)||
     !keys(value,['profile','adoptedAt','rng','nextCheck','cycle','pending','introDone','opportunities','incidents','lastIncidentTick'])||
     value.profile!=='cassandra-small-v1'||!integer(value.adoptedAt,0,world.tick)||!integer(value.rng,1,0xffffffff)||
-    !integer(value.nextCheck,SMALL_CYCLE_START)||value.nextCheck!==smallNextCheck(world.tick)||
-    !integer(value.cycle,-1)||value.cycle!==smallCycleAt(world.tick)||
+    !integer(value.nextCheck,SMALL_CYCLE_START)||value.nextCheck!==smallNextCheck(scheduleTick)||
+    !integer(value.cycle,-1)||value.cycle!==smallCycleAt(scheduleTick)||
     !Array.isArray(value.pending)||value.pending.length>1||
-    typeof value.introDone!=='boolean'||value.introDone!==(world.tick>=SMALL_INTRO_TICK)||
+    typeof value.introDone!=='boolean'||value.introDone!==(scheduleTick>=SMALL_INTRO_TICK)||
     !integer(value.opportunities)||!integer(value.incidents)||value.incidents>value.opportunities)return false;
   const cycle=value.cycle,opened=cycle-smallCycleAt(value.adoptedAt),
     intro=value.introDone&&value.adoptedAt<SMALL_INTRO_TICK?1:0;
   if(value.opportunities+value.pending.length>opened+intro)return false;
   if(value.pending.length){
     const time=value.pending[0],start=SMALL_CYCLE_START+cycle*SMALL_CYCLE_TICKS;
-    if(cycle<0||!integer(time,Math.max(start,world.tick+1),start+SMALL_ACTIVE_TICKS-SMALL_CHECK_INTERVAL)||
+    if(cycle<0||!integer(time,Math.max(start,scheduleTick+1),start+SMALL_ACTIVE_TICKS-SMALL_CHECK_INTERVAL)||
       !validIncidentTick(time,value.adoptedAt))return false;
   }
   if(value.lastIncidentTick!==undefined){

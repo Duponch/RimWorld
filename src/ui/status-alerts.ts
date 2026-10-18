@@ -1,3 +1,4 @@
+import {mechRaidGroups261} from '../sim/mechanical-raid-groups-261';
 import {knownPosition256,knownBuilding256,knownNutrition256,knownPile256} from './exploration-readers-256';
 import type {MapIncident,CampaignSummary} from '../sim/world-map-state';
 import {mapDisplayName} from './map-registry-adapter';
@@ -86,7 +87,7 @@ export function readStatusAlerts(world:World,food:FoodReadability=captureFoodRea
   const rebels=world.pawns.filter(p=>prisonBreakActive(p)&&activeThreat(p)&&knownPosition256(world,p));
   if(rebels.length)add('prison-break',`Révolte de prison · ${rebels.length} détenu${rebels.length>1?'s':''} en fuite`,people(world,rebels));
   const machines=world.mechanoids?.filter(m=>m.state!=='dead'&&m.state!=='downed'&&knownPosition256(world,m))??[];
-  if(machines.length)add('mechanical-threat',`${machines.length} machine(s) hostiles${world.raids?.mechActive?.phase==='staging'?' · regroupement avant assaut':world.raids?.mechActive?.phase==='assault'?' · assaut mécanique':''}`,actors(machines));
+  if(machines.length)add('mechanical-threat',`${machines.length} machine(s) hostiles${mechRaidGroups261(world).some(g=>g.phase==='assault')?' · assaut mécanique':mechRaidGroups261(world).some(g=>g.phase==='staging')?' · regroupement avant assaut':''}`,actors(machines));
   for(const structure of world.structures)if(structure.turret?.wick&&knownBuilding256(world,structure)){
     const view=miniTurretView(world,structure)!;
     add(`turret-wick:${structure.id}`,`Mini-tourelle (${structure.x}, ${structure.z}) · mèche engagée · danger 3,9 · ${turretSeconds(view.wick!.remainingCore)}`,[objectNotificationTarget('structure',structure.id,structure)]);

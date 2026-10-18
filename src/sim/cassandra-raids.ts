@@ -1,3 +1,5 @@
+import {mechRaidGroups261} from './mechanical-raid-groups-261.ts';
+import {tempMapAdoptedAtCore261} from './temp-map-incidents-261.ts';
 import { enableMechanoidRaids } from './mechanoid-raids.ts';
 import { raidRandom,type RaidCalendar } from './raid-state.ts';
 import { TICKS_PER_DAY,type World } from './types.ts';
@@ -46,7 +48,7 @@ export function consumeCassandraOpportunity(world:World,state:RaidCalendar):bool
     agenda.pending.shift();
     if(!agenda.pending.length){agenda.cycle++;prepareCycle(agenda);}
   }
-  if(!state.active&&!state.mechActive)state.nextCheck=agenda.pending[0]!;
+  if(!state.active&&!mechRaidGroups261(world).length&&!state.extraActive261?.length)state.nextCheck=agenda.pending[0]!;
   return due;
 }
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
@@ -63,7 +65,7 @@ export function validCassandraAgenda(value:unknown,tick:number,version=241):bool
 
 /** Actual Camp -> settlement conversion. Keep the complete real attack owner. */
 export function convertCampRaidOwner260(w:World):void {
- const s=w.raids;if(w.schemaVersion<260||s?.profile!=='camp-pressure-v1')return;
- const agenda:CassandraRaidAgenda={rng:((w.seed^0xc455a82)>>>0)||1,cycle:Math.max(0,Math.floor((w.tick-CASSANDRA_CYCLE_START)/CASSANDRA_CYCLE_TICKS)+1),pending:[]};prepareCycle(agenda);
- s.profile='cassandra-raids-v1';s.cassandra=agenda;s.nextCheck=s.active||s.mechActive?null:agenda.pending[0]!;
+ const s=w.raids,modern=w.schemaVersion===261&&tempMapAdoptedAtCore261(w)!==undefined;if(w.schemaVersion<260||!s||s.profile!=='camp-pressure-v1'&&!modern)return;
+ const agenda:CassandraRaidAgenda={rng:modern&&s.cassandra?s.cassandra.rng:((w.seed^0xc455a82)>>>0)||1,cycle:Math.max(0,Math.floor((w.tick-CASSANDRA_CYCLE_START)/CASSANDRA_CYCLE_TICKS)+1),pending:[]};prepareCycle(agenda);
+ s.profile='cassandra-raids-v1';s.cassandra=agenda;s.nextCheck=s.active||mechRaidGroups261(w).length||s.extraActive261?.length?null:agenda.pending[0]!;
 }

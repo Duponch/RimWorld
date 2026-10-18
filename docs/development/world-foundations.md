@@ -26,6 +26,8 @@ Une exigence est fermée seulement avec règle primaire datée, implémentation 
 
 ## Étape actuelle
 
+**V416 — schéma 261, qualification fonctionnelle ciblée :** [Rencontres et sorties de caravane](../gameplay/caravan-encounters-v416.md). Rencontres, commerce/cession, sortie physique et entrée animale acquis par reprises ; mêmes propriétaires, annulation et recharges exactes UI. Adaptation PNJ/animaux déclarée, rouges et limites de confort conservés. Non publié, productionV403 inchangée ; compléments générateur et sites encore ouverts avant démonstration.
+
 [V415](../gameplay/camp-reform-v415.md), schéma260 : reformation immédiate depuis un camp, plan atomique commun des dépôts et pression prospective des nouveaux camps acquis par reprises.70cas/dixfichiers, vraie arête737 puis retrait ciblé, UI en pause736 et deux exports/recharge complets exacts. La présentation conserve un retard de vitesse179,7ms au minage ; l’abattage seul est acquis ensuite. La suite complète n’est pas annoncée verte, ni le confort amélioré. Rencontres, sortie physique d’une bataille sans victoire imposée et compléments générateur restent à fermer avant la démonstration.
 
 [V414](../gameplay/caravan-owners-v414.md), schéma 259, est qualifié par reprises : captifs et propriétaires terminaux, caissons et souvenirs conservés, retraits exclusifs, arrivée3408 puis vraie installation UI250²/export-recharge exacts avec les originaux. La formation/annulation au1807 et le dossier du captif sont contrôlés par reprise depuis ses exports réels. Le générateur, le départ et la capture ne sont pas rejoués pour contourner les refus. Les rouges restent conservés ; aucune clôture ni publication.

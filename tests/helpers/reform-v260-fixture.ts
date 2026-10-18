@@ -21,7 +21,7 @@ export const REFORM415_NOTICE='Reprise exacte V415 du vrai départ494 SHAfac771c
 export const sha415=(s:string)=>createHash('sha256').update(s).digest('hex');
 export function drain415<Y,T>(iterator:Generator<Y,T,void>):T {let s=iterator.next();while(!s.done)s=iterator.next();return s.value;}
 export function require415(root:CampaignState):asserts root is World {
- if(root.schemaVersion!==260||!('pawns'in root)||root.planet?.revision!==3||!root.worldMaps||!root.worldGroups||!root.worldPawns||!root.worldFactions)throw Error('True260 registry, faction and WorldPawns authorities required');
+ if(Number(root.schemaVersion)!==260||!('pawns'in root)||root.planet?.revision!==3||!root.worldMaps||!root.worldGroups||!root.worldPawns||!root.worldFactions)throw Error('True260 registry, faction and WorldPawns authorities required');
  const errors=validateWorld(root);if(errors.length)throw Error('Prepared415 invalid: '+errors.join('\n'));
 }
 export function checkpoint415(root:CampaignState,label:string){

@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 260 as const;
+export const SCHEMA_VERSION = 261 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -308,7 +308,7 @@ export type AreaAction = 'build-bridge' | 'remove-bridge' | 'snow-clear' | 'remo
 export interface StorageSettings extends StorageConditions { items?:Partial<Record<ItemId,boolean>>; filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell; targetZoneId?:number; floor?: import('./flooring.ts').FloorKind }
 export interface BuildLineCommand { type: 'build-line'; kind: import('./construction-line.ts').LineBuildKind; from: Cell; to: Cell; material?: import('./construction-materials.ts').ConstructionMaterial }
-export type Command = import('./material-permission-256.ts').MaterialPermissionCommand256 | import('./ancient-casket-state-256.ts').AncientCasketCommand256 | import('./local-road-prop-ownership-256.ts').ClaimRoadPropCommand256 | import('./animal-egg-permission-v256.ts').EggPermissionCommand256 | import('./world-map-state.ts').WorldMapCommand | import('./secondary-site-state.ts').SecondarySiteCommand | import('./tree-transfer-state.ts').TreeCommand | import('./orbital-state.ts').OrbitalCommand | import('./group-state.ts').GroupCommand | {type:'enable-mech-raids'} | import('./commercial-state.ts').CommercialCommand | import('./surgery-state.ts').SurgeryCommand | import('./quest-state.ts').QuestCommand | import('./caravan-state.ts').ScoutCommand | import('./domestic-state.ts').DomesticCommand | import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
+export type Command = import('./caravan-arrival-261.ts').CaravanArrivalCommand261 | import('./caravan-commands-261.ts').CaravanCommand261 | import('./material-permission-256.ts').MaterialPermissionCommand256 | import('./ancient-casket-state-256.ts').AncientCasketCommand256 | import('./local-road-prop-ownership-256.ts').ClaimRoadPropCommand256 | import('./animal-egg-permission-v256.ts').EggPermissionCommand256 | import('./world-map-state.ts').WorldMapCommand | import('./secondary-site-state.ts').SecondarySiteCommand | import('./tree-transfer-state.ts').TreeCommand | import('./orbital-state.ts').OrbitalCommand | import('./group-state.ts').GroupCommand | {type:'enable-mech-raids'} | import('./commercial-state.ts').CommercialCommand | import('./surgery-state.ts').SurgeryCommand | import('./quest-state.ts').QuestCommand | import('./caravan-state.ts').ScoutCommand | import('./domestic-state.ts').DomesticCommand | import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
   | import('./auto-slaughter-state.ts').AutoSlaughterCommand
   | {type:'spike-trap-auto-rebuild';structureId:number;on:boolean}
   | {type:'shelf-policy';structureId:number;settings:StorageSettings}

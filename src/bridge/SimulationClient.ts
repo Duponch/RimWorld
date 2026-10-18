@@ -53,6 +53,9 @@ export class SimulationClient {
   private fault?: SimulationFault;
   private resyncing = false;
   private readonly pending = new Map<number, PendingRequest>();
+  private tradeArrivals261:import('./protocol').CaravanTradeArrivalMessage261[]=[];
+  onCaravanTradeArrival:(message:import('./protocol').CaravanTradeArrivalMessage261)=>void=()=>{};
+  onCaravanEncounterProgress:(message:import('./protocol').CaravanEncounterProgressMessage261)=>void=()=>{};
   onCampProgress: (message:import('./protocol').CampEntryProgressMessage256|undefined)=>void = ()=>{};
   get hasWorldCreationPreparation():boolean{return [...this.pending.values()].some(p=>p.type==='world-draft-generate'||p.type==='world-draft-start');}
   get hasCampPreparation():boolean{return [...this.pending.values()].some(p=>p.campGroupId!==undefined);}
@@ -80,6 +83,7 @@ export class SimulationClient {
 
   protected deliverUrgentThreats(receipt: UrgentThreatReceipt): void { this.onUrgentThreats(receipt); }
 
+  private deliverTradeArrivals261():void {const adopted=this.adopted;if(!adopted)return;const rows=this.tradeArrivals261;this.tradeArrivals261=[];for(const row of rows){if(row.checkpoint.epoch<adopted.epoch)continue;if(row.checkpoint.epoch===adopted.epoch&&row.checkpoint.revision<=adopted.revision){try{this.onCaravanTradeArrival(row);}catch(error){this.onError(String(error));}}else this.tradeArrivals261.push(row);}}
   private startWorker() {
     this.worker = new Worker(new URL('./simulation.worker.ts', import.meta.url), { type: 'module' });
     this.stopped = false;
@@ -113,6 +117,8 @@ export class SimulationClient {
         this.onError(data.reason);
         return;
       }
+      if(data.type==='caravan-trade-arrival'){if([data.groupId,data.settlementId,data.factionId,data.postId,data.checkpoint?.epoch,data.checkpoint?.revision].every(n=>Number.isSafeInteger(n)&&n>=1)&&this.tradeArrivals261.length<32){this.tradeArrivals261.push(data);this.deliverTradeArrivals261();}return;}
+      if(data.type==='caravan-encounter-progress'){if(Number.isSafeInteger(data.groupId)&&data.groupId>=1&&typeof data.phase==='string'&&data.phase.length<=80&&(data.reason===undefined||typeof data.reason==='string'&&data.reason.length<=2048)){try{this.onCaravanEncounterProgress({...data});}catch(error){this.onError(String(error));}}return;}
       if(data.type==='camp-entry-progress'){
         const pending=this.pending.get(data.id),p=data.progress;
         if(pending?.campGroupId===data.groupId&&Number.isSafeInteger(data.groupId)&&data.groupId>0&&p&&typeof p.phase==='string'&&p.phase.length<=80&&(p.completed===undefined&&p.total===undefined||Number.isSafeInteger(p.completed)&&Number.isSafeInteger(p.total)&&p.completed!>=0&&p.total!>=p.completed!)){
@@ -121,7 +127,7 @@ export class SimulationClient {
       }
       if(data.type==='campaign-only'){
         let result;try{if(!this.urgentThreats.accepts(data.urgentThreats,data.summary.tick,data.speed,data.summary.planet?planetTileCount(data.summary.planet):undefined))result={status:'resync' as const,reason:'Métadonnées de menace illisibles.'};else result=this.snapshots.adoptCampaignOnly(data,view=>this.urgentThreats.accepts(data.urgentThreats,view.tick,data.speed,view.planet?planetTileCount(view.planet):undefined));}catch{result={status:'resync' as const,reason:'Campagne sans carte illisible.'};}
-        if(result.status==='applied'){const urgent=this.urgentThreats.commit(data.urgentThreats,data.summary.tick);this.adopted={epoch:data.epoch,revision:data.revision};this.activeMap=false;this.confirmedCampaign=result.summary;for(const pending of this.pending.values())if((pending.type==='init'||pending.type==='load'||pending.type==='world-draft-start')&&result.replaced)pending.replacementEpoch=data.epoch;try{this.deliverCampaignOnly(result.summary,data.stepMs,data.speed,result.replaced);if(urgent)this.deliverUrgentThreats(urgent);}catch(error){this.onError(String(error));}for(const [id,pending]of this.pending)this.finishReply(id,pending);}else if(result.status==='resync'&&!this.resyncing){this.resyncing=true;void this.request({type:'resync'}).catch(error=>this.onError(String(error))).finally(()=>{this.resyncing=false;});}return;
+        if(result.status==='applied'){const urgent=this.urgentThreats.commit(data.urgentThreats,data.summary.tick);this.adopted={epoch:data.epoch,revision:data.revision};this.activeMap=false;this.confirmedCampaign=result.summary;for(const pending of this.pending.values())if((pending.type==='init'||pending.type==='load'||pending.type==='world-draft-start')&&result.replaced)pending.replacementEpoch=data.epoch;try{this.deliverCampaignOnly(result.summary,data.stepMs,data.speed,result.replaced);this.deliverTradeArrivals261();if(urgent)this.deliverUrgentThreats(urgent);}catch(error){this.onError(String(error));}for(const [id,pending]of this.pending)this.finishReply(id,pending);}else if(result.status==='resync'&&!this.resyncing){this.resyncing=true;void this.request({type:'resync'}).catch(error=>this.onError(String(error))).finally(()=>{this.resyncing=false;});}return;
       }
       if (data.type === 'snapshot') {
         let result;
@@ -139,7 +145,7 @@ export class SimulationClient {
           for (const pending of this.pending.values()) if (pending.type === 'init' || pending.type === 'load' || pending.type === 'world-draft-start') {
             if (result.replaced) pending.replacementEpoch = data.epoch;
           }
-          try { this.deliverSnapshot(result.world, data.stepMs, data.speed, result.replaced, data.motion); }
+          try { this.deliverSnapshot(result.world, data.stepMs, data.speed, result.replaced, data.motion);this.deliverTradeArrivals261(); }
           catch (error) { this.onError(`Présentation interrompue : ${error instanceof Error ? error.message : String(error)}`); }
           try { if (result.replaced || data.audioCues?.length) this.deliverAudioCues(data.audioCues ?? [], result.world, result.replaced); }
           catch (error) { this.onError(`Audio interrompu : ${error instanceof Error ? error.message : String(error)}`); }

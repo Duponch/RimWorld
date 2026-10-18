@@ -1,0 +1,3 @@
+import {defineConfig} from '@playwright/test';
+// ROOT's separately started frozen261 server; no implicit build/start/retry.
+export default defineConfig({testDir:'./tests/integration',testMatch:'travel-v261-native.spec.ts',fullyParallel:false,workers:1,retries:0,timeout:240_000,expect:{timeout:15_000},reporter:[['list']],outputDir:process.env.TRAVEL261_OUTPUT??'tmp/world-foundations/travel261/native',use:{baseURL:process.env.TRAVEL261_BASE_URL??'http://127.0.0.1:5173',viewport:{width:1440,height:1000},channel:'chrome',headless:true,trace:'retain-on-failure',screenshot:'only-on-failure',launchOptions:{args:['--enable-unsafe-webgpu']}}});

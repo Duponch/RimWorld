@@ -11,6 +11,7 @@ import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {planVanishGeneratedAncient256} from './generated-ancient-vanish-256.ts';
 import {prepareWorldAnimalGeneration256} from './world-pawn-generation-256.ts';
 import {actualCampWorldPawnSituation256,actualCampWorldPawnWeight256} from './camp-world-pawn-authority-256.ts';
+import {provisionalCampWorldPawnWeight261} from './camp-world-pawn-authority-261.ts';
 import {validateGeneratedLocalMap256} from './serialization.ts';
 import {adoptFluIncidents} from './flu-incidents.ts';
 import {enableCassandraRaids} from './cassandra-raids.ts';
@@ -67,8 +68,8 @@ export interface CampGenerationSource256 {readonly source:string;readonly atTick
 export interface CampMapInputs256 {
  /** Plain captured shared fields, no World and no live forwarding writers.
   * Arrays/registries remain their original read-only references in generation. */
- readonly campaign:Pick<World,CampaignField> & {readonly schemaVersion:256|257|258|259|260;readonly planet:GeographicPlanetState;readonly worldFactions:NonNullable<World['worldFactions']>};
- readonly tile:number;readonly size:200;readonly calendarOrigin:number;
+ readonly campaign:Pick<World,CampaignField> & {readonly schemaVersion:256|257|258|259|260|261;readonly planet:GeographicPlanetState;readonly worldFactions:NonNullable<World['worldFactions']>};
+ readonly tile:number;readonly size:number;readonly calendarOrigin:number;
  readonly daysPassedSinceSettle:number;
  readonly provenance:CampGenerationSource256;
  readonly init?:CapturedGeographicMapInit256;
@@ -109,7 +110,7 @@ function preflightArrivalMap257(input:ArrivalMapInputs257,settlement:boolean):vo
  const c=input?.campaign;
  if(!c||typeof c!=='object'||Array.isArray(c))throw Error('Missing captured campaign data');
  for(const key of Reflect.ownKeys(c)){const d=Object.getOwnPropertyDescriptor(c,key)!;if(typeof key!=='string'||!(CAMPAIGN_FIELDS as readonly string[]).includes(key)||!Object.hasOwn(d,'value')||!d.enumerable)throw Error('Camp shared input must be captured data, never a World/accessor');}
- if(!isSchema256Or257(c.schemaVersion)||input.size!==(settlement?250:200)||!Number.isSafeInteger(c.tick)||c.tick<0||!Number.isSafeInteger(c.tick*10)||!Number.isSafeInteger(c.nextId)||c.nextId<1||!Number.isSafeInteger(c.rng)||c.rng<1||c.rng>0xffffffff||!Number.isSafeInteger(input.calendarOrigin)||!sourced(input.provenance,input))throw Error('Missing captured Camp256 ownership/clock frontier');
+ if(!isSchema256Or257(c.schemaVersion)||!(settlement?input.size===250:input.size===200||c.schemaVersion===261&&Number.isInteger(input.size)&&input.size>=75&&input.size<=110)||!Number.isSafeInteger(c.tick)||c.tick<0||!Number.isSafeInteger(c.tick*10)||!Number.isSafeInteger(c.nextId)||c.nextId<1||!Number.isSafeInteger(c.rng)||c.rng<1||c.rng>0xffffffff||!Number.isSafeInteger(input.calendarOrigin)||!sourced(input.provenance,input))throw Error('Missing captured Camp256 ownership/clock frontier');
  for(const key of ['schemaVersion','tick','rng','nextId','planet','worldFactions','foodPolicies','nextFoodPolicyId','apparelPolicies','nextApparelPolicyId','foodRules','restRules'] as const)if(!Object.hasOwn(c,key))throw Error('Captured campaign shared authority is incomplete');
  if(c.planet.revision!==3||!c.worldFactions||c.worldFactions.generatedAt>c.tick)throw Error('Missing actual geographic/faction authority');
  if(!c.worldPawns||c.worldPawns.atCore!==c.tick*10)throw Error('Actual Camp1200 WorldPawns owner is absent or stale');
@@ -149,7 +150,7 @@ function* assembleArrivalMap257(input:ArrivalMapInputs257,settlement:boolean):Ge
   if(!settlement)w.expeditionSite={tile:input.tile,createdAt:c.tick,calendarOffset:w.climate.calendarOrigin-input.calendarOrigin-c.tick};
   // Same prospective local disease-calendar producer as existing new sites.
   // It does not age people, spend the campaign RNG or replay past checks.
-  if(w.gameProfile)adoptFluIncidents(w);if(!settlement&&w.schemaVersion===260)initializeCampRaidOwner260(w);
+  if(w.gameProfile)adoptFluIncidents(w);if(!settlement&&(Number(w.schemaVersion)===260||w.schemaVersion===261))initializeCampRaidOwner260(w);
   const stream=(seedPart:number)=>new WorldGenerationRandom(localGenerationStepSeed(description.mapSeed,seedPart,0));
   steps.push({phase,random:composition.random.postTerrain});
   phase='roads390';yield {phase};const roads=populateGeographicRoads256(w,usedRects,input.angular);if(settlement&&roads.edges.cells!==null)working.edgeContext={width:size,height:size,edgeCells:[...roads.edges.cells]};steps.push({phase});
@@ -170,7 +171,7 @@ function* assembleArrivalMap257(input:ArrivalMapInputs257,settlement:boolean):Ge
   phase='snow1150';yield {phase};const snow=stream(INITIAL_SNOW_SEED_PART_256);initializeGeographicInitialSnow256(w,snow);steps.push({phase,random:snow.state});
   phase='animals1200';yield {phase};const animalRandom=stream(INITIAL_ANIMALS_SEED_PART_256);
   if(!c.worldPawns)throw Error('Actual Camp1200 WorldPawns owner is absent');
-  const worldAnimalGeneration=prepareWorldAnimalGeneration256(c.worldPawns,{tick:w.tick,nextId:w.nextId,random:animalRandom,situation:actualCampWorldPawnSituation256,weight:actualCampWorldPawnWeight256});
+  const worldAnimalGeneration=prepareWorldAnimalGeneration256(c.worldPawns,{tick:w.tick,nextId:w.nextId,random:animalRandom,situation:actualCampWorldPawnSituation256,weight:c.schemaVersion===261?provisionalCampWorldPawnWeight261:actualCampWorldPawnWeight256});
   const animals=produceInitialAnimals256(w,{random:animalRandom,pawnKindOrder:input.animals.pawnKindOrder,unspawnedAnimals:input.animals.unspawned,closewalk:captureRandomClosewalk256(w),worldGeneration:worldAnimalGeneration});
   if(animals.status==='blocked')return {status:'blocked',phase,reason:animals.reason,animal:animals};
   w.wildlife=w.wildlife?{...w.wildlife,animals:[...w.wildlife.animals,...animals.originals]}:{profile:GEOGRAPHIC_FAUNA_PROFILE_256,rng:input.animals.runtimeRng,animals:animals.originals,eatenPlants:0,eatenNutrition:0,eatenItems:0};w.nextId=animals.nextId;steps.push({phase,random:animalRandom.state});
@@ -178,7 +179,7 @@ function* assembleArrivalMap257(input:ArrivalMapInputs257,settlement:boolean):Ge
   if(settlement)wakeUnfoggedTempleMechs256(w);
   phase='flowPostFog1600';yield {phase};let riverFlow:ReturnType<typeof generateLocalRiverFlow256>|null=null;
   if(composition.plans.init.river||composition.plans.river){if(!composition.plans.init.river||!composition.plans.river)throw Error('Actual river Init/node pair is incomplete');riverFlow=generateLocalRiverFlow256({plan:composition.plans.init.river,node:composition.plans.river,isRiver:cell=>{const t=w.tiles[cell]!;return !t.floor&&!t.bridge&&isNaturalTerrain256(t.terrain)&&NATURAL_TERRAIN_DEFINITIONS_256[t.terrain].river;}});w.riverWater=packRiverWater256(riverFlow.values,w.width,w.height);}steps.push({phase});
-  if(settlement){adoptWind(w);ensureFireState(w);if((Number(w.schemaVersion)===259||w.schemaVersion===260)&&w.gameProfile){enableCassandraRaids(w,true);adoptMiscIncidents(w);enableVisitors(w,false,true);adoptColonyEconomy(w);}}
+  if(settlement){adoptWind(w);ensureFireState(w);if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||w.schemaVersion===261)&&w.gameProfile){enableCassandraRaids(w,true);adoptMiscIncidents(w);enableVisitors(w,false,true);adoptColonyEconomy(w);}}
   if(w.pawns.length||w.startingArrival||w.jobs.length||w.stockpiles.length||w.growingZones.length||w.planet!==c.planet||w.worldFactions!==c.worldFactions||w.tick!==c.tick||w.rng!==c.rng)throw Error('Local generation acquired a starting scenario, foreign authority or advanced clock');
   // Fresh physical owners only; foreign faction leaders/shared knowledge are
   // references outside this map. Identity holes from true Vanish stay holes.

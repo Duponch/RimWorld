@@ -19,7 +19,7 @@ const originalHolderLinks=(value:object)=>{const seal=sealRemovalOriginal259(val
 /** Envelope caller already performed its complete data-only tree admission. */
 export function validHeldCasketEnvelope259(state:WorldPawnsState256,version:number,nowCore:number,nextId:number):boolean{
  const d=Object.getOwnPropertyDescriptor(state,'heldCaskets259');if(!d)return !('heldCaskets259'in state);
- if((version!==259&&version!==260)||!d.enumerable||!Object.hasOwn(d,'value')||!dense(d.value,nextId))return false;
+ if((version!==259&&version!==260&&version!==261)||!d.enumerable||!Object.hasOwn(d,'value')||!dense(d.value,nextId))return false;
  return d.value.every(r=>exact(r,['originMapId','registeredAtCore','enteredAtAbsCore','context','casket'])&&int(r.originMapId)&&int(r.registeredAtCore,0,nowCore)&&r.registeredAtCore%10===0&&int(r.enteredAtAbsCore)&&!!r.context&&typeof r.context==='object'&&validAncientCasketBuilding256(r.casket,version,{...(r.context as WorldGroupRecord['context']),nextId},r.registeredAtCore/10));
 }
 type ValidationRoot=Readonly<Pick<World,'schemaVersion'|'tick'|'nextId'|'planet'|'worldMaps'|'worldFactions'|'campaignMap'>>&Partial<Readonly<Pick<World,'worldGroups'>>>;
@@ -29,7 +29,7 @@ const pending=new WeakMap<HeldWorldCasket259,()=>boolean>();
 export function validateHeldWorldCaskets259(state:WorldPawnsState256,root:ValidationRoot,ids:NumericMembershipSink,projection?:CampaignMapPresentation|CampaignSummary):string[]{
  const errors:string[]=[],humanIds=new Set<number>();
  for(const e of state.heldCaskets259??[]){
-  if(Number(root.schemaVersion)!==259&&root.schemaVersion!==260){errors.push('Future retained casket holder');continue;}
+  if(Number(root.schemaVersion)!==259&&Number(root.schemaVersion)!==260&&root.schemaVersion!==261){errors.push('Future retained casket holder');continue;}
   const retired=root.worldMaps?.retired.find(m=>m.id===e.originMapId),proof=projection?.worldPawnOrigins?.find(m=>m.mapId===e.originMapId);
   const removedAt=retired?.removedAt??proof?.removedAt;
   if(removedAt===undefined?!pending.get(e)?.():removedAt*10!==e.registeredAtCore)errors.push('Retained casket lacks its actual map-removal receipt');
