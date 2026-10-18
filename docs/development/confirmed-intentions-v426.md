@@ -1,6 +1,6 @@
 # Réactivité des intentions confirmées — V426
 
-18 octobre 2026. **Lot qualifié par reprise du pilote, prêt pour publication.** Suite de [V425](simulation-presentation-v425.md). Le retour humain concerne la réactivité générale : chemin d’un colon mobilisé, construction et zones apparaissent tard, en plus des ralentissements de caméra. Le schéma 263 reste inchangé. Aucune nouvelle mécanique ni cible de200images/s atteinte n’est annoncée.
+18 octobre 2026. **Lot qualifié par reprise du pilote et publié.** Suite de [V425](simulation-presentation-v425.md). Le retour humain concerne la réactivité générale : chemin d’un colon mobilisé, construction et zones apparaissent tard, en plus des ralentissements de caméra. Le schéma 263 reste inchangé. Aucune nouvelle mécanique ni cible de200images/s atteinte n’est annoncée.
 
 ## Résultat de la comparaison native
 
@@ -59,3 +59,9 @@ Le chemin récent doit conserver une origine compatible avec la pose effectiveme
 - Reprise `npm run test:presentation` : **PASS157,490s**, `v426-confirmed-intents-presentation-reprise-2026-10-18T18-59-00.075Z-31280`. Minage puis abattage45s chacun, alternances×6/×1/×3, même oracle de contacts et déplacements : aucun saut brut, saut de transition, excès de trajet continu ou occupation du rocher détecté. Les compteurs de premières arêtes futures ne sont pas assimilés à des pauses visibles. Sources1733 toujours exactes après contrôle. Pas de nouvelle campagne longue ni de suite complète.
 
 Ces observations sont une occurrence native par action, avec histoires de simulation réelles et charge hôte non entièrement neutralisée. Elles ne sont pas une distribution de latence ni une garantie de confort général. Le mouvement physique, les coûts de publication/admission, les longues images pendant la caméra et l’objectif200images/s restent ouverts.
+
+## Publication
+
+Produit c81afea67628b89f775eab2fbaf5a1b2dd96014b, poussé sur origin/main. Build Pages vérifié avant publication : 70 fichiers de catalogue/sauvegardes exacts, 67 entrées et 68 contenus historiques conservés ; aucun laboratoire dans le paquet. Reçu : tmp/elsewhere-pages/v426-package-ear2tu.
+
+Déploiement e754d3db sur [Elsewhere](https://elsewhere-cq7.pages.dev), également vérifié à son [adresse immuable](https://e754d3db.elsewhere-cq7.pages.dev). Les 136 réponses HTTPS sélectionnées sont exactes en octets et MIME, sans erreur ; reçu tmp/elsewhere-pages/v426-http-wTU6mt. Le contrôle HTTPS établit la disponibilité du paquet, pas un nouveau résultat de jouabilité ou de FPS. Les sauvegardes personnelles et references_UI restent intactes.
