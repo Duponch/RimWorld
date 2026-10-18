@@ -1,6 +1,6 @@
 # V429 — performances dans plusieurs contextes
 
-Lot qualifié par reprises, prêt pour publication ; aucune publication V429 à ce stade. La V428 publiée est `8ca17603`, déploiement `e4e82954`. Schéma263 inchangé. Les gains×1 sont acquis sur trois références ; le confort général et les200FPS stables restent ouverts, particulièrement au départ neuf×6. Aucun contenu jouable nouveau ni réduction du réglage graphique.
+Lot publié : produit `05ecbd8c79167190126114c447d20bbdd9949de4`, déploiement Cloudflare `5368f3c9`. Schéma263 inchangé. Les gains×1 sont acquis sur trois références ; le confort général et les200FPS stables restent ouverts, particulièrement au départ neuf×6. Aucun contenu jouable nouveau ni réduction du réglage graphique. La référence précédente est V428 `8ca17603`, déploiement `e4e82954`.
 
 ## Références
 
@@ -159,3 +159,9 @@ Décision : livrer les gains×1 acquis sans attendre une refonte supplémentaire
 Dernière présentation acquise en156,934s (`v429-natural-pass-presentation`) : minage10746images, abattage10685images, pauses et vitesses réelles, zéro saut, excès de déplacement continu ou occupation solide. Minage : p99 de4,3ms, maximum25,1ms ; abattage : p99 de8,3ms, maximum33,3ms. Le gel1741sources est encore exact après ce contrôle. Cette scène ciblée qualifie ces chronologies ; elle ne remplace pas les résultats rouges de la matrice naturelle×6. Les suites ciblées, reprises d'oracles, revue, compilation, présentation et mesures sont acquises avec les limites nommées ; aucune suite exhaustive ni campagne naturelle longue supplémentaire n'est revendiquée. Contrôle documentaire acquis en12,959s (`v429-docs`).
 
 Le banc dense des trois sauvegardes a échoué avant ses mesures : sa préparation avançait18ticks sans les transitions de simulation et la sérialisation stricte a correctement refusé des échéances végétales expirées. Le rouge v429-dense-edge-bench-2026-10-18T21-59-57.684Z-25264 est conservé. Sa réparation privée distingue désormais la sauvegarde initiale stricte de la requête numérique préparée ; reprise différée, aucun gain de ce banc qualifié.
+
+### Publication
+
+Le produit `05ecbd8c79167190126114c447d20bbdd9949de4` est poussé sur `origin/main`. Compilation Pages acquise en17,467s, inspection du paquet en1,738s :539fichiers, deux Workers compilés, aucun laboratoire ou marqueur de diagnostic privé. Les70fichiers publics de catalogue/sauvegardes sont identiques au paquet, avec67fiches et68charges historiques conservées. Reçu : `tmp/elsewhere-pages/v429-package-YMyile`.
+
+Cloudflare publie le déploiement [5368f3c9](https://5368f3c9.elsewhere-cq7.pages.dev) en17,356s ; [l'adresse publique](https://elsewhere-cq7.pages.dev) est actualisée. Les138réponses HTTPS contrôlées sur les deux origines correspondent exactement aux octets/MIME attendus, en10,218s, sans erreur (`tmp/elsewhere-pages/v429-http-Lz3hCv/report.json`). Ces réponses établissent la disponibilité du paquet, pas un nouveau résultat FPS ni un nouveau parcours navigateur en production. L'avertissement Wrangler de dépôt non propre concernait le dossier utilisateur non suivi `references_UI/`, laissé intact et absent du paquet ; les sources produit étaient commitées et qualifiées. Aucun paquet QA n'a été publié.
