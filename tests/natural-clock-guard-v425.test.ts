@@ -32,8 +32,9 @@ function fixture(revision:1|2|4,mature=false):World {
   return world;
 }
 
-test.each(['growth','leafless'] as const)('unsupported climate skips every ID read during new seed (%s)',kind=>{
+test.each(['growth','leafless'] as const)('unsupported clock skips every ID read during new seed (%s)',kind=>{
   const world=fixture(4,kind==='leafless'),candidate=new NaturalResourcePresentation(),state=internals(candidate);
+  world.tick=2**40; // Outside the existing exact-integer forecast proof, including on climate4.
   if(kind==='leafless'){const plant=world.resources[0]!;plant.plantLife={...createPlantLife(world,plant),leaflessAt:0};}
   state.readHistorical(world,true,true);
   expect(state.timedSlots.length).toBeGreaterThan(0); // Already built by the historical capture.
@@ -56,7 +57,7 @@ test('mature climate 4 retains its ID lane without a predictive agenda',()=>{
   expect(state.idAgenda).toBe(false);expect(initialize).not.toHaveBeenCalled();
 });
 
-test.each([1,2] as const)('supported climate %s still initializes the predictive ID agenda',revision=>{
+test.each([1,2,4] as const)('supported climate %s initializes the predictive ID agenda',revision=>{
   const world=fixture(revision),candidate=new NaturalResourcePresentation(),reference=new Reference();
   const initialize=vi.spyOn(NaturalIdPresentationEvents.prototype,'initialize');
   expect(candidate.read(world,true,true)).toStrictEqual(reference.read(world,true,true));
@@ -66,7 +67,8 @@ test.each([1,2] as const)('supported climate %s still initializes the predictive
 
 test('unsupported to supported retry preserves public views, dirty oracle and old captures',()=>{
   const candidate=new NaturalResourcePresentation(),reference=new Reference(),dirty=new NaturalDirtyContractOracle();
-  const first=fixture(4),supported=structuredClone(first);supported.climate=fixture(1).climate;supported.tick=32;
+  const first=fixture(4);first.climate!.calendarOrigin=2**40;
+  const supported=structuredClone(first);supported.climate=fixture(4).climate;supported.tick=32;
   const changed=structuredClone(supported);changed.tick=64;changed.resources[0]!.growth=.76;
   changed.resources[0]!.plantLife={...createPlantLife(changed,changed.resources[0]!),leaflessAt:64};
   const removed=structuredClone(changed);removed.tick=6065;removed.resources.splice(1,1);

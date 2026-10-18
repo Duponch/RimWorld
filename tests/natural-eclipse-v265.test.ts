@@ -1,5 +1,7 @@
 import {expect,test} from 'vitest';
 import {SnapshotDecoder,SnapshotEncoder} from '../src/bridge/snapshots';
+import {ResidentPresentationAssembler} from '../src/bridge/resident-presentation-assembler';
+import {CLIMATE_DEFINITIONS} from '../src/sim/site-climate';
 import {NaturalPresentationEvents,NaturalIdPresentationEvents,composeFinalResourceStructure,type NaturalIdSource} from '../src/render/natural-presentation-events';
 import {NaturalResourcePresentation} from '../src/render/NaturalResourcePresentation';
 import {NaturalResourcePresentationV225 as Reference} from './scenarios/natural-presentation-baseline-v225';
@@ -14,8 +16,11 @@ import type {World} from '../src/sim/types';
 
 /** Confirmed transport/query fixture; controlled metadata exercises context
  * invalidation independently of Resource edits, not storyteller selection. */
-function fixture():World {
+function fixture(geographic=false):World {
   const world=createWorld(265,32,32);world.tick=30100;world.gameProfile=crashlandedProfile();
+  // Query-only climate4 counterpart. No generated globe, RAW save admission or
+  // played storyteller event is claimed by this numerical transport fixture.
+  if(geographic)world.climate={revision:4,tileId:0,irregular262:true,adoptedAt:0,calendarOrigin:1500,definition:{...CLIMATE_DEFINITIONS['temperate-reference']}};
   world.tiles=world.tiles.map(()=>({terrain:'grass'}));world.resources=[
     {id:world.nextId++,kind:'tree',species:'oak',x:4,z:4,amount:10,growth:.1,growthTick:30100,growthThermalFactor:1},
   ];
@@ -38,7 +43,7 @@ function install(world:World):void {
   weather.eclipse={start:30100,end:34600};
 }
 function transport(world:World) {
-  const encoder=new SnapshotEncoder({structureDelta:true}),decoder=new SnapshotDecoder();
+  const encoder=new SnapshotEncoder({structureDelta:true}),decoder=world.climate?.revision===4?new ResidentPresentationAssembler():new SnapshotDecoder();
   return ()=>{
     const packet=structuredClone(encoder.encode(world,0,6)),expected=structuredClone(campaignPresentation(world));
     const result=decoder.adopt(packet);
@@ -48,8 +53,8 @@ function transport(world:World) {
 }
 const sources=(world:World):ReadonlyMap<number,NaturalIdSource>=>new Map(world.resources.map((resource,order)=>[resource.id,{resource,order,natural:true}]));
 
-test('eclipse context start invalidates ordinal and ID forecasts without resource edits',()=>{
-  const world=fixture(),send=transport(world),before=send(),ordinal=new NaturalPresentationEvents(),ids=new NaturalIdPresentationEvents();
+test.each([false,true])('eclipse context start invalidates ordinal and ID forecasts without resource edits (geographic=%s)',geographic=>{
+  const world=fixture(geographic),send=transport(world),before=send(),ordinal=new NaturalPresentationEvents(),ids=new NaturalIdPresentationEvents();
   expect(ordinal.initialize(before,[0],true)).toBeDefined();expect(ids.initialize(before,sources(before),ordinal)).toBeDefined();
   install(world);const after=send();expect(after.resources[0]).toBe(before.resources[0]);
   expect(ordinal.copyIdForecasts(after)).toBeUndefined();
@@ -58,16 +63,16 @@ test('eclipse context start invalidates ordinal and ID forecasts without resourc
   expect(ids.read(before,after,sources(after),structure)).toBeUndefined();
 });
 
-test('natural forecast certification stops at eclipse end even when the next shape is later',()=>{
-  const world=fixture();install(world);setTick(world,34595);
+test.each([false,true])('natural forecast certification stops at eclipse end even when the next shape is later (geographic=%s)',geographic=>{
+  const world=fixture(geographic);install(world);setTick(world,34595);
   const current=transport(world)(),events=new NaturalPresentationEvents();
   expect(events.initialize(current,[0],true)).toBeDefined();
   const forecast=events.copyIdForecasts(current)!.get(current.resources[0]!.id)!;
   expect(forecast.deadline).toBeDefined();expect(forecast.deadline!).toBeLessThanOrEqual(34600);
 });
 
-test('interval removal invalidates both agendas and copied seeds without depending on changed anchors',()=>{
-  const world=fixture();install(world);setTick(world,34595);
+test.each([false,true])('interval removal invalidates both agendas and copied seeds without depending on changed anchors (geographic=%s)',geographic=>{
+  const world=fixture(geographic);install(world);setTick(world,34595);
   const send=transport(world),before=send(),ordinal=new NaturalPresentationEvents(),ids=new NaturalIdPresentationEvents();
   expect(ordinal.initialize(before,[0],true)).toBeDefined();expect(ids.initialize(before,sources(before),ordinal)).toBeDefined();
   setTick(world,34600);delete world.miscIncidents!.weather!.eclipse;const after=send();
@@ -76,14 +81,14 @@ test('interval removal invalidates both agendas and copied seeds without dependi
   expect(ids.read(before,after,sources(after),composeFinalResourceStructure(before,after)!)).toBeUndefined();
 });
 
-test('changed end cannot reuse a seed from an otherwise identical event and tick',()=>{
-  const world=fixture();install(world);const send=transport(world),before=send(),events=new NaturalPresentationEvents();
+test.each([false,true])('changed end cannot reuse a seed from an otherwise identical event and tick (geographic=%s)',geographic=>{
+  const world=fixture(geographic);install(world);const send=transport(world),before=send(),events=new NaturalPresentationEvents();
   expect(events.initialize(before,[0],true)).toBeDefined();world.miscIncidents!.weather!.eclipse!.end++;
   const after=send();expect(events.copyIdForecasts(after)).toBeUndefined();expect(events.read(before,after)).toBeUndefined();
 });
 
-test('real eclipse checkpoints and transitions preserve exhaustive presentation and held snapshots',()=>{
-  const world=fixture(),send=transport(world),actual=new NaturalResourcePresentation(),reference=new Reference();
+test.each([false,true])('real eclipse checkpoints and transitions preserve exhaustive presentation and held snapshots (geographic=%s)',geographic=>{
+  const world=fixture(geographic),send=transport(world),actual=new NaturalResourcePresentation(),reference=new Reference();
   const held:Array<{world:World;copy:World}>=[];
   const read=(reset=false):void=>{
     const current=send(),before=structuredClone(current),expected=reference.read(current,reset,true),value=actual.read(current,reset,true);

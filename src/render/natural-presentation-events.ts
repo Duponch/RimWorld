@@ -3,7 +3,10 @@ import {readSnapshotResourceStructure} from '../bridge/snapshot-changes';
 import {FLORA_DEFINITIONS} from '../sim/biome-flora';
 import {plantLeafless} from '../sim/plant-life';
 import {harvestable,isPlant,plantFertility,PLANT_DEFINITIONS} from '../sim/plants';
-import {isRoofed,roofIndex} from '../sim/roof-rules';
+import {isRoofed,roofIndex,roofCoverage} from '../sim/roof-rules';
+import {isCavePlant256} from '../sim/cave-flora-256';
+import {plantCompletelyIgnoresFertility256,plantSubstrateAllowed256} from '../sim/plant-substrate-256';
+import {naturalPlantSubstrate256} from '../sim/natural-terrain-runtime-256';
 import {climateTick,CLIMATE_DEFINITIONS,TICKS_PER_YEAR,validClimateDefinition,type ClimateProfile} from '../sim/site-climate';
 import {TICKS_PER_DAY,type Resource,type World} from '../sim/types';
 import {floraSize,isResidentCrop} from './flora-presentation';
@@ -14,21 +17,35 @@ import {floraSize,isResidentCrop} from './flora-presentation';
 const CLOCK_LIMIT=2**40;
 const CERTIFICATION_TICKS=32;
 type Clock={tick:number;civil:number;width:number;height:number;schema:number;
+  climateRevision:number|undefined;tileId:number|undefined;irregular:boolean;
   gameProfilePresent:boolean;profile:ClimateProfile|undefined;
   latitude:number|undefined;longitude:number|undefined;meanTemperature:number|undefined;rainfall:number|undefined;amplitude:number|undefined;
   adoptedAt:number|undefined;calendarOrigin:number|undefined;naturalBoundary:number;artificialBoundary:number;
   eclipseStart:number|undefined;eclipseEnd:number|undefined};
 type Inputs=Pick<Resource,'id'|'kind'|'species'|'x'|'z'|'growth'|'growthTick'|'growthLight'|'growthThermalFactor'>
-  &{leaflessAt:number|undefined;fertility:number;roofed:boolean;blighted:boolean};
+  &{leaflessAt:number|undefined;fertility:number;roofed:boolean;blighted:boolean;
+    cave:boolean;ignoreFertility:boolean;substrateAllowed:boolean|undefined};
 export type NaturalObservation=Readonly<{size:number;ripe:boolean;leafless:boolean}>;
 type Forecast={input:Inputs;plannedAt:number;deadline:number|undefined;observation:NaturalObservation};
 export type NaturalEventRead={readonly indices:readonly number[];readonly changes:SnapshotChanges;readonly observations:ReadonlyMap<number,NaturalObservation>};
 
+/** Geography4 stores its actual surface values, including a float32-derived
+ * amplitude. The revision2 latitude/amplitude equation is not its contract.
+ * This is only a finite numerical input capture, never geography/save validation. */
+function geographicClockDefinition(value:unknown):value is import('../sim/site-climate').ClimateDefinition {
+  if(!value||typeof value!=='object'||Array.isArray(value))return false;
+  const keys=['meanTemperature','amplitude','rainfall','latitude','longitude'];
+  if(Reflect.ownKeys(value).length!==keys.length)return false;
+  for(const key of keys){const field=Object.getOwnPropertyDescriptor(value,key);if(!field||field.enumerable!==true||!Object.hasOwn(field,'value')||typeof field.value!=='number'||!Number.isFinite(field.value))return false;}
+  return true;
+}
 function captureClock(world:World):Clock|undefined {
   const {tick,width,height,schemaVersion:schema,gameProfile,climate}=world;
   if(!Number.isSafeInteger(tick)||tick<0||tick>CLOCK_LIMIT-TICKS_PER_YEAR
     ||!Number.isSafeInteger(width)||!Number.isSafeInteger(height)||width<1||height<1)return;
-  if(climate&&(!(climate.revision===1?Object.hasOwn(CLIMATE_DEFINITIONS,climate.profile):climate.revision===2&&validClimateDefinition(climate.definition))
+  if(climate&&(!(climate.revision===1?Object.hasOwn(CLIMATE_DEFINITIONS,climate.profile)
+    :climate.revision===2?validClimateDefinition(climate.definition):climate.revision===4&&geographicClockDefinition(climate.definition)
+      &&Number.isSafeInteger(climate.tileId)&&climate.tileId>=0&&(climate.irregular262===undefined||climate.irregular262===true))
     ||!Number.isSafeInteger(climate.adoptedAt)||climate.adoptedAt<0||climate.adoptedAt>tick
     ||!Number.isSafeInteger(climate.calendarOrigin)||climate.calendarOrigin<0||climate.calendarOrigin>CLOCK_LIMIT))return;
   const civil=climateTick(world);
@@ -52,8 +69,9 @@ function captureClock(world:World):Clock|undefined {
   }
   // climateTick observes only the truthiness of GameProfile. Its cloned object
   // is never retained and a fresh packet object cannot invalidate this clock.
-  const definition=climate?.revision===2?climate.definition:undefined;
-  return {tick,civil,width,height,schema,gameProfilePresent:!!gameProfile,profile:climate?.revision===1?climate.profile:undefined,
+  const definition=climate&&(climate.revision===2||climate.revision===4)?climate.definition:undefined;
+  return {tick,civil,width,height,schema,climateRevision:climate?.revision,tileId:climate?.revision===4?climate.tileId:undefined,
+    irregular:climate?.revision===4&&climate.irregular262===true,gameProfilePresent:!!gameProfile,profile:climate?.revision===1?climate.profile:undefined,
     latitude:definition?.latitude,longitude:definition?.longitude,meanTemperature:definition?.meanTemperature,rainfall:definition?.rainfall,amplitude:definition?.amplitude,
     adoptedAt:climate?.adoptedAt,calendarOrigin:climate?.calendarOrigin,naturalBoundary,artificialBoundary,
     eclipseStart:eclipse?.start,eclipseEnd:eclipse?.end};
@@ -65,20 +83,22 @@ export function supportsNaturalPresentationClock(world:World):boolean {return ca
 
 function sameContext(a:Clock,b:Clock):boolean {
   return a.width===b.width&&a.height===b.height&&a.schema===b.schema&&a.gameProfilePresent===b.gameProfilePresent
+    &&a.climateRevision===b.climateRevision&&a.tileId===b.tileId&&a.irregular===b.irregular
     &&a.profile===b.profile&&a.adoptedAt===b.adoptedAt&&a.calendarOrigin===b.calendarOrigin
     &&a.latitude===b.latitude&&a.longitude===b.longitude&&a.meanTemperature===b.meanTemperature&&a.rainfall===b.rainfall&&a.amplitude===b.amplitude
     &&a.eclipseStart===b.eclipseStart&&a.eclipseEnd===b.eclipseEnd;
 }
 function roofCells(world:World):readonly number[]|undefined {
-  const cells=world.roofing?.constructed;
-  if(cells===undefined)return [];
-  if(!Array.isArray(cells))return;
-  let prior=-1;
-  for(const cell of cells){
-    if(!Number.isSafeInteger(cell)||cell<=prior||cell>=world.width*world.height)return;
-    prior=cell;
+  const roofing=world.roofing;if(!roofing)return [];
+  for(const cells of [roofing.constructed,...(roofing.natural?[roofing.natural.thin,roofing.natural.thick]:[])]){
+    if(!Array.isArray(cells))return;
+    let prior=-1;
+    for(const cell of cells){if(!Number.isSafeInteger(cell)||cell<=prior||cell>=world.width*world.height)return;prior=cell;}
   }
-  return cells;
+  // The binary public roof query observes all three physical roof owners.
+  // Work intentions/cursor are not growth inputs. Keep the existing sorted
+  // coverage merge; no terrain-sized mask or additional persistent index.
+  return roofCoverage(world);
 }
 function captureInputs(world:World,r:Resource):Inputs|undefined {
   const base=r.growth??1,anchor=r.growthTick,factor=r.growthThermalFactor,leaflessAt=r.plantLife?.leaflessAt;
@@ -95,14 +115,19 @@ function captureInputs(world:World,r:Resource):Inputs|undefined {
     ||!Number.isFinite(def.sensitivity)||def.sensitivity<0||def.sensitivity>1))return;
   const fertility=plant?plantFertility(world,r):0;
   if(!Number.isFinite(fertility)||fertility<0)return;
+  const cave=isCavePlant256(r.species,world.schemaVersion),ignoreFertility=plantCompletelyIgnoresFertility256(r.species,world.schemaVersion);
+  const substrateAllowed=plant&&world.schemaVersion>=256
+    ?plantSubstrateAllowed256(r.species,world.schemaVersion,naturalPlantSubstrate256(world.tiles[r.z*world.width+r.x]!)):undefined;
   return {id:r.id,kind:r.kind,species:r.species,x:r.x,z:r.z,growth:r.growth,growthTick:anchor,
-    growthLight:r.growthLight,growthThermalFactor:factor,leaflessAt,fertility,roofed:isRoofed(world,roofIndex(world,r)),blighted:!!r.blight};
+    growthLight:r.growthLight,growthThermalFactor:factor,leaflessAt,fertility,roofed:isRoofed(world,roofIndex(world,r)),blighted:!!r.blight,
+    cave,ignoreFertility,substrateAllowed};
 }
 function sameInputs(a:Inputs,b:Inputs):boolean {
   return a.id===b.id&&a.kind===b.kind&&a.species===b.species&&a.x===b.x&&a.z===b.z
     &&Object.is(a.growth,b.growth)&&Object.is(a.growthTick,b.growthTick)&&a.growthLight===b.growthLight
     &&Object.is(a.growthThermalFactor,b.growthThermalFactor)&&Object.is(a.leaflessAt,b.leaflessAt)
-    &&Object.is(a.fertility,b.fertility)&&a.roofed===b.roofed&&a.blighted===b.blighted;
+    &&Object.is(a.fertility,b.fertility)&&a.roofed===b.roofed&&a.blighted===b.blighted
+    &&a.cave===b.cave&&a.ignoreFertility===b.ignoreFertility&&a.substrateAllowed===b.substrateAllowed;
 }
 const tracked=(r:Resource):boolean=>r.plantLife?.leaflessAt!==undefined||isPlant(r)&&(r.growth??1)!==1;
 const observe=(world:World,r:Resource):NaturalObservation=>Object.freeze({
@@ -122,10 +147,10 @@ function nextDeadline(world:World,probe:World,r:Resource,input:Inputs,clock:Cloc
   // These are constant-query proofs, not a second growth equation. In
   // particular a missing anchor follows the queried tick: I(t)-I(t) stays zero.
   const grows=!input.blighted&&isPlant(r)&&(input.growth??1)<1&&input.growthTick!==undefined
-    &&input.growthLight!=='dark'&&(input.growthLight==='artificial-full'||!input.roofed)
-    &&input.fertility>=def!.minFertility&&(input.growthThermalFactor??1)>0;
+    &&(input.cave||input.growthLight!=='dark'&&(input.growthLight==='artificial-full'||!input.roofed))
+    &&(input.ignoreFertility||input.fertility>=def!.minFertility)&&input.substrateAllowed!==false&&(input.growthThermalFactor??1)>0;
   if(!grows)return next;
-  const boundary=input.growthLight==='artificial-full'?clock.artificialBoundary:clock.naturalBoundary;
+  const boundary=input.cave||input.growthLight==='artificial-full'?clock.artificialBoundary:clock.naturalBoundary;
   // Multiplication at a natural day/year boundary can round differently from
   // the preceding sum. Every growing curve keeps that boundary in its agenda,
   // including curves already displayed at size1 with a stored base below1.
