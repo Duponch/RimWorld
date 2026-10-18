@@ -1,6 +1,6 @@
 # Performances après les fondations — V420
 
-18octobre2026, schéma263 inchangé. Diagnostic CPU/GPU acquis et premier correctif CPU ciblé qualifié localement ; publication V420 encore à effectuer, production V419 `95084b6c`. Le bilan fonctionnel et la démonstration sont [livrés séparément](../gameplay/foundations-demo-v419.md). Cette phase répond au ralentissement signalé sur Les Aulnes et une nouvelle partie à trois colons ; elle ne clôt pas les performances du jeu.
+18octobre2026, schéma263 inchangé. Diagnostic CPU/GPU acquis et premier correctif CPU ciblé qualifié localement ; produit V420 `eb3c515f` publié en `b39e5aa5`. Le bilan fonctionnel et la démonstration sont [livrés séparément](../gameplay/foundations-demo-v419.md). Cette phase répond au ralentissement signalé sur Les Aulnes et une nouvelle partie à trois colons ; elle ne clôt pas les performances du jeu.
 
 ## Observation acquise
 
@@ -78,3 +78,8 @@ Mesurer l'effet du correctif dans le navigateur, puis attribuer les coûts rési
 Preuves locales : `tmp/world-foundations/demonstration-v419/performance-baseline01.json`, `main-profile-acquired01.json`, `main-profile-analysis01.json`, `legacy-baseline-comparison01.json`, `gpu-acquired02.json`, `sparse-adoption01.json`, `sparse-owner-bench02-report.json`, `sparse-owner-bench02-summary.json` et leurs gels de sources/entrées. Sorties privées `p419n01`, `p419p01`, `p420n01`, `g420n02`. Aucun gain FPS acquis à ce stade.
 
 Contrôles de livraison : typage final17,628s, Pages5,563s et documentation14,090s. Les39cas passés distincts sont acquis par reprises sur8fichiers, dont sept nouveaux ; six rouges de témoins historiques restent conservés et reproduits sur l'ancienne source. Ce bilan ne déclare pas une suite complète verte. Archives, catalogue67fiches/70chemins et patrimoine de la démonstration inchangés.
+
+
+## Publication
+
+Produit `eb3c515f68b3c481eed67fd6d7babd853d7b5edf` commité/poussé sur main ; déploiement unique `b39e5aa5` sur elsewhere-cq7.pages.dev. Paquet540fichiers/143932500octets,67fiches/70chemins de sauvegarde exacts. Contrôle local PASS6,256s, déploiement PASS18,383s,136réponses HTTPS200/MIME/octets exacts PASS12,192s. Rapports `tmp/elsewhere-pages/v420-package-uI4HPQ` et `v420-http-NUjCUi`. Les Aulnes publiquesV394 et Les ÉclairciesV419/tick1730 restent strictement inchangées, ainsi que les archives et visuels. Aucune sonde privée, façade DEV ou laboratoire publié.
