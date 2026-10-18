@@ -11,6 +11,8 @@ import {createPlantLife,PLANT_LIFE_INTERVAL} from '../src/sim/plant-life';
 import {crashlandedProfile} from '../src/sim/game-profile';
 import {deserializeWorld} from '../src/sim/serialization';
 import {decodeStoredSave} from '../src/ui/save-storage-codec';
+import {campaignPresentation} from '../src/sim/secondary-site-presentation';
+import {DETERIORATION_INTERVAL} from '../src/sim/deterioration-content';
 import type {Resource,World} from '../src/sim/types';
 
 // Query/dependency fixtures exercise real transport admission, not a claim that
@@ -31,6 +33,9 @@ function camp():World {
 }
 function clock(world:World,tick:number):void {
   world.tick=tick;
+  // These query fixtures skip the simulation scheduler. Keep its unrelated
+  // post-tick clock admissible without claiming any deterioration was played.
+  if(world.deterioration)world.deterioration.lastTick=tick-tick%DETERIORATION_INTERVAL;
   for(const r of world.resources)if(r.plantLife){
     r.plantLife.nextCheck=tick+(r.id-tick%PLANT_LIFE_INTERVAL+PLANT_LIFE_INTERVAL)%PLANT_LIFE_INTERVAL+1;
     r.plantLife.age=Math.max(0,r.plantLife.nextCheck-PLANT_LIFE_INTERVAL-r.plantLife.since);
@@ -49,11 +54,16 @@ function harness(world:World,checkHistoryEachRead=true){
   const verifyHistory=()=>{
     for(const old of history){expect(old.world).toStrictEqual(old.before);expect(old.actual).toStrictEqual(old.actualBefore);expect(old.expected).toStrictEqual(old.expectedBefore);}
   };
-  const packet=(checkpoint=false)=>structuredClone(encoder.encode(world,0,6,checkpoint));
+  const packets=new WeakMap<object,World>();
+  const packet=(checkpoint=false)=>{
+    const message=structuredClone(encoder.encode(world,0,6,checkpoint));
+    packets.set(message,structuredClone(campaignPresentation(world)));return message;
+  };
   const accept=(message:SnapshotMessage<true>)=>{
+    const source=packets.get(message);if(!source)throw Error('Packet provenance missing.');
     const result=decoder.adopt(message);expect(result.status).toBe('applied');
     if(result.status!=='applied')throw Error(JSON.stringify(result));
-    expect(result.world).toStrictEqual(world);return result.world;
+    expect(result.world).toStrictEqual(source);return result.world;
   };
   const send=(checkpoint=false)=>accept(packet(checkpoint));
   const read=(next:World,reset=false,immutable=true)=>{
@@ -121,7 +131,7 @@ test('missing anchors, constant regimes and all resident crops retain their own 
 });
 
 test('the exact first tick after an artificial-light quartile or ripe crossing is not delayed',()=>{
-  const world=camp();world.tick=1500;world.resources=[];
+  const world=camp();clock(world,1500);world.resources=[];
   for(const growth of [0,.25,.5,.75])world.resources.push({id:world.nextId++,kind:'tree',species:'oak',
     x:2,z:3,amount:10,growth,growthTick:1500,growthLight:'artificial-full'});
   world.resources.push({id:world.nextId++,kind:'berries',x:3,z:3,amount:10,growth:.65,growthTick:1500,growthLight:'artificial-full'});
@@ -132,7 +142,7 @@ test('the exact first tick after an artificial-light quartile or ripe crossing i
 });
 
 test('confirmed forecasts remain exact beyond the first windows and at later visible crossings',()=>{
-  const world=camp();world.tick=1500;world.resources=[
+  const world=camp();clock(world,1500);world.resources=[
     {id:world.nextId++,kind:'tree',species:'oak',x:2,z:3,amount:10,growth:.25-96/180000,growthTick:1500,growthLight:'artificial-full'},
     {id:world.nextId++,kind:'tree',species:'pine',x:3,z:3,amount:10,growth:.5-200/120000,growthTick:1500,growthLight:'artificial-full'},
     {id:world.nextId++,kind:'berries',x:4,z:3,amount:10,growth:.65-32/36000,growthTick:1500,growthLight:'artificial-full'},
@@ -153,7 +163,7 @@ test('confirmed forecasts remain exact beyond the first windows and at later vis
 });
 
 test('full membership recaptures preserve later deadlines, changed inputs and current references',()=>{
-  const world=camp();world.tick=1500;world.resources=[
+  const world=camp();clock(world,1500);world.resources=[
     {id:world.nextId++,kind:'tree',species:'oak',x:2,z:3,amount:10,growth:.25-96/180000,growthTick:1500,growthLight:'artificial-full'},
     {id:world.nextId++,kind:'berries',x:3,z:3,amount:10,growth:.65-96/36000,growthTick:1500,growthLight:'artificial-full'},
   ];
@@ -249,7 +259,7 @@ test('legacy-only growth and leaves remain exact before and after a timed specie
 });
 
 test('an initially constant mature species starts exact temporal reads when it becomes immature',()=>{
-  const world=camp();world.tick=1500;world.resources=[
+  const world=camp();clock(world,1500);world.resources=[
     {id:world.nextId++,kind:'tree',species:'oak',x:2,z:3,amount:10,growth:1,growthTick:1500,growthLight:'artificial-full'},
   ];
   const oak=world.resources[0]!,{send,read}=harness(world);read(send(),true);
@@ -318,9 +328,10 @@ test('authentic Aulnes publication and actual lifecycle patches match V225 witho
   const world=deserializeWorld(await decodeStoredSave(readFileSync('public/test-saves/v224/les-aulnes-sieges.json','utf8')));
   const {send,read,verifyHistory}=harness(world,false);expect(validateWorld(world)).toEqual([]);read(send(),true);
   let lifecyclePatches=0;
-    // This unit boundary checks a short authentic prefix. The separate
+  // This unit boundary checks a short authentic prefix. The separate
   // exact replay covers64 ordinary ticks and later lifecycle windows; do not
-  // duplicate its entire 250² retained history inside Vitest's30s test budget.
+  // duplicate its entire 250² retained history here. Strict current campaign
+  // admission and all retained-view comparisons need their own bounded budget.
   for(let tick=0;tick<12;tick++){
     const before=new Map(world.resources.filter(r=>r.plantLife).map(r=>[r.id,r.plantLife!.age]));stepWorld(world);
     lifecyclePatches+=world.resources.filter(r=>r.plantLife&&r.plantLife.age!==before.get(r.id)).length;
@@ -330,4 +341,4 @@ test('authentic Aulnes publication and actual lifecycle patches match V225 witho
   // Verify all retained Worlds/views once after all later adoptions. Rechecking
   // the entire 250² history after each read added quadratic assertion work.
   verifyHistory();
-});
+},90_000);

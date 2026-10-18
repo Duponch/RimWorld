@@ -3,7 +3,7 @@ import { plantLeafless } from '../sim/plant-life';
 import { harvestable } from '../sim/plants';
 import type { Resource,World } from '../sim/types';
 import {readSnapshotChanges} from '../bridge/snapshot-changes';
-import {NaturalPresentationEvents,NaturalIdPresentationEvents,composeFinalResourceStructure,type NaturalObservation,type NaturalIdSource} from './natural-presentation-events';
+import {NaturalPresentationEvents,NaturalIdPresentationEvents,composeFinalResourceStructure,supportsNaturalPresentationClock,type NaturalObservation,type NaturalIdSource} from './natural-presentation-events';
 
 type Shape=Pick<Resource,'id'|'kind'|'x'|'z'|'stone'|'species'>&{ripe:boolean;leafless:boolean;size:number;blighted:boolean};
 export type NaturalPresentationChange = { resource: Resource | undefined; size: number };
@@ -61,6 +61,11 @@ export class NaturalResourcePresentation {
   }
   private seedIds(world:World):void {
     this.clearIds();if(!readSnapshotChanges(world,world))return;
+    // readHistorical has already populated timedSlots for this exact capture.
+    // Mature populations need no agenda and retain their existing ID lane,
+    // including on clocks unsupported by the predictive numerical query.
+    const needsAgenda=this.timedSlots.some(([source])=>world.resources[source]!.species!==undefined||world.resources[source]!.kind==='healroot');
+    if(needsAgenda&&!supportsNaturalPresentationClock(world))return;
     let naturalOrdinal=0;
     for(let ordinal=0;ordinal<world.resources.length;ordinal++){
       const resource=world.resources[ordinal]!,id=resource.id,natural=!isResidentCrop(resource);

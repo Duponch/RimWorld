@@ -27,16 +27,13 @@ import { corpseVisualMask } from './corpse-presentation';
 import { corpsePartAbsent } from '../sim/corpse-anatomy';
 import { bodySizeAtAge } from '../sim/animal-life';
 import { autoSlaughterTargets } from '../sim/auto-slaughter';
-import type { WildAnimal } from '../sim/wildlife-state';
-import type { MaterialPile } from '../sim/types';
+import {wildlifePresentationGroups,type VisualAnimal} from './wildlife-presentation-groups';
 import type { PawnLayer } from './PawnLayer';
 import {animalSlaughterMarker,AnimalSlaughterMarkerStyle} from './AnimalSlaughterMarker';
 import type {SceneTextureLoader} from './scene-render-ports';
 import { growPawnBuffers } from './pawn-buffers';
 import { pileSurfaces,pileIdentitySurfaces,type PileSurface } from './pile-surfaces';
 import { PAWN_MODEL_SCALE,WORLD_SCALE } from '../world/scale';
-
-type VisualAnimal=Pick<WildAnimal,'id'|'species'|'state'|'x'|'z'|'sex'|'ageTicks'|'growthTracker'|'arrivalRotation'|'motion'|'meal'|'strike'|'stun'|'threat'|'predation'|'manhunter'|'health'|'domestic'>&{corpsePile?:MaterialPile;carrierId?:number};
 
 /** Resident capacity and node graph. CPU supplies edges/phases at snapshots
  * and segment boundaries; continuous translation and the rig run on the GPU. */
@@ -62,8 +59,10 @@ class SpeciesRig {
   private readonly restingHeight:number;
   private readonly restingRadius:number;
   private animals:VisualAnimal[]=[];
+  private revision=0;
+  private hasFireActors=false;
   private surfaces:ReadonlyMap<number,number>=new Map();
-  constructor(readonly travelTime:WildlifeLayer['travelTime'],private readonly species:string,surfaceTexture:THREE.Texture,style:AnimalSlaughterMarkerStyle,private readonly animationDetail:AnimationDetail,configure?:(m:THREE.MeshStandardNodeMaterial)=>void) {
+  constructor(readonly travelTime:WildlifeLayer['travelTime'],readonly species:string,surfaceTexture:THREE.Texture,style:AnimalSlaughterMarkerStyle,private readonly animationDetail:AnimationDetail,configure?:(m:THREE.MeshStandardNodeMaterial)=>void) {
     this.animationCache=new ActorAnimationCache(animationDetail);
     this.gaitRate=animalGaitRadiansPerUnit(species);
     const geometry=hareGeometry(isAnimalSpecies256(species)?16:MAX_WILDLIFE,species);
@@ -163,7 +162,9 @@ class SpeciesRig {
     this.plainMaterial=mat;this.texturedMaterial=textured;
     this.mesh=new THREE.Mesh(geometry,textured);this.mesh.name=`Wild ${this.species} — GPU rig`;this.mesh.frustumCulled=false;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.flames=attachedFireMesh(this.mesh.geometry,this,.6,this.animationDetail);
     this.selection=pawnSelectionMesh(this.mesh.geometry as THREE.InstancedBufferGeometry,this);this.selection.visible=false;
+    (this.selection.geometry as THREE.InstancedBufferGeometry).instanceCount=0;
     this.slaughter=animalSlaughterMarker(this.mesh.geometry as THREE.InstancedBufferGeometry,this,style,geometry.boundingBox!.max.y);
+    this.mesh.visible=false;this.flames.visible=false;
   }
   setTexturesEnabled(enabled:boolean):void {this.mesh.material=enabled?this.texturedMaterial:this.plainMaterial;setFireTexturesEnabled(this.flames,enabled);}
   setSelected(ids:ReadonlySet<number>):void {
@@ -189,15 +190,26 @@ class SpeciesRig {
   prepare():()=>void {
     const g=this.mesh.geometry as THREE.InstancedBufferGeometry,fire=this.flames.geometry as THREE.InstancedBufferGeometry;
     const marker=this.slaughter.geometry as THREE.InstancedBufferGeometry;
-    const n=g.instanceCount,f=fire.instanceCount,s=marker.instanceCount,visible=this.slaughter.visible;
+    const n=g.instanceCount,f=fire.instanceCount,s=marker.instanceCount,visible=this.slaughter.visible,bodyVisible=this.mesh.visible,fireVisible=this.flames.visible,revision=this.revision;
     g.instanceCount=Math.max(1,n);fire.instanceCount=Math.max(1,f);
-    marker.instanceCount=Math.max(1,s);this.slaughter.visible=true;
-    return ()=>{g.instanceCount=n;fire.instanceCount=f;marker.instanceCount=s;this.slaughter.visible=visible;};
+    marker.instanceCount=Math.max(1,s);this.slaughter.visible=true;this.mesh.visible=true;this.flames.visible=true;
+    return ()=>{if(this.revision!==revision)return;g.instanceCount=n;fire.instanceCount=f;marker.instanceCount=s;this.slaughter.visible=visible;this.mesh.visible=bodyVisible;this.flames.visible=fireVisible;};
   }
-  update(world:World,timeline:MotionTimeline|undefined,surfaces:ReadonlyMap<number,number>,pileSurface:ReadonlyMap<number,PileSurface>,reset=false,pawns?:PawnLayer,quotaTargets:ReadonlySet<number>=new Set(),pileIdentities?:ReadonlyMap<number,PileSurface>):void {
+  deactivate():void {
+    this.revision++;this.source=undefined;this.animals=[];this.hasFireActors=false;
+    this.keys.clear();this.headings.clear();this.gait.clear();this.carrierSlots.clear();this.actorSlots.clear();this.animationCache.reset();
+    for(const mesh of [this.mesh,this.flames,this.selection,this.slaughter]){(mesh.geometry as THREE.InstancedBufferGeometry).instanceCount=0;mesh.visible=false;}
+    const fire=this.mesh.geometry.getAttribute('aFire') as THREE.InstancedBufferAttribute;
+    if(fire.getX(0)!==0){fire.setX(0,0);fire.needsUpdate=true;}
+  }
+  updateClock(tick:number,pawns?:PawnLayer):void {
+    this.time.value=pawns?.time.value??localTimeSeconds(tick)%(2*Math.PI);this.blend.value=pawns?.blend.value??1;
+  }
+  update(world:World,group:VisualAnimal[],burning:ReadonlyMap<number,number>,timeline:MotionTimeline|undefined,surfaces:ReadonlyMap<number,number>,pileSurface:ReadonlyMap<number,PileSurface>,reset=false,pawns?:PawnLayer,quotaTargets:ReadonlySet<number>=new Set(),pileIdentities?:ReadonlyMap<number,PileSurface>):void {
     const changed=this.source!==world;
+    if(changed||reset)this.revision++;
     if(reset){this.headings.clear();this.keys.clear();this.gait.clear();}
-    if(changed){this.source=world;this.keys.clear();this.animals=[...(world.wildlife?.animals??[]).filter(a=>a.species===this.species).map(a=>{const carrier=world.pawns.find(p=>p.animalRescue?.phase==='carry'&&p.animalRescue.animalId===a.id);return carrier?{...a,carrierId:carrier.id}:a;}),...world.piles.flatMap(p=>p.corpse?.species===this.species&&p.owner.type!=='job'?[{id:p.corpse.animalId,species:p.corpse.species,state:'dead' as const,x:p.owner.type==='ground'?p.owner.x:0,z:p.owner.type==='ground'?p.owner.z:0,sex:p.corpse.sex,ageTicks:p.corpse.ageTicks,health:p.corpse.health,corpsePile:p,carrierId:p.owner.type==='pawn'?p.owner.pawnId:pawns?.animalCorpseTransferCarrier(p.id)}]:[])];this.surfaces=surfaces;
+    if(changed){this.source=world;this.keys.clear();this.animals=group;this.surfaces=surfaces;this.mesh.visible=group.length>0;
       if(this.animals.length>this.mesh.geometry.getAttribute('aFrom').count)growPawnBuffers([this.mesh,this.flames,this.selection,this.slaughter],this.animals.length);
       this.setSelected(this.selected);
       const markers=this.slaughter.geometry as THREE.InstancedBufferGeometry,flags=markers.getAttribute('aSlaughter') as THREE.InstancedBufferAttribute;
@@ -208,12 +220,10 @@ class SpeciesRig {
       const present=new Set(this.animals.map(a=>a.id));for(const id of this.headings.keys())if(!present.has(id)){this.headings.delete(id);this.gait.delete(id);}
     }
     const tick=timeline?.tick??world.tick,origin=Math.floor(tick/1024)*1024;
-    this.travelTime.value=localTimeSeconds(tick,origin);this.time.value=pawns?.time.value??localTimeSeconds(tick)%(2*Math.PI);this.blend.value=pawns?.blend.value??1;
     this.animationCache.setOrigins(origin);
     const g=this.mesh.geometry as THREE.InstancedBufferGeometry,from=g.getAttribute('aFrom') as THREE.InstancedBufferAttribute,to=g.getAttribute('aTo') as THREE.InstancedBufferAttribute,times=g.getAttribute('aTravel') as THREE.InstancedBufferAttribute,state=g.getAttribute('aAnimal') as THREE.InstancedBufferAttribute,scale=g.getAttribute('aScale') as THREE.InstancedBufferAttribute;
     if(changed){
     const fireSize=this.mesh.geometry.getAttribute('aFire') as THREE.InstancedBufferAttribute;
-    const burning=new Map((world.fires?.items??[]).filter(f=>f.attachedAnimalId!==undefined).map(f=>[f.attachedAnimalId!,f.size]));
     const animals=this.animals;
     let fireCount=0;
     animals.forEach((a,i)=>{
@@ -222,6 +232,7 @@ class SpeciesRig {
     });if(!animals.length)fireSize.setX(0,0);fireSize.needsUpdate=true;
     // Keep actor indices intact while omitting every trailing inactive slot.
     (this.flames.geometry as THREE.InstancedBufferGeometry).instanceCount=fireCount;
+    this.hasFireActors=fireCount>0;this.flames.visible=this.hasFireActors;
     }
     const animals=this.animals;g.instanceCount=animals.length;let dirty=false;
     if(changed||reset){this.carrierSlots.clear();if(reset)this.animationCache.reset();}
@@ -328,7 +339,7 @@ class SpeciesRig {
       const time=owner===undefined?this.time.value:pawns?.animationCache.cpuClock(owner,'time')??this.time.value;
       const travelTime=owner===undefined?this.travelTime.value:pawns?.animationCache.cpuClock(owner,'travelTime')??this.travelTime.value;
       this.animationCache.setRoot(i,root,time,travelTime,travelTime,this.blend.value);sampleAnimalRig(this.animationCache,i,g,root,time,travelTime,this.gaitRate,this.sampledBones);this.animationCache.publish(i);
-    }this.animationCache.flush();presentAttachedFire(this.flames,g,this,this.animationDetail);
+    }this.animationCache.flush();if(this.hasFireActors)presentAttachedFire(this.flames,g,this,this.animationDetail);
   }
 }
 
@@ -340,6 +351,10 @@ export class WildlifeLayer {
   private texturesEnabled=true;
   private readonly markerStyle:AnimalSlaughterMarkerStyle;
   private rigs:SpeciesRig[];private source?:World;private surfaces:ReadonlyMap<number,number>=new Map();private pileSurface:ReadonlyMap<number,PileSurface>=new Map();private pileIdentities:ReadonlyMap<number,PileSurface>=new Map();private quotaTargets:ReadonlySet<number>=new Set();
+  private activeRigs:SpeciesRig[]=[];
+  private groups=new Map<string,VisualAnimal[]>();
+  private burning:ReadonlyMap<number,number>=new Map();
+  private selected:ReadonlySet<number>=new Set();
   constructor(configure?:(m:THREE.MeshStandardNodeMaterial)=>void,loadTexture?:SceneTextureLoader,animationDetail=new AnimationDetail()){
     this.markerStyle=new AnimalSlaughterMarkerStyle(loadTexture);
     this.rigs=ANIMAL_SPECIES_IDS.map(species=>new SpeciesRig(this.travelTime,species,this.surfaceTextures[animalCoat(species)],this.markerStyle,animationDetail,configure));
@@ -348,12 +363,29 @@ export class WildlifeLayer {
   setDesignationMinCellPixels(value:number):void {this.markerStyle.setMinCellPixels(value);}
   presentDesignations(camera:THREE.OrthographicCamera|THREE.PerspectiveCamera,height:number,cellPixels:number):void {this.markerStyle.present(camera,height,cellPixels);}
   setTexturesEnabled(enabled:boolean):void {if(this.texturesEnabled===enabled)return;this.texturesEnabled=enabled;for(const rig of this.rigs)rig.setTexturesEnabled(enabled);}
-  setSelected(ids:ReadonlySet<number>):void {for(const rig of this.rigs)rig.setSelected(ids);}
-  forEachPose(visit:(id:number,species:string,x:number,y:number,z:number,height:number,radius:number)=>void):void {for(const rig of this.rigs)rig.forEachPose(visit);}
-  cpuPoseForId(id:number){for(const rig of this.rigs){const pose=rig.cpuPoseForId(id);if(pose)return pose;}}
+  setSelected(ids:ReadonlySet<number>):void {this.selected=ids;for(const rig of this.activeRigs)rig.setSelected(ids);}
+  forEachPose(visit:(id:number,species:string,x:number,y:number,z:number,height:number,radius:number)=>void):void {for(const rig of this.activeRigs)rig.forEachPose(visit);}
+  cpuPoseForId(id:number){for(const rig of this.activeRigs){const pose=rig.cpuPoseForId(id);if(pose)return pose;}}
   presentedPose(id:number){return this.cpuPoseForId(id);}
-  update(world:World,timeline:MotionTimeline|undefined,reset=false,pawns?:PawnLayer):void{if(this.source!==world){this.source=world;this.surfaces=furnitureSurfaces(world);this.pileSurface=pileSurfaces(world);this.pileIdentities=pileIdentitySurfaces(world);this.quotaTargets=autoSlaughterTargets(world);}for(const rig of this.rigs)rig.update(world,timeline,this.surfaces,this.pileSurface,reset,pawns,this.quotaTargets,this.pileIdentities);}
-  presentAnimations(pawns?:PawnLayer):void {for(const rig of this.rigs)rig.presentAnimations(pawns);}
+  update(world:World,timeline:MotionTimeline|undefined,reset=false,pawns?:PawnLayer):void {
+    if(this.source!==world){
+      this.source=world;this.groups=wildlifePresentationGroups(world,pawns?pileId=>pawns.animalCorpseTransferCarrier(pileId):undefined);
+      // Retain canonical species order for pointer iteration and submission.
+      const active=this.rigs.filter(rig=>this.groups.has(rig.species));
+      for(const rig of active)rig.setSelected(this.selected);
+      const present=new Set(active);for(const rig of this.activeRigs)if(!present.has(rig))rig.deactivate();
+      this.activeRigs=active;
+      this.surfaces=furnitureSurfaces(world);this.pileSurface=pileSurfaces(world);this.pileIdentities=pileIdentitySurfaces(world);this.quotaTargets=autoSlaughterTargets(world);
+      this.burning=new Map((world.fires?.items??[]).filter(f=>f.attachedAnimalId!==undefined).map(f=>[f.attachedAnimalId!,f.size]));
+    }
+    const tick=timeline?.tick??world.tick,origin=Math.floor(tick/1024)*1024;
+    this.travelTime.value=localTimeSeconds(tick,origin);
+    // These scalar writes preserve each resident graph's independent clocks,
+    // including during compile preparation; only active rigs prepare actors.
+    for(const rig of this.rigs)rig.updateClock(tick,pawns);
+    for(const rig of this.activeRigs)rig.update(world,this.groups.get(rig.species)!,this.burning,timeline,this.surfaces,this.pileSurface,reset,pawns,this.quotaTargets,this.pileIdentities);
+  }
+  presentAnimations(pawns?:PawnLayer):void {for(const rig of this.activeRigs)rig.presentAnimations(pawns);}
   prepare():()=>void{const restores=this.rigs.map(r=>r.prepare());return()=>{for(const restore of restores)restore();};}
   dispose():void{
     for(const r of this.rigs){

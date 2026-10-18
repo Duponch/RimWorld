@@ -1,5 +1,6 @@
 import type {ValidationIdentityMembership} from './validation-identities.ts';
 import type {Cell,Resource,World} from './types.ts';
+import {hasPausedTreeClock} from './tree-transfer-clock.ts';
 
 const MAX_DENSE_CELLS=1048576,MAX_ANCHOR=Number.MAX_SAFE_INTEGER-3,ID_CAPACITY=65536;
 const integerAnchor=(value:unknown):value is number=>Number.isSafeInteger(value)&&Math.abs(Number(value))<=MAX_ANCHOR;
@@ -17,13 +18,23 @@ export interface OwnedResourceReuseWitness {
   readonly updated:readonly {readonly id:number;readonly afterOrdinal:number}[];
 }
 
+/** Separate closed-Decoder capability: growth tuples preserved all identity,
+ * spatial, substrate and candidate fields. updated contains every full upsert,
+ * including same-tick changes. Never derived from an Encoder flag or RAW World. */
+export interface OwnedResourceBaseReuseWitness {
+  readonly previous:World;
+  readonly kind:'resource-base';
+  readonly updated:readonly {readonly id:number;readonly afterOrdinal:number}[];
+}
+
 export interface OwnedValidationResourceOwner {
   prepare(world:World,witness?:OwnedResourceReuseWitness):OwnedValidationResourceReader;
+  prepareBase(world:World,witness:OwnedResourceBaseReuseWitness):OwnedValidationResourceReader;
   commit(world:World):void;
   discard():void;
 }
 
-const plantCandidate=(resource:Resource):boolean=>resource.plantLife?.pausedTicks!==undefined||resource.plantLife?.ageTick!==undefined||resource.kind==='healroot'||resource.growthLight!==undefined||resource.blight!==undefined||Object.hasOwn(resource,'blight');
+const plantCandidate=(resource:Resource):boolean=>hasPausedTreeClock(resource)||resource.kind==='healroot'||resource.growthLight!==undefined||resource.blight!==undefined||Object.hasOwn(resource,'blight');
 
 /** ID summary from the same resource capture, never an earlier guard verdict.
  * maxId is absent for an empty safe-positive ID collection. */
@@ -85,7 +96,7 @@ function createReader(world:World,reusedIndex?:ResourceIndex):{reader:OwnedValid
         if(!Number.isSafeInteger(id)||id<1)safe=false;
         else if(maxId===undefined||id>maxId)maxId=id;
       }
-      if(kind==='healroot'||resource.growthLight!==undefined||resource.blight!==undefined||Object.hasOwn(resource,'blight'))candidate.candidates.push(ordinal);
+      if(plantCandidate(resource as unknown as Resource))candidate.candidates.push(ordinal);
       if(candidate.presence&&x>=0&&z>=0&&x<width&&z<height)candidate.presence[z*width+x]=1;
       else {
         let row=candidate.outside.get(z);if(!row)candidate.outside.set(z,row=new Set());row.add(x);
@@ -156,6 +167,9 @@ export function createOwnedValidationResourceOwner():OwnedValidationResourceOwne
       pending=undefined;
       const capture=createReader(world,witness?reusable(world,witness):undefined);
       pending={world,capture};return capture.reader;
+    },
+    prepareBase(world,witness){
+      return this.prepare(world,witness.kind==='resource-base'?{kind:'sparse',previous:witness.previous,updated:witness.updated}:undefined);
     },
     commit(world){
       const index=pending?.world===world?pending.capture.peek():undefined;

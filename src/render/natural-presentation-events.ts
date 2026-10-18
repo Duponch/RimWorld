@@ -58,6 +58,11 @@ function captureClock(world:World):Clock|undefined {
     adoptedAt:climate?.adoptedAt,calendarOrigin:climate?.calendarOrigin,naturalBoundary,artificialBoundary,
     eclipseStart:eclipse?.start,eclipseEnd:eclipse?.end};
 }
+/** Numerical forecast support only; never snapshot/admission authority. Share
+ * the exact initialization predicate so unsupported clocks can stop before an
+ * ID ledger is allocated. Do not retain a negative verdict across Worlds. */
+export function supportsNaturalPresentationClock(world:World):boolean {return captureClock(world)!==undefined;}
+
 function sameContext(a:Clock,b:Clock):boolean {
   return a.width===b.width&&a.height===b.height&&a.schema===b.schema&&a.gameProfilePresent===b.gameProfilePresent
     &&a.profile===b.profile&&a.adoptedAt===b.adoptedAt&&a.calendarOrigin===b.calendarOrigin

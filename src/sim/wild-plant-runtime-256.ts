@@ -11,6 +11,7 @@ import {plantCellOrder256} from './wild-plant-generation-math-256.ts';
 import {surfaceTileHash} from './world-site-geography.ts';
 import {validatePlantMap256,type WildPlantMapInput256} from './wild-plant-generation-256.ts';
 import {createWildPlantSpawner256,PlantRegionCache256} from './wild-plant-spawner-256.ts';
+import {actualPlantRuntimeSessionFactory256} from './wild-plant-runtime-session-256.ts';
 const f=Math.fround;
 export interface WildFloraState256 {
  revision:2;cycleIndex:number;desired:number;desiredTmp:number;fertile:number;fertileTmp:number;hasCalculated:boolean;lastTick:number;
@@ -112,7 +113,7 @@ export function advanceWildFlora256(world:World,reader:WildPlantMapReader256):vo
    const cell=cache.order[next.cycleIndex]!,physical=reader.cell(world,cell);
    next.desiredTmp=f(next.desiredTmp+cellDesired(physical,density,rules,anyIgnores));if(physical.fertility>0)next.fertileTmp++;
    if(chance(cachedChance)&&plantRegrowthMtb256(physical.naturalRoof?130:rules.scalars.wildPlantRegrowDays,()=>random.value())&&(!physical.roofed||physical.naturalRoof)){
-    if(!spawner){const captured=captureBound(world,reader,density);spawner=createWildPlantSpawner256(captured.input,captured.order,cache.regions);}
+    if(!spawner){const actualSession=actualPlantRuntimeSessionFactory256(reader);if(actualSession)spawner=actualSession(world,density,next.desired);else {const captured=captureBound(world,reader,density);spawner=createWildPlantSpawner256(captured.input,captured.order,cache.regions);}}
     const def=spawner.pick(cell,random,next.desired,true);
     if(def!==undefined){if(!Number.isSafeInteger(nextId+1))throw Error('No plant identity available');
      const plant=createWildPlantResource256(world,nextId++,cell%world.width,Math.floor(cell/world.width),FACTS[def].species,.15,true);

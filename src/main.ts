@@ -1,4 +1,3 @@
-import {captureHumanOwners,type HumanOwnershipCapture} from './sim/human-owners.ts';
 import {groupGeographicTradeTarget256} from './sim/group-geographic-post-256';
 import {groupWorld} from './sim/world-map-authority';
 import {CaravanEncounterDialog261} from './ui/caravan-encounter-dialog-261';
@@ -200,14 +199,9 @@ import {captureFoodReadability,type FoodReadability} from './sim/food-readabilit
 import { ITEM_DEFINITIONS, availableNutrition } from './sim/items';
 import { foodFreshnessLabel } from './ui/food-freshness';
 import { SimulationClient } from './bridge/SimulationClient';
-import { SnapshotDecoder, type SnapshotValidationContext, type SnapshotMessage, type SnapshotAdoption } from './bridge/snapshots';
+import { SnapshotDecoder } from './bridge/snapshots';
+import {PresentationSnapshotDecoder} from './bridge/presentation-decoder';
 import type { AudioCue } from './bridge/audio-cues';
-import { PowerParentValidationCache, type PowerParentIndex } from './sim/power-parent-validation';
-import { createOwnedValidationGeometryOwner, type OwnedGeometryReuseWitness } from './sim/owned-validation-geometry.ts';
-import { createOwnedValidationResourceOwner, type OwnedResourceReuseWitness } from './sim/owned-validation-resources.ts';
-import { createOwnedDeteriorationOwner } from './sim/deterioration-save.ts';
-import { createOwnedSleepingProvenanceOwner } from './sim/human-sleeping-spot-save.ts';
-import { createOwnedMarshTransportOwner } from './sim/marsh.ts';
 import { AudioDirector } from './audio/AudioDirector';
 import { MusicDirector, type MusicMood } from './audio/MusicDirector';
 import { ambientCameraGain, FoliageAmbience } from './audio/ambience';
@@ -254,68 +248,8 @@ function openResearchContext(panel:'work'|'architect'):void {
 // Only this fixed Worker/client and the fixed MAIN consumers can reach these
 // decoders. The command facade exposes no adoption or World callback entry.
 const client = (() => {
-  class MainSnapshotDecoder extends SnapshotDecoder {
-    readonly #resourceOwner = createOwnedValidationResourceOwner();
-    readonly #geometryOwner = createOwnedValidationGeometryOwner();
-    readonly #deteriorationOwner = createOwnedDeteriorationOwner();
-    readonly #sleepingProvenanceOwner = createOwnedSleepingProvenanceOwner();
-    readonly #marshOwner = createOwnedMarshTransportOwner();
-    override adopt(packet: SnapshotMessage<true>): SnapshotAdoption {
-      this.#resourceOwner.discard();
-      this.#geometryOwner.discard();
-      this.#deteriorationOwner.discard();
-      this.#sleepingProvenanceOwner.discard();
-      this.#marshOwner.discard();
-      try {
-        const result = super.adopt(packet);
-        if (result.status === 'applied') this.#resourceOwner.commit(result.world);
-        else this.#resourceOwner.discard();
-        if (result.status === 'applied') this.#geometryOwner.commit(result.world);
-        else this.#geometryOwner.discard();
-        if (result.status === 'applied') this.#deteriorationOwner.commit(result.world);
-        else this.#deteriorationOwner.discard();
-        if (result.status === 'applied') this.#sleepingProvenanceOwner.commit(result.world);
-        else this.#sleepingProvenanceOwner.discard();
-        if (result.status === 'applied') this.#marshOwner.commit(result.world);
-        else this.#marshOwner.discard();
-        return result;
-      } catch (error) {
-        this.#resourceOwner.discard();
-        this.#geometryOwner.discard();
-        this.#deteriorationOwner.discard();
-        this.#sleepingProvenanceOwner.discard();
-        this.#marshOwner.discard();
-        throw error;
-      }
-    }
-    protected override validateDeteriorationTransport(next:World,structureReuse?:OwnedGeometryReuseWitness):boolean {
-      return this.#deteriorationOwner.validate(next,structureReuse);
-    }
-    protected override validateHumanSleepingSpotTransport(next:World,structureReuse?:OwnedGeometryReuseWitness):boolean {
-      return this.#sleepingProvenanceOwner.validate(next,structureReuse);
-    }
-    protected override validateMarshTransport(next:World,changedTiles?:readonly number[],resourceReuse?:OwnedResourceReuseWitness):string[] {
-      return this.#marshOwner.validate(next,changedTiles,resourceReuse);
-    }
-    protected override createValidationContext(next: World, resourceReuse?: OwnedResourceReuseWitness, geometryReuse?: OwnedGeometryReuseWitness): SnapshotValidationContext {
-      const raw = new PowerParentValidationCache();
-      const geometry = this.#geometryOwner.prepare(next, geometryReuse, this.#resourceOwner.prepare(next, resourceReuse));
-      let parents: PowerParentIndex | undefined;
-      // Nothing escapes this validation context or survives a later adoption.
-      let humanOwners:HumanOwnershipCapture|undefined;
-      return {
-        humanOwners:{read(world:World){return world===next?(humanOwners??=captureHumanOwners(next)):captureHumanOwners(world);}},
-        powerParents: { read(world: World): PowerParentIndex {
-          if (world !== next) return raw.read(world);
-          return parents ??= raw.read(world);
-        } },
-        geometry,
-        resourceFacts: geometry.resourceFacts,
-      };
-    }
-  }
   class MainSimulationClient extends SimulationClient {
-    protected override createDecoder(): SnapshotDecoder { return new MainSnapshotDecoder(); }
+    protected override createDecoder(): SnapshotDecoder { return new PresentationSnapshotDecoder(); }
     protected override deliverSnapshot(world: World, cost: number, speed: number, replaced: boolean, motion?: PawnTrack[]): void {
       receiveMainSnapshot(world, cost, speed, replaced, motion);
     }

@@ -7,7 +7,7 @@ import {terrainAvailable256,terrainHoldsSnow256,terrainSupportsAffordance256,ter
 import {plantSubstrateAllowed256} from './plant-substrate-256.ts';
 import {footprintCells,STRUCTURE_DEFINITIONS} from './definitions.ts';
 import type {Cell,Job,Resource,Tile,World} from './types.ts';
-import type {OwnedResourceReuseWitness} from './owned-validation-resources.ts';
+import type {OwnedResourceReuseWitness,OwnedResourceBaseReuseWitness} from './owned-validation-resources.ts';
 export const MARSH_SCHEMA_VERSION=246;
 export const MARSH_PATH_COST_CORE=30;
 export const MARSH_PERCEIVED_CORE={ordinary:180,drafted:18} as const;
@@ -45,6 +45,7 @@ function validateMarshTransportResources(world:World,version:number,changedTiles
 
 export interface OwnedMarshTransportOwner {
  validate(world:World,changedTiles?:readonly number[],reuse?:OwnedResourceReuseWitness):string[];
+ validateBase(world:World,changedTiles:readonly number[]|undefined,reuse:OwnedResourceBaseReuseWitness):string[];
  commit(world:World):void;
  discard():void;
 }
@@ -62,7 +63,7 @@ export function createOwnedMarshTransportOwner():OwnedMarshTransportOwner {
  const ordinaryArray=(value:unknown):value is unknown[]=>Array.isArray(value)&&Object.getPrototypeOf(value)===Array.prototype;
  const record=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value)&&Object.getPrototypeOf(value)===Object.prototype;
  const positiveId=(value:unknown):value is number=>typeof value==='number'&&Number.isSafeInteger(value)&&value>0;
- const resources=(world:World,changedTiles:readonly number[]|undefined,reuse:OwnedResourceReuseWitness|undefined):readonly Resource[]=>{
+ const resources=(world:World,changedTiles:readonly number[]|undefined,reuse:OwnedResourceReuseWitness|undefined,baseOnly=false):readonly Resource[]=>{
   // Metadata can request a full fallback; an actual replacement refusal below
   // never retries on a favorable population or silently omits that resource.
   try{
@@ -78,7 +79,7 @@ export function createOwnedMarshTransportOwner():OwnedMarshTransportOwner {
    const updated=ownValue(reuse,'updated');
    if(!ordinaryArray(updated)||Reflect.ownKeys(updated).length!==updated.length+1)return after;
    if(updated.length>=after.length)return after;
-   if(!updated.length)return after===before?[]:after;
+   if(!updated.length)return baseOnly||after===before?[]:after;
    if(after===before)return after;
    const ordinals:number[]=[],seen=new Set<number>();
    for(let i=0;i<updated.length;i++){
@@ -100,6 +101,13 @@ export function createOwnedMarshTransportOwner():OwnedMarshTransportOwner {
   validate(world,changedTiles,reuse){
    pending=undefined;
    const errors=validateMarshTransportResources(world,world.schemaVersion,changedTiles,()=>resources(world,changedTiles,reuse));
+   if(!errors.length)pending=world;
+   return errors;
+  },
+  validateBase(world,changedTiles,reuse){
+   pending=undefined;
+   const witness:OwnedResourceReuseWitness|undefined=reuse.kind==='resource-base'?{kind:'sparse',previous:reuse.previous,updated:reuse.updated}:undefined;
+   const errors=validateMarshTransportResources(world,world.schemaVersion,changedTiles,()=>resources(world,changedTiles,witness,true));
    if(!errors.length)pending=world;
    return errors;
   },

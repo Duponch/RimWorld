@@ -10,6 +10,10 @@ import {plantSeasonRange256} from './plant-season-range-256.ts';
 import {FLORA_DEFINITIONS,isPlantSpeciesInVersion} from './biome-flora.ts';
 import {WILD_PLANT_GENERATION_FACTS_256 as FACTS} from './wild-plant-generation-data-256.ts';
 import {runtimePlantCell256,runtimePlantDef256,type WildPlantMapReader256} from './wild-plant-runtime-256.ts';
+import {actualPlantPhysicalMasks256} from './actual-plant-physical-masks-256.ts';
+import {createActualPlantSpatialSession256} from './actual-plant-spatial-session-256.ts';
+import {registerActualPlantRuntimeSession256} from './wild-plant-runtime-session-256.ts';
+import {createSpatialWildPlantSpawner256} from './wild-plant-spawner-256.ts';
 /** Actual physical classifications supplied by existing map composition.
  * Normal walkability and standability are DIFFERENT: bed/table/shelf remain
  * walkable; doors/fences/full-fill have their own RegionType precedence.
@@ -22,15 +26,36 @@ export interface PlantPhysicalMasks256 {
 }
 const ranges=new WeakMap<object,Readonly<{min:number;max:number}>>();
 const binaryClassificationAt=(grid:ArrayLike<number>,cell:number):boolean=>grid[cell]===0||grid[cell]===1;
+function actualPlantMapAuthority256(world:World) {
+ const site=world.site,planet=world.planet,rules=site?.revision===3?localBiomeRules256(site.biome,world.schemaVersion):undefined;
+ if(!isSchema256Or257(world.schemaVersion)||site?.revision!==3||planet?.revision!==3||!rules)throw Error('Missing actual geographic plant map');
+ const owner=planetGeography256(planet),tile=owner.surface.tiles[site.tileId];if(!tile||tile.id!==site.tileId||tile.biome!==site.biome)throw Error('Plant biome differs from actual surface owner');
+ let range=ranges.get(tile);if(!range){range=plantSeasonRange256(tile,owner.surface.radius);ranges.set(tile,range);}
+ return {site,planet,rules,range};
+}
+/** The actual simulation composition alone uses this synchronous session.
+ * capture remains the same complete strict oracle used by generation, public
+ * readers, saves and diagnostics. No session survives an advance call. */
+export function createActualWildPlantMapReader256(densityFactor:(world:World)=>number):WildPlantMapReader256 {
+ const reader=createWildPlantMapReader256(actualPlantPhysicalMasks256,densityFactor);
+ registerActualPlantRuntimeSession256(reader,(world,density,desired)=>{
+  const {rules,range}=actualPlantMapAuthority256(world),order=Object.keys(FACTS) as (keyof typeof FACTS)[];
+  const required=new Set([...rules.wildPlants.map(row=>row.defId),...order.filter(def=>FACTS[def].cavePlant)]);
+  for(const id of required){
+   if(!Object.hasOwn(FACTS,id))throw Error(`Unresolved initial plant ${id}`);
+   const def=FACTS[id as keyof typeof FACTS];if(!isPlantSpeciesInVersion(def.species,world.schemaVersion)||!Object.hasOwn(FLORA_DEFINITIONS,def.species))throw Error(`Missing concrete initial plant ${id}`);
+  }
+  return createSpatialWildPlantSpawner256(createActualPlantSpatialSession256(world,{width:world.width,height:world.height,rules,densityFactor:density,
+   tileMinTemperature:range.min,tileMaxTemperature:range.max,desiredPlants:desired}),order);
+ });
+ return reader;
+}
 /** Pure captured grids from a real World; no terrain generation, World clone,
  * PRNG, cell reweighting or climate substitution. Used only at generation or
  * an actual sparse runtime attempt, never per frame. */
 export function createWildPlantMapReader256(physical:(world:World)=>PlantPhysicalMasks256,densityFactor:(world:World)=>number):WildPlantMapReader256 {
  return {densityFactor,cell:runtimePlantCell256,capture(world){
-  const site=world.site,planet=world.planet,rules=site?.revision===3?localBiomeRules256(site.biome,world.schemaVersion):undefined;
-  if(!isSchema256Or257(world.schemaVersion)||site?.revision!==3||planet?.revision!==3||!rules)throw Error('Missing actual geographic plant map');
-  const owner=planetGeography256(planet),tile=owner.surface.tiles[site.tileId];if(!tile||tile.id!==site.tileId||tile.biome!==site.biome)throw Error('Plant biome differs from actual surface owner');
-  let range=ranges.get(tile);if(!range){range=plantSeasonRange256(tile,owner.surface.radius);ranges.set(tile,range);}
+  const {site,planet,rules,range}=actualPlantMapAuthority256(world);
   const masks=physical(world),n=world.width*world.height;
   if(Object.values(masks).some(grid=>grid.length!==n))throw Error('Physical plant masks differ from actual map');
   const fertility=new Float32Array(n),naturalRoof=new Uint8Array(n),water=new Uint8Array(n),baseWater=new Uint8Array(n),regionTypes=new Uint8Array(n),walkableNoDoor=new Uint8Array(n),snowDepth=new Float32Array(n),terrainDefIds:string[]=[],terrainTags:(readonly string[])[]=[];

@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V425 — lot partiel qualifié par reprises, prêt pour publication, schéma 263 inchangé :** [Simulation et admission de présentation](simulation-presentation-v425.md). Decoder MAIN isolé, témoin des ressources, session écologique éphémère et espèces animales actives. Garde locale évitant certains index O(R), sans gain isolé mesuré. Quatre fenêtres natives finales acquises : départ×1 amélioré, ×6 moins fluide malgré davantage de ticks ; débit Aulnes×3/×6 moins bon au premier lot. LOWMEM initial rouge, recharge entière exacte414 acquise séparément ;1731sources gelées exactes. Non publié, V423 reste publié.
+
 **V424 — audit, schéma 263 inchangé :** [Objectif 200 FPS](performance-architecture-audit-v424.md). Chemin de présentation trop dépendant du World complet ; refonte de la projection, du flux et des indices recommandée, options Worker/WASM/natif comparées. Aucun changement produit ni gain de fluidité livré par cet audit.
 
 **V420 — schéma 263 inchangé :** [Diagnostic CPU/GPU et structures modifiées](performance-foundations-v420.md). Correction ciblée du contrôle MAIN qualifiée ; mesure propriétaire Node7,01→3,25ms, aucun gain FPS global établi. Mesures GPU et rouges historiques conservés dans la note. Publié eb3c515f/déploiement b39e5aa5,136HTTPS exacts ; performances et confort restent ouverts.

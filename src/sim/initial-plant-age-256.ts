@@ -6,8 +6,16 @@ const own=(v:object,k:string)=>Object.hasOwn(v,k);
 /** Observed age is already paused/rebased by the existing owner clock. Keep
  * the integer Core remainder in the immutable offset, not in a second clock. */
 export const effectivePlantAgeCore256=(life:Pick<PlantLife,'age'|'initialAgeCore'>):number=>(life.initialAgeCore??0)+life.age*10;
+// Definition-only values never depend on a World, a clock or an admitted
+// plant. Keep the original find-first rule if definitions share a species.
+const initialPlantLifespansCore256:ReadonlyMap<unknown,number>=(()=>{
+ const lifespans=new Map<unknown,number>();
+ for(const def of Object.values(FACTS))if(!lifespans.has(def.species))lifespans.set(def.species,
+  Math.trunc(Math.fround(Math.fround(def.growDays*def.lifespanDaysPerGrowDays)*60000)));
+ return lifespans;
+})();
 export function initialPlantLifespanCore256(species:unknown):number|undefined {
- const def=Object.values(FACTS).find(d=>d.species===species);return def?Math.trunc(Math.fround(Math.fround(def.growDays*def.lifespanDaysPerGrowDays)*60000)):undefined;
+ return initialPlantLifespansCore256.get(species);
 }
 export function validInitialPlantAge256(plant:Partial<Resource>,version:number):boolean {
  const life=plant.plantLife;if(!life||typeof life!=='object'||!own(life,'initialAgeCore'))return true;

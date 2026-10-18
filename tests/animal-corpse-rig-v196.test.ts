@@ -7,6 +7,7 @@ import { processHaul } from '../src/sim/hauling';
 import { addResolvedInjury,createMedicalRecord,reconcileMedicalDeath } from '../src/sim/injury-state';
 import { BLOOD_UNIT } from '../src/sim/injury-rules';
 import { adultAgeTicks } from '../src/sim/animal-life';
+import { createAnimalMedicalRecord256 } from '../src/sim/animal-clinical-age-v256';
 import { ANIMAL_SPECIES_IDS,type AnimalSpeciesId } from '../src/sim/animal-species';
 import { WildlifeLayer } from '../src/render/WildlifeLayer';
 import { PawnLayer } from '../src/render/PawnLayer';
@@ -19,7 +20,7 @@ import { MotionTimeline } from '../src/render/MotionTimeline';
 import { bodyBloodWord } from '../src/render/body-blood';
 
 function corpse(species:AnimalSpeciesId,id:number):CorpseState {
-  const health=createMedicalRecord(0);health.body=species;health.bloodLoss=BLOOD_UNIT;reconcileMedicalDeath(health);
+  const health=createAnimalMedicalRecord256({tick:0,schemaVersion:263},{species,ageTicks:adultAgeTicks(species)});health.bloodLoss=BLOOD_UNIT;reconcileMedicalDeath(health);
   return {animalId:id,species,sex:'female',ageTicks:adultAgeTicks(species),health};
 }
 function rig(layer:WildlifeLayer,species:string):THREE.Mesh {
@@ -28,8 +29,8 @@ function rig(layer:WildlifeLayer,species:string):THREE.Mesh {
 
 test('all species keep the full shared faceted body, coat palette and resident cross eyes at death and deposition',()=>{
   const world=animalCombatCamp(),layer=new WildlifeLayer();world.wildlife!.animals=[];world.piles=[];
-  for(const [index,species] of ANIMAL_SPECIES_IDS.entries())world.piles.push({id:900+index,kind:'corpse',item:`${species}-corpse`,quantity:1,owner:{type:'ground',x:8+index,z:9},corpse:corpse(species,900+index),rot:{progress:0,atTick:world.tick}});
-  world.nextId=Math.max(world.nextId,907);refreshStock(world);expect(validateWorld(world)).toEqual([]);
+  for(const [index,species] of ANIMAL_SPECIES_IDS.entries())world.piles.push({id:900+index,kind:'corpse',item:`${species}-corpse`,quantity:1,owner:{type:'ground',x:1+index%(world.width-2),z:1+Math.floor(index/(world.width-2))},corpse:corpse(species,900+index),rot:{progress:0,atTick:world.tick}});
+  world.nextId=Math.max(world.nextId,900+ANIMAL_SPECIES_IDS.length);refreshStock(world);expect(validateWorld(world)).toEqual([]);
   const before=structuredClone(world);layer.update(world,undefined,true);
   for(const species of ANIMAL_SPECIES_IDS){
     const mesh=rig(layer,species),geometry=mesh.geometry as THREE.InstancedBufferGeometry;

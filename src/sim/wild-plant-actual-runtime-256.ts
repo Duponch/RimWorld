@@ -1,7 +1,6 @@
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import type {World} from './types.ts';
-import {actualPlantPhysicalMasks256} from './actual-plant-physical-masks-256.ts';
-import {createWildPlantMapReader256} from './wild-plant-runtime-map-256.ts';
+import {createActualWildPlantMapReader256} from './wild-plant-runtime-map-256.ts';
 import {advanceWildFlora256,createWildFloraState256} from './wild-plant-runtime-256.ts';
 
 /** Core4871: the four current surface mutators have no plant-density
@@ -14,7 +13,7 @@ export function actualPlantDensity256(world:World):number {
  if(!isSchema256Or257(world.schemaVersion)||site?.revision!==3||!Number.isInteger(site.mutatorCode)||site.mutatorCode<0||site.mutatorCode>15)throw Error('Missing actual plant-density definitions');
  return 1;
 }
-export const actualWildPlantReader256=createWildPlantMapReader256(actualPlantPhysicalMasks256,actualPlantDensity256);
+export const actualWildPlantReader256=createActualWildPlantMapReader256(actualPlantDensity256);
 export function initializeActualWildFlora256(world:World):void {
  if(world.flora!==undefined)throw Error('Initial wild flora already owned');
  world.flora=createWildFloraState256(world,actualWildPlantReader256);

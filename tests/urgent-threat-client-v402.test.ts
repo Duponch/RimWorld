@@ -2,7 +2,9 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { SimulationClient } from '../src/bridge/SimulationClient';
 import type { Response, Request } from '../src/bridge/protocol';
 const decoder = vi.hoisted(() => ({ calls: 0, reject: false }));
-vi.mock('../src/bridge/snapshots', () => ({ SnapshotDecoder: class { adoptCampaignOnly() { decoder.calls++; return decoder.reject ? {status:'resync'} : {status:'applied',replaced:true}; } adopt(p: any) { decoder.calls++; return decoder.reject ? { status: 'resync' } : { status: 'applied', world: p.world, replaced: true }; } } }));
+// Since V408 the client publishes the Decoder's admitted summary, not the
+// packet directly. Keep that applied-result contract in this transport mock.
+vi.mock('../src/bridge/snapshots', () => ({ SnapshotDecoder: class { adoptCampaignOnly(p: any) { decoder.calls++; return decoder.reject ? {status:'resync'} : {status:'applied',replaced:true,summary:p.summary}; } adopt(p: any) { decoder.calls++; return decoder.reject ? { status: 'resync' } : { status: 'applied', world: p.world, replaced: true }; } } }));
 class Transport {
   static current: Transport; onmessage?: (e: MessageEvent<Response>) => void; onerror?: unknown; onmessageerror?: unknown;
   requests: Request[] = []; constructor() { Transport.current = this; } postMessage(p: Request) { this.requests.push(p); } terminate() {}

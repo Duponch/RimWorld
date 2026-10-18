@@ -75,7 +75,7 @@ import { hasDraftedTendingMarker,validTendShape,validDraftedTendingTransport } f
 import {storageCellById} from '../sim/shelf-storage.ts';
 import { PowerParentValidationCache,type PowerParentReader } from '../sim/power-parent-validation.ts';
 import type { StagingGeometryReader } from '../sim/staging-validation.ts';
-import type { OwnedValidationResourceReader, OwnedResourceReuseWitness } from '../sim/owned-validation-resources.ts';
+import type { OwnedValidationResourceReader, OwnedResourceReuseWitness, OwnedResourceBaseReuseWitness } from '../sim/owned-validation-resources.ts';
 import type { OwnedGeometryReuseWitness } from '../sim/owned-validation-geometry.ts';
 import { ValidationIdentityContext } from '../sim/validation-identities.ts';
 import { validBiofuelTransport } from '../sim/biofuel-save.ts';
@@ -989,7 +989,7 @@ export class SnapshotDecoder {
 
   /** Public/mutable consumers retain the mutation-aware historical reader.
    * The closed MAIN subclass owns its fixed consumers and local query scope. */
-  protected createValidationContext(_next:World,_resourceReuse?:OwnedResourceReuseWitness,_geometryReuse?:OwnedGeometryReuseWitness):SnapshotValidationContext {
+  protected createValidationContext(_next:World,_resourceReuse?:OwnedResourceReuseWitness,_geometryReuse?:OwnedGeometryReuseWitness,_baseReuse?:OwnedResourceBaseReuseWitness):SnapshotValidationContext {
     return {powerParents:new PowerParentValidationCache()};
   }
 
@@ -1004,7 +1004,7 @@ export class SnapshotDecoder {
     return validHumanSleepingSpotTransport(next,next.schemaVersion);
   }
   /** Mutable/public decoders always inspect the entire plant population. */
-  protected validateMarshTransport(next:World,changedTiles?:readonly number[],_resourceReuse?:OwnedResourceReuseWitness):string[] {
+  protected validateMarshTransport(next:World,changedTiles?:readonly number[],_resourceReuse?:OwnedResourceReuseWitness,_baseReuse?:OwnedResourceBaseReuseWitness):string[] {
     return validateMarshTransport(next,next.schemaVersion,changedTiles);
   }
   adoptCampaignOnly(packet:CampaignOnlyMessage,acceptExtra?:(view:World)=>boolean):{status:'applied';replaced:boolean;summary:CampaignSummary}|{status:'stale'}|{status:'resync';reason:string} {
@@ -1168,6 +1168,9 @@ export class SnapshotDecoder {
     let changedResourceIds: number[] | undefined = [];
     let changedTileIndices: number[] = [];
     let resourceStructureCandidate: ResourceStructureCandidate | undefined;
+    // Only full upserts can alter resource identity/spatial/substrate fields.
+    // Growth tuples reconstruct those fields from the admitted predecessor.
+    const resourceBaseUpdated:SnapshotResourcePlacement[]=[];
     let resourceStructureTouched: Set<number> | undefined;
     let resourceStructureRemoved: SnapshotResourceRemoval[] = [];
     let resourceStructureAllowed = this.#resourceStructureReady;
@@ -1250,6 +1253,7 @@ export class SnapshotDecoder {
           if (!validStoneIdentity(resource.stone, resource.kind, message.world.schemaVersion)) return resync('Identité géologique invalide.');
           if (touched.has(resource.id)) return resync('Ressource modifiée plusieurs fois.');
           touched.add(resource.id); write(resource);
+          if(sparse){const afterOrdinal=this.resourceSlots.get(resource.id);if(afterOrdinal!==undefined)resourceBaseUpdated.push({id:resource.id,afterOrdinal});}
         }
         if(growth!==undefined){
           if(!(growth instanceof Float64Array)||growth.length%4||growth.length>previous.width*previous.height*4)return resync('Delta de croissance invalide.');
@@ -1330,6 +1334,8 @@ export class SnapshotDecoder {
     const resourceReuse:OwnedResourceReuseWitness|undefined=!reindexResources
       &&resourceStructureAllowed&&resourceStructureCandidate&&this.current
       ?{kind:'sparse',previous:this.current,updated:resourceStructureCandidate.updated}:undefined;
+    const resourceBaseReuse:OwnedResourceBaseReuseWitness|undefined=resourceReuse
+      ?{kind:'resource-base',previous:resourceReuse.previous,updated:resourceBaseUpdated}:undefined;
     // Defined only by the verified sparse branch above; do not re-read packet
     // properties to infer authority here. Public contexts ignore this fact.
     const geometryReuse:OwnedGeometryReuseWitness|undefined=structureIndices!==undefined&&this.current
@@ -1343,7 +1349,7 @@ export class SnapshotDecoder {
     if(!validTundraTransport(next,next.schemaVersion))return resync('Toundra, flore ou climat futur/incohérent.');
     if(validateAncientCasketPhysical256(next).length)return resync('Invalid actual casket physical owner.');
     if(validateBridgeTransport(next,next.schemaVersion,message.kind==='delta'?changedTileIndices:[]).length)return resync('Fondation future, chantier ou support invalide.');
-    if(this.validateMarshTransport(next,message.kind==='delta'?changedTileIndices:[],resourceReuse).length)return resync('Marais futur, sans support ou fertile invalide.');
+    if(this.validateMarshTransport(next,message.kind==='delta'?changedTileIndices:[],resourceReuse,resourceBaseReuse).length)return resync('Marais futur, sans support ou fertile invalide.');
     if(validateSnowTransport(next,next.schemaVersion, message.kind==='delta'&&!!this.current?.snow===!!next.snow?changedTileIndices:undefined).length)return resync('Snow surface clock, depth or owner invalid.');
     if(validateStartingArrivalOwners(next,next.schemaVersion).length)return resync('Personne, possession ou propriétaire de capsule initiale invalide.');
     if(hasDraftedTend&&!validDraftedTendingTransport(next))return resync('Soins mobilisés, patient, contact ou réservation incohérents.');
@@ -1359,7 +1365,7 @@ export class SnapshotDecoder {
     if(message.kind==='delta'&&this.current&&Object.hasOwn(this.current,'exploration')!==Object.hasOwn(next,'exploration')&&validateExploration256(next,next.schemaVersion).length)return resync('Invalid exploration ownership transition.');
     const exploration=prepareExplorationTransport256(message,next);
     if(!exploration.ok||validateDoors(next,next.schemaVersion,exploration.resolve).length||!validBlindMineTransport256(next))return resync('Invalid exploration actor, door or blind mining intent.');
-    const validation=this.createValidationContext(next,resourceReuse,geometryReuse),powerTopology=validation.powerParents;
+    const validation=this.createValidationContext(next,resourceReuse,geometryReuse,resourceBaseReuse),powerTopology=validation.powerParents;
     if(next.schemaVersion<256&&([...next.structures,...next.jobs,...next.packed.map(pack=>pack.building)].some(entity=>entity.material==='jade')||next.piles.some(pile=>pile.item==='jade'||pile.kind==='jade'||pile.artWork?.material==='jade')))return resync('Jade ou matière future dans un ancien snapshot.');
     const identities=new ValidationIdentityContext(next,validation.resourceFacts);
     const oldDeadWrappers=message.epoch===this.epoch?this.expiredTreeWrappers:undefined;

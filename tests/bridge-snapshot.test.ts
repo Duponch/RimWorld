@@ -10,6 +10,10 @@ import { PresentationQueue } from '../src/render/PresentationQueue';
 import { PawnLayer } from '../src/render/PawnLayer';
 import { miningCamp } from './scenarios/mining';
 
+// A projection can append campaign metadata before a newly adopted domain.
+// Normalize only root key order; every nested value/order stays exact.
+const rootOrderedJson=(world:World):string=>JSON.stringify(Object.fromEntries(Object.keys(world).sort().map(key=>[key,world[key as keyof World]])));
+
 test('flak and sculpture works transmit incremental progress without resync or mutation of old snapshots',()=>{
   const w=createWorld(109,32,32),encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder();
   const send=()=>structuredClone(encoder.encode(w,0,6));
@@ -24,7 +28,7 @@ test('flak and sculpture works transmit incremental progress without resync or m
   corrupt.piles!.upserted[0]!.flakWork!.parts[0]!.quantity=29;
   expect(decoder.adopt(corrupt).status).toBe('resync');
   const next=decoder.adopt(delta);expect(next.status).toBe('applied');if(next.status!=='applied')throw Error('progress rejected');
-  expect(next.world).toEqual(w);expect(first.world).toEqual(before);
+  expect(next.world).toEqual(campaignPresentation(w));expect(first.world).toEqual(before);
 });
 
 test('packed growth deltas preserve exact doubles, absent fields, order and atomic rejection',()=>{
@@ -42,7 +46,7 @@ test('packed growth deltas preserve exact doubles, absent fields, order and atom
     const invalid=structuredClone(delta);invalid.resources!.growth![index]=value;expect(decoder.adopt(invalid).status).toBe('resync');
   }
   const malformed=structuredClone(delta);malformed.resources!.growth=new Float64Array(3);expect(decoder.adopt(malformed).status).toBe('resync');
-  const result=decoder.adopt(delta);expect(result.status).toBe('applied');if(result.status==='applied')expect(result.world).toEqual(w);
+  const result=decoder.adopt(delta);expect(result.status).toBe('applied');if(result.status==='applied')expect(result.world).toEqual(campaignPresentation(w));
   expect(initial.world).toEqual(old);
   const unchanged=encoder.encode(w,0,6);if(unchanged.kind==='delta')expect(unchanged.resources).toBeUndefined();
 });
@@ -50,12 +54,12 @@ test('packed growth deltas preserve exact doubles, absent fields, order and atom
 test('floor placement, burning and removal cross worker deltas without mutating older frames',()=>{
   const source=createWorld(42,32,32),encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder(),index=100;
   source.tiles[index]={terrain:'soil'};
-  const send=()=>{const m=structuredClone(encoder.encode(source,.2,6));const r=decoder.adopt(m);expect(r.status).toBe('applied');if(r.status!=='applied')throw Error('snapshot');expect(r.world).toEqual(source);return r.world;};
+  const send=()=>{const m=structuredClone(encoder.encode(source,.2,6));const r=decoder.adopt(m);expect(r.status).toBe('applied');if(r.status!=='applied')throw Error('snapshot');expect(r.world).toEqual(campaignPresentation(source));return r.world;};
   const initial=send();source.tiles[index]!.floor='wood-planks';const built=send();
   expect(initial.tiles[index]!.floor).toBeUndefined();source.tiles[index]!.floor='burned-wood';send();expect(built.tiles[index]!.floor).toBe('wood-planks');
   delete source.tiles[index]!.floor;const message=structuredClone(encoder.encode(source,.2,6));expect(message.kind).toBe('delta');
   if(message.kind!=='delta')throw Error('delta');const invalid=structuredClone(message);invalid.tiles![0]![5]='bogus' as never;expect(decoder.adopt(invalid).status).toBe('resync');
-  const result=decoder.adopt(message);expect(result.status).toBe('applied');if(result.status==='applied')expect(result.world).toEqual(source);
+  const result=decoder.adopt(message);expect(result.status).toBe('applied');if(result.status==='applied')expect(result.world).toEqual(campaignPresentation(source));
 });
 
 test('same-tick tile edits preserve all five fields across delta and checkpoint resets', () => {
@@ -68,7 +72,7 @@ test('same-tick tile edits preserve all five fields across delta and checkpoint 
     const result = decoder.adopt(packet);
     expect(result.status).toBe('applied');
     if (result.status !== 'applied') throw Error(result.status);
-    expect(result.world).toEqual(source);
+    expect(result.world).toEqual(campaignPresentation(source));
     for (const frame of frames) expect(frame.world).toEqual(frame.frozen);
     frames.push({ world: result.world, frozen: structuredClone(result.world) });
     return packet;
@@ -107,7 +111,7 @@ test('map replacement resets tile caches when dimensions shrink and grow', () =>
     const initial = decoder.adopt(checkpoint);
     expect(initial.status).toBe('applied');
     if (initial.status !== 'applied') throw Error(initial.status);
-    expect(initial.world).toEqual(source);
+    expect(initial.world).toEqual(campaignPresentation(source));
     frames.push({ world: initial.world, frozen: structuredClone(initial.world) });
     delete source.tiles[0]!.floor;
     const delta = structuredClone(encoder.encode(source, 0, 6));
@@ -115,7 +119,7 @@ test('map replacement resets tile caches when dimensions shrink and grow', () =>
     const updated = decoder.adopt(delta);
     expect(updated.status).toBe('applied');
     if (updated.status !== 'applied') throw Error(updated.status);
-    expect(updated.world).toEqual(source);
+    expect(updated.world).toEqual(campaignPresentation(source));
     for (const frame of frames) expect(frame.world).toEqual(frame.frozen);
   }
 });
@@ -123,13 +127,16 @@ test('map replacement resets tile caches when dimensions shrink and grow', () =>
 test('snapshots preserve exact state and previous frames through harvest, patches, replacement and recovery', () => {
   const encoder = new SnapshotEncoder(); const decoder = new SnapshotDecoder();
   let source = createWorld(42, 32, 32);
+  // Saves retain the complete authority; snapshots below retain its projected
+  // read model. Preserve both initial values for their separate contracts.
+  const initialSave = serializeWorld(source);
   const transfer = (checkpoint = false): SnapshotMessage => structuredClone(encoder.encode(source, 0.2, 1, checkpoint));
   const apply = (message: SnapshotMessage, replaced = false): World => {
     const result = decoder.adopt(message);
     if (result.status !== 'applied') throw new Error(`Snapshot refused: ${JSON.stringify(result)}`);
     expect(result.replaced).toBe(replaced);
-    expect(result.world).toEqual(source);
-    expect(JSON.stringify(result.world)).toBe(JSON.stringify(source));
+    expect(result.world).toEqual(campaignPresentation(source));
+    expect(rootOrderedJson(result.world)).toBe(rootOrderedJson(campaignPresentation(source)));
     return result.world;
   };
   const initialPacket = transfer(); const initial = apply(initialPacket, true);
@@ -226,7 +233,7 @@ test('snapshots preserve exact state and previous frames through harvest, patche
   expect(recovered.tiles).not.toBe(changed.tiles);
 
   // Same-size/same-seed saves commonly reuse all IDs; a new epoch must replace their contents.
-  source = deserializeWorld(serializeWorld(initialValue));
+  source = deserializeWorld(initialSave);
   source.tiles[0] = { terrain: 'soil' }; source.resources[0]!.amount += 3;
   const loadedPacket = transfer(); const loaded = apply(loadedPacket, true);
   expect(loadedPacket.kind).toBe('checkpoint'); expect(loadedPacket.epoch).toBe(recovery.epoch + 1);
@@ -244,7 +251,7 @@ test('snapshots preserve exact state and previous frames through harvest, patche
   const restored = fresh.adopt(transfer(true));
   expect(restored.status).toBe('applied');
   if (restored.status === 'applied') {
-    expect(restored.world).toEqual(source);
+    expect(restored.world).toEqual(campaignPresentation(source));
     expect(restored.replaced).toBe(true);
   }
 });
@@ -286,7 +293,7 @@ test('buffered scene preserves arrival, work, excavation, tree removal and cargo
     previousPosition={x,z};expect(world.tiles[Math.round(z)*32+Math.round(x)]!.terrain,`inside rendered rock at ${now}`).not.toBe('rock');
     if(m.getY(0)>0){const p=world.pawns[0]!,job=world.jobs.find(j=>j.id===p.jobId);if(job){expect(Math.max(Math.abs(job.x-x),Math.abs(job.z-z))).toBeLessThanOrEqual(1.001);worked.add(job.id);}}
   }
-  expect(worked.size).toBe(4);expect(queue.size).toBe(0);expect(world).toEqual(source);
+  expect(worked.size).toBe(4);expect(queue.size).toBe(0);expect(world).toEqual(campaignPresentation(source));
   // An unchanged phase survives structured cloning. Its final continuous
   // update is retained even when no further worker snapshot arrives in pause.
   const phase=new PresentationChanges();expect(phase.capture(source)).toBe(true);expect(phase.capture(structuredClone(source))).toBe(false);
@@ -313,7 +320,10 @@ test('seasonal plant state and damage travel by delta without mutating earlier s
       expect(decoder.adopt(corrupt).status).toBe('resync');
     }
     result=decoder.adopt(packet);expect(result.status).toBe('applied');
-    if(result.status==='applied')expect(JSON.stringify(result.world)).toBe(JSON.stringify(source));
+    if(result.status==='applied'){
+      expect(result.world).toEqual(campaignPresentation(source));
+      expect(rootOrderedJson(result.world)).toBe(rootOrderedJson(campaignPresentation(source)));
+    }
     expect(initial).toEqual(initialValue);
   }
   expect(plant.plantLife!.age).toBeGreaterThan(0);

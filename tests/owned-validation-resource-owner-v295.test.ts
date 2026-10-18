@@ -2,6 +2,11 @@ import {expect,test} from 'vitest';
 import {createOwnedValidationResourceOwner,type OwnedResourceReuseWitness} from '../src/sim/owned-validation-resources.ts';
 import type {Resource,World} from '../src/sim/types.ts';
 import {deconstructionCamp} from './scenarios/deconstruction.ts';
+import {adoptEnvironment} from '../src/sim/environment-step.ts';
+import {createPlantLife} from '../src/sim/plant-life.ts';
+import {resumeTreeLife} from '../src/sim/tree-transfer-atomic.ts';
+import {hasPausedTreeClock} from '../src/sim/tree-transfer-clock.ts';
+import {validPlantLife} from '../src/sim/plant-life-save.ts';
 
 // Private, stable ordinary data fixtures. The exported query helper does not
 // establish native ownership or validate the Decoder's sequence certificate.
@@ -65,6 +70,38 @@ test('collision order, callback throws and discard preserve the last confirmed p
   const recovery=structuredClone(w),recovered=owner.prepare(recovery,witness(w,recovery));expect(recovered.ids(recovery)).toBe(ids);
   expect(recovered.hasInvalid(recovery,new Set([recovery.resources[0]!.id]),()=>{throw Error('must short circuit');})).toBe(true);
   owner.commit(recovery);expect(old.ids(w)).toBe(ids);
+});
+
+test('retained replanted trees without light or blight revalidate their clock against the current World',()=>{
+  const w=fixture();w.tick=3000;
+  const tree=resource(w.nextId++,{kind:'tree',species:'oak',amount:46,growth:.8,growthTick:w.tick});w.resources=[tree];
+  expect(adoptEnvironment(w)).toBe(true);tree.plantLife=createPlantLife(w,tree,true);
+  const packedAt=w.tick;w.tick+=50;resumeTreeLife(tree,packedAt,w.tick);
+  expect(hasPausedTreeClock(tree)).toBe(true);expect(tree.growthLight).toBeUndefined();expect(Object.hasOwn(tree,'blight')).toBe(false);
+  expect(validPlantLife(tree,w.schemaVersion,w)).toBe(true);
+  const owner=createOwnedValidationResourceOwner(),old=owner.prepare(w),ids=old.ids(w);
+  expect(old.hasInvalid(w,new Set(),r=>!validPlantLife(r,w.schemaVersion,w))).toBe(false);owner.commit(w);
+  const before=structuredClone(w),late={...w,tick:tree.plantLife!.nextCheck};
+  const current=owner.prepareBase(late,{kind:'resource-base',previous:w,updated:[]});
+  expect(current.ids(late)).toBe(ids);const seen:Resource[]=[];
+  expect(current.hasInvalid(late,new Set(),r=>{seen.push(r);return !validPlantLife(r,late.schemaVersion,late);})).toBe(true);
+  expect(seen).toEqual([tree]);expect(w).toEqual(before);owner.discard();
+  expect(old.hasInvalid(w,new Set(),r=>!validPlantLife(r,w.schemaVersion,w))).toBe(false);
+});
+
+test('every own paused-clock marker creates a candidate and invalidates ordinary-resource index reuse',()=>{
+  for(const key of ['pausedTicks','ageTick','leaflessPausedTicks'] as const){
+    const w=fixture();w.resources=[resource(w.nextId++,{kind:'tree',species:'oak'})];
+    const owner=createOwnedValidationResourceOwner(),old=owner.prepare(w),ids=old.ids(w);owner.commit(w);
+    const next=structuredClone(w),tree=next.resources[0]!;
+    // Own undefined is deliberately malformed data, not an absent marker.
+    tree.plantLife={since:0,age:0,darkTicks:0,nextCheck:100,[key]:undefined};
+    expect(hasPausedTreeClock(tree)).toBe(true);
+    const fresh=owner.prepareBase(next,{kind:'resource-base',previous:w,updated:[{id:tree.id,afterOrdinal:0}]});
+    expect(fresh.ids(next)).not.toBe(ids);const seen:Resource[]=[];
+    expect(fresh.hasInvalid(next,new Set(),r=>{seen.push(r);return !validPlantLife(r,next.schemaVersion,next);})).toBe(true);
+    expect(seen).toEqual([tree]);expect(w.resources[0]!.plantLife).toBeUndefined();
+  }
 });
 
 test('prepare and unobserved commit stay lazy, and a mismatched commit cannot confirm pending facts',()=>{

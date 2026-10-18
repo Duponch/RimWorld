@@ -9,6 +9,8 @@ import {PLANT_LIFE_INTERVAL} from '../src/sim/plant-life';
 import {floraSize,isResidentCrop} from '../src/render/flora-presentation';
 import {harvestable,isPlant} from '../src/sim/plants';
 import {plantLeafless} from '../src/sim/plant-life';
+import {campaignPresentation} from '../src/sim/secondary-site-presentation';
+import {DETERIORATION_INTERVAL} from '../src/sim/deterioration-content';
 import type {Resource,World} from '../src/sim/types';
 
 // Small admitted transport/query fixtures. Their controlled memberships and
@@ -25,6 +27,8 @@ function camp():World {
 }
 function clock(world:World,tick:number):void {
   world.tick=tick;
+  // Numerical clock jumps do not execute the unrelated deterioration loop.
+  if(world.deterioration)world.deterioration.lastTick=tick-tick%DETERIORATION_INTERVAL;
   for(const r of world.resources)if(r.plantLife){
     r.plantLife.nextCheck=tick+(r.id-tick%PLANT_LIFE_INTERVAL+PLANT_LIFE_INTERVAL)%PLANT_LIFE_INTERVAL+1;
     r.plantLife.age=Math.max(0,r.plantLife.nextCheck-PLANT_LIFE_INTERVAL-r.plantLife.since);
@@ -36,7 +40,7 @@ function harness(world:World){
   const packets=new WeakMap<object,World>();
   const held:Array<{world:World;before:World;view:World|undefined;viewBefore:World|undefined}>=[];
   const packet=(checkpoint=false):SnapshotMessage<true>=>{
-    const message=structuredClone(encoder.encode(world,0,6,checkpoint));packets.set(message,structuredClone(world));return message;
+    const message=structuredClone(encoder.encode(world,0,6,checkpoint));packets.set(message,structuredClone(campaignPresentation(world)));return message;
   };
   const accept=(message:SnapshotMessage<true>):World=>{
     const source=packets.get(message);if(!source)throw Error('Packet provenance missing.');
