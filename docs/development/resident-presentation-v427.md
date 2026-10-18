@@ -1,6 +1,6 @@
 # V427 — Les Éclaircies : admission et apparence de présentation
 
-**Lot qualifié par reprises — 18 octobre 2026.** Le lot intégré réduit fortement le coût d'admission MAIN et améliore l'orbite dans le relevé court des Éclaircies ; le confort global reste ouvert. La progression en vue fixe est faible et `applyWorld` demeure coûteux. Schéma 263 inchangé ; publication à suivre.
+**Lot qualifié par reprises — 18 octobre 2026.** Le lot intégré réduit fortement le coût d'admission MAIN et améliore l'orbite dans le relevé court des Éclaircies ; le confort global reste ouvert. La progression en vue fixe est faible et `applyWorld` demeure coûteux. Schéma 263 inchangé ; produit publié `6e06f474`, déploiement `a831993d`.
 
 Le retour humain concerne les ralentissements globaux en jouant, particulièrement dans une vue perspective large et inclinée. Une caméra fixe en pause ne représente pas ce confort : la même scène passe ici de 214,92 images/s en pause fixe à 29,16 images/s en rotation à ×1, avec un intervalle RAF maximal de 479,1 ms. Le diagnostic isole l'admission MAIN, l'application des scènes, la simulation Worker et le GPU avant de modifier ces responsabilités.
 
@@ -72,7 +72,7 @@ Les réparations restent des corrections de doubles/oracles : méthode `discardD
 
 `npm run test:presentation` passe en **176,227s**, Chrome natif, minage puis abattage45s chacun avec alternances×6/×1/×3. Aucun saut brut/de transition, excès de déplacement continu ni occupation solide détecté. Ce parcours utilise sa fixture naturelle250² et ne remplace pas les mesures des Éclaircies. Journal `tmp/validation-runs/v427-presentation-2026-10-18T20-04-04.131Z-25524/output.log`. Les prototypes privés de la suite V428 ne font pas partie de ce lot ; leur gain reste à établir.
 
-Publication : en préparation. Aucune nouvelle mécanique, migration ou modification des sauvegardes publiques ; aucune suite complète ni campagne longue nouvelle revendiquée.
+Le commit produit `6e06f4744422bbe1b0210d1eccd6bbc17e5cbee6` est poussé sur `origin/main`. Son nouveau build Pages passe en35,013s, typage des fixtures réparées inclus ; paquet inspecté dans `tmp/elsewhere-pages/v427-package-OU73ih`, 70fichiers publics de sauvegarde/catalogue exactement conservés, aucun laboratoire ni marqueur QA connu. Publication16,462s : [déploiement a831993d](https://a831993d.elsewhere-cq7.pages.dev), [adresse stable](https://elsewhere-cq7.pages.dev). Les138réponses HTTPS des adresses stable et immuable sont exactes (statut200, MIME, SHA-256), rapport `tmp/elsewhere-pages/v427-http-4Ik6WK/report.json` ; paquet, sauvegardes publiques et HEAD inchangés pendant le contrôle. Cette vérification prouve la disponibilité des fichiers, pas de nouveaux FPS en ligne. Le contrôle inclut désormais les deux entrypoints Worker compilés, soit69chemins par origine. Aucune nouvelle mécanique, migration ou modification des sauvegardes publiques ; aucune suite complète ni campagne longue nouvelle revendiquée.
 
 ## Traces conservées
 
