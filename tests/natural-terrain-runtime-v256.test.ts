@@ -95,3 +95,67 @@ test('RAW and checkpoint/delta keep actual terrain; old envelope and same-tick u
  const frozen=JSON.stringify(next.world);w.structures.push({id:w.nextId++,kind:'wall',material:'wood',x:3,z:3,orientation:0,footprint:'standard'});
  const unsupported=structuredClone(encoder.encode(w,0,0));expect(unsupported.kind).toBe('delta');expect(decoder.adopt(unsupported).status).toBe('resync');expect(JSON.stringify(next.world)).toBe(frozen);
 });
+
+test('substrate scratch replaces the whole DTO and ordered tags without sharing public results',()=>{
+ const scratch={fertility:-1,terrainDefId:'stale',tags:['stale','extra']},tags=scratch.tags;
+ const rows:[Tile,number,string,string[]][]=[
+  [{terrain:'soil-natural'},1,'Soil',['Soil']],[{terrain:'rich-soil'},1.4,'SoilRich',['Soil']],
+  [{terrain:'gravel'},.7,'Gravel',['Soil']],[{terrain:'mossy-soil'},1,'MossyTerrain',['Soil']],
+  [{terrain:'marshy-soil'},1,'MarshyTerrain',['Soil']],[{terrain:'riverbank'},1.4,'Riverbank',['Soil']],
+  [{terrain:'mud'},0,'Mud',['Mud']],[{terrain:'marsh'},0,'Marsh',['Water','WaterMarshy']],
+  [{terrain:'ice'},0,'Ice',['Ice']],[{terrain:'river-shallow'},0,'WaterMovingShallow',['Water','River','WaterFreshShallow','WaterFreshShallowMoving']],
+  [{terrain:'river-chest-deep'},0,'WaterMovingChestDeep',['Water','River']],
+  [{terrain:'water-shallow'},0,'WaterShallow',['Water','WaterFreshShallow','WaterFreshShallowStill']],
+  [{terrain:'ocean-shallow'},0,'WaterOceanShallow',['Water','Ocean']],[{terrain:'ocean-deep'},0,'WaterOceanDeep',['Water','Ocean']],
+  [{terrain:'water-deep'},0,'WaterDeep',['Water']],[{terrain:'packed-dirt'},0,'PackedDirt',['Road']],
+  [{terrain:'rough-stone',stone:'granite'},0,'Granite_Rough',[]],[{terrain:'rough-stone'},0,'rough-stone',[]],
+  [{terrain:'sand'},.1,'Sand',[]],[{terrain:'soft-sand'},0,'SoftSand',[]],
+  [{terrain:'grass'},1,'grass',[]],[{terrain:'soil'},.7,'soil',[]],[{terrain:'water'},0,'water',[]],[{terrain:'rock'},0,'rock',[]],
+ ];
+ for(const [tile,fertility,terrainDefId,expectedTags] of rows)for(const surface of [{},{bridge:true},{floor:'wood-planks'}] as const){
+  const input={...tile,...surface},copy=structuredClone(input),layered='bridge'in surface||'floor'in surface;
+  const expected={fertility:layered?0:fertility,terrainDefId,tags:layered?[]:expectedTags};
+  const publicResult=naturalPlantSubstrate256(input),publicCopy=structuredClone(publicResult);
+  expect(naturalPlantSubstrate256(input,scratch)).toBe(scratch);expect(scratch.tags).toBe(tags);expect(scratch).toEqual(expected);
+  expect(publicResult).toEqual(expected);expect(publicResult).not.toBe(scratch);expect(publicResult.tags).not.toBe(tags);
+  expect(Object.keys(publicResult)).toEqual(['fertility','terrainDefId','tags']);
+  naturalPlantSubstrate256({terrain:'river-shallow'},scratch);expect(publicResult).toEqual(publicCopy);
+  const independent=naturalPlantSubstrate256(input);expect(independent).not.toBe(publicResult);expect(independent.tags).not.toBe(publicResult.tags);
+  expect(input).toEqual(copy);
+ }
+});
+
+test('substrate scratch keeps unknown and historical profile results and malformed stone read order',()=>{
+ const scratch={fertility:0,terrainDefId:'',tags:[] as string[]};
+ for(const version of [255,256,263])for(const tile of [{terrain:'mud'},{terrain:'soil-natural'},{terrain:'marsh',bridge:true}] as const){
+  for(const species of ['cypress',undefined,'not-a-real-species']){
+   const expected=plantSubstrateAllowed256(species,version,naturalPlantSubstrate256(tile));
+   expect(plantSubstrateAllowed256(species,version,naturalPlantSubstrate256(tile,scratch))).toBe(expected);
+   if(species!=='cypress'||version<256)expect(expected).toBeUndefined();
+  }
+ }
+ expect(plantSubstrateAllowed256('cypress',256,naturalPlantSubstrate256({terrain:'mud'},scratch))).toBe(true);
+ expect(plantSubstrateAllowed256('cypress',256,naturalPlantSubstrate256({terrain:'soil-natural'},scratch))).toBe(false);
+ for(const stone of [123,[],{}])for(const target of [undefined,scratch]){
+  const reads:string[]=[],tile=Object.defineProperties({},Object.fromEntries(['terrain','stone','floor','bridge'].map(key=>[key,{enumerable:true,get(){reads.push(key);return key==='terrain'?'grass':key==='stone'?stone:undefined;}}]))) as Tile;
+  expect(()=>naturalPlantSubstrate256(tile,target)).toThrow(TypeError);expect(reads).toEqual(['terrain','stone','stone']);
+ }
+});
+
+test('marsh plant scratch retains first-error order, complete support scans and input values',()=>{
+ // Declared narrow guard fixture; no gameplay history or generated population claimed.
+ const {world:w}=bridgeWorkshopV387(16);w.structures=[];w.jobs=[];w.growingZones=[];
+ w.tiles=w.tiles.map(()=>({terrain:'soil-natural'}));w.tiles[0]={terrain:'mud'};
+ const good={id:w.nextId++,kind:'tree' as const,species:'cypress' as const,x:0,z:0,amount:1};
+ const invalid={...good,id:w.nextId++,x:1},outside={...good,id:w.nextId++,x:0,z:w.height};
+ w.resources=[good,invalid,outside];
+ const check=(expected:string[])=>{const before=structuredClone(w);expect(validateMarshTransport(w,w.schemaVersion,[])).toEqual(expected);expect(w).toEqual(before);};
+ w.structures=[{id:w.nextId++,kind:'wall',material:'wood',x:0,z:0,orientation:0,footprint:'standard'}];
+ check(['Building lacks actual terrain support.']);w.structures=[];
+ check(['Plant violates its actual substrate profile.']);w.resources=[good,outside,invalid];
+ check(['Plant outside terrain.']);w.resources=[good];
+ w.growingZones=[{id:w.nextId++,cells:[0],plant:'rice',allowSow:true,allowCut:true}];check(['Growing zone on infertile terrain.']);
+ w.growingZones[0]!.cells=[1];check([]);
+ w.tiles[0]={terrain:'marsh',bridge:true};check(['Plant rooted in incompatible water.']);
+ w.tiles[0]={terrain:'mud',floor:'wood-planks'};check(['Plant violates its actual substrate profile.']);
+});

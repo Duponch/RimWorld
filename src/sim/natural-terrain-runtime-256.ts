@@ -3,6 +3,7 @@ import {isAncientGeneratedFloor256} from './ancient-generated-floor-state-256.ts
  * rewrite, map scan, owner, cadence or generic terrain registry is introduced. */
 import {NATURAL_TERRAIN_DEFINITIONS_256 as DEFS,NATURAL_TERRAIN_BINDINGS_256 as BINDINGS,isNaturalTerrain256,type TerrainAffordance256} from './local-terrain-definitions-256.ts';
 import type {Tile} from './types.ts';
+import {STONE_KINDS} from './geology.ts';
 import {PACKED_DIRT_256} from './road-ground-256.ts';
 export const NATURAL_TERRAIN_RUNTIME_SCHEMA=256;
 export interface TerrainRuntimeMetadata256 {schemaVersion?:number;site?:{revision:number}}
@@ -33,7 +34,41 @@ export function terrainGroundFertility256(tile:Pick<Tile,'terrain'|'bridge'|'flo
 const coreIds=new Map<string,string>(Object.entries(BINDINGS).map(([core,id])=>[id,core]));
 const soilTags=new Set(['soil-natural','rich-soil','gravel','mossy-soil','marshy-soil','riverbank']);
 /** Real Core tags/def identity for the existing narrow flora profile guard. */
-export function naturalPlantSubstrate256(tile:Pick<Tile,'terrain'|'bridge'|'floor'|'stone'>):{fertility:number;terrainDefId:string;tags:readonly string[]} {
- const t=tile.terrain,tags=soilTags.has(t)?['Soil']:t==='mud'?['Mud']:t==='marsh'?['Water','WaterMarshy']:t==='ice'?['Ice']:t==='river-shallow'?['Water','River','WaterFreshShallow','WaterFreshShallowMoving']:t==='river-chest-deep'?['Water','River']:t==='water-shallow'?['Water','WaterFreshShallow','WaterFreshShallowStill']:t==='ocean-shallow'||t==='ocean-deep'?['Water','Ocean']:t==='water-deep'?['Water']:[];
- const stone=tile.stone?tile.stone[0]!.toUpperCase()+tile.stone.slice(1)+'_Rough':undefined;return {fertility:terrainGroundFertility256(tile),terrainDefId:t==='packed-dirt'?'PackedDirt':coreIds.get(t)??(t==='rough-stone'&&stone?stone:t),tags:tile.bridge||tile.floor?[]:t==='packed-dirt'?['Road']:tags};
+export function naturalPlantSubstrate256(tile:Pick<Tile,'terrain'|'bridge'|'floor'|'stone'>,scratch?:{fertility:number;terrainDefId:string;tags:string[]}):{fertility:number;terrainDefId:string;tags:readonly string[]} {
+ const t=tile.terrain,tags=scratch?.tags??[];tags.length=0;
+ if(soilTags.has(t))tags.push('Soil');else if(t==='mud')tags.push('Mud');else if(t==='marsh')tags.push('Water','WaterMarshy');else if(t==='ice')tags.push('Ice');else if(t==='river-shallow')tags.push('Water','River','WaterFreshShallow','WaterFreshShallowMoving');else if(t==='river-chest-deep')tags.push('Water','River');else if(t==='water-shallow')tags.push('Water','WaterFreshShallow','WaterFreshShallowStill');else if(t==='ocean-shallow'||t==='ocean-deep')tags.push('Water','Ocean');else if(t==='water-deep')tags.push('Water');
+ const stone=tile.stone?tile.stone[0]!.toUpperCase()+tile.stone.slice(1)+'_Rough':undefined;
+ const fertility=terrainGroundFertility256(tile),terrainDefId=t==='packed-dirt'?'PackedDirt':coreIds.get(t)??(t==='rough-stone'&&stone?stone:t);
+ if(tile.bridge||tile.floor)tags.length=0;else if(t==='packed-dirt'){tags.length=0;tags.push('Road');}
+ // Only a synchronous caller may reuse this DTO; public calls still own fresh values.
+ if(scratch){scratch.fertility=fertility;scratch.terrainDefId=terrainDefId;return scratch;}
+ return {fertility,terrainDefId,tags};
+}
+
+/** Only static definition DTOs live here. Public substrate results remain fresh;
+ * this readonly path neither retains tiles nor certifies their validity. */
+type ReadonlyPlantSubstrate256=Readonly<ReturnType<typeof naturalPlantSubstrate256>>;
+type ReadonlyPlantSubstratePair256=readonly [ReadonlyPlantSubstrate256,ReadonlyPlantSubstrate256];
+function staticPlantSubstratePair256(tile:Pick<Tile,'terrain'|'stone'>):ReadonlyPlantSubstratePair256 {
+ const freeze=(value:ReturnType<typeof naturalPlantSubstrate256>):ReadonlyPlantSubstrate256=>{Object.freeze(value.tags);return Object.freeze(value);};
+ return Object.freeze([freeze(naturalPlantSubstrate256(tile)),freeze(naturalPlantSubstrate256({...tile,floor:'wood-planks'}))] as const);
+}
+const readonlyPlantSubstrates256:ReadonlyMap<Tile['terrain'],ReadonlyPlantSubstratePair256>=new Map(
+ ([...Object.values(BINDINGS),'rough-stone','packed-dirt','grass','soil','water','rock'] as Tile['terrain'][]).map(terrain=>[terrain,staticPlantSubstratePair256({terrain})] as const)
+);
+const readonlyRoughPlantSubstrates256:ReadonlyMap<string,ReadonlyPlantSubstratePair256>=new Map(
+ STONE_KINDS.map(stone=>{const pair=staticPlantSubstratePair256({terrain:'rough-stone',stone});return [pair[0].terrainDefId,pair] as const;})
+);
+/** Re-read the actual tile every time, including malformed stone before any
+ * surface/fertility access. Returned shared definitions are deeply frozen. */
+export function readNaturalPlantSubstrate256(tile:Pick<Tile,'terrain'|'bridge'|'floor'|'stone'>):ReadonlyPlantSubstrate256 {
+ const t=tile.terrain;
+ const stone=tile.stone?tile.stone[0]!.toUpperCase()+tile.stone.slice(1)+'_Rough':undefined;
+ const fertility=terrainGroundFertility256(tile),pair=readonlyPlantSubstrates256.get(t);
+ const terrainDefId=t==='rough-stone'&&stone?stone:pair?.[0].terrainDefId??t;
+ const layered=tile.bridge||tile.floor;
+ const actualPair=t==='rough-stone'&&stone?readonlyRoughPlantSubstrates256.get(stone):pair;
+ const value=actualPair?.[layered?1:0];
+ if(value&&value.fertility===fertility&&value.terrainDefId===terrainDefId)return value;
+ return {fertility,terrainDefId,tags:layered?[]:[...(pair?.[0].tags??[])]};
 }

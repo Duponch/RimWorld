@@ -1,3 +1,4 @@
+import {captureHumanOwners,type HumanOwnershipCapture} from './sim/human-owners.ts';
 import {groupGeographicTradeTarget256} from './sim/group-geographic-post-256';
 import {groupWorld} from './sim/world-map-authority';
 import {CaravanEncounterDialog261} from './ui/caravan-encounter-dialog-261';
@@ -206,6 +207,7 @@ import { createOwnedValidationGeometryOwner, type OwnedGeometryReuseWitness } fr
 import { createOwnedValidationResourceOwner, type OwnedResourceReuseWitness } from './sim/owned-validation-resources.ts';
 import { createOwnedDeteriorationOwner } from './sim/deterioration-save.ts';
 import { createOwnedSleepingProvenanceOwner } from './sim/human-sleeping-spot-save.ts';
+import { createOwnedMarshTransportOwner } from './sim/marsh.ts';
 import { AudioDirector } from './audio/AudioDirector';
 import { MusicDirector, type MusicMood } from './audio/MusicDirector';
 import { ambientCameraGain, FoliageAmbience } from './audio/ambience';
@@ -257,11 +259,13 @@ const client = (() => {
     readonly #geometryOwner = createOwnedValidationGeometryOwner();
     readonly #deteriorationOwner = createOwnedDeteriorationOwner();
     readonly #sleepingProvenanceOwner = createOwnedSleepingProvenanceOwner();
+    readonly #marshOwner = createOwnedMarshTransportOwner();
     override adopt(packet: SnapshotMessage<true>): SnapshotAdoption {
       this.#resourceOwner.discard();
       this.#geometryOwner.discard();
       this.#deteriorationOwner.discard();
       this.#sleepingProvenanceOwner.discard();
+      this.#marshOwner.discard();
       try {
         const result = super.adopt(packet);
         if (result.status === 'applied') this.#resourceOwner.commit(result.world);
@@ -272,12 +276,15 @@ const client = (() => {
         else this.#deteriorationOwner.discard();
         if (result.status === 'applied') this.#sleepingProvenanceOwner.commit(result.world);
         else this.#sleepingProvenanceOwner.discard();
+        if (result.status === 'applied') this.#marshOwner.commit(result.world);
+        else this.#marshOwner.discard();
         return result;
       } catch (error) {
         this.#resourceOwner.discard();
         this.#geometryOwner.discard();
         this.#deteriorationOwner.discard();
         this.#sleepingProvenanceOwner.discard();
+        this.#marshOwner.discard();
         throw error;
       }
     }
@@ -287,11 +294,17 @@ const client = (() => {
     protected override validateHumanSleepingSpotTransport(next:World,structureReuse?:OwnedGeometryReuseWitness):boolean {
       return this.#sleepingProvenanceOwner.validate(next,structureReuse);
     }
+    protected override validateMarshTransport(next:World,changedTiles?:readonly number[],resourceReuse?:OwnedResourceReuseWitness):string[] {
+      return this.#marshOwner.validate(next,changedTiles,resourceReuse);
+    }
     protected override createValidationContext(next: World, resourceReuse?: OwnedResourceReuseWitness, geometryReuse?: OwnedGeometryReuseWitness): SnapshotValidationContext {
       const raw = new PowerParentValidationCache();
       const geometry = this.#geometryOwner.prepare(next, geometryReuse, this.#resourceOwner.prepare(next, resourceReuse));
       let parents: PowerParentIndex | undefined;
+      // Nothing escapes this validation context or survives a later adoption.
+      let humanOwners:HumanOwnershipCapture|undefined;
       return {
+        humanOwners:{read(world:World){return world===next?(humanOwners??=captureHumanOwners(next)):captureHumanOwners(world);}},
         powerParents: { read(world: World): PowerParentIndex {
           if (world !== next) return raw.read(world);
           return parents ??= raw.read(world);

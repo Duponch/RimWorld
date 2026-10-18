@@ -1,5 +1,7 @@
 # Travail sur Elsewhere
 
+**V423 — schéma 263 inchangé :** [Adoption des snapshots](docs/development/snapshot-adoption-v423.md). Contrôles ciblés et présentation acquis par reprises, lecteurs publics et sauvegardes stricts. Chrome ×1 : coût moyen du Decoder −20,11% sur Les Aulnes, −24,13% sur le départ trois colons ; cadence d’image meilleure sur Aulnes, moins bonne sur le départ neuf dans ce relevé. Huit recharges complètes exactes ; confort global non rétabli. Publication produit demandée, stockage à nettoyer sans perdre les historiques.
+
 **Diagnostic V422 — aucun changement produit :** [Régression du coût d’adoption](docs/development/foundations-performance-regression-v422.md). Sur les mêmes Aulnes à une carte, saut du Decoder public Node V407→V408 mesuré34,654→58,305ms médians ; registre V407 seul sans saut dans ce banc. Ce ne sont pas les FPS natifs. Cible prioritaire : parcours communs de terrain/propriétaires/structures à chaque adoption. Dernière production V421 inchangée, aucun déploiement QA.
 
 **V421 — schéma 263 inchangé :** [Coûts Worker au repos](docs/development/worker-idle-costs-v421.md). Grille de menace différée et allocations végétales réduites ;29cas ciblés acquis par reprises, recharges Chrome exactes sur Les Aulnes et le départ3colons. Économie Node ciblée, résultat navigateur mixte conservé ; aucun gain général de confort annoncé. Publié9fa50df7/déploiementdf037b33,136HTTPS exacts ; performances toujours prioritaires.

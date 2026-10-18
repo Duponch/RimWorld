@@ -10,12 +10,12 @@ import {validNativeHumanField256,validHumanAgeForPawn256} from '../sim/native-hu
 import {freezeAdmittedNativeWorldPawnOrder256,captureNativeWorldPawnBirth256,sameNativeWorldPawnBirth256} from '../sim/world-pawn-native-order-256';
 import {validWorldPawnsEnvelope256} from '../sim/world-pawn-save-256';
 import {registerProjectedWorldPawns256} from '../sim/world-pawn-transport-save-256';
-import {validCobraClinicalWorld256} from '../sim/toxic-buildup-save-256.ts';
+import {validCobraClinicalWorldForSnapshot256} from '../sim/toxic-buildup-save-256.ts';
 import {validAncientCasketBuilding256,validateAncientCasketPhysical256} from '../sim/ancient-casket-physical-256.ts';
 import {isAncientCasket256} from '../sim/ancient-casket-state-256.ts';
 import {validAncientCasketField256,registerAncientCasketThingIds256} from '../sim/ancient-casket-save-256.ts';
 import {validateAncientOpeningOwners256} from '../sim/ancient-casket-opening-256.ts';
-import {validCryptosleepSicknessWorldTransport256} from '../sim/cryptosleep-sickness-save-256.ts';
+import {validCryptosleepSicknessWorldTransportForSnapshot256} from '../sim/cryptosleep-sickness-save-256.ts';
 import {validArrivalRotation256} from '../sim/arrival-rotation-256';
 import {prepareRiverWaterSnapshot256} from './river-water-transport-256.ts';
 import {freezeAdmittedRiverWater256} from '../sim/river-water-owner-256.ts';
@@ -138,16 +138,16 @@ import { validWildlifeExitState,validWildlifePredationState } from '../sim/wildl
 import { validCorpseConsumption } from '../sim/corpse-anatomy.ts';
 import { V190_ITEM_IDS } from '../sim/biome-items.ts';
 import { validBereavement } from '../sim/bereavement-save.ts';
-import { validDeathThoughtsPawnShape,validDeathThoughtsTransport } from '../sim/death-thoughts-save.ts';
-import { validateRelationshipWorld } from '../sim/relationship-world-save.ts';
+import { validDeathThoughtsPawnShape,validDeathThoughtsTransportForSnapshot } from '../sim/death-thoughts-save.ts';
+import { validateRelationshipWorldForSnapshot } from '../sim/relationship-world-save.ts';
 import { validateGroupStateWithPlanet } from '../sim/group-save.ts';
 import { registerGroupThingIds } from '../sim/group-namespace-save.ts';
 import { validStartingArrivalShape,validateStartingArrivalOwners,registerStartingArrivalThingIds,validStartingArrivalTransition } from '../sim/starting-arrival-save.ts';
 import { validHumanSleepingSpotProvenance,validHumanSleepingSpotStructureEntry,validHumanSleepingSpotTransport } from '../sim/human-sleeping-spot-save.ts';
-import { captureHumanOwners,everyHumanPawnOwner } from '../sim/human-owners.ts';
+import { captureHumanOwners,everyHumanPawnOwner,type HumanOwnershipCapture } from '../sim/human-owners.ts';
 import { validateSocial } from '../sim/social-save.ts';
 import { validPawnSurgeryShape,validateSurgeries } from '../sim/surgery-save.ts';
-import { validArtificialPartTransport,validArtificialPartsWorldTransport } from '../sim/health-save.ts';
+import { validArtificialPartTransport,validArtificialPartsWorldTransportForSnapshot } from '../sim/health-save.ts';
 import { validAnesthetic } from '../sim/anesthetic.ts';
 import { validateScoutRegistry } from '../sim/caravan-save.ts';
 import { validateCommercialRegistry,validateCommercialBindings } from '../sim/commercial-save.ts';
@@ -939,6 +939,8 @@ export interface SnapshotValidationContext {
   powerParents:PowerParentReader;
   geometry?:StagingGeometryReader;
   resourceFacts?:OwnedValidationResourceReader;
+  /** Lazy default owner capture for one closed MAIN adoption only. Public readers remain complete. */
+  humanOwners?:{read(world:World):HumanOwnershipCapture};
 }
 
 /** Reuses stable arrays and replaces changed arrays; previous render snapshots remain intact. */
@@ -1000,6 +1002,10 @@ export class SnapshotDecoder {
    * Public admission and all dynamic sleeping/clinical checks stay complete. */
   protected validateHumanSleepingSpotTransport(next:World,_structureReuse?:OwnedGeometryReuseWitness):boolean {
     return validHumanSleepingSpotTransport(next,next.schemaVersion);
+  }
+  /** Mutable/public decoders always inspect the entire plant population. */
+  protected validateMarshTransport(next:World,changedTiles?:readonly number[],_resourceReuse?:OwnedResourceReuseWitness):string[] {
+    return validateMarshTransport(next,next.schemaVersion,changedTiles);
   }
   adoptCampaignOnly(packet:CampaignOnlyMessage,acceptExtra?:(view:World)=>boolean):{status:'applied';replaced:boolean;summary:CampaignSummary}|{status:'stale'}|{status:'resync';reason:string} {
     const refuse=()=>({status:'resync' as const,reason:'Campagne sans carte illisible.'});
@@ -1337,7 +1343,7 @@ export class SnapshotDecoder {
     if(!validTundraTransport(next,next.schemaVersion))return resync('Toundra, flore ou climat futur/incohérent.');
     if(validateAncientCasketPhysical256(next).length)return resync('Invalid actual casket physical owner.');
     if(validateBridgeTransport(next,next.schemaVersion,message.kind==='delta'?changedTileIndices:[]).length)return resync('Fondation future, chantier ou support invalide.');
-    if(validateMarshTransport(next,next.schemaVersion,message.kind==='delta'?changedTileIndices:[]).length)return resync('Marais futur, sans support ou fertile invalide.');
+    if(this.validateMarshTransport(next,message.kind==='delta'?changedTileIndices:[],resourceReuse).length)return resync('Marais futur, sans support ou fertile invalide.');
     if(validateSnowTransport(next,next.schemaVersion, message.kind==='delta'&&!!this.current?.snow===!!next.snow?changedTileIndices:undefined).length)return resync('Snow surface clock, depth or owner invalid.');
     if(validateStartingArrivalOwners(next,next.schemaVersion).length)return resync('Personne, possession ou propriétaire de capsule initiale invalide.');
     if(hasDraftedTend&&!validDraftedTendingTransport(next))return resync('Soins mobilisés, patient, contact ou réservation incohérents.');
@@ -1560,16 +1566,19 @@ export class SnapshotDecoder {
     // committing the geographic witness or replacing the confirmed world.
     if((next.scenario?.revision===9||next.scenario?.revision===10||next.climate&&(next.climate.revision!==1||Object.hasOwn(next.climate,'definition')))&&
       !validSiteClimate(next.climate,next.schemaVersion,next))return resync('Climat du lieu de départ incohérent.');
+    // Only the fixed MAIN context reuses this default capture within this call.
+    // Public decoding and each foreign context retain their complete capture.
+    const readHumanOwners=()=>validation.humanOwners?.read(next)??captureHumanOwners(next);
     if(Object.hasOwn(next,'group')||Object.hasOwn(next,'groupLosses')){
-      try {const people=captureHumanOwners(next).people;
+      try {const people=readHumanOwners().people;
         if(validateSocial(next,next.schemaVersion,new Set(people.keys())).length||next.pawns.some(p=>!validBereavement(p.bereavement,p.id,next.schemaVersion,next,people)))return resync('Souvenirs de personnes hors carte incohérents.');
       }catch{return resync('Propriétaire humain hors carte incohérent.');}
     }
-    if(validateRelationshipWorld(next,next.schemaVersion).length)return resync('Liens, annonce ou souvenirs relationnels incohérents.');
-    if(!validDeathThoughtsTransport(next,next.schemaVersion))return resync('Souvenirs de décès perçus ou propriétaires incohérents.');
-    if(!validArtificialPartsWorldTransport(next,next.schemaVersion))return resync('Anatomie artificielle ou horloge de son propriétaire invalide.');
-    if(!validCobraClinicalWorld256(next,next.schemaVersion))return resync('Propriétaire clinique toxique invalide.');
-    if(!validCryptosleepSicknessWorldTransport256(next,next.schemaVersion))return resync('Mal de cryptosommeil ou propriétaire clinique invalide.');
+    if(validateRelationshipWorldForSnapshot(next,next.schemaVersion,readHumanOwners).length)return resync('Liens, annonce ou souvenirs relationnels incohérents.');
+    if(!validDeathThoughtsTransportForSnapshot(next,next.schemaVersion,readHumanOwners))return resync('Souvenirs de décès perçus ou propriétaires incohérents.');
+    if(!validArtificialPartsWorldTransportForSnapshot(next,next.schemaVersion,readHumanOwners))return resync('Anatomie artificielle ou horloge de son propriétaire invalide.');
+    if(!validCobraClinicalWorldForSnapshot256(next,next.schemaVersion,readHumanOwners))return resync('Propriétaire clinique toxique invalide.');
+    if(!validCryptosleepSicknessWorldTransportForSnapshot256(next,next.schemaVersion,readHumanOwners))return resync('Mal de cryptosommeil ou propriétaire clinique invalide.');
     if(validateAncientOpeningOwners256(next).length)return resync('Ouverture de capsule ancienne ou propriétaire incohérent.');
     if(next.pawns.some(p=>p.surgery?.implant!==undefined||p.surgeryRequest?.implant!==undefined)
       &&validateSurgeries(next,next.schemaVersion).length)return resync('Prothèse demandée ou ingrédients chirurgicaux incohérents.');

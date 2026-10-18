@@ -1,4 +1,4 @@
-import {captureHumanOwners} from './human-owners.ts';
+import {captureHumanOwners,type HumanOwnershipCapture} from './human-owners.ts';
 import {DEATH_THOUGHT_RULES} from './death-thoughts-rules.ts';
 import type {DeathThoughtKind,DeathThoughtMemory} from './death-thoughts-state.ts';
 import type {World} from './types.ts';
@@ -36,6 +36,11 @@ export function validDeathThoughtsPawnShape(pawn:Record<string,unknown>,version:
  * Archives retain departure clocks; terminal people retain their death clock.
  * The common absence path does not capture possessions or invent state. */
 export function validDeathThoughtsTransport(world:World,version:number=world.schemaVersion):boolean {
+  return validDeathThoughtsTransportForSnapshot(world,version,()=>captureHumanOwners(world));
+}
+
+/** @internal Fixed Decoder consumers only; the absence guard remains before capture. */
+export function validDeathThoughtsTransportForSnapshot(world:World,version:number,readOwners:()=>HumanOwnershipCapture):boolean {
   try {
     const candidates:unknown[]=[...world.pawns];
     if(world.startingArrival&&world.startingArrival.phase!=='opened')candidates.push(...world.startingArrival.pods.map(p=>p.pawn));
@@ -44,7 +49,7 @@ export function validDeathThoughtsTransport(world:World,version:number=world.sch
     candidates.push(...(world.groupLosses??[]).map(loss=>loss.pawn));
     for(const records of [world.visitors?.departed??[],world.podRescues?.departed??[]])candidates.push(...records.map(d=>d.pawn));
     if(!candidates.some(p=>object(p)&&Object.hasOwn(p,'deathThoughts')))return true;
-    const capture=captureHumanOwners(world);
+    const capture=readOwners();
     for(const slot of capture.pawnOwners){
       const pawn=slot.pawn!;
       if(!validDeathThoughtsPawnShape(pawn as unknown as Record<string,unknown>,version,slot.validationTick))return false;

@@ -3,7 +3,7 @@ import {CORE_STARTING_ARRIVAL_PROFILE_256} from './starting-pod-state-256.ts';
 import {hasCryptosleepSickness256,validCryptosleepSicknessHeader256} from './cryptosleep-sickness-256.ts';
 import {validateMedicalRecord} from './injury-validation.ts';
 import {medicalStatus} from './injury-state.ts';
-import {captureHumanOwners} from './human-owners.ts';
+import {captureHumanOwners,type HumanOwnershipCapture} from './human-owners.ts';
 import {isAnimalSpecies} from './animal-species.ts';
 import type {Pawn,World} from './types.ts';
 import type {WildAnimal} from './wildlife-state.ts';
@@ -27,8 +27,13 @@ export function validCryptosleepSicknessTransport256(actor:ClinicalOwner256,vers
  * real local, travel, frozen/terminal and contained humans. Other map/global
  * contexts are admitted by their existing campaign validation pass. */
 export function validCryptosleepSicknessWorldTransport256(world:World,version:number=world.schemaVersion):boolean {
+ return validCryptosleepSicknessWorldTransportForSnapshot256(world,version,()=>captureHumanOwners(world));
+}
+
+/** @internal Fixed Decoder consumers only; all actual holder clocks stay checked. */
+export function validCryptosleepSicknessWorldTransportForSnapshot256(world:World,version:number,readOwners:()=>HumanOwnershipCapture):boolean {
  try {
-  for(const slot of captureHumanOwners(world).pawnOwners){
+  for(const slot of readOwners().pawnOwners){
    const p=slot.pawn!;if(!hasCryptosleepSickness256(p.health))continue;
    // Only the newly represented Core holder can own the real PostMapGenerate
    // sickness at its explicit frozen clock0. Historical capsules stay strict.

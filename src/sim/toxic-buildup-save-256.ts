@@ -1,9 +1,9 @@
 import {validToxicBuildupHeader256} from './toxic-buildup-256.ts';
 import {validHumanClinicalConditionOwner256} from './human-condition-mind-256.ts';
-import {captureHumanOwners} from './human-owners.ts';
+import {captureHumanOwners,type HumanOwnershipCapture} from './human-owners.ts';
 import {validateMedicalRecord} from './injury-validation.ts';
 import {isAnimalSpecies} from './animal-species.ts';
-import {cobraAdmissionReason256} from './cobra-admission-256.ts';
+import {cobraAdmissionReasonForSnapshot256} from './cobra-admission-256.ts';
 import {toxicVomitEngagement256} from './toxic-vomit-256.ts';
 import {groupPawnInterval256} from './group-core-cadence-256.ts';
 import {assessMedical} from './injury-state.ts';
@@ -27,11 +27,16 @@ export function validToxicBuildupTransport256(actor:Pawn|WildAnimal,version:numb
 /** Existing RAW/MAIN owner boundary. This walks actual retained owners only;
  * no clock, diagnosis, corpse roll, holder or past history is manufactured. */
 export function validCobraClinicalWorld256(w:World,version:number=w.schemaVersion):boolean {
+ return validCobraClinicalWorldForSnapshot256(w,version,()=>captureHumanOwners(w));
+}
+
+/** @internal Fixed Decoder consumers only. Keep all local/foreign clinical checks. */
+export function validCobraClinicalWorldForSnapshot256(w:World,version:number,readOwners:()=>HumanOwnershipCapture):boolean {
  try {
-  for(const slot of captureHumanOwners(w).pawnOwners)if(!validToxicBuildupTransport256(slot.pawn!,version,slot.validationTick,slot.kind==='map'?w:undefined))return false;
+  for(const slot of readOwners().pawnOwners)if(!validToxicBuildupTransport256(slot.pawn!,version,slot.validationTick,slot.kind==='map'?w:undefined))return false;
   for(const a of w.wildlife?.animals??[])if(!validToxicBuildupTransport256(a,version,w.tick,w))return false;
   for(const row of w.worldFactions?.leaders??[])if(!validToxicBuildupTransport256(row.pawn,version,row.clock))return false;
-  if(w.wildlife?.animals.some(a=>a.species==='cobra'&&a.state!=='dead')&&cobraAdmissionReason256(w))return false;
+  if(w.wildlife?.animals.some(a=>a.species==='cobra'&&a.state!=='dead')&&cobraAdmissionReasonForSnapshot256(w,readOwners))return false;
   return true;
  }catch{return false;}
 }

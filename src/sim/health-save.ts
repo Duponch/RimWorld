@@ -5,7 +5,7 @@ import { pawnBody } from './health-rules.ts';
 import { validAnesthetic } from './anesthetic.ts';
 import { hasArtificialPartData } from './artificial-parts-save.ts';
 import { validateMedicalRecord } from './injury-validation.ts';
-import { captureHumanOwners } from './human-owners.ts';
+import { captureHumanOwners,type HumanOwnershipCapture } from './human-owners.ts';
 import type { Pawn,World } from './types.ts';
 
 /** New artificial anatomy uses the shared medical validator at its real owner
@@ -19,6 +19,11 @@ export function validArtificialPartTransport(pawn:Pawn,version:number,clock:numb
 }
 
 export function validArtificialPartsWorldTransport(world:World,version:number=world.schemaVersion):boolean {
+  return validArtificialPartsWorldTransportForSnapshot(world,version,()=>captureHumanOwners(world));
+}
+
+/** @internal Fixed Decoder consumers only; public mutable Worlds capture afresh. */
+export function validArtificialPartsWorldTransportForSnapshot(world:World,version:number,readOwners:()=>HumanOwnershipCapture):boolean {
   try {
     const candidates:Pawn[]=[...world.pawns];
     if(world.startingArrival&&world.startingArrival.phase!=='opened')candidates.push(...world.startingArrival.pods.map(p=>p.pawn));
@@ -27,7 +32,7 @@ export function validArtificialPartsWorldTransport(world:World,version:number=wo
     candidates.push(...(world.groupLosses??[]).map(loss=>loss.pawn));
     for(const records of [world.visitors?.departed??[],world.podRescues?.departed??[]])candidates.push(...records.map(d=>d.pawn));
     if(!candidates.some(p=>hasArtificialPartData(p.health)))return true;
-    const capture=captureHumanOwners(world);
+    const capture=readOwners();
     return capture.pawnOwners.every(slot=>validArtificialPartTransport(slot.pawn!,version,slot.validationTick));
   }catch{return false;}
 }

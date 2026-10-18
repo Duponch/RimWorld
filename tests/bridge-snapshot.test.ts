@@ -1,3 +1,4 @@
+import {campaignPresentation} from '../src/sim/secondary-site-presentation.ts';
 import { expect, test } from 'vitest';
 import { SnapshotDecoder, SnapshotEncoder, type SnapshotMessage } from '../src/bridge/snapshots.ts';
 import { applyCommand, createWorld, deserializeWorld, serializeWorld, stepWorld } from '../src/sim/index.ts';
@@ -316,4 +317,26 @@ test('seasonal plant state and damage travel by delta without mutating earlier s
     expect(initial).toEqual(initialValue);
   }
   expect(plant.plantLife!.age).toBeGreaterThan(0);
+});
+
+test('terrain refusals retain bridge before marsh before snow and leave the confirmed snapshot untouched',()=>{
+ const world=createWorld(423,16,16),encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder();
+ const checkpoint=structuredClone(encoder.encode(world,0,1)),initial=decoder.adopt(checkpoint);
+ expect(initial.status).toBe('applied');if(initial.status!=='applied')throw Error('Expected checkpoint');
+ const predecessor=structuredClone(initial.world),source=serializeWorld(world),good=structuredClone(encoder.encode(world,0,1));
+ expect(good.kind).toBe('delta');if(good.kind!=='delta')throw Error('Expected delta');
+ const plant=world.resources.find(r=>r.kind!=='rock')!;expect(plant).toBeDefined();const index=plant.z*world.width+plant.x;
+ const marsh=structuredClone(good);marsh.tiles=[[index,'marsh']];Object.assign(marsh.world,{snow:{revision:-1}});
+ const both=structuredClone(marsh);
+ both.world.jobs.push(Object.assign({id:both.world.nextId++,kind:'wall' as const,material:'wood' as const,x:1,z:1,orientation:0 as const,footprint:'standard' as const,status:'pending' as const,reservedBy:null,progress:0,escrow:{wood:0,food:0}},{bridge:true}));
+ const marshCopy=structuredClone(marsh),bothCopy=structuredClone(both),goodCopy=structuredClone(good);
+ expect(decoder.adopt(both)).toEqual({status:'resync',reason:'Fondation future, chantier ou support invalide.'});
+ expect(decoder.adopt(marsh)).toEqual({status:'resync',reason:'Marais futur, sans support ou fertile invalide.'});
+ const full=structuredClone(checkpoint);if(full.kind!=='checkpoint')throw Error('Expected full checkpoint');full.world.tiles[index]={terrain:'marsh'};Object.assign(full.world,{snow:{revision:-1}});
+ const fullCopy=structuredClone(full);expect(new SnapshotDecoder().adopt(full)).toEqual({status:'resync',reason:'Marais futur, sans support ou fertile invalide.'});
+ const snow=structuredClone(good);Object.assign(snow.world,{snow:{revision:-1}});const snowCopy=structuredClone(snow);
+ expect(decoder.adopt(snow)).toEqual({status:'resync',reason:'Snow surface clock, depth or owner invalid.'});expect(snow).toEqual(snowCopy);
+ expect(initial.world).toEqual(predecessor);expect(marsh).toEqual(marshCopy);expect(both).toEqual(bothCopy);expect(full).toEqual(fullCopy);
+ const adopted=decoder.adopt(good);expect(adopted.status).toBe('applied');if(adopted.status!=='applied')throw Error('Expected unchanged valid delta');
+ expect(adopted.world).toEqual(campaignPresentation(world));expect(initial.world).toEqual(predecessor);expect(good).toEqual(goodCopy);expect(serializeWorld(world)).toBe(source);
 });
