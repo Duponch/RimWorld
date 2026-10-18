@@ -14,12 +14,14 @@ export interface SceneResourceChunks {
 export interface SceneResourceAccess {
   readonly rockCoverEdits:readonly RockCoverEdit[]|undefined;
   treeAt(cell:number):number|undefined;
+  resourceSource(id:number):number|undefined;
+  previousResourceSource(id:number):number|undefined;
   chunksFor(changes?:ReadonlyMap<number,NaturalPresentationChange>,additionalKeys?:ReadonlySet<string>):SceneResourceChunks|undefined;
 }
 type Capture={id:number;kind:Resource['kind'];species:Resource['species'];x:number;z:number;key:string|undefined;tree:number|undefined;rock:number|undefined};
 type FrameRecord={owner:SceneResourceIndex;generation:number;world:World;from:World|undefined;
   resources:readonly Resource[];tick:number;seed:number;width:number;height:number;
-  oldKeys:ReadonlyMap<number,string>;edits:readonly RockCoverEdit[]|undefined;active:boolean};
+  oldKeys:ReadonlyMap<number,string>;oldSources:ReadonlyMap<number,number>|undefined;edits:readonly RockCoverEdit[]|undefined;active:boolean};
 const frames=new WeakMap<SceneResourceFrame,FrameRecord>();
 const records=new WeakSet<FrameRecord>();
 const capture=(world:World,r:Resource):Capture=>{
@@ -138,8 +140,11 @@ export class SceneResourceIndex {
       &&sameSnapshotChangeDomain(from,world);
     const balance=structural||fullCover?new Map<number,number>():undefined;
     const oldKeys=new Map<number,string>(),edits:RockCoverEdit[]=[];
+    let oldSources:Map<number,number>|undefined;
     let valid=Number.isSafeInteger(world.width)&&world.width>0&&Number.isSafeInteger(world.height)&&world.height>0;
     if(structural){
+      for(const old of structural.removed)(oldSources??=new Map()).set(old.id,this.#byId.get(old.id)!);
+      for(const [,old]of structural.updates)(oldSources??=new Map()).set(old.id,this.#byId.get(old.id)!);
       for(const old of structural.removed){
         if(old.key!==undefined)oldKeys.set(old.id,old.key);
         this.#byId.delete(old.id);
@@ -171,6 +176,7 @@ export class SceneResourceIndex {
         const r=world.resources[source]!,old=this.#captures[source]!;
         if(!validResource(r)){valid=false;break;}
         if(same(old,r))continue;
+        (oldSources??=new Map()).set(old.id,source);
         const next=capture(world,r);
         if(old.key!==undefined)oldKeys.set(old.id,old.key);
         remove(this.#chunks,old.key,source);remove(this.#trees,old.tree,source);
@@ -189,6 +195,7 @@ export class SceneResourceIndex {
         if(old&&same(old,r))continue;
         const next=capture(world,r);
         if(old){
+          (oldSources??=new Map()).set(old.id,source);
           if(old.key!==undefined)oldKeys.set(old.id,old.key);
           remove(this.#chunks,old.key,source);remove(this.#trees,old.tree,source);
           // A moved ID may already have acquired its new ordinal. Deleting it
@@ -203,6 +210,7 @@ export class SceneResourceIndex {
       if(valid){
         for(let source=world.resources.length;source<length;source++){
           const old=this.#captures[source]!;
+          (oldSources??=new Map()).set(old.id,source);
           if(old.key!==undefined)oldKeys.set(old.id,old.key);
           remove(this.#chunks,old.key,source);remove(this.#trees,old.tree,source);
           if(this.#byId.get(old.id)===source)this.#byId.delete(old.id);
@@ -211,7 +219,9 @@ export class SceneResourceIndex {
         this.#captures.length=world.resources.length;
       }
     }else{
-      for(const old of this.#captures){
+      for(let source=0;source<this.#captures.length;source++){
+        const old=this.#captures[source]!;
+        (oldSources??=new Map()).set(old.id,source);
         if(old.key!==undefined)oldKeys.set(old.id,old.key);
         if(balance&&old.rock!==undefined)balance.set(old.rock,(balance.get(old.rock)??0)-1);
       }
@@ -236,7 +246,7 @@ export class SceneResourceIndex {
       this.#map=Object.freeze({seed:world.seed,width:world.width,height:world.height});
     const frame=Object.freeze({}) as SceneResourceFrame;
     const record:FrameRecord={owner:this,generation,world,from,resources:world.resources,tick:world.tick,seed:world.seed,width:world.width,height:world.height,
-      oldKeys,edits:sparse||balance?Object.freeze(edits):undefined,active:true};
+      oldKeys,oldSources,edits:sparse||balance?Object.freeze(edits):undefined,active:true};
     frames.set(frame,record);records.add(record);
     // No retained asynchronous authority. Arrays materialized below stay fixed.
     queueMicrotask(()=>{record.active=false;frames.delete(frame);});return frame;
@@ -247,6 +257,12 @@ export class SceneResourceIndex {
   treeAt(record:FrameRecord,cell:number):number|undefined {
     if(!this.accepts(record))return;const bucket=this.#trees.get(cell),source=bucket?.at(-1);
     return source===undefined?undefined:record.resources[source]?.id;
+  }
+  resourceSource(record:FrameRecord,id:number):number|undefined {
+    return this.accepts(record)?this.#byId.get(id):undefined;
+  }
+  previousResourceSource(record:FrameRecord,id:number):number|undefined {
+    return this.accepts(record)?record.oldSources?.get(id)??this.#byId.get(id):undefined;
   }
   chunksFor(record:FrameRecord,changes?:ReadonlyMap<number,NaturalPresentationChange>,additionalKeys?:ReadonlySet<string>):SceneResourceChunks|undefined {
     if(!this.accepts(record))return;
@@ -272,5 +288,7 @@ export function readSceneResourceFrame(frame:SceneResourceFrame|undefined,world:
     ||from!==undefined&&record.from!==from)return;
   return Object.freeze({rockCoverEdits:from===undefined?undefined:record.edits,
     treeAt:(cell:number)=>record.owner.treeAt(record,cell),
+    resourceSource:(id:number)=>record.owner.resourceSource(record,id),
+    previousResourceSource:(id:number)=>record.owner.previousResourceSource(record,id),
     chunksFor:(changes?:ReadonlyMap<number,NaturalPresentationChange>,additionalKeys?:ReadonlySet<string>)=>record.owner.chunksFor(record,changes,additionalKeys)});
 }

@@ -44,13 +44,13 @@ import { applyCommand, deserializeWorld, serializeWorld, stepWorld } from '../si
 import type { World } from '../sim/types';
 import type { Request, Response, SimulationFault } from './protocol';
 import { MAP_SIZE_PRESETS } from '../sim/map-config';
-import { SnapshotEncoder } from './snapshots';
+import { SnapshotEncoder,type SnapshotMessage } from './snapshots';
 import { AudioCueRecorder } from './audio-cues';
 
 /** Both fixed entrypoints execute this identical authoritative engine. The
  * closed entry supplies its concrete transport encoder; public default stays
  * complete. Request ordering, clocks, ACK and SAVE never select that boundary. */
-export function startSimulationWorker(scope:DedicatedWorkerGlobalScope,send:(message:Response)=>void,snapshots:SnapshotEncoder<true>=new SnapshotEncoder({structureDelta:true,minimumStructures:1000})):void {
+export function startSimulationWorker(scope:DedicatedWorkerGlobalScope,send:(message:Response)=>void,snapshots:SnapshotEncoder<true>=new SnapshotEncoder({structureDelta:true,minimumStructures:1000}),publishLocal?:(world:World,publication:SnapshotMessage<true>)=>void):void {
 let world: CampaignState | undefined;
 let caravans:GroupCampaignRuntime256|undefined;
 /** Build on the validated replacement BEFORE changing the active owner. The
@@ -99,7 +99,10 @@ const publishCapturedTick = (checkpoint = false) => {
     const cues=audioCues.drain();
     const visible=visibleWorld();if(!visible){const header=snapshots.campaignHeader(checkpoint);send({type:'campaign-only',...header,stepMs,speed,...(()=>{const transport=snapshots.encodeCampaignSummary(campaignOnlySummary(world),checkpoint);return {summary:transport.state,...transport.geography?{geography:transport.geography}:{}};})(),urgentThreats:urgentThreats.snapshot()});lastPublishedTick=world.tick;for(const notice of takeCaravanTradeArrivals261(world))send({type:'caravan-trade-arrival',...notice,checkpoint:header});return header;}
     const packet = snapshots.encode(visible, stepMs, speed, checkpoint);
-    send({...packet, urgentThreats: urgentThreats.snapshot(), motion:motion.snapshot(),...cues.length?{audioCues:cues}:{}});
+    const publication={...packet, urgentThreats: urgentThreats.snapshot(), motion:motion.snapshot(),...cues.length?{audioCues:cues}:{}};
+    // The fixed resident entry observes this exact confirmed World synchronously.
+    // Commands, ACK, public snapshots and SAVE retain their existing path.
+    if(publishLocal)publishLocal(visible,publication);else send(publication);
     published = { epoch: packet.epoch, revision: packet.revision };
   }
   lastPublishedTick=world?.tick??-1;

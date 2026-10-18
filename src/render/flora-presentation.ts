@@ -1,4 +1,5 @@
-import { plantGrowth } from '../sim/plants';
+import {floraSize,isMedicinalPlant} from '../bridge/natural-appearance-values';
+export {RESIDENT_CROP_KINDS,type ResidentCropKind,isResidentCrop,isMedicinalPlant,floraSize} from '../bridge/natural-appearance-values';
 import { plantLeafless } from '../sim/plant-life';
 import type { Resource,World } from '../sim/types';
 import type { Placement } from './primitives';
@@ -6,14 +7,6 @@ import type { NaturalObservation } from './natural-presentation-events';
 import { hydroponicBasinAt } from '../sim/hydroponics';
 import { HYDROPONIC_SUPPORT_HEIGHT } from './hydroponics-parts';
 
-/** Dedicated crop geometry is deliberately closed. Haygrass joins its resident
- * batch only when present; medicinal plants retain the existing shrub chunks. */
-export const RESIDENT_CROP_KINDS=['rice','potato','corn','cotton','haygrass'] as const;
-export type ResidentCropKind=typeof RESIDENT_CROP_KINDS[number];
-export const isResidentCrop=(r:Pick<Resource,'kind'>):boolean=>(RESIDENT_CROP_KINDS as readonly string[]).includes(r.kind);
-export const isMedicinalPlant=(r:Pick<Resource,'kind'|'species'>):boolean=>r.kind==='healroot'||r.species==='healroot-wild';
-/** Four visible growth steps keep the forest resident between shape changes. */
-export const floraSize=(world:World,r:Resource,readGrowth?:()=>number):number=>!r.species&&!isMedicinalPlant(r)?1:(r.growth??1)===1?1:.3+.7*Math.ceil((readGrowth?readGrowth():plantGrowth(world,r))*4)/4;
 const FLORA_COLORS={glowstool:0xa79583,agarilux:0xb6a1bc,bryolux:0x7b8eaa,pine:0x47684c,birch:0x8fa467,oak:0x57754d,poplar:0x849752,drago:0x728966,saguaro:0x698661,agave:0x839c89,moss:0x718356,grass:0x929357,'tall-grass':0x7d8a4f,brambles:0x556648,'berry-bush':0x677b55,'healroot-wild':0x829b74,'alocasia':0x789c80,'astragalus':0xb2a6bd,'bush':0x687c58,'chokevine':0x69745a,'clivia':0x9c9a72,'dandelion':0xc6b567,'pincushion-cactus':0x88a381,'rafflesia':0xb67874,'low-shrub':0x879573,'bamboo':0x899c66,'cecropia':0x729977,'cypress':0x678c76,'maple':0xaa986b,'palm':0x8da170,'teak':0x65816b,'willow':0x8fa58a};
 export const BLIGHT_COLOR=0xa26b32;
 export const floraColor=(r:Resource):number=>r.blight?BLIGHT_COLOR:FLORA_COLORS[isMedicinalPlant(r)?'healroot-wild':r.species??'berry-bush'];

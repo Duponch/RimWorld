@@ -27,6 +27,8 @@ import { WildlifeLayer } from './WildlifeLayer';
 import { MechanoidLayer } from './MechanoidLayer';
 import { RopeLayer } from './RopeLayer';
 import { NaturalResourcePresentation } from './NaturalResourcePresentation';
+import {PreparedNaturalPresentation} from './PreparedNaturalPresentation';
+import {readPreparedNaturalFrame} from '../bridge/prepared-natural-frame';
 import { SceneResourceIndex, readSceneResourceFrame, type SceneResourceFrame } from './scene-resource-index';
 import { ProjectileLayer } from './ProjectileLayer';
 import { EnvironmentLighting } from './EnvironmentLighting';
@@ -288,6 +290,7 @@ export class SceneRenderCore {
   protected readonly recreationHints = new RecreationHints(this.boxes);
   protected readonly resources = new ResourceLayer(this.resourceGroup, this.staticMaterial,this.texturedStaticMaterial,this.animationDetail);
   protected readonly naturalPresentation = new NaturalResourcePresentation();
+  protected readonly preparedNaturalPresentation = new PreparedNaturalPresentation();
   protected readonly sceneResources = new SceneResourceIndex();
   protected readonly crops = new CropLayer(this.staticMaterial,this.texturedStaticMaterial);
   protected readonly growing = new GrowingZoneLayer(this.boxes);
@@ -563,7 +566,7 @@ export class SceneRenderCore {
       this.resize();
     }
     this.hygiene.update(world,this.boxes,newMap);
-    if (previousWorld?.resources !== world.resources || newMap || Math.floor(previousWorld.tick / 25) !== Math.floor(world.tick / 25)) this.updateResources(world, newMap,resourceFrame);
+    if (previousWorld?.resources !== world.resources || newMap || this.preparedNaturalPresentation.hasFrameChange(world) || this.preparedNaturalPresentation.active&&!this.immutableWorlds.has(world) || Math.floor(previousWorld.tick / 25) !== Math.floor(world.tick / 25)) this.updateResources(world, newMap,resourceFrame);
     const packageKey=(world.packed??[]).filter(p=>p.owner.type==='ground').map(p=>`${p.building.id}:${p.building.material}:${p.owner.type==='ground'?`${p.owner.x}:${p.owner.z}`:''}`).join('|');
     if(this.confirmedIntents)this.roofs.updatePhysical(world,this.wallCutaway,newMap);
     else this.roofs.update(world,this.boxes,this.wallCutaway,newMap);
@@ -1199,24 +1202,35 @@ export class SceneRenderCore {
 
   protected updateResources(world: World, newMap: boolean,frame?:SceneResourceFrame): void {
     const immutable=this.immutableWorlds.has(world);
+    if(immutable&&readPreparedNaturalFrame(world)){
+      const prepared=this.preparedNaturalPresentation;
+      const resetNatural=newMap||!prepared.active;
+      const result=prepared.readScene(world,resetNatural,frame)!;
+      if(!result.changed)return;
+      this.plants.update(world,resetNatural,prepared.changes);
+      this.resources.update(world,resetNatural,prepared.changes,frame,prepared.appearance);
+      this.overview.update(world,resetNatural,prepared.changes,prepared.appearance);return;
+    }
+    const resetNatural=newMap||this.preparedNaturalPresentation.active;
+    this.preparedNaturalPresentation.clear();
     const scene=immutable&&readSceneResourceFrame(frame,world)
-      ?this.naturalPresentation.readScene(world,newMap,true)
-      :this.naturalPresentation.read(world,newMap,immutable);
+      ?this.naturalPresentation.readScene(world,resetNatural,true)
+      :this.naturalPresentation.read(world,resetNatural,immutable);
     if(!scene)return;
     const compact=!isNaturalSceneWorld(scene);
     if(compact&&!scene.changed)return;
     const view=compact?world:scene;
-    this.plants.update(view,newMap,this.naturalPresentation.changes);
+    this.plants.update(view,resetNatural,this.naturalPresentation.changes);
     if(readSceneResourceFrame(frame,world)){
-      this.resources.update(world,newMap,this.naturalPresentation.changes,frame,this.naturalPresentation.appearance);
+      this.resources.update(world,resetNatural,this.naturalPresentation.changes,frame,this.naturalPresentation.appearance);
       // Overview owns the same crop/cluster exclusion already; it can receive
       // the complete current World without a second global filtered array.
-      this.overview.update(world,newMap,this.naturalPresentation.changes,this.naturalPresentation.appearance);return;
+      this.overview.update(world,resetNatural,this.naturalPresentation.changes,this.naturalPresentation.appearance);return;
     }
     const visible=compact
       ?{...world,resources:world.resources.filter(resource=>!isResidentCrop(resource)&&!isClusterPlantSpecies(resource.species))}
       :{...view,resources:view.resources.filter(resource=>!isClusterPlantSpecies(resource.species))};
-    this.resources.update(visible,newMap,this.naturalPresentation.changes,undefined,this.naturalPresentation.appearance); this.overview.update(visible,newMap,this.naturalPresentation.changes,this.naturalPresentation.appearance);
+    this.resources.update(visible,resetNatural,this.naturalPresentation.changes,undefined,this.naturalPresentation.appearance); this.overview.update(visible,resetNatural,this.naturalPresentation.changes,this.naturalPresentation.appearance);
   }
 
   protected buildStructures(world: World): void {
@@ -1705,6 +1719,7 @@ export class SceneRenderCore {
     if(this.grass){this.grass.mesh.removeFromParent();this.grass.dispose();this.grass=null;}
     this.surfaceTint.dispose();
     this.resources.dispose();
+    this.preparedNaturalPresentation.clear();
     this.sceneResources.clear();
     this.structurePreparation?.clear();this.preparedStructures=undefined;
     this.furniturePresentation.clear();this.structureSignature.clear();this.storageSignature.clear();this.homeSignature.clear();

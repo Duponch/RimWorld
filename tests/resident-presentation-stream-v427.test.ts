@@ -1,3 +1,5 @@
+import {WorkerNaturalAppearance} from '../src/bridge/worker-natural-appearance';
+import {campaignPresentation} from '../src/sim/secondary-site-presentation';
 import {expect,test} from 'vitest';
 import {SnapshotDecoder,type SnapshotMessage} from '../src/bridge/snapshots';
 import {readSnapshotChanges,readSnapshotResourceStructure,readSnapshotStructureChanges} from '../src/bridge/snapshot-changes';
@@ -72,8 +74,8 @@ test('transport shape refuses getters, sparse arrays, invalid unsigned headers a
  expect(h.reader.adopt(malformed).status).toBe('resync');expect(reads).toBe(0);
  for(const field of ['seed','rng']as const){const bad=structuredClone(good);bad.world[field]=-1;expect(h.reader.adopt(bad).status).toBe('resync');}
  const holes=structuredClone(good);if(holes.kind!=='checkpoint')throw Error('checkpoint expected');delete holes.world.tiles[0];expect(h.reader.adopt(holes).status).toBe('resync');
- const envelope=residentPublication(good);expect(readResidentWorkerMessage(envelope)).toBe(good);
- expect(()=>readResidentWorkerMessage({...envelope,version:2})).toThrow();
+ const envelope=residentPublication(good,new WorkerNaturalAppearance().capture(campaignPresentation(h.world),good));expect(readResidentWorkerMessage(envelope)).toBe(good);
+ expect(()=>readResidentWorkerMessage({...envelope,version:3})).toThrow();
  expect(()=>readResidentWorkerMessage(good)).toThrow();expect(h.reader.adopt(good).status).toBe('applied');
 });
 
@@ -81,6 +83,6 @@ test('public decoding keeps its business refusal frontier and reader packets exp
  const h=harness(),strict=new SnapshotDecoder(),checkpoint=h.packet();expect(strict.adopt(structuredClone(checkpoint)).status).toBe('applied');
  h.world.piles[0]!.quantity=9;const invalid=h.packet();if(invalid.kind!=='delta')throw Error('delta expected');invalid.piles!.upserted[0]!.quantity=-1;
  expect(strict.adopt(invalid).status).toBe('resync');
- const envelope=residentPublication(checkpoint);expect(Object.keys(envelope).sort()).toEqual(['publication','type','version']);
+ const envelope=residentPublication(checkpoint,new WorkerNaturalAppearance().capture(campaignPresentation(h.world),checkpoint));expect(Object.keys(envelope).sort()).toEqual(['natural','publication','type','version']);
  expect(Object.hasOwn(checkpoint,'trusted')).toBe(false);expect(Object.hasOwn(envelope,'trusted')).toBe(false);
 });
