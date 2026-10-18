@@ -59,4 +59,8 @@ La reprise utilise la sonde harvest existante émise sans réécriture puis comp
 
 Les deux phases ont22changements de vitesse, zéro saut discontinu, occupation solide, starvation ou erreur navigateur. Le diagnostic complémentaire conserve un excès de déplacement continu au contact dans chop, distinct des critères communs : il n’est ni effacé ni transformé en garantie d’interpolation parfaite. Deux captures ROOT inspectées, AMD-RDNA1/WebGPU ;1776fichiers du gel exacts après. Aucun code produit ni seuil n’a changé pendant ces reprises. Aucun nouveau gain de confort ou FPS n’en est déduit.
 
-Le build Pages, la vérification du paquet et le déploiement seront consignés après exécution. Aucun paquet QA n’est destiné à la publication. Les résultats mixtes V420/V421 et le diagnostic V422 sont conservés ; aucune nouvelle optimisation ou mécanique n’est incluse.
+## Publication
+
+Produit `c5bd4f9708d26daeb9c703016b2660147a4f1d03` commité et poussé sur main, déploiement unique `84b9d5b0` sur elsewhere-cq7.pages.dev. Pages reconstruit sur ce HEAD en8,043s, paquet local vérifié9,047s, déploiement16,097s et136réponses HTTPS200/MIME/octets exacts14,095s. Paquet540fichiers/143936852octets,67fiches/70chemins de sauvegarde exacts ; rapports tmp/elsewhere-pages/v423-package-GWWx8B et v423-http-eW07P8. Archives publiques, Les AulnesV394 et démonstrationV419/tick1730 inchangées ; aucun paquet QA publié.
+
+Les résultats mixtes V420/V421 et le diagnostic V422 sont conservés. Cette publication ne déclare pas le confort du départ neuf rétabli ; aucune nouvelle optimisation ou mécanique n’est incluse.
