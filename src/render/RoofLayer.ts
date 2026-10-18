@@ -5,7 +5,7 @@ import type { World } from '../sim/types';
 import type { BoxBatches } from './BoxBatches';
 import { WORLD_SCALE } from '../world/scale';
 import { woodFiberDetail } from './stylized-surfaces';
-import {overlaySurfaceHeightAtCell} from './surface-height';
+import {overlaySurfaceHeightAtCell,type GroundOverlaySurface} from './surface-height';
 import {EMPTY_GROUND_OVERLAYS,GROUND_OVERLAY_RENDER_ORDER,groundOverlayPlacements,setGroundOverlayRenderOrder,type GroundOverlayRect} from './ground-overlay-surfaces';
 
 type RoofCell = { x: number; z: number };
@@ -145,6 +145,10 @@ export class RoofLayer {
     this.mesh.material = enabled ? this.textured : this.plain;
   }
   update(world: World, batches: BoxBatches, cutaway = false, reset = false): void {
+    this.updatePhysical(world,cutaway,reset);
+    this.updateAreas(world,world.roofing?.build??[],world.roofing?.remove??[],batches,reset);
+  }
+  updatePhysical(world:World,cutaway=false,reset=false):void {
     const state = world.roofing;
     const supports = world.structures.filter(s => s.kind === 'wall' || isRoomDoor(s.kind))
       .map(s => `${s.kind}:${s.x}:${s.z}`).join(',');
@@ -157,18 +161,23 @@ export class RoofLayer {
       this.mesh.geometry = roofSlabGeometry(cells, top,cell=>roofKindAt(world,cell.z*world.width+cell.x));
       old.dispose(); this.mesh.visible = cells.length > 0;
     }
-    const areaCells=[...(state?.build??[]),...(state?.remove??[])];
-    const areaKey=`${world.width}|${state?.build.join(',')}|${state?.remove.join(',')}|${areaCells.map(i=>overlaySurfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))).join(',')}`;
+  }
+  updateAreas(world:GroundOverlaySurface,build:readonly number[],remove:readonly number[],batches:BoxBatches,reset=false,known?:(cell:number)=>boolean):boolean {
+    if(known){build=build.filter(known);remove=remove.filter(known);}
+    const areaCells=[...build,...remove];
+    const areaKey=`${world.width}|${build.join(',')}|${remove.join(',')}|${areaCells.map(i=>overlaySurfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))).join(',')}`;
     if(reset||this.areaKey!==areaKey){
       this.areaKey=areaKey;
       const parts=[
-        ...(state?.build ?? []).map(i => ({ i, color: 0x7abca0 })),
-        ...(state?.remove ?? []).map(i => ({ i, color: 0xd49d79 })),
+        ...build.map(i => ({ i, color: 0x7abca0 })),
+        ...remove.map(i => ({ i, color: 0xd49d79 })),
       ].map(({ i, color }) => ({ x: i % world.width, z: Math.floor(i / world.width), y: (overlaySurfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))??0)+.054, sx: .98, sz: .98, sy: .012, color }));
       this.areaSurfaces=parts.length?groundOverlayPlacements(parts,.48):EMPTY_GROUND_OVERLAYS;
       batches.set(this.areas,'roof-areas',parts,'overlay',false);
       setGroundOverlayRenderOrder(this.areas,'roof-areas',GROUND_OVERLAY_RENDER_ORDER.roof);
+      return true;
     }
+    return false;
   }
   prepare(): () => void {
     const surface = this.surface.visible, areas = this.areas.visible;

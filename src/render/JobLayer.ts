@@ -1,38 +1,42 @@
+import { knownCell256 } from '../sim/exploration-visibility-256';
 import { isFoodWorkstation } from '../sim/food-workstations';
 import { isBedKind } from '../sim/bed-kinds';
 import type * as THREE from 'three/webgpu';
 import { isRoofJob } from '../sim/roof-rules';
 import type { BoxBatches } from './BoxBatches';
 import type { Placement } from './primitives';
-import type { World } from '../sim/types';
+import type { World, Job } from '../sim/types';
 import { footprintCells } from '../sim/definitions';
 import { jobDuration } from '../sim/farming';
 import { WORLD_SCALE } from '../world/scale';
 import { isIconDesignationKind } from './DesignationIconLayer';
 
-/** Existing instanced batches carry plans, frames and removal markers. */
-export function buildJobMarkers(world: World, group: THREE.Group, cutaway: boolean, batches: BoxBatches): void {
+interface JobMarkerParts {orders:Placement[];blueprints:Placement[];intentSolids:Placement[];frames:Placement[];progress:Placement[]}
+/** Physical World is absent for intent-only production. No work clock or
+ * progress is consulted in that branch, even when immutable records are shared. */
+function readJobMarkerParts(jobs:readonly Job[],cutaway:boolean,physical?:World,visibility?:World):JobMarkerParts {
     const wallHeight = cutaway ? WORLD_SCALE.wallCutawayHeight : WORLD_SCALE.wallHeight;
-    const orders: Placement[] = [], blueprints: Placement[] = [], frames: Placement[] = [], progress: Placement[] = [];
-    for (const job of world.jobs.filter(j=>!isRoofJob(j))) {
+    const orders: Placement[] = [], blueprints: Placement[] = [], intentSolids:Placement[]=[], frames: Placement[] = [], progress: Placement[] = [];
+    for (const job of jobs.filter(j=>!isRoofJob(j))) {
       // Mechanical faults have their own compact mark on the appliance.
       if(job.kind==='fix-breakdown')continue;
       const cells = footprintCells(job);
-      if(!isIconDesignationKind(job.kind))for (const cell of cells) orders.push({ targetId:job.id, x: cell.x, y: 0.032, z: cell.z, color: job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
+      if(!physical&&visibility&&!cells.every(cell=>knownCell256(visibility,cell.z*visibility.width+cell.x)))continue;
+      if(!isIconDesignationKind(job.kind))for (const cell of cells) orders.push({ targetId:job.id, x: cell.x, y: 0.032, z: cell.z, color: physical&&job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
       if(job.kind==='repair'||job.kind==='flick')continue;
       if(job.kind==='build-bridge'||job.kind==='remove-bridge'){
         blueprints.push({targetId:job.id,x:job.x,z:job.z,y:.075,sx:.94,sy:.04,sz:.94});
-        if(job.kind==='remove-bridge')for(const ry of [-Math.PI/4,Math.PI/4])frames.push({targetId:job.id,x:job.x,z:job.z,y:.1,sx:.85,sy:.025,sz:.05,ry,color:0xd77855});
-        else if(job.construction==='frame'){
+        if(job.kind==='remove-bridge')for(const ry of [-Math.PI/4,Math.PI/4])intentSolids.push({targetId:job.id,x:job.x,z:job.z,y:.1,sx:.85,sy:.025,sz:.05,ry,color:0xd77855});
+        else if(physical&&job.construction==='frame'){
           for(const dz of [-.4,.4])frames.push({targetId:job.id,x:job.x,z:job.z+dz,y:.025,sx:1,sy:.04,sz:.08});
-          const fraction=Math.floor(job.progress/jobDuration(world,job)*20)/20;
+          const fraction=Math.floor(job.progress/jobDuration(physical!,job)*20)/20;
           if(fraction>0)progress.push({targetId:job.id,x:job.x-.5+fraction/2,z:job.z,y:.05,sx:fraction,sy:.025,sz:.92});
         }
         continue;
       }
       if(job.kind==='lay-floor'||job.kind==='remove-floor'||job.kind==='grave'){
         for(const cell of cells){blueprints.push({targetId:job.id,x:cell.x,z:cell.z,y:.09,sx:.94,sy:.08,sz:.94});
-          if(job.kind==='remove-floor')for(const ry of [-Math.PI/4,Math.PI/4])frames.push({targetId:job.id,x:cell.x,z:cell.z,y:.13,sx:.8,sy:.025,sz:.05,ry,color:0xd77855});}
+          if(job.kind==='remove-floor')for(const ry of [-Math.PI/4,Math.PI/4])intentSolids.push({targetId:job.id,x:cell.x,z:cell.z,y:.13,sx:.8,sy:.025,sz:.05,ry,color:0xd77855});}
         continue;
       }
       // Tree intentions use their actual-source billboard, never a building cube.
@@ -40,7 +44,7 @@ export function buildJobMarkers(world: World, group: THREE.Group, cutaway: boole
       if(job.kind==='deconstruct'||job.kind==='uninstall') {
         const targetKind=(job.deconstruction??job.furniture)!.kind;
         const y=(targetKind==='bedroll'?.19:targetKind==='torch-lamp'?1.1:targetKind==='spike-trap'?.625:targetKind==='electric-crematorium'?1.56:targetKind==='electric-smelter'?1.32:targetKind==='biofuel-refinery'?1.69:targetKind==='chemfuel-generator'?1.75:targetKind==='vitals-monitor'?1.14:targetKind==='mini-turret'?1.18:targetKind==='tube-television'?.81:targetKind==='sandbags'?.66:(isFoodWorkstation(targetKind)||targetKind==='machining-table'||targetKind==='hi-tech-research-bench'||targetKind==='fabrication-bench'||targetKind==='multi-analyzer'||targetKind==='drug-lab'||targetKind==='art-bench'||targetKind==='research-bench'||targetKind==='tailor-bench'||targetKind==='stonecutter')?WORLD_SCALE.stonecutterHeight:(targetKind==='vent'||targetKind==='wall'||targetKind==='cooler')?wallHeight:targetKind==='table'||targetKind==='chess-table'?WORLD_SCALE.tableHeight:targetKind==='horseshoes'?WORLD_SCALE.horseshoeHeight:targetKind==='stool'?WORLD_SCALE.stoolHeight:WORLD_SCALE.bedSurfaceHeight)+.06;
-        for(const cell of cells)for(const ry of [-Math.PI/4,Math.PI/4])frames.push({targetId:job.id,x:cell.x,z:cell.z,y,sx:.85,sy:.05,sz:.08,ry,color:job.kind==='uninstall'?0xd9b66c:0xd77855});
+        for(const cell of cells)for(const ry of [-Math.PI/4,Math.PI/4])intentSolids.push({targetId:job.id,x:cell.x,z:cell.z,y,sx:.85,sy:.05,sz:.08,ry,color:job.kind==='uninstall'?0xd9b66c:0xd77855});
         continue;
       }
       const kind=job.furniture?.kind??job.kind;
@@ -49,17 +53,48 @@ export function buildJobMarkers(world: World, group: THREE.Group, cutaway: boole
       const width = kind==='torch-lamp'?.45:kind==='spike-trap'?.83:kind==='double-bed'?1.84:kind==='electric-crematorium'?2.84:kind==='electric-smelter'?2.84:kind==='biofuel-refinery'?2.86:kind==='chemfuel-generator'?1.86:kind==='vitals-monitor'?.78:kind==='mini-turret'?.87:kind==='tube-television'?.84:kind==='sandbags'?.94:kind==='solar-generator'?3.9:kind==='power-conduit'?.18:kind==='power-switch'?.7:kind==='battery'?.86:kind==='hi-tech-research-bench'||kind==='fabrication-bench'?4.85:kind==='multi-analyzer'?1.86:(isFoodWorkstation(kind)||kind==='machining-table'||kind==='drug-lab'||kind==='art-bench'||kind==='research-bench'||kind==='tailor-bench'||kind==='stonecutter')?WORLD_SCALE.stonecutterWidth:kind === 'horseshoes' ? 0.12 : (kind==='vent'||kind === 'wall'||kind==='cooler'||kind==='chess-table') ? 0.92 : kind === 'table' ? WORLD_SCALE.tableWidth : kind === 'stool' ? WORLD_SCALE.stoolWidth : WORLD_SCALE.bedWidth;
       const length = kind==='torch-lamp'?.45:kind==='spike-trap'?.83:kind==='electric-crematorium'?1.84:kind==='electric-smelter'?.84:kind==='biofuel-refinery'||kind==='chemfuel-generator'?1.86:kind==='vitals-monitor'?.60:kind==='mini-turret'?.87:kind==='tube-television'?.72:kind==='solar-generator'?3.9:kind==='power-conduit'?.18:kind==='power-switch'?.7:kind==='battery'?1.83:kind==='hi-tech-research-bench'||kind==='fabrication-bench'||kind==='multi-analyzer'?1.84:kind==='research-bench'?1.8:(isFoodWorkstation(kind)||kind==='machining-table'||kind==='drug-lab'||kind==='art-bench'||kind==='tailor-bench'||kind==='stonecutter')?WORLD_SCALE.stonecutterDepth:kind === 'horseshoes' ? 0.12 : kind === 'table' ? WORLD_SCALE.tableLength : kind === 'stool' ? WORLD_SCALE.stoolWidth : isBedKind(kind) && job.footprint !== 'legacy-single' ? WORLD_SCALE.bedLength : 0.92;
       blueprints.push({ targetId:job.id, x, z, y: height / 2, sx: width, sy: height, sz: length, ry });
-      if (job.construction === 'frame') {
+      if (physical&&job.construction === 'frame') {
         // Four low corner posts distinguish a supplied frame from a bare plan.
         for (const dx of [-1, 1]) for (const dz of [-1, 1]) {
           const lx = dx * (width / 2 - 0.06), lz = dz * (length / 2 - 0.06);
           frames.push({ targetId:job.id, x: x + lx * Math.cos(ry) + lz * Math.sin(ry), z: z + lz * Math.cos(ry) - lx * Math.sin(ry), y: 0.2, sx: 0.09, sy: 0.4, sz: 0.09 });
         }
       }
-      const fraction = Math.floor(job.progress / jobDuration(world,job) * 20) / 20;
+      const fraction = physical?Math.floor(job.progress / jobDuration(physical,job) * 20) / 20:0;
       if (fraction > 0) progress.push({ targetId:job.id, x, z, y: height * fraction / 2, sx: width - 0.06, sy: height * fraction, sz: length - 0.06, ry });
     }
+    return {orders,blueprints,intentSolids,frames,progress};
+  }
+
+function writeJobMarkers(parts:JobMarkerParts,group:THREE.Group,batches:BoxBatches):void {
+    const {orders,blueprints,intentSolids,frames,progress}=parts;
     batches.set(group, 'job-orders', orders.map(p => ({ ...p, sx: 0.9, sy: 0.025, sz: 0.9 })), 'overlay', false);
     batches.set(group, 'job-plans', blueprints.map(p => ({ ...p, color: 0xa7dbc9 })), 'wire', false);
-    batches.set(group, 'job-solids', [...frames.map(p => ({ ...p, color: p.color??0x9f7e52 })), ...progress.map(p => ({ ...p, color: 0xa6916e }))]);
+    batches.set(group, 'job-solids', [...intentSolids.map(p=>({...p,color:p.color??0x9f7e52})),...frames.map(p => ({ ...p, color: p.color??0x9f7e52 })), ...progress.map(p => ({ ...p, color: 0xa6916e }))]);
   }
+
+/** Public callers retain the historical full-world behavior. */
+export function buildJobMarkers(world:World,group:THREE.Group,cutaway:boolean,batches:BoxBatches):void {
+  writeJobMarkers(readJobMarkerParts(world.jobs,cutaway,world),group,batches);
+}
+
+/** Two CPU responsibilities, the same three resident GPU batches/materials. */
+export class ConfirmedJobMarkers {
+  private intentions=readJobMarkerParts([],false);
+  private physical=readJobMarkerParts([],false);
+  private active=new Set<number>();
+  updatePhysical(world:World,cutaway:boolean):void {
+    this.physical=readJobMarkerParts(world.jobs,cutaway,world);
+    this.active=new Set(world.jobs.filter(job=>job.status==='active').map(job=>job.id));
+  }
+  clear():void {this.intentions=readJobMarkerParts([],false);this.physical=readJobMarkerParts([],false);this.active.clear();}
+  updateIntentions(jobs:readonly Job[],cutaway:boolean,executed?:World):void {
+    this.intentions=readJobMarkerParts(jobs,cutaway,undefined,executed);
+  }
+  present(group:THREE.Group,batches:BoxBatches):void {
+    const plans=this.intentions;
+    writeJobMarkers({orders:plans.orders.map(p=>({...p,color:this.active.has(p.targetId!)?0xe7c17a:0x99cfc3})),
+      blueprints:plans.blueprints,intentSolids:plans.intentSolids,frames:this.physical.frames,
+      progress:this.physical.progress},group,batches);
+  }
+}

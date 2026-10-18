@@ -1,6 +1,6 @@
 import * as THREE from 'three/webgpu';
 import { BoxBatches } from './BoxBatches';
-import { overlaySurfaceHeightAtCell } from './surface-height';
+import { overlaySurfaceHeightAtCell,type GroundOverlaySurface } from './surface-height';
 import { GROUND_OVERLAY_RENDER_ORDER,setGroundOverlayRenderOrder } from './ground-overlay-surfaces';
 import type { Placement } from './primitives';
 import type { World } from '../sim/types';
@@ -13,7 +13,11 @@ export class AllowedAreaLayer {
   private signature='';
   constructor(private readonly boxes:BoxBatches){}
   update(world:World,id:number|undefined,reset=false):boolean {
-    const area=id===undefined?undefined:world.allowedAreas?.find(a=>a.id===id);
+    return this.updateIntents(world,world.allowedAreas,id,reset);
+  }
+  updateIntents(world:GroundOverlaySurface,areas:World['allowedAreas'],id:number|undefined,reset=false,known?:(cell:number)=>boolean):boolean {
+    let area=id===undefined?undefined:areas?.find(a=>a.id===id);
+    if(area&&known)area={...area,cells:area.cells.filter(known)};
     const signature=area?`${world.width}:${area.id}:${area.color}:`+area.cells.map(i=>`${i}:${overlaySurfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))}`).join(','):'';
     if(!reset&&signature===this.signature)return false;this.signature=signature;
     const surfaces:Placement[]=(area?.cells??[]).map(i=>{const x=i%world.width,z=Math.floor(i/world.width);return {x,z,y:(overlaySurfaceHeightAtCell(world,x,z)??0)+.024,sx:1,sy:.014,sz:1,color:area!.color};});

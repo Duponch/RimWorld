@@ -1,6 +1,7 @@
 import * as THREE from 'three/webgpu';
 import { Fn, If, attribute, positionLocal, uv, vec2, vec3, uint } from 'three/tsl';
-import type { World } from '../sim/types';
+import type { World, Cell } from '../sim/types';
+import { confirmedRouteEdgeSignature,type ConfirmedIntentRoute } from './confirmed-intent-fields';
 import { pawnPresentationPose } from './pawn-presentation';
 import type { PawnLayer } from './PawnLayer';
 import { actionProgress, selectedConfirmedPath,type ActionLookup } from './action-feedback';
@@ -69,7 +70,7 @@ export class ActionFeedbackLayer {
 
   /** Called after PawnLayer.update. Its source may change only when the pawn
    * capacity grows; rebinding does not rebuild shader geometry or material. */
-  update(world:World,selected:ReadonlySet<number>,source:THREE.InstancedBufferGeometry):void {
+  update(world:World,selected:ReadonlySet<number>,source:THREE.InstancedBufferGeometry,externalPath=false):void {
     this.bindSource(source);
     const action=this.bars.geometry.getAttribute('aAction') as THREE.InstancedBufferAttribute;
     const lookup:ActionLookup={jobs:new Map(world.jobs.map(job=>[job.id,job]))};
@@ -102,7 +103,7 @@ export class ActionFeedbackLayer {
     this.stats.activeBars=active;
     this.bars.visible=this.barsDetailVisible&&active>0;
     if(changed){action.needsUpdate=true;this.stats.barUploads++;}
-    this.updatePath(world,selected,source);
+    if(!externalPath)this.updatePath(world,selected,source);
   }
 
   private bindSource(source:THREE.InstancedBufferGeometry):void {
@@ -129,6 +130,26 @@ export class ActionFeedbackLayer {
   private updatePath(world:World,selected:ReadonlySet<number>,source:THREE.InstancedBufferGeometry):void {
     const paths=world.pawns.flatMap((pawn,index)=>selected.has(pawn.id)
       ?[{index,id:pawn.id,route:selectedConfirmedPath(world,pawn)}]:[]).filter(item=>item.route.length);
+    this.writePath(paths,source);
+  }
+
+  /** The origin is always the executed PawnLayer slot. When the newer route
+   * starts beyond that physical origin, retain the existing confirmed route;
+   * never join across an unproven chord/turn. Confirmed cancellation is empty. */
+  updateConfirmedPath(routes:readonly ConfirmedIntentRoute[],executed:World,selected:ReadonlySet<number>,source:THREE.InstancedBufferGeometry):void {
+    this.bindSource(source);
+    const byId=new Map(routes.map(route=>[route.pawnId,route]));
+    const paths=executed.pawns.flatMap((pawn,index)=>{
+      const intent=byId.get(pawn.id);if(!selected.has(pawn.id)||!intent)return [];
+      const compatible=pawn.x===intent.origin.x&&pawn.z===intent.origin.z
+        &&confirmedRouteEdgeSignature(pawn.motion)===intent.edgeSignature;
+      const route=compatible?intent.cells:selectedConfirmedPath(executed,pawn);
+      return route.length?[{index,id:pawn.id,route}]:[];
+    });
+    this.writePath(paths,source);
+  }
+
+  private writePath(paths:readonly {index:number;id:number;route:readonly Readonly<Cell>[]}[],source:THREE.InstancedBufferGeometry):void {
     const signature=paths.map(item=>`${item.id}@${item.index}:${item.route.map(c=>`${c.x},${c.z}`).join(';')}`).join('|');
     if(signature===this.pathSignature){this.syncTravel(source);return;}
     this.pathSignature=signature;this.stats.pathRebuilds++;

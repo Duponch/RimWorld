@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V426 — intentions confirmées, qualifié par reprise du pilote, prêt pour publication ; schéma 263 inchangé :** [Réactivité des intentions confirmées](confirmed-intentions-v426.md). Dernières intentions admises présentées indépendamment du tick des acteurs, avec surfaces/visibilité/progrès physiques conservés et lots résidents réutilisés. Chrome×1 : chemin323,2→73,3ms, plan411,5→75,1ms, culture360,6→128,9ms ; départ du colon non amélioré. 42cas, build, présentation et export entier acquis. Coût des routes à chaque admission, transport/Decoder et réserve physique restent ouverts ; aucun gainFPS nouveau.
+
 **V425 — lot partiel publié, schéma263 inchangé :** [Simulation et admission de présentation](simulation-presentation-v425.md). Admission MAIN isolée, flore et espèces actives optimisées ; survol différé pendant la navigation. Gains mesurés en pause (rotation125,43→150,11images/s), mais rotation×1 et×6 restent instables. Essai de cache d’ombres retiré ; exports entiers exacts. Publié ecdfe9a3/déploiementd894d842,136HTTPS exacts ; aucune refonte complète ni200FPS stables annoncés. Latence globale des interactions à traiter ensuite.
 
 **V424 — audit, schéma 263 inchangé :** [Objectif 200 FPS](performance-architecture-audit-v424.md). Chemin de présentation trop dépendant du World complet ; refonte de la projection, du flux et des indices recommandée, options Worker/WASM/natif comparées. Aucun changement produit ni gain de fluidité livré par cet audit.

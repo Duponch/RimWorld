@@ -4,6 +4,7 @@ import type {SceneTextureLoader} from './scene-render-ports';
 import * as THREE from 'three/webgpu';
 import { attribute, cameraPosition, cameraViewMatrix, texture, uniform, uv, vec2, vec4 } from 'three/tsl';
 import type { AreaAction, World } from '../sim/types';
+import type { ConfirmedIntentFields } from './confirmed-intent-fields';
 import { footprintCells } from '../sim/definitions';
 import { ARCHITECT_ICON_ATLASES, ARCHITECT_ICON_MAPPING } from '../ui/architect-icons';
 import { floraSize, floraTreeHeight } from './flora-presentation';
@@ -67,10 +68,10 @@ function instancesForTargets(world: World, targets: readonly MarkerTarget[]): De
   });
 }
 
-function committedTargets(world: World): MarkerTarget[] {
+function committedTargets(world: World,intents?:ConfirmedIntentFields): MarkerTarget[] {
   const targets: MarkerTarget[] = [];
   const roofCells = new Set<string>();
-  for (const job of world.jobs) {
+  for (const job of intents?.jobs??world.jobs) {
     if (!isMarkerKind(job.kind)) continue;
     targets.push({ kind: job.kind, x: job.x, z: job.z });
     if (job.kind === 'build-roof' || job.kind === 'remove-roof') roofCells.add(`${job.kind}:${job.z * world.width + job.x}`);
@@ -86,10 +87,10 @@ function committedTargets(world: World): MarkerTarget[] {
   }
   // Roof intentions exist before the bounded scheduler generates jobs. Retain
   // unfinished intentions, including unsupported cells, without work queries.
-  if (world.roofing) {
+  if (world.roofing||intents) {
     const constructed = actualRoofCells(world);
     for (const kind of ['build-roof', 'remove-roof'] as const) {
-      for (const cell of world.roofing[kind === 'build-roof' ? 'build' : 'remove']) {
+      for (const cell of (kind==='build-roof'?intents?.roofBuild??world.roofing?.build:intents?.roofRemove??world.roofing?.remove)??[]) {
         const key = `${kind}:${cell}`;
         if (kind==='remove-roof'&&roofKindAt(world,cell)==='natural-thick'||constructed.has(cell) === (kind === 'build-roof') || roofCells.has(key)) continue;
         roofCells.add(key);
@@ -210,6 +211,7 @@ export class DesignationIconLayer {
   private preview: DesignationIconInstance[] = [];
   private instanceCount = 0;
   private revision = 0;
+  private intentions:ConfirmedIntentFields|undefined;
 
   constructor(loadTexture:SceneTextureLoader=(url,onLoad,onProgress,onError)=>new THREE.TextureLoader().load(url,onLoad,onProgress,onError)) {
     const geometry = new THREE.InstancedBufferGeometry();
@@ -259,8 +261,9 @@ export class DesignationIconLayer {
     loadAtlas(TREE_DESIGNATION_ATLAS_URL,this.treeNode);
   }
 
-  update(world: World): void {
-    this.committed = designationIconInstances(world);
+  update(world: World,intents?:ConfirmedIntentFields): void {
+    this.intentions=intents;
+    this.committed = instancesForTargets(world,committedTargets(world,intents));
     // Compatibility belongs to the snapshot used by queryArea. A new update
     // must be followed by a fresh query while a drag remains active.
     this.preview = [];
@@ -268,7 +271,7 @@ export class DesignationIconLayer {
   }
 
   updatePreview(world: World, action: AreaAction, cells: readonly number[]): void {
-    const targets = committedTargets(world);
+    const targets = committedTargets(world,this.intentions);
     const instances = instancesForTargets(world, [...targets, ...previewTargets(world, action, cells, targets)]);
     this.committed = instances.slice(0, targets.length);
     this.preview = instances.slice(targets.length);

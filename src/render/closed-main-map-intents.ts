@@ -1,10 +1,14 @@
 import type { World } from '../sim/types';
+import { confirmedRouteEdgeSignature,type ConfirmedIntentFields,type ConfirmedIntentRoute } from './confirmed-intent-fields';
+import { selectedConfirmedPath } from './action-feedback';
 
 /** Only the private MAIN renderer supplies this reader. This interface is a
  * dependency injection port, not a capability inferred from a World or flag.
  * The default exported PresentationQueue continues its literal RAW read. */
 export interface ClosedMainMapIntentReader {
   read(world:World):string;
+  /** Only the fixed closed MAIN renderer calls this after decoder admission. */
+  admit?(world:World):ConfirmedIntentFields;
   clear():void;
 }
 
@@ -21,8 +25,9 @@ function historicalSignature(world:World):string {
   ]);
 }
 
-/** Reusable primitive observations of precisely the V304 intent projection.
- * No World, collection or owner is retained. The closed MAIN construction
+/** Reusable primitive observations of the historical queue and confirmed
+ * intentions. Only the closed admission retains immutable intention arrays;
+ * the public read path keeps literal V304 semantics. Closed MAIN construction
  * proves data-only records; shape tests here are conservative admission,
  * never discovery of such a mandate on a public RAW/getter/Proxy graph. */
 class MainMapIntentReader implements ClosedMainMapIntentReader {
@@ -33,21 +38,30 @@ class MainMapIntentReader implements ClosedMainMapIntentReader {
   private differs=false;
   private ready=false;
   private signature:string|undefined;
+  private admitted=new WeakMap<World,string>();
+  private projection:ConfirmedIntentFields|undefined;
+  private generation=0;
+  private captureEligible=false;
+  private projectedGeneration=-1;
+  private capturedRoutes:ConfirmedIntentRoute[]=[];
+  private captureGroup='jobs';
+  private changedGroups=new Set<string>();
 
   clear():void {
     this.ready=false;
     this.signature=undefined;
+    this.admitted=new WeakMap();this.projection=undefined;this.projectedGeneration=-1;this.capturedRoutes=[];
     this.committedLength=0;
     this.cursor=0;
     this.differs=false;
-    // Retain storage capacity, but never retain a World or object value.
+    // Primitive scratch capacity is reusable; admitted references are cleared.
   }
 
   private put(value:Primitive):void {
     const index=this.cursor++;
     this.scratch[index]=value;
     // JSON normalizes both signs of zero. Numbers admitted below are finite.
-    if(value!==this.committed[index])this.differs=true;
+    if(value!==this.committed[index]){this.differs=true;this.changedGroups.add(this.captureGroup);}
   }
   private number(value:unknown):boolean {
     if(typeof value!=='number'||!Number.isFinite(value))return false;
@@ -73,21 +87,26 @@ class MainMapIntentReader implements ClosedMainMapIntentReader {
     return true;
   }
 
-  private capture(world:World):boolean {
+  private capture(world:World,extended=false):boolean {
+    this.capturedRoutes=[];this.changedGroups.clear();this.captureGroup='jobs';
     if(!Array.isArray(world.jobs))return false;
     this.put(world.jobs.length);
     for(let i=0;i<world.jobs.length;i++){
       const job=world.jobs[i];
       if(!job||typeof job!=='object'
         ||!this.number(job.id)||!this.string(job.kind)||!this.number(job.x)||!this.number(job.z)
-        ||!this.number(job.orientation)||!this.string(job.footprint)||!this.optionalString(job.construction))return false;
+        ||!this.number(job.orientation)||!this.string(job.footprint)||!this.optionalString(job.construction)
+        ||extended&&(!this.optionalString(job.furniture?.kind)||!this.optionalString(job.deconstruction?.kind)))return false;
     }
+    this.captureGroup='growing';
     if(!Array.isArray(world.growingZones))return false;
     this.put(world.growingZones.length);
     for(let i=0;i<world.growingZones.length;i++){
       const zone=world.growingZones[i];
       if(!zone||typeof zone!=='object'||!this.number(zone.id)||!this.cells(zone.cells,false)||!this.string(zone.plant))return false;
+      if(extended){this.put(zone.allowSow?1:0);this.put(zone.allowCut?1:0);}
     }
+    this.captureGroup='stockpile';
     if(!Array.isArray(world.stockpiles))return false;
     this.put(world.stockpiles.length);
     for(let i=0;i<world.stockpiles.length;i++){
@@ -95,7 +114,30 @@ class MainMapIntentReader implements ClosedMainMapIntentReader {
       if(!cell||typeof cell!=='object'||!this.number(cell.id)||!this.optionalNumber(cell.zoneId)
         ||!this.number(cell.x)||!this.number(cell.z))return false;
     }
-    if(!this.cells(world.home,true)||!this.cells(world.roofing?.build,true)||!this.cells(world.roofing?.remove,true))return false;
+    this.captureGroup='home';if(!this.cells(world.home,true))return false;
+    this.captureGroup='roof';if(!this.cells(world.roofing?.build,true)||!this.cells(world.roofing?.remove,true))return false;
+    if(extended){
+    this.captureGroup='snow';
+    if(!this.cells(world.snowClearArea,true))return false;
+    this.captureGroup='allowed';
+    if(world.allowedAreas!==undefined&&!Array.isArray(world.allowedAreas))return false;
+    this.put(world.allowedAreas?.length??0);
+    for(const area of world.allowedAreas??[])
+      if(!this.number(area.id)||!this.number(area.color)||!this.cells(area.cells,false))return false;
+    this.captureGroup='routes';
+    if(!Array.isArray(world.pawns))return false;
+    const routeCount=this.cursor++;let routes=0;
+    for(const pawn of world.pawns){
+      const cells=selectedConfirmedPath(world,pawn);if(!cells.length)continue;
+      const edgeSignature=confirmedRouteEdgeSignature(pawn.motion);
+      if(!this.number(pawn.id)||!this.number(pawn.x)||!this.number(pawn.z)||!this.string(edgeSignature))return false;
+      this.put(cells.length);
+      for(const cell of cells)if(!this.number(cell.x)||!this.number(cell.z))return false;
+      this.capturedRoutes.push({pawnId:pawn.id,origin:{x:pawn.x,z:pawn.z},edgeSignature,cells});routes++;
+    }
+    this.scratch[routeCount]=routes;if(routes!==this.committed[routeCount]){this.differs=true;this.changedGroups.add('routes');}
+    }
+    this.captureGroup='piles';
     if(!Array.isArray(world.piles))return false;
     // A count prefix disambiguates every group. Reserve this slot until the
     // historical filter has read the piles once, rather than scanning twice.
@@ -121,12 +163,42 @@ class MainMapIntentReader implements ClosedMainMapIntentReader {
   }
 
   read(world:World):string {
+    const memo=this.admitted.get(world);if(memo!==undefined)return memo;
+    return this.readFresh(world);
+  }
+
+  admit(world:World):ConfirmedIntentFields {
+    const memo=this.admitted.get(world);
+    if(memo!==undefined&&this.projection)return this.projection;
+    const signature=this.readFresh(world,true);
+    this.admitted.set(world,signature);
+    if(!this.projection||this.projectedGeneration!==this.generation){
+      this.projectedGeneration=this.generation;
+      const old=this.projection,changed=(group:string)=>!old||!this.captureEligible||this.changedGroups.has(group);
+      this.projection={jobs:changed('jobs')?world.jobs:old!.jobs,
+        growingZones:changed('growing')?world.growingZones:old!.growingZones,
+        stockpiles:changed('stockpile')?world.stockpiles:old!.stockpiles,
+        home:changed('home')?world.home:old!.home,
+        snowClearArea:changed('snow')?world.snowClearArea:old!.snowClearArea,
+        allowedAreas:changed('allowed')?world.allowedAreas:old!.allowedAreas,
+        roofBuild:changed('roof')?world.roofing?.build??[]:old!.roofBuild,
+        roofRemove:changed('roof')?world.roofing?.remove??[]:old!.roofRemove,
+        routes:changed('routes')?(this.captureEligible?this.capturedRoutes:world.pawns.flatMap(pawn=>{
+          const cells=selectedConfirmedPath(world,pawn);return cells.length?[{pawnId:pawn.id,
+            origin:{x:pawn.x,z:pawn.z},edgeSignature:confirmedRouteEdgeSignature(pawn.motion),cells}]:[];
+        })):old!.routes};
+    }
+    return this.projection;
+  }
+
+  private readFresh(world:World,extended=false):string {
     this.cursor=0;this.differs=false;
-    const eligible=this.capture(world);
+    const eligible=this.capture(world,extended);this.captureEligible=eligible;
     if(eligible&&this.ready&&!this.differs&&this.cursor===this.committedLength)return this.signature!;
     // Commit only after the complete historical stringify succeeds. A throw
     // leaves the previous facts/signature intact; partial scratch is private.
     const signature=historicalSignature(world);
+    this.generation++;
     if(eligible){
       const previous=this.committed;this.committed=this.scratch;this.scratch=previous;
       this.committedLength=this.cursor;this.ready=true;

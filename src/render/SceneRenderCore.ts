@@ -43,7 +43,9 @@ import { prepareShadowPipelines } from './shadow-preparation';
 import { PausedShadowCache } from './PausedShadowCache';
 import { installCommand } from '../sim/furniture-commands';
 import type { Structure } from '../sim/types';
-import { buildJobMarkers } from './JobLayer';
+import { buildJobMarkers, ConfirmedJobMarkers } from './JobLayer';
+import type { ClosedMainMapIntentReader } from './closed-main-map-intents';
+import type { ConfirmedIntentFields } from './confirmed-intent-fields';
 import { jobDuration } from '../sim/farming';
 import { travelHeight } from './furniture-motion';
 import { pileSurfaces,pileIdentitySurfaces } from './pile-surfaces';
@@ -155,6 +157,16 @@ export class SceneRenderCore {
   protected readonly environmentLighting = new EnvironmentLighting();
   protected readonly overview = new OverviewLayer(this.environmentLighting.configure);
   protected readonly timeline = new MotionTimeline();
+  protected readonly confirmedIntentReader=this.createIntentReader();
+  protected createIntentReader():ClosedMainMapIntentReader|undefined {return undefined;}
+  private confirmedIntents:ConfirmedIntentFields|undefined;
+  private confirmedIntentsDirty=false;
+  private presentedIntentFields:ConfirmedIntentFields|undefined;
+  private confirmedJobsSource:ConfirmedIntentFields['jobs']|undefined;
+  private confirmedSurfaceDirty=false;
+  private confirmedPathDirty=false;
+  private confirmedDesignationsDirty=false;
+  private readonly confirmedJobMarkers=new ConfirmedJobMarkers();
   protected readonly presentation = this.createPresentationQueue();
   protected createPresentationQueue():PresentationQueue { return new PresentationQueue(); }
   protected received:{world:World;speed:number;tracks?:PawnTrack[];immutableSnapshot:boolean}|undefined;
@@ -450,13 +462,21 @@ export class SceneRenderCore {
     const previous=this.received?.world;
     const reset=resetPresentation||!previous||world.tick<previous.tick||world.seed!==previous.seed||world.width!==previous.width||world.height!==previous.height;
     this.invalidatePausedShadow(reset);
+    if(reset){
+      this.presentation.clear();this.confirmedJobMarkers.clear();this.confirmedJobsSource=undefined;
+      this.presentedIntentFields=undefined;this.confirmedSurfaceDirty=true;this.confirmedPathDirty=true;
+    }
+    if(this.confirmedIntentReader?.admit){
+      const intents=this.confirmedIntentReader.admit(world);
+      if(intents!==this.confirmedIntents||reset){this.confirmedIntents=intents;this.confirmedIntentsDirty=true;}
+    }
     this.received={world,speed,tracks,immutableSnapshot};
     this.immutableSnapshot=immutableSnapshot;
     if(immutableSnapshot)this.immutableWorlds.add(world);else this.immutableWorlds.delete(world);
     this.projectiles.adopt(world,reset);
     if(this.hostPort.hidden())return;
     if(tracks){this.timeline.adopt(world.tick,speed,tracks,this.hostPort.now(),reset||!this.hasTracks);this.hasTracks=true;}
-    if(reset||!tracks){this.presentation.clear();this.applyWorld(world,reset);return;}
+    if(reset||!tracks){if(!reset)this.presentation.clear();this.applyWorld(world,reset);return;}
     this.presentation.push(world);
     // A background/stalled page must not retain an unlimited snapshot history.
     // Recovery replaces the whole presentation, never only one actor's path.
@@ -487,6 +507,7 @@ export class SceneRenderCore {
     // decoder snapshots promise identity-stable unchanged tiles.
     const immutableTileChanges=this.immutableSnapshot?changedTiles??undefined:undefined;
     const groundChanged=terrainChanges===null||terrainChanges.length>0;
+    if(this.confirmedIntents&&(groundChanged||newMap||!!previousWorld?.snow!==!!world.snow||changedTiles===null||changedTiles.length>0))this.confirmedSurfaceDirty=true;
     if (newMap) {this.cancelDesignation();this.shadowRefresh.invalidate();}
     // The worker epoch distinguishes a checkpoint from an ordinary delta even
     // if terrain content and simulation tick match a previous session.
@@ -544,7 +565,8 @@ export class SceneRenderCore {
     this.hygiene.update(world,this.boxes,newMap);
     if (previousWorld?.resources !== world.resources || newMap || Math.floor(previousWorld.tick / 25) !== Math.floor(world.tick / 25)) this.updateResources(world, newMap,resourceFrame);
     const packageKey=(world.packed??[]).filter(p=>p.owner.type==='ground').map(p=>`${p.building.id}:${p.building.material}:${p.owner.type==='ground'?`${p.owner.x}:${p.owner.z}`:''}`).join('|');
-    this.roofs.update(world,this.boxes,this.wallCutaway,newMap);
+    if(this.confirmedIntents)this.roofs.updatePhysical(world,this.wallCutaway,newMap);
+    else this.roofs.update(world,this.boxes,this.wallCutaway,newMap);
     if(this.roofAreasVisible){const key=`${(world.roofing?.build??[]).join(',')};${(world.roofing?.remove??[]).join(',')}`;
       if(key!==this.roofTintKey||newMap){this.roofTintKey=key;this.zonesTintDirty=true;}}
     const prepared=this.preparedStructures=this.structurePreparation?.read(world,resetPoses);
@@ -559,20 +581,20 @@ export class SceneRenderCore {
     // Quantize presentation of progression to avoid rebuilding static meshes for
     // every work tick. Saved simulation progress remains exact and authoritative.
     const jobKey = world.jobs.filter(j=>j.kind!=='fix-breakdown').map((j) => `${j.id}:${j.kind}:${j.floor}:${j.material}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.construction}:${j.escrow.wood}:${j.kind === 'mine' || j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' || j.kind === 'deconstruct' || j.kind==='repair' ? 0 : Math.floor(j.progress / jobDuration(world,j) * 20)}`).join('|');
-    const jobsChanged=jobKey!==this.jobKey||newMap;
+    const jobsChanged=jobKey!==this.jobKey||newMap||resetPoses;
     if (jobsChanged) { this.jobKey = jobKey; this.buildJobs(world); }
     // Chunk permissions and unscheduled roof intentions have no Job. Check
     // their small primitive signature at adoption, never in the RAF loop.
     const designationKey=`fog:${this.environmentLighting.exploration.field.revision};`+world.piles.filter(p=>p.kind==='chunk'&&p.haulRequested&&p.owner.type==='ground')
       .map(p=>p.owner.type==='ground'?`${p.id}:${p.owner.x}:${p.owner.z}`:'').join('|')
       +`;${world.roofing?.build.join(',')};${world.roofing?.remove.join(',')};${roofCoverage(world).join(',')};${world.roofing?.natural?.thin.join(',')};${world.roofing?.natural?.thick.join(',')}`;
-    if(jobsChanged||designationKey!==this.designationKey){this.designationKey=designationKey;this.designations.update(world);}
+    if(jobsChanged||designationKey!==this.designationKey){this.designationKey=designationKey;if(this.confirmedIntents)this.confirmedDesignationsDirty=true;else this.designations.update(world);}
     if(resetPoses)this.homeSignature.clear();
     const storageKey = `${this.homeSignature.read(world.home)};`+this.storageSignature.read(world.stockpiles,resetPoses)+`;snow:${world.snowClearArea?.join(',')??''};surface:${!!world.snow}`;
     if (storageKey !== this.storageKey || newMap || groundChanged) { this.storageKey = storageKey; this.buildStorage(world); }
     if (newMap || previousWorld?.resources !== world.resources || Math.floor((previousWorld?.tick ?? -1) / 25) !== Math.floor(world.tick / 25)) this.crops.update(world, newMap, this.immutableWorlds.has(world));
     const zoneChanged=this.updateGrowingZones(newMap);
-    if(this.allowedAreaLayer.update(world,this.allowedAreaTarget,newMap))this.zonesTintDirty=true;
+    if(this.allowedAreaLayer.updateIntents(world,this.confirmedIntents?this.confirmedIntents.allowedAreas:world.allowedAreas,this.allowedAreaTarget,newMap,this.confirmedIntents?i=>knownCell256(world,i):undefined))this.zonesTintDirty=true;
     if(zoneChanged||newMap)this.zonesTintDirty=true;
     this.pawns.adoptCargo(previousWorld??undefined,world,this.hasTracks?this.timeline.tick:world.tick,
       !resetPoses&&this.hasTracks&&(this.received?.speed??0)>0);
@@ -591,12 +613,14 @@ export class SceneRenderCore {
     this.podRescue.adopt(world);this.orbitalDelivery.adopt(world);
     if(this.startingArrival.adopt(world,resetPoses))this.invalidatePausedShadow();
     this.resources.adoptChopWork(previousWorld??undefined,world,resetPoses,resourceFrame);
-    this.actionFeedback.update(world,this.selectedPawns,this.pawns.feedbackSource!);
+    this.actionFeedback.update(world,this.selectedPawns,this.pawns.feedbackSource!,!!this.confirmedIntents);
     this.wildlife.update(world,this.hasTracks?this.timeline:undefined,resetPoses,this.pawns);
     this.mechanoids.update(world,this.hasTracks?this.timeline:undefined,resetPoses,this.pawns);
     this.ropes.adopt(world,resetPoses);
     this.landscape.refresh(this.backend==='WebGPU'&&this.overview.group.visible);
     if(this.selectedObject?.kind!=='growing'||zoneChanged)this.updateSelectedObject();
+    this.confirmedPathDirty=!!this.confirmedIntents;
+    this.presentConfirmedIntents();
     this.refreshZonesTint();
     this.environmentLighting.exploration.bind(this.scene);
     this.updateHover();
@@ -849,7 +873,7 @@ export class SceneRenderCore {
   }
   setAllowedAreaTarget(id:number|undefined):void {
     this.allowedAreaTarget=id;this.areaSignature='';
-    if(this.world&&this.allowedAreaLayer.update(this.world,id)){this.zonesTintDirty=true;this.refreshZonesTint();}this.updateHover();
+    if(this.world&&this.allowedAreaLayer.updateIntents(this.world,this.confirmedIntents?this.confirmedIntents.allowedAreas:this.world.allowedAreas,id,false,this.confirmedIntents?i=>knownCell256(this.world!,i):undefined)){this.zonesTintDirty=true;this.refreshZonesTint();}this.updateHover();
   }
   setZoneTarget(id:number|undefined):void {
     if(this.zoneTarget===id)return;this.zoneTarget=id;this.areaSignature='';this.updateHover();
@@ -867,7 +891,7 @@ export class SceneRenderCore {
     if (this.wallCutaway === enabled) return;
     this.invalidatePausedShadow();
     this.wallCutaway = enabled;
-    if (this.world) { this.roofs.update(this.world,this.boxes,this.wallCutaway);this.buildStructures(this.world); this.buildJobs(this.world); }
+    if (this.world) { this.confirmedIntents?this.roofs.updatePhysical(this.world,this.wallCutaway):this.roofs.update(this.world,this.boxes,this.wallCutaway);this.confirmedIntentsDirty=!!this.confirmedIntents;this.buildStructures(this.world); this.buildJobs(this.world); }
     this.areaSignature='';this.updateHover();
   }
 
@@ -1006,7 +1030,7 @@ export class SceneRenderCore {
     this.controls.update();
   }
 
-  setSelectedPawns(ids:ReadonlySet<number>):void {this.selectedPawns=new Set(ids);this.pawns.setSelected(ids);this.wildlife.setSelected(ids);this.mechanoids.setSelected(ids);if(this.world&&this.pawns.feedbackSource)this.actionFeedback.update(this.world,this.selectedPawns,this.pawns.feedbackSource);}
+  setSelectedPawns(ids:ReadonlySet<number>):void {this.selectedPawns=new Set(ids);this.pawns.setSelected(ids);this.wildlife.setSelected(ids);this.mechanoids.setSelected(ids);if(this.world&&this.pawns.feedbackSource)this.actionFeedback.update(this.world,this.selectedPawns,this.pawns.feedbackSource,!!this.confirmedIntents);this.confirmedPathDirty=!!this.confirmedIntents;}
   setSelectedObject(selected:MapObjectSelection|undefined):void {this.setSelectedObjects(selected?[selected]:[]);}
   setSelectedObjects(selected:readonly MapObjectSelection[]):void {this.selectedObjects=selected.map(s=>({...s}));this.selectedObject=this.selectedObjects[0];this.updateSelectedObject();this.updateGrowingZones(false);this.updateTurretPreview();this.updateDeepResources();}
   protected updateDeepResources():void {
@@ -1041,7 +1065,7 @@ export class SceneRenderCore {
     this.refreshGroundOverlays();
   }
   protected updateGrowingZones(reset:boolean):boolean {
-    return this.world?this.growing.update(this.world,reset,this.tool==='growing'||this.tool==='remove-growing',this.selectedObject?.kind==='growing'?this.selectedObject.id:undefined):false;
+    return this.world?this.growing.updateIntents(this.world,this.confirmedIntents?.growingZones??this.world.growingZones,reset,this.tool==='growing'||this.tool==='remove-growing',this.selectedObject?.kind==='growing'?this.selectedObject.id:undefined,this.confirmedIntents?i=>knownCell256(this.world!,i):undefined):false;
   }
   protected updateSelectedObject():void {
     if(this.preparing)return;
@@ -1200,13 +1224,48 @@ export class SceneRenderCore {
     if(prepared?.world===world)this.doors.updateNative(world,this.wallCutaway,false,prepared.doors,prepared.axes,prepared.gateAxes);
     else this.doors.update(world,this.wallCutaway);this.timber.update(world,this.wallCutaway);this.furniturePresentation.update(world,this.structureGroup,this.wallCutaway,this.boxes,this.structureSignature.flowerChanges(),this.immutableWorlds.has(world));this.structureSignature.ackFurnitureBuild(); }
 
-  protected buildJobs(world: World): void { buildJobMarkers(world,this.jobGroup,this.wallCutaway,this.boxes); }
+  protected buildJobs(world: World): void {
+    if(!this.confirmedIntents){buildJobMarkers(world,this.jobGroup,this.wallCutaway,this.boxes);return;}
+    this.confirmedJobMarkers.updatePhysical(world,this.wallCutaway);
+    this.confirmedJobMarkers.updateIntentions(this.confirmedIntents.jobs,this.wallCutaway,world);
+    this.confirmedJobsSource=this.confirmedIntents.jobs;
+    this.confirmedJobMarkers.present(this.jobGroup,this.boxes);
+  }
+
+  /** Runs in the existing RAF, never gated by the actor playhead or 200 ms.
+   * Producers share the original resident batches; only intentions are newer. */
+  private presentConfirmedIntents():void {
+    const intents=this.confirmedIntents,world=this.world,previous=this.presentedIntentFields;
+    if(!intents||!world||!(this.confirmedIntentsDirty||this.confirmedSurfaceDirty||this.confirmedPathDirty||this.confirmedDesignationsDirty))return;
+    const first=!previous,surface=this.confirmedSurfaceDirty,known=(cell:number)=>knownCell256(world,cell);
+    if(this.confirmedJobsSource!==intents.jobs||surface){
+      this.confirmedJobMarkers.updateIntentions(intents.jobs,this.wallCutaway,world);
+      this.confirmedJobMarkers.present(this.jobGroup,this.boxes);this.confirmedJobsSource=intents.jobs;
+    }
+    let zonesChanged=false;
+    if(first||surface||previous.stockpiles!==intents.stockpiles||previous.home!==intents.home||previous.snowClearArea!==intents.snowClearArea){
+      this.buildStorage(world);zonesChanged=true;
+    }
+    if(first||surface||previous.growingZones!==intents.growingZones)zonesChanged=this.updateGrowingZones(false)||zonesChanged;
+    if(first||surface||previous.allowedAreas!==intents.allowedAreas)
+      zonesChanged=this.allowedAreaLayer.updateIntents(world,intents.allowedAreas,this.allowedAreaTarget,false,known)||zonesChanged;
+    if(first||surface||previous.roofBuild!==intents.roofBuild||previous.roofRemove!==intents.roofRemove)
+      zonesChanged=this.roofs.updateAreas(world,intents.roofBuild,intents.roofRemove,this.boxes,false,known)||zonesChanged;
+    if(first||surface||this.confirmedDesignationsDirty||previous.jobs!==intents.jobs||previous.roofBuild!==intents.roofBuild||previous.roofRemove!==intents.roofRemove)
+      this.designations.update(world,intents);
+    if(this.pawns.feedbackSource&&(first||this.confirmedPathDirty||previous.routes!==intents.routes))
+      this.actionFeedback.updateConfirmedPath(intents.routes,world,this.selectedPawns,this.pawns.feedbackSource);
+    this.presentedIntentFields=intents;
+    this.confirmedIntentsDirty=this.confirmedSurfaceDirty=this.confirmedPathDirty=this.confirmedDesignationsDirty=false;
+    if(zonesChanged){this.zonesTintDirty=true;this.refreshZonesTint();}
+  }
 
   protected buildStorage(world: World): void {
-    const { cells } = storageZonePlacements(world.width, world.stockpiles,world);
+    const intents=this.confirmedIntents;
+    const { cells } = storageZonePlacements(world.width, intents?intents.stockpiles.filter(cell=>knownCell256(world,cell.z*world.width+cell.x)):world.stockpiles,world);
     const home: Placement[] = [];
-    if(this.tool==='home'||this.tool==='remove-home')for(const i of world.home??[])home.push({x:i%world.width,z:Math.floor(i/world.width),y:(surfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))??0)+.04,sx:1,sy:.014,sz:1,color:0x779ee6});
-    if(this.tool==='snow-clear'||this.tool==='remove-snow-clear')for(const i of world.snowClearArea??[])home.push({x:i%world.width,z:Math.floor(i/world.width),y:(surfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))??0)+.04,sx:1,sy:.014,sz:1,color:0x86b8d7});
+    if(this.tool==='home'||this.tool==='remove-home')for(const i of ((intents?intents.home:world.home)??[]).filter(i=>!intents||knownCell256(world,i)))home.push({x:i%world.width,z:Math.floor(i/world.width),y:(surfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))??0)+.04,sx:1,sy:.014,sz:1,color:0x779ee6});
+    if(this.tool==='snow-clear'||this.tool==='remove-snow-clear')for(const i of ((intents?intents.snowClearArea:world.snowClearArea)??[]).filter(i=>!intents||knownCell256(world,i)))home.push({x:i%world.width,z:Math.floor(i/world.width),y:(surfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))??0)+.04,sx:1,sy:.014,sz:1,color:0x86b8d7});
     this.storageTintPlacements=cells;this.homeTintPlacements=home;this.zonesTintDirty=true;
     this.boxes.set(this.storageGroup, 'storage-cells', cells, 'storage', false);
     this.boxes.set(this.storageGroup, 'storage-borders', [], 'border', false);
@@ -1276,6 +1335,7 @@ export class SceneRenderCore {
   protected frame(now: number): void {
     if (this.disposed || this.fatalError || this.preparing) return;
     if(this.hasTracks){this.timeline.advance(now);const due=this.presentation.take(this.timeline.tick,now);if(due)this.applyWorld(due);}
+    this.presentConfirmedIntents();
     const dt = this.lastFrame ? Math.min((now - this.lastFrame) / 1000, 0.05) : 0;
     this.lastFrame = now;
     this.pawns.blend.value = this.snapshotDuration > 0 ? Math.min(1, Math.max(0, (this.hostPort.now() - this.snapshotAt) / this.snapshotDuration)) : 1;
@@ -1609,6 +1669,8 @@ export class SceneRenderCore {
   }
   dispose(): void {
     if (this.disposed) return;
+    this.confirmedIntentReader?.clear();this.confirmedIntents=this.presentedIntentFields=undefined;
+    this.confirmedJobMarkers.clear();this.confirmedJobsSource=undefined;
     this.armedRoom = null;
     this.diorama?.dispose(); this.diorama = null;
     this.room?.dispose(); this.room = null;

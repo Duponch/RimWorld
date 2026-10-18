@@ -2,7 +2,7 @@ import * as THREE from 'three/webgpu';
 import { BoxBatches } from './BoxBatches';
 import type { Placement } from './primitives';
 import type { World } from '../sim/types';
-import {overlaySurfaceHeightAtCell} from './surface-height';
+import {overlaySurfaceHeightAtCell,type GroundOverlaySurface} from './surface-height';
 import {adjacentZoneColors} from './zone-surface-presentation';
 import {GROUND_OVERLAY_RENDER_ORDER,setGroundOverlayRenderOrder} from './ground-overlay-surfaces';
 
@@ -12,13 +12,17 @@ export class GrowingZoneLayer {
   private signature = '';
   constructor(private readonly boxes: BoxBatches) {}
   update(world: World, reset: boolean,showAll=false,selectedId?:number): boolean {
-    const signature = `${world.width}:`+world.growingZones.map(z => `${z.id}:${z.allowSow}:${z.cells.map(i=>`${i}:${overlaySurfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))}`).join(',')}`).join('|');
+    return this.updateIntents(world,world.growingZones,reset,showAll,selectedId);
+  }
+  updateIntents(world:GroundOverlaySurface,zones:World['growingZones'],reset=false,showAll=false,selectedId?:number,known?:(cell:number)=>boolean):boolean {
+    if(known)zones=zones.map(zone=>({...zone,cells:zone.cells.filter(known)}));
+    const signature = `${world.width}:`+zones.map(z => `${z.id}:${z.allowSow}:${z.cells.map(i=>`${i}:${overlaySurfaceHeightAtCell(world,i%world.width,Math.floor(i/world.width))}`).join(',')}`).join('|');
     if (!reset && signature === this.signature) return false;
     this.signature = signature;
     const surfaces: Placement[] = [];
     const palette=[0x79a46a,0xaaa36a,0x94aa69,0xaaa57c,0x7baa84];
-    const colors=adjacentZoneColors(world.width,world.growingZones.flatMap(zone=>zone.cells.map(cell=>({zoneId:zone.id,cell}))),palette);
-    for (const zone of world.growingZones) {
+    const colors=adjacentZoneColors(world.width,zones.flatMap(zone=>zone.cells.map(cell=>({zoneId:zone.id,cell}))),palette);
+    for (const zone of zones) {
       // Core keeps each zone's hue when sowing is disabled. Collapsing every
       // disabled field to one grey would make neighbouring fields merge again.
       const color = colors.get(zone.id)!;

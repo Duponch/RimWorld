@@ -471,8 +471,9 @@ class MainPresentationChanges extends PresentationChanges {
   protected override readStructures(world:World):unknown { return this.#structures.read(world); }
 }
 class MainColonyRenderer extends ColonyRenderer {
+  protected override createIntentReader(){return createClosedMainMapIntentReader();}
   protected override createPresentationQueue():PresentationQueue {
-    return new PresentationQueue(createClosedMainMapIntentReader(),()=>new MainPresentationChanges());
+    return new PresentationQueue(this.confirmedIntentReader,()=>new MainPresentationChanges());
   }
   protected override createStructurePreparation():SceneStructurePreparation { return new SceneStructurePreparation(); }
 }
