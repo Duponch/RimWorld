@@ -55,3 +55,9 @@ Comparaison bornée de deux exécutions successives : mêmes entrées et observa
 Preuves locales acquises sous `tmp/world-foundations/demonstration-v419/` : `cpu421-pair-acquired01.json`, `worker421-acquired01.json`, `worker421-analysis01.json` et `plant421-capture-bench01-report.json`, `threat421-nearby-bench01-report.json`, `worker421-acquired03.json`, `worker421-analysis03.json`, `worker421-window-comparison01-03.json` et `worker421-refused02.json`, avec leurs gels et sorties privées. Les gains des postes ne s'additionnent pas ; le confort global reste ouvert.
 
 Contrôles de livraison : Pages PASS5,542s, documentation PASS3,918s. Présentation V418, archives et catalogue V419 réutilisés car ces contrats ne changent pas ; aucun corpus complet, campagne longue ou mesure GPU inchangée rejoué. Publication produit groupée après contrôle du paquet, sans paquet QA.
+
+## Publication et suite
+
+Produit `9fa50df7333f0484d2018a994010e55abd8186cc` commité/poussé sur main, déploiement unique `df037b33` sur elsewhere-cq7.pages.dev. Pages reconstruit sur ce HEAD en3,985s, paquet local vérifié3,818s, déploiement14,305s,136réponses HTTPS200/MIME/octets exacts13,648s. Paquet540fichiers/143932726octets,67fiches/70chemins de sauvegarde exacts ; rapports `tmp/elsewhere-pages/v421-package-VTl0UN` et `v421-http-8wdBGY`. Archives, Les AulnesV394 et démonstrationV419/tick1730 inchangées ; aucun paquet QA publié.
+
+Nouvelle précision humaine : la chute perçue coïncide avec l’arrivée du multicarte. La priorité suivante est donc d’isoler les coûts communs introduits par les fondations sur **une seule carte**, en distinguant registre/campagne, géographie/écologie, transfert et adoption MAIN. Les profils actuels établissent des points coûteux, pas encore le commit responsable de cette régression historique. Ne pas présenter une suite de petites optimisations indépendantes comme son diagnostic causal ; aucun contenu secondaire.
