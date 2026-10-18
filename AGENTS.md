@@ -1,6 +1,6 @@
 # Travail sur Elsewhere
 
-**V419 — schéma 263 :** [Fondations monde et Les Éclaircies](docs/gameplay/foundations-demo-v419.md). Socle fonctionnel pour une colonie/max1 qualifié par reprises : générateur, caravanes, camps/sites temporaires et conservation. Nouvelle démonstration créée par les menus, patrimoine préparé déclaré, usages partiels réels et recharge complète exacte1730. Catalogue67fiches, archives/Aulnes préservées ; publication en préparation. Performances et confort restent ouverts, prochaine priorité autonome. Aucune parité exhaustive annoncée.
+**V419 — schéma 263 :** [Fondations monde et Les Éclaircies](docs/gameplay/foundations-demo-v419.md). Socle fonctionnel pour une colonie/max1 qualifié par reprises : générateur, caravanes, camps/sites temporaires et conservation. Nouvelle démonstration créée par les menus, patrimoine préparé déclaré, usages partiels réels et recharge complète exacte1730. Catalogue67fiches, archives/Aulnes préservées ; publié95084b6c/déploiement0c2b8329,136réponses HTTPS exactes. Performances et confort restent ouverts, prochaine priorité autonome. Aucune parité exhaustive annoncée.
 
 
 ## Consigne courante — 15 octobre 2026 au soir
@@ -21,7 +21,7 @@ Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` auto
 
 **État V404, schéma 254 inchangé :** [Copier et renommer une politique de tenue](docs/gameplay/apparel-policy-copy-v404.md) qualifié : copie des filtres confirmés, autorité partagée, aucune affectation ou tâche modifiée et reprise exacte. Publication à regrouper avec les fondations ; V405 en attente. Dernière production V403/e24c5731.
 
-**Dernière publication V403 :** [Étangs peu profonds](docs/gameplay/shallow-water-v403.md), produit0f1a8cc1/déploiemente24c5731,134 réponses HTTPS exactes ; schéma254.
+**Publication historique avant les fondations — V403 :** [Étangs peu profonds](docs/gameplay/shallow-water-v403.md), produit0f1a8cc1/déploiemente24c5731,134 réponses HTTPS exactes ; schéma254.
 
 **Ordre courant — demande humaine du16octobre, suite actualisée le18octobre :** terminer [les fondations monde](docs/development/world-foundations.md) avant toute suite : planète/génération/biomes/reliefs/rivières/côtes/étangs/poches humides, voyages/sites/persistance et UI/menus conformes au Core vérifié, avec une colonie comme priorité actuelle et approfondissement multicolonie différé. Différer plusieurs colonies ne diffère jamais les cartes temporaires et les voyages de cette colonie. L’auditV406 est le point de départ, pas la fin du chantier. V405table3×3 et tout catalogue secondaire restent en attente. Après achèvement réellement démontré du générateur et des voyages, créer une nouvelle colonie de démonstration cohérente sur ce générateur final, avec le plus de boucles jouables et de biens logiquement pertinents ; déclarer le patrimoine préparé et conserver Les Aulnes et leurs archives. Rendre alors le rapport de clôture, puis poursuivre en autonomie sur les performances conformément à la demande du18octobre ; ne pas annoncer une parité non établie. Sauvegardes et branches historiques préservées.
 
