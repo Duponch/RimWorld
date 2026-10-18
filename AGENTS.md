@@ -1,5 +1,7 @@
 # Travail sur Elsewhere
 
+**Diagnostic V422 — aucun changement produit :** [Régression du coût d’adoption](docs/development/foundations-performance-regression-v422.md). Sur les mêmes Aulnes à une carte, saut du Decoder public Node V407→V408 mesuré34,654→58,305ms médians ; registre V407 seul sans saut dans ce banc. Ce ne sont pas les FPS natifs. Cible prioritaire : parcours communs de terrain/propriétaires/structures à chaque adoption. Dernière production V421 inchangée, aucun déploiement QA.
+
 **V421 — schéma 263 inchangé :** [Coûts Worker au repos](docs/development/worker-idle-costs-v421.md). Grille de menace différée et allocations végétales réduites ;29cas ciblés acquis par reprises, recharges Chrome exactes sur Les Aulnes et le départ3colons. Économie Node ciblée, résultat navigateur mixte conservé ; aucun gain général de confort annoncé. Publié9fa50df7/déploiementdf037b33,136HTTPS exacts ; performances toujours prioritaires.
 
 **V420 — schéma 263 inchangé :** [Diagnostic CPU/GPU et structures modifiées](docs/development/performance-foundations-v420.md). Correction ciblée du contrôle MAIN qualifiée ; mesure propriétaire Node7,01→3,25ms, aucun gain FPS global établi. Mesures GPU et rouges historiques conservés dans la note. Publié eb3c515f/déploiement b39e5aa5,136HTTPS exacts ; performances et confort restent ouverts.
