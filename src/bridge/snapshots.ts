@@ -209,7 +209,8 @@ const orderedChangeCopy = (indices: readonly number[]): readonly number[] => Obj
 
 /** Decoder-private publication capability. Records never retain a World,
  * packet, resource or parent object; accepted Worlds are weak keys. */
-class SnapshotChangeJournal {
+/** @internal Shared publication capability; never exported by snapshot-changes. */
+export class SnapshotChangeJournal {
   private generation = 0;
   private epoch = 0;
   private revision = 0;
@@ -290,7 +291,8 @@ const structureChangeStamps = new WeakMap<World, StructureChangeStamp>();
 const emptyStructureChanges: SnapshotStructureChanges = Object.freeze({ structureIndices: emptyChangeIndices, tileIndices: emptyChangeIndices });
 /** Independent of resource membership. Only primitive ordinals/tiles are kept;
  * consumers retain their constructive immutable-read mandate separately. */
-class StructureChangeJournal {
+/** @internal Shared publication capability; never exported by snapshot-changes. */
+export class StructureChangeJournal {
   private generation = 0;
   private epoch = 0;
   private revision = 0;
@@ -372,7 +374,7 @@ export interface SnapshotResourceStructure {
   readonly edges: readonly SnapshotResourceStructureEdge[];
   readonly tileIndices: readonly number[];
 }
-type ResourceStructureCandidate = Omit<SnapshotResourceStructureEdge, 'parentRevision' | 'revision'>;
+export type ResourceStructureCandidate = Omit<SnapshotResourceStructureEdge, 'parentRevision' | 'revision'>;
 interface ResourceStructureStamp { journal: ResourceStructureJournal; generation: number; epoch: number; revision: number }
 interface ResourceStructureRecord {
   readonly parentRevision: number;
@@ -384,7 +386,8 @@ const resourceStructureStamps = new WeakMap<World, ResourceStructureStamp>();
 const emptyResourceStructure: SnapshotResourceStructure = Object.freeze({ edges: Object.freeze([]), tileIndices: emptyChangeIndices });
 /** Separate capability: the historical ordinal journal/read is unchanged.
  * Neither a record nor its witness retains a packet, Resource or World. */
-class ResourceStructureJournal {
+/** @internal Shared publication capability; never exported by snapshot-changes. */
+export class ResourceStructureJournal {
   private generation = 0;
   private epoch = 0;
   private revision = 0;

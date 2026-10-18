@@ -14,6 +14,9 @@ import { DEFAULT_MAP_SIZE } from '../sim/map-config';
 import { SnapshotDecoder } from './snapshots';
 import type { AudioCue } from './audio-cues';
 
+/** Transport readers are selected by a fixed client implementation, never by a packet flag. */
+export type SnapshotReader=Pick<SnapshotDecoder,'adopt'|'adoptCampaignOnly'|'prepareDraftPreview'|'authorizeDraftPreview'|'discardDraftPreview'>;
+
 type Payload = Request extends infer R ? R extends { id: number } ? Omit<R, 'id'> : never : never;
 interface PendingWorldDraft256 {
  generation:number;aborted?:boolean;request:WorldCreationRequest256;onProgress:(progress:WorldCreationProgress256)=>void;
@@ -48,7 +51,7 @@ export class SimulationClient {
   private draftGeneration=0;
   private draftAbortCleanup?:()=>void;
   private worldDraft?:{preview:WorldCreationPreview256;geography:DraftGeographyPreview256;ticket?:WorldCreationTicket256;starting?:boolean};
-  private snapshots: SnapshotDecoder;
+  private snapshots: SnapshotReader;
   private adopted?: { epoch: number; revision: number };
   private stopped = false;
   private fault?: SimulationFault;
@@ -72,7 +75,10 @@ export class SimulationClient {
     this.startWorker();
   }
 
-  protected createDecoder(): SnapshotDecoder { return new SnapshotDecoder(); }
+  protected createDecoder(): SnapshotReader { return new SnapshotDecoder(); }
+
+  protected createWorker():Worker {return new Worker(new URL('./simulation.worker.ts',import.meta.url),{type:'module'});}
+  protected readWorkerMessage(value:unknown):Response {return value as Response;}
 
   protected deliverSnapshot(world: World, stepMs: number, speed: number, replaced: boolean, motion?: import('./motion-tracks').PawnTrack[]): void {
     this.onSnapshot(world, stepMs, speed, replaced, motion);
@@ -86,9 +92,11 @@ export class SimulationClient {
 
   private deliverTradeArrivals261():void {const adopted=this.adopted;if(!adopted)return;const rows=this.tradeArrivals261;this.tradeArrivals261=[];for(const row of rows){if(row.checkpoint.epoch<adopted.epoch)continue;if(row.checkpoint.epoch===adopted.epoch&&row.checkpoint.revision<=adopted.revision){try{this.onCaravanTradeArrival(row);}catch(error){this.onError(String(error));}}else this.tradeArrivals261.push(row);}}
   private startWorker() {
-    this.worker = new Worker(new URL('./simulation.worker.ts', import.meta.url), { type: 'module' });
+    this.worker = this.createWorker();
     this.stopped = false;
-    this.worker.onmessage = ({ data }: MessageEvent<Response>) => {
+    this.worker.onmessage = ({ data:raw }: MessageEvent<unknown>) => {
+      let data:Response;
+      try{data=this.readWorkerMessage(raw);}catch{this.stop('La projection reçue ne correspond pas au Worker courant.');return;}
       if(data.type==='world-draft-progress'){
         const pending=this.pending.get(data.id),d=pending?.draft,s=pending?.draftStart,p=data.progress;
         const receiver=d&&!d.aborted?d:s&&!s.cancelRequested?s:undefined;

@@ -17,6 +17,9 @@ vi.mock('../src/bridge/audio-cues', () => ({ AudioCueRecorder: class { reset() {
 vi.mock('../src/bridge/presentation-changes', () => ({ PresentationChanges: class { capture() { return false; } } }));
 vi.mock('../src/bridge/snapshots', () => ({ SnapshotEncoder: class {
   epoch = 0; revision = 0; world?: unknown;
+  // Loads first discard an uncommitted world-creation preview. This scheduling
+  // double has no preview; keep that existing lifecycle method available.
+  discardDraftPreview() {}
   encode(world: unknown, stepMs: number, speed: number, checkpoint: boolean) {
     if (control.fail === 'encode') throw Error('encode');
     if (world !== this.world) { this.world = world; this.epoch++; }
@@ -34,7 +37,11 @@ test.each(['step', 'capture', 'encode', 'send'])('worker stops once on fatal %s 
   vi.stubGlobal('self', scope); vi.stubGlobal('setInterval', (callback: () => void) => { wake = callback; return 1; });
   await import('../src/bridge/simulation.worker');
   const request = (packet: Request) => scope.onmessage({ data: packet } as MessageEvent<Request>);
-  request({ type: 'load', id: 1, data: '{"tick":7}' }); request({ type: 'speed', id: 2, speed: 1 });
+  request({ type: 'load', id: 1, data: '{"tick":7}' });
+  expect(packets.at(-1), JSON.stringify(packets)).toMatchObject({ type: 'reply', id: 1, ok: true, checkpoint: { epoch: 1 } });
+  expect(packets.filter(packet => packet.type === 'snapshot').at(-1)).toMatchObject({ kind: 'checkpoint', world: { tick: 7 }, speed: 0 });
+  request({ type: 'speed', id: 2, speed: 1 });
+  expect(packets.at(-1)).toMatchObject({ type: 'reply', id: 2, ok: true });
   control.fail = stage; wake();
   const steps = control.steps; wake(); wake();
   expect(control.steps).toBe(steps); expect(packets.filter(packet => packet.type === 'fault')).toHaveLength(1);
@@ -59,4 +66,7 @@ test('a publication failure after replacement is unknown and blocks further save
   scope.onmessage({ data: { type: 'load', id: 1, data: '{"tick":30}' } } as MessageEvent<Request>);
   expect(packets).toHaveLength(2); expect(packets[0]).toMatchObject({ type: 'fault', tick: 30, speed: 0 });
   expect(packets[1]).toMatchObject({ type: 'reply', id: 1, ok: false, outcome: 'unknown' });
+  scope.onmessage({ data: { type: 'save', id: 2 } } as MessageEvent<Request>);
+  expect(packets.at(-1)).toMatchObject({ type: 'reply', id: 2, ok: false, outcome: 'unknown' });
+  expect(packets.filter(packet => packet.type === 'fault')).toHaveLength(1);
 });

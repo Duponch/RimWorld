@@ -9,6 +9,7 @@ import { noise } from './StaticGeometry';
 import { clearGroup } from './primitives';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import type { NaturalPresentationChange } from './NaturalResourcePresentation';
+import type {NaturalAppearanceReader} from './natural-appearance-pass';
 import { syncTerrainPaintUvs } from './TerrainLayer';
 import { OverviewBatch,configureOverviewMaterial } from './OverviewBatch';
 
@@ -78,7 +79,7 @@ export class OverviewLayer {
     }
     mesh.activeCount=Math.max(mesh.activeCount,slot+1);dirty.add(kind);return slot;
   }
-  update(world:World,reset:boolean,changes?:ReadonlyMap<number,NaturalPresentationChange>):void {
+  update(world:World,reset:boolean,changes?:ReadonlyMap<number,NaturalPresentationChange>,appearance?:NaturalAppearanceReader):void {
     this.revision++;
     if(reset) {
       for(const mesh of this.batches.values())mesh.dispose();
@@ -119,13 +120,13 @@ export class OverviewLayer {
       for(const [id,previous] of this.slots){const r=present.get(id);if(!r||previous.kind!==overviewKind(r))this.releaseSlot(id,dirty);}
     }
     for(const r of changedResources) {
-      const signature=floraIdentity(world,r),previous=this.slots.get(r.id);
+      const observation=appearance?.read(r),signature=floraIdentity(world,r,observation),previous=this.slots.get(r.id);
       const kind=overviewKind(r),slot=previous?.slot??this.claimSlot(kind,world.width*world.height,dirty);
       if(!reset&&previous?.signature===signature)continue;
       dirty.add(kind);
       const mesh=this.batches.get(kind)!,n=noise(r.x,r.z,77),medicinal=isMedicinalPlant(r);
-      const height=r.kind==='tree'?WORLD_SCALE.treeMinHeight+n*(WORLD_SCALE.treeMaxHeight-WORLD_SCALE.treeMinHeight):r.kind==='rock'?0.7:medicinal?(plantLeafless(world,r)?.12:.38):0.75;
-      const width=r.kind==='tree'?0.8+n*0.32:medicinal?.3:0.45,size=floraSize(world,r);
+      const height=r.kind==='tree'?WORLD_SCALE.treeMinHeight+n*(WORLD_SCALE.treeMaxHeight-WORLD_SCALE.treeMinHeight):r.kind==='rock'?0.7:medicinal?((observation?.leafless??plantLeafless(world,r))?.12:.38):0.75;
+      const width=r.kind==='tree'?0.8+n*0.32:medicinal?.3:0.45,size=observation?.size??floraSize(world,r);
       const support=hydroponicFloraHeight(world,r);
       this.transform.position.set(r.x,support?height*size/2+support:height*size/2,r.z);this.transform.rotation.set(0,n*Math.PI*2,0);this.transform.scale.set(width*size,height*size,width*size);this.transform.updateMatrix();
       mesh.setMatrixAt(slot,this.transform.matrix);this.tint.setHex((r.species||medicinal)&&r.kind!=='tree'?floraColor(r):r.kind==='tree'?0xffffff:r.kind==='rock'?(r.stone?stoneColor(r.stone):0x92998d):0x697b55);mesh.setColorAt(slot,this.tint);

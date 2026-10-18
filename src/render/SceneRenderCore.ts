@@ -1208,15 +1208,15 @@ export class SceneRenderCore {
     const view=compact?world:scene;
     this.plants.update(view,newMap,this.naturalPresentation.changes);
     if(readSceneResourceFrame(frame,world)){
-      this.resources.update(world,newMap,this.naturalPresentation.changes,frame);
+      this.resources.update(world,newMap,this.naturalPresentation.changes,frame,this.naturalPresentation.appearance);
       // Overview owns the same crop/cluster exclusion already; it can receive
       // the complete current World without a second global filtered array.
-      this.overview.update(world,newMap,this.naturalPresentation.changes);return;
+      this.overview.update(world,newMap,this.naturalPresentation.changes,this.naturalPresentation.appearance);return;
     }
     const visible=compact
       ?{...world,resources:world.resources.filter(resource=>!isResidentCrop(resource)&&!isClusterPlantSpecies(resource.species))}
       :{...view,resources:view.resources.filter(resource=>!isClusterPlantSpecies(resource.species))};
-    this.resources.update(visible, newMap,this.naturalPresentation.changes); this.overview.update(visible,newMap,this.naturalPresentation.changes);
+    this.resources.update(visible,newMap,this.naturalPresentation.changes,undefined,this.naturalPresentation.appearance); this.overview.update(visible,newMap,this.naturalPresentation.changes,this.naturalPresentation.appearance);
   }
 
   protected buildStructures(world: World): void {

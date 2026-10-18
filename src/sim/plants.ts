@@ -76,24 +76,71 @@ export function fullGrowingLightIntegral(world:ClimateWorld,tick=world.tick):num
   const start=TICKS_PER_DAY*.25,end=TICKS_PER_DAY*.8,count=end-start+1;
   return day*count+Math.max(0,Math.min(count,remainder-start+1));
 }
-export function plantGrowth(world: World, plant: Resource): number {
+type GrowthPassInputs={
+  fertility(plant:Resource):number;
+  allowed(plant:Resource):boolean|undefined;
+  lightTime(plant:Resource,full:boolean):number;
+};
+/** The public reader and a synchronous projection pass use this one formula.
+ * The pass only shares identical input calculations; arithmetic order stays
+ * literal, including the inclusive light integral and strict harvest limit. */
+function readPlantGrowth(world:World,plant:Resource,inputs?:GrowthPassInputs):number {
   if (!isPlant(plant)) return 1;
   const base = plant.growth ?? 1;
   if(plant.blight)return base;
   const cave=isCavePlant256(plant.species,world.schemaVersion);
   if(!cave&&(plant.growthLight==='dark'||plant.growthLight!=='artificial-full'&&isRoofed(world,roofIndex(world,plant))))return base;
   if (base >= 1) return 1;
-  const def = plant.species?FLORA_DEFINITIONS[plant.species]:PLANT_DEFINITIONS[plant.kind as keyof typeof PLANT_DEFINITIONS], fertility = plantFertility(world, plant);
+  const def = plant.species?FLORA_DEFINITIONS[plant.species]:PLANT_DEFINITIONS[plant.kind as keyof typeof PLANT_DEFINITIONS], fertility = inputs?inputs.fertility(plant):plantFertility(world, plant);
   const ignoreFertility=plantCompletelyIgnoresFertility256(plant.species,world.schemaVersion);
-  if(!ignoreFertility&&fertility<def.minFertility||world.schemaVersion>=256&&plantSubstrateAllowed256(plant.species,world.schemaVersion,naturalPlantSubstrate256(world.tiles[plant.z*world.width+plant.x]!))===false)return base;
+  if(!ignoreFertility&&fertility<def.minFertility||world.schemaVersion>=256&&(inputs?inputs.allowed(plant):plantSubstrateAllowed256(plant.species,world.schemaVersion,naturalPlantSubstrate256(world.tiles[plant.z*world.width+plant.x]!)))===false)return base;
   const integral=cave||plant.growthLight==='artificial-full'?fullGrowingLightIntegral:annualGrowingLightIntegral;
-  const lightTime = integral(world) - integral(world, plant.growthTick ?? world.tick);
+  const lightTime = inputs?inputs.lightTime(plant,cave||plant.growthLight==='artificial-full'):integral(world) - integral(world, plant.growthTick ?? world.tick);
   const factor = (plant.growthThermalFactor ?? 1) * (ignoreFertility?1:1 - def.sensitivity + fertility * def.sensitivity);
   return clamp(base + lightTime * factor / (def.growDays * TICKS_PER_DAY));
 }
+export function plantGrowth(world:World,plant:Resource):number {return readPlantGrowth(world,plant);}
+
+/** One immutable, synchronous presentation evaluation only. Discard before
+ * another World or any mutation. No resource result, tile or World is cached
+ * globally; public plantGrowth keeps its unrestricted RAW reads.
+ * Terrain/species combinations and light anchors are shared by the population,
+ * instead of re-deriving the same substrate DTO and integral for every plant. */
+export function createPlantGrowthReader(world:World):(plant:Resource)=>number {
+  type Substrate=ReturnType<typeof naturalPlantSubstrate256>;
+  type Ground={fertility:number;substrate?:Substrate;allowed:Map<Resource['species'],boolean|undefined>};
+  const grounds=new Map<string,Map<string|undefined,[Ground?,Ground?]>>();
+  const ground=(plant:Resource):Ground=>{
+    const tile=world.tiles[plant.z*world.width+plant.x]!,terrain=tile.terrain,stone=tile.stone;
+    let stones=grounds.get(terrain);if(!stones){stones=new Map();grounds.set(terrain,stones);}
+    let layers=stones.get(stone);if(!layers){layers=[];stones.set(stone,layers);}
+    const layer=tile.bridge||tile.floor?1:0;
+    return layers[layer]??(layers[layer]={fertility:terrainGroundFertility256(tile),allowed:new Map()});
+  };
+  const annual=new Map<number,number>(),full=new Map<number,number>();
+  const integral=(tick:number,artificial:boolean):number=>{
+    const values=artificial?full:annual,old=values.get(tick);if(old!==undefined)return old;
+    const value=(artificial?fullGrowingLightIntegral:annualGrowingLightIntegral)(world,tick);values.set(tick,value);return value;
+  };
+  const inputs:GrowthPassInputs={
+    fertility(plant){
+      if(world.schemaVersion<256)return plantFertility(world,plant);
+      if(isCrop(plant)){const value=hydroponicFertility(world,plant);if(value!==undefined)return value;}
+      return ground(plant).fertility;
+    },
+    allowed(plant){
+      const entry=ground(plant),species=plant.species;
+      if(entry.allowed.has(species))return entry.allowed.get(species);
+      const substrate=entry.substrate??(entry.substrate=naturalPlantSubstrate256(world.tiles[plant.z*world.width+plant.x]!));
+      const value=plantSubstrateAllowed256(species,world.schemaVersion,substrate);entry.allowed.set(species,value);return value;
+    },
+    lightTime(plant,artificial){return integral(world.tick,artificial)-integral(plant.growthTick??world.tick,artificial);},
+  };
+  return plant=>readPlantGrowth(world,plant,inputs);
+}
 export const choppable=(world:World,plant:Resource):boolean=>plant.kind==='tree'&&(!plant.species||plantGrowth(world,plant)>=FLORA_DEFINITIONS[plant.species].harvestMinGrowth);
-export const harvestable = (world: World, plant: Resource): boolean => !plant.blight&&isPlant(plant)&&plant.kind!=='tree'&&
-  (!plant.species||FLORA_DEFINITIONS[plant.species].product!==null)&&plantGrowth(world, plant) > (plant.species?FLORA_DEFINITIONS[plant.species].harvestMinGrowth:HARVEST_MIN_GROWTH);
+export const harvestable = (world: World, plant: Resource,readGrowth?:()=>number): boolean => !plant.blight&&isPlant(plant)&&plant.kind!=='tree'&&
+  (!plant.species||FLORA_DEFINITIONS[plant.species].product!==null)&&(readGrowth?readGrowth():plantGrowth(world,plant)) > (plant.species?FLORA_DEFINITIONS[plant.species].harvestMinGrowth:HARVEST_MIN_GROWTH);
 export function berryYield(world: World, plant: Resource): number {
   if(plant.blight)return 0;
   const growth = plantGrowth(world, plant);

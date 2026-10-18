@@ -1,3 +1,4 @@
+import {registeredMapPresentation} from '../src/sim/world-map-presentation';
 import {expect,test} from 'vitest';
 import {NaturalDirtyContractOracle} from './scenarios/natural-dirty-contract-v233';
 import * as THREE from 'three/webgpu';
@@ -34,9 +35,14 @@ function transport(w:World){
   const encoder=new SnapshotEncoder({structureDelta:true}),decoder=new SnapshotDecoder();
   const packet=(checkpoint=false)=>structuredClone(encoder.encode(w,0,6,checkpoint));
   const send=(checkpoint=false)=>{
+    // The encoder publishes the registered selected-map projection, not the
+    // authoritative map/group registries. Capture it before the next encode so
+    // the oracle cannot follow the cached projection through a later mutation.
+    const view=registeredMapPresentation(w);if(!view)throw Error('Expected selected registered map');
+    const expected=structuredClone(view);
     const result=decoder.adopt(packet(checkpoint));
     if(result.status!=='applied')throw Error(JSON.stringify(result));
-    expect(result.world).toStrictEqual(w);return result.world;
+    expect(result.world).toStrictEqual(expected);return result.world;
   };return {send,packet,decoder};
 }
 function exhaustive(w:World){

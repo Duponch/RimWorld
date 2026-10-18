@@ -1,6 +1,5 @@
-import { floraSize,isResidentCrop } from './flora-presentation';
-import { plantLeafless } from '../sim/plant-life';
-import { harvestable } from '../sim/plants';
+import {isResidentCrop} from './flora-presentation';
+import {NaturalAppearancePass} from './natural-appearance-pass';
 import type { Resource,World } from '../sim/types';
 import {readSnapshotChanges} from '../bridge/snapshot-changes';
 import {NaturalPresentationEvents,NaturalIdPresentationEvents,composeFinalResourceStructure,supportsNaturalPresentationClock,type NaturalObservation,type NaturalIdSource} from './natural-presentation-events';
@@ -9,9 +8,9 @@ type Shape=Pick<Resource,'id'|'kind'|'x'|'z'|'stone'|'species'>&{ripe:boolean;le
 export type NaturalPresentationChange = { resource: Resource | undefined; size: number };
 type IdSource=NaturalIdSource&{readonly shape:Shape|undefined;readonly timed:boolean;readonly eligible:boolean};
 const timeDependent=(r:Resource):boolean=>(r.growth??1)!==1||r.plantLife?.leaflessAt!==undefined;
-function shapeAt(world:World,r:Resource,observation?:NaturalObservation):Shape {
+function shapeAt(r:Resource,observation:NaturalObservation):Shape {
   return {id:r.id,kind:r.kind,x:r.x,z:r.z,stone:r.stone,species:r.species,
-    size:observation?.size??floraSize(world,r),ripe:observation?.ripe??(r.kind==='berries'&&harvestable(world,r)),leafless:observation?.leafless??plantLeafless(world,r),blighted:!!r.blight};
+    size:observation.size,ripe:observation.ripe,leafless:observation.leafless,blighted:!!r.blight};
 }
 function equalShape(a:Shape|undefined,b:Shape):boolean {
   return !!a&&a.id===b.id&&a.kind===b.kind&&a.x===b.x&&a.z===b.z&&a.stone===b.stone&&a.species===b.species
@@ -29,6 +28,9 @@ function mergeSources(changed:readonly number[],timed:readonly (readonly [number
 /** Geometry follows visible shape, not the anchors of a growth integral.
  * Own scalar captures also detect edits in place and checkpoint restoration. */
 export class NaturalResourcePresentation {
+  /** The same synchronous pass is consumed by the detailed and distant layers.
+   * Recreated for every read, including mutable calls/reset/map replacement. */
+  appearance:NaturalAppearancePass|undefined;
   private shapes:Shape[]=[];
   private snapshotResources:readonly Resource[]|undefined;
   private snapshotTimeInvariant=false;
@@ -125,7 +127,7 @@ export class NaturalResourcePresentation {
       for(const id of [...affected].filter(id=>this.idSources.has(id)).sort((a,b)=>this.idSources.get(a)!.order-this.idSources.get(b)!.order)){
         const source=this.idSources.get(id)!,old=undo.has(id)?undo.get(id):source;
         if(!source.natural){if(old?.natural)changed=true;continue;}
-        const shape=shapeAt(world,source.resource,observations?.get(id));
+        const shape=shapeAt(source.resource,this.appearance!.read(source.resource,observations?.get(id)));
         if(!old?.natural||structure.added.has(id)||!equalShape(old.shape,shape)){
           changed=true;changes.set(id,{resource:source.resource,size:shape.size});
         }
@@ -147,6 +149,7 @@ export class NaturalResourcePresentation {
   /** Public mutable callers keep the original complete capture. A boolean is
    * never enough to certify an edge; the private decoder journal is required. */
   read(world:World,reset=false,immutableSnapshot=false):World|undefined {
+    this.appearance=new NaturalAppearancePass(world,immutableSnapshot);
     if(this.idWorld){
       if(immutableSnapshot&&!reset){const result=this.readIds(world);if(result)return result.view;}
       this.restoreOrdinalCapture();this.clearIds();
@@ -159,6 +162,7 @@ export class NaturalResourcePresentation {
    * World facade, Shape cell or Resource list. Public read remains literal.
    * Historical/reset/unknown results keep their original World views. */
   readScene(world:World,reset=false,immutableSnapshot=false):{changed:boolean}|World|undefined {
+    this.appearance=new NaturalAppearancePass(world,immutableSnapshot);
     if(this.idWorld){
       if(immutableSnapshot&&!reset){const result=this.readIds(world,false);if(result)return result;}
       this.restoreOrdinalCapture();this.clearIds();
@@ -176,6 +180,7 @@ export class NaturalResourcePresentation {
   /** SnapshotDecoder replaces edited resources instead of mutating them. Only
    * callers with that guarantee may enable the reference shortcut. */
   private readHistorical(world:World,reset=false,immutableSnapshot=false):World|undefined {
+    if(this.appearance?.world!==world)this.appearance=new NaturalAppearancePass(world,immutableSnapshot);
     this.changes.clear();
     if(reset||!immutableSnapshot)this.events.clear();
     const priorWorld=immutableSnapshot&&!reset?this.snapshotWorld:undefined;
@@ -237,9 +242,8 @@ export class NaturalResourcePresentation {
       // Immature growth and temporary leaf loss can change with world.tick
       // even while the decoder keeps the same Resource object.
       if(previous?.[sourceIndex]===r&&old?.id===r.id&&stable)continue;
-      const observation=eventRead?.observations.get(r.id)??fullObservations?.get(r.id);
-      const size=observation?.size??floraSize(world,r);
-      const ripe=observation?.ripe??(r.kind==='berries'&&harvestable(world,r)),leafless=observation?.leafless??plantLeafless(world,r);
+      const observation=this.appearance.read(r,eventRead?.observations.get(r.id)??fullObservations?.get(r.id));
+      const {size,ripe,leafless}=observation;
       if(reset||!old||old.size!==size||old.species!==r.species||old.id!==r.id||old.kind!==r.kind||old.x!==r.x||old.z!==r.z||old.stone!==r.stone||old.ripe!==ripe||old.leafless!==leafless||old.blighted!==!!r.blight){
         changed=true;this.changes.set(r.id,{resource:r,size});
         if(partial||timed)this.shapes[shapeIndex]={size,species:r.species,id:r.id,kind:r.kind,x:r.x,z:r.z,stone:r.stone,leafless,ripe,blighted:!!r.blight};
@@ -266,8 +270,7 @@ export class NaturalResourcePresentation {
     this.shapes=natural.map((r,i)=>{
       const old=this.shapes[i];
       if(old?.id===r.id&&!this.changes.has(r.id))return old;
-      const observation=fullObservations?.get(r.id);
-      return {size:this.changes.get(r.id)?.size??observation?.size??floraSize(world,r),species:r.species,id:r.id,kind:r.kind,x:r.x,z:r.z,stone:r.stone,leafless:observation?.leafless??plantLeafless(world,r),ripe:observation?.ripe??(r.kind==='berries'&&harvestable(world,r)),blighted:!!r.blight};
+      return shapeAt(r,this.appearance!.read(r,fullObservations?.get(r.id)));
     });
     if(!eventRead&&!fullEventsInitialized)this.initializeEvents(world,immutableSnapshot);
     return {...world,resources:natural.slice()};

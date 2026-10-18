@@ -2,6 +2,7 @@ import { plantGrowth } from '../sim/plants';
 import { plantLeafless } from '../sim/plant-life';
 import type { Resource,World } from '../sim/types';
 import type { Placement } from './primitives';
+import type { NaturalObservation } from './natural-presentation-events';
 import { hydroponicBasinAt } from '../sim/hydroponics';
 import { HYDROPONIC_SUPPORT_HEIGHT } from './hydroponics-parts';
 
@@ -12,24 +13,24 @@ export type ResidentCropKind=typeof RESIDENT_CROP_KINDS[number];
 export const isResidentCrop=(r:Pick<Resource,'kind'>):boolean=>(RESIDENT_CROP_KINDS as readonly string[]).includes(r.kind);
 export const isMedicinalPlant=(r:Pick<Resource,'kind'|'species'>):boolean=>r.kind==='healroot'||r.species==='healroot-wild';
 /** Four visible growth steps keep the forest resident between shape changes. */
-export const floraSize=(world:World,r:Resource):number=>!r.species&&!isMedicinalPlant(r)?1:(r.growth??1)===1?1:.3+.7*Math.ceil(plantGrowth(world,r)*4)/4;
+export const floraSize=(world:World,r:Resource,readGrowth?:()=>number):number=>!r.species&&!isMedicinalPlant(r)?1:(r.growth??1)===1?1:.3+.7*Math.ceil((readGrowth?readGrowth():plantGrowth(world,r))*4)/4;
 const FLORA_COLORS={glowstool:0xa79583,agarilux:0xb6a1bc,bryolux:0x7b8eaa,pine:0x47684c,birch:0x8fa467,oak:0x57754d,poplar:0x849752,drago:0x728966,saguaro:0x698661,agave:0x839c89,moss:0x718356,grass:0x929357,'tall-grass':0x7d8a4f,brambles:0x556648,'berry-bush':0x677b55,'healroot-wild':0x829b74,'alocasia':0x789c80,'astragalus':0xb2a6bd,'bush':0x687c58,'chokevine':0x69745a,'clivia':0x9c9a72,'dandelion':0xc6b567,'pincushion-cactus':0x88a381,'rafflesia':0xb67874,'low-shrub':0x879573,'bamboo':0x899c66,'cecropia':0x729977,'cypress':0x678c76,'maple':0xaa986b,'palm':0x8da170,'teak':0x65816b,'willow':0x8fa58a};
 export const BLIGHT_COLOR=0xa26b32;
 export const floraColor=(r:Resource):number=>r.blight?BLIGHT_COLOR:FLORA_COLORS[isMedicinalPlant(r)?'healroot-wild':r.species??'berry-bush'];
 export const isClusterPlantSpecies=(species:Resource['species']):boolean=>species==='grass'||species==='tall-grass';
 export const floraTreeHeight=(r:Resource):number=>r.species==='saguaro'?2.2:r.species==='drago'?3.25:r.species==='pine'?4.6:r.species==='poplar'?4.3:r.species==='bamboo'?3.4:r.species==='palm'?4.5:r.species==='cypress'?4.8:r.species==='willow'?3.6:3.8;
 export const hydroponicFloraHeight=(world:World,r:Resource):number=>r.kind==='healroot'&&hydroponicBasinAt(world,r)?HYDROPONIC_SUPPORT_HEIGHT:0;
-export const floraIdentity=(world:World,r:Resource):string=>{
+export const floraIdentity=(world:World,r:Resource,appearance?:NaturalObservation):string=>{
   const support=hydroponicFloraHeight(world,r);
-  return `${r.kind}:${r.x}:${r.z}:${r.stone??''}:${r.species??''}:${floraSize(world,r)}:${isMedicinalPlant(r)&&plantLeafless(world,r)}${r.blight?':blight':''}${support?`:support=${support}`:''}`;
+  return `${r.kind}:${r.x}:${r.z}:${r.stone??''}:${r.species??''}:${appearance?.size??floraSize(world,r)}:${isMedicinalPlant(r)&&(appearance?.leafless??plantLeafless(world,r))}${r.blight?':blight':''}${support?`:support=${support}`:''}`;
 };
 
 export interface FloraParts {trunks:Placement[];crowns:Placement[];cones:Placement[];bushes:Placement[];blades:Placement[];cacti:Placement[];fruit:Placement[]}
 /** Compact 3D meshes for trees, shrubs and agave. Grass species use their one
  * resident cluster batch rather than duplicating geometry in every chunk. */
-export function appendFlora(parts:FloraParts,world:World,r:Resource,turn:number):void {
+export function appendFlora(parts:FloraParts,world:World,r:Resource,turn:number,size?:number):void {
   if(isClusterPlantSpecies(r.species))return;
-  const {x,z}=r,s=floraSize(world,r),color=floraColor(r),leaves=-r.id*2,fruit=-r.id*2-1,support=hydroponicFloraHeight(world,r);
+  const {x,z}=r,s=size??floraSize(world,r),color=floraColor(r),leaves=-r.id*2,fruit=-r.id*2-1,support=hydroponicFloraHeight(world,r);
   const add=(items:Placement[],p:Omit<Placement,'x'|'z'> & {dx?:number;dz?:number})=>{
     const {dx=0,dz=0,...shape}=p;
     items.push({...shape,x:x+dx*s,z:z+dz*s,y:support?p.y*s+support:p.y*s,sx:(p.sx??1)*s,sy:(p.sy??1)*s,sz:(p.sz??1)*s,color:p.color??color,key:p.key??leaves});

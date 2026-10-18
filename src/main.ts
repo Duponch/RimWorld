@@ -199,8 +199,9 @@ import {captureFoodReadability,type FoodReadability} from './sim/food-readabilit
 import { ITEM_DEFINITIONS, availableNutrition } from './sim/items';
 import { foodFreshnessLabel } from './ui/food-freshness';
 import { SimulationClient } from './bridge/SimulationClient';
-import { SnapshotDecoder } from './bridge/snapshots';
-import {PresentationSnapshotDecoder} from './bridge/presentation-decoder';
+import type {SnapshotReader} from './bridge/SimulationClient';
+import {ResidentPresentationAssembler} from './bridge/resident-presentation-assembler';
+import {readResidentWorkerMessage} from './bridge/resident-protocol';
 import type { AudioCue } from './bridge/audio-cues';
 import { AudioDirector } from './audio/AudioDirector';
 import { MusicDirector, type MusicMood } from './audio/MusicDirector';
@@ -249,7 +250,9 @@ function openResearchContext(panel:'work'|'architect'):void {
 // decoders. The command facade exposes no adoption or World callback entry.
 const client = (() => {
   class MainSimulationClient extends SimulationClient {
-    protected override createDecoder(): SnapshotDecoder { return new PresentationSnapshotDecoder(); }
+    protected override createDecoder():SnapshotReader {return new ResidentPresentationAssembler();}
+    protected override createWorker():Worker {return new Worker(new URL('./bridge/presentation.worker.ts',import.meta.url),{type:'module'});}
+    protected override readWorkerMessage(value:unknown){return readResidentWorkerMessage(value);}
     protected override deliverSnapshot(world: World, cost: number, speed: number, replaced: boolean, motion?: PawnTrack[]): void {
       receiveMainSnapshot(world, cost, speed, replaced, motion);
     }

@@ -8,6 +8,8 @@ import {crashlandedProfile} from '../src/sim/game-profile';
 import {checkpointEclipseGrowth} from '../src/sim/eclipse';
 import {resolveSelectedEclipse} from '../src/sim/cassandra-misc';
 import {floraSize} from '../src/render/flora-presentation';
+import {DETERIORATION_INTERVAL} from '../src/sim/deterioration-content';
+import {campaignPresentation} from '../src/sim/secondary-site-presentation';
 import type {World} from '../src/sim/types';
 
 /** Confirmed transport/query fixture; controlled metadata exercises context
@@ -19,10 +21,14 @@ function fixture():World {
   ];
   world.miscIncidents={profile:'cassandra-misc-v1',adoptedAt:0,rng:123,nextCheck:30200,introDone:true,
     checks:1,opportunities:0,heatwaves:0,weather:{adoptedAt:30100,coldSnaps:0,eclipses:0}};
-  return world;
+  setTick(world,world.tick);return world;
 }
 function setTick(world:World,tick:number):void {
   world.tick=tick;
+  // Numerical query jumps do not execute deterioration. Keep its unrelated
+  // post-tick clock admissible, exactly as the other natural query fixtures;
+  // no RNG draw, goods aging or played scheduler step is claimed here.
+  if(world.deterioration)world.deterioration.lastTick=tick-tick%DETERIORATION_INTERVAL;
   world.miscIncidents!.nextCheck=Math.max(30100,(Math.floor(tick/100)+1)*100);
   world.miscIncidents!.checks=Math.floor((tick-30100)/100)+1;
 }
@@ -34,9 +40,10 @@ function install(world:World):void {
 function transport(world:World) {
   const encoder=new SnapshotEncoder({structureDelta:true}),decoder=new SnapshotDecoder();
   return ()=>{
-    const result=decoder.adopt(structuredClone(encoder.encode(world,0,6)));
-    expect(result.status).toBe('applied');if(result.status!=='applied')throw Error(JSON.stringify(result));
-    return result.world;
+    const packet=structuredClone(encoder.encode(world,0,6)),expected=structuredClone(campaignPresentation(world));
+    const result=decoder.adopt(packet);
+    expect(result.status,JSON.stringify(result)).toBe('applied');if(result.status!=='applied')throw Error(JSON.stringify(result));
+    expect(result.world).toStrictEqual(expected);return result.world;
   };
 }
 const sources=(world:World):ReadonlyMap<number,NaturalIdSource>=>new Map(world.resources.map((resource,order)=>[resource.id,{resource,order,natural:true}]));

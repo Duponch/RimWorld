@@ -1,3 +1,4 @@
+import {registeredMapPresentation} from '../src/sim/world-map-presentation';
 import {expect, test} from 'vitest';
 import {SnapshotDecoder, SnapshotEncoder, type SnapshotMessage} from '../src/bridge/snapshots.ts';
 import {readSnapshotChanges, readSnapshotStructureChanges} from '../src/bridge/snapshot-changes.ts';
@@ -31,7 +32,11 @@ function harness() {
     return result.world;
   };
   const send=(checkpoint=false)=>{
-    const next=applied(packet(checkpoint));expect(next).toStrictEqual(world);return next;
+    // Keep the complete real projection as an independent value. The Worker
+    // retains worldMaps/worldGroups; snapshots carry their campaign metadata.
+    const view=registeredMapPresentation(world);if(!view)throw Error('Expected selected registered map');
+    const expected=structuredClone(view);
+    const next=applied(packet(checkpoint));expect(next).toStrictEqual(expected);return next;
   };
   return {world,encoder,decoder,packet,accept,applied,send};
 }
