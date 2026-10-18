@@ -1,6 +1,6 @@
 # Apparence naturelle géographique — V428
 
-**Qualification ciblée acquise par reprises — 18 octobre 2026, schéma 263 inchangé.** Suite du [diagnostic des Éclaircies V427](resident-presentation-v427.md) : après réduction de l'admission, l'application des ressources représentait encore environ80% du temps de `applyWorld` dans le profil séparé. Dernière paire native en rotation×1 :106,34→131,16images/s, pire intervalle83,3→41,7ms. Gain partiel et fenêtres courtes ; premiers résultats mixtes conservés, aucun200FPS stable annoncé. Publication en préparation.
+**Publié — 18 octobre 2026, schéma 263 inchangé, qualification ciblée acquise par reprises.** Suite du [diagnostic des Éclaircies V427](resident-presentation-v427.md) : après réduction de l'admission, l'application des ressources représentait encore environ80% du temps de `applyWorld` dans le profil séparé. Dernière paire native en rotation×1 :106,34→131,16images/s, pire intervalle83,3→41,7ms. Gain partiel et fenêtres courtes ; premiers résultats mixtes conservés, aucun200FPS stable annoncé. Produit8ca17603, déploiemente4e82954 ;138réponses HTTPS exactes.
 
 ## Changement
 
@@ -93,3 +93,9 @@ L'application moyenne d'un état passe34,36→15,49ms, son maximum69,2→22,0ms.
 Livrer l'agenda naturel seul : un module produit, trois fichiers de tests, aucune nouvelle mécanique ou migration. Les essais de rétention et d'encodeur restent privés. La paire finale permet de livrer un progrès de rotation et de longues images, sans effacer la paire précédente défavorable ni attribuer à ce lot tous les gains dus à la mise au repos des autres applications.
 
 Les200images/s stables restent hors d'atteinte démontrée : le budget est5ms, alors qu'une application d'état peut encore coûter22ms et qu'une image de cette dernière fenêtre atteint41,7ms. Les deux responsabilités suivantes sont les mises à jour graphiques précalculées et bornées, puis un vrai journal des mutations du terrain à la place des62500comparaisons par publication. Le premier vise les coupures de MAIN ; le second vise le débit et le coût fixe du Worker. Déplacer le même parcours dans un autre thread ou langage ne suffit pas à établir un gain ; aucune migration globale n'est lancée pour ce lot.
+
+## Publication
+
+Produit `8ca17603b01296b771e745c412aaaebb4a8941ae`, poussé sur `origin/main`. Compilation Pages/typage de ce HEAD acquise17,130s (`v428-product-pages-build`), contrôle documentaire acquis2,069s et diff sans erreur. Inspection `tmp/elsewhere-pages/v428-package-x4X1EF` :70fichiers de sauvegardes/catalogue identiques,67entrées et68anciens payloads conservés, sondes privées et laboratoire absents du paquet selon les contrôles ciblés.
+
+Déploiement `e4e82954` acquis14,483s : [version stable](https://elsewhere-cq7.pages.dev), [version immuable](https://e4e82954.elsewhere-cq7.pages.dev). Vérification `tmp/elsewhere-pages/v428-http-5ZvX1T/report.json` :138réponses HTTPS avec statut/MIME/octet exacts sur les deux origines, sans erreur. Cela prouve la disponibilité des fichiers contrôlés ; les mesures de FPS restent celles du navigateur local, sans réattribution au paquet compilé ni garantie de confort général.
