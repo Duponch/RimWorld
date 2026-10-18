@@ -50,7 +50,7 @@ export function validateAncientCasketRecord256(c:AncientCasket256,w:AncientCaske
    if(!object(o))errors.push('Item has no data-only owner.');
    else if(o.type==='ancient-casket'?o.casketId!==c.id:typeof o.type!=='string'||!['inventory','equipment','apparel'].includes(o.type)||!integer(o.pawnId,1,w.nextId-1)||!humans.has(o.pawnId)&&!(o.type==='inventory'&&animals.has(o.pawnId)))errors.push('Item has no real direct/nested casket owner.');
   }
-  if(Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||w.schemaVersion===261){const possessions=s.items.filter((p):p is MaterialPile=>p.owner.type!=='ancient-casket');errors.push(...validateEquipmentOwners259(s.humans,possessions),...validateApparelOwners259(s.humans,possessions,w.schemaVersion));}
+  if(Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||w.schemaVersion===262)){const possessions=s.items.filter((p):p is MaterialPile=>p.owner.type!=='ancient-casket');errors.push(...validateEquipmentOwners259(s.humans,possessions),...validateApparelOwners259(s.humans,possessions,w.schemaVersion));}
   if(!errors.length){const boundary=ancientSuspensionBoundary256(s);if(boundary)errors.push(boundary);}
  return errors;
 }

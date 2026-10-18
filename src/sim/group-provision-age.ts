@@ -3,7 +3,7 @@ import {planetGeography256} from './planet-geography-256.ts';
 import {worldSeasonalTemperature} from './world-surface-movement.ts';
 import {mixedGroupProvisions,groupPemmicanCounter,setGroupPemmicanCounter} from './group-provisions.ts';
 import {rotAge,rotRateAtTemperature,ticksUntilRot} from './food-preservation.ts';
-import {seasonTemperature} from './site-climate.ts';
+import {seasonTemperature,geographicPlanetClimateDefinition256,geographicOutdoorTemperature262} from './site-climate.ts';
 import {calendarTick} from './calendar.ts';
 import {tileCoordinates} from './planet-generation.ts';
 import type {GroupState} from './group-state.ts';
@@ -12,7 +12,7 @@ type Away=Extract<GroupState,{members:unknown}>;
 export function groupAmbientTemperature256(w:World,g:Away,atCore=w.tick*10):number {
  const planet=w.planet!;
  const civil=(planetHomeCivilCore(w)-(w.tick*10-atCore))/10;
- if(planet.revision===3){const tile=planetGeography256(planet).surface.tiles[g.tile];if(!tile)throw Error('Unknown geographic provision climate tile');return worldSeasonalTemperature(tile,planetAbsoluteCore256(planet,civil*10));}
+ if(planet.revision===3){const tile=planetGeography256(planet).surface.tiles[g.tile];if(!tile)throw Error('Unknown geographic provision climate tile');if(w.climate?.revision===4&&w.climate.irregular262===true)return geographicOutdoorTemperature262(geographicPlanetClimateDefinition256(planet,g.tile),g.tile,planetAbsoluteCore256(planet,planetHomeCivilCore(w)-(w.tick*10-atCore)));return worldSeasonalTemperature(tile,planetAbsoluteCore256(planet,civil*10));}
  const tile=planet.tiles[g.tile];if(!tile)throw Error('Unknown literal provision climate tile');
  return seasonTemperature(tileCoordinates(tile).latitude,tile.meanTemperature,civil);
 }

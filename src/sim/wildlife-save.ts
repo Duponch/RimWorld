@@ -1,3 +1,4 @@
+import {validGeographicRenewal262} from './geographic-renewal-state-262.ts';
 import {isCaveInsectSpecies256} from './cave-insect-constructor-256.ts';
 import {validateHiveRuntimeOwners256} from './cave-hive-runtime-save-256.ts';
 import {validHiveLordHeader256,validHiveInsectField256,validateCaveHiveOwners256} from './cave-hive-save-256.ts';
@@ -59,7 +60,7 @@ export function validWildlifeExitState(w:Pick<World,'width'|'height'|'tick'|'wil
 /** Snapshot boundary: identity and sparse intent only, no path flood. */
 export function validWildlifePredationState(w:Pick<World,'tick'|'width'|'height'|'wildlife'|'piles'|'nextId'|'site'>,version:number):boolean {
   const s=w.wildlife;if(!s)return true;
-  if(!object(s)||!validWildlifeProfileVersion256(w,version,s)||!Array.isArray(s.animals)||validateDuckFlyers256(w,version).length||version<178&&s.profile==='biome-fauna-v2')return false;
+  if(!object(s)||!validGeographicRenewal262(w,version)||!validWildlifeProfileVersion256(w,version,s)||!Array.isArray(s.animals)||validateDuckFlyers256(w,version).length||version<178&&s.profile==='biome-fauna-v2')return false;
   return s.animals.every(a=>{
     if(!object(a)||!validAnimalMindFields256(a,version,w.tick,w.width,w.height)||!validArrivalRotation256(a,version)||!validAnimalAgeCoreRemainder256(a,version,w.tick)||!validActorMapBedField256(a,version,w.nextId)||!validRetainedCorpseDamage256(a,version)||!isAnimalSpeciesInVersion(a.species,version)||version<178&&a.species==='red-fox')return false;
     if(!validDuckExitFlight256(a,version,w.tick)||!validDuckFlightFields256(a,version,w.tick)||!validAnimalEggState256(a,version,w)||a.health&&Object.hasOwn(a.health,'animalBirthTick')&&!isAnimalSpecies256(a.species)&&!a.growthTracker)return false;
@@ -80,7 +81,7 @@ export function validateWildlife(w:World,version:number,ids:Set<number>):string[
   if(!validWildlifeManhunterState(w,version))errors.push('Invalid wildlife manhunter state.');
   if(!validWildlifeExitState(w,version))errors.push('Invalid wildlife exit state.');
   if(version<76||!object(s)||!validWildlifeProfileVersion256(w,version,s)
-    ||!keys(s,['profile','rng','animals','eatenPlants','eatenNutrition','eatenItems',...(version>=174?['exitedAnimals']:[]),...(version>=256?['flyers','hiveLords']:[]),...(['biome-herbivores-v1','biome-fauna-v2'].includes(s.profile)?['population']:[])])
+    ||!keys(s,['profile','rng','animals','eatenPlants','eatenNutrition','eatenItems',...(version>=174?['exitedAnimals']:[]),...(version>=256?['flyers','hiveLords']:[]),...(version===262?['geographicRenewal262']:[]),...(['biome-herbivores-v1','biome-fauna-v2'].includes(s.profile)?['population']:[])])
     ||!int(s.rng,1,0xffffffff)||!Array.isArray(s.animals)||s.animals.length>MAX_WILDLIFE||!int(s.eatenPlants)||!int(s.eatenItems)||!finite(s.eatenNutrition,0,Number.MAX_SAFE_INTEGER))return ['Invalid wildlife state.'];
   if(['biome-herbivores-v1','biome-fauna-v2'].includes(s.profile)){
     const p=s.population;if(!object(p)||!keys(p,['biome','fullTargetWeight','targetWeight','nextCheck','checks','arrivals'])||!['temperate-forest','boreal-forest','arid-shrubland','tundra'].includes(String(p.biome)))return ['Invalid wildlife population state.'];

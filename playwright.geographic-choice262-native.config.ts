@@ -1,0 +1,3 @@
+import {defineConfig} from '@playwright/test';
+// ROOT starts the frozen source server separately; no parallel CPU campaign.
+export default defineConfig({testDir:'./tests/integration',testMatch:'geographic-choice-v262-native.spec.ts',fullyParallel:false,workers:1,retries:0,timeout:240_000,expect:{timeout:15_000},reporter:[['list']],outputDir:process.env.GEOGRAPHIC_CHOICE262_OUTPUT??'tmp/world-foundations/geographic-choice262/native',use:{baseURL:process.env.GEOGRAPHIC_CHOICE262_BASE_URL??'http://127.0.0.1:5173',viewport:{width:1440,height:1000},channel:'chrome',headless:true,trace:'retain-on-failure',screenshot:'only-on-failure',launchOptions:{args:['--enable-unsafe-webgpu']}}});

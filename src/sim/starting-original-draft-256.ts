@@ -1,3 +1,4 @@
+import {validGeographicCreationSize262,type GeographicCreationSize262} from './geographic-creation-options-262.ts';
 import {SCHEMA_VERSION} from './types.ts';
 import {constructDeliveredStartingOriginalRoster256,type StartingOriginalRoster256} from './starting-original-roster-256.ts';
 import type {StartingOriginalRequest256} from './starting-original-request-256.ts';
@@ -10,12 +11,12 @@ import type {RelationshipPerson} from './relationship-state.ts';
  * Current creation protocol generates this draft at tick0; other clocks refuse.
  * Absolute entry time is a REQUIRED captured input, not inferred from tick0.
  * No global random cursor or arbitrary number of constructor draws is invented. */
-export function prepareStartingOriginalDraft256(draft:GeographicWorldDraft256,geography:CampaignGeography256,tile:number,request:StartingOriginalRequest256,absoluteCore:number):StartingOriginalRoster256 {
- if(!isCampaignGeography256(geography)||geography.surface!==draft.surface||draft.factions.generatedAt!==0||!Number.isSafeInteger(tile)||tile<0||tile>=geography.surface.tiles.length)throw Error('Missing actual new-world roster frontier');
+export function prepareStartingOriginalDraft256(draft:GeographicWorldDraft256,geography:CampaignGeography256,tile:number,request:StartingOriginalRequest256,absoluteCore:number,size:GeographicCreationSize262=250):StartingOriginalRoster256 {
+ if(!validGeographicCreationSize262(size)||!isCampaignGeography256(geography)||geography.surface!==draft.surface||draft.factions.generatedAt!==0||!Number.isSafeInteger(tile)||tile<0||tile>=geography.surface.tiles.length)throw Error('Missing actual new-world roster frontier');
  const site=describeWorldSite(geography.surface,geography.roads,tile),knownThingIds=new Set<number>(),knownPeople=new Map<number,RelationshipPerson>();
  for(const leader of draft.factions.leaders){
   for(const id of [leader.pawn.id,...leader.items.map(p=>p.id),...leader.packed.map(p=>p.building.id)]){if(knownThingIds.has(id)||id>=draft.nextThingId)throw Error('Actual world draft identity frontier is inconsistent');knownThingIds.add(id);}
   knownPeople.set(leader.pawn.id,{id:leader.pawn.id,name:leader.pawn.name,status:'away'});
  }
- return constructDeliveredStartingOriginalRoster256(request,{version:SCHEMA_VERSION,nextId:draft.nextThingId,factions:draft.factions,knownPeople,knownThingIds,context:{seed:site.mapSeed>>>0,width:250,height:250},absoluteCore});
+ return constructDeliveredStartingOriginalRoster256(request,{version:SCHEMA_VERSION,nextId:draft.nextThingId,factions:draft.factions,knownPeople,knownThingIds,context:{seed:site.mapSeed>>>0,width:size,height:size},absoluteCore});
 }

@@ -70,7 +70,7 @@ export function prepareGroupSplit(root:CampaignState,c:Extract<GroupReorganizati
   if(g.admission)childNext.admission={revision:g.admission.revision};
   childNext.reorganization=openGroupReorganization({...childNext,items:values(inventory.child)},[],root.tick,childOrigins);childNext.reorganization.birth={kind:'split',parentGroupId:g.id,at:root.tick};
   if(!groupReorganizationBalance({...sourceNext,items:values(inventory.source)},sourceBalance,root.worldGroups.losses)||!groupReorganizationBalance({...childNext,items:values(inventory.child)},childNext.reorganization,[]))return fail('Bilan des deux moitiés non fermé.');
-  const plan=planBase(root);plan.inventory=inventory;plan.nextThingId=inventory.nextId;plan.nextRng=inventory.rng;plan.receipts=inventory.receipts;plan.changes.push({record:r,beforeState:g,signature:JSON.stringify(g),next:sourceNext});const childRecord={...r,state:childNext,localMapId:null};if(root.schemaVersion===261)delete childRecord.retreat261;plan.created.push(childRecord);plan.survivors=[g.id,childId];return {kind:'ready',plan};
+  const plan=planBase(root);plan.inventory=inventory;plan.nextThingId=inventory.nextId;plan.nextRng=inventory.rng;plan.receipts=inventory.receipts;plan.changes.push({record:r,beforeState:g,signature:JSON.stringify(g),next:sourceNext});const childRecord={...r,state:childNext,localMapId:null};if((Number(root.schemaVersion)===261||root.schemaVersion===262))delete childRecord.retreat261;plan.created.push(childRecord);plan.survivors=[g.id,childId];return {kind:'ready',plan};
  }catch{return fail('Séparation refusée sans modification des propriétaires.');}
 }
 /** Shared pure merge result; caller owns real references and commit preflight.

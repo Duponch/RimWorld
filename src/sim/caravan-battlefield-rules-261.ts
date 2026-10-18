@@ -7,7 +7,7 @@ export const battlefieldHasActiveThreat261=(w:World)=>campHasActiveThreat260(w,t
 export const battlefieldReformReason261=(w:World)=>campReformThreatReason260(w,true);
 /** One actual map-owner pass after physical combat, no offered/load history. */
 export function advanceBattlefieldVictory261(root:CampaignState):void {
- if(root.schemaVersion!==261)return;
+ if((Number(root.schemaVersion)!==261&&root.schemaVersion!==262))return;
  for(const site of root.worldMaps?.sites??[]){
   const b=site.battlefield261;if(site.kind!=='battlefield'||!b||b.won)continue;
   const map=registeredMap(root,site.id);if(!map||battlefieldHasActiveThreat261(map))continue;

@@ -40,7 +40,7 @@ export function adoptExoticMerchantSchedule(w:World):void {
 /** Real Camp→Settlement commit only, never a load or an adoption. Old agendas
  * are replaced prospectively without replaying RNG or admitting past tickets. */
 export function resumeProspectiveVisitorSchedule261(w:World):void {
-  if(w.schemaVersion<261||tempMapTarget261(w)||tempMapAdoptedAtCore261(w)===undefined)return;
+  if((Number(w.schemaVersion)!==261&&w.schemaVersion!==262)||tempMapTarget261(w)||tempMapAdoptedAtCore261(w)===undefined)return;
   const s=w.visitors;if(!s){enableVisitors(w,false,true);return;}
   w.visitors={...s,profile:'cassandra-visitors-v1',introAt:null,
     traveler:newVisitorAgenda(w.seed,'traveler',w.tick,true),visitor:newVisitorAgenda(w.seed,'visitor',w.tick,true),exotic:newVisitorAgenda(w.seed,'exotic',w.tick,true)};
@@ -91,9 +91,9 @@ function arrive(w:World,kind:VisitorKind,intro=false,exotic=false):boolean {
   const id=s.serial+1,merchant=exotic?0:kind==='visitor'&&visitorRandom(random)<.75?Math.floor(visitorRandom(random)*profiles.length):-1;
   const pawns:Pawn[]=[],piles:MaterialPile[]=[];let nextId=w.nextId;
   for(let i=0;i<profiles.length;i++){
-    const factionId=(Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||w.schemaVersion===261)&&w.worldFactions?bornFactionForDef259(w,'OutlanderCivil'):undefined;if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||w.schemaVersion===261)&&w.worldFactions&&factionId===undefined)return false;
+    const factionId=(Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||w.schemaVersion===262))&&w.worldFactions?bornFactionForDef259(w,'OutlanderCivil'):undefined;if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||w.schemaVersion===262))&&w.worldFactions&&factionId===undefined)return false;
     const p=startingPawn(nextId++,`${profiles[i]} ${id}.${i+1}`,arrival.sites[i]!.x,arrival.sites[i]!.z,0,55,w.seed,w.tick,w.schemaVersion);
-    p.faction='outlanders';if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||w.schemaVersion===261)&&w.worldFactions&&!bindBornHumanFaction259(w,p,factionId!))return false;p.foodPolicyId=w.foodPolicies[0]!.id;
+    p.faction='outlanders';if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||w.schemaVersion===262))&&w.worldFactions&&!bindBornHumanFaction259(w,p,factionId!))return false;p.foodPolicyId=w.foodPolicies[0]!.id;
     delete p.apparelPolicyId;delete p.apparelAutomation;delete p.nextApparelCheckAt;
     for(const value of Object.values(p.skills))if(typeof value==='object'){value.level=0;value.passion=0;}
     if(w.schemaVersion>=191)generatePawnBackground(p,w.seed,profiles[i]==='Garde',i===merchant);

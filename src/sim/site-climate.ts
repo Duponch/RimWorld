@@ -1,3 +1,4 @@
+import {irregularTemperatureOffset262} from './geographic-irregular-temperature-262.ts';
 import {evaluateClimateCurve} from './world-climate-settings.ts';
 import {planetTile,planetGeography256} from './planet-geography-256.ts';
 import {worldSurfaceCoordinates} from './world-surface-movement.ts';
@@ -23,7 +24,7 @@ export interface StartingSiteClimate {
   definition:ClimateDefinition;
 }
 export interface ExpeditionSiteClimate {revision:3;adoptedAt:number;calendarOrigin:number;definition:ClimateDefinition}
-export interface GeographicSiteClimate256 {revision:4;adoptedAt:number;calendarOrigin:number;tileId:number;definition:ClimateDefinition}
+export interface GeographicSiteClimate256 {irregular262?:true;revision:4;adoptedAt:number;calendarOrigin:number;tileId:number;definition:ClimateDefinition}
 export type SiteClimate=ReferenceSiteClimate|StartingSiteClimate|ExpeditionSiteClimate|GeographicSiteClimate256;
 
 export type ClimateProfile='temperate-reference'|'boreal-reference'|'arid-reference'|'tundra-preset';
@@ -59,7 +60,12 @@ export function planetTileClimateDefinition(tile:PlanetTile):ClimateDefinition {
 /** Actual prospective tile, distinct radius/axes from the literal old globe. */
 export function geographicPlanetClimateDefinition256(planet:PlanetState,id:number):ClimateDefinition {
  if(planet.revision!==3){const tile=planet.tiles[id];if(!tile)throw Error('Unknown literal planet tile');return planetTileClimateDefinition(tile);}
- const tile=planetGeography256(planet).surface.tiles[id];if(!tile)throw Error('Unknown geographic climate tile');const {latitude,longitude}=worldSurfaceCoordinates(tile);
+ const tile=planetGeography256(planet).surface.tiles[id];if(!tile)throw Error('Unknown geographic climate tile');return geographicSurfaceTileClimateDefinition256(tile);
+}
+/** Read-only immutable surface-tile facts; shared by the creation preview and
+ * the actual planet owner, with the same geographic amplitude calculation. */
+export function geographicSurfaceTileClimateDefinition256(tile:import('./world-surface-geography.ts').WorldSurfaceTile):ClimateDefinition {
+ const {latitude,longitude}=worldSurfaceCoordinates(tile);
  return {meanTemperature:tile.meanTemperature,rainfall:tile.rainfall,latitude,longitude,amplitude:evaluateClimateCurve([[0,3],[.1,4],[1,28]],Math.abs(Math.fround(tile.center[1]/100)))};
 }
 
@@ -151,6 +157,7 @@ export function seasonalOutdoorTemperature(world:ClimateWorld,tick=world.tick):n
   const sample=world.climate?tick-((tick-world.climate.adoptedAt)%6+6)%6:tick;
   const civil=climateTick(world,sample);
   const definition=siteClimateDefinition(world);
+  if(world.climate?.revision===4&&world.climate.irregular262===true)return geographicOutdoorTemperature262(definition,world.climate.tileId,civil*10-geographicLongitudeOffsetCore256(definition.longitude));
   const base=world.climate?.revision===4?geographicSeasonTemperature256(definition,civil*10-geographicLongitudeOffsetCore256(definition.longitude)):world.climate?seasonTemperature(definition.latitude,definition.meanTemperature,civil):21;
   return base+7*Math.cos(2*Math.PI*(civil%TICKS_PER_DAY/TICKS_PER_DAY+.32));
 }
@@ -171,10 +178,10 @@ export function validGeographicClimateDefinition256(value:unknown):value is Clim
 }
 /** clock.calendarOrigin is the shared civil anchor at campaign tick0, not
  * the creation time of this temporary map. No age, season or growth resets. */
-export function createGeographicSiteClimate256(planet:Extract<PlanetState,{revision:3}>,tileId:number,clock:{tick:number;calendarOrigin:number}):GeographicSiteClimate256 {
+export function createGeographicSiteClimate256(planet:Extract<PlanetState,{revision:3}>,tileId:number,clock:{tick:number;calendarOrigin:number;schemaVersion?:number}):GeographicSiteClimate256 {
  if(!Number.isSafeInteger(clock.tick)||clock.tick<0||!Number.isSafeInteger(clock.calendarOrigin)||!Number.isSafeInteger(tileId)||tileId<0)throw Error('Invalid geographic climate clock/tile');
  const definition=geographicPlanetClimateDefinition256(planet,tileId),home=geographicPlanetClimateDefinition256(planet,planet.homeTile),offset=(geographicLongitudeOffsetCore256(definition.longitude)-geographicLongitudeOffsetCore256(home.longitude))/10,calendarOrigin=clock.calendarOrigin+clock.tick+offset;
- if(!Number.isSafeInteger(calendarOrigin))throw Error('Geographic calendar overflow');return {revision:4,tileId,adoptedAt:clock.tick,calendarOrigin,definition};
+ if(!Number.isSafeInteger(calendarOrigin))throw Error('Geographic calendar overflow');return {revision:4,tileId,adoptedAt:clock.tick,calendarOrigin,definition,...clock.schemaVersion===262?{irregular262:true as const}:{}};
 }
 export function geographicLongitudeOffsetCore256(longitude:number):number {const n=Math.fround(longitude/15),low=Math.floor(n),fraction=n-low,rounded=fraction<.5?low:fraction>.5?low+1:low%2===0?low:low+1;return rounded*2500;}
 
@@ -183,4 +190,11 @@ export function geographicLongitudeOffsetCore256(longitude:number):number {const
 export function geographicSeasonTemperature256(definition:ClimateDefinition,absoluteCoreTick:number):number {
  const f=Math.fround,tick=absoluteCoreTick===0?1:absoluteCoreTick,year=f(f(f(f(tick)/60000)%60)/60),angle=f(f(f(Math.PI)*2)*f(year-f(10/12))),amplitude=definition.amplitude*(definition.latitude<0?-1:1);
  return f(definition.meanTemperature+f(f(Math.cos(angle))*f(-amplitude)));
+}
+
+/** Shared actual-tile exterior for newly marked262 map and caravan readers.
+ * Seasonal-only consumers keep geographicSeasonTemperature256 unchanged. */
+export function geographicOutdoorTemperature262(definition:ClimateDefinition,tileId:number,absoluteCore:number):number {
+ const at=absoluteCore===0?1:absoluteCore,civil=(at+geographicLongitudeOffsetCore256(definition.longitude))/10;
+ return geographicSeasonTemperature256(definition,at)+7*Math.cos(2*Math.PI*(civil%TICKS_PER_DAY/TICKS_PER_DAY+.32))+irregularTemperatureOffset262(tileId,at);
 }

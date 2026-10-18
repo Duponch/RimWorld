@@ -1,3 +1,4 @@
+import {validIrregularClimateMarker262} from './geographic-irregular-temperature-262.ts';
 import {planetTile} from './planet-geography-256.ts';
 import { climateOriginAtAdoption,createGeographicSiteClimate256,validGeographicClimateDefinition256,geographicPlanetClimateDefinition256,planetTileClimateDefinition,sameDerivedClimateNumber,startingSiteClimateOrigin,validClimateDefinition,type ClimateProfile,type ClimateDefinition } from './site-climate.ts';
 import type { World } from './types.ts';
@@ -8,6 +9,7 @@ const record=(value:unknown):value is Record<string,unknown>=>typeof value==='ob
 const finite=(value:unknown,min:number,max:number):value is number=>typeof value==='number'&&Number.isFinite(value)&&value>=min&&value<=max;
 
 export function validSiteClimate(value:unknown,version:number,world:Pick<World,'tick'|'gameProfile'|'site'>&Partial<Pick<World,'planet'|'scenario'|'expeditionSite'|'worldMaps'|'campaignMap'>>,capturedCalendarOrigin?:number):boolean {
+  if(record(value)&&!validIrregularClimateMarker262(value,version))return false;
   if(version<239&&(world.site?.biome==='tundra'||record(value)&&value.profile==='tundra-preset'))return false;
   if(record(value)&&value.revision===4)return validGeographicSiteClimate256(value,version,world,capturedCalendarOrigin);
   const prepared=world.scenario?.revision===PREPARED_CRASHLANDED_REVISION||world.scenario?.revision===ARRIVING_CRASHLANDED_REVISION;
@@ -52,7 +54,7 @@ export function validSiteClimate(value:unknown,version:number,world:Pick<World,'
 /** Full RAW/map admission compares the actual immutable owner, never a
  * caller-selected biome/profile or a guessed geographic tile. */
 export function validGeographicSiteClimate256(v:unknown,version:number,world:Pick<World,'tick'|'site'>&Partial<Pick<World,'planet'|'worldMaps'|'expeditionSite'|'campaignMap'>>,capturedCalendarOrigin?:number):boolean {
- if(version<256||!record(v)||Reflect.ownKeys(v).length!==5||!['revision','adoptedAt','calendarOrigin','tileId','definition'].every(k=>Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)??{},'value'))||v.revision!==4||!Number.isSafeInteger(v.adoptedAt)||Number(v.adoptedAt)<0||Number(v.adoptedAt)>world.tick||!Number.isSafeInteger(v.calendarOrigin)||!Number.isSafeInteger(v.tileId)||Number(v.tileId)<0||!validGeographicClimateDefinition256(v.definition)||world.planet?.revision!==3)return false;
+ if(version<256||!record(v)||!validIrregularClimateMarker262(v,version)||Reflect.ownKeys(v).length!==(Object.hasOwn(v,'irregular262')?6:5)||!['revision','adoptedAt','calendarOrigin','tileId','definition'].every(k=>Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)??{},'value'))||v.revision!==4||!Number.isSafeInteger(v.adoptedAt)||Number(v.adoptedAt)<0||Number(v.adoptedAt)>world.tick||!Number.isSafeInteger(v.calendarOrigin)||!Number.isSafeInteger(v.tileId)||Number(v.tileId)<0||!validGeographicClimateDefinition256(v.definition)||world.planet?.revision!==3)return false;
  const planet=world.planet,id=Number(v.tileId),tile=planetTile(planet,id);if(!tile||tile.biome==='ocean'||tile.biome==='lake'||tile.hilliness==='impassable'||tile.biome!==world.site?.biome||tile.hilliness!==world.site.hilliness||world.expeditionSite&&(world.expeditionSite.tile!==id||v.adoptedAt!==world.expeditionSite.createdAt))return false;
  const expected=geographicPlanetClimateDefinition256(planet,id),definition=v.definition;if(!Object.keys(expected).every(k=>definition[k as keyof ClimateDefinition]===expected[k as keyof ClimateDefinition]))return false;
  const registeredAnchor=world.worldMaps?.calendarOrigin??(world.campaignMap?.revision===2?world.campaignMap.calendarOrigin:undefined);

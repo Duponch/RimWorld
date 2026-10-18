@@ -1,4 +1,7 @@
 import {takeCaravanTradeArrivals261} from '../sim/caravan-arrival-261';
+import {validGeographicCreationSize262,validGeographicCreationSeason262} from '../sim/geographic-creation-options-262';
+import {configuredGeographicStartClock256} from '../sim/geographic-start-clock-256';
+import {geographicSurfaceTileClimateDefinition256} from '../sim/site-climate';
 /// <reference lib="webworker" />
 import {pendingCaravan261} from '../sim/caravan-incidents-261';
 import {validCaravanCommand261} from '../sim/caravan-commands-261';
@@ -208,7 +211,7 @@ function validDraftRequest256(v:WorldCreationRequest256):boolean {
  return !!v&&typeof v.seed==='string'&&validWorldGenerationSettings(v.settings)&&!!v.player&&v.player.scenario==='crashlanded'&&v.player.playerDef==='PlayerColony'&&typeof v.player.playerName==='string'&&v.player.playerName.trim().length>0&&v.player.playerName.length<=80&&!/[\u0000-\u001f\u007f-\u009f]/.test(v.player.playerName);
 }
 function sameTicket256(a:WorldCreationTicket256|undefined,b:WorldCreationTicket256):boolean {
- return !!a&&!!b&&a.generation===b.generation&&a.key===b.key&&a.tile===b.tile&&a.size===b.size&&a.ticket===b.ticket&&!!b.player&&a.player.scenario===b.player.scenario&&a.player.playerDef===b.player.playerDef&&a.player.playerName===b.player.playerName;
+ return !!a&&!!b&&a.generation===b.generation&&a.key===b.key&&a.tile===b.tile&&a.size===b.size&&a.season===b.season&&a.ticket===b.ticket&&!!b.player&&a.player.scenario===b.player.scenario&&a.player.playerDef===b.player.playerDef&&a.player.playerName===b.player.playerName;
 }
 function requireDraftSite256(d:HeldWorldDraft256,tile:number):void {
  if(!d.draft||!d.owner||!Number.isSafeInteger(tile)||tile<0||!canPlaceWorldSettlement(d.owner.surface.tiles,tile,{settlementTiles:new Set(d.draft.factions.settlements.map(s=>s.tile))}))throw Error('Le lieu de départ n’est plus disponible.');
@@ -248,7 +251,7 @@ async function handleWorldDraft256(request:DraftRequest256):Promise<void> {
   const d=heldWorldDraft;
   if(!d||!d.draft||!d.owner||d.geographyId===undefined)throw Error('La préparation est perdue. Générez le monde à nouveau.');
   if(request.type==='world-draft-confirm'){
-   const site=request.request;if(creatingDraftColony||!site||site.generation!==d.generation||site.key!==d.key||site.size!==250||request.geographyId!==d.geographyId)throw Error('Cette préparation ne correspond pas au lieu confirmé.');
+   const site=request.request;if(creatingDraftColony||!site||site.generation!==d.generation||site.key!==d.key||!validGeographicCreationSize262(site.size)||!validGeographicCreationSeason262(site.season)||request.geographyId!==d.geographyId)throw Error('Cette préparation ne correspond pas au lieu confirmé.');
    requireDraftSite256(d,site.tile);if(!Number.isSafeInteger(ticketSerial+1))throw Error('Identité de confirmation épuisée.');
    d.ticket={...site,ticket:`${d.generation}:${++ticketSerial}`,player:{...d.request.player}};
    send({type:'reply',id:request.id,ok:true,data:JSON.stringify(d.ticket)});return;
@@ -256,13 +259,14 @@ async function handleWorldDraft256(request:DraftRequest256):Promise<void> {
   if(creatingDraftColony||!sameTicket256(d.ticket,request.ticket)||!validStartingOriginalRequest256(request.startingParty)||!validSettlementLimit(request.maxSettlements)||!validThreatPauseMode(request.threatPauseMode))throw Error('Le départ confirmé n’est plus disponible. Générez le monde à nouveau.');
   if(speed!==0&&world)throw Error('Mettez la partie en pause avant de créer une colonie.');
   requireDraftSite256(d,request.ticket.tile);d.ticket=undefined;d.creationId=request.id;creatingDraftColony=d;ownedCreation=d;
-  const owner=d.owner,draft=d.draft,nextThingId=draft.nextThingId,playerFactionId=draft.factions.playerFactionId,iterator=createGeographicNewGame256({draft,geography:owner,tile:request.ticket.tile,size:250,scenario:'crashlanded',startingParty:request.startingParty},{shrines750:ACTUAL_SHRINES_750_256});
+  const owner=d.owner,draft=d.draft,nextThingId=draft.nextThingId,playerFactionId=draft.factions.playerFactionId,iterator=createGeographicNewGame256({draft,geography:owner,tile:request.ticket.tile,size:request.ticket.size,season:request.ticket.season,scenario:'crashlanded',startingParty:request.startingParty},{shrines750:ACTUAL_SHRINES_750_256});
   let created:World|undefined,completed=false;
   try{
    for(;;){{const actualFault=readSimulationFault256();if(actualFault)throw Error(actualFault.reason);}if(heldWorldDraft!==d)throw Error('La création de la colonie a été annulée.');const result=iterator.next();if(result.done){created=result.value;completed=true;break;}send({type:'world-draft-progress',id:request.id,generation:d.generation,progress:result.value});await nextDraftTurn();}
   }finally{if(!completed)iterator.return(undefined as never);}
   if(heldWorldDraft!==d||!created)throw Error('La préparation est perdue. Générez le monde à nouveau.');
-  if(!isSchema256Or257(created.schemaVersion)||created.width!==250||created.height!==250||created.planet?.revision!==3||planetGeography256(created.planet)!==owner||created.site?.revision!==3||created.site.tileId!==request.ticket.tile||created.scenario?.id!==d.request.player.scenario||created.worldFactions!==draft.factions||created.nextId<nextThingId||created.worldFactions.playerFactionId!==playerFactionId||!created.worldFactions.factions.some(f=>f.id===playerFactionId&&f.def===d.request.player.playerDef&&f.name===d.request.player.playerName))throw Error('L’usine locale n’a pas conservé les propriétaires du monde confirmé.');
+  const confirmedClock=configuredGeographicStartClock256(geographicSurfaceTileClimateDefinition256(owner.surface.tiles[request.ticket.tile]!),request.ticket.season);
+  if(!isSchema256Or257(created.schemaVersion)||created.width!==request.ticket.size||created.height!==request.ticket.size||created.worldMaps?.mapSize.width!==request.ticket.size||created.worldMaps.mapSize.height!==request.ticket.size||created.worldMaps.calendarOrigin!==confirmedClock.calendarOrigin||created.climate?.revision!==4||created.climate.calendarOrigin!==confirmedClock.calendarOrigin||created.planet?.revision!==3||planetGeography256(created.planet)!==owner||created.site?.revision!==3||created.site.tileId!==request.ticket.tile||created.scenario?.id!==d.request.player.scenario||created.worldFactions!==draft.factions||created.nextId<nextThingId||created.worldFactions.playerFactionId!==playerFactionId||!created.worldFactions.factions.some(f=>f.id===playerFactionId&&f.def===d.request.player.playerDef&&f.name===d.request.player.playerName))throw Error('L’usine locale n’a pas conservé les propriétaires, dimensions ou calendrier du monde confirmé.');
   configureSettlementLimit(created,request.maxSettlements);const errors=validateWorld(created);if(errors.length)throw Error(`La colonie produite est invalide : ${errors[0]}`);
   // Sole authoritative replacement boundary. No old colony, clock or RNG was
   // touched before the complete local World and every owner passed validation.

@@ -26,6 +26,8 @@ Une exigence est fermée seulement avec règle primaire datée, implémentation 
 
 ## Étape actuelle
 
+**V417 — schéma 262, qualification ciblée acquise par reprises :** [Choix de départ et écologie géographique](../gameplay/geographic-continuation-v417.md). Six tailles normales, saison et date confirmées, température et faune prospectives ; 47cas/dixfichiers, vraie création325² en hiver et recharge complète exacte. Migration261 neutre sur deux cartes ; rouges et limites de confort conservés. Non publié, productionV403 inchangée ; établissements étrangers et sites de quête encore ouverts avant démonstration.
+
 **V416 — schéma 261, qualification fonctionnelle ciblée :** [Rencontres et sorties de caravane](../gameplay/caravan-encounters-v416.md). Rencontres, commerce/cession, sortie physique et entrée animale acquis par reprises ; mêmes propriétaires, annulation et recharges exactes UI. Adaptation PNJ/animaux déclarée, rouges et limites de confort conservés. Non publié, productionV403 inchangée ; compléments générateur et sites encore ouverts avant démonstration.
 
 [V415](../gameplay/camp-reform-v415.md), schéma260 : reformation immédiate depuis un camp, plan atomique commun des dépôts et pression prospective des nouveaux camps acquis par reprises.70cas/dixfichiers, vraie arête737 puis retrait ciblé, UI en pause736 et deux exports/recharge complets exacts. La présentation conserve un retard de vitesse179,7ms au minage ; l’abattage seul est acquis ensuite. La suite complète n’est pas annoncée verte, ni le confort amélioré. Rencontres, sortie physique d’une bataille sans victoire imposée et compléments générateur restent à fermer avant la démonstration.

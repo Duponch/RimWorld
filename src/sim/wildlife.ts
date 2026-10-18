@@ -1,3 +1,4 @@
+import {advanceGeographicRenewal262} from './geographic-renewal-runtime-262.ts';
 import {processHivePriority256,processHiveWander256} from './cave-hive-lord-256.ts';
 import {reconcileHiveMaintenance256} from './cave-hive-maintenance-256.ts';
 import {cobraAdmissionReason256} from './cobra-admission-256.ts';
@@ -169,7 +170,7 @@ export function reconcileWildlife(world:World,resourcesById?:ReadonlyMap<number,
   }
 }
 export function advanceWildlife(world:World,duckFlyerServices:DuckFlyerServices256={hitRoof:hitSkyfallerRoof256}):void {
-  const s=world.wildlife;if(!s)return;advancePopulation(world,s);advanceAnimalLife(world);advanceEggLayers256(world);if(!s.animals.length){advanceDuckFlyers256(world,duckFlyerServices);return;}
+  const s=world.wildlife;if(!s)return;advanceGeographicRenewal262(world,(species,cell,nextDecision,flyIn)=>addAnimal(world,s,species,cell,nextDecision,flyIn));advancePopulation(world,s);advanceAnimalLife(world);advanceEggLayers256(world);if(!s.animals.length){advanceDuckFlyers256(world,duckFlyerServices);return;}
   // A meal can remain active for many ticks. Capture its plant identity once
   // for this synchronous decision, then discard the index before other world
   // systems can mutate resources. A handful of meals are cheaper to scan

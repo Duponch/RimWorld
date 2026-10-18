@@ -925,7 +925,7 @@ export function stepWorld(world:CampaignState,ticks=1,diagnostics?:import('./wor
       for(const map of registeredMaps(root)){stepLocalWorld(map,1,diagnostics,false);flushRegisteredMap(map);}
       if(root.schemaVersion>=256&&caravans)caravans.step(root);
       else for(const g of root.worldGroups!.groups.slice().sort((a,b)=>a.state.id-b.state.id))if('members' in g.state)withWorldGroup(root,g.state.id,advanceGroup);
-      if(root.schemaVersion===261&&caravans)for(const map of registeredMaps(root)){tryGroupDeparture(map,caravans);flushRegisteredMap(map);}
+      if((Number(root.schemaVersion)===261||root.schemaVersion===262)&&caravans)for(const map of registeredMaps(root)){tryGroupDeparture(map,caravans);flushRegisteredMap(map);}
       for(const id of advanceCaravanArrivals261(root))caravans?.encounterChanged261(root,id);
       for(const row of root.worldGroups!.groups.slice()){const g=row.state;if(!row.encounters261&&'members' in g&&['at-site','awaiting-entry'].includes(g.phase)&&root.worldMaps!.sites.some(m=>m.tile===g.tile&&m.kind==='settlement'))enterRegisteredSite(root,g.id,'visit',false);}
       for(const old of root.worldGroups!.legacyTravellers){const view=legacyTravellerContext(root,old);advanceScoutTrip(view);advanceCommercialTrip(view);if(view.scout)old.scout=view.scout;else delete old.scout;if(view.commercialTrip)old.commercialTrip=view.commercialTrip;else delete old.commercialTrip;}

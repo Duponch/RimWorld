@@ -1,3 +1,4 @@
+import {validGeographicCreationSize262,validGeographicCreationSeason262} from '../sim/geographic-creation-options-262';
 import {worldGenerationKey,validWorldGenerationSettings} from '../sim/world-generation-settings';
 import {WORLD_FACTION_DEFINITIONS_256,isWorldFactionDef256} from '../sim/world-faction-catalog';
 import type {DraftGeographyPreview256} from '../sim/world-geography-owner-256';
@@ -267,12 +268,12 @@ export class SimulationClient {
     catch(error){if(generation===this.draftGeneration){this.clearWorldDraft256();void this.request({type:'world-draft-cancel',generation}).catch(()=>{});}throw error;}
   }
   async confirmWorldDraftSite256(request:WorldCreationSiteRequest256):Promise<WorldCreationTicket256> {
-    const before=this.worldDraft;if(!before||before.starting||before.preview.generation!==request.generation||before.preview.key!==request.key||request.size!==250)throw Error('La préparation est perdue. Générez le monde à nouveau.');
+    const before=this.worldDraft;if(!before||before.starting||before.preview.generation!==request.generation||before.preview.key!==request.key||!validGeographicCreationSize262(request.size)||!validGeographicCreationSeason262(request.season))throw Error('La préparation est perdue. Générez le monde à nouveau.');
     const raw=await this.request({type:'world-draft-confirm',request:{...request},geographyId:before.geography.id}),ticket:unknown=JSON.parse(raw??'null');
-    if(this.worldDraft!==before||!validDraftTicket256(ticket)||ticket.generation!==request.generation||ticket.key!==request.key||ticket.tile!==request.tile||!sameDraftPlayer256(ticket.player,before.preview.request.player))throw Error('Confirmation de lieu périmée. Générez le monde à nouveau.');
+    if(this.worldDraft!==before||!validDraftTicket256(ticket)||ticket.generation!==request.generation||ticket.key!==request.key||ticket.tile!==request.tile||ticket.size!==request.size||ticket.season!==request.season||!sameDraftPlayer256(ticket.player,before.preview.request.player))throw Error('Confirmation de lieu périmée. Générez le monde à nouveau.');
     const confirmed={...ticket,player:{...ticket.player}};Object.freeze(confirmed.player);Object.freeze(confirmed);before.ticket=confirmed;return {...confirmed,player:{...confirmed.player}};
   }
-  hasConfirmedWorldDraft256(ticket:WorldCreationTicket256):boolean {const d=this.worldDraft,t=d?.ticket;return !this.stopped&&!this.fault&&!d?.starting&&!!t&&validDraftTicket256(ticket)&&t.ticket===ticket.ticket&&t.generation===ticket.generation&&t.key===ticket.key&&t.tile===ticket.tile&&t.size===ticket.size&&sameDraftPlayer256(t.player,ticket.player);}
+  hasConfirmedWorldDraft256(ticket:WorldCreationTicket256):boolean {const d=this.worldDraft,t=d?.ticket;return !this.stopped&&!this.fault&&!d?.starting&&!!t&&validDraftTicket256(ticket)&&t.ticket===ticket.ticket&&t.generation===ticket.generation&&t.key===ticket.key&&t.tile===ticket.tile&&t.size===ticket.size&&t.season===ticket.season&&sameDraftPlayer256(t.player,ticket.player);}
   async startWorldDraft256(ticket:WorldCreationTicket256,startingParty:StartingOriginalRequest256,context:{signal:AbortSignal;onProgress:(progress:WorldCreationProgress256)=>void}):Promise<void> {
     if(context.signal.aborted)throw new DOMException('Préparation annulée.','AbortError');
     if(this.hasCampPreparation||!this.hasConfirmedWorldDraft256(ticket))throw Error('La préparation est perdue. Générez le monde à nouveau.');
@@ -332,4 +333,4 @@ export class SimulationClient {
 
 function copyDraftRequest256(r:WorldCreationRequest256):WorldCreationRequest256 {return {seed:r.seed,settings:{...r.settings,factions:[...r.settings.factions]},player:{...r.player}};}
 function sameDraftPlayer256(a:WorldCreationRequest256['player']|undefined,b:WorldCreationRequest256['player']|undefined):boolean {return !!a&&!!b&&typeof a.scenario==='string'&&(a.playerDef==='PlayerColony'||a.playerDef==='PlayerTribe')&&typeof a.playerName==='string'&&a.playerName.trim().length>0&&a.playerName.length<=80&&!/[\u0000-\u001f\u007f-\u009f]/.test(a.playerName)&&a.scenario===b.scenario&&a.playerDef===b.playerDef&&a.playerName===b.playerName;}
-function validDraftTicket256(v:unknown):v is WorldCreationTicket256 {if(!v||typeof v!=='object'||Array.isArray(v))return false;const t=v as WorldCreationTicket256;return Object.keys(t).length===6&&['generation','key','tile','size','ticket','player'].every(k=>Object.hasOwn(t,k))&&Number.isSafeInteger(t.generation)&&t.generation>0&&typeof t.key==='string'&&Number.isSafeInteger(t.tile)&&t.tile>=0&&t.size===250&&typeof t.ticket==='string'&&t.ticket.length>0&&sameDraftPlayer256(t.player,t.player);}
+function validDraftTicket256(v:unknown):v is WorldCreationTicket256 {if(!v||typeof v!=='object'||Array.isArray(v))return false;const t=v as WorldCreationTicket256;return Object.keys(t).length===7&&['generation','key','tile','size','season','ticket','player'].every(k=>Object.hasOwn(t,k))&&Number.isSafeInteger(t.generation)&&t.generation>0&&typeof t.key==='string'&&Number.isSafeInteger(t.tile)&&t.tile>=0&&validGeographicCreationSize262(t.size)&&validGeographicCreationSeason262(t.season)&&typeof t.ticket==='string'&&t.ticket.length>0&&sameDraftPlayer256(t.player,t.player);}

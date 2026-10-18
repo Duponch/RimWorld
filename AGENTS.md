@@ -20,6 +20,8 @@ Autonomie reprise par l’utilisateur ; commits et pushes sur `origin/main` auto
 
 ## Méthode de livraison
 
+**V417 — schéma 262, qualification ciblée acquise par reprises :** [Choix de départ et écologie géographique](docs/gameplay/geographic-continuation-v417.md). Six tailles normales, saison et date confirmées, température et faune prospectives ; 47cas/dixfichiers, vraie création325² en hiver et recharge complète exacte. Migration261 neutre sur deux cartes ; rouges et limites de confort conservés. Non publié, productionV403 inchangée ; établissements étrangers et sites de quête encore ouverts avant démonstration.
+
 **V416 — schéma 261, qualification fonctionnelle ciblée :** [Rencontres et sorties de caravane](docs/gameplay/caravan-encounters-v416.md). Rencontres, commerce/cession, sortie physique et entrée animale acquis par reprises ; mêmes propriétaires, annulation et recharges exactes UI. Adaptation PNJ/animaux déclarée, rouges et limites de confort conservés. Non publié, productionV403 inchangée ; compléments générateur et sites encore ouverts avant démonstration.
 
 **V415 fonctionnel acquis par reprises, schéma260 :** [Reformation depuis un camp](docs/gameplay/camp-reform-v415.md). Sortie immédiate, propriétaires, dépôts partagés et pression prospective ;70cas/dixfichiers et UI/recharge exacte736 acquis. Présentation partielle : minage sans saut mais un retard de vitesse179,7ms reste rouge, abattage acquis séparément sans rejouer le minage. Aucun gainFPS, publication ou clôture des fondations ; rencontres et compléments générateur restent prioritaires.

@@ -23,13 +23,13 @@ const plain=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!
 /** Prospective animal-only clinical field; other records never gain it. */
 export function validScariaRecord261(raw:unknown,version:number,animal:boolean):boolean {
  if(!raw||typeof raw!=='object')return false;const d=Object.getOwnPropertyDescriptor(raw,'scaria261');if(!d)return !('scaria261'in raw);
- if(version!==261||!animal||!d.enumerable||!Object.hasOwn(d,'value')||!plain(d.value))return false;
+ if((version!==261&&version!==262)||!animal||!d.enumerable||!Object.hasOwn(d,'value')||!plain(d.value))return false;
  const s=d.value,h=raw as MedicalRecord,keys=Reflect.ownKeys(s);
  return keys.length===(Object.hasOwn(s,'deathRot')?2:1)&&Object.hasOwn(s,'manhunterCore')&&(s.manhunterCore===-999999||typeof s.manhunterCore==='number'&&Number.isSafeInteger(s.manhunterCore)&&s.manhunterCore>=0&&s.manhunterCore<=h.tick*10)&&(h.death?typeof s.deathRot==='boolean':!Object.hasOwn(s,'deathRot'));
 }
 export function validPermanentManhunter261(a:WildAnimal,version:number):boolean {
  const m=a.manhunter;if(!m)return true;if(typeof m!=='object'||Array.isArray(m))return false;const d=Object.getOwnPropertyDescriptor(m,'permanent261');
- return !d?!('permanent261'in m):version===261&&d.enumerable===true&&Object.hasOwn(d,'value')&&d.value===true&&!!a.health?.scaria261;
+ return !d?!('permanent261'in m):(version===261||version===262)&&d.enumerable===true&&Object.hasOwn(d,'value')&&d.value===true&&!!a.health?.scaria261;
 }
 /** Actual hediff tick only. ClearMind/normal recovery is observed, never undone
  * by reconstructing the previous mental state. Zero keeps native semantics. */
@@ -46,7 +46,7 @@ export function commitScariaDeath261(h:MedicalRecord,chance:number|undefined,dra
  s.deathRot=draw()<chance;
 }
 export function advanceAnimalScaria261(w:World,a:WildAnimal):void {
- if(w.schemaVersion!==261||!a.health?.scaria261||a.health.death)return;
+ if((Number(w.schemaVersion)!==261&&w.schemaVersion!==262)||!a.health?.scaria261||a.health.death)return;
  const s=a.health.scaria261,permanent=a.manhunter?.permanent261===true;
  if(!(s.manhunterCore>0&&permanent&&w.tick*10-s.manhunterCore>300000)){advanceScariaRecord261(a.health,w.tick*10,permanent);return;}
  const record=structuredClone(a.health);advanceScariaRecord261(record,w.tick*10,a.manhunter?.permanent261===true);
@@ -58,6 +58,6 @@ export function scariaCorpseRot261(h:MedicalRecord|undefined,rot:{progress:numbe
  * selected ORIGINAL, without editing it until the map's publication commits. */
 export function prepareManhunterSpawn261(w:World,a:WildAnimal):WildAnimal|undefined {
  const draft=structuredClone(a),view={...w,wildlife:{...w.wildlife!,animals:[draft]}};
- if(w.schemaVersion!==261||!startAnimalManhunter(view,draft,w.tick*10,true))return;
+ if((Number(w.schemaVersion)!==261&&w.schemaVersion!==262)||!startAnimalManhunter(view,draft,w.tick*10,true))return;
  draft.health??=createAnimalMedicalRecord256(w,draft);draft.health.scaria261={manhunterCore:-999999};return draft;
 }

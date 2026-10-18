@@ -1,3 +1,5 @@
+import {validGeographicCreationSize262,validGeographicCreationSeason262,type GeographicCreationSize262,type GeographicCreationSeason262} from './geographic-creation-options-262.ts';
+import {initializeGeographicRenewal262} from './geographic-renewal-state-262.ts';
 import {crashlandedProfile} from './game-profile.ts';
 import {constructAncientCasketGroupIds256,type AncientCasketGroupIds256} from './ancient-casket-group-ids-256.ts';
 import {configuredGeographicStartClock256} from './geographic-start-clock-256.ts';
@@ -6,7 +8,7 @@ import {configuredGeographicStartClock256} from './geographic-start-clock-256.ts
  * The required actual Shrine producer is deliberately NOT replaced by its
  * room envelope or by a callback that merely declares success. */
 import type {AncientHumanNameWorking256} from './ancient-human-name-256.ts';
-import type {World} from './types.ts';
+import {SCHEMA_VERSION,type World} from './types.ts';
 import type {StartingParty} from './starting-candidates.ts';
 import type {GeographicWorldDraft256} from './world-geographic-draft.ts';
 import {isCampaignGeography256,type CampaignGeography256} from './world-geography-owner-256.ts';
@@ -56,7 +58,7 @@ import {validateWorld} from './serialization.ts';
 const BASE_STEPS=new Set(['ElevationFertility','MutatorPostElevationFertility','RocksFromGrid','Terrain','MutatorPostTerrain','Roads','MutatorCriticalStructures','MutatorNonCriticalStructures','ScatterShrines','ScatterRuinsSimple','FindPlayerStartSpot','ScenParts','Plants','SteamGeysers','RockChunks','CaveHives','Snow','Animals','Fog','MutatorFinal']);
 export const BASE_PLAYER_GENERATION_ORDER_256=Object.freeze(CORE_4871_GEN_STEP_DEFS.filter(row=>BASE_STEPS.has(row.defName)).sort((a,b)=>a.order-b.order||a.index-b.index));
 const EXPECTED=['ElevationFertility','MutatorPostElevationFertility','RocksFromGrid','Terrain','MutatorPostTerrain','Roads','MutatorCriticalStructures','MutatorNonCriticalStructures','ScatterShrines','ScatterRuinsSimple','FindPlayerStartSpot','ScenParts','Plants','SteamGeysers','RockChunks','CaveHives','Snow','Animals','Fog','MutatorFinal'];
-export interface GeographicNewGameInput256 {draft:GeographicWorldDraft256;geography:CampaignGeography256;tile:number;size:250;scenario:'crashlanded';startingParty:StartingParty}
+export interface GeographicNewGameInput256 {draft:GeographicWorldDraft256;geography:CampaignGeography256;tile:number;size:GeographicCreationSize262;season?:GeographicCreationSeason262;scenario:'crashlanded';startingParty:StartingParty}
 export interface GeographicNewGameProgress256 {phase:string;completed:number;total:number}
 export interface InitialGenerationWorking256 {adjacentPermutation:number[];adjacentUses:number;edgeContext?:FogEdgeSelectionContext256;rootsToUnfog:number[]}
 /** The concrete750 implementation must run ScatterShrines INCLUDING its
@@ -69,7 +71,7 @@ export interface GeographicNewGameBindings256 {shrines750:ActualShrines750256}
 /** No owner, constructor, random stream or terrain is changed by this guard. */
 export function requireGeographicNewGameInputs256(input:GeographicNewGameInput256,bindings:GeographicNewGameBindings256|undefined):{bindings:GeographicNewGameBindings256;request:StartingOriginalRequest256} {
  if(!bindings||typeof bindings.shrines750?.generate!=='function')throw Error('Unresolved actual ScatterShrines750/interior_ancientTemple producer; Base_Player cannot be published');
- if(!input||input.size!==250||input.scenario!=='crashlanded'||!validStartingOriginalRequest256(input.startingParty))throw Error('The actual eight-entry original roster is required, never a three-entry preview');
+ if(!input||!validGeographicCreationSize262(input.size)||input.season!==undefined&&!validGeographicCreationSeason262(input.season)||input.scenario!=='crashlanded'||!validStartingOriginalRequest256(input.startingParty))throw Error('The actual eight-entry original roster is required, never a three-entry preview');
  const {draft,geography,tile}=input;
  if(!draft||draft.revision!==1||!isCampaignGeography256(geography)||geography.surface!==draft.surface||geography.roads!==draft.roads||draft.factions.generatedAt!==0||!Number.isSafeInteger(draft.nextThingId)||draft.nextThingId<1||!Number.isSafeInteger(tile)||tile<0||tile>=geography.surface.tiles.length)throw Error('Actual confirmed geographic draft/owner/frontier required');
  if(BASE_PLAYER_GENERATION_ORDER_256.length!==EXPECTED.length||BASE_PLAYER_GENERATION_ORDER_256.some((d,i)=>d.defName!==EXPECTED[i]))throw Error('Observed Core Base_Player order disagrees; no alphabetical or omitted750 substitution');
@@ -80,23 +82,23 @@ export function requireGeographicNewGameInputs256(input:GeographicNewGameInput25
  * allocating the eight originals, not after returning a partial map. */
 export function* createGeographicNewGame256(input:GeographicNewGameInput256,bindings?:GeographicNewGameBindings256):Generator<GeographicNewGameProgress256,World,void> {
  const accepted=requireGeographicNewGameInputs256(input,bindings),request=accepted.request;
- const {draft,geography,tile}=input,total=BASE_PLAYER_GENERATION_ORDER_256.length;
+ const {draft,geography,tile,size}=input,total=BASE_PLAYER_GENERATION_ORDER_256.length;
  const planet=createGeographicPlanet256({geography,factions:draft.factions,homeTile:tile,adoptedAt:0,nextGroupId:1});
- const description=describeWorldSite(geography.surface,geography.roads,tile),definition=geographicPlanetClimateDefinition256(planet,tile),{calendarOrigin,absoluteCore}=configuredGeographicStartClock256(definition);
+ const description=describeWorldSite(geography.surface,geography.roads,tile),definition=geographicPlanetClimateDefinition256(planet,tile),{calendarOrigin,absoluteCore}=configuredGeographicStartClock256(definition,input.season??'auto');
  if(!Number.isSafeInteger(absoluteCore)||absoluteCore<0)throw Error('Actual initial absolute clock is invalid');
  // Existing genuine constructor's initial gameplay RNG, distinct from OUTER
  // map-generation Rand and all SeedPart streams. The zero-seed sentinel is its
  // existing explicit constructor rule, never a missing captured input default.
  const runtimeRng=(description.mapSeed>>>0)||0x9e3779b9;
- const roster=prepareStartingOriginalDraft256(draft,geography,tile,request,absoluteCore),lordIds=constructCampaignLordIds256(),casketGroupIds=constructAncientCasketGroupIds256(),runtimeBirth=initialMapGenerationRuntime256();
+ const roster=prepareStartingOriginalDraft256(draft,geography,tile,request,absoluteCore,size),lordIds=constructCampaignLordIds256(),casketGroupIds=constructAncientCasketGroupIds256(),runtimeBirth=initialMapGenerationRuntime256();
  // The current authored NPC producer owns its actual names/backgrounds. Do
  // not construct an unused native-name context or load its research tables.
- const working:InitialGenerationWorking256={...captureMapGenerationRuntime256(runtimeBirth,250,250),adjacentUses:0,rootsToUnfog:[]};
+ const working:InitialGenerationWorking256={...captureMapGenerationRuntime256(runtimeBirth,size,size),adjacentUses:0,rootsToUnfog:[]};
  // ClearWorkingData/rootsToUnfog.Clear are genuine new MapGenerator operations;
  // empty working rectangles/roots do not stand in for a captured old owner.
  const layoutRects:AncientRect256[]=[],usedRects:AncientRect256[]=[];
  yield {phase:'physical10-220',completed:0,total};
- const physical=prepareGeographicPhysicalMap256({planet,factions:draft.factions,tile,width:250,height:250,tick:0,calendarOrigin,nextId:roster.nextId,rng:runtimeRng,initialWeather:{gameInitDataPresent:true,daysPassedSinceSettle:0},definitionContext:{isStartingMap:true,mapInitializing:true,tutorial:false,nomadicFactor:.5,usedRectCells:new Set()}}),w=physical.world;
+ const physical=prepareGeographicPhysicalMap256({schemaVersion:SCHEMA_VERSION,planet,factions:draft.factions,tile,width:size,height:size,tick:0,calendarOrigin,nextId:roster.nextId,rng:runtimeRng,initialWeather:{gameInitDataPresent:true,daysPassedSinceSettle:0},definitionContext:{isStartingMap:true,mapInitializing:true,tutorial:false,nomadicFactor:.5,usedRectCells:new Set()}}),w=physical.world;
  // Creation choices exist before MapGenerator in the real new-game lifecycle.
  // This factory exposes only the same supported Crashlanded preset. Establish
  // it here before750 difficulty consumers; never infer it in a reader/load.
@@ -105,7 +107,7 @@ export function* createGeographicNewGame256(input:GeographicNewGameInput256,bind
  const stream=(part:number)=>new WorldGenerationRandom(localGenerationStepSeed(description.mapSeed,part,0));
  yield {phase:'Roads390',completed:5,total};
  const roads=populateGeographicRoads256(w,usedRects,portableLocalRoadAngular256);
- if(roads.edges.cells!==null)working.edgeContext={width:250,height:250,edgeCells:[...roads.edges.cells]};
+ if(roads.edges.cells!==null)working.edgeContext={width:size,height:size,edgeCells:[...roads.edges.cells]};
  // The four admitted modifiers have no500/700 structures overrides. Their
  // actual nontrivial Init/elevation/terrain effects already ran in physical.
  const ancient:AncientPlacementContext256={startingMap:true,waterCovered:description.waterCovered,mapInitializing:true,layoutRects,usedRects};
@@ -143,6 +145,7 @@ export function* createGeographicNewGame256(input:GeographicNewGameInput256,bind
  const animals=produceInitialAnimals256(w,{random:stream(INITIAL_ANIMALS_SEED_PART_256),pawnKindOrder:CORE_4871_PAWN_KIND_ORDER,unspawnedAnimals:retained,closewalk:captureRandomClosewalk256(w)});if(animals.status==='blocked')throw Error('Actual1200 refused: '+animals.reason);
  const originalWildlife=w.wildlife;
  w.wildlife=originalWildlife?{...originalWildlife,animals:[...originalWildlife.animals,...animals.originals]}:{profile:GEOGRAPHIC_FAUNA_PROFILE_256,rng:runtimeRng,animals:animals.originals,eatenPlants:0,eatenNutrition:0,eatenItems:0};w.nextId=animals.nextId;
+ initializeGeographicRenewal262(w);
  for(const initial of animals.initialGrowth){const a=animals.originals.find(a=>a.id===initial.animalId);if(!a?.growthTracker||a.growthTracker.value!==initial.value||a.growthTracker.nextCheckCore!==initial.nextCheckCore)throw Error('Initial growth receipt disagrees with its actual constructor owner');}
  yield {phase:'Fog1500',completed:18,total};
  const reach=captureGeographicGenerationReachability256(w),fog=initializeExploration256(w,{start:start.cell,rootsToUnfog:working.rootsToUnfog,readers:{standable:reach.physical.standable,roofed:reach.physical.roofed,canReachMapEdgeNoPassClosedDoorsOrWater:reach.canReachMapEdgeNoPassClosedDoorsOrWater},...working.edgeContext?{edgeContext:working.edgeContext}:{}},captureActualFogPhysical256(w),stream(INITIAL_FOG_SEED_PART_256));

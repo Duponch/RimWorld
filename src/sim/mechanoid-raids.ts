@@ -28,8 +28,8 @@ export function chooseMechanoidOpportunity(w:World,points:number,random:{rng:num
   return chooseMechanoidComposition(points,random,w.schemaVersion>=197&&!!policy.ranged);
 }
 function adoptMechanoidRaid(w:World,composition:MechanoidRaidComposition,random:{rng:number},sites=raidEntries(w,random.rng,composition.roster.length),source260?:'camp-pressure'):MechanoidRaidGroup|null {
-  const s=w.raids,count=composition.roster.length,prospective=source260!==undefined&&w.schemaVersion===261&&tempMapModern261(w),worldFaction259=(Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||w.schemaVersion===261)?actualMechanicalBirthFaction259(w.worldFactions):undefined;
-  if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||w.schemaVersion===261)&&!worldFaction259)return null;
+  const s=w.raids,count=composition.roster.length,prospective=source260!==undefined&&(Number(w.schemaVersion)===261||w.schemaVersion===262)&&tempMapModern261(w),worldFaction259=(Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||w.schemaVersion===262))?actualMechanicalBirthFaction259(w.worldFactions):undefined;
+  if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||w.schemaVersion===262))&&!worldFaction259)return null;
   if(w.schemaVersion<194||!s?.mechanoid||(source260?s.profile!=='camp-pressure-v1':s.profile!=='cassandra-raids-v1')||!Number.isSafeInteger(w.tick*10+14999)||!prospective&&(!!s.active||!!s.mechActive)||!sites||sites.length!==count
     ||!Number.isSafeInteger(count)||count<1||!validMechanoidComposition(composition,w.schemaVersion>=197&&!!s.mechanoid.ranged)
     ||!Number.isSafeInteger(s.serial+1)||!Number.isSafeInteger(w.nextId+count)
@@ -64,7 +64,7 @@ export function createMechanoidRaid(w:World,composition:MechanoidRaidComposition
 /** Forced actual player-Camp entry; no faction ticket, age gate or agenda RNG. */
 export function createCampPressureMechanoidRaid260(w:World,points:number,random:{rng:number}):MechanoidRaidGroup|null {
  const root=registeredCampaign(w),mapId=registeredMapId(w),site=root.worldMaps?.sites.find(s=>s.id===mapId),factions=root.worldFactions;
- if((Number(w.schemaVersion)!==260&&w.schemaVersion!==261)||!(site?.kind==='camp'||w.schemaVersion===261&&site?.kind==='battlefield'&&site.battlefield261?.factionId===null)||!site.campPressure||!factions?.factions.some(f=>f.id===factions.playerFactionId&&(f.def==='PlayerColony'||f.def==='PlayerTribe'))||!factions.factions.some(f=>f.def==='Mechanoid')||w.raids?.profile!=='camp-pressure-v1'||!w.raids.mechanoid||!(w.schemaVersion===261&&tempMapModern261(w))&&(!!w.raids.active||!!w.raids.mechActive))return null;
+ if((Number(w.schemaVersion)!==260&&(Number(w.schemaVersion)!==261&&w.schemaVersion!==262))||!(site?.kind==='camp'||(Number(w.schemaVersion)===261||w.schemaVersion===262)&&site?.kind==='battlefield'&&site.battlefield261?.factionId===null)||!site.campPressure||!factions?.factions.some(f=>f.id===factions.playerFactionId&&(f.def==='PlayerColony'||f.def==='PlayerTribe'))||!factions.factions.some(f=>f.def==='Mechanoid')||w.raids?.profile!=='camp-pressure-v1'||!w.raids.mechanoid||!((Number(w.schemaVersion)===261||w.schemaVersion===262)&&tempMapModern261(w))&&(!!w.raids.active||!!w.raids.mechActive))return null;
  const draft={rng:random.rng},composition=chooseMechanoidComposition(points,draft,!!w.raids.mechanoid.ranged);if(!composition)return null;
  const result=adoptMechanoidRaid(w,composition,draft,undefined,'camp-pressure');if(result)random.rng=draft.rng;return result;
 }

@@ -1,3 +1,4 @@
+import {validGeographicCreationSize262,validGeographicCreationSeason262,type GeographicCreationOptions262} from '../sim/geographic-creation-options-262';
 import {worldGenerationKey,type WorldGenerationSettings} from '../sim/world-generation-settings';
 import {isCampaignGeography256} from '../sim/world-geography-owner-256';
 import {canPlaceWorldSettlement} from '../sim/world-settlement-placement';
@@ -26,12 +27,13 @@ export function createWorldCreationFlow256(callbacks:WorldCreationCallbacks256){
     preview={...next,request:copyWorldCreationRequest256(request),factions:next.factions.map(f=>({...f})),settlements:next.settlements.map(s=>({...s}))};return preview;
    }finally{if(mine===serial&&!preview)controller=undefined;}
   },
-  async confirmSite(tile:number):Promise<WorldCreationTicket256>{
+  async confirmSite(tile:number,choices:GeographicCreationOptions262={size:250,season:'auto'}):Promise<WorldCreationTicket256>{
    const before=preview,mine=serial;if(!before)throw Error('Générez un monde avant de choisir le lieu.');
    if(!Number.isSafeInteger(tile)||!canPlaceWorldSettlement(before.geography.surface.tiles,tile,{settlementTiles:new Set(before.settlements.map(s=>s.tile))}))throw Error('Ce lieu de départ est indisponible.');
-   const request={generation:before.generation,key:before.key,tile,size:250 as const},next=await callbacks.confirmSite(request);
+   if(!validGeographicCreationSize262(choices.size)||!validGeographicCreationSeason262(choices.season))throw Error('Choix de taille ou saison invalide.');
+   const request={generation:before.generation,key:before.key,tile,size:choices.size,season:choices.season},next=await callbacks.confirmSite(request);
    if(mine!==serial||preview!==before)throw aborted();
-   if(next.generation!==request.generation||next.key!==request.key||next.tile!==tile||next.size!==250||typeof next.ticket!=='string'||!next.ticket.length||!samePlayer(next.player,before.request.player))throw Error('Le lieu confirmé ne correspond pas au monde présenté.');
+   if(next.generation!==request.generation||next.key!==request.key||next.tile!==tile||next.size!==request.size||next.season!==request.season||typeof next.ticket!=='string'||!next.ticket.length||!samePlayer(next.player,before.request.player))throw Error('Le lieu confirmé ne correspond pas au monde présenté.');
    ticket={...next,player:{...next.player}};return ticket;
   },
   async start(startingParty:StartingOriginalRequest256,onProgress:(progress:WorldCreationProgress256)=>void=()=>{}):Promise<void>{

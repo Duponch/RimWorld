@@ -49,6 +49,7 @@ export interface WildAnimal extends Cell { hiveThink?:import('./cave-hive-think-
   exiting?:{destination:Cell;nextFoodCheck:number};
 }
 export interface WildlifeState {
+  geographicRenewal262?:import('./geographic-renewal-state-262.ts').GeographicRenewal262;
   hiveLords?:import('./cave-hive-state-256.ts').HiveLord256[];
   flyers?:import('./duck-flyer-state-256.ts').DuckFlyer256[];
   profile:'temperate-hares-v1'|'biome-herbivores-v1'|'biome-fauna-v2'|'geographic-fauna-v3'; rng:number; animals:WildAnimal[];

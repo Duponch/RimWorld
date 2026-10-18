@@ -60,7 +60,7 @@ test('max1 rejects before generation; wrong campaign size and missing allocator 
  expect(groupEntryActions(occupied.w,1).settle.ok).toBe(false);
  expect(drain(prepareActualSettlementEntry257(occupied.w,1))).toMatchObject({status:'blocked'});
  expect(JSON.stringify(occupied.w)).toBe(before);
- const f=fixture();f.w.worldMaps!.mapSize={width:200,height:200};
+ const f=fixture();f.w.worldMaps!.mapSize={width:280,height:280};
  expect(drain(prepareActualSettlementEntry257(f.w,1))).toMatchObject({status:'blocked',phase:'settlement-size'});
  f.w.worldMaps!.mapSize={width:250,height:250};delete f.w.worldMaps!.nextLordId;
  expect(drain(prepareActualSettlementEntry257(f.w,1))).toMatchObject({status:'blocked',phase:'settlement-allocators'});

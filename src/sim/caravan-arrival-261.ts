@@ -20,7 +20,7 @@ export function validCaravanArrivalCommand261(v:unknown):v is CaravanArrivalComm
 }
 export function applyCaravanArrivalCommand261(root:CampaignState,c:CaravanArrivalCommand261):CommandResult {
  const fail=(reason:string):CommandResult=>({ok:false,code:'invalid-command',reason}),r=root.worldGroups?.groups.find(r=>r.state.id===c.groupId),g=r?.state,planet=root.planet,a=c.action;
- if(root.schemaVersion!==261||!validCaravanArrivalCommand261(c)||!r?.encounters261||r.pending261||!g||!('members'in g)||r.localMapId!==null||!planet)return fail('L’ordre exige la vraie caravane prospective disponible.');
+ if((Number(root.schemaVersion)!==261&&root.schemaVersion!==262)||!validCaravanArrivalCommand261(c)||!r?.encounters261||r.pending261||!g||!('members'in g)||r.localMapId!==null||!planet)return fail('L’ordre exige la vraie caravane prospective disponible.');
  if(a?.kind==='enter'&&!root.worldMaps?.sites.some(s=>s.id===a.mapId&&s.tile===c.destination))return fail('La carte de cette entrée a disparu ou changé de tuile.');
  if(a?.kind==='trade'){
   const access=root.worldFactions&&worldSettlementAccess256(root.worldFactions,a.settlementId);
@@ -33,7 +33,7 @@ export function applyCaravanArrivalCommand261(root:CampaignState,c:CaravanArriva
  * refusal. A null post at order is historical absence, never an absence promise.
  * Another caravan's real finite post is resolved by its current owner. */
 export function advanceCaravanArrivals261(root:CampaignState):number[] {
- if(root.schemaVersion!==261)return [];const changed:number[]=[];
+ if((Number(root.schemaVersion)!==261&&root.schemaVersion!==262))return [];const changed:number[]=[];
  for(const r of root.worldGroups?.groups.slice()??[]){const g=r.state,a=r.arrival261;if(!a||!('members'in g)||r.localMapId!==null||g.segment||g.tile!==g.destination||g.tile!==a.tile||!['at-site','awaiting-entry'].includes(g.phase)||g.lastPersonalTick!==root.tick)continue;
   delete r.arrival261;changed.push(g.id);let ok=false;
   const action=a.action;

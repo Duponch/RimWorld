@@ -65,7 +65,7 @@ export function validCassandraAgenda(value:unknown,tick:number,version=241):bool
 
 /** Actual Camp -> settlement conversion. Keep the complete real attack owner. */
 export function convertCampRaidOwner260(w:World):void {
- const s=w.raids,modern=w.schemaVersion===261&&tempMapAdoptedAtCore261(w)!==undefined;if(w.schemaVersion<260||!s||s.profile!=='camp-pressure-v1'&&!modern)return;
+ const s=w.raids,modern=(Number(w.schemaVersion)===261||w.schemaVersion===262)&&tempMapAdoptedAtCore261(w)!==undefined;if(w.schemaVersion<260||!s||s.profile!=='camp-pressure-v1'&&!modern)return;
  const agenda:CassandraRaidAgenda={rng:modern&&s.cassandra?s.cassandra.rng:((w.seed^0xc455a82)>>>0)||1,cycle:Math.max(0,Math.floor((w.tick-CASSANDRA_CYCLE_START)/CASSANDRA_CYCLE_TICKS)+1),pending:[]};prepareCycle(agenda);
  s.profile='cassandra-raids-v1';s.cassandra=agenda;s.nextCheck=s.active||mechRaidGroups261(w).length||s.extraActive261?.length?null:agenda.pending[0]!;
 }

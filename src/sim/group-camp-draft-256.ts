@@ -1,3 +1,4 @@
+import {validGeographicCreationSize262,validGeographicSettlementDimensions262,type GeographicCreationSize262} from './geographic-creation-options-262.ts';
 import {captureCampaignLordIds256} from './cave-hive-lord-ids-256.ts';
 import {captureAncientCasketGroupIds256} from './ancient-casket-group-ids-256.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
@@ -29,7 +30,7 @@ export interface ActualCampGenerationRuntime256 {
 }
 export type ReadyCampDraft256={
  readonly status:'ready';readonly groupId:number;
- readonly settlement?:{readonly size:250;readonly nextLordId:number;readonly nextAncientCasketGroupId:number};
+ readonly settlement?:{readonly size:GeographicCreationSize262;readonly nextLordId:number;readonly nextAncientCasketGroupId:number};
  readonly draft:NonNullable<ReturnType<typeof draftSite>>;
  /** Closed-over actual source, not a client-provided boolean certificate. */
  current(input:CampaignState):boolean;
@@ -80,7 +81,7 @@ export function* draftActualGroupCamp256(input:CampaignState,groupId:number,runt
  if(!record||!g||!('members'in g))return blocked('entry-preflight','Actual away group required');
  const planet=root.planet,geography=planet.geography,tile=g.tile,calendarOrigin=maps.calendarOrigin;
  // Read authoritative CAMPAIGN_FIELDS, not a group projection's local header.
- const campaign=Object.fromEntries(CAMPAIGN_FIELDS.filter(k=>Object.hasOwn(root,k)).map(k=>[k,root[k]])) as Pick<World,CampaignField>&{schemaVersion:256|257|258|259|260|261;planet:typeof planet;worldFactions:NonNullable<World['worldFactions']>};
+ const campaign=Object.fromEntries(CAMPAIGN_FIELDS.filter(k=>Object.hasOwn(root,k)).map(k=>[k,root[k]])) as Pick<World,CampaignField>&{schemaVersion:256|257|258|259|260|261|262;planet:typeof planet;worldFactions:NonNullable<World['worldFactions']>};
  const captured=sharedMutableStamp(root),planetStamp=planetScalarStamp(planet),mapStamp=mapRegistryStamp(root),groupStamp=JSON.stringify(g),sites=maps.sites.slice();
  const retained=captureCampRetainedAnimals256(root),retainedStamp=JSON.stringify(retained);
  const runtimeStamp=JSON.stringify({adjacent:runtime.adjacentPermutation,fog:runtime.fog,context:runtime.context,rng:runtime.animalRuntimeRng});
@@ -103,9 +104,9 @@ export function* draftActualGroupCamp256(input:CampaignState,groupId:number,runt
   angular:runtime.angular,context:runtime.context,chunks:{adjacentPermutation:runtime.adjacentPermutation,provenance},
   animals:{pawnKindOrder:CORE_4871_PAWN_KIND_ORDER,unspawned:retained,runtimeRng:runtime.animalRuntimeRng,provenance},
   fog:{...runtime.fog,provenance},...(runtime.monumentCatalogue?{monumentCatalogue:runtime.monumentCatalogue}:{})};
- let settlement:{size:250;lordIds:ReturnType<typeof captureCampaignLordIds256>;casketGroupIds:ReturnType<typeof captureAncientCasketGroupIds256>}|undefined;
- try{if(mode==='settle'){if(maps.mapSize.width!==250||maps.mapSize.height!==250)return blocked('settlement-size','La taille de colonie géographique admise est250×250.');settlement={size:250,lordIds:captureCampaignLordIds256(root),casketGroupIds:captureAncientCasketGroupIds256(root)};}}catch(error){return blocked('settlement-allocators',error instanceof Error?error.message:String(error));}
- const generator=settlement?assembleSettlementMap257({...common,size:250,settlement}):assembleEncounterCamp256({...common,size:200});
+ let settlement:{size:GeographicCreationSize262;dimensions:Readonly<{width:number;height:number}>;lordIds:ReturnType<typeof captureCampaignLordIds256>;casketGroupIds:ReturnType<typeof captureAncientCasketGroupIds256>}|undefined;
+ try{if(mode==='settle'){if(!validGeographicCreationSize262(maps.mapSize.width)||!validGeographicSettlementDimensions262(root.schemaVersion,maps.mapSize.width,maps.mapSize.height,maps.mapSize))return blocked('settlement-size','La réinstallation doit conserver la taille carrée de colonie configurée.');settlement={size:maps.mapSize.width,dimensions:Object.freeze({...maps.mapSize}),lordIds:captureCampaignLordIds256(root),casketGroupIds:captureAncientCasketGroupIds256(root)};}}catch(error){return blocked('settlement-allocators',error instanceof Error?error.message:String(error));}
+ const generator=settlement?assembleSettlementMap257({...common,size:settlement.size,settlement}):assembleEncounterCamp256({...common,size:200});
  let result:CampMapResult256;
  try {
   for(;;){if(!current(root))return blocked('stale-capture','Camp source changed before adoption');const step=generator.next();if(step.done){result=step.value;break;}yield step.value;}
@@ -119,6 +120,6 @@ export function* draftActualGroupCamp256(input:CampaignState,groupId:number,runt
  const currentWithAnimals=(input:CampaignState)=>current(input)&&worldAnimals.current()&&Object.getOwnPropertyDescriptor(w,'wildlife')?.value===wildlife&&Object.getOwnPropertyDescriptor(body,'wildlife')?.value===wildlife&&Object.getOwnPropertyDescriptor(wildlife,'animals')?.value===draftAnimals&&campAnimalArrayWritable256(wildlife);
  const generatedWild=new Set(worldAnimals.candidateAnimals),otherAnimals=draftAnimals.filter(a=>!generatedWild.has(a));
  const adoptWorldAnimals=()=>{if(!currentWithAnimals(root))throw Error('Stale local-map WorldPawn adoption');wildlife.animals=[...otherAnimals,...worldAnimals.commit()];};
- return {status:'ready',groupId,...settlement?{settlement:{size:250 as const,nextLordId:settlement.lordIds.nextId,nextAncientCasketGroupId:settlement.casketGroupIds.nextId}}:{},current:currentWithAnimals,adoptWorldAnimals,draft:{site:{revision:1,tile,createdAt:root.tick,selected:false,map:body,visit:null},nextId:result.nextId},
+ return {status:'ready',groupId,...settlement?{settlement:{size:settlement.size,nextLordId:settlement.lordIds.nextId,nextAncientCasketGroupId:settlement.casketGroupIds.nextId}}:{},current:currentWithAnimals,adoptWorldAnimals,draft:{site:{revision:1,tile,createdAt:root.tick,selected:false,map:body,visit:null},nextId:result.nextId},
   runtimeAfter:{initialGrowth:result.initialGrowth,adjacentPermutation:result.adjacentPermutation,adjacentUses:result.adjacentUses,...result.edgeContext?{edgeContext:result.edgeContext}:{},initialization:result.initialization,steps:result.steps}};
 }

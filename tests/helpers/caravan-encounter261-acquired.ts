@@ -26,7 +26,7 @@ export const sha261=(s:string)=>createHash('sha256').update(s).digest('hex');
 export const sources261=[{pileId:36326,quantity:10},{pileId:2308,quantity:10},{pileId:36331,quantity:9},{pileId:36332,quantity:7}];
 export const NOTICE261='Prepared branches, not natural incidents: immutable acquired Camp736260, strict product migration changes only schema number; real Reform of7/8 and existing four finite stacks; actual adjacent free terrestrial route and ordinary ticks. Chance/opportunity alone is explicitly stubbed false during preparation, then true only for the named incident at the next real1000Core boundary. Demand selection uses a declared bounded value tape while EVERY actual healthRandom call still advances its real owner. Faction, roster, goods, pending, story, IDs, owners, WorldPawns and command/bridge authorities are actual product paths. No seed search, injected pending, battlefield/victory or fabricated resources. Current NPC producer is provisional. No natural MTBR or campaign chronology proven.';
 export function admitted261(root:CampaignState):asserts root is World {
- if(root.schemaVersion!==261||!('pawns'in root)||root.planet?.revision!==3||!root.worldMaps||!root.worldGroups||!root.worldPawns||!root.worldFactions)throw Error('Actual261 geographic campaign authorities required');
+ if(Number(root.schemaVersion)!==261||!('pawns'in root)||root.planet?.revision!==3||!root.worldMaps||!root.worldGroups||!root.worldPawns||!root.worldFactions)throw Error('Actual261 geographic campaign authorities required');
  expect(validateWorld(root)).toEqual([]);
 }
 export function checkpoint261(root:CampaignState,label:string,extra:object={}) {

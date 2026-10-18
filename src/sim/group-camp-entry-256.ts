@@ -1,3 +1,4 @@
+import {validGeographicSettlementDimensions262} from './geographic-creation-options-262.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Ordered SIM entry of one real away group. A yielded generation candidate
  * never becomes a map; source, generation statics and allocation commit once.
@@ -22,9 +23,9 @@ function* prepareActualLocalEntry257(input:CampaignState,groupId:number,mode:'ca
  const blocked=(phase:string,reason:string):Entry256=>({status:'blocked',phase,reason});
  if(!isSchema256Or257(root.schemaVersion)||root.planet?.revision!==3||!registry||!state||!validMapGenerationRuntime256(state))return blocked('runtime-owner','Actual geographic campaign generation owner is missing');
  if(root.gameProfile?.revision!==1||root.gameProfile.storyteller!=='cassandra-partial'||root.gameProfile.difficulty!=='adventure-story')return blocked('generation-profile','Actual admitted no-tutorial AdventureStory context required');
- if(mode==='settle'&&(registry.mapSize.width!==250||registry.mapSize.height!==250))return blocked('settlement-size','La taille de colonie géographique admise est250×250.');
- const size=mode==='settle'?250:200,before=JSON.stringify(state),captured=captureMapGenerationRuntime256(state,size,size);
- const same=()=>registeredCampaign(input)===root&&root.worldMaps===registry&&registry.generationRuntime===state&&JSON.stringify(state)===before;
+ if(mode==='settle'&&!validGeographicSettlementDimensions262(root.schemaVersion,registry.mapSize.width,registry.mapSize.height,registry.mapSize))return blocked('settlement-size','La réinstallation doit conserver la taille carrée de colonie configurée.');
+ const dimensions=Object.freeze({...registry.mapSize}),size=mode==='settle'?dimensions.width:200,before=JSON.stringify(state),captured=captureMapGenerationRuntime256(state,size,size);
+ const same=()=>registeredCampaign(input)===root&&root.worldMaps===registry&&registry.mapSize.width===dimensions.width&&registry.mapSize.height===dimensions.height&&registry.generationRuntime===state&&JSON.stringify(state)===before;
  // These new-map working arrays are created by the actual generation call,
  // mirroring ClearWorkingData. They are not a filtered WorldPawns roster.
  const generator=draftActualGroupCamp256(root,groupId,{angular:portableLocalRoadAngular256,context:{tutorial:false,nomadicFactor:0.5,layoutRects:[],usedRects:[]},

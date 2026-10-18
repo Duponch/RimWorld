@@ -20,7 +20,7 @@ import {groupPlayerOwner256} from './group-route-interval-256.ts';
  * no entry receipt or authority; true exit/removal still require worldMaps. */
 function projectedExitClock259(w:World):{absolute:number;mapId:number} {
  const m=w.campaignMap,c=w.climate,p=w.planet;
- if((Number(w.schemaVersion)!==259&&Number(w.schemaVersion)!==260&&w.schemaVersion!==261)||Object.hasOwn(w,'worldMaps')||Object.hasOwn(w,'worldGroups')||m?.revision!==2||!Number.isSafeInteger(w.tick)||w.tick<0||m.activeMapId===null||!Number.isSafeInteger(m.activeMapId)||m.activeMapId<0||!Number.isSafeInteger(m.calendarOrigin)||p?.revision!==3||c?.revision!==4||w.site?.revision!==3||w.seed!==(w.site.mapSeed>>>0)||c.tileId!==w.site.tileId)throw Error('Missing confirmed local projection clock');
+ if((Number(w.schemaVersion)!==259&&Number(w.schemaVersion)!==260&&(Number(w.schemaVersion)!==261&&w.schemaVersion!==262))||Object.hasOwn(w,'worldMaps')||Object.hasOwn(w,'worldGroups')||m?.revision!==2||!Number.isSafeInteger(w.tick)||w.tick<0||m.activeMapId===null||!Number.isSafeInteger(m.activeMapId)||m.activeMapId<0||!Number.isSafeInteger(m.calendarOrigin)||p?.revision!==3||c?.revision!==4||w.site?.revision!==3||w.seed!==(w.site.mapSeed>>>0)||c.tileId!==w.site.tileId)throw Error('Missing confirmed local projection clock');
  const active=m.maps.find(row=>row.id===m.activeMapId);
  if(!active||active.tile!==c.tileId||!validGeographicSiteClimate256(c,w.schemaVersion,w))throw Error('Projected local climate differs from its actual map/anchor');
  const local=(c.calendarOrigin+w.tick-c.adoptedAt)*10-geographicLongitudeOffsetCore256(c.definition.longitude),home=geographicPlanetClimateDefinition256(p,p.homeTile),shared=(m.calendarOrigin!+w.tick)*10-geographicLongitudeOffsetCore256(home.longitude);

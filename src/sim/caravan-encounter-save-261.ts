@@ -6,11 +6,11 @@ const dense=(v:unknown,max:number):v is unknown[]=>Array.isArray(v)&&v.length<=m
 const incident=(v:unknown)=>typeof v==='string'&&CARAVAN_INCIDENTS_261.some(id=>id===v);
 export interface EncounterValidation261 {version:number;atCore:number;tileCount:number;factionIds:ReadonlySet<number>;mapIds:ReadonlySet<number>;settlements:readonly {id:number;factionId:number;postId:number|null;tile:number}[]}
 export function validEncounterAdmission261(value:unknown,version:number):boolean {
- return value===undefined||version>=261&&plain(value)&&keys(value,['revision'])&&value.revision===1;
+ return value===undefined||(version===261||version===262)&&plain(value)&&keys(value,['revision'])&&value.revision===1;
 }
 export function validCaravanStory261(value:unknown,c:EncounterValidation261):value is CaravanStory261|undefined {
  if(value===undefined)return true;
- if(c.version<261||!plain(value)||!keys(value,['revision','lastFire','recent'],['lastThreatCore','lastFactionId'])||value.revision!==1||!plain(value.lastFire)||!dense(value.recent,5)||value.recent.length<1)return false;
+ if((c.version!==261&&c.version!==262)||!plain(value)||!keys(value,['revision','lastFire','recent'],['lastThreatCore','lastFactionId'])||value.revision!==1||!plain(value.lastFire)||!dense(value.recent,5)||value.recent.length<1)return false;
  const fire=value.lastFire;if(Reflect.ownKeys(fire).length<1||!Reflect.ownKeys(fire).every(k=>incident(k)&&int(fire[k as string],0,c.atCore))||!value.recent.every(v=>incident(v)&&Object.hasOwn(fire,v as string)))return false;
  if(Object.hasOwn(value,'lastThreatCore')&&(!int(value.lastThreatCore,0,c.atCore)||Math.max(Number(value.lastFire.ambush??-1),Number(value.lastFire['manhunter-ambush']??-1))!==value.lastThreatCore))return false;
  if((Object.hasOwn(value.lastFire,'ambush')||Object.hasOwn(value.lastFire,'manhunter-ambush'))&&!Object.hasOwn(value,'lastThreatCore'))return false;
@@ -36,12 +36,12 @@ export function validRetainedCaravan261(v:unknown,c:EncounterValidation261):v is
  return d===null||plain(d)&&keys(d,['tile','action'])&&int(d.tile,0,c.tileCount-1)&&validRetainedArrivalShape261(d.action);
 }
 export function validCaravanBattlefield261(value:unknown,c:EncounterValidation261):value is CaravanBattlefield261 {
- return c.version>=261&&plain(value)&&keys(value,['revision','kind','won','factionId','retained'])&&value.revision===1&&(value.kind==='ambush'||value.kind==='attacked-caravan')&&typeof value.won==='boolean'&&(value.factionId===null||int(value.factionId,1)&&c.factionIds.has(value.factionId))&&validRetainedCaravan261(value.retained,c);
+ return (c.version===261||c.version===262)&&plain(value)&&keys(value,['revision','kind','won','factionId','retained'])&&value.revision===1&&(value.kind==='ambush'||value.kind==='attacked-caravan')&&typeof value.won==='boolean'&&(value.factionId===null||int(value.factionId,1)&&c.factionIds.has(value.factionId))&&validRetainedCaravan261(value.retained,c);
 }
 export function validCaravanCaptivity261(value:unknown,c:EncounterValidation261):boolean {
- return value===undefined||c.version>=261&&plain(value)&&keys(value,['factionId','atCore'])&&int(value.factionId,1)&&c.factionIds.has(value.factionId)&&int(value.atCore,0,c.atCore);
+ return value===undefined||(c.version===261||c.version===262)&&plain(value)&&keys(value,['factionId','atCore'])&&int(value.factionId,1)&&c.factionIds.has(value.factionId)&&int(value.atCore,0,c.atCore);
 }
 /** Call before old260 validation/migration and on archived/retired rows too. */
 export function historicalEncounterFieldsAbsent261(value:unknown,version:number):boolean {
- return version>=261||!value||typeof value!=='object'||!['encounters261','story261','battlefield261','pending261','captivity261','arrival261','encounterBirth261'].some(k=>Object.hasOwn(value,k));
+ return (version===261||version===262)||!value||typeof value!=='object'||!['encounters261','story261','battlefield261','pending261','captivity261','arrival261','encounterBirth261'].some(k=>Object.hasOwn(value,k));
 }

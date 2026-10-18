@@ -1,3 +1,4 @@
+import type {GeographicCreationOptions262} from '../sim/geographic-creation-options-262';
 import type {CampaignGeography256} from '../sim/world-geography-owner-256';
 import type {WorldGenerationSettings} from '../sim/world-generation-settings';
 import type {StartingOriginalRequest256} from '../sim/starting-original-request-256';
@@ -10,7 +11,7 @@ export interface WorldCreationSettlement256 {id:number;factionId:number;tile:num
 /** Main supplies this owner only after the real external geography boundary.
  * NPC summaries do not own leaders, people, items, local maps or random state. */
 export interface WorldCreationPreview256 {generation:number;key:string;request:WorldCreationRequest256;geography:CampaignGeography256;factions:readonly WorldCreationFaction256[];settlements:readonly WorldCreationSettlement256[]}
-export interface WorldCreationSiteRequest256 {generation:number;key:string;tile:number;size:250}
+export interface WorldCreationSiteRequest256 extends GeographicCreationOptions262 {generation:number;key:string;tile:number}
 /** Opaque worker receipt, scoped to the exact draft/player/site confirmed. */
 export interface WorldCreationTicket256 extends WorldCreationSiteRequest256 {ticket:string;player:WorldCreationPlayer256}
 export interface WorldCreationCallbacks256 {

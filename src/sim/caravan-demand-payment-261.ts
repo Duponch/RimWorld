@@ -21,7 +21,7 @@ export type DemandPaymentPlan261={ok:true;current():boolean;commit():void}|{ok:f
 export function prepareDemandPayment261(root:CampaignState,record:EncounterGroup261):DemandPaymentPlan261 {
  const pending=record.pending261,g=record.state,w=worldGroupContext(root,record.state.id),factions=root.worldFactions;
  const fail=(reason:string):DemandPaymentPlan261=>({ok:false,reason});
- if(root.schemaVersion!==261||pending?.kind!=='demand'||!w||!factions||!('members'in g)||record.localMapId!==null||g.lastPersonalTick!==root.tick||!pending.demands.length)return fail('La demande confirmée et ses propriétaires sont indisponibles.');
+ if((Number(root.schemaVersion)!==261&&root.schemaVersion!==262)||pending?.kind!=='demand'||!w||!factions||!('members'in g)||record.localMapId!==null||g.lastPersonalTick!==root.tick||!pending.demands.length)return fail('La demande confirmée et ses propriétaires sont indisponibles.');
  const lines=pending.demands,category=lines[0]!.kind;
  if(new Set(lines.map(l=>l.id)).size!==lines.length||lines.some(l=>(category==='human'||category==='animal')?l.kind!==category:l.kind!=='pile'&&l.kind!=='packed')||category==='human'&&lines.length!==1)return fail('Le manifeste de la demande n’est pas une sélection admissible.');
  const now=root.tick,openingId=root.nextId,openingRng=root.rng,openingState=record.state,signature=JSON.stringify(record);
@@ -48,7 +48,7 @@ export function prepareDemandPayment261(root:CampaignState,record:EncounterGroup
    const animals=lines.map(l=>g.animalOwners?.members.find(a=>a.id===l.id));if(animals.some(a=>!a))return fail('Un animal demandé n’est plus détenu.');
    const prepared=prepareCaravanAnimalCession261(root,g,animals as NonNullable<typeof animals[number]>[]);if(!prepared.ok)return prepared;cession=prepared;
   }
-  inventory=draftSplitInventory(groupPhysicalPawns256(g),g.items,cededIds,[],openingId,openingRng,now,g.packed??[],[],human?.id,261);
+  inventory=draftSplitInventory(groupPhysicalPawns256(g),g.items,cededIds,[],openingId,openingRng,now,g.packed??[],[],human?.id,root.schemaVersion);
   if(!inventory||inventory.child.length||inventory.childPacked.length)return fail('Les biens du membre cédé ne peuvent pas rejoindre les détenteurs restants.');
   nextId=inventory.nextId;nextRng=inventory.rng;
  }else for(const line of lines){

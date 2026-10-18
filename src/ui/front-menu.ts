@@ -1,3 +1,4 @@
+import {worldCreationCalendarFacts262} from './world-creation-calendar-262';
 import {startingOriginalRequestFromRoster256} from '../sim/starting-original-request-256';
 import {createWorldCreationFlow256} from './world-creation-flow';
 import {createWorldDraftParameters,defaultWorldCreationSettings,type WorldDraftParameters} from './world-draft-controls';
@@ -196,7 +197,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
   let seed = '';
   const backend=options.worldCreation;
   const worldCreation=backend&&typeof backend.generate==='function'&&typeof backend.confirmSite==='function'&&typeof backend.start==='function'?createWorldCreationFlow256(backend):undefined;
-  let worldParameters:WorldDraftParameters={seed:'',settings:defaultWorldCreationSettings(),size:250};
+  let worldParameters:WorldDraftParameters={seed:'',settings:defaultWorldCreationSettings(),size:250,season:'auto'};
   let worldGenerationRun=0;
   let selectedTile:number|null=null;
   let teamSeed=0;
@@ -680,7 +681,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
       }).catch(cause=>{if(mine!==worldGenerationRun)return;setBusy(false);showError(cause instanceof Error?cause.message:'Le monde n’a pas pu être généré.');}).finally(()=>cancel.remove());
     });
     if(!worldCreation||typeof options.getWorldCreationPlayer!=='function'){footer.querySelector<HTMLButtonElement>('.front-next')!.disabled=true;showError('La préparation du monde n’est pas disponible. Vous pouvez conserver vos paramètres.');}
-    const resets=element('div','front-world-resets');resets.append(action('Réinitialiser tout',()=>{try{worldCreation?.cancel();worldParameters={seed:randomSiteSeed(),settings:defaultWorldCreationSettings(),size:250};seed=worldParameters.seed;selectedTile=null;navigate('world');}catch{showError('La graine aléatoire est indisponible.');}}));footer.insertBefore(resets,footer.lastElementChild);
+    const resets=element('div','front-world-resets');resets.append(action('Réinitialiser tout',()=>{try{worldCreation?.cancel();worldParameters={seed:randomSiteSeed(),settings:defaultWorldCreationSettings(),size:250,season:'auto'};seed=worldParameters.seed;selectedTile=null;navigate('world');}catch{showError('La graine aléatoire est indisponible.');}}));footer.insertBefore(resets,footer.lastElementChild);
   }
 
   function confirmDraft(message:string,accept:()=>void):void {
@@ -695,15 +696,16 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
 
   function renderSite():void {
     const preview=worldCreation?.preview;if(!preview){navigate('world');return;}
-    const configuration=createWorldCreationSite256({preview,selected:selectedTile,onSelected:id=>{selectedTile=id;clearError();const next=footer.querySelector<HTMLButtonElement>('.front-next');if(next)next.disabled=!configuration.canContinue();},onError:showError});
+    const configuration=createWorldCreationSite256({preview,choices:{size:worldParameters.size,season:worldParameters.season},selected:selectedTile,onSelected:id=>{selectedTile=id;clearError();const next=footer.querySelector<HTMLButtonElement>('.front-next');if(next)next.disabled=!configuration.canContinue();},onError:showError});
     content.append(configuration.element);disposePage=configuration.dispose;
     addNavigation(()=>{worldCreation!.cancel();navigate('world');},'Suivant',()=>{
       const tile=configuration.validate();if(tile===undefined)return;
-      confirmDraft('Confirmer ce lieu de départ avant de choisir les personnages ?',()=>{
+      const calendar=worldCreationCalendarFacts262(preview.geography.surface.tiles[tile]!,worldParameters.season);
+      confirmDraft(`Confirmer ce lieu de départ · ${worldParameters.size} × ${worldParameters.size} · ${calendar.choice} · ${calendar.date} ?`,()=>{
         // Navigation follows an actual worker ACK; selecting a tile alone
         // never creates a local map or invents a confirmed colony.
         const mine=worldGenerationRun;setBusy(true,'Confirmation du lieu de départ…');
-        void worldCreation!.confirmSite(tile).then(()=>{if(mine!==worldGenerationRun||root.hidden)return;setBusy(false);navigate('pawns');}).catch(cause=>{if(mine!==worldGenerationRun||root.hidden)return;worldCreation!.cancel();selectedTile=null;setBusy(false);navigate('world');showError(cause instanceof Error?cause.message:'Le lieu n’a pas pu être confirmé. Générez le monde à nouveau.');});
+        void worldCreation!.confirmSite(tile,{size:worldParameters.size,season:worldParameters.season}).then(()=>{if(mine!==worldGenerationRun||root.hidden)return;setBusy(false);navigate('pawns');}).catch(cause=>{if(mine!==worldGenerationRun||root.hidden)return;worldCreation!.cancel();selectedTile=null;setBusy(false);navigate('world');showError(cause instanceof Error?cause.message:'Le lieu n’a pas pu être confirmé. Générez le monde à nouveau.');});
       });
     });
     footer.querySelector<HTMLButtonElement>('.front-next')!.disabled=!configuration.canContinue();
@@ -848,7 +850,7 @@ export function createFrontMenu(host: HTMLElement, options: FrontMenuOptions): F
     seed = '';
     worldCreation?.cancel();selectedTile=null;
     try { seed = randomSiteSeed();teamSeed=Number(randomSiteSeed()); } catch {teamSeed=0; /* Manual entry remains available. */ }
-    worldParameters={seed,settings:defaultWorldCreationSettings(),size:250};
+    worldParameters={seed,settings:defaultWorldCreationSettings(),size:250,season:'auto'};
     roster=createStartingCandidateRoster(teamSeed);
     navigate('scenario');
   }

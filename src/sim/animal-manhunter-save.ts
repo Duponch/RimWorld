@@ -29,7 +29,7 @@ function validDoorStrike(w:BoundaryWorld,version:number,a:WildAnimal):boolean {
 export function validAnimalManhunter(w:BoundaryWorld,version:number,a:WildAnimal):boolean {
   if(!validDoorStrike(w,version,a)||!validPermanentManhunter261(a,version))return false;
   const m:unknown=a.manhunter;if(m===undefined)return true;
-  if(version<183||!object(m)||!keys(m,['startedAtCore','rng','zeroRestTicks','exhausted','targetId','door',...(version===261?['permanent261']:[])])
+  if(version<183||!object(m)||!keys(m,['startedAtCore','rng','zeroRestTicks','exhausted','targetId','door',...((version===261||version===262)?['permanent261']:[])])
     ||!int(m.startedAtCore,0,w.tick*10)||!int(m.rng,1,0xffffffff)
     ||!int(m.zeroRestTicks,0,w.tick*10-m.startedAtCore+150)||m.zeroRestTicks%150!==0
     ||a.domestic||a.meal||a.predation||a.exiting||a.flee||a.threat||a.retaliation||a.mating||a.taming

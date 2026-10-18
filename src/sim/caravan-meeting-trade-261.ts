@@ -17,7 +17,7 @@ const fail=(reason:string)=>({ok:false as const,reason});
  * keep their original owners and are not advertised as supported trade goods. */
 export function quoteMeetingTrade261(root:Pick<CampaignState,'schemaVersion'|'tick'|'nextId'>,record:WorldGroupRecord,lines:readonly MeetingTradeLine261[]):Quote261 {
  const p=record.pending261,g=record.state;
- if(root.schemaVersion!==261||p?.kind!=='meeting'||p.decision!=='open'||record.localMapId!==null||!('members'in g)||g.lastPersonalTick!==root.tick||p.atCore!==root.tick*10)return fail('La rencontre commerciale n’est plus disponible.');
+ if((Number(root.schemaVersion)!==261&&root.schemaVersion!==262)||p?.kind!=='meeting'||p.decision!=='open'||record.localMapId!==null||!('members'in g)||g.lastPersonalTick!==root.tick||p.atCore!==root.tick*10)return fail('La rencontre commerciale n’est plus disponible.');
  const negotiator=bestGroupNegotiator(g.members),trader=p.people.find(a=>a.id===p.traderId);
  if(!negotiator||!trader||trader.state==='dead'||trader.state==='downed')return fail('Un négociateur et le véritable marchand doivent être disponibles.');
  if(!Array.isArray(lines)||lines.length>128||new Set(lines.map(l=>l.pileId)).size!==lines.length||lines.some(l=>!l||Reflect.ownKeys(l).length!==2||!Number.isSafeInteger(l.pileId)||!Number.isSafeInteger(l.quantity)||!l.quantity||Math.abs(l.quantity)>250000))return fail('Panier de rencontre invalide.');
@@ -57,7 +57,7 @@ export function prepareMeetingTrade261(root:CampaignState,record:WorldGroupRecor
  let silver=Math.abs(q.paid);const payer=q.paid>=0?player:foreign,payee=q.paid>=0?foreign:player;
  for(const i of payer.slice()){const current=projected(i);if(current.item!=='silver'||current.owner.type!=='inventory'||q.paid<0&&current.owner.pawnId!==p.traderId)continue;const count=Math.min(silver,current.quantity);if(count&&!move(payer,payee,i,count,q.paid>=0?p.traderId:receiver.id,q.paid>=0?sent:received))return fail('L’argent réel ne peut pas être transféré.');silver-=count;if(!silver)break;}
  if(silver)return fail('L’argent porté a changé.');
- const mass=captureGroupMass(g.members,player.map(projected),freightGroup(g),261,g.packed,g.animalOwners?.members);if(!mass||mass.grams>mass.capacityGrams)return fail('Le panier final dépasse la charge représentée de la caravane.');
+ const mass=captureGroupMass(g.members,player.map(projected),freightGroup(g),root.schemaVersion,g.packed,g.animalOwners?.members);if(!mass||mass.grams>mass.capacityGrams)return fail('Le panier final dépasse la charge représentée de la caravane.');
  const history=withGroupExchange(withGroupExchange(g.reorganization,'sent',sent),'received',received),before=JSON.stringify(record),events=registry.events;let used=false;
  const writable=(o:object,k:string)=>{const d=Object.getOwnPropertyDescriptor(o,k);return !!d&&Object.hasOwn(d,'value')&&d.writable===true;};
  const recipients=()=>writable(root,'nextId')&&writable(g,'items')&&writable(g,'reorganization')&&writable(p,'items')&&[...updates.keys()].every(i=>writable(i,'quantity')&&writable(i,'owner'))&&registry.events===events&&writable(events,'length')&&Object.isExtensible(events)&&Object.keys(events).every(key=>writable(events,key)&&Object.getOwnPropertyDescriptor(events,key)?.configurable===true);

@@ -1,3 +1,5 @@
+import {validGeographicSettlementDimensions262,type GeographicCreationSize262} from './geographic-creation-options-262.ts';
+import {initializeGeographicRenewal262} from './geographic-renewal-state-262.ts';
 import {generateActualShrines750256} from './ancient-temple-orchestration-256.ts';
 import {populateGeographicCaveHives256} from './geographic-cave-hives-256.ts';
 import {hiveReproductionFactor256} from './cave-hive-profile-256.ts';
@@ -68,7 +70,7 @@ export interface CampGenerationSource256 {readonly source:string;readonly atTick
 export interface CampMapInputs256 {
  /** Plain captured shared fields, no World and no live forwarding writers.
   * Arrays/registries remain their original read-only references in generation. */
- readonly campaign:Pick<World,CampaignField> & {readonly schemaVersion:256|257|258|259|260|261;readonly planet:GeographicPlanetState;readonly worldFactions:NonNullable<World['worldFactions']>};
+ readonly campaign:Omit<Pick<World,CampaignField>,'schemaVersion'> & {readonly schemaVersion:256|257|258|259|260|261|262;readonly planet:GeographicPlanetState;readonly worldFactions:NonNullable<World['worldFactions']>};
  readonly tile:number;readonly size:number;readonly calendarOrigin:number;
  readonly daysPassedSinceSettle:number;
  readonly provenance:CampGenerationSource256;
@@ -88,7 +90,7 @@ export interface CampMapInputs256 {
  readonly planOtherGeyserEdificeRemoval?:(world:World,cell:number)=>{id:number;commit():void}|null;
 }
 /** Existing campaign allocators, detached for this unpublished Base_Player only. */
-export type SettlementMapInputs257=Omit<CampMapInputs256,'size'>&{readonly size:250;readonly settlement:{readonly lordIds:HiveLordIds256;readonly casketGroupIds:AncientCasketGroupIds256}};
+export type SettlementMapInputs257=Omit<CampMapInputs256,'size'>&{readonly size:GeographicCreationSize262;readonly settlement:{readonly dimensions?:Readonly<{width:number;height:number}>;readonly lordIds:HiveLordIds256;readonly casketGroupIds:AncientCasketGroupIds256}};
 type ArrivalMapInputs257=CampMapInputs256|SettlementMapInputs257;
 export interface CampMapProgress256 {readonly phase:string;readonly completed?:number;readonly total?:number}
 export type CampMapResult256=
@@ -110,7 +112,7 @@ function preflightArrivalMap257(input:ArrivalMapInputs257,settlement:boolean):vo
  const c=input?.campaign;
  if(!c||typeof c!=='object'||Array.isArray(c))throw Error('Missing captured campaign data');
  for(const key of Reflect.ownKeys(c)){const d=Object.getOwnPropertyDescriptor(c,key)!;if(typeof key!=='string'||!(CAMPAIGN_FIELDS as readonly string[]).includes(key)||!Object.hasOwn(d,'value')||!d.enumerable)throw Error('Camp shared input must be captured data, never a World/accessor');}
- if(!isSchema256Or257(c.schemaVersion)||!(settlement?input.size===250:input.size===200||c.schemaVersion===261&&Number.isInteger(input.size)&&input.size>=75&&input.size<=110)||!Number.isSafeInteger(c.tick)||c.tick<0||!Number.isSafeInteger(c.tick*10)||!Number.isSafeInteger(c.nextId)||c.nextId<1||!Number.isSafeInteger(c.rng)||c.rng<1||c.rng>0xffffffff||!Number.isSafeInteger(input.calendarOrigin)||!sourced(input.provenance,input))throw Error('Missing captured Camp256 ownership/clock frontier');
+ if(!isSchema256Or257(c.schemaVersion)||!(settlement?validGeographicSettlementDimensions262(c.schemaVersion,input.size,input.size,'settlement'in input?input.settlement.dimensions:undefined):input.size===200||(c.schemaVersion===261||c.schemaVersion===262)&&Number.isInteger(input.size)&&input.size>=75&&input.size<=110)||!Number.isSafeInteger(c.tick)||c.tick<0||!Number.isSafeInteger(c.tick*10)||!Number.isSafeInteger(c.nextId)||c.nextId<1||!Number.isSafeInteger(c.rng)||c.rng<1||c.rng>0xffffffff||!Number.isSafeInteger(input.calendarOrigin)||!sourced(input.provenance,input))throw Error('Missing captured Camp256 ownership/clock frontier');
  for(const key of ['schemaVersion','tick','rng','nextId','planet','worldFactions','foodPolicies','nextFoodPolicyId','apparelPolicies','nextApparelPolicyId','foodRules','restRules'] as const)if(!Object.hasOwn(c,key))throw Error('Captured campaign shared authority is incomplete');
  if(c.planet.revision!==3||!c.worldFactions||c.worldFactions.generatedAt>c.tick)throw Error('Missing actual geographic/faction authority');
  if(!c.worldPawns||c.worldPawns.atCore!==c.tick*10)throw Error('Actual Camp1200 WorldPawns owner is absent or stale');
@@ -138,7 +140,7 @@ function* assembleArrivalMap257(input:ArrivalMapInputs257,settlement:boolean):Ge
  try {
   preflightArrivalMap257(input,settlement);const size=input.size,working:{adjacentPermutation:number[];adjacentUses:number;edgeContext?:FogEdgeSelectionContext256}={adjacentPermutation:[...input.chunks.adjacentPermutation],adjacentUses:0,...input.fog.edgeContext?{edgeContext:{...input.fog.edgeContext,edgeCells:[...input.fog.edgeContext.edgeCells]}}:{}};const c=Object.freeze({...input.campaign}),usedRects=input.context.usedRects.map(r=>({...r})),layoutRects=input.context.layoutRects;
   phase='physical10-220';yield {phase};
-  const physical=prepareGeographicPhysicalMap256({planet:c.planet,factions:c.worldFactions,tile:input.tile,width:size,height:size,tick:c.tick,calendarOrigin:input.calendarOrigin,nextId:c.nextId,rng:c.rng,
+  const physical=prepareGeographicPhysicalMap256({schemaVersion:c.schemaVersion,planet:c.planet,factions:c.worldFactions,tile:input.tile,width:size,height:size,tick:c.tick,calendarOrigin:input.calendarOrigin,nextId:c.nextId,rng:c.rng,
    ...(input.init?{init:input.init}:{}),initialWeather:{gameInitDataPresent:false,daysPassedSinceSettle:input.daysPassedSinceSettle},definitionContext:{isStartingMap:false,mapInitializing:true,tutorial:input.context.tutorial,nomadicFactor:input.context.nomadicFactor,...!settlement?{maxValue:0}:{},usedRectCells:new Set(usedRects.flatMap(r=>{const out:number[]=[];for(let z=Math.max(0,r.minZ);z<=Math.min(size-1,r.maxZ);z++)for(let x=Math.max(0,r.minX);x<=Math.min(size-1,r.maxX);x++)out.push(z*size+x);return out;}))}});
   const {world:w,description,composition}=physical;
   // Keep local physical calendars but carry captured shared authorities. No
@@ -150,7 +152,7 @@ function* assembleArrivalMap257(input:ArrivalMapInputs257,settlement:boolean):Ge
   if(!settlement)w.expeditionSite={tile:input.tile,createdAt:c.tick,calendarOffset:w.climate.calendarOrigin-input.calendarOrigin-c.tick};
   // Same prospective local disease-calendar producer as existing new sites.
   // It does not age people, spend the campaign RNG or replay past checks.
-  if(w.gameProfile)adoptFluIncidents(w);if(!settlement&&(Number(w.schemaVersion)===260||w.schemaVersion===261))initializeCampRaidOwner260(w);
+  if(w.gameProfile)adoptFluIncidents(w);if(!settlement&&(Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||w.schemaVersion===262)))initializeCampRaidOwner260(w);
   const stream=(seedPart:number)=>new WorldGenerationRandom(localGenerationStepSeed(description.mapSeed,seedPart,0));
   steps.push({phase,random:composition.random.postTerrain});
   phase='roads390';yield {phase};const roads=populateGeographicRoads256(w,usedRects,input.angular);if(settlement&&roads.edges.cells!==null)working.edgeContext={width:size,height:size,edgeCells:[...roads.edges.cells]};steps.push({phase});
@@ -171,15 +173,16 @@ function* assembleArrivalMap257(input:ArrivalMapInputs257,settlement:boolean):Ge
   phase='snow1150';yield {phase};const snow=stream(INITIAL_SNOW_SEED_PART_256);initializeGeographicInitialSnow256(w,snow);steps.push({phase,random:snow.state});
   phase='animals1200';yield {phase};const animalRandom=stream(INITIAL_ANIMALS_SEED_PART_256);
   if(!c.worldPawns)throw Error('Actual Camp1200 WorldPawns owner is absent');
-  const worldAnimalGeneration=prepareWorldAnimalGeneration256(c.worldPawns,{tick:w.tick,nextId:w.nextId,random:animalRandom,situation:actualCampWorldPawnSituation256,weight:c.schemaVersion===261?provisionalCampWorldPawnWeight261:actualCampWorldPawnWeight256});
+  const worldAnimalGeneration=prepareWorldAnimalGeneration256(c.worldPawns,{tick:w.tick,nextId:w.nextId,random:animalRandom,situation:actualCampWorldPawnSituation256,weight:(Number(c.schemaVersion)===261||c.schemaVersion===262)?provisionalCampWorldPawnWeight261:actualCampWorldPawnWeight256});
   const animals=produceInitialAnimals256(w,{random:animalRandom,pawnKindOrder:input.animals.pawnKindOrder,unspawnedAnimals:input.animals.unspawned,closewalk:captureRandomClosewalk256(w),worldGeneration:worldAnimalGeneration});
   if(animals.status==='blocked')return {status:'blocked',phase,reason:animals.reason,animal:animals};
   w.wildlife=w.wildlife?{...w.wildlife,animals:[...w.wildlife.animals,...animals.originals]}:{profile:GEOGRAPHIC_FAUNA_PROFILE_256,rng:input.animals.runtimeRng,animals:animals.originals,eatenPlants:0,eatenNutrition:0,eatenItems:0};w.nextId=animals.nextId;steps.push({phase,random:animalRandom.state});
+  initializeGeographicRenewal262(w);
   phase='fog1500';yield {phase};const fogRandom=stream(INITIAL_FOG_SEED_PART_256),reach=captureGeographicGenerationReachability256(w),fog=initializeExploration256(w,{start:start.cell,rootsToUnfog:input.fog.rootsToUnfog,readers:{standable:reach.physical.standable,roofed:reach.physical.roofed,canReachMapEdgeNoPassClosedDoorsOrWater:reach.canReachMapEdgeNoPassClosedDoorsOrWater},...(working.edgeContext?{edgeContext:working.edgeContext}:{})},captureActualFogPhysical256(w),fogRandom);steps.push({phase,random:fogRandom.state});
   if(settlement)wakeUnfoggedTempleMechs256(w);
   phase='flowPostFog1600';yield {phase};let riverFlow:ReturnType<typeof generateLocalRiverFlow256>|null=null;
   if(composition.plans.init.river||composition.plans.river){if(!composition.plans.init.river||!composition.plans.river)throw Error('Actual river Init/node pair is incomplete');riverFlow=generateLocalRiverFlow256({plan:composition.plans.init.river,node:composition.plans.river,isRiver:cell=>{const t=w.tiles[cell]!;return !t.floor&&!t.bridge&&isNaturalTerrain256(t.terrain)&&NATURAL_TERRAIN_DEFINITIONS_256[t.terrain].river;}});w.riverWater=packRiverWater256(riverFlow.values,w.width,w.height);}steps.push({phase});
-  if(settlement){adoptWind(w);ensureFireState(w);if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||w.schemaVersion===261)&&w.gameProfile){enableCassandraRaids(w,true);adoptMiscIncidents(w);enableVisitors(w,false,true);adoptColonyEconomy(w);}}
+  if(settlement){adoptWind(w);ensureFireState(w);if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||w.schemaVersion===262))&&w.gameProfile){enableCassandraRaids(w,true);adoptMiscIncidents(w);enableVisitors(w,false,true);adoptColonyEconomy(w);}}
   if(w.pawns.length||w.startingArrival||w.jobs.length||w.stockpiles.length||w.growingZones.length||w.planet!==c.planet||w.worldFactions!==c.worldFactions||w.tick!==c.tick||w.rng!==c.rng)throw Error('Local generation acquired a starting scenario, foreign authority or advanced clock');
   // Fresh physical owners only; foreign faction leaders/shared knowledge are
   // references outside this map. Identity holes from true Vanish stay holes.
@@ -191,7 +194,7 @@ function* assembleArrivalMap257(input:ArrivalMapInputs257,settlement:boolean):Ge
   for(const tile of w.tiles)if(tile.mineable)add(tile.mineable.id);
   for(const rows of [w.structures,w.resources,w.piles,w.geysers?.items??[],w.filth?.items??[],w.wildlife?.animals??[],w.mechanoids??[]])for(const owner of rows)add(owner.id);
   if(w.packed.length||w.wildlife?.flyers?.length)throw Error('Unrepresented generated Camp holder');
-  phase='local-schema';const admission=validateGeneratedLocalMap256(w,{calendarOrigin:input.calendarOrigin,...settlement?{settlement:true as const}:{}});
+  phase='local-schema';const admission=validateGeneratedLocalMap256(w,{calendarOrigin:input.calendarOrigin,...settlement?{settlement:true as const,settlementDimensions:'settlement'in input?input.settlement.dimensions:undefined}:{}});
   if(admission.length)throw Error(`Generated Camp local schema refused: ${admission.join(' ')}`);
   return {status:'ready',world:w,nextId:w.nextId,rng:w.rng,start:start.cell,riverFlow,worldAnimalGeneration,initialGrowth:animals.initialGrowth,adjacentPermutation:working.adjacentPermutation,adjacentUses:working.adjacentUses,...fog.edgeContext?{edgeContext:fog.edgeContext}:{},steps,initialization:physical.initialization,frontier:settlement?'generated-settlement-before-entry-and-campaign-adoption':'generated-encounter-before-entry-and-campaign-adoption'};
  }catch(error){return {status:'blocked',phase,reason:error instanceof Error?error.message:String(error)};}

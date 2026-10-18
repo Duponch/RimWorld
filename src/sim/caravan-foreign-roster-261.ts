@@ -18,7 +18,7 @@ export interface ForeignRoster261 {people:Pawn[];items:MaterialPile[];nextId:num
  * entry installs the real controller once. No new biology, names or equipment
  * distribution is claimed as native parity. Preparing never writes the source. */
 export function draftForeignRoster261(w:World,kind:'combat'|'trader',factionId:number,points:number,initialRng:number):ForeignRoster261|null {
- if(w.schemaVersion!==261||!w.worldFactions||!w.worldFactions.factions.some(f=>f.id===factionId&&f.id!==w.worldFactions!.playerFactionId)||!w.foodPolicies[0]||!Number.isSafeInteger(initialRng)||initialRng<1||initialRng>0xffffffff)return null;
+ if((Number(w.schemaVersion)!==261&&w.schemaVersion!==262)||!w.worldFactions||!w.worldFactions.factions.some(f=>f.id===factionId&&f.id!==w.worldFactions!.playerFactionId)||!w.foodPolicies[0]||!Number.isSafeInteger(initialRng)||initialRng<1||initialRng>0xffffffff)return null;
  const random={rng:initialRng};
  const composition=kind==='combat'?Number.isFinite(points)&&points>=35&&points<=10000?chooseRaidComposition(points,random):undefined:undefined;
  if(kind==='combat'&&!composition?.roster.length)return null;

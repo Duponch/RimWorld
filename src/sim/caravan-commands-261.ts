@@ -16,7 +16,7 @@ export function validCaravanCommand261(v:unknown):v is CaravanCommand261 {
 }
 export function applyCaravanCommand261(root:CampaignState,c:CaravanCommand261):CommandResult {
  const fail=(reason:string):CommandResult=>({ok:false,code:'invalid-command',reason});
- if(root.schemaVersion!==261||!validCaravanCommand261(c))return fail('Commande de rencontre invalide.');
+ if((Number(root.schemaVersion)!==261&&root.schemaVersion!==262)||!validCaravanCommand261(c))return fail('Commande de rencontre invalide.');
  const r=root.worldGroups?.groups.find(r=>r.state.id===c.groupId),p=r?.pending261,g=r?.state;
  if(!r||!p||!g||!('members'in g)||r.localMapId!==null||p.atCore!==root.tick*10)return fail('Cette rencontre réelle est absente.');
  if(c.type==='caravan-encounter-choice'&&c.choice==='retry')return p.decision!=='open'?{ok:true}:fail('Choisissez d’abord la décision réelle.');

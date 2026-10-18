@@ -16,7 +16,7 @@ function dataGraph(v:unknown,seen=new Set<object>()):boolean {
  * home-agenda slot is a TempMap visitor calendar. Archives keep their existing
  * validators and global identity namespace. Historical versions reject it. */
 export function validTempTravelerHeader261(v:unknown,w:World,version:number):boolean {
- if(version!==261||!v||typeof v!=='object'||Object.getPrototypeOf(v)!==Object.prototype||!tempMapModern261(w))return false;
+ if((version!==261&&version!==262)||!v||typeof v!=='object'||Object.getPrototypeOf(v)!==Object.prototype||!tempMapModern261(w))return false;
  const names=['profile','adoptedAt','rng','serial','groups','departed'];
  if(Reflect.ownKeys(v).length!==names.length||!names.every(k=>ownData(v,k)))return false;
  const s=v as Record<string,unknown>,adopted=tempMapAdoptedAtCore261(w);
@@ -30,6 +30,6 @@ export function validTempTravelerHeader261(v:unknown,w:World,version:number):boo
  * Validate dormant pending dates against that last confirmed tick. All
  * other group, archive and actor chronology is validated at the current tick. */
 export function visitorAgendaClock261(w:World,version:number):number {
- const core=version>=261&&tempMapModern261(w)?tempMapAdoptedAtCore261(w):undefined;
+ const core=(version===261||version===262)&&tempMapModern261(w)?tempMapAdoptedAtCore261(w):undefined;
  return core===undefined?w.tick:core/10;
 }

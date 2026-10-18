@@ -35,7 +35,7 @@ export function prepareMapRaiderWorldExit261(w:World,carrier:Pawn,patient?:Pawn)
  const root=registeredCampaign(w),mapId=registeredMapId(w),state=root.worldPawns,factions=root.worldFactions;
  const calendar=w.raids,group=carrier.raid?.group,active=raidGroup261(w,group);
  const source=raidSource261(w,group),captor=source?.caravan261??source?.tempIncident261;
- if(w.schemaVersion!==261||root.schemaVersion!==261||!w.pawns.includes(carrier)||mapId===undefined||registeredMap(root,mapId)!==w||w.tick!==root.tick||!root.worldMaps?.sites.some(s=>s.id===mapId)||!state||!factions||!captor||group===undefined||active?.id===group&&!active.members?.includes(carrier.id))return no('La sortie ne possède pas ses vrais propriétaires carte/faction/assaut.');
+ if((Number(w.schemaVersion)!==261&&w.schemaVersion!==262)||(Number(root.schemaVersion)!==261&&root.schemaVersion!==262)||!w.pawns.includes(carrier)||mapId===undefined||registeredMap(root,mapId)!==w||w.tick!==root.tick||!root.worldMaps?.sites.some(s=>s.id===mapId)||!state||!factions||!captor||group===undefined||active?.id===group&&!active.members?.includes(carrier.id))return no('La sortie ne possède pas ses vrais propriétaires carte/faction/assaut.');
  if('kind'in captor&&captor.kind==='pressure'&&captor.sourceMapId!==mapId)return no('La pression ne provient pas de cette vraie carte Battlefield.');
  const released=!!carrier.prisoner&&carrier.prisoner.mode==='release'&&carrier.prisoner.releasedAt!==undefined&&carrier.prisoner.releasedAt<=root.tick&&!!carrier.prisoner.escape;
  const now=root.tick*10;
@@ -60,8 +60,8 @@ export function prepareMapRaiderWorldExit261(w:World,carrier:Pawn,patient?:Pawn)
   const draft=structuredClone(original);clearReleasedPawnAssignments259(draft);cleanMapRemovedHumanRecord259(draft,w.tick);unclaimDetachedActorBed256(draft);delete draft.allowedAreaId;delete draft.allowedAreaReturn;
   const items=w.piles.filter(i=>'pawnId'in i.owner&&i.owner.pawnId===original.id),packed=w.packed.filter(p=>p.owner.type!=='ground'&&p.owner.pawnId===original.id);
   const row:CaptivityRow261={kind:'human',actor:draft,factionId:draft.worldAffiliation259!.factionId,originMapId:mapId,context,clockCore:now,enteredAtAbsCore:absolute,entryKind261:'map-exit',mode:'active',items:structuredClone(items),packed:structuredClone(packed),...original===patient?{captivity261:{factionId:captor.factionId,atCore:now}}:{}};
-  suspendWorldPawnGoods259(row,now);const boundary=worldPawnActiveBoundary256(row,261,now);if(boundary)return no(boundary);
-  const pass=preparePassedToWorld256(staged,row,factions,{float:(min,max)=>min+(max-min)*healthRandom(random)},{version:261,situation:original===patient?'Kidnapped':'Free',conditions});if(!pass.ok)return no(pass.reason);pass.commit();prepared.push({original,row:pass.row,items,packed,history});
+  suspendWorldPawnGoods259(row,now);const boundary=worldPawnActiveBoundary256(row,root.schemaVersion,now);if(boundary)return no(boundary);
+  const pass=preparePassedToWorld256(staged,row,factions,{float:(min,max)=>min+(max-min)*healthRandom(random)},{version:root.schemaVersion,situation:original===patient?'Kidnapped':'Free',conditions});if(!pass.ok)return no(pass.reason);pass.commit();prepared.push({original,row:pass.row,items,packed,history});
  }}catch(e){return no(e instanceof Error?e.message:String(e));}
  const removedIds=new Set(originals.map(p=>p.id)),targeters=w.pawns.filter(p=>!removedIds.has(p.id)&&[p.shooting?.order?.targetId,p.melee?.order?.targetId,p.tactics?.targetId].some(id=>id!==undefined&&id!==null&&removedIds.has(id)));
  if(targeters.some(p=>!mutableWorldPawnOriginal256(p)))return no('Une référence de combat à libérer n’est pas mutable.');

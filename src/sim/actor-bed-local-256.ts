@@ -73,7 +73,7 @@ export function captureActorBeds256(input:CampaignState):ActualActorBeds256 {
   }
  }
  for(const owner of root.worldPawns?.owners??[]){if(owner.kind!=='mechanical')actor(owner.actor,null);for(const p of owner.packed)packed(p);}
- if(root.schemaVersion>=261)for(const group of root.worldGroups?.groups??[]){for(const a of group.pending261?.animals??[])actor(a,null);for(const p of group.pending261?.packed??[])packed(p);}
+ if((Number(root.schemaVersion)===261||root.schemaVersion===262))for(const group of root.worldGroups?.groups??[]){for(const a of group.pending261?.animals??[])actor(a,null);for(const p of group.pending261?.packed??[])packed(p);}
  for(const owner of root.worldFactions?.leaders??[])actor(owner.pawn,null);
  for(const record of root.worldGroups?.groups??[])if('members' in record.state){
   const state=record.state as typeof record.state&{animalOwners?:GroupAnimalOwners256};

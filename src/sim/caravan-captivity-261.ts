@@ -22,7 +22,7 @@ export type PreparedCaptivity261=({ok:true;row:CaptiveWorldPawn261}&PreparedCara
  * replayed. PreKidnapped clears guest status and bed ownership at this real act. */
 export function prepareCaravanCaptivity261(w:World,g:AwayGroup,p:Pawn,factionId:number):PreparedCaptivity261 {
  const root=registeredCampaign(w),state=root.worldPawns,factions=root.worldFactions;
- if(w.schemaVersion!==261||!state||!factions||!g.members.includes(p)||!validWorldAffiliationForeignKeys259(p,factions)||!p.worldAffiliation259||p.worldAffiliation259.factionId===factionId||!factions.factions.some(f=>f.id===factionId&&f.id!==factions.playerFactionId)||state.owners.some(r=>r.actor===p||r.actor.id===p.id)||!nativeWorldPawnOrderCurrent256(state,state.nativeOrder))return {ok:false,reason:'La captivité ne possède pas les autorités réelles.'};
+ if((Number(w.schemaVersion)!==261&&w.schemaVersion!==262)||!state||!factions||!g.members.includes(p)||!validWorldAffiliationForeignKeys259(p,factions)||!p.worldAffiliation259||p.worldAffiliation259.factionId===factionId||!factions.factions.some(f=>f.id===factionId&&f.id!==factions.playerFactionId)||state.owners.some(r=>r.actor===p||r.actor.id===p.id)||!nativeWorldPawnOrderCurrent256(state,state.nativeOrder))return {ok:false,reason:'La captivité ne possède pas les autorités réelles.'};
  const origin=g.reorganization?.memberOrigins.find(o=>o.pawnId===p.id);
  if(!origin||!Number.isSafeInteger(origin.enteredAtAbsCore))return {ok:false,reason:'La vraie date d’entrée mondiale du membre est absente.'};
  // Current supported away dossiers have no live map work to clean. A missing
@@ -31,7 +31,7 @@ export function prepareCaravanCaptivity261(w:World,g:AwayGroup,p:Pawn,factionId:
  const preview=structuredClone(p);clearActualGuest259(preview);unclaimDetachedActorBed256(preview);
  const row:CaptiveWorldPawn261={kind:'human',actor:preview,factionId:preview.worldAffiliation259!.factionId,
   originMapId:origin.originMapId,context:origin.context,clockCore:root.tick*10,enteredAtAbsCore:origin.enteredAtAbsCore!,entryKind259:'caravan-exit',mode:'active',items:[],packed:[],captivity261:{factionId,atCore:root.tick*10}};
- const boundary=worldPawnActiveBoundary256(row,261,root.tick*10);if(boundary)return {ok:false,reason:boundary};
+ const boundary=worldPawnActiveBoundary256(row,root.schemaVersion,root.tick*10);if(boundary)return {ok:false,reason:boundary};
  const actorBefore=JSON.stringify(p),tick=root.tick,membership=state.owners.slice(),nativeBefore=state.nativeOrder;
  let nativeAfter=nativeBefore;if(nativeAfter)nativeAfter=passNativeWorldPawnOrder256(nativeAfter,p.id,false);
  let used=false;
@@ -47,14 +47,14 @@ export function prepareCaravanCaptivity261(w:World,g:AwayGroup,p:Pawn,factionId:
  * date rewrite, auto-tend or invented clinical suspension at this boundary. */
 export function prepareCaravanAnimalCession261(root:CampaignState,g:AwayGroup,animals:readonly WildAnimal[]):({ok:true}&PreparedCaravanCession261)|{ok:false;reason:string} {
  const state=root.worldPawns,factions=root.worldFactions;
- if(root.schemaVersion!==261||!state||!factions||!animals.length||!g.animalOwners||g.lastPersonalTick!==root.tick||!nativeWorldPawnOrderCurrent256(state,state.nativeOrder))return {ok:false,reason:'Les propriétaires animaux mondiaux ne sont pas disponibles.'};
+ if((Number(root.schemaVersion)!==261&&root.schemaVersion!==262)||!state||!factions||!animals.length||!g.animalOwners||g.lastPersonalTick!==root.tick||!nativeWorldPawnOrderCurrent256(state,state.nativeOrder))return {ok:false,reason:'Les propriétaires animaux mondiaux ne sont pas disponibles.'};
  const tick=root.tick,before=state.nativeOrder,membership=state.owners.slice(),snapshots=animals.map(a=>JSON.stringify(a)),rows:WorldPawnOwner256[]=[];
  let after=before;
  for(const actor of animals){
   const origin=g.animalOwners.origins.find(o=>o.pawnId===actor.id);
   if(!g.animalOwners.members.includes(actor)||!origin||!Number.isSafeInteger(origin.enteredAtAbsCore)||state.owners.some(r=>r.actor===actor||r.actor.id===actor.id)||actor.state==='dead'||actor.health?.death)return {ok:false,reason:'Un animal cédé n’a plus sa vraie provenance de caravane.'};
   const row:WorldPawnOwner256={kind:'animal',actor,factionId:actor.domestic?factions.playerFactionId:null,originMapId:origin.originMapId,context:origin.context,clockCore:tick*10,enteredAtAbsCore:origin.enteredAtAbsCore!,entryKind259:'caravan-exit',mode:'active',free:true,items:[],packed:[]};
-  const boundary=worldPawnActiveBoundary256(row,261,tick*10);if(boundary)return {ok:false,reason:boundary};rows.push(row);if(after)after=passNativeWorldPawnOrder256(after,actor.id,false);
+  const boundary=worldPawnActiveBoundary256(row,root.schemaVersion,tick*10);if(boundary)return {ok:false,reason:boundary};rows.push(row);if(after)after=passNativeWorldPawnOrder256(after,actor.id,false);
  }
  let used=false;
  const current=()=>!used&&root.tick===tick&&root.worldPawns===state&&root.worldFactions===factions&&state.owners.length===membership.length&&state.owners.every((r,i)=>r===membership[i])&&animals.every((a,i)=>g.animalOwners?.members.includes(a)&&JSON.stringify(a)===snapshots[i])&&nativeWorldPawnOrderCurrent256(state,before);
@@ -64,7 +64,7 @@ export function prepareCaravanAnimalCession261(root:CampaignState,g:AwayGroup,an
  * operates here; age, health, tending and needs remain their existing owners.
  * Every15051Core boundary inside this confirmed ten-Core interval is visited. */
 export function advanceCaravanCaptivity261(root:CampaignState):void {
- if(root.schemaVersion!==261||root.tick<1||!root.worldPawns||!root.worldFactions)return;
+ if((Number(root.schemaVersion)!==261&&root.schemaVersion!==262)||root.tick<1||!root.worldPawns||!root.worldFactions)return;
  const rows=root.worldPawns.owners as CaptiveWorldPawn261[],factions=root.worldFactions;
  for(const row of rows)if(row.destroyed===true)delete row.captivity261;
  const first=(root.tick-1)*10+1,last=root.tick*10;

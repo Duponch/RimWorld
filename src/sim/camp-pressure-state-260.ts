@@ -8,7 +8,7 @@ export function newCampPressure260(core:number):CampPressure260|undefined {
 /** Absence is historical/unarmed, never a reason to start a timer at load. */
 export function validCampPressure260(value:unknown,version:number,kind:WorldMapRecord['kind'],createdAt:number):value is CampPressure260|undefined {
  if(value===undefined)return true;
- if(version<260||!(kind==='camp'||version>=261&&kind==='battlefield')||!value||typeof value!=='object'||Array.isArray(value)||Object.getPrototypeOf(value)!==Object.prototype)return false;
+ if(version<260||!(kind==='camp'||(version===261||version===262)&&kind==='battlefield')||!value||typeof value!=='object'||Array.isArray(value)||Object.getPrototypeOf(value)!==Object.prototype)return false;
  const d=Object.getOwnPropertyDescriptors(value),keys=['revision','raidAtCore','notifyAtCore','alert','raidsSent'];
  if(Reflect.ownKeys(value).length!==keys.length||!keys.every(k=>Object.hasOwn(d,k)&&Object.hasOwn(d[k]!,'value')&&d[k]!.enumerable))return false;
  const p=value as CampPressure260;

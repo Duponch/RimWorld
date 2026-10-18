@@ -112,7 +112,7 @@ export function processPrisonerRelease(world:World,actor:Pawn,context:NeedContex
   patient.motion=null;patient.moveCooldown=0;forgetLocalActorBed256(world,patient);patient.need=null;
   patient.state='idle';patient.planCooldown=0;patient.needCooldown=0;
   if(world.schemaVersion>=213&&isColonist(patient)){
-    if((Number(world.schemaVersion)===259||Number(world.schemaVersion)===260||world.schemaVersion===261)&&patient.worldAffiliation259)clearActualGuest259(patient);else delete patient.prisoner;
+    if((Number(world.schemaVersion)===259||Number(world.schemaVersion)===260||(Number(world.schemaVersion)===261||world.schemaVersion===262))&&patient.worldAffiliation259)clearActualGuest259(patient);else delete patient.prisoner;
     context.event(`${actor.name} a libÃ©rÃ© ${patient.name}, qui retrouve sa libertÃ© dans la colonie.`);
   }else{
     patient.prisoner!.releasedAt=world.tick;patient.prisoner!.escape={...exit};

@@ -13,7 +13,7 @@ const INPUT_SHA='70dea3811dab70e7225cced4c715c8438b1d7aecec6aa173ac72eaa52115e69
 const sha=(s:string)=>createHash('sha256').update(s).digest('hex');
 const memberIds=[7,8],sources=[{pileId:36326,quantity:10},{pileId:2308,quantity:10},{pileId:36331,quantity:9},{pileId:36332,quantity:7}];
 function admitted261(root:CampaignState):asserts root is World {
- if(root.schemaVersion!==261||!('pawns'in root)||root.planet?.revision!==3||!root.worldMaps||!root.worldGroups||!root.worldPawns)throw Error('Actual migrated261 campaign required');
+ if(Number(root.schemaVersion)!==261||!('pawns'in root)||root.planet?.revision!==3||!root.worldMaps||!root.worldGroups||!root.worldPawns)throw Error('Actual migrated261 campaign required');
  expect(validateWorld(root)).toEqual([]);
 }
 async function acquired261(){

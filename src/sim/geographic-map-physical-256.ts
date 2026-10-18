@@ -22,6 +22,7 @@ import {createApparelWearCalendar} from './apparel-renewal.ts';
 export interface GeographicPhysicalMapInputs256 {
  readonly planet:GeographicPlanetState;readonly factions:WorldFactionRegistry256;
  readonly tile:number;readonly width:number;readonly height:number;
+ readonly schemaVersion?:number;
  readonly tick:number;readonly calendarOrigin:number;readonly nextId:number;readonly rng:number;
  readonly definitionContext:LocalDefinitionContext256;
  /** Actual captured successful pre-mutator stream. Omission preserves the closed default. */
@@ -38,7 +39,7 @@ export function prepareGeographicPhysicalMap256(input:GeographicPhysicalMapInput
  const init=input.init??localMapInit256(description.mapSeed,width,height);
  const world:World=emptyGeographicLandscape256(description.mapSeed,width,height);
  world.tick=tick;world.rng=rng;world.planet=planet;world.worldFactions=factions;world.site=site;
- world.climate=createGeographicSiteClimate256(planet,tile,{tick,calendarOrigin});
+ world.climate=createGeographicSiteClimate256(planet,tile,{tick,calendarOrigin,schemaVersion:input.schemaVersion});
  const mineables=createMineableGenerationRecorder256(width,height,nextId);
  const composition=composeLocalSurface256({width,height,site:description,rules,mutatorCode:site.mutatorCode,mineableOwner:mineables,
   lakeCoastAngle:surfaceCoastAngle256(owner.surface,tile,'lake'),init,definitionContext:input.definitionContext,

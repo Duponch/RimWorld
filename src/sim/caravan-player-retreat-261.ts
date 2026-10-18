@@ -26,7 +26,7 @@ const writable=(o:object,k:string)=>{const d=Object.getOwnPropertyDescriptor(o,k
  * unfinished edge/patient/source never holds an already exiting owner. */
 function retreatUnits261(w:World,c:Start){
  const root=registeredCampaign(w),id=registeredMapId(w),site=(root.worldMaps?.sites??(w.campaignMap?.revision===2?w.campaignMap.maps:[])).find(s=>s.id===id),planet=root.planet;
- if(w.schemaVersion!==261||c.retreat261!==true||id!==c.originMapId||site?.kind!=='battlefield'||!site.battlefield261||!planet||!root.worldFactions)return no('La fuite exige le vrai Battlefield261 affiché.');
+ if((Number(w.schemaVersion)!==261&&w.schemaVersion!==262)||c.retreat261!==true||id!==c.originMapId||site?.kind!=='battlefield'||!site.battlefield261||!planet||!root.worldFactions)return no('La fuite exige le vrai Battlefield261 affiché.');
  const full=previewFormation(w,c.memberIds,c.sources,c.destination,c.packedIds??[],c.animalIds??[],true);if(full.kind!=='ready')return no(full.kind==='deferred'?'La route attend une nouvelle tentative.':full.reason);
  const owners=full.loading.capture.members.filter(p=>groupFreeHuman257(p)&&groupHumanMobile257(p));if(!owners.length)return no('Un propriétaire autonome doit sortir.');
  const units=new Map(owners.map(p=>[p.id,new Set([p.id])])),ownerOf=new Map(owners.map(p=>[p.id,p.id]));
@@ -62,7 +62,7 @@ export function playerRetreatJoinTile261(planet:NonNullable<CampaignState['plane
 export function preparePlayerRetreatDeparture261(w:World,next:AwayGroup,enteredAtAbsCore:number|undefined){
  const root=registeredCampaign(w),record=boundWorldGroup(w),site=root.worldMaps?.sites.find(s=>s.id===record?.originMapId),groups=root.worldGroups;
  if(!record?.retreat261)return {ok:true as const,next,targetId:undefined,current:()=>true,commit(){return false;}};
- if(w.schemaVersion!==261||record.localMapId!==site?.id||site?.kind!=='battlefield'||!site.battlefield261||!groups||enteredAtAbsCore===undefined||!writable(groups,'groups')||!writable(groups,'selectedGroupId')||!writable(record,'state')||!writable(record,'localMapId')||!writable(record,'story261')||!writable(record,'arrival261')||!writable(record,'retreat261')||!writable(site.battlefield261,'retained'))return no('Le vrai mandat de sortie n’est plus disponible.');
+ if((Number(w.schemaVersion)!==261&&w.schemaVersion!==262)||record.localMapId!==site?.id||site?.kind!=='battlefield'||!site.battlefield261||!groups||enteredAtAbsCore===undefined||!writable(groups,'groups')||!writable(groups,'selectedGroupId')||!writable(record,'state')||!writable(record,'localMapId')||!writable(record,'story261')||!writable(record,'arrival261')||!writable(record,'retreat261')||!writable(site.battlefield261,'retained'))return no('Le vrai mandat de sortie n’est plus disponible.');
  const context=record.context,origins=next.members.map(p=>({pawnId:p.id,originMapId:site.id,context,enteredAtAbsCore}));
  let departing:AwayGroup={...next,travel:{revision:1,tickDelta:0,forage:newGroupForageRevision256(next.items)},reorganization:openGroupReorganization(next,[],w.tick,origins)};
  if(departing.animalOwners)departing={...departing,animalOwners:{...departing.animalOwners,origins:departing.animalOwners.members.map(a=>({pawnId:a.id,originMapId:site.id,context,enteredAtAbsCore}))}};

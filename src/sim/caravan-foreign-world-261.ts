@@ -19,7 +19,7 @@ export type ForeignWorldPlan261={ok:true;nextRng:number;current():boolean;commit
  * the whole transaction has validated. Their finite stocks follow their holders. */
 export function prepareEncounterForeignWorld261(root:CampaignState,record:EncounterGroup261,initialRng=root.rng):ForeignWorldPlan261 {
  const pending=record.pending261,state=root.worldPawns,factions=root.worldFactions,context=worldGroupContext(root,record.state.id),group=record.state;
- if(root.schemaVersion!==261||!pending||pending.animalAmbush261||!state||!factions||!context||!('members'in group)||state.atCore!==root.tick*10||!nativeWorldPawnOrderCurrent256(state,state.nativeOrder))return {ok:false,reason:'Les destinataires mondiaux de la rencontre sont indisponibles.'};
+ if((Number(root.schemaVersion)!==261&&root.schemaVersion!==262)||!pending||pending.animalAmbush261||!state||!factions||!context||!('members'in group)||state.atCore!==root.tick*10||!nativeWorldPawnOrderCurrent256(state,state.nativeOrder))return {ok:false,reason:'Les destinataires mondiaux de la rencontre sont indisponibles.'};
  const tick=root.tick,rng=root.rng,before=JSON.stringify(pending),membership=state.owners.slice(),nativeBefore=state.nativeOrder;
  const staged:WorldPawnsState256={...state,owners:state.owners.slice()},random={rng:initialRng};
  const conditions:WorldPawnFactionCondition256[]=[];
@@ -32,8 +32,8 @@ export function prepareEncounterForeignWorld261(root:CampaignState,record:Encoun
    encounterBirth261:{groupId:group.id,tile:group.tile,atCore:pending.atCore,kind:pending.kind}};
   const row:WorldPawnOwner256='species'in actor?{...common,kind:'animal',actor:structuredClone(actor)}:{...common,kind:'human',actor:structuredClone(actor)};
   suspendWorldPawnGoods259(row,tick*10);
-  const boundary=worldPawnActiveBoundary256(row,261,tick*10);if(boundary)return {ok:false,reason:boundary};
-  const entry=preparePassedToWorld256(staged,row,factions,{float:(min,max)=>min+healthRandom(random)*(max-min)},{version:261,situation:'Free',conditions});
+  const boundary=worldPawnActiveBoundary256(row,root.schemaVersion,tick*10);if(boundary)return {ok:false,reason:boundary};
+  const entry=preparePassedToWorld256(staged,row,factions,{float:(min,max)=>min+healthRandom(random)*(max-min)},{version:root.schemaVersion,situation:'Free',conditions});
   if(!entry.ok)return {ok:false,reason:entry.reason};entry.commit();prepared.push({original:actor,row:entry.row});
  }
  const current=()=>root.tick===tick&&root.rng===rng&&record.pending261===pending&&JSON.stringify(pending)===before&&root.worldPawns===state&&root.worldFactions===factions&&state.owners.length===membership.length&&state.owners.every((r,i)=>r===membership[i])&&nativeWorldPawnOrderCurrent256(state,nativeBefore);

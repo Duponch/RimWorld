@@ -14,7 +14,7 @@ test.skip(process.env.TRAVEL261_MEETING_NATIVE!=='1','ROOT only: acquired actual
 const INPUT_SHA='d33c8646896b86b1eceebf45f7e500b367c10fe68a0cee75af6540e9767dac32';
 const COMPLETE_SHA='057390e4e232fb7d061a31062604b02bbe6fbbe11bd036f6970a1447425a9792';
 const sha=(s:string)=>createHash('sha256').update(s).digest('hex');
-function admitted(root:CampaignState):asserts root is World {if(root.schemaVersion!==261||!('pawns'in root)||!root.worldMaps||!root.worldGroups||!root.worldPawns)throw Error('Actual261 authorities required');expect(validateWorld(root)).toEqual([]);}
+function admitted(root:CampaignState):asserts root is World {if(Number(root.schemaVersion)!==261||!('pawns'in root)||!root.worldMaps||!root.worldGroups||!root.worldPawns)throw Error('Actual261 authorities required');expect(validateWorld(root)).toEqual([]);}
 function totals(items:readonly MaterialPile[]){const result:Record<string,number>={};for(const p of items)result[p.item]=(result[p.item]??0)+p.quantity;return result;}
 type Trace={direction:string;worker:number;type:string;id?:number;command?:{type:string;groupId?:number;choice?:string;lines?:{pileId:number;quantity:number}[];quote?:string;acceptShortfall?:boolean};ok?:boolean;reason?:string;checkpoint?:unknown;epoch?:number;revision?:number;at:number};
 const trace=(page:Page)=>page.evaluate(()=>(window as unknown as {__owners414Transport:Trace[]}).__owners414Transport.slice());

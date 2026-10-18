@@ -22,7 +22,7 @@ export function advanceCampPressure260(input:CampaignState):void {
  const core=root.tick*10;
  for(const site of root.worldMaps.sites.slice().sort((a,b)=>a.id-b.id)){
   const p=site.campPressure;if(!p)continue;
-  const map=registeredMap(root,site.id);if(!(site.kind==='camp'||root.schemaVersion>=261&&site.kind==='battlefield')||!map){delete site.campPressure;continue;}
+  const map=registeredMap(root,site.id);if(!(site.kind==='camp'||(Number(root.schemaVersion)===261||root.schemaVersion===262)&&site.kind==='battlefield')||!map){delete site.campPressure;continue;}
   if(p.notifyAtCore!==null&&core>=p.notifyAtCore){p.notifyAtCore=null;p.alert=true;notice(root,map,`Camp ${site.id} · détecté. Première tentative d’attaque dans ${Math.max(0,p.raidAtCore-core)/60000} jour(s).`);}
   if(core>=p.raidAtCore){
    // Real timer attempt spends its draw BEFORE producer failure/success, like Core.
