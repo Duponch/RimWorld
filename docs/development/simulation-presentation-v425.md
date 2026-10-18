@@ -1,6 +1,6 @@
 # Simulation et admission de présentation — V425, lot partiel qualifié par reprises
 
-18 octobre 2026. **Lot partiel qualifié par reprises, prêt pour publication ; non publié à l’état de cette note.** Suite de l’[audit architectural V424](performance-architecture-audit-v424.md), sur une seule colonie de référence. Schéma 263 inchangé ; V423 reste la dernière production publiée. Les mesures distinguent la première candidate et la candidate finale avec garde végétale. Cette tranche ne crée aucune mécanique et ne démontre ni 200 FPS ni une refonte complète de la présentation.
+18 octobre 2026. **Lot partiel qualifié par reprises, complément de survol qualifié ; publication en préparation.** Suite de l’[audit architectural V424](performance-architecture-audit-v424.md), sur une seule colonie de référence. Schéma 263 inchangé ; V423 reste la dernière production publiée. Les183,28images/s concernent uniquement une courte fenêtre caméra fixe : elles ne prouvent pas le confort pendant les mouvements. Cette tranche ne crée aucune mécanique et ne démontre ni 200 FPS ni une refonte complète de la présentation.
 
 ## Résultat actuellement établi
 
@@ -163,7 +163,7 @@ Lancé le18octobre16:59:29UTC, `native-candidate-lowmem10` reste rouge en226,239
 
 La reprise `v425-native-recovery414-2026-10-18T17-06-06.143Z-20708` passe séparément en55,669s. Sa preuve `native-recovery11/recovery-native-recover-ex-04df0-ed-windows-no-window-replay/proof.json` est complète : le même export414 est prévalidé strictement, rechargé par le vrai import, comparé entièrement, puis réexporté comme `recovered`. Input et export récupéré ont exactement le même SHA256 `8357b57f213cb52d667c18745127c4e104ffb7235bfb560c4edcf970808803ae`. Aucune fenêtre n’est rejouée ; cette reprise acquiert la conservation et la recharge du checkpoint sans rendre vert le parcours LOWMEM initial.
 
-L’utilisateur libère ensuite C:. Le relevé ROOT du18octobre17:10UTC observe19 474 644 992octets libres sur C: (environ19,5GB) et11,9GB sur E:. Ce nettoyage intervient après les fenêtres LOWMEM et la reprise414 ; aucune performance après nettoyage n’est mesurée ou attribuée à cette action.
+L’utilisateur libère ensuite C:. Le relevé ROOT du18octobre17:10UTC observe19 474 644 992octets libres sur C: (environ19,5GB) et11,9GB sur E:. Ce nettoyage intervient après les fenêtres LOWMEM et la reprise414. Les mesures caméra ajoutées plus bas lui sont postérieures ; aucune comparaison n’isole un gain attribuable à ce nettoyage.
 
 ## Présentation temporelle acquise par reprises
 
@@ -173,4 +173,45 @@ La reprise minage avec trace Worker et sonde compilées passe en89,695s, asserti
 
 L’abattage `v425-presentation-chop-2026-10-18T16-36-56.412Z-36692` passe en87,865s :9138images, p99 d’intervalle16,6ms et maximum45,8ms, zéro saut, excès de déplacement, occupation solide ou autre anomalie signalée. Les contrôles des deux phases sont donc acquis par reprises, sans annoncer un wrapper temporel entier vert ni effacer le rouge initial.
 
-Ce lot partiel est qualifié par reprises et prêt pour publication : continuations Node exactes, contrôles ciblés et temporels acquis, quatre parcours natifs/recharges du premier lot, quatre fenêtres finales avec garde et reprise entière exacte du checkpoint414. Les rouges initiaux restent conservés, notamment le parcours LOWMEM incomplet. Les1731sources servies sont gelées exactes ; aucun commit ou déploiement V425 n’est établi dans cette note et la publication reste ouverte. Les limites de débit des Aulnes, la cadence finale×6 du départ et le budget de5ms par image restent ouverts ; aucun confort général rétabli n’est annoncé.
+Le premier lot est acquis par reprises : continuations Node exactes, contrôles ciblés et temporels acquis, quatre parcours natifs/recharges du premier lot, quatre fenêtres finales avec garde et reprise entière exacte du checkpoint414. Les rouges initiaux restent conservés, notamment le parcours LOWMEM incomplet. Ses1731sources sont gelées et son commit local est `b82c95c1a16f79e56c57da14e7d55d7db5d0697f`. Le signalement caméra suspend la publication pendant le complément ci-dessous. Les limites de débit des Aulnes, la cadence finale×6 du départ et le budget de5ms par image restent ouverts.
+
+## Complément caméra : mouvements rapides, vue large et inclinée
+
+Le signalement humain concerne `localhost:5173`, également en pause. Le pilote privé `tmp/performance-camera-v425/camera-native.spec.ts` reprend le même départ réel250² au35 : vue perspective, inclinaison basse, huit gestes de dézoom240, puis300mouvements de souris erratiques en rotation droite et pan milieu, ainsi que la molette. Les fenêtres de quatre secondes utilisent les vrais événements du navigateur ; aucune écriture de caméra ou World ne remplace les gestes. Poses, durées réelles et entrées sont conservées, car les gestes successifs et l’inertie ne produisent pas toujours des poses finales identiques.
+
+Chrome155 natif WebGPU AMD RDNA1,2560×1440/DPR1, réglages équilibrés60Hz/2048, textures/herbe/pièce/diorama actifs. La référence `native-localhost-base06` donne en pause239,97images/s fixe,167,42en rotation et179,89en pan. À×1, la rotation donne112,71images/s, p99=41,7ms et maximum83,3ms ; des pointes existent aussi à caméra fixe. Ces relevés courts instrumentés ne prouvent ni endurance ni200images physiquement affichées.
+
+Les profils pondérés retrouvent deux coûts distincts : l’invalidation urgente de caméra refait la passe d’ombres malgré la cadence configurée60Hz, et les événements de pointeur déclenchent picking, lectures métier et disposition DOM du survol pendant l’orbite. Le fond de la pièce est également redessiné. Les commandes statiques `RoomLayer` pèsent peu dans ces profils : leur proposition de cache reste privée. Aucune compilation GPU nouvelle n’est établie comme cause des freezes.
+
+Un essai conserve un atlas d’ombres seulement lorsque la nouvelle enveloppe, sa profondeur, sa marge de filtre et sa densité restent couvertes. Les contrôles privés et32cas ciblés passent, mais la vue agressive renouvelle encore499passes pour501images en rotation et525pour525en pan. La preuve de couverture et de densité n’autorise presque aucune réutilisation dans cette vue ; les motifs individuels de refus ne sont pas journalisés. Cet essai est **retiré intégralement**, avec copies et gel conservés sous `rejected-shadow07` ; aucun nouveau cache d’ombres ni changement de qualité ne reste dans le produit.
+
+La candidate07 combinée conserve huit fenêtres, mais le parcours de pause échoue ensuite sur l’oracle `area-feedback` : `main.ts` masque déjà ce panneau dans `b82c95c1`. La capture montre un aperçu de murs ; la reprise doit vérifier le drag réel, ses instances d’aperçu, son annulation et l’absence de commande, puis l’export entier exact. L’échec initial demeure conservé. Le parcours×1 passe séparément.
+
+Cette paire06→07 est globalement moins bonne : même la pause fixe, avec pose et géométrie identiques et sans rafraîchissement des ombres, passe239,97→196,03images/s et2,54→4,15ms CPU. En rotation, le coût CPU cumulé du survol baisse526→23ms et en pan479→27ms, mais ce gain local ne prouve pas une amélioration globale des FPS. Les calculs de couverture représentent environ0,08ms/image en rotation et n’expliquent pas tout le ralentissement. Le relevé hôte ultérieur observe un autre jeu et son client actifs, une charge CPU totale d’environ56% et3,8GB de mémoire disponible ; il ne permet pas de reconstruire leur charge à chaque fenêtre. L’utilisateur confirme qu’il préviendra une fois ce jeu fermé. L’utilisateur confirme ensuite la fermeture du jeu ; les comparaisons suivantes restent distinctes. Aucun gain FPS causal n’est retenu de07.
+
+Le seul complément produit conservé est le survol différé : dernière coordonnée consommée une fois par image, suspension pendant les boutons droite/milieu, reprise sur la vraie position avec hit-test DOM frais. Sélections, annulations et picking final de commande restent synchrones. Dix-huit cas ciblés d’entrées passent ; après retrait des ombres, typage et build Pages passent en27,954s. Les1732sources sont gelées. La reprise native `native-input-recovery08` passe en100,084s : drag réel de127,128 à133,128, aperçu résident, annulation au second bouton droit sans tâche créée, survol repris après pan et export entier identique au35. Sa preuve est complète et ses erreurs vides. Elle ne sert pas de mesure FPS pendant la charge extérieure.
+
+Schéma263, règles, sauvegardes et archives restent inchangés. Le temps d’adoption MAIN et les passes de rendu restent des limites distinctes à traiter ; les200FPS stables ne sont pas acquis. Aucun déploiement V425 n’est effectué à ce stade.
+
+### Comparaison finale du survol, sans profileur CPU
+
+Le témoin11 et la candidate12 passent en174,692s et178,309s. Chrome155 headless utilise le vrai backend WebGPU AMD RDNA1,2560×1440/DPR1 ; ce n’est pas une mesure de l’affichage physique. Le témoin sert uniquement le `ColonyRenderer.ts` original de `b82c95c1` par un plugin Vite privé sur5428 ; les autres sources sont celles du gel, sans modifier le serveur utilisateur5173. La candidate utilise5173. Pas de profil CPU ni timestamps GPU dans ces fenêtres ; les wrappers CPU/RAF et compteurs de passes sont identiques. La caméra initiale perspective et son span33,92 sont exigés avant la préparation ; après préparation, le span90,816 et les poses initiales fixe/rotation correspondent. Les phases pan/zoom gardent des écarts de pose hérités de l’inertie, enregistrés dans les rapports.
+
+| Fenêtre | Images/s témoin→survol différé | CPU image moyen, ms | RAF p99, ms | RAF maximum, ms | Intervalles>50ms | Ticks |
+|---|---:|---:|---:|---:|---:|---:|
+| Pause fixe |231,17→231,10|3,23→3,33|8,4→8,4|8,4→8,5|0→0|0→0|
+| Pause rotation |125,43→150,11|5,56→5,51|16,7→12,5|16,8→12,6|0→0|0→0|
+| Pause pan |136,99→159,06|5,20→5,20|16,7→12,4|20,8→12,5|0→0|0→0|
+| Pause molette |170,88→212,88|4,86→3,72|12,5→8,4|12,6→12,6|0→0|0→0|
+| ×1 fixe |93,53→163,77|7,16→4,15|54,2→37,5|83,3→83,4|4→1|24→24|
+| ×1 rotation |81,48→83,99|7,15→7,87|50,0→70,9|58,3→108,4|3→16|36→38|
+| ×1 pan |77,86→119,16|7,46→5,86|50,1→41,8|83,4→58,4|5→2|38→29|
+| ×1 molette |122,78→144,97|5,57→4,76|45,9→41,6|62,6→54,2|2→1|24→24|
+
+Les gains observés en pause sont19,67% en rotation et16,12% en pan ; le CPU image change peu dans ces deux fenêtres, conformément au travail de survol retiré hors RAF. La très forte variation×1 fixe, à même plage41→65 et sans geste, interdit d’attribuer tous les écarts de FPS au correctif. Une seule paire séquentielle ne neutralise pas charge hôte, JIT, GC ou pilote. Les gestes réels peuvent allonger la fenêtre : rotation×1 dure6001,8→6239,1ms et pan6280,7→4817,2ms ; les FPS sont normalisés par ces durées, les comptes de ticks et d’intervalles restent bruts.
+
+**La rotation×1 reste problématique :** moyenne presque inchangée et pointes plus mauvaises dans cette paire. Aucun confort global rétabli, élimination des freezes ou200FPS stables n’est annoncé. La paire visible profilée09/10 est également conservée : pause non appariée (span206,34 contre90,816), donc aucun gain de pause retenu ; résultats×1 mixtes. Le passage ponctuel à200images/s de10 en pause ne remplace pas le tableau final sans profileur. Les paramètres, poses, preuves et données brutes restent sous `tmp/performance-camera-v425/`.
+
+Les quatre preuves11/12 sont complètes, sans erreur ; les deux exports en pause sont entièrement identiques à leur original35. Le contrôle d’interaction08 reste acquis séparément. Les1732sources sont vérifiées exactes après les mesures ; le build final sans essai d’ombres a passé en27,954s. Aucun changement d’horloge, de bridge ou d’interpolation dans ce complément d’entrée ; les contrôles temporels du lot initial restent ceux décrits plus haut, sans leur attribuer une nouvelle exécution.
+
+Une candidate privée d’admission de flore réutilisant le témoin existant est préparée pour la suite ; elle n’est ni intégrée ni testée et aucun gain ne lui est attribué. La livraison courante contient uniquement le lot initial et ce complément d’entrée.

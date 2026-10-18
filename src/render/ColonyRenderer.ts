@@ -12,9 +12,11 @@ import {mapObjectsAt,sameMapObject} from '../ui/map-object-selection';
 import {matchingMapObjects} from '../ui/map-object-group-selection';
 import {cameraClipNear} from './camera-clip';
 import {installMapWheelZoom} from '../ui/map-wheel';
+import {DeferredMapHover} from './deferred-map-hover';
 import type {AreaAction,Cell} from '../sim/types';
 export class ColonyRenderer extends SceneRenderCore {
   private readonly selectionInput:PawnSelectionInput;
+  private readonly deferredHover=new DeferredMapHover();
   private areaPointer: { x:number; y:number } | undefined;
   private orderRightPress: {pointerId:number;x:number;y:number;at:number;tool:string;moved:boolean} | null = null;
   private readonly resizeObserver:ResizeObserver;
@@ -106,6 +108,7 @@ export class ColonyRenderer extends SceneRenderCore {
   disposeSelection():void{this.selectionInput?.dispose();}
   disconnectResize():void{this.resizeObserver?.disconnect();}
   removeInputListeners():void{
+    this.deferredHover.clear();
     this.releaseMapWheel?.();this.releaseMapWheel=undefined;
     const canvas=this.renderer.domElement;
     canvas.removeEventListener('pointerdown',this.onPointerDown,true);
@@ -123,7 +126,7 @@ export class ColonyRenderer extends SceneRenderCore {
   private onPointerDown = (event: PointerEvent): void => {
     this.onInteractionCancel();
     this.renderer.domElement.focus({preventScroll:true});
-    if(this.selectionInput.down(event))return;
+    if(this.selectionInput.down(event)){this.deferredHover.clear();return;}
     if (this.areaDrag) {
       if (event.button === 2) this.cancelDesignation();
       event.stopImmediatePropagation(); event.preventDefault(); return;
@@ -135,7 +138,8 @@ export class ColonyRenderer extends SceneRenderCore {
     };
     this.pointerDown = { x: event.clientX, y: event.clientY, button: event.button, pointerId: event.pointerId };
     this.renderer.domElement.focus({ preventScroll: true });
-    const from = this.pick(event);
+    if(event.button===1||event.button===2)this.deferredHover.beginCamera(event);
+    const from = event.button===0?this.pick(event):null;
     if (event.button === 0 && event.isPrimary && from && (isAreaAction(this.tool) || isLineBuildKind(this.tool)||this.tool==='allowed-expand'||this.tool==='allowed-shrink')) {
       event.stopImmediatePropagation(); event.preventDefault();
       this.areaDrag = this.tool==='allowed-expand'||this.tool==='allowed-shrink'?{pointerId:event.pointerId,allowed:this.tool==='allowed-expand',from}:isLineBuildKind(this.tool)
@@ -145,11 +149,13 @@ export class ColonyRenderer extends SceneRenderCore {
       // available; subsequent pointer presses are consumed by the drag branch.
       this.controls.enabled = true; this.keys.clear();
       this.areaPointer = { x:event.clientX, y:event.clientY };
+      this.deferredHover.clear();
       this.renderer.domElement.setPointerCapture(event.pointerId);
       this.hoverCell = from; this.areaSignature = ''; this.updateHover();
     }
   };
   private onPointerUp = (event: PointerEvent): void => {
+    this.deferredHover.release(event);
     if(this.selectionInput.up(event))return;
     const right=this.orderRightPress;
     if(right&&event.pointerId===right.pointerId&&event.button===2){
@@ -184,18 +190,23 @@ export class ColonyRenderer extends SceneRenderCore {
   private onPointerMove = (event: PointerEvent): void => {
     const right=this.orderRightPress;
     if(right&&event.pointerId===right.pointerId&&Math.hypot(event.clientX-right.x,event.clientY-right.y)>6)right.moved=true;
-    if(this.selectionInput.move(event))return;
+    if(this.selectionInput.move(event)){this.deferredHover.clear();return;}
     if (this.areaDrag && event.pointerId !== this.areaDrag.pointerId) return;
     if (this.areaDrag) this.areaPointer = { x:event.clientX, y:event.clientY };
     // A second mouse button changes `buttons` through pointermove, without a new pointerdown.
     if (this.areaDrag && (event.buttons & 2)) { event.preventDefault(); this.cancelDesignation(); return; }
-    const previous=this.hoverCell;
-    this.hoverCell = this.pointerOnCanvas(event) ? this.pick(event, !!this.areaDrag) : null;
-    if(previous?.x!==this.hoverCell?.x||previous?.z!==this.hoverCell?.z)this.onHover(this.hoverCell);
-    this.updateHover();
+    if(this.areaDrag)return; // Existing RAF path presents the latest areaPointer.
+    this.deferredHover.move(event);
   };
   protected refreshAreaPointer():void {
-    if (!this.areaDrag || !this.areaPointer) return;
+    if(!this.areaDrag){
+      const point=this.deferredHover.take();if(!point)return;
+      const previous=this.hoverCell;
+      this.hoverCell=document.elementFromPoint(point.x,point.y)===this.renderer.domElement?this.pickAt(point.x,point.y):null;
+      if(previous?.x!==this.hoverCell?.x||previous?.z!==this.hoverCell?.z)this.onHover(this.hoverCell);
+      this.updateHover();return;
+    }
+    if (!this.areaPointer) return;
     const {x,y}=this.areaPointer;
     const next=document.elementFromPoint(x,y)===this.renderer.domElement?this.pickAt(x,y,true):null;
     if (next?.x===this.hoverCell?.x && next?.z===this.hoverCell?.z) return;
@@ -205,6 +216,7 @@ export class ColonyRenderer extends SceneRenderCore {
     return document.elementFromPoint(event.clientX, event.clientY) === this.renderer.domElement;
   }
   private onPointerLeave = (): void => {
+    this.deferredHover.leave();
     if(this.orderRightPress)this.orderRightPress.moved=true;
     if(!this.preparing)this.recreationHints.group.visible=false;
     if(!this.preparing)this.constructionPreview.hide();
@@ -213,6 +225,7 @@ export class ColonyRenderer extends SceneRenderCore {
     if (this.areaDrag) this.updateAreaPreview(); else {this.pointerDown = null;this.updateHover();}
   };
   private onPointerCancel = (event: PointerEvent): void => {
+    this.deferredHover.cancel(event.pointerId);
     if(this.orderRightPress?.pointerId===event.pointerId)this.orderRightPress=null;
     if(this.selectionInput.active){this.selectionInput.cancel();return;}
     if (this.areaDrag?.pointerId === event.pointerId) this.cancelDesignation();
@@ -231,7 +244,7 @@ export class ColonyRenderer extends SceneRenderCore {
     }
   };
   private onKeyUp = (event: KeyboardEvent): void => { this.keys.delete(event.key.toLowerCase()); };
-  private onBlur = (): void => { this.keys.clear(); this.cancelDesignation(); };
+  private onBlur = (): void => { this.deferredHover.resume();this.keys.clear(); this.cancelDesignation(); };
 
 
 }
