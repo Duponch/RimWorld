@@ -1,5 +1,5 @@
 import {plantCompletelyIgnoresFertility256,plantSubstrateAllowed256} from './plant-substrate-256.ts';
-import {naturalPlantSubstrate256} from './natural-terrain-runtime-256.ts';
+import {naturalPlantSubstrate256,terrainGroundFertility256} from './natural-terrain-runtime-256.ts';
 import {isCavePlant256} from './cave-flora-256.ts';
 import { TICKS_PER_DAY, type Pawn, type Resource, type World } from './types.ts';
 import { plantHarvestYield } from './plant-skills.ts';
@@ -46,7 +46,7 @@ export function plantGrowthRate(light: number, temperature: number, fertility: n
 export const plantFertility = (world: World, plant: Resource): number => {
   if(isCrop(plant)) {const fertility=hydroponicFertility(world,plant);if(fertility!==undefined)return fertility;}
   const tile = world.tiles[plant.z * world.width + plant.x]!;
-  return world.schemaVersion>=256?naturalPlantSubstrate256(tile).fertility:tile.floor?0:soilFertility(tile.terrain);
+  return world.schemaVersion>=256?terrainGroundFertility256(tile):tile.floor?0:soilFertility(tile.terrain);
 };
 export const plantResting = (tick: number): boolean => {
   const day = tick % TICKS_PER_DAY / TICKS_PER_DAY;

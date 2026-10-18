@@ -2,7 +2,7 @@ import {actualAdditionalPlantOwners256} from './actual-plant-physical-masks-256.
 import type {World,Resource} from './types.ts';
 import {healthRandom} from './health.ts';
 import {localBiomeRules256} from './local-biome-rules-v256.ts';
-import {naturalPlantSubstrate256,terrainIsWater256} from './natural-terrain-runtime-256.ts';
+import {terrainGroundFertility256,terrainIsWater256} from './natural-terrain-runtime-256.ts';
 import {roofKindAt} from './roof-rules.ts';
 import {FLORA_DEFINITIONS,isPlantSpeciesInVersion} from './biome-flora.ts';
 import {createWildPlantResource256} from './wild-plant-acquisition-v256.ts';
@@ -29,7 +29,7 @@ export interface WildPlantMapReader256 {
 export function runtimePlantCell256(world:World,index:number):RuntimePlantCell256 {
  const tile=world.tiles[index];if(!tile)throw Error('Missing physical plant cell');
  const roof=roofKindAt(world,index);
- return {fertility:f(naturalPlantSubstrate256(tile).fertility),naturalRoof:roof==='natural-thin'||roof==='natural-thick',roofed:roof!==undefined,water:!tile.bridge&&!tile.floor&&terrainIsWater256(tile.terrain)};
+ return {fertility:f(terrainGroundFertility256(tile)),naturalRoof:roof==='natural-thin'||roof==='natural-thick',roofed:roof!==undefined,water:!tile.bridge&&!tile.floor&&terrainIsWater256(tile.terrain)};
 }
 const scalarKeys=['revision','cycleIndex','desired','desiredTmp','fertile','fertileTmp','hasCalculated','lastTick'] as const;
 const integer=(value:unknown,min:number,max:number):value is number=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=min&&value<=max;

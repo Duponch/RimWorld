@@ -1,5 +1,7 @@
 # Travail sur Elsewhere
 
+**V420 — schéma 263 inchangé :** [Diagnostic CPU/GPU et structures modifiées](docs/development/performance-foundations-v420.md). Correction ciblée du contrôle MAIN qualifiée ; mesure propriétaire Node7,01→3,25ms, aucun gain FPS global établi. Mesures GPU et rouges historiques conservés dans la note. Non publié, productionV419 ; performances et confort restent ouverts.
+
 **V419 — schéma 263 :** [Fondations monde et Les Éclaircies](docs/gameplay/foundations-demo-v419.md). Socle fonctionnel pour une colonie/max1 qualifié par reprises : générateur, caravanes, camps/sites temporaires et conservation. Nouvelle démonstration créée par les menus, patrimoine préparé déclaré, usages partiels réels et recharge complète exacte1730. Catalogue67fiches, archives/Aulnes préservées ; publié95084b6c/déploiement0c2b8329,136réponses HTTPS exactes. Performances et confort restent ouverts, prochaine priorité autonome. Aucune parité exhaustive annoncée.
 
 

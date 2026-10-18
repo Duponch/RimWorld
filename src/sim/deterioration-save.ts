@@ -26,7 +26,8 @@ function noOwnedClock(value:unknown,active=new WeakSet<object>()):boolean {
    if(SKIP.has(key))continue;
    const d=Object.getOwnPropertyDescriptor(value,key)!;
    if(!Object.hasOwn(d,'value'))return false;
-   if(!noOwnedClock(d.value,active))return false;
+   const child=d.value;
+   if(child&&typeof child==='object'&&!noOwnedClock(child,active))return false;
   }
   return true;
  }finally{active.delete(value);}
@@ -94,11 +95,15 @@ export interface OwnedDeteriorationOwner {
  * ownership precondition as its resource/geometry owners. Constructing this
  * helper does not establish authority for an arbitrary mutable World.
  *
- * Only an empty, contiguous structural reconstruction that returns the EXACT
- * predecessor array can reuse its deep no-clock fact. Every upsert (including
- * same-tick same-ID), membership/order change, checkpoint or absent witness
- * takes the complete original walker. Other domains and the local clock are
- * always read at their historical frontier. No index/copy or per-item cache. */
+ * The existing sparse producer preserves slots/IDs, lists EVERY replacement
+ * and retains every other record by exact reference. Its canonical new Array
+ * can inherit the confirmed no-clock fact for those retained records; each
+ * replacement is walked in full, including same-tick same-ID upserts. An empty
+ * edge still requires the EXACT predecessor Array. This witness shape alone
+ * grants no authority to arbitrary callers. Membership/order changes,
+ * checkpoints and incoherent metadata take the original complete walker.
+ * Other domains and the local clock always keep their historical frontier.
+ * No index, maintained per-item cache or comparison of all N references. */
 export function createOwnedDeteriorationOwner():OwnedDeteriorationOwner {
  type Certificate={world:World;structures:World['structures']};
  let confirmed:Certificate|undefined,pending:Certificate|undefined;
@@ -108,11 +113,39 @@ export function createOwnedDeteriorationOwner():OwnedDeteriorationOwner {
    let clean:World['structures']|undefined;
    const valid=validTransport(world,world.schemaVersion,value=>{
     const base=confirmed;
-    const unchanged=!!base&&!!reuse&&reuse.kind==='sparse'&&reuse.previous===base.world
-      &&reuse.updatedOrdinals.length===0&&value===base.structures
-      &&value===reuse.previous.structures&&world.schemaVersion===base.world.schemaVersion
-      &&world.width===base.world.width&&world.height===base.world.height&&world.seed===base.world.seed;
-    const clear=unchanged||noOwnedClock(value);
+    let updates:readonly number[]|undefined;
+    // Only metadata is eligible for fallback. A forbidden field in an actual
+    // replacement below is a refusal, never a favorable retry or omission.
+    try{
+     if(base&&reuse&&ownData(reuse,'kind').value==='sparse'&&ownData(reuse,'previous').value===base.world
+       &&world.schemaVersion===base.world.schemaVersion&&world.width===base.world.width
+       &&world.height===base.world.height&&world.seed===base.world.seed
+       &&base.world.structures===base.structures&&Array.isArray(base.structures)&&Array.isArray(value)
+       &&value.length===base.structures.length){
+      const ordinals=ownData(reuse,'updatedOrdinals').value;
+      if(Array.isArray(ordinals)&&Object.getPrototypeOf(ordinals)===Array.prototype
+        &&Reflect.ownKeys(ordinals).length===ordinals.length+1){
+       if(ordinals.length===0){if(value===base.structures)updates=ordinals;}
+       else if(value!==base.structures){
+        const seen=new Set<number>();let coherent=true;
+        for(let i=0;i<ordinals.length;i++){
+         const ordinal=ownData(ordinals,String(i)).value;
+         if(!integer(ordinal,0,value.length-1)||seen.has(ordinal)){coherent=false;break;}
+         seen.add(ordinal);
+         const before=ownData(base.structures,String(ordinal)).value,after=ownData(value,String(ordinal)).value;
+         if(!record(before)||!record(after)){coherent=false;break;}
+         const id=ownData(before,'id').value,nextId=ownData(after,'id').value;
+         if(!integer(id,1)||id!==nextId){coherent=false;break;}
+        }
+        if(coherent)updates=ordinals;
+       }
+      }
+     }
+    }catch{/* Unsupported metadata retains the original complete walker. */}
+    let clear=true;
+    if(updates&&Array.isArray(value)){
+     for(let i=0;i<updates.length;i++)if(!noOwnedClock(value[updates[i]!])){clear=false;break;}
+    }else clear=noOwnedClock(value);
     if(clear&&Array.isArray(value))clean=value;
     return clear;
    });
