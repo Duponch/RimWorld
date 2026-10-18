@@ -1,5 +1,7 @@
 # Travail sur Elsewhere
 
+**V424 — audit architectural, aucun changement produit :** [Objectif 200 FPS et refonte de la présentation](docs/development/performance-architecture-audit-v424.md). Priorité : séparer état autoritaire, sauvegarde et projection visuelle persistante ; réduire les parcours globaux et borner le flux avant adoption. Évaluer Worker de rendu, Rust/WASM et natif selon les coûts mesurés, sans gain promis. Cible humaine Chrome/1440p/Ryzen 5/RX 5700 XT ; V423 reste publié, performances ouvertes.
+
 **V423 — schéma 263 inchangé :** [Adoption des snapshots](docs/development/snapshot-adoption-v423.md). Contrôles ciblés et présentation acquis par reprises, lecteurs publics et sauvegardes stricts. Chrome ×1 : coût moyen du Decoder −20,11% sur Les Aulnes, −24,13% sur le départ trois colons ; cadence d’image meilleure sur Aulnes, moins bonne sur le départ neuf dans ce relevé. Huit recharges complètes exactes ; confort global non rétabli. Publié c5bd4f97/déploiement84b9d5b0,136HTTPS exacts ; nettoyage du stockage demandé sans perdre les historiques.
 
 **Diagnostic V422 — aucun changement produit :** [Régression du coût d’adoption](docs/development/foundations-performance-regression-v422.md). Sur les mêmes Aulnes à une carte, saut du Decoder public Node V407→V408 mesuré34,654→58,305ms médians ; registre V407 seul sans saut dans ce banc. Ce ne sont pas les FPS natifs. Cible prioritaire : parcours communs de terrain/propriétaires/structures à chaque adoption. Dernière production V421 inchangée, aucun déploiement QA.
