@@ -1,3 +1,4 @@
+import {markTerrainCellChanged} from './terrain-mutation-journal.ts';
 import {refreshDuckWaterCell256} from './duck-water-256.ts';
 import {registeredMapId,registeredMap,registeredMapForValidation,captureLocalMap,registeredCampaign} from './world-map-context.ts';
 import {terrainBridgeable256,terrainHoldsSnow256,terrainAcceptsFilth256} from './natural-terrain-runtime-256.ts';
@@ -50,12 +51,12 @@ export function finishBridge(w:World,job:Job):boolean {
   if(w.resources.some(r=>same(r,job)&&constructionPlantBlocks(job,r)))return false;
   const retirement=planConstructionPlantRetirement(w,job,job.id);if(!retirement||!commitConstructionPlantRetirement(w,retirement))return false;
   w.piles=w.piles.filter(p=>p.owner.type!=='job'||p.owner.jobId!==job.id);
-  w.tiles[job.z*w.width+job.x]!.bridge=true;job.escrow.wood=job.escrow.food=0;refreshDuckWaterCell256(w,job);refreshStock(w);
+  w.tiles[job.z*w.width+job.x]!.bridge=true;markTerrainCellChanged(w.tiles,job.z*w.width+job.x);job.escrow.wood=job.escrow.food=0;refreshDuckWaterCell256(w,job);refreshStock(w);
   announce(w,'Pont termine ; '+below(w.tiles[job.z*w.width+job.x]!.terrain)+' conserve sous la fondation.');return true;
 }
 function revealWetGround(w:World,c:Cell):void {
   const index=c.z*w.width+c.x;
-  const tile=w.tiles[index]!;delete tile.bridge;refreshDuckWaterCell256(w,c);
+  const tile=w.tiles[index]!;delete tile.bridge;markTerrainCellChanged(w.tiles,index);refreshDuckWaterCell256(w,c);
   if(!terrainHoldsSnow256(tile.terrain)){setSnowDepth(w,index,0);delete tile.snowDepth;}
   if(!terrainAcceptsFilth256(tile))for(const f of [...w.filth?.items??[]])if(same(f,c))removeFilth(w,f);
 }

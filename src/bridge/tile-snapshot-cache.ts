@@ -44,8 +44,16 @@ export class TileSnapshotCache {
   }
 
   diff(tiles: readonly Tile[]): TileDelta[] {
+    return this.diffAt(tiles);
+  }
+
+  /** One codec for full public scans and the closed Worker's covered cells.
+   * No public Encoder selects a subset, regardless of array identity or tick. */
+  protected diffAt(tiles:readonly Tile[],indices?:readonly number[]):TileDelta[] {
     const changes: TileDelta[] = [], previous = this.values;
-    for (let index = 0, offset = 0; index < tiles.length; index++, offset += 5) {
+    const length=indices?.length??tiles.length;
+    for (let at=0;at<length;at++) {
+      const index=indices?indices[at]!:at,offset=index*5;
       const fogStamp=fogPresence(tiles[index]!);
       const { terrain, stone, miningDamage: damage, ore, floor, miningYield, snowDepth, bridge, collapsedRock,fogged } = tiles[index]!;
       const mineable=mineableValue(tiles[index]!),previousMineable=this.mineables.get(index);

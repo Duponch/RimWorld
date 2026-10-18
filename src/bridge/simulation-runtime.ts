@@ -47,9 +47,10 @@ import { MAP_SIZE_PRESETS } from '../sim/map-config';
 import { SnapshotEncoder } from './snapshots';
 import { AudioCueRecorder } from './audio-cues';
 
-/** Both fixed entrypoints execute this identical authoritative engine. Only
- * the publication envelope differs; request ordering, clocks, ACK and SAVE do not. */
-export function startSimulationWorker(scope:DedicatedWorkerGlobalScope,send:(message:Response)=>void):void {
+/** Both fixed entrypoints execute this identical authoritative engine. The
+ * closed entry supplies its concrete transport encoder; public default stays
+ * complete. Request ordering, clocks, ACK and SAVE never select that boundary. */
+export function startSimulationWorker(scope:DedicatedWorkerGlobalScope,send:(message:Response)=>void,snapshots:SnapshotEncoder<true>=new SnapshotEncoder({structureDelta:true,minimumStructures:1000})):void {
 let world: CampaignState | undefined;
 let caravans:GroupCampaignRuntime256|undefined;
 /** Build on the validated replacement BEFORE changing the active owner. The
@@ -81,7 +82,6 @@ function resumeNeutralEncounter261(previous:object|undefined):void {
 let lastPublishedTick=-1;
 let stepMs = 0;
 let fault: SimulationFault | undefined;
-const snapshots = new SnapshotEncoder({structureDelta:true,minimumStructures:1000});
 const motion = new MotionRecorder();
 let presentationChanges=new PresentationChanges();
 let observedWorld:World|undefined;

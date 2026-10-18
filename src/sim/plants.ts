@@ -106,7 +106,7 @@ export function plantGrowth(world:World,plant:Resource):number {return readPlant
  * globally; public plantGrowth keeps its unrestricted RAW reads.
  * Terrain/species combinations and light anchors are shared by the population,
  * instead of re-deriving the same substrate DTO and integral for every plant. */
-export function createPlantGrowthReader(world:World):(plant:Resource)=>number {
+function createPlantGrowthInputs(world:World):GrowthPassInputs {
   type Substrate=ReturnType<typeof naturalPlantSubstrate256>;
   type Ground={fertility:number;substrate?:Substrate;allowed:Map<Resource['species'],boolean|undefined>};
   const grounds=new Map<string,Map<string|undefined,[Ground?,Ground?]>>();
@@ -136,7 +136,24 @@ export function createPlantGrowthReader(world:World):(plant:Resource)=>number {
     },
     lightTime(plant,artificial){return integral(world.tick,artificial)-integral(plant.growthTick??world.tick,artificial);},
   };
+  return inputs;
+}
+
+/** One immutable, synchronous presentation evaluation; the public RAW reader
+ * remains uncached. The shared inputs never retain plant growth results. */
+export function createPlantGrowthReader(world:World):(plant:Resource)=>number {
+  const inputs=createPlantGrowthInputs(world);
   return plant=>readPlantGrowth(world,plant,inputs);
+}
+
+/** One synchronous forecast pass over unchanged publication inputs. The local
+ * shadow changes only tick; integral entries are keyed by that explicit tick,
+ * including anchor lookups. Ground, roofs, climate and eclipse interval stay
+ * unchanged. Discard this reader before another publication or any mutation.
+ * No shadow, callback or cache is stored in a forecast or authoritative World. */
+export function createPlantGrowthForecastReader(world:World):(plant:Resource,tick:number)=>number {
+  const probe={...world},inputs=createPlantGrowthInputs(probe);
+  return (plant,tick)=>{probe.tick=tick;return readPlantGrowth(probe,plant,inputs);};
 }
 export const choppable=(world:World,plant:Resource):boolean=>plant.kind==='tree'&&(!plant.species||plantGrowth(world,plant)>=FLORA_DEFINITIONS[plant.species].harvestMinGrowth);
 export const harvestable = (world: World, plant: Resource,readGrowth?:()=>number): boolean => !plant.blight&&isPlant(plant)&&plant.kind!=='tree'&&

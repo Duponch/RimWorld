@@ -16,16 +16,16 @@ import type {OverviewBatch} from '../src/render/OverviewBatch';
 import type {ResourceRangeData} from '../src/render/StaticGeometry';
 
 const built=(r:Resource)=>!['rice','potato','corn','cotton'].includes(r.kind)&&r.species!=='grass'&&r.species!=='tall-grass';
-const key=(r:Resource)=>`${Math.floor(r.x/WORLD_SCALE.chunkSize)}:${Math.floor(r.z/WORLD_SCALE.chunkSize)}`;
+const key=(r:Resource)=>`${Math.floor(r.x/WORLD_SCALE.resourceChunkSize)}:${Math.floor(r.z/WORLD_SCALE.resourceChunkSize)}`;
 function camp():World {
-  const w=createWorld(228,250,16),c=WORLD_SCALE.chunkSize;
+  const c=WORLD_SCALE.resourceChunkSize,w=createWorld(228,c+8,c+8); // Four chunks in a supported 2x2 projection fixture.
   w.tiles=w.tiles.map(()=>({terrain:'grass'}));
   w.resources=[
-    {id:w.nextId++,kind:'tree',species:'oak',x:2*c+2,z:2,amount:30,growth:.1,growthTick:0,growthThermalFactor:0},
+    {id:w.nextId++,kind:'tree',species:'oak',x:2,z:c+2,amount:30,growth:.1,growthTick:0,growthThermalFactor:0},
     {id:w.nextId++,kind:'tree',species:'oak',x:2,z:2,amount:30,growth:1,growthTick:0},
     {id:w.nextId++,kind:'rock',stone:'granite',x:c+1,z:2,amount:20},
     {id:w.nextId++,kind:'berries',x:4,z:2,amount:10,growth:.64,growthTick:0,growthThermalFactor:0},
-    {id:w.nextId++,kind:'tree',species:'pine',x:3*c+2,z:2,amount:30,growth:1,growthTick:0},
+    {id:w.nextId++,kind:'tree',species:'pine',x:c+2,z:c+2,amount:30,growth:1,growthTick:0},
     {id:w.nextId++,kind:'wild-plant',species:'grass',x:5,z:2,amount:2,growth:.1,growthTick:0},
     {id:w.nextId++,kind:'rice',x:6,z:2,amount:10,growth:.2,growthTick:0},
     {id:w.nextId++,kind:'healroot',x:7,z:2,amount:1,growth:.3,growthTick:0},
@@ -77,15 +77,15 @@ test('fresh capture has exact source order/current references and an unforgeable
 test('composed sparse movements and silent patches keep source ordinals, old contributions and current references',()=>{
   const w=camp(),{send}=transport(w),index=new SceneResourceIndex(),first=send();
   const initial=index.adopt(first),old=readSceneResourceFrame(initial,first)!.chunksFor()!,oldValue=structuredClone(old);
-  w.resources[2]!.x=2*WORLD_SCALE.chunkSize+4;send();
-  w.resources[1]!.x=WORLD_SCALE.chunkSize+3;w.resources[0]!.amount++;
+  Object.assign(w.resources[2]!,{x:4,z:WORLD_SCALE.resourceChunkSize+2});send();
+  w.resources[1]!.x=WORLD_SCALE.resourceChunkSize+3;w.resources[0]!.amount++;
   const next=send(),frame=index.adopt(next),access=readSceneResourceFrame(frame,next,first)!;
-  check(access,next);expect(access.rockCoverEdits).toStrictEqual([{before:2*w.width+WORLD_SCALE.chunkSize+1,after:2*w.width+2*WORLD_SCALE.chunkSize+4}]);
+  check(access,next);expect(access.rockCoverEdits).toStrictEqual([{before:2*w.width+WORLD_SCALE.resourceChunkSize+1,after:(WORLD_SCALE.resourceChunkSize+2)*w.width+4}]);
   expect(readSceneResourceFrame(frame,next)).toHaveProperty('rockCoverEdits',undefined);
   expect(readSceneResourceFrame(frame,next,structuredClone(first))).toBeUndefined();
   const changes=new Map([[next.resources[1]!.id,change(next.resources[1])],[next.resources[2]!.id,change(next.resources[2])]]);
   const selected=access.chunksFor(changes)!;
-  expect(selected.changedChunks.map(chunk=>chunk.key)).toStrictEqual(exhaustive(next).chunks.filter(chunk=>['0:0','1:0','2:0'].includes(chunk.key)).map(chunk=>chunk.key));
+  expect(selected.changedChunks.map(chunk=>chunk.key)).toStrictEqual(exhaustive(next).chunks.filter(chunk=>['0:0','1:0','0:1'].includes(chunk.key)).map(chunk=>chunk.key));
   expect(old).toStrictEqual(oldValue);expect(readSceneResourceFrame(initial,first)).toBeUndefined();
   w.resources[0]!.amount++;const silent=send(),silentAccess=readSceneResourceFrame(index.adopt(silent),silent,next)!;
   expect(silentAccess.rockCoverEdits).toStrictEqual([]);check(silentAccess,silent);
@@ -112,7 +112,7 @@ test('stale/refused packets do not invent contributions and a later valid patch 
   const result=decoder.adopt(valid);if(result.status!=='applied')throw Error(JSON.stringify(result));
   expect(decoder.adopt(valid).status).toBe('stale');
   const access=readSceneResourceFrame(index.adopt(result.world),result.world,first)!;
-  expect(access.rockCoverEdits).toStrictEqual([{before:2*w.width+WORLD_SCALE.chunkSize+1,after:2*w.width+WORLD_SCALE.chunkSize+2}]);check(access,result.world);
+  expect(access.rockCoverEdits).toStrictEqual([{before:2*w.width+WORLD_SCALE.resourceChunkSize+1,after:2*w.width+WORLD_SCALE.resourceChunkSize+2}]);check(access,result.world);
 });
 
 test('mutable and unconfirmed Worlds recapture, tree collisions keep the last source, and clear revokes handles',()=>{
@@ -128,11 +128,11 @@ test('mutable and unconfirmed Worlds recapture, tree collisions keep the last so
 
 test('consumer geometry keys clear skipped old chunks without replacing current source ordering',()=>{
   const w=camp(),{send}=transport(w),index=new SceneResourceIndex(),first=send();index.adopt(first);
-  w.resources[2]!.x=2*WORLD_SCALE.chunkSize+4;const middle=send();index.adopt(middle);
-  w.resources[2]!.x=3*WORLD_SCALE.chunkSize+4;const next=send(),access=readSceneResourceFrame(index.adopt(next),next,middle)!;
+  Object.assign(w.resources[2]!,{x:4,z:WORLD_SCALE.resourceChunkSize+2});const middle=send();index.adopt(middle);
+  Object.assign(w.resources[2]!,{x:WORLD_SCALE.resourceChunkSize+4,z:WORLD_SCALE.resourceChunkSize+2});const next=send(),access=readSceneResourceFrame(index.adopt(next),next,middle)!;
   const r=next.resources[2]!,result=access.chunksFor(new Map([[r.id,change(r)]]),new Set(['1:0']))!;
   expect(result.emptiedKeys).toContain('1:0');
-  expect(result.changedChunks.map(chunk=>chunk.key)).toStrictEqual(['2:0','3:0']);
+  expect(result.changedChunks.map(chunk=>chunk.key)).toStrictEqual(['0:1','1:1']);
   expect(result.changedChunks[1]!.resources.map(r=>r.id)).toStrictEqual([next.resources[2]!.id,next.resources[4]!.id]);
 });
 
@@ -173,11 +173,11 @@ test('indexed complete Worlds match historical geometry/ranges/uploads and Overv
     expect(world).toStrictEqual(before);
   };
   try{
-    check(true);const stableA=a.group.children.find(chunk=>chunk.name==='Resources 3:0')!,stableB=b.group.children.find(chunk=>chunk.name==='Resources 3:0')!;
+    check(true);const stableA=a.group.children.find(chunk=>chunk.name==='Resources 1:1')!,stableB=b.group.children.find(chunk=>chunk.name==='Resources 1:1')!;
     const buffersA=stableA.children.map(object=>(object as THREE.Mesh).geometry),buffersB=stableB.children.map(object=>(object as THREE.Mesh).geometry);
     w.resources[0]!.amount++;check();w.resources[5]!.growth=.7;check();
     w.resources[0]!.growth=.5;check();w.resources[3]!.growth=.66;check();
-    w.resources[2]!.x=2*WORLD_SCALE.chunkSize+4;check();w.resources[2]!.stone='marble';check();
+    Object.assign(w.resources[2]!,{x:4,z:WORLD_SCALE.resourceChunkSize+2});check();w.resources[2]!.stone='marble';check();
     expect(stableA.children.map(object=>(object as THREE.Mesh).geometry)).toStrictEqual(buffersA);expect(stableB.children.map(object=>(object as THREE.Mesh).geometry)).toStrictEqual(buffersB);
     const removed=w.resources.splice(3,1)[0]!;check();w.resources.splice(3,0,removed);check();
     w.resources.reverse();check();removed.kind='rice';check();removed.kind='berries';check();

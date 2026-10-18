@@ -4,9 +4,10 @@ import { createWorld } from '../src/sim/engine';
 import { buildTerrain, createTerrainPaintTexture, patchTerrainPaintTexture, syncTerrainPaintUvs, terrainPaintEdge, terrainPaintPixelsPerCell } from '../src/render/TerrainLayer';
 import { terrainSurfaceChanges } from '../src/render/terrain-state';
 import { clearGroup } from '../src/render/primitives';
+import { WORLD_SCALE } from '../src/world/scale';
 
 test('painted ground shares world UVs across cells and chunks without adding triangles', () => {
-  const world=createWorld(132,66,8);
+  const world=createWorld(132,WORLD_SCALE.chunkSize+2,8);
   world.tiles=world.tiles.map(()=>({terrain:'soil'}));
   const group=new THREE.Group(),plain=new THREE.MeshStandardNodeMaterial({vertexColors:true});
   const water=new THREE.MeshStandardNodeMaterial({vertexColors:true});
@@ -14,7 +15,7 @@ test('painted ground shares world UVs across cells and chunks without adding tri
   try {
     buildTerrain(world,group,plain,water,true);
     const meshes=group.children as THREE.Mesh[];
-    expect(meshes).toHaveLength(2); // the 64-cell chunk boundary
+    expect(meshes).toHaveLength(2); // both sides of the current spatial chunk boundary
     const perimeterBanks=2*(world.width+world.height);
     expect(meshes.reduce((sum,mesh)=>sum+mesh.geometry.index!.count,0)).toBe((world.width*world.height+perimeterBanks)*6);
     const matched=new Set<string>();
@@ -25,7 +26,7 @@ test('painted ground shares world UVs across cells and chunks without adding tri
         const x=positions.getX(i),z=positions.getZ(i);
         expect(uv.getX(i)).toBeCloseTo((x+.5)/world.width,5);
         expect(uv.getY(i)).toBeCloseTo((z+.5)/world.height,5);
-        if(x===63.5)matched.add(`${z}:${uv.getX(i).toFixed(6)}:${uv.getY(i).toFixed(6)}`);
+        if(x===WORLD_SCALE.chunkSize-.5)matched.add(`${z}:${uv.getX(i).toFixed(6)}:${uv.getY(i).toFixed(6)}`);
       }
     }
     expect(matched.size).toBe(9);

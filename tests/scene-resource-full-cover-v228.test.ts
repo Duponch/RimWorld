@@ -1,3 +1,6 @@
+import {registeredMapPresentation} from '../src/sim/world-map-presentation';
+import {selectedRegisteredMap} from '../src/sim/world-map-context';
+import {captureHumanOwners} from '../src/sim/human-owners';
 // Full projection queries, including hostile post-adoption mutations, remain
 // separate from strict saved colonies and ordinary simulation campaigns.
 import {expect,test} from 'vitest';
@@ -11,11 +14,11 @@ import type {Resource,World} from '../src/sim/types';
 import {WORLD_SCALE} from '../src/world/scale';
 
 function camp():World {
-  const w=createWorld(228,96,16);w.tiles=w.tiles.map(()=>({terrain:'soil'}));
+  const w=createWorld(228,Math.max(96,WORLD_SCALE.resourceChunkSize+8),16);w.tiles=w.tiles.map(()=>({terrain:'soil'}));
   w.resources=[
     {id:w.nextId++,kind:'rock',x:2,z:3,amount:20},
     {id:w.nextId++,kind:'rock',x:2,z:3,amount:20},
-    {id:w.nextId++,kind:'tree',species:'oak',x:70,z:3,amount:20,growth:1,growthTick:0},
+    {id:w.nextId++,kind:'tree',species:'oak',x:WORLD_SCALE.resourceChunkSize+6,z:3,amount:20,growth:1,growthTick:0},
     {id:w.nextId++,kind:'rice',x:4,z:3,amount:10,growth:1,growthTick:0},
     {id:w.nextId++,kind:'rock',x:12,z:4,amount:20},
   ];return w;
@@ -23,9 +26,16 @@ function camp():World {
 function publisher(w:World){
   const encoder=new SnapshotEncoder({structureDelta:true}),decoder=new SnapshotDecoder(),old:Array<{world:World;value:World}>=[];
   const send=(checkpoint=false,source=w)=>{
+    // Public Encoder publishes the selected physical map projection. Freeze
+    // that full witness before encode refreshes its stable presentation facade.
+    const physical=selectedRegisteredMap(source),view=registeredMapPresentation(source);
+    if(!physical||!view)throw Error('Expected the genuine selected registered map');
+    for(const field of ['tiles','resources','pawns','piles','packed','structures'] as const)expect(view[field]).toBe(physical[field]);
+    expect(Object.hasOwn(view,'worldMaps')).toBe(false);expect(Object.hasOwn(view,'worldGroups')).toBe(false);
+    const expected=structuredClone(view),expectedOwners=structuredClone(captureHumanOwners(view,{},false));
     const packet=structuredClone(encoder.encode(source,0,6,checkpoint)),before=structuredClone(packet),result=decoder.adopt(packet);
     if(result.status!=='applied')throw Error(JSON.stringify(result));
-    expect(result.world).toStrictEqual(source);expect(packet).toStrictEqual(before);
+    expect(result.world).toStrictEqual(expected);expect(captureHumanOwners(result.world,{},false)).toStrictEqual(expectedOwners);expect(packet).toStrictEqual(before);
     for(const snapshot of old)expect(snapshot.world).toStrictEqual(snapshot.value);
     old.push({world:result.world,value:structuredClone(result.world)});return result.world;
   };return {send};
@@ -42,7 +52,7 @@ function checkEdits(before:World,after:World,edits:readonly RockCoverEdit[]):voi
 function checkMembers(frame:Parameters<typeof readSceneResourceFrame>[0],w:World):void {
   const expected=new Map<string,Resource[]>();
   for(const r of w.resources)if(!['rice','potato','corn','cotton'].includes(r.kind)&&r.species!=='grass'&&r.species!=='tall-grass'){
-    const key=`${Math.floor(r.x/WORLD_SCALE.chunkSize)}:${Math.floor(r.z/WORLD_SCALE.chunkSize)}`,group=expected.get(key);
+    const key=`${Math.floor(r.x/WORLD_SCALE.resourceChunkSize)}:${Math.floor(r.z/WORLD_SCALE.resourceChunkSize)}`,group=expected.get(key);
     if(group)group.push(r);else expected.set(key,[r]);
   }
   const chunks=readSceneResourceFrame(frame,w)!.chunksFor()!.changedChunks;
@@ -77,8 +87,16 @@ test('full rock multisets retain overlaps, ID swaps and fixed old outputs across
 
 test('64-record eviction permits an exhaustive same-domain diff without claiming a sparse suffix',()=>{
   const w=camp(),{send}=publisher(w),index=new SceneResourceIndex(),first=send();index.adopt(first);
-  for(let i=0;i<66;i++){if(i===4)w.resources.push({id:w.nextId++,kind:'rock',x:15,z:5,amount:20});w.tick++;send();}
-  const next=send();expect(readSnapshotChanges(first,next)).toBeUndefined();expect(sameSnapshotChangeDomain(first,next)).toBe(true);
+  const tick=w.tick;
+  w.resources.push({id:w.nextId++,kind:'rock',x:15,z:5,amount:20});
+  // This is publication history, not elapsed simulation. Capture AFTER the
+  // membership edit so a later missing suffix proves eviction independently.
+  const stable=send();let recent=stable;
+  for(let i=0;i<66;i++){w.resources[0]!.amount=20+i%2;recent=send();}
+  const next=send();expect(w.tick).toBe(tick);
+  expect(readSnapshotChanges(stable,next)).toBeUndefined();expect(sameSnapshotChangeDomain(stable,next)).toBe(true);
+  expect(readSnapshotChanges(recent,next)).toBeDefined();
+  expect(readSnapshotChanges(first,next)).toBeUndefined();expect(sameSnapshotChangeDomain(first,next)).toBe(true);
   const frame=index.adopt(next),edits=readSceneResourceFrame(frame,next,first)!.rockCoverEdits!;
   checkEdits(first,next,edits);expect(edits).toStrictEqual([{before:undefined,after:5*w.width+15}]);checkMembers(frame,next);
 });
@@ -118,7 +136,7 @@ test.each(['width','seed'] as const)('owned %s metadata declines a forged sparse
   if(field==='width'){first.width=192;second.width=192;}else{first.seed++;second.seed++;}
   const frame=index.adopt(second),access=readSceneResourceFrame(frame,second,first)!;
   expect(access.rockCoverEdits).toBeUndefined();checkMembers(frame,second);
-  expect(access.treeAt(3*second.width+70)).toBe(second.resources[2]!.id);
+  expect(access.treeAt(3*second.width+WORLD_SCALE.resourceChunkSize+6)).toBe(second.resources[2]!.id);
   const material=new THREE.MeshStandardNodeMaterial();material.userData.rendererOwned=true;
   const reference=new ResourceLayer(new THREE.Group(),material),candidate=new ResourceLayer(new THREE.Group(),material);
   const buffers=(group:THREE.Group)=>group.children.map(chunk=>({name:chunk.name,meshes:chunk.children.map(object=>{

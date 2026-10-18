@@ -1,3 +1,4 @@
+import {markTerrainCellChanged} from './terrain-mutation-journal.ts';
 import {terrainAvailable256} from './natural-terrain-runtime-256.ts';
 import {invalidateAnimalPens} from './animal-pens.ts';
 import type {Tile,Terrain,World} from './types.ts';
@@ -13,7 +14,7 @@ export function placeCollapsedRock256(world:World,index:number):void {
  if(world.schemaVersion<256||!tile||tile.terrain==='rock'||collapsedRockAt256(tile)||!Number.isSafeInteger(world.nextId+1))throw Error('Cannot create collapsed rock');
  const next:CollapseTile={...tile,terrain:'rock',collapsedRock:{id:world.nextId++,terrain:tile.terrain}};
  delete next.ore;delete next.miningDamage;delete next.miningYield;
- world.tiles[index]=next;invalidateAnimalPens(world);
+ world.tiles[index]=next;markTerrainCellChanged(world.tiles,index);invalidateAnimalPens(world);
 }
 /** Restore the exact retained terrain; floor/bridge/stone/snow were never
  * replaced by a guessed stone floor. This creates neither chunk nor RNG draw. */

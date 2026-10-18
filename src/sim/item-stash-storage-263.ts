@@ -1,3 +1,4 @@
+import {invalidateTerrainJournal} from './terrain-mutation-journal.ts';
 import {captureActualLocalDistricts256} from './actual-local-districts-256.ts';
 import {terrainSupportsAffordance256,terrainSupportsFloor256} from './natural-terrain-runtime-256.ts';
 import {newDoorState} from './door-rules.ts';
@@ -37,7 +38,7 @@ export function generateItemStashStorage400263(w:World,factionId:number|null,use
   else{if(!terrainSupportsFloor256(t,w)||w.piles.some(p=>p.owner.type==='ground'&&p.owner.x===x&&p.owner.z===z)||w.resources.some(p=>p.x===x&&p.z===z))throw Error('Actual Site storage interior is occupied or unsupported');floors.push(cell);roofs.push(cell);}
  }
  if(!Number.isSafeInteger(nextId))throw Error('Actual Site storage namespace exhausted');
- for(const c of floors)w.tiles[c]={...w.tiles[c]!,floor:'wood-planks'};w.structures.push(...structures);w.nextId=nextId;
+ for(const c of floors)w.tiles[c]={...w.tiles[c]!,floor:'wood-planks'};invalidateTerrainJournal(w.tiles);w.structures.push(...structures);w.nextId=nextId;
  w.roofing??={constructed:[],build:[],remove:[],cursor:0};const natural=new Set([...(w.roofing.natural?.thin??[]),...(w.roofing.natural?.thick??[])]);
  w.roofing.constructed=[...new Set([...w.roofing.constructed,...roofs.filter(c=>!natural.has(c))])].sort((a,b)=>a-b);usedRects.push(rect);
  return rect;

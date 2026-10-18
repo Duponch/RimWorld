@@ -25,15 +25,15 @@ function appearance(group:THREE.Group) {
 }
 
 test('resource deltas match full chunk updates across growth, masks, replacement and chunk moves',()=>{
-  const chunkSize=WORLD_SCALE.chunkSize;
-  const world:World=createWorld(42,Math.min(250,Math.max(64,chunkSize*4)),Math.max(64,chunkSize));
+  const chunkSize=WORLD_SCALE.resourceChunkSize;
+  const world:World=createWorld(42,chunkSize+8,chunkSize+8);
   world.tiles=world.tiles.map(()=>({terrain:'grass'}));
   world.resources=[
     {id:1,kind:'tree',species:'oak',x:2,z:2,amount:20,growth:.01,growthTick:0},
     {id:2,kind:'berries',x:3,z:2,amount:10,growth:.64,growthTick:world.tick},
     {id:3,kind:'rock',stone:'granite',x:chunkSize+1,z:2,amount:20},
-    {id:4,kind:'tree',species:'pine',x:chunkSize*2+2,z:2,amount:20},
-    {id:5,kind:'tree',species:'oak',x:chunkSize*3+2,z:2,amount:20},
+    {id:4,kind:'tree',species:'pine',x:2,z:chunkSize+2,amount:20},
+    {id:5,kind:'tree',species:'oak',x:chunkSize+2,z:chunkSize+2,amount:20},
     {id:6,kind:'wild-plant',species:'grass',x:5,z:2,amount:2},
   ];
   const presentation=new NaturalResourcePresentation();
@@ -44,7 +44,7 @@ test('resource deltas match full chunk updates across growth, masks, replacement
   const initial=visible(presentation.read(world,true)!);
   incremental.update(initial,true,presentation.changes);full.update(initial,true);
   expect(appearance(incrementalGroup)).toEqual(appearance(fullGroup));
-  const stableChunkName=`Resources ${Math.floor(world.resources[4]!.x/chunkSize)}:0`;
+  const stableChunkName=`Resources ${Math.floor(world.resources[4]!.x/chunkSize)}:${Math.floor(world.resources[4]!.z/chunkSize)}`;
   const stable=incrementalGroup.children.find(chunk=>chunk.name===stableChunkName)!;
   const stableMeshes=stable.children as THREE.Mesh[];
   const stableGeometries=stableMeshes.map(mesh=>mesh.geometry);
@@ -70,7 +70,7 @@ test('resource deltas match full chunk updates across growth, masks, replacement
     delete world.resources[0]!.plantLife;check();
     const berry=world.resources[1]!;world.resources=world.resources.filter(r=>r.id!==berry.id);check();
     world.resources.splice(1,0,berry);check();
-    world.resources[2]!.x=chunkSize*2;check(); // old chunk becomes empty
+    Object.assign(world.resources[2]!,{x:0,z:chunkSize+2});check(); // old chunk becomes empty
     world.resources[2]!.stone='marble';check();
     Object.assign(world.resources[2]!,{kind:'tree',species:'birch'} satisfies Partial<Resource>);check();
     incremental.setFoliageVisible(false);full.setFoliageVisible(false);

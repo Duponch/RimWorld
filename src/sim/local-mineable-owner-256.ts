@@ -1,3 +1,4 @@
+import {markTerrainCellChanged} from './terrain-mutation-journal.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Real prospective Mineable identity above the existing Tile representation.
  * Only creation/explicit removal owns these transitions; never migration. */
@@ -32,7 +33,7 @@ export function planVanishMineable256(world:MineableWorld256,cell:number,expecte
  if(mapInitializing!==true||!isSchema256Or257(world.schemaVersion)||world.site?.revision!==3||!Number.isSafeInteger(cell)||cell<0||cell>=world.width*world.height||!Number.isSafeInteger(expectedId)||expectedId<1)return null;
  const source=world.tiles[cell],next=source&&removedMineableTile256(source,expectedId);if(!source||!next)return null;
  const owner=source.mineable!,def=owner.def,terrain=owner.terrain;
- return {id:expectedId,commit(){if(world.tiles[cell]!==source||source.mineable!==owner||owner.id!==expectedId||owner.def!==def||owner.terrain!==terrain)throw Error('Actual Mineable changed after Vanish preflight');const current=removedMineableTile256(source,expectedId);if(!current)throw Error('Actual Mineable definition changed after Vanish preflight');world.tiles[cell]=current;}};
+ return {id:expectedId,commit(){if(world.tiles[cell]!==source||source.mineable!==owner||owner.id!==expectedId||owner.def!==def||owner.terrain!==terrain)throw Error('Actual Mineable changed after Vanish preflight');const current=removedMineableTile256(source,expectedId);if(!current)throw Error('Actual Mineable definition changed after Vanish preflight');world.tiles[cell]=current;markTerrainCellChanged(world.tiles,cell);}};
 }
 /** Synchronous Vanish entry for ROOT's genuine fresh phase390 adapter.
  * Same preflight as ClearSpace, no product/RNG/clock or fake World required.

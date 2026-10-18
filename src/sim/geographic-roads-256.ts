@@ -1,3 +1,4 @@
+import {invalidateTerrainJournal} from './terrain-mutation-journal.ts';
 /** Step390 on the ONE actual new map. Planning sees the unmodified terrain;
  * effects retire true Mineables/props and allocate true generated owners.
  * The returned angular implementation remains a declared numeric boundary. */
@@ -45,9 +46,9 @@ export function prepareFreshGeographicRoadPlacement256(world:World,usedRects:rea
   setTerrain(cell,id){const source=world.tiles[cell];if(!source||source.mineable)throw Error('Road terrain effect still overlaps a Mineable');const next:Tile={...source};delete next.floor;delete next.bridge;
    if(isRoadFloor256(id))next.floor=id;
    else {const value=actual(id);if(value!=='packed-dirt'&&!isNaturalTerrain256(value))throw Error('Unknown road target');next.terrain=value;if(value!=='rough-stone')delete next.stone;}
-   world.tiles[cell]=next;
+   world.tiles[cell]=next;invalidateTerrainJournal(world.tiles);
   },
-  setFoundation(cell){const t=world.tiles[cell];if(!t||!terrainSupportsAffordance256(t,'Bridgeable',world))throw Error('Bridge requires its actual support');t.bridge=true;},
+  setFoundation(cell){const t=world.tiles[cell];if(!t||!terrainSupportsAffordance256(t,'Bridgeable',world))throw Error('Bridge requires its actual support');t.bridge=true;invalidateTerrainJournal(world.tiles);},
   get regionalFloor(){return regionalFloor;},
   hasSamePropNear(target,cell,radius){const x=cell%world.width,z=Math.floor(cell/world.width);return world.structures.some(p=>p.kind===target&&(p.x-x)**2+(p.z-z)**2<=radius*radius);},
   spawnProp(target,cell,random){if(world.nextId>=2147483647)throw Error('Road edifice namespace exhausted');world.structures.push(createLocalRoadProp256(target,world.nextId++,cell%world.width,Math.floor(cell/world.width),random));},

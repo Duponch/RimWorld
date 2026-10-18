@@ -12,6 +12,7 @@ import { newDoorState } from '../src/sim/door-rules';
 import { clearGroup } from '../src/render/primitives';
 import { createWorld, addGroundMaterial, applyCommand, stepWorld, serializeWorld, deserializeWorld } from '../src/sim/index';
 import { floraSize } from '../src/render/flora-presentation';
+import { WORLD_SCALE } from '../src/world/scale';
 
 test('thermal growth anchors do not invalidate forest geometry; ripening, depletion and stone identity still do',()=>{
   const w=createWorld(42,32,32);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.tick=2000;w.resources=[
@@ -36,7 +37,7 @@ test('thermal growth anchors do not invalidate forest geometry; ripening, deplet
   layer.clear();mat.dispose();
 });
 
-test('wild flora growth rescales resident ranges from their original vertices and restores exact bounds',()=>{
+test('wild flora growth rescales resident ranges from their original vertices and retains conservative bounds',()=>{
   const world=createWorld(42,32,32);world.tiles=world.tiles.map(()=>({terrain:'grass'}));world.resources=[
     {id:world.nextId++,kind:'tree',species:'oak',x:7,z:8,amount:46,growth:.01,growthTick:0},
   ];
@@ -58,7 +59,16 @@ test('wild flora growth rescales resident ranges from their original vertices an
     const actual=mesh.geometry.getAttribute('position').array,expected=referenceMeshes[index]!.geometry.getAttribute('position').array;
     expect(actual.length).toBe(expected.length);for(let i=0;i<actual.length;i++)expect(actual[i]).toBeCloseTo(expected[i]!,5);
     expect(mesh.geometry.boundingSphere!.center.distanceTo(referenceMeshes[index]!.geometry.boundingSphere!.center)).toBeLessThan(1e-5);
-    expect(mesh.geometry.boundingSphere!.radius).toBeCloseTo(referenceMeshes[index]!.geometry.boundingSphere!.radius,5);
+    const sphere=mesh.geometry.boundingSphere!,fresh=referenceMeshes[index]!.geometry.boundingSphere!;
+    const radiusTolerance=.5*10**-5; // The former toBeCloseTo(...,5) tolerance.
+    expect(Number.isFinite(sphere.radius)).toBe(true);expect(Number.isFinite(fresh.radius)).toBe(true);
+    expect(sphere.radius).toBeGreaterThanOrEqual(fresh.radius-radiusTolerance);
+    // One tree owns every vertex of this fixture's meshes. Independently
+    // require all real Float32 vertices plus the original wind/recoil margin.
+    for(let vertex=0;vertex<actual.length;vertex+=3){
+      const distance=Math.hypot(actual[vertex]!-sphere.center.x,actual[vertex+1]!-sphere.center.y,actual[vertex+2]!-sphere.center.z);
+      expect(distance+4).toBeLessThanOrEqual(sphere.radius+radiusTolerance);
+    }
   }
 
   world.tick=0;layer.update(world,false);
@@ -101,13 +111,14 @@ test('population growth retains GPU meshes/materials and shared poses through ca
 });
 
 test('objets graphiques résidents : retrait/restauration, frontière de chunk, croissance et libération', () => {
-  const world = createWorld(42,32,32); world.resources = [
-    {id:1,kind:'tree',x:15,z:15,amount:12}, {id:2,kind:'tree',x:14,z:15,amount:12},
-    {id:3,kind:'berries',x:15,z:14,amount:10}, {id:4,kind:'rock',x:16,z:15,amount:10},
+  const c=WORLD_SCALE.resourceChunkSize,world = createWorld(42,c+2,32); world.resources = [
+    {id:1,kind:'tree',x:c-1,z:15,amount:12}, {id:2,kind:'tree',x:c-2,z:15,amount:12},
+    {id:3,kind:'berries',x:c-1,z:14,amount:10}, {id:4,kind:'rock',x:c,z:15,amount:10},
   ];
   const group=new THREE.Group(), mat=new THREE.MeshStandardNodeMaterial(); mat.userData.rendererOwned=true;
   const layer=new ResourceLayer(group,mat); layer.update(world,true);
   const saved=[...world.resources], chunks=[...group.children], meshes:THREE.Mesh[]=[];
+  expect(chunks).toHaveLength(2); // A genuine crossed boundary, never an undefined neighbor.
   group.traverse(o=>{if(o instanceof THREE.Mesh)meshes.push(o);});
   const buffers=meshes.map(m=>m.geometry.getAttribute('position')), indices=meshes.map(m=>Array.from(m.geometry.index!.array));
   let disposed=0; for(const mesh of meshes)mesh.geometry.addEventListener('dispose',()=>disposed++);
@@ -123,7 +134,7 @@ test('objets graphiques résidents : retrait/restauration, frontière de chunk, 
     });
   }
   layer.setFoliageVisible(false); expect(meshes.filter(m=>m.name==='tree-canopy').every(m=>!m.visible)).toBe(true);
-  world.resources=[...saved,{id:5,kind:'tree',x:13,z:15,amount:12}]; layer.update(world,false);
+  world.resources=[...saved,{id:5,kind:'tree',x:c-3,z:15,amount:12}]; layer.update(world,false);
   expect(group.children[1]).toBe(chunks[1]); expect(disposed).toBe(2); // only changed chunk rebuilt
   layer.clear(); mat.dispose(); expect(group.children).toEqual([]);
 

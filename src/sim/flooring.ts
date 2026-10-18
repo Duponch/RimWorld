@@ -1,3 +1,4 @@
+import {markTerrainCellChanged} from './terrain-mutation-journal.ts';
 import {isAncientGeneratedFloor256,type AncientGeneratedFloor256} from './ancient-generated-floor-state-256.ts';
 import {refreshDuckWaterCell256} from './duck-water-256.ts';
 import {geyserBlocksPlantOrFloor256} from './local-geyser-state-256.ts';
@@ -77,7 +78,7 @@ export function finishFloor(w:World,job:Job):boolean {
   // Preflight all exact claims/cargo before any plant, material or tile mutation.
   const retirement=planConstructionPlantRetirement(w,job,job.id);
   if(!retirement||!commitConstructionPlantRetirement(w,retirement))return false;
-  w.piles=w.piles.filter(p=>p.owner.type!=='job'||p.owner.jobId!==job.id);tile.floor=job.floor;refreshDuckWaterCell256(w,job);job.escrow.wood=0;job.escrow.food=0;
+  w.piles=w.piles.filter(p=>p.owner.type!=='job'||p.owner.jobId!==job.id);tile.floor=job.floor;markTerrainCellChanged(w.tiles,job.z*w.width+job.x);refreshDuckWaterCell256(w,job);job.escrow.wood=0;job.escrow.food=0;
   // Keep the growing-zone intention; zero fertility prevents sowing until the
   // floor is removed. Matching plant jobs were retired by exact source IDs.
   refreshStock(w);return true;
@@ -97,7 +98,7 @@ export function removeFloor(w:World,job:Job):boolean {
   const previous=d.item==='wood'?ledger.lostWood:d.item==='steel'?ledger.lostSteel??0:d.item&&isBlockMaterial(d.item)?ledger.lostBlocks?.[d.item]??0:0;
   if(!Number.isSafeInteger(ledger.count+1)||!Number.isSafeInteger(previous+lost))return false;
   for(const drop of drops)if(d.item)addMaterial(w,ITEM_DEFINITIONS[d.item].kind,drop.quantity,{type:'ground',...drop.cell},d.item);
-  w.rng=rng;delete tile.floor;refreshDuckWaterCell256(w,job);ledger.count++;
+  w.rng=rng;delete tile.floor;markTerrainCellChanged(w.tiles,job.z*w.width+job.x);refreshDuckWaterCell256(w,job);ledger.count++;
   if(d.item==='wood')ledger.lostWood+=lost;else if(d.item==='steel')ledger.lostSteel=(ledger.lostSteel??0)+lost;
   else if(d.item&&isBlockMaterial(d.item)){ledger.lostBlocks??={};ledger.lostBlocks[d.item]=(ledger.lostBlocks[d.item]??0)+lost;}
   for(const f of [...w.filth?.items??[]])if(f.x===job.x&&f.z===job.z)removeFilth(w,f);
@@ -126,7 +127,7 @@ function removeSterileFloor(w:World,job:Job):boolean {
     losses.push({item,quantity:lost});
   }
   for(const refund of refunds)addMaterial(w,ITEM_DEFINITIONS[refund.item].kind,refund.quantity,{type:'ground',...refund.cell},refund.item);
-  w.rng=rng;delete w.tiles[job.z*w.width+job.x]!.floor;refreshDuckWaterCell256(w,job);ledger.count++;
+  w.rng=rng;delete w.tiles[job.z*w.width+job.x]!.floor;markTerrainCellChanged(w.tiles,job.z*w.width+job.x);refreshDuckWaterCell256(w,job);ledger.count++;
   for(const loss of losses)if(loss.item==='steel')ledger.lostSteel=(ledger.lostSteel??0)+loss.quantity;else ledger.lostSilver=(ledger.lostSilver??0)+loss.quantity;
   for(const f of [...w.filth?.items??[]])if(f.x===job.x&&f.z===job.z)removeFilth(w,f);
   refreshStock(w);return true;
@@ -135,5 +136,5 @@ function removeSterileFloor(w:World,job:Job):boolean {
  * Fire's resource ledger records the original three wooden units as lost. */
 export function burnFloor(w:World,c:Cell):boolean {
   const tile=w.tiles[c.z*w.width+c.x];if(tile?.floor!=='wood-planks'||!w.fires||!Number.isSafeInteger((w.fires.ledger.items.wood??0)+3))return false;
-  tile.floor='burned-wood';refreshDuckWaterCell256(w,c);w.fires.ledger.items.wood=(w.fires.ledger.items.wood??0)+3;return true;
+  tile.floor='burned-wood';markTerrainCellChanged(w.tiles,c.z*w.width+c.x);refreshDuckWaterCell256(w,c);w.fires.ledger.items.wood=(w.fires.ledger.items.wood??0)+3;return true;
 }

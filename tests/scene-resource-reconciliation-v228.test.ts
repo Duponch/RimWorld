@@ -1,3 +1,6 @@
+import {registeredMapPresentation} from '../src/sim/world-map-presentation';
+import {selectedRegisteredMap} from '../src/sim/world-map-context';
+import {captureHumanOwners} from '../src/sim/human-owners';
 // Future location: tests/. Real transport admissions are separate from the
 // explicitly hostile or mutable local projection queries at the end.
 import {expect,test} from 'vitest';
@@ -10,15 +13,16 @@ import type {Resource,World} from '../src/sim/types';
 import {WORLD_SCALE} from '../src/world/scale';
 
 const built=(r:Resource)=>!['rice','potato','corn','cotton'].includes(r.kind)&&r.species!=='grass'&&r.species!=='tall-grass';
-const key=(r:Resource)=>`${Math.floor(r.x/WORLD_SCALE.chunkSize)}:${Math.floor(r.z/WORLD_SCALE.chunkSize)}`;
+const key=(r:Resource)=>`${Math.floor(r.x/WORLD_SCALE.resourceChunkSize)}:${Math.floor(r.z/WORLD_SCALE.resourceChunkSize)}`;
 function camp():World {
-  const w=createWorld(228,250,16),c=WORLD_SCALE.chunkSize;w.tiles=w.tiles.map(()=>({terrain:'soil'}));
+  const c=WORLD_SCALE.resourceChunkSize,w=createWorld(228,c+8,c+8); // Four chunks in a supported 2x2 projection fixture.
+  w.tiles=w.tiles.map(()=>({terrain:'soil'}));
   w.resources=[
-    {id:w.nextId++,kind:'tree',species:'oak',x:2*c+2,z:2,amount:30,growth:1,growthTick:0},
+    {id:w.nextId++,kind:'tree',species:'oak',x:2,z:c+2,amount:30,growth:1,growthTick:0},
     {id:w.nextId++,kind:'tree',species:'oak',x:2,z:2,amount:30,growth:1,growthTick:0},
     {id:w.nextId++,kind:'rock',x:c+1,z:2,amount:20},
     {id:w.nextId++,kind:'berries',x:4,z:2,amount:10,growth:.64,growthTick:0},
-    {id:w.nextId++,kind:'tree',species:'pine',x:3*c+2,z:2,amount:30,growth:1,growthTick:0},
+    {id:w.nextId++,kind:'tree',species:'pine',x:c+2,z:c+2,amount:30,growth:1,growthTick:0},
     {id:w.nextId++,kind:'wild-plant',species:'grass',x:5,z:2,amount:2,growth:.1,growthTick:0},
     {id:w.nextId++,kind:'rice',x:6,z:2,amount:10,growth:.2,growthTick:0},
     {id:w.nextId++,kind:'healroot',x:7,z:2,amount:1,growth:.3,growthTick:0},
@@ -27,9 +31,16 @@ function camp():World {
 function publisher(w:World){
   const encoder=new SnapshotEncoder({structureDelta:true}),decoder=new SnapshotDecoder(),history:Array<{world:World;value:World}>=[];
   const send=()=>{
+    // Public Encoder publishes the selected physical map projection. Freeze
+    // that full witness before encode refreshes its stable presentation facade.
+    const physical=selectedRegisteredMap(w),view=registeredMapPresentation(w);
+    if(!physical||!view)throw Error('Expected the genuine selected registered map');
+    for(const field of ['tiles','resources','pawns','piles','packed','structures'] as const)expect(view[field]).toBe(physical[field]);
+    expect(Object.hasOwn(view,'worldMaps')).toBe(false);expect(Object.hasOwn(view,'worldGroups')).toBe(false);
+    const expected=structuredClone(view),expectedOwners=structuredClone(captureHumanOwners(view,{},false));
     const packet=structuredClone(encoder.encode(w,0,6)),original=structuredClone(packet),result=decoder.adopt(packet);
     if(result.status!=='applied')throw Error(JSON.stringify(result));
-    expect(result.world).toStrictEqual(w);expect(packet).toStrictEqual(original);
+    expect(result.world).toStrictEqual(expected);expect(captureHumanOwners(result.world,{},false)).toStrictEqual(expectedOwners);expect(packet).toStrictEqual(original);
     for(const old of history)expect(old.world).toStrictEqual(old.value);
     history.push({world:result.world,value:structuredClone(result.world)});return result.world;
   };return {send};
@@ -71,7 +82,7 @@ function balance(before:World,after:World,edits:readonly RockCoverEdit[]):void {
 test.each(['healroot','grass','rice'] as const)('tail %s birth/removal preserves source chunks, current references and old materializations',kind=>{
   const w=camp(),{send}=publisher(w),index=new SceneResourceIndex(),a=send(),initial=index.adopt(a);
   const old=readSceneResourceFrame(initial,a)!.chunksFor()!,value=structuredClone(old);
-  const born:Resource={id:w.nextId++,kind:kind==='grass'?'wild-plant':kind,x:3*WORLD_SCALE.chunkSize+3,z:3,amount:1,growth:.3,growthTick:0};
+  const born:Resource={id:w.nextId++,kind:kind==='grass'?'wild-plant':kind,x:WORLD_SCALE.resourceChunkSize+3,z:WORLD_SCALE.resourceChunkSize+3,amount:1,growth:.3,growthTick:0};
   if(kind==='grass')born.species='grass';w.resources.push(born);
   const b=send();expect(readSnapshotChanges(a,b)).toBeUndefined();
   let access=readSceneResourceFrame(index.adopt(b),b,a)!;check(access,b,a);balance(a,b,access.rockCoverEdits!);selected(access,a,b,[born.id]);
@@ -101,12 +112,12 @@ test.each(['reverse','rotate left','rotate right','ID swap','middle removal','mi
 test('classification, moved cells and recreation at another ordinal rebuild only their exact contributions',()=>{
   const w=camp(),{send}=publisher(w),index=new SceneResourceIndex(),a=send();index.adopt(a);
   const original=w.resources[0]!,rock=w.resources[2]!;original.kind='rice';delete original.species;rock.x=2;
-  w.resources[1]!.x=3*WORLD_SCALE.chunkSize+2; // two built trees collide; last source wins.
+  Object.assign(w.resources[1]!,{x:WORLD_SCALE.resourceChunkSize+2,z:WORLD_SCALE.resourceChunkSize+2}); // two built trees collide; last source wins.
   w.resources.push({id:w.nextId++,kind:'wild-plant',species:'grass',x:12,z:3,amount:2});
   const b=send(),accessB=readSceneResourceFrame(index.adopt(b),b,a)!;
   expect(readSnapshotChanges(a,b)).toBeUndefined();check(accessB,b,a);balance(a,b,accessB.rockCoverEdits!);
   selected(accessB,a,b,[original.id,rock.id,w.resources[1]!.id]);
-  const returned=w.resources.splice(1,1)[0]!;returned.x=2*WORLD_SCALE.chunkSize+5;w.resources.push(returned);
+  const returned=w.resources.splice(1,1)[0]!;returned.x=5;returned.z=WORLD_SCALE.resourceChunkSize+2;w.resources.push(returned);
   const c=send(),accessC=readSceneResourceFrame(index.adopt(c),c,b)!;
   check(accessC,c,b);balance(b,c,accessC.rockCoverEdits!);selected(accessC,b,c,[returned.id]);
 });

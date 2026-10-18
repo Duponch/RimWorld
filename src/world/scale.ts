@@ -31,9 +31,11 @@ export const WORLD_SCALE = Object.freeze({
   treeMaxHeight: 7,
   waterSurface: -0.12,
   cameraSpan: 32,
-  // One merged render batch covers a 64-cell square. This is presentation-only:
-  // the simulation, cell coordinates and terrain/foliage silhouettes are unchanged.
-  chunkSize: 64,
+  // Terrain, rock surfaces and piles share broad spatial batches.
+  // Resource births rebuild their own smaller partition, including its index.
+  // Both are presentation-only; cells, silhouettes and simulation are unchanged.
+  chunkSize: 128,
+  resourceChunkSize: 64,
 });
 
 /** Original procedural rig top is 1.405 units; scale all bind parts together. */

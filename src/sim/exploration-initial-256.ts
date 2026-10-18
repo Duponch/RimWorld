@@ -1,3 +1,4 @@
+import {invalidateTerrainJournal} from './terrain-mutation-journal.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Original initial fog, exact physical roots and explicit reachability.
  * Initial-cell RNG belongs to the caller's actual GenStep stream. */
@@ -67,11 +68,11 @@ export function initializeExploration256(map:ExplorationMap256,input:{start:numb
   root=near(map,accepts,random);if(root===null){const picked=edge(map,accepts,random,context);root=picked.root;context=picked.context;}if(root===null)root=any(map,accepts,random);
  }
  // Preflight selection/dependencies before changing the actual map.
- map.exploration={revision:1};for(const tile of map.tiles)tile.fogged=true;
+ map.exploration={revision:1};for(const tile of map.tiles)tile.fogged=true;invalidateTerrainJournal(map.tiles);
  const reveal=floodUnfog256(map,root,physical,effects);
  for(const cell of input.rootsToUnfog){const extra=floodUnfog256(map,cell,physical,effects);for(const c of extra.changedCells)reveal.changedCells.push(c);for(const c of extra.interiorCells)reveal.interiorCells.push(c);reveal.lastFloodInteriorCells=extra.interiorCells;
   // GenStep explicitly Unfog(root) even when a Full root cannot flood.
-  const visited=new Set<number>([cell,...physical.fullFootprint(cell)]);for(const c of visited)if(map.tiles[c]!.fogged){delete map.tiles[c]!.fogged;reveal.changedCells.push(c);effects.cellUnfogged?.(c);}
+  const visited=new Set<number>([cell,...physical.fullFootprint(cell)]);for(const c of visited)if(map.tiles[c]!.fogged){delete map.tiles[c]!.fogged;invalidateTerrainJournal(map.tiles);reveal.changedCells.push(c);effects.cellUnfogged?.(c);}
  }
  return {root,reveal,random:random.state,...context?{edgeContext:context}:{}};
 }

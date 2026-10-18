@@ -1,3 +1,4 @@
+import {markTerrainCellChanged} from './terrain-mutation-journal.ts';
 import {collapsedRockAt256,excavatedCollapsedRock256} from './collapsed-rocks-256.ts';
 import {prepareRemovedFogMineable256,commitRemovedFogBlocker256} from './exploration-runtime-256.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
@@ -39,8 +40,8 @@ export function advanceMining(world:World,pawn:Pawn,job:Job,lightFactor:()=>numb
   // contributes nothing. An old damaged ore has neutral prior contribution.
   const contribution=ore?Math.min(1.25,Math.round(((tile.miningYield??priorDamage/maxHP)
     +Math.min(PICK_DAMAGE,maxHP-priorDamage)/maxHP*miningYield(pawn,body))*1e15)/1e15):undefined;
-  if(damage<maxHP){world.tiles[i]={...tile,miningDamage:damage,...contribution!==undefined?{miningYield:contribution}:{}};return nextStroke();}
-  if(collapsedRockAt256(tile)){const removed=prepareRemovedFogMineable256(world,i);world.tiles[i]=excavatedCollapsedRock256(tile);invalidateAnimalPens(world);commitRemovedFogBlocker256(world,removed,job.id);return true;}
+  if(damage<maxHP){world.tiles[i]={...tile,miningDamage:damage,...contribution!==undefined?{miningYield:contribution}:{}};markTerrainCellChanged(world.tiles,i);return nextStroke();}
+  if(collapsedRockAt256(tile)){const removed=prepareRemovedFogMineable256(world,i);world.tiles[i]=excavatedCollapsedRock256(tile);markTerrainCellChanged(world.tiles,i);invalidateAnimalPens(world);commitRemovedFogBlocker256(world,removed,job.id);return true;}
   let rng=world.rng;rng^=rng<<13;rng^=rng>>>17;rng^=rng<<5;rng>>>=0;
   // Preserve one local global draw per extraction, including integral yields.
   // Core's separate drop and rounding draws are explicitly adapted here.
@@ -59,7 +60,7 @@ export function advanceMining(world:World,pawn:Pawn,job:Job,lightFactor:()=>numb
     if(groundCapacity({...world,tiles},job,item)<quantity)return nextStroke();
   }
   const removed=prepareRemovedFogMineable256(world,i);
-  world.tiles[i]=floor;world.rng=rng;invalidateAnimalPens(world);
+  world.tiles[i]=floor;markTerrainCellChanged(world.tiles,i);world.rng=rng;invalidateAnimalPens(world);
   if(quantity)addMaterial(world,kind,quantity,{type:'ground',x:job.x,z:job.z},item);
   commitRemovedFogBlocker256(world,removed,job.id);
   return true;

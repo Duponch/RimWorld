@@ -1,3 +1,4 @@
+import {markTerrainCellChanged} from './terrain-mutation-journal.ts';
 /** Original confirmed-cell exploration. No camera, time, RNG or AI traversal. */
 import {explorationEnabled256,validExplorationCell256,foggedCell256,type ExplorationMap256} from './exploration-state-256.ts';
 import type {FogPhysicalReaders256} from './exploration-physical-256.ts';
@@ -18,7 +19,7 @@ export function fogNeighbourCells256(map:Pick<ExplorationMap256,'width'|'height'
  for(const [dx,dz] of diagonal?AROUND:CARDINAL){const nx=x+dx,nz=z+dz;if(nx>=0&&nz>=0&&nx<map.width&&nz<map.height)out.push(nz*map.width+nx);}return out;
 }
 function reveal(map:ExplorationMap256,cell:number,physical:FogPhysicalReaders256,result:FogReveal256,effects:ExplorationEffects256):void {
- const worker=(at:number)=>{if(foggedCell256(map,at)){delete map.tiles[at]!.fogged;result.changedCells.push(at);effects.cellUnfogged?.(at);}};
+ const worker=(at:number)=>{if(foggedCell256(map,at)){delete map.tiles[at]!.fogged;markTerrainCellChanged(map.tiles,at);result.changedCells.push(at);effects.cellUnfogged?.(at);}};
  if(!validExplorationCell256(map,cell))return;worker(cell);for(const at of physical.fullFootprint(cell))worker(at);
 }
 /** Caller owns the actual map and the matching geometry captured AFTER any

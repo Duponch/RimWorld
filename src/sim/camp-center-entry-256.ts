@@ -1,3 +1,4 @@
+import {markTerrainCellChanged} from './terrain-mutation-journal.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Original Center/nearby arrival sampling over one actual unpublished Camp.
  * No former World, favorable retry, terrain edit or global RNG is used. */
@@ -126,5 +127,5 @@ export function prepareCampCenterEntry256(input:CampaignState,map:World,group:Aw
 export function applyPreparedCampCenterFog256(map:World,plan:PreparedCampCenterEntry256):void {
  const original=prepared.get(plan);
  if(!original||original.map!==map||original.tiles!==map.tiles||map.tiles.length!==original.fogged.length||original.fogged.some((v,i)=>v!==(map.tiles[i]?.fogged===true)))throw Error('Camp arrival fog plan changed before adoption');
- for(const cell of plan.revealedCells)delete map.tiles[cell]!.fogged;
+ for(const cell of plan.revealedCells){delete map.tiles[cell]!.fogged;markTerrainCellChanged(map.tiles,cell);}
 }

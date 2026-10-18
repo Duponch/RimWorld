@@ -759,7 +759,7 @@ export class SnapshotEncoder<SparseStructures extends boolean = false> {
   private width = 0;
   private height = 0;
   private riverWater:World['riverWater'];
-  private tiles = new TileSnapshotCache();
+  private tiles = this.createTileCache();
   private resources = new Map<number, Resource>();
   private orderedResources: Resource[] = [];
   private piles = new Map<number, MaterialPile>();
@@ -772,11 +772,14 @@ export class SnapshotEncoder<SparseStructures extends boolean = false> {
   private structureDelta=false;
   private campaignOnly=false;
   private readonly geographicTransport=new PlanetGeographyTransportEncoder256();
+  /** Public default always performs complete value discovery. A fixed Worker
+   * may own a separate subclass; no packet/boolean changes this authority. */
+  protected createTileCache():TileSnapshotCache {return new TileSnapshotCache();}
   reserveDraftPreview(owner:import('../sim/world-geography-owner-256.ts').CampaignGeography256){return this.geographicTransport.reserveDraftPreview(owner);}
   authorizeDraftPreview(owner:import('../sim/world-geography-owner-256.ts').CampaignGeography256,id:number):void {this.geographicTransport.authorizeDraftPreview(owner,id);}
   discardDraftPreview():void {this.geographicTransport.discardDraftPreview();}
   encodeCampaignSummary(summary:CampaignSummary,checkpoint=false){return this.geographicTransport.encode(summary,checkpoint);}
-  campaignHeader(checkpoint=false):{epoch:number;revision:number} {if(!this.campaignOnly||checkpoint){this.epoch++;this.revision=0;}this.campaignOnly=true;this.source=undefined;this.riverWater=undefined;this.tiles=new TileSnapshotCache();this.resources.clear();this.piles.clear();this.structures.clear();this.orderedResources=[];this.orderedPiles=[];this.orderedStructures=[];return {epoch:this.epoch,revision:++this.revision};}
+  campaignHeader(checkpoint=false):{epoch:number;revision:number} {if(!this.campaignOnly||checkpoint){this.epoch++;this.revision=0;}this.campaignOnly=true;this.source=undefined;this.riverWater=undefined;this.tiles=this.createTileCache();this.resources.clear();this.piles.clear();this.structures.clear();this.orderedResources=[];this.orderedPiles=[];this.orderedStructures=[];return {epoch:this.epoch,revision:++this.revision};}
   constructor(options:{structureDelta?:SparseStructures;minimumStructures?:number} = {}) {
     const minimum=options.minimumStructures??0;
     if(!Number.isSafeInteger(minimum)||minimum<0)throw new RangeError('minimumStructures must be a nonnegative safe integer.');

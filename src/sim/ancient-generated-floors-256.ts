@@ -1,3 +1,4 @@
+import {invalidateTerrainJournal} from './terrain-mutation-journal.ts';
 import {unpublishedAncientGeneration256} from './ancient-generation-frontier-256.ts';
 import {isAncientGeneratedFloor256,type AncientGeneratedFloor256} from './ancient-generated-floor-state-256.ts';
 import {terrainSupportsAffordance256} from './natural-terrain-runtime-256.ts';
@@ -29,5 +30,5 @@ export function spawnGeneratedAncientFloor256(w:World,rect:AncientRect256,floor:
   // No Mineable/Thing is wiped, and its original owner remains identical.
   changes.push({cell,source,next});
  }
- for(const row of changes)w.tiles[row.cell]=row.next;
+ for(const row of changes)w.tiles[row.cell]=row.next;if(changes.length)invalidateTerrainJournal(w.tiles);
 }

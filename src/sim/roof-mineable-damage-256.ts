@@ -1,3 +1,4 @@
+import {markTerrainCellChanged} from './terrain-mutation-journal.ts';
 /** Roof-only damage to the actual Mineable on the existing rock lane.
  * Use only inside the isolated roof transaction. No mining work/skill/yield is
  * credited for Crush; a retained old mining contribution remains literal. */
@@ -18,16 +19,16 @@ export function damageRoofMineable256(world:World,index:number,original:Tile,amo
  const marker=collapsedRockAt256(original),ore=original.ore?ORE_DEFINITIONS[original.ore]:undefined;
  const damage=(original.miningDamage??0)+amount,max=rockMaxHP(original);
  if(!thick&&damage<max){
-  world.tiles[index]={...original,miningDamage:damage,...ore&&original.miningYield===undefined?{miningYield:0}:{}};
+  world.tiles[index]={...original,miningDamage:damage,...ore&&original.miningYield===undefined?{miningYield:0}:{}};markTerrainCellChanged(world.tiles,index);
   return true;
  }
  // DestroyMined is deliberately NOT called: no miner or new contribution.
  // The zero-yield leaving rock restores its own substrate with no drop draw.
  const removed=prepareRemovedFogMineable256(world,index);
- if(marker)world.tiles[index]=excavatedCollapsedRock256(original);
+ if(marker){world.tiles[index]=excavatedCollapsedRock256(original);markTerrainCellChanged(world.tiles,index);}
  else{
   const floor:Tile=original.mineable?minedFloor(original):{...original,...minedFloor(original)};delete floor.ore;delete floor.miningDamage;delete floor.miningYield;delete floor.mineable;
-  world.tiles[index]=floor;
+  world.tiles[index]=floor;markTerrainCellChanged(world.tiles,index);
   const chance=ore?1:CHUNK_CHANCE,roll=healthRandom(world);
   if(roll<=chance){
    let quantity=1;

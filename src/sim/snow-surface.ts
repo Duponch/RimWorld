@@ -1,3 +1,4 @@
+import {markTerrainCellChanged} from './terrain-mutation-journal.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {terrainHoldsSnow256} from './natural-terrain-runtime-256.ts';
 import {animalBodySize} from './animal-life.ts';
@@ -34,7 +35,7 @@ function runtime(w:World):Runtime {
  let r=runtimes.get(w);if(r)return r;
  const state=w.snow;if(!state)throw new Error('Snow surface absent');
  r={structures:w.structures,structureCount:w.structures.length,outside:0,full:snowFullCells(w),active:new Set(w.tiles.flatMap((t,i)=>t.snowDepth?[i]:[]))} as Runtime;const owner=r;
- r.sweep=new SnowSweepRuntime(state,{width:w.width,height:w.height,depth:i=>snowDepthAt(w,i),writeDepth(i,v){if(v>0){w.tiles[i]!.snowDepth=v;owner.active.add(i);}else{delete w.tiles[i]!.snowDepth;owner.active.delete(i);}},retains:i=>terrainRetainsSnow(w.tiles[i]!.terrain,!!w.tiles[i]!.bridge)&&!owner.full.has(i),roofed:i=>isRoofed(w,i),usesIndoorAir:i=>(owner.layout?.indices[i]??-1)>=0,temperature:i=>w.thermal?.regions[owner.layout?.indices[i]??-1]?.temperature??owner.outside,snowRate:()=>weatherSnowRate(w),changed:()=>{}});
+ r.sweep=new SnowSweepRuntime(state,{width:w.width,height:w.height,depth:i=>snowDepthAt(w,i),writeDepth(i,v){if(v>0){w.tiles[i]!.snowDepth=v;owner.active.add(i);}else{delete w.tiles[i]!.snowDepth;owner.active.delete(i);}markTerrainCellChanged(w.tiles,i);},retains:i=>terrainRetainsSnow(w.tiles[i]!.terrain,!!w.tiles[i]!.bridge)&&!owner.full.has(i),roofed:i=>isRoofed(w,i),usesIndoorAir:i=>(owner.layout?.indices[i]??-1)>=0,temperature:i=>w.thermal?.regions[owner.layout?.indices[i]??-1]?.temperature??owner.outside,snowRate:()=>weatherSnowRate(w),changed:()=>{}});
  runtimes.set(w,r);return r;
 }
 export function setSnowDepth(w:World,index:number,value:number):void {if(!w.snow)return;runtime(w).sweep.set(index,value);}

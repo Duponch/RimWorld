@@ -1,3 +1,4 @@
+import {invalidateTerrainJournal} from './terrain-mutation-journal.ts';
 import {newShelfStorage} from './shelf-storage.ts';
 import {footprintCells} from './definitions.ts';
 import {newDoorState} from './door-rules.ts';
@@ -58,7 +59,7 @@ export function generateForeignBase400263(w:World,settlementId:number,factionId:
  if(!spawnCells.length||!Number.isSafeInteger(nextId))throw Error('Foreign-base original identity or actor placement frontier is unavailable');
  // The map is private, but publication still follows a complete plan: no
  // layout mutation occurs until every touched owner/support has succeeded.
- for(const [cell,t] of tiles)w.tiles[cell]=t;w.structures.push(...structures);w.nextId=nextId;
+ for(const [cell,t] of tiles)w.tiles[cell]=t;invalidateTerrainJournal(w.tiles);w.structures.push(...structures);w.nextId=nextId;
  w.roofing??={constructed:[],build:[],remove:[],cursor:0};
  const natural=new Set([...(w.roofing.natural?.thin??[]),...(w.roofing.natural?.thick??[])]);
  w.roofing.constructed=[...new Set([...w.roofing.constructed,...[...roofs].filter(c=>!natural.has(c))])].sort((a,b)=>a-b);

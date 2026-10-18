@@ -25,7 +25,7 @@ const records=new WeakSet<FrameRecord>();
 const capture=(world:World,r:Resource):Capture=>{
   const built=!isResidentCrop(r)&&!isClusterPlantSpecies(r.species),cell=r.z*world.width+r.x;
   return {id:r.id,kind:r.kind,species:r.species,x:r.x,z:r.z,
-    key:built?`${Math.floor(r.x/WORLD_SCALE.chunkSize)}:${Math.floor(r.z/WORLD_SCALE.chunkSize)}`:undefined,
+    key:built?`${Math.floor(r.x/WORLD_SCALE.resourceChunkSize)}:${Math.floor(r.z/WORLD_SCALE.resourceChunkSize)}`:undefined,
     tree:built&&r.kind==='tree'?cell:undefined,rock:r.kind==='rock'?cell:undefined};
 };
 const same=(a:Capture,b:Resource):boolean=>a.id===b.id&&a.kind===b.kind&&a.species===b.species&&a.x===b.x&&a.z===b.z;

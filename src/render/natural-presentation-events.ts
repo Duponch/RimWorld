@@ -2,11 +2,11 @@ import {readSnapshotChanges,sameSnapshotChangeDomain,type SnapshotChanges} from 
 import {readSnapshotResourceStructure} from '../bridge/snapshot-changes';
 import {FLORA_DEFINITIONS} from '../sim/biome-flora';
 import {plantLeafless} from '../sim/plant-life';
-import {harvestable,isPlant,plantFertility,PLANT_DEFINITIONS} from '../sim/plants';
+import {createPlantGrowthForecastReader,harvestable,isPlant,plantFertility,PLANT_DEFINITIONS} from '../sim/plants';
 import {isRoofed,roofIndex,roofCoverage} from '../sim/roof-rules';
 import {isCavePlant256} from '../sim/cave-flora-256';
 import {plantCompletelyIgnoresFertility256,plantSubstrateAllowed256} from '../sim/plant-substrate-256';
-import {naturalPlantSubstrate256} from '../sim/natural-terrain-runtime-256';
+import {readNaturalPlantSubstrate256} from '../sim/natural-terrain-runtime-256';
 import {climateTick,CLIMATE_DEFINITIONS,TICKS_PER_YEAR,validClimateDefinition,type ClimateProfile} from '../sim/site-climate';
 import {TICKS_PER_DAY,type Resource,type World} from '../sim/types';
 import {floraSize,isResidentCrop} from './flora-presentation';
@@ -117,7 +117,7 @@ function captureInputs(world:World,r:Resource):Inputs|undefined {
   if(!Number.isFinite(fertility)||fertility<0)return;
   const cave=isCavePlant256(r.species,world.schemaVersion),ignoreFertility=plantCompletelyIgnoresFertility256(r.species,world.schemaVersion);
   const substrateAllowed=plant&&world.schemaVersion>=256
-    ?plantSubstrateAllowed256(r.species,world.schemaVersion,naturalPlantSubstrate256(world.tiles[r.z*world.width+r.x]!)):undefined;
+    ?plantSubstrateAllowed256(r.species,world.schemaVersion,readNaturalPlantSubstrate256(world.tiles[r.z*world.width+r.x]!)):undefined;
   return {id:r.id,kind:r.kind,species:r.species,x:r.x,z:r.z,growth:r.growth,growthTick:anchor,
     growthLight:r.growthLight,growthThermalFactor:factor,leaflessAt,fertility,roofed:isRoofed(world,roofIndex(world,r)),blighted:!!r.blight,
     cave,ignoreFertility,substrateAllowed};
@@ -130,12 +130,22 @@ function sameInputs(a:Inputs,b:Inputs):boolean {
     &&a.cave===b.cave&&a.ignoreFertility===b.ignoreFertility&&a.substrateAllowed===b.substrateAllowed;
 }
 const tracked=(r:Resource):boolean=>r.plantLife?.leaflessAt!==undefined||isPlant(r)&&(r.growth??1)!==1;
-const observe=(world:World,r:Resource):NaturalObservation=>Object.freeze({
-  size:floraSize(world,r),ripe:r.kind==='berries'&&harvestable(world,r),leafless:plantLeafless(world,r)});
+type GrowthQueries={select(resource:Resource,tick:number):void;read():number};
+/** Exactly one callback/cache owner per synchronous agenda operation. Public
+ * flora queries consume read immediately; no callback or cursor escapes. */
+function createGrowthQueries(world:World):GrowthQueries {
+  const query=createPlantGrowthForecastReader(world);let resource:Resource,tick=world.tick;
+  return {select(next,at){resource=next;tick=at;},read:()=>query(resource,tick)};
+}
+function observe(world:World,r:Resource,queries:GrowthQueries):NaturalObservation {
+  queries.select(r,world.tick);
+  return Object.freeze({size:floraSize(world,r,queries.read),
+    ripe:r.kind==='berries'&&harvestable(world,r,queries.read),leafless:plantLeafless(world,r)});
+}
 
-/** Only the future tick in this local shadow is changed. No shadow, Resource,
- * tile, roof array or callback survives this synchronous planning read. */
-function nextDeadline(world:World,probe:World,r:Resource,input:Inputs,clock:Clock,observation:NaturalObservation):number|undefined {
+/** Only the forecast query tick changes. All other publication inputs remain
+ * literal; no shadow or callback survives this synchronous planning read. */
+function nextDeadline(world:World,queries:GrowthQueries,r:Resource,input:Inputs,clock:Clock,observation:NaturalObservation):number|undefined {
   let next:number|undefined;
   if(plantLeafless(world,r)){
     const leaflessAt=input.leaflessAt!,expiry=leaflessAt+TICKS_PER_DAY;
@@ -164,10 +174,10 @@ function nextDeadline(world:World,probe:World,r:Resource,input:Inputs,clock:Cloc
   const {size,ripe}=observation;
   if(!Number.isFinite(size))throw new Error('Unproved current shape.');
   const changedAt=(tick:number):boolean=>{
-    probe.tick=tick;
-    const value=floraSize(probe,r);
+    queries.select(r,tick);
+    const value=floraSize(world,r,queries.read);
     if(!Number.isFinite(value))throw new Error('Unproved future shape.');
-    return value!==size||(r.kind==='berries'&&harvestable(probe,r))!==ripe;
+    return value!==size||(r.kind==='berries'&&harvestable(world,r,queries.read))!==ripe;
   };
   // The cycle number is fixed throughout this short bracket. An equal endpoint
   // certifies every intervening projection by monotonicity; a differing one is
@@ -258,7 +268,7 @@ export class NaturalPresentationEvents {
     this.clock=clock;this.roofs=[...roofs];
     this.natural.length=world.resources.length;this.inputs.length=world.resources.length;
     this.growCapacity(world.resources.length);
-    const observations=new Map<number,NaturalObservation>(),probe={...world};
+    const observations=new Map<number,NaturalObservation>(),queries=createGrowthQueries(world);
     try {
       for(let source=0;source<world.resources.length;source++){
         const r=world.resources[source]!,old=this.inputs[source],natural=sourceShapes[source]!>=0;
@@ -278,7 +288,7 @@ export class NaturalPresentationEvents {
           this.inputs[source]=retained.input;observations.set(input.id,retained.observation);continue;
         }
         this.unlink(source,old);this.inputs[source]=input;this.link(source,input);
-        const observation=observe(world,r),deadline=nextDeadline(world,probe,r,input,clock,observation);
+        const observation=observe(world,r,queries),deadline=nextDeadline(world,queries,r,input,clock,observation);
         this.schedule(source,deadline);this.forecasts.set(input.id,{input,plannedAt:clock.tick,deadline,observation});
         observations.set(input.id,observation);
       }
@@ -313,7 +323,7 @@ export class NaturalPresentationEvents {
     this.cells.clear();this.heap=[];
     this.inputs=new Array(world.resources.length);this.positions=new Int32Array(world.resources.length);this.positions.fill(-1);
     this.deadlines=new Float64Array(world.resources.length);
-    const probe={...world};
+    const queries=createGrowthQueries(world);
     try {
       for(let source=0;source<world.resources.length;source++){
         const r=world.resources[source]!;
@@ -326,8 +336,8 @@ export class NaturalPresentationEvents {
         const old=reusable?.get(input.id);
         const retained=old&&old.plannedAt<=clock.tick&&(old.deadline===undefined||clock.tick<old.deadline)
           &&sameInputs(old.input,input)?old:undefined;
-        const observation=retained?.observation??observe(world,r);
-        const deadline=retained?retained.deadline:nextDeadline(world,probe,r,input,clock,observation);
+        const observation=retained?.observation??observe(world,r,queries);
+        const deadline=retained?retained.deadline:nextDeadline(world,queries,r,input,clock,observation);
         const forecast=retained??{input,plannedAt:clock.tick,deadline,observation};
         forecasts.set(input.id,forecast);observations.set(input.id,observation);
         this.inputs[source]=forecast.input;this.link(source,forecast.input);
@@ -379,7 +389,7 @@ export class NaturalPresentationEvents {
     while(this.heap.length&&this.deadlines[this.heap[0]!]!<=world.tick){
       const source=this.heap[0]!;this.remove(source);affected.add(source);due.add(source);
     }
-    const indices=[...affected].sort((left,right)=>left-right),probe={...world},observations=new Map<number,NaturalObservation>();
+    const indices=[...affected].sort((left,right)=>left-right),queries=createGrowthQueries(world),observations=new Map<number,NaturalObservation>();
     try {
       for(const source of indices){
         if(!this.natural[source])continue;
@@ -393,14 +403,29 @@ export class NaturalPresentationEvents {
           continue;
         }
         this.unlink(source,old);this.inputs[source]=input;this.link(source,input);
-        const observation=observe(world,r);
-        const deadline=nextDeadline(world,probe,r,input,clock,observation);
+        const observation=observe(world,r,queries);
+        const deadline=nextDeadline(world,queries,r,input,clock,observation);
         this.schedule(source,deadline);this.forecasts.set(input.id,{input,plannedAt:clock.tick,deadline,observation});observations.set(input.id,observation);
       }
       this.clock=clock;this.forecastClock=clock;
       return {indices,changes,observations};
     }catch{this.clear();return;}
   }
+}
+
+/** The ordinal journal already proves stable membership/order across its whole
+ * retained suffix. A dense thermal edge may evict the separately budgeted ID
+ * journal without losing that older evidence. Never infer stability from equal
+ * lengths or current Resource references alone. */
+function stableOrdinalChanges(from:World,to:World):SnapshotChanges|undefined {
+  const changes=readSnapshotChanges(from,to);
+  if(!changes||from.resources.length!==to.resources.length)return;
+  for(const ordinal of changes.resourceIndices){
+    if(!Number.isSafeInteger(ordinal)||ordinal<0||ordinal>=to.resources.length)return;
+    const resource=to.resources[ordinal],prior=from.resources[ordinal];
+    if(!resource||!prior||!Number.isSafeInteger(resource.id)||resource.id<=0||prior.id!==resource.id)return;
+  }
+  return changes;
 }
 
 /** Metadata only. Ordinals describe the FINAL C, even if the decoder has D.
@@ -414,7 +439,14 @@ export interface FinalResourceStructure {
   readonly afterCount:number;
 }
 export function composeFinalResourceStructure(from:World,to:World):FinalResourceStructure|undefined {
-  const result=readSnapshotResourceStructure(from,to);if(!result)return;
+  const result=readSnapshotResourceStructure(from,to);
+  if(!result){
+    const changes=stableOrdinalChanges(from,to);if(!changes)return;
+    const present=new Map<number,number>();
+    for(const ordinal of changes.resourceIndices)present.set(to.resources[ordinal]!.id,ordinal);
+    return {removed:new Set<number>(),present,added:new Set<number>(),tileIndices:changes.tileIndices,
+      beforeCount:from.resources.length,afterCount:to.resources.length};
+  }
   let count=from.resources.length;
   const removed=new Set<number>(),present=new Map<number,number>(),added=new Set<number>();
   for(const edge of result.edges){
@@ -462,20 +494,27 @@ export class NaturalIdPresentationEvents {
     const cell=old.input.z*this.clock.width+old.input.x,occupants=this.cells.get(cell);occupants?.delete(id);if(!occupants?.size)this.cells.delete(cell);
   }
   private put(id:number,forecast:IdForecast):void {
-    this.drop(id);this.forecasts.set(id,forecast);
-    const cell=forecast.input.z*this.clock!.width+forecast.input.x;let occupants=this.cells.get(cell);if(!occupants){occupants=new Set();this.cells.set(cell,occupants);}occupants.add(id);
-    if(forecast.deadline!==undefined){this.positions.set(id,this.heap.length);this.heap.push(id);this.up(this.heap.length-1);}
+    const old=this.forecasts.get(id),at=this.positions.get(id),width=this.clock!.width;
+    const cell=forecast.input.z*width+forecast.input.x;
+    if(!old||old.input.z*width+old.input.x!==cell){
+      if(old){const previous=old.input.z*width+old.input.x,occupants=this.cells.get(previous);occupants?.delete(id);if(!occupants?.size)this.cells.delete(previous);}
+      let occupants=this.cells.get(cell);if(!occupants){occupants=new Set();this.cells.set(cell,occupants);}occupants.add(id);
+    }
+    this.forecasts.set(id,forecast);
+    if(forecast.deadline===undefined){if(at!==undefined)this.removeHeap(id);}
+    else if(at===undefined){this.positions.set(id,this.heap.length);this.heap.push(id);this.up(this.heap.length-1);}
+    else if(old?.deadline!==forecast.deadline||old?.order!==forecast.order)this.down(this.up(at));
   }
   initialize(world:World,sources:ReadonlyMap<number,NaturalIdSource>,seed?:NaturalPresentationEvents):ReadonlyMap<number,NaturalObservation>|undefined {
     this.clear();if(!readSnapshotChanges(world,world))return;
     const clock=captureClock(world),roofs=roofCells(world);if(!clock||!roofs)return;
-    this.clock=clock;this.roofs=[...roofs];const observations=new Map<number,NaturalObservation>(),probe={...world},prior=seed?.copyIdForecasts(world);
+    this.clock=clock;this.roofs=[...roofs];const observations=new Map<number,NaturalObservation>(),queries=createGrowthQueries(world),prior=seed?.copyIdForecasts(world);
     try {
       for(const [id,source]of sources){
         const r=source.resource;if(!source.natural||!tracked(r))continue;
         const input=captureInputs(world,r);if(!input||input.id!==id)throw new Error('Unproved ID inputs.');
         const old=prior?.get(id),retained=old&&old.plannedAt<=clock.tick&&(old.deadline===undefined||clock.tick<old.deadline)&&sameInputs(old.input,input)?old:undefined;
-        const observation=retained?.observation??observe(world,r),deadline=retained?retained.deadline:nextDeadline(world,probe,r,input,clock,observation);
+        const observation=retained?.observation??observe(world,r,queries),deadline=retained?retained.deadline:nextDeadline(world,queries,r,input,clock,observation);
         const forecast={input,plannedAt:clock.tick,deadline,observation,order:source.order};
         this.forecasts.set(id,forecast);
         const cell=input.z*clock.width+input.x;let occupants=this.cells.get(cell);if(!occupants){occupants=new Set();this.cells.set(cell,occupants);}occupants.add(id);
@@ -490,7 +529,7 @@ export class NaturalIdPresentationEvents {
     const previous=this.clock,clock=captureClock(world),roofs=roofCells(world);
     // The publication chain is read afresh; the passed metadata is no public
     // authority. This method is a numerical query, not an adoption capability.
-    if(!previous||!readSnapshotResourceStructure(from,world)||!clock||!roofs||clock.tick<previous.tick||!sameContext(previous,clock)||clock.civil!==previous.civil+(clock.tick-previous.tick)){this.clear();return;}
+    if(!previous||(!readSnapshotResourceStructure(from,world)&&!stableOrdinalChanges(from,world))||!clock||!roofs||clock.tick<previous.tick||!sameContext(previous,clock)||clock.civil!==previous.civil+(clock.tick-previous.tick)){this.clear();return;}
     const affected=new Set(structure.present.keys()),due=new Set<number>();
     const atCell=(cell:number):void=>{for(const id of this.cells.get(cell)??[])affected.add(id);};
     for(const id of structure.removed)this.drop(id);
@@ -499,14 +538,14 @@ export class NaturalIdPresentationEvents {
     while(a<this.roofs.length||b<roofs.length){const old=this.roofs[a]??Infinity,next=roofs[b]??Infinity;if(old===next){a++;b++;}else if(old<next){atCell(old);a++;changedRoof=true;}else{atCell(next);b++;changedRoof=true;}}
     if(changedRoof)this.roofs=[...roofs];
     while(this.heap.length&&this.forecasts.get(this.heap[0]!)!.deadline!<=world.tick){const id=this.heap[0]!;this.removeHeap(id);affected.add(id);due.add(id);}
-    const ids=[...affected].filter(id=>sources.has(id)).sort((a,b)=>sources.get(a)!.order-sources.get(b)!.order),probe={...world},observations=new Map<number,NaturalObservation>();
+    const ids=[...affected].filter(id=>sources.has(id)).sort((a,b)=>sources.get(a)!.order-sources.get(b)!.order),queries=createGrowthQueries(world),observations=new Map<number,NaturalObservation>();
     try {
       for(const id of ids){
         const source=sources.get(id)!,r=source.resource,old=this.forecasts.get(id);
         if(!source.natural||!tracked(r)){this.drop(id);continue;}
         const input=captureInputs(world,r);if(!input||input.id!==id)throw new Error('Unproved ID inputs.');
         if(old&&sameInputs(old.input,input)&&old.order===source.order&&!due.has(id)&&old.plannedAt<=clock.tick&&(old.deadline===undefined||clock.tick<old.deadline)){observations.set(id,old.observation);continue;}
-        const observation=observe(world,r),deadline=nextDeadline(world,probe,r,input,clock,observation);
+        const observation=observe(world,r,queries),deadline=nextDeadline(world,queries,r,input,clock,observation);
         this.put(id,{input,plannedAt:clock.tick,deadline,observation,order:source.order});observations.set(id,observation);
       }
       this.clock=clock;return {affected,observations};

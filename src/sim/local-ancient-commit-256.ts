@@ -1,3 +1,4 @@
+import {invalidateTerrainJournal} from './terrain-mutation-journal.ts';
 import {unpublishedAncientGeneration256,ancientGenerationCellConflict256} from './ancient-generation-frontier-256.ts';
 import {isAncientMonumentKind256} from './ancient-monument-props-256.ts';
 import {validAncientMonumentBuilding256} from './ancient-monument-save-256.ts';
@@ -48,7 +49,7 @@ export function commitActualAncientLayout256(w:World,layout:ActualAncientLayout2
  if(!layout.structures.length&&!layout.floors.length&&!layout.roofs.length&&!layout.vanishMineables.length&&layout.nextId===w.nextId)return no('No actual ancient layout output; report the real ScatterAt no-op instead');
  // Everything above is preflight, including every identity. No callback can
  // fail after the first owner is removed. Commit uses the same originals.
- for(const [cell,t] of tiles)w.tiles[cell]=t;
+ for(const [cell,t] of tiles)w.tiles[cell]=t;invalidateTerrainJournal(w.tiles);
  w.structures.push(...layout.structures);w.nextId=layout.nextId;
  if(layout.roofs.length){w.roofing??={constructed:[],build:[],remove:[],cursor:0};const natural=new Set([...(w.roofing.natural?.thin??[]),...(w.roofing.natural?.thick??[])]);w.roofing.constructed=[...new Set([...w.roofing.constructed,...layout.roofs.filter(c=>!natural.has(c))])].sort((a,b)=>a-b);}
  return {ok:true,structureIds:layout.structures.map(b=>b.id),removedMineableIds:removed};

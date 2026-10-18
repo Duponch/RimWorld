@@ -1,0 +1,45 @@
+import type {Tile} from './types.ts';
+
+/** Derived transport bookkeeping only. No World, Tile object, value witness,
+ * simulation clock, RNG or save field is owned here. Only the closed Worker
+ * encoder enrolls an actual physical Tile[] after a complete codec capture. */
+export const TERRAIN_JOURNAL_CAPACITY=8192;
+interface Journal {readonly length:number;readonly cells:Uint32Array;version:number;fullVersion:number;poisoned:boolean}
+const journals=new WeakMap<readonly Tile[],Journal>();
+declare const cursorBrand:unique symbol;
+export interface TerrainJournalCursor {readonly [cursorBrand]:true;readonly journal:Journal;readonly version:number}
+export interface TerrainJournalRead {readonly cursor:TerrainJournalCursor;readonly indices:readonly number[]}
+const cursor=(journal:Journal):TerrainJournalCursor=>({journal,version:journal.version}) as TerrainJournalCursor;
+function advance(journal:Journal):boolean {
+ if(journal.version===Number.MAX_SAFE_INTEGER){journal.poisoned=true;return false;}
+ journal.version++;return true;
+}
+/** Writers do nothing until a closed encoder owns a complete initial capture.
+ * A mark is independent of tick and never consumes another reader's changes. */
+export function markTerrainCellChanged(tiles:readonly Tile[],index:number):void {
+ const journal=journals.get(tiles);if(!journal||!advance(journal))return;
+ if(tiles.length!==journal.length||!Number.isSafeInteger(index)||index<0||index>=journal.length){journal.fullVersion=journal.version;return;}
+ journal.cells[journal.version%TERRAIN_JOURNAL_CAPACITY]=index;
+}
+/** Bulk transactions cannot claim coverage of their internal speculative writes.
+ * Call only at the actual commit; the next capture uses the complete codec. */
+export function invalidateTerrainJournal(tiles:readonly Tile[]):void {
+ const journal=journals.get(tiles);if(journal&&advance(journal))journal.fullVersion=journal.version;
+}
+/** @internal Closed encoder boundary. Capture this BEFORE the full codec pass;
+ * commit the returned cursor only after that pass succeeds. */
+export function captureTerrainJournal(tiles:readonly Tile[]):TerrainJournalCursor {
+ let journal=journals.get(tiles);
+ if(!journal||journal.length!==tiles.length||journal.poisoned){journal={length:tiles.length,cells:new Uint32Array(TERRAIN_JOURNAL_CAPACITY),version:0,fullVersion:0,poisoned:false};journals.set(tiles,journal);}
+ return cursor(journal);
+}
+/** Missing owner, replacement, bulk invalidation and bounded history overflow
+ * all require a full value diff. No partial stamp is accepted on a gap. */
+export function readTerrainJournal(tiles:readonly Tile[],before:TerrainJournalCursor):TerrainJournalRead|undefined {
+ const journal=journals.get(tiles);
+ if(!journal||journal!==before.journal||journal.poisoned||journal.length!==tiles.length||before.version>journal.version
+  ||journal.fullVersion>before.version||journal.version-before.version>TERRAIN_JOURNAL_CAPACITY)return;
+ const indices=new Set<number>();
+ for(let version=before.version+1;version<=journal.version;version++)indices.add(journal.cells[version%TERRAIN_JOURNAL_CAPACITY]!);
+ return {cursor:cursor(journal),indices:[...indices].sort((a,b)=>a-b)};
+}

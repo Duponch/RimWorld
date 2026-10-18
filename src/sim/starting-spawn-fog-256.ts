@@ -1,3 +1,4 @@
+import {markTerrainCellChanged} from './terrain-mutation-journal.ts';
 import {captureActualFogPhysical256} from './exploration-physical-256.ts';
 import {notifyExplorationSpawn256} from './exploration-flood-256.ts';
 import {actualExplorationAffiliation256} from './exploration-actors-256.ts';
@@ -22,7 +23,7 @@ export function prepareStartingSpawnFog256(world:World,spawns:readonly {actor:Ac
  const jobSignature=JSON.stringify(touchedJobs),sameJobs=()=>world.jobs===jobs&&jobs.length===jobsBefore.length&&jobs.every((j,i)=>j===jobsBefore[i]);let used=false;
  return {changedCells:Object.freeze([...changed]),current:()=>!used&&world.tiles===tiles&&sameJobs()&&old.every((v,i)=>v===(tiles[i]!.fogged===true))&&JSON.stringify(touchedJobs)===jobSignature,
   commit(){if(used||world.tiles!==tiles||!sameJobs()||old.some((v,i)=>v!==(tiles[i]!.fogged===true))||JSON.stringify(touchedJobs)!==jobSignature)throw Error('Starting fog preflight is stale');used=true;
-   for(const i of changed)delete tiles[i]!.fogged;
+   for(const i of changed){delete tiles[i]!.fogged;markTerrainCellChanged(tiles,i);}
    // These exact newly empty intents have zero work/escrow and no claimant;
    // their existing cancellation path requires no allocation or restitution.
    const retired=retireEmptyMinesAfterReveal256(world,[...changed]);if(!retired.ok)throw Error('Preflighted starting mine cancellation changed: '+retired.reason);
