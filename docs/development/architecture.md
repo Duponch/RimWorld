@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-**V425 — lot partiel qualifié, schéma263 inchangé :** [Simulation et admission de présentation](simulation-presentation-v425.md). Admission MAIN isolée, flore et espèces actives optimisées ; survol différé pendant la navigation. Gains mesurés en pause (rotation125,43→150,11images/s), mais rotation×1 et×6 restent instables. Essai de cache d’ombres retiré ; exports entiers exacts. Publication en préparation ; aucune refonte complète ni200FPS stables annoncés.
+**V425 — lot partiel publié, schéma263 inchangé :** [Simulation et admission de présentation](simulation-presentation-v425.md). Admission MAIN isolée, flore et espèces actives optimisées ; survol différé pendant la navigation. Gains mesurés en pause (rotation125,43→150,11images/s), mais rotation×1 et×6 restent instables. Essai de cache d’ombres retiré ; exports entiers exacts. Publié ecdfe9a3/déploiementd894d842,136HTTPS exacts ; aucune refonte complète ni200FPS stables annoncés. Latence globale des interactions à traiter ensuite.
 
 **V424 — audit, schéma 263 inchangé :** [Objectif 200 FPS](performance-architecture-audit-v424.md). Chemin de présentation trop dépendant du World complet ; refonte de la projection, du flux et des indices recommandée, options Worker/WASM/natif comparées. Aucun changement produit ni gain de fluidité livré par cet audit.
 

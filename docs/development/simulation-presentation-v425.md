@@ -1,6 +1,6 @@
 # Simulation et admission de présentation — V425, lot partiel qualifié par reprises
 
-18 octobre 2026. **Lot partiel qualifié par reprises, complément de survol qualifié ; publication en préparation.** Suite de l’[audit architectural V424](performance-architecture-audit-v424.md), sur une seule colonie de référence. Schéma 263 inchangé ; V423 reste la dernière production publiée. Les183,28images/s concernent uniquement une courte fenêtre caméra fixe : elles ne prouvent pas le confort pendant les mouvements. Cette tranche ne crée aucune mécanique et ne démontre ni 200 FPS ni une refonte complète de la présentation.
+18 octobre 2026. **Lot partiel qualifié par reprises et publié, complément de survol inclus.** Suite de l’[audit architectural V424](performance-architecture-audit-v424.md), sur une seule colonie de référence. Schéma 263 inchangé ; produit ecdfe9a3/déploiementd894d842. Les183,28images/s concernent uniquement une courte fenêtre caméra fixe : elles ne prouvent pas le confort pendant les mouvements. Cette tranche ne crée aucune mécanique et ne démontre ni 200 FPS ni une refonte complète de la présentation.
 
 ## Résultat actuellement établi
 
@@ -191,7 +191,7 @@ Cette paire06→07 est globalement moins bonne : même la pause fixe, avec pose 
 
 Le seul complément produit conservé est le survol différé : dernière coordonnée consommée une fois par image, suspension pendant les boutons droite/milieu, reprise sur la vraie position avec hit-test DOM frais. Sélections, annulations et picking final de commande restent synchrones. Dix-huit cas ciblés d’entrées passent ; après retrait des ombres, typage et build Pages passent en27,954s. Les1732sources sont gelées. La reprise native `native-input-recovery08` passe en100,084s : drag réel de127,128 à133,128, aperçu résident, annulation au second bouton droit sans tâche créée, survol repris après pan et export entier identique au35. Sa preuve est complète et ses erreurs vides. Elle ne sert pas de mesure FPS pendant la charge extérieure.
 
-Schéma263, règles, sauvegardes et archives restent inchangés. Le temps d’adoption MAIN et les passes de rendu restent des limites distinctes à traiter ; les200FPS stables ne sont pas acquis. Aucun déploiement V425 n’est effectué à ce stade.
+Schéma263, règles, sauvegardes et archives restent inchangés. Le temps d’adoption MAIN et les passes de rendu restent des limites distinctes à traiter ; les200FPS stables ne sont pas acquis. Ce complément est inclus dans la publication décrite ci-dessous.
 
 ### Comparaison finale du survol, sans profileur CPU
 
@@ -215,3 +215,11 @@ Les gains observés en pause sont19,67% en rotation et16,12% en pan ; le CPU ima
 Les quatre preuves11/12 sont complètes, sans erreur ; les deux exports en pause sont entièrement identiques à leur original35. Le contrôle d’interaction08 reste acquis séparément. Les1732sources sont vérifiées exactes après les mesures ; le build final sans essai d’ombres a passé en27,954s. Aucun changement d’horloge, de bridge ou d’interpolation dans ce complément d’entrée ; les contrôles temporels du lot initial restent ceux décrits plus haut, sans leur attribuer une nouvelle exécution.
 
 Une candidate privée d’admission de flore réutilisant le témoin existant est préparée pour la suite ; elle n’est ni intégrée ni testée et aucun gain ne lui est attribué. La livraison courante contient uniquement le lot initial et ce complément d’entrée.
+
+## Publication du lot partiel
+
+Le produit `ecdfe9a3e91ba033ced17bdf8844eedc646c0ef8`, incluant le lot initial `b82c95c1`, est poussé sur `origin/main` et publié sur [Elsewhere](https://elsewhere-cq7.pages.dev) le18octobre2026, déploiement [d894d842](https://d894d842.elsewhere-cq7.pages.dev). Le build Pages acquis en27,954s correspond aux1732sources gelées ; le contrôle documentaire final passe en2,095s. Aucun essai d’ombres ni prototype privé d’admission de flore n’est inclus.
+
+L’inspection `tmp/elsewhere-pages/v425-package-JZ0eHE` confirme les70fichiers de catalogue/sauvegardes identiques entre `public` et `dist`, les67entrées du catalogue et les68anciens payloads préservés. La vérification `tmp/elsewhere-pages/v425-http-HzCuZv`, commencée à18:24:05UTC, passe avec136réponses HTTPS aux octets et MIME attendus sur les origines stable et déployée, sans erreur. Elle vérifie la disponibilité du paquet ; elle ne constitue pas une nouvelle mesure de performances ni une nouvelle recharge jouée.
+
+Après ses propres essais, l’utilisateur confirme une amélioration des rotations, mais un confort global insuffisant : ordres de déplacement, pose de constructions et validation de zones ont un délai perceptible. Ces exemples motivent l’analyse du trajet commun entrée→commande→simulation→publication→adoption→présentation, sans les traiter comme trois correctifs isolés. Deux pages actives peuvent se partager CPU/GPU ; aucun gain mesuré n’est attribué à ces essais humains non instrumentés. Les200FPS stables et la faible latence générale restent ouverts.
