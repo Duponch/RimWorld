@@ -1,5 +1,7 @@
 # V430 — préparation de la végétation hors du thread de rendu
 
+Lot publié : produit `70282ec6921db1afba668918b9069bd31bc2de44`, déploiement Cloudflare `86069a64`. Schéma 263 inchangé. Gains×6 mesurés sur trois références, ×1 mixte et stabilité200FPS toujours ouverte.
+
 Le 19 octobre 2026, l’utilisateur autorise cette refonte en autonomie, avec sauvegardes préservées et comparaison des trois parties, notamment en ×6. Le résultat visé est la stabilité, pas seulement une moyenne proche de200FPS. Aucun changement de gameplay, de détail graphique, de vitesse demandée ou de schéma263.
 
 ## Responsabilité extraite
@@ -80,4 +82,12 @@ Le lot supprime le calcul prévisionnel naturel MAIN de la voie résidente et co
 
 `npm run test:presentation` est acquis en158,757s (`v430-presentation`) :45s de minage puis45s d’abattage, pauses/reprises et changements de vitesse du pilote commun. Zéro saut, dépassement de déplacement continu ou occupation solide sur les deux actions ;10708/10752images, maximums20,9/29,2ms. Ce parcours confirme ses contrats temporels, pas la fluidité des trois colonies mesurées séparément.
 
-Le premier contrôle documentaire relève un espace manquant entre « schéma » et263 dans le nouvel index d’architecture ; en-tête corrigé sans changement produit, puis contrôle repris. Lot qualifié pour publication après ces contrôles. Le reçu Cloudflare sera ajouté après déploiement ; la production reste V429/5368f3c9 jusqu’à cette opération.
+Le premier contrôle documentaire relève un espace manquant entre « schéma » et263 dans le nouvel index d’architecture ; en-tête corrigé sans changement produit, puis contrôle repris acquis en1,806s.
+
+## Publication
+
+Le produit `70282ec6921db1afba668918b9069bd31bc2de44` est commité et poussé sur `origin/main`. Son build Pages propre passe en15,043s et son inspection en1,680s (`tmp/elsewhere-pages/v430-package-X95yvS/report.json`). Les70fichiers de sauvegardes/catalogue correspondent exactement au public local ; les67fiches,68anciens payloads et la démonstration Éclaircies restent conservés. Les deux entrées Worker sont compilées ; aucun instrument de mesure privé ni laboratoire ne rejoint le paquet.
+
+Cloudflare publie [86069a64](https://86069a64.elsewhere-cq7.pages.dev) en13,645s ; [l’adresse publique](https://elsewhere-cq7.pages.dev) est actualisée. Les138réponses HTTPS contrôlées sur les deux origines sont exactes en10,188s, avec les MIME attendus et aucune erreur (`tmp/elsewhere-pages/v430-http-osTMK5/report.json`). Ce contrôle prouve la disponibilité des fichiers, sans constituer un nouveau parcours de jeu ou une nouvelle mesure FPS en production.
+
+L’avertissement Wrangler de dépôt non propre concerne uniquement le dossier utilisateur non suivi `references_UI/`, laissé intact et absent du paquet. Les sources produit qualifiées sont commitées ; le reçu documentaire est ajouté séparément. Aucun schéma, sauvegarde publique ou réglage de qualité n’est modifié par cette publication.
