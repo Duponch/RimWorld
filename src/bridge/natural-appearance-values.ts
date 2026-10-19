@@ -29,4 +29,20 @@ export interface NaturalVisualDelta {
   readonly checkpoint:boolean;
   readonly upsert:readonly NaturalVisualUpsert[];
   readonly removed:readonly number[];
+  /** Exact crop stream at this same publication boundary, with separate pages. */
+  readonly crops?:CropVisualDelta;
 }
+/** The current producer always sends the extension. Its absence is the old
+ * closed V430/V2 form, which grants no prepared-crop capability. */
+export interface CropNaturalVisualDelta extends NaturalVisualDelta {readonly crops:CropVisualDelta}
+export interface TypedCropNaturalVisualDelta extends NaturalVisualDelta {readonly crops:TypedCropVisualDelta}
+export interface CropVisualUpsert {
+ readonly id:number;readonly ordinal:number;readonly growth:number;
+ readonly leafless:boolean;readonly blighted:boolean;readonly supported:boolean;
+}
+export interface ObjectCropVisualDelta {readonly upsert:readonly CropVisualUpsert[];readonly removed:readonly number[]}
+export interface TypedCropVisualDelta {
+ readonly format:'columns-v1';readonly ids:Float64Array;readonly ordinals:Uint32Array;
+ readonly growth:Float64Array;readonly flags:Uint8Array;readonly removed:Float64Array;
+}
+export type CropVisualDelta=ObjectCropVisualDelta|TypedCropVisualDelta;

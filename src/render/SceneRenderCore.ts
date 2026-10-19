@@ -51,7 +51,7 @@ import type { ClosedMainMapIntentReader } from './closed-main-map-intents';
 import type { ConfirmedIntentFields } from './confirmed-intent-fields';
 import { jobDuration } from '../sim/farming';
 import { travelHeight } from './furniture-motion';
-import { pileSurfaces,pileIdentitySurfaces } from './pile-surfaces';
+import { pileSurfaces,pileIdentitySurfaces,withPileSurfaceReads } from './pile-surfaces';
 import { CropLayer } from './CropLayer';
 import type { ScreenPawn, SelectionGesture } from './PawnSelectionInput';
 import { FireLayer } from './FireLayer';
@@ -157,7 +157,8 @@ export class SceneRenderCore {
   protected readonly frames = new FrameMetrics();
   protected viewportWidth=1;
   protected viewportHeight=1;
-  protected readonly environmentLighting = new EnvironmentLighting();
+  protected createEnvironmentLighting():EnvironmentLighting { return new EnvironmentLighting(); }
+  protected readonly environmentLighting = this.createEnvironmentLighting();
   protected readonly overview = new OverviewLayer(this.environmentLighting.configure);
   protected readonly timeline = new MotionTimeline();
   protected readonly confirmedIntentReader=this.createIntentReader();
@@ -493,6 +494,10 @@ export class SceneRenderCore {
   }
 
   protected applyWorld(world: World, resetPresentation = false): void {
+    withPileSurfaceReads(()=>this.applyWorldWithinSurfaceReads(world,resetPresentation));
+  }
+
+  private applyWorldWithinSurfaceReads(world: World, resetPresentation = false): void {
     if (this.disposed) return;
     this.invalidatePausedShadow(resetPresentation);
     if (resetPresentation) this.cancelDesignation();
@@ -594,9 +599,12 @@ export class SceneRenderCore {
       +`;${world.roofing?.build.join(',')};${world.roofing?.remove.join(',')};${roofCoverage(world).join(',')};${world.roofing?.natural?.thin.join(',')};${world.roofing?.natural?.thick.join(',')}`;
     if(jobsChanged||designationKey!==this.designationKey){this.designationKey=designationKey;if(this.confirmedIntents)this.confirmedDesignationsDirty=true;else this.designations.update(world);}
     if(resetPoses)this.homeSignature.clear();
-    const storageKey = `${this.homeSignature.read(world.home)};`+this.storageSignature.read(world.stockpiles,resetPoses)+`;snow:${world.snowClearArea?.join(',')??''};surface:${!!world.snow}`;
+    const residentStorage = this.immutableWorlds.has(world);
+    const homeKey = residentStorage ? this.homeSignature.readResident(world) : this.homeSignature.read(world.home);
+    const stockpileKey = residentStorage ? this.storageSignature.readResident(world,resetPoses) : this.storageSignature.read(world.stockpiles,resetPoses);
+    const storageKey = `${homeKey};${stockpileKey};snow:${world.snowClearArea?.join(',')??''};surface:${!!world.snow}`;
     if (storageKey !== this.storageKey || newMap || groundChanged) { this.storageKey = storageKey; this.buildStorage(world); }
-    if (newMap || previousWorld?.resources !== world.resources || Math.floor((previousWorld?.tick ?? -1) / 25) !== Math.floor(world.tick / 25)) this.crops.update(world, newMap, this.immutableWorlds.has(world));
+    if (newMap || previousWorld?.resources !== world.resources || this.crops.hasPreparedFrameChange(world) || Math.floor((previousWorld?.tick ?? -1) / 25) !== Math.floor(world.tick / 25)) this.crops.update(world, newMap, this.immutableWorlds.has(world),resourceFrame);
     const zoneChanged=this.updateGrowingZones(newMap);
     if(this.allowedAreaLayer.updateIntents(world,this.confirmedIntents?this.confirmedIntents.allowedAreas:world.allowedAreas,this.allowedAreaTarget,newMap,this.confirmedIntents?i=>knownCell256(world,i):undefined))this.zonesTintDirty=true;
     if(zoneChanged||newMap)this.zonesTintDirty=true;

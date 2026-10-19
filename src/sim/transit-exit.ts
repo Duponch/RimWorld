@@ -22,7 +22,7 @@ export function leaveTransitCell(world:World,pawn:Pawn,getBlocked:NavigationGrid
     const target=subject&&'kind' in subject&&subject.kind==='double-bed'&&pawn.rescue.bedSlot!==undefined?bedSlotCell(subject,pawn.rescue.bedSlot):subject;
     if(target?.x===pawn.x&&target.z===pawn.z){delete pawn.transitExit;return false;}
   }
-  if(canStandAt(world,pawn)){
+  if(canStandAt(world,pawn,budget.structureGeometry?.())){
     if(pawn.transitExit&&!pawn.draft?.target&&!pawn.need&&!pawn.haul&&!pawn.cooking&&pawn.jobId===null&&!pawn.recreation.task){pawn.path=[];pawn.state='idle';}
     delete pawn.transitExit;return false;
   }
@@ -36,9 +36,9 @@ export function leaveTransitCell(world:World,pawn:Pawn,getBlocked:NavigationGrid
     if(!releaseWork(world,pawn))return true;
   }
   const blocked=getBlocked();let next=pawn.path[0];
-  if(!next||!canStep(world,pawn,next,blocked,CIVIL_TRANSIT_BLOCKERS)) {
+  if(!next||!canStep(world,pawn,next,blocked,CIVIL_TRANSIT_BLOCKERS,budget.structureGeometry?.())) {
     if(pawn.planCooldown>0)return true;
-    const reserved=reservedServiceCells(world,pawn.id),goals=new Set<number>(),standable=captureStandability(world);
+    const reserved=reservedServiceCells(world,pawn.id),goals=new Set<number>(),standable=captureStandability(world,budget.structureGeometry?.());
     const add=(c:Cell)=>{if(standable(c)&&!reserved.has(c.z*world.width+c.x))goals.add(c.z*world.width+c.x);};
     // The nearest standable exit of a connected furniture patch is on its
     // cardinal boundary under our solid-corner rule.
@@ -50,6 +50,6 @@ export function leaveTransitCell(world:World,pawn:Pawn,getBlocked:NavigationGrid
     if(!path?.length)return true;
     pawn.path=path;next=path[0];
   }
-  if(next){pawn.transitExit=true;pawn.state='moving';if(startTravel(world,pawn,next,getLight))pawn.path.shift();}
+  if(next){pawn.transitExit=true;pawn.state='moving';if(startTravel(world,pawn,next,getLight,budget.structureGeometry?.()))pawn.path.shift();}
   return true;
 }

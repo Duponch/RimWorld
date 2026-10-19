@@ -1,10 +1,12 @@
 import * as THREE from 'three/webgpu';
 import { Fn, attribute, cos, sin, positionLocal, texture, uv, varyingProperty, vec2, vec3 } from 'three/tsl';
 import type { FilthRecord } from '../sim/filth-rules';
-import { createFilthAtlas, filthDecal, FILTH_ATLAS } from './filth-appearance';
+import { createFilthAtlas, FILTH_ATLAS } from './filth-appearance';
 import { prepareGrassBloodMasks } from './grass-blood-mask';
 import { material } from './primitives';
-import { FILTH_SURFACE_OFFSET, FLOOR_SURFACE_Y, filthDecalBounds, filthSurfacePatches, surfaceHeightAtCell, type FilthSurface, type SurfaceBounds, type SurfacePatch } from './surface-height';
+import { FILTH_SURFACE_OFFSET, type FilthSurface } from './surface-height';
+import {FilthPresentationPieces} from './filth-presentation-pieces';
+import {markResidentAttributeRange} from './resident-attribute-range';
 
 /** Flat alpha decals: one resident draw for all six species and all thicknesses.
  * No per-frame work, per-stain material, billboard or simulation randomness. */
@@ -13,9 +15,7 @@ export class FilthLayer {
   private readonly atlas: THREE.DataTexture;
   private capacity = 16;
   private revision = 0;
-  private previous: Pick<FilthRecord, 'id' | 'x' | 'z' | 'kind' | 'thickness'>[] = [];
-  private previousSurfaceSize: readonly [number, number] | undefined;
-  private readonly previousSurfaceHeights = new Map<number, number | undefined>();
+  private readonly presentation=new FilthPresentationPieces();
   constructor(configure?: (m: THREE.MeshStandardNodeMaterial) => void) {
     const pixels = createFilthAtlas();
     prepareGrassBloodMasks(pixels);
@@ -63,48 +63,27 @@ export class FilthLayer {
    * or removal invalidates unchanged filth, including mutable direct worlds.
    * Standalone callers without a surface retain the historical .071 height. */
   update(items: readonly FilthRecord[], reset = false, surface?: FilthSurface): void {
-    if (!reset && items.length === this.previous.length && items.every((f, i) => {
-      const p = this.previous[i]!; return f.id === p.id && f.x === p.x && f.z === p.z && f.kind === p.kind && f.thickness === p.thickness;
-    }) && this.surfaceUnchanged(surface)) return;
+    const frame=this.presentation.read(items,reset,surface);
+    if(!frame.changed)return;
     this.revision++;
-    this.previous = items.map(({ id, x, z, kind, thickness }) => ({ id, x, z, kind, thickness }));
-    this.previousSurfaceSize = surface ? [surface.width, surface.height] : undefined;
-    this.previousSurfaceHeights.clear();
-    const pieces: { decal: ReturnType<typeof filthDecal>; patch: SurfacePatch }[] = [];
-    for (const f of items) for (let layer = 0; layer < f.thickness; layer++) {
-      const decal = filthDecal(f, layer), bounds = filthDecalBounds(decal);
-      if (surface) this.rememberSurface(surface, bounds);
-      const patches = surface ? filthSurfacePatches(surface, bounds) : [{ ...bounds, height: FLOOR_SURFACE_Y }];
-      for (const patch of patches) pieces.push({ decal, patch });
-    }
-    const count = pieces.length;
-    if (count > this.capacity) { while (count > this.capacity) this.capacity *= 2; this.allocate(); }
+    const count=frame.count,resized=count>this.capacity;
+    if (resized) { while (count > this.capacity) this.capacity *= 2; this.allocate(); }
     const pose = this.mesh.geometry.getAttribute('filthPose') as THREE.InstancedBufferAttribute;
     const shape = this.mesh.geometry.getAttribute('filthShape') as THREE.InstancedBufferAttribute;
     const clip = this.mesh.geometry.getAttribute('filthClip') as THREE.InstancedBufferAttribute;
-    let i = 0;
-    for (const { decal: d, patch } of pieces) {
-      pose.setXYZW(i, d.x, patch.height + FILTH_SURFACE_OFFSET, d.z, d.rotation);
-      shape.setXYZW(i, d.width, d.height, d.tile, d.flip ? 1 : 0);
-      clip.setXYZW(i, patch.minX, patch.minZ, patch.maxX, patch.maxZ); i++;
+    let first=count,last=0;
+    for(const block of frame.blocks){
+      if(!resized&&!block.changed)continue;
+      let i=block.offset;
+      for (const { decal: d, patch } of block.pieces) {
+        pose.setXYZW(i, d.x, patch.height + FILTH_SURFACE_OFFSET, d.z, d.rotation);
+        shape.setXYZW(i, d.width, d.height, d.tile, d.flip ? 1 : 0);
+        clip.setXYZW(i, patch.minX, patch.minZ, patch.maxX, patch.maxZ); i++;
+      }
+      if(i>block.offset){first=Math.min(first,block.offset);last=Math.max(last,i);}
     }
-    pose.needsUpdate = shape.needsUpdate = clip.needsUpdate = true;
+    if(last>first)for(const attribute of [pose,shape,clip])markResidentAttributeRange(attribute,first*4,(last-first)*4);
     this.mesh.geometry.instanceCount = count; this.mesh.visible = count > 0;
-  }
-  private surfaceUnchanged(surface?: FilthSurface): boolean {
-    if (!surface) return this.previousSurfaceSize === undefined;
-    if (!this.previousSurfaceSize || this.previousSurfaceSize[0] !== surface.width || this.previousSurfaceSize[1] !== surface.height) return false;
-    for (const [index, height] of this.previousSurfaceHeights) {
-      if (height !== surfaceHeightAtCell(surface, index % surface.width, Math.floor(index / surface.width))) return false;
-    }
-    return true;
-  }
-  private rememberSurface(surface: FilthSurface, bounds: SurfaceBounds): void {
-    const minX = Math.max(0, Math.floor(bounds.minX + .5)), maxX = Math.min(surface.width - 1, Math.floor(bounds.maxX + .5));
-    const minZ = Math.max(0, Math.floor(bounds.minZ + .5)), maxZ = Math.min(surface.height - 1, Math.floor(bounds.maxZ + .5));
-    for (let z = minZ; z <= maxZ; z++) for (let x = minX; x <= maxX; x++) {
-      this.previousSurfaceHeights.set(z * surface.width + x, surfaceHeightAtCell(surface, x, z));
-    }
   }
   prepareForCompile(): () => void {
     if (this.mesh.visible) return () => {};

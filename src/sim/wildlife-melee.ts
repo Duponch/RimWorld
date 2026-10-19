@@ -97,7 +97,7 @@ export function advanceAnimalMelee(w:World,a:WildAnimal,core:number,blocked:()=>
   // The job may expire mid-edge. Release its intent without discarding the
   // captured physical movement; a later decision may start a fresh response.
   if(a.retaliation&&core>=a.retaliation.untilCore){delete a.retaliation;a.path=[];}
-  if(advanceHiveStructureMelee256(w,a,core,blocked()))return true;
+  if(advanceHiveStructureMelee256(w,a,core,blocked))return true;
   const duty=hiveAttackTarget256(w,a);
   const hunt=a.predation,target=m?animalManhunterTarget(w,a):hunt?animalPredationTarget(w,a,core):a.threat?animalMeleeTarget(w,a,core,grid()):duty;
   if(!target){

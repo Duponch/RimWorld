@@ -1,10 +1,12 @@
 import * as THREE from 'three/webgpu';
-import { texture } from 'three/tsl';
+import {indexTimberGeometry} from './index-timber-geometry';
+import { attribute,materialColor,texture,vec4,vertexColor } from 'three/tsl';
+import {OverviewBatch,configureOverviewMaterial} from './OverviewBatch';
 import type { World } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
 import { doorOrientations, isRoomDoor } from '../sim/door-rules';
 import { doorLeafTop } from './door-parts';
-import { instancedPatternUv } from './texture-variation';
+import { timberPatternUv } from './timber-pattern-uv';
 import { woodFiberDetail } from './stylized-surfaces';
 import type { Placement } from './primitives';
 import { InstanceTargetTint } from './instance-target-tint';
@@ -95,6 +97,7 @@ export function createTimberGeometry(roof: boolean): THREE.BufferGeometry {
   result.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));
   result.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
   result.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  indexTimberGeometry(result);
   result.computeBoundingBox();result.computeBoundingSphere();
   return result;
 }
@@ -208,48 +211,67 @@ export class TimberCladdingLayer {
   readonly grain=grainTexture();
   readonly material=new THREE.MeshStandardNodeMaterial({color:0xffffff,roughness:.94,metalness:0,flatShading:true,vertexColors:true,map:this.grain});
   readonly plainMaterial=new THREE.MeshStandardNodeMaterial({color:0xffffff,roughness:.94,metalness:0,flatShading:true,vertexColors:true});
-  wallMesh:THREE.InstancedMesh;
-  eaveMesh:THREE.InstancedMesh;
-  private wallCapacity=256;
-  private eaveCapacity=256;
+  /** Exactly two resident batches cover every map. Slots retain the canonical
+   * V432 wall/eave order; these handles expose their complete active counts. */
+  wallMesh:OverviewBatch;
+  eaveMesh:OverviewBatch;
+  private readonly chunks=new Map<string,{
+    wall:{mesh:OverviewBatch;capacity:number;tint:InstanceTargetTint};
+    eave:{mesh:OverviewBatch;capacity:number;tint:InstanceTargetTint};
+  }>();
   private key='';
   private texturesEnabled=true;
-  private readonly wallTint=new InstanceTargetTint();
-  private readonly eaveTint=new InstanceTargetTint();
-  setTargetPreview(ids:ReadonlySet<number>):void {this.wallTint.setTargets(ids);this.eaveTint.setTargets(ids);}
-  clearTargetPreview():void {this.wallTint.clear();this.eaveTint.clear();}
+  private targetPreviewIds:ReadonlySet<number>=new Set();
+  setTargetPreview(ids:ReadonlySet<number>):void {
+    if(ids.size===this.targetPreviewIds.size&&[...ids].every(id=>this.targetPreviewIds.has(id)))return;
+    this.targetPreviewIds=new Set(ids);
+    for(const chunk of this.chunks.values()){chunk.wall.tint.setTargets(ids);chunk.eave.tint.setTargets(ids);}
+  }
+  clearTargetPreview():void {
+    this.targetPreviewIds=new Set();
+    for(const chunk of this.chunks.values()){chunk.wall.tint.clear();chunk.eave.tint.clear();}
+  }
   constructor(configure?: (material: THREE.MeshStandardNodeMaterial)=>void) {
-    // NodeMaterial still applies authored vertex colours and instance tints
-    // after colorNode, just as it does for the original map material.
-    this.material.colorNode=texture(this.grain,instancedPatternUv()).rgb;
+    // Stable named matrix attributes avoid capacity-dependent instance UBOs.
+    // Match NodeMaterial r186: tint * (base * authored vertex colour), with
+    // the same grouping and alpha. Disable only its duplicate implicit path.
+    for(const mat of [this.material,this.plainMaterial]){
+      configureOverviewMaterial(mat);mat.vertexColors=false;
+    }
+    const tint=vec4(attribute('overviewColor','vec3'),1);
+    this.material.colorNode=tint.mul(vec4(texture(this.grain,timberPatternUv()).rgb,1).mul(vertexColor()));
+    this.plainMaterial.colorNode=tint.mul(materialColor.mul(vertexColor()));
     this.material.map=null;
     for(const mat of [this.material,this.plainMaterial]){configure?.(mat);mat.userData.rendererOwned=true;}
-    this.wallMesh=this.makeMesh(this.wallGeometry,'timber-vertical-planks',this.wallCapacity);
-    this.eaveMesh=this.makeMesh(this.eaveGeometry,'timber-eave-planks',this.eaveCapacity);
-    this.group.add(this.wallMesh,this.eaveMesh);
+    const origin=this.createChunk('0:0',256);
+    this.wallMesh=origin.wall.mesh;this.eaveMesh=origin.eave.mesh;
   }
   setTexturesEnabled(enabled:boolean):void {
     if(this.texturesEnabled===enabled)return;
     this.texturesEnabled=enabled;
-    this.wallMesh.material=this.eaveMesh.material=enabled?this.material:this.plainMaterial;
+    for(const chunk of this.chunks.values())chunk.wall.mesh.material=chunk.eave.mesh.material=enabled?this.material:this.plainMaterial;
   }
-  private makeMesh(shape:THREE.BufferGeometry,name:string,capacity:number):THREE.InstancedMesh {
-    const mesh=new THREE.InstancedMesh(shape,this.texturesEnabled?this.material:this.plainMaterial,capacity);
-    mesh.name=name;mesh.count=0;mesh.visible=false;mesh.castShadow=true;mesh.receiveShadow=true;
-    mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+  private makeMesh(shape:THREE.BufferGeometry,name:string,capacity:number):OverviewBatch {
+    const mesh=new OverviewBatch(shape,this.texturesEnabled?this.material:this.plainMaterial,capacity);
+    mesh.geometry.setAttribute('timberOrdinal',new THREE.InstancedBufferAttribute(new Float32Array(capacity),1).setUsage(THREE.StaticDrawUsage));
+    mesh.name=name;mesh.activeCount=0;mesh.castShadow=true;mesh.receiveShadow=true;
     return mesh;
   }
-  private grow(wallCount:number,eaveCount:number):void {
-    if(wallCount>this.wallCapacity) {
-      this.wallCapacity=2**Math.ceil(Math.log2(wallCount));
-      const old=this.wallMesh;this.wallMesh=this.makeMesh(this.wallGeometry,old.name,this.wallCapacity);
-      this.group.remove(old);old.dispose();this.group.add(this.wallMesh);
-    }
-    if(eaveCount>this.eaveCapacity) {
-      this.eaveCapacity=2**Math.ceil(Math.log2(eaveCount));
-      const old=this.eaveMesh;this.eaveMesh=this.makeMesh(this.eaveGeometry,old.name,this.eaveCapacity);
-      this.group.remove(old);old.dispose();this.group.add(this.eaveMesh);
-    }
+  private createChunk(key:string,capacity=16){
+    const chunk={
+      wall:{mesh:this.makeMesh(this.wallGeometry,'timber-vertical-planks',capacity),capacity,tint:new InstanceTargetTint()},
+      eave:{mesh:this.makeMesh(this.eaveGeometry,'timber-eave-planks',capacity),capacity,tint:new InstanceTargetTint()},
+    };
+    for(const mesh of [chunk.wall.mesh,chunk.eave.mesh]){mesh.userData.timberChunk=key;this.group.add(mesh);}
+    this.chunks.set(key,chunk);return chunk;
+  }
+  private grow(batch:{mesh:OverviewBatch;capacity:number},count:number,shape:THREE.BufferGeometry):void {
+    if(count<=batch.capacity)return;
+    batch.capacity=2**Math.ceil(Math.log2(count));
+    // update() immediately rewrites every live slot from canonical placements;
+    // no persistent CPU mirror or copy of obsolete buffer contents is needed.
+    batch.mesh.allocate(shape,batch.capacity);
+    batch.mesh.geometry.setAttribute('timberOrdinal',new THREE.InstancedBufferAttribute(new Float32Array(batch.capacity),1).setUsage(THREE.StaticDrawUsage));
   }
   update(world:World,cutaway:boolean,reset=false):void {
     const walls=world.structures.filter(s=>s.kind==='wall'&&s.material==='wood');
@@ -258,40 +280,50 @@ export class TimberCladdingLayer {
     const key=`${cutaway}|${walls.map(s=>`${s.id}:${s.x}:${s.z}`).join('|')}|${doors.map(s=>`${s.id}:${s.x}:${s.z}:${axes.get(s.z*world.width+s.x)??0}`).join('|')}`;
     if(!reset&&key===this.key)return;
     this.key=key;
-    this.wallTint.restore();this.eaveTint.restore();
+    for(const chunk of this.chunks.values()){chunk.wall.tint.restore();chunk.eave.tint.restore();}
     const parts=timberCladdingParts(world,cutaway);
-    this.grow(parts.walls.length,parts.eaves.length);
-    const object=new THREE.Object3D(),color=new THREE.Color();
-    for(const [mesh,placements] of [[this.wallMesh,parts.walls],[this.eaveMesh,parts.eaves]] as const) {
-      const targetIds:(number|undefined)[]=[];
-      for(let i=0;i<placements.length;i++) {
-        const p=placements[i]!;
-        object.position.set(p.x,p.y,p.z);object.rotation.set(0,p.ry??0,0);
-        object.scale.set(p.sx??1,p.sy??1,p.sz??1);object.updateMatrix();
-        mesh.setMatrixAt(i,object.matrix);mesh.setColorAt(i,color.setRGB(p.tint,p.tint,p.tint));
-        targetIds.push(p.key);
-      }
-      mesh.count=placements.length;
-      if(mesh.instanceColor)(mesh===this.wallMesh?this.wallTint:this.eaveTint).setInstances(mesh.instanceColor,targetIds);
+    const spatial=new Map<string,{wall:number[];eave:number[]}>();
+    for(const [kind,placements]of [['wall',parts.walls],['eave',parts.eaves]]as const)for(let ordinal=0;ordinal<placements.length;ordinal++){
+      // One global owner, including map borders and all map dimensions.
+      // Preserve the original canonical ordinal without a spatial regrouping.
+      const key='0:0';
+      let entry=spatial.get(key);if(!entry){entry={wall:[],eave:[]};spatial.set(key,entry);}entry[kind].push(ordinal);
     }
-    for(const mesh of [this.wallMesh,this.eaveMesh]) {
-      mesh.visible=mesh.count>0;
-      mesh.instanceMatrix.needsUpdate=true;
-      if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
-      mesh.computeBoundingSphere();
+    const object=new THREE.Object3D(),color=new THREE.Color();
+    for(const [key,entry]of spatial){
+      const chunk=this.chunks.get(key)??this.createChunk(key);
+      for(const [kind,placements,shape]of [['wall',parts.walls,this.wallGeometry],['eave',parts.eaves,this.eaveGeometry]]as const){
+        const batch=chunk[kind],ordinals=entry[kind];this.grow(batch,ordinals.length,shape);
+        const mesh=batch.mesh,ordinalAttribute=mesh.geometry.getAttribute('timberOrdinal')as THREE.InstancedBufferAttribute,targetIds:(number|undefined)[]=[];
+        for(let slot=0;slot<ordinals.length;slot++){
+          const ordinal=ordinals[slot]!,p=placements[ordinal]!;
+          object.position.set(p.x,p.y,p.z);object.rotation.set(0,p.ry??0,0);
+          object.scale.set(p.sx??1,p.sy??1,p.sz??1);object.updateMatrix();
+          mesh.setMatrixAt(slot,object.matrix);mesh.setColorAt(slot,color.setRGB(p.tint,p.tint,p.tint));
+          ordinalAttribute.setX(slot,ordinal);targetIds.push(p.key);
+        }
+        mesh.activeCount=ordinals.length;ordinalAttribute.needsUpdate=true;
+        batch.tint.setInstances(mesh.colorBuffer,targetIds);batch.tint.setTargets(this.targetPreviewIds);
+      }
+    }
+    for(const [key,chunk]of this.chunks)for(const batch of [chunk.wall,chunk.eave]){
+      const mesh=batch.mesh;
+      if(!spatial.has(key)){mesh.activeCount=0;batch.tint.setInstances(mesh.colorBuffer,[]);}
+      mesh.instanceMatrix.needsUpdate=true;mesh.colorBuffer.needsUpdate=true;mesh.computeBoundingSphere();
     }
   }
   /** Compile empty batches for the first real and shadow passes. */
   prepareForCompile():()=>void {
-    const empty=[this.wallMesh,this.eaveMesh].filter(mesh=>mesh.count===0);
-    const saved=empty.map(mesh=>({mesh,version:mesh.instanceMatrix.version}));
-    for(const mesh of empty){mesh.count=1;mesh.visible=true;}
-    return ()=>{for(const {mesh,version} of saved)if(mesh.instanceMatrix.version===version){mesh.count=0;mesh.visible=false;}};
+    const empty=[...this.chunks.values()].flatMap(chunk=>[chunk.wall.mesh,chunk.eave.mesh]).filter(mesh=>mesh.activeCount===0);
+    const saved=empty.map(mesh=>({mesh,buffer:mesh.instanceMatrix,version:mesh.instanceMatrix.version}));
+    for(const mesh of empty)mesh.activeCount=1;
+    return ()=>{for(const {mesh,buffer,version} of saved)if(mesh.instanceMatrix===buffer&&buffer.version===version)mesh.activeCount=0;};
   }
   dispose():void {
-    this.wallTint.dispose();this.eaveTint.dispose();
-    this.group.remove(this.wallMesh,this.eaveMesh);
-    this.wallMesh.dispose();this.eaveMesh.dispose();
+    for(const chunk of this.chunks.values())for(const batch of [chunk.wall,chunk.eave]){
+      batch.tint.dispose();this.group.remove(batch.mesh);batch.mesh.dispose();
+    }
+    this.chunks.clear();
     this.wallGeometry.dispose();this.eaveGeometry.dispose();this.material.dispose();this.plainMaterial.dispose();this.grain.dispose();
   }
 }

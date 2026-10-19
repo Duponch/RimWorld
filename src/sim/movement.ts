@@ -11,6 +11,7 @@ import { medicallyStopped,pawnBody } from './health-rules.ts';
 import { doorAt, doorMotionTicks as importDoorDuration } from './door-rules.ts';
 import type { Cell, Pawn, World } from './types.ts';
 import { furnitureDelay } from './furniture-travel.ts';
+import type { StructureNavigationGeometry } from './structure-navigation.ts';
 import { LightEnvironmentCache, type LightReader } from './light-environment.ts';
 import { edgeLength,TRAVEL_TICKS,mergeSlowIntervals,travelEnd,type TravelSegment } from './travel-timing.ts';
 export { edgeLength,TRAVEL_TICKS,type TravelSegment } from './travel-timing.ts';
@@ -18,13 +19,13 @@ export { edgeLength,TRAVEL_TICKS,type TravelSegment } from './travel-timing.ts';
 export const CARDINAL_COST = 1000;
 export const DIAGONAL_COST = 1414;
 export const edgeCost = (a:Cell,b:Cell):number => a.x!==b.x && a.z!==b.z ? DIAGONAL_COST : CARDINAL_COST;
-export function startTravel(world:World,pawn:Pawn,next:Cell,getLight?:LightReader):boolean {
+export function startTravel(world:World,pawn:Pawn,next:Cell,getLight?:LightReader,geometry?:StructureNavigationGeometry):boolean {
   if(isStunned(pawn,world.tick*10)||medicallyStopped(pawn)||carrierOf(world,pawn.id)||!actorStepAllowed(world,pawn,next))return false;
   if(!readyDoorEntry(world,pawn,next))return false;
   // Carry fractional tick overshoot to the next edge; never round each diagonal up.
   let start = pawn.motion && pawn.motion.end >= world.tick-1 ? pawn.motion.end : world.tick;
   const door=doorAt(world,next);if(door)start=Math.max(start,door.door!.changedAt+(1-door.door!.from)*importDoorDuration(door));
-  const terrainDelay=furnitureDelay(world,pawn,next);
+  const terrainDelay=furnitureDelay(world,pawn,next,undefined,geometry);
   let speedFactor=(getLight?.()??new LightEnvironmentCache().read(world)).speedAt(pawn)*pawnBody(pawn).capacities.moving*apparelMoveFactor(world,pawn)*weatherMoveFactor(world,pawn);
   if(world.schemaVersion>=86){if(pawn.prisoner)speedFactor*=.35;if(pawn.rescue?.phase==='carry'||groupHumanCarrying257(world,pawn.id)||kidnapCarrying261(pawn))speedFactor*=.6;}
   if((pawn.mental?.crisis?.kind==='sad-wander'||pawn.mental?.crisis?.kind==='food-binge')&&!pawn.need)speedFactor=Math.min(speedFactor/2,TRAVEL_TICKS/5);

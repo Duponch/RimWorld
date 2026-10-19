@@ -223,6 +223,7 @@ import { deconstructionAt, deconstructionAvailable, designateDeconstruction } fr
 import { finishDeconstruction } from './deconstruction.ts';
 import { advancePriorityWork } from './priority-work.ts';
 import { leaveTransitCell } from './transit-exit.ts';
+import { structureNavigationReader } from './structure-navigation.ts';
 import { removeZonesForPlan } from './construction-zones.ts';
 import { occupancyOf, occupies } from './occupancy.ts';
 import { constructionHaulId, constructionSiteFree, constructionWorkTarget, isConstruction } from './construction-rules.ts';
@@ -1008,6 +1009,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     // Build only if this tick actually plans or moves. No cross-tick cache can hide
     // a command, edited terrain, restored save, or a wall that changed between calls.
     let blocked: Uint8Array | undefined;
+    const structureNavigation=structureNavigationReader(world);
     let roofs: RoofContext | undefined;
     let environment:WorkEnvironment|undefined;
     let furnitureSight:ReturnType<typeof captureFurnitureSight>|undefined;
@@ -1026,11 +1028,11 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     advanceFlowerPots(world,getLight(),new TemperatureView(world,thermal));
     const hasAdversary=world.pawns.some(p=>p.faction==='outlaws'&&!p.prisoner||prisonBreakActive(p)||p.mental?.crisis?.kind==='berserk')||animalThreats.length>0||(world.mechanoids??[]).some(m=>!['dead','downed'].includes(m.state));
     let thermalDirty=structuresBeforeCombat!==world.structures;
-    const invalidateEnvironment=()=>{environment=undefined;light=undefined;furnitureSight=undefined;thermalDirty=true;};
+    const invalidateEnvironment=()=>{environment=undefined;light=undefined;furnitureSight=undefined;thermalDirty=true;structureNavigation.invalidate();};
     const getRoofs = () => roofs ??= new RoofContext(world);
-    const getBlocked: NavigationGrid = () => blocked ??= blockedCells(world);
+    const getBlocked: NavigationGrid = () => blocked ??= blockedCells(world,false,structureNavigation.read());
     const occupied = CIVIL_TRANSIT_BLOCKERS;
-    const budget: SearchBudget = { remaining: PATH_SEARCHES_PER_TICK, pairs: 32768,stats:diagnostics };
+    const budget: SearchBudget = { remaining: PATH_SEARCHES_PER_TICK, pairs: 32768,stats:diagnostics,structureGeometry:structureNavigation.read };
     const processMechanicalDecisions=()=>{
       const actors=world.mechanoids;if(!actors?.length)return;
       const batch=mechanoidCombatBatch(world,getBlocked);

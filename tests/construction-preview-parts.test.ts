@@ -1,8 +1,9 @@
 import { expect, test, vi } from 'vitest';
 import * as THREE from 'three/webgpu';
 import { createWorld } from '../src/sim';
+import { ANCIENT_MONUMENT_DEFS_256, isAncientMonumentKind256 } from '../src/sim/ancient-monument-props-256';
 import { constructionMaterials } from '../src/sim/construction-materials';
-import { STRUCTURE_DEFINITIONS } from '../src/sim/definitions';
+import { JOB_DURATION, STRUCTURE_DEFINITIONS } from '../src/sim/definitions';
 import { FLOOR_KINDS } from '../src/sim/flooring';
 import { sowDaylily } from '../src/sim/flower-pot';
 import type { Structure, StructureKind, World } from '../src/sim/types';
@@ -30,9 +31,20 @@ function structure(kind: StructureKind, x = 8, z = 8): Structure {
 // leak into preview highlighting. Compare the same geometry with that owner.
 const keyed = (parts: readonly object[], key: number) => parts.map(part => ({ ...part, ...('targetId' in part&&typeof part.targetId==='number'&&part.targetId>=0?{targetId:-1}:{}), key }));
 
-test('every catalogued structure has a complete model in every orientation, including installed sculptures', () => {
+test('every constructible structure and installed sculpture has a complete model in every valid orientation', () => {
   const world = camp();
-  for (const kind of Object.keys(STRUCTURE_DEFINITIONS) as StructureKind[]) for (const orientation of [0, 1, 2, 3] as const) {
+  // The physical catalogue also includes natural/recovery objects with no
+  // construction job. The exhaustive JobKind table keeps all buildable kinds
+  // and the finished sculptures whose installation also needs a preview.
+  const kinds = (Object.keys(STRUCTURE_DEFINITIONS) as StructureKind[]).filter(kind => Object.hasOwn(JOB_DURATION, kind));
+  expect(kinds).toEqual(expect.arrayContaining(['small-sculpture', 'large-sculpture']));
+  for (const kind of kinds) for (const orientation of [0, 1, 2, 3] as const) {
+    // Fixed ancient props cannot occur with a rotated physical footprint.
+    // Exercise that refusal as well as every admitted orientation below.
+    if (isAncientMonumentKind256(kind) && !ANCIENT_MONUMENT_DEFS_256[kind].rotatable && orientation !== 0) {
+      expect(() => collectConstructionPreviewParts(world, [{ kind, x: 8, z: 8, orientation }]), `${kind}/${orientation}`).toThrow('Invalid ancient orientation');
+      continue;
+    }
     const parts = collectConstructionPreviewParts(world, [{ kind, x: 8, z: 8, orientation }]);
     expect(parts.length, `${kind}/${orientation}`).toBeGreaterThan(0);
     for (const part of parts) {

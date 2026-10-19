@@ -7,6 +7,7 @@ import type { World } from '../src/sim/types';
 import { MeshStandardNodeMaterial, type InstancedMesh } from 'three/webgpu';
 import { CropLayer } from '../src/render/CropLayer';
 import { CropLayer as ReferenceCropLayer, V224_RESIDENT_CROP_KINDS } from './scenarios/crop-layer-baseline-v224';
+import {campaignPresentation} from '../src/sim/secondary-site-presentation';
 
 test('crop membership and current references match ordered full filters across confirmed and unknown suffixes', () => {
   const producer = createWorld(227, 32, 32);
@@ -16,9 +17,12 @@ test('crop membership and current references match ordered full filters across c
   }
   const encoder = new SnapshotEncoder(), decoder = new SnapshotDecoder(), partition = new CropPresentationPartition();
   const send = (checkpoint = false) => {
+    // The bridge publishes the selected map projection; the campaign registry
+    // remains save authority and is deliberately absent from that projection.
+    const expected=structuredClone(campaignPresentation(producer));
     const result = decoder.adopt(structuredClone(encoder.encode(producer, 0, 6, checkpoint)));
     if (result.status !== 'applied') throw Error(JSON.stringify(result));
-    expect(result.world).toStrictEqual(producer);
+    expect(result.world).toStrictEqual(expected);
     return result.world;
   };
   const check = (world: World, reset = false, immutable = true) => {
@@ -51,7 +55,7 @@ test('crop membership and current references match ordered full filters across c
   expect(first.resources[2]!.amount).toBe(8);
 });
 
-test('confirmed crop partition preserves resident matrices, colors, slots, uploads and bounds', () => {
+test('confirmed crop partition preserves resident matrices, colors, slots and bounds', () => {
   const world = createWorld(228, 16, 16);
   world.tiles = world.tiles.map(() => ({ terrain: 'grass' })); world.resources = [];
   for (const [index, kind] of V224_RESIDENT_CROP_KINDS.entries()) {
@@ -64,12 +68,15 @@ test('confirmed crop partition preserves resident matrices, colors, slots, uploa
     return batches.map(({ slots, free, used, mesh }) => ({
       slots: [...slots], free: free.slice(), used, count: mesh.count,
       matrix: Array.from(mesh.instanceMatrix.array), color: Array.from(mesh.instanceColor!.array),
-      matrixVersion: mesh.instanceMatrix.version, colorVersion: mesh.instanceColor!.version,
-      matrixRanges: mesh.instanceMatrix.updateRanges, colorRanges: mesh.instanceColor!.updateRanges,
+      // Resident presentation now omits unchanged GPU writes. Exact values,
+      // slots and bounds retain the historical oracle; V433 covers patches.
       bounds: mesh.boundingSphere ? { center: mesh.boundingSphere.center.toArray(), radius: mesh.boundingSphere.radius } : null,
     }));
   };
   const update = (reset = false) => {
+    // These synthetic appearance dates do not simulate the skipped interval.
+    // Preserve the existing RNG and prepare its prospective clock explicitly.
+    if(world.deterioration)world.deterioration.lastTick=world.tick;
     const result = decoder.adopt(structuredClone(encoder.encode(world, 0, 6, reset)));
     if (result.status !== 'applied') throw Error(JSON.stringify(result));
     candidate.update(result.world, reset, true); reference.update(result.world, reset);

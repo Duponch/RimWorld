@@ -10,7 +10,6 @@ import { EnvironmentLightField } from './EnvironmentLightField';
  * These artistic coefficients never feed back into simulation light levels. */
 export class EnvironmentLighting {
   readonly exploration = new ExplorationMask256();
-  readonly field = new EnvironmentLightField();
   readonly map = new DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1, RGBAFormat, UnsignedByteType);
   private readonly size = uniform(new Vector2(1, 1)).setGroup(renderGroup);
   private readonly bounds = uniform(new Vector4(1, 1, 0, 0)).setGroup(renderGroup);
@@ -47,7 +46,7 @@ export class EnvironmentLighting {
     return result;
   })();}
 
-  constructor() {
+  constructor(readonly field = new EnvironmentLightField()) {
     this.map.minFilter = this.map.magFilter = LinearFilter;
     this.map.generateMipmaps = false; this.map.needsUpdate = true;
   }

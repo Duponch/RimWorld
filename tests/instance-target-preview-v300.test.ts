@@ -129,8 +129,8 @@ test('door leaves and connected timber restore exact colours after movement, cut
   referenceDoors.update(world, true); referenceTimber.update(world, true);
   doors.clearTargetPreview(); timber.clearTargetPreview();
   expect(bits(doors.mesh.colorBuffer)).toEqual(bits(referenceDoors.mesh.colorBuffer));
-  expect(bits(timber.wallMesh.instanceColor!)).toEqual(bits(referenceTimber.wallMesh.instanceColor!));
-  expect(bits(timber.eaveMesh.instanceColor!)).toEqual(bits(referenceTimber.eaveMesh.instanceColor!));
+  expect(bits(timber.wallMesh.colorBuffer)).toEqual(bits(referenceTimber.wallMesh.colorBuffer));
+  expect(bits(timber.eaveMesh.colorBuffer)).toEqual(bits(referenceTimber.eaveMesh.colorBuffer));
   expect(Array.from(doors.mesh.instanceMatrix.array)).toEqual(Array.from(referenceDoors.mesh.instanceMatrix.array));
   const restore = doors.prepareForCompile(); doors.setTargetPreview(new Set([11])); restore(); doors.clearTargetPreview();
   expect(bits(doors.mesh.colorBuffer)).toEqual(bits(referenceDoors.mesh.colorBuffer));

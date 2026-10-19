@@ -3,6 +3,7 @@ import * as THREE from 'three/webgpu';
 import { createWorld } from '../src/sim/index';
 import type { Structure,World } from '../src/sim/types';
 import { FLOOR_KINDS } from '../src/sim/flooring';
+import { isRoadFloor256 } from '../src/sim/road-ground-256';
 import { newDoorState } from '../src/sim/door-rules';
 import { buildFurniture } from '../src/render/FurnitureLayer';
 import type { BoxBatches } from '../src/render/BoxBatches';
@@ -61,7 +62,7 @@ test('selected timber ghost parts keep the real connected topology and exactly m
 test('masonry bodies and caps meet exactly in both directions, including mixed material joints',()=>{
   const world=camp([structure(1,'wall',3,3,'steel'),structure(2,'wall',4,3,'granite-blocks'),structure(3,'wall',3,4,'steel')]);
   let parts:Placement[]=[];
-  const batches={set(_group:THREE.Group,_key:string,items:Placement[]){parts=items;}} as unknown as BoxBatches;
+  const batches={set(_group:THREE.Group,key:string,items:Placement[]){if(key==='furniture')parts=items;}} as unknown as BoxBatches;
   for(const cutaway of [false,true]) {
     buildFurniture(world,new THREE.Group(),cutaway,batches);
     expect(parts).toHaveLength(6);
@@ -89,10 +90,26 @@ test('timber edge trim stops at a masonry neighbor instead of intruding through 
   } finally { geometry.dispose(); }
 });
 
-test('all floor materials and the three wooden planks cover each cell without gaps or overlaps at their edges',()=>{
+test('continuous floors meet at cell edges; geographic flagstones retain their authored inset joints',()=>{
   for(const floor of [...FLOOR_KINDS,'burned-wood'] as const) {
     const a=floorPartsForKind(floor,0,0).map(bounds),b=floorPartsForKind(floor,1,0).map(bounds);
     const union=new THREE.Box3().makeEmpty();for(const box of a)union.union(box);
+    // V256 added three inset paving pieces to FLOOR_KINDS. They intentionally
+    // expose their joints and do not have the older continuous-floor geometry.
+    if(isRoadFloor256(floor)){
+      expect(a).toHaveLength(3);
+      expect(a.map(box=>[box.min.x,box.max.x,box.min.z,box.max.z])).toEqual([
+        [-.49,-.010000000000000009,-.49,-.010000000000000009],
+        [.010000000000000009,.49,-.49,-.010000000000000009],
+        [-.49,.49,.010000000000000009,.49],
+      ]);
+      for(let i=0;i<a.length;i++){
+        expect(a[i]!.max.y).toBeCloseTo(.062);
+        expect(b[i]!.min.x-a[i]!.min.x).toBeCloseTo(1,12);
+        expect(b[i]!.max.x-a[i]!.max.x).toBeCloseTo(1,12);
+      }
+      continue;
+    }
     expect(union.min.x).toBeCloseTo(-.5);expect(union.max.x).toBeCloseTo(.5);
     expect(union.min.z).toBe(-.5);expect(union.max.z).toBe(.5);
     expect(union.max.y).toBeCloseTo(.062);

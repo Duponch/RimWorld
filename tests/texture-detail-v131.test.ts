@@ -62,7 +62,10 @@ test('wood fibres occupy the existing cladding and roof maps while plain materia
     expect(timber.wallMesh.material).toBe(timber.plainMaterial);
     expect(timber.eaveMesh.material).toBe(timber.plainMaterial);
     expect(timber.plainMaterial.map).toBeNull();
-    expect(timber.plainMaterial.colorNode).toBeNull();
+    expect(timber.plainMaterial.colorNode).toBeTruthy();
+    const plainNodes:THREE.Node[]=[];timber.plainMaterial.colorNode!.traverse(node=>plainNodes.push(node));
+    expect(plainNodes.some(node=>(node as THREE.Node&{isTextureNode?:boolean}).isTextureNode)).toBe(false);
+    expect(plainNodes.some(node=>(node as THREE.Node&{isVertexColorNode?:boolean}).isVertexColorNode)).toBe(true);
     expect(roof.mesh.material).toBe(roof.plain);
     expect(roof.plain.map).toBeNull();
     expect(timber.wallMesh.geometry).toBe(wallGeometry);

@@ -14,8 +14,9 @@ test('one broad irregular bevelled board covers each wall face with a closed rec
   const colors=layer.wallGeometry.getAttribute('color') as THREE.BufferAttribute;
   const normals=layer.wallGeometry.getAttribute('normal') as THREE.BufferAttribute;
   expect(layer.group.children).toEqual([layer.wallMesh,layer.eaveMesh]);
-  expect(p.count).toBeGreaterThan(250);
-  expect(p.count).toBeLessThan(16*4*6);
+  const corners=layer.wallGeometry.index?.count??p.count;
+  expect(corners).toBeGreaterThan(250);
+  expect(corners).toBeLessThan(16*4*6);
   expect(layer.wallGeometry.boundingBox!.min.x).toBeLessThanOrEqual(-.5);
   expect(layer.wallGeometry.boundingBox!.max.x).toBeGreaterThanOrEqual(.5);
   expect(layer.wallGeometry.boundingBox!.min.z).toBeLessThanOrEqual(-.5);
@@ -29,7 +30,10 @@ test('one broad irregular bevelled board covers each wall face with a closed rec
   }
   expect(outward).toEqual(new Set(['0:1','0:-1','1:0','-1:0']));
   expect(tones.size).toBeGreaterThan(8);
-  expect(layer.material.vertexColors).toBe(true);
+  // Authored pigments stay explicit; the duplicate implicit path is disabled.
+  expect(layer.material.vertexColors).toBe(false);
+  const pigmentNodes:THREE.Node[]=[];layer.material.colorNode!.traverse(node=>pigmentNodes.push(node));
+  expect(pigmentNodes.some(node=>(node as THREE.Node&{isVertexColorNode?:boolean}).isVertexColorNode)).toBe(true);
   expect(layer.material.map).toBeNull();
   expect(layer.material.colorNode).toBeTruthy();
   const bytes=layer.grain.image.data as Uint8Array;
@@ -43,7 +47,7 @@ test('wood alone is instanced; eaves overhang by six hundredths and cutaway keep
   world.structures=[wood(1,3,4),{...wood(2,5,4),material:'steel'}];
   const layer=new TimberCladdingLayer();
   layer.update(world,false);
-  expect(layer.wallMesh.count).toBe(1);expect(layer.eaveMesh.count).toBe(4);
+  expect(layer.wallMesh.activeCount).toBe(1);expect(layer.eaveMesh.activeCount).toBe(4);
   expect(layer.wallMesh.castShadow).toBe(true);expect(layer.eaveMesh.receiveShadow).toBe(true);
   const m=new THREE.Matrix4(),position=new THREE.Vector3(),scale=new THREE.Vector3(),rotation=new THREE.Quaternion();
   layer.wallMesh.getMatrixAt(0,m);m.decompose(position,rotation,scale);
@@ -67,18 +71,18 @@ test('stable updates preserve meshes, buffers and colours; real wall changes upd
   const world=createWorld(8,16,16);world.structures=[wood(11,2,2),wood(12,3,2)];
   const layer=new TimberCladdingLayer();layer.update(world,false);
   const wall=layer.wallMesh,eave=layer.eaveMesh;
-  const versions=[wall.instanceMatrix.version,wall.instanceColor!.version,eave.instanceMatrix.version,eave.instanceColor!.version];
+  const versions=[wall.instanceMatrix.version,wall.colorBuffer.version,eave.instanceMatrix.version,eave.colorBuffer.version];
   const tint=new THREE.Color(),sameTint=new THREE.Color();wall.getColorAt(0,tint);
   world.tick+=50;layer.update(world,false);
-  expect([wall.instanceMatrix.version,wall.instanceColor!.version,eave.instanceMatrix.version,eave.instanceColor!.version]).toEqual(versions);
+  expect([wall.instanceMatrix.version,wall.colorBuffer.version,eave.instanceMatrix.version,eave.colorBuffer.version]).toEqual(versions);
   expect(layer.wallMesh).toBe(wall);expect(layer.eaveMesh).toBe(eave);
   world.structures=[wood(12,3,2),wood(11,2,2),wood(13,4,2)];layer.update(world,false);
-  expect(wall.count).toBe(3);expect(eave.count).toBe(8);
+  expect(wall.activeCount).toBe(3);expect(eave.activeCount).toBe(8);
   wall.getColorAt(1,sameTint);expect(sameTint.toArray()).toEqual(tint.toArray());
   expect(wall.instanceMatrix.version).toBeGreaterThan(versions[0]!);
   world.structures=[];layer.update(world,false);
-  expect(wall.count).toBe(0);expect(wall.visible).toBe(false);
-  const restore=layer.prepareForCompile();expect(wall.count).toBe(1);restore();expect(wall.count).toBe(0);
+  expect(wall.activeCount).toBe(0);expect(wall.visible).toBe(false);
+  const restore=layer.prepareForCompile();expect(wall.activeCount).toBe(1);restore();expect(wall.activeCount).toBe(0);
   layer.dispose();
 });
 
@@ -89,10 +93,10 @@ test('the mixed-colony wall count fits two resident draws and leaves a doorway/o
   world.structures[35]={...wood(36,5,1),kind:'door'};
   const layer=new TimberCladdingLayer();layer.update(world,false);
   expect(layer.group.children).toHaveLength(2);
-  expect(layer.wallMesh.count).toBe(298);expect(layer.eaveMesh.count).toBe(80);
+  expect(layer.wallMesh.activeCount).toBe(298);expect(layer.eaveMesh.activeCount).toBe(80);
   expect(layer.wallMesh.instanceMatrix.count).toBeGreaterThanOrEqual(297);
   const transform=new THREE.Matrix4(),translation=new THREE.Vector3();
-  for(let i=0;i<layer.wallMesh.count;i++) {
+  for(let i=0;i<layer.wallMesh.activeCount;i++) {
     layer.wallMesh.getMatrixAt(i,transform);translation.setFromMatrixPosition(transform);
     if(translation.x===5&&translation.z===1)expect(translation.y).toBeGreaterThan(2);
   }
@@ -107,7 +111,7 @@ test('the mixed-colony wall count fits two resident draws and leaves a doorway/o
 
 function eaveFootprints(layer:TimberCladdingLayer):THREE.Box2[] {
   const footprints:THREE.Box2[]=[],matrix=new THREE.Matrix4(),point=new THREE.Vector3();
-  for(let i=0;i<layer.eaveMesh.count;i++) {
+  for(let i=0;i<layer.eaveMesh.activeCount;i++) {
     layer.eaveMesh.getMatrixAt(i,matrix);
     const box=new THREE.Box2().makeEmpty();
     for(const x of [-.5,.5])for(const z of [.405,.56]) {
@@ -121,7 +125,7 @@ function eaveFootprints(layer:TimberCladdingLayer):THREE.Box2[] {
 test('neighbouring walls share a continuous rim without coplanar overlap',()=>{
   const world=createWorld(10,16,16);world.structures=[wood(1,3,3),wood(2,4,3)];
   const layer=new TimberCladdingLayer();layer.update(world,false);
-  expect(layer.eaveMesh.count).toBe(6);
+  expect(layer.eaveMesh.activeCount).toBe(6);
   const rectangles=eaveFootprints(layer);
   for(let i=0;i<rectangles.length;i++)for(let j=i+1;j<rectangles.length;j++) {
     const a=rectangles[i]!,b=rectangles[j]!;
@@ -141,8 +145,8 @@ test('a 7×7 house keeps inner and outer eaves continuous across a doorway',()=>
     world.structures.push(x===5&&z===2?{...wood(id++,x,z),kind:'door'}:wood(id++,x,z));
   }
   const layer=new TimberCladdingLayer();layer.update(world,false);
-  expect(layer.wallMesh.count).toBe(24);
-  expect(layer.eaveMesh.count).toBe(48);
+  expect(layer.wallMesh.activeCount).toBe(24);
+  expect(layer.eaveMesh.activeCount).toBe(48);
   const rectangles=eaveFootprints(layer);
   for(let i=0;i<rectangles.length;i++)for(let j=i+1;j<rectangles.length;j++) {
     const a=rectangles[i]!,b=rectangles[j]!;

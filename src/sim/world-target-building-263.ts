@@ -38,6 +38,10 @@ export function targetDoorCanOpen263(w:World,p:Pawn,s:Structure):boolean|undefin
 /** Full FK check after the ordinary structure shape/support/IDs guards.
  * Packed current buildings must be actually claimed by the player first. */
 export function validTargetBuildingOwners263(w:Pick<World,'schemaVersion'|'worldFactions'|'structures'|'packed'>&Partial<Pick<World,'pawns'>>,version:number):boolean {
+ // This is only the V263 target-building FK domain. Older closed structure
+ // and packed schemas still reject future faction fields before migration;
+ // they must not be made to possess the later packed domain just to reach it.
+ if(version<263)return true;
  for(const s of [...w.structures,...w.packed.map(p=>p.building)])if(validTargetBuildingFactionShape263(s,version)){
   if(s.factionId!==null&&!w.worldFactions?.factions.some(f=>f.id===s.factionId))return false;
   if(w.packed.some(p=>p.building===s)&&s.factionId!==w.worldFactions?.playerFactionId)return false;

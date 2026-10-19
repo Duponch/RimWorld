@@ -7,7 +7,7 @@ import type { World } from '../sim/types';
  * Do not rely on array identity: fixtures and checkpoint consumers may mutate
  * objects in place. Only meaningful changes replace the upload data. */
 export class EnvironmentLightField {
-  private readonly rooms = new RoomTopologyCache();
+  constructor(private readonly rooms:{read(world:World):RoomTopology}=new RoomTopologyCache()) {}
   private readonly lights = new LocalLightCache();
   private previousLight?: Float32Array;
   private previousTopology?:RoomTopology;

@@ -58,23 +58,24 @@ import { CARRY_CAPACITY, footprintCells, JOB_WOOD_COST } from './definitions.ts'
 import { deliveredStock, groundQuantity, reservedDestination, reservedSource, reservedSourcesByPile } from './materials.ts';
 import { cellIndex, workNeighbours, inBounds, canStopAt, hasReachableCell, reachableCells, routeToJob, routeToCell, interactionGoals } from './pathfinding.ts';
 import type { Reachability } from './pathfinding.ts';
+import type { StructureNavigationGeometry } from './structure-navigation.ts';
 import type { Cell, HaulDestination, Job, JobKind, MaterialKind, MaterialPile, Pawn, World } from './types.ts';
 export const PLAN_INTERVAL=20;
 export interface SearchStats { searches:{pawnId:number;mode:'all'|'nearest'|'full';visited:number;unreachedGroups:number;connectivityVisited?:number}[] }
-export interface SearchBudget { remaining:number; pairs:number; stats?:SearchStats }
+export interface SearchBudget { remaining:number; pairs:number; stats?:SearchStats;structureGeometry?:()=>StructureNavigationGeometry }
 export type NavigationGrid=()=>Uint8Array;
 const sameCell=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 
 export function search(world: World, pawn: Pawn, blocked: Uint8Array, occupied: ReadonlySet<number>, budget: SearchBudget, goals?: ReadonlySet<number>, allGroups?:readonly ReadonlySet<number>[]): Reachability | null {
   if (budget.remaining === 0) return null;
   budget.remaining--;
-  const result=reachableCells(world,pawn,blocked,occupied,goals,allGroups);
+  const result=reachableCells(world,pawn,blocked,occupied,goals,allGroups,undefined,undefined,budget.structureGeometry?.());
   budget.stats?.searches.push({pawnId:pawn.id,mode:allGroups?'all':goals?'nearest':'full',visited:result.visited,unreachedGroups:result.unreachedGroups});
   return result;
 }
 export function searchAllowed(world:World,pawn:Pawn,blocked:Uint8Array,occupied:ReadonlySet<number>,budget:SearchBudget,policy:AllowedAreaPolicy):AllowedAreaRouteResult {
   if(!budget.remaining)return {kind:'deferred'};budget.remaining--;
-  const result=reachableCells(world,pawn,blocked,occupied,undefined,undefined,index=>policy.has(index),policy);
+  const result=reachableCells(world,pawn,blocked,occupied,undefined,undefined,index=>policy.has(index),policy,budget.structureGeometry?.());
   budget.stats?.searches.push({pawnId:pawn.id,mode:'nearest',visited:result.visited,unreachedGroups:0});
   if(result.goalIndex===undefined)return {kind:'unreachable'};
   const target={x:result.goalIndex%world.width,z:Math.floor(result.goalIndex/world.width)},path=routeToCell(world,target,result);
@@ -84,7 +85,7 @@ export function searchAllowed(world:World,pawn:Pawn,blocked:Uint8Array,occupied:
  * candidate. Precise routes share one resumable weighted search. */
 export function searchCandidates(world:World,pawn:Pawn,blocked:Uint8Array,occupied:ReadonlySet<number>,budget:SearchBudget,deferNavigation=false):Reachability|null {
   if(!budget.remaining)return null;budget.remaining--;
-  const result=candidateAccess(world,pawn,blocked,occupied,deferNavigation);
+  const result=candidateAccess(world,pawn,blocked,occupied,deferNavigation,pawn,budget.structureGeometry?.());
   budget.stats?.searches.push({pawnId:pawn.id,mode:'all',get visited(){return result.visited;},unreachedGroups:0,get connectivityVisited(){return result.connectivityVisited;}});
   return result;
 }

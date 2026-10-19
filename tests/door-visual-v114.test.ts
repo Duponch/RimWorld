@@ -77,8 +77,8 @@ test('a steel door in a wooden house receives a timber lintel rather than a full
   timber.update(world,false);leaves.update(world,false);
   expect(parts).toHaveLength(6);
   expect(parts.every(part=>part.y+part.sy!/2<=doorLeafTop(false)+.11+1e-6)).toBe(true);
-  expect(timber.wallMesh.count).toBe(3);
-  expect(timber.eaveMesh.count).toBeGreaterThan(0);
+  expect(timber.wallMesh.activeCount).toBe(3);
+  expect(timber.eaveMesh.activeCount).toBeGreaterThan(0);
   expect(leaves.mesh.activeCount).toBe(2);
   timber.dispose();leaves.dispose();
 });

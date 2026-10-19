@@ -19,14 +19,14 @@ test('wood walls move to the timber batch without duplicate furniture boxes; oth
     buildFurniture(world, group, false, boxes);
     timber.update(world, false);
     expect((group.getObjectByName('furniture') as BoxMesh).activeCount).toBe(2);
-    expect(timber.wallMesh.count).toBe(1);
-    expect(timber.eaveMesh.count).toBeGreaterThan(0);
+    expect(timber.wallMesh.activeCount).toBe(1);
+    expect(timber.eaveMesh.activeCount).toBeGreaterThan(0);
 
     world.structures[0]!.material = 'steel';
     buildFurniture(world, group, false, boxes);
     timber.update(world, false);
     expect((group.getObjectByName('furniture') as BoxMesh).activeCount).toBe(4);
-    expect(timber.wallMesh.count).toBe(0);
+    expect(timber.wallMesh.activeCount).toBe(0);
   } finally {
     timber.dispose();
     boxes.dispose();

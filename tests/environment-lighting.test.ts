@@ -6,6 +6,9 @@ import { createWorld, serializeWorld } from '../src/sim/index';
 
 test('lighting presentation preserves the world and GPU resources through fuel, roofs, barriers and checkpoint sizes', () => {
   const w = workplaceCamp(), fire = fixtureFire(w), layer = new EnvironmentLighting();
+  // This prepared legacy workshop jumps to tick 3000 without simulating time.
+  // Start its prospective deterioration calendar there, without backfilling.
+  if(w.deterioration)w.deterioration.lastTick=w.tick;
   const first = serializeWorld(w), mat = new MeshStandardNodeMaterial();
   layer.configure(mat); const node = mat.outputNode, map = layer.map;
   layer.update(w); expect(serializeWorld(w)).toBe(first);

@@ -5,11 +5,12 @@ import type { CandidateAccess } from './navigation-types.ts';
 import { WeightedSearch } from './weighted-search.ts';
 import { navigationAllowedArea,OUTSIDE_ALLOWED_AREA_SEARCH_COST } from './allowed-area-state.ts';
 import { navigationCosts } from './furniture-travel.ts';
+import type { StructureNavigationGeometry } from './structure-navigation.ts';
 
 /** With solid diagonal corners, a legal diagonal always has a cardinal detour.
  * Four-neighbour connectivity therefore answers existence exactly, without
  * assigning any unweighted route or distance to the simulation. */
-export function candidateAccess(world:World,start:Cell,blocked:Uint8Array,occupied:ReadonlySet<number>,deferNavigation=false,originCell:Cell=start):CandidateAccess {
+export function candidateAccess(world:World,start:Cell,blocked:Uint8Array,occupied:ReadonlySet<number>,deferNavigation=false,originCell:Cell=start,geometry?:StructureNavigationGeometry):CandidateAccess {
   // Retain the original actor for policy/doors/hostility while an admitted
   // StopDead query starts at its actual occupied cell, not its future endpoint.
   const width=world.width,height=world.height,size=width*height,origin=originCell.z*width+originCell.x;
@@ -17,8 +18,8 @@ export function candidateAccess(world:World,start:Cell,blocked:Uint8Array,occupi
   const unavailable=blocked.slice();for(const index of occupied)unavailable[index]=1;addActorObstacles(world,start,unavailable);
   // Public callers retain the full construction-time snapshot. The ordinary
   // work planner may defer navigation inside its synchronous read-only scan.
-  let navigation=deferNavigation?undefined:navigationCosts(world,start),corners=deferNavigation?undefined:doorCorners(world);
-  const getNavigation=()=>navigation??=navigationCosts(world,start),getCorners=()=>corners??=doorCorners(world);
+  let navigation=deferNavigation?undefined:navigationCosts(world,start,undefined,geometry),corners=deferNavigation?undefined:geometry?.corners??doorCorners(world);
+  const getNavigation=()=>navigation??=navigationCosts(world,start,undefined,geometry),getCorners=()=>corners??=geometry?.corners??doorCorners(world);
   let connected:Uint8Array|undefined,queue:Int32Array|undefined,head=0,tail=0;
   const connectivity=()=>{if(!connected){connected=new Uint8Array(size);queue=new Int32Array(size);queue[0]=origin;connected[origin]=1;tail=1;}};
   const visit=(i:number)=>{if(!unavailable[i]&&!connected![i]){connected![i]=1;queue![tail++]=i;}};

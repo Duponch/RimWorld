@@ -6,6 +6,7 @@ import { penRegion } from './animal-pens.ts';
 import { productKind, productReady } from './animal-products.ts';
 import { slaughterContact,slaughterHandlerAvailable } from './animal-slaughter.ts';
 import { autoSlaughterTargets,slaughterIntent } from './auto-slaughter.ts';
+import type { AnimalSpeciesId } from './animal-species.ts';
 import type { World } from './types.ts';
 
 /** Death, corpse conversion and loss of tameness can precede a travelling
@@ -13,9 +14,18 @@ import type { World } from './types.ts';
 export function reconcileDomesticWork(world:World):void {
   reconcileAnimalFeeding(world);
   const slaughterTargets=autoSlaughterTargets(world);
+  let penMarkers:Map<number,readonly AnimalSpeciesId[]>|undefined;
   for(const animal of world.wildlife?.animals??[]){
     const id=animal.domestic?.penMarkerId;
-    if(id!==undefined&&!world.structures.some(s=>s.id===id&&s.kind==='pen-marker'&&s.pen?.accepted.includes(animal.species)))delete animal.domestic!.penMarkerId;
+    if(id===undefined)continue;
+    // Marker assignments alone change in this loop. Capture current structures
+    // once per pass, never retaining an index across commands, ticks or maps.
+    if(!penMarkers){
+      penMarkers=new Map();
+      for(const structure of world.structures)if(structure.kind==='pen-marker'&&structure.pen)
+        penMarkers.set(structure.id,structure.pen.accepted);
+    }
+    if(!penMarkers.get(id)?.includes(animal.species))delete animal.domestic!.penMarkerId;
   }
   for(const pawn of world.pawns){
     const task=pawn.animalHandling??pawn.animalCare;if(!task)continue;

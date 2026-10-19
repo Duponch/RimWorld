@@ -32,6 +32,7 @@ import { advanceAnimalHealth,animalBody } from './wildlife-health.ts';
 import { animalEscape } from './wildlife-flight.ts';
 import { animalFoods,animalMealTarget,finishAnimalMeal,grazingPen,reservedPlantWorkCells,type AnimalFood } from './wildlife-food.ts';
 import { animalNavigation,moveAnimal } from './wildlife-navigation.ts';
+import { structureNavigationReader } from './structure-navigation.ts';
 import { HARE,MAX_WILDLIFE,wildlifeRandom,type WildAnimal,type WildlifeState } from './wildlife-state.ts';
 import { isPlant } from './plants.ts';
 import { calendarTick } from './calendar.ts';
@@ -187,11 +188,12 @@ export function advanceWildlife(world:World,duckFlyerServices:DuckFlyerServices2
   const getPlantWorkCells=()=>plantWorkCells??=reservedPlantWorkCells(world);
   reconcileWildlife(world,mealResources,activePlantMeals?getPlantWorkCells():undefined);
   let nav:ReturnType<typeof animalNavigation>|undefined,hareNav:ReturnType<typeof animalNavigation>|undefined,searches=0;
+  const structureNavigation=structureNavigationReader(world);
   const duckNav=new Map<boolean,ReturnType<typeof animalNavigation>>();
-  const getNav=(animal:WildAnimal)=>isDuckRuntime256(world,animal)?(()=>{const flying=duckFlying256(animal.flight);let found=duckNav.get(flying);if(!found){found=animalNavigation(world,false,true,animal);duckNav.set(flying,found);}return found;})():(isAnimalSpecies256(animal.species)?animalCore256(animal.species).race.roamMtbDays===null:animal.species==='hare'||animal.species==='snow-hare'||animalSpecies(animal.species).predator)
-    ?hareNav??=animalNavigation(world,false,true):nav??=animalNavigation(world);
+  const getNav=(animal:WildAnimal)=>isDuckRuntime256(world,animal)?(()=>{const flying=duckFlying256(animal.flight);let found=duckNav.get(flying);if(!found){found=animalNavigation(world,false,true,animal,false,structureNavigation.read());duckNav.set(flying,found);}return found;})():(isAnimalSpecies256(animal.species)?animalCore256(animal.species).race.roamMtbDays===null:animal.species==='hare'||animal.species==='snow-hare'||animalSpecies(animal.species).predator)
+    ?hareNav??=animalNavigation(world,false,true,undefined,false,structureNavigation.read()):nav??=animalNavigation(world,false,false,undefined,false,structureNavigation.read());
   let physical:Uint8Array|undefined,shot:ReturnType<typeof captureWorldShotGrid>|undefined;
-  const getPhysical=()=>physical??=blockedCells(world,true),getShot=()=>shot??=captureWorldShotGrid(world);
+  const getPhysical=()=>physical??=blockedCells(world,true,structureNavigation.read()),getShot=()=>shot??=captureWorldShotGrid(world);
   const hour=Math.floor(calendarTick(world)%6000/250),night=hour<7||hour>=22;
   let ledAnimals:Set<number>|undefined;
   for(const pawn of world.pawns)if(pawn.animalHandling?.kind==='lead'&&pawn.animalHandling.phase!=='approach')
@@ -230,17 +232,17 @@ export function advanceWildlife(world:World,duckFlyerServices:DuckFlyerServices2
     advanceAnimalManhunter(world,a);
     if(a.flee&&world.tick>=a.flee.until){delete a.flee;a.path=[];if(!a.motion||a.motion.end<=world.tick)a.state='idle';}
     if(processAnimalVomiting(world,a))continue;
-    if(world.schemaVersion>=256&&processGroupAnimalOnMap256(world,a,{free:c=>getNav(a).free(c),route:(animal,goals)=>{if(searches>=1)return null;searches++;return getNav(animal).route(animal,goals);},move:animal=>moveAnimal(world,animal,getNav(animal).step,animalBody(animal).capacities.moving)}))continue;
+    if(world.schemaVersion>=256&&processGroupAnimalOnMap256(world,a,{free:c=>getNav(a).free(c),route:(animal,goals)=>{if(searches>=1)return null;searches++;return getNav(animal).route(animal,goals);},move:animal=>moveAnimal(world,animal,getNav(animal).step,animalBody(animal).capacities.moving,getNav(animal).geometry)}))continue;
     if(a.state==='downed'||a.motion&&a.motion.end>world.tick)continue;
     // New panic travel waits only for the already committed physical recovery.
     // Fire damage keeps advancing in the shared fire clock during this wait.
     if(a.strike){a.path=[];if(a.state!=='sleeping')a.state='idle';continue;}
     if(a.predation&&(a.burning||a.flee))cancelAnimalPredation(world,a);
-    if(a.burning&&processBurningAnimal(world,a,{free:c=>getNav(a).free(c),route:goals=>{if(searches>=1)return null;searches++;return getNav(a).route(a,goals);},move:()=>{moveAnimal(world,a,getNav(a).step,body.capacities.moving);}}))continue;
+    if(a.burning&&processBurningAnimal(world,a,{free:c=>getNav(a).free(c),route:goals=>{if(searches>=1)return null;searches++;return getNav(a).route(a,goals);},move:()=>{moveAnimal(world,a,getNav(a).step,body.capacities.moving,getNav(a).geometry);}}))continue;
     if(a.manhunter&&processAnimalManhunter(world,a,getNav(a),getPhysical(),()=>{if(searches>=1)return false;searches++;return true;}))continue;
     if(moveAnimalMelee(world,a,()=>getNav(a),getPhysical,getShot))continue;
     if(a.stun)continue;
-    if(!a.flee&&processHivePriority256(world,a,getNav(a),getPhysical(),()=>{if(searches>=1)return false;searches++;return true;}))continue;
+    if(!a.flee&&processHivePriority256(world,a,()=>getNav(a),getPhysical,()=>{if(searches>=1)return false;searches++;return true;}))continue;
     if(a.predation){
       const target=animalPredationTarget(world,a);
       if(!target){
@@ -267,16 +269,16 @@ export function advanceWildlife(world:World,duckFlyerServices:DuckFlyerServices2
           a.path=path;a.nextDecision=world.tick+25;
         }
       }
-      if(a.path.length)moveAnimal(world,a,getNav(a).step,body.capacities.moving);
+      if(a.path.length)moveAnimal(world,a,getNav(a).step,body.capacities.moving,getNav(a).geometry);
       continue;
     }
     if(a.flee){
       if(world.tick>=a.flee.until){delete a.flee;a.path=[];a.state='idle';}
       else {
-        if(a.path.length){moveAnimal(world,a,getNav(a).step,body.capacities.moving);if(!a.path.length)delete a.flee;continue;}
+        if(a.path.length){moveAnimal(world,a,getNav(a).step,body.capacities.moving,getNav(a).geometry);if(!a.path.length)delete a.flee;continue;}
         if(a.nextDecision>world.tick||searches>=1)continue;
         searches++;const path=animalEscape(world,a,getNav(a));
-        if(path){a.path=path;moveAnimal(world,a,getNav(a).step,body.capacities.moving);}
+        if(path){a.path=path;moveAnimal(world,a,getNav(a).step,body.capacities.moving,getNav(a).geometry);}
         a.nextDecision=world.tick+20;continue;
       }
     }
@@ -289,13 +291,13 @@ export function advanceWildlife(world:World,duckFlyerServices:DuckFlyerServices2
     const held=!danger&&((!!a.taming?.designated||!!a.domestic)&&animalHandlingHolding(world,a.id)
       ||!!a.domestic&&(animalCareInProgress(world,a)||animalFeedingInProgress(world,a)));
     if(held&&!(a.state==='eating'&&a.meal)){cancelAnimalExit(world,a);continue;}
-    if(a.eggLay&&processAnimalEggLay256(world,a,()=>moveAnimal(world,a,getNav(a).step,body.capacities.moving)))continue;
+    if(a.eggLay&&processAnimalEggLay256(world,a,()=>moveAnimal(world,a,getNav(a).step,body.capacities.moving,getNav(a).geometry)))continue;
     if(world.schemaVersion>=221&&a.domestic&&(!a.confusion||a.rest<.15||a.state==='sleeping')){
       const pen=grazingPen(world,a),inside=(c:Cell)=>!pen||pen.has(c.z*world.width+c.x);
       if(processAnimalRest(world,a,{medicalRest,night,nutrition,
         free:c=>inside(c)&&getNav(a).free(c),step:(from,to)=>inside(to)&&getNav(a).step(from,to),
         route:(goals,rank)=>{if(searches>=1)return null;searches++;return getNav(a).route(a,goals.filter(inside),rank);},
-        move:()=>{moveAnimal(world,a,getNav(a).step,body.capacities.moving);}}))continue;
+        move:()=>{moveAnimal(world,a,getNav(a).step,body.capacities.moving,getNav(a).geometry);}}))continue;
     }
     if(a.state==='sleeping') {
       if(medicalRest&&a.food>=nutrition*.45&&!a.sleepUntilCore&&getNav(a).free(a))continue;
@@ -315,7 +317,7 @@ export function advanceWildlife(world:World,duckFlyerServices:DuckFlyerServices2
             plantWorkCells=undefined; // Eating may remove harvest/cut jobs at this cell.
             if(world.resources!==resourcesBefore)mealResources?.delete(meal.id);
           }
-          nav=undefined;hareNav=undefined;duckNav.clear();
+          nav=undefined;hareNav=undefined;duckNav.clear();structureNavigation.invalidate();
         }
         continue;
       }
@@ -344,14 +346,14 @@ export function advanceWildlife(world:World,duckFlyerServices:DuckFlyerServices2
         a.exiting.nextFoodCheck=world.tick+WILDLIFE_EXIT_FOOD_CHECK;checked=true;
       }
       if(arrived&&checked&&!a.path.length){departures.add(a.id);continue;}
-      if(a.path.length)moveAnimal(world,a,getNav(a).step,body.capacities.moving);
+      if(a.path.length)moveAnimal(world,a,getNav(a).step,body.capacities.moving,getNav(a).geometry);
       continue;
     }
     if(a.confusion&&!a.meal){
-      if(a.food>=nutrition*.05&&a.rest>=.15){processAnimalConfusedWander256(world,a,getNav(a),{takeSearch:()=>{if(searches>=1)return false;searches++;return true;},createReachability:()=>getNav(a).wanderSearch(a),random:animalClinicalRandom256(()=>wildlifeRandom(s)),move:()=>{moveAnimal(world,a,getNav(a).step,body.capacities.moving);}});continue;}
+      if(a.food>=nutrition*.05&&a.rest>=.15){processAnimalConfusedWander256(world,a,getNav(a),{takeSearch:()=>{if(searches>=1)return false;searches++;return true;},createReachability:()=>getNav(a).wanderSearch(a),random:animalClinicalRandom256(()=>wildlifeRandom(s)),move:()=>{moveAnimal(world,a,getNav(a).step,body.capacities.moving,getNav(a).geometry);}});continue;}
       if(a.wander?.job){delete a.wander.job;a.path=[];}
     }
-    if(a.path.length){const pen=grazingPen(world,a);if(pen&&!pen.has(a.path[0]!.z*world.width+a.path[0]!.x)){a.path=[];delete a.meal;a.nextDecision=world.tick;}else{moveAnimal(world,a,getNav(a).step,body.capacities.moving);continue;}}
+    if(a.path.length){const pen=grazingPen(world,a);if(pen&&!pen.has(a.path[0]!.z*world.width+a.path[0]!.x)){a.path=[];delete a.meal;a.nextDecision=world.tick;}else{moveAnimal(world,a,getNav(a).step,body.capacities.moving,getNav(a).geometry);continue;}}
     if(a.mating)continue;
     if(a.nextDecision>world.tick)continue;
     const n=getNav(a);
@@ -381,7 +383,7 @@ export function advanceWildlife(world:World,duckFlyerServices:DuckFlyerServices2
     // walk through walls/closed doors; diagonal length stays Euclidean.
     const pen=grazingPen(world,a);
     const choices=[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]].map(([x,z])=>({x:a.x+x!,z:a.z+z!})).filter(c=>n.free(c)&&(isDuckRuntime256(world,a)||!isWetTerrain(world.tiles[c.z*world.width+c.x]?.terrain)||!!world.tiles[c.z*world.width+c.x]?.bridge)&&n.step(a,c)&&(!pen||pen.has(c.z*world.width+c.x)));
-    if(choices.length){const candidate=choices[Math.floor(wildlifeRandom(s)*choices.length)]!;if(!isDuckRuntime256(world,a)||duckWanderWaterAllowed256(world,a,candidate,duckMapHasWater256(world),()=>wildlifeRandom(s))){notifyDuckFlightJob256(world,a,'GotoWander',()=>wildlifeRandom(s));a.path=[candidate];if(a.wander){a.wander.nextMoveOrderIsWait=!a.wander.nextMoveOrderIsWait;a.wander.job={kind:'goto',destination:{...candidate}};}moveAnimal(world,a,getNav(a).step,body.capacities.moving);}}
+    if(choices.length){const candidate=choices[Math.floor(wildlifeRandom(s)*choices.length)]!;if(!isDuckRuntime256(world,a)||duckWanderWaterAllowed256(world,a,candidate,duckMapHasWater256(world),()=>wildlifeRandom(s))){notifyDuckFlightJob256(world,a,'GotoWander',()=>wildlifeRandom(s));a.path=[candidate];if(a.wander){a.wander.nextMoveOrderIsWait=!a.wander.nextMoveOrderIsWait;a.wander.job={kind:'goto',destination:{...candidate}};}moveAnimal(world,a,getNav(a).step,body.capacities.moving,getNav(a).geometry);}}
     a.nextDecision=Math.max(a.nextDecision,world.tick+12+Math.floor(wildlifeRandom(s)*13));
   }
   if(retiredDucks.size)s.animals=s.animals.filter(a=>!retiredDucks.has(a.id));

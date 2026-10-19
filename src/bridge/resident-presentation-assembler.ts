@@ -16,6 +16,7 @@ import {groupWorld} from '../sim/world-map-authority';
 import {SnapshotChangeJournal,StructureChangeJournal,ResourceStructureJournal,
  type ResourceStructureCandidate,type SnapshotMessage,type SnapshotAdoption} from './snapshots';
 import {ResidentResourceBaseJournal} from './resident-resource-base-journal';
+import {canReuseResidentAuxiliaryStockpiles} from './resident-auxiliary-sections';
 
 const own=(value:object,key:PropertyKey):boolean=>Object.hasOwn(value,key);
 function record(value:unknown):value is Record<string,unknown> {
@@ -118,14 +119,14 @@ function tileChanges(previous:Tile[],raw:unknown):{tiles:Tile[];indices:number[]
  const tiles=previous.slice();for(const change of changes)tiles[change.index]=change.tile;return {tiles,indices:[...touched]};
 }
 
-function localShape(raw:unknown,checkpoint:boolean,sparseStructures:boolean):string|undefined {
+function localShape(raw:unknown,checkpoint:boolean,sparseStructures:boolean,reuseStockpiles=false):string|undefined {
  if(!record(raw))return 'World data record';
  if(!integer(raw.schemaVersion,1,SCHEMA_VERSION))return 'schemaVersion';
  if(!integer(raw.tick))return 'tick';
  if(!integer(raw.nextId,1))return 'nextId';
  if(!integer(raw.width,1,MAX_EXTENDED_MAP_SIZE)||!integer(raw.height,1,MAX_EXTENDED_MAP_SIZE))return 'dimensions';
  if(!integer(raw.seed,0,0xffffffff)||!integer(raw.rng,0,0xffffffff))return 'seed/rng uint32';
- for(const key of ['pawns','jobs','stockpiles','growingZones'])if(!identified(raw[key],raw.nextId))return key+' IDs';
+ for(const key of ['pawns','jobs','stockpiles','growingZones'])if(!(key==='stockpiles'&&reuseStockpiles)&&!identified(raw[key],raw.nextId))return key+' IDs';
  for(const key of ['packed','events'])if(!rows(raw[key]))return key+' data rows';
  if(own(raw,'campaignMap')){
   const metadata=raw.campaignMap;if(!record(metadata))return 'campaignMap record';
@@ -204,7 +205,7 @@ export class ResidentPresentationAssembler {
   const unknown=Object.keys(packet).find(key=>!['type','kind','epoch','revision','stepMs','speed','world','geography','explorationApproachers','urgentThreats','motion','audioCues','baseRevision','tiles','resources','piles','structures'].includes(key));
   if(unknown)return fail('Unknown resident publication field: '+unknown);
   const checkpoint=packet.kind==='checkpoint',sparseStructures=!checkpoint&&own(packet,'structures');
-  const malformed=localShape(packet.world,checkpoint,sparseStructures);if(malformed)return fail('Invalid resident shape: '+malformed);
+  const malformed=localShape(packet.world,checkpoint,sparseStructures,!checkpoint&&canReuseResidentAuxiliaryStockpiles(packet,this.current));if(malformed)return fail('Invalid resident shape: '+malformed);
   if(checkpoint&&['tiles','resources','piles','structures','baseRevision'].some(key=>own(packet,key)))return fail('Ambiguous resident checkpoint');
   const previous=this.current;
   if(!checkpoint&&(!previous||packet.epoch!==this.epoch||packet.baseRevision!==this.revision||packet.revision!==packet.baseRevision+1

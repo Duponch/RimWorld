@@ -15,10 +15,10 @@ export function moveToward(world: World, pawn: Pawn, target: Cell, allowTarget: 
   pawn.state = 'moving'; if (pawn.moveCooldown > 0) return;
   const blocked = getBlocked();
   let next = pawn.path[0];
-  if (!next || !canStep(world,pawn,next,blocked,CIVIL_TRANSIT_BLOCKERS)) {
+  if (!next || !canStep(world,pawn,next,blocked,CIVIL_TRANSIT_BLOCKERS,budget.structureGeometry?.())) {
     if (pawn.planCooldown > 0) return;
     const cells = 'kind' in target ? footprintCells(target as Job) : [target];
-    const goals = exact ? new Set([cellIndex(world,target.x,target.z)]) : interactionGoals(world,cells,'kind' in target?String(target.kind):undefined);
+    const goals = exact ? new Set([cellIndex(world,target.x,target.z)]) : interactionGoals(world,cells,'kind' in target?String(target.kind):undefined,budget.structureGeometry?.());
     if (!exact && !allowTarget) for (const cell of cells) goals.delete(cellIndex(world,cell.x,cell.z));
     const reachable = search(world,pawn,blocked,CIVIL_TRANSIT_BLOCKERS,budget,goals); if (!reachable) return;
     const path = exact ? routeToCell(world,target,reachable) : routeToJob(world,target,reachable,allowTarget);
@@ -26,5 +26,5 @@ export function moveToward(world: World, pawn: Pawn, target: Cell, allowTarget: 
     if (path === null) { releaseWork(world,pawn); return; }
     pawn.path = path; next = path[0];
   }
-  if (next&&startTravel(world,pawn,next,getLight)) pawn.path.shift();
+  if (next&&startTravel(world,pawn,next,getLight,budget.structureGeometry?.())) pawn.path.shift();
 }

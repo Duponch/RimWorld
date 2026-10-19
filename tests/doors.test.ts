@@ -97,8 +97,20 @@ test('a sleeping colonist crosses a real closed corridor door; navigation, solid
   const pin={x:14,z:16},thrower={x:19,z:16};expect(clearThrow(open,pin,thrower)).toBe(false);expect(clearThrow(open,pin,thrower,recreationSpace(open))).toBe(false);
   open.structures[0]!.door!.open=true;expect(clearThrow(open,pin,thrower)).toBe(true);expect(clearThrow(open,pin,thrower,recreationSpace(open))).toBe(true);
   const path=routeToCell(open,{x:16,z:15},reachableCells(open,{x:15,z:16},blockedCells(open),new Set()));expect(path?.length).toBe(2);
-  const legacy=deconstructionCamp();const old=JSON.parse(serializeWorld(legacy));((old.schemaVersion=33,withoutResearch(old)),withoutPawnSkills(old));expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedSkills(legacy));
+  const legacy=deconstructionCamp();
+  // Declare the old permission set before serializing it. Migration must not
+  // grant the later pemmican default to this historical policy.
+  for(const policy of legacy.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='pemmican');delete legacy.spoiled.pemmican;
+  // Mental state first exists in V65; the current constructor's wander state
+  // cannot be claimed by V33, and its neutral migration must not recreate it.
+  for(const pawn of legacy.pawns)delete pawn.mental;
+  const old=JSON.parse(serializeWorld(legacy));((old.schemaVersion=33,withoutResearch(old)),withoutPawnSkills(old));
+  // The existing legacy-skill fixture predates the registry and deterioration
+  // domains too. Omit only their later defaults before injecting refusals.
+  delete old.worldMaps;delete old.worldGroups;delete old.deterioration;
+  expect(deserializeWorld(JSON.stringify(old))).toEqual(withMigratedSkills(legacy));
+  const futureMental=structuredClone(old);futureMental.pawns[0].mental={below:[0,0,0],cooldown:0,catharsis:[]};expect(()=>deserializeWorld(JSON.stringify(futureMental))).toThrow(/Invalid mental state/);
   const futureFood=structuredClone(old);futureFood.foodPolicies[0].allowed.push('red-fox-meat');expect(()=>deserializeWorld(JSON.stringify(futureFood))).toThrow('version 33');
-  const future=JSON.parse(saved);(future.schemaVersion=33,withoutPawnSkills(future));expect(()=>deserializeWorld(JSON.stringify(future))).toThrow(/version 33/);
+  const future=structuredClone(old);future.structures.push({...s,id:future.nextId++});expect(()=>deserializeWorld(JSON.stringify(future))).toThrow(/version 33/);
   for(const data of [null,[],{}, {...s.door,closeAt:Infinity},{...s.door,changedAt:w.tick+1},{...s.door,lastTouch:w.tick+1}]){const bad=JSON.parse(saved);bad.structures.find((s:Structure)=>s.kind==='door').door=data;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();}
 });

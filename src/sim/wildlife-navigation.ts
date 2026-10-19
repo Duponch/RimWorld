@@ -12,12 +12,13 @@ import { routeToCell,hasReachableCell,inBounds } from './pathfinding.ts';
 import { jobBlocksTransit } from './construction-rules.ts';
 import { footprintCells } from './definitions.ts';
 import { captureStandability,navigationCosts,furnitureDelay } from './furniture-travel.ts';
-import { doorCorners,doorOpenness,isPassageDoor } from './door-rules.ts';
+import { doorOpenness,isPassageDoor } from './door-rules.ts';
 import { WeightedSearch } from './weighted-search.ts';
 import { scaleNavigationCosts } from './navigation-costs.ts';
 import { meleeContact } from './melee-space.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import { animalSpecies } from './animal-species.ts';
+import {captureStructureNavigation,type StructureNavigationGeometry} from './structure-navigation.ts';
 import type { Cell,World } from './types.ts';
 /** Ranked food candidates resume a single frontier. Group once rather than
  * rescanning thousands of plant contacts for every distinct food score. */
@@ -33,13 +34,14 @@ function rankedFood(world:World,cells:Cell[],search:WeightedSearch,rank:(c:Cell)
 /** Short-lived capture: no world mutation may interleave its searches/steps. */
 /** `allowClosedGate` is for planning a handler-led route only. Physical steps
  * must use the default navigation after the handler opens each passage. */
-export function animalNavigation(world:World,allowClosedGate=false,fencePassable=false,actor?:WildAnimal,capturedFlight=false) {
+export function animalNavigation(world:World,allowClosedGate=false,fencePassable=false,actor?:WildAnimal,capturedFlight=false,providedGeometry?:StructureNavigationGeometry) {
   const duck=world.schemaVersion>=256&&actor?.species==='duck'?actor:undefined,override=duck&&duckTerrainOverride256(world,duck),flying=!!duck&&(capturedFlight||duckFlying256(duck.flight));
   const terrainFree=(terrain:unknown)=>naturalTerrainWalkable256(terrain)||flying&&terrain==='water-deep';
-  const solids=new Set<number>(),corners=doorCorners(world),stand=captureStandability(world),width=world.width;
+  const geometry=providedGeometry??captureStructureNavigation(world);
+  const solids=new Set<number>(),corners=geometry.corners,stand=captureStandability(world,geometry),width=world.width;
   const add=(s:Parameters<typeof footprintCells>[0])=>{for(const c of footprintCells(s))solids.add(c.z*width+c.x);};
-  for(const s of world.structures) {
-    if(s.kind==='vent'||s.kind==='wall'||s.kind==='cooler'||s.kind==='fence'&&!fencePassable&&!flying||world.schemaVersion<22&&s.kind==='table')add(s);
+  for(const {structure:s,cells} of geometry.entries) {
+    if(s.kind==='vent'||s.kind==='wall'||s.kind==='cooler'||s.kind==='fence'&&!fencePassable&&!flying||world.schemaVersion<22&&s.kind==='table')for(const i of cells)solids.add(i);
     if(isPassageDoor(s.kind)&&(s.door?.forbidden||!allowClosedGate&&(!s.door?.open||doorOpenness(s,world.tick)<1-1e-9)))solids.add(s.z*width+s.x);
   }
   for(const j of world.jobs)if(jobBlocksTransit(world,j))add(j);
@@ -68,7 +70,7 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
     }
     const exits=edges.filter(free);
     if(!indices.size&&!exits.length)return;
-    const n=navigationCosts(world,a,override);
+    const n=navigationCosts(world,a,override,geometry);
     // Food travel uses the species' pace. Convert common furniture costs from
     // human base-3 units into hare base-1 units; no human movement capacity.
     const search=new WeightedSearch(world.width,world.height,a.z*world.width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
@@ -89,10 +91,10 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
     const path=exit&&routeToCell(world,exit,reach);
     return path?{kind:'exit',path}:undefined;
   }
-  return {free,
+  return {free,geometry,
     /** One quota-granted frontier shared by all confusion destination tickets. */
     wanderSearch(a:Cell){
-      const n=navigationCosts(world,a,override),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
+      const n=navigationCosts(world,a,override,geometry),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
       return {canReach(c:Cell){if(!inBounds(world,c.x,c.z)||!free(c))return false;const i=c.z*width+c.x;return hasReachableCell(search.advance(new Set([i])),i);},pathTo(c:Cell){if(!inBounds(world,c.x,c.z)||!free(c))return;const i=c.z*width+c.x,reach=search.advance(new Set([i]));return hasReachableCell(reach,i)?routeToCell(world,c,reach)??undefined:undefined;}};
     },occupy:(c:Cell)=>inBounds(world,c.x,c.z)&&!blockedAt(c.z*width+c.x),step,route:(a:Cell,goals:Cell[],rank?:(c:Cell)=>number)=>findRoute(a,goals,false,rank)?.path,
     humanPursuitRoute(a:Cell,targets:readonly (Cell&{id:number})[],physical:Uint8Array,retainFirst=false):{path:Cell[];targetId:number}|undefined {
@@ -104,7 +106,7 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
         return {target,contacts};
       });
       if(!groups.some(g=>g.contacts.length))return;
-      const n=navigationCosts(world,a,override),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
+      const n=navigationCosts(world,a,override,geometry),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
       const pick=(list:typeof groups)=>{
         const goals=new Set(list.flatMap(g=>g.contacts.map(c=>c.z*width+c.x))),reach=search.advance(goals);
         const found=list.flatMap(g=>g.contacts.filter(c=>hasReachableCell(reach,c.z*width+c.x)).map(c=>({target:g.target,cell:c,cost:reach.costs[c.z*width+c.x]!})))
@@ -120,7 +122,7 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
     foodPreyOrExitRoute(a:Cell,goals:Cell[],prey:readonly (Cell&{id:number})[],exitFallback=false,rank?:(c:Cell)=>number):{kind:'food'|'prey'|'exit';path:Cell[];targetId?:number}|undefined {
       const cells=goals.filter(free),indices=new Set(cells.map(c=>c.z*width+c.x));
       if(!indices.size&&!prey.length&&!exitFallback)return;
-      const n=navigationCosts(world,a,override),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
+      const n=navigationCosts(world,a,override,geometry),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
       if(indices.size){
         const reach=rank?undefined:search.advance(indices),food=rank?rankedFood(world,cells,search,rank):cells.filter(c=>hasReachableCell(reach!,c.z*width+c.x)).sort((a,b)=>reach!.costs[a.z*width+a.x]!-reach!.costs[b.z*width+b.x]!)[0];
         if(food){const path=routeToCell(world,food,search.finish(indices));return path?{kind:'food',path}:undefined;}
@@ -144,10 +146,10 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
       const path=edge&&routeToCell(world,edge,reach);return path?{kind:'exit',path}:undefined;
     }};
 }
-export function moveAnimal(world:World,a:WildAnimal,step:(a:Cell,b:Cell)=>boolean,moving=1):boolean {
+export function moveAnimal(world:World,a:WildAnimal,step:(a:Cell,b:Cell)=>boolean,moving=1,geometry?:StructureNavigationGeometry):boolean {
   const next=a.path[0];if(!next)return false;
   if(!step(a,next)){a.path=[];delete a.meal;a.state='idle';a.nextDecision=world.tick+10;return false;}
-  const flight=duckFlightMoveFactor256(world,a),species=actualAnimalProfile256(a),pace=(a.meal||a.flee||a.retaliation||a.predation||a.manhunter||a.burning?species.moveTicks:species.walkTicks)/(moving*weatherMoveFactor(world,a)*actualAnimalMoveSpeedFactor256(a))/flight,delay=furnitureDelay(world,a,next,duckTerrainOverride256(world,a))/flight,start=a.motion&&a.motion.end>=world.tick-1?a.motion.end:world.tick;
+  const flight=duckFlightMoveFactor256(world,a),species=actualAnimalProfile256(a),pace=(a.meal||a.flee||a.retaliation||a.predation||a.manhunter||a.burning?species.moveTicks:species.walkTicks)/(moving*weatherMoveFactor(world,a)*actualAnimalMoveSpeedFactor256(a))/flight,delay=furnitureDelay(world,a,next,duckTerrainOverride256(world,a),geometry)/flight,start=a.motion&&a.motion.end>=world.tick-1?a.motion.end:world.tick;
   if(next.x!==a.x||next.z!==a.z)delete a.arrivalRotation;
   a.motion={...(flight>1?{animalFlight:true as const}:{}),from:{x:a.x,z:a.z},to:{...next},start,end:start+Math.hypot(next.x-a.x,next.z-a.z)*pace+delay,speedFactor:3/pace,terrainDelay:delay};
   if(a.stagger&&a.stagger.untilCore/10>start){a.motion.stagger=mergeSlowIntervals([{start:Math.max(start,a.stagger.sinceCore/10),end:a.stagger.untilCore/10}]);a.motion.end=travelEnd(a.motion);}

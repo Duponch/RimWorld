@@ -34,7 +34,14 @@ test('bounded sweep melts before adding snow and preserves exact phase after run
 test('strict 238 migration leaves the snow domain absent and rejects future spellings',()=>{
  const w=createWorld(42,16,16),old=JSON.parse(serializeWorld(w));
  for(const policy of old.apparelPolicies)policy.allowedItems=policy.allowedItems.filter((item:string)=>item!=='recon-armor'&&!item.endsWith('-tuque'));
- old.schemaVersion=238;const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);expect('snow' in migrated).toBe(false);
+ // The declared238 fixture precedes these default domains and permissions.
+ // Prepare it before the explicit future-snow fields are injected below.
+ delete old.worldMaps;delete old.worldGroups;delete old.deterioration;delete old.spoiled.pemmican;
+ for(const policy of old.foodPolicies)policy.allowed=policy.allowed.filter((item:string)=>item!=='pemmican');
+ // V238 already permits the base mental state, but not V256's wander state.
+ for(const pawn of old.pawns)if(pawn.mental)delete pawn.mental.wander;
+ old.schemaVersion=238;const migrated=deserializeWorld(JSON.stringify(old));expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);expect('snow' in migrated).toBe(false);expect(migrated.pawns.every(p=>p.mental?.wander===undefined)).toBe(true);
+ const futureMental=structuredClone(old);futureMental.pawns[0].mental.wander={revision:1,nextMoveOrderIsWait:false};expect(()=>deserializeWorld(JSON.stringify(futureMental))).toThrow(/Invalid mental state/);
  for(const key of ['snow','snowClearArea'])expect(snowHistoricalFieldsAbsent({...old,[key]:undefined},238)).toBe(false);
  old.tiles[0].snowDepth=.2;expect(()=>deserializeWorld(JSON.stringify(old))).toThrow();
 });

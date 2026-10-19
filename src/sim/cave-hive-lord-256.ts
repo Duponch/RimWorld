@@ -89,9 +89,10 @@ function focus(w:World,a:WildAnimal,nav:ReturnType<typeof animalNavigation>,take
 }
 /** Before ordinary meal/rest selection, after real fire/mental/retaliation.
  * Existing rotating quota defers a search; it never clears a captured edge. */
-export function processHivePriority256(w:World,a:WildAnimal,nav:ReturnType<typeof animalNavigation>,physical:Uint8Array,take:()=>boolean):boolean {
+export function processHivePriority256(w:World,a:WildAnimal,getNav:()=>ReturnType<typeof animalNavigation>,getPhysical:()=>Uint8Array,take:()=>boolean):boolean {
  if(!activeHiveInsect256(a)||a.confusion||a.manhunter||a.burning)return false;
  const lord=lordFor(w,a);if(!lord)return false;
+ const nav=getNav(),physical=getPhysical();
  if(lord.phase!=='defend-expand'&&w.tick*10-lord.lastHarmCore>=1200){lord.phase='defend-expand';for(const member of w.wildlife?.animals??[])if(member.hive?.lordId===lord.id&&member.hiveJob?.kind==='attack'&&member.hiveJob.structure)releaseHiveMaintenance256(w,member);}
  const hive=focus(w,a,nav,take),assault=lord.phase==='assault'||!hive,radius=lord.phase==='defend-expand'?10:40,acquire=lord.phase==='defend-expand'?30:50;
  if(lord.phase!=='defend-expand'&&a.hiveJob?.kind==='maintain')releaseHiveMaintenance256(w,a);
@@ -130,9 +131,10 @@ export function processHiveWander256(w:World,a:WildAnimal,nav:ReturnType<typeof 
 }
 /** Existing tool selection/cooldown and real Structure damage, no parallel
  * combat engine or manhunter alias. Called inside the ordinary Core substep. */
-export function advanceHiveStructureMelee256(w:World,a:WildAnimal,core:number,physical:Uint8Array):boolean {
+export function advanceHiveStructureMelee256(w:World,a:WildAnimal,core:number,getPhysical:()=>Uint8Array):boolean {
  const job=a.hiveJob;if(!activeHiveInsect256(a)||job?.kind!=='attack'||!job.structure||a.burning||a.stun||a.strike||(a.motion?.end??0)>core/10)return false;
  const target=w.structures.find(s=>s.id===job.targetId);if(!target){delete a.hiveJob;return false;}
+ const physical=getPhysical();
  if(!footprintCells(target).some(c=>meleeContact(w,a,c,physical)))return false;
  const state={rng:w.rng},tool=chooseMeleeTool(animalMeleeTools(a),()=>healthRandom(state));if(!tool)return false;
  const raw=Math.max(1,tool.damage*(.8+healthRandom(state)*.4)),damage=Math.floor(raw)+Number(healthRandom(state)<raw%1);

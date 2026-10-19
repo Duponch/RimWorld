@@ -15,7 +15,7 @@ import { SnapshotDecoder } from './snapshots';
 import type { AudioCue } from './audio-cues';
 
 /** Transport readers are selected by a fixed client implementation, never by a packet flag. */
-export type SnapshotReader=Pick<SnapshotDecoder,'adopt'|'adoptCampaignOnly'|'prepareDraftPreview'|'authorizeDraftPreview'|'discardDraftPreview'>;
+export type SnapshotReader=Pick<SnapshotDecoder,'adopt'|'adoptCampaignOnly'|'prepareDraftPreview'|'authorizeDraftPreview'|'discardDraftPreview'>&{readMotion?(packet:import('./snapshots').SnapshotMessage<true>):import('./motion-tracks').PawnTrack[]|undefined};
 
 type Payload = Request extends infer R ? R extends { id: number } ? Omit<R, 'id'> : never : never;
 interface PendingWorldDraft256 {
@@ -154,7 +154,7 @@ export class SimulationClient {
           for (const pending of this.pending.values()) if (pending.type === 'init' || pending.type === 'load' || pending.type === 'world-draft-start') {
             if (result.replaced) pending.replacementEpoch = data.epoch;
           }
-          try { this.deliverSnapshot(result.world, data.stepMs, data.speed, result.replaced, data.motion);this.deliverTradeArrivals261(); }
+          try { this.deliverSnapshot(result.world, data.stepMs, data.speed, result.replaced, this.snapshots.readMotion?this.snapshots.readMotion(data):data.motion);this.deliverTradeArrivals261(); }
           catch (error) { this.onError(`Présentation interrompue : ${error instanceof Error ? error.message : String(error)}`); }
           try { if (result.replaced || data.audioCues?.length) this.deliverAudioCues(data.audioCues ?? [], result.world, result.replaced); }
           catch (error) { this.onError(`Audio interrompu : ${error instanceof Error ? error.message : String(error)}`); }

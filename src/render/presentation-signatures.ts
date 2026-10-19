@@ -1,4 +1,5 @@
-import type { StockpileCell, Structure } from '../sim/types';
+import type { StockpileCell, Structure, World } from '../sim/types';
+import {readResidentAuxiliaryFrame} from '../bridge/resident-auxiliary-sections';
 
 // This owns primitive captures, never a World, source array, building or policy.
 type Scalar = string | number | boolean | bigint | null | undefined;
@@ -133,10 +134,20 @@ export class StoragePresentationSignature {
   private readonly scratch: Scalar[] = [];
   private signature = '';
   private valid = false;
+  private residentToken:object|undefined;
 
-  clear(): void { this.slots.length = this.scratch.length = 0; this.signature = ''; this.valid = false; }
+  clear(): void { this.slots.length = this.scratch.length = 0; this.signature = ''; this.valid = false;this.residentToken=undefined; }
+
+  /** Only the renderer's explicit immutable lane calls this. Unknown/cloned
+   * Worlds and every ordinary public read retain the complete value pass. */
+  readResident(world:World,reset=false):string {
+    const token=readResidentAuxiliaryFrame(world)?.token('stockpiles');
+    if(!reset&&token&&token===this.residentToken&&this.valid)return this.signature;
+    const value=this.read(world.stockpiles,reset);this.residentToken=token;return value;
+  }
 
   read(stockpiles: readonly StockpileCell[], reset = false): string {
+    this.residentToken=undefined;
     if (reset) this.clear();
     let changed = !this.valid || this.slots.length !== stockpiles.length;
     this.valid = false;
@@ -170,10 +181,18 @@ export class HomePresentationSignature {
   private values: Scalar[] = [];
   private text = '';
   private present = false;
+  private residentToken:object|undefined;
 
-  clear(): void { this.values.length = 0; this.text = ''; this.present = false; }
+  clear(): void { this.values.length = 0; this.text = ''; this.present = false;this.residentToken=undefined; }
+
+  readResident(world:World):string {
+    const token=readResidentAuxiliaryFrame(world)?.token('home');
+    if(token&&token===this.residentToken)return this.text;
+    const value=this.read(world.home);this.residentToken=token;return value;
+  }
 
   read(home: readonly number[] | undefined): string {
+    this.residentToken=undefined;
     if (home === undefined) { this.clear(); return ''; }
     let changed = !this.present || this.values.length !== home.length;
     this.present = false;

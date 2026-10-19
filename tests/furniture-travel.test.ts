@@ -16,9 +16,18 @@ import type { Orientation,StructureKind } from '../src/sim/types';
 import { V190_ITEM_IDS } from '../src/sim/biome-items';
 
 /** Construct only the historical policy under test; never sanitize a rejected
- * save. V190 predator products were absent from schema 21. */
+ * save. Predator products and the later pemmican default were absent in V21. */
 function withoutPredatorFood<T extends {foodPolicies:{allowed:string[]}[]}>(world:T):T {
-  for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>!V190_ITEM_IDS.includes(item));
+  for(const policy of world.foodPolicies)policy.allowed=policy.allowed.filter(item=>item!=='pemmican'&&!V190_ITEM_IDS.includes(item));
+  return world;
+}
+/** Extension of the existing pre-skill fixture, before any hostile field is
+ * injected. Real furniture, piles, routes and reservations remain literal. */
+function withoutFutureDefaults<T>(world:T):T {
+  const w=world as {worldMaps?:unknown;worldGroups?:unknown;deterioration?:unknown;spoiled?:{pemmican?:unknown};pawns:{mental?:unknown}[]};
+  delete w.worldMaps;delete w.worldGroups;delete w.deterioration;if(w.spoiled)delete w.spoiled.pemmican;
+  // V21 predates all mental state (V65), rather than only wander (V256).
+  for(const pawn of w.pawns)delete pawn.mental;
   return world;
 }
 
@@ -44,15 +53,20 @@ test('point queries keep complete rotated and historical footprints, job targets
   const line=[[[0,0],[1,0],[-1,0]],[[0,0],[0,1],[0,-1]],[[0,0],[1,0],[-1,0]],[[0,0],[0,1],[0,-1]]];
   const pair=[[[0,0],[0,1]],[[0,0],[1,0]],[[0,0],[0,-1]],[[0,0],[-1,0]]];
   const bench=[[[0,0],[-1,0],[1,0],[0,1],[-1,1],[1,1]],[[0,0],[0,-1],[0,1],[1,0],[1,-1],[1,1]],[[0,0],[-1,0],[1,0],[0,-1],[-1,-1],[1,-1]],[[0,0],[0,-1],[0,1],[-1,0],[-1,-1],[-1,1]]];
-  const stands=new Set<StructureKind>(['sleeping-spot','spike-trap','animal-sleeping-spot','grave','power-conduit','power-switch','butcher-spot','crafting-spot','door','autodoor','fence','fence-gate','pen-marker','stool','dining-chair','armchair','horseshoes']);
-  const rejectsItems=new Set<StructureKind>(['vent','chemfuel-generator','nutrient-paste-dispenser','double-bed','hydroponics-basin','sandbags','small-sculpture','large-sculpture','grave','heater','wind-turbine','battery','solar-generator','cooler','wood-generator','passive-cooler','wall','bed','hospital-bed','dresser','flower-pot','campfire']);
-  const stores=new Set<StructureKind>(['spike-trap','shelf','small-shelf','sleeping-spot','animal-sleeping-spot','orbital-beacon','fence','fence-gate','power-conduit','standing-lamp','sun-lamp','door','autodoor','stool','dining-chair','armchair','horseshoes']);
+  const stands=new Set<StructureKind>(['bedroll','sleeping-spot','spike-trap','animal-sleeping-spot','grave','power-conduit','power-switch','butcher-spot','crafting-spot','door','autodoor','fence','fence-gate','pen-marker','stool','dining-chair','armchair','horseshoes']);
+  const rejectsItems=new Set<StructureKind>(['insect-hive','glow-pod','ancient-cryptosleep-casket','column','urn','stele-large','stele-grand','sarcophagus','bedroll','vent','chemfuel-generator','nutrient-paste-dispenser','double-bed','hydroponics-basin','sandbags','small-sculpture','large-sculpture','grave','heater','wind-turbine','battery','solar-generator','cooler','wood-generator','passive-cooler','wall','bed','hospital-bed','dresser','flower-pot','campfire']);
+  const stores=new Set<StructureKind>(['ancient-road-barrier','ancient-road-lamp','ship-chunk','torch-lamp','spike-trap','shelf','small-shelf','sleeping-spot','animal-sleeping-spot','orbital-beacon','fence','fence-gate','power-conduit','standing-lamp','sun-lamp','door','autodoor','stool','dining-chair','armchair','horseshoes']);
   const flickable=new Set<StructureKind>(['vent','machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench','power-switch','wood-generator','standing-lamp','cooler','heater','electric-stove']);
   const w=createWorld(42,16,16);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.piles=[];w.jobs=[];
   const points=Array.from({length:121},(_,i)=>({x:4+i%11,z:4+Math.floor(i/11)}));points.push({x:-20,z:8},{x:8,z:-20},{x:100,z:8},{x:8,z:100});
   for(const kind of Object.keys(STRUCTURE_DEFINITIONS) as StructureKind[])for(const orientation of [0,1,2,3] as const)for(const footprint of ['standard','legacy-single'] as const){
+    if(['column','urn','stele-large','stele-grand'].includes(kind)&&orientation!==0){
+      expect(()=>footprintCells({id:1,kind,x:8,z:8,orientation,footprint} as Parameters<typeof footprintCells>[0])).toThrow('Invalid ancient orientation');continue;
+    }
     const direction=[[0,1],[1,0],[0,-1],[-1,0]][orientation]!,side=[[1,0],[0,-1],[-1,0],[0,1]][orientation]!;
-    const offsets=kind==='ground-scanner'?[[-1,-1],[0,-1],[1,-1],[-1,0],[0,0],[1,0],[-1,1],[0,1],[1,1]]
+    const offsets=kind==='ancient-cryptosleep-casket'||kind==='sarcophagus'?pair[orientation]!
+      :kind==='ship-chunk'||kind==='stele-large'?[[0,0],[1,0],[0,1],[1,1]]
+      :kind==='ground-scanner'||kind==='stele-grand'?[[-1,-1],[0,-1],[1,-1],[-1,0],[0,0],[1,0],[-1,1],[0,1],[1,1]]
       :kind==='hydroponics-basin'?[0,1,2,3].map(a=>[direction[0]!*a,direction[1]!*a])
       :kind==='wind-turbine'?[0,1].flatMap(a=>[-3,-2,-1,0,1,2,3].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
       :kind==='solar-generator'?Array.from({length:16},(_,i)=>[i%4,Math.floor(i/4)])
@@ -65,7 +79,7 @@ test('point queries keep complete rotated and historical footprints, job targets
       :kind==='table-long'?[0,1,2,3].flatMap(a=>[0,1].map(b=>[direction[0]!*a+side[0]!*b,direction[1]!*a+side[1]!*b]))
       :kind==='shelf'?[[0,0],side]
       :kind==='dresser'?pair[orientation]!
-      :footprint!=='legacy-single'&&['sleeping-spot','bed','hospital-bed','table','battery','grave'].includes(kind)?pair[orientation]!:[[0,0]];
+      :footprint!=='legacy-single'&&['bedroll','sleeping-spot','bed','hospital-bed','table','battery','grave'].includes(kind)?pair[orientation]!:[[0,0]];
     const cells=offsets.map(([x,z])=>({x:8+x!,z:8+z!})),keys=new Set(cells.map(c=>`${c.x},${c.z}`)),expected=points.map(c=>keys.has(`${c.x},${c.z}`));
     const shape={x:8,z:8,orientation,footprint},structure={...shape,id:1,kind};
     const targets:Parameters<typeof footprintContains>[0][]=[structure,{...shape,kind:'install',furniture:{kind}},{...shape,kind:'deconstruct',deconstruction:{kind}}];
@@ -146,17 +160,24 @@ test('opposite loaded trips cross furniture, cancel in transit without teleport 
     if(w.pawns.every(p=>!p.haul)&&w.tick>100)break;
   }
   expect(onTable.size).toBe(2);expect(interrupted).toBe(true);expect(w.piles.find(p=>p.item==='wood')?.owner).toEqual({type:'ground',x:2,z:8});expect(w.piles.find(p=>p.item==='rice')?.owner).toEqual({type:'ground',x:13,z:8});
-  const original=furnitureTrafficFixture(),raw=JSON.parse(serializeWorld(original));((raw.schemaVersion=21,withoutResearch(raw)),withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;
+  const original=furnitureTrafficFixture();for(const pawn of original.pawns)delete pawn.mental;
+  const raw=JSON.parse(serializeWorld(original));((raw.schemaVersion=21,withoutResearch(raw)),withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;
+  withoutFutureDefaults(raw);
   // Declare the pre-V219 cell storage, before neutral zone identities existed.
   for(const cell of raw.stockpiles)delete cell.zoneId;
   withoutPredatorFood(raw);
   expect(deserializeWorld(JSON.stringify(raw))).toEqual(withoutPredatorFood(withMigratedSkills(original)));
   const invalid=JSON.parse(serializeWorld(original));invalid.pawns[0].x=7;invalid.pawns[0].z=8;invalid.pawns[0].path=[];(invalid.schemaVersion=21,withoutPawnSkills(invalid));for(const a of invalid.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete invalid.deconstructed;delete invalid.packed;
+  withoutFutureDefaults(invalid);
   for(const cell of invalid.stockpiles)delete cell.zoneId;
   withoutPredatorFood(invalid);
   expect(()=>deserializeWorld(JSON.stringify(invalid))).toThrow(/version 21/);
   const futurePolicy=structuredClone(raw);futurePolicy.foodPolicies[0].allowed.push('red-fox-meat');
   expect(()=>deserializeWorld(JSON.stringify(futurePolicy))).toThrow(/Invalid food policy/);
+  const futureOwner=structuredClone(raw);futureOwner.structures[0].factionId=null;
+  expect(()=>deserializeWorld(JSON.stringify(futureOwner))).toThrow(/version 21/);
+  const futurePacked=structuredClone(raw);futurePacked.packed=[];
+  expect(()=>deserializeWorld(JSON.stringify(futurePacked))).toThrow(/version 21/);
   const timed=furnitureTrafficFixture(),p=timed.pawns[0]!;p.x=6;p.z=8;p.path=[];p.motion=null;timed.tick=20;startTravel(timed,p,{x:7,z:8});
   expect(deserializeWorld(serializeWorld(timed))).toEqual(timed);
   const bad=JSON.parse(serializeWorld(timed));bad.pawns[0].motion.terrainDelay=1.7;expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/duration/);
@@ -172,6 +193,7 @@ test('opposite loaded trips cross furniture, cancel in transit without teleport 
     }else if(service==='ground-sleep'){actor.need={kind:'sleep',phase:'sleep',bedId:null,target:{x:8,z:8}};actor.state='sleeping';}
     else{actor.motion={from:{x:7,z:8},to:{x:8,z:8},start:0,end:3};actor.moveCooldown=3;}
     refreshStock(old);const raw=structuredClone(old) as any;((raw.schemaVersion=21,withoutResearch(raw)),withoutPawnSkills(raw));for(const a of raw.pawns){delete a.priorities.mine;delete a.priorities.craft;}delete raw.deconstructed;delete raw.packed;
+    withoutFutureDefaults(raw);
     for(const cell of raw.stockpiles)delete cell.zoneId;
     withoutPredatorFood(raw);
     const loaded=deserializeWorld(JSON.stringify(raw));expect(loaded.tick).toBe(old.tick);expect(loaded.rng).toBe(old.rng);expect(loaded.piles).toEqual(raw.piles);expect(loaded.pawns[0]!.motion).toEqual(actor.motion);

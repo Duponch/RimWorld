@@ -1,4 +1,5 @@
 import {groupGeographicTradeTarget256} from './sim/group-geographic-post-256';
+import {updateColonistCard} from './ui/colonist-card';
 import {groupWorld} from './sim/world-map-authority';
 import {CaravanEncounterDialog261} from './ui/caravan-encounter-dialog-261';
 import {createMainWorldCreationCallbacks256} from './ui/world-creation-main';
@@ -210,6 +211,9 @@ import { createNearbyFireCollector, createNearbyMachineCollector, runningMachine
 import { listenerPose, type AudioCamera } from './audio/spatial';
 import { ColonyRenderer } from './render/ColonyRenderer';
 import { SceneStructurePreparation } from './render/SceneStructurePreparation';
+import { SceneLightTopology } from './render/SceneLightTopology';
+import { EnvironmentLightField } from './render/EnvironmentLightField';
+import { EnvironmentLighting } from './render/EnvironmentLighting';
 import type { JobKind, Pawn, World, WorkType, Orientation, AreaAction, Cell, Command } from './sim/types';
 import { TICKS_PER_DAY } from './sim/types';
 import { DEFAULT_MAP_SIZE, MAP_SIZE_PRESETS } from './sim/map-config';
@@ -474,6 +478,7 @@ class MainPresentationChanges extends PresentationChanges {
   protected override readStructures(world:World):unknown { return this.#structures.read(world); }
 }
 class MainColonyRenderer extends ColonyRenderer {
+  protected override createEnvironmentLighting():EnvironmentLighting { return new EnvironmentLighting(new EnvironmentLightField(new SceneLightTopology())); }
   protected override createIntentReader(){return createClosedMainMapIntentReader();}
   protected override createPresentationQueue():PresentationQueue {
     return new PresentationQueue(this.confirmedIntentReader,()=>new MainPresentationChanges());
@@ -1465,21 +1470,18 @@ function renderState() {
   const equipment=equipmentProjection(world),apparel=apparelProjection(world);
   for (const pawn of colonists) {
     const button = colonistButtons.get(pawn.id)!;
-    button.classList.toggle('selected', selection.ids.has(pawn.id));button.dataset.drafted=String(!!pawn.draft);
-    button.setAttribute('aria-pressed', String(selection.ids.has(pawn.id)));
-    button.querySelector('strong')!.textContent = pawn.name; button.title = `${pawn.name} · ${actionLabel(pawn,carriedPatients)} · ${equipmentDescription(equipment.get(pawn.id),pawn)}`;button.dataset.equipment=equipment.get(pawn.id)?.item??'';
-    const rawLook=apparelAppearance(apparel.get(pawn.id)),look={...rawLook,color:rawLook.color??pawnBaseColor(pawn.id)};button.dataset.apparel=look.signature;
-    const portrait=button.querySelector<HTMLElement>('.portrait-head')!,url=portraitDataUrl(appearanceOf(pawn,world.seed),look,equipment.get(pawn.id)?.item,portraitExpressionOf(pawn),humanLimbVisualMask(pawn));
-    if(portrait.dataset.source!==url){portrait.dataset.source=url;portrait.style.setProperty('--pawn-portrait',`url("${url}")`);}button.title+=` · ${look.description}`;
-    (button.querySelector('.portrait-body') as HTMLElement).style.background=look.color!==undefined?`#${look.color.toString(16)}`:'';
-    (button.querySelector('.portrait-vest') as HTMLElement).hidden=!look.vest;
-    const symbol=button.querySelector<HTMLElement>('.pawn-symbol')!;
+    const rawLook=apparelAppearance(apparel.get(pawn.id)),look={...rawLook,color:rawLook.color??pawnBaseColor(pawn.id)};
+    const url=portraitDataUrl(appearanceOf(pawn,world.seed),look,equipment.get(pawn.id)?.item,portraitExpressionOf(pawn),humanLimbVisualMask(pawn));
     const crisis=mentalCrisisView(world,pawn,s=>buildingLabels[s.kind]);
-    symbol.textContent = pawn.state==='dead'?'†':pawn.state==='downed'?'!':crisis?crisis.symbol:pawn.state === 'sleeping' ? 'Z' : pawn.state === 'hungry' ? '!' : '';
-    symbol.setAttribute('aria-label',crisis?`${crisis.label}${crisis.target?` · cible : ${crisis.target.label}`:''}`:'');
-    button.dataset.mentalCrisis=crisis?.kind??'';
-    symbol.dataset.state = pawn.state==='dead'?'dead':pawn.state==='sleeping'?'sleep':'';
-    (button.querySelector('i') as HTMLElement).style.width = `${pawn.state==='dead'?0:pawn.mood}%`;
+    updateColonistCard(button,{
+      selected:selection.ids.has(pawn.id),drafted:!!pawn.draft,name:pawn.name,
+      title:`${pawn.name} · ${actionLabel(pawn,carriedPatients)} · ${equipmentDescription(equipment.get(pawn.id),pawn)} · ${look.description}`,
+      equipment:equipment.get(pawn.id)?.item??'',apparel:look.signature,portrait:url,
+      bodyColor:look.color!==undefined?`#${look.color.toString(16)}`:'',vest:!!look.vest,
+      symbol:pawn.state==='dead'?'†':pawn.state==='downed'?'!':crisis?crisis.symbol:pawn.state === 'sleeping' ? 'Z' : pawn.state === 'hungry' ? '!' : '',
+      symbolLabel:crisis?`${crisis.label}${crisis.target?` · cible : ${crisis.target.label}`:''}`:'',
+      mentalCrisis:crisis?.kind??'',symbolState:pawn.state==='dead'?'dead':pawn.state==='sleeping'?'sleep':'',mood:pawn.state==='dead'?0:pawn.mood,
+    });
   }
   if (currentPanel === 'work') updateWorkPanel(world,carriedPatients);
   updateDraftControls(el('inspector'),selectedColonists);

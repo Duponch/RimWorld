@@ -20,18 +20,18 @@ import { furnitureSurfaces } from './furniture-motion';
 import { travelHeight } from './furniture-motion';
 import { pawnSelectionMesh } from './PawnSelectionLayer';
 import { animalCoat,animalCoatShade,bakeAnimalCoatCoordinates,createAnimalCoatTexture } from './animal-surface-paint';
-import { ANIMAL_SPECIES_IDS,animalSpecies } from '../sim/animal-species';
+import { ANIMAL_SPECIES_IDS } from '../sim/animal-species';
 import { GaitPhaseTracker,animalGaitRadiansPerUnit } from './gait-presentation';
 import { bodyBloodPigment,bodyBloodWord } from './body-blood';
 import { corpseVisualMask } from './corpse-presentation';
 import { corpsePartAbsent } from '../sim/corpse-anatomy';
-import { bodySizeAtAge } from '../sim/animal-life';
 import { autoSlaughterTargets } from '../sim/auto-slaughter';
 import {wildlifePresentationGroups,type VisualAnimal} from './wildlife-presentation-groups';
 import type { PawnLayer } from './PawnLayer';
 import {animalSlaughterMarker,AnimalSlaughterMarkerStyle} from './AnimalSlaughterMarker';
 import type {SceneTextureLoader} from './scene-render-ports';
 import { growPawnBuffers } from './pawn-buffers';
+import {WildlifeBodyScale,WildlifeFrameState} from './wildlife-frame-state';
 import { pileSurfaces,pileIdentitySurfaces,type PileSurface } from './pile-surfaces';
 import { PAWN_MODEL_SCALE,WORLD_SCALE } from '../world/scale';
 
@@ -52,7 +52,7 @@ class SpeciesRig {
   private readonly linkedRoot={x:0,y:0,z:0,yaw:0};
   private selected:ReadonlySet<number>=new Set();
   readonly blend=uniform(1).setGroup(renderGroup);private time=uniform(0).setGroup(renderGroup);
-  private keys=new Map<number,string>();private source:World|undefined;
+  private readonly keys=new WildlifeFrameState();private readonly bodyScale=new WildlifeBodyScale();private source:World|undefined;
   private headings=new Map<number,TurnHeading>();
   private readonly gait=new GaitPhaseTracker();
   private readonly gaitRate:number;
@@ -249,9 +249,10 @@ class SpeciesRig {
         const source=carrier?.geometry,index=carrier?.index??0;
         if(held&&carrier)this.carrierSlots.set(i,index);else this.carrierSlots.delete(i);
         const sourceFrom=source?.getAttribute('aFrom'),sourceTo=source?.getAttribute('aTo'),sourceTravel=source?.getAttribute('aTravel'),motion=source?.getAttribute('aMotion');
-        const signature=[origin,held,handoff?.start,handoff?.end,...[sourceFrom,sourceTo,sourceTravel,motion].flatMap(attr=>attr?[attr.getX(index),attr.getY(index),attr.getZ(index),attr.getW(index)]:[])].join(':');
-        if(this.keys.get(a.id)===signature)return;this.keys.set(a.id,signature);dirty=true;
-        const size=bodySizeAtAge(corpse.species,corpse.ageTicks,corpse.growthTracker?.value)/animalSpecies(corpse.species).bodySize;
+        const same=this.keys.begin(a.id,1).value(origin).value(held).value(handoff?.start).value(handoff?.end)
+          .stream(sourceFrom,index).stream(sourceTo,index).stream(sourceTravel,index).stream(motion,index).unchanged();
+        if(same)return;dirty=true;
+        const size=this.bodyScale.read(corpse);
         scale.setX(i,size);state.setXYZW(i,0,0,2,0);
         blood.setX(i,bodyBloodWord(corpse.health,part=>corpsePartAbsent(corpse,part)));absent.setX(i,corpseVisualMask(corpse));
         carrierState.setXYZW(i,held&&carrier?1:0,motion?.getZ(index)??0,motion?.getW(index)??0,0);
@@ -278,9 +279,10 @@ class SpeciesRig {
         const carrier=pawns?.animalCorpseCarrier(a.carrierId),source=carrier?.geometry,index=carrier?.index??0;
         if(carrier)this.carrierSlots.set(i,index);else this.carrierSlots.delete(i);
         const f=source?.getAttribute('aFrom'),t=source?.getAttribute('aTo'),travel=source?.getAttribute('aTravel'),motion=source?.getAttribute('aMotion');
-        const signature=['rescue',i,origin,a.carrierId,a.state,a.growthTracker?.value,...[f,t,travel,motion].flatMap(attr=>attr?[attr.getX(index),attr.getY(index),attr.getZ(index),attr.getW(index)]:[])].join(':');
-        if(this.keys.get(a.id)===signature)return;this.keys.set(a.id,signature);dirty=true;
-        const growth=bodySizeAtAge(a.species,a.ageTicks,a.growthTracker?.value)/animalSpecies(a.species).bodySize;
+        const same=this.keys.begin(a.id,2).value(i).value(origin).value(a.carrierId).value(a.state).value(a.growthTracker?.value)
+          .stream(f,index).stream(t,index).stream(travel,index).stream(motion,index).unchanged();
+        if(same)return;dirty=true;
+        const growth=this.bodyScale.read(a);
         scale.setX(i,growth);state.setXYZW(i,0,0,1,0);blood.setX(i,bodyBloodWord(a.health));
         absent.setX(i,a.health?corpseVisualMask({animalId:a.id,species:a.species,sex:a.sex,ageTicks:a.ageTicks,health:a.health}):0);
         transfer.setXY(i,0,0);carrierState.setXYZW(i,carrier?1:0,motion?.getZ(index)??0,motion?.getW(index)??0,0);
@@ -289,9 +291,11 @@ class SpeciesRig {
         return;
       }
       const edge=timeline?.segment(a.id)??a.motion,active=!!edge&&tick>=edge.start&&tick<edge.end;
-      const growth=bodySizeAtAge(a.species,a.ageTicks,a.growthTracker?.value)/animalSpecies(a.species).bodySize;
-      const fromFraction=edge&&'fromFraction' in edge?edge.fromFraction:undefined,toFraction=edge&&'toFraction' in edge?edge.toFraction:undefined;
-      const key=`${i}:${origin}:${edge?.start}:${edge?.end}:${fromFraction}:${toFraction}:${active}:${a.state}:${a.meal?.id}:${a.strike?.atCore}:${a.stun?.untilCore}:${a.threat?.targetId}:${a.predation?.targetId}:${a.manhunter?.targetId}:${a.manhunter?.door?.targetId}:${growth}`;if(this.keys.get(a.id)===key)return;this.keys.set(a.id,key);dirty=true;
+      const growth=this.bodyScale.read(a);
+      const fromFraction=edge&&'fromFraction' in edge?edge.fromFraction as number|undefined:undefined,toFraction=edge&&'toFraction' in edge?edge.toFraction as number|undefined:undefined;
+      const same=this.keys.begin(a.id,0).value(i).value(origin).value(edge?.start).value(edge?.end).value(fromFraction).value(toFraction).value(active)
+        .value(a.state).value(a.meal?.id).value(a.strike?.atCore).value(a.stun?.untilCore).value(a.threat?.targetId).value(a.predation?.targetId)
+        .value(a.manhunter?.targetId).value(a.manhunter?.door?.targetId).value(growth).unchanged();if(same)return;dirty=true;
       carrierState.setXYZW(i,0,0,0,0);transfer.setXY(i,0,0);
       blood.setX(i,bodyBloodWord(a.health));
       absent.setX(i,a.health?corpseVisualMask({animalId:a.id,species:a.species,sex:a.sex,ageTicks:a.ageTicks,health:a.health}):0);

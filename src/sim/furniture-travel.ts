@@ -11,6 +11,7 @@ import { overlayNavigationCosts,type NavigationCostLookup } from './navigation-c
 import { FLOOR_DEFINITIONS } from './flooring.ts';
 import { spikeTrapKnowsOf,spikeTrapNavigationActor,SPIKE_TRAP_SEARCH_COST,SPIKE_TRAP_WALK_DELAY } from './spike-trap-state.ts';
 import type { Cell, StructureKind, World } from './types.ts';
+import type { StructureNavigationGeometry } from './structure-navigation.ts';
 
 /** Core natural floors cost two Core ticks. Historical grass/soil stay neutral. */
 export function terrainTravelDelay(world:World,index:number):number {
@@ -93,65 +94,78 @@ export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:numb
   'hospital-bed':{delay:4.2,stand:false,repeat:true},campfire:{delay:4.2,stand:false,repeat:true},
   stool:{delay:3,stand:true,repeat:true},'dining-chair':{delay:3,stand:true,repeat:true},armchair:{delay:3,stand:true,repeat:true},'end-table':{delay:3,stand:false,repeat:true},dresser:{delay:5,stand:false,repeat:true},'flower-pot':{delay:3,stand:false,repeat:true},horseshoes:{delay:1.4,stand:true,repeat:false},
 });
-export function canStandAt(world:World,cell:Cell):boolean {
+export function canStandAt(world:World,cell:Cell,geometry?:StructureNavigationGeometry):boolean {
+  const version=world.schemaVersion;
   if(!Number.isInteger(cell.x)||!Number.isInteger(cell.z)||cell.x<0||cell.z<0||cell.x>=world.width||cell.z>=world.height||['rock','water'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain))return false;
-  for(const s of world.structures)if(footprintContains(s,cell)&&(world.schemaVersion<22?s.kind==='wall'||s.kind==='table':!FURNITURE_TRAVEL[s.kind].stand))return false;
-  if(world.schemaVersion>=28&&world.piles.some(p=>p.kind==='chunk'&&p.owner.type==='ground'&&p.owner.x===cell.x&&p.owner.z===cell.z))return false;
-  return !world.jobs.some(j=>(world.schemaVersion<16&&(j.kind==='wall'||j.kind==='table')||world.schemaVersion>=22&&j.construction==='frame'&&j.kind!=='power-conduit'&&j.kind!=='lay-floor'&&j.kind!=='build-bridge')&&footprintContains(j,cell));
+  for(const s of geometry?.at(cell)??world.structures)if((geometry||footprintContains(s,cell))&&(version<22?s.kind==='wall'||s.kind==='table':!FURNITURE_TRAVEL[s.kind].stand))return false;
+  if(version>=28&&world.piles.some(p=>p.kind==='chunk'&&p.owner.type==='ground'&&p.owner.x===cell.x&&p.owner.z===cell.z))return false;
+  return !world.jobs.some(j=>(version<16&&(j.kind==='wall'||j.kind==='table')||version>=22&&j.construction==='frame'&&j.kind!=='power-conduit'&&j.kind!=='lay-floor'&&j.kind!=='build-bridge')&&footprintContains(j,cell));
 }
 /** For a batch of point queries in one read-only decision. Discard before any
  * world mutation; this is not a shared navigation or cross-actor cache. */
-export function captureStandability(world:World):(cell:Cell)=>boolean {
+export function captureStandability(world:World,geometry?:StructureNavigationGeometry):(cell:Cell)=>boolean {
+  const version=world.schemaVersion;
   const denied=new Set<number>(),add=(s:Parameters<typeof footprintCells>[0])=>{for(const c of footprintCells(s))denied.add(c.z*world.width+c.x);};
-  for(const s of world.structures)if(world.schemaVersion<22?s.kind==='wall'||s.kind==='table':!FURNITURE_TRAVEL[s.kind].stand)add(s);
-  for(const j of world.jobs)if(world.schemaVersion<16&&(j.kind==='wall'||j.kind==='table')||world.schemaVersion>=22&&j.construction==='frame'&&j.kind!=='power-conduit'&&j.kind!=='lay-floor'&&j.kind!=='build-bridge')add(j);
-  if(world.schemaVersion>=28)for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground')denied.add(p.owner.z*world.width+p.owner.x);
+  if(geometry){for(const {structure:s,cells} of geometry.entries)if(version<22?s.kind==='wall'||s.kind==='table':!FURNITURE_TRAVEL[s.kind].stand)for(const i of cells)denied.add(i);}
+  else for(const s of world.structures)if(version<22?s.kind==='wall'||s.kind==='table':!FURNITURE_TRAVEL[s.kind].stand)add(s);
+  for(const j of world.jobs)if(version<16&&(j.kind==='wall'||j.kind==='table')||version>=22&&j.construction==='frame'&&j.kind!=='power-conduit'&&j.kind!=='lay-floor'&&j.kind!=='build-bridge')add(j);
+  if(version>=28)for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground')denied.add(p.owner.z*world.width+p.owner.x);
   return cell=>Number.isInteger(cell.x)&&Number.isInteger(cell.z)&&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height
     &&!['rock','water'].includes(world.tiles[cell.z*world.width+cell.x]!.terrain)&&!denied.has(cell.z*world.width+cell.x);
 }
-export function furnitureDelay(world:World,from:Cell,to:Cell,terrainOverride?:DuckTerrainOverride256):number {
-  if(world.schemaVersion<22)return frameAt(world,to)?FRAME_TRAVEL_DELAY:0;
+export function furnitureDelay(world:World,from:Cell,to:Cell,terrainOverride?:DuckTerrainOverride256,geometry?:StructureNavigationGeometry):number {
+  const version=world.schemaVersion;
+  if(version<22)return frameAt(world,to)?FRAME_TRAVEL_DELAY:0;
   let target:StructureKind|undefined,previousRepeats=false,trap=false;
-  for(const s of world.structures) {
+  if(geometry){
+    for(const s of geometry.at(to)){
+      if(s.kind!=='power-conduit')target=s.kind;
+      if(s.kind==='spike-trap'&&s.spikeTrap&&s.x===to.x&&s.z===to.z)trap=true;
+    }
+    previousRepeats=geometry.at(from).some(s=>FURNITURE_TRAVEL[s.kind].repeat);
+  }else for(const s of world.structures) {
     if(s.kind!=='power-conduit'&&footprintContains(s,to))target=s.kind;
     if(s.kind==='spike-trap'&&s.spikeTrap&&s.x===to.x&&s.z===to.z)trap=true;
     if(footprintContains(s,from)&&FURNITURE_TRAVEL[s.kind].repeat)previousRepeats=true;
   }
   let objectDelay=target?FURNITURE_TRAVEL[target].delay:frameAt(world,to)?FRAME_TRAVEL_DELAY:0;
   let repeats=target?FURNITURE_TRAVEL[target].repeat:false;
-  if(world.schemaVersion>=28)for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground') {
+  if(version>=28)for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground') {
     if(p.owner.x===to.x&&p.owner.z===to.z){objectDelay=Math.max(objectDelay,4.2);repeats=true;}
     if(p.owner.x===from.x&&p.owner.z===from.z)previousRepeats=true;
   }
-  const materialDelay=world.piles.some(p=>(world.schemaVersion>=29&&p.kind==='steel'||world.schemaVersion>=32&&p.kind==='blocks'||world.schemaVersion>=41&&p.kind==='component'||world.schemaVersion>=123&&(p.kind==='gold'||p.kind==='plasteel'||p.kind==='advanced-component'))&&p.owner.type==='ground'&&p.owner.x===to.x&&p.owner.z===to.z)?1.4:0;
+  const materialDelay=world.piles.some(p=>(version>=29&&p.kind==='steel'||version>=32&&p.kind==='blocks'||version>=41&&p.kind==='component'||version>=123&&(p.kind==='gold'||p.kind==='plasteel'||p.kind==='advanced-component'))&&p.owner.type==='ground'&&p.owner.x===to.x&&p.owner.z===to.z)?1.4:0;
   const actor=trap?spikeTrapNavigationActor(world,from):undefined,overrideCost=terrainOverride?.coreCost(world.tiles[to.z*world.width+to.x]!);
   return Math.max(repeats&&previousRepeats?0:objectDelay,materialDelay,(overrideCost===undefined?terrainTravelDelay(world,to.z*world.width+to.x):overrideCost/10),world.snow?snowTravelDelay(world.tiles[to.z*world.width+to.x]!.snowDepth??0):0)
     +(actor&&spikeTrapKnowsOf(world,actor)?SPIKE_TRAP_WALK_DELAY:0);
 }
 /** Captured once per synchronous search. No shared mutation or cross-tick cache. */
-export function navigationCosts(world:World,origin?:Cell,terrainOverride?:DuckTerrainOverride256):{costs:NavigationCostLookup|undefined;repeaters:ReadonlySet<number>;stops:ReadonlySet<number>;floors:NavigationCostLookup} {
+export function navigationCosts(world:World,origin?:Cell,terrainOverride?:DuckTerrainOverride256,geometry?:StructureNavigationGeometry):{costs:NavigationCostLookup|undefined;repeaters:ReadonlySet<number>;stops:ReadonlySet<number>;floors:NavigationCostLookup} {
+  const version=world.schemaVersion,width=world.width,snow=!!world.snow;
   const costs=new Map(frameCosts(world)),repeaters=new Set<number>(),stops=new Set<number>();
-  const actor=world.schemaVersion>=226?spikeTrapNavigationActor(world,origin):undefined,knows=!!actor&&spikeTrapKnowsOf(world,actor),traps=new Map<number,number>(),marshPerceptionCosts=new Map<number,number>();
-  if(world.schemaVersion>=22) {
-    for(const s of world.structures)for(const c of footprintCells(s)) {
-      const i=c.z*world.width+c.x,p=FURNITURE_TRAVEL[s.kind];
+  const actor=version>=226?spikeTrapNavigationActor(world,origin):undefined,knows=!!actor&&spikeTrapKnowsOf(world,actor),traps=new Map<number,number>(),marshPerceptionCosts=new Map<number,number>();
+  if(version>=22) {
+    const add=(s:World['structures'][number],i:number)=>{
+      const p=FURNITURE_TRAVEL[s.kind];
       if(knows&&s.kind==='spike-trap'&&s.spikeTrap)traps.set(i,SPIKE_TRAP_SEARCH_COST);
       if(p.delay)costs.set(i,Math.round(p.delay/3*1000));
       if(p.repeat)repeaters.add(i);if(!p.stand)stops.add(i);
-    }
-    for(const j of world.jobs)if(j.construction==='frame'&&j.kind!=='power-conduit'&&j.kind!=='lay-floor'&&j.kind!=='build-bridge')for(const c of footprintCells(j))stops.add(c.z*world.width+c.x);
+    };
+    if(geometry){for(const {structure,cells} of geometry.entries)for(const i of cells)add(structure,i);}
+    else for(const s of world.structures)for(const c of footprintCells(s))add(s,c.z*width+c.x);
+    for(const j of world.jobs)if(j.construction==='frame'&&j.kind!=='power-conduit'&&j.kind!=='lay-floor'&&j.kind!=='build-bridge')for(const c of footprintCells(j))stops.add(c.z*width+c.x);
   }
   const floors=new Map<number,number>();
   // A single captured byte per cell replaces two mostly dense Maps on a site.
   // Objects remain sparse; both lookups retain the same terrain floor.
   let terrain:Uint8Array|Uint16Array=new Uint8Array(world.tiles.length);let terrainMaximum=0;
-  if(world.schemaVersion>=28) {
-    for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground'){const i=p.owner.z*world.width+p.owner.x;costs.set(i,Math.max(costs.get(i)??0,1400));repeaters.add(i);stops.add(i);}
+  if(version>=28) {
+    for(const p of world.piles)if(p.kind==='chunk'&&p.owner.type==='ground'){const i=p.owner.z*width+p.owner.x;costs.set(i,Math.max(costs.get(i)??0,1400));repeaters.add(i);stops.add(i);}
     // Capture terrain on every decision: flooring can mutate between actors
     // within a tick. Read floor definitions when a floor is present, like the
     // scalar travel rule, without scanning the whole map through that helper.
     const tiles=world.tiles,hasSite=!!world.site;
-    const marshPerception=actor&&'draft' in actor&&actor.draft?MARSH_PERCEIVED_CORE.drafted:MARSH_PERCEIVED_CORE.ordinary;
+    const drafted=!!actor&&'draft' in actor&&!!actor.draft,marshPerception=drafted?MARSH_PERCEIVED_CORE.drafted:MARSH_PERCEIVED_CORE.ordinary;
     for(let i=0;i<tiles.length;i++){
       const tile=tiles[i]!,kind=tile.terrain;
       let cost=tile.floor?Math.round(FLOOR_DEFINITIONS[tile.floor].pathCost/10/3*1000):kind==='rough-stone'||kind==='rich-soil'||kind==='gravel'||hasSite&&kind==='grass'?67:0;
@@ -159,17 +173,17 @@ export function navigationCosts(world:World,origin?:Cell,terrainOverride?:DuckTe
       if(natural&&!tile.bridge&&!tile.floor)cost=Math.round(natural.pathCostCore/30*1000);
       else if(isWetTerrain(kind)&&!tile.bridge&&!tile.floor)cost=Math.round(MARSH_PATH_COST_CORE/30*1000);
       const override=terrainOverride?.coreCost(tile);if(override!==undefined)cost=Math.round(override/30*1000);
-      if(world.snow)cost=Math.max(cost,snowSearchCost(tile.snowDepth??0));
-      const perception=terrainOverride?.perceivedCore(tile)??(natural?(actor&&'draft' in actor&&actor.draft?natural.perceivedDraftedCore:natural.perceivedCivilCore):isWetTerrain(kind)?marshPerception:0);
+      if(snow)cost=Math.max(cost,snowSearchCost(tile.snowDepth??0));
+      const perception=terrainOverride?.perceivedCore(tile)??(natural?(drafted?natural.perceivedDraftedCore:natural.perceivedCivilCore):isWetTerrain(kind)?marshPerception:0);
       if(perception&&!tile.bridge&&!tile.floor)marshPerceptionCosts.set(i,Math.round(perception/30*1000));
       if(cost>255&&terrain instanceof Uint8Array){const wide:Uint16Array=new Uint16Array(terrain.length);wide.set(terrain);terrain=wide;}
       if(cost){terrain[i]=cost;if(cost>terrainMaximum)terrainMaximum=cost;}
     }
   }
-  if(world.schemaVersion>=29)for(const p of world.piles)if((p.kind==='steel'||world.schemaVersion>=32&&p.kind==='blocks'||world.schemaVersion>=41&&p.kind==='component'||world.schemaVersion>=123&&(p.kind==='gold'||p.kind==='plasteel'||p.kind==='advanced-component'))&&p.owner.type==='ground'){const i=p.owner.z*world.width+p.owner.x;floors.set(i,Math.max(floors.get(i)??0,467));costs.set(i,Math.max(costs.get(i)??0,467));}
+  if(version>=29)for(const p of world.piles)if((p.kind==='steel'||version>=32&&p.kind==='blocks'||version>=41&&p.kind==='component'||version>=123&&(p.kind==='gold'||p.kind==='plasteel'||p.kind==='advanced-component'))&&p.owner.type==='ground'){const i=p.owner.z*width+p.owner.x;floors.set(i,Math.max(floors.get(i)??0,467));costs.set(i,Math.max(costs.get(i)??0,467));}
   // Door wait is added after the terrain/object/material maximum, not compared
   // with it. Preserve present zero entries for fully open doors on bare floors.
-  for(const s of world.structures)if(isRoomDoor(s.kind)) {const i=s.z*world.width+s.x;repeaters.delete(i);costs.set(i,Math.max(costs.get(i)??0,terrain[i]??0)+Math.round(doorWait(s,world.tick)/3*1000));}
+  for(const s of geometry?.roomDoors??world.structures)if(isRoomDoor(s.kind)) {const i=s.z*width+s.x;repeaters.delete(i);costs.set(i,Math.max(costs.get(i)??0,terrain[i]??0)+Math.round(doorWait(s,world.tick)/3*1000));}
   const fire=fireNavigationCosts(world);
   // Trap avoidance is additive after the ordinary terrain/object maximum, like
   // fire danger. Its 800 Core cost already includes avoidance: do not add the
