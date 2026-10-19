@@ -1,23 +1,26 @@
 import { isFoodWorkstation } from '../sim/food-workstations';
 import { footprintCells } from '../sim/definitions';
-import type { World } from '../sim/types';
+import type { World, Structure } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
 import {isShelfKind} from '../sim/shelf-storage';
 import {SHELF_ITEM_SCALE,SHELF_LEVELS} from './shelf-presentation';
 
 export interface PileSurface { x:number;y:number;z:number;scale:number;scaleHeight?:boolean;shelfId?:number;level?:number }
+export interface PileSurfaceReadPair {readonly cells:ReadonlyMap<number,PileSurface>;readonly identities:ReadonlyMap<number,PileSurface>}
+export type PileShelfCell=Pick<Structure,'id'|'orientation'>;
 type SurfaceReads={cells?:ReadonlyMap<number,PileSurface>;identities?:ReadonlyMap<number,PileSurface>};
+let retained:((world:World)=>PileSurfaceReadPair|undefined)|undefined;
 let application:WeakMap<World,SurfaceReads>|undefined;
 /** One synchronous scene application owns these read-only derivations. Nothing
  * survives the boundary: external mutable Worlds still get fresh reads. Old and
  * current cargo snapshots have separate entries; nested renders restore scope. */
-export function withPileSurfaceReads<T>(read:()=>T):T {
-  const previous=application;application=new WeakMap();
-  try{return read();}finally{application=previous;}
+export function withPileSurfaceReads<T>(read:()=>T,resolve?:((world:World)=>PileSurfaceReadPair|undefined)):T {
+  const previous=application,previousRetained=retained;application=new WeakMap();retained=resolve;
+  try{return read();}finally{application=previous;retained=previousRetained;}
 }
 function entry(world:World):SurfaceReads|undefined {
   if(!application)return;
-  let value=application.get(world);if(!value){value={};application.set(world,value);}return value;
+  let value=application.get(world);if(!value){const prepared=retained?.(world);value=prepared?{cells:prepared.cells,identities:prepared.identities}:{};application.set(world,value);}return value;
 }
 /** Presentation only. Built per snapshot, never per frame/pile; no extra mesh. */
 export function pileSurfaces(world:World):ReadonlyMap<number,PileSurface> {
@@ -48,22 +51,31 @@ export function pileSurfaces(world:World):ReadonlyMap<number,PileSurface> {
 
 /** Keyed by actual pile identity, so three stacks on one shelf cell never
  * collapse into one presentation bundle. No world state is changed. */
-export function pileIdentitySurfaces(world:World):ReadonlyMap<number,PileSurface>{
-  const cached=entry(world);if(cached?.identities)return cached.identities;
-  const result=new Map<number,PileSurface>(),cells=new Map<number,{id:number;orientation:number}>(),byCell=new Map<number,number[]>();
-  for(const s of world.structures)if(isShelfKind(s.kind))for(const cell of footprintCells(s))cells.set(cell.z*world.width+cell.x,s);
-  if(!cells.size){if(cached)cached.identities=result;return result;}
-  for(const pile of world.piles)if(pile.owner.type==='ground'){
-    const key=pile.owner.z*world.width+pile.owner.x;
+export function pileShelfCells(world:World):ReadonlyMap<number,PileShelfCell>{
+  const cells=new Map<number,PileShelfCell>();
+  for(const s of world.structures)if(isShelfKind(s.kind))for(const cell of footprintCells(s))cells.set(cell.z*world.width+cell.x,{id:s.id,orientation:s.orientation});
+  return cells;
+}
+/** Shared exact shelf arithmetic; the owner may retain the closed geometry
+ * input, while the public reader always derives it from its current World. */
+export function pileIdentitySurfacesFromCells(width:number,piles:World['piles'],cells:ReadonlyMap<number,PileShelfCell>):ReadonlyMap<number,PileSurface>{
+  const result=new Map<number,PileSurface>(),byCell=new Map<number,number[]>();
+  if(!cells.size)return result;
+  for(const pile of piles)if(pile.owner.type==='ground'){
+    const key=pile.owner.z*width+pile.owner.x;
     if(cells.has(key)){const ids=byCell.get(key)??[];ids.push(pile.id);byCell.set(key,ids);}
   }
-  for(const [cell,ids] of byCell){
-    const shelf=cells.get(cell)!,angle=shelf.orientation*Math.PI/2,c=Math.cos(angle),s=Math.sin(angle);
-    ids.sort((a,b)=>a-b);
+  for(const [cell,ids]of byCell){
+    const shelf=cells.get(cell)!,angle=shelf.orientation*Math.PI/2,c=Math.cos(angle),s=Math.sin(angle);ids.sort((a,b)=>a-b);
     for(let level=0;level<ids.length;level++){
       const dx=(level-1)*.13,dz=.16-level*.12;
       result.set(ids[level]!,{x:dx*c+dz*s,y:SHELF_LEVELS[Math.min(level,2)]!,z:dz*c-dx*s,scale:SHELF_ITEM_SCALE,scaleHeight:true,shelfId:shelf.id,level});
     }
   }
+  return result;
+}
+export function pileIdentitySurfaces(world:World):ReadonlyMap<number,PileSurface>{
+  const cached=entry(world);if(cached?.identities)return cached.identities;
+  const result=pileIdentitySurfacesFromCells(world.width,world.piles,pileShelfCells(world));
   if(cached)cached.identities=result;return result;
 }

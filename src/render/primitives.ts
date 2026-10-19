@@ -1,3 +1,4 @@
+import{createSurfaceMaterial}from'./SurfaceMaterials';
 import * as THREE from 'three/webgpu';
 import type {ItemShape} from './item-geometry';
 export type Placement = { x: number; y: number; z: number; sx?: number; sy?: number; sz?: number; ry?: number; color?: number; key?: number; targetId?: number; pigment?: 'stone'; shape?: 'rounded-rock'|'sandbag'|ItemShape };
@@ -9,7 +10,7 @@ const scratchObject = new THREE.Object3D();
 const scratchColor = new THREE.Color();
 
 export function material(color: number, extra: THREE.MeshStandardNodeMaterialParameters = {}): THREE.MeshStandardNodeMaterial {
-  return new THREE.MeshStandardNodeMaterial({ color, roughness: 0.93, metalness: 0, flatShading: true, ...extra });
+  return createSurfaceMaterial('physical',color,extra);
 }
 
 export function instances(group: THREE.Group, geometry: THREE.BufferGeometry, mat: THREE.Material, items: Placement[], shadows = true): THREE.InstancedMesh | undefined {

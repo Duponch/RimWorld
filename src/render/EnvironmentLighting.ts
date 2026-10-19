@@ -1,5 +1,5 @@
 import {ExplorationMask256} from './ExplorationMask256';
-import { DataTexture, LinearFilter, RGBAFormat, UnsignedByteType, Vector2, Vector4, type MeshStandardNodeMaterial, type Node } from 'three/webgpu';
+import { DataTexture, LinearFilter, RGBAFormat, UnsignedByteType, Vector2, Vector4, type NodeMaterial, type Node } from 'three/webgpu';
 import { Fn, If, diffuseColor, float, mix, normalWorldGeometry, output, positionWorld, renderGroup, smoothstep, texture, uniform, vec2, vec3, vec4 } from 'three/tsl';
 import type { World } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
@@ -14,7 +14,7 @@ export class EnvironmentLighting {
   private readonly size = uniform(new Vector2(1, 1)).setGroup(renderGroup);
   private readonly bounds = uniform(new Vector4(1, 1, 0, 0)).setGroup(renderGroup);
   private readonly sample = texture(this.map);
-  private readonly configured = new WeakSet<MeshStandardNodeMaterial>();
+  private readonly configured = new WeakSet<NodeMaterial>();
   private readonly shade = this.createShade(positionWorld, normalWorldGeometry);
   private readonly rockShade = this.createShade(positionWorld, normalWorldGeometry,true);
   private createShade(position:Node,normal:Node,exteriorRock=false):Node {return Fn(() => {
@@ -50,7 +50,7 @@ export class EnvironmentLighting {
     this.map.minFilter = this.map.magFilter = LinearFilter;
     this.map.generateMipmaps = false; this.map.needsUpdate = true;
   }
-  readonly configure = (material: MeshStandardNodeMaterial): void => {
+  readonly configure = (material: NodeMaterial): void => {
     this.exploration.configure(material);
     if (this.configured.has(material)) return;
     if (material.outputNode) throw new Error('Environment lighting requires an unclaimed material output.');
@@ -59,7 +59,7 @@ export class EnvironmentLighting {
   /** Decorative blades borrow the horizontal surface's local-light response.
    * Their authored root precedes sway; geometric blade faces must not attenuate
    * the lamp fill or shift the source/roof sample into a neighbouring cell. */
-  readonly configureGrounded = (material:MeshStandardNodeMaterial,root:Node):void => {
+  readonly configureGrounded = (material:NodeMaterial,root:Node):void => {
     this.exploration.configure(material);
     if(this.configured.has(material))return;
     if(material.outputNode)throw new Error('Environment lighting requires an unclaimed material output.');

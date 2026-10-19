@@ -1,3 +1,5 @@
+import {isCavePlant256,CAVE_PLANT_FACTS_256} from '../sim/cave-flora-256';
+import type {LightSource} from '../sim/light-sources';
 import type {Resource,World} from '../sim/types';
 import {readSnapshotChanges,readSnapshotResourceStructure,sameSnapshotChangeDomain,type SnapshotResourceStructure} from '../bridge/snapshot-changes';
 import {readResidentResourceBaseChanges} from '../bridge/resident-resource-base-changes';
@@ -13,6 +15,7 @@ export interface SceneResourceChunks {
   readonly changedChunks:readonly Readonly<{key:string;resources:readonly Resource[]}>[];
 }
 export interface SceneResourceAccess {
+  readonly caveLightSources:readonly LightSource[];
   readonly rockCoverEdits:readonly RockCoverEdit[]|undefined;
   treeAt(cell:number):number|undefined;
   resourceSource(id:number):number|undefined;
@@ -22,7 +25,7 @@ export interface SceneResourceAccess {
 type Capture={id:number;kind:Resource['kind'];species:Resource['species'];x:number;z:number;key:string|undefined;tree:number|undefined;rock:number|undefined};
 type FrameRecord={owner:SceneResourceIndex;generation:number;world:World;from:World|undefined;
   resources:readonly Resource[];tick:number;seed:number;width:number;height:number;
-  oldKeys:ReadonlyMap<number,string>;oldSources:ReadonlyMap<number,number>|undefined;edits:readonly RockCoverEdit[]|undefined;active:boolean};
+  caves:readonly LightSource[];oldKeys:ReadonlyMap<number,string>;oldSources:ReadonlyMap<number,number>|undefined;edits:readonly RockCoverEdit[]|undefined;active:boolean};
 const frames=new WeakMap<SceneResourceFrame,FrameRecord>();
 const records=new WeakSet<FrameRecord>();
 const capture=(world:World,r:Resource):Capture=>{
@@ -116,9 +119,12 @@ export class SceneResourceIndex {
   #byId=new Map<number,number>();
   #chunks=new Map<string,number[]>();
   #trees=new Map<number,number[]>();
-  clear():void {this.#generation++;this.#world=undefined;this.#map=undefined;this.#captures=[];this.#byId.clear();this.#chunks.clear();this.#trees.clear();}
+  #caves:readonly LightSource[]=[];
+  clear():void {this.#generation++;this.#world=undefined;this.#map=undefined;this.#captures=[];this.#byId.clear();this.#chunks.clear();this.#trees.clear();this.#caves=[];}
   adopt(world:World,reset=false):SceneResourceFrame {
     const from=this.#world,generation=++this.#generation;
+    let caveChanged=reset||!from||from.schemaVersion!==world.schemaVersion||from.seed!==world.seed||from.width!==world.width||from.height!==world.height;
+    const cave=(c:Pick<Resource,'species'>|undefined)=>!!c&&isCavePlant256(c.species,world.schemaVersion);
     const sameMap=!!from&&!!this.#map&&this.#map.seed===world.seed&&this.#map.width===world.width&&this.#map.height===world.height
       &&from.seed===this.#map.seed&&from.width===this.#map.width&&from.height===this.#map.height;
     const validResource=(r:Resource)=>Number.isSafeInteger(r.id)&&r.id>0&&Number.isSafeInteger(r.x)&&Number.isSafeInteger(r.z)
@@ -148,6 +154,7 @@ export class SceneResourceIndex {
     let oldSources:Map<number,number>|undefined;
     let valid=Number.isSafeInteger(world.width)&&world.width>0&&Number.isSafeInteger(world.height)&&world.height>0;
     if(structural){
+      if(structural.removed.some(cave)||structural.added.some(cave)||structural.updates.some(([,old,next])=>cave(old)||cave(next)))caveChanged=true;
       for(const old of structural.removed)(oldSources??=new Map()).set(old.id,this.#byId.get(old.id)!);
       for(const [,old]of structural.updates)(oldSources??=new Map()).set(old.id,this.#byId.get(old.id)!);
       for(const old of structural.removed){
@@ -182,7 +189,7 @@ export class SceneResourceIndex {
         if(!validResource(r)){valid=false;break;}
         if(same(old,r))continue;
         (oldSources??=new Map()).set(old.id,source);
-        const next=capture(world,r);
+        const next=capture(world,r);if(cave(old)||cave(next))caveChanged=true;
         if(old.key!==undefined)oldKeys.set(old.id,old.key);
         remove(this.#chunks,old.key,source);remove(this.#trees,old.tree,source);
         add(this.#chunks,next.key,source);add(this.#trees,next.tree,source);this.#captures[source]=next;
@@ -198,7 +205,7 @@ export class SceneResourceIndex {
         seen.add(r.id);
         const old=this.#captures[source];
         if(old&&same(old,r))continue;
-        const next=capture(world,r);
+        const next=capture(world,r);if(cave(old)||cave(next))caveChanged=true;
         if(old){
           (oldSources??=new Map()).set(old.id,source);
           if(old.key!==undefined)oldKeys.set(old.id,old.key);
@@ -214,7 +221,7 @@ export class SceneResourceIndex {
       }
       if(valid){
         for(let source=world.resources.length;source<length;source++){
-          const old=this.#captures[source]!;
+          const old=this.#captures[source]!;if(cave(old))caveChanged=true;
           (oldSources??=new Map()).set(old.id,source);
           if(old.key!==undefined)oldKeys.set(old.id,old.key);
           remove(this.#chunks,old.key,source);remove(this.#trees,old.tree,source);
@@ -234,7 +241,7 @@ export class SceneResourceIndex {
       for(let source=0;source<world.resources.length;source++){
         const r=world.resources[source]!;
         if(!validResource(r)||this.#byId.has(r.id)){valid=false;break;}
-        const next=capture(world,r);this.#captures.push(next);this.#byId.set(next.id,source);
+        const next=capture(world,r);caveChanged=true;this.#captures.push(next);this.#byId.set(next.id,source);
         add(this.#chunks,next.key,source);add(this.#trees,next.tree,source);
         if(balance&&next.rock!==undefined)balance.set(next.rock,(balance.get(next.rock)??0)+1);
       }
@@ -246,12 +253,13 @@ export class SceneResourceIndex {
       for(const [cell,delta]of balance)for(let n=delta;n<0;n++)edits.push(Object.freeze({before:cell,after:undefined}));
       for(const [cell,delta]of balance)for(let n=0;n<delta;n++)edits.push(Object.freeze({before:undefined,after:cell}));
     }
+    if(caveChanged){const caves:LightSource[]=[];for(const c of this.#captures)if(isCavePlant256(c.species,world.schemaVersion)){const d=CAVE_PLANT_FACTS_256[c.species];caves.push({cell:c.z*world.width+c.x,radius:d.radius,red:d.red,green:d.green,blue:d.blue});}caves.sort((a,b)=>a.cell-b.cell);this.#caves=Object.freeze(caves.map(s=>Object.freeze(s)));}
     this.#world=world;
     if(!this.#map||this.#map.seed!==world.seed||this.#map.width!==world.width||this.#map.height!==world.height)
       this.#map=Object.freeze({seed:world.seed,width:world.width,height:world.height});
     const frame=Object.freeze({}) as SceneResourceFrame;
     const record:FrameRecord={owner:this,generation,world,from,resources:world.resources,tick:world.tick,seed:world.seed,width:world.width,height:world.height,
-      oldKeys,oldSources,edits:sparse||balance?Object.freeze(edits):undefined,active:true};
+      caves:this.#caves,oldKeys,oldSources,edits:sparse||balance?Object.freeze(edits):undefined,active:true};
     frames.set(frame,record);records.add(record);
     // No retained asynchronous authority. Arrays materialized below stay fixed.
     queueMicrotask(()=>{record.active=false;frames.delete(frame);});return frame;
@@ -259,6 +267,7 @@ export class SceneResourceIndex {
   /** These methods accept only the module-private record, never a public flag. */
   accepts(record:FrameRecord):boolean {return records.has(record)&&record.owner===this&&record.active&&record.generation===this.#generation&&record.world===this.#world
     &&record.resources===record.world.resources&&record.tick===record.world.tick&&record.seed===record.world.seed&&record.width===record.world.width&&record.height===record.world.height;}
+  caveLightSources(record:FrameRecord):readonly LightSource[]|undefined {return this.accepts(record)?record.caves:undefined;}
   treeAt(record:FrameRecord,cell:number):number|undefined {
     if(!this.accepts(record))return;const bucket=this.#trees.get(cell),source=bucket?.at(-1);
     return source===undefined?undefined:record.resources[source]?.id;
@@ -291,7 +300,7 @@ export function readSceneResourceFrame(frame:SceneResourceFrame|undefined,world:
   if(!record||!record.owner.accepts(record)||record.world!==world||record.resources!==world.resources
     ||record.tick!==world.tick||record.seed!==world.seed||record.width!==world.width||record.height!==world.height
     ||from!==undefined&&record.from!==from)return;
-  return Object.freeze({rockCoverEdits:from===undefined?undefined:record.edits,
+  return Object.freeze({caveLightSources:record.caves,rockCoverEdits:from===undefined?undefined:record.edits,
     treeAt:(cell:number)=>record.owner.treeAt(record,cell),
     resourceSource:(id:number)=>record.owner.resourceSource(record,id),
     previousResourceSource:(id:number)=>record.owner.previousResourceSource(record,id),

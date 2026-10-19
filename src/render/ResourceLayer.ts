@@ -114,13 +114,13 @@ export class ResourceLayer {
   private readonly windStrength=uniform(0).setGroup(renderGroup);
   private readonly windDirection=uniform(new THREE.Vector2(1,0)).setGroup(renderGroup);
   private readonly middleWind=new NaturalAnimationCache();
-  private readonly windPlain:THREE.MeshStandardNodeMaterial;
-  private readonly windTextured:THREE.MeshStandardNodeMaterial;
+  private readonly windPlain:THREE.NodeMaterial;
+  private readonly windTextured:THREE.NodeMaterial;
   private readonly growing = new Map<number,World['resources'][number]>();
   updateGrowth(world: World): void {
     for(const plant of this.growing.values())if(harvestable(world,plant)){this.update(world,false);break;}
   }
-  constructor(readonly group: THREE.Group, private readonly staticMaterial: THREE.Material, private readonly texturedMaterial: THREE.Material=staticMaterial,private readonly detail?:AnimationDetail) {
+  constructor(readonly group: THREE.Group, private readonly staticMaterial: THREE.NodeMaterial, private readonly texturedMaterial: THREE.NodeMaterial=staticMaterial,private readonly detail?:AnimationDetail) {
     const windPosition=Fn(()=>{
       const root=attribute('windRoot','vec3');
       const deform=(tick:THREE.Node<'float'>)=>{
@@ -152,8 +152,8 @@ export class ResourceLayer {
         });
       return position;
     })();
-    this.windPlain=(staticMaterial as THREE.MeshStandardNodeMaterial).clone();
-    this.windTextured=(texturedMaterial as THREE.MeshStandardNodeMaterial).clone();
+    this.windPlain=staticMaterial.clone();
+    this.windTextured=texturedMaterial.clone();
     this.windPlain.positionNode=this.windTextured.positionNode=windPosition;
     this.windPlain.userData.rendererOwned=this.windTextured.userData.rendererOwned=true;
   }
@@ -299,8 +299,8 @@ export class ResourceLayer {
     const leafless=(r:World['resources'][number])=>appearance?.read(r).leafless??plantLeafless(world,r);
     // ColonyRenderer configures the shared materials after constructing this
     // layer. Copy its lighting node before the first tree shader is compiled.
-    const plainOutput=(this.staticMaterial as THREE.MeshStandardNodeMaterial).outputNode;
-    const texturedOutput=(this.texturedMaterial as THREE.MeshStandardNodeMaterial).outputNode;
+    const plainOutput=this.staticMaterial.outputNode;
+    const texturedOutput=this.texturedMaterial.outputNode;
     if(this.windPlain.outputNode!==plainOutput)this.windPlain.outputNode=plainOutput;
     if(this.windTextured.outputNode!==texturedOutput)this.windTextured.outputNode=texturedOutput;
     if (newMap) { this.middleWind.reset();this.clearTargetPreview();clearGroup(this.group); this.chunks.clear(); this.resourceChunks.clear(); this.growing.clear(); this.treeParts.clear(); this.treeHits.clear(); }

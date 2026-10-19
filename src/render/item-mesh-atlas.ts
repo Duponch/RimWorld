@@ -56,7 +56,7 @@ export class ItemMeshAtlas {
   slot(shape:ItemShape|undefined):number {return this.slots.get(shape)??0;}
   isSmall(shape:ItemShape|undefined):boolean {return this.vertexCounts[this.slot(shape)]!<=this.smallVertexLimit;}
 
-  configure(material:THREE.MeshStandardNodeMaterial,surface?:THREE.Texture):void {
+  configure(material:THREE.NodeMaterial,surface?:THREE.Texture):void {
     const address=uint(attribute('itemShape','float')).mul(this.verticesPerSlot).add(vertexIndex).mul(2);
     const positionUv=this.buffer.element(address),normalUv=this.buffer.element(address.add(1));
     material.positionNode=Fn(()=>{

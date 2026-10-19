@@ -1,3 +1,5 @@
+import type {SceneApplicationContext} from './SceneApplicationContext';
+import{createSurfaceMaterial}from'./SurfaceMaterials';
 import {knownPosition256} from '../ui/exploration-readers-256';
 import {knownCell256,UNDISCOVERED_CELL_LABEL_256} from '../sim/exploration-visibility-256';
 import {roofCoverage} from '../sim/roof-rules';
@@ -157,6 +159,8 @@ export class SceneRenderCore {
   protected readonly frames = new FrameMetrics();
   protected viewportWidth=1;
   protected viewportHeight=1;
+  protected createApplicationContext():SceneApplicationContext|undefined{return undefined;}
+  protected readonly applicationContext=this.createApplicationContext();
   protected createEnvironmentLighting():EnvironmentLighting { return new EnvironmentLighting(); }
   protected readonly environmentLighting = this.createEnvironmentLighting();
   protected readonly overview = new OverviewLayer(this.environmentLighting.configure);
@@ -209,7 +213,7 @@ export class SceneRenderCore {
   protected get controls(): SceneCameraPort['controls'] { return this.rig.controls; }
   protected readonly terrainGroup = new THREE.Group();
   protected readonly resourceGroup = new THREE.Group();
-  protected readonly roofs=new RoofLayer(this.environmentLighting.configure);
+  protected readonly roofs=new RoofLayer(this.environmentLighting.configure,world=>this.applicationContext?.read(world)?.roofs);
   protected readonly doors=new DoorLayer(this.environmentLighting.configure,this.animationDetail);
   protected readonly timber=new TimberCladdingLayer(this.environmentLighting.configure);
   protected readonly structureGroup = new THREE.Group();
@@ -269,8 +273,8 @@ export class SceneRenderCore {
 
   protected readonly keys = new Set<string>();
   protected readonly pileChunks = new Map<string, VisualChunk>();
-  protected readonly staticMaterial = material(0xffffff, { vertexColors: true });
-  protected readonly terrainPlainMaterial = material(0xffffff,{vertexColors:true});
+  protected readonly staticMaterial = createSurfaceMaterial('diffuse',0xffffff, { vertexColors: true });
+  protected readonly terrainPlainMaterial = createSurfaceMaterial('diffuse',0xffffff,{vertexColors:true});
   // Keep texture identity stable: terrain and water can share one GPU image and
   // one shader graph even when a new map or the texture option replaces pixels.
   protected readonly terrainPaintTexture=new THREE.DataTexture(new Uint8Array([255,255,255,0]),1,1);
@@ -279,9 +283,9 @@ export class SceneRenderCore {
   protected readonly terrainPaintPatchSource=new THREE.Box2(new THREE.Vector2(),new THREE.Vector2());
   protected readonly terrainPaintPatchDestination=new THREE.Vector2();
   protected terrainPaintResident=false;
-  protected readonly terrainPaintMaterial = material(0xffffff,{vertexColors:false,map:this.terrainPaintTexture});
+  protected readonly terrainPaintMaterial = createSurfaceMaterial('diffuse',0xffffff,{vertexColors:false,map:this.terrainPaintTexture});
   protected readonly staticPaint=createStylizedSurfaceTexture('vegetation');
-  protected readonly texturedStaticMaterial=material(0xffffff,{vertexColors:true,map:this.staticPaint});
+  protected readonly texturedStaticMaterial=createSurfaceMaterial('diffuse',0xffffff,{vertexColors:true,map:this.staticPaint});
   protected readonly waterMaterial = material(0xffffff, { vertexColors: true, roughness: 0.45, metalness: 0.08 });
   protected readonly paintedWater=new PaintedWater(this.terrainPaintTexture,this.environmentLighting.configure,this.animationDetail);
   protected readonly clouds=new WeatherCloudLayer(this.animationDetail,this.decorOcclusion);
@@ -494,7 +498,9 @@ export class SceneRenderCore {
   }
 
   protected applyWorld(world: World, resetPresentation = false): void {
-    withPileSurfaceReads(()=>this.applyWorldWithinSurfaceReads(world,resetPresentation));
+    if(!this.immutableWorlds.has(world))this.applicationContext?.clear();
+    try{withPileSurfaceReads(()=>this.applyWorldWithinSurfaceReads(world,resetPresentation),this.applicationContext?.readSupports);if(this.applicationContext?.read(world))this.applicationContext.commit(world);}
+    catch(error){this.applicationContext?.abort();throw error;}
   }
 
   private applyWorldWithinSurfaceReads(world: World, resetPresentation = false): void {
@@ -527,6 +533,7 @@ export class SceneRenderCore {
     // cannot certify a sparse traversal or cross a missing publication.
     const resourceFrame = this.immutableWorlds.has(world) ? this.sceneResources.adopt(world,resetPoses) : undefined;
     if(!resourceFrame)this.sceneResources.clear();
+    const application=this.immutableWorlds.has(world)?this.applicationContext?.prepare(world,resetPoses,changedTiles,resourceFrame):undefined;
     this.world = world;
     this.paintedWater.adoptRiverWater(world);
     if(this.environmentLighting.exploration.adopt(world,newMap||resetPoses,previousWorld&&this.immutableWorlds.has(previousWorld)&&this.immutableWorlds.has(world)?changedTiles:null))this.invalidatePausedShadow();
@@ -578,7 +585,7 @@ export class SceneRenderCore {
     else this.roofs.update(world,this.boxes,this.wallCutaway,newMap);
     if(this.roofAreasVisible){const key=`${(world.roofing?.build??[]).join(',')};${(world.roofing?.remove??[]).join(',')}`;
       if(key!==this.roofTintKey||newMap){this.roofTintKey=key;this.zonesTintDirty=true;}}
-    const prepared=this.preparedStructures=this.structurePreparation?.read(world,resetPoses);
+    const prepared=this.preparedStructures=application?.structures??this.structurePreparation?.read(world,resetPoses);
     if(prepared)this.doors.updateNative(world,this.wallCutaway,resetPoses,prepared.doors,prepared.axes,prepared.gateAxes);
     else this.doors.update(world,this.wallCutaway,resetPoses);
     const structureKey = prepared
@@ -596,7 +603,7 @@ export class SceneRenderCore {
     // their small primitive signature at adoption, never in the RAF loop.
     const designationKey=`fog:${this.environmentLighting.exploration.field.revision};`+world.piles.filter(p=>p.kind==='chunk'&&p.haulRequested&&p.owner.type==='ground')
       .map(p=>p.owner.type==='ground'?`${p.id}:${p.owner.x}:${p.owner.z}`:'').join('|')
-      +`;${world.roofing?.build.join(',')};${world.roofing?.remove.join(',')};${roofCoverage(world).join(',')};${world.roofing?.natural?.thin.join(',')};${world.roofing?.natural?.thick.join(',')}`;
+      +`;${world.roofing?.build.join(',')};${world.roofing?.remove.join(',')};${application?.roofs.roofKey??roofCoverage(world).join(',')};${world.roofing?.natural?.thin.join(',')};${world.roofing?.natural?.thick.join(',')}`;
     if(jobsChanged||designationKey!==this.designationKey){this.designationKey=designationKey;if(this.confirmedIntents)this.confirmedDesignationsDirty=true;else this.designations.update(world);}
     if(resetPoses)this.homeSignature.clear();
     const residentStorage = this.immutableWorlds.has(world);
@@ -1309,8 +1316,17 @@ export class SceneRenderCore {
         this.boxes.set(group,`pile:${key}`,[]);this.pileChunks.set(key,{signature:'',group});
       }
     }
-    const surfaces=pileSurfaces(world),identitySurfaces=pileIdentitySurfaces(world);
     const hidden=this.pawns.hiddenPileQuantities();
+    const prepared=this.immutableWorlds.has(world)?this.applicationContext?.piles.read(world,hidden,newMap):undefined;
+    if(prepared){
+      for(const [key,chunk]of this.pileChunks)if(!prepared.activeKeys.has(key)&&chunk.signature!==''){this.boxes.set(chunk.group,`pile:${key}`,[]);chunk.signature='';}
+      for(const {key,signature,bundles}of prepared.changedChunks){const previous=this.pileChunks.get(key);if(previous?.signature===signature)continue;
+        const group=previous?.group??new THREE.Group();if(!previous)this.pileGroup.add(group);group.name=`Material piles ${key}`;
+        this.boxes.set(group,`pile:${key}`,pileParts(bundles));this.pileChunks.set(key,{signature,group});
+      }
+      this.applicationContext!.acknowledgePiles(prepared);return;
+    }
+    const surfaces=pileSurfaces(world),identitySurfaces=pileIdentitySurfaces(world);
     const jobById = new Map(world.jobs.map(job => [job.id, job]));
     const cells = new Map<string, PileBundle>();
     for (const pile of world.piles) {
@@ -1738,7 +1754,7 @@ export class SceneRenderCore {
     this.doors.dispose();this.projectiles.dispose();this.fires.dispose();this.wind.dispose();this.wildlife.dispose();this.mechanoids.dispose();this.ropes.dispose();this.designations.dispose();
 
     for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup]) clearGroup(group);
-    this.pileChunks.clear();
+    this.pileChunks.clear();this.applicationContext?.clear();
     this.staticMaterial.dispose();
     this.terrainPlainMaterial.dispose();
     this.terrainPaintMaterial.dispose();this.terrainPaintTexture.dispose();this.terrainPaintStaging.dispose();

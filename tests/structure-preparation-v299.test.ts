@@ -7,7 +7,8 @@ import {SnapshotEncoder,SnapshotDecoder} from '../src/bridge/snapshots';
 import {SceneStructurePreparation} from '../src/render/SceneStructurePreparation';
 
 function publisher(){
-  const world=createWorld(29902,24,24);world.tick=2000;world.tiles=world.tiles.map(()=>({terrain:'grass'}));world.resources=[];world.structures=[];world.jobs=[];
+  // Keep the generated calendars valid; this fixture does not advance time.
+  const world=createWorld(29902,24,24);world.tiles=world.tiles.map(()=>({terrain:'grass'}));world.resources=[];world.structures=[];world.jobs=[];
   world.structures.push({id:world.nextId++,kind:'door',x:8,z:8,material:'wood',orientation:0,footprint:'standard',door:newDoorState(world.tick)});
   world.structures.push({id:world.nextId++,kind:'bed',x:12,z:12,material:'wood',orientation:0,footprint:'standard'});
   const encoder=new SnapshotEncoder({structureDelta:true,minimumStructures:0}),decoder=new SnapshotDecoder(),history:Array<{world:World;before:World}>=[];

@@ -1,3 +1,4 @@
+import{createSurfaceMaterial}from'./SurfaceMaterials';
 import * as THREE from 'three/webgpu';
 import { attribute, texture } from 'three/tsl';
 import { material } from './primitives';
@@ -27,11 +28,11 @@ export class BoxBatches {
   private readonly sandbagGeometry = createSandbagGeometry();
   private readonly surfaceTexture = createStylizedSurfaceTexture();
   private readonly rockTexture = createChunkSurfacePaint();
-  private readonly texturedSolid = material(0xffffff);
-  private readonly plainRock = material(0xffffff);
-  private readonly texturedRock = material(0xffffff);
+  private readonly texturedSolid = createSurfaceMaterial('diffuse',0xffffff);
+  private readonly plainRock = createSurfaceMaterial('diffuse',0xffffff);
+  private readonly texturedRock = createSurfaceMaterial('diffuse',0xffffff);
   private readonly materials: Record<Style, THREE.NodeMaterial> = {
-    solid: material(0xffffff),
+    solid: createSurfaceMaterial('diffuse',0xffffff),
     // An unlit surface stays legible at midday; grass shares the same tint.
     storage: new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: ZONE_FILL_OPACITY, depthWrite: false }),
     'storage-home': new THREE.MeshBasicNodeMaterial({ color: 0xffffff, transparent: true, opacity: 0.28, depthWrite: false }),
@@ -41,8 +42,8 @@ export class BoxBatches {
   };
   private readonly batches = new Map<string, BoxMesh>();
   private readonly itemAtlas=new ItemMeshAtlas();
-  private readonly plainItem=material(0xffffff);
-  private readonly texturedItem=material(0xffffff);
+  private readonly plainItem=createSurfaceMaterial('diffuse',0xffffff);
+  private readonly texturedItem=createSurfaceMaterial('diffuse',0xffffff);
   private readonly itemBatchKeys=new Set<string>();
   private readonly targetBatches = new Map<BoxMesh, { ids: (number | undefined)[]; tint: InstanceTargetTint }>();
   private readonly targetGroups = new Map<THREE.Group, ReadonlySet<number>>();
@@ -51,8 +52,8 @@ export class BoxBatches {
   private texturesEnabled = true;
   private roundedRockWarm = false;
 
-  constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void) {
-    configure?.(this.materials.solid as THREE.MeshStandardNodeMaterial);
+  constructor(configure?: (material: THREE.NodeMaterial) => void) {
+    configure?.(this.materials.solid);
     configure?.(this.texturedSolid);
     configure?.(this.plainRock);
     configure?.(this.texturedRock);

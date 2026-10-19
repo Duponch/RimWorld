@@ -1,4 +1,4 @@
-import { isPlant, plantGrowth, plantTemperatureFactorFor } from './plants.ts';
+import { createPlantGrowthReader, isPlant, plantTemperatureFactorFor } from './plants.ts';
 import { FLORA_DEFINITIONS } from './biome-flora.ts';
 import { isCropKindInVersion } from './crops.ts';
 import { outdoorTemperature } from './temperature.ts';
@@ -23,6 +23,9 @@ export function updatePlantTemperatures(world:World,layout:ThermalLayout):void {
     }
     binding={source:world.resources,layout,groups};bindings.set(world,binding);
   }
+  // Only immutable environmental inputs are shared within this call. Growth
+  // and its anchor remain live per plant as each old interval is settled.
+  let readGrowth:ReturnType<typeof createPlantGrowthReader>|undefined;
   for(const group of binding.groups.values()) {
     const temperature=group.region<0?outdoorTemperature(world):world.thermal!.regions[group.region]!.temperature;
     const commonFactor=plantTemperatureFactorFor(group.plants[0]!,temperature);
@@ -30,7 +33,8 @@ export function updatePlantTemperatures(world:World,layout:ThermalLayout):void {
     for(const plant of group.plants) {
       if((plant.growthThermalFactor??1)===commonFactor)continue;
       // Settle past light at its saved factor before adopting the next interval.
-      plant.growth=plantGrowth(world,plant);plant.growthTick=world.tick;
+      readGrowth??=createPlantGrowthReader(world);
+      plant.growth=readGrowth(plant);plant.growthTick=world.tick;
       if(commonFactor===1)delete plant.growthThermalFactor;else plant.growthThermalFactor=commonFactor;
     }
     group.factor=commonFactor;

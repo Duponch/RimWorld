@@ -21,19 +21,37 @@ export class ThermalTopologyCache {
   private key='';
   private checks=new Map<number,number>();
   read(world:World):ThermalLayout {
-    const roofs=roofCells(world),doors=world.structures.filter(s=>isRoomDoor(s.kind));
-    const vents=world.structures.flatMap((s,i)=>s.kind==='vent'?[{s,i}]:[]);
-    // Face admission is stricter than room boundaries: e.g. the dispenser
-    // blocks a face without becoming a new room-wall kind. One footprint
-    // capture and a small face witness close in-place/cache mutations.
-    const faceSolids=new Set<number>();
-    if(vents.length)for(const s of world.structures)if(STRUCTURE_DEFINITIONS[s.kind].blocksMovement)for(const c of footprintCells(s))faceSolids.add(c.z*world.width+c.x);
+    const roofs=roofCells(world),doors:World['structures']=[],vents:{s:World['structures'][number];i:number}[]=[];
+    const geographic=isSchema256Or257(world.schemaVersion)&&world.site?.revision===3;
+    const hasVents=world.structures.some(s=>s.kind==='vent'),faceSolids=new Set<number>(),buildings=new Map<number,number>();
+    // Capture both room barriers and vent-face barriers in source order. The
+    // final overlapping structure still wins for room topology, while every
+    // blocking footprint contributes to the vent-face union. No input survives
+    // this public read; in-place edits are observed by the next call.
+    for(let i=0;i<world.structures.length;i++){
+      const s=world.structures[i]!,door=isRoomDoor(s.kind);
+      if(door)doors.push(s);if(s.kind==='vent')vents.push({s,i});
+      const fact=geographic?START_STRUCTURE_PHYSICS_256[s.kind]:undefined;
+      if(geographic&&!fact)throw Error('Unresolved actual thermal structure');
+      const room=geographic?fact!.door||fact!.fullFill:s.kind==='vent'||s.kind==='wall'||s.kind==='cooler'||s.kind==='electric-crematorium'||door;
+      const face=hasVents&&STRUCTURE_DEFINITIONS[s.kind].blocksMovement;
+      let cells:ReturnType<typeof footprintCells>|undefined;
+      if(face||room&&(geographic||s.kind==='electric-crematorium'))cells=footprintCells(s);
+      if(room){
+        const kind=(geographic?fact!.door:door)?2:1;
+        if(geographic||s.kind==='electric-crematorium')for(const c of cells!)buildings.set(c.z*world.width+c.x,kind);
+        else buildings.set(s.z*world.width+s.x,kind);
+      }
+      if(face)for(const c of cells!)faceSolids.add(c.z*world.width+c.x);
+    }
     const faceKey=vents.flatMap(({s})=>ventFaces(s).map(c=>{const i=c.z*world.width+c.x;return c.x<0||c.z<0||c.x>=world.width||c.z>=world.height?'out':i+':'+(faceSolids.has(i)||world.tiles[i]!.terrain==='rock');}));
     const key=[world.width,world.height,...roofs,'doors',...doors.map(s=>s.id+'@'+s.x+':'+s.z),'vents',...vents.map(({s,i})=>i+'@'+s.id+':'+s.x+':'+s.z+':'+s.orientation),...faceKey].join(',');
-    const geographic=isSchema256Or257(world.schemaVersion)&&world.site?.revision===3;
-    const buildings=geographic?new Map(world.structures.flatMap(s=>{const fact=START_STRUCTURE_PHYSICS_256[s.kind];if(!fact)throw Error('Unresolved actual thermal structure');return fact.door||fact.fullFill?footprintCells(s).map(c=>[c.z*world.width+c.x,fact.door?2:1] as const):[];})):new Map(world.structures.filter(s=>s.kind==='vent'||s.kind==='wall'||s.kind==='cooler'||s.kind==='electric-crematorium'||isRoomDoor(s.kind)).flatMap(s=>s.kind==='electric-crematorium'?footprintCells(s).map(c=>[c.z*world.width+c.x,1] as const):[[s.z*world.width+s.x,isRoomDoor(s.kind)?2:1] as const]));
+
     const kind=(i:number)=>buildings.get(i)??(world.tiles[i]!.terrain==='rock'||geographic&&world.tiles[i]!.collapsedRock?1:0);
-    if(this.layout&&key===this.key&&[...this.checks].every(([i,k])=>kind(i)===k))return this.layout;
+    if(this.layout&&key===this.key){
+      let unchanged=true;for(const [i,k] of this.checks)if(kind(i)!==k){unchanged=false;break;}
+      if(unchanged)return this.layout;
+    }
     const checks=new Map<number,number>();
     const read=(i:number)=>{const k=kind(i);checks.set(i,k);return k;};
     const indexAt=(x:number,z:number)=>x<0||z<0||x>=world.width||z>=world.height?undefined:z*world.width+x;

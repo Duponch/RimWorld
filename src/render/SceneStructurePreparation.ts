@@ -4,17 +4,19 @@ import { doorOrientations, isRoomDoor } from '../sim/door-rules';
 import { penBoundaryAxes } from './pen-parts';
 import { readSnapshotStructureChanges } from '../bridge/snapshot-changes';
 
-type Capture = { id:number; kind:Structure['kind']; x:number; z:number; effect:boolean };
+export type SceneStructureGeometry=Pick<Structure,'id'|'kind'|'x'|'z'|'orientation'|'footprint'>;
+type Capture=SceneStructureGeometry&{effect:boolean};
 const effectKinds=new Set<string>(['electric-crematorium','electric-smelter','mini-turret','autodoor','machining-table','fabrication-bench','electric-stove',
   'fueled-stove','hi-tech-research-bench','multi-analyzer','battery','biofuel-refinery','chemfuel-generator',
   'wood-generator','campfire','torch-lamp']);
 const effect=(s:Structure)=>effectKinds.has(s.kind)||!!s.casketWick||!!s.breakdown||!!s.emp;
-const capture=(s:Structure):Capture=>({id:s.id,kind:s.kind,x:s.x,z:s.z,effect:effect(s)});
+const capture=(s:Structure):Capture=>({id:s.id,kind:s.kind,x:s.x,z:s.z,orientation:s.orientation,footprint:s.footprint,effect:effect(s)});
 
 /** Projection owned by the closed MAIN renderer, never an admission capability.
  * The journal proves which ordinals changed, not that arbitrary Worlds are
  * immutable. The caller must own all readers for this instance's lifetime. */
 export class SceneStructurePreparation {
+  constructor(private readonly geometry?:(world:World,captures:readonly SceneStructureGeometry[],changed:boolean,visited:number)=>void){}
   readonly signature=new ConfirmedStructurePresentationSignature();
   #world:World|undefined;
   #captures:Capture[]=[];
@@ -40,12 +42,13 @@ export class SceneStructurePreparation {
     // Mark invalid before the first consumer read. A throw never leaves an old
     // World as the base for partially updated captures.
     this.#world=undefined;
-    let topology=!indices,subjects=!indices;
+    let topology=!indices,subjects=!indices,geometry=!indices;
     if(indices){
       for(const i of indices){
         const s=world.structures[i]!,old=this.#captures[i]!,next=capture(s);
         if(old.kind!==next.kind||old.x!==next.x||old.z!==next.z)topology=true;
         if(old.kind!==next.kind||old.effect!==next.effect)subjects=true;
+        if(old.id!==next.id||old.kind!==next.kind||!Object.is(old.x,next.x)||!Object.is(old.z,next.z)||old.orientation!==next.orientation||old.footprint!==next.footprint)geometry=true;
         this.#captures[i]=next;
       }
     }else this.#captures=world.structures.map(capture);
@@ -65,6 +68,7 @@ export class SceneStructurePreparation {
       this.#axesKey=[...this.#axes].join(':');
     }
     if(topology)this.#gateAxes=penBoundaryAxes(world);
+    this.geometry?.(world,this.#captures,geometry,indices?.length??this.#captures.length);
     this.#jobs=jobs;this.#world=world;
     return {
       world,indices,axes:this.#axes,axesKey:this.#axesKey,gateAxes:this.#gateAxes,

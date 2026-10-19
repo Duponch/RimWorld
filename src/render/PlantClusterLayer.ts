@@ -80,8 +80,8 @@ export class PlantClusterLayer {
   private readonly windStrength=uniform(0);
   private readonly windDirection=uniform(new THREE.Vector2(1,0));
   private readonly middleWind=new NaturalAnimationCache();
-  private readonly windPlain:THREE.MeshStandardNodeMaterial;
-  private readonly windTextured:THREE.MeshStandardNodeMaterial;
+  private readonly windPlain:THREE.NodeMaterial;
+  private readonly windTextured:THREE.NodeMaterial;
   private windYaw!:THREE.InstancedBufferAttribute;
   private windBasis!:THREE.InstancedBufferAttribute;
   // A growing envelope is conservative after removals and moves. Updating it
@@ -93,7 +93,7 @@ export class PlantClusterLayer {
   private readonly targetTint=new ResourceTargetTint();
   private targetPreviewIds=new Set<number>();
 
-  constructor(private readonly plainMaterial: THREE.Material,private readonly texturedMaterial:THREE.Material=plainMaterial,private readonly detail?:AnimationDetail) {
+  constructor(private readonly plainMaterial:THREE.NodeMaterial,private readonly texturedMaterial:THREE.NodeMaterial=plainMaterial,private readonly detail?:AnimationDetail) {
     const windPosition=Fn(()=>{
       const deform=(tick:THREE.Node<'float'>)=>{
       const yaw=attribute('windYaw','float'),c=yaw.cos(),s=yaw.sin();
@@ -119,8 +119,8 @@ export class PlantClusterLayer {
         });
       return position;
     })();
-    this.windPlain=(plainMaterial as THREE.MeshStandardNodeMaterial).clone();
-    this.windTextured=(texturedMaterial as THREE.MeshStandardNodeMaterial).clone();
+    this.windPlain=plainMaterial.clone();
+    this.windTextured=texturedMaterial.clone();
     this.windPlain.positionNode=this.windTextured.positionNode=windPosition;
     this.mesh = this.createMesh(128);
     this.group.name = 'plant-cluster-layer';
@@ -193,8 +193,8 @@ export class PlantClusterLayer {
   }
 
   update(world: World, reset: boolean, changes?: ReadonlyMap<number, NaturalPresentationChange>): void {
-    const plainOutput=(this.plainMaterial as THREE.MeshStandardNodeMaterial).outputNode;
-    const texturedOutput=(this.texturedMaterial as THREE.MeshStandardNodeMaterial).outputNode;
+    const plainOutput=this.plainMaterial.outputNode;
+    const texturedOutput=this.texturedMaterial.outputNode;
     if(this.windPlain.outputNode!==plainOutput)this.windPlain.outputNode=plainOutput;
     if(this.windTextured.outputNode!==texturedOutput)this.windTextured.outputNode=texturedOutput;
     if (reset) {

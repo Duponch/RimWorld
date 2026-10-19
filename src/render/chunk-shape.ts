@@ -55,7 +55,7 @@ export function chunkContourPoints(key: number, small: boolean): Point[] {
 
 /** All deformed vertices stay within the original sphere. Flat shading derives
  * face normals from the deformed position; attribute names survive growth. */
-export function configureChunkMaterial(material: THREE.MeshStandardNodeMaterial): void {
+export function configureChunkMaterial(material: THREE.NodeMaterial): void {
   configureBoxMaterial(material);
   material.positionNode = Fn(() => {
     const contour = attribute('chunkContour', 'vec4').toVar();

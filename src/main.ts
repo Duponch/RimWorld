@@ -1,3 +1,4 @@
+import {SceneApplicationContext} from './render/SceneApplicationContext';
 import {groupGeographicTradeTarget256} from './sim/group-geographic-post-256';
 import {updateColonistCard} from './ui/colonist-card';
 import {groupWorld} from './sim/world-map-authority';
@@ -478,12 +479,13 @@ class MainPresentationChanges extends PresentationChanges {
   protected override readStructures(world:World):unknown { return this.#structures.read(world); }
 }
 class MainColonyRenderer extends ColonyRenderer {
-  protected override createEnvironmentLighting():EnvironmentLighting { return new EnvironmentLighting(new EnvironmentLightField(new SceneLightTopology())); }
+  protected override createApplicationContext():SceneApplicationContext{return new SceneApplicationContext();}
+  protected override createEnvironmentLighting():EnvironmentLighting {const context=this.applicationContext!;return new EnvironmentLighting(new EnvironmentLightField(context.topology,world=>context.read(world)?.lighting));}
   protected override createIntentReader(){return createClosedMainMapIntentReader();}
   protected override createPresentationQueue():PresentationQueue {
     return new PresentationQueue(this.confirmedIntentReader,()=>new MainPresentationChanges());
   }
-  protected override createStructurePreparation():SceneStructurePreparation { return new SceneStructurePreparation(); }
+  protected override createStructurePreparation():SceneStructurePreparation { return this.applicationContext!.structures; }
 }
 let renderer: ColonyRenderer | undefined;
 const TEXTURE_PREFERENCE_KEY = 'lisiere.presentation.textures.v1';

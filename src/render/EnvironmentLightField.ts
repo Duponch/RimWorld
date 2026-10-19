@@ -1,3 +1,4 @@
+import type {LightSource} from '../sim/light-sources';
 import {roofCoverage} from '../sim/roof-rules';
 import { LocalLightCache } from '../sim/local-light';
 import { RoomTopologyCache, type RoomTopology } from '../sim/room-topology';
@@ -6,8 +7,9 @@ import type { World } from '../sim/types';
 /** Renderer-owned derived field. Reads are snapshot work, never frame work.
  * Do not rely on array identity: fixtures and checkpoint consumers may mutate
  * objects in place. Only meaningful changes replace the upload data. */
+export interface PreparedEnvironmentLight {readonly world:World;readonly topology:RoomTopology;readonly sources:readonly LightSource[];readonly roofs:readonly number[];readonly roofKey:string}
 export class EnvironmentLightField {
-  constructor(private readonly rooms:{read(world:World):RoomTopology}=new RoomTopologyCache()) {}
+  constructor(private readonly rooms:{read(world:World):RoomTopology}=new RoomTopologyCache(),private readonly prepared?:(world:World)=>PreparedEnvironmentLight|undefined) {}
   private readonly lights = new LocalLightCache();
   private previousLight?: Float32Array;
   private previousTopology?:RoomTopology;
@@ -20,8 +22,9 @@ export class EnvironmentLightField {
   readonly bounds = { minX: 1, minZ: 1, maxX: 0, maxZ: 0 };
 
   update(world: World): boolean {
-    const topology = this.rooms.read(world), light = this.lights.read(world, topology);
-    const roofs = roofCoverage(world), roofKey = roofs.join(',');
+    const candidate=this.prepared?.(world),prepared=candidate?.world===world?candidate:undefined;
+    const topology = prepared?.topology??this.rooms.read(world), light = this.lights.read(world, topology,prepared?.sources);
+    const roofs = prepared?.roofs??roofCoverage(world), roofKey = prepared?.roofKey??roofs.join(',');
     // Opacity also feeds wall-side shading: it can change outside the lamps'
     // influence while LocalLightCache correctly keeps the same light array.
     if (this.width === world.width && this.height === world.height && this.previousLight === light && this.previousTopology===topology && this.roofKey === roofKey) return false;

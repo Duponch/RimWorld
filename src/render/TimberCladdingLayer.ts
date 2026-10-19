@@ -209,8 +209,8 @@ export class TimberCladdingLayer {
   readonly wallGeometry=createTimberGeometry(false);
   readonly eaveGeometry=createTimberGeometry(true);
   readonly grain=grainTexture();
-  readonly material=new THREE.MeshStandardNodeMaterial({color:0xffffff,roughness:.94,metalness:0,flatShading:true,vertexColors:true,map:this.grain});
-  readonly plainMaterial=new THREE.MeshStandardNodeMaterial({color:0xffffff,roughness:.94,metalness:0,flatShading:true,vertexColors:true});
+  readonly material=new THREE.MeshLambertNodeMaterial({color:0xffffff,flatShading:true,vertexColors:true,map:this.grain});
+  readonly plainMaterial=new THREE.MeshLambertNodeMaterial({color:0xffffff,flatShading:true,vertexColors:true});
   /** Exactly two resident batches cover every map. Slots retain the canonical
    * V432 wall/eave order; these handles expose their complete active counts. */
   wallMesh:OverviewBatch;
@@ -231,7 +231,7 @@ export class TimberCladdingLayer {
     this.targetPreviewIds=new Set();
     for(const chunk of this.chunks.values()){chunk.wall.tint.clear();chunk.eave.tint.clear();}
   }
-  constructor(configure?: (material: THREE.MeshStandardNodeMaterial)=>void) {
+  constructor(configure?: (material: THREE.NodeMaterial)=>void) {
     // Stable named matrix attributes avoid capacity-dependent instance UBOs.
     // Match NodeMaterial r186: tint * (base * authored vertex colour), with
     // the same grouping and alpha. Disable only its duplicate implicit path.

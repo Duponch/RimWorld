@@ -81,7 +81,7 @@ type GrowthPassInputs={
   allowed(plant:Resource):boolean|undefined;
   lightTime(plant:Resource,full:boolean):number;
 };
-/** The public reader and a synchronous projection pass use this one formula.
+/** The public reader and a synchronous evaluation pass use this one formula.
  * The pass only shares identical input calculations; arithmetic order stays
  * literal, including the inclusive light integral and strict harvest limit. */
 function readPlantGrowth(world:World,plant:Resource,inputs?:GrowthPassInputs):number {
@@ -101,9 +101,9 @@ function readPlantGrowth(world:World,plant:Resource,inputs?:GrowthPassInputs):nu
 }
 export function plantGrowth(world:World,plant:Resource):number {return readPlantGrowth(world,plant);}
 
-/** One immutable, synchronous presentation evaluation only. Discard before
- * another World or any mutation. No resource result, tile or World is cached
- * globally; public plantGrowth keeps its unrestricted RAW reads.
+/** Shared environmental inputs for one synchronous evaluation. No resource
+ * result, tile or World is cached globally; public plantGrowth keeps its
+ * unrestricted RAW reads. The owning reader defines its environmental lifetime.
  * Terrain/species combinations and light anchors are shared by the population,
  * instead of re-deriving the same substrate DTO and integral for every plant. */
 function createPlantGrowthInputs(world:World):GrowthPassInputs {
@@ -139,8 +139,13 @@ function createPlantGrowthInputs(world:World):GrowthPassInputs {
   return inputs;
 }
 
-/** One immutable, synchronous presentation evaluation; the public RAW reader
- * remains uncached. The shared inputs never retain plant growth results. */
+/** One synchronous evaluation with stable environmental inputs: same World,
+ * tick, schema, climate/light intervals, roofs, ground and hydroponic layout.
+ * Discard before changing any of those inputs or leaving the current call.
+ * A caller may settle a plant's growth, growthTick and growthThermalFactor
+ * immediately after reading it: these values are read afresh on every call,
+ * and each light-integral entry is keyed by the actual requested anchor.
+ * No plant growth result is retained. The public RAW reader stays uncached. */
 export function createPlantGrowthReader(world:World):(plant:Resource)=>number {
   const inputs=createPlantGrowthInputs(world);
   return plant=>readPlantGrowth(world,plant,inputs);

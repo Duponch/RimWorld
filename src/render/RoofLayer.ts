@@ -9,6 +9,7 @@ import {overlaySurfaceHeightAtCell,type GroundOverlaySurface} from './surface-he
 import {EMPTY_GROUND_OVERLAYS,GROUND_OVERLAY_RENDER_ORDER,groundOverlayPlacements,setGroundOverlayRenderOrder,type GroundOverlayRect} from './ground-overlay-surfaces';
 
 type RoofCell = { x: number; z: number };
+export interface PreparedPhysicalRoofs {readonly world:World;readonly coverage:readonly number[];readonly roofKey:string;readonly tail:string;readonly cells:readonly RoofCell[];readonly supportKey:string;readonly input:unknown}
 type Point = readonly [number, number, number];
 
 export interface RoofSlabCellBounds extends RoofCell {
@@ -131,7 +132,7 @@ export class RoofLayer {
   private surfaceKey = '';
   private areaKey = '';
   private texturesEnabled = true;
-  constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void) {
+  constructor(configure?: (material: THREE.MeshStandardNodeMaterial) => void,private readonly prepared?:(world:World)=>PreparedPhysicalRoofs|undefined) {
     for (const mat of [this.textured, this.plain]) { configure?.(mat); mat.userData.rendererOwned = true; }
     this.mesh = new THREE.Mesh(roofSlabGeometry([], WORLD_SCALE.wallHeight + .08), this.textured);
     this.mesh.name = 'continuous-roof-coverage';
@@ -149,13 +150,12 @@ export class RoofLayer {
     this.updateAreas(world,world.roofing?.build??[],world.roofing?.remove??[],batches,reset);
   }
   updatePhysical(world:World,cutaway=false,reset=false):void {
-    const state = world.roofing;
-    const supports = world.structures.filter(s => s.kind === 'wall' || isRoomDoor(s.kind))
-      .map(s => `${s.kind}:${s.x}:${s.z}`).join(',');
-    const key = `${world.width}|${cutaway}|${roofCoverage(world).join(',')}|${state?.natural?.thin.join(',')}|${state?.natural?.thick.join(',')}|${supports}`;
+    const prepared=this.prepared?.(world),state=world.roofing;
+    const key=prepared&&prepared.world===world?`${world.width}|${cutaway}|${prepared.tail}`:
+      `${world.width}|${cutaway}|${roofCoverage(world).join(',')}|${state?.natural?.thin.join(',')}|${state?.natural?.thick.join(',')}|${world.structures.filter(s=>s.kind==='wall'||isRoomDoor(s.kind)).map(s=>`${s.kind}:${s.x}:${s.z}`).join(',')}`;
     if (reset || this.surfaceKey !== key) {
       this.surfaceKey = key;
-      const cells = roofSurfaceCells(world);
+      const cells = prepared&&prepared.world===world?prepared.cells:roofSurfaceCells(world);
       const top = (cutaway ? WORLD_SCALE.wallCutawayHeight : WORLD_SCALE.wallHeight) + .08;
       const old = this.mesh.geometry;
       this.mesh.geometry = roofSlabGeometry(cells, top,cell=>roofKindAt(world,cell.z*world.width+cell.x));
