@@ -1,0 +1,72 @@
+import {expect,test} from 'vitest';
+import {createWorld} from '../src/sim/index';
+import type {PresentationSegment} from '../src/sim/travel-timing';
+import {ActorPlayback435,ConfirmedTrackCursor435,ownActorPlaybackWorld435,isActorPlaybackWorld435} from '../src/render/ActorPlayback435';
+import {MotionTimeline} from '../src/render/MotionTimeline';
+
+const edge=(start:number,end:number,x=0):PresentationSegment=>({from:{x,z:0},to:{x:x+1,z:0},start,end});
+const linear=(segments:readonly PresentationSegment[],tick:number)=>{let found:PresentationSegment|undefined;for(const item of segments){if(item.start>tick)break;found=item;}return found;};
+
+test('closed cursor is the independent linear selection at every confirmed boundary, without mutating tracks',()=>{
+ const cursor=new ConfirmedTrackCursor435();cursor.configure(true,true);
+ const pieces=[edge(10,12),edge(12,12.5),edge(12,14,2),edge(14,16,3)],tracks=new Map([[7,pieces]]),before=JSON.stringify(pieces);
+ for(const tick of [0,9.99,10,10.5,11.9,12,12.1,13.9,14,16,100])expect(cursor.segment(tracks,7,tick)).toBe(linear(pieces,tick));
+ expect(cursor.stats.steps).toBe(pieces.length);expect(cursor.stats.restarts).toBe(1);expect(JSON.stringify(pieces)).toBe(before);
+});
+
+test('replacement, trim, same-tick correction, rewind and reset revoke the closed cursor',()=>{
+ const c=new ConfirmedTrackCursor435(),a=[edge(10,12),edge(12,14)],tracks=new Map([[1,a]]);c.configure(true,true);
+ expect(c.segment(tracks,1,13)).toBe(a[1]);expect(c.segment(tracks,1,10)).toBe(a[0]);
+ const corrected=[edge(10,13,9),edge(13,14,10)];tracks.set(1,corrected);expect(c.segment(tracks,1,10)).toBe(corrected[0]);
+ tracks.set(1,corrected.slice(1));expect(c.segment(tracks,1,10)).toBeUndefined();expect(c.segment(tracks,1,13)).toBe(corrected[1]);
+ const generation=c.generation;c.configure(true,true);expect(c.generation).toBe(generation+1);expect(c.segment(tracks,1,13)).toBe(corrected[1]);
+ tracks.delete(1);expect(c.segment(tracks,1,14)).toBeUndefined();tracks.set(1,a);expect(c.segment(tracks,1,13)).toBe(a[1]);
+});
+
+test('public mutable timeline keeps historical linear semantics including in-place correction and append',()=>{
+ const timeline=new MotionTimeline(),pieces=[edge(10,12),edge(12,14)];timeline.adopt(14,1,[{id:1,segments:pieces}],0,true);
+ timeline.tick=13;expect(timeline.playbackEnabled435).toBe(false);expect(timeline.playbackSegment435(1)).toBe(timeline.segment(1));
+ pieces[1]!.start=14;expect(timeline.playbackSegment435(1)).toBe(pieces[0]);pieces.push(edge(12.5,16,4));
+ // The literal legacy traversal stops at the first future edge, even for a malformed public list.
+ expect(timeline.playbackSegment435(1)).toBe(timeline.segment(1));
+ pieces.splice(1,1);expect(timeline.playbackSegment435(1)).toBe(pieces[1]);
+ const world=createWorld();Object.freeze(world);expect(isActorPlaybackWorld435(world)).toBe(false);
+});
+
+test('resident ownership publishes only adoption, edge, phase, origin and confirmed reset boundaries',()=>{
+ const world=createWorld(),actor={id:1,motion:edge(100,104)},playback=new ActorPlayback435<typeof actor>(),timeline=new MotionTimeline();
+ ownActorPlaybackWorld435(world,true);playback.prepare(world,[actor]);timeline.adopt(104,1,[{id:1,segments:[actor.motion]}],0,true,true);
+ const visit=(tick:number,origin=0)=>{timeline.tick=tick;expect(playback.beginFrame(timeline)).toBe(true);const selected=playback.select(0,timeline,tick,origin);playback.commit();return selected;};
+ expect(visit(99)).toBeDefined();expect(visit(99.5)).toBeUndefined();expect(visit(100)).toBeDefined();expect(visit(101)).toBeUndefined();expect(visit(104)).toBeDefined();expect(visit(104.5)).toBeUndefined();
+ expect(visit(1024,1024)).toBeDefined();expect(visit(1024.5,1024)).toBeUndefined();timeline.adopt(104,0,[],1,true,true);expect(visit(104)).toBeDefined();
+ expect(playback.snapshot().skips).toBeGreaterThan(0);expect(actor.motion).toEqual(edge(100,104));
+});
+
+test('adoption and explicit endpoint invalidation preserve slot identity while revoking publication',()=>{
+ const world=createWorld(),a={id:1},b={id:2},p=new ActorPlayback435<typeof a>();ownActorPlaybackWorld435(world,true);p.prepare(world,[a,b]);
+ expect(p.beginFrame(undefined)).toBe(true);expect(p.select(0,undefined,0,0)?.id).toBe(1);expect(p.select(1,undefined,0,0)?.id).toBe(2);p.commit();
+ expect(p.select(0,undefined,0,0)).toBeUndefined();p.prepare(world,[b,a],true);expect(p.select(0,undefined,0,0)?.id).toBe(2);expect(p.select(1,undefined,0,0)?.id).toBe(1);p.commit();
+ ownActorPlaybackWorld435(world,false);p.prepare(world,[a]);expect(p.beginFrame(undefined)).toBe(false);expect(p.snapshot().actors).toBe(0);p.clear();
+});
+
+test('nullable motion is absence and Pawn policy never introduces an actor-motion fallback',()=>{
+ const world=createWorld(),actor:{id:number;motion:PresentationSegment|null}={id:1,motion:null},ordinary=new ActorPlayback435<typeof actor>(),pawn=new ActorPlayback435<typeof actor>(()=>false,false);ownActorPlaybackWorld435(world,true);
+ ordinary.prepare(world,[actor]);ordinary.beginFrame(undefined);expect(ordinary.select(0,undefined,0,0)?.edge).toBeUndefined();ordinary.commit();
+ actor.motion=edge(0,4);pawn.prepare(world,[actor]);pawn.beginFrame(undefined);expect(pawn.select(0,undefined,0,0)?.edge).toBeUndefined();pawn.commit();
+});
+
+test('dependent carriers visit every frame and failed batches revoke native key caches before retry',()=>{
+ const world=createWorld(),actors=[{id:1,dependent:true},{id:2,dependent:false}],p=new ActorPlayback435<typeof actors[number]>(a=>a.dependent);ownActorPlaybackWorld435(world,true);p.prepare(world,actors);
+ p.beginFrame(undefined);p.select(0,undefined,0,0);p.select(1,undefined,0,0);p.commit();
+ p.beginFrame(undefined);expect(p.select(0,undefined,0,0)).toBeDefined();expect(p.select(1,undefined,0,0)).toBeUndefined();
+ // No commit simulates an exception after some endpoint writes.
+ p.beginFrame(undefined);expect(p.retrying).toBe(true);expect(p.select(0,undefined,0,0)).toBeDefined();p.commit();expect(p.snapshot().retries).toBe(1);expect(p.snapshot().dependentVisits).toBe(3);
+});
+
+test('clock buffering, starvation, pause, resume and speed changes remain identical to the public timeline',()=>{
+ const native=new MotionTimeline(),closed=new MotionTimeline(),tracks=[{id:1,segments:[edge(100,130)]}];
+ for(const [tick,speed,now,reset] of [[100,1,0,true],[103,1,10,false],[106,3,40,false],[108,0,70,false],[110,0,100,false],[113,1,130,false]] as const){
+  native.adopt(tick,speed,tracks,now,reset);closed.adopt(tick,speed,tracks,now,reset,true);
+  for(const at of [now,now+4,now+16]){expect(closed.advance(at)).toBe(native.advance(at));expect(closed.playbackSegment435(1)).toBe(closed.segment(1));}
+ }
+});

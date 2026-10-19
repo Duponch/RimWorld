@@ -4,6 +4,7 @@ import { ResourceTargetTint } from './resource-target-tint';
 /** Authored IDs identify exact instance slots. Build their lookup only while a
  * preview is active; normal rendering performs no selection scan per frame. */
 export class InstanceTargetTint {
+  constructor(private readonly changed435?:()=>void){}
   private readonly tint = new ResourceTargetTint();
   private attribute: THREE.BufferAttribute | undefined;
   private targets: readonly (number | undefined)[] = [];
@@ -11,7 +12,7 @@ export class InstanceTargetTint {
   private selected = new Set<number>();
 
   /** Restore before the producer overwrites or replaces its RGB buffer. */
-  restore(): void { this.tint.restore(); }
+  restore(): void {const attribute=this.attribute,version=attribute?.version;this.tint.restore();if(attribute&&attribute.version!==version)this.changed435?.();}
 
   /** Called after the producer wrote its current unselected colours. */
   setInstances(attribute: THREE.BufferAttribute, targets: readonly (number | undefined)[]): void {
@@ -41,7 +42,7 @@ export class InstanceTargetTint {
     }
     const slots: number[] = [];
     for (const id of this.selected) slots.push(...(this.index.get(id) ?? []));
-    this.tint.applySlots(this.attribute, slots);
+    const version=this.attribute.version;this.tint.applySlots(this.attribute, slots);if(this.attribute.version!==version)this.changed435?.();
   }
 
   clear(): void { this.restore(); this.selected.clear(); }

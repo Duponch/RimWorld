@@ -1,3 +1,4 @@
+import {setStaticSceneSource435} from './StaticSceneCompiler435';
 import { stoneColor } from './stone-palette';
 import * as THREE from 'three/webgpu';
 import type { World, Terrain } from '../sim/types';
@@ -216,10 +217,11 @@ export function buildTerrain(world: World, group: THREE.Group, surface: THREE.Ma
           if (neighbor < level) banks.push({ x: x + dx * 0.5, z: z + dz * 0.5, y: (level + neighbor) / 2, sy: level - neighbor, ry: rotation, color });
         }
       }
-      mergedInstances(group, [
+      const land=mergedInstances(group, [
         { geometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), items: [...tileGroups].flatMap(([terrain,items])=>isWaterTerrain(terrain)?[]:items) },
         { geometry: new THREE.PlaneGeometry(1, 1), items: banks },
       ], surface, false);
+      if(land)setStaticSceneSource435(land,`terrain:${cx}:${cz}:surface`,cx+chunkSize*.5>=world.width*.5?1:0,2);
       mergedInstances(group, [{ geometry: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), items: [...tileGroups].flatMap(([terrain,items])=>isWaterTerrain(terrain)?items:[]) }], water, false);
     }
     // Identical world-space UVs meet at cell and chunk edges. Plain terrain

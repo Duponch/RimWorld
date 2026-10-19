@@ -34,6 +34,7 @@ export class RockLayer {
   // Clean dedicated materials: shared props already have exploration masks.
   private readonly plainMaterial=opaqueRockExplorationMaterial256(material(0xffffff,{vertexColors:true}));
   private readonly texturedMaterial=opaqueRockExplorationMaterial256(material(0xffffff,{vertexColors:true}));
+  compiledMaterials435():readonly THREE.NodeMaterial[]{return[this.plainMaterial,this.texturedMaterial];}
   constructor(configure?: (material:THREE.MeshStandardNodeMaterial)=>void) {
     // Coordinates come from the existing world-space position attribute, so
     // even a vast continuous cliff adds no UV buffer, vertices or draw calls.

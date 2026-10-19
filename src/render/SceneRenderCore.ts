@@ -1,3 +1,6 @@
+import {OwnedOpaqueRevisions435} from './OwnedOpaqueRevisions435';
+import {ownActorPlaybackWorld435,isActorPlaybackWorld435} from './ActorPlayback435';
+import {StaticSceneCompiler435} from './StaticSceneCompiler435';
 import type {SceneApplicationContext} from './SceneApplicationContext';
 import{createSurfaceMaterial}from'./SurfaceMaterials';
 import {knownPosition256} from '../ui/exploration-readers-256';
@@ -161,6 +164,7 @@ export class SceneRenderCore {
   protected viewportHeight=1;
   protected createApplicationContext():SceneApplicationContext|undefined{return undefined;}
   protected readonly applicationContext=this.createApplicationContext();
+  protected readonly ownedOpaqueRevisions435=this.applicationContext?new OwnedOpaqueRevisions435():undefined;
   protected createEnvironmentLighting():EnvironmentLighting { return new EnvironmentLighting(); }
   protected readonly environmentLighting = this.createEnvironmentLighting();
   protected readonly overview = new OverviewLayer(this.environmentLighting.configure);
@@ -206,6 +210,19 @@ export class SceneRenderCore {
   readonly backend: string;
   protected readonly renderer: THREE.WebGPURenderer;
   protected readonly scene = new THREE.Scene();
+  protected readonly staticSceneCompiler435=this.applicationContext?new StaticSceneCompiler435(this.scene):undefined;
+  staticSceneCompilerMetrics435(){return this.staticSceneCompiler435?.snapshot();}
+  private reconcileStaticCompiler435():void {
+    const owner=this.staticSceneCompiler435;if(!owner)return;
+    if(!this.world||!this.immutableWorlds.has(this.world)){owner.clear();return;}
+    // Rock local views share their global attribute owner; exclude distant
+    // aggregate and let the compiler deduplicate only referenced vertices.
+    owner.reconcile([this.terrainGroup,this.resourceGroup,...this.rocks.group.children.filter(child=>child instanceof THREE.Group)],[this.terrainPlainMaterial,this.terrainPaintMaterial,...this.resources.compiledMaterials435(),...this.rocks.compiledMaterials435()]);
+  }
+  protected readonly actorPlayback435={snapshot:()=>{
+    const pawns=this.pawns.actorPlaybackMetrics435(),wildlife=this.wildlife.actorPlaybackMetrics435(),mechanoids=this.mechanoids.actorPlaybackMetrics435(),rows=[pawns,...wildlife,...mechanoids];
+    return{enabled:!!this.applicationContext&&isActorPlaybackWorld435(this.world??undefined),actors:rows.reduce((n,row)=>n+row.actors,0),visits:rows.reduce((n,row)=>n+row.visits,0),skips:rows.reduce((n,row)=>n+row.skips,0),dependentVisits:rows.reduce((n,row)=>n+row.dependentVisits,0),cursor:this.timeline.playbackDiagnostics435(),producers:{pawns,wildlife,mechanoids}};
+  }};
   protected readonly landscape = new LandscapeBatch();
   protected grass: GpuGroundGrassLayer | null = null;
   protected readonly rig: SceneCameraPort;
@@ -215,7 +232,7 @@ export class SceneRenderCore {
   protected readonly resourceGroup = new THREE.Group();
   protected readonly roofs=new RoofLayer(this.environmentLighting.configure,world=>this.applicationContext?.read(world)?.roofs);
   protected readonly doors=new DoorLayer(this.environmentLighting.configure,this.animationDetail);
-  protected readonly timber=new TimberCladdingLayer(this.environmentLighting.configure);
+  protected readonly timber=new TimberCladdingLayer(this.environmentLighting.configure,this.ownedOpaqueRevisions435?.producer('timber'));
   protected readonly structureGroup = new THREE.Group();
   protected readonly jobGroup = new THREE.Group();
   protected readonly pileGroup = new THREE.Group();
@@ -290,7 +307,7 @@ export class SceneRenderCore {
   protected readonly paintedWater=new PaintedWater(this.terrainPaintTexture,this.environmentLighting.configure,this.animationDetail);
   protected readonly clouds=new WeatherCloudLayer(this.animationDetail,this.decorOcclusion);
   protected readonly precipitation=new WeatherPrecipitationLayer(this.animationDetail);
-  protected readonly boxes = new BoxBatches(this.environmentLighting.configure);
+  protected readonly boxes = new BoxBatches(this.environmentLighting.configure,this.ownedOpaqueRevisions435?.producer('box'));
   protected readonly geysers=new GeyserLayer256(this.boxes);
   protected readonly snowSurface=new SnowSurfaceLayer(this.environmentLighting.configure);
   protected readonly recreationHints = new RecreationHints(this.boxes);
@@ -342,7 +359,7 @@ export class SceneRenderCore {
   protected pointerDown: { x: number; y: number; button: number; pointerId: number } | null = null;
 
   constructor(renderer: THREE.WebGPURenderer, groundGrassEnabled: boolean, protected readonly rendererLifetime: RendererLifetime, protected readonly hostPort:SceneRenderHostPort) {
-    this.renderer = renderer; this.designations=new DesignationIconLayer(hostPort.loadTexture);
+    this.renderer = renderer; this.ownedOpaqueRevisions435?.attach(renderer,this.scene,this.environmentLighting.exploration.ownedObjectUniforms435(),[this.environmentLighting.map,this.environmentLighting.exploration.map]); this.designations=new DesignationIconLayer(hostPort.loadTexture);
     this.wildlife=new WildlifeLayer(this.environmentLighting.configure,hostPort.loadTexture,this.animationDetail);
     try {
     const lost = renderer.onDeviceLost.bind(renderer);
@@ -356,6 +373,7 @@ export class SceneRenderCore {
     // has not begun the scene pass. Composing here avoids an intermediate screen
     // output transform while preserving room -> bundles -> objects draw order.
     this.scene.onBeforeRender = (_renderer, scene, camera) => this.composeRoomBeforeRender(scene, camera);
+    this.resources.compiledAttributeChanged435=(attribute,start,count)=>this.staticSceneCompiler435?.patchAttribute(attribute,start,count);
     this.environmentLighting.configure(this.staticMaterial);
     this.environmentLighting.configure(this.terrainPlainMaterial);
     this.environmentLighting.configure(this.terrainPaintMaterial);
@@ -484,12 +502,12 @@ export class SceneRenderCore {
     if(immutableSnapshot)this.immutableWorlds.add(world);else this.immutableWorlds.delete(world);
     this.projectiles.adopt(world,reset);
     if(this.hostPort.hidden())return;
-    if(tracks){this.timeline.adopt(world.tick,speed,tracks,this.hostPort.now(),reset||!this.hasTracks);this.hasTracks=true;}
+    if(tracks){this.timeline.adopt(world.tick,speed,tracks,this.hostPort.now(),reset||!this.hasTracks,!!this.applicationContext&&immutableSnapshot);this.hasTracks=true;}
     if(reset||!tracks){if(!reset)this.presentation.clear();this.applyWorld(world,reset);return;}
     this.presentation.push(world);
     // A background/stalled page must not retain an unlimited snapshot history.
     // Recovery replaces the whole presentation, never only one actor's path.
-    if(this.presentation.size>64||world.tick-this.timeline.tick>MOTION_HISTORY_TICKS){this.presentation.clear();this.timeline.adopt(world.tick,speed,tracks,this.hostPort.now(),true);this.applyWorld(world,true);return;}
+    if(this.presentation.size>64||world.tick-this.timeline.tick>MOTION_HISTORY_TICKS){this.presentation.clear();this.timeline.adopt(world.tick,speed,tracks,this.hostPort.now(),true,!!this.applicationContext&&immutableSnapshot);this.applyWorld(world,true);return;}
     const due=this.presentation.take(this.timeline.tick,this.hostPort.now());if(due)this.applyWorld(due);
     } catch (error) {
       this.reportFailure(`Adoption de l’affichage interrompue : ${error instanceof Error ? error.message : String(error)}`);
@@ -498,7 +516,9 @@ export class SceneRenderCore {
   }
 
   protected applyWorld(world: World, resetPresentation = false): void {
+    this.ownedOpaqueRevisions435?.setEnabled(!!this.applicationContext&&this.immutableWorlds.has(world));this.ownedOpaqueRevisions435?.invalidateResources();
     if(!this.immutableWorlds.has(world))this.applicationContext?.clear();
+    ownActorPlaybackWorld435(world,!!this.applicationContext&&this.immutableWorlds.has(world));
     try{withPileSurfaceReads(()=>this.applyWorldWithinSurfaceReads(world,resetPresentation),this.applicationContext?.readSupports);if(this.applicationContext?.read(world))this.applicationContext.commit(world);}
     catch(error){this.applicationContext?.abort();throw error;}
   }
@@ -643,6 +663,7 @@ export class SceneRenderCore {
     this.refreshZonesTint();
     this.environmentLighting.exploration.bind(this.scene);
     this.updateHover();
+    this.reconcileStaticCompiler435();
   }
 
   setFloorSelection(floor:BuildableFloorKind|undefined):void {
@@ -713,6 +734,7 @@ export class SceneRenderCore {
   /** Switch resident material graphs. The plain variants contain no texture
    * sampling node; no image or per-frame CPU work is involved while disabled. */
   setTexturesEnabled(enabled:boolean):void {
+    this.ownedOpaqueRevisions435?.invalidateResources();
     if(this.texturesEnabled===enabled)return;
     this.invalidatePausedShadow();
     this.texturesEnabled=enabled;
@@ -754,6 +776,7 @@ export class SceneRenderCore {
     this.startingArrival.setTexturesEnabled(enabled);
     this.environmentLighting.exploration.bind(this.scene);
     this.landscape.needsUpdate=true;
+    this.reconcileStaticCompiler435();
   }
   protected refreshTerrainPaint(world:World):void {
     if(!this.terrainPaintDirty)return;
@@ -841,6 +864,7 @@ export class SceneRenderCore {
   }
 
   setLightingSettings(settings: LightingSettings): void {
+    this.ownedOpaqueRevisions435?.invalidateResources();
     this.lightingSettings = parseLightingSettings(settings);
     this.daylight.setSettings(this.lightingSettings);
     this.room?.setSettings(this.lightingSettings);
@@ -849,6 +873,7 @@ export class SceneRenderCore {
   }
 
   setShadowSettings(settings: ShadowSettings): void {
+    this.ownedOpaqueRevisions435?.invalidateResources();
     const next=parseShadowSettings(settings);
     // The native backend owns the allocation and resizing of the one atlas.
     const supported=[4096,2048,1024,512].find(size=>size<=this.textureDimensionLimit)??512;
@@ -922,6 +947,7 @@ export class SceneRenderCore {
     this.resources.setFoliageVisible(visible);
     this.overview.setFoliageVisible(visible);
     this.landscape.needsUpdate = true;
+    this.reconcileStaticCompiler435();
   }
 
   get cameraMode(): CameraMode { return this.rig.mode; }
@@ -940,7 +966,7 @@ export class SceneRenderCore {
   }
 
   protected async preparePresentationResources(): Promise<void> {
-    this.preparing = true;
+    this.preparing = true;this.ownedOpaqueRevisions435?.setEnabled(false);this.ownedOpaqueRevisions435?.invalidateResources();
     const restoreDiorama = this.dioramaEnabled || this.roomEnabled ? await this.diorama?.prepare() : undefined;
     this.invalidatePausedShadow();
     const culling = new Map<THREE.Object3D, boolean>();
@@ -984,6 +1010,7 @@ export class SceneRenderCore {
       this.storageGroup.visible=this.growing.group.visible=this.allowedAreaLayer.group.visible=true;
       this.overview.group.visible = this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = true;
       this.rocks.setDistant(false); this.rocks.mesh.visible = true;
+      this.staticSceneCompiler435?.syncVisibility();
       this.scene.traverse(object => { culling.set(object, object.frustumCulled); object.frustumCulled = false; });
       this.daylight.update(this.world ? calendarTick(this.world) : 0, this.controls.target,this.world??undefined);
       if (this.dioramaEnabled) this.diorama?.presentSky(this.daylight.sample.y);
@@ -1018,12 +1045,14 @@ export class SceneRenderCore {
       restoreDiorama?.();
       this.overview.group.visible = distant; this.terrainGroup.visible = this.resourceGroup.visible = this.plants.group.visible = !distant;
       this.rocks.setDistant(distant); this.landscape.refresh(this.backend==='WebGPU'&&distant); this.preparing = false;
+      this.staticSceneCompiler435?.syncVisibility();
       this.storageGroup.visible=this.growing.group.visible=this.allowedAreaLayer.group.visible=this.zonesVisible;
       this.roofs.areas.visible=this.zonesVisible&&this.roofAreasVisible;
       this.invalidatePausedShadow();
       this.updateSelectedObject();
       this.updateHover();
       this.frames.reset(); this.lastFrame = 0;
+      this.ownedOpaqueRevisions435?.invalidateResources();this.ownedOpaqueRevisions435?.setEnabled(!!this.world&&this.immutableWorlds.has(this.world));
     }
   }
 
@@ -1477,6 +1506,7 @@ export class SceneRenderCore {
     // Suppress pending continuous caster changes on skipped frames as well as
     // autoUpdate. The projection is kept with the atlas, not the live sun.
     shadow.autoUpdate=false;shadow.needsUpdate=refreshShadow;
+    this.ownedOpaqueRevisions435?.preflight(this.camera,shadow);
     this.renderer.info.reset();
     this.renderScene();
     if(refreshShadow){
@@ -1502,6 +1532,7 @@ export class SceneRenderCore {
   }
 
   protected renderScene(): void {
+    this.staticSceneCompiler435?.syncVisibility();
     withPreparedSceneMatrices(this.scene,()=>{
     const room = this.room;
     if (!room) { this.renderer.render(this.scene, this.camera); return; }
@@ -1727,6 +1758,7 @@ export class SceneRenderCore {
     this.hostPort.disconnectResize();
     this.rig?.dispose();
     this.hostPort.removeInputListeners();
+    this.ownedOpaqueRevisions435?.dispose();this.staticSceneCompiler435?.dispose();
     this.geysers.dispose();this.boxes.dispose();this.snowSurface.dispose();
     this.roofs.dispose();
     this.timber.dispose();

@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import type {OwnedOpaqueProducer435} from './OwnedOpaqueRevisionRegistry435';
 import {indexTimberGeometry} from './index-timber-geometry';
 import { attribute,materialColor,texture,vec4,vertexColor } from 'three/tsl';
 import {OverviewBatch,configureOverviewMaterial} from './OverviewBatch';
@@ -231,7 +232,7 @@ export class TimberCladdingLayer {
     this.targetPreviewIds=new Set();
     for(const chunk of this.chunks.values()){chunk.wall.tint.clear();chunk.eave.tint.clear();}
   }
-  constructor(configure?: (material: THREE.NodeMaterial)=>void) {
+  constructor(configure?: (material: THREE.NodeMaterial)=>void,private readonly ownedProducer435?:OwnedOpaqueProducer435) {
     // Stable named matrix attributes avoid capacity-dependent instance UBOs.
     // Match NodeMaterial r186: tint * (base * authored vertex colour), with
     // the same grouping and alpha. Disable only its duplicate implicit path.
@@ -249,18 +250,20 @@ export class TimberCladdingLayer {
   setTexturesEnabled(enabled:boolean):void {
     if(this.texturesEnabled===enabled)return;
     this.texturesEnabled=enabled;
-    for(const chunk of this.chunks.values())chunk.wall.mesh.material=chunk.eave.mesh.material=enabled?this.material:this.plainMaterial;
+    for(const chunk of this.chunks.values())for(const batch of [chunk.wall,chunk.eave]){batch.mesh.material=enabled?this.material:this.plainMaterial;this.ownedProducer435?.dirty(batch.mesh);}
   }
   private makeMesh(shape:THREE.BufferGeometry,name:string,capacity:number):OverviewBatch {
     const mesh=new OverviewBatch(shape,this.texturesEnabled?this.material:this.plainMaterial,capacity);
     mesh.geometry.setAttribute('timberOrdinal',new THREE.InstancedBufferAttribute(new Float32Array(capacity),1).setUsage(THREE.StaticDrawUsage));
     mesh.name=name;mesh.activeCount=0;mesh.castShadow=true;mesh.receiveShadow=true;
+    this.ownedProducer435?.register(mesh,[this.material,this.plainMaterial],[this.grain]);
     return mesh;
   }
   private createChunk(key:string,capacity=16){
+    const wall=this.makeMesh(this.wallGeometry,'timber-vertical-planks',capacity),eave=this.makeMesh(this.eaveGeometry,'timber-eave-planks',capacity);
     const chunk={
-      wall:{mesh:this.makeMesh(this.wallGeometry,'timber-vertical-planks',capacity),capacity,tint:new InstanceTargetTint()},
-      eave:{mesh:this.makeMesh(this.eaveGeometry,'timber-eave-planks',capacity),capacity,tint:new InstanceTargetTint()},
+      wall:{mesh:wall,capacity,tint:new InstanceTargetTint(()=>this.ownedProducer435?.dirty(wall))},
+      eave:{mesh:eave,capacity,tint:new InstanceTargetTint(()=>this.ownedProducer435?.dirty(eave))},
     };
     for(const mesh of [chunk.wall.mesh,chunk.eave.mesh]){mesh.userData.timberChunk=key;this.group.add(mesh);}
     this.chunks.set(key,chunk);return chunk;
@@ -272,6 +275,7 @@ export class TimberCladdingLayer {
     // no persistent CPU mirror or copy of obsolete buffer contents is needed.
     batch.mesh.allocate(shape,batch.capacity);
     batch.mesh.geometry.setAttribute('timberOrdinal',new THREE.InstancedBufferAttribute(new Float32Array(batch.capacity),1).setUsage(THREE.StaticDrawUsage));
+    this.ownedProducer435?.dirty(batch.mesh);
   }
   update(world:World,cutaway:boolean,reset=false):void {
     const walls=world.structures.filter(s=>s.kind==='wall'&&s.material==='wood');
@@ -310,18 +314,19 @@ export class TimberCladdingLayer {
       const mesh=batch.mesh;
       if(!spatial.has(key)){mesh.activeCount=0;batch.tint.setInstances(mesh.colorBuffer,[]);}
       mesh.instanceMatrix.needsUpdate=true;mesh.colorBuffer.needsUpdate=true;mesh.computeBoundingSphere();
+      this.ownedProducer435?.dirty(mesh);
     }
   }
   /** Compile empty batches for the first real and shadow passes. */
   prepareForCompile():()=>void {
     const empty=[...this.chunks.values()].flatMap(chunk=>[chunk.wall.mesh,chunk.eave.mesh]).filter(mesh=>mesh.activeCount===0);
     const saved=empty.map(mesh=>({mesh,buffer:mesh.instanceMatrix,version:mesh.instanceMatrix.version}));
-    for(const mesh of empty)mesh.activeCount=1;
-    return ()=>{for(const {mesh,buffer,version} of saved)if(mesh.instanceMatrix===buffer&&buffer.version===version)mesh.activeCount=0;};
+    for(const mesh of empty){mesh.activeCount=1;this.ownedProducer435?.dirty(mesh);}
+    return ()=>{for(const {mesh,buffer,version} of saved)if(mesh.instanceMatrix===buffer&&buffer.version===version){mesh.activeCount=0;this.ownedProducer435?.dirty(mesh);}};
   }
   dispose():void {
     for(const chunk of this.chunks.values())for(const batch of [chunk.wall,chunk.eave]){
-      batch.tint.dispose();this.group.remove(batch.mesh);batch.mesh.dispose();
+      batch.tint.dispose();this.ownedProducer435?.forget(batch.mesh);this.group.remove(batch.mesh);batch.mesh.dispose();
     }
     this.chunks.clear();
     this.wallGeometry.dispose();this.eaveGeometry.dispose();this.material.dispose();this.plainMaterial.dispose();this.grain.dispose();

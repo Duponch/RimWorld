@@ -8,6 +8,7 @@ type SavedRange={start:number;values:Float32Array};
 /** Tint only selected merged resource ranges, using the existing RGB stream.
  * No shader/draw/material change, and clearing restores the original F32 bits. */
 export class ResourceTargetTint {
+  constructor(private readonly changed435?:(attribute:THREE.BufferAttribute,start:number,count:number)=>void){}
   private readonly originals=new Map<THREE.BufferAttribute,SavedRange[]>();
   private readonly uploads=new WeakMap<THREE.BufferAttribute,{start:number;count:number}>();
 
@@ -19,7 +20,7 @@ export class ResourceTargetTint {
       range.start=Math.min(range.start,start);range.count=end-range.start;
     }else{range.start=start;range.count=count;attribute.updateRanges.push(range);}
     // One retained range even if the mesh remains culled during many drags.
-    attribute.needsUpdate=true;
+    attribute.needsUpdate=true;this.changed435?.(attribute,start,count);
   }
 
   private restoreAttribute(attribute:THREE.BufferAttribute):void {

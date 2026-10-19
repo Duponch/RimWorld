@@ -115,7 +115,7 @@ export class MiniTurretLayer {
       if(pose.moving){i++;continue;}
       this.moving[i]=this.moving.at(-1)!;this.moving.pop();
     }
-    if(changed)matrix.needsUpdate=true;
+    if(changed){matrix.needsUpdate=true;mesh.commitOwnedOpaque435();}
     return changed;
   }
 

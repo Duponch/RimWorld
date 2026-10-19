@@ -1,3 +1,4 @@
+import {ActorPlayback435} from './ActorPlayback435';
 import {groupHumanCarryPairs257} from '../sim/group-human-admission-257.ts';
 import {arrivalRotationYaw256} from '../sim/arrival-rotation-256';
 import {actorExplorationMaterial256} from './ExplorationMask256';
@@ -167,6 +168,8 @@ export class PawnLayer {
   private readonly partialAnimationCache:ActorAnimationCache;
   private partialOwners:number[]=[];
   private readonly animationOwners=new Map<number,number>();
+  private readonly playback435=new ActorPlayback435<Pawn>((pawn,index)=>this.animationOwners.has(index)||this.handoffs.active.has(pawn.id)||this.groupHumanCarrierIds.has(pawn.id)||pawn.rescue?.phase==='carry'||pawn.animalRescue?.phase==='carry'||(this.pawnMesh?.geometry.getAttribute('aCargo').getX(index)??0)!==0,false);
+  actorPlaybackMetrics435(){return this.playback435.snapshot();}
   private readonly animationRoot={x:0,y:0,z:0,yaw:0};
   private readonly linkedRoot={x:0,y:0,z:0,yaw:0};
   readonly visuals = new Map<number, VisualPawn>();
@@ -1024,6 +1027,7 @@ export class PawnLayer {
     this.syncPartialCargo();
     (this.selectionMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount=world.pawns.length;
     this.pawnIds=world.pawns.map(p=>p.id);this.setSelected(this.selected);
+    this.playback435.prepare(world,world.pawns,true);
   }
 
   /** CPU chooses a confirmed edge; translation, orientation and rig evaluation stay on GPU. */
@@ -1034,9 +1038,11 @@ export class PawnLayer {
     const origin=Math.floor(timeline.tick/1024)*1024;
     this.travelOrigin=origin;
     this.travelTime.value=localTimeSeconds(timeline.tick,origin);
+    const playback=this.playback435.beginFrame(timeline);if(this.playback435.retrying)this.travelKeys.clear();
     let dirty=false;
     world.pawns.forEach((pawn,i)=>{
-      const segment=pawn.body?.pileId!==undefined||pawn.body?.lostAt!==undefined?undefined:timeline.segment(pawn.id);
+      const prepared=playback?this.playback435.select(i,timeline,timeline.tick,origin):undefined;if(playback&&!prepared)return;
+      const segment=pawn.body?.pileId!==undefined||pawn.body?.lostAt!==undefined?undefined:(playback?prepared!.edge:timeline.segment(pawn.id));
       const active=!!segment && timeline.tick<segment.end;
       const pasteCollect=pasteCollectionSource(pawn);
       const onEdge=!!segment&&(active||pawn.state==='moving'&&!pasteCollect||world.tick<segment.end);
@@ -1159,6 +1165,7 @@ export class PawnLayer {
       }
       for(const attribute of [from,to,times,motion])attribute.needsUpdate=true;
     }else if(crouchFinished)motion.needsUpdate=true;
+    if(playback)this.playback435.commit();
   }
 
   /** Called once after camera publication and physical stream reconciliation. */
@@ -1189,6 +1196,7 @@ export class PawnLayer {
   }
 
   dispose(): void {
+    this.playback435.clear();
     clearGroup(this.group);
     this.plainMaterial?.dispose();
     this.texturedMaterial?.dispose();

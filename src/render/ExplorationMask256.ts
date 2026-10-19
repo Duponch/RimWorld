@@ -9,6 +9,8 @@ export function actorExplorationMaterial256<T extends THREE.NodeMaterial>(materi
 export function opaqueRockExplorationMaterial256<T extends THREE.NodeMaterial>(material:T):T {material.userData.explorationOpaqueRock=true;return material;}
 export class ExplorationMask256 {
  readonly field=new ExplorationField256();
+ /** Exact producer nodes for the private compiled-program contract; no graph mutation. */
+ ownedObjectUniforms435():readonly THREE.Node[]{return [this.size,this.enabled];}
  readonly map=new THREE.DataTexture(this.field.data,1,1,THREE.RGBAFormat,THREE.UnsignedByteType);
  private readonly size=uniform(new THREE.Vector2(1,1));
  private readonly enabled=uniform(false);

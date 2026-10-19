@@ -1,3 +1,4 @@
+import {ActorPlayback435} from './ActorPlayback435';
 import {arrivalRotationYaw256} from '../sim/arrival-rotation-256';
 import {actorExplorationMaterial256} from './ExplorationMask256';
 import {isAnimalSpecies256} from '../sim/animal-core-v256';
@@ -53,6 +54,9 @@ class SpeciesRig {
   private selected:ReadonlySet<number>=new Set();
   readonly blend=uniform(1).setGroup(renderGroup);private time=uniform(0).setGroup(renderGroup);
   private readonly keys=new WildlifeFrameState();private readonly bodyScale=new WildlifeBodyScale();private source:World|undefined;
+  private readonly playback435=new ActorPlayback435<VisualAnimal>(animal=>animal.carrierId!==undefined||!!animal.corpsePile&&animal.corpsePile.owner.type!=='ground');
+  playbackMetrics435(){return this.playback435.snapshot();}
+  clearPlayback435():void{this.playback435.clear();}
   private headings=new Map<number,TurnHeading>();
   private readonly gait=new GaitPhaseTracker();
   private readonly gaitRate:number;
@@ -196,7 +200,7 @@ class SpeciesRig {
     return ()=>{if(this.revision!==revision)return;g.instanceCount=n;fire.instanceCount=f;marker.instanceCount=s;this.slaughter.visible=visible;this.mesh.visible=bodyVisible;this.flames.visible=fireVisible;};
   }
   deactivate():void {
-    this.revision++;this.source=undefined;this.animals=[];this.hasFireActors=false;
+    this.revision++;this.source=undefined;this.animals=[];this.hasFireActors=false;this.playback435.clear();
     this.keys.clear();this.headings.clear();this.gait.clear();this.carrierSlots.clear();this.actorSlots.clear();this.animationCache.reset();
     for(const mesh of [this.mesh,this.flames,this.selection,this.slaughter]){(mesh.geometry as THREE.InstancedBufferGeometry).instanceCount=0;mesh.visible=false;}
     const fire=this.mesh.geometry.getAttribute('aFire') as THREE.InstancedBufferAttribute;
@@ -235,12 +239,14 @@ class SpeciesRig {
     this.hasFireActors=fireCount>0;this.flames.visible=this.hasFireActors;
     }
     const animals=this.animals;g.instanceCount=animals.length;let dirty=false;
+    this.playback435.prepare(world,animals,reset);const playback=this.playback435.beginFrame(timeline);if(this.playback435.retrying)this.keys.clear();
     if(changed||reset){this.carrierSlots.clear();if(reset)this.animationCache.reset();}
     animals.forEach((a,i)=>{
       // These bodies have equal endpoints and no local clocks or handoff.
       // New snapshots (even at the same tick), resets and transferred bodies
       // still refresh their complete primitives through the ordinary path.
       if(!changed&&!reset&&a.corpsePile?.owner.type==='ground'&&a.carrierId===undefined)return;
+      const prepared=playback?this.playback435.select(i,timeline,tick,origin):undefined;if(playback&&!prepared)return;
       const blood=g.getAttribute('aBodyBlood'),absent=g.getAttribute('aAbsent'),carrierState=g.getAttribute('aCarrier'),transfer=g.getAttribute('aCorpseHandoff'),transferFrom=g.getAttribute('aCorpseFrom'),transferTo=g.getAttribute('aCorpseTo');
       const corpse=a.corpsePile?.corpse;
       if(corpse&&a.corpsePile){
@@ -290,7 +296,7 @@ class SpeciesRig {
         else {from.setXYZW(i,a.x,0,a.z,0);to.setXYZW(i,a.x,0,a.z,0);times.setXYZW(i,0,0,0,1);}
         return;
       }
-      const edge=timeline?.segment(a.id)??a.motion,active=!!edge&&tick>=edge.start&&tick<edge.end;
+      const edge=playback?prepared!.edge:(timeline?.segment(a.id)??a.motion),active=!!edge&&tick>=edge.start&&tick<edge.end;
       const growth=this.bodyScale.read(a);
       const fromFraction=edge&&'fromFraction' in edge?edge.fromFraction as number|undefined:undefined,toFraction=edge&&'toFraction' in edge?edge.toFraction as number|undefined:undefined;
       const same=this.keys.begin(a.id,0).value(i).value(origin).value(edge?.start).value(edge?.end).value(fromFraction).value(toFraction).value(active)
@@ -331,6 +337,7 @@ class SpeciesRig {
     });
     if(dirty)for(const a of [from,to,times,state,scale,g.getAttribute('aBodyBlood'),g.getAttribute('aAbsent'),g.getAttribute('aCarrier'),g.getAttribute('aCorpseHandoff'),g.getAttribute('aCorpseFrom'),g.getAttribute('aCorpseTo')])a.needsUpdate=true;
     if(changed||reset||dirty){this.actorSlots.clear();let minScale=1;animals.forEach((a,i)=>{this.actorSlots.set(a.id,i);minScale=Math.min(minScale,scale.getX(i));const carrier=g.getAttribute('aCarrier');this.animationCache.reconcile(i,a.id,[state.getZ(i),scale.getX(i),g.getAttribute('aAbsent').getX(i),carrier.getX(i),carrier.getY(i),this.carrierSlots.get(i),a.carrierId,a.corpsePile?.owner.type].join(':'));});this.animationCache.setMinimumScale(minScale);}
+    if(playback)this.playback435.commit();
   }
   cpuPoseForId(id:number){const slot=this.actorSlots.get(id);return slot===undefined?undefined:this.animationCache.cpuPose(slot);}
   presentAnimations(pawns?:PawnLayer):void {
@@ -389,11 +396,12 @@ export class WildlifeLayer {
     for(const rig of this.rigs)rig.updateClock(tick,pawns);
     for(const rig of this.activeRigs)rig.update(world,this.groups.get(rig.species)!,this.burning,timeline,this.surfaces,this.pileSurface,reset,pawns,this.quotaTargets,this.pileIdentities);
   }
+  actorPlaybackMetrics435(){return this.activeRigs.map(rig=>({species:rig.species,...rig.playbackMetrics435()}));}
   presentAnimations(pawns?:PawnLayer):void {for(const rig of this.activeRigs)rig.presentAnimations(pawns);}
   prepare():()=>void{const restores=this.rigs.map(r=>r.prepare());return()=>{for(const restore of restores)restore();};}
   dispose():void{
     for(const r of this.rigs){
-      r.animationCache.dispose();
+      r.clearPlayback435();r.animationCache.dispose();
       for(const m of [r.mesh,r.flames,r.selection,r.slaughter])m.geometry.dispose();
       r.plainMaterial.dispose();r.texturedMaterial.dispose();
       (r.flames.material as THREE.Material).dispose();

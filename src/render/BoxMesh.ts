@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import type {OwnedOpaqueProducer435} from './OwnedOpaqueRevisionRegistry435';
 import { Fn, attribute, mat4, normalLocal, positionLocal, transformNormal } from 'three/tsl';
 
 const matrix = new THREE.Matrix4(), sphere = new THREE.Sphere();
@@ -21,7 +22,7 @@ export class BoxMesh extends THREE.Mesh<THREE.InstancedBufferGeometry> {
   itemShapeBuffer?:THREE.InstancedInterleavedBuffer;
   private baseRadius = Math.sqrt(3) / 2;
 
-  constructor(base: THREE.BufferGeometry, material: THREE.Material, capacity: number) {
+  constructor(base: THREE.BufferGeometry, material: THREE.Material, capacity: number,private readonly ownedProducer435?:OwnedOpaqueProducer435) {
     super(new THREE.InstancedBufferGeometry(), material);
     this.allocate(base, capacity);
   }
@@ -51,10 +52,14 @@ export class BoxMesh extends THREE.Mesh<THREE.InstancedBufferGeometry> {
     }else this.itemShapeBuffer=undefined;
     geometry.instanceCount=0;geometry.boundingSphere=new THREE.Sphere();
     this.geometry=geometry;
+    this.commitOwnedOpaque435();
   }
 
   get activeCount():number { return this.geometry.instanceCount; }
-  set activeCount(value:number) { this.geometry.instanceCount=value; this.visible=value>0; }
+  set activeCount(value:number) {const changed=this.geometry.instanceCount!==value||this.visible!==(value>0);this.geometry.instanceCount=value;this.visible=value>0;if(changed)this.commitOwnedOpaque435();}
+  /** Only a capability supplied by a closed producer can issue this receipt.
+   * Bulk writers commit once, rather than notifying for every instance. */
+  commitOwnedOpaque435():void {this.ownedProducer435?.dirty(this);}
   get boundingSphere():THREE.Sphere { return this.geometry.boundingSphere!; }
   setMatrixAt(index:number,value:THREE.Matrix4):void { value.toArray(this.instanceMatrix.array,index*16); }
   getMatrixAt(index:number,target:THREE.Matrix4):void { target.fromArray(this.instanceMatrix.array,index*16); }
@@ -69,5 +74,5 @@ export class BoxMesh extends THREE.Mesh<THREE.InstancedBufferGeometry> {
       this.getMatrixAt(i,matrix);sphere.set(new THREE.Vector3(),this.baseRadius).applyMatrix4(matrix);this.boundingSphere.union(sphere);
     }
   }
-  dispose():void { this.geometry.dispose(); }
+  dispose():void {this.ownedProducer435?.forget(this);this.geometry.dispose();}
 }

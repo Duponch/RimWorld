@@ -1,4 +1,5 @@
 import{createSurfaceMaterial}from'./SurfaceMaterials';
+import type {OwnedOpaqueProducer435} from './OwnedOpaqueRevisionRegistry435';
 import * as THREE from 'three/webgpu';
 import { attribute, texture } from 'three/tsl';
 import { material } from './primitives';
@@ -52,7 +53,7 @@ export class BoxBatches {
   private texturesEnabled = true;
   private roundedRockWarm = false;
 
-  constructor(configure?: (material: THREE.NodeMaterial) => void) {
+  constructor(configure?: (material: THREE.NodeMaterial) => void,private readonly ownedProducer435?:OwnedOpaqueProducer435) {
     configure?.(this.materials.solid);
     configure?.(this.texturedSolid);
     configure?.(this.plainRock);
@@ -82,9 +83,11 @@ export class BoxBatches {
     this.texturesEnabled = enabled;
     const chosen = enabled ? this.texturedSolid : this.materials.solid;
     for (const mesh of this.batches.values()) {
+      const previous=mesh.material;
       if (mesh.material === this.texturedSolid || mesh.material === this.materials.solid) mesh.material = chosen;
       else if (mesh.material === this.texturedRock || mesh.material === this.plainRock) mesh.material = enabled ? this.texturedRock : this.plainRock;
       else if(mesh.material===this.texturedItem||mesh.material===this.plainItem)mesh.material=enabled?this.texturedItem:this.plainItem;
+      if(mesh.material!==previous)mesh.commitOwnedOpaque435();
     }
   }
 
@@ -129,10 +132,11 @@ export class BoxBatches {
       // Two resident, empty sentinels warm both rock geometries even on a map
       // without fragments. They are shared across the spatial map chunks.
       for(const [suffix,geometry] of [['rounded-rock',this.roundedRockGeometry],['small-rock',this.smallRockGeometry]] as const){
-        const warm = new BoxMesh(geometry, this.texturesEnabled ? this.texturedRock : this.plainRock, 1);
+        const warm = new BoxMesh(geometry, this.texturesEnabled ? this.texturedRock : this.plainRock, 1,this.ownedProducer435);
         this.allocateRockContour(warm);
         warm.name = `pile-${suffix}-warm`;
         warm.castShadow = shadows; warm.receiveShadow = true; warm.activeCount = 0;
+        this.ownedProducer435?.register(warm,[this.plainRock,this.texturedRock],[this.rockTexture]);
         group.add(warm); this.batches.set(warm.name, warm);
       }
       this.roundedRockWarm = true;
@@ -178,6 +182,7 @@ export class BoxBatches {
     mesh.instanceMatrix.needsUpdate=true;mesh.colorBuffer.needsUpdate=true;
     mesh.computeBoundingSphere();
     if(targets)targets.tint.setInstances(mesh.colorBuffer,targets.ids);
+    mesh.commitOwnedOpaque435();
     return true;
   }
 
@@ -191,10 +196,13 @@ export class BoxBatches {
       ? (this.texturesEnabled ? this.texturedRock : this.plainRock)
       : style === 'solid' && this.texturesEnabled ? this.texturedSolid : this.materials[style];
     if (!mesh) {
-      mesh = new BoxMesh(geometry, chosen, Math.max(256, 2 ** Math.ceil(Math.log2(items.length || 1))));
+      mesh = new BoxMesh(geometry, chosen, Math.max(256, 2 ** Math.ceil(Math.log2(items.length || 1))),style==='solid'?this.ownedProducer435:undefined);
       if(rock)this.allocateRockContour(mesh);
       mesh.name = key;
       mesh.castShadow = style === 'solid' && shadows; mesh.receiveShadow = true;
+      if(style==='solid')this.ownedProducer435?.register(mesh,
+        atlas?[this.plainItem,this.texturedItem]:rock?[this.plainRock,this.texturedRock]:[this.materials.solid,this.texturedSolid],
+        atlas?[this.itemAtlas.data,this.surfaceTexture]:rock?[this.rockTexture]:[this.surfaceTexture]);
       group.add(mesh); this.batches.set(key, mesh);
     } else if (items.length > mesh.instanceMatrix.count||atlas!==!!mesh.itemShapeBuffer) {
       // Release the old per-instance buffers before replacing their capacity.
@@ -220,10 +228,11 @@ export class BoxBatches {
     if(rock)mesh.geometry.getAttribute('chunkContour').needsUpdate=true;
     mesh.computeBoundingSphere();
     let targets=this.targetBatches.get(mesh);
-    if(!targets){targets={ids,tint:new InstanceTargetTint()};this.targetBatches.set(mesh,targets);}
+    if(!targets){const ownedMesh=mesh;targets={ids,tint:new InstanceTargetTint(()=>ownedMesh.commitOwnedOpaque435())};this.targetBatches.set(mesh,targets);}
     else targets.ids=ids;
     targets.tint.setInstances(mesh.colorBuffer,ids);
     const selected=this.targetGroups.get(group);if(selected)targets.tint.setTargets(selected);
+    mesh.commitOwnedOpaque435();
   }
 
   private allocateRockContour(mesh: BoxMesh): void {
@@ -248,6 +257,7 @@ export class BoxBatches {
     for(const mesh of empty) {
       mesh.instanceMatrix.array.fill(0,0,16);mesh.instanceMatrix.array[15]=1;
       mesh.instanceMatrix.needsUpdate=true;mesh.activeCount=1;
+      mesh.commitOwnedOpaque435();
     }
     return ()=>{empty.forEach((mesh,i)=>{
       const state=saved[i]!;
@@ -255,6 +265,7 @@ export class BoxBatches {
       // overwrite a newer logical batch, even when its count is also one.
       if(mesh.instanceMatrix!==state.attribute||mesh.instanceMatrix.version!==state.version)return;
       mesh.activeCount=0;mesh.instanceMatrix.array.set(state.first,0);mesh.instanceMatrix.needsUpdate=true;
+      mesh.commitOwnedOpaque435();
     });};
   }
 

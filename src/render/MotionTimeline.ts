@@ -1,3 +1,4 @@
+import {ConfirmedTrackCursor435} from './ActorPlayback435';
 import type { PawnTrack } from '../bridge/motion-tracks';
 import { LOCAL_TICKS_PER_SECOND } from '../bridge/clock-rate';
 import type { PresentationSegment as TravelSegment } from '../sim/travel-timing';
@@ -10,6 +11,11 @@ export const MOTION_BUFFER_TICKS = 2;
 /** Confirmed-time playout. Running speed changes affect the next frame without
  * moving the playhead or inserting a new wait. No prediction on starvation. */
 export class MotionTimeline {
+  private readonly playbackCursor435=new ConfirmedTrackCursor435();
+  get playbackEnabled435():boolean{return this.playbackCursor435.enabled;}
+  get playbackGeneration435():number{return this.playbackCursor435.generation;}
+  playbackSegment435(id:number):TravelSegment|undefined{return this.playbackCursor435.segment(this.tracks,id,this.tick);}
+  playbackDiagnostics435(){return{enabled:this.playbackCursor435.enabled,generation:this.playbackCursor435.generation,...this.playbackCursor435.stats};}
   readonly tracks=new Map<number,TravelSegment[]>();
   tick=0;
   private latest=0;
@@ -20,7 +26,8 @@ export class MotionTimeline {
   private previous=0;
   private ready=Infinity;
   private buffering=true;
-  adopt(tick:number,speed:number,tracks:PawnTrack[],now:number,reset=false):void {
+  adopt(tick:number,speed:number,tracks:PawnTrack[],now:number,reset=false,closed435=false):void {
+    this.playbackCursor435.configure(closed435,reset);
     if(reset){this.tick=tick;this.latest=tick;this.previous=now;this.ready=Infinity;this.buffering=true;this.tracks.clear();this.speed=speed;this.rate=speed*LOCAL_TICKS_PER_SECOND;this.frameRate=this.rate;this.rateChanges.length=0;}
     // Only RAF advances the playhead. A delivery timestamp can be later than
     // the next frame timestamp; changing rate here never consumes that time.

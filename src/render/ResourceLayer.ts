@@ -1,3 +1,4 @@
+import {setStaticSceneSource435} from './StaticSceneCompiler435';
 import { appendFlora,floraSize,hydroponicFloraHeight,isClusterPlantSpecies,isMedicinalPlant,isResidentCrop } from './flora-presentation';
 import { plantLeafless } from '../sim/plant-life';
 import { stoneColor } from './stone-palette';
@@ -99,7 +100,9 @@ function visibleResourceKeys(world:World,r:World['resources'][number],appearance
 }
 
 export class ResourceLayer {
-  private readonly targetTint=new ResourceTargetTint();
+  compiledMaterials435():readonly THREE.NodeMaterial[]{return[this.staticMaterial,this.texturedMaterial,this.windPlain,this.windTextured];}
+  compiledAttributeChanged435:((attribute:THREE.BufferAttribute,start:number,count:number)=>void)|undefined;
+  private readonly targetTint=new ResourceTargetTint((attribute,start,count)=>this.compiledAttributeChanged435?.(attribute,start,count));
   private readonly rangeBounds=new WeakMap<THREE.BufferGeometry,ResourceRangeBounds>();
   private targetPreviewIds=new Set<number>();
   private readonly chunks=new Map<string,{signature:string;group:THREE.Group;identities:Map<number,string>;originalSizes:Map<number,number>;currentSizes:Map<number,number>;treeIds:number[]}>();
@@ -281,6 +284,7 @@ export class ResourceLayer {
       if(!position.updateRanges.includes(upload))position.updateRanges.push(upload);
       if(!normal.updateRanges.includes(upload))normal.updateRanges.push(upload);
       position.needsUpdate=true;normal.needsUpdate=true;
+      this.compiledAttributeChanged435?.(position,upload.start,upload.count);this.compiledAttributeChanged435?.(normal,upload.start,upload.count);
     }
     hit.angle=angle;
   }
@@ -429,6 +433,10 @@ export class ResourceLayer {
       for(const object of group.children){
         const mesh=object as THREE.Mesh,source=mesh.userData.resourceRanges as ResourceRangeData|undefined;
         if(!source)continue;
+        const [chunkX,chunkZ]=key.split(':').map(Number);
+        const east=chunkX!*WORLD_SCALE.resourceChunkSize+WORLD_SCALE.resourceChunkSize*.5>=world.width*.5,south=chunkZ!*WORLD_SCALE.resourceChunkSize+WORLD_SCALE.resourceChunkSize*.5>=world.height*.5;
+        const quadrant=south?(east?3:2):(east?1:0);
+        setStaticSceneSource435(mesh,`resource:${key}:${mesh===canopy?'canopy':'body'}`,quadrant);
         const retained=ResourceRangeBounds.capture((mesh.geometry.getAttribute('position') as THREE.BufferAttribute).array,source.ranges);
         if(retained)this.rangeBounds.set(mesh.geometry,retained);
         const ranges=source.ranges.filter(range=>treeSet.has(rangeResourceId(range.id)));
