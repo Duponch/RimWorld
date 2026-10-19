@@ -22,9 +22,9 @@ const ICON_INDEX: Readonly<Record<DesignationIconKind, number>> = { mine: 0, cho
 const EXTRA_ICON_KINDS = ['haul-chunks', 'deconstruct', 'uninstall', 'remove-floor', 'build-roof', 'remove-roof'] as const;
 type MarkerKind = DesignationIconKind | typeof EXTRA_ICON_KINDS[number];
 type MarkerTarget = { kind: MarkerKind; x: number; z: number };
-// JobLayer uses this predicate to choose between
-// plant/mining/tree sprites and its existing construction/removal geometry.
-const isMarkerKind = (kind: string): kind is MarkerKind => isIconDesignationKind(kind)
+// Includes removal/roof pictograms without changing the historical predicate
+// that selects plant/mining/tree geometry.
+export const hasDesignationPictogram = (kind: string): kind is MarkerKind => isIconDesignationKind(kind)
   || (EXTRA_ICON_KINDS as readonly string[]).includes(kind);
 function iconIndex(kind: MarkerKind): number {
   if (isIconDesignationKind(kind)) return ICON_INDEX[kind];
@@ -72,7 +72,7 @@ function committedTargets(world: World,intents?:ConfirmedIntentFields): MarkerTa
   const targets: MarkerTarget[] = [];
   const roofCells = new Set<string>();
   for (const job of intents?.jobs??world.jobs) {
-    if (!isMarkerKind(job.kind)) continue;
+    if (!hasDesignationPictogram(job.kind)) continue;
     targets.push({ kind: job.kind, x: job.x, z: job.z });
     if (job.kind === 'build-roof' || job.kind === 'remove-roof') roofCells.add(`${job.kind}:${job.z * world.width + job.x}`);
   }
@@ -109,7 +109,7 @@ export function designationIconInstances(world: World): DesignationIconInstance[
  * This presentation helper does not repeat or replace simulation eligibility.
  * Bounds and duplicates are rejected before converting linear cell indices. */
 function previewTargets(world: World, action: AreaAction, cells: readonly number[], committed?: readonly MarkerTarget[]): MarkerTarget[] {
-  if (!isMarkerKind(action)) return [];
+  if (!hasDesignationPictogram(action)) return [];
   // Roof and ground intentions may coexist. Deduplicate only the same action;
   // legacy plant/mining targets still exclude each other's occupied cells.
   const occupied = new Set((committed ?? committedTargets(world)).filter(target => target.kind === action

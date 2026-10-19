@@ -9,7 +9,7 @@ import type { World, Job } from '../sim/types';
 import { footprintCells } from '../sim/definitions';
 import { jobDuration } from '../sim/farming';
 import { WORLD_SCALE } from '../world/scale';
-import { isIconDesignationKind } from './DesignationIconLayer';
+import { hasDesignationPictogram, isIconDesignationKind } from './DesignationIconLayer';
 
 interface JobMarkerParts {orders:Placement[];blueprints:Placement[];intentSolids:Placement[];frames:Placement[];progress:Placement[]}
 /** Physical World is absent for intent-only production. No work clock or
@@ -22,7 +22,9 @@ function readJobMarkerParts(jobs:readonly Job[],cutaway:boolean,physical?:World,
       if(job.kind==='fix-breakdown')continue;
       const cells = footprintCells(job);
       if(!physical&&visibility&&!cells.every(cell=>knownCell256(visibility,cell.z*visibility.width+cell.x)))continue;
-      if(!isIconDesignationKind(job.kind))for (const cell of cells) orders.push({ targetId:job.id, x: cell.x, y: 0.032, z: cell.z, color: physical&&job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
+      // Automatic sowing is not a player designation. Explicit order icons
+      // already identify their targets; neither needs a selection-like floor.
+      if(job.kind!=='sow'&&!hasDesignationPictogram(job.kind))for (const cell of cells) orders.push({ targetId:job.id, x: cell.x, y: 0.032, z: cell.z, color: physical&&job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
       if(job.kind==='repair'||job.kind==='flick')continue;
       if(job.kind==='build-bridge'||job.kind==='remove-bridge'){
         blueprints.push({targetId:job.id,x:job.x,z:job.z,y:.075,sx:.94,sy:.04,sz:.94});
