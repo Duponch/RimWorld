@@ -2,8 +2,9 @@
 
 Cette note rassemble le chantier engagé après V434. La composition22+bulk est
 intégrée après comparaison complète des trois références en ×1 et contrôle
-complémentaire×3/×6. Les tests ciblés et la présentation sont acquis ; build et
-livraison restent en cours. Les autres variantes décrites plus bas restent des expériences privées.
+complémentaire×3/×6. Les tests ciblés, la présentation et le build sont acquis ;
+produit15adc35b publié sur Cloudflare, déploiementc0e48e2f. Les autres variantes
+décrites plus bas restent des expériences privées.
 La cible reste200images/s stables sur Les Forges, rotation comprise ; elle n'est
 pas atteinte. Le schéma263, la simulation, ses règles et ses sauvegardes restent
 inchangés.
@@ -99,7 +100,7 @@ exact, 80 colons/241 animaux, caméra inclinée V432 et vrai glisser droit
 erratique, 300 pas par cycle nominal3,3s pendant au moins10s. Réglages équilibrés,
 textures/herbe/pièce/diorama/occlusion actifs ; audio coupé. ROOT seul exécute
 les contrôles lourds, successivement. Les autres agents préparent des copies
-privées ; les sources servies restent V434/HEAD79df0af6.
+privées ; les comparaisons privées ci-dessous partent de V434/HEAD79df0af6.
 
 Le profil GPU instrumenté `tmp/performance-v435/render-profile/run02` est acquis
 avec 216 images entièrement couvertes : moyenne6,0746ms, médiane4,7048,
@@ -647,4 +648,25 @@ acquis ci-dessus ; aucun résultat de suite complète n'est revendiqué.
 
 Les seuls outputs fermés de cette qualification ont été compressés par NTFS,
 avec leurs chemins et contenus conservés ; aucun vidage de `tmp` ni remplacement
-d'une partie jouée. Build Pages, publication et réponses HTTPS restent à consigner.
+d'une partie jouée.
+
+## Publication
+
+Produit `15adc35bc002e16a98b2b4c8e92e190429cb864b` commité et poussé sur
+`origin/main`. Build Pages de ce HEAD PASS19,120s ; inspection du paquet
+`tmp/elsewhere-pages/v435-package-oW1tdN/` acquise :542fichiers,71chemins publics
+de catalogue/sauvegardes exacts et68fiches, raccords QA privés absents.
+Wrangler4.149.0 épinglé, flux [Direct Upload](https://developers.cloudflare.com/pages/get-started/direct-upload/).
+
+Déploiement PASS15,256s : [adresse immuable c0e48e2f](https://c0e48e2f.elsewhere-cq7.pages.dev)
+et [site public](https://elsewhere-cq7.pages.dev). Contrôle HTTPS PASS14,375s,
+`tmp/elsewhere-pages/v435-http-oK52zB/report.json` :140réponses exactes et MIME
+attendus, paquet/public/HEAD inchangés. Ces réponses prouvent la disponibilité
+des octets, pas les FPS en production ni un nouveau parcours distant. Le dossier
+utilisateur `references_UI/` reste hors commit ; aucune sauvegarde jouée ni
+archive publique n'est remplacée.
+
+Le lot apporte un gain global utile au ×1 mesuré, surtout en rotation, avec les
+réserves de pause, maxima et×3 exposées plus haut. La cible200FPS stable reste
+ouverte : borner les longues applications graphiques et réduire le travail
+commun des programmes de rendu restent les prochaines priorités mesurées.
