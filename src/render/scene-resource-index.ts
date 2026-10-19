@@ -1,5 +1,6 @@
 import type {Resource,World} from '../sim/types';
 import {readSnapshotChanges,readSnapshotResourceStructure,sameSnapshotChangeDomain,type SnapshotResourceStructure} from '../bridge/snapshot-changes';
+import {readResidentResourceBaseChanges} from '../bridge/resident-resource-base-changes';
 import {WORLD_SCALE} from '../world/scale';
 import {isClusterPlantSpecies,isResidentCrop} from './flora-presentation';
 import type {NaturalPresentationChange} from './NaturalResourcePresentation';
@@ -47,7 +48,7 @@ type StructuralPlan={removed:readonly Capture[];survivors:Capture[]|undefined;re
   updates:readonly (readonly [number,Capture,Capture])[];added:readonly Capture[]};
 /** Compose only certified metadata. Intermediate Worlds are never presented,
  * and their edge-local ordinals never index the final target. */
-function structuralPlan(world:World,captures:readonly Capture[],byId:ReadonlyMap<number,number>,proof:SnapshotResourceStructure,
+function structuralPlan(world:World,captures:readonly Capture[],byId:ReadonlyMap<number,number>,proof:Pick<SnapshotResourceStructure,'edges'>,
   validResource:(resource:Resource)=>boolean):StructuralPlan|undefined {
   const removed=new Set<number>(),added=new Map<number,true>(),updated=new Set<number>();
   let count=captures.length;
@@ -120,18 +121,22 @@ export class SceneResourceIndex {
     const from=this.#world,generation=++this.#generation;
     const sameMap=!!from&&!!this.#map&&this.#map.seed===world.seed&&this.#map.width===world.width&&this.#map.height===world.height
       &&from.seed===this.#map.seed&&from.width===this.#map.width&&from.height===this.#map.height;
+    const validResource=(r:Resource)=>Number.isSafeInteger(r.id)&&r.id>0&&Number.isSafeInteger(r.x)&&Number.isSafeInteger(r.z)
+      &&r.x>=0&&r.z>=0&&r.x<world.width&&r.z<world.height;
+    // Try the closed resident BASE suffix before gathering the full public
+    // resource journal: dense growth-only edits cannot change this index.
     // Same-object reuse is a fresh decision, never a self-witness shortcut.
-    const journal=!reset&&from&&from!==world&&sameMap
+    const base=!reset&&from&&from!==world&&sameMap?readResidentResourceBaseChanges(from,world):undefined;
+    const basePlan=base?structuralPlan(world,this.#captures,this.#byId,base,validResource):undefined;
+    const journal=!basePlan&&!reset&&from&&from!==world&&sameMap
       ?readSnapshotChanges(from,world):undefined;
     let sparse=!!journal&&this.#captures.length===world.resources.length;
     if(sparse)for(const source of journal!.resourceIndices){
       const old=this.#captures[source],next=world.resources[source];
       if(!old||!next||old.id!==next.id||(old.key!==undefined)!==(!isResidentCrop(next)&&!isClusterPlantSpecies(next.species))){sparse=false;break;}
     }
-    const validResource=(r:Resource)=>Number.isSafeInteger(r.id)&&r.id>0&&Number.isSafeInteger(r.x)&&Number.isSafeInteger(r.z)
-      &&r.x>=0&&r.z>=0&&r.x<world.width&&r.z<world.height;
-    const structure=!sparse&&!reset&&from&&from!==world&&sameMap?readSnapshotResourceStructure(from,world):undefined;
-    const structural=structure?structuralPlan(world,this.#captures,this.#byId,structure,validResource):undefined;
+    const structure=!basePlan&&!sparse&&!reset&&from&&from!==world&&sameMap?readSnapshotResourceStructure(from,world):undefined;
+    const structural=basePlan??(structure?structuralPlan(world,this.#captures,this.#byId,structure,validResource):undefined);
     // This full diff owns both complete primitive sets; it does not manufacture
     // a sparse journal. Self reads and the common active domain gate restrict
     // which consumer may use the balance; neither replaces exhaustive reads.

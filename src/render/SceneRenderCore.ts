@@ -28,6 +28,7 @@ import { MechanoidLayer } from './MechanoidLayer';
 import { RopeLayer } from './RopeLayer';
 import { NaturalResourcePresentation } from './NaturalResourcePresentation';
 import {PreparedNaturalPresentation} from './PreparedNaturalPresentation';
+import {withPreparedSceneMatrices} from './scene-matrix-pass';
 import {readPreparedNaturalFrame} from '../bridge/prepared-natural-frame';
 import { SceneResourceIndex, readSceneResourceFrame, type SceneResourceFrame } from './scene-resource-index';
 import { ProjectileLayer } from './ProjectileLayer';
@@ -1477,6 +1478,7 @@ export class SceneRenderCore {
   }
 
   protected renderScene(): void {
+    withPreparedSceneMatrices(this.scene,()=>{
     const room = this.room;
     if (!room) { this.renderer.render(this.scene, this.camera); return; }
     room.renderBackground(this.renderer, this.camera, this.controls.target, false);
@@ -1489,6 +1491,7 @@ export class SceneRenderCore {
       this.renderer.autoClear = autoClear;
       this.renderer.setRenderTarget(target);
     }
+    });
   }
 
   protected moveCamera(dt: number): void {

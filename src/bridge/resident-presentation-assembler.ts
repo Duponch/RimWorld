@@ -15,6 +15,7 @@ import {captureFactionInitializations256,sameFactionInitializations256} from '..
 import {groupWorld} from '../sim/world-map-authority';
 import {SnapshotChangeJournal,StructureChangeJournal,ResourceStructureJournal,
  type ResourceStructureCandidate,type SnapshotMessage,type SnapshotAdoption} from './snapshots';
+import {ResidentResourceBaseJournal} from './resident-resource-base-journal';
 
 const own=(value:object,key:PropertyKey):boolean=>Object.hasOwn(value,key);
 function record(value:unknown):value is Record<string,unknown> {
@@ -46,7 +47,7 @@ function projectionReferences(value:unknown,local:boolean):boolean {
  return value.selectedGroupId===null||integer(value.selectedGroupId,1)&&groups.has(value.selectedGroupId);
 }
 type Patch<T>={removed:number[];upserted:T[];order?:number[];growth?:Float64Array};
-type Prepared<T>={values:T[];slots:Map<number,number>;indices:number[]|undefined;edge:ResourceStructureCandidate|undefined};
+type Prepared<T>={values:T[];slots:Map<number,number>;indices:number[]|undefined;edge:ResourceStructureCandidate|undefined;baseEdge:ResourceStructureCandidate|undefined};
 
 /** No private index points at a mutable producer object. Membership/order
  * changes rebuild only that collection; sparse edits keep its stable slots. */
@@ -92,7 +93,11 @@ function patchCollection<T extends {id:number}>(previous:T[],oldSlots:Map<number
  const edge:ResourceStructureCandidate|undefined=own(raw,'order')?undefined:{beforeCount:previous.length,afterCount:values.length,removed,
   added:[...writes.keys()].filter(id=>!oldSlots.has(id)).map(id=>({id,afterOrdinal:nextSlots.get(id)!})),
   updated:[...writes.keys()].filter(id=>oldSlots.has(id)).map(id=>({id,afterOrdinal:nextSlots.get(id)!}))};
- return {values,slots:nextSlots,indices,edge};
+ // Keep all actual upserts as a conservative BASE superset. Growth tuples
+ // already replace exact values above, but never change IDs/classification or
+ // position and therefore do not invalidate structural consumer memberships.
+ const baseEdge=edge?{...edge,updated:patch.upserted.filter(value=>oldSlots.has(value.id)).map(value=>({id:value.id,afterOrdinal:nextSlots.get(value.id)!}))}:undefined;
+ return {values,slots:nextSlots,indices,edge,baseEdge};
 }
 
 function tileChanges(previous:Tile[],raw:unknown):{tiles:Tile[];indices:number[]}|undefined {
@@ -152,6 +157,7 @@ export class ResidentPresentationAssembler {
  private readonly changes=new SnapshotChangeJournal();
  private readonly structures=new StructureChangeJournal();
  private readonly resourceStructure=new ResourceStructureJournal();
+ private readonly resourceBase=new ResidentResourceBaseJournal();
  prepareDraftPreview(packet:unknown){return this.geography.prepareDraftPreview(packet);}
  authorizeDraftPreview(preview:import('../sim/world-geography-owner-256').DraftGeographyPreview256):void {this.geography.authorizeDraftPreview(preview);}
  discardDraftPreview():void {this.geography.discardDraftPreview();}
@@ -213,17 +219,18 @@ export class ResidentPresentationAssembler {
   if(!river.ok)return fail('Invalid resident river reference');if(river.inherited)dynamic={...dynamic,riverWater:river.owner!};
   let next:World,resourceSlots:Map<number,number>,pileSlots:Map<number,number>,structureSlots:Map<number,number>;
   let resourceIndices:number[]|undefined=[],structureIndices:number[]|undefined=[],tileIndices:number[]=[];
-  let edge:ResourceStructureCandidate|undefined;
+  let edge:ResourceStructureCandidate|undefined,baseEdge:ResourceStructureCandidate|undefined;
   if(checkpoint){
    next={...dynamic} as World;resourceSlots=slots(next.resources);pileSlots=slots(next.piles);structureSlots=slots(next.structures);
   }else{
    let tiles=previous!.tiles,resources=previous!.resources,piles=previous!.piles,structures=dynamic.structures;
    resourceSlots=this.resourceSlots;pileSlots=this.pileSlots;structureSlots=this.structureSlots;
    edge={beforeCount:resources.length,afterCount:resources.length,removed:[],added:[],updated:[]};
+   baseEdge=edge;
    if(own(packet,'tiles')){const prepared=tileChanges(tiles,packet.tiles);if(!prepared)return fail('Invalid resident tile indices');tiles=prepared.tiles;tileIndices=prepared.indices;}
    if(own(packet,'resources')){
     const prepared=patchCollection(resources,this.resourceSlots,packet.resources,dynamic.nextId,dynamic.tick);if(!prepared)return fail('Invalid resident resource references');
-    resources=prepared.values;resourceSlots=prepared.slots;resourceIndices=prepared.indices;edge=prepared.edge;
+    resources=prepared.values;resourceSlots=prepared.slots;resourceIndices=prepared.indices;edge=prepared.edge;baseEdge=prepared.baseEdge;
    }
    if(own(packet,'piles')){
     const prepared=patchCollection(piles,this.pileSlots,packet.piles,dynamic.nextId);if(!prepared)return fail('Invalid resident pile references');
@@ -246,11 +253,12 @@ export class ResidentPresentationAssembler {
   const replaced=packet.epoch!==this.epoch;
   this.commitChronology(facts,packet.epoch,packet.revision);
   this.current=next;this.resourceSlots=resourceSlots;this.pileSlots=pileSlots;this.structureSlots=structureSlots;
-  // Publish the existing WeakMap journals only at the successful commit. The
-  // renderer keeps its existing bounded history, conservative overflow/fallback,
-  // generation and ordinal interpretation; there is no second journal format.
+  // Publish only after the complete adoption commits. BASE has its own WeakMap
+  // capability; it must never overwrite the full public resource witness.
   if(checkpoint||!previous){this.changes.reset(next,packet.epoch,packet.revision);this.structures.reset(next,packet.epoch,packet.revision);this.resourceStructure.reset(next,packet.epoch,packet.revision,next.resources.length);}
   else {this.changes.append(previous,next,packet.epoch,packet.revision,resourceIndices,tileIndices);this.structures.append(previous,next,packet.epoch,packet.revision,structureIndices,tileIndices);this.resourceStructure.append(previous,next,packet.epoch,packet.revision,edge,tileIndices,next.resources.length);}
+  if(checkpoint||!previous)this.resourceBase.reset(next,packet.epoch,packet.revision,next.resources.length);
+  else this.resourceBase.append(previous,next,packet.epoch,packet.revision,baseEdge,next.resources.length);
   return {status:'applied',world:next,replaced};
  }
 }

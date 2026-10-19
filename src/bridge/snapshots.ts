@@ -205,7 +205,17 @@ interface SnapshotChangeRecord {
 const snapshotChangeStamps = new WeakMap<World, SnapshotChangeStamp>();
 const emptyChangeIndices: readonly number[] = Object.freeze([]);
 const emptySnapshotChanges: SnapshotChanges = Object.freeze({ resourceIndices: emptyChangeIndices, tileIndices: emptyChangeIndices });
-const orderedChangeCopy = (indices: readonly number[]): readonly number[] => Object.freeze([...new Set(indices)].sort((a, b) => a - b));
+const orderedChangeCopy = (indices: readonly number[]): readonly number[] => {
+  const values=[...indices];
+  // Numeric producers already emit ascending unique ordinals in the common
+  // case. Keep the historical normalization for every atypical input.
+  for(let i=0;i<values.length;i++)if(!Number.isSafeInteger(values[i])||values[i]!<0||i>0&&values[i-1]!>=values[i]!)
+    return Object.freeze([...new Set(values)].sort((a,b)=>a-b));
+  return Object.freeze(values);
+};
+interface SnapshotReadCache<T> {
+  readonly generation:number;readonly epoch:number;readonly fromRevision:number;readonly toRevision:number;readonly result:T;
+}
 
 /** Decoder-private publication capability. Records never retain a World,
  * packet, resource or parent object; accepted Worlds are weak keys. */
@@ -215,14 +225,25 @@ export class SnapshotChangeJournal {
   private epoch = 0;
   private revision = 0;
   private readonly records = new Map<number, SnapshotChangeRecord>();
+  private lastRead:SnapshotReadCache<SnapshotChanges|undefined>|undefined;
+  private lastTileRead:SnapshotReadCache<readonly number[]|undefined>|undefined;
+
+  private remember<T>(from:SnapshotChangeStamp,to:SnapshotChangeStamp,result:T):SnapshotReadCache<T> {
+    return {generation:this.generation,epoch:this.epoch,fromRevision:from.revision,toRevision:to.revision,result};
+  }
+  private matches<T>(cache:SnapshotReadCache<T>|undefined,from:SnapshotChangeStamp,to:SnapshotChangeStamp):cache is SnapshotReadCache<T> {
+    return !!cache&&cache.generation===this.generation&&cache.epoch===this.epoch&&cache.fromRevision===from.revision&&cache.toRevision===to.revision;
+  }
 
   reset(world: World, epoch: number, revision: number): void {
+    this.lastRead=undefined;this.lastTileRead=undefined;
     this.records.clear(); this.generation++; this.epoch = epoch; this.revision = revision;
     snapshotChangeStamps.set(world, { journal: this, generation: this.generation, epoch, revision });
   }
 
   append(parent: World, world: World, epoch: number, revision: number,
     resourceIndices: readonly number[] | undefined, tileIndices: readonly number[]): void {
+    this.lastRead=undefined;this.lastTileRead=undefined;
     const previous = snapshotChangeStamps.get(parent);
     if (!previous || previous.journal !== this || previous.generation !== this.generation
       || previous.epoch !== epoch || epoch !== this.epoch || previous.revision !== this.revision
@@ -242,18 +263,44 @@ export class SnapshotChangeJournal {
     if (from.generation !== this.generation || to.generation !== this.generation
       || from.epoch !== this.epoch || to.epoch !== this.epoch || from.revision > to.revision) return undefined;
     if (from.revision === to.revision) return emptySnapshotChanges;
+    if(this.matches(this.lastRead,from,to))return this.lastRead.result;
+    const finish=(result:SnapshotChanges|undefined):SnapshotChanges|undefined=>{
+      this.lastRead=this.remember(from,to,result);return result;
+    };
     const resources = new Set<number>(), tiles = new Set<number>();
     let revision = to.revision;
     while (revision > from.revision) {
       const record = this.records.get(revision);
       if (!record || record.resourceIndices === undefined || record.parentRevision < from.revision
-        || record.parentRevision >= revision) return undefined;
+        || record.parentRevision >= revision) return finish(undefined);
       for (const index of record.resourceIndices) resources.add(index);
       for (const index of record.tileIndices) tiles.add(index);
       revision = record.parentRevision;
     }
-    if (revision !== from.revision) return undefined;
-    return Object.freeze({ resourceIndices: orderedChangeCopy([...resources]), tileIndices: orderedChangeCopy([...tiles]) });
+    if (revision !== from.revision) return finish(undefined);
+    // Both collections are already unique Sets; do not deduplicate them again.
+    return finish(Object.freeze({ resourceIndices: Object.freeze([...resources].sort((a,b)=>a-b)), tileIndices: Object.freeze([...tiles].sort((a,b)=>a-b)) }));
+  }
+
+  /** The same accepted chronology, independent of resource membership/order.
+   * A terrain consumer never needs to enumerate or allocate resource ordinals. */
+  readTiles(from:SnapshotChangeStamp,to:SnapshotChangeStamp):readonly number[]|undefined {
+    if(from.generation!==this.generation||to.generation!==this.generation
+      ||from.epoch!==this.epoch||to.epoch!==this.epoch||from.revision>to.revision)return;
+    if(from.revision===to.revision)return emptyChangeIndices;
+    if(this.matches(this.lastTileRead,from,to))return this.lastTileRead.result;
+    const finish=(result:readonly number[]|undefined):readonly number[]|undefined=>{
+      this.lastTileRead=this.remember(from,to,result);return result;
+    };
+    const tiles=new Set<number>();let revision=to.revision;
+    while(revision>from.revision){
+      const record=this.records.get(revision);
+      if(!record||record.parentRevision<from.revision||record.parentRevision>=revision)return finish(undefined);
+      for(const index of record.tileIndices)tiles.add(index);
+      revision=record.parentRevision;
+    }
+    if(revision!==from.revision)return finish(undefined);
+    return finish(Object.freeze([...tiles].sort((a,b)=>a-b)));
   }
 }
 
@@ -263,6 +310,14 @@ export function readSnapshotChanges(from: World, to: World): SnapshotChanges | u
   const before = snapshotChangeStamps.get(from), after = snapshotChangeStamps.get(to);
   if (!before || !after || before.journal !== after.journal) return undefined;
   return before.journal.read(before, after);
+}
+
+/** Accepted tile ordinals only. Resource birth/removal/reorder is not a terrain
+ * gap; checkpoints, unknown copies, stale generations and eviction still are. */
+export function readSnapshotTileChanges(from:World,to:World):readonly number[]|undefined {
+  const before=snapshotChangeStamps.get(from),after=snapshotChangeStamps.get(to);
+  if(!before||!after||before.journal!==after.journal)return;
+  return before.journal.readTiles(before,after);
 }
 
 /** Domain gate only. It proves neither resource membership nor a sparse suffix;

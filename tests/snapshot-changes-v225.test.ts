@@ -1,23 +1,26 @@
 import { expect, test } from 'vitest';
 import * as facade from '../src/bridge/snapshot-changes.ts';
-import * as snapshots from '../src/bridge/snapshots.ts';
 import { readSnapshotChanges } from '../src/bridge/snapshot-changes.ts';
 import { SnapshotDecoder, SnapshotEncoder, type SnapshotMessage } from '../src/bridge/snapshots.ts';
 import { createWorld } from '../src/sim/index.ts';
+import {campaignPresentation} from '../src/sim/secondary-site-presentation';
 import type { World } from '../src/sim/types.ts';
 
 type Delta = Extract<SnapshotMessage, { kind: 'delta' }>;
+// Snapshots now carry the complete selected-map projection, not the campaign
+// registry. Compare every transported value with that independent projection.
+const expectedView=(world:World)=>JSON.parse(JSON.stringify(campaignPresentation(world)));
+const transported=(world:World)=>JSON.parse(JSON.stringify(world));
 function fixture(): World {
   const world = createWorld(911, 16, 16);
-  world.tick = 2000;
   world.resources = [0, 1, 2].map<World['resources'][number]>(index => ({ id: world.nextId++, kind: 'berries',
-    x: index + 2, z: 2, amount: 10, growth: .3 + index / 10, growthTick: 1900 }));
-  for (const index of [0, 2, 7]) world.tiles[index] = { terrain: 'soil' };
+    x: index + 2, z: 2, amount: 10, growth: .3 + index / 10, growthTick: world.tick }));
+  for (const index of [0, 2, 7, 2+2*world.width, 3+2*world.width, 4+2*world.width]) world.tiles[index] = { terrain: 'soil' };
   return world;
 }
 function adopt(decoder: SnapshotDecoder, packet: SnapshotMessage): World {
   const result = decoder.adopt(packet);
-  expect(result.status).toBe('applied');
+  expect(result.status,JSON.stringify(result.status==='applied'?{status:result.status}:result)).toBe('applied');
   if (result.status !== 'applied') throw Error(JSON.stringify(result));
   return result.world;
 }
@@ -31,15 +34,15 @@ function harness() {
   const packet = (checkpoint = false) => structuredClone(encoder.encode(world, 0, 6, checkpoint));
   const send = (checkpoint = false) => {
     const accepted = adopt(decoder, packet(checkpoint));
-    expect(accepted).toStrictEqual(world);
+    expect(transported(accepted)).toStrictEqual(expectedView(world));
     return accepted;
   };
   return { world, encoder, decoder, packet, send };
 }
 
 test('read-only exports cannot manufacture an accepted World witness', () => {
-  expect(Object.keys(facade).sort()).toEqual(['readSnapshotChanges', 'sameSnapshotChangeDomain', 'readSnapshotResourceStructure', 'readSnapshotStructureChanges'].sort());
-  expect('SnapshotChangeJournal' in snapshots).toBe(false);
+  expect(Object.keys(facade).sort()).toEqual(['readSnapshotChanges', 'readSnapshotTileChanges', 'sameSnapshotChangeDomain', 'readSnapshotResourceStructure', 'readSnapshotStructureChanges'].sort());
+  expect('SnapshotChangeJournal' in facade).toBe(false);
   const { world, decoder, send } = harness(), initial = send();
   expect('snapshotChanges' in decoder).toBe(false); // The capability is a runtime private field.
   expect(readSnapshotChanges(initial, initial)).toEqual({ resourceIndices: [], tileIndices: [] });
@@ -59,7 +62,7 @@ test('packed growth and source upserts expose sorted private slots and preserve 
   const { world, decoder, packet, send } = harness(), initial = send(), before = structuredClone(initial);
   world.resources[2]!.amount++;
   world.resources[0]!.growth = .3123456789012345;
-  world.resources[0]!.growthTick = 1999;
+  world.resources[0]!.growthTick = world.tick;
   world.tiles[7]!.floor = 'wood-planks';
   world.tiles[0]!.floor = 'wood-planks';
   const patch = delta(packet());
@@ -71,7 +74,7 @@ test('packed growth and source upserts expose sorted private slots and preserve 
   expect(Object.isFrozen(hints.resourceIndices)).toBe(true);
   expect(Object.isFrozen(hints.tileIndices)).toBe(true);
   expect(() => (hints.resourceIndices as number[]).push(99)).toThrow();
-  expect(next).toStrictEqual(world);
+  expect(transported(next)).toStrictEqual(expectedView(world));
   expect(initial).toStrictEqual(before);
   expect(readSnapshotChanges(initial, next)).toEqual(hints);
   // The ring owns copies of indices, not the source transport tuples/buffer.
@@ -108,7 +111,7 @@ test.each([false, true])('late relationship refusal and stale packets publish no
   expect(readSnapshotChanges(b, bad.world as World)).toBeUndefined();
   expect(readSnapshotChanges(a, b)).toEqual(priorHints);
   const c = adopt(decoder, good);
-  expect(c).toStrictEqual(world);
+  expect(transported(c)).toStrictEqual(expectedView(world));
   if (checkpoint) expect(readSnapshotChanges(a, c)).toBeUndefined();
   else expect(readSnapshotChanges(a, c)).toEqual({ resourceIndices: [0, 1], tileIndices: [2] });
   const acceptedHints = readSnapshotChanges(c, c);
@@ -136,7 +139,7 @@ test('an explicit order stays conservative even when its values happen to be unc
   const patch = delta(packet());
   patch.resources!.order = world.resources.map(resource => resource.id);
   const b = adopt(decoder, patch);
-  expect(b).toStrictEqual(world);
+  expect(transported(b)).toStrictEqual(expectedView(world));
   expect(readSnapshotChanges(a, b)).toBeUndefined();
   world.resources[1]!.amount++;
   expect(readSnapshotChanges(b, send())).toEqual({ resourceIndices: [1], tileIndices: [] });

@@ -119,12 +119,17 @@ export function installHoverReadoutLayout(shell:HTMLElement,options:HoverLayoutO
     for(const node of inspectorChildren)if(!next.has(node)){resize.unobserve(node);inspectorChildren.delete(node);}
     for(const node of next)if(!inspectorChildren.has(node)){inspectorChildren.add(node);resize.observe(node);}
   };
-  const visibility=new MutationObserver(()=>{watchInspector();schedule();});
-  [inspector,dock,...fixed].forEach(node=>visibility.observe(node,{attributes:true,attributeFilter:['hidden','class','style'],...node===inspector?{childList:true}:{}}));
+  // DOM setters can emit an attribute mutation even when its string value
+  // is unchanged (notably panel.hidden=true on every admitted snapshot).
+  // Keep actual visibility/style/child changes live, including batched flips.
+  const mutationChanges=(records:MutationRecord[])=>records.some(record=>record.type!=='attributes'
+    ||!record.attributeName||record.oldValue!==(record.target as Element).getAttribute(record.attributeName));
+  const visibility=new MutationObserver(records=>{if(!mutationChanges(records))return;watchInspector();schedule();});
+  [inspector,dock,...fixed].forEach(node=>visibility.observe(node,{attributes:true,attributeFilter:['hidden','class','style'],attributeOldValue:true,...node===inspector?{childList:true}:{}}));
   watchInspector();
-  const menuObserver=new MutationObserver(schedule);
+  const menuObserver=new MutationObserver(records=>{if(mutationChanges(records))schedule();});
   const menus=new Set<HTMLElement>();
-  const watchMenus=()=>{document.querySelectorAll<HTMLElement>('.order-menu').forEach(node=>{if(!menus.has(node)){menus.add(node);resize.observe(node);menuObserver.observe(node,{attributes:true,attributeFilter:['hidden','style','class']});}});};
+  const watchMenus=()=>{document.querySelectorAll<HTMLElement>('.order-menu').forEach(node=>{if(!menus.has(node)){menus.add(node);resize.observe(node);menuObserver.observe(node,{attributes:true,attributeFilter:['hidden','style','class'],attributeOldValue:true});}});};
   // OrderMenu's root is resident, created before this installer.
   watchMenus();
   shell.addEventListener('pointerout',event=>{
