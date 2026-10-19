@@ -125,3 +125,18 @@ lot de rendu/lectures UI, qui ne modifie pas ces contrats.
 
 Typage final et build Pages acquis ensemble en31,580s. Aucun fichier de
 sauvegarde publique ou personnelle modifié par ce lot.
+
+## Publication
+
+Produit `5115a6f166914715a77ac631b9d93d9cfdc088fc` commité et poussé sur
+`origin/main`. Paquet acquis en4,187s :68fiches et71chemins de sauvegardes
+publiques conservés octet pour octet, sondes privées V438 absentes ; rapport
+`tmp/elsewhere-pages/v438-package-I5DOTx/`. Documentation acquise en3,604s.
+`references_UI/` reste hors commit et hors paquet.
+
+Publication Cloudflare acquise en17,264s :
+[déploiement 0dee97af](https://0dee97af.elsewhere-cq7.pages.dev) et
+[site public](https://elsewhere-cq7.pages.dev). Contrôle distant140réponses
+HTTPS200/MIME/octets exacts en16,026s,
+`tmp/elsewhere-pages/v438-http-XqjttA/`. Ce contrôle de disponibilité ne remplace
+pas les observations natives précédentes et n’ajoute aucun gain FPS revendiqué.
