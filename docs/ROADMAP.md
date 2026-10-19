@@ -1,6 +1,6 @@
 # Plan de développement
 
-**V436 — sols inconnus et capsules, schéma263 inchangé :** [Correctifs visuels](development/ground-arrival-visuals-v436.md). Pigment de sol intégré, faces de murs opaques, terres géographiques couvertes d'herbe et chute/ouverture continues. 51cas ciblés acquis par reprises, 32faces Chrome et recharge entière exacte au40 ; rouges historiques et délais conservés, aucun gain FPS annoncé. Qualifié, publication en cours ; sauvegardes publiques préservées.
+**V436 — sols inconnus et capsules, schéma263 inchangé :** [Correctifs visuels](development/ground-arrival-visuals-v436.md). Pigment de sol intégré, faces de murs opaques, terres géographiques couvertes d'herbe et chute/ouverture continues. 51cas ciblés acquis par reprises, 32faces Chrome et recharge entière exacte au40 ; rouges historiques et délais conservés, aucun gain FPS annoncé. Publié05de1776/déploiementc113c1a0,140réponses HTTPS exactes ; sauvegardes publiques préservées.
 
 **V423 — schéma 263 inchangé :** [Adoption des snapshots](development/snapshot-adoption-v423.md). Contrôles ciblés et présentation acquis par reprises, lecteurs publics et sauvegardes stricts. Chrome ×1 : coût moyen du Decoder −20,11% sur Les Aulnes, −24,13% sur le départ trois colons ; cadence d’image meilleure sur Aulnes, moins bonne sur le départ neuf dans ce relevé. Huit recharges complètes exactes ; confort global non rétabli. Publié c5bd4f97/déploiement84b9d5b0,136HTTPS exacts ; nettoyage du stockage demandé sans perdre les historiques.
 

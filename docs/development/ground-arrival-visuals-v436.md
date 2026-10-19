@@ -98,3 +98,20 @@ Revue indépendante statique des sols/murs et des capsules sans défaut bloquant
 après correction des champs privés d’éclairage et des corniches. Aucun banc
 FPS non affecté ni campagne longue rejoué pour ce lot. Les objectifs de confort
 et de performances de V435 restent ouverts.
+
+## Publication
+
+Produit `05de177655f00380a6bade0b463d8da4fd9e3e43` commité et poussé sur
+`origin/main`. Typage final acquis séparément ; build Pages de ce HEAD
+PASS7,599s, paquet PASS7,157s :542fichiers/151647161octets,68fiches et71chemins
+publics exacts, sondes privées absentes. Rapport
+`tmp/elsewhere-pages/v436-package-8i1TCK/`.
+
+Publication Wrangler4.149.0 [Direct Upload](https://developers.cloudflare.com/pages/get-started/direct-upload/)
+PASS17,850s ; [déploiement c113c1a0](https://c113c1a0.elsewhere-cq7.pages.dev)
+et [site public](https://elsewhere-cq7.pages.dev). Contrôle distant140réponses
+HTTPS200/MIME/octets exacts, rapport `tmp/elsewhere-pages/v436-http-7Zsffz/`.
+Ces contrôles d'octets ne sont pas un nouveau parcours distant ni une mesure
+FPS. Les Aulnes, Les Éclaircies, Les Forges et les archives publiques restent
+inchangées ; `references_UI/` reste hors commit. Aucun serveur ou navigateur
+humain fermé.
