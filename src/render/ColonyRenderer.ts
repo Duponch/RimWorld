@@ -47,7 +47,7 @@ export class ColonyRenderer extends SceneRenderCore {
     renderer:THREE.WebGPURenderer,grassEnabled:boolean,lifetime:RendererLifetime){
     const dom=createDomPort(host,renderer);
     super(renderer,grassEnabled,lifetime,dom.port);
-    dom.bind(this);this.mapLabels=dom.labels();
+    dom.bind(this);this.mapLabels=dom.labels();this.scene.add(this.mapLabels.mesh);
     try {    this.selectionInput=new PawnSelectionInput(this.renderer.domElement,{
       enabled:()=>this.tool==='select'&&!document.querySelector('dialog[open]'),
       pawns:()=>this.screenPawns(),select:gesture=>this.onSelection(gesture),

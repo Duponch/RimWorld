@@ -58,13 +58,14 @@ test('unknown ground quantities and incident targets are absent; genuine own hel
 });
 import {footprintCells as importedFootprint} from '../src/sim/definitions';
 
-test('canvas quantities follow scalar adoption revision even at same tick; ordinary RAF keeps its resident label index',()=>{
- const context={setTransform:vi.fn(),clearRect:vi.fn(),strokeText:vi.fn(),fillText:vi.fn()},canvas={className:'',hidden:false,width:0,height:0,setAttribute:vi.fn(),getContext:()=>context,remove:vi.fn()},host={after:vi.fn()};
+test('GPU quantities follow scalar adoption revision even at same tick; ordinary RAF keeps its resident label index',()=>{
+ const context={setTransform:vi.fn(),clearRect:vi.fn(),strokeText:vi.fn(),fillText:vi.fn(),measureText:(text:string)=>({width:7*text.length})},canvas={width:0,height:0,getContext:()=>context};
  vi.stubGlobal('document',{createElement:()=>canvas});vi.stubGlobal('window',{devicePixelRatio:1});
- const overlay=new MapLabelsOverlay(host as unknown as HTMLElement),camera=new THREE.OrthographicCamera(-6,6,6,-6,.1,100);camera.position.set(4,16,4);camera.lookAt(4,0,4);camera.updateProjectionMatrix();
+ const overlay=new MapLabelsOverlay(),camera=new THREE.OrthographicCamera(-6,6,6,-6,.1,100);camera.position.set(4,16,4);camera.lookAt(4,0,4);camera.updateProjectionMatrix();
  const w=witness();w.piles=[{id:801,kind:'wood',item:'wood',quantity:2,owner:{type:'ground',x:4,z:4}}];
- overlay.draw(w,camera,120,800,600,1);expect(context.fillText).not.toHaveBeenCalled();delete w.tiles[132]!.fogged;
- overlay.draw(w,camera,120,800,600,2);expect(context.fillText).toHaveBeenCalledWith('2',expect.any(Number),expect.any(Number));const paints=context.clearRect.mock.calls.length,index=overlay['chunks'];
+ overlay.draw(w,camera,120,800,600,1);expect(overlay['chunks'].flatMap(c=>c.entries)).toEqual([]);expect(overlay.mesh.geometry.instanceCount).toBe(0);delete w.tiles[132]!.fogged;
+ overlay.draw(w,camera,120,800,600,2);expect(overlay['chunks'].flatMap(c=>c.entries).map(e=>({x:e.x,y:e.y,z:e.z,label:e.label,pileId:e.pileId}))).toEqual([{x:4,y:.32,z:4,label:'2',pileId:801}]);expect(overlay.mesh.geometry.instanceCount).toBe(1);
+ const anchor=overlay.mesh.geometry.getAttribute('labelAnchor');if(!(anchor instanceof THREE.BufferAttribute))throw Error('Expected label anchor');const version=anchor.version,index=overlay['chunks'];
  const next={...w,tick:w.tick+1};Object.defineProperty(next,'tiles',{get(){throw Error('RAF must not scan/re-read fog cells');}});
- overlay.draw(next,camera,120,800,600,2);expect(overlay['chunks']).toBe(index);expect(context.clearRect).toHaveBeenCalledTimes(paints);overlay.dispose();
+ overlay.draw(next,camera,120,800,600,2);expect(overlay['chunks']).toBe(index);expect(overlay.mesh.geometry.getAttribute('labelAnchor')).toBe(anchor);expect(anchor.version).toBe(version);overlay.dispose();
 });

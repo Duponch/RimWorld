@@ -33,14 +33,14 @@ export function captureFoodReadability(world:World,visibility:FoodReadabilityVis
  const people=world.pawns.filter(civil),ids=new Set(people.map(p=>p.id)),ground=bucket(),held=new Map<number,Bucket>();
  let freshNutrition=0,survivalMeals=0,freshPileCount=0;
  for(const pile of world.piles){
-  if(visibility.pileVisible?.(pile)===false||pile.kind!=='food'||pile.item==='hay'||pile.quantity<=0||!ITEM_DEFINITIONS[pile.item].nutrition||ticksUntilRot(pile,world.tick)<=0)continue;
+  if(pile.kind!=='food'||pile.item==='hay'||pile.quantity<=0||!ITEM_DEFINITIONS[pile.item].nutrition||visibility.pileVisible?.(pile)===false||ticksUntilRot(pile,world.tick)<=0)continue;
   const owner=pile.owner;
   if(owner.type!=='ground'&&(owner.type!=='pawn'||!ids.has(owner.pawnId)))continue;
   freshNutrition+=nutritionOf(pile)/100;freshPileCount++;if(pile.item==='survival-meal')survivalMeals+=pile.quantity;
   const target=owner.type==='ground'?ground:held.get(owner.pawnId)??bucket();target.items.add(pile.item as FoodItemId);target.count++;
   if(owner.type==='pawn')held.set(owner.pawnId,target);
  }
- const pasteExists=world.structures.some(s=>visibility.structureVisible?.(s)!==false&&s.kind==='nutrient-paste-dispenser');
+ const pasteExists=world.structures.some(s=>s.kind==='nutrient-paste-dispenser'&&visibility.structureVisible?.(s)!==false);
  const byPawn=new Map<number,FoodPersonReadability>(),blockedPawnIds:number[]=[],evaluatedPawnIds:number[]=[],engagedPawnIds:number[]=[],pasteUncheckedPawnIds:number[]=[],excludedPawnIds:number[]=[];
  for(const pawn of people){
   const own=held.get(pawn.id),count=ground.count+(own?.count??0);let status:FoodReadabilityStatus;

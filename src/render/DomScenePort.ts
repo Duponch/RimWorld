@@ -34,7 +34,7 @@ export function createDomPort(host:HTMLElement,renderer:THREE.WebGPURenderer):{
           maxVertexBuffers:device?.limits.maxVertexBuffers??null}));
       }
       canvas.style.cssText='display:block;width:100%;height:100%;touch-action:none;outline:none';
-      canvas.tabIndex=0;host.appendChild(canvas);labels=new MapLabelsOverlay(host);
+      canvas.tabIndex=0;host.appendChild(canvas);labels=new MapLabelsOverlay();
     },
     createCamera:()=>new CameraRig(canvas),
     viewport:()=>({width:host.clientWidth,height:host.clientHeight}),
@@ -47,6 +47,7 @@ export function createDomPort(host:HTMLElement,renderer:THREE.WebGPURenderer):{
     canMoveCamera:()=>!(host.closest('[inert]')||document.querySelector('dialog[open]')),
     cursor(value){canvas.style.cursor=value;},title(value){canvas.title=value;},
     drawLabels:(world,camera,cellPixels,width,height,explorationRevision)=>labels!.draw(world,camera,cellPixels,width,height,explorationRevision),
+    prepareLabelsForCompile:()=>labels!.prepareForCompile(),
     disconnectResize:()=>owner?.disconnectResize(),removeInputListeners:()=>owner?.removeInputListeners(),
     disposeLabels:()=>labels?.dispose(),removeSurface:()=>canvas.remove(),
     // The exact loaded Texture instance is delivered unchanged to the resident

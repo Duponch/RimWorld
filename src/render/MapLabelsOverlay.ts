@@ -1,14 +1,13 @@
 import {knownPile256,knownPosition256} from '../ui/exploration-readers-256';
 import {explorationEnabled256} from '../sim/exploration-state-256';
-import { Box3, Frustum, Matrix4, PerspectiveCamera, Vector3, type OrthographicCamera } from 'three/webgpu';
-import { cameraClipNear } from './camera-clip';
+import type { OrthographicCamera, PerspectiveCamera } from 'three/webgpu';
 import { QUALITY_LABELS, type WeaponQuality } from '../sim/equipment-rules';
 import { ITEM_DEFINITIONS } from '../sim/items';
 import type { MaterialPile, World } from '../sim/types';
-import { perspectiveDetailRange } from './map-overlay-detail';
+import { MapLabelBatch } from './MapLabelBatch';
 import {DEFAULT_ITEM_LABEL_MIN_CELL_PIXELS,itemLabelMinCellPixels} from '../ui/item-label-visibility';
-import {pileIdentitySurfaces} from './pile-surfaces';
-import {isShelfKind} from '../sim/shelf-storage';
+import {pileIdentitySurfacesFromCells,pileShelfCells,pileSurfaces,type PileShelfCell,type PileSurface} from './pile-surfaces';
+import {packedLabelAnchor,pileLabelAnchor} from './map-label-anchors';
 
 export const PILE_LABEL_MIN_CELL_PIXELS = DEFAULT_ITEM_LABEL_MIN_CELL_PIXELS;
 
@@ -35,7 +34,7 @@ function samePileLabels(a: World['piles'] | undefined, b: World['piles'],shelves
     if(shelves&&(before.id!==after.id||before.owner.type!==after.owner.type||before.owner.type==='ground'&&after.owner.type==='ground'&&(before.owner.x!==after.owner.x||before.owner.z!==after.owner.z)))return false;
     const oldLabel = before.owner.type === 'ground' ? pileCaption(before) : '';
     const newLabel = after.owner.type === 'ground' ? pileCaption(after) : '';
-    if (oldLabel !== newLabel || oldLabel && (before.id!==after.id || before.owner.type !== 'ground' ||
+    if (oldLabel !== newLabel || oldLabel && (before.id!==after.id || before.item!==after.item || before.owner.type !== 'ground' ||
       after.owner.type !== 'ground' || before.owner.x !== after.owner.x || before.owner.z !== after.owner.z)) return false;
   }
   return true;
@@ -52,146 +51,102 @@ function samePackedLabels(a: World['packed'] | undefined, b: World['packed']): b
   for (let i = 0; i < b.length; i++) {
     const before = a[i]!, after = b[i]!;
     const oldLabel = packedCaption(before), newLabel = packedCaption(after);
-    if (oldLabel !== newLabel || oldLabel && (before.owner.type !== 'ground' ||
+    if (oldLabel !== newLabel || oldLabel && (before.building.kind!==after.building.kind || before.owner.type !== 'ground' ||
       after.owner.type !== 'ground' || before.owner.x !== after.owner.x || before.owner.z !== after.owner.z)) return false;
   }
   return true;
 }
 
-/** Close-zoom GUI labels, batched in one 2D canvas. No per-pile DOM or GPU mesh. */
+function sameSurfaces(a:ReadonlyMap<number,PileSurface>,b:ReadonlyMap<number,PileSurface>):boolean {
+  if(a.size!==b.size)return false;
+  for(const [cell,value]of a){const next=b.get(cell);if(!next||value.x!==next.x||value.y!==next.y||value.z!==next.z||value.scale!==next.scale||value.scaleHeight!==next.scaleHeight)return false;}
+  return true;
+}
+function sameShelfCells(a:ReadonlyMap<number,PileShelfCell>,b:ReadonlyMap<number,PileShelfCell>):boolean {
+  if(a.size!==b.size)return false;
+  for(const [cell,value]of a){const next=b.get(cell);if(!next||value.id!==next.id||value.orientation!==next.orientation)return false;}
+  return true;
+}
+
+/** Physical captions indexed at snapshot changes. The resident GPU batch owns
+ * camera projection and depth rejection, with no per-label camera work here. */
 export class MapLabelsOverlay {
-  private readonly canvas: HTMLCanvasElement;
-  private readonly context: CanvasRenderingContext2D;
-  private readonly point = new Vector3();
-  private readonly frustum = new Frustum();
-  private readonly projectionView = new Matrix4();
+  private readonly batch = new MapLabelBatch();
+  readonly mesh = this.batch.mesh;
   private sourcePiles: World['piles'] | undefined;
   private sourcePacked: World['packed'] | undefined;
   private sourceStructures:World['structures']|undefined;
-  private shelfSignature='';
+  private supportCells:ReadonlyMap<number,PileSurface>=new Map();
+  private shelfCells:ReadonlyMap<number,PileShelfCell>=new Map();
   private sourceWorld:World|undefined;
   private explorationRevision:number|undefined;
   private explorationEnabled=false;
   private sourceWidth = -1;
-  private chunks: { bounds: Box3; entries: { x: number; y:number; z: number; label: string;pileId?:number;shelf?:boolean }[] }[] = [];
-  private width = 0;
-  private height = 0;
-  private ratio = 1;
-  private visible = false;
-  private drawn = false;
-  private lastCamera: OrthographicCamera | PerspectiveCamera | null = null;
-  private readonly lastView = new Matrix4();
-  private readonly lastProjection = new Matrix4();
-  private readonly lastPosition = new Vector3();
+  private chunks: { entries: { x: number; y:number; z: number; label: string;pileId?:number;shelf?:boolean;offsetY:number }[] }[] = [];
   private minCellPixels=PILE_LABEL_MIN_CELL_PIXELS;
-  setMinCellPixels(value:number):void {const threshold=itemLabelMinCellPixels(value);if(this.minCellPixels!==threshold){this.minCellPixels=threshold;this.drawn=false;}}
+  setMinCellPixels(value:number):void {this.minCellPixels=itemLabelMinCellPixels(value);}
 
-  constructor(host: HTMLElement) {
-    this.canvas = document.createElement('canvas');
-    this.canvas.className = 'map-labels-overlay';
-    this.canvas.setAttribute('aria-hidden', 'true');
-    this.canvas.hidden = true;
-    this.context = this.canvas.getContext('2d', { alpha: true })!;
-    // Keep the WebGPU canvas as the sole #viewport canvas; the existing input
-    // and accessibility helpers intentionally target that single surface.
-    // Keep the overlay next to the viewport but before the interface panels
-    // in paint order. It must stay outside #viewport: WebGPU is its sole canvas.
-    host.after(this.canvas);
-  }
+  constructor(_host?: HTMLElement) {}
+
+  prepareForCompile():()=>void {return this.batch.prepareForCompile();}
 
   private index(world: World,explorationRevision?:number): boolean {
-    // Structure snapshots are immutable in the private MAIN. Policy, HP and
-    // unrelated buildings do not move supports and must not redraw labels.
-    const shelfSignature=this.sourceStructures===world.structures?this.shelfSignature:world.structures.filter(s=>isShelfKind(s.kind)).map(s=>`${s.id}:${s.kind}:${s.x}:${s.z}:${s.orientation}`).join('|');
+    // Structure snapshots are immutable in the private MAIN. Compare the real
+    // support geometry only when that source changes, never on camera motion.
+    let supportsChanged=false;
+    if(this.sourceStructures!==world.structures||this.sourceWidth!==world.width){
+      const cells=pileSurfaces(world),shelves=pileShelfCells(world);
+      if(!sameSurfaces(this.supportCells,cells)){this.supportCells=cells;supportsChanged=true;}
+      if(!sameShelfCells(this.shelfCells,shelves)){this.shelfCells=shelves;supportsChanged=true;}
+    }
     const enabled=explorationEnabled256(world);
     const sameExploration=this.explorationEnabled===enabled&&(!enabled||(explorationRevision===undefined?this.sourceWorld===world:this.explorationRevision===explorationRevision));
     const unchanged = sameExploration && this.sourceWidth === world.width &&
-      this.shelfSignature===shelfSignature&&samePileLabels(this.sourcePiles, world.piles,!!shelfSignature) && samePackedLabels(this.sourcePacked, world.packed);
+      !supportsChanged&&samePileLabels(this.sourcePiles, world.piles,this.shelfCells.size>0) && samePackedLabels(this.sourcePacked, world.packed);
     this.sourceWorld=world;this.explorationEnabled=enabled;this.explorationRevision=explorationRevision;
     this.sourcePiles = world.piles; this.sourcePacked = world.packed; this.sourceWidth = world.width;
-    this.sourceStructures=world.structures;this.shelfSignature=shelfSignature;
+    this.sourceStructures=world.structures;
     if (unchanged) return false;
-    const chunks = new Map<number, { bounds: Box3; entries: { x: number; y:number; z: number; label: string;pileId?:number;shelf?:boolean }[] }>();
+    const chunks = new Map<number, typeof this.chunks[number]>(), occupied = new Map<number,number>();
     const add = (x: number, z: number, label: string,y=.32,pileId?:number,shelf=false): void => {
       if (!label) return;
       const cx = Math.floor(x / 16), cz = Math.floor(z / 16), key = cz * Math.ceil(world.width / 16) + cx;
       let chunk = chunks.get(key);
       if (!chunk) {
-        chunk = {
-          bounds: new Box3(new Vector3(cx * 16 - .5, -.5, cz * 16 - .5), new Vector3(cx * 16 + 15.5, 2.5, cz * 16 + 15.5)),
-          entries: [],
-        };
+        chunk = {entries: []};
         chunks.set(key, chunk);
       }
-      chunk.entries.push({ x,y, z, label,pileId,shelf });
+      // Ground stacks share one physical anchor. Shelf stacks already have
+      // distinct physical levels/slots; do not regroup them as the camera turns.
+      const cell=z*world.width+x,overlap=shelf?0:occupied.get(cell)??0;
+      if(!shelf)occupied.set(cell,overlap+1);
+      chunk.entries.push({ x,y, z, label,pileId,shelf,offsetY:Math.min(overlap,3)*12 });
     };
-    const supports=pileIdentitySurfaces(world);
+    const supports=pileIdentitySurfacesFromCells(world.width,world.piles,this.shelfCells);
     for (const pile of world.piles) if (pile.owner.type === 'ground'&&knownPile256(world,pile)){
-      const support=supports.get(pile.id);
-      add(pile.owner.x+(support?.x??0),pile.owner.z+(support?.z??0),pileCaption(pile),support?support.y+.18:.32,pile.id,!!support);
+      const label=pileCaption(pile);if(!label)continue;
+      const support=supports.get(pile.id)??this.supportCells.get(pile.owner.z*world.width+pile.owner.x),anchor=pileLabelAnchor(pile,support);
+      add(anchor.x,anchor.z,label,anchor.y,pile.id,support?.shelfId!==undefined);
     }
-    for (const packed of world.packed) if (packed.owner.type === 'ground'&&knownPosition256(world,packed.owner))
-      add(packed.owner.x, packed.owner.z, packedCaption(packed));
+    for (const packed of world.packed) if (packed.owner.type === 'ground'&&knownPosition256(world,packed.owner)){
+      const label=packedCaption(packed);if(!label)continue;
+      const anchor=packedLabelAnchor(packed,this.supportCells.get(packed.owner.z*world.width+packed.owner.x));
+      add(anchor.x,anchor.z,label,anchor.y);
+    }
     this.chunks = [...chunks.values()];
+    this.batch.update(this.chunks.flatMap(chunk=>chunk.entries));
     return true;
   }
 
   draw(world: World | null | undefined, camera: OrthographicCamera | PerspectiveCamera, cellPixels: number, width: number, height: number,explorationRevision?:number): void {
-    // RimWorld shows item overlays at its closest detail levels. At other
-    // scales the early exit avoids the pile scan and all canvas operations.
+    // At other scales this exit avoids the pile scan and the draw altogether.
     if (!world || cellPixels < this.minCellPixels || !width || !height) {
-      if (this.visible) { this.canvas.hidden = true; this.visible = false; }
-      this.drawn = false;
+      this.mesh.visible=false;
       return;
     }
-    const becameVisible = !this.visible;
-    if (!this.visible) { this.canvas.hidden = false; this.visible = true; }
-    const ratio = Math.min(2, window.devicePixelRatio || 1);
-    const resized = this.width !== width || this.height !== height || this.ratio !== ratio;
-    if (resized) {
-      this.width = width; this.height = height; this.ratio = ratio;
-      this.canvas.width = Math.ceil(width * ratio);
-      this.canvas.height = Math.ceil(height * ratio);
-    }
-    camera.updateMatrixWorld();
-    const indexed = this.index(world,explorationRevision);
-    if (this.drawn && !becameVisible && !resized && !indexed && this.lastCamera === camera &&
-      this.lastView.equals(camera.matrixWorldInverse) && this.lastProjection.equals(camera.projectionMatrix) &&
-      this.lastPosition.equals(camera.position)) return;
-    const ctx = this.context;
-    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-    ctx.clearRect(0, 0, width, height);
-    ctx.font = '12px Arial, sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.lineJoin = 'round'; ctx.lineWidth = 2.5;
-    ctx.strokeStyle = 'rgba(24, 29, 27, .85)';
-    ctx.fillStyle = '#fff4d9';
-    this.frustum.setFromProjectionMatrix(this.projectionView.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse), camera.coordinateSystem, camera.reversedDepth);
-    const maxDistance = camera instanceof PerspectiveCamera && this.minCellPixels>0
-      ? perspectiveDetailRange(camera, height, this.minCellPixels) : Infinity;
-    const maxDistanceSquared = maxDistance * maxDistance;
-    const occupied = new Map<string, number>();
-    for (const chunk of this.chunks) {
-      if (!this.frustum.intersectsBox(chunk.bounds) || chunk.bounds.distanceToPoint(camera.position) > maxDistance) continue;
-      for (const { x,y:poseY, z, label,shelf } of chunk.entries) {
-        this.point.set(x, poseY, z);
-        if (this.point.distanceToSquared(camera.position) > maxDistanceSquared) continue;
-        this.point.project(camera);
-        if (this.point.z < cameraClipNear(camera) || this.point.z > 1 || Math.abs(this.point.x) > 1.08 || Math.abs(this.point.y) > 1.08) continue;
-        const screenX = (this.point.x + 1) * width * .5;
-        const screenY = (1 - this.point.y) * height * .5;
-        const cell = shelf?`screen:${Math.round(screenX/24)}:${Math.round(screenY/12)}`:`cell:${z * world.width + x}`, overlap = occupied.get(cell) ?? 0;
-        occupied.set(cell, overlap + 1);
-        const y = screenY + Math.min(overlap, 3) * 12;
-        ctx.strokeText(label, screenX, y); ctx.fillText(label, screenX, y);
-      }
-    }
-    this.lastCamera = camera;
-    this.lastView.copy(camera.matrixWorldInverse);
-    this.lastProjection.copy(camera.projectionMatrix);
-    this.lastPosition.copy(camera.position);
-    this.drawn = true;
+    this.index(world,explorationRevision);
+    this.batch.present(camera,height,cellPixels,this.minCellPixels);
   }
 
-  dispose(): void { this.canvas.remove(); }
+  dispose(): void { this.batch.dispose(); }
 }

@@ -122,11 +122,11 @@ export function readStatusAlerts(world:World,food:FoodReadability=captureFoodRea
   const pending=world.jobs.filter(j=>j.status==='pending'&&knownPosition256(world,j));
   if(pending.length)add('pending-jobs',`${pending.length} ordre(s) en attente`,pending.map(j=>objectNotificationTarget('job',j.id,j)),{panel:'work'});
   if(!world.stockpiles.length&&!storageCells(world).some(c=>knownPosition256(world,c)))add('no-stockpile','Aucune réserve de stockage',[],{panel:'architect',tool:'stockpile'});
-  if(world.jobs.some(j=>knownPosition256(world,j)&&constructionRecipe(j).ingredients.length>0)&&world.pawns.every(p=>p.priorities.haul===0&&p.priorities.build===0))add('disabled-construction','Construction/transport désactivés : chantiers non approvisionnés',[],{panel:'work'});
+  if(world.pawns.every(p=>p.priorities.haul===0&&p.priorities.build===0)&&world.jobs.some(j=>knownPosition256(world,j)&&constructionRecipe(j).ingredients.length>0))add('disabled-construction','Construction/transport désactivés : chantiers non approvisionnés',[],{panel:'work'});
   const interrupted=world.pawns.filter(p=>p.interruptedCargo);
   if(interrupted.length)add('interrupted-cargo',`${interrupted.length} cargaison(s) conservée(s) : fin de déplacement ou sol proche à libérer`,people(world,interrupted),{panel:'work'});
   counted('idle',world.pawns.filter(p=>isColonist(p)&&!p.prisoner&&p.state==='idle'&&!p.draft&&!p.flee&&!p.mental?.crisis&&!p.interruptedCargo),n=>`${n} colon(s) disponible(s)`);
-  const beds=world.structures.filter(s=>knownBuilding256(world,s)&&isBedKind(s.kind)&&!s.medical&&!s.prisoner).reduce((n,s)=>n+bedSlotsCount(s),0);
+  const beds=world.structures.filter(s=>isBedKind(s.kind)&&!s.medical&&!s.prisoner&&knownBuilding256(world,s)).reduce((n,s)=>n+bedSlotsCount(s),0);
   if(beds<living.length)add('beds',`${living.length-beds} couchage(s) manquant(s)`,[],{panel:'architect',category:'furniture'});
   const prisoners=world.pawns.filter(p=>p.prisoner&&p.state!=='dead');
   if(prisoners.length)add('prisoners',`${prisoners.length} prisonnier(s) · ${living.some(p=>p.priorities.warden>0)?'Geôlier activé':'Geôlier désactivé'}`,people(world,prisoners),{panel:'work'},'prisoner');

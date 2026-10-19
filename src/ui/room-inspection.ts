@@ -18,6 +18,7 @@ export class RoomInspection {
   update(panel: HTMLElement, world: World, cell: Cell): void {
     if (panel.hidden) return;
     let line = panel.querySelector<HTMLElement>('#room-description');
+    if (line?.closest('[hidden]')) return;
     if (!line) {
       line = document.createElement('div'); line.id = 'room-description'; line.className = 'muted';
       // Keep habitat information near the selected object's description.

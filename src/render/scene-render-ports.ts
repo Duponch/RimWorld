@@ -43,6 +43,7 @@ export interface SceneRenderHostPort {
   cursor(value:string):void;
   title(value:string):void;
   drawLabels(world:World|null,camera:THREE.OrthographicCamera|THREE.PerspectiveCamera,cellPixels:number,width:number,height:number,explorationRevision?:number):void;
+  prepareLabelsForCompile?():()=>void;
   disconnectResize():void;
   removeInputListeners():void;
   disposeLabels():void;

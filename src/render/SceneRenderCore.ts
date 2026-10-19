@@ -988,6 +988,7 @@ export class SceneRenderCore {
     const restorePlants = this.plants.prepareForCompile();
     const restoreGrass = this.grass?.prepareForCompile() ?? (() => {});
     const restoreDesignations=this.designations.prepareForCompile();
+    const restoreLabels=this.hostPort.prepareLabelsForCompile?.();
     const restoreFilth=this.hygiene.filth.prepareForCompile();
     const restoreClouds=this.clouds.prepareForCompile();
     const restorePodRescue=this.podRescue.prepareForCompile();
@@ -1040,6 +1041,7 @@ export class SceneRenderCore {
       restoreWind();restorePawnFires();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
       restoreSnow();restoreBoxes();restoreArea();restoreTurretRange();restoreHints();restoreOrderRock();restoreConstruction();restoreDeep();
       restoreOverview();
+      restoreLabels?.();
       restorePodRescue();restoreOrbitalDelivery();
       restoreStartingArrival();
       restoreDiorama?.();
@@ -1508,12 +1510,12 @@ export class SceneRenderCore {
     shadow.autoUpdate=false;shadow.needsUpdate=refreshShadow;
     this.ownedOpaqueRevisions435?.preflight(this.camera,shadow);
     this.renderer.info.reset();
+    this.hostPort.drawLabels(this.world, this.camera, cellPixels, this.viewportWidth, this.viewportHeight,this.environmentLighting.exploration.field.revision);
     this.renderScene();
     if(refreshShadow){
       const completed=!shadow.needsUpdate;this.shadowRefresh.capture(now,completed);
       if(cacheEligible)this.pausedShadow.capture(completed,this.camera,shadowLight,skyTick,this.pawns.blend.value,distant,this.viewportWidth,this.viewportHeight);
     }
-    this.hostPort.drawLabels(this.world, this.camera, cellPixels, this.viewportWidth, this.viewportHeight,this.environmentLighting.exploration.field.revision);
     this.stats.drawCalls = this.renderer.info.render.drawCalls;
     this.stats.triangles = this.renderer.info.render.triangles;
     this.frames.record(now, this.hostPort.hidden());
