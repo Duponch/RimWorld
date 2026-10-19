@@ -1,6 +1,6 @@
 # Travail sur Elsewhere
 
-**V437 — marques des champs, schéma263 inchangé :** [Fonds des ordres](docs/gameplay/designation-ground-v437.md). Carrés cyan des semis et fonds redondants des ordres à pictogramme supprimés ; vraies sélections et plans conservés. 20cas ciblés acquis, ancien rouge d’accent du survol de pont conservé ; champ, abattage et sélection de riz contrôlés dans le jeu. Aucun gain FPS revendiqué.
+**V437 — marques des champs, schéma263 inchangé :** [Fonds des ordres](docs/gameplay/designation-ground-v437.md). Carrés cyan des semis et fonds redondants des ordres à pictogramme supprimés ; vraies sélections et plans conservés. 20cas ciblés acquis, ancien rouge d’accent du survol de pont conservé ; champ, abattage et sélection de riz contrôlés dans le jeu. Publié86650bab/déploiement3fbd7cda,140réponses HTTPS exactes ; sauvegardes publiques inchangées. Aucun gain FPS revendiqué.
 
 **V436 — sols inconnus et capsules, schéma263 inchangé :** [Correctifs visuels](docs/development/ground-arrival-visuals-v436.md). Sol caché comme pigment du terrain, faces de murs connues opaques, herbe sur les terres géographiques et capsules continues sur horloge confirmée. 51cas ciblés acquis par reprises ; 32faces Chrome et campagne entière rechargée exactement au40, phases de présentation acquises sur rapports conservés. Rouges historiques et délais de préparation conservés ; aucun gain FPS global annoncé. Publié05de1776/déploiementc113c1a0,140réponses HTTPS exactes ; sauvegardes publiques inchangées.
 

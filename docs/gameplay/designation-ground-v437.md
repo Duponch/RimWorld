@@ -54,3 +54,18 @@ ce correctif. Pas de sauvegarde humaine chargée, modifiée ou remplacée.
 Typage et build Pages acquis ensemble en40,481s. Liens de documentation
 acquis en3,688s après refus d’accès au lanceur Python dans le bac à sable ;
 le premier reçu d’échec d’environnement est conservé.
+
+## Publication
+
+Produit `86650bab89321ba2053328e8ba67e59e6cc18506` commité et poussé sur
+`origin/main`. Paquet acquis en3,573s, rapport
+`tmp/elsewhere-pages/v437-package-HEVTL7/` :68fiches et71chemins de sauvegardes
+publiques conservés octet pour octet ; fichiers privés et sondes de contrôle
+absents. `references_UI/` demeure hors commit et hors paquet.
+
+Publication Cloudflare acquise en17,021s :
+[déploiement 3fbd7cda](https://3fbd7cda.elsewhere-cq7.pages.dev),
+[site public](https://elsewhere-cq7.pages.dev).
+Contrôle distant acquis en14,050s :140réponses HTTPS200, MIME et octets exacts,
+rapport `tmp/elsewhere-pages/v437-http-qcyY64/`. Ces contrôles de disponibilité
+ne sont pas un nouveau parcours distant ni une mesure de performances.
