@@ -1,6 +1,6 @@
 # V434 — préparation commune de la scène et coût des surfaces
 
-Travaux du 19 octobre 2026, qualification ciblée acquise ; publication préparée. Schéma 263 inchangé. Les Forges reste la référence principale : carte 250², 80 colons, 241 animaux et patrimoine préparé déclaré dans [V432](stress-colony-v432.md). La cible est 200 FPS stables en ×1, rotation comprise ; les vitesses rapides et les anciennes parties restent des contrôles complémentaires.
+Travaux du 19 octobre 2026, qualification ciblée acquise ; publié83860f37, déploiementdaa13dca. Schéma 263 inchangé. Les Forges reste la référence principale : carte 250², 80 colons, 241 animaux et patrimoine préparé déclaré dans [V432](stress-colony-v432.md). La cible est 200 FPS stables en ×1, rotation comprise ; les vitesses rapides et les anciennes parties restent des contrôles complémentaires.
 
 ## Responsabilités et conservation
 
@@ -68,4 +68,4 @@ Les quatre anciens cas de `temperature.test.ts` échouent également sur le miro
 
 La présentation est acquise par `test:presentation` (PASS152,990s) : minage/abattage et changements6/1/3, sans saut ni occupation solide ; p99 autour de8,3ms sur ce parcours de trois colons. Cela ne remplace pas les mesures de charge des Forges.
 
-Publication prévue par le flux [Direct Upload de Cloudflare](https://developers.cloudflare.com/pages/get-started/direct-upload/), Wrangler local épinglé, package inspecté puis réponses HTTPS exactes. Tous les71chemins publics de sauvegardes/catalogue doivent rester identiques au package V432 ; aucune partie jouée ni historique n'est remplacé.
+Publication par le flux [Direct Upload de Cloudflare](https://developers.cloudflare.com/pages/get-started/direct-upload/), Wrangler local4.149.0 épinglé. Produit83860f3734904c0704ee3ba30a82b91a83c7298f poussé sur origin/main ; build Pages du HEAD sélectionné PASS16,627s, inspection du paquet `tmp/elsewhere-pages/v434-package-g7ZPc3/`. Déploiement PASS16,305s : [adresse immuable daa13dca](https://daa13dca.elsewhere-cq7.pages.dev), [site public](https://elsewhere-cq7.pages.dev). Vérification `tmp/elsewhere-pages/v434-http-vJFgcR/report.json` : **140réponses HTTPS exactes**, MIME attendus, deux origines ; paquet/public/HEAD inchangés et absence des raccords QA privés contrôlée. Tous les71chemins publics (70payloads et catalogue) restent identiques au package V432. Le dossier utilisateur `references_UI/` non suivi reste hors commit ; aucune partie jouée ni historique n'est remplacé. Ces réponses prouvent la disponibilité des octets, pas les FPS en production ni un nouveau parcours de gameplay distant.
