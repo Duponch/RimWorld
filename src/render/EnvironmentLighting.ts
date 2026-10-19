@@ -17,13 +17,14 @@ export class EnvironmentLighting {
   private readonly configured = new WeakSet<NodeMaterial>();
   private readonly shade = this.createShade(positionWorld, normalWorldGeometry);
   private readonly rockShade = this.createShade(positionWorld, normalWorldGeometry,true);
-  private createShade(position:Node,normal:Node,exteriorRock=false):Node {return Fn(() => {
+  private readonly groundShade = this.createShade(positionWorld,normalWorldGeometry,false,true);
+  private createShade(position:Node,normal:Node,exteriorRock=false,ground=false):Node {return Fn(() => {
     const p = vec3(position as ReturnType<typeof vec3>).toVar(), n = vec3(normal as ReturnType<typeof vec3>).toVar(), result = output.toVar();
     // Most forest fragments have no local source/roof, or lie above its height.
     // Keep this a uniform-driven branch: no new material/pipeline on ignition.
     If(p.x.greaterThanEqual(this.bounds.x).and(p.z.greaterThanEqual(this.bounds.y))
       .and(p.x.lessThanEqual(this.bounds.z)).and(p.z.lessThanEqual(this.bounds.w))
-      .and(p.y.lessThan(WORLD_SCALE.wallHeight + .02)), () => {
+      .and(p.y.lessThan(WORLD_SCALE.wallHeight + .02)).and(ground?this.exploration.knownGround:float(1).equal(1)), () => {
       const centre = p.xz.add(.5).floor().add(.5).div(this.size);
       const opaque = this.sample.sample(centre).level(float(0)).b;
       // Wall/door sides read the exposed adjacent cell, not the opaque centre.
@@ -54,7 +55,7 @@ export class EnvironmentLighting {
     this.exploration.configure(material);
     if (this.configured.has(material)) return;
     if (material.outputNode) throw new Error('Environment lighting requires an unclaimed material output.');
-    material.outputNode = material.userData.explorationOpaqueRock?this.rockShade:this.shade; this.configured.add(material);
+    material.outputNode = material.userData.explorationOpaqueRock?this.rockShade:material.userData.explorationOpaqueGround?this.groundShade:this.shade; this.configured.add(material);
   };
   /** Decorative blades borrow the horizontal surface's local-light response.
    * Their authored root precedes sway; geometric blade faces must not attenuate

@@ -1,4 +1,5 @@
 import{createSurfaceMaterial}from'./SurfaceMaterials';
+import {solidExplorationMaterial256} from './ExplorationMask256';
 import type {OwnedOpaqueProducer435} from './OwnedOpaqueRevisionRegistry435';
 import * as THREE from 'three/webgpu';
 import { attribute, texture } from 'three/tsl';
@@ -54,6 +55,7 @@ export class BoxBatches {
   private roundedRockWarm = false;
 
   constructor(configure?: (material: THREE.NodeMaterial) => void,private readonly ownedProducer435?:OwnedOpaqueProducer435) {
+    solidExplorationMaterial256(this.materials.solid);solidExplorationMaterial256(this.texturedSolid);
     configure?.(this.materials.solid);
     configure?.(this.texturedSolid);
     configure?.(this.plainRock);

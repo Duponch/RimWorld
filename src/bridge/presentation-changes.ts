@@ -24,6 +24,10 @@ export class PresentationChanges {
     const signature=JSON.stringify([
       world.seed,world.width,world.height,world.events.at(-1),
       this.relationshipSignature,
+      // Countdown is continuous; real impact and discharge are discrete.
+      world.startingArrival?[world.startingArrival.phase,world.startingArrival.phase==='opened'
+        ?[world.startingArrival.openedAt,world.startingArrival.cells]
+        :world.startingArrival.pods.map(p=>[p.id,'phase' in p?p.phase:undefined])]:undefined,
       world.worldIncidents?.active,
       world.campaignMap?.incidents,
       world.podRescues?.pending,world.podRescues?.incidents,world.pawns.map(p=>p.podRescue),

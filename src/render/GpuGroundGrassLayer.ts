@@ -19,7 +19,11 @@ import { NaturalAnimationCache, NaturalPhasePalette } from './natural-animation-
  * This is scenery: no Resource, job, save or simulation RNG. Four vertices/two
  * triangles are shared by a bounded visible field. */
 export const GROUND_GRASS_MAX_BLADES = 120_000;
-const SOIL_TERRAINS = new Set<Terrain>(['grass', 'soil', 'rich-soil']);
+/** Natural soils introduced by geographic generation keep the legacy carpet.
+ * Roads (packed-dirt), alluvium, mud and gravel remain distinct bare surfaces. */
+const SOIL_TERRAINS = new Set<Terrain>([
+  'grass', 'soil', 'rich-soil', 'soil-natural', 'mossy-soil', 'marshy-soil',
+]);
 const scratchColor = new THREE.Color();
 const bloodColor = new THREE.Color(GRASS_BLOOD_COLOR);
 

@@ -6,7 +6,19 @@ import { WORLD_SCALE } from '../world/scale';
 import { isWaterTerrain } from './surface-height';
 import { clearGroup, type Placement } from './primitives';
 import { mergedInstances, noise } from './StaticGeometry';
+import {foggedCell256} from '../sim/exploration-state-256';
 const scratchColor=new THREE.Color();
+/** Original ink earth: a presentation pigment, never a new physical terrain. */
+export const GROUND_FOG_PIGMENT=0x3b3d49;
+export function terrainPresentationType(world:World,index:number):Terrain {
+  if(foggedCell256(world,index))return 'soil';
+  const terrain=world.tiles[index]!.terrain;
+  return terrain==='rock'?'rough-stone':terrain;
+}
+function terrainPresentationColor(world:World,index:number,terrain:Terrain):number {
+  if(foggedCell256(world,index))return GROUND_FOG_PIGMENT;
+  return terrain==='rough-stone'?stoneColor(world.tiles[index]!.stone):terrain==='grass'&&world.site?.biome==='arid-shrubland'?ARID_GRASS_COLOR:TERRAIN_COLORS[terrain];
+}
 /** Original chalk pigments, distinct from the authoritative terrain rules. */
 export const TERRAIN_COLORS: Record<Terrain, number> = { 'packed-dirt':0x9b8c74,'rich-soil':0x665642,gravel:0x999783,'rough-stone':0x899182, grass: 0x81946c, soil: 0xa39b75, marsh: 0x738675, rock: 0x899182, water: 0x78a7a4, 'water-shallow': 0x9ac0b4,
   'soil-natural':0x9a8b6f,'mossy-soil':0x788b67,'marshy-soil':0x788270,mud:0x7b7565,sand:0xc6b791,'soft-sand':0xcdbd98,ice:0xd4e1de,riverbank:0x817961,
@@ -42,8 +54,7 @@ export function terrainPaintEdge(axis:0|1,boundary:number,along:number,seed:numb
 
 function paintTileColor(world:World,palette:Uint8Array,index:number):void {
   const x=index%world.width,z=Math.floor(index/world.width);
-  const tile=world.tiles[index]!,terrain=tile.terrain==='rock'?'rough-stone':tile.terrain;
-  const color=terrain==='rough-stone'?stoneColor(tile.stone):terrain==='grass'&&world.site?.biome==='arid-shrubland'?ARID_GRASS_COLOR:TERRAIN_COLORS[terrain];
+  const terrain=terrainPresentationType(world,index),color=terrainPresentationColor(world,index,terrain);
   // Keep per-cell tint subtle. A hard tint step on every identical tile would
   // reveal the square grid even after its painted edge was displaced.
   scratchColor.setHex(color).multiplyScalar(.98+noise(x,z,world.seed)*.04);
@@ -54,7 +65,7 @@ function paintTileColor(world:World,palette:Uint8Array,index:number):void {
 function paintPixels(world:World,scale:number,pixels:Uint8Array,palette:Uint8Array,x0:number,z0:number,x1:number,z1:number):void {
   const width=world.width*scale;
   const channel=(x:number,z:number,c:number)=>palette[((Math.max(0,Math.min(world.height-1,z))*world.width+Math.max(0,Math.min(world.width-1,x)))*3)+c]!;
-  const waterAt=(x:number,z:number)=>x>=0&&z>=0&&x<world.width&&z<world.height&&isWaterTerrain(world.tiles[z*world.width+x]!.terrain);
+  const waterAt=(x:number,z:number)=>x>=0&&z>=0&&x<world.width&&z<world.height&&isWaterTerrain(terrainPresentationType(world,z*world.width+x));
   // The horizontal boundary varies with each row but is shared by the ~8
   // texels across a cell. The vertical boundary varies with each column but
   // is shared by the ~8 rows. Cache those exact samples within this bake (or
@@ -200,11 +211,10 @@ export function buildTerrain(world: World, group: THREE.Group, surface: THREE.Ma
       for(const terrain of Object.keys(TERRAIN_COLORS) as Terrain[])tileGroups.set(terrain,[]);
       const banks: Placement[] = [];
       for (let z = cz; z < Math.min(cz + chunkSize, world.height); z++) for (let x = cx; x < Math.min(cx + chunkSize, world.width); x++) {
-        const type = world.tiles[z * world.width + x].terrain;
         // The typed rough floor is already rendered beneath a massif; excavation changes no ground buffers.
-        const terrain = type==='rock'?'rough-stone':type;
+        const index=z*world.width+x,terrain=terrainPresentationType(world,index);
         const n = noise(x, z, world.seed);
-        scratchColor.setHex(terrain==='rough-stone'?stoneColor(world.tiles[z*world.width+x].stone):terrain==='grass'&&world.site?.biome==='arid-shrubland'?ARID_GRASS_COLOR:TERRAIN_COLORS[terrain]).multiplyScalar(0.94 + n * 0.12);
+        scratchColor.setHex(terrainPresentationColor(world,index,terrain)).multiplyScalar(0.94 + n * 0.12);
         // Marsh stays on the existing land quad at0; it is walkable wet ground.
         const color = scratchColor.getHex(), level = isWaterTerrain(terrain) ? WORLD_SCALE.waterSurface : 0;
         tileGroups.get(terrain)!.push({ x, z, y: level, color });
@@ -213,7 +223,7 @@ export function buildTerrain(world: World, group: THREE.Group, surface: THREE.Ma
         for (const [dx, dz, rotation] of [[1, 0, Math.PI / 2], [-1, 0, -Math.PI / 2], [0, 1, 0], [0, -1, Math.PI]] as const) {
           const nx = x + dx, nz = z + dz;
           const neighbor = nx < 0 || nz < 0 || nx >= world.width || nz >= world.height ? -0.16
-            : isWaterTerrain(world.tiles[nz * world.width + nx].terrain) ? WORLD_SCALE.waterSurface : 0;
+            : isWaterTerrain(terrainPresentationType(world,nz * world.width + nx)) ? WORLD_SCALE.waterSurface : 0;
           if (neighbor < level) banks.push({ x: x + dx * 0.5, z: z + dz * 0.5, y: (level + neighbor) / 2, sy: level - neighbor, ry: rotation, color });
         }
       }

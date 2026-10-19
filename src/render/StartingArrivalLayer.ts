@@ -1,13 +1,12 @@
 import {CORE_STARTING_ARRIVAL_PROFILE_256} from '../sim/starting-pod-state-256';
 import * as THREE from 'three/webgpu';
-import { Fn,attribute,cos,float,instanceIndex,mat4,normalLocal,positionLocal,sin,smoothstep,texture,transformNormal,uint,uniform,vec3,vec4 } from 'three/tsl';
-import type { World } from '../sim/types';
+import { Fn,attribute,cos,float,mat4,normalLocal,positionLocal,sin,smoothstep,texture,transformNormal,uniform,vec3,vec4 } from 'three/tsl';
+import type { Cell,World } from '../sim/types';
 import { BoxMesh } from './BoxMesh';
 import { material } from './primitives';
 import { createStylizedSurfaceTexture } from './stylized-surfaces';
 import { instancedBoxPatternUv } from './texture-variation';
 import type { AnimationDetail } from './AnimationDetail';
-import { RetainedAnimation } from './RetainedAnimation';
 
 export const STARTING_ARRIVAL_CAPSULES=3;
 export const STARTING_ARRIVAL_PARTS=8;
@@ -37,12 +36,12 @@ export class StartingArrivalLayer {
   private readonly times=uniform(new THREE.Vector2(0,15));
   private readonly landed=uniform(0);
   private readonly coreArrival=uniform(0);
-  private readonly corePods=new Map<number,{fallCore:number;landed:boolean;remainingCore:number}>();
+  private readonly coreCells=new Set<string>();
+  private readonly coreOpenings=new Map<string,{cell:Cell;openedAt:number}>();
   private readonly base=new THREE.BoxGeometry(1,1,1);
   private readonly paint=createStylizedSurfaceTexture();
   private readonly plain=material(0xffffff,{transparent:true,depthWrite:false,forceSinglePass:true});
   private readonly painted=material(0xffffff,{transparent:true,depthWrite:false,forceSinglePass:true});
-  private readonly animation:RetainedAnimation;
   private key='';
   private revision=0;
   private phase:Phase='none';
@@ -51,13 +50,20 @@ export class StartingArrivalLayer {
   private texturesEnabled=true;
   private cellsKey='';
 
-  constructor(configure?:(surface:THREE.MeshStandardNodeMaterial)=>void,detail?:AnimationDetail){
-    this.animation=new RetainedAnimation(detail);
-    // Reserve the tiny three-owner palette before compilation; no later growth.
-    this.animation.reconcile([0,1,2].map(id=>({id,x:0,y:1,z:0})));this.animation.reset();
-    const open=smoothstep(this.opening.x,this.opening.x.add(STARTING_ARRIVAL_OPENING_TICKS),this.tick).mul(this.opening.y);
+  constructor(configure?:(surface:THREE.MeshStandardNodeMaterial)=>void,_detail?:AnimationDetail){
+    // Only three transient shells: keep fall and hinges on the shared fractional
+    // presentation clock at every distance, rather than a held animation sample.
+    // Reuse center Y as a signed clock: positive fall duration in local ticks,
+    // zero grounded, negative -(confirmed opening tick + 1).
+    const clock=attribute('arrivalCenter','vec3').y;
+    const coreOpeningAt=clock.negate().sub(1);
+    const coreOpen=smoothstep(coreOpeningAt,coreOpeningAt.add(STARTING_ARRIVAL_OPENING_TICKS),this.tick).mul(clock.lessThan(0).select(1,0));
+    const legacyOpen=smoothstep(this.opening.x,this.opening.x.add(STARTING_ARRIVAL_OPENING_TICKS),this.tick).mul(this.opening.y);
+    const open=this.coreArrival.greaterThan(.5).select(coreOpen,legacyOpen);
+    const coreFall=float(1).sub(smoothstep(0,clock.max(.001),this.tick)).mul(STARTING_ARRIVAL_HEIGHT).mul(clock.greaterThan(0).select(1,0));
     const fall=float(1).sub(smoothstep(this.times.x,this.times.y,this.tick)).mul(STARTING_ARRIVAL_HEIGHT).mul(float(1).sub(this.landed));
-    const basis=this.animation.choose(()=>{const angle=open.mul(-Math.PI*.56);return vec4(open,this.coreArrival.greaterThan(.5).select(attribute('arrivalCenter','vec3').y,fall),cos(angle),sin(angle));},uint(instanceIndex.div(STARTING_ARRIVAL_PARTS)));
+    const angle=open.mul(-Math.PI*.56);
+    const basis=vec4(open,this.coreArrival.greaterThan(.5).select(coreFall,fall),cos(angle),sin(angle)).toVar();
     const position=Fn(()=>{
       const transform=mat4(attribute('boxMatrix0','vec4'),attribute('boxMatrix1','vec4'),attribute('boxMatrix2','vec4'),attribute('boxMatrix3','vec4')).toVar();
       const side=attribute('arrivalLidSide','float'),c=float(1).add(basis.z.sub(1).mul(side.mul(side))),s=basis.w.mul(side);
@@ -93,30 +99,48 @@ export class StartingArrivalLayer {
   }
 
   adopt(world:World,reset=false):boolean {
-    const arrival=world.startingArrival;this.confirmedTick=world.tick;this.corePods.clear();
-    const core=arrival?.profile===CORE_STARTING_ARRIVAL_PROFILE_256&&arrival.phase!=='opened'?arrival:undefined;this.coreArrival.value=core?1:0;
-    if(core)for(const p of core.pods)this.corePods.set(p.id,{fallCore:p.fallCore,landed:p.phase==='landed',remainingCore:p.remainingCore});
-    if(reset){this.key='';this.cellsKey='';this.animation.reset();}
+    const arrival=world.startingArrival;this.confirmedTick=world.tick;
+    if(reset){this.key='';this.cellsKey='';this.coreCells.clear();this.coreOpenings.clear();}
+    const core=arrival?.profile===CORE_STARTING_ARRIVAL_PROFILE_256?arrival:undefined;this.coreArrival.value=core?1:0;
     if(!arrival){
-      const changed=this.mesh.activeCount>0;this.key='';this.cellsKey='';this.phase='none';this.fadeUntil=undefined;
-      if(changed||reset){this.mesh.activeCount=0;this.animation.reset();this.revision++;}return changed;
+      const changed=this.mesh.activeCount>0;this.key='';this.cellsKey='';this.phase='none';this.fadeUntil=undefined;this.coreCells.clear();this.coreOpenings.clear();
+      if(changed||reset){this.mesh.activeCount=0;this.revision++;}return changed;
     }
     // The durable receipt remains in saves. Once its short animation is over,
     // ordinary snapshots do not build keys, arrays or retained-pose work.
     if(arrival.phase==='opened'&&world.tick>=arrival.openedAt+STARTING_ARRIVAL_OPENING_TICKS){
       const changed=this.mesh.activeCount>0;
       if(changed||reset||this.phase!=='retired'){
-        this.key='retired';this.mesh.activeCount=0;this.phase='retired';this.fadeUntil=undefined;this.animation.reset();this.revision++;
+        this.key='retired';this.mesh.activeCount=0;this.phase='retired';this.fadeUntil=undefined;this.coreCells.clear();this.coreOpenings.clear();this.revision++;
       }return changed;
     }
-    const cells=arrival.phase==='opened'?arrival.cells:arrival.pods.map(pod=>pod.cell);
-    const cellsKey=cells.map(cell=>`${cell.x}:${cell.z}`).join('|')+(core?':'+core.pods.map(p=>`${p.id}:${p.phase}:${p.remainingCore}`).join('|'):'');
+    const rows:{cell:Cell;clock:number}[]=[];
+    if(core){
+      const opened=core.phase==='opened'?core.cells:core.openedCells;
+      // Removal may be destruction. Only an actual opened cell authorizes a
+      // visual receipt, at its confirmed adoption tick. Pending saves have no
+      // per-cell opening timestamps, so already opened cells are not replayed.
+      const restoreReceipt=core.phase==='opened'&&this.coreCells.size===0&&this.coreOpenings.size===0&&this.key==='';
+      for(const cell of opened){const key=`${cell.x}:${cell.z}`;
+        if((this.coreCells.has(key)||restoreReceipt)&&!this.coreOpenings.has(key))this.coreOpenings.set(key,{cell:{...cell},openedAt:core.phase==='opened'?core.openedAt:world.tick});
+      }
+      this.coreCells.clear();
+      if(core.phase!=='opened')for(const pod of core.pods){
+        this.coreCells.add(`${pod.cell.x}:${pod.cell.z}`);
+        rows.push({cell:pod.cell,clock:pod.phase==='incoming'&&pod.remainingCore>0?pod.fallCore/10:0});
+      }
+      for(const [key,receipt] of this.coreOpenings){
+        if(world.tick>=receipt.openedAt+STARTING_ARRIVAL_OPENING_TICKS)this.coreOpenings.delete(key);
+        else rows.push({cell:receipt.cell,clock:-(receipt.openedAt+1)});
+      }
+    }else {
+      this.coreCells.clear();this.coreOpenings.clear();
+      for(const cell of arrival.phase==='opened'?arrival.cells:arrival.pods.map(pod=>pod.cell))rows.push({cell,clock:0});
+    }
+    const cellsKey=rows.map(({cell,clock})=>`${cell.x}:${cell.z}:${clock}`).join('|');
     const key=`${arrival.phase}:${arrival.start}:${arrival.landAt}:${arrival.openAt}:${arrival.phase==='opened'?arrival.openedAt:''}:${cellsKey}`;
     if(key===this.key)return false;
     this.key=key;this.revision++;this.tick.value=world.tick;
-    // Impact/opening are confirmed ownership boundaries, even when a distant
-    // pose was retained. Revoke its sample before reconciling the same anchors.
-    this.animation.reset();
     this.times.value.set(arrival.start,arrival.landAt);this.landed.value=arrival.phase==='incoming'?0:1;
     this.opening.value.set(arrival.phase==='opened'?arrival.openedAt:0,arrival.phase==='opened'?1:0);
     this.fadeUntil=arrival.phase==='opened'?arrival.openedAt+STARTING_ARRIVAL_OPENING_TICKS:undefined;
@@ -124,31 +148,25 @@ export class StartingArrivalLayer {
     if(cellsKey!==this.cellsKey){
       this.cellsKey=cellsKey;const centers=this.mesh.geometry.getAttribute('arrivalCenter') as THREE.InstancedBufferAttribute;
       this.mesh.boundingSphere.makeEmpty();
-      cells.forEach((cell,capsule)=>{
-        for(let part=0;part<STARTING_ARRIVAL_PARTS;part++)centers.setXYZ(capsule*STARTING_ARRIVAL_PARTS+part,cell.x,core?this.coreHeight(core.pods[capsule]!.id,world.tick):0,cell.z);
+      rows.forEach(({cell,clock},capsule)=>{
+        for(let part=0;part<STARTING_ARRIVAL_PARTS;part++)centers.setXYZ(capsule*STARTING_ARRIVAL_PARTS+part,cell.x,clock,cell.z);
         this.mesh.boundingSphere.union(new THREE.Sphere(new THREE.Vector3(cell.x,12.5,cell.z),13.5));
       });centers.needsUpdate=true;
     }
-    this.mesh.activeCount=cells.length*STARTING_ARRIVAL_PARTS;
-    this.animation.reconcile(cells.map((cell,id)=>({id:core?.pods[id]?.id??id,x:cell.x,y:1,z:cell.z})));
+    this.mesh.activeCount=rows.length*STARTING_ARRIVAL_PARTS;
     return true;
   }
 
-  private coreHeight(id:number,tick:number):number {const p=this.corePods.get(id);if(!p||p.landed||p.remainingCore===0)return 0;const t=Math.max(0,Math.min(1,tick*10/p.fallCore));return (1-t*t*(3-2*t))*STARTING_ARRIVAL_HEIGHT;}
-
-  present(tick:number):boolean {
+  present(tick:number,confirmedTick=this.confirmedTick):boolean {
     if(!this.mesh.activeCount)return false;
-    // Never predict beyond the most recent adopted simulation snapshot.
-    this.tick.value=Math.min(tick,this.confirmedTick);
+    // Scene supplies the latest received confirmed frontier. Its bounded shared
+    // timeline may be fractionally ahead of the last applied scene snapshot.
+    // Standalone callers retain the adopted-tick guard; no wall clock advances.
+    this.tick.value=Math.min(tick,confirmedTick);
     if(this.fadeUntil!==undefined&&this.tick.value>=this.fadeUntil){
-      this.mesh.activeCount=0;this.phase='retired';this.fadeUntil=undefined;this.animation.reset();this.revision++;return true;
+      this.mesh.activeCount=0;this.phase='retired';this.fadeUntil=undefined;this.coreCells.clear();this.coreOpenings.clear();this.revision++;return true;
     }
-    const smooth=(a:number,b:number,t:number)=>{const f=Math.max(0,Math.min(1,(t-a)/(b-a)));return f*f*(3-2*f);};
-    this.animation.present(owner=>{
-      const open=smooth(this.opening.value.x,this.opening.value.x+STARTING_ARRIVAL_OPENING_TICKS,this.tick.value)*this.opening.value.y,angle=open*(-Math.PI*.56);
-      owner.values[0]=open;owner.values[1]=this.coreArrival.value?this.coreHeight(owner.id,this.tick.value):(1-smooth(this.times.value.x,this.times.value.y,this.tick.value))*STARTING_ARRIVAL_HEIGHT*(1-this.landed.value);
-      owner.values[2]=Math.cos(angle);owner.values[3]=Math.sin(angle);
-    });return false;
+    return false;
   }
 
   setTexturesEnabled(enabled:boolean):void {if(enabled!==this.texturesEnabled){this.texturesEnabled=enabled;this.mesh.material=enabled?this.painted:this.plain;}}
@@ -165,5 +183,5 @@ export class StartingArrivalLayer {
     };
   }
 
-  dispose():void {this.animation.dispose();this.mesh.removeFromParent();this.mesh.dispose();this.base.dispose();this.plain.dispose();this.painted.dispose();this.paint.dispose();this.group.clear();}
+  dispose():void {this.mesh.removeFromParent();this.mesh.dispose();this.base.dispose();this.plain.dispose();this.painted.dispose();this.paint.dispose();this.coreCells.clear();this.coreOpenings.clear();this.group.clear();}
 }

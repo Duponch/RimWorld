@@ -1,5 +1,6 @@
 import type { World, Tile } from '../sim/types';
 import {readSnapshotTileChanges} from '../bridge/snapshot-changes';
+import {explorationEnabled256,foggedCell256} from '../sim/exploration-state-256';
 
 const rocky=(t:Tile)=>t.terrain==='rock'||t.terrain==='rough-stone';
 const NO_CHANGES:readonly number[]=[];
@@ -16,10 +17,12 @@ export function terrainTileChanges(a:World|null|undefined,b:World,immutableSnaps
 }
 /** null means the map/palette context changed and needs a complete bake. */
 export function terrainSurfaceChanges(a:World|null|undefined,b:World,tiles=terrainTileChanges(a,b)):readonly number[]|null {
-  if(!a||tiles===null)return null;
+  if(!a||tiles===null||explorationEnabled256(a)!==explorationEnabled256(b))return null;
   let changed:number[]|undefined;
   for(const i of tiles){
     const old=a.tiles[i]!,next=b.tiles[i]!;
+    if(foggedCell256(a,i)!==foggedCell256(b,i)){(changed??=[]).push(i);continue;}
+    if(foggedCell256(b,i))continue;
     if(rocky(old)&&rocky(next)){if(old.stone!==next.stone)(changed??=[]).push(i);}
     else if(old.terrain!==next.terrain||old.bridge!==next.bridge)(changed??=[]).push(i);
   }

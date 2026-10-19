@@ -6,6 +6,7 @@ import{createSurfaceMaterial}from'./SurfaceMaterials';
 import {knownPosition256} from '../ui/exploration-readers-256';
 import {knownCell256,UNDISCOVERED_CELL_LABEL_256} from '../sim/exploration-visibility-256';
 import {roofCoverage} from '../sim/roof-rules';
+import {opaqueGroundExplorationMaterial256} from './ExplorationMask256';
 import {replantTreeReason,isMinifiedTree} from '../sim/tree-transfer';
 import { AllowedAreaLayer } from './AllowedAreaLayer';
 import { DioramaLayer } from './DioramaLayer';
@@ -61,7 +62,7 @@ import { CropLayer } from './CropLayer';
 import type { ScreenPawn, SelectionGesture } from './PawnSelectionInput';
 import { FireLayer } from './FireLayer';
 import { GrowingZoneLayer } from './GrowingZoneLayer';
-import { buildTerrain, copyTerrainPaintRect, createTerrainPaintTexture, patchTerrainPaintTexture, singleTerrainPaintPatchRect, syncTerrainPaintUvs, TERRAIN_PAINT_PIXELS_PER_CELL, type TerrainPaintPatchRect } from './TerrainLayer';
+import { buildTerrain, copyTerrainPaintRect, createTerrainPaintTexture, patchTerrainPaintTexture, singleTerrainPaintPatchRect, syncTerrainPaintUvs, terrainPresentationType, TERRAIN_PAINT_PIXELS_PER_CELL, type TerrainPaintPatchRect } from './TerrainLayer';
 import { PaintedWater } from './PaintedWater';
 import { WeatherCloudLayer } from './WeatherCloudLayer';
 import { OrbitalDeliveryLayer } from './OrbitalDeliveryLayer';
@@ -291,7 +292,7 @@ export class SceneRenderCore {
   protected readonly keys = new Set<string>();
   protected readonly pileChunks = new Map<string, VisualChunk>();
   protected readonly staticMaterial = createSurfaceMaterial('diffuse',0xffffff, { vertexColors: true });
-  protected readonly terrainPlainMaterial = createSurfaceMaterial('diffuse',0xffffff,{vertexColors:true});
+  protected readonly terrainPlainMaterial = opaqueGroundExplorationMaterial256(createSurfaceMaterial('diffuse',0xffffff,{vertexColors:true}));
   // Keep texture identity stable: terrain and water can share one GPU image and
   // one shader graph even when a new map or the texture option replaces pixels.
   protected readonly terrainPaintTexture=new THREE.DataTexture(new Uint8Array([255,255,255,0]),1,1);
@@ -300,7 +301,7 @@ export class SceneRenderCore {
   protected readonly terrainPaintPatchSource=new THREE.Box2(new THREE.Vector2(),new THREE.Vector2());
   protected readonly terrainPaintPatchDestination=new THREE.Vector2();
   protected terrainPaintResident=false;
-  protected readonly terrainPaintMaterial = createSurfaceMaterial('diffuse',0xffffff,{vertexColors:false,map:this.terrainPaintTexture});
+  protected readonly terrainPaintMaterial = opaqueGroundExplorationMaterial256(createSurfaceMaterial('diffuse',0xffffff,{vertexColors:false,map:this.terrainPaintTexture}));
   protected readonly staticPaint=createStylizedSurfaceTexture('vegetation');
   protected readonly texturedStaticMaterial=createSurfaceMaterial('diffuse',0xffffff,{vertexColors:true,map:this.staticPaint});
   protected readonly waterMaterial = material(0xffffff, { vertexColors: true, roughness: 0.45, metalness: 0.08 });
@@ -557,7 +558,6 @@ export class SceneRenderCore {
     this.world = world;
     this.paintedWater.adoptRiverWater(world);
     if(this.environmentLighting.exploration.adopt(world,newMap||resetPoses,previousWorld&&this.immutableWorlds.has(previousWorld)&&this.immutableWorlds.has(world)?changedTiles:null))this.invalidatePausedShadow();
-    if(!this.environmentLighting.exploration.surface.parent)this.scene.add(this.environmentLighting.exploration.surface);
     if (newMap) { this.configureDiorama(); this.configureRoom(); }
     this.updateDeepResources();
     this.grass?.update(world,newMap,immutableTileChanges,resourceFrame);
@@ -575,7 +575,7 @@ export class SceneRenderCore {
       }
       else this.terrainPaintDirty=true;
       if(this.texturesEnabled)this.refreshTerrainPaint(world);
-      const waterTopologyChanged=terrainChanges===null||terrainChanges.some(i=>isWaterTerrain(previousWorld!.tiles[i]!.terrain)!==isWaterTerrain(world.tiles[i]!.terrain));
+      const waterTopologyChanged=terrainChanges===null||terrainChanges.some(i=>isWaterTerrain(terrainPresentationType(previousWorld!,i))!==isWaterTerrain(terrainPresentationType(world,i)));
       if(this.texturesEnabled&&!waterTopologyChanged){
         // Painted terrain reads its colour from the map. A soil/grass/stone
         // change does not alter its quad or bank geometry. Keep the plain
@@ -1463,7 +1463,7 @@ export class SceneRenderCore {
     this.doors.present(skyTick);this.projectiles.present(skyTick);this.fires.present(skyTick);this.wind.present(skyTick);
     this.actionVfx.setView(this.camera);this.structureVfx.setView(this.camera,this.controls.target);
     this.actionVfx.present(skyTick);this.brawlCloud.present(skyTick);this.structureVfx.present(skyTick);this.podRescue.present(skyTick);this.orbitalDelivery.present(skyTick);
-    if(this.startingArrival.present(skyTick))this.invalidatePausedShadow();
+    if(this.startingArrival.present(skyTick,this.received?.world.tick??this.world?.tick??skyTick))this.invalidatePausedShadow();
     if(this.texturesEnabled)this.paintedWater.present(skyTick/TICKS_PER_SECOND);
     if(this.animationDetail.shouldSample(this.skyAnimation,(this.world?.width??1)/2,0,(this.world?.height??1)/2)){
       this.daylight.update(this.world?calendarTick(this.world,skyTick):skyTick, this.controls.target,this.world??undefined);

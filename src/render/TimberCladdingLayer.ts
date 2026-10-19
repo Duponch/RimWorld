@@ -1,7 +1,8 @@
 import * as THREE from 'three/webgpu';
+import {solidExplorationMaterial256} from './ExplorationMask256';
 import type {OwnedOpaqueProducer435} from './OwnedOpaqueRevisionRegistry435';
 import {indexTimberGeometry} from './index-timber-geometry';
-import { attribute,materialColor,texture,vec4,vertexColor } from 'three/tsl';
+import { attribute,materialColor,texture,varying,vec4,vertexColor } from 'three/tsl';
 import {OverviewBatch,configureOverviewMaterial} from './OverviewBatch';
 import type { World } from '../sim/types';
 import { WORLD_SCALE } from '../world/scale';
@@ -233,6 +234,8 @@ export class TimberCladdingLayer {
     for(const chunk of this.chunks.values()){chunk.wall.tint.clear();chunk.eave.tint.clear();}
   }
   constructor(configure?: (material: THREE.NodeMaterial)=>void,private readonly ownedProducer435?:OwnedOpaqueProducer435) {
+    const owner=varying(attribute('overviewMatrix3','vec4').xz,'v_timberExplorationOwner');
+    solidExplorationMaterial256(this.material,owner);solidExplorationMaterial256(this.plainMaterial,owner);
     // Stable named matrix attributes avoid capacity-dependent instance UBOs.
     // Match NodeMaterial r186: tint * (base * authored vertex colour), with
     // the same grouping and alpha. Disable only its duplicate implicit path.

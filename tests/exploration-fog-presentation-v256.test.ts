@@ -30,7 +30,7 @@ test('resident primitive field captures same-tick deletion, sparse identity reus
 test('resident data texture/material identities survive changes; solid AND shadow masks compose existing mask exactly once',()=>{
  const mask=new ExplorationMask256(),material=actorExplorationMaterial256(new THREE.MeshStandardNodeMaterial());const texture=mask.map;mask.configure(material);const solid=material.maskNode,shadow=material.maskShadowNode,version=material.version;
  expect(solid).toBeTruthy();expect(shadow).toBeTruthy();mask.configure(material);expect(material.maskNode).toBe(solid);expect(material.maskShadowNode).toBe(shadow);expect(material.version).toBe(version);
- const w=witness();mask.adopt(w,true,null);expect(mask.map).toBe(texture);expect(mask.surface.visible).toBe(true);const firstRanges=[...texture.updateRanges];delete w.tiles[1]!.fogged;mask.adopt(w,false,[1]);expect(texture.updateRanges.length).toBeGreaterThan(firstRanges.length);expect(mask.map).toBe(texture);expect(material.maskNode).toBe(solid);expect(material.maskShadowNode).toBe(shadow);
+ const w=witness();mask.adopt(w,true,null);expect(mask.map).toBe(texture);expect(mask.field.enabled).toBe(true);const firstRanges=[...texture.updateRanges];delete w.tiles[1]!.fogged;mask.adopt(w,false,[1]);expect(texture.updateRanges.length).toBeGreaterThan(firstRanges.length);expect(mask.map).toBe(texture);expect(material.maskNode).toBe(solid);expect(material.maskShadowNode).toBe(shadow);
  texture.onUpdate?.(texture);expect(texture.updateRanges).toEqual([]);mask.dispose();material.dispose();
 });
 test('undiscovered readout returns before light/room/object access, including mineral and prospective road grounds',()=>{
