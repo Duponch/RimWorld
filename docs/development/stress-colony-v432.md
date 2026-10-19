@@ -80,4 +80,6 @@ Les cinq cas du correctif de sauvegarde sont acquis ; les quatre cas d'enclos et
 
 ## Publication
 
-Le build Pages, la préservation du catalogue et les réponses HTTPS sont vérifiés avant livraison ; le reçu exact est ajouté après déploiement.
+Produit commité et poussé sur `origin/main` : `f15d6fd4e7ccc734d86c79bd0aa6106787250940`. Build Pages avec typage réussi en 17,659 s ; paquet vérifié dans `tmp/elsewhere-pages/v432-package-U3yRcx` : les 71 chemins du catalogue public correspondent aux octets du build, les anciennes entrées/sauvegardes restent exactes et les sondes DEV/QA sont absentes. Le dossier non suivi `references_UI` est laissé intact et exclu du paquet.
+
+Déploiement Cloudflare Pages **`33ec3b62`**, [version immuable](https://33ec3b62.elsewhere-cq7.pages.dev) et [version stable](https://elsewhere-cq7.pages.dev). Contrôle `tmp/elsewhere-pages/v432-http-efG674` : **140 réponses HTTPS exactes** sur les deux origines, dont la nouvelle partie, le catalogue et les fichiers d'entrée/Workers sélectionnés. Cela prouve les octets disponibles en ligne ; les mesures de jeu ci-dessus viennent de Chrome local, pas d'un nouveau benchmark distant. La sauvegarde compressée publique mesure 3 651 576 octets, SHA-256 `cac80d70b366db579fddefde6f892abdfd07f81fe16f64aaf8f4b6e874ebabf1` ; son RAW reste celui du tick 335 indiqué plus haut.
