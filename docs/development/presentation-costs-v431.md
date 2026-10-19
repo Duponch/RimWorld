@@ -95,4 +95,10 @@ Les exports candidats entiers sont exacts aux ticks 11116/2129/821, SHA-256 resp
 
 La priorité suivante est de séparer les confirmations légères des mouvements et les projections visuelles coûteuses, avec un producteur qui tient compte du consommateur avant l'encodage. Le journal ordonné des phases, les commandes/ACK, les urgences et SAVE doivent rester indépendants de ce regroupement. Le rendu jeu/ombres reste également coûteux ; ces profils ne mesurent pas un coût GPU par passe et ne démontrent pas qu'un changement de langage suffirait.
 
-Le parcours de présentation est rejoué pour le périmètre exact après retrait SIM : `v431-release-presentation` passe en 154,357 s, sans saut ni occupation solide ; maxima minage/abattage 20,9/29,3 ms. Les trois captures finales `release04/*/final-view.png` sont inspectées. Documentation contrôlée (`v431-docs`, 10,100 s) ; publication du paquet propre à suivre.
+Le parcours de présentation est rejoué pour le périmètre exact après retrait SIM : `v431-release-presentation` passe en 154,357 s, sans saut ni occupation solide ; maxima minage/abattage 20,9/29,3 ms. Les trois captures finales `release04/*/final-view.png` sont inspectées. Documentation contrôlée (`v431-docs`, 10,100 s).
+
+## Publication acquise
+
+Produit `8b11264596ef4007b157d5f5298b07cc8189a756`, poussé sur `origin/main`. Paquet Pages propre construit depuis ce HEAD (`v431-pages-build`, 15,765 s), contrôlé en 1,550 s puis publié avec Wrangler 4.149.0 en 14,159 s : [déploiement d841b735](https://d841b735.elsewhere-cq7.pages.dev), [adresse publique Elsewhere](https://elsewhere-cq7.pages.dev).
+
+Les 138 réponses HTTPS sélectionnées sur les deux adresses sont exactes en octets et MIME (`v431-pages-https`, 12,908 s). Les 70 fichiers du catalogue correspondent à `public`, ses 67 fiches et les 68 sauvegardes historiques restent conservées. Deux entrées Worker compilées, aucun laboratoire ni sonde privée dans le paquet. Reçus : `tmp/elsewhere-pages/v431-package-szbYrn` et `v431-http-9ddjPN`. L'avertissement Git de Wrangler correspond au seul dossier non suivi `references_UI/`, exclu du paquet et laissé intact. Les contrôles HTTPS prouvent la mise à disposition du paquet ; les FPS ci-dessus sont des mesures Chrome locales, pas un nouveau banc de la production.
