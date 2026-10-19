@@ -2,6 +2,39 @@
   "version": 2,
   "saves": [
     {
+      "id": "forges-v432",
+      "release": "v432",
+      "filename": "les-forges-crash-test.json",
+      "label": "Les Forges · crash-test 80 colons",
+      "description": "Colonie de charge explicitement préparée : 80 colons, 7512 structures, 4498 cases de culture, 160 animaux dans 4 enclos, 1 animal domestique original (husky) et 80 sauvages. 300 vrais ticks observés après préparation. Référence de performance ×1 ; aucun objectif FPS atteint n’est annoncé.",
+      "pawns": 80,
+      "colonists": 80,
+      "width": 250,
+      "height": 250,
+      "tick": 335,
+      "prepared": true,
+      "sha256": "54e261830e5c803d66f98709ed413b851a43ab3051e97428e2d9aebd7b3cd52d",
+      "provenance": "Colonie de charge préparée sur la création géographique originale ; les 3 survivants initiaux sont conservés et 77 colons ont été ajoutés. Leurs compétences et rôles, les bâtiments et sols, les biens en quantités finies, le combustible, 14 recherches et la maturité des cultures sont créés pour cette scène. Terrassement de 30543 cases et défrichage de 13174 ressources sans bois, récolte, expérience ni autre rendement crédité. Cet aménagement ne raconte aucune construction ou acquisition naturelle. Il comprend 8 quartiers, 7512 structures dont les conduits, 32 champs et 4498 cases de culture, avec 144 lampes alimentées. Les 160 animaux d’élevage sont préparés dans 4 vrais enclos fermés et accessibles ; 1 animal domestique original (husky) et 80 sauvages sont conservés ou préparés selon le relevé de population. Après préparation, 300 vrais ticks ont été suivis jusqu’au 335 : 79 colons ont changé de case ; récolte, semis, construction de sacs de sable, livraison de matériaux, nettoyage, traite et recherche ont réellement été observés. Cuisine et couture en sont encore à la collecte des ingrédients. Aucun repas ni vêtement terminé n’est revendiqué ; les stocks préparés ne prouvent aucune production. La recherche a effectivement progressé. Les tâches observées peuvent inclure des trajets ou de l’attente. Sauvegarde, export et rechargement complets ont été contrôlés sans perte ; la reprise continue de la même façon. Les performances mesurées constituent une première référence à vitesse ×1, sans amélioration comparée ni objectif FPS atteint annoncé. Les Aulnes, Les Éclaircies et toutes les archives restent conservées.",
+      "focus": [
+        "charge préparée",
+        "80 colons",
+        "une colonie 250×250",
+        "quartiers et éclairage",
+        "agriculture et ateliers",
+        "animaux et enclos",
+        "tâches physiques",
+        "référence performance ×1",
+        "sauvegarde et reprise"
+      ],
+      "steps": [
+        "Inspecter les 8 quartiers, les postes et leurs factures ; les 7512 structures et les biens initiaux sont un patrimoine préparé.",
+        "Reprendre à vitesse ×1 les 80 colons et leurs tâches physiques. Les 4498 cases de culture comprennent une maturité préparée ; ne pas assimiler ces cultures à une croissance déjà jouée.",
+        "Inspecter les 4 enclos réels et leurs 160 animaux, les autres animaux domestiques conservés et les 80 sauvages.",
+        "Cuisine et couture : la collecte des ingrédients est réellement engagée. Aucun repas ni vêtement terminé n’est revendiqué ; les stocks préparés ne prouvent aucune production. Récolte, semis, construction, transport, nettoyage, traite et recherche ont aussi été observés.",
+        "Utiliser cette partie comme référence de charge à vitesse ×1. Les performances dépendent du matériel et de la caméra ; aucun seuil stable ni amélioration comparée n’est garanti."
+      ]
+    },
+    {
       "id": "eclaircies-v419",
       "release": "v419",
       "filename": "les-eclaircies.json",

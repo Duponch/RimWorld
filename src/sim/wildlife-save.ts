@@ -189,7 +189,10 @@ export function validateWildlife(w:World,version:number,ids:Set<number>):string[
       if(!object(m)||!keys(m,['from','to','start','end','speedFactor','terrainDelay',...(version>=77?['stagger']:[]),...(version>=78?['stuns']:[]),...(version>=239?['snowEntryPending']:[]),...(version>=256?['animalFlight']:[])])||!cell(m.from)||!cell(m.to)||Math.max(Math.abs(m.from.x-m.to.x),Math.abs(m.from.z-m.to.z))!==1||m.to.x!==a.x||m.to.z!==a.z||!validWildlifeMotionTiming(w.tick,version,a,m))errors.push('Invalid wildlife motion.');
       else if(m.end>w.tick){
         if(!['moving','downed','dead'].includes(a.state))errors.push('Active wildlife edge without movement.');
-        const pathNavigation=version>=256&&a.species==='duck'?animalNavigation(w,false,true,a,m.animalFlight===true):a.species==='hare'||a.species==='snow-hare'||animalSpecies(a.species).predator
+        // The actual256 runtime lets non-roaming native species cross fences.
+        // Historical seven-species rules and captured Duck flight stay literal.
+        const fencePassable=version>=256&&isAnimalSpecies256(a.species)?animalCore256(a.species).race.roamMtbDays===null:a.species==='hare'||a.species==='snow-hare'||animalSpecies(a.species).predator;
+        const pathNavigation=version>=256&&a.species==='duck'?animalNavigation(w,false,true,a,m.animalFlight===true):fencePassable
           ?(hareNavigation??=animalNavigation(w,false,true)):(navigation??=animalNavigation(w));
         if(!pathNavigation.step(m.from,m.to))errors.push('Wildlife edge crosses a solid obstacle.');
       }
