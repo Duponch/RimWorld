@@ -1,6 +1,6 @@
 # V441 — Brassage, fermentation et alcool
 
-Lot qualifié localement le 20 octobre 2026, publication en préparation. Schéma : **265**. La production publique reste V440 jusqu’à la publication vérifiée de ce lot. Cette note ne clôt aucun des six ensembles de complétion Core.
+Lot publié le 20 octobre 2026 après qualification ciblée. Schéma : **265**. Cette note ne clôt aucun des six ensembles de complétion Core.
 
 ## Résultat joueur et périmètre
 
@@ -83,3 +83,11 @@ Typage et build Pages acquis, avertissements de taille des chunks et de durée d
 L’import du patrimoine privé14,56Mo/250² reste bloqué dans le navigateur intégré, avec repli WebGL2 et sans erreur console. Capture `ui-import-pending.png`, onglet de test fermé après conservation ; aucun clic de gameplay acquis sur cet import. Diagnostic isolé `import-adoption-diagnostic.json` : même RAW validé, checkpoint et delta publics puis vraie chaîne résidente intégralement égaux, avant/après et prédécesseurs conservés, aucun tick ni RNG avancé. La cause du blocage intégré reste ouverte.
 
 Le paquet compilé est ensuite acquis dans Chrome natif155.0.8059.85/WebGPU, par le vrai sélecteur de fichier et sans injection d’état. Les options Effets sonores/Musique sont décochées avant import et le navigateur lancé muet. La variante de patrimoine explicitement préparée avec recherche, brasserie et fût terminé atteint l’interface en pause en30,0s après demande d’import ; Architecte expose les deux bâtiments, l’inspection de colon et l’éditeur de politiques sont utilisables. Une vraie commande renomme la politique partagée2, puis l’export entier est strictement égal au fichier importé plus cette modification et sa remise à zéro attendue de `needCooldown` ; tick1730 inchangé. Aucune erreur de page ou de rendu ; avertissement Windows `powerPreference` et requête musicale annulée lors de la coupure conservés. Parcours total39,380s, rapports/captures `tmp/brewing-next/native-ui/2026-10-20T20-22-44-953Z/`. Ce parcours qualifie menus, présentation et commande de politique, pas une production ou ingestion réalisée par clic ; leurs transitions physiques sont couvertes séparément ci-dessus.
+
+## Livraison
+
+Produit **3ccc51e3ad5e96c1f168ff546cb4ecc152b0ade4** commité puis poussé sur `origin/main`. Paquet Pages acquis :550fichiers/151855665octets,68fiches et71chemins publics de sauvegardes inchangés, sources et références privées absentes. Rapport `tmp/elsewhere-pages/v441-package-lC1Kd8/`. Les1806empreintes produit restent exactement celles du build pendant les contrôles et après publication. Documentation1072documents/9939liens acquise avant livraison.
+
+Publication Wrangler4.149.0 : [déploiement58093389](https://58093389.elsewhere-cq7.pages.dev), [site public](https://elsewhere-cq7.pages.dev). **156réponses HTTPS200/MIME/octets exacts acquises par reprises sur les deux origines**, avec HEAD, paquet et sauvegardes inchangés. Deux délais du client Nodefetch,30s puis60s sur Les Éclaircies à l’origine du déploiement, sont conservés :87réponses déjà acquises, aucune discordance d’octets. Le second client HTTP reçoit le même fichier entier et exact en1,552s. La reprise native vérifie les69réponses restantes en271,599s, avec téléchargements de certaines textures/sauvegardes plus longs, sans retirer de fichier ni alléger les contrôles. La provenance du préfixe87 et tous ses résultats sont revérifiés avant réemploi ; les rapports rouges restent sous `v441-http-8GbrQS/` et `v441-http-syXT0g/`, rapport final `tmp/elsewhere-pages/v441-http-l5O8WY/`. Cela établit la disponibilité des fichiers, pas la cause des délais ni une nouvelle preuve de gameplay/FPS.
+
+Le seul dépôt non suivi est `references_UI/`, préservé et exclu du paquet ; l’avertissement de dépôt non propre est conservé. Navigateur natif et serveur privé de prévisualisation fermés après conservation des rapports et de l’export entier ; le choix humain de silence reste inscrit dans les consignes et les lanceurs automatisés.

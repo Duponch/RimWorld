@@ -1,8 +1,8 @@
 # Guide joueur
 
-## Brasser et consommer de la bière — V441, qualifié localement
+## Brasser et consommer de la bière — V441 publiée
 
-La filière est qualifiée localement au schéma **265** : 60 nouveaux cas acquis par reprises, présentation et UI native muette acquises. La publication est en préparation ; la version publique demeure V440. Un rouge historique de repos en caravane après recharge reste conservé. Aucune parité Core ni amélioration FPS n’est annoncée. Les préparations de contrôle ne représentent pas une acquisition jouée. [Règles, adaptations et limites V441](brewing-v441.md).
+La filière est qualifiée localement au schéma **265** : 60 nouveaux cas acquis par reprises, présentation et UI native muette acquises. V441 est désormais publiée. Un rouge historique de repos en caravane après recharge reste conservé. Aucune parité Core ni amélioration FPS n’est annoncée. Les préparations de contrôle ne représentent pas une acquisition jouée. [Règles, adaptations et limites V441](brewing-v441.md).
 
 Dans **Recherche**, lancez **Brassage de bière** : **400 points**, sans préalable, au bureau simple ou avancé utilisable. Activez Recherche dans Travail. Après achèvement, ouvrez **Architecte → Production** : la **Brasserie**, manuelle et rotative 3×1, coûte **120 bois + 30 acier** ; le **Tonneau de fermentation**, 1×1, coûte **30 bois + 10 acier**. Prévoyez donc **150 bois et 40 acier** pour la paire, ainsi que des accès aux postes. Construction et approvisionnement sont réels. Une brasserie récupérée reste utilisable sans cette recherche, qui verrouille la construction.
 
@@ -158,7 +158,7 @@ Dans **Nouvelle partie**, choisissez une case **Toundra** et lisez sa températu
 
 Sélectionnez un seul colon, faites un clic droit sur une pile alimentaire au sol, en réserve ou sur une étagère, puis choisissez **Consommer**. Les piles d’une étagère restent des choix distincts. L’ordre remplace l’activité actuelle, sans mise en file ; relâchez Maj. Il exige un accès réel et une portion disponible.
 
-Le colon prend sa portion et mange avant de recevoir la nutrition. Un civil cherche sa place de repas habituelle ; un colon mobilisé reste mobilisé et mange au contact. Le régime et les risques sont affichés : cet ordre direct peut consommer un aliment exclu du régime, mais le choix automatique continue de le respecter. Arrêter l’ordre ou démobiliser interrompt le repas et conserve l’aliment non mangé. Manipulation et capacité à manger sont requises ; corps et inventaires alimentaires généraux ne sont pas proposés. La bière V441 utilise l’ordre **Boire** et les politiques décrites en tête de ce guide, qualifiés localement et en préparation de publication. [Portée et contrôles V346](consuming-v346.md).
+Le colon prend sa portion et mange avant de recevoir la nutrition. Un civil cherche sa place de repas habituelle ; un colon mobilisé reste mobilisé et mange au contact. Le régime et les risques sont affichés : cet ordre direct peut consommer un aliment exclu du régime, mais le choix automatique continue de le respecter. Arrêter l’ordre ou démobiliser interrompt le repas et conserve l’aliment non mangé. Manipulation et capacité à manger sont requises ; corps et inventaires alimentaires généraux ne sont pas proposés. La bière V441 utilise l’ordre **Boire** et les politiques décrites en tête de ce guide, qualifiés localement et publiés en V441. [Portée et contrôles V346](consuming-v346.md).
 
 ## Soins de terrain par un colon mobilisé — V343
 

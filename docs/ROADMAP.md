@@ -1,6 +1,6 @@
 # Plan de développement
 
-**V441 — schéma 265, qualifié localement :** [Brassage, fermentation et alcool](gameplay/brewing-v441.md). Filière physique houblon → moût → bière, politiques partagées et clinique prospective. 60 nouveaux cas acquis par reprises ; un rouge historique de repos en caravane conservé. Présentation et UI native muette acquises ; publication en préparation, production publique V440 conservée. Aucune parité Core ni amélioration FPS annoncée.
+**V441 publiée — schéma 265 :** [Brassage, fermentation et alcool](gameplay/brewing-v441.md). Filière physique houblon → moût → bière, politiques partagées et clinique prospective. 60 nouveaux cas acquis par reprises ; un rouge historique de repos en caravane conservé. Présentation et UI native muette acquises. Aucune parité Core ni amélioration FPS annoncée.
 
 **V440 — schéma 264 :** [Chaîne géothermique](gameplay/geothermal-power-v440.md). Recherche, construction payée sur geyser existant, 3 600 W, chaleur, entretien, retrait et continuation ; 33cas ciblés acquis par reprises, présentation et construction UI acquises. Migration neutre des trois références ; onze rouges historiques identiques au témoin conservés. Aucun gain FPS global ni clôture Core annoncé.
 
@@ -8,7 +8,7 @@ Schéma courant 265 ; migration neutre après validation stricte du 264.
 
 **20 octobre 2026 — mandat de complétion :** [plan canonique des six ensembles Core](development/core-completion-plan-20261020.md). Développement autonome vers une version finale, comparaisons régulières au Core et optimisation continue. Prochain lot : lectures d’environnement et coûts mesurés des Forges ×1 ; puis reprise de chaînes de gameplay cohérentes, sans subordonner tout contenu à une cible FPS. Une colonie reste la référence, voyages et cartes temporaires inclus ; les chronologies ci-dessous restent datées et ne constituent pas un inventaire exhaustif actuel.
 
-**V439 — schéma263 inchangé :** [Lectures locales d’environnement](development/environment-readers-v439.md). CPU chambre Forges Chrome13,509→7,084ms, textes et mondes conservés ; ciblés acquis et sept rouges anciens identiques au témoin. Aucun gain FPS global. Prochain lot fonctionnel : géothermie payée et utile sur les geysers existants.
+**V439 — schéma263 inchangé :** [Lectures locales d’environnement](development/environment-readers-v439.md). CPU chambre Forges Chrome13,509→7,084ms, textes et mondes conservés ; ciblés acquis et sept rouges anciens identiques au témoin. Aucun gain FPS global. Après V440 et V441 publiées, poursuivre les [six ensembles de complétion Core](development/core-completion-plan-20261020.md) selon leurs dépendances et les défauts observés.
 
 **V436 — sols inconnus et capsules, schéma263 inchangé :** [Correctifs visuels](development/ground-arrival-visuals-v436.md). Pigment de sol intégré, faces de murs opaques, terres géographiques couvertes d'herbe et chute/ouverture continues. 51cas ciblés acquis par reprises, 32faces Chrome et recharge entière exacte au40 ; rouges historiques et délais conservés, aucun gain FPS annoncé. Publié05de1776/déploiementc113c1a0,140réponses HTTPS exactes ; sauvegardes publiques préservées.
 
