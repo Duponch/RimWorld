@@ -49,4 +49,6 @@ La consolidation apporte une économie CPU locale et deux invalidations plus pr�
 
 ## Livraison
 
-Commit, paquet, publication et vérification distante restent à consigner après leur acquisition.
+Produit `1f527092e078d511989efc188002d26e19c3f4fd` commité et poussé sur `origin/main`. Paquet vérifié :542fichiers/151652695octets,68fiches et71chemins de sauvegardes publiques strictement conservés, sondes privées absentes ; rapport `tmp/elsewhere-pages/v439-package-UOjLzF/`. Documentation acquise :1070documents/9914liens, trois originaux byte-identiques ; commande Python système indisponible avant exécution, runtime fourni utilisé sans modification de l’environnement utilisateur.
+
+Publication Cloudflare acquise avec Wrangler4.149.0 : [déploiement cd379e0d](https://cd379e0d.elsewhere-cq7.pages.dev), [site public](https://elsewhere-cq7.pages.dev). Le premier contrôle de version a signalé une écriture de journal refusée sur C: ; la publication utilise un journal explicitement localisé sous `tmp/hud-point-v439/`. Avertissement de répertoire Git non propre dû à `references_UI/` non suivi, dossier préservé et exclu du paquet. Vérification distante acquise :140réponses HTTPS200/MIME/octets exacts, HEAD, `dist` et sauvegardes inchangés pendant le contrôle ; rapport `tmp/elsewhere-pages/v439-http-D66mXs/`. Ce contrôle établit la disponibilité du paquet, pas une nouvelle preuve de gameplay ou de performances.
