@@ -1,6 +1,6 @@
 # V444 — Fabriquer le couteau en plastacier
 
-État : **qualification ciblée, présentation et parcours UI acquis par reprises avec réserve de mise en page ; publication en préparation**. Schéma 268 ; dernière productionV443/schéma267. Aucun gain FPS ni achèvement d’ensemble annoncé.
+État : **publié39f0092a, déploiement7390bb27 ; qualification ciblée, présentation et parcours UI acquis par reprises avec réserve de mise en page**. Schéma 268 ; V443 et sauvegardes historiques préservées. Aucun gain FPS ni achèvement d’ensemble annoncé.
 
 ## Résultat joueur et périmètre
 
@@ -52,4 +52,8 @@ Après ce parcours, seule la description de recette est simplifiée : coût, abs
 
 Menus finaux acquis en28,330s : `knife-v444-native-menu-final`, rapport sous `tmp/melee-v444/native-ui/2026-10-20T22-28-13-989Z/`. Même ouvrage initial, vraie facture et filtres, texte à50%, export entier exact sauf identifiant retiré ; aucune notification capturée pendant ce périmètre court. Le contrôle ne rejoue ni fabrication ni équipement et ne clôt pas le signal de mise en page du parcours complet. Après fermeture du serveur, le journal Vite confirme l’unique événement du parcours complet ; conservé dans `tmp/melee-v444/native-ui/vite-notifications.txt`. Les2093empreintes finales sont strictement identiques au dernier gel ; un seul fichier produit diffère du gel précédent, `src/ui/bill-controls.ts`, pour son libellé.
 
-Publication et réponses HTTPS à renseigner après leur acquisition.
+Produit sélectionné et poussé sur `origin/main` : `39f0092aa6611d52c965adc6cdd7c063485b0797`. Paquet Pages acquis en1,912s, rapport privé `tmp/elsewhere-pages/v444-package-x8m6RR/` : tous les71chemins publics et68fiches sont conservés public↔dist, actifs statiques nonJS strictement identiques au paquetV443, aucune addition statique ni pilote privé livré. Le nouveau produit modifie les bundles compilés ; pas les parties publiques.
+
+Déploiement Pages acquis en16,300s, identifiant `7390bb27`, [version publiée](https://7390bb27.elsewhere-cq7.pages.dev), [site principal](https://elsewhere-cq7.pages.dev). Vérification ciblée :20réponses HTTPS exactes,10chemins sur les deux origines, en11,538s ; rapport `tmp/elsewhere-pages/v444-http-cu2aJA/`. Entrée, feuille de style,favicon,bundle,deux workers,catalogue et deux icônes de forge sont vérifiés. Les sauvegardes inchangées sont comparées localement et ne sont pas toutes retéléchargées ; ce contrôle ne vaut pas un parcours de gameplay ni une mesure GPU en production. Seul `references_UI/`, dossier humain non suivi, reste hors commit et hors paquet.
+
+Consolidation documentaire : contrôle final des liens et en-têtes acquis après mise à jour des index de schéma ; le premier rouge d’en-têtes architecture/validation est conservé. Ordres de grandeur de travail : recherches et intégration environ10–15minutes en parallèle ; qualification, reprises, consolidation et publication environ20minutes à partir du premier typage. Les journaux donnent les durées d’exécution précises ; les réparations du pilote ne sont pas comptées comme corrections de règles produit. Les reprises évitables concernent les types du nouveau test, son registre vide, le cycle de sélection du poste et les en-têtes courants ; les cas déjà acquis n’ont pas été rejoués en entier pour ces corrections locales.

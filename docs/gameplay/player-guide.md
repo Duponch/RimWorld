@@ -1,8 +1,8 @@
 # Guide joueur
 
-## Fabriquer un couteau — V444 qualifiée localement
+## Fabriquer un couteau — V444 publiée
 
-Le raccord de fabrication est qualifié localement, publication en préparation : [périmètre et contrôlesV444](plasteel-knife-v444.md). Placez un **Emplacement d’artisanat** ou sélectionnez une des deux forges. Ajoutez **Fabriquer un couteau en plastacier**, autorisez le plastacier et activez **Artisanat** dans Travail. Il faut **30plastacier** ; aucun niveau minimum ni recherche propre à la recette. Construire une nouvelle forge demande toujours la recherche **Forge**.
+Le raccord de fabrication est publié : [périmètre et contrôlesV444](plasteel-knife-v444.md). Placez un **Emplacement d’artisanat** ou sélectionnez une des deux forges. Ajoutez **Fabriquer un couteau en plastacier**, autorisez le plastacier et activez **Artisanat** dans Travail. Il faut **30plastacier** ; aucun niveau minimum ni recherche propre à la recette. Construire une nouvelle forge demande toujours la recherche **Forge**. Si l’ouvrage masque le poste, cliquez de nouveau sur la même case pour parcourir les objets sélectionnables.
 
 L’artisan apporte les matières au contact et conserve un ouvrage avec son auteur et sa progression. Le point d’artisanat travaille à la moitié de l’efficacité nominale d’une forge, avant les autres facteurs. Après fabrication et rangement, sélectionnez un colon puis le couteau avec le clic droit pour l’équiper. Le produit utilise les règles existantes de qualité,PV,combat,vente et récupération. Seul le couteau en plastacier est proposé dans cette tranche.
 
