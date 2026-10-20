@@ -1,6 +1,6 @@
 # Plan de développement
 
-**V443 — schéma 267, qualifié localement, publication préparée :** [Forges, plaques et casque simple](gameplay/smithing-v443.md). Chaîne physique des matières à l’habillement et à la récupération ; migration266 par numéro seul. 45cas nouveaux et42cas voisins acquis par reprises, typage et build Pages acquis. Présentation et UI natives muettes acquises, publication préparée ; aucun gain FPS global ni parité Core annoncé.
+**V443 publiée — schéma 267 :** [Forges, plaques et casque simple](gameplay/smithing-v443.md). Chaîne physique des matières à l’habillement et à la récupération ; migration266 par numéro seul. 45cas nouveaux et42cas voisins acquis par reprises, typage et build Pages acquis. Présentation et UI natives muettes acquises ; publication575e6b1d/451ebf8b vérifiée ; aucun gain FPS global ni parité Core annoncé.
 
 **V442 publiée — schéma 266 :** [Reprise du repos en caravane](gameplay/caravan-rest-v442.md). La trace du repos réel suit les mêmes humains et animaux ; l’ancien rouge de continuation V441 passe avec ses assertions inchangées. 71 cas distincts dans 13 fichiers acquis par reprises ; typage et build Pages acquis. Présentation et UI natives muettes acquises ; V442 publiée. Aucun gain FPS ni parité Core annoncé.
 

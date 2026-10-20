@@ -1,6 +1,6 @@
 # Guide joueur
 
-## Forger une armure — V443 qualifiée localement
+## Forger une armure — V443 publiée
 
 Dans **Recherche**, achevez **Forge** (700points). Dans **Architecte → Production**, construisez une **Forge à combustible** avec100acier et Construction4, ou une **Forge électrique** avec100acier,3composants et Construction5. Les deux occupent3×1cases et se tournent avec Q/E. La première doit recevoir du bois réel (50maximum, consommé seulement pendant le travail) ; la seconde demande210W, chauffe aussi au repos et peut tomber en panne. Activez **Artisanat** dans Travail.
 
