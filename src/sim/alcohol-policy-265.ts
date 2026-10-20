@@ -1,3 +1,4 @@
+import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import {campaignPhysicalCaptures} from './campaign-people.ts';
 import {isCarePatient} from './affiliation.ts';
 import type {Pawn,World} from './types.ts';
@@ -50,7 +51,7 @@ export function validDrugPolicyRegistry265(policies:unknown,nextId:unknown):bool
 /** Command boundary only. Absent old registries are materialized at an actual
  * edit, never at load or inspection. Accepted physical drinks stay committed. */
 export function applyDrugPolicyCommand265(world:World,command:DrugPolicyCommand265):string|null {
- if(world.schemaVersion!==265)return 'Les politiques de drogues nécessitent la version actuelle.';
+ if(!isSchema265OrLater(world.schemaVersion))return 'Les politiques de drogues nécessitent la version actuelle.';
  const policies=effectiveDrugPolicies265(world),users=()=>campaignPhysicalCaptures(world).flatMap(c=>c.owners.pawnOwners.filter(s=>s.simulation!=='frozen').map(s=>s.pawn!));
  if(command.type==='drug-policy-create'){
   const source=command.copyFromId===undefined?undefined:policies.find(p=>p.id===command.copyFromId);

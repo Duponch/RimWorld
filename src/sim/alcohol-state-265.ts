@@ -1,3 +1,4 @@
+import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import {hasAlcoholConsumeMarker265,validAlcoholConsumePawnShape265,validAlcoholConsumeTransport265} from './alcohol-consume-save-265.ts';
 import type {VomitState} from './food-poisoning.ts';
 import type {MedicalRecord} from './injury-types.ts';
@@ -28,7 +29,7 @@ const severity=(v:unknown,lo=0,hi=1):v is number=>typeof v==='number'&&Number.is
 export function validAlcoholHeader265(record:unknown,version:number,human=true):boolean {
  if(!record||typeof record!=='object')return false;
  const d=Object.getOwnPropertyDescriptor(record,'alcohol');if(!d)return !('alcohol'in record);
- const tick=own(record,'tick');if(version!==265||!human||!d.enumerable||!('value'in d)||!tick||!int(tick.value)||!Number.isSafeInteger(tick.value*10))return false;
+ const tick=own(record,'tick');if(!isSchema265OrLater(version)||!human||!d.enumerable||!('value'in d)||!tick||!int(tick.value)||!Number.isSafeInteger(tick.value*10))return false;
  const a=d.value;if(!closed(a,['bornAt','high','tolerance','hangover','lastDoseTick','dosesToday','addiction','cirrhosis','brainDamage','vomit','vomitRequestedAt','bingeRequestedAt'])||!['bornAt','high','tolerance','hangover','lastDoseTick','dosesToday'].every(k=>!!own(a,k))||!int(a.bornAt,0,tick.value)||!severity(a.high,0,3.4028234663852886e38)||!severity(a.tolerance)||!severity(a.hangover)||!int(a.lastDoseTick,a.bornAt,tick.value)||!int(a.dosesToday,1,6000))return false;
  if(Object.hasOwn(a,'addiction')&&(!closed(a.addiction,['severity','need'])||Reflect.ownKeys(a.addiction).length!==2||!severity(a.addiction.severity,Number.MIN_VALUE)||!severity(a.addiction.need)))return false;
  for(const key of ['cirrhosis','brainDamage'])if(Object.hasOwn(a,key)&&a[key]!==true)return false;
@@ -47,11 +48,11 @@ export function cancelAlcoholSpatial265(record:MedicalRecord):void {const a=reco
 export function validAlcoholWorld265(world:World,version:number=world.schemaVersion):boolean {
  try{
   for(const key of ['drugPolicies','nextDrugPolicyId'])if(key in world&&!own(world,key))return false;
-  if(version!==265){if('drugPolicies'in world||'nextDrugPolicyId'in world)return false;}
+  if(!isSchema265OrLater(version)){if('drugPolicies'in world||'nextDrugPolicyId'in world)return false;}
   else if(('drugPolicies'in world)!==('nextDrugPolicyId'in world)||'drugPolicies'in world&&(world.drugPolicies===undefined||world.nextDrugPolicyId===undefined)||!validDrugPolicyRegistry265(world.drugPolicies,world.nextDrugPolicyId))return false;
   const policies=new Set(effectiveDrugPolicies265(world).map(p=>p.id)),seen=new Set<object>();
   for(const capture of campaignPhysicalCaptures(world)){if(capture.world&&!validAlcoholConsumeTransport265(capture.world))return false;for(const slot of capture.owners.pawnOwners){const p=slot.pawn!;if(seen.has(p))continue;seen.add(p);
-   const policy=Object.getOwnPropertyDescriptor(p,'drugPolicyId');if(policy?(version!==265||!('value'in policy)||!policy.enumerable||!int(policy.value,1,(world.nextDrugPolicyId??2)-1)||slot.simulation!=='frozen'&&!policies.has(policy.value)):'drugPolicyId'in p)return false;
+   const policy=Object.getOwnPropertyDescriptor(p,'drugPolicyId');if(policy?(!isSchema265OrLater(version)||!('value'in policy)||!policy.enumerable||!int(policy.value,1,(world.nextDrugPolicyId??2)-1)||slot.simulation!=='frozen'&&!policies.has(policy.value)):'drugPolicyId'in p)return false;
    if(p.health&&(!validAlcoholHeader265(p.health,version,p.health.body===undefined)||p.health.alcohol&&p.health.alcohol.lastDoseTick>slot.validationTick))return false;
    if(p.health?.alcohol){
     const h=p.health,a=h.alcohol!,spatial=slot.kind==='map'?capture.world:undefined;
@@ -65,9 +66,9 @@ export function validAlcoholWorld265(world:World,version:number=world.schemaVers
    if(hasAlcoholConsumeMarker265(p)&&(slot.simulation!=='local'||!validAlcoholConsumePawnShape265(p,version,capture.world??world)))return false;
    const tolerance=p.recreation?.tolerance as Record<string,unknown>|undefined,bored=p.recreation?.bored as Record<string,unknown>|undefined;
    if(tolerance&&('chemical'in tolerance||bored&&'chemical'in bored)){
-    if(version!==265||!own(tolerance,'chemical')||!bored||!own(bored,'chemical')||typeof tolerance.chemical!=='number'||!Number.isFinite(tolerance.chemical)||tolerance.chemical<0||tolerance.chemical>100||typeof bored.chemical!=='boolean'||tolerance.chemical>50&&!bored.chemical||tolerance.chemical<30&&bored.chemical)return false;
+    if(!isSchema265OrLater(version)||!own(tolerance,'chemical')||!bored||!own(bored,'chemical')||typeof tolerance.chemical!=='number'||!Number.isFinite(tolerance.chemical)||tolerance.chemical<0||tolerance.chemical>100||typeof bored.chemical!=='boolean'||tolerance.chemical>50&&!bored.chemical||tolerance.chemical<30&&bored.chemical)return false;
    }
-   if(p.mental?.crisis?.kind==='drug-binge'&&version!==265)return false;
+   if(p.mental?.crisis?.kind==='drug-binge'&&!isSchema265OrLater(version))return false;
   }
   }
   // Animals and machines can never acquire this human ingestion mechanism.

@@ -12,6 +12,7 @@ import {newCookingBill} from '../src/sim/cooking-bills.ts';
 import {validBrewingHistoricalTransport265} from '../src/sim/brewing-catalogue-save-265.ts';
 import {orbitalBeerCount265,orbitalStock} from '../src/sim/orbital-stock.ts';
 import type {World,Structure} from '../src/sim/types.ts';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 
 function publicText(path:string):string {
  const text=readFileSync(new URL(`../public/test-saves/${path}`,import.meta.url),'utf8'),v=JSON.parse(text);
@@ -41,13 +42,13 @@ test.each([
  ['Les Forges','v432/les-forges-crash-test.json'],
  ['Les Aulnes','v394/les-aulnes-integrees.json'],
  ['Les Éclaircies','v419/les-eclaircies.json'],
-] as const)('%s: strict264 →265 changes only the campaign number, all owners included',(name,path)=>{
+] as const)('%s: strict264 → current changes only the campaign number, all owners included',(name,path)=>{
  // A public older payload first takes its ordinary old migrations. This
  // explicit264 witness is not described as an originally published264 save.
  const witness=old264(deserializeWorld(publicText(path))),before=JSON.stringify(witness);
  const migrated=deserializeCampaign(before);
- expect(migrated.schemaVersion).toBe(265);
- expect(JSON.parse(serializeCampaign(migrated)),name).toEqual({...JSON.parse(before),schemaVersion:265});
+ expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
+ expect(JSON.parse(serializeCampaign(migrated)),name).toEqual({...JSON.parse(before),schemaVersion:SCHEMA_VERSION});
  expect(JSON.stringify(witness)).toBe(before);
  expect(migrated).not.toHaveProperty('drugPolicies');expect(migrated).not.toHaveProperty('nextDrugPolicyId');
  expect(migrated.research).not.toHaveProperty('brewing');

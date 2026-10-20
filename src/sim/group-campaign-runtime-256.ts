@@ -39,7 +39,7 @@ export class GroupCampaignRuntime256 {
  owners(root:CampaignState,coreTick?:number):GroupMotionOwner[] {
   return (root.worldGroups?.groups??[]).flatMap(r=>{const g=r.state;if(r.localMapId!==null||!('members'in g)||coreTick!==undefined&&g.departedAt*10>=coreTick)return [];return [{id:g.id,tile:g.tile,destination:g.destination,moving:g.phase==='travelling'&&!g.paused&&g.stop===null,segment:g.segment,nextPassable:!g.segment||this.geometry.passable(root,g.segment.to),...g.travel?{travel:g.travel}:{},...g.animalOwners?.interval&&(coreTick===undefined||g.animalOwners.interval.startedAt*10<coreTick)?{animalInterval:g.animalOwners.interval}:{}}];});
  }
- bootstrap(root:CampaignState):void {this.#root=root;this.restMarks.clear();this.physical.clear();this.#physicalChanged.clear();this.motion.bootstrap(this.owners(root));for(const r of root.worldGroups!.groups)if('members'in r.state&&r.state.travel)this.physical.rebuild(r.state as GroupForageOwner256);}
+ bootstrap(root:CampaignState):void {this.#root=root;this.restMarks.bootstrap(Number(root.schemaVersion)>=266);this.physical.clear();this.#physicalChanged.clear();this.motion.bootstrap(this.owners(root));for(const r of root.worldGroups!.groups)if('members'in r.state&&r.state.travel)this.physical.rebuild(r.state as GroupForageOwner256);}
  setGlobeSelected(root:CampaignState,selected:boolean):void {this.authority(root);this.motion.setGlobeSelected(selected);}
  private authority(root:CampaignState):void {if(root!==this.#root||!root.worldMaps||!root.worldGroups)throw Error('Missing confirmed caravan generation');}
  /** A confirmed encounter command invalidates only its real physical capture.

@@ -1,4 +1,5 @@
 import {validAlcoholWorld265} from '../sim/alcohol-state-265.ts';
+import {validCaravanRestField266} from '../sim/caravan-rest-state-266.ts';
 import {validBrewingHistoricalTransport265} from '../sim/brewing-catalogue-save-265.ts';
 import {validFermentationWorld265} from '../sim/fermentation-save-265.ts';
 import {validBrewingResearchTransport265,validGeothermalResearchTransport} from '../sim/research-save.ts';
@@ -1179,6 +1180,7 @@ export class SnapshotDecoder {
     if(Object.hasOwn(message.world,'bombWaves')&&(!Array.isArray(message.world.bombWaves)||message.world.bombWaves.some(w=>!validBombWaveShape(w,message.world.schemaVersion))))return resync('Forme de vague Bomb invalide.');
     let hasDraftedTend=false;const forcedConsumers:Pawn[]=[];
     for(const pawn of message.world.pawns){
+      if(!validCaravanRestField266(pawn as unknown as Record<string,unknown>,message.world.schemaVersion,pawn.health?.death?.tick??message.world.tick))return resync('Trace de repos de caravane invalide ou future.');
       if(!validNativeHumanField256(pawn,message.world.schemaVersion))return resync('Identité humaine native invalide ou future.');
       if(!validArrivalRotation256(pawn,message.world.schemaVersion))return resync('Orientation d’arrivée invalide ou future.');
       if(!pawn||typeof pawn!=='object'||Array.isArray(pawn))return resync('Personne locale invalide pour ce snapshot.');
@@ -1517,6 +1519,7 @@ export class SnapshotDecoder {
     if(!validPackagedSurvivalState(next,next.schemaVersion))return resync('Production de repas de survie invalide ou future.');
     if(next.schemaVersion<177&&[...next.structures,...next.jobs,...(next.packed??[]).map(p=>p.building)].some(s=>s.kind==='sun-lamp'))return resync('Lampe horticole future.');
     if(validateScoutRegistry(next,next.schemaVersion).length)return resync('Registre de reconnaissance invalide.');
+    for(const animal of next.wildlife?.animals??[])if(!validCaravanRestField266(animal as unknown as Record<string,unknown>,next.schemaVersion,animal.health?.death?.tick??next.tick))return resync('Trace de repos de caravane animale invalide ou future.');
     if(!validWildlifeExitState(next,next.schemaVersion))return resync('Départ de faune invalide.');
     if(next.jobs.some(j=>isAncientGeneratedFloor256(j.floor)&&(next.schemaVersion<256||j.kind!=='remove-floor'||next.tiles[j.z*next.width+j.x]?.floor!==j.floor)))return resync('Invalid generated ancient floor work.');
     if(next.jobs.some(j=>!validFrameDamage256(j,next.schemaVersion)))return resync('Dégâts de cadre invalides ou futurs.');

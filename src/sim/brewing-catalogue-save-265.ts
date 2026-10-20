@@ -1,3 +1,4 @@
+import {isSchema265OrLater} from './schema-compatibility-257.ts';
 /** Prospective brewing catalogue guard. This reads only owning domains, never
  * terrain/planet grids, and runs before a historical version is migrated. */
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
@@ -21,11 +22,11 @@ function oldDomain(v:unknown,resourceRoot=false):boolean {
  return true;
 }
 export function validBrewingCatalogueDomains265(value:unknown,version:number):boolean {
- try{return version>=265||!record(value)||DOMAINS.every(k=>oldDomain(value[k],k==='resources'));}catch{return false;}
+ try{return isSchema265OrLater(version)||!record(value)||DOMAINS.every(k=>oldDomain(value[k],k==='resources'));}catch{return false;}
 }
 export function validBrewingHistoricalTransport265(value:unknown,version:number):boolean {
  try{
-  if(version>=265||!record(value))return true;
+  if(isSchema265OrLater(version)||!record(value))return true;
   const w=record(value.world)?value.world:value;
   if(!validBrewingCatalogueDomains265(w,version))return false;
   if(record(w.secondarySite)&&!validBrewingCatalogueDomains265(w.secondarySite.map,version))return false;

@@ -27,7 +27,7 @@ test('hops uses exact Plant diets and legacy rough-herbivore fallback only from2
  base.health=createAnimalMedicalRecord256(w,base);
  w.wildlife={profile:'temperate-hares-v1',rng:1,animals:[base],eatenPlants:0,eatenNutrition:0,eatenItems:0};
  w.piles=[];addMaterial(w,'food',10,{type:'ground',x:10,z:10},'hops');addMaterial(w,'beer',2,{type:'ground',x:11,z:10},'beer');
- const hops=w.piles.find(p=>p.item==='hops')!,beer=w.piles.find(p=>p.item==='beer')!,before=JSON.stringify(w);
+ const hops=w.piles.find(p=>p.item==='hops')!,beer=w.piles.find(p=>p.item==='beer')!,before=JSON.stringify(w),version=w.schemaVersion;
  for(const species of ANIMAL_SPECIES_IDS_256){
   const animal={...base,species},plant=(animalDietFlags256(species)!&0x40)!==0;
   expect(animalItemDiet256(animal,'hops',false,265),species).toBe(plant);expect(animalPileFood(w,animal,hops),species).toBe(plant);
@@ -35,6 +35,6 @@ test('hops uses exact Plant diets and legacy rough-herbivore fallback only from2
   expect(animalPileFood(w,animal,beer),species).toBe(false);expect(caravanAnimalFood256(animal,beer,w.tick,265),species).toBe(false);
  }
  for(const [species,expected] of [['hare',true],['red-fox',false]] as const){const animal={...base,species};expect(animalPileFood(w,animal,hops)).toBe(expected);expect(caravanAnimalFoodEver256(animal,'hops',265)).toBe(expected);}
- Object.assign(w,{schemaVersion:264});expect(animalPileFood(w,{...base,species:'hare'},hops)).toBe(false);w.schemaVersion=265;
+ Object.assign(w,{schemaVersion:264});expect(animalPileFood(w,{...base,species:'hare'},hops)).toBe(false);w.schemaVersion=version;
  expect(JSON.stringify(w)).toBe(before);
 });

@@ -1,3 +1,4 @@
+import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import {isColonist} from './affiliation.ts';
 import {allowedAreaAllows} from './allowed-area-state.ts';
 import {materialAllowedForPlayer256} from './material-permission-256.ts';
@@ -28,7 +29,7 @@ function beers(world:World):MaterialPile[]{let cache=sourceCache.get(world);if(!
 /** Read-only UI refusal. Explicit orders bypass a policy, as Core direct
  * ingestion does; permission, owner and physiological ability still apply. */
 export function alcoholDrinkReason265(world:World,pawn:Pawn,pile:MaterialPile|undefined):string|null {
- if(world.schemaVersion!==265)return 'La bière nécessite une sauvegarde actuelle.';
+ if(!isSchema265OrLater(world.schemaVersion))return 'La bière nécessite une sauvegarde actuelle.';
  if(!world.pawns.includes(pawn)||!isColonist(pawn)||pawn.prisoner||pawn.visitor||pawn.raid||pawn.podRescue)return 'Choisissez un colon humain libre.';
  if(['downed','dead'].includes(pawn.state)||pawn.health?.death||pawn.health?.body!==undefined)return 'Ce colon ne peut pas boire.';
  if(pawn.mental?.crisis||carrierOf(world,pawn.id))return 'Ce colon ne peut pas recevoir cet ordre.';
@@ -89,7 +90,7 @@ export function planAlcoholNeed265(world:World,pawn:Pawn,context:NeedContext,rea
 /** Clinical mental admission uses the same bounded search quota. Core's
  * availability check ignores forbidden status, but still needs actual reach. */
 export function alcoholBingeAdmission265(world:World,pawn:Pawn,budget?:SearchBudget):boolean|null {
- if(world.schemaVersion!==265||!isColonist(pawn)||pawn.prisoner||pawn.visitor||pawn.raid||pawn.podRescue||pawn.mental?.crisis||['dead','downed','sleeping'].includes(pawn.state)||carrierOf(world,pawn.id))return false;
+ if(!isSchema265OrLater(world.schemaVersion)||!isColonist(pawn)||pawn.prisoner||pawn.visitor||pawn.raid||pawn.podRescue||pawn.mental?.crisis||['dead','downed','sleeping'].includes(pawn.state)||carrierOf(world,pawn.id))return false;
  const candidates=beers(world).filter(p=>p.owner.type==='ground'&&!world.tiles[p.owner.z*world.width+p.owner.x]?.fogged&&(isRoofed(world,p.owner.z*world.width+p.owner.x)||(p.owner.x-pawn.x)**2+(p.owner.z-pawn.z)**2<=45**2));
  if(!candidates.length)return false;
  const reach=search(world,pawn,blockedCells(world),new Set(),budget??{remaining:1,pairs:0},new Set(candidates.map(p=>{const o=p.owner as {x:number;z:number};return o.z*world.width+o.x;})));if(!reach)return null;
@@ -98,7 +99,7 @@ export function alcoholBingeAdmission265(world:World,pawn:Pawn,budget?:SearchBud
 /** The engine calls after urgent ordinary needs and before work/recreation.
  * Search/release share its real tick-local navigation and conservative cargo. */
 export function processAutomaticAlcohol265(world:World,pawn:Pawn,context:NeedContext):boolean {
- if(world.schemaVersion!==265||pawn.need||pawn.needCooldown>0||pawn.orders.active!==null||pawn.draft||!isColonist(pawn)||pawn.prisoner||pawn.visitor||pawn.raid||pawn.podRescue||['dead','downed','sleeping'].includes(pawn.state)||pawn.medicalSleep||pawn.health?.death||pawn.health?.body!==undefined||carrierOf(world,pawn.id)||urgentMedicalTask(pawn)||pawn.interruptedCargo||pawn.burning||pawn.bombRefuge||pawn.heatRefuge||pawn.stun||pawn.melee||pawn.shooting||pawn.mental?.crisis&&pawn.mental.crisis.kind!=='drug-binge')return false;
+ if(!isSchema265OrLater(world.schemaVersion)||pawn.need||pawn.needCooldown>0||pawn.orders.active!==null||pawn.draft||!isColonist(pawn)||pawn.prisoner||pawn.visitor||pawn.raid||pawn.podRescue||['dead','downed','sleeping'].includes(pawn.state)||pawn.medicalSleep||pawn.health?.death||pawn.health?.body!==undefined||carrierOf(world,pawn.id)||urgentMedicalTask(pawn)||pawn.interruptedCargo||pawn.burning||pawn.bombRefuge||pawn.heatRefuge||pawn.stun||pawn.melee||pawn.shooting||pawn.mental?.crisis&&pawn.mental.crisis.kind!=='drug-binge')return false;
  if(!beers(world).length)return false;
  const reason=alcoholChoice265(world,pawn);if(!reason)return false;
  const body=pawnBody(pawn);if(body.capacities.eating<=0||body.capacities.manipulation<=0)return false;
@@ -126,7 +127,7 @@ export function takeOwnedBeer265(world:World,pawn:Pawn,source:MaterialPile,task:
 }
 /** Called only after the real held unit was removed at the ingest contact. */
 export function ingestBeer265(world:World,pawn:Pawn):void {
- if(world.schemaVersion!==265)throw Error('Future beer ingestion');
+ if(!isSchema265OrLater(world.schemaVersion))throw Error('Future beer ingestion');
  if(pawn.health&&pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
  pawn.health??=createMedicalRecord(world.tick);
  ingestAlcoholDose265(pawn.health,alcoholBodySize265(pawn),world.tick,()=>healthRandom(world));

@@ -1,3 +1,4 @@
+import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import {ancientCasketOpenIntent256} from './ancient-casket-open-intent-256.ts';
 import {isAncientCasket256} from './ancient-casket-state-256.ts';
 import {planAncientCasketRelease256} from './ancient-casket-release-256.ts';
@@ -124,7 +125,7 @@ export function queryOrderOptions(world:World,pawnId:number,cell:Cell,queue=fals
     if(!reason&&!planAncientCasketRelease256(world,casket).ok)reason='Le contenu de cette capsule ne peut pas encore être libéré.';
     options.push({jobId:0,openCasketId:casket.id,label:'Ouvrir la capsule ancienne',enabled:!reason,...reason?{reason}:{}});
   }
-  for(const food of piles)if(food.kind==='food'||world.schemaVersion===265&&food.kind==='beer'&&food.item==='beer'){
+  for(const food of piles)if(food.kind==='food'||isSchema265OrLater(world.schemaVersion)&&food.kind==='beer'&&food.item==='beer'){
     const reason=queue?'La consommation directe ne peut pas être mise en file.':consumeReason(world,pawn,food)??(!consumeProposal(world,pawn,food)?'Aucun accès libre au contact de cette nourriture.':undefined);
     options.push({jobId:0,consumePileId:food.id,label:(food.kind==='beer'?'Boire ':'Consommer ')+ITEM_DEFINITIONS[food.item].label,enabled:!reason,warnings:consumeWarnings(world,pawn,food),...reason?{reason}:{}});
   }

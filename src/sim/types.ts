@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 265 as const;
+export const SCHEMA_VERSION = 266 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -81,7 +81,7 @@ export interface Job extends Cell { frameDamage?:number;
   progress: number;
   escrow: Stock;
 }
-export interface Pawn extends Cell { worldAffiliation259?:import("./world-affiliation-259.ts").WorldAffiliation259; prisonerHistory259?:import("./prisoner-state.ts").PrisonerState; nativeHuman?:import('./native-human-identity-256.ts').NativeHumanIdentity256; hiveDefeats?:number[];
+export interface Pawn extends Cell { caravanRest?:import('./caravan-rest-state-266.ts').CaravanRestMark266; worldAffiliation259?:import("./world-affiliation-259.ts").WorldAffiliation259; prisonerHistory259?:import("./prisoner-state.ts").PrisonerState; nativeHuman?:import('./native-human-identity-256.ts').NativeHumanIdentity256; hiveDefeats?:number[];
   /** Initial actual Camp Spawn facing; absent on historical actors. */
   arrivalRotation?:Orientation;
   /** One true global bed owner; local bedId/bedSlot remain map-local aliases. */

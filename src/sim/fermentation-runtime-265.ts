@@ -1,3 +1,4 @@
+import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import {FERMENTING_CAPACITY_265,FERMENTING_DURATION_CORE_265,FERMENTING_SERVICE_TICKS_265,fermentationSpeed265,type BarrelExtractionTask265} from './fermentation-state-265.ts';
 import {temperatureAt,TemperatureView} from './temperature.ts';
 import type {ThermalLayout} from './thermal-topology.ts';
@@ -22,7 +23,7 @@ const actualBarrel=(w:World,id:number)=>w.structures.find(s=>s.id===id&&s.kind==
 const capable=(w:World,p:Pawn)=>!backgroundWorkRefusal(p,'haul')&&!medicalWorkRefusal(p)&&!p.collapsePending&&(p.faction??'colony')==='colony'&&!p.prisoner&&!p.visitor&&!p.raid&&!p.podRescue&&!p.draft&&!p.stun&&!p.burning&&!p.mental?.crisis&&p.state!=='dead'&&p.state!=='downed'&&pawnBody(p).capacities.manipulation>0&&allowedAreaWorkAllowed(w,p)&&workPriority(p,'haul')>0;
 
 export function barrelFillAllowed265(w:World,s:Structure):boolean {
-  if(w.schemaVersion<265||s.kind!=='fermenting-barrel'||!s.fermentation||s.fermentation.progress>=1||s.fermentation.wort>=25||blockedBarrel(w,s))return false;
+  if(!isSchema265OrLater(w.schemaVersion)||s.kind!=='fermenting-barrel'||!s.fermentation||s.fermentation.progress>=1||s.fermentation.wort>=25||blockedBarrel(w,s))return false;
   const t=temperatureAt(w,s);return t>=1&&t<=30;
 }
 export function barrelFreeCapacity265(w:World,id:number,exceptPawn?:number):number {
@@ -45,7 +46,7 @@ export function finishBarrelFill265(w:World,p:Pawn,carry:MaterialPile):boolean {
  * product's stable thing-ID phase; Unity's internal ticker slot is not copied.
  * Only installed barrels advance. Packed/transit content is deliberately idle. */
 export function advanceFermentation265(w:World,layout?:ThermalLayout):void {
-  if(w.schemaVersion<265)return;
+  if(!isSchema265OrLater(w.schemaVersion))return;
   let view:TemperatureView|undefined;
   for(const s of w.structures){
     const state=s.fermentation;if(s.kind!=='fermenting-barrel'||!state)continue;
@@ -68,7 +69,7 @@ export function fermentationInspection265(w:World,s:Structure){
 }
 export interface BarrelFillCandidate265 {priority:number;rank:number;distance:number;id:number;sourceId:number;quantity:number;destination:HaulDestination;target:Cell}
 export function fermentationHaulCandidates265(w:World,p:Pawn,reach:Reachability):BarrelFillCandidate265[] {
-  if(w.schemaVersion<265||!capable(w,p))return [];
+  if(!isSchema265OrLater(w.schemaVersion)||!capable(w,p))return [];
   const results:BarrelFillCandidate265[]=[];
   for(const s of w.structures){
     if(s.kind!=='fermenting-barrel')continue;
@@ -83,7 +84,7 @@ export function fermentationHaulCandidates265(w:World,p:Pawn,reach:Reachability)
   return results;
 }
 export function barrelExtractionProposal265(w:World,p:Pawn,reach:Reachability):{task:BarrelExtractionTask265;path:Cell[]}|null {
-  if(w.schemaVersion<265||!capable(w,p))return null;
+  if(!isSchema265OrLater(w.schemaVersion)||!capable(w,p))return null;
   const reserved=reservedServiceCells(w,p.id);
   for(const s of w.structures.filter(s=>s.kind==='fermenting-barrel'&&s.fermentation&&s.fermentation.wort>0&&s.fermentation.progress>=1).sort((a,b)=>Math.abs(a.x-p.x)+Math.abs(a.z-p.z)-Math.abs(b.x-p.x)-Math.abs(b.z-p.z)||a.id-b.id)){
     if(!targetBuildingPlayerUse263(w,s)||blockedBarrel(w,s)||!allowedAreaAllows(w,p,s)||w.pawns.some(q=>q.id!==p.id&&q.brewing?.barrelId===s.id)||haulReservations(w,p.id).some(h=>h.destination.type==='fermenting-barrel'&&h.destination.structureId===s.id))continue;

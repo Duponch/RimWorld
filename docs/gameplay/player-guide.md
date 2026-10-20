@@ -1,5 +1,7 @@
 # Guide joueur
 
+**V442 — reprise des caravanes :** sauvegarder pendant le repos conserve désormais le dernier service réel du même voyageur ou animal. La prochaine variation de fatigue ne change plus du fait d’une recharge dans les cas qualifiés. Les sauvegardes antérieures ne reçoivent aucun repos ajouté. [Périmètre et contrôles](caravan-rest-v442.md).
+
 ## Brasser et consommer de la bière — V441 publiée
 
 La filière est qualifiée localement au schéma **265** : 60 nouveaux cas acquis par reprises, présentation et UI native muette acquises. V441 est désormais publiée. Un rouge historique de repos en caravane après recharge reste conservé. Aucune parité Core ni amélioration FPS n’est annoncée. Les préparations de contrôle ne représentent pas une acquisition jouée. [Règles, adaptations et limites V441](brewing-v441.md).

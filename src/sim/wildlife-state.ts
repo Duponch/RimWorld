@@ -2,9 +2,12 @@ import type { Cell } from './types.ts';
 import type { TravelSegment } from './travel-timing.ts';
 import type { MedicalRecord } from './injury-types.ts';
 import type { StaggerState } from './stagger.ts';
+import type { CaravanRestMark266 } from './caravan-rest-state-266.ts';
 import { ANIMAL_SPECIES,type AnimalSpeciesId,type FaunaBiomeId } from './animal-species.ts';
 
 export interface WildAnimal extends Cell { hiveThink?:import('./cave-hive-think-256.ts').HiveThinkData256; hiveJob?:import('./cave-hive-lord-256.ts').HiveDutyJob256; hive?:import('./cave-insect-constructor-256.ts').HiveInsectMembership256; startingPet?:import("./starting-pet-state-256.ts").StartingPetState256; arrivalRotation?:import('./types.ts').Orientation; growthTracker?:import("./animal-growth-runtime-256.ts").AnimalGrowthTracker256; caravanCarrySick?:boolean; corpseDamage?:number;
+  /** Last actual caravan rest; retained history, never a local rest promise. */
+  caravanRest?:CaravanRestMark266;
   wander?:import('./animal-condition-mental-state-256.ts').AnimalWanderState256;
   confusion?:import('./animal-condition-mental-state-256.ts').AnimalConfusion256;
   mapBed?:import('./actor-map-bed-256.ts').ActorMapBed256;

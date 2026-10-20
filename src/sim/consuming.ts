@@ -1,3 +1,4 @@
+import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import { isColonist } from './affiliation.ts';
 import {alcoholDrinkReason265,beerPile265} from './alcohol-ingestion-265.ts';
 import { allowedAreaReason } from './allowed-area-state.ts';
@@ -42,7 +43,7 @@ function actorReason(world:Pick<World,'schemaVersion'|'tick'>,pawn:Pawn):string|
 export function consumeActivityValid(world:Pick<World,'schemaVersion'|'tick'>,pawn:Pawn):boolean {
   const task=pawn.need;
   return isForcedConsuming(pawn)&&!actorReason(world,pawn)&&task?.kind==='eat'&&task.paste===undefined&&task.phase!=='collect'
-    &&(task.alcoholReason===undefined||world.schemaVersion===265&&task.alcoholReason==='ordered'&&task.quantity===1)
+    &&(task.alcoholReason===undefined||isSchema265OrLater(world.schemaVersion)&&task.alcoholReason==='ordered'&&task.quantity===1)
     &&pawn.orders.active==='consume'&&!pawn.orders.queue.length&&!pawn.priorityWork&&!pawn.interruptedCargo
     &&pawn.jobId===null&&!pawn.haul&&!pawn.cooking&&!pawn.rescue&&!pawn.tend&&!pawn.feed&&!pawn.ward&&!pawn.surgery
     &&!pawn.research&&!pawn.orbitalTrade&&!pawn.deepWork&&!pawn.animalHandling&&!pawn.animalCare&&!pawn.animalFeed&&!pawn.animalRescue
@@ -67,7 +68,7 @@ export function consumeReason(world:World,pawn:Pawn,pile:MaterialPile|undefined)
   if(pawn.surgery?.phase==='work')return 'Terminez ou annulez l’intervention en cours avant de consommer.';
   const carrying=world.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)||world.packed.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
   if(carrying&&(pawn.moveCooldown>0||(pawn.motion?.end??0)>world.tick))return 'Attendez la fin du déplacement avant de déposer la cargaison.';
-  if(!pile||!world.piles.includes(pile)||!(pile.kind==='food'&&FOOD_ITEMS.includes(pile.item as FoodItemId)||world.schemaVersion===265&&beerPile265(pile))||pile.owner.type!=='ground')return 'Choisissez une pile de nourriture ou de bière présente au sol.';
+  if(!pile||!world.piles.includes(pile)||!(pile.kind==='food'&&FOOD_ITEMS.includes(pile.item as FoodItemId)||isSchema265OrLater(world.schemaVersion)&&beerPile265(pile))||pile.owner.type!=='ground')return 'Choisissez une pile de nourriture ou de bière présente au sol.';
   if(beerPile265(pile)){const beerReason=alcoholDrinkReason265(world,pawn,pile);if(beerReason)return beerReason;}
   if(ticksUntilRot(pile,world.tick)<=0)return 'Cette nourriture a expiré.';
   const area=allowedAreaReason(world,pawn,pile.owner);if(area)return area;

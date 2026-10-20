@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V442 — schéma266 :** aucun objet ajouté. La [reprise du repos des caravanes](caravan-rest-v442.md) corrige l’écart historique V441 dans les cas qualifiés ; mêmes humains, animaux, biens et effets d’alcool conservés, migration265 neutre. Qualification ciblée et UI acquises, publication en préparation.
+
 **V441 publiée — [Brassage, fermentation et alcool](brewing-v441.md), schéma 265.** Chaîne physique houblon → moût → tonneau → bière, recherche Brassage de bière 400, construction payée, factures Cuisine, remplissage/extraction Transport et vraie consommation. 60 nouveaux cas acquis par reprises ; présentation et UI native muette acquises. V441 est publiée ; un rouge historique de repos en caravane reste ouvert. Aucune parité Core ni amélioration FPS annoncée.
 
 | Bien ou service V441 | Acquisition et usage intégrés | Limites et conservation |

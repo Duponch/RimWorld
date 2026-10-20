@@ -36,7 +36,7 @@ export function advanceGroupAnimalPersonal256(w:World,g:AwayGroup,clinicalRest:(
  if((Number(w.schemaVersion)!==259&&Number(w.schemaVersion)!==260&&(Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&!isSchema263OrLater(Number(w.schemaVersion)))))||g.admission?.revision!==2)advanceCaravanOtherFoodAges256(w,g);
  const env=groupAnimalEnvironment256(w,g);advanceCaravanAnimalBiology256(w,g,{...env,random:()=>healthRandom(w),clinicalRest,originForInventory:id=>g.animalOwners?.origins.find(o=>o.pawnId===id)??g.reorganization?.memberOrigins.find(o=>o.pawnId===id),retire:(a,o)=>retireCaravanAnimal256(w,g,a,o)});
 }
-export function advanceGroupAnimalMeters256(g:AwayGroup,coreTick:number,marks:GroupRestMarks256):void {for(const a of g.animalOwners?.members??[])if(a.ageTicks>0)advanceCaravanAnimalNeed150256(a,coreTick,marks.effectiveness(a.id,coreTick));}
+export function advanceGroupAnimalMeters256(g:AwayGroup,coreTick:number,marks:GroupRestMarks256):void {for(const a of g.animalOwners?.members??[])if(a.ageTicks>0)advanceCaravanAnimalNeed150256(a,coreTick,marks.effectiveness(a.id,coreTick,a));}
 /** Legacy humans keep their old cadence even after a real animal transfer. */
 export function advanceLegacyAnimalInterval256(w:World,g:AwayGroup,coreTick:number,deltaCore:number,carried:ReadonlySet<number>,marks:GroupRestMarks256):void {
  const moving=g.phase==='travelling'&&!g.paused&&g.stop===null,env=groupAnimalEnvironment256(w,g,coreTick);for(const p of groupPhysicalPawns256(g))if('species'in p){if(p.ageTicks===0)continue;if(!moving||carried.has(p.id))marks.mark(p,coreTick,.8);satisfyCaravanAnimalFood256(w,g,p,{...env,random:()=>healthRandom(w)});}

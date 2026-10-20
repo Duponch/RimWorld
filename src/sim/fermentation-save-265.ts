@@ -1,3 +1,4 @@
+import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import {validFermentationState265,FERMENTING_SERVICE_TICKS_265} from './fermentation-state-265.ts';
 import {isHaulOrder} from './order-types.ts';
 import {everyHumanPawnOwner} from './human-owners.ts';
@@ -14,7 +15,7 @@ const incompatibleExtraction=(p:Pawn):boolean=>!!(p.need||p.recreation.task||p.a
 export function validFermentationWorld265(w:World,version:number=w.schemaVersion):boolean {
   const building=(s:Structure):boolean=>{
     if(brewingKind(s.kind)){
-      if(version<265||s.material!=='wood'||s.footprint!=='standard'||!integer(s.orientation,0,3)||['quality','power','fuel'].some(k=>own(s,k)))return false;
+      if(!isSchema265OrLater(version)||s.material!=='wood'||s.footprint!=='standard'||!integer(s.orientation,0,3)||['quality','power','fuel'].some(k=>own(s,k)))return false;
       return s.kind==='fermenting-barrel'?own(s,'fermentation')&&validFermentationState265(s.fermentation):!own(s,'fermentation');
     }
     return !own(s,'fermentation');
@@ -25,15 +26,15 @@ export function validFermentationWorld265(w:World,version:number=w.schemaVersion
     if(own(j,'fermentation'))return false;
     const targets=[j.furniture,j.deconstruction,j.fixBreakdown,j.repair];
     if(targets.some(v=>v&&own(v,'fermentation')))return false;
-    if(version<265&&(brewingKind(j.kind)||targets.some(v=>v&&'kind' in v&&brewingKind(v.kind))))return false;
+    if(!isSchema265OrLater(version)&&(brewingKind(j.kind)||targets.some(v=>v&&'kind' in v&&brewingKind(v.kind))))return false;
     if(brewingKind(j.kind)&&(j.material!=='wood'||j.footprint!=='standard'||!integer(j.orientation,0,3)||own(j,'quality')||own(j,'fuel')||own(j,'power')))return false;
   }
-  for(const key of ['lostWort','lostBeer'] as const)if(own(w.deconstructed,key)&&(version<265||!integer(w.deconstructed[key],1)))return false;
+  for(const key of ['lostWort','lostBeer'] as const)if(own(w.deconstructed,key)&&(!isSchema265OrLater(version)||!integer(w.deconstructed[key],1)))return false;
   const barrelClaims=new Set<number>();
   const pawn=(p:Pawn,local:boolean):boolean=>{
     if(own(p,'brewing')){
       const t=p.brewing;
-      if(version<265||!local||!exact(t,['barrelId','spot','progress'])||!integer(t.barrelId,1,w.nextId-1)||!exact(t.spot,['x','z'])||!integer(t.spot.x,0,w.width-1)||!integer(t.spot.z,0,w.height-1)||!integer(t.progress,0,FERMENTING_SERVICE_TICKS_265)||p.haul||p.cooking||p.jobId!==null||incompatibleExtraction(p)||barrelClaims.has(t.barrelId))return false;
+      if(!isSchema265OrLater(version)||!local||!exact(t,['barrelId','spot','progress'])||!integer(t.barrelId,1,w.nextId-1)||!exact(t.spot,['x','z'])||!integer(t.spot.x,0,w.width-1)||!integer(t.spot.z,0,w.height-1)||!integer(t.progress,0,FERMENTING_SERVICE_TICKS_265)||p.haul||p.cooking||p.jobId!==null||incompatibleExtraction(p)||barrelClaims.has(t.barrelId))return false;
       const s=w.structures.find(s=>s.id===t.barrelId&&s.kind==='fermenting-barrel');
       if(!s||!s.fermentation||s.fermentation.wort<=0||s.fermentation.progress<1||Math.abs(s.x-t.spot.x)+Math.abs(s.z-t.spot.z)!==1)return false;
       barrelClaims.add(t.barrelId);
@@ -41,7 +42,7 @@ export function validFermentationWorld265(w:World,version:number=w.schemaVersion
     const tasks=[...(p.haul?[p.haul]:[]),...p.orders.queue.filter(isHaulOrder)];
     for(const h of tasks)if(h.destination.type==='fermenting-barrel'){
       const d=h.destination;
-      if(version<265||!local||!exact(d,['type','structureId'])||!integer(d.structureId,1,w.nextId-1)||!integer(h.quantity,1,10)||barrelClaims.has(d.structureId)||h.serviceProgress!==undefined&&!integer(h.serviceProgress,0,FERMENTING_SERVICE_TICKS_265))return false;
+      if(!isSchema265OrLater(version)||!local||!exact(d,['type','structureId'])||!integer(d.structureId,1,w.nextId-1)||!integer(h.quantity,1,10)||barrelClaims.has(d.structureId)||h.serviceProgress!==undefined&&!integer(h.serviceProgress,0,FERMENTING_SERVICE_TICKS_265))return false;
       const s=w.structures.find(s=>s.id===d.structureId&&s.kind==='fermenting-barrel'),pile=w.piles.find(i=>i.id===(h.phase==='pickup'?h.sourcePileId:h.carryPileId));
       if(!s?.fermentation||s.fermentation.progress>=1||s.fermentation.wort+h.quantity>25||!pile||pile.item!=='wort')return false;
       barrelClaims.add(d.structureId);

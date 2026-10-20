@@ -1,3 +1,4 @@
+import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import {processHumanConfusedWander256,recoverHumanConfusion256} from './human-condition-mind-256.ts';
 import {alcoholBingeAdmission265,processAutomaticAlcohol265} from './alcohol-ingestion-265.ts';
 import { expireMentalCatharsisAt } from './mental-state.ts';
@@ -112,7 +113,7 @@ export function updateMentalBreak(world:World,pawn:Pawn,budget?:SearchBudget):vo
       if(admission===null)return;
       if(admission)options.push({kind,admission,weight:MENTAL_CRISIS_CATALOG[kind].weight*(kind==='murderous-rage'?murderousRageWeight(admission.population):1)});
     }
-    if(intensity===1&&world.schemaVersion===265&&!pawn.prisoner){const admission=alcoholBingeAdmission265(world,pawn,budget);if(admission===null)return;if(admission)options.push({kind:'drug-binge',weight:1});}
+    if(intensity===1&&isSchema265OrLater(world.schemaVersion)&&!pawn.prisoner){const admission=alcoholBingeAdmission265(world,pawn,budget);if(admission===null)return;if(admission)options.push({kind:'drug-binge',weight:1});}
     if(options.length)break;
   }
   if(!options.length||healthRandom(world)>=150/(BREAK_MTB_DAYS[Math.max(0,level)]!*60000))return;

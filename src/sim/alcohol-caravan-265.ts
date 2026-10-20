@@ -1,3 +1,4 @@
+import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import {drugPolicyFor265,type DrugPolicy265} from './alcohol-policy-265.ts';
 import {alcoholBodySize265,scheduledAlcoholDue265} from './alcohol-ingestion-265.ts';
 import {ingestAlcoholDose265} from './alcohol-clinical-265.ts';
@@ -19,7 +20,7 @@ export interface GroupAlcoholContext265 {
  * always names the real original carrier, independently of who drinks. */
 export function advanceGroupAlcohol265(group:Group,c:GroupAlcoholContext265):ConsumedGroupMass {
  const none:ConsumedGroupMass={massRemovedGrams:0,removed:[]};
- if(c.schemaVersion!==265||!group.items.some(p=>p.kind==='beer'&&p.item==='beer'))return none;
+ if(!isSchema265OrLater(c.schemaVersion)||!group.items.some(p=>p.kind==='beer'&&p.item==='beer'))return none;
  if(group.lastPersonalTick!==c.tick||c.onlyPerson256&&!group.members.includes(c.onlyPerson256))throw Error('Alcohol ingestion lost its actual caravan person');
  // Every prospective goods transformation needs a real inventory opening.
  // A historical group is never silently enriched with an effects ledger.

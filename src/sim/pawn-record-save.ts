@@ -1,4 +1,5 @@
 import {validWorldAffiliationFields259,validWorldAffiliationForeignKeys259} from './world-affiliation-259.ts';
+import {validCaravanRestField266} from './caravan-rest-state-266.ts';
 import {validPrisonerStateRecord259} from './prisoner-save.ts';
 import {validNativeHumanField256,validHumanAgeForPawn256} from './native-human-identity-256.ts';
 import {validHiveDefeatMemory256} from './cave-hive-memories-256.ts';
@@ -68,6 +69,7 @@ export function validateAwayPawnRecordShape(item:Record<string,unknown>,context:
 function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,version:number,validationTick:number,detached:boolean,awayAreaIds?:ReadonlySet<number>):string[] {
   const input=world as unknown as Record<string,unknown>;
   const legacyV2=version===2, size=world.width*world.height, errors:string[]=[];
+  if(!validCaravanRestField266(item,version,item.state==='dead'&&typeof (item.health as {death?:{tick?:number}}|undefined)?.death?.tick==='number'?(item.health as {death:{tick:number}}).death.tick:validationTick))errors.push('Invalid or future caravan rest receipt.');
   if(Object.hasOwn(item,'brewing')&&(version<265||detached))return ['Invalid or future detached fermentation task.'];
   if(!validWorldAffiliationFields259(item,version)||Object.hasOwn(item,'prisonerHistory259')&&!validPrisonerStateRecord259(item.prisonerHistory259,version,input as unknown as World,true))return ['Invalid or future actual guest affiliation/history.'];
   if((!detached||Object.hasOwn(world,'worldFactions'))&&!validWorldAffiliationForeignKeys259(item as unknown as import('./types.ts').Pawn,world.worldFactions))return ['Invalid actual Pawn faction/host foreign key.'];

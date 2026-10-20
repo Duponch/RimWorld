@@ -1,3 +1,4 @@
+import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import {isColonist} from './affiliation.ts';
 import {pawnBody} from './health-rules.ts';
 import {medicalStatus} from './injury-state.ts';
@@ -34,7 +35,7 @@ export function hasAlcoholConsumeMarker265(pawn:{need?:unknown}):boolean {return
 export function validAlcoholConsumePawnShape265(pawn:{need?:unknown;orders?:unknown;draft?:unknown},version:number,w:Pick<World,'width'|'height'|'nextId'|'tick'>):boolean {
  if(!hasAlcoholConsumeMarker265(pawn))return true;
  const t=pawn.need;
- if(version!==265||!closed(t,['kind','alcoholReason','forced','phase','sourcePileId','carryPileId','quantity','progress','workRemainder','dining'])
+ if(!isSchema265OrLater(version)||!closed(t,['kind','alcoholReason','forced','phase','sourcePileId','carryPileId','quantity','progress','workRemainder','dining'])
   ||!['kind','alcoholReason','phase','sourcePileId','carryPileId','quantity','progress','dining'].every(k=>Object.hasOwn(t,k))
   ||t.kind!=='eat'||!reasons.includes(t.alcoholReason as AlcoholReason265)||!['pickup','choose-spot','travel','ingest'].includes(t.phase as string)
   ||!int(t.sourcePileId,1,w.nextId-1)||!int(t.quantity,1,t.alcoholReason==='inventory'?3:1)||!int(t.progress,0,49))return false;
@@ -75,7 +76,7 @@ function actorValid(p:Pawn,w:World,t:Eat):boolean {
 export function validAlcoholConsumeTransport265(w:World,knownConsumers?:readonly Pawn[]):boolean {
  try {
  const consumers=knownConsumers??w.pawns.filter(hasAlcoholConsumeMarker265);if(!consumers.length)return true;
- if(w.schemaVersion!==265)return false;
+ if(!isSchema265OrLater(w.schemaVersion))return false;
  const key=(c:Cell)=>c.z*w.width+c.x;
  const piles=new Map<number,MaterialPile>(),carried=new Map<number,MaterialPile[]>(),actors=new Map<number,Pawn>();
  const services=new Map<number,Set<number>>(),patients=new Set<number>(),unavailable=new Set<number>();

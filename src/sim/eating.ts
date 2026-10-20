@@ -1,3 +1,4 @@
+import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import {eggAllowedForPlayer256} from './animal-egg-permission-v256.ts';
 import {beerPile265,completeAlcoholInventory265,takeOwnedBeer265,ingestBeer265} from './alcohol-ingestion-265.ts';
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
@@ -25,7 +26,7 @@ export function processEating(world: World, pawn: Pawn, context: NeedContext): v
   // Only the explicit mode acquires this interruption contract. Automatic
   // eating keeps its historical release, location choice and resolution.
   const release=()=>{if(task.forced)interruptDraftWork(world,pawn);else context.release();};
-  const alcohol=world.schemaVersion===265&&task.alcoholReason!==undefined;
+  const alcohol=isSchema265OrLater(world.schemaVersion)&&task.alcoholReason!==undefined;
   if(alcohol){
     const body=pawnBody(pawn);
     // Recheck after every health transition, before pickup, inventory transfer
@@ -35,7 +36,7 @@ export function processEating(world: World, pawn: Pawn, context: NeedContext): v
   }
   if(task.forced&&!consumeActivityValid(world,pawn)){release();return;}
   if(task.forced&&(pawn.moveCooldown>0||(pawn.motion?.end??0)>world.tick))return;
-  const ownBeer=world.schemaVersion===265&&task.alcoholReason!==undefined&&task.alcoholReason!=='inventory'&&task.phase==='pickup'&&world.piles.some(p=>p.id===task.sourcePileId&&p.owner.type==='inventory'&&p.owner.pawnId===pawn.id&&beerPile265(p));
+  const ownBeer=isSchema265OrLater(world.schemaVersion)&&task.alcoholReason!==undefined&&task.alcoholReason!=='inventory'&&task.phase==='pickup'&&world.piles.some(p=>p.id===task.sourcePileId&&p.owner.type==='inventory'&&p.owner.pawnId===pawn.id&&beerPile265(p));
   if(!ownBeer&&task.alcoholReason!=='binge'&&!allowedAreaServicesAllowed(world,pawn)){release();return;}
   if(task.phase==='pickup'&&task.paste){
     if(!pasteRequestValid(world,pawn,task.paste)){release();return;}
