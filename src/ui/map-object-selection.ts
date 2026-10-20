@@ -14,11 +14,13 @@ export function mapObjectsAt(world:World,cell:Cell):MapObjectSelection[] {
   const same=(other:Cell)=>other.x===cell.x&&other.z===cell.z;
   const inFootprint=(object:World['structures'][number]|World['jobs'][number])=>footprintCells(object).some(same);
   const geyser=geyserAt256(world,cell);
+  const harvested=geyser&&world.structures.some(s=>s.kind==='geothermal-generator'&&s.geothermal?.geyserId===geyser.id&&s.x+2===geyser.x&&s.z+2===geyser.z);
   return [
-    ...(geyser?[{kind:'geyser' as const,id:geyser.id}]:[]),
+    ...(geyser&&!harvested?[{kind:'geyser' as const,id:geyser.id}]:[]),
     ...world.packed.filter(p=>p.owner.type==='ground'&&same(p.owner)).map(p=>({kind:'packed' as const,id:p.building.id})),
     ...world.piles.filter(p=>p.owner.type==='ground'&&same(p.owner)).map(p=>({kind:'pile' as const,id:p.id})),
     ...world.structures.filter(inFootprint).sort((a,b)=>Number(a.kind==='power-conduit')-Number(b.kind==='power-conduit')).map(s=>({kind:'structure' as const,id:s.id})),
+    ...(geyser&&harvested?[{kind:'geyser' as const,id:geyser.id}]:[]),
     ...world.resources.filter(r=>same(r)&&mapResourceSelectable(r)).map(r=>({kind:'resource' as const,id:r.id})),
     ...(world.tiles[cell.z*world.width+cell.x]?.terrain==='rock'?[{kind:'rock' as const,id:cell.z*world.width+cell.x}]:[]),
     ...world.jobs.filter(inFootprint).map(j=>({kind:'job' as const,id:j.id})),

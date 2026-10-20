@@ -9,7 +9,7 @@ import type { Tool } from './layout';
 const BUILD_RESEARCH:Readonly<Partial<Record<Tool,ResearchProject>>>=Object.freeze({
   vent:'complex-furniture',autodoor:'autodoors','mini-turret':'gun-turrets','vitals-monitor':'vitals-monitor',
   'tube-television':'tube-television',cooler:'air-conditioning',battery:'batteries',
-  'solar-generator':'solar-power','hydroponics-basin':'hydroponics',
+  'geothermal-generator':'geothermal-power','solar-generator':'solar-power','hydroponics-basin':'hydroponics',
   'deep-drill':'deep-drilling','ground-scanner':'ground-scanner',
   'orbital-beacon':'microelectronics','comms-console':'microelectronics',
   'nutrient-paste-dispenser':'nutrient-paste',hopper:'nutrient-paste',
@@ -22,7 +22,7 @@ const BUILD_RESEARCH:Readonly<Partial<Record<Tool,ResearchProject>>>=Object.free
 /** Existing command/material compatibility boundaries. These describe the
  * format, never the colony's stock, selected material, workers or terrain. */
 const MIN_SCHEMA:Readonly<Partial<Record<Tool,number>>>=Object.freeze({
-  bedroll:256,'torch-lamp':249,'build-bridge':247,'remove-bridge':247,vent:244,'sleeping-spot':232,shelf:229,'small-shelf':229,'spike-trap':226,
+  'geothermal-generator':264,bedroll:256,'torch-lamp':249,'build-bridge':247,'remove-bridge':247,vent:244,'sleeping-spot':232,shelf:229,'small-shelf':229,'spike-trap':226,
   'electric-crematorium':225,'double-bed':224,'electric-smelter':222,
   'animal-sleeping-spot':221,'biofuel-refinery':218,'chemfuel-generator':218,
   'nutrient-paste-dispenser':217,hopper:217,'orbital-beacon':216,

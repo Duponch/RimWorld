@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {invalidateTerrainJournal} from './terrain-mutation-journal.ts';
 import {draftForeignRoster261} from './caravan-foreign-roster-261.ts';
 import {populateWorldTargetDefenders263} from './world-target-defence-263.ts';
@@ -19,7 +20,7 @@ const overlaps=(a:AncientRect256,b:AncientRect256)=>a.minX<=b.maxX&&b.minX<=a.ma
  * beds and existing human roster are the declared3D/PNJ adaptation.
  * Optional real edge turret/power belongs to the following composition phase. */
 export function constructSiteOutpost400263(w:World,site:ItemStash263,storage:AncientRect256,usedRects:AncientRect256[],random:WorldGenerationRandom):SiteOutpostBuilt263 {
- if(Number(w.schemaVersion)!==263||site.threat.kind!=='outpost'||site.factionId!==site.threat.factionId||!w.worldFactions?.factions.some(f=>f.id===site.factionId)||w.pawns.length||w.jobs.length||w.worldDefence263)throw Error('Actual unpublished Site Outpost400 required');
+ if(!isSchema263OrLater(Number(w.schemaVersion))||site.threat.kind!=='outpost'||site.factionId!==site.threat.factionId||!w.worldFactions?.factions.some(f=>f.id===site.factionId)||w.pawns.length||w.jobs.length||w.worldDefence263)throw Error('Actual unpublished Site Outpost400 required');
  const size=16,cx=Math.floor((storage.minX+storage.maxX)/2),cz=Math.floor((storage.minZ+storage.maxZ)/2),candidates=[{x:storage.minX-1-size,z:cz-size/2},{x:storage.maxX+1,z:cz-size/2},{x:cx-size/2,z:storage.minZ-1-size},{x:cx-size/2,z:storage.maxZ+1}].map(c=>({minX:c.x,minZ:c.z,maxX:c.x+size-1,maxZ:c.z+size-1}));
  const occupied=new Set(w.structures.flatMap(s=>footprintCells(s).map(c=>c.z*w.width+c.x))),reach=captureGeographicGenerationReachability256(w);
  const choices=candidates.filter(r=>{if(r.minX<0||r.minZ<0||r.maxX>=w.width||r.maxZ>=w.height||usedRects.some(u=>overlaps(r,u)))return false;let water=0;for(let z=r.minZ;z<=r.maxZ;z++)for(let x=r.minX;x<=r.maxX;x++){const c=z*w.width+x;if(occupied.has(c))return false;if(terrainIsWater256(w.tiles[c]!.terrain))water++;}return water<=size*size*.1&&reach.canReachMapEdgeNoPassClosedDoorsOrWater((r.minZ+8)*w.width+r.minX+8);});

@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {animalMarketValue261,ANIMAL_PRICE_CAPACITIES_261,type AnimalPriceClinicalCapture261} from './caravan-animal-value-261.ts';
 import {CARAVAN_ANIMAL_VALUE_DATA_261} from './caravan-animal-value-data-261.ts';
 import {pileMarketValue} from './trade-prices.ts';
@@ -21,7 +22,7 @@ export function currentAnimalDemandValue261(a:WildAnimal):number|undefined {
  const result=animalMarketValue261(a,{summaryHealth:1,capacities,hediffPriceOffset:0,scenarioFactor:1});return result.ok?result.value:undefined;
 }
 export function captureCurrentDemand261(g:AwayGroup,playerFactionId:number,version=261):{ok:true;capture:DemandCapture}|{ok:false;reason:string} {
- if(version!==261&&(Number(version)!==262&&Number(version)!==263))return {ok:false,reason:'Version de demande non prise en charge.'};
+ if(version!==261&&(Number(version)!==262&&!isSchema263OrLater(Number(version))))return {ok:false,reason:'Version de demande non prise en charge.'};
  const humans=g.members.map(p=>({id:p.id,owner:p.worldAffiliation259?.factionId===playerFactionId&&!p.prisoner,prisoner:!!p.prisoner}));
  if(g.members.some(p=>!p.worldAffiliation259))return {ok:false,reason:'La demande ne possède pas une affiliation humaine prise en charge.'};
  const animals=(g.animalOwners?.members??[]).map(a=>({id:a.id,marketValue:currentAnimalDemandValue261(a)}));

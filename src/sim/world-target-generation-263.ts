@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {captureTargetFactionSeal263} from './world-target-faction-seal-263.ts';
 import {assembleWorldTargetMap263,type CampMapInputs256,type CampMapResult256,type CampMapProgress256} from './camp-map-assembly-256.ts';
 import {captureCampRetainedAnimals256} from './group-camp-draft-256.ts';
@@ -16,7 +17,7 @@ export type WorldTargetGeneration263={status:'ready';result:Generated;runtimeAft
 export function* prepareWorldTargetGeneration263(input:CampaignState,groupId:number):Generator<CampMapProgress256,WorldTargetGeneration263,void> {
  const root=registeredCampaign(input),maps=root.worldMaps,groups=root.worldGroups,record=groups?.groups.find(r=>r.state.id===groupId),g=record?.state,pending=record?.pendingEntry263,runtime=maps?.generationRuntime;
  const blocked=(phase:string,reason:string):WorldTargetGeneration263=>({status:'blocked',phase,reason});
- if(Number(root.schemaVersion)!==263||!maps||!groups||!runtime||!validMapGenerationRuntime256(runtime)||!record||!g||!('members'in g)||!pending||root.planet?.revision!==3||!root.worldFactions||!root.worldPawns||maps.mapSize.width!==maps.mapSize.height)return blocked('owner','Actual263 campaign, target request and generation runtime required');
+ if(!isSchema263OrLater(Number(root.schemaVersion))||!maps||!groups||!runtime||!validMapGenerationRuntime256(runtime)||!record||!g||!('members'in g)||!pending||root.planet?.revision!==3||!root.worldFactions||!root.worldPawns||maps.mapSize.width!==maps.mapSize.height)return blocked('owner','Actual263 campaign, target request and generation runtime required');
  const access=worldTargetAccess263(root,pending.target,g.tile);if(!access.ok)return blocked('target',access.reason);if(access.map)return blocked('target','An existing target map does not require generation');
  const dimensions={...maps.mapSize},size=dimensions.width,context:WorldTargetConstruction263=access.source.kind==='foreign-settlement'?{kind:'foreign-settlement',settlementId:access.source.settlement.id,factionId:access.source.factionId,dimensions}:{kind:'quest-site',siteId:access.source.site.id,factionId:access.source.factionId,dimensions};
  const tick=root.tick,rng=root.rng,nextId=root.nextId,planet=root.planet,geography=planet.geography,state=record.state,source=access.source.kind==='foreign-settlement'?access.source.settlement:access.source.site;

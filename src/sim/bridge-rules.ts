@@ -70,6 +70,7 @@ export const BUILDING_SUPPORT:Readonly<Record<StructureKind,'Light'|'Medium'|'He
   'solar-generator':'Medium',
   'wood-generator':'Medium',
   'chemfuel-generator':'Medium',
+  'geothermal-generator':'Heavy',
   'comms-console':'Medium',
   'hydroponics-basin':'Medium',
   'multi-analyzer':'Medium',

@@ -1,3 +1,4 @@
+import {harvestedGeyserIds264} from './geothermal-parts264';
 /** Original low-poly rim, shared BoxBatches/materials/shadow preparation.
  * No Thing object/scene per geyser and no per-frame World read. */
 import * as THREE from 'three/webgpu';
@@ -18,7 +19,7 @@ export class GeyserLayer256 {
  readonly group=new THREE.Group();private key:string|null=null;
  constructor(private readonly boxes:BoxBatches){this.group.name='Natural geysers — resident rim';}
  adopt(world:GeyserWorld256,reset=false):boolean {
-  const items=world.geysers?.items??[],key=items.map(g=>`${g.id}:${g.x}:${g.z}`).join('|');
+  const harvested=harvestedGeyserIds264(world),items=(world.geysers?.items??[]).filter(g=>!harvested.has(g.id)),key=items.map(g=>`${g.id}:${g.x}:${g.z}`).join('|');
   if(!reset&&key===this.key)return false;this.key=key;
   this.boxes.set(this.group,'natural-geysers',geyserParts256(items));return true;
  }

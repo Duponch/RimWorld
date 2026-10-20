@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {newGroupAdmissionRevision259,autoCapturePatient259} from './group-human-admission-259.ts';
 import {estimateGroupTravel} from './group-travel-estimate.ts';
 import {regularGroupFreight258} from './group-freight-contract-258.ts';
@@ -114,7 +115,7 @@ function viewMass(mass:GroupMassCapture,items:readonly MaterialPile[],tick:numbe
 export function previewFormation(w:World,ids:readonly number[],sources:readonly CommercialBuyLine[],destination:number,packedIds:readonly number[]=[],animalIds:readonly number[]=[],retreat261=false) {
   const campaignMap=w.campaignMap,legacyMap=campaignMap&&campaignMap.revision!==2?campaignMap:undefined;
   const origin=w.worldMaps?w.worldMaps.sites.find(s=>s.id===registeredMapId(w))?.tile:campaignMap?.revision===2?campaignMap.maps.find(s=>s.id===campaignMap.activeMapId)?.tile:w.expeditionSite?.tile??w.planet?.homeTile;
-  if(!w.planet||!groupDestinationValid(w.planet,destination)||destination===origin&&!((Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||Number(w.schemaVersion)===263))&&retreat261))return {kind:'refused' as const,reason:'Choisissez une destination terrestre différente de la carte actuelle.'};
+  if(!w.planet||!groupDestinationValid(w.planet,destination)||destination===origin&&!((Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||isSchema263OrLater(Number(w.schemaVersion))))&&retreat261))return {kind:'refused' as const,reason:'Choisissez une destination terrestre différente de la carte actuelle.'};
   const visit=campaignAuthority(w).secondarySite?.visit;
   if(w.schemaVersion<255&&!w.expeditionSite&&(visit||legacyMap?.visitIds.length))return {kind:'refused' as const,reason:'Une expédition est déjà présente sur le second site.'};
   if(w.schemaVersion<255&&w.expeditionSite){

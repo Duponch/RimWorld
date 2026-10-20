@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {plainWorldPawnData256} from './world-pawn-save-256.ts';
 import {captureActualLocalDistricts256} from './actual-local-districts-256.ts';
 import {rotAge} from './food-preservation.ts';
@@ -14,7 +15,7 @@ export interface SiteHolderTransfer263 {current():boolean;commit():void}
  * re-created reward, remote collection or second ownership interval. */
 export function prepareItemStashTransfer263(root:CampaignState,source:ItemStash263,map:World,mapId:number,storage:AncientRect256):SiteHolderTransfer263|null {
  const registry=root.worldSites263,entries=registry?.entries,items=source.items,originals=items.slice(),piles=map.piles,localItems=piles.slice(),atCore=root.tick*10;
- if(Number(root.schemaVersion)!==263||Number(map.schemaVersion)!==263||!registry||!entries?.includes(source)||source.closed||source.mapId!==null||source.expiresAtCore===null||source.expiresAtCore<=atCore||!items.length||map.tick!==root.tick||!Number.isSafeInteger(mapId)||mapId<0)return null;
+ if(!isSchema263OrLater(Number(root.schemaVersion))||!isSchema263OrLater(Number(map.schemaVersion))||!registry||!entries?.includes(source)||source.closed||source.mapId!==null||source.expiresAtCore===null||source.expiresAtCore<=atCore||!items.length||map.tick!==root.tick||!Number.isSafeInteger(mapId)||mapId<0)return null;
  if(originals.some(p=>p.owner.type!=='world-site263'||p.owner.siteId!==source.id))return null;
  const physical=captureActualLocalDistricts256(map),cells:number[]=[];
  for(let z=storage.minZ+1;z<storage.maxZ;z++)for(let x=storage.minX+1;x<storage.maxX;x++){
@@ -33,7 +34,7 @@ export function prepareItemStashTransfer263(root:CampaignState,source:ItemStash2
  * closed receipt owns only scalar lost identities; no hidden physical stock.
  * This executes in real SIM time, never during save admission/migration. */
 export function expireWorldSites263(root:CampaignState):void {
- if(Number(root.schemaVersion)!==263)return;
+ if(!isSchema263OrLater(Number(root.schemaVersion)))return;
  const registry=root.worldSites263;if(!registry)return;const atCore=root.tick*10;
  for(const entry of registry.entries){if(entry.kind!=='item-stash'||entry.closed||entry.mapId!==null||entry.expiresAtCore===null||entry.expiresAtCore>atCore)continue;
   entry.closed={atCore,reason:'expired',lost:entry.items.map(p=>({id:p.id,item:p.item,quantity:p.quantity}))};entry.items=[];
@@ -42,6 +43,6 @@ export function expireWorldSites263(root:CampaignState):void {
 /** The campaign physical census visits these originals exactly once. A
  * projection may name their IDs but must never carry another pile array. */
 export function siteOwnedThings263(root:Pick<CampaignState,'schemaVersion'|'worldSites263'>):MaterialPile[] {
- if(Number(root.schemaVersion)!==263)return [];
+ if(!isSchema263OrLater(Number(root.schemaVersion)))return [];
  return root.worldSites263?.entries.flatMap(s=>s.kind==='item-stash'&&!s.closed?s.items:[])??[];
 }

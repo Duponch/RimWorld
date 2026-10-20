@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {advanceGroupCare} from './group-care.ts';
 import type {World} from './types.ts';
 import type {AwayGroup} from './group-capture.ts';
@@ -32,7 +33,7 @@ export function advanceGroupAnimalPersonal256(w:World,g:AwayGroup,clinicalRest:(
  if(!g.travel&&!g.animalOwners)return;
  // Admission2 already settled this same interval before human clinical death.
  // Historical owners retain their previous ordering and pay this pass here.
- if((Number(w.schemaVersion)!==259&&Number(w.schemaVersion)!==260&&(Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&Number(w.schemaVersion)!==263)))||g.admission?.revision!==2)advanceCaravanOtherFoodAges256(w,g);
+ if((Number(w.schemaVersion)!==259&&Number(w.schemaVersion)!==260&&(Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&!isSchema263OrLater(Number(w.schemaVersion)))))||g.admission?.revision!==2)advanceCaravanOtherFoodAges256(w,g);
  const env=groupAnimalEnvironment256(w,g);advanceCaravanAnimalBiology256(w,g,{...env,random:()=>healthRandom(w),clinicalRest,originForInventory:id=>g.animalOwners?.origins.find(o=>o.pawnId===id)??g.reorganization?.memberOrigins.find(o=>o.pawnId===id),retire:(a,o)=>retireCaravanAnimal256(w,g,a,o)});
 }
 export function advanceGroupAnimalMeters256(g:AwayGroup,coreTick:number,marks:GroupRestMarks256):void {for(const a of g.animalOwners?.members??[])if(a.ageTicks>0)advanceCaravanAnimalNeed150256(a,coreTick,marks.effectiveness(a.id,coreTick));}

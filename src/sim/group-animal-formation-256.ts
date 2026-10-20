@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {notifyDuckFlightJob256} from './duck-flight-runtime-256.ts';
 import {prospectiveHuman259} from './group-human-admission-259.ts';
 import {healthRandom} from './health.ts';
@@ -32,7 +33,7 @@ export function groupAnimalReason256(w:World,a:WildAnimal,preparing=false):strin
 /** New actual259/admission2 only. The existing ungathered line suppresses later
  * wandering decisions; the handler still waits for BOTH captured edges before
  * contact/gathering. No motion, health, service or dangerous task is cleared. */
-export function groupAnimalFormationReason259(w:World,a:WildAnimal):string|undefined {return animalFormationReason256(w,a,false,(Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||Number(w.schemaVersion)===263)))&&!w.group&&prospectiveHuman259(w));}
+export function groupAnimalFormationReason259(w:World,a:WildAnimal):string|undefined {return animalFormationReason256(w,a,false,(Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||isSchema263OrLater(Number(w.schemaVersion)))))&&!w.group&&prospectiveHuman259(w));}
 export function previewGroupAnimals256(w:World,ids:readonly number[],members:readonly Pawn[],reachable:(p:Pawn,c:Cell)=>boolean):{kind:'ready';animals:WildAnimal[];preparation?:GroupAnimalPreparation256}|{kind:'refused';reason:string} {
  if(!ids.length)return {kind:'ready',animals:[]};if(w.schemaVersion<256||!members.length||new Set(ids).size!==ids.length)return {kind:'refused',reason:'Sélection animale invalide.'};
  const animals:WildAnimal[]=[],lines:GroupAnimalPreparationLine256[]=[],carriers=new Set<number>();

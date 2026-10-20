@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {WORLD_FACTION_TECH_LEVEL_259} from './world-faction-catalog.ts';
 import {plainWorldPawnData256} from './world-pawn-save-256.ts';
 import {validatePileRecordShape} from './material-record-save.ts';
@@ -27,7 +28,7 @@ export interface WorldSitesValidationContext263 {schemaVersion:number;tick:numbe
  * even ownundefined, is rejected below for every non263 version. The existing
  * plain-data reader runs before nested value reads, including held owners. */
 export function validateWorldSites263(value:unknown,root:WorldSitesValidationContext263,globalIds:NumericMembershipSink):string[] {
- if(Number(root.schemaVersion)!==263)return Object.hasOwn(root,'worldSites263')||value!==undefined?['Future263 world Sites in an older campaign.']:[];
+ if(!isSchema263OrLater(Number(root.schemaVersion)))return Object.hasOwn(root,'worldSites263')||value!==undefined?['Future263 world Sites in an older campaign.']:[];
  if(value===undefined)return Object.hasOwn(root,'worldSites263')?['Undefined263 Site authority.']:[];
  if(!plainWorldPawnData256(value)||!record(value)||!keys(value,['revision','nextId','entries'],['quest'])||value.revision!==1||!int(value.nextId,1)||!Array.isArray(value.entries)||value.entries.length>4096||Object.hasOwn(value,'quest')&&!calendar(value.quest,root.tick*10,root.nextId))return ['Invalid263 world Site authority.'];
  const sites=value as unknown as WorldSitesState263,ids=new Set<number>(),activeTiles=new Set<number>(),core=root.tick*10,factions=root.worldFactions;

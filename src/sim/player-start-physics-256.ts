@@ -20,6 +20,7 @@ export const START_STRUCTURE_PHYSICS_256={
  "sleeping-spot":{"defId":"SleepingSpot","passability":0,"edifice":true,"door":false,"fence":false,"fullFill":false},
  "animal-sleeping-spot":{"defId":"AnimalSleepingSpot","passability":0,"edifice":true,"door":false,"fence":false,"fullFill":false},
  "biofuel-refinery":{"defId":"BiofuelRefinery","passability":1,"edifice":true,"door":false,"fence":false,"fullFill":false},
+ "geothermal-generator":{"defId":"GeothermalGenerator","passability":2,"edifice":true,"door":false,"fence":false,"fullFill":true},
  "chemfuel-generator":{"defId":"ChemfuelPoweredGenerator","passability":1,"edifice":true,"door":false,"fence":false,"fullFill":false},
  "nutrient-paste-dispenser":{"defId":"NutrientPasteDispenser","passability":2,"edifice":true,"door":false,"fence":false,"fullFill":true},
  "hopper":{"defId":"Hopper","passability":1,"edifice":true,"door":false,"fence":false,"fullFill":false},

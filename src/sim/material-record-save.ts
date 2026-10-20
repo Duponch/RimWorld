@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {validMaterialPermission256} from './material-permission-256.ts';
 import {heldDuckInventoryClock256} from './duck-held-item-clock-256.ts';
@@ -77,7 +78,7 @@ else {
   const owner = item.owner;
   // A direct held owner is admissible ONLY to the actual casket validator.
   // Ordinary map/full/delta calls omit this explicit original holder ID.
-  if (owner.type === 'world-site263' ? version!==263||!integer(worldSiteId263,1)||owner.siteId!==worldSiteId263||Object.keys(owner).length!==2||Object.keys(owner).some(key=>!['type','siteId'].includes(key))
+  if (owner.type === 'world-site263' ? !isSchema263OrLater(version)||!integer(worldSiteId263,1)||owner.siteId!==worldSiteId263||Object.keys(owner).length!==2||Object.keys(owner).some(key=>!['type','siteId'].includes(key))
     : owner.type === 'ancient-casket' ? !isSchema256Or257(version)||!integer(ancientCasketId,1,world.nextId-1)||owner.casketId!==ancientCasketId||Object.keys(owner).some(key=>!['type','casketId'].includes(key))
     : owner.type === 'ground' ? !coord(owner) || Object.keys(owner).some(key => !['type', 'x', 'z'].includes(key))
     : (owner.type === 'pawn'||version>=52&&owner.type==='equipment'||version>=63&&owner.type==='apparel'||version>=88&&owner.type==='inventory') ? !integer(owner.pawnId, 1) || Object.keys(owner).some(key => !['type', 'pawnId'].includes(key))

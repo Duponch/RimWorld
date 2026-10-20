@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {validGeographicRenewal262} from './geographic-renewal-state-262.ts';
 import {isCaveInsectSpecies256} from './cave-insect-constructor-256.ts';
 import {validateHiveRuntimeOwners256} from './cave-hive-runtime-save-256.ts';
@@ -114,7 +115,7 @@ export function validateWildlife(w:World,version:number,ids:Set<number>):string[
   if(!validWildlifeManhunterState(w,version))errors.push('Invalid wildlife manhunter state.');
   if(!validWildlifeExitState(w,version))errors.push('Invalid wildlife exit state.');
   if(version<76||!object(s)||!validWildlifeProfileVersion256(w,version,s)
-    ||!keys(s,['profile','rng','animals','eatenPlants','eatenNutrition','eatenItems',...(version>=174?['exitedAnimals']:[]),...(version>=256?['flyers','hiveLords']:[]),...((Number(version)===262||Number(version)===263)?['geographicRenewal262']:[]),...(['biome-herbivores-v1','biome-fauna-v2'].includes(s.profile)?['population']:[])])
+    ||!keys(s,['profile','rng','animals','eatenPlants','eatenNutrition','eatenItems',...(version>=174?['exitedAnimals']:[]),...(version>=256?['flyers','hiveLords']:[]),...((Number(version)===262||isSchema263OrLater(Number(version)))?['geographicRenewal262']:[]),...(['biome-herbivores-v1','biome-fauna-v2'].includes(s.profile)?['population']:[])])
     ||!int(s.rng,1,0xffffffff)||!Array.isArray(s.animals)||s.animals.length>MAX_WILDLIFE||!int(s.eatenPlants)||!int(s.eatenItems)||!finite(s.eatenNutrition,0,Number.MAX_SAFE_INTEGER))return ['Invalid wildlife state.'];
   if(['biome-herbivores-v1','biome-fauna-v2'].includes(s.profile)){
     const p=s.population;if(!object(p)||!keys(p,['biome','fullTargetWeight','targetWeight','nextCheck','checks','arrivals'])||!['temperate-forest','boreal-forest','arid-shrubland','tundra'].includes(String(p.biome)))return ['Invalid wildlife population state.'];

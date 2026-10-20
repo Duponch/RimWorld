@@ -9,6 +9,7 @@ import {footprintCells} from './definitions.ts';
 import {START_STRUCTURE_PHYSICS_256} from './player-start-physics-256.ts';
 import {setSnowDepth,snowDepthAt} from './snow-surface.ts';
 import {validLocalGeyserState256} from './local-geyser-save-256.ts';
+import {harvestedGeothermalGeyserIds264} from './geothermal-state-264.ts';
 import type {ThermalLayout} from './thermal-topology.ts';
 import type {GeyserWorld256,NaturalGeyser256} from './local-geyser-state-256.ts';
 const f=Math.fround;
@@ -41,6 +42,7 @@ export function advanceLocalGeysers256(world:GeyserWorld256,layout:ThermalLayout
  if(world.tick!==state.atTick+1)throw Error('Geyser phase requires one real local step, never catch-up');
  if(world.tiles.length!==world.width*world.height||state.items.length&&!world.snow)throw Error('Actual geyser surface/snow owner absent');
  if(layout.indices.length!==world.tiles.length||layout.rooms.length!==(world.thermal?.regions.length??0)||layout.rooms.some((r,i)=>r.cells.length!==world.thermal!.regions[i]!.cells.length))throw Error('Geyser heat requires actual reconciled thermal regions');
+ const harvested=harvestedGeothermalGeyserIds264(world);
  let full:ReadonlySet<number>|undefined;const rng={rng:world.rng};
  const items=state.items.map(g=>({...g})),temperatures=(world.thermal?.regions??[]).map(r=>r.temperature),snow=new Map<number,number>();
  const integer=(lo:number,hi:number)=>lo+Math.floor(healthRandom(rng)*(hi-lo+1));
@@ -60,6 +62,7 @@ export function advanceLocalGeysers256(world:GeyserWorld256,layout:ThermalLayout
   }
  };
  for(let core=state.atTick*10+1;core<=world.tick*10;core++)for(const g of items){
+  if(harvested.has(g.id))continue;
   if(g.sprayTicksLeft>0){g.sprayTicksLeft--;if((core+combineWorldSeed(g.id,169495093))%20===0)pushHeat(g);if(g.sprayTicksLeft===0)g.ticksUntilSpray=integer(500,2000);}
   else if(--g.ticksUntilSpray===0){start(g);g.sprayTicksLeft=integer(200,500);}
  }

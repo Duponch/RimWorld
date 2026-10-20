@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Utiliser la géothermie — V440
+
+Recherchez **Énergie géothermique** (3 200 points) au bureau simple ou avancé, puis choisissez **Architecte → Énergie → Centrale géothermique**. Centrez l’emprise fixe 6×6 exactement sur un geyser découvert, sur terrain lourd. Prévoyez 340 acier, 8 composants et un constructeur de niveau 8 ; laissez l’accès aux quatre côtés. Une fois construite, elle fournit 3 600 W constants sans combustible au réseau voisin. Isolez-la avec un interrupteur de réseau si nécessaire.
+
+La vapeur chauffe une pièce fermée même pendant une panne ou un EMP : évitez d’enfermer la centrale sans prévoir sa chaleur. Sa fiche distingue puissance, vapeur et panne. Elle ne se déplace pas ; déconstruction et destruction conservent le geyser. Les anciennes parties n’obtiennent ni recherche ni équipement gratuit. [Règles et limites](geothermal-power-v440.md).
+
 ## Choisir son terrain et voyager — V408 à V418
 
 Dans **Nouvelle partie**, choisissez le scénario et le narrateur, puis **Créer un monde → Générer**. Sur **Choisir un lieu de départ**, sélectionnez une vraie tuile terrestre et lisez son biome, son relief, son climat et ses eaux avant **Suivant → Confirmer**. Une rivière ou une côte doit figurer dans les caractéristiques du lieu ; une étendue d’eau locale ne suffit pas à en faire une rivière. Vérifiez aussi la taille et la saison. La référence de jeu reste **une colonie, maximum 1**. [Génération](world-generation-v408.md), [tailles et saisons](geographic-continuation-v417.md).

@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 /** Prospective, explicitly adapted NPC population. This is the same authored
  * person/health/equipment pipeline as existing visitors and raids, NOT a native
  * PawnGenerator receipt. Failure discards the entire unpublished map. */
@@ -96,7 +97,7 @@ export function spawnFunctionalAncientCasket256(w:World,placement:AncientShrineP
   if(conflict||t.terrain==='rock'||t.collapsedRock||!terrainSupportsAffordance256(t,'Medium',w))throw Error('Actual casket cell refused: '+(conflict??'Medium substrate absent'));
   for(const s of w.structures)if(footprintCells(s).some(p=>p.x===c.x&&p.z===c.z)&&!removals.has(s.id)){const plan=planVanishGeneratedAncient256(w,cell,true);if(!plan)throw Error('Actual casket encounters an unsupported edifice owner');removals.set(s.id,plan);}
  }
- if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||Number(w.schemaVersion)===263)))?(!birth259||birth259.factions!==w.worldFactions):birth259!==undefined)throw Error('Actual schema259 ancient birth context required, never retrofit a prior person');
+ if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||isSchema263OrLater(Number(w.schemaVersion)))))?(!birth259||birth259.factions!==w.worldFactions):birth259!==undefined)throw Error('Actual schema259 ancient birth context required, never retrofit a prior person');
  let next=w.nextId;const pId=next++;
  const prepared=prepareFunctionalAncientHuman256({id:pId,nextId:next,cell:placement.casket.cell,tick:w.tick,contents:kind,random,...birth259?{birth259}:{}});next=prepared.nextId;
  if(prepared.pawn.state==='dead'){if(!Number.isSafeInteger(next+1))throw Error('Held corpse Thing allocator exhausted');prepared.items.push(retainFreshCorpse(prepared.pawn,casketId,next++,w.tick));}

@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {createBattlefieldPressureHumanRaid261} from './caravan-pressure-261.ts';
 import type {CampaignState} from './world-map-state.ts';
 import type {World} from './types.ts';
@@ -22,7 +23,7 @@ export function advanceCampPressure260(input:CampaignState):void {
  const core=root.tick*10;
  for(const site of root.worldMaps.sites.slice().sort((a,b)=>a.id-b.id)){
   const p=site.campPressure;if(!p)continue;
-  const map=registeredMap(root,site.id);if(!(site.kind==='camp'||(Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||Number(root.schemaVersion)===263))&&site.kind==='battlefield')||!map){delete site.campPressure;continue;}
+  const map=registeredMap(root,site.id);if(!(site.kind==='camp'||(Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||isSchema263OrLater(Number(root.schemaVersion))))&&site.kind==='battlefield')||!map){delete site.campPressure;continue;}
   if(p.notifyAtCore!==null&&core>=p.notifyAtCore){p.notifyAtCore=null;p.alert=true;notice(root,map,`Camp ${site.id} · détecté. Première tentative d’attaque dans ${Math.max(0,p.raidAtCore-core)/60000} jour(s).`);}
   if(core>=p.raidAtCore){
    // Real timer attempt spends its draw BEFORE producer failure/success, like Core.

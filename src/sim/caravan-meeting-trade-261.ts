@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {bestGroupNegotiator,tradeImprovement} from './trade-negotiator.ts';
 import {tradeRefusal,tradeUnitPrice,roundTradeSilver} from './trade-prices.ts';
 import {copyPileCondition} from './pile-condition.ts';
@@ -17,7 +18,7 @@ const fail=(reason:string)=>({ok:false as const,reason});
  * keep their original owners and are not advertised as supported trade goods. */
 export function quoteMeetingTrade261(root:Pick<CampaignState,'schemaVersion'|'tick'|'nextId'>,record:WorldGroupRecord,lines:readonly MeetingTradeLine261[]):Quote261 {
  const p=record.pending261,g=record.state;
- if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&Number(root.schemaVersion)!==263))||p?.kind!=='meeting'||p.decision!=='open'||record.localMapId!==null||!('members'in g)||g.lastPersonalTick!==root.tick||p.atCore!==root.tick*10)return fail('La rencontre commerciale n’est plus disponible.');
+ if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&!isSchema263OrLater(Number(root.schemaVersion))))||p?.kind!=='meeting'||p.decision!=='open'||record.localMapId!==null||!('members'in g)||g.lastPersonalTick!==root.tick||p.atCore!==root.tick*10)return fail('La rencontre commerciale n’est plus disponible.');
  const negotiator=bestGroupNegotiator(g.members),trader=p.people.find(a=>a.id===p.traderId);
  if(!negotiator||!trader||trader.state==='dead'||trader.state==='downed')return fail('Un négociateur et le véritable marchand doivent être disponibles.');
  if(!Array.isArray(lines)||lines.length>128||new Set(lines.map(l=>l.pileId)).size!==lines.length||lines.some(l=>!l||Reflect.ownKeys(l).length!==2||!Number.isSafeInteger(l.pileId)||!Number.isSafeInteger(l.quantity)||!l.quantity||Math.abs(l.quantity)>250000))return fail('Panier de rencontre invalide.');

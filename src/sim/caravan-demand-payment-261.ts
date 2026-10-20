@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import type {CampaignState} from './world-map-state.ts';
 import type {AwayGroup} from './group-capture.ts';
 import type {MaterialPile} from './types.ts';
@@ -21,7 +22,7 @@ export type DemandPaymentPlan261={ok:true;current():boolean;commit():void}|{ok:f
 export function prepareDemandPayment261(root:CampaignState,record:EncounterGroup261):DemandPaymentPlan261 {
  const pending=record.pending261,g=record.state,w=worldGroupContext(root,record.state.id),factions=root.worldFactions;
  const fail=(reason:string):DemandPaymentPlan261=>({ok:false,reason});
- if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&Number(root.schemaVersion)!==263))||pending?.kind!=='demand'||!w||!factions||!('members'in g)||record.localMapId!==null||g.lastPersonalTick!==root.tick||!pending.demands.length)return fail('La demande confirmée et ses propriétaires sont indisponibles.');
+ if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&!isSchema263OrLater(Number(root.schemaVersion))))||pending?.kind!=='demand'||!w||!factions||!('members'in g)||record.localMapId!==null||g.lastPersonalTick!==root.tick||!pending.demands.length)return fail('La demande confirmée et ses propriétaires sont indisponibles.');
  const lines=pending.demands,category=lines[0]!.kind;
  if(new Set(lines.map(l=>l.id)).size!==lines.length||lines.some(l=>(category==='human'||category==='animal')?l.kind!==category:l.kind!=='pile'&&l.kind!=='packed')||category==='human'&&lines.length!==1)return fail('Le manifeste de la demande n’est pas une sélection admissible.');
  const now=root.tick,openingId=root.nextId,openingRng=root.rng,openingState=record.state,signature=JSON.stringify(record);

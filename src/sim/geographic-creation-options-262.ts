@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {validMapDimension,validMapDimensionForSchema} from './map-config.ts';
 /** Exact ordinary Core choices. TestMapSizes is not a product preference:
  *350/400 stay absent. Legacy save bounds are deliberately unchanged. */
@@ -10,7 +11,7 @@ export type GeographicCreationSeason262=typeof GEOGRAPHIC_CREATION_SEASONS_262[n
  * authority, never a fallback or a new persisted field. Historical owners
  * retain their exact250 branch;262 requires the captured square choice. */
 export function validGeographicSettlementDimensions262(version:number,width:unknown,height:unknown,expected?:Readonly<{width:number;height:number}>):boolean {
- if((Number(version)===262||Number(version)===263))return !!expected&&validGeographicCreationSize262(expected.width)&&expected.height===expected.width&&width===expected.width&&height===expected.height;
+ if((Number(version)===262||isSchema263OrLater(Number(version))))return !!expected&&validGeographicCreationSize262(expected.width)&&expected.height===expected.width&&width===expected.width&&height===expected.height;
  return (version===259||version===260||version===261)&&width===250&&height===250;
 }
 export interface GeographicCreationOptions262 {size:GeographicCreationSize262;season:GeographicCreationSeason262}
@@ -18,5 +19,5 @@ export const validGeographicCreationSize262=(v:unknown):v is GeographicCreationS
 export const geographicCreationSizeWarns262=(v:unknown):boolean=>validGeographicCreationSize262(v)&&v>280;
 /** Only the new262 boundary consumes the existing prospective400 dimension
  * domain. Every older schema retains the literal250 guard before migration. */
-export const validGeographicMapDimension262=(v:unknown,version:number):v is number=>(Number(version)===262||Number(version)===263)?validMapDimensionForSchema(v,version):validMapDimension(v);
+export const validGeographicMapDimension262=(v:unknown,version:number):v is number=>(Number(version)===262||isSchema263OrLater(Number(version)))?validMapDimensionForSchema(v,version):validMapDimension(v);
 export const validGeographicCreationSeason262=(v:unknown):v is GeographicCreationSeason262=>typeof v==='string'&&(GEOGRAPHIC_CREATION_SEASONS_262 as readonly string[]).includes(v);

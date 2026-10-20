@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 const own=(v:unknown,k:string)=>!!v&&typeof v==='object'&&Object.hasOwn(v,k);
 const field=(v:unknown,k:string):unknown=>{if(!v||typeof v!=='object')return undefined;const d=Object.getOwnPropertyDescriptor(v,k);return d&&Object.hasOwn(d,'value')?d.value:undefined;};
 const rows=(v:unknown):unknown[]=>Array.isArray(v)?v:[];
@@ -5,7 +6,7 @@ const rows=(v:unknown):unknown[]=>Array.isArray(v)?v:[];
  * state/owner/RNG can be granted by migration, even an ownundefined field.
  * This is not a recursive object walker or a looser replacement validator. */
 export function historicalWorldSitesAbsent263(raw:unknown,version:number):boolean {
- if(version===263)return true;
+ if(isSchema263OrLater(version))return true;
  const maps=field(raw,'worldMaps'),groups=field(raw,'worldGroups'),factions=field(raw,'worldFactions');
  const local=[raw,field(field(raw,'secondarySite'),'map'),...rows(field(maps,'sites')).map(s=>field(s,'map'))];
  if(local.some(w=>own(w,'worldSites263')||own(w,'worldDefence263')||own(w,'worldSiteThreat263')))return false;

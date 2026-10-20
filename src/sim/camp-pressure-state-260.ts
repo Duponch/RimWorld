@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import type {WorldMapRecord} from './world-map-state.ts';
 export interface CampPressure260 {revision:1;raidAtCore:number;notifyAtCore:number|null;alert:boolean;raidsSent:number}
 export const CAMP_WARNING_CORE_260=60000,CAMP_FIRST_RAID_CORE_260=240000;
@@ -8,7 +9,7 @@ export function newCampPressure260(core:number):CampPressure260|undefined {
 /** Absence is historical/unarmed, never a reason to start a timer at load. */
 export function validCampPressure260(value:unknown,version:number,kind:WorldMapRecord['kind'],createdAt:number):value is CampPressure260|undefined {
  if(value===undefined)return true;
- if(version<260||!(kind==='camp'||(version===261||(Number(version)===262||Number(version)===263))&&kind==='battlefield')||!value||typeof value!=='object'||Array.isArray(value)||Object.getPrototypeOf(value)!==Object.prototype)return false;
+ if(version<260||!(kind==='camp'||(version===261||(Number(version)===262||isSchema263OrLater(Number(version))))&&kind==='battlefield')||!value||typeof value!=='object'||Array.isArray(value)||Object.getPrototypeOf(value)!==Object.prototype)return false;
  const d=Object.getOwnPropertyDescriptors(value),keys=['revision','raidAtCore','notifyAtCore','alert','raidsSent'];
  if(Reflect.ownKeys(value).length!==keys.length||!keys.every(k=>Object.hasOwn(d,k)&&Object.hasOwn(d[k]!,'value')&&d[k]!.enumerable))return false;
  const p=value as CampPressure260;

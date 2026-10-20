@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {prepareGroupReform260,type GroupReformCommand260} from './group-reform-260.ts';
 import {advanceGroupAnimalPersonal256,advanceGroupAnimalMeters256,advanceLegacyAnimalInterval256} from './group-animal-runtime-256.ts';
 import {recalculateGroupCarried256} from './group-caravan-carry-256.ts';
@@ -45,7 +46,7 @@ export class GroupCampaignRuntime256 {
   * Survivor draw positions, committed segment and cadence are never reset. */
  /** Preflight one true physical exit AFTER this tick's personal pass. */
  preparePlayerRetreat261(root:CampaignState,g:AwayGroup,targetId?:number){
-  this.authority(root);if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&Number(root.schemaVersion)!==263)))throw Error('Actual261 retreat runtime required');
+  this.authority(root);if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&!isSchema263OrLater(Number(root.schemaVersion)))))throw Error('Actual261 retreat runtime required');
   const owner={id:g.id,tile:g.tile,destination:g.destination,moving:g.phase==='travelling'&&!g.paused&&g.stop===null,segment:g.segment,nextPassable:!g.segment||this.geometry.passable(root,g.segment.to),...g.travel?{travel:g.travel}:{}};
   const registration=targetId===undefined?this.motion.prepareRegistration(owner,[...this.owners(root),owner]):undefined;
   return {commit:()=>{if(registration)this.motion.commitRegistration(registration);if(targetId!==undefined){this.motion.remove(g.id);this.physical.remove(g.id);}this.#physicalChanged.add(targetId??g.id);}};

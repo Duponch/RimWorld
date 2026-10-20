@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {actualMechanicalBirthFaction259} from './mechanoid-world-faction-259.ts';
 import {mechMaxPawnCost,mechanoidRaidCost} from './mechanoid-raid-composition.ts';
 import {isMechanoidKind,type MechanoidKind} from './mechanoid-definition.ts';
@@ -39,7 +40,7 @@ export function draftSiteMechanoidRoster263(points:number,rng:number):{roster:Me
  * authority. Never publish a prefix, consume IDs or change campaign RNG here. */
 export function assembleSiteMechanoids263(w:World,roster:readonly MechanoidKind[],rng:number,cells:readonly Cell[],siteId:number,options:SiteMechOptions263):{mechanoids:Mechanoid[];nextId:number;rng:number}|undefined {
  const bornAtCore=options.bornAtCore??w.tick*10;
- if(Number(w.schemaVersion)!==263||!rngValid(rng)||!int(siteId,1)||!int(bornAtCore,Math.max(0,(w.tick-1)*10),w.tick*10)||!int(options.releaseAtCore,bornAtCore)||options.releaseAtCore!==bornAtCore&&options.releaseAtCore!==bornAtCore+120||typeof options.sleeping!=='boolean'||typeof options.wakeIfClose!=='boolean'||roster.length!==cells.length||roster.length>90||!roster.every(isMechanoidKind)||!int(w.nextId,1,Number.MAX_SAFE_INTEGER-roster.length))return;
+ if(!isSchema263OrLater(Number(w.schemaVersion))||!rngValid(rng)||!int(siteId,1)||!int(bornAtCore,Math.max(0,(w.tick-1)*10),w.tick*10)||!int(options.releaseAtCore,bornAtCore)||options.releaseAtCore!==bornAtCore&&options.releaseAtCore!==bornAtCore+120||typeof options.sleeping!=='boolean'||typeof options.wakeIfClose!=='boolean'||roster.length!==cells.length||roster.length>90||!roster.every(isMechanoidKind)||!int(w.nextId,1,Number.MAX_SAFE_INTEGER-roster.length))return;
  const site=w.worldSites263?.entries.find(s=>s.id===siteId);if(!site||site.kind!=='item-stash'||site.closed)return;
  const faction=actualMechanicalBirthFaction259(w.worldFactions);if(!faction)return;
  const physical=captureActualLocalDistricts256(w),occupied=new Set([...w.pawns,...w.wildlife?.animals??[],...w.mechanoids??[]].filter(m=>m.state!=='dead').map(m=>m.z*w.width+m.x)),seen=new Set<number>();
@@ -56,13 +57,13 @@ export function draftSiteMechanoids263(w:World,points:number,rng:number,cells:re
 }
 export const sleepingSiteMech263=(m:Mechanoid):boolean=>m.site263?.awakeAtCore===null;
 export function siteMechanicalDuty263(w:World,m:Mechanoid):{phase:'assault'}|undefined {
- const d=m.site263;return Number(w.schemaVersion)===263&&d&&d.awakeAtCore!==null&&w.tick*10>=d.releaseAtCore?{phase:'assault'}:undefined;
+ const d=m.site263;return isSchema263OrLater(Number(w.schemaVersion))&&d&&d.awakeAtCore!==null&&w.tick*10>=d.releaseAtCore?{phase:'assault'}:undefined;
 }
 /** LordJob_SleepThenAssaultColony: one genuine DormancyWakeup or actual
  * ExternalViolence wakes the whole Site group. No fog/inspection wake. */
 export function wakeSiteMechGroup263(w:World,member:Mechanoid,atCore:number):void {
  const d=member.site263;if(!d||d.awakeAtCore!==null)return;
- if(Number(w.schemaVersion)!==263||!w.mechanoids?.includes(member)||!int(atCore,Math.max(d.bornAtCore,(w.tick-1)*10,0),w.tick*10))throw Error('Invalid actual Site mechanical wake');
+ if(!isSchema263OrLater(Number(w.schemaVersion))||!w.mechanoids?.includes(member)||!int(atCore,Math.max(d.bornAtCore,(w.tick-1)*10,0),w.tick*10))throw Error('Invalid actual Site mechanical wake');
  for(const m of w.mechanoids)if(m.site263?.siteId===d.siteId&&m.site263.awakeAtCore===null){m.site263={...m.site263,awakeAtCore:atCore,goal:null};m.path=[];m.planCooldown=0;}
  w.events.push({tick:w.tick,type:'command',message:'Les mécanoïdes du site s’éveillent et commencent leur assaut.'});if(w.events.length>80)w.events.splice(0,w.events.length-80);
 }
@@ -71,7 +72,7 @@ export function wakeSiteMechGroup263(w:World,member:Mechanoid,atCore:number):voi
  * buildings. Defaults wakeUpWithDelay=false. Reveal alone never wakes a Site.
  * One bounded capture per due mechanical group, no frame/update-panel scan. */
 export function advanceSiteMechanoids263(w:World):void {
- if(Number(w.schemaVersion)!==263||!w.worldFactions)return;
+ if(!isSchema263OrLater(Number(w.schemaVersion))||!w.worldFactions)return;
  let grid:ReturnType<typeof captureWorldShotGrid>|undefined,components:Int32Array|undefined;
  // One decision-local connectivity capture, created only if a due sleeper
  // actually has a nearby player building. Reused by every due original in
@@ -98,7 +99,7 @@ export function advanceSiteMechanoids263(w:World):void {
  }
 }
 export function constructDirectSiteSleepingMechanoids263(w:World,site:ItemStash263,storage:AncientRect256,_usedRects:AncientRect256[],random:WorldGenerationRandom):void {
- if(Number(w.schemaVersion)!==263||site.threat.kind!=='sleeping-mechanoids'||!w.worldSites263?.entries.includes(site))throw Error('Actual SleepingMechanoids1600 frontier required');
+ if(!isSchema263OrLater(Number(w.schemaVersion))||site.threat.kind!=='sleeping-mechanoids'||!w.worldSites263?.entries.includes(site))throw Error('Actual SleepingMechanoids1600 frontier required');
  const roster=draftSiteMechanoidRoster263(site.threat.points,(random.integerValue()>>>0)||1);if(!roster)throw Error('Actual Site mechanical budget refused');
  if(!roster.roster.length)return;
  const placement=prepareSiteThreatPlacements263(w,roster.roster.length,roster.nextRng,{kind:'around',rect:storage});if(!placement)throw Error('Actual SleepingMechanoids1600 placements refused');
@@ -111,7 +112,7 @@ export function constructDirectSiteSleepingMechanoids263(w:World,site:ItemStash2
 function plain(v:unknown,names:readonly string[]):v is Record<string,unknown>{return !!v&&typeof v==='object'&&Object.getPrototypeOf(v)===Object.prototype&&Reflect.ownKeys(v).length===names.length&&names.every(k=>{const d=Object.getOwnPropertyDescriptor(v,k);return !!d?.enumerable&&Object.hasOwn(d,'value');});}
 export function validSiteMechField263(v:unknown,version:number,tick:number):boolean {
  if(!v||typeof v!=='object')return false;const property=Object.getOwnPropertyDescriptor(v,'site263');if(!property)return !('site263'in v);
- if(version!==263||!property.enumerable||!Object.hasOwn(property,'value')||!plain(property.value,['revision','siteId','bornAtCore','releaseAtCore','awakeAtCore','wakeIfClose','goal']))return false;
+ if(!isSchema263OrLater(version)||!property.enumerable||!Object.hasOwn(property,'value')||!plain(property.value,['revision','siteId','bornAtCore','releaseAtCore','awakeAtCore','wakeIfClose','goal']))return false;
  const d=property.value,m=v as Mechanoid;if(d.revision!==1||!int(d.siteId,1)||!int(d.bornAtCore,0,tick*10)||!int(d.releaseAtCore,d.bornAtCore)||d.releaseAtCore!==d.bornAtCore&&d.releaseAtCore!==d.bornAtCore+120||typeof d.wakeIfClose!=='boolean'||!(d.awakeAtCore===null||int(d.awakeAtCore,d.bornAtCore,tick*10))||'raid'in v||'temple'in v)return false;
  if(d.goal!==null&&(!plain(d.goal,['x','z'])||!int(d.goal.x)||!int(d.goal.z)))return false;
  return d.awakeAtCore!==null&&d.releaseAtCore<=tick*10||Array.isArray(m.path)&&!m.path.length&&!m.motion&&!m.melee&&!m.ranged&&['idle','dead','downed'].includes(m.state)&&d.goal===null;

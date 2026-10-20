@@ -1,4 +1,5 @@
 import {isRoofed} from './roof-rules.ts';
+import {geothermalPlacementRefusal264} from './geothermal-placement-264.ts';
 import {marshSupportsFootprint} from './marsh.ts';
 import { workPriority } from './work-types.ts';
 import { constructionPlantBlocks } from './construction-plants.ts';
@@ -51,6 +52,7 @@ export function constructionObstruction(world: World, job: Job):ConstructionObst
 /** A frame is traversable. Completion must not materialize a building across
  * a person, an active edge (including its diagonal corner), or a service. */
 export function constructionSiteFree(world: World, job: Job, workerId?: number, obstacle=constructionObstruction(world,job)): boolean {
+  if(job.kind==='geothermal-generator'&&geothermalPlacementRefusal264(world,job,job.id))return false;
   if(obstacle.plant||obstacle.pile||obstacle.pack||job.kind!=='build-bridge'&&!marshSupportsFootprint(world,footprintCells(job),job.kind==='install'?{kind:job.furniture?.kind??'install',material:world.packed.find(p=>p.building.id===job.furniture?.structureId)?.building.material??world.structures.find(s=>s.id===job.furniture?.structureId)?.material}:job))return false;
   if((job.furniture?.kind??job.kind)==='spike-trap'&&!spikeTrapPlacementAllowed(
     {...world,jobs:world.jobs.filter(j=>j!==job)},job,job.furniture?.structureId))return false;

@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {advanceScariaRecord261,commitScariaDeath261} from './animal-scaria-261.ts';
 import {advanceOffmapThermal259,offmapThermalRange259,WORLD_PAWN_NO_HOLDER_TEMPERATURE_259} from './offmap-thermal-259.ts';
 import {createAnimalMedicalRecord256} from './animal-clinical-age-v256.ts';
@@ -53,13 +54,13 @@ function animalAge(row:Extract<WorldPawnOwner256,{kind:'animal'}>,toCore:number,
  * This reads actual fields; it does not run a future clinical tick or trial. */
 export function worldPawnActiveBoundary256(row:WorldPawnOwner256,version=256,atCore=row.clockCore):string|null {
  if(terminalWorldPawn256(row)||row.mode==='mothballed')return null;
- if(row.items.length||row.packed.length){if((version!==259&&version!==260&&(version!==261&&(Number(version)!==262&&Number(version)!==263))))return 'Actual off-map item/gear ticking requires its retained-holder adapter';if(!validSuspendedWorldPawnGoods259(row,atCore))return 'Actual suspended item holder/frontier is not admitted';}
- if(row.kind==='mechanical')return (version===259||version===260||(version===261||(Number(version)===262||Number(version)===263)))&&row.items.length===0&&row.packed.length===0?null:'Mechanical WorldPawn owner is not admitted';
+ if(row.items.length||row.packed.length){if((version!==259&&version!==260&&(version!==261&&(Number(version)!==262&&!isSchema263OrLater(Number(version))))))return 'Actual off-map item/gear ticking requires its retained-holder adapter';if(!validSuspendedWorldPawnGoods259(row,atCore))return 'Actual suspended item holder/frontier is not admitted';}
+ if(row.kind==='mechanical')return (version===259||version===260||(version===261||(Number(version)===262||isSchema263OrLater(Number(version)))))&&row.items.length===0&&row.packed.length===0?null:'Mechanical WorldPawn owner is not admitted';
  if(row.kind==='animal'){
   if(row.actor.pregnancy)return 'Actual off-map pregnancy requires miscarriage and newborn WorldPawn-owner adapters';
   const egg=worldPawnEggBoundary256(row.actor,worldPawnMothballReadiness256(row)==='yes');if(egg)return egg;
  }
- if((version===259||version===260||(version===261||(Number(version)===262||Number(version)===263)))){const range=offmapThermalRange259(row.actor,row.items);if(typeof range==='string')return range;}
+ if((version===259||version===260||(version===261||(Number(version)===262||isSchema263OrLater(Number(version)))))){const range=offmapThermalRange259(row.actor,row.items);if(typeof range==='string')return range;}
  else if(row.actor.health?.heatstroke||row.actor.health?.hypothermia)return 'Actual off-map thermal hediff owner is not bound';
  return null;
 }
@@ -74,7 +75,7 @@ function advancePreparedWorldPawnRow256(row:WorldPawnOwner256,toCore:number,rand
  if(terminalWorldPawn256(row))return {ok:true};
  if(toCore<row.clockCore||toCore%10)return {ok:false,reason:'Invalid WorldPawn personal clock'};
  const delta=toCore-row.clockCore;if(!delta)return {ok:true};
- if(row.kind==='mechanical'){const reason=(version===259||version===260||(version===261||(Number(version)===262||Number(version)===263)))?advanceMechanicalWorldPawn259(row,toCore):'Future mechanical WorldPawn';return reason?{ok:false,reason}:{ok:true};}
+ if(row.kind==='mechanical'){const reason=(version===259||version===260||(version===261||(Number(version)===262||isSchema263OrLater(Number(version)))))?advanceMechanicalWorldPawn259(row,toCore):'Future mechanical WorldPawn';return reason?{ok:false,reason}:{ok:true};}
  const mothball=row.mode==='mothballed';
  const activeBoundary=worldPawnActiveBoundary256(row,version,toCore);if(activeBoundary)return {ok:false,reason:activeBoundary};
  if(row.kind==='animal'){
@@ -92,10 +93,10 @@ function advancePreparedWorldPawnRow256(row:WorldPawnOwner256,toCore:number,rand
   if(h.tick!==row.clockCore/10&&h.tick!==toCore/10)return {ok:false,reason:'WorldPawn clinical clock skipped'};
   const medicalContext={cryptosleepSicknessSpawned:false,...h.toxicBuildup?{toxicOwner:{id:a.id,spawned:false,awake:a.state!=='sleeping'}}:{},phase:a.id%60,posture:'standing' as const,starving:row.kind==='animal'?row.actor.food<=0:row.actor.hunger<=0,hunger:row.kind==='animal'?row.actor.food/animalNutritionMax(row.actor)*100:row.actor.hunger,rest:row.kind==='animal'?row.actor.rest*100:row.actor.rest,infectionSeed:(row.context.seed^Math.imul(a.id,0x9e3779b1))>>>0};
   const frontier=row.kind==='animal'?worldPawnAnimalConditionFrontier256(row.actor,h,random):humanConditionMedicalFrontier256(row.actor,h,toCore/10,random,{kind:'world-pawn'});
-  if((version===261||(Number(version)===262||Number(version)===263))&&row.kind==='animal')advanceScariaRecord261(h,toCore,row.actor.manhunter?.permanent261===true);
+  if((version===261||(Number(version)===262||isSchema263OrLater(Number(version))))&&row.kind==='animal')advanceScariaRecord261(h,toCore,row.actor.manhunter?.permanent261===true);
   advanceMedical(h,toCore/10-h.tick,medicalContext,random,frontier);frontier?.commit();
  }
- if(!mothball&&(version===259||version===260||(version===261||(Number(version)===262||Number(version)===263))))advanceOffmapThermal259(a,row.items,toCore,WORLD_PAWN_NO_HOLDER_TEMPERATURE_259,()=>row.kind==='animal'?createAnimalMedicalRecord256({schemaVersion:version,tick:toCore/10},row.actor,toCore/10):createMedicalRecord(toCore/10));
+ if(!mothball&&(version===259||version===260||(version===261||(Number(version)===262||isSchema263OrLater(Number(version))))))advanceOffmapThermal259(a,row.items,toCore,WORLD_PAWN_NO_HOLDER_TEMPERATURE_259,()=>row.kind==='animal'?createAnimalMedicalRecord256({schemaVersion:version,tick:toCore/10},row.actor,toCore/10):createMedicalRecord(toCore/10));
  h=a.health;
  if(!mothball&&h){const status=medicalStatus(h);if(status==='dead'){commitToxicDeath256(h,random);if(row.kind==='animal'){commitScariaDeath261(h,scariaRotChance,random);delete row.actor.manhunter;}a.state='dead';row.mode='dead';delete row.free;row.clockCore=h.death!.tick*10;return {ok:true};}a.state=status==='downed'?'downed':'idle';
  }
@@ -106,7 +107,7 @@ function advancePreparedWorldPawnRow256(row:WorldPawnOwner256,toCore:number,rand
 /** Same declared current263 animal adaptation at campaign life and the
  * existing removal remainder. Neither a save flag nor a new animal cohort. */
 function provisionalAnimalMothball263(row:WorldPawnOwner256,version:number,nativeOrder:WorldPawnsState256['nativeOrder']):boolean {
- return version===263&&!nativeOrder&&row.kind==='animal'&&row.mode==='mothballed'&&row.actor.wander?.revision===1&&row.actor.growthTracker?.revision===1&&worldPawnMothballReadiness256(row)==='yes';
+ return isSchema263OrLater(version)&&!nativeOrder&&row.kind==='animal'&&row.mode==='mothballed'&&row.actor.wander?.revision===1&&row.actor.growthTracker?.revision===1&&worldPawnMothballReadiness256(row)==='yes';
 }
 /** The redress caller has already checked its actual Free neutral owner and
  * clinical frontier. Only its existing Food/Rest reset may precede removal;
@@ -117,7 +118,7 @@ function redressedRemovalClone263(row:WorldPawnOwner256,original:WorldPawnOwner2
 }
 /** Existing Mothball removal remainder, no health catch-up/healing. */
 export function prepareWorldPawnRemoval256(row:WorldPawnOwner256,atCore:number,authority?:{version:number;state:WorldPawnsState256;original:WorldPawnOwner256}):{ok:true;draft:WorldPawnOwner256}|{ok:false;reason:string}{
- if(authority&&(authority.version!==263||authority.state.atCore!==atCore||!nativeWorldPawnOrderCurrent256(authority.state,authority.state.nativeOrder)||!authority.state.owners.includes(authority.original)||!redressedRemovalClone263(row,authority.original)))return {ok:false,reason:'Current263 removal requires its actual unchanged original and only the existing Food/Rest reset'};
+ if(authority&&(!isSchema263OrLater(authority.version)||authority.state.atCore!==atCore||!nativeWorldPawnOrderCurrent256(authority.state,authority.state.nativeOrder)||!authority.state.owners.includes(authority.original)||!redressedRemovalClone263(row,authority.original)))return {ok:false,reason:'Current263 removal requires its actual unchanged original and only the existing Food/Rest reset'};
  const draft=structuredClone(row);
  if(draft.mode==='mothballed'){
   if(worldPawnMothballReadiness256(draft)!=='yes')return {ok:false,reason:'Unclosed real mothball hediff flags'};

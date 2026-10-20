@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {planetGeography256} from './planet-geography-256.ts';
 import {worldBiomeCanSettle} from './world-biome-properties.ts';
 import {worldSettlementAccess256} from './world-faction-access.ts';
@@ -27,7 +28,7 @@ export function worldTargetAccess263(root:CampaignState,target:WorldEntryTarget2
 }
 function access263(root:TargetAuthority263,target:WorldEntryTarget263,tile:number,maps:readonly TargetMapHeader263[]):WorldTargetAccess263 {
  const no=(reason:string):WorldTargetAccess263=>({ok:false,reason});
- if(Number(root.schemaVersion)!==263||!validWorldEntryTarget263(target)||root.planet?.revision!==3||!root.worldFactions)return no('Le vrai contexte géographique263 est absent.');
+ if(!isSchema263OrLater(Number(root.schemaVersion))||!validWorldEntryTarget263(target)||root.planet?.revision!==3||!root.worldFactions)return no('Le vrai contexte géographique263 est absent.');
  const surface=planetGeography256(root.planet).surface,t=surface.tiles[tile];
  if(!t||t.id!==tile||!worldBiomeCanSettle(t.biome)||t.hilliness==='impassable')return no('Cette tuile ne permet pas la vraie génération locale.');
  if(target.kind==='attack-settlement'){
@@ -59,7 +60,7 @@ export function worldTargetActions263(view:World|CampaignState|CampaignSummary,t
  * physical exit authority. This is admission of their actual map-parent,
  * never a Battlefield alias or a threat bypass for Reform. */
 export function worldTargetRetreatAvailable263(view:Pick<CampaignState,'schemaVersion'|'worldFactions'|'worldSites263'>,map:TargetMapHeader263):boolean {
- if(Number(view.schemaVersion)!==263||!map.target263)return false;
+ if(!isSchema263OrLater(Number(view.schemaVersion))||!map.target263)return false;
  const target=map.target263;
  if(map.kind==='quest-site'&&target.kind==='quest-site')return !!view.worldSites263?.entries.some(s=>s.kind==='item-stash'&&!s.closed&&s.id===target.siteId&&s.mapId===map.id&&s.tile===map.tile);
  if(map.kind!=='foreign-settlement'||target.kind!=='foreign-settlement')return false;
@@ -75,7 +76,7 @@ export function queueWorldTargetEntry263(root:CampaignState,record:WorldGroupRec
  record.pendingEntry263={revision:1,requestedAtCore:root.tick*10,target:{...target}};return true;
 }
 export function pendingWorldEntry263(root:CampaignState):{groupId:number;pending:NonNullable<WorldGroupRecord['pendingEntry263']>}|null {
- if(Number(root.schemaVersion)!==263)return null;
+ if(!isSchema263OrLater(Number(root.schemaVersion)))return null;
  const record=root.worldGroups?.groups.find(r=>r.pendingEntry263);return record?.pendingEntry263?{groupId:record.state.id,pending:record.pendingEntry263}:null;
 }
 /** Existing order channel, same actual pending identity. Retrying does not
@@ -83,7 +84,7 @@ export function pendingWorldEntry263(root:CampaignState):{groupId:number;pending
 export function pendingWorldTargetOrder263(root:CampaignState,record:WorldGroupRecord,destination:number,action:import('./caravan-encounter-state-261.ts').RetainedArrival261):CommandResult|undefined {
  const pending=record.pendingEntry263;if(!pending)return undefined;
  const g=record.state,no=(reason:string):CommandResult=>({ok:false,code:'invalid-command',reason});
- if(Number(root.schemaVersion)!==263||record.localMapId!==null||!('members'in g)||g.segment||g.tile!==destination||g.lastPersonalTick!==root.tick||!['at-site','awaiting-entry'].includes(g.phase))return no('Cette vraie préparation d’entrée ne peut pas être redirigée.');
+ if(!isSchema263OrLater(Number(root.schemaVersion))||record.localMapId!==null||!('members'in g)||g.segment||g.tile!==destination||g.lastPersonalTick!==root.tick||!['at-site','awaiting-entry'].includes(g.phase))return no('Cette vraie préparation d’entrée ne peut pas être redirigée.');
  if(action===null){const d=Object.getOwnPropertyDescriptor(record,'pendingEntry263');if(!d||!Object.hasOwn(d,'value')||d.configurable!==true)return no('La vraie préparation ne peut pas être annulée.');delete record.pendingEntry263;return {ok:true};}
  if(!validWorldEntryTarget263(action)||action.kind!==pending.target.kind||(action.kind==='attack-settlement'?pending.target.kind!=='attack-settlement'||action.settlementId!==pending.target.settlementId||action.factionId!==pending.target.factionId:pending.target.kind!=='visit-site'||action.siteId!==pending.target.siteId))return no('Réessayez la même entrée ou annulez sa préparation.');
  const access=worldTargetAccess263(root,action,destination);return access.ok?{ok:true}:no(access.reason);

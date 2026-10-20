@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {validTargetBuildingFactionShape263} from './world-target-building-263.ts';
 import {isBlockMaterial} from './building-materials.ts';
 import {footprintCells} from './definitions.ts';
@@ -21,7 +22,7 @@ export function validShelfSettings(value:unknown,version:number):boolean {
 export function validShelfBuildingShape(value:unknown,version:number):boolean {
   if(!object(value))return false;
   if(!isShelfKind(String(value.kind)))return !Object.hasOwn(value,'shelf');
-  if(Reflect.ownKeys(value).some(k=>typeof k!=='string'||!['id','kind','x','z','orientation','footprint','material','shelf','damage',...(version===263?['factionId']:[])].includes(k)))return false;
+  if(Reflect.ownKeys(value).some(k=>typeof k!=='string'||!['id','kind','x','z','orientation','footprint','material','shelf','damage',...(isSchema263OrLater(version)?['factionId']:[])].includes(k)))return false;
   if(Object.hasOwn(value,'factionId')&&!validTargetBuildingFactionShape263(value,version))return false;
   const state=value.shelf;
   if(version<229||!object(state)||Reflect.ownKeys(state).length!==2||!Object.hasOwn(state,'cells')||!Object.hasOwn(state,'settings')

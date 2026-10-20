@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {draftSiteManhunterRoster263} from './caravan-manhunter-261.ts';
 import {prepareManhunterSpawn261} from './animal-scaria-261.ts';
 import {captureGeographicGenerationReachability256} from './geographic-generation-reachability-256.ts';
@@ -15,7 +16,7 @@ export const SITE_MANHUNTER_SEED_PART_263=457293335;
  * standable, unfogged, edge-reachable room>=225, outside UsedRects. The current
  * roster remains the declared provisional animal producer, without rerolls. */
 export function constructDirectSiteManhunters263(w:World,site:ItemStash263,_storage:AncientRect256,usedRects:AncientRect256[],random:WorldGenerationRandom):void {
- if(Number(w.schemaVersion)!==263||site.threat.kind!=='manhunters'||w.site?.revision!==3||w.site.tileId!==site.tile||!w.wildlife)throw Error('Actual Site manhunter generation required');
+ if(!isSchema263OrLater(Number(w.schemaVersion))||site.threat.kind!=='manhunters'||w.site?.revision!==3||w.site.tileId!==site.tile||!w.wildlife)throw Error('Actual Site manhunter generation required');
  const reach=captureGeographicGenerationReachability256(w),capture=captureRandomClosewalk256(w,reach),outside=(c:number)=>{const x=c%w.width,z=Math.floor(c/w.width);return !usedRects.some(r=>x>=r.minX&&x<=r.maxX&&z>=r.minZ&&z<=r.maxZ);};
  const root=findLocalCentralCell256({width:w.width,height:w.height,tightness:2,minimumDistrictCells:225,invalidOnFailure:true,readers:{standable:c=>reach.physical.standable(c),district:c=>reach.physical.district(c),extra:c=>outside(c)&&!foggedCell256(w,c)&&reach.canReachMapEdgeNoPassClosedDoorsOrWater(c)}},random);
  if(root===null)return;

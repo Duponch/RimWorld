@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 /** Core-only750 composition on the SAME unpublished map and step Rand.
  * No generic symbol interpreter or external outcome callback. Human population
  * is the declared existing-NPC adaptation, not native PawnGenerator parity.
@@ -66,8 +67,8 @@ function resolveActualShrine256(w:World,placement:AncientShrinePlacement256,shar
  // Human population is the explicitly authored existing-NPC adaptation.
  // The same real casket child, original identity and branch remain; no native
  // prefix/replayed receipt or ready-but-empty holder is admitted.
- const bornDef=contents==='ancient-hostile'?'AncientsHostile':'Ancients',birth=(Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||Number(w.schemaVersion)===263)))?w.worldFactions!.factions.find(f=>f.def===bornDef):undefined;
- if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||Number(w.schemaVersion)===263)))&&!birth)throw Error('Selected future ancient birth lacks its actual faction instance');
+ const bornDef=contents==='ancient-hostile'?'AncientsHostile':'Ancients',birth=(Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||isSchema263OrLater(Number(w.schemaVersion)))))?w.worldFactions!.factions.find(f=>f.def===bornDef):undefined;
+ if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||isSchema263OrLater(Number(w.schemaVersion)))))&&!birth)throw Error('Selected future ancient birth lacks its actual faction instance');
  spawnFunctionalAncientCasket256(w,placement,contents,groupId,casketId,random,birth?{factions:w.worldFactions!,factionId:birth.id}:undefined);
 }
 /** The BaseGen LIFO order is explicit and finite: casket group children first,

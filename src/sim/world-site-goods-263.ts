@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {footprintCells} from './definitions.ts';
 import {captureActualLocalDistricts256} from './actual-local-districts-256.ts';
 import type {World,Cell} from './types.ts';
@@ -51,7 +52,7 @@ export function draftItemStashGoods263(siteId:number,nextId:number,points:number
  * recalls the same retained people; it never copies their gear as loot. */
 export function generateForeignBaseLoot263(w:World,settlementId:number,storage:AncientRect256,rng:number):void {
  const tileId=w.site?.revision===3?w.site.tileId:undefined;
- if(Number(w.schemaVersion)!==263||tileId===undefined||!w.worldFactions?.settlements.some(s=>s.id===settlementId&&s.tile===tileId))throw Error('Actual foreign base loot parent required');
+ if(!isSchema263OrLater(Number(w.schemaVersion))||tileId===undefined||!w.worldFactions?.settlements.some(s=>s.id===settlementId&&s.tile===tileId))throw Error('Actual foreign base loot parent required');
  const physical=captureActualLocalDistricts256(w),occupied=new Set(w.structures.flatMap(s=>footprintCells(s).map(c=>c.z*w.width+c.x))),cells:Cell[]=[];
  for(let z=storage.minZ+1;z<storage.maxZ;z++)for(let x=storage.minX+1;x<storage.maxX;x++){const c=z*w.width+x;if(physical.standable(c)&&!occupied.has(c)&&!w.resources.some(r=>r.x===x&&r.z===z)&&!w.piles.some(p=>p.owner.type==='ground'&&p.owner.x===x&&p.owner.z===z))cells.push({x,z});}
  const goods=draftOriginalTargetGoods263(settlementId,w.nextId,0,w.tick,rng,cells);if(!goods)throw Error('No physical storage capacity for the actual base loot');w.piles.push(...goods.items);w.nextId=goods.nextId;

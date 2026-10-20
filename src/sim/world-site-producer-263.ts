@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {WORLD_FACTION_TECH_LEVEL_259} from './world-faction-catalog.ts';
 import {planetGeography256} from './planet-geography-256.ts';
 import {worldBiomeCanSettle} from './world-biome-properties.ts';
@@ -24,7 +25,7 @@ function siteTile263(root:CampaignState,homeTile:number,draw:()=>number):number|
  * they are not silently converted to a peaceful Site. */
 export function prepareItemStashBirth263(root:CampaignState,points:number):{ok:false;reason:string}|{ok:true;site:ItemStash263;current():boolean;commit():void} {
  const registry=root.worldSites263,maps=root.worldMaps,factions=root.worldFactions,home=maps?.sites.find(s=>s.kind==='settlement'&&s.tile!==null),tick=root.tick,nextId=root.nextId,rng=root.rng;
- if(Number(root.schemaVersion)!==263||!registry||!maps||!factions||!home||home.tile===null||!Number.isFinite(points)||points<0||points>10000||registry.entries.length>=4096||!Number.isSafeInteger(registry.nextId+1))return {ok:false,reason:'Actual263 home, Site registry and threat budget required'};
+ if(!isSchema263OrLater(Number(root.schemaVersion))||!registry||!maps||!factions||!home||home.tile===null||!Number.isFinite(points)||points<0||points>10000||registry.entries.length>=4096||!Number.isSafeInteger(registry.nextId+1))return {ok:false,reason:'Actual263 home, Site registry and threat budget required'};
  const random={rng},draw=()=>healthRandom(random),tile=siteTile263(root,home.tile,draw);if(tile===undefined)return {ok:false,reason:'No actual reachable unoccupied Site tile at distance7..27'};
  let threat:ItemStashThreat263={kind:'none'},factionId:number|null=null;
  if(draw()<.85){

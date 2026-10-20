@@ -21,6 +21,7 @@ const BUILDINGS:Readonly<Record<string,readonly [number,number,boolean]>>={
   'electric-smelter':[180,1,true],
   'biofuel-refinery':[200,1,true],
   'chemfuel-generator':[300,1,true],
+  'geothermal-generator':[500,.5,true],
   'nutrient-paste-dispenser':[350,.5,true],
   hopper:[100,.5,true],
   'orbital-beacon':[75,.5,false],

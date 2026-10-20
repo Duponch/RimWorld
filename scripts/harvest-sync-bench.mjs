@@ -51,7 +51,7 @@ if(process.env.HARVEST_PREINSTRUMENTED==='1'&&process.env.HARVEST_TRACE==='1')th
 const {createWorld,applyCommand,serializeWorld}=await import('../src/sim/index.ts');
 const report={date:new Date().toISOString(),cpu:os.cpus()[0].model,seconds,switches,initialSpeed,speedCycle,viewport:{width:1440,height:1000},contactStallDiagnostic:process.env.HARVEST_CONTACT_STALL==='1',protocol:'Native Chromium WebGPU, seed 42 / 250² / 3 colonists, rectangular designations, actual worker at initialSpeed; switches=true uses speedCycle every 2 seconds. Frame pose read from shared GPU inputs; no full-world serialization in frames. Runtime clock: 6 local ticks/s at 1x. 13 cells/s candidate bound includes neutral 6x travel (12 cells/s). An excess is continuous only on one unchanged confirmed segment or exactly one contiguous grid/GPU boundary with exact shared endpoint and timestamp; both witnessed legs stay within the contact envelope and independent time/pose/arc bounds. Raw candidates are reported separately.',phases:[]};
 report.browserChannel=browserChannel;
-const browser=await chromium.launch({channel:browserChannel,args:[]});
+const browser=await chromium.launch({channel:browserChannel,args:['--mute-audio']});
 try{for(const action of (process.env.HARVEST_ACTIONS??'mine,chop').split(',')){
  const w=createWorld(42,250,250);w.tick=2000;w.deterioration.lastTick=w.tick; // Declared initial noon, no past exposure.
  const p=w.pawns[0],c=action==='mine'?w.tiles.map((t,i)=>({t,x:i%250,z:Math.floor(i/250)})).filter(v=>v.t.terrain==='rock').sort((a,b)=>(a.x-p.x)**2+(a.z-p.z)**2-((b.x-p.x)**2+(b.z-p.z)**2))[0]:p;

@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {mechRaidGroup261} from './mechanical-raid-groups-261.ts';
 import {tempMapModern261} from './temp-map-incidents-261.ts';
 import {raidGroup261} from './temp-map-raids-261.ts';
@@ -134,7 +135,7 @@ function spawnSites(w:World,e:Entry261,count:number,random:{rng:number}):Cell[]|
  * Rejected admission commits no identities, possessions or owner. Resolution
  * RNG survives every actual attempt, including failure; the caller commits it. */
 export function admitTempMapTraveler261(w:World,points:number,random:{rng:number}):boolean {
- if((Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&Number(w.schemaVersion)!==263))||!tempMapModern261(w)||!w.worldFactions||!Number.isFinite(points)||!Number.isInteger(random.rng)||random.rng<=0||random.rng>0xffffffff)return false;
+ if((Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&!isSchema263OrLater(Number(w.schemaVersion))))||!tempMapModern261(w)||!w.worldFactions||!Number.isFinite(points)||!Number.isInteger(random.rng)||random.rng<=0||random.rng>0xffffffff)return false;
  const old=w.visitors;
  if((old?.serial??0)>=Number.MAX_SAFE_INTEGER||(old?.departed.length??0)+w.pawns.length+civilianAwayCounts(w).people>=w.width*w.height)return false;
  const draft={rng:random.rng};

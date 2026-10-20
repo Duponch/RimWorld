@@ -1,3 +1,5 @@
+import {validGeothermalResearchTransport} from '../sim/research-save.ts';
+import {validGeothermalWorld264} from '../sim/geothermal-state-264.ts';
 import {registerProjectedWorldSites263} from '../sim/world-sites-projection-save-263.ts';
 import {validWorldAffiliationFields259,validWorldAffiliationForeignKeys259} from '../sim/world-affiliation-259.ts';
 import {validPrisonerStateRecord259} from '../sim/prisoner-save.ts';
@@ -1453,6 +1455,7 @@ export class SnapshotDecoder {
     if(!validSmeltingTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Fonderie, filtre, arme ou propriétaire de fusion invalide ou futur.');
     if(!validNutrientPasteTransport(next,next.schemaVersion,powerTopology))return resync('Pâte nutritive, source ou transport invalide.');
     if(!validOrbitalTransport(next,next.schemaVersion,powerTopology,identities))return resync('État orbital, propriétaire ou contact invalide.');
+    if(!validGeothermalWorld264(next,next.schemaVersion)||!validGeothermalResearchTransport(next,next.schemaVersion))return resync('Géothermie, phase ou propriétaire invalide.');
     if(!validDeepDrillingTransport(next,next.schemaVersion)||!validDeepResearchTransport(next,next.schemaVersion))return resync('Gisement, travail ou recherche de forage invalides.');
     if(validateHydroponics(next,next.schemaVersion,powerTopology,identities,validation.geometry).length)return resync('Bac hydroponique, culture liée ou alimentation incohérents.');
     if(!validAutoSlaughterTransport(next,next.schemaVersion))return resync('Quota d’abattage automatique invalide ou futur.');

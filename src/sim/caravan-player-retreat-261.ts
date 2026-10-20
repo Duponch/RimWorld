@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {planetTile} from './planet-geography-256.ts';
 import {newGroupForageRevision256} from './group-forage-state-256.ts';
 import {previewFormation,previewGroupFormation} from './group-authority.ts';
@@ -27,7 +28,7 @@ const writable=(o:object,k:string)=>{const d=Object.getOwnPropertyDescriptor(o,k
  * unfinished edge/patient/source never holds an already exiting owner. */
 function retreatUnits261(w:World,c:Start){
  const root=registeredCampaign(w),id=registeredMapId(w),site=(root.worldMaps?.sites??(w.campaignMap?.revision===2?w.campaignMap.maps:[])).find(s=>s.id===id),planet=root.planet;
- if((Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&Number(w.schemaVersion)!==263))||c.retreat261!==true||id!==c.originMapId||!site||!temporaryRetainedOwner263(root,site)||!planet||!root.worldFactions)return no('La fuite exige sa vraie carte temporaire et son propriétaire retenu.');
+ if((Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&!isSchema263OrLater(Number(w.schemaVersion))))||c.retreat261!==true||id!==c.originMapId||!site||!temporaryRetainedOwner263(root,site)||!planet||!root.worldFactions)return no('La fuite exige sa vraie carte temporaire et son propriétaire retenu.');
  const full=previewFormation(w,c.memberIds,c.sources,c.destination,c.packedIds??[],c.animalIds??[],true);if(full.kind!=='ready')return no(full.kind==='deferred'?'La route attend une nouvelle tentative.':full.reason);
  const owners=full.loading.capture.members.filter(p=>groupFreeHuman257(p)&&groupHumanMobile257(p));if(!owners.length)return no('Un propriétaire autonome doit sortir.');
  const units=new Map(owners.map(p=>[p.id,new Set([p.id])])),ownerOf=new Map(owners.map(p=>[p.id,p.id]));
@@ -64,7 +65,7 @@ export function preparePlayerRetreatDeparture261(w:World,next:AwayGroup,enteredA
  const root=registeredCampaign(w),record=boundWorldGroup(w),site=root.worldMaps?.sites.find(s=>s.id===record?.originMapId),groups=root.worldGroups;
  const retainedParent=site&&temporaryRetainedOwner263(root,site);
  if(!record?.retreat261)return {ok:true as const,next,targetId:undefined,current:()=>true,commit(){return false;}};
- if((Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&Number(w.schemaVersion)!==263))||record.localMapId!==site?.id||!site||!retainedParent||!groups||enteredAtAbsCore===undefined||!writable(groups,'groups')||!writable(groups,'selectedGroupId')||!writable(record,'state')||!writable(record,'localMapId')||!writable(record,'story261')||!writable(record,'arrival261')||!writable(record,'retreat261')||!writable(retainedParent,'retained'))return no('Le vrai mandat de sortie n’est plus disponible.');
+ if((Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&!isSchema263OrLater(Number(w.schemaVersion))))||record.localMapId!==site?.id||!site||!retainedParent||!groups||enteredAtAbsCore===undefined||!writable(groups,'groups')||!writable(groups,'selectedGroupId')||!writable(record,'state')||!writable(record,'localMapId')||!writable(record,'story261')||!writable(record,'arrival261')||!writable(record,'retreat261')||!writable(retainedParent,'retained'))return no('Le vrai mandat de sortie n’est plus disponible.');
  const context=record.context,origins=next.members.map(p=>({pawnId:p.id,originMapId:site.id,context,enteredAtAbsCore}));
  let departing:AwayGroup={...next,travel:{revision:1,tickDelta:0,forage:newGroupForageRevision256(next.items)},reorganization:openGroupReorganization(next,[],w.tick,origins)};
  if(departing.animalOwners)departing={...departing,animalOwners:{...departing.animalOwners,origins:departing.animalOwners.members.map(a=>({pawnId:a.id,originMapId:site.id,context,enteredAtAbsCore}))}};

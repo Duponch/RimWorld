@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {registeredMap} from './world-map-context.ts';
 import {isColonist} from './affiliation.ts';
 import {computeThreatPoints,summaryHealthPercent} from './threat-points.ts';
@@ -10,7 +11,7 @@ import type {CampaignState} from './world-map-state.ts';
  * Adoption happens at the true current tick, skips the current quest cycle,
  * and grants no retrospective quest, Thing, history or RNG opportunity. */
 export function advanceWorldSites263(root:CampaignState):void {
- if(Number(root.schemaVersion)!==263||root.planet?.revision!==3||!root.worldMaps||!root.worldGroups||!root.worldFactions||root.gameProfile?.storyteller!=='cassandra-partial'||root.gameProfile.difficulty!=='adventure-story')return;
+ if(!isSchema263OrLater(Number(root.schemaVersion))||root.planet?.revision!==3||!root.worldMaps||!root.worldGroups||!root.worldFactions||root.gameProfile?.storyteller!=='cassandra-partial'||root.gameProfile.difficulty!=='adventure-story')return;
  const people=[...root.worldMaps.sites.flatMap(s=>registeredMap(root,s.id)!.pawns),...root.worldGroups.groups.flatMap(r=>'members'in r.state?r.state.members:[])].filter(p=>isColonist(p)&&!p.prisoner&&!p.visitor&&p.state!=='dead'&&!p.health?.death),ids=[...new Set(people.map(p=>p.id))],core=root.tick*10;
  root.worldSites263??={revision:1,nextId:1,entries:[]};const registry=root.worldSites263;
  registry.quest??=newQuestCalendar263(core,root.rng,ids);const calendar=registry.quest;

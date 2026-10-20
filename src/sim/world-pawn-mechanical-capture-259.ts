@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {mechRaidGroups261} from './mechanical-raid-groups-261.ts';
 import {registeredMaps} from './world-map-context.ts';
 import {campaignPhysicalCaptures} from './campaign-people.ts';
@@ -101,7 +102,7 @@ function scan(root:CampaignState,rows:readonly Mechanical[]){
  * events and historical scalar IDs do not invalidate or manufacture a Keep. */
 export function captureMechanicalWorldPawnFacts259(root:CampaignState){
  const state=root.worldPawns,rows=(state?.owners??[]).filter((r):r is Mechanical=>r.kind==='mechanical'),byId=new Map(rows.map(r=>[r.actor.id,r])),originals=rows.map(r=>r.actor);
- const supported=()=>(Number(root.schemaVersion)===259||Number(root.schemaVersion)===260||(Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||Number(root.schemaVersion)===263)))&&root.planet?.revision===3&&!!root.worldMaps&&!!root.worldGroups&&!!root.worldFactions&&root.worldPawns===state;
+ const supported=()=>(Number(root.schemaVersion)===259||Number(root.schemaVersion)===260||(Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||isSchema263OrLater(Number(root.schemaVersion)))))&&root.planet?.revision===3&&!!root.worldMaps&&!!root.worldGroups&&!!root.worldFactions&&root.worldPawns===state;
  const before=supported()?scan(root,rows):undefined;
  return {facts(row:WorldPawnOwner256):WorldPawnGCFacts256{return row.kind==='mechanical'&&byId.get(row.actor.id)===row?before?.facts.get(row.actor.id)??unknown:unknown;},historicalIds:before?.history??new Set<number>(),current():boolean{
   return !!before&&supported()&&rows.every((r,i)=>r.actor===originals[i])&&scan(root,rows).seal===before.seal;

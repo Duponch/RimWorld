@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {prisonBreakActive} from './prison-break-state.ts';
 import {isColonist,activeThreat} from './affiliation.ts';
 import type {World,Structure,Pawn} from './types.ts';
@@ -6,11 +7,11 @@ import type {World,Structure,Pawn} from './types.ts';
 export const TARGET_BUILDING_KINDS_263=['wall','door','bed','table','stool','shelf','mini-turret','solar-generator','battery','power-conduit','sandbags'] as const;
 const kind=(v:unknown)=>typeof v==='string'&&(TARGET_BUILDING_KINDS_263 as readonly string[]).includes(v);
 export function validTargetBuildingFactionShape263(v:unknown,version:number):boolean {
- if(version!==263||!v||typeof v!=='object'||Array.isArray(v)||!kind(Object.getOwnPropertyDescriptor(v,'kind')?.value))return false;
+ if(!isSchema263OrLater(version)||!v||typeof v!=='object'||Array.isArray(v)||!kind(Object.getOwnPropertyDescriptor(v,'kind')?.value))return false;
  const d=Object.getOwnPropertyDescriptor(v,'factionId');return !!d&&Object.hasOwn(d,'value')&&d.enumerable===true&&(d.value===null||typeof d.value==='number'&&Number.isSafeInteger(d.value)&&d.value>0);
 }
-export function targetBuilding263(w:Pick<World,'schemaVersion'>,s:Structure):boolean {return Number(w.schemaVersion)===263&&kind(s.kind)&&Object.hasOwn(s,'factionId');}
-export function targetBuildingPlayerUse263(w:Partial<Pick<World,'schemaVersion'|'worldFactions'>>,s:Structure):boolean {return !(kind(s.kind)&&Object.hasOwn(s,'factionId')&&(w.schemaVersion===undefined||Number(w.schemaVersion)===263))||!!w.worldFactions&&s.factionId===w.worldFactions.playerFactionId;}
+export function targetBuilding263(w:Pick<World,'schemaVersion'>,s:Structure):boolean {return isSchema263OrLater(Number(w.schemaVersion))&&kind(s.kind)&&Object.hasOwn(s,'factionId');}
+export function targetBuildingPlayerUse263(w:Partial<Pick<World,'schemaVersion'|'worldFactions'>>,s:Structure):boolean {return !(kind(s.kind)&&Object.hasOwn(s,'factionId')&&(w.schemaVersion===undefined||isSchema263OrLater(Number(w.schemaVersion))))||!!w.worldFactions&&s.factionId===w.worldFactions.playerFactionId;}
 /** Core Building.ClaimableBy delegates to Thing's actual faction's potential
  * tool-user threats; its check is not a fabricated win bit or a map-wide
  * guarantee. Current humans are the declared existing tool-user catalogue. */
@@ -46,6 +47,6 @@ export function validTargetBuildingOwners263(w:Pick<World,'schemaVersion'|'world
   if(s.factionId!==null&&!w.worldFactions?.factions.some(f=>f.id===s.factionId))return false;
   if(w.packed.some(p=>p.building===s)&&s.factionId!==w.worldFactions?.playerFactionId)return false;
  }
- if(version===263&&(w.pawns??[]).some(p=>p.bedId!==null&&w.structures.some(s=>s.id===p.bedId&&!targetBuildingPlayerUse263(w,s))))return false;
+ if(isSchema263OrLater(version)&&(w.pawns??[]).some(p=>p.bedId!==null&&w.structures.some(s=>s.id===p.bedId&&!targetBuildingPlayerUse263(w,s))))return false;
  return true;
 }

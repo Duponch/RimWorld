@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {stepWorldPawnGC256} from './world-pawn-gc-256.ts';
 import {actualWorldPawnGCReader259} from './world-pawn-mechanical-gc-259.ts';
 import {advanceCaravanCaptivity261} from './caravan-captivity-261.ts';
@@ -19,7 +20,7 @@ export function advanceActualWorldPawns256(root:CampaignState):void {
  advanceCaravanCaptivity261(root);
  // One local interval pays ten Core work units at this confirmed frontier;
  // no backdated discard or ten biological/calendar passes are fabricated.
- if((Number(root.schemaVersion)===259||Number(root.schemaVersion)===260||(Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||Number(root.schemaVersion)===263))))stepWorldPawnGC256(state,atCore,actualWorldPawnGCReader259(root),10);
+ if((Number(root.schemaVersion)===259||Number(root.schemaVersion)===260||(Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||isSchema263OrLater(Number(root.schemaVersion))))))stepWorldPawnGC256(state,atCore,actualWorldPawnGCReader259(root),10);
  // Only a committed clinical notice becomes a campaign event. Refusal emits
  // nothing and leaves this registry's originals and RNG byte-identical.
  for(const message of plan.notices)root.worldGroups.events.push({tick:root.tick,type:'need',message});

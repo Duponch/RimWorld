@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {CARAVAN_MANHUNTER_DATA_261} from './caravan-manhunter-data-261.ts';
 import {INITIAL_ANIMAL_FACTS_256,type InitialAnimalFact256} from './initial-animal-data-256.ts';
 import {constructFreshInitialWildAnimal256} from './initial-animal-constructor-256.ts';
@@ -42,7 +43,7 @@ export function draftManhunterRoster261(root:CampaignState,tile:number,basePoint
 /** Site GenStep/SignalAction supplies its actual budget without the distinct
  * caravan-incident factor0.75. Same provisional animal producer and draws. */
 export function draftSiteManhunterRoster263(root:CampaignState,tile:number,points:number,initialRng:number):{animals:WildAnimal[];nextId:number;rng:number}|undefined {
- if(Number(root.schemaVersion)!==263||!Number.isFinite(points)||points<0||points>10000)return;
+ if(!isSchema263OrLater(Number(root.schemaVersion))||!Number.isFinite(points)||points<0||points>10000)return;
  return draftManhunterAnimalsAtPoints261(root,tile,f(points),initialRng,true);
 }
 function draftManhunterAnimalsAtPoints261(root:CampaignState,tile:number,points:number,initialRng:number,canFireChecked:boolean):{animals:WildAnimal[];nextId:number;rng:number}|undefined {

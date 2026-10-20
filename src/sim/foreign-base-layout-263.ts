@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {invalidateTerrainJournal} from './terrain-mutation-journal.ts';
 import {newShelfStorage} from './shelf-storage.ts';
 import {footprintCells} from './definitions.ts';
@@ -21,7 +22,7 @@ export interface ForeignBaseLayout263 {rect:AncientRect256;storage:AncientRect25
  * ONLY at Settlement400 on the unpublished common terrain map, before900. */
 export function generateForeignBase400263(w:World,settlementId:number,factionId:number,requiredBeds:number,usedRects:AncientRect256[],random:WorldGenerationRandom):ForeignBaseLayout263 {
  const actual=w.worldFactions?.settlements.find(s=>s.id===settlementId&&s.factionId===factionId);
- if(Number(w.schemaVersion)!==263||!actual||actual.factionId===w.worldFactions!.playerFactionId||w.site?.revision!==3||w.pawns.length||w.jobs.length||w.packed.length||w.worldMaps?.sites.some(s=>s.map?.tiles===w.tiles))throw Error('Foreign base requires its actual unpublished263 Settlement400 frontier');
+ if(!isSchema263OrLater(Number(w.schemaVersion))||!actual||actual.factionId===w.worldFactions!.playerFactionId||w.site?.revision!==3||w.pawns.length||w.jobs.length||w.packed.length||w.worldMaps?.sites.some(s=>s.map?.tiles===w.tiles))throw Error('Foreign base requires its actual unpublished263 Settlement400 frontier');
  if(!Number.isInteger(requiredBeds)||requiredBeds<0||requiredBeds>63)throw Error('Actual current base roster exceeds the adapted layout capacity');
  const reach=captureGeographicGenerationReachability256(w),occupied=new Set(w.structures.flatMap(s=>footprintCells(s).map(p=>p.z*w.width+p.x)));
  const center=findLocalNotEdgeCell256(w.width,w.height,12,c=>{

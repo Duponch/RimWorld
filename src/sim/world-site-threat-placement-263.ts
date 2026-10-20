@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {captureActualLocalDistricts256} from './actual-local-districts-256.ts';
 import {stagedCampArrivalRandom256} from './camp-center-entry-256.ts';
 import {foggedCell256} from './exploration-state-256.ts';
@@ -8,7 +9,7 @@ import type {AncientRect256} from './local-ancient-placement-256.ts';
  * deliberately reject open doors; this rare physical admission does not.
  * No physical owner, terrain, navigation cache or campaign RNG is modified. */
 export function prepareSiteThreatPlacements263(w:World,count:number,rng:number,where:{kind:'edge'}|{kind:'around';rect:AncientRect256}):{cells:Cell[];rng:number}|undefined {
- if(Number(w.schemaVersion)!==263||!Number.isSafeInteger(count)||count<1||count>w.width*w.height)return;
+ if(!isSchema263OrLater(Number(w.schemaVersion))||!Number.isSafeInteger(count)||count<1||count>w.width*w.height)return;
  const physical=captureActualLocalDistricts256(w),random=stagedCampArrivalRandom256(rng),n=w.width*w.height,reached=new Uint8Array(n),queue=new Int32Array(n);let head=0,tail=0;
  const add=(c:number)=>{if(c>=0&&c<n&&!reached[c]&&physical.normalWalkable(c)){reached[c]=1;queue[tail++]=c;}};
  for(const p of w.pawns)if(isColonist(p)&&p.state!=='dead'&&!p.health?.death)add(p.z*w.width+p.x);

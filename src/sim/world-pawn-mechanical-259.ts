@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {validMechanoidShape} from './mechanoid-save.ts';
 import {validMechanicalWorldFaction259} from './mechanoid-world-faction-259.ts';
 import {cancelMelee} from './melee-state.ts';
@@ -23,7 +24,7 @@ export function cleanMapRemovedMechanical259(m:Mechanoid,tick:number):void {
  * Sparse mechanical health remains at its last real impact, <= that frontier. */
 export function validMechanicalWorldPawn259(row:MechanicalWorldPawn259,version:number,registry?:WorldFactionRegistry256):boolean {
  const at=row.mechanicalTimersAtCore259,a=row.actor;
- if((version!==259&&version!==260&&(version!==261&&(Number(version)!==262&&Number(version)!==263)))||!Number.isSafeInteger(at)||at<0||at%10||at>row.clockCore||row.mode==='mothballed'||row.items.length||row.packed.length||Object.hasOwn(row,'heldAtCore259')||Object.hasOwn(row,'entryKind259')||!a.worldFaction259||row.factionId!==a.worldFaction259.factionId||!validMechanicalWorldFaction259(a,version,registry))return false;
+ if((version!==259&&version!==260&&(version!==261&&(Number(version)!==262&&!isSchema263OrLater(Number(version)))))||!Number.isSafeInteger(at)||at<0||at%10||at>row.clockCore||row.mode==='mothballed'||row.items.length||row.packed.length||Object.hasOwn(row,'heldAtCore259')||Object.hasOwn(row,'entryKind259')||!a.worldFaction259||row.factionId!==a.worldFaction259.factionId||!validMechanicalWorldFaction259(a,version,registry))return false;
  if(!validMechanoidShape(a,version,at/10)||a.path.length||a.motion||a.moveCooldown||a.planCooldown||a.melee?.order||a.ranged?.order||a.ranged?.stance?.phase==='warmup'||a.meleeThreat||a.raid?.goal||a.temple?.goal)return false;
  const status=a.health?medicalStatus(a.health):'mobile';
  return status==='mobile'?a.state==='idle':a.state===status;

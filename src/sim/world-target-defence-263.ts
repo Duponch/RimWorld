@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import type {ForeignRoster261} from './caravan-foreign-roster-261.ts';
 import {civilianAdmissionFits} from './civilian-away.ts';
 import {newTactics} from './tactics-state.ts';
@@ -15,7 +16,7 @@ export interface WorldTargetDefence263 {
  source:{kind:'foreign-settlement';settlementId:number;settledAtCore?:number}|{kind:'outpost'|'turrets';siteId:number};
 }
 export function populateWorldTargetDefenders263(w:World,source:WorldTargetDefence263['source'],factionId:number,roster:Pick<ForeignRoster261,'people'|'items'|'nextId'>,cells:readonly number[],defendSpot:Cell):void {
- if(Number(w.schemaVersion)!==263||w.worldDefence263||w.pawns.length||!cells.length)throw Error('Actual unpublished263 map defender frontier required');
+ if(!isSchema263OrLater(Number(w.schemaVersion))||w.worldDefence263||w.pawns.length||!cells.length)throw Error('Actual unpublished263 map defender frontier required');
  if(cells.length<roster.people.length||!civilianAdmissionFits(w,roster.people.length,roster.items.length)||w.nextId<roster.nextId||!roster.people.every(p=>p.worldAffiliation259?.factionId===factionId))throw Error('Actual existing foreign producer cannot populate this base');
  for(let i=0;i<roster.people.length;i++){const p=roster.people[i]!,cell=cells[i]!;p.x=cell%w.width;p.z=Math.floor(cell/w.width);p.path=[];p.moveCooldown=0;p.planCooldown=0;if(p.state!=='downed')p.state='idle';delete p.raid;}
  w.pawns.push(...roster.people);w.piles.push(...roster.items);
@@ -24,7 +25,7 @@ export function populateWorldTargetDefenders263(w:World,source:WorldTargetDefenc
 /** Capturing/recruiting an original ends only its old defence mandate. The
  * physical human and goods remain in their real existing owners. */
 export function isWorldTargetDefender263(w:World,p:Pawn):boolean {
- const d=w.worldDefence263;return Number(w.schemaVersion)===263&&!!d&&d.memberIds.includes(p.id)&&p.faction==='outlaws'&&!p.prisoner&&p.worldAffiliation259?.factionId===d.factionId;
+ const d=w.worldDefence263;return isSchema263OrLater(Number(w.schemaVersion))&&!!d&&d.memberIds.includes(p.id)&&p.faction==='outlaws'&&!p.prisoner&&p.worldAffiliation259?.factionId===d.factionId;
 }
 export function processWorldTargetDefender263(w:World,p:Pawn,getBlocked:NavigationGrid,budget:SearchBudget,getLight:LightReader):void {
  if(!isWorldTargetDefender263(w,p))throw Error('No actual settlement/Site defence mandate');

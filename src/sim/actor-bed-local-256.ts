@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {targetBuildingPlayerUse263} from './world-target-building-263.ts';
 import {captureCoreStartingAnimals256} from './starting-pod-state-256.ts';
 import {captureDuckFlyerOwners256} from './duck-owner-capture-256.ts';
@@ -74,7 +75,7 @@ export function captureActorBeds256(input:CampaignState):ActualActorBeds256 {
   }
  }
  for(const owner of root.worldPawns?.owners??[]){if(owner.kind!=='mechanical')actor(owner.actor,null);for(const p of owner.packed)packed(p);}
- if((Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||Number(root.schemaVersion)===263)))for(const group of root.worldGroups?.groups??[]){for(const a of group.pending261?.animals??[])actor(a,null);for(const p of group.pending261?.packed??[])packed(p);}
+ if((Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||isSchema263OrLater(Number(root.schemaVersion)))))for(const group of root.worldGroups?.groups??[]){for(const a of group.pending261?.animals??[])actor(a,null);for(const p of group.pending261?.packed??[])packed(p);}
  for(const owner of root.worldFactions?.leaders??[])actor(owner.pawn,null);
  for(const record of root.worldGroups?.groups??[])if('members' in record.state){
   const state=record.state as typeof record.state&{animalOwners?:GroupAnimalOwners256};

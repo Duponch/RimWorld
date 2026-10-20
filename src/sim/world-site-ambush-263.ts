@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {siteAmbushTriggered263} from './world-site-ambush-state-263.ts';
 import {prepareSiteThreatPlacements263} from './world-site-threat-placement-263.ts';
 import {draftSiteManhunterRoster263} from './caravan-manhunter-261.ts';
@@ -46,13 +47,13 @@ function activate263(w:World,s:WorldSiteAmbush263,core:number):void {
 /** True local simulation phase only; no RAF, load initializer or missed-tick
  * replay. Each published participant remains in its real local owner list. */
 export function advanceSiteAmbush263(w:World):void {
- const s=w.worldSiteThreat263;if(Number(w.schemaVersion)!==263||!s||s.phase!=='armed')return;
+ const s=w.worldSiteThreat263;if(!isSchema263OrLater(Number(w.schemaVersion))||!s||s.phase!=='armed')return;
  if(siteAmbushTriggered263(w,s))activate263(w,s,s.explosionAtCore??w.tick*10);
 }
 export function siteAmbushWaiting263(w:World,id:number,kind:'human'|'animal'):boolean {
- const s=w.worldSiteThreat263;return Number(w.schemaVersion)===263&&!!s&&s.phase==='active'&&s.releaseAtCore!==null&&w.tick*10<s.releaseAtCore&&(kind==='human'?s.humanIds:s.animalIds).includes(id);
+ const s=w.worldSiteThreat263;return isSchema263OrLater(Number(w.schemaVersion))&&!!s&&s.phase==='active'&&s.releaseAtCore!==null&&w.tick*10<s.releaseAtCore&&(kind==='human'?s.humanIds:s.animalIds).includes(id);
 }
-export function isSiteAmbushHuman263(w:World,p:Pawn):boolean {const s=w.worldSiteThreat263;return Number(w.schemaVersion)===263&&!!s&&s.phase==='active'&&s.humanIds.includes(p.id)&&p.faction==='outlaws'&&!p.prisoner;}
+export function isSiteAmbushHuman263(w:World,p:Pawn):boolean {const s=w.worldSiteThreat263;return isSchema263OrLater(Number(w.schemaVersion))&&!!s&&s.phase==='active'&&s.humanIds.includes(p.id)&&p.faction==='outlaws'&&!p.prisoner;}
 export function processSiteAmbushHuman263(w:World,p:Pawn,getBlocked:NavigationGrid,budget:SearchBudget,getLight:LightReader):void {
  if(!isSiteAmbushHuman263(w,p))throw Error('No actual Site human ambush mandate');
  if(siteAmbushWaiting263(w,p.id,'human')){p.path=[];if(!p.motion||p.motion.end<=w.tick)p.state='idle';return;}

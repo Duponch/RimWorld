@@ -1,3 +1,4 @@
+import {GEOTHERMAL_VENT_264,geothermalSteam264,harvestedGeyserIds264} from './geothermal-parts264';
 import {knownSpawnedThing256} from '../sim/exploration-visibility-256';
 import {geyserCells256} from '../sim/local-geyser-state-256';
 import type {GeyserWorld256} from '../sim/local-geyser-state-256';
@@ -6,7 +7,7 @@ import {actualBombWick256} from '../sim/ancient-casket-explosive-state-256';
 import * as THREE from 'three/webgpu';
 import { Fn, attribute, cameraPosition, cross, float, mix, positionLocal, sin, smoothstep, uniform, uv, varying, vec2, vec3 } from 'three/tsl';
 import { BATTERY_CAPACITY } from '../sim/power-battery.ts';
-import { isPowerActive } from '../sim/power-rules.ts';
+import { isPowerActive,powerWatts } from '../sim/power-rules.ts';
 import { doorOrientations } from '../sim/door-rules.ts';
 import { footprintCells } from '../sim/definitions.ts';
 import type { Structure, World } from '../sim/types.ts';
@@ -170,10 +171,11 @@ export class StructureVfxLayer {
     if(reset){this.adopt(world,true);return;}
     const working=new Set<number>();
     for(const pawn of world.pawns)if(pawn.state==='working'&&pawn.cooking?.phase==='work')working.add(pawn.cooking.stationId);
-    const tokens:string[]=[];
+    const tokens:string[]=[],harvested=harvestedGeyserIds264(world);
+    for(const g of world.geysers?.items??[])tokens.push(`geyser:${g.id}:${g.x}:${g.z}:${g.sprayTicksLeft>0&&!harvested.has(g.id)}:${knownSpawnedThing256(world,geyserCells256(world.width,g))}`);
     let doorAxes=preparedDoorAxes;
     for(const s of subjects){
-      const on=isPowerActive(s),work=working.has(s.id);
+      const on=s.kind==='geothermal-generator'?powerWatts(s,world)>0:isPowerActive(s),work=working.has(s.id);
       const wick=actualBombWick256(s);if(wick)tokens.push(`${s.id}:turret-wick:${wick.startedAtCore}`);
       if(s.kind==='autodoor'){
         doorAxes??=doorOrientations(world);
@@ -196,6 +198,8 @@ export class StructureVfxLayer {
         tokens.push(`${s.id}:battery:${x}:${z}:${s.orientation}:${level}`);
       }else if(s.kind==='biofuel-refinery'){
         tokens.push(`${s.id}:biofuel-refinery:${s.x}:${s.z}:${s.orientation}:${on}`);
+      }else if(s.kind==='geothermal-generator'){
+        tokens.push(`${s.id}:geothermal-generator:${s.x}:${s.z}:${on}:${geothermalSteam264(s)}`);
       }else if(s.kind==='chemfuel-generator'){
         tokens.push(`${s.id}:chemfuel-generator:${s.x}:${s.z}:${on}`);
       }else if(s.kind==='wood-generator'){
@@ -220,7 +224,6 @@ export class StructureVfxLayer {
       const flame=!!wave.animalDeath||!!wave.casketExplosion||wave.shortCircuit?.damage==='flame';
       tokens.push(radius===undefined?`bomb-flash:${wave.id}`:`bomb-flash:${wave.id}:${radius}:${flame}`);
     }
-    for(const g of world.geysers?.items??[])tokens.push(`geyser:${g.id}:${g.x}:${g.z}:${g.sprayTicksLeft>0}:${knownSpawnedThing256(world,geyserCells256(world.width,g))}`);
     for(const fire of world.fires?.items??[])if(fire.attachedPawnId===undefined&&fire.attachedAnimalId===undefined)tokens.push(`${fire.id}:ground-fire:${fire.x}:${fire.z}:${fire.size}`);
     if(tokens.join('|')===this.key)return;
     this.adopt(world);
@@ -239,11 +242,12 @@ export class StructureVfxLayer {
           size:size*(.53+phase(id,i+41)*.94),opacityBias,rise:rise*(.78+shape*.42)});
       }
     };
-    for(const g of world.geysers?.items??[]){tokens.push(`geyser:${g.id}:${g.x}:${g.z}:${g.sprayTicksLeft>0}:${knownSpawnedThing256(world,geyserCells256(world.width,g))}`);if(g.sprayTicksLeft>0&&knownSpawnedThing256(world,geyserCells256(world.width,g)))puff(g.x+.5,.16,g.z+.5,g.id,.48,0,1.32,10);}
+    const harvested=harvestedGeyserIds264(world);
+    for(const g of world.geysers?.items??[]){const spraying=g.sprayTicksLeft>0&&!harvested.has(g.id);tokens.push(`geyser:${g.id}:${g.x}:${g.z}:${spraying}:${knownSpawnedThing256(world,geyserCells256(world.width,g))}`);if(spraying&&knownSpawnedThing256(world,geyserCells256(world.width,g)))puff(g.x+.5,.16,g.z+.5,g.id,.48,0,1.32,10);}
     const h=WORLD_SCALE.stonecutterHeight;
     let doorAxes:ReadonlyMap<number,0|1>|undefined;
     for(const s of world.structures){
-      const on=isPowerActive(s),work=working.has(s.id);
+      const on=s.kind==='geothermal-generator'?powerWatts(s,world)>0:isPowerActive(s),work=working.has(s.id);
       const wick=actualBombWick256(s);if(wick){
         tokens.push(`${s.id}:turret-wick:${wick.startedAtCore}`);
         const y=s.kind==='ancient-cryptosleep-casket'?.94:1.43;
@@ -313,6 +317,10 @@ export class StructureVfxLayer {
           const ry=s.orientation*Math.PI/2,c=Math.cos(ry),n=Math.sin(ry);
           glow.push({x:s.x+.64*c-.38*n,y:.74,z:s.z-.38*c-.64*n,sx:.15,sy:.10,sz:.05,ry,color:0xb7dca0});
         }
+      }else if(s.kind==='geothermal-generator'){
+        tokens.push(`${s.id}:geothermal-generator:${s.x}:${s.z}:${on}:${geothermalSteam264(s)}`);
+        if(on)glow.push({x:s.x+2.5,y:1.12,z:s.z+3.928,sx:.42,sy:.085,sz:.027,ry:0,color:0xb5d992});
+        if(geothermalSteam264(s))puff(s.x+GEOTHERMAL_VENT_264.x,GEOTHERMAL_VENT_264.y,s.z+GEOTHERMAL_VENT_264.z,s.id,.72,0,1.8,12);
       }else if(s.kind==='chemfuel-generator'){
         tokens.push(`${s.id}:chemfuel-generator:${s.x}:${s.z}:${on}`);
         if(on){
@@ -335,7 +343,7 @@ export class StructureVfxLayer {
         const cells=footprintCells(s);
         const x=cells.reduce((sum,cell)=>sum+cell.x,0)/cells.length;
         const z=cells.reduce((sum,cell)=>sum+cell.z,0)/cells.length;
-        const y=s.kind==='wind-turbine'?4.42:s.kind==='autodoor'||s.kind==='cooler'?WORLD_SCALE.wallHeight+.08:
+        const y=s.kind==='geothermal-generator'?2.88:s.kind==='wind-turbine'?4.42:s.kind==='autodoor'||s.kind==='cooler'?WORLD_SCALE.wallHeight+.08:
           s.kind==='electric-smelter'?1.44:s.kind==='biofuel-refinery'?1.90:s.kind==='chemfuel-generator'?1.90:s.kind==='wood-generator'?WORLD_SCALE.generatorHeight+.35:s.kind==='battery'?1.21:
           s.kind==='solar-generator'?.67:WORLD_SCALE.stonecutterHeight+.4;
         tokens.push(`${s.id}:breakdown:${s.breakdown.brokenAt}:${x}:${z}`);

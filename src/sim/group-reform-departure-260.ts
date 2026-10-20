@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import type {World,Pawn,MaterialPile,Cell,Job} from './types.ts';
 import type {WildAnimal} from './wildlife-state.ts';
 import type {WorldGroupRecord} from './world-map-state.ts';
@@ -58,7 +59,7 @@ export function prepareReformDeparture260(w:World,input:ReformDepartureInput260)
   const active=w.jobs.find(j=>j.id===p.jobId);if(active)releasePawnJob259(jobCopy(active),p.id);
   const d=structuredClone(p),oldMemories=d.roomMemories;
   d.x=origin.x;d.z=origin.z;delete d.motion;d.path=[];d.moveCooldown=0;
-  if((Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||Number(w.schemaVersion)===263))){delete d.draft;del(p,'draft');}
+  if((Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||isSchema263OrLater(Number(w.schemaVersion))))){delete d.draft;del(p,'draft');}
   releaseAllowedAreaReturn(d);finishRoomRest(w,d);
   const task=d.recreation.task;if((task?.activity==='horseshoes'||task?.activity==='chess'||task?.activity==='watch-television')&&task.phase==='active'&&task.elapsed>0)rememberRoomUse(w,d,'recreation');
   cancelAutomaticCombat(d);cancelHunting(d);clearReleasedPawnAssignments259(d);

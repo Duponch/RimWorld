@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {plainWorldPawnData256} from './world-pawn-save-256.ts';
 import {registeredCampaign,registeredMapId} from './world-map-context.ts';
 import type {World} from './types.ts';
@@ -12,7 +13,7 @@ const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v===
  * invents a raid/pending/faction when an old map has no defence owner. */
 export function validWorldTargetDefence263(w:World,version:number,construction?:WorldDefenceConstruction263):boolean {
  const present=Object.hasOwn(w,'worldDefence263'),d=w.worldDefence263;
- if(version!==263)return !present;
+ if(!isSchema263OrLater(version))return !present;
  if(!present)return true;
  if(!plainWorldPawnData256(d)||!object(d)||!keys(d,['revision','bornAtCore','factionId','memberIds','defendSpot','radius','source'])||d.revision!==1||!int(d.bornAtCore,0,w.tick*10)||Number(d.bornAtCore)%10||!int(d.factionId,1)||!Array.isArray(d.memberIds)||d.memberIds.length<1||d.memberIds.length>256||d.memberIds.some(id=>!int(id,1,w.nextId-1))||new Set(d.memberIds).size!==d.memberIds.length||!object(d.defendSpot)||!keys(d.defendSpot,['x','z'])||!int(d.defendSpot.x,0,w.width-1)||!int(d.defendSpot.z,0,w.height-1)||d.radius!==28||!object(d.source))return false;
  const source=d.source,settled=Object.hasOwn(source,'settledAtCore');

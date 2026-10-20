@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {isColonist,isAdmittedGuest} from './affiliation.ts';
 import {plainWorldPawnData256} from './world-pawn-save-256.ts';
 import {enableCassandraRaids} from './cassandra-raids.ts';
@@ -19,7 +20,7 @@ import type {DestroyedSettlement263} from './world-sites-state-263.ts';
 /** This is the actual defeated parent, never an unvisited hostile base or an
  * ItemStash relabelled as a home. Preview is scalar and entirely read-only. */
 export function actualDestroyedSettlement263(root:CampaignState,record:WorldMapRecord):DestroyedSettlement263|undefined {
- if(Number(root.schemaVersion)!==263||record.kind!=='foreign-settlement'||record.target263?.kind!=='foreign-settlement'||record.target263.destroyedSiteId===undefined)return;
+ if(!isSchema263OrLater(Number(root.schemaVersion))||record.kind!=='foreign-settlement'||record.target263?.kind!=='foreign-settlement'||record.target263.destroyedSiteId===undefined)return;
  const target=record.target263;
  return root.worldSites263?.entries.find((s):s is DestroyedSettlement263=>s.kind==='destroyed-settlement'&&s.id===target.destroyedSiteId&&s.sourceSettlementId===target.settlementId&&s.factionId===target.factionId&&s.mapId===record.id&&s.tile===record.tile);
 }

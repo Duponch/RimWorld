@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {permanentManhunterTarget261,permanentManhunterTargets261} from './animal-scaria-261.ts';
 import {cancelToxicVomit256} from './toxic-buildup-256.ts';
 import {notifyDuckFlightJob256} from './duck-flight-runtime-256.ts';
@@ -30,7 +31,7 @@ export function recoverAnimalManhunter(w:World,a:WildAnimal):void {
   }
 }
 export function startAnimalManhunter(w:World,a:WildAnimal,core=w.tick*10,permanent261=false):boolean {
-  if(permanent261&&(Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&Number(w.schemaVersion)!==263)))return false;
+  if(permanent261&&(Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&!isSchema263OrLater(Number(w.schemaVersion)))))return false;
   if(w.schemaVersion<183||!w.wildlife?.animals.includes(a)||a.domestic||a.manhunter||a.retaliation||a.state==='dead'||a.state==='downed'
     ||!Number.isSafeInteger(core)||core<0||core>w.tick*10||animalBody(a).capacities.moving<=0
     ||!actualAnimalMeleeProfile256(a).some(t=>!a.health||(t.sourceParts??[t.sourcePart]).some(part=>!partMissing(a.health!,part))))return false;

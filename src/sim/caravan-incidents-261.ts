@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {draftManhunterRoster261} from './caravan-manhunter-261.ts';
 import {planetTile} from './planet-geography-256.ts';
 import {worldGroupContext} from './world-map-context.ts';
@@ -13,7 +14,7 @@ import type {WorldLandBiome} from './world-biome-selection.ts';
 
 /** Formation/reformation creation only. Never called by migration/bootstrap. */
 export function admitBornCaravan261(root:CampaignState,record:WorldGroupRecord):void {
- if((Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||Number(root.schemaVersion)===263)))(record as EncounterGroup261).encounters261={revision:1};
+ if((Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||isSchema263OrLater(Number(root.schemaVersion)))))(record as EncounterGroup261).encounters261={revision:1};
 }
 export function pendingCaravan261(root:CampaignState):EncounterGroup261|undefined {
  return root.worldGroups?.groups.find(r=>(r as EncounterGroup261).pending261!==undefined) as EncounterGroup261|undefined;
@@ -40,7 +41,7 @@ export function caravanMapAllowed261(root:CampaignState,tile:number):boolean {
  * Current PNJ points deliberately reuse the existing visitor/combat producer;
  * this approved adaptation does not claim native pawn-MarketValue parity. */
 export function advanceCaravanIncidents261(root:CampaignState):boolean {
- if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&Number(root.schemaVersion)!==263))||!root.worldGroups||root.planet?.revision!==3||!root.worldFactions||!root.worldPawns||root.tick*10%1000!==0||pendingCaravan261(root))return false;
+ if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&!isSchema263OrLater(Number(root.schemaVersion))))||!root.worldGroups||root.planet?.revision!==3||!root.worldFactions||!root.worldPawns||root.tick*10%1000!==0||pendingCaravan261(root))return false;
  const factions=actualFactionCapture(root);if(!factions)return false;
  for(const raw of root.worldGroups.groups){
   const record=raw as EncounterGroup261,g=record.state;

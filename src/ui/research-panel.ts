@@ -27,6 +27,7 @@ const projectById=new Map(researchProjects.map(project=>[project.id,project]));
 const NODE_WIDTH=142,NODE_HEIGHT=66,GRAPH_WIDTH=850,GRAPH_HEIGHT=650;
 const nodePosition=(project:ProjectNode)=>({x:20+(project.x-24)*.82,y:22+(project.y-20)*.66});
 const prerequisites=new Map<ResearchProject,string[]>([
+  ['geothermal-power',['Électricité (acquise au départ)']],
   ['biofuel-refining',['Électricité (acquise au départ)']],
   ['nutrient-paste',['Électricité (acquise au départ)']],
   ['deep-drilling',['Microélectronique']],['ground-scanner',['Forage profond']],

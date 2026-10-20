@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {planetTileCount} from './planet-geography-256.ts';
 import type {LostCampaignMemory} from './world-map-lost.ts';
 import type {World} from './types.ts';
@@ -11,7 +12,7 @@ export interface CaravanCession261 {groupId:number;tile:number;captorFactionId:n
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 const loss=(kind:unknown)=>typeof kind==='string'&&['colonist-lost','friend-lost','rival-lost','parent-lost','child-lost','sibling-lost','lover-lost','spouse-lost'].includes(kind);
 export function validCaravanCessionShape261(value:unknown,version:number):value is CaravanCession261 {
- if((version!==261&&(Number(version)!==262&&Number(version)!==263))||!value||typeof value!=='object'||Array.isArray(value)||Object.getPrototypeOf(value)!==Object.prototype)return false;
+ if((version!==261&&(Number(version)!==262&&!isSchema263OrLater(Number(version))))||!value||typeof value!=='object'||Array.isArray(value)||Object.getPrototypeOf(value)!==Object.prototype)return false;
  const keys=Reflect.ownKeys(value),names=['groupId','tile','captorFactionId'];
  if(keys.length!==names.length||!keys.every(k=>typeof k==='string'&&names.includes(k)&&Object.getOwnPropertyDescriptor(value,k)?.enumerable===true&&Object.hasOwn(Object.getOwnPropertyDescriptor(value,k)!,'value')))return false;
  const v=value as CaravanCession261;return int(v.groupId,1)&&int(v.tile)&&int(v.captorFactionId,1);

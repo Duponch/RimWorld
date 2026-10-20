@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {validEncounterAdmission261,validCaravanStory261,validCaravanBattlefield261,validRetainedArrivalShape261,type EncounterValidation261} from './caravan-encounter-save-261.ts';
 import {validPendingEncounterShape261} from './caravan-pending-save-261.ts';
 const own=(v:object,k:string)=>Object.hasOwn(v,k);
@@ -15,8 +16,8 @@ export function validGroupEncounterFields261(r:Record<string,unknown>,c:Encounte
  if(!validEncounterAdmission261(r.encounters261,c.version)||!validCaravanStory261(r.story261,c)||!validPendingEncounterShape261(r.pending261,c.version,nextId,c.atCore))return false;
  if((r.story261!==undefined||r.pending261!==undefined||r.arrival261!==undefined)&&!r.encounters261)return false;
  if(r.pending261!==undefined&&(r.localMapId!==null||r.pending261.atCore!==c.atCore))return false;
- const retreat=r.retreat261;if(retreat!==undefined&&((c.version!==261&&(Number(c.version)!==262&&Number(c.version)!==263))||!retreat||typeof retreat!=='object'||Array.isArray(retreat)||Object.getPrototypeOf(retreat)!==Object.prototype||Reflect.ownKeys(retreat).some(k=>typeof k!=='string'||!Object.hasOwn(Object.getOwnPropertyDescriptor(retreat,k)!,'value')||Object.getOwnPropertyDescriptor(retreat,k)!.enumerable!==true||k!=='revision'&&k!=='autoJoinable')||!own(retreat,'revision')||(retreat as {revision:unknown}).revision!==1||!r.encounters261||(!!r.state&&typeof r.state==='object'&&'members'in r.state?!own(retreat,'autoJoinable')||(retreat as {autoJoinable:unknown}).autoJoinable!==true:own(retreat,'autoJoinable'))))return false;
+ const retreat=r.retreat261;if(retreat!==undefined&&((c.version!==261&&(Number(c.version)!==262&&!isSchema263OrLater(Number(c.version))))||!retreat||typeof retreat!=='object'||Array.isArray(retreat)||Object.getPrototypeOf(retreat)!==Object.prototype||Reflect.ownKeys(retreat).some(k=>typeof k!=='string'||!Object.hasOwn(Object.getOwnPropertyDescriptor(retreat,k)!,'value')||Object.getOwnPropertyDescriptor(retreat,k)!.enumerable!==true||k!=='revision'&&k!=='autoJoinable')||!own(retreat,'revision')||(retreat as {revision:unknown}).revision!==1||!r.encounters261||(!!r.state&&typeof r.state==='object'&&'members'in r.state?!own(retreat,'autoJoinable')||(retreat as {autoJoinable:unknown}).autoJoinable!==true:own(retreat,'autoJoinable'))))return false;
  const a=r.arrival261;if(a===undefined)return true;
- if((c.version!==261&&(Number(c.version)!==262&&Number(c.version)!==263))||!a||typeof a!=='object'||Array.isArray(a)||Object.getPrototypeOf(a)!==Object.prototype||Reflect.ownKeys(a).length!==2||!own(a,'tile')||!own(a,'action'))return false;
+ if((c.version!==261&&(Number(c.version)!==262&&!isSchema263OrLater(Number(c.version))))||!a||typeof a!=='object'||Array.isArray(a)||Object.getPrototypeOf(a)!==Object.prototype||Reflect.ownKeys(a).length!==2||!own(a,'tile')||!own(a,'action'))return false;
  const arrival=a as {tile:unknown;action:unknown};return int(arrival.tile,0,c.tileCount-1)&&arrival.action!==null&&validRetainedArrivalShape261(arrival.action,c.version);
 }

@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {footprintCells} from './definitions.ts';
 import {captureGeographicGenerationReachability256} from './geographic-generation-reachability-256.ts';
 import {captureActualLocalDistricts256} from './actual-local-districts-256.ts';
@@ -21,7 +22,7 @@ export const SITE_TURRETS_SEED_PART_263=895502705;
 export const SITE_POWER_SEED_PART_263=1186199651;
 const inside=(c:Cell,r:AncientRect256)=>c.x>=r.minX&&c.x<=r.maxX&&c.z>=r.minZ&&c.z<=r.maxZ;
 function actual(w:World,siteId:number,factionId:number):void {
- const geography=w.site;if(Number(w.schemaVersion)!==263||geography?.revision!==3||!w.worldSites263?.entries.some(s=>s.id===siteId&&s.kind==='item-stash'&&!s.closed&&s.tile===geography.tileId&&s.factionId===factionId)||!w.worldFactions?.factions.some(f=>f.id===factionId&&f.id!==w.worldFactions!.playerFactionId))throw Error('Actual foreign Site faction required');
+ const geography=w.site;if(!isSchema263OrLater(Number(w.schemaVersion))||geography?.revision!==3||!w.worldSites263?.entries.some(s=>s.id===siteId&&s.kind==='item-stash'&&!s.closed&&s.tile===geography.tileId&&s.factionId===factionId)||!w.worldFactions?.factions.some(f=>f.id===factionId&&f.id!==w.worldFactions!.playerFactionId))throw Error('Actual foreign Site faction required');
 }
 function clear(w:World,s:Structure,unroofed=false):boolean {
  const support=buildingSupportNeed256(s);if(!support)return false;

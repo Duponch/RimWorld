@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V440 — [Géothermie](geothermal-power-v440.md), schéma 264.** Projet Énergie géothermique et centrale originale fixe 6×6 : 3 200 points, 340 acier + 8 composants, Construction 8, 3 600 W constants. Geyser original, approvisionnement/travail réels, réseau, chaleur distincte, panne/réparation et récupération ; qualification ciblée et parcours UI acquis, aucune attribution aux colonies historiques.
+
 **V404 qualifié — [copie et nom des politiques de tenue](apparel-policy-copy-v404.md), schéma254 inchangé.** Filtres confirmés indépendants, nom modifiable et registre partagé ; aucune affectation, Auto, tâche ou pièce portée modifiée. Publication groupée prévue avec V405.
 
 **V402 qualifié — [avertissement et pause](urgent-pause-v402.md), schéma 253 inchangé.** Consolidation joueur : raids humains/mécaniques et rage individuelle sur les deux cartes, signal et action Voir, réglage Jamais/Menaces majeures/Toutes menaces. Pas de nouvelle ressource, incident ou format ; autres lettres et ralentissement temporaire Core hors tranche.

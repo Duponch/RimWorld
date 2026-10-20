@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import type {World} from './types.ts';
 import type {NumericMembershipSink} from './numeric-membership.ts';
 import {validateDetachedPawnRecordShape} from './pawn-record-save.ts';
@@ -16,7 +17,7 @@ const dense=(v:unknown,max:number):v is unknown[]=>Array.isArray(v)&&v.length<=m
 /** Envelope is checked before any nested record is interpreted as an actor. */
 export function validPendingEncounterShape261(value:unknown,version:number,nextId:number,atCore:number):value is PendingCaravanEncounter261|undefined {
  if(value===undefined)return true;
- if((version!==261&&(Number(version)!==262&&Number(version)!==263))||!plainWorldPawnData256(value)||!plain(value)||!['meeting','demand','ambush'].includes(String(value.kind))||!exact(value,['revision','kind','decision','atCore','factionId','people','animals','items','packed',...value.kind==='demand'?['demands']:[],...value.kind==='meeting'?['traderId','guardIds']:[],...value.animalAmbush261===true?['animalAmbush261']:[]])||value.revision!==1||!int(value.atCore,0,atCore)||!(value.animalAmbush261===true?value.kind==='ambush'&&value.factionId===null:int(value.factionId,1))||!dense(value.people,nextId)||(value.animalAmbush261===true?value.people.length!==0:!value.people.length)||!dense(value.animals,nextId)||!dense(value.items,nextId)||!dense(value.packed,nextId))return false;
+ if((version!==261&&(Number(version)!==262&&!isSchema263OrLater(Number(version))))||!plainWorldPawnData256(value)||!plain(value)||!['meeting','demand','ambush'].includes(String(value.kind))||!exact(value,['revision','kind','decision','atCore','factionId','people','animals','items','packed',...value.kind==='demand'?['demands']:[],...value.kind==='meeting'?['traderId','guardIds']:[],...value.animalAmbush261===true?['animalAmbush261']:[]])||value.revision!==1||!int(value.atCore,0,atCore)||!(value.animalAmbush261===true?value.kind==='ambush'&&value.factionId===null:int(value.factionId,1))||!dense(value.people,nextId)||(value.animalAmbush261===true?value.people.length!==0:!value.people.length)||!dense(value.animals,nextId)||!dense(value.items,nextId)||!dense(value.packed,nextId))return false;
  if(value.kind==='ambush'?value.decision!=='forced':value.kind==='meeting'?!['open','attack'].includes(String(value.decision)):!['open','fight'].includes(String(value.decision)))return false;
  if(value.animalAmbush261===true&&(value.animals.length<2||value.animals.length>100||value.items.length||value.packed.length)||Object.hasOwn(value,'animalAmbush261')&&value.animalAmbush261!==true)return false;
  const people=value.people;

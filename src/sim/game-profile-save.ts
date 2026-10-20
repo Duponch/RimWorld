@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import type { World } from './types.ts';
 
 const record=(v:unknown):v is Record<string,unknown>=>typeof v==='object'&&v!==null&&!Array.isArray(v);
@@ -12,7 +13,7 @@ export function validGameProfile(value:unknown,version:number,scenario:unknown,e
     value.revision===1&&value.storyteller==='cassandra-partial'&&value.difficulty==='adventure-story'&&value.saveMode==='reloadable';
 }
 export function validateGameProfile(world:World,temporaryTarget263=false):string[] {
-  if(temporaryTarget263&&Number(world.schemaVersion)===263)return [];
+  if(temporaryTarget263&&isSchema263OrLater(Number(world.schemaVersion)))return [];
   if(!world.gameProfile||world.expeditionSite&&world.schemaVersion>=240)return [];
   return world.arrivals!==undefined||world.heatwaves!==undefined||world.raids?.profile!=='cassandra-raids-v1'?['Core creation profile must retain its own incident calendar.']:[];
 }

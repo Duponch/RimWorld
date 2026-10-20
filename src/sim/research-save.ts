@@ -1,4 +1,4 @@
-import {PEMMICAN_RESEARCH_COST,pemmicanUnlocked} from './research.ts';
+import {GEOTHERMAL_POWER_RESEARCH_COST,geothermalPowerUnlocked,PEMMICAN_RESEARCH_COST,pemmicanUnlocked} from './research.ts';
 import {PEMMICAN_SCHEMA_VERSION,isPemmicanRecipe} from './pemmican-content.ts';
 import type { PowerParentReader } from './power-parent-validation.ts';
 import { BIOFUEL_REFINING_RESEARCH_COST,biofuelRefiningUnlocked,NUTRIENT_PASTE_RESEARCH_COST,DEEP_DRILLING_RESEARCH_COST,GROUND_SCANNER_RESEARCH_COST,deepDrillingUnlocked,groundScannerUnlocked,STERILE_MATERIALS_RESEARCH_COST,VITALS_MONITOR_RESEARCH_COST,sterileMaterialsUnlocked,vitalsMonitorUnlocked,DRUG_PRODUCTION_RESEARCH_COST,MEDICINE_PRODUCTION_RESEARCH_COST,drugProductionUnlocked,medicineProductionUnlocked,HYDROPONICS_RESEARCH_COST,hydroponicsUnlocked,GUN_TURRETS_RESEARCH_COST,gunTurretsUnlocked,TUBE_TELEVISION_RESEARCH_COST,tubeTelevisionUnlocked,PACKAGED_SURVIVAL_MEALS_RESEARCH_COST,packagedSurvivalMealsUnlocked,HOSPITAL_BED_RESEARCH_COST,hospitalBedUnlocked,MACHINING_RESEARCH_COST,GUNSMITHING_RESEARCH_COST,PLATE_ARMOR_RESEARCH_COST,FLAK_ARMOR_RESEARCH_COST,RECON_ARMOR_RESEARCH_COST,MICROELECTRONICS_RESEARCH_COST,MULTI_ANALYZER_RESEARCH_COST,FABRICATION_RESEARCH_COST,ADVANCED_FABRICATION_RESEARCH_COST,AUTODOORS_RESEARCH_COST,microelectronicsUnlocked,multiAnalyzerUnlocked,fabricationUnlocked,advancedFabricationUnlocked,reconArmorUnlocked,autodoorsUnlocked,machiningUnlocked,researchPrerequisite,STONECUTTING_RESEARCH_COST,SMITHING_RESEARCH_COST,COMPLEX_FURNITURE_RESEARCH_COST,CLOTHING_RESEARCH_COST,AIR_CONDITIONING_COST,BATTERIES_RESEARCH_COST,SOLAR_POWER_RESEARCH_COST,airConditioningUnlocked,clothingUnlocked,batteriesUnlocked,solarPowerUnlocked,complexFurnitureUnlocked,flakArmorUnlocked } from './research.ts';
@@ -105,9 +105,9 @@ export function validMedicineResearchTransport(world:World,version:number):boole
 export function validateResearch(world:World,version:number):string[]{
   const errors:string[]=[],state=world.research;
   if(state!==undefined){
-    const progress=(p:unknown,cost:number,active:boolean,root=false)=>record(p)&&Object.keys(p).every(k=>['points','completedAt',...(root?['project',...(version>=75?['airConditioning']:[]),...(version>=85?['batteries','solarPower']:[]),...(version>=89?['stonecutting','smithing']:[]),...(version>=90?['complexFurniture']:[]),...(version>=101?['machining','gunsmithing']:[]),...(version>=109?['plateArmor','flakArmor']:[]),...(version>=123?['microelectronics','multiAnalyzer','fabrication']:[]),...(version>=139?['advancedFabrication']:[]),...(version>=143?['autodoors']:[]),...(version>=148?['reconArmor']:[]),...(version>=187?['hospitalBed']:[]),...(version>=188?['packagedSurvivalMeals']:[]),...(version>=190?['tubeTelevision']:[]),...(version>=193?['gunTurrets']:[]),...(version>=203?['hydroponics']:[]),...(version>=206?['drugProduction','medicineProduction']:[]),...(version>=211?['sterileMaterials','vitalsMonitor']:[]),...(version>=215?['deepDrilling','groundScanner']:[]),...(version>=217?['nutrientPaste']:[]),...(version>=218?['biofuelRefining']:[]),...(version>=248?['pemmican']:[])]:[])].includes(k))&&int(p.points,0,cost)
+    const progress=(p:unknown,cost:number,active:boolean,root=false)=>record(p)&&Object.keys(p).every(k=>['points','completedAt',...(root?['project',...(version>=75?['airConditioning']:[]),...(version>=85?['batteries','solarPower']:[]),...(version>=89?['stonecutting','smithing']:[]),...(version>=90?['complexFurniture']:[]),...(version>=101?['machining','gunsmithing']:[]),...(version>=109?['plateArmor','flakArmor']:[]),...(version>=123?['microelectronics','multiAnalyzer','fabrication']:[]),...(version>=139?['advancedFabrication']:[]),...(version>=143?['autodoors']:[]),...(version>=148?['reconArmor']:[]),...(version>=187?['hospitalBed']:[]),...(version>=188?['packagedSurvivalMeals']:[]),...(version>=190?['tubeTelevision']:[]),...(version>=193?['gunTurrets']:[]),...(version>=203?['hydroponics']:[]),...(version>=206?['drugProduction','medicineProduction']:[]),...(version>=211?['sterileMaterials','vitalsMonitor']:[]),...(version>=215?['deepDrilling','groundScanner']:[]),...(version>=217?['nutrientPaste']:[]),...(version>=218?['biofuelRefining']:[]),...(version>=248?['pemmican']:[]),...(version>=264?['geothermalPower']:[])]:[])].includes(k))&&int(p.points,0,cost)
       &&(p.completedAt===undefined?p.points<cost:int(p.completedAt,0,world.tick)&&p.points===cost&&!active);
-    if(version<73||!record(state)||state.project!==null&&state.project!=='complex-clothing'&&(version<75||state.project!=='air-conditioning')&&(version<85||state.project!=='batteries'&&state.project!=='solar-power')&&(version<89||state.project!=='stonecutting'&&state.project!=='smithing')&&(version<90||state.project!=='complex-furniture')&&(version<101||state.project!=='machining'&&state.project!=='gunsmithing')&&(version<109||state.project!=='plate-armor'&&state.project!=='flak-armor')&&(version<123||state.project!=='microelectronics'&&state.project!=='multi-analyzer'&&state.project!=='fabrication')&&(version<139||state.project!=='advanced-fabrication')&&(version<143||state.project!=='autodoors')&&(version<148||state.project!=='recon-armor')&&(version<187||state.project!=='hospital-bed')&&(version<188||state.project!=='packaged-survival-meals')&&(version<190||state.project!=='tube-television')&&(version<193||state.project!=='gun-turrets')&&(version<203||state.project!=='hydroponics')&&(version<206||state.project!=='drug-production'&&state.project!=='medicine-production')&&(version<211||state.project!=='sterile-materials'&&state.project!=='vitals-monitor')&&(version<215||state.project!=='deep-drilling'&&state.project!=='ground-scanner')&&(version<217||state.project!=='nutrient-paste')&&(version<218||state.project!=='biofuel-refining')&&(version<248||state.project!=='pemmican')
+    if(version<73||!record(state)||state.project!==null&&state.project!=='complex-clothing'&&(version<75||state.project!=='air-conditioning')&&(version<85||state.project!=='batteries'&&state.project!=='solar-power')&&(version<89||state.project!=='stonecutting'&&state.project!=='smithing')&&(version<90||state.project!=='complex-furniture')&&(version<101||state.project!=='machining'&&state.project!=='gunsmithing')&&(version<109||state.project!=='plate-armor'&&state.project!=='flak-armor')&&(version<123||state.project!=='microelectronics'&&state.project!=='multi-analyzer'&&state.project!=='fabrication')&&(version<139||state.project!=='advanced-fabrication')&&(version<143||state.project!=='autodoors')&&(version<148||state.project!=='recon-armor')&&(version<187||state.project!=='hospital-bed')&&(version<188||state.project!=='packaged-survival-meals')&&(version<190||state.project!=='tube-television')&&(version<193||state.project!=='gun-turrets')&&(version<203||state.project!=='hydroponics')&&(version<206||state.project!=='drug-production'&&state.project!=='medicine-production')&&(version<211||state.project!=='sterile-materials'&&state.project!=='vitals-monitor')&&(version<215||state.project!=='deep-drilling'&&state.project!=='ground-scanner')&&(version<217||state.project!=='nutrient-paste')&&(version<218||state.project!=='biofuel-refining')&&(version<248||state.project!=='pemmican')&&(version<264||state.project!=='geothermal-power')
       ||!progress(state,CLOTHING_RESEARCH_COST,state.project==='complex-clothing'||version<75&&state.project!==null,true)
       ||state.airConditioning!==undefined&&(version<75||!progress(state.airConditioning,AIR_CONDITIONING_COST,state.project==='air-conditioning'))
       ||state.project==='air-conditioning'&&!state.airConditioning
@@ -161,6 +161,7 @@ export function validateResearch(world:World,version:number):string[]{
       ||state.project==='complex-furniture'&&!state.complexFurniture
       ||state.project==='batteries'&&!state.batteries||state.project==='solar-power'&&!state.solarPower)errors.push('Invalid research project.');
   }
+  if(!validGeothermalResearchTransport(world,version))errors.push('Invalid or future geothermal research or content.');
   if(!validPemmicanResearchTransport(world,version))errors.push('Invalid or future pemmican research or production.');
   if(!validHospitalSupportTransport(world,version))errors.push('Invalid or future hospital support research or content.');
   if(!validDeepResearchTransport(world,version))errors.push('Invalid or future deep drilling research or content.');
@@ -236,5 +237,45 @@ export function validPemmicanResearchTransport(world:World,version:number):boole
       ||(world.packed??[]).some(p=>p.building.bills?.some(b=>isPemmicanRecipe(b.recipe)))
       ||world.pawns.some(p=>isPemmicanRecipe(p.cooking?.recipe)||(p.orders?.queue??[]).some(o=>typeof o==='object'&&o!==null&&'cooking' in o&&isPemmicanRecipe(o.cooking.recipe)));
     return !content||version>=PEMMICAN_SCHEMA_VERSION&&pemmicanUnlocked(world);
+  }catch{return false;}
+}
+/** Sparse V264 envelope/content guard for saves and reconstructed snapshots.
+ * Root campaign research applies to every actual local or terminal owner;
+ * terrain, people and historical research are deliberately not revalidated. */
+export function validGeothermalResearchTransport(world:World,version:number):boolean {
+  try{
+    const state=world.research,project=state?.project;
+    if(state&&Object.hasOwn(state,'geothermalPower')){
+      const p=state.geothermalPower;
+      if(version<264||!record(p)||Object.getPrototypeOf(p)!==Object.prototype
+        ||!Reflect.ownKeys(p).every(k=>typeof k==='string'&&(k==='points'||k==='completedAt')&&Object.getOwnPropertyDescriptor(p,k)?.enumerable===true&&Object.hasOwn(Object.getOwnPropertyDescriptor(p,k)!,'value'))
+        ||!Object.hasOwn(p,'points')||!int(p.points,0,GEOTHERMAL_POWER_RESEARCH_COST)
+        ||(Object.hasOwn(p,'completedAt')?!int(p.completedAt,0,world.tick)||p.points!==GEOTHERMAL_POWER_RESEARCH_COST||project==='geothermal-power':p.points>=GEOTHERMAL_POWER_RESEARCH_COST))return false;
+    }
+    if(project==='geothermal-power'&&(version<264||!state?.geothermalPower))return false;
+    // A completed, validated record unlocks all local maps through the single
+    // campaign authority. No progress record is created for an old campaign.
+    if(version>=264&&geothermalPowerUnlocked(world))return true;
+    const marked=(v:unknown):boolean=>record(v)&&(v.kind==='geothermal-generator'||Object.hasOwn(v,'geothermal'));
+    const content=(v:unknown):boolean=>marked(v)||record(v)&&[v.furniture,v.deconstruction,v.repair,v.fixBreakdown].some(marked);
+    const packed=(records:readonly {building:unknown}[]|undefined):boolean=>(records??[]).some(p=>content(p.building));
+    const local=(map:Pick<World,'structures'|'jobs'|'packed'|'visitors'|'podRescues'|'group'|'groupLosses'>):boolean=>
+      (map.structures??[]).some(content)||(map.jobs??[]).some(content)||packed(map.packed)
+      ||!!(map.group&&'packed' in map.group&&packed(map.group.packed))
+      ||(map.groupLosses??[]).some(l=>packed(l.packed))
+      ||[map.visitors?.departed??[],map.podRescues?.departed??[]].some(records=>records.some(d=>packed(d.packed)));
+    if(local(world)||world.secondarySite&&local(world.secondarySite.map)
+      ||world.worldMaps?.sites.some(site=>site.map&&local(site.map)))return false;
+    const groups=world.worldGroups;
+    if(groups&&(groups.groups.some(g=>'packed' in g.state&&packed(g.state.packed))
+      ||groups.losses.some(l=>packed(l.packed))||(groups.animalLosses??[]).some(l=>packed(l.packed))
+      ||groups.abandonedPawns.some(p=>packed(p.packed))
+      ||groups.abandonedContents.some(c=>c.humans.some(p=>packed(p.packed))||c.animals.some(a=>packed(a.packed)))))return false;
+    // Reconstructed MAIN views retain these real freight owners in their
+    // campaign projection instead of transporting the inactive map registry.
+    const projection=world.campaignMap;
+    if(projection?.revision===2&&(projection.groups.some(g=>'packed' in g.state&&packed(g.state.packed))
+      ||projection.groupLosses.some(l=>packed(l.packed))||(projection.animalLosses??[]).some(l=>packed(l.packed))))return false;
+    return true;
   }catch{return false;}
 }

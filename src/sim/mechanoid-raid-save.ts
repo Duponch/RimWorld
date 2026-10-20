@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {multiRaid261} from './mechanical-raid-groups-261.ts';
 import {registeredCampaign,registeredMapId} from './world-map-context.ts';
 import { validMechanoidComposition } from './mechanoid-raid-composition.ts';
@@ -9,7 +10,7 @@ export const validMechComposition=(value:unknown,ranged=false):boolean=>validMec
 export function validateMechanoidRaids(w:World,version:number=w.schemaVersion,registeredIds?:Iterable<number>):string[] {
   const s=w.raids,errors:string[]=[];
   if(!s)return (w.mechanoids??[]).some(m=>m.raid)?['Mechanoid mandate without calendar.']:[];
-  const p:unknown=s.mechanoid;const multi=(version===261||(Number(version)===262||Number(version)===263))&&multiRaid261(w);const groups:unknown[]=[...s.mechActive!==undefined?[s.mechActive]:[],...Array.isArray(s.extraMechActive261)?s.extraMechActive261:[]];
+  const p:unknown=s.mechanoid;const multi=(version===261||(Number(version)===262||isSchema263OrLater(Number(version))))&&multiRaid261(w);const groups:unknown[]=[...s.mechActive!==undefined?[s.mechActive]:[],...Array.isArray(s.extraMechActive261)?s.extraMechActive261:[]];
   if(version<194&&(p!==undefined||groups.length>0||s.last?.mechanoid!==undefined||s.last?.mechComposition!==undefined))return ['Future mechanoid raid state.'];
   if(p!==undefined&&(!object(p)||!keys(p,['adoptedAt','rng','lastFaction',...(version>=197?['ranged']:[])])||!int(p.adoptedAt,0,w.tick)||!int(p.rng,1,0xffffffff)
     ||p.lastFaction!==undefined&&(typeof p.lastFaction!=='string'||!['outlaws','mechanoid'].includes(p.lastFaction))||(s.profile!=='cassandra-raids-v1'&&!(version>=260&&s.profile==='camp-pressure-v1'))
@@ -23,7 +24,7 @@ export function validateMechanoidRaids(w:World,version:number=w.schemaVersion,re
       ||!g.lost.every((id,i)=>Array.isArray(g.members)&&g.members.includes(id)&&(i===0||Number(id)>Number((g.lost as unknown[])[i-1])))
       ||typeof g.phase!=='string'||!['staging','assault'].includes(g.phase)||!object(g.stage)||Object.keys(g.stage).length!==3||!keys(g.stage,['point','activatedAtCore','delayCore'])
       ||!cell(g.stage.point)||g.stage.activatedAtCore!==Number(g.startedAt)*10||!int(g.stage.delayCore,5000,14999))return [...errors,'Invalid mechanoid raid group.'];
-    const group=g as unknown as import('./mechanoid-raid-state.ts').MechanoidRaidGroup;if(s.profile==='camp-pressure-v1'&&group.source260!=='camp-pressure')errors.push('Camp pressure owner requires its real forced provenance.');if(group.source260){const id=registeredMapId(w),root=registeredCampaign(w);if(root.worldMaps?!root.worldMaps.sites.some(m=>m.id===id&&(m.kind==='camp'||m.kind==='settlement'||(version===261||(Number(version)===262||Number(version)===263))&&m.kind==='battlefield')):!w.campaignMap||!('maps'in w.campaignMap)||!w.campaignMap.maps.some(m=>w.campaignMap?.revision===2&&m.id===w.campaignMap.activeMapId&&(m.kind==='camp'||m.kind==='settlement'||(version===261||(Number(version)===262||Number(version)===263))&&m.kind==='battlefield')))errors.push('Forced raid without its actual Camp owner.');}
+    const group=g as unknown as import('./mechanoid-raid-state.ts').MechanoidRaidGroup;if(s.profile==='camp-pressure-v1'&&group.source260!=='camp-pressure')errors.push('Camp pressure owner requires its real forced provenance.');if(group.source260){const id=registeredMapId(w),root=registeredCampaign(w);if(root.worldMaps?!root.worldMaps.sites.some(m=>m.id===id&&(m.kind==='camp'||m.kind==='settlement'||(version===261||(Number(version)===262||isSchema263OrLater(Number(version))))&&m.kind==='battlefield')):!w.campaignMap||!('maps'in w.campaignMap)||!w.campaignMap.maps.some(m=>w.campaignMap?.revision===2&&m.id===w.campaignMap.activeMapId&&(m.kind==='camp'||m.kind==='settlement'||(version===261||(Number(version)===262||isSchema263OrLater(Number(version))))&&m.kind==='battlefield')))errors.push('Forced raid without its actual Camp owner.');}
     if(group.phase==='staging'&&(w.tick*10>group.stage.activatedAtCore+group.stage.delayCore||group.lost.length*10>=group.members.length*3))errors.push('Stale mechanoid staging.');
     if(group.phase==='assault'&&w.tick*10<=group.stage.activatedAtCore+group.stage.delayCore&&group.lost.length*10<group.members.length*3)errors.push('Premature mechanoid assault.');
     const incompatible=new Set(registeredIds);

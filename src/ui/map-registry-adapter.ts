@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {settlementProximityWarning263} from '../sim/world-settlement-proximity-263';
 import {settlementProximityText263} from './settlement-proximity-263';
 import {worldSiteLabel263} from './world-target-ui-263';
@@ -22,7 +23,7 @@ export function readMapRegistryState(value:CampaignUIState):MapRegistryState|und
  return {tick:value.tick,selectedMapId:facts.activeMapId,maxSettlements:facts.maxSettlements,settlements:facts.maps.filter(map=>map.kind==='settlement').length,maps:facts.maps.map(map=>({
   ...map.campPressure?{campPressure:map.campPressure}:{},id:map.id,tile:map.tile,name:mapDisplayName(map),kind:map.kind,active:map.selected,people:map.pawnCount,createdAt:map.createdAt,
   view:map.actions.view,settle:map.actions.settle,abandon:map.actions.abandon,
-  ...(Number(value.schemaVersion)===263&&map.tile!==null?{settleWarning263:()=>settlementProximityText263(settlementProximityWarning263(value,map.tile!))}:{}),
+  ...(isSchema263OrLater(Number(value.schemaVersion))&&map.tile!==null?{settleWarning263:()=>settlementProximityText263(settlementProximityWarning263(value,map.tile!))}:{}),
   abandonedPeople:map.abandonConsequences.pawns,groundItems:map.abandonConsequences.groundItems,structures:map.abandonConsequences.structures,
  }))};
 }

@@ -87,6 +87,7 @@ export const toolDefinitions: { id: Tool; title: string; hint: string; key: stri
   {id:'power-conduit',title:'Câble électrique',hint:'cliquer ou tracer une ligne droite · 1 acier par case · peut passer sous un mur · aucun remboursement à la déconstruction',key:'',category:'power'},
   {id:'power-switch',title:'Interrupteur électrique',hint:'1 × 1 · coupe le réseau après intervention d’un colon · Travail : Manutention',key:'',category:'power'},
   {id:'battery',title:'Batterie',hint:'1 × 2 · 600 Wj · rendement de charge 50 % · recherche Batteries · Q / E pour tourner',key:'',category:'power'},
+  {id:'geothermal-generator',title:'Centrale géothermique',hint:'6 × 6 fixe · 340 acier + 8 composants · Construction 8 · 3 600 W constants sans combustible · placer le geyser sur les quatre cases centrales du plan · recherche Énergie géothermique',key:'',category:'power'},
   {id:'solar-generator',title:'Générateur solaire',hint:'4 × 4 · jusqu’à 1 700 W au soleil · sans toit · Construction 6 · recherche Panneaux solaires',key:'',category:'power'},
   {id:'standing-lamp',title:'Lampe sur pied',hint:'30 W · raccordement à un réseau proche · n’éclaire que si alimentée',key:'',category:'furniture'},
   {id:'sun-lamp',title:'Lampe horticole',hint:'2 900 W · cultures sous toit dans la zone éclairée · arrêt automatique la nuit · Survol : couverture prévue si alimentée',key:'',category:'furniture'},

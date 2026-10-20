@@ -1,3 +1,4 @@
+import {advanceGeothermalGenerators264} from './geothermal-runtime-264.ts';
 import {advanceActualWildFlora256} from './wild-plant-actual-runtime-256.ts';
 import { adoptSiteClimate,siteClimateDefinition } from './site-climate.ts';
 import { adoptWeather,advanceWeather,weatherRainRate } from './weather.ts';
@@ -39,6 +40,7 @@ export function advanceSurfaceTemperature(world:World,layout:ThermalLayout,provi
   const light=providedLight??(()=>{let cache=lightCaches.get(world);if(!cache){cache=new LightEnvironmentCache();lightCaches.set(world,cache);}return cache.read(world);});
   advanceTemperature(world,layout);
   advanceLocalGeysers256(world,layout);
+  advanceGeothermalGenerators264(world,layout);
   const before=world.structures;
   if(world.fires)advanceFires(world,{rainRate:weatherRainRate(world)},layout);
   if(before!==world.structures)layout=reconcileTemperature(world);

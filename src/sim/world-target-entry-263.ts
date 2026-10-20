@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {prepareReformRetirementSurface260} from './group-reform-retirement-surface-260.ts';
 import {captureTargetFactionSeal263} from './world-target-faction-seal-263.ts';
 import {prepareWorldTargetGeneration263} from './world-target-generation-263.ts';
@@ -29,7 +30,7 @@ const grow=(a:unknown[])=>Object.isExtensible(a)&&Object.getOwnPropertyDescripto
 export function* prepareWorldTargetEntry263(input:CampaignState,groupId:number):Generator<CampMapProgress256,WorldTargetEntry263,void> {
  const root=registeredCampaign(input),maps=root.worldMaps,groups=root.worldGroups,record=groups?.groups.find(r=>r.state.id===groupId),g=record?.state,pending=record?.pendingEntry263;
  const blocked=(phase:string,reason:string):WorldTargetEntry263=>({status:'blocked',phase,reason});
- if(Number(root.schemaVersion)!==263||!maps||!groups||!root.worldFactions||!root.worldPawns||!record||!g||!('members'in g)||!pending||record.localMapId!==null||record.pending261||g.segment||g.lastPersonalTick!==root.tick||g.tile!==g.destination)return blocked('owner','La vraie caravane et sa préparation d’entrée263 sont absentes.');
+ if(!isSchema263OrLater(Number(root.schemaVersion))||!maps||!groups||!root.worldFactions||!root.worldPawns||!record||!g||!('members'in g)||!pending||record.localMapId!==null||record.pending261||g.segment||g.lastPersonalTick!==root.tick||g.tile!==g.destination)return blocked('owner','La vraie caravane et sa préparation d’entrée263 sont absentes.');
  const access=worldTargetAccess263(root,pending.target,g.tile);if(!access.ok)return blocked('target',access.reason);
  const tick=root.tick,rng=root.rng,nextId=root.nextId,factions=root.worldFactions,worldPawns=root.worldPawns,sitesAuthority=root.worldSites263,registry=groups.groups,registryRefs=registry.slice(),mapRecords=maps.sites,mapRefs=mapRecords.slice();
  const source=access.source.kind==='foreign-settlement'?access.source.settlement:access.source.site,sourceBefore=JSON.stringify(source),recordBefore=JSON.stringify(record),members=g.members,items=g.items,packed=g.packed,animals=g.animalOwners?.members??[];

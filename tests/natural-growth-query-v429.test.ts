@@ -61,7 +61,7 @@ test('fresh contexts preserve substrate, cave, old schema, missing anchor and th
     const historical={...world,schemaVersion:schema} as World;
     exact(historical,[1500,1501,1563,1500]);
   }
-  world.schemaVersion=263;
+  world.schemaVersion=264;
   for(const factor of [0,.125,.75,1]){for(const resource of world.resources)resource.growthThermalFactor=factor;exact(world,[1500,1563,1501]);}
 });
 

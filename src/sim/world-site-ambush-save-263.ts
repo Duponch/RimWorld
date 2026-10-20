@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {plainWorldPawnData256} from './world-pawn-save-256.ts';
 import {registeredCampaign,registeredMapId} from './world-map-context.ts';
 import type {World} from './types.ts';
@@ -9,7 +10,7 @@ const keys=(v:Record<string,unknown>,names:readonly string[])=>Object.keys(v).le
  * This never accepts a standalone persisted ambush as its own provenance. */
 export function validWorldSiteAmbush263(w:World,version:number,constructionSiteId?:number):boolean {
  const d=Object.getOwnPropertyDescriptor(w,'worldSiteThreat263');if(!d)return !('worldSiteThreat263'in w);
- if(version!==263||!d.enumerable||!Object.hasOwn(d,'value')||!plainWorldPawnData256(d.value)||!record(d.value))return false;
+ if(!isSchema263OrLater(version)||!d.enumerable||!Object.hasOwn(d,'value')||!plainWorldPawnData256(d.value)||!record(d.value))return false;
  const s=d.value,core=w.tick*10;
  if(!keys(s,['revision','siteId','kind','bornAtCore','points','payload','rng','storage','trigger','center','phase','activatedAtCore','releaseAtCore','lastTick','explosionAtCore','humanIds','animalIds','mechanoidIds'])||s.revision!==1||!int(s.siteId,1)||!['ambush-edge','ambush-hidden'].includes(String(s.kind))||!int(s.bornAtCore,0,core)||s.bornAtCore%10||typeof s.points!=='number'||!Number.isFinite(s.points)||s.points<0||s.points>8000||!['human','manhunters','mechanoids'].includes(String(s.payload))||!int(s.rng,1,0xffffffff)||!int(s.lastTick,s.bornAtCore/10,w.tick))return false;
  const rect=(v:unknown)=>record(v)&&keys(v,['minX','maxX','minZ','maxZ'])&&int(v.minX,0,w.width-1)&&int(v.maxX,v.minX,w.width-1)&&int(v.minZ,0,w.height-1)&&int(v.maxZ,v.minZ,w.height-1);

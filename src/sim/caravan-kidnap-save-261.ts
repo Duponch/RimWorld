@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {raidGroup261,raidKidnapSource261} from './temp-map-raids-261.ts';
 import {physicalKidnapReason261,kidnapRecoveredAwake261,type RaiderKidnap261} from './caravan-kidnap-261.ts';
 import {sameRescueEdge} from './rescue-save.ts';
@@ -7,7 +8,7 @@ const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&
  * optional field is neutral; ownundefined/hidden/inherited/accessor is not. */
 export function validRaiderKidnapField261(raid:object,version:number):boolean {
  const d=Object.getOwnPropertyDescriptor(raid,'kidnap261');if(!d)return !('kidnap261'in raid);
- if((version!==261&&(Number(version)!==262&&Number(version)!==263))||!d.enumerable||!Object.hasOwn(d,'value')||!record(d.value))return false;const t=d.value;
+ if((version!==261&&(Number(version)!==262&&!isSchema263OrLater(Number(version))))||!d.enumerable||!Object.hasOwn(d,'value')||!record(d.value))return false;const t=d.value;
  return Reflect.ownKeys(t).length===2&&Object.hasOwn(t,'patientId')&&Object.hasOwn(t,'phase')&&Number.isSafeInteger(t.patientId)&&Number(t.patientId)>0&&(t.phase==='approach'||t.phase==='carry');
 }
 /** Additional closed-domain cross references. The ordinary raid validator must
@@ -16,7 +17,7 @@ export function validatePhysicalKidnaps261(w:World,version:number):string[] {
  const errors:string[]=[],patients=new Set<number>();
  for(const carrier of w.pawns){if(!carrier.raid)continue;const descriptor=Object.getOwnPropertyDescriptor(carrier.raid,'kidnap261');
   if(!descriptor){if('kidnap261'in carrier.raid)errors.push('Inherited raider kidnapping reference.');continue;}
-  if((version!==261&&(Number(version)!==262&&Number(version)!==263))||!descriptor.enumerable||!Object.hasOwn(descriptor,'value')){errors.push('Invalid or future raider kidnapping reference.');continue;}
+  if((version!==261&&(Number(version)!==262&&!isSchema263OrLater(Number(version))))||!descriptor.enumerable||!Object.hasOwn(descriptor,'value')){errors.push('Invalid or future raider kidnapping reference.');continue;}
   const raw=descriptor.value;
   if(!record(raw)||Reflect.ownKeys(raw).length!==2||!Object.hasOwn(raw,'patientId')||!Object.hasOwn(raw,'phase')||!Number.isSafeInteger(raw.patientId)||Number(raw.patientId)<1||raw.phase!=='approach'&&raw.phase!=='carry'){errors.push('Invalid or future raider kidnapping reference.');continue;}
   const t=raw as unknown as RaiderKidnap261;

@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {prepareEncounterForeignWorld261} from './caravan-foreign-world-261.ts';
 import {prepareDemandPayment261} from './caravan-demand-payment-261.ts';
 import {prepareMeetingTrade261,type MeetingTradeLine261} from './caravan-meeting-trade-261.ts';
@@ -16,7 +17,7 @@ export function validCaravanCommand261(v:unknown):v is CaravanCommand261 {
 }
 export function applyCaravanCommand261(root:CampaignState,c:CaravanCommand261):CommandResult {
  const fail=(reason:string):CommandResult=>({ok:false,code:'invalid-command',reason});
- if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&Number(root.schemaVersion)!==263))||!validCaravanCommand261(c))return fail('Commande de rencontre invalide.');
+ if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&!isSchema263OrLater(Number(root.schemaVersion))))||!validCaravanCommand261(c))return fail('Commande de rencontre invalide.');
  const r=root.worldGroups?.groups.find(r=>r.state.id===c.groupId),p=r?.pending261,g=r?.state;
  if(!r||!p||!g||!('members'in g)||r.localMapId!==null||p.atCore!==root.tick*10)return fail('Cette rencontre réelle est absente.');
  if(c.type==='caravan-encounter-choice'&&c.choice==='retry')return p.decision!=='open'?{ok:true}:fail('Choisissez d’abord la décision réelle.');

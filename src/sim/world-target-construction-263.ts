@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {generateForeignBaseLoot263} from './world-site-goods-263.ts';
 import {draftForeignRoster261} from './caravan-foreign-roster-261.ts';
 import {generateForeignBase400263,FOREIGN_BASE_SEED_PART_263} from './foreign-base-layout-263.ts';
@@ -21,7 +22,7 @@ export const worldTargetSeedPart263=(context:WorldTargetConstruction263)=>contex
  * The campaign supplies real shared registry references, never a fabricated
  * world object or a target hidden in the historical Camp context. */
 export function worldTargetConstructionReason263(c:Pick<World,'worldFactions'|'worldSites263'>&{schemaVersion:number},target:WorldTargetConstruction263,tile:number,size:number):string|undefined {
- if(Number(c.schemaVersion)!==263||!target||target.dimensions.width!==size||target.dimensions.height!==size||![200,225,250,275,300,325].includes(size))return 'Actual263 target/campaign dimensions required';
+ if(!isSchema263OrLater(Number(c.schemaVersion))||!target||target.dimensions.width!==size||target.dimensions.height!==size||![200,225,250,275,300,325].includes(size))return 'Actual263 target/campaign dimensions required';
  if(target.kind==='foreign-settlement')return c.worldFactions?.settlements.some(s=>s.id===target.settlementId&&s.tile===tile&&s.factionId===target.factionId&&s.factionId!==c.worldFactions!.playerFactionId&&(!s.attack263||s.attack263.mapId===null))?undefined:'Actual unspawned foreign settlement required';
  return c.worldSites263?.entries.some(s=>s.id===target.siteId&&s.kind==='item-stash'&&!s.closed&&s.tile===tile&&s.factionId===target.factionId&&s.mapId===null)?undefined:'Actual unspawned ItemStash holder required';
 }

@@ -1,5 +1,7 @@
 # Documentation d’Elsewhere
 
+**V440 — schéma 264 :** [Chaîne géothermique](gameplay/geothermal-power-v440.md). Recherche, construction payée sur geyser existant, 3 600 W, chaleur, entretien, retrait et continuation ; 33cas ciblés acquis par reprises, présentation et construction UI acquises. Migration neutre des trois références ; onze rouges historiques identiques au témoin conservés. Aucun gain FPS global ni clôture Core annoncé.
+
 **V421 — schéma 263 inchangé :** [Coûts Worker au repos](development/worker-idle-costs-v421.md). Grille de menace différée et allocations végétales réduites ;29cas ciblés acquis par reprises, recharges Chrome exactes sur Les Aulnes et le départ3colons. Économie Node ciblée, résultat navigateur mixte conservé ; aucun gain général de confort annoncé. Publié9fa50df7/déploiementdf037b33,136HTTPS exacts ; performances toujours prioritaires.
 
 **V420 — schéma 263 inchangé :** [Diagnostic CPU/GPU et structures modifiées](development/performance-foundations-v420.md). Correction ciblée du contrôle MAIN qualifiée ; mesure propriétaire Node7,01→3,25ms, aucun gain FPS global établi. Mesures GPU et rouges historiques conservés dans la note. Publié eb3c515f/déploiement b39e5aa5,136HTTPS exacts ; performances et confort restent ouverts.

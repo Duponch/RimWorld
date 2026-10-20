@@ -35,6 +35,7 @@ export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:numb
   'electric-crematorium':{delay:0,stand:false,repeat:false},
   'electric-smelter':{delay:5,stand:false,repeat:true},
   'biofuel-refinery':{delay:5,stand:false,repeat:true},
+  'geothermal-generator':{delay:0,stand:false,repeat:false},
   'chemfuel-generator':{delay:5,stand:false,repeat:true},
   'nutrient-paste-dispenser':{delay:0,stand:false,repeat:false},
   hopper:{delay:4.2,stand:false,repeat:false},

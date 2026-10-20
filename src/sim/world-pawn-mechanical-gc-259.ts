@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {captureMechanicalWorldPawnFacts259} from './world-pawn-mechanical-capture-259.ts';
 import type {CampaignState} from './world-map-state.ts';
 import type {WorldPawnGCReader256,WorldPawnGCFacts256} from './world-pawn-gc-256.ts';
@@ -11,7 +12,7 @@ export function actualWorldPawnGCReader259(root:CampaignState):WorldPawnGCReader
  const actual=()=>capture??=captureMechanicalWorldPawnFacts259(root);
  const facts=(row:WorldPawnOwner256):WorldPawnGCFacts256=>actual().facts(row);
  return {facts,current:()=>actual().current(),planDiscard(rows){
-  const state=root.worldPawns;if(!state||(Number(root.schemaVersion)!==259&&Number(root.schemaVersion)!==260&&(Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&Number(root.schemaVersion)!==263))))throw Error('Missing actual mechanical GC campaign owner');
+  const state=root.worldPawns;if(!state||(Number(root.schemaVersion)!==259&&Number(root.schemaVersion)!==260&&(Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&!isSchema263OrLater(Number(root.schemaVersion))))))throw Error('Missing actual mechanical GC campaign owner');
   if(!rows.length)return {commit(){}};
   // No original or receipt changes until ALL actual retention and destruction
   // preflights succeeded. Generic GC owns final membership/native-slot removal.

@@ -56,9 +56,9 @@ export class RoomTopologyCache {
     // at each read. Barrier order is captured because later objects win.
     let inputChanged = resized, count = 0;
     for (const building of world.structures) {
-      const value = building.kind === 'wall' || building.kind === 'cooler' || building.kind === 'vent' || building.kind==='electric-crematorium' ? 1 : isRoomDoor(building.kind) ? 2 : 0;
+      const value = building.kind === 'wall' || building.kind === 'cooler' || building.kind === 'vent' || building.kind==='electric-crematorium'||building.kind==='geothermal-generator' ? 1 : isRoomDoor(building.kind) ? 2 : 0;
       if (!value) continue;
-      for(const cell of building.kind==='electric-crematorium'?footprintCells(building):[building]){
+      for(const cell of building.kind==='electric-crematorium'||building.kind==='geothermal-generator'?footprintCells(building):[building]){
         const code = (cell.z * width + cell.x) * 3 + value;
         if (this.barriers[count] !== code) { this.barriers[count] = code; inputChanged = true; }
         count++;

@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {planetTiles} from './planet-geography-256.ts';
 import {WORLD_FACTION_DEFINITIONS_256,worldRelationKind256} from './world-faction-catalog.ts';
 import type {WorldSurfaceTile} from './world-surface-geography.ts';
@@ -21,7 +22,7 @@ export function settlementProximityOffsets263(tiles:readonly ProximityTile263[],
  return offsets.sort((a,b)=>a.factionId-b.factionId||Math.abs(b.goodwill)-Math.abs(a.goodwill));
 }
 export function settlementProximityWarning263(view:Pick<CampaignState,'schemaVersion'|'planet'|'worldFactions'>,tile:number):SettlementProximityOffset263[] {
- const f=view.worldFactions;if(Number(view.schemaVersion)!==263||view.planet?.revision!==3||!f)return [];
+ const f=view.worldFactions;if(!isSchema263OrLater(Number(view.schemaVersion))||view.planet?.revision!==3||!f)return [];
  const excluded=new Set(f.factions.filter(x=>x.id===f.playerFactionId||WORLD_FACTION_DEFINITIONS_256[x.def].permanentEnemy).map(x=>x.id));
  return settlementProximityOffsets263(planetTiles(view.planet),tile,f.settlements,excluded);
 }
@@ -30,7 +31,7 @@ const writable=(o:object,k:string)=>{const d=Object.getOwnPropertyDescriptor(o,k
  * colonies count even when empty; caravans and retired maps never count. */
 export function advanceSettlementProximity263(root:CampaignState):void {
  const f=root.worldFactions,maps=root.worldMaps,groups=root.worldGroups;
- if(Number(root.schemaVersion)!==263||!root.tick||root.tick%90000!==0||root.planet?.revision!==3||!f||!maps||!groups)return;
+ if(!isSchema263OrLater(Number(root.schemaVersion))||!root.tick||root.tick%90000!==0||root.planet?.revision!==3||!f||!maps||!groups)return;
  const excluded=new Set(f.factions.filter(x=>x.id===f.playerFactionId||f.relations.some(r=>r.aId===Math.min(x.id,f.playerFactionId)&&r.bId===Math.max(x.id,f.playerFactionId)&&r.goodwill===-100)).map(x=>x.id));
  const tiles=planetTiles(root.planet),offsets:SettlementProximityOffset263[]=[];
  for(const home of maps.sites)if(home.kind==='settlement'&&home.tile!==null)offsets.push(...settlementProximityOffsets263(tiles,home.tile,f.settlements,excluded));

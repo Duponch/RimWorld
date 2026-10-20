@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {prepareManhunterSpawn261} from './animal-scaria-261.ts';
 import {MAX_WILDLIFE} from './wildlife-state.ts';
 import {bornKidnapLord261} from './caravan-kidnap-lord-261.ts';
@@ -41,7 +42,7 @@ function recipients(root:CampaignState,record:EncounterGroup261,people:readonly 
 export function* prepareActualBattlefieldEntry261(input:CampaignState,groupId:number):Generator<CampMapProgress256,BattlefieldEntry261,void> {
  const root=registeredCampaign(input),record=root.worldGroups?.groups.find(g=>g.state.id===groupId) as EncounterGroup261|undefined,g=record?.state,pending=record?.pending261;
  const blocked=(phase:string,reason:string):BattlefieldEntry261=>({status:'blocked',phase,reason});
- if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&Number(root.schemaVersion)!==263))||!record||!g||!('members'in g)||!pending||pending.decision==='open'||!root.worldMaps||!root.worldFactions||!root.worldPawns)return blocked('owner','La vraie décision de rencontre et ses originaux sont absents.');
+ if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&!isSchema263OrLater(Number(root.schemaVersion))))||!record||!g||!('members'in g)||!pending||pending.decision==='open'||!root.worldMaps||!root.worldFactions||!root.worldPawns)return blocked('owner','La vraie décision de rencontre et ses originaux sont absents.');
  const playerAnimals=g.animalOwners?.members??[],size=pending.kind==='meeting'?100:caravanAmbushMapSize261(g.members.length+playerAnimals.length,pending.people.length+pending.animals.length);
  if(size===undefined||pending.animals.length&&!pending.animalAmbush261)return blocked('roster','Ce producteur de rencontre n’a pas de détenteur animal étranger pris en charge.');
  const generation=yield*prepareBattlefieldGeneration261(root,groupId,size);if(generation.status==='blocked')return generation;

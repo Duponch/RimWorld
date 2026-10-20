@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {retainRaidResult261} from './temp-map-raids-261.ts';
 import {isColonist} from './affiliation.ts';
 import {registeredCampaign} from './world-map-context.ts';
@@ -10,7 +11,7 @@ export function advanceCaravanRaid261(w:World):boolean {
  const calendar=w.raids,a=calendar?.active,source=a?.caravan261;
  if(!calendar||!a||!source)return false;
  if(source.kind==='pressure')return false;
- if((Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&Number(w.schemaVersion)!==263))||a.deadline!==null||a.lossPermille!==null)throw Error('Invalid real incident raid controller');
+ if((Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&!isSchema263OrLater(Number(w.schemaVersion))))||a.deadline!==null||a.lossPermille!==null)throw Error('Invalid real incident raid controller');
  const members=w.pawns.filter(p=>a.members.includes(p.id)),lost=(p:Pawn)=>p.state==='dead'||p.state==='downed'||!!p.prisoner||p.recruitment?.raidGroup===a.id;
  for(const p of members)if(lost(p)&&!a.lost.includes(p.id))a.lost.push(p.id);a.lost.sort((a,b)=>a-b);
  if(source.kind==='defend-caravan'&&a.phase==='assault'){

@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {registeredMap,flushRegisteredMap} from './world-map-context.ts';
 import {prepareMapRaiderWorldExit261} from './caravan-map-exit-261.ts';
 import {atMapEdge} from './raid-space.ts';
@@ -5,7 +6,7 @@ import type {CampaignState} from './world-map-state.ts';
 const refusals=new WeakMap<object,string>();
 /** True WorldPawns pass precedes this exact physical exit frontier. */
 export function advanceCaravanMapExits261(root:CampaignState):void {
- if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&Number(root.schemaVersion)!==263)))return;
+ if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&!isSchema263OrLater(Number(root.schemaVersion)))))return;
  for(const site of root.worldMaps?.sites??[]){const map=registeredMap(root,site.id)!;if(!map.raids?.active?.caravan261&&!map.raids?.last?.caravan261&&!map.raids?.extraActive261&&!map.raids?.extraResults261)continue;
   for(const actor of map.pawns.slice()){
    if(!actor.raid?.exiting||!atMapEdge(map,actor)||actor.moveCooldown>0||(actor.motion?.end??0)>map.tick||actor.state==='dead'||actor.state==='downed')continue;

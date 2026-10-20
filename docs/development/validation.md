@@ -1,5 +1,7 @@
 # Validation courante — V349–V350
 
+**V440 — schéma 264 :** [Chaîne géothermique](../gameplay/geothermal-power-v440.md). Recherche, construction payée sur geyser existant, 3 600 W, chaleur, entretien, retrait et continuation ; 33cas ciblés acquis par reprises, présentation et construction UI acquises. Migration neutre des trois références ; onze rouges historiques identiques au témoin conservés. Aucun gain FPS global ni clôture Core annoncé.
+
 **V420 — schéma 263 inchangé :** [Diagnostic CPU/GPU et structures modifiées](performance-foundations-v420.md). Correction ciblée du contrôle MAIN qualifiée ; mesure propriétaire Node7,01→3,25ms, aucun gain FPS global établi. Mesures GPU et rouges historiques conservés dans la note. Publié eb3c515f/déploiement b39e5aa5,136HTTPS exacts ; performances et confort restent ouverts.
 
 **V419 — schéma 263 :** [Fondations monde et Les Éclaircies](../gameplay/foundations-demo-v419.md). Socle fonctionnel pour une colonie/max1 qualifié par reprises : générateur, caravanes, camps/sites temporaires et conservation. Nouvelle démonstration créée par les menus, patrimoine préparé déclaré, usages partiels réels et recharge complète exacte1730. Catalogue67fiches, archives/Aulnes préservées ; publié95084b6c/déploiement0c2b8329,136réponses HTTPS exactes. Performances et confort restent ouverts, prochaine priorité autonome. Aucune parité exhaustive annoncée.

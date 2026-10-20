@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import type {Pawn,World} from './types.ts';
 import type {PreparingGroup} from './group-capture.ts';
 import type {CampaignGroupSummary,CampaignMapPresentation,CampaignSummary,WorldMapKind} from './world-map-state.ts';
@@ -20,7 +21,7 @@ const same=(a:Patient259,b:Patient259)=>a.pawnId===b.pawnId&&a.state===b.state&&
 /** Called from the real map registry, before any presentation omits its roster. */
 export function captureGroupCapturePatients259(map:World|undefined,mapId:number|null,g:CampaignGroupSummary['state']):GroupCapturePatients259|undefined {
  const rows=captureRows(g);if(!rows.length)return;
- if(!map||(Number(map.schemaVersion)!==259&&Number(map.schemaVersion)!==260&&(Number(map.schemaVersion)!==261&&(Number(map.schemaVersion)!==262&&Number(map.schemaVersion)!==263)))||mapId===null)throw Error('Capture preparation has no actual map owner');
+ if(!map||(Number(map.schemaVersion)!==259&&Number(map.schemaVersion)!==260&&(Number(map.schemaVersion)!==261&&(Number(map.schemaVersion)!==262&&!isSchema263OrLater(Number(map.schemaVersion)))))||mapId===null)throw Error('Capture preparation has no actual map owner');
  return {mapId,patients:rows.map(row=>{const p=map.pawns.find(p=>p.id===row.pawnId);if(!p)throw Error('Capture preparation lost its actual human');return facts(p);})};
 }
 /** Exact transport shape plus phase/faction facts. The active map also compares
@@ -28,7 +29,7 @@ export function captureGroupCapturePatients259(map:World|undefined,mapId:number|
 export function validGroupCapturePatients259(value:unknown,w:Authority259,row:Pick<CampaignGroupSummary,'id'|'localMapId'|'state'>,activeMapId:number|null):value is GroupCapturePatients259|undefined {
  const rows=captureRows(row.state);
  if(!rows.length)return value===undefined;
- if((Number(w.schemaVersion)!==259&&Number(w.schemaVersion)!==260&&(Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&Number(w.schemaVersion)!==263)))||row.state.admission?.revision!==2||row.localMapId===null||!record(value)||!exact(value,['mapId','patients'])||value.mapId!==row.localMapId||!dense(value.patients)||value.patients.length!==rows.length||!w.worldFactions||!Array.isArray(w.worldFactions.factions))return false;
+ if((Number(w.schemaVersion)!==259&&Number(w.schemaVersion)!==260&&(Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&!isSchema263OrLater(Number(w.schemaVersion)))))||row.state.admission?.revision!==2||row.localMapId===null||!record(value)||!exact(value,['mapId','patients'])||value.mapId!==row.localMapId||!dense(value.patients)||value.patients.length!==rows.length||!w.worldFactions||!Array.isArray(w.worldFactions.factions))return false;
  const f=w.worldFactions,ids=new Set<number>();
  for(const raw of value.patients){
   if(!record(raw)||!exact(raw,['pawnId','state','affiliation','capturedAt','originQuestId','podRescue'])||!int(raw.pawnId,1,w.nextId-1)||ids.has(raw.pawnId)||!validWorldAffiliation259(raw.affiliation)||raw.originQuestId!==null||raw.podRescue!==false)return false;
@@ -49,8 +50,8 @@ const projections=new WeakMap<World,{group:PreparingGroup;mapId:number;kind:Worl
  * RAW fields alone never satisfy the runtime admission predicates. */
 export function brandGroupCaptureProjection259(view:World,row:CampaignGroupSummary,metadata:CampaignMapPresentation|CampaignSummary):void {
  const bound=boundWorldGroup(view),map=metadata.maps.find(m=>m.id===row.localMapId);
- if((Number(view.schemaVersion)!==259&&Number(view.schemaVersion)!==260&&(Number(view.schemaVersion)!==261&&(Number(view.schemaVersion)!==262&&Number(view.schemaVersion)!==263)))||!bound||bound.state!==row.state||view.group!==row.state||row.localMapId===null||bound.localMapId!==row.localMapId||!map||!('manifest'in row.state)||!validGroupCapturePatients259(row.capturePatients259,view,row,metadata.activeMapId))return;
+ if((Number(view.schemaVersion)!==259&&Number(view.schemaVersion)!==260&&(Number(view.schemaVersion)!==261&&(Number(view.schemaVersion)!==262&&!isSchema263OrLater(Number(view.schemaVersion)))))||!bound||bound.state!==row.state||view.group!==row.state||row.localMapId===null||bound.localMapId!==row.localMapId||!map||!('manifest'in row.state)||!validGroupCapturePatients259(row.capturePatients259,view,row,metadata.activeMapId))return;
  projections.set(view,{group:row.state,mapId:row.localMapId,kind:map.kind,patients:row.capturePatients259?.patients??[]});
 }
-export function projectedGroupReform259(w:World):boolean {const proof=projections.get(w),bound=boundWorldGroup(w);return !!proof&&proof.group===w.group&&bound?.state===proof.group&&bound.localMapId===proof.mapId&&(proof.kind==='camp'||proof.kind==='legacy-site'||(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||Number(w.schemaVersion)===263))&&proof.kind==='battlefield');}
+export function projectedGroupReform259(w:World):boolean {const proof=projections.get(w),bound=boundWorldGroup(w);return !!proof&&proof.group===w.group&&bound?.state===proof.group&&bound.localMapId===proof.mapId&&(proof.kind==='camp'||proof.kind==='legacy-site'||(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||isSchema263OrLater(Number(w.schemaVersion))))&&proof.kind==='battlefield');}
 export function projectedCapturePatient259(w:World,g:PreparingGroup,pawnId:number):boolean {const proof=projections.get(w);return !!proof&&proof.group===g&&projectedGroupReform259(w)&&proof.patients.some(p=>p.pawnId===pawnId);}

@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {registeredCampaign,registeredMap,flushRegisteredMap} from './world-map-context.ts';
 import {campHasActiveThreat260,campReformThreatReason260} from './camp-reform-threats-260.ts';
 import type {World} from './types.ts';
@@ -7,7 +8,7 @@ export const battlefieldHasActiveThreat261=(w:World)=>campHasActiveThreat260(w,t
 export const battlefieldReformReason261=(w:World)=>campReformThreatReason260(w,true);
 /** One actual map-owner pass after physical combat, no offered/load history. */
 export function advanceBattlefieldVictory261(root:CampaignState):void {
- if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&Number(root.schemaVersion)!==263)))return;
+ if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&!isSchema263OrLater(Number(root.schemaVersion)))))return;
  for(const site of root.worldMaps?.sites??[]){
   const b=site.battlefield261;if(site.kind!=='battlefield'||!b||b.won)continue;
   const map=registeredMap(root,site.id);if(!map||battlefieldHasActiveThreat261(map))continue;

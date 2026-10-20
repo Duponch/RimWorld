@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {nativeWorldPawnOrderCurrent256,commitNativeWorldPawnOrder256,orderedWorldPawnRows256} from './world-pawn-native-order-256.ts';
 import {removeNativeWorldPawnOrder256} from './native-world-pawn-order-256.ts';
 import {medicalBleed,partMissing} from './injury-state.ts';
@@ -53,7 +54,7 @@ export function prepareWorldAnimalRedress256(state:WorldPawnsState256,row:Extrac
  // That new Food category is therefore the true growth hunger multiplier.
  const redressed=structuredClone(row),foodPercentage=input.random.float(.5,.9),rest=fact.needsRest?input.random.float(.9,1):1;
  redressed.actor.food=f(foodPercentage*animalNutritionMax(redressed.actor));redressed.actor.rest=rest;
- const removal=prepareWorldPawnRemoval256(redressed,state.atCore,input.version===263?{version:input.version,state,original:row}:undefined);if(!removal.ok)return removal;if(removal.draft.kind!=='animal')throw Error('Actual redress owner changed kind');
+ const removal=prepareWorldPawnRemoval256(redressed,state.atCore,isSchema263OrLater(input.version)?{version:input.version,state,original:row}:undefined);if(!removal.ok)return removal;if(removal.draft.kind!=='animal')throw Error('Actual redress owner changed kind');
  // No MakeThing, sex/age/scar/chronological/growth initializer, gear or fresh
  // identity is replayed. Core neutral animal SetFaction is already null.
  const animal=removal.draft.actor;animal.x=input.cell.x;animal.z=input.cell.z;animal.path=[];animal.state='idle';animal.nextDecision=input.tick+1;

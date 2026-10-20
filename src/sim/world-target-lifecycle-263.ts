@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {plainWorldPawnData256} from './world-pawn-save-256.ts';
 import {activeThreat} from './affiliation.ts';
 import {registeredMap,registeredMapId} from './world-map-context.ts';
@@ -8,7 +9,7 @@ const writable=(o:object,k:string)=>{const d=Object.getOwnPropertyDescriptor(o,k
  * including actual WorldPawns transfer, beds/areas, lost goods and memories.
  * No timeout, defeat or inhabitant reset is offered merely by load. */
 export function prepareWorldTargetMapRemoval263(root:CampaignState,map:WorldMapRecord):{current():boolean;commit():void}|null {
- if(Number(root.schemaVersion)!==263||!map.target263)return null;
+ if(!isSchema263OrLater(Number(root.schemaVersion))||!map.target263)return null;
  const registry=root.worldSites263,factions=root.worldFactions,target=map.target263,core=root.tick*10,settlement=target.kind==='foreign-settlement'?factions?.settlements.find(s=>s.id===target.settlementId):undefined,site=target.kind==='quest-site'?registry?.entries.find(s=>s.id===target.siteId):target.destroyedSiteId!==undefined?registry?.entries.find(s=>s.id===target.destroyedSiteId):undefined;
  if(!registry||!factions||!Number.isSafeInteger(core+60000)||(settlement?!settlement.attack263||settlement.attack263.mapId!==map.id:!site||site.mapId!==map.id))throw Error('Actual263 removed map parent unavailable');
  const entries=registry.entries,source=settlement??site!,before=JSON.stringify(source),attack=settlement?.attack263;
@@ -26,7 +27,7 @@ export function prepareWorldTargetMapRemoval263(root:CampaignState,map:WorldMapR
  * humanlike threat. Fleeing players do not set a win bit or kill anybody.
  * The same existing map receives the real DestroyedSettlement parent. */
 export function advanceForeignSettlementDefeat263(root:CampaignState):void {
- if(Number(root.schemaVersion)!==263||!root.worldMaps||!root.worldFactions||!root.worldSites263)return;
+ if(!isSchema263OrLater(Number(root.schemaVersion))||!root.worldMaps||!root.worldFactions||!root.worldSites263)return;
  const factions=root.worldFactions,registry=root.worldSites263,core=root.tick*10;
  for(const record of root.worldMaps.sites){const t=record.target263;if(record.kind!=='foreign-settlement'||t?.kind!=='foreign-settlement'||t.destroyedSiteId!==undefined)continue;
   const settlement=factions.settlements.find(s=>s.id===t.settlementId),map=registeredMap(root,record.id);if(!settlement||!map||registeredMapId(map)!==record.id)continue;

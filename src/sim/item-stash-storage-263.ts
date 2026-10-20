@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {invalidateTerrainJournal} from './terrain-mutation-journal.ts';
 import {captureActualLocalDistricts256} from './actual-local-districts-256.ts';
 import {terrainSupportsAffordance256,terrainSupportsFloor256} from './natural-terrain-runtime-256.ts';
@@ -13,7 +14,7 @@ export const ITEM_STASH_STORAGE_SEED_PART_263=913432591;
  * current wood walls/floor/roof/door interpret the storage building in3D.
  * Its concrete contents remain in the Site owner until complete adoption. */
 export function generateItemStashStorage400263(w:World,factionId:number|null,usedRects:AncientRect256[],random:WorldGenerationRandom):AncientRect256 {
- if(Number(w.schemaVersion)!==263||w.site?.revision!==3||w.pawns.length||w.jobs.length)throw Error('Actual unpublished ItemStash400 frontier required');
+ if(!isSchema263OrLater(Number(w.schemaVersion))||w.site?.revision!==3||w.pawns.length||w.jobs.length)throw Error('Actual unpublished ItemStash400 frontier required');
  const physical=captureActualLocalDistricts256(w),width=w.width,height=w.height,center={x:Math.floor(width/2),z:Math.floor(height/2)};
  const rectAt=(x:number,z:number):AncientRect256=>({minX:x-3,minZ:z-3,maxX:x+3,maxZ:z+3});
  const allowed=(x:number,z:number)=>{

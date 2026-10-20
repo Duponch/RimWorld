@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {validWorldSiteAmbush263} from './world-site-ambush-save-263.ts';
 import {validSiteDefenceSource263} from './world-site-defence-source-263.ts';
 import {targetBuilding263} from './world-target-building-263.ts';
@@ -10,10 +11,10 @@ import type {World} from './types.ts';
  * selected map and every caravan. Decode registers its Things only once. */
 export function registerProjectedWorldSites263(w:World,ids:NumericMembershipSink,summary?:CampaignSummary):string[] {
  const metadata=summary??(w.campaignMap?.revision===2?w.campaignMap:undefined);
- if(!metadata)return Number(w.schemaVersion)===263&&Object.hasOwn(w,'worldSites263')?['Projected Sites lack their true campaign metadata.']:[];
+ if(!metadata)return isSchema263OrLater(Number(w.schemaVersion))&&Object.hasOwn(w,'worldSites263')?['Projected Sites lack their true campaign metadata.']:[];
  const context:WorldSitesValidationContext263={schemaVersion:w.schemaVersion,tick:w.tick,nextId:w.nextId,planet:w.planet,worldFactions:w.worldFactions,worldMaps:{sites:metadata.maps},...Object.hasOwn(w,'worldSites263')?{worldSites263:w.worldSites263}:{}};
  const errors=validateWorldSites263(w.worldSites263,context,ids);
- if(Number(w.schemaVersion)===263){const packs=[...w.packed??[],...metadata.groups.flatMap(r=>'members'in r.state?r.state.packed??[]:[]),...w.worldPawns?.owners.flatMap(r=>r.packed)??[]];for(const p of packs)if(targetBuilding263(w,p.building)&&p.building.factionId!==w.worldFactions?.playerFactionId)errors.push('Projected target furniture is not actually player-owned.');}
+ if(isSchema263OrLater(Number(w.schemaVersion))){const packs=[...w.packed??[],...metadata.groups.flatMap(r=>'members'in r.state?r.state.packed??[]:[]),...w.worldPawns?.owners.flatMap(r=>r.packed)??[]];for(const p of packs)if(targetBuilding263(w,p.building)&&p.building.factionId!==w.worldFactions?.playerFactionId)errors.push('Projected target furniture is not actually player-owned.');}
  if(!summary&&!validWorldTargetDefence263(w,w.schemaVersion))errors.push('Invalid projected263 map defence.');
  if(!summary&&!validSiteDefenceSource263(w,w.schemaVersion))errors.push('Projected Site defence differs from its selected threat.');
  if(!summary&&!validWorldSiteAmbush263(w,w.schemaVersion))errors.push('Invalid projected263 Site ambush.');

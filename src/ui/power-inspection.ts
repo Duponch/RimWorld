@@ -29,6 +29,12 @@ export function biofuelPowerInspection(world:World,structure:Structure):string {
   return `${state} · Production ${watts(Math.max(0,powerWatts(structure,world)))} / 1 000 W · Réservoir ${reserve.toLocaleString('fr-FR',{maximumFractionDigits:2})} / ${fuelLimit(structure.kind)/FUEL_UNIT_TICKS} biocarburants · 4,5 unités/jour · débit arrêté par le commutateur ou une panne · EMP : production suspendue, combustible consommé · ravitaillement avec le biocarburant réellement porté · chaleur et faible lumière locale en marche`;
 }
 
+export function geothermalPowerInspection(world:World,structure:Structure):string {
+  if(structure.kind!=='geothermal-generator')return '';
+  const state=structure.breakdown?'En panne':structure.emp&&structure.emp.untilCore>world.tick*10?'Neutralisée par EMP':isPowerActive(structure)?'En marche':'Démarrage en attente';
+  return `${state} · Production ${watts(Math.max(0,powerWatts(structure,world)))} / 3 600 W · constante jour et nuit, même sous toit · sans combustible · centrale fixe sur son geyser · vapeur et chaleur intermittentes, indépendantes du courant, des pannes et des EMP · risque de surchauffe dans une pièce fermée · isoler le réseau avec un interrupteur de circuit`;
+}
+
 export function hydroponicsPowerInspection(structure:Structure):string {
   if(structure.kind!=='hydroponics-basin')return '';
   const state=structure.breakdown?'Pompe en panne':structure.power?.switchOn===false?'Pompe arrêtée manuellement':isPowerActive(structure)?'Pompe alimentée':'Pompe sans alimentation';
@@ -39,7 +45,7 @@ export function hydroponicsPowerInspection(structure:Structure):string {
 export function solarFlareInspection(world:World,structure:Structure):string {
   if(!world.worldIncidents?.active||!isElectrical(structure.kind))return '';
   if(structure.kind==='battery')return 'Éruption solaire : charge et décharge du réseau suspendues · réserve conservée · autodécharge normale de 5 W·j/jour';
-  if(['wood-generator','chemfuel-generator','solar-generator','wind-turbine'].includes(structure.kind))return `Éruption solaire : source ${isPowerActive(structure)?'toujours active':'actuellement arrêtée'} · potentiel de production conservé${(structure.kind==='wood-generator'||structure.kind==='chemfuel-generator')&&isPowerActive(structure)?` · le ${structure.kind==='wood-generator'?'bois':'biocarburant'} continue de brûler`:''} · stockage du surplus suspendu`;
+  if(['wood-generator','chemfuel-generator','geothermal-generator','solar-generator','wind-turbine'].includes(structure.kind))return `Éruption solaire : source ${isPowerActive(structure)?'toujours active':'actuellement arrêtée'} · potentiel de production conservé${(structure.kind==='wood-generator'||structure.kind==='chemfuel-generator')&&isPowerActive(structure)?` · le ${structure.kind==='wood-generator'?'bois':'biocarburant'} continue de brûler`:''} · stockage du surplus suspendu`;
   if(!isPowerTrader(structure.kind))return 'Éruption solaire : connexions et interrupteurs physiques conservés';
   const cause=structure.breakdown?'panne mécanique distincte':structure.power?.switchOn===false?'arrêt manuel distinct':structure.power?.parentId===null?'absence de raccordement distincte':isPowerActive(structure)?'encore alimenté avant son délestage':'actuellement sans alimentation · redémarrage suspendu';
   return `Éruption solaire : ${cause} · arrêt progressif des consommateurs${structure.kind==='electric-tailor-bench'&&!isPowerActive(structure)?' · couture manuelle possible à vitesse réduite (50 %)':''}`;
@@ -59,7 +65,7 @@ export function rainElectricalInspection(world: World, structure: Structure): st
 
 export function powerInspection(world: World, structure: Structure, compact=false): string {
   if (!isElectrical(structure.kind) || !structure.power) return '';
-  if (compact && structure.breakdown) return ` · Panne mécanique${biofuelPowerInspection(world,structure)?` · ${biofuelPowerInspection(world,structure)}`:''}${nutrientPasteInspection(world,structure)?` · ${nutrientPasteInspection(world,structure)}`:''}${orbitalInspection(world,structure)?` · ${orbitalInspection(world,structure)}`:''}${deepDrillingInspection(world,structure)?` · ${deepDrillingInspection(world,structure)}`:''}${hydroponicsPowerInspection(structure)?` · ${hydroponicsPowerInspection(structure)}`:''}${solarFlareInspection(world,structure)?` · ${solarFlareInspection(world,structure)}`:''}${rainElectricalInspection(world, structure) ? ` · ${rainElectricalInspection(world, structure)}` : ''}.`;
+  if (compact && structure.breakdown) return ` · Panne mécanique${geothermalPowerInspection(world,structure)?` · ${geothermalPowerInspection(world,structure)}`:''}${biofuelPowerInspection(world,structure)?` · ${biofuelPowerInspection(world,structure)}`:''}${nutrientPasteInspection(world,structure)?` · ${nutrientPasteInspection(world,structure)}`:''}${orbitalInspection(world,structure)?` · ${orbitalInspection(world,structure)}`:''}${deepDrillingInspection(world,structure)?` · ${deepDrillingInspection(world,structure)}`:''}${hydroponicsPowerInspection(structure)?` · ${hydroponicsPowerInspection(structure)}`:''}${solarFlareInspection(world,structure)?` · ${solarFlareInspection(world,structure)}`:''}${rainElectricalInspection(world, structure) ? ` · ${rainElectricalInspection(world, structure)}` : ''}.`;
   const topology = cache.read(world);
   const group = connectedPowerGroups(world, topology).find(g => g.some(s => s.id === structure.id));
   const supply = group?.reduce((n, s) => n + Math.max(0, powerWatts(s, world)), 0) ?? 0;
@@ -84,6 +90,8 @@ export function powerInspection(world: World, structure: Structure, compact=fals
     detail=deepDrillingInspection(world,structure);
   } else if (structure.kind === 'hydroponics-basin') {
     detail=hydroponicsPowerInspection(structure);
+  } else if (structure.kind === 'geothermal-generator') {
+    detail=geothermalPowerInspection(world,structure);
   } else if (structure.kind === 'solar-generator') {
     const open = solarUnroofedCells(world, structure);
     const light = annualNaturalLight(world);

@@ -8,7 +8,7 @@ La référence fonctionnelle est **RimWorld Vanilla/Core**, installation locale 
 
 **Une colonie, maximum 1, reste la référence de travail.** Le réglage livré 1–5 et les sauvegardes multicartes sont préservés ; approfondissement multicolonie différé, sans clôture de ce domaine. Les voyages, camps, rencontres et Sites temporaires de cette colonie restent dans le périmètre. Les producteurs actuels de PNJ sont une adaptation provisoire autorisée ; leur reproduction interne exhaustive ne bloque pas les fondations ni les autres boucles du jeu.
 
-Point de départ produit : V438, schéma263. Les fondations monde V419 sont qualifiées pour leur périmètre ; le générateur, les caravanes, les propriétaires, les cartes temporaires et les reprises existent. Les Aulnes, Les Éclaircies, Les Forges, les parties personnelles et leurs archives sont conservés. Un état préparé reste déclaré comme tel.
+Point de départ produit : V438, schéma263. V439 a consolidé les lectures d’environnement ; [V440](../gameplay/geothermal-power-v440.md) raccorde la chaîne géothermique au schéma264, qualifiée par reprises et jouée dans le navigateur. Les fondations monde V419 sont qualifiées pour leur périmètre ; le générateur, les caravanes, les propriétaires, les cartes temporaires et les reprises existent. Les Aulnes, Les Éclaircies, Les Forges, les parties personnelles et leurs archives sont conservés. Un état préparé reste déclaré comme tel.
 
 ## Lecture du bilan
 

@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {worldTargetActions263} from '../sim/world-target-access-263';
 import type {World} from '../sim/types';
 import type {WorldSite263,WorldEntryTarget263} from '../sim/world-sites-state-263';
@@ -13,7 +14,7 @@ export interface WorldTargetChoice263 {key:string;label:string;target:WorldEntry
 /** The same product admission reads the real target; this view adds labels and
  * the neutral/friendly confirmation, never permissions or preview mutations. */
 export function worldTargetChoices263(world:World,tile:number):WorldTargetChoice263[] {
- if(Number(world.schemaVersion)!==263)return [];
+ if(!isSchema263OrLater(Number(world.schemaVersion)))return [];
  const result:WorldTargetChoice263[]=[],registry=world.worldFactions;
  for(const settlement of registry?.settlements??[]){
   if(settlement.tile!==tile||settlement.factionId===registry!.playerFactionId)continue;

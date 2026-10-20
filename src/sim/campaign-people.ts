@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {captureEncounterHumans261} from './caravan-encounter-owners-261.ts';
 import {captureWorldPawnHumans256} from './world-pawn-human-capture-256.ts';
 import {captureLostOwners} from './world-lost-owners.ts';
@@ -46,7 +47,7 @@ export function appendCampaignPeople(world:World,people:Map<number,RelationshipP
 
 export function campaignPhysicalCaptures(world:World):readonly {world:World|undefined;owners:HumanOwnershipCapture}[] {
   const root=campaignAuthority(world),other=root.worldMaps?undefined:otherCampaignMap(root);
-  const physical=(root.worldMaps?[...root.worldMaps.sites.map(m=>registeredMapForValidation(root,m.id)!),...globalOwnerContexts(root,true)]:[root,...other?[other]:[]]).map(local=>({world:local as World|undefined,owners:captureHumanOwners(local,{},false)}));return [...(root.worldMaps?[...physical,{world:undefined,owners:captureLostOwners(root)}]:physical),...(root.worldPawns?[{world:undefined,owners:captureWorldPawnHumans256(root)}]:[]),...((Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||Number(root.schemaVersion)===263))?[{world:undefined,owners:captureEncounterHumans261(root)}]:[])];
+  const physical=(root.worldMaps?[...root.worldMaps.sites.map(m=>registeredMapForValidation(root,m.id)!),...globalOwnerContexts(root,true)]:[root,...other?[other]:[]]).map(local=>({world:local as World|undefined,owners:captureHumanOwners(local,{},false)}));return [...(root.worldMaps?[...physical,{world:undefined,owners:captureLostOwners(root)}]:physical),...(root.worldPawns?[{world:undefined,owners:captureWorldPawnHumans256(root)}]:[]),...((Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||isSchema263OrLater(Number(root.schemaVersion))))?[{world:undefined,owners:captureEncounterHumans261(root)}]:[])];
 }
 
 /** Global notifications use actual live owners. Clinical/local work guards

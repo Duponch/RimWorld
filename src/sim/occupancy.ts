@@ -23,6 +23,7 @@ export const OCCUPANCY = Object.freeze({
   'electric-crematorium':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   'electric-smelter':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   'biofuel-refinery':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
+  'geothermal-generator':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   'chemfuel-generator':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   'nutrient-paste-dispenser':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   hopper:Object.freeze({clearItems:false,items:true,zones:false,store:false}),

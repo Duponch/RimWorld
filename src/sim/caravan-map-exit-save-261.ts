@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {geographicLongitudeOffsetCore256} from './site-climate.ts';
 import type {WorldPawnOwner256} from './world-pawn-state-256.ts';
 import type {WorldPawnOriginMap256} from './world-pawn-origin-projection-256.ts';
@@ -7,7 +8,7 @@ const own=(v:object,key:PropertyKey)=>Object.getOwnPropertyDescriptor(v,key);
  * its full original field allowlist, IDs, ownership and context validation. */
 export function validMapExitHeader261(raw:object,version:number):boolean {
  const d=own(raw,'entryKind261');if(!d)return !('entryKind261'in raw);
- if((version!==261&&(Number(version)!==262&&Number(version)!==263))||!d.enumerable||!Object.hasOwn(d,'value')||d.value!=='map-exit')return false;
+ if((version!==261&&(Number(version)!==262&&!isSchema263OrLater(Number(version))))||!d.enumerable||!Object.hasOwn(d,'value')||d.value!=='map-exit')return false;
  const origin=own(raw,'originMapId');
  return !!origin&&Object.hasOwn(origin,'value')&&Number.isSafeInteger(origin.value)&&origin.value>=0&&!('entryKind259'in raw)&&!('encounterBirth261'in raw)&&!('startingPawnLeftBehind'in raw);
 }

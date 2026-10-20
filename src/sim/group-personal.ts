@@ -1,3 +1,4 @@
+import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {advanceOffmapThermal259} from './offmap-thermal-259.ts';
 import {humanConditionMedicalFrontier256} from './human-condition-frontier-256.ts';
 import {commitToxicDeath256} from './toxic-buildup-256.ts';
@@ -64,7 +65,7 @@ export function advanceGroupPersonal(group:ActiveGroup,c:GroupPersonalContext):G
         ageImmunityFactor:humanAgeImmunityFactor(p.age),...c.deferNeedMeters256?c.clinicalRestFor256?.(p):{}},c.random,conditionFrontier);conditionFrontier?.commit();
       for(const infection of p.health.infections?.cases??[])if(infection.id>=firstInfection)c.notice(p,`${p.name} souffre d’une infection.`);
     }
-    if(c.schemaVersion===259||c.schemaVersion===260||(c.schemaVersion===261||(Number(c.schemaVersion)===262||Number(c.schemaVersion)===263)))advanceOffmapThermal259(p,group.items,c.tick*10,c.ambientTemperature259!,()=>createMedicalRecord(c.tick));
+    if(c.schemaVersion===259||c.schemaVersion===260||(c.schemaVersion===261||(Number(c.schemaVersion)===262||isSchema263OrLater(Number(c.schemaVersion)))))advanceOffmapThermal259(p,group.items,c.tick*10,c.ambientTemperature259!,()=>createMedicalRecord(c.tick));
     if(p.health?.death){commitToxicDeath256(p.health,c.random);
         // Terminal validation uses the death tick, including expirations that
         // were still valid at the previous living frontier. No age or XP now.
