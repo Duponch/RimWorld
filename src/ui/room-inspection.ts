@@ -3,8 +3,8 @@ import { cookingSpot } from '../sim/cooking-bills';
 import { footprintCells } from '../sim/definitions';
 import { isRoofed, roofIndex,roofKindAt } from '../sim/roof-rules';
 import type { Cell, World } from '../sim/types';
-import { TemperatureView } from '../sim/temperature';
-import { roomCleanliness } from '../sim/filth';
+import { temperatureAt } from '../sim/temperature';
+import { CleanlinessCapture,roomCleanliness } from '../sim/filth-room';
 import { BEAUTY_BAND_LABEL } from '../sim/room-beauty';
 import { IMPRESSION_LABELS } from '../sim/room-impressiveness';
 import { RoomBeautyInspection } from './room-beauty-inspection';
@@ -36,12 +36,12 @@ export class RoomInspection {
       : covered?`Pièce ${covered===room.cellCount?'couverte':'partiellement couverte'} · ${covered} / ${room.cellCount} cases.`
       : `Pièce non couverte · ${room.cellCount} case${room.cellCount > 1 ? 's' : ''}.`;
     const i=roofIndex(world,cell);
-    if(room&&room.kind!=='solid')text+=` Température : ${new TemperatureView(world).at(world,cell).toFixed(1)} °C.`;
+    if(room&&room.kind!=='solid')text+=` Température : ${temperatureAt(world,cell).toFixed(1)} °C.`;
     if(isRoofed(world,i)){const roof=roofKindAt(world,i);text+=roof==='natural-thick'?' Toit naturel épais sur cette case.':roof==='natural-thin'?' Toit naturel mince sur cette case.':' Toit construit sur cette case.';}
     if(world.roofing?.remove.includes(i))text+=' Zone : retirer le toit.';
     else if(world.roofing?.build.includes(i))text+=' Zone : construire un toit.';
     if(properties&&properties.role!=='none')text+=` ${ROOM_ROLE_LABEL[properties.role]}.`;
-    const cleanliness=roomCleanliness(world,cell);
+    const cleanliness=roomCleanliness(world,cell,new CleanlinessCapture(world,environment.topology));
     text+=cleanliness===null?' Propreté : pas de score de pièce.':` Propreté : ${cleanliness.toFixed(2)}.`;
     const beauty=this.beauty.read(world,environment.topology,cell);
     text+=beauty===null?' Beauté : pas de score de pièce.':` Beauté : ${beauty.beauty.toFixed(2)} · ${BEAUTY_BAND_LABEL[beauty.band]}.`;

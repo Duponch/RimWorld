@@ -1,0 +1,88 @@
+# Elsewhere — plan de complétion Core du 20 octobre 2026
+
+## Mandat et référence
+
+L’utilisateur autorise la poursuite autonome du développement jusqu’à une version finale selon les six ensembles ci-dessous, avec recherches Internet régulières et optimisation continue. Cette note constitue le plan canonique courant ; les chronologies et estimations anciennes restent historiques. Elle ne déclare ni parité exhaustive, ni campagne entière acquise, ni date de fin. Chaque lot apporte une fonction utilisable ou une correction vérifiée, avec ses limites explicites.
+
+La référence fonctionnelle est **RimWorld Vanilla/Core**, installation locale **1.6.4871 rev590** lors de cet audit. Les extensions restent différées. Les recherches ciblées devront vérifier les annonces et changements de version sans faire passer une bêta, un wiki ou un exemple de sauvegarde pour une règle stable. Réutiliser les lectures XML/IL et les sources datées déjà acquises quand leur règle reste applicable ; aucune copie de code ou d’asset propriétaire dans le produit.
+
+**Une colonie, maximum 1, reste la référence de travail.** Le réglage livré 1–5 et les sauvegardes multicartes sont préservés ; approfondissement multicolonie différé, sans clôture de ce domaine. Les voyages, camps, rencontres et Sites temporaires de cette colonie restent dans le périmètre. Les producteurs actuels de PNJ sont une adaptation provisoire autorisée ; leur reproduction interne exhaustive ne bloque pas les fondations ni les autres boucles du jeu.
+
+Point de départ produit : V438, schéma263. Les fondations monde V419 sont qualifiées pour leur périmètre ; le générateur, les caravanes, les propriétaires, les cartes temporaires et les reprises existent. Les Aulnes, Les Éclaircies, Les Forges, les parties personnelles et leurs archives sont conservés. Un état préparé reste déclaré comme tel.
+
+## Lecture du bilan
+
+**Présent** signifie qu’un chemin fonctionnel existe dans les sources et possède des contrôles ou observations identifiés ; cela ne certifie pas tous ses usages. **Partiel** signifie que des règles, contenus, interfaces ou situations restent ouverts. **Manquant** désigne une boucle non raccordée, même si un nom ou un objet apparenté existe. **Non vérifié** ne signifie pas absent : conserver cette distinction dans les comptes rendus.
+
+Les tables anciennes de [l’état fonctionnel](../gameplay/implementation-status.md), du [catalogue](../gameplay/content-catalogue.md) et du [guide](../gameplay/player-guide.md) mélangent plusieurs dates. Vérifier la source actuelle et la note du lot avant de reprendre une absence ancienne : hydroponie, pâte nutritive, synthèse médicale, forage/scanner, biocarburant et armure de reconnaissance sont notamment raccordés. Les nombres de tests, variantes de matière et fiches préparées ne mesurent pas l’avancement global.
+
+## 1. Stabiliser l’expérience et les performances
+
+**Présent :** présentation résidente, préparation Worker, adoption progressive, lots GPU, HUD et étiquettes améliorés ; pause et horloge confirmée, conservation et réglages graphiques. **Partiel :** fluidité en charge, applications graphiques longues, pics et vitesse physique ; confort général non rétabli. La cible humaine reste dépasser200FPS et viser220–230, y compris en rotation, sans ralentir la simulation.
+
+**Prochain lot prioritaire : Les Forges à ×1.** Reprendre le chemin dominant mesuré, notamment préparation/application commune et lecteurs du HUD, en séparant simulation/Worker, transport/adoption MAIN, CPU image, RAF et GPU. Comparer le même état, caméra, résolution et options, fixe puis rotation ; publier FPS, percentiles, maxima et vitesse physique tenue. Les [mesures V435](render-spatial-v435.md) et [V438](ui-hud-performance-v438.md) restent des références distinctes : ne pas comparer directement leurs fenêtres et résolutions différentes. Les Aulnes, Les Éclaircies et le départ neuf servent de contre-exemples pertinents, sans reconstruire une campagne entière à chaque essai.
+
+Travail concret : supprimer les parcours ou préparations inutiles confirmés par profil ; partager les lectures utiles ; borner les changements appliqués et les uploads sans réduire arbitrairement les confirmations, dégrader les règles ou rendre l’état visible incohérent. Corriger aussi les gestes ordinaires qui deviennent lents ou illisibles : sélection, dossiers, ordres et changement de vitesse.
+
+**Critère observable du lot :** un joueur constate des commandes et phases cohérentes ; le chemin changé a une mesure avant/après reproductible, sans régression matérielle inexpliquée sur les références concernées. Les sauvegardes et continuations restent exactes. Un gain CPU isolé ne devient pas une annonce FPS ; une amélioration locale ne devient pas une cible générale acquise.
+
+**Borne de progression :** une hypothèse principale et au plus deux variantes comparables par lot d’optimisation, puis décision explicite : intégrer le gain qualifié, écarter la piste ou conserver le blocage précis. Ne pas reconduire indéfiniment le même diagnostic ni subordonner tout gameplay à l’obtention de220FPS. Après ce lot prioritaire, reprendre une tranche fonctionnelle cohérente ; seule une régression bloquant la jouabilité, l’intégrité ou la mesure justifie de prolonger immédiatement la réparation. Toute nouvelle mécanique examine ses coûts dès sa conception.
+
+## 2. Compléter économie, recherche et catalogue
+
+**Présent :** agriculture à six cultures semables ; repas et plusieurs séries×4, textile, pierre, art, armes limitées, composants avancés, médecine, biocarburant, récupération et stockage physiques. Recherche commune au poste, bureaux alimentés et multi-analyseur. Commerce local, orbital et caravanier avec biens et fonds finis. **Partiel :** richesse, prix, assortiment commercial, arbre et débouchés. **Manquant :** familles productives et industrielles entières.
+
+L’audit compte31projets locaux contre77définitions concrètes de recherche du Core local. C’est un repère de catalogue, pas un pourcentage d’achèvement : Électricité est connue initialement ici, des prérequis sont adaptés et Armure de plaques n’a pas sa recette. Les sources fermées utiles sont `src/sim/research.ts`, `production-recipes.ts`, `crops.ts`, `equipment-rules.ts` et `trade-catalogue.ts`.
+
+Travaux à livrer en chaînes complètes :
+
+- Compléter prix et négociabilité des biens déjà jouables, puis l’évaluation des personnes/animaux et son effet sur attentes et menaces. Conserver les inconnus visibles tant que les règles ne sont pas vérifiées ; ne pas transformer silencieusement un total minimal en richesse exhaustive.
+- Relier les recherches à leurs véritables constructions, recettes et contraintes ; traiter les adaptations historiques explicitement, sans progrès ou déverrouillage rétroactif. Développer les filières absentes par ensembles utiles : brassage/fermentation, cultures et produits associés, forge/armement, protections puis industrie médicale avancée.
+- Étendre les choix d’habitat et d’énergie selon les règles vérifiées : géothermie, hydraulique, prévention du feu, autres équipements et matériaux utiles. Le catalogue actuel d’armes reste quatre identités ; compléter acquisition, fabrication, usage et récupération ensemble.
+- Achever les réglages de production et de gestion qui comptent en partie : filtres, comptage, politiques, stockage lié, refus expliqués. Actualiser catalogue et guide au même lot ; les intitulés et boutons seuls ne constituent pas une livraison.
+
+**Critère observable :** depuis ressources finies et connaissances déclarées, le joueur recherche, acquiert, transporte, fabrique, range, utilise ou vend le produit ; annulation, pénurie, panne et recharge conservent identités et quantités. Le bénéfice de la filière est visible dans la vie de la colonie. Les coûts et règles inconnus sont nommés avant l’implémentation concernée.
+
+## 3. Approfondir habitants, santé et animaux
+
+**Présent :** compétences, incapacités, besoins, humeur, relations et crises ciblées ; blessures anatomiques, soins, maladies ciblées, chirurgie et prothèses en bois. Animaux géographiques, alimentation, chasse/prédation, élevage et produits existants, enclos, secours et abattage. **Partiel :** profondeur sociale et médicale, diversité des comportements et animaux domestiques. **Manquant ou à vérifier avant lot :** opérations et implants industriels, catalogue médical élargi, comportements sociaux et dressage non raccordés. Ne pas confondre davantage d’espèces générées avec davantage de boucles domestiques.
+
+Travail concret : développer récupération durable et handicaps, traitements et équipements médicaux avec acquisition réelle ; enrichir les relations et leurs conséquences jouées ; compléter les aptitudes et usages animaux utiles à une colonie et à ses voyages. Vérifier les frontières Core/DLC avant d’ajouter une naissance, une mécanique d’éducation ou un comportement de dressage. La précision des producteurs provisoires de PNJ reste séparée de ces règles de vie.
+
+**Critère observable :** un même habitant ou animal subit la situation, reçoit le service au contact, en conserve les effets puis reprend ou perd réellement ses activités ; ses possessions et liens survivent à la sauvegarde, au voyage et au retour. Une opération réussie dans une scène préparée ne prouve ni guérison générale ni campagne autonome. Les refus d’accès, réservations, interruptions et conséquences défavorables restent jouables.
+
+## 4. Développer narration, combat, quêtes et diplomatie
+
+**Présent :** incidents et narrateurs partiels, raids humains et menaces mécaniques ciblées, mobilisation, projectiles, mêlée, couvert et mini-tourelle ; quête locale et Sites ItemStash ; factions, contacts et relations mondiales utilisés par les fondations. **Partiel :** variété tactique, distribution des incidents, récompenses et conséquences narratives. **Manquant :** catalogue de quêtes et diplomatie actifs comparables au Core, stratégies et moyens de combat étendus. Un registre de factions ne constitue pas une diplomatie complète.
+
+Travail concret : compléter les occasions et conditions des narrateurs, les groupes hostiles et leurs stratégies, les armes et défenses manquantes ; relier les quêtes à des personnes/biens/lieux originaux avec délais, choix, échec et règlement ; donner aux relations de faction des changements et conséquences vérifiés, notamment échanges, aide, hostilité et accès. Poursuivre les Sites et rencontres d’une colonie sans rouvrir un chantier de plusieurs colonies.
+
+**Critère observable :** la situation est annoncée avec une information exploitable ; choix et actions physiques changent son déroulement. Renfort, récompense, fuite, perte ou changement de relation se produit une seule fois et se recharge exactement. La chronologie reste visible ; un scénario favorable préparé ne certifie pas les fréquences, l’équilibre ou la diversité d’une campagne.
+
+## 5. Raccorder une victoire jouable
+
+**Manquant :** une boucle de victoire Core effectivement raccordée et démontrée. Une carcasse de vaisseau, un caisson ancien ou un objectif affiché ne constituent pas une fin de partie.
+
+Travail concret : vérifier puis livrer une voie de sortie Core complète, avec progression technologique, acquisition et logistique, construction/activation ou déplacement vers l’objectif concerné, pression et défense, choix des partants, possessions et issue finale. Établir les dépendances avec industrie, recherche, combat, monde et sauvegarde avant d’implémenter les étapes ; ne pas attendre un catalogue exhaustif pour commencer cette chaîne. Les autres voies de victoire demeurent nommées séparément tant qu’elles ne sont pas jouables.
+
+**Critère observable :** le joueur peut atteindre la fin depuis une colonie ordinaire sans fabriquer l’état terminal dans le pilote. Préparation et péripéties ont un coût réel ; départs, laissés sur place et pertes conservent leurs identités. Pause/recharge pendant les étapes critiques ne duplique ni échéance ni résultat. L’écran et l’état final correspondent aux personnes réellement parties et permettent le comportement post-victoire prévu par la règle vérifiée.
+
+## 6. Qualifier les campagnes et préparer la version finale
+
+**Présent :** nombreux contrôles ciblés, parcours UI et reprises exactes, références préparées et portions de campagnes naturelles conservées. **Partiel/non vérifié :** survie durable dans les contextes ordinaires, renouvellements successifs, récupération après crise, progression jusqu’à la victoire, confort et mémoire en longue session. Une suite de tests ou une liste de démonstrations ne remplace pas ces parcours.
+
+Travail concret : reprendre les campagnes existantes à leurs checkpoints fiables ; exercer périodiquement besoins, saisons, stocks, entretien, soins, production, menace, voyage et retour, puis progression industrielle et victoire. Les parties doivent garder leurs conséquences défavorables ; ne pas reconstruire un monde avantageux pour effacer un échec. Entretenir Les Aulnes comme démonstration cohérente et les autres références selon leur fonction, en déclarant le patrimoine préparé et les usages réellement joués.
+
+**Critère observable :** une colonie traverse plusieurs renouvellements et incidents avec ses personnes et biens d’origine ; les sauvegardes, redémarrages et pertes sont conservés. Les manques de règles, défauts produit, limites de pilote et situations non exercées sont distingués. Les mesures longues portent sur la partie effectivement jouée. La qualification finale consolide les preuves acquises et les limites restantes sans rejouer automatiquement toutes les préparations historiques.
+
+## Organisation des lots et clôture
+
+Le lot suivant porte donc sur **les performances mesurées des Forges×1** ; viennent ensuite des chaînes fonctionnelles des ensembles2–5 selon leurs dépendances et les défauts révélés en partie. L’ensemble6 accompagne périodiquement cette progression ; ce n’est ni un préalable lourd à chaque changement ni une campagne repoussée après tout le développement. Le simple nombre de versions ou d’optimisations ne décide pas de l’ordre.
+
+Pour chaque lot, conserver une seule note canonique avec résultat joueur, quelques invariants, référence vérifiée, adaptation, travaux réalisés, contrôles et limites. Réutiliser [la stratégie de tests](testing.md) et [les critères de jouabilité](playability-validation.md) : passe ciblée groupée et court parcours pertinent ; présentation requise pour horloge/bridge/interpolation/phases ; régression élargie pour frontières transversales, campagnes longues périodiques ou motivées. Ne pas créer un nouveau protocole de preuve par incident. CPU, contrôles lourds et navigateur natif sont successifs, sources servies gelées.
+
+Les recherches Internet reviennent au début de chaque mécanique ou changement de règle, et lors d’une divergence avec le Core observé. Conserver version, provenance, décision adopter/adapter/différer/vérifier et identifiants du corpus applicables. Une recherche générale répétée ne remplace pas l’implémentation d’une tranche déjà comprise.
+
+Les agents prennent des tâches indépendantes bornées et des fichiers distincts ; ROOT intègre et conduit seul les contrôles lourds. Les commits/pushes autorisés et publications produit regroupées suivent les contrôles pertinents ; aucune publication pour QA seule. Les schémas, migrations strictes, PRNG, propriétaires et sauvegardes historiques restent des frontières permanentes.
+
+La version finale sera appréciée sur la cohérence des six ensembles : boucles Core promises effectivement jouables, voie de victoire atteignable, campagnes qualifiées, confort mesuré et limites explicites. Aucun nombre de définitions, pourcentage d’avancement ou objectif FPS isolé ne vaut clôture. Toute pause humaine ultérieure prime sur cette autonomie.

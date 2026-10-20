@@ -28,6 +28,15 @@ export function reconcileTemperature(world:World,layout=thermalLayout(world)):Th
   return layout;
 }
 
+/** One current cell, without allocating the all-cell view used by batch readers.
+ * Read the original region lists on every call, including public in-place edits.
+ * Reverse order preserves TemperatureView's last-write priority for overlaps. */
+export function temperatureAt(world:World,cell:Cell):number {
+  const index=cell.z*world.width+cell.x,regions=world.thermal?.regions;
+  for(let i=(regions?.length??0)-1;i>=0;i--)if(regions![i]!.cells.includes(index))return regions![i]!.temperature;
+  return outdoorTemperature(world);
+}
+
 export class TemperatureView {
   private temperatures?:Map<number,number>;
   private layout?:ThermalLayout;

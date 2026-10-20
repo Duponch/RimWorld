@@ -14,13 +14,13 @@ function plantLight(world:World,plant:Resource):number {
   let cache=lightCaches.get(world);if(!cache){cache=new LightEnvironmentCache();lightCaches.set(world,cache);}return cache.read(world).lightAt(plant);
 }
 import { harvestProductLabel, plantGrowth, harvestable, berryYield, plantResting, plantTemperatureFactorFor,choppable, sowingTemperatureAllowed, isPlant, plantFertility, PLANT_DEFINITIONS } from '../sim/plants';
-import { TemperatureView } from '../sim/temperature';
+import { temperatureAt } from '../sim/temperature';
 import type { Cell, Resource, World } from '../sim/types';
 import { hydroponicBasinAt } from '../sim/hydroponics';
 import { isPowerActive } from '../sim/power-rules';
 
 export function plantInspection(world:World,plant:Resource):string {
-  const temperature=new TemperatureView(world).at(world,plant),factor=plantTemperatureFactorFor(plant,temperature);
+  const temperature=temperatureAt(world,plant),factor=plantTemperatureFactorFor(plant,temperature);
   const constraints:string[]=[];let soil='';
   if(plant.blight)constraints.push(`Fléau des cultures · gravité ${Math.round(plant.blight.severity*100)} % · croissance arrêtée · contagieux à partir de 28 % · couper sans récolte pour contenir la propagation`);
   const basin=hydroponicBasinAt(world,plant);
@@ -43,5 +43,5 @@ export function plantInspection(world:World,plant:Resource):string {
 }
 
 export function growingTemperatureInspection(world:World,cell:Cell):string {
-  return sowingTemperatureAllowed(new TemperatureView(world).at(world,cell))?'':' · Nouveaux semis suspendus : température hors plage (0–58 °C exclus)';
+  return sowingTemperatureAllowed(temperatureAt(world,cell))?'':' · Nouveaux semis suspendus : température hors plage (0–58 °C exclus)';
 }

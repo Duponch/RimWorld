@@ -1,5 +1,11 @@
 # Plan de développement
 
+Schéma 263 inchangé.
+
+**20 octobre 2026 — mandat de complétion :** [plan canonique des six ensembles Core](development/core-completion-plan-20261020.md). Développement autonome vers une version finale, comparaisons régulières au Core et optimisation continue. Prochain lot : lectures d’environnement et coûts mesurés des Forges ×1 ; puis reprise de chaînes de gameplay cohérentes, sans subordonner tout contenu à une cible FPS. Une colonie reste la référence, voyages et cartes temporaires inclus ; les chronologies ci-dessous restent datées et ne constituent pas un inventaire exhaustif actuel.
+
+**V439 — schéma263 inchangé :** [Lectures locales d’environnement](development/environment-readers-v439.md). CPU chambre Forges Chrome13,509→7,084ms, textes et mondes conservés ; ciblés acquis et sept rouges anciens identiques au témoin. Aucun gain FPS global. Prochain lot fonctionnel : géothermie payée et utile sur les geysers existants.
+
 **V436 — sols inconnus et capsules, schéma263 inchangé :** [Correctifs visuels](development/ground-arrival-visuals-v436.md). Pigment de sol intégré, faces de murs opaques, terres géographiques couvertes d'herbe et chute/ouverture continues. 51cas ciblés acquis par reprises, 32faces Chrome et recharge entière exacte au40 ; rouges historiques et délais conservés, aucun gain FPS annoncé. Publié05de1776/déploiementc113c1a0,140réponses HTTPS exactes ; sauvegardes publiques préservées.
 
 **V423 — schéma 263 inchangé :** [Adoption des snapshots](development/snapshot-adoption-v423.md). Contrôles ciblés et présentation acquis par reprises, lecteurs publics et sauvegardes stricts. Chrome ×1 : coût moyen du Decoder −20,11% sur Les Aulnes, −24,13% sur le départ trois colons ; cadence d’image meilleure sur Aulnes, moins bonne sur le départ neuf dans ce relevé. Huit recharges complètes exactes ; confort global non rétabli. Publié c5bd4f97/déploiement84b9d5b0,136HTTPS exacts ; nettoyage du stockage demandé sans perdre les historiques.

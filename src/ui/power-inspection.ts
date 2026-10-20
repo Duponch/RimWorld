@@ -4,7 +4,7 @@ import { batteryWattDays } from '../sim/power-battery';
 import { solarUnroofedCells } from '../sim/solar-rules';
 import { annualNaturalLight } from '../sim/environment';
 import { windIntensity, windObstructions } from '../sim/wind-rules';
-import { TemperatureView } from '../sim/temperature';
+import { temperatureAt } from '../sim/temperature';
 import { sunLampActive, sunLampScheduled } from '../sim/sun-lamp';
 import { activeEclipse } from '../sim/eclipse';
 import { isRainElectricalKind, rainElectricalEligible } from '../sim/rain-electric';
@@ -98,7 +98,7 @@ export function powerInspection(world: World, structure: Structure, compact=fals
     if (obstacles) detail += ` · production réduite de ${Math.min(100, obstacles * 20)} % par les obstacles`;
     detail += ' · Les toits, rochers, arbres et bâtiments hauts gênent le vent. La coupe demande le travail réel d’un colon';
   } else if (structure.kind === 'heater') {
-    const temperature = new TemperatureView(world).at(world, structure);
+    const temperature = temperatureAt(world, structure);
     const state = structure.breakdown ? 'En panne' : structure.power.switchOn === false ? 'Arrêt manuel' : !isPowerActive(structure) ? 'Sans alimentation' : structure.heater?.high ? 'Chauffage' : 'Veille';
     detail = `Cible ${(structure.heater?.target ?? 21).toFixed(1)} °C · air ${temperature.toFixed(1)} °C · ${state} · demande ${watts(powerDemand(structure))} · chauffe l’air de la pièce fermée, sans refroidissement`;
   } else if (structure.kind === 'sun-lamp') {

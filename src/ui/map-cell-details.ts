@@ -4,7 +4,7 @@ import type { RoomBeautyCapture } from '../sim/room-beauty';
 import { captureRoomQuality } from '../sim/room-quality';
 import { roofKindAt } from '../sim/roof-rules';
 import { soilFertility } from '../sim/soil';
-import { TemperatureView } from '../sim/temperature';
+import { temperatureAt } from '../sim/temperature';
 import { ROOM_ROLE_LABEL, WorkEnvironmentCache } from '../sim/work-environment';
 import type { Cell, World } from '../sim/types';
 import {terrainSurfaceLabel,terrainSurfaceSpeed} from './terrain-inspection';
@@ -32,7 +32,7 @@ export function mapCellDetails(world: World, cell: Cell, lightLevel: number): Ma
   const speed = terrainSurfaceSpeed(world,index);
   const terrain = terrainSurfaceLabel(tile);
   const objects = mapHoverLines(world, cell, lightLevel).slice(tile.bridge?3:2).filter(line => !line.startsWith('Toit'));
-  const temperature = new TemperatureView(world).at(world, cell);
+  const temperature = temperatureAt(world, cell);
   const rows: MapCellDetails['rows'] = [];
   if (room && !room.psychologicallyOutdoors && room.role !== 'none') rows.push({ label: 'Pièce', value: ROOM_ROLE_LABEL[room.role] });
   const perceivedBeauty=beautyView.perceived(cell);
