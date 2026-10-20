@@ -15,7 +15,7 @@ const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.
 const storageKeys=new Set<string>(['furniture','plant',...Object.values(ITEM_DEFINITIONS).map(d=>d.kind)]);
 export function validShelfSettings(value:unknown,version:number):boolean {
   if(version<229||!object(value)||Reflect.ownKeys(value).some(k=>typeof k!=='string'||!['filters','priority','capacity','items','quality','hitPoints','allowFresh','allowRotten'].includes(k)))return false;
-  return object(value.filters)&&Reflect.ownKeys(value.filters).every(k=>typeof k==='string'&&storageKeys.has(k)&&(version>=256||k!=='jade')&&(version>=241||k!=='uranium')&&(version>=235||k!=='plant')&&typeof value.filters![k as never]==='boolean')
+  return object(value.filters)&&Reflect.ownKeys(value.filters).every(k=>typeof k==='string'&&storageKeys.has(k)&&(version>=265||k!=='wort'&&k!=='beer')&&(version>=256||k!=='jade')&&(version>=241||k!=='uranium')&&(version>=235||k!=='plant')&&typeof value.filters![k as never]==='boolean')
     &&integer(value.priority,1,5)&&value.capacity===500&&validStorageItems(value.items,version)&&validStorageConditions(value,version);
 }
 /** Reciprocal building/state admission, shared by files and snapshots. */

@@ -1,6 +1,6 @@
 import {ANIMAL_ITEM_DETERIORATION_256} from './animal-items-v256.ts';
 /** Restricted prospective catalogue. Core 1.6.4871 rates in mean HP/day. */
-export const DETERIORATION_RATES=Object.freeze({'raw-fungus':6,...ANIMAL_ITEM_DETERIORATION_256,wood:.5,cloth:4,'muffalo-wool':3.4,'light-leather':2,plainleather:2,bluefur:2,camelhide:2,foxfur:2,component:2,'advanced-component':2});
+export const DETERIORATION_RATES=Object.freeze({hops:6,wort:1,beer:.5,'raw-fungus':6,...ANIMAL_ITEM_DETERIORATION_256,wood:.5,cloth:4,'muffalo-wool':3.4,'light-leather':2,plainleather:2,bluefur:2,camelhide:2,foxfur:2,component:2,'advanced-component':2});
 export type DeteriorationItem=keyof typeof DETERIORATION_RATES;
 export const isDeteriorationItem=(v:unknown):v is DeteriorationItem=>typeof v==='string'&&Object.hasOwn(DETERIORATION_RATES,v);
 /** Local probability cadence, not the Core cell sampler. */

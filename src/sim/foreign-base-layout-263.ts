@@ -35,7 +35,7 @@ export function generateForeignBase400263(w:World,settlementId:number,factionId:
  const clear=(c:number)=>{const t=tileAt(c);if(t.mineable){const next=removedMineableTile256(t,t.mineable.id);if(!next)throw Error('Foreign base cannot retire its actual Mineable');tiles.set(c,next);}else if(t.terrain==='rock'||t.collapsedRock)throw Error('Unresolved foreign-base rock owner');return tileAt(c);};
  const add=(kind:StructureKind,x:number,z:number,material:Structure['material']='wood')=>{
   const original:Structure={id:nextId++,kind,x,z,orientation:0,footprint:'standard',material,factionId,...kind==='door'?{door:newDoorState(w.tick)}:{},...['bed','table','stool'].includes(kind)?{quality:'normal' as const}:{}};
-  if(kind==='shelf')original.shelf=newShelfStorage(footprintCells(original).map(()=>nextId++));
+  if(kind==='shelf')original.shelf=newShelfStorage(footprintCells(original).map(()=>nextId++),w.schemaVersion);
   const support=buildingSupportNeed256(original);if(!support)throw Error('Unresolved foreign-base building support');
   for(const p of footprintCells(original)){const c=p.z*w.width+p.x;if(p.x<rect.minX||p.z<rect.minZ||p.x>rect.maxX||p.z>rect.maxZ||occupied.has(c)||w.resources.some(r=>r.x===p.x&&r.z===p.z)||w.piles.some(i=>i.owner.type==='ground'&&i.owner.x===p.x&&i.owner.z===p.z)||!terrainSupportsAffordance256(clear(c),support,w))throw Error('Actual foreign-base building cannot be placed');occupied.add(c);}
   structures.push(original);return original;

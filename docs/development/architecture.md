@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V441 — schéma 265, qualifié localement :** [Brassage, fermentation et alcool](../gameplay/brewing-v441.md). Filière physique houblon → moût → bière, politiques partagées et clinique prospective. 60 nouveaux cas acquis par reprises ; un rouge historique de repos en caravane conservé. Présentation et UI native muette acquises ; publication en préparation, production publique V440 conservée. Aucune parité Core ni amélioration FPS annoncée.
+
 **V440 — schéma 264 :** [Chaîne géothermique](../gameplay/geothermal-power-v440.md). Recherche, construction payée sur geyser existant, 3 600 W, chaleur, entretien, retrait et continuation ; 33cas ciblés acquis par reprises, présentation et construction UI acquises. Migration neutre des trois références ; onze rouges historiques identiques au témoin conservés. Aucun gain FPS global ni clôture Core annoncé.
 
 **V435 — lots statiques et révisions du rendu :** [Sélection et coûts restants](render-spatial-v435.md). Pages géométriques résidentes et copies par plages, arêtes de mouvement réutilisées, révisions opaques explicitement suivies ; voies publiques et ombres natives conservées, schéma263 inchangé. Rotation×1 Forges87,28→113,42FPS, Éclaircies181,13→202,58 et Aulnes221,23→231,32 ; 66cas et présentation acquis, recharges entières strictes. ×6 meilleur en images sans débit physique tenu, ×3 non amélioré, pause/maxima mixtes. Publié15adc35b/déploiementc0e48e2f,140réponses HTTPS exactes ; aucun200FPS stable. Applications denses et coût partagé des programmes de rendu restent ouverts.

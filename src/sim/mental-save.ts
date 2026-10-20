@@ -13,6 +13,7 @@ export function validMentalShape(value:unknown,version:number,tick:number,width:
   const c=value.crisis;if(c===undefined)return true;
   if(!object(c)||typeof c.kind!=='string'||!Object.hasOwn(MENTAL_CRISIS_CATALOG,c.kind)||c.kind==='food-binge'&&version<150||!['sad-wander','food-binge'].includes(c.kind)&&version<192)return false;
   if(c.kind==='confused-wander'&&(version<256||!Object.hasOwn(value,'wander')))return false;
+  if(c.kind==='drug-binge'&&version!==265)return false;
   const rules=MENTAL_CRISIS_CATALOG[c.kind as keyof typeof MENTAL_CRISIS_CATALOG];
   if(!integer(c.age,0,rules.maxCore+(c.kind==='murderous-rage'?19:-1))||c.age%30!==0||typeof c.waitUntil!=='number'||!Number.isFinite(c.waitUntil)||c.waitUntil<0||c.waitUntil>tick+20.1||!(c.target===null||object(c.target)&&keys(c.target,['x','z'])&&integer(c.target.x,0,width-1)&&integer(c.target.z,0,height-1)))return false;
   const base=['kind','age','target','waitUntil'];
@@ -31,7 +32,8 @@ export function validateMental(world:World,version:number):string[] {
     const m=p.mental;if(m===undefined)continue;
     if(!isColonist(p)&&!(version>=256&&m.wander&&(!m.crisis||m.crisis.kind==='confused-wander'))||!validMentalShape(m,version,world.tick,world.width,world.height)){errors.push('Invalid mental state.');continue;}
     const c=m.crisis;if(!c)continue;
-    const aggressive=c.kind!=='sad-wander'&&c.kind!=='food-binge'&&c.kind!=='confused-wander';
+    const aggressive=c.kind!=='sad-wander'&&c.kind!=='food-binge'&&c.kind!=='confused-wander'&&c.kind!=='drug-binge';
+    if(c.kind==='drug-binge'&&(p.prisoner||p.visitor||p.podRescue||p.raid))errors.push('Invalid alcohol binge owner.');
     if(aggressive&&(p.prisoner||p.visitor||p.podRescue||p.raid))errors.push('Invalid aggressive crisis owner.');
     if('targetId' in c&&c.targetId!==null) {
       if(c.targetId>=world.nextId||c.targetId===p.id)errors.push('Invalid mental target identity.');

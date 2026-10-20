@@ -1,3 +1,4 @@
+import {fermentationStatusKey265,fermentationStatusParts265} from './brewing-parts265';
 import {GEOTHERMAL_VENT_264,geothermalSteam264,harvestedGeyserIds264} from './geothermal-parts264';
 import {knownSpawnedThing256} from '../sim/exploration-visibility-256';
 import {geyserCells256} from '../sim/local-geyser-state-256';
@@ -196,6 +197,8 @@ export class StructureVfxLayer {
         const cells=footprintCells(s),last=cells[cells.length-1]!,x=(s.x+last.x)/2,z=(s.z+last.z)/2;
         const level=s.breakdown?0:Math.min(4,Math.max(0,Math.ceil((s.battery?.stored??0)/BATTERY_CAPACITY*4)));
         tokens.push(`${s.id}:battery:${x}:${z}:${s.orientation}:${level}`);
+      }else if(s.kind==='fermenting-barrel'){
+        tokens.push(fermentationStatusKey265(s));
       }else if(s.kind==='biofuel-refinery'){
         tokens.push(`${s.id}:biofuel-refinery:${s.x}:${s.z}:${s.orientation}:${on}`);
       }else if(s.kind==='geothermal-generator'){
@@ -311,6 +314,9 @@ export class StructureVfxLayer {
           const ry=s.orientation*Math.PI/2,dx=(i-1.5)*.15,cs=Math.cos(ry),sn=Math.sin(ry);
           glow.push({x:x+dx*cs,y:1.012,z:z-dx*sn,sx:.105,sy:.026,sz:.24,ry,color:i===3?0x87dcc7:i===2?0xa7d792:0xe4af67});
         }
+      }else if(s.kind==='fermenting-barrel'){
+        tokens.push(fermentationStatusKey265(s));
+        for(const part of fermentationStatusParts265(s))glow.push({x:part.x,y:part.y,z:part.z,sx:part.sx!,sy:part.sy!,sz:part.sz!,ry:part.ry??0,color:part.color!});
       }else if(s.kind==='biofuel-refinery'){
         tokens.push(`${s.id}:biofuel-refinery:${s.x}:${s.z}:${s.orientation}:${on}`);
         if(on){

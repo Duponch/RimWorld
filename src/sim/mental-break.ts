@@ -1,4 +1,5 @@
 import {processHumanConfusedWander256,recoverHumanConfusion256} from './human-condition-mind-256.ts';
+import {alcoholBingeAdmission265,processAutomaticAlcohol265} from './alcohol-ingestion-265.ts';
 import { expireMentalCatharsisAt } from './mental-state.ts';
 import { BREAK_MTB_DAYS,finishMentalBreak,mentalState } from './mental-state.ts';
 import { breakThresholds,minorBreakThreshold } from './traits.ts';
@@ -42,6 +43,10 @@ function startMinorBreak(world:World,pawn:Pawn,kind:'sad-wander'|'food-binge'):b
 }
 export const startSadWander=(world:World,pawn:Pawn):boolean=>startMinorBreak(world,pawn,'sad-wander');
 export const startFoodBinge=(world:World,pawn:Pawn):boolean=>startMinorBreak(world,pawn,'food-binge');
+export function startAlcoholBinge265(world:World,pawn:Pawn,budget?:SearchBudget,admitted=false):boolean {
+ if(!admitted&&alcoholBingeAdmission265(world,pawn,budget)!==true)return false;
+ return commitBreak(world,pawn,{kind:'drug-binge',age:0,target:null,waitUntil:world.tick});
+}
 function startAggressiveBreak(world:World,pawn:Pawn,kind:AggressiveCrisisKind,admitted?:AggressiveCrisisAdmission):boolean {
   if(world.schemaVersion<192||moodFrozen(pawn))return false;
   const admission=admitted??aggressiveCrisisAdmission(world,pawn,kind);
@@ -65,6 +70,11 @@ export function updateMentalBreak(world:World,pawn:Pawn,budget?:SearchBudget):vo
   // The arrested person's current interval stays clinical, while no new
   // mental job can replace the body owned by the actual carrier.
   if(world.schemaVersion>=213&&carrierOf(world,pawn.id)?.rescue?.arrest)return;
+  const alcohol=pawn.health?.alcohol;
+  if(alcohol?.bingeRequestedAt!==undefined){
+    if(alcohol.bingeRequestedAt<(world.tick-1)*10||pawn.mental?.crisis||moodFrozen(pawn)||pawn.state==='downed')delete alcohol.bingeRequestedAt;
+    else {const admission=alcoholBingeAdmission265(world,pawn,budget);if(admission!==null){delete alcohol.bingeRequestedAt;if(admission){startAlcoholBinge265(world,pawn,budget,true);m=pawn.mental;}}}
+  }
   if(m?.crisis) {
     if(pawn.state==='downed'||moodFrozen(pawn)){finishMentalBreak(world,pawn);return;}
     if((world.tick+pawn.id)%3===0) {
@@ -102,12 +112,14 @@ export function updateMentalBreak(world:World,pawn:Pawn,budget?:SearchBudget):vo
       if(admission===null)return;
       if(admission)options.push({kind,admission,weight:MENTAL_CRISIS_CATALOG[kind].weight*(kind==='murderous-rage'?murderousRageWeight(admission.population):1)});
     }
+    if(intensity===1&&world.schemaVersion===265&&!pawn.prisoner){const admission=alcoholBingeAdmission265(world,pawn,budget);if(admission===null)return;if(admission)options.push({kind:'drug-binge',weight:1});}
     if(options.length)break;
   }
   if(!options.length||healthRandom(world)>=150/(BREAK_MTB_DAYS[Math.max(0,level)]!*60000))return;
   let roll=healthRandom(world)*options.reduce((sum,c)=>sum+c.weight,0);
   const chosen=options.find(c=>(roll-=c.weight)<0)??options.at(-1)!;
   if(chosen.kind==='sad-wander'||chosen.kind==='food-binge')startMinorBreak(world,pawn,chosen.kind);
+  else if(chosen.kind==='drug-binge')startAlcoholBinge265(world,pawn,budget,true);
   else startAggressiveBreak(world,pawn,chosen.kind,chosen.admission);
 }
 
@@ -126,6 +138,7 @@ export function processMentalBreak(world:World,pawn:Pawn,context:NeedContext,can
     if(moodFrozen(pawn))finishMentalBreak(world,pawn);
     return;
   }
+  if(crisis.kind==='drug-binge'&&!pawn.interruptedCargo&&processAutomaticAlcohol265(world,pawn,context)){crisis.target=null;return;}
   if(crisis.target) {
     if(!canStandAt(world,crisis.target)||reservedServiceCells(world,pawn.id).has(crisis.target.z*world.width+crisis.target.x)) {
       crisis.target=null;pawn.path=[];pawn.state='idle';crisis.waitUntil=world.tick+1;return;

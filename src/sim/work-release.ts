@@ -84,7 +84,7 @@ export function planCommandDrops(world:World,command:Command|import('./cave-glow
     const pawn=world.pawns.find(p=>p.id===command.pawnId),job=world.jobs.find(j=>j.id===pawn?.jobId);
     if(pawn?.ward&&command.work==='warden'||pawn?.animalHandling&&command.work==='handle'||(pawn?.animalCare||pawn?.animalFeed||pawn?.animalRescue)&&command.work==='doctor')pawns.add(pawn.id);
     if(pawn?.burial&&command.work==='haul'&&pawn.orders.active!=='bury'||pawn?.cleaning&&!pawn.cleaning.forced&&command.work==='clean')pawns.add(pawn!.id);
-    if(pawn&&((pawn.surgery&&command.work==='doctor')||(pawn.tend&&command.work==='doctor'&&pawn.orders.active!=='tend')||(pawn.feed&&command.work===feedingWork(world.pawns.find(p=>p.id===pawn.feed!.patientId))&&pawn.orders.active!=='feed')||(pawn.haul&&pawn.orders.active!=='haul'&&command.work===haulingWork(pawn.haul.destination))||(job&&workType(job)===command.work&&pawn.orders.active===null)||(pawn.cooking&&pawn.orders.active!=='cook'&&command.work === taskWork(pawn.cooking))))pawns.add(pawn.id);
+    if(pawn&&((pawn.surgery&&command.work==='doctor')||(pawn.tend&&command.work==='doctor'&&pawn.orders.active!=='tend')||(pawn.feed&&command.work===feedingWork(world.pawns.find(p=>p.id===pawn.feed!.patientId))&&pawn.orders.active!=='feed')||(pawn.brewing&&command.work==='haul')||(pawn.haul&&pawn.orders.active!=='haul'&&command.work===haulingWork(pawn.haul.destination))||(job&&workType(job)===command.work&&pawn.orders.active===null)||(pawn.cooking&&pawn.orders.active!=='cook'&&command.work === taskWork(pawn.cooking))))pawns.add(pawn.id);
   } else if(command.type==='bill-remove'||command.type==='bill-update') {
     for(const pawn of world.pawns)if(pawn.cooking?.billId===command.billId&&pawn.cooking.stationId===command.structureId
       &&!(pawn.cooking.recipe==='burn-apparel'&&hasTravellingCargo(world,pawn)))pawns.add(pawn.id);
@@ -204,7 +204,7 @@ export function releaseAssignments(world:World,pawn:Pawn,despawning=false):void 
  * notifiers must run first on their actual owners; private preflight may reuse
  * this half only after checking that it has no cross-actor notifier. */
 export function clearReleasedPawnAssignments259(pawn:Pawn):void {
-  delete pawn.orbitalTrade;delete pawn.deepWork;delete pawn.animalHandling;delete pawn.animalCare;delete pawn.animalFeed;delete pawn.burial;delete pawn.cleaning;delete pawn.trade;delete pawn.firefighting;delete pawn.ward;delete pawn.heatRefuge;delete pawn.research;delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
+  delete pawn.brewing;delete pawn.orbitalTrade;delete pawn.deepWork;delete pawn.animalHandling;delete pawn.animalCare;delete pawn.animalFeed;delete pawn.burial;delete pawn.cleaning;delete pawn.trade;delete pawn.firefighting;delete pawn.ward;delete pawn.heatRefuge;delete pawn.research;delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
   delete pawn.rescue;delete pawn.animalRescue;delete pawn.surgery;delete pawn.hunting;delete pawn.openCasket;
   delete pawn.transitExit;
   pawn.orders.active=null;

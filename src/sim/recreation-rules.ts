@@ -3,16 +3,16 @@ import { TICKS_PER_DAY, type Cell, type Pawn, type World } from './types.ts';
 import { pawnBody } from './health-rules.ts';
 
 export const RECREATION_KINDS = ['solitary', 'dexterity', 'cerebral', 'social', 'television'] as const;
-export type RecreationKind = typeof RECREATION_KINDS[number];
+export type RecreationKind = typeof RECREATION_KINDS[number] | 'chemical';
 export type RecreationActivity = 'skygaze' | 'horseshoes' | 'chess' | 'social-relax' | 'visit-sick' | 'watch-television';
 export interface RecreationTask { activity: RecreationActivity; target: Cell; buildingId: number | null; seatId?: number; patientId?: number; phase: 'travel' | 'active'; elapsed: number }
-export interface RecreationNeed { level: number; tolerance: Record<RecreationKind, number>; bored: Record<RecreationKind, boolean>; task: RecreationTask | null }
+export interface RecreationNeed { level: number; tolerance: Record<typeof RECREATION_KINDS[number], number>&{chemical?:number}; bored: Record<typeof RECREATION_KINDS[number], boolean>&{chemical?:boolean}; task: RecreationTask | null }
 export const RECREATION_DURATION = 400;
 export const VISIT_SICK_DURATION = 150;
 export const RECREATION_GAIN = 36 * 24 / TICKS_PER_DAY;
 // Extremely low expectations. Wealth-derived expectations await the economy.
 export const TOLERANCE_FALL = 18 / TICKS_PER_DAY;
-export const recreationKind = (activity: RecreationActivity): RecreationKind => activity === 'horseshoes' ? 'dexterity' : activity === 'chess' ? 'cerebral' : activity === 'watch-television' ? 'television' : activity === 'social-relax'||activity === 'visit-sick' ? 'social' : 'solitary';
+export const recreationKind = (activity: RecreationActivity): typeof RECREATION_KINDS[number] => activity === 'horseshoes' ? 'dexterity' : activity === 'chess' ? 'cerebral' : activity === 'watch-television' ? 'television' : activity === 'social-relax'||activity === 'visit-sick' ? 'social' : 'solitary';
 export const initialRecreation = (level = 55): RecreationNeed => ({level, tolerance: {solitary: 0, dexterity: 0, cerebral: 0, social: 0, television:0}, bored: {solitary: false, dexterity: false, cerebral: false, social: false, television:false}, task: null});
 
 export function updateRecreation(pawn: Pawn,body?:import('./body-capacities.ts').BodyAssessment,toleranceFall=TOLERANCE_FALL,elapsedLocal=1): void {
@@ -24,16 +24,18 @@ export function updateRecreation(pawn: Pawn,body?:import('./body-capacities.ts')
     joy.tolerance[kind] = Math.max(0, joy.tolerance[kind] - toleranceFall);
     if (joy.tolerance[kind] < 30) joy.bored[kind] = false;
   }
+  if(joy.tolerance.chemical!==undefined){joy.tolerance.chemical=Math.max(0,joy.tolerance.chemical-toleranceFall);if(joy.tolerance.chemical<30)joy.bored.chemical=false;}
   if (pawn.state !== 'recreating' || joy.task?.phase !== 'active') {
     const factor = joy.level < 1 ? 1 : joy.level < 15 ? .4 : joy.level < 30 ? .7 : 1;
     joy.level = Math.max(0, joy.level - 60 / TICKS_PER_DAY * factor * elapsedLocal);
   }
 }
 export function gainRecreation(joy: RecreationNeed, kind: RecreationKind, amount = RECREATION_GAIN): number {
-  const gained = Math.min(100 - joy.level, Math.max(0, amount) * (1 - joy.tolerance[kind] / 100));
+  const gained = Math.min(100 - joy.level, Math.max(0, amount) * (1 - (joy.tolerance[kind]??0) / 100));
   joy.level += gained;
-  joy.tolerance[kind] = Math.min(100, joy.tolerance[kind] + gained * .65);
-  if (joy.tolerance[kind] > 50) joy.bored[kind] = true;
+  joy.tolerance[kind] = Math.min(100, (joy.tolerance[kind]??0) + gained * .65);
+  if(kind==='chemical'&&joy.bored.chemical===undefined)joy.bored.chemical=false;
+  if (joy.tolerance[kind]! > 50) joy.bored[kind] = true;
   return gained;
 }
 export const recreationMood = (level: number): number => level < 1 ? -20 : level < 15 ? -10 : level < 30 ? -5 : level < 70 ? 0 : level < 85 ? 5 : 10;

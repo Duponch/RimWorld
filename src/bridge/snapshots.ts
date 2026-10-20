@@ -1,4 +1,7 @@
-import {validGeothermalResearchTransport} from '../sim/research-save.ts';
+import {validAlcoholWorld265} from '../sim/alcohol-state-265.ts';
+import {validBrewingHistoricalTransport265} from '../sim/brewing-catalogue-save-265.ts';
+import {validFermentationWorld265} from '../sim/fermentation-save-265.ts';
+import {validBrewingResearchTransport265,validGeothermalResearchTransport} from '../sim/research-save.ts';
 import {validGeothermalWorld264} from '../sim/geothermal-state-264.ts';
 import {registerProjectedWorldSites263} from '../sim/world-sites-projection-save-263.ts';
 import {validWorldAffiliationFields259,validWorldAffiliationForeignKeys259} from '../sim/world-affiliation-259.ts';
@@ -701,6 +704,7 @@ function prepareStructureChanges(previous:World,world:Pick<World,'nextId'|'width
 function validPile(pile:MaterialPile,world:World|DynamicWorld,deferAnimalHolder=false):boolean {
   if(!pile||typeof pile!=='object'||Array.isArray(pile)||!Number.isSafeInteger(pile.id)||pile.id<1||pile.id>=world.nextId
     ||typeof pile.item!=='string'||!Object.hasOwn(ITEM_DEFINITIONS,pile.item))return false;
+  if(world.schemaVersion<265&&['hops','wort','beer'].includes(pile.item))return false;
   if(pile.item==='pemmican'&&world.schemaVersion<248)return false;
   if(pile.item==='nutrient-paste-meal'&&world.schemaVersion<217)return false;
   if(pile.item==='chemfuel'&&(world.schemaVersion<218||pile.rot!==undefined))return false;
@@ -1455,6 +1459,8 @@ export class SnapshotDecoder {
     if(!validSmeltingTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Fonderie, filtre, arme ou propriétaire de fusion invalide ou futur.');
     if(!validNutrientPasteTransport(next,next.schemaVersion,powerTopology))return resync('Pâte nutritive, source ou transport invalide.');
     if(!validOrbitalTransport(next,next.schemaVersion,powerTopology,identities))return resync('État orbital, propriétaire ou contact invalide.');
+    if(!validAlcoholWorld265(next,next.schemaVersion))return resync('Alcool, politique ou propriétaire invalide.');
+    if(!validBrewingHistoricalTransport265(message,next.schemaVersion)||!validFermentationWorld265(next,next.schemaVersion)||!validBrewingResearchTransport265(next,next.schemaVersion))return resync('Brassage, fermentation ou propriétaire invalide.');
     if(!validGeothermalWorld264(next,next.schemaVersion)||!validGeothermalResearchTransport(next,next.schemaVersion))return resync('Géothermie, phase ou propriétaire invalide.');
     if(!validDeepDrillingTransport(next,next.schemaVersion)||!validDeepResearchTransport(next,next.schemaVersion))return resync('Gisement, travail ou recherche de forage invalides.');
     if(validateHydroponics(next,next.schemaVersion,powerTopology,identities,validation.geometry).length)return resync('Bac hydroponique, culture liée ou alimentation incohérents.');

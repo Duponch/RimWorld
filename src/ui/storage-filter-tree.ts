@@ -24,6 +24,8 @@ export const STORAGE_FILTER_TREE:readonly StorageFilterNode[]=[
   ]),
   branch('manufactured','Produits manufacturés',[
     branch('medicines','Médicaments',kind('medicine')),
+    branch('brewing-products','Brassage',leaves(id=>id==='wort'||id==='beer')),
+    branch('brewing-plants','Matières végétales',leaves(id=>id==='hops')),
     branch('textiles','Textiles',[
       branch('leathers','Cuirs',leaves((id,k)=>k==='textile'&&id!=='cloth'&&id!=='muffalo-wool')),
       branch('wools','Laines',leaves(id=>id==='muffalo-wool')),

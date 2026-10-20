@@ -27,6 +27,7 @@ export function newCookingBill(id:number,recipe:ProductionRecipe='simple-meal',v
     ...isCremationRecipe(recipe)?{cremationFilter:{colonists:true,strangers:true,fresh:true,rotting:true,desiccated:true}}:{}};
 }
 export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-meal',version:number=SCHEMA_VERSION):value is BillSettings {
+  if(recipe==='brew-wort'&&version<265)return false;
   if(recipe==='smelt-slag'&&version<256)return false;
   if(isBurnApparelRecipe(recipe)&&version<251)return false;
   if(isPemmicanRecipe(recipe)&&version<248)return false;
@@ -47,10 +48,10 @@ export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-
   return Object.keys(v).every(k=>['id','recipe','mode','target','suspended','filters','radius','destination',...smelting?['smeltFilter']:[],...cremation?['cremationFilter']:[]].includes(k))
     &&(smelting||cremation?['times','forever']:['times','until','forever']).includes(v.mode)&&Number.isSafeInteger(v.target)&&v.target>=0&&v.target<=9999
     &&typeof v.suspended==='boolean'&&!!v.filters&&typeof v.filters==='object'&&!Array.isArray(v.filters)
-    &&Object.keys(v.filters).every(i=>(PRODUCTION_RECIPES[recipe].inputs as readonly string[]).includes(i)&&(version>=256||!isFutureEcologyItem256(i))&&(version>=197||!V219_ITEM_IDS.some(future=>future===i)))
+    &&Object.keys(v.filters).every(i=>(PRODUCTION_RECIPES[recipe].inputs as readonly string[]).includes(i)&&(version>=265||i!=='hops')&&(version>=256||!isFutureEcologyItem256(i))&&(version>=197||!V219_ITEM_IDS.some(future=>future===i)))
     // Old carcass filters stay absent after migration and therefore reject new
     // sources. Only a new bill or explicit settings can opt into those inputs.
-    &&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||(isFutureEcologyItem256(i)||V219_ITEM_IDS.some(future=>future===i)||(['milk','muffalo-wool'].includes(i)?version<120:['hare-meat','potato','corn',...V91_ITEM_IDS,...V190_ITEM_IDS].includes(i)))&&v.filters[i]===undefined)
+    &&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||(i==='hops'&&recipe!=='brew-wort'||isFutureEcologyItem256(i)||V219_ITEM_IDS.some(future=>future===i)||(['milk','muffalo-wool'].includes(i)?version<120:['hare-meat','potato','corn',...V91_ITEM_IDS,...V190_ITEM_IDS].includes(i)))&&v.filters[i]===undefined)
     &&Number.isFinite(v.radius)&&v.radius>=0&&v.radius<=999&&(cremation||isBurnApparelRecipe(recipe)?v.destination==='drop':['stockpile','drop'].includes(v.destination));
 }
 /** Reference resource counter includes stored items and current task cargo.

@@ -58,7 +58,7 @@ function wander(w:World,p:Pawn,c:AggressiveCrisis,getBlocked:NavigationGrid,budg
 }
 
 export function processAggressiveCrisis(w:World,p:Pawn,getBlocked:NavigationGrid,budget:SearchBudget,getLight:LightReader,context:NeedContext):void {
-  const current=p.mental?.crisis;if(!current||current.kind==='sad-wander'||current.kind==='food-binge'||current.kind==='confused-wander')return;
+  const current=p.mental?.crisis;if(!current||current.kind==='sad-wander'||current.kind==='food-binge'||current.kind==='confused-wander'||current.kind==='drug-binge')return;
   const c=current,core=w.tick*10;
   collapseFromExhaustion(w,p,context);
   if(moodFrozen(p)){finishMentalBreak(w,p,p.state!=='dead');return;}

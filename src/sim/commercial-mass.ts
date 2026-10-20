@@ -19,6 +19,7 @@ const TEXTILE=Object.freeze({tribalwear:500,shirt:300,pants:500,duster:2000,park
  * Quality, HP and the seven represented stuffs do not alter these masses. */
 export function commercialItemMassGrams(item:ItemId,version:number=SCHEMA_VERSION):number|undefined {
   if(version<256&&isCoreStartingApparel256(item))return undefined;
+  if(item==='hops'||item==='wort'||item==='beer')return version>=265?(item==='hops'?30:item==='wort'?800:300):undefined;
   if(item==='jade')return version>=256?500:undefined;
   if(item==='slag-steel-chunk')return version>=256?8000:undefined;
   if(item==='raw-fungus')return version>=256?30:undefined;

@@ -12,6 +12,7 @@ export function serviceCell(pawn: Pawn,world?:Pick<World,'structures'>): Cell | 
   if(pawn.need?.kind==='eat'&&pawn.need.paste&&(pawn.need.phase==='pickup'||pawn.need.phase==='collect'))return pawn.need.paste.spot;
   if(pawn.feed?.paste&&(pawn.feed.phase==='pickup'||pawn.feed.phase==='collect'))return pawn.feed.paste.spot;
   if(pawn.orbitalTrade)return pawn.orbitalTrade.spot;
+  if(pawn.brewing)return pawn.brewing.spot;
   if(pawn.deepWork)return pawn.deepWork.spot;
   if(pawn.surgery)return pawn.surgery.spot;
   if(pawn.animalCare)return pawn.animalCare.spot;

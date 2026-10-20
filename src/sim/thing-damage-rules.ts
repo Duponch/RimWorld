@@ -10,6 +10,7 @@ import { floraDefinition } from './biome-flora.ts';
 
 /** Only shipped definitions. Missing/non-HP things are deliberately not fuels. */
 const BUILDINGS:Readonly<Record<string,readonly [number,number,boolean]>>={
+  brewery:[180,1,true],'fermenting-barrel':[100,1,true],
   'insect-hive':[130,1,false],'glow-pod':[50,1,false],
   'ship-chunk':[300,0,false],
   'ancient-cryptosleep-casket':[250,1,false],
@@ -53,6 +54,7 @@ export const resourceFlammability=(r:Pick<Resource,'kind'|'species'>)=>floraDefi
 export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=193):number {
   if(version<256&&(p.item==='flak-pants'||p.item==='plasteel-flak-helmet'))return 0;
   if(p.item==='slag-steel-chunk')return version>=256?300:0;
+  if(p.item==='hops'||p.item==='wort'||p.item==='beer')return version>=265?(p.item==='beer'?50:60):0;
   if(p.item==='raw-fungus')return version>=256?60:0;
   if(isAnimalItem256(p.item))return version>=256?(ANIMAL_ITEM_HP_256 as Readonly<Record<string,number>>)[p.item]??(p.kind==='corpse'?100:0):0;
   if(version>=256&&p.item==='steel')return 100;
@@ -66,6 +68,7 @@ export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=193):number
 }
 export function pileFlammability(p:Pick<MaterialPile,'kind'|'item'>):number {
   if(isAnimalItem256(p.item))return (ANIMAL_ITEM_FLAMMABILITY_256 as Readonly<Record<string,number>>)[p.item]??(p.kind==='corpse'?.7:0);
+  if(p.item==='hops')return 1;if(p.item==='wort')return .2;if(p.item==='beer')return .5;
   if(p.kind==='plant')return .8;
   if(p.item==='recon-armor')return .4;
   if(p.item==='plasteel-flak-helmet')return 0;

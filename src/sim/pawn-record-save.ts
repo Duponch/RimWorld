@@ -68,6 +68,7 @@ export function validateAwayPawnRecordShape(item:Record<string,unknown>,context:
 function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,version:number,validationTick:number,detached:boolean,awayAreaIds?:ReadonlySet<number>):string[] {
   const input=world as unknown as Record<string,unknown>;
   const legacyV2=version===2, size=world.width*world.height, errors:string[]=[];
+  if(Object.hasOwn(item,'brewing')&&(version<265||detached))return ['Invalid or future detached fermentation task.'];
   if(!validWorldAffiliationFields259(item,version)||Object.hasOwn(item,'prisonerHistory259')&&!validPrisonerStateRecord259(item.prisonerHistory259,version,input as unknown as World,true))return ['Invalid or future actual guest affiliation/history.'];
   if((!detached||Object.hasOwn(world,'worldFactions'))&&!validWorldAffiliationForeignKeys259(item as unknown as import('./types.ts').Pawn,world.worldFactions))return ['Invalid actual Pawn faction/host foreign key.'];
   if(!validNativeHumanField256(item,version))errors.push('Invalid or future actual native human identity.');
@@ -155,7 +156,7 @@ function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,ver
   const haul = item.haul;
   if(record(haul)&&haul.whole!==undefined&&(version<26||haul.whole!==true||haul.quantity!==1||!record(haul.destination)||!['stockpile','aside'].includes(String(haul.destination.type))))errors.push('Invalid whole furniture haul shape.');
   if(record(haul)&&record(haul.destination)&&('growingZoneId' in haul.destination||'sowCell' in haul.destination)&&(version<20||!validSowingDestination(haul.destination,input as unknown as World)))errors.push('Invalid sowing clearance shape.');
-  if(record(haul)&&haul.serviceProgress!==undefined&&(version<10||!record(haul.destination)||!(haul.destination.type==='fuel'||version>=193&&haul.destination.type==='turret')||haul.phase!=='deliver'||!integer(haul.serviceProgress,1,23)))errors.push('Invalid refuel interaction progress.');
+  if(record(haul)&&haul.serviceProgress!==undefined&&(version<10||!record(haul.destination)||!(haul.destination.type==='fuel'||version>=193&&haul.destination.type==='turret'||version>=265&&haul.destination.type==='fermenting-barrel')||haul.phase!=='deliver'||!integer(haul.serviceProgress,1,23)))errors.push('Invalid refuel interaction progress.');
   if(record(haul)&&record(haul.destination)&&haul.destination.forced!==undefined&&(version<19||!(haul.destination.type==='fuel'||version>=193&&haul.destination.type==='turret')||haul.destination.forced!==true))errors.push('Invalid forced refuel flag.');
   if(record(haul)&&record(haul.destination)&&haul.destination.forCooking!==undefined&&(haul.destination.type!=='fuel'||typeof haul.destination.forCooking!=='boolean'))errors.push('Invalid cooking refuel purpose.');
   if(record(haul)&&record(haul.destination)&&haul.destination.type==='turret'&&(version<193||Object.keys(haul.destination).some(k=>!['type','structureId','forced'].includes(k))))errors.push('Invalid turret service destination.');
@@ -184,7 +185,7 @@ function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,ver
     if (record(haul) && haul.pickupCell!==undefined && (version<6 || haul.phase!=='deliver' || !record(haul.pickupCell) || !coord(haul.pickupCell))) errors.push('Invalid pickup facing cell.');
     if (!record(haul) || !integer(haul.sourcePileId, 1) || !integer(haul.quantity, 1, CARRY_CAPACITY) || !oneOf(haul.phase, ['pickup', 'deliver'])
       || !(haul.carryPileId === null || integer(haul.carryPileId, 1)) || !record(haul.destination)
-      || !(haul.destination.type === 'job' ? integer(haul.destination.jobId, 1) : (haul.destination.type === 'fuel' && version>=10 ||haul.destination.type==='turret'&&version>=193||haul.destination.type==='hopper'&&version>=217) ? integer(haul.destination.structureId,1) : haul.destination.type === 'stockpile' ? integer(haul.destination.stockpileId, 1) : version >= 9 && haul.destination.type === 'aside' && coord(haul.destination))) errors.push('Invalid haul task.');
+      || !(haul.destination.type === 'job' ? integer(haul.destination.jobId, 1) : (haul.destination.type === 'fuel' && version>=10 ||haul.destination.type==='turret'&&version>=193||haul.destination.type==='hopper'&&version>=217||haul.destination.type==='fermenting-barrel'&&version>=265) ? integer(haul.destination.structureId,1) : haul.destination.type === 'stockpile' ? integer(haul.destination.stockpileId, 1) : version >= 9 && haul.destination.type === 'aside' && coord(haul.destination))) errors.push('Invalid haul task.');
   }
   return errors;
 }

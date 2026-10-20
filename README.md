@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V441 — schéma 265, qualifié localement :** [Brassage, fermentation et alcool](docs/gameplay/brewing-v441.md). Filière physique houblon → moût → bière, politiques partagées et clinique prospective. 60 nouveaux cas acquis par reprises ; un rouge historique de repos en caravane conservé. Présentation et UI native muette acquises ; publication en préparation, production publique V440 conservée. Aucune parité Core ni amélioration FPS annoncée.
+
 **V440 — schéma 264 :** [Chaîne géothermique](docs/gameplay/geothermal-power-v440.md). Recherche, construction payée sur geyser existant, 3 600 W, chaleur, entretien, retrait et continuation ; 33cas ciblés acquis par reprises, présentation et construction UI acquises. Migration neutre des trois références ; onze rouges historiques identiques au témoin conservés. Aucun gain FPS global ni clôture Core annoncé.
 
 **V421 — schéma 263 inchangé :** [Coûts Worker au repos](docs/development/worker-idle-costs-v421.md). Grille de menace différée et allocations végétales réduites ;29cas ciblés acquis par reprises, recharges Chrome exactes sur Les Aulnes et le départ3colons. Économie Node ciblée, résultat navigateur mixte conservé ; aucun gain général de confort annoncé. Publié9fa50df7/déploiementdf037b33,136HTTPS exacts ; performances toujours prioritaires.

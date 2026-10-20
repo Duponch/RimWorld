@@ -1,4 +1,5 @@
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
+import {cancelAlcoholSpatial265} from './alcohol-state-265.ts';
 import {advanceOffmapThermal259} from './offmap-thermal-259.ts';
 import {humanConditionMedicalFrontier256} from './human-condition-frontier-256.ts';
 import {commitToxicDeath256} from './toxic-buildup-256.ts';
@@ -56,10 +57,11 @@ export function advanceGroupPersonal(group:ActiveGroup,c:GroupPersonalContext):G
     advanceHumanAgeAt(p,{tick:c.tick,schemaVersion:c.schemaVersion,random:c.random,notice:message=>c.notice(p,message)});
     if(c.schemaVersion>=84&&p.hunger<=0)p.health??=createMedicalRecord(group.lastPersonalTick);
     if(p.health){
+      cancelAlcoholSpatial265(p.health);
       if(p.health.body||p.health.tick!==group.lastPersonalTick&&!(healthBefore===undefined&&p.health.tick===c.tick))throw Error('Invalid human clinical frontier');
       const firstInfection=p.health.infections?.nextId??1;
       const conditionFrontier=humanConditionMedicalFrontier256(p,p.health,c.tick,c.random,{kind:'caravan'});
-      advanceMedical(p.health,c.tick-p.health.tick,{phase:p.id%60,toxicOwner:{id:p.id,spawned:false,awake:p.state!=='sleeping'},cryptosleepSicknessSpawned:false,posture:c.resting?'ground':'standing',starving:p.hunger<=0,
+      advanceMedical(p.health,c.tick-p.health.tick,{phase:p.id%60,alcoholOwner:{id:p.id,spawned:false,awake:p.state!=='sleeping',inMentalState:!!p.mental?.crisis},toxicOwner:{id:p.id,spawned:false,awake:p.state!=='sleeping'},cryptosleepSicknessSpawned:false,posture:c.resting?'ground':'standing',starving:p.hunger<=0,
         malnutritionRate:malnutritionRate(p.id),infectionChanceFactor:c.infectionChanceFactor,hunger:p.hunger,rest:p.rest,
         restingBonus:c.resting&&p.state!=='downed',infectionSeed:((c.seedFor?.(p)??c.seed)^Math.imul(p.id,0x9e3779b1))>>>0,
         ageImmunityFactor:humanAgeImmunityFactor(p.age),...c.deferNeedMeters256?c.clinicalRestFor256?.(p):{}},c.random,conditionFrontier);conditionFrontier?.commit();

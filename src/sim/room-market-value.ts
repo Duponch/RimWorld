@@ -48,6 +48,7 @@ const def = (stuff: number, work: number, passability: Passability,
  * inheriting a fictitious value. Historical untyped furniture keeps Core's
  * abstract-stuff estimate rather than receiving a fabricated material. */
 const BUILDINGS: Readonly<Record<StructureKind, BuildingValueDef>> = Object.freeze({
+ brewery:def(0,2000,'pass-through',{wood:120,steel:30}),'fermenting-barrel':def(0,600,'pass-through',{wood:30,steel:10}),
  // Hive has no cost/recipe/work contribution; GlowPod supplies MarketValue50.
  'insect-hive':def(0,1,'pass-through'),
  'glow-pod':Object.freeze({...def(0,1,'pass-through'),baseMarketValue:50}),
@@ -208,7 +209,7 @@ export function floorRoomMarketValue(tile: Tile): number {
  * flower pot likewise adds beauty but zero value beyond the pot. */
 const RESOURCE_VALUE: Readonly<Record<ResourceKind, 0>> = Object.freeze({
   'wild-plant': 0, potato: 0, corn: 0, tree: 0, berries: 0,
-  rock: 0, rice: 0, cotton: 0, healroot: 0, haygrass: 0,
+  rock: 0, rice: 0, cotton: 0, healroot: 0, haygrass: 0, hops:0,
 });
 export function resourceRoomMarketValue(resource: Resource): number {
   const value = RESOURCE_VALUE[resource.kind];

@@ -51,6 +51,16 @@ export function itemInformation(pile:MaterialPile,world?:World):ObjectInformatio
   const mass=commercialItemMassGrams(pile.item);
   if(mass!==undefined&&!pile.mechCorpse)add('Général','Masse unitaire',`${mass/1000} kg`,'Masse utilisée par le chargement des expéditions commerciales ; elle ne limite pas le transport ordinaire sur la carte.');
   if(definition.nutrition)add('Alimentation','Nutrition',String(definition.nutrition/100),'Nutrition par unité consommée. La jauge de nourriture de 100 points représente une unité de nutrition.');
+  if(pile.item==='hops')add('Brassage','Usage','Ingrédient végétal','25 houblons donnent 5 moûts à la brasserie. Le houblon n’est pas proposé comme repas aux personnes ni comme provision de voyage.');
+  if(pile.item==='wort'){
+    add('Brassage','Usage','Moût à fermenter','Transport apporte physiquement le moût dans un tonneau entre 1 et 30 °C. Le moût ne se boit pas.');
+    add('Brassage','Conservation','5 jours avant pourriture','Durée à 10 °C ou plus ; le froid ralentit la pourriture et la congélation la suspend.');
+  }
+  if(pile.item==='beer'){
+    add('Alcool','Consommation','1 bière par prise','Boisson alcoolisée prise au contact. Les politiques partagées règlent les prises automatiques ; un ordre direct reste soumis aux refus physiques.');
+    add('Alcool','Effets','Plaisir et alcoolémie','L’alcool peut altérer les capacités et provoquer tolérance, dépendance, sevrage et gueule de bois. Consultez Santé pour l’état réel de la personne.');
+    add('Alcool','Conservation','Ne pourrit pas','La pile reste sensible aux dégâts et à la détérioration à l’extérieur.');
+  }
   if(pile.item==='pemmican'){
     add('Alimentation','Conservation',`${ROT_DAYS.pemmican} jours`,'Durée avant pourriture à 10 °C ou plus. Le froid ralentit cette progression ; la congélation la suspend.');
     add('Alimentation','Usage','Réserve de camp','Aliment préparé pouvant être consommé selon le régime. Les expéditions de cette version demandent toujours des repas de survie.');
@@ -72,5 +82,5 @@ export function itemInformation(pile:MaterialPile,world?:World):ObjectInformatio
     add('Isolation','Chaleur',`${insulation.heat.toFixed(1)} °C`,'Isolation de cette pièce après facteur de qualité.');
     add('Vêtement','Parties couvertes',apparel.coverage.parts.map(part=>BODY_PARTS[part].label).join(', '),'Parties anatomiques couvertes par cette pièce. La couverture participe au calcul de protection au contact.');
   }
-  return {title:isMinifiedTree(pile)&&pile.plantPack.pendingExpiry?'Arbre mort · restes en attente':isApparelItem(pile.item)&&pile.apparel?apparelLabel(pile):definition.label,description:isMinifiedTree(pile)&&pile.plantPack.pendingExpiry?'Arbre mort ; tous ses restes sont conservés jusqu’à leur dépôt.':definition.kind==='food'?'Aliment physique pouvant être consommé selon le régime alimentaire.':definition.kind==='apparel'?'Vêtement physique qui peut être porté, retiré et stocké.':definition.kind==='weapon'?'Arme physique qui peut être équipée, déposée et stockée.':'Objet physique de la colonie.',rows};
+  return {title:isMinifiedTree(pile)&&pile.plantPack.pendingExpiry?'Arbre mort · restes en attente':isApparelItem(pile.item)&&pile.apparel?apparelLabel(pile):definition.label,description:pile.item==='hops'?'Houblon récolté destiné au brassage.':pile.item==='wort'?'Moût préparé à la brasserie ; la fermentation en tonneau produit la bière.':pile.item==='beer'?'Bière fermentée, stockable et échangeable. Sa consommation a des effets sur la santé.':isMinifiedTree(pile)&&pile.plantPack.pendingExpiry?'Arbre mort ; tous ses restes sont conservés jusqu’à leur dépôt.':definition.kind==='food'?'Aliment physique pouvant être consommé selon le régime alimentaire.':definition.kind==='apparel'?'Vêtement physique qui peut être porté, retiré et stocké.':definition.kind==='weapon'?'Arme physique qui peut être équipée, déposée et stockée.':'Objet physique de la colonie.',rows};
 }

@@ -14,17 +14,17 @@ const f=Math.fround;
 type ActualOwner256=Pick<WildAnimal,'species'|'ageTicks'|'ageCoreRemainder'|'growthTracker'>;
 export type AnimalBirthdayApplication256={status:'applied';added:AnimalAgeConditionCase256[]}|{status:'not-applied';reason:'no-eligible-part'}|{status:'blocked';reason:'legacy-anatomy'};
 function covers(record:AnimalAgeMedical256,part:BodyPartId,ancestor:BodyPartId):boolean {const model=medicalModel(record);for(let p:BodyPartId|null=part;p!==null;p=model.byId[p]!.parent)if(p===ancestor)return true;return false;}
-function eligiblePartTickets256(record:AnimalAgeMedical256,kind:AnimalAgeConditionKind256):{part:BodyPartId;weight:number}[] {
+function eligiblePartTickets256(record:AnimalAgeMedical256,kind:AnimalAgeConditionKind256,onlyParts?:readonly BodyPartId[]):{part:BodyPartId;weight:number}[] {
  const model=medicalModel(record),rows=clinicalConditionPartFacts256(model,record),def=definitions[kind],absolute=new Map<BodyPartId,number>(),tickets:{part:BodyPartId;weight:number}[]=[];
  for(const row of rows){const part=row.part,subtree=row.parent===null?1:f(absolute.get(row.parent)!*f(row.coverage));absolute.set(part,subtree);
-  if(def.part!==undefined&&row.defId!==def.part||def.anyLive&&!row.alive||record.missing.some(m=>covers(record,part,m.part))||record.artificialParts?.some(p=>covers(record,part,p.part))||record.animalAgeConditions?.cases.some(c=>c.kind===kind&&c.part===part))continue;
+  if(onlyParts&&!onlyParts.includes(part)||def.part!==undefined&&row.defId!==def.part||def.anyLive&&!row.alive||record.missing.some(m=>covers(record,part,m.part))||record.artificialParts?.some(p=>covers(record,part,p.part))||record.animalAgeConditions?.cases.some(c=>c.kind===kind&&c.part===part))continue;
   let rest=f(1);for(const child of rows)if(child.parent===row.part)rest=f(rest-f(child.coverage));if(Math.abs(rest)<f(.00001)||rest<=0)rest=0;
   tickets.push({part,weight:f(subtree*rest)});
  }
  return tickets;
 }
-function rollPart256(record:AnimalAgeMedical256,kind:AnimalAgeConditionKind256,random:InitialAnimalRandom256):BodyPartId|undefined {
- const tickets=eligiblePartTickets256(record,kind);
+function rollPart256(record:AnimalAgeMedical256,kind:AnimalAgeConditionKind256,random:InitialAnimalRandom256,onlyParts?:readonly BodyPartId[]):BodyPartId|undefined {
+ const tickets=eligiblePartTickets256(record,kind,onlyParts);
  if(!tickets.length)return;if(tickets.length===1)return tickets[0]!.part;
  let total=0;for(const ticket of tickets)total=f(total+ticket.weight);if(total<=0)throw Error('Selected birthday organs have zero coverage');
  const roll=f(random.value()*total);let accumulated=0;for(const ticket of tickets)if(ticket.weight>0){accumulated=f(accumulated+ticket.weight);if(accumulated>=roll)return ticket.part;}
@@ -32,17 +32,18 @@ function rollPart256(record:AnimalAgeMedical256,kind:AnimalAgeConditionKind256,r
 }
 /** A true TryApply attempt. The caller owns a private generation transaction
  * or the real live record; no load/guard path calls this producer. */
-export function tryApplyAnimalAgeCondition256(record:AnimalAgeMedical256,kind:AnimalAgeConditionKind256,random:InitialAnimalRandom256,afterInitialHumanAdd?:()=>boolean):AnimalBirthdayApplication256 {
+export function tryApplyAnimalAgeCondition256(record:AnimalAgeMedical256,kind:AnimalAgeConditionKind256,random:InitialAnimalRandom256,afterInitialHumanAdd?:()=>boolean,onlyParts?:readonly BodyPartId[]):AnimalBirthdayApplication256 {
  if(!Object.hasOwn(definitions,kind))throw Error('Unknown animal condition');
  const nativeHuman=record.body===undefined&&Object.hasOwn(record,'humanHealthScale')&&validHumanHealthScaleHeader256(record,256);
  if(record.body!==undefined&&!isAnimalSpecies(record.body)||kind!=='Dementia'&&kind!=='Carcinoma'&&!nativeHuman&&(!isAnimalSpecies(record.body)||!isAnimalSpecies256(record.body)&&record.animalGrowth===undefined))return {status:'blocked',reason:'legacy-anatomy'};
  if(afterInitialHumanAdd&&!nativeHuman)throw Error('Initial human health continuation requires its actual native projection');
  if(record.death)throw Error('A dead original cannot gain a birthday condition');
- const added:AnimalAgeConditionCase256[]=[],def=definitions[kind],actualCount=Math.min(def.count,eligiblePartTickets256(record,kind).length);
+ if(onlyParts&&(kind!=='Carcinoma'||onlyParts.length!==1||onlyParts[0]!=='liver'))throw Error('Only the actual alcohol liver giver supplies a restricted target');
+ const added:AnimalAgeConditionCase256[]=[],def=definitions[kind],actualCount=Math.min(def.count,eligiblePartTickets256(record,kind,onlyParts).length);
  if(!actualCount)return {status:'not-applied',reason:'no-eligible-part'};
  if(!Number.isSafeInteger((record.animalAgeConditions?.nextId??1)+actualCount))throw Error('Animal condition identities exhausted');
  for(let i=0;i<def.count;i++){
-  const part=rollPart256(record,kind,random);if(part===undefined)break;
+  const part=rollPart256(record,kind,random,onlyParts);if(part===undefined)break;
   const state=record.animalAgeConditions??{revision:1 as const,nextId:1,cases:[]};if(!Number.isSafeInteger(state.nextId+1))throw Error('Animal condition identities exhausted');
   const c:AnimalAgeConditionCase256={id:state.nextId,kind,part,bornAt:record.tick,ageCore:0,severity:f(def.initial),noPain:random.value()<f(def.noPainChance)};
   if(kind==='Dementia'&&!record.body)c.skillDecayRemainders={};

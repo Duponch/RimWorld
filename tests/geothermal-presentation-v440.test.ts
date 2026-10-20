@@ -20,7 +20,7 @@ import {mapObjectsAt} from '../src/ui/map-object-selection';
 import {toolDefinitions} from '../src/ui/layout';
 
 function fixture(){
- const world=createWorld(440,32,32);world.schemaVersion=264;world.pawns=[];world.jobs=[];world.piles=[];world.packed=[];world.resources=[];
+ const world=createWorld(440,32,32);Object.assign(world,{schemaVersion:264});world.pawns=[];world.jobs=[];world.piles=[];world.packed=[];world.resources=[];
  const geyserId=world.nextId++;
  world.geysers={revision:1,atTick:world.tick,items:[{id:geyserId,x:12,z:12,ticksUntilSpray:0,sprayTicksLeft:240}]};
  const generator:Structure={id:world.nextId++,kind:'geothermal-generator',x:10,z:10,orientation:0,footprint:'standard',material:'steel',power:{on:true,parentId:null},geothermal:{geyserId,atTick:world.tick,ticksUntilSpray:0,sprayTicksLeft:240}};

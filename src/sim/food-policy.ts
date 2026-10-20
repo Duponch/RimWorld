@@ -6,8 +6,10 @@ import { isCarePatient } from './affiliation.ts';
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import type { CommandResult, Pawn, World } from './types.ts';
 
-export type FoodItemId = Exclude<{[K in ItemId]: typeof ITEM_DEFINITIONS[K]['nutrition'] extends 0 ? never : K}[ItemId],'hay'>;
-export const FOOD_ITEMS = Object.keys(ITEM_DEFINITIONS).filter(id => id!=='hay'&&ITEM_DEFINITIONS[id as ItemId].nutrition > 0) as FoodItemId[];
+export type FoodItemId = Exclude<{[K in ItemId]: typeof ITEM_DEFINITIONS[K]['nutrition'] extends 0 ? never : K}[ItemId],'hay'|'hops'|'beer'>;
+// Hops has FoodType Plant, absent from the human race's diet; Beer explicitly
+// NeverForNutrition. Neither silently joins historical food policies/recipes.
+export const FOOD_ITEMS = Object.keys(ITEM_DEFINITIONS).filter(id => id!=='hay'&&id!=='hops'&&id!=='beer'&&ITEM_DEFINITIONS[id as ItemId].nutrition > 0) as FoodItemId[];
 export const MAX_FOOD_POLICIES = 32;
 export interface FoodPolicy {id: number; name: string; allowed: FoodItemId[]}
 export type FoodPolicyCommand =

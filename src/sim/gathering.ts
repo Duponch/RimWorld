@@ -18,7 +18,7 @@ export function gatherResource(world: World, resource: Resource, kind:'chop'|'ha
   // CUT235 attempts the common worker yield only for a currently yieldable
   // source. All pre235 paths remain literal, including legacy no-worker draws.
   const roll=currentCut?(plantCanYieldNow(world,resource)?harvestRoll(world,resource,worker):{quantity:0,rng:world.rng}):
-    kind==='chop'&&!resource.species&&!worker?{quantity:resource.amount,rng:world.rng}:kind==='cut'&&(world.schemaVersion>=235&&resource.kind==='tree'||resource.blight||resource.species||resource.kind==='healroot'||resource.kind==='haygrass')?{quantity:0,rng:world.rng}:harvestRoll(world,resource,kind==='cut'?undefined:worker);
+    kind==='chop'&&!resource.species&&!worker?{quantity:resource.amount,rng:world.rng}:kind==='cut'&&(world.schemaVersion>=235&&resource.kind==='tree'||resource.blight||resource.species||resource.kind==='healroot'||resource.kind==='haygrass'||resource.kind==='hops')?{quantity:0,rng:world.rng}:harvestRoll(world,resource,kind==='cut'?undefined:worker);
   if(roll.quantity>0) {
     const item=resource.species?FLORA_DEFINITIONS[resource.species].product:
       kind==='chop'||currentCut&&resource.kind==='tree'?'wood':isCrop(resource)?cropProduct(resource.kind):world.foodRules==='legacy'?'legacy-portion':'berries';

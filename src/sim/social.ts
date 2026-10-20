@@ -1,4 +1,5 @@
 import { isColonist,distanceSquared } from './affiliation.ts';
+import {alcoholModifiers265} from './alcohol-rules-265.ts';
 import { pawnBody } from './health-rules.ts';
 import { carrierOf } from './rescue-state.ts';
 import { clearShotSegment,type ShotGrid } from './combat-space.ts';
@@ -57,7 +58,7 @@ export function socialFightChance(world:World,recipient:Pawn,initiator:Pawn,kind
   const capacities=pawnBody(recipient).capacities;
   const usable=(value:number)=>Math.max(0,Math.min(1,(value-.3)/.7));
   return Math.min(1,(kind==='slight' ? .005 : .04)*usable(capacities.manipulation)*usable(capacities.moving)
-    *curve(opinionOf(recipient,initiator.id,world.tick,world),fightOpinionWeight)*(recipient.traits?.includes('bloodlust')?4:1));
+    *curve(opinionOf(recipient,initiator.id,world.tick,world),fightOpinionWeight)*(recipient.traits?.includes('bloodlust')?4:1)*(recipient.health?alcoholModifiers265(recipient.health).socialFightFactor:1));
 }
 /** Passive exchanges do not acquire reservations, cancel work or retime an edge. */
 export function exchangeSocial(world:World,a:Pawn,b:Pawn,kind:SocialInteractionKind,grid?:ShotGrid):boolean {

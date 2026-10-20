@@ -1,3 +1,5 @@
+import {finishBarrelFill265} from './fermentation-runtime-265.ts';
+import {FERMENTING_SERVICE_TICKS_265} from './fermentation-state-265.ts';
 import {eggAllowedForPlayer256} from './animal-egg-permission-v256.ts';
 import { processFurnitureHaul } from './furniture-hauling.ts';
 import { constructionSiteFree } from './construction-rules.ts';
@@ -50,7 +52,12 @@ export function processHaul(world: World, pawn: Pawn, move: (target: Cell, allow
     const retirement=planConstructionPlantRetirement(world,target as Job,(target as Job).id,'frame');
     if(!retirement||retirement.actors.has(pawn.id)||!commitConstructionPlantRetirement(world,retirement)){pawn.path=[];pawn.state='working';return;}
   }
-  if (task.destination.type==='turret') {
+  if(task.destination.type==='fermenting-barrel'){
+    if((pawn.motion?.end??0)>world.tick||pawn.moveCooldown>0)return;
+    pawn.state='working';pawn.path=[];task.serviceProgress=(task.serviceProgress??0)+1;
+    if(task.serviceProgress<FERMENTING_SERVICE_TICKS_265)return;
+    if(!finishBarrelFill265(world,pawn,carry)){releaseWork(world,pawn);return;}
+  } else if (task.destination.type==='turret') {
     pawn.state='working';pawn.path=[];task.serviceProgress=(task.serviceProgress??0)+1;
     if(task.serviceProgress<TURRET_RELOAD_WORK_TICKS)return;
     const turret=reloadableTurret(world,task.destination.structureId)!;

@@ -4,7 +4,7 @@ import type { Cell, World } from './types.ts';
  * forwarding accessors, never a copied random stream or identity allocator. */
 export const CAMPAIGN_FIELDS = [
   'schemaVersion','tick','rng','nextId','planet','worldFactions','worldPawns','research','relationships',
-  'foodPolicies','nextFoodPolicyId','apparelPolicies','nextApparelPolicyId',
+  'drugPolicies','nextDrugPolicyId','foodPolicies','nextFoodPolicyId','apparelPolicies','nextApparelPolicyId',
   'foodRules','restRules','gameProfile','worldIncidents','worldSites263',
 ] as const satisfies readonly (keyof World)[];
 export type CampaignField = typeof CAMPAIGN_FIELDS[number];

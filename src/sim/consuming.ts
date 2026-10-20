@@ -1,4 +1,5 @@
 import { isColonist } from './affiliation.ts';
+import {alcoholDrinkReason265,beerPile265} from './alcohol-ingestion-265.ts';
 import { allowedAreaReason } from './allowed-area-state.ts';
 import { FOOD_ITEMS,foodAllowed,type FoodItemId } from './food-policy.ts';
 import { ITEM_DEFINITIONS,mealQuantity,rawFoodThought } from './items.ts';
@@ -30,6 +31,7 @@ function actorReason(world:Pick<World,'schemaVersion'|'tick'>,pawn:Pawn):string|
   if(medicallyStopped(pawn)||pawn.health?.death)return 'Ce colon à terre ou décédé ne peut pas consommer directement.';
   if(pawn.mental?.crisis)return 'Ce colon est en crise et ne reçoit pas cet ordre.';
   if((pawn.health?.foodPoisoning?.vomit||pawn.health?.cryptosleepSickness?.vomit||pawn.health?.toxicBuildup?.vomit||pawn.health?.toxicBuildup?.vomitRequestedAt!==undefined)||pawn.health?.flu?.vomit||pawn.health?.immuneDiseases?.malaria?.vomit)return 'Attendez la fin du vomissement.';
+  if(pawn.health?.alcohol?.vomit||pawn.health?.alcohol?.vomitRequestedAt!==undefined)return 'Attendez la fin du vomissement.';
   const body=pawnBody(pawn);
   if(body.capacities.eating<=0||body.capacities.manipulation<=0)return 'Ce colon doit pouvoir manger et manipuler la portion.';
   if(pawn.burning||pawn.bombRefuge||pawn.heatRefuge||pawn.tactics)return 'Terminez la réaction immédiate avant de consommer.';
@@ -40,6 +42,7 @@ function actorReason(world:Pick<World,'schemaVersion'|'tick'>,pawn:Pawn):string|
 export function consumeActivityValid(world:Pick<World,'schemaVersion'|'tick'>,pawn:Pawn):boolean {
   const task=pawn.need;
   return isForcedConsuming(pawn)&&!actorReason(world,pawn)&&task?.kind==='eat'&&task.paste===undefined&&task.phase!=='collect'
+    &&(task.alcoholReason===undefined||world.schemaVersion===265&&task.alcoholReason==='ordered'&&task.quantity===1)
     &&pawn.orders.active==='consume'&&!pawn.orders.queue.length&&!pawn.priorityWork&&!pawn.interruptedCargo
     &&pawn.jobId===null&&!pawn.haul&&!pawn.cooking&&!pawn.rescue&&!pawn.tend&&!pawn.feed&&!pawn.ward&&!pawn.surgery
     &&!pawn.research&&!pawn.orbitalTrade&&!pawn.deepWork&&!pawn.animalHandling&&!pawn.animalCare&&!pawn.animalFeed&&!pawn.animalRescue
@@ -64,10 +67,11 @@ export function consumeReason(world:World,pawn:Pawn,pile:MaterialPile|undefined)
   if(pawn.surgery?.phase==='work')return 'Terminez ou annulez l’intervention en cours avant de consommer.';
   const carrying=world.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)||world.packed.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
   if(carrying&&(pawn.moveCooldown>0||(pawn.motion?.end??0)>world.tick))return 'Attendez la fin du déplacement avant de déposer la cargaison.';
-  if(!pile||!world.piles.includes(pile)||pile.kind!=='food'||!FOOD_ITEMS.includes(pile.item as FoodItemId)||pile.owner.type!=='ground')return 'Choisissez une pile de nourriture présente au sol.';
+  if(!pile||!world.piles.includes(pile)||!(pile.kind==='food'&&FOOD_ITEMS.includes(pile.item as FoodItemId)||world.schemaVersion===265&&beerPile265(pile))||pile.owner.type!=='ground')return 'Choisissez une pile de nourriture ou de bière présente au sol.';
+  if(beerPile265(pile)){const beerReason=alcoholDrinkReason265(world,pawn,pile);if(beerReason)return beerReason;}
   if(ticksUntilRot(pile,world.tick)<=0)return 'Cette nourriture a expiré.';
   const area=allowedAreaReason(world,pawn,pile.owner);if(area)return area;
-  const quantity=mealQuantity(pawn,pile,available(world,pawn,pile));
+  const quantity=beerPile265(pile)?Math.min(1,available(world,pawn,pile)):mealQuantity(pawn,pile,available(world,pawn,pile));
   if(quantity<=0)return 'Cette portion est déjà réservée.';
   if(quantity<pile.quantity&&(world.piles.length>=32768||!Number.isSafeInteger(world.nextId+1)))return 'Pas de place pour identifier la portion séparée.';
   if(!planCommandDrops(world,{type:'order-consume',pawnId:pawn.id,pileId:pile.id,queue:false}))return 'Pas de place pour déposer la cargaison avant de consommer.';
@@ -89,9 +93,10 @@ export function consumeProposal(world:World,pawn:Pawn,pile:MaterialPile|undefine
   // whose occupied cell is traversable but cannot be an eating destination.
   reach.stops=new Set([...(reach.stops??[]),...reservedContacts(world,pawn)]);
   const path=routeToJob(world,pile.owner,reach,true);if(!path)return;
-  return {task:{kind:'eat',forced:true,phase:'pickup',sourcePileId:pile.id,carryPileId:null,quantity:mealQuantity(pawn,pile,available(world,pawn,pile)),progress:0,dining:null},path};
+  return {task:{kind:'eat',forced:true,...beerPile265(pile)?{alcoholReason:'ordered' as const}:{},phase:'pickup',sourcePileId:pile.id,carryPileId:null,quantity:beerPile265(pile)?1:mealQuantity(pawn,pile,available(world,pawn,pile)),progress:0,dining:null},path};
 }
 export function consumeWarnings(world:World,pawn:Pawn,pile:MaterialPile):string[] {
+  if(beerPile265(pile))return ['Cet ordre boit une bière réelle indépendamment de la politique de drogues.','L’alcool réduit les capacités et peut provoquer vomissements, gueule de bois, tolérance, dépendance et dommages durables.'];
   const warnings:string[]=[];
   if(!foodAllowed(world,pawn,pile.item))warnings.push('Cet aliment est exclu du régime ; cet ordre direct le consommera.');
   if(rawFoodThought(pile.item))warnings.push('Aliment cru : humeur et risque alimentaire habituels.');

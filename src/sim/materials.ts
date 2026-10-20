@@ -225,6 +225,7 @@ export function sameDestination(a: HaulDestination, b: HaulDestination): boolean
   return a.type === b.type && (a.type === 'job' && b.type === 'job' ? a.jobId === b.jobId
     : a.type === 'fuel' && b.type === 'fuel' ? a.structureId === b.structureId
     : a.type === 'turret' && b.type === 'turret' ? a.structureId === b.structureId
+    : a.type === 'fermenting-barrel' && b.type === 'fermenting-barrel' ? a.structureId === b.structureId
     : a.type === 'hopper' && b.type === 'hopper' ? a.structureId === b.structureId
     : a.type === 'stockpile' && b.type === 'stockpile' ? a.stockpileId === b.stockpileId
       : a.type === 'aside' && b.type === 'aside' && a.x === b.x && a.z === b.z);

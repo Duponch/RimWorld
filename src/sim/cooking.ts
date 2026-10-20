@@ -1,3 +1,4 @@
+import {brewingSpeed265,validWortIngredients265} from './brewing-content-265.ts';
 import {eggAllowedForPlayer256} from './animal-egg-permission-v256.ts';
 import {isBurnApparelRecipe,burnApparelIngredientAllowed,validBurnApparelIngredients} from './burn-apparel-rules.ts';
 import {isPemmicanRecipe,validPemmicanIngredients} from './pemmican-content.ts';
@@ -60,6 +61,8 @@ function take(world:World,pawn:Pawn,pile:MaterialPile,quantity:number):MaterialP
 export function processCooking(world:World,pawn:Pawn,context:ProductionContext):void {
   const task=pawn.cooking!;
   if(!allowedAreaWorkAllowed(world,pawn)){context.release();return;}
+  const brewing=task.recipe==='brew-wort';
+  if(brewing&&(world.schemaVersion<265||task.phase!=='output'&&task.phase!=='interrupted'&&!validWortIngredients265(task.ingredients))){context.release();return;}
   const medicine=task.recipe==='make-medicine';
   const kibble=isKibbleRecipe(task.recipe),pemmican=isPemmicanRecipe(task.recipe);
   if(pemmican&&world.schemaVersion<248){context.release();return;}
@@ -72,7 +75,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if((smelting||cremation||burningApparel)&&(pawn.stun||pawn.draft||pawn.state==='downed'||pawn.state==='dead'||pawnBody(pawn).capacities.manipulation<=0||(cremation||burningApparel)&&(medicalWorkRefusal(pawn)||(pawn.faction??'colony')!=='colony'||pawn.prisoner||pawn.visitor||pawn.raid||pawn.podRescue||pawn.burning||pawn.mental?.crisis||pawn.collapsePending||workPriority(pawn,'haul')===0))){context.release();return;}
   if(task.phase==='interrupted'){context.release();return;}
   const station=world.structures.find(s=>s.id===task.stationId),bill=station?.bills?.find(b=>b.id===task.billId);
-  if((pemmican||kibble||medicine||biofuel||smelting||cremation||burningApparel)&&(!station||!bill||bill.recipe!==task.recipe||!stationAccepts(station,task.recipe!))){context.release();return;}
+  if((brewing||pemmican||kibble||medicine||biofuel||smelting||cremation||burningApparel)&&(!station||!bill||bill.recipe!==task.recipe||!stationAccepts(station,task.recipe!))){context.release();return;}
   if(backgroundWorkRefusal(pawn,taskWork(task))||!station||!bill||bill.suspended||task.recipe==='cook-survival-meal'&&!stationAccepts(station,task.recipe)||!productionResearchUnlocked(world,taskRecipe(task))||task.phase!=='output'&&!productionWorkerQualified(pawn,taskRecipe(task))||workPriority(pawn,taskWork(task))===0&&pawn.orders.active!=='cook'||(task.phase!=='output'&&(!foodStationUsable(station)||!productionStationUsable(station)))) {context.release();return;}
   if(task.phase==='output'){if(!recipeHasProducts(taskRecipe(task))){context.release();return;}processProductionOutput(world,pawn,context,bill.destination);return;}
   const recipe=PRODUCTION_RECIPES[taskRecipe(task)];
@@ -89,12 +92,12 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
     const pile=world.piles.find(p=>p.id===entry.pileId);
     if(cremation&&!canStandAt(world,entry.cell)){context.release();return;}
     if((pemmican||kibble||biofuel)&&entry.stage!=='placed'&&entry.quantity>10){context.release();return;}
-    if((pemmican||kibble||medicine||biofuel||smelting||cremation||burningApparel)&&(!bill.filters[entry.item]||!pile||burningApparel&&!burnApparelIngredientAllowed(bill,pile)||smelting&&!smeltingIngredientAllowed(bill,pile)
+    if((brewing||pemmican||kibble||medicine||biofuel||smelting||cremation||burningApparel)&&(!bill.filters[entry.item]||!pile||burningApparel&&!burnApparelIngredientAllowed(bill,pile)||smelting&&!smeltingIngredientAllowed(bill,pile)
       ||cremation&&(!cremationIngredientAllowed(world,bill,pile)||pile.humanCorpse&&burialClaim(world,pile.humanCorpse.pawnId,pawn.id))
       ||entry.stage==='source'&&(pile.owner.type!=='ground'||(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2)
       ||entry.stage==='placed'&&(pile.owner.type!=='ground'||pile.owner.x!==entry.cell.x||pile.owner.z!==entry.cell.z)
       ||entry.stage==='held'&&(pile.owner.type!=='pawn'||pile.owner.pawnId!==pawn.id))){context.release();return;}
-    if((pemmican||kibble||task.recipe==='chemfuel-from-organics')&&pile&&ticksUntilRot(pile,world.tick)<=0){context.release();return;}
+    if((brewing||pemmican||kibble||task.recipe==='chemfuel-from-organics')&&pile&&ticksUntilRot(pile,world.tick)<=0){context.release();return;}
     if(!pile||!cremation&&isAnimalCorpseItem(pile.item)&&!corpseFresh(pile,world.tick)||(task.recipe==='cook-survival-meal'||task.recipe==='cook-simple-meal-bulk'||task.recipe==='cook-fine-meal-bulk'||task.recipe==='cook-lavish-meal-bulk'||task.recipe==='vegetarian-fine-meal'||task.recipe==='cook-vegetarian-fine-meal-bulk'||task.recipe==='carnivore-fine-meal'||task.recipe==='cook-carnivore-fine-meal-bulk'||task.recipe==='vegetarian-lavish-meal'||task.recipe==='cook-vegetarian-lavish-meal-bulk'||task.recipe==='cook-carnivore-lavish-meal'||task.recipe==='cook-carnivore-lavish-meal-bulk')&&ticksUntilRot(pile,world.tick)<=0||pile.item!==entry.item||pile.quantity<entry.quantity||entry.stage!=='held'&&reservedSource(world,pile.id)>pile.quantity){context.release();return;}
     if((cremation||burningApparel)&&reservedSource(world,pile.id,pawn.id)>0){context.release();return;}
     if((task.recipe==='cook-survival-meal'||task.recipe==='cook-simple-meal-bulk'||task.recipe==='cook-fine-meal-bulk'||task.recipe==='cook-lavish-meal-bulk'||task.recipe==='vegetarian-fine-meal'||task.recipe==='cook-vegetarian-fine-meal-bulk'||task.recipe==='carnivore-fine-meal'||task.recipe==='cook-carnivore-fine-meal-bulk'||task.recipe==='vegetarian-lavish-meal'||task.recipe==='cook-vegetarian-lavish-meal-bulk'||task.recipe==='cook-carnivore-lavish-meal'||task.recipe==='cook-carnivore-lavish-meal-bulk')&&(!bill.filters[entry.item]
@@ -142,7 +145,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const culinary=taskWork(task)==='cook',mechanical=isMechSalvageRecipe(task.recipe);
   if(task.progress<total){
     if(culinary||mechanical||medicine){if(!Number.isSafeInteger((task.workTicks??0)+1)||((task.workTicks??0)+1)>Math.floor(Number.MAX_SAFE_INTEGER/1000))return;task.workTicks=(task.workTicks??0)+1;}
-    const speed=burningApparel?cremationSpeed(pawn):cremation?cremationSpeed(pawn):smelting?smeltingSpeed(pawn):biofuel?biofuelProductionSpeed(pawn):medicine?medicineProductionSpeed(pawn):mechanical?mechSalvageSpeed(pawn):task.recipe==='butcher-creature'?butcherySpeed(pawn):culinary?cookingSpeed(pawn):1;
+    const speed=brewing?brewingSpeed265(pawn):burningApparel?cremationSpeed(pawn):cremation?cremationSpeed(pawn):smelting?smeltingSpeed(pawn):biofuel?biofuelProductionSpeed(pawn):medicine?medicineProductionSpeed(pawn):mechanical?mechSalvageSpeed(pawn):task.recipe==='butcher-creature'?butcherySpeed(pawn):culinary?cookingSpeed(pawn):1;
     const fraction=medicine||biofuel?1:consumeCookingFuel(station);if(!medicine&&!biofuel)applyCookingHeat(world,station,fraction);
     task.progress=Math.min(total,task.progress+Math.round(context.workRate(station,pawn)*speed*PRODUCTION_WORK_SCALE*fraction));
   }
@@ -169,7 +172,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(isTailoring(task.recipe)&&!Number.isSafeInteger((world.tailoring?.completed??0)+1))return;
   const random={rng:world.rng},apparel=isTailoring(task.recipe)||isFlakRecipe(task.recipe)?{...newApparelState(item as ApparelItem,material),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
   const weapon=isGunRecipe(task.recipe)?{...newWeaponState(item as RangedWeaponItem),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
-  const foodPoison=world.schemaVersion>=89&&culinary&&!kibble?foodPoisonFromRecipe(roomCleanliness(world,pawn),(pawn.skills.cooking?.level??0),()=>healthRandom(random)):undefined;
+  const foodPoison=world.schemaVersion>=89&&culinary&&!kibble&&!brewing?foodPoisonFromRecipe(roomCleanliness(world,pawn),(pawn.skills.cooking?.level??0),()=>healthRandom(random)):undefined;
   const medicineSkill=medicine?completedMedicineSkill(pawn,task.workTicks??0):undefined;
   // All preconditions succeeded. Consume once, create once, then store physically.
   for(const [id,quantity] of used)world.piles.find(p=>p.id===id)!.quantity-=quantity;
@@ -180,6 +183,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(isTailoring(task.recipe)){(world.tailoring??={completed:0,cancelled:0,lostCloth:0}).completed++;}
   task.ingredients=[];task.productId=id;task.phase='output';task.progress=0;if(culinary)pawn.skills.cooking=completedCookingSkill(pawn,task.workTicks??0);delete task.workTicks;pawn.planCooldown=0;
   if(bill.mode==='times')bill.target=Math.max(0,bill.target-1);
+  if(brewing){context.event(`${pawn.name} a brassé 5 unités de moût.`);return;}
   if(medicine){context.event(`${pawn.name} a fabriqué 1 médicament.`);return;}
   if(pemmican){context.event(`${pawn.name} a préparé 16 unités de pemmican.`);return;}
   if(kibble){context.event(`${pawn.name} a fabriqué ${kibbleOutputUnits(station)} croquettes.`);return;}

@@ -9,7 +9,7 @@ export type AggressiveCrisis=
   | (CrisisBase&{kind:'tantrum';targetId:number|null;targetSinceCore:number;attempted:boolean;nextTargetCore:number})
   | (CrisisBase&{kind:'berserk';targetId:number|null;jobUntilCore:number|null})
   | (CrisisBase&{kind:'murderous-rage';targetId:number;nextCheckCore:number});
-export type MentalCrisis=(CrisisBase&{kind:'confused-wander'})|(CrisisBase&{kind:'sad-wander'})|(CrisisBase&{kind:'food-binge'})|AggressiveCrisis;
+export type MentalCrisis=(CrisisBase&{kind:'confused-wander'})|(CrisisBase&{kind:'sad-wander'})|(CrisisBase&{kind:'food-binge'})|(CrisisBase&{kind:'drug-binge'})|AggressiveCrisis;
 
 export interface MentalState {
   wander?:HumanConditionWander256;

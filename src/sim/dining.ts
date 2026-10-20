@@ -37,7 +37,7 @@ export function validDiningPlace(world: World, place: DiningPlace): boolean {
  * is geometric; reachability still follows the real obstacles. A single shared
  * search is deferred until there is a candidate requiring a route.
  */
-export function chooseDiningPlace(world: World, pawn: Pawn, context: NeedContext): { place: DiningPlace; path: Cell[] } | null {
+export function chooseDiningPlace(world: World, pawn: Pawn, context: NeedContext,beer=false): { place: DiningPlace; path: Cell[] } | null {
   const key = (cell: Cell): number => cell.z * world.width + cell.x;
   const reserved = reservedServiceCells(world,pawn.id);
   // Index surfaces once per decision, rather than rescanning all furniture per seat.
@@ -53,9 +53,9 @@ export function chooseDiningPlace(world: World, pawn: Pawn, context: NeedContext
   for (const seat of world.structures) {
     if(!allowedAreaAllows(world,pawn,seat))continue;
     if(!prisonerAllowedCell(world,pawn,seat,topology))continue;
-    if (!isDiningSeat(seat.kind) || !targetBuildingPlayerUse263(world,seat) || deconstructionReserved(world,seat.id,pawn.id) || world.schemaVersion>=22&&!canStandAt(world,seat) || reserved.has(key(seat)) || distance(pawn, seat) > MATERIAL_DEFINITIONS.food.chairSearchRadius ** 2) continue;
+    if (!isDiningSeat(seat.kind) || !targetBuildingPlayerUse263(world,seat) || deconstructionReserved(world,seat.id,pawn.id) || world.schemaVersion>=22&&!canStandAt(world,seat) || reserved.has(key(seat)) || distance(pawn, seat) > (beer?25:MATERIAL_DEFINITIONS.food.chairSearchRadius) ** 2) continue;
     const surface = neighbors(seat).find(cell => inBounds(world, cell.x, cell.z) && surfaces.has(key(cell)));
-    if (surface) candidates.push({ target: { x: seat.x, z: seat.z }, seatId: seat.id, tableId: surfaces.get(key(surface))! });
+    if (surface||beer) candidates.push({ target: { x: seat.x, z: seat.z }, seatId: seat.id, tableId: surface?surfaces.get(key(surface))!:null });
   }
   candidates.sort((a, b) => distance(pawn, a.target) - distance(pawn, b.target) || a.seatId! - b.seatId!);
   let reach: ReturnType<NeedContext['search']> | undefined;

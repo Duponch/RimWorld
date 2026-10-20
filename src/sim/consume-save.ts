@@ -51,10 +51,11 @@ export function hasForcedConsumptionDomain(pawn:{need?:unknown;orders?:unknown;d
 }
 /** Closed new task only. Unmarked historical needs keep their existing guard. */
 export function validForcedConsumeShape(value:unknown,version:number,w:Pick<World,'width'|'height'|'nextId'>):boolean {
-  if(version<234||!closed(value,['kind','forced','phase','sourcePileId','carryPileId','quantity','progress','workRemainder','dining'])
+  if(version<234||!closed(value,['kind','forced','phase','sourcePileId','carryPileId','quantity','progress','workRemainder','dining',...(version===265?['alcoholReason']:[])])
     ||!['kind','forced','phase','sourcePileId','carryPileId','quantity','progress','dining'].every(k=>Object.hasOwn(value,k))
     ||value.kind!=='eat'||value.forced!==true||(typeof value.phase!=='string'||!['pickup','choose-spot','travel','ingest'].includes(value.phase))
     ||!int(value.sourcePileId,1,w.nextId-1)||!int(value.quantity,1,MAX_STACK)||!int(value.progress,0,49))return false;
+  if('alcoholReason'in value&&(version!==265||value.alcoholReason!=='ordered'||value.quantity!==1))return false;
   if(value.phase==='pickup'?value.carryPileId!==null:!int(value.carryPileId,1,w.nextId-1))return false;
   if(value.phase!=='ingest'&&(value.progress!==0||Object.hasOwn(value,'workRemainder'))
     ||Object.hasOwn(value,'workRemainder')&&!int(value.workRemainder,1,9999))return false;
@@ -127,7 +128,7 @@ export function validForcedConsumeTransport(world:World,knownConsumers?:readonly
     }
     const reserved=reservedSourcesByPile(world),standable=captureStandability(world);
     const free=(c:Cell,actor:number)=>{const owners=services.get(key(c));return !owners||owners.size===1&&owners.has(actor);};
-    const food=(p:MaterialPile|undefined):p is MaterialPile=>!!p&&p.kind==='food'&&FOOD_ITEMS.includes(p.item as typeof FOOD_ITEMS[number])
+    const food=(p:MaterialPile|undefined,beer:boolean):p is MaterialPile=>!!p&&(beer?world.schemaVersion===265&&p.kind==='beer'&&p.item==='beer':p.kind==='food'&&FOOD_ITEMS.includes(p.item as typeof FOOD_ITEMS[number]))
       &&int(p.id,1,world.nextId-1)&&int(p.quantity,1,ITEM_DEFINITIONS[p.item].stackLimit);
     for(const pawn of consumers){
       if(travelling.has(pawn.id)||packedHeld.has(pawn.id)||actors.get(pawn.id)!==pawn||!validForcedConsumePawnShape(pawn,world.schemaVersion,world)||!consumeActivityValid(world,pawn))return false;
@@ -140,7 +141,7 @@ export function validForcedConsumeTransport(world:World,knownConsumers?:readonly
       let previous:Cell=pawn;
       for(const step of pawn.path){if(!cell(step,world)||stepDistance(previous,step)!==1)return false;previous=step;}
       const owned=carried.get(pawn.id)??[],pile=piles.get((task.phase==='pickup'?task.sourcePileId:task.carryPileId)??-1);
-      if(!food(pile)||task.quantity>ITEM_DEFINITIONS[pile.item].maxIngest)return false;
+      if(!food(pile,task.alcoholReason==='ordered')||task.quantity>ITEM_DEFINITIONS[pile.item].maxIngest)return false;
       const moving=(pawn.motion?.end??0)>world.tick||pawn.moveCooldown>0;
       if(task.phase==='pickup'){
         if(owned.length||pile.owner.type!=='ground'||!inArea(pawn,pile.owner)||!int(reserved.get(pile.id),task.quantity,pile.quantity)||task.quantity>pile.quantity)return false;
@@ -152,7 +153,7 @@ export function validForcedConsumeTransport(world:World,knownConsumers?:readonly
         const place=task.dining;
         if(place){
           if(!standable(place.target)||!inArea(pawn,place.target)||!free(place.target,pawn.id))return false;
-          if(place.seatId!==null){const seat=beds.get(place.seatId);if(!seat||!isDiningSeat(seat.kind)||!same(seat,place.target)||place.tableId===null)return false;}
+          if(place.seatId!==null){const seat=beds.get(place.seatId);if(!seat||!isDiningSeat(seat.kind)||!same(seat,place.target)||place.tableId===null&&task.alcoholReason!=='ordered')return false;}
           if(place.tableId!==null){const table=beds.get(place.tableId);if(!table||!isDiningTable(table.kind)||!footprintCells(table).some(c=>distance(c,place.target)===1))return false;}
           if(pawn.path.length&&!same(pawn.path.at(-1)!,place.target)||!pawn.path.length&&!same(pawn,place.target))return false;
           if(task.phase==='ingest'&&(moving||pawn.path.length||!same(pawn,place.target)))return false;

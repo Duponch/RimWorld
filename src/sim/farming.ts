@@ -50,7 +50,7 @@ export const growingZoneAt = (world: World, cell: number): GrowingZone | undefin
 export function sowingJobAllowed(world:World,pawn:Pawn,job:Pick<Job,'kind'|'growingZoneId'>):boolean {
   if(job.kind!=='sow'||job.growingZoneId===undefined)return true;
   const zone=zoneCells(world).byId.get(job.growingZoneId);
-  return (!zone||hydroponicSowingAllowed(world,zone))&&(zone?.plant!=='healroot'||plantSkill(pawn).level>=8);
+  return (!zone||hydroponicSowingAllowed(world,zone))&&(zone?.plant!=='healroot'||plantSkill(pawn).level>=8)&&(zone?.plant!=='hops'||plantSkill(pawn).level>=3);
 }
 /** Presentation may supply the already captured target; omission keeps the
  * simulation's existing spatial cache. null means the target is absent. */

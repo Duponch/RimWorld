@@ -5,6 +5,7 @@ import { ANIMAL_SPECIES } from './animal-species.ts';
 import { ITEM_DEFINITIONS,type ItemId } from './items.ts';
 import { storageAccepts } from './storage-filters.ts';
 import type { StorageConditions } from './storage-condition.ts';
+import {SCHEMA_VERSION} from './types.ts';
 import type { Cell,MaterialPile,StockpileCell,StorageFilters,Structure,World } from './types.ts';
 
 export type ShelfKind='shelf'|'small-shelf';
@@ -13,8 +14,8 @@ export interface ShelfStorageSettings extends StorageConditions {filters:Storage
 /** Cell identities belong to the same building through construction and packing. */
 export interface ShelfStorageState {cells:number[];settings:ShelfStorageSettings}
 export interface StorageCell extends StockpileCell {shelfId?:number}
-export function newShelfStorage(cells:readonly number[]):ShelfStorageState {
-  return {cells:[...cells],settings:{priority:3,capacity:500,filters:{wood:true,food:true,chemfuel:true,neutroamine:true,silver:true,unfinished:true,textile:true,steel:true,gold:true,uranium:true,plasteel:true,component:true,'advanced-component':true,medicine:true,weapon:true,apparel:true,blocks:true}}};
+export function newShelfStorage(cells:readonly number[],version:number=SCHEMA_VERSION):ShelfStorageState {
+  return {cells:[...cells],settings:{priority:3,capacity:500,filters:{...(version>=265?{wort:true,beer:true}:{}),wood:true,food:true,chemfuel:true,neutroamine:true,silver:true,unfinished:true,textile:true,steel:true,gold:true,uranium:true,plasteel:true,component:true,'advanced-component':true,medicine:true,weapon:true,apparel:true,blocks:true}}};
 }
 /** Fixed physical exclusions are independent of the player's policy. */
 export function shelfFixedAccepts(subject:ItemId|MaterialPile):boolean {

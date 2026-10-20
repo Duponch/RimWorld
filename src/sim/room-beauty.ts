@@ -45,6 +45,7 @@ export function groundObjectBeauty(object:BeautyObject):number {return object.vi
 export function structureBeauty(structure:BeautyStructure):number {
   if(isAncientMonumentKind256(structure.kind)){const m=isFurnitureMaterial(structure.material)?FURNITURE_MATERIALS[structure.material]:undefined,d=ANCIENT_MONUMENT_DEFS_256[structure.kind];return d.beauty*(m?.beautyFactor??1)*(d.quality?QUALITY_BEAUTY[furnitureQuality(structure.quality)]:1)+(m?.beautyOffset??0);}
   if(structure.kind==='ship-chunk')return -20;
+  if(structure.kind==='brewery'||structure.kind==='fermenting-barrel')return 0;
   if(structure.kind==='geothermal-generator')return -30;
   if(structure.kind==='chemfuel-generator')return -20;
   if(structure.kind==='deep-drill')return -25;

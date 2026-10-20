@@ -21,6 +21,21 @@ export function cropGeometry(kind:ResidentCropKind):THREE.BufferGeometry {
     const leaves=[-.25,.25].map((x,i)=>new THREE.ConeGeometry(.16,.7,3).rotateZ(x<0?-.7:.7).translate(x,.68+i*.34,0));
     const tassel=new THREE.ConeGeometry(.1,.28,4).translate(0,1.64,0);
     parts=[stalk,...leaves,tassel];
+  } else if(kind==='hops') {
+    // A compact climbing vine with broad leaves and pale hop cones. Its
+    // silhouette is authored once, using the existing resident crop material.
+    parts=[new THREE.CylinderGeometry(.035,.05,1.1,5).translate(0,.55,0)];
+    for(let i=0;i<5;i++){
+      const a=i*2.4,x=Math.cos(a)*.19,z=Math.sin(a)*.19,y=.24+i*.17;
+      parts.push(new THREE.OctahedronGeometry(.19).scale(1,.38,1.2).rotateY(a).translate(x,y,z));
+      if(i>1)parts.push(new THREE.ConeGeometry(.09,.22,5).rotateZ(Math.PI).translate(x*.85,y-.08,z*.85));
+    }
+    // Octahedron leaves are non-indexed; expand only this vine's indexed
+    // stems/cones, preserving their position, normal and uv attributes.
+    parts=parts.map(part=>{
+      if(part.index===null)return part;
+      const expanded=part.toNonIndexed();part.dispose();return expanded;
+    });
   } else if(kind==='haygrass') {
     // Blade bends are authored once in the resident mesh. Ordinary snapshots
     // still transform one whole plant, never individual stems or seed heads.
@@ -67,6 +82,7 @@ class CropBatch {
   constructor(private readonly group:THREE.Group,readonly kind:ResidentCropKind,private material: THREE.Material) {
     if(kind==='cotton')this.ripe.setHex(0xf0ead7);
     if(kind==='potato')this.ripe.setHex(0x83964a);
+    if(kind==='hops'){this.green.setHex(0x72966a);this.ripe.setHex(0xaabd78);}
     if(kind==='haygrass'){this.green.setHex(0x80934e);this.ripe.setHex(0xc6b56b);}
     this.geometry = cropGeometry(kind);
     this.residentBounds=new CropResidentBounds(this.geometry);
@@ -114,7 +130,7 @@ class CropBatch {
     }
     // One plant per map cell is a proven upper bound. Historical batches reserve
     // on loading; haygrass reserves when its first real plant creates the batch.
-    const required = Math.max(crops.length, reset ? world.width * world.height : 0);
+    const required = Math.max(crops.length, reset && this.kind!=='hops' ? world.width * world.height : 0);
     if (required > this.mesh.instanceMatrix.count) {
       const old = this.mesh, mesh = this.createMesh(2 ** Math.ceil(Math.log2(required)));
       mesh.instanceMatrix.array.set(old.instanceMatrix.array); mesh.instanceColor!.array.set(old.instanceColor!.array);
@@ -168,7 +184,7 @@ class CropBatch {
       const slot=this.slots.get(id)!;this.transform.scale.setScalar(0);this.transform.updateMatrix();this.mesh.setMatrixAt(slot,this.transform.matrix);
       firstMatrix=Math.min(firstMatrix,slot);lastMatrix=Math.max(lastMatrix,slot);this.slots.delete(id);this.captures.delete(id);this.insertionOrder.delete(id);this.liveSlots.delete(slot);this.free.push(slot);this.residentBounds.remove(slot);boundsChanged=true;
     }
-    const required=Math.max(cropCount,reset?world.width*world.height:0),resized=required>this.mesh.instanceMatrix.count;
+    const required=Math.max(cropCount,reset&&this.kind!=='hops'?world.width*world.height:0),resized=required>this.mesh.instanceMatrix.count;
     if(resized){const old=this.mesh,mesh=this.createMesh(2**Math.ceil(Math.log2(required)));mesh.instanceMatrix.array.set(old.instanceMatrix.array);mesh.instanceColor!.array.set(old.instanceColor!.array);mesh.count=old.count;this.group.remove(old);old.dispose();this.mesh=mesh;this.group.add(mesh);}
     let visibleCount=this.mesh.count;
     // Producer changes are already sorted by CURRENT source ordinal.
@@ -203,7 +219,7 @@ class CropBatch {
       firstMatrix=Math.min(firstMatrix,slot);lastMatrix=Math.max(lastMatrix,slot);
       this.slots.delete(id);this.captures.delete(id);this.free.push(slot);
     }
-    const required=Math.max(crops.length,reset?world.width*world.height:0),resized=required>this.mesh.instanceMatrix.count;
+    const required=Math.max(crops.length,reset&&this.kind!=='hops'?world.width*world.height:0),resized=required>this.mesh.instanceMatrix.count;
     if(resized){
       const old=this.mesh,mesh=this.createMesh(2**Math.ceil(Math.log2(required)));
       mesh.instanceMatrix.array.set(old.instanceMatrix.array);mesh.instanceColor!.array.set(old.instanceColor!.array);
@@ -246,8 +262,8 @@ class CropBatch {
   dispose(): void { this.clearTargetPreview();this.residentBounds.clear();this.liveSlots.clear();this.insertionOrder.clear();this.captures.clear();this.mesh.dispose(); this.geometry.dispose(); }
 }
 
-/** Four historical shapes are prewarmed even empty. Haygrass becomes resident
- * only when present. CPU work is on snapshots; old crop geometry is retained. */
+/** Historical shapes and the small hops batch are prewarmed even empty.
+ * Haygrass becomes resident only when present. CPU work is on snapshots; old crop geometry is retained. */
 export class CropLayer {
   readonly group=new THREE.Group();
   private readonly batches:CropBatch[];

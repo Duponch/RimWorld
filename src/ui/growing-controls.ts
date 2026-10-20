@@ -3,6 +3,7 @@ import { PLANT_DEFINITIONS } from '../sim/plants';
 import { CROP_KINDS, type CropKind } from '../sim/crops';
 
 const CULTURE_HELP:Record<CropKind,string>={
+  hops:'Culture 3 pour semer ; sol et hydroponie. Un plant mûr peut donner 8 houblons. Cinq jours de croissance pondérée et sensibilité à la fertilité de 70 % ; la lumière, le froid et la nuit modifient la durée réelle. Le houblon se conserve 30 jours à température ambiante. La recherche Brassage de bière débloque la brasserie et le tonneau, sans conditionner le semis du houblon.',
   haygrass:'Le foin mûr donne jusqu’à 18 unités. Sept jours de croissance pondérée, sensibilité à la fertilité de 60 %. Sol uniquement, sans hydroponie. Semis 17 ticks et récolte 20 ticks nominaux ; la durée et le rendement dépendent du récolteur et du milieu. Le foin nourrit les herbivores et entre dans les croquettes, mais ne se mange pas par les humains. Conservation : 60 jours à température ambiante.',
   rice:'Le riz mûr donne 6 unités. Cycle court, sensible à la fertilité : utile pour les premières récoltes.',
   potato:'Un plant mûr donne 11 pommes de terre. Cycle intermédiaire, moins pénalisé par le gravier ; le gain en terre riche est aussi plus faible. Conservation : 30 jours à température ambiante.',

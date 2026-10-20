@@ -16,7 +16,10 @@ export function humanConditionMedicalFrontier256(p:Pawn,record:MedicalRecord,clo
  if(!record.animalAgeConditions&&p.mental?.crisis?.kind!=='confused-wander'&&!record.toxicBuildup)return;
  if(record.body)throw Error('Human condition frontier requires the actual human record');
  if(record.humanHealthScale!==undefined&&record.animalAgeConditions?.cases.some(c=>c.kind==='Alzheimers'))throw Error('Actual native Human Alzheimer memories and conditional thoughts are not bound');
- if(!hasHumanConditionMind256(p))throw Error('Historical human clinical wander authority is unavailable');
+ // Carcinoma has no mental giver or skill/memory effect. A newly acquired
+ // liver cancer can evolve on an old literal human without inventing a mind.
+ const requiresMind=!record.alcohol||!!record.toxicBuildup||p.mental?.crisis?.kind==='confused-wander'||record.animalAgeConditions?.cases.some(c=>c.kind!=='Carcinoma');
+ if(requiresMind&&!hasHumanConditionMind256(p))throw Error('Historical human clinical wander authority is unavailable');
  const local=owner.kind==='map'?owner.world:undefined,commitPawn=actualCommitPawn??p;
  if(actualCommitPawn&&(owner.kind!=='map'||!local||!isSchema256Or257(local.schemaVersion)||actualCommitPawn===p||p.id!==actualCommitPawn.id||p.health!==record||actualCommitPawn.health===record||local.tick!==clock||!local.pawns.includes(actualCommitPawn)||local.pawns.some(a=>a!==actualCommitPawn&&a.id===p.id)))throw Error('Private clinical outcome lacks its actual original map owner');
  const random=animalClinicalRandom256(draw);

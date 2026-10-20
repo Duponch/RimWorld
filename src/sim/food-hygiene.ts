@@ -1,4 +1,5 @@
 import {processToxicVomit256,toxicVomitEngagement256} from './toxic-vomit-256.ts';
+import {processAlcoholVomit265} from './alcohol-vomit-265.ts';
 import {cancelMelee} from './melee-state.ts';
 import {cancelShooting} from './shooting-state.ts';
 import {cancelToxicVomit256} from './toxic-buildup-256.ts';
@@ -37,20 +38,22 @@ export function ingestFoodRisk(w:World,p:Pawn|WildAnimal,food:Pick<MaterialPile,
 /** Captured movement finishes before a vomiting episode interrupts the job.
  * Carried material is released through the ordinary conservative mechanism. */
 export function processPawnVomiting(w:World,p:Pawn):boolean {
-  const state=p.health?.foodPoisoning,flu=p.health?.flu,malaria=p.health?.immuneDiseases?.malaria,crypto=p.health?.cryptosleepSickness,toxic=p.health?.toxicBuildup;
-  if((!state&&!flu&&!malaria&&!crypto&&!toxic)||p.state==='dead')return false;
+  const state=p.health?.foodPoisoning,flu=p.health?.flu,malaria=p.health?.immuneDiseases?.malaria,crypto=p.health?.cryptosleepSickness,toxic=p.health?.toxicBuildup,alcohol=p.health?.alcohol;
+  if((!state&&!flu&&!malaria&&!crypto&&!toxic&&!alcohol)||p.state==='dead')return false;
   const context:FoodPoisonVomitContext={
     awake:!['sleeping','downed'].includes(p.state)&&!p.stun,position:p,foodLevel:p.hunger,foodMax:100,
     random:()=>healthRandom(w),canStand:c=>canStandAt(w,c),deposit:c=>addFilth(w,c,'vomit'),
-    start:()=>{if(p.moveCooldown>0)return false;interruptWork(w,p);p.path=[];p.state='idle';return true;},
+    start:()=>{if(p.moveCooldown>0)return false;if(alcohol)delete alcohol.vomit;interruptWork(w,p);p.path=[];p.state='idle';return true;},
   };
   const toxicContext:FoodPoisonVomitContext={...context,awake:!carrierOf(w,p.id)&&p.state!=='sleeping'&&!p.medicalSleep&&!p.stun&&!!p.health&&assessMedical(p.health).canBeAwake,start:()=>{if(p.moveCooldown>0)return false;const down=p.state==='downed';cancelMelee(p);cancelShooting(p);interruptWork(w,p);p.path=[];p.state=down?'downed':'idle';return true;}};
   if(toxic&&!toxicContext.awake&&p.health)cancelToxicVomit256(p.health);
+  if(alcohol&&!toxicContext.awake){delete alcohol.vomit;delete alcohol.vomitRequestedAt;}
   // An active malaria episode keeps its owner; otherwise the historical
   // food poisoning/Flu order runs first, followed by malaria only if idle.
   const activeMalaria=!!malaria?.vomit;
   let chosen:ReturnType<typeof processVomit>|undefined;
-  if((toxic?.vomit||toxic?.vomitRequestedAt!==undefined)&&p.health)chosen=processToxicVomit256(p.health,w.tick,p.id,toxicContext,toxicVomitEngagement256(p,w.tick));
+  if((alcohol?.vomit||alcohol?.vomitRequestedAt!==undefined)&&p.health)chosen=processAlcoholVomit265(p.health,w.tick,p.id,toxicContext,toxicVomitEngagement256(p,w.tick));
+  else if((toxic?.vomit||toxic?.vomitRequestedAt!==undefined)&&p.health)chosen=processToxicVomit256(p.health,w.tick,p.id,toxicContext,toxicVomitEngagement256(p,w.tick));
   else if(crypto?.vomit&&!carrierOf(w,p.id))chosen=processVomit(crypto,w.tick,p.id%60,context,cryptosleepVomitChance256(crypto));
   else if(activeMalaria)chosen=processVomit(malaria!,w.tick,p.id%60,context,immuneDiseaseVomitChance(malaria));
   else{
@@ -71,6 +74,7 @@ export function processPawnVomiting(w:World,p:Pawn):boolean {
   }
   if(!chosen)return false;
   if(toxic?.vomitRequestedAt!==undefined)return false;
+  if(alcohol?.vomitRequestedAt!==undefined)return false;
   p.hunger=chosen.foodLevel;
   if(chosen.active){p.path=[];if(!['dead','downed','sleeping'].includes(p.state))p.state='idle';p.planCooldown=0;}
   return chosen.active;

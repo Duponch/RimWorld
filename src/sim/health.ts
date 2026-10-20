@@ -1,4 +1,5 @@
 import {notifyKidnapLordHarm261} from './caravan-kidnap-lord-261.ts';
+import {cancelAlcoholSpatial265} from './alcohol-state-265.ts';
 import {humanConditionMedicalFrontier256} from './human-condition-frontier-256.ts';
 import {recoverHumanConfusion256} from './human-condition-mind-256.ts';
 import {commitToxicDeath256,cancelToxicVomit256} from './toxic-buildup-256.ts';
@@ -32,6 +33,7 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn),ex
   if(externalViolence)notifyKidnapLordHarm261(world,pawn);
   const status=medicalStatus(pawn.health,body);if(status==='dead')commitToxicDeath256(pawn.health,()=>healthRandom(world));
   if(status!=='mobile') {
+    if(pawn.state!==status||status==='dead'||!body.canBeAwake)cancelAlcoholSpatial265(pawn.health);
     cancelCryptosleepVomit256(pawn.health);if(pawn.state!==status||status==='dead'||!body.canBeAwake)cancelToxicVomit256(pawn.health);
     delete pawn.bombRefuge;
     if(pawn.mental?.crisis?.kind==='confused-wander')recoverHumanConfusion256(pawn);else finishMentalBreak(world,pawn,status!=='dead');
@@ -59,6 +61,7 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn),ex
     pawn.need=null;delete pawn.medicalSleep;pawn.state='idle';pawn.planCooldown=0;pawn.needCooldown=0;
     announce(world,`${pawn.name} peut de nouveau se relever.`);
   }
+  if(world.schemaVersion>=265&&pawn.need?.kind==='eat'&&pawn.need.alcoholReason!==undefined&&(body.capacities.eating<=0||body.capacities.manipulation<=0))interruptWork(world,pawn,retainTravellingCargo);
   if(body.capacities.manipulation===0&&(pawn.hunting||pawn.research||pawn.equipmentTask||pawn.jobId!==null||pawn.ward||pawn.feed||pawn.tend||pawn.surgery||pawn.rescue||pawn.animalRescue||pawn.haul||pawn.cooking||pawn.recreation.task?.activity==='chess'||pawn.orders.active!==null||pawn.orders.queue.length||pawn.priorityWork))interruptWork(world,pawn,retainTravellingCargo);
   if(body.capacities.manipulation===0)delete pawn.shooting;
   dropIncapacitatedEquipment(world,pawn);
@@ -74,7 +77,7 @@ export function updatePawnHealth(world:World,pawn:Pawn,retainTravellingCargo=fal
     const bed=resting?currentMedicalBed(world,pawn,carried):undefined;
     const nextInfection=record.infections?.nextId??1;
     const sky=pawn.moveCooldown===0&&pawn.state==='recreating'&&pawn.recreation.task?.activity==='skygaze'&&pawn.recreation.task.phase==='active';
-    const actualPawn=record.toxicBuildup?pawn:undefined,actualRecord=record,actualRng=world.rng,actualTick=world.tick,actualActors=world.pawns;
+    const actualPawn=record.toxicBuildup||(record.alcohol?.tolerance??0)>.45?pawn:undefined,actualRecord=record,actualRng=world.rng,actualTick=world.tick,actualActors=world.pawns;
     const actorBefore=actualPawn?JSON.stringify(actualPawn):undefined,privateRandom=actualPawn?{rng:world.rng}:undefined;
     if(actualPawn){
       if(!world.pawns.includes(actualPawn)||!Object.isExtensible(actualPawn)||Reflect.ownKeys(actualPawn).some(k=>{const d=Object.getOwnPropertyDescriptor(actualPawn,k)!;return !('value'in d)||!d.writable||!d.configurable;}))throw Error('Toxic clinical original is not a mutable actual map owner');
@@ -82,7 +85,7 @@ export function updatePawnHealth(world:World,pawn:Pawn,retainTravellingCargo=fal
     }
     const medicalDraw=privateRandom?()=>healthRandom(privateRandom):()=>healthRandom(world);
     const conditionFrontier=humanConditionMedicalFrontier256(pawn,record,world.tick,medicalDraw,{kind:'map',world},actualPawn);
-    advanceMedical(record,world.tick-record.tick,{phase:pawn.id%60,toxicOwner:{id:pawn.id,spawned:!carrierOf(world,pawn.id),awake:pawn.state!=='sleeping'&&!pawn.medicalSleep&&!pawn.stun},cryptosleepSicknessSpawned:!carrierOf(world,pawn.id),posture:bed?'bed':resting?'ground':'standing',starving:pawn.hunger<=0,malnutritionRate:world.schemaVersion>=84?malnutritionRate(pawn.id):undefined,infectionChanceFactor:playerInfectionFactor(world,pawn),
+    advanceMedical(record,world.tick-record.tick,{phase:pawn.id%60,alcoholOwner:{id:pawn.id,spawned:!carrierOf(world,pawn.id),awake:pawn.state!=='sleeping'&&!pawn.medicalSleep&&!pawn.stun,inMentalState:!!pawn.mental?.crisis},toxicOwner:{id:pawn.id,spawned:!carrierOf(world,pawn.id),awake:pawn.state!=='sleeping'&&!pawn.medicalSleep&&!pawn.stun},cryptosleepSicknessSpawned:!carrierOf(world,pawn.id),posture:bed?'bed':resting?'ground':'standing',starving:pawn.hunger<=0,malnutritionRate:world.schemaVersion>=84?malnutritionRate(pawn.id):undefined,infectionChanceFactor:playerInfectionFactor(world,pawn),
       hunger:pawn.hunger,rest:pawn.rest,restingBonus:!!bed||resting&&pawn.state!=='downed'||sky,infectionSeed:(world.seed^Math.imul(pawn.id,0x9e3779b1))>>>0,
       ageImmunityFactor:humanAgeImmunityFactor(pawn.age),...(bed?{bedHealPerDay:bedHealPerDay(bed),bedImmunityFactor:bedImmunityFactor(bed,world)}:{})},medicalDraw,conditionFrontier);
     if(actualPawn){

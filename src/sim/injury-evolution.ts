@@ -1,4 +1,6 @@
 import {advanceToxicBuildupCore256} from './toxic-buildup-256.ts';
+import {advanceAlcoholCore265} from './alcohol-clinical-265.ts';
+import {alcoholClinicalActive265} from './alcohol-state-265.ts';
 import {animalClinicalRandom256} from './animal-condition-medical-frontier-256.ts';
 import type {AnimalConditionMedicalFrontier256} from './animal-condition-medical-frontier-256.ts';
 import {advanceCryptosleepSickness256,cryptosleepSick256} from './cryptosleep-sickness-256.ts';
@@ -38,6 +40,7 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
     context.bedHealPerDay!==undefined&&context.bedHealPerDay!==0&&context.bedHealPerDay!==4&&context.bedHealPerDay!==10||
     context.bedImmunityFactor!==undefined&&context.bedImmunityFactor!==1&&context.bedImmunityFactor!==1.05&&context.bedImmunityFactor!==1.07&&context.bedImmunityFactor!==1.11&&context.bedImmunityFactor!==1.13)throw new Error('Invalid medical interval');
   if(record.death||isMechanoidKind(record.body))return;
+  if(record.alcohol&&(!context.alcoholOwner||!Number.isSafeInteger(context.alcoholOwner.id)||context.alcoholOwner.id<1||typeof context.alcoholOwner.spawned!=='boolean'||typeof context.alcoholOwner.awake!=='boolean'))throw Error('Alcohol clinical interval requires its actual original owner');
   if(record.toxicBuildup&&(!context.toxicOwner||!Number.isSafeInteger(context.toxicOwner.id)||context.toxicOwner.id<1||typeof context.toxicOwner.spawned!=='boolean'||typeof context.toxicOwner.awake!=='boolean'))throw Error('Toxic clinical interval requires its actual original owner');
   if(record.animalAgeConditions&&!animalConditions)throw Error('Actual conditions require the real owner frontier');
   if(record.cryptosleepSickness&&typeof context.cryptosleepSicknessSpawned!=='boolean')throw Error('Missing actual cryptosleep sickness physical owner');
@@ -45,7 +48,7 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
   if(pending&&!Number.isSafeInteger((record.infections?.nextId??1)+pending))throw new Error('Infection identities exhausted');
   if((record.infections?.cases.length||pending)&&!Number.isSafeInteger((record.tick+ticks)*10))throw new Error('Infection clock exhausted');
   if(record.immuneDiseases&&!Number.isSafeInteger((record.tick+ticks)*10))throw new Error('Immune disease clock exhausted');
-  if(!animalConditions&&!record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.infections?.cases.length&&!record.infections?.immunity&&!record.foodPoisoning&&!record.toxicBuildup&&!record.cryptosleepSickness&&!record.flu&&!record.immuneDiseases&&!record.anesthetic&&!(context.malnutritionRate&&(context.starving||record.malnutrition))){record.tick+=ticks;return;}
+  if(!animalConditions&&!alcoholClinicalActive265(record.alcohol)&&!record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.infections?.cases.length&&!record.infections?.immunity&&!record.foodPoisoning&&!record.toxicBuildup&&!record.cryptosleepSickness&&!record.flu&&!record.immuneDiseases&&!record.anesthetic&&!(context.malnutritionRate&&(context.starving||record.malnutrition))){record.tick+=ticks;return;}
   const end=record.tick+ticks;
   while(record.tick<end) {
     record.tick++;
@@ -57,6 +60,7 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
       if(!advanceCryptosleepSickness256(sickness,10))delete record.cryptosleepSickness;
     }
     animalConditions?.step(record);if(record.death)return;
+    if(record.alcohol){for(let core=(record.tick-1)*10+1;core<=record.tick*10&&!record.death;core++){advanceAlcoholCore265(record,core,context.alcoholOwner!,random);reconcileMedicalDeath(record);}if(record.death)return;}
     if(record.toxicBuildup){const actual=context.toxicOwner!,draw=animalClinicalRandom256(random);for(let core=(record.tick-1)*10+1;core<=record.tick*10&&!record.death;core++){advanceToxicBuildupCore256(record,actual.id,core,draw,actual);reconcileMedicalDeath(record);}if(record.death)return;}
     if(advanceAnesthetic(record,context.phase)){reconcileMedicalDeath(record);if(record.death)return;}
     if(record.foodPoisoning){

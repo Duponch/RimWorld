@@ -1,5 +1,6 @@
 import type {WildAnimal} from './wildlife-state.ts';
 import type {MaterialPile,World} from './types.ts';
+import {SCHEMA_VERSION} from './types.ts';
 import type {AwayGroup} from './group-capture.ts';
 import type {GroupInventoryVector} from './group-reorganization-state.ts';
 import {animalItemDiet256,animalPlantDiet256} from './animal-diet-v256.ts';
@@ -17,19 +18,20 @@ type Group=AwayGroup&{animalOwners?:GroupAnimalOwners256;reorganization?:NonNull
 export const caravanAnimalWantFood256=animalFoodWantEat256;
 const plants=new Set<ItemId>(['rice','corn','potato','berries','agave-fruit','raw-fungus']);
 /** Positive Core categories only, no corpse-as-stack or inappropriate drug. */
-export function caravanAnimalFood256(a:WildAnimal,p:MaterialPile,tick:number):boolean {
+export function caravanAnimalFood256(a:WildAnimal,p:MaterialPile,tick:number,version:number=SCHEMA_VERSION):boolean {
  if(p.kind!=='food'||!ITEM_DEFINITIONS[p.item].nutrition||ticksUntilRot(p,tick)<=0)return false;
- return caravanAnimalFoodEver256(a,p.item);
+ return caravanAnimalFoodEver256(a,p.item,version);
 }
 /** Definition-only diet shared by the preview; freshness belongs to the actual
  * stack check above, independently of future rot duration. */
-export function caravanAnimalFoodEver256(a:WildAnimal,item:ItemId):boolean {
- const exact=animalItemDiet256(a,item);if(exact!==undefined)return exact;
+export function caravanAnimalFoodEver256(a:WildAnimal,item:ItemId,version:number=SCHEMA_VERSION):boolean {
+ const exact=animalItemDiet256(a,item,false,version);if(exact!==undefined)return exact;
+ if(item==='hops')return version>=265&&!animalSpecies(a.species).predator;
  if(item==='kibble')return true;if(item==='hay')return !animalSpecies(a.species).predator;
  return animalSpecies(a.species).predator?isAnimalMeat(item)||item.endsWith('-meal')||item==='pemmican':plants.has(item)||item.endsWith('-meal')||item==='pemmican'||item==='milk';
 }
 export function caravanAnimalFoodScore256(p:Pick<MaterialPile,'item'>):number {
- const item=p.item,base=item==='kibble'||item==='hay'?5:isAnimalMeat(item)?4:plants.has(item)&&item!=='berries'?3:eggSpeciesForItem256(item)?3:item==='berries'||item==='milk'?2:item==='pemmican'||item==='survival-meal'||item==='simple-meal'||item==='nutrient-paste-meal'?1:0;
+ const item=p.item,base=item==='kibble'||item==='hay'||item==='hops'?5:isAnimalMeat(item)?4:plants.has(item)&&item!=='berries'?3:eggSpeciesForItem256(item)?3:item==='berries'||item==='milk'?2:item==='pemmican'||item==='survival-meal'||item==='simple-meal'||item==='nutrient-paste-meal'?1:0;
  return Math.fround(base+Math.min(Math.fround(ITEM_DEFINITIONS[item].nutrition/10000),.999));
 }
 /** Counter changes are actual physical effects since the current opening;
@@ -50,7 +52,7 @@ export function satisfyCaravanAnimalFood256(w:World,g:Group,a:WildAnimal,c:{temp
  if(!g.animalOwners?.members.includes(a)||a.state==='dead'||a.health?.death||a.food>=animalNutritionMax(a)*caravanAnimalWantFood256(a)*.8)return;
  const plant=animalPlantDiet256(a);if((plant===true||plant===undefined&&!animalSpecies(a.species).predator)&&c.hasVirtualPlants&&c.temperature>=0){a.food=Math.min(animalNutritionMax(a),Math.fround(a.food+Math.fround(.5*Math.fround(.7+.3*c.random()))));return;}
  const holders=new Set([...g.members,...g.animalOwners.members].filter(p=>p.state!=='dead'&&!p.health?.death).map(p=>p.id));
- let selected:MaterialPile|undefined,score=-Infinity;for(const p of g.items)if(p.owner.type==='inventory'&&holders.has(p.owner.pawnId)&&caravanAnimalFood256(a,p,w.tick)){const s=caravanAnimalFoodScore256(p);if(s>score){selected=p;score=s;}}
+ let selected:MaterialPile|undefined,score=-Infinity;for(const p of g.items)if(p.owner.type==='inventory'&&holders.has(p.owner.pawnId)&&caravanAnimalFood256(a,p,w.tick,w.schemaVersion)){const s=caravanAnimalFoodScore256(p);if(s>score){selected=p;score=s;}}
  if(!selected)return;const nutrition=ITEM_DEFINITIONS[selected.item].nutrition/100,wanted=animalNutritionMax(a)-a.food;
  const quantity=Math.min(selected.quantity,ITEM_DEFINITIONS[selected.item].maxIngest,Math.max(1,Math.ceil(wanted/nutrition)));if(!Number.isSafeInteger(quantity)||quantity<1)throw Error('Invalid animal food quantity');
  recordCaravanAnimalConsumption256(g,selected.item,quantity);

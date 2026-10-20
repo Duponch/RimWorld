@@ -5,7 +5,7 @@ import type { Resource, World } from '../sim/types';
 
 type Partition = Record<ResidentCropKind, Resource[]>;
 type ReadonlyPartition = Readonly<Record<ResidentCropKind, readonly Resource[]>>;
-const emptyPartition = (): Partition => ({ rice: [], potato: [], corn: [], cotton: [], haygrass: [] });
+const emptyPartition = (): Partition => ({ rice: [], potato: [], corn: [], cotton: [], haygrass: [], hops: [] });
 
 /** Only membership is retained. Continuous growth, leaf loss, transforms and
  * upload ranges are still evaluated at every ordinary crop presentation. */

@@ -35,7 +35,7 @@ export interface ResearchReadiness {
 }
 /** The explicit version gates in selectResearch, without invoking a command. */
 const minimumSchema:Partial<Record<ResearchProject,number>>={
-  'geothermal-power':264,pemmican:248,'biofuel-refining':218,'nutrient-paste':217,'deep-drilling':215,'ground-scanner':215,
+  brewing:265,'geothermal-power':264,pemmican:248,'biofuel-refining':218,'nutrient-paste':217,'deep-drilling':215,'ground-scanner':215,
   'sterile-materials':211,'vitals-monitor':211,'drug-production':206,'medicine-production':206,
   hydroponics:203,'gun-turrets':193,'tube-television':190,'packaged-survival-meals':188,
   'hospital-bed':187,autodoors:143,

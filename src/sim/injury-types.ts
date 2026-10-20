@@ -17,6 +17,8 @@ export interface Injury {
 }
 export interface MissingPart {part:BodyPartId;bornAt:number;tended?:true;nonFresh?:true}
 export interface MedicalRecord {
+  /** Prospective only, created by an actually ingested beer in schema265. */
+  alcohol?:import('./alcohol-state-265.ts').AlcoholState265;
   scaria261?:import('./animal-scaria-261.ts').AnimalScaria261;
   /** Prospective nativeHuman current scale, parent checked against actual biological age. */
   humanHealthScale?:number;
@@ -54,6 +56,7 @@ export interface MedicalRecord {
   death?:{tick:number;cause:'execution'|'blood-loss'|'vital-failure'|'trauma'|'heatstroke'|'hypothermia'|'downed'|'infection'|'malnutrition'|'flu'|'malaria'|'plague'|'heart-artery-blockage'|'heart-attack'|'toxic-buildup'|'scaria'};
 }
 export interface MedicalContext {
+  alcoholOwner?:import('./alcohol-clinical-265.ts').AlcoholOwner265;
   /** Actual owner witness when cryptosleep sickness exists; never a fake map. */
   cryptosleepSicknessSpawned?:boolean;
   /** Actual owner id/spawn/awake witness, required only for prospective toxicity. */

@@ -1,4 +1,5 @@
 import {shipChunkNextRandom256} from './ship-chunk-leavings-256.ts';
+import {fermentationContents265} from './fermentation-state-265.ts';
 import {drawShipChunkDeconstruction256} from './ship-chunk-leavings-256.ts';
 import {isAncientCasket256} from './ancient-casket-state-256.ts';
 import {planEmptyAncientCasketRemoval256} from './ancient-casket-empty-removal-256.ts';
@@ -67,6 +68,8 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   }
   const fuelTicks = structure.fuel ? structure.fuel.ticks + structure.fuel.burned : 0;
   const ledger = world.deconstructed;
+  const fermentation=fermentationContents265(structure),fermentationLostKey=fermentation?.item==='beer'?'lostBeer':'lostWort';
+  if(fermentation&&!Number.isSafeInteger((ledger[fermentationLostKey]??0)+fermentation.quantity))return false;
   if (![(ledger.lostComponents??0)+lostComponents, ledger.count + 1, ledger.lostWood + lostWood, (ledger.lostSteel ?? 0) + lostSteel, ledger.fuelTicks + fuelTicks,...Object.values(lostBlocks),...Object.values(lostTextiles)].every(Number.isSafeInteger)) return false;
   if(!commitGraveRelease(world,structure,graveRelease))return false;
   commitShelfRemoval(world,shelfRemoval);
@@ -76,6 +79,7 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   for(const a of world.wildlife?.animals??[])if(a.manhunter?.door?.targetId===structure.id)delete a.manhunter.door;
   for (const d of refunds) addMaterial(world, ITEM_DEFINITIONS[d.item].kind, d.quantity, { type: 'ground', ...d.cell }, d.item);
   ledger.count++; ledger.lostWood += lostWood; ledger.fuelTicks += fuelTicks;
+  if(fermentation)ledger[fermentationLostKey]=(ledger[fermentationLostKey]??0)+fermentation.quantity;
   if(lostComponents)ledger.lostComponents=(ledger.lostComponents??0)+lostComponents;
   if (lostSteel) ledger.lostSteel = (ledger.lostSteel ?? 0) + lostSteel;
   if(Object.keys(lostBlocks).length)ledger.lostBlocks=lostBlocks;

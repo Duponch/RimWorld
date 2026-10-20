@@ -9,6 +9,7 @@ export type MentalCrisisKind=keyof typeof MENTAL_CRISIS_CATALOG;
 const descriptions:Readonly<Record<MentalCrisisKind,string>>={
   'sad-wander':'ne travaille plus et refuse les ordres. Cherche encore nourriture et sommeil en cas de besoin extrême.',
   'food-binge':'cherche à manger même rassasié, sans suivre son régime ; les repas restent physiques.',
+  'drug-binge':'cherche de la bière sans suivre sa politique de drogues ; chaque prise exige une bière physique, un déplacement et le contact. Refuse les ordres sans devenir hostile.',
   'confused-wander':'se déplace sans but pendant un épisode de confusion lié à la santé.',
   tantrum:'Refuse les ordres et s’en prend aux bâtiments accessibles.',
   berserk:'Refuse les ordres et devient hostile à tous. Ne poursuit pas une victime à terre.',

@@ -25,6 +25,7 @@ export function processToxicVomit256(record:MedicalRecord,tick:number,id:number,
   if(record.flu)delete record.flu.vomit;
   if(record.immuneDiseases?.malaria)delete record.immuneDiseases.malaria.vomit;
   if(record.cryptosleepSickness)delete record.cryptosleepSickness.vomit;
+  if(record.alcohol)delete record.alcohol.vomit;
   return true;
  };
  const result=processVomit(t,tick,phase,{...context,start},0,accepted);

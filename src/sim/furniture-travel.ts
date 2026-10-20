@@ -26,6 +26,7 @@ export function terrainTravelDelay(world:World,index:number):number {
 /** Current Core wiki path costs, converted by the local day/tick ratio (10).
  * Repeat suppression is shared by all qualifying furniture, not by instance. */
 export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:number;stand:boolean;repeat:boolean}>>>=Object.freeze({
+  brewery:{delay:5,stand:false,repeat:true},'fermenting-barrel':{delay:4.2,stand:false,repeat:true},
   'insect-hive':{delay:4.2,stand:false,repeat:true},'glow-pod':{delay:0,stand:false,repeat:true},
   'ancient-cryptosleep-casket':{delay:4.2,stand:false,repeat:true},
   column:{delay:0,stand:false,repeat:true},urn:{delay:3,stand:false,repeat:true},'stele-large':{delay:5,stand:false,repeat:true},'stele-grand':{delay:5,stand:false,repeat:true},sarcophagus:{delay:4.2,stand:false,repeat:true},

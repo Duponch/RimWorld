@@ -19,6 +19,7 @@ function gear(baseMarketValue:number,maxHitPoints:number,visitorHandles:boolean,
   return value(baseMarketValue,visitorHandles,{healthAffectsPrice:true,maxHitPoints,hasQuality:true,sellPriceFactor:weapon?.2:1,...extra});
 }
 export const TRADE_CATALOGUE:Readonly<Partial<Record<ItemId,TradeCatalogueEntry>>>=Object.freeze({
+  hops:value(1.3,false),wort:value(2.5,false,{playerCanBuy:false,playerCanSell:false}),beer:value(12,false,{maxHitPoints:50}),
   pemmican:value(1.4),
   jade:value(5,false,{playerCanBuy:false,playerCanSell:false}),
   silver:value(1,true),wood:value(1.2),steel:value(1.9),gold:value(10),uranium:value(6),plasteel:value(9),cloth:value(1.5,true),'light-leather':value(1.9),'muffalo-wool':value(2.7),component:value(32,true),'advanced-component':value(200),

@@ -33,7 +33,7 @@ export function captureFoodReadability(world:World,visibility:FoodReadabilityVis
  const people=world.pawns.filter(civil),ids=new Set(people.map(p=>p.id)),ground=bucket(),held=new Map<number,Bucket>();
  let freshNutrition=0,survivalMeals=0,freshPileCount=0;
  for(const pile of world.piles){
-  if(pile.kind!=='food'||pile.item==='hay'||pile.quantity<=0||!ITEM_DEFINITIONS[pile.item].nutrition||visibility.pileVisible?.(pile)===false||ticksUntilRot(pile,world.tick)<=0)continue;
+  if(pile.kind!=='food'||pile.item==='hay'||pile.item==='hops'||pile.quantity<=0||!ITEM_DEFINITIONS[pile.item].nutrition||visibility.pileVisible?.(pile)===false||ticksUntilRot(pile,world.tick)<=0)continue;
   const owner=pile.owner;
   if(owner.type!=='ground'&&(owner.type!=='pawn'||!ids.has(owner.pawnId)))continue;
   freshNutrition+=nutritionOf(pile)/100;freshPileCount++;if(pile.item==='survival-meal')survivalMeals+=pile.quantity;

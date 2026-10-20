@@ -20,7 +20,8 @@ export function initializeRecreation(world: World): void {
   }
 }
 function recreationNeedErrors(joy:unknown,version:number):string[] {
-  const kinds=version>=190?RECREATION_KINDS:version>=124?RECREATION_KINDS.slice(0,4):version>=122?RECREATION_KINDS.slice(0,3):RECREATION_KINDS.slice(0,2);
+  const base=version>=190?RECREATION_KINDS:version>=124?RECREATION_KINDS.slice(0,4):version>=122?RECREATION_KINDS.slice(0,3):RECREATION_KINDS.slice(0,2);
+  const kinds:readonly string[]=version===265&&record(joy)&&record(joy.tolerance)&&Object.hasOwn(joy.tolerance,'chemical')?[...base,'chemical']:base;
   if(!record(joy)||!meter(joy.level)||!record(joy.tolerance)||!record(joy.bored)
     ||Object.keys(joy.tolerance).length!==kinds.length||Object.keys(joy.bored).length!==kinds.length
     ||kinds.some(k=>!meter((joy.tolerance as Record<string,unknown>)[k])||typeof (joy.bored as Record<string,unknown>)[k]!=='boolean'))return ['Invalid recreation need.'];

@@ -20,7 +20,7 @@ const CATEGORY_ICONS: Readonly<Record<string, string>> = {
 const PRODUCTION_ORDER = [
   'hydroponics-basin', 'deep-drill', 'ground-scanner', 'orbital-beacon',
   'comms-console', 'nutrient-paste-dispenser', 'hopper', 'research-bench',
-  'tailor-bench', 'drug-lab', 'electric-crematorium', 'electric-smelter', 'biofuel-refinery', 'art-bench',
+  'tailor-bench', 'brewery', 'fermenting-barrel', 'drug-lab', 'electric-crematorium', 'electric-smelter', 'biofuel-refinery', 'art-bench',
   'machining-table', 'hi-tech-research-bench', 'multi-analyzer', 'fabrication-bench',
   'electric-tailor-bench', 'crafting-spot', 'fueled-stove', 'electric-stove',
 ] as const;

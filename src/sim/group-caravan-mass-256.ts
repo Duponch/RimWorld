@@ -14,6 +14,7 @@ export type GroupWithTravelPacked256=AwayGroup&{packed?:PackedFurniture[]};
 /** This new contract alone admits real gathered fruits. It does not broaden
  * mass/possession admission of a historical group or an individual trip. */
 export function groupCaravanUnitMass256(item:MaterialPile['item'],freight:boolean,version:number=256):number|undefined {
+ if(item==='hops'||item==='wort'||item==='beer')return version>=265?commercialItemMassGrams(item,version):undefined;
  const extra=additionalGroupFreightMass258(item,version);if(extra!==undefined)return extra;
  if(item==='herbal-medicine')return 350;if(item==='glitterworld-medicine')return 500;
  return ITEM_DEFINITIONS[item].nutrition>0?(commercialItemMassGrams(item,256)??(item==='berries'?27:['rice','corn','potato','agave-fruit'].includes(item)||isAnimalMeat(item)?30:['simple-meal','fine-meal','lavish-meal','vegetarian-fine-meal','carnivore-fine-meal','vegetarian-lavish-meal','carnivore-lavish-meal'].includes(item)?440:item==='milk'?30:undefined)):Object.hasOwn(GROUP_FORAGED_MASS_256,item)?GROUP_FORAGED_MASS_256[item as keyof typeof GROUP_FORAGED_MASS_256]:groupItemMassGrams(item,freight,256);

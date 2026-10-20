@@ -32,8 +32,9 @@ export const animalFoodPreference=(item:ItemId):number=>item==='kibble'?100:item
 const herbivoreFoods:ReadonlySet<ItemId>=new Set(['nutrient-paste-meal','berries','rice','potato','corn','agave-fruit','simple-meal','fine-meal','vegetarian-fine-meal','carnivore-fine-meal','lavish-meal','vegetarian-lavish-meal','carnivore-lavish-meal','survival-meal','pemmican','legacy-portion']);
 const preparedFoods:ReadonlySet<ItemId>=new Set(['nutrient-paste-meal','simple-meal','fine-meal','vegetarian-fine-meal','carnivore-fine-meal','lavish-meal','vegetarian-lavish-meal','carnivore-lavish-meal','survival-meal','pemmican','legacy-portion']);
 export const animalPileFood=(world:World,a:WildAnimal,p:World['piles'][number]):boolean=>isAnimalSpecies256(a.species)
-  ?world.schemaVersion>=256&&animalItemDiet256(a,p.item,p.kind==='corpse')===true&&(p.kind==='corpse'?corpseFresh(p,world.tick)&&!!p.corpse&&corpsePartNutrition(p.corpse,'torso')>.001:p.kind==='food')
+  ?world.schemaVersion>=256&&animalItemDiet256(a,p.item,p.kind==='corpse',world.schemaVersion)===true&&(p.kind==='corpse'?corpseFresh(p,world.tick)&&!!p.corpse&&corpsePartNutrition(p.corpse,'torso')>.001:p.kind==='food')
   :p.item==='raw-fungus'?p.kind==='food'&&legacyAnimalFungus256(a.species,world.schemaVersion)
+  :p.item==='hops'?world.schemaVersion>=265&&p.kind==='food'&&!animalSpecies(a.species).predator
   :p.item==='hay'||p.item==='kibble'
   ?world.schemaVersion>=227&&p.kind==='food'&&(p.item==='kibble'||!animalSpecies(a.species).predator)
   :animalSpecies(a.species).predator

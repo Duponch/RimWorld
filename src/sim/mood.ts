@@ -1,4 +1,5 @@
 import {hiveDefeatThoughts256} from './cave-hive-memories-256.ts';
+import {alcoholThoughts265} from './alcohol-rules-265.ts';
 import {cryptosleepSick256} from './cryptosleep-sickness-256.ts';
 import {lostThoughts} from './world-map-lost.ts';
 import { COLONY_EXPECTATIONS,type ColonyExpectation } from './expectations.ts';
@@ -74,7 +75,7 @@ export function personalMoodThoughts(pawn:Pawn,c:PersonalMoodContext):readonly M
   if(pawn.mental?.crisis?.kind==='confused-wander')return [];
   if(pawn.state==='dead')return [];
   const expectation=c.expectation;
-  const thoughts:MoodThought[]=[expectation?expectationThoughts.get(expectation.id)!:camp,...roomMoodThoughtsAt(pawn,c.tick),...hiveDefeatThoughts256(pawn,c.tick)];
+  const thoughts:MoodThought[]=[expectation?expectationThoughts.get(expectation.id)!:camp,...roomMoodThoughtsAt(pawn,c.tick),...hiveDefeatThoughts256(pawn,c.tick),...alcoholThoughts265(pawn)];
   if(pawn.bereavement)thoughts.push(...bereavementThoughtsAt(pawn,c.tick,c.people));
   if(pawn.deathThoughts)thoughts.push(...deathThoughtsAt(pawn,c.tick,c.people));
   if(c.lost)thoughts.push(...c.lost);

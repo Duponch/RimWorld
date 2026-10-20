@@ -1,4 +1,5 @@
 import {isSchema256Or257} from './schema-compatibility-257.ts';
+import {fermentationContents265} from './fermentation-state-265.ts';
 import {damageCaveHiveProp256} from './cave-hive-damage-256.ts';
 import {setMaterialForbidden256} from './material-permission-256.ts';
 import {damageEmptyAncientCasket256} from './ancient-casket-empty-removal-256.ts';
@@ -148,14 +149,15 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   const serviceLoss=delivered.reduce((sum,p)=>sum+(p.item==='component'?p.quantity:0),0);
   const actors=world.pawns.filter(p=>{
     const h=p.haul;
-    return p.jobId!==null&&ids.has(p.jobId)||p.research?.stationId===s.id||p.cooking?.stationId===s.id
-      ||h&&(h.whole&&h.sourcePileId===s.id||(h.destination.type==='fuel'||h.destination.type==='turret')&&h.destination.structureId===s.id||h.destination.type==='job'&&ids.has(h.destination.jobId))
+    return p.jobId!==null&&ids.has(p.jobId)||p.research?.stationId===s.id||p.cooking?.stationId===s.id||p.brewing?.barrelId===s.id
+      ||h&&(h.whole&&h.sourcePileId===s.id||(h.destination.type==='fuel'||h.destination.type==='turret'||h.destination.type==='fermenting-barrel')&&h.destination.structureId===s.id||h.destination.type==='job'&&ids.has(h.destination.jobId))
       ||p.need?.kind==='sleep'&&p.need.bedId===s.id||p.recreation.task?.buildingId===s.id||p.recreation.task?.seatId===s.id||p.rescue?.bedId===s.id;
   });
   const plan=planStructureDestruction(detonates?{...world,nextId:world.nextId+1}:world,s,actors,origin,state?.rng??rng,cause==='roof-thick');if(!plan)return false;
   if(detonates&&!Number.isSafeInteger(world.nextId+1+(plan.salvage?.drops.length??0)))return false;
   const {salvage,drops}=plan;
   const destruction=world.destroyed??{count:0,lost:{}},lost={...destruction.lost};
+  const fermentation=fermentationContents265(s);if(fermentation)lost[fermentation.item]=(lost[fermentation.item]??0)+fermentation.quantity;
   for(const cost of constructionRecipe(s).ingredients){const key=cost.item as keyof typeof lost,quantity=cost.quantity-(salvage?.returned.get(cost.item)??0);if(quantity)lost[key]=(lost[key]??0)+quantity;}
   if(serviceLoss)lost.component=(lost.component??0)+serviceLoss;
   const fuelLost=s.fuel?.ticks??0,fuelBurned=s.fuel?.burned??0;

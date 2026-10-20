@@ -2,7 +2,8 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { PresentationChanges } from '../src/bridge/presentation-changes.ts';
 import { mentalCrisisLabel, MENTAL_CRISIS_CATALOG, type MentalCrisisKind } from '../src/sim/mental-catalog.ts';
 import { mentalCrisisStatus, mentalCrisisView } from '../src/sim/mental-presentation.ts';
-import { startBerserk, startFoodBinge, startMurderousRage, startSadWander, startTantrum } from '../src/sim/mental-break.ts';
+import { startAlcoholBinge265, startBerserk, startFoodBinge, startMurderousRage, startSadWander, startTantrum } from '../src/sim/mental-break.ts';
+import {addMaterial} from '../src/sim/materials.ts';
 import { finishMentalBreak } from '../src/sim/mental-state.ts';
 import { queryOrderOptions } from '../src/sim/player-orders.ts';
 import type { Pawn, World } from '../src/sim/types.ts';
@@ -14,6 +15,7 @@ import { animalCombatCamp } from './scenarios/animal-combat.ts';
 
 const starters:Record<MentalCrisisKind,(world:World,pawn:Pawn)=>boolean>={
   'sad-wander':startSadWander,'food-binge':startFoodBinge,tantrum:startTantrum,berserk:startBerserk,'murderous-rage':startMurderousRage,
+  'drug-binge':(world,pawn)=>{addMaterial(world,'beer',1,{type:'ground',x:pawn.x+1,z:pawn.z},'beer');return startAlcoholBinge265(world,pawn);},
 };
 const kinds=Object.keys(MENTAL_CRISIS_CATALOG) as MentalCrisisKind[];
 function camp(){const world=mentalCrisesCamp();crisisBuildings(world);return world;}
@@ -52,6 +54,11 @@ test.each(kinds)('%s shares its actual label, refuses direct orders and keeps th
   expect(starters[kind](world,pawn)).toBe(true);
   const before=JSON.stringify(world),view=mentalCrisisView(world,pawn);
   expect(view?.label).toBe(mentalCrisisLabel(kind));expect(mentalCrisisStatus(world,pawn)).toContain(view!.label);
+  if(kind==='drug-binge'){
+    expect(view?.symbol).toBe('↝');expect(view?.target).toBeUndefined();expect(view?.description).toContain('bière physique');
+    expect(world.piles.filter(p=>p.item==='beer').reduce((sum,p)=>sum+p.quantity,0)).toBe(1);
+    expect(pawn.melee).toBeFalsy();
+  }
   const options=queryOrderOptions(world,pawn.id,{x:12,z:15},false);
   expect(options).toHaveLength(1);expect(options[0]).toMatchObject({label:view!.label,enabled:false});
   expect(options[0]!.reason).toContain(view!.label);

@@ -1,3 +1,4 @@
+import {alcoholInspection265} from '../sim/alcohol-rules-265';
 import {cryptosleepSick256,cryptosleepSicknessModifiers256} from '../sim/cryptosleep-sickness-256';
 import { MALNUTRITION_UNIT,MALNUTRITION_LABELS,malnutritionStage } from '../sim/malnutrition';
 import { HEAT_UNIT,HEAT_LABELS,heatStage } from '../sim/heat-rules';
@@ -229,7 +230,7 @@ export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|unde
   const empty=document.createElement('p');empty.dataset.health='healthy';empty.className='health-empty';empty.textContent='Aucune affection';conditions.append(empty);
   const injuries=document.createElement('div');injuries.dataset.health='injuries';injuries.className='health-injury-list';conditions.append(injuries);
   createInfectionInspection(conditions);createFluInspection(conditions);createImmuneDiseasesInspection(conditions);
-  for(const name of ['food-poisoning','cryptosleep-sickness','malnutrition','thermal','stagger','anesthetic']){
+  for(const name of ['food-poisoning','cryptosleep-sickness','malnutrition','thermal','stagger','anesthetic','alcohol']){
     const p=document.createElement('p');p.dataset.health=name;conditions.append(p);
   }
   const bleeding=document.createElement('p');bleeding.dataset.health='bleeding';bleeding.className='health-bleeding';conditions.append(bleeding);
@@ -279,6 +280,7 @@ export function healthStatusText(pawn:Pawn,world?:World):string {
 export function updateHealthInspection(panel:HTMLElement,pawn:Pawn,world?:World):void {
   const details=panel.querySelector('#health-inspection');if(!details)return;
   const health=pawn.health;
+  const alcohol=alcoholInspection265(pawn),alcoholRow=details.querySelector('[data-health="alcohol"]');if(alcoholRow)alcoholRow.textContent=alcohol.join(' · ');
   const anesthetic=details.querySelector('[data-health="anesthetic"]');if(anesthetic)anesthetic.textContent=healthAnestheticText(pawn);
   const crypto=details.querySelector('[data-health="cryptosleep-sickness"]'),sickness=health?.cryptosleepSickness;if(crypto)crypto.textContent=sickness?`${sickness.remainingCore>0?`Mal de cryptosommeil · ${(sickness.remainingCore/2500).toFixed(1)} h restantes`:'Vomissement résiduel'}${sickness.vomit?' · Vomit':''}`:'';
   const surgery=details.querySelector('[data-health="surgery"]');if(surgery?.querySelector('[data-health="surgery-request"]')){
@@ -350,8 +352,8 @@ export function updateHealthInspection(panel:HTMLElement,pawn:Pawn,world?:World)
   const injuries=details.querySelector<HTMLElement>('[data-health="injuries"]')!,injuryRows=clinicalRows(pawn),injurySignature=JSON.stringify([injuryRows,health?.bloodLoss]);
   if(injuries.dataset.signature!==injurySignature){injuries.dataset.signature=injurySignature;injuries.replaceChildren(...injuryRows.map(row=>clinicalElement(pawn,row)));}
   const healthy=details.querySelector<HTMLElement>('[data-health="healthy"]')!;
-  healthy.hidden=injuryRows.length>0||!!health?.infections?.cases.length||!!health?.flu||!!health?.immuneDiseases||!!poison||!!health?.malnutrition||!!stage||!!coldStage||!!pawn.stagger||!!health?.cryptosleepSickness||!!health?.anesthetic||pawn.state==='dead';
-  for(const name of ['food-poisoning','cryptosleep-sickness','malnutrition','thermal','stagger','anesthetic']){
+  healthy.hidden=alcohol.length>0||injuryRows.length>0||!!health?.infections?.cases.length||!!health?.flu||!!health?.immuneDiseases||!!poison||!!health?.malnutrition||!!stage||!!coldStage||!!pawn.stagger||!!health?.cryptosleepSickness||!!health?.anesthetic||pawn.state==='dead';
+  for(const name of ['food-poisoning','cryptosleep-sickness','malnutrition','thermal','stagger','anesthetic','alcohol']){
     const row=details.querySelector<HTMLElement>(`[data-health="${name}"]`)!;row.hidden=!row.textContent;row.tabIndex=0;if(row.textContent)setTooltip(row,{title:row.textContent.split(' · ')[0],body:row.textContent});
   }
 }

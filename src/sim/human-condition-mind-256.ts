@@ -24,7 +24,8 @@ export function constructHumanConditionMind256(p:Pawn,version:number):void {
 export function hasHumanConditionMind256(p:Pawn):boolean {return p.mental?.wander?.revision===1;}
 export function validHumanClinicalConditionOwner256(p:Pawn,version:number,clock:number,spatial=false):boolean {
  const h=p.health;if(!h?.animalAgeConditions&&!h?.toxicBuildup&&p.mental?.crisis?.kind!=='confused-wander')return true;
- if(!isSchema256Or257(version)||!hasHumanConditionMind256(p)||!h||h.body||h.tick>clock)return false;
+ const requiresMind=version!==265||!h?.alcohol||!!h.toxicBuildup||p.mental?.crisis?.kind==='confused-wander'||h?.animalAgeConditions?.cases.some(c=>c.kind!=='Carcinoma');
+ if(!isSchema256Or257(version)||requiresMind&&!hasHumanConditionMind256(p)||!h||h.body||h.tick>clock)return false;
  for(const c of h.animalAgeConditions?.cases??[])for(const key of Object.keys(c.skillDecayRemainders??{}))if(!Object.hasOwn(p.skills,key))return false;
  const c=p.mental?.crisis;
  if(c?.kind==='confused-wander'&&(!spatial&&(c.target!==null||c.waitUntil>clock)||p.state==='dead'||p.state==='downed'))return false;

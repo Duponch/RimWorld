@@ -1,5 +1,7 @@
 # Validation courante — V349–V350
 
+**V441 — schéma 265, qualifié localement :** [Brassage, fermentation et alcool](../gameplay/brewing-v441.md). Filière physique houblon → moût → bière, politiques partagées et clinique prospective. 60 nouveaux cas acquis par reprises ; un rouge historique de repos en caravane conservé. Présentation et UI native muette acquises ; publication en préparation, production publique V440 conservée. Aucune parité Core ni amélioration FPS annoncée.
+
 **V440 — schéma 264 :** [Chaîne géothermique](../gameplay/geothermal-power-v440.md). Recherche, construction payée sur geyser existant, 3 600 W, chaleur, entretien, retrait et continuation ; 33cas ciblés acquis par reprises, présentation et construction UI acquises. Migration neutre des trois références ; onze rouges historiques identiques au témoin conservés. Aucun gain FPS global ni clôture Core annoncé.
 
 **V420 — schéma 263 inchangé :** [Diagnostic CPU/GPU et structures modifiées](performance-foundations-v420.md). Correction ciblée du contrôle MAIN qualifiée ; mesure propriétaire Node7,01→3,25ms, aucun gain FPS global établi. Mesures GPU et rouges historiques conservés dans la note. Publié eb3c515f/déploiement b39e5aa5,136HTTPS exacts ; performances et confort restent ouverts.

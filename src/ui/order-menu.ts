@@ -106,10 +106,10 @@ export function tacticalRescuePolicy(world:World,ids:ReadonlySet<number>,targetI
   return {patientId:patient.id,...actor?{pawnId:actor.id}:{},label:`Secourir ${patient.name}`,enabled:!reason,...reason?{reason}:{}};
 }
 
-/** One selected actor must choose food explicitly, rather than accidentally
+/** One selected actor must choose food or beer explicitly, rather than accidentally
  * walking to it. Distinct piles in an ordinary reserve or shelf stay distinct. */
 export function contextConsumesFood(world:World,ids:ReadonlySet<number>,cell:Cell,targetId?:number):boolean {
-  return targetId===undefined&&ids.size===1&&groundPilesAt(world,cell).some(p=>p.kind==='food'&&FOOD_ITEMS.includes(p.item as typeof FOOD_ITEMS[number]));
+  return targetId===undefined&&ids.size===1&&groundPilesAt(world,cell).some(p=>p.kind==='food'&&FOOD_ITEMS.includes(p.item as typeof FOOD_ITEMS[number])||world.schemaVersion>=265&&p.item==='beer');
 }
 
 export class OrderMenu {
@@ -265,7 +265,7 @@ export class OrderMenu {
       const fire=world.fires?.items.find(f=>{const at=firePosition(world,f);return at?.x===cell.x&&at?.z===cell.z;});
       if(fire){const button=document.createElement('button');button.setAttribute('role','menuitem');button.dataset.orderFire=String(fire.id);button.textContent='Prioriser : éteindre le feu';button.onclick=()=>{this.close();void this.client.command({type:'order-extinguish',pawnId:pawn.id,fireId:fire.id}).then(()=>this.report('Extinction prioritaire demandée.')).catch(error=>this.report(String(error instanceof Error?error.message:error),true));};content.append(button);}
       if(!options.length&&!fire)content.textContent='Aucun travail ni pile à transporter ici. Utilisez les ordres d’Architecte.';
-      const hint=document.createElement('p');hint.className='muted';hint.textContent=options.some(option=>option.openCasketId!==undefined)?'Le colon rejoint la capsule et l’ouvre sur place. Ordre direct, sans mise en file.':options.some(option=>option.consumePileId!==undefined)?'Consommer remplace l’activité en cours, sans mise en file. Un colon mobilisé reste mobilisé et mange au contact de la pile.':options.some(option=>option.arrestPatientId!==undefined)?'Arrestation directe par un colon démobilisé, avec lit de prison accessible. La chance affichée dépend de l’état actuel ; un refus peut provoquer une fureur violente.':fire?'L’extinction est un ordre direct, sans mise en file.':options.some(option=>option.capturePatientId!==undefined)?'La capture est un ordre direct. Préparez un lit de prison dans une pièce fermée.':'Maj : ajouter à la file. Construction et cuisine peuvent se poursuivre sur cette case.';content.append(hint);
+      const hint=document.createElement('p');hint.className='muted';hint.textContent=options.some(option=>option.openCasketId!==undefined)?'Le colon rejoint la capsule et l’ouvre sur place. Ordre direct, sans mise en file.':options.some(option=>option.consumePileId!==undefined)?'Consommer remplace l’activité en cours, sans mise en file. Un colon mobilisé reste mobilisé. La nourriture se mange et la bière se boit au contact de la pile.':options.some(option=>option.arrestPatientId!==undefined)?'Arrestation directe par un colon démobilisé, avec lit de prison accessible. La chance affichée dépend de l’état actuel ; un refus peut provoquer une fureur violente.':fire?'L’extinction est un ordre direct, sans mise en file.':options.some(option=>option.capturePatientId!==undefined)?'La capture est un ordre direct. Préparez un lit de prison dans une pièce fermée.':'Maj : ajouter à la file. Construction et cuisine peuvent se poursuivre sur cette case.';content.append(hint);
       this.position(x,y);content.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
     } catch(error) {if(revision===this.revision){content.textContent=String(error instanceof Error?error.message:error);this.position(x,y);}}
   }

@@ -14,6 +14,9 @@ export type MechCorpseItem=typeof MECH_CORPSE_ITEMS[number];
  * rules are tracked in docs/development/food-items.md. Nutrition uses integer
  * hundredths here; the actor's 0..100 meter represents one nutrition unit. */
 export const ITEM_DEFINITIONS = Object.freeze({
+  hops:Object.freeze({label:'Houblon',kind:'food',stackLimit:75,nutrition:5,maxIngest:75,color:0xaaa455}),
+  wort:Object.freeze({label:'Moût',kind:'wort',stackLimit:25,nutrition:0,maxIngest:0,color:0xa17a38}),
+  beer:Object.freeze({label:'Bière',kind:'beer',stackLimit:25,nutrition:8,maxIngest:1,color:0xa87c38}),
   'minified-tree':Object.freeze({label:'Arbre déraciné',kind:'plant',stackLimit:1,nutrition:0,maxIngest:0,color:0x729548}),
   hay:Object.freeze({label:'Foin',kind:'food',stackLimit:200,nutrition:5,maxIngest:200,color:0xc3aa59}),
   pemmican:Object.freeze({label:'Pemmican',kind:'food',stackLimit:75,nutrition:5,maxIngest:75,color:0xaf7958}),
@@ -110,10 +113,10 @@ export const ITEM_DEFINITIONS = Object.freeze({
 export type ItemId = keyof typeof ITEM_DEFINITIONS;
 /** These raw foods cause the shared raw-meal thought, independently of policy. */
 export const rawFoodThought = (item: ItemId): boolean => item === 'rice' || item === 'potato' || item === 'corn' || item === 'agave-fruit' || item === 'raw-fungus' || isAnimalMeat(item)||!!eggSpeciesForItem256(item);
-export const legacyItem = (kind: MaterialKind): ItemId => kind==='chemfuel'?'chemfuel':kind==='neutroamine'?'neutroamine':kind==='silver'?'silver':kind==='uranium'?'uranium':kind==='corpse'||kind==='mech-corpse'?missingEquipmentType():kind==='unfinished'?missingEquipmentType():kind==='textile'?'cloth':kind==='apparel'||kind==='weapon'?missingEquipmentType():kind==='medicine'?missingMedicineType():kind==='component'?'component':kind==='advanced-component'?'advanced-component':kind==='jade'?'jade':kind==='gold'?'gold':kind==='plasteel'?'plasteel':kind==='blocks'?missingBlockType(): kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
+export const legacyItem = (kind: MaterialKind): ItemId => kind==='wort'?'wort':kind==='beer'?'beer':kind==='chemfuel'?'chemfuel':kind==='neutroamine'?'neutroamine':kind==='silver'?'silver':kind==='uranium'?'uranium':kind==='corpse'||kind==='mech-corpse'?missingEquipmentType():kind==='unfinished'?missingEquipmentType():kind==='textile'?'cloth':kind==='apparel'||kind==='weapon'?missingEquipmentType():kind==='medicine'?missingMedicineType():kind==='component'?'component':kind==='advanced-component'?'advanced-component':kind==='jade'?'jade':kind==='gold'?'gold':kind==='plasteel'?'plasteel':kind==='blocks'?missingBlockType(): kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
 export const nutritionOf = (pile: MaterialPile): number => ITEM_DEFINITIONS[pile.item].nutrition * pile.quantity;
 export function availableNutrition(world: World): number {
-  return world.piles.reduce((sum, pile) => sum + (pile.item==='hay'||pile.owner.type === 'job'||pile.owner.type==='inventory'||pile.owner.type==='pawn'&&!world.pawns.some(p=>p.id===('pawnId' in pile.owner?pile.owner.pawnId:-1)&&(p.faction??'colony')==='colony') ? 0 : nutritionOf(pile)), 0) / 100;
+    return world.piles.reduce((sum, pile) => sum + (pile.item==='hay'||pile.item==='hops'||pile.item==='beer'||pile.owner.type === 'job'||pile.owner.type==='inventory'||pile.owner.type==='pawn'&&!world.pawns.some(p=>p.id===('pawnId' in pile.owner?pile.owner.pawnId:-1)&&(p.faction??'colony')==='colony') ? 0 : nutritionOf(pile)), 0) / 100;
 }
 /** Unity's midpoint-to-even rounding, used by the reference stack calculation. */
 function roundEven(value: number): number {
@@ -122,7 +125,7 @@ function roundEven(value: number): number {
 }
 export function mealQuantity(pawn: Pawn, pile: MaterialPile, available: number): number {
   const item = ITEM_DEFINITIONS[pile.item];
-  if (pile.item==='hay' || !item.nutrition || available <= 0) return 0;
+  if (pile.item==='hay' || pile.item==='hops'||pile.item==='beer'||!item.nutrition || available <= 0) return 0;
   return Math.min(available, item.maxIngest, Math.max(1, roundEven((100 - pawn.hunger) / item.nutrition)));
 }
 

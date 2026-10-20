@@ -210,7 +210,7 @@ function attackConfirmationDOM263(kind:'neutral'|'ally',planned=false,send=vi.fn
  const {host}=dom(),f=preparedStationaryEntry256(true),tile=f.child.tile;
  const admission=vi.spyOn(targetAdmission263,'worldTargetActions263').mockReturnValue({ok:true});
  const factions:NonNullable<typeof f.snapshot.world.worldFactions>={revision:1,contentModel:'original-faction-content-v1',generatedAt:0,playerFactionId:1,nextFactionId:3,nextSettlementId:5,factions:[{id:1,def:'PlayerColony',hidden:false,name:'Projection joueur',randomKey:1,colorFromSpectrum:1,leaderOwnerId:null},{id:2,def:'OutlanderCivil',hidden:false,name:'Projection étrangère',randomKey:2,colorFromSpectrum:2,leaderOwnerId:null}],relations:[{aId:1,bId:2,goodwill:kind==='ally'?80:0,kind}],settlements:[{id:4,factionId:2,tile,name:'Établissement <literal>',postId:null}],leaders:[]};
- const snapshot:GroupPanelSnapshot={...f.snapshot,world:{...f.snapshot.world,schemaVersion:264,worldFactions:factions}};
+ const snapshot:GroupPanelSnapshot={...f.snapshot,world:{...f.snapshot.world,schemaVersion:264 as typeof f.snapshot.world.schemaVersion,worldFactions:factions}};
  const base=createGroupAdapters({blocked:()=>undefined,send}),captured=base.capture(f.snapshot),facts={...captured,actions:{...captured.actions,route:{ok:true}}};
  const previewRoute=vi.fn<GroupPanelAdapters['previewRoute']>(()=>({ok:true,route:[tile],durationCore:0})),adapters:GroupPanelAdapters={...base,capture:()=>facts,previewRoute},ui=createGroupPanel(host as unknown as HTMLElement,adapters);
  const before=JSON.stringify(snapshot),worldBefore=JSON.stringify(f.world),relationsBefore=JSON.stringify(factions.relations);ui.update(snapshot);

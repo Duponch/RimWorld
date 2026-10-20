@@ -21,7 +21,20 @@ export function itemGeometry(item:ItemId,quantity:number=ITEM_DEFINITIONS[item].
   const box=(x:number,y:number,z:number,sx:number,sy:number,sz:number,tint:number=color,ry=0)=>add(undefined,x,y,z,sx,sy,sz,tint,ry);
   const round=(x:number,y:number,z:number,sx:number,sy:number,sz:number,tint:number=color)=>add('item-round',x,y,z,sx,sy,sz,tint);
   const amount=Math.max(.65,Math.min(1,quantity/Math.max(1,definition.stackLimit)));
-  if(item==='wood'){
+  if(item==='beer'){
+    const count=quantity===1?1:quantity<5?2:3;
+    for(let i=0;i<count;i++){
+      const x=(i-(count-1)/2)*.20,z=i%2*.08-.04;
+      add('item-disc',x,.16,z,.16,.30,.16,0x7c6847);add('item-disc',x,.35,z,.075,.13,.075,0x8c8055);
+      add('item-disc',x,.43,z,.09,.025,.09,0xc6c8a9);box(x,.17,z+.082,.11,.12,.012,0xe4d6a6);
+    }
+  }else if(item==='wort'){
+    add('item-disc',0,.16,0,.43,.28,.43,0xa1aa8b);add('item-disc',0,.32,0,.45,.045,.45,0x6e8477);
+    box(0,.355,0,.18,.05,.07,0xd1c6a0);box(0,.16,.215,.20,.12,.015,0xc4aa6c);
+  }else if(item==='hops'){
+    for(let i=0;i<5;i++){const a=i*2.4;add('item-nugget',Math.cos(a)*.16,.09+(i%2)*.09,Math.sin(a)*.14,.20,.17,.18,i%2?0x9fae6b:0xb7bf7d,a);}
+    box(0,.055,0,.30,.025,.04,0x6c8d5b);
+  }else if(item==='wood'){
     for(const [x,y,z,turn] of [[0,.075,-.09,-.035],[.01,.075,.09,.05],[-.015,.205,0,-.08]]){
       add('item-log',x!,y!,z!, .65*amount,.14,.14,color,turn);
       for(const side of [-1,1])add('item-log',x!+side*.324*amount*Math.cos(turn!),y!,z!-side*.324*amount*Math.sin(turn!),.008,.114,.114,0xc9ad77,turn);

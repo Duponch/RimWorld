@@ -18,7 +18,7 @@ function validState(value:unknown,id:number,tick:number):value is CropBlightStat
 export function validCropBlight(plant:unknown,version:number,world:Pick<World,'tick'>):boolean {
   if(!record(plant))return false;
   if(plant.blight===undefined)return !Object.hasOwn(plant,'blight')||version>=205;
-  return version>=205&&typeof plant.kind==='string'&&['rice','potato','corn','cotton','healroot',...(version>=227?['haygrass']:[])].includes(plant.kind)&&plant.species===undefined
+  return version>=205&&typeof plant.kind==='string'&&['rice','potato','corn','cotton','healroot',...(version>=227?['haygrass']:[]),...(version>=265?['hops']:[])].includes(plant.kind)&&plant.species===undefined
     &&integer(plant.id,1)&&typeof plant.growth==='number'&&Number.isFinite(plant.growth)&&plant.growth>=.0001&&plant.growth<=1
     &&integer(plant.growthTick,0,world.tick)&&validState(plant.blight,plant.id,world.tick);
 }

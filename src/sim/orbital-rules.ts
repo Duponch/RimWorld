@@ -11,7 +11,7 @@ import { tradeCatalogueEntry } from './trade-catalogue.ts';
 import { roundTradeSilver,tradeUnitPrice } from './trade-prices.ts';
 import { ticksUntilRot } from './food-preservation.ts';
 import { reservedSource } from './materials.ts';
-import { ORBITAL_STOCK } from './orbital-stock.ts';
+import { orbitalBeerCatalogue265,ORBITAL_STOCK } from './orbital-stock.ts';
 import type { TradeGood } from './trade-goods.ts';
 import type { TradeLine } from './trade-state.ts';
 import type { OrbitalShip } from './orbital-state.ts';
@@ -60,14 +60,14 @@ export function orbitalAtContact(w:World,p:Pawn,ship:OrbitalShip):boolean {
   return task.spot.x===spot.x&&task.spot.z===spot.z&&p.x===spot.x&&p.z===spot.z&&!p.path.length&&p.moveCooldown===0&&(p.motion?.end??0)<=w.tick&&(p.stun?.untilCore??0)<=w.tick*10
     &&!orbitalOtherActivity(w,p);
 }
-export function orbitalOtherActivity(w:World,p:Pawn):boolean {return !!(p.need||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.haul||p.cooking||p.deepWork||p.trade||p.research||p.hunting||p.animalHandling||p.rescue||p.tend||p.feed||p.ward||p.surgery||p.animalCare||p.animalFeed||p.animalRescue||p.equipmentTask||p.burial||p.cleaning||p.firefighting||p.shooting||p.melee||p.tactics||p.flee||p.heatRefuge||p.bombRefuge||p.recreation.task||w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id));}
+export function orbitalOtherActivity(w:World,p:Pawn):boolean {return !!(p.need||p.jobId!==null||p.orders.active!==null||p.orders.queue.length||p.haul||p.cooking||p.brewing||p.deepWork||p.trade||p.research||p.hunting||p.animalHandling||p.rescue||p.tend||p.feed||p.ward||p.surgery||p.animalCare||p.animalFeed||p.animalRescue||p.equipmentTask||p.burial||p.cleaning||p.firefighting||p.shooting||p.melee||p.tactics||p.flee||p.heatRefuge||p.bombRefuge||p.recreation.task||w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id));}
 export const ORBITAL_BULK_EXTRAS=new Set(['light-leather','muffalo-wool','foxfur','berries','rice','potato','corn','hare-meat','red-fox-meat','survival-meal']);
 export function orbitalItemRefusal(pile:MaterialPile,side:'buy'|'sell',w:World,ship:OrbitalShip):string|undefined {
   const e=tradeCatalogueEntry(pile.item);
   if(!e||pile.quantity<=0||ticksUntilRot(pile,w.tick)<=0)return 'Objet indisponible ou sans profil commercial.';
   if(pile.kind==='weapon'||pile.kind==='apparel'||pile.unfinished||pile.corpse||pile.humanCorpse||pile.mechCorpse)return 'Ce profil orbital ne commerce pas cet objet.';
   if(side==='sell'&&!e.playerCanSell||side==='buy'&&!e.playerCanBuy)return 'Cet objet ne peut pas être échangé dans ce sens.';
-  if(!ORBITAL_STOCK[ship.kind].some(([item])=>item===pile.item)&&!(side==='sell'&&ship.kind==='bulk'&&ORBITAL_BULK_EXTRAS.has(pile.item)))return 'Ce profil orbital ne commerce pas cette catégorie.';
+  if(!orbitalBeerCatalogue265(w.schemaVersion,ship.kind,pile.item)&&!ORBITAL_STOCK[ship.kind].some(([item])=>item===pile.item)&&!(side==='sell'&&ship.kind==='bulk'&&ORBITAL_BULK_EXTRAS.has(pile.item)))return 'Ce profil orbital ne commerce pas cette catégorie.';
 }
 export function orbitalTradeGoods(w:World,p:Pawn,ship:OrbitalShip):{goods:TradeGood[];silver:MaterialPile[];merchantSilver:MaterialPile[]} {
   const covered=orbitalCoverage(w),improvement=tradeImprovement(p),goods:TradeGood[]=[],silver:MaterialPile[]=[],merchantSilver:MaterialPile[]=[];

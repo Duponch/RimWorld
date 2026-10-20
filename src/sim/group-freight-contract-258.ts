@@ -15,6 +15,7 @@ export function regularGroupFreight258(pile:MaterialPile,version:number):boolean
  return regularGroupFreightItem258(pile.item,version);
 }
 export function regularGroupFreightItem258(item:ItemId,version:number):boolean {
+ if(item==='hops'||item==='wort'||item==='beer')return version>=265&&groupCaravanUnitMass256(item,true,version)!==undefined;
  return version>=258&&['medicine','component','advanced-component','weapon','apparel','blocks','gold','plasteel','uranium','jade','chemfuel','neutroamine','textile','wood','steel','chunk'].includes(ITEM_DEFINITIONS[item].kind)&&groupCaravanUnitMass256(item,true,version)!==undefined;
 }
 /** A historical source reference is not another owner: full pickup keeps its ID.

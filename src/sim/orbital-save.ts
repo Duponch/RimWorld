@@ -7,7 +7,7 @@ import { validatePileRecordShape } from './material-record-save.ts';
 import { validatePreservation } from './food-preservation-save.ts';
 import { microelectronicsUnlocked } from './research.ts';
 import { orbitalConsoleSpot,ORBITAL_BULK_EXTRAS } from './orbital-rules.ts';
-import { ORBITAL_STOCK } from './orbital-stock.ts';
+import { orbitalBeerCatalogue265,ORBITAL_STOCK } from './orbital-stock.ts';
 import { pileMaxHp } from './thing-damage-rules.ts';
 import { serviceCell } from './service-reservations.ts';
 import { validatePower } from './power-save.ts';
@@ -87,8 +87,8 @@ export function validOrbitalTransport(w:World,version:number,powerTopology?:Powe
       const o=p.owner;
       if(o.type!=='orbital-ship'&&o.type!=='orbital-cargo')return false;
       const ship=o.type==='orbital-ship'?w.orbital!.ships.find(s=>s.id===o.shipId):undefined;
-      const allowed=ship?ORBITAL_STOCK[ship.kind].some(([item])=>item===p.item)||ship.kind==='bulk'&&ORBITAL_BULK_EXTRAS.has(p.item)
-        :Object.values(ORBITAL_STOCK).some(stock=>stock.some(([item])=>item===p.item))||ORBITAL_BULK_EXTRAS.has(p.item);
+      const allowed=ship?orbitalBeerCatalogue265(version,ship.kind,p.item)||ORBITAL_STOCK[ship.kind].some(([item])=>item===p.item)||ship.kind==='bulk'&&ORBITAL_BULK_EXTRAS.has(p.item)
+        :orbitalBeerCatalogue265(version,'bulk',p.item)||Object.values(ORBITAL_STOCK).some(stock=>stock.some(([item])=>item===p.item))||ORBITAL_BULK_EXTRAS.has(p.item);
       if(!obj(o)||!keys(o,o.type==='orbital-ship'?['type','shipId']:['type','deliveryId'])
         ||o.type==='orbital-ship'&&!ships.has(o.shipId)||o.type==='orbital-cargo'&&!deliveries.has(o.deliveryId)
         ||!int(p.id,1,w.nextId-1)||ids.has(p.id)||!Object.hasOwn(ITEM_DEFINITIONS,p.item)
