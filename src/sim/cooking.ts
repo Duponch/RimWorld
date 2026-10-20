@@ -1,7 +1,8 @@
-import {smithingRecipeAvailable267,isSmithingRecipe267,smithingMaterialFromIngredients267,smithingProduct267,smithingWorkTotal267} from './smithing-content-267.ts';
+import {isSmithingWeaponRecipe267,smithingRecipeAvailable267,isSmithingRecipe267,smithingMaterialFromIngredients267,smithingProduct267,smithingWorkTotal267} from './smithing-content-267.ts';
 import {beginSmithingWork267} from './smithing-work-267.ts';
 import {brewingSpeed265,validWortIngredients265} from './brewing-content-265.ts';
 import {eggAllowedForPlayer256} from './animal-egg-permission-v256.ts';
+import {materialAllowedForPlayer256} from './material-permission-256.ts';
 import {isBurnApparelRecipe,burnApparelIngredientAllowed,validBurnApparelIngredients} from './burn-apparel-rules.ts';
 import {isPemmicanRecipe,validPemmicanIngredients} from './pemmican-content.ts';
 import { shelfAt } from './shelf-storage.ts';
@@ -98,6 +99,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(smithingPiece&&(!bill.filters[smithingPiece.smithingWork!.material]||smithingPiece.smithingWork!.authorId!==pawn.id)){context.release();return;}
   for(const entry of task.ingredients) {
     const pile=world.piles.find(p=>p.id===entry.pileId);
+    if(smithing&&pile&&!materialAllowedForPlayer256(pile)){context.release();return;}
     if(smithing&&(!pile||!smithingPiece&&!bill.filters[entry.item]||entry.stage==='source'&&(pile.owner.type!=='ground'||(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2)||entry.stage==='placed'&&(pile.owner.type!=='ground'||pile.owner.x!==entry.cell.x||pile.owner.z!==entry.cell.z)||entry.stage==='held'&&(pile.owner.type!=='pawn'||pile.owner.pawnId!==pawn.id))){context.release();return;}
     if(cremation&&!canStandAt(world,entry.cell)){context.release();return;}
     if((pemmican||kibble||biofuel)&&entry.stage!=='placed'&&entry.quantity>10){context.release();return;}
@@ -183,8 +185,8 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const rice=task.ingredients.filter(i=>i.item==='rice').reduce((n,i)=>n+i.quantity,0),item=smith?smithingProduct267(smith.smithingWork!.recipe,smith.smithingWork!.material):recipeProduct(taskRecipe(task),task.ingredients,material);
   const potato=task.ingredients.filter(i=>i.item==='potato').reduce((n,i)=>n+i.quantity,0),corn=task.ingredients.filter(i=>i.item==='corn').reduce((n,i)=>n+i.quantity,0);
   if(isTailoring(task.recipe)&&!Number.isSafeInteger((world.tailoring?.completed??0)+1))return;
-  const random={rng:world.rng},apparel=smithing&&task.recipe!=='make-plasteel-knife'||isTailoring(task.recipe)||isFlakRecipe(task.recipe)?{...newApparelState(item as ApparelItem,material),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
-  const weapon=isGunRecipe(task.recipe)||task.recipe==='make-plasteel-knife'?{...newWeaponState(item as WeaponItem),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
+  const random={rng:world.rng},apparel=smithing&&!isSmithingWeaponRecipe267(task.recipe)||isTailoring(task.recipe)||isFlakRecipe(task.recipe)?{...newApparelState(item as ApparelItem,material),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
+  const weapon=isGunRecipe(task.recipe)||isSmithingWeaponRecipe267(task.recipe)?{...newWeaponState(item as WeaponItem),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
   const foodPoison=world.schemaVersion>=89&&culinary&&!kibble&&!brewing?foodPoisonFromRecipe(roomCleanliness(world,pawn),(pawn.skills.cooking?.level??0),()=>healthRandom(random)):undefined;
   const medicineSkill=medicine?completedMedicineSkill(pawn,task.workTicks??0):undefined;
   // All preconditions succeeded. Consume once, create once, then store physically.

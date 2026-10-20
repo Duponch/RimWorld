@@ -1,13 +1,15 @@
 import { HUMAN_BODY } from './body-definition.ts';
-import { equippedWeapon,isWeaponItem,WEAPON_QUALITIES } from './equipment-rules.ts';
+import { equippedWeapon,isWeaponItem,weaponMeleeQualityFactor } from './equipment-rules.ts';
 import { pawnBody } from './health-rules.ts';
 import { partMissing } from './injury-state.ts';
+import {isMaceItem269} from './mace-content-269.ts';
+import {isMaceToolId269,maceTool269,type MaceToolId269} from './mace-combat-269.ts';
 import type { Pawn,World } from './types.ts';
 
 export type MeleeDamage='toxic-bite'|'blunt'|'poke'|'bite'|'scratch'|'cut'|'stab';
-export type MeleeToolId=`animal256-tool-${number}-${number}`|'left-fist'|'right-fist'|'left-claw'|'right-claw'|'head'|'teeth'|'grip'|'barrel'|'barrel-poke'|'knife-handle'|'knife-blade'|'knife-point'|'left-blade-cut'|'left-blade-stab'|'right-blade-cut'|'right-blade-stab';
+export type MeleeToolId=MaceToolId269|`animal256-tool-${number}-${number}`|'left-fist'|'right-fist'|'left-claw'|'right-claw'|'head'|'teeth'|'grip'|'barrel'|'barrel-poke'|'knife-handle'|'knife-blade'|'knife-point'|'left-blade-cut'|'left-blade-stab'|'right-blade-cut'|'right-blade-stab';
 export interface MeleeTool { id:MeleeToolId; damage:number; penetration:number; kind:MeleeDamage; cooldownCore:number; weight:number }
-export const meleeRecoveryCore=(id:MeleeToolId):number=>id==='knife-blade'?72:id==='knife-point'||id==='knife-handle'?96:120;
+export const meleeRecoveryCore=(id:MeleeToolId):number=>isMaceToolId269(id)?maceTool269(id).cooldownCore:id==='knife-blade'?72:id==='knife-point'||id==='knife-handle'?96:120;
 export function curve(x:number,points:readonly (readonly [number,number])[]):number {
   if(x<=points[0]![0])return points[0]![1];
   for(let i=1;i<points.length;i++){const a=points[i-1]!,b=points[i]!;if(x<=b[0])return a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0]);}
@@ -33,9 +35,11 @@ export function meleeTools(world:World,pawn:Pawn,body=()=>pawnBody(pawn)):MeleeT
   if(exists('head'))add('head',5,'blunt',.2);
   const weapon=equippedWeapon(world,pawn);
   if(weapon?.weapon&&isWeaponItem(weapon.item)&&!pawn.equipmentDropPending&&body().capacities.manipulation>0) {
-    const factor=[.8,.9,1,1.1,1.2,1.45,1.65][WEAPON_QUALITIES.indexOf(weapon.weapon.quality)]!;
+    const factor=weaponMeleeQualityFactor(weapon.weapon.quality);
     if(weapon.item==='plasteel-knife'){
       add('knife-handle',9*.9*factor,'blunt');add('knife-blade',12*1.1*factor,'cut');add('knife-point',13*1.1*factor,'stab');
+    } else if(isMaceItem269(weapon.item)){
+      if(world.schemaVersion===269)for(const part of ['handle','head'] as const){const tool=maceTool269(`${weapon.item}-${part}`);add(tool.id,tool.damage*factor,tool.kind);}
     } else {const damage=9*factor;add('grip',damage,'blunt');add('barrel',damage,'blunt');add('barrel-poke',damage,'poke');}
   }
   return rankMeleeTools(tools);

@@ -5,7 +5,7 @@ import { PAWN_MODEL_SCALE } from '../world/scale';
 import { APPAREL } from '../sim/apparel-rules';
 import {ITEM_VISUAL_IDS,itemCargoKind,itemGeometry,centreItemParts} from './item-presentation';
 import {placementGeometry} from './item-portrait';
-import { WEAPON_VISUALS } from './weapon-shape';
+import { RESIDENT_WEAPON_VISUALS269 } from './weapon-shape';
 
 // Disjoint from weapon tags; -4 is the bolt-action rifle, not the parka hood.
 export const PARKA_HOOD_DYE = -6;
@@ -26,7 +26,7 @@ export const PAWN_EYE_CROSS = 62;
  * There is no per-pawn AnimationMixer, bone Object3D tree or CPU bone update.
  * This deliberately small prototype rig is not yet the future glTF atlas importer.
  */
-export function pawnGeometry(includeSmithing=false): THREE.InstancedBufferGeometry {
+export function pawnGeometry(includeSmithing=false,includeMace=false): THREE.InstancedBufferGeometry {
   const positions: number[] = [], normals: number[] = [], colors: number[] = [];
   const bones: number[] = [], pivots: number[] = [], dyes: number[] = [];
   const indices:number[]=[];
@@ -200,9 +200,9 @@ export function pawnGeometry(includeSmithing=false): THREE.InstancedBufferGeomet
   addPart([.34,.34,.14],[0,1.17,-.12],1,[0,1.04,0],0xffffff,PARKA_HOOD_DYE);
   // Ground weapon shapes run along X. Rifle barrel rises on its sling; the
   // revolver/knife point down at the hip, grip up against the belt.
-  for(const variant of WEAPON_VISUALS)for(const part of variant.parts)addPart(
+  for(const variant of RESIDENT_WEAPON_VISUALS269)if(variant.item!=='mace-family'||includeMace)for(const part of variant.parts)addPart(
     [part.size[2],part.size[0],part.size[1]].map(n=>n/PAWN_MODEL_SCALE),
-    [.205+part.center[2]/PAWN_MODEL_SCALE,.68+(variant.item==='bolt-action-rifle'||variant.item==='emp-launcher'?1:-1)*part.center[0]/PAWN_MODEL_SCALE,part.center[1]/PAWN_MODEL_SCALE],0,[0,.61,0],part.color,variant.dye);
+    [.205+part.center[2]/PAWN_MODEL_SCALE,.68+(variant.item==='bolt-action-rifle'||variant.item==='emp-launcher'||variant.item==='mace-family'?1:-1)*part.center[0]/PAWN_MODEL_SCALE,part.center[1]/PAWN_MODEL_SCALE],0,[0,.61,0],part.color,variant.dye);
   const geometry = new THREE.InstancedBufferGeometry();
   // WebGPU guarantees only eight vertex-buffer slots. Keeping authored attributes
   // interleaved leaves room for the seven independent per-instance attributes.

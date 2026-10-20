@@ -28,7 +28,7 @@ export function samplePawnRig(cache:ActorAnimationCache,slot:number,g:BufferGeom
   let height=pose===1||pose===18||pose===19?.28:pose===6?1.3:WORLD_SCALE.carriedHeight;
   if(pose>1.5&&pose<3.5)height=Math.sin(time*4+phase)*.08+1.32;
   if(pose===3)height+=WORLD_SCALE.stoolHeight-.605*PAWN_MODEL_SCALE;
-  cache.set(slot,4,height,pose);
+  cache.set(slot,4,height,pose,activity);
   for(let bone=0;bone<8;bone++){
     const sign=bone===3||bone===4||bone===6?-1:1;let angle=0;
     if(bone>1.5){

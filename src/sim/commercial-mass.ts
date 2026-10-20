@@ -1,4 +1,5 @@
 import {ANIMAL_ITEM_MASS_GRAMS_256,isAnimalItem256} from './animal-items-v256.ts';
+import {isMaceItem269} from './mace-content-269.ts';
 import {isCoreStartingApparel256} from './starting-gear-256.ts';
 import {physicalTravelUnitMass} from './tree-transfer-mass.ts';
 import {SCHEMA_VERSION} from './types.ts';
@@ -19,6 +20,7 @@ const TEXTILE=Object.freeze({tribalwear:500,shirt:300,pants:500,duster:2000,park
 /** The delivered shirt is Core's CollarShirt, not the lighter BasicShirt.
  * Quality, HP and the seven represented stuffs do not alter these masses. */
 export function commercialItemMassGrams(item:ItemId,version:number=SCHEMA_VERSION):number|undefined {
+  if(isMaceItem269(item))return version>=269?1250:undefined;
   if(isSmithingApparel267(item))return version>=267?smithingApparelMass267(item):undefined;
   if(version<256&&isCoreStartingApparel256(item))return undefined;
   if(item==='hops'||item==='wort'||item==='beer')return version>=265?(item==='hops'?30:item==='wort'?800:300):undefined;

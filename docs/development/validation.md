@@ -1,4 +1,6 @@
-# Validation courante — V444
+# Validation courante — V445
+
+**V445 — schéma 269 :** [Masses dans les six matières](../gameplay/maces-v445.md). Fabrication, ouvrage, équipement, combat et récupération métallique ;97cas du lot acquis par reprises,11voisins de ravitaillement acquis et deux anciens scénarios de cuisine invalides conservés. Présentation et interface natives muettes acquises par reprises, réserve de mise en page conservée. Publication en préparation. Ensemble2 toujours principal ; aucun gain FPS ni catalogue mêlée complet annoncé.
 
 **V444 publiée — schéma 268 :** [Fabrication du couteau en plastacier](../gameplay/plasteel-knife-v444.md).55cas distincts/8fichiers acquis par reprises ; typage, build Pages, présentation et UI natives muettes acquis. Une notification ResizeObserver reste documentée ; menus finaux recontrôlés séparément. Publié39f0092a/7390bb27 ; ni suite complète ni campagne naturelle longue annoncée.
 

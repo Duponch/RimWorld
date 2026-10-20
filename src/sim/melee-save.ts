@@ -1,3 +1,4 @@
+import {isMaceToolId269} from './mace-combat-269.ts';
 import { isBarrier } from './barriers.ts';
 import { automaticOwnership,automaticPost } from './automatic-combat-save.ts';
 import { hostileTo,isColonist } from './affiliation.ts';
@@ -17,7 +18,7 @@ export function validMeleeShape(value:unknown,version:number,tick:number):boolea
   const o=value.order,s=value.strike;
   if(o!==null&&(!object(o)||!keys(o,['targetId','startedDowned',...(version>=60?['auto']:[]),...(version>=67?['structure']:[]),...(version>=192?['untilCore']:[])])||!integer(o.targetId,1)||o.structure!==undefined&&(o.structure!==true||o.startedDowned||o.auto!==undefined&&!(version>=192&&o.auto==='mental'||version>=204&&o.auto==='prison-break'))||typeof o.startedDowned!=='boolean'||o.auto!==undefined&&(typeof o.auto!=='string'||!['draft','response',...(version>=125?['social']:[]),...(version>=192?['mental','retaliation']:[]),...(version>=204?['prison-break']:[])].includes(o.auto))||o.untilCore!==undefined&&(!['mental','retaliation'].includes(String(o.auto))||!integer(o.untilCore,1,tick*10+(o.auto==='retaliation'?200:900)))||o.auto==='retaliation'&&o.untilCore===undefined))return false;
   if(s===null)return o!==null;
-  return object(s)&&keys(s,['targetId','atCore','untilCore','tool','outcome',...(version>=67?['structure']:[])])&&(s.structure===undefined||object(s.structure)&&keys(s.structure,['x','z'])&&integer(s.structure.x,0)&&integer(s.structure.z,0)&&s.outcome==='hit')&&(integer(s.targetId,1)||version>=256&&s.targetId===null&&s.structure===undefined)&&integer(s.atCore,0,tick*10)&&integer(s.untilCore,tick*10+1)&&s.untilCore-s.atCore===meleeRecoveryCore(s.tool as MeleeToolId)&&['left-fist','right-fist','head','teeth','grip','barrel','barrel-poke',...(version>=88?['knife-handle','knife-blade','knife-point']:[])].includes(String(s.tool))&&['hit','miss','dodge'].includes(String(s.outcome));
+  return object(s)&&keys(s,['targetId','atCore','untilCore','tool','outcome',...(version>=67?['structure']:[])])&&(s.structure===undefined||object(s.structure)&&keys(s.structure,['x','z'])&&integer(s.structure.x,0)&&integer(s.structure.z,0)&&s.outcome==='hit')&&(integer(s.targetId,1)||version>=256&&s.targetId===null&&s.structure===undefined)&&integer(s.atCore,0,tick*10)&&integer(s.untilCore,tick*10+1)&&s.untilCore-s.atCore===meleeRecoveryCore(s.tool as MeleeToolId)&&(version===269&&isMaceToolId269(s.tool)||['left-fist','right-fist','head','teeth','grip','barrel','barrel-poke',...(version>=88?['knife-handle','knife-blade','knife-point']:[])].includes(String(s.tool)))&&['hit','miss','dodge'].includes(String(s.outcome));
 }
 export function validStunShape(value:unknown,version:number,tick:number,maxDuration=45):boolean {
   if(value===undefined)return true;

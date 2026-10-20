@@ -1,3 +1,4 @@
+import {validCraftingFuelDestination269} from './fuel-purpose-save-269.ts';
 import {validWorldAffiliationFields259,validWorldAffiliationForeignKeys259} from './world-affiliation-259.ts';
 import {validCaravanRestField266} from './caravan-rest-state-266.ts';
 import {validPrisonerStateRecord259} from './prisoner-save.ts';
@@ -156,6 +157,7 @@ function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,ver
     else if(!validStunIntervals(m.stuns,version,m.start as number,validationTick)||!validSlowIntervals(m.stagger,version,m.start as number,validationTick)||(m.speedFactor!==undefined&&(version<37||typeof m.speedFactor!=='number'||!Number.isFinite(m.speedFactor)||m.speedFactor<(version>=87?MIN_PAWN_SPEED_V87:version>=86?MIN_PAWN_SPEED_V86:version>=65?.128*((4.6-.12)/4.6)/2:version>=63?.128*((4.6-.12)/4.6):version>=45?.128:.8)||m.speedFactor>1))||!validCapturedTravelDelay(m.terrainDelay,version)||Math.abs(m.end-travelEnd(m as unknown as TravelSegment))>1e-7 || Math.abs((item.moveCooldown as number)-Math.max(0,m.end-validationTick))>1e-7) errors.push('Inconsistent travel duration.');
   }
   const haul = item.haul;
+  if(record(haul)&&record(haul.destination)&&!validCraftingFuelDestination269(haul.destination,version))errors.push('Invalid or future crafting refuel purpose.');
   if(record(haul)&&haul.whole!==undefined&&(version<26||haul.whole!==true||haul.quantity!==1||!record(haul.destination)||!['stockpile','aside'].includes(String(haul.destination.type))))errors.push('Invalid whole furniture haul shape.');
   if(record(haul)&&record(haul.destination)&&('growingZoneId' in haul.destination||'sowCell' in haul.destination)&&(version<20||!validSowingDestination(haul.destination,input as unknown as World)))errors.push('Invalid sowing clearance shape.');
   if(record(haul)&&haul.serviceProgress!==undefined&&(version<10||!record(haul.destination)||!(haul.destination.type==='fuel'||version>=193&&haul.destination.type==='turret'||version>=265&&haul.destination.type==='fermenting-barrel')||haul.phase!=='deliver'||!integer(haul.serviceProgress,1,23)))errors.push('Invalid refuel interaction progress.');

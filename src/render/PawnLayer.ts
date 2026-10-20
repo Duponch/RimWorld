@@ -28,7 +28,10 @@ import { growPawnBuffers } from './pawn-buffers';
 import { isColonist } from '../sim/affiliation';
 import { pawnGeometry,cargoGeometry,selectCargoGeometryKinds,PARKA_HOOD_DYE,FLAK_HELMET_DYE,PLATE_ARMOR_DYE,SIMPLE_HELMET_DYE,TUQUE_DYE,RECON_HELMET_DYE,RECON_ARMOR_DYE,PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS } from './pawn-geometry';
 import { equipmentProjection } from './character-equipment';
-import { WEAPON_VISUALS,weaponVisual } from './weapon-shape';
+import { RESIDENT_WEAPON_VISUALS269,weaponVisual } from './weapon-shape';
+import {MACE_DYE269,MACE_EQUIPMENT269,maceStrikeActivity269} from './mace-parts269';
+import {macePositionNode269} from './mace-pose269';
+import {MACE_ITEMS_269,isMaceItem269,maceColor269} from '../sim/mace-content-269';
 import { doorAt } from '../sim/door-rules';
 import { furnitureSurfaces } from './furniture-motion';
 import { pawnPresentationPose } from './pawn-presentation';
@@ -86,6 +89,14 @@ function workActivity(pawn:Pawn):number {
   if(pawn.state!=='working'||pawn.stun)return 0;
   if(pawn.cooking?.recipe==='make-plate-armor'||pawn.cooking?.recipe==='make-simple-helmet')return 1;
   return pawn.cooking?2:pawn.research||pawn.deepWork?3:1;
+}
+/** Decode the already published equipment scalar; no pile lookup in a frame. */
+function presentationActivity(pawn:Pawn,equipmentCode:number):number {
+  if(Math.floor(equipmentCode)===MACE_EQUIPMENT269&&pawn.melee?.strike){
+    const item=MACE_ITEMS_269[Math.round((equipmentCode-MACE_EQUIPMENT269)*8)-1];
+    return item?maceStrikeActivity269(pawn.melee.strike.tool,item):0;
+  }
+  return workActivity(pawn);
 }
 function animationPose(pawn:Pawn,workPose:number,smallMelee:boolean,seated:boolean):number {
   if(pawn.state==='dead')return POSE_DEAD;
@@ -177,7 +188,8 @@ export class PawnLayer {
   readonly visuals = new Map<number, VisualPawn>();
   private pawnMesh: THREE.Mesh | null = null;
   private smithingGeometry=false;
-  private retiredPawnGeometry:THREE.BufferGeometry|undefined;
+  private maceGeometry=false;
+  private readonly retiredPawnGeometries:THREE.BufferGeometry[]=[];
   private readonly surfaceTexture = createStylizedSurfaceTexture();
   private plainMaterial: THREE.MeshStandardNodeMaterial | null = null;
   private texturedMaterial: THREE.MeshStandardNodeMaterial | null = null;
@@ -284,20 +296,21 @@ export class PawnLayer {
   private readonly travelKeys = new Map<number,string>();
   /** One-way extension at adoption, never per frame or per garment removal.
    * Shared actor/cargo/fire trajectories and material graphs retain identity.
-   * Keep the single old geometry until teardown: Three's disposal also frees
+   * Keep retired geometries until teardown: Three's disposal also frees
    * shared attributes recorded by its previous RenderObject. */
-  private extendSmithingGeometry():void {
-    this.smithingGeometry=true;
+  private extendResidentGeometry(smithing:boolean,mace:boolean):void {
+    if(this.smithingGeometry===smithing&&this.maceGeometry===mace)return;
+    this.smithingGeometry=smithing;this.maceGeometry=mace;
     if(!this.pawnMesh)return;
-    const previous=this.pawnMesh.geometry as THREE.InstancedBufferGeometry,next=pawnGeometry(true);
+    const previous=this.pawnMesh.geometry as THREE.InstancedBufferGeometry,next=pawnGeometry(smithing,mace);
     for(const [name,attribute]of Object.entries(previous.attributes))if(attribute instanceof THREE.InstancedBufferAttribute
       ||attribute instanceof THREE.InterleavedBufferAttribute&&attribute.data instanceof THREE.InstancedInterleavedBuffer)next.setAttribute(name,attribute);
     next.userData={...previous.userData};next.instanceCount=previous.instanceCount;
-    this.pawnMesh.geometry=next;this.retiredPawnGeometry=previous;
+    this.pawnMesh.geometry=next;this.retiredPawnGeometries.push(previous);
   }
   private createPawnMesh(count: number): void {
     clearGroup(this.group);
-    const geometry = pawnGeometry(this.smithingGeometry);
+    const geometry = pawnGeometry(this.smithingGeometry,this.maceGeometry);
     geometry.userData.animationCache=this.animationCache;
     const travel = new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4);
     for(let i=0;i<count;i++)travel.setW(i,1);
@@ -486,7 +499,7 @@ export class PawnLayer {
       // the shot (0.134 s in the native pilot). Keep the cosmetic kick short
       // but long enough to survive that presentation boundary.
       const recoil=motion.z.equal(15).select(float(1).sub(this.travelTime.sub(motion.w).div(.30)).clamp(0,1),float(0));
-      for(const weapon of WEAPON_VISUALS) {
+      for(const weapon of RESIDENT_WEAPON_VISUALS269) {
         const isWeapon=attribute('dye','float').equal(weapon.dye);
         const along=positionLocal.y.sub(.68),across=positionLocal.x.sub(.205),depth=positionLocal.z;
         if(weapon.item==='bolt-action-rifle'||weapon.item==='emp-launcher') {
@@ -494,6 +507,8 @@ export class PawnLayer {
           // the torso. During aim its authored barrel (+Y) points forward.
           If(isWeapon,()=>{ animated.assign(vec3(along.mul(.30).add(across).add(.13),along.mul(.78).add(depth.mul(.12)).add(.84),depth.mul(.8).add(.25))); });
           If(shooting.and(isWeapon),()=>{ animated.assign(vec3(across.add(.10),depth.add(1.02).add(recoil.mul(.035)),along.add(.45).sub(recoil.mul(.12)))); });
+        } else if(weapon.item==='mace-family') {
+          If(isWeapon,()=>{animated.assign(macePositionNode269(along,across,depth,sin(this.travelTime.sub(motion.w).mul(4).clamp(0,1).mul(Math.PI)),motion.y,motion.z.equal(8).or(motion.z.equal(WORK_POSE.groundMelee))));});
         } else {
           If(isWeapon,()=>{ animated.assign(vec3(across.add(.27),along.mul(.82).add(.65),depth.add(.13))); });
           If(shooting.and(isWeapon),()=>{ animated.assign(vec3(across.add(.19),depth.add(.99).add(recoil.mul(.035)),along.add(.44).sub(recoil.mul(.09)))); });
@@ -502,7 +517,7 @@ export class PawnLayer {
             animated.assign(vec3(across.add(.23),depth.add(.83),along.add(.38).add(reach.mul(.2))));
           });
         }
-        If(isWeapon.and(attribute('aEquipment','vec4').x.notEqual(weapon.equipment)),()=>{animated.assign(vec3(0));});
+        If(isWeapon.and(attribute('aEquipment','vec4').x.floor().notEqual(weapon.equipment)),()=>{animated.assign(vec3(0));});
       }
       // Holstered equipment follows the same full-body transformation as the
       // torso when reclining, dying or being carried. Previously it was reset
@@ -562,6 +577,10 @@ export class PawnLayer {
     const originalPosition = makeOriginalPosition();
     mat.positionNode=Fn(()=>{const result=vec3(0).toVar();If(this.animationCache.cached(),()=>{result.assign(this.cachedPawnPosition());}).Else(()=>{result.assign(originalPosition);});return result;})();
     const baseColor = Fn(()=>{const fragmentBone=pawnFragmentTraits.x,fragmentDye=pawnFragmentTraits.y;const tint=mix(attribute('color','vec3'),attribute('aTint','vec3'),fragmentDye.equal(1).select(float(1),float(0))).toVar();
+      If(fragmentDye.equal(MACE_DYE269),()=>{
+        const material=attribute('aEquipment','vec4').x.fract().mul(8).round();
+        for(const [index,item]of MACE_ITEMS_269.entries()){const c=new THREE.Color(maceColor269(item));If(material.equal(index+1),()=>{tint.mulAssign(vec3(c.r,c.g,c.b));});}
+      });
       {const wool=new THREE.Color(0xb3c0ba);If(fragmentDye.equal(TUQUE_DYE).and(attribute('aEquipment','vec4').z.greaterThan(7.5)),()=>{tint.assign(vec3(wool.r,wool.g,wool.b));});}
       If(fragmentDye.equal(PLATE_ARMOR_DYE),()=>{tint.assign(attribute('aTint','vec3'));});
       for(const [index,hex] of SIMPLE_HELMET_COLORS267.entries()){const color=new THREE.Color(hex);If(fragmentDye.equal(SIMPLE_HELMET_DYE).and(attribute('aEquipment','vec4').w.fract().mul(16).round().equal(index+1)),()=>{tint.assign(vec3(color.r,color.g,color.b));});}
@@ -720,7 +739,7 @@ export class PawnLayer {
    * static morphology and visibility still use the live encoded streams. */
   private cachedPawnPosition():THREE.Node<'vec3'> {
     return Fn(()=>{
-      const bone=attribute('boneId','float'),dye=attribute('dye','float'),motion=vec4(0,0,this.animationCache.cell(4).y,0);
+      const bone=attribute('boneId','float'),dye=attribute('dye','float'),motion=vec4(0,this.animationCache.cell(4).z,this.animationCache.cell(4).y,0);
       const pose=this.animationCache.cell(0);
       const pivot=pawnMorph(attribute('bindPivot','vec3')),local=pawnMorph(positionLocal).sub(pivot);
       const data=this.animationCache.cellAt(float(8).add(bone));
@@ -735,14 +754,15 @@ export class PawnLayer {
       If(motion.z.greaterThan(2.5).and(motion.z.lessThan(3.5)),()=>{If(bone.greaterThan(5.5),()=>{animated.y.addAssign(.21);animated.z.addAssign(.21);});animated.y.addAssign(WORLD_SCALE.stoolHeight/PAWN_MODEL_SCALE-.605);});
       If(motion.z.equal(10).and(bone.lessThan(3.5)),()=>{const y=animated.y.sub(.48).toVar(),z=animated.z.toVar();animated.y.assign(y.mul(.82).sub(z.mul(.57)).add(.48));animated.z.assign(y.mul(.57).add(z.mul(.82)));});
       const shooting=motion.z.equal(7).or(motion.z.equal(15)),recoil=this.animationCache.cell(3).z;
-      for(const weapon of WEAPON_VISUALS){const isWeapon=dye.equal(weapon.dye),along=positionLocal.y.sub(.68),across=positionLocal.x.sub(.205),depth=positionLocal.z;
+      for(const weapon of RESIDENT_WEAPON_VISUALS269){const isWeapon=dye.equal(weapon.dye),along=positionLocal.y.sub(.68),across=positionLocal.x.sub(.205),depth=positionLocal.z;
         if(weapon.item==='bolt-action-rifle'||weapon.item==='emp-launcher'){
           If(isWeapon,()=>{animated.assign(vec3(along.mul(.30).add(across).add(.13),along.mul(.78).add(depth.mul(.12)).add(.84),depth.mul(.8).add(.25)));});
           If(shooting.and(isWeapon),()=>{animated.assign(vec3(across.add(.10),depth.add(1.02).add(recoil.mul(.035)),along.add(.45).sub(recoil.mul(.12))));});
+        }else if(weapon.item==='mace-family'){If(isWeapon,()=>{animated.assign(macePositionNode269(along,across,depth,this.animationCache.cell(3).w,motion.y,motion.z.equal(8).or(motion.z.equal(WORK_POSE.groundMelee))));});
         }else{If(isWeapon,()=>{animated.assign(vec3(across.add(.27),along.mul(.82).add(.65),depth.add(.13)));});
           If(shooting.and(isWeapon),()=>{animated.assign(vec3(across.add(.19),depth.add(.99).add(recoil.mul(.035)),along.add(.44).sub(recoil.mul(.09))));});
           if(weapon.item==='plasteel-knife')If(motion.z.equal(8).or(motion.z.equal(WORK_POSE.groundMelee)).and(isWeapon),()=>{animated.assign(vec3(across.add(.23),depth.add(.83),along.add(.38).add(this.animationCache.cell(3).w.mul(.2))));});}
-        If(isWeapon.and(attribute('aEquipment','vec4').x.notEqual(weapon.equipment)),()=>{animated.assign(vec3(0));});}
+        If(isWeapon.and(attribute('aEquipment','vec4').x.floor().notEqual(weapon.equipment)),()=>{animated.assign(vec3(0));});}
       If(motion.z.equal(1).or(motion.z.equal(5)).or(motion.z.equal(POSE_SLEEP)).or(motion.z.equal(POSE_DEAD)),()=>{const y=animated.y.toVar();animated.y.assign(animated.z.add(.19));animated.z.assign(float(.65).sub(y));});
       If(motion.z.equal(POSE_DEAD),()=>{animated.z.assign(animated.z.mul(.78));});
       If(motion.z.equal(6),()=>{const x=animated.x.toVar(),y=animated.y.toVar(),z=animated.z.toVar();animated.assign(vec3(float(.65).sub(y),z.add(.19+.95/PAWN_MODEL_SCALE),x.add(.3)));});
@@ -879,7 +899,11 @@ export class PawnLayer {
     const bodies=new Map(world.piles.filter(p=>p.humanCorpse).map(p=>[p.humanCorpse!.pawnId,p]));
     const retainedOffsets=retainedHumanCorpseOffsets(world);
     const apparel=apparelProjection(world);
-    if(!this.smithingGeometry)for(const pieces of apparel.values())if(pieces.some(p=>isSmithingApparel267(p.item))){this.extendSmithingGeometry();break;}
+    const gears=equipmentProjection(world);
+    let smithing=this.smithingGeometry,mace=this.maceGeometry;
+    if(!smithing)for(const pieces of apparel.values())if(pieces.some(p=>isSmithingApparel267(p.item))){smithing=true;break;}
+    if(!mace)for(const piece of gears.values())if(isMaceItem269(piece.item)){mace=true;break;}
+    this.extendResidentGeometry(smithing,mace);
     if (!this.pawnMesh) this.createPawnMesh(Math.max(1,world.pawns.length));
     else if(this.pawnMesh.geometry.getAttribute('aFrom').count<world.pawns.length)growPawnBuffers([this.pawnMesh,this.cargoMesh!,this.selectionMesh!,this.fireMesh!,this.partialCargoMesh!],world.pawns.length);
     const geometry = this.pawnMesh!.geometry as THREE.InstancedBufferGeometry;
@@ -908,7 +932,7 @@ export class PawnLayer {
     const cargo = geometry.getAttribute('aCargo') as THREE.InstancedBufferAttribute;
     const handoffFrom=this.cargoMesh!.geometry.getAttribute('aHandoffFrom') as THREE.InstancedBufferAttribute;
     const handoffTo=this.cargoMesh!.geometry.getAttribute('aHandoffTo') as THREE.InstancedBufferAttribute;
-    const equipment=geometry.getAttribute('aEquipment') as THREE.InterleavedBufferAttribute,gears=equipmentProjection(world);
+    const equipment=geometry.getAttribute('aEquipment') as THREE.InterleavedBufferAttribute;
     const carried = new Map<number, World['piles'][number]>();
     for (const pile of world.piles) if (pile.owner.type === 'pawn') carried.set(pile.owner.pawnId, pile);
     let jobsById:Map<number,World['jobs'][number]>|undefined;
@@ -1012,7 +1036,8 @@ export class PawnLayer {
       toAttribute.setXYZW(index, to.x, to.y, to.z, to.w);
       this.workPoses.set(pawn.id,workPose);
       const smallMelee=!!pawn.melee?.strike&&(world.wildlife?.animals.some(animal=>animal.id===pawn.melee!.strike!.targetId&&animal.species==='hare')??false);
-      motion.setXYZW(index, pawn.state === 'moving'&&!pawn.stun&&!pasteCollect ? 1 : 0,workActivity(pawn),animationPose(pawn,workPose,smallMelee,seated),pawn.melee?.strike ? coreTimeSeconds(pawn.melee.strike.atCore,Math.floor(world.tick/1024)*1024) : pawn.shooting?.stance?.phase==='cooldown'?coreTimeSeconds(pawn.shooting.stance.startedAtCore,Math.floor(world.tick/1024)*1024):pawn.id * 1.7);
+      const equipmentCode=weaponVisual(gears.get(pawn.id)?.item)?.equipment??0;
+      motion.setXYZW(index, pawn.state === 'moving'&&!pawn.stun&&!pasteCollect ? 1 : 0,presentationActivity(pawn,equipmentCode),animationPose(pawn,workPose,smallMelee,seated),pawn.melee?.strike ? coreTimeSeconds(pawn.melee.strike.atCore,Math.floor(world.tick/1024)*1024) : pawn.shooting?.stance?.phase==='cooldown'?coreTimeSeconds(pawn.shooting.stance.startedAtCore,Math.floor(world.tick/1024)*1024):pawn.id * 1.7);
       const identity=appearanceOf(pawn,world.seed),variant=appearanceShape(identity);
       blood.setX(index,bodyBloodWord(pawn.health));
       scratchColor.setHex(identity.skinColor);skin.setXYZ(index,scratchColor.r,scratchColor.g,scratchColor.b);
@@ -1022,7 +1047,7 @@ export class PawnLayer {
       scratchColor.setHex(look.color??(isColonist(pawn)?pawnBaseColor(pawn.id):pawn.visitor&&!world.visitors?.groups.find(g=>g.id===pawn.visitor!.group)?.hostile?0x77958f:0xb74736));
       if(pawn.state==='dead')scratchColor.setHex(0x73756c);
       tint.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
-      equipment.setXYZW(index,weaponVisual(gears.get(pawn.id)?.item)?.equipment??0,look.silhouette,(look.vest?1:0)+(look.simpleHelmet?10:look.reconHelmet?4:look.helmet?2:look.tuque===2?8:look.tuque===1?6:0)+(look.vestTintCode??0)/65536,look.pants+(look.simpleHelmet?look.simpleHelmetMaterial/16:look.plasteelHelmet?.5:0));
+      equipment.setXYZW(index,equipmentCode,look.silhouette,(look.vest?1:0)+(look.simpleHelmet?10:look.reconHelmet?4:look.helmet?2:look.tuque===2?8:look.tuque===1?6:0)+(look.vestTintCode??0)/65536,look.pants+(look.simpleHelmet?look.simpleHelmetMaterial/16:look.plasteelHelmet?.5:0));
       const load = carried.get(pawn.id);
       const packed=world.packed?.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
       const handoff=this.handoffs.active.get(pawn.id);
@@ -1044,7 +1069,11 @@ export class PawnLayer {
     this.animationOwners.clear();for(const [patient,carrier] of patientOwners)this.animationOwners.set(patient,carrier);
     world.pawns.forEach((p,i)=>{const owner=bodies.get(p.id)?.owner;
       const pose=motion.getZ(i),posture=pose===1||pose===3||pose===5||pose===6||pose===10||pose===POSE_SLEEP||pose===POSE_DEAD||pose===WORK_POSE.ground||pose===WORK_POSE.groundMelee?pose:0;
-      this.animationCache.reconcile(i,p.id,[posture,shape.getX(i),shape.getY(i),shape.getZ(i),shape.getW(i),equipment.getX(i),equipment.getY(i),equipment.getZ(i),equipment.getW(i),owner?.type,owner?.type==='pawn'?owner.pawnId:undefined,patientOwners.get(i)].join(':'));});
+      // A new confirmed mace tool/strike invalidates its retained pose once.
+      // Reach then follows ordinary sampling; no continuously changing tick.
+      const activity=motion.getY(i),mace=isMaceItem269(gears.get(p.id)?.item)
+        ?[activity===6||activity===7?activity:0,activity===6||activity===7?p.melee?.strike?.atCore:undefined]:[];
+      this.animationCache.reconcile(i,p.id,[posture,shape.getX(i),shape.getY(i),shape.getZ(i),shape.getW(i),equipment.getX(i),equipment.getY(i),equipment.getZ(i),equipment.getW(i),owner?.type,owner?.type==='pawn'?owner.pawnId:undefined,patientOwners.get(i),...mace].join(':'));});
     for (const attr of [fromAttribute, toAttribute, motion, tint, cargo,handoffFrom,handoffTo]) attr.needsUpdate = true;
     geometry.instanceCount = world.pawns.length;
     (this.cargoMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount = world.pawns.length;
@@ -1060,6 +1089,7 @@ export class PawnLayer {
     if(!this.pawnMesh)return;
     const geometry=this.pawnMesh.geometry;
     const from=geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute,to=geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute,times=geometry.getAttribute('aTravel') as THREE.InstancedBufferAttribute,motion=geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
+    const equipment=geometry.getAttribute('aEquipment');
     const origin=Math.floor(timeline.tick/1024)*1024;
     this.travelOrigin=origin;
     this.travelTime.value=localTimeSeconds(timeline.tick,origin);
@@ -1155,7 +1185,7 @@ export class PawnLayer {
         times.setXYZW(i,shifting?approachStart:0,shifting?approachStart+APPROACH_TICKS/TICKS_PER_SECOND:0,localTimeSeconds(heading.startTick,origin),2);
         // Unexpected target changes still get a short, visibly stepping
         // adjustment. Normal task arrivals already reach contact on the edge.
-        motion.setX(i,motionX(shifting,this.crouchTransitions.get(pawn.id),origin));motion.setY(i,workActivity(pawn));
+        motion.setX(i,motionX(shifting,this.crouchTransitions.get(pawn.id),origin));motion.setY(i,presentationActivity(pawn,equipment.getX(i)));
         motion.setZ(i,shownPose);
       }
       if(!stepping){
@@ -1223,7 +1253,7 @@ export class PawnLayer {
   dispose(): void {
     this.playback435.clear();
     clearGroup(this.group);
-    this.retiredPawnGeometry?.dispose();this.retiredPawnGeometry=undefined;this.smithingGeometry=false;
+    for(const retired of this.retiredPawnGeometries)retired.dispose();this.retiredPawnGeometries.length=0;this.smithingGeometry=false;this.maceGeometry=false;
     this.plainMaterial?.dispose();
     this.texturedMaterial?.dispose();
     this.nativePlainMaterial?.dispose();

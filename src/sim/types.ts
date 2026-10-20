@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 268 as const;
+export const SCHEMA_VERSION = 269 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -35,7 +35,7 @@ export interface MaterialPile { /** Actual CompForbiddable on prospective ordina
 export type StorageFilters = { wort?:boolean; beer?:boolean; jade?:boolean; plant?:boolean; chemfuel?:boolean; neutroamine?:boolean; 'mech-corpse'?:boolean; silver?:boolean; corpse?:boolean; wood:boolean; food:boolean; unfinished?:boolean; textile?:boolean; chunk?:boolean; steel?:boolean; gold?:boolean; uranium?:boolean; plasteel?:boolean; component?:boolean; 'advanced-component'?:boolean; medicine?:boolean; weapon?:boolean; apparel?:boolean; blocks?:boolean; furniture?:boolean };
 export interface StockpileCell extends Cell, StorageConditions { /** Logical zone identity; physical cell IDs remain haul destinations. */ zoneId?:number; items?:Partial<Record<ItemId,boolean>>; id: number; filters: StorageFilters; priority: number; capacity: number }
 export interface GrowingZone { basinId?:number; id: number; cells: number[]; plant: 'hops' | 'rice' | 'cotton' | 'potato' | 'corn' | 'healroot' | 'haygrass'; allowSow: boolean; allowCut: boolean }
-export type HaulDestination = {type:'fermenting-barrel';structureId:number} | {type:'hopper';structureId:number} | { type:'turret';structureId:number;forced?:true } | { type: 'fuel'; structureId: number; forced?: boolean; forCooking?: boolean } | { type: 'stockpile'; stockpileId: number; forHunting?: true } | { type: 'job'; jobId: number; forConstruction?: boolean } | ({ type: 'aside'; growingZoneId?: number; sowCell?: Cell; constructionId?: number; forConstruction?: boolean } & Cell);
+export type HaulDestination = {type:'fermenting-barrel';structureId:number} | {type:'hopper';structureId:number} | { type:'turret';structureId:number;forced?:true } | { type: 'fuel'; structureId: number; forced?: boolean; forCooking?: boolean;forCrafting?:true } | { type: 'stockpile'; stockpileId: number; forHunting?: true } | { type: 'job'; jobId: number; forConstruction?: boolean } | ({ type: 'aside'; growingZoneId?: number; sowCell?: Cell; constructionId?: number; forConstruction?: boolean } & Cell);
 export interface HaulTask {
   /** A whole furniture identity, never a divisible material pile. */
   whole?: true;

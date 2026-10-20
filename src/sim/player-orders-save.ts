@@ -1,3 +1,4 @@
+import {validCraftingFuelDestination269} from './fuel-purpose-save-269.ts';
 import { validForcedConsumePawnShape } from './consume-save.ts';
 import { MAX_QUEUED_ORDERS } from './player-orders.ts';
 import type { World } from './types.ts';
@@ -44,10 +45,11 @@ function validQueuedHaul(value:unknown,version:number,world:World):boolean {
   const t=value as Record<string,unknown>,d=t.destination as Record<string,unknown>;
   const id=(x:unknown)=>typeof x==='number'&&Number.isSafeInteger(x)&&x>0;
   if(Object.keys(t).some(k=>!['sourcePileId','quantity','phase','destination','carryPileId',...(version>=26?['whole']:[])].includes(k))||!id(t.sourcePileId)||!id(t.quantity)||(t.quantity as number)>CARRY_CAPACITY||t.phase!=='pickup'||t.carryPileId!==null||!d||typeof d!=='object'||Array.isArray(d))return false;
+  if(!validCraftingFuelDestination269(d,version)||Object.hasOwn(d,'forCrafting')&&!world.structures.some(s=>s.id===d.structureId&&s.kind==='fueled-smithy'))return false;
   if(t.whole!==undefined&&(version<26||t.whole!==true||t.quantity!==1||!['stockpile','aside'].includes(String(d.type))))return false;
   if(version>=217&&d.type==='hopper')return id(d.structureId)&&Object.keys(d).every(k=>['type','structureId'].includes(k));
   if(version>=193&&d.type==='turret')return id(d.structureId)&&d.forced===true&&Object.keys(d).every(k=>['type','structureId','forced'].includes(k));
-  if(version>=19&&d.type==='fuel')return id(d.structureId)&&d.forced===true&&(d.forCooking===undefined||version>=20&&d.forCooking===true&&world.structures.some(s=>s.id===d.structureId&&(s.kind==='campfire'||version>=84&&s.kind==='fueled-stove'||version>=267&&s.kind==='fueled-smithy')))&&Object.keys(d).every(k=>['type','structureId','forced',...(version>=20?['forCooking']:[])].includes(k));
+  if(version>=19&&d.type==='fuel')return id(d.structureId)&&d.forced===true&&(d.forCooking===undefined||version>=20&&d.forCooking===true&&world.structures.some(s=>s.id===d.structureId&&(s.kind==='campfire'||version>=84&&s.kind==='fueled-stove'||version>=267&&s.kind==='fueled-smithy')))&&Object.keys(d).every(k=>['type','structureId','forced',...(version>=20?['forCooking']:[]),...(version===269?['forCrafting']:[])].includes(k));
   if(version>=20&&d.type==='aside'&&d.growingZoneId!==undefined)return validSowingDestination(d,world)&&Object.keys(d).every(k=>['type','growingZoneId','sowCell','x','z'].includes(k));
   if(version>=19&&d.type==='aside')return id(d.constructionId)&&Number.isInteger(d.x)&&Number(d.x)>=0&&Number(d.x)<world.width&&Number.isInteger(d.z)&&Number(d.z)>=0&&Number(d.z)<world.height&&(d.forConstruction===undefined||typeof d.forConstruction==='boolean')&&Object.keys(d).every(k=>['type','constructionId','forConstruction','x','z'].includes(k));
   return d.type==='stockpile'?id(d.stockpileId)&&Object.keys(d).every(k=>['type','stockpileId'].includes(k))

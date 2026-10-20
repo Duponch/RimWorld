@@ -1,3 +1,4 @@
+import {isMaceItem269} from './mace-content-269.ts';
 import {validSmithingWorkShape267} from './smithing-save-267.ts';
 import {isSmithingProduct267,isSmithingWorkpiece267} from './smithing-content-267.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
@@ -33,6 +34,7 @@ export function validatePileRecordShape(item:Record<string,unknown>,world:Pick<W
  const input={width:world.width,height:world.height,tick:validationTick};
  const coord=(v:Record<string,unknown>)=>integer(v.x,0,world.width-1)&&integer(v.z,0,world.height-1);
  const errors:string[]=[];
+ if(version!==269&&(isMaceItem269(item.item)||item.item==='unfinished-mace'))return ['Future mace catalogue.'];
  if(version<268&&item.item==='unfinished-knife')return ['Future knife manufacture.'];
  if(version<267&&(isSmithingProduct267(item.item)||isSmithingWorkpiece267(item.item)||Object.hasOwn(item,'smithingWork')))return ['Future smithing item.'];
  if(!validSmithingWorkShape267(item,version))errors.push('Invalid smithing work.');

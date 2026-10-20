@@ -7,6 +7,6 @@ export const workType=(job:Pick<Job,'kind'|'growingZoneId'|'flowerPotId'|'instal
 export const workPriority=(pawn:Pick<Pawn,'priorities'|'background'>,work:WorkType):number=>backgroundWorkRefusal(pawn,work)?0:pawn.priorities[work];
 /** Some non-work activities still consume a skill; keep its stored record. */
 export const effectiveSkillLevel=(pawn:Pick<Pawn,'background'>,skill:BackgroundSkillId,storedLevel:number):number=>backgroundSkillRefusal(pawn,skill)?0:storedLevel;
-/** Physical carrying belongs to its provider: builders/growers/cooks can carry
+/** Physical carrying belongs to its provider: builders/growers/cooks/crafters can carry
  * their own materials without being admitted to general hauling. */
-export const haulingWork=(destination:HaulDestination):WorkType=>destination.type==='stockpile'&&destination.forHunting?'hunt':destination.type==='job'&&destination.forConstruction||destination.type==='aside'&&destination.forConstruction?'build':destination.type==='aside'?destination.constructionId===undefined?'grow':'haul':destination.type==='fuel'&&destination.forCooking?'cook':'haul';
+export const haulingWork=(destination:HaulDestination):WorkType=>destination.type==='stockpile'&&destination.forHunting?'hunt':destination.type==='job'&&destination.forConstruction||destination.type==='aside'&&destination.forConstruction?'build':destination.type==='aside'?destination.constructionId===undefined?'grow':'haul':destination.type==='fuel'?(destination.forCrafting?'craft':destination.forCooking?'cook':'haul'):'haul';

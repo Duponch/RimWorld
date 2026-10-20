@@ -1,3 +1,4 @@
+import {MACE_ITEM_DEFINITIONS_269} from './mace-content-269.ts';
 import {SMITHING_APPAREL_ITEM_DEFINITIONS267} from './smithing-apparel-267.ts';
 import {CAVE_ITEM_DEFINITIONS_256} from './cave-products-256.ts';
 import {eggSpeciesForItem256} from './animal-egg-content-v256.ts';
@@ -16,6 +17,8 @@ export type MechCorpseItem=typeof MECH_CORPSE_ITEMS[number];
  * hundredths here; the actor's 0..100 meter represents one nutrition unit. */
 export const ITEM_DEFINITIONS = Object.freeze({
   ...SMITHING_APPAREL_ITEM_DEFINITIONS267,
+  ...MACE_ITEM_DEFINITIONS_269,
+  'unfinished-mace':Object.freeze({label:'Masse inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x87958f}),
   'unfinished-knife':Object.freeze({label:'Couteau inachevé',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0xa0b2b5}),
   'unfinished-plate-armor':Object.freeze({label:'Armure de plaques inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x87958f}),
   'unfinished-simple-helmet':Object.freeze({label:'Casque simple inachevé',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x87958f}),

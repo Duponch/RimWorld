@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V445 — schéma 269 :** [Masses dans les six matières](../gameplay/maces-v445.md). Fabrication, ouvrage, équipement, combat et récupération métallique ;97cas du lot acquis par reprises,11voisins de ravitaillement acquis et deux anciens scénarios de cuisine invalides conservés. Présentation et interface natives muettes acquises par reprises, réserve de mise en page conservée. Publication en préparation. Ensemble2 toujours principal ; aucun gain FPS ni catalogue mêlée complet annoncé.
+
 **V444 publiée — schéma 268 :** [Fabrication du couteau en plastacier](../gameplay/plasteel-knife-v444.md). Domaine d’ouvrage de forge réutilisé, sortie arme existante et migration267 strictement validée puis numéro seul ; voies publiques/résidentes contrôlées au même tick. Présentation et UI natives muettes acquises avec réserve de mise en page ; publication39f0092a/7390bb27 vérifiée.
 
 **V443 publiée — schéma 267 :** [Forges, plaques et casque simple](../gameplay/smithing-v443.md). Chaîne physique des matières à l’habillement et à la récupération ; migration266 par numéro seul. 45cas nouveaux et42cas voisins acquis par reprises, typage et build Pages acquis. Présentation et UI natives muettes acquises ; publication575e6b1d/451ebf8b vérifiée ; aucun gain FPS global ni parité Core annoncé.

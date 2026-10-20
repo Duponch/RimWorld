@@ -70,6 +70,7 @@ export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=isSmithingA
   return p.item==='wood'?150:p.item==='cloth'?80:p.item==='light-leather'?60:p.item==='component'?70:0;
 }
 export function pileFlammability(p:Pick<MaterialPile,'kind'|'item'>):number {
+  if(isMaceItem269(p.item))return MACE_DEFINITIONS_269[maceMaterial269(p.item)].flammability;
   if(isSmithingApparel267(p.item))return ARMOR_STUFF_DEFINITIONS267[smithingApparelStuff267(p.item)].flammability;
   if(isAnimalItem256(p.item))return (ANIMAL_ITEM_FLAMMABILITY_256 as Readonly<Record<string,number>>)[p.item]??(p.kind==='corpse'?.7:0);
   if(p.item==='hops')return 1;if(p.item==='wort')return .2;if(p.item==='beer')return .5;
@@ -95,3 +96,4 @@ export function mergeThingDamage(target:Pick<MaterialPile,'item'|'kind'|'quantit
 export type FireItemLoss=Partial<Record<ItemId,number>>;
 
 export const isRepairableStructure=(s:Pick<Structure,'kind'|'material'>):boolean=>structureMaxHp(s)>0;
+import {isMaceItem269,maceMaterial269,MACE_DEFINITIONS_269} from './mace-content-269.ts';

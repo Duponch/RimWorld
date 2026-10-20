@@ -1,5 +1,12 @@
 # Catalogue de contenu : couverture connue
 
+**V445 — qualification ciblée en cours, schéma269 :** [Masses dans les six matières](maces-v445.md). Six nouvelles identités portent le catalogue à **dix armes** ; les autres familles restent ouvertes. Aucun statut de publication ni bilan de contrôles acquis attribué à ce lot ici.
+
+| Contenu V445 | Acquisition et usage | Frontières et limites |
+| --- | --- | --- |
+| Masses bois, acier, plastacier, uranium, argent et or | Recherche Forge, Artisanat3, deux forges ;50unités homogènes ou500argent/or. Transport au contact, ouvrage avec auteur/reçus/progression, qualité finale unique ; rangement, équipement, mêlée, masse1,25kg et économie raccordés. | Bois/argent/or désactivés initialement dans la facture. Ni emplacement d’artisanat ni usinage ; aucun équipement PNJ ni stock marchand ajouté. Qualification ciblée en cours. |
+| Reprise, permissions et récupération | Interdiction d’ouvrage ou de matière déposée bloque le travail sans perte ; autoriser permet la reprise. Combustible de forge transporté sous Artisanat. Fusion des cinq métaux à25% :12–13unités usuelles ou125précieuses ; annulation à75% par reçu. | Schéma268 strict avant migration neutre269, sans permission ni ressource rétroactive. Bois non fondu ; recette de brûlage d’armes différée. Épées et autres matières de couteaux restent hors lot. |
+
 **V444 publiée — schéma 268 :** [Fabrication du couteau en plastacier](plasteel-knife-v444.md). Recette30plastacier à l’emplacement d’artisanat et aux deux forges ; ouvrage, auteur et progression physiques, sortie vers le couteau déjà jouable.55cas distincts acquis par reprises, présentation et UI natives muettes acquises avec réserve de mise en page ; publication39f0092a/7390bb27 vérifiée. Autres matières et autres armes de mêlée différées.
 
 **V443 publiée — schéma 267 :** [Forges, plaques et casque simple](smithing-v443.md). 45cas nouveaux et42cas voisins acquis par reprises ; présentation et UI natives muettes acquises ; publication575e6b1d/451ebf8b vérifiée.

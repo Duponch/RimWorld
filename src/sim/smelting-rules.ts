@@ -1,10 +1,12 @@
 import {materialAllowedForPlayer256} from './material-permission-256.ts';
+import {isMaceItem269,maceMaterial269,maceUnits269} from './mace-content-269.ts';
+import {SCHEMA_VERSION} from './types.ts';
 import { roundYield } from './cooking-statistics.ts';
 import { WEAPON_QUALITIES,isWeaponItem,weaponMaxHitPoints,type WeaponItem } from './equipment-rules.ts';
 import { pawnBody } from './health-rules.ts';
 import type { CookingBill,SmeltFilter } from './cooking-types.ts';
 import type { MaterialPile,Pawn } from './types.ts';
-import { isSmeltingRecipe } from './smelting-content.ts';
+import { isSmeltingRecipe,SMELTING_WEAPONS } from './smelting-content.ts';
 import {APPAREL} from './apparel-definitions.ts';
 import {isSmithingApparel267,smithingApparelStuff267,smithingApparelUnits267,type SmithingApparel267} from './smithing-apparel-267.ts';
 export { isSmeltingRecipe,SMELTING_WORK_TICKS,SMELTING_MAX_OUTPUT,SMELTING_WEAPONS,SMELTING_APPAREL_INPUTS267,SMELTING_APPAREL_MAX_OUTPUT267,smeltingProduct,type SmeltingRecipe } from './smelting-content.ts';
@@ -35,7 +37,7 @@ export function smeltingIngredientAllowed(bill:CookingBill,pile:MaterialPile):bo
     const hp=smeltingHitPointsPercent(a.hitPoints,max),filter=bill.smeltFilter;
     return hp>=filter.hpMin&&hp<=filter.hpMax&&quality>=WEAPON_QUALITIES.indexOf(filter.qualityMin)&&quality<=WEAPON_QUALITIES.indexOf(filter.qualityMax);
   }
-  if(!isSmeltingRecipe(bill.recipe)||!validSmeltFilter(bill.smeltFilter)||!isWeaponItem(pile.item)
+  if(!isSmeltingRecipe(bill.recipe)||!validSmeltFilter(bill.smeltFilter)||!isWeaponItem(pile.item)||!SMELTING_WEAPONS.includes(pile.item)
     ||pile.kind!=='weapon'||pile.quantity!==1||bill.filters[pile.item]!==true||!record(pile.weapon)
     ||!Object.hasOwn(pile.weapon,'quality')||!Object.hasOwn(pile.weapon,'hitPoints')
     ||Object.keys(pile.weapon).some(k=>!['quality','hitPoints','forbidden'].includes(k))||pile.weapon.forbidden!==undefined)return false;
@@ -45,7 +47,7 @@ export function smeltingIngredientAllowed(bill:CookingBill,pile:MaterialPile):bo
   return hp>=filter.hpMin&&hp<=filter.hpMax&&quality>=WEAPON_QUALITIES.indexOf(filter.qualityMin)&&quality<=WEAPON_QUALITIES.indexOf(filter.qualityMax);
 }
 export function validSmeltingIngredients(parts:readonly {item:unknown;quantity:number}[],recipe:unknown='smelt-weapon'):boolean {
-  return parts.length===1&&parts[0]!.quantity===1&&(recipe==='smelt-slag'?parts[0]!.item==='slag-steel-chunk':recipe==='smelt-apparel'?isSmithingApparel267(parts[0]!.item)&&smithingApparelStuff267(parts[0]!.item)!=='wood':isWeaponItem(parts[0]!.item));
+  return parts.length===1&&parts[0]!.quantity===1&&(recipe==='smelt-slag'?parts[0]!.item==='slag-steel-chunk':recipe==='smelt-apparel'?isSmithingApparel267(parts[0]!.item)&&smithingApparelStuff267(parts[0]!.item)!=='wood':isWeaponItem(parts[0]!.item)&&SMELTING_WEAPONS.includes(parts[0]!.item));
 }
 /** Smelting has no skill or learning; delivered WorkSpeedGlobal remains neutral. */
 export function smeltingSpeed(pawn:Pawn):number {
@@ -54,14 +56,17 @@ export function smeltingSpeed(pawn:Pawn):number {
 }
 /** Intricate components are excluded before rounding. Even a whole yield draws once. */
 export function smeltingYield(item:WeaponItem|SmithingApparel267,random:()=>number):number {
+  if(isMaceItem269(item)){const material=maceMaterial269(item);if(material==='wood')throw Error('Wooden weapon is not smeltable');return roundYield(maceUnits269(material)*.25,random);}
   if(isSmithingApparel267(item)){
     if(smithingApparelStuff267(item)==='wood')throw Error('Wooden apparel is not smeltable');
     return roundYield(smithingApparelUnits267(item)*.25,random);
   }
   return roundYield((item==='bolt-action-rifle'?60:item==='emp-launcher'?75:30)*.25,random);
 }
-export function validSmeltingProduct(item:unknown,quantity:unknown,recipe:unknown='smelt-weapon'):boolean {
+export function validSmeltingProduct(item:unknown,quantity:unknown,recipe:unknown='smelt-weapon',version:number=SCHEMA_VERSION):boolean {
   if(recipe==='smelt-apparel')return Number.isInteger(quantity)&&(['steel','plasteel','uranium'].includes(String(item))?[10,42,43].includes(Number(quantity)):['silver','gold'].includes(String(item))&&[100,425].includes(Number(quantity)));
   if(recipe==='smelt-slag')return item==='steel'&&typeof quantity==='number'&&Number.isInteger(quantity)&&quantity>=1&&quantity<=15;
-  return typeof quantity==='number'&&Number.isInteger(quantity)&&quantity>=1&&(item==='steel'?quantity<=19:item==='plasteel'&&quantity<=8);
+  // Output can already have deposited a fraction into a partly filled stack.
+  // Preserve the old metal/quantity frontier before269, even with no input left.
+  return typeof quantity==='number'&&Number.isInteger(quantity)&&quantity>=1&&(item==='steel'?quantity<=19:item==='plasteel'?quantity<=(version>=269?13:8):version>=269&&(item==='uranium'?quantity<=13:(item==='silver'||item==='gold')&&quantity<=125));
 }

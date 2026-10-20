@@ -1,5 +1,15 @@
 # Guide joueur
 
+## Fabriquer une masse — V445, qualification ciblée en cours
+
+Après la recherche **Forge**, sélectionnez une **Forge à combustible** ou une **Forge électrique**, puis ajoutez **Fabriquer une masse**. Activez **Artisanat** dans Travail et choisissez un artisan de niveau3au minimum. La forge doit disposer de bois ou d’électricité ; l’artisan peut transporter le combustible de son propre travail avec Artisanat, sans activer Cuisine ni Transport.
+
+La facture demande **50unités d’une même matière** : bois, acier, plastacier ou uranium ; pour l’argent et l’or, il faut **500unités**. Acier, plastacier et uranium sont cochés initialement. Ouvrez les ingrédients pour autoriser bois, argent ou or ; plusieurs matières autorisées ne permettent pas de les mélanger dans un ouvrage. Ni l’emplacement d’artisanat ni l’atelier d’usinage ne proposent cette recette.
+
+L’artisan transporte les matières au contact puis conserve un ouvrage avec son auteur et sa progression. Le même auteur peut reprendre après une interruption. Interdire l’ouvrage ou une matière déposée bloque la suite sans la consommer ; autorisez à nouveau pour reprendre. Annuler rembourse environ75% de chaque portion incorporée, avec arrondi. La qualité est tirée une seule fois à la finition. Prévoyez une réserve acceptant l’arme, puis sélectionnez un colon et utilisez le clic droit pour équiper la même masse : elle sert la mêlée et pèse1,25kg.
+
+**Fondre une arme** peut récupérer25% du métal des cinq masses métalliques :12ou13unités pour acier/plastacier/uranium,125pour argent/or. Les nouveaux types sont décochés initialement dans la facture de fusion. La masse en bois ne fond pas ; son brûlage par recette reste différé. Les six masses portent le catalogue à dix identités d’armes, sans compléter les autres familles ni les assortiments marchands. [Règles, adaptations et état de qualification](maces-v445.md).
+
 ## Fabriquer un couteau — V444 publiée
 
 Le raccord de fabrication est publié : [périmètre et contrôlesV444](plasteel-knife-v444.md). Placez un **Emplacement d’artisanat** ou sélectionnez une des deux forges. Ajoutez **Fabriquer un couteau en plastacier**, autorisez le plastacier et activez **Artisanat** dans Travail. Il faut **30plastacier** ; aucun niveau minimum ni recherche propre à la recette. Construire une nouvelle forge demande toujours la recherche **Forge**. Si l’ouvrage masque le poste, cliquez de nouveau sur la même case pour parcourir les objets sélectionnables.

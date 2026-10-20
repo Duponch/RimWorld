@@ -20,6 +20,7 @@ function gear(baseMarketValue:number,maxHitPoints:number,visitorHandles:boolean,
   return value(baseMarketValue,visitorHandles,{healthAffectsPrice:true,maxHitPoints,hasQuality:true,sellPriceFactor:weapon?.2:1,...extra});
 }
 export const TRADE_CATALOGUE:Readonly<Partial<Record<ItemId,TradeCatalogueEntry>>>=Object.freeze({
+  ...Object.fromEntries(MACE_ITEMS_269.map(item=>[item,gear(maceBaseValue269(item),maceMaxHitPoints269(item),false,true)])),
   // Both Core products carry Clothing and Armor trade tags. Preserve actual
   // quality/HP pricing; no merchant stock or generated material is invented.
   ...Object.fromEntries(SMITHING_APPAREL_ITEMS267.map(item=>[item,gear(smithingApparelBaseValue267(item),SMITHING_APPAREL_DEFINITIONS267[item].hitPoints,true)])),
@@ -41,3 +42,4 @@ export const TRADE_CATALOGUE:Readonly<Partial<Record<ItemId,TradeCatalogueEntry>
   'emp-launcher':gear(506.5,100,true,true),
 });
 export const tradeCatalogueEntry=(item:ItemId):TradeCatalogueEntry|undefined=>TRADE_CATALOGUE[item];
+import {MACE_ITEMS_269,maceBaseValue269,maceMaxHitPoints269} from './mace-content-269.ts';

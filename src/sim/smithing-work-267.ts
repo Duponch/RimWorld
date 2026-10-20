@@ -3,6 +3,7 @@ import {ingredientPlaceFree} from './cooking-bills.ts';
 import {groundCapacity,planGroundPlacement} from './ground-placement.ts';
 import {healthRandom} from './health.ts';
 import {addMaterial,refreshStock} from './materials.ts';
+import {materialAllowedForPlayer256} from './material-permission-256.ts';
 import {isCookingOrder} from './order-types.ts';
 import {releaseAssignments} from './work-release.ts';
 import {smithingRecipeAvailable267,isSmithingRecipe267,smithingMaterialFromIngredients267,smithingWorkpiece267,type SmithingMaterial267,type SmithingRecipe267} from './smithing-content-267.ts';
@@ -20,12 +21,12 @@ export function beginSmithingWork267(w:World,p:Pawn):MaterialPile|null {
  const station=w.structures.find(s=>s.id===t.stationId);if(!station)return null;
  if(t.ingredients.length===1&&t.ingredients[0]!.item===item){
   const i=t.ingredients[0]!,existing=w.piles.find(q=>q.id===i.pileId),work=existing?.smithingWork;
-  if(!existing||!work||existing.item!==item||work.recipe!==recipe||work.authorId!==p.id||i.stage!=='placed'||i.quantity!==1||existing.owner.type!=='ground'||existing.owner.x!==i.cell.x||existing.owner.z!==i.cell.z||!ingredientPlaceFree(w,i.cell,t.spot,recipe,station)||work.billId!==undefined&&work.billId!==t.billId)return null;
+  if(!existing||!materialAllowedForPlayer256(existing)||!work||existing.item!==item||work.recipe!==recipe||work.authorId!==p.id||i.stage!=='placed'||i.quantity!==1||existing.owner.type!=='ground'||existing.owner.x!==i.cell.x||existing.owner.z!==i.cell.z||!ingredientPlaceFree(w,i.cell,t.spot,recipe,station)||work.billId!==undefined&&work.billId!==t.billId)return null;
   work.billId=t.billId;return existing;
  }
  const material=smithingMaterialFromIngredients267(recipe,t.ingredients);if(!material)return null;
  const used=new Map<number,number>();
- for(const i of t.ingredients){const q=w.piles.find(q=>q.id===i.pileId);if(i.stage!=='placed'||!q||q.item!==material||q.owner.type!=='ground'||q.owner.x!==i.cell.x||q.owner.z!==i.cell.z||!ingredientPlaceFree(w,i.cell,t.spot,recipe,station))return null;used.set(q.id,(used.get(q.id)??0)+i.quantity);}
+ for(const i of t.ingredients){const q=w.piles.find(q=>q.id===i.pileId);if(i.stage!=='placed'||!q||!materialAllowedForPlayer256(q)||q.item!==material||q.owner.type!=='ground'||q.owner.x!==i.cell.x||q.owner.z!==i.cell.z||!ingredientPlaceFree(w,i.cell,t.spot,recipe,station))return null;used.set(q.id,(used.get(q.id)??0)+i.quantity);}
  if([...used].some(([id,n])=>w.piles.find(q=>q.id===id)!.quantity<n))return null;
  const piles=w.piles.map(q=>used.has(q.id)?{...q,quantity:q.quantity-used.get(q.id)!}:q).filter(q=>q.quantity>0),shadow={...w,piles};
  if(piles.length>=32768||!Number.isSafeInteger(w.nextId+1))return null;

@@ -79,7 +79,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
           if(budget.pairs--<=0){budget.pairs=0;return null;}
           const path=routeToJob(world,pile.owner as Cell,reachable,true);
           if(!path)continue;
-          return {station,priority:workPriority(pawn,billWork(bill)),target:pile.owner as Cell,path,refuel:{sourcePileId:pile.id,quantity:Math.min(10,capacity,pile.quantity-reservedSource(world,pile.id)),phase:'pickup',carryPileId:null,destination:{type:'fuel',structureId:station.id,...(isBurnApparelRecipe(bill.recipe)?{}:{forCooking:true as const}),...(options?.forced?{forced:true}:{})}}};
+          return {station,priority:workPriority(pawn,billWork(bill)),target:pile.owner as Cell,path,refuel:{sourcePileId:pile.id,quantity:Math.min(10,capacity,pile.quantity-reservedSource(world,pile.id)),phase:'pickup',carryPileId:null,destination:{type:'fuel',structureId:station.id,...(world.schemaVersion===269&&station.kind==='fueled-smithy'&&billWork(bill)==='craft'?{forCrafting:true as const}:isBurnApparelRecipe(bill.recipe)?{}:{forCooking:true as const}),...(options?.forced?{forced:true}:{})}}};
         }
         break;
       }

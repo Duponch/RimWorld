@@ -1,6 +1,7 @@
 import type Node from 'three/src/nodes/core/Node.js';
 import { attribute, float, mix, vec3 } from 'three/tsl';
 import { BODY_PROPORTIONS } from './pawn-appearance-shape';
+import {MACE_DYE269} from './mace-parts269';
 
 /** Applied equally to vertices and rigid-bone pivots, before pose animation. */
 export function pawnMorph(point:Node<'vec3'>) {
@@ -18,7 +19,7 @@ export function pawnMorph(point:Node<'vec3'>) {
   const body=vec3(point.x.mul(legs.select(hip,arms.select(shoulder,torso))),point.y,point.z.mul(depth));
   const shaped=head.select(vec3(point.x.mul(headWidth),point.y,point.z),body);
   // Weapons preserve their dimensions, with only their holster shifted outwards.
-  const weapon=dye.equal(-1).or(dye.equal(-4)).or(dye.equal(-5));
+  const weapon=dye.equal(-1).or(dye.equal(-4)).or(dye.equal(-5)).or(dye.equal(MACE_DYE269));
   return weapon.select(vec3(point.x.add(shoulder.sub(1).mul(.205)),point.y,point.z),shaped);
 }
 

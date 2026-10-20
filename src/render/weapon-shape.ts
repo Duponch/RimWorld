@@ -1,3 +1,5 @@
+import {isMaceItem269,MACE_ITEMS_269} from '../sim/mace-content-269';
+import {MACE_DYE269,MACE_EQUIPMENT269,MACE_PARTS269,maceParts269,maceEquipment269} from './mace-parts269';
 /** One authored rigid shape, reused on the ground, in cargo and at the hip.
  * Dimensions are metres before the pawn's model conversion. */
 export const REVOLVER_PARTS = [
@@ -39,4 +41,10 @@ export const WEAPON_VISUALS = [
   {item:'plasteel-knife',equipment:3,cargo:71,dye:-5,parts:KNIFE_PARTS},
   {item:'emp-launcher',equipment:4,cargo:73,dye:-9,parts:EMP_LAUNCHER_PARTS},
 ] as const;
-export const weaponVisual=(item:string|undefined)=>WEAPON_VISUALS.find(v=>v.item===item);
+/** Optional resident families are separate from the four historical concrete
+ * visuals: a family key is never a real ItemId or a ground/cargo item. */
+export const RESIDENT_WEAPON_VISUALS269=[...WEAPON_VISUALS,
+  {item:'mace-family',equipment:MACE_EQUIPMENT269,cargo:0,dye:MACE_DYE269,parts:MACE_PARTS269},
+] as const;
+const maceVisuals269=new Map(MACE_ITEMS_269.map(item=>[item,{item,equipment:maceEquipment269(item),cargo:0,dye:MACE_DYE269,parts:maceParts269(item)}]));
+export const weaponVisual=(item:string|undefined)=>isMaceItem269(item)?maceVisuals269.get(item):WEAPON_VISUALS.find(v=>v.item===item);

@@ -3,7 +3,9 @@ import {UNDISCOVERED_CELL_LABEL_256} from '../sim/exploration-visibility-256';
 import {eggSpeciesForItem256} from '../sim/animal-egg-content-v256';
 import { ITEM_DEFINITIONS } from '../sim/items';
 import { isApparelItem, apparelDefinition, apparelLabel, armorPiece, apparelQualityFactor, apparelInsulation } from '../sim/apparel-rules';
-import { QUALITY_LABELS, isWeaponItem, weaponMaxHitPoints } from '../sim/equipment-rules';
+import { QUALITY_LABELS, isWeaponItem, weaponMaxHitPoints,weaponMeleeQualityFactor } from '../sim/equipment-rules';
+import {isMaceItem269,maceMaterial269,MACE_DEFINITIONS_269} from '../sim/mace-content-269';
+import {maceTool269} from '../sim/mace-combat-269';
 import { commercialItemMassGrams } from '../sim/commercial-mass';
 import type { MaterialPile,World } from '../sim/types';
 import {deteriorationInspection} from './deterioration-inspection';
@@ -69,6 +71,14 @@ export function itemInformation(pile:MaterialPile,world?:World):ObjectInformatio
   const quality=pile.weapon?.quality??pile.apparel?.quality;
   if(quality)add('Général','Qualité',QUALITY_LABELS[quality],'Qualité propre à cette instance, conservée pendant les déplacements et l’équipement.');
   if(isWeaponItem(pile.item)&&pile.weapon)add('Général','Points de vie',`${pile.weapon.hitPoints} / ${weaponMaxHitPoints(pile.item)}`,'État réel de l’arme sélectionnée.');
+  if(isMaceItem269(pile.item)&&pile.weapon){
+    const factor=weaponMeleeQualityFactor(pile.weapon.quality),head=maceTool269(`${pile.item}-head`),handle=maceTool269(`${pile.item}-handle`);
+    const number=(value:number)=>Number(value.toFixed(2)).toLocaleString('fr-FR');
+    add('Arme','Matière',MACE_DEFINITIONS_269[maceMaterial269(pile.item)].label,'Matière réelle de cette masse, conservée pendant le port et le transport.');
+    add('Mêlée','Tête',`${number(head.damage*factor)} dégâts contondants`,'Dégâts nominaux après matière et qualité, avant protections et choix du coup. Une attaque peut utiliser un autre outil disponible.');
+    add('Mêlée','Manche',`${number(handle.damage*factor)} dégâts de poussée`,'Dégâts nominaux après matière et qualité, avant protections et choix du coup. Les chances de toucher et d’esquive restent distinctes.');
+    add('Mêlée','Récupération de base',`${number(head.cooldownCore/60)} s`,'Délai de l’outil de cette matière, avant les facteurs personnels de mêlée ; la qualité ne réduit pas ce délai. Ce n’est pas une cadence de dégâts garantie.');
+  }
   if(pile.item==='emp-launcher'){
     add('Arme','Effet','Impulsion EMP','Interrompt temporairement les mécanoïdes et les équipements électriques sensibles. Ne blesse pas directement les personnes et ne vide pas les batteries.');
     add('Arme','Rayon de l’impulsion','1,1 case','L’impulsion se déclenche au point d’impact réel du projectile. La dispersion et les obstacles peuvent déplacer cet impact.');

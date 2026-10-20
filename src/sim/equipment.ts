@@ -1,3 +1,4 @@
+import {isMaceItem269} from './mace-content-269.ts';
 import { apparelDuration } from './apparel-rules.ts';
 import { allowedAreaReason,allowedAreaWorkAllowed } from './allowed-area-state.ts';
 import { violentWorkRefusal } from './colonist-backgrounds.ts';
@@ -19,7 +20,7 @@ export function equipmentReason(world:World,pawn:Pawn,pile:MaterialPile|undefine
   if(carrierOf(world,pawn.id)||pawn.equipmentDropPending||pawn.interruptedCargo)return 'Ce colon doit d’abord être libre de son portage.';
   if(pawn.collapsePending||world.restRules==='legacy'&&pawn.rest===0)return 'Ce colon doit récupérer de son épuisement.';
   if(action==='wear'||action==='remove')return apparelReason(world,pawn,pile,action,accepted);
-  if(!pile||pile.kind!=='weapon')return 'Arme introuvable.';
+  if(!pile||pile.kind!=='weapon'||world.schemaVersion!==269&&isMaceItem269(pile.item))return 'Arme introuvable.';
   if(action==='drop')return pile.owner.type==='equipment'&&pile.owner.pawnId===pawn.id?undefined:'Cette arme n’est pas équipée par ce colon.';
   const violence=violentWorkRefusal(pawn);if(violence)return violence;
   if(pile.owner.type!=='ground')return 'Cette arme n’est plus au sol.';

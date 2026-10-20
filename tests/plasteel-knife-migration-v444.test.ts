@@ -16,7 +16,7 @@ import {applyCommand,stepWorld} from '../src/sim/engine.ts';
 import {registryCamp,preparedMap} from './helpers/world-maps-v255.ts';
 import {reorganizationCamp256} from './helpers/group-reorganization-v256.ts';
 import {foodWorkstationCamp} from './scenarios/food-workstations.ts';
-import type {MaterialPile,Structure,World} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type MaterialPile,type Structure,type World} from '../src/sim/types.ts';
 
 const REFERENCES=[
  ['Les Forges','v432/les-forges-crash-test.json'],
@@ -36,12 +36,12 @@ const knifeWork=(w:World):MaterialPile=>({id:w.nextId++,item:'unfinished-knife',
 const plateWork=(w:World):MaterialPile=>({id:w.nextId++,item:'unfinished-plate-armor',kind:'unfinished',quantity:1,owner:{type:'ground',x:6,z:5},
  smithingWork:{recipe:'make-plate-armor',material:'steel',authorId:w.pawns[0]!.id,progress:100,parts:[{item:'steel',quantity:75},{item:'steel',quantity:75},{item:'steel',quantity:20}]}});
 
-test.each(REFERENCES)('%s migrates a strict complete267 witness to268 by the root version alone',(label,path)=>{
+test.each(REFERENCES)('%s migrates a strict complete267 witness to current by the root version alone',(label,path)=>{
  // Public files predate267. Ordinary historical migrations are applied first;
  // this explicitly declared267 witness is never called an original267 file.
  const w=deserializeWorld(publicPayload(path)),text=historical(w),before=JSON.parse(text),loaded=deserializeCampaign(text);
- expect(w.schemaVersion).toBe(268);expect(loaded.schemaVersion).toBe(268);expect(validateWorld(loaded)).toEqual([]);
- expect(JSON.parse(serializeCampaign(loaded)),label).toEqual({...before,schemaVersion:268});
+ expect(w.schemaVersion).toBe(SCHEMA_VERSION);expect(loaded.schemaVersion).toBe(SCHEMA_VERSION);expect(validateWorld(loaded)).toEqual([]);
+ expect(JSON.parse(serializeCampaign(loaded)),label).toEqual({...before,schemaVersion:SCHEMA_VERSION});
  expect(historical(w)).toBe(text);
 },120000);
 
@@ -55,16 +55,16 @@ test('old finished knives in real ground/inventory owners and old smithing recei
   expect(validKnifeHistoricalTransport268(w,version)).toBe(true);
  }
  const text=historical(w),copy=deserializeWorld(text);
- expect(JSON.parse(serializeCampaign(copy))).toEqual({...JSON.parse(text),schemaVersion:268});
+ expect(JSON.parse(serializeCampaign(copy))).toEqual({...JSON.parse(text),schemaVersion:SCHEMA_VERSION});
  expect(copy.piles.filter(q=>q.item==='plasteel-knife')).toEqual(w.piles.filter(q=>q.item==='plasteel-knife'));
- const raw=JSON.parse(serializeCampaign(copy));raw.schemaVersion=269;
+ const raw=JSON.parse(serializeCampaign(copy));raw.schemaVersion=SCHEMA_VERSION+1;
  expect(()=>deserializeCampaign(JSON.stringify(raw))).toThrow();
- expect(validKnifeHistoricalTransport268(raw,269)).toBe(false);
+ expect(validKnifeHistoricalTransport268(raw,SCHEMA_VERSION+1)).toBe(false);
 });
 
 test('267 rejects prospective recipe/workpiece keys in actual local, away, history, queue and filter owners before migration',()=>{
  const {w,g}=reorganizationCamp256(),control=historical(w);
- expect(JSON.parse(serializeCampaign(deserializeCampaign(control)))).toEqual({...JSON.parse(control),schemaVersion:268});
+ expect(JSON.parse(serializeCampaign(deserializeCampaign(control)))).toEqual({...JSON.parse(control),schemaVersion:SCHEMA_VERSION});
  for(const [label,mutate] of [
   ['unfinished identity',(v:World)=>{v.piles.push(knifeWork(v));}],
   ['recipe on an existing station',(v:World)=>{v.structures[0]!.bills=[newCookingBill(v.nextId++,'make-plasteel-knife')];}],
@@ -93,13 +93,13 @@ test('267 refuses prospective manufacture on its actual inactive map and public 
  expect(new SnapshotDecoder().adopt(forged).status).toBe('resync');expect(first.world).toEqual(retained);
 });
 
-test('268 admits same-tick work and finished WeaponState in public and resident projections, retaining immutable predecessors',()=>{
+test('current admits same-tick work and finished WeaponState in public and resident projections, retaining immutable predecessors',()=>{
  // Declared transport fixtures, not a claim that work or production happened
  // without a physical step. The production pilot exercises the real commit.
  const w=registryCamp(),encoder=new SnapshotEncoder({structureDelta:true,minimumStructures:0}),strict=new SnapshotDecoder(),resident=new ResidentPresentationAssembler();
  const send=(checkpoint=false)=>{
   const packet=structuredClone(encoder.encode(w,0,0,checkpoint)),a=strict.adopt(structuredClone(packet)),b=resident.adopt(packet);
-  expect(a.status).toBe('applied');expect(b.status).toBe('applied');if(a.status!=='applied'||b.status!=='applied')throw Error('Valid268 transport refused');
+  expect(a.status).toBe('applied');expect(b.status).toBe('applied');if(a.status!=='applied'||b.status!=='applied')throw Error('Valid current transport refused');
   expect(b.world).toEqual(a.world);return {world:a.world,resident:b.world,packet};
  };
  const first=send(),original=structuredClone(first.world),residentOriginal=structuredClone(first.resident),q=knifeWork(w);w.piles.push(q);
@@ -116,11 +116,11 @@ test('268 admits same-tick work and finished WeaponState in public and resident 
  expect(strict.adopt(structuredClone(packet)).status).toBe('applied');expect(resident.adopt(packet).status).toBe('applied');
 });
 
-test('268 rejects malformed knife receipts in files and deltas while267 refuses even their valid shape',()=>{
+test('current rejects malformed knife receipts in files and deltas while267 refuses even their valid shape',()=>{
  const w=registryCamp(),q=knifeWork(w);w.piles.push(q);const saved=serializeCampaign(w),encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder();
  const full=structuredClone(encoder.encode(w,0,0)),first=decoder.adopt(full);if(first.status!=='applied')throw Error('Valid knife checkpoint refused');
  const retained=structuredClone(first.world);q.smithingWork!.progress++;const delta=structuredClone(encoder.encode(w,0,0));
- expect(validSmithingWorkShape267(asRecord(q),267)).toBe(false);expect(validSmithingWorkShape267(asRecord(q),268)).toBe(true);expect(validSmithingWorkShape267(asRecord(q),269)).toBe(false);
+ expect(validSmithingWorkShape267(asRecord(q),267)).toBe(false);expect(validSmithingWorkShape267(asRecord(q),268)).toBe(true);expect(validSmithingWorkShape267(asRecord(q),SCHEMA_VERSION)).toBe(true);expect(validSmithingWorkShape267(asRecord(q),SCHEMA_VERSION+1)).toBe(false);
  for(const [label,mutate] of [
   ['foreign material',(p:MaterialPile)=>{p.smithingWork!.material='steel';}],
   ['missing ingredient',(p:MaterialPile)=>{p.smithingWork!.parts[0]!.quantity=29;}],
@@ -137,7 +137,7 @@ test('268 rejects malformed knife receipts in files and deltas while267 refuses 
  expect(decoder.adopt(delta).status).toBe('applied');expect(first.world).toEqual(retained);
 });
 
-test('a real author-bound267 helmet work resumes after the neutral268 migration with the entire continuation unchanged',()=>{
+test('a real author-bound267 helmet work resumes after the neutral migration to current with the entire continuation unchanged',()=>{
  // Prepared old workshop, research and finite stock. Hauling, refuelling,
  // working and output below all run through ordinary commands and steps.
  const w=foodWorkstationCamp(),p=w.pawns[0]!;w.deterioration!.lastTick=w.tick;if(w.fires)w.fires.clockCore=w.tick*10;
@@ -148,7 +148,7 @@ test('a real author-bound267 helmet work resumes after the neutral268 migration 
  const command=applyCommand(w,{type:'bill-add',structureId:s.id,recipe:'make-simple-helmet'});expect(command.ok,command.reason).toBe(true);
  for(let n=0;n<3000&&!w.piles.some(q=>q.smithingWork?.progress);n++)stepWorld(w);
  const work=w.piles.find(q=>q.smithingWork?.recipe==='make-simple-helmet');expect(work).toBeDefined();expect(work!.smithingWork!.progress).toBeGreaterThan(0);
- const text=historical(w),migrated=deserializeWorld(text);expect(JSON.parse(serializeWorld(migrated))).toEqual({...JSON.parse(text),schemaVersion:268});
+ const text=historical(w),migrated=deserializeWorld(text);expect(JSON.parse(serializeWorld(migrated))).toEqual({...JSON.parse(text),schemaVersion:SCHEMA_VERSION});
  expect(migrated.piles.find(q=>q.id===work!.id)?.smithingWork).toEqual(work!.smithingWork);
  const start=w.tick;for(let n=0;n<2000&&p.cooking?.phase!=='output';n++)stepWorld(w);expect(p.cooking?.phase).toBe('output');
  stepWorld(migrated,w.tick-start);expect(serializeWorld(migrated)).toBe(serializeWorld(w));expect(validateWorld(w)).toEqual([]);
