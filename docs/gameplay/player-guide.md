@@ -1,6 +1,6 @@
 # Guide joueur
 
-## Fabriquer une masse — V445, qualification ciblée en cours
+## Fabriquer une masse — V445 publiée
 
 Après la recherche **Forge**, sélectionnez une **Forge à combustible** ou une **Forge électrique**, puis ajoutez **Fabriquer une masse**. Activez **Artisanat** dans Travail et choisissez un artisan de niveau3au minimum. La forge doit disposer de bois ou d’électricité ; l’artisan peut transporter le combustible de son propre travail avec Artisanat, sans activer Cuisine ni Transport.
 

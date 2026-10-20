@@ -1,6 +1,6 @@
 # Ce qui est jouable et ce qui manque
 
-**V445 — schéma 269 :** [Masses dans les six matières](maces-v445.md). Fabrication, ouvrage, équipement, combat et récupération métallique ;97cas du lot acquis par reprises,11voisins de ravitaillement acquis et deux anciens scénarios de cuisine invalides conservés. Présentation et interface natives muettes acquises par reprises, réserve de mise en page conservée. Publication en préparation. Ensemble2 toujours principal ; aucun gain FPS ni catalogue mêlée complet annoncé.
+**V445 publiée — schéma 269 :** [Masses dans les six matières](maces-v445.md). Fabrication, ouvrage, équipement, combat et récupération métallique ;97cas du lot acquis par reprises,11voisins de ravitaillement acquis et deux anciens scénarios de cuisine invalides conservés. Présentation et interface natives muettes acquises par reprises, réserve de mise en page conservée. Publié9de7122f/déploiement5d140817,20réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Ensemble2 toujours principal ; aucun gain FPS ni catalogue mêlée complet annoncé.
 
 **V444 publiée — schéma 268 :** [Fabrication du couteau en plastacier](plasteel-knife-v444.md). Acquisition par30plastacier aux forges ou à l’emplacement d’artisanat, avec ouvrage, reprise, qualité, rangement et équipement.55cas ciblés acquis par reprises, présentation et UI natives muettes acquises avec réserve de mise en page ; publication39f0092a/7390bb27 vérifiée. Autres matières et armes de mêlée différées.
 

@@ -1,6 +1,6 @@
 # Catalogue de contenu : couverture connue
 
-**V445 — qualification ciblée en cours, schéma269 :** [Masses dans les six matières](maces-v445.md). Six nouvelles identités portent le catalogue à **dix armes** ; les autres familles restent ouvertes. Aucun statut de publication ni bilan de contrôles acquis attribué à ce lot ici.
+**V445 publiée — schéma 269 :** [Masses dans les six matières](maces-v445.md). Six nouvelles identités portent le catalogue à **dix armes** ; les autres familles restent ouvertes. Qualification ciblée et UI natives muettes acquises par reprises, avec limites nommées ; publication9de7122f/5d140817 vérifiée.
 
 | Contenu V445 | Acquisition et usage | Frontières et limites |
 | --- | --- | --- |
