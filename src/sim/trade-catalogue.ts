@@ -1,4 +1,5 @@
 import type { ItemId } from './items.ts';
+import {SMITHING_APPAREL_ITEMS267,SMITHING_APPAREL_DEFINITIONS267,smithingApparelBaseValue267} from './smithing-apparel-267.ts';
 
 /** Core 1.6.4871 normal-quality values before quality, condition and rounding.
  * Fixed material is part of each existing ItemId; there is no generic price by kind. */
@@ -19,6 +20,9 @@ function gear(baseMarketValue:number,maxHitPoints:number,visitorHandles:boolean,
   return value(baseMarketValue,visitorHandles,{healthAffectsPrice:true,maxHitPoints,hasQuality:true,sellPriceFactor:weapon?.2:1,...extra});
 }
 export const TRADE_CATALOGUE:Readonly<Partial<Record<ItemId,TradeCatalogueEntry>>>=Object.freeze({
+  // Both Core products carry Clothing and Armor trade tags. Preserve actual
+  // quality/HP pricing; no merchant stock or generated material is invented.
+  ...Object.fromEntries(SMITHING_APPAREL_ITEMS267.map(item=>[item,gear(smithingApparelBaseValue267(item),SMITHING_APPAREL_DEFINITIONS267[item].hitPoints,true)])),
   hops:value(1.3,false),wort:value(2.5,false,{playerCanBuy:false,playerCanSell:false}),beer:value(12,false,{maxHitPoints:50}),
   pemmican:value(1.4),
   jade:value(5,false,{playerCanBuy:false,playerCanSell:false}),

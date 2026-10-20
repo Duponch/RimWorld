@@ -25,6 +25,8 @@ const maximumTorchBurned=(tick:number)=>Math.floor(tick/5)*19+Math.floor((tick%5
  * a strict four-field contract and its own saved twentieths of a reserve unit. */
 export function validBuildingFuelShape(value:unknown,kind:unknown,version:number,tick:number):boolean {
   if(!obj(value)||version<10||!int(value.ticks,0,fuelLimit(kind))||typeof value.autoRefuel!=='boolean')return false;
+  if(kind==='fueled-smithy')return version>=267&&keys(value,['ticks','burned','autoRefuel'])
+    &&int(tick)&&int(value.burned,0,tick*8);
   if(kind==='torch-lamp')return version>=249&&keys(value,['ticks','burned','autoRefuel','burnRemainder'])
     &&int(tick)&&int(value.burned,0,maximumTorchBurned(tick))&&int(value.burnRemainder,0,4)
     &&(value.burned<maximumTorchBurned(tick)||value.burnRemainder<=((tick%5)*19)%5)

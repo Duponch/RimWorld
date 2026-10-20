@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { pawnGeometry,FLAK_HELMET_DYE,TUQUE_DYE,RECON_HELMET_DYE,RECON_ARMOR_DYE,PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS } from '../render/pawn-geometry';
+import { pawnGeometry,FLAK_HELMET_DYE,PLATE_ARMOR_DYE,SIMPLE_HELMET_DYE,TUQUE_DYE,RECON_HELMET_DYE,RECON_ARMOR_DYE,PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS } from '../render/pawn-geometry';
 import { BODY_PROPORTIONS, appearanceShape } from '../render/pawn-appearance-shape';
 import type { apparelAppearance } from '../render/character-apparel';
 import type { PawnAppearance } from '../sim/pawn-appearance';
@@ -25,7 +25,7 @@ let sourceFaces: Face[] | undefined;
 // changing a 3D hair, beard, head or garment part changes the portrait too.
 function faces(): readonly Face[] {
   if (sourceFaces) return sourceFaces;
-  const geometry = pawnGeometry();
+  const geometry = pawnGeometry(true);
   const pos = geometry.getAttribute('position'), normal = geometry.getAttribute('normal');
   const color = geometry.getAttribute('color'), bone = geometry.getAttribute('boneId'), dye = geometry.getAttribute('dye');
   const result: Face[] = [];
@@ -61,7 +61,9 @@ function visible(face: Face, variant: readonly [number, number, number, number],
   if (dye === -3) return look.silhouette === 2 || look.silhouette === 3;
   if (dye === -6) return look.silhouette === 4 && !look.helmet && !look.tuque;
   if (dye === TUQUE_DYE) return !!look.tuque;
-  if (dye === FLAK_HELMET_DYE) return look.helmet && !look.reconHelmet;
+  if (dye === FLAK_HELMET_DYE) return look.helmet && !look.reconHelmet && !look.simpleHelmet;
+  if (dye === PLATE_ARMOR_DYE) return look.plateArmor;
+  if (dye === SIMPLE_HELMET_DYE) return look.simpleHelmet;
   if (dye === RECON_ARMOR_DYE) return look.silhouette === 5;
   if (dye === RECON_HELMET_DYE) return look.reconHelmet;
   if (dye === -1 || dye === -4 || dye === -5) return dye === weaponDye;
@@ -69,6 +71,8 @@ function visible(face: Face, variant: readonly [number, number, number, number],
 }
 
 function colorOf(face: Face, appearance: PawnAppearance, look: ApparelLook): number {
+  if(face.dye===PLATE_ARMOR_DYE)return look.color??face.color;
+  if(face.dye===SIMPLE_HELMET_DYE)return look.simpleHelmetColor??face.color;
   if(face.dye===-2&&look.vestTintColor!==undefined)return look.vestTintColor;
   if(face.dye===FLAK_HELMET_DYE&&look.plasteelHelmet)return 0xa0b2b5;
   if (face.dye === TUQUE_DYE) return look.tuque===2?0xb3c0ba:0xd8c8a2;
@@ -152,7 +156,7 @@ function makeSvg(appearance: PawnAppearance, look: ApparelLook, weaponItem: stri
       art: `<polygon points="${points.map(p => `${round(p[0])},${round(p[1])}`).join(' ')}" fill="${fill}" stroke="${fill}" stroke-width=".2"/>` });
   }
   polygons.sort((a, b) => a.z - b.z);
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" data-source="pawn-geometry" data-head="${appearance.headType}" data-hair="${appearance.hair}" data-beard="${appearance.beard}" data-skin="${hex(appearance.skinColor)}" data-hair-color="${hex(appearance.hairColor)}" data-helmet="${look.helmet}" data-recon-helmet="${look.reconHelmet}" data-tuque="${look.tuque}" data-weapon="${weaponVisual(weaponItem)?.item ?? ''}" data-expression="${expression}"${limbMask?` data-limb-mask="${limbMask}"`:''}>
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" data-source="pawn-geometry" data-head="${appearance.headType}" data-hair="${appearance.hair}" data-beard="${appearance.beard}" data-skin="${hex(appearance.skinColor)}" data-hair-color="${hex(appearance.hairColor)}" data-helmet="${look.helmet}" data-recon-helmet="${look.reconHelmet}"${look.simpleHelmet?` data-simple-helmet="true" data-helmet-color="${hex(look.simpleHelmetColor!)}"`:""}${look.plateArmor?` data-plate-armor="true"`:""} data-tuque="${look.tuque}" data-weapon="${weaponVisual(weaponItem)?.item ?? ''}" data-expression="${expression}"${limbMask?` data-limb-mask="${limbMask}"`:''}>
   <defs><linearGradient id="paper" x2="0" y2="1"><stop stop-color="#f4eee0"/><stop offset="1" stop-color="#d9d0b9"/></linearGradient><clipPath id="crop"><rect width="96" height="96" rx="6"/></clipPath></defs>
   <rect width="96" height="96" rx="6" fill="url(#paper)"/>
   <g clip-path="url(#crop)">${polygons.map(p => p.art).join('')}</g>

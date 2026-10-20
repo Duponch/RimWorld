@@ -1,14 +1,19 @@
 import { apparelCompatible } from './armor.ts';
 import {CORE_STARTING_APPAREL_256,isCoreStartingApparel256} from './starting-gear-256.ts';
-import { APPAREL, isApparelFamily, APPAREL_MATERIALS, type ApparelFamily, type ApparelItem, type ApparelMaterial, type ApparelState } from './apparel-rules.ts';
+import { APPAREL, isApparelFamily, APPAREL_MATERIALS, APPAREL_MATERIAL_DEFINITIONS, type ApparelFamily, type ApparelItem, type ApparelMaterial, type ApparelState } from './apparel-rules.ts';
 import { WEAPON_QUALITIES, type WeaponQuality } from './equipment-rules.ts';
+import {ARMOR_STUFFS267,ARMOR_STUFF_DEFINITIONS267,SMITHING_APPAREL_ITEMS267,isSmithingApparel267,type ArmorStuff267} from './smithing-apparel-267.ts';
+
+export type ApparelPolicyMaterial=ApparelMaterial|ArmorStuff267;
+export const APPAREL_POLICY_MATERIALS267:readonly ApparelPolicyMaterial[]=Object.freeze([...APPAREL_MATERIALS,...ARMOR_STUFFS267]);
+export const apparelPolicyMaterialLabel267=(material:ApparelPolicyMaterial):string=>Object.hasOwn(ARMOR_STUFF_DEFINITIONS267,material)?ARMOR_STUFF_DEFINITIONS267[material as ArmorStuff267].label:APPAREL_MATERIAL_DEFINITIONS[material as ApparelMaterial].label;
 
 export type ApparelTemperatureNeed='neutral'|'cold'|'heat';
 export interface ApparelPolicy {
   readonly id:number;
   readonly label:string;
   readonly allowedItems:readonly ApparelItem[];
-  readonly allowedMaterials:readonly ApparelMaterial[];
+  readonly allowedMaterials:readonly ApparelPolicyMaterial[];
   readonly minQuality:WeaponQuality;
   readonly maxQuality:WeaponQuality;
   readonly minHitPointsPercent:number;
@@ -32,7 +37,7 @@ export type ApparelReplacementChoice=
 
 const qualities=WEAPON_QUALITIES as readonly WeaponQuality[];
 export const DEFAULT_APPAREL_POLICY:ApparelPolicy=Object.freeze({
-  id:1,label:'Tout vêtement',allowedItems:Object.freeze((Object.keys(APPAREL) as ApparelItem[]).filter(item=>!isCoreStartingApparel256(item))),allowedMaterials:APPAREL_MATERIALS,
+  id:1,label:'Tout vêtement',allowedItems:Object.freeze((Object.keys(APPAREL) as ApparelItem[]).filter(item=>!isCoreStartingApparel256(item)&&!isSmithingApparel267(item))),allowedMaterials:APPAREL_MATERIALS,
   minQuality:'awful',maxQuality:'legendary',minHitPointsPercent:0,maxHitPointsPercent:1,
 });
 export const TEXTILE_APPAREL_POLICY:ApparelPolicy=Object.freeze({
@@ -42,23 +47,23 @@ export interface ApparelPolicyRegistry {apparelPolicies:ApparelPolicy[];nextAppa
 const clonePolicy=(policy:ApparelPolicy):ApparelPolicy=>({...policy,allowedItems:[...policy.allowedItems],allowedMaterials:[...policy.allowedMaterials]});
 // The pre-V90 migration requests the old catalogue via includeWool=false.
 // It must not acquire later V141 headgear before its own strict validation.
-export const createDefaultApparelPolicyRegistry=(includeWool=true,includeHelmet=includeWool,includePredators=true,includeTuque=includeHelmet,includeCoreStartingGear=false):ApparelPolicyRegistry=>({apparelPolicies:[DEFAULT_APPAREL_POLICY,TEXTILE_APPAREL_POLICY].map(policy=>{
+export const createDefaultApparelPolicyRegistry=(includeWool=true,includeHelmet=includeWool,includePredators=true,includeTuque=includeHelmet,includeCoreStartingGear=false,includeSmithing=false):ApparelPolicyRegistry=>({apparelPolicies:[DEFAULT_APPAREL_POLICY,TEXTILE_APPAREL_POLICY].map(policy=>{
   const copy=clonePolicy(policy);
-  return {...copy,allowedItems:[...copy.allowedItems.filter(item=>(includeTuque||APPAREL[item].family!=='tuque')&&(includePredators||APPAREL[item].material!=='foxfur')&&(includeWool||APPAREL[item].material!=='muffalo-wool')&&(includeHelmet||item!=='flak-helmet'&&item!=='recon-helmet'&&item!=='recon-armor')),...includeCoreStartingGear?CORE_STARTING_APPAREL_256:[]],
-    allowedMaterials:copy.allowedMaterials.filter(material=>(includeWool||material!=='muffalo-wool')&&(includePredators||material!=='foxfur'))};
+  return {...copy,allowedItems:[...copy.allowedItems.filter(item=>(includeTuque||APPAREL[item].family!=='tuque')&&(includePredators||APPAREL[item].material!=='foxfur')&&(includeWool||APPAREL[item].material!=='muffalo-wool')&&(includeHelmet||item!=='flak-helmet'&&item!=='recon-helmet'&&item!=='recon-armor')),...includeCoreStartingGear?CORE_STARTING_APPAREL_256:[],...includeSmithing?SMITHING_APPAREL_ITEMS267:[]],
+    allowedMaterials:[...copy.allowedMaterials.filter(material=>(includeWool||material!=='muffalo-wool')&&(includePredators||material!=='foxfur')),...includeSmithing?ARMOR_STUFFS267:[]]};
 }),nextApparelPolicyId:3});
 
-export function validApparelPolicy(policy:ApparelPolicy):boolean {
+export function validApparelPolicy(policy:ApparelPolicy,version=267):boolean {
   return !!policy&&Number.isSafeInteger(policy.id)&&policy.id>0&&typeof policy.label==='string'&&policy.label.length>0
-    &&Array.isArray(policy.allowedItems)&&new Set(policy.allowedItems).size===policy.allowedItems.length&&policy.allowedItems.every(i=>Object.hasOwn(APPAREL,i))
-    &&Array.isArray(policy.allowedMaterials)&&new Set(policy.allowedMaterials).size===policy.allowedMaterials.length&&policy.allowedMaterials.every(m=>APPAREL_MATERIALS.includes(m))
+    &&Array.isArray(policy.allowedItems)&&new Set(policy.allowedItems).size===policy.allowedItems.length&&policy.allowedItems.every(i=>Object.hasOwn(APPAREL,i)&&(version>=267||!isSmithingApparel267(i)))
+    &&Array.isArray(policy.allowedMaterials)&&new Set(policy.allowedMaterials).size===policy.allowedMaterials.length&&policy.allowedMaterials.every(m=>APPAREL_POLICY_MATERIALS267.includes(m)&&(version>=267||!(ARMOR_STUFFS267 as readonly string[]).includes(m)))
     &&qualities.includes(policy.minQuality)&&qualities.includes(policy.maxQuality)&&qualities.indexOf(policy.minQuality)<=qualities.indexOf(policy.maxQuality)
     &&Number.isFinite(policy.minHitPointsPercent)&&Number.isFinite(policy.maxHitPointsPercent)&&policy.minHitPointsPercent>=0&&policy.maxHitPointsPercent<=1&&policy.minHitPointsPercent<=policy.maxHitPointsPercent;
 }
 export function apparelPolicyAllows(policy:ApparelPolicy,garment:ApparelPolicyGarment):boolean {
   if(!validApparelPolicy(policy)||!garment||!Object.hasOwn(APPAREL,garment.item))return false;
   const definition=APPAREL[garment.item],quality=qualities.indexOf(garment.apparel.quality),percent=garment.apparel.hitPoints/definition.hitPoints;
-  const material=garment.apparel.material??definition.material;
+  const material=definition.stuff??garment.apparel.material??definition.material;
   return policy.allowedItems.includes(garment.item)&&(material===undefined||policy.allowedMaterials.includes(material))
     &&quality>=qualities.indexOf(policy.minQuality)&&quality<=qualities.indexOf(policy.maxQuality)&&percent>=policy.minHitPointsPercent&&percent<=policy.maxHitPointsPercent;
 }

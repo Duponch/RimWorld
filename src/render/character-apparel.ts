@@ -1,5 +1,7 @@
 import {packStartingApparelTint256,startingApparelTintHex256} from '../sim/starting-apparel-color-256';
 import { APPAREL,apparelLabel,type ApparelItem } from '../sim/apparel-rules';
+import {isSmithingApparel267} from '../sim/smithing-apparel-267';
+import {itemCargoKind} from './item-presentation';
 import type { World,MaterialPile } from '../sim/types';
 
 /** One snapshot projection for map and portraits; no render-owned inventory. */
@@ -14,17 +16,30 @@ export function apparelAppearance(pieces:readonly MaterialPile[]=[]) {
   const family=(name:string)=>pieces.find(p=>APPAREL[p.item as ApparelItem]?.family===name);
   const tuque=family('tuque'),vest=pieces.find(p=>p.item==='flak-vest');
   const shirt=family('shirt'),tribal=family('tribalwear'),pants=pieces.find(p=>p.item==='flak-pants')??family('pants'),outer=family('duster')??family('parka');
-  const recon=pieces.find(p=>p.item==='recon-armor'),top=recon??outer??tribal??shirt,definition=top?APPAREL[top.item as ApparelItem]:undefined;
-  return {shirt:!!shirt,tribal:!!tribal,vest:pieces.some(p=>p.item==='flak-vest')&&!outer,
-    helmet:pieces.some(p=>p.item==='flak-helmet'||p.item==='plasteel-flak-helmet'||p.item==='recon-helmet'),
+  const plate=pieces.find(p=>isSmithingApparel267(p.item)&&p.item.endsWith('-plate-armor'));
+  const simple=pieces.find(p=>isSmithingApparel267(p.item)&&p.item.endsWith('-simple-helmet'));
+  const recon=pieces.find(p=>p.item==='recon-armor'),top=plate??recon??outer??tribal??shirt,definition=top?APPAREL[top.item as ApparelItem]:undefined;
+  return {shirt:!!shirt,tribal:!!tribal,vest:pieces.some(p=>p.item==='flak-vest')&&!outer&&!plate,
+    helmet:!!simple||pieces.some(p=>p.item==='flak-helmet'||p.item==='plasteel-flak-helmet'||p.item==='recon-helmet'),
+    plateArmor:!!plate,simpleHelmet:!!simple,simpleHelmetColor:simple?APPAREL[simple.item as ApparelItem].color:undefined,
+    simpleHelmetMaterial:simple?SIMPLE_HELMET_ITEMS267.indexOf(simple.item as typeof SIMPLE_HELMET_ITEMS267[number])+1:0,
     plasteelHelmet:pieces.some(p=>p.item==='plasteel-flak-helmet'),
     reconHelmet:pieces.some(p=>p.item==='recon-helmet'),tuque:tuque?(tuque.item==='muffalo-wool-tuque'?2:1):0,
-    silhouette:recon?5:outer?(definition!.family==='parka'?4:3):tribal?2:shirt?1:0,
+    silhouette:plate?6:recon?5:outer?(definition!.family==='parka'?4:3):tribal?2:shirt?1:0,
     pants:pants?(pants.item==='flak-pants'?(pants.apparel?.birthColor?(pants.apparel.birthColor.r===Math.fround(.62)?9:10):8):(['cloth','light-leather','plainleather','bluefur','camelhide','muffalo-wool','foxfur'].indexOf(APPAREL[pants.item as ApparelItem].material??'cloth')+1)):0,
     ...(vest?.apparel?.birthColor&&!outer?{vestTintCode:packStartingApparelTint256(vest.apparel.birthColor),vestTintColor:startingApparelTintHex256(vest.apparel.birthColor)}:{}),
     color:definition?.color,signature:pieces.map(p=>p.item+(p.apparel?.birthColor?':'+Object.values(p.apparel.birthColor).join(','):'')).sort().join(' '),description:pieces.map(apparelLabel).join(', ')||'Aucun vêtement équipé'};
 }
+/** Mutually exclusive codes preserve every historical equipment integer.
+ * Simple helmet pigment occupies exact sixteenths in the existing pants word. */
+export const SIMPLE_HELMET_ITEMS267=['steel-simple-helmet','plasteel-simple-helmet','uranium-simple-helmet','silver-simple-helmet','gold-simple-helmet'] as const;
+export const SIMPLE_HELMET_COLORS267=Object.freeze(SIMPLE_HELMET_ITEMS267.map(item=>APPAREL[item].color));
 export const APPAREL_CARGO:Readonly<Record<ApparelItem,number>>=Object.freeze({
+  'wood-plate-armor':itemCargoKind('wood-plate-armor'),'steel-plate-armor':itemCargoKind('steel-plate-armor'),
+  'plasteel-plate-armor':itemCargoKind('plasteel-plate-armor'),'uranium-plate-armor':itemCargoKind('uranium-plate-armor'),
+  'silver-plate-armor':itemCargoKind('silver-plate-armor'),'gold-plate-armor':itemCargoKind('gold-plate-armor'),
+  'steel-simple-helmet':itemCargoKind('steel-simple-helmet'),'plasteel-simple-helmet':itemCargoKind('plasteel-simple-helmet'),
+  'uranium-simple-helmet':itemCargoKind('uranium-simple-helmet'),'silver-simple-helmet':itemCargoKind('silver-simple-helmet'),'gold-simple-helmet':itemCargoKind('gold-simple-helmet'),
   'foxfur-tribalwear':76,'foxfur-shirt':77,'foxfur-pants':78,'foxfur-duster':79,'foxfur-parka':80,
   'plainleather-tribalwear':39,
   'plainleather-shirt':40,

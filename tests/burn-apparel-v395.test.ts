@@ -30,8 +30,10 @@ function staged(){const f=scene();until(f.w,()=>f.p.cooking?.ingredients[0]?.sta
 function ctx(w:World,p:Pawn,rate=1):ProductionContext{return {search:()=>null,move:()=>{throw Error('Already physically staged');},release:()=>releaseWork(w,p),event:()=>{},workRate:()=>rate};}
 
 test('burn bills are prospective, explicit opt-in whole apparel destruction with Transport and no products',()=>{
- const {w,p,station}=scene(),blank=newCookingBill(w.nextId,'burn-apparel');
+ const {w,p,station}=scene(),blank=newCookingBill(w.nextId,'burn-apparel',251),current=newCookingBill(w.nextId,'burn-apparel');
  expect(Object.values(blank.filters).every(v=>v===false)).toBe(true);expect(blank.destination).toBe('drop');expect(validBillSettings(blank,'burn-apparel',251)).toBe(true);
+ expect(Object.hasOwn(blank.filters,'wood-plate-armor')).toBe(false);expect(current.filters['wood-plate-armor']).toBe(false);
+ expect(validBillSettings(current,'burn-apparel')).toBe(true);expect(validBillSettings(current,'burn-apparel',251)).toBe(false);
  expect(validBillSettings(blank,'burn-apparel',250)).toBe(false);expect(validBillSettings({...blank,mode:'until'},'burn-apparel')).toBe(false);
  expect(validBillSettings({...blank,destination:'stockpile'},'burn-apparel')).toBe(false);
  expect(productionResearchUnlocked(w,'burn-apparel')).toBe(true);expect(productionResearchUnlocked({...w,schemaVersion:250 as World['schemaVersion']},'burn-apparel')).toBe(false);
@@ -44,9 +46,10 @@ test('burn bills are prospective, explicit opt-in whole apparel destruction with
 });
 
 test('definition and Stuff burnability, integer HP/quality and permission filters reject protected inputs',()=>{
- const {bill,garment}=scene();expect(BURN_APPAREL_INPUTS).not.toContain('flak-helmet');
+ const {bill,garment}=scene();expect(BURN_APPAREL_INPUTS).not.toContain('flak-helmet');expect(BURN_APPAREL_INPUTS).not.toContain('plasteel-flak-helmet');
  for(const item of Object.keys(APPAREL) as ApparelItem[]){const pile:MaterialPile={id:1,item,kind:'apparel',quantity:1,owner:{type:'ground',x:1,z:1},apparel:newApparelState(item)};
- const b={...newCookingBill(2,'burn-apparel'),filters:{[item]:true}};expect(burnApparelIngredientAllowed(b,pile),item).toBe(item!=='flak-helmet');}
+ const stuff=APPAREL[item].stuff,burnable=stuff===undefined?item!=='flak-helmet'&&item!=='plasteel-flak-helmet':stuff==='wood';
+ const b={...newCookingBill(2,'burn-apparel'),filters:{[item]:true}};expect(burnApparelIngredientAllowed(b,pile),item).toBe(burnable);}
  expect(burnApparelIngredientAllowed(bill,garment)).toBe(true);expect(validBurnApparelIngredients([{item:'cloth-shirt',quantity:2}])).toBe(false);expect(validBurnApparelIngredients([null])).toBe(false);
  garment.apparel!.quality='excellent';bill.smeltFilter!.qualityMax='good';expect(burnApparelIngredientAllowed(bill,garment)).toBe(false);
  garment.apparel!.quality='normal';garment.apparel!.hitPoints=51;expect(burnApparelIngredientAllowed(bill,garment)).toBe(false);

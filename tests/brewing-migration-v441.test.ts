@@ -11,6 +11,7 @@ import {initialDrugPolicies265} from '../src/sim/alcohol-policy-265.ts';
 import {newCookingBill} from '../src/sim/cooking-bills.ts';
 import {validBrewingHistoricalTransport265} from '../src/sim/brewing-catalogue-save-265.ts';
 import {orbitalBeerCount265,orbitalStock} from '../src/sim/orbital-stock.ts';
+import {ARMOR_STUFFS267,isSmithingApparel267} from '../src/sim/smithing-apparel-267.ts';
 import type {World,Structure} from '../src/sim/types.ts';
 import {SCHEMA_VERSION} from '../src/sim/types.ts';
 
@@ -19,6 +20,11 @@ function publicText(path:string):string {
  return v.format==='lisiere-save'?gunzipSync(Buffer.from(v.payload,'base64')).toString('utf8'):text;
 }
 function old264(w:World):World {
+ // Fresh current presets include prospective forge permissions. The explicit
+ // historical witness must omit those before changing its schema number.
+ if(w.apparelPolicies)w.apparelPolicies=w.apparelPolicies.map(p=>({...p,
+  allowedItems:p.allowedItems.filter(i=>!isSmithingApparel267(i)),
+  allowedMaterials:p.allowedMaterials.filter(m=>!(ARMOR_STUFFS267 as readonly string[]).includes(m))}));
  Object.assign(w,{schemaVersion:264});delete w.drugPolicies;delete w.nextDrugPolicyId;return w;
 }
 

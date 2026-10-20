@@ -1,3 +1,5 @@
+import {isSmithingRecipe267,smithingUnits267,smithingMaterialAllowed267} from './smithing-content-267.ts';
+import {planSmithingWork267} from './smithing-work-plan-267.ts';
 import {eggAllowedForPlayer256} from './animal-egg-permission-v256.ts';
 import {isBurnApparelRecipe,burnApparelIngredientAllowed} from './burn-apparel-rules.ts';
 import {isPemmicanRecipe,validPemmicanIngredients} from './pemmican-content.ts';
@@ -83,6 +85,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       }
       const artResumed=planArtWork(world,pawn,station,bill,reachable,budget);if(artResumed.plan)return artResumed.plan;if(artResumed.handled)continue;
       const gunResumed=planGunWork(world,pawn,station,bill,reachable,budget);if(gunResumed.plan)return gunResumed.plan;if(gunResumed.handled)continue;
+      const smithingResumed=planSmithingWork267(world,pawn,station,bill,reachable,budget);if(smithingResumed.plan)return smithingResumed.plan;if(smithingResumed.handled)continue;
       const flakResumed=planFlakWork(world,pawn,station,bill,reachable,budget);if(flakResumed.plan)return flakResumed.plan;if(flakResumed.handled)continue;
       const componentResumed=planComponentWork(world,pawn,station,bill,reachable,budget);if(componentResumed.plan)return componentResumed.plan;if(componentResumed.handled)continue;
       const resumed=planUnfinished(world,pawn,station,bill,reachable,budget);if(resumed.plan)return resumed.plan;if(resumed.handled)continue;
@@ -95,11 +98,11 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
       if(!sources.length)continue;
       const kibble=isKibbleRecipe(bill.recipe),mealQuota=kibble?KIBBLE_GROUP_UNITS:mixedMealGroupUnits(bill.recipe);
       const ingredientGroup=kibble?kibbleIngredientGroup:fineMealIngredientGroup;
-      const groups=(isArtRecipe(bill.recipe)||bill.recipe==='tuque')?[...new Set(sources.map(p=>p.item))].map(material=>sources.filter(p=>p.item===material)):[sources];
+      const groups=(isSmithingRecipe267(bill.recipe)||isArtRecipe(bill.recipe)||bill.recipe==='tuque')?[...new Set(sources.map(p=>p.item))].map(material=>sources.filter(p=>p.item===material)):[sources];
       for(const group of groups) {
       const ingredients:CookingIngredient[]=[],planned=new Map<string,{item:ProductionIngredient;quantity:number}>();
-      let missing:number=PRODUCTION_RECIPES[bill.recipe].units;
-      if((isArtRecipe(bill.recipe)||bill.recipe==='tuque')&&group.reduce((n,p)=>n+Math.max(0,p.quantity-reservedSource(world,p.id)),0)<missing)continue;
+      let missing:number=isSmithingRecipe267(bill.recipe)&&smithingMaterialAllowed267(bill.recipe,group[0]?.item)?smithingUnits267(bill.recipe,group[0]!.item):PRODUCTION_RECIPES[bill.recipe].units;
+      if((isSmithingRecipe267(bill.recipe)||isArtRecipe(bill.recipe)||bill.recipe==='tuque')&&group.reduce((n,p)=>n+Math.max(0,p.quantity-reservedSource(world,p.id)),0)<missing)continue;
       const cells=[station,spot,{x:spot.x-1,z:spot.z},{x:spot.x+1,z:spot.z},{x:spot.x,z:spot.z-1},{x:spot.x,z:spot.z+1},...footprintCells(station)]
         .filter((c,i,a)=>allows(c)&&a.findIndex(t=>same(t,c))===i&&(!isCremationRecipe(bill.recipe)||canStandAt(world,c))&&ingredientPlaceFree(world,c,spot,bill.recipe,station));
       let tailoringMaterial:ProductionIngredient|undefined;

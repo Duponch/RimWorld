@@ -1,4 +1,5 @@
 import {ActorPlayback435} from './ActorPlayback435';
+import {isSmithingApparel267} from '../sim/smithing-apparel-267';
 import {groupHumanCarryPairs257} from '../sim/group-human-admission-257.ts';
 import {arrivalRotationYaw256} from '../sim/arrival-rotation-256';
 import {actorExplorationMaterial256} from './ExplorationMask256';
@@ -21,11 +22,11 @@ import { BIOME_CARGO } from './biome-cargo';
 import {itemCargoKind} from './item-presentation';
 import { firePosition } from '../sim/fire-rules';
 import { attachedFireMesh, presentAttachedFire,setFireTexturesEnabled } from './FireLayer';
-import { apparelProjection,apparelAppearance } from './character-apparel';
+import { apparelProjection,apparelAppearance,SIMPLE_HELMET_COLORS267 } from './character-apparel';
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import { growPawnBuffers } from './pawn-buffers';
 import { isColonist } from '../sim/affiliation';
-import { pawnGeometry,cargoGeometry,selectCargoGeometryKinds,PARKA_HOOD_DYE,FLAK_HELMET_DYE,TUQUE_DYE,RECON_HELMET_DYE,RECON_ARMOR_DYE,PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS } from './pawn-geometry';
+import { pawnGeometry,cargoGeometry,selectCargoGeometryKinds,PARKA_HOOD_DYE,FLAK_HELMET_DYE,PLATE_ARMOR_DYE,SIMPLE_HELMET_DYE,TUQUE_DYE,RECON_HELMET_DYE,RECON_ARMOR_DYE,PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS } from './pawn-geometry';
 import { equipmentProjection } from './character-equipment';
 import { WEAPON_VISUALS,weaponVisual } from './weapon-shape';
 import { doorAt } from '../sim/door-rules';
@@ -83,6 +84,7 @@ function motionX(walking:boolean,transition:CrouchTransition|undefined,origin:nu
 }
 function workActivity(pawn:Pawn):number {
   if(pawn.state!=='working'||pawn.stun)return 0;
+  if(pawn.cooking?.recipe==='make-plate-armor'||pawn.cooking?.recipe==='make-simple-helmet')return 1;
   return pawn.cooking?2:pawn.research||pawn.deepWork?3:1;
 }
 function animationPose(pawn:Pawn,workPose:number,smallMelee:boolean,seated:boolean):number {
@@ -174,6 +176,8 @@ export class PawnLayer {
   private readonly linkedRoot={x:0,y:0,z:0,yaw:0};
   readonly visuals = new Map<number, VisualPawn>();
   private pawnMesh: THREE.Mesh | null = null;
+  private smithingGeometry=false;
+  private retiredPawnGeometry:THREE.BufferGeometry|undefined;
   private readonly surfaceTexture = createStylizedSurfaceTexture();
   private plainMaterial: THREE.MeshStandardNodeMaterial | null = null;
   private texturedMaterial: THREE.MeshStandardNodeMaterial | null = null;
@@ -278,9 +282,22 @@ export class PawnLayer {
     }
   }
   private readonly travelKeys = new Map<number,string>();
+  /** One-way extension at adoption, never per frame or per garment removal.
+   * Shared actor/cargo/fire trajectories and material graphs retain identity.
+   * Keep the single old geometry until teardown: Three's disposal also frees
+   * shared attributes recorded by its previous RenderObject. */
+  private extendSmithingGeometry():void {
+    this.smithingGeometry=true;
+    if(!this.pawnMesh)return;
+    const previous=this.pawnMesh.geometry as THREE.InstancedBufferGeometry,next=pawnGeometry(true);
+    for(const [name,attribute]of Object.entries(previous.attributes))if(attribute instanceof THREE.InstancedBufferAttribute
+      ||attribute instanceof THREE.InterleavedBufferAttribute&&attribute.data instanceof THREE.InstancedInterleavedBuffer)next.setAttribute(name,attribute);
+    next.userData={...previous.userData};next.instanceCount=previous.instanceCount;
+    this.pawnMesh.geometry=next;this.retiredPawnGeometry=previous;
+  }
   private createPawnMesh(count: number): void {
     clearGroup(this.group);
-    const geometry = pawnGeometry();
+    const geometry = pawnGeometry(this.smithingGeometry);
     geometry.userData.animationCache=this.animationCache;
     const travel = new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4);
     for(let i=0;i<count;i++)travel.setW(i,1);
@@ -502,10 +519,12 @@ export class PawnLayer {
       });
       If(attribute('dye','float').equal(-3).and(attribute('aEquipment','vec4').y.notEqual(2).and(attribute('aEquipment','vec4').y.notEqual(3))),()=>{animated.assign(vec3(0));});
       // Vest is bit0. Mutually exclusive headgear occupies even codes:
-      // flak2, recon4, cloth tuque6, wool tuque8. No new actor buffer.
-      const wornFlags=attribute('aEquipment','vec4').z.floor(),helmet=wornFlags.greaterThan(1.5),recon=wornFlags.greaterThan(3.5).and(wornFlags.lessThan(5.5)),tuque=wornFlags.greaterThan(5.5);
+      // flak2, recon4, cloth tuque6, wool tuque8, simple10. No new buffer.
+      const wornFlags=attribute('aEquipment','vec4').z.floor(),helmet=wornFlags.greaterThan(1.5),recon=wornFlags.greaterThan(3.5).and(wornFlags.lessThan(5.5)),tuque=wornFlags.greaterThan(5.5).and(wornFlags.lessThan(9.5));
       If(attribute('dye','float').equal(-2).and(wornFlags.mod(2).lessThan(.5)),()=>{animated.assign(vec3(0));});
       If(attribute('dye','float').equal(FLAK_HELMET_DYE).and(helmet.not().or(wornFlags.greaterThan(3.5))),()=>{animated.assign(vec3(0));});
+      If(attribute('dye','float').equal(PLATE_ARMOR_DYE).and(attribute('aEquipment','vec4').y.notEqual(6)),()=>{animated.assign(vec3(0));});
+      If(attribute('dye','float').equal(SIMPLE_HELMET_DYE).and(wornFlags.lessThan(9.5).or(wornFlags.greaterThan(11.5))),()=>{animated.assign(vec3(0));});
       If(attribute('dye','float').equal(RECON_ARMOR_DYE).and(attribute('aEquipment','vec4').y.notEqual(5)),()=>{animated.assign(vec3(0));});
       If(attribute('dye','float').equal(RECON_HELMET_DYE).and(recon.not()),()=>{animated.assign(vec3(0));});
       If(attribute('dye','float').equal(TUQUE_DYE).and(tuque.not()),()=>{animated.assign(vec3(0));});
@@ -544,6 +563,8 @@ export class PawnLayer {
     mat.positionNode=Fn(()=>{const result=vec3(0).toVar();If(this.animationCache.cached(),()=>{result.assign(this.cachedPawnPosition());}).Else(()=>{result.assign(originalPosition);});return result;})();
     const baseColor = Fn(()=>{const fragmentBone=pawnFragmentTraits.x,fragmentDye=pawnFragmentTraits.y;const tint=mix(attribute('color','vec3'),attribute('aTint','vec3'),fragmentDye.equal(1).select(float(1),float(0))).toVar();
       {const wool=new THREE.Color(0xb3c0ba);If(fragmentDye.equal(TUQUE_DYE).and(attribute('aEquipment','vec4').z.greaterThan(7.5)),()=>{tint.assign(vec3(wool.r,wool.g,wool.b));});}
+      If(fragmentDye.equal(PLATE_ARMOR_DYE),()=>{tint.assign(attribute('aTint','vec3'));});
+      for(const [index,hex] of SIMPLE_HELMET_COLORS267.entries()){const color=new THREE.Color(hex);If(fragmentDye.equal(SIMPLE_HELMET_DYE).and(attribute('aEquipment','vec4').w.fract().mul(16).round().equal(index+1)),()=>{tint.assign(vec3(color.r,color.g,color.b));});}
       If(fragmentDye.equal(-3).or(fragmentDye.equal(PARKA_HOOD_DYE)),()=>{ tint.assign(attribute('aTint','vec3')); });
       If(attribute('aEquipment','vec4').y.equal(2).and(fragmentBone.greaterThanEqual(2)).and(fragmentBone.lessThanEqual(3)),()=>{ tint.assign(attribute('aSkin','vec3')); });
       If(fragmentDye.equal(2),()=>{ tint.assign(attribute('aSkin','vec3')); });
@@ -725,10 +746,12 @@ export class PawnLayer {
       If(motion.z.equal(1).or(motion.z.equal(5)).or(motion.z.equal(POSE_SLEEP)).or(motion.z.equal(POSE_DEAD)),()=>{const y=animated.y.toVar();animated.y.assign(animated.z.add(.19));animated.z.assign(float(.65).sub(y));});
       If(motion.z.equal(POSE_DEAD),()=>{animated.z.assign(animated.z.mul(.78));});
       If(motion.z.equal(6),()=>{const x=animated.x.toVar(),y=animated.y.toVar(),z=animated.z.toVar();animated.assign(vec3(float(.65).sub(y),z.add(.19+.95/PAWN_MODEL_SCALE),x.add(.3)));});
-      const equipment=attribute('aEquipment','vec4'),worn=equipment.z.floor(),helmet=worn.greaterThan(1.5),recon=worn.greaterThan(3.5).and(worn.lessThan(5.5)),tuque=worn.greaterThan(5.5);
+      const equipment=attribute('aEquipment','vec4'),worn=equipment.z.floor(),helmet=worn.greaterThan(1.5),recon=worn.greaterThan(3.5).and(worn.lessThan(5.5)),tuque=worn.greaterThan(5.5).and(worn.lessThan(9.5));
       If(dye.equal(-3).and(equipment.y.notEqual(2).and(equipment.y.notEqual(3))),()=>{animated.assign(vec3(0));});
       If(dye.equal(-2).and(worn.mod(2).lessThan(.5)),()=>{animated.assign(vec3(0));});
       If(dye.equal(FLAK_HELMET_DYE).and(helmet.not().or(worn.greaterThan(3.5))),()=>{animated.assign(vec3(0));});
+      If(dye.equal(PLATE_ARMOR_DYE).and(equipment.y.notEqual(6)),()=>{animated.assign(vec3(0));});
+      If(dye.equal(SIMPLE_HELMET_DYE).and(worn.lessThan(9.5).or(worn.greaterThan(11.5))),()=>{animated.assign(vec3(0));});
       If(dye.equal(RECON_ARMOR_DYE).and(attribute('aEquipment','vec4').y.notEqual(5)),()=>{animated.assign(vec3(0));});
       If(dye.equal(RECON_HELMET_DYE).and(recon.not()),()=>{animated.assign(vec3(0));});
       If(dye.equal(TUQUE_DYE).and(tuque.not()),()=>{animated.assign(vec3(0));});
@@ -855,6 +878,8 @@ export class PawnLayer {
     this.rescuePairs=[...this.rescuePairs,...world.piles.flatMap(p=>p.humanCorpse&&p.owner.type==='pawn'&&indices.has(p.owner.pawnId)&&indices.has(p.humanCorpse.pawnId)?[[indices.get(p.owner.pawnId)!,indices.get(p.humanCorpse.pawnId)!] as const]:[])];
     const bodies=new Map(world.piles.filter(p=>p.humanCorpse).map(p=>[p.humanCorpse!.pawnId,p]));
     const retainedOffsets=retainedHumanCorpseOffsets(world);
+    const apparel=apparelProjection(world);
+    if(!this.smithingGeometry)for(const pieces of apparel.values())if(pieces.some(p=>isSmithingApparel267(p.item))){this.extendSmithingGeometry();break;}
     if (!this.pawnMesh) this.createPawnMesh(Math.max(1,world.pawns.length));
     else if(this.pawnMesh.geometry.getAttribute('aFrom').count<world.pawns.length)growPawnBuffers([this.pawnMesh,this.cargoMesh!,this.selectionMesh!,this.fireMesh!,this.partialCargoMesh!],world.pawns.length);
     const geometry = this.pawnMesh!.geometry as THREE.InstancedBufferGeometry;
@@ -883,7 +908,7 @@ export class PawnLayer {
     const cargo = geometry.getAttribute('aCargo') as THREE.InstancedBufferAttribute;
     const handoffFrom=this.cargoMesh!.geometry.getAttribute('aHandoffFrom') as THREE.InstancedBufferAttribute;
     const handoffTo=this.cargoMesh!.geometry.getAttribute('aHandoffTo') as THREE.InstancedBufferAttribute;
-    const equipment=geometry.getAttribute('aEquipment') as THREE.InterleavedBufferAttribute,gears=equipmentProjection(world),apparel=apparelProjection(world);
+    const equipment=geometry.getAttribute('aEquipment') as THREE.InterleavedBufferAttribute,gears=equipmentProjection(world);
     const carried = new Map<number, World['piles'][number]>();
     for (const pile of world.piles) if (pile.owner.type === 'pawn') carried.set(pile.owner.pawnId, pile);
     let jobsById:Map<number,World['jobs'][number]>|undefined;
@@ -957,7 +982,7 @@ export class PawnLayer {
       if(orbitalReady&&stationCell)yaw=Math.atan2(stationCell.x-pawn.x,stationCell.z-pawn.z);
       if(pasteCollect&&stationCell)yaw=Math.atan2(stationCell.x-pawn.x,stationCell.z-pawn.z);
       const contactPose=arriving?pawnWorkPose({...pawn,state:'working'},job,station?.kind):workPose;
-      const atBench=station?.kind==='electric-crematorium'||station?.kind==='electric-smelter'||station?.kind==='biofuel-refinery'||station?.kind==='deep-drill'||station?.kind==='ground-scanner'||station?.kind==='drug-lab'||station?.kind==='research-bench'||station?.kind==='hi-tech-research-bench'||station?.kind==='fabrication-bench'||station?.kind==='butcher-table'||station?.kind==='machining-table'||station?.kind==='stonecutter'||station?.kind==='art-bench'||station?.kind==='tailor-bench'||station?.kind==='electric-tailor-bench'||station?.kind==='electric-stove'||station?.kind==='fueled-stove';
+      const atBench=station?.kind==='fueled-smithy'||station?.kind==='electric-smithy'||station?.kind==='electric-crematorium'||station?.kind==='electric-smelter'||station?.kind==='biofuel-refinery'||station?.kind==='deep-drill'||station?.kind==='ground-scanner'||station?.kind==='drug-lab'||station?.kind==='research-bench'||station?.kind==='hi-tech-research-bench'||station?.kind==='fabrication-bench'||station?.kind==='butcher-table'||station?.kind==='machining-table'||station?.kind==='stonecutter'||station?.kind==='art-bench'||station?.kind==='tailor-bench'||station?.kind==='electric-tailor-bench'||station?.kind==='electric-stove'||station?.kind==='fueled-stove';
       const clearance=job?.kind==='mine' ? .9 : atBench ? .88 : .82;
       const pair=pawn.social?.fight?pawnsById.get(pawn.social.fight.opponentId):undefined;
       const socialOpponent=pair?.social?.fight?.opponentId===pawn.id&&!medicallyStopped(pair)?pair:undefined;
@@ -997,7 +1022,7 @@ export class PawnLayer {
       scratchColor.setHex(look.color??(isColonist(pawn)?pawnBaseColor(pawn.id):pawn.visitor&&!world.visitors?.groups.find(g=>g.id===pawn.visitor!.group)?.hostile?0x77958f:0xb74736));
       if(pawn.state==='dead')scratchColor.setHex(0x73756c);
       tint.setXYZ(index, scratchColor.r, scratchColor.g, scratchColor.b);
-      equipment.setXYZW(index,weaponVisual(gears.get(pawn.id)?.item)?.equipment??0,look.silhouette,(look.vest?1:0)+(look.reconHelmet?4:look.helmet?2:look.tuque===2?8:look.tuque===1?6:0)+(look.vestTintCode??0)/65536,look.pants+(look.plasteelHelmet?.5:0));
+      equipment.setXYZW(index,weaponVisual(gears.get(pawn.id)?.item)?.equipment??0,look.silhouette,(look.vest?1:0)+(look.simpleHelmet?10:look.reconHelmet?4:look.helmet?2:look.tuque===2?8:look.tuque===1?6:0)+(look.vestTintCode??0)/65536,look.pants+(look.simpleHelmet?look.simpleHelmetMaterial/16:look.plasteelHelmet?.5:0));
       const load = carried.get(pawn.id);
       const packed=world.packed?.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
       const handoff=this.handoffs.active.get(pawn.id);
@@ -1198,6 +1223,7 @@ export class PawnLayer {
   dispose(): void {
     this.playback435.clear();
     clearGroup(this.group);
+    this.retiredPawnGeometry?.dispose();this.retiredPawnGeometry=undefined;this.smithingGeometry=false;
     this.plainMaterial?.dispose();
     this.texturedMaterial?.dispose();
     this.nativePlainMaterial?.dispose();

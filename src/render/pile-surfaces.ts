@@ -31,6 +31,10 @@ export function pileSurfaces(world:World):ReadonlyMap<number,PileSurface> {
       for(const cell of footprintCells(s))surfaces.set(cell.z*world.width+cell.x,{x:0,y:1.405,z:0,scale:.65});
       continue;
     }
+    if(s.kind==='fueled-smithy'||s.kind==='electric-smithy'){
+      for(const cell of footprintCells(s))surfaces.set(cell.z*world.width+cell.x,{x:0,y:.87,z:0,scale:.65});
+      continue;
+    }
     if(s.kind==='electric-smelter'){
       const angle=s.orientation*Math.PI/2,c=Math.cos(angle),n=Math.sin(angle);
       for(const cell of footprintCells(s)){

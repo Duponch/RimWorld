@@ -4,6 +4,7 @@
 import type {StructureKind} from './types.ts';
 export interface StartThingPhysics256 {readonly defId:string;readonly passability:0|1|2;readonly edifice:boolean;readonly door:boolean;readonly fence:boolean;readonly fullFill:boolean}
 export const START_STRUCTURE_PHYSICS_256={
+ 'fueled-smithy':{defId:'FueledSmithy',passability:1,edifice:true,door:false,fence:false,fullFill:false},'electric-smithy':{defId:'ElectricSmithy',passability:1,edifice:true,door:false,fence:false,fullFill:false},
  brewery:{defId:'Brewery',passability:1,edifice:true,door:false,fence:false,fullFill:false},'fermenting-barrel':{defId:'FermentingBarrel',passability:1,edifice:true,door:false,fence:false,fullFill:false},
  'insect-hive':{defId:'Hive',passability:1,edifice:true,door:false,fence:false,fullFill:false},'glow-pod':{defId:'GlowPod',passability:1,edifice:true,door:false,fence:false,fullFill:false},
  'ship-chunk':{defId:'ShipChunk',passability:1,edifice:true,door:false,fence:false,fullFill:false},

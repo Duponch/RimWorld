@@ -5,7 +5,9 @@ import { pawnBody } from './health-rules.ts';
 import type { CookingBill,SmeltFilter } from './cooking-types.ts';
 import type { MaterialPile,Pawn } from './types.ts';
 import { isSmeltingRecipe } from './smelting-content.ts';
-export { isSmeltingRecipe,SMELTING_WORK_TICKS,SMELTING_MAX_OUTPUT,SMELTING_WEAPONS,smeltingProduct,type SmeltingRecipe } from './smelting-content.ts';
+import {APPAREL} from './apparel-definitions.ts';
+import {isSmithingApparel267,smithingApparelStuff267,smithingApparelUnits267,type SmithingApparel267} from './smithing-apparel-267.ts';
+export { isSmeltingRecipe,SMELTING_WORK_TICKS,SMELTING_MAX_OUTPUT,SMELTING_WEAPONS,SMELTING_APPAREL_INPUTS267,SMELTING_APPAREL_MAX_OUTPUT267,smeltingProduct,type SmeltingRecipe } from './smelting-content.ts';
 
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 export function validSmeltFilter(value:unknown):value is SmeltFilter {
@@ -23,6 +25,16 @@ export function smeltingHitPointsPercent(hitPoints:number,maxHitPoints:number):n
 /** Ownership belongs to the caller: this same filter applies to ground and held stages. */
 export function smeltingIngredientAllowed(bill:CookingBill,pile:MaterialPile):boolean {
   if(bill.recipe==='smelt-slag')return materialAllowedForPlayer256(pile)&&pile.item==='slag-steel-chunk'&&pile.kind==='chunk'&&pile.quantity===1&&bill.filters['slag-steel-chunk']===true&&pile.weapon===undefined&&pile.apparel===undefined&&pile.corpse===undefined&&(pile.damage===undefined||Number.isSafeInteger(pile.damage)&&pile.damage>=1&&pile.damage<300);
+  if(bill.recipe==='smelt-apparel'){
+    if(!validSmeltFilter(bill.smeltFilter)||!materialAllowedForPlayer256(pile)||!isSmithingApparel267(pile.item)||smithingApparelStuff267(pile.item)==='wood'
+      ||pile.kind!=='apparel'||pile.quantity!==1||bill.filters[pile.item]!==true||!record(pile.apparel)||pile.weapon!==undefined
+      ||pile.apparel.material!==undefined||pile.apparel.forbidden!==undefined||pile.apparel.forced!==undefined
+      ||Object.keys(pile.apparel).some(k=>!['quality','hitPoints','material','forbidden','forced'].includes(k)))return false;
+    const a=pile.apparel,max=APPAREL[pile.item].hitPoints,quality=WEAPON_QUALITIES.indexOf(a.quality);
+    if(!Number.isInteger(a.hitPoints)||a.hitPoints<=0||a.hitPoints>max||quality<0)return false;
+    const hp=smeltingHitPointsPercent(a.hitPoints,max),filter=bill.smeltFilter;
+    return hp>=filter.hpMin&&hp<=filter.hpMax&&quality>=WEAPON_QUALITIES.indexOf(filter.qualityMin)&&quality<=WEAPON_QUALITIES.indexOf(filter.qualityMax);
+  }
   if(!isSmeltingRecipe(bill.recipe)||!validSmeltFilter(bill.smeltFilter)||!isWeaponItem(pile.item)
     ||pile.kind!=='weapon'||pile.quantity!==1||bill.filters[pile.item]!==true||!record(pile.weapon)
     ||!Object.hasOwn(pile.weapon,'quality')||!Object.hasOwn(pile.weapon,'hitPoints')
@@ -33,7 +45,7 @@ export function smeltingIngredientAllowed(bill:CookingBill,pile:MaterialPile):bo
   return hp>=filter.hpMin&&hp<=filter.hpMax&&quality>=WEAPON_QUALITIES.indexOf(filter.qualityMin)&&quality<=WEAPON_QUALITIES.indexOf(filter.qualityMax);
 }
 export function validSmeltingIngredients(parts:readonly {item:unknown;quantity:number}[],recipe:unknown='smelt-weapon'):boolean {
-  return parts.length===1&&parts[0]!.quantity===1&&(recipe==='smelt-slag'?parts[0]!.item==='slag-steel-chunk':isWeaponItem(parts[0]!.item));
+  return parts.length===1&&parts[0]!.quantity===1&&(recipe==='smelt-slag'?parts[0]!.item==='slag-steel-chunk':recipe==='smelt-apparel'?isSmithingApparel267(parts[0]!.item)&&smithingApparelStuff267(parts[0]!.item)!=='wood':isWeaponItem(parts[0]!.item));
 }
 /** Smelting has no skill or learning; delivered WorkSpeedGlobal remains neutral. */
 export function smeltingSpeed(pawn:Pawn):number {
@@ -41,10 +53,15 @@ export function smeltingSpeed(pawn:Pawn):number {
   return Math.max(.1,c.manipulation*(.7+.3*Math.min(1,c.sight)));
 }
 /** Intricate components are excluded before rounding. Even a whole yield draws once. */
-export function smeltingYield(item:WeaponItem,random:()=>number):number {
+export function smeltingYield(item:WeaponItem|SmithingApparel267,random:()=>number):number {
+  if(isSmithingApparel267(item)){
+    if(smithingApparelStuff267(item)==='wood')throw Error('Wooden apparel is not smeltable');
+    return roundYield(smithingApparelUnits267(item)*.25,random);
+  }
   return roundYield((item==='bolt-action-rifle'?60:item==='emp-launcher'?75:30)*.25,random);
 }
 export function validSmeltingProduct(item:unknown,quantity:unknown,recipe:unknown='smelt-weapon'):boolean {
+  if(recipe==='smelt-apparel')return Number.isInteger(quantity)&&(['steel','plasteel','uranium'].includes(String(item))?[10,42,43].includes(Number(quantity)):['silver','gold'].includes(String(item))&&[100,425].includes(Number(quantity)));
   if(recipe==='smelt-slag')return item==='steel'&&typeof quantity==='number'&&Number.isInteger(quantity)&&quantity>=1&&quantity<=15;
   return typeof quantity==='number'&&Number.isInteger(quantity)&&quantity>=1&&(item==='steel'?quantity<=19:item==='plasteel'&&quantity<=8);
 }

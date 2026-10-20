@@ -6,6 +6,7 @@ import { V120_ANIMAL_PRODUCT_ITEMS } from './animal-product-items.ts';
 import { adjacent } from './pathfinding.ts';
 import { APPAREL,apparelDefinition,conflictsWith,isApparelItem,newApparelState,type ApparelItem } from './apparel-rules.ts';
 import { WEAPON_QUALITIES } from './equipment-rules.ts';
+import {isSmithingApparel267} from './smithing-apparel-267.ts';
 import type { MaterialPile,World } from './types.ts';
 
 const record=(x:unknown):x is Record<string,unknown>=>!!x&&typeof x==='object'&&!Array.isArray(x);
@@ -13,6 +14,7 @@ const capturedApparel=(item:ApparelItem):MaterialPile=>({id:0,kind:'apparel',ite
 const capturedApparelCandidates=(version:number):MaterialPile[]=>{
   const seen=new Set<string>(),out:MaterialPile[]=[];
   for(const item of Object.keys(APPAREL) as ApparelItem[]){
+    if(version<267&&isSmithingApparel267(item))continue;
     if(version<256&&isCoreStartingApparel256(item))continue;
     const historical=item==='flak-vest'||item==='cloth-shirt'||version>=72&&item==='cloth-tribalwear';
     if(version<90&&!historical||version<91&&V91_ITEM_IDS.includes(item)||version<120&&V120_ANIMAL_PRODUCT_ITEMS.includes(item)||version<141&&item==='flak-helmet'||version<148&&item==='recon-helmet'||version<241&&item==='recon-armor'||version<245&&item.endsWith('-tuque')||version<178&&item.startsWith('foxfur-'))continue;
@@ -27,6 +29,7 @@ export function validApparelShape(p:Record<string,unknown>,version:number):boole
   const a=p.apparel;
   if(version<63||typeof p.item!=='string'||!Object.hasOwn(APPAREL,p.item)||!record(a))return false;
   const item=p.item as ApparelItem,definition=APPAREL[item];
+  if(version<267&&isSmithingApparel267(item))return false;
   if(!validStartingApparelColor256(a,item,version))return false;
   if(version<256&&isCoreStartingApparel256(item))return false;
   const historical=item==='flak-vest'||item==='cloth-shirt'||version>=72&&item==='cloth-tribalwear';
@@ -38,7 +41,7 @@ export function validApparelShape(p:Record<string,unknown>,version:number):boole
     &&(a.forbidden===undefined||a.forbidden===true)&&(a.forced===undefined||a.forced===true)
     // V241 recon suits sold to a physical trader retain their identity and
     // condition in inventory; validateTrade owns the custodian whitelist.
-    &&!(a.forbidden===true&&a.forced===true)&&p.quantity===1&&record(p.owner)&&typeof p.owner.type==='string'&&['ground','pawn','apparel',...(version>=241&&item==='recon-armor'?['inventory']:[]),...(version>=231?['starting-pod']:[])].includes(p.owner.type)
+    &&!(a.forbidden===true&&a.forced===true)&&p.quantity===1&&record(p.owner)&&typeof p.owner.type==='string'&&['ground','pawn','apparel',...(version>=241&&item==='recon-armor'||version>=267&&isSmithingApparel267(item)?['inventory']:[]),...(version>=231?['starting-pod']:[])].includes(p.owner.type)
     &&(a.forced===undefined||p.owner.type==='apparel');
 }
 export function validateApparel(world:World,version:number=world.schemaVersion):string[] {
@@ -75,7 +78,7 @@ export function validateApparel(world:World,version:number=world.schemaVersion):
 export function validateApparelOwners259(pawns:readonly {id:number}[],piles:readonly MaterialPile[],version:number):string[]{const errors:string[]=[],byPawn=new Map<number,MaterialPile[]>();
   for(const pile of piles)if(pile.owner.type==='apparel') {
     const id=pile.owner.pawnId,pawn=pawns.find(p=>p.id===id);
-    if(!pawn||!isApparelItem(pile.item)||pile.kind!=='apparel'||!pile.apparel||pile.apparel.forbidden||version>=90&&pile.apparel.material!==APPAREL[pile.item].material){errors.push('Invalid worn apparel owner.');continue;}
+    if(!pawn||!isApparelItem(pile.item)||version<267&&isSmithingApparel267(pile.item)||pile.kind!=='apparel'||!pile.apparel||pile.apparel.forbidden||version>=90&&pile.apparel.material!==APPAREL[pile.item].material){errors.push('Invalid worn apparel owner.');continue;}
     const worn=byPawn.get(pawn.id)??[];
     if(worn.some(p=>conflictsWith(p,pile)))errors.push('Incompatible worn apparel.');
     worn.push(pile);byPawn.set(pawn.id,worn);

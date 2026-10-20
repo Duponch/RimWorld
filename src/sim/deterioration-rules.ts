@@ -5,6 +5,7 @@ import {isShelfKind} from './shelf-storage.ts';
 import {isRoofed} from './roof-rules.ts';
 import {weatherRainRate} from './weather.ts';
 import {DETERIORATION_RATES,isDeteriorationItem} from './deterioration-content.ts';
+import {isSmithingApparel267} from './smithing-apparel-267.ts';
 import type {ThermalLayout} from './thermal-topology.ts';
 import type {MaterialPile,World} from './types.ts';
 export type DeteriorationStatus='outside'|'covered-outside'|'unroofed-inside'|'protected-shelf'|'protected-inside'|'terrain-exposed'|'not-ground'|'out-of-scope';
@@ -19,7 +20,7 @@ function containsSorted(cells:readonly number[],cell:number):boolean {let low=0,
 /** Snapshot path uses serialized retained thermal regions, not a new layout build. */
 export function deteriorationExposure(w:World,pile:MaterialPile,environment?:DeteriorationEnvironment):DeteriorationExposure {
  const neutral={baseRate:0,rate:0,roofed:false,usesOutdoorTemperature:true,terrainFactor:0};
- if(w.schemaVersion<252||w.schemaVersion<256&&isFutureEcologyItem256(pile.item)||!isDeteriorationItem(pile.item))return {status:'out-of-scope',...neutral};
+ if(w.schemaVersion<252||w.schemaVersion<267&&isSmithingApparel267(pile.item)||w.schemaVersion<256&&isFutureEcologyItem256(pile.item)||!isDeteriorationItem(pile.item))return {status:'out-of-scope',...neutral};
  const baseRate=DETERIORATION_RATES[pile.item];if(pile.owner.type!=='ground')return {status:'not-ground',...neutral,baseRate};
  const e=environment??captureDeteriorationEnvironment(w),cell=pile.owner.z*w.width+pile.owner.x;
  const roofed=isRoofed(w,cell),inside=e.layout?(e.layout.indices[cell]??-1)>=0:(w.thermal?.regions??[]).some(r=>containsSorted(r.cells,cell));

@@ -24,11 +24,11 @@ export function applyThermalSources(world:World,layout:ThermalLayout):void {
       room.temperature=Math.min(1000,room.temperature+SUN_LAMP_HEAT_PER_SECOND/6/room.cells.length);
       continue;
     }
-    if(source.kind==='electric-smelter'||source.kind==='electric-crematorium'){
+    if(source.kind==='electric-smithy'||source.kind==='electric-smelter'||source.kind==='electric-crematorium'){
       if(!isPowerActive(source))continue;
       const cell=source.kind==='electric-crematorium'?cookingSpot(source):source;
       const id=layout.indices[cell.z*world.width+cell.x]!;if(id<0)continue;
-      const room=regions[id]!;room.temperature=Math.min(1000,room.temperature+(source.kind==='electric-crematorium'?12:9)/6/room.cells.length);continue;
+      const room=regions[id]!;room.temperature=Math.min(1000,room.temperature+(source.kind==='electric-smithy'?4:source.kind==='electric-crematorium'?12:9)/6/room.cells.length);continue;
     }
     if(source.kind==='electric-stove'?!isPowerActive(source):!source.fuel?.ticks)continue;
     const id=layout.indices[source.z*world.width+source.x]!;if(id<0)continue;

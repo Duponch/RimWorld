@@ -1,3 +1,4 @@
+import {SMITHING_APPAREL_ITEM_DEFINITIONS267} from './smithing-apparel-267.ts';
 import {CAVE_ITEM_DEFINITIONS_256} from './cave-products-256.ts';
 import {eggSpeciesForItem256} from './animal-egg-content-v256.ts';
 import {ANIMAL_ITEM_DEFINITIONS_256} from './animal-items-v256.ts';
@@ -14,6 +15,9 @@ export type MechCorpseItem=typeof MECH_CORPSE_ITEMS[number];
  * rules are tracked in docs/development/food-items.md. Nutrition uses integer
  * hundredths here; the actor's 0..100 meter represents one nutrition unit. */
 export const ITEM_DEFINITIONS = Object.freeze({
+  ...SMITHING_APPAREL_ITEM_DEFINITIONS267,
+  'unfinished-plate-armor':Object.freeze({label:'Armure de plaques inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x87958f}),
+  'unfinished-simple-helmet':Object.freeze({label:'Casque simple inachevé',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x87958f}),
   hops:Object.freeze({label:'Houblon',kind:'food',stackLimit:75,nutrition:5,maxIngest:75,color:0xaaa455}),
   wort:Object.freeze({label:'Moût',kind:'wort',stackLimit:25,nutrition:0,maxIngest:0,color:0xa17a38}),
   beer:Object.freeze({label:'Bière',kind:'beer',stackLimit:25,nutrition:8,maxIngest:1,color:0xa87c38}),

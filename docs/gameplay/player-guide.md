@@ -1,5 +1,15 @@
 # Guide joueur
 
+## Forger une armure — V443 qualifiée localement
+
+Dans **Recherche**, achevez **Forge** (700points). Dans **Architecte → Production**, construisez une **Forge à combustible** avec100acier et Construction4, ou une **Forge électrique** avec100acier,3composants et Construction5. Les deux occupent3×1cases et se tournent avec Q/E. La première doit recevoir du bois réel (50maximum, consommé seulement pendant le travail) ; la seconde demande210W, chauffe aussi au repos et peut tomber en panne. Activez **Artisanat** dans Travail.
+
+Sélectionnez le poste et ajoutez la facture. Le **casque simple** consomme40unités d’un même métal et accepte un débutant ; il peut aussi être produit à l’atelier d’usinage. L’**armure de plaques** demande Artisanat7 et la recherche **Armure de plaques** (600points, après Forge et Vêtements complexes) ; elle consomme170unités de bois ou d’un même métal. Argent et or demandent dix fois ces quantités. Bois/acier sont cochés initialement pour les plaques, acier seul pour le casque ; ouvrez les ingrédients de la facture pour choisir les autres matières.
+
+Le colon transporte les matières, travaille au contact et laisse un ouvrage inachevé si le travail s’interrompt. Le même auteur reprend sa progression ; annuler l’ouvrage récupère environ75% des portions engagées si un dépôt est possible. La qualité est déterminée une seule fois à l’achèvement. Le produit peut être rangé, transporté, vendu ou porté. Une plaque remplace les vêtements occupant ses couches intermédiaire et extérieure et ralentit le déplacement ; le casque simple protège le haut de la tête, avec le visage découvert.
+
+Pour le port automatique, autorisez **le type et sa matière** dans la politique de tenue. Les politiques des anciennes parties conservent volontairement leurs filtres : ajoutez les nouvelles permissions vous-même. La fonderie propose **Fondre une armure** pour récupérer25% du métal, selon les filtres de PV/qualité ; les plaques en bois se brûlent sans récupération. Les deux anciens casques pare-balles fixes n’entrent pas encore dans cette récupération. [Règles, adaptations et contrôles](smithing-v443.md).
+
 **V442 — reprise des caravanes :** sauvegarder pendant le repos conserve désormais le dernier service réel du même voyageur ou animal. La prochaine variation de fatigue ne change plus du fait d’une recharge dans les cas qualifiés. Les sauvegardes antérieures ne reçoivent aucun repos ajouté. [Périmètre et contrôles](caravan-rest-v442.md).
 
 ## Brasser et consommer de la bière — V441 publiée

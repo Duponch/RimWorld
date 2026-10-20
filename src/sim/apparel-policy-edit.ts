@@ -1,11 +1,11 @@
-import {validApparelPolicy,type ApparelPolicy} from './apparel-policy.ts';
-import {APPAREL,APPAREL_MATERIALS,type ApparelItem,type ApparelMaterial} from './apparel-rules.ts';
+import {validApparelPolicy,APPAREL_POLICY_MATERIALS267,type ApparelPolicy,type ApparelPolicyMaterial} from './apparel-policy.ts';
+import {APPAREL,type ApparelItem} from './apparel-rules.ts';
 import {SCHEMA_VERSION,type World,type CommandResult} from './types.ts';
 import type {WeaponQuality} from './equipment-rules.ts';
 
 export interface ApparelPolicyUpdateCommand {
   type:'apparel-policy-update';policyId:number;
-  allowedItems:readonly ApparelItem[];allowedMaterials:readonly ApparelMaterial[];
+  allowedItems:readonly ApparelItem[];allowedMaterials:readonly ApparelPolicyMaterial[];
   minQuality:WeaponQuality;maxQuality:WeaponQuality;
   minHitPointsPercent:number;maxHitPointsPercent:number;
 }
@@ -28,10 +28,10 @@ export function applyApparelPolicyUpdate(world:World,command:ApparelPolicyUpdate
     const {type,policyId,allowedItems,allowedMaterials,minQuality,maxQuality,minHitPointsPercent,maxHitPointsPercent}=command;
     if(type!=='apparel-policy-update'||!Number.isSafeInteger(policyId)||policyId<=0)return fail();
     const registry=world.apparelPolicies,index=registry?.findIndex(policy=>policy.id===policyId)??-1;
-    if(!registry||index<0||!denseStrings(allowedItems,Object.keys(APPAREL).length)||!denseStrings(allowedMaterials,APPAREL_MATERIALS.length))return fail();
+    if(!registry||index<0||!denseStrings(allowedItems,Object.keys(APPAREL).length)||!denseStrings(allowedMaterials,APPAREL_POLICY_MATERIALS267.length))return fail();
     const previous=registry[index]!;
     const next:ApparelPolicy={...previous,allowedItems:[...allowedItems],allowedMaterials:[...allowedMaterials],minQuality,maxQuality,minHitPointsPercent,maxHitPointsPercent};
-    if(!validApparelPolicy(next))return fail();
+    if(!validApparelPolicy(next,world.schemaVersion))return fail();
     if(same(previous.allowedItems,next.allowedItems)&&same(previous.allowedMaterials,next.allowedMaterials)
       &&previous.minQuality===minQuality&&previous.maxQuality===maxQuality
       &&previous.minHitPointsPercent===minHitPointsPercent&&previous.maxHitPointsPercent===maxHitPointsPercent)return {ok:true};

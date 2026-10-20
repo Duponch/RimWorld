@@ -1,5 +1,6 @@
 /** Pure item/coverage/stat definitions. Keep catalogue initialization independent of medical, work and production runtime cycles. */
 import {apparelCoverage,type ApparelCoverage,type ArmorRatings} from './armor.ts';
+import {SMITHING_APPAREL_DEFINITIONS267,type SmithingApparel267,type ArmorStuff267} from './smithing-apparel-267.ts';
 export const APPAREL_MATERIALS = ['cloth', 'light-leather', 'plainleather', 'bluefur', 'camelhide', 'muffalo-wool', 'foxfur'] as const;
 export type ApparelMaterial = typeof APPAREL_MATERIALS[number];
 /** Historical families admit every existing material. Tuques are a limited family. */
@@ -52,6 +53,8 @@ export interface ApparelDefinition {
   readonly moveOffset: number;
   readonly family?: ApparelFamily;
   readonly material?: ApparelMaterial;
+  /** Finite armor Stuff; never a material admitted by textile recipes. */
+  readonly stuff?: ArmorStuff267;
   readonly coldInsulation: number;
   readonly heatInsulation: number;
 }
@@ -65,9 +68,10 @@ const textileDefinition = (family: ApparelFamily, material: ApparelMaterial): Ap
   });
 };
 
-export type ApparelItem=`${ApparelMaterial}-${Exclude<ApparelFamily,'tuque'>}`|'cloth-tuque'|'muffalo-wool-tuque'|'flak-vest'|'flak-helmet'|'recon-helmet'|'recon-armor'|'flak-pants'|'plasteel-flak-helmet';
+export type ApparelItem=`${ApparelMaterial}-${Exclude<ApparelFamily,'tuque'>}`|'cloth-tuque'|'muffalo-wool-tuque'|'flak-vest'|'flak-helmet'|'recon-helmet'|'recon-armor'|'flak-pants'|'plasteel-flak-helmet'|SmithingApparel267;
 /** Existing cloth ids stay canonical so old saves and reservations retain identity. */
 export const APPAREL:Readonly<Record<ApparelItem,ApparelDefinition>> = Object.freeze({
+  ...SMITHING_APPAREL_DEFINITIONS267,
   'foxfur-tribalwear': textileDefinition('tribalwear','foxfur'),
   'foxfur-shirt': textileDefinition('shirt','foxfur'),
   'foxfur-pants': textileDefinition('pants','foxfur'),

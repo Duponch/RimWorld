@@ -34,6 +34,7 @@ export function equipmentOrderReason(world:World,pawn:Pawn,pile:MaterialPile|und
 }
 function release(world:World,pawn:Pawn):void {releaseWork(world,pawn);}
 function announce(world:World,message:string):void {world.events.push({tick:world.tick,type:'job',message});if(world.events.length>80)world.events.shift();}
+const gearRecoveryRecipe=(recipe:unknown):boolean=>recipe==='smelt-weapon'||recipe==='smelt-apparel'||recipe==='burn-apparel';
 function begin(pawn:Pawn,itemId:number,action:EquipmentAction,path:Cell[],automatic=false,duration?:number):void {
   pawn.equipmentTask={itemId,action,progress:0,...duration!==undefined?{duration}:{},...automatic?{automatic:true as const}:{}};
   if(action==='equip'||action==='drop')delete pawn.droppedWeaponId;pawn.path=path;pawn.state='moving';pawn.planCooldown=0;
@@ -48,9 +49,9 @@ export function applyEquipment(world:World,command:EquipmentCommand):CommandResu
     if(command.allowed)delete state.forbidden;else state.forbidden=true;
     if(!command.allowed)for(const p of world.pawns){
       if(p.haul?.phase==='pickup'&&p.haul.sourcePileId===pile!.id)release(world,p);
-      if((p.cooking?.recipe==='smelt-weapon'||p.cooking?.recipe==='burn-apparel')&&p.cooking.ingredients.some(i=>i.pileId===pile.id))release(world,p);
+      if(p.cooking&&gearRecoveryRecipe(p.cooking.recipe)&&p.cooking.ingredients.some(i=>i.pileId===pile.id))release(world,p);
       p.orders.queue=p.orders.queue.filter(o=>typeof o==='number'||('cooking' in o
-        ?o.cooking.recipe!=='smelt-weapon'&&o.cooking.recipe!=='burn-apparel'||!o.cooking.ingredients.some(i=>i.pileId===pile.id)
+        ?!gearRecoveryRecipe(o.cooking.recipe)||!o.cooking.ingredients.some(i=>i.pileId===pile.id)
         :o.sourcePileId!==pile.id));
     }
     return {ok:true};

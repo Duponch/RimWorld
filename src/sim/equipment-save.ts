@@ -10,9 +10,10 @@ export function validEquipmentShape(p:Record<string,unknown>,version:number):boo
   if(version<52)return p.equipmentTask===undefined&&p.equipmentDropPending===undefined&&p.droppedWeaponId===undefined;
   if(p.equipmentDropPending!==undefined&&p.equipmentDropPending!==true||p.droppedWeaponId!==undefined&&!id(p.droppedWeaponId))return false;
   const t=p.equipmentTask;if(t===undefined)return true;
-  // V241 can exchange two 66-tick recon suits. validateApparel still checks
+  // V267 can exchange two90-tick plates; a vest+duster replacement takes138.
+  // Older envelopes retain their132/60 bounds. validateApparel still checks
   // the exact captured duration against the versioned compatible wardrobe.
-  if(record(t)&&(t.action==='wear'||t.action==='remove'))return version>=63&&Object.keys(t).every(k=>['itemId','action','progress','duration',...(version>=90?['automatic']:[])].includes(k))&&id(t.itemId)&&id(t.duration)&&Number(t.duration)<=(version>=241?132:60)&&typeof t.progress==='number'&&Number.isInteger(t.progress)&&t.progress>=0&&t.progress<Number(t.duration)
+  if(record(t)&&(t.action==='wear'||t.action==='remove'))return version>=63&&Object.keys(t).every(k=>['itemId','action','progress','duration',...(version>=90?['automatic']:[])].includes(k))&&id(t.itemId)&&id(t.duration)&&Number(t.duration)<=(version>=267?180:version>=241?132:60)&&typeof t.progress==='number'&&Number.isInteger(t.progress)&&t.progress>=0&&t.progress<Number(t.duration)
     &&(t.automatic===undefined||version>=90&&t.automatic===true);
   return record(t)&&Object.keys(t).every(k=>['itemId','action','progress','automatic'].includes(k))&&id(t.itemId)
     &&(t.action==='equip'?t.progress===0:t.action==='drop'&&typeof t.progress==='number'&&Number.isInteger(t.progress)&&t.progress>=0&&t.progress<3)

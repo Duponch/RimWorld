@@ -1,3 +1,4 @@
+import {isSmithingRecipe267,smithingWorkpiece267,smithingMaterialFromIngredients267} from './smithing-content-267.ts';
 import {isBurnApparelRecipe,burnApparelIngredientAllowed,validBurnApparelIngredients} from './burn-apparel-rules.ts';
 import {billWork,taskWork} from './production-recipes.ts';
 import { workPriority } from './work-types.ts';
@@ -49,6 +50,7 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   if(fuelStationReserved(world,station.id))return no('Poste réservé pour une cuisine ou un ravitaillement.');
   if(station.kind==='electric-stove'&&!foodStationUsable(station))return no('La cuisinière n’est pas alimentée :350 W nécessaires.');
   if(station.kind==='biofuel-refinery'&&!productionStationUsable(station))return no('Raffinerie sans courant : 170 W nécessaires.');
+  if(station.kind==='electric-smithy'&&!productionStationUsable(station))return no('Forge sans courant : 210 W nécessaires.');
   if(station.kind==='electric-smelter'&&!productionStationUsable(station))return no('Fonderie sans courant : 700 W nécessaires.');
   if(station.kind==='electric-crematorium'&&!productionStationUsable(station))return no('Crématorium sans courant : 250 W nécessaires.');
   if(!productionStationUsable(station))return no(station.kind==='fabrication-bench'?'Établi de fabrication sans courant : 250 W nécessaires.':'Atelier d’usinage sans courant : 350 W nécessaires.');
@@ -98,13 +100,14 @@ export function queuedCookingReason(world:World,order:CookingOrder,pawn?:Pawn):s
   if(bill.recipe==='cook-vegetarian-lavish-meal-bulk'&&!validVegetarianLavishMealBulkIngredients(c.ingredients))return 'Les quatre plats gastronomiques végétariens exigent cent végétaux crus ou laits, sans viande.';
   if(bill.recipe==='cook-carnivore-lavish-meal-bulk'&&!validCarnivoreLavishMealBulkIngredients(c.ingredients))return 'Les quatre plats gastronomiques carnivores exigent cent viandes crues, sans lait ni végétaux.';
   if(bill.recipe==='cook-carnivore-lavish-meal'&&!validCarnivoreLavishMealIngredients(c.ingredients))return 'Le plat carnivore gastronomique exige vingt-cinq viandes crues, sans lait ni végétaux.';
+  if(isSmithingRecipe267(bill.recipe)&&!(c.ingredients.length===1&&c.ingredients[0]!.item===smithingWorkpiece267(bill.recipe))&&!smithingMaterialFromIngredients267(bill.recipe,c.ingredients))return 'L’armure exige une seule matière autorisée en quantité complète.';
   for(const i of c.ingredients) {
     const pile=view.piles.find(p=>p.id===i.pileId);
     if(isCremationRecipe(bill.recipe)&&!canStandAt(view,i.cell))return 'Dépôt des ingrédients inaccessible.';
     if(isCremationRecipe(bill.recipe)&&(!pile||!cremationIngredientAllowed(view,bill,pile)||pile.humanCorpse&&burialClaim(view,pile.humanCorpse.pawnId,author?.id)))return 'Dépouille interdite par les filtres, indisponible ou réservée pour une inhumation.';
     if(isBurnApparelRecipe(bill.recipe)&&(!pile||!burnApparelIngredientAllowed(bill,pile)))return 'Vêtement interdit, non brûlable ou hors des filtres de type, état et qualité.';
-    if(isSmeltingRecipe(bill.recipe)&&(!pile||!smeltingIngredientAllowed(bill,pile)))return bill.recipe==='smelt-slag'?'Scorie interdite ou absente de la facture.':'Arme interdite ou hors des filtres de type, état et qualité de la facture.';
-    const work=pile?.artWork??pile?.gunWork??pile?.flakWork??pile?.componentWork??pile?.unfinished,bound=work?.billId===bill.id;
+    if(isSmeltingRecipe(bill.recipe)&&(!pile||!smeltingIngredientAllowed(bill,pile)))return bill.recipe==='smelt-apparel'?'Armure interdite ou hors des filtres de type, état et qualité.':bill.recipe==='smelt-slag'?'Scorie interdite ou absente de la facture.':'Arme interdite ou hors des filtres de type, état et qualité de la facture.';
+    const work=pile?.smithingWork??pile?.artWork??pile?.gunWork??pile?.flakWork??pile?.componentWork??pile?.unfinished,bound=work?.billId===bill.id;
     const required=(sources.get(i.pileId)??0)+i.quantity;sources.set(i.pileId,required);
     if(!isCremationRecipe(bill.recipe)&&pile&&isAnimalCorpseItem(pile.item)&&!corpseFresh(pile,world.tick))return 'Dépouille pourrie, impropre à la boucherie.';
     if(pile&&bill.recipe==='cook-survival-meal'&&ticksUntilRot(pile,world.tick)<=0)return 'Ingrédient périmé, impropre au repas de survie.';
@@ -121,9 +124,10 @@ export function queuedCookingReason(world:World,order:CookingOrder,pawn?:Pawn):s
     if(pile&&bill.recipe==='cook-vegetarian-lavish-meal-bulk'&&ticksUntilRot(pile,world.tick)<=0)return 'Ingrédient périmé, impropre aux quatre plats gastronomiques végétariens.';
     if(pile&&bill.recipe==='cook-carnivore-lavish-meal-bulk'&&ticksUntilRot(pile,world.tick)<=0)return 'Viande périmée, impropre aux quatre plats gastronomiques carnivores.';
     if(pile&&bill.recipe==='cook-carnivore-lavish-meal'&&ticksUntilRot(pile,world.tick)<=0)return 'Viande périmée, impropre au plat carnivore gastronomique.';
+    if(pile?.smithingWork&&(pile.smithingWork.recipe!==bill.recipe||!bill.filters[pile.smithingWork.material]))return 'Ouvrage de forge incompatible avec la recette ou ses matières autorisées.';
     if(pile?.componentWork&&pile.componentWork.recipe!==bill.recipe)return 'Ouvrage réservé à une autre recette.';
     if(work&&(work.authorId!==author?.id||work.billId!==undefined&&!bound))return 'Ouvrage réservé à un autre auteur ou une autre facture.';
-    if(!(bound||(pile?.artWork?bill.filters[pile.artWork.material]:pile?.gunWork?pile.gunWork.parts.every(part=>bill.filters[part.item]):pile?.flakWork?pile.flakWork.parts.every(part=>bill.filters[part.item]):pile?.componentWork?pile.componentWork.recipe==='make-component'?bill.filters.steel:pile.componentWork.parts.every(part=>bill.filters[part.item]):bill.filters[pile?.unfinished?'cloth':i.item]))||!pile||pile.item!==i.item||pile.owner.type!=='ground'||pile.quantity-reservedSource(view,pile.id)<required)return 'Ingrédient réservé disparu ou devenu insuffisant.';
+    if(!(bound||(pile?.smithingWork?bill.filters[pile.smithingWork.material]:pile?.artWork?bill.filters[pile.artWork.material]:pile?.gunWork?pile.gunWork.parts.every(part=>bill.filters[part.item]):pile?.flakWork?pile.flakWork.parts.every(part=>bill.filters[part.item]):pile?.componentWork?pile.componentWork.recipe==='make-component'?bill.filters.steel:pile.componentWork.parts.every(part=>bill.filters[part.item]):bill.filters[pile?.unfinished?'cloth':i.item]))||!pile||pile.item!==i.item||pile.owner.type!=='ground'||pile.quantity-reservedSource(view,pile.id)<required)return 'Ingrédient réservé disparu ou devenu insuffisant.';
     if(!bound&&(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2)return 'Ingrédient sorti du rayon de la facture.';
     const workpiece=i.item==='unfinished-component'&&c.recipe==='make-advanced-component';
     if(!(workpiece&&componentWorkpiecePlaceFree(view,i.cell,spot,taskRecipe(c),station)||ingredientWithinReach(i.cell,spot,station))||!(workpiece?componentWorkpiecePlaceFree(view,i.cell,spot,taskRecipe(c),station):ingredientPlaceFree(view,i.cell,spot,taskRecipe(c),station)))return 'Dépôt des ingrédients inaccessible.';

@@ -48,6 +48,7 @@ const def = (stuff: number, work: number, passability: Passability,
  * inheriting a fictitious value. Historical untyped furniture keeps Core's
  * abstract-stuff estimate rather than receiving a fabricated material. */
 const BUILDINGS: Readonly<Record<StructureKind, BuildingValueDef>> = Object.freeze({
+ 'fueled-smithy':def(0,3000,'pass-through',{steel:100}),'electric-smithy':def(0,3000,'pass-through',{steel:100,component:3}),
  brewery:def(0,2000,'pass-through',{wood:120,steel:30}),'fermenting-barrel':def(0,600,'pass-through',{wood:30,steel:10}),
  // Hive has no cost/recipe/work contribution; GlowPod supplies MarketValue50.
  'insect-hive':def(0,1,'pass-through'),

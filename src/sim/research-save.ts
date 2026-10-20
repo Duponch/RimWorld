@@ -23,9 +23,22 @@ import { constructionCapacity } from './construction-materials.ts';
 import { reservedSource } from './materials.ts';
 import type { World } from './types.ts';
 import { gunsmithingUnlocked } from './research.ts';
+import { smithyConstructionUnlocked267 } from './research.ts';
 import { isGunRecipe,isFlakRecipe } from './production-recipes.ts';
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
+/** Existing Smithing research unlocks new construction. A recovered/minified
+ * bench is still usable without replaying its construction research. */
+export function validSmithyResearchTransport267(world:World,version:number):boolean {
+  try {
+    const smithy=(kind:unknown)=>kind==='fueled-smithy'||kind==='electric-smithy';
+    if(version>=267)return !world.jobs.some(j=>smithy(j.kind)&&!smithyConstructionUnlocked267(world));
+    const marked=(v:unknown):boolean=>record(v)&&(smithy(v.kind)
+      ||['furniture','deconstruction','repair','fixBreakdown'].some(k=>record(v[k])&&smithy(v[k].kind)));
+    return !world.structures.some(marked)&&!world.jobs.some(marked)&&!(world.packed??[]).some(p=>marked(p.building))
+      &&![...(world.visitors?.departed??[]),...(world.podRescues?.departed??[])].some(d=>(d.packed??[]).some(p=>marked(p.building)));
+  }catch{return false;}
+}
 /** New research/content only; reconstructed snapshots reuse this guard without
  * another historical research, world or terrain validation. */
 export function validDeepResearchTransport(world:World,version:number):boolean {
@@ -178,6 +191,7 @@ export function validateResearch(world:World,version:number):string[]{
       ||state.project==='batteries'&&!state.batteries||state.project==='solar-power'&&!state.solarPower)errors.push('Invalid research project.');
   }
   if(!validBrewingResearchTransport265(world,version))errors.push('Invalid or future brewing research.');
+  if(!validSmithyResearchTransport267(world,version))errors.push('Invalid or future smithy construction.');
   if(!validGeothermalResearchTransport(world,version))errors.push('Invalid or future geothermal research or content.');
   if(!validPemmicanResearchTransport(world,version))errors.push('Invalid or future pemmican research or production.');
   if(!validHospitalSupportTransport(world,version))errors.push('Invalid or future hospital support research or content.');

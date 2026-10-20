@@ -13,6 +13,8 @@ export const FLAK_HELMET_DYE = -7;
 export const RECON_HELMET_DYE = -8;
 export const RECON_ARMOR_DYE = -9;
 export const TUQUE_DYE = -10;
+export const PLATE_ARMOR_DYE = -11;
+export const SIMPLE_HELMET_DYE = -12;
 // Face variants are resident in the same pawn batch. The vertex shader shows
 // exactly one of them; portraits project the open-eye variant at rest.
 export const PAWN_EYE_OPEN = 60;
@@ -24,7 +26,7 @@ export const PAWN_EYE_CROSS = 62;
  * There is no per-pawn AnimationMixer, bone Object3D tree or CPU bone update.
  * This deliberately small prototype rig is not yet the future glTF atlas importer.
  */
-export function pawnGeometry(): THREE.InstancedBufferGeometry {
+export function pawnGeometry(includeSmithing=false): THREE.InstancedBufferGeometry {
   const positions: number[] = [], normals: number[] = [], colors: number[] = [];
   const bones: number[] = [], pivots: number[] = [], dyes: number[] = [];
   const indices:number[]=[];
@@ -171,6 +173,28 @@ export function pawnGeometry(): THREE.InstancedBufferGeometry {
     addShell([ring(.59,side*.23,0,.064,.075,.017),ring(.75,side*.23,0,.070,.082,.019)],arm,[side*.23,1.01,0],0x657c84,RECON_ARMOR_DYE);
     addShell([ring(.40,hip,0,.076,.092,.022),ring(.65,hip,0,.09,.106,.026)],leg,[hip,.61,0],APPAREL['recon-armor'].color,RECON_ARMOR_DYE);
     addShell([ring(.18,hip,0,.071,.085,.018),ring(.40,hip,0,.078,.096,.022)],calf,[hip,.61,0],0x657c84,RECON_ARMOR_DYE);
+  }
+  if(includeSmithing){
+  // Original articulated plate harness, not a scaled copy of the recon suit.
+  // Breast/plackart, collar, shoulders and limb plates follow the same eight
+  // rigid bones, so every working/sleeping/carried pose and shadow agrees.
+  addShell([ring(.63,0,0,.178,.146,.032),ring(.77,0,0,.181,.155,.035),
+    ring(.94,0,0,.218,.168,.042),ring(1.025,0,0,.184,.141,.034)],0,[0,.61,0],0xffffff,PLATE_ARMOR_DYE);
+  addPart([.11,.24,.035],[0,.86,.174],0,[0,.61,0],0xffffff,PLATE_ARMOR_DYE);
+  addShell([ring(1.018,0,0,.13,.12,.025),ring(1.075,0,0,.118,.11,.023)],0,[0,.61,0],0xffffff,PLATE_ARMOR_DYE);
+  for(const side of [-1,1]){
+    const arm=side<0?2:3,leg=side<0?4:5,calf=side<0?6:7,hip=side*.105;
+    addShell([ring(.86,side*.235,0,.076,.090,.022),ring(.99,side*.235,0,.112,.112,.030),ring(1.07,side*.226,0,.095,.104,.025)],arm,[side*.23,1.01,0],0xffffff,PLATE_ARMOR_DYE);
+    addShell([ring(.60,side*.23,0,.060,.073,.015),ring(.79,side*.23,0,.075,.085,.020)],arm,[side*.23,1.01,0],0xffffff,PLATE_ARMOR_DYE);
+    addShell([ring(.40,hip,0,.083,.102,.023),ring(.65,hip,0,.096,.113,.025)],leg,[hip,.61,0],0xffffff,PLATE_ARMOR_DYE);
+    addShell([ring(.19,hip,0,.067,.083,.018),ring(.40,hip,0,.080,.102,.023)],calf,[hip,.61,0],0xffffff,PLATE_ARMOR_DYE);
+  }
+  // A pointed open-face cap, narrow rim and raised central reinforcement.
+  // Eyes and beard remain exposed; only hair is masked by this headgear.
+  addShell([ring(1.285,0,0,.176,.154,.030),ring(1.34,0,0,.186,.163,.035),
+    ring(1.425,0,0,.142,.135,.031),ring(1.50,0,0,.040,.065,.017)],1,[0,1.04,0],0xffffff,SIMPLE_HELMET_DYE);
+  addPart([.392,.028,.348],[0,1.302,.015],1,[0,1.04,0],0xffffff,SIMPLE_HELMET_DYE);
+  addPart([.045,.055,.22],[0,1.445,-.008],1,[0,1.04,0],0xffffff,SIMPLE_HELMET_DYE);
   }
   // Resident parka hood; its visibility follows the outfit attribute.
   addPart([.34,.34,.14],[0,1.17,-.12],1,[0,1.04,0],0xffffff,PARKA_HOOD_DYE);

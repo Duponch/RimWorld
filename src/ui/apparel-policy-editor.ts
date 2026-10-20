@@ -1,11 +1,12 @@
-import {APPAREL,APPAREL_MATERIALS,APPAREL_MATERIAL_DEFINITIONS,type ApparelItem,type ApparelMaterial} from '../sim/apparel-rules';
+import {APPAREL,APPAREL_MATERIAL_DEFINITIONS,type ApparelItem,type ApparelMaterial} from '../sim/apparel-rules';
+import {ARMOR_STUFF_DEFINITIONS267,type ArmorStuff267} from '../sim/smithing-apparel-267';
 import {QUALITY_LABELS,WEAPON_QUALITIES,type WeaponQuality} from '../sim/equipment-rules';
-import {validApparelPolicy,type ApparelPolicy} from '../sim/apparel-policy';
+import {validApparelPolicy,APPAREL_POLICY_MATERIALS267,type ApparelPolicyMaterial,type ApparelPolicy} from '../sim/apparel-policy';
 import {SCHEMA_VERSION,type Pawn,type World} from '../sim/types';
 import {normalizeApparelPolicyName,type ApparelPolicyNameCommand} from '../sim/apparel-policy-edit';
 import './apparel-policy-editor.css';
 
-export type ApparelPolicyUpdate={type:'apparel-policy-update';policyId:number;allowedItems:ApparelItem[];allowedMaterials:ApparelMaterial[];
+export type ApparelPolicyUpdate={type:'apparel-policy-update';policyId:number;allowedItems:ApparelItem[];allowedMaterials:ApparelPolicyMaterial[];
   minQuality:WeaponQuality;maxQuality:WeaponQuality;minHitPointsPercent:number;maxHitPointsPercent:number};
 export type ApparelPolicyEditorCommand=ApparelPolicyUpdate|ApparelPolicyNameCommand;
 const items=Object.keys(APPAREL) as ApparelItem[];
@@ -24,7 +25,7 @@ export function apparelPolicyEditorLayout():string {
     </div>
     <form id="apparel-policy-form">
       <fieldset class="apparel-item-filters"><legend>Vêtements autorisés</legend>${items.map(id=>`<label><input type="checkbox" data-apparel-allowed-item="${id}"> ${APPAREL[id].label}</label>`).join('')}</fieldset>
-      <fieldset class="apparel-material-filters"><legend>Matières autorisées</legend>${APPAREL_MATERIALS.map(id=>`<label><input type="checkbox" data-apparel-allowed-material="${id}"> ${APPAREL_MATERIAL_DEFINITIONS[id].label}</label>`).join('')}</fieldset>
+      <fieldset class="apparel-material-filters"><legend>Matières autorisées</legend>${APPAREL_POLICY_MATERIALS267.map(id=>`<label><input type="checkbox" data-apparel-allowed-material="${id}"> ${(APPAREL_MATERIAL_DEFINITIONS[id as ApparelMaterial]?.label??ARMOR_STUFF_DEFINITIONS267[id as ArmorStuff267].label)}</label>`).join('')}</fieldset>
       <p class="muted">Les deux filtres s’appliquent ensemble. Les armures sans matière textile ne dépendent pas du filtre de matière.</p>
       <div class="apparel-policy-ranges"><label>Qualité minimale <select id="apparel-min-quality">${qualityOptions()}</select></label><label>Qualité maximale <select id="apparel-max-quality">${qualityOptions()}</select></label>
       <label>PV minimum (%) <input id="apparel-min-hp" type="number" min="0" max="100" step="any" required></label><label>PV maximum (%) <input id="apparel-max-hp" type="number" min="0" max="100" step="any" required></label></div>
@@ -82,12 +83,12 @@ export function createApparelPolicyEditor(root:HTMLElement,send:(command:Apparel
     const p=policy();draft=p?fields(p):undefined;baseline=draft?signature(draft):'';dirty=false;
     if(!draft){controls();return;}
     choice.value=String(draft.policyId);for(const check of itemChecks)check.checked=draft.allowedItems.includes(check.dataset.apparelAllowedItem as ApparelItem);
-    for(const check of materialChecks)check.checked=draft.allowedMaterials.includes(check.dataset.apparelAllowedMaterial as ApparelMaterial);
+    for(const check of materialChecks)check.checked=draft.allowedMaterials.includes(check.dataset.apparelAllowedMaterial as ApparelPolicyMaterial);
     minQuality.value=draft.minQuality;maxQuality.value=draft.maxQuality;minHP.value=String(draft.minHitPointsPercent*100);maxHP.value=String(draft.maxHitPointsPercent*100);status.textContent='Valeurs confirmées. Aucun ordre de port envoyé.';controls();
   }
   function changed(){if(!draft)return;dirty=true;status.textContent='Brouillon non appliqué. Les filtres confirmés restent en vigueur. Appliquez ou annulez ce brouillon avant de copier ou renommer.';feedback.textContent='';controls();}
   for(const check of itemChecks)check.onchange=()=>{if(locked()||naming||!draft)return;draft.allowedItems=itemChecks.filter(c=>c.checked).map(c=>c.dataset.apparelAllowedItem as ApparelItem);changed();};
-  for(const check of materialChecks)check.onchange=()=>{if(locked()||naming||!draft)return;draft.allowedMaterials=materialChecks.filter(c=>c.checked).map(c=>c.dataset.apparelAllowedMaterial as ApparelMaterial);changed();};
+  for(const check of materialChecks)check.onchange=()=>{if(locked()||naming||!draft)return;draft.allowedMaterials=materialChecks.filter(c=>c.checked).map(c=>c.dataset.apparelAllowedMaterial as ApparelPolicyMaterial);changed();};
   minQuality.onchange=()=>{if(!locked()&&!naming&&draft){draft.minQuality=minQuality.value as WeaponQuality;changed();}};
   maxQuality.onchange=()=>{if(!locked()&&!naming&&draft){draft.maxQuality=maxQuality.value as WeaponQuality;changed();}};
   const percent=(input:HTMLInputElement)=>input.value.trim()===''?NaN:Number(input.value)/100;

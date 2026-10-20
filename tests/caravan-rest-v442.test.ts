@@ -18,6 +18,8 @@ import {attachGeneratedAnimalGrowth256} from '../src/sim/animal-growth-runtime-2
 import {createAnimalMedicalRecord256} from '../src/sim/animal-clinical-age-v256.ts';
 import {validCaravanRestField266} from '../src/sim/caravan-rest-state-266.ts';
 import {SnapshotEncoder,SnapshotDecoder} from '../src/bridge/snapshots.ts';
+import {ARMOR_STUFFS267,isSmithingApparel267} from '../src/sim/smithing-apparel-267.ts';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 import type {World,Pawn} from '../src/sim/types.ts';
 import type {WildAnimal} from '../src/sim/wildlife-state.ts';
 
@@ -143,8 +145,13 @@ test('actual mixed-caravan animal rest is earned, restored before needs150 and e
 
 test('strict265 migrates the complete unmarked campaign by number only and rejects a future receipt on local or away owners',()=>{
  const f=prepared(),old=JSON.parse(serializeCampaign(f.w)) as World;
+ // This synthetic265 witness predates forge permission presets; discard only
+ // those newly introduced permissions before casting the historical schema.
+ if(old.apparelPolicies)old.apparelPolicies=old.apparelPolicies.map(p=>({...p,
+  allowedItems:p.allowedItems.filter(i=>!isSmithingApparel267(i)),
+  allowedMaterials:p.allowedMaterials.filter(m=>!(ARMOR_STUFFS267 as readonly string[]).includes(m))}));
  Object.assign(old,{schemaVersion:265});const bytes=JSON.stringify(old),migrated=deserializeCampaign(bytes);
- expect(migrated.schemaVersion).toBe(266);expect(JSON.parse(serializeCampaign(migrated))).toEqual({...old,schemaVersion:266});
+ expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);expect(JSON.parse(serializeCampaign(migrated))).toEqual({...old,schemaVersion:SCHEMA_VERSION});
  expect(JSON.stringify(old)).toBe(bytes);
  for(const location of ['local','away'] as const){
   const bad=JSON.parse(bytes) as World,p=location==='local'?bad.pawns[0]!:group(bad,f.g.id).members[0]!;

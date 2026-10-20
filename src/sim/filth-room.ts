@@ -36,7 +36,7 @@ export class CleanlinessCapture {
     const contains=(i:number)=>cells.has(i)||adjacent.has(i)&&this.topology.at(i%w.width,Math.floor(i/w.width))?.kind==='doorway';
     for(const f of w.filth?.items??[])if(contains(f.z*w.width+f.x))total+=FILTH_DEFINITIONS[f.kind].cleanliness;
     for(const p of w.piles)if(p.item==='slag-steel-chunk'&&p.owner.type==='ground'&&contains(p.owner.z*w.width+p.owner.x))total-=2;
-    for(const s of w.structures){const value=s.kind==='spike-trap'?-5:s.kind==='electric-crematorium'?-20:s.kind==='hydroponics-basin'?-3:s.kind==='machining-table'?-2:s.kind==='butcher-table'?-15:s.kind==='stonecutter'||s.kind==='art-bench'?-5:0;if(value&&footprintCells(s).some(c=>contains(c.z*w.width+c.x)||s.kind==='electric-crematorium'&&neighbors(c).some(n=>cells.has(n.z*w.width+n.x))))total+=value;}
+    for(const s of w.structures){const value=s.kind==='spike-trap'?-5:s.kind==='electric-crematorium'?-20:s.kind==='hydroponics-basin'?-3:s.kind==='fueled-smithy'||s.kind==='electric-smithy'?-3:s.kind==='machining-table'?-2:s.kind==='butcher-table'?-15:s.kind==='stonecutter'||s.kind==='art-bench'?-5:0;if(value&&footprintCells(s).some(c=>contains(c.z*w.width+c.x)||s.kind==='electric-crematorium'&&neighbors(c).some(n=>cells.has(n.z*w.width+n.x))))total+=value;}
     const result={id,cells,adjacent,covered,cleanliness:total/cells.size,doorway};this.rooms.set(id,result);return result;
   }
 }

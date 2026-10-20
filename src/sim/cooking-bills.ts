@@ -1,3 +1,4 @@
+import {isSmithingRecipe267,smithingInitialMaterial267,isSmithingProduct267} from './smithing-content-267.ts';
 import {isFutureEcologyItem256} from './cave-products-256.ts';
 import {isBurnApparelRecipe} from './burn-apparel-rules.ts';
 import {isPemmicanRecipe} from './pemmican-content.ts';
@@ -21,12 +22,13 @@ import { SCHEMA_VERSION,type Cell,type Structure,type World } from './types.ts';
 export const COOK_TICKS=60; // 300 reference work / 10 local ticks Ã— campfire factor 2.
 export const INGREDIENT_UNITS=10; // 0.5 nutrition for the supported raw ingredients.
 export function newCookingBill(id:number,recipe:ProductionRecipe='simple-meal',version:number=SCHEMA_VERSION):CookingBill {
-  const inputs=PRODUCTION_RECIPES[recipe].inputs.filter(i=>(version>=256||!isFutureEcologyItem256(i))&&(version>=197||!V219_ITEM_IDS.some(future=>future===i)));
-  return {id,recipe,mode:'times',target:1,suspended:false,filters:Object.fromEntries(inputs.map(i=>[i,isCremationRecipe(recipe)?i==='human-corpse':(recipe==='smelt-slag'||!isSmeltingRecipe(recipe))&&!isBurnApparelRecipe(recipe)&&(recipe!=='chemfuel-from-organics'||(BIOFUEL_INITIAL_ORGANICS as readonly string[]).includes(i))])),radius:999,destination:isCremationRecipe(recipe)||isBurnApparelRecipe(recipe)?'drop':'stockpile',
-    ...(recipe==='smelt-weapon'||isBurnApparelRecipe(recipe))?{smeltFilter:{hpMin:0,hpMax:100,qualityMin:'awful',qualityMax:'legendary'}}:{},
+  const inputs=PRODUCTION_RECIPES[recipe].inputs.filter(i=>(version>=267||!isSmithingProduct267(i))&&(version>=256||!isFutureEcologyItem256(i))&&(version>=197||!V219_ITEM_IDS.some(future=>future===i)));
+  return {id,recipe,mode:'times',target:1,suspended:false,filters:Object.fromEntries(inputs.map(i=>[i,isCremationRecipe(recipe)?i==='human-corpse':isSmithingRecipe267(recipe)?smithingInitialMaterial267(i as import('./smithing-content-267.ts').SmithingMaterial267):(recipe==='smelt-slag'||!isSmeltingRecipe(recipe))&&!isBurnApparelRecipe(recipe)&&(recipe!=='chemfuel-from-organics'||(BIOFUEL_INITIAL_ORGANICS as readonly string[]).includes(i))])),radius:999,destination:isCremationRecipe(recipe)||isBurnApparelRecipe(recipe)?'drop':'stockpile',
+    ...(recipe==='smelt-weapon'||recipe==='smelt-apparel'||isBurnApparelRecipe(recipe))?{smeltFilter:{hpMin:0,hpMax:100,qualityMin:'awful',qualityMax:'legendary'}}:{},
     ...isCremationRecipe(recipe)?{cremationFilter:{colonists:true,strangers:true,fresh:true,rotting:true,desiccated:true}}:{}};
 }
 export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-meal',version:number=SCHEMA_VERSION):value is BillSettings {
+  if((isSmithingRecipe267(recipe)||recipe==='smelt-apparel')&&version!==267)return false;
   if(recipe==='brew-wort'&&version<265)return false;
   if(recipe==='smelt-slag'&&version<256)return false;
   if(isBurnApparelRecipe(recipe)&&version<251)return false;
@@ -41,17 +43,17 @@ export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-
   if(recipe==='make-emp-launcher'&&version<208)return false;
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
   const v=value as BillSettings;
-  const smelting=recipe==='smelt-weapon'||isBurnApparelRecipe(recipe);
+  const smelting=recipe==='smelt-weapon'||recipe==='smelt-apparel'||isBurnApparelRecipe(recipe);
   const cremation=isCremationRecipe(recipe);
   if(smelting?!Object.hasOwn(v,'smeltFilter')||!validSmeltFilter(v.smeltFilter):Object.hasOwn(v,'smeltFilter'))return false;
   if(cremation?!Object.hasOwn(v,'cremationFilter')||!validCremationFilter(v.cremationFilter):Object.hasOwn(v,'cremationFilter'))return false;
   return Object.keys(v).every(k=>['id','recipe','mode','target','suspended','filters','radius','destination',...smelting?['smeltFilter']:[],...cremation?['cremationFilter']:[]].includes(k))
     &&(smelting||cremation?['times','forever']:['times','until','forever']).includes(v.mode)&&Number.isSafeInteger(v.target)&&v.target>=0&&v.target<=9999
     &&typeof v.suspended==='boolean'&&!!v.filters&&typeof v.filters==='object'&&!Array.isArray(v.filters)
-    &&Object.keys(v.filters).every(i=>(PRODUCTION_RECIPES[recipe].inputs as readonly string[]).includes(i)&&(version>=265||i!=='hops')&&(version>=256||!isFutureEcologyItem256(i))&&(version>=197||!V219_ITEM_IDS.some(future=>future===i)))
+    &&Object.keys(v.filters).every(i=>(PRODUCTION_RECIPES[recipe].inputs as readonly string[]).includes(i)&&(version>=267||!isSmithingProduct267(i))&&(version>=265||i!=='hops')&&(version>=256||!isFutureEcologyItem256(i))&&(version>=197||!V219_ITEM_IDS.some(future=>future===i)))
     // Old carcass filters stay absent after migration and therefore reject new
     // sources. Only a new bill or explicit settings can opt into those inputs.
-    &&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||(i==='hops'&&recipe!=='brew-wort'||isFutureEcologyItem256(i)||V219_ITEM_IDS.some(future=>future===i)||(['milk','muffalo-wool'].includes(i)?version<120:['hare-meat','potato','corn',...V91_ITEM_IDS,...V190_ITEM_IDS].includes(i)))&&v.filters[i]===undefined)
+    &&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||(isSmithingProduct267(i)||i==='hops'&&recipe!=='brew-wort'||isFutureEcologyItem256(i)||V219_ITEM_IDS.some(future=>future===i)||(['milk','muffalo-wool'].includes(i)?version<120:['hare-meat','potato','corn',...V91_ITEM_IDS,...V190_ITEM_IDS].includes(i)))&&v.filters[i]===undefined)
     &&Number.isFinite(v.radius)&&v.radius>=0&&v.radius<=999&&(cremation||isBurnApparelRecipe(recipe)?v.destination==='drop':['stockpile','drop'].includes(v.destination));
 }
 /** Reference resource counter includes stored items and current task cargo.
@@ -68,7 +70,7 @@ export function countedProducts(world:World,bill?:CookingBill):number {
   const meal=isPemmicanRecipe(recipe)||isKibbleRecipe(recipe)||recipe==='cook-survival-meal'||recipe==='fine-meal'||recipe==='cook-fine-meal-bulk'||recipe==='vegetarian-fine-meal'||recipe==='cook-vegetarian-fine-meal-bulk'||recipe==='carnivore-fine-meal'||recipe==='cook-carnivore-fine-meal-bulk'||recipe==='lavish-meal'||recipe==='cook-lavish-meal-bulk'||recipe==='vegetarian-lavish-meal'||recipe==='cook-vegetarian-lavish-meal-bulk'||recipe==='cook-carnivore-lavish-meal'||recipe==='cook-carnivore-lavish-meal-bulk';
   return world.piles.reduce((n,p)=>{
     if(!products.has(p.item))return n;
-    if(p.owner.type==='pawn'&&bill?.recipe!=='butcher-creature'||isFlakRecipe(recipe)&&p.owner.type==='apparel')return n+p.quantity;
+    if(p.owner.type==='pawn'&&bill?.recipe!=='butcher-creature'||(isFlakRecipe(recipe)||isSmithingRecipe267(recipe))&&p.owner.type==='apparel')return n+p.quantity;
     if(p.owner.type!=='ground')return n;
     const zone=stored.get(p.owner.z*world.width+p.owner.x);
     return zone&&(!meal||storageCellAccepts(world,zone,p.item))?n+p.quantity:n;

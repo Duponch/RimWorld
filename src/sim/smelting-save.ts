@@ -38,6 +38,7 @@ export function validateSmelting(w:World,version:number,powerTopology?:PowerPare
     ||(s.pawn.orders?.queue??[]).some(o=>isCookingOrder(o)&&isSmeltingRecipe(o.cooking.recipe))));
   if(!machinePresent&&!bills.some(prospectiveBill)&&!taskPresent)return errors;
   if(version<222)return ['Future smelting station, recipe or filter.'];
+  if(version<267&&(bills.some(b=>b?.recipe==='smelt-apparel')||owners.slots.some(s=>s.pawn&&(s.pawn.cooking?.recipe==='smelt-apparel'||s.pawn.orders.queue.some(o=>isCookingOrder(o)&&o.cooking.recipe==='smelt-apparel')))))return ['Future apparel-smelting recipe.'];
   for(const b of bills)if(prospectiveBill(b)&&(!obj(b)||!(isSmeltingRecipe(b.recipe)&&validBillSettings(b,b.recipe,version)||version>=251&&isBurnApparelRecipe(b.recipe)&&validBillSettings(b,'burn-apparel',version))))errors.push('Invalid smelting bill or filter attached to another recipe.');
   if(foreign.some(s=>s.pawn&&(isSmeltingRecipe(s.pawn.cooking?.recipe)
     ||(s.pawn.orders?.queue??[]).some(o=>isCookingOrder(o)&&isSmeltingRecipe(o.cooking.recipe)))))errors.push('Off-map owner retains a local smelting task.');

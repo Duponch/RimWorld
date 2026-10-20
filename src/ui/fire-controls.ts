@@ -12,6 +12,10 @@ export function fireControls(fire: Structure, send: (command: Command) => void):
 }
 export function updateFireControls(root: ParentNode, fire: Structure): void {
   const label=root.querySelector('#fire-fuel');
+  if(label&&fire.fuel&&fire.kind==='fueled-smithy'){
+    label.textContent=`${fire.fuel.ticks?'Alimentée':'Vide'} · ${(fire.fuel.ticks/WOOD_BURN_TICKS).toFixed(1)} / ${fuelLimit(fire.kind)/WOOD_BURN_TICKS} bois · 80 bois/jour de travail · aucune consommation au repos`;
+    return;
+  }
   if(label&&fire.fuel&&fire.kind==='torch-lamp'){
     label.textContent=`${fire.fuel.ticks?'Allumée':'Éteinte'} · ${(fire.fuel.ticks/WOOD_BURN_TICKS).toFixed(1)} / ${fuelLimit(fire.kind)/WOOD_BURN_TICKS} bois · 2 bois/jour au sec · pluie/neige sans toit : consommation accrue · lumière et chaleur arrêtées à vide · aucun interrupteur`;
     return;

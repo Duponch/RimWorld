@@ -3,6 +3,7 @@ import {isHabitatFurnitureKind,FURNITURE_DEFINITIONS} from './furniture-stats.ts
 import {ANIMAL_ITEM_HP_256,ANIMAL_ITEM_FLAMMABILITY_256,isAnimalItem256} from './animal-items-v256.ts';
 import {BEDROLL_TEXTILES_256,isBedrollTextile256} from './bedroll-textiles-256.ts';
 import { APPAREL } from './apparel-rules.ts';
+import {isSmithingApparel267,smithingApparelStuff267,ARMOR_STUFF_DEFINITIONS267} from './smithing-apparel-267.ts';
 import { weaponMaxHitPoints } from './equipment-rules.ts';
 import type { ItemId } from './items.ts';
 import type { MaterialPile,Resource,Structure } from './types.ts';
@@ -10,6 +11,7 @@ import { floraDefinition } from './biome-flora.ts';
 
 /** Only shipped definitions. Missing/non-HP things are deliberately not fuels. */
 const BUILDINGS:Readonly<Record<string,readonly [number,number,boolean]>>={
+  'fueled-smithy':[180,1,true],'electric-smithy':[180,1,true],
   brewery:[180,1,true],'fermenting-barrel':[100,1,true],
   'insect-hive':[130,1,false],'glow-pod':[50,1,false],
   'ship-chunk':[300,0,false],
@@ -51,7 +53,8 @@ export const structureFlammability=(s:Pick<Structure,'kind'|'material'>)=>isAnci
 export const structureLeavesResources=(s:Pick<Structure,'kind'>)=>isAncientMonumentKind256(s.kind)|| (BUILDINGS[s.kind]?.[2]??false);
 export const resourceMaxHp=(r:Pick<Resource,'kind'|'species'>)=>floraDefinition(r)?.hitPoints??(r.kind==='healroot'?60:r.kind==='tree'?200:r.kind==='berries'?120:r.kind==='corn'?150:r.kind==='rock'?0:85);
 export const resourceFlammability=(r:Pick<Resource,'kind'|'species'>)=>floraDefinition(r)?.flammability??(r.kind==='rock'?0:r.kind==='tree'?.8:r.kind==='haygrass'?1.3:1);
-export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=193):number {
+export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=isSmithingApparel267(p.item)?267:193):number {
+  if(isSmithingApparel267(p.item))return version>=267&&p.kind==='apparel'?APPAREL[p.item].hitPoints:0;
   if(version<256&&(p.item==='flak-pants'||p.item==='plasteel-flak-helmet'))return 0;
   if(p.item==='slag-steel-chunk')return version>=256?300:0;
   if(p.item==='hops'||p.item==='wort'||p.item==='beer')return version>=265?(p.item==='beer'?50:60):0;
@@ -67,6 +70,7 @@ export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=193):number
   return p.item==='wood'?150:p.item==='cloth'?80:p.item==='light-leather'?60:p.item==='component'?70:0;
 }
 export function pileFlammability(p:Pick<MaterialPile,'kind'|'item'>):number {
+  if(isSmithingApparel267(p.item))return ARMOR_STUFF_DEFINITIONS267[smithingApparelStuff267(p.item)].flammability;
   if(isAnimalItem256(p.item))return (ANIMAL_ITEM_FLAMMABILITY_256 as Readonly<Record<string,number>>)[p.item]??(p.kind==='corpse'?.7:0);
   if(p.item==='hops')return 1;if(p.item==='wort')return .2;if(p.item==='beer')return .5;
   if(p.kind==='plant')return .8;

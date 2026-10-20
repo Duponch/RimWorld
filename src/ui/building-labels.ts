@@ -11,6 +11,7 @@ export const buildingLabels: Readonly<Record<StructureKind, string>> = {
   vent:'Bouche d’aération',
   'spike-trap':'Piège à pointes','electric-crematorium':'Crématorium électrique',
   'electric-smelter':'Fonderie électrique',
+  'fueled-smithy':'Forge à combustible','electric-smithy':'Forge électrique',
   brewery:'Brasserie','fermenting-barrel':'Tonneau de fermentation','biofuel-refinery':'Raffinerie de biocarburant','chemfuel-generator':'Générateur à biocarburant',
   'nutrient-paste-dispenser':'Distributeur de pâte nutritive',hopper:'Trémie',
   'orbital-beacon':'Balise orbitale','comms-console':'Console de communication',

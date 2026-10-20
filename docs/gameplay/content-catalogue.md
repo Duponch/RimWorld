@@ -1,5 +1,13 @@
 # Catalogue de contenu : couverture connue
 
+**V443 — schéma 267, qualifié localement, publication préparée :** [Forges, plaques et casque simple](smithing-v443.md). 45cas nouveaux et42cas voisins acquis par reprises ; présentation et UI natives muettes acquises, publication préparée.
+
+| Contenu V443 | Acquisition et usage | Frontières et limites |
+| --- | --- | --- |
+| Forge à combustible et forge électrique | Recherche Forge700 ; construction physique100acier, ou100acier+3composants ; Construction4/5. Postes3×1 orientables,180PV, minifiables20kg. Combustible50bois,80/jour de travail ; électrique210W, chaleur au repos, pannes et pluie. | Électricité initialement connue ici ; cabinet d’outils absent, aucun bonus accordé. |
+| Plaques et casque simple | Plaques :170bois ou170métal homogène, Artisanat7 et recherche Armure de plaques600 après Forge/Vêtements complexes. Casque :40métal, sans seuil, aux forges ou à l’atelier d’usinage. Argent/or : quantités×10. Six plaques et cinq casques, avec protection,PV,isolation,masse,valeur et couleur de leur matière. | Travail local Artisanat, adaptation de Smith. Ouvrage physique, auteur et progression conservés ; qualité tirée une fois à la fin. Les onze tables de définition sont contrôlées ; fabrication réellement parcourue sur plaques bois et casque argent. |
+| Habillement et récupération | Port réel avec conflits de couches, réservation, délais, protection, usure, stockage, politiques, masse et commerce. Nouvelle fusion des dix variantes métalliques à25% ; brûlage du bois ; annulation d’un ouvrage à75% par portion incorporée. | Aucun stock marchand ajouté. Deux anciens casques pare-balles fixes restent sans récupération : leur coût mixte exige plusieurs sorties. Anciennes politiques non enrichies ; sauvegardes historiques et personnelles préservées. |
+
 **V442 — schéma266 :** aucun objet ajouté. La [reprise du repos des caravanes](caravan-rest-v442.md) corrige l’écart historique V441 dans les cas qualifiés ; mêmes humains, animaux, biens et effets d’alcool conservés, migration265 neutre. Qualification ciblée et UI acquises, V442 publiée.
 
 **V441 publiée — [Brassage, fermentation et alcool](brewing-v441.md), schéma 265.** Chaîne physique houblon → moût → tonneau → bière, recherche Brassage de bière 400, construction payée, factures Cuisine, remplissage/extraction Transport et vraie consommation. 60 nouveaux cas acquis par reprises ; présentation et UI native muette acquises. V441 est publiée ; un rouge historique de repos en caravane reste ouvert. Aucune parité Core ni amélioration FPS annoncée.
