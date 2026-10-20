@@ -1,4 +1,4 @@
-import {isSmithingRecipe267,smithingMaterialFromIngredients267,smithingProduct267,smithingWorkTotal267} from './smithing-content-267.ts';
+import {smithingRecipeAvailable267,isSmithingRecipe267,smithingMaterialFromIngredients267,smithingProduct267,smithingWorkTotal267} from './smithing-content-267.ts';
 import {beginSmithingWork267} from './smithing-work-267.ts';
 import {brewingSpeed265,validWortIngredients265} from './brewing-content-265.ts';
 import {eggAllowedForPlayer256} from './animal-egg-permission-v256.ts';
@@ -27,7 +27,7 @@ import { beginFlakWork } from './flak-work.ts';
 import { beginComponentWork } from './component-work.ts';
 import { biofuelProductionSpeed,completedMedicineSkill,medicineProductionSpeed,productionResearchUnlocked,productionWorkerQualified } from './machining.ts';
 import { isBiofuelRecipe,validBiofuelIngredients,validMedicineIngredients,isFlakRecipe,isGunRecipe,stationAccepts } from './production-recipes.ts';
-import { newWeaponState,type RangedWeaponItem } from './equipment-rules.ts';
+import { newWeaponState,type WeaponItem } from './equipment-rules.ts';
 import { isAnimalCorpseItem, isAnimalMeat } from './biome-items.ts';
 import { foodStationUsable } from './food-workstations.ts';
 import { consumeCookingFuel } from './fuel.ts';
@@ -64,7 +64,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const task=pawn.cooking!;
   if(!allowedAreaWorkAllowed(world,pawn)){context.release();return;}
   const smithing=isSmithingRecipe267(task.recipe);
-  if(smithing&&(world.schemaVersion!==267||pawn.draft||pawn.stun||pawn.state==='dead'||pawn.state==='downed'||medicalWorkRefusal(pawn)||pawn.burning||pawn.mental?.crisis)){context.release();return;}
+  if(smithing&&(!smithingRecipeAvailable267(task.recipe as import('./smithing-content-267.ts').SmithingRecipe267,world.schemaVersion)||pawn.draft||pawn.stun||pawn.state==='dead'||pawn.state==='downed'||medicalWorkRefusal(pawn)||pawn.burning||pawn.mental?.crisis)){context.release();return;}
   if(smithing&&((pawn.motion?.end??0)>world.tick||pawn.moveCooldown>0))return;
   const brewing=task.recipe==='brew-wort';
   if(brewing&&(world.schemaVersion<265||task.phase!=='output'&&task.phase!=='interrupted'&&!validWortIngredients265(task.ingredients))){context.release();return;}
@@ -183,8 +183,8 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const rice=task.ingredients.filter(i=>i.item==='rice').reduce((n,i)=>n+i.quantity,0),item=smith?smithingProduct267(smith.smithingWork!.recipe,smith.smithingWork!.material):recipeProduct(taskRecipe(task),task.ingredients,material);
   const potato=task.ingredients.filter(i=>i.item==='potato').reduce((n,i)=>n+i.quantity,0),corn=task.ingredients.filter(i=>i.item==='corn').reduce((n,i)=>n+i.quantity,0);
   if(isTailoring(task.recipe)&&!Number.isSafeInteger((world.tailoring?.completed??0)+1))return;
-  const random={rng:world.rng},apparel=smithing||isTailoring(task.recipe)||isFlakRecipe(task.recipe)?{...newApparelState(item as ApparelItem,material),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
-  const weapon=isGunRecipe(task.recipe)?{...newWeaponState(item as RangedWeaponItem),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
+  const random={rng:world.rng},apparel=smithing&&task.recipe!=='make-plasteel-knife'||isTailoring(task.recipe)||isFlakRecipe(task.recipe)?{...newApparelState(item as ApparelItem,material),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
+  const weapon=isGunRecipe(task.recipe)||task.recipe==='make-plasteel-knife'?{...newWeaponState(item as WeaponItem),quality:craftingQuality(craftingSkill(pawn).level,()=>healthRandom(random))}:undefined;
   const foodPoison=world.schemaVersion>=89&&culinary&&!kibble&&!brewing?foodPoisonFromRecipe(roomCleanliness(world,pawn),(pawn.skills.cooking?.level??0),()=>healthRandom(random)):undefined;
   const medicineSkill=medicine?completedMedicineSkill(pawn,task.workTicks??0):undefined;
   // All preconditions succeeded. Consume once, create once, then store physically.

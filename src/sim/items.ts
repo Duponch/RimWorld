@@ -16,6 +16,7 @@ export type MechCorpseItem=typeof MECH_CORPSE_ITEMS[number];
  * hundredths here; the actor's 0..100 meter represents one nutrition unit. */
 export const ITEM_DEFINITIONS = Object.freeze({
   ...SMITHING_APPAREL_ITEM_DEFINITIONS267,
+  'unfinished-knife':Object.freeze({label:'Couteau inachevé',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0xa0b2b5}),
   'unfinished-plate-armor':Object.freeze({label:'Armure de plaques inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x87958f}),
   'unfinished-simple-helmet':Object.freeze({label:'Casque simple inachevé',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x87958f}),
   hops:Object.freeze({label:'Houblon',kind:'food',stackLimit:75,nutrition:5,maxIngest:75,color:0xaaa455}),

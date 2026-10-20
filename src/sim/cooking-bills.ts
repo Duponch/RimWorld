@@ -1,4 +1,5 @@
-import {isSmithingRecipe267,smithingInitialMaterial267,isSmithingProduct267} from './smithing-content-267.ts';
+import {isSchema267OrLater} from './schema-compatibility-257.ts';
+import {isSmithingRecipe267,smithingRecipeAvailable267,smithingInitialMaterial267,isSmithingProduct267} from './smithing-content-267.ts';
 import {isFutureEcologyItem256} from './cave-products-256.ts';
 import {isBurnApparelRecipe} from './burn-apparel-rules.ts';
 import {isPemmicanRecipe} from './pemmican-content.ts';
@@ -23,12 +24,12 @@ export const COOK_TICKS=60; // 300 reference work / 10 local ticks Ã— campfir
 export const INGREDIENT_UNITS=10; // 0.5 nutrition for the supported raw ingredients.
 export function newCookingBill(id:number,recipe:ProductionRecipe='simple-meal',version:number=SCHEMA_VERSION):CookingBill {
   const inputs=PRODUCTION_RECIPES[recipe].inputs.filter(i=>(version>=267||!isSmithingProduct267(i))&&(version>=256||!isFutureEcologyItem256(i))&&(version>=197||!V219_ITEM_IDS.some(future=>future===i)));
-  return {id,recipe,mode:'times',target:1,suspended:false,filters:Object.fromEntries(inputs.map(i=>[i,isCremationRecipe(recipe)?i==='human-corpse':isSmithingRecipe267(recipe)?smithingInitialMaterial267(i as import('./smithing-content-267.ts').SmithingMaterial267):(recipe==='smelt-slag'||!isSmeltingRecipe(recipe))&&!isBurnApparelRecipe(recipe)&&(recipe!=='chemfuel-from-organics'||(BIOFUEL_INITIAL_ORGANICS as readonly string[]).includes(i))])),radius:999,destination:isCremationRecipe(recipe)||isBurnApparelRecipe(recipe)?'drop':'stockpile',
+  return {id,recipe,mode:'times',target:1,suspended:false,filters:Object.fromEntries(inputs.map(i=>[i,isCremationRecipe(recipe)?i==='human-corpse':isSmithingRecipe267(recipe)?smithingInitialMaterial267(i as import('./smithing-content-267.ts').SmithingMaterial267,recipe):(recipe==='smelt-slag'||!isSmeltingRecipe(recipe))&&!isBurnApparelRecipe(recipe)&&(recipe!=='chemfuel-from-organics'||(BIOFUEL_INITIAL_ORGANICS as readonly string[]).includes(i))])),radius:999,destination:isCremationRecipe(recipe)||isBurnApparelRecipe(recipe)?'drop':'stockpile',
     ...(recipe==='smelt-weapon'||recipe==='smelt-apparel'||isBurnApparelRecipe(recipe))?{smeltFilter:{hpMin:0,hpMax:100,qualityMin:'awful',qualityMax:'legendary'}}:{},
     ...isCremationRecipe(recipe)?{cremationFilter:{colonists:true,strangers:true,fresh:true,rotting:true,desiccated:true}}:{}};
 }
 export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-meal',version:number=SCHEMA_VERSION):value is BillSettings {
-  if((isSmithingRecipe267(recipe)||recipe==='smelt-apparel')&&version!==267)return false;
+  if(isSmithingRecipe267(recipe)&&!smithingRecipeAvailable267(recipe,version)||recipe==='smelt-apparel'&&!isSchema267OrLater(version))return false;
   if(recipe==='brew-wort'&&version<265)return false;
   if(recipe==='smelt-slag'&&version<256)return false;
   if(isBurnApparelRecipe(recipe)&&version<251)return false;

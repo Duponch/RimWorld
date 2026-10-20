@@ -78,9 +78,15 @@ const originalTraceAdvance=advanceSimulation;advanceSimulation=now=>{const at=pe
  }
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
  if(process.env.HARVEST_PREINSTRUMENTED!=='1')await page.route('**/src/main.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:probe+await response.text()+probeTail});});
- await page.addInitScript(data=>localStorage.setItem('lisiere.save.v1',data),serializeWorld(w));
+ await page.addInitScript(data=>{
+  localStorage.setItem('lisiere.audio.effects.enabled.v1','false');
+  localStorage.setItem('lisiere.audio.music.enabled.v1','false');
+  localStorage.setItem('lisiere.save.v1',data);
+ },serializeWorld(w));
  await page.goto(process.env.HARVEST_URL??'http://127.0.0.1:5173/?scenario=camp&e2e&size=250');await page.waitForFunction(()=>!!window.__lisiere);
  await page.waitForFunction(()=>!!window.__sync);
+ if(await page.locator('#sound-enabled').isChecked()||await page.locator('#music-enabled').isChecked())throw Error('Presentation checks must disable sound effects and music before play');
+ report.audio={effects:false,music:false,browserMuted:true};
  const prepareStarted=performance.now();
  await page.waitForFunction(()=>!document.querySelector('.game-shell').inert&&!document.querySelector('[data-speed="0"]').disabled,undefined,{timeout:60000}).catch(async error=>{
   report.preparationFailure={action,errors,elapsed:performance.now()-prepareStarted,state:await page.evaluate(()=>({preparing:window.__sync?.view?.preparing,backend:window.__lisiere?.backend,tick:window.__lisiere?.world?.tick,text:document.querySelector('.front-menu')?.textContent}))};

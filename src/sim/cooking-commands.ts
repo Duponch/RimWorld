@@ -1,4 +1,5 @@
-import {isSmithingRecipe267} from './smithing-content-267.ts';
+import {smithingRecipeAvailable267,isSmithingRecipe267} from './smithing-content-267.ts';
+import {isSchema267OrLater} from './schema-compatibility-257.ts';
 import {isBurnApparelRecipe} from './burn-apparel-rules.ts';
 import {hasTravellingCargo,interruptWork} from './interrupted-cargo.ts';
 import { productionResearchUnlocked } from './machining.ts';
@@ -17,7 +18,7 @@ export function applyBillCommand(world:World,command:BillCommand,drops:DropPlan)
   if(!station?.bills)return {ok:false,code:'missing-target',reason:'Poste de production introuvable.'};
   if(command.type==='bill-add') {
     if(station.bills.length>=64||!Number.isSafeInteger(world.nextId+1))return {ok:false,code:'invalid-command',reason:'Limite de factures atteinte.'};
-    const recipe=command.recipe??stationRecipe(station)!;if((isSmithingRecipe267(recipe)||recipe==='smelt-apparel')&&world.schemaVersion!==267||isBurnApparelRecipe(recipe)&&world.schemaVersion<251||recipe==='make-pemmican'&&world.schemaVersion<248||isKibbleRecipe(recipe)&&world.schemaVersion<227||isCremationRecipe(recipe)&&world.schemaVersion<225||isSmeltingRecipe(recipe)&&world.schemaVersion<222||!stationAccepts(station,recipe)||!productionResearchUnlocked(world,recipe))return {ok:false,code:'invalid-command',reason:'Recette indisponible : vérifiez le poste et sa recherche préalable.'};
+    const recipe=command.recipe??stationRecipe(station)!;if(isSmithingRecipe267(recipe)&&!smithingRecipeAvailable267(recipe,world.schemaVersion)||recipe==='smelt-apparel'&&!isSchema267OrLater(world.schemaVersion)||isBurnApparelRecipe(recipe)&&world.schemaVersion<251||recipe==='make-pemmican'&&world.schemaVersion<248||isKibbleRecipe(recipe)&&world.schemaVersion<227||isCremationRecipe(recipe)&&world.schemaVersion<225||isSmeltingRecipe(recipe)&&world.schemaVersion<222||!stationAccepts(station,recipe)||!productionResearchUnlocked(world,recipe))return {ok:false,code:'invalid-command',reason:'Recette indisponible : vérifiez le poste et sa recherche préalable.'};
     station.bills.push(newCookingBill(world.nextId++,recipe,world.schemaVersion));return {ok:true};
   }
   const index=station.bills.findIndex(b=>b.id===command.billId),bill=station.bills[index];

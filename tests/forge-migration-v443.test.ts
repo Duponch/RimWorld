@@ -12,7 +12,7 @@ import {addMaterial} from '../src/sim/materials.ts';
 import {ARMOR_STUFFS267,isSmithingApparel267} from '../src/sim/smithing-apparel-267.ts';
 import {smithingWorkTotal267} from '../src/sim/smithing-content-267.ts';
 import {validSmithingHistoricalTransport267} from '../src/sim/smithing-catalogue-save-267.ts';
-import type {World,MaterialPile,Structure} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type World,type MaterialPile,type Structure} from '../src/sim/types.ts';
 
 const REFERENCES=[
  ['Les Forges','v432/les-forges-crash-test.json'],
@@ -28,15 +28,15 @@ function publicPayload(path:string):string {
 type Legacy266=Omit<World,'schemaVersion'>&{schemaVersion:266};
 function legacy(w:World):Legacy266 {Object.assign(w,{schemaVersion:266});return w as unknown as Legacy266;}
 
-test.each(REFERENCES)('%s upgrades a strict complete266 witness to267 by version number only',(label,path)=>{
+test.each(REFERENCES)('%s upgrades a strict complete266 witness to the current schema by version number only',(label,path)=>{
  // The public sources predate266. Their ordinary pre-existing migrations are
  // applied first; this is an explicit266 witness, never called a raw266 file.
- const admitted=deserializeWorld(publicPayload(path));expect(admitted.schemaVersion).toBe(267);
+ const admitted=deserializeWorld(publicPayload(path));expect(admitted.schemaVersion).toBe(SCHEMA_VERSION);
  const old=legacy(admitted),bytes=JSON.stringify(old),before=JSON.parse(bytes),loaded=deserializeCampaign(bytes);
  // The reader performs strict266 validation BEFORE the number changes;
- // validateWorld/serializeCampaign deliberately accept current267 only.
+ // validateWorld/serializeCampaign deliberately accept the current schema only.
  expect(validateWorld(loaded)).toEqual([]);
- expect(loaded.schemaVersion).toBe(267);expect(JSON.parse(serializeCampaign(loaded)),label).toEqual({...before,schemaVersion:267});
+ expect(loaded.schemaVersion).toBe(SCHEMA_VERSION);expect(JSON.parse(serializeCampaign(loaded)),label).toEqual({...before,schemaVersion:SCHEMA_VERSION});
  expect(JSON.stringify(old)).toBe(bytes);
  // This includes complete maps, all original/terminal actors and possessions,
  // research, policies, timers, histories, allocators and PRNG streams.
@@ -49,7 +49,7 @@ function oldCamp(){
  const f=reorganizationCamp256();
  for(const policy of f.w.apparelPolicies!){Object.assign(policy,{allowedItems:policy.allowedItems.filter(i=>!isSmithingApparel267(i)),allowedMaterials:policy.allowedMaterials.filter(m=>!(ARMOR_STUFFS267 as readonly string[]).includes(m))});}
  addMaterial(f.w,'wood',1,{type:'ground',x:4,z:4},'wood');legacy(f.w);
- const bytes=JSON.stringify(f.w);expect(deserializeCampaign(bytes).schemaVersion).toBe(267);expect(JSON.stringify(f.w)).toBe(bytes);return f;
+ const bytes=JSON.stringify(f.w);expect(deserializeCampaign(bytes).schemaVersion).toBe(SCHEMA_VERSION);expect(JSON.stringify(f.w)).toBe(bytes);return f;
 }
 const plate=(w:World,owner:MaterialPile['owner']={type:'ground',x:3,z:3}):MaterialPile=>({id:w.nextId++,item:'steel-plate-armor',kind:'apparel',quantity:1,owner,apparel:newApparelState('steel-plate-armor')});
 const work=(w:World)=>({recipe:'make-plate-armor' as const,material:'steel' as const,authorId:w.pawns[0]!.id,progress:100,parts:[{item:'steel' as const,quantity:75},{item:'steel' as const,quantity:75},{item:'steel' as const,quantity:20}]});
@@ -57,7 +57,7 @@ const smithy=(w:World):Structure=>({id:w.nextId++,kind:'fueled-smithy',x:3,z:6,o
 
 test('266 refuses future goods, recipes, work markers, policy Stuff and packed targets before migration, without touching the caller',()=>{
  const {w,g}=oldCamp(),control=JSON.stringify(w),neutral=deserializeCampaign(control);
- expect(JSON.parse(serializeCampaign(neutral))).toEqual({...JSON.parse(control),schemaVersion:267});
+ expect(JSON.parse(serializeCampaign(neutral))).toEqual({...JSON.parse(control),schemaVersion:SCHEMA_VERSION});
  for(const [label,mutate] of [
   ['finished local apparel',(v:World)=>{v.piles.push(plate(v));}],
   ['actual away possession',(v:World)=>{const row=v.worldGroups!.groups.find(r=>r.state.id===g.id)!.state;if(!('members'in row))throw Error('Away owner missing');row.items.push(plate(v,{type:'inventory',pawnId:row.members[0]!.id}));}],
@@ -80,21 +80,21 @@ test('266 rejects future content in the actual inactive map and in public full e
  const {w}=oldCamp();
  // Restore current only to prepare an ordinary second map through the shared
  // helper, then retain that exact campaign as a266 historical control.
- Object.assign(w,{schemaVersion:267});preparedMap(w,52,'legacy-site',false);legacy(w);
+ Object.assign(w,{schemaVersion:SCHEMA_VERSION});preparedMap(w,52,'legacy-site',false);legacy(w);
  const control=JSON.stringify(w),bad=JSON.parse(control) as World,inactive=bad.worldMaps!.sites.find(s=>s.map)!.map!;
- expect(JSON.parse(serializeCampaign(deserializeCampaign(control)))).toEqual({...JSON.parse(control),schemaVersion:267});
+ expect(JSON.parse(serializeCampaign(deserializeCampaign(control)))).toEqual({...JSON.parse(control),schemaVersion:SCHEMA_VERSION});
  inactive.piles.push(plate(bad,{type:'ground',x:3,z:3}));const bytes=JSON.stringify(bad);
  expect(()=>deserializeCampaign(bytes)).toThrow();expect(JSON.stringify(bad)).toBe(bytes);expect(JSON.stringify(w)).toBe(control);
  const encoder=new SnapshotEncoder(),packet=structuredClone(encoder.encode(w,0,0));expect(new SnapshotDecoder().adopt(packet).status).toBe('applied');
  const forged=structuredClone(packet);if(forged.kind!=='checkpoint')throw Error('Expected full historical checkpoint');forged.world.piles.push(plate(forged.world));expect(new SnapshotDecoder().adopt(forged).status).toBe('resync');
 });
 
-test('267 strictly validates complete work receipts and same-tick public deltas, keeping the previously adopted instance unchanged after corruption',()=>{
+test('the current schema strictly validates complete work receipts and same-tick public deltas, keeping the previously adopted instance unchanged after corruption',()=>{
  const w=registryCamp();w.piles.push(plate(w));
  const unfinished:MaterialPile={id:w.nextId++,item:'unfinished-plate-armor',kind:'unfinished',quantity:1,owner:{type:'ground',x:5,z:5},smithingWork:work(w)};w.piles.push(unfinished);
  expect(validateWorld(w)).toEqual([]);const saved=serializeCampaign(w);expect(serializeCampaign(deserializeCampaign(saved))).toBe(saved);
  const encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder(),full=structuredClone(encoder.encode(w,0,0)),first=decoder.adopt(full);
- expect(first.status).toBe('applied');if(first.status!=='applied')throw Error('Valid267 work checkpoint refused');const retained=structuredClone(first.world);
+ expect(first.status).toBe('applied');if(first.status!=='applied')throw Error('Valid current work checkpoint refused');const retained=structuredClone(first.world);
  unfinished.smithingWork!.progress++;const tick=w.tick,delta=structuredClone(encoder.encode(w,0,0));expect(delta.kind).toBe('delta');expect(w.tick).toBe(tick);
  for(const [label,mutate] of [
   ['mixed materials',(p:MaterialPile)=>{p.smithingWork!.parts[0]!.item='gold';}],

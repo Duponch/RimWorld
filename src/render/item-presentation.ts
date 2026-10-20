@@ -52,9 +52,14 @@ export function itemGeometry(item:ItemId,quantity:number=ITEM_DEFINITIONS[item].
     if(item==='plasteel')for(const x of [-.075,.075])box(x,.245,0,.025,.018,.35,0xc3dedc);
   }else if(item==='silver'){
     for(const [x,z,h] of [[-.18,-.06,.06],[.06,-.1,.1],[.15,.13,.045],[-.10,.16,.035]])add('item-disc',x!,h!/2,z!, .20,h!, .20,color);
-  }else if(definition.kind==='weapon'||item==='unfinished-gun'){
-    const weapon=weaponVisual(item==='unfinished-gun'?'bolt-action-rifle':item);
-    for(const p of weapon?.parts??[])box(p.center[0]!, .07+p.center[2]!,p.center[1]!,p.size[0]!,p.size[2]!,p.size[1]!,item==='unfinished-gun'?color:p.color);
+  }else if(definition.kind==='weapon'||item==='unfinished-gun'||item==='unfinished-knife'){
+    const weapon=weaponVisual(item==='unfinished-gun'?'bolt-action-rifle':item==='unfinished-knife'?'plasteel-knife':item);
+    for(const [index,p] of (weapon?.parts??[]).entries()){
+      // The knife blank has no sharpened point or fitted guard yet. Its broad
+      // blade and bare tang reuse the original authored knife dimensions.
+      if(item==='unfinished-knife'&&(index===1||index===3))continue;
+      box(p.center[0]!, .07+p.center[2]!,p.center[1]!,p.size[0]!,p.size[2]!,p.size[1]!,item==='unfinished-gun'||item==='unfinished-knife'?color:p.color);
+    }
   }else if(item.endsWith('-plate-armor')||item==='unfinished-plate-armor'){
     add('item-vest',0,.13,0,.65,.24,.68,color);for(const side of [-1,1]){box(side*.28,.20,-.16,.21,.14,.24);box(side*.18,.08,.36,.24,.11,.28);}box(0,.27,.04,.22,.035,.29,0xb6bba7);
   }else if(item.endsWith('-simple-helmet')||item==='unfinished-simple-helmet'){

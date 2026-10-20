@@ -1,4 +1,5 @@
-import {isSmithingRecipe267,isSmithingWorkpiece267,smithingMaterialAllowed267,smithingStackLimit267,smithingUnits267,smithingWorkpiece267,smithingWorkTotal267} from './smithing-content-267.ts';
+import {isSmithingRecipe267,smithingRecipeAvailable267,isSmithingWorkpiece267,smithingMaterialAllowed267,smithingStackLimit267,smithingUnits267,smithingWorkpiece267,smithingWorkTotal267} from './smithing-content-267.ts';
+import {isSchema267OrLater} from './schema-compatibility-257.ts';
 import type {World} from './types.ts';
 
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype;
@@ -10,7 +11,7 @@ export function validSmithingWorkShape267(p:Record<string,unknown>,version:numbe
  if(!isSmithingWorkpiece267(p.item))return !Object.hasOwn(p,'smithingWork');
  const u=p.smithingWork;
  if(['unfinished','gunWork','flakWork','componentWork','artWork','apparel','weapon','egg','humanCorpse','mechCorpse'].some(k=>Object.hasOwn(p,k)))return false;
- if(version!==267||p.kind!=='unfinished'||p.quantity!==1||!record(p.owner)||!['ground','pawn','inventory'].includes(String(p.owner.type))||!closed(u,['recipe','material','authorId','progress','parts','billId'])||!['recipe','material','authorId','progress','parts'].every(k=>Object.hasOwn(u,k))||!isSmithingRecipe267(u.recipe)||!smithingMaterialAllowed267(u.recipe,u.material)||p.item!==smithingWorkpiece267(u.recipe)||!int(u.authorId,1)||!int(u.progress,0,smithingWorkTotal267(u.recipe,u.material))||Object.hasOwn(u,'billId')&&!int(u.billId,1)||!Array.isArray(u.parts)||!u.parts.length||u.parts.length>smithingUnits267(u.recipe,u.material))return false;
+ if(!isSchema267OrLater(version)||p.kind!=='unfinished'||p.quantity!==1||!record(p.owner)||!['ground','pawn','inventory'].includes(String(p.owner.type))||!closed(u,['recipe','material','authorId','progress','parts','billId'])||!['recipe','material','authorId','progress','parts'].every(k=>Object.hasOwn(u,k))||!isSmithingRecipe267(u.recipe)||!smithingRecipeAvailable267(u.recipe,version)||!smithingMaterialAllowed267(u.recipe,u.material)||p.item!==smithingWorkpiece267(u.recipe)||!int(u.authorId,1)||!int(u.progress,0,smithingWorkTotal267(u.recipe,u.material))||Object.hasOwn(u,'billId')&&!int(u.billId,1)||!Array.isArray(u.parts)||!u.parts.length||u.parts.length>smithingUnits267(u.recipe,u.material))return false;
  let units=0;
  for(const part of u.parts){if(!closed(part,['item','quantity'])||Reflect.ownKeys(part).length!==2||part.item!==u.material||!int(part.quantity,1,smithingStackLimit267(u.material)))return false;units+=part.quantity;}
  return units===smithingUnits267(u.recipe,u.material);

@@ -33,6 +33,7 @@ export function validatePileRecordShape(item:Record<string,unknown>,world:Pick<W
  const input={width:world.width,height:world.height,tick:validationTick};
  const coord=(v:Record<string,unknown>)=>integer(v.x,0,world.width-1)&&integer(v.z,0,world.height-1);
  const errors:string[]=[];
+ if(version<268&&item.item==='unfinished-knife')return ['Future knife manufacture.'];
  if(version<267&&(isSmithingProduct267(item.item)||isSmithingWorkpiece267(item.item)||Object.hasOwn(item,'smithingWork')))return ['Future smithing item.'];
  if(!validSmithingWorkShape267(item,version))errors.push('Invalid smithing work.');
  if(version<265&&['hops','wort','beer'].includes(String(item.item)))return ['Future brewing item.'];

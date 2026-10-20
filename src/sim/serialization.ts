@@ -1,3 +1,4 @@
+import {validKnifeHistoricalTransport268,validKnifeCatalogueDomains268} from './catalogue-save-268.ts';
 import {validSmithingHistoricalTransport267,validSmithingCatalogueDomains267} from './smithing-catalogue-save-267.ts';
 import {validateSmithingWorks267} from './smithing-save-267.ts';
 import {isSchema263OrLater} from './schema-compatibility-257.ts';
@@ -284,7 +285,7 @@ export function validateGeneratedLocalMap256(input:unknown,context:{readonly cal
       ||!record(input.site)||input.site.revision!==3||Object.hasOwn(input,'worldMaps')||Object.hasOwn(input,'worldGroups')||!context||!Number.isSafeInteger(context.calendarOrigin))return ['Expected an unpublished geographic local-map candidate with its actual campaign clock.'];
     if(context.settlement&&(!validGeographicSettlementDimensions262(Number(input.schemaVersion),input.width,input.height,context.settlementDimensions)||['scenario','expeditionSite','startingArrival'].some(k=>Object.hasOwn(input,k))))return ['A non-starting settlement must have its actual new geographic body, without arrival or Camp provenance.'];
     if(context.worldTarget263&&(!isSchema263OrLater(Number(input.schemaVersion))||input.width!==context.worldTarget263.context.dimensions.width||input.height!==context.worldTarget263.context.dimensions.height||!record(input.site)||worldTargetConstructionReason263(input as unknown as World,context.worldTarget263.context,Number(input.site.tileId),Number(input.width))||['scenario','expeditionSite','startingArrival'].some(k=>Object.hasOwn(input,k))))return ['World target generation differs from its real construction authority.'];
-    return validateSchema(input,input.schemaVersion as 256|257|258|259|260|261|262|263|264|265|266|267,false,undefined,context);
+    return validateSchema(input,input.schemaVersion as 256|257|258|259|260|261|262|263|264|265|266|267|268,false,undefined,context);
   }catch{return ['Invalid unpublished geographic local-map candidate.'];}
 }
 function validateSharedCampaign(root:CampaignState):string[] {const view=emptyCampaignOwner(root);brandCampaignContext(view,root);return validateCampaignSharedFields(view);}
@@ -292,6 +293,7 @@ function validateSharedCampaign(root:CampaignState):string[] {const view=emptyCa
  * The secondary view forwards the old campaign schema without migrating it. */
 function validateCampaignSchema(input:unknown,version:Parameters<typeof validateSchema>[1]):string[] {
   try{
+    if(!validKnifeHistoricalTransport268(input,version))return ['Historical save contains future knife manufacture.'];
     if(!historicalWorldSitesAbsent263(input,version))return ['Historical save contains future263 Site/settlement authority.'];
     if(!validCaravan261Historical(input,version))return ['Historical save contains future caravan261 state.'];
     if(!validCamp260Historical(input,version))return ['Historical save contains future Camp260 state.'];
@@ -317,7 +319,7 @@ function validateCampaignSchema(input:unknown,version:Parameters<typeof validate
     return errors;
   }catch{return ['Invalid second-site records or owner namespace.'];}
 }
-function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250 | 251 | 252 | 253 | 254 | 255 | 256 | 257 | 258 | 259 | 260 | 261|262|263|264|265|266|267, relationshipContext = true,registeredIds?:Set<number>,generatedContext?:{readonly calendarOrigin:number;readonly settlement?:true;readonly settlementDimensions?:Readonly<{width:number;height:number}>;readonly worldTarget263?:WorldTargetGenerated263},registeredNonStartingSettlement=false): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250 | 251 | 252 | 253 | 254 | 255 | 256 | 257 | 258 | 259 | 260 | 261|262|263|264|265|266|267|268, relationshipContext = true,registeredIds?:Set<number>,generatedContext?:{readonly calendarOrigin:number;readonly settlement?:true;readonly settlementDimensions?:Readonly<{width:number;height:number}>;readonly worldTarget263?:WorldTargetGenerated263},registeredNonStartingSettlement=false): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(raw)) return ['World must be an object.'];
@@ -348,6 +350,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
   let input=raw;
   if (version >= 5 && !oneOf(input.foodRules, ['legacy', 'adult'])) errors.push('Invalid food rules profile.');
   if (version < 5 && input.foodRules !== undefined) errors.push('Legacy save contains version 5 fields.');
+  if(!validKnifeCatalogueDomains268(input,version))errors.push('Future knife manufacture.');
   if(!validSmithingCatalogueDomains267(input,version))errors.push('Future smithing catalogue content.');
   if(!validBrewingCatalogueDomains265(input,version))errors.push('Future brewing catalogue content.');
   if(!validPemmicanCatalogueDomains(input,version))errors.push('Future pemmican catalogue content.');
@@ -792,6 +795,7 @@ export function serializeCampaign(world:CampaignState):string {
 export function deserializeCampaign(serialized: string): CampaignState {
   if (typeof serialized !== 'string' || !withinSaveTextLimit(serialized)) throw new Error('Invalid or oversized save.');
   let input: unknown = JSON.parse(serialized);
+  if(record(input)&&Number.isInteger(input.schemaVersion)&&!validKnifeHistoricalTransport268(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future knife manufacture.');
   if(!input||typeof input!=='object'||!validGeographicRenewalCampaignRaw262(input,Number((input as Record<string,unknown>).schemaVersion)))throw Error('Invalid or future geographic renewal before hydration.');
   if(!input||typeof input!=='object'||!validWorldPawnsEnvelope256(input,Number((input as Record<string,unknown>).schemaVersion),Number((input as Record<string,unknown>).tick)*10,Number((input as Record<string,unknown>).nextId)))throw Error('Invalid or future WorldPawns header before geographic hydration.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validPlanetGeographyHistorical256(input,Number(input.schemaVersion)))throw new Error('Invalid historical geographic ownership.');
@@ -1616,6 +1620,7 @@ export function deserializeCampaign(serialized: string): CampaignState {
   if(record(input)&&input.schemaVersion===264){const old=validateCampaignSchema(input,264);if(old.length)throw new Error('Invalid version264 save: '+old.join(' '));input.schemaVersion=265; /* Number only. No hops, wort, beer, fermentation, policy, alcohol, research, history or random draw is offered. */}
   if(record(input)&&input.schemaVersion===265){const old=validateCampaignSchema(input,265);if(old.length)throw new Error('Invalid version265 save: '+old.join(' '));input.schemaVersion=266; /* Number only. No past caravan rest, fatigue gain, comfort or service is invented. */}
   if(record(input)&&input.schemaVersion===266){const old=validateCampaignSchema(input,266);if(old.length)throw new Error('Invalid version266 save: '+old.join(' '));input.schemaVersion=267; /* Number only. No forge, armor, ingredient, policy, research or random draw is offered. */}
+  if(record(input)&&input.schemaVersion===267){const old=validateCampaignSchema(input,267);if(old.length)throw new Error('Invalid version267 save: '+old.join(' '));input.schemaVersion=268; /* Number only. No knife, receipt, bill, permission, progress, owner, ID or random draw is offered. */}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;
   if(hasLoadedRoot(world))consolidateLooseRocks(world);

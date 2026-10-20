@@ -1,4 +1,6 @@
-# Validation courante — V442
+# Validation courante — V444
+
+**V444 qualifiée localement — schéma 268 :** [Fabrication du couteau en plastacier](../gameplay/plasteel-knife-v444.md).55cas distincts/8fichiers acquis par reprises ; typage, build Pages, présentation et UI natives muettes acquis. Une notification ResizeObserver reste documentée ; menus finaux recontrôlés séparément. Publication en préparation ; ni suite complète ni campagne naturelle longue annoncée.
 
 **V443 publiée — schéma 267 :** [Forges, plaques et casque simple](../gameplay/smithing-v443.md). Chaîne physique des matières à l’habillement et à la récupération ; migration266 par numéro seul. 45cas nouveaux et42cas voisins acquis par reprises, typage et build Pages acquis. Présentation et UI natives muettes acquises ; publication575e6b1d/451ebf8b vérifiée ; aucun gain FPS global ni parité Core annoncé.
 

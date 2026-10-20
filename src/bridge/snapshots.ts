@@ -1,3 +1,4 @@
+import {validKnifeHistoricalTransport268} from '../sim/catalogue-save-268.ts';
 import {validSmithingHistoricalTransport267} from '../sim/smithing-catalogue-save-267.ts';
 import {validSmithingWorkShape267,validateSmithingWorks267} from '../sim/smithing-save-267.ts';
 import {validAlcoholWorld265} from '../sim/alcohol-state-265.ts';
@@ -1464,7 +1465,7 @@ export class SnapshotDecoder {
     if(!validSmeltingTransport(next,next.schemaVersion,powerTopology,true,validation.geometry))return resync('Fonderie, filtre, arme ou propriétaire de fusion invalide ou futur.');
     if(!validNutrientPasteTransport(next,next.schemaVersion,powerTopology))return resync('Pâte nutritive, source ou transport invalide.');
     if(!validOrbitalTransport(next,next.schemaVersion,powerTopology,identities))return resync('État orbital, propriétaire ou contact invalide.');
-    if(!validSmithyResearchTransport267(next,next.schemaVersion)||!validSmithingHistoricalTransport267(message,next.schemaVersion)||validateSmithingWorks267(next,next.schemaVersion).length)return resync('Forge, matière ou ouvrage invalide.');
+    if(!validKnifeHistoricalTransport268(message,next.schemaVersion)||!validSmithyResearchTransport267(next,next.schemaVersion)||!validSmithingHistoricalTransport267(message,next.schemaVersion)||validateSmithingWorks267(next,next.schemaVersion).length)return resync('Forge, matière ou ouvrage invalide.');
     if(!validAlcoholWorld265(next,next.schemaVersion))return resync('Alcool, politique ou propriétaire invalide.');
     if(!validBrewingHistoricalTransport265(message,next.schemaVersion)||!validFermentationWorld265(next,next.schemaVersion)||!validBrewingResearchTransport265(next,next.schemaVersion))return resync('Brassage, fermentation ou propriétaire invalide.');
     if(!validGeothermalWorld264(next,next.schemaVersion)||!validGeothermalResearchTransport(next,next.schemaVersion))return resync('Géothermie, phase ou propriétaire invalide.');

@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V444 qualifiée localement — schéma 268 :** [Fabrication du couteau en plastacier](gameplay/plasteel-knife-v444.md). Débouché physique des forges et de l’emplacement d’artisanat ;55cas ciblés acquis par reprises, présentation et UI natives muettes acquises avec réserve de mise en page. Publication en préparation ; ensemble2 toujours principal, victoire et qualification finale ouvertes.
+
 **V443 publiée — schéma 267 :** [Forges, plaques et casque simple](gameplay/smithing-v443.md). Chaîne physique des matières à l’habillement et à la récupération ; migration266 par numéro seul. 45cas nouveaux et42cas voisins acquis par reprises, typage et build Pages acquis. Présentation et UI natives muettes acquises ; publication575e6b1d/451ebf8b vérifiée ; aucun gain FPS global ni parité Core annoncé.
 
 **V442 publiée — schéma 266 :** [Reprise du repos en caravane](gameplay/caravan-rest-v442.md). La trace du repos réel suit les mêmes humains et animaux ; l’ancien rouge de continuation V441 passe avec ses assertions inchangées. 71 cas distincts dans 13 fichiers acquis par reprises ; typage et build Pages acquis. Présentation et UI natives muettes acquises ; V442 publiée. Aucun gain FPS ni parité Core annoncé.

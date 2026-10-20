@@ -5,7 +5,7 @@ import {healthRandom} from './health.ts';
 import {addMaterial,refreshStock} from './materials.ts';
 import {isCookingOrder} from './order-types.ts';
 import {releaseAssignments} from './work-release.ts';
-import {isSmithingRecipe267,smithingMaterialFromIngredients267,smithingWorkpiece267,type SmithingMaterial267,type SmithingRecipe267} from './smithing-content-267.ts';
+import {smithingRecipeAvailable267,isSmithingRecipe267,smithingMaterialFromIngredients267,smithingWorkpiece267,type SmithingMaterial267,type SmithingRecipe267} from './smithing-content-267.ts';
 import type {Cell,CommandResult,MaterialPile,Pawn,World} from './types.ts';
 
 export interface SmithingWork267 {
@@ -15,7 +15,7 @@ export interface SmithingWork267 {
 }
 /** Transform only delivered, homogeneous parts; first prove the workpiece slot. */
 export function beginSmithingWork267(w:World,p:Pawn):MaterialPile|null {
- const t=p.cooking;if(w.schemaVersion!==267||!t||!isSmithingRecipe267(t.recipe)||!allowedAreaWorkAllowed(w,p)||(p.motion?.end??0)>w.tick||p.moveCooldown>0||p.x!==t.spot.x||p.z!==t.spot.z)return null;
+ const t=p.cooking;if(!t||!isSmithingRecipe267(t.recipe)||!smithingRecipeAvailable267(t.recipe,w.schemaVersion)||!allowedAreaWorkAllowed(w,p)||(p.motion?.end??0)>w.tick||p.moveCooldown>0||p.x!==t.spot.x||p.z!==t.spot.z)return null;
  const recipe=t.recipe,item=smithingWorkpiece267(recipe);
  const station=w.structures.find(s=>s.id===t.stationId);if(!station)return null;
  if(t.ingredients.length===1&&t.ingredients[0]!.item===item){
@@ -37,7 +37,7 @@ export function beginSmithingWork267(w:World,p:Pawn):MaterialPile|null {
 /** Native Cancel refunds75% of each receipt. Refusal preserves both object/RNG. */
 export function cancelSmithingWork267(w:World,id:number):CommandResult {
  const pile=w.piles.find(q=>q.id===id),u=pile?.smithingWork;
- if(w.schemaVersion!==267||!pile||!u||pile.owner.type!=='ground')return {ok:false,code:'missing-target',reason:'Armure inachevée introuvable au sol.'};
+ if(!pile||!u||!smithingRecipeAvailable267(u.recipe,w.schemaVersion)||pile.owner.type!=='ground')return {ok:false,code:'missing-target',reason:'Ouvrage inachevé introuvable au sol.'};
  const random={rng:w.rng};let quantity=0;
  for(const part of u.parts){const raw=part.quantity*.75,whole=Math.floor(raw);quantity+=whole+(raw>whole&&healthRandom(random)<raw-whole?1:0);}
  const shadow={...w,piles:w.piles.filter(q=>q!==pile)},placements=planGroundPlacement(shadow,quantity,pile.owner,u.material);

@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V444 qualifiée localement — schéma 268 :** [Fabrication du couteau en plastacier](plasteel-knife-v444.md). Recette30plastacier à l’emplacement d’artisanat et aux deux forges ; ouvrage, auteur et progression physiques, sortie vers le couteau déjà jouable.55cas distincts acquis par reprises, présentation et UI natives muettes acquises avec réserve de mise en page ; publication en préparation. Autres matières et autres armes de mêlée différées.
+
 **V443 publiée — schéma 267 :** [Forges, plaques et casque simple](smithing-v443.md). 45cas nouveaux et42cas voisins acquis par reprises ; présentation et UI natives muettes acquises ; publication575e6b1d/451ebf8b vérifiée.
 
 | Contenu V443 | Acquisition et usage | Frontières et limites |

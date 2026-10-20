@@ -6,6 +6,7 @@ import { isCookingOrder } from './order-types.ts';
 import { groundCapacity,planGroundPlacement } from './ground-placement.ts';
 import { addGroundMaterial,refreshStock } from './materials.ts';
 import { ingredientPlaceFree } from './cooking-bills.ts';
+import {isSchema267OrLater} from './schema-compatibility-257.ts';
 import { isSmithingWorkpiece267 } from './smithing-content-267.ts';
 import { productionWorkTotal,isTailoring,unfinishedItem,PRODUCTION_RECIPES,tailoringMaterialFromIngredients,tailoringMaterialAllowed,type TailoringMaterial,type TailoringRecipe } from './production-recipes.ts';
 import type { Cell,CommandResult,MaterialPile,Pawn,World } from './types.ts';
@@ -75,7 +76,7 @@ export function cancelUnfinished(world:World,itemId:number):CommandResult {
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):boolean=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 export function validUnfinishedShape(p:Record<string,unknown>,version:number):boolean {
-  if(isSmithingWorkpiece267(p.item))return version===267&&!Object.hasOwn(p,'unfinished');
+  if(isSmithingWorkpiece267(p.item))return isSchema267OrLater(version)&&(p.item!=='unfinished-knife'||version===268)&&!Object.hasOwn(p,'unfinished');
   if(p.item==='unfinished-flak-vest'||p.item==='unfinished-flak-helmet'||p.item==='unfinished-recon-helmet'||p.item==='unfinished-recon-armor'||p.item==='unfinished-gun'||p.item==='unfinished-sculpture'||p.item==='unfinished-component')return p.unfinished===undefined;
   if(p.kind!=='unfinished')return p.unfinished===undefined;
   const u=p.unfinished;

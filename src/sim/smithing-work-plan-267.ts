@@ -4,7 +4,7 @@ import {cookingSpot,ingredientPlaceFree} from './cooking-bills.ts';
 import {groundCapacity} from './ground-placement.ts';
 import {reservedSource} from './materials.ts';
 import {routeToJob,type Reachability} from './pathfinding.ts';
-import {isSmithingRecipe267,smithingWorkpiece267} from './smithing-content-267.ts';
+import {smithingRecipeAvailable267,isSmithingRecipe267,smithingWorkpiece267} from './smithing-content-267.ts';
 import type {CookingPlan} from './cooking-planner.ts';
 import type {CookingBill} from './cooking-types.ts';
 import type {Cell,Pawn,Structure,World} from './types.ts';
@@ -12,7 +12,7 @@ import type {Cell,Pawn,Structure,World} from './types.ts';
 /** A bound unfinished piece blocks a second manufacture even if its author
  * is away or its current location cannot be reached. No ingredient substitution. */
 export function planSmithingWork267(w:World,p:Pawn,s:Structure,b:CookingBill,reach:Reachability,budget:{pairs:number}):{handled:boolean;plan?:CookingPlan} {
- if(w.schemaVersion!==267||!isSmithingRecipe267(b.recipe))return {handled:false};
+ if(!isSmithingRecipe267(b.recipe)||!smithingRecipeAvailable267(b.recipe,w.schemaVersion))return {handled:false};
  const policy=captureAllowedArea(w,p),allows=(c:Cell)=>!policy||allowedAreaAllows(w,p,c,policy);
  if(!allows(s))return {handled:false};
  const bound=w.piles.find(q=>q.smithingWork?.billId===b.id),spot=cookingSpot(s);
