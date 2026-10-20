@@ -1,6 +1,6 @@
 # V442 — Reprise du repos des caravanes
 
-20 octobre 2026, schéma **266**. Qualification ciblée, présentation et parcours UI acquis ; publication en préparation. Ce correctif fait avancer les campagnes durables, sans clore les six ensembles Core.
+20 octobre 2026, schéma **266**, lot publié après qualification ciblée, présentation et parcours UI acquis. Ce correctif fait avancer les campagnes durables, sans clore les six ensembles Core.
 
 ## Résultat et règle conservée
 
@@ -29,3 +29,9 @@ Typage acquis, build Pages5,304s acquis ; avertissements de taille du paquet con
 Mesure pure du nouveau garde, Node24.11.1,321acteurs originaux des Forges335, dix chauffes puis sept répétitions de200parcours : médiane **0,02454ms** par parcours sans trace, maximum0,04845ms ; cas synthétique où les321acteurs portent une trace, médiane0,22440ms, maximum0,31117ms. Les Forges d’origine restent entières et inchangées. Ce microbanc ne mesure ni adoption complète, ni simulation, navigateur, GPU ou FPS ; le cas synthétique n’est pas une histoire de repos acquise. Rapport privé `tmp/caravan-rest-v442/guard-cost.json`.
 
 Présentation native acquise en165,459s : minage/abattage, phases et vitesses, rapport `tmp/test-runs/caravan-rest-v442-presentation/artifacts/`. Puis paquet compilé dans Chrome155.0.8059.85/WebGPU, lancement muet et vraies options Effets/Musique décochées : import du checkpoint acquis au10, inspection Monde→caravane1 des mêmes Ada/Noé, deux vraies commandes Reprendre/Suspendre avec horloge globale en pause. **Export entier strictement égal au fichier importé, tick10 inchangé**, traces, propriétaires, PRNG et histoire compris. Aucun état injecté dans l’application. Parcours28,614s, rapport/captures `tmp/caravan-rest-v442/native-ui/2026-10-20T21-01-10-645Z/`. Aucune erreur page/rendu ; requête musicale annulée lors de la coupure conservée. La petite carte du témoin ne sert pas de référence de charge ou de preuve FPS ; le contrôle de présentation reste en250². Navigateur de contrôle fermé après le parcours.
+
+## Livraison
+
+Produit **71b8e0d3399daed5412c9c264390cb9d3e67990c** commité et poussé sur `origin/main`. Paquet Pages550fichiers/151860652octets ;71chemins publics de sauvegardes/68fiches et tous les fichiers statiques hors JavaScript/index strictement identiques au paquet V441 qualifié. Aucun asset ajouté, référence privée ou sonde publiée. Rapport `tmp/elsewhere-pages/v442-package-rX7SzG/` ;1807empreintes produit inchangées pendant les contrôles.
+
+[Déploiement cf417507](https://cf417507.elsewhere-cq7.pages.dev), [site public](https://elsewhere-cq7.pages.dev), Wrangler4.149.0 : **16réponses HTTPS200/MIME/octets exacts** sur les deux origines pour les entrées, CSS, JavaScript, deux Workers et manifeste. Rapport `tmp/elsewhere-pages/v442-http-XDYBaJ/` ; HEAD produit, paquet et sauvegardes inchangés pendant la vérification. Les gros fichiers et anciennes images inchangés sont comparés intégralement dans le paquet ; ils ne sont pas téléchargés à nouveau pour ce correctif. Ce contrôle ciblé ne vaut pas nouvelle mesure de gameplay/FPS ni nouvelle vérification distante de tous les assets historiques. Avertissement de dépôt non propre lié au seul `references_UI/` non suivi et préservé. Serveurs privés et navigateur de contrôle fermés ; tests silencieux maintenus, jamais supprimés.

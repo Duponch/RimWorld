@@ -1,6 +1,6 @@
 # Plan de développement
 
-**V442 — schéma 266, qualification ciblée acquise :** [Reprise du repos en caravane](gameplay/caravan-rest-v442.md). La trace du repos réel suit les mêmes humains et animaux ; l’ancien rouge de continuation V441 passe avec ses assertions inchangées. 71 cas distincts dans 13 fichiers acquis par reprises ; typage et build Pages acquis. Présentation et UI natives muettes acquises ; publication en préparation. Aucun gain FPS ni parité Core annoncé.
+**V442 publiée — schéma 266 :** [Reprise du repos en caravane](gameplay/caravan-rest-v442.md). La trace du repos réel suit les mêmes humains et animaux ; l’ancien rouge de continuation V441 passe avec ses assertions inchangées. 71 cas distincts dans 13 fichiers acquis par reprises ; typage et build Pages acquis. Présentation et UI natives muettes acquises ; V442 publiée. Aucun gain FPS ni parité Core annoncé.
 
 **V441 publiée — schéma 265 :** [Brassage, fermentation et alcool](gameplay/brewing-v441.md). Filière physique houblon → moût → bière, politiques partagées et clinique prospective. 60 nouveaux cas acquis par reprises ; un rouge historique de repos en caravane conservé. Présentation et UI native muette acquises. Aucune parité Core ni amélioration FPS annoncée.
 
