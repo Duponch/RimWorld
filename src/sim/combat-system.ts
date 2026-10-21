@@ -24,7 +24,7 @@ export function advanceWorldCombat(world:World,contacts?:SpikeTrapWindow):void {
   const people=world.pawns.filter(p=>p.shooting||p.melee),targets=new Set(people.map(p=>p.melee?.order?.targetId));
   const animalTargets=new Set(world.wildlife?.animals.flatMap(a=>a.predation?[a.predation.targetId]:[])??[]);
   const shooters=[...people,...(world.mechanoids?.filter(m=>m.melee||m.ranged||m.stun||m.emp||m.stagger)??[]),...(world.wildlife?.animals.filter(a=>a.predation||a.manhunter||a.threat||a.strike||a.retaliation||a.stun||targets.has(a.id)||animalTargets.has(a.id))??[])].sort((a,b)=>a.id-b.id);
-  const turrets=world.structures.filter(s=>s.kind==='mini-turret'&&s.turret),explosiveCaskets=world.structures.filter(s=>s.kind==='ancient-cryptosleep-casket'&&s.casketWick);
+  const turrets=world.structures.filter(s=>s.kind==='mini-turret'&&s.turret),explosiveCaskets=world.structures.filter(s=>(s.kind==='ancient-cryptosleep-casket'||s.kind==='cryptosleep-casket')&&s.casketWick);
   if(!shooters.length&&!turrets.length&&!explosiveCaskets.length){const emp=world.structures.some(s=>s.emp)||world.packed.some(p=>p.building.emp);
     advanceWorldProjectiles(world,contacts||mechRaidGroups261(world).length>0||emp?core=>{
       const changed=contacts?.advance(core)??false,before=world.mechanoids?.length;

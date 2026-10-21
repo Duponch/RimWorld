@@ -1,4 +1,6 @@
 import {validCraftingFuelDestination269} from './fuel-purpose-save-269.ts';
+import {validCryptosleepTaskField271} from './cryptosleep-task-save-271.ts';
+import {memoryExpiry271,validSuspendedMemory271} from './suspended-memory-271.ts';
 import {validWorldAffiliationFields259,validWorldAffiliationForeignKeys259} from './world-affiliation-259.ts';
 import {validCaravanRestField266} from './caravan-rest-state-266.ts';
 import {validPrisonerStateRecord259} from './prisoner-save.ts';
@@ -60,22 +62,37 @@ const record = (value: unknown): value is Record<string, unknown> => typeof valu
 const integer = (value: unknown, min: number, max = Number.MAX_SAFE_INTEGER): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value >= min && value <= max;
 const bounded = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100;
 const oneOf = (value: unknown, values: string[]): boolean => typeof value === 'string' && values.includes(value);
+function validMealMemoryClock271(memory:Record<string,unknown>,version:number,tick:number,civilTick:number):boolean {
+ const born=Number(memory.expiresAt)-TICKS_PER_DAY;
+ if(!validSuspendedMemory271(memory,version,tick,born))return false;
+ // Preserve literal historical admission when no new suspension is present.
+ if(civilTick===tick&&!Object.hasOwn(memory,'suspendedTicks'))return integer(memory.expiresAt,tick+1,tick+TICKS_PER_DAY);
+ const observed=Math.max(tick,born);
+ return integer(born,0,civilTick)&&integer(memoryExpiry271(memory,Number(memory.expiresAt)),observed+1,observed+TICKS_PER_DAY);
+}
 
 export type PawnRecordContext=Pick<World,'width'|'height'|'tick'|'nextId'>&Partial<Pick<World,'worldFactions'>>;
-export function validatePawnRecordShape(item:Record<string,unknown>,world:World,version:number,validationTick=world.tick):string[] {return pawnRecordShape(item,world,version,validationTick,false);}
+export function validatePawnRecordShape(item:Record<string,unknown>,world:World,version:number,validationTick=world.tick,heldPlayer271?:{casketId:number;heldAt:number}):string[] {return pawnRecordShape(item,world,version,validationTick,false,undefined,heldPlayer271);}
+/** A real removed-map holder, after actual local bed/area cleanup. Scalar
+ * context only; it grants no fabricated map or local task authority. */
+export function validateRetainedPlayerCasketPawnShape271(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick:number,heldPlayer271:{casketId:number;heldAt:number}):string[] {return pawnRecordShape(item,context,version,validationTick,true,undefined,{...heldPlayer271,retained:true});}
 /** Personal record only: detached owners cannot acquire local bed/area authorities. */
 export function validateDetachedPawnRecordShape(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick=context.tick):string[] {return pawnRecordShape(item,context,version,validationTick,true);}
 /** Away ownership has real origin IDs, never manufactured Area objects. */
 export function validateAwayPawnRecordShape(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick:number,areaIds:ReadonlySet<number>):string[] {return pawnRecordShape(item,context,version,validationTick,true,areaIds);}
-function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,version:number,validationTick:number,detached:boolean,awayAreaIds?:ReadonlySet<number>):string[] {
+function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,version:number,validationTick:number,detached:boolean,awayAreaIds?:ReadonlySet<number>,heldPlayer271?:{casketId:number;heldAt:number;retained?:true}):string[] {
   const input=world as unknown as Record<string,unknown>;
   const legacyV2=version===2, size=world.width*world.height, errors:string[]=[];
+  const held=Object.getOwnPropertyDescriptor(item,'cryptosleepHeldAt271');
+  if(heldPlayer271?(version!==271||detached&&!heldPlayer271.retained||heldPlayer271.heldAt!==validationTick||!held?.enumerable||!Object.hasOwn(held,'value')||held.value!==validationTick):'cryptosleepHeldAt271'in item)errors.push('Invalid actual player-casket suspension authority.');
+  if(!validCryptosleepTaskField271(item,version,validationTick,world.nextId)||detached&&Object.hasOwn(item,'cryptosleepTask'))errors.push('Invalid or future player-casket task.');
+  const memoryCivil=heldPlayer271?world.tick:validationTick;
   if(!validCaravanRestField266(item,version,item.state==='dead'&&typeof (item.health as {death?:{tick?:number}}|undefined)?.death?.tick==='number'?(item.health as {death:{tick:number}}).death.tick:validationTick))errors.push('Invalid or future caravan rest receipt.');
   if(Object.hasOwn(item,'brewing')&&(version<265||detached))return ['Invalid or future detached fermentation task.'];
   if(!validWorldAffiliationFields259(item,version)||Object.hasOwn(item,'prisonerHistory259')&&!validPrisonerStateRecord259(item.prisonerHistory259,version,input as unknown as World,true))return ['Invalid or future actual guest affiliation/history.'];
   if((!detached||Object.hasOwn(world,'worldFactions'))&&!validWorldAffiliationForeignKeys259(item as unknown as import('./types.ts').Pawn,world.worldFactions))return ['Invalid actual Pawn faction/host foreign key.'];
   if(!validNativeHumanField256(item,version))errors.push('Invalid or future actual native human identity.');
-  if(!validHiveDefeatMemory256(item,version,validationTick))errors.push('Invalid or future Hive defeat memory.');
+  if(!validHiveDefeatMemory256(item,version,memoryCivil))errors.push('Invalid or future Hive defeat memory.');
   if(!validArrivalRotation256(item,version))errors.push('Invalid or future arrival rotation.');
   if(!validAncientOpeningField256(item,version,validationTick,world.nextId))errors.push('Invalid or future actual casket opening.');
   if(!validActorMapBedField256(item,version,world.nextId))errors.push('Invalid or future original bed reference.');
@@ -88,11 +105,11 @@ function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,ver
   const coord=(value:Record<string,unknown>)=>integer(value.x,0,world.width-1)&&integer(value.z,0,world.height-1);
   if(!validPawnPodRescue(item,version,input as unknown as World))errors.push('Invalid or future pod rescue mandate for schema.');
   if(!validHumanAgeForPawn256(item,version))errors.push('Invalid or future human age.');
-  if(!validDeathThoughtsPawnShape(item,version,validationTick))errors.push('Invalid or future perceived death memory.');
+  if(!validDeathThoughtsPawnShape(item,version,validationTick,memoryCivil))errors.push('Invalid or future perceived death memory.');
   if(version<195&&(Object.hasOwn(item,'familyBereavement')||Object.hasOwn(item,'romanceMemories'))
-    ||!validFamilyBereavementShape(item.familyBereavement,version,validationTick)||!validRomanceMemoryShape(item.romanceMemories,version,validationTick))errors.push('Invalid or future family/romance memory shape.');
+    ||!validFamilyBereavementShape(item.familyBereavement,version,validationTick,memoryCivil)||!validRomanceMemoryShape(item.romanceMemories,version,validationTick,memoryCivil))errors.push('Invalid or future family/romance memory shape.');
   if(!validBackground(item.background,version,item.age as import('./human-age.ts').HumanAge|undefined))errors.push('Invalid or future colonist background.');
-  if(!validRoomExperience(item,version,validationTick))errors.push('Invalid or future room experience.');
+  if(!validRoomExperience(item,version,validationTick,memoryCivil))errors.push('Invalid or future room experience.');
   if(version>=90?(typeof item.beauty!=='number'||!Number.isFinite(item.beauty)||item.beauty<0||item.beauty>100):item.beauty!==undefined)errors.push('Invalid or future beauty need.');
   for(const field of ['apparelPolicyId','apparelAutomation','nextApparelCheckAt'])if(version<90&&item[field]!==undefined)errors.push('Legacy pawn contains apparel policy state.');
   if(!validPrisonerPawnShape(item,version,input as unknown as World,detached))errors.push('Invalid prisoner, warden or recruitment shape for schema.');
@@ -176,7 +193,7 @@ function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,ver
     if (version >= 5 ? !integer(item.need.quantity, 1, MAX_STACK) : item.need.quantity !== undefined) errors.push('Invalid meal quantity.');
   }
   if (version >= 4) {
-    if (!bounded(item.comfort) || !Array.isArray(item.memories) || item.memories.length > (version>=227?5:version>=217?4:version >= 152 ? 3 : version >= 8 ? 2 : 1) || item.memories.some(memory => !record(memory) || !oneOf(memory.kind, version>=227?['ate-without-table','ate-raw-food','ate-fine-meal','ate-lavish-meal','ate-nutrient-paste','ate-kibble']:version>=217?['ate-without-table','ate-raw-food','ate-fine-meal','ate-lavish-meal','ate-nutrient-paste']:version >= 154 ? ['ate-without-table', 'ate-raw-food', 'ate-fine-meal', 'ate-lavish-meal'] : version >= 152 ? ['ate-without-table', 'ate-raw-food', 'ate-fine-meal'] : version >= 8 ? ['ate-without-table', 'ate-raw-food'] : ['ate-without-table']) || !integer(memory.expiresAt, validationTick + 1, validationTick + TICKS_PER_DAY))) errors.push('Invalid comfort or meal memory.');
+    if (!bounded(item.comfort) || !Array.isArray(item.memories) || item.memories.length > (version>=227?5:version>=217?4:version >= 152 ? 3 : version >= 8 ? 2 : 1) || item.memories.some(memory => !record(memory) || !oneOf(memory.kind, version>=227?['ate-without-table','ate-raw-food','ate-fine-meal','ate-lavish-meal','ate-nutrient-paste','ate-kibble']:version>=217?['ate-without-table','ate-raw-food','ate-fine-meal','ate-lavish-meal','ate-nutrient-paste']:version >= 154 ? ['ate-without-table', 'ate-raw-food', 'ate-fine-meal', 'ate-lavish-meal'] : version >= 152 ? ['ate-without-table', 'ate-raw-food', 'ate-fine-meal'] : version >= 8 ? ['ate-without-table', 'ate-raw-food'] : ['ate-without-table']) || !validMealMemoryClock271(memory,version,validationTick,memoryCivil))) errors.push('Invalid comfort or meal memory.');
     else if (new Set(item.memories.map(memory => (memory as {kind:string}).kind)).size !== item.memories.length) errors.push('Duplicate meal memory.');
     else if (item.memories.some(memory => (memory as {kind:string}).kind === 'ate-fine-meal') && item.memories.some(memory => (memory as {kind:string}).kind === 'ate-lavish-meal')) errors.push('Conflicting meal memories.');
     if (record(item.need) && item.need.kind === 'eat') {

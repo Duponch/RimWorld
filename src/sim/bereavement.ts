@@ -1,3 +1,4 @@
+import {memoryExpiry271,memoryReadTick271} from './suspended-memory-271.ts';
 import { captureHumanOwners } from './human-owners.ts';
 import { campaignLivingObservers } from './campaign-people.ts';
 import { isColonist } from './affiliation.ts';
@@ -8,7 +9,7 @@ import { notifyFamilyDeath } from './family-bereavement.ts';
 import { notifyDeathThoughts } from './death-thoughts.ts';
 
 export type DeathMemoryKind='friend-died'|'rival-died';
-export interface DeathMemory {otherId:number;kind:DeathMemoryKind;at:number;opinion:number}
+export interface DeathMemory {otherId:number;kind:DeathMemoryKind;at:number;opinion:number;suspendedTicks?:number}
 
 export const FRIEND_DEATH_DURATION=20*TICKS_PER_DAY;
 export const RIVAL_DEATH_DURATION=10*TICKS_PER_DAY;
@@ -41,19 +42,21 @@ export function notifyPawnDeath(world:World,deceased:Pawn):void {
 }
 
 export function expireBereavement(pawn:Pawn,tick:number):void {
+  if(pawn.cryptosleepHeldAt271!==undefined)return;
   const memories=pawn.bereavement;if(!memories)return;
-  if(!memories.some(memory=>memory.at+deathMemoryDuration(memory.kind)<=tick))return;
-  pawn.bereavement=memories.filter(memory=>memory.at+deathMemoryDuration(memory.kind)>tick);
+  if(!memories.some(memory=>memoryExpiry271(memory,memory.at+deathMemoryDuration(memory.kind))<=tick))return;
+  pawn.bereavement=memories.filter(memory=>memoryExpiry271(memory,memory.at+deathMemoryDuration(memory.kind))>tick);
   if(!pawn.bereavement.length)delete pawn.bereavement;
 }
 
 /** Only HUD/tick callers evaluate thoughts; there is no render-frame scan. */
 export function bereavementThoughts(world:World,pawn:Pawn):MoodThought[] {return bereavementThoughtsAt(pawn,world.tick,{get:id=>world.pawns.find(p=>p.id===id)});}
 export function bereavementThoughtsAt(pawn:Pawn,tick:number,people:Pick<ReadonlyMap<number,{readonly name:string}>,'get'>):MoodThought[] {
+  tick=memoryReadTick271(pawn,tick);
   if(pawn.state==='dead')return [];
   const thoughts:MoodThought[]=[];
   for(const memory of pawn.bereavement??[]){
-    const expiresAt=memory.at+deathMemoryDuration(memory.kind);
+    const expiresAt=memoryExpiry271(memory,memory.at+deathMemoryDuration(memory.kind));
     if(expiresAt<=tick)continue;
     const person=people.get(memory.otherId);
     const friend=memory.kind==='friend-died';

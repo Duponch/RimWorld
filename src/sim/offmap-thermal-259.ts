@@ -1,3 +1,4 @@
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {nextHeatSeverity} from './heat-severity.ts';
 import {nextColdSeverity} from './cold-rules.ts';
 import {apparelInsulation} from './apparel-rules.ts';
@@ -33,7 +34,7 @@ export function advanceOffmapThermal259(actor:Actor,items:readonly MaterialPile[
  const h=actor.health,heat=h?.heatstroke??0,cold=h?.hypothermia??0;
  const nextHeat=nextHeatSeverity(heat,temperature,range.max),nextCold=nextColdSeverity(cold,temperature,range.min,true);
  if(nextHeat===heat&&nextCold===cold)return;
- const record=h??create();if(record.tick!==atCore/10)throw Error('Actual off-map thermal medical frontier differs from its owner');
+ const record=h??create();if(medicalCivilTick271(record)!==atCore/10)throw Error('Actual off-map thermal medical frontier differs from its owner');
  actor.health=record;
  if(nextHeat)record.heatstroke=nextHeat;else delete record.heatstroke;
  // Heat giver can kill before Hypothermia's turn; preserve that true barrier.

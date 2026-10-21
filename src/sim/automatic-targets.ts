@@ -20,7 +20,7 @@ function coneCells(grid:ShotGrid,from:Cell,to:Cell):Set<number> {
 export function automaticShotScore(world:World,p:Pawn,target:LivingTarget,grid:ShotGrid,from:Cell=p,to:Cell=target,carried:(id:number)=>boolean=id=>!!carrierOf(world,id)):number {
   let score=60-Math.min(40,Math.sqrt(distanceSquared(p,target)))-10*shotCover(grid,p,target,combatTargetKey(target)).blockChance;
   if(isAnimalTarget(target)?target.manhunter?.targetId===p.id:isPawnTarget(target)&&target.shooting?.order?.targetId===p.id||!isAnimalTarget(target)&&target.melee?.order?.targetId===p.id)score+=10;
-  if(p.lastAttack?.targetId===target.id&&world.tick*10-p.lastAttack.atCore<=300)score+=40;
+  if(p.lastAttack?.targetId===target.id&&world.tick*10-p.lastAttack.atCore-(p.lastAttack.suspendedTicks??0)*10<=300)score+=40;
   const cone=coneCells(grid,from,to);
   for(const other of world.pawns)if(other!==target&&other.state!=='dead'&&cone.has(other.z*grid.width+other.x)&&!carried(other.id)) {
     const factor=interceptionDistanceFactor(distanceSquared(from,other));

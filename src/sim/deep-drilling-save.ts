@@ -12,17 +12,21 @@ const kinds=['deep-drill','ground-scanner'];
 
 /** One transport/file contract for acquired reserves, building work and real
  * operator claims. Temporary power, light and roof conditions reconcile in play. */
-export function validDeepDrillingTransport(w:World,version:number,packedRecords?:readonly PackedFurniture[],clock:number=w.tick):boolean {
+export function validDeepDrillingTransport(w:World,version:number,packedRecords?:readonly PackedFurniture[],clock?:number):boolean;
+export function validDeepDrillingTransport(w:Pick<World,'tick'|'width'|'height'|'nextId'>,version:number,packedRecords:readonly PackedFurniture[],clock?:number):boolean;
+export function validDeepDrillingTransport(w:World|Pick<World,'tick'|'width'|'height'|'nextId'>,version:number,packedRecords?:readonly PackedFurniture[],clock:number=w.tick):boolean {
+  const local='structures'in w?w:undefined;if(!packedRecords&&!local)return false;
   try {
-    const archived=packedRecords?[]:[...(w.visitors?.departed??[]),...(w.podRescues?.departed??[])];
-    const buildings=packedRecords?packedRecords.map(p=>({s:p.building,tick:clock})):[...w.structures.map(s=>({s,tick:w.tick})),...(w.packed??[]).map(p=>({s:p.building,tick:w.tick})),
+    const archived=packedRecords?[]:[...(local!.visitors?.departed??[]),...(local!.podRescues?.departed??[])];
+    const buildings=packedRecords?packedRecords.map(p=>({s:p.building,tick:clock})):[...local!.structures.map(s=>({s,tick:w.tick})),...(local!.packed??[]).map(p=>({s:p.building,tick:w.tick})),
       ...archived.flatMap(d=>(d.packed??[]).map(p=>({s:p.building,tick:d.tick})))];
-    if(!packedRecords&&(archived.some(d=>Object.hasOwn(d.pawn,'deepWork'))||w.jobs.some(j=>Object.hasOwn(j,'deepDrill')||Object.hasOwn(j,'deepScanner'))))return false;
-    if(version<215)return !Object.hasOwn(w,'deepResources')
-      &&w.pawns.every(p=>!Object.hasOwn(p,'deepWork'))
-      &&[...buildings.map(p=>p.s),...w.jobs].every(s=>!kinds.includes(s.kind)&&!Object.hasOwn(s,'deepDrill')&&!Object.hasOwn(s,'deepScanner'));
+    if(!packedRecords&&(archived.some(d=>Object.hasOwn(d.pawn,'deepWork'))||local!.jobs.some(j=>Object.hasOwn(j,'deepDrill')||Object.hasOwn(j,'deepScanner'))))return false;
+    if(version<215&&packedRecords)return buildings.every(({s})=>!kinds.includes(s.kind)&&!Object.hasOwn(s,'deepDrill')&&!Object.hasOwn(s,'deepScanner'));
+    if(version<215)return !Object.hasOwn(local!,'deepResources')
+      &&local!.pawns.every(p=>!Object.hasOwn(p,'deepWork'))
+      &&[...buildings.map(p=>p.s),...local!.jobs].every(s=>!kinds.includes(s.kind)&&!Object.hasOwn(s,'deepDrill')&&!Object.hasOwn(s,'deepScanner'));
     if(!packedRecords){
-    const state:unknown=w.deepResources;
+    const state:unknown=local!.deepResources;
     if(state!==undefined){
       if(!obj(state)||!keys(state,['adoptedAt','rng','discoveries','cells'])||!int(state.adoptedAt,0,w.tick)
         ||!int(state.rng,1,0xffffffff)||!int(state.discoveries)||!Array.isArray(state.cells)||state.cells.length>w.width*w.height)return false;
@@ -32,7 +36,7 @@ export function validDeepDrillingTransport(w:World,version:number,packedRecords?
           ||!['steel','gold','silver','plasteel'].includes(String(c.item))||!int(c.count,1,300))return false;
         last=c.index;
       }
-    }else if(Object.hasOwn(w,'deepResources'))return false;
+    }else if(Object.hasOwn(local!,'deepResources'))return false;
     }
     for(const {s,tick} of buildings){
       const drill:unknown=s.deepDrill,scanner:unknown=s.deepScanner;
@@ -50,20 +54,20 @@ export function validDeepDrillingTransport(w:World,version:number,packedRecords?
     }
     if(packedRecords)return true;
     const claimed=new Set<number>(),spots=new Set<number>();
-    for(const p of w.pawns){
+    for(const p of local!.pawns){
       if(!Object.hasOwn(p,'deepWork'))continue;
-      if(!w.deepResources)return false;
+      if(!local!.deepResources)return false;
       const t:unknown=p.deepWork;
       if(!obj(t)||!keys(t,['structureId','spot','kind'])||!int(t.structureId,1,w.nextId-1)||!['drill','scan'].includes(String(t.kind))
         ||!obj(t.spot)||!keys(t.spot,['x','z'])||!int(t.spot.x,0,w.width-1)||!int(t.spot.z,0,w.height-1))return false;
-      const s=w.structures.find(s=>s.id===t.structureId),spot=t.spot.z*w.width+t.spot.x;
+      const s=local!.structures.find(s=>s.id===t.structureId),spot=t.spot.z*w.width+t.spot.x;
       if(!s||s.kind!==(t.kind==='drill'?'deep-drill':'ground-scanner')||claimed.has(s.id)||spots.has(spot))return false;
       const expected=deepWorkSpot(s);
       if(expected.x!==t.spot.x||expected.z!==t.spot.z||p.state==='working'&&(p.x!==t.spot.x||p.z!==t.spot.z||p.path.length||p.moveCooldown>0||(p.motion?.end??0)>w.tick))return false;
       // Match the file reader's active-service census. Admission reservations
       // also cover queued work and may waive an urgent bedside visitor.
-      for(const other of w.pawns)if(other!==p){
-        const cell=serviceCell(other,w);if(cell&&cell.x===t.spot.x&&cell.z===t.spot.z)return false;
+      for(const other of local!.pawns)if(other!==p){
+        const cell=serviceCell(other,local!);if(cell&&cell.x===t.spot.x&&cell.z===t.spot.z)return false;
       }
       claimed.add(s.id);spots.add(spot);
       if(!isColonist(p)||p.prisoner||p.visitor||p.raid||p.podRescue||p.draft||p.mental?.crisis||p.interruptedCargo
@@ -71,7 +75,7 @@ export function validDeepDrillingTransport(w:World,version:number,packedRecords?
         ||p.rescue||p.tend||p.surgery||p.feed||p.ward||p.equipmentTask||p.burial||p.cleaning||p.firefighting
         ||p.shooting||p.melee||p.flee||p.tactics||p.burning||p.heatRefuge||p.bombRefuge||p.trade
         ||p.recreation.task||p.orders.active!==null||!['moving','working'].includes(p.state)
-        ||w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id))return false;
+        ||local!.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id))return false;
       if(p.priorities[t.kind==='drill'?'mine':'research']===0)return false;
     }
     return true;

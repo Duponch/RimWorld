@@ -1,12 +1,24 @@
 # Guide joueur
 
+## Utiliser un caisson de cryptosommeil — V447 en qualification, non publiée
+
+Après **Multi-analyseur**, lancez **Cryptosommeil** dans Recherche : **2 000 points**, sur un **bureau avancé alimenté et réellement relié à un multi-analyseur alimenté**. Prévoyez un constructeur de niveau **8** et **180 acier, 5 uranium, 4 composants et 1 composant avancé** pour le caisson ordinaire. Les matières doivent être apportées au chantier ; le caisson terminé n’exige pas d’électricité.
+
+Donnez l’ordre **Entrer** à un adulte libre de la colonie, ou faites porter un adulte libre à terre par un autre colon capable. La personne reste sur la carte et continue à vivre pendant le trajet et les **500 ticks Core de fermeture** — 50 ticks locaux. Elle entre seulement à la fin du service réel.
+
+Une fois contenu, le même adulte conserve son inventaire, ses vêtements, son équipement et ses meubles emballés. Ses besoins, sa santé, son âge biologique et la durée de ses souvenirs sont suspendus ; il ne guérit pas dans le caisson et son âge chronologique continue. Son attribution de lit reste conservée à l’entrée ; un véritable retrait de carte la nettoie. Le caisson ne remplace pas un lit médical.
+
+**Un autre colon doit ouvrir** le caisson, après approche et **300 ticks Core au contact** — 30 ticks locaux. Prévoyez une place de sortie : la personne reprend avec ses biens et la maladie de cryptosommeil. L’avertissement avant l’entrée du dernier colon ne garantit aucun réveil ultérieur ; un adulte à terre peut compter comme autre colon sans pouvoir ouvrir.
+
+Les dégâts peuvent blesser l’occupant, déclencher une détonation et faire perdre des biens si leur dépôt échoue. Abandonner la carte ne réveille pas gratuitement la personne : le même caisson et ses contenus sont conservés par une adaptation déclarée, sans retour garanti vers l’ancien bâtiment. Ce caisson ordinaire ne permet **aucune victoire** ni embarquement spatial. La version en qualification compte **35 projets de recherche** et conserve **16 identités d’armes**. [Règles, adaptations et état des contrôles](cryptosleep-v447.md).
+
 ## Fabriquer une épée longue — V446 publiée
 
 Après **Forge**, ouvrez **Recherche** et lancez **Lames longues** : **400 points**, au bureau ordinaire ou à un bureau avancé utilisable. Activez Recherche dans Travail, puis **Artisanat** pour la fabrication. Choisissez un artisan de niveau **5**, une **Forge à combustible** ou une **Forge électrique**, puis ajoutez **Fabriquer une épée longue**.
 
 Prévoyez **100 unités d’une même matière** : bois, acier, plastacier ou uranium ; il faut **1 000 unités** pour l’argent ou l’or. Acier, plastacier et uranium sont cochés au départ ; les trois autres matières restent activables. L’artisan apporte les portions, garde son ouvrage et sa progression après interruption, puis termine une arme avec sa qualité et son état. L’emplacement d’artisanat et l’usinage ne proposent pas cette recette. Rangez le produit puis équipez-le par le clic droit habituel : l’épée pèse **2 kg** et peut frapper avec le manche, la pointe ou la lame.
 
-**Fondre une arme** récupère **25 unités** du métal usuel ou **250 unités** d’argent/or ; le bois ne fond pas. Le brûlage des armes par recette, les autres matières de couteaux et les autres familles manquantes restent ouverts ; les visiteurs ne gagnent aucun assortiment supplémentaire. Le catalogue compte **16 identités d’armes** et **34 projets de recherche**, sans compléter le Core. Aucune boucle de victoire ni vaisseau achevé n’est livré par V446. [Règles, conservation et qualification](longswords-v446.md).
+**Fondre une arme** récupère **25 unités** du métal usuel ou **250 unités** d’argent/or ; le bois ne fond pas. Le brûlage des armes par recette, les autres matières de couteaux et les autres familles manquantes restent ouverts ; les visiteurs ne gagnent aucun assortiment supplémentaire. Dans V446, le catalogue comptait **16 identités d’armes** et **34 projets de recherche**, sans compléter le Core. Aucune boucle de victoire ni vaisseau achevé n’est livré par V446. [Règles, conservation et qualification](longswords-v446.md).
 
 ## Fabriquer une masse — V445 publiée
 

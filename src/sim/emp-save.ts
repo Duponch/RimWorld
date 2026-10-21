@@ -44,31 +44,37 @@ export function validStructureEmpState(value:unknown,kind:unknown,version:number
 
 /** Installed devices and minified batteries retain the absolute disable clock.
  * Plans are references and never own an additional transient state. */
-export function validEmpStructureTransport(w:World,version:number=w.schemaVersion,packedRecords?:readonly PackedFurniture[],clock:number=w.tick):boolean {
-  if(!packedRecords)for(const s of w.structures)if(Object.hasOwn(s,'emp')&&(s.emp===undefined||!validStructureEmpState(s.emp,s.kind,version,w.tick)))return false;
+export function validEmpStructureTransport(w:World,version?:number,packedRecords?:readonly PackedFurniture[],clock?:number):boolean;
+export function validEmpStructureTransport(w:Pick<World,'schemaVersion'|'research'|'tick'>,version:number,packedRecords:readonly PackedFurniture[],clock?:number):boolean;
+export function validEmpStructureTransport(w:World|Pick<World,'schemaVersion'|'research'|'tick'>,version:number=w.schemaVersion,packedRecords?:readonly PackedFurniture[],clock:number=w.tick):boolean {
+  const local='structures'in w?w:undefined;if(!packedRecords&&!local)return false;
+  if(!packedRecords)for(const s of local!.structures)if(Object.hasOwn(s,'emp')&&(s.emp===undefined||!validStructureEmpState(s.emp,s.kind,version,w.tick)))return false;
   const copied=(v:unknown)=>object(v)&&Object.hasOwn(v,'emp');
   const packed=(p:unknown,tick:number)=>!copied(p)&&object(p)&&object(p.building)
     &&(!copied(p.building)||p.building.kind==='battery'&&p.building.emp!==undefined&&validStructureEmpState(p.building.emp,'battery',version,tick));
-  for(const p of packedRecords??w.packed??[])if(!packed(p,packedRecords?clock:w.tick))return false;
+  for(const p of packedRecords??local!.packed??[])if(!packed(p,packedRecords?clock:w.tick))return false;
   if(packedRecords)return true;
-  for(const j of w.jobs)if(copied(j)||copied(j.furniture)||copied(j.deconstruction))return false;
-  for(const records of [w.visitors?.departed??[],w.podRescues?.departed??[]])for(const departure of records)
+  for(const j of local!.jobs)if(copied(j)||copied(j.furniture)||copied(j.deconstruction))return false;
+  for(const records of [local!.visitors?.departed??[],local!.podRescues?.departed??[]])for(const departure of records)
     for(const p of departure.packed??[])if(!packed(p,departure.tick))return false;
   return true;
 }
 
 /** Prospective content gate shared by save and sparse transport. Existing
  * production guards still validate the common gun task/ingredients/claims. */
-export function validEmpProductionTransport(w:World,version:number=w.schemaVersion,packedRecords?:readonly PackedFurniture[]):boolean {
+export function validEmpProductionTransport(w:World,version?:number,packedRecords?:readonly PackedFurniture[]):boolean;
+export function validEmpProductionTransport(w:Pick<World,'schemaVersion'|'research'|'tick'>,version:number,packedRecords:readonly PackedFurniture[]):boolean;
+export function validEmpProductionTransport(w:World|Pick<World,'schemaVersion'|'research'|'tick'>,version:number=w.schemaVersion,packedRecords?:readonly PackedFurniture[]):boolean {
+  const local='structures'in w?w:undefined;if(!packedRecords&&!local)return false;
   const allowed=version>=208&&microelectronicsUnlocked(w);
-  for(const station of packedRecords?packedRecords.map(p=>p.building):[...w.structures,...(w.packed??[]).map(p=>p.building)])for(const bill of station.bills??[])
+  for(const station of packedRecords?packedRecords.map(p=>p.building):[...local!.structures,...(local!.packed??[]).map(p=>p.building)])for(const bill of station.bills??[])
     if(bill.recipe==='make-emp-launcher'&&(!allowed||station.kind!=='machining-table'||!validBillSettings(bill,bill.recipe,version)))return false;
   if(packedRecords)return true;
-  for(const pile of w.piles)if(pile.gunWork?.recipe==='make-emp-launcher'&&!allowed)return false;
-  for(const p of w.pawns){
+  for(const pile of local!.piles)if(pile.gunWork?.recipe==='make-emp-launcher'&&!allowed)return false;
+  for(const p of local!.pawns){
     if(p.cooking?.recipe==='make-emp-launcher'&&!allowed)return false;
     for(const order of p.orders?.queue??[])if(object(order)&&object(order.cooking)&&order.cooking.recipe==='make-emp-launcher'
-      &&(!allowed||!validCookingOrder(order,w)))return false;
+      &&(!allowed||!validCookingOrder(order,local!)))return false;
   }
   return true;
 }

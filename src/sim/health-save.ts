@@ -1,3 +1,4 @@
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {validToxicBuildupTransport256} from './toxic-buildup-save-256.ts';
 import {validCryptosleepSicknessTransport256} from './cryptosleep-sickness-save-256.ts';
 import { medicalStatus } from './injury-state.ts';
@@ -13,7 +14,7 @@ import type { Pawn,World } from './types.ts';
 export function validArtificialPartTransport(pawn:Pawn,version:number,clock:number):boolean {
   const record=pawn.health;if(!hasArtificialPartData(record))return true;
   if(!record||record.body!==undefined||validateMedicalRecord(record,true,true,true,true,false,false,true,true,true,true,true,version,version>=127)!==null
-    ||record.tick>clock||record.death?.tick!==undefined&&record.death.tick>clock)return false;
+    ||medicalCivilTick271(record)>clock||record.death?.tick!==undefined&&record.death.tick>clock)return false;
   const status=medicalStatus(record);
   return status==='mobile'?pawn.state!=='dead'&&pawn.state!=='downed':pawn.state===status;
 }
@@ -49,8 +50,8 @@ export function validatePawnHealthRecord(p:Pawn,world:Pick<World,'tick'|'width'|
     if(!validArtificialPartTransport(p,world.schemaVersion,world.tick))errors.push('Invalid or future artificial part anatomy.');
     if(!validToxicBuildupTransport256(p,world.schemaVersion,world.tick,world))errors.push('Invalid toxic buildup or actual clinical owner');
     if(!validCryptosleepSicknessTransport256(p,world.schemaVersion,world.tick,world))errors.push('Invalid or future cryptosleep sickness or episode owner.');
-    if(!validAnesthetic(h.anesthetic,h.tick,world.schemaVersion>=179,p.id%20))errors.push('Anesthetic cadence does not match its owner.');
-    if(h.death||allowEarlier?h.tick>world.tick:h.tick!==world.tick)errors.push('Medical clock does not match the world.');
+    if(!validAnesthetic(h.anesthetic,h.tick,world.schemaVersion>=179,p.id%20,medicalCivilTick271(h),world.schemaVersion))errors.push('Anesthetic cadence does not match its owner.');
+    if(h.death||allowEarlier?medicalCivilTick271(h)>world.tick:medicalCivilTick271(h)!==world.tick)errors.push('Medical clock does not match the world.');
     const vomit=h.foodPoisoning?.vomit;
     if(vomit&&(vomit.cell.x>=world.width||vomit.cell.z>=world.height))errors.push('Vomiting target is outside the map.');
     const fluVomit=h.flu?.vomit;

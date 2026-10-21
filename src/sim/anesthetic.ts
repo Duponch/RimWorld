@@ -2,6 +2,9 @@ import type { MedicalRandom, MedicalRecord } from './injury-types.ts';
 
 /** Human clinical condition, independent of an operation or sleeping task. */
 export interface AnestheticState {
+  /** Schema271: exact received pulse count at the most recent resume/dose.
+   * Its civil anchor is tick + the record's current civil/clinical offset. */
+  cadence271?:{tick:number;steps:number;bornAtCivil:number};
   bornAt:number;
   /** Exact Core deadline; the owning local tick removes it on crossing. */
   expiresAtCore:number;
@@ -44,6 +47,7 @@ export function administerAnesthetic(record:MedicalRecord,random:MedicalRandom):
   if(!Number.isFinite(draw)||draw<0||draw>=1)throw new Error('Invalid anesthetic random value');
   record.anesthetic={bornAt:record.tick,expiresAtCore:record.tick*10+ANESTHETIC_DELAY_MIN_CORE+
     Math.floor(draw*(ANESTHETIC_DELAY_MAX_CORE-ANESTHETIC_DELAY_MIN_CORE+1)),severity:ANESTHETIC_UNIT,remainder:0};
+  if(record.civilTick271!==undefined)record.anesthetic.cadence271={tick:record.tick,steps:0,bornAtCivil:record.civilTick271};
   return true;
 }
 
@@ -66,16 +70,36 @@ const integer=(value:unknown,min:number,max:number):value is number=>Number.isSa
  * Isolated records bound the unknown cadence to floor/ceil(elapsed/20). World
  * callers supply the owner phase to check the exact inclusive cadence count.
  * Decay/remainder must agree exactly in either case. */
-export function validAnesthetic(value:unknown,recordTick:number,allowed:boolean,phase?:number):boolean {
+export function validAnesthetic(value:unknown,recordTick:number,allowed:boolean,phase?:number,civilTick=recordTick,version=270):boolean {
   if(value===undefined)return true;
-  if(!allowed||!object(value)||Object.keys(value).some(key=>!['bornAt','expiresAtCore','severity','remainder'].includes(key))||
+  if(!allowed||!object(value)||Object.keys(value).some(key=>!['bornAt','expiresAtCore','severity','remainder',...(version===271?['cadence271']:[])].includes(key))||
     !integer(recordTick,0,Number.MAX_SAFE_INTEGER)||!Number.isSafeInteger(recordTick*10)||
     !integer(value.bornAt,0,recordTick)||!integer(value.expiresAtCore,recordTick*10+1,Number.MAX_SAFE_INTEGER)||
     !integer(value.severity,1,ANESTHETIC_UNIT)||!integer(value.remainder,0,LOSS_DENOMINATOR-1)||phase!==undefined&&!integer(phase,0,ANESTHETIC_INTERVAL-1))return false;
   const delay=value.expiresAtCore-value.bornAt*10;
   if(delay<ANESTHETIC_DELAY_MIN_CORE||delay>ANESTHETIC_DELAY_MAX_CORE)return false;
   const steps=((ANESTHETIC_UNIT-value.severity)*LOSS_DENOMINATOR+value.remainder)/LOSS_NUMERATOR;
+  const cadence=Object.getOwnPropertyDescriptor(value,'cadence271');
+  if(cadence||'cadence271'in value){
+    if(version!==271||!cadence||!Object.hasOwn(cadence,'value')||!cadence.enumerable||!object(cadence.value)||Object.getPrototypeOf(cadence.value)!==Object.prototype||Reflect.ownKeys(cadence.value).length!==3||!['tick','steps','bornAtCivil'].every(k=>{const d=Object.getOwnPropertyDescriptor(cadence.value,k);return !!d&&Object.hasOwn(d,'value')&&d.enumerable;}))return false;
+    const c=cadence.value;
+    if(!integer(civilTick,recordTick,Number.MAX_SAFE_INTEGER)||!integer(c.tick,value.bornAt,recordTick)||!integer(c.steps,0,Number.MAX_SAFE_INTEGER)||!integer(c.bornAtCivil,value.bornAt,civilTick)||c.bornAtCivil>c.tick+civilTick-recordTick||!Number.isSafeInteger(steps)||steps<c.steps)return false;
+    if(phase!==undefined)return steps===c.steps+Math.floor((civilTick-phase)/ANESTHETIC_INTERVAL)-Math.floor((c.tick+civilTick-recordTick-phase)/ANESTHETIC_INTERVAL);
+    const elapsed=recordTick-c.tick;return steps-c.steps>=Math.floor(elapsed/ANESTHETIC_INTERVAL)&&steps-c.steps<=Math.ceil(elapsed/ANESTHETIC_INTERVAL);
+  }
+  if(civilTick!==recordTick)return false;
   if(phase!==undefined)return Number.isSafeInteger(steps)&&steps===Math.floor((recordTick-phase)/ANESTHETIC_INTERVAL)-Math.floor((value.bornAt-phase)/ANESTHETIC_INTERVAL);
   const elapsed=recordTick-value.bornAt;
   return Number.isSafeInteger(steps)&&steps>=Math.floor(elapsed/ANESTHETIC_INTERVAL)&&steps<=Math.ceil(elapsed/ANESTHETIC_INTERVAL);
+}
+
+/** Factual dose date is captured before a later suspension changes its offset. */
+export function anestheticCivilBornAt271(record:MedicalRecord):number|undefined {return record.anesthetic?.cadence271?.bornAtCivil??record.anesthetic?.bornAt;}
+/** Pure checkpoint. The caller owns the original pawn/holder transaction. */
+export function prepareAnestheticResume271(record:MedicalRecord,phase:number,targetCivil:number):AnestheticState['cadence271']|undefined {
+ const a=record.anesthetic;if(!a)return;
+ const civil=record.civilTick271??record.tick;
+ if(!Number.isSafeInteger(targetCivil)||targetCivil<civil||!validAnesthetic(a,record.tick,true,phase,civil,271))throw Error('Invalid actual anesthetic suspension checkpoint');
+ const steps=((ANESTHETIC_UNIT-a.severity)*LOSS_DENOMINATOR+a.remainder)/LOSS_NUMERATOR;
+ return {tick:record.tick,steps,bornAtCivil:anestheticCivilBornAt271(record)!};
 }

@@ -1,3 +1,4 @@
+import {medicalCivilTick271,medicalCivilCore271} from './suspended-human-clock-271.ts';
 import {groupPawnInterval256} from './group-core-cadence-256.ts';
 import {animalConditionMtbEvent256} from './animal-age-condition-runtime-256.ts';
 import {animalClinicalRandom256} from './animal-condition-medical-frontier-256.ts';
@@ -13,7 +14,7 @@ const addictionMultiplier=(t:number):number=>t<=f(.5)?1+t*8:t<=f(.8)?5+(t-.5)/.3
 /** Exactly one real unit has already left its holder. No policy preview or
  * reservation can call this physiological producer. The stream is the owner. */
 export function ingestAlcoholDose265(record:MedicalRecord,bodySize:number,worldTick:number,random:MedicalRandom):AlcoholState265 {
- if(record.body!==undefined||record.death||!Number.isFinite(bodySize)||bodySize<=0||!Number.isSafeInteger(worldTick)||worldTick!==record.tick)throw Error('Beer requires its actual living human clinical owner');
+ if(record.body!==undefined||record.death||!Number.isFinite(bodySize)||bodySize<=0||!Number.isSafeInteger(worldTick)||worldTick!==medicalCivilTick271(record))throw Error('Beer requires its actual living human clinical owner');
  const a=record.alcohol??{bornAt:record.tick,high:0,tolerance:0,hangover:0,lastDoseTick:worldTick,dosesToday:0},old=f(a.tolerance),effect=factor(old);
  if(a.addiction)a.addiction.severity=Math.min(1,f(a.addiction.severity+f(.2)));
  else {
@@ -32,7 +33,7 @@ const curve=(t:number,middle:number,last:number):number=>t<=.5?99999+(middle-999
 export function advanceAlcoholCore265(record:MedicalRecord,atCore:number,owner:AlcoholOwner265,draw:MedicalRandom):void {
  const a=record.alcohol;if(!a||record.death)return;
  if(!Number.isSafeInteger(atCore)||atCore<1||atCore>record.tick*10||atCore<=(record.tick-1)*10)throw Error('Alcohol interval is outside the actual clinical clock');
- const hash=(interval:number)=>groupPawnInterval256(owner.id,atCore,interval,1),random=animalClinicalRandom256(draw),stage=alcoholStage265(a);
+ const hash=(interval:number)=>groupPawnInterval256(owner.id,medicalCivilCore271(record,atCore),interval,1),random=animalClinicalRandom256(draw),stage=alcoholStage265(a);
  if(hash(60)){
   if(a.tolerance>f(.45)){
    if(animalConditionMtbEvent256(curve(a.tolerance,60,45),60,random)&&!partMissing(record,'liver')&&!a.cirrhosis){random.value();a.cirrhosis=true;}
@@ -40,12 +41,12 @@ export function advanceAlcoholCore265(record:MedicalRecord,atCore:number,owner:A
   }
   if(stage===4&&animalConditionMtbEvent256(10,60,random)&&!partMissing(record,'brain')&&!a.brainDamage){random.value();a.brainDamage=true;}
   // Off-map owners consume their actual trial but cannot own a map crisis job.
-  if(alcoholWithdrawal265(a)&&!owner.inMentalState&&animalConditionMtbEvent256(40,60,random)&&owner.spawned&&owner.awake)a.bingeRequestedAt=atCore;
+  if(alcoholWithdrawal265(a)&&!owner.inMentalState&&animalConditionMtbEvent256(40,60,random)&&owner.spawned&&owner.awake)a.bingeRequestedAt=medicalCivilCore271(record,atCore);
  }
  if(hash(600)){
   const highMtb=stage===2?.75:stage===3?.2:0;
-  if(highMtb&&animalConditionMtbEvent256(highMtb,600,random)&&owner.spawned&&owner.awake)a.vomitRequestedAt=atCore;
-  if(a.hangover>=f(.4)&&animalConditionMtbEvent256(.4,600,random)&&owner.spawned&&owner.awake)a.vomitRequestedAt=atCore;
+  if(highMtb&&animalConditionMtbEvent256(highMtb,600,random)&&owner.spawned&&owner.awake)a.vomitRequestedAt=medicalCivilCore271(record,atCore);
+  if(a.hangover>=f(.4)&&animalConditionMtbEvent256(.4,600,random)&&owner.spawned&&owner.awake)a.vomitRequestedAt=medicalCivilCore271(record,atCore);
  }
  if(hash(200)){
   a.high=Math.max(0,f(a.high+f(f(-.75)*f(.0033333334))));

@@ -1,3 +1,4 @@
+import {medicalCivilTick271,validMedicalCivilHeader271} from './suspended-human-clock-271.ts';
 import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import {hasAlcoholConsumeMarker265,validAlcoholConsumePawnShape265,validAlcoholConsumeTransport265} from './alcohol-consume-save-265.ts';
 import type {VomitState} from './food-poisoning.ts';
@@ -27,13 +28,13 @@ const closed=(v:unknown,keys:readonly string[]):v is Record<string,unknown>=>pla
 const int=(v:unknown,lo=0,hi=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=lo&&v<=hi;
 const severity=(v:unknown,lo=0,hi=1):v is number=>typeof v==='number'&&Number.isFinite(v)&&v>=lo&&v<=hi&&Math.fround(v)===v;
 export function validAlcoholHeader265(record:unknown,version:number,human=true):boolean {
- if(!record||typeof record!=='object')return false;
+ if(!record||typeof record!=='object'||!validMedicalCivilHeader271(record,version,human))return false;
  const d=Object.getOwnPropertyDescriptor(record,'alcohol');if(!d)return !('alcohol'in record);
  const tick=own(record,'tick');if(!isSchema265OrLater(version)||!human||!d.enumerable||!('value'in d)||!tick||!int(tick.value)||!Number.isSafeInteger(tick.value*10))return false;
- const a=d.value;if(!closed(a,['bornAt','high','tolerance','hangover','lastDoseTick','dosesToday','addiction','cirrhosis','brainDamage','vomit','vomitRequestedAt','bingeRequestedAt'])||!['bornAt','high','tolerance','hangover','lastDoseTick','dosesToday'].every(k=>!!own(a,k))||!int(a.bornAt,0,tick.value)||!severity(a.high,0,3.4028234663852886e38)||!severity(a.tolerance)||!severity(a.hangover)||!int(a.lastDoseTick,a.bornAt,tick.value)||!int(a.dosesToday,1,6000))return false;
+ const a=d.value;if(!closed(a,['bornAt','high','tolerance','hangover','lastDoseTick','dosesToday','addiction','cirrhosis','brainDamage','vomit','vomitRequestedAt','bingeRequestedAt'])||!['bornAt','high','tolerance','hangover','lastDoseTick','dosesToday'].every(k=>!!own(a,k))||!int(a.bornAt,0,tick.value)||!severity(a.high,0,3.4028234663852886e38)||!severity(a.tolerance)||!severity(a.hangover)||!int(a.lastDoseTick,a.bornAt,medicalCivilTick271(record as MedicalRecord))||!int(a.dosesToday,1,6000))return false;
  if(Object.hasOwn(a,'addiction')&&(!closed(a.addiction,['severity','need'])||Reflect.ownKeys(a.addiction).length!==2||!severity(a.addiction.severity,Number.MIN_VALUE)||!severity(a.addiction.need)))return false;
  for(const key of ['cirrhosis','brainDamage'])if(Object.hasOwn(a,key)&&a[key]!==true)return false;
- for(const key of ['vomitRequestedAt','bingeRequestedAt'])if(Object.hasOwn(a,key)&&(!int(a[key],0,tick.value*10)||Object.hasOwn(record,'death')))return false;
+ for(const key of ['vomitRequestedAt','bingeRequestedAt'])if(Object.hasOwn(a,key)&&(!int(a[key],0,medicalCivilTick271(record as MedicalRecord)*10)||Object.hasOwn(record,'death')))return false;
  if(Object.hasOwn(a,'vomit')){
   if(Object.hasOwn(record,'death')||!closed(a.vomit,['remainingCore','cell'])||Reflect.ownKeys(a.vomit).length!==2||!int(a.vomit.remainingCore,1,899)||!closed(a.vomit.cell,['x','z'])||Reflect.ownKeys(a.vomit.cell).length!==2||!int(a.vomit.cell.x)||!int(a.vomit.cell.z))return false;
   for(const key of ['foodPoisoning','flu','cryptosleepSickness','toxicBuildup']){const other=own(record,key);if(other&&plain(other.value)&&Object.hasOwn(other.value,'vomit'))return false;}
@@ -56,7 +57,7 @@ export function validAlcoholWorld265(world:World,version:number=world.schemaVers
    if(p.health&&(!validAlcoholHeader265(p.health,version,p.health.body===undefined)||p.health.alcohol&&p.health.alcohol.lastDoseTick>slot.validationTick))return false;
    if(p.health?.alcohol){
     const h=p.health,a=h.alcohol!,spatial=slot.kind==='map'?capture.world:undefined;
-    if(h.tick>slot.validationTick||validateMedicalRecord(h,true,true,true,true,false,false,true,true,true,true,true,version,version>=127)!==null)return false;
+    if(medicalCivilTick271(h)>slot.validationTick||validateMedicalRecord(h,true,true,true,true,false,false,true,true,true,true,true,version,version>=127)!==null)return false;
     const status=medicalStatus(h);if(status==='mobile'?(p.state==='downed'||p.state==='dead'):p.state!==status)return false;
     if(!spatial&&(a.vomit||a.vomitRequestedAt!==undefined||a.bingeRequestedAt!==undefined))return false;
     if(a.vomit){const v=a.vomit;if(!spatial||v.cell.x>=spatial.width||v.cell.z>=spatial.height||!['idle','downed'].includes(p.state)||p.path.length||p.moveCooldown>0||!pawnBody(p).canBeAwake||Math.max(Math.abs(v.cell.x-p.x),Math.abs(v.cell.z-p.z))>1||p.need||p.jobId!==null||p.haul||p.cooking||p.research||p.orders.active!==null||p.recreation.task)return false;}

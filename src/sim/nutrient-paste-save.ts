@@ -1,3 +1,4 @@
+import {memoryExpiry271,validSuspendedMemory271} from './suspended-memory-271.ts';
 import type { PowerParentReader } from './power-parent-validation.ts';
 import { captureHumanOwners } from './human-owners.ts';
 import { hopperAccepts,hopperCapacity,pasteHoppers,pasteSpot,type PasteRequest } from './nutrient-paste.ts';
@@ -49,7 +50,7 @@ export function validNutrientPasteTransport(w:World,version:number,powerTopology
     for(const pile of w.piles)if(pile.item==='nutrient-paste-meal'&&(validatePileRecordShape(pile as unknown as Record<string,unknown>,w,version).length||validatePreservation({...w,piles:[pile]},version).length))return false;
     for(const slot of humans.slots){
       const p=slot.pawn;
-      if(p?.memories){const seen=new Set<string>();for(const m of p.memories){if(m?.kind!=='ate-nutrient-paste')continue;if(!obj(m)||!keys(m,['kind','expiresAt'])||!int(m.expiresAt,slot.validationTick+1,slot.validationTick+6000)||seen.has(m.kind))return false;seen.add(m.kind);}}
+      if(p?.memories){const seen=new Set<string>();for(const m of p.memories){if(m?.kind!=='ate-nutrient-paste')continue;if(!obj(m)||!keys(m,['kind','expiresAt'],['suspendedTicks'])||!validSuspendedMemory271(m,version,slot.validationTick,Number(m.expiresAt)-6000)||!int(memoryExpiry271(m,Number(m.expiresAt)),slot.validationTick+1,slot.validationTick+6000)||seen.has(m.kind))return false;seen.add(m.kind);}}
       for(const pile of slot.items)if(pile.item==='nutrient-paste-meal'&&(validatePileRecordShape(pile as unknown as Record<string,unknown>,w,version,slot.validationTick).length||validatePreservation({...w,tick:slot.validationTick,piles:[pile]},version).length))return false;
     }
     const spots=new Set<number>();

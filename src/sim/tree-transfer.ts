@@ -4,7 +4,7 @@ import {gatherResource,clearingDuration,plantWorkGrowthFactor256} from './gather
 import {clearanceOutputPending} from './construction-plants.ts';
 import {retainClearingWorkAfterOutputRefusal} from './plant-retirement.ts';
 import {advanceWork,workProgress,resetWork} from './work-progress.ts';
-import {extractTreeDefinition,treePackLive} from './tree-transfer-rules.ts';
+import {extractTreeDefinition,treePackLive,treePackExpiry271} from './tree-transfer-rules.ts';
 import {isMinifiedTree,type MinifiedTreePile,type TreeJob,type TreeCommand} from './tree-transfer-state.ts';
 import {advanceTreeTransfer} from './tree-transfer-runtime.ts';
 import {planTreeExpiry,commitTreeExpiry,planPendingTreeExpiry,commitPendingTreeExpiry,type TreeHost,type TreePileRef,type TreeExpiryOutputPlan} from './tree-transfer-atomic.ts';
@@ -186,7 +186,7 @@ export function processTreeWork(w:World,p:Pawn,j:Job,move:(target:Cell,touch:boo
     const sourcePileId=j.tree.sourcePileId,pile=w.piles.find(i=>i.id===sourcePileId);
     // The dispatcher after actors owns this exact death boundary. Neither
     // new work nor a global interruption may consume foreign queued orders.
-    if(pile&&isMinifiedTree(pile)&&!pile.plantPack.pendingExpiry&&w.tick>=pile.plantPack.expiresAt)return;
+    if(pile&&isMinifiedTree(pile)&&!pile.plantPack.pendingExpiry&&w.tick>=treePackExpiry271(pile))return;
   }
   const body=pawnBody(p);
   const obstruction=j.tree.kind==='replant'&&j.tree.phase!=='pickup'?w.resources.find(r=>same(r,j)):undefined;
@@ -246,7 +246,7 @@ export function advanceMinifiedTrees(w:World):void {
   const refs:TreePileRef[]=[];
   for(const container of collections)for(const pile of container)if(isMinifiedTree(pile))refs.push({pile,container:container===w.piles?'map':container,clock:w.tick,active:true});
   const host=hostFor(w,refs);
-  for(const ref of refs)if(w.tick>=ref.pile.plantPack.expiresAt){
+  for(const ref of refs)if(w.tick>=treePackExpiry271(ref.pile)){
     const pending=ref.pile.plantPack.pendingExpiry;
     if(pending&&w.tick<pending.retryAt)continue;
     const plan=planTreeExpiry(host,ref);

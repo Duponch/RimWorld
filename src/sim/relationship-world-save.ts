@@ -12,8 +12,8 @@ export function validateRelationshipWorld(world: World, version: number): string
 
 /** @internal Fixed Decoder consumers only. Public/RAW callers capture afresh. */
 export function validateRelationshipWorldForSnapshot(world:World,version:number,readOwners:()=>HumanOwnershipCapture):string[] {
-  let owners: {pawn:Pawn;tick:number}[];
-  try {owners=readOwners().pawnOwners.map(slot=>({pawn:slot.pawn!,tick:slot.validationTick}));}
+  let owners: {pawn:Pawn;tick:number;civilTick:number}[];
+  try {owners=readOwners().pawnOwners.map(slot=>({pawn:slot.pawn!,tick:slot.validationTick,civilTick:slot.kind==='player-casket'?world.tick:slot.validationTick}));}
   catch {return ['Invalid human relationship namespace.'];}
   const offers = [...(world.arrivals?.pending ? [world.arrivals.pending] : []), ...(world.quests?.entries ?? [])];
   const hasFields = Object.hasOwn(world, 'relationships')
@@ -28,10 +28,9 @@ export function validateRelationshipWorldForSnapshot(world:World,version:number,
     for (const offer of offers) {
       if (!validAnnouncedRelationship(offer, world, version, people)) errors.push('Invalid offered human relationship.');
     }
-    for (const { pawn, tick } of owners) {
-      const clock = tick === world.tick ? world : { ...world, tick };
-      if (!validFamilyBereavement(pawn.familyBereavement, pawn.id, version, clock, people)) errors.push('Invalid family bereavement memory.');
-      if (!validRomanceMemories(pawn.romanceMemories, pawn.id, version, clock, people)) errors.push('Invalid romance memory.');
+    for (const { pawn, tick, civilTick } of owners) {
+      if (!validFamilyBereavement(pawn.familyBereavement, pawn.id, version, world, people,tick,civilTick)) errors.push('Invalid family bereavement memory.');
+      if (!validRomanceMemories(pawn.romanceMemories, pawn.id, version, world, people,tick,civilTick)) errors.push('Invalid romance memory.');
     }
   } catch { errors.push('Invalid human relationship namespace.'); }
   return errors;

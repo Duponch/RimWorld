@@ -1,3 +1,4 @@
+import {medicalElapsedTicks271} from './suspended-human-clock-271.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {rememberLocalActorBedDeparture256,prepareLocalActorBedReturn256} from './actor-bed-local-256.ts';
 import {commitActorBedEntry256} from './actor-map-bed-256.ts';
@@ -172,7 +173,7 @@ export function advanceScoutTrip(w:World):void {
     advanceHumanAge(w,s.pawn);tickSkills(w,s.pawn);expireSocialMemories(s.pawn,w.tick);expireMealMemories(w,s.pawn);
     // The supported scout begins healthy. Waiting at a sealed border does not
     // later replay a fictitious on-map exposure when the person returns.
-    if(s.pawn.health)s.pawn.health.tick=w.tick;
+    if(s.pawn.health){const h=s.pawn.health;if(h.civilTick271===undefined)h.tick=w.tick;else{h.tick+=medicalElapsedTicks271(h,w.tick);h.civilTick271=w.tick;}}
   }
   if(s.phase==='travelling'&&w.tick>s.departedAt&&w.tick<=s.returnAt){
     const p=s.pawn;

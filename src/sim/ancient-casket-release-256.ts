@@ -14,6 +14,7 @@ import {validateAncientCasketOwners256} from './ancient-casket-save-256.ts';
 import {addCryptosleepSickness256,type CryptosleepSicknessRandom256} from './cryptosleep-sickness-256.ts';
 import {createMedicalRecord,reconcileMedicalDeath} from './injury-state.ts';
 import {healthRandom} from './health.ts';
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import type {Cell,MaterialPile,Pawn,World} from './types.ts';
 import type {WildAnimal} from './wildlife-state.ts';
 type MovedActor={actor:Pawn|WildAnimal;cell:Cell;human:boolean};
@@ -28,10 +29,10 @@ export function ancientCasketEjectionRandom256(source:Pick<World,'rng'>):Cryptos
 }
 /** A real eject operation at its true owner clock. Dead humans are represented
  * by their original corpse Thing, which does not acquire a new Pawn Hediff. */
-export function applyAncientHumanEjectionSickness256(pawn:Pawn,clock:number,random:CryptosleepSicknessRandom256):void {
+export function applyAncientHumanEjectionSickness256(pawn:Pawn,clock:number,random:CryptosleepSicknessRandom256,version=270):void {
  if(!Number.isSafeInteger(clock)||clock<0)throw Error('Invalid actual ejection clinical clock');
- if(pawn.state==='dead'||pawn.health?.death){if(pawn.state!=='dead'||!pawn.health?.death||pawn.health.tick!==pawn.health.death.tick||pawn.health.tick>clock)throw Error('Invalid original terminal ejection owner');return;}
- if(pawn.health&&(pawn.health.tick!==clock||pawn.health.body!==undefined))throw Error('Invalid original human ejection clinical owner');
+ if(pawn.state==='dead'||pawn.health?.death){if(pawn.state!=='dead'||!pawn.health?.death||(version===271?medicalCivilTick271(pawn.health):pawn.health.tick)!==pawn.health.death.tick||pawn.health.death.tick>clock)throw Error('Invalid original terminal ejection owner');return;}
+ if(pawn.health&&((version===271?medicalCivilTick271(pawn.health):pawn.health.tick)!==clock||pawn.health.body!==undefined))throw Error('Invalid original human ejection clinical owner');
  const record=pawn.health??createMedicalRecord(clock);addCryptosleepSickness256(record,random,256);reconcileMedicalDeath(record);pawn.health=record;
 }
 /** Original map only. Connected Near candidates and ground capacity are reused;
@@ -65,7 +66,7 @@ export function planAncientCasketRelease256(w:World,target:AncientCasket256,rele
   for(let i=localItems.length-1;i>=0;i--)if(localItems[i]!.pile.humanCorpse&&!movedIds.has(localItems[i]!.pile.humanCorpse!.pawnId))localItems.splice(i,1);
   for(const pile of s.items)if(pile.owner.type!=='ancient-casket'&&'pawnId'in pile.owner&&movedIds.has(pile.owner.pawnId))localItems.push({pile});
   let clock:ReturnType<typeof prepareAncientResumeClock256>;
-  try{clock=prepareAncientResumeClock256({...s,humans:localActors.filter(p=>p.human).map(p=>p.actor as Pawn),animals:localActors.filter(p=>!p.human).map(p=>p.actor as WildAnimal),items:localItems.map(p=>p.pile)},w.tick);}catch(error){return {ok:false,reason:String(error)};}
+  try{clock=prepareAncientResumeClock256({...s,humans:localActors.filter(p=>p.human).map(p=>p.actor as Pawn),animals:localActors.filter(p=>!p.human).map(p=>p.actor as WildAnimal),items:localItems.map(p=>p.pile)},w.tick,w.schemaVersion);}catch(error){return {ok:false,reason:String(error)};}
   actors.push(...localActors);items.push(...localItems);parts.push({c,actors:localActors,items:localItems,clock});
  }
  if(w.pawns.length+actors.filter(a=>a.human).length>w.width*w.height||w.piles.length+items.length>32768||w.wildlife&&w.wildlife.animals.length+actors.filter(a=>!a.human).length>256)return {ok:false,reason:'The real receiving owner capacity is exhausted.'};
@@ -75,7 +76,7 @@ export function planAncientCasketRelease256(w:World,target:AncientCasket256,rele
  // composed. Refuse before clocks/owners/RNG are changed, never cure or reroll.
  const clinicalState={rng:releaseRng},clinicalRandom=ancientCasketEjectionRandom256(clinicalState);
  for(const part of parts){const moved=new Set(part.actors.filter(a=>a.human).map(a=>a.actor));for(const p of part.c.casket.humans){
-  if(p.state==='dead'||p.health?.death)continue;const clock=moved.has(p)?w.tick:part.c.casket.heldAt,record=p.health?structuredClone(p.health):createMedicalRecord(clock);record.tick=clock;
+  if(p.state==='dead'||p.health?.death)continue;const clock=moved.has(p)?w.tick:part.c.casket.heldAt,record=p.health?structuredClone(p.health):createMedicalRecord(clock);if(w.schemaVersion===271){if(record.tick!==clock)record.civilTick271=clock;}else record.tick=clock;
   addCryptosleepSickness256(record,clinicalRandom,256);reconcileMedicalDeath(record);
   if(record.death)return {ok:false,reason:'Actual fatal ejection requires original corpse materialization/held transfer; original holder retained.'};
  }}
@@ -99,7 +100,7 @@ export function planAncientCasketRelease256(w:World,target:AncientCasket256,rele
   const random=()=>healthRandom(w),clinicalRandom=ancientCasketEjectionRandom256(w);
   for(let index=0;index<parts.length;index++){
    const part=parts[index]!,s=part.c.casket,moved=new Set(part.actors.map(p=>p.actor));
-   for(const human of s.humans){applyAncientHumanEjectionSickness256(human,moved.has(human)?w.tick:s.heldAt,clinicalRandom);if(human.state!=='dead'){ensureFilth(w);const feet=human.filthFeet??={carried:[]};const slime=feet.carried.find(f=>String(f.kind)==='slime');if(slime)slime.thickness=Math.min(5,slime.thickness+1);else feet.carried.push({kind:'slime',thickness:1});}}
+   for(const human of s.humans){applyAncientHumanEjectionSickness256(human,moved.has(human)?w.tick:s.heldAt,clinicalRandom,w.schemaVersion);if(human.state!=='dead'){ensureFilth(w);const feet=human.filthFeet??={carried:[]};const slime=feet.carried.find(f=>String(f.kind)==='slime');if(slime)slime.thickness=Math.min(5,slime.thickness+1);else feet.carried.push({kind:'slime',thickness:1});}}
    // validateAncientCasketOwners256 keeps the animal lane explicitly closed:
    // no human surrogate, clinical birth rewrite or new suspension tracker.
    const partition=partitions[index]!;

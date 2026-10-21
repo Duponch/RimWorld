@@ -40,6 +40,7 @@ export function updatePawnInspection(root: HTMLElement, world: World, pawn: Pawn
     identity = document.createElement('p'); identity.id = 'selected-identity';
     root.querySelector('#selected-action')?.before(identity);
   }
+  if(pawn.cryptosleepTask){const task=pawn.cryptosleepTask,activity=root.querySelector<HTMLElement>('#selected-action');if(activity)activity.textContent=task.phase==='closing'?`Prépare le cryptosommeil · ${Math.floor(task.progressCore/500*100)} %`:task.phase==='opening'?`Ouvre le caisson · ${Math.floor(task.progressCore/300*100)} %`:task.action==='carry'?'Porte un patient vers le caisson':task.action==='open'?'Rejoint le caisson pour l’ouvrir':'Rejoint le caisson pour y entrer';}
   const sex = appearanceOf(pawn, world.seed).sex === 'female' ? 'Femme' : 'Homme';
   const affiliation = pawn.prisoner ? 'Prisonnier' : isColonist(pawn) ? 'Colon' : pawn.visitor ? 'Visiteur' : pawn.podRescue ? 'Naufragé' : 'Hors-la-loi';
   identity.textContent = `${sex}${pawn.age ? ` · ${biologicalYears(pawn.age)} ans` : ''} · ${affiliation}`;

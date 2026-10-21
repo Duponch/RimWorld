@@ -5,7 +5,7 @@ import { cancelMelee } from './melee-state.ts';
 import { combatTarget,hostileTarget,activeCombatThreat } from './combat-target.ts';
 
 export type AutomaticAttack = {kind:'draft'}|{kind:'response';remaining:number;until:number};
-export type AttackMemory = {targetId:number;atCore:number};
+export type AttackMemory = {targetId:number;atCore:number;suspendedTicks?:number};
 export function automaticPermission(p:Pawn,kind:'draft'|'response'):boolean {
   return isColonist(p)&&(kind==='draft'?!!p.draft:!p.draft&&p.hostilityResponse==='attack');
 }

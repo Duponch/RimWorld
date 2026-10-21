@@ -17,7 +17,7 @@ export const isSmithingRecipe267=(v:unknown):v is SmithingRecipe267=>v==='make-p
 export const isSmithingWeaponRecipe267=(v:unknown):v is 'make-plasteel-knife'|'make-mace'|'make-longsword'=>v==='make-plasteel-knife'||v==='make-mace'||v==='make-longsword';
 export const smithingSkillRequired267=(recipe:SmithingRecipe267):number=>recipe==='make-longsword'?5:recipe==='make-mace'?3:recipe==='make-plate-armor'?7:0;
 /** The knife's existing product predates V268; only its manufacture is new. */
-export const smithingRecipeAvailable267=(recipe:SmithingRecipe267,version:number):boolean=>recipe==='make-longsword'?version===270:recipe==='make-mace'?version===269||version===270:recipe==='make-plasteel-knife'?version===268||version===269||version===270:version===267||version===268||version===269||version===270;
+export const smithingRecipeAvailable267=(recipe:SmithingRecipe267,version:number):boolean=>recipe==='make-longsword'?(version===270||version===271):recipe==='make-mace'?version===269||(version===270||version===271):recipe==='make-plasteel-knife'?version===268||version===269||(version===270||version===271):version===267||version===268||version===269||(version===270||version===271);
 export const isSmithingMaterial267=(v:unknown):v is SmithingMaterial267=>typeof v==='string'&&(SMITHING_MATERIALS_267 as readonly string[]).includes(v);
 export const isSmithingProduct267=(v:unknown):v is SmithingProduct267=>typeof v==='string'&&(SMITHING_PRODUCTS_267 as readonly string[]).includes(v);
 export const isSmithingWorkpiece267=(v:unknown):v is SmithingWorkpiece267=>v==='unfinished-plate-armor'||v==='unfinished-simple-helmet'||v==='unfinished-knife'||v==='unfinished-mace'||v==='unfinished-longsword';

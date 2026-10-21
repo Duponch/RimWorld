@@ -14,6 +14,7 @@ import { clearQueuedOrders } from './player-orders.ts';
 import { planCommandDrops,releaseWork } from './work-release.ts';
 import { interruptWork } from './interrupted-cargo.ts';
 import { updatePawnHealth } from './health.ts';
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import { rememberMeal } from './wellbeing.ts';
 import type { NeedContext } from './needs.ts';
 import type { Cell,CommandResult,Pawn,World } from './types.ts';
@@ -53,7 +54,7 @@ export function processFeeding(world:World,doctor:Pawn,context:NeedContext):void
   if(!allowedAreaServicesAllowed(world,doctor)){interruptWork(world,doctor);return;}
   const t=doctor.feed;if(!t)return;
   const p=world.pawns.find(p=>p.id===t.patientId)!;
-  if(p?.health&&p.health.tick<world.tick&&!p.health.death)updatePawnHealth(world,p);
+  if(p?.health&&medicalCivilTick271(p.health)<world.tick&&!p.health.death)updatePawnHealth(world,p);
   if(feedingReason(world,doctor,p,true)||!feedingPlaceValid(world,t,p)){interruptWork(world,doctor);return;}
   if(t.phase==='pickup'&&t.paste){
     if(!pasteRequestValid(world,doctor,t.paste,p)){interruptWork(world,doctor);return;}

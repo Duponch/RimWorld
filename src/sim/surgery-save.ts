@@ -1,3 +1,4 @@
+import {anestheticCivilBornAt271} from './anesthetic.ts';
 import { isColonist } from './affiliation.ts';
 import { isBedKind } from './bed-kinds.ts';
 import { lyingPatient } from './care-access.ts';
@@ -79,7 +80,7 @@ export function validateSurgeries(w:World,version:number,onlyBedIds?:ReadonlySet
     if(p.surgeryRequest){
       const active=work.get(p.id),anesthetic=p.health?.anesthetic;
       if(p.id===offMap||p.visitor||surgeryRequestReason(p,p.surgeryRequest.part,{...(active?{allowAnesthetic:true as const}:{}),...(p.surgeryRequest.implant?{implant:p.surgeryRequest.implant}:{})})
-        ||anesthetic&&(!active||anesthetic.bornAt<p.surgeryRequest.requestedAt))errors.push('Invalid surgical patient request.');
+        ||anesthetic&&(!active||anestheticCivilBornAt271(p.health!)!<p.surgeryRequest.requestedAt))errors.push('Invalid surgical patient request.');
     }
     const t=p.surgery;if(!t)continue;
     const patient=byId.get(t.patientId),bed=w.structures.find(b=>b.id===t.bedId&&isBedKind(b.kind));
@@ -96,7 +97,7 @@ export function validateSurgeries(w:World,version:number,onlyBedIds?:ReadonlySet
     // The engine suspends that provider while this physical service is active.
     if(p.jobId!==null||p.haul||p.cooking||p.need||p.recreation.task||p.tend||p.feed||p.rescue||p.ward||p.research||p.animalCare||p.animalHandling||p.equipmentTask||p.hunting||p.burial||p.cleaning||p.firefighting||p.interruptedCargo)errors.push('Surgery conflicts with another doctor activity.');
     if(t.phase==='work'){
-      if(!patient?.health?.anesthetic||t.workCore>(w.tick-patient.health.anesthetic.bornAt+1)*10||!medicineAllowed(patient,t.consumedMedicine!)||p.state!=='working'||p.moveCooldown!==0||p.motion&&p.motion.end>w.tick||p.path.length||p.x!==t.spot.x||p.z!==t.spot.z
+      if(!patient?.health?.anesthetic||t.workCore>(patient.health.tick-patient.health.anesthetic.bornAt+1)*10||!medicineAllowed(patient,t.consumedMedicine!)||p.state!=='working'||p.moveCooldown!==0||p.motion&&p.motion.end>w.tick||p.path.length||p.x!==t.spot.x||p.z!==t.spot.z
         ||w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id))errors.push('Invalid administered surgery phase or cargo.');
     }else if(t.implant){
       if(p.state!=='moving'||!patient||!validImplantTaskRelations(w,p,patient,t))errors.push('Invalid wooden surgery ingredient ownership or staging.');

@@ -65,7 +65,8 @@ export function validateDoubleBeds(w:World,version:number):string[] {
   for(const owner of owners.pawnOwners){
     const p=owner.pawn!;
     if(!validBedSlotPawnShape(p as unknown as Record<string,unknown>,w,version)){errors.push('Invalid double bed owner or rescue slot shape.');continue;}
-    if(owner.kind!=='map'&&prospectivePawn(p)){errors.push('Off-map owner retains a local bed slot.');continue;}
+    if(owner.kind==='player-casket'&&(p.need||p.rescue||p.surgery)){errors.push('Contained player-casket owner retains a local bed service.');continue;}
+    if(owner.kind!=='map'&&owner.kind!=='player-casket'&&prospectivePawn(p)){errors.push('Off-map owner retains a local bed slot.');continue;}
     const bed=beds.find(b=>b.id===p.bedId);
     if(bed?.kind==='double-bed'){
       if((p.faction??'colony')!=='colony'||p.state==='dead'||p.health?.death||p.prisoner||p.visitor||p.raid||p.podRescue)errors.push('Invalid double bed civilian owner.');

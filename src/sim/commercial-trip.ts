@@ -1,3 +1,4 @@
+import {medicalElapsedTicks271} from './suspended-human-clock-271.ts';
 import {rememberMapAreaDeparture,prepareSameMapAreaReturn,commitMapAreaEntry} from './pawn-map-areas.ts';
 import {registeredCampaign} from './world-map-context.ts';
 import { releaseAllowedAreaReturn } from './allowed-area-state.ts';
@@ -110,7 +111,7 @@ export function advanceCommercialTrip(w:World):void {
   const s=w.commercialTrip;if(!s||!('pawn' in s))return;
   if(w.tick>s.departedAt){
     advanceHumanAge(w,s.pawn);tickSkills(w,s.pawn);expireSocialMemories(s.pawn,w.tick);expireMealMemories(w,s.pawn);
-    if(s.pawn.health)s.pawn.health.tick=w.tick;
+    if(s.pawn.health){const h=s.pawn.health;if(h.civilTick271===undefined)h.tick=w.tick;else{h.tick+=medicalElapsedTicks271(h,w.tick);h.civilTick271=w.tick;}}
     if(s.phase!=='awaiting-entry'){
       s.pawn.hunger=Math.max(0,s.pawn.hunger-(w.foodRules==='legacy'?.015:HUNGER_PER_TICK*adultHungerFactor(s.pawn.hunger)));
       updateRest(w,s.pawn);if(s.pawn.needCooldown>0)s.pawn.needCooldown--;consumeRation(w,s);

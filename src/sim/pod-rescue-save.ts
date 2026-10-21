@@ -47,7 +47,7 @@ export function validPodRescueShape(value:unknown,version:number,w:Bounds):boole
     const i=value.incidents.find(i=>object(i)&&i.id===d.incidentId);
     if(!object(i)||i.result!=='departed'||i.resolvedAt!==d.tick||i.pawnId!==d.pawn.id
       ||!validPawnPodRescue(d.pawn,version,{...w,tick:d.tick})||!object(d.pawn.podRescue)||d.pawn.podRescue.incidentId!==d.incidentId
-      ||d.pawn.health!==undefined&&(!object(d.pawn.health)||d.pawn.health.tick!==d.tick))return false;
+      ||d.pawn.health!==undefined&&(!object(d.pawn.health)||(d.pawn.health.civilTick271??d.pawn.health.tick)!==d.tick))return false;
   }
   return true;
 }

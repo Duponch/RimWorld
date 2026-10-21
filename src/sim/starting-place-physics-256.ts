@@ -12,7 +12,7 @@ import type {World,MaterialPile,Cell} from './types.ts';
 /** One pod-open decision. Small mutable working lists contain the actual
  * planned stack outcomes, never another World or an alternate terrain grid.
  * The caller discards this capture immediately after any physical edit. */
-export function captureStartingPlacePhysics256(world:World,arrival:CoreStartingArrivalPending256,center:Readonly<Cell>,
+export function captureStartingPlacePhysics256(world:World,arrival:CoreStartingArrivalPending256|undefined,center:Readonly<Cell>,
  ground:ReadonlyMap<number,readonly MaterialPile[]>,spawned:readonly {cell:Readonly<Cell>;downed:boolean}[]) {
  const capture=captureStartingDropPhysics256(world,center),w=world.width,h=world.height,n=w*h;
  const inBounds=(c:Readonly<Cell>)=>Number.isInteger(c.x)&&Number.isInteger(c.z)&&c.x>=0&&c.z>=0&&c.x<w&&c.z<h;
@@ -27,7 +27,7 @@ export function captureStartingPlacePhysics256(world:World,arrival:CoreStartingA
  for(const robot of world.mechanoids??[])if(robot.state!=='dead')add(robot,robot.state==='downed');
  // Deliberately read this small live plan on every probe: a previously planned
  // entrant can affect the NEXT entrant's quality before any original moves.
- const itemPods=new Map<number,number>();for(const p of arrival.pods)if(p.phase==='landed'){const i=p.cell.z*w+p.cell.x;itemPods.set(i,(itemPods.get(i)??0)+1);}
+ const itemPods=new Map<number,number>();for(const p of arrival?.pods??[])if(p.phase==='landed'){const i=p.cell.z*w+p.cell.x;itemPods.set(i,(itemPods.get(i)??0)+1);}
  const packed=new Map<number,number>();for(const p of world.packed)if(p.owner.type==='ground'){const i=p.owner.z*w+p.owner.x;packed.set(i,(packed.get(i)??0)+1);}
  return (cell:Readonly<Cell>,thing:StartingPlaceThing256,source?:MaterialPile):StartingPlaceCell256=>{
   if(!inBounds(cell))return {canSpawn:false,sameRoom:false,passDoorsReachable:false,itemCount:0,maxItems:0,haulDestinationAccepts:false,saveCompressiblePresent:false,matchingStackSpace:0,fullFill:false,preventDropping:false,door:false,workTable:false,downedPawn:false,anyPawn:false,selectablePlant:false};

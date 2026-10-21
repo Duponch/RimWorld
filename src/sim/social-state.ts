@@ -1,3 +1,4 @@
+import {memoryExpiry271,memoryAge271,memoryReadTick271} from './suspended-memory-271.ts';
 import { TICKS_PER_DAY,type Pawn,type World } from './types.ts';
 import { pawnBody } from './health-rules.ts';
 import { effectiveSkillLevel } from './work-types.ts';
@@ -7,7 +8,7 @@ import { expireRomanceMemories,romanceOpinionCauses,type RomanceOpinionKind } fr
 
 export type SocialKind='chitchat'|'deep-talk'|'rapport'|'kind-words'|'slight'|'insult'|'fight-cathartic'|'fight-angering';
 export type SocialInteractionKind=SocialKind|'romance-attempt'|'breakup';
-export interface SocialMemory { otherId:number;kind:SocialKind;at:number;offset:number }
+export interface SocialMemory { otherId:number;kind:SocialKind;at:number;offset:number;suspendedTicks?:number }
 export interface SocialState {
   rng:number; wants?:true;
   last?:{otherId:number;kind:SocialInteractionKind;tick:number;initiated:boolean};
@@ -42,7 +43,7 @@ export function deepTalkWeight(compatibility:number):number {
   return .225;
 }
 export function memoryOffset(memory:SocialMemory,tick:number):number {
-  const age=Math.max(0,tick-memory.at);
+  const age=Math.max(0,memoryAge271(memory,memory.at,tick));
   if(memory.kind==='chitchat')return Math.min(10,Math.max(0,memory.offset-Math.floor(age/TICKS_PER_DAY)));
   return memory.offset*Math.max(0,Math.min(1,(DEEP_TALK_DURATION-age)/(DEEP_TALK_DURATION*.3)));
 }
@@ -52,11 +53,12 @@ export type OpinionCauseKind=SocialKind|`relation-${RelationshipViewKind}`|`roma
 export interface OpinionCause {kind:OpinionCauseKind;count:number;value:number;nextChange:number;label:string;description:string}
 const relationLabels:Readonly<Record<RelationshipViewKind,string>>={parent:'Parent',child:'Enfant',sibling:'Fratrie',lover:'Partenaire',spouse:'Conjoint','ex-lover':'Ancien partenaire','ex-spouse':'Ancien conjoint'};
 export function opinionCauses(pawn:Pawn,otherId:number,tick:number,world?:World):OpinionCause[] {
+  tick=memoryReadTick271(pawn,tick);
   const memories=pawn.social?.memories.filter(m=>m.otherId===otherId&&memoryOffset(m,tick)!==0)??[];
   const causes:OpinionCause[]=(['chitchat','deep-talk','rapport','kind-words','slight','insult','fight-cathartic','fight-angering'] as const).flatMap(kind=>{
     const group=memories.filter(m=>m.kind===kind).sort((a,b)=>b.at-a.at);if(!group.length)return [];
     const value=roundOpinion(group.reduce((s,m,i)=>s+memoryOffset(m,tick)*((kind==='deep-talk'||kind==='kind-words'||kind==='slight'||kind==='insult'||kind==='fight-cathartic'||kind==='fight-angering') ? .9**i : 1),0));
-    const nextChange=kind==='chitchat'?group[0]!.at+(Math.floor((tick-group[0]!.at)/TICKS_PER_DAY)+1)*TICKS_PER_DAY:Math.min(...group.map(m=>m.at+DEEP_TALK_DURATION));
+    const nextChange=kind==='chitchat'?memoryExpiry271(group[0]!,group[0]!.at+(Math.floor((memoryAge271(group[0]!,group[0]!.at,tick))/TICKS_PER_DAY)+1)*TICKS_PER_DAY):Math.min(...group.map(m=>memoryExpiry271(m,m.at+DEEP_TALK_DURATION)));
     return [{kind,count:group.length,value,nextChange,label:SOCIAL_LABELS[kind],description:'Souvenir dirigé d’un échange social réel.'}];
   });
   if(world&&world.schemaVersion>=195&&world.relationships?.links.length)for(const kind of relationshipIndex(world).kinds(pawn.id,otherId)){
@@ -70,12 +72,13 @@ export const opinionOf=(pawn:Pawn,otherId:number,tick:number,world?:World):numbe
 /** InsultedMood is a separate two-day thought in Core, with fixed -5 per
  * occurrence before stacking, independent of the speaker's SocialImpact. */
 function socialMoodMemories(pawn:Pawn,tick:number,kind:'insult'|'kind-words'):{otherId:number;count:number;offset:number;expiresAt:number}[] {
-  const active=(pawn.social?.memories??[]).filter(m=>m.kind===kind&&m.at+INSULT_MOOD_DURATION>tick)
+  tick=memoryReadTick271(pawn,tick);
+  const active=(pawn.social?.memories??[]).filter(m=>m.kind===kind&&memoryExpiry271(m,m.at+INSULT_MOOD_DURATION)>tick)
     .sort((a,b)=>b.at-a.at||a.otherId-b.otherId).slice(0,10);
   const groups=new Map<number,{otherId:number;count:number;offset:number;expiresAt:number}>();
   for(const [index,m] of active.entries()){
-    let group=groups.get(m.otherId);if(!group){group={otherId:m.otherId,count:0,offset:0,expiresAt:m.at+INSULT_MOOD_DURATION};groups.set(m.otherId,group);}
-    group.count++;group.offset+=(kind==='insult'?-5:5)*.9**index;group.expiresAt=Math.max(group.expiresAt,m.at+INSULT_MOOD_DURATION);
+    let group=groups.get(m.otherId);if(!group){group={otherId:m.otherId,count:0,offset:0,expiresAt:memoryExpiry271(m,m.at+INSULT_MOOD_DURATION)};groups.set(m.otherId,group);}
+    group.count++;group.offset+=(kind==='insult'?-5:5)*.9**index;group.expiresAt=Math.max(group.expiresAt,memoryExpiry271(m,m.at+INSULT_MOOD_DURATION));
   }
   return [...groups.values()];
 }
@@ -84,10 +87,11 @@ export const kindWordsMoodMemories=(pawn:Pawn,tick:number)=>socialMoodMemories(p
 
 /** Cleanup runs on retained dead actors too. Merging chitchat never refreshes its clock. */
 export function expireSocialMemories(pawn:Pawn,tick:number):void {
+  if(pawn.cryptosleepHeldAt271!==undefined)return;
   if(pawn.romanceMemories)expireRomanceMemories(pawn,tick);
   const s=pawn.social;if(!s)return;
   for(const m of s.memories)if(m.kind==='chitchat'){
-    const days=Math.floor((tick-m.at)/TICKS_PER_DAY);if(days>0){m.offset=Math.max(0,m.offset-days);m.at+=days*TICKS_PER_DAY;}
+    const days=Math.floor((memoryAge271(m,m.at,tick))/TICKS_PER_DAY);if(days>0){m.offset=Math.max(0,m.offset-days);m.at+=days*TICKS_PER_DAY;}
   }
   if(s.memories.some(m=>memoryOffset(m,tick)===0))s.memories=s.memories.filter(m=>memoryOffset(m,tick)!==0);
 }

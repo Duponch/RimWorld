@@ -1,5 +1,13 @@
 # Catalogue de contenu : couverture connue
 
+**V447 en qualification, non publiée — schéma 271 :** [Caissons de cryptosommeil de colonie](cryptosleep-v447.md). **35 projets de recherche** dans la version en qualification ; **16 identités d’armes**, inchangées. Résultats et réserves restent à finaliser dans la note canonique ; le catalogue Core et les six ensembles restent ouverts.
+
+| Contenu V447 en qualification | Acquisition et usage | Frontières et limites |
+| --- | --- | --- |
+| Cryptosommeil et caisson ordinaire | Recherche **2 000 points après Multi-analyseur**, bureau avancé alimenté et réellement relié à un analyseur alimenté. Construction **8**, **180 acier, 5 uranium, 4 composants et 1 composant avancé** apportés au chantier. | Bâtiment 1 × 2 orientable, sans consommation électrique propre, qualité ou minification ; adultes libres de la colonie dans ce lot. |
+| Entrée et ouverture | Entrée volontaire ou portage d’un adulte libre à terre ; fermeture réelle de **500 ticks Core**. **Un autre colon** ouvre au contact en **300 ticks Core**, avec place réelle de sortie et maladie de cryptosommeil. | Personne encore active pendant l’approche et la fermeture ; aucun secours ou réveil distant garanti. La confirmation du dernier colon ne fournit pas d’assistant. |
+| Suspension et conservation | Même adulte, inventaire, équipement, vêtements et meubles emballés ; besoins, âge biologique, santé et durée des souvenirs suspendus, sans guérison ni rations créées. Attribution du lit conservée à l’entrée, nettoyée lors d’un vrai retrait de carte. | Dégâts : blessures, détonation possible et perte de biens si le dépôt échoue. Retrait de carte : conservation déclarée du holder, issue terminale native inconnue. Le caisson ordinaire ne livre **aucune victoire** ni vaisseau achevé. |
+
 **V446 publiée — schéma 270 :** [Épées longues dans les six matières](longswords-v446.md). Six nouvelles identités portent le catalogue à **16 armes** ; **34 projets de recherche** sont disponibles, dont Lames longues. 180 cas ciblés et parcours natifs acquis par reprises ; publication 9a7abfbe/822a5387 vérifiée. Les limites et réserves sont conservées dans la note canonique.
 
 | Contenu V446 | Acquisition et usage | Frontières et limites |

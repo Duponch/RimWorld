@@ -1,5 +1,7 @@
 # Elsewhere — plan de complétion Core du 20 octobre 2026
 
+**V447 en qualification, non publiée — schéma 271 :** les [caissons de cryptosommeil de colonie](../gameplay/cryptosleep-v447.md) poursuivent l’ensemble 2 avec recherche, construction et services physiques ; liste locale à 35 projets, catalogue inchangé à 16 armes. Suspension et conservation ne constituent pas une victoire : les six ensembles restent ouverts.
+
 ## Mandat et référence
 
 L’utilisateur autorise la poursuite autonome du développement jusqu’à une version finale selon les six ensembles ci-dessous, avec recherches Internet régulières et optimisation continue. Cette note constitue le plan canonique courant ; les chronologies et estimations anciennes restent historiques. Elle ne déclare ni parité exhaustive, ni campagne entière acquise, ni date de fin. Chaque lot apporte une fonction utilisable ou une correction vérifiée, avec ses limites explicites.
@@ -14,7 +16,7 @@ Point de départ produit : V438, schéma263. V439 a consolidé les lectures d’
 
 **V445 publiée — schéma 269 :** les [masses dans les six matières](../gameplay/maces-v445.md) poursuivent l’ensemble2, chantier principal. Bois, acier, plastacier, uranium, argent et or ajoutent six identités aux quatre armes précédentes, soit dix identités au catalogue. La chaîne relie recherche Forge, matières homogènes, transport, ouvrage, qualité, rangement, équipement et récupération métallique. Les autres familles d’armes, les autres matières de couteaux et le brûlage des armes en bois restent ouverts ; publication9de7122f/5d140817 vérifiée, sans clôture de l’ensemble2.
 
-**V446 publiée — schéma 270 :** les [six épées longues](../gameplay/longswords-v446.md) portent le catalogue actuel à**16identités d’armes** et la liste actuelle à**34projets de recherche**. Lames longues400 après Forge, bureau ordinaire, Artisanat5 aux deux forges,100unités homogènes ou1000argent/or ; ouvrage, qualité, rangement, équipement, trois outils de mêlée, masse2kg et fusion25/250. 180 cas ciblés et parcours natifs acquis par reprises ; publication 9a7abfbe/822a5387 vérifiée, limites conservées dans la note canonique. Commerce restreint des visiteurs, brûlage des armes, autres matières de couteaux, lances et autres familles restent ouverts. G5 demeure absent, sans victoire ni vaisseau achevé livré ; l’ensemble2 reste principal et non clos.
+**V446 publiée — schéma 270 :** les [six épées longues](../gameplay/longswords-v446.md) portent le catalogue de V446 à **16 identités d’armes** et sa liste à **34 projets de recherche**. Lames longues400 après Forge, bureau ordinaire, Artisanat5 aux deux forges,100unités homogènes ou1000argent/or ; ouvrage, qualité, rangement, équipement, trois outils de mêlée, masse2kg et fusion25/250. 180 cas ciblés et parcours natifs acquis par reprises ; publication 9a7abfbe/822a5387 vérifiée, limites conservées dans la note canonique. Commerce restreint des visiteurs, brûlage des armes, autres matières de couteaux, lances et autres familles restent ouverts. G5 demeure absent, sans victoire ni vaisseau achevé livré ; l’ensemble2 reste principal et non clos.
 
 ## Lecture du bilan
 
@@ -38,7 +40,7 @@ Travail concret : supprimer les parcours ou préparations inutiles confirmés pa
 
 **Présent :** agriculture à sept cultures semables, dont le houblon ; brassage, fermentation et bière qualifiés localement et publiés en V441 ; repas et plusieurs séries×4, textile, pierre, art, armes limitées, composants avancés, médecine, biocarburant, récupération et stockage physiques. Recherche commune au poste, bureaux alimentés et multi-analyseur. Commerce local, orbital et caravanier avec biens et fonds finis. **Partiel :** richesse, prix, assortiment commercial, arbre et débouchés. **Manquant :** familles productives et industrielles entières.
 
-L’audit initial comptait31projets locaux contre77définitions concrètes de recherche du Core local ; la liste actuelle en compte34 avec Lames longues V446 publiée. C’est un repère de catalogue, pas un pourcentage d’achèvement : Électricité est connue initialement ici, des prérequis sont adaptés et Armure de plaques n’avait pas sa recette avant le lotV443. Les sources fermées utiles sont `src/sim/research.ts`, `production-recipes.ts`, `crops.ts`, `equipment-rules.ts` et `trade-catalogue.ts`.
+L’audit initial comptait31projets locaux contre77définitions concrètes de recherche du Core local ; la liste actuelle en compte **35 avec Cryptosommeil V447 en qualification**, après les 34 de V446 publiée. C’est un repère de catalogue, pas un pourcentage d’achèvement : Électricité est connue initialement ici, des prérequis sont adaptés et Armure de plaques n’avait pas sa recette avant le lotV443. Les sources fermées utiles sont `src/sim/research.ts`, `production-recipes.ts`, `crops.ts`, `equipment-rules.ts` et `trade-catalogue.ts`.
 
 Travaux à livrer en chaînes complètes :
 

@@ -1,3 +1,4 @@
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {raidGroup261,raidSource261} from './temp-map-raids-261.ts';
 import type {Pawn,World} from './types.ts';
@@ -47,7 +48,7 @@ export function prepareMapRaiderWorldExit261(w:World,carrier:Pawn,patient?:Pawn)
  else if(kidnapping261(carrier))return no('Le passager réel doit sortir dans la même transaction que son ravisseur.');
  const originals=patient?[carrier,patient]:[carrier];
  if(new Set(originals.map(p=>p.id)).size!==originals.length)return no('La sortie partage un même original entre deux lignes.');
- if(originals.some(p=>!mutableWorldPawnOriginal256(p)||!p.worldAffiliation259||!validWorldAffiliationForeignKeys259(p,factions)||p.health&&p.health.tick!==w.tick||state.owners.some(r=>r.actor===p||r.actor.id===p.id)||p.rescue||p.animalRescue||p.surgery||p.interruptedCargo||p.equipmentDropPending||w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)||w.packed.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)))return no('Une personne ou sa cargaison ne possède pas encore sa sortie terminale réelle.');
+ if(originals.some(p=>!mutableWorldPawnOriginal256(p)||!p.worldAffiliation259||!validWorldAffiliationForeignKeys259(p,factions)||p.health&&medicalCivilTick271(p.health)!==w.tick||state.owners.some(r=>r.actor===p||r.actor.id===p.id)||p.rescue||p.animalRescue||p.surgery||p.interruptedCargo||p.equipmentDropPending||w.piles.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)||w.packed.some(i=>i.owner.type==='pawn'&&i.owner.pawnId===p.id)))return no('Une personne ou sa cargaison ne possède pas encore sa sortie terminale réelle.');
  if(carrier.worldAffiliation259!.factionId!==captor.factionId||captor.factionId===factions.playerFactionId||patient&&patient.worldAffiliation259!.factionId===captor.factionId)return no('La faction réelle du ravisseur ou de la victime ne correspond plus.');
  if(patient){const relation=factions.relations.find(r=>r.aId===Math.min(captor.factionId,factions.playerFactionId)&&r.bId===Math.max(captor.factionId,factions.playerFactionId));if(relation?.kind!=='hostile')return no('La faction ravisseuse n’est plus réellement hostile au joueur.');}
  let absolute:number;try{absolute=actualCampRemovalAbsCore256(root,w);}catch(e){return no(e instanceof Error?e.message:String(e));}

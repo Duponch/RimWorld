@@ -6,7 +6,7 @@ import type { Cell, Job, Structure, World } from './types.ts';
 
 export interface DeconstructionTarget { structureId: number; kind: Structure['kind']; material?:ConstructionMaterial }
 /** Lost construction wood and retired fuel history are distinct ledger terms. */
-export interface DeconstructionLedger { lostWort?:number; lostBeer?:number; count: number; lostWood: number; fuelTicks: number; lostSteel?:number; lostSilver?:number; lostUranium?:number; lostComponents?:number; lostBlocks?:Partial<Record<import('./building-materials.ts').BlockMaterial,number>>; lostTextiles?:Partial<Record<import('./building-materials.ts').UpholsteryMaterial,number>> }
+export interface DeconstructionLedger { lostAdvancedComponents271?:number; lostWort?:number; lostBeer?:number; count: number; lostWood: number; fuelTicks: number; lostSteel?:number; lostSilver?:number; lostUranium?:number; lostComponents?:number; lostBlocks?:Partial<Record<import('./building-materials.ts').BlockMaterial,number>>; lostTextiles?:Partial<Record<import('./building-materials.ts').UpholsteryMaterial,number>> }
 export const deconstructionAt = (world: World, cell: Cell & {targetId?:number}) => world.structures.find(s => (cell.targetId===undefined||s.id===cell.targetId)&&footprintContains(s, cell));
 export const deconstructionTarget = (world: World, job: Job) => world.structures.find(s => s.id === job.deconstruction?.structureId);
 export function deconstructionReserved(world: World, id: number, exceptPawn?: number): boolean {
@@ -22,7 +22,7 @@ export function deconstructionAvailable(world: World, job: Job, exceptPawn?: num
     if(p.need?.kind==='eat'&&p.need.paste?.dispenserId===id&&(p.need.phase==='pickup'||p.need.phase==='collect')
       ||p.feed?.paste?.dispenserId===id&&(p.feed.phase==='pickup'||p.feed.phase==='collect')
       ||p.haul?.destination.type==='hopper'&&p.haul.destination.structureId===id)return false;
-    if (p.brewing?.barrelId===id || p.haul?.destination.type==='fermenting-barrel'&&p.haul.destination.structureId===id || p.orbitalTrade?.consoleId===id || p.deepWork?.structureId===id || p.research?.stationId===id || p.rescue?.bedId===id || p.cooking?.stationId === id || p.haul?.destination.type === 'fuel' && p.haul.destination.structureId === id
+    if (p.cryptosleepTask?.casketId===id || p.brewing?.barrelId===id || p.haul?.destination.type==='fermenting-barrel'&&p.haul.destination.structureId===id || p.orbitalTrade?.consoleId===id || p.deepWork?.structureId===id || p.research?.stationId===id || p.rescue?.bedId===id || p.cooking?.stationId === id || p.haul?.destination.type === 'fuel' && p.haul.destination.structureId === id
       || p.need?.kind === 'sleep' && p.need.bedId === id || p.need?.kind === 'eat' && p.need.dining?.seatId === id
       || p.recreation.task?.buildingId === id || p.recreation.task?.seatId === id) return false;
     for (const order of p.orders.queue) if (typeof order !== 'number') {

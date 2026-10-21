@@ -1,3 +1,4 @@
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {CORE_STARTING_ARRIVAL_PROFILE_256} from './starting-pod-state-256.ts';
 import {hasCryptosleepSickness256,validCryptosleepSicknessHeader256} from './cryptosleep-sickness-256.ts';
@@ -12,7 +13,7 @@ type ClinicalOwner256=Pawn|WildAnimal;
  * General shape/identity/owner admission remains in the existing guards. */
 export function validCryptosleepSicknessTransport256(actor:ClinicalOwner256,version:number,clock:number,spatial?:{width:number;height:number}):boolean {
  const record=actor.health;if(!hasCryptosleepSickness256(record))return true;
- if(!record||!validCryptosleepSicknessHeader256(record,version)||!Number.isSafeInteger(clock)||clock<0||record.tick>clock)return false;
+ if(!record||!validCryptosleepSicknessHeader256(record,version)||!Number.isSafeInteger(clock)||clock<0||medicalCivilTick271(record)>clock)return false;
  const animal=isAnimalSpecies(record.body);
  if(validateMedicalRecord(record,true,true,!animal,!animal,animal,animal,true,true,true,true,true,version,!animal)!==null)return false;
  const v=record.cryptosleepSickness!.vomit;

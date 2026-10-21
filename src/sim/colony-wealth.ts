@@ -2,6 +2,7 @@ import { factionOf } from './affiliation.ts';
 import { floorRoomMarketValue, structureRoomMarketValue } from './room-market-value.ts';
 import { pileMarketValue } from './trade-prices.ts';
 import { tradeCatalogueEntry } from './trade-catalogue.ts';
+import { isPlayerCasket271 } from './cryptosleep-state-271.ts';
 import type { ItemId } from './items.ts';
 import type { MaterialPile, Pawn, World } from './types.ts';
 
@@ -83,17 +84,25 @@ function knownPileValue(pile: MaterialPile): number | undefined {
 }
 
 export function colonyWealth(world: World): ColonyWealth {
+  // Installed holders keep their original people and goods on this map.
+  // Archived holders from removed maps are deliberately outside this reader.
+  // Authority validation already owns the full contents guard. This read
+  // visits only installed structures, without revalidating every held field.
+  const held = world.structures.filter(isPlayerCasket271).flatMap(c=>{
+    const h=c.cryptosleep;return h.human?[{pawn:h.human,items:h.items,packed:h.packed}]:[];
+  });
   const pawns = new Map(world.pawns.map(p => [p.id,p]));
+  for (const owner of held) pawns.set(owner.pawn.id,owner.pawn);
   const unpricedPileIds: number[] = [], unpricedPackedIds: number[] = [], unpricedStructureIds: number[] = [], unpricedPawnIds: number[] = [];
   let items = 0, structures = 0, floors = 0;
-  for (const pile of world.piles) {
+  for (const piles of [world.piles,...held.map(owner=>owner.items)]) for (const pile of piles) {
     if (!pileOnPlayerMap(pile,pawns)) continue;
     const value = knownPileValue(pile);
     if (value === undefined) unpricedPileIds.push(pile.id);
     else items += value;
   }
   // Packed furniture is a physical item, not a second installed building.
-  for (const pack of world.packed) {
+  for (const packed of [world.packed,...held.map(owner=>owner.packed)]) for (const pack of packed) {
     const owner = pack.owner;
     if (owner.type !== 'ground' && !colonyPawn(pawns.get(owner.pawnId))) continue;
     try { items += structureRoomMarketValue(pack.building); }
@@ -108,7 +117,7 @@ export function colonyWealth(world: World): ColonyWealth {
   for (const tile of world.tiles) floors += floorRoomMarketValue(tile);
   // Pawn MarketValue needs age/life stage, all Core capacities, full skill set,
   // beauty and hediff price offsets. Those facts are absent from this save.
-  for (const pawn of world.pawns) if (colonyPawn(pawn)) unpricedPawnIds.push(pawn.id);
+  for (const pawn of pawns.values()) if (colonyPawn(pawn)) unpricedPawnIds.push(pawn.id);
   for(const animal of world.wildlife?.animals??[])if(animal.domestic&&animal.state!=='dead')unpricedPawnIds.push(animal.id);
   const pawnsKnown = 0, knownTotal = items + structures + floors + pawnsKnown;
   return {

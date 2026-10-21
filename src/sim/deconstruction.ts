@@ -1,4 +1,6 @@
 import {shipChunkNextRandom256} from './ship-chunk-leavings-256.ts';
+import {isPlayerCasket271} from './cryptosleep-state-271.ts';
+import {planCryptosleepRemoval271} from './cryptosleep-removal-271.ts';
 import {fermentationContents265} from './fermentation-state-265.ts';
 import {drawShipChunkDeconstruction256} from './ship-chunk-leavings-256.ts';
 import {isAncientCasket256} from './ancient-casket-state-256.ts';
@@ -22,6 +24,7 @@ import type { Job, Pawn, World } from './types.ts';
 export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolean {
   const structure = deconstructionTarget(world, job);
   if (!structure || !deconstructionAvailable(world, job, pawn.id)) return false;
+  if(isPlayerCasket271(structure)){const plan=planCryptosleepRemoval271(world,structure,'deconstruct');return plan.ok&&plan.commit();}
   if(isAncientCasket256(structure)){const plan=planEmptyAncientCasketRemoval256(world,structure,'deconstruct');return plan.ok&&plan.commit();}
   const bedOwnership=prepareBedOwnershipTransition256(world,structure,'destroy');
   const fogRemoval=prepareRemovedFogStructure256(world,structure);

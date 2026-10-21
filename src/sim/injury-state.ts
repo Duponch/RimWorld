@@ -19,6 +19,7 @@ import type { Injury,MedicalRandom,MedicalRecord } from './injury-types.ts';
 import { INFECTION_DELAY_MAX_CORE,INFECTION_UNIT,infectionModifiers,injuryInfectionChance } from './infection-rules.ts';
 import { initializeInfectionRisk,removeInfectionsWithin } from './infection-state.ts';
 import { isMechanoidKind } from './mechanoid-definition.ts';
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 
 export function createMedicalRecord(tick=0):MedicalRecord {
   if(!Number.isSafeInteger(tick)||tick<0)throw new Error('Invalid medical tick');
@@ -85,10 +86,10 @@ export function reconcileMedicalDeath(record:MedicalRecord):void {
   if(record.death)return;
   if(isMechanoidKind(record.body)){
     const cause=assessMedical(record).vitalFailure?'vital-failure':record.injuries.reduce((n,i)=>n+i.severity,0)>=150*HP_UNIT*medicalModel(record).healthScale?'trauma':null;
-    if(cause)record.death={tick:record.tick,cause};return;
+    if(cause)record.death={tick:medicalCivilTick271(record),cause};return;
   }
   const cause=(record.toxicBuildup?.severity??0)>=1?'toxic-buildup':record.animalAgeConditions?.cases.some(c=>c.kind==='HeartAttack'&&c.severity>=1)?'heart-attack':record.animalAgeConditions?.cases.some(c=>c.kind==='HeartArteryBlockage'&&c.severity>=1)?'heart-artery-blockage':(record.malnutrition??0)>=MALNUTRITION_UNIT?'malnutrition':(record.heatstroke??0)>=HEAT_UNIT?'heatstroke':(record.hypothermia??0)>=HEAT_UNIT?'hypothermia':record.bloodLoss>=BLOOD_UNIT?'blood-loss':record.infections?.cases.some(c=>c.severity>=INFECTION_UNIT)?'infection':(record.flu?.severity??0)>=FLU_UNIT?'flu':(record.immuneDiseases?.malaria?.severity??0)>=IMMUNE_DISEASE_UNIT?'malaria':(record.immuneDiseases?.plague?.severity??0)>=IMMUNE_DISEASE_UNIT?'plague':assessMedical(record).vitalFailure?'vital-failure':record.injuries.reduce((n,i)=>n+i.severity,0)>=150*HP_UNIT*medicalModel(record).healthScale?'trauma':null;
-  if(cause)record.death={tick:record.tick,cause};
+  if(cause)record.death={tick:medicalCivilTick271(record),cause};
 }
 export function rollScarPain(random:MedicalRandom):ScarPain {const n=random();return n<.5?0:n<.7?1:n<.9?3:6;}
 

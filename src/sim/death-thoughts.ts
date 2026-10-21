@@ -1,3 +1,4 @@
+import {memoryExpiry271,memoryReadTick271} from './suspended-memory-271.ts';
 import { factionOf,factionRelation,isColonist,distanceSquared } from './affiliation.ts';
 import { captureHumanOwners,type HumanOwnershipCapture,type HumanOwnerSlot } from './human-owners.ts';
 import { campaignPhysicalCaptures } from './campaign-people.ts';
@@ -11,8 +12,9 @@ import type { MoodThought } from './mood.ts';
 import type { Pawn,World } from './types.ts';
 
 export function expireDeathThoughts(pawn:Pawn,tick:number):void {
-  if(!pawn.deathThoughts?.some(m=>m.at+deathThoughtDuration(m.kind)<=tick))return;
-  pawn.deathThoughts=pawn.deathThoughts.filter(m=>m.at+deathThoughtDuration(m.kind)>tick);
+  if(pawn.cryptosleepHeldAt271!==undefined)return;
+  if(!pawn.deathThoughts?.some(m=>memoryExpiry271(m,m.at+deathThoughtDuration(m.kind))<=tick))return;
+  pawn.deathThoughts=pawn.deathThoughts.filter(m=>memoryExpiry271(m,m.at+deathThoughtDuration(m.kind))>tick);
   if(!pawn.deathThoughts.length)delete pawn.deathThoughts;
 }
 /** Event memories do not renew; observations renew the same physical person's
@@ -20,7 +22,7 @@ export function expireDeathThoughts(pawn:Pawn,tick:number):void {
 export function rememberDeathThought(pawn:Pawn,kind:DeathThoughtKind,otherId:number,tick:number,renew=false):void {
   expireDeathThoughts(pawn,tick);
   const existing=pawn.deathThoughts?.find(m=>m.kind===kind&&m.otherId===otherId);
-  if(existing){if(renew)existing.at=tick;return;}
+  if(existing){if(renew){existing.at=tick;delete existing.suspendedTicks;}return;}
   const memories=pawn.deathThoughts??=[],same=memories.filter(m=>m.kind===kind);
   if(same.length>=DEATH_THOUGHT_RULES[kind].limit){
     const oldest=same.reduce((a,b)=>a.at<b.at||a.at===b.at&&a.otherId<b.otherId?a:b);
@@ -66,10 +68,11 @@ export function notifyDeathThoughts(world:World,deceased:Pawn,capture?:HumanOwne
 }
 
 export function deathThoughtsAt(pawn:Pawn,tick:number,_people?:Pick<ReadonlyMap<number,{readonly name:string}>,'get'>):MoodThought[] {
+  tick=memoryReadTick271(pawn,tick);
   if(pawn.state==='dead')return [];
   const groups=new Map<DeathThoughtKind,{count:number;expiresAt:number}>();
   for(const m of pawn.deathThoughts??[]){
-    const expiresAt=m.at+deathThoughtDuration(m.kind);if(expiresAt<=tick)continue;
+    const expiresAt=memoryExpiry271(m,m.at+deathThoughtDuration(m.kind));if(expiresAt<=tick)continue;
     const g=groups.get(m.kind);if(g){g.count++;g.expiresAt=Math.min(g.expiresAt,expiresAt);}else groups.set(m.kind,{count:1,expiresAt});
   }
   return [...groups].map<MoodThought>(([kind,g])=>{

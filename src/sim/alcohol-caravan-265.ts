@@ -1,3 +1,4 @@
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import {drugPolicyFor265,type DrugPolicy265} from './alcohol-policy-265.ts';
 import {alcoholBodySize265,scheduledAlcoholDue265} from './alcohol-ingestion-265.ts';
@@ -38,7 +39,7 @@ export function advanceGroupAlcohol265(group:Group,c:GroupAlcoholContext265):Con
   if(!addictionDue&&!(scheduledPulse&&scheduledAlcoholDue265(c.tick,p,policy)))continue;
   const pile=group.items.find(q=>q.kind==='beer'&&q.item==='beer'&&q.quantity>0&&q.owner.type==='inventory'&&carriers.has(q.owner.pawnId));if(!pile||pile.owner.type!=='inventory')continue;
   const originalCarrier=pile.owner.pawnId;
-  if(!Number.isSafeInteger(pile.quantity)||p.health&&p.health.tick!==c.tick)throw Error('Caravan beer is not at its actual clinical frontier');
+  if(!Number.isSafeInteger(pile.quantity)||p.health&&medicalCivilTick271(p.health)!==c.tick)throw Error('Caravan beer is not at its actual clinical frontier');
   const previous=group.reorganization.inventoryEffects?.beer??0;if(!Number.isSafeInteger(previous-1))throw Error('Alcohol consumption effects exhausted');
   const bodySize=alcoholBodySize265(p);recordCaravanAnimalConsumption256(group,'beer',1);
   if(pile.quantity===1)group.items.splice(group.items.indexOf(pile),1);else pile.quantity--;

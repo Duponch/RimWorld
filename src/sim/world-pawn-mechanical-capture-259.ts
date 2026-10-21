@@ -57,6 +57,7 @@ function scan(root:CampaignState,rows:readonly Mechanical[]){
   key(s.turret?.targetKey,source+':turret-target');key(s.turret?.burst?.targetKey,source+':turret-burst');key(s.turret?.wick?.instigatorKey,source+':wick-instigator');key(s.casketWick?.instigatorKey,source+':casket-instigator');
   for(const id of s.shelf?.cells??[])ref(id,source+':shelf-reference');for(const b of s.bills??[])ref(b.id,source+':bill-namespace');
   if(s.casket){for(const p of s.casket.humans)actor(p,source+':casket-human',false);for(const a of s.casket.animals)actor(a,source+':casket-animal',false);for(const p of s.casket.items)pile(p,source+':casket-item');}
+  if(s.cryptosleep){if(s.cryptosleep.human)actor(s.cryptosleep.human,source+':player-casket-human',false);for(const p of s.cryptosleep.items)pile(p,source+':player-casket-item');for(const p of s.cryptosleep.packed)packed(p,source+':player-casket-furniture');}
  };
  const packed=(p:PackedFurniture,source:string)=>{structure(p.building,source+':packed');if(p.owner.type!=='ground')ref(p.owner.pawnId,source+':packed-holder');};
  for(const captured of campaignPhysicalCaptures(root as World))for(const slot of captured.owners.slots){const source='human:'+slot.id;ref(slot.id,source+':actual-human-holder');if(slot.pawn)actor(slot.pawn,source,!!captured.world&&slot.kind==='map');for(const p of slot.items)pile(p,source);for(const p of slot.packed)packed(p,source);}
@@ -88,6 +89,7 @@ function scan(root:CampaignState,rows:readonly Mechanical[]){
  for(const post of root.worldGroups?.posts??[])for(const p of post.state.stock)pile(p,'post-stock');
  for(const row of root.worldPawns?.owners??[]){actor(row.actor,'world-pawn:'+row.actor.id,false,row.kind==='mechanical');for(const p of row.items)pile(p,'world-pawn');for(const p of row.packed)packed(p,'world-pawn');}
  for(const held of root.worldPawns?.heldCaskets259??[])structure(held.casket,'actual-retained-cryptosleep-holder');
+ for(const held of root.worldPawns?.heldPlayerCaskets271??[])structure(held.casket,'actual-retained-player-cryptosleep-holder');
  const facts=new Map<number,WorldPawnGCFacts256>(),sealed:unknown[]=[];
  for(const row of rows){const admitted=validMechanicalWorldPawn259(row,root.schemaVersion,root.worldFactions),reasons=[...keep.get(row.actor.id)!];if(row.keepForever)reasons.push('actual-explicit-keep');if(row.everColonist)reasons.push('actual-explicit-ever-colonist');reasons.sort();
   // Humanlike-only Colonist/logs, Animal-only bonds, and outgoing native

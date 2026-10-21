@@ -30,7 +30,7 @@ export function animalConditionMtbEvent256(days:number,intervalCore:number,rando
 }
 /** Exactly ONE actual HealthTickInterval call. The owner supplies elapsed
  * Core time; no phase is synthesized from a new clock or wall time. */
-export function advanceAnimalAgeConditionInterval256(record:AnimalAgeMedical256,input:{actorId:number;atCore:number;deltaCore:number;random:InitialAnimalRandom256;bindings:Partial<AnimalAgeConditionBindings256>}):void {
+export function advanceAnimalAgeConditionInterval256(record:AnimalAgeMedical256,input:{actorId:number;atCore:number;civilCore?:number;deltaCore:number;random:InitialAnimalRandom256;bindings:Partial<AnimalAgeConditionBindings256>}):void {
  if(!record.animalAgeConditions||record.death)return;
  if(!Number.isSafeInteger(input.actorId)||input.actorId<1||!Number.isSafeInteger(input.atCore)||input.atCore<0||!Number.isInteger(input.deltaCore)||input.deltaCore<1||input.deltaCore>16||input.atCore>record.tick*10||input.atCore-input.deltaCore<(record.tick-1)*10)throw Error('Condition interval does not belong to its actual clinical owner');
  const missing=unresolvedAnimalConditionBindings256(record,input.bindings);if(missing.length)throw Error('Unresolved animal condition bindings: '+missing.join(', '));
@@ -38,7 +38,7 @@ export function advanceAnimalAgeConditionInterval256(record:AnimalAgeMedical256,
  const snapshot=[...record.animalAgeConditions.cases];
  for(const c of snapshot){if(record.death)return;if(!record.animalAgeConditions.cases.includes(c))continue;
   if(!Number.isSafeInteger(c.ageCore+deltaCore))throw Error('Condition age exhausted');c.ageCore+=deltaCore;
-  const stage=animalConditionStage256(c.kind,c.severity),hash=(period:number)=>groupPawnInterval256(actorId,atCore,period,deltaCore);
+  const stage=animalConditionStage256(c.kind,c.severity),hash=(period:number)=>groupPawnInterval256(actorId,input.civilCore??atCore,period,deltaCore);
   if(stage.heartAttackMtb&&hash(60)&&animalConditionMtbEvent256(stage.heartAttackMtb,60,random))tryApplyAnimalAgeCondition256(record,'HeartAttack',random);
   if(stage.confusionMtb&&hash(60)&&!bindings.inMentalState()&&animalConditionMtbEvent256(stage.confusionMtb,60,random))bindings.tryStartConfused(c,atCore);
   // Real animals have neither skills nor a Mood memory tracker. The primary

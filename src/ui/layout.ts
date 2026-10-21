@@ -114,6 +114,7 @@ export const toolDefinitions: { id: Tool; title: string; hint: string; key: stri
   {id:'art-bench',title:'Atelier de sculpture',hint:'3 × 1 · 75 bois ou acier + 50 acier · manuel · petites et grandes sculptures · Q / E pour tourner',key:'',category:'production'},
   {id:'machining-table',title:'Atelier d’usinage',hint:'3 × 1 · 150 acier + 5 composants · 350 W · Construction 4 · Usinage',key:'',category:'production'},
   {id:'hi-tech-research-bench',title:'Bureau de recherche haute technologie',hint:'5 × 2 · 250 acier + 10 composants · 250 W · Construction 6 · Microélectronique',key:'',category:'production'},
+  {id:'cryptosleep-casket',title:'Caisson de cryptosommeil',hint:'1 × 2 · 180 acier + 5 uranium + 4 composants + 1 composant avancé · Construction 8 · Sans électricité',key:'',category:'furniture'},
   {id:'multi-analyzer',title:'Multi-analyseur',hint:'2 × 2 · 40 acier + 50 plastacier + 20 or + 8 composants · 200 W · Construction 8',key:'',category:'production'},
   {id:'fabrication-bench',title:'Établi de fabrication',hint:'5 × 2 · 200 acier + 12 composants + 2 composants avancés · 250 W · Construction 6',key:'',category:'production'},
   {id:'electric-tailor-bench',title:'Établi de tailleur électrique',hint:'3 × 1 · 75 matériaux + 50 acier + 2 composants · 120 W · Construction 4',key:'',category:'production'},

@@ -49,6 +49,7 @@ function knownMemoryReceivers259(w:Pick<World,'schemaVersion'|'tick'|'nextId'|'w
  if((Number(w.schemaVersion)!==259&&Number(w.schemaVersion)!==260&&(Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&!isSchema263OrLater(Number(w.schemaVersion)))))||!validWorldPawnsEnvelope256(w,w.schemaVersion,w.tick*10,w.nextId))return false;
  for(const row of w.worldPawns?.owners??[])if(row.kind==='human')known.add(row.actor.id);
  for(const entry of w.worldPawns?.heldCaskets259??[])for(const p of entry.casket.casket.humans)if(int(p.id,1,w.nextId-1))known.add(p.id);
+ for(const entry of w.worldPawns?.heldPlayerCaskets271??[]){const p=entry.casket.cryptosleep.human;if(p&&int(p.id,1,w.nextId-1))known.add(p.id);}
  return memories.every(m=>known.has(m.receiverId));
 }
 function metadata(value:unknown,w:Pick<World,'schemaVersion'|'tick'|'nextId'|'planet'>&Partial<Pick<World,'worldFactions'|'worldSites263'|'pawns'|'campaignPeople'>>,summary=false):value is CampaignMapPresentation {

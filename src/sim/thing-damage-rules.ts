@@ -17,6 +17,7 @@ const BUILDINGS:Readonly<Record<string,readonly [number,number,boolean]>>={
   'insect-hive':[130,1,false],'glow-pod':[50,1,false],
   'ship-chunk':[300,0,false],
   'ancient-cryptosleep-casket':[250,1,false],
+  'cryptosleep-casket':[250,.5,false],
   shelf:[100,1,true],'small-shelf':[50,1,true],
   'spike-trap':[40,1,true],
   'electric-crematorium':[300,1,true],

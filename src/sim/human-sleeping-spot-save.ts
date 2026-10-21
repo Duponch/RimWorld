@@ -114,7 +114,8 @@ function validTransport(w:World,version:number,structures?:StructureProvenanceRe
         ||p.rescue!==undefined&&!dataRecord(p.rescue)||p.surgery!==undefined&&!dataRecord(p.surgery))return false;
       const assigned=p.bedId===null?undefined:byId.get(p.bedId),need=p.need?.kind==='sleep'?p.need:undefined,bed=need?.bedId===null?undefined:byId.get(need?.bedId??0);
       const rescue=p.rescue&&byId.get(p.rescue.bedId),surgery=p.surgery&&byId.get(p.surgery.bedId);
-      if(kind!=='map')return !assigned&&!bed&&!rescue&&!surgery;
+      if(kind!=='map'&&kind!=='player-casket')return !assigned&&!bed&&!rescue&&!surgery;
+      if(kind==='player-casket'&&(need||p.rescue||p.surgery))return false;
       if(assigned){
         if(Object.hasOwn(p,'bedSlot')||assigned.medical||!!assigned.prisoner!==!!p.prisoner||p.state==='dead'||p.health?.death||assignments.has(assigned.id))return false;
         assignments.add(assigned.id);

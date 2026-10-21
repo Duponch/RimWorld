@@ -1,3 +1,4 @@
+import {medicalCivilTick271,medicalCivilCore271} from './suspended-human-clock-271.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {advanceAnimalAgeConditionInterval256,tickAnimalConditionTends256} from './animal-age-condition-runtime-256.ts';
 import {destroyAnimalConditionPart256} from './animal-condition-missing-part-256.ts';
@@ -29,7 +30,7 @@ export function humanConditionMedicalFrontier256(p:Pawn,record:MedicalRecord,clo
    if(current!==record||record.tick!==last+1||done)throw Error('Human condition frontier lost its actual original');last=record.tick;
    for(let core=(record.tick-1)*10+1;core<=record.tick*10&&!record.death;core++){
     tickAnimalConditionTends256(record);
-    advanceAnimalAgeConditionInterval256(record,{actorId:p.id,atCore:core,deltaCore:1,random,bindings:{
+    advanceAnimalAgeConditionInterval256(record,{actorId:p.id,atCore:core,civilCore:medicalCivilCore271(record,core),deltaCore:1,random,bindings:{
      inMentalState:()=>!!p.mental?.crisis||!!episode,
      tryStartConfused:()=>{if(owner.kind==='world-pawn'||episode||p.mental?.crisis||['dead','downed','sleeping'].includes(p.state)||medicalStatus(record)!=='mobile')return false;episode={revision:1,ageCore:0};started=true;return true;},
      destroyPart:(part,atCore)=>{destroyAnimalConditionPart256(record,part,atCore,random);},
@@ -46,11 +47,11 @@ export function humanConditionMedicalFrontier256(p:Pawn,record:MedicalRecord,clo
       if(units)learnSkill(skill,-units,p);
      }
     }
-    if(episode&&(medicalStatus(record)!=='mobile'||advanceAnimalConfusionState256(episode,p.id,core,1,random))){episode=undefined;recovered=true;}
+    if(episode&&(medicalStatus(record)!=='mobile'||advanceAnimalConfusionState256(episode,p.id,medicalCivilCore271(record,core),1,random))){episode=undefined;recovered=true;}
    }
   },
   commit(){
-   if(done||(record.death?record.tick>clock:record.tick!==clock)||actualCommitPawn&&(!local||!isSchema256Or257(local.schemaVersion)||!local.pawns.includes(actualCommitPawn)||local.pawns.some(a=>a!==actualCommitPawn&&a.id===p.id)||local.tick!==clock||actualCommitPawn.health!==record||actualCommitPawn.id!==p.id))throw Error('Human condition outcome has an invalid owner clock/adoption');done=true;
+   if(done||(record.death?medicalCivilTick271(record)>clock:medicalCivilTick271(record)!==clock)||actualCommitPawn&&(!local||!isSchema256Or257(local.schemaVersion)||!local.pawns.includes(actualCommitPawn)||local.pawns.some(a=>a!==actualCommitPawn&&a.id===p.id)||local.tick!==clock||actualCommitPawn.health!==record||actualCommitPawn.id!==p.id))throw Error('Human condition outcome has an invalid owner clock/adoption');done=true;
    if(record.death||recovered&&!episode){recoverHumanConfusion256(commitPawn,local);return;}
    if(started&&episode&&!startHumanConfusion256(commitPawn,clock,local))throw Error('Human clinical admission changed before actual commit');
    if(episode&&commitPawn.mental?.crisis?.kind==='confused-wander')commitPawn.mental.crisis.age=episode.ageCore;

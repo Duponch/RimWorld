@@ -1,3 +1,4 @@
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import { validateMedicalRecord } from './injury-validation.ts';
 import { medicalStatus } from './injury-state.ts';
@@ -135,7 +136,7 @@ export function validForcedConsumeTransport(world:World,knownConsumers?:readonly
       if(travelling.has(pawn.id)||packedHeld.has(pawn.id)||actors.get(pawn.id)!==pawn||!validForcedConsumePawnShape(pawn,world.schemaVersion,world)||!consumeActivityValid(world,pawn))return false;
       if(patients.has(pawn.id))return false;
       const health=pawn.health;
-      if(health&&(health.body!==undefined||health.death||health.tick>world.tick||medicalStatus(health)!=='mobile'
+      if(health&&(health.body!==undefined||health.death||medicalCivilTick271(health)>world.tick||medicalStatus(health)!=='mobile'
         ||validateMedicalRecord(health,true,true,true,true,false,false,true,true,true,true,true,world.schemaVersion,world.schemaVersion>=127)!==null))return false;
       const task=pawn.need;if(task?.kind!=='eat')return false;
       if(!Array.isArray(pawn.path)||pawn.path.length>world.width*world.height||!cell({x:pawn.x,z:pawn.z},world)||!validConsumeTravel(pawn,world))return false;

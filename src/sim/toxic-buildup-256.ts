@@ -1,3 +1,4 @@
+import {medicalCivilTick271,medicalCivilCore271,validMedicalCivilHeader271} from './suspended-human-clock-271.ts';
 import type {MedicalRecord,MedicalRandom} from './injury-types.ts';
 import type {VomitState} from './food-poisoning.ts';
 import {groupPawnInterval256} from './group-core-cadence-256.ts';
@@ -17,13 +18,13 @@ export function toxicStage256(severity:number){
 /** Absence remains literal. Header descriptors are checked before any field
  * access; the actual owner supplies its clinical clock and episode frontier. */
 export function validToxicBuildupHeader256(record:unknown,version:number,mechanical=false):boolean {
- if(!record||typeof record!=='object')return false;
+ if(!record||typeof record!=='object'||!validMedicalCivilHeader271(record,version,!Object.hasOwn(record,'body')))return false;
  const desc=Object.getOwnPropertyDescriptor(record,'toxicBuildup');if(!desc)return !('toxicBuildup'in record);
  if(version<256||mechanical||!('value'in desc)||!desc.enumerable||!plain(desc.value))return false;
  const t=desc.value;if(!exact(t,['severity','bornAt','vomit','rotOnDeath','vomitRequestedAt'])||!data(t,'severity')||!data(t,'bornAt')||typeof t.severity!=='number'||!Number.isFinite(t.severity)||f(t.severity)!==t.severity||t.severity<0||!integer(t.bornAt))return false;
  const tick=data(record,'tick'),death=data(record,'death');if(!tick||!integer(tick.value)||t.bornAt>tick.value||t.severity===0&&!Object.hasOwn(t,'vomit'))return false;
  if(Object.hasOwn(t,'rotOnDeath')&&(typeof t.rotOnDeath!=='boolean'||!death||!plain(death.value)))return false;
- if(Object.hasOwn(t,'vomitRequestedAt')&&(!integer(t.vomitRequestedAt)||t.vomitRequestedAt>tick.value*10||death))return false;
+ if(Object.hasOwn(t,'vomitRequestedAt')&&(!integer(t.vomitRequestedAt)||t.vomitRequestedAt>medicalCivilTick271(record as MedicalRecord)*10||death))return false;
  if(Object.hasOwn(t,'vomit')){
   const v=t.vomit;if(death||!plain(v)||!exact(v,['remainingCore','cell'])||!data(v,'remainingCore')||!integer(v.remainingCore,1)||v.remainingCore>899||!data(v,'cell')||!plain(v.cell)||!exact(v.cell,['x','z'])||!data(v.cell,'x')||!data(v.cell,'z')||!integer(v.cell.x)||!integer(v.cell.z))return false;
   for(const key of ['foodPoisoning','flu','cryptosleepSickness']){const other=data(record,key);if(other&&plain(other.value)&&Object.hasOwn(other.value,'vomit'))return false;}
@@ -50,14 +51,14 @@ export function applyToxicBite256(record:MedicalRecord,totalDamage:number,bodySi
 export function advanceToxicBuildupCore256(record:MedicalRecord,id:number,atCore:number,random:InitialAnimalRandom256,physical:{spawned:boolean;awake:boolean}):void {
  const t=record.toxicBuildup;if(!t||record.death)return;
  const stage=toxicStage256(t.severity);
- if(groupPawnInterval256(id,atCore,60,1)){
+ if(groupPawnInterval256(id,medicalCivilCore271(record,atCore),60,1)){
   if(stage.dementia&&animalConditionMtbEvent256(stage.dementia,60,random)){const r=tryApplyAnimalAgeCondition256(record,'Dementia',random);if(r.status==='blocked')throw Error('Unrepresented actual toxic Dementia victim');}
   if(stage.carcinoma&&animalConditionMtbEvent256(stage.carcinoma,60,random)){const r=tryApplyAnimalAgeCondition256(record,'Carcinoma',random);if(r.status==='blocked')throw Error('Unrepresented actual toxic Carcinoma victim');}
  }
  // Same stage and order as Hediff.TickInterval, before Immunizable's comp.
  // A rejected Spawned/Awake trial creates NO future wake-up intention.
- if(stage.vomit&&groupPawnInterval256(id,atCore,600,1)&&animalConditionMtbEvent256(stage.vomit,600,random)&&physical.spawned&&physical.awake&&assessMedical(record).canBeAwake)t.vomitRequestedAt=atCore;
- if(groupPawnInterval256(id,atCore,200,1))t.severity=Math.max(0,f(t.severity+f(f(-.08)*f(.0033333334))));
+ if(stage.vomit&&groupPawnInterval256(id,medicalCivilCore271(record,atCore),600,1)&&animalConditionMtbEvent256(stage.vomit,600,random)&&physical.spawned&&physical.awake&&assessMedical(record).canBeAwake)t.vomitRequestedAt=medicalCivilCore271(record,atCore);
+ if(groupPawnInterval256(id,medicalCivilCore271(record,atCore),200,1))t.severity=Math.max(0,f(t.severity+f(f(-.08)*f(.0033333334))));
  if(!t.severity&&!t.vomit)delete record.toxicBuildup;
 }
 /** This is a physical-owner commit operation. Read/load/validation never call

@@ -1,3 +1,4 @@
+import {memoryAge271,validSuspendedMemory271} from './suspended-memory-271.ts';
 import { DEEP_TALK_DURATION } from './social-state.ts';
 import { TICKS_PER_DAY,type World,type Pawn } from './types.ts';
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
@@ -11,7 +12,7 @@ const validOffset=(kind:unknown,offset:unknown):boolean=>typeof offset==='number
   kind==='fight-cathartic'?offset===38:
   kind==='fight-angering'?offset===-22:
   offset>0&&offset<=(kind==='chitchat'?Number.MAX_SAFE_INTEGER:kind==='rapport'?2.740000001:20.550000001));
-export function validateHumanSocial(p:Pawn,version:number,tick:number,ids:ReadonlySet<number>,localPawns:readonly Pawn[]):string[] {
+export function validateHumanSocial(p:Pawn,version:number,tick:number,ids:ReadonlySet<number>,localPawns:readonly Pawn[],civilTick=tick):string[] {
   const errors:string[]=[];
     const s:unknown=p.social;if(s===undefined)return [];
     if(version<70||!object(s)||Object.keys(s).some(k=>!['rng','wants','last','memories',...(version>=125?['fight']:[])].includes(k))||!integer(s.rng,1,0xffffffff)||s.wants!==undefined&&s.wants!==true||!Array.isArray(s.memories)||s.memories.length>(version>=134?2400:version>=125?2100:version>=86?900:600)){errors.push('Invalid social state.');return errors;}
@@ -27,7 +28,7 @@ export function validateHumanSocial(p:Pawn,version:number,tick:number,ids:Readon
     }
     const counts=new Map<string,number>();let chats=0,deep=0,rapport=0,kindWords=0,slight=0,insult=0,cathartic=0,angering=0;
     for(const m of s.memories){
-      if(!object(m)||Object.keys(m).some(k=>!['otherId','kind','at','offset'].includes(k))||!other(m.otherId)||!memoryKind(m.kind,version)||!integer(m.at,0,tick)||!validOffset(m.kind,m.offset)||tick-m.at>=(m.kind==='chitchat'?TICKS_PER_DAY:DEEP_TALK_DURATION)){errors.push('Invalid social memory.');continue;}
+      if(!object(m)||Object.keys(m).some(k=>!['otherId','kind','at','offset','suspendedTicks'].includes(k))||!validSuspendedMemory271(m,version,tick,Number(m.at))||!other(m.otherId)||!memoryKind(m.kind,version)||!integer(m.at,0,civilTick)||!validOffset(m.kind,m.offset)||memoryAge271(m,m.at,tick)>=(m.kind==='chitchat'?TICKS_PER_DAY:DEEP_TALK_DURATION)){errors.push('Invalid social memory.');continue;}
       const key=`${m.otherId}:${m.kind}`,count=(counts.get(key)??0)+1;counts.set(key,count);
       if(count>(m.kind==='chitchat'?1:m.kind==='rapport'?50:m.kind==='fight-cathartic'||m.kind==='fight-angering'?5:10))errors.push('Too many social memories for one person.');
       if(m.kind==='chitchat')chats++;else if(m.kind==='rapport')rapport++;else if(m.kind==='kind-words')kindWords++;else if(m.kind==='slight')slight++;else if(m.kind==='insult')insult++;else if(m.kind==='fight-cathartic')cathartic++;else if(m.kind==='fight-angering')angering++;else deep++;

@@ -9,7 +9,7 @@ import type {WorldPawnOwner256} from './world-pawn-state-256.ts';
 export interface WorldPawnOriginMap256 {mapId:number;tile:number;removedAt:number;settledAt?:number}
 export function worldPawnOriginProjection256(root:CampaignState):{worldPawnOrigins?:WorldPawnOriginMap256[]} {
  if(!isSchema256Or257(root.schemaVersion)||!root.worldMaps)return {};
- const needed=new Set([...root.worldPawns?.owners??[],...root.worldPawns?.discardedMechanical259??[],...root.worldPawns?.heldCaskets259??[]].flatMap(r=>r.originMapId===null||root.worldMaps!.sites.some(m=>m.id===r.originMapId)?[]:[r.originMapId]));
+ const needed=new Set([...root.worldPawns?.owners??[],...root.worldPawns?.discardedMechanical259??[],...root.worldPawns?.heldCaskets259??[],...root.worldPawns?.heldPlayerCaskets271??[]].flatMap(r=>r.originMapId===null||root.worldMaps!.sites.some(m=>m.id===r.originMapId)?[]:[r.originMapId]));
  if((Number(root.schemaVersion)===259||Number(root.schemaVersion)===260||(Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||isSchema263OrLater(Number(root.schemaVersion))))))for(const m of root.worldGroups?.lostMemories??[])if(m.kind==='new-colony-settled'&&!root.worldMaps.sites.some(s=>s.id===m.mapId))needed.add(m.mapId);
  if((Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||isSchema263OrLater(Number(root.schemaVersion)))))for(const m of root.worldGroups?.lostMemories??[])if(m.caravanCession261&&!root.worldMaps.sites.some(s=>s.id===m.mapId))needed.add(m.mapId);
  if(isSchema263OrLater(Number(root.schemaVersion)))for(const g of root.worldGroups?.groups??[])if(g.localMapId===null&&g.retreat261?.autoJoinable===true&&!root.worldMaps.sites.some(s=>s.id===g.originMapId))needed.add(g.originMapId);

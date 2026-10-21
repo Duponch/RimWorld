@@ -34,7 +34,7 @@ interface WorldPawnCommon256 {
 export type WorldPawnOwner256=WorldPawnCommon256&({kind:'human';actor:Pawn}|{kind:'animal';actor:WildAnimal}|{kind:'mechanical';actor:Mechanoid;mechanicalTimersAtCore259:number});
 /** Scalar receipt after actual Destroy(Vanish)/Discard, never a living owner. */
 export interface DiscardedMechanical259 {id:number;mechKind:MechanoidKind;factionId:number;originMapId:number;enteredAtAbsCore:number;discardedAtCore:number}
-export interface WorldPawnsState256 {revision:1;atCore:number;lastSuccessfulCore:number;currentRate:number;owners:WorldPawnOwner256[];heldCaskets259?:import('./world-pawn-casket-259.ts').HeldWorldCasket259[];nativeOrder?:NativeWorldPawnOrder256;discardedMechanical259?:DiscardedMechanical259[]}
+export interface WorldPawnsState256 {revision:1;atCore:number;lastSuccessfulCore:number;currentRate:number;owners:WorldPawnOwner256[];heldCaskets259?:import('./world-pawn-casket-259.ts').HeldWorldCasket259[];heldPlayerCaskets271?:import('./world-pawn-player-casket-271.ts').HeldPlayerCasket271[];nativeOrder?:NativeWorldPawnOrder256;discardedMechanical259?:DiscardedMechanical259[]}
 export type WorldPawnCampaign256=CampaignState&{worldPawns?:WorldPawnsState256};
 /** Actual campaign birth only. Never called by load, migration or first abandon. */
 export function initialWorldPawns256(atCore=0):WorldPawnsState256 {

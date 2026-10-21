@@ -1,3 +1,4 @@
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import type {World,Pawn,MaterialPile,Cell,Job} from './types.ts';
 import type {WildAnimal} from './wildlife-state.ts';
@@ -54,7 +55,7 @@ export function prepareReformDeparture260(w:World,input:ReformDepartureInput260)
   if(p.surgery||p.rescue||p.animalRescue||p.animalHandling?.kind==='lead')throw Error('Reform release still owns a cross-actor notifier');
   // Living local clinical records are already required at this actual clock by
   // validatePawnHealthRecord; never advance clinical state in a Reform preview.
-  if(p.need?.kind==='sleep'&&p.need.medical&&p.health&&!p.health.death&&p.health.tick<w.tick)throw Error('Reform medical source must have its actual current clinical clock');
+  if(p.need?.kind==='sleep'&&p.need.medical&&p.health&&!p.health.death&&medicalCivilTick271(p.health)<w.tick)throw Error('Reform medical source must have its actual current clinical clock');
   for(const job of w.jobs)if(p.orders.queue.includes(job.id)&&jobCopy(job).reservedBy===p.id){const d=jobCopy(job);delete d.clearance;delete d.installationWork;d.reservedBy=null;d.status='pending';}
   const active=w.jobs.find(j=>j.id===p.jobId);if(active)releasePawnJob259(jobCopy(active),p.id);
   const d=structuredClone(p),oldMemories=d.roomMemories;

@@ -3,14 +3,18 @@ import { constructionRecipe, validConstructionMaterial } from './construction-ma
 import type { World } from './types.ts';
 
 /** Runs after collection shapes, before any planner-based order validation. */
-export function validateConstructionMaterials(world:World,version:number,packedRecords?:readonly PackedFurniture[]):string[] {
+export function validateConstructionMaterials(world:World,version:number,packedRecords?:readonly PackedFurniture[]):string[];
+export function validateConstructionMaterials(world:Pick<World,'tick'>,version:number,packedRecords:readonly PackedFurniture[]):string[];
+export function validateConstructionMaterials(world:World|Pick<World,'tick'>,version:number,packedRecords?:readonly PackedFurniture[]):string[] {
+  const local='structures'in world?world:undefined;if(!packedRecords&&!local)return ['Material validation requires an actual map or explicit packed records.'];
   const errors:string[]=[];
-  for(const entity of packedRecords?packedRecords.map(p=>p.building):[...world.jobs,...world.structures,...(world.packed??[]).map(p=>p.building)]) {
+  for(const entity of packedRecords?packedRecords.map(p=>p.building):[...local!.jobs,...local!.structures,...(local!.packed??[]).map(p=>p.building)]) {
     if(entity.kind==='torch-lamp'&&(version<249||entity.material!=='wood'||entity.orientation!==0||entity.footprint!=='standard'))errors.push('Torch lamp requires V249, wood and fixed orientation.');
     if(entity.kind==='vitals-monitor'&&(version<211||entity.material!=='steel'||entity.footprint!=='standard'))errors.push('Vitals monitor requires V211 and steel.');
     if(entity.kind==='drug-lab'&&(version<206||!validConstructionMaterial(entity.kind,entity.material,version)||entity.footprint!=='standard'))errors.push('Drug lab requires V206, wood or steel and its standard footprint.');
     if(entity.kind==='hydroponics-basin'&&(version<203||entity.material!=='steel'||entity.footprint!=='standard'))errors.push('Hydroponics basin requires V203 and steel.');
     if(entity.kind==='mini-turret'&&(version<193||entity.material!=='steel'||entity.orientation!==0||entity.footprint!=='standard'))errors.push('Mini turret requires V193, steel and fixed orientation.');
+    if(entity.kind==='cryptosleep-casket'&&(version!==271||entity.material!=='steel'||entity.footprint!=='standard'))errors.push('Ordinary cryptosleep casket requires V271, steel and its standard footprint.');
     if(entity.kind==='tube-television'&&(version<190||entity.material!=='steel'||entity.footprint!=='standard'))errors.push('Tube television requires V190 and steel.');
     if(entity.kind==='sandbags'&&(version<189||entity.material!=='cloth'||entity.orientation!==0||entity.footprint!=='standard'))errors.push('Sandbags require V189, cloth and fixed orientation.');
     if(['grave','lay-floor','remove-floor'].includes(entity.kind)&&(version<89||entity.material!==undefined))errors.push('Terrain work requires V89 without a building material.');
@@ -30,14 +34,14 @@ export function validateConstructionMaterials(world:World,version:number,packedR
     if(entity.material!==undefined&&(version<30||!validConstructionMaterial(entity.kind,entity.material,version)||entity.footprint==='legacy-single'))errors.push('Invalid or future construction material.');
   }
   if(packedRecords)return errors;
-  if(world.jobs.some(job=>job.kind==='small-sculpture'||job.kind==='large-sculpture'))errors.push('Sculptures cannot be construction jobs.');
+  if(local!.jobs.some(job=>job.kind==='small-sculpture'||job.kind==='large-sculpture'))errors.push('Sculptures cannot be construction jobs.');
   // V2–V4 do not have ItemId; their kind/escrow checks remain in validateSchema.
   if(errors.length||version<5)return errors;
   const delivered=new Map<number,Map<string,number>>();
-  for(const p of world.piles)if(p.owner.type==='job') {
+  for(const p of local!.piles)if(p.owner.type==='job') {
     const amounts=delivered.get(p.owner.jobId)??new Map<string,number>();amounts.set(p.item,(amounts.get(p.item)??0)+p.quantity);delivered.set(p.owner.jobId,amounts);
   }
-  for(const job of world.jobs)for(const [item,quantity] of delivered.get(job.id)??[]) {
+  for(const job of local!.jobs)for(const [item,quantity] of delivered.get(job.id)??[]) {
     if(quantity>(constructionRecipe(job).ingredients.find(c=>c.item===item)?.quantity??0))errors.push('Unrequested or excess construction material.');
     if(job.construction==='blueprint')errors.push('Blueprint already contains construction materials.');
   }

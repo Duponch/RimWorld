@@ -1,10 +1,11 @@
+import {memoryExpiry271,validSuspendedMemory271,memoryReadTick271} from './suspended-memory-271.ts';
 import { captureRelationshipPeople } from './relationship-namespace.ts';
 import { TICKS_PER_DAY,type Pawn,type World } from './types.ts';
 import type { RelationshipPeople } from './relationship-state.ts';
 import type { MoodThought } from './mood.ts';
 
 export type RomanceMemoryKind='rebuffed-opinion'|'rebuffed-mood'|'failed-opinion'|'failed-low-opinion-mood'|'breakup-opinion'|'breakup-mood';
-export interface RomanceMemory {otherId:number;kind:RomanceMemoryKind;at:number}
+export interface RomanceMemory {otherId:number;kind:RomanceMemoryKind;at:number;suspendedTicks?:number}
 export type RomanceOpinionKind='rebuffed-opinion'|'failed-opinion'|'breakup-opinion';
 export const ROMANCE_MEMORY_DEFINITIONS=Object.freeze({
   'rebuffed-opinion':{days:10,offset:-10,limit:300,perOther:5,multiplier:.9,label:'Tentative repoussée'},
@@ -21,8 +22,9 @@ export const romanceMemoryDuration=(kind:RomanceMemoryKind):number=>ROMANCE_MEMO
 const oldest=(a:RomanceMemory,b:RomanceMemory)=>a.at<b.at||a.at===b.at&&a.otherId<b.otherId?a:b;
 
 export function expireRomanceMemories(pawn:Pawn,tick:number):void {
-  if(!pawn.romanceMemories?.some(memory=>memory.at+romanceMemoryDuration(memory.kind)<=tick))return;
-  pawn.romanceMemories=pawn.romanceMemories.filter(memory=>memory.at+romanceMemoryDuration(memory.kind)>tick);
+  if(pawn.cryptosleepHeldAt271!==undefined)return;
+  if(!pawn.romanceMemories?.some(memory=>memoryExpiry271(memory,memory.at+romanceMemoryDuration(memory.kind))<=tick))return;
+  pawn.romanceMemories=pawn.romanceMemories.filter(memory=>memoryExpiry271(memory,memory.at+romanceMemoryDuration(memory.kind))>tick);
   if(!pawn.romanceMemories.length)delete pawn.romanceMemories;
 }
 export function addRomanceMemory(pawn:Pawn,otherId:number,kind:RomanceMemoryKind,tick:number):void {
@@ -42,21 +44,23 @@ export function removeSuccessfulRomanceMemories(pawn:Pawn,otherId:number):void {
 }
 export interface RomanceOpinionCause {kind:RomanceOpinionKind;count:number;value:number;nextChange:number;label:string;description:string}
 export function romanceOpinionCauses(pawn:Pawn,otherId:number,tick:number):RomanceOpinionCause[] {
+  tick=memoryReadTick271(pawn,tick);
   return opinionKinds.flatMap(kind=>{
     const definition=ROMANCE_MEMORY_DEFINITIONS[kind],duration=romanceMemoryDuration(kind);
-    const memories=(pawn.romanceMemories??[]).filter(m=>m.kind===kind&&m.otherId===otherId&&m.at+duration>tick).sort((a,b)=>b.at-a.at);
+    const memories=(pawn.romanceMemories??[]).filter(m=>m.kind===kind&&m.otherId===otherId&&memoryExpiry271(m,m.at+duration)>tick).sort((a,b)=>b.at-a.at);
     if(!memories.length)return [];
-    const value=memories.reduce((sum,m,index)=>sum+definition.offset*Math.min(1,(m.at+duration-tick)/(duration*.3))*definition.multiplier**index,0);
-    return [{kind,count:memories.length,value,nextChange:Math.min(...memories.map(m=>m.at+duration)),label:definition.label,
+    const value=memories.reduce((sum,m,index)=>sum+definition.offset*Math.min(1,(memoryExpiry271(m,m.at+duration)-tick)/(duration*.3))*definition.multiplier**index,0);
+    return [{kind,count:memories.length,value,nextChange:Math.min(...memories.map(m=>memoryExpiry271(m,m.at+duration))),label:definition.label,
       description:'Souvenir dirigé d’un échange amoureux réel ; son opinion décroît pendant les derniers 30 % de sa durée.'}];
   });
 }
 export function romanceMoodThoughts(world:World,pawn:Pawn):MoodThought[] {return romanceMoodThoughtsAt(pawn,world.tick,captureRelationshipPeople(world));}
 export function romanceMoodThoughtsAt(pawn:Pawn,tick:number,people:Pick<ReadonlyMap<number,{readonly name:string}>,'get'>):MoodThought[] {
+  tick=memoryReadTick271(pawn,tick);
   if(!pawn.romanceMemories)return [];
   const groups=new Map<string,RomanceMemory[]>();
   for(const m of pawn.romanceMemories){
-    if(!moodKinds.includes(m.kind)||m.at+romanceMemoryDuration(m.kind)<=tick)continue;
+    if(!moodKinds.includes(m.kind)||memoryExpiry271(m,m.at+romanceMemoryDuration(m.kind))<=tick)continue;
     const label=`${ROMANCE_MEMORY_DEFINITIONS[m.kind].label} ${people.get(m.otherId)?.name??'cette personne'}`,key=`${m.kind}:${label}`;
     const group=groups.get(key)??[];group.push(m);groups.set(key,group);
   }
@@ -65,27 +69,27 @@ export function romanceMoodThoughtsAt(pawn:Pawn,tick:number,people:Pick<Readonly
     const memory=group[0]!,definition=ROMANCE_MEMORY_DEFINITIONS[memory.kind],name=people.get(memory.otherId)?.name??'cette personne';
     return {id:`romance-${memory.kind}-${memory.otherId}`,label:`${definition.label} ${name}${group.length>1?` ×${group.length}`:''}`,
       offset:group.reduce((sum,_m,index)=>sum+definition.offset*definition.multiplier**index,0),kind:'memory',
-      expiresAt:Math.min(...group.map(m=>m.at+romanceMemoryDuration(m.kind))),description:'Souvenir amoureux réel ; humeur distincte de l’opinion envers cette personne.'};
+      expiresAt:Math.min(...group.map(m=>memoryExpiry271(m,m.at+romanceMemoryDuration(m.kind)))),description:'Souvenir amoureux réel ; humeur distincte de l’opinion envers cette personne.'};
   });
 }
 const object=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value);
 const integer=(value:unknown,lo:number,hi=Number.MAX_SAFE_INTEGER):value is number=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=lo&&value<=hi;
-export function validRomanceMemoryShape(value:unknown,version:number,tick:number):value is RomanceMemory[]|undefined {
+export function validRomanceMemoryShape(value:unknown,version:number,tick:number,civilTick=tick):value is RomanceMemory[]|undefined {
   if(value===undefined)return true;
   if(version<195||!Array.isArray(value)||!value.length||value.length>ROMANCE_MEMORY_LIMIT)return false;
   const totals=new Map<string,number>(),pairs=new Map<string,number>();
   for(const m of value){
-    if(!object(m)||Object.keys(m).length!==3||Object.keys(m).some(k=>!['otherId','kind','at'].includes(k))||!integer(m.otherId,1)
-      ||typeof m.kind!=='string'||!Object.hasOwn(ROMANCE_MEMORY_DEFINITIONS,m.kind)||!integer(m.at,0,tick))return false;
+    if(!object(m)||Object.keys(m).length!==(Object.hasOwn(m,'suspendedTicks')?4:3)||Object.keys(m).some(k=>!['otherId','kind','at','suspendedTicks'].includes(k))||!validSuspendedMemory271(m,version,tick,Number(m.at))||!integer(m.otherId,1)
+      ||typeof m.kind!=='string'||!Object.hasOwn(ROMANCE_MEMORY_DEFINITIONS,m.kind)||!integer(m.at,0,civilTick))return false;
     const kind=m.kind as RomanceMemoryKind,definition=ROMANCE_MEMORY_DEFINITIONS[kind];
-    if(m.at+romanceMemoryDuration(kind)<=tick)return false;
+    if(memoryExpiry271(m,m.at+romanceMemoryDuration(kind))<=Math.max(tick,m.at))return false;
     const count=(totals.get(kind)??0)+1,key=`${kind}:${m.otherId}`,pairCount=(pairs.get(key)??0)+1;
     totals.set(kind,count);pairs.set(key,pairCount);if(count>definition.limit||pairCount>definition.perOther)return false;
   }
   return true;
 }
-export function validRomanceMemories(value:unknown,pawnId:number,version:number,world:World,people?:RelationshipPeople):boolean {
-  if(!validRomanceMemoryShape(value,version,world.tick))return false;
+export function validRomanceMemories(value:unknown,pawnId:number,version:number,world:World,people?:RelationshipPeople,activeTick=world.tick,civilTick=activeTick):boolean {
+  if(!validRomanceMemoryShape(value,version,activeTick,civilTick))return false;
   if(value===undefined)return true;
   const known=people??captureRelationshipPeople(world);
   return known.has(pawnId)&&value.every(memory=>memory.otherId!==pawnId&&known.has(memory.otherId));

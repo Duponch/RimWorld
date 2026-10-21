@@ -23,6 +23,7 @@ export const BUILDING_SUPPORT:Readonly<Record<StructureKind,'Light'|'Medium'|'He
  brewery:'Medium','fermenting-barrel':'Light',
  'insect-hive':'None','glow-pod':'None',
   'ancient-cryptosleep-casket':'Medium',
+  'cryptosleep-casket':'Medium',
   column:'Light',urn:'Light','stele-large':'Medium','stele-grand':'Heavy',sarcophagus:'Light',
   'ancient-road-barrier':'Light','ancient-road-lamp':'Light',
   'ship-chunk':'Light',

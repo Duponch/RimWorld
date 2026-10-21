@@ -1,3 +1,4 @@
+import {memoryExpiry271,validSuspendedMemory271} from './suspended-memory-271.ts';
 import {animalNutritionMax} from './animal-life.ts';
 import {validAnimalAgeCoreRemainder256} from './initial-animal-age-owner-256.ts';
 import {captureHumanOwners} from './human-owners.ts';
@@ -139,13 +140,13 @@ export function validFodderTransport(w:World,version:number=w?.schemaVersion):bo
         ||pawn.ward?.kind==='food'&&humanTaskTargetsHay(pawn.ward,hayIds))return false;
       let kibbleMemory=false;
       for(const memory of records(pawn.memories))if(memory.kind==='ate-kibble'){
-        if(kibbleMemory||Object.keys(memory).length!==2||!Object.hasOwn(memory,'expiresAt')
-          ||!Number.isSafeInteger(memory.expiresAt)||Number(memory.expiresAt)<=slot.validationTick
-          ||Number(memory.expiresAt)>slot.validationTick+TICKS_PER_DAY)return false;
+        if(kibbleMemory||Object.keys(memory).length!==(Object.hasOwn(memory,'suspendedTicks')?3:2)||!validSuspendedMemory271(memory,version,slot.validationTick,Number(memory.expiresAt)-TICKS_PER_DAY)||!Object.hasOwn(memory,'expiresAt')
+          ||!Number.isSafeInteger(memory.expiresAt)||memoryExpiry271(memory,Number(memory.expiresAt))<=slot.validationTick
+          ||memoryExpiry271(memory,Number(memory.expiresAt))>slot.validationTick+TICKS_PER_DAY)return false;
         kibbleMemory=true;
       }
       const poisoning=pawn.health?.foodPoisoning;
-      if(fodder(poisoning?.item)&&!validFoodPoisoning(poisoning,slot.validationTick,true,version))return false;
+      if(fodder(poisoning?.item)&&!validFoodPoisoning(poisoning,pawn.health?.tick??slot.validationTick,true,version))return false;
     }
     return true;
   }catch{return false;}

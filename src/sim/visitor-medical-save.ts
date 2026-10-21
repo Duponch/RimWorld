@@ -1,3 +1,4 @@
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import { hasVisitorMedicalGuestMarker,validVisitorMedicalDeparture,validVisitorShape } from './visitor-save.ts';
 import { validRescueShape,validateRescues } from './rescue-save.ts';
 import { validTendShape,validateCare } from './care-save.ts';
@@ -52,7 +53,7 @@ export function validVisitorMedicalTransport(w:World):boolean {
       if(p.medicalSleep!==undefined&&(p.medicalSleep!==true||p.state!=='downed'&&p.state!=='resting'||p.moveCooldown>0))return false;
       const h=p.health;
       if(!h||validateMedicalRecord(h,true,true,true,true,false,false,true,true,true,true,true,w.schemaVersion,w.schemaVersion>=127)!==null
-        ||(h.death?h.tick>w.tick:h.tick!==w.tick))return false;
+        ||(h.death?medicalCivilTick271(h)>w.tick:medicalCivilTick271(h)!==w.tick))return false;
       const status=medicalStatus(h);if(status==='mobile'?p.state==='downed'||p.state==='dead':p.state!==status)return false;
     }
     for(const actor of w.pawns){

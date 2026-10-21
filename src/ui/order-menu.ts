@@ -1,3 +1,4 @@
+import {appendCryptosleepOptions271} from './cryptosleep-controls-271';
 import {footprintContains} from '../sim/definitions';
 import {isAncientCasket256} from '../sim/ancient-casket-state-256';
 import { firePosition } from '../sim/fire-rules';
@@ -138,7 +139,7 @@ export class OrderMenu {
     // A turret service is a personal haul order, including while mobilized.
     // Ask the worker for its real eligibility instead of treating the building
     // as a ground movement or a living attack target.
-    if(world.structures.some(s=>isAncientCasket256(s)&&footprintContains(s,cell)&&(targetId===undefined||targetId===s.id))||contextConsumesFood(world,ids,cell,targetId)||targetId===undefined&&world.structures.some(s=>s.kind==='mini-turret'&&s.x===cell.x&&s.z===cell.z)){
+    if(world.structures.some(s=>(isAncientCasket256(s)||s.kind==='cryptosleep-casket')&&footprintContains(s,cell)&&(targetId===undefined||targetId===s.id))||contextConsumesFood(world,ids,cell,targetId)||targetId===undefined&&world.structures.some(s=>s.kind==='mini-turret'&&s.x===cell.x&&s.z===cell.z)){
       await this.open(world,ids,cell,x,y,queue);return;
     }
     this.close();
@@ -217,6 +218,7 @@ export class OrderMenu {
       const options=await this.client.orderOptions(pawn.id,cell.x,cell.z,queue);
       if(revision!==this.revision)return;
       content.replaceChildren();
+      const cryptosleepCount=appendCryptosleepOptions271(content,world,pawn.id,cell,queue,{close:()=>this.close(),send:command=>this.client.command(command),report:(message,error)=>this.report(message,error)});
       for(const option of options) {
         const button=document.createElement('button');button.setAttribute('role','menuitem');button.dataset.orderJob=String(option.jobId);
         if(option.haulTarget)button.dataset.orderHaul=option.haulTarget.type;
@@ -264,8 +266,8 @@ export class OrderMenu {
       }
       const fire=world.fires?.items.find(f=>{const at=firePosition(world,f);return at?.x===cell.x&&at?.z===cell.z;});
       if(fire){const button=document.createElement('button');button.setAttribute('role','menuitem');button.dataset.orderFire=String(fire.id);button.textContent='Prioriser : éteindre le feu';button.onclick=()=>{this.close();void this.client.command({type:'order-extinguish',pawnId:pawn.id,fireId:fire.id}).then(()=>this.report('Extinction prioritaire demandée.')).catch(error=>this.report(String(error instanceof Error?error.message:error),true));};content.append(button);}
-      if(!options.length&&!fire)content.textContent='Aucun travail ni pile à transporter ici. Utilisez les ordres d’Architecte.';
-      const hint=document.createElement('p');hint.className='muted';hint.textContent=options.some(option=>option.openCasketId!==undefined)?'Le colon rejoint la capsule et l’ouvre sur place. Ordre direct, sans mise en file.':options.some(option=>option.consumePileId!==undefined)?'Consommer remplace l’activité en cours, sans mise en file. Un colon mobilisé reste mobilisé. La nourriture se mange et la bière se boit au contact de la pile.':options.some(option=>option.arrestPatientId!==undefined)?'Arrestation directe par un colon démobilisé, avec lit de prison accessible. La chance affichée dépend de l’état actuel ; un refus peut provoquer une fureur violente.':fire?'L’extinction est un ordre direct, sans mise en file.':options.some(option=>option.capturePatientId!==undefined)?'La capture est un ordre direct. Préparez un lit de prison dans une pièce fermée.':'Maj : ajouter à la file. Construction et cuisine peuvent se poursuivre sur cette case.';content.append(hint);
+      if(!options.length&&!fire&&!cryptosleepCount)content.textContent='Aucun travail ni pile à transporter ici. Utilisez les ordres d’Architecte.';
+      const hint=document.createElement('p');hint.className='muted';hint.textContent=cryptosleepCount?'Le cryptosommeil se prépare au contact. Un autre colon devra ouvrir le caisson sur place.':options.some(option=>option.openCasketId!==undefined)?'Le colon rejoint la capsule et l’ouvre sur place. Ordre direct, sans mise en file.':options.some(option=>option.consumePileId!==undefined)?'Consommer remplace l’activité en cours, sans mise en file. Un colon mobilisé reste mobilisé. La nourriture se mange et la bière se boit au contact de la pile.':options.some(option=>option.arrestPatientId!==undefined)?'Arrestation directe par un colon démobilisé, avec lit de prison accessible. La chance affichée dépend de l’état actuel ; un refus peut provoquer une fureur violente.':fire?'L’extinction est un ordre direct, sans mise en file.':options.some(option=>option.capturePatientId!==undefined)?'La capture est un ordre direct. Préparez un lit de prison dans une pièce fermée.':'Maj : ajouter à la file. Construction et cuisine peuvent se poursuivre sur cette case.';content.append(hint);
       this.position(x,y);content.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
     } catch(error) {if(revision===this.revision){content.textContent=String(error instanceof Error?error.message:error);this.position(x,y);}}
   }

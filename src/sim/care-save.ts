@@ -1,3 +1,4 @@
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import { tendingReason,tendingPlaceValid } from './tending.ts';
 import { draftedTendingReason,draftedTendingPlaceValid } from './drafted-tending.ts';
 import { serviceCell } from './service-reservations.ts';
@@ -128,7 +129,7 @@ export function validDraftedTendingTransport(world:World):boolean {
     for(const pawn of records){
       const record=pawn.health;
       if(!record){if(pawn.state==='downed'||pawn.state==='dead')return false;continue;}
-      if(record.body!==undefined||record.death||record.tick!==world.tick
+      if(record.body!==undefined||record.death||medicalCivilTick271(record)!==world.tick
         ||validateMedicalRecord(record,true,true,true,true,false,false,true,true,true,true,true,world.schemaVersion,world.schemaVersion>=127)!==null)return false;
       const status=medicalStatus(record);
       if(status==='mobile'?pawn.state==='downed'||pawn.state==='dead':pawn.state!==status)return false;

@@ -22,6 +22,7 @@ import { malnutritionRate } from './malnutrition.ts';
 import { humanAgeImmunityFactor } from './human-age.ts';
 import { notifyPawnDeath } from './bereavement.ts';
 import { currentMedicalBed,bedHealPerDay,bedImmunityFactor } from './hospital-medical-stats.ts';
+import {medicalCivilTick271,medicalElapsedTicks271} from './suspended-human-clock-271.ts';
 
 export function healthRandom(world:Pick<World,'rng'>):number {let n=world.rng;n^=n<<13;n^=n>>>17;n^=n<<5;world.rng=n>>>0;return world.rng/0x100000000;}
 function announce(world:World,message:string):void {world.events.push({tick:world.tick,type:'need',message});if(world.events.length>80)world.events.splice(0,world.events.length-80);}
@@ -67,6 +68,7 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn),ex
   dropIncapacitatedEquipment(world,pawn);
 }
 export function updatePawnHealth(world:World,pawn:Pawn,retainTravellingCargo=false):BodyAssessment|undefined {
+  if(pawn.cryptosleepHeldAt271!==undefined)return pawn.health?pawnBody(pawn):undefined;
   if(world.schemaVersion>=84&&pawn.hunger<=0&&pawn.state!=='dead')pawn.health??=createMedicalRecord(Math.max(0,world.tick-1));
   let record=pawn.health;if(!record)return;
   if(record.death){if(!carrierOf(world,pawn.id)&&pawn.moveCooldown===0)retryInterruptedCargo(world,pawn);return;}
@@ -85,7 +87,7 @@ export function updatePawnHealth(world:World,pawn:Pawn,retainTravellingCargo=fal
     }
     const medicalDraw=privateRandom?()=>healthRandom(privateRandom):()=>healthRandom(world);
     const conditionFrontier=humanConditionMedicalFrontier256(pawn,record,world.tick,medicalDraw,{kind:'map',world},actualPawn);
-    advanceMedical(record,world.tick-record.tick,{phase:pawn.id%60,alcoholOwner:{id:pawn.id,spawned:!carrierOf(world,pawn.id),awake:pawn.state!=='sleeping'&&!pawn.medicalSleep&&!pawn.stun,inMentalState:!!pawn.mental?.crisis},toxicOwner:{id:pawn.id,spawned:!carrierOf(world,pawn.id),awake:pawn.state!=='sleeping'&&!pawn.medicalSleep&&!pawn.stun},cryptosleepSicknessSpawned:!carrierOf(world,pawn.id),posture:bed?'bed':resting?'ground':'standing',starving:pawn.hunger<=0,malnutritionRate:world.schemaVersion>=84?malnutritionRate(pawn.id):undefined,infectionChanceFactor:playerInfectionFactor(world,pawn),
+    advanceMedical(record,medicalElapsedTicks271(record,world.tick),{civilTick:world.tick,phase:pawn.id%60,alcoholOwner:{id:pawn.id,spawned:!carrierOf(world,pawn.id),awake:pawn.state!=='sleeping'&&!pawn.medicalSleep&&!pawn.stun,inMentalState:!!pawn.mental?.crisis},toxicOwner:{id:pawn.id,spawned:!carrierOf(world,pawn.id),awake:pawn.state!=='sleeping'&&!pawn.medicalSleep&&!pawn.stun},cryptosleepSicknessSpawned:!carrierOf(world,pawn.id),posture:bed?'bed':resting?'ground':'standing',starving:pawn.hunger<=0,malnutritionRate:world.schemaVersion>=84?malnutritionRate(pawn.id):undefined,infectionChanceFactor:playerInfectionFactor(world,pawn),
       hunger:pawn.hunger,rest:pawn.rest,restingBonus:!!bed||resting&&pawn.state!=='downed'||sky,infectionSeed:(world.seed^Math.imul(pawn.id,0x9e3779b1))>>>0,
       ageImmunityFactor:humanAgeImmunityFactor(pawn.age),...(bed?{bedHealPerDay:bedHealPerDay(bed),bedImmunityFactor:bedImmunityFactor(bed,world)}:{})},medicalDraw,conditionFrontier);
     if(actualPawn){
@@ -104,7 +106,7 @@ export function updatePawnHealth(world:World,pawn:Pawn,retainTravellingCargo=fal
 /** Called by a damage producer after it has resolved hit selection/protection. */
 export function injurePawn(world:World,pawn:Pawn,part:BodyPartId,kind:InjuryKind,severity:number):void {
   if(pawn.state==='dead')return;
-  if(!pawn.health||pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
+  if(!pawn.health||medicalCivilTick271(pawn.health)<world.tick)updatePawnHealth(world,pawn);
   if(pawn.health?.death)return;
   pawn.health??=createMedicalRecord(world.tick);
   addResolvedInjury(pawn.health,part,kind,severity,()=>healthRandom(world));

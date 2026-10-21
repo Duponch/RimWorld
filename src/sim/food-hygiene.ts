@@ -9,7 +9,7 @@ import {carrierOf} from './rescue-state.ts';
 import {animalCarrier} from './animal-rest-state.ts';
 import {animalNutritionMax} from './animal-life.ts';
 import {createAnimalMedicalRecord256} from './animal-clinical-age-v256.ts';
-import { exposeFoodPoisoning,ingestionFoodPoison } from './food-poisoning.ts';
+import { exposeFoodPoisoningAtRecord,ingestionFoodPoison } from './food-poisoning.ts';
 import { processFoodPoisoningVomit,processVomit,type FoodPoisonVomitContext } from './food-poisoning-runtime.ts';
 import { fluVomitChance } from './flu-rules.ts';
 import { immuneDiseaseVomitChance } from './immune-diseases-rules.ts';
@@ -30,7 +30,7 @@ export function ingestFoodRisk(w:World,p:Pawn|WildAnimal,food:Pick<MaterialPile,
   const cause=ingestionFoodPoison(food,human,w.gameProfile?.difficulty==='adventure-story'?.75:1,()=>healthRandom(w));
   if(!cause)return;
   p.health??=human?createMedicalRecord(w.tick):createAnimalMedicalRecord256(w,p as WildAnimal);
-  p.health.foodPoisoning=exposeFoodPoisoning(p.health.foodPoisoning,cause,food.item,w.tick);
+  p.health.foodPoisoning=exposeFoodPoisoningAtRecord(p.health,cause,food.item,w.tick);
   if(human)reconcilePawnHealth(w,p as Pawn);else reconcileAnimalHealth(w,p as WildAnimal);
   w.events.push({tick:w.tick,type:'need',message:`${human?(p as Pawn).name:animalSpecies((p as WildAnimal).species).label+' '+p.id} souffre d’une intoxication alimentaire.`});
   if(w.events.length>80)w.events.splice(0,w.events.length-80);

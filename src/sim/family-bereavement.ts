@@ -1,3 +1,4 @@
+import {memoryExpiry271,memoryReadTick271} from './suspended-memory-271.ts';
 import { captureHumanOwners } from './human-owners.ts';
 import { campaignLivingObservers } from './campaign-people.ts';
 import { isColonist } from './affiliation.ts';
@@ -8,15 +9,16 @@ import { TICKS_PER_DAY,type Pawn,type World } from './types.ts';
 import type { MoodThought } from './mood.ts';
 
 export type FamilyDeathKind=`${FamilyDeathRelation}-died`;
-export interface FamilyDeathMemory {otherId:number;kind:FamilyDeathKind;at:number}
+export interface FamilyDeathMemory {otherId:number;kind:FamilyDeathKind;at:number;suspendedTicks?:number}
 export const FAMILY_DEATH_DURATION=30*TICKS_PER_DAY,FAMILY_DEATH_LIMIT=10;
 export const FAMILY_DEATH_LABELS:Readonly<Record<FamilyDeathKind,string>>=Object.freeze({
   'parent-died':'parent','child-died':'enfant','sibling-died':'fratrie','lover-died':'partenaire','spouse-died':'conjoint',
 });
 export const familyDeathOffset=(kind:FamilyDeathKind):number=>FAMILY_DEATH_MOOD[kind.slice(0,-5) as FamilyDeathRelation];
 export function expireFamilyBereavement(pawn:Pawn,tick:number):void {
-  if(!pawn.familyBereavement?.some(m=>m.at+FAMILY_DEATH_DURATION<=tick))return;
-  pawn.familyBereavement=pawn.familyBereavement.filter(m=>m.at+FAMILY_DEATH_DURATION>tick);
+  if(pawn.cryptosleepHeldAt271!==undefined)return;
+  if(!pawn.familyBereavement?.some(m=>memoryExpiry271(m,m.at+FAMILY_DEATH_DURATION)<=tick))return;
+  pawn.familyBereavement=pawn.familyBereavement.filter(m=>memoryExpiry271(m,m.at+FAMILY_DEATH_DURATION)>tick);
   if(!pawn.familyBereavement.length)delete pawn.familyBereavement;
 }
 /** Only the real clinical death transition calls this producer. No load,
@@ -40,16 +42,17 @@ export function notifyFamilyDeath(world:World,deceased:Pawn):void {
 }
 export function familyBereavementThoughts(world:World,pawn:Pawn):MoodThought[] {return familyBereavementThoughtsAt(pawn,world.tick,captureRelationshipPeople(world));}
 export function familyBereavementThoughtsAt(pawn:Pawn,tick:number,people:Pick<ReadonlyMap<number,{readonly name:string}>,'get'>):MoodThought[] {
+  tick=memoryReadTick271(pawn,tick);
   if(!pawn.familyBereavement)return [];
   const groups=new Map<string,FamilyDeathMemory[]>();
   for(const m of pawn.familyBereavement){
-    if(m.at+FAMILY_DEATH_DURATION<=tick)continue;
+    if(memoryExpiry271(m,m.at+FAMILY_DEATH_DURATION)<=tick)continue;
     const key=`${m.kind}:${people.get(m.otherId)?.name??'cette personne'}`,group=groups.get(key)??[];group.push(m);groups.set(key,group);
   }
   return [...groups.values()].map<MoodThought>(group=>{
     const memory=group[0]!,name=people.get(memory.otherId)?.name??'cette personne';
     return {id:`family-${memory.kind}-${memory.otherId}`,label:`Mort de ${name} (${FAMILY_DEATH_LABELS[memory.kind]})${group.length>1?` ×${group.length}`:''}`,
-      offset:familyDeathOffset(memory.kind)*(1-.75**group.length)/.25,kind:'memory',expiresAt:Math.min(...group.map(m=>m.at+FAMILY_DEATH_DURATION)),
+      offset:familyDeathOffset(memory.kind)*(1-.75**group.length)/.25,kind:'memory',expiresAt:Math.min(...group.map(m=>memoryExpiry271(m,m.at+FAMILY_DEATH_DURATION))),
       description:'Décès réel d’un proche ; lien capturé à la mort, distinct du souvenir d’un ami ou rival, durant trente jours.'};
   });
 }

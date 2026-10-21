@@ -107,6 +107,7 @@ export function advanceHumanAge(world:World,pawn:Pawn):void {
   }});
 }
 export function advanceHumanAgeAt(pawn:Pawn,c:HumanAgeContext):void {
+  if(pawn.cryptosleepHeldAt271!==undefined)return;
   if(c.schemaVersion<138)return;
     const age=pawn.age;if(!age)return;
     if(pawn.nativeHuman&&pawn.state!=='dead'&&!pawn.health?.death){

@@ -1,3 +1,4 @@
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import { CREMATION_FILTER_KEYS,CREMATION_INPUTS,isCremationRecipe } from './cremation-content.ts';
 import { validCorpseRot,validCorpseShape } from './corpse-save.ts';
 import { validCorpseConsumption } from './corpse-anatomy.ts';
@@ -29,7 +30,7 @@ export function cremationIngredientAllowed(world:World,bill:CookingBill,pile:Mat
       ||!Number.isSafeInteger(c.pawnId)||Number(c.pawnId)<1||c.nextBileTick!==undefined&&(!Number.isSafeInteger(c.nextBileTick)||Number(c.nextBileTick)<0||Number(c.nextBileTick)>world.tick+6000))return false;
     const person=world.pawns.find(p=>p.id===c.pawnId),body=person?.body;
     if(!person||person.state!=='dead'||!person.health?.death||!body||body.pileId!==pile.id||body.lostAt!==undefined
-      ||!Number.isSafeInteger(body.observedAt)||body.observedAt<person.health.death.tick||person.health.tick>world.tick
+      ||!Number.isSafeInteger(body.observedAt)||body.observedAt<person.health.death.tick||medicalCivilTick271(person.health)>world.tick
       ||validateMedicalRecord(person.health,true,true,true,true,false,false,true,true,true,true,true,world.schemaVersion,world.schemaVersion>=127)!==null
       ||!validCorpseRot(pile.rot,world.tick,body.observedAt,person.health)||!filter[isColonist(person)?'colonists':'strangers'])return false;
   }else{

@@ -23,8 +23,8 @@ function historical(v:unknown):boolean {
 }
 export function validLongswordCatalogueDomains270(value:unknown,version:number):boolean {
  try{
-  if(version===270)return true;
-  if(!Number.isSafeInteger(version)||version<1||version>270)return false;
+  if((version===270||version===271))return true;
+  if(!Number.isSafeInteger(version)||version<1||version>271)return false;
   return !record(value)||DOMAINS.every(k=>historical(value[k]));
  }catch{return false;}
 }
@@ -32,8 +32,8 @@ export function validLongswordCatalogueDomains270(value:unknown,version:number):
  * including inactive maps, retained people, recovery tools and item ledgers. */
 export function validLongswordHistoricalTransport270(value:unknown,version:number):boolean {
  try{
-  if(version===270)return true;
-  if(!Number.isSafeInteger(version)||version<1||version>270)return false;
+  if((version===270||version===271))return true;
+  if(!Number.isSafeInteger(version)||version<1||version>271)return false;
   if(!record(value))return true;
   const w=record(value.world)?value.world:value;
   if(!validLongswordCatalogueDomains270(w,version))return false;

@@ -1,5 +1,7 @@
 import {eggSpeciesForItem256} from './animal-egg-content-v256.ts';
 import { isAnimalMeat } from './biome-items.ts';
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
+import type {MedicalRecord} from './injury-types.ts';
 import type { ItemId } from './items.ts';
 import type { Cell } from './types.ts';
 
@@ -10,6 +12,7 @@ export interface FoodContamination {fraction:number;cause:FoodContaminationCause
 export interface VomitState {remainingCore:number;cell:Cell}
 export interface FoodPoisoningState {
   /** 300000 is full severity; a 200-Core pulse removes exactly 1000. */
+  /** Birth remains on the owner's active clinical clock after suspension. */
   severity:number;bornAt:number;cause:FoodPoisonCause;item:ItemId;
   /** May outlive the last severity pulse, until this physical episode ends. */
   vomit?:VomitState;
@@ -56,12 +59,20 @@ export function ingestionFoodPoison(pile:{item:ItemId;foodPoison?:FoodContaminat
   if(foodCanCarryPoison(pile.item)&&pile.foodPoison&&chance(pile.foodPoison.fraction*factor,random))return pile.foodPoison.cause;
   return undefined;
 }
-/** An initial case is not restarted by a second exposure. Later phases return
- * just below .8, and therefore stay major rather than restarting the mild stage. */
+/** Clinical tick only. An initial case is not restarted by a second exposure.
+ * Later phases return just below .8, keeping the original clinical birth. */
 export function exposeFoodPoisoning(previous:FoodPoisoningState|undefined,cause:FoodPoisonCause,item:ItemId,tick:number):FoodPoisoningState {
   if(!previous)return {severity:FOOD_POISON_UNIT,bornAt:tick,cause,item};
   if(previous.severity<FOOD_POISON_UNIT*.8){previous.severity=239700;previous.cause=cause;previous.item=item;}
   return previous;
+}
+/** Actual ingestion is dated civilly; physiology uses active time. Preserve
+ * the real event even when feeding precedes the patient's current medical
+ * pass. Existing animals and unsuspended humans have an identity offset. */
+export function exposeFoodPoisoningAtRecord(record:MedicalRecord,cause:FoodPoisonCause,item:ItemId,civilTick:number):FoodPoisoningState {
+ const frontier=medicalCivilTick271(record),clinicalTick=record.tick+(civilTick-frontier);
+ if(![record.tick,frontier,civilTick,clinicalTick].every(n=>Number.isSafeInteger(n)&&n>=0)||frontier<record.tick||civilTick<frontier)throw Error('Invalid actual food poisoning clinical frontier');
+ return exposeFoodPoisoning(record.foodPoisoning,cause,item,clinicalTick);
 }
 export type FoodPoisoningStage='none'|'initial'|'major'|'recovering';
 export function foodPoisoningStage(state:FoodPoisoningState|undefined):FoodPoisoningStage {

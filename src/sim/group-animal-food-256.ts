@@ -10,7 +10,7 @@ import {eggSpeciesForItem256} from './animal-egg-content-v256.ts';
 import {ITEM_DEFINITIONS,type ItemId} from './items.ts';
 import {ticksUntilRot} from './food-preservation.ts';
 import {animalNutritionMax,animalFoodWantEat256} from './animal-life.ts';
-import {ingestionFoodPoison,exposeFoodPoisoning} from './food-poisoning.ts';
+import {ingestionFoodPoison,exposeFoodPoisoningAtRecord} from './food-poisoning.ts';
 import {createAnimalMedicalRecord256} from './animal-clinical-age-v256.ts';
 import {GROUP_FORAGED_ITEMS_256,type GroupForagedItem256} from './group-forage-state-256.ts';
 import type {GroupAnimalOwners256} from './group-animal-state-256.ts';
@@ -59,7 +59,7 @@ export function satisfyCaravanAnimalFood256(w:World,g:Group,a:WildAnimal,c:{temp
  const poison=ingestionFoodPoison(selected,false,w.gameProfile?.difficulty==='adventure-story'?.75:1,c.random);
  if(quantity===selected.quantity)g.items.splice(g.items.indexOf(selected),1);else selected.quantity-=quantity;
  a.food=Math.min(animalNutritionMax(a),a.food+nutrition*quantity);
- if(poison){a.health??=createAnimalMedicalRecord256(w,a);a.health.foodPoisoning=exposeFoodPoisoning(a.health.foodPoisoning,poison,selected.item,w.tick);}
+ if(poison){a.health??=createAnimalMedicalRecord256(w,a);a.health.foodPoisoning=exposeFoodPoisoningAtRecord(a.health,poison,selected.item,w.tick);}
 }
 
 export function validGroupAdditionalFoodEffects256(v:unknown):v is GroupInventoryVector {

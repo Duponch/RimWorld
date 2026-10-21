@@ -15,6 +15,7 @@ import { advanceFlu } from './flu-evolution.ts';
 import { advanceImmuneDiseases } from './immune-diseases-evolution.ts';
 import { advanceAnesthetic } from './anesthetic.ts';
 import { isMechanoidKind } from './mechanoid-definition.ts';
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 
 function heal(record:MedicalRecord,injury:Injury,amount:number,random:MedicalRandom):void {
   injury.severity-=amount;
@@ -28,6 +29,7 @@ function chosen(list:Injury[],random:MedicalRandom):Injury {return list[Math.flo
  * must split at hunger/posture changes and handle downing/death at their tick.
  * Mutates its owned record; snapshots and the PRNG remain the caller's concern. */
 export function advanceMedical(record:MedicalRecord,ticks:number,context:MedicalContext,random:MedicalRandom,animalConditions?:AnimalConditionMedicalFrontier256):void {
+  const startCivil=medicalCivilTick271(record),endCivil=context.civilTick??startCivil+ticks,offset=startCivil-record.tick;
   if(!Number.isSafeInteger(ticks)||ticks<0||ticks>100000||!Number.isSafeInteger(record.tick+ticks)||
     !Number.isInteger(context.phase)||context.phase<0||context.phase>=HEAL_INTERVAL||
     !['standing','ground','bed'].includes(context.posture)||typeof context.starving!=='boolean'||
@@ -39,7 +41,11 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
     context.ageImmunityFactor!==undefined&&(!Number.isFinite(context.ageImmunityFactor)||context.ageImmunityFactor<.5||context.ageImmunityFactor>1)||
     context.bedHealPerDay!==undefined&&context.bedHealPerDay!==0&&context.bedHealPerDay!==4&&context.bedHealPerDay!==10||
     context.bedImmunityFactor!==undefined&&context.bedImmunityFactor!==1&&context.bedImmunityFactor!==1.05&&context.bedImmunityFactor!==1.07&&context.bedImmunityFactor!==1.11&&context.bedImmunityFactor!==1.13)throw new Error('Invalid medical interval');
+  if(!Number.isSafeInteger(endCivil)||(record.civilTick271!==undefined||context.civilTick!==undefined)&&!Number.isSafeInteger(endCivil*10)||endCivil-startCivil!==ticks||offset<0)throw Error('Medical interval does not match its actual civil frontier');
   if(record.death||isMechanoidKind(record.body))return;
+  // All local medical periods divide60. Moving the hash phase retains their
+  // civil cadence while conditions/deadlines keep the active clinical clock.
+  if(offset)context={...context,phase:((context.phase-offset)%HEAL_INTERVAL+HEAL_INTERVAL)%HEAL_INTERVAL};
   if(record.alcohol&&(!context.alcoholOwner||!Number.isSafeInteger(context.alcoholOwner.id)||context.alcoholOwner.id<1||typeof context.alcoholOwner.spawned!=='boolean'||typeof context.alcoholOwner.awake!=='boolean'))throw Error('Alcohol clinical interval requires its actual original owner');
   if(record.toxicBuildup&&(!context.toxicOwner||!Number.isSafeInteger(context.toxicOwner.id)||context.toxicOwner.id<1||typeof context.toxicOwner.spawned!=='boolean'||typeof context.toxicOwner.awake!=='boolean'))throw Error('Toxic clinical interval requires its actual original owner');
   if(record.animalAgeConditions&&!animalConditions)throw Error('Actual conditions require the real owner frontier');
@@ -48,10 +54,11 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
   if(pending&&!Number.isSafeInteger((record.infections?.nextId??1)+pending))throw new Error('Infection identities exhausted');
   if((record.infections?.cases.length||pending)&&!Number.isSafeInteger((record.tick+ticks)*10))throw new Error('Infection clock exhausted');
   if(record.immuneDiseases&&!Number.isSafeInteger((record.tick+ticks)*10))throw new Error('Immune disease clock exhausted');
-  if(!animalConditions&&!alcoholClinicalActive265(record.alcohol)&&!record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.infections?.cases.length&&!record.infections?.immunity&&!record.foodPoisoning&&!record.toxicBuildup&&!record.cryptosleepSickness&&!record.flu&&!record.immuneDiseases&&!record.anesthetic&&!(context.malnutritionRate&&(context.starving||record.malnutrition))){record.tick+=ticks;return;}
+  if(!animalConditions&&!alcoholClinicalActive265(record.alcohol)&&!record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.infections?.cases.length&&!record.infections?.immunity&&!record.foodPoisoning&&!record.toxicBuildup&&!record.cryptosleepSickness&&!record.flu&&!record.immuneDiseases&&!record.anesthetic&&!(context.malnutritionRate&&(context.starving||record.malnutrition))){record.tick+=ticks;if(record.civilTick271!==undefined)record.civilTick271=endCivil;return;}
   const end=record.tick+ticks;
   while(record.tick<end) {
     record.tick++;
+    if(record.civilTick271!==undefined)record.civilTick271=record.tick+offset;
     if(record.cryptosleepSickness){
       const sickness=record.cryptosleepSickness;
       // Hediff tests MTB before Spawned/Awake. A non-spawned owner consumes

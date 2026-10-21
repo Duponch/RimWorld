@@ -2,6 +2,7 @@ import {clearingDuration} from './gathering.ts';
 import {captureHumanOwners} from './human-owners.ts';
 import {captureTreeOccurrences} from './tree-transfer-owners.ts';
 import {validOriginalTreeResource} from './tree-transfer-resource-save.ts';
+import {isPlayerCasket271} from './cryptosleep-state-271.ts';
 import {isColonist} from './affiliation.ts';
 import {medicalWorkRefusal} from './health-rules.ts';
 import {backgroundWorkRefusal} from './colonist-backgrounds.ts';
@@ -10,7 +11,7 @@ import type {NumericMembershipSink} from './numeric-membership.ts';
 /** V349 sparse domain guards over actual candidate owners. */
 import type {Pawn,Resource,MaterialPile} from './types.ts';
 import {TREE_PACK_LIFETIME,TREE_SCHEMA,type TreeJob,type TreeOwnerOccurrence,type MinifiedTreePile} from './tree-transfer-state.ts';
-import {extractTreeDefinition,treeExpiryQuantityRange} from './tree-transfer-rules.ts';
+import {extractTreeDefinition,treeExpiryQuantityRange,treePackExpiry271} from './tree-transfer-rules.ts';
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 const exact=(v:Record<string,unknown>,required:readonly string[],optional:readonly string[]=[])=>
@@ -25,13 +26,14 @@ export function validTreePileShape(pile:unknown,version:number,clock:number,next
     pile.kind!=='plant'||pile.item!=='minified-tree'||pile.quantity!==1||!integer(pile.id,1,nextId-1)||
     !record(pile.innerResource)||!record(pile.plantPack)||!record(pile.owner))return false;
   const tree=pile.innerResource,pack=pile.plantPack;
-  if(!exact(pack,['packedAt','expiresAt'],version>=236?['pendingExpiry']:[])||!integer(pack.packedAt,0,clock)||
+  if(!exact(pack,['packedAt','expiresAt'],[...version>=236?['pendingExpiry']:[],...version===271?['suspendedTicks271']:[]])||!integer(pack.packedAt,0,clock)||
     !integer(pack.expiresAt,pack.packedAt+1)||pack.expiresAt-pack.packedAt!==TREE_PACK_LIFETIME||
     !integer(tree.id,1,nextId-1)||tree.id===pile.id||tree.kind!=='tree'||
     !extractTreeDefinition(tree as unknown as Resource)||!resourceValidAt(tree,pack.packedAt))return false;
+  if('suspendedTicks271'in pack&&(!Object.hasOwn(pack,'suspendedTicks271')||version!==271||!integer(pack.suspendedTicks271,1,clock-pack.packedAt)||!Number.isSafeInteger(Number(pack.expiresAt)+Number(pack.suspendedTicks271))))return false;
   if(Object.hasOwn(pack,'pendingExpiry')){
     const pending=pack.pendingExpiry;
-    if(version<236||clock<(pack.expiresAt as number)||!record(pending)||!exact(pending,['quantity','retryAt'])||
+    if(version<236||clock<treePackExpiry271(pile as unknown as MinifiedTreePile)||!record(pending)||!exact(pending,['quantity','retryAt'])||
       !integer(pending.quantity,1,500000)||!integer(pending.retryAt,clock,clock+20)||
       !treeExpiryQuantityRange(pile as unknown as MinifiedTreePile).includes(pending.quantity))return false;
   }
@@ -87,7 +89,7 @@ export function validateTreeDomain(input:TreeDomainInput):TreeDomainIndex|undefi
     if(!validTreePileShape(pile,input.version,occurrence.clock,input.nextId,input.resourceValidAt))return;
     const treePile=pile as MinifiedTreePile,id=treePile.innerResource.id;
     if(wrappers.has(treePile.id)||innerIds.has(id)||input.outerIds.has(id)||local.has(id)||
-      occurrence.clock>=treePile.plantPack.expiresAt&&!treePile.plantPack.pendingExpiry)return;
+      occurrence.clock>=treePackExpiry271(treePile)&&!treePile.plantPack.pendingExpiry)return;
     wrappers.set(treePile.id,occurrence);innerIds.add(id);
   }
   for(const job of input.jobs){
@@ -124,6 +126,10 @@ export function validPlantTargetShape(raw:unknown,version:number,nextId:number):
 }
 function currentTreeDomain(w:World):boolean {
   if(w.piles.some(hasTreePayload)||w.jobs.some(j=>Object.hasOwn(j,'tree')||Object.hasOwn(j,'plantTarget')||j.kind==='extract-tree'||j.kind==='replant-tree'))return true;
+  // These are real local containers, absent from w.piles. Removed-map holders
+  // belong to WorldPawns instead: their scalar owner guard and registrar own
+  // the original tree once, without importing it into another map's domain.
+  if(w.structures.some(s=>isPlayerCasket271(s)&&s.cryptosleep.items.some(hasTreePayload)))return true;
   const collections=[w.scout&&'pawn' in w.scout?w.scout.items:[],w.commercialTrip&&'pawn' in w.commercialTrip?w.commercialTrip.items:[],w.group&&'members' in w.group?w.group.items:[],
     ...(w.groupLosses??[]).map(l=>l.items),...(w.visitors?.departed??[]).map(d=>d.items),...(w.podRescues?.departed??[]).map(d=>d.items),...(w.raids?.departed??[]).map(d=>d.items),...(w.prisonDepartures??[]).map(d=>d.items),
     ...(w.startingArrival&&w.startingArrival.phase!=='opened'?w.startingArrival.pods.map(p=>p.items):[])];
@@ -177,7 +183,9 @@ export function validateTreeTransport(w:World,version:number=w.schemaVersion,col
     return true;
   }catch{return false;}
 }
-/** Register source owners after legacy registrars have registered outer Things. */
+/** Register source owners after legacy registrars have registered outer Things.
+ * captureHumanOwners.slots are local/ordinary travel owners only. Retained
+ * WorldPawns contribute knowledge, never another contained-Thing occurrence. */
 export function registerTreeThingIds(w:World,ids:NumericMembershipSink):string[] {
   try{
     if(!currentTreeDomain(w))return [];

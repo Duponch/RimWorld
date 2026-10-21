@@ -73,7 +73,7 @@ export function validateRescues(world:World,onlyArrestDomain=false,onlyBedIds?:R
       if(!isColonist(actor)||actor.prisoner||medicalWorkRefusal(actor)||(t.capture?actor.orders.active!=='rescue':(patient?.prisoner?actor.priorities.warden:actor.priorities.doctor)===0&&actor.orders.active!=='rescue'))errors.push('Invalid rescue or capture authority.');
     }
     patients.add(t.patientId);
-    if(actor.jobId!==null||actor.need||actor.tend||actor.ward||actor.feed||actor.haul||actor.cooking||actor.recreation.task||actor.interruptedCargo||actor.state!=='moving')errors.push('Rescue conflicts with actor activity.');
+    if(actor.jobId!==null||actor.cryptosleepTask||actor.need||actor.tend||actor.ward||actor.feed||actor.haul||actor.cooking||actor.recreation.task||actor.interruptedCargo||actor.state!=='moving')errors.push('Rescue conflicts with actor activity.');
     if(patient&&t.phase==='carry'){
       if(patient.x!==actor.x||patient.z!==actor.z||patient.moveCooldown!==actor.moveCooldown||!sameRescueEdge(patient.motion,actor.motion))errors.push('Carried patient does not share carrier edge.');
       if(patient.need||patient.path.length||patient.medicalSleep)errors.push('Carried patient still uses a service.');

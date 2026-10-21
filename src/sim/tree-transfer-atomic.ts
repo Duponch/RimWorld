@@ -2,7 +2,7 @@
 import type {Cell,MaterialOwner,MaterialPile,Resource} from './types.ts';
 import type {PlantLife} from './plant-life.ts';
 import {PLANT_LIFE_INTERVAL} from './plant-life.ts';
-import {treeExpiryYield,treePackDeadline,extractTreeDefinition,treePackLive} from './tree-transfer-rules.ts';
+import {treeExpiryYield,treePackDeadline,extractTreeDefinition,treePackLive,treePackExpiry271} from './tree-transfer-rules.ts';
 import type {MinifiedTreePile,TreeJob,TreeOutput} from './tree-transfer-state.ts';
 export type PausedTreeLife=PlantLife&{pausedTicks:number;ageTick:number;leaflessPausedTicks?:number};
 export interface TreePileRef {pile:MinifiedTreePile;container:unknown;clock:number;active:boolean}
@@ -100,7 +100,7 @@ export function commitTreeReplantation(host:TreeHost,plan:ReplantPlan):Resource|
 }
 export interface ExpiryPlan {tick:number;nextId:number;beforeRng:number;afterRng:number;ref:TreePileRef;signature:string;output:TreeExpiryOutputPlan}
 export function planTreeExpiry(host:TreeHost,ref:TreePileRef,destroyed=false):ExpiryPlan|undefined {
-  if(!ref.active||!destroyed&&host.tick<ref.pile.plantPack.expiresAt)return;
+  if(!ref.active||!destroyed&&host.tick<treePackExpiry271(ref.pile))return;
   const pending=ref.pile.plantPack.pendingExpiry,roll=pending?{quantity:pending.quantity,rng:host.rng}:treeExpiryYield(ref.pile,host.rng,host.expiryYieldFactor(ref));if(!roll)return;
   const output=host.expiryOutput(ref,roll.quantity);
   if(!output||!host.idsAvailable(output.newIds,ref))return;
@@ -119,7 +119,7 @@ export function commitTreeExpiry(host:TreeHost,plan:ExpiryPlan):boolean {
 export interface PendingExpiryPlan {tick:number;nextId:number;beforeRng:number;afterRng:number;ref:TreePileRef;signature:string;quantity:number;retryAt:number}
 /** Only the first failed expiry captures a draw. No lifetime is extended. */
 export function planPendingTreeExpiry(host:TreeHost,ref:TreePileRef):PendingExpiryPlan|undefined {
-  if(!ref.active||host.tick<ref.pile.plantPack.expiresAt||ref.pile.plantPack.pendingExpiry||!Number.isSafeInteger(host.tick+20))return;
+  if(!ref.active||host.tick<treePackExpiry271(ref.pile)||ref.pile.plantPack.pendingExpiry||!Number.isSafeInteger(host.tick+20))return;
   const roll=treeExpiryYield(ref.pile,host.rng,host.expiryYieldFactor(ref));if(!roll||roll.quantity<1)return;
   return {tick:host.tick,nextId:host.nextId,beforeRng:host.rng,afterRng:roll.rng,ref,signature:fingerprint(ref.pile),quantity:roll.quantity,retryAt:host.tick+20};
 }

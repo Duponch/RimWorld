@@ -17,6 +17,9 @@ export interface Injury {
 }
 export interface MissingPart {part:BodyPartId;bornAt:number;tended?:true;nonFresh?:true}
 export interface MedicalRecord {
+  /** Schema271: actual civil frontier. tick and condition deadlines remain
+   * clinical active time. Absent retains the historical identity clock. */
+  civilTick271?:number;
   /** Prospective only, created by an actually ingested beer in schema265. */
   alcohol?:import('./alcohol-state-265.ts').AlcoholState265;
   scaria261?:import('./animal-scaria-261.ts').AnimalScaria261;
@@ -56,6 +59,8 @@ export interface MedicalRecord {
   death?:{tick:number;cause:'execution'|'blood-loss'|'vital-failure'|'trauma'|'heatstroke'|'hypothermia'|'downed'|'infection'|'malnutrition'|'flu'|'malaria'|'plague'|'heart-artery-blockage'|'heart-attack'|'toxic-buildup'|'scaria'};
 }
 export interface MedicalContext {
+  /** Civil endpoint of this unsuspended interval; never includes a held gap. */
+  civilTick?:number;
   alcoholOwner?:import('./alcohol-clinical-265.ts').AlcoholOwner265;
   /** Actual owner witness when cryptosleep sickness exists; never a fake map. */
   cryptosleepSicknessSpawned?:boolean;

@@ -1,3 +1,4 @@
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {mentalState} from './mental-state.ts';
@@ -26,7 +27,7 @@ export function hasHumanConditionMind256(p:Pawn):boolean {return p.mental?.wande
 export function validHumanClinicalConditionOwner256(p:Pawn,version:number,clock:number,spatial=false):boolean {
  const h=p.health;if(!h?.animalAgeConditions&&!h?.toxicBuildup&&p.mental?.crisis?.kind!=='confused-wander')return true;
  const requiresMind=!isSchema265OrLater(version)||!h?.alcohol||!!h.toxicBuildup||p.mental?.crisis?.kind==='confused-wander'||h?.animalAgeConditions?.cases.some(c=>c.kind!=='Carcinoma');
- if(!isSchema256Or257(version)||requiresMind&&!hasHumanConditionMind256(p)||!h||h.body||h.tick>clock)return false;
+ if(!isSchema256Or257(version)||requiresMind&&!hasHumanConditionMind256(p)||!h||h.body||medicalCivilTick271(h)>clock)return false;
  for(const c of h.animalAgeConditions?.cases??[])for(const key of Object.keys(c.skillDecayRemainders??{}))if(!Object.hasOwn(p.skills,key))return false;
  const c=p.mental?.crisis;
  if(c?.kind==='confused-wander'&&(!spatial&&(c.target!==null||c.waitUntil>clock)||p.state==='dead'||p.state==='downed'))return false;

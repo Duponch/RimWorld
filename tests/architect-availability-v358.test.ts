@@ -35,6 +35,15 @@ function command(world:World,tool:Tool):DesignateCommand {
     ...(placementMaterial(tool,'wood')?{material:placementMaterial(tool,'wood')}:{})};
 }
 function engineAvailable(world:World,tool:Tool):boolean {
+  if(tool==='geothermal-generator'){
+    // Declared isolated admission site, matching V440's fixed natural anchor.
+    // This does not claim geographic generation or a constructed generator.
+    const site=world.site,geysers=world.geysers,nextId=world.nextId;
+    world.site={revision:3,tileId:0,mapSeed:world.seed,biome:'temperate-forest',hilliness:'flat',river:'none',stones:['granite','slate'],coastAngle:null,mutatorCode:0};
+    world.geysers={revision:1,atTick:world.tick,items:[{id:world.nextId++,x:10,z:10,ticksUntilSpray:500,sprayTicksLeft:0}]};
+    try{return canDesignate(world,command(world,tool)).ok;}
+    finally{if(site)world.site=site;else delete world.site;if(geysers)world.geysers=geysers;else delete world.geysers;world.nextId=nextId;}
+  }
   return canDesignate(world,command(world,tool)).ok;
 }
 function freeze(value:unknown,seen=new WeakSet<object>()):void {
@@ -43,7 +52,7 @@ function freeze(value:unknown,seen=new WeakSet<object>()):void {
 }
 
 test('V358 complete catalogue agrees with physical command research gates on admissible sites',()=>{
-  expect(toolDefinitions).toHaveLength(102);
+  expect(toolDefinitions).toHaveLength(113);
   const locked=camp(),known=camp(true),hidden:Tool[]=[];
   for(const tool of constructionTools){
     const initial=engineAvailable(locked,tool.id),completed=engineAvailable(known,tool.id);
@@ -52,7 +61,7 @@ test('V358 complete catalogue agrees with physical command research gates on adm
     expect(architectToolAvailable(known,tool.id),tool.id).toBe(completed);
     if(!initial)hidden.push(tool.id);
   }
-  expect(hidden).toHaveLength(39);expect(hidden).toContain('vent');
+  expect(hidden).toHaveLength(45);expect(hidden).toContain('vent');
   expect(hidden).toEqual(constructionTools.filter(tool=>!architectToolAvailable(locked,tool.id)).map(tool=>tool.id));
 });
 

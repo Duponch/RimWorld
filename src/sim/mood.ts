@@ -1,3 +1,4 @@
+import {memoryExpiry271,memoryReadTick271} from './suspended-memory-271.ts';
 import {hiveDefeatThoughts256} from './cave-hive-memories-256.ts';
 import {alcoholThoughts265} from './alcohol-rules-265.ts';
 import {cryptosleepSick256} from './cryptosleep-sickness-256.ts';
@@ -72,6 +73,7 @@ export function moodThoughts(world:World,pawn:Pawn,topology?:RelationshipTopolog
     environment:{comfort:pawn.comfort,beauty:pawn.beauty},housing:relationshipHousingThought(world,pawn,topology),deathSituation:colonistUnburiedThought(world,pawn)});
 }
 export function personalMoodThoughts(pawn:Pawn,c:PersonalMoodContext):readonly MoodThought[] {
+  if(pawn.cryptosleepHeldAt271!==undefined)c={...c,tick:memoryReadTick271(pawn,c.tick)};
   if(pawn.mental?.crisis?.kind==='confused-wander')return [];
   if(pawn.state==='dead')return [];
   const expectation=c.expectation;
@@ -91,7 +93,7 @@ export function personalMoodThoughts(pawn:Pawn,c:PersonalMoodContext):readonly M
   let condition=1;
   for(const pile of c.items)if(pile.owner.type==='apparel'&&pile.owner.pawnId===pawn.id)condition=Math.min(condition,pile.apparel!.hitPoints/APPAREL[pile.item as keyof typeof APPAREL].hitPoints);
   if(condition<.5)thoughts.push(apparel[condition<.2?1:0]!);
-  for(const m of pawn.memories)if(m.expiresAt>c.tick)thoughts.push({id:m.kind,label:memoryLabels[m.kind],offset:memoryOffsets[m.kind],kind:'memory',description:'Souvenir du dernier repas concerné ; une nouvelle occurrence renouvelle sa durée sans cumul.',expiresAt:m.expiresAt});
+  for(const m of pawn.memories)if(memoryExpiry271(m,m.expiresAt)>c.tick)thoughts.push({id:m.kind,label:memoryLabels[m.kind],offset:memoryOffsets[m.kind],kind:'memory',description:'Souvenir du dernier repas concerné ; une nouvelle occurrence renouvelle sa durée sans cumul.',expiresAt:memoryExpiry271(m,m.expiresAt)});
   const denied=pawn.deniedJoining?.filter(t=>t>c.tick)??[];
   if(denied.length)thoughts.push({id:'denied-joining',label:`Accueil refusé ×${denied.length}`,offset:-3*(1-.75**denied.length)/.25,kind:'memory',description:'Une demande d’accueil refusée ; six jours, au plus cinq souvenirs à effet décroissant.',expiresAt:denied[0]});
   for(const insult of insultMoodMemories(pawn,c.tick)){
@@ -112,7 +114,7 @@ export function moodTarget(thoughts:readonly MoodThought[]):number {
 /** Downed does not mean unconscious. Awake medical rest and a conscious person
  * without usable legs still experience mood; sleep and lost awareness freeze it. */
 export function moodFrozen(pawn:Pawn,body?:BodyAssessment):boolean {
-  return pawn.state==='dead'||pawn.state==='sleeping'||!!pawn.medicalSleep||!(body??pawnBody(pawn)).canBeAwake;
+  return pawn.cryptosleepHeldAt271!==undefined||pawn.state==='dead'||pawn.state==='sleeping'||!!pawn.medicalSleep||!(body??pawnBody(pawn)).canBeAwake;
 }
 export function updateMood(world:World,pawn:Pawn,body?:BodyAssessment,topology?:RelationshipTopology):void {
   if(moodFrozen(pawn,body))return;
@@ -126,11 +128,12 @@ export function updateMoodFromThoughts(pawn:Pawn,thoughts:readonly MoodThought[]
 }
 export function expireMealMemories(world:World,pawn:Pawn):void {expireMealMemoriesAt(pawn,world.tick);}
 export function expireMealMemoriesAt(pawn:Pawn,tick:number):void {
+  if(pawn.cryptosleepHeldAt271!==undefined)return;
   if(pawn.familyBereavement)expireFamilyBereavement(pawn,tick);
   if(pawn.romanceMemories)expireRomanceMemories(pawn,tick);
   if(pawn.bereavement)expireBereavement(pawn,tick);
   if(pawn.deathThoughts)expireDeathThoughts(pawn,tick);
   expireRoomMemoriesAt(pawn,tick);
   if(pawn.deniedJoining?.some(t=>t<=tick)){pawn.deniedJoining=pawn.deniedJoining.filter(t=>t>tick);if(!pawn.deniedJoining.length)delete pawn.deniedJoining;}
-  if(pawn.memories.some(m=>m.expiresAt<=tick))pawn.memories=pawn.memories.filter(m=>m.expiresAt>tick);
+  if(pawn.memories.some(m=>memoryExpiry271(m,m.expiresAt)<=tick))pawn.memories=pawn.memories.filter(m=>memoryExpiry271(m,m.expiresAt)>tick);
 }

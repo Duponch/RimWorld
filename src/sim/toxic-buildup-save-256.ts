@@ -1,3 +1,4 @@
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {validToxicBuildupHeader256} from './toxic-buildup-256.ts';
 import {validHumanClinicalConditionOwner256} from './human-condition-mind-256.ts';
 import {captureHumanOwners,type HumanOwnershipCapture} from './human-owners.ts';
@@ -15,9 +16,9 @@ export function validToxicBuildupTransport256(actor:Pawn|WildAnimal,version:numb
  if(!validToxicBuildupHeader256(record,version))return false;
  const t=record.toxicBuildup;if(!t)return true;
  const animal=isAnimalSpecies(record.body);
- if(record.tick>clock||validateMedicalRecord(record,true,true,!animal,!animal,animal,animal,true,true,true,true,true,version,!animal)!==null||record.death&&typeof t.rotOnDeath!=='boolean')return false;
+ if(medicalCivilTick271(record)>clock||validateMedicalRecord(record,true,true,!animal,!animal,animal,animal,true,true,true,true,true,version,!animal)!==null||record.death&&typeof t.rotOnDeath!=='boolean')return false;
  const request=t.vomitRequestedAt;
- if(request!==undefined){const edge=toxicVomitEngagement256(actor,clock);if(!spatial||record.tick!==clock||!groupPawnInterval256(actor.id,request,600,1)||!edge||edge.startCore>request||edge.endCore<=clock*10||actor.state==='sleeping'||actor.state==='downed'||!assessMedical(record).canBeAwake||actor.stun)return false;}
+ if(request!==undefined){const edge=toxicVomitEngagement256(actor,clock);if(!spatial||medicalCivilTick271(record)!==clock||!groupPawnInterval256(actor.id,request,600,1)||!edge||edge.startCore>request||edge.endCore<=clock*10||actor.state==='sleeping'||actor.state==='downed'||!assessMedical(record).canBeAwake||actor.stun)return false;}
  const v=t.vomit;if(!v)return true;
  if(!spatial||v.cell.x>=spatial.width||v.cell.z>=spatial.height||!['idle','downed'].includes(actor.state)||actor.path.length||(actor.motion?.end??0)>clock||!assessMedical(record).canBeAwake||Math.max(Math.abs(v.cell.x-actor.x),Math.abs(v.cell.z-actor.z))>1)return false;
  if('hunger'in actor&&(actor.melee?.order||actor.shooting?.order||actor.shooting?.stance?.phase==='aim'||actor.moveCooldown>0||actor.jobId!==null||actor.haul||actor.cooking||actor.need||actor.hunting||actor.research||actor.ward||actor.feed||actor.tend||actor.surgery||actor.rescue||actor.equipmentTask||actor.orders.active!==null||actor.orders.queue.length||actor.priorityWork||actor.recreation.task))return false;

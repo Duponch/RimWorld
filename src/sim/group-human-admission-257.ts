@@ -145,12 +145,15 @@ export function processGroupHumanCarry257(w:World,g:PreparingGroup,p:Pawn,ctx:Ne
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype&&Reflect.ownKeys(v).every(k=>typeof k==='string'&&Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)!,'value'));
 const fields=(v:Record<string,unknown>,keys:readonly string[])=>Reflect.ownKeys(v).length===keys.length&&keys.every(k=>Object.hasOwn(v,k));
 const dense=(v:unknown):v is unknown[]=>Array.isArray(v)&&Reflect.ownKeys(v).length===v.length+1&&Array.from({length:v.length},(_,i)=>Object.hasOwn(v,i)&&Object.hasOwn(Object.getOwnPropertyDescriptor(v,String(i))!,'value')).every(Boolean);
-export function validGroupAdmission257(value:unknown,version:number):value is GroupAdmission257|undefined {return value===undefined||[257,258,259,260,261,262,263,264,265,266,267,268,269].includes(version)&&record(value)&&fields(value,['revision'])&&(value.revision===1||version>=259&&value.revision===2);}
+/** Admissions survive number-only migrations within the supported closed
+ * family; the original revision still controls the older formation rules. */
+const supportsGroupAdmission257=(version:number):boolean=>version===257||version===258||version===259||version===260||version===261||version===262||isSchema263OrLater(version);
+export function validGroupAdmission257(value:unknown,version:number):value is GroupAdmission257|undefined {return value===undefined||supportsGroupAdmission257(version)&&record(value)&&fields(value,['revision'])&&(value.revision===1||version>=259&&value.revision===2);}
 /** Raw references are checked against the actual local owner array. This is
  * not a capability flag that can admit another map's human. */
 export function validGroupHumanPreparation257(value:unknown,w:World,g:PreparingGroup,version:number,referencesOnly=false):boolean {
  if(value===undefined)return !g.admission;
- if(![257,258,259,260,261,262,263,264,265,266,267,268,269].includes(version)||!g.admission||!record(value)||!fields(value,['revision','releaseIds','passengers',...Object.hasOwn(value,'undraftIds261')?['undraftIds261']:[]])||value.revision!==1||!dense(value.releaseIds)||!dense(value.passengers))return false;
+ if(!supportsGroupAdmission257(version)||!g.admission||!record(value)||!fields(value,['revision','releaseIds','passengers',...Object.hasOwn(value,'undraftIds261')?['undraftIds261']:[]])||value.revision!==1||!dense(value.releaseIds)||!dense(value.passengers))return false;
  const undraft=Object.hasOwn(value,'undraftIds261')?value.undraftIds261:undefined;
  if(Object.hasOwn(value,'undraftIds261')&&((version!==261&&(Number(version)!==262&&!isSchema263OrLater(Number(version))))||!dense(undraft)||!undraft.length||undraft.some(id=>!Number.isSafeInteger(id)||!g.memberIds.includes(id as number))||new Set(undraft).size!==undraft.length))return false;
  const ids=new Set(g.memberIds),pawns=new Map(w.pawns.map(p=>[p.id,p])),released=new Set<number>(),patients=new Set<number>(),carrying=new Set<number>();

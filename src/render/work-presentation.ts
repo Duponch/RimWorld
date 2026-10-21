@@ -44,6 +44,7 @@ export function pawnWorkPose(pawn:Pawn,job:Job|undefined,stationKind?:StructureK
   if(pawn.cooking?.phase==='work'&&(stationKind==='crafting-spot'||stationKind==='butcher-spot'))return WORK_POSE.ground;
   if(pawn.firefighting?.phase==='beat')return WORK_POSE.build;
   if(pawn.animalFeed?.phase==='feed'||pawn.feed?.phase==='feed'||pawn.tend?.phase==='tend'||pawn.surgery?.phase==='work'||pawn.animalCare?.phase==='treat'||pawn.animalHandling?.phase==='interact'||pawn.haul?.serviceProgress!==undefined)return WORK_POSE.craft;
+  if(pawn.cryptosleepTask&&(pawn.cryptosleepTask.phase==='closing'||pawn.cryptosleepTask.phase==='opening'))return WORK_POSE.craft;
   if(pawn.cooking||pawn.research||pawn.deepWork||pawn.brewing)return WORK_POSE.craft;
   if(job)return WORK_POSE.build;
   return 0;

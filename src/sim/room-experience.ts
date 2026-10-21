@@ -1,3 +1,4 @@
+import {memoryExpiry271,validSuspendedMemory271,memoryReadTick271} from './suspended-memory-271.ts';
 import { isBedKind } from './bed-kinds.ts';
 import { bedSlotCell,pawnBedSlot } from './bed-slots.ts';
 import { captureRoomQuality } from './room-quality.ts';
@@ -7,7 +8,7 @@ import type { MoodThought } from './mood.ts';
 import type { Pawn,World } from './types.ts';
 
 export type RoomMemoryKind=keyof typeof ROOM_MEMORY_OFFSETS;
-export interface RoomMemory {kind:RoomMemoryKind;stage:number;expiresAt:number}
+export interface RoomMemory {kind:RoomMemoryKind;stage:number;expiresAt:number;suspendedTicks?:number}
 export interface RoomRest {nextAt:number;applied:boolean}
 const labels:Record<RoomMemoryKind,string>={bedroom:'Chambre',barracks:'Dortoir',dining:'Salle du dernier repas',recreation:'Salle du dernier loisir'};
 const admitted=(w:World,p:Pawn)=>w.schemaVersion>=103&&(p.faction??'colony')==='colony'&&!p.visitor&&!p.prisoner&&p.state!=='dead';
@@ -52,26 +53,28 @@ export function finishRoomRest(w:World,p:Pawn):void {
 }
 export function expireRoomMemories(w:World,p:Pawn):void {expireRoomMemoriesAt(p,w.tick);}
 export function expireRoomMemoriesAt(p:Pawn,tick:number):void {
-  if(p.roomMemories?.some(m=>m.expiresAt<=tick)){
-    p.roomMemories=p.roomMemories.filter(m=>m.expiresAt>tick);if(!p.roomMemories.length)delete p.roomMemories;
+  if(p.cryptosleepHeldAt271!==undefined)return;
+  if(p.roomMemories?.some(m=>memoryExpiry271(m,m.expiresAt)<=tick)){
+    p.roomMemories=p.roomMemories.filter(m=>memoryExpiry271(m,m.expiresAt)>tick);if(!p.roomMemories.length)delete p.roomMemories;
   }
 }
 export function roomMoodThoughts(w:World,p:Pawn):MoodThought[]{return roomMoodThoughtsAt(p,w.tick);}
 export function roomMoodThoughtsAt(p:Pawn,tick:number):MoodThought[]{
-  return (p.roomMemories??[]).filter(m=>m.expiresAt>tick).map(m=>({id:`room-${m.kind}`,label:`${labels[m.kind]} · ${IMPRESSION_LABELS[m.stage]}`,offset:ROOM_MEMORY_OFFSETS[m.kind][m.stage]!,kind:'memory',expiresAt:m.expiresAt,description:'Souvenir d’un usage réel de cette pièce, durant un jour. La pièce actuelle ne remplace pas le lieu de ce souvenir.'}));
+  tick=memoryReadTick271(p,tick);
+  return (p.roomMemories??[]).filter(m=>memoryExpiry271(m,m.expiresAt)>tick).map(m=>({id:`room-${m.kind}`,label:`${labels[m.kind]} · ${IMPRESSION_LABELS[m.stage]}`,offset:ROOM_MEMORY_OFFSETS[m.kind][m.stage]!,kind:'memory',expiresAt:memoryExpiry271(m,m.expiresAt),description:'Souvenir d’un usage réel de cette pièce, durant un jour. La pièce actuelle ne remplace pas le lieu de ce souvenir.'}));
 }
 
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min:number,max:number):boolean=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 /** Basic pawn shape is validated by the central save reader first. */
-export function validRoomExperience(p:Record<string,unknown>,version:number,tick:number):boolean {
+export function validRoomExperience(p:Record<string,unknown>,version:number,tick:number,civilTick=tick):boolean {
   const memories=p.roomMemories,need=p.need,rest=record(need)?need.roomRest:undefined;
   if(version<103)return memories===undefined&&rest===undefined;
   if(memories!==undefined){
     if(!Array.isArray(memories)||!memories.length||memories.length>3)return false;
     const kinds=new Set<string>();let bedroom=false;
     for(const m of memories){
-      if(!record(m)||Object.keys(m).some(k=>!['kind','stage','expiresAt'].includes(k))||typeof m.kind!=='string'||!Object.hasOwn(ROOM_MEMORY_OFFSETS,m.kind)||!integer(m.stage,0,9)||!integer(m.expiresAt,tick+1,tick+ROOM_MEMORY_DURATION)||ROOM_MEMORY_OFFSETS[m.kind as RoomMemoryKind][Number(m.stage)]==null||kinds.has(m.kind))return false;
+      if(!record(m)||Object.keys(m).some(k=>!['kind','stage','expiresAt','suspendedTicks'].includes(k))||typeof m.kind!=='string'||!Object.hasOwn(ROOM_MEMORY_OFFSETS,m.kind)||!integer(m.stage,0,9)||!validSuspendedMemory271(m,version,tick,Number(m.expiresAt)-ROOM_MEMORY_DURATION)||!integer(memoryExpiry271(m,Number(m.expiresAt)),(civilTick===tick?tick:Math.max(tick,Number(m.expiresAt)-ROOM_MEMORY_DURATION))+1,(civilTick===tick?tick:Math.max(tick,Number(m.expiresAt)-ROOM_MEMORY_DURATION))+ROOM_MEMORY_DURATION)||civilTick!==tick&&!integer(Number(m.expiresAt)-ROOM_MEMORY_DURATION,0,civilTick)||ROOM_MEMORY_OFFSETS[m.kind as RoomMemoryKind][Number(m.stage)]==null||kinds.has(m.kind))return false;
       kinds.add(m.kind);if(m.kind==='bedroom'||m.kind==='barracks'){if(bedroom)return false;bedroom=true;}
     }
   }

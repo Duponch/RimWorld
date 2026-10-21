@@ -1,3 +1,4 @@
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {createAnimalMedicalRecord256} from './animal-clinical-age-v256.ts';
 import { seriesApparelProtection } from './apparel-protection.ts';
 import { animalCarrier } from './animal-rest-state.ts';
@@ -28,7 +29,7 @@ export interface SpikeTrapImpactPlan {
 const prepared=new WeakMap<SpikeTrapImpactPlan,{world:World;tick:number;adopt:()=>boolean}>();
 const uint32=(n:number)=>Number.isSafeInteger(n)&&n>=0&&n<=0xffffffff;
 function invalidRecord(world:World,actor:LivingTarget,record:MedicalRecord):boolean {
-  if(record.tick>world.tick)return true;
+  if(medicalCivilTick271(record)>world.tick)return true;
   return isMechanoidTarget(actor)?!!validateMechanoidMedicalRecord(record,world.schemaVersion,actor.mechKind):
     !!validateMedicalRecord(record,true,true,true,true,isAnimalTarget(actor),true,true,true,true,true,true,world.schemaVersion,true);
 }

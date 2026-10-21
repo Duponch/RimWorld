@@ -20,7 +20,9 @@ export const treeWorkCorePerTick=(speed:number,growth:number):number=>
 export const replantDurationCore=(definition:TreeDefinition,speed:number,growth:number):number|undefined=>{
   const rate=treeWorkCorePerTick(speed,growth);return rate>0?Math.max(1,Math.trunc(definition.workCore/rate)):undefined;
 };
-export const treePackLive=(pile:MinifiedTreePile,tick:number):boolean=>!pile.plantPack.pendingExpiry&&tick<pile.plantPack.expiresAt;
+/** Original packing/expiry dates stay factual across a suspended container. */
+export const treePackExpiry271=(pile:Pick<MinifiedTreePile,'plantPack'>):number=>pile.plantPack.expiresAt+(pile.plantPack.suspendedTicks271??0);
+export const treePackLive=(pile:MinifiedTreePile,tick:number):boolean=>!pile.plantPack.pendingExpiry&&tick<treePackExpiry271(pile);
 export const treePackDeadline=(tick:number):number=>tick+TREE_PACK_LIFETIME;
 const draw=(rng:number):{value:number;rng:number}=>{
   let next=rng;next^=next<<13;next^=next>>>17;next^=next<<5;next>>>=0;

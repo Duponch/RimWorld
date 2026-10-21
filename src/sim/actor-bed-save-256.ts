@@ -41,12 +41,12 @@ export function validateProjectedActorBeds256(w:World,views:readonly {world:Worl
  const actors:BedActor256[]=[],locations=new Map<BedActor256,number|null>(),byId=new Map<number,BedActor256>();
  const add=(actor:BedActor256,map:number|null)=>{const old=byId.get(actor.id);if(old&&old!==actor)throw Error('Projected actor has two owners');if(old){if(locations.get(old)!==map)throw Error('Contradictory projected actor map');return;}byId.set(actor.id,actor);locations.set(actor,map);actors.push(actor);};
  try{
-  everyHumanPawnOwner(w,(p,kind)=>{add(p,kind==='map'?activeMapId:null);return true;});
+  everyHumanPawnOwner(w,(p,kind)=>{add(p,kind==='map'||kind==='player-casket'?activeMapId:null);return true;});
   if(validateDuckFlyers256(w,w.schemaVersion).length)return ['Invalid actual held Duck owner.'];
   for(const a of w.wildlife?.animals??[])add(a,activeMapId);
   for(const a of captureCoreStartingAnimals256(w))add(a,null);
   for(const f of captureDuckFlyerOwners256(w))add(f.animal,null);
-  for(const row of views)if(!row.referencesOnly){everyHumanPawnOwner(row.world,(p,kind)=>{add(p,kind==='map'?activeMapId:null);return true;});
+  for(const row of views)if(!row.referencesOnly){everyHumanPawnOwner(row.world,(p,kind)=>{add(p,kind==='map'||kind==='player-casket'?activeMapId:null);return true;});
    const group=row.world.group as typeof row.world.group&{animalOwners?:import('./group-animal-state-256.ts').GroupAnimalOwners256};for(const a of group?.animalOwners?.members??[])add(a,null);}
   for(const a of terminalAnimals)add(a,null);
   for(const row of w.worldPawns?.owners??[])if(row.kind!=='mechanical')add(row.actor,null);

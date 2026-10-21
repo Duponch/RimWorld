@@ -35,6 +35,7 @@ export function equipmentInspectionView(world:World,pawn:Pawn):EquipmentInspecti
   const inventory=world.piles.filter(p=>['pawn','inventory'].includes(p.owner.type)&&'pawnId' in p.owner&&p.owner.pawnId===pawn.id)
     .map(p=>`${ITEM_DEFINITIONS[p.item].label}${p.quantity>1?` ×${p.quantity}`:''}`);
   for(const packed of world.packed)if(packed.owner.type==='pawn'&&packed.owner.pawnId===pawn.id)inventory.push(buildingLabels[packed.building.kind]);
+  if(pawn.cryptosleepTask?.action==='carry'&&(pawn.cryptosleepTask.phase==='carry'||pawn.cryptosleepTask.phase==='closing'))inventory.push('Patient porté vers un caisson de cryptosommeil');
   if(pawn.rescue?.phase==='carry')inventory.push(pawn.rescue.capture?'Personne capturée transportée':'Personne secourue transportée');
   if(pawn.animalRescue?.phase==='carry')inventory.push(`Animal secouru transporté · ${pawn.animalRescue.animalId}`);
   return {

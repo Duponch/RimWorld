@@ -39,32 +39,7 @@ export function validateCooking(input:unknown,version:number,ids:Set<number>,mem
   const cell=(v:unknown)=>record(v)&&Object.keys(v).every(key=>key==='x'||key==='z')&&int(v.x,0,w.width-1)&&int(v.z,0,w.height-1);
   const taskKeys=new Set(['recipe','stationId','billId','spot','actionCell','phase','ingredients','progress','productId','storageId',...(version>=79?['workTicks']:[]),...(version>=32?['storageQuantity']:[])]);
   const ingredientKeys=new Set(['pileId','item','quantity','stage','cell']);
-  for(const s of packedRecords?packedRecords.map(p=>p.building):[...w.structures,...(version>=32?w.packed.map(p=>p.building):[])]) {
-    const recipe=stationRecipe(s);
-    if((s.kind==='fueled-smithy'||s.kind==='electric-smithy')&&!isSchema267OrLater(version)){errors.push('Future smithy.');continue;}
-    if(s.kind==='brewery'&&version<265){errors.push('Future brewery.');continue;}
-    if(s.kind==='electric-crematorium'&&version<225){errors.push('Future electric crematorium.');continue;}
-    if(s.kind==='electric-smelter'&&version<222){errors.push('Future electric smelter.');continue;}
-    if(s.kind==='biofuel-refinery'&&version<218){errors.push('Future biofuel refinery.');continue;}
-    if(s.kind==='drug-lab'&&version<206){errors.push('Future drug laboratory.');continue;}
-    if(!recipe||version<32&&recipe==='stone-blocks'||version<72&&recipe==='tribalwear'||version<79&&recipe==='butcher-creature'||version<101&&s.kind==='machining-table'||version<104&&s.kind==='art-bench'||version<123&&s.kind==='fabrication-bench') {if(s.bills!==undefined)errors.push('Bills attached to a non-workstation.');continue;}
-    if(!Array.isArray(s.bills)||s.bills.length>64){errors.push('Invalid workstation bills.');continue;}
-    for(const b of s.bills) {
-      if(isSmithingRecipe267(b?.recipe)&&(!smithingRecipeAvailable267(b.recipe,version)||!productionResearchUnlocked(w,b.recipe))){errors.push('Unavailable smithing bill.');continue;}
-      if(b?.recipe==='smelt-apparel'&&!isSchema267OrLater(version)){errors.push('Future apparel smelting bill.');continue;}
-      if(b?.recipe==='brew-wort'&&version<265){errors.push('Future wort bill.');continue;}
-      if(isBurnApparelRecipe(b?.recipe)&&version<251){errors.push('Future apparel-burning bill.');continue;}
-      if(isPemmicanRecipe(b?.recipe)&&(version<248||!productionResearchUnlocked(w,b.recipe))){errors.push('Unavailable pemmican bill.');continue;}
-      if(isKibbleRecipe(b?.recipe)&&version<227){errors.push('Future kibble bill.');continue;}
-      if(isCremationRecipe(b?.recipe)&&(version<225||!productionResearchUnlocked(w,b.recipe))){errors.push('Unavailable cremation bill.');continue;}
-      if(isSmeltingRecipe(b?.recipe)&&(version<222||!productionResearchUnlocked(w,b.recipe))){errors.push('Unavailable smelting bill.');continue;}
-      if(isBiofuelRecipe(b?.recipe)&&(version<218||!productionResearchUnlocked(w,b.recipe))){errors.push('Unavailable biofuel bill.');continue;}
-      if(b?.recipe==='make-medicine'&&(version<206||!productionResearchUnlocked(w,b.recipe))){errors.push('Unavailable medicine bill.');continue;}
-      if(version<197&&record(b)&&record(b.filters)&&Object.keys(b.filters).some(key=>V219_ITEM_IDS.some(item=>item===key))){errors.push('Future mechanical carcass bill filter.');continue;}
-      if(!record(b)||!int(b.id,1,w.nextId-1)||!stationAccepts(s,b.recipe)||version<194&&(isMechSalvageRecipe(b.recipe)||Object.hasOwn(b.filters??{},'scyther-corpse'))||b.recipe==='cook-survival-meal'&&(version<188||!packagedSurvivalMealsUnlocked(w))||version<152&&b.recipe==='fine-meal'||version<154&&b.recipe==='lavish-meal'||version<155&&b.recipe==='vegetarian-fine-meal'||version<156&&b.recipe==='carnivore-fine-meal'||version<157&&b.recipe==='vegetarian-lavish-meal'||version<159&&b.recipe==='cook-carnivore-lavish-meal'||version<160&&b.recipe==='cook-simple-meal-bulk'||version<161&&b.recipe==='cook-fine-meal-bulk'||version<162&&b.recipe==='cook-vegetarian-fine-meal-bulk'||version<163&&b.recipe==='cook-carnivore-fine-meal-bulk'||version<164&&b.recipe==='cook-lavish-meal-bulk'||version<165&&b.recipe==='cook-vegetarian-lavish-meal-bulk'||version<166&&b.recipe==='cook-carnivore-lavish-meal-bulk'||version<101&&isGunRecipe(b.recipe)||version<104&&isArtRecipe(b.recipe)||version<109&&isFlakRecipe(b.recipe)||version<141&&b.recipe==='make-flak-helmet'||version<148&&b.recipe==='make-recon-helmet'||version<241&&b.recipe==='make-recon-armor'||version<245&&b.recipe==='tuque'||version<123&&b.recipe==='make-component'||version<139&&b.recipe==='make-advanced-component'||!validBillSettings(b,b.recipe,version)||Object.hasOwn(b.filters??{},'fine-meal')||Object.hasOwn(b.filters??{},'lavish-meal')||Object.hasOwn(b.filters??{},'vegetarian-fine-meal')||Object.hasOwn(b.filters??{},'carnivore-fine-meal')||Object.hasOwn(b.filters??{},'vegetarian-lavish-meal')||Object.hasOwn(b.filters??{},'carnivore-lavish-meal')||version<148&&Object.keys(b.filters??{}).some(i=>i==='recon-helmet'||i==='unfinished-recon-helmet')||version<178&&Object.keys(b.filters??{}).some(i=>V190_ITEM_IDS.includes(i))||version<120&&Object.keys(b.filters??{}).some(i=>V120_ANIMAL_PRODUCT_ITEMS.includes(i))||version<91&&Object.keys(b.filters??{}).some(i=>V91_ITEM_IDS.includes(i))||version<79&&b.filters&&Object.hasOwn(b.filters,'hare-meat')||version<84&&b.filters&&['potato','corn'].some(i=>Object.hasOwn(b.filters,i)))errors.push('Invalid cooking bill.');
-      else {if(ids.has(b.id))errors.push('Duplicate bill identity.');ids.add(b.id);}
-    }
-  }
+  errors.push(...validateCookingBuildingRecords258(w,version,ids,packedRecords?packedRecords.map(p=>p.building):[...w.structures,...(version>=32?w.packed.map(p=>p.building):[])]));
   if(packedRecords)return errors;
   for(const p of w.pawns) {
     if(version<32?p.priorities.craft!==undefined:!int(p.priorities.craft,0,4))errors.push('Invalid or future craft priority.');
@@ -283,4 +258,37 @@ export function validKibbleProductionTransport(w:World,version:number,memoizeSta
     }
     return true;
   }catch{return false;}
+}
+
+/** Shared literal building/bill validation. No map authority is required for
+ * actual minified originals; only their scalar research/allocator context. */
+export function validateCookingBuildingRecords258(w:Pick<World,'schemaVersion'|'research'|'nextId'>,version:number,ids:Set<number>,buildings:readonly import('./types.ts').Structure[]):string[] {
+  const errors:string[]=[];
+  for(const s of buildings) {
+    const recipe=stationRecipe(s);
+    if((s.kind==='fueled-smithy'||s.kind==='electric-smithy')&&!isSchema267OrLater(version)){errors.push('Future smithy.');continue;}
+    if(s.kind==='brewery'&&version<265){errors.push('Future brewery.');continue;}
+    if(s.kind==='electric-crematorium'&&version<225){errors.push('Future electric crematorium.');continue;}
+    if(s.kind==='electric-smelter'&&version<222){errors.push('Future electric smelter.');continue;}
+    if(s.kind==='biofuel-refinery'&&version<218){errors.push('Future biofuel refinery.');continue;}
+    if(s.kind==='drug-lab'&&version<206){errors.push('Future drug laboratory.');continue;}
+    if(!recipe||version<32&&recipe==='stone-blocks'||version<72&&recipe==='tribalwear'||version<79&&recipe==='butcher-creature'||version<101&&s.kind==='machining-table'||version<104&&s.kind==='art-bench'||version<123&&s.kind==='fabrication-bench') {if(s.bills!==undefined)errors.push('Bills attached to a non-workstation.');continue;}
+    if(!Array.isArray(s.bills)||s.bills.length>64){errors.push('Invalid workstation bills.');continue;}
+    for(const b of s.bills) {
+      if(isSmithingRecipe267(b?.recipe)&&(!smithingRecipeAvailable267(b.recipe,version)||!productionResearchUnlocked(w,b.recipe))){errors.push('Unavailable smithing bill.');continue;}
+      if(b?.recipe==='smelt-apparel'&&!isSchema267OrLater(version)){errors.push('Future apparel smelting bill.');continue;}
+      if(b?.recipe==='brew-wort'&&version<265){errors.push('Future wort bill.');continue;}
+      if(isBurnApparelRecipe(b?.recipe)&&version<251){errors.push('Future apparel-burning bill.');continue;}
+      if(isPemmicanRecipe(b?.recipe)&&(version<248||!productionResearchUnlocked(w,b.recipe))){errors.push('Unavailable pemmican bill.');continue;}
+      if(isKibbleRecipe(b?.recipe)&&version<227){errors.push('Future kibble bill.');continue;}
+      if(isCremationRecipe(b?.recipe)&&(version<225||!productionResearchUnlocked(w,b.recipe))){errors.push('Unavailable cremation bill.');continue;}
+      if(isSmeltingRecipe(b?.recipe)&&(version<222||!productionResearchUnlocked(w,b.recipe))){errors.push('Unavailable smelting bill.');continue;}
+      if(isBiofuelRecipe(b?.recipe)&&(version<218||!productionResearchUnlocked(w,b.recipe))){errors.push('Unavailable biofuel bill.');continue;}
+      if(b?.recipe==='make-medicine'&&(version<206||!productionResearchUnlocked(w,b.recipe))){errors.push('Unavailable medicine bill.');continue;}
+      if(version<197&&record(b)&&record(b.filters)&&Object.keys(b.filters).some(key=>V219_ITEM_IDS.some(item=>item===key))){errors.push('Future mechanical carcass bill filter.');continue;}
+      if(!record(b)||!int(b.id,1,w.nextId-1)||!stationAccepts(s,b.recipe)||version<194&&(isMechSalvageRecipe(b.recipe)||Object.hasOwn(b.filters??{},'scyther-corpse'))||b.recipe==='cook-survival-meal'&&(version<188||!packagedSurvivalMealsUnlocked(w))||version<152&&b.recipe==='fine-meal'||version<154&&b.recipe==='lavish-meal'||version<155&&b.recipe==='vegetarian-fine-meal'||version<156&&b.recipe==='carnivore-fine-meal'||version<157&&b.recipe==='vegetarian-lavish-meal'||version<159&&b.recipe==='cook-carnivore-lavish-meal'||version<160&&b.recipe==='cook-simple-meal-bulk'||version<161&&b.recipe==='cook-fine-meal-bulk'||version<162&&b.recipe==='cook-vegetarian-fine-meal-bulk'||version<163&&b.recipe==='cook-carnivore-fine-meal-bulk'||version<164&&b.recipe==='cook-lavish-meal-bulk'||version<165&&b.recipe==='cook-vegetarian-lavish-meal-bulk'||version<166&&b.recipe==='cook-carnivore-lavish-meal-bulk'||version<101&&isGunRecipe(b.recipe)||version<104&&isArtRecipe(b.recipe)||version<109&&isFlakRecipe(b.recipe)||version<141&&b.recipe==='make-flak-helmet'||version<148&&b.recipe==='make-recon-helmet'||version<241&&b.recipe==='make-recon-armor'||version<245&&b.recipe==='tuque'||version<123&&b.recipe==='make-component'||version<139&&b.recipe==='make-advanced-component'||!validBillSettings(b,b.recipe,version)||Object.hasOwn(b.filters??{},'fine-meal')||Object.hasOwn(b.filters??{},'lavish-meal')||Object.hasOwn(b.filters??{},'vegetarian-fine-meal')||Object.hasOwn(b.filters??{},'carnivore-fine-meal')||Object.hasOwn(b.filters??{},'vegetarian-lavish-meal')||Object.hasOwn(b.filters??{},'carnivore-lavish-meal')||version<148&&Object.keys(b.filters??{}).some(i=>i==='recon-helmet'||i==='unfinished-recon-helmet')||version<178&&Object.keys(b.filters??{}).some(i=>V190_ITEM_IDS.includes(i))||version<120&&Object.keys(b.filters??{}).some(i=>V120_ANIMAL_PRODUCT_ITEMS.includes(i))||version<91&&Object.keys(b.filters??{}).some(i=>V91_ITEM_IDS.includes(i))||version<79&&b.filters&&Object.hasOwn(b.filters,'hare-meat')||version<84&&b.filters&&['potato','corn'].some(i=>Object.hasOwn(b.filters,i)))errors.push('Invalid cooking bill.');
+      else {if(ids.has(b.id))errors.push('Duplicate bill identity.');ids.add(b.id);}
+    }
+  }
+  return errors;
 }

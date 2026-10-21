@@ -8,7 +8,7 @@ import type { FoodPolicy } from './food-policy.ts';
 import { allowedFoodFromPolicies } from './food-policy.ts';
 import { ITEM_DEFINITIONS,adultHungerFactor,mealQuantity } from './items.ts';
 import { commercialItemMassGrams } from './commercial-mass.ts';
-import { ingestionFoodPoison,exposeFoodPoisoning } from './food-poisoning.ts';
+import { ingestionFoodPoison,exposeFoodPoisoningAtRecord } from './food-poisoning.ts';
 import { createMedicalRecord,medicalStatus } from './injury-state.ts';
 import { rememberIngestionAt } from './wellbeing.ts';
 import type { ConsumedGroupMass } from './group-care.ts';
@@ -47,7 +47,7 @@ export function advanceGroupIngestion(group:ActiveGroup,c:GroupIngestionContext)
     removed.push({pawnId:owner.pawnId,grams:mass*quantity});
     if(cause){
       person.health??=createMedicalRecord(c.tick);
-      person.health.foodPoisoning=exposeFoodPoisoning(person.health.foodPoisoning,cause,pile.item,c.tick);
+      person.health.foodPoisoning=exposeFoodPoisoningAtRecord(person.health,cause,pile.item,c.tick);
       const status=medicalStatus(person.health);if(status!=='mobile')person.state=status;
       c.notice(person,`${person.name} souffre d’une intoxication alimentaire.`);
     }

@@ -1,4 +1,10 @@
 import {validLongswordHistoricalTransport270} from '../sim/catalogue-save-270.ts';
+import {validCryptosleepHistoricalTransport271} from '../sim/catalogue-save-271.ts';
+import {validCryptosleepResearchTransport271} from '../sim/research-save.ts';
+import {isPlayerCasket271} from '../sim/cryptosleep-state-271.ts';
+import {validCryptosleepBuilding271,registerCryptosleepThingIds271} from '../sim/cryptosleep-owner-save-271.ts';
+import {validCryptosleepTaskField271,validCryptosleepTaskTransport271} from '../sim/cryptosleep-task-save-271.ts';
+import {medicalCivilTick271,validMedicalCivilHeader271} from '../sim/suspended-human-clock-271.ts';
 import {validLongBladesResearchTransport270} from '../sim/research-save.ts';
 import {validCraftingFuelTransport269} from '../sim/fuel-purpose-save-269.ts';
 import {validMaceHistoricalTransport269} from '../sim/catalogue-save-269.ts';
@@ -607,9 +613,9 @@ function validSurgeryTransport(pawn:Pawn,world:Pick<World,'schemaVersion'|'tick'
   const record=pawn.health;
   if(isMechanoidKind(record?.body))return false;
   if(record?.anesthetic===undefined)return true;
-  if(!record||typeof record!=='object'||Array.isArray(record)||record.body!==undefined||record.tick>world.tick||
-    (record.death===undefined?record.tick!==world.tick:!record.death||typeof record.death!=='object'||Array.isArray(record.death)||record.death.tick!==record.tick))return false;
-  return validAnesthetic(record.anesthetic,record.tick,world.schemaVersion>=179,pawn.id%20);
+  if(!record||typeof record!=='object'||Array.isArray(record)||record.body!==undefined||!validMedicalCivilHeader271(record,world.schemaVersion)||medicalCivilTick271(record)>world.tick||
+    (record.death===undefined?medicalCivilTick271(record)!==world.tick:!record.death||typeof record.death!=='object'||Array.isArray(record.death)||record.death.tick!==medicalCivilTick271(record)))return false;
+  return validAnesthetic(record.anesthetic,record.tick,world.schemaVersion>=179,pawn.id%20,medicalCivilTick271(record),world.schemaVersion);
 }
 
 /** New disease payloads use the same isolated record guard as save files.
@@ -618,7 +624,7 @@ function validImmuneDiseaseTransport(pawn:Pawn,world:Pick<World,'schemaVersion'|
   const record=pawn.health;
   if(!record||!Object.hasOwn(record,'immuneDiseases')&&!['malaria','plague'].includes(record.death?.cause??''))return true;
   if(validateMedicalRecord(record,true,true,true,true,false,false,true,true,true,true,true,world.schemaVersion,world.schemaVersion>=127)!==null
-    ||record.tick>world.tick||!archived&&!record.death&&record.tick!==world.tick)return false;
+    ||!validMedicalCivilHeader271(record,world.schemaVersion)||medicalCivilTick271(record)>world.tick||!archived&&!record.death&&medicalCivilTick271(record)!==world.tick)return false;
   const vomit=record.immuneDiseases?.malaria?.vomit;
   if(vomit&&(vomit.cell.x>=world.width||vomit.cell.z>=world.height||record.foodPoisoning?.vomit||record.flu?.vomit))return false;
   const status=medicalStatus(record);
@@ -653,7 +659,7 @@ function denseArray(value:unknown):value is unknown[] {
 function validStructurePatchEntry(value:unknown,world:Pick<World,'nextId'|'width'|'height'|'schemaVersion'|'tick'>):value is Structure {
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
   if(!validCaveHiveBuilding256(value,world.schemaVersion,world)||!validAncientCasketField256(value,world.schemaVersion)||!validLocalRoadPropStructure256(value,world.schemaVersion,world)||!validHumanSleepingSpotStructureEntry(value,world.schemaVersion,world)||!validBedrollStructureEntry256(value,world.schemaVersion,world)||!validAncientMonumentBuilding256(value,world.schemaVersion))return false;
-  if(!validAncientCasketBuilding256(value,world.schemaVersion,world))return false;
+  if(!validAncientCasketBuilding256(value,world.schemaVersion,world)||!validCryptosleepBuilding271(value,world.schemaVersion,world,world.tick))return false;
   const s=value as Structure;
   return Number.isSafeInteger(s.id)&&s.id>=1&&s.id<world.nextId
     &&typeof s.kind==='string'&&Object.hasOwn(STRUCTURE_DEFINITIONS,s.kind)
@@ -1112,6 +1118,7 @@ export class SnapshotDecoder {
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
     if(packet.world.destroyed!==undefined&&!validNaturalHiveLoss256(packet.world.destroyed,packet.world.schemaVersion))return resync('Invalid or future natural Hive loss counter.');
     if(!validWorldPawnsEnvelope256(packet.world,packet.world.schemaVersion,packet.world.tick*10,packet.world.nextId))return resync('Invalid or future WorldPawns header.');
+    if(!validCryptosleepHistoricalTransport271(packet,packet.world.schemaVersion))return resync('Cryptosommeil futur dans ce snapshot.');
     if(!validPlanetGeographyHistorical256(packet.world,packet.world.schemaVersion))return resync('Géographie ou factions futures.');
     if(!validLocalRoadInfoEnvelope256(packet.world,packet.world.schemaVersion))return resync('Invalid local road state.');
     if(!validLocalGeyserEnvelope256(packet.world,packet.world.schemaVersion,packet.world.tick,packet.world.nextId))return resync('Invalid local geyser state.');
@@ -1188,6 +1195,8 @@ export class SnapshotDecoder {
     if(Object.hasOwn(message.world,'bombWaves')&&(!Array.isArray(message.world.bombWaves)||message.world.bombWaves.some(w=>!validBombWaveShape(w,message.world.schemaVersion))))return resync('Forme de vague Bomb invalide.');
     let hasDraftedTend=false;const forcedConsumers:Pawn[]=[];
     for(const pawn of message.world.pawns){
+      if(!validCryptosleepTaskField271(pawn,message.world.schemaVersion,message.world.tick,message.world.nextId)||Object.hasOwn(pawn,'cryptosleepHeldAt271'))return resync('Tâche ou propriétaire local de cryptosommeil invalide.');
+      if(pawn.health&&!validMedicalCivilHeader271(pawn.health,message.world.schemaVersion))return resync('Horloge médicale civile invalide ou future.');
       if(!validCaravanRestField266(pawn as unknown as Record<string,unknown>,message.world.schemaVersion,pawn.health?.death?.tick??message.world.tick))return resync('Trace de repos de caravane invalide ou future.');
       if(!validNativeHumanField256(pawn,message.world.schemaVersion))return resync('Identité humaine native invalide ou future.');
       if(!validArrivalRotation256(pawn,message.world.schemaVersion))return resync('Orientation d’arrivée invalide ou future.');
@@ -1425,6 +1434,7 @@ export class SnapshotDecoder {
     if(!validPemmicanCatalogueDomains(next,next.schemaVersion)||!validPemmicanResearchTransport(next,next.schemaVersion))return resync('Pemmican, recherche ou production future/invalide.');
     if(!validTundraTransport(next,next.schemaVersion))return resync('Toundra, flore ou climat futur/incohérent.');
     if(validateAncientCasketPhysical256(next).length)return resync('Invalid actual casket physical owner.');
+    if(!validCryptosleepResearchTransport271(next,next.schemaVersion)||!validCryptosleepTaskTransport271(next))return resync('Recherche, caisson ou service de cryptosommeil invalide.');
     if(validateBridgeTransport(next,next.schemaVersion,message.kind==='delta'?changedTileIndices:[]).length)return resync('Fondation future, chantier ou support invalide.');
     if(this.validateMarshTransport(next,message.kind==='delta'?changedTileIndices:[],resourceReuse,resourceBaseReuse).length)return resync('Marais futur, sans support ou fertile invalide.');
     if(validateSnowTransport(next,next.schemaVersion, message.kind==='delta'&&!!this.current?.snow===!!next.snow?changedTileIndices:undefined).length)return resync('Snow surface clock, depth or owner invalid.');
@@ -1580,11 +1590,11 @@ export class SnapshotDecoder {
     // capture. Foreign registries above are already validated; their historical
     // owners reserve the same namespace as the map and cannot become a wave.
     const shelves=next.structures.some(s=>s.shelf!==undefined)||next.packed.some(p=>p.building.shelf!==undefined);
-    const startingArrival=Object.hasOwn(next,'startingArrival'),ancientCaskets=next.structures.some(isAncientCasket256);
-    if(next.ancientShrineWarnings||mineableIds.size||next.geysers||next.wildlife?.flyers?.length||collapsedRockIds.size||next.jobs.some(j=>j.tree)||next.piles.some(p=>p.innerResource)||startingArrival||ancientCaskets||shelves||relationships||Object.hasOwn(next,'orbital')||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||next.raids?.extraMechActive261?.length||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
+    const startingArrival=Object.hasOwn(next,'startingArrival'),ancientCaskets=next.structures.some(isAncientCasket256),playerCaskets=next.structures.some(isPlayerCasket271);
+    if(next.ancientShrineWarnings||mineableIds.size||next.geysers||next.wildlife?.flyers?.length||collapsedRockIds.size||next.jobs.some(j=>j.tree)||next.piles.some(p=>p.innerResource)||startingArrival||ancientCaskets||playerCaskets||shelves||relationships||Object.hasOwn(next,'orbital')||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||next.raids?.extraMechActive261?.length||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
       // Only the closed MAIN context can reuse its resource facts. Keep RAW
       // and non-strict collection/getter evaluation on the historical path.
-      const owned=validation.resourceFacts&&(startingArrival||ancientCaskets||shelves||relationships||Object.hasOwn(next,'orbital'))
+      const owned=validation.resourceFacts&&(startingArrival||ancientCaskets||playerCaskets||shelves||relationships||Object.hasOwn(next,'orbital'))
         ?captureOwnedStrictNamespace(next,validation.resourceFacts,mechanicalCorpseIds):undefined;
       let ids:NumericMembershipSink&Iterable<number>,strictIds:boolean;
       if(owned!==undefined){
@@ -1596,7 +1606,7 @@ export class SnapshotDecoder {
           ...(next.wildlife?.animals??[]),...(next.filth?.items??[]),...(next.fires?.items??[]),...(next.fires?.embers??[]),
           ...next.packed.map(p=>p.building),...shelfIdentityOwners(next),...next.structures.flatMap(s=>s.bills??[]),...next.packed.flatMap(p=>p.building.bills??[]),
         ];
-        ids=new NumericMembership();strictIds=!!next.ancientShrineWarnings||mineableIds.size>0||!!next.geysers||!!next.wildlife?.flyers?.length||collapsedRockIds.size>0||startingArrival||ancientCaskets||shelves||relationships||Object.hasOwn(next,'orbital')||next.schemaVersion>=235&&(next.jobs.some(j=>j.tree!==undefined||j.plantTarget!==undefined)||next.piles.some(p=>p.kind==='plant')||next.resources.some(hasPausedTreeClock));
+        ids=new NumericMembership();strictIds=!!next.ancientShrineWarnings||mineableIds.size>0||!!next.geysers||!!next.wildlife?.flyers?.length||collapsedRockIds.size>0||startingArrival||ancientCaskets||playerCaskets||shelves||relationships||Object.hasOwn(next,'orbital')||next.schemaVersion>=235&&(next.jobs.some(j=>j.tree!==undefined||j.plantTarget!==undefined)||next.piles.some(p=>p.kind==='plant')||next.resources.some(hasPausedTreeClock));
         for(const owner of owners){if(strictIds&&(!Number.isSafeInteger(owner.id)||owner.id<1||owner.id>=next.nextId||ids.has(owner.id)))return resync('Identité dupliquée ou invalide dans le registre relationnel.');if(mechanicalCorpseIds.has(owner.id)&&ids.has(owner.id))return resync('Identité de carcasse mécanique dupliquée.');ids.add(owner.id);}
       }
       if(next.geysers&&!registerGeyserIdentities256(next.geysers,ids))return resync('Duplicate geyser identity.');
@@ -1604,7 +1614,6 @@ export class SnapshotDecoder {
       if(validateDuckFlyers256(next,next.schemaVersion,ids).length)return resync('Propriétaire de transit animal dupliqué ou invalide.');
       for(const id of mineableIds.values()){if(ids.has(id))return resync('Duplicate Mineable owner.');ids.add(id);}
       for(const id of collapsedRockIds.values()){if(ids.has(id))return resync('Duplicate collapsed rock owner.');ids.add(id);}
-      if(registerTreeThingIds(next,ids).length)return resync('Duplicate contained tree identity.');
       const addId=(id:unknown):boolean=>{if(!Number.isSafeInteger(id)||Number(id)<1||Number(id)>=next.nextId||ids.has(Number(id))&&(strictIds||mechanicalCorpseIds.has(Number(id))))return false;ids.add(Number(id));return true;};
       const addItems=(items:unknown):boolean=>Array.isArray(items)&&items.every(item=>item&&typeof item==='object'&&addId(item.id));
       if(relationships){for(const id of postIds)if(!addId(id))return resync('Identité du comptoir dupliquée dans le registre relationnel.');}
@@ -1632,6 +1641,11 @@ export class SnapshotDecoder {
       if(registerGroupThingIds(next,ids).length)return resync('Une identité du groupe possède plusieurs propriétaires.');
       if(registerStartingArrivalThingIds(next,ids).length)return resync('Une identité des capsules initiales possède plusieurs propriétaires.');
       if(registerAncientCasketThingIds256(next,ids).length)return resync('Propriétaire ou identité de capsule ancienne invalide.');
+      if(registerCryptosleepThingIds271(next,ids).length)return resync('Propriétaire ou identité de caisson de cryptosommeil invalide.');
+      // Outer human/personal Things must precede their contained tree originals,
+      // matching RAW. The player-holder guard can reuse this ordinary namespace
+      // without mistaking its own already-registered inner tree for a rival.
+      if(registerTreeThingIds(next,ids).length)return resync('Duplicate contained tree identity.');
       if(validateShooting(next,next.schemaVersion,ids).length)return resync('Référence ou autorité de tir humaine invalide.');
       if(validateMechanoidRaids(next,next.schemaVersion,ids).length)return resync('Identité mécanique historique réutilisée dans un autre propriétaire.');
       for(const actor of next.mechanoids??[])if(validateMechanoidRanged(next,actor,next.schemaVersion,ids).length)return resync('Référence ou phase de tir mécanique invalide.');

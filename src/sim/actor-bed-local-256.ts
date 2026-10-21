@@ -63,7 +63,9 @@ export function captureActorBeds256(input:CampaignState):ActualActorBeds256 {
  for(const captured of campaignPhysicalCaptures(input as World)){
   const mapId=captured.world?registeredMapId(captured.world):undefined;
   for(const slot of captured.owners.pawnOwners){
-   actor(slot.pawn!,slot.kind==='map'&&mapId!==undefined?mapId:null);
+   // A player casket freezes its original on this map; it is not a departure
+   // and retains the same local bed alias, including a historical bare bedId.
+   actor(slot.pawn!,(slot.kind==='map'||slot.kind==='player-casket')&&mapId!==undefined?mapId:null);
    for(const pack of slot.packed)packed(pack);
   }
   if(captured.world){

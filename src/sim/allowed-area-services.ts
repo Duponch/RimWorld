@@ -1,3 +1,4 @@
+import {isPlayerCasket271,cryptosleepInteraction271} from './cryptosleep-state-271.ts';
 import { captureAllowedArea,allowedAreaAllows,type AllowedAreaPolicy } from './allowed-area-state.ts';
 import { bedSlotCell } from './bed-slots.ts';
 import type { Cell,Pawn,World } from './types.ts';
@@ -49,6 +50,8 @@ export function allowedAreaServicesAllowed(world:World,pawn:Pawn):boolean {
     if(surgery.phase==='pickup'&&!source(surgery.medicine?.sourcePileId))return false;
     if(surgery.ingredients?.some(i=>!cell(i.cell)||i.stage==='source'&&!source(i.pileId)))return false;
   }
+  const cryptosleep=pawn.cryptosleepTask;
+  if(cryptosleep){const c=world.structures.find(s=>s.id===cryptosleep.casketId);if(!c||!isPlayerCasket271(c)||!cell(cryptosleepInteraction271(c))||cryptosleep.action==='carry'&&cryptosleep.phase==='approach'&&!patient(cryptosleep.patientId!))return false;}
   const rescue=pawn.rescue;
   if(rescue&&!rescue.release){
     const bed=world.structures.find(s=>s.id===rescue.bedId);

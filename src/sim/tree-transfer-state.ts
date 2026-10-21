@@ -4,7 +4,7 @@ export const TREE_SCHEMA=235;
 export const TREE_PACK_LIFETIME=42000;
 /** Dead source and fixed output remain in the one original physical wrapper. */
 export type PendingTreeExpiry={quantity:number;retryAt:number};
-export type TreePack={packedAt:number;expiresAt:number;pendingExpiry?:PendingTreeExpiry};
+export type TreePack={packedAt:number;expiresAt:number;pendingExpiry?:PendingTreeExpiry;suspendedTicks271?:number};
 export type MinifiedTreePile=Omit<MaterialPile,'kind'|'item'> & {
   kind:'plant';item:'minified-tree';quantity:1;innerResource:Resource;plantPack:TreePack;
 };

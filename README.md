@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V447 en qualification, non publiée — schéma 271 :** [Caissons de cryptosommeil de colonie](docs/gameplay/cryptosleep-v447.md). Recherche, construction payée, entrée et ouverture au contact, suspension du même adulte et de ses biens. L’ensemble 2 reste principal ; victoire, campagnes durables et performances restent ouverts.
+
 **V446 publiée — schéma 270 :** [Épées longues dans les six matières](docs/gameplay/longswords-v446.md). Lames longues, fabrication aux deux forges, ouvrage, équipement, trois outils de mêlée et récupération ; 180 cas ciblés acquis par reprises. Présentation et interface natives muettes acquises ; deux notifications de mise en page conservées. Publié 9a7abfbe/déploiement 822a5387, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Ensemble 2 toujours principal ; aucun gain FPS ni clôture des six ensembles.
 
 **V445 publiée — schéma 269 :** [Masses dans les six matières](docs/gameplay/maces-v445.md). Fabrication, ouvrage, équipement, combat et récupération métallique ;97cas du lot acquis par reprises,11voisins de ravitaillement acquis et deux anciens scénarios de cuisine invalides conservés. Présentation et interface natives muettes acquises par reprises, réserve de mise en page conservée. Publié9de7122f/déploiement5d140817,20réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Ensemble2 toujours principal ; aucun gain FPS ni catalogue mêlée complet annoncé.

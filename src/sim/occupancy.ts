@@ -9,6 +9,7 @@ export const OCCUPANCY = Object.freeze({
   'fermenting-barrel':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   'insect-hive':Object.freeze({clearItems:true,items:false,zones:false,store:false}),'glow-pod':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   'ancient-cryptosleep-casket':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
+  'cryptosleep-casket':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   column:Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   urn:Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   'stele-large':Object.freeze({clearItems:true,items:false,zones:false,store:false}),

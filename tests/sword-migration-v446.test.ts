@@ -58,7 +58,7 @@ test('269 retains all old maces, knife, paid receipts and smelting limits withou
  expect(validBillSettings(bill,bill.recipe,269)).toBe(true);expect(validBillSettings(bill,bill.recipe,SCHEMA_VERSION)).toBe(true);expect(bill).toEqual(before);
  for(const item of LONGSWORD_ITEMS_270)expect(validBillSettings({...bill,filters:{...bill.filters,[item]:false}},bill.recipe,269)).toBe(false);
  for(const [item,quantity] of [['steel',25],['plasteel',25],['uranium',25],['silver',250],['gold',250]] as const){expect(validSmeltingProduct(item,quantity,'smelt-weapon',269)).toBe(false);expect(validSmeltingProduct(item,quantity,'smelt-weapon',SCHEMA_VERSION)).toBe(true);}
- const raw=JSON.parse(text);raw.schemaVersion=271;expect(()=>deserializeCampaign(JSON.stringify(raw))).toThrow();expect(validLongswordHistoricalTransport270(raw,271)).toBe(false);
+ const raw=JSON.parse(text);raw.schemaVersion=SCHEMA_VERSION+1;expect(()=>deserializeCampaign(JSON.stringify(raw))).toThrow();expect(validLongswordHistoricalTransport270(raw,SCHEMA_VERSION+1)).toBe(false);
 });
 
 test('269 refuses all six swords,18 tools, work, recipe and false research/filter markers in real owning domains and public same-tick envelopes',()=>{

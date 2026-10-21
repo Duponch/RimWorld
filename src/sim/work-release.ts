@@ -1,3 +1,4 @@
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import type {ReformDeparture260} from './group-reform-departure-260.ts';
 import {hasTravellingCargo} from './interrupted-cargo.ts';
 import { releaseSurgeryState } from './surgery-state.ts';
@@ -8,7 +9,7 @@ import { finishRoomRest,rememberRoomUse } from './room-experience.ts';
 import { feedingWork } from './feeding-rules.ts';
 import { cancelAutomaticCombat } from './automatic-combat-state.ts';
 import {releaseAnimalRescue} from './animal-rest-state.ts';
-import { releaseRescue } from './rescue-state.ts';
+import { releaseRescue,releaseCryptosleepCarry271 } from './rescue-state.ts';
 import { updatePawnHealth } from './health.ts';
 import { isRoofJob } from './roof-rules.ts';
 import { taskWork } from './production-recipes.ts';
@@ -43,7 +44,7 @@ export function planCommandDrops(world:World,command:Command|import('./cave-glow
   if(command.type==='designate'&&(command.kind==='sleeping-spot'||command.kind==='animal-sleeping-spot'))return new Map();
   const jobs=new Set<number>(),zones=new Set<number>(),pawns=new Set<number>();
   let retiringGrowingActors:Set<number>|undefined;
-  if(command.type==='order-bury'||command.type==='clean-room'||command.type==='order-orbital-trade'||command.type==='order-trade'||command.type==='order-extinguish'||command.type==='order-capture'||command.type==='order-arrest'||command.type==='order-equipment'||command.type==='order-feed'||command.type==='order-tend'||command.type==='order-drafted-tend'||command.type==='order-consume'||command.type==='order-animal-rescue'||command.type==='order-rescue'||command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders') {
+  if(command.type==='order-enter-cryptosleep'||command.type==='order-carry-cryptosleep'||command.type==='order-open-cryptosleep'||command.type==='order-bury'||command.type==='clean-room'||command.type==='order-orbital-trade'||command.type==='order-trade'||command.type==='order-extinguish'||command.type==='order-capture'||command.type==='order-arrest'||command.type==='order-equipment'||command.type==='order-feed'||command.type==='order-tend'||command.type==='order-drafted-tend'||command.type==='order-consume'||command.type==='order-animal-rescue'||command.type==='order-rescue'||command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders') {
     pawns.add(command.pawnId);
   } else if(command.type==='designate') {
     const affected=zonesUnderPlan(world,command);for(const id of affected.deliveries)zones.add(id);
@@ -192,9 +193,10 @@ export function releaseAssignments(world:World,pawn:Pawn,despawning=false):void 
   finishRoomRest(world,pawn);
   if((pawn.recreation.task?.activity==='horseshoes'||pawn.recreation.task?.activity==='chess'||pawn.recreation.task?.activity==='watch-television')&&pawn.recreation.task.phase==='active'&&pawn.recreation.task.elapsed>0)rememberRoomUse(world,pawn,'recreation');
   cancelAutomaticCombat(pawn);cancelHunting(pawn);
-  if(!despawning&&pawn.need?.kind==='sleep'&&pawn.need.medical&&pawn.health&&!pawn.health.death&&pawn.health.tick<world.tick)updatePawnHealth(world,pawn);
+  if(!despawning&&pawn.need?.kind==='sleep'&&pawn.need.medical&&pawn.health&&!pawn.health.death&&medicalCivilTick271(pawn.health)<world.tick)updatePawnHealth(world,pawn);
   releaseSurgeryState(world,pawn);
   delete pawn.openCasket;
+  releaseCryptosleepCarry271(world,pawn,despawning);
   releaseRescue(world,pawn,despawning);
   releasePawnJob259(world.jobs.find(j=>j.id===pawn.jobId),pawn.id);
   clearReleasedPawnAssignments259(pawn);
@@ -205,7 +207,7 @@ export function releaseAssignments(world:World,pawn:Pawn,despawning=false):void 
  * this half only after checking that it has no cross-actor notifier. */
 export function clearReleasedPawnAssignments259(pawn:Pawn):void {
   delete pawn.brewing;delete pawn.orbitalTrade;delete pawn.deepWork;delete pawn.animalHandling;delete pawn.animalCare;delete pawn.animalFeed;delete pawn.burial;delete pawn.cleaning;delete pawn.trade;delete pawn.firefighting;delete pawn.ward;delete pawn.heatRefuge;delete pawn.research;delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
-  delete pawn.rescue;delete pawn.animalRescue;delete pawn.surgery;delete pawn.hunting;delete pawn.openCasket;
+  delete pawn.cryptosleepTask;delete pawn.rescue;delete pawn.animalRescue;delete pawn.surgery;delete pawn.hunting;delete pawn.openCasket;
   delete pawn.transitExit;
   pawn.orders.active=null;
   pawn.recreation.task=null;pawn.jobId=null;pawn.haul=null;pawn.cooking=null;pawn.need=null;pawn.path=[];if(pawn.state!=='downed'&&pawn.state!=='dead')pawn.state='idle';pawn.planCooldown=20;pawn.needCooldown=20;
