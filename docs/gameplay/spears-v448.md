@@ -1,6 +1,6 @@
 # V448 — Lances dans les six matières
 
-État : **qualification ciblée et parcours natif acquis par reprises ; publication en préparation**. Schéma 272. Typage/build, présentation commune et parcours natif acquis ; livraison à consigner. Aucun gain FPS, catalogue de mêlée complet ou achèvement d’ensemble annoncé.
+État : **publiée ; qualification ciblée, présentation et parcours natif acquis par reprises**. Schéma 272. Typage/build, paquet et disponibilité HTTPS vérifiés. Aucun gain FPS, catalogue de mêlée complet ou achèvement d’ensemble annoncé.
 
 ## Résultat joueur et périmètre
 
@@ -72,7 +72,7 @@ Cette réutilisation concerne un chemin de rendu déjà partagé ; elle n’impl
 
 **124 cas distincts acquis sur 126 sélectionnés, dans 17 fichiers, par reprises.** La passe groupée dure **220,353 s** : 123 verts, un nouveau rouge d’oracle de test et deux anciens rouges. Les nouveaux chemins de production, migration, récupération et présentation passent ; les six matières sont réellement transportées, travaillées, interrompues, rechargées, rangées et équipées depuis des apports finis déclarés. La forge à combustible sépare son bois brûlé de la matière de l’ouvrage. Les deux dépôts partiels de fusion rejouent acier et argent avec les mêmes objets et tirages.
 
-Le nouveau rouge bois/médiocre supposait à tort que les poids bruts totalisaient toujours 1. Dans ce cas, cinq outils sont dans la catégorie supérieure et aucun dans la catégorie intermédiaire : le total brut est 0,75 et le sélecteur utilise déjà ce total. **Seul le test est corrigé**, avec cinq quantiles et les cinq outils sélectionnables contrôlés ; reprise de ce seul cas acquise en **11,063 s**, sans modification du combat commun. Le premier typage rouge en **13,869 s**, sur une affectation de version dans ce test, reste également conservé ; la vue historique est désormais indépendante.
+Le nouveau rouge bois/médiocre supposait à tort que les poids bruts totalisaient toujours 1. Dans ce cas, cinq outils sont dans la catégorie supérieure et aucun dans la catégorie intermédiaire : le total brut est 0,75 et le sélecteur utilise déjà ce total. **Seul le test est corrigé**, avec cinq quantiles et les cinq outils sélectionnables contrôlés ; reprise de ce seul cas acquise en **11,063 s**, sans modification du combat commun. Le premier typage rouge en **13,869 s**, sur une affectation de version dans le fichier de test de combat, reste également conservé ; la vue historique est désormais indépendante.
 
 Les deux anciens échecs de `tests/melee.test.ts` sont conservés : « V58 migration… » échoue avec **Invalid historical map registry**, et « thirty actors… » avec **Deterioration interval was skipped**. Le même fichier sur les sources exactes V447/HEAD précédent reproduit les mêmes deux erreurs, avec six verts, en **13,073 s** ; aucune régression V448 ne leur est attribuée. Journaux sous `tmp/validation-runs/v448-targeted-…`, `v448-wood-weight-reprise-…` et `v448-baseline-melee-…`. Aucun total de réussite de la suite entière n’est annoncé.
 
@@ -98,4 +98,10 @@ Le catalogue complet de mêlée, les autres matières de couteaux, le brûlage p
 
 ## Livraison
 
-Publication en préparation ; paquet et disponibilité HTTPS restent à consigner après sélection du commit produit.
+Produit sélectionné et poussé sur `origin/main` : **`6fda9dfe5c355b86c5570811acef197dfcc2c3d2`**. Paquet acquis en **1,812s**, `tmp/elsewhere-pages/v448-package-AkQ4An/` : **552fichiers, dont550actifs, 152 200 531octets**. Les71chemins publics de catalogue/sauvegarde et68fiches restent exacts. Tous les actifs statiques et la feuille compilée sont identiques à V447 ; seule l’entréeHTML et les trois bundles JavaScript changent. Les actifs/source de contrôle et le dossier humain `references_UI/` sont absents du paquet.
+
+Déploiement acquis en **20,763s** : [version091ef9cb](https://091ef9cb.elsewhere-cq7.pages.dev), [site principal](https://elsewhere-cq7.pages.dev). Quatre actifs téléversés,546déjà présents ; l’avertissement de répertoire non propre correspond au seul dossier humain non suivi, conservé hors commit et paquet. **20réponses HTTPS exactes en8,194s**, dix chemins sur chacune des deux origines : entrée, CSS, favicon, bundle, deuxworkers, catalogue et deuxicônes de forge. Rapport `tmp/elsewhere-pages/v448-http-Dz3Yj3/`. Ce contrôle atteste disponibilité, octets et MIME, sans prétendre rejouer le gameplay distant ; l’intégralité des sauvegardes est contrôlée localement.
+
+Les documents de livraison seuls sont actualisés après publication, sans recompiler le produit. Contrôle documentaire : **1 079documents,10 027liens**, six en-têtes courants272, trois originaux du corpus strictement identiques. Le gel de2 124sources reste exact ; sauvegardes, historiques et préférences des joueurs sont conservés.
+
+Ce lot est clos dans sa portée déclarée ; **l’ensemble2 et les six ensembles restent ouverts**. Le prochain relevé préparatoire porte sur les glaives, après **Forge** déjà existante, et ne constitue pas une fonction livrée.

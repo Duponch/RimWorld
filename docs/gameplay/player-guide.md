@@ -1,6 +1,6 @@
 # Guide joueur
 
-## Fabriquer une lance — V448 qualifiée localement, publication en préparation
+## Fabriquer une lance — V448 publiée
 
 Après **Forge**, terminez **Lames longues**, la recherche existante de **400 points**, au bureau ordinaire ou à un bureau avancé utilisable. Choisissez un artisan de niveau **4**, une **Forge à combustible** ou une **Forge électrique**, puis la facture **Fabriquer une lance**.
 

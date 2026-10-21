@@ -1,6 +1,6 @@
 # Architecture et décisions
 
-**V448 qualifiée localement — schéma 272 :** [Lances dans les six matières](../gameplay/spears-v448.md). Fabrication, ouvrage, équipement, trois verbes et récupération ; 124 cas ciblés acquis par reprises, deux anciens rouges identiques au témoin V447 conservés. Typage/build, présentation et UI natives muettes acquis ; deux notifications de mise en page conservées. Publication en préparation, sauvegardes publiques préservées. Ensemble 2 principal ; aucun gain FPS ni clôture des six ensembles.
+**V448 publiée — schéma 272 :** [Lances dans les six matières](../gameplay/spears-v448.md). Fabrication, ouvrage, équipement, trois verbes et récupération ; 124 cas ciblés acquis par reprises, deux anciens rouges identiques au témoin V447 conservés. Typage/build, présentation et UI natives muettes acquis ; deux notifications de mise en page conservées. Publication6fda9dfe/091ef9cb vérifiée par20réponses HTTPS exactes ; sauvegardes publiques inchangées. Ensemble 2 principal ; aucun gain FPS ni clôture des six ensembles.
 
 **V447 publiée — schéma 271 :** [Caissons de cryptosommeil de colonie](../gameplay/cryptosleep-v447.md). Recherche, chantier payé, services et reprise des mêmes adultes libres et biens ; 148 cas acquis par reprises, dix rouges historiques conservés. Présentation et UI natives muettes acquises ; publication 7f020b0c/4397021b vérifiée, sauvegardes publiques inchangées. Ensemble 2 principal ; victoire, six ensembles et cible FPS ouverts.
 
