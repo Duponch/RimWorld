@@ -1,6 +1,6 @@
 # V451 — Réacteur stellaire
 
-**Qualification ciblée et native acquise, schéma 275.** Première chaîne de l’ensemble 5 : recherches, construction payée, activation confirmée, démarrage persistant et signal d’attaques par carte. Le lancement, les autres pièces et la victoire restent ouverts. Le paquet Pages et sa publication restent à vérifier ; V450 reste en production à ce stade.
+**V451 publiée, schéma 275.** Première chaîne de l’ensemble 5 : recherches, construction payée, activation confirmée, démarrage persistant et signal d’attaques par carte. Produit `8e0e2ee6`, déploiement `7552f915`, qualification ciblée et native acquise. Le lancement, les autres pièces et la victoire restent ouverts.
 
 ## Référence et décisions
 
@@ -85,3 +85,13 @@ Chrome est lancé avec `--mute-audio`. Effets et musique sont désactivés et le
 La présentation commune est acquise par reprise : `v451-presentation` atteint sa limite d’enveloppe à180,144 s, après la phase mine45 s conservée et ses assertions acquises ; la phase chop seule est reprise dans `v451-presentation-chop-reprise`, **100,722 s**, sans rejouer le minage. Même source gelée, Chrome/WebGPU muet, camp250² et vitesses1→6/1/3. Chaque phase conserve0saut brut,0excès continu de déplacement,0occupation solide,0privation de présentation et erreurs[]. Intervalles maximaux50,1 ms au minage et58,4 ms à l’abattage : aucun gain FPS ou seuil général ne s’en déduit. Le dépassement de l’enveloppe et les deux rapports restent conservés.
 
 Les fixtures déclarent leurs préparations ; les transports, le travail, les commandes, combats et reprises effectivement joués en restent distincts. Aucun démarrage défendu pendant quatorze jours naturels ni victoire de campagne n’est déduit d’un checkpoint proche d’une échéance. Les six ensembles et la qualification des campagnes durables restent ouverts.
+
+## Publication et suite
+
+Le22octobre2026, heure locale, paquet Pages du HEAD produit exact `8e0e2ee6b8be640fe5352226693ce9905880084c` : `v451-pages-build` acquis en7,927 s. Avertissement de chunks supérieurs à500Ko conservé, sans annonce de gain de performance. `v451-package` acquis en3,079 s :552fichiers/152 397 159octets, fichiers statiques et CSS identiques au paquet V450, aucun asset propriétaire ajouté et outils privés de test absents.
+
+`v451-pages-deploy` acquis en17,086 s ; [déploiement7552f915](https://7552f915.elsewhere-cq7.pages.dev/) et [adresse stable](https://elsewhere-cq7.pages.dev/). `v451-published-https` acquis en12,681 s :20réponses ciblées, octets et MIME exacts sur les deux adresses. Les68fiches et71chemins publics de sauvegarde restent identiques ; paquet, HEAD et sauvegardes n’ont pas changé pendant la vérification. Reçus privés : `tmp/elsewhere-pages/v451-package-Yzf6jy/` et `v451-http-NGvdQR/`. Ces contrôles HTTPS établissent la disponibilité du paquet, sans remplacer les parcours de jeu ni mesurer les FPS.
+
+La documentation passe sur1 082documents/10 074liens avant la publication ; six en-têtes courants au schéma275 et trois sources humaines originales identiques. La mise à jour documentaire de publication fait ensuite l’objet du même contrôle. Les références personnelles non suivies `references_UI/`, les sauvegardes, historiques et démonstrations restent préservés.
+
+La suite préparée de l’ensemble5 relie **poutres structurelles et moteurs Johnson–Tanaka**, recherche et chantiers payés, réseau physique et rapport des pièces manquantes. Les propositions privées ne sont pas encore intégrées ni qualifiées. Caissons spatiaux, ordinateur/cœur d’IA, capteurs, embarquement et lancement auront leurs propres boucles complètes ; aucun contenu ou progrès n’est offert pour les contourner. Les autres ensembles restent ouverts.

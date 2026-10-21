@@ -1,5 +1,7 @@
 # Elsewhere sur Cloudflare Pages
 
+**Publication courante V451, schéma275 : `7552f915`.** Produit `8e0e2ee6` : [réacteur stellaire, qualification et limites](../gameplay/ship-reactor-v451.md#publication-et-suite).20réponses HTTPS ciblées exactes, fichiers publics de sauvegarde inchangés. Les états suivants sont historiques.
+
 **Publication courante V376, schéma 239 : `712fc270`.** Produit872afdbb poussé : [toundra et neige physique](../gameplay/tundra-snow-v376.md). 106réponses HTTPS exactes sur la production et le déploiement, package public inchangé hors JS/Worker/CSS du produit. Les états suivants sont historiques.
 
 **Publication courante V361 : `ff304a50`, 15 octobre 2026, schéma237.** Produit `e3fe6efb` commité/poussé : [réserves, étagères et placements](../gameplay/shelf-zones-v361.md). Une publication et106 réponses HTTPS exactes sur [la production](https://elsewhere-cq7.pages.dev/) et [le déploiement](https://ff304a50.elsewhere-cq7.pages.dev/). [Preuves et limites](#publication-v361--réserves-étagères-et-placements). Les publications suivantes sont historiques.

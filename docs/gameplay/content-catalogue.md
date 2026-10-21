@@ -1,6 +1,6 @@
 # Catalogue de contenu : couverture connue
 
-**V451 qualifiée localement — schéma 275 :** [Réacteur stellaire](ship-reactor-v451.md). Recherches, chantier payé, 1 000 W, démarrage confirmé et attaques indépendantes ; 50 cas ciblés acquis par reprises, un ancien rouge identique au témoin conservé. Typage, présentation et interface natives muettes acquis. Build Pages et publication en attente ; V450 reste en production. **Ensemble 5 engagé** ; autres pièces et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
+**V451 publiée — schéma 275 :** [Réacteur stellaire](ship-reactor-v451.md). Recherches, chantier payé, 1 000 W, démarrage confirmé et attaques indépendantes ; 50 cas ciblés acquis par reprises, un ancien rouge identique au témoin conservé. Typage, présentation et interface natives muettes acquis. Build Pages acquis ; publié 8e0e2ee6/7552f915, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. **Ensemble 5 engagé** ; autres pièces et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
 
 | Boucle V451 qualifiée | Acquisition et usage | Limites |
 | --- | --- | --- |
