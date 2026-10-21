@@ -6,7 +6,7 @@ Amenez une caravane au comptoir d’un établissement non hostile, puis ouvrez *
 
 **Confirmer le don** remet les biens au stock du comptoir sans argent reçu. **Annuler le don** efface seulement le choix. Un petit don peut rapporter zéro point ; à 100, il peut encore être remis sans gain. Une relation neutre devient alliée à 75, puis conserve son histoire jusqu’aux seuils de rupture. L’alliance n’ajoute pas encore de bouton d’aide militaire. Ce canal ne permet pas de donner aux factions hostiles, aux visiteurs ou aux vaisseaux. [Règles et limites](diplomatic-gifts-v450.md).
 
-**V450 qualifiée localement — schéma 274 :** [Dons au comptoir d’une faction](diplomatic-gifts-v450.md). Textiles réellement remis, effet diplomatique et reprises exactes ; 118 cas ciblés acquis par reprises, trois anciens rouges UI identiques au témoin conservés. Typage/build, présentation et interface natives muettes acquis ; publication à effectuer, sauvegardes publiques inchangées. **Ensemble 4 principal**, suite vers la victoire de l’ensemble 5 ; aucun gain FPS ni clôture générale.
+**V450 publiée — schéma 274 :** [Dons au comptoir d’une faction](diplomatic-gifts-v450.md). Textiles réellement remis, effet diplomatique et reprises exactes ; 118 cas ciblés acquis par reprises, trois anciens rouges UI identiques au témoin conservés. Typage/build, présentation et interface natives muettes acquis ; publication deb645ad/04ec28ae vérifiée par 20 réponses HTTPS exactes ; sauvegardes publiques inchangées. **Ensemble 4 principal**, suite vers la victoire de l’ensemble 5 ; aucun gain FPS ni clôture générale.
 
 ## Fabriquer, poser et retirer une prothèse industrielle — V449 publiée
 

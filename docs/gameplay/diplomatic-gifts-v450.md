@@ -1,6 +1,6 @@
 # V450 — Dons au comptoir d'une faction
 
-État : **qualification ciblée, présentation et parcours natif acquis par reprises ; non publié**. Schéma **274**, après V449 publiée. Les échecs initiaux et les limites sont conservés ci-dessous. La publication reste à terminer ; aucun gain FPS ni clôture d’ensemble annoncé.
+État : **publié ; qualification ciblée, présentation et parcours natif acquis par reprises**. Schéma **274**, après V449 publiée. Les échecs initiaux et les limites sont conservés ci-dessous. Publication vérifiée ; aucun gain FPS ni clôture d’ensemble annoncé.
 
 ## Résultat joueur et périmètre
 
@@ -97,6 +97,12 @@ Le premier typage `v450-first-types-2026-10-21T19-58-59.321Z-20116`, rouge16,834
 
 Le21octobre, l’humain demande de libérer plusieurs Go du répertoire temporaire sans perdre les fichiers récents ou utiles.112anciens caches SSR recréables ont été retirés ;148journaux de conversations anciens ont été compressés sur place avec SHA, taille et date de modification identiques.31groupes de paquets, musiques et images figés identiques partagent désormais leur stockage, avec les1817chemins conservés et protégés en lecture seule ; SHA et identités vérifiés. Les dates de ces copies partagées sont celles du canonique, leurs métadonnées originales sont consignées. Il faut les copier dans un nouveau fichier indépendant avant toute modification. Aucun rapport, sauvegarde ou historique n’a été supprimé. L’espace libre mesuré est passé d’environ6Mo à6,10Go ; les contrôles ultérieurs produisent leurs nouveaux rapports. Reçus privés dans `tmp/disk-cleanup-20261021/`, dont `summary.json` et les manifests de suppression, compression et déduplication.
 
-**Publication encore à effectuer.** Les sauvegardes publiques sont conservées ; les contrôles de paquet et HTTPS doivent conclure la livraison.
+### Publication V450
+
+Produit `deb645ad3e7dcec5ada1eff82516a2253510972c`, poussé sur `origin/main`. Déploiement Pages `04ec28ae`, [adresse du déploiement](https://04ec28ae.elsewhere-cq7.pages.dev) et [site stable](https://elsewhere-cq7.pages.dev). `v450-pages-deploy-2026-10-21T20-48-41.724Z-26868`, PASS22,380s, quatre fichiers ajoutés et546réutilisés. Le seul avertissement de copie de travail concerne `references_UI/`, dossier humain exclu du commit et du paquet.
+
+Paquet local acquis dans `tmp/elsewhere-pages/v450-package-jcmstO/` : toutes les ressources statiques et la feuille de style gardent les octets du paquet V449 qualifié ; aucune addition statique ni instrument privé. Les71chemins publics du catalogue et de sauvegardes, dont68fiches, restent exacts. Aulnes, Éclaircies, Forges et archives sont conservées. Vingt réponses HTTPS ciblées des deux origines correspondent exactement au paquet et à leurs types MIME, PASS6,756s, reçu `tmp/elsewhere-pages/v450-http-RvQd2C/`. Cela établit la disponibilité du paquet ; les comportements joués sont couverts par les parcours locaux distincts.
+
+Les six ensembles restent ouverts. L’ensemble4 a maintenant ce premier canal de don ; le prochain chantier commence la voie de victoire de l’ensemble5, après vérification Core des dépendances et horloges stellaires. L’ensemble2 conserve ses manques et les glaives différés ; aucune assistance diplomatique, campagne jusqu’à la victoire ou cible FPS n’est déclarée livrée.
 
 **Effets sonores et musique coupés avant les tests dans le jeu ; navigateur de contrôle muet.** Les tests restent requis et ces réglages ne sont pas imposés aux joueurs publiés. Les autres relations, incidents et conséquences du gameplay restent actifs. Une passe ciblée ne vaut ni diplomatie exhaustive ni campagne durable, et ne clôt aucun des six ensembles.
