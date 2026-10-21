@@ -1,3 +1,4 @@
+import {isSchema272OrLater} from './schema-compatibility-257.ts';
 /** Pure Core smithing catalogue. No item/runtime imports: items and recipes
  * consume this authority without forming a production initialization cycle. */
 import {SPEAR_MATERIALS_272,spearItem272,spearUnits272,spearWorkTicks272,type SpearItem272} from './spear-content-272.ts';
@@ -18,7 +19,7 @@ export const isSmithingRecipe267=(v:unknown):v is SmithingRecipe267=>v==='make-p
 export const isSmithingWeaponRecipe267=(v:unknown):v is 'make-plasteel-knife'|'make-mace'|'make-longsword'|'make-spear'=>v==='make-plasteel-knife'||v==='make-mace'||v==='make-longsword'||v==='make-spear';
 export const smithingSkillRequired267=(recipe:SmithingRecipe267):number=>recipe==='make-spear'?4:recipe==='make-longsword'?5:recipe==='make-mace'?3:recipe==='make-plate-armor'?7:0;
 /** The knife's existing product predates V268; only its manufacture is new. */
-export const smithingRecipeAvailable267=(recipe:SmithingRecipe267,version:number):boolean=>recipe==='make-spear'?version===272:recipe==='make-longsword'?(version===270||version===271||version===272):recipe==='make-mace'?version===269||(version===270||version===271||version===272):recipe==='make-plasteel-knife'?version===268||version===269||(version===270||version===271||version===272):version===267||version===268||version===269||(version===270||version===271||version===272);
+export const smithingRecipeAvailable267=(recipe:SmithingRecipe267,version:number):boolean=>recipe==='make-spear'?isSchema272OrLater(version):recipe==='make-longsword'?(version===270||version===271||isSchema272OrLater(version)):recipe==='make-mace'?version===269||(version===270||version===271||isSchema272OrLater(version)):recipe==='make-plasteel-knife'?version===268||version===269||(version===270||version===271||isSchema272OrLater(version)):version===267||version===268||version===269||(version===270||version===271||isSchema272OrLater(version));
 export const isSmithingMaterial267=(v:unknown):v is SmithingMaterial267=>typeof v==='string'&&(SMITHING_MATERIALS_267 as readonly string[]).includes(v);
 export const isSmithingProduct267=(v:unknown):v is SmithingProduct267=>typeof v==='string'&&(SMITHING_PRODUCTS_267 as readonly string[]).includes(v);
 export const isSmithingWorkpiece267=(v:unknown):v is SmithingWorkpiece267=>v==='unfinished-plate-armor'||v==='unfinished-simple-helmet'||v==='unfinished-knife'||v==='unfinished-mace'||v==='unfinished-longsword'||v==='unfinished-spear';

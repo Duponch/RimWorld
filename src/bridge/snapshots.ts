@@ -1,3 +1,6 @@
+import {validProstheticHistoricalTransport273} from '../sim/catalogue-save-273.ts';
+import {validProstheticsResearchTransport273} from '../sim/research-save.ts';
+import {validProstheticWorkShape273,validateProstheticWorks273} from '../sim/prosthetic-work-save-273.ts';
 import {validSpearHistoricalTransport272} from '../sim/catalogue-save-272.ts';
 import {validLongswordHistoricalTransport270} from '../sim/catalogue-save-270.ts';
 import {validCryptosleepHistoricalTransport271} from '../sim/catalogue-save-271.ts';
@@ -719,6 +722,7 @@ function prepareStructureChanges(previous:World,world:Pick<World,'nextId'|'width
 function validPile(pile:MaterialPile,world:World|DynamicWorld,deferAnimalHolder=false):boolean {
   if(!pile||typeof pile!=='object'||Array.isArray(pile)||!Number.isSafeInteger(pile.id)||pile.id<1||pile.id>=world.nextId
     ||typeof pile.item!=='string'||!Object.hasOwn(ITEM_DEFINITIONS,pile.item))return false;
+  if(!validProstheticWorkShape273(pile as unknown as Record<string,unknown>,world.schemaVersion))return false;
   if(!validSmithingWorkShape267(pile as unknown as Record<string,unknown>,world.schemaVersion))return false;
   if(world.schemaVersion<265&&['hops','wort','beer'].includes(pile.item))return false;
   if(pile.item==='pemmican'&&world.schemaVersion<248)return false;
@@ -749,7 +753,7 @@ function validPile(pile:MaterialPile,world:World|DynamicWorld,deferAnimalHolder=
     if(world.schemaVersion<89||!Number.isSafeInteger(owner.graveId)||owner.graveId<1||!world.structures.some(s=>s.id===owner.graveId&&(s.kind==='grave'||world.schemaVersion>=256&&s.kind==='sarcophagus'))
       ||Object.keys(owner).some(key=>!['type','graveId'].includes(key)))return false;
   }else return false;
-  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','mechCorpse','damage','unfinished','gunWork','flakWork','componentWork','artWork','smithingWork','apparel','weapon','haulRequested','innerResource','plantPack','egg','eggForbidden','forbidden'].includes(key)))return false;
+  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','mechCorpse','damage','unfinished','gunWork','flakWork','componentWork','artWork','smithingWork','prostheticWork273','apparel','weapon','haulRequested','innerResource','plantPack','egg','eggForbidden','forbidden'].includes(key)))return false;
   if(!validMaterialPermission256(pile,world.schemaVersion))return false;
   if(!validEggPile256(pile,world.schemaVersion,heldDuckInventoryClock256(world,pile,world.schemaVersion,world.tick),world.nextId)||world.schemaVersion<256&&isFutureEcologyItem256(pile.item))return false;
   if(world.schemaVersion<194&&Object.hasOwn(pile,'mechCorpse'))return false;
@@ -1119,6 +1123,7 @@ export class SnapshotDecoder {
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
     if(packet.world.destroyed!==undefined&&!validNaturalHiveLoss256(packet.world.destroyed,packet.world.schemaVersion))return resync('Invalid or future natural Hive loss counter.');
     if(!validWorldPawnsEnvelope256(packet.world,packet.world.schemaVersion,packet.world.tick*10,packet.world.nextId))return resync('Invalid or future WorldPawns header.');
+    if(!validProstheticHistoricalTransport273(packet,packet.world.schemaVersion))return resync('Prothèses industrielles futures dans ce snapshot.');
     if(!validSpearHistoricalTransport272(packet,packet.world.schemaVersion))return resync('Catalogue de lances futur dans ce snapshot.');
     if(!validCryptosleepHistoricalTransport271(packet,packet.world.schemaVersion))return resync('Cryptosommeil futur dans ce snapshot.');
     if(!validPlanetGeographyHistorical256(packet.world,packet.world.schemaVersion))return resync('Géographie ou factions futures.');
@@ -1183,6 +1188,7 @@ export class SnapshotDecoder {
     if(!Array.isArray(message.world.stockpiles)||message.world.stockpiles.some(zone=>!validStorageConditions(zone,message.world.schemaVersion)))return resync('Plages de qualité ou de PV de réserve invalides pour ce snapshot.');
     if(!validStockpileZones(message.world,message.world.schemaVersion)||message.world.stockpiles.some(zone=>!Number.isInteger(zone.priority)||zone.priority<1||zone.priority>(message.world.schemaVersion>=219?5:4)))return resync('Identité de zone ou priorité de réserve invalide pour ce snapshot.');
     for(const zone of message.world.stockpiles){
+      if(Object.hasOwn(zone.filters??{},'prosthesis')&&(message.world.schemaVersion!==273||typeof zone.filters.prosthesis!=='boolean'))return resync('Filtre de prothèses invalide ou futur.');
       if(Object.hasOwn(zone.filters??{},'jade')&&(message.world.schemaVersion<256||typeof zone.filters.jade!=='boolean'))return resync('Filtre de jade invalide ou futur.');
       if(Object.hasOwn(zone.filters??{},'neutroamine')&&(message.world.schemaVersion<206||typeof zone.filters.neutroamine!=='boolean')
         ||Object.hasOwn(zone.items??{},'neutroamine')&&(message.world.schemaVersion<206||typeof zone.items!.neutroamine!=='boolean'))return resync('Filtre de neutroamine invalide ou futur.');
@@ -1482,6 +1488,8 @@ export class SnapshotDecoder {
     if(!validNutrientPasteTransport(next,next.schemaVersion,powerTopology))return resync('Pâte nutritive, source ou transport invalide.');
     if(!validOrbitalTransport(next,next.schemaVersion,powerTopology,identities))return resync('État orbital, propriétaire ou contact invalide.');
     if(!validCraftingFuelTransport269(next,next.schemaVersion))return resync('Ravitaillement d’artisanat invalide ou futur.');
+    if(!validProstheticsResearchTransport273(next,next.schemaVersion)||validateProstheticWorks273(next,next.schemaVersion).length)return resync('Recherche ou ouvrage de prothèse invalide.');
+    if(!validProstheticHistoricalTransport273(message,next.schemaVersion))return resync('Prothèses industrielles futures dans ce snapshot.');
     if(!validSpearHistoricalTransport272(message,next.schemaVersion))return resync('Catalogue de lances futur dans ce snapshot.');
     if(!validLongswordHistoricalTransport270(message,next.schemaVersion)||!validLongBladesResearchTransport270(next,next.schemaVersion))return resync('Lames longues, recherche ou fabrication invalides.');
     if(!validMaceHistoricalTransport269(message,next.schemaVersion)||!validKnifeHistoricalTransport268(message,next.schemaVersion)||!validSmithyResearchTransport267(next,next.schemaVersion)||!validSmithingHistoricalTransport267(message,next.schemaVersion)||validateSmithingWorks267(next,next.schemaVersion).length)return resync('Forge, matière ou ouvrage invalide.');

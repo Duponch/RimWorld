@@ -1,3 +1,4 @@
+import {detachMissingProstheticBills273} from './prosthetic-work-273.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {isPlayerCasket271} from './cryptosleep-state-271.ts';
 import {damagePlayerCryptosleep271} from './cryptosleep-removal-271.ts';
@@ -210,7 +211,7 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   }
   if(world.fires)world.fires.batteryWicks=world.fires.batteryWicks.filter(w=>w.structureId!==s.id);
   if(s.kind==='hydroponics-basin')removeHydroponicPlants(world,s);
-  detachMissingBills(world);detachMissingFlakBills(world);detachMissingGunBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);reconcilePower(world);if(installed)reconcileRoofSupport(world,false,s);refreshStock(world);
+  detachMissingBills(world);detachMissingFlakBills(world);detachMissingGunBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);detachMissingProstheticBills273(world);reconcilePower(world);if(installed)reconcileRoofSupport(world,false,s);refreshStock(world);
   if(installed&&s.kind==='spike-trap')rebuildSpikeTrap(world,s);
   if(waveId!==undefined)registerBombWave(world,s,waveId,core,external?.instigatorKey??s.turret?.wick?.instigatorKey);
   commitRemovedFogBlocker256(world,fogRemoval);return true;

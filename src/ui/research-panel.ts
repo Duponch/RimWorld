@@ -9,6 +9,7 @@ export {researchProjects} from './research-projects';
 export interface ResearchPanelActions {onOpenWork?:()=>void;onOpenProduction?:()=>void}
 
 export const researchLinks: readonly (readonly [ResearchProject, ResearchProject])[] = [
+  ['machining','prosthetics'],
   ['multi-analyzer','cryptosleep'],
   ['microelectronics','deep-drilling'],['deep-drilling','ground-scanner'],
   ['hospital-bed','vitals-monitor'],['multi-analyzer','vitals-monitor'],
@@ -29,6 +30,7 @@ const projectById=new Map(researchProjects.map(project=>[project.id,project]));
 const NODE_WIDTH=142,NODE_HEIGHT=66,GRAPH_WIDTH=850,GRAPH_HEIGHT=650;
 const nodePosition=(project:ProjectNode)=>({x:20+(project.x-24)*.82,y:22+(project.y-20)*.66});
 const prerequisites=new Map<ResearchProject,string[]>([
+  ['prosthetics',['Usinage']],
   ['cryptosleep',['Multi-analyseur']],
   ['long-blades',['Forge']],
   ['brewing',[]],

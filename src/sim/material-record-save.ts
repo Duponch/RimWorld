@@ -1,3 +1,6 @@
+import {validProstheticWorkShape273} from './prosthetic-work-save-273.ts';
+import {isProstheticItem273} from './prosthetic-content-273.ts';
+import {isSchema272OrLater} from './schema-compatibility-257.ts';
 import {isSchema269OrLater,isSchema270OrLater} from './schema-compatibility-257.ts';
 import {isSpearItem272} from './spear-content-272.ts';
 import {isLongswordItem270} from './longsword-content-270.ts';
@@ -37,7 +40,10 @@ export function validatePileRecordShape(item:Record<string,unknown>,world:Pick<W
  const input={width:world.width,height:world.height,tick:validationTick};
  const coord=(v:Record<string,unknown>)=>integer(v.x,0,world.width-1)&&integer(v.z,0,world.height-1);
  const errors:string[]=[];
- if(version!==272&&(isSpearItem272(item.item)||item.item==='unfinished-spear'))return ['Future spear catalogue.'];
+ if(item.kind==='prosthesis'&&record(item.owner)&&item.owner.type==='job')return ['Prosthesis cannot be a construction deposit.'];
+ if(version!==273&&(isProstheticItem273(item.item)||item.item==='unfinished-prosthetic'||Object.hasOwn(item,'prostheticWork273')))return ['Future industrial prosthetics.'];
+ if(!validProstheticWorkShape273(item,version))errors.push('Invalid prosthetic work.');
+ if(!isSchema272OrLater(version)&&(isSpearItem272(item.item)||item.item==='unfinished-spear'))return ['Future spear catalogue.'];
  if(!isSchema269OrLater(version)&&(isMaceItem269(item.item)||item.item==='unfinished-mace'))return ['Future mace catalogue.'];
  if(!isSchema270OrLater(version)&&(isLongswordItem270(item.item)||item.item==='unfinished-longsword'))return ['Future longsword catalogue.'];
  if(version<268&&item.item==='unfinished-knife')return ['Future knife manufacture.'];
@@ -75,7 +81,7 @@ if(version<79&&['hare-corpse','hare-meat','light-leather'].includes(String(item.
 if(!validUnfinishedShape(item,version)||!validGunWorkShape(item,version)||!validFlakWorkShape(item,version)||!validComponentWorkShape(item,version))errors.push('Invalid unfinished item.');
 if(!validApparelShape(item,version))errors.push('Invalid apparel state for schema.');
 if(!validWeaponShape(item,version))errors.push('Invalid weapon state for schema.');
-if (!oneOf(item.kind, ['wood', 'food', ...(version>=265?['wort','beer']:[]), ...(version>=256?['jade']:[]), ...(version>=241?['uranium']:[]), ...(version>=235?['plant']:[]), ...(version>=218?['chemfuel']:[]), ...(version>=206?['neutroamine']:[]), ...(version>=28?['chunk']:[]), ...(version>=29?['steel']:[]),...(version>=123?['gold','plasteel','advanced-component']:[]), ...(version>=32?['blocks']:[]), ...(version>=41?['component']:[]), ...(version>=51?['medicine']:[]), ...(version>=52?['weapon']:[]), ...(version>=63?['apparel']:[]), ...(version>=71?['textile']:[]), ...(version>=72?['unfinished']:[]),...(version>=79?['corpse']:[]),...(version>=194?['mech-corpse']:[]),...(version>=88?['silver']:[])]) || !integer(item.quantity, 1, version>=227&&item.item==='hay'?200:version>=218&&item.item==='chemfuel'?150:version>=206&&item.item==='neutroamine'?150:version>=256&&isFutureEcologyItem256(item.item)&&item.kind==='textile'?100:version>=120&&item.item==='muffalo-wool'?100:version>=88&&item.item==='silver'||version>=123&&item.item==='gold'?500:MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
+if (!oneOf(item.kind, ['wood', 'food', ...(version===273?['prosthesis']:[]), ...(version>=265?['wort','beer']:[]), ...(version>=256?['jade']:[]), ...(version>=241?['uranium']:[]), ...(version>=235?['plant']:[]), ...(version>=218?['chemfuel']:[]), ...(version>=206?['neutroamine']:[]), ...(version>=28?['chunk']:[]), ...(version>=29?['steel']:[]),...(version>=123?['gold','plasteel','advanced-component']:[]), ...(version>=32?['blocks']:[]), ...(version>=41?['component']:[]), ...(version>=51?['medicine']:[]), ...(version>=52?['weapon']:[]), ...(version>=63?['apparel']:[]), ...(version>=71?['textile']:[]), ...(version>=72?['unfinished']:[]),...(version>=79?['corpse']:[]),...(version>=194?['mech-corpse']:[]),...(version>=88?['silver']:[])]) || !integer(item.quantity, 1, version>=227&&item.item==='hay'?200:version>=218&&item.item==='chemfuel'?150:version>=206&&item.item==='neutroamine'?150:version>=256&&isFutureEcologyItem256(item.item)&&item.kind==='textile'?100:version>=120&&item.item==='muffalo-wool'?100:version>=88&&item.item==='silver'||version>=123&&item.item==='gold'?500:MAX_STACK) || !record(item.owner)) errors.push('Invalid material pile.');
 else {
   if (version >= 5) {
     if (typeof item.item !== 'string' || !Object.hasOwn(ITEM_DEFINITIONS, item.item)) errors.push('Unknown item definition.');

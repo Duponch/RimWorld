@@ -1,3 +1,5 @@
+import {artificialPartIngredient273} from './artificial-parts-rules.ts';
+import {isProstheticItem273} from './prosthetic-content-273.ts';
 import {materialAllowedForPlayer256} from './material-permission-256.ts';
 import { allowedAreaAllows } from './allowed-area-state.ts';
 import {shelfAt} from './shelf-storage.ts';
@@ -20,10 +22,11 @@ export function planImplantIngredients(w:World,doctor:Pawn,patient:Pawn,spot:Cel
   const distance=(p:MaterialPile)=>p.owner.type==='ground'?(p.owner.x-patient.x)**2+(p.owner.z-patient.z)**2:Infinity;
   const sources=w.piles.filter(p=>materialAllowedForPlayer256(p)&&p.owner.type==='ground'&&allowedAreaAllows(w,doctor,p.owner)&&p.quantity>reservedSource(w,p.id)&&routeToJob(w,p.owner,reach,true));
   sources.sort((a,b)=>distance(a)-distance(b)||a.id-b.id);
-  const wood=sources.find(p=>p.item==='wood');if(!wood)return;
+  const required=patient.surgeryRequest?.implant?artificialPartIngredient273(patient.surgeryRequest.implant):undefined;
+  const component=required?sources.find(p=>p.item===required):undefined;if(required&&!component)return;
   for(const item of (Object.keys(MEDICINES) as MedicineItem[]).sort((a,b)=>MEDICINES[b].potency-MEDICINES[a].potency)){
     if(!medicineAllowed(patient,item))continue;
-    let needed=2;const selected:{pile:MaterialPile;quantity:number}[]=[{pile:wood,quantity:1}];
+    let needed=2;const selected:{pile:MaterialPile;quantity:number}[]=component?[{pile:component,quantity:1}]:[];
     for(const pile of sources){
       if(pile.item!==item||medicineClaims(w,pile.id)>=10)continue;
       const quantity=Math.min(needed,pile.quantity-reservedSource(w,pile.id));if(quantity<=0)continue;
@@ -38,29 +41,31 @@ export function planImplantIngredients(w:World,doctor:Pawn,patient:Pawn,spot:Cel
       ingredients.push({pileId:pile.id,item:pile.item as SurgicalIngredient['item'],quantity,stage:'source',cell:{...cell}});
     }
     if(ingredients.length!==selected.length)continue;
-    const path=routeToJob(w,wood.owner as Cell,reach,true);if(path)return {ingredients,path};
+    const path=routeToJob(w,selected[0]!.pile.owner as Cell,reach,true);if(path)return {ingredients,path};
   }
 }
 
 /** Shared runtime/save ownership check. Clinical eligibility and bedside
  * reservation remain the caller's responsibility. It performs no mutation. */
 export function validImplantTaskRelations(w:World,doctor:Pawn,patient:Pawn|undefined,task:SurgeryTask):boolean {
-  if(!patient||!task.implant||task.medicine)return false;
+  if(!patient||!task.implant&&!task.removeArtificial273||task.medicine)return false;
   const cargo=w.piles.filter(p=>p.owner.type==='pawn'&&p.owner.pawnId===doctor.id);
-  if(task.phase==='work')return task.ingredients===undefined&&!!task.consumedMedicine&&medicineAllowed(patient,task.consumedMedicine)&&cargo.length===0;
-  if(task.consumedMedicine!==undefined||!task.ingredients?.length)return false;
+  const retained=task.phase==='work'&&isProstheticItem273(task.implant);
+  if(task.phase==='work'&&!retained)return task.ingredients===undefined&&!!task.consumedMedicine&&medicineAllowed(patient,task.consumedMedicine)&&cargo.length===0;
+  if(retained? !task.consumedMedicine||!medicineAllowed(patient,task.consumedMedicine)||cargo.length!==0:task.consumedMedicine!==undefined)return false;
+  if(!task.ingredients?.length)return false;
   if(task.ingredients.some(i=>shelfAt(w,i.cell)))return false;
-  let held=0,open=false;const cells=new Set<string>();let medicine:MedicineItem|undefined,wood=0,doses=0;
+  let held=0,open=false;const cells=new Set<string>();let medicine:MedicineItem|undefined,component=0,doses=0;const required=task.implant?artificialPartIngredient273(task.implant):undefined;
   for(const i of task.ingredients){
     const key=`${i.cell.x}:${i.cell.z}`;
     if(cells.has(key)||same(i.cell,task.spot)||Math.abs(i.cell.x-task.spot.x)+Math.abs(i.cell.z-task.spot.z)>2)return false;
     cells.add(key);
-    if(i.item==='wood')wood+=i.quantity;
+    if(required&&i.item===required)component+=i.quantity;
     else if(isMedicine(i.item)&&medicineAllowed(patient,i.item)){
       if(medicine&&medicine!==i.item)return false;medicine=i.item;doses+=i.quantity;
     }else return false;
     if(i.stage==='placed'){if(open)return false;}else {if(i.stage==='held'&&open)return false;open=true;}
-    const pile=w.piles.find(p=>p.id===i.pileId);if(!pile||pile.item!==i.item||pile.quantity<i.quantity)return false;
+    const pile=w.piles.find(p=>p.id===i.pileId);if(!pile||pile.item!==i.item||pile.quantity<i.quantity||isProstheticItem273(task.implant)&&!materialAllowedForPlayer256(pile))return false;
     if(i.stage==='held'){
       held++;if(pile.owner.type!=='pawn'||pile.owner.pawnId!==doctor.id||pile.quantity!==i.quantity)return false;
     }else {
@@ -69,8 +74,8 @@ export function validImplantTaskRelations(w:World,doctor:Pawn,patient:Pawn|undef
       if(i.stage==='source'&&(groundCapacity(w,i.cell,i.item,doctor.id)<i.quantity||groundPile(w,i.cell)))return false;
     }
   }
-  return wood===1&&doses===2&&held<=1&&cargo.length===held
-    &&(task.phase==='pickup'?held===0&&task.ingredients.some(i=>i.stage==='source'):task.phase==='approach'&&(held===1||task.ingredients.every(i=>i.stage==='placed')));
+  return component===(required?1:0)&&doses===(retained?1:2)&&(!retained||medicine===task.consumedMedicine)&&held<=1&&cargo.length===held
+    &&(task.phase==='work'?retained&&task.ingredients.every(i=>i.stage==='placed'):task.phase==='pickup'?held===0&&task.ingredients.some(i=>i.stage==='source'):task.phase==='approach'&&(held===1||task.ingredients.every(i=>i.stage==='placed')));
 }
 
 /** One existing carry owner at a time, with the same bounded split as cooking
@@ -112,4 +117,13 @@ export function consumeImplantIngredients(w:World,task:SurgeryTask):void {
     if(!pile.quantity)w.piles.splice(w.piles.indexOf(pile),1);
   }
   delete task.ingredients;refreshStock(w);
+}
+/** New industrial surgery consumes the first real dose at anesthesia. The
+ * piece and the remaining dose stay physically staged until the final toil. */
+export function consumeImplantAnestheticDose273(w:World,task:SurgeryTask):void {
+  const i=task.ingredients!.find(i=>isMedicine(i.item))!,pile=w.piles.find(p=>p.id===i.pileId)!;
+  pile.quantity--;i.quantity--;
+  if(!pile.quantity)w.piles.splice(w.piles.indexOf(pile),1);
+  if(!i.quantity)task.ingredients=task.ingredients!.filter(j=>j!==i);
+  refreshStock(w);
 }

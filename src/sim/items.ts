@@ -1,3 +1,4 @@
+import {PROSTHETIC_ITEM_DEFINITIONS_273} from './prosthetic-content-273.ts';
 import {SPEAR_ITEM_DEFINITIONS_272} from './spear-content-272.ts';
 import {LONGSWORD_ITEM_DEFINITIONS_270} from './longsword-content-270.ts';
 import {MACE_ITEM_DEFINITIONS_269} from './mace-content-269.ts';
@@ -18,6 +19,8 @@ export type MechCorpseItem=typeof MECH_CORPSE_ITEMS[number];
  * rules are tracked in docs/development/food-items.md. Nutrition uses integer
  * hundredths here; the actor's 0..100 meter represents one nutrition unit. */
 export const ITEM_DEFINITIONS = Object.freeze({
+  ...PROSTHETIC_ITEM_DEFINITIONS_273,
+  'unfinished-prosthetic':Object.freeze({label:'Prothèse inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x9da9a1}),
   ...SMITHING_APPAREL_ITEM_DEFINITIONS267,
   ...MACE_ITEM_DEFINITIONS_269,
   ...LONGSWORD_ITEM_DEFINITIONS_270,
@@ -127,7 +130,7 @@ export const ITEM_DEFINITIONS = Object.freeze({
 export type ItemId = keyof typeof ITEM_DEFINITIONS;
 /** These raw foods cause the shared raw-meal thought, independently of policy. */
 export const rawFoodThought = (item: ItemId): boolean => item === 'rice' || item === 'potato' || item === 'corn' || item === 'agave-fruit' || item === 'raw-fungus' || isAnimalMeat(item)||!!eggSpeciesForItem256(item);
-export const legacyItem = (kind: MaterialKind): ItemId => kind==='wort'?'wort':kind==='beer'?'beer':kind==='chemfuel'?'chemfuel':kind==='neutroamine'?'neutroamine':kind==='silver'?'silver':kind==='uranium'?'uranium':kind==='corpse'||kind==='mech-corpse'?missingEquipmentType():kind==='unfinished'?missingEquipmentType():kind==='textile'?'cloth':kind==='apparel'||kind==='weapon'?missingEquipmentType():kind==='medicine'?missingMedicineType():kind==='component'?'component':kind==='advanced-component'?'advanced-component':kind==='jade'?'jade':kind==='gold'?'gold':kind==='plasteel'?'plasteel':kind==='blocks'?missingBlockType(): kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
+export const legacyItem = (kind: MaterialKind): ItemId => kind==='wort'?'wort':kind==='beer'?'beer':kind==='chemfuel'?'chemfuel':kind==='neutroamine'?'neutroamine':kind==='silver'?'silver':kind==='uranium'?'uranium':kind==='corpse'||kind==='mech-corpse'?missingEquipmentType():kind==='prosthesis'?missingEquipmentType():kind==='unfinished'?missingEquipmentType():kind==='textile'?'cloth':kind==='apparel'||kind==='weapon'?missingEquipmentType():kind==='medicine'?missingMedicineType():kind==='component'?'component':kind==='advanced-component'?'advanced-component':kind==='jade'?'jade':kind==='gold'?'gold':kind==='plasteel'?'plasteel':kind==='blocks'?missingBlockType(): kind === 'steel' ? 'steel' : kind === 'wood' ? 'wood' : kind === 'chunk' ? 'legacy-chunk' : 'legacy-portion';
 export const nutritionOf = (pile: MaterialPile): number => ITEM_DEFINITIONS[pile.item].nutrition * pile.quantity;
 export function availableNutrition(world: World): number {
     return world.piles.reduce((sum, pile) => sum + (pile.item==='hay'||pile.item==='hops'||pile.item==='beer'||pile.owner.type === 'job'||pile.owner.type==='inventory'||pile.owner.type==='pawn'&&!world.pawns.some(p=>p.id===('pawnId' in pile.owner?pile.owner.pawnId:-1)&&(p.faction??'colony')==='colony') ? 0 : nutritionOf(pile)), 0) / 100;

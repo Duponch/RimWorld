@@ -1,3 +1,6 @@
+import {validProstheticIngredients273} from './machining.ts';
+import {isProstheticRecipe273} from './prosthetic-content-273.ts';
+import {beginProstheticWork273} from './prosthetic-work-273.ts';
 import {isSmithingWeaponRecipe267,smithingRecipeAvailable267,isSmithingRecipe267,smithingMaterialFromIngredients267,smithingProduct267,smithingWorkTotal267} from './smithing-content-267.ts';
 import {beginSmithingWork267} from './smithing-work-267.ts';
 import {brewingSpeed265,validWortIngredients265} from './brewing-content-265.ts';
@@ -65,6 +68,9 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const task=pawn.cooking!;
   if(!allowedAreaWorkAllowed(world,pawn)){context.release();return;}
   const smithing=isSmithingRecipe267(task.recipe);
+  const prostheticRecipe=isProstheticRecipe273(task.recipe);
+  if(prostheticRecipe&&(pawn.draft||pawn.stun||pawn.state==='dead'||pawn.state==='downed'||medicalWorkRefusal(pawn)||pawn.burning||pawn.mental?.crisis)){context.release();return;}
+  if(prostheticRecipe&&((pawn.motion?.end??0)>world.tick||pawn.moveCooldown>0))return;
   if(smithing&&(!smithingRecipeAvailable267(task.recipe as import('./smithing-content-267.ts').SmithingRecipe267,world.schemaVersion)||pawn.draft||pawn.stun||pawn.state==='dead'||pawn.state==='downed'||medicalWorkRefusal(pawn)||pawn.burning||pawn.mental?.crisis)){context.release();return;}
   if(smithing&&((pawn.motion?.end??0)>world.tick||pawn.moveCooldown>0))return;
   const brewing=task.recipe==='brew-wort';
@@ -85,6 +91,8 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(backgroundWorkRefusal(pawn,taskWork(task))||!station||!bill||bill.suspended||task.recipe==='cook-survival-meal'&&!stationAccepts(station,task.recipe)||!productionResearchUnlocked(world,taskRecipe(task))||task.phase!=='output'&&!productionWorkerQualified(pawn,taskRecipe(task))||workPriority(pawn,taskWork(task))===0&&pawn.orders.active!=='cook'||(task.phase!=='output'&&(!foodStationUsable(station)||!productionStationUsable(station)))) {context.release();return;}
   if(task.phase==='output'){if(!recipeHasProducts(taskRecipe(task))){context.release();return;}processProductionOutput(world,pawn,context,bill.destination);return;}
   const recipe=PRODUCTION_RECIPES[taskRecipe(task)];
+  if(isProstheticRecipe273(task.recipe)&&bill.recipe!==task.recipe){context.release();return;}
+  if(isProstheticRecipe273(task.recipe)&&!(task.ingredients.length===1&&task.ingredients[0]!.item==='unfinished-prosthetic')&&!validProstheticIngredients273(task.recipe,task.ingredients)){context.release();return;}
   if(pemmican&&!validPemmicanIngredients(task.ingredients)){context.release();return;}
   if(kibble&&!validKibbleIngredients(task.ingredients)){context.release();return;}
   if(medicine&&!validMedicineIngredients(taskRecipe(task),task.ingredients)){context.release();return;}
@@ -99,7 +107,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(smithingPiece&&(!bill.filters[smithingPiece.smithingWork!.material]||smithingPiece.smithingWork!.authorId!==pawn.id)){context.release();return;}
   for(const entry of task.ingredients) {
     const pile=world.piles.find(p=>p.id===entry.pileId);
-    if(smithing&&pile&&!materialAllowedForPlayer256(pile)){context.release();return;}
+    if((smithing||prostheticRecipe)&&pile&&!materialAllowedForPlayer256(pile)){context.release();return;}
     if(smithing&&(!pile||!smithingPiece&&!bill.filters[entry.item]||entry.stage==='source'&&(pile.owner.type!=='ground'||(pile.owner.x-station.x)**2+(pile.owner.z-station.z)**2>bill.radius**2)||entry.stage==='placed'&&(pile.owner.type!=='ground'||pile.owner.x!==entry.cell.x||pile.owner.z!==entry.cell.z)||entry.stage==='held'&&(pile.owner.type!=='pawn'||pile.owner.pawnId!==pawn.id))){context.release();return;}
     if(cremation&&!canStandAt(world,entry.cell)){context.release();return;}
     if((pemmican||kibble||biofuel)&&entry.stage!=='placed'&&entry.quantity>10){context.release();return;}
@@ -140,6 +148,8 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   task.phase='work';pawn.state='working';pawn.path=[];
   const unfinished=isTailoring(task.recipe)?beginUnfinished(world,pawn):null;
   if(isTailoring(task.recipe)&&!unfinished){context.release();return;}
+  const prosthetic=isProstheticRecipe273(task.recipe)?beginProstheticWork273(world,pawn):null;
+  if(isProstheticRecipe273(task.recipe)&&!prosthetic){context.release();return;}
   const gun=isGunRecipe(task.recipe)?beginGunWork(world,pawn):null;
   if(isGunRecipe(task.recipe)&&!gun){context.release();return;}
   const smith=smithing?beginSmithingWork267(world,pawn):null;
@@ -149,6 +159,7 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(isFlakRecipe(task.recipe)&&!flak){context.release();return;}
   const component=isComponentRecipe(task.recipe)?beginComponentWork(world,pawn):null;
   if(isComponentRecipe(task.recipe)&&!component){context.release();return;}
+  if(prosthetic){pawn.skills.crafting??={...craftingSkill(pawn)};if(prosthetic.prostheticWork273!.progress<total)learnSkill(pawn.skills.crafting,1000,pawn);task.progress=prosthetic.prostheticWork273!.progress;}
   if(gun){pawn.skills.crafting??={...craftingSkill(pawn)};if(gun.gunWork!.progress<total)learnSkill(pawn.skills.crafting,1000,pawn);task.progress=gun.gunWork!.progress;}
   if(flak){pawn.skills.crafting??={...craftingSkill(pawn)};if(flak.flakWork!.progress<total)learnSkill(pawn.skills.crafting,1000,pawn);task.progress=flak.flakWork!.progress;}
   if(component){pawn.skills.crafting??={...craftingSkill(pawn)};if(component.componentWork!.progress<total)learnSkill(pawn.skills.crafting,1000,pawn);task.progress=component.componentWork!.progress;}
@@ -159,11 +170,12 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   const culinary=taskWork(task)==='cook',mechanical=isMechSalvageRecipe(task.recipe);
   if(task.progress<total){
     if(culinary||mechanical||medicine){if(!Number.isSafeInteger((task.workTicks??0)+1)||((task.workTicks??0)+1)>Math.floor(Number.MAX_SAFE_INTEGER/1000))return;task.workTicks=(task.workTicks??0)+1;}
-    const speed=smithing?biofuelProductionSpeed(pawn):brewing?brewingSpeed265(pawn):burningApparel?cremationSpeed(pawn):cremation?cremationSpeed(pawn):smelting?smeltingSpeed(pawn):biofuel?biofuelProductionSpeed(pawn):medicine?medicineProductionSpeed(pawn):mechanical?mechSalvageSpeed(pawn):task.recipe==='butcher-creature'?butcherySpeed(pawn):culinary?cookingSpeed(pawn):1;
+    const speed=prosthetic?biofuelProductionSpeed(pawn):smithing?biofuelProductionSpeed(pawn):brewing?brewingSpeed265(pawn):burningApparel?cremationSpeed(pawn):cremation?cremationSpeed(pawn):smelting?smeltingSpeed(pawn):biofuel?biofuelProductionSpeed(pawn):medicine?medicineProductionSpeed(pawn):mechanical?mechSalvageSpeed(pawn):task.recipe==='butcher-creature'?butcherySpeed(pawn):culinary?cookingSpeed(pawn):1;
     const fraction=medicine||biofuel?1:consumeCookingFuel(station);if(!medicine&&!biofuel)applyCookingHeat(world,station,fraction);
     task.progress=Math.min(total,task.progress+Math.round(context.workRate(station,pawn)*speed*PRODUCTION_WORK_SCALE*fraction));
   }
   if(unfinished)unfinished.unfinished!.progress=task.progress;
+  if(prosthetic)prosthetic.prostheticWork273!.progress=task.progress;
   if(gun)gun.gunWork!.progress=task.progress;
   if(smith)smith.smithingWork!.progress=task.progress;
   if(flak)flak.flakWork!.progress=task.progress;
@@ -203,5 +215,5 @@ export function processCooking(world:World,pawn:Pawn,context:ProductionContext):
   if(pemmican){context.event(`${pawn.name} a préparé 16 unités de pemmican.`);return;}
   if(kibble){context.event(`${pawn.name} a fabriqué ${kibbleOutputUnits(station)} croquettes.`);return;}
   if(biofuel){context.event(`${pawn.name} a raffiné 35 unités de biocarburant.`);return;}
-  context.event(smithing||isGunRecipe(task.recipe)||isFlakRecipe(task.recipe)||isComponentRecipe(task.recipe)||isTailoring(task.recipe)?`${pawn.name} a fabriqué : ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='cook-survival-meal'?`${pawn.name} a cuisiné 1 repas de survie emballé.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='cook-simple-meal-bulk'?`${pawn.name} a cuisiné 4 repas simples.`:task.recipe==='fine-meal'?`${pawn.name} a cuisiné 1 plat raffiné.`:task.recipe==='cook-fine-meal-bulk'?`${pawn.name} a cuisiné 4 plats raffinés.`:task.recipe==='vegetarian-fine-meal'?`${pawn.name} a cuisiné 1 plat végétarien raffiné.`:task.recipe==='cook-vegetarian-fine-meal-bulk'?`${pawn.name} a cuisiné 4 plats végétariens raffinés.`:task.recipe==='carnivore-fine-meal'?`${pawn.name} a cuisiné 1 plat carnivore raffiné.`:task.recipe==='cook-carnivore-fine-meal-bulk'?`${pawn.name} a cuisiné 4 plats carnivores raffinés.`:task.recipe==='lavish-meal'?`${pawn.name} a cuisiné 1 plat gastronomique.`:task.recipe==='cook-lavish-meal-bulk'?`${pawn.name} a cuisiné 4 plats gastronomiques.`:task.recipe==='vegetarian-lavish-meal'?`${pawn.name} a cuisiné 1 plat végétarien gastronomique.`:task.recipe==='cook-vegetarian-lavish-meal-bulk'?`${pawn.name} a cuisiné 4 plats végétariens gastronomiques.`:task.recipe==='cook-carnivore-lavish-meal'?`${pawn.name} a cuisiné 1 plat carnivore gastronomique.`:task.recipe==='cook-carnivore-lavish-meal-bulk'?`${pawn.name} a cuisiné 4 plats carnivores gastronomiques.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice-meat-potato-corn-agave} baies, ${rice} riz${meat?`, ${meat} viande`:''}${potato?`, ${potato} pommes de terre`:''}${corn?`, ${corn} maïs`:''}${agave?`, ${agave} fruits d’agave`:''}).`);
+  context.event(isProstheticRecipe273(task.recipe)||smithing||isGunRecipe(task.recipe)||isFlakRecipe(task.recipe)||isComponentRecipe(task.recipe)||isTailoring(task.recipe)?`${pawn.name} a fabriqué : ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='cook-survival-meal'?`${pawn.name} a cuisiné 1 repas de survie emballé.`:task.recipe==='stone-blocks'?`${pawn.name} a taillé 20 ${ITEM_DEFINITIONS[item].label.toLowerCase()}.`:task.recipe==='cook-simple-meal-bulk'?`${pawn.name} a cuisiné 4 repas simples.`:task.recipe==='fine-meal'?`${pawn.name} a cuisiné 1 plat raffiné.`:task.recipe==='cook-fine-meal-bulk'?`${pawn.name} a cuisiné 4 plats raffinés.`:task.recipe==='vegetarian-fine-meal'?`${pawn.name} a cuisiné 1 plat végétarien raffiné.`:task.recipe==='cook-vegetarian-fine-meal-bulk'?`${pawn.name} a cuisiné 4 plats végétariens raffinés.`:task.recipe==='carnivore-fine-meal'?`${pawn.name} a cuisiné 1 plat carnivore raffiné.`:task.recipe==='cook-carnivore-fine-meal-bulk'?`${pawn.name} a cuisiné 4 plats carnivores raffinés.`:task.recipe==='lavish-meal'?`${pawn.name} a cuisiné 1 plat gastronomique.`:task.recipe==='cook-lavish-meal-bulk'?`${pawn.name} a cuisiné 4 plats gastronomiques.`:task.recipe==='vegetarian-lavish-meal'?`${pawn.name} a cuisiné 1 plat végétarien gastronomique.`:task.recipe==='cook-vegetarian-lavish-meal-bulk'?`${pawn.name} a cuisiné 4 plats végétariens gastronomiques.`:task.recipe==='cook-carnivore-lavish-meal'?`${pawn.name} a cuisiné 1 plat carnivore gastronomique.`:task.recipe==='cook-carnivore-lavish-meal-bulk'?`${pawn.name} a cuisiné 4 plats carnivores gastronomiques.`:`${pawn.name} a cuisiné 1 repas simple (${10-rice-meat-potato-corn-agave} baies, ${rice} riz${meat?`, ${meat} viande`:''}${potato?`, ${potato} pommes de terre`:''}${corn?`, ${corn} maïs`:''}${agave?`, ${agave} fruits d’agave`:''}).`);
 }

@@ -1,5 +1,13 @@
 # Catalogue de contenu : couverture connue
 
+**V449 qualifiée localement — schéma 273 :** [Bras et jambes prothétiques industriels](industrial-prostheses-v449.md). Fabrication payée, pose, remplacement, retrait récupérable et fret ; 114 cas ciblés acquis par reprises, typage/build, présentation et interface natives muettes acquis. Publication à effectuer ; sauvegardes publiques inchangées. **Ensemble 3 principal**, glaives reportés ; aucun gain FPS ni clôture des six ensembles.
+
+| Contenu V449 qualifié localement | Acquisition et usage | Frontières et limites |
+| --- | --- | --- |
+| Deux pièces et leurs ouvrages | Prothèses, 600 points après Usinage ; Artisanat 5, atelier d'usinage, 40 acier + 4 composants, 15 000 travail Core. Même auteur/progression ; produit sans qualité, bras 5 kg ou jambe 8 kg, 50 PV, une unité par pile. | Pas de fabrication aux forges, ni de cœur ou cochléaire jouable ; assortiment marchand inchangé. Les 22 armes existantes ne sont pas modifiées. |
+| Pose et corps réel | Adultes libres, lit utilisable, autre médecin niveau 4, pièce + deux médicaments. Bras à l'épaule : 50 % d'efficacité partielle ; jambe : 85 %. Racine manquante ou présente, remplacement des parties en bois ; capacités et risque opératoire communs. | Dose d'anesthésie au début, pièce et dose restante à la finition avant l'issue ; ancienne pose du bois conserve sa consommation groupée historique. Pas un pourcentage garanti du corps entier ni un soin des autres affections. |
+| Retrait et restitution | Retrait : une dose, 2 000 travail Core, risque réel ; pièce industrielle récupérée neuve à 50/50 PV avec nouvel identifiant, bois retiré : une unité. Restitution des parties descendantes remplacées et dépôt planifié avant commit. | Blocage de dépôt conservateur déclaré comme adaptation ; pas de membre naturel récupérable inventé. Retrait industriel exposé dans Santé ; bois rendu lors du remplacement. Aucun gain FPS ni victoire annoncé. |
+
 **V448 publiée — schéma 272 :** [Lances dans les six matières](spears-v448.md). Fabrication, ouvrage, équipement, trois verbes et récupération ; 124 cas ciblés acquis par reprises, deux anciens rouges identiques au témoin V447 conservés. Typage/build, présentation et UI natives muettes acquis ; deux notifications de mise en page conservées. Publication6fda9dfe/091ef9cb vérifiée par20réponses HTTPS exactes ; sauvegardes publiques inchangées. Ensemble 2 principal ; aucun gain FPS ni clôture des six ensembles.
 
 | Contenu V448 publié | Acquisition et usage | Frontières et limites |

@@ -71,7 +71,13 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
   // prospective animal/owner already admitted by its native clinical header.
   const animalNonFresh=version>=256&&animal&&(!!clinicalAnimal||Object.hasOwn(value,'animalAgeConditions'));
   for(const m of value.missing) {
-    if(!object(m)||!keys(m,['part','bornAt','tended',...(version>=210&&!animal&&!mechanical||animalNonFresh?['nonFresh']:[])])||!bodyPartExists(m.part)||BODY_PARTS[m.part].parent===null||BODY_PARTS[m.part].conceptual||!BODY_PARTS[m.part].destroyable&&!(version>=256&&!mechanical&&(Object.hasOwn(value,'animalAgeConditions')||animalNonFresh)&&Object.getOwnPropertyDescriptor(m,'nonFresh')?.value===true)||!integer(m.bornAt,0,value.tick)||m.tended!==undefined&&(mechanical||m.tended!==true))return fail;
+    // An added shoulder replaces its direct biological clavicle too. This is
+    // an owned synthetic-child marker, never permission to lose arbitrary
+    // indestructible bones. The full AddedPart guard below checks the rest.
+    const shoulderChild273=version===273&&!animal&&!mechanical&&object(m)&&(m.part==='left-clavicle'||m.part==='right-clavicle')
+      &&Object.getOwnPropertyDescriptor(m,'nonFresh')?.value===true&&Array.isArray(value.artificialParts)
+      &&value.artificialParts.some(p=>object(p)&&p.kind==='prosthetic-arm'&&p.part===(m.part==='left-clavicle'?'left-shoulder':'right-shoulder')&&p.installedAt===m.bornAt);
+    if(!object(m)||!keys(m,['part','bornAt','tended',...(version>=210&&!animal&&!mechanical||animalNonFresh?['nonFresh']:[])])||!bodyPartExists(m.part)||BODY_PARTS[m.part].parent===null||BODY_PARTS[m.part].conceptual||!BODY_PARTS[m.part].destroyable&&!shoulderChild273&&!(version>=256&&!mechanical&&(Object.hasOwn(value,'animalAgeConditions')||animalNonFresh)&&Object.getOwnPropertyDescriptor(m,'nonFresh')?.value===true)||!integer(m.bornAt,0,value.tick)||m.tended!==undefined&&(mechanical||m.tended!==true))return fail;
   }
   if(animal)for(const m of value.missing){const descriptor=Object.getOwnPropertyDescriptor(m,'nonFresh');if(descriptor&&(!animalNonFresh||!Object.hasOwn(descriptor,'value')||descriptor.enumerable!==true||descriptor.value!==true))return fail;}
   const record=value as unknown as MedicalRecord;

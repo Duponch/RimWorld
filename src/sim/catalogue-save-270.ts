@@ -25,7 +25,7 @@ function historical(v:unknown):boolean {
 export function validLongswordCatalogueDomains270(value:unknown,version:number):boolean {
  try{
   if(isSchema270OrLater(version))return true;
-  if(!Number.isSafeInteger(version)||version<1||version>272)return false;
+  if(!Number.isSafeInteger(version)||version<1||version>273)return false;
   return !record(value)||DOMAINS.every(k=>historical(value[k]));
  }catch{return false;}
 }
@@ -34,7 +34,7 @@ export function validLongswordCatalogueDomains270(value:unknown,version:number):
 export function validLongswordHistoricalTransport270(value:unknown,version:number):boolean {
  try{
   if(isSchema270OrLater(version))return true;
-  if(!Number.isSafeInteger(version)||version<1||version>272)return false;
+  if(!Number.isSafeInteger(version)||version<1||version>273)return false;
   if(!record(value))return true;
   const w=record(value.world)?value.world:value;
   if(!validLongswordCatalogueDomains270(w,version))return false;

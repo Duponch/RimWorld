@@ -1,4 +1,6 @@
-# Validation courante — V448 publiée
+# Validation courante — V449 qualifiée localement
+
+**V449 qualifiée localement — schéma 273 :** [Bras et jambes prothétiques industriels](../gameplay/industrial-prostheses-v449.md). Fabrication payée, pose, remplacement, retrait récupérable et fret ; 114 cas ciblés acquis par reprises, typage/build, présentation et interface natives muettes acquis. Publication à effectuer ; sauvegardes publiques inchangées. **Ensemble 3 principal**, glaives reportés ; aucun gain FPS ni clôture des six ensembles.
 
 **V448 publiée — schéma 272 :** [Lances dans les six matières](../gameplay/spears-v448.md). Fabrication, ouvrage, équipement, trois verbes et récupération ; 124 cas ciblés acquis par reprises, deux anciens rouges identiques au témoin V447 conservés. Typage/build, présentation et UI natives muettes acquis ; deux notifications de mise en page conservées. Publication6fda9dfe/091ef9cb vérifiée par20réponses HTTPS exactes ; sauvegardes publiques inchangées. Ensemble 2 principal ; aucun gain FPS ni clôture des six ensembles.
 

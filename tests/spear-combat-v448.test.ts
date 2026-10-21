@@ -7,6 +7,7 @@ import {validWeaponShape} from '../src/sim/equipment-save.ts';
 import {validMeleeShape} from '../src/sim/melee-save.ts';
 import {meleeTools,meleeRecoveryCore,chooseMeleeTool} from '../src/sim/melee-statistics.ts';
 import {SPEAR_TOOL_IDS_272,isSpearToolId272} from '../src/sim/spear-combat-272.ts';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 import {meleeContact} from '../src/sim/melee-space.ts';
 import {strikeLivingTarget} from '../src/sim/living-melee.ts';
 import {rangedWeaponProfile} from '../src/sim/ranged-statistics.ts';
@@ -80,6 +81,6 @@ test.each(['shaft-blunt','shaft-poke','point'] as const)('actual %s impact retai
 test('the 271→272 boundary preserves every previous human weapon tool without a draw',()=>{
  const w=firingCamp(),p=w.pawns[0]!,weapon=equippedWeapon(w,p)!;
  for(const item of ['revolver','bolt-action-rifle','emp-launcher','plasteel-knife','wood-mace','uranium-mace','steel-longsword','plasteel-longsword'] as const){
-  weapon.item=item;weapon.weapon=newWeaponState(item);const historical=Object.assign({},w,{schemaVersion:271}),before=meleeTools(historical,p),rng=w.rng;expect(meleeTools(w,p)).toEqual(before);expect(w.rng).toBe(rng);expect(w.schemaVersion).toBe(272);
+  weapon.item=item;weapon.weapon=newWeaponState(item);const historical=Object.assign({},w,{schemaVersion:271}),before=meleeTools(historical,p),rng=w.rng;expect(meleeTools(w,p)).toEqual(before);expect(w.rng).toBe(rng);expect(w.schemaVersion).toBe(SCHEMA_VERSION);
  }
 });

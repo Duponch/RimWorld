@@ -1,3 +1,6 @@
+import {artificialPartIngredient273} from '../sim/artificial-parts-rules';
+import {isProstheticItem273} from '../sim/prosthetic-content-273';
+import {ITEM_DEFINITIONS} from '../sim/items';
 import {alcoholInspection265} from '../sim/alcohol-rules-265';
 import {cryptosleepSick256,cryptosleepSicknessModifiers256} from '../sim/cryptosleep-sickness-256';
 import { MALNUTRITION_UNIT,MALNUTRITION_LABELS,malnutritionStage } from '../sim/malnutrition';
@@ -17,10 +20,10 @@ import { immuneDiseaseModifiers } from '../sim/immune-diseases-rules';
 import { foodPoisoningStage,FOOD_POISON_UNIT } from '../sim/food-poisoning';
 import { bodyDescription } from './burial-controls';
 import { isCarePatient } from '../sim/affiliation';
-import { SURGERY_PARTS,surgeryRequestReason,surgeryInstallRequestReason } from '../sim/surgery-rules';
+import { SURGERY_PARTS,surgeryRequestReason,surgeryInstallRequestReason,surgeryRemoveRequestReason273 } from '../sim/surgery-rules';
 import type { SurgicalLimb } from '../sim/surgery-anatomy';
-import { WOODEN_PARTS,artificialPartCovering,artificialPartEfficiencies } from '../sim/artificial-parts-rules';
-import type { WoodenPartKind,WoodenPartSite } from '../sim/artificial-parts-types';
+import { ARTIFICIAL_PARTS,artificialPartCovering,artificialPartEfficiencies } from '../sim/artificial-parts-rules';
+import type { ArtificialPartKind,ArtificialPartSite } from '../sim/artificial-parts-types';
 import { ANESTHETIC_UNIT,anestheticStage,anestheticModifiers } from '../sim/anesthetic';
 import { heatModifiers } from '../sim/heat-rules';
 import { coldModifiers } from '../sim/cold-rules';
@@ -34,13 +37,14 @@ import './health-inspection.css';
 
 export interface SurgeryInspectionActions {
   request:(pawnId:number,part:SurgicalLimb)=>void;
-  install?:(pawnId:number,part:WoodenPartSite,implant:WoodenPartKind)=>void;
+  install?:(pawnId:number,part:ArtificialPartSite,implant:ArtificialPartKind)=>void;
+  remove?:(pawnId:number,part:ArtificialPartSite)=>void;
   cancel:(pawnId:number)=>void;
 }
 
-const woodenOperationChoices=()=>Object.entries(WOODEN_PARTS).flatMap(([kind,rule])=>rule.sites.map(part=>({
-  implant:kind as WoodenPartKind,part,label:`${rule.label} · ${BODY_PARTS[part].label.toLocaleLowerCase('fr-FR')}`,
-  guidance:`1 bois + 2 médicaments du même type autorisé · Médecine ${rule.medicineSkill} · efficacité ${Math.round(rule.efficiency*100)} % de la partie.`,
+const artificialOperationChoices=()=>Object.entries(ARTIFICIAL_PARTS).flatMap(([kind,rule])=>rule.sites.map(part=>({
+  implant:kind as ArtificialPartKind,part,label:`${rule.label} · ${BODY_PARTS[part].label.toLocaleLowerCase('fr-FR')}`,
+  guidance:`1 ${ITEM_DEFINITIONS[artificialPartIngredient273(kind as ArtificialPartKind)].label.toLocaleLowerCase('fr-FR')} + 2 médicaments du même type autorisé · Médecine ${rule.medicineSkill} · efficacité ${Math.round(rule.efficiency*100)} % de la partie.`,
 })));
 
 /** Request projection only: the clinical command owns admission, cancellation,
@@ -48,14 +52,15 @@ const woodenOperationChoices=()=>Object.entries(WOODEN_PARTS).flatMap(([kind,rul
 export function healthSurgeryView(pawn:Pawn,world?:World) {
   const request=pawn.surgeryRequest,doctor=world?.pawns.find(p=>p.surgery?.patientId===pawn.id);
   const phase=doctor?.surgery?.phase;
-  const installing=request?.implant!==undefined;
+  const installing=request?.implant!==undefined,removing=request?.removeArtificial273!==undefined,wooden=installing&&!isProstheticItem273(request!.implant);
   const status=request
-    ?`${installing?`Pose demandée (${WOODEN_PARTS[request.implant!].label.toLocaleLowerCase('fr-FR')})`:'Amputation demandée'} : ${BODY_PARTS[request.part].label.toLocaleLowerCase('fr-FR')} · ${phase==='work'?'opération en cours':phase==='pickup'?installing?'collecte du bois et des médicaments':'collecte du médicament':phase==='approach'?'approche du chevet':installing?'en attente du lit, du médecin, du bois et des médicaments':'en attente du lit, du médecin et du médicament'}.`
-    :'Aucune amputation demandée.';
+    ?`${installing?`Pose demandée (${ARTIFICIAL_PARTS[request.implant!].label.toLocaleLowerCase('fr-FR')})`:removing?`Retrait demandé (${ARTIFICIAL_PARTS[request.removeArtificial273!].label.toLocaleLowerCase('fr-FR')})`:'Amputation demandée'} : ${BODY_PARTS[request.part].label.toLocaleLowerCase('fr-FR')} · ${phase==='work'?'opération en cours':phase==='pickup'?installing?wooden?'collecte du bois et des médicaments':'collecte de la pièce et des médicaments':'collecte du médicament':phase==='approach'?'approche du chevet':installing?wooden?'en attente du lit, du médecin, du bois et des médicaments':'en attente du lit, du médecin, de la pièce et des médicaments':'en attente du lit, du médecin et du médicament'}.`
+    :'Aucune opération demandée.';
   return {status,canCancel:!!request&&pawn.state!=='dead'&&!pawn.health?.death,
     choices:SURGERY_PARTS.map(part=>({part,label:BODY_PARTS[part].label,
       reason:request?'Une opération est déjà demandée pour ce colon.':surgeryRequestReason(pawn,part)})),
-    installations:world&&world.schemaVersion>=210?woodenOperationChoices().map(choice=>({...choice,
+    removals:world&&world.schemaVersion===273?(pawn.health?.artificialParts??[]).filter(a=>isProstheticItem273(a.kind)).map(a=>({part:a.part,kind:a.kind,label:`${ARTIFICIAL_PARTS[a.kind].label} · ${BODY_PARTS[a.part].label.toLocaleLowerCase('fr-FR')}`,reason:request?'Une opération est déjà demandée pour ce colon.':surgeryRemoveRequestReason273(pawn,a.part,a.kind)})):[],
+    installations:world&&world.schemaVersion>=210?artificialOperationChoices().filter(choice=>world.schemaVersion===273||!isProstheticItem273(choice.implant)).map(choice=>({...choice,
       reason:request?'Une opération est déjà demandée pour ce colon.':surgeryInstallRequestReason(pawn,choice.part,choice.implant)})):[]};
 }
 
@@ -67,11 +72,17 @@ export function requestInspectedAmputation(pawn:Pawn|undefined,part:SurgicalLimb
   if(reason)return reason;
   actions.request(pawn!.id,part);return undefined;
 }
-export function requestInspectedInstallation(pawn:Pawn|undefined,part:WoodenPartSite,implant:WoodenPartKind,actions:SurgeryInspectionActions):string|undefined {
+export function requestInspectedInstallation(pawn:Pawn|undefined,part:ArtificialPartSite,implant:ArtificialPartKind,actions:SurgeryInspectionActions):string|undefined {
   const reason=!pawn?'Aucun colon sélectionné.':pawn.surgeryRequest?'Une opération est déjà demandée pour ce colon.':surgeryInstallRequestReason(pawn,part,implant);
   if(reason)return reason;
   if(!actions.install)return 'La pose de prothèse n’est pas disponible.';
   actions.install(pawn!.id,part,implant);return undefined;
+}
+export function requestInspectedProstheticRemoval273(pawn:Pawn|undefined,part:ArtificialPartSite,kind:ArtificialPartKind,actions:SurgeryInspectionActions):string|undefined {
+  const reason=!pawn?'Aucun colon sélectionné.':pawn.surgeryRequest?'Une opération est déjà demandée pour ce colon.':surgeryRemoveRequestReason273(pawn,part,kind);
+  if(reason)return reason;
+  if(!actions.remove)return 'Le retrait n’est pas disponible.';
+  actions.remove(pawn!.id,part);return undefined;
 }
 export function cancelInspectedAmputation(pawn:Pawn|undefined,actions:SurgeryInspectionActions):boolean {
   if(!pawn?.surgeryRequest||pawn.state==='dead'||pawn.health?.death)return false;
@@ -107,7 +118,7 @@ export function healthInjuryRows(pawn:Pawn):ReadonlyArray<{part:string;descripti
   return [
     ...health.injuries.map(i=>({partId:i.part,part:BODY_PARTS[i.part].label,description:`${i.scar?.pain!==undefined?'Cicatrice':INJURY_RULES[i.kind].label} · −${(i.severity/HP_UNIT).toFixed(2)} PV${i.tended!==undefined?` · soignée (${Math.round(i.tended/10)} %)` :''}`})),
     ...health.missing.filter(m=>!artificialPartCovering(health,m.part)).map(m=>({partId:m.part,part:BODY_PARTS[m.part].label,description:`Partie perdue${m.tended?' · plaie soignée':''}`})),
-    ...(health.artificialParts??[]).map(added=>({partId:added.part,part:BODY_PARTS[added.part].label,description:`${WOODEN_PARTS[added.kind].label} · efficacité ${Math.round(WOODEN_PARTS[added.kind].efficiency*100)} %`})),
+    ...(health.artificialParts??[]).map(added=>({partId:added.part,part:BODY_PARTS[added.part].label,description:`${ARTIFICIAL_PARTS[added.kind].label} · efficacité ${Math.round(ARTIFICIAL_PARTS[added.kind].efficiency*100)} %`})),
     ...(health.ageAilments??[]).map(kind=>kind==='bad-back'
       ?{partId:'spine' as const,part:'Colonne vertébrale',description:'Lumbago'}
       :{partId:'torso' as const,part:'Torse',description:'Frêle'}),
@@ -136,9 +147,9 @@ const CAPACITY_HELP:Record<typeof CAPACITY_LABELS[number][0],{body:string;parts:
 export function healthPartTooltip(pawn:Pawn,part:BodyPartId):{title:string;body:string;rows:TooltipRow[]} {
   const definition=BODY_PARTS[part],efficiency=bodyEfficiencies(anatomyInput(pawn))[BODY_INDEX[part]]!;
   const added=pawn.health?artificialPartCovering(pawn.health,part):undefined;
-  if(added&&added.part!==part)return {title:definition.label,body:'Cette partie naturelle est remplacée par la prothèse de son parent ; elle ne constitue pas une nouvelle plaie à soigner.',rows:[{label:'Prothèse',value:WOODEN_PARTS[added.kind].label},{label:'Efficacité de la prothèse',value:percent(WOODEN_PARTS[added.kind].efficiency)}]};
-  return {title:definition.label,body:added?'Prothèse en bois : fonction partielle, sensible aux dégâts. Les autres affections du patient continuent à modifier ses capacités.':efficiency===0?'Cette partie ne contribue plus aux capacités qui en dépendent.':'Les lésions et les parties perdues modifient son efficacité.',rows:[
-    ...added?[{label:'Prothèse',value:WOODEN_PARTS[added.kind].label}]:[],
+  if(added&&added.part!==part)return {title:definition.label,body:'Cette partie naturelle est remplacée par la prothèse de son parent ; elle ne constitue pas une nouvelle plaie à soigner.',rows:[{label:'Prothèse',value:ARTIFICIAL_PARTS[added.kind].label},{label:'Efficacité de la prothèse',value:percent(ARTIFICIAL_PARTS[added.kind].efficiency)}]};
+  return {title:definition.label,body:added?'Prothèse : fonction partielle, sensible aux dégâts. Les autres affections du patient continuent à modifier ses capacités.':efficiency===0?'Cette partie ne contribue plus aux capacités qui en dépendent.':'Les lésions et les parties perdues modifient son efficacité.',rows:[
+    ...added?[{label:'Prothèse',value:ARTIFICIAL_PARTS[added.kind].label}]:[],
     {label:'Points de vie',value:`${pawn.health?remainingPartHealth(pawn.health,part)/HP_UNIT:definition.hp} / ${definition.hp}`},
     {label:'Efficacité',value:percent(efficiency)},
     {label:'Position',value:definition.depth==='inside'?'Interne':'Externe'},
@@ -180,7 +191,7 @@ function clinicalRows(pawn:Pawn):ClinicalRow[]{
     const pain=artificial?0:injury.severity*(scar?5*injury.scar!.pain!:rule.painUnits)/PAIN_UNIT;
     const title=scar?`Cicatrice de ${rule.label.toLocaleLowerCase('fr-FR')}`:rule.label;
     const treatment=injury.tended!==undefined?`Soignée · qualité ${percent(injury.tended/1000)}`:scar?'Lésion permanente':'Non soignée';
-    return {partId:injury.part,part:BODY_PARTS[injury.part].label,description:title,bleeding:bleed>0,tooltip:{title,body:artificial?`Lésion de la prothèse ${WOODEN_PARTS[artificial.kind].label.toLocaleLowerCase('fr-FR')}, sans douleur ni saignement.`:scar?'Cette ancienne lésion laisse une cicatrice permanente.':`Lésion du ${BODY_PARTS[injury.part].label.toLocaleLowerCase('fr-FR')}. ${treatment}.`,rows:[
+    return {partId:injury.part,part:BODY_PARTS[injury.part].label,description:title,bleeding:bleed>0,tooltip:{title,body:artificial?`Lésion de la prothèse ${ARTIFICIAL_PARTS[artificial.kind].label.toLocaleLowerCase('fr-FR')}, sans douleur ni saignement.`:scar?'Cette ancienne lésion laisse une cicatrice permanente.':`Lésion du ${BODY_PARTS[injury.part].label.toLocaleLowerCase('fr-FR')}. ${treatment}.`,rows:[
       {label:'Gravité',value:`${(injury.severity/HP_UNIT).toFixed(2)} PV`},
       {label:'Saignement',value:`${percent(bleed)}/jour`},
       {label:'Douleur avant anesthésie',value:`+${percent(pain)}`},
@@ -188,7 +199,7 @@ function clinicalRows(pawn:Pawn):ClinicalRow[]{
     ]}};
   });
   for(const missing of health.missing)if(!artificialPartCovering(health,missing.part))rows.push({partId:missing.part,part:BODY_PARTS[missing.part].label,description:'Partie perdue',bleeding:freshMissing(health,missing),tooltip:{title:'Partie perdue',body:'La partie et ses descendants ne contribuent plus aux capacités du corps.',rows:[{label:'Traitement',value:missing.tended?'Plaie soignée':freshMissing(health,missing)?'Plaie fraîche non soignée':'Plaie fermée'}]}});
-  for(const added of health.artificialParts??[]){const rule=WOODEN_PARTS[added.kind];rows.push({partId:added.part,part:BODY_PARTS[added.part].label,description:rule.label,bleeding:false,tooltip:{title:rule.label,body:'Cette partie manquante a été remplacée par une prothèse en bois. La fonction reste partielle ; les affections et lésions présentes continuent d’être prises en compte.',rows:[{label:'Efficacité de la partie',value:percent(rule.efficiency)},{label:'Matière',value:'Bois'}]}});}
+  for(const added of health.artificialParts??[]){const rule=ARTIFICIAL_PARTS[added.kind];rows.push({partId:added.part,part:BODY_PARTS[added.part].label,description:rule.label,bleeding:false,tooltip:{title:rule.label,body:'Cette partie a été remplacée par une prothèse. Sa fonction et les affections ou lésions présentes déterminent ses capacités.',rows:[{label:'Efficacité de la partie',value:percent(rule.efficiency)},{label:'Type',value:isProstheticItem273(added.kind)?'Prothèse industrielle':'Bois'}]}});}
   for(const kind of health.ageAilments??[]){const partId=kind==='bad-back'?'spine':'torso';rows.push({partId,part:BODY_PARTS[partId].label,description:kind==='bad-back'?'Lumbago':'Frêle',bleeding:false,tooltip:{title:kind==='bad-back'?'Lumbago':'Frêle',body:'Affection chronique liée à l’âge.',rows:[{label:'Mouvement',value:'−30 % points'},{label:'Manipulation',value:kind==='bad-back'?'−10 % points':'−30 % points'}]}});}
   return rows.sort((a,b)=>BODY_INDEX[a.partId]-BODY_INDEX[b.partId]);
 }
@@ -246,12 +257,18 @@ export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|unde
       button.onclick=()=>{const refusal=requestInspectedAmputation(selected(),part,surgery);if(refusal){request.textContent=refusal;request.hidden=false;}};
       row.append(button,document.createTextNode(' '),reason);operations.append(row);
     }
-    if(surgery.install)for(const choice of woodenOperationChoices()){
+    if(surgery.install)for(const choice of artificialOperationChoices()){
       const row=document.createElement('p'),button=document.createElement('button');row.className='health-operation-row';row.hidden=true;
       button.type='button';button.dataset.surgeryInstall=`${choice.implant}:${choice.part}`;button.disabled=true;button.textContent=`Poser : ${choice.label}`;
       const reason=document.createElement('small');reason.dataset.surgeryInstallReason=`${choice.implant}:${choice.part}`;
       button.onclick=()=>{const refusal=requestInspectedInstallation(selected(),choice.part,choice.implant,surgery);if(refusal){request.textContent=refusal;request.hidden=false;}};
       row.append(button,document.createTextNode(' '),reason);operations.append(row);
+    }
+    if(surgery.remove)for(const choice of artificialOperationChoices().filter(c=>isProstheticItem273(c.implant))){
+      const row=document.createElement('p'),button=document.createElement('button');row.className='health-operation-row';row.hidden=true;
+      button.type='button';button.dataset.surgeryRemove=`${choice.implant}:${choice.part}`;button.textContent=`Retirer : ${choice.label}`;
+      button.onclick=()=>{const refusal=requestInspectedProstheticRemoval273(selected(),choice.part,choice.implant,surgery);if(refusal){request.textContent=refusal;request.hidden=false;}};
+      row.append(button);operations.append(row);
     }
     const cancel=document.createElement('button');cancel.type='button';cancel.dataset.surgeryCancel='true';cancel.textContent='Annuler la demande';cancel.disabled=true;
     cancel.onclick=()=>{cancelInspectedAmputation(selected(),surgery);};operations.append(cancel);
@@ -285,7 +302,7 @@ export function updateHealthInspection(panel:HTMLElement,pawn:Pawn,world?:World)
   const crypto=details.querySelector('[data-health="cryptosleep-sickness"]'),sickness=health?.cryptosleepSickness;if(crypto)crypto.textContent=sickness?`${sickness.remainingCore>0?`Mal de cryptosommeil · ${(sickness.remainingCore/2500).toFixed(1)} h restantes`:'Vomissement résiduel'}${sickness.vomit?' · Vomit':''}`:'';
   const surgery=details.querySelector('[data-health="surgery"]');if(surgery?.querySelector('[data-health="surgery-request"]')){
     const view=healthSurgeryView(pawn,world),request=surgery.querySelector<HTMLElement>('[data-health="surgery-request"]')!;request.textContent=view.status;request.hidden=!pawn.surgeryRequest;
-    surgery.querySelector<HTMLElement>('[data-health="surgery-empty"]')!.hidden=view.choices.some(choice=>choice.reason===undefined)||view.installations.some(choice=>choice.reason===undefined&&surgery.querySelector(`[data-surgery-install="${choice.implant}:${choice.part}"]`))||!!pawn.surgeryRequest;
+    surgery.querySelector<HTMLElement>('[data-health="surgery-empty"]')!.hidden=view.choices.some(choice=>choice.reason===undefined)||view.installations.some(choice=>choice.reason===undefined&&surgery.querySelector(`[data-surgery-install="${choice.implant}:${choice.part}"]`))||view.removals.some(choice=>choice.reason===undefined)||!!pawn.surgeryRequest;
     for(const choice of view.choices){
       const button=surgery.querySelector<HTMLButtonElement>(`[data-surgery-part="${choice.part}"]`)!;
       button.disabled=choice.reason!==undefined;button.parentElement!.hidden=choice.reason!==undefined&&(pawn.surgeryRequest?.part!==choice.part||pawn.surgeryRequest.implant!==undefined);
@@ -297,8 +314,14 @@ export function updateHealthInspection(panel:HTMLElement,pawn:Pawn,world?:World)
       const key=`${choice.implant}:${choice.part}`,button=surgery.querySelector<HTMLButtonElement>(`[data-surgery-install="${key}"]`);if(!button)continue;
       button.disabled=choice.reason!==undefined;
       button.parentElement!.hidden=choice.reason!==undefined&&(pawn.surgeryRequest?.part!==choice.part||pawn.surgeryRequest.implant!==choice.implant);
-      setTooltip(button,{title:`Pose · ${choice.label}`,body:choice.reason??'Remplace uniquement cette partie manquante par une prothèse en bois. La récupération reste partielle et l’opération peut échouer.',rows:[{label:'Préparation',value:choice.guidance},{label:'Conditions',value:'Patient installé au lit, chevet accessible et anesthésie'},{label:'Risques',value:'Échec opératoire et lésions ; aucun résultat garanti'}]});
+      setTooltip(button,{title:`Pose · ${choice.label}`,body:choice.reason??'Pose cette prothèse à la place du membre ou de sa prothèse actuelle. La fonction reste partielle et l’opération peut échouer.',rows:[{label:'Préparation',value:choice.guidance},{label:'Conditions',value:'Patient installé au lit, chevet accessible et anesthésie'},{label:'Risques',value:'Échec opératoire et lésions ; aucun résultat garanti'}]});
       surgery.querySelector(`[data-surgery-install-reason="${key}"]`)!.textContent=choice.reason??choice.guidance;
+    }
+    for(const button of surgery.querySelectorAll<HTMLButtonElement>('[data-surgery-remove]'))button.parentElement!.hidden=true;
+    for(const choice of view.removals){
+      const button=surgery.querySelector<HTMLButtonElement>(`[data-surgery-remove="${choice.kind}:${choice.part}"]`);if(!button)continue;
+      button.disabled=choice.reason!==undefined;button.parentElement!.hidden=choice.reason!==undefined;
+      setTooltip(button,{title:`Retrait · ${choice.label}`,body:choice.reason??'Une dose autorisée, un lit et un médecin. En cas de réussite, la même sorte de prothèse est récupérée au sol ; le membre redevient absent. Risque d’échec opératoire.'});
     }
     const cancel=surgery.querySelector<HTMLButtonElement>('[data-surgery-cancel]')!;cancel.disabled=!view.canCancel;cancel.hidden=!view.canCancel;
   }

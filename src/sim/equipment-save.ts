@@ -1,3 +1,4 @@
+import {isSchema272OrLater} from './schema-compatibility-257.ts';
 import {isSpearItem272} from './spear-content-272.ts';
 import {isLongswordItem270} from './longsword-content-270.ts';
 import {isMaceItem269} from './mace-content-269.ts';
@@ -25,7 +26,7 @@ export function validEquipmentShape(p:Record<string,unknown>,version:number):boo
 export function validWeaponShape(p:Record<string,unknown>,version:number):boolean {
   if(p.kind!=='weapon')return p.weapon===undefined;
   const w=p.weapon;
-  return version>=52&&isWeaponItem(p.item)&&(version>=269||!isMaceItem269(p.item))&&(version>=270||!isLongswordItem270(p.item))&&(version===272||!isSpearItem272(p.item))&&(version>=208||p.item!=='emp-launcher')&&(version>=88||p.item==='revolver')&&record(p.owner)&&p.owner.type!=='job'&&record(w)&&Object.keys(w).every(k=>['quality','hitPoints','forbidden'].includes(k))
+  return version>=52&&isWeaponItem(p.item)&&(version>=269||!isMaceItem269(p.item))&&(version>=270||!isLongswordItem270(p.item))&&(isSchema272OrLater(version)||!isSpearItem272(p.item))&&(version>=208||p.item!=='emp-launcher')&&(version>=88||p.item==='revolver')&&record(p.owner)&&p.owner.type!=='job'&&record(w)&&Object.keys(w).every(k=>['quality','hitPoints','forbidden'].includes(k))
     &&typeof w.quality==='string'&&(WEAPON_QUALITIES as readonly string[]).includes(w.quality)
     &&typeof w.hitPoints==='number'&&Number.isInteger(w.hitPoints)&&w.hitPoints>0&&w.hitPoints<=weaponMaxHitPoints(p.item)
     &&(w.forbidden===undefined||w.forbidden===true)&&p.quantity===1;

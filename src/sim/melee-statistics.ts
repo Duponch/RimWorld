@@ -34,7 +34,7 @@ export function meleeTools(world:World,pawn:Pawn,body=()=>pawnBody(pawn)):MeleeT
   const add=(id:MeleeToolId,damage:number,kind:MeleeDamage,factor=1,penetration=damage*.015)=>{const cooldownCore=meleeRecoveryCore(id);tools.push({id,damage,kind,penetration,cooldownCore,weight:damage*(1+penetration)/(cooldownCore/60)*factor});};
   const exists=(id:typeof HUMAN_BODY[number]['id'])=>!pawn.health||!partMissing(pawn.health,id);
   // LeftHand/RightHand groups are the fingers; missing every finger removes the tool.
-  for(const side of ['left','right'] as const)if(HUMAN_BODY.some(p=>p.groups.includes(`${side}-hand`)&&exists(p.id)))add(`${side}-fist`,8.2,'blunt');
+  for(const side of ['left','right'] as const)if(world.schemaVersion===273&&pawn.health?.artificialParts?.some(p=>p.kind==='prosthetic-arm'&&p.part===`${side}-shoulder`)||HUMAN_BODY.some(p=>p.groups.includes(`${side}-hand`)&&exists(p.id)))add(`${side}-fist`,8.2,'blunt');
   if(exists('jaw'))add('teeth',8.2,'bite',.07);
   if(exists('head'))add('head',5,'blunt',.2);
   const weapon=equippedWeapon(world,pawn);

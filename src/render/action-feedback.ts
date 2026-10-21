@@ -1,6 +1,6 @@
 import { extractTreeDefinition } from '../sim/tree-transfer-rules';
 import { isMinifiedTree } from '../sim/tree-transfer-state';
-import { WOODEN_PARTS } from '../sim/artificial-parts';
+import { ARTIFICIAL_PARTS } from '../sim/artificial-parts-rules';
 import { readProjectProgress, researchCost } from '../sim/research';
 import { ANIMAL_FEED_TICKS } from '../sim/animal-feeding-rules';
 import { BURIAL_TICKS } from '../sim/burial';
@@ -51,7 +51,7 @@ export function actionProgress(world:World,pawn:Pawn,lookup?:ActionLookup):Actio
     const progress=readProjectProgress(world.research,world.research.project);
     return measured('research',progress?.points??0,researchCost(world.research.project));
   }
-  if(pawn.surgery?.phase==='work')return measured('surgery',pawn.surgery.progress,pawn.surgery.implant ? WOODEN_PARTS[pawn.surgery.implant].work : SURGERY_WORK);
+  if(pawn.surgery?.phase==='work')return measured('surgery',pawn.surgery.progress,pawn.surgery.implant ? ARTIFICIAL_PARTS[pawn.surgery.implant].work : pawn.surgery.removeArtificial273 ? 2000 : SURGERY_WORK);
   if(pawn.burial?.phase==='bury')return measured('burial',pawn.burial.progress,BURIAL_TICKS);
   if(pawn.animalFeed?.phase==='feed')return measured('feeding',pawn.animalFeed.progress,ANIMAL_FEED_TICKS);
   if(pawn.equipmentTask){

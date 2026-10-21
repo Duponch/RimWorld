@@ -1,4 +1,5 @@
 import {ITEM_DEFINITIONS,type ItemId} from './items.ts';
+import {isProstheticItem273} from './prosthetic-content-273.ts';
 import type {PreparingGroup} from './group-capture.ts';
 import type {MaterialPile,World} from './types.ts';
 import type {PackedFurniture} from './furniture-rules.ts';
@@ -15,6 +16,7 @@ export function regularGroupFreight258(pile:MaterialPile,version:number):boolean
  return regularGroupFreightItem258(pile.item,version);
 }
 export function regularGroupFreightItem258(item:ItemId,version:number):boolean {
+ if(isProstheticItem273(item))return version===273&&groupCaravanUnitMass256(item,true,version)!==undefined;
  if(item==='hops'||item==='wort'||item==='beer')return version>=265&&groupCaravanUnitMass256(item,true,version)!==undefined;
  return version>=258&&['medicine','component','advanced-component','weapon','apparel','blocks','gold','plasteel','uranium','jade','chemfuel','neutroamine','textile','wood','steel','chunk'].includes(ITEM_DEFINITIONS[item].kind)&&groupCaravanUnitMass256(item,true,version)!==undefined;
 }

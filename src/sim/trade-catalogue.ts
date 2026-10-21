@@ -22,6 +22,8 @@ function gear(baseMarketValue:number,maxHitPoints:number,visitorHandles:boolean,
   return value(baseMarketValue,visitorHandles,{healthAffectsPrice:true,maxHitPoints,hasQuality:true,sellPriceFactor:weapon?.2:1,...extra});
 }
 export const TRADE_CATALOGUE:Readonly<Partial<Record<ItemId,TradeCatalogueEntry>>>=Object.freeze({
+  'prosthetic-arm':value(258,false,{healthAffectsPrice:true,maxHitPoints:50}),
+  'prosthetic-leg':value(258,false,{healthAffectsPrice:true,maxHitPoints:50}),
   ...Object.fromEntries(SPEAR_ITEMS_272.map(item=>[item,gear(spearBaseValue272(item),spearMaxHitPoints272(item),false,true)])),
   ...Object.fromEntries(LONGSWORD_ITEMS_270.map(item=>[item,gear(longswordBaseValue270(item),longswordMaxHitPoints270(item),false,true)])),
   ...Object.fromEntries(MACE_ITEMS_269.map(item=>[item,gear(maceBaseValue269(item),maceMaxHitPoints269(item),false,true)])),

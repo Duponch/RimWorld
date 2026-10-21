@@ -18,7 +18,7 @@ test('the six wooden sites use the real installation guard and dispatch intent w
   for(const [kind,rule] of Object.entries(WOODEN_PARTS))for(const part of rule.sites){
     const {world,pawn}=patient(part),send=actions(),before=JSON.stringify(world);
     const view=healthSurgeryView(pawn,world);
-    expect(view.installations).toHaveLength(6);
+    expect(view.installations.filter(c=>!c.implant.startsWith('prosthetic-'))).toHaveLength(6);
     const choice=view.installations.find(c=>c.part===part&&c.implant===kind)!;
     expect(choice.reason).toBeUndefined();expect(choice.guidance).toContain('1 bois + 2 médicaments');
     expect(choice.guidance).toContain(`efficacité ${Math.round(rule.efficiency*100)} %`);

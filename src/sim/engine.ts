@@ -1,3 +1,4 @@
+import {cancelProstheticWork273,detachMissingProstheticBills273} from './prosthetic-work-273.ts';
 import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {applyCryptosleep271,processCryptosleepTask271,reconcileCryptosleepTask271} from './cryptosleep-task-271.ts';
 import {cryptosleepUnlocked271} from './research.ts';
@@ -558,7 +559,7 @@ function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
     reconcilePodRescueResults(world);
     syncCarriedAnimals(world);reconcileAnimalRescues(world);reconcileAnimalRest(world);
     reconcileWildlife(world);
-    detachMissingBills(world);detachMissingSmithingBills267(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);reconcileBreakdownJobs(world);reconcileRepairs(world);reconcilePowerFlicks(world);
+    detachMissingBills(world);detachMissingSmithingBills267(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);detachMissingProstheticBills273(world);reconcileBreakdownJobs(world);reconcileRepairs(world);reconcilePowerFlicks(world);
     if(command.type.startsWith('order-')&&'pawnId' in command){const actor=world.pawns.find(p=>p.id===command.pawnId);if(actor)delete actor.flee;}
     reconcilePrisoners(world);reconcileRescues(world);reconcileWarden(world);reconcilePatientRest(world);reconcileTending(world);reconcileSurgery(world);reconcilePasteRequests(world);reconcileFeeding(world);reconcileAnimalFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns){if(pawn.orbitalTrade)reconcileOrbitalTrade(world,pawn);if(pawn.deepWork)reconcileDeepWork(world,pawn);reconcileWeaponMemory(world,pawn);}reconcileOrders(world);const thermal=reconcileTemperature(world);reconcilePlantLighting(world,()=>readPlantLight(world));updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);}
   if(result.ok)reconcileSpikeTrapContacts(world);
@@ -632,7 +633,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
   if(command.type==='climate-adopt'){const adopted=adoptEnvironment(world);if(adopted)event(world,'command','Climat saisonnier et météo activés à partir de maintenant.');return {ok:true};}
   if(command.type==='order-extinguish'){const reason=applyExtinguish(world,command);return reason?refusal('invalid-command',reason):{ok:true};}
   if(command.type==='power-flick')return requestPowerFlick(world,command.structureId,command.on);
-  if(command.type==='cancel-unfinished')return world.piles.some(p=>p.id===command.itemId&&p.smithingWork)?cancelSmithingWork267(world,command.itemId):world.piles.some(p=>p.id===command.itemId&&p.componentWork)?cancelComponentWork(world,command.itemId):world.piles.some(p=>p.id===command.itemId&&p.flakWork)?cancelFlakWork(world,command.itemId):world.piles.some(p=>p.id===command.itemId&&p.artWork)?cancelArtWork(world,command.itemId):world.piles.some(p=>p.id===command.itemId&&p.gunWork)?cancelGunWork(world,command.itemId):cancelUnfinished(world,command.itemId);
+  if(command.type==='cancel-unfinished')return world.piles.some(p=>p.id===command.itemId&&p.prostheticWork273)?cancelProstheticWork273(world,command.itemId):world.piles.some(p=>p.id===command.itemId&&p.smithingWork)?cancelSmithingWork267(world,command.itemId):world.piles.some(p=>p.id===command.itemId&&p.componentWork)?cancelComponentWork(world,command.itemId):world.piles.some(p=>p.id===command.itemId&&p.flakWork)?cancelFlakWork(world,command.itemId):world.piles.some(p=>p.id===command.itemId&&p.artWork)?cancelArtWork(world,command.itemId):world.piles.some(p=>p.id===command.itemId&&p.gunWork)?cancelGunWork(world,command.itemId):cancelUnfinished(world,command.itemId);
   if(command.type==='enable-wildlife'){enableWildlife(world);return {ok:true};}
   if(command.type==='enable-heatwaves'){if(world.gameProfile)return {ok:false,code:'invalid-command',reason:'Le calendrier de canicule historique n’est pas disponible avec ce narrateur.'};enableHeatwaves(world);return {ok:true};}
   if(command.type==='order-orbital-trade'||command.type==='cancel-orbital-trade'||command.type==='orbital-trade-execute')return applyOrbitalTrade(world,command);
@@ -684,7 +685,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
     reconcileDomesticWork(world);wakePlanners(world);return {ok:true};
   }
   if(command.type==='animal-care-policy')return applyAnimalCarePolicy(world,command);
-  if(command.type==='surgery-request'||command.type==='surgery-cancel'||command.type==='surgery-install')return applySurgery(world,command);
+  if(command.type==='surgery-request'||command.type==='surgery-cancel'||command.type==='surgery-remove-prosthetic'||command.type==='surgery-install')return applySurgery(world,command);
   if(command.type==='order-tend')return applyTending(world,command);
   if(command.type==='order-drafted-tend')return applyDraftedTending(world,command);
   if(command.type==='order-consume')return applyConsume(world,command);
@@ -729,7 +730,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
   if(command.type==='cooler-target')return setCoolerTarget(world,command.structureId,command.target);
   if(command.type==='research-project')return selectResearch(world,command.project);
   if(command.type==='bill-add'||command.type==='bill-update'||command.type==='bill-remove'||command.type==='bill-move') {
-    const result=applyBillCommand(world,command,drops);if(result.ok){detachMissingBills(world);detachMissingSmithingBills267(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);wakePlanners(world);refreshStock(world);}return result;
+    const result=applyBillCommand(world,command,drops);if(result.ok){detachMissingBills(world);detachMissingSmithingBills267(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);detachMissingProstheticBills273(world);wakePlanners(world);refreshStock(world);}return result;
   }
   if (command.type === 'area') return applyArea(world, command,drops);
   if (command.type === 'build-line') return applyBuildLine(world, command);
@@ -1028,7 +1029,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     reconcileAllowedAreas(world);advanceWorldCombat(world,trapContacts);
     if(trapContacts){advanceWildlife(world);reconcileAnimalRescues(world);reconcileAnimalRest(world);}
     syncCarriedAnimals(world);advanceLocalEggs256(world,thermal);reconcileAnimalRescues(world);reconcileAnimalRest(world);advanceCorpses(world,thermal);advanceMechanoidCorpses(world);reconcileDomesticWork(world);advanceAnimalProducts(world);advanceHumanCorpses(world);advanceDeathThoughts(world);reconcileBurials(world);reconcileCommercialOnMap(world);
-    detachMissingBills(world);detachMissingSmithingBills267(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);if(world.tick%20===0)reconcileBreakdownJobs(world);reconcileRepairs(world);reconcilePowerFlicks(world);
+    detachMissingBills(world);detachMissingSmithingBills267(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);detachMissingProstheticBills273(world);if(world.tick%20===0)reconcileBreakdownJobs(world);reconcileRepairs(world);reconcilePowerFlicks(world);
     expireStaggers(world);advanceFilth(world,weatherRainRate(world));
     scheduleGrowing(world);
     scheduleRoofs(world);advanceWorldApparelWear(world);reconcilePrisoners(world);reconcileRescues(world);reconcileWarden(world);reconcilePatientRest(world);reconcileTending(world);reconcileSurgery(world);reconcilePasteRequests(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns){if(pawn.orbitalTrade)reconcileOrbitalTrade(world,pawn);if(pawn.deepWork)reconcileDeepWork(world,pawn);reconcileWeaponMemory(world,pawn);}

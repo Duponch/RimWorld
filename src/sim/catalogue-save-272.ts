@@ -1,3 +1,4 @@
+import {isSchema272OrLater} from './schema-compatibility-257.ts';
 import {SPEAR_ITEMS_272} from './spear-content-272.ts';
 import {SPEAR_TOOL_IDS_272} from './spear-combat-272.ts';
 
@@ -22,16 +23,16 @@ function historical(v:unknown):boolean {
 }
 export function validSpearCatalogueDomains272(value:unknown,version:number):boolean {
  try{
-  if(version===272)return true;
-  if(!Number.isSafeInteger(version)||version<1||version>272)return false;
+  if(isSchema272OrLater(version))return true;
+  if(!Number.isSafeInteger(version)||version<1||version>273)return false;
   return !record(value)||DOMAINS.every(k=>historical(value[k]));
  }catch{return false;}
 }
 /** File, full/checkpoint and delta boundaries include retained/off-map owners. */
 export function validSpearHistoricalTransport272(value:unknown,version:number):boolean {
  try{
-  if(version===272)return true;
-  if(!Number.isSafeInteger(version)||version<1||version>272)return false;
+  if(isSchema272OrLater(version))return true;
+  if(!Number.isSafeInteger(version)||version<1||version>273)return false;
   if(!record(value))return true;
   const w=record(value.world)?value.world:value;
   if(!validSpearCatalogueDomains272(w,version))return false;

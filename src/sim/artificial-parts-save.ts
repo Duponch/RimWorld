@@ -2,7 +2,7 @@ import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Prospective direct tumor loss reuses MissingPart, never an installed prosthesis. */
 import {HUMAN_MODEL,modelHasPart,medicalModel} from './body-model.ts';
 import {isWithinPart} from './injury-rules.ts';
-import {WOODEN_PARTS,isWoodenPartKind,isWoodenPartSite} from './artificial-parts-rules.ts';
+import {ARTIFICIAL_PARTS,artificialPartAvailable273,isArtificialPartSite,isWoodenPartSite} from './artificial-parts-rules.ts';
 import {validHumanHealthScaleHeader256} from './native-human-clinical-scale-256.ts';
 import type {ArtificialPart} from './artificial-parts-types.ts';
 import type {MedicalRecord} from './injury-types.ts';
@@ -22,10 +22,10 @@ export function validArtificialParts(record:MedicalRecord,version:number,human=t
   const sites=new Set<string>();
   for(const part of parts){
     if(!object(part)||Reflect.ownKeys(part).length!==3||Object.keys(part).some(k=>!['part','kind','installedAt'].includes(k))
-      ||!isWoodenPartKind(part.kind)||!isWoodenPartSite(part.part)||!WOODEN_PARTS[part.kind].sites.includes(part.part as never)
+      ||!artificialPartAvailable273(part.kind,version)||!isArtificialPartSite(part.part)||!ARTIFICIAL_PARTS[part.kind].sites.includes(part.part)
       ||!integer(part.installedAt,0,record.tick)||sites.has(part.part))return false;
     sites.add(part.part);
-    if(parts.some(other=>other!==part&&(!object(other)||!isWoodenPartSite(other.part)
+    if(parts.some(other=>other!==part&&(!object(other)||!isArtificialPartSite(other.part)
       ||isWithinPart(part.part,other.part,HUMAN_MODEL)||isWithinPart(other.part,part.part,HUMAN_MODEL)))
       ||record.missing.some(m=>isWithinPart(part.part,m.part,HUMAN_MODEL))
       ||record.injuries.some(i=>i.part===part.part?Object.hasOwn(i,'scar')||Object.hasOwn(i,'infection'):isWithinPart(i.part,part.part,HUMAN_MODEL))
@@ -40,7 +40,7 @@ export function validArtificialParts(record:MedicalRecord,version:number,human=t
     if(version>=256&&(nativeHuman||record.animalAgeConditions||!human&&record.body&&medicalModel(record).byId[marker.part]?.nativeDefId)){const d=Object.getOwnPropertyDescriptor(marker,'nonFresh');if(!d||!Object.hasOwn(d,'value')||d.enumerable!==true||d.value!==true||Object.hasOwn(marker,'tended'))return false;continue;}
     if(version<210||!human||marker.nonFresh!==true||Object.hasOwn(marker,'tended'))return false;
     const parent=parts.find(p=>HUMAN_MODEL.byId[marker.part]?.parent===p.part);
-    if(parent?marker.bornAt!==parent.installedAt:!isWoodenPartSite(marker.part)||parts.some(p=>isWithinPart(marker.part,p.part,HUMAN_MODEL)))return false;
+    if(parent?marker.bornAt!==parent.installedAt:!(isWoodenPartSite(marker.part)||version===273&&isArtificialPartSite(marker.part))||parts.some(p=>isWithinPart(marker.part,p.part,HUMAN_MODEL)))return false;
   }
   return true;
 }

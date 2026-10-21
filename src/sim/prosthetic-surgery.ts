@@ -3,7 +3,13 @@ import { allowedAreaReason } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { surgeryRequestReason,medicalSurgerySpeed,surgerySuccessChance,surgeryBaseXp } from './surgery-rules.ts';
-import { WOODEN_PARTS,installWoodenPart } from './artificial-parts.ts';
+import { ARTIFICIAL_PARTS,installArtificialPart } from './artificial-parts.ts';
+import {artificialPartAvailable273} from './artificial-parts-rules.ts';
+import {isProstheticItem273} from './prosthetic-content-273.ts';
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
+import {isWithinPart} from './injury-rules.ts';
+import {groundCapacity,groundPile,nearbyGround} from './ground-placement.ts';
+import {addMaterial,refreshStock} from './materials.ts';
 import { resolveSurgeryOutcome } from './surgery-outcomes.ts';
 import { administerAnesthetic,canAdministerAnesthetic } from './anesthetic.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
@@ -20,11 +26,11 @@ import { captureCleanliness } from './filth-room.ts';
 import { surgeryOutdoors } from './surgery-room.ts';
 import { releaseWork } from './work-release.ts';
 import { interruptWork } from './interrupted-cargo.ts';
-import { planImplantIngredients,validImplantTaskRelations,gatherImplantIngredient,implantIngredientsReady,consumeImplantIngredients } from './surgery-ingredients.ts';
+import { planImplantIngredients,validImplantTaskRelations,gatherImplantIngredient,implantIngredientsReady,consumeImplantIngredients,consumeImplantAnestheticDose273 } from './surgery-ingredients.ts';
 import type { SurgeryTask } from './surgery-state.ts';
 import type { Reachability } from './pathfinding.ts';
 import type { NeedContext } from './needs.ts';
-import type { Cell,Pawn,World } from './types.ts';
+import type { Cell,Pawn,World,MaterialPile } from './types.ts';
 
 const release=(w:World,d:Pawn):void=>{if(!releaseWork(w,d))interruptWork(w,d);};
 export function implantSurgeryReason(w:World,d:Pawn,p:Pawn|undefined,accepted=false):string|undefined {
@@ -34,7 +40,8 @@ export function implantSurgeryReason(w:World,d:Pawn,p:Pawn|undefined,accepted=fa
   if(workPriority(d,'doctor')===0)return 'Médecin est désactivé.';
   if(d.interruptedCargo)return 'Déposer la cargaison avant l’opération.';
   if(w.schemaVersion<210||!p||p===d||!request?.implant)return 'Aucune demande de prothèse valide.';
-  if(d.skills.medicine.level<WOODEN_PARTS[request.implant].medicineSkill)return 'Médecine 3 est requise pour poser cette prothèse.';
+  if(!artificialPartAvailable273(request.implant,w.schemaVersion))return 'Cette prothèse est indisponible dans ce schéma.';
+  if(d.skills.medicine.level<ARTIFICIAL_PARTS[request.implant].medicineSkill)return `Médecine ${ARTIFICIAL_PARTS[request.implant].medicineSkill} est requise pour poser cette prothèse.`;
   const reason=surgeryRequestReason(p,request.part,{implant:request.implant,...task?.consumedMedicine?{allowAnesthetic:true as const}:{}});if(reason)return reason;
   if(task&&(task.implant!==request.implant||task.part!==request.part))return 'La prothèse demandée a changé.';
   if(task?.consumedMedicine&&!medicineAllowed(p,task.consumedMedicine))return 'Le plafond médical du patient interdit ce médicament.';
@@ -56,8 +63,8 @@ export function processImplantSurgery(w:World,d:Pawn,context:NeedContext,doctorG
   if(!allowedAreaServicesAllowed(w,d)){release(w,d);return;}
   const task=d.surgery;if(!task?.implant)return;
   const p=w.pawns.find(p=>p.id===task.patientId);
-  if(d.health&&d.health.tick<w.tick)updatePawnHealth(w,d);
-  if(p?.health&&p.health.tick<w.tick)updatePawnHealth(w,p);
+  if(d.health&&medicalCivilTick271(d.health)<w.tick)updatePawnHealth(w,d);
+  if(p?.health&&medicalCivilTick271(p.health)<w.tick)updatePawnHealth(w,p);
   if(d.surgery!==task)return;
   if(!p||implantSurgeryReason(w,d,p,true)||!validImplantTaskRelations(w,d,p,task)){release(w,d);return;}
   if(task.ingredients?.some(i=>i.stage!=='placed')){if(!gatherImplantIngredient(w,d,task,context))release(w,d);return;}
@@ -66,24 +73,66 @@ export function processImplantSurgery(w:World,d:Pawn,context:NeedContext,doctorG
   if(!task.consumedMedicine){
     const item=implantIngredientsReady(w,d,p,task);
     if(!item||!canAdministerAnesthetic(p.health!)){release(w,d);return;}
-    // All clinical, ownership and capacity guards precede the random draw and
-    // this atomic consumption of the three physically delivered ingredients.
+    if(isProstheticItem273(task.implant)&&!planArtificialRestitution273(w,p,task.part,task.ingredients)){reportRestitutionBlocked273(w,p,context);release(w,d);return;}
+    // Clinical, ownership and capacity guards precede the anesthesia draw.
+    // Historical wood consumes its full ledger here; industrial inputs retain
+    // the actual piece and second dose until the final recipe toil.
     if(!administerAnesthetic(p.health!,()=>healthRandom(w))){release(w,d);return;}
-    consumeImplantIngredients(w,task);task.consumedMedicine=item;task.phase='work';
+    if(isProstheticItem273(task.implant))consumeImplantAnestheticDose273(w,task);else consumeImplantIngredients(w,task);
+    task.consumedMedicine=item;task.phase='work';
     reconcilePawnHealth(w,p);
     context.event(`${d.name} anesthésie ${p.name} et commence la pose de la prothèse.`);
   }
-  d.state='working';d.path=[];task.workCore+=10;
-  task.progress+=10*medicalSurgerySpeed(d,doctorGlow());
-  if(task.progress<WOODEN_PARTS[task.implant].work)return;
+  const gained=10*medicalSurgerySpeed(d,doctorGlow()),finishing=task.progress+gained>=ARTIFICIAL_PARTS[task.implant].work;
+  const restitution=isProstheticItem273(task.implant)&&finishing?planArtificialRestitution273(w,p,task.part,task.ingredients):[];
+  // Local transactional adaptation: prove every return before final dose/piece
+  // consumption, outcome RNG or anatomy. A blocked finish retains valid work.
+  if(!restitution){reportRestitutionBlocked273(w,p,context);return;}
+  d.state='working';d.path=[];task.workCore+=10;task.progress+=gained;
+  if(!finishing)return;
   learnSkill(d.skills.medicine,surgeryBaseXp(task.workCore),d);
+  if(isProstheticItem273(task.implant))consumeImplantIngredients(w,task);
   const bed=w.structures.find(s=>s.id===task.bedId)!;
   const capture=captureCleanliness(w),room=capture.room(bed);
   const chance=surgerySuccessChance({doctor:d,medicine:task.consumedMedicine,bedQuality:bed.quality,bedSurgeryFactor:bedSurgeryFactor(bed,w),recipeFactor:1,patientGlow:patientGlow(bed),roomCleanliness:room?.cleanliness??null,outdoors:surgeryOutdoors(w,bed,capture)});
   const outcome=resolveSurgeryOutcome(p.health!,task.part,chance,()=>healthRandom(w),{allowMissingPart:true});
   p.health=outcome.record;
-  const success=outcome.kind==='success'&&installWoodenPart(p.health,task.part,task.implant);
+  const success=outcome.kind==='success'&&installArtificialPart(p.health,task.part,task.implant);
+  if(success)commitArtificialRestitution273(w,restitution);
   delete p.surgeryRequest;reconcilePawnHealth(w,p);
-  context.event(success?`${d.name} a posé la prothèse « ${WOODEN_PARTS[task.implant].label} » à ${p.name}.`:`La pose de la prothèse de ${p.name} a échoué (${outcome.kind}) ; les matériaux ont été utilisés et des soins peuvent être nécessaires.`);
+  context.event(success?`${d.name} a posé la prothèse « ${ARTIFICIAL_PARTS[task.implant].label} » à ${p.name}.`:`La pose de la prothèse de ${p.name} a échoué (${outcome.kind}) ; les matériaux ont été utilisés et des soins peuvent être nécessaires.`);
   release(w,d);
+}
+
+/** Preflight every displaced added root together, before any random/physical
+ * commit. Each returned root becomes a fresh Thing, never the old input ID.
+ * Existing connected Near placement is retained; no teleport through walls. */
+export function planArtificialRestitution273(w:World,p:Pawn,part:import('./body-definition.ts').BodyPartId,ingredients:readonly import('./surgery-state.ts').SurgicalIngredient[]=[]):MaterialPile[]|null {
+ const removed=p.health?.artificialParts?.filter(old=>isWithinPart(old.part,part))??[];
+ if(!removed.length)return [];
+ if(w.schemaVersion!==273||!Number.isSafeInteger(w.nextId+removed.length))return null;
+ const consumed=new Map<number,number>();
+ for(const i of ingredients){const q=w.piles.find(q=>q.id===i.pileId);if(i.stage!=='placed'||!q||q.item!==i.item||q.owner.type!=='ground'||q.owner.x!==i.cell.x||q.owner.z!==i.cell.z||!Number.isSafeInteger(i.quantity)||i.quantity<1)return null;consumed.set(q.id,(consumed.get(q.id)??0)+i.quantity);if(consumed.get(q.id)!>q.quantity)return null;}
+ const shadow={...w,piles:w.piles.flatMap(q=>{const used=consumed.get(q.id)??0;return used===q.quantity?[]:used?[{...q,quantity:q.quantity-used}]:[q];})},result:MaterialPile[]=[],cells=nearbyGround(w,p);
+ for(const old of removed){
+  const item=isProstheticItem273(old.kind)?old.kind:'wood',cell=cells.find(c=>{const occupied=groundPile(shadow,c);return (!occupied||item==='wood'&&occupied.item==='wood')&&groundCapacity(shadow,c,item)>=1;});
+  if(!cell)return null;
+  const pile:MaterialPile={id:w.nextId+result.length,item,kind:item==='wood'?'wood':'prosthesis',quantity:1,owner:{type:'ground',...cell}};
+  result.push(pile);const target=groundPile(shadow,cell);
+  if(target){const index=shadow.piles.indexOf(target);shadow.piles[index]={...target,quantity:target.quantity+1};}else shadow.piles.push(pile);
+  if(shadow.piles.length>32768)return null;
+ }
+ return result;
+}
+export function commitArtificialRestitution273(w:World,returns:readonly MaterialPile[]):void {
+ if(!returns.length)return;
+ // A fresh Thing identity is allocated for every removed added root, even
+ // when its new wood unit is immediately absorbed by an accessible stack.
+ w.nextId+=returns.length;
+ for(const pile of returns){const target=pile.owner.type==='ground'?groundPile(w,pile.owner):undefined;if(pile.item==='wood'&&target)addMaterial(w,'wood',1,pile.owner,'wood');else w.piles.push(pile);}
+ refreshStock(w);
+}
+export function reportRestitutionBlocked273(w:World,p:Pawn,context:Pick<NeedContext,'event'>):void {
+ const message=`La récupération de la prothèse de ${p.name} attend une place libre au sol. L’opération est en attente.`;
+ if(!w.events.some(e=>e.message===message))context.event(message);
 }

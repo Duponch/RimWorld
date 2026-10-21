@@ -8,15 +8,16 @@ import { MEDICINES,type MedicineItem } from './medicine-rules.ts';
 import { XP_SCALE } from './skills.ts';
 import { SURGICAL_LIMBS,isSurgicalLimb } from './surgery-anatomy.ts';
 import type { Pawn } from './types.ts';
-import { woodenPartInstallReason } from './artificial-parts.ts';
-import type { WoodenPartKind } from './artificial-parts-types.ts';
+import { artificialPartInstallReason,artificialPartRemovalReason273 } from './artificial-parts.ts';
+import type { ArtificialPartKind } from './artificial-parts-types.ts';
 import { isWithinPart } from './injury-rules.ts';
 
 /** Core 1.6.4871 RemoveBodyPart. Request/physical contacts belong to surgery.ts. */
 export const SURGERY_PARTS=SURGICAL_LIMBS;
 export const SURGERY_WORK=2000;
 export const surgeryBaseXp=(workedCoreTicks:number):number=>Math.round(workedCoreTicks*.1*16*XP_SCALE);
-export function surgeryRequestReason(patient:Pawn,part:unknown,options:{allowAnesthetic?:true;implant?:WoodenPartKind}={}):string|undefined {
+export function surgeryRequestReason(patient:Pawn,part:unknown,options:{allowAnesthetic?:true;implant?:ArtificialPartKind;removeArtificial273?:ArtificialPartKind}={}):string|undefined {
+  if(options.removeArtificial273!==undefined)return surgeryRemoveRequestReason273(patient,part,options.removeArtificial273,options);
   if(options.implant!==undefined)return surgeryInstallRequestReason(patient,part,options.implant,options);
   if(!isColonist(patient)||patient.prisoner||patient.visitor||patient.raid||patient.podRescue)return 'Cette opération est réservée aux colons adultes libres.';
   if(patient.age&&biologicalYears(patient.age)<18)return 'Cette opération est réservée aux adultes.';
@@ -36,7 +37,12 @@ export function surgeryInstallRequestReason(patient:Pawn,part:unknown,implant:un
   if(patient.age&&biologicalYears(patient.age)<18)return 'Cette opération est réservée aux adultes.';
   if(patient.state==='dead'||patient.health?.death)return 'Ce colon est décédé.';
   if(patient.health?.anesthetic&&!options.allowAnesthetic)return 'Attendre la disparition de l’anesthésie avant une nouvelle demande.';
-  return woodenPartInstallReason(patient.health,part,implant);
+  return artificialPartInstallReason(patient.health,part,implant);
+}
+export function surgeryRemoveRequestReason273(patient:Pawn,part:unknown,kind:unknown,options:{allowAnesthetic?:true}={}):string|undefined {
+  if(!isColonist(patient)||patient.prisoner||patient.visitor||patient.raid||patient.podRescue||patient.age&&biologicalYears(patient.age)<18)return 'Cette opération est réservée aux colons adultes libres.';
+  if(patient.health?.anesthetic&&!options.allowAnesthetic)return 'Attendre la disparition de l’anesthésie avant une nouvelle demande.';
+  return artificialPartRemovalReason273(patient.health,part,kind);
 }
 
 /** Actual Glow, not the already transformed tending-light factor. */

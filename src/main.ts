@@ -1222,7 +1222,7 @@ function rebuildInspector() {
     createJournalInspection(panel);
     createSkillsInspection(panel);
     createEquipmentInspection(panel,current,send);
-    createHealthInspection(panel,()=>current()?.pawn,send,managed,managed?{request:(pawnId,part)=>send({type:'surgery-request',pawnId,part}),cancel:pawnId=>send({type:'surgery-cancel',pawnId}),install:(pawnId,part,implant)=>send({type:'surgery-install',pawnId,part,implant})}:undefined);
+    createHealthInspection(panel,()=>current()?.pawn,send,managed,managed?{request:(pawnId,part)=>send({type:'surgery-request',pawnId,part}),cancel:pawnId=>send({type:'surgery-cancel',pawnId}),install:(pawnId,part,implant)=>send({type:'surgery-install',pawnId,part,implant}),remove:(pawnId,part)=>send({type:'surgery-remove-prosthetic',pawnId,part})}:undefined);
     if(inspected.prisoner)createPrisonerInspection(panel,current,send);
     if(managed){
       el('manage-work').onclick = () => setPanel('work');
@@ -1600,7 +1600,7 @@ function renderState() {
       cutBlight.onclick=()=>void attempt(()=>client.command({type:'cut-blighted-crops'}));
       chop.onclick=()=>plantOrder('chop');harvest.onclick=()=>plantOrder('harvest');cut.onclick=()=>plantOrder('cut');
       el('cell-materials').textContent = '';
-      updateUnfinishedInspection(el('inspector'),world,pile?.smithingWork||pile?.unfinished||pile?.gunWork||pile?.artWork||pile?.flakWork||pile?.componentWork?pile:undefined,c=>void attempt(()=>client.command(c)));
+      updateUnfinishedInspection(el('inspector'),world,pile?.prostheticWork273||pile?.smithingWork||pile?.unfinished||pile?.gunWork||pile?.artWork||pile?.flakWork||pile?.componentWork?pile:undefined,c=>void attempt(()=>client.command(c)));
       el('cell-job').textContent = job ? `${queryJobStatus(world, job).reason ?? 'En cours'}${constructionDeliveryLabel(world,job) ? ` · Livré : ${constructionDeliveryLabel(world,job)}` : ''}` : '';
       if(structure&&isBedKind(structure.kind))cellDescription += ` · Efficacité du repos : ${Math.round(bedRestEffectiveness(structure)*100)} % · Immunité : ${Math.round(bedImmunityFactor(structure,world)*100)} % · Soins : +${Math.round(bedTendOffset(structure,world)*100)} % · Chirurgie : ×${bedSurgeryFactor(structure,world).toLocaleString('fr-FR')} · Guérison du lit : +${bedHealPerDay(structure)} PV/jour Core`;
       if(structure)cellDescription+=vitalsMonitorInspection(world,structure);

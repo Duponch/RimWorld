@@ -1,3 +1,4 @@
+import {isProstheticItem273,PROSTHETIC_DEFINITIONS_273} from '../sim/prosthetic-content-273';
 import {knownPile256} from './exploration-readers-256';
 import {UNDISCOVERED_CELL_LABEL_256} from '../sim/exploration-visibility-256';
 import {eggSpeciesForItem256} from '../sim/animal-egg-content-v256';
@@ -57,6 +58,12 @@ export function itemInformation(pile:MaterialPile,world?:World):ObjectInformatio
   const mass=commercialItemMassGrams(pile.item);
   if(mass!==undefined&&!pile.mechCorpse)add('Général','Masse unitaire',`${mass/1000} kg`,'Masse utilisée par le chargement des expéditions commerciales ; elle ne limite pas le transport ordinaire sur la carte.');
   if(definition.nutrition)add('Alimentation','Nutrition',String(definition.nutrition/100),'Nutrition par unité consommée. La jauge de nourriture de 100 points représente une unité de nutrition.');
+  if(isProstheticItem273(pile.item)){
+    const rule=PROSTHETIC_DEFINITIONS_273[pile.item];
+    add('Prothèse','Usage','Pose chirurgicale','La pièce réelle est transportée au chevet avec deux médicaments autorisés du même type. Médecine 4 ; la pose peut échouer.');
+    add('Prothèse','Efficacité',`${Math.round(rule.efficiency*100)} %`,'Fonction du membre installé avant les autres effets sur les capacités du patient.');
+    add('Fabrication','Recette','40 acier + 4 composants','Recherche Prothèses après Usinage ; atelier d’usinage alimenté, Artisanat 5. Sans qualité.');
+  }
   if(pile.item==='hops')add('Brassage','Usage','Ingrédient végétal','25 houblons donnent 5 moûts à la brasserie. Le houblon n’est pas proposé comme repas aux personnes ni comme provision de voyage.');
   if(pile.item==='wort'){
     add('Brassage','Usage','Moût à fermenter','Transport apporte physiquement le moût dans un tonneau entre 1 et 30 °C. Le moût ne se boit pas.');

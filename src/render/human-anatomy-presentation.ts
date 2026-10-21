@@ -1,3 +1,4 @@
+import {artificialPartCovering} from '../sim/artificial-parts-rules';
 import { partMissing } from '../sim/injury-state';
 import type { Pawn } from '../sim/types';
 
@@ -14,7 +15,7 @@ export const HUMAN_LIMB_VISUALS=Object.freeze([
 /** Snapshot-adoption projection only. Missing parents (e.g. shoulder) hide
  * their limb subtree; a missing hand/foot never removes its present parent. */
 export function humanLimbVisualMask(pawn:Pick<Pawn,'health'>):number {
-  return pawn.health?HUMAN_LIMB_VISUALS.reduce((mask,{part,bit})=>mask+(partMissing(pawn.health!,part)?bit:0),0):0;
+  return pawn.health?HUMAN_LIMB_VISUALS.reduce((mask,{part,bit})=>mask+(partMissing(pawn.health!,part)&&!artificialPartCovering(pawn.health!,part)?bit:0),0):0;
 }
 
 /** One small exact float32 word in the existing aShape.x stream. Body morph

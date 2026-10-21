@@ -1,3 +1,4 @@
+import {isProstheticItem273} from './prosthetic-content-273.ts';
 import { WEAPON_QUALITIES } from './equipment-rules.ts';
 import { ticksUntilRot } from './food-preservation.ts';
 import { tradeCatalogueEntry } from './trade-catalogue.ts';
@@ -19,7 +20,7 @@ export function tradeHealthFactor(fraction:number):number {
   if(hp<.9)return .5+(hp-.6)*(5/3);
   return 1;
 }
-export function pileMarketValue(pile:Pick<MaterialPile,'item'|'weapon'|'apparel'>):number|undefined {
+export function pileMarketValue(pile:Pick<MaterialPile,'item'|'weapon'|'apparel'|'damage'>):number|undefined {
   const entry=tradeCatalogueEntry(pile.item);if(!entry)return undefined;
   let value=entry.baseMarketValue;
   if(entry.hasQuality){
@@ -28,6 +29,7 @@ export function pileMarketValue(pile:Pick<MaterialPile,'item'|'weapon'|'apparel'
     value+=Math.min(value*(qualityFactors[index]!-1),qualityGains[index]!);
     if(entry.healthAffectsPrice)value*=tradeHealthFactor(state.hitPoints/entry.maxHitPoints);
   }
+  if(isProstheticItem273(pile.item)&&entry.healthAffectsPrice)value*=tradeHealthFactor((entry.maxHitPoints-(pile.damage??0))/entry.maxHitPoints);
   return value>200?roundTradeSilver(value/5)*5:value;
 }
 /** Pricing is separate from permission, source reachability and the atomic transfer.
@@ -38,11 +40,11 @@ export function tradeUnitPrice(pile:MaterialPile,direction:TradeDirection,improv
 }
 /** Settlement's two percentage points follow the Pawn stat clamp. This does
  * not broaden the historical visitor's admissible improvement range. */
-export function settlementTradeUnitPrice(pile:Pick<MaterialPile,'item'|'weapon'|'apparel'>,direction:TradeDirection,negotiatorImprovement:number,priceLoss=0):number|undefined {
+export function settlementTradeUnitPrice(pile:Pick<MaterialPile,'item'|'weapon'|'apparel'|'damage'>,direction:TradeDirection,negotiatorImprovement:number,priceLoss=0):number|undefined {
   if(!Number.isFinite(negotiatorImprovement)||negotiatorImprovement<0||negotiatorImprovement>.395)return undefined;
   return priceWithImprovement(pile,direction,negotiatorImprovement+.02,priceLoss);
 }
-function priceWithImprovement(pile:Pick<MaterialPile,'item'|'weapon'|'apparel'>,direction:TradeDirection,improvement:number,priceLoss:number):number|undefined {
+function priceWithImprovement(pile:Pick<MaterialPile,'item'|'weapon'|'apparel'|'damage'>,direction:TradeDirection,improvement:number,priceLoss:number):number|undefined {
   const marketValue=pileMarketValue(pile),entry=tradeCatalogueEntry(pile.item);
   if(marketValue===undefined||!entry||!Number.isFinite(priceLoss)||priceLoss<0||priceLoss>1)return undefined;
   if(pile.item==='silver')return 1;

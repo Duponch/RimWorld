@@ -1,5 +1,19 @@
 # Guide joueur
 
+## Fabriquer, poser et retirer une prothèse industrielle — V449 qualifiée localement
+
+**Qualification ciblée et parcours natif acquis ; publication à effectuer.** L'ensemble 3 devient prioritaire, sans attendre toutes les armes de l'ensemble 2 ; les glaives sont reportés. Le lot apporte des **bras et jambes**, tandis que cœur, cochléaire et autres implants restent différés.
+
+Après **Usinage**, recherchez **Prothèses**, **600 points**, puis ajoutez **Fabriquer un bras prothétique** ou **Fabriquer une jambe prothétique** à un **atelier d'usinage** utilisable. Activez Artisanat et choisissez un artisan de niveau **5**. Chaque pièce demande **40 acier et 4 composants**, transportés physiquement ; le même auteur conserve son ouvrage et sa progression. Le produit n'a pas de qualité : bras **5 kg**, jambe **8 kg**, **50 PV**, une pièce par pile.
+
+Installez le patient adulte libre dans un lit utilisable, puis demandez la pose dans **Santé → Opérations**. Il faut **un autre médecin de niveau 4**, la bonne pièce et **deux doses de médicaments autorisées**. Le bras remplace le membre à partir de l'épaule ; la jambe remplace sa racine. Un parent naturel absent ou déjà artificiel peut empêcher la pose. La pièce peut remplacer une partie manquante, présente ou en bois, sous réserve des gardes affichées.
+
+La première dose sert à l'anesthésie au début. La pièce et la seconde dose restent déposées pendant le travail puis sont consommées à la fin, avant le résultat. Un échec peut blesser le patient et consomme les ingrédients employés ; annuler ne rembourse pas une dose déjà administrée. **La pose historique du bois conserve sa consommation groupée au début.**
+
+Le bras a **50 % d'efficacité partielle**, la jambe **85 %** ; l'ensemble du corps dépend aussi de l'autre côté et des affections. Une prothèse ne soigne pas les autres blessures. Le retrait d'un bras ou d'une jambe industriels demande **une dose** et une nouvelle opération risquée : il laisse la racine manquante et rend une pièce neuve à **50/50 PV**. Le remplacement d'une jambe, d'une main ou d'un pied de bois restitue **un bois** par partie. Aucun bras ou jambe naturel n'est créé comme objet.
+
+Gardez une place de dépôt pour les pièces retirées : si toutes les sorties ne peuvent pas être conservées, l'opération ne termine pas partiellement la récupération. Les réglages audio muets concernent les contrôles de développement ; les préférences des joueurs et les conséquences cliniques restent actives. [Règles vérifiées, adaptations et état de qualification](industrial-prostheses-v449.md).
+
 ## Fabriquer une lance — V448 publiée
 
 Après **Forge**, terminez **Lames longues**, la recherche existante de **400 points**, au bureau ordinaire ou à un bureau avancé utilisable. Choisissez un artisan de niveau **4**, une **Forge à combustible** ou une **Forge électrique**, puis la facture **Fabriquer une lance**.

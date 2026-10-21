@@ -14,7 +14,7 @@ export function validMechCorpseShape(value:unknown,version:number,tick:number):b
     &&validMechaMedicalRecord(c.health,tick,true,c.mechKind,version)
     &&(c.heading===undefined||typeof c.heading==='number'&&Number.isFinite(c.heading)&&Math.abs(c.heading)<=Math.PI*2)
     &&object(o)&&typeof o.type==='string'&&['ground','pawn'].includes(o.type)
-    &&['corpse','humanCorpse','rot','foodPoison','apparel','weapon','unfinished','artWork','gunWork','flakWork','componentWork','smithingWork'].every(k=>value[k]===undefined);
+    &&['corpse','humanCorpse','rot','foodPoison','apparel','weapon','unfinished','artWork','gunWork','flakWork','componentWork','smithingWork','prostheticWork273'].every(k=>value[k]===undefined);
 }
 export function validMechSalvageLedger(w:World,version:number):boolean {
   const s=w.mechSalvage;

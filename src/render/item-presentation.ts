@@ -21,7 +21,15 @@ export function itemGeometry(item:ItemId,quantity:number=ITEM_DEFINITIONS[item].
   const box=(x:number,y:number,z:number,sx:number,sy:number,sz:number,tint:number=color,ry=0)=>add(undefined,x,y,z,sx,sy,sz,tint,ry);
   const round=(x:number,y:number,z:number,sx:number,sy:number,sz:number,tint:number=color)=>add('item-round',x,y,z,sx,sy,sz,tint);
   const amount=Math.max(.65,Math.min(1,quantity/Math.max(1,definition.stackLimit)));
-  if(item==='beer'){
+  if(item==='prosthetic-arm'||item==='prosthetic-leg'||item==='unfinished-prosthetic'){
+    // Original assembled limb, reused by ground, cargo and portrait batches.
+    const leg=item==='prosthetic-leg',unfinished=item==='unfinished-prosthetic';
+    box(0,.12,-.18,.18,.16,.32);box(0,.12,.15,.15,.14,.30);
+    add('item-disc',0,.12,-.01,.21,.16,.21,0x586b70);
+    box(0,.12,-.36,.23,.19,.09,0x6e7f82);
+    if(!unfinished){box(0,.11,.35,leg?.23:.19,.12,leg?.25:.15);box(0,.205,-.18,.06,.025,.24,0xe0dfc6);}
+    else{box(.19,.07,.16,.10,.10,.18,0x788a8e);box(-.18,.04,-.05,.09,.055,.14,0xb99a5d);}
+  }else if(item==='beer'){
     const count=quantity===1?1:quantity<5?2:3;
     for(let i=0;i<count;i++){
       const x=(i-(count-1)/2)*.20,z=i%2*.08-.04;

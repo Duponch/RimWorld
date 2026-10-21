@@ -1,5 +1,5 @@
-import {isSchema270OrLater,isSchema271OrLater} from './schema-compatibility-257.ts';
-import {CRYPTOSLEEP_RESEARCH_COST271,cryptosleepUnlocked271,LONG_BLADES_RESEARCH_COST,longBladesUnlocked270,smithingUnlocked,BREWING_RESEARCH_COST,GEOTHERMAL_POWER_RESEARCH_COST,geothermalPowerUnlocked,PEMMICAN_RESEARCH_COST,pemmicanUnlocked} from './research.ts';
+import {isSchema272OrLater,isSchema270OrLater,isSchema271OrLater} from './schema-compatibility-257.ts';
+import {PROSTHETICS_RESEARCH_COST273,CRYPTOSLEEP_RESEARCH_COST271,cryptosleepUnlocked271,LONG_BLADES_RESEARCH_COST,longBladesUnlocked270,smithingUnlocked,BREWING_RESEARCH_COST,GEOTHERMAL_POWER_RESEARCH_COST,geothermalPowerUnlocked,PEMMICAN_RESEARCH_COST,pemmicanUnlocked} from './research.ts';
 /** Brewing research is prospective. Owning a recovered brewery or bought beer
  * does not require completing the construction research. */
 export function validBrewingResearchTransport265(world:World,version:number):boolean {
@@ -28,6 +28,21 @@ import { smithyConstructionUnlocked267 } from './research.ts';
 import { isGunRecipe,isFlakRecipe } from './production-recipes.ts';
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
+/** Sparse transport guard for the new research record only. Recovered physical
+ * prostheses need no fabrication knowledge; the runtime gates new work. */
+export function validProstheticsResearchTransport273(world:World,version:number):boolean {
+  try{
+    const state=world.research,p=state?.prosthetics;
+    if(state&&Object.hasOwn(state,'prosthetics')){
+      if(version!==273||!record(p)||Object.getPrototypeOf(p)!==Object.prototype
+        ||!Reflect.ownKeys(p).every(k=>typeof k==='string'&&(k==='points'||k==='completedAt')&&Object.getOwnPropertyDescriptor(p,k)?.enumerable===true&&Object.hasOwn(Object.getOwnPropertyDescriptor(p,k)!,'value'))
+        ||!Object.hasOwn(p,'points')||!int(p.points,0,PROSTHETICS_RESEARCH_COST273)
+        ||(Object.hasOwn(p,'completedAt')?!int(p.completedAt,0,world.tick)||p.points!==PROSTHETICS_RESEARCH_COST273||state.project==='prosthetics':p.points>=PROSTHETICS_RESEARCH_COST273)
+        ||!!researchPrerequisite(world,'prosthetics'))return false;
+    }
+    return state?.project!=='prosthetics'||version===273&&p!==undefined;
+  }catch{return false;}
+}
 /** Existing Smithing research unlocks new construction. A recovered/minified
  * bench is still usable without replaying its construction research. */
 export function validSmithyResearchTransport267(world:World,version:number):boolean {
@@ -133,9 +148,9 @@ export function validMedicineResearchTransport(world:World,version:number):boole
 export function validateResearch(world:World,version:number):string[]{
   const errors:string[]=[],state=world.research;
   if(state!==undefined){
-    const progress=(p:unknown,cost:number,active:boolean,root=false)=>record(p)&&Object.keys(p).every(k=>['points','completedAt',...(root?['project',...(version>=75?['airConditioning']:[]),...(version>=85?['batteries','solarPower']:[]),...(version>=89?['stonecutting','smithing']:[]),...(version>=90?['complexFurniture']:[]),...(version>=101?['machining','gunsmithing']:[]),...(version>=109?['plateArmor','flakArmor']:[]),...(version>=123?['microelectronics','multiAnalyzer','fabrication']:[]),...(version>=139?['advancedFabrication']:[]),...(version>=143?['autodoors']:[]),...(version>=148?['reconArmor']:[]),...(version>=187?['hospitalBed']:[]),...(version>=188?['packagedSurvivalMeals']:[]),...(version>=190?['tubeTelevision']:[]),...(version>=193?['gunTurrets']:[]),...(version>=203?['hydroponics']:[]),...(version>=206?['drugProduction','medicineProduction']:[]),...(version>=211?['sterileMaterials','vitalsMonitor']:[]),...(version>=215?['deepDrilling','groundScanner']:[]),...(version>=217?['nutrientPaste']:[]),...(version>=218?['biofuelRefining']:[]),...(version>=248?['pemmican']:[]),...(version>=264?['geothermalPower']:[]),...(version>=265?['brewing']:[]),...(isSchema270OrLater(version)?['longBlades']:[]),...(isSchema271OrLater(version)?['cryptosleep']:[])]:[])].includes(k))&&int(p.points,0,cost)
+    const progress=(p:unknown,cost:number,active:boolean,root=false)=>record(p)&&Object.keys(p).every(k=>['points','completedAt',...(root?['project',...(version>=75?['airConditioning']:[]),...(version>=85?['batteries','solarPower']:[]),...(version>=89?['stonecutting','smithing']:[]),...(version>=90?['complexFurniture']:[]),...(version>=101?['machining','gunsmithing']:[]),...(version>=109?['plateArmor','flakArmor']:[]),...(version>=123?['microelectronics','multiAnalyzer','fabrication']:[]),...(version>=139?['advancedFabrication']:[]),...(version>=143?['autodoors']:[]),...(version>=148?['reconArmor']:[]),...(version>=187?['hospitalBed']:[]),...(version>=188?['packagedSurvivalMeals']:[]),...(version>=190?['tubeTelevision']:[]),...(version>=193?['gunTurrets']:[]),...(version>=203?['hydroponics']:[]),...(version>=206?['drugProduction','medicineProduction']:[]),...(version>=211?['sterileMaterials','vitalsMonitor']:[]),...(version>=215?['deepDrilling','groundScanner']:[]),...(version>=217?['nutrientPaste']:[]),...(version>=218?['biofuelRefining']:[]),...(version>=248?['pemmican']:[]),...(version>=264?['geothermalPower']:[]),...(version>=265?['brewing']:[]),...(isSchema270OrLater(version)?['longBlades']:[]),...(isSchema271OrLater(version)?['cryptosleep']:[]),...(version===273?['prosthetics']:[])]:[])].includes(k))&&int(p.points,0,cost)
       &&(p.completedAt===undefined?p.points<cost:int(p.completedAt,0,world.tick)&&p.points===cost&&!active);
-    if(version<73||!record(state)||state.project!==null&&state.project!=='complex-clothing'&&(version<75||state.project!=='air-conditioning')&&(version<85||state.project!=='batteries'&&state.project!=='solar-power')&&(version<89||state.project!=='stonecutting'&&state.project!=='smithing')&&(version<90||state.project!=='complex-furniture')&&(version<101||state.project!=='machining'&&state.project!=='gunsmithing')&&(version<109||state.project!=='plate-armor'&&state.project!=='flak-armor')&&(version<123||state.project!=='microelectronics'&&state.project!=='multi-analyzer'&&state.project!=='fabrication')&&(version<139||state.project!=='advanced-fabrication')&&(version<143||state.project!=='autodoors')&&(version<148||state.project!=='recon-armor')&&(version<187||state.project!=='hospital-bed')&&(version<188||state.project!=='packaged-survival-meals')&&(version<190||state.project!=='tube-television')&&(version<193||state.project!=='gun-turrets')&&(version<203||state.project!=='hydroponics')&&(version<206||state.project!=='drug-production'&&state.project!=='medicine-production')&&(version<211||state.project!=='sterile-materials'&&state.project!=='vitals-monitor')&&(version<215||state.project!=='deep-drilling'&&state.project!=='ground-scanner')&&(version<217||state.project!=='nutrient-paste')&&(version<218||state.project!=='biofuel-refining')&&(version<248||state.project!=='pemmican')&&(version<264||state.project!=='geothermal-power')&&(version<265||state.project!=='brewing')&&(!isSchema270OrLater(version)||state.project!=='long-blades')&&(!isSchema271OrLater(version)||state.project!=='cryptosleep')
+    if(version<73||!record(state)||state.project!==null&&state.project!=='complex-clothing'&&(version<75||state.project!=='air-conditioning')&&(version<85||state.project!=='batteries'&&state.project!=='solar-power')&&(version<89||state.project!=='stonecutting'&&state.project!=='smithing')&&(version<90||state.project!=='complex-furniture')&&(version<101||state.project!=='machining'&&state.project!=='gunsmithing')&&(version<109||state.project!=='plate-armor'&&state.project!=='flak-armor')&&(version<123||state.project!=='microelectronics'&&state.project!=='multi-analyzer'&&state.project!=='fabrication')&&(version<139||state.project!=='advanced-fabrication')&&(version<143||state.project!=='autodoors')&&(version<148||state.project!=='recon-armor')&&(version<187||state.project!=='hospital-bed')&&(version<188||state.project!=='packaged-survival-meals')&&(version<190||state.project!=='tube-television')&&(version<193||state.project!=='gun-turrets')&&(version<203||state.project!=='hydroponics')&&(version<206||state.project!=='drug-production'&&state.project!=='medicine-production')&&(version<211||state.project!=='sterile-materials'&&state.project!=='vitals-monitor')&&(version<215||state.project!=='deep-drilling'&&state.project!=='ground-scanner')&&(version<217||state.project!=='nutrient-paste')&&(version<218||state.project!=='biofuel-refining')&&(version<248||state.project!=='pemmican')&&(version<264||state.project!=='geothermal-power')&&(version<265||state.project!=='brewing')&&(!isSchema270OrLater(version)||state.project!=='long-blades')&&(!isSchema271OrLater(version)||state.project!=='cryptosleep')&&(version!==273||state.project!=='prosthetics')
       ||!progress(state,CLOTHING_RESEARCH_COST,state.project==='complex-clothing'||version<75&&state.project!==null,true)
       ||state.airConditioning!==undefined&&(version<75||!progress(state.airConditioning,AIR_CONDITIONING_COST,state.project==='air-conditioning'))
       ||state.project==='air-conditioning'&&!state.airConditioning
@@ -161,6 +176,8 @@ export function validateResearch(world:World,version:number):string[]{
       ||state.project==='sterile-materials'&&!state.sterileMaterials
       ||state.brewing!==undefined&&(version<265||!progress(state.brewing,BREWING_RESEARCH_COST,state.project==='brewing'))
       ||state.project==='brewing'&&!state.brewing
+      ||state.prosthetics!==undefined&&(version!==273||!progress(state.prosthetics,PROSTHETICS_RESEARCH_COST273,state.project==='prosthetics')||!!researchPrerequisite(world,'prosthetics'))
+      ||state.project==='prosthetics'&&!state.prosthetics
       ||state.longBlades!==undefined&&(!isSchema270OrLater(version)||!progress(state.longBlades,LONG_BLADES_RESEARCH_COST,state.project==='long-blades')||!!researchPrerequisite(world,'long-blades'))
       ||state.project==='long-blades'&&!state.longBlades
       ||state.cryptosleep!==undefined&&(!isSchema271OrLater(version)||!progress(state.cryptosleep,CRYPTOSLEEP_RESEARCH_COST271,state.project==='cryptosleep')||!!researchPrerequisite(world,'cryptosleep'))
@@ -195,6 +212,7 @@ export function validateResearch(world:World,version:number):string[]{
       ||state.project==='complex-furniture'&&!state.complexFurniture
       ||state.project==='batteries'&&!state.batteries||state.project==='solar-power'&&!state.solarPower)errors.push('Invalid research project.');
   }
+  if(!validProstheticsResearchTransport273(world,version))errors.push('Invalid or future prosthetics research.');
   if(!validCryptosleepResearchTransport271(world,version))errors.push('Invalid or future cryptosleep research or construction.');
   if(!validLongBladesResearchTransport270(world,version))errors.push('Invalid or future long-blade research or production.');
   if(!validBrewingResearchTransport265(world,version))errors.push('Invalid or future brewing research.');
@@ -335,7 +353,7 @@ export function validLongBladesResearchTransport270(world:World,version:number):
     ||world.piles.some(q=>accept(q.smithingWork?.recipe))
     ||world.pawns.some(q=>accept(q.cooking?.recipe)||q.orders.queue.some(o=>typeof o==='object'&&o!==null&&'cooking'in o&&accept(o.cooking.recipe)));
   };
-  if(version!==272&&usesRecipe(recipe=>recipe==='make-spear'))return false;
+  if(!isSchema272OrLater(version)&&usesRecipe(recipe=>recipe==='make-spear'))return false;
   if(isSchema270OrLater(version)&&longBladesUnlocked270(world))return true;
   return !usesRecipe(recipe=>recipe==='make-longsword'||recipe==='make-spear');
  }catch{return false;}

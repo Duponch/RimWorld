@@ -1,3 +1,4 @@
+import {isProstheticItem273} from './prosthetic-content-273.ts';
 import {isLongswordItem270,longswordMaterial270,LONGSWORD_DEFINITIONS_270} from './longsword-content-270.ts';
 import {isSpearItem272,spearMaterial272,SPEAR_DEFINITIONS_272} from './spear-content-272.ts';
 import {isAncientMonumentKind256,ancientMonumentMaterial256,ancientMonumentMaxHp256,ancientNeutralMaxHp256,ANCIENT_MONUMENT_DEFS_256} from './ancient-monument-props-256.ts';
@@ -56,7 +57,8 @@ export const structureFlammability=(s:Pick<Structure,'kind'|'material'>)=>isAnci
 export const structureLeavesResources=(s:Pick<Structure,'kind'>)=>isAncientMonumentKind256(s.kind)|| (BUILDINGS[s.kind]?.[2]??false);
 export const resourceMaxHp=(r:Pick<Resource,'kind'|'species'>)=>floraDefinition(r)?.hitPoints??(r.kind==='healroot'?60:r.kind==='tree'?200:r.kind==='berries'?120:r.kind==='corn'?150:r.kind==='rock'?0:85);
 export const resourceFlammability=(r:Pick<Resource,'kind'|'species'>)=>floraDefinition(r)?.flammability??(r.kind==='rock'?0:r.kind==='tree'?.8:r.kind==='haygrass'?1.3:1);
-export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=isSmithingApparel267(p.item)?267:193):number {
+export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=isProstheticItem273(p.item)?273:isSmithingApparel267(p.item)?267:193):number {
+  if(isProstheticItem273(p.item))return version===273&&p.kind==='prosthesis'?50:0;
   if(isSmithingApparel267(p.item))return version>=267&&p.kind==='apparel'?APPAREL[p.item].hitPoints:0;
   if(version<256&&(p.item==='flak-pants'||p.item==='plasteel-flak-helmet'))return 0;
   if(p.item==='slag-steel-chunk')return version>=256?300:0;
@@ -73,6 +75,7 @@ export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=isSmithingA
   return p.item==='wood'?150:p.item==='cloth'?80:p.item==='light-leather'?60:p.item==='component'?70:0;
 }
 export function pileFlammability(p:Pick<MaterialPile,'kind'|'item'>):number {
+  if(isProstheticItem273(p.item))return .7;
   if(isSpearItem272(p.item))return SPEAR_DEFINITIONS_272[spearMaterial272(p.item)].flammability;
   if(isLongswordItem270(p.item))return LONGSWORD_DEFINITIONS_270[longswordMaterial270(p.item)].flammability;
   if(isMaceItem269(p.item))return MACE_DEFINITIONS_269[maceMaterial269(p.item)].flammability;
