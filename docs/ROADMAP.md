@@ -1,6 +1,6 @@
 # Plan de développement
 
-**V447 en qualification, non publiée — schéma 271 :** [Caissons de cryptosommeil de colonie](gameplay/cryptosleep-v447.md). Construction et services physiques, suspension et reprise des mêmes adultes libres et biens. Ce caisson ordinaire ne livre pas de victoire ; l’ensemble 2 et les six ensembles restent ouverts.
+**V447 publiée — schéma 271 :** [Caissons de cryptosommeil de colonie](gameplay/cryptosleep-v447.md). Recherche, chantier payé, services et reprise des mêmes adultes libres et biens ; 148 cas acquis par reprises, dix rouges historiques conservés. Présentation et UI natives muettes acquises ; publication 7f020b0c/4397021b vérifiée, sauvegardes publiques inchangées. Ensemble 2 principal ; victoire, six ensembles et cible FPS ouverts.
 
 **V446 publiée — schéma 270 :** [Épées longues dans les six matières](gameplay/longswords-v446.md). Lames longues, fabrication aux deux forges, ouvrage, équipement, trois outils de mêlée et récupération ; 180 cas ciblés acquis par reprises. Présentation et interface natives muettes acquises ; deux notifications de mise en page conservées. Publié 9a7abfbe/déploiement 822a5387, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Ensemble 2 toujours principal ; aucun gain FPS ni clôture des six ensembles.
 
@@ -16,7 +16,7 @@
 
 **V440 — schéma 264 :** [Chaîne géothermique](gameplay/geothermal-power-v440.md). Recherche, construction payée sur geyser existant, 3 600 W, chaleur, entretien, retrait et continuation ; 33cas ciblés acquis par reprises, présentation et construction UI acquises. Migration neutre des trois références ; onze rouges historiques identiques au témoin conservés. Aucun gain FPS global ni clôture Core annoncé.
 
-Schéma 271 en qualification ; dernière production publiée au schéma 270. Migration 270 strictement validée puis numéro seul, sans recherche, personne ou bien rétroactif.
+Schéma courant publié : 271. Migration 270 strictement validée puis numéro seul, sans recherche, personne ou bien rétroactif.
 
 **20 octobre 2026 — mandat de complétion :** [plan canonique des six ensembles Core](development/core-completion-plan-20261020.md). Développement autonome vers une version finale, comparaisons régulières au Core et optimisation continue. Prochain lot : lectures d’environnement et coûts mesurés des Forges ×1 ; puis reprise de chaînes de gameplay cohérentes, sans subordonner tout contenu à une cible FPS. Une colonie reste la référence, voyages et cartes temporaires inclus ; les chronologies ci-dessous restent datées et ne constituent pas un inventaire exhaustif actuel.
 

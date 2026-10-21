@@ -1,6 +1,6 @@
-# Validation courante — V447 en qualification
+# Validation courante — V447 publiée
 
-**V447 en qualification, non publiée — schéma 271 :** [Caissons de cryptosommeil de colonie](../gameplay/cryptosleep-v447.md). Recherche/chantier, services, suspension, propriétaires, destruction et reprise RAW/publique sont le périmètre engagé ; résultats, rouges et réserves restent à finaliser dans la note canonique. Parcours natifs avec effets et musique coupés ; aucune publication ni clôture d’ensemble annoncée.
+**V447 publiée — schéma 271 :** [Caissons de cryptosommeil de colonie](../gameplay/cryptosleep-v447.md). Recherche, chantier payé, services et reprise des mêmes adultes libres et biens ; 148 cas acquis par reprises, dix rouges historiques conservés. Présentation et UI natives muettes acquises ; publication 7f020b0c/4397021b vérifiée, sauvegardes publiques inchangées. Ensemble 2 principal ; victoire, six ensembles et cible FPS ouverts.
 
 **V446 publiée — schéma 270 :** [Épées longues dans les six matières](../gameplay/longswords-v446.md). Lames longues, fabrication aux deux forges, ouvrage, équipement, trois outils de mêlée et récupération ; 180 cas ciblés acquis par reprises. Présentation et interface natives muettes acquises ; deux notifications de mise en page conservées. Publié 9a7abfbe/déploiement 822a5387, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Ensemble 2 toujours principal ; aucun gain FPS ni clôture des six ensembles.
 

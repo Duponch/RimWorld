@@ -1,6 +1,6 @@
 # Guide joueur
 
-## Utiliser un caisson de cryptosommeil — V447 en qualification, non publiée
+## Utiliser un caisson de cryptosommeil — V447 publiée
 
 Après **Multi-analyseur**, lancez **Cryptosommeil** dans Recherche : **2 000 points**, sur un **bureau avancé alimenté et réellement relié à un multi-analyseur alimenté**. Prévoyez un constructeur de niveau **8** et **180 acier, 5 uranium, 4 composants et 1 composant avancé** pour le caisson ordinaire. Les matières doivent être apportées au chantier ; le caisson terminé n’exige pas d’électricité.
 
@@ -10,7 +10,7 @@ Une fois contenu, le même adulte conserve son inventaire, ses vêtements, son �
 
 **Un autre colon doit ouvrir** le caisson, après approche et **300 ticks Core au contact** — 30 ticks locaux. Prévoyez une place de sortie : la personne reprend avec ses biens et la maladie de cryptosommeil. L’avertissement avant l’entrée du dernier colon ne garantit aucun réveil ultérieur ; un adulte à terre peut compter comme autre colon sans pouvoir ouvrir.
 
-Les dégâts peuvent blesser l’occupant, déclencher une détonation et faire perdre des biens si leur dépôt échoue. Abandonner la carte ne réveille pas gratuitement la personne : le même caisson et ses contenus sont conservés par une adaptation déclarée, sans retour garanti vers l’ancien bâtiment. Ce caisson ordinaire ne permet **aucune victoire** ni embarquement spatial. La version en qualification compte **35 projets de recherche** et conserve **16 identités d’armes**. [Règles, adaptations et état des contrôles](cryptosleep-v447.md).
+Les dégâts peuvent blesser l’occupant, déclencher une détonation et faire perdre des biens si leur dépôt échoue. Abandonner la carte ne réveille pas gratuitement la personne : le même caisson et ses contenus sont conservés par une adaptation déclarée, sans retour garanti vers l’ancien bâtiment. Ce caisson ordinaire ne permet **aucune victoire** ni embarquement spatial. La version publiée compte **35 projets de recherche** et conserve **16 identités d’armes**. [Règles, adaptations et état des contrôles](cryptosleep-v447.md).
 
 ## Fabriquer une épée longue — V446 publiée
 

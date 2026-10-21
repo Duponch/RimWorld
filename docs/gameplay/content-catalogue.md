@@ -1,8 +1,8 @@
 # Catalogue de contenu : couverture connue
 
-**V447 en qualification, non publiée — schéma 271 :** [Caissons de cryptosommeil de colonie](cryptosleep-v447.md). **35 projets de recherche** dans la version en qualification ; **16 identités d’armes**, inchangées. Résultats et réserves restent à finaliser dans la note canonique ; le catalogue Core et les six ensembles restent ouverts.
+**V447 publiée — schéma 271 :** [Caissons de cryptosommeil de colonie](cryptosleep-v447.md). Recherche, chantier payé, services et reprise des mêmes adultes libres et biens ; 148 cas acquis par reprises, dix rouges historiques conservés. Présentation et UI natives muettes acquises ; publication 7f020b0c/4397021b vérifiée, sauvegardes publiques inchangées. Ensemble 2 principal ; victoire, six ensembles et cible FPS ouverts.
 
-| Contenu V447 en qualification | Acquisition et usage | Frontières et limites |
+| Contenu V447 publiée | Acquisition et usage | Frontières et limites |
 | --- | --- | --- |
 | Cryptosommeil et caisson ordinaire | Recherche **2 000 points après Multi-analyseur**, bureau avancé alimenté et réellement relié à un analyseur alimenté. Construction **8**, **180 acier, 5 uranium, 4 composants et 1 composant avancé** apportés au chantier. | Bâtiment 1 × 2 orientable, sans consommation électrique propre, qualité ou minification ; adultes libres de la colonie dans ce lot. |
 | Entrée et ouverture | Entrée volontaire ou portage d’un adulte libre à terre ; fermeture réelle de **500 ticks Core**. **Un autre colon** ouvre au contact en **300 ticks Core**, avec place réelle de sortie et maladie de cryptosommeil. | Personne encore active pendant l’approche et la fermeture ; aucun secours ou réveil distant garanti. La confirmation du dernier colon ne fournit pas d’assistant. |

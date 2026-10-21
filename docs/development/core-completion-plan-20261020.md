@@ -1,6 +1,6 @@
 # Elsewhere — plan de complétion Core du 20 octobre 2026
 
-**V447 en qualification, non publiée — schéma 271 :** les [caissons de cryptosommeil de colonie](../gameplay/cryptosleep-v447.md) poursuivent l’ensemble 2 avec recherche, construction et services physiques ; liste locale à 35 projets, catalogue inchangé à 16 armes. Suspension et conservation ne constituent pas une victoire : les six ensembles restent ouverts.
+**V447 publiée — schéma 271 :** [Caissons de cryptosommeil de colonie](../gameplay/cryptosleep-v447.md). Recherche, chantier payé, services et reprise des mêmes adultes libres et biens ; 148 cas acquis par reprises, dix rouges historiques conservés. Présentation et UI natives muettes acquises ; publication 7f020b0c/4397021b vérifiée, sauvegardes publiques inchangées. Ensemble 2 principal ; victoire, six ensembles et cible FPS ouverts.
 
 ## Mandat et référence
 
@@ -40,7 +40,7 @@ Travail concret : supprimer les parcours ou préparations inutiles confirmés pa
 
 **Présent :** agriculture à sept cultures semables, dont le houblon ; brassage, fermentation et bière qualifiés localement et publiés en V441 ; repas et plusieurs séries×4, textile, pierre, art, armes limitées, composants avancés, médecine, biocarburant, récupération et stockage physiques. Recherche commune au poste, bureaux alimentés et multi-analyseur. Commerce local, orbital et caravanier avec biens et fonds finis. **Partiel :** richesse, prix, assortiment commercial, arbre et débouchés. **Manquant :** familles productives et industrielles entières.
 
-L’audit initial comptait31projets locaux contre77définitions concrètes de recherche du Core local ; la liste actuelle en compte **35 avec Cryptosommeil V447 en qualification**, après les 34 de V446 publiée. C’est un repère de catalogue, pas un pourcentage d’achèvement : Électricité est connue initialement ici, des prérequis sont adaptés et Armure de plaques n’avait pas sa recette avant le lotV443. Les sources fermées utiles sont `src/sim/research.ts`, `production-recipes.ts`, `crops.ts`, `equipment-rules.ts` et `trade-catalogue.ts`.
+L’audit initial comptait31projets locaux contre77définitions concrètes de recherche du Core local ; la liste actuelle en compte **35 avec Cryptosommeil V447 publiée**, après les 34 de V446 publiée. C’est un repère de catalogue, pas un pourcentage d’achèvement : Électricité est connue initialement ici, des prérequis sont adaptés et Armure de plaques n’avait pas sa recette avant le lotV443. Les sources fermées utiles sont `src/sim/research.ts`, `production-recipes.ts`, `crops.ts`, `equipment-rules.ts` et `trade-catalogue.ts`.
 
 Travaux à livrer en chaînes complètes :
 
