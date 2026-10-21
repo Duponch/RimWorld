@@ -1,3 +1,4 @@
+import {isSchema273OrLater} from '../sim/schema-compatibility-257.ts';
 import {validProstheticHistoricalTransport273} from '../sim/catalogue-save-273.ts';
 import {validProstheticsResearchTransport273} from '../sim/research-save.ts';
 import {validProstheticWorkShape273,validateProstheticWorks273} from '../sim/prosthetic-work-save-273.ts';
@@ -1188,7 +1189,7 @@ export class SnapshotDecoder {
     if(!Array.isArray(message.world.stockpiles)||message.world.stockpiles.some(zone=>!validStorageConditions(zone,message.world.schemaVersion)))return resync('Plages de qualité ou de PV de réserve invalides pour ce snapshot.');
     if(!validStockpileZones(message.world,message.world.schemaVersion)||message.world.stockpiles.some(zone=>!Number.isInteger(zone.priority)||zone.priority<1||zone.priority>(message.world.schemaVersion>=219?5:4)))return resync('Identité de zone ou priorité de réserve invalide pour ce snapshot.');
     for(const zone of message.world.stockpiles){
-      if(Object.hasOwn(zone.filters??{},'prosthesis')&&(message.world.schemaVersion!==273||typeof zone.filters.prosthesis!=='boolean'))return resync('Filtre de prothèses invalide ou futur.');
+      if(Object.hasOwn(zone.filters??{},'prosthesis')&&(!isSchema273OrLater(message.world.schemaVersion)||typeof zone.filters.prosthesis!=='boolean'))return resync('Filtre de prothèses invalide ou futur.');
       if(Object.hasOwn(zone.filters??{},'jade')&&(message.world.schemaVersion<256||typeof zone.filters.jade!=='boolean'))return resync('Filtre de jade invalide ou futur.');
       if(Object.hasOwn(zone.filters??{},'neutroamine')&&(message.world.schemaVersion<206||typeof zone.filters.neutroamine!=='boolean')
         ||Object.hasOwn(zone.items??{},'neutroamine')&&(message.world.schemaVersion<206||typeof zone.items!.neutroamine!=='boolean'))return resync('Filtre de neutroamine invalide ou futur.');

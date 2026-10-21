@@ -1,3 +1,4 @@
+import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import {anestheticCivilBornAt271} from './anesthetic.ts';
 import { isColonist } from './affiliation.ts';
 import { isBedKind } from './bed-kinds.ts';
@@ -21,15 +22,15 @@ const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v===
 const keys=(v:Record<string,unknown>,required:readonly string[],optional:readonly string[]=[])=>required.every(k=>Object.hasOwn(v,k))&&Object.keys(v).every(k=>required.includes(k)||optional.includes(k));
 type Bounds=Pick<World,'tick'|'width'|'height'|'nextId'>;
 const validChoice=(v:Record<string,unknown>,version:number):boolean=>{
- if(Object.hasOwn(v,'removeArtificial273'))return version===273&&!Object.hasOwn(v,'implant')&&isArtificialPartKind(v.removeArtificial273)&&isArtificialPartSite(v.part)&&ARTIFICIAL_PARTS[v.removeArtificial273].sites.includes(v.part);
+ if(Object.hasOwn(v,'removeArtificial273'))return isSchema273OrLater(version)&&!Object.hasOwn(v,'implant')&&isArtificialPartKind(v.removeArtificial273)&&isArtificialPartSite(v.part)&&ARTIFICIAL_PARTS[v.removeArtificial273].sites.includes(v.part);
  return Object.hasOwn(v,'implant')?artificialPartAvailable273(v.implant,version)&&isArtificialPartSite(v.part)&&ARTIFICIAL_PARTS[v.implant].sites.includes(v.part):isSurgicalLimb(v.part);
 };
 export function validSurgeryRequestShape(value:unknown,version:number,tick:number):boolean {
- return value===undefined||version>=179&&object(value)&&keys(value,['part','requestedAt'],[...version>=210?['implant']:[],...version===273?['removeArtificial273']:[]])&&validChoice(value,version)&&int(value.requestedAt,0,tick);
+ return value===undefined||version>=179&&object(value)&&keys(value,['part','requestedAt'],[...version>=210?['implant']:[],...isSchema273OrLater(version)?['removeArtificial273']:[]])&&validChoice(value,version)&&int(value.requestedAt,0,tick);
 }
 export function validSurgeryTaskShape(value:unknown,version:number,w:Bounds):boolean {
  if(value===undefined)return true;
- if(version<179||!object(value)||!keys(value,['patientId','part','bedId','spot','phase','progress','workCore'],['medicine','consumedMedicine',...version>=210?['implant','ingredients']:[],...version===273?['removeArtificial273']:[]])
+ if(version<179||!object(value)||!keys(value,['patientId','part','bedId','spot','phase','progress','workCore'],['medicine','consumedMedicine',...version>=210?['implant','ingredients']:[],...isSchema273OrLater(version)?['removeArtificial273']:[]])
   ||!int(value.patientId,1,w.nextId-1)||!int(value.bedId,1,w.nextId-1)||!validChoice(value,version)
   ||!object(value.spot)||!keys(value.spot,['x','z'])||!int(value.spot.x,0,w.width-1)||!int(value.spot.z,0,w.height-1)
   ||!['pickup','approach','work'].includes(String(value.phase))||typeof value.progress!=='number'||!Number.isFinite(value.progress)||value.progress<0

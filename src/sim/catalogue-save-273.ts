@@ -1,3 +1,4 @@
+import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import {PROSTHETIC_ITEMS_273,PROSTHETIC_RECIPES_273} from './prosthetic-content-273.ts';
 
 /** Prospective family fence visits actual owners/catalogues, never terrain. */
@@ -21,16 +22,16 @@ function historical(v:unknown):boolean {
 }
 export function validProstheticCatalogueDomains273(value:unknown,version:number):boolean {
  try{
-  if(version===273)return true;
-  if(!Number.isSafeInteger(version)||version<1||version>273)return false;
+  if(isSchema273OrLater(version))return true;
+  if(!Number.isSafeInteger(version)||version<1||version>274)return false;
   return !record(value)||DOMAINS.every(k=>historical(value[k]));
  }catch{return false;}
 }
 /** File, full/checkpoint and delta boundaries include retained/off-map owners. */
 export function validProstheticHistoricalTransport273(value:unknown,version:number):boolean {
  try{
-  if(version===273)return true;
-  if(!Number.isSafeInteger(version)||version<1||version>273)return false;
+  if(isSchema273OrLater(version))return true;
+  if(!Number.isSafeInteger(version)||version<1||version>274)return false;
   if(!record(value))return true;
   const w=record(value.world)?value.world:value;
   if(!validProstheticCatalogueDomains273(w,version))return false;

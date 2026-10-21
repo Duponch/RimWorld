@@ -1,6 +1,7 @@
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {planetTiles} from './planet-geography-256.ts';
 import {WORLD_FACTION_DEFINITIONS_256,worldRelationKind256} from './world-faction-catalog.ts';
+import {worldRelationAfterChange274} from './world-diplomacy-274.ts';
 import type {WorldSurfaceTile} from './world-surface-geography.ts';
 import type {WorldFactionSettlement256,WorldFactionRegistry256} from './world-faction-state.ts';
 import type {WorldEvent} from './types.ts';
@@ -35,13 +36,13 @@ export function advanceSettlementProximity263(root:CampaignState):void {
  const excluded=new Set(f.factions.filter(x=>x.id===f.playerFactionId||f.relations.some(r=>r.aId===Math.min(x.id,f.playerFactionId)&&r.bId===Math.max(x.id,f.playerFactionId)&&r.goodwill===-100)).map(x=>x.id));
  const tiles=planetTiles(root.planet),offsets:SettlementProximityOffset263[]=[];
  for(const home of maps.sites)if(home.kind==='settlement'&&home.tile!==null)offsets.push(...settlementProximityOffsets263(tiles,home.tile,f.settlements,excluded));
- applySettlementProximity263(f,offsets,groups.events,root.tick);
+ applySettlementProximity263(f,offsets,groups.events,root.tick,root.schemaVersion);
 }
 /** Narrow diplomacy responsibility; callers provide offsets from the actual
  * bounded land graph, not a count of invented settlements or people. */
-export function applySettlementProximity263(f:Pick<WorldFactionRegistry256,'playerFactionId'|'relations'|'factions'>,offsets:readonly SettlementProximityOffset263[],events:WorldEvent[],tick:number):void {
+export function applySettlementProximity263(f:Pick<WorldFactionRegistry256,'playerFactionId'|'relations'|'factions'>,offsets:readonly SettlementProximityOffset263[],events:WorldEvent[],tick:number,version=263):void {
  const totals=new Map<number,number>();for(const o of offsets)totals.set(o.factionId,(totals.get(o.factionId)??0)+o.goodwill);
- const changes=[...totals].flatMap(([id,amount])=>{const row=f.relations.find(r=>r.aId===Math.min(id,f.playerFactionId)&&r.bId===Math.max(id,f.playerFactionId));if(!row)return [];const goodwill=Math.max(-100,row.goodwill+amount);return goodwill===row.goodwill?[]:[{row,goodwill,kind:worldRelationKind256(goodwill),id,amount}];});
+ const changes=[...totals].flatMap(([id,amount])=>{const row=f.relations.find(r=>r.aId===Math.min(id,f.playerFactionId)&&r.bId===Math.max(id,f.playerFactionId));if(!row)return [];const goodwill=Math.max(-100,row.goodwill+amount);return goodwill===row.goodwill?[]:[{row,goodwill,kind:version===274?worldRelationAfterChange274(row.kind,goodwill):worldRelationKind256(goodwill),id,amount}];});
  if(!changes.length)return;
  if(!changes.every(c=>writable(c.row,'goodwill')&&writable(c.row,'kind'))||!Array.isArray(events)||!Object.isExtensible(events)||Reflect.ownKeys(events).some(k=>!writable(events,String(k))||k!=='length'&&Object.getOwnPropertyDescriptor(events,k)?.configurable!==true))throw Error('Actual settlement proximity recipients are immutable');
  for(const c of changes){c.row.goodwill=c.goodwill;c.row.kind=c.kind;}

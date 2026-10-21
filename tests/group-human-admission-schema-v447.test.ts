@@ -18,7 +18,7 @@ test('literal admission revisions survive the closed schema family through272 wi
   expect(validGroupAdmission257({revision:2},version),String(version)).toBe(version>=259);
   expect(validGroupAdmission257(undefined,version)).toBe(true);
  }
- for(const version of [256,274,270.5,NaN])for(const revision of [1,2])expect(validGroupAdmission257({revision},version)).toBe(false);
+ for(const version of [256,275,270.5,NaN])for(const revision of [1,2])expect(validGroupAdmission257({revision},version)).toBe(false);
 });
 
 test('admission remains strict plain data and never reads accessors',()=>{
@@ -32,7 +32,7 @@ test('admission remains strict plain data and never reads accessors',()=>{
 test('number-only continuation retains the same preparation references and closed rejection boundaries',()=>{
  const {w,g,prep}=preparation(),before=JSON.stringify(g);
  for(const version of [259,260,261,262,263,264,265,266,267,268,269,270,271,272])expect(validGroupHumanPreparation257(prep,w,g,version,true),String(version)).toBe(true);
- for(const version of [256,274,270.5,NaN])expect(validGroupHumanPreparation257(prep,w,g,version,true)).toBe(false);
+ for(const version of [256,275,270.5,NaN])expect(validGroupHumanPreparation257(prep,w,g,version,true)).toBe(false);
  for(const value of [
   {...prep,releaseIds:[11,11]},
   {...prep,releaseIds:[13]},

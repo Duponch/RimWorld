@@ -1,3 +1,4 @@
+import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import {additionalGroupFreightMass258,groupPackedMassGrams258} from './group-freight-mass-258.ts';
 import {SCHEMA_VERSION} from './types.ts';
 import {physicalTravelUnitMass} from './tree-transfer-mass.ts';
@@ -16,7 +17,7 @@ export type GroupWithTravelPacked256=AwayGroup&{packed?:PackedFurniture[]};
 /** This new contract alone admits real gathered fruits. It does not broaden
  * mass/possession admission of a historical group or an individual trip. */
 export function groupCaravanUnitMass256(item:MaterialPile['item'],freight:boolean,version:number=256):number|undefined {
- if(isProstheticItem273(item))return version===273?commercialItemMassGrams(item,version):undefined;
+ if(isProstheticItem273(item))return isSchema273OrLater(version)?commercialItemMassGrams(item,version):undefined;
  if(isSmithingApparel267(item))return version>=267?commercialItemMassGrams(item,version):undefined;
  if(item==='hops'||item==='wort'||item==='beer')return version>=265?commercialItemMassGrams(item,version):undefined;
  const extra=additionalGroupFreightMass258(item,version);if(extra!==undefined)return extra;

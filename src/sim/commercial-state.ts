@@ -22,6 +22,7 @@ export interface CommercialReceipt {
   sold?:CommercialTextileTotals;
 }
 export interface CivilianPost {
+  gifts274?:import('./group-gift-state-274.ts').CommercialGifts274;
   stockedAt:number;
   rng:number;
   generation:number;

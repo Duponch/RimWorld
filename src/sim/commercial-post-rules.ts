@@ -2,6 +2,7 @@ import { emptyCommercialTextiles,isCommercialTextile,type CommercialTextileTotal
 import { ITEM_DEFINITIONS } from './items.ts';
 import { pileMaxHp } from './thing-damage-rules.ts';
 import type { World } from './types.ts';
+import {validCommercialGifts274} from './group-gift-state-274.ts';
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const keys=(v:Record<string,unknown>,allowed:readonly string[]):boolean=>Object.keys(v).every(k=>allowed.includes(k));
 const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
@@ -11,11 +12,13 @@ const textileTotals=(v:unknown):v is CommercialTextileTotals=>object(v)&&keys(v,
 
 /** Shape-only check for transport and the bounded stock. No map/registry scan. */
 export function validCivilianPostShape(value:unknown,tick:number,nextId=Number.MAX_SAFE_INTEGER,version=185):value is CivilianPost {
-  if(!object(value)||!keys(value,['stockedAt','rng','generation','stock','transactions','silverReceived','bought','recent',...version>=185?['sold','silverPaid']:[]])
+  if(!object(value)||!keys(value,['stockedAt','rng','generation','stock','transactions','silverReceived','bought','recent',...version>=185?['sold','silverPaid']:[],...version===274?['gifts274']:[]])
     ||!integer(value.stockedAt,0,tick)||!integer(value.rng,1,0xffffffff)||!integer(value.generation,1)
     ||!integer(value.transactions)||!integer(value.silverReceived)||!object(value.bought)||!keys(value.bought,['medicine','component'])
     ||!integer(value.bought.medicine)||!integer(value.bought.component)||!Array.isArray(value.stock)||!value.stock.length||value.stock.length>COMMERCIAL_MAX_STOCK
     ||!Array.isArray(value.recent)||value.recent.length!==Math.min(value.transactions,COMMERCIAL_RECEIPTS))return false;
+  if(Object.hasOwn(value,'gifts274')&&!validCommercialGifts274(value.gifts274,version,tick,nextId))return false;
+  const gifts=value.gifts274 as CivilianPost['gifts274'];
   const sales=Object.hasOwn(value,'sold')||Object.hasOwn(value,'silverPaid');
   if(sales&&(!textileTotals(value.sold)||!integer(value.silverPaid,1)||value.sold.cloth+value.sold['muffalo-wool']===0))return false;
   const ids=new Set<number>(),stockTextiles=emptyCommercialTextiles();
@@ -44,7 +47,10 @@ export function validCivilianPostShape(value:unknown,tick:number,nextId=Number.M
   // Sold textiles stay in this stock until the next generation. Lifetime
   // counters bound it above; retained receipts from this generation bound it
   // below, even after older receipts have fallen out of the finite ledger.
-  for(const item of ['cloth','muffalo-wool'] as const)if(stockTextiles[item]>accumulatedSold[item]||stockTextiles[item]<generationSold[item])return false;
+  for(const item of ['cloth','muffalo-wool'] as const){
+    const upper=BigInt(accumulatedSold[item])+BigInt(gifts?.totals[item]??0),giftMinimum=gifts?.recent.filter(r=>r.tick>=Number(value.stockedAt)).reduce((n,r)=>n+BigInt(r.totals[item]),0n)??0n;
+    if(BigInt(stockTextiles[item])>upper||BigInt(stockTextiles[item])<BigInt(generationSold[item])+giftMinimum)return false;
+  }
   if(![silver,medicine,component,silverPaid,sold.cloth,sold['muffalo-wool']].every(Number.isSafeInteger)||silver>value.silverReceived||medicine>value.bought.medicine||component>value.bought.component
     ||silverPaid>paid||sold.cloth>accumulatedSold.cloth||sold['muffalo-wool']>accumulatedSold['muffalo-wool'])return false;
   if(value.transactions<=COMMERCIAL_RECEIPTS&&(silver!==value.silverReceived||medicine!==value.bought.medicine||component!==value.bought.component

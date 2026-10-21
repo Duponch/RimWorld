@@ -1,3 +1,4 @@
+import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import {naturalTerrainWalkable256} from './natural-terrain-movement-256.ts';
 import {foggedCell256} from './exploration-state-256.ts';
 import {canDesignateBridge} from './bridge.ts';
@@ -24,7 +25,7 @@ export type AreaQuery = { ok: false; reason: string; code: CommandResult['code']
   | { ok: true; bounds: AreaBounds; cells: number[]; selected: number; skipped: number; targetZoneId?:number };
 
 export function validStorageSettings(settings: StorageSettings,version:number=SCHEMA_VERSION): boolean {
-  if(settings.filters&&Object.hasOwn(settings.filters,'prosthesis')&&(version!==273||typeof settings.filters.prosthesis!=='boolean'))return false;
+  if(settings.filters&&Object.hasOwn(settings.filters,'prosthesis')&&(!isSchema273OrLater(version)||typeof settings.filters.prosthesis!=='boolean'))return false;
   if(settings.filters&&Object.hasOwn(settings.filters,'jade')&&(version<256||typeof settings.filters.jade!=='boolean'))return false;
   if(settings.filters&&Object.hasOwn(settings.filters,'plant')&&(version<235||typeof settings.filters.plant!=='boolean'))return false;
   if(settings.filters?.corpse!==undefined&&(version<79||typeof settings.filters.corpse!=='boolean'))return false;

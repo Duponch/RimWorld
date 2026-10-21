@@ -1,3 +1,4 @@
+import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import {artificialPartAvailable273} from './artificial-parts-rules.ts';
 import {removeArtificialPart273} from './artificial-parts.ts';
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
@@ -76,7 +77,7 @@ export function applySurgery(world:World,command:SurgeryCommand):CommandResult {
     patient.planCooldown=0;return {ok:true};
   }
   if(command.type==='surgery-install'&&!artificialPartAvailable273(command.implant,world.schemaVersion))return fail('Cette partie ne permet pas encore la pose de prothèses.');
-  if(command.type==='surgery-remove-prosthetic'&&world.schemaVersion!==273)return fail('Cette partie ne permet pas le retrait de prothèses.');
+  if(command.type==='surgery-remove-prosthetic'&&!isSchema273OrLater(world.schemaVersion))return fail('Cette partie ne permet pas le retrait de prothèses.');
   const removed=command.type==='surgery-remove-prosthetic'?patient.health?.artificialParts?.find(p=>p.part===command.part)?.kind:undefined;
   if(command.type==='surgery-remove-prosthetic'&&!removed)return fail('Aucune prothèse installée à retirer.');
   const reason=surgeryRequestReason(patient,command.part,command.type==='surgery-install'?{implant:command.implant}:removed?{removeArtificial273:removed}:{});if(reason)return fail(reason);

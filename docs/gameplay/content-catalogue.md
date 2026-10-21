@@ -1,5 +1,12 @@
 # Catalogue de contenu : couverture connue
 
+| Boucle V450 qualifiée | Acquisition et usage | Limites |
+| --- | --- | --- |
+| Don au comptoir visité | Tissu ou laine de muffalo de la vraie caravane, négociateur disponible, quantités et effet affichés puis transfert entier ou partiel au stock fini. | Pas d’argent payé ; autres biens, personnes/animaux, visiteurs, orbital et paix avec les hostiles hors lot. |
+| Conséquence diplomatique | Prix SELL réel, rendement décroissant Float32, ajustement vers la relation naturelle, plafonds et hystérésis ; reçu distinct des ventes et reprise exacte. | Les noms et producteurs de PNJ restent adaptés. Une alliance ne livre pas encore assistance, fréquence de raids ou diplomatie exhaustive. |
+
+**V450 qualifiée localement — schéma 274 :** [Dons au comptoir d’une faction](diplomatic-gifts-v450.md). Textiles réellement remis, effet diplomatique et reprises exactes ; 118 cas ciblés acquis par reprises, trois anciens rouges UI identiques au témoin conservés. Typage/build, présentation et interface natives muettes acquis ; publication à effectuer, sauvegardes publiques inchangées. **Ensemble 4 principal**, suite vers la victoire de l’ensemble 5 ; aucun gain FPS ni clôture générale.
+
 **V449 publiée — schéma 273 :** [Bras et jambes prothétiques industriels](industrial-prostheses-v449.md). Fabrication payée, pose, remplacement, retrait récupérable et fret ; 114 cas ciblés acquis par reprises, typage/build, présentation et interface natives muettes acquis. Publié0bd422f5/déploiement7813d7e7,20réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. **Ensemble 3 principal**, glaives reportés ; aucun gain FPS ni clôture des six ensembles.
 
 | Contenu V449 publié | Acquisition et usage | Frontières et limites |

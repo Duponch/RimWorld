@@ -17,6 +17,7 @@ import {SnapshotChangeJournal,StructureChangeJournal,ResourceStructureJournal,
  type ResourceStructureCandidate,type SnapshotMessage,type SnapshotAdoption} from './snapshots';
 import {ResidentResourceBaseJournal} from './resident-resource-base-journal';
 import {canReuseResidentAuxiliaryStockpiles} from './resident-auxiliary-sections';
+import {validGiftHistoricalTransport274} from '../sim/diplomatic-gift-transport-274';
 
 const own=(value:object,key:PropertyKey):boolean=>Object.hasOwn(value,key);
 function record(value:unknown):value is Record<string,unknown> {
@@ -122,6 +123,7 @@ function tileChanges(previous:Tile[],raw:unknown):{tiles:Tile[];indices:number[]
 function localShape(raw:unknown,checkpoint:boolean,sparseStructures:boolean,reuseStockpiles=false):string|undefined {
  if(!record(raw))return 'World data record';
  if(!integer(raw.schemaVersion,1,SCHEMA_VERSION))return 'schemaVersion';
+ if(!validGiftHistoricalTransport274(raw,raw.schemaVersion))return 'future diplomatic gift';
  if(!integer(raw.tick))return 'tick';
  if(!integer(raw.nextId,1))return 'nextId';
  if(!integer(raw.width,1,MAX_EXTENDED_MAP_SIZE)||!integer(raw.height,1,MAX_EXTENDED_MAP_SIZE))return 'dimensions';
@@ -181,7 +183,7 @@ export class ResidentPresentationAssembler {
   const header=this.header(packet);if(header==='stale')return {status:'stale'};if(header==='invalid'||packet.type!=='campaign-only'||Object.keys(packet).some(key=>!['type','epoch','revision','stepMs','speed','summary','urgentThreats','geography'].includes(key))||!record(packet.summary))return fail();
   const raw=packet.summary;
   if(!integer(raw.schemaVersion,1,SCHEMA_VERSION)||!integer(raw.tick)||!integer(raw.nextId,1)||!integer(raw.rng,0,0xffffffff)||!Number.isSafeInteger(raw.civilTick)||!projectionReferences(raw,false)
-   ||!rows(raw.events)||!rows(raw.people)||!rows(raw.lossContexts)||!rows(raw.lostMemories)||!rows(raw.incidents)
+   ||!validGiftHistoricalTransport274(raw,raw.schemaVersion)||!rows(raw.events)||!rows(raw.people)||!rows(raw.lossContexts)||!rows(raw.lostMemories)||!rows(raw.incidents)
    ||own(raw,'tiles')||own(raw,'resources')||own(raw,'piles')||own(raw,'pawns')||own(raw,'structures')||own(raw,'jobs')||own(raw,'worldMaps')||own(raw,'worldGroups'))return fail();
   const geographic=this.geography.prepare(raw,packet.geography,own(packet,'geography'),packet.epoch!==this.epoch);if(!geographic.ok)return fail();
   const summary={...geographic.state},view=groupWorld(summary,null),calendar=summary.planet?.revision===3?summary.calendarOrigin:undefined;

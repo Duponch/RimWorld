@@ -5,6 +5,9 @@ import {createScenarioWorld} from '../src/sim/new-game.ts';
 import {SimulationRequestError} from '../src/bridge/protocol.ts';
 import {emptyGroupLedger} from '../src/sim/group-loading.ts';
 import type {GroupPanelAction} from '../src/sim/group-panel-state.ts';
+import type {GroupGiftQuote274} from '../src/sim/group-gift-state-274.ts';
+import type {GroupState} from '../src/sim/group-state.ts';
+import type {MaterialPile} from '../src/sim/types.ts';
 
 /** Focus/identity/content and request boundaries only. Layout, native Tab and
  * actual pointer clipping belong to the composed browser route. */
@@ -140,4 +143,39 @@ test('a refused caravan selection restores the confirmed group, and replacement 
  select.value='2';select.fire('change');await Promise.resolve();await Promise.resolve();expect(select.value).toBe('1');panel.update(confirmed);expect(select.value).toBe('1');expect(select.children[1]).toBe(option);
  find(host,'groupAction','cancel').fire('click');expect(adapters.send).toHaveBeenLastCalledWith({type:'group-cancel',groupId:1});await Promise.resolve();await Promise.resolve();
  panel.resetForReplacement();expect(select.children).toHaveLength(0);expect(select.dataset.key).toBeUndefined();panel.update(confirmed);expect(select.value).toBe('1');expect(select.children[1]).not.toBe(option);panel.dispose();
+});
+
+/** UI projection fixture only: it makes no physical-travel or faction claim. */
+function giftSurface274(){
+ const {host,documentFixture}=dom(),f=setup(),pawn=f.world.pawns[0]!,tile=actualCivilianTile(f.world);
+ const pile:MaterialPile={id:f.world.nextId++,item:'cloth',kind:'textile',quantity:6,owner:{type:'inventory',pawnId:pawn.id}};
+ const mass={grams:180,capacityGrams:35000,rations:0,pemmicanUnits:0,provisionNutrition:0,byMember:[{pawnId:pawn.id,grams:180,capacityGrams:35000}]};
+ const group={id:1,startedAt:f.world.tick,destination:tile,ledger:emptyGroupLedger(),phase:'at-site',members:[pawn],items:[pile],departedAt:f.world.tick,lastPersonalTick:f.world.tick,baseline:{food:0,silver:0,medicine:0,component:0},tile,route:[tile],segment:null,paused:false,arrivedAt:f.world.tick,decisionUntil:f.world.tick+250} as unknown as GroupState;
+ f.world.group=group;f.facts.mass=mass;f.facts.trade={negotiator:pawn,groupSilver:0,postSilver:0,buys:[],sells:[]};
+ let revision='initial';
+ const quote=(lines:readonly {pileId:number;quantity:number}[]):GroupGiftQuote274=>({ok:true,signature:JSON.stringify([revision,lines]),negotiatorId:pawn.id,settlementId:1,settlementName:'Comptoir <atelier>',factionId:2,factionName:'Union <img src=x>',postId:1,recognizedValue:lines.reduce((n,l)=>n+l.quantity*1.2,0),baseGoodwill:.2,naturalGoodwill:0,requestedGain:1,adjustedGain:1,appliedGain:1,goodwillBefore:74,goodwillAfter:75,relationBefore:'neutral',relationAfter:'ally',goods:[{pile,available:6,unitPrice:1.2}],selected:lines.map(l=>({...l,item:'cloth' as const,unitPrice:1.2})),mass});
+ f.facts.gift274=quote([]);f.adapters.quoteGift274=vi.fn<NonNullable<GroupPanelAdapters['quoteGift274']>>((_snapshot,_facts,lines)=>quote(lines));
+ const snapshot={...f.snapshot,group},panel=createGroupPanel(host as unknown as HTMLElement,f.adapters);panel.update(snapshot);
+ const box=find(host,'groupGift274'),input=box.querySelectorAll('*').find(n=>n.tag==='input'&&n.type==='number')!;
+ return {...f,host,documentFixture,panel,snapshot,pile,box,input,revise(){revision='changed';}};
+}
+
+test('V450 gift draft states the real recipient and effect literally; cancellation sends nothing and quantities retain focus',()=>{
+ const f=giftSurface274(),before=JSON.stringify(f.world);
+ expect(f.box.hidden).toBe(false);expect(f.input.getAttribute('aria-label')).toContain('Donner');
+ f.documentFixture.activeElement=f.input;f.input.value='2';f.input.fire('input');
+ const preview=find(f.host,'groupGiftPreview274');expect(preview.textContent).toContain('Union <img src=x>');expect(preview.textContent).toContain('74 → 75');expect(preview.textContent).toContain('Neutre → Alliée');expect(preview.textContent).toContain('2,4');
+ f.panel.update(f.snapshot);expect(f.documentFixture.activeElement).toBe(f.input);expect(f.input.value).toBe('2');
+ const cancel=find(f.host,'groupGiftCancel274');f.documentFixture.activeElement=cancel;cancel.fire('click');expect(f.input.value).toBe('');expect(f.adapters.send).not.toHaveBeenCalled();expect(JSON.stringify(f.world)).toBe(before);f.panel.dispose();
+});
+
+test('V450 changed gift quotes require a fresh preview and an unknown result locks further confirmation',async()=>{
+ const f=giftSurface274(),before=JSON.stringify(f.world),confirm=find(f.host,'groupGiftConfirm274');f.input.value='2';f.input.fire('input');f.revise();
+ confirm.fire('click');await Promise.resolve();expect(f.adapters.send).not.toHaveBeenCalled();expect(f.host.textContent).toContain('Le don a changé');
+ f.adapters.send=vi.fn(()=>Promise.reject(new SimulationRequestError('Réponse perdue','unknown')));
+ confirm.fire('click');await Promise.resolve();await Promise.resolve();await Promise.resolve();
+ expect(f.adapters.send).toHaveBeenCalledOnce();expect(f.adapters.send).toHaveBeenCalledWith(expect.objectContaining({type:'group-gift274',groupId:1,lines:[{pileId:f.pile.id,quantity:2}]}));
+ expect(confirm.getAttribute('aria-disabled')).toBe('true');expect(f.input.readOnly).toBe(true);confirm.fire('click');await Promise.resolve();expect(f.adapters.send).toHaveBeenCalledOnce();
+ expect(JSON.stringify(f.world)).toBe(before);f.panel.resetForReplacement();f.panel.update(f.snapshot);expect(f.input.value).toBe('2'); // Detached old input is never recycled into the replacement surface.
+ const replacement=find(f.host,'groupGift274').querySelectorAll('*').find(n=>n.tag==='input'&&n.type==='number')!;expect(replacement).not.toBe(f.input);expect(replacement.value).toBe('');f.panel.dispose();
 });

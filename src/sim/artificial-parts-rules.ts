@@ -1,3 +1,4 @@
+import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import { BODY_PARTS,type BodyPartId } from './body-definition.ts';
 import type { MedicalRecord } from './injury-types.ts';
 import type { ArtificialPart,ArtificialPartKind,ArtificialPartSite,WoodenPartKind,WoodenPartSite } from './artificial-parts-types.ts';
@@ -15,7 +16,7 @@ export const isWoodenPartSite=(value:unknown):value is WoodenPartSite=>typeof va
 export const ARTIFICIAL_PARTS:Readonly<Record<ArtificialPartKind,{label:string;sites:readonly ArtificialPartSite[];efficiency:number;work:number;medicineSkill:number}>>=Object.freeze({...WOODEN_PARTS,...PROSTHETIC_DEFINITIONS_273});
 export const isArtificialPartKind=(value:unknown):value is ArtificialPartKind=>isWoodenPartKind(value)||isProstheticItem273(value);
 export const isArtificialPartSite=(value:unknown):value is ArtificialPartSite=>isWoodenPartSite(value)||value==='left-shoulder'||value==='right-shoulder';
-export const artificialPartAvailable273=(kind:unknown,version:number):kind is ArtificialPartKind=>isWoodenPartKind(kind)?version>=210:isProstheticItem273(kind)&&version===273;
+export const artificialPartAvailable273=(kind:unknown,version:number):kind is ArtificialPartKind=>isWoodenPartKind(kind)?version>=210:isProstheticItem273(kind)&&isSchema273OrLater(version);
 export const artificialPartIngredient273=(kind:ArtificialPartKind):'wood'|import('./prosthetic-content-273.ts').ProstheticItem273=>isProstheticItem273(kind)?kind:'wood';
 /** Nearest added root, including the root itself. Children remain anatomically
  * missing: capacity workers alone substitute their artificial ancestor. */

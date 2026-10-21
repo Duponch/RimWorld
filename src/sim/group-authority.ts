@@ -1,3 +1,5 @@
+import {quoteGroupGift274,prepareGroupGift274} from './group-gift-274.ts';
+export {quoteGroupGift274} from './group-gift-274.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {newGroupAdmissionRevision259,autoCapturePatient259} from './group-human-admission-259.ts';
 import {estimateGroupTravel} from './group-travel-estimate.ts';
@@ -197,7 +199,7 @@ export function groupPermission(w:World):GroupPermissionView {
     trade={negotiator,...!buy.ok?{refusal:buy.reason}:{},groupSilver:g.items.filter(p=>p.owner.type==='inventory'&&p.item==='silver').reduce((n,p)=>n+p.quantity,0),postSilver:env.post?.stock.filter(p=>p.item==='silver').reduce((n,p)=>n+p.quantity,0)??0,buys:goods(buy,'buy'),sells:goods(sell,'sell')};
     actions.buy={ok:buy.ok,...!buy.ok?{reason:buy.reason}:{}};actions.sell={ok:sell.ok,...!sell.ok?{reason:sell.reason}:{}};
   }
-  return {originTile:away(g)?g.tile:w.expeditionSite?.tile??w.planet?.homeTile??0,originLabel:away(g)?'Groupe':w.expeditionSite?'Expédition':'Foyer',maximumSources:w.schemaVersion>=256?w.piles.length:64,mass:mass?viewMass(mass,items,w.tick,!!g&&mixedGroupProvisions(g)):null,confirmedRoute:away(g)?g.route:[],actions,trade};
+  return {originTile:away(g)?g.tile:w.expeditionSite?.tile??w.planet?.homeTile??0,originLabel:away(g)?'Groupe':w.expeditionSite?'Expédition':'Foyer',maximumSources:w.schemaVersion>=256?w.piles.length:64,mass:mass?viewMass(mass,items,w.tick,!!g&&mixedGroupProvisions(g)):null,confirmedRoute:away(g)?g.route:[],actions,trade,...Number(w.schemaVersion)===274?{gift274:quoteGroupGift274(w,[])}:{}};
 }
 export function cancelPawnGroupPreparation257(w:World,id:number):void {const row=pawnWorldGroup(w,id);if(row)withWorldGroup(w,row.state.id,cancelGroupPreparation);else cancelGroupPreparation(w);}
 export function cancelGroupPreparation(w:World):void {
@@ -246,6 +248,7 @@ export function applyGroupCommand(w:World,c:GroupCommand):CommandResult {
     if(!Number.isSafeInteger(w.planet.nextGroupId+1))return fail('Le registre des groupes est plein.');
     w.group={id:w.planet.nextGroupId++,startedAt:w.tick,destination:w.planet.homeTile,ledger:emptyGroupLedger(),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?{provisions:newGroupProvisions()}:{}),...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA?{freight:newGroupFreight()}:{}),phase:'unloading',memberIds:[...c.memberIds].sort((a,b)=>a-b),...c.animalIds?.length?{animalIds:[...c.animalIds]}:{},pendingPileIds:items.map(p=>p.id),...packs.length?{pendingPackedIds:packs.map(p=>p.building.id)}:{}};return {ok:true};
   }
+  if(c.type==='group-gift274'){const g=w.group;if(!g||g.id!==c.groupId)return fail('La caravane ciblée est absente.');const plan=prepareGroupGift274(w,c.lines,c.quote);if(!plan.ok)return fail(plan.reason);plan.commit();return {ok:true};}
   if(c.type==='group-buy'||c.type==='group-sell'){
     const g=w.group;if(!w.planet||!away(g))return fail('Le commerce exige un groupe présent au comptoir civil.');
     const mass=captureGroupMass(g.members,g.items,freightGroup(g),w.schemaVersion,g.packed,g.animalOwners?.members);if(!mass)return fail('Inventaire du groupe invalide.');

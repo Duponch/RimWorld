@@ -1,3 +1,4 @@
+import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {medicalCivilTick271,validMedicalCivilHeader271} from './suspended-human-clock-271.ts';
 import {isSchema265OrLater} from './schema-compatibility-257.ts';
@@ -74,7 +75,7 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
     // An added shoulder replaces its direct biological clavicle too. This is
     // an owned synthetic-child marker, never permission to lose arbitrary
     // indestructible bones. The full AddedPart guard below checks the rest.
-    const shoulderChild273=version===273&&!animal&&!mechanical&&object(m)&&(m.part==='left-clavicle'||m.part==='right-clavicle')
+    const shoulderChild273=isSchema273OrLater(version)&&!animal&&!mechanical&&object(m)&&(m.part==='left-clavicle'||m.part==='right-clavicle')
       &&Object.getOwnPropertyDescriptor(m,'nonFresh')?.value===true&&Array.isArray(value.artificialParts)
       &&value.artificialParts.some(p=>object(p)&&p.kind==='prosthetic-arm'&&p.part===(m.part==='left-clavicle'?'left-shoulder':'right-shoulder')&&p.installedAt===m.bornAt);
     if(!object(m)||!keys(m,['part','bornAt','tended',...(version>=210&&!animal&&!mechanical||animalNonFresh?['nonFresh']:[])])||!bodyPartExists(m.part)||BODY_PARTS[m.part].parent===null||BODY_PARTS[m.part].conceptual||!BODY_PARTS[m.part].destroyable&&!shoulderChild273&&!(version>=256&&!mechanical&&(Object.hasOwn(value,'animalAgeConditions')||animalNonFresh)&&Object.getOwnPropertyDescriptor(m,'nonFresh')?.value===true)||!integer(m.bornAt,0,value.tick)||m.tended!==undefined&&(mechanical||m.tended!==true))return fail;

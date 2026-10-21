@@ -1,3 +1,4 @@
+import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import {validProstheticWorkShape273} from './prosthetic-work-save-273.ts';
 import { allowedAreaAllows,allowedAreaWorkAllowed } from './allowed-area-state.ts';
 import { ingredientPlaceFree } from './cooking-bills.ts';
@@ -25,7 +26,7 @@ const integer=(value:unknown,min=0,max=Number.MAX_SAFE_INTEGER):boolean=>Number.
 export function beginProstheticWork273(world:World,pawn:Pawn):MaterialPile|null {
   if(!allowedAreaWorkAllowed(world,pawn))return null;
   const task=pawn.cooking,recipe=task?.recipe;
-  if(world.schemaVersion!==273||!task||!isProstheticRecipe273(recipe))return null;
+  if(!isSchema273OrLater(world.schemaVersion)||!task||!isProstheticRecipe273(recipe))return null;
   if(task.ingredients.length===1&&task.ingredients[0]?.item==='unfinished-prosthetic'){
     const ingredient=task.ingredients[0]!,existing=world.piles.find(p=>p.id===ingredient.pileId);
     if(ingredient.quantity!==1||ingredient.stage!=='placed'||existing?.item!=='unfinished-prosthetic'||existing.owner.type!=='ground'||existing.owner.x!==ingredient.cell.x||existing.owner.z!==ingredient.cell.z||!validProstheticWorkShape273(existing as unknown as Record<string,unknown>,world.schemaVersion)||!existing.prostheticWork273||existing.prostheticWork273.recipe!==recipe||existing.prostheticWork273.authorId!==pawn.id||existing.prostheticWork273.billId!==undefined&&existing.prostheticWork273.billId!==task.billId)return null;

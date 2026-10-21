@@ -591,7 +591,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
     if(result.ok){wakePlanners(world);event(world,'command',`${result.affected} plant(s) malade(s) désigné(s) pour coupe, sans récolte.`);}
     return result;
   }
-  if(command.type==='planet-adopt'||command.type==='group-start'||command.type==='group-cancel'||command.type==='group-pause'||command.type==='group-route'||command.type==='group-buy'||command.type==='group-sell'||command.type==='group-unload')return validGroupCommand(command)?applyGroupCommand(world,command):refusal('invalid-command','Commande de groupe invalide.');
+  if(command.type==='planet-adopt'||command.type==='group-start'||command.type==='group-cancel'||command.type==='group-pause'||command.type==='group-route'||command.type==='group-buy'||command.type==='group-sell'||command.type==='group-gift274'||command.type==='group-unload')return validGroupCommand(command,world.schemaVersion)?applyGroupCommand(world,command):refusal('invalid-command','Commande de groupe invalide.');
   if(command.type==='commercial-start'||command.type==='commercial-cancel'||command.type==='commercial-unload')return applyCommercialPreparation(world,command);
   if(command.type==='commercial-buy')return applyCommercialBuy(world,command);
   if(command.type==='commercial-sell')return applyCommercialSell(world,command);

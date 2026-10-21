@@ -1,5 +1,13 @@
 # Guide joueur
 
+### Donner des textiles à une faction
+
+Amenez une caravane au comptoir d’un établissement non hostile, puis ouvrez **Monde → Globe et caravanes → Donner**. Choisissez du tissu ou de la laine de muffalo réellement portés. L’aperçu indique la faction, le comptoir, la valeur reconnue, la bonne volonté et la charge après remise. Les prix affichés sont arrondis pour la lecture ; le calcul conserve leur précision.
+
+**Confirmer le don** remet les biens au stock du comptoir sans argent reçu. **Annuler le don** efface seulement le choix. Un petit don peut rapporter zéro point ; à 100, il peut encore être remis sans gain. Une relation neutre devient alliée à 75, puis conserve son histoire jusqu’aux seuils de rupture. L’alliance n’ajoute pas encore de bouton d’aide militaire. Ce canal ne permet pas de donner aux factions hostiles, aux visiteurs ou aux vaisseaux. [Règles et limites](diplomatic-gifts-v450.md).
+
+**V450 qualifiée localement — schéma 274 :** [Dons au comptoir d’une faction](diplomatic-gifts-v450.md). Textiles réellement remis, effet diplomatique et reprises exactes ; 118 cas ciblés acquis par reprises, trois anciens rouges UI identiques au témoin conservés. Typage/build, présentation et interface natives muettes acquis ; publication à effectuer, sauvegardes publiques inchangées. **Ensemble 4 principal**, suite vers la victoire de l’ensemble 5 ; aucun gain FPS ni clôture générale.
+
 ## Fabriquer, poser et retirer une prothèse industrielle — V449 publiée
 
 **Publié, qualification ciblée et parcours natif acquis.** L'ensemble 3 devient prioritaire, sans attendre toutes les armes de l'ensemble 2 ; les glaives sont reportés. Le lot apporte des **bras et jambes**, tandis que cœur, cochléaire et autres implants restent différés.

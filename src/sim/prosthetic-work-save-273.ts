@@ -1,3 +1,4 @@
+import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import {PROSTHETIC_REQUIREMENTS_273,isProstheticRecipe273,PROSTHETIC_PRODUCTION_WORK_TICKS_273} from './prosthetic-content-273.ts';
 import type {World} from './types.ts';
 const materials=['steel','component'] as const;
@@ -10,7 +11,7 @@ export function validProstheticWorkShape273(p:Record<string,unknown>,version:num
   if(p.item!=='unfinished-prosthetic')return !Object.hasOwn(p,'prostheticWork273');
   const work=p.prostheticWork273,owner=p.owner;
   if(['unfinished','gunWork','flakWork','componentWork','artWork','smithingWork','apparel','weapon','egg','humanCorpse','mechCorpse'].some(k=>Object.hasOwn(p,k)))return false;
-  if(version!==273||p.kind!=='unfinished'||p.quantity!==1||!record(owner)||!['ground','pawn','inventory'].includes(String(owner.type))||!closed(work,['recipe','authorId','progress','parts','billId'])||!['recipe','authorId','progress','parts'].every(k=>Object.hasOwn(work,k))||!isProstheticRecipe273(work.recipe))return false;
+  if(!isSchema273OrLater(version)||p.kind!=='unfinished'||p.quantity!==1||!record(owner)||!['ground','pawn','inventory'].includes(String(owner.type))||!closed(work,['recipe','authorId','progress','parts','billId'])||!['recipe','authorId','progress','parts'].every(k=>Object.hasOwn(work,k))||!isProstheticRecipe273(work.recipe))return false;
   const recipe=work.recipe,required=PROSTHETIC_REQUIREMENTS_273;
   if(!integer(work.authorId,1)||!integer(work.progress,0,PROSTHETIC_PRODUCTION_WORK_TICKS_273*10000)||Object.hasOwn(work,'billId')&&!integer(work.billId,1)||!Array.isArray(work.parts)||work.parts.length<2||work.parts.length>44||Object.keys(work.parts).length!==work.parts.length)return false;
   const totals={steel:0,component:0};

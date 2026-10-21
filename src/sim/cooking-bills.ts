@@ -1,3 +1,4 @@
+import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import {isProstheticRecipe273} from './prosthetic-content-273.ts';
 import {isSchema272OrLater,isSchema269OrLater,isSchema270OrLater} from './schema-compatibility-257.ts';
 import {isSpearItem272} from './spear-content-272.ts';
@@ -34,7 +35,7 @@ export function newCookingBill(id:number,recipe:ProductionRecipe='simple-meal',v
     ...isCremationRecipe(recipe)?{cremationFilter:{colonists:true,strangers:true,fresh:true,rotting:true,desiccated:true}}:{}};
 }
 export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-meal',version:number=SCHEMA_VERSION):value is BillSettings {
-  if(isProstheticRecipe273(recipe)&&version!==273)return false;
+  if(isProstheticRecipe273(recipe)&&!isSchema273OrLater(version))return false;
   if(isSmithingRecipe267(recipe)&&!smithingRecipeAvailable267(recipe,version)||recipe==='smelt-apparel'&&!isSchema267OrLater(version))return false;
   if(recipe==='brew-wort'&&version<265)return false;
   if(recipe==='smelt-slag'&&version<256)return false;

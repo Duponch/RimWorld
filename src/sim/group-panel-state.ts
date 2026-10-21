@@ -17,6 +17,7 @@ export interface GroupTradeView {
   buys:readonly GroupTradeChoice[];sells:readonly GroupTradeChoice[];
 }
 export interface GroupPermissionView {
+  gift274?:import('./group-gift-state-274.ts').GroupGiftQuote274;
   reform?:boolean;originTile:number;originLabel:string;maximumSources:number;
   mass:GroupMassView|null;confirmedRoute:readonly number[];
   actions:Readonly<Record<GroupPanelAction,GroupActionPermission>>;

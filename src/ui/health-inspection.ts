@@ -1,3 +1,4 @@
+import {isSchema273OrLater} from '../sim/schema-compatibility-257.ts';
 import {artificialPartIngredient273} from '../sim/artificial-parts-rules';
 import {isProstheticItem273} from '../sim/prosthetic-content-273';
 import {ITEM_DEFINITIONS} from '../sim/items';
@@ -59,8 +60,8 @@ export function healthSurgeryView(pawn:Pawn,world?:World) {
   return {status,canCancel:!!request&&pawn.state!=='dead'&&!pawn.health?.death,
     choices:SURGERY_PARTS.map(part=>({part,label:BODY_PARTS[part].label,
       reason:request?'Une opération est déjà demandée pour ce colon.':surgeryRequestReason(pawn,part)})),
-    removals:world&&world.schemaVersion===273?(pawn.health?.artificialParts??[]).filter(a=>isProstheticItem273(a.kind)).map(a=>({part:a.part,kind:a.kind,label:`${ARTIFICIAL_PARTS[a.kind].label} · ${BODY_PARTS[a.part].label.toLocaleLowerCase('fr-FR')}`,reason:request?'Une opération est déjà demandée pour ce colon.':surgeryRemoveRequestReason273(pawn,a.part,a.kind)})):[],
-    installations:world&&world.schemaVersion>=210?artificialOperationChoices().filter(choice=>world.schemaVersion===273||!isProstheticItem273(choice.implant)).map(choice=>({...choice,
+    removals:world&&isSchema273OrLater(world.schemaVersion)?(pawn.health?.artificialParts??[]).filter(a=>isProstheticItem273(a.kind)).map(a=>({part:a.part,kind:a.kind,label:`${ARTIFICIAL_PARTS[a.kind].label} · ${BODY_PARTS[a.part].label.toLocaleLowerCase('fr-FR')}`,reason:request?'Une opération est déjà demandée pour ce colon.':surgeryRemoveRequestReason273(pawn,a.part,a.kind)})):[],
+    installations:world&&world.schemaVersion>=210?artificialOperationChoices().filter(choice=>isSchema273OrLater(world.schemaVersion)||!isProstheticItem273(choice.implant)).map(choice=>({...choice,
       reason:request?'Une opération est déjà demandée pour ce colon.':surgeryInstallRequestReason(pawn,choice.part,choice.implant)})):[]};
 }
 

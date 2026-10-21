@@ -1,3 +1,4 @@
+import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import {PROSTHETIC_RESEARCH_COST_273} from './prosthetic-content-273.ts';
 import {isSchema270OrLater,isSchema271OrLater} from './schema-compatibility-257.ts';
 import {CRYPTOSLEEP_RESEARCH_POINTS_271} from './cryptosleep-content-271.ts';
@@ -22,7 +23,7 @@ import type { Cell,CommandResult,Pawn,Structure,World } from './types.ts';
 
 export const RESEARCH_SCALE=1_000_000;
 export const PROSTHETICS_RESEARCH_COST273=PROSTHETIC_RESEARCH_COST_273*RESEARCH_SCALE;
-export const prostheticsUnlocked273=(w:Pick<World,'schemaVersion'|'research'>):boolean=>w.schemaVersion===273&&w.research?.prosthetics?.completedAt!==undefined;
+export const prostheticsUnlocked273=(w:Pick<World,'schemaVersion'|'research'>):boolean=>isSchema273OrLater(w.schemaVersion)&&w.research?.prosthetics?.completedAt!==undefined;
 export const CRYPTOSLEEP_RESEARCH_COST271=CRYPTOSLEEP_RESEARCH_POINTS_271*RESEARCH_SCALE;
 export const cryptosleepUnlocked271=(w:Pick<World,'schemaVersion'|'research'>):boolean=>isSchema271OrLater(w.schemaVersion)&&w.research?.cryptosleep?.completedAt!==undefined;
 export const LONG_BLADES_RESEARCH_COST=400*RESEARCH_SCALE;
@@ -158,7 +159,7 @@ export function researchStationUsable(world:World,station:Structure,project:Rese
   return true;
 }
 export function selectResearch(world:World,project:unknown):CommandResult {
-  if(project==='prosthetics'&&world.schemaVersion!==273)return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};
+  if(project==='prosthetics'&&!isSchema273OrLater(world.schemaVersion))return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};
   if(project==='cryptosleep'&&!isSchema271OrLater(world.schemaVersion))return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};
   if(project==='long-blades'&&!isSchema270OrLater(world.schemaVersion))return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};
   if(project==='brewing'&&world.schemaVersion<265)return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};

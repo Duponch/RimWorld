@@ -89,13 +89,13 @@ test('prosthetic research, actual crafting skill and separate40/4quotas gate the
  expect(validProstheticIngredients273(b.recipe,[{item:'steel',quantity:43},{item:'component',quantity:1}])).toBe(false);
  w.piles.find(q=>q.item==='component')!.quantity=3;refreshStock(w);const before=serializeWorld(w),plan=planCookingOrder(w,p,s.id);
  expect(plan.order).toBeUndefined();expect(serializeWorld(w)).toBe(before);
- const bill=newCookingBill(w.nextId,b.recipe);expect(validBillSettings(bill,b.recipe,272)).toBe(false);expect(validBillSettings(bill,b.recipe,274)).toBe(false);
+ const bill=newCookingBill(w.nextId,b.recipe);expect(validBillSettings(bill,b.recipe,272)).toBe(false);expect(validBillSettings(bill,b.recipe,275)).toBe(false);
 });
 
 test('workpiece guards retain historical authors and cargo but reject forged metadata and future schemas',()=>{
  const {w,p}=prepared();until(w,()=>w.piles.some(q=>q.prostheticWork273&&q.prostheticWork273.progress>0));
  const piece=w.piles.find(q=>q.prostheticWork273)!,record=piece as unknown as Record<string,unknown>;
- expect(validProstheticWorkShape273(record,273)).toBe(true);expect(validProstheticWorkShape273(record,272)).toBe(false);expect(validProstheticWorkShape273(record,274)).toBe(false);
+ expect(validProstheticWorkShape273(record,273)).toBe(true);expect(validProstheticWorkShape273(record,272)).toBe(false);expect(validProstheticWorkShape273(record,275)).toBe(false);
  expect(validProstheticWorkShape273({...record,owner:{type:'inventory',pawnId:p.id}},273)).toBe(true);
  for(const property of ['weapon','apparel','unfinished','gunWork','smithingWork'])expect(validProstheticWorkShape273({...record,[property]:undefined},273)).toBe(false);
  expect(validProstheticWorkShape273({item:'steel',prostheticWork273:undefined},273)).toBe(false);

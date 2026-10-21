@@ -27,7 +27,7 @@ const reject=(reason:string)=>({ok:false as const,reason});
 type ContextResult={ok:true;context:CommercialOwnerContext}|{ok:false;reason:string};
 function captureIndividualTrade(w:World):ContextResult {
   const trip=w.commercialTrip,post=w.civilianPost;
-  if(!trip||trip.phase!=='at-post'||w.tick>trip.decisionUntil||!post||!validCivilianPostShape(post,w.tick,w.nextId))return reject('Le voyageur doit être arrivé au comptoir civil.');
+  if(!trip||trip.phase!=='at-post'||w.tick>trip.decisionUntil||!post||!validCivilianPostShape(post,w.tick,w.nextId,w.schemaVersion))return reject('Le voyageur doit être arrivé au comptoir civil.');
   const p=trip.pawn;
   if(!isColonist(p)||p.prisoner||p.visitor||p.raid||p.podRescue||p.health?.death||p.age&&biologicalYears(p.age)<18)return reject('Le négociateur doit rester un colon adulte libre et capable.');
   const reason=negotiatorRefusal(p);if(reason)return reject(reason);

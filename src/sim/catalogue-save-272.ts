@@ -24,7 +24,7 @@ function historical(v:unknown):boolean {
 export function validSpearCatalogueDomains272(value:unknown,version:number):boolean {
  try{
   if(isSchema272OrLater(version))return true;
-  if(!Number.isSafeInteger(version)||version<1||version>273)return false;
+  if(!Number.isSafeInteger(version)||version<1||version>274)return false;
   return !record(value)||DOMAINS.every(k=>historical(value[k]));
  }catch{return false;}
 }
@@ -32,7 +32,7 @@ export function validSpearCatalogueDomains272(value:unknown,version:number):bool
 export function validSpearHistoricalTransport272(value:unknown,version:number):boolean {
  try{
   if(isSchema272OrLater(version))return true;
-  if(!Number.isSafeInteger(version)||version<1||version>273)return false;
+  if(!Number.isSafeInteger(version)||version<1||version>274)return false;
   if(!record(value))return true;
   const w=record(value.world)?value.world:value;
   if(!validSpearCatalogueDomains272(w,version))return false;

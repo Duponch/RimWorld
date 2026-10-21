@@ -1,3 +1,4 @@
+import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { allowedAreaReason } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
@@ -110,7 +111,7 @@ export function processImplantSurgery(w:World,d:Pawn,context:NeedContext,doctorG
 export function planArtificialRestitution273(w:World,p:Pawn,part:import('./body-definition.ts').BodyPartId,ingredients:readonly import('./surgery-state.ts').SurgicalIngredient[]=[]):MaterialPile[]|null {
  const removed=p.health?.artificialParts?.filter(old=>isWithinPart(old.part,part))??[];
  if(!removed.length)return [];
- if(w.schemaVersion!==273||!Number.isSafeInteger(w.nextId+removed.length))return null;
+ if(!isSchema273OrLater(w.schemaVersion)||!Number.isSafeInteger(w.nextId+removed.length))return null;
  const consumed=new Map<number,number>();
  for(const i of ingredients){const q=w.piles.find(q=>q.id===i.pileId);if(i.stage!=='placed'||!q||q.item!==i.item||q.owner.type!=='ground'||q.owner.x!==i.cell.x||q.owner.z!==i.cell.z||!Number.isSafeInteger(i.quantity)||i.quantity<1)return null;consumed.set(q.id,(consumed.get(q.id)??0)+i.quantity);if(consumed.get(q.id)!>q.quantity)return null;}
  const shadow={...w,piles:w.piles.flatMap(q=>{const used=consumed.get(q.id)??0;return used===q.quantity?[]:used?[{...q,quantity:q.quantity-used}]:[q];})},result:MaterialPile[]=[],cells=nearbyGround(w,p);

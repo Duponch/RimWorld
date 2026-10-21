@@ -3,6 +3,7 @@ import {plainWorldPawnData256} from './world-pawn-save-256.ts';
 import {activeThreat} from './affiliation.ts';
 import {registeredMap,registeredMapId} from './world-map-context.ts';
 import {WORLD_FACTION_DEFINITIONS_256,worldRelationKind256} from './world-faction-catalog.ts';
+import {worldRelationAfterChange274} from './world-diplomacy-274.ts';
 import type {CampaignState,WorldMapRecord} from './world-map-state.ts';
 const writable=(o:object,k:string)=>{const d=Object.getOwnPropertyDescriptor(o,k);return d?Object.hasOwn(d,'value')&&d.writable===true:!(k in o)&&Object.isExtensible(o);};
 /** Site/Settlement MapRemoved is part of the existing owner transaction,
@@ -38,7 +39,7 @@ export function advanceForeignSettlementDefeat263(root:CampaignState):void {
   const faction=factions.factions.find(f=>f.id===t.factionId)!;if(!factions.settlements.some(s=>s.factionId===t.factionId))faction.lifecycle259={revision:1,defeated:true,temporary:faction.lifecycle259?.temporary??false};
   for(const other of factions.factions){if(other.hidden||other.id===factions.playerFactionId||other.id===faction.id)continue;
    const hostile=factions.relations.find(r=>r.aId===Math.min(other.id,faction.id)&&r.bId===Math.max(other.id,faction.id));if(hostile?.kind!=='hostile')continue;
-   const player=factions.relations.find(r=>r.aId===Math.min(other.id,factions.playerFactionId)&&r.bId===Math.max(other.id,factions.playerFactionId));if(!player||WORLD_FACTION_DEFINITIONS_256[other.def].permanentEnemy)continue;player.goodwill=Math.min(100,player.goodwill+20);player.kind=worldRelationKind256(player.goodwill);
+   const player=factions.relations.find(r=>r.aId===Math.min(other.id,factions.playerFactionId)&&r.bId===Math.max(other.id,factions.playerFactionId));if(!player||WORLD_FACTION_DEFINITIONS_256[other.def].permanentEnemy)continue;player.goodwill=Math.min(100,player.goodwill+20);player.kind=Number(root.schemaVersion)===274?worldRelationAfterChange274(player.kind,player.goodwill):worldRelationKind256(player.goodwill);
   }
   root.worldGroups!.events.push({tick:root.tick,type:'command',message:'Les défenseurs de l’établissement étranger sont vaincus ; sa carte devient un établissement détruit.'});if(root.worldGroups!.events.length>80)root.worldGroups!.events.splice(0,root.worldGroups!.events.length-80);
  }

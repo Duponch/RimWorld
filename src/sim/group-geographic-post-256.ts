@@ -18,7 +18,7 @@ export function groupGeographicTradeTarget256(w:World,g:AwayGroup){
 export function arriveGeographicGroupPost256(w:World,g:AwayGroup):boolean {
  const root=registeredCampaign(w),groups=root.worldGroups,factions=root.worldFactions;if(root.planet?.revision!==3||!groups||!factions)return false;
  const record=boundWorldGroup(w);if(!record||record.state!==g)return false;const settlement=factions.settlements.find(s=>s.tile===g.tile);if(!settlement)return false;
- const draft=draftWorldSettlementPost256(factions,settlement.id,g,groups.posts,{seed:localSurfaceMapSeed(root.planet.generationSeed,settlement.tile),tick:w.tick,nextId:w.nextId},groups.nextPostId);if(!draft)return false;
+ const draft=draftWorldSettlementPost256(factions,settlement.id,g,groups.posts,{seed:localSurfaceMapSeed(root.planet.generationSeed,settlement.tile),tick:w.tick,nextId:w.nextId,schemaVersion:w.schemaVersion},groups.nextPostId);if(!draft)return false;
  root.worldFactions=draft.registry;const index=groups.posts.findIndex(p=>p.id===draft.post.id);if(index<0)groups.posts.push(draft.post);else groups.posts[index]=draft.post;
  groups.nextPostId=draft.nextPostId;root.nextId=draft.nextThingId;record.postId=draft.post.id;return true;
 }

@@ -42,7 +42,7 @@ test('a wound acquired after one resume owns its clinical birth across a later h
  p.cryptosleepHeldAt271=150;expect(prepareSuspendedHumanResume271(p,150,180).commit()).toBe(true);delete p.cryptosleepHeldAt271;
  // Three ticks avoid a healing pulse; the wound's age advances only by3.
  active(h,183,59);expect(h.tick-wound.bornAt).toBe(3);expect(wound.bornAt).toBe(110);expect(medicalCivilTick271(h)).toBe(183);
- expect(validMedicalCivilHeader271(h,271)).toBe(true);expect(validMedicalCivilHeader271(h,270)).toBe(false);expect(validMedicalCivilHeader271(h,272)).toBe(true);expect(validMedicalCivilHeader271(h,274)).toBe(false);
+ expect(validMedicalCivilHeader271(h,271)).toBe(true);expect(validMedicalCivilHeader271(h,270)).toBe(false);expect(validMedicalCivilHeader271(h,272)).toBe(true);expect(validMedicalCivilHeader271(h,275)).toBe(false);
 });
 
 test('a terminal medical record retains clinical age while its death date is civil',()=>{
@@ -62,7 +62,7 @@ test('existing and external event memories receive only their own suspended span
  expect(p.bereavement.map(m=>[m.at,m.suspendedTicks])).toEqual([[50,100],[150,50]]);
  expect(memoryAge271(p.bereavement[0]!,50,200)).toBe(50);expect(memoryAge271(p.bereavement[1]!,150,200)).toBe(0);
  expect(p.memories[0]!.expiresAt).toBe(6100);expect(memoryExpiry271(p.memories[0]!,6100)).toBe(6200);
- expect(validSuspendedMemory271(p.bereavement[1],271,200,150)).toBe(true);expect(validSuspendedMemory271(p.bereavement[1],270,200,150)).toBe(false);expect(validSuspendedMemory271(p.bereavement[1],272,200,150)).toBe(true);expect(validSuspendedMemory271(p.bereavement[1],274,200,150)).toBe(false);
+ expect(validSuspendedMemory271(p.bereavement[1],271,200,150)).toBe(true);expect(validSuspendedMemory271(p.bereavement[1],270,200,150)).toBe(false);expect(validSuspendedMemory271(p.bereavement[1],272,200,150)).toBe(true);expect(validSuspendedMemory271(p.bereavement[1],275,200,150)).toBe(false);
  p.cryptosleepHeldAt271=200;p.bereavement.push({otherId:5,kind:'rival-died',at:230,opinion:-40});expect(prepareSuspendedHumanResume271(p,200,300).commit()).toBe(true);
  expect(p.bereavement.map(m=>[m.at,m.suspendedTicks])).toEqual([[50,200],[150,150],[230,70]]);
 });

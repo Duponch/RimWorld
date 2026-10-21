@@ -1,3 +1,4 @@
+import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Prospective direct tumor loss reuses MissingPart, never an installed prosthesis. */
 import {HUMAN_MODEL,modelHasPart,medicalModel} from './body-model.ts';
@@ -40,7 +41,7 @@ export function validArtificialParts(record:MedicalRecord,version:number,human=t
     if(version>=256&&(nativeHuman||record.animalAgeConditions||!human&&record.body&&medicalModel(record).byId[marker.part]?.nativeDefId)){const d=Object.getOwnPropertyDescriptor(marker,'nonFresh');if(!d||!Object.hasOwn(d,'value')||d.enumerable!==true||d.value!==true||Object.hasOwn(marker,'tended'))return false;continue;}
     if(version<210||!human||marker.nonFresh!==true||Object.hasOwn(marker,'tended'))return false;
     const parent=parts.find(p=>HUMAN_MODEL.byId[marker.part]?.parent===p.part);
-    if(parent?marker.bornAt!==parent.installedAt:!(isWoodenPartSite(marker.part)||version===273&&isArtificialPartSite(marker.part))||parts.some(p=>isWithinPart(marker.part,p.part,HUMAN_MODEL)))return false;
+    if(parent?marker.bornAt!==parent.installedAt:!(isWoodenPartSite(marker.part)||isSchema273OrLater(version)&&isArtificialPartSite(marker.part))||parts.some(p=>isWithinPart(marker.part,p.part,HUMAN_MODEL)))return false;
   }
   return true;
 }
