@@ -1,3 +1,4 @@
+import {isSchema275OrLater} from './schema-compatibility-257.ts';
 import {shipChunkNextRandom256} from './ship-chunk-leavings-256.ts';
 import {isPlayerCasket271} from './cryptosleep-state-271.ts';
 import {planCryptosleepRemoval271} from './cryptosleep-removal-271.ts';
@@ -24,6 +25,7 @@ import type { Job, Pawn, World } from './types.ts';
 export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolean {
   const structure = deconstructionTarget(world, job);
   if (!structure || !deconstructionAvailable(world, job, pawn.id)) return false;
+  const reactor=structure.kind==='ship-reactor';if(reactor&&!isSchema275OrLater(world.schemaVersion))return false;
   if(isPlayerCasket271(structure)){const plan=planCryptosleepRemoval271(world,structure,'deconstruct');return plan.ok&&plan.commit();}
   if(isAncientCasket256(structure)){const plan=planEmptyAncientCasketRemoval256(world,structure,'deconstruct');return plan.ok&&plan.commit();}
   const bedOwnership=prepareBedOwnershipTransition256(world,structure,'destroy');
@@ -40,7 +42,7 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   // body identity will be moved there only after all preflights succeed.
   if(graveRelease.corpseId!==null)view.piles.find(p=>p.id===graveRelease.corpseId)!.owner={type:'ground',...graveRelease.cell!};
   const refunds: { item: ItemId; quantity: number; cell: { x:number; z:number } }[] = [];
-  let rng = world.rng, lostWood = 0, lostSteel = 0, lostComponents=0;
+  let rng = world.rng, lostWood = 0, lostSteel = 0, lostComponents=0,lostPlasteel=0,lostUranium=0,lostAdvancedComponents=0;
   if(structure.kind==='glow-pod')rng=shipChunkNextRandom256(rng).rng; // actual singleton leavingsRect, no material/filth under Deconstruct
   const shipRefunds=structure.kind==='ship-chunk'?drawShipChunkDeconstruction256(structure,rng):null;if(shipRefunds)rng=shipRefunds.rng;let shipRefundIndex=0;
   const lostBlocks:Partial<Record<BlockMaterial,number>>={...world.deconstructed.lostBlocks};
@@ -66,6 +68,10 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
     if (cost.item === 'wood') lostWood += cost.quantity - quantity;
     else if(cost.item==='steel')lostSteel += cost.quantity - quantity;
     else if(cost.item==='component')lostComponents+=cost.quantity-quantity;
+    // Prospective reactor only: historical generic removals retain their ledger.
+    else if(reactor&&cost.item==='plasteel')lostPlasteel+=cost.quantity-quantity;
+    else if(reactor&&cost.item==='uranium')lostUranium+=cost.quantity-quantity;
+    else if(reactor&&cost.item==='advanced-component')lostAdvancedComponents+=cost.quantity-quantity;
     else if(isBlockMaterial(cost.item))lostBlocks[cost.item]=(lostBlocks[cost.item]??0)+cost.quantity-quantity;
     else if(world.schemaVersion>=189&&isUpholsteryMaterial(cost.item))lostTextiles[cost.item]=(lostTextiles[cost.item]??0)+cost.quantity-quantity;
   }
@@ -73,7 +79,7 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   const ledger = world.deconstructed;
   const fermentation=fermentationContents265(structure),fermentationLostKey=fermentation?.item==='beer'?'lostBeer':'lostWort';
   if(fermentation&&!Number.isSafeInteger((ledger[fermentationLostKey]??0)+fermentation.quantity))return false;
-  if (![(ledger.lostComponents??0)+lostComponents, ledger.count + 1, ledger.lostWood + lostWood, (ledger.lostSteel ?? 0) + lostSteel, ledger.fuelTicks + fuelTicks,...Object.values(lostBlocks),...Object.values(lostTextiles)].every(Number.isSafeInteger)) return false;
+  if (![(ledger.lostPlasteel275??0)+lostPlasteel,(ledger.lostUranium??0)+lostUranium,(ledger.lostAdvancedComponents271??0)+lostAdvancedComponents,(ledger.lostComponents??0)+lostComponents, ledger.count + 1, ledger.lostWood + lostWood, (ledger.lostSteel ?? 0) + lostSteel, ledger.fuelTicks + fuelTicks,...Object.values(lostBlocks),...Object.values(lostTextiles)].every(Number.isSafeInteger)) return false;
   if(!commitGraveRelease(world,structure,graveRelease))return false;
   commitShelfRemoval(world,shelfRemoval);
   world.structures = structures; world.jobs = jobs; world.rng = rng;
@@ -84,6 +90,9 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   ledger.count++; ledger.lostWood += lostWood; ledger.fuelTicks += fuelTicks;
   if(fermentation)ledger[fermentationLostKey]=(ledger[fermentationLostKey]??0)+fermentation.quantity;
   if(lostComponents)ledger.lostComponents=(ledger.lostComponents??0)+lostComponents;
+  if(lostPlasteel)ledger.lostPlasteel275=(ledger.lostPlasteel275??0)+lostPlasteel;
+  if(lostUranium)ledger.lostUranium=(ledger.lostUranium??0)+lostUranium;
+  if(lostAdvancedComponents)ledger.lostAdvancedComponents271=(ledger.lostAdvancedComponents271??0)+lostAdvancedComponents;
   if (lostSteel) ledger.lostSteel = (ledger.lostSteel ?? 0) + lostSteel;
   if(Object.keys(lostBlocks).length)ledger.lostBlocks=lostBlocks;
   if(Object.keys(lostTextiles).length)ledger.lostTextiles=lostTextiles;

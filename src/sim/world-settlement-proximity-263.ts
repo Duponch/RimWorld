@@ -1,3 +1,4 @@
+import {isSchema274OrLater} from './schema-compatibility-257.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {planetTiles} from './planet-geography-256.ts';
 import {WORLD_FACTION_DEFINITIONS_256,worldRelationKind256} from './world-faction-catalog.ts';
@@ -42,7 +43,7 @@ export function advanceSettlementProximity263(root:CampaignState):void {
  * bounded land graph, not a count of invented settlements or people. */
 export function applySettlementProximity263(f:Pick<WorldFactionRegistry256,'playerFactionId'|'relations'|'factions'>,offsets:readonly SettlementProximityOffset263[],events:WorldEvent[],tick:number,version=263):void {
  const totals=new Map<number,number>();for(const o of offsets)totals.set(o.factionId,(totals.get(o.factionId)??0)+o.goodwill);
- const changes=[...totals].flatMap(([id,amount])=>{const row=f.relations.find(r=>r.aId===Math.min(id,f.playerFactionId)&&r.bId===Math.max(id,f.playerFactionId));if(!row)return [];const goodwill=Math.max(-100,row.goodwill+amount);return goodwill===row.goodwill?[]:[{row,goodwill,kind:version===274?worldRelationAfterChange274(row.kind,goodwill):worldRelationKind256(goodwill),id,amount}];});
+ const changes=[...totals].flatMap(([id,amount])=>{const row=f.relations.find(r=>r.aId===Math.min(id,f.playerFactionId)&&r.bId===Math.max(id,f.playerFactionId));if(!row)return [];const goodwill=Math.max(-100,row.goodwill+amount);return goodwill===row.goodwill?[]:[{row,goodwill,kind:isSchema274OrLater(version)?worldRelationAfterChange274(row.kind,goodwill):worldRelationKind256(goodwill),id,amount}];});
  if(!changes.length)return;
  if(!changes.every(c=>writable(c.row,'goodwill')&&writable(c.row,'kind'))||!Array.isArray(events)||!Object.isExtensible(events)||Reflect.ownKeys(events).some(k=>!writable(events,String(k))||k!=='length'&&Object.getOwnPropertyDescriptor(events,k)?.configurable!==true))throw Error('Actual settlement proximity recipients are immutable');
  for(const c of changes){c.row.goodwill=c.goodwill;c.row.kind=c.kind;}

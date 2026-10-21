@@ -2,12 +2,12 @@ import { FLOOR_DEFINITIONS,isBuildableFloor,isFloorKind,floorAvailable } from '.
 import { FURNITURE_DEFINITIONS,isHabitatFurnitureKind } from '../sim/furniture-stats';
 import { researchUnlocked,type ResearchProject } from '../sim/research';
 import type { World } from '../sim/types';
-import type { Tool } from './layout';
+import type { ArchitectCategory, Tool } from './layout';
 
 /** Research requirements for ordinary construction, without installation's
  * exemptions. Furniture and floors keep their delivered definition as owner. */
 const BUILD_RESEARCH:Readonly<Partial<Record<Tool,ResearchProject>>>=Object.freeze({
-  'cryptosleep-casket':'cryptosleep',vent:'complex-furniture',autodoor:'autodoors','mini-turret':'gun-turrets','vitals-monitor':'vitals-monitor',
+  'ship-reactor':'ship-reactor','cryptosleep-casket':'cryptosleep',vent:'complex-furniture',autodoor:'autodoors','mini-turret':'gun-turrets','vitals-monitor':'vitals-monitor',
   'tube-television':'tube-television',cooler:'air-conditioning',battery:'batteries',
   'fueled-smithy':'smithing','electric-smithy':'smithing',brewery:'brewing','fermenting-barrel':'brewing','geothermal-generator':'geothermal-power','solar-generator':'solar-power','hydroponics-basin':'hydroponics',
   'deep-drill':'deep-drilling','ground-scanner':'ground-scanner',
@@ -22,7 +22,7 @@ const BUILD_RESEARCH:Readonly<Partial<Record<Tool,ResearchProject>>>=Object.free
 /** Existing command/material compatibility boundaries. These describe the
  * format, never the colony's stock, selected material, workers or terrain. */
 const MIN_SCHEMA:Readonly<Partial<Record<Tool,number>>>=Object.freeze({
-  'cryptosleep-casket':271,'fueled-smithy':267,'electric-smithy':267,brewery:265,'fermenting-barrel':265,'geothermal-generator':264,bedroll:256,'torch-lamp':249,'build-bridge':247,'remove-bridge':247,vent:244,'sleeping-spot':232,shelf:229,'small-shelf':229,'spike-trap':226,
+  'ship-reactor':275,'cryptosleep-casket':271,'fueled-smithy':267,'electric-smithy':267,brewery:265,'fermenting-barrel':265,'geothermal-generator':264,bedroll:256,'torch-lamp':249,'build-bridge':247,'remove-bridge':247,vent:244,'sleeping-spot':232,shelf:229,'small-shelf':229,'spike-trap':226,
   'electric-crematorium':225,'double-bed':224,'electric-smelter':222,
   'animal-sleeping-spot':221,'biofuel-refinery':218,'chemfuel-generator':218,
   'nutrient-paste-dispenser':217,hopper:217,'orbital-beacon':216,
@@ -42,10 +42,13 @@ const MIN_SCHEMA:Readonly<Partial<Record<Tool,number>>>=Object.freeze({
 });
 
 const KEY_RESEARCH:readonly ResearchProject[]=Object.freeze([...new Set([
-  ...Object.values(BUILD_RESEARCH),
+  'ship-basics',...Object.values(BUILD_RESEARCH),
   ...Object.values(FURNITURE_DEFINITIONS).map(definition=>definition.research),
   ...Object.values(FLOOR_DEFINITIONS).map(definition=>definition.research),
 ].filter((project):project is ResearchProject=>project!==null&&project!==undefined))]);
+
+/** The Ship category follows ShipBasics, before its reactor research finishes. */
+export const architectCategoryAvailable=(world:World,category:ArchitectCategory):boolean=>category!=='ship'||researchUnlocked(world,'ship-basics');
 
 /** Catalogue visibility only. Placement still has its own shared simulation
  * validation; an occupied cell or an empty stock never removes an icon. */
@@ -59,7 +62,7 @@ export function architectToolAvailable(world:World,tool:Tool):boolean {
   return !project||researchUnlocked(world,project);
 }
 
-/** Twenty-three completion bits, read when adopting a snapshot. Progress,
+/** Completion bits, read when adopting a snapshot. Progress,
  * project selection and completion dates do not trigger catalogue DOM work. */
 export function architectAvailabilityKey(world:World):string {
   // The completion vector stays collision-free as the delivered catalogue grows.

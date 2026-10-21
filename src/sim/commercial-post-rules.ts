@@ -1,3 +1,4 @@
+import {isSchema274OrLater} from './schema-compatibility-257.ts';
 import { emptyCommercialTextiles,isCommercialTextile,type CommercialTextileTotals,COMMERCIAL_MAX_STOCK,COMMERCIAL_RECEIPTS,type CivilianPost,type CommercialProduct,type CommercialStockPile } from './commercial-state.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { pileMaxHp } from './thing-damage-rules.ts';
@@ -12,7 +13,7 @@ const textileTotals=(v:unknown):v is CommercialTextileTotals=>object(v)&&keys(v,
 
 /** Shape-only check for transport and the bounded stock. No map/registry scan. */
 export function validCivilianPostShape(value:unknown,tick:number,nextId=Number.MAX_SAFE_INTEGER,version=185):value is CivilianPost {
-  if(!object(value)||!keys(value,['stockedAt','rng','generation','stock','transactions','silverReceived','bought','recent',...version>=185?['sold','silverPaid']:[],...version===274?['gifts274']:[]])
+  if(!object(value)||!keys(value,['stockedAt','rng','generation','stock','transactions','silverReceived','bought','recent',...version>=185?['sold','silverPaid']:[],...isSchema274OrLater(version)?['gifts274']:[]])
     ||!integer(value.stockedAt,0,tick)||!integer(value.rng,1,0xffffffff)||!integer(value.generation,1)
     ||!integer(value.transactions)||!integer(value.silverReceived)||!object(value.bought)||!keys(value.bought,['medicine','component'])
     ||!integer(value.bought.medicine)||!integer(value.bought.component)||!Array.isArray(value.stock)||!value.stock.length||value.stock.length>COMMERCIAL_MAX_STOCK

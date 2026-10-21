@@ -52,7 +52,7 @@ test.each(['steel','silver'] as const)('real %s spear smelting preserves pickup,
  until(w,()=>p.cooking?.ingredients[0]?.stage==='held'&&(p.motion?.end??0)>w.tick);expect(weapon.owner).toEqual({type:'pawn',pawnId:p.id});const pickup=exact(w);
  until(w,()=>p.cooking?.phase==='output');stepWorld(pickup,w.tick-pickup.tick);expect(serializeWorld(pickup)).toBe(serializeWorld(w));
  const product=w.piles.find(q=>q.id===p.cooking!.productId)!,quantity=product.quantity;expect([metal==='silver'?187:18,metal==='silver'?188:19]).toContain(quantity);expect(product).toMatchObject({item:metal,owner:{type:'pawn',pawnId:p.id}});expect(w.piles.some(q=>q.id===id)).toBe(false);expect(bill.target).toBe(0);expect(product.weapon).toBeUndefined();
- const a={x:17,z:14},b={x:19,z:14},initialA=metal==='silver'?475:70,initialB=metal==='silver'?275:20,cut=metal==='silver'?25:5;
+ const a={x:17,z:14},b={x:19,z:14},initialA=metal==='silver'?475:70,initialB=metal==='silver'?276:20,cut=metal==='silver'?25:5;
  for(const cell of [a,b])expect(applyCommand(w,{type:'stockpile',enabled:true,...cell,filters:{wood:false,food:false,[metal]:true}}).ok).toBe(true);
  addMaterial(w,metal,initialA,{type:'ground',...a});addMaterial(w,metal,initialB,{type:'ground',...b});refreshStock(w);bill.destination='stockpile';
  until(w,()=>product.quantity===quantity-cut);expect(product.owner.type).toBe('pawn');const partial=exact(w),tick=w.tick;

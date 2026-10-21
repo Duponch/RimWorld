@@ -1,3 +1,4 @@
+import {isSchema274OrLater} from './schema-compatibility-257.ts';
 import {WORLD_FACTION_DEFINITIONS_256,initialWorldGoodwill256,worldRelationKind256,type WorldFactionRelationKind256} from './world-faction-catalog.ts';
 import type {WorldFactionInstance256,WorldFactionRegistry256,WorldFactionRelation256} from './world-faction-state.ts';
 
@@ -17,7 +18,7 @@ export function worldRelationAfterChange274(previous:WorldFactionRelationKind256
 export function validWorldRelationKind274(goodwill:number,kind:unknown,version:number):boolean {
  if(!Number.isSafeInteger(goodwill)||goodwill< -100||goodwill>100)return false;
  if(version>=256&&version<=273)return kind===worldRelationKind256(goodwill);
- if(version!==274)return false;
+ if(!isSchema274OrLater(version))return false;
  return kind==='hostile'?goodwill<0:kind==='ally'?goodwill>0:kind==='neutral'&&goodwill> -75&&goodwill<75;
 }
 
@@ -56,7 +57,7 @@ export type DiplomaticGiftFaction274={ok:false;reason:string}|{ok:true;faction:W
  * carried goods remain the caller's transaction, never inferred here. */
 export function diplomaticGiftFaction274(registry:WorldFactionRegistry256,factionId:number,version:number):DiplomaticGiftFaction274 {
  const no=(reason:string):DiplomaticGiftFaction274=>({ok:false,reason});
- if(version!==274||!Number.isSafeInteger(factionId)||factionId<1)return no('Les dons exigent le contrat diplomatique courant.');
+ if(!isSchema274OrLater(version)||!Number.isSafeInteger(factionId)||factionId<1)return no('Les dons exigent le contrat diplomatique courant.');
  const player=registry.factions.find(f=>f.id===registry.playerFactionId),faction=registry.factions.find(f=>f.id===factionId);
  if(!player||!faction||player===faction)return no('La faction destinataire réelle est absente.');
  const p=WORLD_FACTION_DEFINITIONS_256[player.def],f=WORLD_FACTION_DEFINITIONS_256[faction.def];

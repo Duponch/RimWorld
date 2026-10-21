@@ -1,3 +1,4 @@
+import {isSchema274OrLater} from './schema-compatibility-257.ts';
 import {quoteGroupGift274,prepareGroupGift274} from './group-gift-274.ts';
 export {quoteGroupGift274} from './group-gift-274.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
@@ -199,7 +200,7 @@ export function groupPermission(w:World):GroupPermissionView {
     trade={negotiator,...!buy.ok?{refusal:buy.reason}:{},groupSilver:g.items.filter(p=>p.owner.type==='inventory'&&p.item==='silver').reduce((n,p)=>n+p.quantity,0),postSilver:env.post?.stock.filter(p=>p.item==='silver').reduce((n,p)=>n+p.quantity,0)??0,buys:goods(buy,'buy'),sells:goods(sell,'sell')};
     actions.buy={ok:buy.ok,...!buy.ok?{reason:buy.reason}:{}};actions.sell={ok:sell.ok,...!sell.ok?{reason:sell.reason}:{}};
   }
-  return {originTile:away(g)?g.tile:w.expeditionSite?.tile??w.planet?.homeTile??0,originLabel:away(g)?'Groupe':w.expeditionSite?'Expédition':'Foyer',maximumSources:w.schemaVersion>=256?w.piles.length:64,mass:mass?viewMass(mass,items,w.tick,!!g&&mixedGroupProvisions(g)):null,confirmedRoute:away(g)?g.route:[],actions,trade,...Number(w.schemaVersion)===274?{gift274:quoteGroupGift274(w,[])}:{}};
+  return {originTile:away(g)?g.tile:w.expeditionSite?.tile??w.planet?.homeTile??0,originLabel:away(g)?'Groupe':w.expeditionSite?'Expédition':'Foyer',maximumSources:w.schemaVersion>=256?w.piles.length:64,mass:mass?viewMass(mass,items,w.tick,!!g&&mixedGroupProvisions(g)):null,confirmedRoute:away(g)?g.route:[],actions,trade,...isSchema274OrLater(Number(w.schemaVersion))?{gift274:quoteGroupGift274(w,[])}:{}};
 }
 export function cancelPawnGroupPreparation257(w:World,id:number):void {const row=pawnWorldGroup(w,id);if(row)withWorldGroup(w,row.state.id,cancelGroupPreparation);else cancelGroupPreparation(w);}
 export function cancelGroupPreparation(w:World):void {

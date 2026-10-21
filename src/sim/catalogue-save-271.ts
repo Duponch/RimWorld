@@ -22,7 +22,7 @@ function historical(v:unknown):boolean {
 export function validCryptosleepCatalogueDomains271(value:unknown,version:number):boolean {
  try{
   if(isSchema271OrLater(version))return true;
-  if(!Number.isSafeInteger(version)||version<1||version>274)return false;
+  if(!Number.isSafeInteger(version)||version<1||version>275)return false;
   return !record(value)||DOMAINS.every(k=>historical(value[k]));
  }catch{return false;}
 }
@@ -31,7 +31,7 @@ export function validCryptosleepCatalogueDomains271(value:unknown,version:number
 export function validCryptosleepHistoricalTransport271(value:unknown,version:number):boolean {
  try{
   if(isSchema271OrLater(version))return true;
-  if(!Number.isSafeInteger(version)||version<1||version>274)return false;
+  if(!Number.isSafeInteger(version)||version<1||version>275)return false;
   if(!record(value))return true;
   const w=record(value.world)?value.world:value;
   if(!validCryptosleepCatalogueDomains271(w,version))return false;

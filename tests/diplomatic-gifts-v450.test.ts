@@ -99,7 +99,7 @@ test('receipt shape and targeted command reject historical/future, forged and em
  const f=prepared(),lines=[{pileId:f.cloth.id,quantity:10}],{q,plan:p}=plan(f,lines);p.commit();
  const receipt=f.post.gifts274!,command={type:'group-gift274',groupId:1,lines,quote:q.signature};
  expect(validCommercialGifts274(receipt,274,f.w.tick,f.w.nextId)).toBe(true);
- for(const version of [273,275]){expect(validCommercialGifts274(receipt,version,f.w.tick,f.w.nextId)).toBe(false);expect(validGroupCommand(command,version)).toBe(false);}
+ for(const version of [273,276]){expect(validCommercialGifts274(receipt,version,f.w.tick,f.w.nextId)).toBe(false);expect(validGroupCommand(command,version)).toBe(false);}
  expect(validGroupCommand(command,274)).toBe(true);expect(validGroupCommand({...command,lines:[]},274)).toBe(false);expect(validGroupCommand({...command,extra:1},274)).toBe(false);
  const forged=structuredClone(receipt);forged.recent[0]!.appliedGain++;expect(validCommercialGifts274(forged,274,f.w.tick,f.w.nextId)).toBe(false);
  const wrongBase=structuredClone(receipt);wrongBase.recent[0]!.baseGoodwill+=40;expect(validCommercialGifts274(wrongBase,274,f.w.tick,f.w.nextId)).toBe(false);

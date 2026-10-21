@@ -1,3 +1,4 @@
+import {isSchema275OrLater} from './schema-compatibility-257.ts';
 import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import type {PackedFurniture} from './furniture-rules.ts';
 import { constructionRecipe, validConstructionMaterial } from './construction-materials.ts';
@@ -15,6 +16,7 @@ export function validateConstructionMaterials(world:World|Pick<World,'tick'>,ver
     if(entity.kind==='drug-lab'&&(version<206||!validConstructionMaterial(entity.kind,entity.material,version)||entity.footprint!=='standard'))errors.push('Drug lab requires V206, wood or steel and its standard footprint.');
     if(entity.kind==='hydroponics-basin'&&(version<203||entity.material!=='steel'||entity.footprint!=='standard'))errors.push('Hydroponics basin requires V203 and steel.');
     if(entity.kind==='mini-turret'&&(version<193||entity.material!=='steel'||entity.orientation!==0||entity.footprint!=='standard'))errors.push('Mini turret requires V193, steel and fixed orientation.');
+    if(entity.kind==='ship-reactor'&&(!isSchema275OrLater(version)||entity.material!=='steel'||entity.footprint!=='standard'))errors.push('Ship reactor requires V275, steel and its standard footprint.');
     if(entity.kind==='cryptosleep-casket'&&(!isSchema271OrLater(version)||entity.material!=='steel'||entity.footprint!=='standard'))errors.push('Ordinary cryptosleep casket requires V271, steel and its standard footprint.');
     if(entity.kind==='tube-television'&&(version<190||entity.material!=='steel'||entity.footprint!=='standard'))errors.push('Tube television requires V190 and steel.');
     if(entity.kind==='sandbags'&&(version<189||entity.material!=='cloth'||entity.orientation!==0||entity.footprint!=='standard'))errors.push('Sandbags require V189, cloth and fixed orientation.');

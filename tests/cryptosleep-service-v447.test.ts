@@ -111,7 +111,7 @@ test('contact helpers and task envelopes reject paused credit, skipped intervals
  expect(advanceCryptosleepContact271(t,10,true)).toBe('wait');expect(t).toMatchObject({phase:'closing',progressCore:0,lastWorkedAt:10});
  expect(advanceCryptosleepContact271(t,10,true)).toBe('wait');expect(t.progressCore).toBe(0);expect(advanceCryptosleepContact271(t,11,true)).toBe('wait');expect(t.progressCore).toBe(10);
  const before=structuredClone(t);expect(advanceCryptosleepContact271(t,13,true)).toBe('cancel');expect(t).toEqual(before);expect(advanceCryptosleepContact271(t,11,false)).toBe('cancel');expect(t).toEqual(before);
- expect(validCryptosleepTaskField271({cryptosleepTask:t},SCHEMA_VERSION,11,4)).toBe(true);expect(validCryptosleepTaskField271({cryptosleepTask:t},270,11,4)).toBe(false);expect(validCryptosleepTaskField271({cryptosleepTask:t},271,11,4)).toBe(true);expect(validCryptosleepTaskField271({cryptosleepTask:t},275,11,4)).toBe(false);
+ expect(validCryptosleepTaskField271({cryptosleepTask:t},SCHEMA_VERSION,11,4)).toBe(true);expect(validCryptosleepTaskField271({cryptosleepTask:t},270,11,4)).toBe(false);expect(validCryptosleepTaskField271({cryptosleepTask:t},271,11,4)).toBe(true);expect(validCryptosleepTaskField271({cryptosleepTask:t},276,11,4)).toBe(false);
  for(const change of [{progressCore:500},{progressCore:1},{lastWorkedAt:10},{action:'open'},{patientId:3},{phase:'pickup'}])expect(validCryptosleepTaskField271({cryptosleepTask:{...t,...change}},SCHEMA_VERSION,11,4)).toBe(false);
  expect(validCryptosleepTaskField271({cryptosleepTask:undefined},270,11,4)).toBe(false);
  const accessor=Object.defineProperty({...t},'action',{enumerable:true,get(){throw Error('Task accessor must not execute');}});

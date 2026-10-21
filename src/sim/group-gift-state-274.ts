@@ -1,3 +1,4 @@
+import {isSchema274OrLater} from './schema-compatibility-257.ts';
 import {diplomaticGiftGainFromBase274} from './diplomatic-gift-value-274.ts';
 import {validWorldRelationKind274,worldGoodwillChange274} from './world-diplomacy-274.ts';
 import type {CommercialTextile,CommercialTextileTotals} from './commercial-state.ts';
@@ -27,7 +28,7 @@ const dense=(v:unknown,max:number):v is unknown[]=>Array.isArray(v)&&Object.getP
 const receiptKeys=['tick','groupId','pawnId','settlementId','factionId','postId','totals','recognizedValue','baseGoodwill','requestedGain','adjustedGain','naturalGoodwill','appliedGain','goodwillBefore','goodwillAfter','relationBefore','relationAfter'] as const;
 /** Pure bounded field guard, shared by physical post owners and transport. */
 export function validCommercialGifts274(value:unknown,version:number,tick:number,nextId:number):value is CommercialGifts274 {
- if(version!==274||!closed(value,['count','totals','recent'])||Reflect.ownKeys(value).length!==3||!int(value.count,1)||!totals(value.totals)||!dense(value.recent,32)||value.recent.length!==Math.min(value.count,32))return false;
+ if(!isSchema274OrLater(version)||!closed(value,['count','totals','recent'])||Reflect.ownKeys(value).length!==3||!int(value.count,1)||!totals(value.totals)||!dense(value.recent,32)||value.recent.length!==Math.min(value.count,32))return false;
  const accumulated=value.totals,count=value.count;
  let last=-1;const sum={cloth:0,'muffalo-wool':0};
  for(const r of value.recent){

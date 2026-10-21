@@ -1,5 +1,7 @@
 # Adoption du référentiel utilisateur
 
+**V451 — CAT-052, chantier SYS/TEST-056, propriétaires051–054, retrait058, énergie127, signaux136/137 :** adopter recherches, emprise/support, coût fixe, 1 000 W immédiats et démarrage natif de14jours avec fin strictement postérieure ; adapter horloge locale, dates historiques, PRNG et producteurs des menaces. Différer autres pièces et lancement. [Référence primaire Core 1.6.4871, décisions et limites](../gameplay/ship-reactor-v451.md). Aucun identifiant global clos ; originaux préservés.
+
 **V396 qualifié — chapitres 10–11, SYS/TEST-051..061 :** adopter propriétaires réels, protection environnementale des dix matières, PV/division/fusion et étagères ; adapter cadence Bernoulli de 25 ticks locaux, flux privé prospectif et inspection ; différer autres objets, inventaires hors carte et ToxicFallout. [Règles Core 1.6.4871, provenance réutilisée et limites](../gameplay/deterioration-v396.md). Contrôles ciblés, corpus public, présentation et parcours natif acquis par reprises ; aucun identifiant global clos, originaux préservés.
 
 **V393 qualifié — SYS-077/TEST-077, continuité V13/V389 :** conserver les règles alimentaires et consolider seulement le constat des piles/régimes et l’action Assignations ; adapter une alerte anticipée de compatibilité, sans déduire accès, réservation ou autonomie. Exclusions et pâte non évaluée explicites. [Références réutilisées et limites](../gameplay/food-readability-v393.md). Aucun identifiant global clos ; aucun nouvel objet ou schéma.

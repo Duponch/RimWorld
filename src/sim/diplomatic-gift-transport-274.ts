@@ -1,3 +1,4 @@
+import {isSchema274OrLater} from './schema-compatibility-257.ts';
 /** A prospective field fence for the lightweight resident reader. Authority
  * still validates receipts and owners before publication. Inspect only actual
  * post slots, never map terrain, entities or arbitrary nested objects. */
@@ -5,7 +6,7 @@ const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&
 const historicalPost=(v:unknown)=>!record(v)||!Object.hasOwn(v,'gifts274');
 export function validGiftHistoricalTransport274(value:unknown,version:number):boolean {
  try{
-  if(version===274)return true;
+  if(isSchema274OrLater(version))return true;
   if(!Number.isSafeInteger(version)||version<1||version>273)return false;
   if(!record(value))return true;
   const w=record(value.world)?value.world:value;

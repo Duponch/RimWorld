@@ -1,5 +1,13 @@
 # Catalogue de contenu : couverture connue
 
+**V451 qualifiée localement — schéma 275 :** [Réacteur stellaire](ship-reactor-v451.md). Recherches, chantier payé, 1 000 W, démarrage confirmé et attaques indépendantes ; 50 cas ciblés acquis par reprises, un ancien rouge identique au témoin conservé. Typage, présentation et interface natives muettes acquis. Build Pages et publication en attente ; V450 reste en production. **Ensemble 5 engagé** ; autres pièces et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
+
+| Boucle V451 qualifiée | Acquisition et usage | Limites |
+| --- | --- | --- |
+| Réacteur physique | Deux recherches au bureau avancé + analyseur, Construction 8, quatre intrants finis, chantier extérieur 6 × 7 ; 1 000 W dès finition. | Fixe, sans qualité ou combustible ; autres pièces ouvertes. |
+| Démarrage confirmé | Mêmes réacteurs reliés, quatorze jours runtime, dates conservées et fin strictement après l'échéance. | Pas d'arrêt gratuit ; lancement encore absent. |
+| Attaques et conséquences | Signal de la vraie carte, groupes humains ou mécaniques physiques indépendants, persistants après retrait ; reprises exactes. | Hasard, producteurs et tactiques adaptés ; une occasion peut échouer. Pas de victoire complète. |
+
 | Boucle V450 qualifiée | Acquisition et usage | Limites |
 | --- | --- | --- |
 | Don au comptoir visité | Tissu ou laine de muffalo de la vraie caravane, négociateur disponible, quantités et effet affichés puis transfert entier ou partiel au stock fini. | Pas d’argent payé ; autres biens, personnes/animaux, visiteurs, orbital et paix avec les hostiles hors lot. |

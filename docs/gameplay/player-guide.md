@@ -1,5 +1,17 @@
 # Guide joueur
 
+**V451 qualifiée localement — schéma 275 :** [Réacteur stellaire](ship-reactor-v451.md). Recherches, chantier payé, 1 000 W, démarrage confirmé et attaques indépendantes ; 50 cas ciblés acquis par reprises, un ancien rouge identique au témoin conservé. Typage, présentation et interface natives muettes acquis. Build Pages et publication en attente ; V450 reste en production. **Ensemble 5 engagé** ; autres pièces et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
+
+### Construire et démarrer un réacteur stellaire
+
+Après **Fabrication avancée**, recherchez **Construction de vaisseau** — 4 000 points — puis **Réacteur stellaire** — 6 000 points. Il faut le bureau avancé utilisable et son multi-analyseur relié. La catégorie **Vaisseau** suit la recherche confirmée.
+
+Choisissez un constructeur de niveau **8** et un emplacement extérieur de support lourd, sans toit sur les **42 cases**. Le réacteur occupe **6 × 7 cases**, se tourne et se place initialement vers l'Est. Prévoyez **350 acier, 280 plastacier, 70 uranium et 8 composants avancés**, transportés puis consommés par le chantier. Il fournit **1 000 W dès sa construction**, avant son démarrage spatial, sans combustible périodique.
+
+Dans son inspection, **Démarrer le réacteur** ouvre une confirmation. Annuler laisse le monde intact ; confirmer engage les réacteurs en veille réellement reliés. Préparez les défenses : le signal peut attirer des attaques pendant les **quatorze jours** de démarrage. Il n'existe pas de bouton d'arrêt gratuit. Plusieurs réacteurs ne multiplient pas les calendriers ; leur fin ou leur retrait n'effacent pas les adversaires arrivés. Pause et recharge conservent les dates.
+
+Les autres pièces, l'embarquement spatial et le lancement restent à développer. Le caisson ordinaire V447 reste un équipement de colonie. [Règles, adaptations et contrôles](ship-reactor-v451.md).
+
 ### Donner des textiles à une faction
 
 Amenez une caravane au comptoir d’un établissement non hostile, puis ouvrez **Monde → Globe et caravanes → Donner**. Choisissez du tissu ou de la laine de muffalo réellement portés. L’aperçu indique la faction, le comptoir, la valeur reconnue, la bonne volonté et la charge après remise. Les prix affichés sont arrondis pour la lecture ; le calcul conserve leur précision.

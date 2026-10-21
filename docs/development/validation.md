@@ -1,5 +1,7 @@
 # Validation courante — V449 publiée
 
+**V451 qualifiée localement — schéma 275 :** [Réacteur stellaire](../gameplay/ship-reactor-v451.md). Recherches, chantier payé, 1 000 W, démarrage confirmé et attaques indépendantes ; 50 cas ciblés acquis par reprises, un ancien rouge identique au témoin conservé. Typage, présentation et interface natives muettes acquis. Build Pages et publication en attente ; V450 reste en production. **Ensemble 5 engagé** ; autres pièces et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
+
 **V450 publiée — schéma 274 :** [Dons au comptoir d’une faction](../gameplay/diplomatic-gifts-v450.md). Textiles réellement remis, effet diplomatique et reprises exactes ; 118 cas ciblés acquis par reprises, trois anciens rouges UI identiques au témoin conservés. Typage/build, présentation et interface natives muettes acquis ; publication deb645ad/04ec28ae vérifiée par 20 réponses HTTPS exactes ; sauvegardes publiques inchangées. **Ensemble 4 principal**, suite vers la victoire de l’ensemble 5 ; aucun gain FPS ni clôture générale.
 
 **V449 publiée — schéma 273 :** [Bras et jambes prothétiques industriels](../gameplay/industrial-prostheses-v449.md). Fabrication payée, pose, remplacement, retrait récupérable et fret ; 114 cas ciblés acquis par reprises, typage/build, présentation et interface natives muettes acquis. Publié0bd422f5/déploiement7813d7e7,20réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. **Ensemble 3 principal**, glaives reportés ; aucun gain FPS ni clôture des six ensembles.

@@ -15,7 +15,7 @@ function allScalars(values: readonly Scalar[]): boolean {
 }
 
 function legacyStructureSignature(structures: readonly Structure[], doorAxesKey: string, packageKey: string): string {
-  return doorAxesKey + packageKey + structures.map(s => `${s.id}:${s.kind}:${s.material}:${s.x}:${s.z}:${s.orientation}:${s.footprint}:${s.medical}:${s.grave?.corpseId}:${s.flower?.plant ? `${s.flower.plant.hitPoints > 0}:${Math.floor(s.flower.plant.growth * 4)}` : ''}:${s.power?.on}:${s.power?.parentId}:${s.power?.switchOn}:${s.breakdown?.brokenAt ?? ''}:${s.fuel ? s.fuel.ticks > 0 : ''}${s.vent?':vent'+s.vent.open:''}${s.kind==='cryptosleep-casket'?':crypto'+!!s.cryptosleep?.human:''}`).join('|');
+  return doorAxesKey + packageKey + structures.map(s => `${s.id}:${s.kind}:${s.material}:${s.x}:${s.z}:${s.orientation}:${s.footprint}:${s.medical}:${s.grave?.corpseId}:${s.flower?.plant ? `${s.flower.plant.hitPoints > 0}:${Math.floor(s.flower.plant.growth * 4)}` : ''}:${s.power?.on}:${s.power?.parentId}:${s.power?.switchOn}:${s.breakdown?.brokenAt ?? ''}:${s.fuel ? s.fuel.ticks > 0 : ''}${s.vent?':vent'+s.vent.open:''}${s.kind==='cryptosleep-casket'?':crypto'+!!s.cryptosleep?.human:''}${s.kind==='ship-reactor'?':reactor'+(s.shipReactor275?.state??'hibernating'):''}`).join('|');
 }
 
 /** Recapture all interpolation inputs on every read, including mutable arrays.
@@ -63,7 +63,7 @@ export class ConfirmedStructurePresentationSignature {
       v[9] = !!plant; v[10] = plant ? plant.hitPoints > 0 : undefined;
       v[11] = plant ? Math.floor(plant.growth * 4) : undefined;
       v[12] = s.power?.on; v[13] = s.power?.parentId; v[14] = s.power?.switchOn;
-      v[15] = s.breakdown?.brokenAt ?? ''; v[16] = fuel ? fuel.ticks > 0 : ''; v[17] = s.vent?.open;v[18]=s.kind==='cryptosleep-casket'?!!s.cryptosleep?.human:undefined;
+      v[15] = s.breakdown?.brokenAt ?? ''; v[16] = fuel ? fuel.ticks > 0 : ''; v[17] = s.vent?.open;v[18]=s.kind==='cryptosleep-casket'?!!s.cryptosleep?.human:undefined;v[19]=s.kind==='ship-reactor'?(s.shipReactor275?.state??'hibernating'):undefined;
       if (!allScalars(v)) {
         this.clear(); return legacyStructureSignature(structures, doorAxesKey, packageKey);
       }
@@ -75,7 +75,7 @@ export class ConfirmedStructurePresentationSignature {
           if(flowerOnly)this.pendingFlowers.add(i);
         }
         const flower = v[9] ? `${v[10]}:${v[11]}` : '';
-        this.slots[i] = { values: v.slice(), text: `${v[0]}:${v[1]}:${v[2]}:${v[3]}:${v[4]}:${v[5]}:${v[6]}:${v[7]}:${v[8]}:${flower}:${v[12]}:${v[13]}:${v[14]}:${v[15]}:${v[16]}${v[17]===undefined?'':':vent'+v[17]}${v[18]===undefined?'':':crypto'+v[18]}` };
+        this.slots[i] = { values: v.slice(), text: `${v[0]}:${v[1]}:${v[2]}:${v[3]}:${v[4]}:${v[5]}:${v[6]}:${v[7]}:${v[8]}:${flower}:${v[12]}:${v[13]}:${v[14]}:${v[15]}:${v[16]}${v[17]===undefined?'':':vent'+v[17]}${v[18]===undefined?'':':crypto'+v[18]}${v[19]===undefined?'':':reactor'+v[19]}` };
         changed = true;
       }
     }
@@ -116,7 +116,7 @@ export class ConfirmedStructurePresentationSignature {
       v[9] = !!plant; v[10] = plant ? plant.hitPoints > 0 : undefined;
       v[11] = plant ? Math.floor(plant.growth * 4) : undefined;
       v[12] = s.power?.on; v[13] = s.power?.parentId; v[14] = s.power?.switchOn;
-      v[15] = s.breakdown?.brokenAt ?? ''; v[16] = fuel ? fuel.ticks > 0 : ''; v[17] = s.vent?.open;v[18]=s.kind==='cryptosleep-casket'?!!s.cryptosleep?.human:undefined;
+      v[15] = s.breakdown?.brokenAt ?? ''; v[16] = fuel ? fuel.ticks > 0 : ''; v[17] = s.vent?.open;v[18]=s.kind==='cryptosleep-casket'?!!s.cryptosleep?.human:undefined;v[19]=s.kind==='ship-reactor'?(s.shipReactor275?.state??'hibernating'):undefined;
       if (!allScalars(v)) {
         this.clear(); return legacyStructureSignature(structures, doorAxesKey, packageKey);
       }
@@ -128,7 +128,7 @@ export class ConfirmedStructurePresentationSignature {
           if(flowerOnly)this.pendingFlowers.add(i);
         }
         const flower = v[9] ? `${v[10]}:${v[11]}` : '';
-        this.slots[i] = { values: v.slice(), text: `${v[0]}:${v[1]}:${v[2]}:${v[3]}:${v[4]}:${v[5]}:${v[6]}:${v[7]}:${v[8]}:${flower}:${v[12]}:${v[13]}:${v[14]}:${v[15]}:${v[16]}${v[17]===undefined?'':':vent'+v[17]}${v[18]===undefined?'':':crypto'+v[18]}` };
+        this.slots[i] = { values: v.slice(), text: `${v[0]}:${v[1]}:${v[2]}:${v[3]}:${v[4]}:${v[5]}:${v[6]}:${v[7]}:${v[8]}:${flower}:${v[12]}:${v[13]}:${v[14]}:${v[15]}:${v[16]}${v[17]===undefined?'':':vent'+v[17]}${v[18]===undefined?'':':crypto'+v[18]}${v[19]===undefined?'':':reactor'+v[19]}` };
         changed = true;
       }
     }

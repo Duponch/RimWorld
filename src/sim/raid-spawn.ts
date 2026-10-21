@@ -8,6 +8,8 @@ import { atMapEdge } from './raid-space.ts';
 import { raidRandom,type RaidComposition,type RaidGroup,type RaidRole } from './raid-state.ts';
 import { startingPawn } from './starting-pawns.ts';
 import { generatePawnBackground } from './background-generation.ts';
+import {validShipReactorRaidSource275} from './ship-reactor-threat-save-275.ts';
+import type {ShipReactorRaidSource275} from './ship-reactor-threats-275.ts';
 import type { Cell,Pawn,World } from './types.ts';
 
 export const RAID_ROLE_OPTIONS:readonly {role:RaidRole;weight:number;weapon:'plasteel-knife'|'revolver'|'bolt-action-rifle'}[]=[
@@ -23,6 +25,7 @@ export interface RaidSpawnOptions {
   random:{rng:number};
   composition?:RaidComposition;
   preserveCalendarRng?:boolean;
+  shipReactor275?:ShipReactorRaidSource275;
 }
 
 /** The caller has already selected real entry cells. Prepare every person and
@@ -30,13 +33,16 @@ export interface RaidSpawnOptions {
 export function createRaidGroup(w:World,options:RaidSpawnOptions):RaidGroup|null {
   const s=w.raids,{count,sites,composition}=options;
   const scout=w.scout?.phase==='travelling'||w.scout?.phase==='awaiting-entry'?w.scout:w.commercialTrip&&'pawn' in w.commercialTrip?w.commercialTrip:undefined;
-  if(!s||s.active||s.mechActive||!Number.isSafeInteger(count)||count<1||sites.length!==count
+  const independent=options.shipReactor275!==undefined;
+  if(independent&&!validShipReactorRaidSource275(options.shipReactor275,w,w.tick,'human'))return null;
+  if(!s||!independent&&(!!s.active||!!s.mechActive)||!Number.isSafeInteger(count)||count<1||sites.length!==count
     ||s.serial>=Number.MAX_SAFE_INTEGER||w.nextId>Number.MAX_SAFE_INTEGER-count*3
     ||!civilianAdmissionFits(w,count,count*2)
     ||s.departed.length+count>w.width*w.height||!w.foodPolicies[0]
     ||!Number.isSafeInteger(options.random.rng)||options.random.rng<0||options.random.rng>0xffffffff
     ||composition&&(composition.roster.length!==count||composition.roster.some(role=>!RAID_ROLE_OPTIONS.some(option=>option.role===role))))return null;
   const stands=captureStandability(w),occupied=new Set(w.pawns.flatMap(p=>[p.z*w.width+p.x,...p.motion&&p.motion.end>w.tick?[p.motion.from.z*w.width+p.motion.from.x]:[]]));
+  if(independent||Number(w.schemaVersion)===275&&s.extraMechActive261?.some(g=>!!g.shipReactor275))for(const actor of [...w.mechanoids??[],...w.wildlife?.animals??[]]){occupied.add(actor.z*w.width+actor.x);if(actor.motion&&actor.motion.end>w.tick)occupied.add(actor.motion.from.z*w.width+actor.motion.from.x);}
   const used=new Set<number>();
   for(const cell of sites){const key=cell.z*w.width+cell.x;
     if(!Number.isSafeInteger(cell.x)||!Number.isSafeInteger(cell.z)||cell.x<0||cell.z<0||cell.x>=w.width||cell.z>=w.height
@@ -56,7 +62,9 @@ export function createRaidGroup(w:World,options:RaidSpawnOptions):RaidGroup|null
   const deadline=w.tick+2600+Math.floor(raidRandom(random)*1201),lossPermille=400+Math.floor(raidRandom(random)*301);
   const group:RaidGroup={id,startedAt:w.tick,deadline,lossPermille,members:generated.map(p=>p.id),lost:[],phase:'assault'};
   if(composition)group.composition=composition;
-  w.nextId=next;w.pawns.push(...generated);w.piles.push(...piles);if(!options.preserveCalendarRng)s.rng=random.rng;options.random.rng=random.rng;s.serial=id;s.nextCheck=null;s.active=group;
+  if(independent)group.shipReactor275={...options.shipReactor275!};
+  w.nextId=next;w.pawns.push(...generated);w.piles.push(...piles);if(!options.preserveCalendarRng&&!independent)s.rng=random.rng;options.random.rng=random.rng;s.serial=id;
+  if(independent){s.extraActive261??=[];s.extraResults261??=s.last?[structuredClone(s.last)]:[];s.extraActive261.push(group);}else{s.nextCheck=null;s.active=group;}
   w.events.push({tick:w.tick,type:'command',message:`Raid : ${count} assaillant(s) arrive(nt) au bord de la carte et attaque(nt) immédiatement. Mobilisez la défense.`});if(w.events.length>80)w.events.splice(0,w.events.length-80);
   return group;
 }

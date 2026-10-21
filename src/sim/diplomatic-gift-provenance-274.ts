@@ -1,3 +1,4 @@
+import {isSchema274OrLater} from './schema-compatibility-257.ts';
 import {worldNaturalGoodwill274} from './world-diplomacy-274.ts';
 import {WORLD_FACTION_DEFINITIONS_256,initialWorldGoodwill256} from './world-faction-catalog.ts';
 import type {CivilianPost} from './commercial-state.ts';
@@ -13,7 +14,7 @@ export function createGiftReceiptProvenance274(registry:WorldFactionRegistry256|
  return (post,postId)=>{
   if(!post||!Object.hasOwn(post,'gifts274'))return true;
   const history=post.gifts274;
-  if(version!==274||!registry||!history||!Array.isArray(history.recent)||!history.recent.length||history.recent.length>32)return false;
+  if(!isSchema274OrLater(version)||!registry||!history||!Array.isArray(history.recent)||!history.recent.length||history.recent.length>32)return false;
   // A legacy civilianPost alias has no transported external postId. Its
   // receipts must agree internally; actual post rows supply their own ID.
   const actualPostId=postId??history.recent[0]?.postId;

@@ -15,6 +15,7 @@ import { floraDefinition } from './biome-flora.ts';
 
 /** Only shipped definitions. Missing/non-HP things are deliberately not fuels. */
 const BUILDINGS:Readonly<Record<string,readonly [number,number,boolean]>>={
+  'ship-reactor':[500,0,true],
   'fueled-smithy':[180,1,true],'electric-smithy':[180,1,true],
   brewery:[180,1,true],'fermenting-barrel':[100,1,true],
   'insect-hive':[130,1,false],'glow-pod':[50,1,false],

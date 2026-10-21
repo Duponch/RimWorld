@@ -18,7 +18,7 @@ const mapSizeLabels: Record<number, string> = { 32: 'terrain d’essai', 64: 'co
 
 export type Tool = 'snow-clear' | 'remove-snow-clear' | BuildableFloorKind | 'home' | 'remove-home' | 'ignore-roof' | 'haul-chunks' | 'select' | 'allowed-expand' | 'allowed-shrink' | Exclude<JobKind, 'sow'|'repair'|'fix-breakdown'|'flick'|'lay-floor'> | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
 export type Panel = 'quests' | 'world' | 'animals' | 'wildlife' | 'research' | 'architect' | 'work' | 'schedule' | 'assign' | 'history' | 'menu' | null;
-export type ArchitectCategory = 'orders' | 'zones' | 'structure' | 'floors' | 'furniture' | 'temperature' | 'recreation' | 'production' | 'power';
+export type ArchitectCategory = 'orders' | 'zones' | 'structure' | 'floors' | 'furniture' | 'temperature' | 'recreation' | 'production' | 'power' | 'ship';
 /** Visible Core work order (naturalPriority), omitting Smithing and Tailoring
  * because Lisière has no distinct priorities for them. The same sequence owns
  * both headings and controls so a display-only reorder cannot shift a pawn's
@@ -35,6 +35,7 @@ export const workColumns: readonly {id: WorkType; label: string}[] = [
   {id:'clean',label:'Nettoyage'}, {id:'research',label:'Recherche'},
 ];
 export const toolDefinitions: { id: Tool; title: string; hint: string; key: string; category: ArchitectCategory }[] = [
+  {id:'ship-reactor',title:'Réacteur stellaire',hint:'6 × 7 orientable · 350 acier + 280 plastacier + 70 uranium + 8 composants avancés · Construction 8 · terrain lourd sans toit · 1 000 W dès construction · recherche Réacteur stellaire · Q / E pour tourner',key:'',category:'ship'},
   ...FLOOR_KINDS.map(id=>({id,title:FLOOR_DEFINITIONS[id].label,hint:`${flooringRecipe(id).ingredients.map(i=>`${i.quantity} ${ITEM_DEFINITIONS[i.item].label}`).join(' + ')} par case · Construction ${FLOOR_DEFINITIONS[id].skill}${FLOOR_DEFINITIONS[id].research==='stonecutting'?' · recherche Taille de pierre':FLOOR_DEFINITIONS[id].research==='smithing'?' · recherche Forge':FLOOR_DEFINITIONS[id].research==='sterile-materials'?' · recherche Matériaux stériles':''} · cliquer ou tracer un rectangle`,key:'',category:'floors' as const})),
   {id:'build-bridge',title:'Pont en bois',hint:'Fondation sur marais ou eau peu profonde · support léger uniquement · tracer une ligne ou un rectangle',key:'',category:'floors'},
   {id:'remove-bridge',title:'Retirer le pont',hint:'Travail de Construction · récupère 6 bois · refusé si une construction perd son support',key:'',category:'floors'},
@@ -193,7 +194,7 @@ export function gameLayout(): string {
       <div class="architect-body"><nav class="architect-categories" aria-label="Catégories de construction">
         <button data-category="orders" class="active">Ordres</button><button data-category="zones">Zones</button>
         <button data-category="temperature">Température</button><button data-category="structure">Structure</button><button data-category="floors">Sols</button><button data-category="furniture">Meubles</button>
-        <button data-category="recreation">Loisirs</button><button data-category="production">Production</button><button data-category="power">Énergie</button><button disabled>Sécurité</button>
+        <button data-category="recreation">Loisirs</button><button data-category="production">Production</button><button data-category="power">Énergie</button><button data-category="ship" hidden>Vaisseau</button><button disabled>Sécurité</button>
       </nav><div class="architect-content">
         <div class="tools">${toolDefinitions.map(tool => `<button data-tool="${tool.id}" data-tool-category="${tool.category}" title="${tool.hint}" aria-label="${tool.title}" aria-pressed="false" class="tool"><span class="tool-icon" aria-hidden="true"></span><span>${tool.title}</span><kbd>${tool.key}</kbd></button>`).join('')}</div>
         <div class="architect-options"><p id="tool-instruction">Choisissez un ordre, puis cliquez sur la carte.</p>

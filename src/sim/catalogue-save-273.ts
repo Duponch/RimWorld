@@ -23,7 +23,7 @@ function historical(v:unknown):boolean {
 export function validProstheticCatalogueDomains273(value:unknown,version:number):boolean {
  try{
   if(isSchema273OrLater(version))return true;
-  if(!Number.isSafeInteger(version)||version<1||version>274)return false;
+  if(!Number.isSafeInteger(version)||version<1||version>275)return false;
   return !record(value)||DOMAINS.every(k=>historical(value[k]));
  }catch{return false;}
 }
@@ -31,7 +31,7 @@ export function validProstheticCatalogueDomains273(value:unknown,version:number)
 export function validProstheticHistoricalTransport273(value:unknown,version:number):boolean {
  try{
   if(isSchema273OrLater(version))return true;
-  if(!Number.isSafeInteger(version)||version<1||version>274)return false;
+  if(!Number.isSafeInteger(version)||version<1||version>275)return false;
   if(!record(value))return true;
   const w=record(value.world)?value.world:value;
   if(!validProstheticCatalogueDomains273(w,version))return false;

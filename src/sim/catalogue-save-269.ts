@@ -25,7 +25,7 @@ function historical(v:unknown):boolean {
 export function validMaceCatalogueDomains269(value:unknown,version:number):boolean {
  try{
   if(isSchema269OrLater(version))return true;
-  if(!Number.isSafeInteger(version)||version<1||version>274)return false;
+  if(!Number.isSafeInteger(version)||version<1||version>275)return false;
   return !record(value)||DOMAINS.every(k=>historical(value[k]));
  }catch{return false;}
 }
@@ -34,7 +34,7 @@ export function validMaceCatalogueDomains269(value:unknown,version:number):boole
 export function validMaceHistoricalTransport269(value:unknown,version:number):boolean {
  try{
   if(isSchema269OrLater(version))return true;
-  if(!Number.isSafeInteger(version)||version<1||version>274)return false;
+  if(!Number.isSafeInteger(version)||version<1||version>275)return false;
   if(!record(value))return true;
   const w=record(value.world)?value.world:value;
   if(!validMaceCatalogueDomains269(w,version))return false;

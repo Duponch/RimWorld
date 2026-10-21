@@ -10,6 +10,7 @@ export interface MechanoidRaidPolicy {
 export interface MechanoidRaidComposition { budget:number;roster:MechanoidKind[] }
 /** Mechanical raids share the existing agenda, without human retreat state. */
 export interface MechanoidRaidGroup {
+  shipReactor275?:import('./ship-reactor-threats-275.ts').ShipReactorRaidSource275;
   source260?:'camp-pressure';
   id:number;startedAt:number;members:number[];lost:number[];
   phase:'staging'|'assault';

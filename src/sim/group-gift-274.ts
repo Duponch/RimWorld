@@ -1,3 +1,4 @@
+import {isSchema274OrLater} from './schema-compatibility-257.ts';
 import {registeredCampaign,boundWorldGroup} from './world-map-context.ts';
 import {groupGeographicTradeTarget256} from './group-geographic-post-256.ts';
 import {captureGroupMass,type AwayGroup} from './group-capture.ts';
@@ -25,7 +26,7 @@ function sealEdges(roots:readonly object[]):()=>boolean {
  return ()=>edges.every(e=>Object.getOwnPropertyDescriptor(e.owner,e.key)?.value===e.value);
 }
 function capture(w:World){
- if(Number(w.schemaVersion)!==274||w.planet?.revision!==3||!w.group||!('members'in w.group))return no('Le don exige une caravane arrivée à un véritable comptoir de faction.');
+ if(!isSchema274OrLater(Number(w.schemaVersion))||w.planet?.revision!==3||!w.group||!('members'in w.group))return no('Le don exige une caravane arrivée à un véritable comptoir de faction.');
  const g=w.group,target=groupGeographicTradeTarget256(w,g),root=registeredCampaign(w),factions=root.worldFactions;
  if(!target||!factions||!validCivilianPostShape(target.post,w.tick,w.nextId,w.schemaVersion))return no('Le comptoir réellement visité n’est plus disponible.');
  const faction=diplomaticGiftFaction274(factions,target.factionId,w.schemaVersion);if(!faction.ok)return faction;

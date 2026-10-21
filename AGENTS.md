@@ -1,5 +1,7 @@
 # Travail sur Elsewhere
 
+**V451 qualifiée localement — schéma 275 :** [Réacteur stellaire](docs/gameplay/ship-reactor-v451.md). Recherches, chantier payé, 1 000 W, démarrage confirmé et attaques indépendantes ; 50 cas ciblés acquis par reprises, un ancien rouge identique au témoin conservé. Typage, présentation et interface natives muettes acquis. Build Pages et publication en attente ; V450 reste en production. **Ensemble 5 engagé** ; autres pièces et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
+
 **V450 publiée — schéma 274 :** [Dons au comptoir d’une faction](docs/gameplay/diplomatic-gifts-v450.md). Textiles réellement remis, effet diplomatique et reprises exactes ; 118 cas ciblés acquis par reprises, trois anciens rouges UI identiques au témoin conservés. Typage/build, présentation et interface natives muettes acquis ; publication deb645ad/04ec28ae vérifiée par 20 réponses HTTPS exactes ; sauvegardes publiques inchangées. **Ensemble 4 principal**, suite vers la victoire de l’ensemble 5 ; aucun gain FPS ni clôture générale.
 
 **Ménage demandé le 21 octobre :** supprimer les anciens caches recréables sans perdre les fichiers récents ou utiles. [Nettoyage acquis et archives préservées](docs/gameplay/diplomatic-gifts-v450.md#entretien-du-stockage-demandé-pendant-le-lot) : les anciennes copies figées regroupées sont en lecture seule ; les copier dans un nouveau fichier indépendant avant de les modifier. L’ancienneté seule ne justifie pas de retirer une sauvegarde ou un historique.

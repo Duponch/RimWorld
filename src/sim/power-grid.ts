@@ -2,7 +2,7 @@ import type { Structure } from './types.ts';
 
 /** Nominal roles do not depend on production, fuel or stored energy. */
 export const isPowerConduit=(kind:unknown):boolean=>kind==='power-conduit';
-export const isPowerTransmitter=(kind:unknown):boolean=>kind==='geothermal-generator'||kind==='chemfuel-generator'||kind==='wood-generator'||kind==='solar-generator'||kind==='wind-turbine'||kind==='battery'||kind==='power-conduit'||kind==='power-switch';
+export const isPowerTransmitter=(kind:unknown):boolean=>kind==='ship-reactor'||kind==='geothermal-generator'||kind==='chemfuel-generator'||kind==='wood-generator'||kind==='solar-generator'||kind==='wind-turbine'||kind==='battery'||kind==='power-conduit'||kind==='power-switch';
 export const isPowerConnector=(kind:unknown):boolean=>kind==='electric-smithy'||kind==='electric-crematorium'||kind==='electric-smelter'||kind==='biofuel-refinery'||kind==='nutrient-paste-dispenser'||kind==='orbital-beacon'||kind==='comms-console'||kind==='deep-drill'||kind==='ground-scanner'||kind==='vitals-monitor'||kind==='hydroponics-basin'||kind==='mini-turret'||kind==='tube-television'||kind==='sun-lamp'||kind==='standing-lamp'||kind==='cooler'||kind==='heater'||kind==='electric-stove'||kind==='electric-tailor-bench'||kind==='machining-table'||kind==='hi-tech-research-bench'||kind==='multi-analyzer'||kind==='fabrication-bench'||kind==='autodoor';
 
 /** A stopped generator remains a wire. Only the physical switch opens the grid;

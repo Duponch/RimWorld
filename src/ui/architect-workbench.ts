@@ -16,6 +16,7 @@ const CATEGORY_ICONS: Readonly<Record<string, string>> = {
   recreation: modelIconUrl('horseshoes'),
   production: modelIconUrl('machining-table'),
   power: modelIconUrl('battery'),
+  ship: modelIconUrl('ship-reactor'),
 };
 const PRODUCTION_ORDER = [
   'hydroponics-basin', 'deep-drill', 'ground-scanner', 'orbital-beacon',

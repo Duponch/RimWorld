@@ -45,7 +45,7 @@ export function hydroponicsPowerInspection(structure:Structure):string {
 export function solarFlareInspection(world:World,structure:Structure):string {
   if(!world.worldIncidents?.active||!isElectrical(structure.kind))return '';
   if(structure.kind==='battery')return 'Éruption solaire : charge et décharge du réseau suspendues · réserve conservée · autodécharge normale de 5 W·j/jour';
-  if(['wood-generator','chemfuel-generator','geothermal-generator','solar-generator','wind-turbine'].includes(structure.kind))return `Éruption solaire : source ${isPowerActive(structure)?'toujours active':'actuellement arrêtée'} · potentiel de production conservé${(structure.kind==='wood-generator'||structure.kind==='chemfuel-generator')&&isPowerActive(structure)?` · le ${structure.kind==='wood-generator'?'bois':'biocarburant'} continue de brûler`:''} · stockage du surplus suspendu`;
+  if(['ship-reactor','wood-generator','chemfuel-generator','geothermal-generator','solar-generator','wind-turbine'].includes(structure.kind))return `Éruption solaire : source ${isPowerActive(structure)?'toujours active':'actuellement arrêtée'} · potentiel de production conservé${(structure.kind==='wood-generator'||structure.kind==='chemfuel-generator')&&isPowerActive(structure)?` · le ${structure.kind==='wood-generator'?'bois':'biocarburant'} continue de brûler`:''} · stockage du surplus suspendu`;
   if(!isPowerTrader(structure.kind))return 'Éruption solaire : connexions et interrupteurs physiques conservés';
   const cause=structure.breakdown?'panne mécanique distincte':structure.power?.switchOn===false?'arrêt manuel distinct':structure.power?.parentId===null?'absence de raccordement distincte':isPowerActive(structure)?'encore alimenté avant son délestage':'actuellement sans alimentation · redémarrage suspendu';
   return `Éruption solaire : ${cause} · arrêt progressif des consommateurs${structure.kind==='electric-tailor-bench'&&!isPowerActive(structure)?' · couture manuelle possible à vitesse réduite (50 %)':''}`;
@@ -90,6 +90,8 @@ export function powerInspection(world: World, structure: Structure, compact=fals
     detail=deepDrillingInspection(world,structure);
   } else if (structure.kind === 'hydroponics-basin') {
     detail=hydroponicsPowerInspection(structure);
+  } else if (structure.kind === 'ship-reactor') {
+    detail='Production électrique : 1 000 W · disponible dès la construction, indépendamment du démarrage stellaire';
   } else if (structure.kind === 'geothermal-generator') {
     detail=geothermalPowerInspection(world,structure);
   } else if (structure.kind === 'solar-generator') {

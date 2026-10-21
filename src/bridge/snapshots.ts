@@ -1,3 +1,6 @@
+import {validateShipReactorThreats275,validShipReactorThreatContinuation275} from '../sim/ship-reactor-threat-save-275.ts';
+import {validShipReactorBuilding275,validShipReactorWorld275,validShipReactorContinuation275,validShipReactorHistoricalTransport275} from '../sim/ship-reactor-save-275.ts';
+import {validShipResearchTransport275} from '../sim/research-save.ts';
 import {isSchema273OrLater} from '../sim/schema-compatibility-257.ts';
 import {validProstheticHistoricalTransport273} from '../sim/catalogue-save-273.ts';
 import {validProstheticsResearchTransport273} from '../sim/research-save.ts';
@@ -664,6 +667,7 @@ function denseArray(value:unknown):value is unknown[] {
 function validStructurePatchEntry(value:unknown,world:Pick<World,'nextId'|'width'|'height'|'schemaVersion'|'tick'>):value is Structure {
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
   if(!validCaveHiveBuilding256(value,world.schemaVersion,world)||!validAncientCasketField256(value,world.schemaVersion)||!validLocalRoadPropStructure256(value,world.schemaVersion,world)||!validHumanSleepingSpotStructureEntry(value,world.schemaVersion,world)||!validBedrollStructureEntry256(value,world.schemaVersion,world)||!validAncientMonumentBuilding256(value,world.schemaVersion))return false;
+  if(!validShipReactorBuilding275(value,world.schemaVersion,world,world.tick*10))return false;
   if(!validAncientCasketBuilding256(value,world.schemaVersion,world)||!validCryptosleepBuilding271(value,world.schemaVersion,world,world.tick))return false;
   const s=value as Structure;
   return Number.isSafeInteger(s.id)&&s.id>=1&&s.id<world.nextId
@@ -1124,6 +1128,7 @@ export class SnapshotDecoder {
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
     if(packet.world.destroyed!==undefined&&!validNaturalHiveLoss256(packet.world.destroyed,packet.world.schemaVersion))return resync('Invalid or future natural Hive loss counter.');
     if(!validWorldPawnsEnvelope256(packet.world,packet.world.schemaVersion,packet.world.tick*10,packet.world.nextId))return resync('Invalid or future WorldPawns header.');
+    if(!validShipReactorHistoricalTransport275(packet,packet.world.schemaVersion))return resync('Réacteur stellaire futur dans ce snapshot.');
     if(!validProstheticHistoricalTransport273(packet,packet.world.schemaVersion))return resync('Prothèses industrielles futures dans ce snapshot.');
     if(!validSpearHistoricalTransport272(packet,packet.world.schemaVersion))return resync('Catalogue de lances futur dans ce snapshot.');
     if(!validCryptosleepHistoricalTransport271(packet,packet.world.schemaVersion))return resync('Cryptosommeil futur dans ce snapshot.');
@@ -1496,6 +1501,8 @@ export class SnapshotDecoder {
     if(!validMaceHistoricalTransport269(message,next.schemaVersion)||!validKnifeHistoricalTransport268(message,next.schemaVersion)||!validSmithyResearchTransport267(next,next.schemaVersion)||!validSmithingHistoricalTransport267(message,next.schemaVersion)||validateSmithingWorks267(next,next.schemaVersion).length)return resync('Forge, matière ou ouvrage invalide.');
     if(!validAlcoholWorld265(next,next.schemaVersion))return resync('Alcool, politique ou propriétaire invalide.');
     if(!validBrewingHistoricalTransport265(message,next.schemaVersion)||!validFermentationWorld265(next,next.schemaVersion)||!validBrewingResearchTransport265(next,next.schemaVersion))return resync('Brassage, fermentation ou propriétaire invalide.');
+    if(validateShipReactorThreats275(next,next.schemaVersion).length||message.kind==='delta'&&this.current&&!validShipReactorThreatContinuation275(this.current,next))return resync('Signal et historique du réacteur stellaire invalides.');
+    if(!validShipReactorWorld275(next,next.schemaVersion)||!validShipResearchTransport275(next,next.schemaVersion)||message.kind==='delta'&&this.current&&!validShipReactorContinuation275(this.current,next))return resync('Réacteur stellaire, démarrage ou propriétaire invalide.');
     if(!validGeothermalWorld264(next,next.schemaVersion)||!validGeothermalResearchTransport(next,next.schemaVersion))return resync('Géothermie, phase ou propriétaire invalide.');
     if(!validDeepDrillingTransport(next,next.schemaVersion)||!validDeepResearchTransport(next,next.schemaVersion))return resync('Gisement, travail ou recherche de forage invalides.');
     if(validateHydroponics(next,next.schemaVersion,powerTopology,identities,validation.geometry).length)return resync('Bac hydroponique, culture liée ou alimentation incohérents.');
