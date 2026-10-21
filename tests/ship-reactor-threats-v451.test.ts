@@ -74,7 +74,7 @@ test('two actual additional human Lords coexist with the original owner, retain 
 
 test('old/future pressure owners and foreign cycle/field changes are closed',()=>{
  const w=ownerFixture();expect(validateShipReactorThreats275(w)).toEqual([]);
- for(const version of [274,276])expect(validateShipReactorThreats275(w,version)).not.toEqual([]);
+ for(const version of [274,277])expect(validateShipReactorThreats275(w,version)).not.toEqual([]);
  for(const key of ['seed','mapId','generationAtCore'] as const){const copy=structuredClone(w);copy.shipReactorThreats275![key]++;expect(validateShipReactorThreats275(copy)).not.toEqual([]);}
  const copy=structuredClone(w);Object.defineProperty(copy.shipReactorThreats275!,'future276',{value:true,enumerable:true});expect(validateShipReactorThreats275(copy)).not.toEqual([]);
 });

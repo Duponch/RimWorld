@@ -72,7 +72,7 @@ test('fatal external damage retires and releases contents before a radius2.66Fla
 
 test('low HP retains one persistent140–150Core wick while occupied and its expiry uses the same destructive lane',()=>{
  const {w,p,c}=held();expect(damageStructure(w,c,200,'bullet',w.rng,{core:0,rawAmount:200})).toBe(true);const wick=structuredClone(c.casketWick!);expect(wick.endCore-wick.startedAtCore).toBeGreaterThanOrEqual(140);expect(wick.endCore-wick.startedAtCore).toBeLessThanOrEqual(150);expect(c.cryptosleep.human).toBe(p);
- expect(validAncientCasketWickField256(c,271,0)).toBe(true);expect(validAncientCasketWickField256(c,270,0)).toBe(false);expect(validAncientCasketWickField256(c,272,0)).toBe(true);expect(validAncientCasketWickField256(c,276,0)).toBe(false);
+ expect(validAncientCasketWickField256(c,271,0)).toBe(true);expect(validAncientCasketWickField256(c,270,0)).toBe(false);expect(validAncientCasketWickField256(c,272,0)).toBe(true);expect(validAncientCasketWickField256(c,277,0)).toBe(false);
  expect(damageStructure(w,c,1,'bullet',w.rng,{core:0,rawAmount:1})).toBe(true);expect(c.casketWick).toEqual(wick);w.tick=Math.ceil(wick.endCore/10);ready(planCryptosleepRemoval271(w,c,'kill-finalize',{core:wick.endCore}));expect(advanceBombWick(w,c,wick.endCore)).toBe(true);expect(w.structures.includes(c)).toBe(false);expect(w.pawns.find(q=>q.id===p.id)).toBe(p);expect(w.bombWaves?.[0]?.startedAtCore).toBe(wick.endCore);
 });
 

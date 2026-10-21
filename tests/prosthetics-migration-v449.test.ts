@@ -22,7 +22,7 @@ const work=(w:World):MaterialPile=>({id:w.nextId++,item:'unfinished-prosthetic',
 
 test('273 research and storage transport stay sparse, closed and prospective',()=>{
  expect(isSchema272OrLater(272)).toBe(true);expect(isSchema272OrLater(273)).toBe(true);
- for(const v of [271,276,'273',NaN])expect(isSchema272OrLater(v)).toBe(false);
+ for(const v of [271,277,'273',NaN])expect(isSchema272OrLater(v)).toBe(false);
  const w=registryCamp();expect(applyCommand(w,{type:'stockpile',enabled:true,x:4,z:4,filters:{wood:true,food:true}}).ok).toBe(true);
  const encoder=new SnapshotEncoder(),first=structuredClone(encoder.encode(w,0,0));expect(new SnapshotDecoder().adopt(structuredClone(first)).status).toBe('applied');if(first.kind!=='checkpoint')throw Error('Missing checkpoint');
  for(const change of [
@@ -57,7 +57,7 @@ test('272 refuses new physical and clinical catalogue markers even false, on rea
   mutate(checkpoint.world);expect(new SnapshotDecoder().adopt(checkpoint).status,label).toBe('resync');expect(first.world).toEqual(retained);
   mutate(old);const delta=structuredClone(encoder.encode(old,0,0));expect(delta.kind).toBe('delta');expect(decoder.adopt(delta).status,label).toBe('resync');expect(first.world).toEqual(retained);
  }
- const future=JSON.parse(control);future.schemaVersion=276;expect(()=>deserializeCampaign(JSON.stringify(future))).toThrow();expect(validProstheticHistoricalTransport273(future,276)).toBe(false);
+ const future=JSON.parse(control);future.schemaVersion=277;expect(()=>deserializeCampaign(JSON.stringify(future))).toThrow();expect(validProstheticHistoricalTransport273(future,277)).toBe(false);
 },120000);
 
 test('inactive original temporary map retains its predecessor when future item/filter markers are refused',()=>{

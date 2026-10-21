@@ -1,3 +1,4 @@
+import {isSchema275OrLater} from './schema-compatibility-257.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {sameRaidResult261} from './temp-map-raids-261.ts';
 import {validCaravanRaidProvenance261} from './caravan-raid-save-261.ts';
@@ -23,7 +24,7 @@ export function validateTempRaidCollections261(w:World,version:number):string[] 
  const s=w.raids;if(!s)return [];const has=(k:string)=>Object.hasOwn(s,k),extra:unknown=has('extraActive261')?s.extraActive261:[],mechanical:unknown=has('extraMechActive261')?s.extraMechActive261:[],results:unknown=s.extraResults261;
  const collectionKeys=['extraActive261','extraMechActive261','extraResults261'];
  if(!collectionKeys.some(has))return collectionKeys.some(k=>k in s)?['Inherited multi-raid state.']:[];
- const marker=tempMapRecord261(w)?.tempIncidents261,ship=Number(version)===275&&Object.hasOwn(w,'shipReactorThreats275')&&validateShipReactorThreats275(w,version).length===0;
+ const marker=tempMapRecord261(w)?.tempIncidents261,ship=isSchema275OrLater(version)&&Object.hasOwn(w,'shipReactorThreats275')&&validateShipReactorThreats275(w,version).length===0;
  if((version!==261&&(Number(version)!==262&&!isSchema263OrLater(Number(version))))||!marker&&!ship||!has('extraResults261')||!has('extraActive261')&&!has('extraMechActive261')||!dense(extra,s.serial)||!dense(mechanical,s.serial)||!dense(results,s.serial)||collectionKeys.some(k=>k in s&&!has(k)||has(k)&&(()=>{const d=Object.getOwnPropertyDescriptor(s,k);return !d||!d.enumerable||!Object.hasOwn(d,'value');})()))return ['Invalid prospective multi-raid owner.'];
  const witnesses=Number(!!s.active)+Number(!!s.mechActive)+extra.length+mechanical.length+results.length;
  const mechanicalProof=!!marker&&witnesses>=2&&(mechanical.length>0||s.mechActive?.source260==='camp-pressure'&&s.mechActive.startedAt*10>marker.adoptedAtCore&&(!!s.active||extra.length>0||results.length>0)||results.some(r=>plain(r)&&r.mechanoid===true&&int(r.tick,Math.floor(marker.adoptedAtCore/10)+1,w.tick)));
@@ -54,7 +55,7 @@ export function validateTempRaidCollections261(w:World,version:number):string[] 
  }
  const resultIds=new Set<number>();
  for(const raw of results){
-  if(!plain(raw)||!fields(raw,['id','tick','reason','killed','downed','escaped'],['captured','composition','originQuestId','caravan261','memberCount261','mechanoid','mechComposition','tempIncident261',...(Number(version)===275?['shipReactor275']:[])])||!int(raw.id,1,s.serial)||groups.has(raw.id)||resultIds.has(raw.id)||!int(raw.tick,0,w.tick)||!['defended','withdrawn','colony-down'].includes(String(raw.reason))){errors.push('Invalid retained actual raid result.');continue;}
+  if(!plain(raw)||!fields(raw,['id','tick','reason','killed','downed','escaped'],['captured','composition','originQuestId','caravan261','memberCount261','mechanoid','mechComposition','tempIncident261',...(isSchema275OrLater(version)?['shipReactor275']:[])])||!int(raw.id,1,s.serial)||groups.has(raw.id)||resultIds.has(raw.id)||!int(raw.tick,0,w.tick)||!['defended','withdrawn','colony-down'].includes(String(raw.reason))){errors.push('Invalid retained actual raid result.');continue;}
   resultIds.add(raw.id);
   const temp=Object.hasOwn(raw,'tempIncident261'),caravan=Object.hasOwn(raw,'caravan261'),mech=Object.hasOwn(raw,'mechanoid')||Object.hasOwn(raw,'mechComposition');
   const reactor=Object.hasOwn(raw,'shipReactor275');

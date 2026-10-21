@@ -3,6 +3,7 @@ import type { StructureKind } from '../sim/types';
 export const buildingLabels: Readonly<Record<StructureKind, string>> = {
   'insect-hive':'Ruche souterraine','glow-pod':'Poche luminescente',
   'ship-reactor':'Réacteur stellaire',
+  'ship-beam':'Poutre structurelle de vaisseau','ship-engine':'Moteur Johnson–Tanaka',
   'ship-chunk':'Débris de vaisseau',
   'cryptosleep-casket':'Caisson de cryptosommeil',
   'ancient-cryptosleep-casket':'Capsule ancienne de cryptosommeil',

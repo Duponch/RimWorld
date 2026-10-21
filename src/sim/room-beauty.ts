@@ -1,3 +1,4 @@
+import {isShipPartKind276} from './ship-part-content-276.ts';
 import {isAncientMonumentKind256,ANCIENT_MONUMENT_DEFS_256} from './ancient-monument-props-256.ts';
 import {QUALITY_BEAUTY,furnitureQuality} from './furniture-stats.ts';
 import { furnitureBeauty,isFurnitureMaterial,isHabitatFurnitureKind,isSculptureKind,sculptureBeauty,FURNITURE_MATERIALS,type FurnitureLike } from './furniture-stats.ts';
@@ -44,7 +45,7 @@ export function filthBeauty(filth:Pick<BeautyFilth,'kind'>,outdoors=false):numbe
 export function groundObjectBeauty(object:BeautyObject):number {return object.visible===false?0:object.beauty??-4;}
 export function structureBeauty(structure:BeautyStructure):number {
   if(isAncientMonumentKind256(structure.kind)){const m=isFurnitureMaterial(structure.material)?FURNITURE_MATERIALS[structure.material]:undefined,d=ANCIENT_MONUMENT_DEFS_256[structure.kind];return d.beauty*(m?.beautyFactor??1)*(d.quality?QUALITY_BEAUTY[furnitureQuality(structure.quality)]:1)+(m?.beautyOffset??0);}
-  if(structure.kind==='ship-reactor')return 0; // Fixed inputs, no Stuff or Beauty override.
+  if(isShipPartKind276(structure.kind))return 0; // Fixed inputs, no Stuff or Beauty override.
   if(structure.kind==='ship-chunk')return -20;
   if(structure.kind==='brewery'||structure.kind==='fermenting-barrel')return 0;
   if(structure.kind==='geothermal-generator')return -30;

@@ -6,6 +6,7 @@ import {SnapshotEncoder,SnapshotDecoder} from '../src/bridge/snapshots.ts';
 import {ResidentPresentationAssembler} from '../src/bridge/resident-presentation-assembler.ts';
 import {serializeWorld,deserializeWorld,validateWorld} from '../src/sim/serialization.ts';
 import {readShipReactorStart275} from '../src/sim/ship-reactor-runtime-275.ts';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 import type {ShipReactor275} from '../src/sim/ship-reactor-state-275.ts';
 
 /** Declared already-built local structure, only for hostile transport inputs.
@@ -36,7 +37,7 @@ test('old274 RAW, public Decoder and lightweight Resident reject the presence of
  // No reactor, ship research, pressure or loss was present in this actual
  // ordinary workshop before the explicitly future field below.
  const raw274=JSON.stringify(w),upgraded=deserializeWorld(raw274);
- expect(upgraded).toEqual({...w,schemaVersion:275});
+ expect(upgraded).toEqual({...w,schemaVersion:SCHEMA_VERSION});
  const encoder=new SnapshotEncoder({structureDelta:true}),decoder=new SnapshotDecoder(),resident=new ResidentPresentationAssembler();
  const initial=structuredClone(encoder.encode(w,0,0)),first=decoder.adopt(structuredClone(initial)),shown=resident.adopt(structuredClone(initial));
  expect(first.status).toBe('applied');expect(shown.status).toBe('applied');if(first.status!=='applied'||shown.status!=='applied')throw Error('Ordinary274 baseline refused');

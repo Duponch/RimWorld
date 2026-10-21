@@ -14,11 +14,11 @@ test.skipIf(!existsSync('tmp/prosthetics-v449/native-ui/2026-10-21T19-18-40-181Z
  const copy=deserializeCampaign(text);expect(copy.schemaVersion).toBe(SCHEMA_VERSION);expect(validateWorld(copy)).toEqual([]);expect(JSON.parse(serializeCampaign(copy))).toEqual({...before,schemaVersion:SCHEMA_VERSION});expect(readFileSync('tmp/prosthetics-v449/native-ui/2026-10-21T19-18-40-181Z/result.json','utf8')).toBe(text);
 });
 
-test('closed capability and command families continue274 and reject276 and old gift commands',()=>{
+test('closed capability and command families continue274 and reject277 and old gift commands',()=>{
  for(const v of [273,274]){expect(isSchema273OrLater(v)).toBe(true);expect(isSchema272OrLater(v)).toBe(true);}
- for(const v of [272,276,'274',NaN])expect(isSchema273OrLater(v)).toBe(false);
+ for(const v of [272,277,'274',NaN])expect(isSchema273OrLater(v)).toBe(false);
  const c={type:'group-gift274',groupId:5,lines:[{pileId:17,quantity:2}],quote:'correlated'};
- expect(validGroupCommand(c,274)).toBe(true);for(const v of [254,256,273,276])expect(validGroupCommand(c,v)).toBe(false);
+ expect(validGroupCommand(c,274)).toBe(true);for(const v of [254,256,273,277])expect(validGroupCommand(c,v)).toBe(false);
  for(const lines of [[],[{pileId:17,quantity:0}],[{pileId:17,quantity:1},{pileId:17,quantity:2}]])expect(validGroupCommand({...c,lines},274)).toBe(false);
 });
 

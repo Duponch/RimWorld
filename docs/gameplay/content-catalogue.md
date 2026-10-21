@@ -1,6 +1,14 @@
 # Catalogue de contenu : couverture connue
 
+**V452 qualifiée localement — schéma 276 :** [Poutres et moteurs de vaisseau](ship-parts-v452.md). Recherche moteur, une poutre et trois moteurs payés, connexion physique, rapport et retraits conservés ; 63 cas ciblés acquis, dont 35 nouveaux et 28 voisins. Typage, présentation et interface natives muettes acquis. Build Pages et publication en attente ; V451 reste en production. **Ensemble 5 en cours** ; ordinateur, capteurs, caissons spatiaux, embarquement et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
+
 **V451 publiée — schéma 275 :** [Réacteur stellaire](ship-reactor-v451.md). Recherches, chantier payé, 1 000 W, démarrage confirmé et attaques indépendantes ; 50 cas ciblés acquis par reprises, un ancien rouge identique au témoin conservé. Typage, présentation et interface natives muettes acquis. Build Pages acquis ; publié 8e0e2ee6/7552f915, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. **Ensemble 5 engagé** ; autres pièces et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
+
+| Boucle V452 qualifiée | Acquisition et usage | Limites |
+| --- | --- | --- |
+| Poutre et moteur physiques |Construction de vaisseau puis moteur (6 000 points) ; bureau avancé + analyseur, Construction 5/8, matériaux finis et travail extérieur sur 12 cases orientées. |Pièces fixes, 400 PV, sans qualité ; autres pièces spatiales encore absentes. |
+| Vaisseau relié |Pièces achevées connectées par leurs bords, rapport de pièces/manques et démarrage des mêmes réacteurs au travers des ponts. Transmission électrique passive. |Pas de lancement, passager ou victoire ; une connexion électrique ne constitue pas seule une coque reliée. |
+| Retrait et reprise |Même poutre déconstruite, coupure réelle du réseau, retours + pertes conservés ; RAW/public et anciens réacteurs275 continuent sous276. |Pas de remboursement rétroactif ; ordinateur, capteurs, caisson spatial et embarquement ouverts. |
 
 | Boucle V451 qualifiée | Acquisition et usage | Limites |
 | --- | --- | --- |

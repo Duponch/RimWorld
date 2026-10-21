@@ -1,3 +1,4 @@
+import {isSchema275OrLater} from './schema-compatibility-257.ts';
 import {mechRaidGroups261,multiRaid261} from './mechanical-raid-groups-261.ts';
 import {retainRaidResult261} from './temp-map-raids-261.ts';
 import {advanceKidnapLord261} from './caravan-kidnap-lord-261.ts';
@@ -57,12 +58,12 @@ function advanceHumanRaidGroup(w:World,a:RaidGroup,independent=false):void {
 }
 /** Independent reactor Lords do not borrow Cassandra's occupied agenda slot. */
 function restoreShipFreeAgenda275(w:World):void {
- const s=w.raids;if(Number(w.schemaVersion)===275&&w.shipReactorThreats275&&s?.profile==='cassandra-raids-v1'&&!s.active&&!s.mechActive&&(s.extraActive261??[]).every(g=>!!g.shipReactor275)&&(s.extraMechActive261??[]).every(g=>!!g.shipReactor275))s.nextCheck=s.cassandra!.pending[0]!;
+ const s=w.raids;if(isSchema275OrLater(w.schemaVersion)&&w.shipReactorThreats275&&s?.profile==='cassandra-raids-v1'&&!s.active&&!s.mechActive&&(s.extraActive261??[]).every(g=>!!g.shipReactor275)&&(s.extraMechActive261??[]).every(g=>!!g.shipReactor275))s.nextCheck=s.cassandra!.pending[0]!;
 }
 /** Calendar and group outcomes, once per tick. Pawn controllers own movement. */
 export function advanceRaids(w:World):void {
   const s=w.raids;if(!s)return;advanceKidnapLord261(w);advanceTempMapRaids261(w);
-  if(Number(w.schemaVersion)===275)for(const group of s.extraActive261?.slice()??[])if(group.shipReactor275)advanceHumanRaidGroup(w,group,true);
+  if(isSchema275OrLater(w.schemaVersion))for(const group of s.extraActive261?.slice()??[])if(group.shipReactor275)advanceHumanRaidGroup(w,group,true);
   const multi=multiRaid261(w);if(multi)advanceMechanoidRaid(w);
   if(s.profile==='ship-reactor-raids-v1')return;
   if(advanceCaravanRaid261(w))return;

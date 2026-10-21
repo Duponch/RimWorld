@@ -1,3 +1,4 @@
+import {isSchema275OrLater} from './schema-compatibility-257.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {bindBornHumanFaction259,bornFactionForDef259} from './world-affiliation-259.ts';
 import { civilianAdmissionFits } from './civilian-away.ts';
@@ -42,7 +43,7 @@ export function createRaidGroup(w:World,options:RaidSpawnOptions):RaidGroup|null
     ||!Number.isSafeInteger(options.random.rng)||options.random.rng<0||options.random.rng>0xffffffff
     ||composition&&(composition.roster.length!==count||composition.roster.some(role=>!RAID_ROLE_OPTIONS.some(option=>option.role===role))))return null;
   const stands=captureStandability(w),occupied=new Set(w.pawns.flatMap(p=>[p.z*w.width+p.x,...p.motion&&p.motion.end>w.tick?[p.motion.from.z*w.width+p.motion.from.x]:[]]));
-  if(independent||Number(w.schemaVersion)===275&&s.extraMechActive261?.some(g=>!!g.shipReactor275))for(const actor of [...w.mechanoids??[],...w.wildlife?.animals??[]]){occupied.add(actor.z*w.width+actor.x);if(actor.motion&&actor.motion.end>w.tick)occupied.add(actor.motion.from.z*w.width+actor.motion.from.x);}
+  if(independent||isSchema275OrLater(w.schemaVersion)&&s.extraMechActive261?.some(g=>!!g.shipReactor275))for(const actor of [...w.mechanoids??[],...w.wildlife?.animals??[]]){occupied.add(actor.z*w.width+actor.x);if(actor.motion&&actor.motion.end>w.tick)occupied.add(actor.motion.from.z*w.width+actor.motion.from.x);}
   const used=new Set<number>();
   for(const cell of sites){const key=cell.z*w.width+cell.x;
     if(!Number.isSafeInteger(cell.x)||!Number.isSafeInteger(cell.z)||cell.x<0||cell.z<0||cell.x>=w.width||cell.z>=w.height

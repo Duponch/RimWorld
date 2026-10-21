@@ -1,3 +1,4 @@
+import {isSchema275OrLater} from './schema-compatibility-257.ts';
 import {shipReactorThreatMap275,shipReactorThreatSeed275,shipReactorGenerationInterval275,shipReactorCycleHits275} from './ship-reactor-threats-275.ts';
 import {registeredCampaign} from './world-map-context.ts';
 import {validComposition} from './raid-save.ts';
@@ -15,7 +16,7 @@ function actualOpportunity(w:World,atCore:number,cycle:number):boolean {
 /** Historical provenance remains independent of a reactor's current presence. */
 export function validShipReactorRaidSource275(v:unknown,w:World,atTick=w.tick,kind?:'human'|'mechanoid'):v is ShipReactorRaidSource275 {
  const owner=w.shipReactorThreats275,map=shipReactorThreatMap275(w);
- if(Number(w.schemaVersion)!==275||!plain(owner)||!map||owner.mapId!==map.mapId||owner.tile!==map.tile||owner.generationAtCore!==map.generationAtCore||owner.seed!==shipReactorThreatSeed275(w,map.mapId)||!int(owner.adoptedAtCore,map.generationAtCore,w.tick*10)||!plain(v)||!fields(v,['revision','mapId','tile','atCore','cycle','points','factionId'])||v.revision!==1||v.mapId!==owner.mapId||v.mapId!==map.mapId||v.tile!==owner.tile||v.tile!==map.tile||!int(v.atCore,owner.adoptedAtCore,atTick*10)||v.atCore%1000||!int(v.cycle)||!budget(v.points)||!actualOpportunity(w,v.atCore,v.cycle))return false;
+ if(!isSchema275OrLater(w.schemaVersion)||!plain(owner)||!map||owner.mapId!==map.mapId||owner.tile!==map.tile||owner.generationAtCore!==map.generationAtCore||owner.seed!==shipReactorThreatSeed275(w,map.mapId)||!int(owner.adoptedAtCore,map.generationAtCore,w.tick*10)||!plain(v)||!fields(v,['revision','mapId','tile','atCore','cycle','points','factionId'])||v.revision!==1||v.mapId!==owner.mapId||v.mapId!==map.mapId||v.tile!==owner.tile||v.tile!==map.tile||!int(v.atCore,owner.adoptedAtCore,atTick*10)||v.atCore%1000||!int(v.cycle)||!budget(v.points)||!actualOpportunity(w,v.atCore,v.cycle))return false;
  const factions=registeredCampaign(w).worldFactions;
  if(v.factionId===null){if(factions||kind==='mechanoid')return false;}
  else {const faction=factions?.factions.find(f=>f.id===v.factionId);if(!int(v.factionId,1)||!faction||kind&&faction.def!==(kind==='mechanoid'?'Mechanoid':'Pirate'))return false;}
@@ -24,7 +25,7 @@ export function validShipReactorRaidSource275(v:unknown,w:World,atTick=w.tick,ki
 export function validateShipReactorThreats275(w:World,version:number=w.schemaVersion):string[] {
  const own=Object.getOwnPropertyDescriptor(w,'shipReactorThreats275');if(!own)return 'shipReactorThreats275'in w?['Inherited ship reactor pressure owner.']:[];
  const state:unknown=own.value,map=shipReactorThreatMap275(w),now=w.tick*10;
- if(Number(version)!==275||!own.enumerable||!Object.hasOwn(own,'value')||!plain(state)||!fields(state,['revision','mapId','tile','generationAtCore','adoptedAtCore','active','seed','rng','checkedAtCore','opportunities','spawned','recent'],['lastFaction'])||state.revision!==1||!map||state.mapId!==map.mapId||state.tile!==map.tile||state.generationAtCore!==map.generationAtCore||!int(state.adoptedAtCore,map.generationAtCore,now)||state.adoptedAtCore%10||typeof state.active!=='boolean'||state.seed!==shipReactorThreatSeed275(w,map.mapId)||!int(state.rng,1,0xffffffff)||!int(state.checkedAtCore,Math.floor((state.adoptedAtCore-1)/1000)*1000,Math.floor(now/1000)*1000)||state.checkedAtCore%1000||!int(state.opportunities)||!int(state.spawned,0,state.opportunities)||!dense(state.recent,32)||state.recent.length>state.opportunities||state.lastFaction!==undefined&&!['outlaws','mechanoid'].includes(String(state.lastFaction)))return ['Invalid or future ship reactor pressure owner.'];
+ if(!isSchema275OrLater(version)||!own.enumerable||!Object.hasOwn(own,'value')||!plain(state)||!fields(state,['revision','mapId','tile','generationAtCore','adoptedAtCore','active','seed','rng','checkedAtCore','opportunities','spawned','recent'],['lastFaction'])||state.revision!==1||!map||state.mapId!==map.mapId||state.tile!==map.tile||state.generationAtCore!==map.generationAtCore||!int(state.adoptedAtCore,map.generationAtCore,now)||state.adoptedAtCore%10||typeof state.active!=='boolean'||state.seed!==shipReactorThreatSeed275(w,map.mapId)||!int(state.rng,1,0xffffffff)||!int(state.checkedAtCore,Math.floor((state.adoptedAtCore-1)/1000)*1000,Math.floor(now/1000)*1000)||state.checkedAtCore%1000||!int(state.opportunities)||!int(state.spawned,0,state.opportunities)||!dense(state.recent,32)||state.recent.length>state.opportunities||state.lastFaction!==undefined&&!['outlaws','mechanoid'].includes(String(state.lastFaction)))return ['Invalid or future ship reactor pressure owner.'];
  const recent=state.recent;let successes=0;const births=new Map<number,{atCore:number;mechanical:boolean}>();
  for(const group of [...w.raids?.extraActive261??[],...w.raids?.extraMechActive261??[],...w.raids?.extraResults261??[]])if(group?.shipReactor275)births.set(group.id,{atCore:group.shipReactor275.atCore,mechanical:'stage'in group||'mechanoid'in group&&group.mechanoid===true});
  for(let i=0;i<recent.length;i++){
@@ -37,7 +38,7 @@ export function validateShipReactorThreats275(w:World,version:number=w.schemaVer
 /** Delta-only continuity after full next-world validation. A map replacement
  * is a checkpoint and has no predecessor here; cold RAW cannot prove history. */
 export function validShipReactorThreatContinuation275(previous:Pick<World,'schemaVersion'|'tick'|'shipReactorThreats275'>,next:Pick<World,'schemaVersion'|'tick'|'shipReactorThreats275'>):boolean {
- if(!int(previous.schemaVersion,1,275)||!int(next.schemaVersion,1,275)||!int(previous.tick)||!int(next.tick,previous.tick))return false;
+ if(!int(previous.schemaVersion,1,276)||!int(next.schemaVersion,1,276)||!int(previous.tick)||!int(next.tick,previous.tick))return false;
  const a=previous.shipReactorThreats275,b=next.shipReactorThreats275;
  if(!a)return !b||b.adoptedAtCore>=previous.tick*10;
  if(!b||a.revision!==b.revision||a.mapId!==b.mapId||a.tile!==b.tile||a.generationAtCore!==b.generationAtCore||a.adoptedAtCore!==b.adoptedAtCore||a.seed!==b.seed

@@ -1,3 +1,4 @@
+import {isShipPartKind276} from './ship-part-content-276.ts';
 import {PEN_ANIMALS_256} from './animal-domestic-v256.ts';
 import {isAnimalSpeciesInVersion} from './animal-species.ts';
 import type { AnimalSpeciesId } from './animal-species.ts';
@@ -36,7 +37,7 @@ const terrainPassable=(world:World,i:number):boolean=>{
   return t!==undefined&&t!=='rock'&&t!=='water';
 };
 const penBarrier=(s:Structure):boolean=>
-  s.kind==='ship-reactor'||s.kind==='geothermal-generator'||s.kind==='wall'||s.kind==='cooler'||s.kind==='vent'||s.kind==='fence'
+  isShipPartKind276(s.kind)||s.kind==='geothermal-generator'||s.kind==='wall'||s.kind==='cooler'||s.kind==='vent'||s.kind==='fence'
   ||isPassageDoor(s.kind)&&!(s.door?.holdOpen&&s.door.open);
 const passage=(s:Structure):boolean=>isPassageDoor(s.kind);
 
@@ -46,7 +47,7 @@ export function invalidateAnimalPens(world:World):void { caches.delete(world); }
 
 function signature(world:World):string {
   const parts:string[]=[];
-  for(const s of world.structures)if(s.kind==='ship-reactor'||s.kind==='geothermal-generator'||s.kind==='wall'||s.kind==='cooler'||s.kind==='vent'||s.kind==='fence'||passage(s)||s.kind==='pen-marker')
+  for(const s of world.structures)if(isShipPartKind276(s.kind)||s.kind==='geothermal-generator'||s.kind==='wall'||s.kind==='cooler'||s.kind==='vent'||s.kind==='fence'||passage(s)||s.kind==='pen-marker')
     parts.push(`${s.id}:${s.kind}:${s.x}:${s.z}:${s.door?.holdOpen&&s.door.open?1:0}`);
   return parts.join('|');
 }

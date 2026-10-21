@@ -45,7 +45,7 @@ test('reactor pays four exact ingredients and rotates its native centered42-cell
  }
  expect(footprintCells({...plan,footprint:'standard'})).toEqual(shipReactorCells275(plan,1));
  expect(validConstructionMaterial(plan.kind,'steel',275)).toBe(true);
- for(const version of [274,276])expect(validConstructionMaterial(plan.kind,'steel',version)).toBe(false);
+ for(const version of [274,277])expect(validConstructionMaterial(plan.kind,'steel',version)).toBe(false);
  for(const material of [undefined,'wood','plasteel','granite-blocks'])expect(validConstructionMaterial(plan.kind,material,275)).toBe(false);
 });
 
@@ -64,7 +64,7 @@ test('both ship projects require real advanced bench and analyzer, preserve thei
  }
  const before=structuredClone(w);expect(applyCommand(w,{type:'research-project',project:'ship-reactor'}).ok).toBe(false);expect(w).toEqual(before);
  expect(applyCommand(w,{type:'research-project',project:'ship-basics'}).ok).toBe(true);expect(readProjectProgress(w.research!,'ship-basics')).toEqual({points:0});
- expect(validShipResearchTransport275(w,275)).toBe(true);expect(validShipResearchTransport275(w,274)).toBe(false);expect(validShipResearchTransport275(w,276)).toBe(false);
+ expect(validShipResearchTransport275(w,275)).toBe(true);expect(validShipResearchTransport275(w,274)).toBe(false);expect(validShipResearchTransport275(w,277)).toBe(false);
  expect(applyCommand(w,{type:'research-project',project:null}).ok).toBe(true);finish(w,'ship-basics');
  expect(applyCommand(w,{type:'research-project',project:'ship-reactor'}).ok).toBe(true);expect(w.research!.shipBasics!.points).toBe(4_000_000_000);expect(w.research!.shipReactor).toEqual({points:0});
  const corrupt=structuredClone(w);corrupt.research!.shipReactor!.points=6_000_000_000;expect(validShipResearchTransport275(corrupt,275)).toBe(false);

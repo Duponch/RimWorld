@@ -1,3 +1,4 @@
+import {SHIP_BEAM_CONTENT_276,SHIP_ENGINE_CONTENT_276} from './ship-part-content-276.ts';
 import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import {isProstheticItem273} from './prosthetic-content-273.ts';
 import {isLongswordItem270,longswordMaterial270,LONGSWORD_DEFINITIONS_270} from './longsword-content-270.ts';
@@ -15,6 +16,8 @@ import { floraDefinition } from './biome-flora.ts';
 
 /** Only shipped definitions. Missing/non-HP things are deliberately not fuels. */
 const BUILDINGS:Readonly<Record<string,readonly [number,number,boolean]>>={
+  'ship-beam':[SHIP_BEAM_CONTENT_276.maxHitPoints,SHIP_BEAM_CONTENT_276.flammability,SHIP_BEAM_CONTENT_276.leavesResourcesWhenKilled],
+  'ship-engine':[SHIP_ENGINE_CONTENT_276.maxHitPoints,SHIP_ENGINE_CONTENT_276.flammability,SHIP_ENGINE_CONTENT_276.leavesResourcesWhenKilled],
   'ship-reactor':[500,0,true],
   'fueled-smithy':[180,1,true],'electric-smithy':[180,1,true],
   brewery:[180,1,true],'fermenting-barrel':[100,1,true],

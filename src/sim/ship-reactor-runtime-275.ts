@@ -1,5 +1,7 @@
 import {isSchema275OrLater} from './schema-compatibility-257.ts';
-import {shipReactorRect275} from './ship-reactor-content-275.ts';
+import {isShipPartKind276} from './ship-part-content-276.ts';
+import {indexShipParts276,connectedShipParts276} from './ship-part-reader-276.ts';
+import {validShipHullBuilding276} from './ship-part-save-276.ts';
 import {shipReactorEndCore275,isShipReactor275,validShipReactorCommand275,validShipReactorState275,type ShipReactor275,type ShipReactorCommand275,type ShipReactorState275} from './ship-reactor-state-275.ts';
 import {validShipReactorBuilding275} from './ship-reactor-save-275.ts';
 import type {World,CommandResult} from './types.ts';
@@ -9,25 +11,15 @@ export type ShipReactorStartView275={ok:false;reason:string}|{ok:true;reactorIds
 const fail=(reason:string):Extract<ShipReactorStartPlan275,{ok:false}>=>({ok:false,reason});
 const coreNow=(w:World):number|undefined=>Number.isSafeInteger(w.tick)&&w.tick>=0&&Number.isSafeInteger(w.tick*10)?w.tick*10:undefined;
 
-/** At command time only: build adjacency from42 actual occupied cells per
- * reactor, never from terrain. Existing Starting/Running parts remain bridges. */
+/** At command time only: adjacency from the completed parts' actual cells.
+ * No terrain walk or graph work on a physical/render frame. */
 function connectedHibernating(w:World,id:number):ShipReactor275[]|undefined {
  const now=coreNow(w);if(!isSchema275OrLater(w.schemaVersion)||now===undefined)return;
- const all=w.structures.filter(isShipReactor275),target=all.find(s=>s.id===id);if(!target)return;
- const byCell=new Map<number,ShipReactor275>(),byId=new Map<number,ShipReactor275>();
- for(const s of all){
-  if(!validShipReactorBuilding275(s,w.schemaVersion,w,now)||byId.has(s.id))return;
-  byId.set(s.id,s);const r=shipReactorRect275(s,s.orientation);
-  for(let z=r.z;z<r.z+r.depth;z++)for(let x=r.x;x<r.x+r.width;x++){const key=z*w.width+x;if(byCell.has(key))return;byCell.set(key,s);}
- }
- const queue=[target],visited=new Set([target.id]);
- for(let i=0;i<queue.length;i++){
-  const r=shipReactorRect275(queue[i]!,queue[i]!.orientation);
-  const visit=(x:number,z:number)=>{if(x<0||z<0||x>=w.width||z>=w.height)return;const other=byCell.get(z*w.width+x);if(other&&!visited.has(other.id)){visited.add(other.id);queue.push(other);}};
-  for(let x=r.x;x<r.x+r.width;x++){visit(x,r.z-1);visit(x,r.z+r.depth);}
-  for(let z=r.z;z<r.z+r.depth;z++){visit(r.x-1,z);visit(r.x+r.width,z);}
- }
- return queue.filter(s=>!Object.hasOwn(s,'shipReactor275')).sort((a,b)=>a.id-b.id);
+ for(const s of w.structures)if(isShipPartKind276(s.kind)
+  &&(!validShipReactorBuilding275(s,w.schemaVersion,w,now)||!validShipHullBuilding276(s,w.schemaVersion,w)))return;
+ const built=indexShipParts276(w.structures,w.width,w.height);if(!built.ok||built.index.get(id)?.kind!=='ship-reactor')return;
+ const connected=connectedShipParts276(built.index,id);if(!connected.ok)return;
+ return connected.parts.map(p=>p.source).filter(isShipReactor275).filter(s=>!Object.hasOwn(s,'shipReactor275'));
 }
 
 /** Capture original edges too: replacing a nested component at equal value
@@ -60,9 +52,10 @@ export function prepareShipReactorStart275(w:World,reactorId:number,confirmedIds
  const end=shipReactorEndCore275(now);if(end===undefined)return fail('L’échéance du réacteur dépasse l’horloge conservable.');
  if(selected.some(s=>!Object.isExtensible(s)))return fail('Le réacteur ne peut pas recevoir son état de démarrage.');
  const array=w.structures,originals=[...array],version=w.schemaVersion,tick=w.tick,width=w.width,height=w.height,nextId=w.nextId;
- const seals=array.filter(isShipReactor275).map(originalSeal);let used=false;
+ const parts=array.filter(s=>isShipPartKind276(s.kind)),seals=parts.map(originalSeal);let used=false;
  const current=()=>!used&&w.schemaVersion===version&&w.tick===tick&&w.width===width&&w.height===height&&w.nextId===nextId&&w.structures===array
-  &&array.length===originals.length&&originals.every((s,i)=>array[i]===s)&&seals.every(s=>s())&&selected.every(s=>Object.isExtensible(s)&&!('shipReactor275'in s))
+  &&array.length===originals.length&&originals.every((s,i)=>array[i]===s)&&array.filter(s=>isShipPartKind276(s.kind)).length===parts.length
+  &&seals.every(s=>s())&&selected.every(s=>Object.isExtensible(s)&&!('shipReactor275'in s))
   &&(()=>{const current=connectedHibernating(w,reactorId);return !!current&&current.length===selected.length&&current.every((s,i)=>s===selected[i]);})();
  return {ok:true,reactorIds:Object.freeze([...ids]),current,commit:()=>{
   if(!current())return false;

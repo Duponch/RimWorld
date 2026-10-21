@@ -1,6 +1,23 @@
 # Guide joueur
 
+**V452 qualifiée localement — schéma 276 :** [Poutres et moteurs de vaisseau](ship-parts-v452.md). Recherche moteur, une poutre et trois moteurs payés, connexion physique, rapport et retraits conservés ; 63 cas ciblés acquis, dont 35 nouveaux et 28 voisins. Typage, présentation et interface natives muettes acquis. Build Pages et publication en attente ; V451 reste en production. **Ensemble 5 en cours** ; ordinateur, capteurs, caissons spatiaux, embarquement et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
+
 **V451 publiée — schéma 275 :** [Réacteur stellaire](ship-reactor-v451.md). Recherches, chantier payé, 1 000 W, démarrage confirmé et attaques indépendantes ; 50 cas ciblés acquis par reprises, un ancien rouge identique au témoin conservé. Typage, présentation et interface natives muettes acquis. Build Pages acquis ; publié 8e0e2ee6/7552f915, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. **Ensemble 5 engagé** ; autres pièces et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
+
+### Construire les poutres et moteurs du vaisseau
+
+Après **Construction de vaisseau**, la catégorie **Vaisseau** donne accès à la **poutre structurelle**. Recherchez ensuite **Moteur Johnson–Tanaka** — **6 000 points** — au bureau avancé utilisable avec son multi-analyseur relié. Cette recherche suit Construction de vaisseau, sans exiger la recherche du réacteur.
+
+| Pièce | Emprise et orientation initiale | Matières | Constructeur |
+| --- | --- | --- | --- |
+| Poutre structurelle |2 × 6, Nord ; rotation possible |200 acier, 40 plastacier, 3 composants, 1 avancé |Construction 5 |
+| Moteur Johnson–Tanaka |3 × 4, Nord ; rotation possible |260 acier, 140 plastacier, 70 uranium, 6 avancés |Construction 8 |
+
+Choisissez un emplacement extérieur de support lourd, découvert et sans toit sur les **douze cases** de chaque pièce. Les matières sont livrées au chantier puis consommées par le travail. Pour **une poutre et trois moteurs**, prévoyez au total **980 acier, 460 plastacier, 210 uranium, 3 composants et 19 composants avancés** ; ce total s'ajoute au réacteur et aux infrastructures déjà construits.
+
+Les pièces achevées doivent se toucher par un **bord** pour former le même vaisseau. Elles transmettent aussi l'électricité ; le moteur ne demande pas de combustible périodique. Leur inspection compte les pièces réellement reliées et celles qui manquent encore. Une poutre ou un moteur peut relier des réacteurs pour leur démarrage confirmé ; retirer ce pont scinde les prochaines lectures, sans remettre à zéro un réacteur déjà démarré ni effacer les adversaires arrivés.
+
+Vous pouvez déconstruire une pièce pour récupérer une partie de ses matériaux. **Ordinateur, capteurs, caissons spatiaux, embarquement et lancement restent à développer** : la coque partielle ne permet pas encore de quitter la planète. [Règles, coûts et contrôles](ship-parts-v452.md).
 
 ### Construire et démarrer un réacteur stellaire
 
@@ -10,7 +27,7 @@ Choisissez un constructeur de niveau **8** et un emplacement extérieur de suppo
 
 Dans son inspection, **Démarrer le réacteur** ouvre une confirmation. Annuler laisse le monde intact ; confirmer engage les réacteurs en veille réellement reliés. Préparez les défenses : le signal peut attirer des attaques pendant les **quatorze jours** de démarrage. Il n'existe pas de bouton d'arrêt gratuit. Plusieurs réacteurs ne multiplient pas les calendriers ; leur fin ou leur retrait n'effacent pas les adversaires arrivés. Pause et recharge conservent les dates.
 
-Les autres pièces, l'embarquement spatial et le lancement restent à développer. Le caisson ordinaire V447 reste un équipement de colonie. [Règles, adaptations et contrôles](ship-reactor-v451.md).
+Poutres et moteurs prolongent désormais cette construction ; ordinateur, capteurs, caissons spatiaux, embarquement et lancement restent à développer. Le caisson ordinaire V447 reste un équipement de colonie. [Règles, adaptations et contrôles](ship-reactor-v451.md).
 
 ### Donner des textiles à une faction
 

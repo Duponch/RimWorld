@@ -1,12 +1,15 @@
 import { FLOOR_DEFINITIONS,isBuildableFloor,isFloorKind,floorAvailable } from '../sim/flooring';
 import { FURNITURE_DEFINITIONS,isHabitatFurnitureKind } from '../sim/furniture-stats';
 import { researchUnlocked,type ResearchProject } from '../sim/research';
+import {isSchema276OrLater} from '../sim/schema-compatibility-257';
+import {isShipAddedKind276} from '../sim/ship-part-content-276';
 import type { World } from '../sim/types';
 import type { ArchitectCategory, Tool } from './layout';
 
 /** Research requirements for ordinary construction, without installation's
  * exemptions. Furniture and floors keep their delivered definition as owner. */
 const BUILD_RESEARCH:Readonly<Partial<Record<Tool,ResearchProject>>>=Object.freeze({
+  'ship-beam':'ship-basics','ship-engine':'ship-engine',
   'ship-reactor':'ship-reactor','cryptosleep-casket':'cryptosleep',vent:'complex-furniture',autodoor:'autodoors','mini-turret':'gun-turrets','vitals-monitor':'vitals-monitor',
   'tube-television':'tube-television',cooler:'air-conditioning',battery:'batteries',
   'fueled-smithy':'smithing','electric-smithy':'smithing',brewery:'brewing','fermenting-barrel':'brewing','geothermal-generator':'geothermal-power','solar-generator':'solar-power','hydroponics-basin':'hydroponics',
@@ -22,6 +25,7 @@ const BUILD_RESEARCH:Readonly<Partial<Record<Tool,ResearchProject>>>=Object.free
 /** Existing command/material compatibility boundaries. These describe the
  * format, never the colony's stock, selected material, workers or terrain. */
 const MIN_SCHEMA:Readonly<Partial<Record<Tool,number>>>=Object.freeze({
+  'ship-beam':276,'ship-engine':276,
   'ship-reactor':275,'cryptosleep-casket':271,'fueled-smithy':267,'electric-smithy':267,brewery:265,'fermenting-barrel':265,'geothermal-generator':264,bedroll:256,'torch-lamp':249,'build-bridge':247,'remove-bridge':247,vent:244,'sleeping-spot':232,shelf:229,'small-shelf':229,'spike-trap':226,
   'electric-crematorium':225,'double-bed':224,'electric-smelter':222,
   'animal-sleeping-spot':221,'biofuel-refinery':218,'chemfuel-generator':218,
@@ -53,6 +57,7 @@ export const architectCategoryAvailable=(world:World,category:ArchitectCategory)
 /** Catalogue visibility only. Placement still has its own shared simulation
  * validation; an occupied cell or an empty stock never removes an icon. */
 export function architectToolAvailable(world:World,tool:Tool):boolean {
+  if(isShipAddedKind276(tool)&&!isSchema276OrLater(world.schemaVersion))return false;
   if((tool==='snow-clear'||tool==='remove-snow-clear')&&!world.snow)return false;
   if(isFloorKind(tool)&&(!isBuildableFloor(tool)||!floorAvailable(tool,world.schemaVersion)))return false;
   if(world.schemaVersion<(MIN_SCHEMA[tool]??(isBuildableFloor(tool)?89:0)))return false;

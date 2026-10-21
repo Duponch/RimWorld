@@ -1,3 +1,5 @@
+import {isSchema276OrLater} from './schema-compatibility-257.ts';
+import {isShipPartKind276,isShipAddedKind276} from './ship-part-content-276.ts';
 import {isSchema275OrLater} from './schema-compatibility-257.ts';
 import {shipChunkNextRandom256} from './ship-chunk-leavings-256.ts';
 import {isPlayerCasket271} from './cryptosleep-state-271.ts';
@@ -25,7 +27,7 @@ import type { Job, Pawn, World } from './types.ts';
 export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolean {
   const structure = deconstructionTarget(world, job);
   if (!structure || !deconstructionAvailable(world, job, pawn.id)) return false;
-  const reactor=structure.kind==='ship-reactor';if(reactor&&!isSchema275OrLater(world.schemaVersion))return false;
+  const shipPart=isShipPartKind276(structure.kind);if(shipPart&&!(isShipAddedKind276(structure.kind)?isSchema276OrLater(world.schemaVersion):isSchema275OrLater(world.schemaVersion)))return false;
   if(isPlayerCasket271(structure)){const plan=planCryptosleepRemoval271(world,structure,'deconstruct');return plan.ok&&plan.commit();}
   if(isAncientCasket256(structure)){const plan=planEmptyAncientCasketRemoval256(world,structure,'deconstruct');return plan.ok&&plan.commit();}
   const bedOwnership=prepareBedOwnershipTransition256(world,structure,'destroy');
@@ -68,10 +70,10 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
     if (cost.item === 'wood') lostWood += cost.quantity - quantity;
     else if(cost.item==='steel')lostSteel += cost.quantity - quantity;
     else if(cost.item==='component')lostComponents+=cost.quantity-quantity;
-    // Prospective reactor only: historical generic removals retain their ledger.
-    else if(reactor&&cost.item==='plasteel')lostPlasteel+=cost.quantity-quantity;
-    else if(reactor&&cost.item==='uranium')lostUranium+=cost.quantity-quantity;
-    else if(reactor&&cost.item==='advanced-component')lostAdvancedComponents+=cost.quantity-quantity;
+    // Prospective ship parts only: older generic removals keep their ledger.
+    else if(shipPart&&cost.item==='plasteel')lostPlasteel+=cost.quantity-quantity;
+    else if(shipPart&&cost.item==='uranium')lostUranium+=cost.quantity-quantity;
+    else if(shipPart&&cost.item==='advanced-component')lostAdvancedComponents+=cost.quantity-quantity;
     else if(isBlockMaterial(cost.item))lostBlocks[cost.item]=(lostBlocks[cost.item]??0)+cost.quantity-quantity;
     else if(world.schemaVersion>=189&&isUpholsteryMaterial(cost.item))lostTextiles[cost.item]=(lostTextiles[cost.item]??0)+cost.quantity-quantity;
   }

@@ -1,3 +1,4 @@
+import {isShipPartKind276} from './ship-part-content-276.ts';
 import {naturalTerrainWalkable256} from './natural-terrain-movement-256.ts';
 import { addActorObstacles,actorStepAllowed,openHostileDoor } from './combat-navigation.ts';
 import { doorCorners,isPassageDoor } from './door-rules.ts';
@@ -27,7 +28,7 @@ export function blockedCells(world: World, physical=false,geometry?:StructureNav
   }
   const add=(structure:World['structures'][number],cells?:readonly number[])=>{
     if (!physical&&isPassageDoor(structure.kind)&&structure.door?.forbidden)blocked[cellIndex(world,structure.x,structure.z)]=1;
-    if ((structure.kind === 'wall'||structure.kind==='cooler'||structure.kind==='vent'||structure.kind==='electric-crematorium'||structure.kind==='ship-reactor'||structure.kind==='geothermal-generator'||structure.kind==='nutrient-paste-dispenser') || version<22&&structure.kind === 'table'){
+    if ((structure.kind === 'wall'||structure.kind==='cooler'||structure.kind==='vent'||structure.kind==='electric-crematorium'||isShipPartKind276(structure.kind)||structure.kind==='geothermal-generator'||structure.kind==='nutrient-paste-dispenser') || version<22&&structure.kind === 'table'){
       if(cells){for(const i of cells)blocked[i]=1;}
       else for (const cell of footprintCells(structure)) blocked[cellIndex(world, cell.x, cell.z)] = 1;
     }

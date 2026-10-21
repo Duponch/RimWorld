@@ -1,3 +1,4 @@
+import {isShipPartKind276} from './ship-part-content-276.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {roofCells} from './roof-rules.ts';
 import {START_STRUCTURE_PHYSICS_256} from './player-start-physics-256.ts';
@@ -33,13 +34,13 @@ export class ThermalTopologyCache {
       if(door)doors.push(s);if(s.kind==='vent')vents.push({s,i});
       const fact=geographic?START_STRUCTURE_PHYSICS_256[s.kind]:undefined;
       if(geographic&&!fact)throw Error('Unresolved actual thermal structure');
-      const room=geographic?fact!.door||fact!.fullFill:s.kind==='vent'||s.kind==='wall'||s.kind==='cooler'||s.kind==='electric-crematorium'||s.kind==='ship-reactor'||s.kind==='geothermal-generator'||door;
+      const room=geographic?fact!.door||fact!.fullFill:s.kind==='vent'||s.kind==='wall'||s.kind==='cooler'||s.kind==='electric-crematorium'||isShipPartKind276(s.kind)||s.kind==='geothermal-generator'||door;
       const face=hasVents&&STRUCTURE_DEFINITIONS[s.kind].blocksMovement;
       let cells:ReturnType<typeof footprintCells>|undefined;
-      if(face||room&&(geographic||s.kind==='electric-crematorium'||s.kind==='ship-reactor'||s.kind==='geothermal-generator'))cells=footprintCells(s);
+      if(face||room&&(geographic||s.kind==='electric-crematorium'||isShipPartKind276(s.kind)||s.kind==='geothermal-generator'))cells=footprintCells(s);
       if(room){
         const kind=(geographic?fact!.door:door)?2:1;
-        if(geographic||s.kind==='electric-crematorium'||s.kind==='ship-reactor'||s.kind==='geothermal-generator')for(const c of cells!)buildings.set(c.z*world.width+c.x,kind);
+        if(geographic||s.kind==='electric-crematorium'||isShipPartKind276(s.kind)||s.kind==='geothermal-generator')for(const c of cells!)buildings.set(c.z*world.width+c.x,kind);
         else buildings.set(s.z*world.width+s.x,kind);
       }
       if(face)for(const c of cells!)faceSolids.add(c.z*world.width+c.x);

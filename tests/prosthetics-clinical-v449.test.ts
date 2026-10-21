@@ -41,7 +41,7 @@ test('only273 admits a synthetic clavicle linked to its matching installed shoul
  for(const side of ['left','right'] as const){
   const part=`${side}-shoulder` as const,h=createMedicalRecord(100);expect(h.humanHealthScale).toBeUndefined();
   expect(installArtificialPart(h,part,'prosthetic-arm')).toBe(true);expect(medical(h,273)).toBeNull();
-  for(const version of [210,272,276])expect(medical(h,version)).not.toBeNull();
+  for(const version of [210,272,277])expect(medical(h,version)).not.toBeNull();
   const orphan=structuredClone(h);delete orphan.artificialParts;expect(medical(orphan,273)).not.toBeNull();
   const wrongParent=structuredClone(h);wrongParent.artificialParts![0]!.part=side==='left'?'right-shoulder':'left-shoulder';expect(medical(wrongParent,273)).not.toBeNull();
   const falseDate=structuredClone(h);falseDate.missing.find(m=>m.part===`${side}-clavicle`)!.bornAt--;expect(medical(falseDate,273)).not.toBeNull();

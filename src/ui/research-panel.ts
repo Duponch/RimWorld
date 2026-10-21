@@ -9,7 +9,7 @@ export {researchProjects} from './research-projects';
 export interface ResearchPanelActions {onOpenWork?:()=>void;onOpenProduction?:()=>void}
 
 export const researchLinks: readonly (readonly [ResearchProject, ResearchProject])[] = [
-  ['advanced-fabrication','ship-basics'],['ship-basics','ship-reactor'],
+  ['advanced-fabrication','ship-basics'],['ship-basics','ship-reactor'],['ship-basics','ship-engine'],
   ['machining','prosthetics'],
   ['multi-analyzer','cryptosleep'],
   ['microelectronics','deep-drilling'],['deep-drilling','ground-scanner'],
@@ -31,7 +31,7 @@ const projectById=new Map(researchProjects.map(project=>[project.id,project]));
 const NODE_WIDTH=142,NODE_HEIGHT=66,GRAPH_WIDTH=850,GRAPH_HEIGHT=740;
 const nodePosition=(project:ProjectNode)=>({x:20+(project.x-24)*.82,y:22+(project.y-20)*.66});
 const prerequisites=new Map<ResearchProject,string[]>([
-  ['ship-basics',['Fabrication avancée']],['ship-reactor',['Construction de vaisseau']],
+  ['ship-basics',['Fabrication avancée']],['ship-reactor',['Construction de vaisseau']],['ship-engine',['Construction de vaisseau']],
   ['prosthetics',['Usinage']],
   ['cryptosleep',['Multi-analyseur']],
   ['long-blades',['Forge']],
@@ -95,6 +95,9 @@ export function updateResearchPanel(root: HTMLElement, world: World, send: (comm
       if(toId==='tube-television'){
         const x1=from.x,y1=from.y+NODE_HEIGHT/2,y2=to.y+NODE_HEIGHT/2;
         path.setAttribute('d',`M${x1} ${y1} L6 ${y1} L6 ${y2} L${to.x} ${y2}`);
+      } else if(to.y===from.y&&to.x<from.x){
+        const y=from.y+NODE_HEIGHT/2;
+        path.setAttribute('d',`M${from.x} ${y} L${to.x+NODE_WIDTH} ${y}`);
       } else if(from.x===to.x){
         const x=from.x+NODE_WIDTH/2,y1=from.y+NODE_HEIGHT,y2=to.y;
         path.setAttribute('d',`M${x} ${y1} L${x} ${y2}`);

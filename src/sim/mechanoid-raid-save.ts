@@ -1,3 +1,4 @@
+import {isSchema275OrLater} from './schema-compatibility-257.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {multiRaid261} from './mechanical-raid-groups-261.ts';
 import {registeredCampaign,registeredMapId} from './world-map-context.ts';
@@ -14,12 +15,12 @@ export function validateMechanoidRaids(w:World,version:number=w.schemaVersion,re
   const p:unknown=s.mechanoid;const multi=(version===261||(Number(version)===262||isSchema263OrLater(Number(version))))&&multiRaid261(w);const groups:unknown[]=[...s.mechActive!==undefined?[s.mechActive]:[],...Array.isArray(s.extraMechActive261)?s.extraMechActive261:[]];
   if(version<194&&(p!==undefined||groups.length>0||s.last?.mechanoid!==undefined||s.last?.mechComposition!==undefined))return ['Future mechanoid raid state.'];
   if(p!==undefined&&(!object(p)||!keys(p,['adoptedAt','rng','lastFaction',...(version>=197?['ranged']:[])])||!int(p.adoptedAt,0,w.tick)||!int(p.rng,1,0xffffffff)
-    ||p.lastFaction!==undefined&&(typeof p.lastFaction!=='string'||!['outlaws','mechanoid'].includes(p.lastFaction))||(s.profile!=='cassandra-raids-v1'&&!(version>=260&&s.profile==='camp-pressure-v1')&&!(Number(version)===275&&w.shipReactorThreats275))
+    ||p.lastFaction!==undefined&&(typeof p.lastFaction!=='string'||!['outlaws','mechanoid'].includes(p.lastFaction))||(s.profile!=='cassandra-raids-v1'&&!(version>=260&&s.profile==='camp-pressure-v1')&&!(isSchema275OrLater(version)&&w.shipReactorThreats275))
     ||p.ranged!==undefined&&(!object(p.ranged)||Object.keys(p.ranged).length!==1||!keys(p.ranged,['adoptedAt'])||!int(p.ranged.adoptedAt,p.adoptedAt,w.tick))))errors.push('Invalid mechanoid raid policy.');
   const rangedAt=version>=197&&object(p)&&object(p.ranged)&&int(p.ranged.adoptedAt)?p.ranged.adoptedAt:undefined;
   for(const g of groups){
     const cell=(v:unknown)=>object(v)&&Object.keys(v).length===2&&keys(v,['x','z'])&&int(v.x,0,w.width-1)&&int(v.z,0,w.height-1);
-    if(!p||!multi&&s.active||!object(g)||!keys(g,['id','startedAt','members','lost','phase','stage','composition',...version>=260?['source260']:[],...(Number(version)===275?['shipReactor275']:[])])||object(g)&&Object.hasOwn(g,'source260')&&g.source260!=='camp-pressure'||object(g)&&Object.hasOwn(g,'shipReactor275')&&(!validShipReactorRaidSource275(g.shipReactor275,w,w.tick,'mechanoid')||g.source260!==undefined||g.shipReactor275.atCore!==Number(g.startedAt)*10)||(multi?!int(g.id,1,s.serial):g.id!==s.serial)||!int(g.startedAt,object(p)&&int(p.adoptedAt)?p.adoptedAt:0,w.tick)
+    if(!p||!multi&&s.active||!object(g)||!keys(g,['id','startedAt','members','lost','phase','stage','composition',...version>=260?['source260']:[],...(isSchema275OrLater(version)?['shipReactor275']:[])])||object(g)&&Object.hasOwn(g,'source260')&&g.source260!=='camp-pressure'||object(g)&&Object.hasOwn(g,'shipReactor275')&&(!validShipReactorRaidSource275(g.shipReactor275,w,w.tick,'mechanoid')||g.source260!==undefined||g.shipReactor275.atCore!==Number(g.startedAt)*10)||(multi?!int(g.id,1,s.serial):g.id!==s.serial)||!int(g.startedAt,object(p)&&int(p.adoptedAt)?p.adoptedAt:0,w.tick)
       ||!validMechComposition(g.composition,rangedAt!==undefined&&Number(g.startedAt)>=rangedAt)||!Array.isArray(g.members)||!object(g.composition)||!Array.isArray(g.composition.roster)||g.members.length!==g.composition.roster.length
       ||!g.members.every(id=>int(id,1,w.nextId-1))||new Set(g.members).size!==g.members.length||!Array.isArray(g.lost)
       ||!g.lost.every((id,i)=>Array.isArray(g.members)&&g.members.includes(id)&&(i===0||Number(id)>Number((g.lost as unknown[])[i-1])))

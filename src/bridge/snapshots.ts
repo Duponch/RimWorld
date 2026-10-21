@@ -1,3 +1,4 @@
+import {validShipPartHistoricalTransport276,validShipHullBuilding276} from '../sim/ship-part-save-276.ts';
 import {validateShipReactorThreats275,validShipReactorThreatContinuation275} from '../sim/ship-reactor-threat-save-275.ts';
 import {validShipReactorBuilding275,validShipReactorWorld275,validShipReactorContinuation275,validShipReactorHistoricalTransport275} from '../sim/ship-reactor-save-275.ts';
 import {validShipResearchTransport275} from '../sim/research-save.ts';
@@ -667,7 +668,7 @@ function denseArray(value:unknown):value is unknown[] {
 function validStructurePatchEntry(value:unknown,world:Pick<World,'nextId'|'width'|'height'|'schemaVersion'|'tick'>):value is Structure {
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
   if(!validCaveHiveBuilding256(value,world.schemaVersion,world)||!validAncientCasketField256(value,world.schemaVersion)||!validLocalRoadPropStructure256(value,world.schemaVersion,world)||!validHumanSleepingSpotStructureEntry(value,world.schemaVersion,world)||!validBedrollStructureEntry256(value,world.schemaVersion,world)||!validAncientMonumentBuilding256(value,world.schemaVersion))return false;
-  if(!validShipReactorBuilding275(value,world.schemaVersion,world,world.tick*10))return false;
+  if(!validShipReactorBuilding275(value,world.schemaVersion,world,world.tick*10)||!validShipHullBuilding276(value,world.schemaVersion,world))return false;
   if(!validAncientCasketBuilding256(value,world.schemaVersion,world)||!validCryptosleepBuilding271(value,world.schemaVersion,world,world.tick))return false;
   const s=value as Structure;
   return Number.isSafeInteger(s.id)&&s.id>=1&&s.id<world.nextId
@@ -1128,6 +1129,7 @@ export class SnapshotDecoder {
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
     if(packet.world.destroyed!==undefined&&!validNaturalHiveLoss256(packet.world.destroyed,packet.world.schemaVersion))return resync('Invalid or future natural Hive loss counter.');
     if(!validWorldPawnsEnvelope256(packet.world,packet.world.schemaVersion,packet.world.tick*10,packet.world.nextId))return resync('Invalid or future WorldPawns header.');
+    if(!validShipPartHistoricalTransport276(packet,packet.world.schemaVersion))return resync('Pièce de vaisseau ou recherche moteur future dans ce snapshot.');
     if(!validShipReactorHistoricalTransport275(packet,packet.world.schemaVersion))return resync('Réacteur stellaire futur dans ce snapshot.');
     if(!validProstheticHistoricalTransport273(packet,packet.world.schemaVersion))return resync('Prothèses industrielles futures dans ce snapshot.');
     if(!validSpearHistoricalTransport272(packet,packet.world.schemaVersion))return resync('Catalogue de lances futur dans ce snapshot.');

@@ -35,31 +35,45 @@ import {readShipReactorStart275} from '../src/sim/ship-reactor-runtime-275.ts';
 import {applyCommand,stepWorld} from '../src/sim/engine.ts';
 import {damageStructure} from '../src/sim/thing-damage.ts';
 import {SnapshotEncoder,SnapshotDecoder} from '../src/bridge/snapshots.ts';
-import type {World} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type World} from '../src/sim/types.ts';
 import type {Mechanoid} from '../src/sim/mechanoid-state.ts';
 import {writeTestFileSync} from './test-output.ts';
 
 export const REACTOR_PRESSURE_PREPARATION275='Declared isolated32² engineering/combat fixture. Only immutable acquired geography is reused; factions, leaders, local physical map/clocks and one healthy original colonist are made by their real producers. Forty-five-day date, cleared soil/roof/inventory, one already-owned reactor and initial absence of flora are prepared, not earned or elapsed. Required road/geyser/flora/snow/fog owners are made by their actual constructors. Both branches reuse this same validated baseline. A declared defeated competing faction isolates the human/mechanical branch; a bounded pure composition oracle chooses a mechanical pressure-stream state before birth. No world/map seed is rerolled, no actual attempt is retried and no native RNG equivalence or natural raid frequency is claimed. The actual next physical step owns opportunity, faction check, roster, entry, IDs and admission.';
 let baseline275:string|undefined;
 const replayBaseline275=process.env.SHIP_REACTOR_PRESSURE_BASELINE275;
+const baselineDirectory275=`tmp/ship-reactor-v451/reprises-schema-${SCHEMA_VERSION}`;
+/** Never overwrite the acquired275 baseline or its original provenance. */
+function saveCurrentBaseline275(w:World,source:{path:string;sha256:string;schemaVersion?:number}){
+ baseline275=serializeWorld(w);expect(w.schemaVersion).toBe(SCHEMA_VERSION);
+ expect(serializeWorld(deserializeWorld(baseline275))).toBe(baseline275);
+ writeTestFileSync(`${baselineDirectory275}/pressure-baseline.json`,baseline275);
+ writeTestFileSync(`${baselineDirectory275}/pressure-baseline.meta.json`,JSON.stringify({preparation:REACTOR_PRESSURE_PREPARATION275,schemaVersion:SCHEMA_VERSION,input:source.path,inputSha256:source.sha256,...(source.schemaVersion===undefined?{}:{sourceSchemaVersion:source.schemaVersion}),sha256:createHash('sha256').update(baseline275).digest('hex'),tick:w.tick,mapId:0,tile:w.planet!.homeTile,width:w.width,height:w.height,completeWorldValidatedBeforeBirth:true,raidAlreadyBorn:false},null,2));
+}
 
 /** A complete real World is checked before either actual raid is admitted.
  * No stale calendar in an old campaign is shifted to manufacture day45. */
 export function preparedShipReactorPressureWorld275():World {
- if(baseline275)return deserializeWorld(baseline275);
+ if(baseline275)return deserializeWorld(baseline275!);
  if(replayBaseline275){
-  const text=readFileSync(replayBaseline275,'utf8'),w=deserializeWorld(text);
-  expect(validateWorld(w)).toEqual([]);expect(serializeWorld(w)).toBe(text);expect(w.width).toBe(32);expect(w.height).toBe(32);
+  const text=readFileSync(replayBaseline275,'utf8'),original=JSON.parse(text) as {schemaVersion:number},w=deserializeWorld(text);
+  // deserializeWorld performs the complete original275 validation before
+  // its real migration. A resumed current baseline changes nothing either.
+  expect([275,SCHEMA_VERSION]).toContain(original.schemaVersion);
+  expect(w.schemaVersion).toBe(SCHEMA_VERSION);expect(validateWorld(w)).toEqual([]);
+  expect(JSON.parse(serializeWorld(w))).toEqual({...original,schemaVersion:SCHEMA_VERSION});expect(w.width).toBe(32);expect(w.height).toBe(32);
   expect(w.pawns).toHaveLength(1);expect(w.tick).toBeGreaterThanOrEqual(45*6000);expect(w.shipReactorThreats275).toBeUndefined();expect(w.raids).toBeUndefined();
   expect(w.structures.filter(s=>s.kind==='ship-reactor')).toHaveLength(1);expect(w.structures.find(s=>s.kind==='ship-reactor')!.shipReactor275).toBeUndefined();
-  expect(actualMechanicalBirthFaction259(w.worldFactions)).not.toBeNull();baseline275=text;return w;
+  expect(actualMechanicalBirthFaction259(w.worldFactions)).not.toBeNull();
+  saveCurrentBaseline275(w,{path:replayBaseline275,sha256:createHash('sha256').update(text).digest('hex'),schemaVersion:original.schemaVersion});
+  expect(readFileSync(replayBaseline275,'utf8')).toBe(text);return w;
  }
  const text=readFileSync(GIFT_CAMP_SOURCE274,'utf8');expect(createHash('sha256').update(text).digest('hex')).toBe(GIFT_CAMP_SOURCE_SHA274);
  const acquired=deserializeCampaign(text);if(acquired.planet?.revision!==3)throw Error('Actual immutable acquired geography required');
  const geography=planetGeography256(acquired.planet),random=new WorldGenerationRandom(718);
- const foreign=generateForeignWorldFactions256({version:275,tick:0,tiles:geography.surface.tiles,selection:[...geography.definition.factions],population:3,nextFactionId:1,nextSettlementId:1,nextThingId:1,random});
+ const foreign=generateForeignWorldFactions256({version:SCHEMA_VERSION,tick:0,tiles:geography.surface.tiles,selection:[...geography.definition.factions],population:3,nextFactionId:1,nextSettlementId:1,nextThingId:1,random});
  if(!foreign.ok)throw Error(foreign.reason);
- const made=completeWorldFactionRegistry256({version:275,draft:foreign.draft,playerDef:'PlayerColony',name:'Réacteur déclaré',postWorldRandom:new WorldGenerationRandom(991)});
+ const made=completeWorldFactionRegistry256({version:SCHEMA_VERSION,draft:foreign.draft,playerDef:'PlayerColony',name:'Réacteur déclaré',postWorldRandom:new WorldGenerationRandom(991)});
  if(!made.ok)throw Error(made.reason);
  const occupied=new Set(made.registry.settlements.map(s=>s.tile));
  const home=geography.surface.tiles.find(t=>t.biome==='temperate-forest'&&t.hilliness==='flat'&&!geography.roads[t.id]!.length&&canPlaceWorldSettlement(geography.surface.tiles,t.id,{settlementTiles:occupied}));
@@ -70,7 +84,7 @@ export function preparedShipReactorPressureWorld275():World {
  for(let cycle=30;cycle<38&&due===undefined;cycle++)for(const hit of shipReactorCycleHits275(seed,cycle)){const core=(cycle*90+hit)*1000;if(core>45*60000){due=core;break;}}
  if(due===undefined)throw Error('The fixed disposition has no future opportunity in eight cycles');
  const tick=due/10-1;
- const {world:w}=prepareGeographicPhysicalMap256({schemaVersion:275,planet,factions:made.registry,tile:home.id,width:32,height:32,tick,calendarOrigin:0,nextId:foreign.nextThingId,rng:451,initialWeather:{gameInitDataPresent:false,daysPassedSinceSettle:45},definitionContext:{isStartingMap:false,mapInitializing:true,tutorial:false,nomadicFactor:.5,usedRectCells:new Set()}});
+ const {world:w}=prepareGeographicPhysicalMap256({schemaVersion:SCHEMA_VERSION,planet,factions:made.registry,tile:home.id,width:32,height:32,tick,calendarOrigin:0,nextId:foreign.nextThingId,rng:451,initialWeather:{gameInitDataPresent:false,daysPassedSinceSettle:45},definitionContext:{isStartingMap:false,mapInitializing:true,tutorial:false,nomadicFactor:.5,usedRectCells:new Set()}});
  // Finite declared preparation of a control landscape; no clearing yield or
  // natural acquisition is asserted. All subsequent actors remain physical.
  w.tiles=w.tiles.map(()=>({terrain:'soil-natural'}));delete w.roofing;
@@ -80,17 +94,15 @@ export function preparedShipReactorPressureWorld275():World {
  initializeGeographicInitialSnow256(w,new WorldGenerationRandom(localGenerationStepSeed(site.mapSeed,INITIAL_SNOW_SEED_PART_256,0)));
  const reach=captureGeographicGenerationReachability256(w);
  initializeExploration256(w,{start:16*32+16,rootsToUnfog:[],readers:{standable:reach.physical.standable,roofed:reach.physical.roofed,canReachMapEdgeNoPassClosedDoorsOrWater:reach.canReachMapEdgeNoPassClosedDoorsOrWater}},captureActualFogPhysical256(w),new WorldGenerationRandom(451));
- const p=startingPawn(w.nextId++,'Témoin déclaré',16,16,0,100,w.seed,w.tick,275);p.health=createMedicalRecord(w.tick);p.hunger=100;p.rest=100;p.mood=100;p.hostilityResponse='ignore';p.schedule.fill('work');
+ const p=startingPawn(w.nextId++,'Témoin déclaré',16,16,0,100,w.seed,w.tick,SCHEMA_VERSION);p.health=createMedicalRecord(w.tick);p.hunger=100;p.rest=100;p.mood=100;p.hostilityResponse='ignore';p.schedule.fill('work');
  for(const key of Object.keys(p.priorities) as (keyof typeof p.priorities)[])p.priorities[key]=0;
  expect(bindBornHumanFaction259(w,p,w.worldFactions!.playerFactionId)).toBe(true);w.pawns.push(p);
  w.structures.push({id:w.nextId++,kind:'ship-reactor',x:25,z:25,orientation:1,footprint:'standard',material:'steel',power:{on:true,parentId:null}});
  initialWorldRegistry(w);w.worldMaps!.campaignSeed=planet.generationSeed;w.worldMaps!.calendarOrigin=0;
  expect(actualMechanicalBirthFaction259(w.worldFactions)).not.toBeNull();expect(validateWorld(w)).toEqual([]);
- baseline275=serializeWorld(w);expect(serializeWorld(deserializeWorld(baseline275))).toBe(baseline275);
- writeTestFileSync('tmp/ship-reactor-v451/pressure-baseline.json',baseline275);
- writeTestFileSync('tmp/ship-reactor-v451/pressure-baseline.meta.json',JSON.stringify({preparation:REACTOR_PRESSURE_PREPARATION275,input:GIFT_CAMP_SOURCE274,inputSha256:GIFT_CAMP_SOURCE_SHA274,sha256:createHash('sha256').update(baseline275).digest('hex'),tick:w.tick,mapId:0,tile:home.id,width:w.width,height:w.height,completeWorldValidatedBeforeBirth:true,raidAlreadyBorn:false},null,2));
+ saveCurrentBaseline275(w,{path:GIFT_CAMP_SOURCE274,sha256:GIFT_CAMP_SOURCE_SHA274});
  expect(createHash('sha256').update(readFileSync(GIFT_CAMP_SOURCE274)).digest('hex')).toBe(GIFT_CAMP_SOURCE_SHA274);
- return deserializeWorld(baseline275);
+ return deserializeWorld(baseline275!);
 }
 
 function publicProbe(w:World){
@@ -122,7 +134,7 @@ function kill(w:World,m:Mechanoid){
  expect(commitMechanoidImpact(w,m,medical,{rng:w.rng},w.tick*10)).toBe(true);advanceMechanoidRaid(w);advanceMechanoidCorpses(w);
 }
 
-describe.skipIf(!existsSync(GIFT_CAMP_SOURCE274)&&!(replayBaseline275&&existsSync(replayBaseline275)))('complete pressure275 on actual acquired geography, declared branch preparation',()=>{
+describe.skipIf(!existsSync(GIFT_CAMP_SOURCE274)&&!(replayBaseline275&&existsSync(replayBaseline275)))(`complete pressure275 at schema${SCHEMA_VERSION} on actual acquired geography, declared branch preparation`,()=>{
  test('real mechanical opportunity, faction, staging loss, physical attack, reactor loss and corpse IDs survive RAW and public continuations',()=>{
   const w=preparedShipReactorPressureWorld275(),reactorId=start(w,'mechanoid'),probe=publicProbe(w),victimId=w.pawns[0]!.id,before=w.nextId;
   const twin=raw(w);stepWorld(w);stepWorld(twin);expect(serializeWorld(twin)).toBe(serializeWorld(w));

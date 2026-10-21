@@ -127,6 +127,6 @@ test('prospective reactor losses reject old/future fields and refuse every accum
   expect(finishDeconstruction(copy,copy.pawns[0]!,copy.jobs.find(j=>j.id===job.id)!)).toBe(false);expect(copy).toEqual(before);
  }
  w.deconstructed.lostPlasteel275=140;expect(validateDeconstruction(w,275,true)).toEqual([]);
- for(const version of [274,276])expect(validateDeconstruction(w,version,true).some(s=>s.includes('ledger')||s.includes('plasteel'))).toBe(true);
+ for(const version of [274,277])expect(validateDeconstruction(w,version,true).some(s=>s.includes('ledger')||s.includes('plasteel'))).toBe(true);
  for(const value of [0,-1,.5,Number.MAX_SAFE_INTEGER+1]){w.deconstructed.lostPlasteel275=value;expect(validateDeconstruction(w,275,true)).not.toEqual([]);}
 });

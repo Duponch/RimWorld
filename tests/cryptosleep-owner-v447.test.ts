@@ -55,7 +55,7 @@ test('closed owner rejects active cargo, duplicate originals, wrong clinical mar
 });
 
 test('building header admits only the paid fixed definition and rejects future fields before reading accessors',()=>{
- const {w,c}=contained();expect(validCryptosleepBuilding271(c,271,w,w.tick)).toBe(true);expect(validCryptosleepBuilding271(c,272,w,w.tick)).toBe(true);expect(validCryptosleepBuilding271(c,276,w,w.tick)).toBe(false);
+ const {w,c}=contained();expect(validCryptosleepBuilding271(c,271,w,w.tick)).toBe(true);expect(validCryptosleepBuilding271(c,272,w,w.tick)).toBe(true);expect(validCryptosleepBuilding271(c,277,w,w.tick)).toBe(false);
  expect(validCryptosleepBuilding271(c,270,w,w.tick)).toBe(false);
  for(const extra of [{power:{}},{fuel:{}},{quality:'normal'},{material:'wood'},{footprint:'legacy-single'},{damage:250},{factionId:undefined}])expect(validCryptosleepBuilding271({...c,...extra},271,w,w.tick)).toBe(false);
  let reads=0;const raw={...c};Object.defineProperty(raw,'material',{enumerable:true,get(){reads++;return 'steel';}});

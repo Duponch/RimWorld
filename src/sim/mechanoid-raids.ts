@@ -1,3 +1,4 @@
+import {isSchema275OrLater} from './schema-compatibility-257.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {actualMechanicalBirthFaction259} from './mechanoid-world-faction-259.ts';
 import {mechRaidGroups261,multiRaid261,beginMechanicalMulti261} from './mechanical-raid-groups-261.ts';
@@ -66,7 +67,7 @@ export function createMechanoidRaid(w:World,composition:MechanoidRaidComposition
  return adoptMechanoidRaid(w,composition,random,sites);
 }
 export function createShipReactorMechanoidRaid275(w:World,points:number,random:{rng:number},source:ShipReactorRaidSource275):MechanoidRaidGroup|null {
- if(Number(w.schemaVersion)!==275||!w.raids?.mechanoid)return null;
+ if(!isSchema275OrLater(w.schemaVersion)||!w.raids?.mechanoid)return null;
  const composition=chooseMechanoidComposition(points,random,!!w.raids.mechanoid.ranged);if(!composition)return null;
  return adoptMechanoidRaid(w,composition,random,undefined,undefined,source);
 }

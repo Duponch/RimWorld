@@ -19,7 +19,7 @@ test.each(PROSTHETIC_ITEMS_273)('%s joins real current freight loading with its 
  expect(regularGroupFreightItem258(item,273)).toBe(true);
  expect(groupCaravanUnitMass256(item,true,273)).toBe(grams);
  expect(groupFreightUnitMass258(piece,273)).toBe(grams);
- for(const version of [2,258,272,276]){
+ for(const version of [2,258,272,277]){
   expect(regularGroupFreightItem258(item,version),String(version)).toBe(false);
   expect(groupCaravanUnitMass256(item,true,version),String(version)).toBeUndefined();
  }

@@ -1,3 +1,4 @@
+import {isSchema275OrLater} from './schema-compatibility-257.ts';
 import {registeredCampaign,registeredMapId} from './world-map-context.ts';
 import {tempMapRecord261,tempMapThreatPoints261} from './temp-map-incidents-261.ts';
 import {raidRandom,type RaidCalendar} from './raid-state.ts';
@@ -19,7 +20,7 @@ export interface ShipReactorThreats275 {revision:1;mapId:number;tile:number|null
 const f=Math.fround;
 const even=(v:number)=>{const low=Math.floor(v),fraction=v-low;return fraction<.5?low:fraction>.5?low+1:low%2===0?low:low+1;};
 const mix=(v:number)=>{v=Math.imul(v^(v>>>16),0x7feb352d);v=Math.imul(v^(v>>>15),0x846ca68b);return (v^(v>>>16))>>>0||1;};
-export const shipReactorBeacon275=(w:Pick<World,'schemaVersion'|'shipReactorThreats275'>):boolean=>Number(w.schemaVersion)===275&&w.shipReactorThreats275?.active===true;
+export const shipReactorBeacon275=(w:Pick<World,'schemaVersion'|'shipReactorThreats275'>):boolean=>isSchema275OrLater(w.schemaVersion)&&w.shipReactorThreats275?.active===true;
 /** Own xorshift stream is an explicit adaptation, not Unity's seeded Rand.
  * Off30 > spacing2 means a previous cycle cannot constrain this fixed cycle. */
 export function shipReactorFrequency275(scale:number):number {
@@ -76,7 +77,7 @@ function admit(w:World,state:ShipReactorThreats275,budget:number,cycle:number,ra
 /** Called after real reactor state advancement. No structure/terrain scan and
  * no historical replay; the caller supplies its already-known map beacon. */
 export function advanceShipReactorThreats275(w:World,starting:boolean):void {
- if(Number(w.schemaVersion)!==275)return;const now=w.tick*10;
+ if(!isSchema275OrLater(w.schemaVersion))return;const now=w.tick*10;
  let state=w.shipReactorThreats275;
  if(!state){if(!starting)return;const map=shipReactorThreatMap275(w);if(!map)return;const seed=shipReactorThreatSeed275(w,map.mapId);state=w.shipReactorThreats275={revision:1,...map,adoptedAtCore:now,active:true,seed,rng:mix(seed^0x275e77),checkedAtCore:Math.floor((now-1)/1000)*1000,opportunities:0,spawned:0,recent:[]};}
  state.active=starting;if(now%1000||now<=state.checkedAtCore)return;state.checkedAtCore=now;if(!starting)return;
