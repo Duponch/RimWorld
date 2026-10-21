@@ -1,6 +1,6 @@
 # V446 — Épées longues dans les six matières
 
-État : **qualification ciblée, présentation et parcours natifs acquis par reprises ; livraison en cours**. Schéma 270. Aucun gain FPS ni achèvement d’ensemble annoncé.
+État : **publiée ; qualification ciblée, présentation et parcours natifs acquis par reprises**. Schéma 270. Aucun gain FPS ni achèvement d’ensemble annoncé.
 
 ## Résultat joueur
 
@@ -81,4 +81,8 @@ Le disque E: plein a interrompu la première passe. Nettoyage ciblé : 102 répe
 
 ## Livraison
 
-En cours. Aucune publication anticipée ; l’ensemble 2 reste principal. Les six ensembles, la victoire et la cible de fluidité en charge restent ouverts.
+Produit sélectionné et poussé sur `origin/main` : **`9a7abfbe767193d1f5183fd4f176405ec235a6e4`**. Paquet qualifié en **1,729 s**, `tmp/elsewhere-pages/v446-package-SzPQci/` : 552 fichiers dont 550 actifs ; 71 chemins publics et 68 fiches conservés strictement public↔dist ; actifs statiques non JS identiques au paquet V445. Les trois bundles JavaScript et l’entrée sont nouveaux ; aucun instrument privé ni dossier humain `references_UI/` livré. L’avertissement de répertoire non propre de Wrangler correspond à ce dossier humain non suivi, conservé hors commit.
+
+Déploiement acquis en **19,107 s** : [version 822a5387](https://822a5387.elsewhere-cq7.pages.dev), [site principal](https://elsewhere-cq7.pages.dev). Vérification **14,297 s** : **20 réponses HTTPS exactes**, dix chemins sur deux origines ; `tmp/elsewhere-pages/v446-http-tPXk8C/`. Entrée, feuille de style, favicon, bundle, deux workers, catalogue et deux icônes de forge sont comparés ; ce relevé ne vaut ni gameplay distant ni téléchargement des 71 sauvegardes. Leur comparaison complète est locale.
+
+Les documents de livraison seuls changent après la sélection, sans recompilation produit. Contrôles documentaires et en-têtes de schéma acquis ; les 2104 empreintes sources restent exactes. Serveur et navigateurs de contrôle arrêtés ; les deux notifications du journal Vite sont conservées dans `tmp/longsword-v446/vite-notifications.txt`, sans résolution annoncée. L’ensemble 2 reste principal. Les six ensembles, la victoire et la cible de fluidité en charge restent ouverts ; les notes privées préparatoires sur le cryptosommeil et le vaisseau ne constituent pas du gameplay livré.

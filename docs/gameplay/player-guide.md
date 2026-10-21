@@ -1,12 +1,12 @@
 # Guide joueur
 
-## Fabriquer une épée longue — V446 en qualification
+## Fabriquer une épée longue — V446 publiée
 
-Après **Forge**, ouvrez **Recherche** et lancez **Lames longues** : **400points**, au bureau ordinaire ou à un bureau avancé utilisable. Activez Recherche dans Travail, puis **Artisanat** pour la fabrication. Choisissez un artisan de niveau**5**, une **Forge à combustible** ou une **Forge électrique**, puis ajoutez **Fabriquer une épée longue**. Ce lot reste en qualification ; aucune nouvelle publication n’est annoncée ici.
+Après **Forge**, ouvrez **Recherche** et lancez **Lames longues** : **400 points**, au bureau ordinaire ou à un bureau avancé utilisable. Activez Recherche dans Travail, puis **Artisanat** pour la fabrication. Choisissez un artisan de niveau **5**, une **Forge à combustible** ou une **Forge électrique**, puis ajoutez **Fabriquer une épée longue**.
 
-Prévoyez **100unités homogènes** de bois, acier, plastacier ou uranium, ou **1000unités** d’argent ou d’or. Acier, plastacier et uranium sont cochés initialement ; les trois autres matières restent activables. L’artisan apporte les portions au contact, conserve l’auteur et la progression de son ouvrage, puis produit une arme avec qualité et état. L’emplacement d’artisanat et l’usinage ne proposent pas cette recette. Rangez le produit puis équipez-le par le clic droit habituel : l’épée pèse**2kg** et utilise trois outils de mêlée, manche, pointe et lame.
+Prévoyez **100 unités d’une même matière** : bois, acier, plastacier ou uranium ; il faut **1 000 unités** pour l’argent ou l’or. Acier, plastacier et uranium sont cochés au départ ; les trois autres matières restent activables. L’artisan apporte les portions, garde son ouvrage et sa progression après interruption, puis termine une arme avec sa qualité et son état. L’emplacement d’artisanat et l’usinage ne proposent pas cette recette. Rangez le produit puis équipez-le par le clic droit habituel : l’épée pèse **2 kg** et peut frapper avec le manche, la pointe ou la lame.
 
-**Fondre une arme** récupère**25unités** du métal usuel ou**250unités** d’argent/or ; le bois ne fond pas. Le brûlage des armes par recette, les autres matières de couteaux et les autres familles manquantes restent ouverts ; les visiteurs ne gagnent aucun assortiment supplémentaire. Le catalogue candidat compte**16identités d’armes** et la liste actuelle**34projets de recherche**, sans compléter le Core. **G5 reste absent : aucune boucle de victoire ni vaisseau achevé n’est livré par V446.** [Règles, conservation et qualification](longswords-v446.md).
+**Fondre une arme** récupère **25 unités** du métal usuel ou **250 unités** d’argent/or ; le bois ne fond pas. Le brûlage des armes par recette, les autres matières de couteaux et les autres familles manquantes restent ouverts ; les visiteurs ne gagnent aucun assortiment supplémentaire. Le catalogue compte **16 identités d’armes** et **34 projets de recherche**, sans compléter le Core. Aucune boucle de victoire ni vaisseau achevé n’est livré par V446. [Règles, conservation et qualification](longswords-v446.md).
 
 ## Fabriquer une masse — V445 publiée
 
