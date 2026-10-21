@@ -1,5 +1,7 @@
 # Elsewhere sur Cloudflare Pages
 
+**Publication courante V452, schéma276 : `dd91c337`.** Produit `6ac38d08` : [poutres et moteurs de vaisseau, qualification et limites](../gameplay/ship-parts-v452.md#publication-et-suite).20réponses HTTPS ciblées exactes,68fiches et71chemins publics de sauvegarde inchangés. Les états suivants sont historiques.
+
 **Publication courante V451, schéma275 : `7552f915`.** Produit `8e0e2ee6` : [réacteur stellaire, qualification et limites](../gameplay/ship-reactor-v451.md#publication-et-suite).20réponses HTTPS ciblées exactes, fichiers publics de sauvegarde inchangés. Les états suivants sont historiques.
 
 **Publication courante V376, schéma 239 : `712fc270`.** Produit872afdbb poussé : [toundra et neige physique](../gameplay/tundra-snow-v376.md). 106réponses HTTPS exactes sur la production et le déploiement, package public inchangé hors JS/Worker/CSS du produit. Les états suivants sont historiques.

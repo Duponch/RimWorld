@@ -1,6 +1,6 @@
 # V452 — Poutres et moteurs de vaisseau
 
-**Qualification locale acquise, schéma276.** Poursuite de l’ensemble5 après le [réacteur V451](ship-reactor-v451.md) publié. Poutre structurelle, moteur Johnson–Tanaka, recherche et chantiers payés, réseau physique et rapport des pièces manquantes. V451 reste la production avant construction et vérification du paquet Pages de ce lot. Le lancement et la victoire restent ouverts.
+**V452 publiée, schéma276.** Poursuite de l’ensemble5 après le [réacteur V451](ship-reactor-v451.md) publié. Poutre structurelle, moteur Johnson–Tanaka, recherche et chantiers payés, réseau physique et rapport des pièces manquantes. Produit `6ac38d08`, déploiement `dd91c337`,20réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Le lancement et la victoire restent ouverts.
 
 ## Référence et périmètre
 
@@ -72,4 +72,12 @@ Rapports sous `tmp/test-runs/v452-presentation-mine-2026-10-21T22-40-08.505Z-218
 
 Le contrôle de l’index avant commit a détecté quatre lignes vides finales dans les nouveaux helpers. Elles sont retirées après les contrôles natifs, sans autre modification de leurs textes ; les deux gels précédents sont conservés et le gel de publication est actualisé. Aucun comportement n’est changé par cette normalisation de fin de fichier.
 
-Le paquet Pages et sa publication restent à acquérir. Aucun démarrage défendu quatorze jours naturels, embarquement, lancement, victoire ou clôture des six ensembles n’est annoncé. La suite proposée de l’ensemble5 est le caisson spatial distinct du caisson de colonie, puis ordinateur/cœur d’IA, capteurs et lancement avec les vrais partants ; aucune de ces pièces futures n’est livrée par un simple rapport.
+## Publication et suite
+
+Produit enregistré : **`6ac38d08100275803085ef19e7cdf9902f3f7461`**,112fichiers,1 441ajouts/217retraits. Construction Pages de ce HEAD acquise en6,608 s, contrôle du paquet en2,972 s, déploiement en15,062 s. Les avertissements du build sur les gros chunks et le temps des plugins restent visibles ; celui de Wrangler sur le dossier de travail provient des références humaines non suivies, exclues du paquet. Aucun indicateur artificiel de dossier propre n’est ajouté.
+
+**Déploiement `dd91c337`**,22octobre2026 local : [production](https://elsewhere-cq7.pages.dev/) et [déploiement identifié](https://dd91c337.elsewhere-cq7.pages.dev/). Contrôle HTTPS acquis en12,656 s : vingt réponses ciblées, dix chemins sur chaque origine, statuts, MIME et octets exacts par rapport au paquet local. Cette vérification atteste sa disponibilité ; elle ne constitue pas un nouveau parcours de gameplay ou une mesure de performances sur la production.
+
+Paquet de552fichiers/152 440 030octets, **68fiches et71chemins de sauvegarde conservés**. Tous les fichiers statiques et la feuille de style restent strictement identiques au paquet V451 ; seuls l’entrée et ses JavaScript/Workers compilés changent. Les Aulnes et les archives publiques ne sont pas remplacées. Sources, références humaines, pilotes et routes QA privées absents du paquet ; les2151sources servies concordent toujours avec le gel de publication.
+
+Aucun démarrage défendu quatorze jours naturels, embarquement, lancement, victoire ou clôture des six ensembles n’est annoncé. La suite proposée de l’ensemble5 est le caisson spatial distinct du caisson de colonie, puis ordinateur/cœur d’IA, capteurs et lancement avec les vrais partants ; aucune de ces pièces futures n’est livrée par un simple rapport.
