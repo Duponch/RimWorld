@@ -1,5 +1,14 @@
 # Catalogue de contenu : couverture connue
 
+**V446 en qualification — schéma270 :** [Épées longues dans les six matières](longswords-v446.md). Six nouvelles identités portent le catalogue candidat à**16armes** ; la liste actuelle contient**34projets de recherche**, dont Lames longues. Aucun nouveau résultat de contrôle ou déploiement annoncé ici ; les publications historiques ci-dessous restent distinctes.
+
+| Contenu V446 | Acquisition et usage | Frontières et limites |
+| --- | --- | --- |
+| Lames longues et six épées | Recherche400 après Forge, bureau ordinaire admissible ; Artisanat5 aux deux forges.100unités homogènes bois/acier/plastacier/uranium ou1000argent/or, transport réel, ouvrage/auteur/progression, qualité puis rangement et équipement. Trois outils manche/pointe/lame ;2kg par arme. | Acier/plastacier/uranium autorisés initialement. Ni emplacement d’artisanat ni usinage ; lances, autres matières de couteaux et autres armes absentes restent à développer. |
+| Récupération et conservation | Fusion métallique25unités usuelles ou250argent/or ; qualité/usure sans gain de rendement.269 strict avant migration neutre270, sans recherche, biens, permissions ou progression rétroactifs. | Bois non fondu, recette de brûlage d’armes différée. Prix/état réels sans élargir les visiteurs ni créer de stock marchand. Qualification en cours, aucun gain FPS annoncé. |
+
+**G5 reste absent :** V446 ne raccorde aucune victoire complète et ne livre aucun vaisseau achevé ; cette chaîne ne se déduit pas d’un objet ou d’un nom présent au catalogue.
+
 **V445 publiée — schéma 269 :** [Masses dans les six matières](maces-v445.md). Six nouvelles identités portent le catalogue à **dix armes** ; les autres familles restent ouvertes. Qualification ciblée et UI natives muettes acquises par reprises, avec limites nommées ; publication9de7122f/5d140817 vérifiée.
 
 | Contenu V445 | Acquisition et usage | Frontières et limites |

@@ -1,5 +1,6 @@
 import { ITEM_DEFINITIONS, type ItemId } from '../sim/items';
 import { isAnimalMeat } from '../sim/biome-items';
+import {isLongswordItem270} from '../sim/longsword-content-270';
 import {isMaceItem269} from '../sim/mace-content-269';
 import type { StorageFilters } from '../sim/types';
 
@@ -41,8 +42,8 @@ export const STORAGE_FILTER_TREE:readonly StorageFilterNode[]=[
   branch('plants','Plantes déracinées',kind('plant')),
   branch('objects','Objets',[branch('unfinished','Inachevé',kind('unfinished'))]),
   branch('weapons','Armes',[
-    branch('ranged','Armes à distance',leaves((id,k)=>k==='weapon'&&id!=='plasteel-knife'&&!isMaceItem269(id))),
-    branch('melee','Armes de mêlée',leaves(id=>id==='plasteel-knife'||isMaceItem269(id))),
+    branch('ranged','Armes à distance',leaves((id,k)=>k==='weapon'&&id!=='plasteel-knife'&&!isMaceItem269(id)&&!isLongswordItem270(id))),
+    branch('melee','Armes de mêlée',leaves(id=>id==='plasteel-knife'||isMaceItem269(id)||isLongswordItem270(id))),
   ]),
   branch('apparel','Vêtements',[
     branch('armor','Armures',[

@@ -14,6 +14,7 @@ export const researchLinks: readonly (readonly [ResearchProject, ResearchProject
   ['drug-production','medicine-production'],['microelectronics','medicine-production'],
   ['gunsmithing','gun-turrets'],
   ['complex-furniture','tube-television'],
+  ['smithing','long-blades'],
   ['smithing','machining'],['machining','gunsmithing'],
   ['smithing','plate-armor'],['complex-clothing','plate-armor'],
   ['machining','flak-armor'],['plate-armor','flak-armor'],
@@ -27,6 +28,7 @@ const projectById=new Map(researchProjects.map(project=>[project.id,project]));
 const NODE_WIDTH=142,NODE_HEIGHT=66,GRAPH_WIDTH=850,GRAPH_HEIGHT=650;
 const nodePosition=(project:ProjectNode)=>({x:20+(project.x-24)*.82,y:22+(project.y-20)*.66});
 const prerequisites=new Map<ResearchProject,string[]>([
+  ['long-blades',['Forge']],
   ['brewing',[]],
   ['geothermal-power',['Électricité (acquise au départ)']],
   ['biofuel-refining',['Électricité (acquise au départ)']],

@@ -24,8 +24,8 @@ function historical(v:unknown):boolean {
  * new scan. Geographic arrays and flavour text never become recipe authority. */
 export function validKnifeCatalogueDomains268(value:unknown,version:number):boolean {
  try{
-  if(version===268||version===269)return true;
-  if(!Number.isSafeInteger(version)||version<1||version>269)return false;
+  if(version===268||version===269||version===270)return true;
+  if(!Number.isSafeInteger(version)||version<1||version>270)return false;
   return !record(value)||DOMAINS.every(k=>historical(value[k]));
  }catch{return false;}
 }
@@ -34,8 +34,8 @@ export function validKnifeCatalogueDomains268(value:unknown,version:number):bool
  * token boundary, including inactive maps, queues and terminal possessions. */
 export function validKnifeHistoricalTransport268(value:unknown,version:number):boolean {
  try{
-  if(version===268||version===269)return true;
-  if(!Number.isSafeInteger(version)||version<1||version>269)return false;
+  if(version===268||version===269||version===270)return true;
+  if(!Number.isSafeInteger(version)||version<1||version>270)return false;
   if(!record(value))return true;
   const w=record(value.world)?value.world:value;
   if(!validKnifeCatalogueDomains268(w,version))return false;

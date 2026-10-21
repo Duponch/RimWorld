@@ -115,7 +115,8 @@ test('yield ignores quality/HP and draws once even for the exact fifteen-steel r
     let draws=0;expect(smeltingYield(item,()=>{draws++;return 0;})).toBe(max);expect(draws).toBe(1);
     expect(smeltingYield(item,()=>.999999)).toBe(min);
   }
-  expect(validSmeltingProduct('steel',20)).toBe(false);
+  expect(validSmeltingProduct('steel',20,'smelt-weapon',269)).toBe(false);
+  expect(validSmeltingProduct('steel',20,'smelt-weapon',270)).toBe(true);
   expect(validSmeltingProduct('plasteel',9,'smelt-weapon',268)).toBe(false);
   expect(validSmeltingProduct('plasteel',9,'smelt-weapon',269)).toBe(true);
   expect(validSmeltingProduct('plasteel',14,'smelt-weapon',269)).toBe(false);

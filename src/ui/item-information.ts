@@ -6,6 +6,8 @@ import { isApparelItem, apparelDefinition, apparelLabel, armorPiece, apparelQual
 import { QUALITY_LABELS, isWeaponItem, weaponMaxHitPoints,weaponMeleeQualityFactor } from '../sim/equipment-rules';
 import {isMaceItem269,maceMaterial269,MACE_DEFINITIONS_269} from '../sim/mace-content-269';
 import {maceTool269} from '../sim/mace-combat-269';
+import {isLongswordItem270,longswordMaterial270,LONGSWORD_DEFINITIONS_270} from '../sim/longsword-content-270';
+import {longswordTool270} from '../sim/longsword-combat-270';
 import { commercialItemMassGrams } from '../sim/commercial-mass';
 import type { MaterialPile,World } from '../sim/types';
 import {deteriorationInspection} from './deterioration-inspection';
@@ -78,6 +80,15 @@ export function itemInformation(pile:MaterialPile,world?:World):ObjectInformatio
     add('Mêlée','Tête',`${number(head.damage*factor)} dégâts contondants`,'Dégâts nominaux après matière et qualité, avant protections et choix du coup. Une attaque peut utiliser un autre outil disponible.');
     add('Mêlée','Manche',`${number(handle.damage*factor)} dégâts de poussée`,'Dégâts nominaux après matière et qualité, avant protections et choix du coup. Les chances de toucher et d’esquive restent distinctes.');
     add('Mêlée','Récupération de base',`${number(head.cooldownCore/60)} s`,'Délai de l’outil de cette matière, avant les facteurs personnels de mêlée ; la qualité ne réduit pas ce délai. Ce n’est pas une cadence de dégâts garantie.');
+  }
+  if(isLongswordItem270(pile.item)&&pile.weapon){
+    const factor=weaponMeleeQualityFactor(pile.weapon.quality),tip=longswordTool270(`${pile.item}-tip`),edge=longswordTool270(`${pile.item}-edge`),handle=longswordTool270(`${pile.item}-handle`);
+    const number=(value:number)=>Number(value.toFixed(2)).toLocaleString('fr-FR');
+    add('Arme','Matière',LONGSWORD_DEFINITIONS_270[longswordMaterial270(pile.item)].label,'Matière réelle de cette épée longue, conservée pendant le port et le transport.');
+    add('Mêlée','Pointe',`${number(tip.damage*factor)} dégâts de perforation`,'Dégâts nominaux après matière et qualité, avant protections et choix du coup. Une attaque peut utiliser un autre outil disponible.');
+    add('Mêlée','Tranchant',`${number(edge.damage*factor)} dégâts de coupure`,'Dégâts nominaux après matière et qualité, avant protections et choix du coup. Les chances de toucher et d’esquive restent distinctes.');
+    add('Mêlée','Manche',`${number(handle.damage*factor)} dégâts contondants`,'Dégâts nominaux après matière et qualité, avant protections et choix du coup.');
+    add('Mêlée','Récupération de base',`${number(tip.cooldownCore/60)} s (lame) · ${number(handle.cooldownCore/60)} s (manche)`,'Délais des outils de cette matière, avant les facteurs personnels de mêlée ; la qualité ne réduit pas ces délais. Ce n’est pas une cadence de dégâts garantie.');
   }
   if(pile.item==='emp-launcher'){
     add('Arme','Effet','Impulsion EMP','Interrompt temporairement les mécanoïdes et les équipements électriques sensibles. Ne blesse pas directement les personnes et ne vide pas les batteries.');

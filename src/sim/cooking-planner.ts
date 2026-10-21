@@ -1,3 +1,4 @@
+import {isSchema269OrLater} from './schema-compatibility-257.ts';
 import {isSmithingRecipe267,smithingUnits267,smithingMaterialAllowed267} from './smithing-content-267.ts';
 import {planSmithingWork267} from './smithing-work-plan-267.ts';
 import {eggAllowedForPlayer256} from './animal-egg-permission-v256.ts';
@@ -79,7 +80,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
           if(budget.pairs--<=0){budget.pairs=0;return null;}
           const path=routeToJob(world,pile.owner as Cell,reachable,true);
           if(!path)continue;
-          return {station,priority:workPriority(pawn,billWork(bill)),target:pile.owner as Cell,path,refuel:{sourcePileId:pile.id,quantity:Math.min(10,capacity,pile.quantity-reservedSource(world,pile.id)),phase:'pickup',carryPileId:null,destination:{type:'fuel',structureId:station.id,...(world.schemaVersion===269&&station.kind==='fueled-smithy'&&billWork(bill)==='craft'?{forCrafting:true as const}:isBurnApparelRecipe(bill.recipe)?{}:{forCooking:true as const}),...(options?.forced?{forced:true}:{})}}};
+          return {station,priority:workPriority(pawn,billWork(bill)),target:pile.owner as Cell,path,refuel:{sourcePileId:pile.id,quantity:Math.min(10,capacity,pile.quantity-reservedSource(world,pile.id)),phase:'pickup',carryPileId:null,destination:{type:'fuel',structureId:station.id,...(isSchema269OrLater(world.schemaVersion)&&station.kind==='fueled-smithy'&&billWork(bill)==='craft'?{forCrafting:true as const}:isBurnApparelRecipe(bill.recipe)?{}:{forCooking:true as const}),...(options?.forced?{forced:true}:{})}}};
         }
         break;
       }

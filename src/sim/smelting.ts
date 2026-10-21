@@ -1,3 +1,4 @@
+import {isLongswordItem270,longswordMaterial270,longswordUnits270} from './longsword-content-270.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {isMaceItem269,maceMaterial269,maceUnits269} from './mace-content-269.ts';
 import type {WeaponItem} from './equipment-rules.ts';
@@ -33,7 +34,7 @@ export function finishSmelting(world:World,pawn:Pawn,bill:CookingBill,context:Pr
     ||reservedSource(world,weapon.id,pawn.id)>0||world.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)
     ||world.piles.length>32768||!Number.isSafeInteger(world.nextId+1))return false;
   const item=task.recipe==='smelt-slag'?'steel':smeltingProduct(weapon.item as WeaponItem|SmithingApparel267);
-  const maximum=task.recipe==='smelt-apparel'?Math.ceil(smithingApparelUnits267(weapon.item as SmithingApparel267)*.25):task.recipe==='smelt-slag'?15:isMaceItem269(weapon.item)?Math.ceil(maceUnits269(maceMaterial269(weapon.item))*.25):19;
+  const maximum=task.recipe==='smelt-apparel'?Math.ceil(smithingApparelUnits267(weapon.item as SmithingApparel267)*.25):task.recipe==='smelt-slag'?15:isLongswordItem270(weapon.item)?Math.ceil(longswordUnits270(longswordMaterial270(weapon.item))*.25):isMaceItem269(weapon.item)?Math.ceil(maceUnits269(maceMaterial269(weapon.item))*.25):19;
   // silver/gold425 fit their500-unit stacks. Ordinary metals fit75. Reserve
   // the entire potential output before drawing or removing the original.
   if(!Number.isSafeInteger(maximum)||maximum<1||maximum>ITEM_DEFINITIONS[item].stackLimit)return false;

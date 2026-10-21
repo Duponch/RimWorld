@@ -1,3 +1,4 @@
+import {isLongswordItem270,longswordMaterial270,longswordUnits270} from './longsword-content-270.ts';
 import {materialAllowedForPlayer256} from './material-permission-256.ts';
 import {isMaceItem269,maceMaterial269,maceUnits269} from './mace-content-269.ts';
 import {SCHEMA_VERSION} from './types.ts';
@@ -56,6 +57,7 @@ export function smeltingSpeed(pawn:Pawn):number {
 }
 /** Intricate components are excluded before rounding. Even a whole yield draws once. */
 export function smeltingYield(item:WeaponItem|SmithingApparel267,random:()=>number):number {
+  if(isLongswordItem270(item)){const material=longswordMaterial270(item);if(material==='wood')throw Error('Wooden weapon is not smeltable');return roundYield(longswordUnits270(material)*.25,random);}
   if(isMaceItem269(item)){const material=maceMaterial269(item);if(material==='wood')throw Error('Wooden weapon is not smeltable');return roundYield(maceUnits269(material)*.25,random);}
   if(isSmithingApparel267(item)){
     if(smithingApparelStuff267(item)==='wood')throw Error('Wooden apparel is not smeltable');
@@ -67,6 +69,6 @@ export function validSmeltingProduct(item:unknown,quantity:unknown,recipe:unknow
   if(recipe==='smelt-apparel')return Number.isInteger(quantity)&&(['steel','plasteel','uranium'].includes(String(item))?[10,42,43].includes(Number(quantity)):['silver','gold'].includes(String(item))&&[100,425].includes(Number(quantity)));
   if(recipe==='smelt-slag')return item==='steel'&&typeof quantity==='number'&&Number.isInteger(quantity)&&quantity>=1&&quantity<=15;
   // Output can already have deposited a fraction into a partly filled stack.
-  // Preserve the old metal/quantity frontier before269, even with no input left.
-  return typeof quantity==='number'&&Number.isInteger(quantity)&&quantity>=1&&(item==='steel'?quantity<=19:item==='plasteel'?quantity<=(version>=269?13:8):version>=269&&(item==='uranium'?quantity<=13:(item==='silver'||item==='gold')&&quantity<=125));
+  // Preserve each old metal/quantity frontier, even with no input left.
+  return typeof quantity==='number'&&Number.isInteger(quantity)&&quantity>=1&&(item==='steel'?quantity<=(version>=270?25:19):item==='plasteel'?quantity<=(version>=270?25:version>=269?13:8):version>=269&&(item==='uranium'?quantity<=(version>=270?25:13):(item==='silver'||item==='gold')&&quantity<=(version>=270?250:125)));
 }

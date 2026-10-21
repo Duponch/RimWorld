@@ -19,7 +19,7 @@ import {applyCommand,stepWorld} from '../src/sim/engine.ts';
 import {registryCamp,preparedMap} from './helpers/world-maps-v255.ts';
 import {reorganizationCamp256} from './helpers/group-reorganization-v256.ts';
 import {foodWorkstationCamp} from './scenarios/food-workstations.ts';
-import type {MaterialPile,World,HaulTask,Structure} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type MaterialPile,type World,type HaulTask,type Structure} from '../src/sim/types.ts';
 
 const REFERENCES=[['Les Forges','v432/les-forges-crash-test.json'],['Les Aulnes','v394/les-aulnes-integrees.json'],['Les Éclaircies','v419/les-eclaircies.json']] as const;
 function publicPayload(path:string):string {
@@ -34,17 +34,17 @@ const maceWork=(w:World):MaterialPile=>({id:w.nextId++,item:'unfinished-mace',ki
 const knifeWork=(w:World):MaterialPile=>({id:w.nextId++,item:'unfinished-knife',kind:'unfinished',quantity:1,owner:{type:'ground',x:6,z:5},
  smithingWork:{recipe:'make-plasteel-knife',material:'plasteel',authorId:w.pawns[0]!.id,progress:100,parts:[{item:'plasteel',quantity:30}]}});
 
-test.each(REFERENCES)('%s migrates a strict whole268 witness to269 without adding permissions, goods, history or progress',(label,path)=>{
+test.each(REFERENCES)('%s migrates a strict whole268 witness to the current schema without adding permissions, goods, history or progress',(label,path)=>{
  // Public files predate268. Their ordinary migrations establish this explicit
  // historical witness; neither those files nor their named archives are edited.
  const w=deserializeWorld(publicPayload(path)),text=historical(w),before=JSON.parse(text),copy=deserializeCampaign(text);
- expect(w.schemaVersion).toBe(269);expect(copy.schemaVersion).toBe(269);expect(validateWorld(copy)).toEqual([]);
- expect(JSON.parse(serializeCampaign(copy)),label).toEqual({...before,schemaVersion:269});expect(historical(w)).toBe(text);
+ expect(w.schemaVersion).toBe(SCHEMA_VERSION);expect(copy.schemaVersion).toBe(SCHEMA_VERSION);expect(validateWorld(copy)).toEqual([]);
+ expect(JSON.parse(serializeCampaign(copy)),label).toEqual({...before,schemaVersion:SCHEMA_VERSION});expect(historical(w)).toBe(text);
 },120000);
 
 test('268 keeps the finished knife and its paid work, while old smelting filters stay absent and future outputs remain refused',()=>{
  const w=registryCamp();addMaterial(w,'weapon',1,{type:'ground',x:4,z:4},'plasteel-knife');w.piles.push(knifeWork(w));
- const text=historical(w),copy=deserializeWorld(text);expect(JSON.parse(serializeCampaign(copy))).toEqual({...JSON.parse(text),schemaVersion:269});
+ const text=historical(w),copy=deserializeWorld(text);expect(JSON.parse(serializeCampaign(copy))).toEqual({...JSON.parse(text),schemaVersion:SCHEMA_VERSION});
  expect(copy.piles).toEqual(w.piles);expect(validMaceHistoricalTransport269(w,268)).toBe(true);
  expect(validWeaponShape(w.piles.find(q=>q.item==='plasteel-knife')! as unknown as Record<string,unknown>,268)).toBe(true);
  const bill=newCookingBill(500,'smelt-weapon',268),before=structuredClone(bill);
@@ -53,12 +53,12 @@ test('268 keeps the finished knife and its paid work, while old smelting filters
  for(const item of MACE_ITEMS_269)expect(validBillSettings({...bill,filters:{...bill.filters,[item]:false}},bill.recipe,268)).toBe(false);
  for(const [item,quantity] of [['plasteel',13],['gold',125],['uranium',13],['silver',125]] as const){expect(validSmeltingProduct(item,quantity,'smelt-weapon',268)).toBe(false);expect(validSmeltingProduct(item,quantity,'smelt-weapon',269)).toBe(true);}
  expect(validSmeltingProduct('plasteel',8,'smelt-weapon',268)).toBe(true);expect(validSmeltingProduct('steel',19,'smelt-weapon',268)).toBe(true);
- const raw=JSON.parse(text);raw.schemaVersion=270;expect(()=>deserializeCampaign(JSON.stringify(raw))).toThrow();expect(validMaceHistoricalTransport269(raw,270)).toBe(false);
+ const raw=JSON.parse(text);raw.schemaVersion=SCHEMA_VERSION+1;expect(()=>deserializeCampaign(JSON.stringify(raw))).toThrow();expect(validMaceHistoricalTransport269(raw,SCHEMA_VERSION+1)).toBe(false);
 });
 
 test('268 refuses six products, the recipe, workpiece, twelve recovery tools and hidden permissions across true owning domains',()=>{
  const {w,g}=reorganizationCamp256(),control=historical(w);
- expect(JSON.parse(serializeCampaign(deserializeCampaign(control)))).toEqual({...JSON.parse(control),schemaVersion:269});
+ expect(JSON.parse(serializeCampaign(deserializeCampaign(control)))).toEqual({...JSON.parse(control),schemaVersion:SCHEMA_VERSION});
  const check=(label:string,mutate:(v:World)=>void)=>{const bad=JSON.parse(control) as World;mutate(bad);const text=JSON.stringify(bad);expect(validMaceHistoricalTransport269(bad,268),label).toBe(false);expect(()=>deserializeCampaign(text),label).toThrow();expect(JSON.stringify(bad)).toBe(text);expect(historical(w)).toBe(control);};
  for(const item of MACE_ITEMS_269){
   check(item,v=>v.piles.push({id:v.nextId++,item,kind:'weapon',quantity:1,owner:{type:'ground',x:4,z:4},weapon:newWeaponState(item)}));
@@ -118,7 +118,7 @@ test('paid old268 knife work resumes through the ordinary physical pipeline afte
  expect(applyCommand(w,{type:'bill-add',structureId:station.id,recipe:'make-plasteel-knife'}).ok).toBe(true);
  for(let n=0;n<3000&&!w.piles.some(q=>q.smithingWork?.progress);n++)stepWorld(w);
  const paid=w.piles.find(q=>q.item==='unfinished-knife');expect(paid?.smithingWork?.progress).toBeGreaterThan(0);const text=historical(w),copy=deserializeWorld(text);
- expect(JSON.parse(serializeWorld(copy))).toEqual({...JSON.parse(text),schemaVersion:269});expect(copy.piles.find(q=>q.id===paid!.id)?.smithingWork).toEqual(paid!.smithingWork);
+ expect(JSON.parse(serializeWorld(copy))).toEqual({...JSON.parse(text),schemaVersion:SCHEMA_VERSION});expect(copy.piles.find(q=>q.id===paid!.id)?.smithingWork).toEqual(paid!.smithingWork);
  const start=w.tick;for(let n=0;n<2000&&p.cooking?.phase!=='output';n++)stepWorld(w);expect(p.cooking?.phase).toBe('output');stepWorld(copy,w.tick-start);
  expect(serializeWorld(copy)).toBe(serializeWorld(w));expect(validateWorld(w)).toEqual([]);expect(w.piles.filter(q=>q.item==='plasteel-knife')).toHaveLength(1);expect(w.piles.some(q=>q.id===paid!.id)).toBe(false);
  expect(w.piles.some(q=>MACE_ITEMS_269.includes(q.item as typeof MACE_ITEMS_269[number])||q.item==='unfinished-mace')).toBe(false);
@@ -160,7 +160,7 @@ test('new269 queued crafting fuel has a closed exclusive purpose and a true forg
 });
 
 test('268 refuses even false crafting fuel markers in files, queued checkpoints and same-tick deltas before migration',()=>{
- const {w}=fuelQueueFixture(),control=historical(w);expect(JSON.parse(serializeWorld(deserializeWorld(control)))).toEqual({...JSON.parse(control),schemaVersion:269});
+ const {w}=fuelQueueFixture(),control=historical(w);expect(JSON.parse(serializeWorld(deserializeWorld(control)))).toEqual({...JSON.parse(control),schemaVersion:SCHEMA_VERSION});
  for(const value of [true,false]){
   const bad=JSON.parse(control) as World,task=bad.pawns[0]!.orders.queue[0] as HaulTask;Object.assign(task.destination,{forCrafting:value});const text=JSON.stringify(bad);
   expect(validMaceHistoricalTransport269(bad,268)).toBe(false);expect(()=>deserializeCampaign(text)).toThrow();expect(JSON.stringify(bad)).toBe(text);

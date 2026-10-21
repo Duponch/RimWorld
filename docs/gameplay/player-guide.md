@@ -1,5 +1,13 @@
 # Guide joueur
 
+## Fabriquer une épée longue — V446 en qualification
+
+Après **Forge**, ouvrez **Recherche** et lancez **Lames longues** : **400points**, au bureau ordinaire ou à un bureau avancé utilisable. Activez Recherche dans Travail, puis **Artisanat** pour la fabrication. Choisissez un artisan de niveau**5**, une **Forge à combustible** ou une **Forge électrique**, puis ajoutez **Fabriquer une épée longue**. Ce lot reste en qualification ; aucune nouvelle publication n’est annoncée ici.
+
+Prévoyez **100unités homogènes** de bois, acier, plastacier ou uranium, ou **1000unités** d’argent ou d’or. Acier, plastacier et uranium sont cochés initialement ; les trois autres matières restent activables. L’artisan apporte les portions au contact, conserve l’auteur et la progression de son ouvrage, puis produit une arme avec qualité et état. L’emplacement d’artisanat et l’usinage ne proposent pas cette recette. Rangez le produit puis équipez-le par le clic droit habituel : l’épée pèse**2kg** et utilise trois outils de mêlée, manche, pointe et lame.
+
+**Fondre une arme** récupère**25unités** du métal usuel ou**250unités** d’argent/or ; le bois ne fond pas. Le brûlage des armes par recette, les autres matières de couteaux et les autres familles manquantes restent ouverts ; les visiteurs ne gagnent aucun assortiment supplémentaire. Le catalogue candidat compte**16identités d’armes** et la liste actuelle**34projets de recherche**, sans compléter le Core. **G5 reste absent : aucune boucle de victoire ni vaisseau achevé n’est livré par V446.** [Règles, conservation et qualification](longswords-v446.md).
+
 ## Fabriquer une masse — V445 publiée
 
 Après la recherche **Forge**, sélectionnez une **Forge à combustible** ou une **Forge électrique**, puis ajoutez **Fabriquer une masse**. Activez **Artisanat** dans Travail et choisissez un artisan de niveau3au minimum. La forge doit disposer de bois ou d’électricité ; l’artisan peut transporter le combustible de son propre travail avec Artisanat, sans activer Cuisine ni Transport.

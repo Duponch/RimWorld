@@ -1,5 +1,7 @@
 # Travail sur Elsewhere
 
+**V446 qualifiée — schéma 270 :** [Épées longues dans les six matières](docs/gameplay/longswords-v446.md). Lames longues, fabrication aux deux forges, ouvrage, équipement, trois outils de mêlée et récupération ; 180 cas ciblés acquis par reprises. Présentation et interface natives muettes acquises ; deux notifications de mise en page conservées. Publication en cours, sauvegardes publiques inchangées. Ensemble 2 toujours principal ; aucun gain FPS ni clôture des six ensembles.
+
 **V445 publiée — schéma 269 :** [Masses dans les six matières](docs/gameplay/maces-v445.md). Fabrication, ouvrage, équipement, combat et récupération métallique ;97cas du lot acquis par reprises,11voisins de ravitaillement acquis et deux anciens scénarios de cuisine invalides conservés. Présentation et interface natives muettes acquises par reprises, réserve de mise en page conservée. Publié9de7122f/déploiement5d140817,20réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Ensemble2 toujours principal ; aucun gain FPS ni catalogue mêlée complet annoncé.
 
 **Préférence humaine du 20 octobre — tests silencieux :** désactiver effets sonores et musique avant de lancer ou reprendre un test dans le jeu. Garder ce choix dans le navigateur de contrôle ; les navigateurs automatisés doivent être lancés muets. Ne pas imposer ce réglage aux joueurs du produit publié.

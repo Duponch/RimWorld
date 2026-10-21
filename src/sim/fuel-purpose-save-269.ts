@@ -9,7 +9,7 @@ const marked=(v:unknown):v is Record<string,unknown>=>record(v)&&Object.hasOwn(v
 /** Absence preserves the literal historical purpose contract. */
 export function validCraftingFuelDestination269(value:Record<string,unknown>,version:number):boolean {
  if(!marked(value))return true;
- return version===269&&value.type==='fuel'&&value.forCrafting===true&&!Object.hasOwn(value,'forCooking')&&int(value.structureId)
+ return (version===269||version===270)&&value.type==='fuel'&&value.forCrafting===true&&!Object.hasOwn(value,'forCooking')&&int(value.structureId)
   &&Object.keys(value).every(k=>['type','structureId','forCrafting','forced'].includes(k))&&(!Object.hasOwn(value,'forced')||value.forced===true);
 }
 /** Only the new purpose acquires these shared file/Decoder checks. Existing
@@ -17,7 +17,7 @@ export function validCraftingFuelDestination269(value:Record<string,unknown>,ver
 export function validCraftingFuelTransport269(w:World,version:number):boolean {
  try{
   if(!w.pawns.some(p=>marked(p.haul?.destination)||p.orders?.queue?.some(o=>record(o)&&marked(o.destination))))return true;
-  if(version!==269)return false;
+  if(version!==269&&version!==270)return false;
   const cell=(v:unknown)=>record(v)&&Object.keys(v).every(k=>k==='x'||k==='z')&&int(v.x,0,w.width-1)&&int(v.z,0,w.height-1);
   const valid=(raw:unknown,pawn:Pawn,queued:boolean):boolean=>{
    if(!record(raw)||!marked(raw.destination))return true;

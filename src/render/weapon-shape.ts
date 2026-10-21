@@ -1,3 +1,5 @@
+import {isLongswordItem270,LONGSWORD_ITEMS_270} from '../sim/longsword-content-270';
+import {LONGSWORD_DYE270,LONGSWORD_EQUIPMENT270,LONGSWORD_PARTS270,longswordParts270,longswordEquipment270} from './longsword-parts270';
 import {isMaceItem269,MACE_ITEMS_269} from '../sim/mace-content-269';
 import {MACE_DYE269,MACE_EQUIPMENT269,MACE_PARTS269,maceParts269,maceEquipment269} from './mace-parts269';
 /** One authored rigid shape, reused on the ground, in cargo and at the hip.
@@ -45,6 +47,8 @@ export const WEAPON_VISUALS = [
  * visuals: a family key is never a real ItemId or a ground/cargo item. */
 export const RESIDENT_WEAPON_VISUALS269=[...WEAPON_VISUALS,
   {item:'mace-family',equipment:MACE_EQUIPMENT269,cargo:0,dye:MACE_DYE269,parts:MACE_PARTS269},
+  {item:'longsword-family',equipment:LONGSWORD_EQUIPMENT270,cargo:0,dye:LONGSWORD_DYE270,parts:LONGSWORD_PARTS270},
 ] as const;
 const maceVisuals269=new Map(MACE_ITEMS_269.map(item=>[item,{item,equipment:maceEquipment269(item),cargo:0,dye:MACE_DYE269,parts:maceParts269(item)}]));
-export const weaponVisual=(item:string|undefined)=>isMaceItem269(item)?maceVisuals269.get(item):WEAPON_VISUALS.find(v=>v.item===item);
+const longswordVisuals270=new Map(LONGSWORD_ITEMS_270.map(item=>[item,{item,equipment:longswordEquipment270(item),cargo:0,dye:LONGSWORD_DYE270,parts:longswordParts270(item)}]));
+export const weaponVisual=(item:string|undefined)=>isLongswordItem270(item)?longswordVisuals270.get(item):isMaceItem269(item)?maceVisuals269.get(item):WEAPON_VISUALS.find(v=>v.item===item);

@@ -1,3 +1,5 @@
+import {validLongswordHistoricalTransport270} from '../sim/catalogue-save-270.ts';
+import {validLongBladesResearchTransport270} from '../sim/research-save.ts';
 import {validCraftingFuelTransport269} from '../sim/fuel-purpose-save-269.ts';
 import {validMaceHistoricalTransport269} from '../sim/catalogue-save-269.ts';
 import {validKnifeHistoricalTransport268} from '../sim/catalogue-save-268.ts';
@@ -1468,6 +1470,7 @@ export class SnapshotDecoder {
     if(!validNutrientPasteTransport(next,next.schemaVersion,powerTopology))return resync('Pâte nutritive, source ou transport invalide.');
     if(!validOrbitalTransport(next,next.schemaVersion,powerTopology,identities))return resync('État orbital, propriétaire ou contact invalide.');
     if(!validCraftingFuelTransport269(next,next.schemaVersion))return resync('Ravitaillement d’artisanat invalide ou futur.');
+    if(!validLongswordHistoricalTransport270(message,next.schemaVersion)||!validLongBladesResearchTransport270(next,next.schemaVersion))return resync('Lames longues, recherche ou fabrication invalides.');
     if(!validMaceHistoricalTransport269(message,next.schemaVersion)||!validKnifeHistoricalTransport268(message,next.schemaVersion)||!validSmithyResearchTransport267(next,next.schemaVersion)||!validSmithingHistoricalTransport267(message,next.schemaVersion)||validateSmithingWorks267(next,next.schemaVersion).length)return resync('Forge, matière ou ouvrage invalide.');
     if(!validAlcoholWorld265(next,next.schemaVersion))return resync('Alcool, politique ou propriétaire invalide.');
     if(!validBrewingHistoricalTransport265(message,next.schemaVersion)||!validFermentationWorld265(next,next.schemaVersion)||!validBrewingResearchTransport265(next,next.schemaVersion))return resync('Brassage, fermentation ou propriétaire invalide.');

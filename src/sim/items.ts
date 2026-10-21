@@ -1,3 +1,4 @@
+import {LONGSWORD_ITEM_DEFINITIONS_270} from './longsword-content-270.ts';
 import {MACE_ITEM_DEFINITIONS_269} from './mace-content-269.ts';
 import {SMITHING_APPAREL_ITEM_DEFINITIONS267} from './smithing-apparel-267.ts';
 import {CAVE_ITEM_DEFINITIONS_256} from './cave-products-256.ts';
@@ -18,6 +19,8 @@ export type MechCorpseItem=typeof MECH_CORPSE_ITEMS[number];
 export const ITEM_DEFINITIONS = Object.freeze({
   ...SMITHING_APPAREL_ITEM_DEFINITIONS267,
   ...MACE_ITEM_DEFINITIONS_269,
+  ...LONGSWORD_ITEM_DEFINITIONS_270,
+  'unfinished-longsword':Object.freeze({label:'Épée longue inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x87958f}),
   'unfinished-mace':Object.freeze({label:'Masse inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x87958f}),
   'unfinished-knife':Object.freeze({label:'Couteau inachevé',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0xa0b2b5}),
   'unfinished-plate-armor':Object.freeze({label:'Armure de plaques inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x87958f}),
