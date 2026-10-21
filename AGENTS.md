@@ -1,6 +1,6 @@
 # Travail sur Elsewhere
 
-**V449 qualifiée localement — schéma 273 :** [Bras et jambes prothétiques industriels](docs/gameplay/industrial-prostheses-v449.md). Fabrication payée, pose, remplacement, retrait récupérable et fret ; 114 cas ciblés acquis par reprises, typage/build, présentation et interface natives muettes acquis. Publication à effectuer ; sauvegardes publiques inchangées. **Ensemble 3 principal**, glaives reportés ; aucun gain FPS ni clôture des six ensembles.
+**V449 publiée — schéma 273 :** [Bras et jambes prothétiques industriels](docs/gameplay/industrial-prostheses-v449.md). Fabrication payée, pose, remplacement, retrait récupérable et fret ; 114 cas ciblés acquis par reprises, typage/build, présentation et interface natives muettes acquis. Publié0bd422f5/déploiement7813d7e7,20réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. **Ensemble 3 principal**, glaives reportés ; aucun gain FPS ni clôture des six ensembles.
 
 **Priorité humaine du 21 octobre — progression transversale :** passer maintenant à l’ensemble 3 après les lances V448. Les glaives préparés restent différés ; ne pas enchaîner les variantes d’armes jusqu’à épuiser le catalogue avant d’aborder habitants, santé et animaux. Livrer une récupération clinique utile, puis réexaminer les ensembles4–5 et leurs dépendances. L’ensemble2 reste ouvert, sans être un préalable exhaustif aux autres ensembles. Tests obligatoires avec effets et musique coupés ; autonomie, conservation et livraisons autorisées maintenues.
 

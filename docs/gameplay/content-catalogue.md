@@ -1,8 +1,8 @@
 # Catalogue de contenu : couverture connue
 
-**V449 qualifiée localement — schéma 273 :** [Bras et jambes prothétiques industriels](industrial-prostheses-v449.md). Fabrication payée, pose, remplacement, retrait récupérable et fret ; 114 cas ciblés acquis par reprises, typage/build, présentation et interface natives muettes acquis. Publication à effectuer ; sauvegardes publiques inchangées. **Ensemble 3 principal**, glaives reportés ; aucun gain FPS ni clôture des six ensembles.
+**V449 publiée — schéma 273 :** [Bras et jambes prothétiques industriels](industrial-prostheses-v449.md). Fabrication payée, pose, remplacement, retrait récupérable et fret ; 114 cas ciblés acquis par reprises, typage/build, présentation et interface natives muettes acquis. Publié0bd422f5/déploiement7813d7e7,20réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. **Ensemble 3 principal**, glaives reportés ; aucun gain FPS ni clôture des six ensembles.
 
-| Contenu V449 qualifié localement | Acquisition et usage | Frontières et limites |
+| Contenu V449 publié | Acquisition et usage | Frontières et limites |
 | --- | --- | --- |
 | Deux pièces et leurs ouvrages | Prothèses, 600 points après Usinage ; Artisanat 5, atelier d'usinage, 40 acier + 4 composants, 15 000 travail Core. Même auteur/progression ; produit sans qualité, bras 5 kg ou jambe 8 kg, 50 PV, une unité par pile. | Pas de fabrication aux forges, ni de cœur ou cochléaire jouable ; assortiment marchand inchangé. Les 22 armes existantes ne sont pas modifiées. |
 | Pose et corps réel | Adultes libres, lit utilisable, autre médecin niveau 4, pièce + deux médicaments. Bras à l'épaule : 50 % d'efficacité partielle ; jambe : 85 %. Racine manquante ou présente, remplacement des parties en bois ; capacités et risque opératoire communs. | Dose d'anesthésie au début, pièce et dose restante à la finition avant l'issue ; ancienne pose du bois conserve sa consommation groupée historique. Pas un pourcentage garanti du corps entier ni un soin des autres affections. |

@@ -1,6 +1,6 @@
 # V449 — Bras et jambes prothétiques industriels
 
-État : **qualification ciblée et parcours natif acquis par reprises ; non publié**. Schéma **273**. La publication reste à terminer ; aucun gain FPS ni clôture d’ensemble annoncé.
+État : **publié**, produit **0bd422f5**, déploiement **7813d7e7**, schéma **273**. Qualification ciblée, présentation et parcours natif acquis par reprises ; aucun gain FPS ni clôture d’ensemble annoncé.
 
 ## Résultat joueur et priorité
 
@@ -93,9 +93,13 @@ Préparation privée `v449-ui-preparation` : **un cas acquis en 10,922 s, exclu 
 
 La confirmation du réveil naturel conserve un échec de critère initial : `v449-natural-recovery-2026-10-21T19-26-26.860Z-10156`, **17,019 s**, huit réussites et un rouge à l’arrivée au9999. Le réveil et la capacité avaient passé ; le critère exigeait à tort la disparition de `motion`, alors que le dernier segment confirmé est conservé par le moteur. Le critère vérifie désormais position, fin datée de segment, chemin vide et délai nul, sans modification produit ni réveil forcé. Reprise `v449-recovery-spear-reprise-2026-10-21T19-29-58.196Z-6316`, **83,073 s**, **30/30** : neuf services dont pose bois→jambe, dissipation naturelle de l’anesthésie, capacité de marche0,8→0,92, trajet réel du même patient et recharges entières exactes réveil/arrivée, avec un bois/aucune pièce/une dose restants. Trente repas finis et trois lits ordinaires sont déclarés au départ. Les21 cas voisins de combat/migration des lances gardent les biens, verbes, ouvrages et propriétaires précédents au schéma273. La seule assertion de version courante figée272 utilise désormais la constante courante ; les anciennes bornes271/272 ne sont pas réécrites. Les92 cas antérieurs et ce nouveau cas de réveil plus21 voisins font bien114 distincts, sans addition des reprises.
 
-Typage final des derniers tests acquis : `v449-final-types-2026-10-21T19-32-02.011Z-13272`, **16,621 s**. Documentation : **1 080 documents/10 042 liens**, six en-têtes273 et trois sources originales identiques. Les sources produit du build, des parcours natifs et de cette livraison ont la même empreinte gelée.
+Typage final des derniers tests acquis : `v449-final-types-2026-10-21T19-32-02.011Z-13272`, **16,621 s**. Documentation : **1 080 documents/10 043 liens**, six en-têtes273 et trois sources originales identiques. Les sources produit du build, des parcours natifs et de cette livraison ont la même empreinte gelée.
 
-**Publication à effectuer.**
+**Publication acquise.** Produit `0bd422f581093480c62788735a2ba0123c459db3` poussé sur `origin/main`. Paquet `tmp/elsewhere-pages/v449-package-skAQ7u/` : tous les assets statiques et la feuille compilée sont strictement les octets V448 ; aucune nouvelle ressource propriétaire ou pilote privé. Les71 chemins publics de sauvegarde/catalogue restent exacts,68 fiches, historiques et parties personnelles préservés. Déploiement `7813d7e7`, **25,221 s**, quatre fichiers nouveaux/546réutilisés. L’avertissement de répertoire sale correspond au seul dossier humain non suivi `references_UI/`, exclu du commit et du paquet ; aucun changement produit non commis.
+
+[Site public](https://elsewhere-cq7.pages.dev) et [déploiement V449](https://7813d7e7.elsewhere-cq7.pages.dev) : **20 réponses HTTPS ciblées exactes**, octets et types MIME, contrôle **5,477 s** ; rapport `tmp/elsewhere-pages/v449-http-usmz2C/`. Ces réponses attestent la disponibilité des entrées/assets ciblés, pas une nouvelle preuve de gameplay ou de performances. Le gel produit et les sauvegardes restent identiques après contrôle.
+
+Suite retenue après la chaîne clinique : ensemble4, dons de biens réellement transportés à une faction visitée et conséquence diplomatique. Les règles, factions admissibles et seuils doivent être vérifiés avant implémentation ; ce n’est pas une fonction déjà livrée. L’ensemble3 demeure partiel, sans retour préalable imposé aux glaives.
 
 **Effets sonores et musique coupés avant les tests dans le jeu ; navigateur automatisé muet.** Les tests restent requis. Cette préférence de contrôle ne désactive ni le son ni la musique des joueurs publiés, et ne désactive aucune maladie, douleur, infection, saignement ou autre conséquence du gameplay.
 

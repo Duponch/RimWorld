@@ -1,8 +1,8 @@
 # Guide joueur
 
-## Fabriquer, poser et retirer une prothèse industrielle — V449 qualifiée localement
+## Fabriquer, poser et retirer une prothèse industrielle — V449 publiée
 
-**Qualification ciblée et parcours natif acquis ; publication à effectuer.** L'ensemble 3 devient prioritaire, sans attendre toutes les armes de l'ensemble 2 ; les glaives sont reportés. Le lot apporte des **bras et jambes**, tandis que cœur, cochléaire et autres implants restent différés.
+**Publié, qualification ciblée et parcours natif acquis.** L'ensemble 3 devient prioritaire, sans attendre toutes les armes de l'ensemble 2 ; les glaives sont reportés. Le lot apporte des **bras et jambes**, tandis que cœur, cochléaire et autres implants restent différés.
 
 Après **Usinage**, recherchez **Prothèses**, **600 points**, puis ajoutez **Fabriquer un bras prothétique** ou **Fabriquer une jambe prothétique** à un **atelier d'usinage** utilisable. Activez Artisanat et choisissez un artisan de niveau **5**. Chaque pièce demande **40 acier et 4 composants**, transportés physiquement ; le même auteur conserve son ouvrage et sa progression. Le produit n'a pas de qualité : bras **5 kg**, jambe **8 kg**, **50 PV**, une pièce par pile.
 
