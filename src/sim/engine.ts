@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {applyCryptosleep271,processCryptosleepTask271,reconcileCryptosleepTask271} from './cryptosleep-task-271.ts';
 import {cryptosleepUnlocked271} from './research.ts';
 import {newCryptosleepHolder271} from './cryptosleep-state-271.ts';
@@ -467,7 +468,7 @@ export function canDesignate(world: World, command: DesignateCommand|import('./c
   if(command?.kind==='hi-tech-research-bench'&&!microelectronicsUnlocked(world))return refusal('invalid-command','Recherchez Microélectronique pour construire ce bureau.');
   if(command?.kind==='multi-analyzer'&&!multiAnalyzerUnlocked(world))return refusal('invalid-command','Recherchez Multi-analyseur pour construire cet appareil.');
   if(command?.kind==='fabrication-bench'&&!fabricationUnlocked(world))return refusal('invalid-command','Recherchez Fabrication pour construire cet établi.');
-  if(command?.kind==='cryptosleep-casket'&&(world.schemaVersion!==271||installing||!cryptosleepUnlocked271(world)))return refusal('invalid-command','Recherchez Cryptosommeil pour construire ce caisson ; il ne se transporte pas en paquet.');
+  if(command?.kind==='cryptosleep-casket'&&(!isSchema271OrLater(world.schemaVersion)||installing||!cryptosleepUnlocked271(world)))return refusal('invalid-command','Recherchez Cryptosommeil pour construire ce caisson ; il ne se transporte pas en paquet.');
   if(command?.kind==='autodoor'&&!autodoorsUnlocked(world))return refusal('invalid-command','Recherchez Portes automatiques pour construire cette porte.');
   if(command?.kind==='mini-turret'&&(world.schemaVersion<193||installing||!gunTurretsUnlocked(world)))return refusal('invalid-command','Recherchez Tourelles automatiques pour construire cet appareil ; minification indisponible.');
   if(command?.kind==='tube-television'&&(world.schemaVersion<190||!installing&&!tubeTelevisionUnlocked(world)))return refusal('invalid-command','Recherchez Télévision cathodique pour construire cet appareil.');

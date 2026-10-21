@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {validCraftingFuelDestination269} from './fuel-purpose-save-269.ts';
 import {validCryptosleepTaskField271} from './cryptosleep-task-save-271.ts';
 import {memoryExpiry271,validSuspendedMemory271} from './suspended-memory-271.ts';
@@ -84,7 +85,7 @@ function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,ver
   const input=world as unknown as Record<string,unknown>;
   const legacyV2=version===2, size=world.width*world.height, errors:string[]=[];
   const held=Object.getOwnPropertyDescriptor(item,'cryptosleepHeldAt271');
-  if(heldPlayer271?(version!==271||detached&&!heldPlayer271.retained||heldPlayer271.heldAt!==validationTick||!held?.enumerable||!Object.hasOwn(held,'value')||held.value!==validationTick):'cryptosleepHeldAt271'in item)errors.push('Invalid actual player-casket suspension authority.');
+  if(heldPlayer271?(!isSchema271OrLater(version)||detached&&!heldPlayer271.retained||heldPlayer271.heldAt!==validationTick||!held?.enumerable||!Object.hasOwn(held,'value')||held.value!==validationTick):'cryptosleepHeldAt271'in item)errors.push('Invalid actual player-casket suspension authority.');
   if(!validCryptosleepTaskField271(item,version,validationTick,world.nextId)||detached&&Object.hasOwn(item,'cryptosleepTask'))errors.push('Invalid or future player-casket task.');
   const memoryCivil=heldPlayer271?world.tick:validationTick;
   if(!validCaravanRestField266(item,version,item.state==='dead'&&typeof (item.health as {death?:{tick?:number}}|undefined)?.death?.tick==='number'?(item.health as {death:{tick:number}}).death.tick:validationTick))errors.push('Invalid or future caravan rest receipt.');

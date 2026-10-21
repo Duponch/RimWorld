@@ -1,5 +1,12 @@
 # Catalogue de contenu : couverture connue
 
+**V448 qualifiée localement — schéma 272 :** [Lances dans les six matières](spears-v448.md). Fabrication, ouvrage, équipement, trois verbes et récupération ; 124 cas ciblés acquis par reprises, deux anciens rouges identiques au témoin V447 conservés. Typage/build, présentation et UI natives muettes acquis ; deux notifications de mise en page conservées. Publication en préparation, sauvegardes publiques préservées. Ensemble 2 principal ; aucun gain FPS ni clôture des six ensembles.
+
+| Contenu V448 qualifié localement | Acquisition et usage | Frontières et limites |
+| --- | --- | --- |
+| Six lances | Lames longues, 400 points après Forge ; Artisanat 4, deux forges. 75 unités homogènes de bois/acier/plastacier/uranium ou 750 argent/or ; auteur, ouvrage, progression et qualité conservés, rangement puis équipement du même produit. | Acier/plastacier/uranium activés initialement ; autres matières activables. Jade/pierres exclus, ni emplacement d’artisanat ni usinage. Chaîne ciblée acquise par reprises ; autres familles toujours ouvertes. |
+| Usage, récupération et économie | 2 kg ; manche Blunt/Poke 13 et pointe Stab 23, délai de base 2,6 s. Pointe : pénétration 50 % × qualité, sans facteur tranchant de matière. Fusion : 18–19 métal usuel ou 187–188 argent/or, avec arrondi stochastique. | Bois non fondu, brûlage par recette différé. Aucun assortiment marchand, équipement PNJ, résultat FPS ou victoire ajouté par cette note. |
+
 **V447 publiée — schéma 271 :** [Caissons de cryptosommeil de colonie](cryptosleep-v447.md). Recherche, chantier payé, services et reprise des mêmes adultes libres et biens ; 148 cas acquis par reprises, dix rouges historiques conservés. Présentation et UI natives muettes acquises ; publication 7f020b0c/4397021b vérifiée, sauvegardes publiques inchangées. Ensemble 2 principal ; victoire, six ensembles et cible FPS ouverts.
 
 | Contenu V447 publiée | Acquisition et usage | Frontières et limites |

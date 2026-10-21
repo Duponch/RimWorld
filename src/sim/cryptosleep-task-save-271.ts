@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {CRYPTOSLEEP_ENTER_CORE_271,CRYPTOSLEEP_OPEN_CORE_271,isPlayerCasket271,cryptosleepInteraction271,type CryptosleepTask271} from './cryptosleep-state-271.ts';
 import {cryptosleepContinuationReason271} from './cryptosleep-task-271.ts';
 import {sameRescueEdge} from './rescue-save.ts';
@@ -9,7 +10,7 @@ const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSa
 export function validCryptosleepTaskField271(p:unknown,version:number,tick:number,nextId:number):boolean {
  if(!record(p))return false;if(!Object.hasOwn(p,'cryptosleepTask'))return true;
  const d=Object.getOwnPropertyDescriptor(p,'cryptosleepTask'),t=d?.value;
- if(version!==271||!d?.enumerable||!Object.hasOwn(d,'value')||!record(t))return false;
+ if(!isSchema271OrLater(version)||!d?.enumerable||!Object.hasOwn(d,'value')||!record(t))return false;
  if(!Reflect.ownKeys(t).every(k=>{const d=Object.getOwnPropertyDescriptor(t,k);return typeof k==='string'&&d?.enumerable===true&&Object.hasOwn(d,'value');}))return false;
  const carry=t.action==='carry',keys=['casketId','action','phase','progressCore','lastWorkedAt',...carry?['patientId']:[]];
  if(Reflect.ownKeys(t).length!==keys.length||!Reflect.ownKeys(t).every(k=>typeof k==='string'&&keys.includes(k)&&Object.getOwnPropertyDescriptor(t,k)?.enumerable===true&&Object.hasOwn(Object.getOwnPropertyDescriptor(t,k)!,'value'))||!int(t.casketId,1,nextId-1)||!int(t.lastWorkedAt,0,tick)||!int(t.progressCore)||t.progressCore%10!==0)return false;

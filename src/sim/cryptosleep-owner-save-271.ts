@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {isPlayerCasket271,validCryptosleepField271,type PlayerCasket271} from './cryptosleep-state-271.ts';
 import {validAncientCasketWickField256} from './ancient-casket-explosive-state-256.ts';
 import {cryptosleepCells271} from './cryptosleep-content-271.ts';
@@ -39,7 +40,7 @@ export function validCryptosleepBuilding271(raw:unknown,version:number,world:Hea
  const allowed=['id','kind','x','z','orientation','footprint','material','damage','factionId','cryptosleep','casketWick'];
  if(Reflect.ownKeys(raw).some(k=>{const d=Object.getOwnPropertyDescriptor(raw,k);return typeof k!=='string'||!allowed.includes(k)||!d?.enumerable||!Object.hasOwn(d,'value');}))return false;
  const s=raw as unknown as PlayerCasket271;
- return version===271&&integer(s.id,1,world.nextId-1)&&integer(s.x,0,world.width-1)&&integer(s.z,0,world.height-1)
+ return isSchema271OrLater(version)&&integer(s.id,1,world.nextId-1)&&integer(s.x,0,world.width-1)&&integer(s.z,0,world.height-1)
   &&integer(s.orientation,0,3)&&s.footprint==='standard'&&s.material==='steel'
   &&(!Object.hasOwn(s,'damage')||integer(s.damage,1,249))
   &&(!Object.hasOwn(s,'factionId')||s.factionId===null||integer(s.factionId,1,world.nextId-1)&&s.factionId===world.worldFactions?.playerFactionId)

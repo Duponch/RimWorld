@@ -1,4 +1,6 @@
 import {isLongswordItem270} from './longsword-content-270.ts';
+import {isSpearItem272} from './spear-content-272.ts';
+import {isSpearToolId272,spearTool272,type SpearToolId272} from './spear-combat-272.ts';
 import {isLongswordToolId270,longswordTool270,type LongswordToolId270} from './longsword-combat-270.ts';
 import { HUMAN_BODY } from './body-definition.ts';
 import { equippedWeapon,isWeaponItem,weaponMeleeQualityFactor } from './equipment-rules.ts';
@@ -9,9 +11,9 @@ import {isMaceToolId269,maceTool269,type MaceToolId269} from './mace-combat-269.
 import type { Pawn,World } from './types.ts';
 
 export type MeleeDamage='toxic-bite'|'blunt'|'poke'|'bite'|'scratch'|'cut'|'stab';
-export type MeleeToolId=LongswordToolId270|MaceToolId269|`animal256-tool-${number}-${number}`|'left-fist'|'right-fist'|'left-claw'|'right-claw'|'head'|'teeth'|'grip'|'barrel'|'barrel-poke'|'knife-handle'|'knife-blade'|'knife-point'|'left-blade-cut'|'left-blade-stab'|'right-blade-cut'|'right-blade-stab';
+export type MeleeToolId=SpearToolId272|LongswordToolId270|MaceToolId269|`animal256-tool-${number}-${number}`|'left-fist'|'right-fist'|'left-claw'|'right-claw'|'head'|'teeth'|'grip'|'barrel'|'barrel-poke'|'knife-handle'|'knife-blade'|'knife-point'|'left-blade-cut'|'left-blade-stab'|'right-blade-cut'|'right-blade-stab';
 export interface MeleeTool { id:MeleeToolId; damage:number; penetration:number; kind:MeleeDamage; cooldownCore:number; weight:number }
-export const meleeRecoveryCore=(id:MeleeToolId):number=>isLongswordToolId270(id)?longswordTool270(id).cooldownCore:isMaceToolId269(id)?maceTool269(id).cooldownCore:id==='knife-blade'?72:id==='knife-point'||id==='knife-handle'?96:120;
+export const meleeRecoveryCore=(id:MeleeToolId):number=>isSpearToolId272(id)?spearTool272(id).cooldownCore:isLongswordToolId270(id)?longswordTool270(id).cooldownCore:isMaceToolId269(id)?maceTool269(id).cooldownCore:id==='knife-blade'?72:id==='knife-point'||id==='knife-handle'?96:120;
 export function curve(x:number,points:readonly (readonly [number,number])[]):number {
   if(x<=points[0]![0])return points[0]![1];
   for(let i=1;i<points.length;i++){const a=points[i-1]!,b=points[i]!;if(x<=b[0])return a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0]);}
@@ -29,7 +31,7 @@ export const mechaMeleeHitChance=(sight=1,manipulation=1):number=>curve(12*(Math
  * capacities affect hit/dodge, not a fictitious fist damage multiplier. */
 export function meleeTools(world:World,pawn:Pawn,body=()=>pawnBody(pawn)):MeleeTool[] {
   const tools:MeleeTool[]=[];
-  const add=(id:MeleeToolId,damage:number,kind:MeleeDamage,factor=1)=>{const cooldownCore=meleeRecoveryCore(id);tools.push({id,damage,kind,penetration:damage*.015,cooldownCore,weight:damage*(1+damage*.015)/(cooldownCore/60)*factor});};
+  const add=(id:MeleeToolId,damage:number,kind:MeleeDamage,factor=1,penetration=damage*.015)=>{const cooldownCore=meleeRecoveryCore(id);tools.push({id,damage,kind,penetration,cooldownCore,weight:damage*(1+penetration)/(cooldownCore/60)*factor});};
   const exists=(id:typeof HUMAN_BODY[number]['id'])=>!pawn.health||!partMissing(pawn.health,id);
   // LeftHand/RightHand groups are the fingers; missing every finger removes the tool.
   for(const side of ['left','right'] as const)if(HUMAN_BODY.some(p=>p.groups.includes(`${side}-hand`)&&exists(p.id)))add(`${side}-fist`,8.2,'blunt');
@@ -40,6 +42,8 @@ export function meleeTools(world:World,pawn:Pawn,body=()=>pawnBody(pawn)):MeleeT
     const factor=weaponMeleeQualityFactor(weapon.weapon.quality);
     if(weapon.item==='plasteel-knife'){
       add('knife-handle',9*.9*factor,'blunt');add('knife-blade',12*1.1*factor,'cut');add('knife-point',13*1.1*factor,'stab');
+    } else if(isSpearItem272(weapon.item)){
+      if(world.schemaVersion>=272)for(const part of ['shaft-blunt','shaft-poke','point'] as const){const t=spearTool272(`${weapon.item}-${part}`);add(t.id,t.damage*factor,t.kind,1,t.penetration*factor);}
     } else if(isLongswordItem270(weapon.item)){
       if(world.schemaVersion>=270)for(const part of ['handle','tip','edge'] as const){const tool=longswordTool270(`${weapon.item}-${part}`);add(tool.id,tool.damage*factor,tool.kind);}
     } else if(isMaceItem269(weapon.item)){

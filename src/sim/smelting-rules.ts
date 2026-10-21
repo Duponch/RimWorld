@@ -1,4 +1,5 @@
 import {isLongswordItem270,longswordMaterial270,longswordUnits270} from './longsword-content-270.ts';
+import {isSpearItem272,spearMaterial272,spearUnits272} from './spear-content-272.ts';
 import {materialAllowedForPlayer256} from './material-permission-256.ts';
 import {isMaceItem269,maceMaterial269,maceUnits269} from './mace-content-269.ts';
 import {SCHEMA_VERSION} from './types.ts';
@@ -57,6 +58,7 @@ export function smeltingSpeed(pawn:Pawn):number {
 }
 /** Intricate components are excluded before rounding. Even a whole yield draws once. */
 export function smeltingYield(item:WeaponItem|SmithingApparel267,random:()=>number):number {
+  if(isSpearItem272(item)){const material=spearMaterial272(item);if(material==='wood')throw Error('Wooden weapon is not smeltable');return roundYield(spearUnits272(material)*.25,random);}
   if(isLongswordItem270(item)){const material=longswordMaterial270(item);if(material==='wood')throw Error('Wooden weapon is not smeltable');return roundYield(longswordUnits270(material)*.25,random);}
   if(isMaceItem269(item)){const material=maceMaterial269(item);if(material==='wood')throw Error('Wooden weapon is not smeltable');return roundYield(maceUnits269(material)*.25,random);}
   if(isSmithingApparel267(item)){

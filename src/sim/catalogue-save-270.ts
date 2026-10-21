@@ -1,3 +1,4 @@
+import {isSchema270OrLater} from './schema-compatibility-257.ts';
 import {LONGSWORD_ITEMS_270} from './longsword-content-270.ts';
 import {LONGSWORD_TOOL_IDS_270} from './longsword-combat-270.ts';
 
@@ -23,8 +24,8 @@ function historical(v:unknown):boolean {
 }
 export function validLongswordCatalogueDomains270(value:unknown,version:number):boolean {
  try{
-  if((version===270||version===271))return true;
-  if(!Number.isSafeInteger(version)||version<1||version>271)return false;
+  if(isSchema270OrLater(version))return true;
+  if(!Number.isSafeInteger(version)||version<1||version>272)return false;
   return !record(value)||DOMAINS.every(k=>historical(value[k]));
  }catch{return false;}
 }
@@ -32,8 +33,8 @@ export function validLongswordCatalogueDomains270(value:unknown,version:number):
  * including inactive maps, retained people, recovery tools and item ledgers. */
 export function validLongswordHistoricalTransport270(value:unknown,version:number):boolean {
  try{
-  if((version===270||version===271))return true;
-  if(!Number.isSafeInteger(version)||version<1||version>271)return false;
+  if(isSchema270OrLater(version))return true;
+  if(!Number.isSafeInteger(version)||version<1||version>272)return false;
   if(!record(value))return true;
   const w=record(value.world)?value.world:value;
   if(!validLongswordCatalogueDomains270(w,version))return false;

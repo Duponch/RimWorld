@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import type {Cell,MaterialPile,Pawn,Structure} from './types.ts';
 import type {PackedFurniture} from './furniture-rules.ts';
 
@@ -68,7 +69,7 @@ export function validCryptosleepField271(value:unknown,version:number,tick:numbe
  const kind=Object.getOwnPropertyDescriptor(value,'kind'),field=Object.getOwnPropertyDescriptor(value,'cryptosleep');
  if(kind&&(!Object.hasOwn(kind,'value')||!kind.enumerable))return false;
  if(kind?.value!=='cryptosleep-casket')return !('cryptosleep'in value);
- if(version!==271||!integer(tick)||!field||!field.enumerable||!Object.hasOwn(field,'value')||!dataOnly271(field.value)||!object(field.value))return false;
+ if(!isSchema271OrLater(version)||!integer(tick)||!field||!field.enumerable||!Object.hasOwn(field,'value')||!dataOnly271(field.value)||!object(field.value))return false;
  const state=field.value;
  return Reflect.ownKeys(state).length===5&&['revision','heldAt','human','items','packed'].every(k=>Object.hasOwn(state,k))
   &&state.revision===1&&integer(state.heldAt,0,tick)&&(state.human===null||object(state.human))

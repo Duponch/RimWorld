@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {isPlayerCasket271,cryptosleepInteraction271,type PlayerCasket271,type CryptosleepCommand271} from './cryptosleep-state-271.ts';
 import {isColonist} from './affiliation.ts';
 import {biologicalYears} from './human-age.ts';
@@ -15,7 +16,7 @@ import type {Cell,Pawn,World} from './types.ts';
 
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype;
 export function validCryptosleepCommand271(value:unknown,version:number,nextId:number):value is CryptosleepCommand271 {
- if(version!==271||!record(value))return false;
+ if(!isSchema271OrLater(version)||!record(value))return false;
  if(!Reflect.ownKeys(value).every(k=>{const d=Object.getOwnPropertyDescriptor(value,k);return typeof k==='string'&&d?.enumerable===true&&Object.hasOwn(d,'value');}))return false;
  const carry=value.type==='order-carry-cryptosleep',enter=value.type==='order-enter-cryptosleep',keys=carry?['type','pawnId','patientId','casketId']:['type','pawnId','casketId',...(enter&&Object.hasOwn(value,'confirmLastColonist')?['confirmLastColonist']:[])];
  if(!['order-enter-cryptosleep','order-carry-cryptosleep','order-open-cryptosleep'].includes(String(value.type))||Reflect.ownKeys(value).length!==keys.length)return false;

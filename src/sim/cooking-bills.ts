@@ -1,3 +1,5 @@
+import {isSchema269OrLater,isSchema270OrLater} from './schema-compatibility-257.ts';
+import {isSpearItem272} from './spear-content-272.ts';
 import {isLongswordItem270} from './longsword-content-270.ts';
 import {isSchema267OrLater} from './schema-compatibility-257.ts';
 import {isMaceItem269} from './mace-content-269.ts';
@@ -25,7 +27,7 @@ import { SCHEMA_VERSION,type Cell,type Structure,type World } from './types.ts';
 export const COOK_TICKS=60; // 300 reference work / 10 local ticks Ã— campfire factor 2.
 export const INGREDIENT_UNITS=10; // 0.5 nutrition for the supported raw ingredients.
 export function newCookingBill(id:number,recipe:ProductionRecipe='simple-meal',version:number=SCHEMA_VERSION):CookingBill {
-  const inputs=PRODUCTION_RECIPES[recipe].inputs.filter(i=>(version>=270||!isLongswordItem270(i))&&(version>=269||!isMaceItem269(i))&&(version>=267||!isSmithingProduct267(i))&&(version>=256||!isFutureEcologyItem256(i))&&(version>=197||!V219_ITEM_IDS.some(future=>future===i)));
+  const inputs=PRODUCTION_RECIPES[recipe].inputs.filter(i=>(version===272||!isSpearItem272(i))&&(version>=270||!isLongswordItem270(i))&&(version>=269||!isMaceItem269(i))&&(version>=267||!isSmithingProduct267(i))&&(version>=256||!isFutureEcologyItem256(i))&&(version>=197||!V219_ITEM_IDS.some(future=>future===i)));
   return {id,recipe,mode:'times',target:1,suspended:false,filters:Object.fromEntries(inputs.map(i=>[i,isCremationRecipe(recipe)?i==='human-corpse':isSmithingRecipe267(recipe)?smithingInitialMaterial267(i as import('./smithing-content-267.ts').SmithingMaterial267,recipe):(recipe==='smelt-slag'||!isSmeltingRecipe(recipe))&&!isBurnApparelRecipe(recipe)&&(recipe!=='chemfuel-from-organics'||(BIOFUEL_INITIAL_ORGANICS as readonly string[]).includes(i))])),radius:999,destination:isCremationRecipe(recipe)||isBurnApparelRecipe(recipe)?'drop':'stockpile',
     ...(recipe==='smelt-weapon'||recipe==='smelt-apparel'||isBurnApparelRecipe(recipe))?{smeltFilter:{hpMin:0,hpMax:100,qualityMin:'awful',qualityMax:'legendary'}}:{},
     ...isCremationRecipe(recipe)?{cremationFilter:{colonists:true,strangers:true,fresh:true,rotting:true,desiccated:true}}:{}};
@@ -53,10 +55,10 @@ export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-
   return Object.keys(v).every(k=>['id','recipe','mode','target','suspended','filters','radius','destination',...smelting?['smeltFilter']:[],...cremation?['cremationFilter']:[]].includes(k))
     &&(smelting||cremation?['times','forever']:['times','until','forever']).includes(v.mode)&&Number.isSafeInteger(v.target)&&v.target>=0&&v.target<=9999
     &&typeof v.suspended==='boolean'&&!!v.filters&&typeof v.filters==='object'&&!Array.isArray(v.filters)
-    &&Object.keys(v.filters).every(i=>(PRODUCTION_RECIPES[recipe].inputs as readonly string[]).includes(i)&&(version===269||(version===270||version===271)||!isMaceItem269(i))&&((version===270||version===271)||!isLongswordItem270(i))&&(version>=267||!isSmithingProduct267(i))&&(version>=265||i!=='hops')&&(version>=256||!isFutureEcologyItem256(i))&&(version>=197||!V219_ITEM_IDS.some(future=>future===i)))
+    &&Object.keys(v.filters).every(i=>(PRODUCTION_RECIPES[recipe].inputs as readonly string[]).includes(i)&&(version===272||!isSpearItem272(i))&&(isSchema269OrLater(version)||!isMaceItem269(i))&&(isSchema270OrLater(version)||!isLongswordItem270(i))&&(version>=267||!isSmithingProduct267(i))&&(version>=265||i!=='hops')&&(version>=256||!isFutureEcologyItem256(i))&&(version>=197||!V219_ITEM_IDS.some(future=>future===i)))
     // Old carcass filters stay absent after migration and therefore reject new
     // sources. Only a new bill or explicit settings can opt into those inputs.
-    &&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||(isSmithingProduct267(i)||isMaceItem269(i)||isLongswordItem270(i)||i==='hops'&&recipe!=='brew-wort'||isFutureEcologyItem256(i)||V219_ITEM_IDS.some(future=>future===i)||(['milk','muffalo-wool'].includes(i)?version<120:['hare-meat','potato','corn',...V91_ITEM_IDS,...V190_ITEM_IDS].includes(i)))&&v.filters[i]===undefined)
+    &&PRODUCTION_RECIPES[recipe].inputs.every(i=>typeof v.filters[i]==='boolean'||(isSmithingProduct267(i)||isMaceItem269(i)||isLongswordItem270(i)||isSpearItem272(i)||i==='hops'&&recipe!=='brew-wort'||isFutureEcologyItem256(i)||V219_ITEM_IDS.some(future=>future===i)||(['milk','muffalo-wool'].includes(i)?version<120:['hare-meat','potato','corn',...V91_ITEM_IDS,...V190_ITEM_IDS].includes(i)))&&v.filters[i]===undefined)
     &&Number.isFinite(v.radius)&&v.radius>=0&&v.radius<=999&&(cremation||isBurnApparelRecipe(recipe)?v.destination==='drop':['stockpile','drop'].includes(v.destination));
 }
 /** Reference resource counter includes stored items and current task cargo.

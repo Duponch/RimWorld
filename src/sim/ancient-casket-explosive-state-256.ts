@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import type {BombInstigatorKey,TurretWick} from './mini-turret-state.ts';
 import type {Structure,World} from './types.ts';
@@ -12,7 +13,7 @@ function data(v:unknown):v is Record<string,unknown>{return !!v&&typeof v==='obj
  * duration is persisted, never redrawn by RAW/MAIN or owner reconstruction. */
 export function validAncientCasketWickField256(owner:object,version:number,tick=Number.MAX_SAFE_INTEGER):boolean {
  const d=Object.getOwnPropertyDescriptor(owner,'casketWick');if(!d)return !('casketWick'in owner);
- if(!isSchema256Or257(version)||!Object.hasOwn(d,'value')||!d.enumerable||!(Object.getOwnPropertyDescriptor(owner,'kind')?.value==='ancient-cryptosleep-casket'||version===271&&Object.getOwnPropertyDescriptor(owner,'kind')?.value==='cryptosleep-casket')||!data(d.value))return false;
+ if(!isSchema256Or257(version)||!Object.hasOwn(d,'value')||!d.enumerable||!(Object.getOwnPropertyDescriptor(owner,'kind')?.value==='ancient-cryptosleep-casket'||isSchema271OrLater(version)&&Object.getOwnPropertyDescriptor(owner,'kind')?.value==='cryptosleep-casket')||!data(d.value))return false;
  const w=d.value,keys=Object.keys(w);
  if(!keys.every(k=>['startedAtCore','endCore','instigatorKey'].includes(k))||!integer(w.startedAtCore)||!integer(w.endCore,w.startedAtCore+140,w.startedAtCore+150)||tick!==Number.MAX_SAFE_INTEGER&&(!Number.isSafeInteger(tick*10)||w.startedAtCore>tick*10||w.endCore<=tick*10))return false;
  if(Object.hasOwn(w,'instigatorKey')&&!key(w.instigatorKey))return false;

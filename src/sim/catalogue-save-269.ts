@@ -1,3 +1,4 @@
+import {isSchema269OrLater} from './schema-compatibility-257.ts';
 import {MACE_ITEMS_269} from './mace-content-269.ts';
 import {MACE_TOOL_IDS_269} from './mace-combat-269.ts';
 
@@ -23,8 +24,8 @@ function historical(v:unknown):boolean {
 }
 export function validMaceCatalogueDomains269(value:unknown,version:number):boolean {
  try{
-  if(version===269||(version===270||version===271))return true;
-  if(!Number.isSafeInteger(version)||version<1||version>271)return false;
+  if(isSchema269OrLater(version))return true;
+  if(!Number.isSafeInteger(version)||version<1||version>272)return false;
   return !record(value)||DOMAINS.every(k=>historical(value[k]));
  }catch{return false;}
 }
@@ -32,8 +33,8 @@ export function validMaceCatalogueDomains269(value:unknown,version:number):boole
  * including inactive maps, retained people, recovery tools and item ledgers. */
 export function validMaceHistoricalTransport269(value:unknown,version:number):boolean {
  try{
-  if(version===269||(version===270||version===271))return true;
-  if(!Number.isSafeInteger(version)||version<1||version>271)return false;
+  if(isSchema269OrLater(version))return true;
+  if(!Number.isSafeInteger(version)||version<1||version>272)return false;
   if(!record(value))return true;
   const w=record(value.world)?value.world:value;
   if(!validMaceCatalogueDomains269(w,version))return false;

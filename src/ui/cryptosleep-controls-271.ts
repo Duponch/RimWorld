@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from '../sim/schema-compatibility-257.ts';
 import {footprintContains} from '../sim/definitions';
 import {cryptosleepIntent271,cryptosleepLastColonist271} from '../sim/cryptosleep-intent-271';
 import {isPlayerCasket271,type CryptosleepCommand271} from '../sim/cryptosleep-state-271';
@@ -7,7 +8,7 @@ export interface CryptosleepOption271 {label:string;command:CryptosleepCommand27
 /** Cold context-menu read: use the same real route/claim admission as commands.
  * The acknowledgement used for preflight never sends or accepts an order. */
 export function cryptosleepOptions271(w:World,pawnId:number,cell:Cell,queue=false):CryptosleepOption271[]{
- if(w.schemaVersion!==271)return [];
+ if(!isSchema271OrLater(w.schemaVersion))return [];
  const actor=w.pawns.find(p=>p.id===pawnId);if(!actor)return [];
  const target=w.structures.find(s=>isPlayerCasket271(s)&&footprintContains(s,cell));
  const patient=w.pawns.find(p=>p.id!==pawnId&&p.state==='downed'&&p.x===cell.x&&p.z===cell.z);

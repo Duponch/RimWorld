@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import type {MedicalRecord} from './injury-types.ts';
 import type {Pawn} from './types.ts';
 import {prepareAnestheticResume271} from './anesthetic.ts';
@@ -18,7 +19,7 @@ export function validMedicalCivilHeader271(value:unknown,version:number,human=tr
  if(!value||typeof value!=='object')return false;
  const d=Object.getOwnPropertyDescriptor(value,'civilTick271');if(!d)return !('civilTick271'in value);
  const t=Object.getOwnPropertyDescriptor(value,'tick');
- return version===271&&human&&Object.hasOwn(d,'value')&&d.enumerable===true&&Number.isSafeInteger(d.value)&&d.value>=0&&!!t&&Object.hasOwn(t,'value')&&Number.isSafeInteger(t.value)&&t.value>=0&&d.value>=t.value&&Number.isSafeInteger(d.value*10);
+ return isSchema271OrLater(version)&&human&&Object.hasOwn(d,'value')&&d.enumerable===true&&Number.isSafeInteger(d.value)&&d.value>=0&&!!t&&Object.hasOwn(t,'value')&&Number.isSafeInteger(t.value)&&t.value>=0&&d.value>=t.value&&Number.isSafeInteger(d.value*10);
 }
 type Write271={object:object;key:string;before:PropertyDescriptor|undefined;after:unknown};
 export interface SuspendedHumanResume271 {current():boolean;commit():boolean}

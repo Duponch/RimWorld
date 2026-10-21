@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {CRYPTOSLEEP_ENTER_CORE_271,CRYPTOSLEEP_OPEN_CORE_271,isPlayerCasket271,cryptosleepInteraction271,type CryptosleepTask271,type CryptosleepCommand271,type PlayerCasket271} from './cryptosleep-state-271.ts';
 import {cryptosleepIntent271,cryptosleepActorCapable271,cryptosleepHuman271,cryptosleepTravelRefusal271,cryptosleepClaim271} from './cryptosleep-intent-271.ts';
@@ -21,7 +22,7 @@ export function releaseCryptosleepTask271(w:World,p:Pawn):void {
 /** Relationship/capability checks only; no flood, copy or clinical advancement. */
 export function cryptosleepContinuationReason271(w:World,p:Pawn):string|undefined {
  const t=p.cryptosleepTask;if(!t)return;
- const target=get(w,t.casketId);if(w.schemaVersion!==271||!cryptosleepActorCapable271(w,p)||cryptosleepTravelRefusal271(w,p))return 'Le colon ne peut plus poursuivre ce service.';
+ const target=get(w,t.casketId);if(!isSchema271OrLater(w.schemaVersion)||!cryptosleepActorCapable271(w,p)||cryptosleepTravelRefusal271(w,p))return 'Le colon ne peut plus poursuivre ce service.';
  if(!target?.cryptosleep||cryptosleepClaim271(w,target.id,p.id)||deconstructionReserved(w,target.id,p.id))return 'Le caisson ou sa réservation ne permet plus ce service.';
  if(t.action==='open'?!target.cryptosleep.human:!!target.cryptosleep.human)return 'Le contenu du caisson a changé.';
  const cell=cryptosleepInteraction271(target);if(allowedAreaReason(w,p,cell)||reservedServiceCells(w,p.id).has(cell.z*w.width+cell.x))return 'La case du caisson n’est plus disponible.';

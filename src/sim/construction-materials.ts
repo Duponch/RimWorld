@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {CRYPTOSLEEP_CONSTRUCTION_271,CRYPTOSLEEP_PHYSICS_271} from './cryptosleep-content-271.ts';
 import {isCaveHiveKind256} from './cave-hive-state-256.ts';
 import {shipChunkRecipe256} from './ship-chunk-256.ts';
@@ -134,7 +135,7 @@ for(const kind of Object.keys(JOB_DURATION) as JobKind[]) {
   }
 }
 export function validConstructionMaterial(kind:unknown,material:unknown,version:number=SCHEMA_VERSION):boolean {
-  if(kind==='cryptosleep-casket')return version===271&&material==='steel';
+  if(kind==='cryptosleep-casket')return isSchema271OrLater(version)&&material==='steel';
   if(kind==='ancient-cryptosleep-casket')return version>=256&&material===undefined;
   if(isAncientMonumentKind256(kind))return ancientMonumentMaterial256(kind,material,version);
   if(kind==='ship-chunk')return version>=256&&material===undefined;

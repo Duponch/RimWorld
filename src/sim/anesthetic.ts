@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import type { MedicalRandom, MedicalRecord } from './injury-types.ts';
 
 /** Human clinical condition, independent of an operation or sleeping task. */
@@ -72,7 +73,7 @@ const integer=(value:unknown,min:number,max:number):value is number=>Number.isSa
  * Decay/remainder must agree exactly in either case. */
 export function validAnesthetic(value:unknown,recordTick:number,allowed:boolean,phase?:number,civilTick=recordTick,version=270):boolean {
   if(value===undefined)return true;
-  if(!allowed||!object(value)||Object.keys(value).some(key=>!['bornAt','expiresAtCore','severity','remainder',...(version===271?['cadence271']:[])].includes(key))||
+  if(!allowed||!object(value)||Object.keys(value).some(key=>!['bornAt','expiresAtCore','severity','remainder',...(isSchema271OrLater(version)?['cadence271']:[])].includes(key))||
     !integer(recordTick,0,Number.MAX_SAFE_INTEGER)||!Number.isSafeInteger(recordTick*10)||
     !integer(value.bornAt,0,recordTick)||!integer(value.expiresAtCore,recordTick*10+1,Number.MAX_SAFE_INTEGER)||
     !integer(value.severity,1,ANESTHETIC_UNIT)||!integer(value.remainder,0,LOSS_DENOMINATOR-1)||phase!==undefined&&!integer(phase,0,ANESTHETIC_INTERVAL-1))return false;
@@ -81,7 +82,7 @@ export function validAnesthetic(value:unknown,recordTick:number,allowed:boolean,
   const steps=((ANESTHETIC_UNIT-value.severity)*LOSS_DENOMINATOR+value.remainder)/LOSS_NUMERATOR;
   const cadence=Object.getOwnPropertyDescriptor(value,'cadence271');
   if(cadence||'cadence271'in value){
-    if(version!==271||!cadence||!Object.hasOwn(cadence,'value')||!cadence.enumerable||!object(cadence.value)||Object.getPrototypeOf(cadence.value)!==Object.prototype||Reflect.ownKeys(cadence.value).length!==3||!['tick','steps','bornAtCivil'].every(k=>{const d=Object.getOwnPropertyDescriptor(cadence.value,k);return !!d&&Object.hasOwn(d,'value')&&d.enumerable;}))return false;
+    if(!isSchema271OrLater(version)||!cadence||!Object.hasOwn(cadence,'value')||!cadence.enumerable||!object(cadence.value)||Object.getPrototypeOf(cadence.value)!==Object.prototype||Reflect.ownKeys(cadence.value).length!==3||!['tick','steps','bornAtCivil'].every(k=>{const d=Object.getOwnPropertyDescriptor(cadence.value,k);return !!d&&Object.hasOwn(d,'value')&&d.enumerable;}))return false;
     const c=cadence.value;
     if(!integer(civilTick,recordTick,Number.MAX_SAFE_INTEGER)||!integer(c.tick,value.bornAt,recordTick)||!integer(c.steps,0,Number.MAX_SAFE_INTEGER)||!integer(c.bornAtCivil,value.bornAt,civilTick)||c.bornAtCivil>c.tick+civilTick-recordTick||!Number.isSafeInteger(steps)||steps<c.steps)return false;
     if(phase!==undefined)return steps===c.steps+Math.floor((civilTick-phase)/ANESTHETIC_INTERVAL)-Math.floor((c.tick+civilTick-recordTick-phase)/ANESTHETIC_INTERVAL);

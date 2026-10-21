@@ -8,6 +8,8 @@ import { weaponVisual } from '../render/weapon-shape';
 import { humanBoneAbsent } from '../render/human-anatomy-presentation';
 import { anestheticStage } from '../sim/anesthetic';
 import {LONGSWORD_DYE270} from '../render/longsword-parts270';
+import {SPEAR_DYE272} from '../render/spear-parts272';
+import {isSpearItem272,spearColor272} from '../sim/spear-content-272';
 import {isLongswordItem270,longswordColor270} from '../sim/longsword-content-270';
 import {MACE_DYE269} from '../render/mace-parts269';
 import {isMaceItem269,maceColor269} from '../sim/mace-content-269';
@@ -29,7 +31,7 @@ let sourceFaces: Face[] | undefined;
 // changing a 3D hair, beard, head or garment part changes the portrait too.
 function faces(): readonly Face[] {
   if (sourceFaces) return sourceFaces;
-  const geometry = pawnGeometry(true,true,true);
+  const geometry = pawnGeometry(true,true,true,true);
   const pos = geometry.getAttribute('position'), normal = geometry.getAttribute('normal');
   const color = geometry.getAttribute('color'), bone = geometry.getAttribute('boneId'), dye = geometry.getAttribute('dye');
   const result: Face[] = [];
@@ -70,7 +72,7 @@ function visible(face: Face, variant: readonly [number, number, number, number],
   if (dye === SIMPLE_HELMET_DYE) return look.simpleHelmet;
   if (dye === RECON_ARMOR_DYE) return look.silhouette === 5;
   if (dye === RECON_HELMET_DYE) return look.reconHelmet;
-  if (dye === -1 || dye === -4 || dye === -5 || dye === MACE_DYE269 || dye === LONGSWORD_DYE270) return dye === weaponDye;
+  if (dye === -1 || dye === -4 || dye === -5 || dye === MACE_DYE269 || dye === LONGSWORD_DYE270 || dye === SPEAR_DYE272) return dye === weaponDye;
   return dye >= 0;
 }
 
@@ -106,6 +108,7 @@ function morph(point: Vertex, bone: number, variant: readonly [number, number, n
 /** The portrait projects the same weapon parts at the shader's resting pose.
  * No extra scene or animated portrait render is created. */
 function posedPoint(point: Vertex, bone: number, variant: readonly [number, number, number, number], dye: number): Vertex {
+  if(dye===SPEAR_DYE272){const along=point[1]-.68,across=point[0]-.205;return [across+.28,along*.70+.77,point[2]+.12];}
   if(dye===MACE_DYE269||dye===LONGSWORD_DYE270){const along=point[1]-.68,across=point[0]-.205;return [across+.28,along*.82+.70,point[2]+.12];}
   if (dye === -4) {
     const along = point[1] - .68, across = point[0] - .205, depth = point[2];
@@ -123,7 +126,8 @@ function posedNormal(normal: Vertex, dye: number): Vertex {
   if (dye === -4) {
     y = (y - .30 * x) / .78;
     z = (z - .12 * y) / .8;
-  } else if (dye === -1 || dye === -5 || dye === MACE_DYE269 || dye === LONGSWORD_DYE270) y /= .82;
+  } else if (dye === SPEAR_DYE272) y /= .70;
+  else if (dye === -1 || dye === -5 || dye === MACE_DYE269 || dye === LONGSWORD_DYE270) y /= .82;
   const length = Math.hypot(x, y, z) || 1;
   return [x / length, y / length, z / length];
 }
@@ -153,7 +157,7 @@ function makeSvg(appearance: PawnAppearance, look: ApparelLook, weaponItem: stri
     if (dot <= 0) continue;
     const points = placed.map(project);
     const light = .76 + .24 * Math.max(0, normal[0] * .3 + normal[1] * .65 + normal[2] * .75);
-    const base = face.dye===MACE_DYE269&&isMaceItem269(weaponItem)?new THREE.Color(face.color).multiply(new THREE.Color(maceColor269(weaponItem))).getHex():face.dye===LONGSWORD_DYE270&&isLongswordItem270(weaponItem)?new THREE.Color(face.color).multiply(new THREE.Color(longswordColor270(weaponItem))).getHex():colorOf(face, appearance, look);
+    const base = face.dye===SPEAR_DYE272&&isSpearItem272(weaponItem)?new THREE.Color(face.color).multiply(new THREE.Color(spearColor272(weaponItem))).getHex():face.dye===MACE_DYE269&&isMaceItem269(weaponItem)?new THREE.Color(face.color).multiply(new THREE.Color(maceColor269(weaponItem))).getHex():face.dye===LONGSWORD_DYE270&&isLongswordItem270(weaponItem)?new THREE.Color(face.color).multiply(new THREE.Color(longswordColor270(weaponItem))).getHex():colorOf(face, appearance, look);
     const key = `${base}|${round(light)}`;
     let fill = shaded.get(key);
     if (!fill) { fill = '#' + new THREE.Color(base).multiplyScalar(light).getHexString(); shaded.set(key, fill); }

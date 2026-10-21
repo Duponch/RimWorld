@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {isPlayerCasket271,newCryptosleepHolder271,type PlayerCasket271} from './cryptosleep-state-271.ts';
 import {validCryptosleepBuilding271} from './cryptosleep-owner-save-271.ts';
 import {prepareSuspendedHumanResume271,medicalCivilTick271} from './suspended-human-clock-271.ts';
@@ -120,7 +121,7 @@ function prepareVanish271(w:World,p:Pawn,draft:Pawn,items:readonly MaterialPile[
  * contents, then an optional Flame wave. Destruction never calls Open. */
 export function planCryptosleepRemoval271(w:World,s:Structure,mode:'deconstruct'|'kill-finalize'|'vanish',explosion?:{core:number;instigatorKey?:BombInstigatorKey},damageRng=w.rng):CryptosleepRemoval271 {
  const no=(reason:string):CryptosleepRemoval271=>({ok:false,reason});
- if(w.schemaVersion!==271||!isPlayerCasket271(s)||!w.structures.includes(s)||!validCryptosleepBuilding271(s,w.schemaVersion,w)||s.cryptosleep.heldAt>w.tick||!int(damageRng)||damageRng>0xffffffff)return no('Actual paid player casket required');
+ if(!isSchema271OrLater(w.schemaVersion)||!isPlayerCasket271(s)||!w.structures.includes(s)||!validCryptosleepBuilding271(s,w.schemaVersion,w)||s.cryptosleep.heldAt>w.tick||!int(damageRng)||damageRng>0xffffffff)return no('Actual paid player casket required');
  const c=s as PlayerCasket271,h=c.cryptosleep,p=h.human,tick=w.tick,heldItems=h.items,heldPacks=h.packed,itemMembers=[...h.items],packMembers=[...h.packed];
  if(explosion&&(mode!=='kill-finalize'||!int(explosion.core)||explosion.core<Math.max(0,(tick-1)*10)||explosion.core>tick*10||(w.bombWaves?.length??0)>=w.width*w.height))return no('Actual Flame owner/clock/capacity unavailable');
  const jobs=w.jobs.filter(j=>j.deconstruction?.structureId===c.id||j.repair?.structureId===c.id||j.fixBreakdown?.structureId===c.id),jobIds=new Set(jobs.map(j=>j.id));
@@ -193,7 +194,7 @@ export function planCryptosleepRemoval271(w:World,s:Structure,mode:'deconstruct'
 }
 
 export function damagePlayerCryptosleep271(w:World,s:Structure,amount:number,cause:StructureDamageCause,rng:number,external?:StructureDamageContext):boolean {
- if(w.schemaVersion!==271||!isPlayerCasket271(s)||!w.structures.includes(s)||!validCryptosleepBuilding271(s,w.schemaVersion,w)||s.cryptosleep.heldAt>w.tick||!int(amount)||amount===0||!int(rng)||rng>0xffffffff)return false;
+ if(!isSchema271OrLater(w.schemaVersion)||!isPlayerCasket271(s)||!w.structures.includes(s)||!validCryptosleepBuilding271(s,w.schemaVersion,w)||s.cryptosleep.heldAt>w.tick||!int(amount)||amount===0||!int(rng)||rng>0xffffffff)return false;
  const core=external?.core??w.tick*10;if(external&&(!Number.isFinite(external.rawAmount)||external.rawAmount<0||!int(core)||core<Math.max(0,(w.tick-1)*10)||core>w.tick*10))return false;
  const before=s.damage??0,damage=before+amount;if(!int(damage)||!Number.isSafeInteger(core+150))return false;
  if(external?.detonate&&(!s.casketWick||s.casketWick.endCore>core))return false;

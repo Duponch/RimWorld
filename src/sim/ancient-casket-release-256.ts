@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {nearbyGround,groundCapacity,groundPile} from './ground-placement.ts';
 import {canStandAt,FURNITURE_TRAVEL} from './furniture-travel.ts';
@@ -31,8 +32,8 @@ export function ancientCasketEjectionRandom256(source:Pick<World,'rng'>):Cryptos
  * by their original corpse Thing, which does not acquire a new Pawn Hediff. */
 export function applyAncientHumanEjectionSickness256(pawn:Pawn,clock:number,random:CryptosleepSicknessRandom256,version=270):void {
  if(!Number.isSafeInteger(clock)||clock<0)throw Error('Invalid actual ejection clinical clock');
- if(pawn.state==='dead'||pawn.health?.death){if(pawn.state!=='dead'||!pawn.health?.death||(version===271?medicalCivilTick271(pawn.health):pawn.health.tick)!==pawn.health.death.tick||pawn.health.death.tick>clock)throw Error('Invalid original terminal ejection owner');return;}
- if(pawn.health&&((version===271?medicalCivilTick271(pawn.health):pawn.health.tick)!==clock||pawn.health.body!==undefined))throw Error('Invalid original human ejection clinical owner');
+ if(pawn.state==='dead'||pawn.health?.death){if(pawn.state!=='dead'||!pawn.health?.death||(isSchema271OrLater(version)?medicalCivilTick271(pawn.health):pawn.health.tick)!==pawn.health.death.tick||pawn.health.death.tick>clock)throw Error('Invalid original terminal ejection owner');return;}
+ if(pawn.health&&((isSchema271OrLater(version)?medicalCivilTick271(pawn.health):pawn.health.tick)!==clock||pawn.health.body!==undefined))throw Error('Invalid original human ejection clinical owner');
  const record=pawn.health??createMedicalRecord(clock);addCryptosleepSickness256(record,random,256);reconcileMedicalDeath(record);pawn.health=record;
 }
 /** Original map only. Connected Near candidates and ground capacity are reused;
@@ -76,7 +77,7 @@ export function planAncientCasketRelease256(w:World,target:AncientCasket256,rele
  // composed. Refuse before clocks/owners/RNG are changed, never cure or reroll.
  const clinicalState={rng:releaseRng},clinicalRandom=ancientCasketEjectionRandom256(clinicalState);
  for(const part of parts){const moved=new Set(part.actors.filter(a=>a.human).map(a=>a.actor));for(const p of part.c.casket.humans){
-  if(p.state==='dead'||p.health?.death)continue;const clock=moved.has(p)?w.tick:part.c.casket.heldAt,record=p.health?structuredClone(p.health):createMedicalRecord(clock);if(w.schemaVersion===271){if(record.tick!==clock)record.civilTick271=clock;}else record.tick=clock;
+  if(p.state==='dead'||p.health?.death)continue;const clock=moved.has(p)?w.tick:part.c.casket.heldAt,record=p.health?structuredClone(p.health):createMedicalRecord(clock);if(isSchema271OrLater(w.schemaVersion)){if(record.tick!==clock)record.civilTick271=clock;}else record.tick=clock;
   addCryptosleepSickness256(record,clinicalRandom,256);reconcileMedicalDeath(record);
   if(record.death)return {ok:false,reason:'Actual fatal ejection requires original corpse materialization/held transfer; original holder retained.'};
  }}

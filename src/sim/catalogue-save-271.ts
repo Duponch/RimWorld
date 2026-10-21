@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 /** Sparse prospective boundary: only real owning records and catalogues are
  * visited, never the terrain or geographic resource arrays. */
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
@@ -20,8 +21,8 @@ function historical(v:unknown):boolean {
 }
 export function validCryptosleepCatalogueDomains271(value:unknown,version:number):boolean {
  try{
-  if(version===271)return true;
-  if(!Number.isSafeInteger(version)||version<1||version>271)return false;
+  if(isSchema271OrLater(version))return true;
+  if(!Number.isSafeInteger(version)||version<1||version>272)return false;
   return !record(value)||DOMAINS.every(k=>historical(value[k]));
  }catch{return false;}
 }
@@ -29,8 +30,8 @@ export function validCryptosleepCatalogueDomains271(value:unknown,version:number
  * including inactive maps, retained people, recovery tools and item ledgers. */
 export function validCryptosleepHistoricalTransport271(value:unknown,version:number):boolean {
  try{
-  if(version===271)return true;
-  if(!Number.isSafeInteger(version)||version<1||version>271)return false;
+  if(isSchema271OrLater(version))return true;
+  if(!Number.isSafeInteger(version)||version<1||version>272)return false;
   if(!record(value))return true;
   const w=record(value.world)?value.world:value;
   if(!validCryptosleepCatalogueDomains271(w,version))return false;

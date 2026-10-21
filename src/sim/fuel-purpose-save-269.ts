@@ -1,3 +1,4 @@
+import {isSchema269OrLater} from './schema-compatibility-257.ts';
 import {fuelCapacity,REFUEL_WORK_TICKS} from './fuel.ts';
 import {reservedSource} from './materials.ts';
 import {withoutQueuedOrder} from './haul-reservations.ts';
@@ -9,7 +10,7 @@ const marked=(v:unknown):v is Record<string,unknown>=>record(v)&&Object.hasOwn(v
 /** Absence preserves the literal historical purpose contract. */
 export function validCraftingFuelDestination269(value:Record<string,unknown>,version:number):boolean {
  if(!marked(value))return true;
- return (version===269||(version===270||version===271))&&value.type==='fuel'&&value.forCrafting===true&&!Object.hasOwn(value,'forCooking')&&int(value.structureId)
+ return isSchema269OrLater(version)&&value.type==='fuel'&&value.forCrafting===true&&!Object.hasOwn(value,'forCooking')&&int(value.structureId)
   &&Object.keys(value).every(k=>['type','structureId','forCrafting','forced'].includes(k))&&(!Object.hasOwn(value,'forced')||value.forced===true);
 }
 /** Only the new purpose acquires these shared file/Decoder checks. Existing
@@ -17,7 +18,7 @@ export function validCraftingFuelDestination269(value:Record<string,unknown>,ver
 export function validCraftingFuelTransport269(w:World,version:number):boolean {
  try{
   if(!w.pawns.some(p=>marked(p.haul?.destination)||p.orders?.queue?.some(o=>record(o)&&marked(o.destination))))return true;
-  if(version!==269&&version!==270&&version!==271)return false;
+  if(!isSchema269OrLater(version))return false;
   const cell=(v:unknown)=>record(v)&&Object.keys(v).every(k=>k==='x'||k==='z')&&int(v.x,0,w.width-1)&&int(v.z,0,w.height-1);
   const valid=(raw:unknown,pawn:Pawn,queued:boolean):boolean=>{
    if(!record(raw)||!marked(raw.destination))return true;

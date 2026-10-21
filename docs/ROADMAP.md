@@ -1,5 +1,7 @@
 # Plan de développement
 
+**V448 qualifiée localement — schéma 272 :** [Lances dans les six matières](gameplay/spears-v448.md). Fabrication, ouvrage, équipement, trois verbes et récupération ; 124 cas ciblés acquis par reprises, deux anciens rouges identiques au témoin V447 conservés. Typage/build, présentation et UI natives muettes acquis ; deux notifications de mise en page conservées. Publication en préparation, sauvegardes publiques préservées. Ensemble 2 principal ; aucun gain FPS ni clôture des six ensembles.
+
 **V447 publiée — schéma 271 :** [Caissons de cryptosommeil de colonie](gameplay/cryptosleep-v447.md). Recherche, chantier payé, services et reprise des mêmes adultes libres et biens ; 148 cas acquis par reprises, dix rouges historiques conservés. Présentation et UI natives muettes acquises ; publication 7f020b0c/4397021b vérifiée, sauvegardes publiques inchangées. Ensemble 2 principal ; victoire, six ensembles et cible FPS ouverts.
 
 **V446 publiée — schéma 270 :** [Épées longues dans les six matières](gameplay/longswords-v446.md). Lames longues, fabrication aux deux forges, ouvrage, équipement, trois outils de mêlée et récupération ; 180 cas ciblés acquis par reprises. Présentation et interface natives muettes acquises ; deux notifications de mise en page conservées. Publié 9a7abfbe/déploiement 822a5387, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Ensemble 2 toujours principal ; aucun gain FPS ni clôture des six ensembles.

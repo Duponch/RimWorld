@@ -1,5 +1,15 @@
 # Guide joueur
 
+## Fabriquer une lance — V448 qualifiée localement, publication en préparation
+
+Après **Forge**, terminez **Lames longues**, la recherche existante de **400 points**, au bureau ordinaire ou à un bureau avancé utilisable. Choisissez un artisan de niveau **4**, une **Forge à combustible** ou une **Forge électrique**, puis la facture **Fabriquer une lance**.
+
+Prévoyez **75 unités d’une même matière** : bois, acier, plastacier ou uranium ; il faut **750 unités d’argent ou d’or**. Acier, plastacier et uranium sont activés initialement ; les trois autres matières restent activables. Les matières doivent être autorisées, accessibles et apportées physiquement. Le même auteur doit conserver son ouvrage et sa progression après interruption, puis livrer une arme avec qualité et état. L’emplacement d’artisanat et l’usinage ne fabriquent pas cette lance.
+
+Rangez la lance puis équipez le même objet : il pèse **2 kg**. Le manche sert à frapper ou pousser ; la pointe acérée perce avec une pénétration de base de **50 %**, ajustée par la qualité. La matière modifie les dégâts et la cadence, sans multiplier cette pénétration propre à la pointe. La lance utilise le contact de mêlée habituel et n’ajoute pas une attaque à deux cases.
+
+**Fondre une arme** rend **18 ou 19 unités** du métal usuel, ou **187 ou 188 unités** d’argent/or ; le bois ne fond pas. Le brûlage par recette et les autres familles manquantes restent ouverts. Les six lances portent le catalogue à **22 identités d’armes** avec **35 recherches inchangées** ; elles ne livrent aucune victoire. [Règles, adaptations et état des contrôles](spears-v448.md).
+
 ## Utiliser un caisson de cryptosommeil — V447 publiée
 
 Après **Multi-analyseur**, lancez **Cryptosommeil** dans Recherche : **2 000 points**, sur un **bureau avancé alimenté et réellement relié à un multi-analyseur alimenté**. Prévoyez un constructeur de niveau **8** et **180 acier, 5 uranium, 4 composants et 1 composant avancé** pour le caisson ordinaire. Les matières doivent être apportées au chantier ; le caisson terminé n’exige pas d’électricité.

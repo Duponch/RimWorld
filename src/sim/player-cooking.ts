@@ -66,6 +66,7 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   if(station.kind==='electric-smelter')return {label:plan.task?.recipe==='smelt-slag'?'Extraire l’acier d’une scorie':'Fondre une arme',order:{cooking:plan.task!},path:plan.path};
   if(station.kind==='electric-crematorium')return {label:'Incinérer une dépouille',order:{cooking:plan.task!},path:plan.path};
   if(isKibbleRecipe(plan.task?.recipe))return {label:'Fabriquer des croquettes',order:{cooking:plan.task!},path:plan.path};
+  if(plan.task?.recipe==='make-spear')return {label:'Fabriquer une lance',order:{cooking:plan.task},path:plan.path};
   if(plan.task?.recipe==='make-longsword')return {label:'Fabriquer une épée longue',order:{cooking:plan.task},path:plan.path};
   if(plan.task?.recipe==='make-mace')return {label:'Fabriquer une masse',order:{cooking:plan.task},path:plan.path};
   if(plan.task?.recipe==='make-plasteel-knife')return {label:'Fabriquer un couteau en plastacier',order:{cooking:plan.task},path:plan.path};

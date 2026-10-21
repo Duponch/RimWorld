@@ -30,6 +30,9 @@ import { pawnGeometry,cargoGeometry,selectCargoGeometryKinds,PARKA_HOOD_DYE,FLAK
 import { equipmentProjection } from './character-equipment';
 import { RESIDENT_WEAPON_VISUALS269,weaponVisual } from './weapon-shape';
 import {LONGSWORD_DYE270,LONGSWORD_EQUIPMENT270,longswordStrikeActivity270} from './longsword-parts270';
+import {SPEAR_DYE272,SPEAR_EQUIPMENT272,spearStrikeActivity272} from './spear-parts272';
+import {spearPositionNode272} from './spear-pose272';
+import {SPEAR_ITEMS_272,isSpearItem272,spearColor272} from '../sim/spear-content-272';
 import {longswordPositionNode270} from './longsword-pose270';
 import {LONGSWORD_ITEMS_270,isLongswordItem270,longswordColor270} from '../sim/longsword-content-270';
 import {MACE_DYE269,MACE_EQUIPMENT269,maceStrikeActivity269} from './mace-parts269';
@@ -95,6 +98,10 @@ function workActivity(pawn:Pawn):number {
 }
 /** Decode the already published equipment scalar; no pile lookup in a frame. */
 function presentationActivity(pawn:Pawn,equipmentCode:number):number {
+  if(Math.floor(equipmentCode)===SPEAR_EQUIPMENT272&&pawn.melee?.strike){
+    const item=SPEAR_ITEMS_272[Math.round((equipmentCode-SPEAR_EQUIPMENT272)*8)-1];
+    return item?spearStrikeActivity272(pawn.melee.strike.tool,item):0;
+  }
   if(Math.floor(equipmentCode)===LONGSWORD_EQUIPMENT270&&pawn.melee?.strike){
     const item=LONGSWORD_ITEMS_270[Math.round((equipmentCode-LONGSWORD_EQUIPMENT270)*8)-1];
     return item?longswordStrikeActivity270(pawn.melee.strike.tool,item):0;
@@ -197,6 +204,7 @@ export class PawnLayer {
   private smithingGeometry=false;
   private maceGeometry=false;
   private longswordGeometry=false;
+  private spearGeometry=false;
   private readonly retiredPawnGeometries:THREE.BufferGeometry[]=[];
   private readonly surfaceTexture = createStylizedSurfaceTexture();
   private plainMaterial: THREE.MeshStandardNodeMaterial | null = null;
@@ -306,11 +314,11 @@ export class PawnLayer {
    * Shared actor/cargo/fire trajectories and material graphs retain identity.
    * Keep retired geometries until teardown: Three's disposal also frees
    * shared attributes recorded by its previous RenderObject. */
-  private extendResidentGeometry(smithing:boolean,mace:boolean,longsword:boolean):void {
-    if(this.smithingGeometry===smithing&&this.maceGeometry===mace&&this.longswordGeometry===longsword)return;
-    this.smithingGeometry=smithing;this.maceGeometry=mace;this.longswordGeometry=longsword;
+  private extendResidentGeometry(smithing:boolean,mace:boolean,longsword:boolean,spear:boolean):void {
+    if(this.smithingGeometry===smithing&&this.maceGeometry===mace&&this.longswordGeometry===longsword&&this.spearGeometry===spear)return;
+    this.smithingGeometry=smithing;this.maceGeometry=mace;this.longswordGeometry=longsword;this.spearGeometry=spear;
     if(!this.pawnMesh)return;
-    const previous=this.pawnMesh.geometry as THREE.InstancedBufferGeometry,next=pawnGeometry(smithing,mace,longsword);
+    const previous=this.pawnMesh.geometry as THREE.InstancedBufferGeometry,next=pawnGeometry(smithing,mace,longsword,spear);
     for(const [name,attribute]of Object.entries(previous.attributes))if(attribute instanceof THREE.InstancedBufferAttribute
       ||attribute instanceof THREE.InterleavedBufferAttribute&&attribute.data instanceof THREE.InstancedInterleavedBuffer)next.setAttribute(name,attribute);
     next.userData={...previous.userData};next.instanceCount=previous.instanceCount;
@@ -318,7 +326,7 @@ export class PawnLayer {
   }
   private createPawnMesh(count: number): void {
     clearGroup(this.group);
-    const geometry = pawnGeometry(this.smithingGeometry,this.maceGeometry,this.longswordGeometry);
+    const geometry = pawnGeometry(this.smithingGeometry,this.maceGeometry,this.longswordGeometry,this.spearGeometry);
     geometry.userData.animationCache=this.animationCache;
     const travel = new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4);
     for(let i=0;i<count;i++)travel.setW(i,1);
@@ -515,6 +523,8 @@ export class PawnLayer {
           // the torso. During aim its authored barrel (+Y) points forward.
           If(isWeapon,()=>{ animated.assign(vec3(along.mul(.30).add(across).add(.13),along.mul(.78).add(depth.mul(.12)).add(.84),depth.mul(.8).add(.25))); });
           If(shooting.and(isWeapon),()=>{ animated.assign(vec3(across.add(.10),depth.add(1.02).add(recoil.mul(.035)),along.add(.45).sub(recoil.mul(.12)))); });
+        } else if(weapon.item==='spear-family') {
+          If(isWeapon,()=>{animated.assign(spearPositionNode272(along,across,depth,sin(this.travelTime.sub(motion.w).mul(4).clamp(0,1).mul(Math.PI)),motion.y,motion.z.equal(8).or(motion.z.equal(WORK_POSE.groundMelee))));});
         } else if(weapon.item==='longsword-family') {
           If(isWeapon,()=>{animated.assign(longswordPositionNode270(along,across,depth,sin(this.travelTime.sub(motion.w).mul(4).clamp(0,1).mul(Math.PI)),motion.y,motion.z.equal(8).or(motion.z.equal(WORK_POSE.groundMelee))));});
         } else if(weapon.item==='mace-family') {
@@ -587,6 +597,10 @@ export class PawnLayer {
     const originalPosition = makeOriginalPosition();
     mat.positionNode=Fn(()=>{const result=vec3(0).toVar();If(this.animationCache.cached(),()=>{result.assign(this.cachedPawnPosition());}).Else(()=>{result.assign(originalPosition);});return result;})();
     const baseColor = Fn(()=>{const fragmentBone=pawnFragmentTraits.x,fragmentDye=pawnFragmentTraits.y;const tint=mix(attribute('color','vec3'),attribute('aTint','vec3'),fragmentDye.equal(1).select(float(1),float(0))).toVar();
+      If(fragmentDye.equal(SPEAR_DYE272),()=>{
+        const material=attribute('aEquipment','vec4').x.fract().mul(8).round();
+        for(const [index,item]of SPEAR_ITEMS_272.entries()){const c=new THREE.Color(spearColor272(item));If(material.equal(index+1),()=>{tint.mulAssign(vec3(c.r,c.g,c.b));});}
+      });
       If(fragmentDye.equal(LONGSWORD_DYE270),()=>{
         const material=attribute('aEquipment','vec4').x.fract().mul(8).round();
         for(const [index,item]of LONGSWORD_ITEMS_270.entries()){const c=new THREE.Color(longswordColor270(item));If(material.equal(index+1),()=>{tint.mulAssign(vec3(c.r,c.g,c.b));});}
@@ -772,6 +786,7 @@ export class PawnLayer {
         if(weapon.item==='bolt-action-rifle'||weapon.item==='emp-launcher'){
           If(isWeapon,()=>{animated.assign(vec3(along.mul(.30).add(across).add(.13),along.mul(.78).add(depth.mul(.12)).add(.84),depth.mul(.8).add(.25)));});
           If(shooting.and(isWeapon),()=>{animated.assign(vec3(across.add(.10),depth.add(1.02).add(recoil.mul(.035)),along.add(.45).sub(recoil.mul(.12))));});
+        }else if(weapon.item==='spear-family'){If(isWeapon,()=>{animated.assign(spearPositionNode272(along,across,depth,this.animationCache.cell(3).w,motion.y,motion.z.equal(8).or(motion.z.equal(WORK_POSE.groundMelee))));});
         }else if(weapon.item==='longsword-family'){If(isWeapon,()=>{animated.assign(longswordPositionNode270(along,across,depth,this.animationCache.cell(3).w,motion.y,motion.z.equal(8).or(motion.z.equal(WORK_POSE.groundMelee))));});
         }else if(weapon.item==='mace-family'){If(isWeapon,()=>{animated.assign(macePositionNode269(along,across,depth,this.animationCache.cell(3).w,motion.y,motion.z.equal(8).or(motion.z.equal(WORK_POSE.groundMelee))));});
         }else{If(isWeapon,()=>{animated.assign(vec3(across.add(.27),along.mul(.82).add(.65),depth.add(.13)));});
@@ -915,11 +930,12 @@ export class PawnLayer {
     const retainedOffsets=retainedHumanCorpseOffsets(world);
     const apparel=apparelProjection(world);
     const gears=equipmentProjection(world);
-    let smithing=this.smithingGeometry,mace=this.maceGeometry,longsword=this.longswordGeometry;
+    let smithing=this.smithingGeometry,mace=this.maceGeometry,longsword=this.longswordGeometry,spear=this.spearGeometry;
     if(!smithing)for(const pieces of apparel.values())if(pieces.some(p=>isSmithingApparel267(p.item))){smithing=true;break;}
     if(!mace)for(const piece of gears.values())if(isMaceItem269(piece.item)){mace=true;break;}
     if(!longsword)for(const piece of gears.values())if(isLongswordItem270(piece.item)){longsword=true;break;}
-    this.extendResidentGeometry(smithing,mace,longsword);
+    if(!spear)for(const piece of gears.values())if(isSpearItem272(piece.item)){spear=true;break;}
+    this.extendResidentGeometry(smithing,mace,longsword,spear);
     if (!this.pawnMesh) this.createPawnMesh(Math.max(1,world.pawns.length));
     else if(this.pawnMesh.geometry.getAttribute('aFrom').count<world.pawns.length)growPawnBuffers([this.pawnMesh,this.cargoMesh!,this.selectionMesh!,this.fireMesh!,this.partialCargoMesh!],world.pawns.length);
     const geometry = this.pawnMesh!.geometry as THREE.InstancedBufferGeometry;
@@ -1087,7 +1103,7 @@ export class PawnLayer {
       const pose=motion.getZ(i),posture=pose===1||pose===3||pose===5||pose===6||pose===10||pose===POSE_SLEEP||pose===POSE_DEAD||pose===WORK_POSE.ground||pose===WORK_POSE.groundMelee?pose:0;
       // A new confirmed optional melee tool/strike invalidates its retained pose once.
       // Reach then follows ordinary sampling; no continuously changing tick.
-      const activity=motion.getY(i),family=isMaceItem269(gears.get(p.id)?.item)||isLongswordItem270(gears.get(p.id)?.item),
+      const activity=motion.getY(i),family=isMaceItem269(gears.get(p.id)?.item)||isLongswordItem270(gears.get(p.id)?.item)||isSpearItem272(gears.get(p.id)?.item),
         melee=family?[activity,p.melee?.strike?.tool,p.melee?.strike?.atCore]:[];
       this.animationCache.reconcile(i,p.id,[posture,shape.getX(i),shape.getY(i),shape.getZ(i),shape.getW(i),equipment.getX(i),equipment.getY(i),equipment.getZ(i),equipment.getW(i),owner?.type,owner?.type==='pawn'?owner.pawnId:undefined,patientOwners.get(i),...melee].join(':'));});
     for (const attr of [fromAttribute, toAttribute, motion, tint, cargo,handoffFrom,handoffTo]) attr.needsUpdate = true;
@@ -1269,7 +1285,7 @@ export class PawnLayer {
   dispose(): void {
     this.playback435.clear();
     clearGroup(this.group);
-    for(const retired of this.retiredPawnGeometries)retired.dispose();this.retiredPawnGeometries.length=0;this.smithingGeometry=false;this.maceGeometry=false;this.longswordGeometry=false;
+    for(const retired of this.retiredPawnGeometries)retired.dispose();this.retiredPawnGeometries.length=0;this.smithingGeometry=false;this.maceGeometry=false;this.longswordGeometry=false;this.spearGeometry=false;
     this.plainMaterial?.dispose();
     this.texturedMaterial?.dispose();
     this.nativePlainMaterial?.dispose();

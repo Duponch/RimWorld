@@ -1,4 +1,5 @@
 import {LONGSWORD_ITEMS_270,longswordBaseValue270,longswordMaxHitPoints270} from './longsword-content-270.ts';
+import {SPEAR_ITEMS_272,spearBaseValue272,spearMaxHitPoints272} from './spear-content-272.ts';
 import type { ItemId } from './items.ts';
 import {SMITHING_APPAREL_ITEMS267,SMITHING_APPAREL_DEFINITIONS267,smithingApparelBaseValue267} from './smithing-apparel-267.ts';
 
@@ -21,6 +22,7 @@ function gear(baseMarketValue:number,maxHitPoints:number,visitorHandles:boolean,
   return value(baseMarketValue,visitorHandles,{healthAffectsPrice:true,maxHitPoints,hasQuality:true,sellPriceFactor:weapon?.2:1,...extra});
 }
 export const TRADE_CATALOGUE:Readonly<Partial<Record<ItemId,TradeCatalogueEntry>>>=Object.freeze({
+  ...Object.fromEntries(SPEAR_ITEMS_272.map(item=>[item,gear(spearBaseValue272(item),spearMaxHitPoints272(item),false,true)])),
   ...Object.fromEntries(LONGSWORD_ITEMS_270.map(item=>[item,gear(longswordBaseValue270(item),longswordMaxHitPoints270(item),false,true)])),
   ...Object.fromEntries(MACE_ITEMS_269.map(item=>[item,gear(maceBaseValue269(item),maceMaxHitPoints269(item),false,true)])),
   // Both Core products carry Clothing and Armor trade tags. Preserve actual

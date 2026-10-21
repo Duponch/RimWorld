@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {clearingDuration} from './gathering.ts';
 import {captureHumanOwners} from './human-owners.ts';
 import {captureTreeOccurrences} from './tree-transfer-owners.ts';
@@ -26,11 +27,11 @@ export function validTreePileShape(pile:unknown,version:number,clock:number,next
     pile.kind!=='plant'||pile.item!=='minified-tree'||pile.quantity!==1||!integer(pile.id,1,nextId-1)||
     !record(pile.innerResource)||!record(pile.plantPack)||!record(pile.owner))return false;
   const tree=pile.innerResource,pack=pile.plantPack;
-  if(!exact(pack,['packedAt','expiresAt'],[...version>=236?['pendingExpiry']:[],...version===271?['suspendedTicks271']:[]])||!integer(pack.packedAt,0,clock)||
+  if(!exact(pack,['packedAt','expiresAt'],[...version>=236?['pendingExpiry']:[],...isSchema271OrLater(version)?['suspendedTicks271']:[]])||!integer(pack.packedAt,0,clock)||
     !integer(pack.expiresAt,pack.packedAt+1)||pack.expiresAt-pack.packedAt!==TREE_PACK_LIFETIME||
     !integer(tree.id,1,nextId-1)||tree.id===pile.id||tree.kind!=='tree'||
     !extractTreeDefinition(tree as unknown as Resource)||!resourceValidAt(tree,pack.packedAt))return false;
-  if('suspendedTicks271'in pack&&(!Object.hasOwn(pack,'suspendedTicks271')||version!==271||!integer(pack.suspendedTicks271,1,clock-pack.packedAt)||!Number.isSafeInteger(Number(pack.expiresAt)+Number(pack.suspendedTicks271))))return false;
+  if('suspendedTicks271'in pack&&(!Object.hasOwn(pack,'suspendedTicks271')||!isSchema271OrLater(version)||!integer(pack.suspendedTicks271,1,clock-pack.packedAt)||!Number.isSafeInteger(Number(pack.expiresAt)+Number(pack.suspendedTicks271))))return false;
   if(Object.hasOwn(pack,'pendingExpiry')){
     const pending=pack.pendingExpiry;
     if(version<236||clock<treePackExpiry271(pile as unknown as MinifiedTreePile)||!record(pending)||!exact(pending,['quantity','retryAt'])||

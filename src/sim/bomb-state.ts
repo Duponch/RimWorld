@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {animalDeathExplosionRadius256,isExplosiveAnimal256,validAnimalDeathExplosionOwner256,type AnimalDeathExplosion256} from './animal-death-provenance-v256.ts';
 import type { BombInstigatorKey } from './mini-turret-state.ts';
@@ -31,7 +32,7 @@ export const bombCellCore=(w:Pick<World,'width'>,wave:MiniTurretBombWave,index:n
 export function validBombWaveShape(value:unknown,version=193):value is MiniTurretBombWave {
   if(version<193||!object(value)||!keys(value,['id','sourceId','instigatorKey','center','startedAtCore','advancedAtCore','cells','nextCell','damagedThingKeys',...version>=201?['shortCircuit']:[],...version>=208?['emp']:[],...version>=256?['animalDeath','casketExplosion']:[]]))return false;
   if(Object.hasOwn(value,'casketExplosion')){
-    const d=Object.getOwnPropertyDescriptor(value,'casketExplosion');if(!isSchema256Or257(version)||!d?.enumerable||!Object.hasOwn(d,'value')||!object(d.value)||Object.getPrototypeOf(d.value)!==Object.prototype||Reflect.ownKeys(d.value).length!==(Object.hasOwn(d.value,'player271')?2:1)||Object.hasOwn(d.value,'player271')&&(version!==271||Object.getOwnPropertyDescriptor(d.value,'player271')?.value!==true||!Object.getOwnPropertyDescriptor(d.value,'player271')?.enumerable))return false;
+    const d=Object.getOwnPropertyDescriptor(value,'casketExplosion');if(!isSchema256Or257(version)||!d?.enumerable||!Object.hasOwn(d,'value')||!object(d.value)||Object.getPrototypeOf(d.value)!==Object.prototype||Reflect.ownKeys(d.value).length!==(Object.hasOwn(d.value,'player271')?2:1)||Object.hasOwn(d.value,'player271')&&(!isSchema271OrLater(version)||Object.getOwnPropertyDescriptor(d.value,'player271')?.value!==true||!Object.getOwnPropertyDescriptor(d.value,'player271')?.enumerable))return false;
     const a=Object.getOwnPropertyDescriptor(d.value,'ignoredThingKeys');if(!a?.enumerable||!Object.hasOwn(a,'value')||!Array.isArray(a.value)||Object.getPrototypeOf(a.value)!==Array.prototype||!dense(a.value)||(d.value.player271?a.value.length>4:a.value.length!==3)||Reflect.ownKeys(a.value).some(k=>typeof k!=='string'||!Object.hasOwn(Object.getOwnPropertyDescriptor(a.value,k)!,'value')))return false;
     if(a.value.some((key,n,all)=>typeof key!=='string'||!/^pile:[1-9]\d*$/.test(key)||!integer(Number(key.slice(5)),1,Number(value.id)-1)||Number(key.slice(5))===value.sourceId||n>0&&all[n-1]>=key)||Object.hasOwn(value,'animalDeath')||Object.hasOwn(value,'shortCircuit')||Object.hasOwn(value,'emp'))return false;
   }

@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** DefeatedInsectHive is intrinsic Pawn memory, never a map/Lord owner. XML:
  * ten days, +4, stackLimit5; ThoughtDef's ordinary stack multiplier is .75. */
@@ -10,7 +11,7 @@ export interface HiveMemoryPawn256 {hiveDefeats?:number[];hiveDefeatSuspendedTic
 export function validHiveDefeatMemory256(v:unknown,version:number,tick:number):boolean {
  if(!v||typeof v!=='object')return false;const d=Object.getOwnPropertyDescriptor(v,'hiveDefeats'),held=Object.getOwnPropertyDescriptor(v,'hiveDefeatSuspendedTicks271');if(!d)return !('hiveDefeats'in v)&&!('hiveDefeatSuspendedTicks271'in v);
  if(held||'hiveDefeatSuspendedTicks271'in v){
-  if(version!==271||!held||!Object.hasOwn(held,'value')||!held.enumerable||!Array.isArray(held.value)||!Array.isArray(d.value)||held.value.length!==d.value.length||Reflect.ownKeys(held.value).length!==held.value.length+1)return false;
+  if(!isSchema271OrLater(version)||!held||!Object.hasOwn(held,'value')||!held.enumerable||!Array.isArray(held.value)||!Array.isArray(d.value)||held.value.length!==d.value.length||Reflect.ownKeys(held.value).length!==held.value.length+1)return false;
   for(let i=0;i<held.value.length;i++){const e=Object.getOwnPropertyDescriptor(held.value,String(i));if(!e||!Object.hasOwn(e,'value')||!e.enumerable||!Number.isSafeInteger(e.value)||e.value<0||e.value>tick-d.value[i])return false;}
  }
  if(!isSchema256Or257(version)||!Object.hasOwn(d,'value')||!d.enumerable||!Array.isArray(d.value)||Object.getPrototypeOf(d.value)!==Array.prototype||d.value.length>5||Reflect.ownKeys(d.value).length!==d.value.length+1)return false;

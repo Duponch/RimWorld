@@ -77,6 +77,18 @@ function publicExact(root:ReturnType<typeof prepared>['root']){
  const first=decoder.adopt(structuredClone(encoder.encode(root,0,0,true)));expect(first.status).toBe('applied');if(first.status==='applied')expect(first.world).toEqual(view);
  const delta=encoder.encode(root,0,0);expect(delta.kind).toBe('delta');const second=decoder.adopt(structuredClone(delta));expect(second.status).toBe('applied');if(second.status==='applied')expect(second.world).toEqual(view);
 }
+
+test('strict271 continues the same original casket and contained tree into272 by number only, through save and public transport',()=>{
+ const {root,c,p,tree,source}=containedTree(),saved=serializeCampaign(root);
+ const original={...JSON.parse(saved),schemaVersion:271},old=JSON.stringify(original);
+ const copy=deserializeCampaign(old);if(!('pawns'in copy))throw Error('The actual acquired colony must remain loaded');
+ expect(serializeCampaign(copy)).toBe(saved);expect(JSON.stringify(original)).toBe(old);
+ const holder=registeredMap(copy,0)!.structures.find(isPlayerCasket271)!;
+ expect(holder.id).toBe(c.id);expect(holder.cryptosleep.human?.id).toBe(p.id);
+ const plant=holder.cryptosleep.items.find(i=>i.id===tree.id)!;
+ expect(plant.innerResource?.id).toBe(source.id);expect(plant.plantPack).toEqual(tree.plantPack);
+ publicExact(copy);expect(serializeCampaign(root)).toBe(saved);
+});
 function refuseTreeCollision(root:ReturnType<typeof prepared>['root'],retained:boolean,treeId:number,innerId:number){
  const view=registeredMapPresentation(root)!,other=view.resources.find(r=>r.id!==innerId&&(r.id-innerId)%PLANT_LIFE_INTERVAL===0);
  if(!other)throw Error('The actual namespace needs an existing Resource with the same plant clock phase');

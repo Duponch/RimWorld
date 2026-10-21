@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {isPlayerCasket271,validCryptosleepField271,type PlayerCasket271} from './cryptosleep-state-271.ts';
 import {validateCryptosleepOwners271,validCryptosleepBuilding271,validateRetainedCryptosleepOwner271} from './cryptosleep-owner-save-271.ts';
 import {isAncientCasket256,ancientCasketHasContents256} from './ancient-casket-state-256.ts';
@@ -26,7 +27,7 @@ const dense=(v:unknown,max:number):v is unknown[]=>Array.isArray(v)&&Object.getP
 /** The enclosing WorldPawns envelope has already admitted a data-only tree. */
 export function validHeldPlayerCasketEnvelope271(state:WorldPawnsState256,version:number,nowCore:number,nextId:number):boolean {
  const d=Object.getOwnPropertyDescriptor(state,'heldPlayerCaskets271');if(!d)return !('heldPlayerCaskets271'in state);
- if(version!==271||!d.enumerable||!Object.hasOwn(d,'value')||!dense(d.value,nextId))return false;
+ if(!isSchema271OrLater(version)||!d.enumerable||!Object.hasOwn(d,'value')||!dense(d.value,nextId))return false;
  return d.value.every(e=>exact(e,['originMapId','registeredAtCore','enteredAtAbsCore','context','casket'])&&int(e.originMapId)&&int(e.registeredAtCore,0,nowCore)&&e.registeredAtCore%10===0&&int(e.enteredAtAbsCore)&&!!e.context&&typeof e.context==='object'&&isPlayerCasket271(e.casket)&&int(e.casket.id,1,nextId-1)&&validCryptosleepField271(e.casket,version,e.registeredAtCore/10));
 }
 type Root271=Readonly<Pick<World,'schemaVersion'|'tick'|'nextId'|'planet'|'worldMaps'|'worldFactions'|'campaignMap'>>&Partial<Readonly<Pick<World,'worldGroups'|'foodPolicies'|'apparelPolicies'|'research'>>>;
@@ -43,7 +44,7 @@ export function validateHeldPlayerCaskets271(state:WorldPawnsState256,root:Root2
  for(const e of state.heldPlayerCaskets271??[])if(e.casket.cryptosleep.human)humans.add(e.casket.cryptosleep.human.id);
  for(const e of state.heldPlayerCaskets271??[]){
   const staged=pending.get(e)?.()===true,retired=root.worldMaps?.retired.find(m=>m.id===e.originMapId),proof=projection?.worldPawnOrigins?.find(m=>m.mapId===e.originMapId),removedAt=retired?.removedAt??proof?.removedAt;
-  if(root.schemaVersion!==271||(removedAt===undefined?!staged:removedAt*10!==e.registeredAtCore))errors.push('Player casket lacks its actual map-removal receipt.');
+  if(!isSchema271OrLater(root.schemaVersion)||(removedAt===undefined?!staged:removedAt*10!==e.registeredAtCore))errors.push('Player casket lacks its actual map-removal receipt.');
   const context=e.context,c=context.climate,tile=retired?.tile??proof?.tile;
   if(!validGroupMapContext(context,e.registeredAtCore/10,root.schemaVersion,root)||c?.revision!==4||context.site?.revision!==3||tile!==undefined&&(context.site.tileId!==tile||c.tileId!==tile))errors.push('Retained player casket actual origin context refused.');
   if(c?.revision!==4||e.enteredAtAbsCore!==(c.calendarOrigin+e.registeredAtCore/10-c.adoptedAt)*10-geographicLongitudeOffsetCore256(c.definition.longitude))errors.push('Retained player casket absolute removal clock refused.');

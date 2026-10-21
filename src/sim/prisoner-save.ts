@@ -1,3 +1,4 @@
+import {isSpearItem272} from './spear-content-272.ts';
 import {isLongswordItem270} from './longsword-content-270.ts';
 import {isMaceItem269} from './mace-content-269.ts';
 import { isBedKind } from './bed-kinds.ts';
@@ -103,7 +104,7 @@ function validateDepartures(w:World,version:number,ids:Set<number>):string[] {
     ids.add(d.pawnId);let valid=true;
     for(const item of d.items){
       if(!object(item)||!keys(item,['id','kind','item','quantity','owner','apparel','weapon'])||!integer(item.id,1,w.nextId-1)||ids.has(item.id)||!object(item.owner)||!keys(item.owner,['type','pawnId'])||item.owner.pawnId!==d.pawnId
-        ||!(item.kind==='weapon'&&(['revolver',...(version>=88?['bolt-action-rifle','plasteel-knife']:[]),...(version>=208?['emp-launcher']:[])].includes(String(item.item))||version>=269&&isMaceItem269(item.item)||version>=270&&isLongswordItem270(item.item))&&item.owner.type==='equipment'||item.kind==='apparel'&&item.owner.type==='apparel')||!validWeaponShape(item,version)||!validApparelShape(item,version)){valid=false;continue;}
+        ||!(item.kind==='weapon'&&(['revolver',...(version>=88?['bolt-action-rifle','plasteel-knife']:[]),...(version>=208?['emp-launcher']:[])].includes(String(item.item))||version>=269&&isMaceItem269(item.item)||version===272&&isSpearItem272(item.item)||version>=270&&isLongswordItem270(item.item))&&item.owner.type==='equipment'||item.kind==='apparel'&&item.owner.type==='apparel')||!validWeaponShape(item,version)||!validApparelShape(item,version)){valid=false;continue;}
       ids.add(item.id);
     }
     if(!valid){errors.push('Invalid exported prisoner possessions.');continue;}

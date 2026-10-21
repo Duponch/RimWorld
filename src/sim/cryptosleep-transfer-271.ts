@@ -1,3 +1,4 @@
+import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {isPlayerCasket271,newCryptosleepHolder271,cryptosleepInteraction271,type PlayerCasket271} from './cryptosleep-state-271.ts';
 import {cryptosleepHuman271,cryptosleepActorCapable271} from './cryptosleep-intent-271.ts';
 import {prepareSuspendedHumanResume271,medicalCivilTick271} from './suspended-human-clock-271.ts';
@@ -20,7 +21,7 @@ export type CryptosleepTransferPlan271={ok:false;reason:string}|{ok:true;commit(
 const fail=(reason:string):CryptosleepTransferPlan271=>({ok:false,reason});
 const personal=(p:MaterialPile,id:number)=>['inventory','equipment','apparel'].includes(p.owner.type)&&'pawnId'in p.owner&&p.owner.pawnId===id;
 const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
-const installed=(w:World,c:PlayerCasket271)=>w.schemaVersion===271&&isPlayerCasket271(c)&&w.structures.includes(c);
+const installed=(w:World,c:PlayerCasket271)=>isSchema271OrLater(w.schemaVersion)&&isPlayerCasket271(c)&&w.structures.includes(c);
 /** Only cold owner transitions seal whole records. Ordinary ticks, transport
  * and rendering neither clone nor enumerate these suspended originals. */
 const seal=(p:Pawn,items:readonly MaterialPile[],packed:readonly PackedFurniture[])=>JSON.stringify([p,items,packed]);

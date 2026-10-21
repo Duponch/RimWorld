@@ -1,4 +1,5 @@
 import {isLongswordItem270,longswordMaterial270,LONGSWORD_DEFINITIONS_270} from './longsword-content-270.ts';
+import {isSpearItem272,spearMaterial272,SPEAR_DEFINITIONS_272} from './spear-content-272.ts';
 import {isAncientMonumentKind256,ancientMonumentMaterial256,ancientMonumentMaxHp256,ancientNeutralMaxHp256,ANCIENT_MONUMENT_DEFS_256} from './ancient-monument-props-256.ts';
 import {isHabitatFurnitureKind,FURNITURE_DEFINITIONS} from './furniture-stats.ts';
 import {ANIMAL_ITEM_HP_256,ANIMAL_ITEM_FLAMMABILITY_256,isAnimalItem256} from './animal-items-v256.ts';
@@ -72,6 +73,7 @@ export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=isSmithingA
   return p.item==='wood'?150:p.item==='cloth'?80:p.item==='light-leather'?60:p.item==='component'?70:0;
 }
 export function pileFlammability(p:Pick<MaterialPile,'kind'|'item'>):number {
+  if(isSpearItem272(p.item))return SPEAR_DEFINITIONS_272[spearMaterial272(p.item)].flammability;
   if(isLongswordItem270(p.item))return LONGSWORD_DEFINITIONS_270[longswordMaterial270(p.item)].flammability;
   if(isMaceItem269(p.item))return MACE_DEFINITIONS_269[maceMaterial269(p.item)].flammability;
   if(isSmithingApparel267(p.item))return ARMOR_STUFF_DEFINITIONS267[smithingApparelStuff267(p.item)].flammability;

@@ -1,3 +1,4 @@
+import {isSchema270OrLater,isSchema271OrLater} from './schema-compatibility-257.ts';
 import {CRYPTOSLEEP_RESEARCH_COST271,cryptosleepUnlocked271,LONG_BLADES_RESEARCH_COST,longBladesUnlocked270,smithingUnlocked,BREWING_RESEARCH_COST,GEOTHERMAL_POWER_RESEARCH_COST,geothermalPowerUnlocked,PEMMICAN_RESEARCH_COST,pemmicanUnlocked} from './research.ts';
 /** Brewing research is prospective. Owning a recovered brewery or bought beer
  * does not require completing the construction research. */
@@ -132,9 +133,9 @@ export function validMedicineResearchTransport(world:World,version:number):boole
 export function validateResearch(world:World,version:number):string[]{
   const errors:string[]=[],state=world.research;
   if(state!==undefined){
-    const progress=(p:unknown,cost:number,active:boolean,root=false)=>record(p)&&Object.keys(p).every(k=>['points','completedAt',...(root?['project',...(version>=75?['airConditioning']:[]),...(version>=85?['batteries','solarPower']:[]),...(version>=89?['stonecutting','smithing']:[]),...(version>=90?['complexFurniture']:[]),...(version>=101?['machining','gunsmithing']:[]),...(version>=109?['plateArmor','flakArmor']:[]),...(version>=123?['microelectronics','multiAnalyzer','fabrication']:[]),...(version>=139?['advancedFabrication']:[]),...(version>=143?['autodoors']:[]),...(version>=148?['reconArmor']:[]),...(version>=187?['hospitalBed']:[]),...(version>=188?['packagedSurvivalMeals']:[]),...(version>=190?['tubeTelevision']:[]),...(version>=193?['gunTurrets']:[]),...(version>=203?['hydroponics']:[]),...(version>=206?['drugProduction','medicineProduction']:[]),...(version>=211?['sterileMaterials','vitalsMonitor']:[]),...(version>=215?['deepDrilling','groundScanner']:[]),...(version>=217?['nutrientPaste']:[]),...(version>=218?['biofuelRefining']:[]),...(version>=248?['pemmican']:[]),...(version>=264?['geothermalPower']:[]),...(version>=265?['brewing']:[]),...((version===270||version===271)?['longBlades']:[]),...(version===271?['cryptosleep']:[])]:[])].includes(k))&&int(p.points,0,cost)
+    const progress=(p:unknown,cost:number,active:boolean,root=false)=>record(p)&&Object.keys(p).every(k=>['points','completedAt',...(root?['project',...(version>=75?['airConditioning']:[]),...(version>=85?['batteries','solarPower']:[]),...(version>=89?['stonecutting','smithing']:[]),...(version>=90?['complexFurniture']:[]),...(version>=101?['machining','gunsmithing']:[]),...(version>=109?['plateArmor','flakArmor']:[]),...(version>=123?['microelectronics','multiAnalyzer','fabrication']:[]),...(version>=139?['advancedFabrication']:[]),...(version>=143?['autodoors']:[]),...(version>=148?['reconArmor']:[]),...(version>=187?['hospitalBed']:[]),...(version>=188?['packagedSurvivalMeals']:[]),...(version>=190?['tubeTelevision']:[]),...(version>=193?['gunTurrets']:[]),...(version>=203?['hydroponics']:[]),...(version>=206?['drugProduction','medicineProduction']:[]),...(version>=211?['sterileMaterials','vitalsMonitor']:[]),...(version>=215?['deepDrilling','groundScanner']:[]),...(version>=217?['nutrientPaste']:[]),...(version>=218?['biofuelRefining']:[]),...(version>=248?['pemmican']:[]),...(version>=264?['geothermalPower']:[]),...(version>=265?['brewing']:[]),...(isSchema270OrLater(version)?['longBlades']:[]),...(isSchema271OrLater(version)?['cryptosleep']:[])]:[])].includes(k))&&int(p.points,0,cost)
       &&(p.completedAt===undefined?p.points<cost:int(p.completedAt,0,world.tick)&&p.points===cost&&!active);
-    if(version<73||!record(state)||state.project!==null&&state.project!=='complex-clothing'&&(version<75||state.project!=='air-conditioning')&&(version<85||state.project!=='batteries'&&state.project!=='solar-power')&&(version<89||state.project!=='stonecutting'&&state.project!=='smithing')&&(version<90||state.project!=='complex-furniture')&&(version<101||state.project!=='machining'&&state.project!=='gunsmithing')&&(version<109||state.project!=='plate-armor'&&state.project!=='flak-armor')&&(version<123||state.project!=='microelectronics'&&state.project!=='multi-analyzer'&&state.project!=='fabrication')&&(version<139||state.project!=='advanced-fabrication')&&(version<143||state.project!=='autodoors')&&(version<148||state.project!=='recon-armor')&&(version<187||state.project!=='hospital-bed')&&(version<188||state.project!=='packaged-survival-meals')&&(version<190||state.project!=='tube-television')&&(version<193||state.project!=='gun-turrets')&&(version<203||state.project!=='hydroponics')&&(version<206||state.project!=='drug-production'&&state.project!=='medicine-production')&&(version<211||state.project!=='sterile-materials'&&state.project!=='vitals-monitor')&&(version<215||state.project!=='deep-drilling'&&state.project!=='ground-scanner')&&(version<217||state.project!=='nutrient-paste')&&(version<218||state.project!=='biofuel-refining')&&(version<248||state.project!=='pemmican')&&(version<264||state.project!=='geothermal-power')&&(version<265||state.project!=='brewing')&&(version!==270&&version!==271||state.project!=='long-blades')&&(version!==271||state.project!=='cryptosleep')
+    if(version<73||!record(state)||state.project!==null&&state.project!=='complex-clothing'&&(version<75||state.project!=='air-conditioning')&&(version<85||state.project!=='batteries'&&state.project!=='solar-power')&&(version<89||state.project!=='stonecutting'&&state.project!=='smithing')&&(version<90||state.project!=='complex-furniture')&&(version<101||state.project!=='machining'&&state.project!=='gunsmithing')&&(version<109||state.project!=='plate-armor'&&state.project!=='flak-armor')&&(version<123||state.project!=='microelectronics'&&state.project!=='multi-analyzer'&&state.project!=='fabrication')&&(version<139||state.project!=='advanced-fabrication')&&(version<143||state.project!=='autodoors')&&(version<148||state.project!=='recon-armor')&&(version<187||state.project!=='hospital-bed')&&(version<188||state.project!=='packaged-survival-meals')&&(version<190||state.project!=='tube-television')&&(version<193||state.project!=='gun-turrets')&&(version<203||state.project!=='hydroponics')&&(version<206||state.project!=='drug-production'&&state.project!=='medicine-production')&&(version<211||state.project!=='sterile-materials'&&state.project!=='vitals-monitor')&&(version<215||state.project!=='deep-drilling'&&state.project!=='ground-scanner')&&(version<217||state.project!=='nutrient-paste')&&(version<218||state.project!=='biofuel-refining')&&(version<248||state.project!=='pemmican')&&(version<264||state.project!=='geothermal-power')&&(version<265||state.project!=='brewing')&&(!isSchema270OrLater(version)||state.project!=='long-blades')&&(!isSchema271OrLater(version)||state.project!=='cryptosleep')
       ||!progress(state,CLOTHING_RESEARCH_COST,state.project==='complex-clothing'||version<75&&state.project!==null,true)
       ||state.airConditioning!==undefined&&(version<75||!progress(state.airConditioning,AIR_CONDITIONING_COST,state.project==='air-conditioning'))
       ||state.project==='air-conditioning'&&!state.airConditioning
@@ -160,9 +161,9 @@ export function validateResearch(world:World,version:number):string[]{
       ||state.project==='sterile-materials'&&!state.sterileMaterials
       ||state.brewing!==undefined&&(version<265||!progress(state.brewing,BREWING_RESEARCH_COST,state.project==='brewing'))
       ||state.project==='brewing'&&!state.brewing
-      ||state.longBlades!==undefined&&(version!==270&&version!==271||!progress(state.longBlades,LONG_BLADES_RESEARCH_COST,state.project==='long-blades')||!!researchPrerequisite(world,'long-blades'))
+      ||state.longBlades!==undefined&&(!isSchema270OrLater(version)||!progress(state.longBlades,LONG_BLADES_RESEARCH_COST,state.project==='long-blades')||!!researchPrerequisite(world,'long-blades'))
       ||state.project==='long-blades'&&!state.longBlades
-      ||state.cryptosleep!==undefined&&(version!==271||!progress(state.cryptosleep,CRYPTOSLEEP_RESEARCH_COST271,state.project==='cryptosleep')||!!researchPrerequisite(world,'cryptosleep'))
+      ||state.cryptosleep!==undefined&&(!isSchema271OrLater(version)||!progress(state.cryptosleep,CRYPTOSLEEP_RESEARCH_COST271,state.project==='cryptosleep')||!!researchPrerequisite(world,'cryptosleep'))
       ||state.project==='cryptosleep'&&!state.cryptosleep
       ||state.pemmican!==undefined&&(version<248||!progress(state.pemmican,PEMMICAN_RESEARCH_COST,state.project==='pemmican'))
       ||state.project==='pemmican'&&!state.pemmican
@@ -322,17 +323,21 @@ export function validLongBladesResearchTransport270(world:World,version:number):
  try{
   const state=world.research,p=state?.longBlades;
   if(state&&Object.hasOwn(state,'longBlades')){
-   if(version!==270&&version!==271||!record(p)||Object.getPrototypeOf(p)!==Object.prototype||!Object.hasOwn(p,'points')
+   if(!isSchema270OrLater(version)||!record(p)||Object.getPrototypeOf(p)!==Object.prototype||!Object.hasOwn(p,'points')
     ||!Reflect.ownKeys(p).every(k=>typeof k==='string'&&(k==='points'||k==='completedAt')&&Object.getOwnPropertyDescriptor(p,k)?.enumerable===true&&Object.hasOwn(Object.getOwnPropertyDescriptor(p,k)!,'value'))
     ||!int(p.points,0,LONG_BLADES_RESEARCH_COST)||!smithingUnlocked(world)
     ||(Object.hasOwn(p,'completedAt')?!int(p.completedAt,0,world.tick)||p.points!==LONG_BLADES_RESEARCH_COST||state.project==='long-blades':p.points>=LONG_BLADES_RESEARCH_COST))return false;
   }
-  if(state?.project==='long-blades'&&(version!==270&&version!==271||!p))return false;
-  if((version===270||version===271)&&longBladesUnlocked270(world))return true;
-  const bill=(value:{bills?:readonly {recipe:string}[]})=>value.bills?.some(b=>b.recipe==='make-longsword');
-  return !world.structures.some(bill)&&!(world.packed??[]).some(q=>bill(q.building))
-   &&!world.piles.some(q=>q.smithingWork?.recipe==='make-longsword')
-   &&!world.pawns.some(q=>q.cooking?.recipe==='make-longsword'||q.orders.queue.some(o=>typeof o==='object'&&o!==null&&'cooking'in o&&o.cooking.recipe==='make-longsword'));
+  if(state?.project==='long-blades'&&(!isSchema270OrLater(version)||!p))return false;
+  const usesRecipe=(accept:(recipe:unknown)=>boolean)=>{
+   const bill=(value:{bills?:readonly {recipe:string}[]})=>value.bills?.some(b=>accept(b.recipe));
+   return world.structures.some(bill)||(world.packed??[]).some(q=>bill(q.building))
+    ||world.piles.some(q=>accept(q.smithingWork?.recipe))
+    ||world.pawns.some(q=>accept(q.cooking?.recipe)||q.orders.queue.some(o=>typeof o==='object'&&o!==null&&'cooking'in o&&accept(o.cooking.recipe)));
+  };
+  if(version!==272&&usesRecipe(recipe=>recipe==='make-spear'))return false;
+  if(isSchema270OrLater(version)&&longBladesUnlocked270(world))return true;
+  return !usesRecipe(recipe=>recipe==='make-longsword'||recipe==='make-spear');
  }catch{return false;}
 }
 
@@ -341,17 +346,17 @@ export function validCryptosleepResearchTransport271(world:World,version:number)
  try{
   const state=world.research,p=state?.cryptosleep;
   if(state&&Object.hasOwn(state,'cryptosleep')){
-   if(version!==271||!record(p)||Object.getPrototypeOf(p)!==Object.prototype||!Object.hasOwn(p,'points')
+   if(!isSchema271OrLater(version)||!record(p)||Object.getPrototypeOf(p)!==Object.prototype||!Object.hasOwn(p,'points')
     ||!Reflect.ownKeys(p).every(k=>typeof k==='string'&&(k==='points'||k==='completedAt')&&Object.getOwnPropertyDescriptor(p,k)?.enumerable===true&&Object.hasOwn(Object.getOwnPropertyDescriptor(p,k)!,'value'))
     ||!int(p.points,0,CRYPTOSLEEP_RESEARCH_COST271)||!multiAnalyzerUnlocked(world)
     ||(Object.hasOwn(p,'completedAt')?!int(p.completedAt,0,world.tick)||p.points!==CRYPTOSLEEP_RESEARCH_COST271||state.project==='cryptosleep':p.points>=CRYPTOSLEEP_RESEARCH_COST271))return false;
   }
-  if(state?.project==='cryptosleep'&&(version!==271||!p))return false;
+  if(state?.project==='cryptosleep'&&(!isSchema271OrLater(version)||!p))return false;
   const marked=(v:unknown):boolean=>record(v)&&(v.kind==='cryptosleep-casket'||Object.hasOwn(v,'cryptosleep')||record(v.deconstruction)&&v.deconstruction.kind==='cryptosleep-casket'||record(v.furniture)&&v.furniture.kind==='cryptosleep-casket');
   if((world.packed??[]).some(q=>marked(q.building)))return false;
   // An installed original can be recovered before knowing how to build one.
   // Research gates paid new construction, never opening or using that object.
-  if(world.jobs.some(j=>j.kind==='cryptosleep-casket')&&!(version===271&&cryptosleepUnlocked271(world)))return false;
+  if(world.jobs.some(j=>j.kind==='cryptosleep-casket')&&!(isSchema271OrLater(version)&&cryptosleepUnlocked271(world)))return false;
   return true;
  }catch{return false;}
 }

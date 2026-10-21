@@ -1,3 +1,4 @@
+import {SPEAR_ITEM_DEFINITIONS_272} from './spear-content-272.ts';
 import {LONGSWORD_ITEM_DEFINITIONS_270} from './longsword-content-270.ts';
 import {MACE_ITEM_DEFINITIONS_269} from './mace-content-269.ts';
 import {SMITHING_APPAREL_ITEM_DEFINITIONS267} from './smithing-apparel-267.ts';
@@ -20,6 +21,8 @@ export const ITEM_DEFINITIONS = Object.freeze({
   ...SMITHING_APPAREL_ITEM_DEFINITIONS267,
   ...MACE_ITEM_DEFINITIONS_269,
   ...LONGSWORD_ITEM_DEFINITIONS_270,
+  ...SPEAR_ITEM_DEFINITIONS_272,
+  'unfinished-spear':Object.freeze({label:'Lance inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x87958f}),
   'unfinished-longsword':Object.freeze({label:'Épée longue inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x87958f}),
   'unfinished-mace':Object.freeze({label:'Masse inachevée',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0x87958f}),
   'unfinished-knife':Object.freeze({label:'Couteau inachevé',kind:'unfinished',stackLimit:1,nutrition:0,maxIngest:0,color:0xa0b2b5}),

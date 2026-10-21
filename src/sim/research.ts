@@ -1,3 +1,4 @@
+import {isSchema270OrLater,isSchema271OrLater} from './schema-compatibility-257.ts';
 import {CRYPTOSLEEP_RESEARCH_POINTS_271} from './cryptosleep-content-271.ts';
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { otherCampaignMap } from './secondary-site-context.ts';
@@ -20,9 +21,9 @@ import type { Cell,CommandResult,Pawn,Structure,World } from './types.ts';
 
 export const RESEARCH_SCALE=1_000_000;
 export const CRYPTOSLEEP_RESEARCH_COST271=CRYPTOSLEEP_RESEARCH_POINTS_271*RESEARCH_SCALE;
-export const cryptosleepUnlocked271=(w:Pick<World,'schemaVersion'|'research'>):boolean=>w.schemaVersion===271&&w.research?.cryptosleep?.completedAt!==undefined;
+export const cryptosleepUnlocked271=(w:Pick<World,'schemaVersion'|'research'>):boolean=>isSchema271OrLater(w.schemaVersion)&&w.research?.cryptosleep?.completedAt!==undefined;
 export const LONG_BLADES_RESEARCH_COST=400*RESEARCH_SCALE;
-export const longBladesUnlocked270=(w:Pick<World,'schemaVersion'|'research'>):boolean=>(Number(w.schemaVersion)===270||w.schemaVersion===271)&&w.research?.longBlades?.completedAt!==undefined;
+export const longBladesUnlocked270=(w:Pick<World,'schemaVersion'|'research'>):boolean=>isSchema270OrLater(w.schemaVersion)&&w.research?.longBlades?.completedAt!==undefined;
 export const BREWING_RESEARCH_COST=400*RESEARCH_SCALE;
 export const brewingUnlocked=(w:Pick<World,'schemaVersion'|'research'>):boolean=>w.schemaVersion>=265&&w.research?.brewing?.completedAt!==undefined;
 export const GEOTHERMAL_POWER_RESEARCH_COST=3200*RESEARCH_SCALE;
@@ -153,8 +154,8 @@ export function researchStationUsable(world:World,station:Structure,project:Rese
   return true;
 }
 export function selectResearch(world:World,project:unknown):CommandResult {
-  if(project==='cryptosleep'&&world.schemaVersion!==271)return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};
-  if(project==='long-blades'&&Number(world.schemaVersion)!==270&&world.schemaVersion!==271)return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};
+  if(project==='cryptosleep'&&!isSchema271OrLater(world.schemaVersion))return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};
+  if(project==='long-blades'&&!isSchema270OrLater(world.schemaVersion))return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};
   if(project==='brewing'&&world.schemaVersion<265)return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};
   if(project==='geothermal-power'&&world.schemaVersion<264)return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};
   if(project==='pemmican'&&world.schemaVersion<248)return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};

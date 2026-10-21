@@ -59,12 +59,15 @@ test('the same anesthetized casket occupant really departs with continued clinic
  const g=away(f,id);expect(g.members.find(p=>p.id===personId)).toBe(patient);expect(map.pawns.includes(patient)).toBe(false);
  const check=(p:Pawn,clock:number)=>{
   expect(medicalCivilTick271(p.health!)).toBe(clock);expect(clock-p.health!.tick).toBe(suspended);
-  expect(validAnesthetic(p.health!.anesthetic,p.health!.tick,true,p.id%20,clock,271)).toBe(true);
+  expect(validAnesthetic(p.health!.anesthetic,p.health!.tick,true,p.id%20,clock,271)).toBe(true);expect(validAnesthetic(p.health!.anesthetic,p.health!.tick,true,p.id%20,clock,w.schemaVersion)).toBe(true);
   expect(anestheticCivilBornAt271(p.health!)).toBe(doseAt);expect(p.hiveDefeats).toEqual([hiveAt]);
   expect(p.hiveDefeatSuspendedTicks271).toEqual([suspended]);expect(p.cryptosleepHeldAt271).toBeUndefined();
  };
  check(patient,w.tick);expect(validateWorld(w)).toEqual([]);
- const saved=serializeCampaign(w),copy=deserializeCampaign(saved);expect(serializeCampaign(copy)).toBe(saved);
+ const saved=serializeCampaign(w),literal271={...JSON.parse(saved),schemaVersion:271},old=JSON.stringify(literal271),copy=deserializeCampaign(old);
+ // Strict271 retains the same acquired group, pulse anchors and memories;272
+ // contributes only its version number, without a dose, person or progress.
+ expect(serializeCampaign(copy)).toBe(saved);expect(JSON.stringify(literal271)).toBe(old);
  if(!('pawns'in copy))throw Error('Actual loaded colony lost at group reload');
  const replay=resumed(copy),replayed=away(replay,id).members.find(p=>p.id===personId)!;check(replayed,copy.tick);
 

@@ -1,3 +1,4 @@
+import {validSpearHistoricalTransport272} from '../sim/catalogue-save-272.ts';
 import {validLongswordHistoricalTransport270} from '../sim/catalogue-save-270.ts';
 import {validCryptosleepHistoricalTransport271} from '../sim/catalogue-save-271.ts';
 import {validCryptosleepResearchTransport271} from '../sim/research-save.ts';
@@ -1118,6 +1119,7 @@ export class SnapshotDecoder {
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
     if(packet.world.destroyed!==undefined&&!validNaturalHiveLoss256(packet.world.destroyed,packet.world.schemaVersion))return resync('Invalid or future natural Hive loss counter.');
     if(!validWorldPawnsEnvelope256(packet.world,packet.world.schemaVersion,packet.world.tick*10,packet.world.nextId))return resync('Invalid or future WorldPawns header.');
+    if(!validSpearHistoricalTransport272(packet,packet.world.schemaVersion))return resync('Catalogue de lances futur dans ce snapshot.');
     if(!validCryptosleepHistoricalTransport271(packet,packet.world.schemaVersion))return resync('Cryptosommeil futur dans ce snapshot.');
     if(!validPlanetGeographyHistorical256(packet.world,packet.world.schemaVersion))return resync('Géographie ou factions futures.');
     if(!validLocalRoadInfoEnvelope256(packet.world,packet.world.schemaVersion))return resync('Invalid local road state.');
@@ -1480,6 +1482,7 @@ export class SnapshotDecoder {
     if(!validNutrientPasteTransport(next,next.schemaVersion,powerTopology))return resync('Pâte nutritive, source ou transport invalide.');
     if(!validOrbitalTransport(next,next.schemaVersion,powerTopology,identities))return resync('État orbital, propriétaire ou contact invalide.');
     if(!validCraftingFuelTransport269(next,next.schemaVersion))return resync('Ravitaillement d’artisanat invalide ou futur.');
+    if(!validSpearHistoricalTransport272(message,next.schemaVersion))return resync('Catalogue de lances futur dans ce snapshot.');
     if(!validLongswordHistoricalTransport270(message,next.schemaVersion)||!validLongBladesResearchTransport270(next,next.schemaVersion))return resync('Lames longues, recherche ou fabrication invalides.');
     if(!validMaceHistoricalTransport269(message,next.schemaVersion)||!validKnifeHistoricalTransport268(message,next.schemaVersion)||!validSmithyResearchTransport267(next,next.schemaVersion)||!validSmithingHistoricalTransport267(message,next.schemaVersion)||validateSmithingWorks267(next,next.schemaVersion).length)return resync('Forge, matière ou ouvrage invalide.');
     if(!validAlcoholWorld265(next,next.schemaVersion))return resync('Alcool, politique ou propriétaire invalide.');

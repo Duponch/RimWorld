@@ -8,6 +8,8 @@ import {isMaceItem269,maceMaterial269,MACE_DEFINITIONS_269} from '../sim/mace-co
 import {maceTool269} from '../sim/mace-combat-269';
 import {isLongswordItem270,longswordMaterial270,LONGSWORD_DEFINITIONS_270} from '../sim/longsword-content-270';
 import {longswordTool270} from '../sim/longsword-combat-270';
+import {isSpearItem272,spearMaterial272,SPEAR_DEFINITIONS_272} from '../sim/spear-content-272';
+import {spearTool272} from '../sim/spear-combat-272';
 import { commercialItemMassGrams } from '../sim/commercial-mass';
 import type { MaterialPile,World } from '../sim/types';
 import {deteriorationInspection} from './deterioration-inspection';
@@ -80,6 +82,16 @@ export function itemInformation(pile:MaterialPile,world?:World):ObjectInformatio
     add('Mêlée','Tête',`${number(head.damage*factor)} dégâts contondants`,'Dégâts nominaux après matière et qualité, avant protections et choix du coup. Une attaque peut utiliser un autre outil disponible.');
     add('Mêlée','Manche',`${number(handle.damage*factor)} dégâts de poussée`,'Dégâts nominaux après matière et qualité, avant protections et choix du coup. Les chances de toucher et d’esquive restent distinctes.');
     add('Mêlée','Récupération de base',`${number(head.cooldownCore/60)} s`,'Délai de l’outil de cette matière, avant les facteurs personnels de mêlée ; la qualité ne réduit pas ce délai. Ce n’est pas une cadence de dégâts garantie.');
+  }
+  if(isSpearItem272(pile.item)&&pile.weapon){
+    const factor=weaponMeleeQualityFactor(pile.weapon.quality),shaft=spearTool272(`${pile.item}-shaft-blunt`),point=spearTool272(`${pile.item}-point`);
+    const number=(v:number)=>Number(v.toFixed(2)).toLocaleString('fr-FR');
+    add('Arme','Matière',SPEAR_DEFINITIONS_272[spearMaterial272(pile.item)].label,'Matière réelle de cette lance, conservée pendant le port et le transport.');
+    add('Mêlée','Pointe',`${number(point.damage*factor)} dégâts de perforation`,'Dégâts nominaux après matière et qualité, avant protections et choix du coup. La lance attaque au contact.');
+    add('Mêlée','Hampe · coup',`${number(shaft.damage*factor)} dégâts contondants`,'Coup de hampe distinct de la poussée ; le choix dépend des outils disponibles.');
+    add('Mêlée','Hampe · poussée',`${number(shaft.damage*factor)} dégâts de poussée`,'La poussée de la hampe rencontre la protection contondante.');
+    add('Mêlée','Pénétration de la pointe',`${number(point.penetration*factor*100)} %`,'Pénétration nominale propre à la pointe, modifiée par la qualité. Ce nombre n’est pas une chance garantie de traverser toute protection.');
+    add('Mêlée','Récupération de base',`${number(point.cooldownCore/60)} s`,'Délai de chaque outil de cette matière, avant les facteurs personnels de mêlée ; la qualité ne réduit pas ce délai.');
   }
   if(isLongswordItem270(pile.item)&&pile.weapon){
     const factor=weaponMeleeQualityFactor(pile.weapon.quality),tip=longswordTool270(`${pile.item}-tip`),edge=longswordTool270(`${pile.item}-edge`),handle=longswordTool270(`${pile.item}-handle`);
