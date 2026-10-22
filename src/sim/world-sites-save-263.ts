@@ -13,13 +13,13 @@ import type {MaterialPile} from './types.ts';
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype;
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 const keys=(r:Record<string,unknown>,required:readonly string[],optional:readonly string[]=[])=>required.every(k=>Object.hasOwn(r,k))&&Object.keys(r).every(k=>required.includes(k)||optional.includes(k));
-function calendar(value:unknown,core:number,nextId:number):value is WorldQuestCalendar263 {
+function calendar(value:unknown,core:number,nextId:number,version:number):value is WorldQuestCalendar263 {
  if(!record(value)||!keys(value,['revision','adoptedAtCore','nextCheckCore','cycle','pendingCore','previousHitInterval','rng','opportunities','siteOffers','recent','populationAdaptationDays','populationAtCore','knownColonistIds']))return false;
  const s=value;
  return s.revision===1&&int(s.adoptedAtCore,0,core)&&s.adoptedAtCore%10===0&&int(s.nextCheckCore,core+1)&&s.nextCheckCore%1000===0&&s.nextCheckCore<=Math.floor(core/1000)*1000+1000&&int(s.cycle,0,Math.floor(core/600000))
   &&(s.pendingCore===null||int(s.pendingCore,core+1,(Number(s.cycle)+1)*600000-1)&&s.pendingCore%1000===0)
   &&int(s.previousHitInterval,-1000000,Math.floor(core/1000))&&int(s.rng,1,0xffffffff)&&int(s.opportunities)&&int(s.siteOffers,0,s.opportunities)
-  &&Array.isArray(s.recent)&&s.recent.length<=5&&s.recent.length===Math.min(5,s.siteOffers)&&s.recent.every(x=>x==='item-stash')
+  &&Array.isArray(s.recent)&&s.recent.length<=5&&s.recent.length===Math.min(5,s.siteOffers)&&s.recent.every(x=>x==='item-stash'||version===284&&x==='trade-request')
   &&typeof s.populationAdaptationDays==='number'&&Number.isFinite(s.populationAdaptationDays)&&s.populationAdaptationDays>=0&&Number.isInteger(s.populationAdaptationDays*2)
   &&int(s.populationAtCore,s.adoptedAtCore,core)&&s.populationAtCore%10===0&&Array.isArray(s.knownColonistIds)&&s.knownColonistIds.length<=4096&&s.knownColonistIds.every(id=>int(id,1,nextId-1))&&new Set(s.knownColonistIds).size===s.knownColonistIds.length;
 }
@@ -30,7 +30,7 @@ export interface WorldSitesValidationContext263 {schemaVersion:number;tick:numbe
 export function validateWorldSites263(value:unknown,root:WorldSitesValidationContext263,globalIds:NumericMembershipSink):string[] {
  if(!isSchema263OrLater(Number(root.schemaVersion)))return Object.hasOwn(root,'worldSites263')||value!==undefined?['Future263 world Sites in an older campaign.']:[];
  if(value===undefined)return Object.hasOwn(root,'worldSites263')?['Undefined263 Site authority.']:[];
- if(!plainWorldPawnData256(value)||!record(value)||!keys(value,['revision','nextId','entries'],['quest'])||value.revision!==1||!int(value.nextId,1)||!Array.isArray(value.entries)||value.entries.length>4096||Object.hasOwn(value,'quest')&&!calendar(value.quest,root.tick*10,root.nextId))return ['Invalid263 world Site authority.'];
+ if(!plainWorldPawnData256(value)||!record(value)||!keys(value,['revision','nextId','entries'],['quest'])||value.revision!==1||!int(value.nextId,1)||!Array.isArray(value.entries)||value.entries.length>4096||Object.hasOwn(value,'quest')&&!calendar(value.quest,root.tick*10,root.nextId,root.schemaVersion))return ['Invalid263 world Site authority.'];
  const sites=value as unknown as WorldSitesState263,ids=new Set<number>(),activeTiles=new Set<number>(),core=root.tick*10,factions=root.worldFactions;
  if(!factions||!root.planet)return ['Site authority requires the actual faction and planet registries.'];
  for(const raw of sites.entries){
@@ -58,7 +58,7 @@ export function validateWorldSites263(value:unknown,root:WorldSitesValidationCon
    for(const p of raw.items){
     if(!record(p)||!int(p.id,1,root.nextId-1)||globalIds.has(p.id)||!record(p.owner)||p.owner.type!=='world-site263'||p.owner.siteId!==raw.id||!keys(p.owner,['type','siteId']))return ['Duplicate or invalid263 held Site Thing.'];
     const holderTick=Number(raw.heldAtCore)/10,context={width:1,height:1,tick:holderTick,nextId:root.nextId,climate:undefined};
-    if(validatePileRecordShape(p,context,263,holderTick,undefined,Number(raw.id)).length)return ['Invalid original Site Thing payload.'];
+    if(validatePileRecordShape(p,context,root.schemaVersion,holderTick,undefined,Number(raw.id)).length)return ['Invalid original Site Thing payload.'];
     const pile=p as unknown as MaterialPile;if(isPerishable(pile.item)&&(!pile.rot||pile.rot.atTick!==holderTick||pile.rot.rate!==0||pile.rot.progress<0||pile.rot.progress>=ROT_DAYS[pile.item]*6000))return ['Site contents must remain genuinely frozen.'];
     globalIds.add(p.id);
    }

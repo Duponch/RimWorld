@@ -76,6 +76,12 @@ export function previewGenericItinerary261(w:World,points:readonly number[]):Gro
  try{return previewItinerary(w,points,{homeCivilCore:planetHomeCivilCore(w),genericTicksPerMove:3464},true);}
  catch(e){return failed(e instanceof Error?e.message:String(e));}
 }
+/** TradeRequest's null-caravan estimate uses3300 for both search and arrival;
+ * the route planner's displayed3464 fallback remains unchanged. */
+export function previewTradeRequestItinerary284(w:World,points:readonly number[]):GroupItineraryResult {
+ try{return previewItinerary(w,points,{homeCivilCore:planetHomeCivilCore(w),genericTicksPerMove:3300},true);}
+ catch(e){return failed(e instanceof Error?e.message:String(e));}
+}
 function previewItinerary(w:World,points:readonly number[],cost:PlanetCostContext,generic:boolean):GroupItineraryResult {
  try{
   if(!w.planet||points.length<(generic?0:1)||points.length>25)return failed('Le plan accepte au plus25 étapes, origine comprise.');

@@ -4,9 +4,11 @@ import {apparelCompatible,type ArmorPiece} from './armor.ts';
 import {QUALITY_LABELS,WEAPON_QUALITIES,type WeaponQuality} from './equipment-rules.ts';
 import {partMissing} from './injury-state.ts';
 import type {ItemId} from './items.ts';
-import type {MaterialPile,Pawn,World} from './types.ts';
+import {SCHEMA_VERSION,type MaterialPile,type Pawn,type World} from './types.ts';
 
 export interface ApparelState {
+  /** False is a documented new birth; true is corpse wear; absence stays unknown. */
+  corpseWear284?:boolean;
   /** Actual prospective MakeThing ColorGenerator outcome, not a texture sample. */
   birthColor?:import("./starting-apparel-color-256.ts").StartingApparelColor256;
   quality:WeaponQuality;
@@ -41,9 +43,9 @@ export const apparelMaterial=(pile:Pick<MaterialPile,'item'|'apparel'>):ApparelM
 export const apparelFamily=(item:ApparelItem):ApparelFamily|undefined=>APPAREL[item].family;
 export const wornApparel=(world:World,pawn:Pawn):MaterialPile[]=>world.piles.filter(p=>p.owner.type==='apparel'&&p.owner.pawnId===pawn.id);
 export const apparelLabel=(pile:MaterialPile):string=>`${apparelDefinition(pile).label} (${QUALITY_LABELS[pile.apparel!.quality]})`;
-export const newApparelState=(item:ApparelItem,material:ApparelMaterial|undefined=APPAREL[item].material):ApparelState=>material===undefined
-  ? {quality:'normal',hitPoints:APPAREL[item].hitPoints}
-  : {quality:'normal',hitPoints:APPAREL[item].hitPoints,material};
+export const newApparelState=(item:ApparelItem,material:ApparelMaterial|undefined=APPAREL[item].material,version:number=SCHEMA_VERSION):ApparelState=>({
+  quality:'normal',hitPoints:APPAREL[item].hitPoints,...material===undefined?{}:{material},...version===284?{corpseWear284:false}:{},
+});
 export const hasApparelParts=(pawn:Pawn,pile:MaterialPile):boolean=>apparelDefinition(pile).coverage.parts.some(p=>!pawn.health||!partMissing(pawn.health,p));
 export const conflictsWith=(a:MaterialPile,b:MaterialPile):boolean=>!apparelCompatible(apparelDefinition(a).coverage,apparelDefinition(b).coverage);
 export const apparelDuration=(world:World,pawn:Pawn,pile:MaterialPile,action:'wear'|'remove'):number=>apparelDefinition(pile).equipTicks+(action==='wear'?wornApparel(world,pawn).filter(p=>conflictsWith(p,pile)).reduce((n,p)=>n+apparelDefinition(p).equipTicks,0):0);

@@ -32,7 +32,7 @@ export function applyCoreStartingPodBirth256(world:World,roster:StartingOriginal
  // Actual MakeThing sequence, BEFORE the pet and the three transporters.
  const supplies:MadeSupply256[]=CORE_STARTING_SUPPLIES_256.map(([item,quantity])=>{
   const id=world.nextId++,definition=ITEM_DEFINITIONS[item];
-  const apparel=isApparelItem(item)?newApparelState(item):undefined,color=drawStartingApparelColor256(item,random);
+  const apparel=isApparelItem(item)?newApparelState(item,undefined,world.schemaVersion):undefined,color=drawStartingApparelColor256(item,random);
   if(apparel&&color)apparel.birthColor=color;
   return {id,item,kind:definition.kind,quantity,...apparel?{apparel}:isWeaponItem(item)?{weapon:newWeaponState(item)}:{}};
  });

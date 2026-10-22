@@ -53,7 +53,7 @@ function arrive(w:World,q:JoinerQuest):void {
   const p=startingPawn(w.nextId,q.name,entry.x,entry.z,q.profile,55,w.seed,w.tick,w.schemaVersion);
   assignOfferedBackground(p,q,w.seed,w.tick);
   p.hunger=75;p.rest=80;p.foodPolicyId=w.foodPolicies[0]!.id;p.originQuestId=q.id;
-  const shirt={id:w.nextId+1,kind:'apparel' as const,item:'cloth-shirt' as const,quantity:1,owner:{type:'apparel' as const,pawnId:p.id},apparel:newApparelState('cloth-shirt')};
+  const shirt={id:w.nextId+1,kind:'apparel' as const,item:'cloth-shirt' as const,quantity:1,owner:{type:'apparel' as const,pawnId:p.id},apparel:newApparelState('cloth-shirt',undefined,w.schemaVersion)};
   const relationships=prepareRelationshipAdmission(w,p,q.relationship);
   if(relationships===null)return;
   w.nextId+=2;w.pawns.push(p);w.piles.push(shirt);

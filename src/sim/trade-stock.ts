@@ -56,7 +56,7 @@ export function generateVisitorStock(seed:number,pawnId:number,nextId:number,tic
     if(quantity<=0)return;
     if(!Number.isSafeInteger(nextId+1))throw new RangeError('Visitor stock identity overflow.');
     const kind=ITEM_DEFINITIONS[item].kind,pile:MaterialPile={id:nextId++,kind,item,quantity,owner:{type:'inventory',pawnId},...freshRot(item,tick)};
-    if(quality){const condition={quality,hitPoints:tradeCatalogueEntry(item)!.maxHitPoints};if(kind==='weapon')pile.weapon=condition;else pile.apparel={...condition,...isSchema279OrLater(version)?{material:APPAREL[item as keyof typeof APPAREL].material}:{}};}
+    if(quality){const condition={quality,hitPoints:tradeCatalogueEntry(item)!.maxHitPoints};if(kind==='weapon')pile.weapon=condition;else pile.apparel={...condition,...isSchema279OrLater(version)?{material:APPAREL[item as keyof typeof APPAREL].material}:{},...version===284?{corpseWear284:false}:{}};}
     piles.push(pile);
   };
   add('silver',integer(state,50,250));

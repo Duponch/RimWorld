@@ -1,5 +1,7 @@
 # Guide joueur
 
+**V462 qualifiée localement — schéma 284 :** [Demandes commerciales mondiales](trade-requests-v462.md). Offres sur production possible, deux délais, choix de récompense et remise des mêmes objets par une vraie caravane. 104 cas distincts acquis par reprises, dont 66 nouveaux et 38 voisins ; parcours Chrome/WebGPU muet, annulation et recharges entières exactes. Typage et présentation acquis. Build et publication en attente ; V461 reste publiée. Coût géométrique ciblé réduit, aucun gain FPS global. Ensemble 4 ; autres bases, six ensembles, campagnes et cible FPS ouverts.
+
 **V461 publiée — schéma 283 :** [Exécutants des factures](bill-workers-v461.md). Choix d’une personne ou d’une plage de compétence pour les55recettes existantes ; vrais détenteurs, engagements et file déjà acceptés conservés, reprise liée à l’auteur. 52cas distincts acquis par reprises, dont41nouveaux et11voisins. Deux chemises physiques, recharges entières et interface native muette acquises ; sources finales recontrôlées après correction ciblée du cas Vanish. Mesure CPU ciblée conservée, aucun gain FPS global. Typage acquis. Publié 7b588bea/dc688b6c,20réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Migration282 stricte puis numéro seul283 ; aucune qualification offerte. Ensemble2, avec interactions humains/voyages/conservation ; autres bases, six ensembles, campagnes et cible FPS ouverts.
 
 **V460 publiée — schéma 282 inchangé :** [Ressenti thermique humain](thermal-mood-v460.md). Pensées de froid/chaleur de situation selon l’air réel et l’isolation portée, sur carte et en caravane ; humeur progressive et clinique distinctes, sans nouvel état ni RNG. 36 cas distincts acquis par reprises, dont 18 nouveaux et 18 voisins ; deux anciens rouges d’humeur identiques au témoin V459 conservés. Refroidisseur payé, pensée chaude puis air confortable acquis ; recharges natives entières exactes sans erreur applicative. Mesure CPU ciblée mixte conservée. Typage et interface native muette acquis. Publié 744f5a2a/e5044b75, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Famille actuelle282 seulement, anciennes branches préservées, futur fermé ; aucun souvenir de sommeil ajouté. Ensemble3 en cours ; autres bases, six ensembles, campagnes et cible FPS ouverts, aucun gain FPS global annoncé.
@@ -591,6 +593,16 @@ Un revolver rend7–8acier, un fusil à verrou15acier, un lanceurEMP18–19acier
 Suspendre/modifier la facture ou interrompre le colon avant la fin conserve l’arme physique, avec éventuelle perte de progression. Après consommation, annuler conserve le métal existant et ne restitue pas l’arme. Armures, textiles, scories, réparation et fusion à plusieurs sorties restent hors lot. [Conditions, adaptations et suivi des contrôles](smelting-v311.md).
 
 **Schéma courant 221 — V310 : [secours et emplacements de couchage animaux](animal-rescue-v310.md).** Conditions, adaptations et contrôles acquis sont détaillés dans la note unique. Les résultats datés ci-dessous demeurent historiques.
+
+## Remplir une demande commerciale — V462
+
+Une notification ouvre la demande dans **Quêtes**. Consultez la quantité, la destination et les deux délais : temps pour accepter, puis durée pour livrer. Choisissez une récompense avant **Accepter la demande**. Masquer une offre ne la refuse pas et son délai continue de courir.
+
+Préparez les biens et chargez une caravane par les moyens ordinaires. Seuls ses inventaires comptent à destination : produits frais, qualité normale ou meilleure lorsqu’elle existe, vêtements de provenance connue sans port par un cadavre. Les objets portés ou équipés restent distincts du fret. Un ancien vêtement dont l’historique manque n’est pas présumé propre.
+
+À l’établissement demandé, ouvrez la caravane dans **Monde**. **Préparer la remise** met le jeu en pause et affiche les biens et gains. **Annuler** conserve la campagne ; **Confirmer la remise** livre la quantité exacte puis distribue la récompense aux vrais porteurs. Aucun achat, négociateur ou don préalable n’est requis. Une surcharge est annoncée et peut empêcher de reprendre la marche.
+
+La récompense ne change pas après acceptation et n’est remise qu’une fois. Expiration et hostilité terminent la demande ; une destination disparue reste indisponible. [Règles, adaptations et vérifications](trade-requests-v462.md).
 
 ## Choisir les artisans d’une facture — V461
 

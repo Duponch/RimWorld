@@ -5,6 +5,8 @@ import { backgroundSkillSummary, createBackgroundInspection, updateBackgroundIns
 import { TICKS_PER_DAY,type Command,type World } from '../sim/types';
 import type { JoinerQuest } from '../sim/quest-state';
 import { offeredRelationshipText,updateOfferedRelationship } from './relationship-inspection';
+import {createTradeRequests284} from './trade-requests-284';
+import type {CampaignSummary} from '../sim/world-map-state';
 
 const duration=(ticks:number,elapsed=false):string=>{
   const exact=Math.max(0,ticks)*1440/TICKS_PER_DAY;
@@ -18,7 +20,7 @@ const latest=(entries:readonly JoinerQuest[]):JoinerQuest|undefined=>entries.at(
 
 /** One persistent set of controls: tick-by-tick snapshot updates never replace
  * the focused button. Names from saves are written only through textContent. */
-export function createQuestUI(send:(command:Command)=>Promise<unknown>):{update:(world:World)=>void} {
+export function createQuestUI(send:(command:Command)=>Promise<unknown>):{update:(world:World)=>void;updateCampaign:(summary:CampaignSummary)=>void} {
   const root=document.getElementById('quests-content');
   if(!root)throw new Error('Panneau Quêtes absent.');
   const heading=document.createElement('h3');heading.textContent='Asile et poursuite';heading.tabIndex=-1;
@@ -35,7 +37,8 @@ export function createQuestUI(send:(command:Command)=>Promise<unknown>):{update:
   const feedback=document.createElement('p');feedback.id='quest-feedback';feedback.setAttribute('role','alert');
   const historyHeading=document.createElement('h3');historyHeading.textContent='Dossiers précédents';
   const history=document.createElement('ol');history.id='quest-history';
-  root.replaceChildren(heading,intro,enable,status,details,profile,timing,response,feedback,historyHeading,history);
+  const local=document.createElement('section');local.dataset.questLocal='';local.append(heading,intro,enable,status,details,profile,timing,response,feedback,historyHeading,history);root.replaceChildren(local);
+  const tradeHost=document.createElement('section');root.append(tradeHost);const tradeRequests=createTradeRequests284(tradeHost,send);
   const letter=document.createElement('button');letter.id='quest-letter';letter.className='arrival-letter';letter.type='button';
   letter.onclick=()=>{if(document.getElementById('quests-panel')?.hidden)document.querySelector<HTMLButtonElement>('[data-panel="quests"]')?.click();requestAnimationFrame(()=>heading.focus());};
   let current:World|undefined,busy=false,shownId:number|undefined;
@@ -63,6 +66,8 @@ export function createQuestUI(send:(command:Command)=>Promise<unknown>):{update:
   accept.onclick=()=>answer(true);refuse.onclick=()=>answer(false);
 
   function update(world:World):void {
+    local.hidden=false;
+    tradeRequests.update(world);
     current=world;
     const eligible=!!world.gameProfile&&world.raids?.profile==='cassandra-raids-v1';
     const calendar=world.quests;
@@ -114,5 +119,8 @@ export function createQuestUI(send:(command:Command)=>Promise<unknown>):{update:
       const alerts=document.getElementById('alerts');if(alerts&&letter.parentElement!==alerts)alerts.prepend(letter);
     }else letter.remove();
   }
-  return {update};
+  function updateCampaign(summary:CampaignSummary):void {
+    current=undefined;shownId=undefined;local.hidden=true;enable.disabled=accept.disabled=refuse.disabled=true;letter.remove();tradeRequests.update(summary);
+  }
+  return {update,updateCampaign};
 }

@@ -37,6 +37,9 @@ import {validBrewingHistoricalTransport265} from '../sim/brewing-catalogue-save-
 import {validFermentationWorld265} from '../sim/fermentation-save-265.ts';
 import {validSmithyResearchTransport267,validBrewingResearchTransport265,validGeothermalResearchTransport} from '../sim/research-save.ts';
 import {validGeothermalWorld264} from '../sim/geothermal-state-264.ts';
+import {registerProjectedTradeRequests284} from '../sim/trade-request-projection-save-284.ts';
+import {validTradeRequestHistorical284} from '../sim/trade-request-save-284.ts';
+import {validApparelProvenanceHistoricalTransport284} from '../sim/apparel-provenance-284.ts';
 import {registerProjectedWorldSites263} from '../sim/world-sites-projection-save-263.ts';
 import {validWorldAffiliationFields259,validWorldAffiliationForeignKeys259} from '../sim/world-affiliation-259.ts';
 import {validPrisonerStateRecord259} from '../sim/prisoner-save.ts';
@@ -1116,6 +1119,7 @@ export class SnapshotDecoder {
     const refuse=()=>({status:'resync' as const,reason:'Campagne sans carte illisible.'});
     if(!Number.isSafeInteger(packet.epoch)||packet.epoch<1||!Number.isSafeInteger(packet.revision)||packet.revision<1||!Number.isFinite(packet.stepMs)||packet.stepMs<0||![0,1,3,6].includes(packet.speed))return refuse();
     if(packet.epoch<this.epoch||packet.epoch===this.epoch&&packet.revision<=this.revision)return {status:'stale'};
+    if(!validTradeRequestHistorical284(packet.summary,packet.summary.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet.summary,packet.summary.schemaVersion))return refuse();
     if(!validWorldPawnsEnvelope256(packet.summary,packet.summary.schemaVersion,packet.summary.tick*10,packet.summary.nextId))return refuse();
     if(!validPlanetGeographyHistorical256(packet.summary,packet.summary.schemaVersion))return refuse();
     const geographic=this.geographicTransport.prepare(packet.summary,packet.geography,Object.hasOwn(packet,'geography'),packet.epoch!==this.epoch);if(!geographic.ok)return refuse();
@@ -1124,7 +1128,7 @@ export class SnapshotDecoder {
     if(packet.epoch===this.epoch&&!sameNativeWorldPawnBirth256(this.confirmedNativeWorldPawnBirth,view.worldPawns))return refuse();
     if(packet.epoch===this.epoch&&!sameFactionInitializations256(this.confirmedFactionInitializations,view.worldFactions))return refuse();
     const ids=new Set<number>();
-    if(registerProjectedGroups(view,ids,proof.context,summary).length||registerProjectedFactionOwners256(view,ids,summary).length||registerProjectedWorldPawns256(view,ids,summary).length||registerProjectedWorldSites263(view,ids,summary).length||acceptExtra&&!acceptExtra(view)||!this.geographicTransport.canCommit(geographic)||!this.planetValidation.commit(proof))return refuse();
+    if(registerProjectedGroups(view,ids,proof.context,summary).length||registerProjectedFactionOwners256(view,ids,summary).length||registerProjectedWorldPawns256(view,ids,summary).length||registerProjectedWorldSites263(view,ids,summary).length||registerProjectedTradeRequests284(view,ids,summary).length||acceptExtra&&!acceptExtra(view)||!this.geographicTransport.canCommit(geographic)||!this.planetValidation.commit(proof))return refuse();
     if(!this.geographicTransport.commit(geographic))throw Error('Lost private geographic preparation after commit');
     freezeAdmittedNativeWorldPawnOrder256(summary);view.worldPawns=summary.worldPawns;
     this.adoptGeographicCalendar(view,packet.epoch,summary);
@@ -1146,7 +1150,7 @@ export class SnapshotDecoder {
     if(!validPrisonerSurgeryHistoricalTransport280(packet,packet.world.schemaVersion))return resync('Future captive surgery.');
     if(!validApparelTradeHistoricalTransport279(packet,packet.world.schemaVersion))return resync('Future ordinary apparel inventory or trade.');
     if(!validApparelReservesHistoricalTransport278(packet,packet.world.schemaVersion))return resync('Future apparel reserve settings.');
-    if(!validBillWorkerHistoricalTransport283(packet,packet.world.schemaVersion))return resync('Future bill worker settings.');
+    if(!validTradeRequestHistorical284(packet,packet.world.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet,packet.world.schemaVersion)||!validBillWorkerHistoricalTransport283(packet,packet.world.schemaVersion))return resync('Future bill worker settings.');
     if(!validShipCasketHistoricalTransport277(packet,packet.world.schemaVersion))return resync('Future spatial casket content.');
     if(!validShipPartHistoricalTransport276(packet,packet.world.schemaVersion))return resync('Pièce de vaisseau ou recherche moteur future dans ce snapshot.');
     if(!validShipReactorHistoricalTransport275(packet,packet.world.schemaVersion))return resync('Réacteur stellaire futur dans ce snapshot.');
@@ -1699,7 +1703,7 @@ export class SnapshotDecoder {
       if(validateBombRefuges(next,[],ids).length)return resync('Refuge ou danger Bomb incohérent.');
       if(registerProjectedFactionOwners256(next,ids).length)return resync('Faction, chef ou propriétaire projeté incohérent.');
       if(registerProjectedWorldPawns256(next,ids).length)return resync('Invalid projected WorldPawns owner or namespace.');
-      if(registerProjectedWorldSites263(next,ids).length)return resync('Invalid projected263 Site holder or map parent.');
+      if(registerProjectedWorldSites263(next,ids).length||registerProjectedTradeRequests284(next,ids).length)return resync('Invalid projected263 Site holder or map parent.');
     }
     if(!everyHumanPawnOwner(next,p=>validWorldAffiliationFields259(p as unknown as Record<string,unknown>,next.schemaVersion)&&validWorldAffiliationForeignKeys259(p,next.worldFactions)))return resync('Faction/hôte d’un original invalide.');
     // An absent planet also belongs to the accepted epoch. A replacement

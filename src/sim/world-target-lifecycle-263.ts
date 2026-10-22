@@ -1,4 +1,5 @@
 import {isSchema274OrLater} from './schema-compatibility-257.ts';
+import {noteTradeRequestDestinationLost284} from './trade-request-runtime-284.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {plainWorldPawnData256} from './world-pawn-save-256.ts';
 import {activeThreat} from './affiliation.ts';
@@ -36,6 +37,7 @@ export function advanceForeignSettlementDefeat263(root:CampaignState):void {
   if(map.pawns.some(p=>p.worldAffiliation259?.factionId===t.factionId&&!p.prisoner&&activeThreat(p)))continue;
   if(!Number.isSafeInteger(registry.nextId+1))throw Error('World Site identity exhausted');
   const id=registry.nextId++;registry.entries.push({kind:'destroyed-settlement',id,tile:record.tile!,factionId:t.factionId,createdAtCore:core,mapId:record.id,sourceSettlementId:settlement.id});t.destroyedSiteId=id;
+  noteTradeRequestDestinationLost284(root,settlement.id,id);
   factions.settlements=factions.settlements.filter(s=>s!==settlement);
   const faction=factions.factions.find(f=>f.id===t.factionId)!;if(!factions.settlements.some(s=>s.factionId===t.factionId))faction.lifecycle259={revision:1,defeated:true,temporary:faction.lifecycle259?.temporary??false};
   for(const other of factions.factions){if(other.hidden||other.id===factions.playerFactionId||other.id===faction.id)continue;

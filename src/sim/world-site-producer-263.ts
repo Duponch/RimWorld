@@ -36,7 +36,7 @@ export function prepareItemStashBirth263(root:CampaignState,points:number):{ok:f
    const chosen=selectCaravanFaction261(capture,'combat',points,draw);if(!chosen.ok)return chosen;factionId=chosen.factionId;threat={kind:kind as 'outpost'|'turrets',factionId,points};
   }
  }
- const goods=draftItemStashGoods263(registry.nextId,nextId,points,tick,random.rng);if(!goods)return {ok:false,reason:'Actual original reward producer refused'};random.rng=goods.rng;
+ const goods=draftItemStashGoods263(registry.nextId,nextId,points,tick,random.rng,root.schemaVersion);if(!goods)return {ok:false,reason:'Actual original reward producer refused'};random.rng=goods.rng;
  const expiresAtCore=tick*10+(12+Math.floor(17*draw()))*60000;if(!Number.isSafeInteger(expiresAtCore))return {ok:false,reason:'Actual Site timeout exceeds the safe clock'};
  const site:ItemStash263={kind:'item-stash',id:registry.nextId,tile,factionId,createdAtCore:tick*10,mapId:null,expiresAtCore,heldAtCore:tick*10,items:goods.items,threat};
  const entries=registry.entries,refs=entries.slice(),nextSiteId=registry.nextId,sites=maps.sites,settlements=factions.settlements,factionRows=factions.factions,relations=factions.relations,planet=root.planet;

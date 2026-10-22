@@ -48,7 +48,7 @@ test('client rejects malformed, wrong-target and duplicate-candidate JSON while 
 });
 
 async function runtime(){
- const world=createWorld(461,32,32);world.schemaVersion=283;
+ const world=createWorld(461,32,32);
  const bill=newCookingBill(world.nextId++),station={id:world.nextId++,kind:'campfire' as const,x:15,z:8,orientation:0 as const,footprint:'standard' as const,bills:[bill],fuel:{ticks:6000,burned:0,autoRefuel:false}};
  world.structures.push(station);finalizeInitialWorldRegistry(world);loaded.world=world;
  let revision=0;const packets:Response[]=[],encode=vi.fn((view:World,_ms:number,speed:number,checkpoint:boolean)=>({type:'snapshot',kind:checkpoint?'checkpoint':'delta',epoch:1,revision:++revision,world:view,stepMs:0,speed})),capture=vi.fn();

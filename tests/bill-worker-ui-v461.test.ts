@@ -44,7 +44,7 @@ afterEach(()=>vi.unstubAllGlobals());
 const settled=async()=>{await Promise.resolve();await Promise.resolve();await Promise.resolve();};
 function deferred<T>(){let resolve!:(value:T)=>void,reject!:(reason:unknown)=>void;const promise=new Promise<T>((yes,no)=>{resolve=yes;reject=no;});return {promise,resolve,reject};}
 function ui(recipe:ProductionRecipe='shirt',customRead?:(billId:number)=>Promise<BillWorkerOptions283>){
-  const w=deconstructionCamp(2,32);w.schemaVersion=283;
+  const w=deconstructionCamp(2,32);
   const station:Structure={id:w.nextId++,kind:recipe==='make-medicine'?'drug-lab':recipe==='burn-apparel'?'campfire':'tailor-bench',x:10,z:10,orientation:0,footprint:'standard',material:'wood',bills:[]};
   const bill=newCookingBill(w.nextId++,recipe);station.bills=[bill];w.structures.push(station);
   const assigned:BillWorkerOption283={pawnId:w.pawns[0]!.id,name:'Artisane <nom littéral>',level:8,description:'Travail désactivé · non affectée',enabled:true};

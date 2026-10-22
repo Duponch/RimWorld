@@ -44,7 +44,8 @@ function held(w:World):{c:PlayerCasket271;p:World['pawns'][number]} {
 test('literal minified bill settings have closed versions, bounds and own data without accessing a worker getter',()=>{
  const w=deconstructionCamp(2),s=station(w),bill=first(s);bill.worker=policy(w.pawns[0]!.id);
  expect(validBillWorkerBuilding283(s,283,w.nextId)).toBe(true);
- expect(validBillWorkerBuilding283(s,282,w.nextId)).toBe(false);expect(validBillWorkerBuilding283(s,284,w.nextId)).toBe(false);
+ expect(validBillWorkerBuilding283(s,284,w.nextId)).toBe(true);
+ expect(validBillWorkerBuilding283(s,282,w.nextId)).toBe(false);expect(validBillWorkerBuilding283(s,285,w.nextId)).toBe(false);
  for(const value of [undefined,null,false,[],{},policy(w.nextId),policy(-1),{...policy(null),skillMin:-1},{...policy(null),skillMax:21},{...policy(null),skillMin:13},{...policy(null),skillMax:1.5},{...policy(null),future284:true}]){
   const candidate=structuredClone(s);Object.defineProperty(first(candidate),'worker',{value,enumerable:true});expect(validBillWorkerBuilding283(candidate,283,w.nextId)).toBe(false);
  }
@@ -67,7 +68,7 @@ const envelopes=(s:unknown)=>[
 
 test('historical future fields are refused throughout the actual custody envelopes and public sparse upserts',()=>{
  const s={bills:[{worker:policy(1)}]};
- for(const raw of envelopes(s)){const before=JSON.stringify(raw);expect(validBillWorkerHistoricalTransport283(raw,282)).toBe(false);expect(validBillWorkerHistoricalTransport283(raw,283)).toBe(true);expect(validBillWorkerHistoricalTransport283(raw,284)).toBe(false);expect(JSON.stringify(raw)).toBe(before);}
+ for(const raw of envelopes(s)){const before=JSON.stringify(raw);expect(validBillWorkerHistoricalTransport283(raw,282)).toBe(false);expect(validBillWorkerHistoricalTransport283(raw,283)).toBe(true);expect(validBillWorkerHistoricalTransport283(raw,284)).toBe(true);expect(validBillWorkerHistoricalTransport283(raw,285)).toBe(false);expect(JSON.stringify(raw)).toBe(before);}
  let reads=0;const s2={bills:[{}]};Object.defineProperty(s2.bills[0]!,'worker',{enumerable:true,get(){reads++;throw Error('Historical getter');}});
  expect(validBillWorkerHistoricalTransport283({structures:[s2]},282)).toBe(false);expect(reads).toBe(0);
 });
@@ -203,7 +204,7 @@ test('Vanish retains a known player human without clinical death or kidnapping a
 test('strict282 migration offers no worker policy and current full save keeps a real named reference exactly',()=>{
  const w=deconstructionCamp(2),s=station(w);expect(validateWorld(w)).toEqual([]);
  const old=JSON.parse(serializeWorld(w));old.schemaVersion=282;const text=JSON.stringify(old),copy=deserializeWorld(text);
- expect(JSON.parse(serializeWorld(copy))).toEqual({...old,schemaVersion:283});expect(first(copy.structures.find(p=>p.id===s.id)!).worker).toBeUndefined();
+ expect(JSON.parse(serializeWorld(copy))).toEqual({...old,schemaVersion:284});expect(first(copy.structures.find(p=>p.id===s.id)!).worker).toBeUndefined();
  first(s).worker=policy(w.pawns[0]!.id);expect(validateWorld(w)).toEqual([]);const saved=serializeWorld(w);expect(serializeWorld(deserializeWorld(saved))).toBe(saved);
  old.structures.find((p:Structure)=>p.id===s.id).bills[0].worker=policy(null);expect(()=>deserializeWorld(JSON.stringify(old))).toThrow(/worker/i);
 });

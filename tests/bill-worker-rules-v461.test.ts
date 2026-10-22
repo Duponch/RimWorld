@@ -17,7 +17,7 @@ import {fixtureBuilding} from './scenarios/deconstruction.ts';
 /** Existing complete World fixture with declared stations/inputs only. These
  * tests exercise new admission/planning, not an elapsed production campaign. */
 function camp(recipe:ProductionRecipe='simple-meal',kind:Structure['kind']='campfire',count=2){
- const world=healrootCamp(32,count);world.schemaVersion=283;
+ const world=healrootCamp(32,count);
  for(const pawn of world.pawns){delete pawn.background;delete pawn.traits;pawn.priorities.cook=1;pawn.priorities.craft=1;pawn.skills.cooking={level:8,xp:0,dailyXp:0,passion:0};pawn.skills.crafting={level:8,xp:0,dailyXp:0,passion:0};pawn.skills.intellectual={level:8,xp:0,dailyXp:0,passion:0};}
  if(recipe==='make-medicine')world.research={points:0,project:null,microelectronics:{points:MICROELECTRONICS_RESEARCH_COST,completedAt:1000},drugProduction:{points:DRUG_PRODUCTION_RESEARCH_COST,completedAt:1500},medicineProduction:{points:MEDICINE_PRODUCTION_RESEARCH_COST,completedAt:2000}};
  const station:Structure=fixtureBuilding(world,kind,8,8);station.bills=[];
@@ -75,7 +75,7 @@ test('policy shape rejects unknown, hidden, inherited, accessor and noninteger f
 test('closed schema guards preserve absent/history admission and reject prospective settings on historical or future worlds',()=>{
  const f=camp(),withPolicy={...f.bill,worker:policy(f.other!.id,20,20)};
  expect(validBillSettings(withPolicy,withPolicy.recipe,283)).toBe(true);expect(validBillSettings(withPolicy,withPolicy.recipe,282)).toBe(false);
- for(const version of [282,284]){
+ for(const version of [282,285]){
   f.world.schemaVersion=version as World['schemaVersion'];const before=JSON.stringify(f.world);
   expect(billWorkerRefusal283(f.world,f.pawn,withPolicy)).toBeUndefined();expect(JSON.stringify(f.world)).toBe(before);
   expect(applyCommand(f.world,{type:'bill-worker-policy',structureId:f.station.id,billId:f.bill.id,policy:policy()}).ok).toBe(false);expect(JSON.stringify(f.world)).toBe(before);

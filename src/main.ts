@@ -952,7 +952,7 @@ function selectedColonyIds():number[]{return snapshot?.pawns.filter(p=>selection
 function renderWildlife(world:World){updateWildlifePanel(el('wildlife-content'),world,id=>selectPawn(id),()=>void attempt(async()=>{await client.command({type:'enable-wildlife'});renderState();}),[...selection.ids],id=>void attempt(async()=>{await client.command({type:'shoot',pawnIds:selectedColonyIds(),targetId:id});renderState();}),id=>void attempt(async()=>{await client.command({type:'melee',pawnIds:selectedColonyIds(),targetId:id});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId:id,enabled});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'tame',animalId:id,enabled});renderState();}));}
 function setPanel(panel: Panel, preserveTool = false) {
   if(!snapshot&&campaignOnly&&panel===null)panel='world';
-  if(!snapshot&&campaignOnly&&panel!==null&&panel!=='world'&&panel!=='menu')return;
+  if(!snapshot&&campaignOnly&&panel!==null&&panel!=='world'&&panel!=='menu'&&panel!=='quests')return;
   hoverReadoutLayout?.reset();
   architectWorkbench.close();
   dismissTooltip();
@@ -2043,14 +2043,14 @@ function renderCampaignOnly():void {
  const minute=Math.floor(state.civilTick%TICKS_PER_DAY*1440/TICKS_PER_DAY);el('campaign-clock').textContent=`Temps de campagne · jour ${1+Math.floor(state.civilTick/TICKS_PER_DAY)} · ${String(Math.floor(minute/60)).padStart(2,'0')}:${String(minute%60).padStart(2,'0')}`;el('fps-counter').textContent='— FPS';
  el('pause-banner').hidden=currentSpeed!==0;
  for(const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]')){const active=Number(button.dataset.speed)===currentSpeed;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));}
- statusAlerts.updateCampaign(state);mapJumpTo.update(readJumpToEntries(state));
+ statusAlerts.updateCampaign(state);mapJumpTo.update(readJumpToEntries(state));questUI.updateCampaign(state);
  if(currentPanel==='world')refreshWorldPanels(state);
 }
 function receiveMainCampaignOnly(summary:CampaignSummary,cost:number,speed:number,replaced:boolean):void {
  const hadMap=!!snapshot;if(replaced||hadMap)campaignPresentationEpoch++;
  if(hadMap||replaced){renderer?.dispose();renderer=undefined;audio.reset();latestMotion=undefined;hoveredCell=null;hoverReadoutLayout?.reset();selection.clear();selectedPawn=undefined;selectedCell=undefined;selectedObject=undefined;selectedObjects=[];orderMenu.close();startingArrivalUI.reset();}
  snapshot=undefined;latestFoodReadability=undefined;campaignOnly=summary;stepMs=cost;currentSpeed=speed;if(speed>0)deferredResumeGuard.confirm(false);session.hasWorld=true;frontMenu.setHasGame(true);
- if(currentPanel!=='menu'){if(worldTab==='individual')worldTab='maps';if(currentPanel!=='world')setPanel('world');}
+ if(worldTab==='individual')worldTab='maps';if(currentPanel!=='menu'&&currentPanel!=='world'&&currentPanel!=='quests')setPanel('world');
  if(!frontMenu.isOpen())shell.hidden=false;renderCampaignOnly();syncStorageButtons();
 }
 function receiveMainAudioCues(cues: readonly AudioCue[]): void {

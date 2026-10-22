@@ -1,3 +1,5 @@
+import {createTradeRequestDelivery284} from './trade-request-delivery-284';
+import type {TradeRequestCommand284} from '../sim/trade-request-state-284';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import type {GroupGiftQuote274} from '../sim/group-gift-state-274.ts';
 import {groupConfirmedArrivalText} from './group-confirmed-labels';
@@ -63,7 +65,7 @@ export interface GroupPanelAdapters {
   quoteTrade(snapshot:GroupPanelSnapshot,facts:GroupPanelFacts,direction:'buy'|'sell',lines:CommercialBuyLine[]):TradePreview;
   quoteGift274?(snapshot:GroupPanelSnapshot,facts:GroupPanelFacts,lines:CommercialBuyLine[]):GroupGiftQuote274;
   /** Resolution/rejection must follow the authoritative correlated ack. */
-  send(command:GroupCommand|WorldMapCommand):Promise<unknown>;
+  send(command:GroupCommand|WorldMapCommand|TradeRequestCommand284):Promise<unknown>;
   inspectPresentPawn?(pawnId:number):void;
   /** Real speed0 request, resolves only after authoritative ACK/adoption. */
   pauseForReorganization?():Promise<unknown>;
@@ -175,6 +177,7 @@ export function createGroupPanel(host:HTMLElement,adapters:GroupPanelAdapters):G
   let planner:GroupRoutePlanner|undefined,plannerRoute:readonly number[]=[];
   let departureAcknowledgement:{draft:string;warnings:string}|undefined;
   let busy=false,unknown:string|undefined,stopped:string|undefined,hostBlocked:string|undefined,generation=0,disposed=false;
+  let requestDelivery284:ReturnType<typeof createTradeRequestDelivery284>|undefined;
   let plan:PlanPreview|undefined,routePreview:RoutePreview|undefined,previewTick:number|undefined;
   const selectedAnimals=new Set<number>(),selectedPacks=new Set<number>();
   const selected=new Set<number>(),sources=new Map<number,string>(),buys=new Map<number,string>(),sells=new Map<number,string>(),gifts274=new Map<number,string>(),waiting=new Map<number,string>();
@@ -217,7 +220,7 @@ stay.addEventListener('change',()=>{invalidatePreview();renderDraft();},{signal:
   function permission(action:GroupAction):string|undefined {return lockReason()??((action==='start'||action==='unload')&&snapshot?.campaign?.activeMapId===null?'Affichez une carte locale pour préparer ce chargement.':undefined)??((action==='start'||action==='unload')&&!Number.isSafeInteger(snapshot?.originMapId)?'La carte de départ confirmée est indisponible.':undefined)??(!facts?'Les projections métier sont indisponibles.':facts.actions[action].ok?undefined:facts.actions[action].reason??'Action indisponible.');}
   function available(b:HTMLButtonElement,reason:string|undefined){b.setAttribute('aria-disabled',String(!!reason));setTooltip(b,{body:reason??'Appliquer la commande au monde confirmé.'});}
   function updateRequest(){const message=lockReason();request.hidden=!message;request.textContent=message??'';}
-  async function send(action:GroupAction|null,command:GroupCommand|WorldMapCommand,fromReorganization=false):Promise<boolean>{
+  async function send(action:GroupAction|null,command:GroupCommand|WorldMapCommand|TradeRequestCommand284,fromReorganization=false):Promise<boolean>{
     if(action===null?lockReason(!fromReorganization):permission(action))return false;
     const token=generation;busy=true;updateLocks();
     try{await adapters.send(command);if(token!==generation||disposed)return false;error.hidden=true;return true;}
@@ -333,6 +336,7 @@ stay.addEventListener('change',()=>{invalidatePreview();renderDraft();},{signal:
   }
   giftCancel274.addEventListener('click',()=>{if(lockReason())return;gifts274.clear();shownGift274=undefined;giftTable274.refresh();renderDraft();},{signal:abort.signal});
   giftButton274.addEventListener('click',()=>{void(async()=>{if(giftRefusal274()||!snapshot||!facts||!adapters.quoteGift274)return;try{const lines=quantityLines(gifts274);if(!lines.length)throw Error('Choisissez les quantités à donner.');const quote=adapters.quoteGift274(snapshot,facts,lines);if(!quote.ok)throw Error(quote.reason);if(!shownGift274||shownGift274!==quote.signature)throw Error('Le don a changé. Vérifiez le nouvel aperçu avant de confirmer.');const accepted=await send(null,{type:'group-gift274',groupId:snapshot.group!.id,lines:lines.map(l=>({...l})),quote:shownGift274});if(accepted){gifts274.clear();shownGift274=undefined;giftTable274.refresh();renderDraft();}}catch(cause){error.hidden=false;error.textContent=cause instanceof Error?cause.message:String(cause);giftDraft274();}})();},{signal:abort.signal});
+  requestDelivery284=createTradeRequestDelivery284(element,{send:command=>send(null,command),pause:adapters.pauseForReorganization});
   const split=document.createElement('button'),merge=document.createElement('button');split.type=merge.type='button';split.textContent='Séparer la caravane';merge.textContent='Regrouper des caravanes';split.dataset.groupReorganizationAction='split';merge.dataset.groupReorganizationAction='merge';actions.append(split,merge);
   const reorganization=createGroupReorganizationPanel256(element,{
     current:()=>snapshot,pause:adapters.pauseForReorganization,blocked:()=>lockReason(false),
@@ -347,6 +351,7 @@ stay.addEventListener('change',()=>{invalidatePreview();renderDraft();},{signal:
 
 
   function updateLocks(){
+    requestDelivery284?.update(snapshot,lockReason(),!!(stopped??unknown??hostBlocked??(plannerLocked?'planner':undefined)??(reorganizationLocked?'reorganization':undefined)));
     planner?.update();
     updateRequest();
     const g=snapshot?.group,away=groupAway(g),atDestination=away&&(g.phase==='at-site'||g.phase==='awaiting-entry'||snapshot!.world.schemaVersion>=256&&g.phase==='stationary');
@@ -514,8 +519,8 @@ stay.addEventListener('change',()=>{invalidatePreview();renderDraft();},{signal:
     setHostBlocked(reason){if(reason)closeSettlementNotice263();hostBlocked=reason;updateLocks();reorganization.update();},
     setSimulationStopped(message){closeSettlementNotice263();stopped=message;updateLocks();reorganization.update();},
     focusTrade261(){if(!tradeBox.hidden){tradeBox.tabIndex=-1;tradeBox.scrollIntoView({block:'nearest'});tradeBox.focus();}},
-    resetForReplacement(){closeSettlementNotice263();targetConfirmation.close();for(const b of targetButtons.values())b.remove();targetButtons.clear();planner?.reset();reorganization.reset();generation++;delete groupSelector.dataset.key;groupSelector.replaceChildren();groupSelector.value='';busy=false;unknown=stopped=undefined;waiting.clear();selected.clear();selectedAnimals.clear();selectedPacks.clear();sources.clear();buys.clear();sells.clear();gifts274.clear();destination=null;stay.checked=true;retreatMode=false;shownBuy=shownSell=shownGift274=undefined;snapshot=facts=undefined;pilesById=new Map();invalidatePreview();peopleTable.update([]);animalTable.update([]);bedrollTable.update([]);sourceTable.update([]);manifestTable.update([]);goodsTable.update([]);buyTable.update([]);sellTable.update([]);giftTable274.update([]);giftBox274.hidden=true;giftTotal274.textContent='';lossesTable.update([]);animalLossesTable.update([]);globe.setPlanet(undefined);arrivalConfirmed.hidden=true;arrivalConfirmed.textContent='';origin.textContent=status.textContent=mass.textContent=stop.textContent=routeText.textContent=provisionsText.textContent='';error.hidden=true;updateLocks();},
-    dispose(){closeSettlementNotice263();disposed=true;generation++;targetConfirmation.close();planner?.dispose();closeDepartureNotice();abort.abort();reorganization.dispose();globe.dispose();element.remove();},
+    resetForReplacement(){requestDelivery284?.reset();closeSettlementNotice263();targetConfirmation.close();for(const b of targetButtons.values())b.remove();targetButtons.clear();planner?.reset();reorganization.reset();generation++;delete groupSelector.dataset.key;groupSelector.replaceChildren();groupSelector.value='';busy=false;unknown=stopped=undefined;waiting.clear();selected.clear();selectedAnimals.clear();selectedPacks.clear();sources.clear();buys.clear();sells.clear();gifts274.clear();destination=null;stay.checked=true;retreatMode=false;shownBuy=shownSell=shownGift274=undefined;snapshot=facts=undefined;pilesById=new Map();invalidatePreview();peopleTable.update([]);animalTable.update([]);bedrollTable.update([]);sourceTable.update([]);manifestTable.update([]);goodsTable.update([]);buyTable.update([]);sellTable.update([]);giftTable274.update([]);giftBox274.hidden=true;giftTotal274.textContent='';lossesTable.update([]);animalLossesTable.update([]);globe.setPlanet(undefined);arrivalConfirmed.hidden=true;arrivalConfirmed.textContent='';origin.textContent=status.textContent=mass.textContent=stop.textContent=routeText.textContent=provisionsText.textContent='';error.hidden=true;updateLocks();},
+    dispose(){requestDelivery284?.dispose();closeSettlementNotice263();disposed=true;generation++;targetConfirmation.close();planner?.dispose();closeDepartureNotice();abort.abort();reorganization.dispose();globe.dispose();element.remove();},
   };
   return api;
 }

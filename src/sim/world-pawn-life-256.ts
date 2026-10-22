@@ -1,4 +1,5 @@
 import {medicalCivilTick271,medicalElapsedTicks271} from './suspended-human-clock-271.ts';
+import {markCorpseWornApparel284} from './apparel-provenance-284.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {cancelAlcoholSpatial265} from './alcohol-state-265.ts';
 import {advanceScariaRecord261,commitScariaDeath261} from './animal-scaria-261.ts';
@@ -101,7 +102,7 @@ function advancePreparedWorldPawnRow256(row:WorldPawnOwner256,toCore:number,rand
  }
  if(!mothball&&(version===259||version===260||(version===261||(Number(version)===262||isSchema263OrLater(Number(version))))))advanceOffmapThermal259(a,row.items,toCore,WORLD_PAWN_NO_HOLDER_TEMPERATURE_259,()=>row.kind==='animal'?createAnimalMedicalRecord256({schemaVersion:version,tick:toCore/10},row.actor,toCore/10):createMedicalRecord(toCore/10));
  h=a.health;
- if(!mothball&&h){const status=medicalStatus(h);if(status==='dead'){commitToxicDeath256(h,random);if(row.kind==='animal'){commitScariaDeath261(h,scariaRotChance,random);delete row.actor.manhunter;}a.state='dead';row.mode='dead';delete row.free;row.clockCore=h.death!.tick*10;return {ok:true};}a.state=status==='downed'?'downed':'idle';
+ if(!mothball&&h){const status=medicalStatus(h);if(status==='dead'){commitToxicDeath256(h,random);if(row.kind==='animal'){commitScariaDeath261(h,scariaRotChance,random);delete row.actor.manhunter;}a.state='dead';if(row.kind==='human')markCorpseWornApparel284(row.items,row.actor,version);row.mode='dead';delete row.free;row.clockCore=h.death!.tick*10;return {ok:true};}a.state=status==='downed'?'downed':'idle';
  }
  row.clockCore=toCore;
  if(!mothball&&h&&groupPawnInterval256(a.id,toCore,7500,Math.min(delta,10)))autoTendWorldPawn256(h);

@@ -22,6 +22,7 @@ import type { Pawn,World } from './types.ts';
 import { malnutritionRate } from './malnutrition.ts';
 import { humanAgeImmunityFactor } from './human-age.ts';
 import { notifyPawnDeath } from './bereavement.ts';
+import {markCorpseWornApparel284} from './apparel-provenance-284.ts';
 import { currentMedicalBed,bedHealPerDay,bedImmunityFactor } from './hospital-medical-stats.ts';
 import {medicalCivilTick271,medicalElapsedTicks271} from './suspended-human-clock-271.ts';
 
@@ -52,6 +53,7 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn),ex
         if(status==='dead'){
           if(world.schemaVersion>=256){delete pawn.mapBed;pawn.bedId=null;delete pawn.bedSlot;}
         if(world.structures.some(b=>b.id===pawn.bedId&&(b.kind==='double-bed'||b.kind==='sleeping-spot'))||(world.packed??[]).some(pack=>pack.building.id===pawn.bedId&&pack.building.kind==='double-bed')){pawn.bedId=null;delete pawn.bedSlot;}
+        markCorpseWornApparel284(world.piles,pawn,world.schemaVersion);
         delete pawn.surgeryRequest;notifyPawnDeath(world,pawn);notifyBillWorkerUnavailable283(world,pawn.id);
       }
       announce(world,status==='dead'?`${pawn.name} est décédé.`:`${pawn.name} est à terre.`);

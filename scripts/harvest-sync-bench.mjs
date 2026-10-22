@@ -81,6 +81,8 @@ const originalTraceAdvance=advanceSimulation;advanceSimulation=now=>{const at=pe
  await page.addInitScript(data=>{
   localStorage.setItem('lisiere.audio.effects.enabled.v1','false');
   localStorage.setItem('lisiere.audio.music.enabled.v1','false');
+  localStorage.setItem('lisiere.audio.effects.volume.v1','0');
+  localStorage.setItem('lisiere.audio.music.volume.v1','0');
   localStorage.setItem('lisiere.save.v1',data);
  },serializeWorld(w));
  await page.goto(process.env.HARVEST_URL??'http://127.0.0.1:5173/?scenario=camp&e2e&size=250');await page.waitForFunction(()=>!!window.__lisiere);

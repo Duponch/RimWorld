@@ -82,7 +82,7 @@ function openPod(w:World,pending:PodRescuePending):boolean {
   addResolvedInjury(p.health,'torso','bruise',8*HP_UNIT,()=>random(rng));
   if(medicalStatus(p.health)!=='downed')return false;
   p.state='downed';
-  const shirt:MaterialPile={id:w.nextId+1,kind:'apparel',item:'cloth-shirt',quantity:1,owner:{type:'apparel',pawnId:p.id},apparel:newApparelState('cloth-shirt')};
+  const shirt:MaterialPile={id:w.nextId+1,kind:'apparel',item:'cloth-shirt',quantity:1,owner:{type:'apparel',pawnId:p.id},apparel:newApparelState('cloth-shirt',undefined,w.schemaVersion)};
   const s=w.podRescues!;
   w.nextId+=2;w.pawns.push(p);w.piles.push(shirt);
   s.incidents.push({id:pending.id,start:pending.start,openedAt:w.tick,pawnId:p.id,

@@ -2,6 +2,7 @@ import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {targetBuilding263} from './world-target-building-263.ts';
 import {validMapTargetFields263,validPendingWorldEntryFields263,validateWorldTargetBindings263} from './world-target-registry-save-263.ts';
 import {validateWorldSites263} from './world-sites-save-263.ts';
+import {validateTradeRequests284} from './trade-request-save-284.ts';
 import {validCaravanCessionMemory261} from './caravan-person-lost-save-261.ts';
 import {validTempMapField261} from './temp-map-incidents-save-261.ts';
 import {validMapEncounterFields261,validGroupEncounterFields261} from './caravan-registry-save-261.ts';
@@ -104,6 +105,6 @@ export function validateRegisteredCampaign(raw:unknown,validateLocal:(local:Worl
  errors.push(...validateLostArchives(root,known,ids));for(const id of captureLostOwners(root).byId.keys())humans.add(id);
  for(const m of root.worldGroups!.lostMemories)if(!humans.has(m.receiverId))errors.push('Lost memory receiver has no actual human owner.');
  for(const p of root.worldGroups!.posts)errors.push(...validateCivilianPost({tick:root.tick,nextId:root.nextId,civilianPost:p.state},root.schemaVersion,ids));
- if(root.planet)errors.push(...validatePlanet(root.planet,{...sharedCampaignData(root),seed:root.worldMaps!.campaignSeed} as World,root.schemaVersion));errors.push(...validateCampaignHiveLordIds256(root),...validateAncientCasketGroupIds256(root));errors.push(...validateWorldFactionCampaign256(root,ids,humans));errors.push(...validateGroupAnimalLosses256(root as World,root.schemaVersion),...registerGroupAnimalLossThings256(root as World,ids));for(const owner of root.worldFactions?.leaders??[])ids.add(owner.pawn.id);if(root.worldPawns)errors.push(...validateWorldPawnOwners256(root.worldPawns,root,ids,undefined,humans));errors.push(...validateWorldSites263(root.worldSites263,root,ids),...validateWorldTargetBindings263(root));return errors;
+ if(root.planet)errors.push(...validatePlanet(root.planet,{...sharedCampaignData(root),seed:root.worldMaps!.campaignSeed} as World,root.schemaVersion));errors.push(...validateCampaignHiveLordIds256(root),...validateAncientCasketGroupIds256(root));errors.push(...validateWorldFactionCampaign256(root,ids,humans));errors.push(...validateGroupAnimalLosses256(root as World,root.schemaVersion),...registerGroupAnimalLossThings256(root as World,ids));for(const owner of root.worldFactions?.leaders??[])ids.add(owner.pawn.id);if(root.worldPawns)errors.push(...validateWorldPawnOwners256(root.worldPawns,root,ids,undefined,humans));errors.push(...validateWorldSites263(root.worldSites263,root,ids),...validateTradeRequests284(root.tradeRequests284,root,ids),...validateWorldTargetBindings263(root));return errors;
  }catch{return ['Invalid registry data or global owner namespace.'];}
 }

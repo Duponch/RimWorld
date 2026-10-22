@@ -33,11 +33,11 @@ export function advanceQuestPopulation263(s:WorldQuestCalendar263,core:number,co
  if(consecutive&&Math.floor((s.populationAtCore-171)/30000)!==Math.floor((core-171)/30000))s.populationAdaptationDays+=.5;
  s.knownColonistIds=[...colonistIds];s.populationAtCore=core;
 }
-interface QuestSelection263 {points:number;progress:number;adjustedPopulation:number;hasFreeColonist:boolean;hasHomeMap:boolean}
+interface QuestSelection263 {points:number;progress:number;adjustedPopulation:number;hasFreeColonist:boolean;hasHomeMap:boolean;tradeRequests284?:boolean}
 /** Unsupported Core roots keep their tickets. Selecting one is a no-op,
  * never a fabricated quest or a redistribution towards ItemStash. Their
  * unimplemented CanRun/refire clauses are a declared catalogue limitation. */
-export function selectWorldQuest263(s:WorldQuestCalendar263,input:QuestSelection263):'item-stash'|null {
+export function selectWorldQuest263(s:WorldQuestCalendar263,input:QuestSelection263):'item-stash'|'trade-request'|null {
  if(!input.hasFreeColonist||!input.hasHomeMap)return null;
  if(random(s)<populationIncreasingChance263(input.adjustedPopulation,s.populationAdaptationDays))return null;
  const choices=[{key:'item-stash',weight:1},
@@ -46,14 +46,14 @@ export function selectWorldQuest263(s:WorldQuestCalendar263,input:QuestSelection
   ...(input.progress>=10?[{key:'peace-talks',weight:1}]:[])];
  for(const c of choices){for(let i=0;i<s.recent.length&&i<RECENT.length;i++)if(s.recent[i]===c.key)c.weight*=RECENT[i]!;}
  const total=choices.reduce((sum,c)=>sum+c.weight,0);let draw=random(s)*total;
- for(const c of choices){draw-=c.weight;if(draw<0)return c.key==='item-stash'?'item-stash':null;}
+ for(const c of choices){draw-=c.weight;if(draw<0)return c.key==='item-stash'?'item-stash':c.key==='trade-request'&&input.tradeRequests284?'trade-request':null;}
  return null;
 }
 /** Called at the true campaign tick, after other caravan owners. No RAF,
  * repeated poll, catch-up opportunity or advance on a second call. Returns
  * only the selected supported root; actual birth and history publication
  * remain the Site producer's transaction. */
-export function advanceWorldQuestCalendar263(s:WorldQuestCalendar263,core:number,input:QuestSelection263):'item-stash'|null {
+export function advanceWorldQuestCalendar263(s:WorldQuestCalendar263,core:number,input:QuestSelection263):'item-stash'|'trade-request'|null {
  if(core<s.nextCheckCore)return null;
  s.nextCheckCore=(Math.floor(core/CHECK)+1)*CHECK;
  const cycle=Math.floor(core/CYCLE);
@@ -70,3 +70,5 @@ export function advanceWorldQuestCalendar263(s:WorldQuestCalendar263,core:number
 }
 /** Called once, only after the real holder and its Things are committed. */
 export function notifyItemStashBorn263(s:WorldQuestCalendar263):void {s.siteOffers++;s.recent.unshift('item-stash');if(s.recent.length>5)s.recent.length=5;}
+/** Historical counter name retained; it counts supported actual offers. */
+export function notifyTradeRequestBorn284(s:WorldQuestCalendar263):void {s.siteOffers++;s.recent.unshift('trade-request');if(s.recent.length>5)s.recent.length=5;}

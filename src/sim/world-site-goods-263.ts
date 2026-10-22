@@ -26,7 +26,7 @@ export function itemStashValue263(points:number):number {
  * The holder never ticks its contents; these food clocks are frozen until
  * their true map transfer, where the existing item-clock shifter is applied.
  * No arrival, reload or failed generation may call this producer again. */
-function draftOriginalTargetGoods263(siteId:number,nextId:number,points:number,tick:number,rng:number,ground?:readonly Cell[]):{items:MaterialPile[];nextId:number;rng:number;targetValue:number}|null {
+function draftOriginalTargetGoods263(siteId:number,nextId:number,points:number,tick:number,rng:number,ground?:readonly Cell[],version:number=263):{items:MaterialPile[];nextId:number;rng:number;targetValue:number}|null {
  if(![siteId,nextId].every(n=>Number.isSafeInteger(n)&&n>0)||!Number.isSafeInteger(tick)||tick<0||!Number.isInteger(rng)||rng<=0||rng>0xffffffff)return null;
  const random=()=>{rng^=rng<<13;rng^=rng>>>17;rng^=rng<<5;rng>>>=0;return rng/4294967296;};
  const targetValue=ground?1800:itemStashValue263(points)*(.7+.6*random()),items:MaterialPile[]=[];let remaining=targetValue;
@@ -40,13 +40,13 @@ function draftOriginalTargetGoods263(siteId:number,nextId:number,points:number,t
   const frozen=freshRot(item,tick);if(!ground&&frozen.rot)frozen.rot.rate=0;
   const pile:MaterialPile={id:nextId++,kind:def.kind,item,quantity,owner:ground?{type:'ground',...ground[count]!}:{type:'world-site263',siteId},...frozen,
    ...def.kind==='weapon'?{weapon:newWeaponState(item as Parameters<typeof newWeaponState>[0])}:{},
-   ...def.kind==='apparel'?{apparel:newApparelState(item as Parameters<typeof newApparelState>[0])}:{}};
+   ...def.kind==='apparel'?{apparel:newApparelState(item as Parameters<typeof newApparelState>[0],undefined,version)}:{}};
   items.push(pile);remaining-=quantity*unit;
  }
  return items.length?{items,nextId,rng,targetValue}:null;
 }
 
-export function draftItemStashGoods263(siteId:number,nextId:number,points:number,tick:number,rng:number){return draftOriginalTargetGoods263(siteId,nextId,points,tick,rng);}
+export function draftItemStashGoods263(siteId:number,nextId:number,points:number,tick:number,rng:number,version:number=263){return draftOriginalTargetGoods263(siteId,nextId,points,tick,rng,undefined,version);}
 /** Default Settlement loot value1800, original current content adaptation.
  * New local Things are created only by a true fresh base generation. Re-entry
  * recalls the same retained people; it never copies their gear as loot. */
@@ -55,5 +55,5 @@ export function generateForeignBaseLoot263(w:World,settlementId:number,storage:A
  if(!isSchema263OrLater(Number(w.schemaVersion))||tileId===undefined||!w.worldFactions?.settlements.some(s=>s.id===settlementId&&s.tile===tileId))throw Error('Actual foreign base loot parent required');
  const physical=captureActualLocalDistricts256(w),occupied=new Set(w.structures.flatMap(s=>footprintCells(s).map(c=>c.z*w.width+c.x))),cells:Cell[]=[];
  for(let z=storage.minZ+1;z<storage.maxZ;z++)for(let x=storage.minX+1;x<storage.maxX;x++){const c=z*w.width+x;if(physical.standable(c)&&!occupied.has(c)&&!w.resources.some(r=>r.x===x&&r.z===z)&&!w.piles.some(p=>p.owner.type==='ground'&&p.owner.x===x&&p.owner.z===z))cells.push({x,z});}
- const goods=draftOriginalTargetGoods263(settlementId,w.nextId,0,w.tick,rng,cells);if(!goods)throw Error('No physical storage capacity for the actual base loot');w.piles.push(...goods.items);w.nextId=goods.nextId;
+ const goods=draftOriginalTargetGoods263(settlementId,w.nextId,0,w.tick,rng,cells,w.schemaVersion);if(!goods)throw Error('No physical storage capacity for the actual base loot');w.piles.push(...goods.items);w.nextId=goods.nextId;
 }

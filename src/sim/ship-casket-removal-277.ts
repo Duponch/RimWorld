@@ -12,6 +12,7 @@ import type {Mechanoid} from './mechanoid-state.ts';
 import {validShipCasketBuilding277} from './ship-casket-owner-save-277.ts';
 import {createMedicalRecord,medicalStatus} from './injury-state.ts';
 import {healthRandom,reconcilePawnHealth} from './health.ts';
+import {markCorpseWornApparel284} from './apparel-provenance-284.ts';
 import {captureStartingPlacePhysics256} from './starting-place-physics-256.ts';
 import {findStartingPlaceNear256,type StartingPlaceThing256} from './starting-place-near-256.ts';
 import {planSelectedDrops,releaseWork} from './work-release.ts';
@@ -202,7 +203,7 @@ export function planShipCasketRemoval277(w:World,s:Structure,mode:'deconstruct'|
    else if(occupant.kind==='animal')w.wildlife!.animals.push(occupant.animal);
    else w.mechanoids=[...(w.mechanoids??[]),occupant.mech];
    if(spawn&&!spawn.commit())throw Error('Actual spatial spawn notification changed within commit');
-   if(occupant.kind==='human')reconcilePawnHealth(w,occupant.pawn,undefined,true);else if(occupant.kind==='animal')reconcileAnimalHealth(w,occupant.animal);
+    if(occupant.kind==='human'){markCorpseWornApparel284(h.items,occupant.pawn,w.schemaVersion);reconcilePawnHealth(w,occupant.pawn,undefined,true);}else if(occupant.kind==='animal')reconcileAnimalHealth(w,occupant.animal);
    notifyActualExplorationSpawn256(w,p);
   }}
   c.shipCryptosleep277=newShipCasketHolder277(tick);if(mode==='deconstruct')w.deconstructed=deconstructed;if(mode==='kill-finalize'||losesPossessions)w.destroyed=destroyed;

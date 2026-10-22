@@ -30,7 +30,7 @@ export const corpseFresh=(p:MaterialPile,tick:number):boolean=>p.kind==='corpse'
 
 /** Before worker/spot efficiency and stochastic integer rounding. Missing whole
  * subtrees lose their coverage once; ordinary wounds have one global penalty. */
-export function corpseYield(p:MaterialPile):{meat:number;leather:number} {
+export function corpseYield(p:Pick<MaterialPile,'corpse'>):{meat:number;leather:number} {
   const c=p.corpse;if(!c)return {meat:0,leather:0};
   const definition=actualAnimalProfile256(c);
   const h=c.health,coverage=corpseCoverage(c);
@@ -39,7 +39,7 @@ export function corpseYield(p:MaterialPile):{meat:number;leather:number} {
   const curve=(raw:number)=>raw<=5?raw*14/5:raw<=40?14+(raw-5)*26/35:raw;
   return {meat:curve(definition.rawMeat*size*coverage*injury),leather:curve(definition.rawLeather*size*coverage*injury)};
 }
-export function corpseProducts(p:MaterialPile):{meat:{item:AnimalMeatItem;quantity:number};leather:{item:AnimalLeatherItem|null;quantity:number}}|undefined {
+export function corpseProducts(p:Pick<MaterialPile,'corpse'>):{meat:{item:AnimalMeatItem;quantity:number};leather:{item:AnimalLeatherItem|null;quantity:number}}|undefined {
   if(!p.corpse)return;
   const definition=actualAnimalProfile256(p.corpse),yielded=corpseYield(p);
   return {meat:{item:definition.meatItem,quantity:yielded.meat},leather:{item:definition.leatherItem,quantity:yielded.leather}};

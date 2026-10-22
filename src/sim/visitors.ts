@@ -101,7 +101,7 @@ function arrive(w:World,kind:VisitorKind,intro=false,exotic=false):boolean {
     if(w.schemaVersion>=191)generatePawnBackground(p,w.seed,profiles[i]==='Garde',i===merchant);
     for(const key of Object.keys(p.priorities) as (keyof Pawn['priorities'])[])p.priorities[key]=0;
     p.visitor={group:id,role:kind==='traveler'?'traveler':i===merchant?'trader':'visitor',...exotic&&i===merchant?{merchantKind:'exotic' as const}:{},phase:'arriving',goal:{...arrival.parking[i]!},personalFoodIds:[]};
-    piles.push({id:nextId++,kind:'apparel',item:'cloth-shirt',quantity:1,owner:{type:'apparel',pawnId:p.id},apparel:newApparelState('cloth-shirt')});
+    piles.push({id:nextId++,kind:'apparel',item:'cloth-shirt',quantity:1,owner:{type:'apparel',pawnId:p.id},apparel:newApparelState('cloth-shirt',undefined,w.schemaVersion)});
     if(i===merchant){const stock=exotic?generateExoticStock(random.rng,p.id,nextId,w.tick,w.schemaVersion):generateVisitorStock(random.rng,p.id,nextId,w.tick,w.schemaVersion);piles.push(...stock.piles);nextId=stock.nextId;random.rng=stock.rng;}
     // Preserve Core's food draw before the explicit fine→simple substitution.
     const foodDraw=visitorRandom(random),item=foodDraw<.75?'simple-meal':'survival-meal',quantity=visitorRandom(random)<5/6?3:2,foodId=nextId++;

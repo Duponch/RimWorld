@@ -13,6 +13,7 @@ import {groupHasAdmission257,groupHumanHandler257,groupHumanPassenger257,release
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {adoptCaravanOtherFoodClimate256,advanceCaravanOtherFoodAges256} from './group-animal-runtime-256.ts';
 import {stripTerminalCaravanMember256,archiveOwnerlessCaravanAnimals256} from './group-animal-terminal-256.ts';
+import {markCorpseWornApparel284} from './apparel-provenance-284.ts';
 import {processGroupAnimalHandler256,processGroupAnimalDelivery256,pendingGroupAnimalDeliveries256,groupAnimalsReadyForDeparture256,groupAnimalReason256} from './group-animal-formation-256.ts';
 import {rememberActorBedDeparture256,unclaimDetachedActorBed256} from './actor-map-bed-256.ts';
 import {captureActorBeds256} from './actor-bed-local-256.ts';
@@ -259,6 +260,7 @@ export function advanceGroupPersonalFrontier(w:World,prospective?:GroupPersonalF
     infectionChanceFactor:w.gameProfile?.difficulty==='adventure-story'?.75:1,mood:{people,expectation,difficultyMood:colonistMoodOffset(w,g.members[0]!)},lostThoughts:p=>lostThoughts(w,p,people),joyToleranceFall:(expectation?.joyToleranceDropPerDay??.18)*100/6000,random,notice});
   if(!result)return;
   if(result.deceased.length){
+    for(const p of result.deceased)markCorpseWornApparel284(g.items,p,w.schemaVersion);
     const dead=new Set(result.deceased.map(p=>p.id));
     const actualAway=g;
     if(w.schemaVersion>=256&&g.reorganization&&g.members.some(p=>!dead.has(p.id)&&(g.admission?.revision!==2||groupPlayerOwner256(p))))for(const p of result.deceased)stripTerminalCaravanMember256(w,g,p.id);

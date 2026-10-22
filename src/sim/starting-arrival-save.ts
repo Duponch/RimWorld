@@ -138,7 +138,13 @@ export function validateStartingArrivalOwners(w:World,version:number=w.schemaVer
           if(dropCells.has(key)||a.pods.some(p=>p.cell.x===c.x&&p.cell.z===c.z))return ['Starting drop cells overlap.'];
           dropCells.add(key);loose++;
         }else return ['Starting material has a foreign owner.'];
-        if(pile.kind==='apparel'&&!sameFlat(pile.apparel,newApparelState(pile.item as ApparelItem)))return ['Starting apparel is not fresh.'];
+        if(pile.kind==='apparel'){
+          const expected=newApparelState(pile.item as ApparelItem,undefined,version);
+          // A migrated pending original may still have unknown provenance.
+          // Comparing must preserve that absence, never mint a clean proof.
+          if(!Object.hasOwn(pile.apparel!,'corpseWear284'))delete expected.corpseWear284;
+          if(!sameFlat(pile.apparel,expected))return ['Starting apparel is not fresh.'];
+        }
         if(pile.kind==='weapon'&&!sameFlat(pile.weapon,newWeaponState(pile.item as WeaponItem)))return ['Starting weapon is not fresh.'];
         totals.set(pile.item,(totals.get(pile.item)??0)+pile.quantity);
       }

@@ -156,7 +156,7 @@ export function admitTempMapTraveler261(w:World,points:number,random:{rng:number
   generatePawnBackground(p,w.seed,profiles[i]==='Garde',false);
   for(const key of Object.keys(p.priorities) as (keyof Pawn['priorities'])[])p.priorities[key]=0;
   p.visitor={group:id,role:'traveler',phase:'arriving',goal:{...spot},personalFoodIds:[]};
-  piles.push({id:nextId++,kind:'apparel',item:'cloth-shirt',quantity:1,owner:{type:'apparel',pawnId:p.id},apparel:newApparelState('cloth-shirt')});
+  piles.push({id:nextId++,kind:'apparel',item:'cloth-shirt',quantity:1,owner:{type:'apparel',pawnId:p.id},apparel:newApparelState('cloth-shirt',undefined,w.schemaVersion)});
   const foodDraw=visitorRandom(draft),item=foodDraw<.75?'simple-meal':'survival-meal',quantity=visitorRandom(draft)<5/6?3:2,foodId=nextId++;
   piles.push({id:foodId,kind:'food',item,quantity,owner:{type:'inventory',pawnId:p.id},...freshRot(item,w.tick)});p.visitor.personalFoodIds=[foodId];pawns.push(p);
  }

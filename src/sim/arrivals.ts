@@ -59,7 +59,7 @@ export function applyArrival(world:World,command:ArrivalCommand):CommandResult {
   pawn.hunger=75;pawn.rest=80;pawn.foodPolicyId=world.foodPolicies[0]!.id;
   // Clothing crosses the map boundary with its owner; it is an external input,
   // not a withdrawal from colony stock or a textile-production recipe.
-  const shirt={id:world.nextId+1,kind:'apparel' as const,item:'cloth-shirt' as const,quantity:1,owner:{type:'apparel' as const,pawnId:pawn.id},apparel:newApparelState('cloth-shirt')};
+  const shirt={id:world.nextId+1,kind:'apparel' as const,item:'cloth-shirt' as const,quantity:1,owner:{type:'apparel' as const,pawnId:pawn.id},apparel:newApparelState('cloth-shirt',undefined,world.schemaVersion)};
   const relationships=prepareRelationshipAdmission(world,pawn,o.relationship);
   if(relationships===null)return refuse('Le lien familial annoncé ne peut plus être engagé. La demande reste ouverte.');
   world.nextId+=2;world.pawns.push(pawn);world.piles.push(shirt);

@@ -55,10 +55,10 @@ export function validCoreStartingArrivalShape256(value:unknown,version:number,w:
 }
 /** An exact newborn stack, including its recipe-specific Silver800 and Meal50 quantities.
  * No caller can use this to admit an enlarged ground/inventory stack. */
-function validBornSupply(pile:MaterialPile,podId:number,item:typeof CORE_STARTING_SUPPLIES_256[number][0],quantity:number,nextId:number):boolean {
+function validBornSupply(pile:MaterialPile,podId:number,item:typeof CORE_STARTING_SUPPLIES_256[number][0],quantity:number,nextId:number,version:number):boolean {
  if(!int(pile.id,1,nextId-1))return false;const definition=ITEM_DEFINITIONS[item];if(!definition)return false;
- const expected:MaterialPile={id:pile.id,item,kind:definition.kind,quantity,owner:{type:'starting-pod',podId},...isApparelItem(item)?{apparel:newApparelState(item)}:isWeaponItem(item)?{weapon:newWeaponState(item)}:{}};
- if(pile.apparel){if(!validStartingApparelColor256(pile.apparel,item,256))return false;if(item==='flak-pants'||item==='flak-vest'){if(!Object.hasOwn(pile.apparel,'birthColor'))return false;expected.apparel!.birthColor=pile.apparel.birthColor;}}
+ const expected:MaterialPile={id:pile.id,item,kind:definition.kind,quantity,owner:{type:'starting-pod',podId},...isApparelItem(item)?{apparel:newApparelState(item,undefined,version)}:isWeaponItem(item)?{weapon:newWeaponState(item)}:{}};
+ if(pile.apparel){if(!Object.hasOwn(pile.apparel,'corpseWear284'))delete expected.apparel!.corpseWear284;if(!validStartingApparelColor256(pile.apparel,item,version))return false;if(item==='flak-pants'||item==='flak-vest'){if(!Object.hasOwn(pile.apparel,'birthColor'))return false;expected.apparel!.birthColor=pile.apparel.birthColor;}}
  setMaterialForbidden256(expected,true);return equalData(pile,expected);
 }
 /** Real original actor/clinical guards at the held clock0. The source recipe
@@ -91,7 +91,7 @@ export function validateCoreStartingArrivalContents256(w:World,a:CoreStartingArr
   const humanRefs=pod.order.filter(r=>r.kind==='human');if(humanRefs.length!==1||humanRefs[0]!.id!==pod.pawn.id||pod.order[0]?.kind!=='human')errors.push('Initial human order is not original');
   const loose=pod.items.filter(p=>p.owner.type==='starting-pod'),groupIndex=loose.some(p=>p.item==='silver')?0:loose.some(p=>p.item==='survival-meal')?1:2,group=CORE_STARTING_SUPPLIES_256.filter((_,i)=>i%3===groupIndex);
   if(groups.has(groupIndex))errors.push('Duplicate initial supply group');groups.add(groupIndex);
-  if(loose.length!==group.length||loose.some((p,i)=>!validBornSupply(p,pod.id,group[i]![0],group[i]![1],w.nextId)))errors.push('Starting contents do not match the actual ordered recipe');
+  if(loose.length!==group.length||loose.some((p,i)=>!validBornSupply(p,pod.id,group[i]![0],group[i]![1],w.nextId,w.schemaVersion)))errors.push('Starting contents do not match the actual ordered recipe');
   if(pod.items.length!==loose.length)errors.push('Initial adapted constructor unexpectedly acquired unrepresented starting possessions');
   const expectedOrder=[{kind:'human',id:pod.pawn.id},...loose.map(p=>({kind:'item',id:p.id})),...pod.animals.map(p=>({kind:'animal',id:p.id}))];
   if(pod.order.length!==expectedOrder.length||pod.order.some((r,i)=>r.kind!==expectedOrder[i]!.kind||r.id!==expectedOrder[i]!.id))errors.push('Mixed contained Thing order is not physical');

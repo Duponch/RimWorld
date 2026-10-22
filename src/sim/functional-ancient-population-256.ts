@@ -7,6 +7,7 @@ import type {WorldFactionRegistry256} from './world-faction-state.ts';
 import {startingPawn} from './starting-pawns.ts';
 import {generatePawnBackground} from './background-generation.ts';
 import {newApparelState} from './apparel-rules.ts';
+import {markCorpseWornApparel284} from './apparel-provenance-284.ts';
 import {newWeaponState} from './equipment-rules.ts';
 import {createMedicalRecord,addResolvedInjury,medicalStatus} from './injury-state.ts';
 import {HP_UNIT} from './injury-rules.ts';
@@ -45,7 +46,7 @@ function injuredProfile(p:Pawn,random:WorldGenerationRandom):void {
 
 /** Prepare one original human and every owned item, keeping the real allocator
  * private until the casket and all branch-specific actors can be committed. */
-export function prepareFunctionalAncientHuman256(input:{id:number;nextId:number;cell:Cell;tick:number;contents:FunctionalAncientContents256;random:WorldGenerationRandom;birth259?:FunctionalAncientBirth259}):{pawn:Pawn;items:AncientHeldPile256[];nextId:number} {
+export function prepareFunctionalAncientHuman256(input:{id:number;nextId:number;cell:Cell;tick:number;contents:FunctionalAncientContents256;random:WorldGenerationRandom;birth259?:FunctionalAncientBirth259;version?:number}):{pawn:Pawn;items:AncientHeldPile256[];nextId:number} {
  const {id,cell,tick,contents:kind,random}=input;
  if(!(random instanceof WorldGenerationRandom)||!contents.has(kind)||!Number.isSafeInteger(id)||id<1||!Number.isSafeInteger(input.nextId)||input.nextId<=id||!Number.isSafeInteger(tick)||tick<0||!Number.isSafeInteger(cell.x)||!Number.isSafeInteger(cell.z)||cell.x<0||cell.z<0)throw Error('Invalid prospective functional NPC birth inputs');
  const seed=random.integerValue()>>>0,profile=random.integer(0,3),slave=kind==='slave';
@@ -59,7 +60,7 @@ export function prepareFunctionalAncientHuman256(input:{id:number;nextId:number;
  delete p.apparelPolicyId;delete p.apparelAutomation;delete p.nextApparelCheckAt;
  const items:AncientHeldPile256[]=[];let next=input.nextId;
  const allocate=()=>{if(!Number.isSafeInteger(next+1))throw Error('Functional NPC Thing identities exhausted');return next++;};
- items.push({id:allocate(),kind:'apparel',item:'cloth-shirt',quantity:1,owner:{type:'apparel',pawnId:p.id},apparel:newApparelState('cloth-shirt')});
+ items.push({id:allocate(),kind:'apparel',item:'cloth-shirt',quantity:1,owner:{type:'apparel',pawnId:p.id},apparel:newApparelState('cloth-shirt',undefined,input.version??256)});
  if(!slave){const weapon=profile===0?'plasteel-knife':profile===1?'revolver':'bolt-action-rifle';items.push({id:allocate(),kind:'weapon',item:weapon,quantity:1,owner:{type:'equipment',pawnId:p.id},weapon:newWeaponState(weapon)});}
  if(kind==='ancient-incapped'||kind==='ancient-half-eaten'||slave){p.health??=createMedicalRecord(tick);injuredProfile(p,random);}
  // The actual tomb loot choices remain ordinary real possessions, independent
@@ -73,6 +74,7 @@ export function prepareFunctionalAncientHuman256(input:{id:number;nextId:number;
   const h=p.health??=createMedicalRecord(tick);addResolvedInjury(h,'head','bruise',25*HP_UNIT,()=>random.value());
   if(medicalStatus(h)!=='dead')throw Error('Selected authored dead captive did not produce an actual medical death');p.state='dead';
  }
+ markCorpseWornApparel284(items,p,input.version??256);
  return {pawn:p,items,nextId:next};
 }
 
@@ -99,7 +101,7 @@ export function spawnFunctionalAncientCasket256(w:World,placement:AncientShrineP
  }
  if((Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||isSchema263OrLater(Number(w.schemaVersion)))))?(!birth259||birth259.factions!==w.worldFactions):birth259!==undefined)throw Error('Actual schema259 ancient birth context required, never retrofit a prior person');
  let next=w.nextId;const pId=next++;
- const prepared=prepareFunctionalAncientHuman256({id:pId,nextId:next,cell:placement.casket.cell,tick:w.tick,contents:kind,random,...birth259?{birth259}:{}});next=prepared.nextId;
+ const prepared=prepareFunctionalAncientHuman256({id:pId,nextId:next,cell:placement.casket.cell,tick:w.tick,contents:kind,random,version:w.schemaVersion,...birth259?{birth259}:{}});next=prepared.nextId;
  if(prepared.pawn.state==='dead'){if(!Number.isSafeInteger(next+1))throw Error('Held corpse Thing allocator exhausted');prepared.items.push(retainFreshCorpse(prepared.pawn,casketId,next++,w.tick));}
  const casket:AncientCasket256={id:casketId,kind:'ancient-cryptosleep-casket',...placement.casket.cell,orientation:placement.casket.orientation,footprint:'standard',factionId:null,casket:{revision:1,groupId,contentsKnown:false,heldAt:w.tick,humans:[prepared.pawn],animals:[],items:prepared.items}};
  if(!validAncientCasketBuilding256(casket,w.schemaVersion,{width:w.width,height:w.height,nextId:next},w.tick))throw Error('Functional population created an invalid physical casket');

@@ -30,6 +30,8 @@ import {advanceSiteMechanoids263} from './world-site-mechanoids-263.ts';
 import {advanceSiteAmbush263,isSiteAmbushHuman263,processSiteAmbushHuman263} from './world-site-ambush-263.ts';
 import {targetBuildingPlayerUse263} from './world-target-building-263.ts';
 import {advanceWorldSites263} from './world-sites-runtime-263.ts';
+import {advanceTradeRequests284} from './trade-request-runtime-284.ts';
+import {applyTradeRequestCommand284} from './trade-request-commands-284.ts';
 import {advanceForeignSettlementDefeat263} from './world-target-lifecycle-263.ts';
 import {pendingWorldEntry263} from './world-target-access-263.ts';
 import {isWorldTargetDefender263,processWorldTargetDefender263} from './world-target-defence-263.ts';
@@ -558,6 +560,8 @@ export function canDesignate(world: World, command: DesignateCommand|import('./c
   return { ok: true };
 }
 export function applyCommand(world: World, command: Command,caravans?:import('./group-campaign-runtime-256.ts').GroupCampaignRuntime256): CommandResult {
+ const tradeType=command&&typeof command==='object'?Object.getOwnPropertyDescriptor(command,'type'):undefined;
+ if(tradeType&&'value'in tradeType&&typeof tradeType.value==='string'&&tradeType.value.startsWith('trade-request-'))return applyTradeRequestCommand284(world,command);
  if(world.worldMaps){const descriptor=command&&typeof command==='object'&&!Array.isArray(command)?Object.getOwnPropertyDescriptor(command,'type'):undefined;if(!descriptor||!('value'in descriptor)||typeof descriptor.value!=='string')return refusal('invalid-command','Commande invalide.');const root=registeredCampaign(world);if(validCaravanArrivalCommand261(command,Number(world.schemaVersion)))return applyCaravanArrivalCommand261(root,command);if(validCaravanCommand261(command)){const result=applyCaravanCommand261(root,command);if(result.ok)caravans?.encounterChanged261(root,command.groupId);return result;}if(validWorldMapCommand(command))return applyWorldMapCommand(root,command);if(command&&typeof command==='object'&&typeof command.type==='string'&&(command.type==='planet-adopt'||command.type.startsWith('group-')))return applyRegisteredGroupCommand(root,command as import('./group-state.ts').GroupCommand,caravans);if(secondaryCommand(command))return refusal('invalid-command','Choisissez une carte ou un groupe du registre de campagne.');const local=selectedRegisteredMap(root);if(!local)return refusal('invalid-command','Aucune carte locale sélectionnée.');const result=applyLocalCommand(local,command);if(result.ok&&command.type==='commercial-start'){const source=root.worldMaps!.sites.find(s=>s.id===registeredMapId(local))!;if(root.worldGroups!.canonicalPostId===null)delete source.postId;else source.postId=root.worldGroups!.canonicalPostId;}flushRegisteredMap(local);return result;}
   if(!command||typeof command!=='object')return refusal('invalid-command','Commande invalide.');
   if(secondaryCommand(command))return applySecondarySiteCommand(world,command);
@@ -592,6 +596,7 @@ function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
   return result;
 }
 function applyCommandInternal(world: World, command: Exclude<LocalCommand,import('./world-map-state.ts').WorldMapCommand|{type:'apparel-policy-update'|'apparel-policy-copy'|'apparel-policy-rename'|'egg-forbid'|'material-forbid'}>): CommandResult {
+  if(command.type==='trade-request-answer'||command.type==='trade-request-dismiss'||command.type==='trade-request-fulfill')return applyTradeRequestCommand284(world,command);
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
   if(command.type==='group-reform'||command.type==='group-split'||command.type==='group-merge'||command.type==='group-carry-sick')return refusal('invalid-command','Cette commande exige le registre et le contexte réel de caravane.');
   if(command.type==='cancel-job'||command.type==='cancel-resource'||command.type==='cancel-pile')return applyDesignationCancel(world,command)??refusal('invalid-command','Annulation inconnue.');
@@ -1007,7 +1012,7 @@ export function stepWorld(world:CampaignState,ticks=1,diagnostics?:import('./wor
       for(const id of advanceCaravanArrivals261(root))caravans?.encounterChanged261(root,id);
       for(const row of root.worldGroups!.groups.slice()){const g=row.state;if(!row.encounters261&&'members' in g&&['at-site','awaiting-entry'].includes(g.phase)&&root.worldMaps!.sites.some(m=>m.tile===g.tile&&m.kind==='settlement'))enterRegisteredSite(root,g.id,'visit',false);}
       for(const old of root.worldGroups!.legacyTravellers){const view=legacyTravellerContext(root,old);advanceScoutTrip(view);advanceCommercialTrip(view);if(view.scout)old.scout=view.scout;else delete old.scout;if(view.commercialTrip)old.commercialTrip=view.commercialTrip;else delete old.commercialTrip;}
-      advanceWorldSites263(root);advanceForeignSettlementDefeat263(root);advanceSettlementProximity263(root);advanceWorldIncidents(campaignClockContext(root));advanceBattlefieldVictory261(root);advanceCampPressure260(root);removeEmptyCamps(root);advanceTempMapIncidents261(root);
+      advanceTradeRequests284(root);advanceWorldSites263(root);advanceForeignSettlementDefeat263(root);advanceSettlementProximity263(root);advanceWorldIncidents(campaignClockContext(root));advanceBattlefieldVictory261(root);advanceCampPressure260(root);removeEmptyCamps(root);advanceTempMapIncidents261(root);
       advanceActualWorldPawns256(root);advanceCaravanMapExits261(root);
       if(pendingWorldEntry263(root)||advanceCaravanIncidents261(root))break;
     }return;
