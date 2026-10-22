@@ -24,10 +24,10 @@ const data=(v:object,key:string)=>{const d=Object.getOwnPropertyDescriptor(v,key
 
 /** Domain-only admission, to be conjoined with the existing complete research
  * guard. Old fields still use their historical guards; false/undefined new
- * markers and selected ship-engine are rejected before276 and after280. */
+ * markers and selected ship-engine are rejected before276 and after281. */
 export function validShipEngineResearchDomain276(state:unknown,version:number,atLocal:number):boolean {
  try{
-  if(!int(version,1,280)||!int(atLocal,0,Number.MAX_SAFE_INTEGER))return false;
+  if(!int(version,1,281)||!int(atLocal,0,Number.MAX_SAFE_INTEGER))return false;
   if(state===undefined)return true;
   if(!plain(state))return false;
   const selected=data(state,'project')?.value,hasRecord='shipEngine'in state;

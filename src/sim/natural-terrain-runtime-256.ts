@@ -5,16 +5,18 @@ import {NATURAL_TERRAIN_DEFINITIONS_256 as DEFS,NATURAL_TERRAIN_BINDINGS_256 as 
 import type {Tile} from './types.ts';
 import {STONE_KINDS} from './geology.ts';
 import {PACKED_DIRT_256} from './road-ground-256.ts';
+import {isSchema281OrLater} from './schema-compatibility-257.ts';
+import {isSmoothedStone281,SMOOTHED_STONE_TERRAIN_281,SMOOTHED_STONE_FACTS_281} from './smooth-floor-terrain-281.ts';
 export const NATURAL_TERRAIN_RUNTIME_SCHEMA=256;
 export interface TerrainRuntimeMetadata256 {schemaVersion?:number;site?:{revision:number}}
 const historical=new Set(['grass','soil','water','rock','rough-stone','rich-soil','gravel','marsh','water-shallow']);
-export function terrainAvailable256(terrain:unknown,version:number):boolean {return terrain==='grass'||terrain==='soil'||terrain==='water'||terrain==='rock'||terrain==='rough-stone'&&version>=28||(terrain==='rich-soil'||terrain==='gravel')&&version>=83||terrain==='marsh'&&version>=246||terrain==='water-shallow'&&version>=254||version>=256&&(terrain==='packed-dirt'||isNaturalTerrain256(terrain));}
-export function terrainHasProspectiveRules256(terrain:unknown,w:TerrainRuntimeMetadata256):boolean {return (w.schemaVersion??255)>=256&&(terrain==='packed-dirt'||isNaturalTerrain256(terrain)&&(!historical.has(terrain)||w.site?.revision===3));}
+export function terrainAvailable256(terrain:unknown,version:number):boolean {if(isSmoothedStone281(terrain))return isSchema281OrLater(version);return terrain==='grass'||terrain==='soil'||terrain==='water'||terrain==='rock'||terrain==='rough-stone'&&version>=28||(terrain==='rich-soil'||terrain==='gravel')&&version>=83||terrain==='marsh'&&version>=246||terrain==='water-shallow'&&version>=254||version>=256&&(terrain==='packed-dirt'||isNaturalTerrain256(terrain));}
+export function terrainHasProspectiveRules256(terrain:unknown,w:TerrainRuntimeMetadata256):boolean {if(isSmoothedStone281(terrain))return isSchema281OrLater(w.schemaVersion);return (w.schemaVersion??255)>=256&&(terrain==='packed-dirt'||isNaturalTerrain256(terrain)&&(!historical.has(terrain)||w.site?.revision===3));}
 export function terrainIsWater256(terrain:unknown):boolean {return isNaturalTerrain256(terrain)&&DEFS[terrain].water;}
 export function terrainBridgeable256(terrain:unknown,version:number):boolean {return terrainAvailable256(terrain,version)&&isNaturalTerrain256(terrain)&&DEFS[terrain].affordances.includes('Bridgeable');}
 export function terrainExtinguishesFire256(tile:Pick<Tile,'terrain'|'bridge'|'floor'>):boolean {return !tile.bridge&&!tile.floor&&(tile.terrain==='water'||isNaturalTerrain256(tile.terrain)&&DEFS[tile.terrain].extinguishesFire);}
-export function terrainAcceptsFilth256(tile:Pick<Tile,'terrain'|'bridge'|'floor'>):boolean {if(tile.bridge||tile.floor)return true;if(isNaturalTerrain256(tile.terrain))return DEFS[tile.terrain].affordances.includes('Walkable')&&DEFS[tile.terrain].acceptsUnnaturalFilth;return tile.terrain!=='water'&&tile.terrain!=='rock';}
-export function terrainHoldsSnow256(terrain:unknown,bridge=false):boolean {if(bridge)return true;return isNaturalTerrain256(terrain)?DEFS[terrain].holdsSnow:terrain!=='water'&&terrain!=='rock';}
+export function terrainAcceptsFilth256(tile:Pick<Tile,'terrain'|'bridge'|'floor'>):boolean {if(tile.bridge||tile.floor)return true;if(isSmoothedStone281(tile.terrain))return SMOOTHED_STONE_FACTS_281.acceptsUnnaturalFilth;if(isNaturalTerrain256(tile.terrain))return DEFS[tile.terrain].affordances.includes('Walkable')&&DEFS[tile.terrain].acceptsUnnaturalFilth;return tile.terrain!=='water'&&tile.terrain!=='rock';}
+export function terrainHoldsSnow256(terrain:unknown,bridge=false):boolean {if(bridge)return true;if(isSmoothedStone281(terrain))return SMOOTHED_STONE_FACTS_281.holdsSnow;return isNaturalTerrain256(terrain)?DEFS[terrain].holdsSnow:terrain!=='water'&&terrain!=='rock';}
 export function terrainExtraDeterioration256(tile:Pick<Tile,'terrain'|'floor'|'bridge'>):number {return tile.bridge||tile.floor?0:tile.terrain==='water'?3:isNaturalTerrain256(tile.terrain)?DEFS[tile.terrain].extraDeterioration:0;}
 /** Complete affordances apply only to newly introduced identities or a true
  * geographic site3. Neutral migrations keep old rough-stone graves literal. */
@@ -26,6 +28,7 @@ export function terrainSupportsAffordance256(tile:Pick<Tile,'terrain'|'bridge'|'
  if(tile.terrain==='packed-dirt'&&!tile.floor)return PACKED_DIRT_256.affordances.includes(need);
  if(!terrainHasProspectiveRules256(tile.terrain,w))return tile.terrain!=='marsh'&&tile.terrain!=='water-shallow';
  if(tile.floor)return terrainSupportsAffordance256({terrain:tile.terrain},'Heavy',w)&&['Walkable','Light','Medium','Heavy'].includes(need);
+ if(isSmoothedStone281(tile.terrain))return (SMOOTHED_STONE_FACTS_281.affordances as readonly TerrainAffordance256[]).includes(need);
  return isNaturalTerrain256(tile.terrain)&&DEFS[tile.terrain].affordances.includes(need);
 }
 /** Every delivered constructed floor inherits Core FloorBase Heavy. */
@@ -36,9 +39,9 @@ const soilTags=new Set(['soil-natural','rich-soil','gravel','mossy-soil','marshy
 /** Real Core tags/def identity for the existing narrow flora profile guard. */
 export function naturalPlantSubstrate256(tile:Pick<Tile,'terrain'|'bridge'|'floor'|'stone'>,scratch?:{fertility:number;terrainDefId:string;tags:string[]}):{fertility:number;terrainDefId:string;tags:readonly string[]} {
  const t=tile.terrain,tags=scratch?.tags??[];tags.length=0;
- if(soilTags.has(t))tags.push('Soil');else if(t==='mud')tags.push('Mud');else if(t==='marsh')tags.push('Water','WaterMarshy');else if(t==='ice')tags.push('Ice');else if(t==='river-shallow')tags.push('Water','River','WaterFreshShallow','WaterFreshShallowMoving');else if(t==='river-chest-deep')tags.push('Water','River');else if(t==='water-shallow')tags.push('Water','WaterFreshShallow','WaterFreshShallowStill');else if(t==='ocean-shallow'||t==='ocean-deep')tags.push('Water','Ocean');else if(t==='water-deep')tags.push('Water');
- const stone=tile.stone?tile.stone[0]!.toUpperCase()+tile.stone.slice(1)+'_Rough':undefined;
- const fertility=terrainGroundFertility256(tile),terrainDefId=t==='packed-dirt'?'PackedDirt':coreIds.get(t)??(t==='rough-stone'&&stone?stone:t);
+ if(isSmoothedStone281(t))tags.push('Floor');else if(soilTags.has(t))tags.push('Soil');else if(t==='mud')tags.push('Mud');else if(t==='marsh')tags.push('Water','WaterMarshy');else if(t==='ice')tags.push('Ice');else if(t==='river-shallow')tags.push('Water','River','WaterFreshShallow','WaterFreshShallowMoving');else if(t==='river-chest-deep')tags.push('Water','River');else if(t==='water-shallow')tags.push('Water','WaterFreshShallow','WaterFreshShallowStill');else if(t==='ocean-shallow'||t==='ocean-deep')tags.push('Water','Ocean');else if(t==='water-deep')tags.push('Water');
+ const stone=tile.stone?tile.stone[0]!.toUpperCase()+tile.stone.slice(1)+(isSmoothedStone281(t)?'_Smooth':'_Rough'):undefined;
+ const fertility=terrainGroundFertility256(tile),terrainDefId=t==='packed-dirt'?'PackedDirt':coreIds.get(t)??((t==='rough-stone'||isSmoothedStone281(t))&&stone?stone:t);
  if(tile.bridge||tile.floor)tags.length=0;else if(t==='packed-dirt'){tags.length=0;tags.push('Road');}
  // Only a synchronous caller may reuse this DTO; public calls still own fresh values.
  if(scratch){scratch.fertility=fertility;scratch.terrainDefId=terrainDefId;return scratch;}
@@ -54,20 +57,23 @@ function staticPlantSubstratePair256(tile:Pick<Tile,'terrain'|'stone'>):Readonly
  return Object.freeze([freeze(naturalPlantSubstrate256(tile)),freeze(naturalPlantSubstrate256({...tile,floor:'wood-planks'}))] as const);
 }
 const readonlyPlantSubstrates256:ReadonlyMap<Tile['terrain'],ReadonlyPlantSubstratePair256>=new Map(
- ([...Object.values(BINDINGS),'rough-stone','packed-dirt','grass','soil','water','rock'] as Tile['terrain'][]).map(terrain=>[terrain,staticPlantSubstratePair256({terrain})] as const)
+ ([...Object.values(BINDINGS),'rough-stone',SMOOTHED_STONE_TERRAIN_281,'packed-dirt','grass','soil','water','rock'] as Tile['terrain'][]).map(terrain=>[terrain,staticPlantSubstratePair256({terrain})] as const)
 );
 const readonlyRoughPlantSubstrates256:ReadonlyMap<string,ReadonlyPlantSubstratePair256>=new Map(
  STONE_KINDS.map(stone=>{const pair=staticPlantSubstratePair256({terrain:'rough-stone',stone});return [pair[0].terrainDefId,pair] as const;})
+);
+const readonlySmoothPlantSubstrates281:ReadonlyMap<string,ReadonlyPlantSubstratePair256>=new Map(
+ STONE_KINDS.map(stone=>{const pair=staticPlantSubstratePair256({terrain:SMOOTHED_STONE_TERRAIN_281,stone});return [pair[0].terrainDefId,pair] as const;})
 );
 /** Re-read the actual tile every time, including malformed stone before any
  * surface/fertility access. Returned shared definitions are deeply frozen. */
 export function readNaturalPlantSubstrate256(tile:Pick<Tile,'terrain'|'bridge'|'floor'|'stone'>):ReadonlyPlantSubstrate256 {
  const t=tile.terrain;
- const stone=tile.stone?tile.stone[0]!.toUpperCase()+tile.stone.slice(1)+'_Rough':undefined;
+ const stone=tile.stone?tile.stone[0]!.toUpperCase()+tile.stone.slice(1)+(isSmoothedStone281(t)?'_Smooth':'_Rough'):undefined;
  const fertility=terrainGroundFertility256(tile),pair=readonlyPlantSubstrates256.get(t);
- const terrainDefId=t==='rough-stone'&&stone?stone:pair?.[0].terrainDefId??t;
+ const terrainDefId=(t==='rough-stone'||isSmoothedStone281(t))&&stone?stone:pair?.[0].terrainDefId??t;
  const layered=tile.bridge||tile.floor;
- const actualPair=t==='rough-stone'&&stone?readonlyRoughPlantSubstrates256.get(stone):pair;
+ const actualPair=isSmoothedStone281(t)&&stone?readonlySmoothPlantSubstrates281.get(stone):t==='rough-stone'&&stone?readonlyRoughPlantSubstrates256.get(stone):pair;
  const value=actualPair?.[layered?1:0];
  if(value&&value.fertility===fertility&&value.terrainDefId===terrainDefId)return value;
  return {fertility,terrainDefId,tags:layered?[]:[...(pair?.[0].tags??[])]};

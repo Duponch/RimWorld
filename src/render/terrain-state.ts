@@ -1,6 +1,7 @@
 import type { World, Tile } from '../sim/types';
 import {readSnapshotTileChanges} from '../bridge/snapshot-changes';
 import {explorationEnabled256,foggedCell256} from '../sim/exploration-state-256';
+import {isSmoothedStone281} from '../sim/smooth-floor-terrain-281';
 
 const rocky=(t:Tile)=>t.terrain==='rock'||t.terrain==='rough-stone';
 const NO_CHANGES:readonly number[]=[];
@@ -23,6 +24,10 @@ export function terrainSurfaceChanges(a:World|null|undefined,b:World,tiles=terra
     const old=a.tiles[i]!,next=b.tiles[i]!;
     if(foggedCell256(a,i)!==foggedCell256(b,i)){(changed??=[]).push(i);continue;}
     if(foggedCell256(b,i))continue;
+    if(isSmoothedStone281(old.terrain)||isSmoothedStone281(next.terrain)){
+      if(old.terrain!==next.terrain||old.stone!==next.stone||old.bridge!==next.bridge)(changed??=[]).push(i);
+      continue;
+    }
     if(rocky(old)&&rocky(next)){if(old.stone!==next.stone)(changed??=[]).push(i);}
     else if(old.terrain!==next.terrain||old.bridge!==next.bridge)(changed??=[]).push(i);
   }

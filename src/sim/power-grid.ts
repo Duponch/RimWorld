@@ -16,6 +16,7 @@ export const allowsWireConnection=(kind:unknown):boolean=>isPowerTransmitter(kin
  * with a wall, door or consumer, but never with another transmitter. V85 rejects
  * replacing a conduit by a transmitter until that replacement is conservative. */
 export function sharesConstructionLayer(aKind:unknown,bKind:unknown):boolean {
+  if(aKind==='smooth-floor'||bKind==='smooth-floor')return aKind===bKind;
   if(aKind==='build-bridge'||aKind==='remove-bridge'||bKind==='build-bridge'||bKind==='remove-bridge')return true;
   const floor=(k:unknown)=>k==='lay-floor'||k==='remove-floor';
   if(floor(aKind)||floor(bKind))return floor(aKind)&&floor(bKind);

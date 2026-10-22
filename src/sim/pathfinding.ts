@@ -1,3 +1,4 @@
+import {canTouchSmoothFloor281} from './smooth-floor-281.ts';
 import {isShipPartKind276} from './ship-part-content-276.ts';
 import {naturalTerrainWalkable256} from './natural-terrain-movement-256.ts';
 import { addActorObstacles,actorStepAllowed,openHostileDoor } from './combat-navigation.ts';
@@ -15,7 +16,7 @@ import type { StructureNavigationGeometry } from './structure-navigation.ts';
 export const cellIndex = (world: World, x: number, z: number): number => z * world.width + x;
 export const inBounds = (world: World, x: number, z: number): boolean =>
   Number.isInteger(x) && Number.isInteger(z) && x >= 0 && z >= 0 && x < world.width && z < world.height;
-export const workNeighbours=(cell:Cell,kind?:string):Cell[]=>[[0,-1],[1,0],[0,1],[-1,0],...(kind==='mine'?[[-1,-1],[1,-1],[1,1],[-1,1]]:[])].map(([dx,dz])=>({x:cell.x+dx!,z:cell.z+dz!}));
+export const workNeighbours=(cell:Cell,kind?:string):Cell[]=>[[0,-1],[1,0],[0,1],[-1,0],...(kind==='mine'||kind==='smooth-floor'?[[-1,-1],[1,-1],[1,1],[-1,1]]:[])].map(([dx,dz])=>({x:cell.x+dx!,z:cell.z+dz!}));
 export const adjacent = (a: Cell, b: Cell): boolean => Math.abs(a.x - b.x) + Math.abs(a.z - b.z) === 1;
 
 /** Only finished solids block V16 transit. Completion checks active actors/edges. */
@@ -85,10 +86,10 @@ export function reachableCells(world: World, start: Cell, blocked: Uint8Array, o
   const result=new WeightedSearch(world.width,world.height,cellIndex(world,start.x,start.z),unavailable,costs,repeaters,floors,geometry?.corners??doorCorners(world),additive).finish(goals,allGroups,goal);result.stops=stops;if(policy)result.allowedAreaPolicy=policy;return result;
 }
 
-export function routeToJob(world: World, target: Cell & { kind?: string; orientation?: 0 | 1 | 2 | 3; footprint?: 'standard' | 'legacy-single' }, reachable: Reachability, allowTarget = false): Cell[] | null {
+export function routeToJob(world: World, target: Cell & { kind?: string; orientation?: 0 | 1 | 2 | 3; footprint?: 'standard' | 'legacy-single' }, reachable: Reachability, allowTarget = false,geometry?:StructureNavigationGeometry): Cell[] | null {
   const cells = target.kind ? footprintCells(target as Job) : [target];
-  const candidates: Cell[] = cells.flatMap(cell => workNeighbours(cell,target.kind)).filter(cell => (allowTarget || !cells.some(occupied => occupied.x === cell.x && occupied.z === cell.z))&&canStopAt(world,cell,reachable));
-  if (allowTarget&&canStopAt(world,target,reachable)) candidates.unshift({ x: target.x, z: target.z });
+  const candidates: Cell[] = cells.flatMap(cell => workNeighbours(cell,target.kind)).filter(cell => (allowTarget || !cells.some(occupied => occupied.x === cell.x && occupied.z === cell.z))&&canStopAt(world,cell,reachable)&&(target.kind!=='smooth-floor'||canTouchSmoothFloor281(world,cell,target,geometry)));
+  if ((allowTarget||target.kind==='smooth-floor')&&canStopAt(world,target,reachable)) candidates.unshift({ x: target.x, z: target.z });
   const goals=new Set(candidates.filter(c=>inBounds(world,c.x,c.z)).map(c=>cellIndex(world,c.x,c.z)).filter(i=>hasReachableCell(reachable,i)));
   if(!goals.size)return null;
   if(goals.has(reachable.start))return [];
@@ -123,7 +124,7 @@ export function interactionGoals(world: World, cells: Cell[], kind?:string,geome
     if (cell.z + 1 < world.height) goals.add(index + world.width);
     if (cell.x > 0) goals.add(index - 1);
   }
-  if(kind==='mine')for(const c of cells)for(const n of workNeighbours(c,kind))if(inBounds(world,n.x,n.z))goals.add(cellIndex(world,n.x,n.z));
-  for(const i of goals)if(!canStandAt(world,{x:i%world.width,z:Math.floor(i/world.width)},geometry))goals.delete(i);
+  if(kind==='mine'||kind==='smooth-floor')for(const c of cells)for(const n of workNeighbours(c,kind))if(inBounds(world,n.x,n.z))goals.add(cellIndex(world,n.x,n.z));
+  for(const i of goals)if(!canStandAt(world,{x:i%world.width,z:Math.floor(i/world.width)},geometry)||kind==='smooth-floor'&&!cells.some(c=>canTouchSmoothFloor281(world,{x:i%world.width,z:Math.floor(i/world.width)},c,geometry)))goals.delete(i);
   return goals;
 }

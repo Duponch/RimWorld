@@ -7,7 +7,9 @@ import { isWaterTerrain } from './surface-height';
 import { clearGroup, type Placement } from './primitives';
 import { mergedInstances, noise } from './StaticGeometry';
 import {foggedCell256} from '../sim/exploration-state-256';
+import {isSmoothedStone281} from '../sim/smooth-floor-terrain-281';
 const scratchColor=new THREE.Color();
+const smoothedStoneWash281=new THREE.Color(0xe8e6de);
 /** Original ink earth: a presentation pigment, never a new physical terrain. */
 export const GROUND_FOG_PIGMENT=0x3b3d49;
 export function terrainPresentationType(world:World,index:number):Terrain {
@@ -17,10 +19,11 @@ export function terrainPresentationType(world:World,index:number):Terrain {
 }
 function terrainPresentationColor(world:World,index:number,terrain:Terrain):number {
   if(foggedCell256(world,index))return GROUND_FOG_PIGMENT;
+  if(isSmoothedStone281(terrain))return scratchColor.setHex(stoneColor(world.tiles[index]!.stone)).lerp(smoothedStoneWash281,.16).getHex();
   return terrain==='rough-stone'?stoneColor(world.tiles[index]!.stone):terrain==='grass'&&world.site?.biome==='arid-shrubland'?ARID_GRASS_COLOR:TERRAIN_COLORS[terrain];
 }
 /** Original chalk pigments, distinct from the authoritative terrain rules. */
-export const TERRAIN_COLORS: Record<Terrain, number> = { 'packed-dirt':0x9b8c74,'rich-soil':0x665642,gravel:0x999783,'rough-stone':0x899182, grass: 0x81946c, soil: 0xa39b75, marsh: 0x738675, rock: 0x899182, water: 0x78a7a4, 'water-shallow': 0x9ac0b4,
+export const TERRAIN_COLORS: Record<Terrain, number> = { 'smoothed-stone':0xa5acaa,'packed-dirt':0x9b8c74,'rich-soil':0x665642,gravel:0x999783,'rough-stone':0x899182, grass: 0x81946c, soil: 0xa39b75, marsh: 0x738675, rock: 0x899182, water: 0x78a7a4, 'water-shallow': 0x9ac0b4,
   'soil-natural':0x9a8b6f,'mossy-soil':0x788b67,'marshy-soil':0x788270,mud:0x7b7565,sand:0xc6b791,'soft-sand':0xcdbd98,ice:0xd4e1de,riverbank:0x817961,
   'water-deep':0x6f969b,'ocean-shallow':0x8eb9b6,'ocean-deep':0x6a929e,'river-shallow':0x94b9ad,'river-chest-deep':0x79a5a2 };
 export const ARID_GRASS_COLOR = 0xa69772;

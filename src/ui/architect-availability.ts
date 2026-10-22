@@ -1,7 +1,7 @@
 import { FLOOR_DEFINITIONS,isBuildableFloor,isFloorKind,floorAvailable } from '../sim/flooring';
 import { FURNITURE_DEFINITIONS,isHabitatFurnitureKind } from '../sim/furniture-stats';
 import { researchUnlocked,type ResearchProject } from '../sim/research';
-import {isSchema276OrLater,isSchema277OrLater} from '../sim/schema-compatibility-257';
+import {isSchema276OrLater,isSchema277OrLater,isSchema281OrLater} from '../sim/schema-compatibility-257';
 import {isShipAddedKind276} from '../sim/ship-part-content-276';
 import type { World } from '../sim/types';
 import type { ArchitectCategory, Tool } from './layout';
@@ -57,6 +57,7 @@ export const architectCategoryAvailable=(world:World,category:ArchitectCategory)
 /** Catalogue visibility only. Placement still has its own shared simulation
  * validation; an occupied cell or an empty stock never removes an icon. */
 export function architectToolAvailable(world:World,tool:Tool):boolean {
+  if(tool==='smooth-floor'&&!isSchema281OrLater(world.schemaVersion))return false;
   if(tool==='ship-cryptosleep-casket'&&!isSchema277OrLater(world.schemaVersion))return false;
   if(isShipAddedKind276(tool)&&!isSchema276OrLater(world.schemaVersion))return false;
   if((tool==='snow-clear'||tool==='remove-snow-clear')&&!world.snow)return false;

@@ -1,16 +1,16 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 280 as const;
+export const SCHEMA_VERSION = 281 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
-export type Terrain = import('./local-terrain-definitions-256.ts').NaturalTerrainId256 | 'packed-dirt' | 'water-shallow' | 'marsh' | 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone' | 'rich-soil' | 'gravel';
+export type Terrain = import('./local-terrain-definitions-256.ts').NaturalTerrainId256 | 'smoothed-stone' | 'packed-dirt' | 'water-shallow' | 'marsh' | 'grass' | 'soil' | 'water' | 'rock' | 'rough-stone' | 'rich-soil' | 'gravel';
 export type ResourceKind = 'hops' | 'wild-plant' | 'potato' | 'corn' | 'tree' | 'berries' | 'rock' | 'rice' | 'cotton' | 'healroot' | 'haygrass';
 export type MaterialKind = 'prosthesis' | 'wort' | 'beer' | 'jade' | 'plant' | 'chemfuel' | 'neutroamine' | 'mech-corpse' | 'silver' | 'corpse' | 'wood' | 'food' | 'chunk' | 'steel' | 'gold' | 'uranium' | 'plasteel' | 'advanced-component' | 'blocks' | 'component' | 'medicine' | 'weapon' | 'apparel' | 'textile' | 'unfinished';
 export type BedSlot = 0 | 1;
 export type LocalRoadProp256 = import('./local-road-data-256.ts').LocalRoadProp256;
 export type StructureKind = 'ship-cryptosleep-casket' | 'ship-beam' | 'ship-engine' | 'ship-reactor' | 'cryptosleep-casket' | 'fueled-smithy' | 'electric-smithy' | 'brewery' | 'fermenting-barrel' | 'geothermal-generator' | import('./cave-hive-state-256.ts').CaveHiveKind256 | 'ship-chunk' | 'ancient-cryptosleep-casket' | import('./ancient-monument-props-256.ts').AncientMonumentKind256 | LocalRoadProp256 | 'torch-lamp' | 'vent' | 'shelf' | 'small-shelf' | 'spike-trap' | 'electric-crematorium' | 'double-bed' | 'electric-smelter' | 'sleeping-spot' | 'animal-sleeping-spot' | 'biofuel-refinery' | 'chemfuel-generator' | 'nutrient-paste-dispenser' | 'hopper' | 'orbital-beacon' | 'comms-console' | 'deep-drill' | 'ground-scanner' | 'vitals-monitor' | 'drug-lab' | 'hydroponics-basin' | 'mini-turret' | 'tube-television' | 'sandbags' | 'art-bench' | 'small-sculpture' | 'large-sculpture' | 'machining-table' | 'fabrication-bench' | 'hi-tech-research-bench' | 'multi-analyzer' | 'grave' | 'heater' | 'wind-turbine' | 'power-conduit' | 'power-switch' | 'battery' | 'solar-generator' | 'fueled-stove' | 'electric-stove' | 'butcher-table' | 'butcher-spot' | 'cooler' | 'research-bench' | 'tailor-bench' | 'electric-tailor-bench' | 'crafting-spot' | 'wood-generator' | 'sun-lamp' | 'standing-lamp' | 'passive-cooler' | 'door' | 'autodoor' | 'wall' | 'fence' | 'fence-gate' | 'pen-marker' | 'bedroll' | 'bed' | 'hospital-bed' | 'table' | 'table-square' | 'table-long' | 'stool' | 'dining-chair' | 'armchair' | 'end-table' | 'dresser' | 'flower-pot' | 'campfire' | 'horseshoes' | 'chess-table' | 'stonecutter';
-export type JobKind = 'build-bridge' | 'remove-bridge' | 'extract-tree' | 'replant-tree' | 'lay-floor' | 'remove-floor' | 'flick' | 'repair' | 'fix-breakdown' | 'build-roof' | 'remove-roof' | 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | Exclude<StructureKind,LocalRoadProp256|'ship-chunk'|'ancient-cryptosleep-casket'|import('./cave-hive-state-256.ts').CaveHiveKind256>;
+export type JobKind = 'smooth-floor' | 'build-bridge' | 'remove-bridge' | 'extract-tree' | 'replant-tree' | 'lay-floor' | 'remove-floor' | 'flick' | 'repair' | 'fix-breakdown' | 'build-roof' | 'remove-roof' | 'mine' | 'chop' | 'harvest' | 'cut' | 'sow' | 'deconstruct' | 'uninstall' | 'install' | Exclude<StructureKind,LocalRoadProp256|'ship-chunk'|'ancient-cryptosleep-casket'|import('./cave-hive-state-256.ts').CaveHiveKind256>;
 export type WorkType = 'handle' | 'art' | 'clean' | 'firefight' | 'warden' | 'basic' | 'hunt' | 'research' | 'patient' | 'bedrest' | 'doctor' | 'mine' | 'gather' | 'build' | 'haul' | 'grow' | 'cook' | 'craft';
 export type Orientation = 0 | 1 | 2 | 3;
 export type Footprint = 'standard' | 'legacy-single';
@@ -312,7 +312,7 @@ export interface World {
   logisticsCursor: number;
 }
 export type DesignateCommand = { type: 'designate'; kind: JobKind; targetId?:number; orientation?: Orientation; material?:import('./construction-materials.ts').ConstructionMaterial; floor?:import('./flooring.ts').FloorKind } & Cell;
-export type AreaAction = 'build-bridge' | 'remove-bridge' | 'snow-clear' | 'remove-snow-clear' | 'lay-floor' | 'remove-floor' | 'home' | 'remove-home' | 'build-roof' | 'remove-roof' | 'ignore-roof' | 'mine' | 'haul-chunks' | 'deconstruct' | 'chop' | 'harvest' | 'cut' | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
+export type AreaAction = 'smooth-floor' | 'build-bridge' | 'remove-bridge' | 'snow-clear' | 'remove-snow-clear' | 'lay-floor' | 'remove-floor' | 'home' | 'remove-home' | 'build-roof' | 'remove-roof' | 'ignore-roof' | 'mine' | 'haul-chunks' | 'deconstruct' | 'chop' | 'harvest' | 'cut' | 'cancel' | 'stockpile' | 'remove-stockpile' | 'growing' | 'remove-growing';
 export interface StorageSettings extends StorageConditions { items?:Partial<Record<ItemId,boolean>>; filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell; targetZoneId?:number; floor?: import('./flooring.ts').FloorKind }
 export interface BuildLineCommand { type: 'build-line'; kind: import('./construction-line.ts').LineBuildKind; from: Cell; to: Cell; material?: import('./construction-materials.ts').ConstructionMaterial }

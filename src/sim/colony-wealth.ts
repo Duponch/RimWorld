@@ -1,5 +1,6 @@
 import {captureShipCasketHumans277,captureShipCasketAnimals277} from './ship-casket-state-277.ts';
 import {APPAREL_TRADE_MATERIAL_VALUES_279} from './apparel-trade-279.ts';
+import {hasSmoothedStoneSubstrate281} from './smooth-floor-terrain-281.ts';
 import { factionOf } from './affiliation.ts';
 import { floorRoomMarketValue, structureRoomMarketValue } from './room-market-value.ts';
 import { pileMarketValue } from './trade-prices.ts';
@@ -118,7 +119,13 @@ export function colonyWealth(world: World): ColonyWealth {
       structures += structureRoomMarketValue({...building,damage:0});
     } catch (error) { if (!(error instanceof RangeError)) throw error; unpricedStructureIds.push(building.id); }
   }
-  for (const tile of world.tiles) floors += floorRoomMarketValue(tile);
+  for (const tile of world.tiles) {
+    // Core counts the visible top terrain, including beneath a fallen edifice.
+    // Preserve historical overlay counts; only the new bare substrate adopts
+    // that fog boundary. A room's physical terrain value remains independent.
+    if(tile.fogged&&!tile.floor&&!tile.bridge&&hasSmoothedStoneSubstrate281(tile))continue;
+    floors += floorRoomMarketValue(tile);
+  }
   // Pawn MarketValue needs age/life stage, all Core capacities, full skill set,
   // beauty and hediff price offsets. Those facts are absent from this save.
   for (const pawn of pawns.values()) if (colonyPawn(pawn)) unpricedPawnIds.push(pawn.id);

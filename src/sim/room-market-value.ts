@@ -1,4 +1,5 @@
 import {SHIP_CASKET_CONTENT_277} from './ship-casket-content-277.ts';
+import {hasSmoothedStoneSubstrate281,SMOOTHED_STONE_FACTS_281} from './smooth-floor-terrain-281.ts';
 import {SHIP_BEAM_CONTENT_276,SHIP_ENGINE_CONTENT_276} from './ship-part-content-276.ts';
 import {BEDROLL_TEXTILE_MARKET_VALUES_256} from './bedroll-textiles-256.ts';
 import { FURNITURE_MATERIALS,isSculptureKind,isSculptureMaterial,sculptureWorkToMakeCore } from './furniture-stats.ts';
@@ -184,8 +185,9 @@ export function structureRoomMarketValue(structure: Structure): number {
   return value > 200 ? roundTradeSilver(value / 5) * 5 : value;
 }
 
-/** Terrain values are per cell, including the work of laying a floor. Natural
- * terrain and fire-burned planks have no Core construction cost or market value. */
+/** Terrain values are per cell, including the work of laying a floor. The
+ * transformed stone has its explicit fixed value; other natural terrain and
+ * fire-burned planks have no Core construction cost or market value. */
 const FLOOR_VALUE: Readonly<Record<FloorKind, number>> = Object.freeze({
   'ancient-tile':0,'ancient-concrete':0,
   'broken-asphalt':0,
@@ -206,7 +208,7 @@ const FLOOR_VALUE: Readonly<Record<FloorKind, number>> = Object.freeze({
 });
 export function floorRoomMarketValue(tile: Tile): number {
   if(tile.bridge)return 12*MATERIAL_VALUE.wood+1500*VALUE_PER_WORK;
-  if (tile.floor === undefined) return 0;
+  if (tile.floor === undefined) return hasSmoothedStoneSubstrate281(tile)?SMOOTHED_STONE_FACTS_281.marketValue:0;
   const value = FLOOR_VALUE[tile.floor];
   if (value === undefined) throw new RangeError(`Unmapped room floor value: ${tile.floor}`);
   return value;

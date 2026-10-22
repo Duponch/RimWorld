@@ -1,5 +1,8 @@
 import {markTerrainCellChanged} from './terrain-mutation-journal.ts';
 import {terrainAvailable256} from './natural-terrain-runtime-256.ts';
+import {isSmoothedStone281} from './smooth-floor-terrain-281.ts';
+import {isSchema281OrLater} from './schema-compatibility-257.ts';
+import {isStoneKind} from './geology.ts';
 import {invalidateAnimalPens} from './animal-pens.ts';
 import type {Tile,Terrain,World} from './types.ts';
 /** A real impassable mineable building represented on the existing rock lane.
@@ -33,7 +36,8 @@ export function validCollapsedRock256(tile:object,version:number,nextId:number,v
  const data=(key:string)=>Object.getOwnPropertyDescriptor(tile,key);
  return !!id&&Object.hasOwn(id,'value')&&Number.isSafeInteger(id.value)&&id.value>0&&id.value<nextId
   &&!!terrain&&Object.hasOwn(terrain,'value')&&validTerrain(terrain.value)&&terrain.value!=='rock'
-  &&data('terrain')?.value==='rock'&&!Object.hasOwn(tile,'ore')&&!Object.hasOwn(tile,'miningYield');
+  &&data('terrain')?.value==='rock'&&!Object.hasOwn(tile,'ore')&&!Object.hasOwn(tile,'miningYield')
+  &&(!isSmoothedStone281(terrain.value)||isSchema281OrLater(version)&&data('stone')?.enumerable===true&&Object.hasOwn(data('stone')!,'value')&&isStoneKind(data('stone')!.value));
 }
 /** Cold RAW/full/delta candidate census only, including both actual maps.
  * Do not call this scan from rendering or an unchanged local tick. */

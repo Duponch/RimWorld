@@ -1,4 +1,5 @@
 import {isShipCasketKind277,SHIP_CASKET_CONTENT_277} from './ship-casket-content-277.ts';
+import {hasSmoothedStoneSubstrate281,SMOOTHED_STONE_FACTS_281} from './smooth-floor-terrain-281.ts';
 import {isShipPartKind276} from './ship-part-content-276.ts';
 import {isAncientMonumentKind256,ANCIENT_MONUMENT_DEFS_256} from './ancient-monument-props-256.ts';
 import {QUALITY_BEAUTY,furnitureQuality} from './furniture-stats.ts';
@@ -6,7 +7,7 @@ import { furnitureBeauty,isFurnitureMaterial,isHabitatFurnitureKind,isSculptureK
 import type { RoomTopology } from './room-topology.ts';
 
 export interface BeautyCell {x:number;z:number}
-export interface BeautyTile {terrain:string;floor?:string}
+export interface BeautyTile {terrain:string;floor?:string;collapsedRock?:{terrain:string}}
 export interface BeautyStructure extends BeautyCell,FurnitureLike {id?:number;baseBeauty?:number;beautyCell?:BeautyCell}
 export interface BeautyFilth extends BeautyCell {kind:string}
 /** One physical ground object/stack. Quantity never multiplies Beauty. */
@@ -34,6 +35,7 @@ export function floorBeauty(tile:BeautyTile,outdoors=false):number {
   if(tile.terrain==='packed-dirt'&&!tile.floor)return -1;
   if(tile.floor&&Object.hasOwn(FLOOR_BEAUTY,tile.floor))return FLOOR_BEAUTY[tile.floor as keyof typeof FLOOR_BEAUTY];
   if(tile.floor)return 0;
+  if(hasSmoothedStoneSubstrate281(tile))return SMOOTHED_STONE_FACTS_281.beauty;
   if(tile.terrain==='grass'||tile.terrain==='soil'||tile.terrain==='rich-soil'||tile.terrain==='gravel')return outdoors?0:-3;
   if(tile.terrain==='rough-stone')return -1;
   return 0;

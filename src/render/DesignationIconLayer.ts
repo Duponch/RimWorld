@@ -19,7 +19,7 @@ const CHOP_ICON_HEIGHT_FRACTION = .72;
 export const DESIGNATION_ICON_KINDS = ['mine', 'chop', 'harvest', 'cut', 'extract-tree', 'replant-tree'] as const;
 export type DesignationIconKind = typeof DESIGNATION_ICON_KINDS[number];
 const ICON_INDEX: Readonly<Record<DesignationIconKind, number>> = { mine: 0, chop: 1, harvest: 2, cut: 3, 'extract-tree':80, 'replant-tree':81 };
-const EXTRA_ICON_KINDS = ['haul-chunks', 'deconstruct', 'uninstall', 'remove-floor', 'build-roof', 'remove-roof'] as const;
+const EXTRA_ICON_KINDS = ['smooth-floor','haul-chunks', 'deconstruct', 'uninstall', 'remove-floor', 'build-roof', 'remove-roof'] as const;
 type MarkerKind = DesignationIconKind | typeof EXTRA_ICON_KINDS[number];
 type MarkerTarget = { kind: MarkerKind; x: number; z: number };
 // Includes removal/roof pictograms without changing the historical predicate
@@ -27,6 +27,7 @@ type MarkerTarget = { kind: MarkerKind; x: number; z: number };
 export const hasDesignationPictogram = (kind: string): kind is MarkerKind => isIconDesignationKind(kind)
   || (EXTRA_ICON_KINDS as readonly string[]).includes(kind);
 function iconIndex(kind: MarkerKind): number {
+  if(kind==='smooth-floor')return 82;
   if (isIconDesignationKind(kind)) return ICON_INDEX[kind];
   const cell = ARCHITECT_ICON_MAPPING[kind]!;
   return 20 + cell.atlas * 30 + cell.row * 6 + cell.column;
@@ -35,13 +36,13 @@ function iconIndex(kind: MarkerKind): number {
 export const isIconDesignationKind = (kind: unknown): kind is DesignationIconKind =>
   typeof kind === 'string' && (DESIGNATION_ICON_KINDS as readonly string[]).includes(kind);
 
-/** Two vector slots only; historical v304 assets are neither edited nor copied. */
+/** Three resident vector slots; historical v304 assets are neither edited nor copied. */
 export const TREE_DESIGNATION_ATLAS_URL='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="192" height="96" viewBox="0 0 128 64">'+
-  ['extract-tree','replant-tree'].map((kind,index)=>pictogramSvg(kind).replace('<svg ',`<svg x="${index*64}" y="0" `).replace('width="96" height="96"','width="64" height="64"')).join('')+'</svg>');
+  '<svg xmlns="http://www.w3.org/2000/svg" width="288" height="96" viewBox="0 0 192 64">'+
+  ['extract-tree','replant-tree','smooth-floor'].map((kind,index)=>pictogramSvg(kind).replace('<svg ',`<svg x="${index*64}" y="0" `).replace('width="96" height="96"','width="64" height="64"')).join('')+'</svg>');
 
 function treeFallbackAtlas():THREE.DataTexture {
-  const width=32,height=16,data=new Uint8Array(width*height*4);
+  const width=48,height=16,data=new Uint8Array(width*height*4);
   const pixel=(slot:number,x:number,y:number)=>{if(x<1||x>14||y<1||y>14)return;const at=(y*width+slot*16+x)*4;data[at]=data[at+1]=data[at+2]=data[at+3]=255;};
   // Upright shovel and rooted sprout remain distinct even if SVG decoding fails.
   for(let y=3;y<=10;y++)for(let x=7;x<=8;x++)pixel(0,x,y);
@@ -49,6 +50,7 @@ function treeFallbackAtlas():THREE.DataTexture {
   for(let y=10;y<=13;y++)for(let x=5+(y===13?1:0);x<=10-(y===13?1:0);x++)pixel(0,x,y);
   for(let y=4;y<=12;y++)pixel(1,8,y);
   for(let i=0;i<4;i++){pixel(1,8-i,7-i);pixel(1,8+i,6-i);pixel(1,5+i,12);}
+  for(let x=3;x<=12;x++)pixel(2,x,12);for(let i=0;i<6;i++){pixel(2,5+i,9-i);pixel(2,6+i,9-i);}
   const map=new THREE.DataTexture(data,width,height,THREE.RGBAFormat,THREE.UnsignedByteType);
   map.minFilter=map.magFilter=THREE.LinearFilter;map.generateMipmaps=false;map.needsUpdate=true;return map;
 }
@@ -163,6 +165,7 @@ function fallbackAtlas(atlas?: 0 | 1): THREE.DataTexture {
     line(2, 5, 2, 9, 12, 2); line(2, 8, 12, 13, 9, 2); line(2, 13, 9, 12, 6);
     line(3, 4, 3, 12, 12); line(3, 12, 3, 4, 12); line(3, 3, 2, 5, 4, 2); line(3, 11, 2, 13, 4, 2);
   } else for (const kind of EXTRA_ICON_KINDS) {
+    if(kind==='smooth-floor')continue;
     const cell = ARCHITECT_ICON_MAPPING[kind]!;
     if (cell.atlas !== atlas) continue;
     const icon = cell.row * 6 + cell.column;
@@ -240,7 +243,7 @@ export class DesignationIconLayer {
       const cell = icon.sub(offset);
       return vec2(uv().x.add(cell.mod(6)).div(6), uv().y.add(cell.div(6).floor().negate().add(4)).div(5));
     };
-    const treeUv=vec2(uv().x.add(icon.sub(80)).div(2),uv().y);
+    const treeUv=vec2(uv().x.add(icon.sub(80)).div(3),uv().y);
     material.colorNode = icon.greaterThanEqual(80).select(this.treeNode.sample(treeUv),icon.lessThan(20).select(this.atlasNode.sample(atlasUv),
       icon.lessThan(50).select(this.architectNodes[0].sample(architectUv(20)), this.architectNodes[1].sample(architectUv(50)))));
     this.mesh = new THREE.Mesh(geometry, material);

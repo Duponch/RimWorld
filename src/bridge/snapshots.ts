@@ -1,3 +1,4 @@
+import {validSmoothFloorsHistoricalTransport281,validSmoothFloorTile281,validSmoothFloorWorld281} from '../sim/smooth-floor-save-281.ts';
 import {validPrisonerSurgeryHistoricalTransport280,validPrisonerSurgeryWorld280,hasPrisonerSurgery280} from '../sim/prisoner-surgery-save-280.ts';
 import {validApparelTradeHistoricalTransport279,validApparelTradeWorld279} from '../sim/apparel-trade-save-279.ts';
 import {validApparelReservesBuilding278,validApparelReservesHistoricalTransport278} from '../sim/apparel-reserves-save-278.ts';
@@ -1137,6 +1138,7 @@ export class SnapshotDecoder {
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
     if(packet.world.destroyed!==undefined&&!validNaturalHiveLoss256(packet.world.destroyed,packet.world.schemaVersion))return resync('Invalid or future natural Hive loss counter.');
     if(!validWorldPawnsEnvelope256(packet.world,packet.world.schemaVersion,packet.world.tick*10,packet.world.nextId))return resync('Invalid or future WorldPawns header.');
+    if(!validSmoothFloorsHistoricalTransport281(packet,packet.world.schemaVersion))return resync('Future natural stone smoothing.');
     if(!validPrisonerSurgeryHistoricalTransport280(packet,packet.world.schemaVersion))return resync('Future captive surgery.');
     if(!validApparelTradeHistoricalTransport279(packet,packet.world.schemaVersion))return resync('Future ordinary apparel inventory or trade.');
     if(!validApparelReservesHistoricalTransport278(packet,packet.world.schemaVersion))return resync('Future apparel reserve settings.');
@@ -1315,7 +1317,7 @@ export class SnapshotDecoder {
           if(!validExplorationTile256(candidate,message.world.schemaVersion,Object.hasOwn(message.world,'exploration')))return resync('Invalid or future fog cell.');
           if(!validCollapsedRock256(candidate,message.world.schemaVersion,message.world.nextId,v=>admittedRoofTerrain256(v,message.world.schemaVersion)))return resync('Invalid or future collapsed rock.');
           if (!validBridgeTile(candidate,message.world.schemaVersion)||!validMarshTile(candidate,message.world.schemaVersion,message.world)||snowDepth!==undefined&&(message.world.schemaVersion<239||typeof snowDepth!=='number'||!Number.isFinite(snowDepth)||snowDepth<=0||snowDepth>1) || !Number.isInteger(index) || index < 0 || index >= tiles.length || touched.has(index)
-            || floor!==undefined&&(message.world.schemaVersion<89||!floorAvailable(floor,message.world.schemaVersion)||floor==='sterile-tile'&&!sterileMaterialsUnlocked(message.world)) || !validOre({terrain,ore},message.world.schemaVersion) || !validMiningDamage(candidate,message.world.schemaVersion) || !validStoneIdentity(stone,collapsedRock?.terrain??terrain,message.world.schemaVersion)) return resync('Delta de terrain invalide.');
+            || floor!==undefined&&(message.world.schemaVersion<89||!floorAvailable(floor,message.world.schemaVersion)||floor==='sterile-tile'&&!sterileMaterialsUnlocked(message.world)) ||!validSmoothFloorTile281(candidate,message.world.schemaVersion)|| !validOre({terrain,ore},message.world.schemaVersion) || !validMiningDamage(candidate,message.world.schemaVersion) || !validStoneIdentity(stone,collapsedRock?.terrain??terrain,message.world.schemaVersion)) return resync('Delta de terrain invalide.');
           touched.add(index);
         }
         tiles = tiles.slice();
@@ -1720,6 +1722,8 @@ export class SnapshotDecoder {
     if(!validCobraClinicalWorldForSnapshot256(next,next.schemaVersion,readHumanOwners))return resync('Propriétaire clinique toxique invalide.');
     if(!validCryptosleepSicknessWorldTransportForSnapshot256(next,next.schemaVersion,readHumanOwners))return resync('Mal de cryptosommeil ou propriétaire clinique invalide.');
     if(validateAncientOpeningOwners256(next).length)return resync('Ouverture de capsule ancienne ou propriétaire incohérent.');
+    if(message.kind==='checkpoint'&&next.tiles.some(t=>!validSmoothFloorTile281(t,next.schemaVersion)))return resync('Terrain lissé invalide.');
+    if(!validSmoothFloorWorld281(next,message.epoch===this.epoch?this.current:undefined))return resync('Ordre ou auteur du lissage incohérent.');
     if(!validPrisonerSurgeryWorld280(next))return resync('Demande ou service chirurgical du captif incohérent.');
     if(!hasPrisonerSurgery280(next)&&next.pawns.some(p=>p.surgery?.implant!==undefined||p.surgeryRequest?.implant!==undefined)
       &&validateSurgeries(next,next.schemaVersion).length)return resync('Prothèse demandée ou ingrédients chirurgicaux incohérents.');

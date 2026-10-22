@@ -12,7 +12,7 @@ const coverage: Record<Terrain, boolean> = {
   grass: true, soil: true, 'rich-soil': true,
   'soil-natural': true, 'mossy-soil': true, 'marshy-soil': true,
   'packed-dirt': false, gravel: false, riverbank: false, mud: false,
-  sand: false, 'soft-sand': false, ice: false, 'rough-stone': false, rock: false,
+  sand: false, 'soft-sand': false, ice: false, 'rough-stone': false, 'smoothed-stone': false, rock: false,
   marsh: false, water: false, 'water-shallow': false, 'water-deep': false,
   'ocean-shallow': false, 'ocean-deep': false,
   'river-shallow': false, 'river-chest-deep': false,

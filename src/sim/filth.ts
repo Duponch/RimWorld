@@ -1,4 +1,5 @@
 import {isSchema277OrLater} from './schema-compatibility-257.ts';
+import {isSmoothedStone281} from './smooth-floor-terrain-281.ts';
 import {terrainAcceptsFilth256} from './natural-terrain-runtime-256.ts';
 import { isRoofed } from './roof-rules.ts';
 import { isGrowingTerrain } from './soil.ts';
@@ -19,7 +20,7 @@ function filthWalkable(w:World,c:Cell):boolean {
 function accepted(w:World,c:Cell,kind:FilthKind,spontaneous=false):boolean {
   const tile=w.tiles[c.z*w.width+c.x]!;
   if(tile.floor||tile.bridge)return true;
-  if(!spontaneous)return tile.terrain==='rough-stone'||kind!=='dirt'&&kind!=='trash';
+  if(!spontaneous)return tile.terrain==='rough-stone'||isSmoothedStone281(tile.terrain)||kind!=='dirt'&&kind!=='trash';
   if(isRoofed(w,c.z*w.width+c.x))return true;
   const room=captureCleanliness(w).room(c);return !!room&&room.cells.size-room.covered<Math.ceil(room.cells.size*.25);
 }

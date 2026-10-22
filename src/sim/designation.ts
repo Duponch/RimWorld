@@ -13,12 +13,14 @@ import { isCookingOrder } from './order-types.ts';
 import { footprintCells } from './definitions.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { inBounds } from './pathfinding.ts';
+import {canDesignateSmoothFloor281} from './smooth-floor-281.ts';
+import {captureStructureNavigation} from './structure-navigation.ts';
 import { canDesignateFloor,isBuildableFloor } from './flooring.ts';
 import { soilFertility } from './soil.ts';
 import { SCHEMA_VERSION,type AreaAction,type AreaCommand,type Cell,type CommandResult,type StorageSettings,type World } from './types.ts';
 
 const TREE = 1, BERRIES = 2, FIXED = 4, JOB = 8, STORAGE = 16, BLOCKED = 32, RIPE = 64, GROWING = 128, ZONE_BLOCKED = 256, GROW_BLOCKED = 512, DECONSTRUCTIBLE = 1024, ROCK = 2048, CHUNK = 4096, HAUL = 8192, PLANT_JOB = 16384;
-export const isAreaAction = (value: unknown): value is AreaAction => ['build-bridge','remove-bridge','snow-clear','remove-snow-clear','lay-floor','remove-floor','home','remove-home','build-roof', 'remove-roof', 'ignore-roof', 'mine', 'haul-chunks', 'deconstruct', 'chop', 'harvest', 'cut', 'cancel', 'stockpile', 'remove-stockpile', 'growing', 'remove-growing'].includes(value as string);
+export const isAreaAction = (value: unknown): value is AreaAction => ['smooth-floor','build-bridge','remove-bridge','snow-clear','remove-snow-clear','lay-floor','remove-floor','home','remove-home','build-roof', 'remove-roof', 'ignore-roof', 'mine', 'haul-chunks', 'deconstruct', 'chop', 'harvest', 'cut', 'cancel', 'stockpile', 'remove-stockpile', 'growing', 'remove-growing'].includes(value as string);
 export interface AreaBounds { minX: number; maxX: number; minZ: number; maxZ: number }
 export interface AreaIndex { flags: Uint16Array }
 export type AreaQuery = { ok: false; reason: string; code: CommandResult['code'] }
@@ -88,6 +90,7 @@ export function queryArea(world: World, command: AreaCommand, index?: AreaIndex)
   const bounds = { minX: Math.min(command.from.x, command.to.x), maxX: Math.max(command.from.x, command.to.x), minZ: Math.min(command.from.z, command.to.z), maxZ: Math.max(command.from.z, command.to.z) };
   const selected = (bounds.maxX - bounds.minX + 1) * (bounds.maxZ - bounds.minZ + 1);
   const flags = (index ?? buildAreaIndex(world)).flags;
+  const smoothGeometry=command.action==='smooth-floor'?captureStructureNavigation(world):undefined;
   const cells: number[] = [],home=new Set(world.home);
   for (let z = bounds.minZ; z <= bounds.maxZ; z++) for (let x = bounds.minX; x <= bounds.maxX; x++) {
     const i = z * world.width + x, value = flags[i]!;
@@ -97,7 +100,7 @@ export function queryArea(world: World, command: AreaCommand, index?: AreaIndex)
       if(!world.jobs.some(j=>j.kind==='mine'&&j.x===x&&j.z===z))cells.push(i);
       continue;
     }
-    const eligible = command.action==='build-bridge'||command.action==='remove-bridge'?canDesignateBridge(world,{type:'designate',kind:command.action,x,z}).ok:command.action==='snow-clear'?!(world.snowClearArea??[]).includes(i)&&!(value&BLOCKED):command.action==='remove-snow-clear'?(world.snowClearArea??[]).includes(i):command.action==='lay-floor'||command.action==='remove-floor'?canDesignateFloor(world,{type:'designate',kind:command.action,x,z,...command.action==='lay-floor'?{floor:command.floor}:{}}).ok:command.action==='home'?!home.has(i):command.action==='remove-home'?home.has(i):isRoofArea(command.action) ? true : command.action === 'mine' ? (value & ROCK) && !(value & JOB)
+    const eligible = command.action==='smooth-floor'?canDesignateSmoothFloor281(world,{x,z},undefined,smoothGeometry).ok:command.action==='build-bridge'||command.action==='remove-bridge'?canDesignateBridge(world,{type:'designate',kind:command.action,x,z}).ok:command.action==='snow-clear'?!(world.snowClearArea??[]).includes(i)&&!(value&BLOCKED):command.action==='remove-snow-clear'?(world.snowClearArea??[]).includes(i):command.action==='lay-floor'||command.action==='remove-floor'?canDesignateFloor(world,{type:'designate',kind:command.action,x,z,...command.action==='lay-floor'?{floor:command.floor}:{}}).ok:command.action==='home'?!home.has(i):command.action==='remove-home'?home.has(i):isRoofArea(command.action) ? true : command.action === 'mine' ? (value & ROCK) && !(value & JOB)
       : command.action === 'haul-chunks' ? value & CHUNK
       : command.action === 'deconstruct' ? (value & DECONSTRUCTIBLE) && !(value & JOB)
       : command.action === 'chop' ? (value & TREE) && !(value & (world.schemaVersion>=235?PLANT_JOB:JOB))

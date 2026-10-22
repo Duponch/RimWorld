@@ -1,3 +1,4 @@
+import {isSchema281OrLater} from './schema-compatibility-257.ts';
 /** Core natural stones. Ores, cut blocks and loose chunks are different content. */
 export const STONE_KINDS = ['granite', 'limestone', 'marble', 'sandstone', 'slate'] as const;
 export type StoneKind = typeof STONE_KINDS[number];
@@ -46,5 +47,6 @@ export function geologicalField(seed: number, stones: readonly StoneKind[] = sit
 
 /** Optional identity preserves untyped historic maps without assigning invented deposits. */
 export function validStoneIdentity(value: unknown, kind: unknown, version: number): boolean {
+  if(kind==='smoothed-stone')return isSchema281OrLater(version)&&isStoneKind(value);
   return value === undefined || version >= 27 && (kind === 'rock' || version >= 28 && kind === 'rough-stone') && isStoneKind(value);
 }
