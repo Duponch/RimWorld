@@ -1,6 +1,6 @@
 # V458 — Lisser les sols rocheux
 
-**Qualifié localement, schéma281 ; publication en préparation, V457 reste en production.** Cinq roches, travail Construction, interruption/reprise et revêtement payé acquis par reprises : **56 cas distincts**, dont31 nouveaux et25 voisins. Typage et parcours Chrome/WebGPU muet acquis ; un ancien échec de migration et une notification de mise en page restent consignés. Ce lot reprend une base ordinaire de construction après la revue de tous les domaines. Les exemples humains ne ferment pas le périmètre ; les six ensembles restent ouverts.
+**Publié, schéma281 : produit `78cbd3a38388957fec0ed77553e29c590fa21f38`, déploiement `4b5eaee5`.** Cinq roches, travail Construction, interruption/reprise et revêtement payé acquis par reprises : **56 cas distincts**, dont31 nouveaux et25 voisins. Typage et parcours Chrome/WebGPU muet acquis ; un ancien échec de migration et une notification de mise en page restent consignés. Ce lot reprend une base ordinaire de construction après la revue de tous les domaines. Les exemples humains ne ferment pas le périmètre ; les six ensembles restent ouverts.
 
 ## Boucle retenue
 
@@ -70,6 +70,8 @@ Rapport `tmp/smooth-floors-v458/validation-cost-2026-10-22T03-10-54-130Z.json`. 
 
 ## Publication et suite
 
-Publication Pages en préparation après contrôles ; identités produit/déploiement, paquet et vérifications HTTPS seront renseignés après acquisition. Sauvegardes publiques et historiques restent préservés.
+Build Pages propre acquis en4,781s à partir du produit choisi `78cbd3a38388957fec0ed77553e29c590fa21f38`. Paquet **552fichiers/152745134octets**,71chemins de sauvegardes et68fiches strictement identiques aux fichiers publics ; statiques et CSS inchangés par rapport au paquet V457 qualifié, outils privés absents. Rapports `tmp/elsewhere-pages/v458-package-BVjQbr/` et `v458-http-e5s0q5/`.
+
+Publication Pages acquise en13,916s, déploiement **`4b5eaee5`**. [Jouer à Elsewhere](https://elsewhere-cq7.pages.dev/), [déploiement identifié](https://4b5eaee5.elsewhere-cq7.pages.dev/). **20réponses HTTPS ciblées exactes** en octets/typeMIME : entrée, JS, CSS, deuxWorkers, catalogue et icônes existantes, sur les deuxorigines. Ces réponses prouvent disponibilité du paquet ; elles ne rejouent ni le navigateur ni une campagne/FPS. Sauvegardes publiques et historiques inchangés. L’avertissement de répertoire Git non entièrement propre vient du dossier humain non suivi `references_UI/`, conservé et absent du paquet ; il n’a pas été ajouté au commit.
 
 Relecture transversale du22octobre après ce lot : habitat/production/recherche/logistique, habitants/social/clinique/captivité/animaux, monde/récit/combat/dangers, création/aide/ergonomie, victoire/campagne et performances réexaminés. Trois notes privées `next-habitants.md`, `next-material-world-ui.md`, `next-story-campaign.md` conservent les comparaisons. **Suite privilégiée : apprentissage animal conduisant à un vrai transport local utile**, après recherche dédiée ; le bât de caravane existe déjà et n’est pas présenté comme manquant. Une demande commerciale mondiale, un danger toxique prolongé, les usages du couple et l’apprentissage de départ restent des alternatives, sans former une liste fermée. Murs lissés, autres bases, six ensembles, campagne complète et cible FPS restent ouverts ; pas de retour automatique aux variantes de sols ou au vaisseau.
