@@ -1,6 +1,6 @@
 # V459 — Apprentissage animal et transport local
 
-**Qualifiée localement, schéma282 ; publication en attente, V458 reste publiée.** Ce lot de l’ensemble3 relie une demande de dressage au travail d’un vrai dresseur, puis au transport autonome d’objets par le même animal. Il suit la réévaluation de tous les domaines Core du22octobre. Les exemples humains ne ferment pas le périmètre ; aucun des six ensembles ni la cible FPS n’est clos.
+**Publiée, schéma282.** Ce lot de l’ensemble3 relie une demande de dressage au travail d’un vrai dresseur, puis au transport autonome d’objets par le même animal. Il suit la réévaluation de tous les domaines Core du22octobre. Les exemples humains ne ferment pas le périmètre ; aucun des six ensembles ni la cible FPS n’est clos.
 
 ## Boucle et référence
 
@@ -47,3 +47,11 @@ La revue des captures a identifié un défaut de réemploi de l’inspecteur : l
 ## Limites maintenues ouvertes
 
 Le réglage d’aire animale reste **Sans restriction**, sans héritage fictif du maître. Aires éditables, attaque, sauvetage, suivi et édition du maître restent à compléter. Cette première voie transporte les familles actuellement admises en inventaire animal local ; dépouilles, ouvrages inachevés et meubles minifiés conservent leurs anciens détenteurs et ne sont pas annoncés comme pris en charge par ce transport. Le service emporte exactement deux portions par leçon ; le préchargement natif pour plusieurs sessions n’est pas reproduit. Les séquences RNG, la navigation et l’attache visuelle ne sont pas une parité interne exhaustive. Tous les autres domaines Core, leurs interactions, campagnes durables, victoire complète et cible FPS restent ouverts.
+
+## Livraison
+
+Produit `27845776a1e5f56c86e00dd328f6531bbb19aadd`, envoyé sur `origin/main`. Build Pages acquis5,635s depuis ce HEAD, paquet552 fichiers contrôlé face à V458 : tous les assets statiques et le CSS identiques ;71 chemins publics et68 fiches de sauvegarde conservés strictement, anciens payloads inclus. Aucun pilote privé ni laboratoire dans le paquet. Rapports `tmp/elsewhere-pages/v459-package-TCu7Zt/`.
+
+Déploiement `f0143fd6` acquis23,106s. [Jouer sur Elsewhere](https://elsewhere-cq7.pages.dev/) ; [déploiement identifié](https://f0143fd6.elsewhere-cq7.pages.dev/). Les20 réponses HTTPS ciblées sur les deux origines correspondent exactement au paquet et à leurs types MIME, HEAD/paquet/sauvegardes inchangés pendant le contrôle : `tmp/elsewhere-pages/v459-http-qsQpUp/report.json`. Cela qualifie la disponibilité du paquet, sans nouvelle preuve de campagne ou de performances.
+
+La [réévaluation transversale après V459](../development/audit-core-20261022.md#réévaluation-après-v459) retient ensuite les pensées de froid/chaleur ressentis comme base quotidienne à documenter et réaliser. Elle reste ouverte aux autres domaines et interactions ; aucun enchaînement automatique des aptitudes animales ou de la fin de partie.
