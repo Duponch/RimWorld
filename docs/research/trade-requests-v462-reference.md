@@ -1,6 +1,6 @@
 # Demandes commerciales mondiales — référence du lot V462
 
-22 octobre 2026. **Lot qualifié localement, publication en attente.** V461 reste la production. La [note de qualification](../gameplay/trade-requests-v462.md) donne les contrôles et leurs limites. Cette référence couvre une famille de quêtes et ses interactions avec production, habitants, équipement, inventaires, voyages, diplomatie et conservation. Elle ne ferme aucun ensemble ni l'audit des autres domaines Core.
+22 octobre 2026. **V462 publiée, schéma284.** La [note de qualification](../gameplay/trade-requests-v462.md) donne les contrôles, reprises, publication et limites. Cette référence couvre une famille de quêtes et ses interactions avec production, habitants, équipement, inventaires, voyages, diplomatie et conservation. Elle ne ferme aucun ensemble ni l'audit des autres domaines Core.
 
 ## Sources et limites de la comparaison
 
@@ -52,4 +52,4 @@ Hostilité pendant la mission et timeout sont des causes de fin. L'offre expire 
 - Provenance d'habit prospective : neuf documenté propre, vrai décès marque tous les types portés représentés, avant retrait en caravane. Retrait/transfert ne nettoient pas. Ancien sans provenance reste inconnu et n'est pas offert propre par migration ; il n'est pas étiqueté cadavre par supposition. Le natif réinitialise lors d'une vraie résurrection ordinaire ; aucune résurrection locale livrée et aucun reset inventé.
 - Schéma284 : validation283 stricte avant changement de numéro, aucun gain/offre/RNG/personne/date/provenance créé par migration. Holder de quête exclusif, reçus scalaires, RAW/public/résident, voyages et continuités sont qualifiés dans les périmètres et préparations de la note du lot.
 
-La note du lot distingue parcours natif muet acquis, préparations explicites, reprises et contrôles de conservation. Aucun gain FPS global, distribution exhaustive des récompenses ou clôture des six ensembles n'est établi. Publication V462 en attente.
+La note du lot distingue parcours natif muet acquis, préparations explicites, reprises et contrôles de conservation. Aucun gain FPS global, distribution exhaustive des récompenses ou clôture des six ensembles n'est établi.

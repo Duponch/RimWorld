@@ -1,6 +1,6 @@
 # V462 — demandes commerciales mondiales
 
-22 octobre 2026. **Qualifiée localement ; V461 reste publiée.** Le parcours commercial natif, la présentation générale par reprises et le typage final sont acquis. Build et publication restent à terminer.
+22 octobre 2026. **V462 publiée — schéma 284.** Le parcours commercial natif, la présentation générale par reprises, le typage final et le build Pages sont acquis. [Jouer](https://elsewhere-cq7.pages.dev/).
 
 Une demande commerciale donne un débouché aux produits de la colonie : offre d’un établissement existant, choix de récompense, acceptation, puis remise complète par une vraie caravane. Les marchandises quittent ses inventaires et les récompenses originales rejoignent ses porteurs, une seule fois. Ce lot relève surtout de l’ensemble 4 et relie production, vêtements, habitants et animaux, voyages, diplomatie et conservation.
 
@@ -67,4 +67,8 @@ La seconde reprise d’abattage passe en 113,530 s, avec 45 s de collecte et les
 
 Sur la même géométrie de 119 904 tuiles, 100 lectures par voie donnent la même valeur scalaire. Le scan géométrique redondant est remplacé par le propriétaire déjà préparé au chargement : médiane **148,9058 → 0,0031 ms**, p95 **215,5942 → 0,0071 ms**, maximum **267,125 → 0,0893 ms**. [Rapport ciblé Node](../../tmp/trade-request-v462/geometry-cost.json). Cette mesure ne couvre ni le coût total d’une offre, ni les FPS, le GPU ou la vitesse physique générale. La préparation froide reste nécessaire.
 
-Typage final acquis en **49,714 s**, journal `tmp/validation-runs/v462-types-delivery-2026-10-22T21-01-57.489Z-25688/output.log`. Build et publication restent en attente. Les sauvegardes publiques et historiques sont conservées. Les autres bases de tous les domaines, les six ensembles, la campagne durable, la victoire et la cible 200–230 FPS restent ouverts. Les exemples donnés par l’utilisateur ne ferment jamais ce périmètre.
+Typage final acquis en **49,714 s**, journal `tmp/validation-runs/v462-types-delivery-2026-10-22T21-01-57.489Z-25688/output.log`. Build Pages acquis en **9,021 s** sur le commit produit `6f63d2f68eba6ed673baa918b70b3fa9ef0b3807`, poussé sur `origin/main`. Paquet vérifié : 552 fichiers, 71 chemins de sauvegardes publiques identiques, assets statiques conservés, aucun outil privé de QA. [Rapport du paquet](../../tmp/elsewhere-pages/v462-package-8owdJ0/report.json).
+
+Déploiement **`2a66a836`**, [adresse propre](https://2a66a836.elsewhere-cq7.pages.dev/) et [site stable](https://elsewhere-cq7.pages.dev/). Les **20 réponses HTTPS ciblées** ont les octets et types attendus sur les deux adresses ; [rapport](../../tmp/elsewhere-pages/v462-http-XBjwn9/report.json). La disponibilité du paquet ne vaut pas une deuxième campagne navigateur. L’avertissement Wrangler de dossier sale vient du dossier humain non suivi `references_UI/`, laissé hors commit et hors paquet ; les fichiers produit suivis étaient propres.
+
+Les sauvegardes publiques et historiques sont conservées. Les autres bases de tous les domaines, les six ensembles, la campagne durable, la victoire et la cible 200–230 FPS restent ouverts. Les exemples donnés par l’utilisateur ne ferment jamais ce périmètre.
