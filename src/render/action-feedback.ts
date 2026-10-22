@@ -8,6 +8,7 @@ import { SURGERY_WORK } from '../sim/surgery-rules';
 import { REFUEL_WORK_TICKS } from '../sim/fuel';
 import { TURRET_RELOAD_WORK_TICKS } from '../sim/mini-turret-reload';
 import { handlingStepDuration } from '../sim/animal-handling';
+import {animalTrainingStepTicks282} from '../sim/animal-training-service-282';
 import { SLAUGHTER_WORK_TICKS } from '../sim/animal-slaughter';
 import { isColonist } from '../sim/affiliation';
 import { INGEST_TICKS } from '../sim/eating';
@@ -70,7 +71,17 @@ export function actionProgress(world:World,pawn:Pawn,lookup?:ActionLookup):Actio
     const filth=world.filth?.items.find(item=>item.id===pawn.cleaning!.targets[0]);
     if(filth)return measured('cleaning',pawn.cleaning.progress,FILTH_DEFINITIONS[filth.kind].work);
   }
-  if(pawn.animalHandling?.phase==='interact')return measured('handling',pawn.animalHandling.progress,pawn.animalHandling.kind==='slaughter'?SLAUGHTER_WORK_TICKS:handlingStepDuration(pawn.animalHandling));
+  if(pawn.animalHandling?.phase==='interact'){
+    const task=pawn.animalHandling;
+    if(task.kind==='train'){
+      const animal=world.wildlife?.animals.find(a=>a.id===task.animalId),food=world.piles.find(p=>p.id===task.carryPileId);
+      if(animal&&food)return measured('handling',task.progress,animalTrainingStepTicks282(task as import('../sim/animal-training-service-282').AnimalTrainingTask282,animal,food.item));
+      // After the second physical feed there is deliberately no food holder.
+      if(animal&&task.step===5)return measured('handling',task.progress,10);
+      return undefined;
+    }
+    return measured('handling',task.progress,task.kind==='slaughter'?SLAUGHTER_WORK_TICKS:handlingStepDuration(task));
+  }
   if(pawn.animalCare?.phase==='treat'&&pawn.animalCare.duration!==undefined)return measured('tending',pawn.animalCare.progress,pawn.animalCare.duration);
   if(pawn.hunting?.phase==='finish')return measured('hunting',pawn.hunting.progress,18);
   if(pawn.tend?.phase==='tend'&&pawn.tend.duration!==undefined)

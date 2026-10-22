@@ -339,7 +339,13 @@ class SpeciesRig {
     if(changed||reset||dirty){this.actorSlots.clear();let minScale=1;animals.forEach((a,i)=>{this.actorSlots.set(a.id,i);minScale=Math.min(minScale,scale.getX(i));const carrier=g.getAttribute('aCarrier');this.animationCache.reconcile(i,a.id,[state.getZ(i),scale.getX(i),g.getAttribute('aAbsent').getX(i),carrier.getX(i),carrier.getY(i),this.carrierSlots.get(i),a.carrierId,a.corpsePile?.owner.type].join(':'));});this.animationCache.setMinimumScale(minScale);}
     if(playback)this.playback435.commit();
   }
-  cpuPoseForId(id:number){const slot=this.actorSlots.get(id);return slot===undefined?undefined:this.animationCache.cpuPose(slot);}
+  cpuPoseForId(id:number){
+    const slot=this.actorSlots.get(id);if(slot===undefined)return;
+    // Near actors use the original GPU path, which deliberately has no cached
+    // CPU pose. Attached presentation samples those same streams and clocks.
+    const g=this.mesh.geometry;
+    return this.animationCache.cpuPose(slot)??sampleActorRoot(g.getAttribute('aFrom'),g.getAttribute('aTo'),g.getAttribute('aTravel'),slot,this.travelTime.value,this.blend.value);
+  }
   presentAnimations(pawns?:PawnLayer):void {
     const g=this.mesh.geometry,from=g.getAttribute('aFrom'),to=g.getAttribute('aTo'),travel=g.getAttribute('aTravel');
     if(!this.animationCache.prepareOriginalOnly())for(let i=0;i<this.animals.length;i++){

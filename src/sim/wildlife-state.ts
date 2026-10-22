@@ -18,6 +18,10 @@ export interface WildAnimal extends Cell { shipCryptosleepHeldAt277?:number; fil
   eggLay?:{target:Cell;progress:number};
   animalRest?:import('./animal-rest-state.ts').AnimalRestTask;
   domestic?:import('./domestic-state.ts').DomesticAnimal;
+  /** Prospective acquired skills on this same original, including wild returns. */
+  training?:import('./animal-training-state-282.ts').AnimalTrainingState282;
+  /** Real local storage service, or a true held pile awaiting Near cleanup. */
+  haul?:import('./animal-hauling-state-282.ts').AnimalHaulTask282;
   taming?:import('./domestic-state.ts').TamingDesignation;
   id:number; species:AnimalSpeciesId; sex:'female'|'male';
   /** Biological age in local ticks. Historical animals enter V121 as adults. */

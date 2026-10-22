@@ -3,7 +3,7 @@ import {naturalTerrainWalkable256} from './natural-terrain-movement-256.ts';
 import {duckTerrainWalkable256,duckTerrainOverride256} from './duck-water-256.ts';
 import {duckFlightMoveFactor256} from './duck-flight-runtime-256.ts';
 import {duckFlying256} from './duck-flight-state-256.ts';
-import {animalLifeStageData256,isAnimalSpecies256} from './animal-core-v256.ts';
+import {animalCore256,animalLifeStageData256,isAnimalSpecies256} from './animal-core-v256.ts';
 import {finishSnowStep} from './snow-surface.ts';
 import {animalBodySize} from './animal-life.ts';
 import { mergeSlowIntervals,travelEnd } from './travel-timing.ts';
@@ -16,6 +16,9 @@ import { doorOpenness,isPassageDoor } from './door-rules.ts';
 import { WeightedSearch } from './weighted-search.ts';
 import { scaleNavigationCosts } from './navigation-costs.ts';
 import { meleeContact } from './melee-space.ts';
+import {START_STRUCTURE_PHYSICS_256} from './player-start-physics-256.ts';
+import {animalHaulDoorPassable282} from './animal-haul-door-282.ts';
+import {isSchema282OrLater} from './schema-compatibility-257.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import { animalSpecies } from './animal-species.ts';
 import {captureStructureNavigation,type StructureNavigationGeometry} from './structure-navigation.ts';
@@ -60,6 +63,38 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
     if(!blocked){blocked=new Uint8Array(width*world.height);for(let i=0;i<world.tiles.length;i++){const t=world.tiles[i]!.terrain;if(!terrainFree(t))blocked[i]=1;}for(const i of solids)blocked[i]=1;}
     return blocked;
   };
+  // Haul uses OnCell, not Standability: a partial shelf or a chunk can be the
+  // actual pickup/deposit cell. This separate sparse capture leaves all old
+  // food/free/step/route behavior untouched, including their existing masks.
+  let haulSolids:ReadonlySet<number>|undefined;
+  const haulStaticSolids=()=>{
+    if(!haulSolids){const captured=new Set<number>();
+      for(const {structure:s,cells} of geometry.entries)if(START_STRUCTURE_PHYSICS_256[s.kind].passability===2)for(const i of cells)captured.add(i);
+      for(const j of world.jobs)if(jobBlocksTransit(world,j))for(const c of footprintCells(j))captured.add(c.z*width+c.x);
+      haulSolids=captured;
+    }
+    return haulSolids;
+  };
+  const haulActor=(a:WildAnimal)=>isSchema282OrLater(world.schemaVersion)&&!!a.domestic&&a.state!=='dead'&&a.shipCryptosleepHeldAt277===undefined;
+  // The shared base navigation's caller option is not actor provenance.
+  // Read this animal's real race; all admitted Advanced haulers pass fences.
+  const haulFenceBlocked=(a:WildAnimal)=>isAnimalSpecies256(a.species)?animalCore256(a.species).race.roamMtbDays!==null:
+    a.species==='deer'||a.species==='gazelle'||a.species==='muffalo'||a.species==='dromedary';
+  const haulPoint=(a:WildAnimal,c:Cell,planning:boolean)=>{
+    if(!haulActor(a)||!inBounds(world,c.x,c.z)||!naturalTerrainWalkable256(world.tiles[c.z*width+c.x]?.terrain)||haulStaticSolids().has(c.z*width+c.x))return false;
+    for(const s of geometry.at(c)){
+      if(START_STRUCTURE_PHYSICS_256[s.kind].fence&&haulFenceBlocked(a))return false;
+      if(isPassageDoor(s.kind)&&!animalHaulDoorPassable282(world,a,s,planning))return false;
+    }
+    return true;
+  };
+  const haulStep=(a:WildAnimal,to:Cell)=>{
+    const dx=to.x-a.x,dz=to.z-a.z;
+    if(Math.max(Math.abs(dx),Math.abs(dz))!==1||!haulPoint(a,to,false))return false;
+    if(!dx||!dz)return true;
+    const xSide={x:to.x,z:a.z},zSide={x:a.x,z:to.z};
+    return haulPoint(a,xSide,false)&&haulPoint(a,zSide,false)&&!corners.has(xSide.z*width+xSide.x)&&!corners.has(zSide.z*width+zSide.x);
+  };
   function findRoute(a:Cell,goals:Cell[],exitFallback=false,rank?:(c:Cell)=>number):{kind:'food'|'exit';path:Cell[]}|undefined {
     const cells=goals.filter(free),indices=new Set(cells.map(c=>c.z*world.width+c.x));
     if(!indices.size&&!exitFallback)return;
@@ -92,6 +127,23 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
     return path?{kind:'exit',path}:undefined;
   }
   return {free,geometry,
+    haulStep,
+    /** ROOT grants one search quota. All source and destination questions
+     * resume THIS frontier from this original animal, never flood per pile. */
+    haulSearch(a:WildAnimal):{canReach(c:Cell):boolean;pathTo(c:Cell):Cell[]|undefined}{
+      if(!haulActor(a)||!inBounds(world,a.x,a.z))return {canReach:()=>false,pathTo:()=>undefined};
+      const unavailable=new Uint8Array(width*world.height);
+      for(let i=0;i<world.tiles.length;i++)if(!naturalTerrainWalkable256(world.tiles[i]?.terrain))unavailable[i]=1;
+      for(const i of haulStaticSolids())unavailable[i]=1;
+      for(const {structure:s,cells} of geometry.entries){
+        if(START_STRUCTURE_PHYSICS_256[s.kind].fence&&haulFenceBlocked(a)||isPassageDoor(s.kind)&&!animalHaulDoorPassable282(world,a,s,true))for(const i of cells)unavailable[i]=1;
+      }
+      const n=navigationCosts(world,a,undefined,geometry),search=new WeightedSearch(width,world.height,a.z*width+a.x,unavailable,scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
+      return {
+        canReach(c:Cell){if(!haulPoint(a,c,true))return false;const i=c.z*width+c.x;return hasReachableCell(search.advance(new Set([i])),i);},
+        pathTo(c:Cell){if(!haulPoint(a,c,true))return;const i=c.z*width+c.x,reach=search.advance(new Set([i]));return hasReachableCell(reach,i)?routeToCell(world,c,reach)??undefined:undefined;},
+      };
+    },
     /** One quota-granted frontier shared by all confusion destination tickets. */
     wanderSearch(a:Cell){
       const n=navigationCosts(world,a,override,geometry),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
@@ -149,7 +201,7 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
 export function moveAnimal(world:World,a:WildAnimal,step:(a:Cell,b:Cell)=>boolean,moving=1,geometry?:StructureNavigationGeometry):boolean {
   const next=a.path[0];if(!next)return false;
   if(!step(a,next)){a.path=[];delete a.meal;a.state='idle';a.nextDecision=world.tick+10;return false;}
-  const flight=duckFlightMoveFactor256(world,a),species=actualAnimalProfile256(a),pace=(a.meal||a.flee||a.retaliation||a.predation||a.manhunter||a.burning?species.moveTicks:species.walkTicks)/(moving*weatherMoveFactor(world,a)*actualAnimalMoveSpeedFactor256(a))/flight,delay=furnitureDelay(world,a,next,duckTerrainOverride256(world,a),geometry)/flight,start=a.motion&&a.motion.end>=world.tick-1?a.motion.end:world.tick;
+  const flight=duckFlightMoveFactor256(world,a),species=actualAnimalProfile256(a),pace=(a.meal||a.flee||a.retaliation||a.predation||a.manhunter||a.burning||a.haul&&a.haul.phase!=='holding'?species.moveTicks:species.walkTicks)/(moving*weatherMoveFactor(world,a)*actualAnimalMoveSpeedFactor256(a))/flight,delay=furnitureDelay(world,a,next,duckTerrainOverride256(world,a),geometry)/flight,start=a.motion&&a.motion.end>=world.tick-1?a.motion.end:world.tick;
   if(next.x!==a.x||next.z!==a.z)delete a.arrivalRotation;
   a.motion={...(flight>1?{animalFlight:true as const}:{}),from:{x:a.x,z:a.z},to:{...next},start,end:start+Math.hypot(next.x-a.x,next.z-a.z)*pace+delay,speedFactor:3/pace,terrainDelay:delay};
   if(a.stagger&&a.stagger.untilCore/10>start){a.motion.stagger=mergeSlowIntervals([{start:Math.max(start,a.stagger.sinceCore/10),end:a.stagger.untilCore/10}]);a.motion.end=travelEnd(a.motion);}

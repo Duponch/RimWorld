@@ -1,4 +1,5 @@
 import {hasTravellingCargo,interruptWork} from './interrupted-cargo.ts';
+import {interruptAnimalStorage282} from './animal-hauling-282.ts';
 import {footprintCells} from './definitions.ts';
 import {dropRetainingIdentity} from './ground-placement.ts';
 import {reservedSource} from './materials.ts';
@@ -35,6 +36,7 @@ export function planShelfRemoval(world:World,s:Structure):ShelfRemovalPlan|null 
  * building; content stays ground and cannot follow its furniture carrier. */
 export function commitShelfRemoval(world:World,plan:ShelfRemovalPlan):void {
   for(const [id,cell] of plan.drops){const pile=world.piles.find(p=>p.id===id);if(pile)pile.owner={type:'ground',...cell};}
+  interruptAnimalStorage282(world,plan.cells);
   for(const p of world.pawns){
     if(plan.carriers.has(p.id)){if(hasTravellingCargo(world,p))interruptWork(world,p,true);else releaseWork(world,p,plan.drops);}
     if(p.cooking?.storageId!==null&&p.cooking?.storageId!==undefined&&plan.cells.has(p.cooking.storageId)){

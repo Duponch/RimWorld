@@ -22,6 +22,7 @@ export function groupAnimalPreparation(w:World,id:number):{group:PreparingGroup;
 /** Active services/captured edges are never erased to obtain an eligible animal. */
 function animalFormationReason256(w:World,a:WildAnimal,preparing:boolean,ordinaryAdmission=false):string|undefined {
  if(w.schemaVersion<256||!w.wildlife?.animals.includes(a)||!a.domestic||a.state==='dead'||a.health?.death)return 'Animal domestique vivant et présent requis.';
+ if(a.haul&&a.haul.phase!=='holding')return 'Cet animal doit terminer son transport local.';
  const held=groupAnimalPreparation(w,a.id);if(held&&(!preparing||held.group!==w.group))return 'Cet animal appartient déjà à une formation.';
  if(animalClaimed(w,a.id,preparing?held?.line.handlerId:undefined)||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.stun||a.predation||a.mating||a.exiting||a.manhunter||a.confusion||a.eggLay||a.exitFlight||(a.health?.foodPoisoning?.vomit||a.health?.cryptosleepSickness?.vomit||a.health?.toxicBuildup?.vomit||a.health?.toxicBuildup?.vomitRequestedAt!==undefined)||a.domestic.slaughter)return 'Cet animal doit terminer son activité ou son danger.';
  const ordinary=ordinaryAdmission&&a.state==='moving'&&a.wander?.job?.kind==='goto'&&!a.meal&&!a.animalRest&&!a.flight&&!a.motion?.animalFlight&&!a.hiveJob;

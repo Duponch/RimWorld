@@ -30,6 +30,7 @@ import { pileParts,type PileBundle } from './pile-parts';
 import { corpseStage } from '../sim/corpses';
 import { corpseVisualMask } from './corpse-presentation';
 import { WildlifeLayer } from './WildlifeLayer';
+import { AnimalCargoLayer282 } from './AnimalCargoLayer282';
 import { MechanoidLayer } from './MechanoidLayer';
 import { RopeLayer } from './RopeLayer';
 import { NaturalResourcePresentation } from './NaturalResourcePresentation';
@@ -194,6 +195,7 @@ export class SceneRenderCore {
   protected readonly wind = new WindLayer(this.environmentLighting.configure,this.animationDetail);
   protected readonly projectiles = new ProjectileLayer(this.animationDetail);
   protected readonly wildlife:WildlifeLayer;
+  protected readonly animalCargo = new AnimalCargoLayer282(this.environmentLighting.configure);
   protected readonly mechanoids = new MechanoidLayer(this.environmentLighting.configure,this.animationDetail);
   protected readonly ropes = new RopeLayer();
   protected readonly pawns = new PawnLayer(this.environmentLighting.configure,this.animationDetail);
@@ -424,7 +426,7 @@ export class SceneRenderCore {
     this.landscape.add(this.plants.group,this.overview.group,this.terrainGroup,this.resourceGroup,this.rocks.group);
     this.scene.add(this.mechanoids.group);
     this.scene.add(this.geysers.group);
-    this.scene.add(this.deepResources.mesh,this.areaPreview.mesh,this.turretRange.mesh,this.orderRockPreview.mesh,this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.allowedAreaLayer.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh,this.precipitation.mesh);
+    this.scene.add(this.deepResources.mesh,this.areaPreview.mesh,this.turretRange.mesh,this.orderRockPreview.mesh,this.landscape,this.pileGroup,this.hygiene.group,this.wind.group,this.wildlife.mesh,this.wildlife.flames,this.animalCargo.group,this.ropes.mesh,this.fires.mesh,this.projectiles.mesh,this.roofs.surface,this.roofs.areas,this.doors.group,this.timber.group,this.crops.group, this.growing.group, this.allowedAreaLayer.group, this.structureGroup, this.jobGroup, this.designations.mesh, this.storageGroup, this.pawns.group,this.clouds.mesh,this.precipitation.mesh);
     if (groundGrassEnabled) {
       this.grass = this.createGrass();
       this.grass.setTerrainPaint(this.terrainPaintTexture);
@@ -654,6 +656,7 @@ export class SceneRenderCore {
     this.resources.adoptChopWork(previousWorld??undefined,world,resetPoses,resourceFrame);
     this.actionFeedback.update(world,this.selectedPawns,this.pawns.feedbackSource!,!!this.confirmedIntents);
     this.wildlife.update(world,this.hasTracks?this.timeline:undefined,resetPoses,this.pawns);
+    this.animalCargo.update(world,this.hasTracks?this.timeline:undefined,resetPoses);
     this.mechanoids.update(world,this.hasTracks?this.timeline:undefined,resetPoses,this.pawns);
     this.ropes.adopt(world,resetPoses);
     this.landscape.refresh(this.backend==='WebGPU'&&this.overview.group.visible);
@@ -973,6 +976,7 @@ export class SceneRenderCore {
     const distant = this.overview.group.visible;
     const restorePawnFires=this.pawns.prepareFiresForCompile();
     const restoreWildlife=this.wildlife.prepare();
+    const restoreAnimalCargo=this.animalCargo.prepareForCompile();
     const restoreMechanoids=this.mechanoids.prepare();
     const restoreRopes=this.ropes.prepareForCompile();
     const restoreFeedback=this.actionFeedback.prepareForCompile();
@@ -1038,7 +1042,7 @@ export class SceneRenderCore {
       // restorers must therefore run last to recover their real runtime flag.
       for (const [object, value] of culling) object.frustumCulled = value;
       restoreMechanoids();
-      restoreWind();restorePawnFires();restoreWildlife();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
+      restoreWind();restorePawnFires();restoreWildlife();restoreAnimalCargo();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
       restoreSnow();restoreBoxes();restoreArea();restoreTurretRange();restoreHints();restoreOrderRock();restoreConstruction();restoreDeep();
       restoreOverview();
       restoreLabels?.();
@@ -1433,6 +1437,7 @@ export class SceneRenderCore {
     if(this.world)this.wildlife.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns);
     if(this.world)this.mechanoids.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns);
     this.pawns.presentAnimations();this.wildlife.presentAnimations(this.pawns);this.mechanoids.presentAnimations(this.pawns);
+    if(this.animalCargo.present(this.wildlife))this.invalidatePausedShadow(false);
     this.ropes.present(this.hasTracks?this.timeline:undefined,this.pawns,this.wildlife);
     if(!this.shadowViewReady||this.shadowCamera!==this.camera||this.shadowCameraLayers!==this.camera.layers.mask||this.shadowCameraCoordinates!==this.camera.coordinateSystem||this.shadowCameraReversedDepth!==this.camera.reversedDepth||!this.shadowView.equals(this.camera.matrixWorld)||!this.shadowProjection.equals(this.camera.projectionMatrix)) {
       this.shadowView.copy(this.camera.matrixWorld);this.shadowProjection.copy(this.camera.projectionMatrix);
@@ -1785,7 +1790,7 @@ export class SceneRenderCore {
     this.structurePreparation?.clear();this.preparedStructures=undefined;
     this.furniturePresentation.clear();this.structureSignature.clear();this.storageSignature.clear();this.homeSignature.clear();
     this.pawns.dispose();
-    this.doors.dispose();this.projectiles.dispose();this.fires.dispose();this.wind.dispose();this.wildlife.dispose();this.mechanoids.dispose();this.ropes.dispose();this.designations.dispose();
+    this.doors.dispose();this.projectiles.dispose();this.fires.dispose();this.wind.dispose();this.animalCargo.dispose();this.wildlife.dispose();this.mechanoids.dispose();this.ropes.dispose();this.designations.dispose();
 
     for (const group of [this.terrainGroup, this.resourceGroup, this.structureGroup, this.jobGroup, this.storageGroup, this.pileGroup]) clearGroup(group);
     this.pileChunks.clear();this.applicationContext?.clear();

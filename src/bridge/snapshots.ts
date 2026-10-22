@@ -1,4 +1,6 @@
 import {validSmoothFloorsHistoricalTransport281,validSmoothFloorTile281,validSmoothFloorWorld281} from '../sim/smooth-floor-save-281.ts';
+import {validAnimalTrainingHistoricalTransport282} from '../sim/animal-training-historical-282.ts';
+import {validAnimalTrainingWorld282} from '../sim/animal-training-world-282.ts';
 import {validPrisonerSurgeryHistoricalTransport280,validPrisonerSurgeryWorld280,hasPrisonerSurgery280} from '../sim/prisoner-surgery-save-280.ts';
 import {validApparelTradeHistoricalTransport279,validApparelTradeWorld279} from '../sim/apparel-trade-save-279.ts';
 import {validApparelReservesBuilding278,validApparelReservesHistoricalTransport278} from '../sim/apparel-reserves-save-278.ts';
@@ -1138,6 +1140,7 @@ export class SnapshotDecoder {
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
     if(packet.world.destroyed!==undefined&&!validNaturalHiveLoss256(packet.world.destroyed,packet.world.schemaVersion))return resync('Invalid or future natural Hive loss counter.');
     if(!validWorldPawnsEnvelope256(packet.world,packet.world.schemaVersion,packet.world.tick*10,packet.world.nextId))return resync('Invalid or future WorldPawns header.');
+    if(!validAnimalTrainingHistoricalTransport282(packet,packet.world.schemaVersion))return resync('Future animal training or hauling.');
     if(!validSmoothFloorsHistoricalTransport281(packet,packet.world.schemaVersion))return resync('Future natural stone smoothing.');
     if(!validPrisonerSurgeryHistoricalTransport280(packet,packet.world.schemaVersion))return resync('Future captive surgery.');
     if(!validApparelTradeHistoricalTransport279(packet,packet.world.schemaVersion))return resync('Future ordinary apparel inventory or trade.');
@@ -1584,6 +1587,7 @@ export class SnapshotDecoder {
     for(const pawn of next.pawns)if(pawn.body&&Object.hasOwn(pawn.body,'damage')&&(!validHumanBodyShape(pawn.body,next.schemaVersion,next.tick,pawn.health)||pawn.state!=='dead'||!pawn.health?.death||pawn.body.observedAt<pawn.health.death.tick))return resync('Dégâts de corps retenu invalides.');
     if(next.pawns.some(p=>!validNativeHumanField256(p,next.schemaVersion)))return resync('Identité humaine native retenue invalide ou future.');
     if(next.pawns.some(p=>!validArrivalRotation256(p,next.schemaVersion)))return resync('Orientation d’arrivée retenue invalide ou future.');
+    if(!validAnimalTrainingWorld282(next))return resync('Dressage ou transport animal incohérent.');
     if(!validWildlifePredationState(next,next.schemaVersion))return resync('Prédation de faune invalide.');
     if(!validWildlifeManhunterState(next,next.schemaVersion))return resync('Rage de faune invalide.');
     if(validateQuests(next,next.schemaVersion).length)return resync('Dossier de quête invalide.');

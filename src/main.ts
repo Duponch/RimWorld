@@ -968,7 +968,7 @@ function setPanel(panel: Panel, preserveTool = false) {
   for (const name of ['architect', 'work', 'schedule', 'assign', 'history', 'menu', 'research', 'wildlife', 'animals', 'world', 'quests'] as const) el(`${name}-panel`).hidden = panel !== name;
   groupUI.setVisible(panel==='world'&&worldTab==='group');overviewGlobe.setVisible(panel==='world'&&worldTab==='maps');
   const campaign=campaignState();if(panel==='world'&&campaign)refreshWorldPanels(campaign);
-  if(panel==='animals'&&snapshot)updateAnimalsPanel(el('animals-content'),snapshot,id=>selectPawn(id),designateAnimalSlaughter,updateAutoSlaughterPolicy);
+  if(panel==='animals'&&snapshot)updateAnimalsPanel(el('animals-content'),snapshot,id=>selectPawn(id),designateAnimalSlaughter,updateAutoSlaughterPolicy,designateAnimalTraining);
   if(panel==='wildlife'&&snapshot)renderWildlife(snapshot);
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]:not(:disabled)')) {
     const active = button.dataset.panel === panel;
@@ -1204,7 +1204,7 @@ function rebuildInspector() {
       const button=document.createElement('button');button.dataset.groupPawn=String(id);button.onclick=()=>selectPawn(id);el('group-members').append(button);
     }
   } else if(selectedPawn!==undefined&&snapshot?.wildlife?.animals.some(a=>a.id===selectedPawn)) {
-    createAnimalInspector(panel,{onRescue:(pawnId,animalId)=>void attempt(async()=>{await client.command({type:'order-animal-rescue',pawnId,animalId});renderState();}),onSlaughter:designateAnimalSlaughter,onTame:(animalId,enabled)=>void attempt(async()=>{await client.command({type:'tame',animalId,enabled});renderState();}),onCarePolicy:(animalId,care)=>void attempt(async()=>{await client.command({type:'animal-care-policy',animalId,care});renderState();}),onHunt:(animalId,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId,enabled});renderState();}),onClose:clearSelection});
+    createAnimalInspector(panel,{onRescue:(pawnId,animalId)=>void attempt(async()=>{await client.command({type:'order-animal-rescue',pawnId,animalId});renderState();}),onSlaughter:designateAnimalSlaughter,onTraining:designateAnimalTraining,onTame:(animalId,enabled)=>void attempt(async()=>{await client.command({type:'tame',animalId,enabled});renderState();}),onCarePolicy:(animalId,care)=>void attempt(async()=>{await client.command({type:'animal-care-policy',animalId,care});renderState();}),onHunt:(animalId,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId,enabled});renderState();}),onClose:clearSelection});
   } else if(selectedPawn!==undefined&&snapshot?.mechanoids?.some(m=>m.id===selectedPawn)) {
     const current=()=>{const actor=snapshot?.mechanoids?.find(m=>m.id===selectedPawn);return snapshot&&actor?{world:snapshot,actor}:undefined;};
     createMechanoidInspector(panel,current,clearSelection);
@@ -1342,7 +1342,7 @@ function actionLabel(pawn: Pawn, carriedPatients: ReadonlySet<number>) {
   if(pawn.ward||pawn.prisoner||pawn.feed||pawn.tend||pawn.surgery||pawn.state==='resting'||pawn.rescue||carriedPatients.has(pawn.id))return queryPawnStatus(snapshot!,pawn,confirmedFoodReadability()).reason;
   if(pawn.state==='downed'||pawn.state==='dead')return stateLabels[pawn.state];
   if(pawn.interruptedCargo)return pawn.state==='sleeping'?'Se repose · cargaison à déposer':'Cargaison à déposer · sol proche encombré';
-  if(pawn.animalHandling)return ({tame:'Apprivoisement',maintain:'Entretien de la familiarité',lead:'Conduit un animal vers son enclos',milk:'Trait un dromadaire',shear:'Tond un mufalo',slaughter:'Abattage domestique'})[pawn.animalHandling.kind];
+  if(pawn.animalHandling)return ({tame:'Apprivoisement',maintain:'Entretien de la familiarité',train:'Dressage animal',lead:'Conduit un animal vers son enclos',milk:'Trait un dromadaire',shear:'Tond un mufalo',slaughter:'Abattage domestique'})[pawn.animalHandling.kind];
   if(pawn.animalRescue)return pawn.animalRescue.phase==='carry'?'Porte un animal vers un couchage':'Secourt un animal';
   if(pawn.animalCare)return 'Soins vétérinaires';
   if(pawn.animalFeed)return 'Alimentation assistée animale';
@@ -1404,6 +1404,9 @@ function updateWorkPanel(world: World, carriedPatients: ReadonlySet<number>): vo
 function designateAnimalSlaughter(animalId:number,enabled:boolean):void {
   void attempt(async()=>{await client.command({type:'slaughter',animalId,enabled});renderState();});
 }
+function designateAnimalTraining(animalId:number,skill:'obedience'|'haul',wanted:boolean):void {
+  void attempt(async()=>{await client.command({type:'animal-training',animalId,skill,wanted});renderState();});
+}
 async function updateAutoSlaughterPolicy(config:AutoSlaughterConfig):Promise<void> {
   await client.command({type:'auto-slaughter-policy',config});renderState();
 }
@@ -1426,7 +1429,7 @@ function renderState() {
   const colonistIds = new Set(colonists.map(pawn => pawn.id));
   const selectedColonists = colonists.filter(pawn => selection.ids.has(pawn.id) && !pawn.prisoner);
   const carriedPatients = carriedPatientsOf(world);
-  if(currentPanel==='animals')updateAnimalsPanel(el('animals-content'),world,id=>selectPawn(id),designateAnimalSlaughter,updateAutoSlaughterPolicy);
+  if(currentPanel==='animals')updateAnimalsPanel(el('animals-content'),world,id=>selectPawn(id),designateAnimalSlaughter,updateAutoSlaughterPolicy,designateAnimalTraining);
   if(currentPanel==='wildlife')renderWildlife(world);
   if(currentPanel==='research')updateResearchPanel(el('research-content'),world,c=>void attempt(()=>client.command(c)),researchPanelActions);
   mapJumpTo.update(readJumpToEntries(world));

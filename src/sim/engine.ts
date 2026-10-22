@@ -1,4 +1,5 @@
 import {advanceShipReactorThreats275} from './ship-reactor-threats-275.ts';
+import {interruptAnimalStorage282,reconcileAnimalHauls282} from './animal-hauling-282.ts';
 import {shipCasketPlacementRefusal277} from './ship-casket-placement-277.ts';
 import {shipCryptosleepUnlocked277} from './research.ts';
 import {newShipCasketHolder277} from './ship-casket-state-277.ts';
@@ -108,6 +109,7 @@ import { reconcileDomesticWork } from './domestic-reconcile.ts';
 import { advanceAnimalProducts } from './animal-products.ts';
 import { PEN_ANIMALS,penAnimalsForVersion, invalidateAnimalPens } from './animal-pens.ts';
 import { applyTaming,processHandling,advanceTameness } from './animal-handling.ts';
+import {setAnimalTrainingWanted282} from './animal-training-282.ts';
 import { designateSlaughter } from './animal-slaughter.ts';
 import { setAutoSlaughterPolicy } from './auto-slaughter.ts';
 import { applyAnimalCarePolicy,processAnimalCare } from './animal-care.ts';
@@ -389,6 +391,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
       world.stockpiles = world.stockpiles.filter(cell => !ids.has(cell.id));
       for(const pawn of world.pawns)if(pawn.cooking?.storageId&&ids.has(pawn.cooking.storageId)){pawn.cooking.storageId=null;delete pawn.cooking.storageQuantity;pawn.path=[];pawn.planCooldown=0;}
       for (const pawn of world.pawns) if (pawn.haul?.destination.type === 'stockpile' && ids.has(pawn.haul.destination.stockpileId)) releaseWork(world, pawn,drops);
+      interruptAnimalStorage282(world,ids);
     } else {
       const jobs = world.jobs.filter(job => [...footprintCells(job),...furnitureSourceCells(world,job)].some(cell => cells.has(cellIndex(world, cell.x, cell.z))));
       const ids = new Set(jobs.map(job => job.id)); affected = ids.size;
@@ -695,6 +698,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
   if(command.type==='order-equipment'||command.type==='weapon-permission'||command.type==='apparel-permission'||command.type==='forget-weapon')return applyEquipment(world,command);
   if(command.type==='order-feed')return applyFeeding(world,command);
   if(command.type==='tame')return applyTaming(world,command);
+  if(command.type==='animal-training')return setAnimalTrainingWanted282(world,command.animalId,command.skill,command.wanted);
   if(command.type==='slaughter')return designateSlaughter(world,command);
   if(command.type==='auto-slaughter-policy'){
     const result=setAutoSlaughterPolicy(world,command);
@@ -791,6 +795,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
     const result=patchShelfPolicy(world,command.structureId,command.settings);
     if(!result.ok)return refusal('invalid-storage',result.reason);
     const ids=new Set(shelf!.shelf!.cells);
+    interruptAnimalStorage282(world,ids);
     for(const p of world.pawns){
       if(p.cooking?.storageId!==null&&p.cooking?.storageId!==undefined&&ids.has(p.cooking.storageId)){p.cooking.storageId=null;delete p.cooking.storageQuantity;p.path=[];p.planCooldown=0;}
       if(p.haul?.destination.type==='stockpile'&&ids.has(p.haul.destination.stockpileId))releaseWork(world,p,drops);
@@ -803,6 +808,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
     if(!cells.length)return refusal('missing-target','Zone de stockage absente.');
     if(!validStorageSettings(command.settings,world.schemaVersion))return refusal('invalid-storage','Politique de stockage invalide.');
     const ids=new Set(cells.map(cell=>cell.id));
+    interruptAnimalStorage282(world,ids);
     for(const cell of cells)patchStockpilePolicy(cell,command.settings);
     for(const pawn of world.pawns)if(pawn.cooking?.storageId!==null&&pawn.cooking?.storageId!==undefined&&ids.has(pawn.cooking.storageId)){
       pawn.cooking.storageId=null;delete pawn.cooking.storageQuantity;pawn.path=[];pawn.planCooldown=0;
@@ -885,6 +891,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
     }
     for(const pawn of world.pawns)if(pawn.cooking?.storageId!==null&&pawn.cooking?.storageId!==undefined&&affectedIds.has(pawn.cooking.storageId)){pawn.cooking.storageId=null;delete pawn.cooking.storageQuantity;pawn.path=[];pawn.planCooldown=0;}
     // Re-evaluate pending capacity reservations atomically after the policy change.
+    interruptAnimalStorage282(world,affectedIds);
     for (const pawn of world.pawns) if (pawn.haul?.destination.type === 'stockpile'
       && (!destinationValid(world, pawn) || affectedIds.has(pawn.haul.destination.stockpileId))) releaseWork(world, pawn,drops);
     for(const p of world.pawns)if(p.haul?.whole&&p.haul.destination.type==='aside'&&!destinationValid(world,p))releaseWork(world,p,drops);
@@ -1380,6 +1387,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     if(light&&lightKey!==plantLightSourcesKey(world))light=undefined;
     reconcilePlantLighting(world,getLight);updatePlantTemperatures(world,thermal);reconcileSmoothFloorJobs281(world,structureNavigation.read);reconcilePrisoners(world);reconcileRescues(world);reconcileWarden(world);reconcilePatientRest(world);reconcileTending(world);reconcileSurgery(world);reconcilePasteRequests(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns){if(pawn.orbitalTrade)reconcileOrbitalTrade(world,pawn);if(pawn.deepWork)reconcileDeepWork(world,pawn);reconcileWeaponMemory(world,pawn);}
     reconcileGroupAdmission257(world);
+    reconcileAnimalHauls282(world);
   }
 }
 import { updatePawnHealth,reconcilePawnHealth } from './health.ts';

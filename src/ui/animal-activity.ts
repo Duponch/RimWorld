@@ -33,6 +33,11 @@ export function animalActivity(world:World,animal:WildAnimal,quotaTargets?:Reado
   if(animal.threat)return 'Se défend';
   if(animal.exiting)return 'Quitte la carte faute de nourriture';
   if(animal.animalRest)return animal.animalRest.phase==='travel'?'Rejoint son couchage':'Dort au couchage';
+  if(animal.training){
+    const trainer=world.pawns.find(p=>p.animalHandling?.kind==='train'&&p.animalHandling.animalId===animal.id),task=trainer?.animalHandling;
+    if(task)return `${task.phase==='pickup'?'Dresseur collecte la nourriture':task.phase==='approach'?'Dresseur en approche':task.finalStartedCore!==undefined?'Termine la tentative':task.step===2||task.step===4?'Reçoit sa nourriture':'Leçon de dressage'} · ${trainer!.name}`;
+  }
+  if(animal.haul)return animal.haul.phase==='pickup'?'Rejoint une pile à transporter':animal.haul.phase==='holding'?`Conserve un objet · ${labels[animal.state]}`:'Transporte un objet vers le stockage';
   const state=animal.state==='moving'&&!animal.path.length&&!animal.meal&&(!animal.motion||animal.motion.end<=world.tick)?'idle':animal.state;
   return `${labels[state]}${animal.meal&&state==='moving'?' vers sa nourriture':''}`;
 }

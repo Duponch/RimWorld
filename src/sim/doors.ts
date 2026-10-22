@@ -9,6 +9,9 @@ import { prisonBreakActive } from './prison-break-state.ts';
 import { DOOR_CLOSE_DELAY, doorAt, doorOpenness, doorOpenTicks, doorMotionTicks, isPassageDoor } from './door-rules.ts';
 import { invalidateAnimalPens } from './animal-pens.ts';
 import { isBlockMaterial } from './building-materials.ts';
+import {animalHaulDoorCanOpen282,animalHaulDoorPassable282} from './animal-haul-door-282.ts';
+import {isSchema282OrLater} from './schema-compatibility-257.ts';
+import type {WildAnimal} from './wildlife-state.ts';
 import type { Cell, CommandResult, Pawn, Structure, World } from './types.ts';
 export type DoorCommand={type:'door-policy';structureId:number;setting:'holdOpen'|'forbidden';value:boolean};
 
@@ -27,6 +30,20 @@ export function readyDoorEntry(world:World,pawn:Pawn,next:Cell):boolean {
   if(d.forbidden&&!breaking)return false;
   rememberExplorationApproacher256(world,d,pawn.id,true);
   d.lastTouch=world.tick;
+  if(!d.open)openDoor(world,s);
+  if(doorOpenness(s,world.tick)<1-1e-9)return false;
+  d.closeAt=world.tick+DOOR_CLOSE_DELAY;return true;
+}
+/** Real domestic hauler at the threshold. Opening uses the existing timed
+ * door transaction; a false result consumes neither path nor physical edge. */
+export function readyAnimalHaulDoorEntry282(world:World,a:WildAnimal,next:Cell):boolean {
+  if(!isSchema282OrLater(world.schemaVersion)||!a.domestic||a.state==='dead'||a.shipCryptosleepHeldAt277!==undefined)return false;
+  const s=doorAt(world,next);if(!s)return true;
+  if(world.wildlife?.animals.find(value=>value.id===a.id)!==a||Math.max(Math.abs(next.x-a.x),Math.abs(next.z-a.z))!==1||(a.motion?.end??0)>world.tick)return false;
+  const permission=animalHaulDoorCanOpen282(world,a,s);
+  if(!permission){const passable=animalHaulDoorPassable282(world,a,s);if(passable)rememberExplorationApproacher256(world,s.door!,a.id,false);return passable;}
+  rememberExplorationApproacher256(world,s.door!,a.id,true);
+  const d=s.door!;d.lastTouch=world.tick;
   if(!d.open)openDoor(world,s);
   if(doorOpenness(s,world.tick)<1-1e-9)return false;
   d.closeAt=world.tick+DOOR_CLOSE_DELAY;return true;

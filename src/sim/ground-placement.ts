@@ -56,6 +56,7 @@ export function createGroundCapacityReader(world:World):GroundCapacityReader {
       if(p.cooking.phase==='output'&&p.cooking.storageId!==null){const c=storageById.get(p.cooking.storageId),product=byId.get(p.cooking.productId!);if(c)add(c,{pawnId:p.id,item:product?.item,quantity:p.cooking.storageQuantity??product?.quantity??Infinity});}
     }
   }
+  for(const a of world.wildlife?.animals??[])if(a.haul&&a.haul.phase!=='holding')haul(a.haul,a.id);
   return {piles,storage,reservations,packed:new Set(world.packed.filter(p=>p.owner.type==='ground').map(p=>p.owner.type==='ground'?p.owner.z*world.width+p.owner.x:-1))};
 }
 function shelfCapacity(world:World,cell:Cell,subject:ItemId|MaterialPile,exceptPawn:number|undefined,zone:StorageCell,geometry:StagingGeometryReader|undefined,reader?:GroundCapacityReader,policy=true):number {
@@ -113,6 +114,7 @@ function cellCapacity(world: World, cell: Cell, item: ItemId, limit: number, exc
     for(const i of pawn.cooking.ingredients)if(i.stage!=='placed'&&i.cell.x===cell.x&&i.cell.z===cell.z) {if(i.item!==item)return 0;capacity-=i.quantity;}
     if(zone&&pawn.cooking.phase==='output'&&pawn.cooking.storageId===zone.id){const product=world.piles.find(p=>p.id===pawn.cooking!.productId);if(!product||product.item!==item)return 0;capacity-=pawn.cooking.storageQuantity??product.quantity;}
   }
+  for(const a of world.wildlife?.animals??[])if(a.id!==exceptPawn&&a.haul&&a.haul.phase!=='holding')capacity-=reservedAt(world,a.haul,cell,item,zone??undefined);
   return Math.max(0,capacity);
 }
 function reservedAt(world:World,task:HaulTask,cell:Cell,item:ItemId,zone?:StockpileCell):number {

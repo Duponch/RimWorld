@@ -22,14 +22,19 @@ import { ITEM_DEFINITIONS } from '../sim/items';
 import type { WildAnimal } from '../sim/wildlife-state';
 import { slaughterRefusal } from '../sim/animal-slaughter';
 import { mountAnimalRescueControls,updateAnimalRescueControls } from './animal-rescue-inspection';
+import {isSchema282OrLater} from '../sim/schema-compatibility-257';
+import {readAnimalTraining282,trainingRefusal282,nextTrainable282,ANIMAL_TRAINING_LABELS_282,ANIMAL_TRAINING_INTERVAL_CORE_282} from '../sim/animal-training-282';
 
-export type AnimalInspectorTab = 'info' | 'health';
+type TrainingChoice282='obedience'|'haul';
+
+export type AnimalInspectorTab = 'info' | 'health' | 'training';
 export interface AnimalInspectorOptions {
   onHunt: (animalId: number, enabled: boolean) => void;
   onTame?: (animalId: number, enabled: boolean) => void;
   onSlaughter?: (animalId: number, enabled: boolean) => void;
   onRescue?: (pawnId:number,animalId:number) => void;
   onCarePolicy?: (animalId: number, care: MedicalCare) => void;
+  onTraining?: (animalId:number,skill:TrainingChoice282,wanted:boolean) => void;
   onClose: () => void;
 }
 export interface AnimalInspectorView {
@@ -52,6 +57,27 @@ export interface AnimalInspectorView {
   species: readonly string[];
   needs: readonly string[];
   health: readonly string[];
+  training?:{master:string;status:string;rows:readonly {skill:TrainingChoice282;label:string;wanted:boolean;progress:string;reason?:string;prerequisites:string}[]};
+}
+
+function trainingView282(world:World,a:WildAnimal):AnimalInspectorView['training'] {
+  if(!isSchema282OrLater(world.schemaVersion)||!a.domestic)return;
+  const masterId=a.training?.masterId??a.startingPet?.masterId;
+  const master=masterId===undefined?'Aucun maître affecté':world.pawns.find(p=>p.id===masterId)?.name??world.campaignPeople?.find(p=>p.id===masterId)?.name??'Personne hors carte';
+  const rows=(['obedience','haul'] as const).map(skill=>{
+    const state=readAnimalTraining282(a,skill),requirements=skill==='obedience'?['tameness'] as const:['tameness','obedience'] as const;
+    return {skill,label:ANIMAL_TRAINING_LABELS_282[skill],wanted:state.wanted,
+      progress:`${state.steps} / ${state.maxSteps} · ${state.learned?(state.steps===state.maxSteps?'Acquis':'Acquis, entretien nécessaire'):'À apprendre'}`,
+      reason:trainingRefusal282(world,a,skill),prerequisites:requirements.map(key=>{const r=readAnimalTraining282(a,key);return `${ANIMAL_TRAINING_LABELS_282[key]} ${r.steps}/${r.maxSteps}`;}).join(' · ')};
+  });
+  const trainer=world.pawns.find(p=>p.animalHandling?.kind==='train'&&p.animalHandling.animalId===a.id),task=trainer?.animalHandling;
+  const next=nextTrainable282(world,a),left=a.training?.lastAttemptCore===undefined?0:Math.max(0,a.training.lastAttemptCore+ANIMAL_TRAINING_INTERVAL_CORE_282-world.tick*10);
+  const status=task?`${trainer!.name} · ${task.phase==='pickup'?'rassemble les deux portions de nourriture':task.phase==='approach'?'rejoint l’animal':task.finalStartedCore!==undefined?'tentative effectuée, termine l’interaction':task.step===2||task.step===4?'nourrit l’animal':'leçon en cours'}`
+    :a.haul?`Transport : ${a.haul.phase==='pickup'?'rejoint une pile':a.haul.phase==='holding'?'conserve un objet, attend un dépôt':'porte un objet vers le stockage'}`
+    :left?`Intervalle avant un nouvel essai : ${Math.ceil(left/2500)} h.`
+    :next?`Prochaine leçon demandée : ${ANIMAL_TRAINING_LABELS_282[next]}. Un dresseur habilité, de la nourriture et un accès restent nécessaires.`
+    :'Les leçons attendent leurs prérequis et un animal disponible.';
+  return {master,status,rows};
 }
 
 const poisonStage = { none: 'fin de récupération', initial: 'phase initiale', major: 'phase majeure', recovering: 'récupération' } as const;
@@ -164,7 +190,9 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
     dead:animal.state==='dead',
     species: [
       `Espèce : ${species.label}`,
-      ...(animal.startingPet?.masterId!==undefined?[`Maître et lien initial : ${world.pawns.find(p=>p.id===animal.startingPet!.masterId)?.name??world.campaignPeople?.find(p=>p.id===animal.startingPet!.masterId)?.name??'personne hors carte'}`,`Obéissance initiale : 3 / 3 · demandée`]:[]),
+      ...(animal.training?.masterId!==undefined?[`Maître : ${world.pawns.find(p=>p.id===animal.training!.masterId)?.name??world.campaignPeople?.find(p=>p.id===animal.training!.masterId)?.name??'personne hors carte'}`]
+        :animal.startingPet?.masterId!==undefined?[`Maître et lien initial : ${world.pawns.find(p=>p.id===animal.startingPet!.masterId)?.name??world.campaignPeople?.find(p=>p.id===animal.startingPet!.masterId)?.name??'personne hors carte'}`]:[]),
+      ...(!animal.training&&animal.startingPet?.obedience?['Obéissance initiale : 3 / 3 · demandée']:[]),
       ...(animal.manhunter?['État : rage temporaire · attaque les humains','Récupération : durée variable ; le sommeil ordinaire ne met pas fin à la rage']:[]),
       `Régime : ${species.predator?'carnivore · viande, repas et dépouilles fraîches':'herbivore'}`,
       `Stade de vie : ${stageLabel[stage]}`,
@@ -182,12 +210,13 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
       `Repos : ${percent(Math.max(0, Math.min(1, animal.rest)))}`,
     ],
     health:[...(animal.domestic&&!penStatus?['Statut : domestique libre']:[]),...veterinaryLines(world,animal),...animalFeedingLines(world,animal),...condition],
+    training:trainingView282(world,animal),
   };
 }
 
 export function animalInspectorScaffold(): string {
   const tabs: readonly { id: AnimalInspectorTab; label: string }[] = [
-    { id: 'info', label: 'Info' }, { id: 'health', label: 'Santé' },
+    { id: 'info', label: 'Info' }, { id: 'health', label: 'Santé' }, {id:'training',label:'Dressage'},
   ];
   return `<div class="animal-inspector-scroll"><header class="animal-inspector-summary"><div class="panel-heading"><h2 data-animal-title></h2><button type="button" data-animal-close aria-label="Fermer l’inspection">×</button></div><p data-animal-identity></p><p data-animal-activity></p><p data-animal-position></p></header><div class="animal-inspector-tabs" role="tablist" aria-label="Dossiers de l’animal">${tabs.map(tab => `<button type="button" role="tab" id="animal-tab-${tab.id}" aria-controls="animal-panel-${tab.id}" aria-selected="false" tabindex="-1" data-animal-tab="${tab.id}">${tab.label}</button>`).join('')}</div><div class="animal-inspector-pages">${tabs.map(tab => `<section role="tabpanel" id="animal-panel-${tab.id}" aria-labelledby="animal-tab-${tab.id}" tabindex="0" data-animal-panel="${tab.id}" hidden><div data-animal-content="${tab.id}"></div>${tab.id==='health'?`<label class="animal-care-policy" data-animal-care-wrap>Politique de soins <select data-animal-care>${Object.entries(MEDICAL_CARE).map(([id,label])=>`<option value="${id}">${label}</option>`).join('')}</select></label>`:''}</section>`).join('')}</div><div class="animal-inspector-actions"><label data-animal-hunt-wrap><input type="checkbox" data-animal-hunt><span>Chasser</span></label><label data-animal-tame-wrap><input type="checkbox" data-animal-tame><span>Apprivoiser</span></label><label data-animal-slaughter-wrap><input type="checkbox" data-animal-slaughter><span>Abattre</span></label></div></div>`;
 }
@@ -204,22 +233,31 @@ function selectTab(root: HTMLElement, tab: AnimalInspectorTab): void {
 
 /** Mount once per switch into animal selection. Updates keep tabs and their scroll state. */
 export function createAnimalInspector(root: HTMLElement, options: AnimalInspectorOptions): void {
+  root.classList.add('animal-inspector-host');
   if (root.querySelector('.animal-inspector-tabs')) return;
   root.classList.remove('colonist-inspector-host');
-  root.classList.add('animal-inspector-host');
   root.innerHTML = animalInspectorScaffold();
   mountAnimalRescueControls(root,options.onRescue);
   root.dataset.animalTameAvailable=String(!!options.onTame);
   root.dataset.animalSlaughterAvailable=String(!!options.onSlaughter);
   root.dataset.animalCareAvailable=String(!!options.onCarePolicy);
+  root.dataset.animalTrainingAvailable=String(!!options.onTraining);
+  const training=root.querySelector<HTMLElement>('[data-animal-content="training"]')!;
+  training.innerHTML='<p data-animal-training-master></p><p data-animal-training-status aria-live="polite"></p>'
+    +(['obedience','haul'] as const).map(skill=>`<section class="animal-inspector-section"><h3>${ANIMAL_TRAINING_LABELS_282[skill]}</h3><p data-animal-training-progress="${skill}"></p><p data-animal-training-prerequisites="${skill}"></p><label class="animal-care-policy"><input type="checkbox" data-animal-training="${skill}">Entraîner ${skill==='haul'?'au transport':'à l’obéissance'}</label><p data-animal-training-reason="${skill}"></p></section>`).join('')
+    +'<p class="muted">Décocher suspend la demande de leçons et conserve les aptitudes apprises. Le transport appris se déclenche automatiquement après les besoins et soins, avec une réserve accessible. Suivi, attaque et sauvetage ne sont pas proposés ici.</p><p class="muted">Zone de l’animal : Sans restriction. Les aires animales ne se règlent pas encore ici.</p>';
+  for(const skill of ['obedience','haul'] as const){
+    const input=training.querySelector<HTMLInputElement>(`[data-animal-training="${skill}"]`)!;
+    input.onchange=()=>{const id=Number(root.dataset.animalInspectorId),wanted=input.checked;input.checked=input.dataset.confirmedWanted==='true';if(Number.isSafeInteger(id))options.onTraining?.(id,skill,wanted);};
+  }
   const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-animal-tab]')];
   for (const button of buttons) {
     button.addEventListener('click', () => selectTab(root, button.dataset.animalTab as AnimalInspectorTab));
     button.addEventListener('keydown', event => {
       if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
       event.preventDefault();
-      const index = buttons.indexOf(button);
-      const next = event.key === 'Home' ? buttons[0] : event.key === 'End' ? buttons.at(-1) : buttons[(index + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length];
+      const available=buttons.filter(value=>!value.hidden),index = available.indexOf(button);
+      const next = event.key === 'Home' ? available[0] : event.key === 'End' ? available.at(-1) : available[(index + (event.key === 'ArrowRight' ? 1 : -1) + available.length) % available.length];
       if (next) { next.focus(); selectTab(root, next.dataset.animalTab as AnimalInspectorTab); }
     });
   }
@@ -302,6 +340,20 @@ export function updateAnimalInspector(root: HTMLElement, world: World, animalId:
     { title: 'Besoins', lines: view.needs },
   ]);
   renderSections(root, 'health', [{ title: 'État de santé', lines: view.health }]);
+  const trainingButton=root.querySelector<HTMLButtonElement>('[data-animal-tab="training"]')!;trainingButton.hidden=!view.training;
+  if(!view.training&&root.dataset.animalInspectorTab==='training')selectTab(root,'info');
+  if(view.training){
+    root.querySelector('[data-animal-training-master]')!.textContent=`Maître : ${view.training.master}`;
+    root.querySelector('[data-animal-training-status]')!.textContent=view.training.status;
+    for(const row of view.training.rows){
+      root.querySelector(`[data-animal-training-progress="${row.skill}"]`)!.textContent=row.progress;
+      root.querySelector(`[data-animal-training-prerequisites="${row.skill}"]`)!.textContent=`Prérequis : ${row.prerequisites}`;
+      root.querySelector(`[data-animal-training-reason="${row.skill}"]`)!.textContent=row.reason??'La demande de leçons ne réserve ni dresseur, ni nourriture, ni trajet.';
+      const input=root.querySelector<HTMLInputElement>(`[data-animal-training="${row.skill}"]`)!;
+      input.checked=row.wanted;input.dataset.confirmedWanted=String(row.wanted);input.disabled=root.dataset.animalTrainingAvailable!=='true'||!!row.reason;
+      input.title=row.reason??'Demander les leçons. Les aptitudes déjà apprises restent disponibles lorsque cette demande est décochée.';
+    }
+  }
   updateAnimalRescueControls(root,world,animalId);
   return true;
 }

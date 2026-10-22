@@ -13,6 +13,7 @@ import { medicineClaims } from './medicine-logistics.ts';
 import { veterinaryCareSpeciesAllowed } from './veterinary-rules.ts';
 import { ANIMAL_FEED_TICKS,animalFeedPlaceValid } from './animal-feeding-rules.ts';
 import { animalPileFood } from './wildlife-food.ts';
+import {validAnimalTrainingService282} from './animal-training-service-282.ts';
 import { medicalWorkRefusal } from './health-rules.ts';
 import { workPriority } from './work-types.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
@@ -154,7 +155,8 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
     const lead=obj(h)&&h.kind==='lead';
     const slaughter=obj(h)&&h.kind==='slaughter';
     const product=obj(h)&&(h.kind==='milk'||h.kind==='shear');
-    if(h!==undefined&&!(slaughter?validSlaughterTask(w,p,version):lead
+    const training=obj(h)&&h.kind==='train';
+    if(h!==undefined&&!(training?validAnimalTrainingService282(w,p,version):slaughter?validSlaughterTask(w,p,version):lead
       ?version>=119&&keys(h,['animalId','kind','markerId','phase','sourcePileId','carryPileId','quantity','step','progress'],version>=135?['ropees','gatherId']:[])&&base(h)&&int(h.markerId,1,w.nextId-1)&&['approach','lead',...(version>=135?['gather']:[])].includes(String(h.phase))
         &&h.sourcePileId===0&&h.carryPileId===null&&h.quantity===0&&h.step===0&&h.progress===0
         &&(h.ropees===undefined||version>=135&&Array.isArray(h.ropees)&&h.ropees.length>=1&&h.ropees.length<=MAX_ROPEES
@@ -181,6 +183,7 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
     const a=w.wildlife!.animals.find(a=>a.id===task.animalId)!;
     if(p.animalHandling){
       const t=p.animalHandling;
+      if(t.kind==='train')continue;
       if(t.kind==='slaughter')continue;
       if(t.kind==='lead'){
         const region=t.markerId===undefined?undefined:penRegion(w,t.markerId);

@@ -399,7 +399,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   if(burying&&(!best||workPriority(pawn,'haul')<best.priority||workPriority(pawn,'haul')===best.priority&&best.rank>1)&&assignBurial(world,pawn,()=>reachable))return;
   if(best?.brewing){pawn.brewing=best.brewing.task;pawn.path=best.brewing.path;pawn.state=pawn.path.length?'moving':'working';return;}
   if(best?.deepWork){startDeepWork(pawn,best.deepWork);return;}
-  if(best?.animalHandling){startHandling(pawn,best.animalHandling);return;}
+  if(best?.animalHandling){startHandling(pawn,best.animalHandling,world);return;}
   if(best?.animalLeading){startLeading(world,pawn,best.animalLeading);return;}
   if(best?.animalProduct){startProduct(pawn,best.animalProduct);return;}
   if(best?.animalFeed){startAnimalFeeding(pawn,best.animalFeed);return;}

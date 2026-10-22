@@ -1,6 +1,7 @@
 import {captureShipCasketHumans277,captureShipCasketAnimals277} from './ship-casket-state-277.ts';
 import {APPAREL_TRADE_MATERIAL_VALUES_279} from './apparel-trade-279.ts';
 import {hasSmoothedStoneSubstrate281} from './smooth-floor-terrain-281.ts';
+import {animalHaulContents282} from './animal-haul-contents-282.ts';
 import { factionOf } from './affiliation.ts';
 import { floorRoomMarketValue, structureRoomMarketValue } from './room-market-value.ts';
 import { pileMarketValue } from './trade-prices.ts';
@@ -101,7 +102,7 @@ export function colonyWealth(world: World): ColonyWealth {
   const unpricedPileIds: number[] = [], unpricedPackedIds: number[] = [], unpricedStructureIds: number[] = [], unpricedPawnIds: number[] = [];
   let items = 0, structures = 0, floors = 0;
   for (const piles of [world.piles,...held.map(owner=>owner.items)]) for (const pile of piles) {
-    if (!pileOnPlayerMap(pile,pawns)) continue;
+    if (!pileOnPlayerMap(pile,pawns)&&!animalHaulContents282(world,pile)) continue;
     const value = knownPileValue(pile);
     if (value === undefined) unpricedPileIds.push(pile.id);
     else items += value;

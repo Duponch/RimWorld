@@ -1,5 +1,6 @@
 import type { MedicalCare, TendMedicine } from './medicine-rules.ts';
 import type { Cell } from './types.ts';
+import type {AnimalTrainingSkill282} from './animal-training-state-282.ts';
 
 /** V106 covers the obtainable hare only. No historical animal changes faction. */
 export interface DomesticAnimal {
@@ -20,13 +21,20 @@ export interface DomesticAnimal {
 export interface TamingDesignation { designated:boolean; lastAttempt?:number }
 export interface AnimalHandlingTask {
   animalId:number;
-  kind:'tame'|'maintain'|'lead'|'milk'|'shear'|'slaughter';
+  kind:'tame'|'maintain'|'train'|'lead'|'milk'|'shear'|'slaughter';
   sourcePileId:number;
   carryPileId:number|null;
   quantity:number;
   phase:'pickup'|'approach'|'interact'|'lead'|'gather';
   step:number;
   progress:number;
+  /** V282 only: the two admitted physical feed portions and actual skill. */
+  trainable?:AnimalTrainingSkill282;
+  feedUnits?:number;
+  /** The actual feed duration captured before its first worked tick. */
+  feedDuration?:number;
+  /** Attempt/XP already committed at the beginning of the final delay. */
+  finalStartedCore?:number;
   markerId?:number;
   /** V135: IDs already on the handler's ropes, in attachment order. The
    * original animalId remains the stable job identity. */
@@ -43,6 +51,7 @@ export interface AnimalCareTask {
   medicine?:TendMedicine;
 }
 export type DomesticCommand =
+  | {type:'animal-training';animalId:number;skill:'obedience'|'haul';wanted:boolean}
   | {type:'order-animal-rescue';pawnId:number;animalId:number}
   | {type:'animal-spot-medical';spotId:number;enabled:boolean}
   | {type:'slaughter';animalId:number;enabled:boolean}

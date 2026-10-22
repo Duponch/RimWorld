@@ -13,8 +13,10 @@ import {autoSlaughterTargets} from '../sim/auto-slaughter';
 import {animalActivity} from './animal-activity';
 import {autoSlaughterScaffold,updateAutoSlaughterPanel,type AutoSlaughterSend} from './auto-slaughter-panel';
 import './management-reference-v199.css';
+import {isSchema282OrLater} from '../sim/schema-compatibility-257';
+import {readAnimalTraining282,trainingRefusal282} from '../sim/animal-training-282';
 
-interface DomesticRow { locate:HTMLButtonElement; cells:HTMLElement[]; slaughter:HTMLInputElement }
+interface DomesticRow { locate:HTMLButtonElement; cells:HTMLElement[]; slaughter:HTMLInputElement;training?:HTMLInputElement;trainingStatus?:HTMLElement }
 const stageLabel={baby:'Petit',juvenile:'Jeune',adult:'Adulte'} as const;
 const domesticRows=new WeakMap<HTMLElement,Map<number,DomesticRow>>();
 
@@ -24,18 +26,18 @@ export function animalsPanelScaffold():string {
   return autoSlaughterScaffold()+'<p class="muted" data-domestic-empty>Aucun animal domestique.</p><div class="domestic-list domestic-table-wrap" data-domestic-list></div>';
 }
 
-export function updateAnimalsPanel(root:HTMLElement,world:World,focus:(id:number)=>void,slaughter?:(id:number,enabled:boolean)=>void,autoSlaughter?:AutoSlaughterSend):void {
+export function updateAnimalsPanel(root:HTMLElement,world:World,focus:(id:number)=>void,slaughter?:(id:number,enabled:boolean)=>void,autoSlaughter?:AutoSlaughterSend,training?:(id:number,skill:'obedience'|'haul',wanted:boolean)=>void):void {
   if(!root.querySelector('[data-domestic-list]'))root.innerHTML=animalsPanelScaffold();
   updateAutoSlaughterPanel(root,world,autoSlaughter);
   const animals=world.wildlife?.animals.filter(a=>!!a.domestic&&a.state!=='dead')??[];
   root.querySelector<HTMLElement>('[data-domestic-empty]')!.hidden=animals.length>0;
   const list=root.querySelector<HTMLElement>('[data-domestic-list]')!;
-  const ids=animals.map(a=>`${a.id}:${a.species}`).join(',');
+  const trainingAvailable=isSchema282OrLater(world.schemaVersion),ids=`${trainingAvailable}:`+animals.map(a=>`${a.id}:${a.species}`).join(',');
   if(list.dataset.ids!==ids){
     list.dataset.ids=ids;
     const rows=new Map<number,DomesticRow>();
     const table=document.createElement('table');table.className='domestic-table';
-    table.innerHTML='<thead><tr><th scope="col">Nom</th><th scope="col">Sexe</th><th scope="col">Âge</th><th scope="col">Maturité</th><th scope="col">Soins</th><th scope="col">Enclos</th><th scope="col">Production</th><th scope="col">État</th><th scope="col">Abattre</th></tr></thead><tbody></tbody>';
+    table.innerHTML='<thead><tr><th scope="col">Nom</th><th scope="col">Sexe</th><th scope="col">Âge</th><th scope="col">Maturité</th><th scope="col">Soins</th><th scope="col">Enclos</th><th scope="col">Production</th><th scope="col">État</th>'+(trainingAvailable?'<th scope="col">Entraîner au transport</th>':'')+'<th scope="col">Abattre</th></tr></thead><tbody></tbody>';
     const body=table.querySelector('tbody')!;
     body.append(...animals.map(a=>{
       const row=document.createElement('tr');row.className='domestic-row';row.dataset.domesticAnimal=String(a.id);row.dataset.domesticDetails=String(a.id);
@@ -46,15 +48,18 @@ export function updateAnimalsPanel(root:HTMLElement,world:World,focus:(id:number
       const cells=Array.from({length:7},()=>document.createElement('td'));
       const slaughterCell=document.createElement('td'),checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.dataset.domesticSlaughter=String(a.id);
       checkbox.setAttribute('aria-label',`Abattre ${animalSpecies(a.species).label} ${a.id}`);slaughterCell.append(checkbox);
-      rows.set(a.id,{locate,cells,slaughter:checkbox});
-      row.append(name,...cells,slaughterCell);return row;
+      const trainingCell=trainingAvailable?document.createElement('td'):undefined,train=trainingCell?document.createElement('input'):undefined,trainingStatus=trainingCell?document.createElement('small'):undefined;
+      if(train&&trainingCell&&trainingStatus){train.type='checkbox';train.dataset.domesticTrain=String(a.id);train.setAttribute('aria-label',`Entraîner au transport ${actualAnimalName256(a)??animalSpecies(a.species).label} ${a.id}`);trainingCell.append(train,trainingStatus);}
+      rows.set(a.id,{locate,cells,slaughter:checkbox,training:train,trainingStatus});
+      row.append(name,...cells,...(trainingCell?[trainingCell]:[]),slaughterCell);return row;
     }));
     list.replaceChildren(table);
     const labels=table.querySelectorAll<HTMLElement>('thead th');
     setTooltip(labels[4]!,{title:'Soins',body:'La politique médicale se règle dans le dossier Santé de l’animal. Un médecin apporte les médicaments autorisés et soigne au contact.'});
     setTooltip(labels[5]!,{title:'Enclos',body:'Le marqueur attribué et le périmètre physique déterminent cet état. Un dresseur conduit les herbivores ; le lièvre reste libre.'});
     setTooltip(labels[6]!,{title:'Production',body:'Un adulte possédé produit selon son espèce et son sexe. Animaux actif : un colon rejoint la bête pour traire ou tondre une jauge pleine.'});
-    setTooltip(labels[8]!,{title:'Abattre manuellement',body:'Cette case désigne un animal individuellement. Les quotas du troupeau restent indépendants : décocher ici ne retire pas une cible automatique.'});
+    setTooltip(labels[labels.length-1]!,{title:'Abattre manuellement',body:'Cette case désigne un animal individuellement. Les quotas du troupeau restent indépendants : décocher ici ne retire pas une cible automatique.'});
+    if(trainingAvailable)setTooltip(labels[8]!,{title:'Demander le dressage au transport',body:'Demande les leçons et leurs prérequis. Décocher conserve les aptitudes apprises ; le transport est ensuite automatique. Le dossier de l’animal détaille progression et refus.'});
     domesticRows.set(list,rows);
   }
   const rows=domesticRows.get(list);
@@ -81,6 +86,13 @@ export function updateAnimalsPanel(root:HTMLElement,world:World,focus:(id:number
     const refusal=slaughterRefusal(world,a);
     row.slaughter.disabled=!slaughter||!!refusal&&!row.slaughter.checked;
     row.slaughter.onchange=()=>slaughter?.(a.id,row.slaughter.checked);
+    if(row.training&&row.trainingStatus){
+      const state=readAnimalTraining282(a,'haul'),reason=trainingRefusal282(world,a,'haul');
+      row.training.checked=state.wanted;row.training.disabled=!training||!!reason;
+      row.training.onchange=()=>{const wanted=row.training!.checked;row.training!.checked=state.wanted;training?.(a.id,'haul',wanted);};
+      row.trainingStatus.textContent=reason??`${state.steps}/${state.maxSteps}${state.learned?' · acquis':''}`;
+      setTooltip(row.training,{title:'Entraîner au transport',body:reason??'Les leçons demandées attendent un dresseur habilité, la nourriture et les prérequis. Une aptitude acquise reste utilisable si cette case est décochée.'});
+    }
     setTooltip(row.slaughter,{title:row.slaughter.checked?'Annuler la désignation manuelle':'Abattre manuellement',body:refusal??'Un dresseur rejoint cet animal et l’abat au contact. Cette case règle seulement la désignation manuelle ; un quota automatique peut aussi cibler l’animal.'});
     row.cells[0]!.setAttribute('aria-label',a.sex==='female'?'Femelle':'Mâle');
     setTooltip(row.locate,{title:`${species.label} ${a.id}`,body:'Cliquer pour repérer l’animal et ouvrir son dossier.',rows:[{label:'Position',value:`${a.x}, ${a.z}`},{label:'Nourriture',value:`${Math.round(100*a.food/animalNutritionMax(a))} %`},{label:'Mobilité',value:`${mobility} %`},{label:'Familiarité',value:`${a.domestic!.tameness}/5`}]});

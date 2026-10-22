@@ -10,6 +10,7 @@ export function haulReservations(world:World, exceptPawn?:number):HaulTask[] {
     const queue=pawn.orders?.queue;
     if(queue?.length)for(const order of queue)if(isHaulOrder(order))tasks.push(order);
   }
+  for(const animal of world.wildlife?.animals??[])if(animal.id!==exceptPawn&&animal.haul&&animal.haul.phase!=='holding')tasks.push(animal.haul);
   return tasks;
 }
 export function withoutQueuedOrder(world:World, task:QueuedOrder):World {

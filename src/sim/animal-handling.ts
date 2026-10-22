@@ -31,6 +31,9 @@ import { leadingClaimIds,processLeading, type LeadingTask } from './animal-leadi
 import { processProduct, productHandlerAvailable, productKind, type ProductTask } from './animal-products.ts';
 import { processSlaughter,slaughterHolding,type SlaughterTask } from './animal-slaughter.ts';
 import { animalClaimed } from './animal-rest-state.ts';
+import {advanceAnimalTraining282} from './animal-training-282.ts';
+import {interruptAnimalHaul282} from './animal-hauling-282.ts';
+import {animalTrainingLesson282,animalTrainingFood282,animalTrainingFeedUnits282,processAnimalTraining282,type AnimalTrainingTask282} from './animal-training-service-282.ts';
 
 /** Core's 60,000-tick day is represented by 6,000 local ticks. */
 export const TAME_COOLDOWN = TICKS_PER_DAY / 2;
@@ -68,7 +71,7 @@ function handlerAvailable(p:Pawn):boolean {
     &&!medicalWorkRefusal(p)&&body.talking>0&&body.hearing>0&&body.manipulation>0;
 }
 function trainableAt(w:World,a:WildAnimal):boolean {
-  return !startingPetFourNoTamenessDecay256(a.species)&&(a.species==='hare'||w.schemaVersion>=256&&isAnimalSpecies256(a.species)&&!PEN_ANIMALS_256.includes(a.species))&&!!a.domestic&&a.domestic.tameness<MAX_TAMENESS
+  return !a.training&&!startingPetFourNoTamenessDecay256(a.species)&&(a.species==='hare'||w.schemaVersion>=256&&isAnimalSpecies256(a.species)&&!PEN_ANIMALS_256.includes(a.species))&&!!a.domestic&&a.domestic.tameness<MAX_TAMENESS
     &&w.tick-(a.domestic.lastTraining??a.domestic.since)>=TRAIN_COOLDOWN;
 }
 function tameableAt(w:World,a:WildAnimal,p:Pawn):boolean {
@@ -90,32 +93,40 @@ export function animalHandlingHolding(w:World,id:number):boolean {
 export function handlingWanted(w:World,p:Pawn):boolean {
   if(!handlerAvailable(p))return false;
   return !!w.wildlife?.animals.some(a=>allowedAreaAllows(w,p,a)&&animalAvailable(a)&&!animalHandlingClaimed(w,a.id)
-    &&(trainableAt(w,a)||tameableAt(w,a,p)));
+    &&(animalTrainingLesson282(w,p,a)!==undefined||trainableAt(w,a)||tameableAt(w,a,p)));
 }
 export interface HandlingProposal { task:AnimalHandlingTask; path:Cell[]; target:Cell }
 export function handlingProposal(w:World,p:Pawn,reach:Reachability):HandlingProposal|undefined {
   if(!handlingWanted(w,p))return;
   const animals=w.wildlife!.animals.filter(a=>allowedAreaAllows(w,p,a)&&animalAvailable(a)&&!animalHandlingClaimed(w,a.id)
-    &&(trainableAt(w,a)||tameableAt(w,a,p)))
+    &&(animalTrainingLesson282(w,p,a)!==undefined||trainableAt(w,a)||tameableAt(w,a,p)))
     .sort((a,b)=>(a.x-p.x)**2+(a.z-p.z)**2-((b.x-p.x)**2+(b.z-p.z)**2)||a.id-b.id);
   const sources=w.piles.filter(i=>i.kind==='food'&&eggAllowedForPlayer256(i)&&(w.schemaVersion>=256||handlingFoodCollectable(w,i.item))&&i.owner.type==='ground'&&allowedAreaAllows(w,p,i.owner))
     .sort((a,b)=>(a.owner.type==='ground'?(a.owner.x-p.x)**2+(a.owner.z-p.z)**2:Infinity)
       -(b.owner.type==='ground'?(b.owner.x-p.x)**2+(b.owner.z-p.z)**2:Infinity)||a.id-b.id);
   for(const a of animals) {
+    const trainable=animalTrainingLesson282(w,p,a);
 
     // An inaccessible animal must not reserve food, a worker or its attempt.
     if(!routeToJob(w,a,reach,false))continue;
     for(const pile of sources) {
-    if(pile.owner.type!=='ground'||!handlingFoodCollectable(w,pile.item,a))continue;
-    const feeds=handlingFeedUnits(a.species,pile.item)*2;
+    if(pile.owner.type!=='ground'||!(trainable?!pile.forbidden&&animalTrainingFood282(a,pile.item):handlingFoodCollectable(w,pile.item,a)))continue;
+    const feedUnits=trainable?animalTrainingFeedUnits282(a,pile.item):handlingFeedUnits(a.species,pile.item),feeds=feedUnits*2;
     if(pile.quantity-reservedSource(w,pile.id)<feeds)continue;
     const path=routeToJob(w,pile.owner,reach,true);if(!path)continue;
-    return {task:{animalId:a.id,kind:a.domestic?'maintain':'tame',sourcePileId:pile.id,carryPileId:null,
+    return {task:{animalId:a.id,kind:trainable?'train':a.domestic?'maintain':'tame',...(trainable?{trainable,feedUnits}:{}),sourcePileId:pile.id,carryPileId:null,
       quantity:feeds,phase:'pickup',step:0,progress:0},path,target:pile.owner};
     }
   }
 }
-export function startHandling(p:Pawn,proposal:HandlingProposal):void {
+export function startHandling(p:Pawn,proposal:HandlingProposal,w?:World):void {
+  if(proposal.task.kind==='train'){
+    const a=w?.wildlife?.animals.find(a=>a.id===proposal.task.animalId);
+    if(!w||!a||animalTrainingLesson282(w,p,a)!==proposal.task.trainable)return;
+    // Admission alone revokes a physical haul. A failed Near drop keeps the
+    // original cargo in holding while this distinct human service proceeds.
+    if(a.haul&&a.haul.phase!=='holding')interruptAnimalHaul282(w,a);
+  }
   p.animalHandling=proposal.task;p.path=proposal.path;p.state=proposal.path.length?'moving':'working';p.planCooldown=0;
 }
 export function tameRefusal(_w:World,a:WildAnimal|undefined):string|undefined {
@@ -184,6 +195,7 @@ interface HandlingContext extends NeedContext { candidates():Reachability|null; 
 export function processHandling(w:World,p:Pawn,ctx:HandlingContext):void {
   if(!allowedAreaServicesAllowed(w,p)){interruptWork(w,p);return;}
   const task=p.animalHandling;if(!task)return;
+  if(task.kind==='train'){processAnimalTraining282(w,p,task as AnimalTrainingTask282,ctx);return;}
   if(task.kind==='slaughter'){processSlaughter(w,p,task as SlaughterTask,ctx);return;}
   if(w.wildlife?.animals.some(a=>a.manhunter&&leadingClaimIds(task).includes(a.id))){interruptWork(w,p);return;}
   if(task.kind==='lead'){if(task.markerId===undefined){interruptWork(w,p);return;}processLeading(w,p,task as LeadingTask,ctx);return;}
@@ -236,6 +248,7 @@ export function processHandling(w:World,p:Pawn,ctx:HandlingContext):void {
 /** Sparse caller: once per world tick, with no path or map scan. */
 export function advanceTameness(w:World):void {
   for(const a of w.wildlife?.animals??[]) {
+    if(a.training){advanceAnimalTraining282(w,a);continue;}
     const d=a.domestic;if(startingPetFourNoTamenessDecay256(a.species)||!d||!(a.species==='hare'||w.schemaVersion>=256&&isAnimalSpecies256(a.species)&&!PEN_ANIMALS_256.includes(a.species))||a.state==='dead'||w.tick<d.nextDecay)continue;
     while(a.domestic&&w.tick>=a.domestic.nextDecay) {
       a.domestic.tameness--;

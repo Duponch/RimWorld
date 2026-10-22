@@ -1,4 +1,6 @@
 import {validSmoothFloorsHistoricalTransport281,validSmoothFloorTile281,validateSmoothFloors281} from './smooth-floor-save-281.ts';
+import {validAnimalTrainingHistoricalTransport282} from './animal-training-historical-282.ts';
+import {animalHaulContents282} from './animal-haul-contents-282.ts';
 import {isSchema281OrLater} from './schema-compatibility-257.ts';
 import {validPrisonerSurgeryHistoricalTransport280} from './prisoner-surgery-save-280.ts';
 import {validApparelTradeHistoricalTransport279} from './apparel-trade-save-279.ts';
@@ -308,7 +310,7 @@ export function validateGeneratedLocalMap256(input:unknown,context:{readonly cal
       ||!record(input.site)||input.site.revision!==3||Object.hasOwn(input,'worldMaps')||Object.hasOwn(input,'worldGroups')||!context||!Number.isSafeInteger(context.calendarOrigin))return ['Expected an unpublished geographic local-map candidate with its actual campaign clock.'];
     if(context.settlement&&(!validGeographicSettlementDimensions262(Number(input.schemaVersion),input.width,input.height,context.settlementDimensions)||['scenario','expeditionSite','startingArrival'].some(k=>Object.hasOwn(input,k))))return ['A non-starting settlement must have its actual new geographic body, without arrival or Camp provenance.'];
     if(context.worldTarget263&&(!isSchema263OrLater(Number(input.schemaVersion))||input.width!==context.worldTarget263.context.dimensions.width||input.height!==context.worldTarget263.context.dimensions.height||!record(input.site)||worldTargetConstructionReason263(input as unknown as World,context.worldTarget263.context,Number(input.site.tileId),Number(input.width))||['scenario','expeditionSite','startingArrival'].some(k=>Object.hasOwn(input,k))))return ['World target generation differs from its real construction authority.'];
-    return validateSchema(input,input.schemaVersion as 256|257|258|259|260|261|262|263|264|265|266|267|268|269|270|271|272|273|274|275|276|277|278|279|280|281,false,undefined,context);
+    return validateSchema(input,input.schemaVersion as 256|257|258|259|260|261|262|263|264|265|266|267|268|269|270|271|272|273|274|275|276|277|278|279|280|281|282,false,undefined,context);
   }catch{return ['Invalid unpublished geographic local-map candidate.'];}
 }
 function validateSharedCampaign(root:CampaignState):string[] {const view=emptyCampaignOwner(root);brandCampaignContext(view,root);return validateCampaignSharedFields(view);}
@@ -316,6 +318,7 @@ function validateSharedCampaign(root:CampaignState):string[] {const view=emptyCa
  * The secondary view forwards the old campaign schema without migrating it. */
 function validateCampaignSchema(input:unknown,version:Parameters<typeof validateSchema>[1]):string[] {
   try{
+    if(!validAnimalTrainingHistoricalTransport282(input,version))return ['Historical save contains future animal training or hauling.'];
     if(!validSmoothFloorsHistoricalTransport281(input,version))return ['Historical save contains future natural stone smoothing.'];
     if(!validPrisonerSurgeryHistoricalTransport280(input,version))return ['Historical save contains future captive surgery.'];
     if(!validApparelTradeHistoricalTransport279(input,version))return ['Historical save contains future ordinary apparel custody or trade.'];
@@ -353,7 +356,7 @@ function validateCampaignSchema(input:unknown,version:Parameters<typeof validate
     return errors;
   }catch{return ['Invalid second-site records or owner namespace.'];}
 }
-function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250 | 251 | 252 | 253 | 254 | 255 | 256 | 257 | 258 | 259 | 260 | 261|262|263|264|265|266|267|268|269|270|271|272|273|274|275|276|277|278|279|280|281, relationshipContext = true,registeredIds?:Set<number>,generatedContext?:{readonly calendarOrigin:number;readonly settlement?:true;readonly settlementDimensions?:Readonly<{width:number;height:number}>;readonly worldTarget263?:WorldTargetGenerated263},registeredNonStartingSettlement=false): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250 | 251 | 252 | 253 | 254 | 255 | 256 | 257 | 258 | 259 | 260 | 261|262|263|264|265|266|267|268|269|270|271|272|273|274|275|276|277|278|279|280|281|282, relationshipContext = true,registeredIds?:Set<number>,generatedContext?:{readonly calendarOrigin:number;readonly settlement?:true;readonly settlementDimensions?:Readonly<{width:number;height:number}>;readonly worldTarget263?:WorldTargetGenerated263},registeredNonStartingSettlement=false): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(raw)) return ['World must be an object.'];
@@ -781,7 +784,10 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
       if (version>=21&&!groundOccupancyAllows(world,owner) || isImpassable(owner) || structureCells.get(cellKey(owner))?.kind === 'wall' || version<16&&jobCells.get(cellKey(owner))?.kind === 'wall') errors.push('Pile on impassable cell.');
       if(pile.kind==='wood'||pile.kind==='food')available[pile.kind] += pile.quantity;
     } else if (owner.type === 'pawn') { if (!pawnById.has(owner.pawnId)) errors.push('Pile references missing carrier.'); if((pile.kind==='wood'||pile.kind==='food')&&(version<88||(pawnById.get(owner.pawnId)?.faction??'colony')==='colony'))available[pile.kind] += pile.quantity; }
-    else if(owner.type==='equipment'||owner.type==='apparel'||owner.type==='inventory'){if(!pawnById.has(owner.pawnId)&&!(owner.type==='inventory'&&version>=256&&animalContentsOwner256(world,owner.pawnId)!==undefined))errors.push('Missing equipment owner.');}
+    else if(owner.type==='equipment'||owner.type==='apparel'||owner.type==='inventory'){
+      if(!pawnById.has(owner.pawnId)&&!(owner.type==='inventory'&&version>=256&&animalContentsOwner256(world,owner.pawnId)!==undefined))errors.push('Missing equipment owner.');
+      if((pile.kind==='wood'||pile.kind==='food')&&animalHaulContents282(world,pile))available[pile.kind]+=pile.quantity;
+    }
     else if(owner.type==='grave'){if(!world.structures.some(s=>(s.kind==='grave'||version>=256&&s.kind==='sarcophagus')&&s.id===owner.graveId))errors.push('Missing grave owner.');}
     else if(owner.type==='starting-pod')errors.push('Contained starting material occurs in map piles.');
     else if(owner.type==='world-site263')errors.push('Contained Site material occurs in map piles.');
@@ -840,6 +846,7 @@ export function serializeCampaign(world:CampaignState):string {
 export function deserializeCampaign(serialized: string): CampaignState {
   if (typeof serialized !== 'string' || !withinSaveTextLimit(serialized)) throw new Error('Invalid or oversized save.');
   let input: unknown = JSON.parse(serialized);
+  if(record(input)&&Number.isInteger(input.schemaVersion)&&!validAnimalTrainingHistoricalTransport282(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future animal training or hauling.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validSmoothFloorsHistoricalTransport281(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future natural stone smoothing.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validPrisonerSurgeryHistoricalTransport280(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future captive surgery.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validApparelTradeHistoricalTransport279(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future ordinary apparel custody or trade.');
@@ -1690,6 +1697,7 @@ export function deserializeCampaign(serialized: string): CampaignState {
   if(record(input)&&input.schemaVersion===278){const old=validateCampaignSchema(input,278);if(old.length)throw new Error('Invalid version278 save: '+old.join(' '));input.schemaVersion=279; /* Number only: preserve objects, custody, receipts, sampled wealth, bills, time and random draws. */}
   if(record(input)&&input.schemaVersion===279){const old=validateCampaignSchema(input,279);if(old.length)throw new Error('Invalid version279 save: '+old.join(' '));input.schemaVersion=280; /* Number only: no surgery request, patient/bed role, medical state, inventory, dossier, time or random draw. */}
   if(record(input)&&input.schemaVersion===280){const old=validateCampaignSchema(input,280);if(old.length)throw new Error('Invalid version280 save: '+old.join(' '));input.schemaVersion=281; /* Number only: no terrain, rock identity, smoothing intention/progress, skill, inventory, time or random draw. */}
+  if(record(input)&&input.schemaVersion===281){const old=validateCampaignSchema(input,281);if(old.length)throw new Error('Invalid version281 save: '+old.join(' '));input.schemaVersion=282; /* Number only: no animal training, learned step, intent, area, cargo, master, clock, food or random draw. */}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;
   if(hasLoadedRoot(world))consolidateLooseRocks(world);

@@ -1,4 +1,6 @@
 import {validSmoothFloorsHistoricalTransport281,validSmoothFloorTile281,validSmoothFloorWorld281} from '../sim/smooth-floor-save-281';
+import {validAnimalTrainingHistoricalTransport282} from '../sim/animal-training-historical-282';
+import {validAnimalTrainingWorld282} from '../sim/animal-training-world-282';
 import {validPrisonerSurgeryHistoricalTransport280,validPrisonerSurgeryWorld280} from '../sim/prisoner-surgery-save-280';
 import {validApparelTradeHistoricalTransport279,validApparelTradeWorld279} from '../sim/apparel-trade-save-279';
 import {validApparelReservesBuilding278,validApparelReservesHistoricalTransport278} from '../sim/apparel-reserves-save-278';
@@ -262,6 +264,7 @@ export class ResidentPresentationAssembler {
    next={...previous,...dynamic,structures,tiles,resources,piles} as World;
    for(const key of Object.keys(previous!)as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&key!=='structures'&&!own(dynamic,key))delete (next as Partial<World>)[key];
   }
+  if(!validAnimalTrainingHistoricalTransport282(packet,next.schemaVersion)||!validAnimalTrainingWorld282(next))return fail('Invalid resident animal training or hauling');
   if(!validSmoothFloorsHistoricalTransport281(packet,next.schemaVersion)||!validSmoothFloorWorld281(next,packet.epoch===this.epoch?previous:undefined))return fail('Invalid resident natural stone smoothing');
   if((checkpoint?next.tiles.some(t=>!validSmoothFloorTile281(t,next.schemaVersion)):tileIndices.some(i=>!validSmoothFloorTile281(next.tiles[i]!,next.schemaVersion))))return fail('Invalid resident smoothed terrain');
   if(!validPrisonerSurgeryHistoricalTransport280(packet,next.schemaVersion)||!validPrisonerSurgeryWorld280(next))return fail('Invalid resident captive surgery');

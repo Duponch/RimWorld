@@ -1,4 +1,5 @@
 import {animalContentsOwner256,animalContentsLocation256} from './animal-local-contents-256.ts';
+import {animalHaulContents282} from './animal-haul-contents-282.ts';
 import {isFutureEcologyItem256} from './cave-products-256.ts';
 import {canMergeEggPile256} from './animal-egg-permission-v256.ts';
 import {validEggPile256} from './animal-egg-save-v256.ts';
@@ -121,7 +122,7 @@ export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):
   if(sameOwner(pile.owner,owner))return true;
   if(pile.kind==='plant'){if(owner.type!=='ground'&&owner.type!=='pawn'&&owner.type!=='inventory')return false;if(owner.type==='ground'&&groundCapacity(world,owner,pile,pile.owner.type==='pawn'?pile.owner.pawnId:undefined)<1)return false;pile.owner={...owner};refreshStock(world);return true;}
   if((pile.kind==='corpse'||pile.kind==='mech-corpse')&&owner.type!=='ground'&&owner.type!=='pawn')return false;
-  const carrier=pile.owner.type==='pawn'?pile.owner.pawnId:undefined;
+  const carrier=pile.owner.type==='pawn'||animalHaulContents282(world,pile)&&pile.owner.type==='inventory'?pile.owner.pawnId:undefined;
   if(owner.type==='ground'&&groundCapacity(world,owner,pile,carrier)<pile.quantity)return false;
   if(owner.type==='ground'&&shelfAt(world,owner)){
     let remaining=pile.quantity;
@@ -152,7 +153,10 @@ export function reservedSource(world: World, pileId: number, exceptPawn?: number
   let quantity = commercialReservedQuantity(world,pileId,exceptPawn)+groupReservedQuantity(world,pileId);
   for(const j of world.jobs)if(j.id!==exceptTreeJob&&j.tree?.kind==='replant'&&j.tree.phase==='pickup'&&j.tree.sourcePileId===pileId&&j.reservedBy!==exceptPawn&&!exceptPawns?.has(j.reservedBy??-1))quantity++;
   if(world.scout?.phase==='loading'&&world.scout.pawnId!==exceptPawn&&world.scout.sourcePileId===pileId)quantity+=world.scout.quantity;
-  for(const a of world.wildlife?.animals??[])if(a.id!==exceptPawn&&!exceptPawns?.has(a.id)&&a.meal?.kind==='pile'&&a.meal.id===pileId)quantity+=a.meal.quantity;
+  for(const a of world.wildlife?.animals??[])if(a.id!==exceptPawn&&!exceptPawns?.has(a.id)){
+    if(a.meal?.kind==='pile'&&a.meal.id===pileId)quantity+=a.meal.quantity;
+    if(a.haul?.phase==='pickup'&&a.haul.sourcePileId===pileId)quantity+=a.haul.quantity;
+  }
   for (const pawn of world.pawns) {
     if (pawn.id !== exceptPawn&&!exceptPawns?.has(pawn.id)) {
       if(pawn.burial?.phase==='pickup'&&pawn.burial.corpseId===pileId)quantity++;
@@ -192,8 +196,10 @@ export function reservedSourcesByPile(world: World, exceptPawn?: number): Readon
   for(const j of world.jobs)if(j.tree?.kind==='replant'&&j.tree.phase==='pickup'&&j.reservedBy!==exceptPawn)add(j.tree.sourcePileId,1);
   for(const [id,quantity] of commercialReservedSources(world,exceptPawn))add(id,quantity);
   for(const [id,quantity] of groupReservedQuantities(world))add(id,quantity);
-  for (const animal of world.wildlife?.animals ?? [])
-    if (animal.id !== exceptPawn && animal.meal?.kind === 'pile') add(animal.meal.id, animal.meal.quantity);
+  for (const animal of world.wildlife?.animals ?? [])if (animal.id !== exceptPawn){
+    if(animal.meal?.kind==='pile')add(animal.meal.id, animal.meal.quantity);
+    if(animal.haul?.phase==='pickup')add(animal.haul.sourcePileId,animal.haul.quantity);
+  }
   for (const pawn of world.pawns) {
     if (pawn.id !== exceptPawn) {
       if (pawn.burial?.phase === 'pickup' && pawn.burial.corpseId !== undefined) add(pawn.burial.corpseId, 1);
@@ -243,4 +249,4 @@ export function groundQuantity(world: World, cell: Cell): number {
 }
 
 /** Colony HUD excludes possessions of neutral or hostile people. */
-export function colonyPile(world:World,pile:MaterialPile):boolean {const o=pile.owner;return o.type==='ground'||(o.type==='pawn'||o.type==='equipment'||o.type==='apparel')&&world.pawns.some(p=>p.id===o.pawnId&&isColonist(p));}
+export function colonyPile(world:World,pile:MaterialPile):boolean {const o=pile.owner;return o.type==='ground'||(o.type==='pawn'||o.type==='equipment'||o.type==='apparel')&&world.pawns.some(p=>p.id===o.pawnId&&isColonist(p))||animalHaulContents282(world,pile);}
