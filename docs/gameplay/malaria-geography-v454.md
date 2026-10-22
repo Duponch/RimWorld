@@ -1,6 +1,6 @@
 # V454 — Paludisme des biomes géographiques
 
-**Qualification ciblée et interface native muette acquises ; schéma 277 inchangé ; publication en attente.** Admission du paludisme déjà tiré rétablie dans les marécages tempérés, forêts tropicales et marécages tropicaux. Aucun nouvel équilibrage ou catalogue de maladies annoncé.
+**V454 publiée — schéma 277 inchangé.** Admission du paludisme déjà tiré rétablie dans les marécages tempérés, forêts tropicales et marécages tropicaux. Aucun nouvel équilibrage ou catalogue de maladies annoncé.
 
 Ce lot suit l’[audit transversal des bases](../development/audit-core-20261022.md), qui couvre tous les aspects du Core et leurs interactions. Les domaines cités par l’utilisateur étaient des exemples, pas une liste fermée. La priorité suivante reste la réserve de vêtements utilisables, puis la valeur et la vente des vêtements existants ; l’ordre sera réévalué selon les lacunes ordinaires.
 
@@ -56,6 +56,10 @@ Rapport `tmp/malaria-geography-v454/native-ui/2026-10-22T00-34-11-796Z/report.js
 
 ## Livraison et suite
 
-Build Pages et publication à acquérir. Les sauvegardes publiques et originaux du corpus doivent rester strictement identiques. Cette réparation ne change ni le schéma277 ni les historiques, et ne revendique aucun gain FPS, fréquence naturelle des maladies ou clôture des six ensembles.
+**Produit sélectionné : `33abcc2cfc693312fea1f70447857b5f786700fa`.** Build Pages acquis4,616s ; paquet `tmp/elsewhere-pages/v454-package-fNsHnH/`,552fichiers et152675377octets. Les68fiches/71chemins publics de sauvegarde sont strictement identiques public↔dist ; les actifs statiques et CSS restent ceux de V453, laboratoire et branchements QA absents du paquet inspecté.
+
+Déploiement **`c514a33d`** acquis sur [l’adresse publique](https://elsewhere-cq7.pages.dev/) et [l’adresse immuable](https://c514a33d.elsewhere-cq7.pages.dev/). Les20réponses HTTPS ciblées sont exactes en octets/MIME sur les deux adresses, rapport `tmp/elsewhere-pages/v454-http-5jKCzR/report.json`. Ce contrôle distant ne retélécharge pas toutes les sauvegardes et ne remplace pas le parcours natif acquis. L’avertissement de répertoire Git non entièrement suivi provient du dossier humain `references_UI/`, conservé et exclu du paquet ; aucune source produit suivie n’est restée modifiée pendant le build ou le contrôle.
+
+Les trois originaux du corpus sont byte-identiques. Cette réparation ne change ni le schéma277 ni les historiques, et ne revendique aucun gain FPS, fréquence naturelle des maladies ou clôture des six ensembles.
 
 La suite décidée par l’[audit transversal](../development/audit-core-20261022.md) est la réserve d’habits utilisables, puis la valeur/vente des vêtements existants. La recherche primaire préparatoire confirme la distinction entre état/qualité du produit compté, vêtement porté et ingrédients ; ce lot suivant n’est pas livré par le présent correctif. Réévaluer ensuite tous les autres domaines selon leurs lacunes ordinaires.

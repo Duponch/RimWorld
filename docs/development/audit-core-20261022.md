@@ -4,6 +4,8 @@ L’audit porte sur l’ensemble du jeu et ses interactions. Social, constructio
 
 Les six ensembles restent ouverts. Le projet possède de nombreuses actions physiques jouables ; il ne possède pas encore une campagne Core complète, une victoire démontrée ou la cible de performances en charge. Aucun pourcentage global n’est déduit du nombre de versions, de définitions ou de tests.
 
+**Suite actualisée après V454 :** le [raccord du paludisme géographique](../gameplay/malaria-geography-v454.md) est publié, avec apparition, soins et reprises acquis dans son périmètre. La prochaine priorité est la réserve de vêtements utilisables, puis leur valeur/vente ; les autres domaines restent à réévaluer. La lecture initiale et les priorités ci-dessous sont conservées comme provenance de cette décision.
+
 ## Référence et méthode
 
 Lecture des sources courantes autour de V453, schéma 277, confrontée au [plan des six ensembles](core-completion-plan-20261020.md), au [corpus original](../reference/originals/Documentation_developpement.html) et à ses identifiants SYS/TEST/CONST/UI/STAT/GAP conservés. Les trois originaux sont préservés. Les chapitres couvrent temps, définitions/statistiques, génération et milieux, commandes, travail, économie, habitants, combat, environnement, récit, voyages, populations et sauvegardes ; leur seule énumération n’atteste pas une couverture exhaustive.
