@@ -1,6 +1,6 @@
 # V457 — Chirurgie thérapeutique des captifs adultes
 
-**Qualifiée localement, schéma280 ; publication en attente, V456 reste publiée.** Ce lot poursuit l’ensemble3 après la réévaluation transversale, sur les opérations déjà représentées et les vrais services de prison. Aucun nouvel objet, médicament, implant, corps ou type de tâche.
+**Publiée — schéma280.** Ce lot poursuit l’ensemble3 après la réévaluation transversale, sur les opérations déjà représentées et les vrais services de prison. Aucun nouvel objet, médicament, implant, corps ou type de tâche.
 
 ## Résultat et portée
 
@@ -48,7 +48,7 @@ Diagnostic conservé : trois annotations de fixtures puis un cast historique ont
 
 Effets et musique coupés, quatre clés audio false/0 avant la première page et après les recharges, Chrome `--mute-audio` ; aucun réglage imposé aux joueurs. Sources2439chemins gelées et strictement identiques après le parcours. Capture finale du dossier contrôlée visuellement. Une notification `ResizeObserver loop completed with undelivered notifications` est conservée dans le rapport natif et le journal Vite ; aucune autre erreur, faute graphique ou arrêt de simulation observé. Rapport privé `tmp/prisoner-surgery-v457/native-ui/2026-10-22T02-17-52-510Z/report.json`. Le serveur humain5184 n’a pas été piloté.
 
-La compilation Pages et la publication seront renseignées après acquisition. Aucun nouveau gain FPS ni clôture clinique/Core/sixensembles.
+Compilation Pages acquise en4,950s. Produit `55e22babddae82960c9cae802e452e4a846532de`, publié sous `5435d148` ; [site public](https://elsewhere-cq7.pages.dev/) et [déploiement identifié](https://5435d148.elsewhere-cq7.pages.dev/). Paquet552fichiers/152716343octets,68fiches et71chemins publics de sauvegarde strictement égaux à `public`, assets statiques et CSS inchangés par rapport au paquet V456 qualifié, laboratoires/instrumentation privés absents. Vingt réponses HTTPS ciblées contrôlées octet par octet et MIME ; ces réponses ne remplacent pas le parcours natif. Publication15,859s ; rapports `tmp/elsewhere-pages/v457-package-DFfGHR/report.json` et `tmp/elsewhere-pages/v457-http-XYfHgd/report.json`. L’avertissement Wrangler sur le répertoire non vierge correspond aux références humaines non suivies, préservées et exclues du paquet. Serveur ROOT5173 arrêté après contrôle exact d’identité/port ; Chrome de test fermé. Aucun nouveau gain FPS ni clôture clinique/Core/sixensembles.
 
 ## Suite choisie
 
