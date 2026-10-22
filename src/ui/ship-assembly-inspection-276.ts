@@ -1,3 +1,4 @@
+import {isSchema276OrLater} from '../sim/schema-compatibility-257.ts';
 import {isShipPartKind277} from '../sim/ship-casket-graph-277';
 import {indexShipParts276,readShipAssembly276,type ShipPartIndexResult276,type ShipAssemblyReport276} from '../sim/ship-part-reader-276';
 import type {Structure,World} from '../sim/types';
@@ -19,7 +20,7 @@ function read(root:HTMLElement,w:World,id:number):ShipAssemblyReport276<Structur
  * offering a launch command or allocating a graph on every rendered frame. */
 export function updateShipAssemblyInspection276(root:HTMLElement,w:World,s:Structure|undefined):void {
  let section=root.querySelector<HTMLDetailsElement>('[data-ship-assembly]');
- if((Number(w.schemaVersion)!==276&&w.schemaVersion!==277)||!s||!isShipPartKind277(s.kind)){section?.remove();caches.delete(root);return;}
+ if(!isSchema276OrLater(w.schemaVersion)||!s||!isShipPartKind277(s.kind)){section?.remove();caches.delete(root);return;}
  if(!section){section=root.ownerDocument.createElement('details');section.dataset.shipAssembly='';root.querySelector('.cell-card')?.append(section);}
  const doc=root.ownerDocument,report=read(root,w,s.id);
  let summary=section.querySelector('summary');if(!summary){summary=doc.createElement('summary');section.append(summary);}

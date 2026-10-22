@@ -9,7 +9,7 @@ import {isShipPartKind276,isShipAddedKind276,SHIP_PART_DEFAULT_ORIENTATION_276} 
 import {shipPartPlacementRefusal276} from './ship-reactor-placement-275.ts';
 import {applyShipReactorCommand275,advanceShipReactors275} from './ship-reactor-runtime-275.ts';
 import {cancelProstheticWork273,detachMissingProstheticBills273} from './prosthetic-work-273.ts';
-import {isSchema271OrLater} from './schema-compatibility-257.ts';
+import {isSchema271OrLater,isSchema276OrLater,isSchema277OrLater} from './schema-compatibility-257.ts';
 import {applyCryptosleep271,processCryptosleepTask271,reconcileCryptosleepTask271} from './cryptosleep-task-271.ts';
 import {cryptosleepUnlocked271} from './research.ts';
 import {newCryptosleepHolder271} from './cryptosleep-state-271.ts';
@@ -449,9 +449,9 @@ export function buildConstructionCellIndex(world: World, kind: LineBuildKind): C
 /** Pure shared rule used by preview and command execution. */
 export function canDesignate(world: World, command: DesignateCommand|import('./cave-glowpod-minification-256.ts').NaturalInstallPlan256, installing=false, index?:ConstructionCellIndex): CommandResult {
   if(command&&isShipPartKind276(command.kind)&&command.orientation===undefined)command={...command,orientation:SHIP_PART_DEFAULT_ORIENTATION_276[command.kind]};
-  if(command&&isShipAddedKind276(command.kind)){if(installing||(Number(world.schemaVersion)!==276&&world.schemaVersion!==277)||!(command.kind==='ship-beam'?shipBasicsUnlocked275(world):shipEngineUnlocked276(world)))return refusal('invalid-command',command.kind==='ship-beam'?'Recherchez Construction de vaisseau pour construire cette poutre fixe.':'Recherchez Moteur Johnson–Tanaka pour construire ce moteur fixe.');const reason=shipPartPlacementRefusal276(world,{...command,kind:command.kind});if(reason)return refusal('occupied',reason);}
+  if(command&&isShipAddedKind276(command.kind)){if(installing||!isSchema276OrLater(world.schemaVersion)||!(command.kind==='ship-beam'?shipBasicsUnlocked275(world):shipEngineUnlocked276(world)))return refusal('invalid-command',command.kind==='ship-beam'?'Recherchez Construction de vaisseau pour construire cette poutre fixe.':'Recherchez Moteur Johnson–Tanaka pour construire ce moteur fixe.');const reason=shipPartPlacementRefusal276(world,{...command,kind:command.kind});if(reason)return refusal('occupied',reason);}
   if(command?.kind==='ship-cryptosleep-casket'){
-    if(installing||world.schemaVersion!==277||!shipCryptosleepUnlocked277(world))return refusal('invalid-command','Recherchez Cryptosommeil spatial pour construire ce caisson fixe.');
+    if(installing||!isSchema277OrLater(world.schemaVersion)||!shipCryptosleepUnlocked277(world))return refusal('invalid-command','Recherchez Cryptosommeil spatial pour construire ce caisson fixe.');
     command={...command,orientation:command.orientation??2};
     const reason=shipCasketPlacementRefusal277(world,{x:command.x,z:command.z,orientation:command.orientation});if(reason)return refusal('invalid-command',reason);
   }

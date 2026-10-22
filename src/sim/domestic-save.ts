@@ -1,3 +1,4 @@
+import {isSchema277OrLater} from './schema-compatibility-257.ts';
 import {startingPetFourNoTamenessDecay256} from './starting-pet-four-tameness-256.ts';
 import {isAnimalSpecies256} from './animal-core-v256.ts';
 import {PEN_ANIMALS_256} from './animal-domestic-v256.ts';
@@ -212,4 +213,4 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
 export function validDetachedDomesticAnimal(a:WildAnimal,tick:number,nextId:number,version=255):boolean {return a.domestic===undefined||validDomesticOwner({tick,nextId},a,version);}
 
 /** Scalar clock with the real local structures, solely for an actual held owner. */
-export function validHeldDomesticAnimal277(a:WildAnimal,tick:number,nextId:number,version:number,structures:World['structures']):boolean {return version===277&&(a.domestic===undefined||validDomesticOwner({tick,nextId,structures},a,version));}
+export function validHeldDomesticAnimal277(a:WildAnimal,tick:number,nextId:number,version:number,structures:World['structures']):boolean {return isSchema277OrLater(version)&&(a.domestic===undefined||validDomesticOwner({tick,nextId,structures},a,version));}

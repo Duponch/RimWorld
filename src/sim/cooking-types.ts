@@ -11,6 +11,13 @@ export interface CremationFilter {
   colonists:boolean;strangers:boolean;
   fresh:boolean;rotting:boolean;desiccated:boolean;
 }
+/** V278: filters finished apparel counted toward a reserve, never ingredients
+ * or the quality roll. Absence preserves the historical bill counter. */
+export interface ApparelCountFilter278 {
+  hpMin:number;hpMax:number;
+  qualityMin:WeaponQuality;qualityMax:WeaponQuality;
+  includeEquipped:boolean;
+}
 
 export type RawIngredient = 'raw-fungus' | 'rice' | 'berries' | 'agave-fruit' | typeof ANIMAL_MEAT_ITEMS[number] | 'potato' | 'corn';
 export interface CookingBill {
@@ -25,6 +32,7 @@ export interface CookingBill {
   /** Shared HP/quality filter for whole weapons and apparel destruction. */
   smeltFilter?:SmeltFilter;
   cremationFilter?:CremationFilter;
+  apparelCount?:ApparelCountFilter278;
 }
 export type BillSettings=Omit<CookingBill,'id'|'recipe'>;
 export interface CookingIngredient {

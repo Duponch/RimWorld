@@ -1,3 +1,4 @@
+import {isSchema277OrLater} from './schema-compatibility-257.ts';
 import {terrainAcceptsFilth256} from './natural-terrain-runtime-256.ts';
 import { isRoofed } from './roof-rules.ts';
 import { isGrowingTerrain } from './soil.ts';
@@ -87,7 +88,7 @@ export function bleedFilth(w:World,cell:Cell,rate:number,lying:boolean,bodySize=
 /** Only already-carried traces on the new animal/mechanical carrier. No new
  * ambient dirt/trash behaviour is inferred for their older controllers. */
 export function recordShipCasketFilthMovement277(w:World,p:Cell&{state:string;filthFeet?:import('./filth-rules.ts').FilthFeet}):void {
- if(w.schemaVersion!==277||p.state==='dead'||!p.filthFeet)return;const feet=p.filthFeet,state=ensureFilth(w);
+ if(!isSchema277OrLater(w.schemaVersion)||p.state==='dead'||!p.filthFeet)return;const feet=p.filthFeet,state=ensureFilth(w);
  if(filthRandom(state)<.05)for(let i=feet.carried.length-1;i>=0;i--){const carried=feet.carried[i]!;if(filthWalkable(w,p)&&accepted(w,p,carried.kind)&&addFilth(w,p,carried.kind)&&--carried.thickness===0)feet.carried.splice(i,1);}
  if(!feet.carried.length&&!feet.lastTerrain)delete p.filthFeet;
 }

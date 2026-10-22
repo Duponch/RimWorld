@@ -1,4 +1,5 @@
 import {isSchema273OrLater} from './schema-compatibility-257.ts';
+import {isApparelCountRecipe278,newApparelCountFilter278,validApparelCountFilter278,countedApparelProducts278} from './apparel-count-278.ts';
 import {isProstheticRecipe273} from './prosthetic-content-273.ts';
 import {isSchema272OrLater,isSchema269OrLater,isSchema270OrLater} from './schema-compatibility-257.ts';
 import {isSpearItem272} from './spear-content-272.ts';
@@ -32,7 +33,8 @@ export function newCookingBill(id:number,recipe:ProductionRecipe='simple-meal',v
   const inputs=PRODUCTION_RECIPES[recipe].inputs.filter(i=>(isSchema272OrLater(version)||!isSpearItem272(i))&&(version>=270||!isLongswordItem270(i))&&(version>=269||!isMaceItem269(i))&&(version>=267||!isSmithingProduct267(i))&&(version>=256||!isFutureEcologyItem256(i))&&(version>=197||!V219_ITEM_IDS.some(future=>future===i)));
   return {id,recipe,mode:'times',target:1,suspended:false,filters:Object.fromEntries(inputs.map(i=>[i,isCremationRecipe(recipe)?i==='human-corpse':isSmithingRecipe267(recipe)?smithingInitialMaterial267(i as import('./smithing-content-267.ts').SmithingMaterial267,recipe):(recipe==='smelt-slag'||!isSmeltingRecipe(recipe))&&!isBurnApparelRecipe(recipe)&&(recipe!=='chemfuel-from-organics'||(BIOFUEL_INITIAL_ORGANICS as readonly string[]).includes(i))])),radius:999,destination:isCremationRecipe(recipe)||isBurnApparelRecipe(recipe)?'drop':'stockpile',
     ...(recipe==='smelt-weapon'||recipe==='smelt-apparel'||isBurnApparelRecipe(recipe))?{smeltFilter:{hpMin:0,hpMax:100,qualityMin:'awful',qualityMax:'legendary'}}:{},
-    ...isCremationRecipe(recipe)?{cremationFilter:{colonists:true,strangers:true,fresh:true,rotting:true,desiccated:true}}:{}};
+    ...isCremationRecipe(recipe)?{cremationFilter:{colonists:true,strangers:true,fresh:true,rotting:true,desiccated:true}}:{},
+    ...(version===278&&isApparelCountRecipe278(recipe)?{apparelCount:newApparelCountFilter278()}:{})};
 }
 export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-meal',version:number=SCHEMA_VERSION):value is BillSettings {
   if(isProstheticRecipe273(recipe)&&!isSchema273OrLater(version))return false;
@@ -51,11 +53,14 @@ export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-
   if(recipe==='make-emp-launcher'&&version<208)return false;
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
   const v=value as BillSettings;
+  const apparelCount=Object.getOwnPropertyDescriptor(value,'apparelCount');
+  if(!apparelCount&&'apparelCount'in value)return false;
+  if(apparelCount&&(version!==278||!isApparelCountRecipe278(recipe)||!Object.hasOwn(apparelCount,'value')||!apparelCount.enumerable||!validApparelCountFilter278(apparelCount.value)))return false;
   const smelting=recipe==='smelt-weapon'||recipe==='smelt-apparel'||isBurnApparelRecipe(recipe);
   const cremation=isCremationRecipe(recipe);
   if(smelting?!Object.hasOwn(v,'smeltFilter')||!validSmeltFilter(v.smeltFilter):Object.hasOwn(v,'smeltFilter'))return false;
   if(cremation?!Object.hasOwn(v,'cremationFilter')||!validCremationFilter(v.cremationFilter):Object.hasOwn(v,'cremationFilter'))return false;
-  return Object.keys(v).every(k=>['id','recipe','mode','target','suspended','filters','radius','destination',...smelting?['smeltFilter']:[],...cremation?['cremationFilter']:[]].includes(k))
+  return Object.keys(v).every(k=>['id','recipe','mode','target','suspended','filters','radius','destination',...smelting?['smeltFilter']:[],...cremation?['cremationFilter']:[],...apparelCount?['apparelCount']:[]].includes(k))
     &&(smelting||cremation?['times','forever']:['times','until','forever']).includes(v.mode)&&Number.isSafeInteger(v.target)&&v.target>=0&&v.target<=9999
     &&typeof v.suspended==='boolean'&&!!v.filters&&typeof v.filters==='object'&&!Array.isArray(v.filters)
     &&Object.keys(v.filters).every(i=>(PRODUCTION_RECIPES[recipe].inputs as readonly string[]).includes(i)&&(isSchema272OrLater(version)||!isSpearItem272(i))&&(isSchema269OrLater(version)||!isMaceItem269(i))&&(isSchema270OrLater(version)||!isLongswordItem270(i))&&(version>=267||!isSmithingProduct267(i))&&(version>=265||i!=='hops')&&(version>=256||!isFutureEcologyItem256(i))&&(version>=197||!V219_ITEM_IDS.some(future=>future===i)))
@@ -70,6 +75,7 @@ export function countedMeals(world:World):number {return countedProducts(world);
 // Lazy initialization also keeps recipe/unfinished-work imports cycle-safe.
 const COUNTED_PRODUCTS=new Map<ProductionRecipe,ReadonlySet<string>>();
 export function countedProducts(world:World,bill?:CookingBill):number {
+  if(bill&&Object.hasOwn(bill,'apparelCount'))return countedApparelProducts278(world,bill);
   const recipe=bill?.recipe??'simple-meal';
   if(isArtRecipe(recipe))return world.structures.filter(s=>s.kind===recipe).length+world.packed.filter(p=>p.building.kind===recipe&&p.owner.type!=='inventory').length;
   let products=COUNTED_PRODUCTS.get(recipe);

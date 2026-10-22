@@ -23,10 +23,10 @@ const int=(v:unknown,min:number,max:number):v is number=>typeof v==='number'&&Nu
 const data=(v:object,key:string)=>{const d=Object.getOwnPropertyDescriptor(v,key);return d?.enumerable&&Object.hasOwn(d,'value')?d:undefined;};
 
 /** Sparse prospective record, shared by RAW and reconstructed public states.
- * False/undefined markers and selection are rejected before277 and after277. */
+ * False/undefined markers and selection are rejected before277 and after278. */
 export function validShipCasketResearchDomain277(state:unknown,version:number,atLocal:number):boolean {
  try{
-  if(!int(version,1,277)||!int(atLocal,0,Number.MAX_SAFE_INTEGER))return false;
+  if(!int(version,1,278)||!int(atLocal,0,Number.MAX_SAFE_INTEGER))return false;
   if(state===undefined)return true;if(!plain(state))return false;
   const selected=data(state,'project')?.value,hasRecord='shipCryptosleep'in state;
   if(!hasRecord&&selected!=='ship-cryptosleep')return true;

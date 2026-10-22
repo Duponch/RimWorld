@@ -1,3 +1,4 @@
+import {validApparelReservesBuilding278,validApparelReservesHistoricalTransport278} from '../sim/apparel-reserves-save-278.ts';
 import {validShipCasketHistoricalTransport277} from '../sim/ship-casket-save-277.ts';
 import {validShipCasketBuilding277,registerShipCasketThingIds277} from '../sim/ship-casket-owner-save-277.ts';
 import {isShipCasket277} from '../sim/ship-casket-state-277.ts';
@@ -1134,6 +1135,7 @@ export class SnapshotDecoder {
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
     if(packet.world.destroyed!==undefined&&!validNaturalHiveLoss256(packet.world.destroyed,packet.world.schemaVersion))return resync('Invalid or future natural Hive loss counter.');
     if(!validWorldPawnsEnvelope256(packet.world,packet.world.schemaVersion,packet.world.tick*10,packet.world.nextId))return resync('Invalid or future WorldPawns header.');
+    if(!validApparelReservesHistoricalTransport278(packet,packet.world.schemaVersion))return resync('Future apparel reserve settings.');
     if(!validShipCasketHistoricalTransport277(packet,packet.world.schemaVersion))return resync('Future spatial casket content.');
     if(!validShipPartHistoricalTransport276(packet,packet.world.schemaVersion))return resync('Pièce de vaisseau ou recherche moteur future dans ce snapshot.');
     if(!validShipReactorHistoricalTransport275(packet,packet.world.schemaVersion))return resync('Réacteur stellaire futur dans ce snapshot.');
@@ -1457,6 +1459,7 @@ export class SnapshotDecoder {
     if(!validTundraTransport(next,next.schemaVersion))return resync('Toundra, flore ou climat futur/incohérent.');
     if(validateAncientCasketPhysical256(next).length)return resync('Invalid actual casket physical owner.');
     if(!validCryptosleepResearchTransport271(next,next.schemaVersion)||!validCryptosleepTaskTransport271(next)||!validShipCasketTaskTransport277(next))return resync('Recherche, caisson ou service de cryptosommeil invalide.');
+    if(next.structures.some(s=>!validApparelReservesBuilding278(s,next.schemaVersion))||next.packed.some(p=>!validApparelReservesBuilding278(p.building,next.schemaVersion)))return resync('Réglages de réserve vestimentaire invalides ou futurs.');
     if(validateBridgeTransport(next,next.schemaVersion,message.kind==='delta'?changedTileIndices:[]).length)return resync('Fondation future, chantier ou support invalide.');
     if(this.validateMarshTransport(next,message.kind==='delta'?changedTileIndices:[],resourceReuse,resourceBaseReuse).length)return resync('Marais futur, sans support ou fertile invalide.');
     if(validateSnowTransport(next,next.schemaVersion, message.kind==='delta'&&!!this.current?.snow===!!next.snow?changedTileIndices:undefined).length)return resync('Snow surface clock, depth or owner invalid.');
