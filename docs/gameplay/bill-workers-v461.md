@@ -1,6 +1,6 @@
 # V461 — Exécutants des factures
 
-**Qualification locale acquise, schéma 283 ; publication en attente.** Ce lot permet de réserver une facture de production à une personne ou de limiter ses nouvelles prises à une plage de compétence. Il suit la [réévaluation transversale](../development/audit-core-20261022.md#réévaluation-après-v461). Il améliore une base ordinaire de production ; catalogue, autres bases et interactions Core, six ensembles, campagnes durables, victoire et cible FPS restent ouverts.
+**V461 publiée, schéma 283.** Ce lot permet de réserver une facture de production à une personne ou de limiter ses nouvelles prises à une plage de compétence. Il suit la [réévaluation transversale](../development/audit-core-20261022.md#réévaluation-après-v461). Il améliore une base ordinaire de production ; catalogue, autres bases et interactions Core, six ensembles, campagnes durables, victoire et cible FPS restent ouverts.
 
 ## Comportement et référence
 
@@ -70,4 +70,6 @@ Le premier contrôle corrigé est `tmp/bill-workers-v461/guard-cost-2026-10-22T1
 
 Ce lot ne garantit ni production immédiate par la personne nommée, accès depuis une autre carte, transfert d’auteur ou qualité future. Copie/nom des factures, autres filtres, seuil de reprise, nouvelles recettes, apprentissage général de l’interface, demandes commerciales et toutes les autres bases Core restent ouverts. Les restrictions de travailleurs des extensions ne sont pas introduites. Une colonie reste la référence ; multicolonie différée, historiques et critères des six ensembles restent conservés.
 
-**Publication : à compléter.** Commit produit, build Pages, comparaison du paquet et des sauvegardes publiques, déploiement identifié et vérifications HTTPS ne sont pas encore acquis dans cette note. V460 demeure la référence publiée à ce point de qualification. Aucun gain FPS ni clôture d’ensemble n’est annoncé.
+**Publication acquise.** Produit `7b588beae2da49dfbc72834bfa63e5990f5261f1`, poussé sur `origin/main`. Build Pages acquis5,885s ; paquet `tmp/elsewhere-pages/v461-package-SsnRq4/`, 552fichiers, ressources statiques et CSS strictement identiques au paquet V460. Les71chemins publics et68fiches conservent leurs octets et métadonnées ; aucun laboratoire, source ou instrumentation privée dans le paquet. Le suivi Git est propre au build ; le dossier humain non suivi `references_UI/` est exclu et préservé.
+
+Déploiement `dc688b6c`, acquis17,622s sur le projet existant `elsewhere`. [Jouer à Elsewhere](https://elsewhere-cq7.pages.dev/). Les20réponses HTTPS ciblées de l’adresse stable et du nouveau déploiement sont exactes en octets/types ; rapport `tmp/elsewhere-pages/v461-http-LY7AkS/report.json`. Ces réponses prouvent la disponibilité du paquet, pas une campagne de jeu distante. Après réévaluation de tous les domaines, prochaine priorité : **préparer la demande commerciale mondiale de l’ensemble4**, avec faisabilité, délais, vrais détenteurs et récompenses à fermer avant code. Aucun gain FPS ni clôture d’ensemble n’est annoncé.
