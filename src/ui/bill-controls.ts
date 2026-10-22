@@ -1,4 +1,5 @@
 import {isProstheticRecipe273} from '../sim/prosthetic-content-273';
+import {isSchema278OrLater} from '../sim/schema-compatibility-257';
 import {isSmithingRecipe267} from '../sim/smithing-content-267';
 import { productionResearchUnlocked } from '../sim/machining';
 import { isArtRecipe, type ArtRecipe } from '../sim/art-rules';
@@ -170,7 +171,7 @@ export function updateBillControls(root:ParentNode,station:Structure,world:World
     const form=root.querySelector<HTMLElement>(`[data-bill="${bill.id}"]`);if(!form)continue;
     form.querySelector('[data-bill-status]')!.textContent=`${PRODUCTION_RECIPES[bill.recipe].label} · ${bill.suspended?'suspendue':bill.mode==='times'?`${bill.target} restant(s)`:bill.mode==='until'?`${countedProducts(world,bill)} / ${bill.target} ${isApparelCountRecipe278(bill.recipe)&&bill.apparelCount?'vêtement(s) admis dans la réserve confirmée':bill.recipe==='butcher-creature'?'viande(s) stockée(s)':'produit(s) compté(s)'}`:'sans limite'}`;
     form.querySelector('[data-bill-reason]')!.textContent=queryCookingBillStatus(world,station,bill).reason;
-    apparelDrafts278.get(form)?.sync(bill,Number(world.schemaVersion)===278);
+    apparelDrafts278.get(form)?.sync(bill,isSchema278OrLater(world.schemaVersion));
     if(!form.dataset.dirty)(form.querySelector('[data-field="target"]') as HTMLInputElement).value=String(bill.target);
   }
 }

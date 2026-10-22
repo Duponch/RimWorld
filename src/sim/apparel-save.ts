@@ -1,4 +1,6 @@
 import {isSchema256Or257} from './schema-compatibility-257.ts';
+import {isSchema279OrLater} from './schema-compatibility-257.ts';
+import {isOrdinaryApparel279} from './apparel-trade-279.ts';
 import {validStartingApparelColor256} from './starting-apparel-color-256.ts';
 import { V91_ITEM_IDS } from './biome-items.ts';
 import {isCoreStartingApparel256} from './starting-gear-256.ts';
@@ -39,9 +41,9 @@ export function validApparelShape(p:Record<string,unknown>,version:number):boole
     &&typeof a.hitPoints==='number'&&Number.isInteger(a.hitPoints)&&a.hitPoints>0&&a.hitPoints<=definition.hitPoints
     &&(version<90?a.material===undefined:definition.material===undefined?a.material===undefined:a.material===definition.material)
     &&(a.forbidden===undefined||a.forbidden===true)&&(a.forced===undefined||a.forced===true)
-    // V241 recon suits sold to a physical trader retain their identity and
-    // condition in inventory; validateTrade owns the custodian whitelist.
-    &&!(a.forbidden===true&&a.forced===true)&&p.quantity===1&&record(p.owner)&&typeof p.owner.type==='string'&&['ground','pawn','apparel',...(version>=241&&item==='recon-armor'||version>=267&&isSmithingApparel267(item)?['inventory']:[]),...(version>=231?['starting-pod']:[])].includes(p.owner.type)
+    // Ordinary garments gain inventory custody only in279. Actual custodian
+    // and archive/holder membership remain the owning domain's responsibility.
+    &&!(a.forbidden===true&&a.forced===true)&&p.quantity===1&&record(p.owner)&&typeof p.owner.type==='string'&&['ground','pawn','apparel',...(isSchema279OrLater(version)&&isOrdinaryApparel279(item)||version>=241&&item==='recon-armor'||version>=267&&isSmithingApparel267(item)?['inventory']:[]),...(version>=231?['starting-pod']:[])].includes(p.owner.type)
     &&(a.forced===undefined||p.owner.type==='apparel');
 }
 export function validateApparel(world:World,version:number=world.schemaVersion):string[] {

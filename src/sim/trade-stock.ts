@@ -2,6 +2,8 @@ import { freshRot } from './food-preservation.ts';
 import { ITEM_DEFINITIONS, type ItemId } from './items.ts';
 import { WEAPON_QUALITIES, type WeaponQuality } from './equipment-rules.ts';
 import { tradeCatalogueEntry } from './trade-catalogue.ts';
+import {APPAREL} from './apparel-definitions.ts';
+import {isSchema279OrLater} from './schema-compatibility-257.ts';
 import { SCHEMA_VERSION,type MaterialPile } from './types.ts';
 
 interface StockCandidate {readonly value:number;readonly item?:ItemId}
@@ -47,14 +49,14 @@ export interface VisitorStockPlan {piles:MaterialPile[];nextId:number;rng:number
 /** Pure pre-plan. Callers commit its identities and PRNG only after a real entry
  * is available. Personal food is produced separately and is never sale stock.
  * This private generator reproduces distributions, not Unity's random sequence. */
-export function generateVisitorStock(seed:number,pawnId:number,nextId:number,tick:number):VisitorStockPlan {
+export function generateVisitorStock(seed:number,pawnId:number,nextId:number,tick:number,version:number=SCHEMA_VERSION):VisitorStockPlan {
   if(!Number.isInteger(seed)||seed<0||seed>0xffffffff||!Number.isSafeInteger(pawnId)||pawnId<=0||!Number.isSafeInteger(nextId)||nextId<=0||!Number.isSafeInteger(tick)||tick<0)throw new RangeError('Invalid visitor stock planning input.');
   const state={rng:seed||1},piles:MaterialPile[]=[];
   const add=(item:ItemId,quantity:number,quality?:WeaponQuality)=>{
     if(quantity<=0)return;
     if(!Number.isSafeInteger(nextId+1))throw new RangeError('Visitor stock identity overflow.');
     const kind=ITEM_DEFINITIONS[item].kind,pile:MaterialPile={id:nextId++,kind,item,quantity,owner:{type:'inventory',pawnId},...freshRot(item,tick)};
-    if(quality){const condition={quality,hitPoints:tradeCatalogueEntry(item)!.maxHitPoints};if(kind==='weapon')pile.weapon=condition;else pile.apparel=condition;}
+    if(quality){const condition={quality,hitPoints:tradeCatalogueEntry(item)!.maxHitPoints};if(kind==='weapon')pile.weapon=condition;else pile.apparel={...condition,...isSchema279OrLater(version)?{material:APPAREL[item as keyof typeof APPAREL].material}:{}};}
     piles.push(pile);
   };
   add('silver',integer(state,50,250));

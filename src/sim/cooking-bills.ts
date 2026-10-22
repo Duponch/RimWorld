@@ -1,4 +1,4 @@
-import {isSchema273OrLater} from './schema-compatibility-257.ts';
+import {isSchema273OrLater,isSchema278OrLater} from './schema-compatibility-257.ts';
 import {isApparelCountRecipe278,newApparelCountFilter278,validApparelCountFilter278,countedApparelProducts278} from './apparel-count-278.ts';
 import {isProstheticRecipe273} from './prosthetic-content-273.ts';
 import {isSchema272OrLater,isSchema269OrLater,isSchema270OrLater} from './schema-compatibility-257.ts';
@@ -34,7 +34,7 @@ export function newCookingBill(id:number,recipe:ProductionRecipe='simple-meal',v
   return {id,recipe,mode:'times',target:1,suspended:false,filters:Object.fromEntries(inputs.map(i=>[i,isCremationRecipe(recipe)?i==='human-corpse':isSmithingRecipe267(recipe)?smithingInitialMaterial267(i as import('./smithing-content-267.ts').SmithingMaterial267,recipe):(recipe==='smelt-slag'||!isSmeltingRecipe(recipe))&&!isBurnApparelRecipe(recipe)&&(recipe!=='chemfuel-from-organics'||(BIOFUEL_INITIAL_ORGANICS as readonly string[]).includes(i))])),radius:999,destination:isCremationRecipe(recipe)||isBurnApparelRecipe(recipe)?'drop':'stockpile',
     ...(recipe==='smelt-weapon'||recipe==='smelt-apparel'||isBurnApparelRecipe(recipe))?{smeltFilter:{hpMin:0,hpMax:100,qualityMin:'awful',qualityMax:'legendary'}}:{},
     ...isCremationRecipe(recipe)?{cremationFilter:{colonists:true,strangers:true,fresh:true,rotting:true,desiccated:true}}:{},
-    ...(version===278&&isApparelCountRecipe278(recipe)?{apparelCount:newApparelCountFilter278()}:{})};
+    ...(isSchema278OrLater(version)&&isApparelCountRecipe278(recipe)?{apparelCount:newApparelCountFilter278()}:{})};
 }
 export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-meal',version:number=SCHEMA_VERSION):value is BillSettings {
   if(isProstheticRecipe273(recipe)&&!isSchema273OrLater(version))return false;
@@ -55,7 +55,7 @@ export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-
   const v=value as BillSettings;
   const apparelCount=Object.getOwnPropertyDescriptor(value,'apparelCount');
   if(!apparelCount&&'apparelCount'in value)return false;
-  if(apparelCount&&(version!==278||!isApparelCountRecipe278(recipe)||!Object.hasOwn(apparelCount,'value')||!apparelCount.enumerable||!validApparelCountFilter278(apparelCount.value)))return false;
+  if(apparelCount&&(!isSchema278OrLater(version)||!isApparelCountRecipe278(recipe)||!Object.hasOwn(apparelCount,'value')||!apparelCount.enumerable||!validApparelCountFilter278(apparelCount.value)))return false;
   const smelting=recipe==='smelt-weapon'||recipe==='smelt-apparel'||isBurnApparelRecipe(recipe);
   const cremation=isCremationRecipe(recipe);
   if(smelting?!Object.hasOwn(v,'smeltFilter')||!validSmeltFilter(v.smeltFilter):Object.hasOwn(v,'smeltFilter'))return false;

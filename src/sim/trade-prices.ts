@@ -1,4 +1,5 @@
 import {isProstheticItem273} from './prosthetic-content-273.ts';
+import {isNewApparelTrade279} from './apparel-trade-279.ts';
 import { WEAPON_QUALITIES } from './equipment-rules.ts';
 import { ticksUntilRot } from './food-preservation.ts';
 import { tradeCatalogueEntry } from './trade-catalogue.ts';
@@ -6,6 +7,7 @@ import type { MaterialPile } from './types.ts';
 
 /** Directions are always from the player's point of view. */
 export type TradeDirection='buy'|'sell';
+export type TradeChannel279='visitor'|'caravan';
 const qualityFactors=[.5,.75,1,1.25,1.5,2.5,5] as const;
 const qualityGains=[Infinity,Infinity,Infinity,500,1000,2000,3000] as const;
 /** Unity/financial reference midpoint-to-even; apply once to the net basket. */
@@ -65,12 +67,13 @@ export function sculptureTradeUnitPrice(value:number,direction:TradeDirection,im
 }
 /** The ordinary visitor and the V123 exotic visitor use their own finite stock;
  * category permission is checked against the merchant present at contact. */
-export function tradeRefusal(pile:MaterialPile,direction:TradeDirection,tick:number,merchantKind?:'exotic'):string|undefined {
+export function tradeRefusal(pile:MaterialPile,direction:TradeDirection,tick:number,merchantKind?:'exotic',channel:TradeChannel279='visitor'):string|undefined {
   const entry=tradeCatalogueEntry(pile.item);
   if(!entry)return 'Cet objet n’a pas de profil commercial disponible.';
   if(pile.quantity<=0||ticksUntilRot(pile,tick)<=0)return 'Cet objet n’est plus disponible.';
   if(direction==='sell'&&!entry.playerCanSell)return 'Cet objet ne peut pas être revendu.';
   if(direction==='buy'&&!entry.playerCanBuy)return 'Cet objet n’est pas vendu par les marchands.';
+  if(isNewApparelTrade279(pile.item)&&(merchantKind==='exotic'||channel!=='visitor'))return 'Ces vêtements se négocient avec un visiteur ordinaire présent sur la carte.';
   if(!entry.visitorHandles&&!(merchantKind==='exotic'&&['gold','plasteel','uranium','advanced-component','neutroamine','recon-armor'].includes(pile.item)))return 'Ce visiteur ne commerce pas cette catégorie d’objets.';
   if(pileMarketValue(pile)===undefined)return 'L’état de cet objet ne permet pas de calculer son prix.';
   return undefined;

@@ -38,7 +38,7 @@ export function draftForeignRoster261(w:World,kind:'combat'|'trader',factionId:n
   generatePawnBackground(p,w.seed,role.guard,trader);
   people.push(p);items.push({id:nextId++,kind:'apparel',item:'cloth-shirt',quantity:1,owner:{type:'apparel',pawnId:p.id},apparel:newApparelState('cloth-shirt')});
   if(role.weapon)items.push({id:nextId++,kind:'weapon',item:role.weapon,quantity:1,owner:{type:'equipment',pawnId:p.id},weapon:newWeaponState(role.weapon)});
-  if(trader){const stock=generateVisitorStock(random.rng,p.id,nextId,w.tick);items.push(...stock.piles);nextId=stock.nextId;random.rng=stock.rng;}
+  if(trader){const stock=generateVisitorStock(random.rng,p.id,nextId,w.tick,w.schemaVersion);items.push(...stock.piles);nextId=stock.nextId;random.rng=stock.rng;}
   if(kind==='trader'){
    const foodDraw=healthRandom(random),item=foodDraw<.75?'simple-meal':'survival-meal',quantity=healthRandom(random)<5/6?3:2;
    items.push({id:nextId++,kind:'food',item,quantity,owner:{type:'inventory',pawnId:p.id},...freshRot(item,w.tick)});

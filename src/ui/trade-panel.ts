@@ -1,6 +1,7 @@
 import { isColonist } from '../sim/affiliation';
 import { ITEM_DEFINITIONS } from '../sim/items';
 import { weaponLabel } from '../sim/equipment-rules';
+import {apparelLabel,apparelDefinition} from '../sim/apparel-rules';
 import { negotiatorRefusal,tradingAtContact } from '../sim/trade-contact';
 import { tradeGoods,quoteTrade,tradeImprovement } from '../sim/trade-goods';
 import { isSculptureMaterial,sculptureMaxHitPoints } from '../sim/furniture-stats';
@@ -55,12 +56,12 @@ export function createTradeUI(send:(c:Command)=>Promise<unknown>,pause:()=>Promi
     if(!ready){total.textContent='';confirm.disabled=true;return;}
     const key=`${p.id}:${t.id}:${p.trade!.startedAt}`;
     if(readyKey!==key&&!busy){readyKey=key;void run(pause);}
-    const stock=tradeGoods(w,p,t),next=[...stock.goods.map(g=>`${g.pile.id}:${g.available}:${g.unitPrice}:${g.refusal??''}`),...stock.artGoods.map(g=>`art:${g.packed.building.id}:${g.packed.building.kind}:${g.packed.building.material}:${g.packed.building.quality}:${g.packed.building.damage??0}:${g.unitPrice}`)].join('|');
+    const stock=tradeGoods(w,p,t),next=[...stock.goods.map(g=>`${g.pile.id}:${g.available}:${g.unitPrice}:${g.refusal??''}:${g.pile.apparel?.quality??''}:${g.pile.apparel?.hitPoints??''}`),...stock.artGoods.map(g=>`art:${g.packed.building.id}:${g.packed.building.kind}:${g.packed.building.material}:${g.packed.building.quality}:${g.packed.building.damage??0}:${g.unitPrice}`)].join('|');
     if(stockKey!==next){
       stockKey=next;table.replaceChildren();const head=document.createElement('tr');for(const x of ['Objet','Échange','Stock','Prix unitaire','Quantité']){const th=document.createElement('th');th.textContent=x;head.append(th);}table.append(head);
       for(const g of stock.goods){
         const tr=document.createElement('tr'),name=document.createElement('td'),side=document.createElement('td'),available=document.createElement('td'),price=document.createElement('td'),quantity=document.createElement('td');
-        name.textContent=g.pile.weapon?weaponLabel(g.pile):ITEM_DEFINITIONS[g.pile.item].label;side.textContent=g.side==='buy'?'Acheter':'Vendre';available.textContent=String(g.available);price.textContent=g.refusal?'Refusé':g.unitPrice.toFixed(2);if(g.refusal)tr.title=g.refusal;
+        name.textContent=g.pile.weapon?weaponLabel(g.pile):g.pile.apparel?`${apparelLabel(g.pile)} · ${g.pile.apparel.hitPoints}/${apparelDefinition(g.pile).hitPoints} PV`:ITEM_DEFINITIONS[g.pile.item].label;side.textContent=g.side==='buy'?'Acheter':'Vendre';available.textContent=String(g.available);price.textContent=g.refusal?'Refusé':g.unitPrice.toFixed(2);if(g.refusal)tr.title=g.refusal;
         const input=document.createElement('input');input.type='number';input.min='0';input.max=String(g.available);input.step='1';input.value=String(Math.abs(quantities.get(`pile:${g.pile.id}`)??0));input.disabled=!!g.refusal;input.dataset.pile=String(g.pile.id);input.dataset.item=g.pile.item;input.dataset.side=g.side;input.setAttribute('aria-label',`${side.textContent} ${name.textContent}`);
         input.oninput=()=>{const n=Number(input.value);quantities.set(`pile:${g.pile.id}`,(g.side==='buy'?1:-1)*n);accept.checked=false;balance();};quantity.append(input);tr.append(name,side,available,price,quantity);table.append(tr);
       }

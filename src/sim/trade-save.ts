@@ -6,7 +6,7 @@ import { ITEM_DEFINITIONS } from './items.ts';
 import { isColonist } from './affiliation.ts';
 import { isArtMaterial,isArtRecipe } from './art-rules.ts';
 import { isFurnitureQuality,sculptureMaxHitPoints } from './furniture-stats.ts';
-import type { World } from './types.ts';
+import type { MaterialPile,World } from './types.ts';
 
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const int=(n:unknown,min=0,max=Number.MAX_SAFE_INTEGER):n is number=>typeof n==='number'&&Number.isSafeInteger(n)&&n>=min&&n<=max;
@@ -15,15 +15,10 @@ export function validTradeShape(p:Record<string,unknown>,version:number,w:World)
   const t=p.trade;if(t===undefined)return true;
   return version>=88&&object(t)&&keys(t,['traderId','phase','startedAt'])&&int(t.traderId,1,w.nextId-1)&&int(t.startedAt,0,w.tick)&&['approach','ready'].includes(String(t.phase));
 }
-export function validateTrade(w:World,version:number):string[] {
-  const errors:string[]=[],claimed=new Set<number>();
-  if(version<88)return w.trade!==undefined||w.pawns.some(p=>p.trade)||w.piles.some(p=>p.owner.type==='inventory')?['Legacy save contains trade.']:[];
-  for(const p of w.pawns)if(p.trade){
-    const t=w.pawns.find(t=>t.id===p.trade!.traderId);
-    if(!isColonist(p)||p.prisoner||p.draft||p.jobId!==null||p.haul||p.need||p.ward||p.cooking||p.feed||p.tend||p.rescue||p.equipmentTask||p.research||p.firefighting||p.hunting||p.orders.active!==null||p.orders.queue.length||p.recreation.task||p.mental?.crisis||!t?.visitor||t.visitor.role!=='trader'||claimed.has(t.id))errors.push('Invalid trade contact or reservation.');
-    claimed.add(p.trade.traderId);
-  }
-  for(const pile of w.piles)if(pile.owner.type==='inventory'){
+/** Same inventory custodian rule for RAW and a targeted prospective reader.
+ * This never validates a ledger or grants source/merchant permission. */
+export function validTradeInventoryCustody(w:World,pile:MaterialPile,version:number):boolean {
+  if(pile.owner.type!=='inventory')return true;
     const p=w.pawns.find(p=>p.id===('pawnId' in pile.owner?pile.owner.pawnId:-1));
     const scoutRation=version>=171&&!!p&&isColonist(p)&&!p.prisoner&&pile.item==='survival-meal'&&pile.quantity<=3&&pile.foodPoison===undefined;
     const commercialInventory=version>=180&&!!p&&isColonist(p)&&!p.prisoner&&(['silver','medicine','component'].includes(pile.item)||version>=185&&['cloth','muffalo-wool'].includes(pile.item));
@@ -33,8 +28,17 @@ export function validateTrade(w:World,version:number):string[] {
       &&(['survival-meal','silver','medicine','component','cloth','muffalo-wool'].includes(pile.item)||version>=250&&pile.item==='pemmican'||version>=253&&(pile.item==='wood'||pile.item==='steel')||version>=256&&(pile.item==='berries'||pile.item==='agave-fruit'));
     const animal=version>=256?animalContentsOwner256(w,('pawnId'in pile.owner?pile.owner.pawnId:-1)):undefined;
     const prospectiveInventory=version>=256&&(animal!==undefined||!!p&&!Object.hasOwn(p,'mechKind')&&p.health?.body===undefined)&&groupCaravanPileMass256(pile,true,version)!==undefined;
-    if(!p?.visitor&&!scoutRation&&!commercialInventory&&!groupInventory&&!prospectiveInventory||pile.kind==='corpse'||pile.kind==='mech-corpse'||pile.kind==='unfinished')errors.push('Invalid inventory ownership.');
+    return !(!p?.visitor&&!scoutRation&&!commercialInventory&&!groupInventory&&!prospectiveInventory||pile.kind==='corpse'||pile.kind==='mech-corpse'||pile.kind==='unfinished');
+}
+export function validateTrade(w:World,version:number):string[] {
+  const errors:string[]=[],claimed=new Set<number>();
+  if(version<88)return w.trade!==undefined||w.pawns.some(p=>p.trade)||w.piles.some(p=>p.owner.type==='inventory')?['Legacy save contains trade.']:[];
+  for(const p of w.pawns)if(p.trade){
+    const t=w.pawns.find(t=>t.id===p.trade!.traderId);
+    if(!isColonist(p)||p.prisoner||p.draft||p.jobId!==null||p.haul||p.need||p.ward||p.cooking||p.feed||p.tend||p.rescue||p.equipmentTask||p.research||p.firefighting||p.hunting||p.orders.active!==null||p.orders.queue.length||p.recreation.task||p.mental?.crisis||!t?.visitor||t.visitor.role!=='trader'||claimed.has(t.id))errors.push('Invalid trade contact or reservation.');
+    claimed.add(p.trade.traderId);
   }
+  for(const pile of w.piles)if(pile.owner.type==='inventory'&&!validTradeInventoryCustody(w,pile,version))errors.push('Invalid inventory ownership.');
   const ledger:unknown=w.trade;if(ledger===undefined)return errors;
   if(!object(ledger)||!keys(ledger,version>=105?['count','silverPaid','silverReceived','forgone','bought','sold','artBought','artSold','recent']:['count','silverPaid','silverReceived','forgone','bought','sold','recent'])||!int(ledger.count,1)||!int(ledger.silverPaid)||!int(ledger.silverReceived)||!int(ledger.forgone)||!object(ledger.bought)||!object(ledger.sold)||!Array.isArray(ledger.recent)||!ledger.recent.length||ledger.recent.length>80||ledger.recent.length!==Math.min(80,ledger.count))return [...errors,'Invalid trade ledger.'];
   for(const totals of [ledger.bought,ledger.sold])for(const [item,n] of Object.entries(totals))if(version<256&&isCoreStartingApparel256(item)||!Object.hasOwn(ITEM_DEFINITIONS,item)||version<227&&['hay','kibble'].includes(item)||version<217&&item==='nutrient-paste-meal'||version<206&&item==='neutroamine'||item==='silver'||version<152&&item==='fine-meal'||version<154&&item==='lavish-meal'||version<155&&item==='vegetarian-fine-meal'||version<156&&item==='carnivore-fine-meal'||version<157&&item==='vegetarian-lavish-meal'||version<159&&item==='carnivore-lavish-meal'||version<123&&['gold','plasteel','advanced-component'].includes(item)||version<141&&item==='flak-helmet'||version<148&&['recon-helmet','unfinished-recon-helmet'].includes(item)||!int(n,1))errors.push('Invalid trade item totals.');

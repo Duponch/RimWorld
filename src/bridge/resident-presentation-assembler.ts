@@ -1,3 +1,4 @@
+import {validApparelTradeHistoricalTransport279,validApparelTradeWorld279} from '../sim/apparel-trade-save-279';
 import {validApparelReservesBuilding278,validApparelReservesHistoricalTransport278} from '../sim/apparel-reserves-save-278';
 import {validShipCasketHistoricalTransport277} from '../sim/ship-casket-save-277';
 import {validShipPartHistoricalTransport276} from '../sim/ship-part-save-276';
@@ -127,6 +128,7 @@ function tileChanges(previous:Tile[],raw:unknown):{tiles:Tile[];indices:number[]
 function localShape(raw:unknown,checkpoint:boolean,sparseStructures:boolean,reuseStockpiles=false):string|undefined {
  if(!record(raw))return 'World data record';
  if(!integer(raw.schemaVersion,1,SCHEMA_VERSION))return 'schemaVersion';
+ if(!validApparelTradeHistoricalTransport279(raw,raw.schemaVersion))return 'future ordinary apparel inventory or trade';
  if(!validApparelReservesHistoricalTransport278(raw,raw.schemaVersion))return 'future apparel reserve settings';
  if(!validShipCasketHistoricalTransport277(raw,raw.schemaVersion))return 'future spatial casket content';
  if(!validShipPartHistoricalTransport276(raw,raw.schemaVersion))return 'future ship hull or engine research';
@@ -191,7 +193,7 @@ export class ResidentPresentationAssembler {
   const header=this.header(packet);if(header==='stale')return {status:'stale'};if(header==='invalid'||packet.type!=='campaign-only'||Object.keys(packet).some(key=>!['type','epoch','revision','stepMs','speed','summary','urgentThreats','geography'].includes(key))||!record(packet.summary))return fail();
   const raw=packet.summary;
   if(!integer(raw.schemaVersion,1,SCHEMA_VERSION)||!integer(raw.tick)||!integer(raw.nextId,1)||!integer(raw.rng,0,0xffffffff)||!Number.isSafeInteger(raw.civilTick)||!projectionReferences(raw,false)
-   ||!validGiftHistoricalTransport274(raw,raw.schemaVersion)||!validApparelReservesHistoricalTransport278(raw,raw.schemaVersion)||!validShipCasketHistoricalTransport277(raw,raw.schemaVersion)||!validShipPartHistoricalTransport276(raw,raw.schemaVersion)||!validShipReactorHistoricalTransport275(raw,raw.schemaVersion)||!rows(raw.events)||!rows(raw.people)||!rows(raw.lossContexts)||!rows(raw.lostMemories)||!rows(raw.incidents)
+   ||!validGiftHistoricalTransport274(raw,raw.schemaVersion)||!validApparelTradeHistoricalTransport279(raw,raw.schemaVersion)||!validApparelReservesHistoricalTransport278(raw,raw.schemaVersion)||!validShipCasketHistoricalTransport277(raw,raw.schemaVersion)||!validShipPartHistoricalTransport276(raw,raw.schemaVersion)||!validShipReactorHistoricalTransport275(raw,raw.schemaVersion)||!rows(raw.events)||!rows(raw.people)||!rows(raw.lossContexts)||!rows(raw.lostMemories)||!rows(raw.incidents)
    ||own(raw,'tiles')||own(raw,'resources')||own(raw,'piles')||own(raw,'pawns')||own(raw,'structures')||own(raw,'jobs')||own(raw,'worldMaps')||own(raw,'worldGroups'))return fail();
   const geographic=this.geography.prepare(raw,packet.geography,own(packet,'geography'),packet.epoch!==this.epoch);if(!geographic.ok)return fail();
   const summary={...geographic.state},view=groupWorld(summary,null),calendar=summary.planet?.revision===3?summary.calendarOrigin:undefined;
@@ -257,6 +259,7 @@ export class ResidentPresentationAssembler {
    for(const key of Object.keys(previous!)as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&key!=='structures'&&!own(dynamic,key))delete (next as Partial<World>)[key];
   }
   if(next.structures.some(s=>!validApparelReservesBuilding278(s,next.schemaVersion))||next.packed.some(p=>!validApparelReservesBuilding278(p.building,next.schemaVersion)))return fail('Invalid resident apparel reserve settings');
+  if(!validApparelTradeHistoricalTransport279(packet,next.schemaVersion)||!validApparelTradeWorld279(next))return fail('Invalid resident ordinary apparel custody');
   const calendar=next.planet?.revision===3&&next.campaignMap?.revision===2?next.campaignMap.calendarOrigin:undefined;
   if(!this.chronology(next,packet.epoch,calendar)||acceptExtra&&!acceptExtra(next)||!this.geography.canCommit(geographic))return fail('Rejected resident transaction');
   freezeAdmittedNativeWorldPawnOrder256(next);if(!river.inherited&&next.riverWater)freezeAdmittedRiverWater256(next.riverWater);

@@ -2,6 +2,7 @@ import {APPAREL} from './apparel-definitions.ts';
 import {WEAPON_QUALITIES} from './equipment-rules.ts';
 import {isRecipeProduct,type ProductionRecipe} from './production-recipes.ts';
 import {foggedCell256} from './exploration-state-256.ts';
+import {isSchema278OrLater} from './schema-compatibility-257.ts';
 import type {ApparelCountFilter278,CookingBill} from './cooking-types.ts';
 import type {Cell,Pawn,World} from './types.ts';
 
@@ -35,7 +36,7 @@ const spawned=(p:Pawn):boolean=>p.state!=='dead'&&!p.health?.death&&p.shipCrypto
  * storage's rounded percentages deliberately have a different contract. */
 export function countedApparelProducts278(world:World,bill:Pick<CookingBill,'recipe'|'apparelCount'>):number {
  const field=Object.getOwnPropertyDescriptor(bill,'apparelCount');
- if(Number(world.schemaVersion)!==278||!isApparelCountRecipe278(bill.recipe)||!field||!Object.hasOwn(field,'value')||!field.enumerable||!validApparelCountFilter278(field.value))return 0;
+ if(!isSchema278OrLater(world.schemaVersion)||!isApparelCountRecipe278(bill.recipe)||!field||!Object.hasOwn(field,'value')||!field.enumerable||!validApparelCountFilter278(field.value))return 0;
  const filter:ApparelCountFilter278=field.value,products=products278(bill.recipe),carriers=new Map<number,Pawn>(),colonists=new Set<number>(),player=world.worldFactions?.playerFactionId;
  for(const p of world.pawns){
   if(!spawned(p)||(p.faction??'colony')!=='colony'||p.worldAffiliation259&&p.worldAffiliation259.factionId!==player)continue;

@@ -1,5 +1,7 @@
 # Catalogue de contenu : couverture connue
 
+**V456 qualifiée localement — schéma 279 :** [Valeur et vente des vêtements ordinaires](apparel-trade-v456.md). Les37variantes existantes ont une valeur ;35nouveaux profils négociables au visiteur ordinaire local, tenues tribales seulement vendables. Vraies chemises V455 vendues/rachetées puis conservées au départ, fonds et propriétaires physiques. 53cas distincts acquis par reprises, trois anciens rouges identiques au témoin V455 conservés. Typage et interface native muette acquis ; notification de mise en page conservée. Publication en attente, V455 reste en production. Suite : chirurgie thérapeutique des captifs adultes, après réévaluation transversale. Aucun nouvel objet, gain FPS ou clôture des six ensembles.
+
 **V455 publiée — schéma 278 :** [Réserves de vêtements utilisables](apparel-reserves-v455.md). Douze recettes existantes, critères PV/qualité et option porté ; anciens comptes préservés. Ouvrage, remplacement et réserve d’un rechange physiques. 61 cas distincts acquis, dont 40 nouveaux et 21 voisins ; deux anciens rouges identiques au témoin V454 conservés sur les 63 cas de la sélection. Typage et interface native muette acquis. Build Pages acquis ; publié 271b13ba/5a46d239, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Aucun nouvel objet, gain FPS ou clôture des six ensembles ; autres bases Core ouvertes.
 
 **V454 publiée — schéma 277 inchangé :** [Paludisme géographique](malaria-geography-v454.md). Admission rétablie dans les trois biomes géographiques déjà pourvus de son ticket ; même patient, soins physiques et recharges entières. 43 cas distincts acquis, dont 24 nouveaux et 19 voisins ; un ancien échec de préparation identique au témoin V453 conservé. Typage et interface native muette acquis. Build Pages acquis ; publié 33abcc2c/c514a33d, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Suite : réserves d’habits utilisables, puis valeur et vente des vêtements existants après l’audit transversal. Six ensembles et cible FPS restent ouverts.
@@ -12,6 +14,7 @@
 
 | Boucle V455 | Admission et usage locaux | Limites annoncées |
 | --- | --- | --- |
+| Commerce vestimentaire V456 | Livré dans le périmètre local | Les37vêtements existants ont une valeur selon matière/travail/qualité/PV ;35nouvelles permissions auprès du visiteur ordinaire, tenues tribales vente seule. Argent fini et même objet rechargeable chez le marchand puis dans son archive. Autres canaux et souillure différés. [Détail](apparel-trade-v456.md). |
 | Réserves vestimentaires V455 | Douze recettes déjà jouables ; réserve filtrée par PV et qualité, option porté, ouvrage conservé, vraie sortie puis remplacement et rechange restant. Anciens comptes maintenus tant que le nouveau réglage n’est pas choisi. | Aucun nouvel objet ni qualité de sortie garantie ; stockage précis, souillure, restriction aux matières d’entrée et seuil de reprise différés. |
 
 | Boucle V454 | Admission et usage locaux | Limites annoncées |

@@ -1,5 +1,7 @@
 # Guide joueur
 
+**V456 qualifiée localement — schéma 279 :** [Valeur et vente des vêtements ordinaires](apparel-trade-v456.md). Les37variantes existantes ont une valeur ;35nouveaux profils négociables au visiteur ordinaire local, tenues tribales seulement vendables. Vraies chemises V455 vendues/rachetées puis conservées au départ, fonds et propriétaires physiques. 53cas distincts acquis par reprises, trois anciens rouges identiques au témoin V455 conservés. Typage et interface native muette acquis ; notification de mise en page conservée. Publication en attente, V455 reste en production. Suite : chirurgie thérapeutique des captifs adultes, après réévaluation transversale. Aucun nouvel objet, gain FPS ou clôture des six ensembles.
+
 **V455 publiée — schéma 278 :** [Réserves de vêtements utilisables](apparel-reserves-v455.md). Douze recettes existantes, critères PV/qualité et option porté ; anciens comptes préservés. Ouvrage, remplacement et réserve d’un rechange physiques. 61 cas distincts acquis, dont 40 nouveaux et 21 voisins ; deux anciens rouges identiques au témoin V454 conservés sur les 63 cas de la sélection. Typage et interface native muette acquis. Build Pages acquis ; publié 271b13ba/5a46d239, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Aucun nouvel objet, gain FPS ou clôture des six ensembles ; autres bases Core ouvertes.
 
 **V454 publiée — schéma 277 inchangé :** [Paludisme géographique](malaria-geography-v454.md). Admission rétablie dans les trois biomes géographiques déjà pourvus de son ticket ; même patient, soins physiques et recharges entières. 43 cas distincts acquis, dont 24 nouveaux et 19 voisins ; un ancien échec de préparation identique au témoin V453 conservé. Typage et interface native muette acquis. Build Pages acquis ; publié 33abcc2c/c514a33d, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Suite : réserves d’habits utilisables, puis valeur et vente des vêtements existants après l’audit transversal. Six ensembles et cible FPS restent ouverts.
@@ -9,6 +11,12 @@
 **V452 publiée — schéma 276 :** [Poutres et moteurs de vaisseau](ship-parts-v452.md). Recherche moteur, une poutre et trois moteurs payés, connexion physique, rapport et retraits conservés ; 63 cas ciblés acquis, dont 35 nouveaux et 28 voisins. Typage, présentation et interface natives muettes acquis. Build Pages acquis ; publié 6ac38d08/dd91c337, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. [Jouer sur Cloudflare](https://elsewhere-cq7.pages.dev/). **Ensemble 5 en cours** ; ordinateur, capteurs, caissons spatiaux, embarquement et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
 
 **V451 publiée — schéma 275 :** [Réacteur stellaire](ship-reactor-v451.md). Recherches, chantier payé, 1 000 W, démarrage confirmé et attaques indépendantes ; 50 cas ciblés acquis par reprises, un ancien rouge identique au témoin conservé. Typage, présentation et interface natives muettes acquis. Build Pages acquis ; publié 8e0e2ee6/7552f915, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. **Ensemble 5 engagé** ; autres pièces et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
+
+### Vendre et racheter des vêtements
+
+Ouvrez **Visiteurs · Commerce**, choisissez un négociateur disponible et rejoignez le marchand ordinaire. Les vêtements accessibles au sol dans le foyer ou une réserve peuvent être vendus ; les habits portés ne sont pas directement prélevés. La ligne indique matière, qualité et PV, qui influencent le prix.
+
+Le marchand paie avec l’argent qu’il possède réellement. S’il manque d’argent, la perte doit être acceptée explicitement avant de conclure. Une pièce vendue reste dans son inventaire et peut être rachetée avec sa qualité et son état, sauf les **tenues tribales, seulement vendables**. Les achats sont déposés au contact. Cette extension ne donne pas automatiquement de nouveaux acheteurs aux comptoirs, rencontres de caravane, marchands exotiques ou vaisseaux orbitaux. [Règles et contrôles](apparel-trade-v456.md).
 
 ### Maintenir des réserves de vêtements
 

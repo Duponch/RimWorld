@@ -2,6 +2,7 @@ import {LONGSWORD_ITEMS_270,longswordBaseValue270,longswordMaxHitPoints270} from
 import {SPEAR_ITEMS_272,spearBaseValue272,spearMaxHitPoints272} from './spear-content-272.ts';
 import type { ItemId } from './items.ts';
 import {SMITHING_APPAREL_ITEMS267,SMITHING_APPAREL_DEFINITIONS267,smithingApparelBaseValue267} from './smithing-apparel-267.ts';
+import {APPAREL_TRADE_ITEMS_279,APPAREL_TRADE_279,isNewApparelTrade279} from './apparel-trade-279.ts';
 
 /** Core 1.6.4871 normal-quality values before quality, condition and rounding.
  * Fixed material is part of each existing ItemId; there is no generic price by kind. */
@@ -30,6 +31,12 @@ export const TRADE_CATALOGUE:Readonly<Partial<Record<ItemId,TradeCatalogueEntry>
   // Both Core products carry Clothing and Armor trade tags. Preserve actual
   // quality/HP pricing; no merchant stock or generated material is invented.
   ...Object.fromEntries(SMITHING_APPAREL_ITEMS267.map(item=>[item,gear(smithingApparelBaseValue267(item),SMITHING_APPAREL_DEFINITIONS267[item].hitPoints,true)])),
+  // New ordinary clothing is priced in every value reader. tradeRefusal owns
+  // the narrower local standard-visitor permission; other channels stay shut.
+  ...Object.fromEntries(APPAREL_TRADE_ITEMS_279.filter(isNewApparelTrade279).map(item=>{
+    const p=APPAREL_TRADE_279[item];
+    return [item,gear(p.baseMarketValue,p.maxHitPoints,true,false,{playerCanBuy:p.playerCanBuy})];
+  })),
   hops:value(1.3,false),wort:value(2.5,false,{playerCanBuy:false,playerCanSell:false}),beer:value(12,false,{maxHitPoints:50}),
   pemmican:value(1.4),
   jade:value(5,false,{playerCanBuy:false,playerCanSell:false}),

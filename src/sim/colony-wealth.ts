@@ -1,4 +1,5 @@
 import {captureShipCasketHumans277,captureShipCasketAnimals277} from './ship-casket-state-277.ts';
+import {APPAREL_TRADE_MATERIAL_VALUES_279} from './apparel-trade-279.ts';
 import { factionOf } from './affiliation.ts';
 import { floorRoomMarketValue, structureRoomMarketValue } from './room-market-value.ts';
 import { pileMarketValue } from './trade-prices.ts';
@@ -35,7 +36,8 @@ function pileOnPlayerMap(pile: MaterialPile, pawns: ReadonlyMap<number, Pawn>): 
 }
 
 const MATERIAL_VALUE: Readonly<Partial<Record<ItemId, number>>> = Object.freeze({
-  wood: 1.2, silver:1, steel: 1.9, jade:5, component: 32, 'advanced-component': 200, plasteel: 9, gold: 10, uranium: 6, cloth: 1.5, 'light-leather': 1.9, 'muffalo-wool': 2.7, foxfur:3.5,
+  ...APPAREL_TRADE_MATERIAL_VALUES_279,
+  wood: 1.2, silver:1, steel: 1.9, jade:5, component: 32, 'advanced-component': 200, plasteel: 9, gold: 10, uranium: 6,
   'granite-blocks': .9, 'limestone-blocks': .9, 'marble-blocks': .9,
   'sandstone-blocks': .9, 'slate-blocks': .9,
 });
