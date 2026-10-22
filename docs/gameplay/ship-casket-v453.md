@@ -1,6 +1,6 @@
 # V453 — Caisson de cryptosommeil spatial
 
-**V453 qualifiée localement — schéma 277.** Recherche et chantier payés, entrée/portage des mêmes occupants représentés, suspension puis éjection directe. **83 cas distincts acquis par reprises : 53 nouveaux et 30 voisins** ; typage, continuation entière comparée, présentation et interface Chrome/WebGPU muettes acquis. Build Pages et publication en attente ; production V452 inchangée. Aucun lancement, victoire, gain FPS global ou clôture des six ensembles. L’audit transversal des bases est désormais [consigné](../development/audit-core-20261022.md).
+**V453 publiée — schéma 277.** Recherche et chantier payés, entrée/portage des mêmes occupants représentés, suspension puis éjection directe. **83 cas distincts acquis par reprises : 53 nouveaux et 30 voisins** ; typage, continuation entière comparée, présentation et interface Chrome/WebGPU muettes acquis. Build Pages acquis ; produit `6d90207c`, déploiement `208e401f`,20réponses HTTPS ciblées exactes et sauvegardes publiques inchangées. Aucun lancement, victoire, gain FPS global ou clôture des six ensembles. L’audit transversal des bases est désormais [consigné](../development/audit-core-20261022.md).
 
 ## Référence et règle retenue
 
@@ -78,6 +78,8 @@ Défauts produit corrigés : validation du mandat non mobilisé, sous-gardes mé
 
 ## Publication et suite
 
-**Publication en attente.** Build Pages, paquet, déploiement et réponses HTTPS seront consignés après acquisition. Les68fiches et71chemins de sauvegardes publiques sont conservés.
+**Produit sélectionné : `6d90207c7f426a65ec823cea3e000ff409ab94b2`.** Build Pages acquis en5,206s ; paquet `tmp/elsewhere-pages/v453-package-N0jav5/`,552fichiers,152675165octets. Les68fiches et71chemins publics sont strictement identiques ; actifs statiques/CSS conservés et laboratoire/branchements QA absents du paquet inspecté.
+
+Déploiement **`208e401f`** acquis sur [l’adresse publique stable](https://elsewhere-cq7.pages.dev/) et [son adresse immuable](https://208e401f.elsewhere-cq7.pages.dev/). Les20réponses HTTPS ciblées sont exactes en octets/MIME sur les deux adresses ; rapport `tmp/elsewhere-pages/v453-http-nUE8mM/report.json`. L’ensemble des sauvegardes est comparé localement public↔dist ; cette passe distante ciblée ne retélécharge pas chaque sauvegarde et ne remplace pas les parcours natifs acquis. Le dépôt conserve le dossier humain `references_UI/` non suivi ; il n’entre pas dans le paquet.
 
 L’[audit transversal](../development/audit-core-20261022.md) réexamine tous les domaines et leurs interactions, pas seulement les exemples humains. Prochaine priorité décidée : corriger le paludisme géographique existant, puis les réserves d’habits utilisables et le débouché commercial des vêtements actuels. Ordinateur/capteurs/lancement restent dans l’objectif final, sans passage automatique avant ces bases.
