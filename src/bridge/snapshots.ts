@@ -38,6 +38,8 @@ import {validFermentationWorld265} from '../sim/fermentation-save-265.ts';
 import {validSmithyResearchTransport267,validBrewingResearchTransport265,validGeothermalResearchTransport} from '../sim/research-save.ts';
 import {validGeothermalWorld264} from '../sim/geothermal-state-264.ts';
 import {registerProjectedTradeRequests284} from '../sim/trade-request-projection-save-284.ts';
+import {validCouplePawnShape285} from '../sim/couple-save-285.ts';
+import {hasCoupleFields285,validCoupleHistoricalTransport285} from '../sim/couple-owner-save-285.ts';
 import {validTradeRequestHistorical284} from '../sim/trade-request-save-284.ts';
 import {validApparelProvenanceHistoricalTransport284} from '../sim/apparel-provenance-284.ts';
 import {registerProjectedWorldSites263} from '../sim/world-sites-projection-save-263.ts';
@@ -1119,7 +1121,7 @@ export class SnapshotDecoder {
     const refuse=()=>({status:'resync' as const,reason:'Campagne sans carte illisible.'});
     if(!Number.isSafeInteger(packet.epoch)||packet.epoch<1||!Number.isSafeInteger(packet.revision)||packet.revision<1||!Number.isFinite(packet.stepMs)||packet.stepMs<0||![0,1,3,6].includes(packet.speed))return refuse();
     if(packet.epoch<this.epoch||packet.epoch===this.epoch&&packet.revision<=this.revision)return {status:'stale'};
-    if(!validTradeRequestHistorical284(packet.summary,packet.summary.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet.summary,packet.summary.schemaVersion))return refuse();
+    if(!validCoupleHistoricalTransport285(packet.summary,packet.summary.schemaVersion)||!validTradeRequestHistorical284(packet.summary,packet.summary.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet.summary,packet.summary.schemaVersion))return refuse();
     if(!validWorldPawnsEnvelope256(packet.summary,packet.summary.schemaVersion,packet.summary.tick*10,packet.summary.nextId))return refuse();
     if(!validPlanetGeographyHistorical256(packet.summary,packet.summary.schemaVersion))return refuse();
     const geographic=this.geographicTransport.prepare(packet.summary,packet.geography,Object.hasOwn(packet,'geography'),packet.epoch!==this.epoch);if(!geographic.ok)return refuse();
@@ -1150,7 +1152,7 @@ export class SnapshotDecoder {
     if(!validPrisonerSurgeryHistoricalTransport280(packet,packet.world.schemaVersion))return resync('Future captive surgery.');
     if(!validApparelTradeHistoricalTransport279(packet,packet.world.schemaVersion))return resync('Future ordinary apparel inventory or trade.');
     if(!validApparelReservesHistoricalTransport278(packet,packet.world.schemaVersion))return resync('Future apparel reserve settings.');
-    if(!validTradeRequestHistorical284(packet,packet.world.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet,packet.world.schemaVersion)||!validBillWorkerHistoricalTransport283(packet,packet.world.schemaVersion))return resync('Future bill worker settings.');
+    if(!validCoupleHistoricalTransport285(packet,packet.world.schemaVersion)||!validTradeRequestHistorical284(packet,packet.world.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet,packet.world.schemaVersion)||!validBillWorkerHistoricalTransport283(packet,packet.world.schemaVersion))return resync('Future couple or bill worker settings.');
     if(!validShipCasketHistoricalTransport277(packet,packet.world.schemaVersion))return resync('Future spatial casket content.');
     if(!validShipPartHistoricalTransport276(packet,packet.world.schemaVersion))return resync('Pièce de vaisseau ou recherche moteur future dans ce snapshot.');
     if(!validShipReactorHistoricalTransport275(packet,packet.world.schemaVersion))return resync('Réacteur stellaire futur dans ce snapshot.');
@@ -1234,6 +1236,7 @@ export class SnapshotDecoder {
     if(Object.hasOwn(message.world,'bombWaves')&&(!Array.isArray(message.world.bombWaves)||message.world.bombWaves.some(w=>!validBombWaveShape(w,message.world.schemaVersion))))return resync('Forme de vague Bomb invalide.');
     let hasDraftedTend=false;const forcedConsumers:Pawn[]=[];
     for(const pawn of message.world.pawns){
+      if(!validCouplePawnShape285(pawn,message.world.schemaVersion,message.world.tick))return resync('Activité, horloge ou souvenir de couple invalide ou futur.');
       if(!validCryptosleepTaskField271(pawn,message.world.schemaVersion,message.world.tick,message.world.nextId)||Object.hasOwn(pawn,'cryptosleepHeldAt271')||!validShipCasketTaskField277(pawn,message.world.schemaVersion,message.world.tick,message.world.nextId)||Object.hasOwn(pawn,'shipCryptosleepHeldAt277'))return resync('Tâche ou propriétaire local de cryptosommeil invalide.');
       if(pawn.health&&!validMedicalCivilHeader271(pawn.health,message.world.schemaVersion))return resync('Horloge médicale civile invalide ou future.');
       if(!validCaravanRestField266(pawn as unknown as Record<string,unknown>,message.world.schemaVersion,pawn.health?.death?.tick??message.world.tick))return resync('Trace de repos de caravane invalide ou future.');
@@ -1628,7 +1631,7 @@ export class SnapshotDecoder {
     const collapsedRockIds=new Map(message.kind==='checkpoint'?[]:this.collapsedRockIds);
     if(message.kind==='checkpoint'){for(let i=0;i<next.tiles.length;i++){const rock=next.tiles[i]!.collapsedRock;if(rock)collapsedRockIds.set(i,rock.id);}}
     else for(const i of changedTileIndices??[]){const rock=next.tiles[i]!.collapsedRock;if(rock)collapsedRockIds.set(i,rock.id);else collapsedRockIds.delete(i);}
-    const relationMemories=(p:Pawn):boolean=>Object.hasOwn(p,'romanceMemories')||Object.hasOwn(p,'familyBereavement');
+    const relationMemories=(p:Pawn):boolean=>Object.hasOwn(p,'romanceMemories')||Object.hasOwn(p,'familyBereavement')||hasCoupleFields285(p);
     const relationships=Object.hasOwn(next,'planet')||Object.hasOwn(next,'group')||Object.hasOwn(next,'groupLosses')||Object.hasOwn(next,'relationships')||next.pawns.some(relationMemories)
       ||[next.scout,next.commercialTrip].some(owner=>owner&&'pawn' in owner&&relationMemories(owner.pawn))
       ||[next.visitors?.departed??[],next.podRescues?.departed??[]].some(records=>records.some(record=>relationMemories(record.pawn)))

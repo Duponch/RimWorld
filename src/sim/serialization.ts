@@ -287,6 +287,7 @@ import { validFluIncidents } from './flu-incidents-save.ts';
 import { validEmpStructureTransport,validEmpProductionTransport } from './emp-save.ts';
 import { adoptExoticMerchantSchedule } from './visitors.ts';
 import { isFurnitureQuality } from './furniture-stats.ts';
+import {validCoupleHistoricalTransport285} from './couple-owner-save-285.ts';
 import {validTradeRequestHistorical284} from './trade-request-save-284.ts';
 import {validApparelProvenanceHistoricalTransport284} from './apparel-provenance-284.ts';
 import { validateFlowerPotState } from './flower-pot.ts';
@@ -303,6 +304,10 @@ const oneOf = (value: unknown, values: string[]): boolean => typeof value === 's
 export function validateWorld(input: unknown): string[] {
   return validateCampaignSchema(input,SCHEMA_VERSION);
 }
+/** Strict previous campaign contract, before the number-only285 migration. */
+export function validateCampaignSchema284(input:unknown):string[] {
+  return validateCampaignSchema(input,284);
+}
 /** Unpublished geographic factory output, before a map registry owns it.
  * Reuse the complete local-schema guard without synthesizing a campaign,
  * colony, group or registry. This never authorizes save/load or adoption;
@@ -313,7 +318,7 @@ export function validateGeneratedLocalMap256(input:unknown,context:{readonly cal
       ||!record(input.site)||input.site.revision!==3||Object.hasOwn(input,'worldMaps')||Object.hasOwn(input,'worldGroups')||!context||!Number.isSafeInteger(context.calendarOrigin))return ['Expected an unpublished geographic local-map candidate with its actual campaign clock.'];
     if(context.settlement&&(!validGeographicSettlementDimensions262(Number(input.schemaVersion),input.width,input.height,context.settlementDimensions)||['scenario','expeditionSite','startingArrival'].some(k=>Object.hasOwn(input,k))))return ['A non-starting settlement must have its actual new geographic body, without arrival or Camp provenance.'];
     if(context.worldTarget263&&(!isSchema263OrLater(Number(input.schemaVersion))||input.width!==context.worldTarget263.context.dimensions.width||input.height!==context.worldTarget263.context.dimensions.height||!record(input.site)||worldTargetConstructionReason263(input as unknown as World,context.worldTarget263.context,Number(input.site.tileId),Number(input.width))||['scenario','expeditionSite','startingArrival'].some(k=>Object.hasOwn(input,k))))return ['World target generation differs from its real construction authority.'];
-    return validateSchema(input,input.schemaVersion as 256|257|258|259|260|261|262|263|264|265|266|267|268|269|270|271|272|273|274|275|276|277|278|279|280|281|282|283|284,false,undefined,context);
+    return validateSchema(input,input.schemaVersion as 256|257|258|259|260|261|262|263|264|265|266|267|268|269|270|271|272|273|274|275|276|277|278|279|280|281|282|283|284|285,false,undefined,context);
   }catch{return ['Invalid unpublished geographic local-map candidate.'];}
 }
 function validateSharedCampaign(root:CampaignState):string[] {const view=emptyCampaignOwner(root);brandCampaignContext(view,root);return validateCampaignSharedFields(view);}
@@ -321,6 +326,7 @@ function validateSharedCampaign(root:CampaignState):string[] {const view=emptyCa
  * The secondary view forwards the old campaign schema without migrating it. */
 function validateCampaignSchema(input:unknown,version:Parameters<typeof validateSchema>[1]):string[] {
   try{
+    if(!validCoupleHistoricalTransport285(input,version))return ['Historical save contains future couple fields.'];
     if(!validTradeRequestHistorical284(input,version)||!validApparelProvenanceHistoricalTransport284(input,version))return ['Historical save contains future trade requests or apparel provenance.'];
     if(!validBillWorkerHistoricalTransport283(input,version))return ['Historical save contains future bill worker settings.'];
     if(!validAnimalTrainingHistoricalTransport282(input,version))return ['Historical save contains future animal training or hauling.'];
@@ -361,7 +367,7 @@ function validateCampaignSchema(input:unknown,version:Parameters<typeof validate
     return errors;
   }catch{return ['Invalid second-site records or owner namespace.'];}
 }
-function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250 | 251 | 252 | 253 | 254 | 255 | 256 | 257 | 258 | 259 | 260 | 261|262|263|264|265|266|267|268|269|270|271|272|273|274|275|276|277|278|279|280|281|282|283|284, relationshipContext = true,registeredIds?:Set<number>,generatedContext?:{readonly calendarOrigin:number;readonly settlement?:true;readonly settlementDimensions?:Readonly<{width:number;height:number}>;readonly worldTarget263?:WorldTargetGenerated263},registeredNonStartingSettlement=false): string[] {
+function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 101 | 103 | 104 | 105 | 106 | 109 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 127 | 134 | 135 | 138 | 139 | 141 | 143 | 144 | 148 | 150 | 152 | 154 | 155 | 156 | 157 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250 | 251 | 252 | 253 | 254 | 255 | 256 | 257 | 258 | 259 | 260 | 261|262|263|264|265|266|267|268|269|270|271|272|273|274|275|276|277|278|279|280|281|282|283|284|285, relationshipContext = true,registeredIds?:Set<number>,generatedContext?:{readonly calendarOrigin:number;readonly settlement?:true;readonly settlementDimensions?:Readonly<{width:number;height:number}>;readonly worldTarget263?:WorldTargetGenerated263},registeredNonStartingSettlement=false): string[] {
   const legacyV2 = version === 2;
   const errors: string[] = [];
   if (!record(raw)) return ['World must be an object.'];
@@ -674,7 +680,7 @@ function validateSchema(raw: unknown, version: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 1
     }
     if (spatial) {if (version < 14 && pawnCells.has(key)) errors.push('Pawns overlap.'); pawnCells.add(key);}
     if (spatial&&((version<22?['wall', 'table']:['wall']).includes(structureCells.get(key)?.kind ?? '') || version<16&&['wall', 'table'].includes(jobCells.get(key)?.kind ?? ''))) errors.push('Pawn occupies a wall target.');
-    if (Number(version>=265&&!!pawn.brewing)+Number(version>=256&&!!pawn.openCasket)+Number(version>=221&&!!pawn.animalRescue) + Number(version>=216&&!!pawn.orbitalTrade) + Number(version>=215&&!!pawn.deepWork) + Number(version>=214&&!!pawn.animalFeed) + Number(version>=179&&!!pawn.surgery) + Number(version>=106&&!!pawn.animalHandling) + Number(version>=106&&!!pawn.animalCare) + Number(version>=86&&!!pawn.ward) + Number(version>=52&&!!pawn.equipmentTask) + Number(version>=48&&!!pawn.feed) + Number(version>=47&&!!pawn.tend) + Number(version>=46&&!!pawn.rescue) + Number(version>=10&&!!pawn.cooking) + Number(pawn.jobId !== null) + Number(pawn.haul !== null) + Number(!legacyV2 && pawn.need !== null) > 1) errors.push('Pawn has two simultaneous tasks.');
+    if (Number(version===285&&!!pawn.coupleTask285)+Number(version>=265&&!!pawn.brewing)+Number(version>=256&&!!pawn.openCasket)+Number(version>=221&&!!pawn.animalRescue) + Number(version>=216&&!!pawn.orbitalTrade) + Number(version>=215&&!!pawn.deepWork) + Number(version>=214&&!!pawn.animalFeed) + Number(version>=179&&!!pawn.surgery) + Number(version>=106&&!!pawn.animalHandling) + Number(version>=106&&!!pawn.animalCare) + Number(version>=86&&!!pawn.ward) + Number(version>=52&&!!pawn.equipmentTask) + Number(version>=48&&!!pawn.feed) + Number(version>=47&&!!pawn.tend) + Number(version>=46&&!!pawn.rescue) + Number(version>=10&&!!pawn.cooking) + Number(pawn.jobId !== null) + Number(pawn.haul !== null) + Number(!legacyV2 && pawn.need !== null) > 1) errors.push('Pawn has two simultaneous tasks.');
     if (pawn.jobId !== null) {
       const job = jobById.get(pawn.jobId);
       if (!job || job.reservedBy !== pawn.id || job.status !== 'active') errors.push('Pawn/job reservation mismatch.');
@@ -851,6 +857,7 @@ export function serializeCampaign(world:CampaignState):string {
 export function deserializeCampaign(serialized: string): CampaignState {
   if (typeof serialized !== 'string' || !withinSaveTextLimit(serialized)) throw new Error('Invalid or oversized save.');
   let input: unknown = JSON.parse(serialized);
+  if(record(input)&&Number.isInteger(input.schemaVersion)&&!validCoupleHistoricalTransport285(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future couple fields.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&(!validTradeRequestHistorical284(input,Number(input.schemaVersion))||!validApparelProvenanceHistoricalTransport284(input,Number(input.schemaVersion))))throw new Error('Invalid historical save: Future trade requests or apparel provenance.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validBillWorkerHistoricalTransport283(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future bill worker settings.');
   if(record(input)&&Number.isInteger(input.schemaVersion)&&!validAnimalTrainingHistoricalTransport282(input,Number(input.schemaVersion)))throw new Error('Invalid historical save: Future animal training or hauling.');
@@ -1707,6 +1714,7 @@ export function deserializeCampaign(serialized: string): CampaignState {
   if(record(input)&&input.schemaVersion===281){const old=validateCampaignSchema(input,281);if(old.length)throw new Error('Invalid version281 save: '+old.join(' '));input.schemaVersion=282; /* Number only: no animal training, learned step, intent, area, cargo, master, clock, food or random draw. */}
   if(record(input)&&input.schemaVersion===282){const old=validateCampaignSchema(input,282);if(old.length)throw new Error('Invalid version282 save: '+old.join(' '));input.schemaVersion=283; /* Number only: no bill worker, skill range, person, work, item, date or random draw is offered. */}
   if(record(input)&&input.schemaVersion===283){const old=validateCampaignSchema(input,283);if(old.length)throw new Error('Invalid version283 save: '+old.join(' '));input.schemaVersion=284; /* Number only: no quest, reward, worker, cloth provenance, person, item, clock or random draw is offered. */}
+  if(record(input)&&input.schemaVersion===284){const old=validateCampaignSchema284(input);if(old.length)throw new Error('Invalid version284 save: '+old.join(' '));input.schemaVersion=285; /* Number only: no couple task, opportunity, cooldown, memory, person, item, clock or random draw is offered. */}
   const errors = validateWorld(input); if (errors.length) throw new Error(`Invalid save: ${errors.join(' ')}`);
   const world = input as World;
   if(hasLoadedRoot(world))consolidateLooseRocks(world);

@@ -1,4 +1,5 @@
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
+import {prepareCoupleRelease285,type CoupleReleasePlan285} from './couple-release-285.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {raidGroup261,raidSource261} from './temp-map-raids-261.ts';
 import type {Pawn,World} from './types.ts';
@@ -58,9 +59,11 @@ export function prepareMapRaiderWorldExit261(w:World,carrier:Pawn,patient?:Pawn)
  for(const faction of factions.factions){if(!faction.lifecycle259)return no('Une instance de faction ne possède pas son cycle de vie réel.');conditions.push({factionId:faction.id,...faction.lifecycle259,techLevel:WORLD_FACTION_TECH_LEVEL_259[faction.def]});}
  const nativeBefore=state.nativeOrder,staged:WorldPawnsState256={...state,owners:state.owners.slice()},random={rng:root.rng};
  const prepared:{original:Pawn;row:CaptivityRow261;items:World['piles'];packed:World['packed'];history?:Pawn['prisonerHistory259']}[]=[];
+ let couple:CoupleReleasePlan285;
+ try{couple=prepareCoupleRelease285(w,new Set(originals.map(p=>p.id)));}catch(e){return no(e instanceof Error?e.message:String(e));}
  try{for(const original of originals){
   const history=original.prisoner??original.prisonerHistory259;if(!mutableHistory261(history))return no('Le dossier de captivité original ne peut pas être déplacé à sa vraie sortie.');
-  const draft=structuredClone(original);clearReleasedPawnAssignments259(draft);cleanMapRemovedHumanRecord259(draft,w.tick);unclaimDetachedActorBed256(draft);delete draft.allowedAreaId;delete draft.allowedAreaReturn;
+  const draft=couple.project(original);clearReleasedPawnAssignments259(draft);cleanMapRemovedHumanRecord259(draft,w.tick);unclaimDetachedActorBed256(draft);delete draft.allowedAreaId;delete draft.allowedAreaReturn;
   const items=w.piles.filter(i=>'pawnId'in i.owner&&i.owner.pawnId===original.id),packed=w.packed.filter(p=>p.owner.type!=='ground'&&p.owner.pawnId===original.id);
   const row:CaptivityRow261={kind:'human',actor:draft,factionId:draft.worldAffiliation259!.factionId,originMapId:mapId,context,clockCore:now,enteredAtAbsCore:absolute,entryKind261:'map-exit',mode:'active',items:structuredClone(items),packed:structuredClone(packed),...original===patient?{captivity261:{factionId:captor.factionId,atCore:now}}:{}};
   suspendWorldPawnGoods259(row,now);const boundary=worldPawnActiveBoundary256(row,root.schemaVersion,now);if(boundary)return no(boundary);
@@ -69,9 +72,9 @@ export function prepareMapRaiderWorldExit261(w:World,carrier:Pawn,patient?:Pawn)
  const removedIds=new Set(originals.map(p=>p.id)),targeters=w.pawns.filter(p=>!removedIds.has(p.id)&&[p.shooting?.order?.targetId,p.melee?.order?.targetId,p.tactics?.targetId].some(id=>id!==undefined&&id!==null&&removedIds.has(id)));
  if(targeters.some(p=>!mutableWorldPawnOriginal256(p)))return no('Une référence de combat à libérer n’est pas mutable.');
  const tick=root.tick,rng=root.rng,nextId=root.nextId,membership=state.owners.slice(),people=w.pawns.slice(),piles=w.piles.slice(),packs=w.packed.slice(),sourceJson=JSON.stringify(source),snapshots=originals.map(p=>JSON.stringify(p)),goods=prepared.map(p=>JSON.stringify([p.items,p.packed])),targeterSnapshots=targeters.map(p=>JSON.stringify(p));let used=false;
- const current=()=>!used&&root.tick===tick&&w.tick===tick&&root.rng===rng&&root.nextId===nextId&&root.worldPawns===state&&root.worldFactions===factions&&state.atCore===now&&registeredMap(root,mapId)===w&&w.raids===calendar&&raidSource261(w,group)===source&&JSON.stringify(source)===sourceJson&&state.owners.length===membership.length&&state.owners.every((r,i)=>r===membership[i])&&nativeWorldPawnOrderCurrent256(state,nativeBefore)&&w.pawns.length===people.length&&w.pawns.every((p,i)=>p===people[i])&&w.piles.length===piles.length&&w.piles.every((p,i)=>p===piles[i])&&w.packed.length===packs.length&&w.packed.every((p,i)=>p===packs[i])&&originals.every((p,i)=>JSON.stringify(p)===snapshots[i])&&prepared.every((p,i)=>JSON.stringify([p.items,p.packed])===goods[i])&&prepared.every(p=>mutableHistory261(p.history))&&targeters.every((p,i)=>JSON.stringify(p)===targeterSnapshots[i]);
+ const current=()=>!used&&couple.current()&&root.tick===tick&&w.tick===tick&&root.rng===rng&&root.nextId===nextId&&root.worldPawns===state&&root.worldFactions===factions&&state.atCore===now&&registeredMap(root,mapId)===w&&w.raids===calendar&&raidSource261(w,group)===source&&JSON.stringify(source)===sourceJson&&state.owners.length===membership.length&&state.owners.every((r,i)=>r===membership[i])&&nativeWorldPawnOrderCurrent256(state,nativeBefore)&&w.pawns.length===people.length&&w.pawns.every((p,i)=>p===people[i])&&w.piles.length===piles.length&&w.piles.every((p,i)=>p===piles[i])&&w.packed.length===packs.length&&w.packed.every((p,i)=>p===packs[i])&&originals.every((p,i)=>JSON.stringify(p)===snapshots[i])&&prepared.every((p,i)=>JSON.stringify([p.items,p.packed])===goods[i])&&prepared.every(p=>mutableHistory261(p.history))&&targeters.every((p,i)=>JSON.stringify(p)===targeterSnapshots[i]);
  return {ok:true,departingIds:originals.map(p=>p.id),rows:prepared.map(p=>p.row),current,commit(){
-  if(!current())throw Error('Stale actual map raider/kidnap WorldPawn transfer');used=true;cancelWorldPawnGC256(state);
+  if(!current())throw Error('Stale actual map raider/kidnap WorldPawn transfer');couple.commit();used=true;cancelWorldPawnGC256(state);
   for(const {original,row,items,packed,history} of prepared){
    const draft=row.actor as unknown as Record<string,unknown>,target=original as unknown as Record<string,unknown>;
    for(const key of Object.keys(target))if(!Object.hasOwn(draft,key))delete target[key];

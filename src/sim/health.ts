@@ -24,6 +24,7 @@ import { humanAgeImmunityFactor } from './human-age.ts';
 import { notifyPawnDeath } from './bereavement.ts';
 import {markCorpseWornApparel284} from './apparel-provenance-284.ts';
 import { currentMedicalBed,bedHealPerDay,bedImmunityFactor } from './hospital-medical-stats.ts';
+import {coupleBed285} from './couple-bed-285.ts';
 import {medicalCivilTick271,medicalElapsedTicks271} from './suspended-human-clock-271.ts';
 
 export function healthRandom(world:Pick<World,'rng'>):number {let n=world.rng;n^=n<<13;n^=n>>>17;n^=n<<5;world.rng=n>>>0;return world.rng/0x100000000;}
@@ -45,7 +46,10 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn),ex
       notifyKidnapLordHarm261(world,pawn);
       if(status==='dead'||externalViolence)notifyColonyLoss(world,pawn,status==='dead'?'died':'downed');
       const wasSleeping=pawn.state==='sleeping';
-      const bed=pawn.need?.kind==='sleep'&&pawn.need.phase==='sleep'&&pawn.need.bedId!==null?pawn.need:null;
+      const coupled=pawn.coupleTask285,physicalCoupleBed=world.schemaVersion===285&&coupled&&!carrierOf(world,pawn.id)?coupleBed285(world,pawn):undefined;
+      const bed=pawn.need?.kind==='sleep'&&pawn.need.phase==='sleep'&&pawn.need.bedId!==null?pawn.need
+        :physicalCoupleBed&&coupled?{kind:'sleep' as const,phase:'sleep' as const,bedId:physicalCoupleBed.id,target:{x:pawn.x,z:pawn.z},
+          ...coupled.roomRest?{roomRest:coupled.roomRest}:{},...coupled.medical?{medical:coupled.medical}:{}}:null;
       interruptWork(world,pawn,retainTravellingCargo);
       if(status==='downed'&&bed)pawn.need=bed;
       if(status==='downed'&&wasSleeping)pawn.medicalSleep=true;else delete pawn.medicalSleep;
@@ -79,7 +83,10 @@ export function updatePawnHealth(world:World,pawn:Pawn,retainTravellingCargo=fal
     const restingCandidate=pawn.moveCooldown===0&&(pawn.state==='sleeping'||pawn.state==='resting'||pawn.state==='downed');
     const carried=restingCandidate&&!!carrierOf(world,pawn.id);
     const resting=restingCandidate&&!carried;
-    const bed=resting?currentMedicalBed(world,pawn,carried):undefined;
+    // Awake couple activity still owns its physical bed posture: natural
+    // healing and both immunity factors do not depend on gaining sleep rest.
+    const coupleBed=world.schemaVersion===285&&pawn.coupleTask285&&!carrierOf(world,pawn.id)?coupleBed285(world,pawn):undefined;
+    const bed=coupleBed??(resting?currentMedicalBed(world,pawn,carried):undefined);
     const nextInfection=record.infections?.nextId??1;
     const sky=pawn.moveCooldown===0&&pawn.state==='recreating'&&pawn.recreation.task?.activity==='skygaze'&&pawn.recreation.task.phase==='active';
     const actualPawn=record.toxicBuildup||(record.alcohol?.tolerance??0)>.45?pawn:undefined,actualRecord=record,actualRng=world.rng,actualTick=world.tick,actualActors=world.pawns;

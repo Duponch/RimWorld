@@ -23,7 +23,7 @@ export function bedSlotBodyCenter(bed:Structure,slot:BedSlot):Cell|undefined {
   const direction=directions[bed.orientation??0]!;
   return {x:head.x+direction.x*.5,z:head.z+direction.z*.5};
 }
-export function pawnBedSlot(pawn:Pawn,bed:Structure):BedSlot|undefined {
+export function pawnBedSlot(pawn:Pick<Pawn,'bedId'|'bedSlot'>,bed:Structure):BedSlot|undefined {
   if(pawn.bedId!==bed.id||!bedKind(bed))return;
   if(bed.kind!=='double-bed')return pawn.bedSlot===undefined?0:undefined;
   return pawn.bedSlot===0||pawn.bedSlot===1?pawn.bedSlot:undefined;

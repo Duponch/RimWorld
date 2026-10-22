@@ -1,3 +1,4 @@
+import {isSchema284OrLater} from '../sim/schema-compatibility-257.ts';
 import type {Command,World} from '../sim/types';
 import type {CampaignState} from '../sim/world-map-state';
 import type {RelationshipPerson} from '../sim/relationship-state';
@@ -123,7 +124,7 @@ export function createTradeRequests284(host:HTMLElement,send:(command:Command)=>
   text(row.progress,busy?.id===request.id?busy.kind==='answer'?'Acceptation en cours…':'Mise à jour en cours…':'');
  };
  function render():void {
-  if(!current)return;section.hidden=Number(current.schemaVersion)!==284;
+  if(!current)return;section.hidden=!isSchema284OrLater(current.schemaVersion);
   const entries=section.hidden?[]:current.tradeRequests284?.entries??[],ids=new Set(entries.map(r=>r.id));
   for(const [id,row]of rows)if(!ids.has(id)){row.letter.remove();row.element.remove();rows.delete(id);drafts.delete(id);}
   const live=entries.filter(r=>r.status==='offered'||r.status==='accepted').length;

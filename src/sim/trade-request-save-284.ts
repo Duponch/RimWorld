@@ -1,3 +1,4 @@
+import {isSchema284OrLater} from './schema-compatibility-257.ts';
 import {plainWorldPawnData256} from './world-pawn-save-256.ts';
 import {validatePileRecordShape} from './material-record-save.ts';
 import {planetTileCount} from './planet-geography-256.ts';
@@ -73,7 +74,7 @@ function entry(value:unknown,root:TradeRequestsValidationContext284,nextRequestI
   for(const raw of option.items){
    if(!record(raw)||!int(raw.id,1,root.nextId-1)||held.has(raw.id)||!record(raw.owner)||!keys(raw.owner,['type','requestId','optionId'])||raw.owner.type!=='trade-request284'||raw.owner.requestId!==r.id||raw.owner.optionId!==option.id)return 'Invalid exclusive trade reward holder.';
    const p=raw as unknown as MaterialPile,o=original.get(p.id),tick=r.offeredAtCore/10;
-   if(!o||o.optionId!==option.id||!sameTradeRewardManifest284(tradeRewardManifest284(p),o.thing)||validatePileRecordShape(raw,{width:1,height:1,tick,nextId:root.nextId,climate:undefined},284,tick,undefined,undefined,{requestId:r.id,optionId:option.id}).length)return 'Invalid actual trade reward payload or original manifest.';
+   if(!o||o.optionId!==option.id||!sameTradeRewardManifest284(tradeRewardManifest284(p),o.thing)||validatePileRecordShape(raw,{width:1,height:1,tick,nextId:root.nextId,climate:undefined},root.schemaVersion,tick,undefined,undefined,{requestId:r.id,optionId:option.id}).length)return 'Invalid actual trade reward payload or original manifest.';
    if(isPerishable(p.item)&&(!p.rot||p.rot.atTick!==tick||p.rot.rate!==0||p.rot.progress<0||p.rot.progress>=ROT_DAYS[p.item]*6000))return 'Trade rewards must retain their original frozen clock.';
    held.set(p.id,p);
   }
@@ -106,11 +107,11 @@ function entry(value:unknown,root:TradeRequestsValidationContext284,nextRequestI
  * only live held Things, once, after the whole candidate passes. */
 export function validateTradeRequests284(value:unknown,root:TradeRequestsValidationContext284,ids:NumericMembershipSink):string[] {
  try{
-  if(!int(root.schemaVersion,1,284))return ['Unknown trade request schema.'];
+  if(!int(root.schemaVersion,1,285))return ['Unknown trade request schema.'];
   const field=Object.getOwnPropertyDescriptor(root,'tradeRequests284');
   if(field&&(!field.enumerable||!own(field,'value')))return ['Invalid trade request authority descriptor.'];
   if(field&&field.value!==value||!field&&'tradeRequests284'in root)return ['Trade request authority differs from its actual field.'];
-  if(root.schemaVersion!==284)return field||'tradeRequests284'in root||value!==undefined?['Future284 trade requests in an older campaign.']:[];
+  if(!isSchema284OrLater(root.schemaVersion))return field||'tradeRequests284'in root||value!==undefined?['Future284 trade requests in an older campaign.']:[];
   if(value===undefined)return field||'tradeRequests284'in root?['Undefined284 trade request authority.']:[];
   if(!plainWorldPawnData256(value)||!record(value)||!keys(value,['revision','adoptedAtCore','nextId','entries'])||value.revision!==1||!clock(value.adoptedAtCore,0,root.tick*10)||!int(value.nextId,1)||!dense(value.entries,TRADE_REQUEST_MAX_ENTRIES_284)||!clock(root.tick*10)||!int(root.nextId,1)||!root.planet||!root.worldFactions)return ['Invalid trade request authority or actual world context.'];
   const requests=value as unknown as TradeRequests284,requestIds=new Set<number>(),manifests=new Set<number>(),held=new Map<number,MaterialPile>(),active=new Set<number>();
@@ -124,7 +125,7 @@ export function validateTradeRequests284(value:unknown,root:TradeRequestsValidat
 /** Cold historical transport fence only. Current284 admission uses the closed
  * request graph above, never a generic campaign walk on each publication. */
 export function validTradeRequestHistorical284(value:unknown,version:number):boolean {
- if(!int(version,1,284))return false;if(version===284)return true;
+ if(!int(version,1,285))return false;if(isSchema284OrLater(version))return true;
  let budget=2_000_000;const active=new WeakSet<object>(),done=new WeakSet<object>();
  const walk=(v:unknown):boolean=>{
   if(--budget<0)return false;if(v===null||typeof v!=='object')return typeof v!=='function'&&typeof v!=='symbol';

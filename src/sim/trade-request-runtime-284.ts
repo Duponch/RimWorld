@@ -1,3 +1,4 @@
+import {isSchema284OrLater} from './schema-compatibility-257.ts';
 import {worldSettlementAccess256} from './world-faction-access.ts';
 import {prepareTradeRewardCleanup284} from './trade-request-holder-284.ts';
 import type {CampaignState} from './world-map-state.ts';
@@ -17,7 +18,7 @@ export function logTradeRequest284(root:CampaignState,message:string):void {
 /** Called by the actual settlement-defeat commit while its original Site
  * proof exists. A later map removal cannot erase this quest's target history. */
 export function noteTradeRequestDestinationLost284(root:CampaignState,settlementId:number,destroyedSiteId:number):void {
- if(Number(root.schemaVersion)!==284)return;
+ if(!isSchema284OrLater(root.schemaVersion))return;
  const site=root.worldSites263?.entries.find(s=>s.id===destroyedSiteId&&s.kind==='destroyed-settlement'&&s.sourceSettlementId===settlementId);
  if(!site)return;
  for(const request of root.tradeRequests284?.entries??[])if(request.settlementId===settlementId&&request.factionId===site.factionId&&request.tile===site.tile&&!request.destinationLost)
@@ -26,7 +27,7 @@ export function noteTradeRequestDestinationLost284(root:CampaignState,settlement
 /** True SIM continuation only. Loading/admission and every UI read stay pure.
  * The new optional family adopts now, never replays a former selected ticket. */
 export function advanceTradeRequests284(root:CampaignState):void {
- if(Number(root.schemaVersion)!==284||root.planet?.revision!==3||!root.worldMaps||!root.worldFactions)return;
+ if(!isSchema284OrLater(root.schemaVersion)||root.planet?.revision!==3||!root.worldMaps||!root.worldFactions)return;
  const core=root.tick*10;root.tradeRequests284??={revision:1,adoptedAtCore:core,nextId:1,entries:[]};
  for(const request of root.tradeRequests284.entries){
   if(request.status!=='offered'&&request.status!=='accepted')continue;
@@ -53,7 +54,7 @@ export function validTradeRequestCommand284(value:unknown):value is TradeRequest
   v.type==='trade-request-fulfill'?keys.length===5&&int(v.groupId)&&typeof v.confirm==='boolean'&&typeof v.quote==='string'&&v.quote.length>0&&v.quote.length<=262144:false;
 }
 export function answerTradeRequest284(root:CampaignState,command:Exclude<TradeRequestCommand284,{type:'trade-request-fulfill'}>):CommandResult {
- if(Number(root.schemaVersion)!==284||!root.worldFactions||!root.tradeRequests284||!canLogTradeRequest284(root))return no('Cette demande commerciale est absente ou non modifiable.');
+ if(!isSchema284OrLater(root.schemaVersion)||!root.worldFactions||!root.tradeRequests284||!canLogTradeRequest284(root))return no('Cette demande commerciale est absente ou non modifiable.');
  const request=root.tradeRequests284.entries.find(q=>q.id===command.requestId),core=root.tick*10;
  if(!request||request.status!=='offered'||core>=request.offerExpiresAtCore)return no('Cette offre n’est plus disponible.');
  if(command.type==='trade-request-dismiss'){

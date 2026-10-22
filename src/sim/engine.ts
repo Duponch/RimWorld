@@ -1,4 +1,5 @@
 import {advanceShipReactorThreats275} from './ship-reactor-threats-275.ts';
+import {tryCoupleOpportunity285,reconcileCouple285,processCouple285} from './couple-runtime-285.ts';
 import {interruptAnimalStorage282,reconcileAnimalHauls282} from './animal-hauling-282.ts';
 import {shipCasketPlacementRefusal277} from './ship-casket-placement-277.ts';
 import {shipCryptosleepUnlocked277} from './research.ts';
@@ -835,7 +836,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
       if(owner?.bedId===bed.id&&owner.bedSlot===command.slot)return {ok:true};
       const ownership=prepareConfirmedBedAssignment256(world,bed,owner??null,command.slot);
       const affected=new Set(world.pawns.filter(p=>p.bedId===bed.id&&p.bedSlot===command.slot||p===owner).map(p=>p.id));
-      const released=world.pawns.filter(p=>p.need?.kind==='sleep'&&affected.has(p.id)||p.rescue&&(affected.has(p.rescue.patientId)||p.rescue.bedId===bed.id&&p.rescue.bedSlot===command.slot));
+      const released=world.pawns.filter(p=>(p.need?.kind==='sleep'||p.coupleTask285!==undefined)&&affected.has(p.id)||p.rescue&&(affected.has(p.rescue.patientId)||p.rescue.bedId===bed.id&&p.rescue.bedSlot===command.slot));
       for(const pawn of released)if(!releaseWork(world,pawn,drops))return refusal('occupied','Impossible de libérer le couchage précédent.');
       for(const pawn of world.pawns)if(affected.has(pawn.id)){pawn.bedId=null;delete pawn.bedSlot;pawn.needCooldown=0;}
       if(owner){owner.bedId=bed.id;owner.bedSlot=command.slot;}
@@ -846,7 +847,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
     const ownership=prepareConfirmedBedAssignment256(world,bed,owner??null);
     if(owner?.bedSlot!==undefined)for(const carrier of world.pawns)if(carrier.rescue?.patientId===owner.id)releaseWork(world,carrier,drops);
     for (const pawn of world.pawns) if (pawn.bedId === bed.id || pawn === owner) {
-      if (pawn.need?.kind === 'sleep') releaseWork(world, pawn,drops);
+      if (pawn.need?.kind === 'sleep'||pawn.coupleTask285) releaseWork(world, pawn,drops);
       pawn.bedId = null;delete pawn.bedSlot; pawn.needCooldown = 0;
     }
     if (owner) owner.bedId = bed.id;
@@ -1132,7 +1133,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
       pawn.moveCooldown = Math.max(0, (pawn.motion?.end ?? world.tick) - world.tick); if (pawn.planCooldown > 0) pawn.planCooldown--;
       const readAir460=()=> (humanAir460??new TemperatureView(world,thermal)).at(world,pawn);
       advanceHeatExposure(world,pawn,readAir460);
-      const body=updatePawnHealth(world,pawn);reconcileKidnapParticipant261(world,pawn);reconcileAncientCasketOpening256(world,pawn);reconcileCryptosleepTask271(world,pawn);reconcileShipCasketTask277(world,pawn);
+      const body=updatePawnHealth(world,pawn);reconcileCouple285(world,pawn,body);reconcileKidnapParticipant261(world,pawn);reconcileAncientCasketOpening256(world,pawn);reconcileCryptosleepTask271(world,pawn);reconcileShipCasketTask277(world,pawn);
       reconcileAllowedAreaPawn(world,pawn);
       if(pawn.animalRescue)reconcileAnimalRescues(world,pawn);
       if(prisonBreakActive(pawn)&&(pawn.state==='downed'||pawn.state==='dead'))endPrisonBreak(world,pawn);
@@ -1146,6 +1147,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
       tickSkills(world,pawn);
       updateNeeds(world, pawn,body,getFurnitureSight,()=>getLight().topology,readAir460);
       updateMentalBreak(world,pawn,budget);reconcileAncientCasketOpening256(world,pawn);reconcileCryptosleepTask271(world,pawn);reconcileShipCasketTask277(world,pawn);
+      reconcileCouple285(world,pawn,body);
       if(prisonBreakActive(pawn)&&(pawn.mental?.crisis||pawn.state==='downed'||pawn.need))endPrisonBreak(world,pawn);
       if(pawn.mental?.crisis){
         if(scoutOnMapId(world)===pawn.id)applyScoutCommand(world,{type:'scout-cancel'});
@@ -1154,6 +1156,14 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
       if(pawn.animalRescue)reconcileAnimalRescues(world,pawn);
       if(processPawnVomiting(world,pawn)){if(prisonBreakActive(pawn))endPrisonBreak(world,pawn);continue;}
       if(pawn.stun&&pawn.stun.untilCore<=world.tick*10)delete pawn.stun;
+      // Lying-down opportunities precede the ordinary downed/medical sleeper
+      // dispatcher. Immobility alone is not an inability to be awake in bed.
+      tryCoupleOpportunity285(world,pawn,body);
+      if(pawn.coupleTask285){
+        collapseFromExhaustion(world,pawn,{event:message=>event(world,'need',message)});
+        reconcileCouple285(world,pawn,body);
+        if(pawn.coupleTask285&&(pawn.state==='downed'||isStunned(pawn,world.tick*10))){processCouple285(world,pawn);continue;}
+      }
       if(isForcedConsuming(pawn)&&!consumeActivityValid(world,pawn))interruptDraftWork(world,pawn);
       if(pawn.jobId!==null&&(pawn.stun||pawn.burning||pawn.bombRefuge||pawn.heatRefuge||pawn.tactics||pawn.draft)){const tree=world.jobs.find(j=>j.id===pawn.jobId&&j.tree);if(tree&&treeJobReason(world,tree,pawn))interruptWork(world,pawn);}
       if(pawn.state==='downed'||carrierOf(world,pawn.id)||isStunned(pawn,world.tick*10))continue;
@@ -1172,6 +1182,8 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
       };
       if(processBurning(world,pawn,needsContext))continue;
       if(bombDanger(world,pawn,getBlocked,budget,getLight,bombSources))continue;
+      if(pawn.coupleTask285&&processHeatRefuge(world,pawn,needsContext,thermal))continue;
+      if(processCouple285(world,pawn))continue;
       // An explicit clinical mandate keeps its mobilisation. Physiology,
       // captured travel, stun and immediate fire/bomb danger ran above it.
       if(isForcedConsuming(pawn)){

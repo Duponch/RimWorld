@@ -1,5 +1,6 @@
 import { isBedKind } from './bed-kinds.ts';
 import { bedSlotCell,pawnBedSlot } from './bed-slots.ts';
+import {coupleBed285} from './couple-bed-285.ts';
 import { updateMood,expireMealMemories } from './mood.ts';
 import { rememberRoomUse } from './room-experience.ts';
 export { comfortMood } from './mood.ts';
@@ -24,6 +25,8 @@ export function updateWellbeing(world: World, pawn: Pawn,body?:BodyAssessment,re
   let fallback:ShotGrid|undefined;
   const sight=()=>readSight?.()??(fallback??={width:world.width,height:world.height,coverAt:()=>undefined,blocksSight:(x,z)=>world.tiles[z*world.width+x]?.terrain==='rock'||world.structures.some(s=>STRUCTURE_SHOT_FILL[s.kind]>.99&&!(isRoomDoor(s.kind)&&s.door?.open)&&footprintContains(s,{x,z}))});
   const furnitureWorld:FurnitureWorldLike={structures:world.structures,cellsOf:structure=>footprintCells(structure as unknown as Structure),lineOfSight:(from,to)=>clearShotSegment(sight(),from,to)};
+  const coupleBed=coupleBed285(world,pawn);
+  if(coupleBed)ceiling=comfortForStructure(furnitureWorld,coupleBed)*100;
   if (need?.kind === 'sleep' && need.bedId !== null && (pawn.state === 'sleeping'||need.phase==='sleep'&&pawn.moveCooldown===0&&(pawn.state==='resting'||pawn.state==='downed'))) {
     const bed=world.structures.find(item=>{
       if(item.id!==need.bedId||!isBedKind(item.kind))return false;

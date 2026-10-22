@@ -1,3 +1,5 @@
+import {hasCoupleFields285} from './couple-owner-save-285.ts';
+import {validCouplePawnContext285} from './couple-save-285.ts';
 import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {isPlayerCasket271,validCryptosleepField271,type PlayerCasket271} from './cryptosleep-state-271.ts';
 import {validAncientCasketWickField256} from './ancient-casket-explosive-state-256.ts';
@@ -79,6 +81,7 @@ function validHeldRot271(p:MaterialPile,tick:number):boolean {
 function validateCryptosleepContents271(s:PlayerCasket271,context:RetainedCryptosleepContext271,humanIds:ReadonlySet<number>,local?:World):string[] {
  const errors:string[]=[],h=s.cryptosleep,p=h.human,version=context.schemaVersion;
  if(!p)return errors;
+ if(local&&hasCoupleFields285(p)&&!validCouplePawnContext285(p,{version,tick:h.heldAt,civilTick:context.tick,nextId:context.nextId,knownHumanIds:humanIds}))errors.push('Invalid held couple clock or memory.');
  if(!isColonist(p)||p.prisoner||p.visitor||p.raid||p.podRescue||p.age&&biologicalYears(p.age)<18||p.state==='dead'||p.health?.death)errors.push('Player casket requires one original living adult free colonist.');
  if(p.cryptosleepHeldAt271!==h.heldAt)errors.push('Player-casket human suspension marker differs from its actual holder.');
  if(!inactiveHuman271(p))errors.push('Player-casket human retains an active task, route or work cargo.');

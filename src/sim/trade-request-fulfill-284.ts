@@ -1,3 +1,4 @@
+import {isSchema284OrLater} from './schema-compatibility-257.ts';
 import {registeredCampaign,boundWorldGroup} from './world-map-context.ts';
 import {worldSettlementAccess256} from './world-faction-access.ts';
 import {worldNaturalGoodwill274,worldGoodwillChange274} from './world-diplomacy-274.ts';
@@ -28,7 +29,7 @@ function sealEdges(roots:readonly object[]):()=>boolean {
 
 function capture(w:World,requestId:number,groupId:number){
  const root=registeredCampaign(w),requests=root.tradeRequests284,factions=root.worldFactions;
- if(Number(w.schemaVersion)!==284||Number(root.schemaVersion)!==284||!positive(requestId)||!positive(groupId)||root.planet?.revision!==3||!requests||!factions||w.tick!==root.tick)return no('Cette demande commerciale ou son contexte n’est plus disponible.');
+ if(!isSchema284OrLater(w.schemaVersion)||!isSchema284OrLater(root.schemaVersion)||!positive(requestId)||!positive(groupId)||root.planet?.revision!==3||!requests||!factions||w.tick!==root.tick)return no('Cette demande commerciale ou son contexte n’est plus disponible.');
  const request=requests.entries.find(r=>r.id===requestId),binding=boundWorldGroup(w),record=binding??root.worldGroups?.groups.find(r=>r.state.id===groupId);
  if(record&&!plainWorldPawnData256(record))return no('Le propriétaire réel de cette caravane est invalide.');
  const g=record?.state??w.group;
@@ -45,7 +46,7 @@ function capture(w:World,requestId:number,groupId:number){
  if(!faction||!relation||relations.length!==1||natural===undefined||!plainWorldPawnData256(relation)||relation.kind==='hostile')return no('La vraie relation diplomatique est absente ou hostile.');
  const chosen=request.options.find(o=>o.id===request.selectedOptionId);
  if(!chosen||request.options.some(o=>o!==chosen&&o.items.length)||chosen.items.length!==chosen.original.length||chosen.items.length>64)return no('La récompense choisie n’est plus dans son détenteur exclusif.');
- const mass=captureProspectiveGroupMass256(g,284),members=groupPhysicalPawns256(g),ids=new Set<number>();
+ const mass=captureProspectiveGroupMass256(g,w.schemaVersion),members=groupPhysicalPawns256(g),ids=new Set<number>();
  if(!mass||!members.length||members.some(p=>p.state==='dead'||p.health?.death)||!positive(request.quantity)||!positive(root.nextId)||!positive(root.rng)||root.rng>0xffffffff)return no('Les vrais porteurs, les quantités ou la charge sont invalides.');
  for(const p of g.items){if(!positive(p.id)||p.id>=root.nextId||ids.has(p.id))return no('L’identité d’un bien transporté est invalide.');ids.add(p.id);}
  for(const p of chosen.items){
@@ -70,7 +71,7 @@ function draft(w:World,requestId:number,groupId:number){
  if(needed)return no(`La caravane ne transporte pas toute la quantité admissible (${available}/${request.quantity}).`);
  const remaining=g.items.filter(p=>changes.get(p)!==p.quantity),shadowItems=remaining.map(p=>changes.has(p)?{...p,quantity:p.quantity-changes.get(p)!}:p);
  const random={rng:root.rng},rewards:TradeDeliveredThing284[]=[],incoming:MaterialPile[]=[],placements:{pile:MaterialPile;owner:MaterialPile['owner'];rot?:MaterialPile['rot']}[]=[];
- let finalMass=captureProspectiveGroupMass256({...g,items:shadowItems},284);if(!finalMass)return no('La charge après remise ne peut pas être conservée.');
+ let finalMass=captureProspectiveGroupMass256({...g,items:shadowItems},w.schemaVersion);if(!finalMass)return no('La charge après remise ne peut pas être conservée.');
  const climate=chosen.items.some(p=>p.rot)?groupProvisionClimateRate(w,g):1;
  for(const pile of chosen.items){
   const capable=members.filter(p=>caravanPawnCapacityGrams256(p)>0),notOverloaded=capable.filter(p=>{const row=finalMass!.carriers.find(r=>r.pawnId===p.id);return !!row&&row.grams<=row.capacityGrams;}),pool=notOverloaded.length?notOverloaded:capable.length?capable:members;
@@ -79,7 +80,7 @@ function draft(w:World,requestId:number,groupId:number){
   const rot=pile.rot?{progress:rotAge(pile,w.tick),atTick:w.tick,...climate!==1?{rate:climate}:{}}:undefined;
   const moved={...pile,owner,...rot?{rot}:{}};incoming.push(moved);shadowItems.push(moved);placements.push({pile,owner,...rot?{rot}:{}});rewards.push({...tradeRewardManifest284(pile),pawnId:pawn.id});
   if(shadowItems.length>32768)return no('La caravane ne peut pas conserver toutes les piles de récompense.');
-  finalMass=captureProspectiveGroupMass256({...g,items:shadowItems},284);if(!finalMass)return no('La charge de la récompense n’est pas représentée.');
+  finalMass=captureProspectiveGroupMass256({...g,items:shadowItems},w.schemaVersion);if(!finalMass)return no('La charge de la récompense n’est pas représentée.');
  }
  const bonus=worldGoodwillChange274(relation.goodwill,relation.kind,natural,12),reward=bonus&&worldGoodwillChange274(bonus.goodwillAfter,bonus.kindAfter,natural,chosen.goodwill);
  if(!bonus||!reward)return no('Les deux changements diplomatiques ne peuvent pas être conservés.');

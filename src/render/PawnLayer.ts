@@ -11,6 +11,7 @@ import { AnimationDetail } from './AnimationDetail';
 import {ActorAnimationCache,sampleActorRoot} from './ActorAnimationCache';
 import {samplePawnRig} from './actor-animation-sampling';
 import { bedSlotBodyCenter,pawnBedSlot } from '../sim/bed-slots';
+import {coupleBed285} from '../sim/couple-bed-285';
 import { corpseStage,CORPSE_ROT_TICKS,CORPSE_DESSICATION_TICKS } from '../sim/corpses';
 import { corpseVisualMask } from './corpse-presentation';
 import { humanCorpseAge } from '../sim/human-corpses';
@@ -112,9 +113,10 @@ function presentationActivity(pawn:Pawn,equipmentCode:number):number {
   }
   return workActivity(pawn);
 }
-function animationPose(pawn:Pawn,workPose:number,smallMelee:boolean,seated:boolean):number {
+function animationPose(pawn:Pawn,workPose:number,smallMelee:boolean,seated:boolean,lyingAwake=false):number {
   if(pawn.state==='dead')return POSE_DEAD;
   if(pawn.state==='sleeping'||pawn.medicalSleep||anestheticStage(pawn.health?.anesthetic?.severity??0)==='sedated')return POSE_SLEEP;
+  if(lyingAwake)return 1;
   if(pawn.health?.foodPoisoning?.vomit||pawn.health?.flu?.vomit||pawn.health?.immuneDiseases?.malaria?.vomit)return 10;
   if(pawn.stun&&!medicallyStopped(pawn))return 9;
   if(pawn.melee?.strike)return smallMelee?WORK_POSE.groundMelee:8;
@@ -991,7 +993,8 @@ export class PawnLayer {
       if(pawn.feed?.phase==='feed'){const p=pawnsById.get(pawn.feed.patientId);if(p)yaw=Math.atan2(p.x-pawn.x,p.z-pawn.z);}
       if(pawn.tend?.phase==='tend'&&pawn.tend.patientId!==pawn.id){const p=pawnsById.get(pawn.tend.patientId);if(p)yaw=Math.atan2(p.x-pawn.x,p.z-pawn.z);}
       if(pawn.surgery?.phase==='work'){const p=pawnsById.get(pawn.surgery.patientId);if(p)yaw=Math.atan2(p.x-pawn.x,p.z-pawn.z);}
-      const bed = (pawn.state === 'sleeping'||pawn.state==='resting'||pawn.state==='downed') && bedId !== null ? world.structures.find(item => item.id === bedId) : undefined;
+      const coupleBed=coupleBed285(world,pawn);
+      const bed = coupleBed??((pawn.state === 'sleeping'||pawn.state==='resting'||pawn.state==='downed') && bedId !== null ? world.structures.find(item => item.id === bedId) : undefined);
       const seated=seatedOnFurniture(pawn);
       let px = pawn.x, pz = pawn.z, py = seated||pawn.state==='eating'||pawn.state==='sleeping'||pawn.state==='resting'||medicallyStopped(pawn)?0:this.travelSurfaces.get(pawn.z*world.width+pawn.x)??0;
       const body=bodies.get(pawn.id);
@@ -1069,7 +1072,7 @@ export class PawnLayer {
       this.workPoses.set(pawn.id,workPose);
       const smallMelee=!!pawn.melee?.strike&&(world.wildlife?.animals.some(animal=>animal.id===pawn.melee!.strike!.targetId&&animal.species==='hare')??false);
       const equipmentCode=weaponVisual(gears.get(pawn.id)?.item)?.equipment??0;
-      motion.setXYZW(index, pawn.state === 'moving'&&!pawn.stun&&!pasteCollect ? 1 : 0,presentationActivity(pawn,equipmentCode),animationPose(pawn,workPose,smallMelee,seated),pawn.melee?.strike ? coreTimeSeconds(pawn.melee.strike.atCore,Math.floor(world.tick/1024)*1024) : pawn.shooting?.stance?.phase==='cooldown'?coreTimeSeconds(pawn.shooting.stance.startedAtCore,Math.floor(world.tick/1024)*1024):pawn.id * 1.7);
+      motion.setXYZW(index, pawn.state === 'moving'&&!pawn.stun&&!pasteCollect ? 1 : 0,presentationActivity(pawn,equipmentCode),animationPose(pawn,workPose,smallMelee,seated,!!coupleBed),pawn.melee?.strike ? coreTimeSeconds(pawn.melee.strike.atCore,Math.floor(world.tick/1024)*1024) : pawn.shooting?.stance?.phase==='cooldown'?coreTimeSeconds(pawn.shooting.stance.startedAtCore,Math.floor(world.tick/1024)*1024):pawn.id * 1.7);
       const identity=appearanceOf(pawn,world.seed),variant=appearanceShape(identity);
       blood.setX(index,bodyBloodWord(pawn.health));
       scratchColor.setHex(identity.skinColor);skin.setXYZ(index,scratchColor.r,scratchColor.g,scratchColor.b);

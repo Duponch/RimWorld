@@ -7,11 +7,13 @@ import { extractTreeDefinition } from '../sim/tree-transfer-rules';
 import { isMinifiedTree } from '../sim/tree-transfer-state';
 import { workProgress } from '../sim/work-progress';
 import { researchProjects } from './research-panel';
+import {coupleActivity285} from './couple-activity-285';
 import type { Pawn, World } from '../sim/types';
 
 /** Reports confirmed phases only. Open-ended research and scanning have no
  * invented completion timer; clearing uses its own persisted work counter. */
 export function specificWorkActivity(world: World, pawn: Pawn): string | undefined {
+  const couple=coupleActivity285(world,pawn);if(couple)return couple.label;
   if (pawn.research) {
     const project = researchProjects.find(item => item.id === world.research?.project);
     return pawn.state === 'working'

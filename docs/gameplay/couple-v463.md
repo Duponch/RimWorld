@@ -1,0 +1,81 @@
+# V463 — vie quotidienne du couple adulte
+
+23 octobre 2026. **EN QUALIFICATION — schéma 285, pas publiée.** Parcours Chrome/WebGPU muet, présentation générale et typage final acquis ; livraison en préparation. La base publique reste V462.
+
+Deux partenaires adultes réellement présents dans leur double-lit peuvent partager un moment intime. Ils occupent leurs deux places et restent éveillés pendant une durée réelle. La fermeture donne à chacun un souvenir temporaire, une opinion dirigée vers l’autre et son propre délai avant une nouvelle occasion. L’activité relie surtout l’ensemble 3 à l’habitat, aux relations, aux soins, aux voyages et à la conservation.
+
+## Règles et présence physique
+
+La [référence primaire et son croisement avec le corpus](../research/couple-v463-reference.md) identifient le Core **1.6.4871 rev590**, ses définitions et les classes ciblées relues avant développement. Empreinte de l’assembly : `5cf1b5be399d5b1c9c56ca72c9d35b4ecf307feacf5859d04ac5a1aa5926356a`. Les règles détaillées viennent de cette installation ; aucun code ni asset propriétaire n’est intégré au produit.
+
+- Deux humains libres, biologiquement âgés d’au moins **18 ans réels**, doivent déjà être amoureux ou conjoints, présents sur la même carte et couchés dans les deux places distinctes du même double-lit civil utilisable. L’âge absent n’est pas remplacé par un âge supposé. Affectations, cellules, fin du mouvement et occupations concurrentes sont vérifiées.
+- Il n’existe ni bouton donnant immédiatement l’activité, ni rendez-vous garanti chaque nuit. Une personne déjà allongée peut effectuer un essai après **2 500 Core ticks** depuis son dernier essai effectif. Cette date est enregistrée avant les vérifications de partenaire, de chance, de délai personnel et d’éveil : un résultat négatif ne remet pas le compteur à zéro.
+- La chance dépend des deux personnes : âge, douleur, conscience, avis et attraction représentée. Le calcul conserve le délai moyen natif de base et sa probabilité linéaire, sans transformer ce délai moyen en rendez-vous. Nutrition à zéro, saignement ou décès empêchent l’admission ; une faim encore positive et une malnutrition résiduelle ne deviennent pas une famine artificielle.
+- Les deux personnes doivent pouvoir être éveillées. Une personne consciente déjà installée peut être immobile ou à terre : aucune nouvelle exigence de marche ou de manipulation n’est déduite. Crise, combat, portage et autres engagements incompatibles restent contrôlés séparément.
+- Une durée commune est tirée à l’entrée, dans les bornes **250–2 750 Core ticks**. Deux tâches réciproques remplacent le sommeil. Elles ne donnent pas de gain de jauge de repos ; le confort, les soins et l’observation de la vraie chambre gardent leurs règles physiques.
+- Après entrée, fin naturelle et interruption ferment les deux étapes, une seule fois, avec souvenir et délai personnels. Avant entrée, aucun de ces bénéfices n’est acquis. Les commandes, départs et retraits concernés préparent la fermeture des deux originaux avant leurs écritures ; un préflight refusé conserve l’état.
+
+Le seuil adulte, le périmètre des colons libres, les places préalablement affectées et les restrictions du lit civil sont des **adaptations locales explicites**. Le natif s’appuie plus largement sur les occupants réels et les réservations. Un partage de lit entre deux personnes sans relation reste possible pour dormir ; il ne crée pas une relation.
+
+## Lit, chambre et clinique
+
+Le même `RoomRest.nextAt/applied` passe du sommeil à l’activité puis au sommeil repris, sans nouveau tirage ni faux passage debout. Chaque transition finalise l’ancienne étape allongée : si la chambre avait déjà été observée, sa pensée est actualisée selon la vraie pièce ; sinon, aucune première pensée gratuite n’est donnée. Une fermeture préparée recontrôle son observation avant mutation. Le mandat médical de repos préexistant reste conservé pour une reprise admissible.
+
+**Correction de l’inférence clinique initiale : être éveillé pendant l’activité ne supprime pas les services de guérison du lit.** Le flag natif retirant le gain de repos ne retire pas les parts de guérison naturelle : 8 de base, +4 allongé et +4 du lit civil par jour, avant les autres facteurs. Les parts d’immunité du lit ×1,07 et de posture ×1,1 restent distinctes ; les soins pansés et les autres règles cliniques continuent. Le lecteur exige la vraie place et ne donne pas ces services à une personne réellement portée ou déplacée. Le double-lit demeure civil et n’acquiert pas un rôle de lit opératoire.
+
+## Souvenirs, horloges et propriétaires
+
+Chaque fermeture acquise ajoute un événement distinct ciblant l’ID réel du partenaire. Il dure **trois jours**, avec une limite de **dix événements globale**, tous partenaires confondus ; ajouter un événement ne renouvelle pas une ancienne date. Les groupes sont séparés par ID, même en cas d’homonymes. L’humeur de base **+8** s’empile dans chaque groupe avec un facteur **0,6**. L’opinion dirigée de base **+6** reste pleine pendant les premiers 70 % de l’âge actif, puis décroît sur les 30 % restants ; pondération et arrondi sont calculés par le lecteur pur. Ce souvenir n’est pas une conversation.
+
+Les noms affichés viennent des vrais propriétaires actuels. Les calculs de simulation évitent une nouvelle capture globale des personnes pour chaque pensée : noms locaux d’abord, résolution du namespace seulement si le libellé est affiché. Les valeurs restent identiques quand le calcul d’humeur omet ces nouveaux noms.
+
+Les échéances `lastAttemptAtCore` et `nextAllowedAtCore` sont **absolues**. Elles ne sont ni décalées ni gelées par le cryptosommeil. Seul l’âge actif du souvenir reçoit la correction de suspension existante. Durée et cooldown utilisent un flux personnel sauvegardé, distinct du RNG monde et du social ; l’opportunité utilise un tirage temporaire personnel. Ce choix permet aux fermetures préparées d’écrire les deux personnes sans consommer le RNG monde pour cette fermeture. Les transferts mondiaux gardent leurs autres tirages préexistants.
+
+Schéma **285** : validation stricte de 284, puis changement de numéro seul. Aucun essai, souvenir, durée, RNG personnel ou bénéfice n’est offert par migration. Les champs futurs et les formes illicites restent refusés. La tâche active exige la paire réelle sur carte ; les états passifs suivent le même humain dans ses vrais détenteurs, notamment caravane, WorldPawn, caisson et archive, avec leurs namespaces et leurs horloges. Les dates originales et l’identité ne sont pas recréées au transfert ou à la recharge.
+
+## Adaptations et limites
+
+Le pas local vaut dix Core ticks : les dates entières sont conservées et la fin est traitée au premier tick confirmé atteignant l’échéance, avec une quantification de zéro à neuf Core ticks. Les deux fermetures sont atomiques localement ; aucune parité d’ordre des sous-ticks, de seed ou de consommation aléatoire native n’est annoncée. Le vieillissement des souvenirs suit la convention locale existante plutôt que la cadence native de 150 Core ticks.
+
+L’orientation et la beauté non représentées restent neutres ; le lot ne fabrique pas de profil à partir du sexe graphique. Fiancés, LoveEnhancer, profils exhaustifs, variantes DLC, mariage joué, grossesse et enfants ne sont pas ouverts par cette tranche. Les implants ordinaires ne deviennent pas des LoveEnhancer. Ce sont des exemples de limites, pas une liste fermant les autres manques Core.
+
+La présentation utilise la pose allongée éveillée existante, le centre et l’orientation de la vraie place, avec partenaire et durée restante issus de l’état confirmé. Le parcours navigateur et ses captures sont acquis dans la préparation décrite ci-dessous. La composition « paire active et troisième humain déjà tenu dans un caisson occupé sur la même carte, puis retrait/recharge » reste non qualifiée : les cas froids acquis utilisent des cartes distinctes pour la paire et les caissons.
+
+Le [cadre d’adoption](../research/reference-adoption.md) et la référence dédiée croisent les chapitres temps, commandes/interruption, identité, besoins/social, santé, pièces, représentation, sauvegardes et critères. Les entrées existantes, notamment SYS/TEST-023, 047, 049, 079, 081, 083, 086, 087, 088, 091 et 096, conservent leur sens de contrats et critères ; leur citation ne vaut pas résultat de test. Propriétaires et distinctions sont adoptés ; places civiles, pas local, RNG personnel et fermeture atomique sont adaptés ; profils absents différés et parcours finaux à vérifier. Aucun nouvel ID de corpus ni architecture automatique n’est déduit.
+
+## Contrôles acquis et reprises conservées
+
+**135 cas distincts acquis par reprises : 101 nouveaux dans 13 fichiers et 34 voisins.** Cinq anciens rouges de chambre sont conservés et comparés séparément. Les nouveaux cas couvrent règles, aléatoire, souvenirs, sauvegardes, clinique, humeur, suspension, présentation de contrat, runtime/recharge, chambre, transactions froides et interruptions. Les sélections se recouvrent ; leurs comptes ne s’additionnent pas et ne désignent pas une seule suite finale de 135 cas.
+
+La reprise des **17 cas runtime après la garde rapide** passe : [journal](../../tmp/validation-runs/v463-runtime-final-fastgate-2026-10-22T22-52-23.975Z-30316/output.log), durée Vitest 15,96 s, enveloppe 16,518 s. La dernière reprise **39 cas dans six fichiers** passe après correction du garde de reprise face au feu : [journal](../../tmp/validation-runs/v463-release-fire-final-2026-10-22T22-55-46.234Z-27184/output.log), 94,58 s Vitest, 95,263 s enveloppe. Elle reprend les huit transactions froides et inclut les deux nouveaux cas de feu apparu au pied du lit ou à côté après préparation, sans mutation sur refus ni double consommation.
+
+| Reprise | Résultat et correction bornée |
+|---|---|
+| Purs initiaux, puis sélection de 83 | 24 PASS/1 rouge d’âge natif `NaN`, puis 82 PASS/1 rouge de préparation du lit. Le diviseur d’âge est évalué à l’appel pour sortir du cycle de modules, sans âge de secours. Recherche et matière de la fixture ont été corrigées sans assouplir l’admission produit. |
+| Runtime/recharge, puis clinique/chambre | 16 PASS/1 rouge de date préparée incompatible avec le front de détérioration, puis 29 PASS dans cinq fichiers. La continuation emploie le vrai moteur et une date cohérente. |
+| Transactions froides | Une première préparation refuse avant huit cas ; puis 14 PASS/8 rouges sur 22, 21 PASS/1 rouge et enfin le dernier cas ciblé passe. Les préparations ont été corrigées et la vraie sérialisation conserve les witnesses géographiques ; les sept cas ignorés de la dernière sélection ne deviennent pas sept nouveaux résultats. |
+| Voisins et témoin V462 | 34 PASS/5 rouges sur 39. Les cinq rouges de chambre ont été confrontés au produit V462 `6f63d2f6` : quatre messages identiques après conversion CRLF/LF ; pour le cinquième, patch Expected/Received identique mais préambule explicitement différent en schéma 285/284. Aucun diagnostic globalement byte-identique n’est revendiqué. [Comparaison détaillée](../../tmp/couple-v463/room-witness-comparison-reprise02/report.json). |
+
+Les journaux initiaux et corrections restent conservés dans [le suivi privé](../../tmp/couple-v463/progress.md). Le typage final est acquis en **13,973 s**, code de sortie 0 enregistré dans le registre de validation pour `v463-types-final-2026-10-22T23-06-58.887Z-19008` ; son journal vide est normal, mais ne constitue pas à lui seul cette preuve.
+
+## Parcours Chrome/WebGPU muet
+
+La [préparation Node finale](../../tmp/couple-v463/prepared-native/2026-10-22T22-57-42-816Z/manifest.json) progresse de l’entrée **5750** à la paire active **5751**, puis à sa fin naturelle **6013**. Ses trois sauvegardes sont exactement celles de la première préparation, refaite après correction des sources ; aucune occasion ou seed de remplacement. Deux adultes amoureux, recherche, lit construit, places et sommeil initial sont une préparation déclarée ; rencontre, construction et recherche payées ne sont pas prétendues jouées. Une date favorable déterministe a été choisie explicitement sans changer seed ou RNG réel ; tâches, souvenirs et délais viennent ensuite du vrai moteur.
+
+Deux essais de navigateur sont conservés sans parcours acquis : accès réseau refusé avant document, puis serveur local isolé qui ne répondait pas. L’identité du seul serveur de contrôle a été vérifiée avant arrêt et relance autorisée ; les autres serveurs sont conservés. La reprise avec **le même manifeste et la même entrée** passe : [rapport natif](../../tmp/couple-v463/native-ui/2026-10-22T23-01-25-021Z/report.json), 129,508 s de parcours, 135,453 s enveloppe. Entrée et fin progressent à ×1, deux activités et durées réelles sont inspectées, puis un souvenir +8 est lu pour chacun et les deux personnes reprennent leur sommeil. Zéro erreur applicative ou notification de mise en page.
+
+Les exports entiers aux ticks réellement observés sont égaux à un rejeu Node indépendant depuis l’entrée originale, sans champ ignoré. Sélections et survols ne changent aucun champ. Recharge de sa propre sauvegarde active, puis finale, et 60 images en pause pour chacune restent exactes, sans second souvenir ni nouveau délai. L’entrée vaut SHA256 `07276100d48217aa74209fe7c356631102d1aef34939362ef2cee68b909be6a7` ; la fin rechargée vaut `f29c3990a5b000fd6383dc5b93954a72327023ab3d4a1807f51b348d420a3372`. Les sources servies restent égales au manifeste.
+
+Les captures ont été relues : places du lit, activité éveillée sans Z, partenaire/durée lisibles puis sommeil et pensée acquise. Le lit préparé est à l’extérieur : la pensée d’habitat préexistante demandant une pièce commune reste distincte, aucun bonus de chambre intérieure n’est offert. Effets et musique sont désactivés et leurs volumes à zéro avant chaque document ; Chrome est lancé avec `--mute-audio`. Les défauts audio du produit publié sont conservés. Les interruptions sont qualifiées en simulation ; ce parcours natif exerce la fin naturelle.
+
+Deux corrections annexes sont présentes : la validation finale d’une fermeture recontrôle feu et autorité avant de reprendre le sommeil ; **Quêtes** est inclus parmi les panneaux accessibles en campagne sans carte dans la synchronisation des boutons. Ce second raccord est relu, sans preuve native nouvelle à ce stade.
+
+## Présentation générale et coûts ciblés
+
+Le contrôle commun **`test:presentation` passe en 157,240 s** avec Chrome/WebGPU muet, seed42, carte250² et trois colons,45s de collecte par phase et changements de vitesse6/1/3 : [rapport](../../tmp/test-runs/v463-presentation-general-2026-10-22T23-03-59.682Z-26600/artifacts/harvest-sync-verification.json). Minage tick2885 puis abattage tick2886 : zéro saut invalide, candidat brut, occupation solide ou famine de présentation. Les sources du parcours natif sont encore égales après ce contrôle : [contre-vérification](../../tmp/couple-v463/final-evidence-summary.json).
+
+Le [relevé ciblé Node](../../tmp/couple-v463/cost-probe/2026-10-22T23-06-52-450Z/report.json) mesure30lots de2000appels directs sur la préparation32² : médianes0,000014ms pour le refus d’un acteur debout,0,000056ms sans place de double-lit et0,000063ms pour le lecteur du vrai lit actif. Les mondes entiers restent inchangés. Ces coûts de helpers isolés, avec échauffement JIT, ne couvrent ni opportunité complète, ni simulation globale, image, GPU ou FPS ; aucune amélioration avant/après n’est mesurée. Listes bornées à dix souvenirs, garde rapide et résolution paresseuse des noms évitent des parcours inutiles ; aucun gain FPS global n’est annoncé.
+
+## Livraison restant à compléter
+
+Build Pages puis publication restent à acquérir et dater. Les contrôles du jeu gardent effets et musique coupés, sans imposer ce réglage aux joueurs. Aucun domaine Core, campagne ou ensemble n’est clos. Les six ensembles, les campagnes durables, la victoire et la cible FPS restent ouverts ; les autres bases et leurs interactions seront réévaluées après livraison, sans suite spatiale ou série de variantes automatique.

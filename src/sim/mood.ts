@@ -21,6 +21,7 @@ import { deathThoughtsAt,expireDeathThoughts } from './death-thoughts.ts';
 import { colonistUnburiedThought } from './death-thoughts-perception.ts';
 import { expireFamilyBereavement,familyBereavementThoughtsAt } from './family-bereavement.ts';
 import { expireRomanceMemories,romanceMoodThoughtsAt } from './romance-memories.ts';
+import {coupleMoodThoughts285,expireCoupleMemories285} from './couple-memories-285.ts';
 import { relationshipHousingThought,type RelationshipTopology } from './relationship-housing.ts';
 import { captureRelationshipPeople } from './relationship-namespace.ts';
 import type { BodyAssessment } from './body-capacities.ts';
@@ -59,10 +60,15 @@ export const comfortMood=(value:number):number=>comforts[comfortStage(value)]?.o
  * evaluator supplies simulation and inspection, outside render frames. Current
  * content permits one stage per family and one memory per meal kind. */
 export type PersonalMoodPeople=Pick<ReadonlyMap<number,{readonly name:string}>,'get'>;
+const unnamedCouplePeople285:PersonalMoodPeople=Object.freeze({get:(_id:number)=>undefined});
 export interface PersonalMoodContext {
   tick:number;people:PersonalMoodPeople;
   /** Local compatibility uses its existing namespace for family/romance labels. */
   relationPeople?:PersonalMoodPeople;
+  /** Optional local-first actual-owner lookup, used only for couple labels. */
+  couplePeople285?:PersonalMoodPeople;
+  /** SIM may omit these new names; identity grouping and values are unchanged. */
+  resolveCoupleNames285?:boolean;
   items:readonly MaterialPile[];expectation?:ColonyExpectation;difficultyMood:number;
   /** Absent off-map: never reuse the former map room, comfort or beauty. */
   environment?:{comfort:number;beauty:number};housing?:MoodThought;
@@ -71,10 +77,15 @@ export interface PersonalMoodContext {
   ambientTemperature460?:number;
   deathSituation?:MoodThought;lost?:readonly MoodThought[];
 }
-export function moodThoughts(world:World,pawn:Pawn,topology?:RelationshipTopology,readTemperature?:()=>number):readonly MoodThought[] {
+export function moodThoughts(world:World,pawn:Pawn,topology?:RelationshipTopology,readTemperature?:()=>number,resolveCoupleNames285=true):readonly MoodThought[] {
   if(pawn.state==='dead')return [];
+  const relationPeople=pawn.familyBereavement||pawn.romanceMemories?captureRelationshipPeople(world):undefined;
+  // This lookup lives only for this read. A present partner needs no owner
+  // capture; an away/held/terminal partner is resolved only if a label asks.
+  let coupleNamespace285=relationPeople;
   return personalMoodThoughts(pawn,{lost:lostThoughts(world,pawn,()=>captureRelationshipPeople(world)),tick:world.tick,people:{get:id=>world.pawns.find(p=>p.id===id)},
-    ...(pawn.familyBereavement||pawn.romanceMemories?{relationPeople:captureRelationshipPeople(world)}:{}),
+    ...relationPeople?{relationPeople}:{},
+    ...pawn.coupleMemories285?{resolveCoupleNames285,couplePeople285:{get:(id:number)=>world.pawns.find(p=>p.id===id)??(coupleNamespace285??=captureRelationshipPeople(world)).get(id)}}:{},
     items:world.piles,expectation:colonyExpectation(world,pawn),difficultyMood:colonistMoodOffset(world,pawn),
     ...(isSchema282OrLater(world.schemaVersion)&&pawn.cryptosleepHeldAt271===undefined&&pawn.shipCryptosleepHeldAt277===undefined
       ?{ambientTemperature460:readTemperature?readTemperature():temperatureAt(world,pawn)}:{}),
@@ -92,6 +103,7 @@ export function personalMoodThoughts(pawn:Pawn,c:PersonalMoodContext):readonly M
   if(c.deathSituation)thoughts.push(c.deathSituation);
   if(pawn.familyBereavement)thoughts.push(...familyBereavementThoughtsAt(pawn,c.tick,c.relationPeople??c.people));
   if(pawn.romanceMemories)thoughts.push(...romanceMoodThoughtsAt(pawn,c.tick,c.relationPeople??c.people));
+  if(pawn.coupleMemories285)thoughts.push(...coupleMoodThoughts285(pawn,c.tick,c.resolveCoupleNames285===false?unnamedCouplePeople285:c.couplePeople285??c.people));
   const housing=c.housing;if(housing)thoughts.push(housing);
   const difficultyMood=c.difficultyMood;
   if(difficultyMood)thoughts.push(situation('difficulty-mood','Récit d’aventure',difficultyMood,'Bonus d’humeur du niveau d’aventure choisi.'));
@@ -131,7 +143,7 @@ export function moodFrozen(pawn:Pawn,body?:BodyAssessment):boolean {
 }
 export function updateMood(world:World,pawn:Pawn,body?:BodyAssessment,topology?:RelationshipTopology,readTemperature?:()=>number):void {
   if(moodFrozen(pawn,body))return;
-  updateMoodFromThoughts(pawn,moodThoughts(world,pawn,topology,readTemperature),body);
+  updateMoodFromThoughts(pawn,moodThoughts(world,pawn,topology,readTemperature,false),body);
 }
 export function updateMoodFromThoughts(pawn:Pawn,thoughts:readonly MoodThought[],body?:BodyAssessment):void {
   if(moodFrozen(pawn,body))return;
@@ -144,6 +156,7 @@ export function expireMealMemoriesAt(pawn:Pawn,tick:number):void {
   if((pawn.cryptosleepHeldAt271!==undefined||pawn.shipCryptosleepHeldAt277!==undefined))return;
   if(pawn.familyBereavement)expireFamilyBereavement(pawn,tick);
   if(pawn.romanceMemories)expireRomanceMemories(pawn,tick);
+  if(pawn.coupleMemories285)expireCoupleMemories285(pawn,tick);
   if(pawn.bereavement)expireBereavement(pawn,tick);
   if(pawn.deathThoughts)expireDeathThoughts(pawn,tick);
   expireRoomMemoriesAt(pawn,tick);

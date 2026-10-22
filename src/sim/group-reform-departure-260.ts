@@ -1,4 +1,5 @@
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
+import {prepareCoupleRelease285} from './couple-release-285.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import type {World,Pawn,MaterialPile,Cell,Job} from './types.ts';
 import type {WildAnimal} from './wildlife-state.ts';
@@ -21,6 +22,7 @@ import {removalWritesMutable259,sealRemovalOriginal259,type MapRemovalWrite259} 
 export interface ReformDeparture260 {
  readonly ids:ReadonlySet<number>;readonly packedIds:ReadonlySet<number>;readonly nextId:number;
  readonly items:ReadonlyMap<number,MaterialPile|null>;readonly people:readonly Pawn[];
+ readonly coupleWrites285:readonly MapRemovalWrite259[];
  valueAfter(object:object,key:string):unknown;
  seal(areas?:readonly MapRemovalWrite259[],beds?:readonly MapRemovalWrite259[]):(stage:0|1|2)=>boolean;
  current():boolean;begin():void;commit():void;
@@ -42,6 +44,8 @@ export function prepareReformDeparture260(w:World,input:ReformDepartureInput260)
  const del=(object:object,key:string)=>put(object,key,undefined,false);
  const own=(o:object,k:string)=>Object.getOwnPropertyDescriptor(o,k)?.value;
  const after=(o:object,k:string)=>{const r=writes.find(r=>r.object===o&&r.key===k);return r?r.present?r.value:undefined:own(o,k);};
+ const couple=prepareCoupleRelease285(w,ids);
+ for(const r of couple.writes)put(r.object,r.key,r.value,r.present);
  const bed=captureActorBeds256(root),jobDrafts=new Map<Job,Job>();
  const jobCopy=(job:Job)=>{let draft=jobDrafts.get(job);if(!draft){draft=structuredClone(job);jobDrafts.set(job,draft);}return draft;};
  const deleted=['priorityWork','interruptedCargo','orbitalTrade','deepWork','animalHandling','animalCare','animalFeed','burial','cleaning','trade','firefighting','ward','heatRefuge','research','tend','feed','medicalSleep','equipmentTask','rescue','animalRescue','surgery','hunting','openCasket','transitExit','allowedAreaId','allowedAreaReturn','motion'];
@@ -58,7 +62,7 @@ export function prepareReformDeparture260(w:World,input:ReformDepartureInput260)
   if(p.need?.kind==='sleep'&&p.need.medical&&p.health&&!p.health.death&&medicalCivilTick271(p.health)<w.tick)throw Error('Reform medical source must have its actual current clinical clock');
   for(const job of w.jobs)if(p.orders.queue.includes(job.id)&&jobCopy(job).reservedBy===p.id){const d=jobCopy(job);delete d.clearance;delete d.installationWork;d.reservedBy=null;d.status='pending';}
   const active=w.jobs.find(j=>j.id===p.jobId);if(active)releasePawnJob259(jobCopy(active),p.id);
-  const d=structuredClone(p),oldMemories=d.roomMemories;
+  const d=couple.project(p),oldMemories=d.roomMemories;
   d.x=origin.x;d.z=origin.z;delete d.motion;d.path=[];d.moveCooldown=0;
   if((Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||isSchema263OrLater(Number(w.schemaVersion))))){delete d.draft;del(p,'draft');}
   releaseAllowedAreaReturn(d);finishRoomRest(w,d);
@@ -115,9 +119,9 @@ export function prepareReformDeparture260(w:World,input:ReformDepartureInput260)
  const graph=sealRemovalOriginal259(scope,writes,[]);
  const slots=(afterWrites:readonly MapRemovalWrite259[])=>writes.every((r,i)=>{const final=[...afterWrites].reverse().find(w=>w.object===r.object&&w.key===r.key),d=Object.getOwnPropertyDescriptor(r.object,r.key);if(final)return final.present?!!d&&d.enumerable===true&&Object.hasOwn(d,'value')&&Object.is(d.value,final.value):d===undefined;const old=stamps[i];return !!d===!!old&&(!d||Object.hasOwn(d,'value')&&d.enumerable===old!.enumerable&&d.writable===old!.writable&&d.configurable===old!.configurable&&Object.is(d.value,old!.value));});
  let phase:'prepared'|'begun'|'departed'='prepared';
- const current=()=>phase==='prepared'&&stable()&&removalWritesMutable259(writes)&&slots([])&&graph(0);
+ const current=()=>phase==='prepared'&&stable()&&couple.current()&&removalWritesMutable259(writes)&&slots([])&&graph(0);
  if(!current())throw Error('Reform originals or write recipients cannot be admitted');
- return {ids,packedIds,nextId,people,items:new Map(transfers.map(t=>[t.original.id,t.fragment?t.next:null])),valueAfter:after,
+ return {ids,packedIds,nextId,people,coupleWrites285:couple.writes,items:new Map(transfers.map(t=>[t.original.id,t.fragment?t.next:null])),valueAfter:after,
   seal(areas=[],beds=[]){const all=[...writes,...areas],check=sealRemovalOriginal259(scope,all,beds);return stage=>stable()&&slots(stage===0?[]:stage===1?all:[...all,...beds])&&check(stage);},
   current,begin(){if(!current())throw Error('Stale Reform before first mutation');phase='begun';},
   commit(){if(phase!=='begun')throw Error('Reform departure admission was not consumed');for(const r of writes){if(r.present){if(!Reflect.set(r.object,r.key,r.value))throw Error('Admitted Reform write failed');}else if(!Reflect.deleteProperty(r.object,r.key))throw Error('Admitted Reform deletion failed');}phase='departed';if(!stable()||!slots(writes)||!graph(1))throw Error('Reform produced an unplanned departure');}

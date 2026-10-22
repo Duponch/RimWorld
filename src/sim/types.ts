@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 284 as const;
+export const SCHEMA_VERSION = 285 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -119,6 +119,9 @@ export interface Pawn extends Cell { shipCasketTask277?:import('./ship-casket-st
   deathThoughts?:import('./death-thoughts-state.ts').DeathThoughtMemory[];
   familyBereavement?:import('./family-bereavement.ts').FamilyDeathMemory[];
   romanceMemories?:import('./romance-memories.ts').RomanceMemory[];
+  coupleClock285?:import('./couple-state-285.ts').CoupleClock285;
+  coupleTask285?:import('./couple-state-285.ts').CoupleTask285;
+  coupleMemories285?:import('./couple-memories-285.ts').CoupleMemory285[];
   raid?:import('./raid-state.ts').RaiderState;
   traits?: import('./traits.ts').TraitId[];
   background?: import('./colonist-backgrounds.ts').ColonistBackground;

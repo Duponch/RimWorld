@@ -1,3 +1,4 @@
+import {isSchema284OrLater} from './schema-compatibility-257.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {validApparelProvenance284} from './apparel-provenance-284.ts';
 import {isSchema279OrLater} from './schema-compatibility-257.ts';
@@ -38,7 +39,7 @@ export function validApparelShape(p:Record<string,unknown>,version:number):boole
   if(version<256&&isCoreStartingApparel256(item))return false;
   const historical=item==='flak-vest'||item==='cloth-shirt'||version>=72&&item==='cloth-tribalwear';
   if(version<90&&!historical||version<91&&V91_ITEM_IDS.includes(item)||version<120&&V120_ANIMAL_PRODUCT_ITEMS.includes(item)||version<141&&item==='flak-helmet'||version<148&&item==='recon-helmet'||version<241&&item==='recon-armor'||version<245&&item.endsWith('-tuque')||version<178&&item.startsWith('foxfur-'))return false;
-  return Object.keys(a).every(k=>['quality','hitPoints','forbidden',...(version>=90?['material','forced']:[]),...(isSchema256Or257(version)?['birthColor']:[]),...(version===284?['corpseWear284']:[])].includes(k))
+  return Object.keys(a).every(k=>['quality','hitPoints','forbidden',...(version>=90?['material','forced']:[]),...(isSchema256Or257(version)?['birthColor']:[]),...(isSchema284OrLater(version)?['corpseWear284']:[])].includes(k))
     &&typeof a.quality==='string'&&(WEAPON_QUALITIES as readonly string[]).includes(a.quality)
     &&typeof a.hitPoints==='number'&&Number.isInteger(a.hitPoints)&&a.hitPoints>0&&a.hitPoints<=definition.hitPoints
     &&(version<90?a.material===undefined:definition.material===undefined?a.material===undefined:a.material===definition.material)
@@ -46,7 +47,7 @@ export function validApparelShape(p:Record<string,unknown>,version:number):boole
     // Ordinary garments gain inventory custody only in279; the three remaining
     // carried armor types join in284. Actual custodian and holder membership
     // remain the owning domain's responsibility.
-    &&!(a.forbidden===true&&a.forced===true)&&p.quantity===1&&record(p.owner)&&typeof p.owner.type==='string'&&['ground','pawn','apparel',...(isSchema279OrLater(version)&&isOrdinaryApparel279(item)||version>=241&&item==='recon-armor'||version>=267&&isSmithingApparel267(item)||version===284&&['flak-vest','flak-helmet','recon-helmet'].includes(item)?['inventory']:[]),...(version>=231?['starting-pod']:[]),...(version===284?['trade-request284']:[])].includes(p.owner.type)
+    &&!(a.forbidden===true&&a.forced===true)&&p.quantity===1&&record(p.owner)&&typeof p.owner.type==='string'&&['ground','pawn','apparel',...(isSchema279OrLater(version)&&isOrdinaryApparel279(item)||version>=241&&item==='recon-armor'||version>=267&&isSmithingApparel267(item)||isSchema284OrLater(version)&&['flak-vest','flak-helmet','recon-helmet'].includes(item)?['inventory']:[]),...(version>=231?['starting-pod']:[]),...(isSchema284OrLater(version)?['trade-request284']:[])].includes(p.owner.type)
     &&(a.forced===undefined||p.owner.type==='apparel');
 }
 export function validateApparel(world:World,version:number=world.schemaVersion):string[] {

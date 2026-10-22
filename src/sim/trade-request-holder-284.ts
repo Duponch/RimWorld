@@ -1,3 +1,4 @@
+import {isSchema284OrLater} from './schema-compatibility-257.ts';
 import {plainWorldPawnData256} from './world-pawn-save-256.ts';
 import type {MaterialPile} from './types.ts';
 import type {TradeRequest284,TradeRequests284,TradeRewardCleanup284,TradeRewardThing284} from './trade-request-state-284.ts';
@@ -50,6 +51,6 @@ export function prepareTradeRewardCleanup284(request:TradeRequest284,optionIds:r
 /** The caller's existing campaign census visits these originals once. Neither
  * original manifests nor cleanup/delivery receipts reserve another Thing ID. */
 export function tradeRequestOwnedThings284(root:{schemaVersion:number;tradeRequests284?:TradeRequests284}):MaterialPile[] {
- if(root.schemaVersion!==284)return [];
+ if(!isSchema284OrLater(root.schemaVersion))return [];
  return root.tradeRequests284?.entries.flatMap(r=>r.options.flatMap(o=>o.items))??[];
 }

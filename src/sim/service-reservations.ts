@@ -11,6 +11,7 @@ import type { Cell, Pawn, World } from './types.ts';
  * occupancy: a passer-by can cross any of these cells without claiming its use.
  * Sleeping/collapsing on the floor does not acquire furniture or a work spot. */
 export function serviceCell(pawn: Pawn,world?:Pick<World,'structures'>): Cell | null {
+  if(pawn.coupleTask285&&world){const bed=world.structures.find(s=>s.id===pawn.coupleTask285!.bedId&&s.kind==='double-bed');if(bed)return bedSlotCell(bed,pawn.coupleTask285.slot)??null;}
   if(pawn.shipCasketTask277&&world){const c=world.structures.find(s=>s.id===pawn.shipCasketTask277!.casketId);if(c&&isShipCasket277(c))return shipCasketInteraction277(c,c.orientation);}
   if(pawn.cryptosleepTask&&world){const c=world.structures.find(s=>s.id===pawn.cryptosleepTask!.casketId);if(c&&isPlayerCasket271(c))return cryptosleepInteraction271(c);}
   if(pawn.openCasket&&world){const c=world.structures.find(s=>s.id===pawn.openCasket!.casketId);if(c&&isAncientCasket256(c))return ancientCasketInteraction256(c);}

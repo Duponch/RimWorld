@@ -63,9 +63,13 @@ export function prepareSuspendedHumanResume271(pawn:Pawn,heldAt:number,targetCiv
  // unchanged and store the same per-memory correction as dated thoughts.
  dated(pawn.memories,m=>Number(m.expiresAt)-6000);
  dated(pawn.roomMemories,m=>Number(m.expiresAt)-6000);
- dated(pawn.bereavement,m=>Number(m.at));dated(pawn.deathThoughts,m=>Number(m.at));dated(pawn.familyBereavement,m=>Number(m.at));dated(pawn.romanceMemories,m=>Number(m.at));dated(pawn.social?.memories,m=>Number(m.at));
- const lists=[pawn.memories,pawn.roomMemories,pawn.bereavement,pawn.deathThoughts,pawn.familyBereavement,pawn.romanceMemories,pawn.social?.memories],social=pawn.social;
- links.push(()=>pawn.social===social&&[pawn.memories,pawn.roomMemories,pawn.bereavement,pawn.deathThoughts,pawn.familyBereavement,pawn.romanceMemories,pawn.social?.memories].every((list,i)=>list===lists[i]));
+ dated(pawn.bereavement,m=>Number(m.at));dated(pawn.deathThoughts,m=>Number(m.at));dated(pawn.familyBereavement,m=>Number(m.at));dated(pawn.romanceMemories,m=>Number(m.at));dated(pawn.coupleMemories285,m=>Number(m.at));dated(pawn.social?.memories,m=>Number(m.at));
+ const coupleOthers285=pawn.coupleMemories285?.map(m=>m.otherId);
+ links.push(()=>!coupleOthers285||pawn.coupleMemories285?.every((m,i)=>m.otherId===coupleOthers285[i])===true);
+ const lists=[pawn.memories,pawn.roomMemories,pawn.bereavement,pawn.deathThoughts,pawn.familyBereavement,pawn.romanceMemories,pawn.coupleMemories285,pawn.social?.memories],social=pawn.social;
+ links.push(()=>pawn.social===social&&[pawn.memories,pawn.roomMemories,pawn.bereavement,pawn.deathThoughts,pawn.familyBereavement,pawn.romanceMemories,pawn.coupleMemories285,pawn.social?.memories].every((list,i)=>list===lists[i]));
+ // Couple clocks are absolute global Core deadlines. Only the memories above
+ // receive active-age correction; never shift a cooldown, attempt date or RNG.
  // Legacy scalar arrays contain deadlines, not factual event dates.
  for(const [list,duration] of [[pawn.deniedJoining,36000],[pawn.mental?.catharsis,18000]] as const)if(list){const before=[...list];links.push(()=>list.length===before.length&&list.every((v,i)=>v===before[i]));for(let i=0;i<list.length;i++){const span=targetCivil-Math.max(heldAt,list[i]!-duration);if(span>0)add(list,String(i),span);}}
  const hive=pawn.hiveDefeats,hiveHeld=pawn.hiveDefeatSuspendedTicks271;

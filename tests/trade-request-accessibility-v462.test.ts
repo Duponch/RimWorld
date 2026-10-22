@@ -9,7 +9,7 @@ import {initialWorldRegistry,captureLocalMap} from '../src/sim/world-map-context
 
 /** Prepared reader fixtures, never an elapsed manufacturing campaign. */
 function camp(){
- const w=healrootCamp(32,1);w.schemaVersion=284;
+ const w=healrootCamp(32,1);
  delete w.worldMaps;delete w.worldGroups;delete w.worldFactions;delete w.planet;delete w.site;delete w.exploration;
  for(const p of w.pawns){delete p.background;p.priorities.craft=1;p.skills.crafting={level:0,xp:0,dailyXp:0,passion:0};}
  w.research={points:0,completedAt:0,project:null};return w;

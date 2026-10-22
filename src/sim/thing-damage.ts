@@ -32,6 +32,7 @@ import { commitDrop,releaseAssignments } from './work-release.ts';
 import { releaseFurniture } from './furniture-transfer.ts';
 import { planStructureDestruction } from './thing-destruction.ts';
 import {prepareBedOwnershipTransition256} from './actor-bed-transition-256.ts';
+import {prepareCoupleRelease285} from './couple-release-285.ts';
 import { reconcileRoofSupport } from './roofing.ts';
 import { reconcilePower } from './power.ts';
 import { detachMissingBills } from './unfinished.ts';
@@ -158,7 +159,7 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
     const h=p.haul;
     return p.jobId!==null&&ids.has(p.jobId)||p.research?.stationId===s.id||p.cooking?.stationId===s.id||p.brewing?.barrelId===s.id
       ||h&&(h.whole&&h.sourcePileId===s.id||(h.destination.type==='fuel'||h.destination.type==='turret'||h.destination.type==='fermenting-barrel')&&h.destination.structureId===s.id||h.destination.type==='job'&&ids.has(h.destination.jobId))
-      ||p.need?.kind==='sleep'&&p.need.bedId===s.id||p.recreation.task?.buildingId===s.id||p.recreation.task?.seatId===s.id||p.rescue?.bedId===s.id;
+      ||p.need?.kind==='sleep'&&p.need.bedId===s.id||p.coupleTask285?.bedId===s.id||p.recreation.task?.buildingId===s.id||p.recreation.task?.seatId===s.id||p.rescue?.bedId===s.id;
   });
   const plan=planStructureDestruction(detonates?{...world,nextId:world.nextId+1}:world,s,actors,origin,state?.rng??rng,cause==='roof-thick');if(!plan)return false;
   if(detonates&&!Number.isSafeInteger(world.nextId+1+(plan.salvage?.drops.length??0)))return false;
@@ -172,7 +173,10 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   const totals=state?.ledger??destruction;
   if(!addSafe(totals.fuelTicksLost??0,fuelLost)||!addSafe(totals.fuelTicksBurned??0,fuelBurned)||!addSafe(destruction.count,1)||!Object.values(lost).every(Number.isSafeInteger)||!Number.isSafeInteger(((totals.batteryEnergyLost??0)+energy)*2)
     ||state&&(!addSafe(state.ledger.structures,1)||!addSafe(state.ledger.items.component??0,serviceLoss)))return false;
+  const coupleIds=new Set(actors.filter(p=>p.coupleTask285?.bedId===s.id).map(p=>p.id));
+  const coupleRelease=coupleIds.size?prepareCoupleRelease285(world,coupleIds):undefined;
   if(s.kind==='sarcophagus'&&!commitGraveRelease(world,s,plan.graveRelease))return false;
+  coupleRelease?.commit();
   if(state)world.fires=state;
   const waveId=detonates?world.nextId++:undefined;
   if(plan.rubble){world.filth=plan.rubble.filth;world.nextId=plan.rubble.nextId;}

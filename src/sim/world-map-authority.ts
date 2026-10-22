@@ -158,7 +158,7 @@ function commitRegisteredMapRemoval260(root:CampaignState,map:World,record:impor
  notifyMapLost(root,map,id,lastSettlement,newColonyReceivers);
  const registry=root.worldGroups!;
  if(removalPhase)removalPhase.areas();else if(areaPlan)commitRemovedMapAreas(areaPlan);
- const compact=detachMapOwners(map,id,record.tile!,pass,removalPhase?.drops260);
+ const compact=detachMapOwners(map,id,record.tile!,pass,removalPhase?.drops260,removalPhase?.releaseCouples285);
  if(removalPhase)removalPhase.beds();else bedOwnership?.commit();
  if(map.scout&&'pawn' in map.scout||map.commercialTrip&&'pawn' in map.commercialTrip){registry.legacyTravellers.push({originMapId:id,...record.postId!==undefined?{postId:record.postId}:{},context:{seed:map.seed,width:map.width,height:map.height,...map.climate?{climate:map.climate}:{},...map.site?{site:map.site}:{},...map.scenario?{scenario:map.scenario}:{}},...map.scout&&'pawn' in map.scout?{scout:map.scout}:{},...map.commercialTrip&&'pawn' in map.commercialTrip?{commercialTrip:map.commercialTrip}:{}});delete map.scout;delete map.commercialTrip;}
  pass.commit(compact);targetRemoval?.commit();

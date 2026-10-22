@@ -1,6 +1,7 @@
 import {memoryExpiry271,validSuspendedMemory271,memoryReadTick271} from './suspended-memory-271.ts';
 import { isBedKind } from './bed-kinds.ts';
 import { bedSlotCell,pawnBedSlot } from './bed-slots.ts';
+import {coupleBed285} from './couple-bed-285.ts';
 import { captureRoomQuality } from './room-quality.ts';
 import { IMPRESSION_LABELS,ROOM_MEMORY_DURATION,ROOM_MEMORY_OFFSETS } from './room-impressiveness.ts';
 import { healthRandom } from './health.ts';
@@ -12,6 +13,13 @@ export interface RoomMemory {kind:RoomMemoryKind;stage:number;expiresAt:number;s
 export interface RoomRest {nextAt:number;applied:boolean}
 const labels:Record<RoomMemoryKind,string>={bedroom:'Chambre',barracks:'Dortoir',dining:'Salle du dernier repas',recreation:'Salle du dernier loisir'};
 const admitted=(w:World,p:Pawn)=>w.schemaVersion>=103&&(p.faction??'colony')==='colony'&&!p.visitor&&!p.prisoner&&p.state!=='dead';
+type RoomRestTask285=Extract<NonNullable<Pawn['need']>,{kind:'sleep'}>|NonNullable<Pawn['coupleTask285']>;
+/** The acquired room clock moves with actual continuous lying-down use.
+ * The common historical sleep path still borrows its original task directly. */
+function roomRestTask285(w:World,p:Pawn):RoomRestTask285|undefined {
+ if(p.need?.kind==='sleep'&&p.need.phase==='sleep')return p.need;
+ return w.schemaVersion===285&&p.coupleTask285&&coupleBed285(w,p)?p.coupleTask285:undefined;
+}
 
 function remember(w:World,p:Pawn,kind:RoomMemoryKind,stage:number):void {
   if(ROOM_MEMORY_OFFSETS[kind][stage]==null)return;
@@ -26,19 +34,21 @@ export function rememberRoomUse(w:World,p:Pawn,kind:'dining'|'recreation'):void 
 function applyBedroomMemory(w:World,p:Pawn):void {
   p.roomMemories=p.roomMemories?.filter(m=>m.kind!=='bedroom'&&m.kind!=='barracks');
   if(!p.roomMemories?.length)delete p.roomMemories;
-  const task=p.need;if(task?.kind!=='sleep'||task.phase!=='sleep'||task.bedId===null||task.bedId!==p.bedId)return;
+  const task=roomRestTask285(w,p);if(!task||task.bedId===null||task.bedId!==p.bedId)return;
   const bed=w.structures.find(s=>s.id===task.bedId&&isBedKind(s.kind));
   if(!bed||bed.medical||bed.prisoner)return;
   if(bed.kind==='double-bed'){
     const slot=pawnBedSlot(p,bed),cell=slot===undefined?undefined:bedSlotCell(bed,slot);
-    if(!cell||p.x!==cell.x||p.z!==cell.z||task.target.x!==cell.x||task.target.z!==cell.z||(p.motion?.end??0)>w.tick)return;
+    const target='target'in task?task.target:cell;
+    if(!cell||!target||p.x!==cell.x||p.z!==cell.z||target.x!==cell.x||target.z!==cell.z||(p.motion?.end??0)>w.tick)return;
   }else if(p.x!==bed.x||p.z!==bed.z)return;
   const room=captureRoomQuality(w).room(p);if(room?.beds)remember(w,p,room.beds===1?'bedroom':'barracks',room.stage);
 }
 /** The first observation is delayed 1–4 hours after lying down, then daily.
  * Store the deadline so loading never redraws or grants an earlier benefit. */
 export function advanceRoomRest(w:World,p:Pawn):void {
-  const task=p.need;if(!admitted(w,p)||task?.kind!=='sleep'||task.phase!=='sleep'||p.x!==task.target.x||p.z!==task.target.z||p.moveCooldown>0)return;
+  const task=roomRestTask285(w,p);if(!admitted(w,p)||!task||p.moveCooldown>0)return;
+  if('target'in task&&(p.x!==task.target.x||p.z!==task.target.z))return;
   if(!task.roomRest){
     task.roomRest={nextAt:w.tick+250+Math.floor(healthRandom(w)*751),applied:false};
     if(task.bedId!==p.bedId&&p.roomMemories){p.roomMemories=p.roomMemories.filter(m=>m.kind!=='bedroom'||(ROOM_MEMORY_OFFSETS.bedroom[m.stage]??0)<=0);if(!p.roomMemories.length)delete p.roomMemories;}
@@ -48,7 +58,7 @@ export function advanceRoomRest(w:World,p:Pawn):void {
 /** Finishing or interrupting the physical rest repeats only an observation
  * that already occurred, never grants a thought for a brief bed visit. */
 export function finishRoomRest(w:World,p:Pawn):void {
-  if(!admitted(w,p)||p.need?.kind!=='sleep'||!p.need.roomRest?.applied)return;
+  if(!admitted(w,p)||!roomRestTask285(w,p)?.roomRest?.applied)return;
   applyBedroomMemory(w,p);
 }
 export function expireRoomMemories(w:World,p:Pawn):void {expireRoomMemoriesAt(p,w.tick);}

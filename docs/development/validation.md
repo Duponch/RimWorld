@@ -1,4 +1,6 @@
-# Validation courante — V462 publiée
+# Validation courante — V463 en qualification
+
+**V463 en qualification — schéma 285 :** [Vie quotidienne du couple adulte](../gameplay/couple-v463.md). Présence réelle dans les deux places du lit, activité éveillée, clinique, souvenirs et délais personnels ;101nouveaux cas acquis par reprises,34voisins et5anciens rouges documentés. Parcours Chrome/WebGPU muet, recharges entières, présentation générale et typage final acquis ; livraison en préparation. Migration284 stricte puis numéro seul285 ; aucun bénéfice offert. Ensemble3 principal ; tous les autres domaines et interactions, les six ensembles, campagnes, victoire et cible FPS restent ouverts.
 
 **V462 publiée — schéma 284 :** [Demandes commerciales mondiales](../gameplay/trade-requests-v462.md). Offres sur production possible, deux délais, choix de récompense et remise des mêmes objets par une vraie caravane. 104 cas distincts acquis par reprises, dont 66 nouveaux et 38 voisins ; parcours Chrome/WebGPU muet, annulation et recharges entières exactes. Typage et présentation acquis. Publié 6f63d2f6/2a66a836, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Coût géométrique ciblé réduit, aucun gain FPS global. Ensemble 4 ; autres bases, six ensembles, campagnes et cible FPS ouverts.
 

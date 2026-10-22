@@ -1,3 +1,5 @@
+import {validCouplePawnContext285} from './couple-save-285.ts';
+import {hasCoupleFields285} from './couple-owner-save-285.ts';
 import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
@@ -68,7 +70,7 @@ const BASELINE=['food','silver','cargo','medicine','component'];
 const COMMON=['id','startedAt','destination','ledger','phase'];
 const PREPARING=['memberIds','rendezvous','meeting','manifest','cursor','exits'];
 const AWAY=['members','items','departedAt','lastPersonalTick','baseline','entry','tile','route','segment','paused','stop'];
-const PASSIVE_PAWN=['age','appearance','roomMemories','filthFeet','recruitment','social','bereavement','familyBereavement','romanceMemories','deathThoughts',
+const PASSIVE_PAWN=['coupleClock285','coupleMemories285','age','appearance','roomMemories','filthFeet','recruitment','social','bereavement','familyBereavement','romanceMemories','deathThoughts',
   'traits','background','mental','faction','hostilityResponse','careDisabled','medicalCare','selfTend','health','apparelPolicyId',
   'apparelAutomation','nextApparelCheckAt','deniedJoining','originQuestId','podRescue','motion',
   'lastAttack','meleeThreat','disturbance','droppedWeaponId','allowedAreaId'];
@@ -337,6 +339,7 @@ function validateGroupOwners(world:World,version:number,planet:PlanetState,refer
   // Contextual memory references use one real capture after all new shapes.
   try{const capture=captureHumanOwners(world),known=new Set(capture.people.keys());
     for(const {pawn,clock} of owners){errors.push(...validateHumanSocial(pawn,version,clock,known,world.pawns));
+      if(hasCoupleFields285(pawn)&&!validCouplePawnContext285(pawn,{version,tick:clock,nextId:world.nextId,knownHumanIds:known}))fail('Invalid passive group couple clock or memory.');
       if(!validHumanBereavement(pawn.bereavement,pawn,version,clock,capture.people))fail('Invalid group death memory.');
       if(pawn.state!=='dead'&&pawn.droppedWeaponId!==undefined&&(capture.byId.get(pawn.id)?.items.some(i=>i.owner.type==='equipment')
         ||!world.piles.some(i=>i.id===pawn.droppedWeaponId&&i.kind==='weapon'&&i.owner.type==='ground')))fail('Invalid group remembered weapon.');}

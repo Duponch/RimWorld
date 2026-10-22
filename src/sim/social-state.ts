@@ -5,6 +5,7 @@ import { effectiveSkillLevel } from './work-types.ts';
 import { relationshipIndex } from './relationship-runtime.ts';
 import { RELATIONSHIP_OPINION,type RelationshipViewKind } from './relationship-state.ts';
 import { expireRomanceMemories,romanceOpinionCauses,type RomanceOpinionKind } from './romance-memories.ts';
+import {coupleOpinionOffset285,COUPLE_MEMORY_DURATION_285} from './couple-memories-285.ts';
 
 export type SocialKind='chitchat'|'deep-talk'|'rapport'|'kind-words'|'slight'|'insult'|'fight-cathartic'|'fight-angering';
 export type SocialInteractionKind=SocialKind|'romance-attempt'|'breakup';
@@ -49,7 +50,7 @@ export function memoryOffset(memory:SocialMemory,tick:number):number {
 }
 function roundPositiveOpinion(n:number):number {const lo=Math.floor(n);return n<=0?0:Math.max(1,n-lo===.5?lo+lo%2:Math.round(n));}
 function roundOpinion(n:number):number {return n<0?-roundPositiveOpinion(-n):roundPositiveOpinion(n);}
-export type OpinionCauseKind=SocialKind|`relation-${RelationshipViewKind}`|`romance-${RomanceOpinionKind}`;
+export type OpinionCauseKind=SocialKind|`relation-${RelationshipViewKind}`|`romance-${RomanceOpinionKind}`|'couple-intimacy';
 export interface OpinionCause {kind:OpinionCauseKind;count:number;value:number;nextChange:number;label:string;description:string}
 const relationLabels:Readonly<Record<RelationshipViewKind,string>>={parent:'Parent',child:'Enfant',sibling:'Fratrie',lover:'Partenaire',spouse:'Conjoint','ex-lover':'Ancien partenaire','ex-spouse':'Ancien conjoint'};
 export function opinionCauses(pawn:Pawn,otherId:number,tick:number,world?:World):OpinionCause[] {
@@ -65,6 +66,14 @@ export function opinionCauses(pawn:Pawn,otherId:number,tick:number,world?:World)
     causes.push({kind:`relation-${kind}`,count:1,value:RELATIONSHIP_OPINION[kind],nextChange:Infinity,label:relationLabels[kind],description:'Lien personnel connu ; son effet n’est pas une conversation expirante.'});
   }
   for(const cause of romanceOpinionCauses(pawn,otherId,tick))causes.push({...cause,kind:`romance-${cause.kind}`,value:roundOpinion(cause.value)});
+  if(pawn.coupleMemories285){
+    const value=coupleOpinionOffset285(pawn,otherId,tick);
+    if(value>0){
+      const group=pawn.coupleMemories285.filter(m=>m.otherId===otherId&&memoryExpiry271(m,m.at+COUPLE_MEMORY_DURATION_285)>tick);
+      causes.push({kind:'couple-intimacy',count:group.length,value,nextChange:Math.min(...group.map(m=>memoryExpiry271(m,m.at+COUPLE_MEMORY_DURATION_285))),label:'Moment intime partagé',
+        description:'Souvenir dirigé du partenaire réel ; opinion décroissante pendant les derniers 30 % des trois jours, cumul dégressif.'});
+    }
+  }
   return causes;
 }
 export const opinionOf=(pawn:Pawn,otherId:number,tick:number,world?:World):number=>pawn.state==='dead'?0:Math.max(-100,Math.min(100,opinionCauses(pawn,otherId,tick,world).reduce((s,c)=>s+c.value,0)));

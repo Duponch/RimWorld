@@ -1,3 +1,4 @@
+import {isSchema284OrLater} from './schema-compatibility-257.ts';
 import {APPAREL,APPAREL_MATERIALS,APPAREL_FAMILIES,type ApparelMaterial,type ApparelFamily,type ApparelItem,type ApparelDefinition} from './apparel-definitions.ts';
 export * from './apparel-definitions.ts';
 import {apparelCompatible,type ArmorPiece} from './armor.ts';
@@ -44,7 +45,7 @@ export const apparelFamily=(item:ApparelItem):ApparelFamily|undefined=>APPAREL[i
 export const wornApparel=(world:World,pawn:Pawn):MaterialPile[]=>world.piles.filter(p=>p.owner.type==='apparel'&&p.owner.pawnId===pawn.id);
 export const apparelLabel=(pile:MaterialPile):string=>`${apparelDefinition(pile).label} (${QUALITY_LABELS[pile.apparel!.quality]})`;
 export const newApparelState=(item:ApparelItem,material:ApparelMaterial|undefined=APPAREL[item].material,version:number=SCHEMA_VERSION):ApparelState=>({
-  quality:'normal',hitPoints:APPAREL[item].hitPoints,...material===undefined?{}:{material},...version===284?{corpseWear284:false}:{},
+  quality:'normal',hitPoints:APPAREL[item].hitPoints,...material===undefined?{}:{material},...isSchema284OrLater(version)?{corpseWear284:false}:{},
 });
 export const hasApparelParts=(pawn:Pawn,pile:MaterialPile):boolean=>apparelDefinition(pile).coverage.parts.some(p=>!pawn.health||!partMissing(pawn.health,p));
 export const conflictsWith=(a:MaterialPile,b:MaterialPile):boolean=>!apparelCompatible(apparelDefinition(a).coverage,apparelDefinition(b).coverage);

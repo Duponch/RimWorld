@@ -1,3 +1,4 @@
+import {isSchema284OrLater} from './schema-compatibility-257.ts';
 import {healthRandom} from './health.ts';
 import {registeredMap} from './world-map-context.ts';
 import {worldSettlementAccess256} from './world-faction-access.ts';
@@ -22,7 +23,7 @@ const writable=(v:object,key:string)=>Object.getOwnPropertyDescriptor(v,key)?.wr
 export function prepareTradeRequestBirth284(root:CampaignState):{ok:false;reason:string}|{ok:true;request:TradeRequest284;current():boolean;commit():void} {
  const registry=root.tradeRequests284,maps=root.worldMaps,factions=root.worldFactions,planet=root.planet,tick=root.tick,nextId=root.nextId,rng=root.rng;
  const homeRow=maps?.sites.find(s=>s.kind==='settlement'&&s.tile!==null),home=homeRow&&registeredMap(root,homeRow.id);
- if(Number(root.schemaVersion)!==284||!registry||!maps||!factions||planet?.revision!==3||!homeRow||homeRow.tile===null||!home||registry.entries.length>=TRADE_REQUEST_MAX_ENTRIES_284||!Number.isSafeInteger(registry.nextId+1))return no('La demande exige une colonie et les registres mondiaux réels.');
+ if(!isSchema284OrLater(root.schemaVersion)||!registry||!maps||!factions||planet?.revision!==3||!homeRow||homeRow.tile===null||!home||registry.entries.length>=TRADE_REQUEST_MAX_ENTRIES_284||!Number.isSafeInteger(registry.nextId+1))return no('La demande exige une colonie et les registres mondiaux réels.');
  const surface=planetGeography256(planet).surface,average=geographicAverageTileSize256(planet),center=surface.tiles[homeRow.tile]!.center;
  const candidates=factions.settlements.filter(s=>{
   const access=worldSettlementAccess256(factions,s.id),faction=factions.factions.find(f=>f.id===s.factionId),leader=factions.leaders.find(l=>l.factionId===s.factionId);
@@ -48,7 +49,7 @@ export function prepareTradeRequestBirth284(root:CampaignState):{ok:false;reason
   options:rewards.options,dismissed:false,status:'offered',cleanup:[]};
  const entries=registry.entries,entryRefs=entries.slice(),nextRequestId=registry.nextId,source=()=>JSON.stringify([home.pawns,home.piles,home.packed,home.structures,home.resources,home.tiles,home.research,factions,maps.sites.map(s=>[s.id,s.tile,s.kind,s.map]),root.worldGroups]);
  const before=source(),candidate=JSON.stringify(request);let used=false;
- const current=()=>!used&&root.schemaVersion===284&&root.tick===tick&&root.nextId===nextId&&root.rng===rng&&root.tradeRequests284===registry&&root.worldMaps===maps&&root.worldFactions===factions&&root.planet===planet&&registry.nextId===nextRequestId&&registry.entries===entries&&entries.length===entryRefs.length&&entries.every((q,i)=>q===entryRefs[i])&&registeredMap(root,homeRow.id)===home&&source()===before&&JSON.stringify(request)===candidate
+ const current=()=>!used&&isSchema284OrLater(root.schemaVersion)&&root.tick===tick&&root.nextId===nextId&&root.rng===rng&&root.tradeRequests284===registry&&root.worldMaps===maps&&root.worldFactions===factions&&root.planet===planet&&registry.nextId===nextRequestId&&registry.entries===entries&&entries.length===entryRefs.length&&entries.every((q,i)=>q===entryRefs[i])&&registeredMap(root,homeRow.id)===home&&source()===before&&JSON.stringify(request)===candidate
   &&canLogTradeRequest284(root)&&writable(root,'nextId')&&writable(root,'rng')&&writable(registry,'nextId')&&writable(entries,'length')&&Object.isExtensible(entries);
  if(!current())return no('Les destinataires de cette offre ne sont pas modifiables.');
  return {ok:true,request,current,commit(){if(!current())throw Error('Trade request birth changed before commit');used=true;entries.push(request);registry.nextId++;root.nextId=rewards.nextId;root.rng=random.rng;}};

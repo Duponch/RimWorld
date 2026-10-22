@@ -132,7 +132,7 @@ export function updateNeeds(world: World, pawn: Pawn,body?:import('./body-capaci
   updateWellbeing(world, pawn,body,readFurnitureSight,topology,readTemperature);
 }
 
-export function collapseFromExhaustion(world:World,pawn:Pawn,context:NeedContext):void {
+export function collapseFromExhaustion(world:World,pawn:Pawn,context:Pick<NeedContext,'event'>):void {
   // A completed attack still owns its recovery. Exhaustion starts its real
   // sleep task when that recovery expires, without discarding the strike.
   if(world.schemaVersion>=192&&pawn.melee?.strike)return;

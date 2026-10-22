@@ -2,6 +2,9 @@ import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import type {World} from './types.ts';
 import type {NumericMembershipSink} from './numeric-membership.ts';
 import {validateDetachedPawnRecordShape} from './pawn-record-save.ts';
+import {captureHumanOwners} from './human-owners.ts';
+import {hasCoupleFields285} from './couple-owner-save-285.ts';
+import {validCouplePawnContext285} from './couple-save-285.ts';
 import {validatePileRecordShape} from './material-record-save.ts';
 import {validatePackedFurnitureRecords} from './furniture-transfer-save.ts';
 import {validCaravanAnimalRecord256} from './group-animal-record-save-256.ts';
@@ -70,5 +73,11 @@ export function validatePendingEncounterRecords261(root:Pick<CampaignState,'sche
   else if(line.kind==='pile'){if(!g.items.some(i=>i.id===line.id&&i.quantity>=line.quantity))errors.push('Demanded goods are no longer held');}
   else if(!g.packed?.some(i=>i.building.id===line.id))errors.push('Demanded packed original is absent');
  }
+ // The existing accumulator is still registering later campaign owners here.
+ // Only acquired couple fields need the complete, actual campaign knowledge.
+ if(!errors.length&&p.people.some(hasCoupleFields285))try{
+  const known=new Set(captureHumanOwners(context).people.keys());
+  for(const actor of p.people)if(hasCoupleFields285(actor)&&!validCouplePawnContext285(actor,{version:root.schemaVersion,tick:root.tick,nextId:root.nextId,knownHumanIds:known}))errors.push('Invalid pending foreign couple clock or memory.');
+ }catch{errors.push('Invalid pending foreign couple namespace.');}
  return errors;
 }

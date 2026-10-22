@@ -24,6 +24,8 @@
 
 **V451 publiée — schéma 275 :** [Réacteur stellaire](ship-reactor-v451.md). Recherches, chantier payé, 1 000 W, démarrage confirmé et attaques indépendantes ; 50 cas ciblés acquis par reprises, un ancien rouge identique au témoin conservé. Typage, présentation et interface natives muettes acquis. Build Pages acquis ; publié 8e0e2ee6/7552f915, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. **Ensemble 5 engagé** ; autres pièces et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
 
+**V463 en qualification, pas encore publiée :** [vie quotidienne du couple adulte](couple-v463.md) dans le double-lit civil existant, avec deux places physiques, durée, interruptions et souvenirs dirigés vers le vrai partenaire. Aucun nouvel objet ou recette ; admission et migration prospectives, présentation native et livraison encore à qualifier. Ce lot ne ferme ni le social ni les autres bases Core.
+
 | Boucle V455 | Admission et usage locaux | Limites annoncées |
 | --- | --- | --- |
 | Demandes commerciales mondiales V462 | Offre sur production possible parmi 57 familles existantes, deux délais, choix de récompense et livraison physique par la vraie caravane ; [détail](trade-requests-v462.md). | Même destination et mêmes objets, inventaires humains/animaux, provenance des habits et reprises conservées. Récompenses principales bornées à 23 types existants ; richesse matérielle connue déclarée. Autres familles, domaines, six ensembles et performances ouverts. |

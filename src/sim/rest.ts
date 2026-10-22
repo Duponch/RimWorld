@@ -26,7 +26,9 @@ export function updateRest(world: World, pawn: Pawn): void {
     pawn.rest=depletedHumanRest(pawn.rest,world.restRules==='legacy');
     return;
   }
-  if(pawn.state==='downed'||pawn.state==='resting') {
+  const coupleAwake285=world.schemaVersion===285&&pawn.coupleTask285!==undefined;
+  if(coupleAwake285)delete pawn.medicalSleep;
+  if(!coupleAwake285&&(pawn.state==='downed'||pawn.state==='resting')) {
     pawn.restZeroTicks=0;pawn.collapsePending=false;
     if(pawn.moveCooldown>0){delete pawn.medicalSleep;return;}
     if(pawn.medicalSleep&&pawn.rest>=100)delete pawn.medicalSleep;
@@ -44,7 +46,7 @@ export function updateRest(world: World, pawn: Pawn): void {
     else pawn.rest=depletedHumanRest(pawn.rest,world.restRules==='legacy');
     return;
   }
-  if (pawn.state !== 'sleeping') pawn.rest = depletedHumanRest(pawn.rest,world.restRules==='legacy');
+  if (coupleAwake285||pawn.state !== 'sleeping') pawn.rest = depletedHumanRest(pawn.rest,world.restRules==='legacy');
   if (world.restRules === 'legacy') { pawn.restZeroTicks = 0; pawn.collapsePending = false; return; }
   pawn.restZeroTicks = pawn.rest < 0.01 && pawn.state !== 'sleeping' ? Math.min(4500, pawn.restZeroTicks + 1) : 0;
   if (pawn.rest >= 0.01 || pawn.hunger <= 0 || pawn.need?.kind === 'sleep') { pawn.collapsePending = false; return; }

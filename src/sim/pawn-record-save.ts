@@ -1,3 +1,4 @@
+import {validCouplePawnShape285} from './couple-save-285.ts';
 import {isSchema277OrLater} from './schema-compatibility-257.ts';
 import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {validCraftingFuelDestination269} from './fuel-purpose-save-269.ts';
@@ -93,6 +94,7 @@ function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,ver
   if(heldPlayer271?(!isSchema271OrLater(version)||detached&&!heldPlayer271.retained||heldPlayer271.heldAt!==validationTick||!held?.enumerable||!Object.hasOwn(held,'value')||held.value!==validationTick):'cryptosleepHeldAt271'in item)errors.push('Invalid actual player-casket suspension authority.');
   if(!validCryptosleepTaskField271(item,version,validationTick,world.nextId)||detached&&Object.hasOwn(item,'cryptosleepTask'))errors.push('Invalid or future player-casket task.');
   const memoryCivil=heldPlayer271||heldShip277?world.tick:validationTick;
+  if(!validCouplePawnShape285(item,version,validationTick,memoryCivil)||(detached||heldPlayer271||heldShip277)&&'coupleTask285'in item)errors.push('Invalid or future couple fields for actual Pawn holder.');
   if(!validCaravanRestField266(item,version,item.state==='dead'&&typeof (item.health as {death?:{tick?:number}}|undefined)?.death?.tick==='number'?(item.health as {death:{tick:number}}).death.tick:validationTick))errors.push('Invalid or future caravan rest receipt.');
   if(Object.hasOwn(item,'brewing')&&(version<265||detached))return ['Invalid or future detached fermentation task.'];
   if(!validWorldAffiliationFields259(item,version)||Object.hasOwn(item,'prisonerHistory259')&&!validPrisonerStateRecord259(item.prisonerHistory259,version,input as unknown as World,true))return ['Invalid or future actual guest affiliation/history.'];

@@ -49,7 +49,7 @@ export function validateHeldWorldCaskets259(state:WorldPawnsState256,root:Valida
  return errors;
 }
 /** Private permit tied to a complete current transaction, never serialized. */
-export interface MapRemovalCommitPhase259 {readonly drops260?:ReadonlyMap<number,import('./types.ts').Cell>;departed260?():void;areas():void;beds():void}
+export interface MapRemovalCommitPhase259 {readonly drops260?:ReadonlyMap<number,import('./types.ts').Cell>;departed260?():void;releaseCouples285?():void;areas():void;beds():void}
 const removalPermits=new WeakMap<object,{map:World;current:()=>boolean;begin?:()=>MapRemovalCommitPhase259;prepared?:()=>boolean}>();
 export function brandHeldCasketRemoval259<T extends object>(plan:T,map:World,current:()=>boolean,begin?:()=>MapRemovalCommitPhase259,prepared?:()=>boolean):T{removalPermits.set(plan,{map,current,begin,prepared});return plan;}
 export function heldCasketRemovalPermitted259(map:World,plan:object|undefined):boolean{const permit=plan&&removalPermits.get(plan);return !!permit&&permit.map===map&&permit.current();}

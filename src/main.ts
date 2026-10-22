@@ -98,6 +98,7 @@ import { createFlashstormUI } from './ui/flashstorm';
 import { createSolarFlareUI } from './ui/solar-flare';
 import { updateResearchPanel,type ResearchPanelActions } from './ui/research-panel';
 import { specificWorkActivity } from './ui/work-activity';
+import {coupleActivity285} from './ui/couple-activity-285';
 import { createScoutUI } from './ui/scout-panel';
 import {createCampPreparationView256} from './ui/camp-preparation-view-256';
 import { createGroupPanel } from './ui/group-panel';
@@ -1322,6 +1323,7 @@ function carriedPatientsOf(world: World): ReadonlySet<number> {
   return patients;
 }
 function actionLabel(pawn: Pawn, carriedPatients: ReadonlySet<number>) {
+  const couple=snapshot&&coupleActivity285(snapshot,pawn);if(couple)return couple.label;
   if((pawn.health?.foodPoisoning?.vomit||pawn.health?.alcohol?.vomit)&&pawn.state!=='dead')return 'Vomit';
   if(pawn.cleaning)return pawn.cleaning.phase==='clean'?'Nettoie':'Rejoint des traces à nettoyer';
   if(pawn.burial)return pawn.burial.phase==='bury'?'Inhume une dépouille':pawn.burial.phase==='carry'?'Transporte une dépouille vers une tombe':'Va chercher une dépouille';
@@ -1541,7 +1543,7 @@ function renderState() {
       updateMoodInspection(el('inspector'),world,pawn);
       updateSocialInspection(el('inspector'),world,pawn);
       updateJournalInspection(el('inspector'),world,pawn);
-      setTooltip(el('selected-action'),{title:'Activité',body:queryPawnStatus(world,pawn,food).reason});
+      setTooltip(el('selected-action'),{title:'Activité',body:coupleActivity285(world,pawn)?.description??queryPawnStatus(world,pawn,food).reason});
     }
   } else if (selectedCell) {
     const { x, z } = selectedCell;
@@ -1783,7 +1785,7 @@ const arrivalUI=createArrivalUI(command=>client.command(command));
 const questUI=createQuestUI(command=>client.command(command));
 function syncStorageButtons() {
   syncFirstDayGuide();
-  for(const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]')){if(button.dataset.mapOriginalDisabled===undefined){button.dataset.mapOriginalDisabled=String(button.disabled);button.dataset.mapOriginalTitle=button.title;}const local=!['world','menu'].includes(button.dataset.panel??'');button.disabled=button.dataset.mapOriginalDisabled==='true'||local&&!snapshot;button.title=local&&!snapshot?'Affichez une carte locale pour ouvrir ce panneau.':button.dataset.mapOriginalTitle??'';}
+  for(const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]')){if(button.dataset.mapOriginalDisabled===undefined){button.dataset.mapOriginalDisabled=String(button.disabled);button.dataset.mapOriginalTitle=button.title;}const local=!['world','menu','quests'].includes(button.dataset.panel??'');button.disabled=button.dataset.mapOriginalDisabled==='true'||local&&!snapshot;button.title=local&&!snapshot?'Affichez une carte locale pour ouvrir ce panneau.':button.dataset.mapOriginalTitle??'';}
   groupUI.setHostBlocked(groupCommandsBlocked());mapRegistry.setBlocked(groupCommandsBlocked());mapJumpTo.setBlocked(groupCommandsBlocked());
   shell.inert = replacingWorld || frontMenu.isOpen() || !campaignState() || simulationStopped || graphicsFault || graphicsRecovering || waitingRequests.size > 0;
   for(const button of document.querySelectorAll<HTMLButtonElement>('[data-speed]'))button.disabled=replacingWorld||currentPanel==='menu';

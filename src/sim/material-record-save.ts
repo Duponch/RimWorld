@@ -1,3 +1,4 @@
+import {isSchema284OrLater} from './schema-compatibility-257.ts';
 import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import {validProstheticWorkShape273} from './prosthetic-work-save-273.ts';
 import {isProstheticItem273} from './prosthetic-content-273.ts';
@@ -98,7 +99,7 @@ else {
   const owner = item.owner;
   // A direct held owner is admissible ONLY to the actual casket validator.
   // Ordinary map/full/delta calls omit this explicit original holder ID.
-  if (owner.type === 'trade-request284' ? version!==284||!tradeRequestHolder284||owner.requestId!==tradeRequestHolder284.requestId||owner.optionId!==tradeRequestHolder284.optionId||!integer(owner.requestId,1)||!integer(owner.optionId,1,3)||Object.keys(owner).length!==3||Object.keys(owner).some(key=>!['type','requestId','optionId'].includes(key))
+  if (owner.type === 'trade-request284' ? !isSchema284OrLater(version)||!tradeRequestHolder284||owner.requestId!==tradeRequestHolder284.requestId||owner.optionId!==tradeRequestHolder284.optionId||!integer(owner.requestId,1)||!integer(owner.optionId,1,3)||Object.keys(owner).length!==3||Object.keys(owner).some(key=>!['type','requestId','optionId'].includes(key))
     : owner.type === 'world-site263' ? !isSchema263OrLater(version)||!integer(worldSiteId263,1)||owner.siteId!==worldSiteId263||Object.keys(owner).length!==2||Object.keys(owner).some(key=>!['type','siteId'].includes(key))
     : owner.type === 'ancient-casket' ? !isSchema256Or257(version)||!integer(ancientCasketId,1,world.nextId-1)||owner.casketId!==ancientCasketId||Object.keys(owner).some(key=>!['type','casketId'].includes(key))
     : owner.type === 'ground' ? !coord(owner) || Object.keys(owner).some(key => !['type', 'x', 'z'].includes(key))

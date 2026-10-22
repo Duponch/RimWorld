@@ -1,3 +1,4 @@
+import {isSchema284OrLater} from './schema-compatibility-257.ts';
 import {TRADE_REQUEST_CONTENT_284,tradeRequestFamilyForItem284,type TradeRequestFamily284} from './trade-request-content-284.ts';
 import {registeredMapForValidation,registeredMapId,hasLoadedRoot} from './world-map-context.ts';
 import {planetTile,planetTiles} from './planet-geography-256.ts';
@@ -50,7 +51,7 @@ const freeCraft=(root:CampaignState,p:Pawn):boolean=>isColonist(p)&&!p.prisoner&
 export function captureTradeRequestAvailability284(root:CampaignState,home:World):ReadonlyMap<TradeRequestFamily284,TradeRequestAvailability284> {
  const totals=new Map<TradeRequestFamily284,{actual:number;potential:number;makeable:boolean}>(
   TRADE_REQUEST_CONTENT_284.map(e=>[e.family,{actual:0,potential:0,makeable:false}]));
- if(Number(root.schemaVersion)!==284)return totals;
+ if(!isSchema284OrLater(root.schemaVersion))return totals;
  const add=(item:ItemId,quantity:number,actual=false)=>{
   if(!(quantity>0))return;const family=tradeRequestFamilyForItem284(item);if(!family)return;
   if(!Number.isSafeInteger(quantity))throw Error('Invalid trade request availability quantity');

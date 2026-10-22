@@ -31,17 +31,19 @@ export function cleanMapRemovedAnimal256(animal:WildAnimal,tick:number):void {
  if(animal.health){cancelCryptosleepVomit256(animal.health);cancelToxicVomit256(animal.health);}if(animal.motion&&animal.motion.end>tick){animal.x=animal.motion.from.x;animal.z=animal.motion.from.z;}if(animal.wander)delete animal.wander.job;animal.path=[];for(const key of ['motion','meal','predation','exiting','flee','threat','retaliation','strike','stun','stagger','sleepUntilCore','mating','taming','animalRest','eggLay','burning','flight','exitFlight'] as const)delete animal[key];if(animal.domestic){delete animal.domestic.bedId;delete animal.domestic.penMarkerId;delete animal.domestic.slaughter;}if(animal.manhunter){delete animal.manhunter.targetId;delete animal.manhunter.door;}if(animal.state!=='dead'&&animal.state!=='downed')animal.state='idle';
 }
 /** Rare removal transition. Normal interruption/edge continuation is a different contract. */
-export function detachMapOwners(map:World,mapId:number,tile:number,removalPlan?:CampMapRemoved256,drops260?:ReadonlyMap<number,Cell>):AbandonedMapContents {
+export function detachMapOwners(map:World,mapId:number,tile:number,removalPlan?:CampMapRemoved256,drops260?:ReadonlyMap<number,Cell>,releaseCouples285?:()=>void):AbandonedMapContents {
  if(map.startingArrival?.profile===CORE_STARTING_ARRIVAL_PROFILE_256&&map.startingArrival.phase!=='opened')throw Error('Core initial capsules require actual discharge before MapRemoved');
  const retainedCaskets=heldCasketRemovalPermitted259(map,removalPlan);
  const casketRemoval=ancientCasketMapRemovalBoundary256(map);if(casketRemoval&&!retainedCaskets)throw Error(casketRemoval);
  if(map.structures.some(s=>isPlayerCasket271(s)&&s.cryptosleep.human)&&!retainedCaskets)throw Error('Occupied player casket requires its actual current MapRemoved permit.');
  if(map.structures.some(s=>isShipCasket277(s)&&s.shipCryptosleep277.occupant)&&!retainedCaskets)throw Error('Occupied spatial casket requires its actual current MapRemoved permit.');
+ if(map.schemaVersion===285&&map.pawns.some(p=>p.coupleTask285)&&!releaseCouples285)throw Error('Entered couple stages require the actual admitted MapRemoved pair release.');
  const heldAnimals=captureDuckMapRemovedOwners256(map),animalRows:AbandonedMapContents['animals']=[...(map.wildlife?.animals??[]).map(animal=>({animal})),...heldAnimals];
  const animalIds=new Set<number>();for(const row of animalRows){if(animalIds.has(row.animal.id))throw Error('Duplicate actual MapRemoved animal owner');animalIds.add(row.animal.id);}
  const before=captureHumanOwners(map,{},false),holders=new Map<number,number>(),animalHolders=new Map<number,number>();
  for(const p of map.pawns){if(p.rescue?.phase==='carry')holders.set(p.rescue.patientId,p.id);if(p.animalRescue?.phase==='carry')animalHolders.set(p.animalRescue.animalId,p.id);}
  if(map.schemaVersion>=256)for(const a of map.wildlife?.animals??[]){const carrier=animalCarrier(map,a.id);if(carrier)animalHolders.set(a.id,carrier.id);}
+ releaseCouples285?.();
  // StopDead before cleanup or cargo search; no prospective endpoint is reached.
  for(const p of map.pawns){stopAtOccupiedCell(p,map.tick);if(p.health){cancelCryptosleepVomit256(p.health);cancelToxicVomit256(p.health);}}
  const guests=new Map<number,AbandonedWorldPawn['guest']>();

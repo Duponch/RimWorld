@@ -1,3 +1,4 @@
+import {isSchema284OrLater} from './schema-compatibility-257.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {WORLD_FACTION_TECH_LEVEL_259} from './world-faction-catalog.ts';
 import {plainWorldPawnData256} from './world-pawn-save-256.ts';
@@ -19,7 +20,7 @@ function calendar(value:unknown,core:number,nextId:number,version:number):value 
  return s.revision===1&&int(s.adoptedAtCore,0,core)&&s.adoptedAtCore%10===0&&int(s.nextCheckCore,core+1)&&s.nextCheckCore%1000===0&&s.nextCheckCore<=Math.floor(core/1000)*1000+1000&&int(s.cycle,0,Math.floor(core/600000))
   &&(s.pendingCore===null||int(s.pendingCore,core+1,(Number(s.cycle)+1)*600000-1)&&s.pendingCore%1000===0)
   &&int(s.previousHitInterval,-1000000,Math.floor(core/1000))&&int(s.rng,1,0xffffffff)&&int(s.opportunities)&&int(s.siteOffers,0,s.opportunities)
-  &&Array.isArray(s.recent)&&s.recent.length<=5&&s.recent.length===Math.min(5,s.siteOffers)&&s.recent.every(x=>x==='item-stash'||version===284&&x==='trade-request')
+  &&Array.isArray(s.recent)&&s.recent.length<=5&&s.recent.length===Math.min(5,s.siteOffers)&&s.recent.every(x=>x==='item-stash'||isSchema284OrLater(version)&&x==='trade-request')
   &&typeof s.populationAdaptationDays==='number'&&Number.isFinite(s.populationAdaptationDays)&&s.populationAdaptationDays>=0&&Number.isInteger(s.populationAdaptationDays*2)
   &&int(s.populationAtCore,s.adoptedAtCore,core)&&s.populationAtCore%10===0&&Array.isArray(s.knownColonistIds)&&s.knownColonistIds.length<=4096&&s.knownColonistIds.every(id=>int(id,1,nextId-1))&&new Set(s.knownColonistIds).size===s.knownColonistIds.length;
 }

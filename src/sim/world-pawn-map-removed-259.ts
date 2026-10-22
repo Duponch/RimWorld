@@ -1,4 +1,5 @@
 import {prepareHeldShipCasketRemoval277,heldShipCasketLivingIds277} from './world-pawn-ship-casket-277.ts';
+import {prepareCoupleRelease285,type CoupleReleasePlan285} from './couple-release-285.ts';
 import {notifyBillWorkerUnavailable283} from './bill-worker-owners-283.ts';
 import {isShipCasket277} from './ship-casket-state-277.ts';
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
@@ -51,8 +52,8 @@ import {healthRandom} from './health.ts';
 const alive=(a:Pawn|WildAnimal)=>a.state!=='dead'&&!a.health?.death;
 /** Preparation touches only a private original record and read-only real-map
  * observations. Cross-actor surgery/carry/rope notifiers refuse beforehand. */
-function cleanHumanDraft(map:World,p:Pawn,area:ReturnType<typeof prepareRemovedMapAreas>['updates'][number]|undefined):Pawn {
- const draft=structuredClone(p);if(draft.motion&&draft.motion.end>map.tick){draft.x=draft.motion.from.x;draft.z=draft.motion.from.z;}delete draft.motion;draft.path=[];draft.moveCooldown=0;
+function cleanHumanDraft(map:World,p:Pawn,area:ReturnType<typeof prepareRemovedMapAreas>['updates'][number]|undefined,draft=structuredClone(p)):Pawn {
+ if(draft.motion&&draft.motion.end>map.tick){draft.x=draft.motion.from.x;draft.z=draft.motion.from.z;}delete draft.motion;draft.path=[];draft.moveCooldown=0;
  if(draft.health){cancelCryptosleepVomit256(draft.health);cancelToxicVomit256(draft.health);}
  if(area?.next)draft.mapAreas=structuredClone(area.next);
  releaseAllowedAreaReturn(draft);finishRoomRest(map,draft);
@@ -101,6 +102,9 @@ export function prepareMapRemoved259(input:CampaignState,map:World,mapId:number,
  const context={seed:map.seed,width:map.width,height:map.height,...map.climate?{climate:map.climate}:{},...map.site?{site:map.site}:{},...map.scenario?{scenario:map.scenario}:{}};
  const conditions:WorldPawnFactionCondition256[]=[];
  for(const f of factions.factions)if(f.lifecycle259)conditions.push({factionId:f.id,defeated:f.lifecycle259.defeated,temporary:f.lifecycle259.temporary,techLevel:WORLD_FACTION_TECH_LEVEL_259[f.def]});
+ let couple:CoupleReleasePlan285;
+ try{couple=prepareCoupleRelease285(map,new Set(map.pawns.filter(p=>!departure?.ids.has(p.id)).map(p=>p.id)),{priorWrites:departure?.coupleWrites285});}catch(e){return no(e instanceof Error?e.message:String(e));}
+ const coupleBeds=map.structures.filter(b=>couple.people.some(p=>p.coupleTask285?.bedId===b.id)),coupleAreaSeal=sealRemovalOriginal259({people:couple.people,beds:coupleBeds},areaWrites,couple.writes);
  const randomState={rng:root.rng},random={float:(min:number,max:number)=>min+(max-min)*healthRandom(randomState)},staged:WorldPawnsState256={...state,atCore:now,owners:state.owners.slice()};
  type Prepared={original:Pawn|WildAnimal|Mechanoid;kind:'human'|'animal'|'mechanical';outcome:WorldPawnOwner256;cleaned:string;items:World['piles'];packed:World['packed']};
  const prepared:Prepared[]=[],ids=new Set<number>();
@@ -113,7 +117,7 @@ export function prepareMapRemoved259(input:CampaignState,map:World,mapId:number,
   const cleaned=JSON.stringify(actor);const pass=preparePassedToWorld256(staged,row,factions,random,{version:root.schemaVersion,situation:'Free',conditions});if(!pass.ok)throw Error(pass.reason);pass.commit();prepared.push({original,kind,outcome:pass.row,cleaned,items,packed});
  };
  try{
-  for(const s of captures){const p=s.pawn!;const actor=cleanHumanDraft(map,p,areaByPawn.get(p));add(p,'human',actor,actor.worldAffiliation259!.factionId);}
+   for(const s of captures){const p=s.pawn!;const actor=cleanHumanDraft(map,p,areaByPawn.get(p),couple.project(p));add(p,'human',actor,actor.worldAffiliation259!.factionId);}
   for(const {animal:a,clock} of animals){if(clock!==map.tick||!a.growthTracker||!a.wander)throw Error('L’animal restant n’a pas sa vraie horloge ou son propriétaire prospectif complet.');const actor=structuredClone(a);cleanMapRemovedAnimal256(actor,map.tick);unclaimDetachedActorBed256(actor);add(a,'animal',actor,a.domestic?factions.playerFactionId:null);}
    for(const m of mechanical){const actor=structuredClone(m);cleanMapRemovedMechanical259(actor,map.tick);add(m,'mechanical',actor,m.worldFaction259!.factionId);}
  }catch(e){return no(e instanceof Error?e.message:String(e));}
@@ -124,15 +128,15 @@ export function prepareMapRemoved259(input:CampaignState,map:World,mapId:number,
  const errors=validateWorldPawnOwners256(staged,root,new Set(),undefined,new Set(humans.people.keys()));if(errors.length)return no(errors[0]!);
  if(lostColonists.some(p=>!prepared.some(row=>row.kind==='human'&&row.original===p)))return no('A lost colonist has no actual staged human transfer');
  const rng=root.rng,nextId=root.nextId,owners=state.owners.slice(),before=prepared.map(p=>JSON.stringify(p.original)),heldBefore=prepared.map(p=>JSON.stringify([p.items,p.packed])),beforePawns=map.pawns.slice(),beforeAnimals=map.wildlife?.animals.slice(),beforeFlyers=map.wildlife?.flyers?.slice(),beforeMechs=mechanical.slice();let used=false;
- const sourceSeals=prepared.map(p=>sealRemovalOriginal259(p.original,areaWrites,bedWrites)),areaSourceSeals=areaPlan.updates.filter(u=>!departure?.ids.has(u.pawn.id)).map(u=>sealRemovalOriginal259(u.pawn,areaWrites,bedWrites));let phase:'prepared'|'begun'|'departed'|'areas'|'beds'='prepared',departed=false;
+ const sourceSeals=prepared.map(p=>({covered:!!departure&&p.kind==='human'&&beforePawns.includes(p.original as Pawn),check:sealRemovalOriginal259(p.original,areaWrites,bedWrites)})),areaSourceSeals=areaPlan.updates.filter(u=>!departure?.ids.has(u.pawn.id)).map(u=>({covered:!!departure&&beforePawns.includes(u.pawn),check:sealRemovalOriginal259(u.pawn,areaWrites,bedWrites)}));let phase:'prepared'|'begun'|'departed'|'areas'|'released'|'beds'='prepared',departed=false;
  const departureSeal=departure?.seal(),departureAreasSeal=departure?.seal(areaWrites);
  const afterPawns=beforePawns.filter(p=>!departure?.ids.has(p.id)),afterAnimals=beforeAnimals?.filter(a=>!departure?.ids.has(a.id)),heldAfter=prepared.map(p=>JSON.stringify([p.items.map(i=>departure?.items.get(i.id)??i),p.packed]));
  const header=()=>!used&&recipientsMutable()&&held.current()&&playerHeld.current()&&shipHeld.current()&&(map.mechanoids?.length??0)===beforeMechs.length&&!map.mechanoids?.some((m,i)=>m!==beforeMechs[i])&&root.tick*10===now&&root.rng===rng&&root.nextId===(departed?departure!.nextId:nextId)&&root.worldPawns===state&&state.atCore===at&&nativeWorldPawnOrderCurrent256(state,nativeBefore)&&state.owners.length===owners.length&&state.owners.every((r,i)=>r===owners[i])&&prepared.every((p,i)=>JSON.stringify([p.items,p.packed])===(departed?heldAfter[i]:heldBefore[i]))&&map.wildlife?.animals.length===(departed?afterAnimals:beforeAnimals)?.length&&!map.wildlife?.animals.some((a,i)=>a!==(departed?afterAnimals:beforeAnimals)![i])&&map.wildlife?.flyers?.length===beforeFlyers?.length&&!map.wildlife?.flyers?.some((a,i)=>a!==beforeFlyers![i]);
  const rosterCurrent=()=>map.pawns.length===(departed?afterPawns:beforePawns).length&&map.pawns.every((p,i)=>p===(departed?afterPawns:beforePawns)[i]);
  const areaDefinitionsCurrent=()=>map.allowedAreas===areaDefinitions&&areaDefinitionSeal(0);
- const initialCurrent=()=>mechanicalExtrasCurrent()&&dropsCurrent()&&header()&&rosterCurrent()&&areaDefinitionsCurrent()&&(departure?departure.current()&&departureAreasSeal!(0):removedMapAreasCurrent(areaPlan))&&(bedPlan?.current?.()??true)&&sourceSeals.every(check=>check(0))&&areaSourceSeals.every(check=>check(0))&&prepared.every((p,i)=>JSON.stringify(p.original)===before[i]);
- const departureCurrent=()=>!!departure&&dropsCurrent()&&header()&&rosterCurrent()&&areaDefinitionsCurrent()&&departureSeal!(1)&&sourceSeals.every(check=>check(0))&&areaSourceSeals.every(check=>check(0));
- const detachCurrent=()=>phase==='areas'&&header()&&rosterCurrent()&&areaDefinitionsCurrent()&&(!departure||departureAreasSeal!(1))&&removalWritesApplied259(areaWrites)&&sourceSeals.every(check=>check(1))&&areaSourceSeals.every(check=>check(1));
+ const initialCurrent=()=>couple.current()&&mechanicalExtrasCurrent()&&dropsCurrent()&&header()&&rosterCurrent()&&areaDefinitionsCurrent()&&(departure?departure.current()&&departureAreasSeal!(0):removedMapAreasCurrent(areaPlan))&&(bedPlan?.current?.()??true)&&sourceSeals.every(s=>s.check(0))&&areaSourceSeals.every(s=>s.check(0))&&prepared.every((p,i)=>JSON.stringify(p.original)===before[i]);
+ const departureCurrent=()=>!!departure&&dropsCurrent()&&header()&&rosterCurrent()&&areaDefinitionsCurrent()&&departureSeal!(1)&&sourceSeals.every(s=>s.covered||s.check(0))&&areaSourceSeals.every(s=>s.covered||s.check(0));
+ const detachCurrent=()=>phase==='areas'&&header()&&rosterCurrent()&&areaDefinitionsCurrent()&&(!departure||departureAreasSeal!(1))&&removalWritesApplied259(areaWrites)&&sourceSeals.every(s=>s.covered||s.check(1))&&areaSourceSeals.every(s=>s.covered||s.check(1))&&coupleAreaSeal(1);
  const plan:CampMapRemoved256={ok:true,current:()=>phase==='prepared'&&initialCurrent(),commit(compact:AbandonedMapContents){
   if(phase!=='beds'||!header()||!removalWritesApplied259(areaWrites)||!removalWritesApplied259(bedWrites)||compact.mapId!==mapId||compact.removedAt!==root.tick||Object.hasOwn(compact,'lostColonistIds259'))throw Error('Stale actual259 MapRemoved transaction');
   for(const p of prepared){const count=p.kind==='human'?compact.humans.filter(h=>h.pawn===p.original).length:p.kind==='animal'?compact.animals.filter(a=>a.animal===p.original).length:map.mechanoids?.filter(m=>m===p.original).length;if(count!==1||JSON.stringify(p.original)!==p.cleaned)throw Error('Actual MapRemoved cleanup differs from its admitted original');}
@@ -148,6 +152,7 @@ export function prepareMapRemoved259(input:CampaignState,map:World,mapId:number,
   if(!plan.ok||!plan.current())throw Error('Stale actual MapRemoved begin');phase='begun';
   return {...departure?{drops260:dropPlan}:{},departed260(){if(!departure||phase!=='begun')throw Error('Unexpected Reform departure phase');departed=true;phase='departed';if(!departureCurrent())throw Error('Unexpected admitted Reform departure');},
    areas(){if(departure?phase!=='departed'||!departureCurrent():phase!=='begun'||!initialCurrent())throw Error('Stale MapRemoved before area commit');commitRemovedMapAreas(areaPlan);held.confirmAreas();playerHeld.confirmAreas();shipHeld.confirmAreas();phase='areas';if(!detachCurrent())throw Error('Unexpected MapRemoved area result');},
-   beds(){if(phase!=='areas'||!header()||!removalWritesApplied259(areaWrites))throw Error('Stale MapRemoved before bed commit');bedPlan?.commit();held.confirmBeds();playerHeld.confirmBeds();shipHeld.confirmBeds();phase='beds';if(!header()||!removalWritesApplied259(bedWrites))throw Error('Unexpected MapRemoved bed result');}};
+   releaseCouples285(){if(!detachCurrent()||!removalWritesMutable259(couple.writes))throw Error('Stale MapRemoved couple release');for(const write of couple.writes){if(write.present){if(!Reflect.set(write.object,write.key,write.value))throw Error('Admitted removal couple write failed');}else if(!Reflect.deleteProperty(write.object,write.key))throw Error('Admitted removal couple deletion failed');}phase='released';if(!coupleAreaSeal(2))throw Error('Unexpected removal couple result');},
+   beds(){if((couple.writes.length?phase!=='released':phase!=='areas'&&phase!=='released')||!header()||!removalWritesApplied259(areaWrites))throw Error('Stale MapRemoved before bed commit');bedPlan?.commit();held.confirmBeds();playerHeld.confirmBeds();shipHeld.confirmBeds();phase='beds';if(!header()||!removalWritesApplied259(bedWrites))throw Error('Unexpected MapRemoved bed result');}};
  },()=>plan.ok&&plan.current());
 }

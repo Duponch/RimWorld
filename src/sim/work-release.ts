@@ -1,4 +1,5 @@
 import {releaseShipCasketCarry277} from './ship-casket-carry-277.ts';
+import {prepareCoupleRelease285} from './couple-release-285.ts';
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import type {ReformDeparture260} from './group-reform-departure-260.ts';
 import {hasTravellingCargo} from './interrupted-cargo.ts';
@@ -99,10 +100,10 @@ export function planCommandDrops(world:World,command:Command|import('./cave-glow
     if(bed?.kind==='double-bed'){
       if((command.slot===0||command.slot===1)&&!(owner?.bedId===bed.id&&owner.bedSlot===command.slot)){
         const affected=new Set(world.pawns.filter(p=>p.bedId===bed.id&&p.bedSlot===command.slot||p.id===command.pawnId).map(p=>p.id));
-        for(const pawn of world.pawns)if(pawn.need?.kind==='sleep'&&affected.has(pawn.id)||pawn.rescue&&(affected.has(pawn.rescue.patientId)||pawn.rescue.bedId===bed.id&&pawn.rescue.bedSlot===command.slot))pawns.add(pawn.id);
+        for(const pawn of world.pawns)if((pawn.need?.kind==='sleep'||pawn.coupleTask285!==undefined)&&affected.has(pawn.id)||pawn.rescue&&(affected.has(pawn.rescue.patientId)||pawn.rescue.bedId===bed.id&&pawn.rescue.bedSlot===command.slot))pawns.add(pawn.id);
       }
     }else if(command.slot===undefined){
-      for(const pawn of world.pawns)if(pawn.need?.kind==='sleep'&&(pawn.bedId===command.bedId||pawn.id===command.pawnId)
+      for(const pawn of world.pawns)if((pawn.need?.kind==='sleep'||pawn.coupleTask285!==undefined)&&(pawn.bedId===command.bedId||pawn.id===command.pawnId)
         ||owner?.bedSlot!==undefined&&pawn.rescue?.patientId===owner.id)pawns.add(pawn.id);
     }
   }
@@ -185,6 +186,7 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
 /** Release task/service claims independently of ownership. Only involuntary or tactical
  * interruption may use this while an object is still carried. */
 export function releaseAssignments(world:World,pawn:Pawn,despawning=false):void {
+  if(world.schemaVersion===285&&pawn.coupleTask285)prepareCoupleRelease285(world,new Set([pawn.id])).commit();
   releaseAllowedAreaReturn(pawn);
   releaseAnimalRescue(world,pawn);
   if(pawn.animalHandling?.kind==='lead'){
@@ -208,6 +210,7 @@ export function releaseAssignments(world:World,pawn:Pawn,despawning=false):void 
  * notifiers must run first on their actual owners; private preflight may reuse
  * this half only after checking that it has no cross-actor notifier. */
 export function clearReleasedPawnAssignments259(pawn:Pawn):void {
+  if(pawn.coupleTask285)throw Error('Entered couple stage requires its actual pair release before own-record cleanup');
   delete pawn.brewing;delete pawn.orbitalTrade;delete pawn.deepWork;delete pawn.animalHandling;delete pawn.animalCare;delete pawn.animalFeed;delete pawn.burial;delete pawn.cleaning;delete pawn.trade;delete pawn.firefighting;delete pawn.ward;delete pawn.heatRefuge;delete pawn.research;delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
   delete pawn.shipCasketTask277;delete pawn.cryptosleepTask;delete pawn.rescue;delete pawn.animalRescue;delete pawn.surgery;delete pawn.hunting;delete pawn.openCasket;
   delete pawn.transitExit;

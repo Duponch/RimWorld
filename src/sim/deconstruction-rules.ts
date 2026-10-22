@@ -23,7 +23,7 @@ export function deconstructionAvailable(world: World, job: Job, exceptPawn?: num
       ||p.feed?.paste?.dispenserId===id&&(p.feed.phase==='pickup'||p.feed.phase==='collect')
       ||p.haul?.destination.type==='hopper'&&p.haul.destination.structureId===id)return false;
     if (p.cryptosleepTask?.casketId===id || p.brewing?.barrelId===id || p.haul?.destination.type==='fermenting-barrel'&&p.haul.destination.structureId===id || p.orbitalTrade?.consoleId===id || p.deepWork?.structureId===id || p.research?.stationId===id || p.rescue?.bedId===id || p.cooking?.stationId === id || p.haul?.destination.type === 'fuel' && p.haul.destination.structureId === id
-      || p.need?.kind === 'sleep' && p.need.bedId === id || p.need?.kind === 'eat' && p.need.dining?.seatId === id
+      || p.need?.kind === 'sleep' && p.need.bedId === id || p.coupleTask285?.bedId===id || p.need?.kind === 'eat' && p.need.dining?.seatId === id
       || p.recreation.task?.buildingId === id || p.recreation.task?.seatId === id) return false;
     for (const order of p.orders.queue) if (typeof order !== 'number') {
       if ('cooking' in order ? order.cooking.stationId === id : order.destination.type === 'fuel' && order.destination.structureId === id) return false;
