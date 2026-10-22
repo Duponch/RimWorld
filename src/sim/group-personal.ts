@@ -1,5 +1,5 @@
 import {medicalCivilTick271,medicalElapsedTicks271} from './suspended-human-clock-271.ts';
-import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
+import {isSchema263OrLater,isSchema282OrLater} from '../sim/schema-compatibility-257.ts';
 import {cancelAlcoholSpatial265} from './alcohol-state-265.ts';
 import {advanceOffmapThermal259} from './offmap-thermal-259.ts';
 import {humanConditionMedicalFrontier256} from './human-condition-frontier-256.ts';
@@ -90,7 +90,7 @@ export function advanceGroupPersonal(group:ActiveGroup,c:GroupPersonalContext):G
     if(!c.deferNeedMeters256){p.hunger=depletedHumanHunger(p,c.legacyFood);p.rest=groupRestAfterInterval(p,c.resting,c.legacyRest);}
     if(p.mental?.cooldown&&!c.resting&&p.state!=='downed'&&!moodFrozen(p,body))p.mental.cooldown--;
     if(!c.deferNeedMeters256)updateRecreation(p,body,c.joyToleranceFall);
-    updateMoodFromThoughts(p,personalMoodThoughts(p,{...c.mood,lost:c.lostThoughts?.(p),tick:c.tick,items:group.items}),body);
+    updateMoodFromThoughts(p,personalMoodThoughts(p,{...c.mood,...isSchema282OrLater(c.schemaVersion)?{ambientTemperature460:c.ambientTemperature259}:{},lost:c.lostThoughts?.(p),tick:c.tick,items:group.items}),body);
   }
   // Death leaves immediately for Root's terminal owner at health.death.tick.
   // No terminal mutation, dose, route or ingestion can follow this result.

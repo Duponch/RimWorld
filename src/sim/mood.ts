@@ -3,13 +3,16 @@ import {hiveDefeatThoughts256} from './cave-hive-memories-256.ts';
 import {alcoholThoughts265} from './alcohol-rules-265.ts';
 import {cryptosleepSick256} from './cryptosleep-sickness-256.ts';
 import {lostThoughts} from './world-map-lost.ts';
+import {isSchema282OrLater} from './schema-compatibility-257.ts';
+import {thermalMoodThoughts460} from './thermal-mood-v460.ts';
+import {temperatureAt} from './temperature.ts';
 import { COLONY_EXPECTATIONS,type ColonyExpectation } from './expectations.ts';
 import { colonyExpectation } from './colony-economy.ts';
 import { malnutritionStage } from './malnutrition.ts';
 import { expireRoomMemoriesAt,roomMoodThoughtsAt } from './room-experience.ts';
 import { TRAITS } from './traits.ts';
 import { colonistMoodOffset } from './game-profile.ts';
-import { APPAREL } from './apparel-rules.ts';
+import { APPAREL,apparelInsulation } from './apparel-rules.ts';
 import { pawnBody } from './health-rules.ts';
 import { medicalPain } from './injury-state.ts';
 import { insultMoodMemories,kindWordsMoodMemories } from './social-state.ts';
@@ -63,13 +66,18 @@ export interface PersonalMoodContext {
   items:readonly MaterialPile[];expectation?:ColonyExpectation;difficultyMood:number;
   /** Absent off-map: never reuse the former map room, comfort or beauty. */
   environment?:{comfort:number;beauty:number};housing?:MoodThought;
+  /** Actual owner's current air, including caravans; independent from furniture.
+   * Only a supported prospective owner supplies this optional situation. */
+  ambientTemperature460?:number;
   deathSituation?:MoodThought;lost?:readonly MoodThought[];
 }
-export function moodThoughts(world:World,pawn:Pawn,topology?:RelationshipTopology):readonly MoodThought[] {
+export function moodThoughts(world:World,pawn:Pawn,topology?:RelationshipTopology,readTemperature?:()=>number):readonly MoodThought[] {
   if(pawn.state==='dead')return [];
   return personalMoodThoughts(pawn,{lost:lostThoughts(world,pawn,()=>captureRelationshipPeople(world)),tick:world.tick,people:{get:id=>world.pawns.find(p=>p.id===id)},
     ...(pawn.familyBereavement||pawn.romanceMemories?{relationPeople:captureRelationshipPeople(world)}:{}),
     items:world.piles,expectation:colonyExpectation(world,pawn),difficultyMood:colonistMoodOffset(world,pawn),
+    ...(isSchema282OrLater(world.schemaVersion)&&pawn.cryptosleepHeldAt271===undefined&&pawn.shipCryptosleepHeldAt277===undefined
+      ?{ambientTemperature460:readTemperature?readTemperature():temperatureAt(world,pawn)}:{}),
     environment:{comfort:pawn.comfort,beauty:pawn.beauty},housing:relationshipHousingThought(world,pawn,topology),deathSituation:colonistUnburiedThought(world,pawn)});
 }
 export function personalMoodThoughts(pawn:Pawn,c:PersonalMoodContext):readonly MoodThought[] {
@@ -90,9 +98,14 @@ export function personalMoodThoughts(pawn:Pawn,c:PersonalMoodContext):readonly M
   for(const id of pawn.traits??[]){const trait=TRAITS[id];if(trait.mood)thoughts.push({id:`trait-${id}`,label:trait.label,offset:trait.mood,kind:'situation',description:trait.description});}
   for(const t of [pawn.hunger<=0?starvation[Math.max(0,malnutritionStage(pawn.health?.malnutrition)-1)]:hunger[hungerStage(pawn.hunger)],fatigue[restStage(pawn.rest)],c.environment?comforts[comfortStage(c.environment.comfort)]:undefined,c.environment?beauty[beautyStage(c.environment.beauty)]:undefined,pawn.prisoner?undefined:leisure[joyStage(pawn.recreation.level)],pains[painStage(pawn.health?medicalPain(pawn.health):0)]])if(t)thoughts.push(t);
   if((pawn.health?.toxicBuildup?.severity??0)>=Math.fround(.04)||cryptosleepSick256(pawn.health?.cryptosleepSickness)||(pawn.health?.flu?.severity??0)>0||(pawn.health?.immuneDiseases?.malaria?.severity??0)>0||(pawn.health?.immuneDiseases?.plague?.severity??0)>0)thoughts.push(sick);
-  let condition=1;
-  for(const pile of c.items)if(pile.owner.type==='apparel'&&pile.owner.pawnId===pawn.id)condition=Math.min(condition,pile.apparel!.hitPoints/APPAREL[pile.item as keyof typeof APPAREL].hitPoints);
+  const ambientTemperature460=pawn.cryptosleepHeldAt271===undefined&&pawn.shipCryptosleepHeldAt277===undefined?c.ambientTemperature460:undefined;
+  let condition=1,minComfortable460=16,maxComfortable460=26;
+  for(const pile of c.items)if(pile.owner.type==='apparel'&&pile.owner.pawnId===pawn.id){
+    condition=Math.min(condition,pile.apparel!.hitPoints/APPAREL[pile.item as keyof typeof APPAREL].hitPoints);
+    if(ambientTemperature460!==undefined){const insulation=apparelInsulation(pile);minComfortable460-=insulation.cold;maxComfortable460+=insulation.heat;}
+  }
   if(condition<.5)thoughts.push(apparel[condition<.2?1:0]!);
+  if(ambientTemperature460!==undefined)thoughts.push(...thermalMoodThoughts460(ambientTemperature460,{min:minComfortable460,max:maxComfortable460}));
   for(const m of pawn.memories)if(memoryExpiry271(m,m.expiresAt)>c.tick)thoughts.push({id:m.kind,label:memoryLabels[m.kind],offset:memoryOffsets[m.kind],kind:'memory',description:'Souvenir du dernier repas concerné ; une nouvelle occurrence renouvelle sa durée sans cumul.',expiresAt:memoryExpiry271(m,m.expiresAt)});
   const denied=pawn.deniedJoining?.filter(t=>t>c.tick)??[];
   if(denied.length)thoughts.push({id:'denied-joining',label:`Accueil refusé ×${denied.length}`,offset:-3*(1-.75**denied.length)/.25,kind:'memory',description:'Une demande d’accueil refusée ; six jours, au plus cinq souvenirs à effet décroissant.',expiresAt:denied[0]});
@@ -116,9 +129,9 @@ export function moodTarget(thoughts:readonly MoodThought[]):number {
 export function moodFrozen(pawn:Pawn,body?:BodyAssessment):boolean {
   return (pawn.cryptosleepHeldAt271!==undefined||pawn.shipCryptosleepHeldAt277!==undefined)||pawn.state==='dead'||pawn.state==='sleeping'||!!pawn.medicalSleep||!(body??pawnBody(pawn)).canBeAwake;
 }
-export function updateMood(world:World,pawn:Pawn,body?:BodyAssessment,topology?:RelationshipTopology):void {
+export function updateMood(world:World,pawn:Pawn,body?:BodyAssessment,topology?:RelationshipTopology,readTemperature?:()=>number):void {
   if(moodFrozen(pawn,body))return;
-  updateMoodFromThoughts(pawn,moodThoughts(world,pawn,topology),body);
+  updateMoodFromThoughts(pawn,moodThoughts(world,pawn,topology,readTemperature),body);
 }
 export function updateMoodFromThoughts(pawn:Pawn,thoughts:readonly MoodThought[],body?:BodyAssessment):void {
   if(moodFrozen(pawn,body))return;

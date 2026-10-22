@@ -1112,13 +1112,18 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     // A casket transaction replaces the authority array rather than splicing
     // this iteration. Newly released people start decisions on the next tick.
     const actingHumans271=world.pawns,actingCount271=actingHumans271.length;
+    // Current thermal phase already owns its topology and region array. Borrow
+    // one O(1) view for the whole human pass; public readers keep their exact
+    // mutable point lookup. Historical exposure branches retain their reader.
+    const humanAir460=world.schemaVersion===282?new TemperatureView(world,thermal):undefined;
     for (let offset = 0; offset < (world.schemaVersion>=271?actingCount271:world.pawns.length); offset++) {
       const pawn = world.schemaVersion>=271?actingHumans271[((world.tick-1)+offset)%actingCount271]!:world.pawns[((world.tick-1)+offset)%world.pawns.length]!;
       if(world.schemaVersion>=271&&world.pawns!==actingHumans271&&!world.pawns.includes(pawn))continue;
       if(trapContacts?.visit(pawn)){blocked=undefined;invalidateEnvironment();}
       const completedEdge=pawn.moveCooldown>0&&(pawn.motion?.end??0)<=world.tick;
       pawn.moveCooldown = Math.max(0, (pawn.motion?.end ?? world.tick) - world.tick); if (pawn.planCooldown > 0) pawn.planCooldown--;
-      advanceHeatExposure(world,pawn,()=>new TemperatureView(world,thermal).at(world,pawn));
+      const readAir460=()=> (humanAir460??new TemperatureView(world,thermal)).at(world,pawn);
+      advanceHeatExposure(world,pawn,readAir460);
       const body=updatePawnHealth(world,pawn);reconcileKidnapParticipant261(world,pawn);reconcileAncientCasketOpening256(world,pawn);reconcileCryptosleepTask271(world,pawn);reconcileShipCasketTask277(world,pawn);
       reconcileAllowedAreaPawn(world,pawn);
       if(pawn.animalRescue)reconcileAnimalRescues(world,pawn);
@@ -1131,7 +1136,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
       if(completedEdge)recordFilthMovement(world,pawn);
       if(pawn.health)bleedFilth(world,pawn,medicalBleed(pawn.health),pawn.state==='downed'||pawn.state==='sleeping');
       tickSkills(world,pawn);
-      updateNeeds(world, pawn,body,getFurnitureSight,()=>getLight().topology);
+      updateNeeds(world, pawn,body,getFurnitureSight,()=>getLight().topology,readAir460);
       updateMentalBreak(world,pawn,budget);reconcileAncientCasketOpening256(world,pawn);reconcileCryptosleepTask271(world,pawn);reconcileShipCasketTask277(world,pawn);
       if(prisonBreakActive(pawn)&&(pawn.mental?.crisis||pawn.state==='downed'||pawn.need))endPrisonBreak(world,pawn);
       if(pawn.mental?.crisis){

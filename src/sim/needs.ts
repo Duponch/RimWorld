@@ -123,13 +123,13 @@ export function processNeeds(world: World, pawn: Pawn, context: NeedContext): bo
   return false;
 }
 
-export function updateNeeds(world: World, pawn: Pawn,body?:import('./body-capacities.ts').BodyAssessment,readFurnitureSight?:FurnitureSight,topology?:import('./room-topology.ts').RoomTopology|(()=>import('./room-topology.ts').RoomTopology)): void {
+export function updateNeeds(world: World, pawn: Pawn,body?:import('./body-capacities.ts').BodyAssessment,readFurnitureSight?:FurnitureSight,topology?:import('./room-topology.ts').RoomTopology|(()=>import('./room-topology.ts').RoomTopology),readTemperature?:()=>number): void {
   pawn.hunger=depletedHumanHunger(pawn,world.foodRules==='legacy');
   updateRest(world, pawn);
   advanceRoomRest(world,pawn);
   if(!pawn.prisoner)updateRecreation(pawn,body,(colonyExpectation(world,pawn)?.joyToleranceDropPerDay??.18)*100/TICKS_PER_DAY);
   if (pawn.needCooldown > 0) pawn.needCooldown--;
-  updateWellbeing(world, pawn,body,readFurnitureSight,topology);
+  updateWellbeing(world, pawn,body,readFurnitureSight,topology,readTemperature);
 }
 
 export function collapseFromExhaustion(world:World,pawn:Pawn,context:NeedContext):void {

@@ -18,7 +18,7 @@ import type { RoomTopology } from './room-topology.ts';
 export type FurnitureSight=()=>ShotGrid;
 
 /** Comfort is a level approaching the furniture's ceiling, not an instant bonus. */
-export function updateWellbeing(world: World, pawn: Pawn,body?:BodyAssessment,readSight?:FurnitureSight,topology?:RoomTopology|(()=>RoomTopology)): void {
+export function updateWellbeing(world: World, pawn: Pawn,body?:BodyAssessment,readSight?:FurnitureSight,topology?:RoomTopology|(()=>RoomTopology),readTemperature?:()=>number): void {
   const need = pawn.need;
   let ceiling = 0;
   let fallback:ShotGrid|undefined;
@@ -52,7 +52,7 @@ export function updateWellbeing(world: World, pawn: Pawn,body?:BodyAssessment,re
   pawn.comfort = pawn.comfort < ceiling ? Math.min(ceiling, pawn.comfort + perHour * 24 / TICKS_PER_DAY)
     : Math.max(ceiling, pawn.comfort + perHour * 24 / TICKS_PER_DAY);
   expireMealMemories(world,pawn);
-  updateMood(world,pawn,body,topology);
+  updateMood(world,pawn,body,topology,readTemperature);
 }
 
 export function rememberMeal(world: World, pawn: Pawn, atTable: boolean, raw = false, food?: ItemId): void {

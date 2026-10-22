@@ -1,5 +1,7 @@
 # Guide joueur
 
+**V460 qualifiée localement — schéma 282 inchangé :** [Ressenti thermique humain](thermal-mood-v460.md). Pensées de froid/chaleur de situation selon l’air réel et l’isolation portée, sur carte et en caravane ; humeur progressive et clinique distinctes, sans nouvel état ni RNG. 36 cas distincts acquis par reprises, dont 18 nouveaux et 18 voisins ; deux anciens rouges d’humeur identiques au témoin V459 conservés. Refroidisseur payé, pensée chaude puis air confortable acquis ; recharges natives entières exactes sans erreur applicative. Mesure CPU ciblée mixte conservée. Typage et interface native muette acquis. Publication en attente, V459 reste en production. Famille actuelle282 seulement, anciennes branches préservées, futur fermé ; aucun souvenir de sommeil ajouté. Ensemble3 en cours ; autres bases, six ensembles, campagnes et cible FPS ouverts, aucun gain FPS global annoncé.
+
 **V459 publiée — schéma 282 :** [Apprentissage animal et transport local](animal-hauling-v459.md). Obéissance puis Transport réellement appris, dresseur et nourriture finis, même animal et objets pris/déposés vers une réserve compatible. 58 cas distincts acquis par reprises, dont 39 nouveaux et 19 voisins ; dix anciens rouges identiques au témoin V458 conservés. Reprises natives depuis les mêmes états, leçon/cargaison/dépôt exacts et réouverture du dossier corrigée ; anciens rapports conservés. Coût CPU ciblé mesuré, aucun gain FPS global. Typage et interface native muette acquis. Publié 27845776/f0143fd6, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Migration281 stricte puis numéro seul282 ; aucun acquis offert. Ensemble3 en cours ; aires Sans restriction, autres aptitudes et familles de fret ouvertes. Aucun gain FPS ni clôture des six ensembles.
 
 **V458 publiée — schéma 281 :** [Lisser les sols rocheux](smooth-floors-v458.md). Cinq roches typées, Construction sans intrants ni recherche, ordres et rectangle, abandon/reprise et revêtement payé conservant le même substrat. 56 cas distincts acquis par reprises. Un ancien échec de migration reproduit sur V457 et une notification de mise en page conservés ; reprise native depuis son propre état acquis. Typage et interface native muette acquis. Publié 78cbd3a3/4b5eaee5, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Migration280 stricte puis numéro seul281. Ensemble2 ; propreté0, anciens sols sans roche connue et coût rugueux géographique2 conservés. Murs lissés, autres bases, six ensembles et cible FPS restent ouverts.
@@ -587,6 +589,16 @@ Un revolver rend7–8acier, un fusil à verrou15acier, un lanceurEMP18–19acier
 Suspendre/modifier la facture ou interrompre le colon avant la fin conserve l’arme physique, avec éventuelle perte de progression. Après consommation, annuler conserve le métal existant et ne restitue pas l’arme. Armures, textiles, scories, réparation et fusion à plusieurs sorties restent hors lot. [Conditions, adaptations et suivi des contrôles](smelting-v311.md).
 
 **Schéma courant 221 — V310 : [secours et emplacements de couchage animaux](animal-rescue-v310.md).** Conditions, adaptations et contrôles acquis sont détaillés dans la note unique. Les résultats datés ci-dessous demeurent historiques.
+
+## Comprendre le ressenti thermique — V460
+
+Sélectionnez un humain, ouvrez **Besoins**, puis **Humeur**. Une pensée **Un peu froid** ou **Un peu chaud**, puis ses intensités supérieures, dépend de l’écart entre l’air actuel et la limite confortable calculée avec les vêtements réellement portés. Une même température peut donc produire une pensée différente après un changement de tenue. Les quatre pénalités sont **−4, −8, −12 et −16** ; la limite confortable exacte ne donne pas de pénalité thermique.
+
+Pour supprimer cette sensation, adaptez les habits ou l’habitat et laissez l’humain rejoindre un lieu dont l’air est confortable. En caravane, l’air vient de sa position mondiale actuelle ; l’ancienne pièce ne fournit plus sa température. Une pensée peut disparaître lorsque l’air ou la tenue change, tandis que la jauge d’humeur revient progressivement vers sa nouvelle cible.
+
+Cette sensation est distincte de l’**hypothermie** et du **coup de chaleur**, dont les règles cliniques restent séparées. Pendant le sommeil ou l’absence d’éveil, une pensée de situation peut rester visible alors que la progression de la jauge est gelée. Un humain contenu dans un caisson de cryptosommeil ne reçoit pas une fausse exposition à l’air de sa cellule.
+
+Les souvenirs « a dormi dans le froid/la chaleur » restent à compléter séparément. [Règles, référence primaire, préparations et contrôles](thermal-mood-v460.md).
 
 ## Apprendre le transport à un animal — V459
 
