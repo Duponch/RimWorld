@@ -1,12 +1,13 @@
-import {SHIP_REQUIREMENTS_276,isShipPartKind276,isShipOrientation276,type ShipPartKind276,type ShipRequirementId276} from './ship-part-content-276.ts';
-import {shipPartRect276,type ShipPartPose276,type ShipPartRect276} from './ship-part-geometry-276.ts';
+import {SHIP_REQUIREMENTS_276,isShipOrientation276,type ShipRequirementId276} from './ship-part-content-276.ts';
+import type {ShipPartRect276} from './ship-part-geometry-276.ts';
+import {isShipPartKind277,shipPartRect277,type ShipPartPose277,type ShipPartKind277} from './ship-casket-graph-277.ts';
 
 /** Call with completed, live local structures only. Jobs, packed furniture and
  * other maps are different owners and must never be supplied as ship parts.
  * Existing world/save guards remain responsible for the full record shape. */
-export interface ShipPartSource276 {readonly id:number;readonly kind:string;readonly x:number;readonly z:number;readonly orientation:number}
+export interface ShipPartSource276 {readonly id:number;readonly kind:string;readonly x:number;readonly z:number;readonly orientation:number;readonly shipCryptosleep277?:{readonly occupant:unknown}}
 export interface IndexedShipPart276<T extends ShipPartSource276> {
- readonly id:number;readonly kind:ShipPartKind276;readonly source:T;readonly rect:ShipPartRect276;
+ readonly id:number;readonly kind:ShipPartKind277;readonly source:T;readonly rect:ShipPartRect276;
 }
 export interface ShipPartIndex276<T extends ShipPartSource276> {
  readonly parts:readonly IndexedShipPart276<T>[];
@@ -25,10 +26,10 @@ export function indexShipParts276<T extends ShipPartSource276>(structures:readon
  const byId=new Map<number,IndexedShipPart276<T>>(),byCell=new Map<number,IndexedShipPart276<T>>();
  const parts:IndexedShipPart276<T>[]=[];
  for(const source of structures){
-  if(!isShipPartKind276(source.kind))continue;
+  if(!isShipPartKind277(source.kind))continue;
   if(!integer(source.id,1)||!integer(source.x)||!integer(source.z)||!isShipOrientation276(source.orientation))return {ok:false,reason:'invalid-part',partId:source.id};
   if(byId.has(source.id))return {ok:false,reason:'duplicate-id',partId:source.id};
-  const rect=shipPartRect276(source as T&ShipPartPose276);
+  const rect=shipPartRect277(source as T&ShipPartPose277);
   if(rect.x<0||rect.z<0||rect.x+rect.width>width||rect.z+rect.depth>height)return {ok:false,reason:'invalid-part',partId:source.id};
   const part:IndexedShipPart276<T>=Object.freeze({id:source.id,kind:source.kind,source,rect:Object.freeze(rect)});
   for(let z=rect.z;z<rect.z+rect.depth;z++)for(let x=rect.x;x<rect.x+rect.width;x++){
@@ -68,20 +69,20 @@ export type ShipAssemblyReport276<T extends ShipPartSource276>=
  Extract<ConnectedShipResult276<T>,{ok:false}>|
  {readonly ok:true;readonly partIds:readonly number[];readonly parts:readonly IndexedShipPart276<T>[];
   readonly counts:ShipPartCounts276;readonly requirements:readonly ShipRequirementView276[];
-  readonly missing:readonly ShipRequirementView276[];readonly launchImplemented:false};
+  readonly missing:readonly ShipRequirementView276[];readonly occupiedCaskets:number;readonly launchImplemented:false};
 
-/** Counts are a player report, never a launch permission. The three not-yet-
- * implemented components deliberately stay at0; no fictitious item admission,
- * occupied casket, destination, final manifest or victory state is created. */
+/** Counts are a player report, never a launch permission. Computer and sensors
+ * stay at0; completed spatial holders report only their confirmed occupancy. */
 export function readShipAssembly276<T extends ShipPartSource276>(index:ShipPartIndex276<T>,rootId:number):ShipAssemblyReport276<T> {
  const connected=connectedShipParts276(index,rootId);if(!connected.ok)return connected;
  const counts={beam:0,engine:0,reactor:0,computer:0,sensors:0,casket:0};
  for(const part of connected.parts){
-  if(part.kind==='ship-beam')counts.beam++;else if(part.kind==='ship-engine')counts.engine++;else counts.reactor++;
+  if(part.kind==='ship-beam')counts.beam++;else if(part.kind==='ship-engine')counts.engine++;else if(part.kind==='ship-reactor')counts.reactor++;else counts.casket++;
  }
  const requirements=SHIP_REQUIREMENTS_276.map(row=>Object.freeze({...row,present:counts[row.id],missing:Math.max(0,row.required-counts[row.id])}));
  return Object.freeze({ok:true as const,partIds:connected.partIds,parts:connected.parts,counts:Object.freeze(counts),
-  requirements:Object.freeze(requirements),missing:Object.freeze(requirements.filter(row=>row.missing>0)),launchImplemented:false as const});
+  requirements:Object.freeze(requirements),missing:Object.freeze(requirements.filter(row=>row.missing>0)),
+  occupiedCaskets:connected.parts.filter(part=>part.kind==='ship-cryptosleep-casket'&&part.source.shipCryptosleep277?.occupant!=null).length,launchImplemented:false as const});
 }
 
 export type ReactorPhaseReader276<T extends ShipPartSource276>=(source:T)=>'hibernating'|'starting'|'running';

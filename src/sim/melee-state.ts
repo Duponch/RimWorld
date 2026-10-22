@@ -5,7 +5,9 @@ export interface MeleeState {
   /** Recovery is independent of the order and survives stop/move/undraft. */
   strike:{structure?:import('./types.ts').Cell;targetId:number|null;atCore:number;untilCore:number;tool:MeleeToolId;outcome:'hit'|'miss'|'dodge';
     /** Mechanical EMP only; historical human/animal and 45-Core recovery stays literal. */
-    empPause?:{ticks:number;lastAtCore:number}}|null;
+    empPause?:{ticks:number;lastAtCore:number};
+    /** Paused active recovery; factual atCore remains unchanged. */
+    suspendedCore277?:number}|null;
 }
 export type MeleeCommand={type:'melee';pawnIds:number[];targetId:number;structure?:true};
 export function cancelMelee(pawn:{melee?:MeleeState}):void {

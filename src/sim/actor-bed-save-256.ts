@@ -1,3 +1,4 @@
+import {captureShipCasketAnimals277} from './ship-casket-state-277.ts';
 import {validateStartingPetLinks256} from './starting-pet-state-256.ts';
 import {captureCoreStartingAnimals256} from './starting-pod-state-256.ts';
 /** Global ownership of the same bed originals. No map, claimant or history is
@@ -41,14 +42,16 @@ export function validateProjectedActorBeds256(w:World,views:readonly {world:Worl
  const actors:BedActor256[]=[],locations=new Map<BedActor256,number|null>(),byId=new Map<number,BedActor256>();
  const add=(actor:BedActor256,map:number|null)=>{const old=byId.get(actor.id);if(old&&old!==actor)throw Error('Projected actor has two owners');if(old){if(locations.get(old)!==map)throw Error('Contradictory projected actor map');return;}byId.set(actor.id,actor);locations.set(actor,map);actors.push(actor);};
  try{
-  everyHumanPawnOwner(w,(p,kind)=>{add(p,kind==='map'||kind==='player-casket'?activeMapId:null);return true;});
+  everyHumanPawnOwner(w,(p,kind)=>{add(p,kind==='map'||kind==='player-casket'||kind==='ship-casket'?activeMapId:null);return true;});
   if(validateDuckFlyers256(w,w.schemaVersion).length)return ['Invalid actual held Duck owner.'];
   for(const a of w.wildlife?.animals??[])add(a,activeMapId);
+  for(const held of captureShipCasketAnimals277(w))add(held.animal,activeMapId);
   for(const a of captureCoreStartingAnimals256(w))add(a,null);
   for(const f of captureDuckFlyerOwners256(w))add(f.animal,null);
-  for(const row of views)if(!row.referencesOnly){everyHumanPawnOwner(row.world,(p,kind)=>{add(p,kind==='map'||kind==='player-casket'?activeMapId:null);return true;});
+  for(const row of views)if(!row.referencesOnly){everyHumanPawnOwner(row.world,(p,kind)=>{add(p,kind==='map'||kind==='player-casket'||kind==='ship-casket'?activeMapId:null);return true;});
    const group=row.world.group as typeof row.world.group&{animalOwners?:import('./group-animal-state-256.ts').GroupAnimalOwners256};for(const a of group?.animalOwners?.members??[])add(a,null);}
   for(const a of terminalAnimals)add(a,null);
+  for(const e of w.worldPawns?.heldShipCaskets277??[]){const o=e.casket.shipCryptosleep277.occupant;if(o?.kind==='animal')add(o.animal,null);}
   for(const row of w.worldPawns?.owners??[])if(row.kind!=='mechanical')add(row.actor,null);
   const expected=actualBedReferences256(activeMapId??0,w.structures,w.packed);
   for(const actual of expected){const row=refs.find(r=>r.id===actual.id);if(!row||row.mapId!==actual.mapId||row.slots!==actual.slots||row.animal!==actual.animal)return ['Projected bed metadata disagrees with the actual local original.'];}

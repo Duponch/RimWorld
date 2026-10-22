@@ -1,3 +1,4 @@
+import {shipCasketActor277} from './ship-casket-state-277.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {mechRaidGroups261} from './mechanical-raid-groups-261.ts';
 import {registeredMaps} from './world-map-context.ts';
@@ -57,6 +58,7 @@ function scan(root:CampaignState,rows:readonly Mechanical[]){
   key(s.turret?.targetKey,source+':turret-target');key(s.turret?.burst?.targetKey,source+':turret-burst');key(s.turret?.wick?.instigatorKey,source+':wick-instigator');key(s.casketWick?.instigatorKey,source+':casket-instigator');
   for(const id of s.shelf?.cells??[])ref(id,source+':shelf-reference');for(const b of s.bills??[])ref(b.id,source+':bill-namespace');
   if(s.casket){for(const p of s.casket.humans)actor(p,source+':casket-human',false);for(const a of s.casket.animals)actor(a,source+':casket-animal',false);for(const p of s.casket.items)pile(p,source+':casket-item');}
+  if(s.shipCryptosleep277){const h=s.shipCryptosleep277,a=shipCasketActor277(h);if(a)actor(a,source+':spatial-casket-occupant',false);for(const p of h.items)pile(p,source+':spatial-casket-item');for(const p of h.packed)packed(p,source+':spatial-casket-furniture');}
   if(s.cryptosleep){if(s.cryptosleep.human)actor(s.cryptosleep.human,source+':player-casket-human',false);for(const p of s.cryptosleep.items)pile(p,source+':player-casket-item');for(const p of s.cryptosleep.packed)packed(p,source+':player-casket-furniture');}
  };
  const packed=(p:PackedFurniture,source:string)=>{structure(p.building,source+':packed');if(p.owner.type!=='ground')ref(p.owner.pawnId,source+':packed-holder');};
@@ -90,6 +92,7 @@ function scan(root:CampaignState,rows:readonly Mechanical[]){
  for(const row of root.worldPawns?.owners??[]){actor(row.actor,'world-pawn:'+row.actor.id,false,row.kind==='mechanical');for(const p of row.items)pile(p,'world-pawn');for(const p of row.packed)packed(p,'world-pawn');}
  for(const held of root.worldPawns?.heldCaskets259??[])structure(held.casket,'actual-retained-cryptosleep-holder');
  for(const held of root.worldPawns?.heldPlayerCaskets271??[])structure(held.casket,'actual-retained-player-cryptosleep-holder');
+ for(const held of root.worldPawns?.heldShipCaskets277??[])structure(held.casket,'actual-retained-spatial-cryptosleep-holder');
  const facts=new Map<number,WorldPawnGCFacts256>(),sealed:unknown[]=[];
  for(const row of rows){const admitted=validMechanicalWorldPawn259(row,root.schemaVersion,root.worldFactions),reasons=[...keep.get(row.actor.id)!];if(row.keepForever)reasons.push('actual-explicit-keep');if(row.everColonist)reasons.push('actual-explicit-ever-colonist');reasons.sort();
   // Humanlike-only Colonist/logs, Animal-only bonds, and outgoing native

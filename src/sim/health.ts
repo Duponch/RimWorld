@@ -68,7 +68,7 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn),ex
   dropIncapacitatedEquipment(world,pawn);
 }
 export function updatePawnHealth(world:World,pawn:Pawn,retainTravellingCargo=false):BodyAssessment|undefined {
-  if(pawn.cryptosleepHeldAt271!==undefined)return pawn.health?pawnBody(pawn):undefined;
+  if((pawn.cryptosleepHeldAt271!==undefined||pawn.shipCryptosleepHeldAt277!==undefined))return pawn.health?pawnBody(pawn):undefined;
   if(world.schemaVersion>=84&&pawn.hunger<=0&&pawn.state!=='dead')pawn.health??=createMedicalRecord(Math.max(0,world.tick-1));
   let record=pawn.health;if(!record)return;
   if(record.death){if(!carrierOf(world,pawn.id)&&pawn.moveCooldown===0)retryInterruptedCargo(world,pawn);return;}

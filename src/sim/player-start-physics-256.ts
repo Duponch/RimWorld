@@ -4,6 +4,7 @@
 import type {StructureKind} from './types.ts';
 export interface StartThingPhysics256 {readonly defId:string;readonly passability:0|1|2;readonly edifice:boolean;readonly door:boolean;readonly fence:boolean;readonly fullFill:boolean}
 export const START_STRUCTURE_PHYSICS_256={
+ 'ship-cryptosleep-casket':{defId:'Ship_CryptosleepCasket',passability:1,edifice:true,door:false,fence:false,fullFill:false},
  'ship-beam':{defId:'Ship_Beam',passability:2,edifice:true,door:false,fence:false,fullFill:true},
  'ship-engine':{defId:'Ship_Engine',passability:2,edifice:true,door:false,fence:false,fullFill:true},
  'ship-reactor':{defId:'Ship_Reactor',passability:2,edifice:true,door:false,fence:false,fullFill:true},

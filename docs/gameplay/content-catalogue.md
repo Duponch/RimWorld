@@ -1,8 +1,16 @@
 # Catalogue de contenu : couverture connue
 
+**V453 qualifiée localement — schéma 277 :** [Caisson de cryptosommeil spatial](ship-casket-v453.md). Recherche, chantier payé et connexion à la vraie poutre ; entrée et portage, suspension puis éjection directe des mêmes humains, animaux et mécanoïdes représentés. 83 cas distincts acquis par reprises, dont 53 nouveaux et 30 voisins. Typage, présentation et interface natives muettes acquis. Build Pages et publication en attente ; V452 reste en production. Sauvegardes publiques inchangées. **Suite : bases ordinaires après audit transversal**, sans poursuite automatique ordinateur/capteurs. Lancement, victoire complète, six ensembles et cible FPS restent ouverts ; détail des reprises, adaptations et limites dans la note canonique.
+
 **V452 publiée — schéma 276 :** [Poutres et moteurs de vaisseau](ship-parts-v452.md). Recherche moteur, une poutre et trois moteurs payés, connexion physique, rapport et retraits conservés ; 63 cas ciblés acquis, dont 35 nouveaux et 28 voisins. Typage, présentation et interface natives muettes acquis. Build Pages acquis ; publié 6ac38d08/dd91c337, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. [Jouer sur Cloudflare](https://elsewhere-cq7.pages.dev/). **Ensemble 5 en cours** ; ordinateur, capteurs, caissons spatiaux, embarquement et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
 
 **V451 publiée — schéma 275 :** [Réacteur stellaire](ship-reactor-v451.md). Recherches, chantier payé, 1 000 W, démarrage confirmé et attaques indépendantes ; 50 cas ciblés acquis par reprises, un ancien rouge identique au témoin conservé. Typage, présentation et interface natives muettes acquis. Build Pages acquis ; publié 8e0e2ee6/7552f915, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. **Ensemble 5 engagé** ; autres pièces et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
+
+| Boucle V453 qualifiée | Acquisition et usage locaux | Limites annoncées |
+| --- | --- | --- |
+| Caisson spatial physique |Recherche 2 800 après Construction de vaisseau + Cryptosommeil ; bureau avancé/analyseur, Construction 8, quatre intrants : 120 acier, 14 uranium, 3 composants et 3 avancés ; chantier 1×2 orienté avec tête sur vraie poutre. |Complet dans ce périmètre local ; support lourd/extérieur sans toit, 200 PV, sans qualité ni minification ; recherches et stock de preuve préparés déclarés. |
+| Entrée, portage et sortie |Même humain, animal ou mécanoïde représenté ; patient à terre pour portage, approche et fermeture 500 Core, suspension puis éjection directe sans travailleur, possessions/identité conservées. |La qualification vise les parcours décrits dans la note, pas toutes les situations Core ; pas de nouvelle capture mécanique jouée ni de guérison pendant suspension. |
+| Reprise et retraits |Horloges et vrais propriétaires conservés ; sauvegardes et contrôles publics du lot, dégâts/explosion et retrait distincts de la sortie volontaire. Transmission électrique passive et rapport du vaisseau réel. |Aucun lancement ou victoire ; ordinateur/capteurs ouverts. Les six ensembles et les performances restent incomplets ; audit transversal des bases avant prochain lot. |
 
 | Boucle V452 publiée | Acquisition et usage | Limites |
 | --- | --- | --- |

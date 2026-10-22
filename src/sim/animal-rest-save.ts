@@ -1,4 +1,5 @@
 import { isColonist } from './affiliation.ts';
+import {isSchema277OrLater} from './schema-compatibility-257.ts';
 import { autoSlaughterTargets,slaughterIntent } from './auto-slaughter.ts';
 import { animalCarrier,animalClaimed,animalSpotClaimed } from './animal-rest-state.ts';
 import { medicalWorkRefusal,pawnBody } from './health-rules.ts';
@@ -30,11 +31,14 @@ export function validAnimalRescueShape(v:unknown,version:number):boolean {
     &&(!Object.hasOwn(v,'forced')||v.forced===true)&&id(v.animalId)&&id(v.spotId)&&(v.phase==='approach'||v.phase==='carry');
 }
 /** A released patient retains the admitted human segment without a synthetic
- * provenance flag. The prospective owned-animal envelope therefore also covers
- * recovery before the edge ends, while every captured cost/interval stays strict. */
+ * provenance flag. The owned-animal envelope also covers recovery before the
+ * edge ends. Spatial277 admits a wild patient on the same strict human edge,
+ * with no autonomous route/activity state; every cost/interval stays strict. */
 export function validAnimalCarrierMotion(w:World,a:WildAnimal,version:number):boolean {
   const m=a.motion;
-  if(version<221||!a.domestic||!m||!object(m)||!keys(m,['from','to','start','end'],['speedFactor','terrainDelay','stagger','stuns',...(version>=239?['snowEntryPending']:[])]))return false;
+  const spatialPatient=isSchema277OrLater(version)&&a.path.length===0&&['idle','downed','dead'].includes(a.state)
+    &&!a.meal&&!a.predation&&!a.mating&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike&&!a.animalRest;
+  if(version<221||!a.domestic&&!spatialPatient||!m||!object(m)||!keys(m,['from','to','start','end'],['speedFactor','terrainDelay','stagger','stuns',...(version>=239?['snowEntryPending']:[])]))return false;
   const cell=(v:unknown):v is {x:number;z:number}=>object(v)&&keys(v,['x','z'])&&Number.isSafeInteger(v.x)&&Number(v.x)>=0&&Number(v.x)<w.width&&Number.isSafeInteger(v.z)&&Number(v.z)>=0&&Number(v.z)<w.height;
   if(!cell(m.from)||!cell(m.to)||!same(a,m.to)||!Number.isFinite(m.start)||m.start<0||m.start>w.tick||!Number.isFinite(m.end)||m.end<=m.start
     ||Math.max(Math.abs(m.from.x-m.to.x),Math.abs(m.from.z-m.to.z))!==1

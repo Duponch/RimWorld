@@ -1,3 +1,5 @@
+import {shipCasketHumanReferences277,shipCasketTerminalParticipant277} from './ship-casket-notifications-277.ts';
+import {captureShipCasketHumans277} from './ship-casket-state-277.ts';
 import {memoryExpiry271,validSuspendedMemory271} from './suspended-memory-271.ts';
 import {validAttackMemory} from './automatic-combat-save.ts';
 import {validPrisonerStateRecord259} from './prisoner-save.ts';
@@ -183,16 +185,17 @@ export function validateVisitors(w:World,version:number,ids:Set<number>):string[
     }
     if(!p.visitor!.personalFoodIds.every(id=>d.items.some(i=>i.id===id&&i.kind==='food'&&i.owner.type==='inventory')))errors.push('Invalid exported visitor food.');
   }
+  const held277=captureShipCasketHumans277(w),cohort277=[...w.pawns,...held277.map(h=>h.pawn)];
   for(const g of s.groups){
     if(temp&&(!object(g)||!cell(g.spot,w)||!edge(g.spot,w)))errors.push('TempMap traveler has no physical edge destination.');
     if(!object(g)||!keys(g,['id','kind','members','entry','spot','phase','startedAt','arrivedAt','durationCore','hostile','reason'])||!integer(g.id,1,s.serial)||groups.has(g.id)||!['traveler','visitor'].includes(String(g.kind))||!Array.isArray(g.members)||!g.members.length||g.members.length>12||new Set(g.members).size!==g.members.length||!g.members.every(id=>integer(id,1,w.nextId-1))||!cell(g.entry,w)||!edge(g.entry,w)||!cell(g.spot,w)||!phases.includes(String(g.phase))||!integer(g.startedAt,s.adoptedAt,w.tick)||g.arrivedAt!==null&&!integer(g.arrivedAt,g.startedAt,w.tick)||typeof g.hostile!=='boolean'||(g.kind==='traveler'?g.durationCore!==0:g.durationCore<8000||g.durationCore>=22000)||!integer(g.durationCore,0)||g.phase==='staying'&&(g.arrivedAt===null||g.kind!=='visitor')||g.phase==='arriving'&&g.arrivedAt!==null||(g.phase==='leaving'?!['timeout','danger','hostile','blocked'].includes(String(g.reason)):g.reason!==undefined)){errors.push('Invalid visitor group.');continue;}
     groups.add(g.id);
     if(g.hostile&&g.reason!=='hostile')errors.push('Hostile visitor group without hostile departure.');
-    for(const id of g.members){if(members.has(id)||!w.pawns.some(p=>p.id===id&&p.visitor?.group===g.id)&&!s.departed.some(d=>d.pawn.id===id&&d.group===g.id))errors.push('Invalid visitor group membership.');members.add(id);}
+    for(const id of g.members){if(members.has(id)||!cohort277.some(p=>p.id===id&&p.visitor?.group===g.id)&&!s.departed.some(d=>d.pawn.id===id&&d.group===g.id)&&!shipCasketTerminalParticipant277(w,id,'human',g.id,'visitor'))errors.push('Invalid visitor group membership.');members.add(id);}
   }
-  for(const p of w.pawns)if(p.visitor){const v=p.visitor,g=s.groups.find(g=>g.id===v.group);
+  for(const p of cohort277)if(p.visitor){const v=p.visitor,g=s.groups.find(g=>g.id===v.group);
     if(!validVisitorShape(p as unknown as Record<string,unknown>,version,w)||p.faction!=='outlanders'||p.prisoner||p.raid||p.trade||p.draft||!g||!g.members.includes(p.id)||v.phase!==g.phase||g.kind==='traveler'&&v.role!=='traveler'||g.kind==='visitor'&&v.role==='traveler')errors.push('Invalid visitor mandate.');
-    if(!v.personalFoodIds.every(id=>w.piles.some(i=>i.id===id&&i.kind==='food'&&(i.owner.type==='inventory'||i.owner.type==='pawn')&&i.owner.pawnId===p.id)))errors.push('Invalid visitor personal food ownership.');
+    if(!v.personalFoodIds.every(id=>[...w.piles,...held277.find(h=>h.pawn===p)?.items??[]].some(i=>i.id===id&&i.kind==='food'&&(i.owner.type==='inventory'||i.owner.type==='pawn')&&i.owner.pawnId===p.id)))errors.push('Invalid visitor personal food ownership.');
     const admitted=version>=237&&hasVisitorMedicalGuestMarker(p);
     if(admitted&&(!g||!integer(v.medicalGuestAt,g.startedAt,w.tick)))errors.push('Invalid visitor medical admission chronology.');
     if(p.orders.active!==null||p.orders.queue.length||p.jobId!==null||p.haul||p.cooking||!admitted&&(p.bedId!==null||p.need?.kind==='sleep'&&p.need.bedId!==null))errors.push('Visitor retains colonial work or bed.');

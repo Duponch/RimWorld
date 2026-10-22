@@ -15,7 +15,7 @@ export function validAnimalDeathExplosionOwner256(world:World,wave:MiniTurretBom
  if(animal&&!body||pile&&!pile.corpse)return false;
  if(!body)return ![...world.pawns,...world.structures,...world.jobs,...world.resources,...world.packed.map(p=>p.building),...(world.mechanoids??[])].some(o=>o.id===wave.sourceId);
  const record=body.health,age=body.ageTicks;
- if(body.species!==proof.species||!record?.death||record.death.tick!==proof.deathTick||record.body!==proof.species||!Number.isSafeInteger(age)||age<0||!Number.isSafeInteger(record.animalBirthTick)||record.death.tick-record.animalBirthTick! !== age)return false;
+ if(body.species!==proof.species||!record?.death||record.death.tick!==proof.deathTick||record.body!==proof.species||!Number.isSafeInteger(age)||age<0||!Number.isSafeInteger(record.animalBirthTick)||record.tick-record.animalBirthTick! !== age)return false;
  if(!validAnimalGrowthTracker256(body,world.schemaVersion,record.death.tick)||!validAnimalGrowthClinicalOwner256(body,world.schemaVersion))return false;
  const stage=body.growthTracker?({AnimalAdult:'adult',AnimalBaby:'baby',AnimalBabyTiny:'baby',AnimalJuvenile:'juvenile',EusocialInsectLarva:'baby',EusocialInsectJuvenile:'juvenile',EusocialInsectAdult:'adult'} as const)[trackedAnimalLifeStage256(body.species,body.growthTracker).definition]:age>=animalStageAgeTicks256(proof.species,'adult')?'adult':age>=animalStageAgeTicks256(proof.species,'juvenile')?'juvenile':'baby';
  return stage===proof.lifeStage;

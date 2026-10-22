@@ -1,3 +1,4 @@
+import {captureShipCasketAnimals277} from './ship-casket-state-277.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {targetBuildingPlayerUse263} from './world-target-building-263.ts';
 import {captureCoreStartingAnimals256} from './starting-pod-state-256.ts';
@@ -65,17 +66,19 @@ export function captureActorBeds256(input:CampaignState):ActualActorBeds256 {
   for(const slot of captured.owners.pawnOwners){
    // A player casket freezes its original on this map; it is not a departure
    // and retains the same local bed alias, including a historical bare bedId.
-   actor(slot.pawn!,(slot.kind==='map'||slot.kind==='player-casket')&&mapId!==undefined?mapId:null);
+   actor(slot.pawn!,(slot.kind==='map'||slot.kind==='player-casket'||slot.kind==='ship-casket')&&mapId!==undefined?mapId:null);
    for(const pack of slot.packed)packed(pack);
   }
   if(captured.world){
    if(captured.world.structures.length&&mapId===undefined)throw Error('Spawned beds lack a real map authority');
    for(const b of captured.world.structures)bed(b,mapId??null);
+   for(const held of captureShipCasketAnimals277(captured.world)){actor(held.animal,mapId??null);for(const pack of held.packed)packed(pack);}
    for(const p of captured.world.packed)packed(p);
    for(const a of captureCoreStartingAnimals256(captured.world))actor(a,null);
    if(mapId!==undefined){for(const a of captured.world.wildlife?.animals??[])actor(a,mapId);for(const held of captureDuckFlyerOwners256(captured.world)){identity(held.holderId,held.holder);actor(held.animal,null);}}
   }
  }
+ for(const e of root.worldPawns?.heldShipCaskets277??[]){const o=e.casket.shipCryptosleep277.occupant;if(o?.kind==='animal')actor(o.animal,null);for(const p of e.casket.shipCryptosleep277.packed)packed(p);}
  for(const owner of root.worldPawns?.owners??[]){if(owner.kind!=='mechanical')actor(owner.actor,null);for(const p of owner.packed)packed(p);}
  if((Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||isSchema263OrLater(Number(root.schemaVersion)))))for(const group of root.worldGroups?.groups??[]){for(const a of group.pending261?.animals??[])actor(a,null);for(const p of group.pending261?.packed??[])packed(p);}
  for(const owner of root.worldFactions?.leaders??[])actor(owner.pawn,null);

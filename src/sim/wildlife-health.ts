@@ -1,3 +1,4 @@
+import {medicalCivilTick271,medicalElapsedTicks271} from './suspended-human-clock-271.ts';
 import {advanceAnimalScaria261,commitScariaDeath261,scariaCorpseRot261} from './animal-scaria-261.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {activeHiveInsect256,hiveInstigatorFaction256,notifyHivePawnHarmed256,receiveHiveMemo256,combatTargetKeyForHive256} from './cave-hive-lord-256.ts';
@@ -33,7 +34,7 @@ export const animalBody=(a:WildAnimal)=>{
 };
 export function reconcileAnimalHealth(w:World,a:WildAnimal):void {
   if(!a.health)return;
-  if(a.health.death&&isAnimalSpecies256(a.species))a.ageTicks=a.health.death.tick-a.health.animalBirthTick!;
+  if(a.health.death&&isAnimalSpecies256(a.species))a.ageTicks=a.health.tick-a.health.animalBirthTick!;
   const status=medicalStatus(a.health);if(status==='dead'){commitToxicDeath256(a.health,()=>healthRandom(w));commitScariaDeath261(a.health,w.gameProfile?.difficulty==='adventure-story'?.333:undefined,()=>healthRandom(w));if(a.health.scaria261)a.corpseRot=scariaCorpseRot261(a.health,a.corpseRot??{progress:0,atTick:w.tick});}
   if(w.schemaVersion>=256&&status==='dead'){if(a.state!=='dead'){detachHiveInsect256(w,a);const wasSpawned=!animalCarrier(w,a.id);dropAnimalContentsOnDeath256(w,a,wasSpawned);cancelAnimalLocalGroupIntents256(w,a.id);}delete a.mapBed;if(a.domestic)delete a.domestic.bedId;}
   if(status!=='mobile') {
@@ -59,7 +60,7 @@ export function advanceAnimalHealth(w:World,a:WildAnimal):void {
   if(!a.health||a.health.death)return;
   const lying=(!a.motion||a.motion.end<=w.tick)&&['sleeping','downed'].includes(a.state)&&!(w.schemaVersion>=221&&animalCarrier(w,a.id));
   const conditionFrontier=localAnimalConditionFrontier256(w,a,a.health,()=>healthRandom(w));
-  advanceMedical(a.health,w.tick-a.health.tick,{phase:a.id%60,toxicOwner:{id:a.id,spawned:!animalCarrier(w,a.id),awake:a.state!=='sleeping'&&!a.stun},cryptosleepSicknessSpawned:!animalCarrier(w,a.id),posture:lying?'ground':'standing',starving:a.food<=0,malnutritionRate:w.schemaVersion>=84?malnutritionRate(a.id):undefined,
+  advanceMedical(a.health,medicalElapsedTicks271(a.health,w.tick),{phase:a.id%60,toxicOwner:{id:a.id,spawned:!animalCarrier(w,a.id),awake:a.state!=='sleeping'&&!a.stun},cryptosleepSicknessSpawned:!animalCarrier(w,a.id),posture:lying?'ground':'standing',starving:a.food<=0,malnutritionRate:w.schemaVersion>=84?malnutritionRate(a.id):undefined,
     hunger:a.food/animalNutritionMax(a)*100,rest:a.rest*100,restingBonus:lying&&a.state==='sleeping',infectionSeed:(w.seed^Math.imul(a.id,0x9e3779b1))>>>0},()=>healthRandom(w),conditionFrontier);
   conditionFrontier?.commit();reconcileAnimalHealth(w,a);
 }
@@ -127,7 +128,7 @@ function advanceExplosiveAnimalHealth256(w:World,a:WildAnimal,privateActor=false
  const record=privateActor?outcome.health:a.health?structuredClone(a.health):a.food<=0?createAnimalMedicalRecord256(w,a,Math.max(0,w.tick-1)):undefined;if(!record)return;
  const lying=(!a.motion||a.motion.end<=w.tick)&&['sleeping','downed'].includes(a.state)&&!animalCarrier(w,a.id),random={rng:w.rng};
  const conditionFrontier=localAnimalConditionFrontier256(w,a,record,()=>healthRandom(random));
- advanceMedical(record,w.tick-record.tick,{phase:a.id%60,toxicOwner:{id:a.id,spawned:!animalCarrier(w,a.id),awake:a.state!=='sleeping'&&!a.stun},cryptosleepSicknessSpawned:!animalCarrier(w,a.id),posture:lying?'ground':'standing',starving:a.food<=0,malnutritionRate:malnutritionRate(a.id),hunger:a.food/animalNutritionMax(a)*100,rest:a.rest*100,restingBonus:lying&&a.state==='sleeping',infectionSeed:(w.seed^Math.imul(a.id,0x9e3779b1))>>>0},()=>healthRandom(random),conditionFrontier);
+ advanceMedical(record,medicalElapsedTicks271(record,w.tick),{phase:a.id%60,toxicOwner:{id:a.id,spawned:!animalCarrier(w,a.id),awake:a.state!=='sleeping'&&!a.stun},cryptosleepSicknessSpawned:!animalCarrier(w,a.id),posture:lying?'ground':'standing',starving:a.food<=0,malnutritionRate:malnutritionRate(a.id),hunger:a.food/animalNutritionMax(a)*100,rest:a.rest*100,restingBonus:lying&&a.state==='sleeping',infectionSeed:(w.seed^Math.imul(a.id,0x9e3779b1))>>>0},()=>healthRandom(random),conditionFrontier);
  const death=planAnimalDeathExplosion256(w,a,record);
  if(privateActor&&(w.tick!==actualTick||w.rng!==actualRng||w.wildlife?.animals!==actualActors||!actualActors?.includes(a)||a.health!==originalHealth||JSON.stringify(a)!==actorBefore))throw Error('Stale actual toxic animal outcome');
  commitToxicDeath256(record,()=>healthRandom(random));death.commit();

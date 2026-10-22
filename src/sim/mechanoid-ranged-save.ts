@@ -1,3 +1,4 @@
+import {shipCasketHumanReferences277,shipCasketAnimalReferences277,shipCasketMechanicalReferences277} from './ship-casket-notifications-277.ts';
 import type {NumericMembershipLookup} from './numeric-membership.ts';
 import { isMechanoidKind,type MechanoidKind } from './mechanoid-definition.ts';
 import { mechanoidEnemy } from './combat-target.ts';
@@ -30,14 +31,15 @@ export function validMechanoidRangedShape(value:unknown,kind:MechanoidKind,versi
 function historicalTarget(w:World,key:string,id:number):boolean {
   const kind=key.slice(0,key.indexOf(':'));
   if(kind==='pawn'){
+    if(shipCasketHumanReferences277(w).some(p=>p.id===id))return true;
     if(w.pawns.some(p=>p.id===id)||[w.scout,w.commercialTrip].some(g=>g&&'pawn' in g&&g.pawn.id===id)
       ||w.group&&'members' in w.group&&w.group.members.some(p=>p.id===id)||w.groupLosses?.some(l=>l.pawn.id===id))return true;
     return !!w.raids?.departed.some(d=>d.pawnId===id)||!!w.prisonDepartures?.some(d=>d.pawnId===id)
       ||!!w.visitors?.departed.some(d=>d.pawn.id===id)||!!w.podRescues?.departed.some(d=>d.pawn.id===id)
       ||w.piles.some(p=>p.humanCorpse?.pawnId===id);
   }
-  if(kind==='animal')return !!w.wildlife?.animals.some(a=>a.id===id)||w.piles.some(p=>p.corpse?.animalId===id);
-  return !!w.mechanoids?.some(m=>m.id===id)||w.piles.some(p=>p.id===id&&p.mechCorpse!==undefined);
+  if(kind==='animal')return shipCasketAnimalReferences277(w).some(a=>a.id===id)||!!w.wildlife?.animals.some(a=>a.id===id)||w.piles.some(p=>p.corpse?.animalId===id);
+  return shipCasketMechanicalReferences277(w).some(m=>m.id===id)||!!w.mechanoids?.some(m=>m.id===id)||w.piles.some(p=>p.id===id&&p.mechCorpse!==undefined);
 }
 
 /** ids, when supplied, is the COMPLETE Thing namespace after collective owners. */

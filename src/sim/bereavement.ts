@@ -42,7 +42,7 @@ export function notifyPawnDeath(world:World,deceased:Pawn):void {
 }
 
 export function expireBereavement(pawn:Pawn,tick:number):void {
-  if(pawn.cryptosleepHeldAt271!==undefined)return;
+  if((pawn.cryptosleepHeldAt271!==undefined||pawn.shipCryptosleepHeldAt277!==undefined))return;
   const memories=pawn.bereavement;if(!memories)return;
   if(!memories.some(memory=>memoryExpiry271(memory,memory.at+deathMemoryDuration(memory.kind))<=tick))return;
   pawn.bereavement=memories.filter(memory=>memoryExpiry271(memory,memory.at+deathMemoryDuration(memory.kind))>tick);

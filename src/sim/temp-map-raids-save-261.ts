@@ -1,3 +1,5 @@
+import {isSchema277OrLater} from './schema-compatibility-257.ts';
+import {shipCasketHumanReferences277,shipCasketTerminalParticipant277} from './ship-casket-notifications-277.ts';
 import {isSchema275OrLater} from './schema-compatibility-257.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {sameRaidResult261} from './temp-map-raids-261.ts';
@@ -42,29 +44,29 @@ export function validateTempRaidCollections261(w:World,version:number):string[] 
   if(plain(raw)&&Object.hasOwn(raw,'shipReactor275')){
    if(!ship||!validShipReactorHumanGroup275(raw,w)||groups.has(Number(raw.id))){errors.push('Invalid independent ship reactor human Lord.');continue;}
    groups.add(Number(raw.id));
-   for(const id of raw.members as number[]){if(members.has(id)){errors.push('Raid Lords share one original.');continue;}members.add(id);const pawn=w.pawns.find(p=>p.id===id);if(pawn?pawn.raid?.group!==raw.id&&pawn.recruitment?.raidGroup!==raw.id:!s.departed.some(d=>d.group===raw.id&&d.pawnId===id))errors.push('Ship reactor Lord lost an original participant.');}
+   for(const id of raw.members as number[]){if(members.has(id)){errors.push('Raid Lords share one original.');continue;}members.add(id);const pawn=[...w.pawns,...shipCasketHumanReferences277(w)].find(p=>p.id===id);if(pawn?pawn.raid?.group!==raw.id&&pawn.recruitment?.raidGroup!==raw.id:!s.departed.some(d=>d.group===raw.id&&d.pawnId===id)&&!shipCasketTerminalParticipant277(w,id,'human',Number(raw.id)))errors.push('Ship reactor Lord lost an original participant.');}
    continue;
   }
   if(!plain(raw)||!fields(raw,['id','startedAt','deadline','lossPermille','members','lost','phase','tempIncident261'])||!int(raw.id,1,s.serial)||groups.has(raw.id)||!int(raw.startedAt,0,w.tick)||raw.deadline!==null||raw.lossPermille!==null||raw.phase!=='assault'||!dense(raw.members,w.width*w.height)||!raw.members.length||!raw.members.every(id=>int(id,1,w.nextId-1))||new Set(raw.members).size!==raw.members.length||!dense(raw.lost,raw.members.length)||!raw.lost.every((id,i)=>raw.members instanceof Array&&raw.members.includes(id)&&(i===0||Number(id)>Number((raw.lost as unknown[])[i-1])))||!validTempRaidSource261(raw.tempIncident261,w,raw.members as number[])||!plain(raw.tempIncident261)||raw.tempIncident261.atCore!==raw.startedAt*10){errors.push('Invalid independent TempMap Lord.');continue;}
   groups.add(raw.id);
   for(const id of raw.members as number[]){
    if(members.has(id)){errors.push('Raid Lords share one original.');continue;}members.add(id);
-   const pawn=w.pawns.find(p=>p.id===id),row=registeredCampaign(w).worldPawns?.owners.find(r=>r.actor.id===id);
+   const pawn=[...w.pawns,...shipCasketHumanReferences277(w)].find(p=>p.id===id),row=registeredCampaign(w).worldPawns?.owners.find(r=>r.actor.id===id);
    if(pawn?pawn.raid?.group!==raw.id&&pawn.recruitment?.raidGroup!==raw.id:row?row.originMapId!==tempMapRecord261(w)!.id:!(raw.lost as number[]).includes(id))errors.push('TempMap Lord lost an unrecorded original.');
   }
  }
  const resultIds=new Set<number>();
  for(const raw of results){
-  if(!plain(raw)||!fields(raw,['id','tick','reason','killed','downed','escaped'],['captured','composition','originQuestId','caravan261','memberCount261','mechanoid','mechComposition','tempIncident261',...(isSchema275OrLater(version)?['shipReactor275']:[])])||!int(raw.id,1,s.serial)||groups.has(raw.id)||resultIds.has(raw.id)||!int(raw.tick,0,w.tick)||!['defended','withdrawn','colony-down'].includes(String(raw.reason))){errors.push('Invalid retained actual raid result.');continue;}
+  if(!plain(raw)||!fields(raw,['id','tick','reason','killed','downed','escaped'],['captured','composition','originQuestId','caravan261','memberCount261','mechanoid','mechComposition','tempIncident261',...(isSchema277OrLater(version)?['destroyed277']:[]),...(isSchema275OrLater(version)?['shipReactor275']:[])])||!int(raw.id,1,s.serial)||groups.has(raw.id)||resultIds.has(raw.id)||!int(raw.tick,0,w.tick)||!['defended','withdrawn','colony-down'].includes(String(raw.reason))){errors.push('Invalid retained actual raid result.');continue;}
   resultIds.add(raw.id);
   const temp=Object.hasOwn(raw,'tempIncident261'),caravan=Object.hasOwn(raw,'caravan261'),mech=Object.hasOwn(raw,'mechanoid')||Object.hasOwn(raw,'mechComposition');
   const reactor=Object.hasOwn(raw,'shipReactor275');
   const composition=raw.composition,count=temp||caravan?raw.memberCount261:mech&&plain(raw.mechComposition)&&Array.isArray(raw.mechComposition.roster)?raw.mechComposition.roster.length:plain(composition)&&Array.isArray(composition.roster)?composition.roster.length:raw.id===1?1:2;
-  if(!int(count,1,w.nextId-1)||!['killed','downed','escaped'].every(k=>int(raw[k],0,count))||Object.hasOwn(raw,'captured')&&!int(raw.captured,1,count)||Number(raw.killed)+Number(raw.downed)+Number(raw.escaped)+Number(raw.captured??0)!==count){errors.push('Retained raid counts do not conserve their actual cohort.');continue;}
+  if(!int(count,1,w.nextId-1)||!['killed','downed','escaped'].every(k=>int(raw[k],0,count))||Object.hasOwn(raw,'destroyed277')&&(!isSchema277OrLater(version)||!int(raw.destroyed277,1,count))||Object.hasOwn(raw,'captured')&&!int(raw.captured,1,count)||Number(raw.killed)+Number(raw.downed)+Number(raw.escaped)+Number(raw.captured??0)+Number(raw.destroyed277??0)!==count){errors.push('Retained raid counts do not conserve their actual cohort.');continue;}
   if(reactor&&(!ship||temp||caravan||raw.originQuestId!==undefined||raw.memberCount261!==undefined||!validShipReactorRaidSource275(raw.shipReactor275,w,raw.tick,mech?'mechanoid':'human')))errors.push('Invalid retained ship reactor raid provenance.');
   if(temp){if(reactor||caravan||mech||composition!==undefined||raw.originQuestId!==undefined||raw.reason==='colony-down'||!validTempRaidSource261(raw.tempIncident261,w,undefined,raw.tick)||plain(raw.tempIncident261)&&Number(raw.tempIncident261.atCore)>raw.tick*10)errors.push('Invalid independent TempMap raid result.');}
   else if(caravan){const source=raw.caravan261;if(mech||raw.originQuestId!==undefined||!plain(source)||!int(source.bornAtCore,0,raw.tick*10)||!validCaravanRaidProvenance261(source,w,Number(source.bornAtCore)/10,undefined,raw.tick)||source.kind==='pressure'&&!validComposition(composition,count,version,true,true))errors.push('Invalid retained caravan raid result.');}
-  else if(mech){if(raw.mechanoid!==true||!validMechComposition(raw.mechComposition,!!s.mechanoid?.ranged)||!s.mechanoid||raw.tick<s.mechanoid.adoptedAt||raw.reason!=='defended'||raw.downed!==0||raw.escaped!==0||raw.captured!==undefined||raw.killed!==count||composition!==undefined||raw.originQuestId!==undefined||raw.memberCount261!==undefined)errors.push('Invalid retained mechanical result.');}
+  else if(mech){if(raw.mechanoid!==true||!validMechComposition(raw.mechComposition,!!s.mechanoid?.ranged)||!s.mechanoid||raw.tick<s.mechanoid.adoptedAt||raw.reason!=='defended'||raw.downed!==0||raw.escaped!==0||raw.captured!==undefined||Number(raw.killed)+Number(raw.destroyed277??0)!==count||composition!==undefined||raw.originQuestId!==undefined||raw.memberCount261!==undefined)errors.push('Invalid retained mechanical result.');}
   else if(raw.memberCount261!==undefined)errors.push('Unowned retained cohort count.');
   if(!temp&&!mech&&composition!==undefined){
    const quest=raw.originQuestId!==undefined;

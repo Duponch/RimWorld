@@ -2,6 +2,8 @@ import {detachMissingProstheticBills273} from './prosthetic-work-273.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {isPlayerCasket271} from './cryptosleep-state-271.ts';
 import {damagePlayerCryptosleep271} from './cryptosleep-removal-271.ts';
+import {isShipCasket277} from './ship-casket-state-277.ts';
+import {damageShipCasket277} from './ship-casket-removal-277.ts';
 import {fermentationContents265} from './fermentation-state-265.ts';
 import {damageCaveHiveProp256} from './cave-hive-damage-256.ts';
 import {setMaterialForbidden256} from './material-permission-256.ts';
@@ -131,6 +133,7 @@ export type StructureDamageCause='fire'|'melee'|'bullet'|'bomb'|'roof'|'roof-thi
 export interface StructureDamageContext {core:number;rawAmount:number;instigatorKey?:BombInstigatorKey;detonate?:true}
 export function damageStructure(world:World,s:Structure,amount:number,cause:StructureDamageCause='fire',rng=world.rng,external?:StructureDamageContext):boolean {
   if(isPlayerCasket271(s))return damagePlayerCryptosleep271(world,s,amount,cause,rng,external);
+  if(isShipCasket277(s))return damageShipCasket277(world,s,amount,cause,rng,external);
   if(s.kind==='insect-hive'||s.kind==='glow-pod')return damageCaveHiveProp256(world,s,amount,cause,rng,external);
   if(isAncientCasket256(s))return damageEmptyAncientCasket256(world,s,amount,cause,rng,external);
   if(s.kind==='ship-chunk'&&!isSchema256Or257(world.schemaVersion))return false;

@@ -1,3 +1,6 @@
+import {findShipCasketActor277} from './ship-casket-state-277.ts';
+import {validFilthFeet} from './filth-save.ts';
+import {isSchema277OrLater} from './schema-compatibility-257.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {validSiteMechField263,validateSiteMechGroups263} from './world-site-mechanoids-263.ts';
 import {mechRaidGroup261} from './mechanical-raid-groups-261.ts';
@@ -34,8 +37,9 @@ export function validMechaMedicalRecord(value:unknown,worldTick:number,dead:bool
   const record=value as MedicalRecord;
   return record.tick<=worldTick&&!!record.death===dead;
 }
-export function validMechanoidShape(value:unknown,version:number,tick:number):value is Mechanoid {
-  if(version<194||!integer(tick)||!object(value)||!validMechanicalWorldFactionField259(value,version)||!validRetainedCorpseDamage256(value,version)||!validTempleMechField256(value,version,tick)||!validSiteMechField263(value,version,tick)||!keys(value,['id','mechKind','x','z','state','health','path','motion','heading','moveCooldown','planCooldown','raid','melee','stagger','stun',...(version>=197?['ranged','meleeThreat']:[]),...(version>=208?['emp']:[]),...(version>=256?['corpseDamage','temple']:[]),...(version>=259?['worldFaction259']:[]),...(isSchema263OrLater(version)?['site263']:[])])
+export function validMechanoidShape(value:unknown,version:number,tick:number,heldAt277?:number):value is Mechanoid {
+  if(object(value)){const d=Object.getOwnPropertyDescriptor(value,'shipCryptosleepHeldAt277');if(heldAt277!==undefined?(!isSchema277OrLater(version)||heldAt277!==tick||!d?.enumerable||!Object.hasOwn(d,'value')||d.value!==heldAt277):'shipCryptosleepHeldAt277'in value)return false;if(Object.hasOwn(value,'filthFeet')&&(!isSchema277OrLater(version)||!validFilthFeet(value.filthFeet,version)))return false;}
+  if(version<194||!integer(tick)||!object(value)||!validMechanicalWorldFactionField259(value,version)||!validRetainedCorpseDamage256(value,version)||!validTempleMechField256(value,version,tick)||!validSiteMechField263(value,version,tick)||!keys(value,['id','mechKind','x','z','state','health','path','motion','heading','moveCooldown','planCooldown','raid','melee','stagger','stun',...(version>=197?['ranged','meleeThreat']:[]),...(version>=208?['emp']:[]),...(version>=256?['corpseDamage','temple']:[]),...(version>=259?['worldFaction259']:[]),...(isSchema263OrLater(version)?['site263']:[]),...(isSchema277OrLater(version)?['filthFeet']:[]),...(heldAt277!==undefined?['shipCryptosleepHeldAt277']:[])])
     ||!integer(value.id,1)||!isMechanoidKind(value.mechKind)||version<197&&value.mechKind!=='scyther'||!integer(value.x)||!integer(value.z)
     ||typeof value.state!=='string'||!['idle','moving','working','downed','dead'].includes(value.state)||!finite(value.heading,-Math.PI*2,Math.PI*2)
     ||!finite(value.moveCooldown,0,1000)||!integer(value.planCooldown,0,1000)||!Array.isArray(value.path)||!value.path.every(cell)
@@ -49,9 +53,15 @@ export function validMechanoidShape(value:unknown,version:number,tick:number):va
   if(m.raid!==undefined&&(!object(m.raid)||!keys(m.raid,['group','goal'])||!integer(m.raid.group,1)||m.raid.goal!==null&&!cell(m.raid.goal)))return false;
   if(m.motion!==undefined){
     const motion=m.motion;
+    // Spatial277 may carry any represented mechanical body on a HUMAN edge.
+    // A released patient keeps that admitted segment. This does not change an
+    // autonomous mech's speed: the envelope has no route, work or attack order.
+    const carriedSegment277=isSchema277OrLater(version)&&m.path.length===0&&['idle','downed','dead'].includes(m.state)
+      &&!m.melee?.order&&!m.ranged?.order&&m.ranged?.stance?.phase!=='warmup'&&!mechanicalOrder256(m)?.goal;
+    const maximumSpeed=carriedSegment277?Math.max(1,mechanoidDefinition(m.mechKind).moveSpeed/4.6):mechanoidDefinition(m.mechKind).moveSpeed/4.6;
     if(!object(motion)||!keys(motion,['from','to','start','end','speedFactor','terrainDelay','stagger','stuns'])||!cell(motion.from)||!cell(motion.to)
       ||!finite(motion.start,0,tick)||!finite(motion.end,0,tick+1000)||motion.end<=motion.start
-      ||motion.speedFactor!==undefined&&!finite(motion.speedFactor,.001,mechanoidDefinition(m.mechKind).moveSpeed/4.6)||motion.terrainDelay!==undefined&&!finite(motion.terrainDelay,0,50)
+      ||motion.speedFactor!==undefined&&!finite(motion.speedFactor,.001,maximumSpeed)||motion.terrainDelay!==undefined&&!finite(motion.terrainDelay,0,50)
       ||!validSlowIntervals(motion.stagger,version,motion.start,tick)
       ||!validStunIntervals(motion.stuns,version,motion.start,tick)&&!validMechanoidEmpIntervals(motion.stuns,version,motion.start,tick,m.emp)
       ||Math.max(Math.abs(motion.from.x-motion.to.x),Math.abs(motion.from.z-motion.to.z))!==1
@@ -68,9 +78,9 @@ export function validMechanoidShape(value:unknown,version:number,tick:number):va
     const validPause=version>=208&&object(s)&&object(pause)&&keys(pause,['ticks','lastAtCore'])
       &&pause.lastAtCore===tick*10&&integer(pause.lastAtCore,Number(s.atCore))&&integer(pause.ticks,0,pause.lastAtCore-Number(s.atCore));
     const pausedTicks=validPause&&object(pause)?Number(pause.ticks):0;
-    if(s!==null&&(!object(s)||!keys(s,['structure','targetId','atCore','untilCore','tool','outcome',...(version>=208?['empPause']:[])])||!(integer(s.targetId,1)||version>=256&&s.targetId===null&&s.structure===undefined)
-      ||Object.hasOwn(s,'empPause')&&!validPause||!integer(s.atCore,0,tick*10)||!integer(s.untilCore,tick*10+1)
-      ||s.untilCore-s.atCore!==(m.mechKind==='pikeman'&&(s.tool==='barrel'||s.tool==='barrel-poke')?156:120)+pausedTicks||typeof s.tool!=='string'||!tools(m.mechKind).includes(s.tool)
+    if(s!==null&&(!object(s)||!keys(s,['structure','targetId','atCore','untilCore','tool','outcome',...(version>=208?['empPause']:[]),...(isSchema277OrLater(version)?['suspendedCore277']:[])])||!(integer(s.targetId,1)||version>=256&&s.targetId===null&&s.structure===undefined)
+      ||Object.hasOwn(s,'suspendedCore277')&&(!isSchema277OrLater(version)||!integer(s.suspendedCore277,1,tick*10-Number(s.atCore)))||Object.hasOwn(s,'empPause')&&!validPause||!integer(s.atCore,0,tick*10)||!integer(s.untilCore,tick*10+1)
+      ||s.untilCore-s.atCore!==(m.mechKind==='pikeman'&&(s.tool==='barrel'||s.tool==='barrel-poke')?156:120)+pausedTicks+Number(s.suspendedCore277??0)||typeof s.tool!=='string'||!tools(m.mechKind).includes(s.tool)
       ||typeof s.outcome!=='string'||!['hit','miss','dodge'].includes(s.outcome)||s.structure!==undefined&&(!cell(s.structure)||s.outcome!=='hit')))return false;
   }
   return true;
@@ -114,7 +124,7 @@ export function validateMechanoids(w:World,version:number=w.schemaVersion,ids:Nu
           ||!structure&&[w.pawns,w.mechanoids??[],w.piles,w.jobs,w.resources,w.wildlife?.animals??[]].some(owners=>owners.some(t=>t.id===s.targetId))
           ||w.packed.some(p=>p.building.id===s.targetId))errors.push('Invalid mechanoid barrier recovery.');
       }else if(!(version>=256&&s.targetId===null)&&!w.pawns.some(t=>t.id===s.targetId)&&!w.wildlife?.animals.some(t=>t.id===s.targetId)
-        &&!w.piles.some(p=>p.id===s.targetId&&(!!p.corpse||!!p.humanCorpse||!!p.mechCorpse))&&!w.raids?.departed.some(t=>t.pawnId===s.targetId))errors.push('Mechanoid recovery has no historical target.');
+        &&!findShipCasketActor277(w,{kind:'human',id:s.targetId!})&&!findShipCasketActor277(w,{kind:'animal',id:s.targetId!})&&!w.piles.some(p=>p.id===s.targetId&&(!!p.corpse||!!p.humanCorpse||!!p.mechCorpse))&&!w.raids?.departed.some(t=>t.pawnId===s.targetId))errors.push('Mechanoid recovery has no historical target.');
     }
   }
   return errors;

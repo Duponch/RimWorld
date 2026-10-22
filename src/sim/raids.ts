@@ -1,3 +1,4 @@
+import {shipCasketHumanReferences277,shipCasketTerminalParticipant277} from './ship-casket-notifications-277.ts';
 import {isSchema275OrLater} from './schema-compatibility-257.ts';
 import {mechRaidGroups261,multiRaid261} from './mechanical-raid-groups-261.ts';
 import {retainRaidResult261} from './temp-map-raids-261.ts';
@@ -41,7 +42,7 @@ export function enableRaids(w:World):void {
 export function stopRaidEngagement(p:Pawn):void {cancelShooting(p);cancelMelee(p);delete p.tactics;p.path=[];if(p.raid)p.raid.goal=null;p.planCooldown=0;}
 /** One original Lord, with the same retreat/contact rules in either owner. */
 function advanceHumanRaidGroup(w:World,a:RaidGroup,independent=false):void {
- const s=w.raids!,cassandra=s.profile==='cassandra-raids-v1',members=w.pawns.filter(p=>a.members.includes(p.id));
+ const s=w.raids!,cassandra=s.profile==='cassandra-raids-v1',members=[...w.pawns,...shipCasketHumanReferences277(w)].filter(p=>a.members.includes(p.id)),terminal=a.members.flatMap(id=>{const r=shipCasketTerminalParticipant277(w,id,'human',a.id);return r?[r]:[];}),destroyed=terminal.filter(r=>r.destroyed).length;
  for(const p of members)if((p.state==='dead'||p.state==='downed'||p.prisoner||p.recruitment?.raidGroup===a.id)&&!a.lost.includes(p.id))a.lost.push(p.id);a.lost.sort((a,b)=>a-b);
  if(a.phase==='assault'){
   const reason=a.lossPermille!==null&&a.lost.length*1000>=a.members.length*a.lossPermille?'losses':a.deadline!==null&&w.tick>=a.deadline?'timeout':!w.pawns.some(p=>isColonist(p)&&p.state!=='dead'&&p.state!=='downed')?'colony-down':undefined;
@@ -49,7 +50,7 @@ function advanceHumanRaidGroup(w:World,a:RaidGroup,independent=false):void {
  }
  if(!members.some(p=>p.state!=='dead'&&p.state!=='downed'&&!p.prisoner&&!isColonist(p))){
   const captured=members.filter(p=>p.state!=='dead'&&(p.prisoner||p.recruitment?.raidGroup===a.id)).length;
-  s.last={id:a.id,tick:w.tick,reason:a.reason==='colony-down'?'colony-down':s.departed.some(d=>a.members.includes(d.pawnId))?'withdrawn':'defended',killed:members.filter(p=>p.state==='dead').length,downed:members.filter(p=>p.state==='downed'&&!p.prisoner&&!p.recruitment).length,escaped:a.members.length-members.length,...captured?{captured}:{},...a.composition?{composition:a.composition}:{},...a.originQuestId!==undefined?{originQuestId:a.originQuestId}:{},...a.caravan261?{caravan261:a.caravan261,memberCount261:a.members.length}:{},...a.shipReactor275?{shipReactor275:{...a.shipReactor275}}:{}};
+  s.last={id:a.id,tick:w.tick,reason:a.reason==='colony-down'?'colony-down':s.departed.some(d=>a.members.includes(d.pawnId))?'withdrawn':'defended',killed:members.filter(p=>p.state==='dead').length+terminal.filter(r=>!r.destroyed&&r.actor.health?.death).length,...destroyed?{destroyed277:destroyed}:{},downed:members.filter(p=>p.state==='downed'&&!p.prisoner&&!p.recruitment).length,escaped:a.members.length-members.length-terminal.length,...captured?{captured}:{},...a.composition?{composition:a.composition}:{},...a.originQuestId!==undefined?{originQuestId:a.originQuestId}:{},...a.caravan261?{caravan261:a.caravan261,memberCount261:a.members.length}:{},...a.shipReactor275?{shipReactor275:{...a.shipReactor275}}:{}};
   for(const p of members)if(p.raid&&!p.prisoner){p.raid.exiting=true;stopRaidEngagement(p);}
   retainRaidResult261(w);s.completed++;if(independent)s.extraActive261=s.extraActive261!.filter(g=>g!==a);else delete s.active;
   if(!a.shipReactor275&&!tempMapModern261(w)&&!mechRaidGroups261(w).length&&!s.extraActive261?.length)s.nextCheck=s.profile==='camp-pressure-v1'?null:cassandra?s.cassandra!.pending[0]!:w.tick+Math.floor(TICKS_PER_DAY*(6+raidRandom(s)*2));

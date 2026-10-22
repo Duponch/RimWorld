@@ -22,7 +22,7 @@ export const romanceMemoryDuration=(kind:RomanceMemoryKind):number=>ROMANCE_MEMO
 const oldest=(a:RomanceMemory,b:RomanceMemory)=>a.at<b.at||a.at===b.at&&a.otherId<b.otherId?a:b;
 
 export function expireRomanceMemories(pawn:Pawn,tick:number):void {
-  if(pawn.cryptosleepHeldAt271!==undefined)return;
+  if((pawn.cryptosleepHeldAt271!==undefined||pawn.shipCryptosleepHeldAt277!==undefined))return;
   if(!pawn.romanceMemories?.some(memory=>memoryExpiry271(memory,memory.at+romanceMemoryDuration(memory.kind))<=tick))return;
   pawn.romanceMemories=pawn.romanceMemories.filter(memory=>memoryExpiry271(memory,memory.at+romanceMemoryDuration(memory.kind))>tick);
   if(!pawn.romanceMemories.length)delete pawn.romanceMemories;

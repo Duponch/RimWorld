@@ -4,6 +4,8 @@ import {isSchema275OrLater} from './schema-compatibility-257.ts';
 import {shipChunkNextRandom256} from './ship-chunk-leavings-256.ts';
 import {isPlayerCasket271} from './cryptosleep-state-271.ts';
 import {planCryptosleepRemoval271} from './cryptosleep-removal-271.ts';
+import {isShipCasket277} from './ship-casket-state-277.ts';
+import {planShipCasketRemoval277} from './ship-casket-removal-277.ts';
 import {fermentationContents265} from './fermentation-state-265.ts';
 import {drawShipChunkDeconstruction256} from './ship-chunk-leavings-256.ts';
 import {isAncientCasket256} from './ancient-casket-state-256.ts';
@@ -29,6 +31,7 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   if (!structure || !deconstructionAvailable(world, job, pawn.id)) return false;
   const shipPart=isShipPartKind276(structure.kind);if(shipPart&&!(isShipAddedKind276(structure.kind)?isSchema276OrLater(world.schemaVersion):isSchema275OrLater(world.schemaVersion)))return false;
   if(isPlayerCasket271(structure)){const plan=planCryptosleepRemoval271(world,structure,'deconstruct');return plan.ok&&plan.commit();}
+  if(isShipCasket277(structure)){const plan=planShipCasketRemoval277(world,structure,'deconstruct');return plan.ok&&plan.commit();}
   if(isAncientCasket256(structure)){const plan=planEmptyAncientCasketRemoval256(world,structure,'deconstruct');return plan.ok&&plan.commit();}
   const bedOwnership=prepareBedOwnershipTransition256(world,structure,'destroy');
   const fogRemoval=prepareRemovedFogStructure256(world,structure);

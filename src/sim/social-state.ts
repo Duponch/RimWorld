@@ -87,7 +87,7 @@ export const kindWordsMoodMemories=(pawn:Pawn,tick:number)=>socialMoodMemories(p
 
 /** Cleanup runs on retained dead actors too. Merging chitchat never refreshes its clock. */
 export function expireSocialMemories(pawn:Pawn,tick:number):void {
-  if(pawn.cryptosleepHeldAt271!==undefined)return;
+  if((pawn.cryptosleepHeldAt271!==undefined||pawn.shipCryptosleepHeldAt277!==undefined))return;
   if(pawn.romanceMemories)expireRomanceMemories(pawn,tick);
   const s=pawn.social;if(!s)return;
   for(const m of s.memories)if(m.kind==='chitchat'){

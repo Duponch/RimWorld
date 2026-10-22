@@ -1,3 +1,4 @@
+import {SHIP_CASKET_CONTENT_277} from './ship-casket-content-277.ts';
 import {SHIP_BEAM_CONTENT_276,SHIP_ENGINE_CONTENT_276} from './ship-part-content-276.ts';
 import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import {isProstheticItem273} from './prosthetic-content-273.ts';
@@ -16,6 +17,7 @@ import { floraDefinition } from './biome-flora.ts';
 
 /** Only shipped definitions. Missing/non-HP things are deliberately not fuels. */
 const BUILDINGS:Readonly<Record<string,readonly [number,number,boolean]>>={
+  'ship-cryptosleep-casket':[SHIP_CASKET_CONTENT_277.maxHitPoints,SHIP_CASKET_CONTENT_277.flammability,SHIP_CASKET_CONTENT_277.leavesResourcesWhenKilled],
   'ship-beam':[SHIP_BEAM_CONTENT_276.maxHitPoints,SHIP_BEAM_CONTENT_276.flammability,SHIP_BEAM_CONTENT_276.leavesResourcesWhenKilled],
   'ship-engine':[SHIP_ENGINE_CONTENT_276.maxHitPoints,SHIP_ENGINE_CONTENT_276.flammability,SHIP_ENGINE_CONTENT_276.leavesResourcesWhenKilled],
   'ship-reactor':[500,0,true],

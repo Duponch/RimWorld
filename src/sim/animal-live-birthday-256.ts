@@ -20,7 +20,7 @@ export function applyLiveAnimalBirthday256(world:{schemaVersion:number;tick:numb
  for(const kind of ANIMAL_BIRTHDAY_KINDS_256){if(!(random.value()<animalBirthdayChance256(kind,fraction)))continue;
   const record=a.health??createAnimalMedicalRecord256(world,a,Math.max(0,world.tick-1)),result=tryApplyAnimalAgeCondition256(record,kind,random);
   if(result.status==='blocked')throw Error('Actual birthday native anatomy is unavailable');
-  if(result.status==='applied'){for(const c of result.added)c.bornAt=world.tick;a.health=record;}
+  if(result.status==='applied'){for(const c of result.added)c.bornAt=world.tick-(record.civilTick271===undefined?0:record.civilTick271-record.tick);a.health=record;}
  }
  // No initial-generation severity simulation, medical catch-up, tending,
  // health repair or replay of earlier birthday years is performed here.

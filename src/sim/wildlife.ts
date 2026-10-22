@@ -1,3 +1,4 @@
+import {recordShipCasketFilthMovement277} from './filth.ts';
 import {siteAmbushWaiting263} from './world-site-ambush-263.ts';
 import {advanceGeographicRenewal262} from './geographic-renewal-runtime-262.ts';
 import {processHivePriority256,processHiveWander256} from './cave-hive-lord-256.ts';
@@ -227,6 +228,7 @@ export function advanceWildlife(world:World,duckFlyerServices:DuckFlyerServices2
     a.rest=Math.max(0,Math.min(1,a.rest+(a.state==='sleeping'?.0003809524*.8:-.00015833333*(a.rest<.01?.6:a.rest<.14?.3:a.rest<.28?.7:1))));
     // Transport owns position only: life, health, bleeding and needs still advance.
     if(world.schemaVersion>=221&&animalCarrier(world,a.id))continue;
+    if(a.filthFeet&&a.motion&&a.motion.end>world.tick-1&&a.motion.end<=world.tick)recordShipCasketFilthMovement277(world,a);
     if(a.exitFlight)continue;
     if(!a.burning&&!a.flee&&!a.retaliation&&siteAmbushWaiting263(world,a.id,'animal')){a.path=[];if(!a.motion||a.motion.end<=world.tick)a.state='idle';continue;}
     advanceAnimalManhunter(world,a);

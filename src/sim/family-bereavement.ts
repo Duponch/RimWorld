@@ -16,7 +16,7 @@ export const FAMILY_DEATH_LABELS:Readonly<Record<FamilyDeathKind,string>>=Object
 });
 export const familyDeathOffset=(kind:FamilyDeathKind):number=>FAMILY_DEATH_MOOD[kind.slice(0,-5) as FamilyDeathRelation];
 export function expireFamilyBereavement(pawn:Pawn,tick:number):void {
-  if(pawn.cryptosleepHeldAt271!==undefined)return;
+  if((pawn.cryptosleepHeldAt271!==undefined||pawn.shipCryptosleepHeldAt277!==undefined))return;
   if(!pawn.familyBereavement?.some(m=>memoryExpiry271(m,m.at+FAMILY_DEATH_DURATION)<=tick))return;
   pawn.familyBereavement=pawn.familyBereavement.filter(m=>memoryExpiry271(m,m.at+FAMILY_DEATH_DURATION)>tick);
   if(!pawn.familyBereavement.length)delete pawn.familyBereavement;

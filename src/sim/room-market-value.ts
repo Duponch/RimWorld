@@ -1,3 +1,4 @@
+import {SHIP_CASKET_CONTENT_277} from './ship-casket-content-277.ts';
 import {SHIP_BEAM_CONTENT_276,SHIP_ENGINE_CONTENT_276} from './ship-part-content-276.ts';
 import {BEDROLL_TEXTILE_MARKET_VALUES_256} from './bedroll-textiles-256.ts';
 import { FURNITURE_MATERIALS,isSculptureKind,isSculptureMaterial,sculptureWorkToMakeCore } from './furniture-stats.ts';
@@ -49,6 +50,7 @@ const def = (stuff: number, work: number, passability: Passability,
  * inheriting a fictitious value. Historical untyped furniture keeps Core's
  * abstract-stuff estimate rather than receiving a fabricated material. */
 const BUILDINGS: Readonly<Record<StructureKind, BuildingValueDef>> = Object.freeze({
+ 'ship-cryptosleep-casket':def(0,SHIP_CASKET_CONTENT_277.coreWork,'pass-through',Object.fromEntries(SHIP_CASKET_CONTENT_277.ingredients.map(c=>[c.item,c.quantity]))),
  'ship-beam':def(0,SHIP_BEAM_CONTENT_276.coreWork,'impassable',Object.fromEntries(SHIP_BEAM_CONTENT_276.ingredients.map(c=>[c.item,c.quantity]))),
  'ship-engine':def(0,SHIP_ENGINE_CONTENT_276.coreWork,'impassable',Object.fromEntries(SHIP_ENGINE_CONTENT_276.ingredients.map(c=>[c.item,c.quantity]))),
  'ship-reactor':def(0,65000,'impassable',{steel:350,plasteel:280,uranium:70,'advanced-component':8}),

@@ -1,3 +1,4 @@
+import {isSchema277OrLater} from './schema-compatibility-257.ts';
 import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {medicalCivilTick271,validMedicalCivilHeader271} from './suspended-human-clock-271.ts';
@@ -37,7 +38,7 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
   if(mechanical){allowHeat=false;allowCold=false;allowInfection=false;allowMalnutrition=false;allowFoodPoison=false;allowFlu=false;}
   const species=object(value)&&isAnimalSpecies(value.body)?value.body:undefined;
   const fail='Invalid medical record';
-  if(!validMedicalCivilHeader271(value,version,!animal&&!mechanical))return fail;
+  if(!validMedicalCivilHeader271(value,version,!mechanical&&(!animal||isSchema277OrLater(version))))return fail;
   if(!validAlcoholHeader265(value,version,!animal&&!mechanical))return fail;
   if(!validScariaRecord261(value,version,animal))return fail;
   if(!validHumanHealthScaleHeader256(value,version,!animal&&!mechanical))return fail;
@@ -47,7 +48,7 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
   if(clinicalAnimal&&(!object(value)||version<256||!integer(value.tick)||!Number.isSafeInteger(value.animalBirthTick)||Number(value.animalBirthTick)>value.tick||!Number.isSafeInteger(value.tick-Number(value.animalBirthTick))))return fail;
   const model=mechanicalKind?mechanoidBodyModel(mechanicalKind):animal&&species?medicalModel({body:species,tick:Number((value as Record<string,unknown>).tick),animalBirthTick:(value as Record<string,unknown>).animalBirthTick as number,animalGrowth:(value as Record<string,unknown>).animalGrowth as number}):medicalModel({humanHealthScale:object(value)?value.humanHealthScale as number:undefined}),BODY_PARTS=model.byId,PART_INJURY_RULES=injuryPartRules(model);
   const bodyPartExists=(id:unknown)=>modelHasPart(model,id);
-  if(!object(value)||!keys(value,[...(isSchema271OrLater(version)&&!animal&&!mechanical?['civilTick271']:[]),...((version===261||(Number(version)===262||isSchema263OrLater(Number(version))))&&animal?['scaria261']:[]),...(animal||mechanical?['body']:[]),...(clinicalAnimal&&version>=256?['animalBirthTick']:[]),...(animal&&species&&version>=256?['animalGrowth','animalAgeConditions']:[]),'tick','nextInjuryId','injuries','missing','bloodLoss','death',...(isSchema265OrLater(version)&&!animal&&!mechanical?['alcohol']:[]),...(allowHeat?['heatstroke']:[]),...(allowCold?['hypothermia']:[]),...(allowInfection?['infections']:[]),...(allowMalnutrition?['malnutrition']:[]),...(allowFoodPoison?['foodPoisoning']:[]),...(version>=256&&!mechanical?['cryptosleepSickness','toxicBuildup',...(!animal?['animalAgeConditions','humanHealthScale']:[])]:[]),...(allowFlu&&!animal&&!mechanical?['flu']:[]),...(version>=207&&!animal&&!mechanical?['immuneDiseases']:[]),...(version>=138&&!animal&&!mechanical?['ageAilments']:[]),...(version>=179&&!animal&&!mechanical?['anesthetic']:[]),...(version>=210&&!animal&&!mechanical?['artificialParts']:[])])||!integer(value.tick)||!integer(value.nextInjuryId,1)||!integer(value.bloodLoss,0,mechanical?0:BLOOD_UNIT)||!Array.isArray(value.injuries)||!Array.isArray(value.missing))return fail;
+  if(!object(value)||!keys(value,[...(isSchema271OrLater(version)&&!mechanical&&(!animal||isSchema277OrLater(version))?['civilTick271']:[]),...((version===261||(Number(version)===262||isSchema263OrLater(Number(version))))&&animal?['scaria261']:[]),...(animal||mechanical?['body']:[]),...(clinicalAnimal&&version>=256?['animalBirthTick']:[]),...(animal&&species&&version>=256?['animalGrowth','animalAgeConditions']:[]),'tick','nextInjuryId','injuries','missing','bloodLoss','death',...(isSchema265OrLater(version)&&!animal&&!mechanical?['alcohol']:[]),...(allowHeat?['heatstroke']:[]),...(allowCold?['hypothermia']:[]),...(allowInfection?['infections']:[]),...(allowMalnutrition?['malnutrition']:[]),...(allowFoodPoison?['foodPoisoning']:[]),...(version>=256&&!mechanical?['cryptosleepSickness','toxicBuildup',...(!animal?['animalAgeConditions','humanHealthScale']:[])]:[]),...(allowFlu&&!animal&&!mechanical?['flu']:[]),...(version>=207&&!animal&&!mechanical?['immuneDiseases']:[]),...(version>=138&&!animal&&!mechanical?['ageAilments']:[]),...(version>=179&&!mechanical&&(!animal||isSchema277OrLater(version))?['anesthetic']:[]),...(version>=210&&!animal&&!mechanical?['artificialParts']:[])])||!integer(value.tick)||!integer(value.nextInjuryId,1)||!integer(value.bloodLoss,0,mechanical?0:BLOOD_UNIT)||!Array.isArray(value.injuries)||!Array.isArray(value.missing))return fail;
   if(mechanical&&(!mechanicalKind||version<(mechanicalKind==='scyther'?194:197)||value.body!==mechanicalKind||animal))return fail;
   if(animal&&(!species||!isAnimalSpeciesInVersion(species,version)||version<91&&species!=='hare'||version<178&&species==='red-fox'))return fail;
   if(value.heatstroke!==undefined&&(!allowHeat||!integer(value.heatstroke,1,1_000_000_000)))return fail;
@@ -55,7 +56,7 @@ export function validateMedicalRecord(value:unknown,allowGunshot=true,allowBite=
   if(value.malnutrition!==undefined&&(!allowMalnutrition||!integer(value.malnutrition,1,1_000_000_000)))return fail;
   if(!validFoodPoisoning(value.foodPoisoning,value.tick,allowFoodPoison,version)||animal&&object(value.foodPoisoning)&&value.foodPoisoning.cause==='dangerous-food')return fail;
   if(!validFlu(value as unknown as MedicalRecord,allowFlu&&!animal)||!validImmuneDiseases(value.immuneDiseases,value as unknown as MedicalRecord,version))return fail;
-  if(!validAnesthetic(value.anesthetic,value.tick,version>=179&&!animal&&!mechanical,undefined,medicalCivilTick271(value as unknown as MedicalRecord),version))return fail;
+  if(!validAnesthetic(value.anesthetic,value.tick,version>=179&&!mechanical&&(!animal||isSchema277OrLater(version)),undefined,medicalCivilTick271(value as unknown as MedicalRecord),version))return fail;
   if(value.ageAilments!==undefined&&(!Array.isArray(value.ageAilments)||value.ageAilments.length<1||value.ageAilments.length>2||new Set(value.ageAilments).size!==value.ageAilments.length||value.ageAilments.some(a=>a!=='bad-back'&&a!=='frail')))return fail;
   const ids=new Set<number>();let total=0;
   for(const i of value.injuries) {

@@ -14,7 +14,7 @@ export function medicalElapsedTicks271(record:MedicalRecord,targetCivil:number):
  return elapsed;
 }
 /** Header admission is descriptor-first, including explicit undefined and
- * inherited/accessor values. This extension is only bound to human owners. */
+ * inherited/accessor values. The caller admits humans271 or the prospective flesh-animal277 domain. */
 export function validMedicalCivilHeader271(value:unknown,version:number,human=true):boolean {
  if(!value||typeof value!=='object')return false;
  const d=Object.getOwnPropertyDescriptor(value,'civilTick271');if(!d)return !('civilTick271'in value);

@@ -1,3 +1,5 @@
+import {isSchema277OrLater} from './schema-compatibility-257.ts';
+import {isShipCasketKind277} from './ship-casket-content-277.ts';
 import {isSchema275OrLater,isSchema276OrLater} from './schema-compatibility-257.ts';
 import {isShipAddedKind276,isShipOrientation276} from './ship-part-content-276.ts';
 import type {PackedFurniture} from './furniture-rules.ts';
@@ -21,10 +23,10 @@ export function validatePower(world:World|Pick<World,'tick'>,version:number,only
     if(s.kind==='battery'){
       if(version<85||!battery||typeof battery!=='object'||Array.isArray(battery)||Object.keys(battery).some(k=>k!=='stored'&&(k!=='half'||version<87))||!Number.isSafeInteger(battery.stored)||battery.stored<0||battery.stored>BATTERY_CAPACITY||battery.half!==undefined&&(battery.half!==true||battery.stored===BATTERY_CAPACITY))errors.push('Invalid battery energy.');
     }else if(battery!==undefined)errors.push('Unexpected battery energy.');
-    if(isShipAddedKind276(s.kind)){
+    if(isShipAddedKind276(s.kind)||isShipCasketKind277(s.kind)){
       // Native passive transmitter, using the existing local grid adapter.
       // No supply, consumer state, switch, minification or power parent.
-      if(!isSchema276OrLater(version)||packed||s.material!=='steel'||s.footprint!=='standard'||!isShipOrientation276(s.orientation)
+      if(!(isShipCasketKind277(s.kind)?isSchema277OrLater(version):isSchema276OrLater(version))||packed||s.material!=='steel'||s.footprint!=='standard'||!isShipOrientation276(s.orientation)
         ||!p||typeof p!=='object'||Array.isArray(p)||Object.getPrototypeOf(p)!==Object.prototype||Reflect.ownKeys(p).length!==2
         ||!['on','parentId'].every(k=>{const d=Object.getOwnPropertyDescriptor(p,k);return !!d?.enumerable&&Object.hasOwn(d,'value');})
         ||p.on!==false||p.parentId!==null)errors.push('Invalid passive ship-part transmitter.');

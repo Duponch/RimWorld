@@ -1,3 +1,4 @@
+import {medicalCivilTick271,medicalElapsedTicks271} from './suspended-human-clock-271.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {advanceOffmapThermal259} from './offmap-thermal-259.ts';
 import {commitToxicDeath256} from './toxic-buildup-256.ts';
@@ -55,12 +56,12 @@ export function advanceCaravanAnimalBiology256(w:World,g:Group,c:AnimalBiologica
  const residents=[...owners?.members??[]];
  for(const a of residents){if(a.state==='dead'||a.health?.death)throw Error('Terminal animal still active');const o=origin(g,a),oldAge=a.ageTicks;if(!Number.isSafeInteger(oldAge+1))throw Error('Animal age exhausted');if(a.growthTracker){const oldAgeCore=a.ageTicks*10+(a.ageCoreRemainder??0);advanceTrackedAnimalAge256(a,{atCore:w.tick*10,deltaCore:10,hungerMultiplier:animalGrowthFactor(a),suspended:false});synchronizeAnimalGrowthMedical256(a);applyLiveAnimalBirthday256(w,a,oldAgeCore,c.random);}else a.ageTicks++;
   if(a.food<=0)a.health??=createAnimalMedicalRecord256(w,a,w.tick-1);
-  if(a.health){if(a.health.tick!==w.tick-1&&a.health.tick!==w.tick)throw Error('Animal clinical frontier skipped');const rest=c.clinicalRest(a);
+  if(a.health){if(medicalCivilTick271(a.health)!==w.tick-1&&medicalCivilTick271(a.health)!==w.tick)throw Error('Animal clinical frontier skipped');const rest=c.clinicalRest(a);
    const conditionFrontier=caravanAnimalConditionFrontier256(a,a.health,c.random);
-   advanceMedical(a.health,w.tick-a.health.tick,{phase:a.id%60,toxicOwner:{id:a.id,spawned:false,awake:a.state!=='sleeping'},cryptosleepSicknessSpawned:false,posture:rest.resting?'ground':'standing',starving:a.food<=0,malnutritionRate:malnutritionRate(a.id),hunger:a.food/animalNutritionMax(a)*100,rest:a.rest*100,restingBonus:rest.resting&&a.state!=='downed',infectionSeed:(o.context.seed^Math.imul(a.id,0x9e3779b1))>>>0},c.random,conditionFrontier);conditionFrontier?.commit();
+   advanceMedical(a.health,medicalElapsedTicks271(a.health,w.tick),{phase:a.id%60,toxicOwner:{id:a.id,spawned:false,awake:a.state!=='sleeping'},cryptosleepSicknessSpawned:false,posture:rest.resting?'ground':'standing',starving:a.food<=0,malnutritionRate:malnutritionRate(a.id),hunger:a.food/animalNutritionMax(a)*100,rest:a.rest*100,restingBonus:rest.resting&&a.state!=='downed',infectionSeed:(o.context.seed^Math.imul(a.id,0x9e3779b1))>>>0},c.random,conditionFrontier);conditionFrontier?.commit();
   }
   if(Number(w.schemaVersion)===259||Number(w.schemaVersion)===260||(Number(w.schemaVersion)===261||(Number(w.schemaVersion)===262||isSchema263OrLater(Number(w.schemaVersion)))))advanceOffmapThermal259(a,g.items,w.tick*10,c.temperature,()=>createAnimalMedicalRecord256(w,a,w.tick));
-  if(a.health){const status=medicalStatus(a.health);if(status==='dead'){commitToxicDeath256(a.health,c.random);a.state='dead';if(isAnimalSpecies256(a.species))a.ageTicks=a.health.death!.tick-a.health.animalBirthTick!;unclaimDetachedActorBed256(a);c.retire(a,o);continue;}a.state=status==='downed'?'downed':'idle';
+  if(a.health){const status=medicalStatus(a.health);if(status==='dead'){commitToxicDeath256(a.health,c.random);a.state='dead';if(isAnimalSpecies256(a.species))a.ageTicks=a.health.tick-a.health.animalBirthTick!;unclaimDetachedActorBed256(a);c.retire(a,o);continue;}a.state=status==='downed'?'downed':'idle';
   }
   const product=animalProductDefinition(a);if(product&&a.domestic)a.domestic.productFullness=Math.min(1,(a.domestic.productFullness??0)+animalGrowthFactor(a)/(product.days*6000));
   const pregnancy=a.pregnancy;if(pregnancy){const factor=animalGrowthFactor(a),accrue=factor===1||factor===.5&&(w.tick+a.id)%2===0||factor===.25&&(w.tick+a.id)%4===0;if(accrue)pregnancy.progress=Math.min(gestationTicks(a.species),pregnancy.progress+1);

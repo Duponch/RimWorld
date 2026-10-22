@@ -92,7 +92,7 @@ export function readFirstDayGuide(world:World,food:FoodReadability=captureFoodRe
   const availability=readAvailabilityStatusAlerts(world),absence=availability[0];
   const absenceTarget=absence?.targets[0];
   const absenceAction:FirstDayGuideAction=absenceTarget?{target:absenceTarget,...absence?.tab?{tab:absence.tab}:{}}:absence?.context?{...absence.context}:{panel:'menu'};
-  const absenceActionLabel=absenceTarget?`Consulter ${absence?.tab==='health'?'Santé':absence?.tab==='needs'?'Besoins':'Prisonnier'}`:absence?.context?.panel==='world'?'Ouvrir Monde':'Ouvrir Menu';
+  const absenceActionLabel=absenceTarget?absenceTarget.kind==='object'?'Inspecter le caisson':`Consulter ${absence?.tab==='health'?'Santé':absence?.tab==='needs'?'Besoins':'Prisonnier'}`:absence?.context?.panel==='world'?'Ouvrir Monde':'Ouvrir Menu';
   return [
     {id:'work',title:absence?'Comprendre la disponibilité des colons':'Répartir le travail',status:noPeople?'optional':absence||missingWork.length?'missing':'ready',
       detail:absence?`${absence.text}.${availability.length>1?` ${availability.slice(1).map(row=>row.text).join('. ')}.`:''}`:noPeople?'Aucun colon libre vivant sur cette carte.':missingWork.length?`À activer : ${missingWork.join(', ')}.`:'Transport, Construction et Culture ont un titulaire affecté.',

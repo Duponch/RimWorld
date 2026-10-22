@@ -1,3 +1,5 @@
+import {recordShipCasketFilthMovement277} from './filth.ts';
+import {shipCasketCarrierOf277,syncShipCasketPassenger277} from './ship-casket-carry-277.ts';
 import {mechanicalDuty256,mechanicalOrder256,sleepingTempleMech256} from './temple-mech-duty-256.ts';
 import { mechanoidDefinition } from './mechanoid-definition.ts';
 import { mechanoidBodyModel } from './mechanoid-anatomy.ts';
@@ -103,6 +105,8 @@ function travel(w:World,m:Mechanoid,next:Cell,getLight:LightReader,blocked:Uint8
 }
 /** Physical decisions share the caller's terrain/light and acquisition capture. */
 export function processMechanoidCombat(w:World,m:Mechanoid,getBlocked:NavigationGrid,budget:SearchBudget,getLight:LightReader,batch=mechanoidCombatBatch(w,getBlocked)):void {
+  const casketCarrier=shipCasketCarrierOf277(w,{kind:'mechanical',id:m.id});if(casketCarrier){syncShipCasketPassenger277(w,casketCarrier);return;}
+  if(m.filthFeet&&m.motion&&m.motion.end>w.tick-1&&m.motion.end<=w.tick)recordShipCasketFilthMovement277(w,m);
   if(sleepingTempleMech256(m))return;
   m.moveCooldown=Math.max(0,(m.motion?.end??w.tick)-w.tick);m.planCooldown=Math.max(0,m.planCooldown-1);
   if(empMechanoidActive(m,w.tick*10))return;
@@ -180,7 +184,7 @@ export function advanceMechanoidCombat(w:World,m:Mechanoid,core:number,batch=mec
   if(m.ranged?.stance)return false;
   const melee=m.melee;if(!melee)return false;
   if(!melee.order&&!melee.strike){delete m.melee;return false;}
-  if(m.state==='dead'||m.state==='downed'||m.stun&&core<m.stun.untilCore||empMechanoidActive(m,core)||melee.strike||(m.motion?.end??0)>core/10)return false;
+  if(shipCasketCarrierOf277(w,{kind:'mechanical',id:m.id})||m.state==='dead'||m.state==='downed'||m.stun&&core<m.stun.untilCore||empMechanoidActive(m,core)||melee.strike||(m.motion?.end??0)>core/10)return false;
   const group=readMechRaid(w,m);if(!group){cancelMelee(m);m.path=[];return false;}
   if(melee.order?.structure){
     const target=w.structures.find(s=>s.id===melee.order!.targetId&&isBarrier(s));

@@ -1,3 +1,4 @@
+import {captureShipCasketHumans277} from './ship-casket-state-277.ts';
 import {ancientCasketHumanOwnersForWorld256} from './ancient-casket-state-256.ts';
 import {cryptosleepHumanOwnersForWorld271} from './cryptosleep-state-271.ts';
 /** Human owner capture shared by runtime and save guards.
@@ -11,10 +12,10 @@ import type {PackedFurniture} from './furniture-rules.ts';
 import type {RelationshipPeople,RelationshipPerson} from './relationship-state.ts';
 import type {GroupDepartureBaseline,GroupLoss,GroupState} from './group-state.ts';
 
-export type HumanOwnerKind='map'|'world-lost'|'ancient-casket'|'player-casket'|'starting-pod'|'scout-away'|'commercial-away'|'group-away'|'group-loss'
+export type HumanOwnerKind='map'|'world-lost'|'ancient-casket'|'player-casket'|'ship-casket'|'starting-pod'|'scout-away'|'commercial-away'|'group-away'|'group-loss'
   |'visitor-departure'|'pod-departure'|'raid-departure'|'prison-departure'|'world-pawn'|'caravan-encounter';
 export type HumanSimulation='local'|'world'|'frozen'|'identity-only';
-export type HumanPlace={kind:'map'}|{kind:'ancient-casket';casketId:number}|{kind:'player-casket';casketId:number}|{kind:'starting-pod';podId:number}|{kind:'planet';tile:number}|{kind:'legacy-trip'}|{kind:'archive'}|{kind:'world-pawn'};
+export type HumanPlace={kind:'map'}|{kind:'ancient-casket';casketId:number}|{kind:'player-casket';casketId:number}|{kind:'ship-casket';casketId:number}|{kind:'starting-pod';podId:number}|{kind:'planet';tile:number}|{kind:'legacy-trip'}|{kind:'archive'}|{kind:'world-pawn'};
 export interface HumanOwnerSlot {
   readonly id:number;readonly name:string;readonly kind:HumanOwnerKind;
   readonly simulation:HumanSimulation;readonly place:HumanPlace;
@@ -77,6 +78,7 @@ export function everyHumanPawnOwner(realWorld:World,predicate:(pawn:Pawn,kind:Hu
   for(const pawn of realWorld.pawns)if(!predicate(pawn,'map'))return false;
   for(const held of ancientCasketHumanOwnersForWorld256(realWorld))if(!predicate(held.pawn,'ancient-casket'))return false;
   for(const held of cryptosleepHumanOwnersForWorld271(realWorld))if(!predicate(held.pawn,'player-casket'))return false;
+  for(const held of captureShipCasketHumans277(realWorld))if(!predicate(held.pawn,'ship-casket'))return false;
   if(realWorld.startingArrival&&realWorld.startingArrival.phase!=='opened')for(const pod of realWorld.startingArrival.pods)
     if(!predicate(pod.pawn,'starting-pod'))return false;
   const scout=realWorld.scout,commercial=realWorld.commercialTrip;
@@ -123,7 +125,7 @@ export function captureHumanOwners(realWorld:World,explicit:ExplicitWorldHumanOw
     if(kind==='group-away'&&dead)fail('group-owns-dead','Group living roster still owns a dead human; complete the terminal transfer before capture.');
     if(kind==='group-loss'&&(pawn.state!=='dead'||deathAt===undefined))
       fail('missing-terminal-death','New terminal requires the real dead Pawn and clinical death clock; do not invent either.');
-    const status=dead?'dead':kind==='map'?'present':kind==='starting-pod'||kind==='ancient-casket'||kind==='player-casket'||simulation==='world'?'away':'departed';
+    const status=dead?'dead':kind==='map'?'present':kind==='starting-pod'||kind==='ancient-casket'||kind==='player-casket'||kind==='ship-casket'||simulation==='world'?'away':'departed';
     add({id:pawn.id,name:pawn.name,kind,simulation,place,validationTick:tick,pawn,status,
       ...deathAt!==undefined?{deathAt}:{},items:Object.freeze([...items]),packed:Object.freeze([...packed]),...extra});
   };
@@ -133,6 +135,8 @@ export function captureHumanOwners(realWorld:World,explicit:ExplicitWorldHumanOw
   for(const held of casketOwners)addPawn(held.pawn,held.kind,held.simulation,held.place,held.validationTick,held.items);
   const playerCasketOwners=cryptosleepHumanOwnersForWorld271(realWorld);
   for(const held of playerCasketOwners)addPawn(held.pawn,held.kind,held.simulation,held.place,held.validationTick,held.items,held.packed);
+  const shipCasketOwners=captureShipCasketHumans277(realWorld);
+  for(const held of shipCasketOwners)addPawn(held.pawn,held.kind,held.simulation,held.place,held.validationTick,held.items,held.packed);
   const arrival=realWorld.startingArrival;
   if(arrival&&arrival.phase!=='opened')for(const pod of arrival.pods){
     if(arrival.personalTick!==0)fail('starting-personal-clock','Initial capsule requires its explicit personal tick zero.');
@@ -177,14 +181,14 @@ export function captureHumanOwners(realWorld:World,explicit:ExplicitWorldHumanOw
   // complete guards retain the actual owning context for jobs and possessions.
   if(includeCampaignKnowledge)appendCampaignPeople(realWorld,people);
   const select=(predicate:(slot:HumanOwnerSlot)=>boolean)=>Object.freeze(slots.filter(predicate));
-  const isContained=(s:HumanOwnerSlot)=>s.kind==='starting-pod'||s.kind==='ancient-casket'||s.kind==='player-casket';
+  const isContained=(s:HumanOwnerSlot)=>s.kind==='starting-pod'||s.kind==='ancient-casket'||s.kind==='player-casket'||s.kind==='ship-casket';
   const local=select(s=>s.kind==='map'),away=select(s=>s.simulation==='world'),contained=select(isContained),terminals=select(s=>s.kind==='group-loss'),
     frozen=select(s=>s.kind!=='group-loss'&&!isContained(s)&&(s.simulation==='frozen'||s.simulation==='identity-only'));
   const legacy=away.filter(s=>s.kind!=='group-away'),groupAway=away.filter(s=>s.kind==='group-away'),archives=frozen;
   const countLiving=(list:readonly HumanOwnerSlot[])=>list.filter(s=>s.status!=='dead').length;
   const census:HumanOwnerCensus={localOwned:local.length,localLiving:countLiving(local),localDead:local.length-countLiving(local),
-    containedOwned:contained.length,containedLiving:countLiving(contained),containedPiles:(arrival&&arrival.phase!=='opened'?arrival.pods.reduce((n,p)=>n+p.items.length,0):0)+casketOwners.reduce((n,h)=>n+h.items.length,0)+playerCasketOwners.reduce((n,h)=>n+h.items.length,0),
-    ...(playerCasketOwners.length?{containedPacked:playerCasketOwners.reduce((n,h)=>n+h.packed.length,0)}:{}),
+    containedOwned:contained.length,containedLiving:countLiving(contained),containedPiles:(arrival&&arrival.phase!=='opened'?arrival.pods.reduce((n,p)=>n+p.items.length,0):0)+casketOwners.reduce((n,h)=>n+h.items.length,0)+playerCasketOwners.reduce((n,h)=>n+h.items.length,0)+shipCasketOwners.reduce((n,h)=>n+h.items.length,0),
+    ...(playerCasketOwners.length||shipCasketOwners.length?{containedPacked:playerCasketOwners.reduce((n,h)=>n+h.packed.length,0)+shipCasketOwners.reduce((n,h)=>n+h.packed.length,0)}:{}),
     legacyAwayOwned:legacy.length,legacyAwayLiving:countLiving(legacy),groupAwayOwned:groupAway.length,groupAwayLiving:countLiving(groupAway),terminalOwned:terminals.length,
     frozenPawnArchives:archives.filter(s=>!!s.pawn).length,simpleDepartureIdentities:archives.filter(s=>!s.pawn).length,knownHumans:people.size,
     mapPiles:realWorld.piles.length,legacyTravelPiles:legacy.reduce((n,s)=>n+s.items.length,0),groupTravelPiles:group&&'members' in group?group.items.length:0,

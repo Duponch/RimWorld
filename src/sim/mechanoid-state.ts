@@ -10,7 +10,7 @@ import type { MechanoidRangedState } from './mechanoid-ranged-state.ts';
 import type { EmpAdaptationState } from './emp-state.ts';
 
 /** Mechanical map owner. No human or animal needs, skills or inventory. */
-export interface Mechanoid extends Cell { corpseDamage?:number;
+export interface Mechanoid extends Cell { shipCryptosleepHeldAt277?:number; filthFeet?:import('./filth-rules.ts').FilthFeet; corpseDamage?:number;
   id:number;mechKind:MechanoidKind;
   /** True prospective faction instance, never synthesized for historical mechs. */
   worldFaction259?:MechanicalWorldFaction259;

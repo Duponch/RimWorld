@@ -1,3 +1,4 @@
+import {isShipCasket277,captureShipCasketAnimals277} from './ship-casket-state-277.ts';
 import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {clearingDuration} from './gathering.ts';
 import {captureHumanOwners} from './human-owners.ts';
@@ -130,7 +131,7 @@ function currentTreeDomain(w:World):boolean {
   // These are real local containers, absent from w.piles. Removed-map holders
   // belong to WorldPawns instead: their scalar owner guard and registrar own
   // the original tree once, without importing it into another map's domain.
-  if(w.structures.some(s=>isPlayerCasket271(s)&&s.cryptosleep.items.some(hasTreePayload)))return true;
+  if(w.structures.some(s=>isPlayerCasket271(s)&&s.cryptosleep.items.some(hasTreePayload)||isShipCasket277(s)&&s.shipCryptosleep277.items.some(hasTreePayload)))return true;
   const collections=[w.scout&&'pawn' in w.scout?w.scout.items:[],w.commercialTrip&&'pawn' in w.commercialTrip?w.commercialTrip.items:[],w.group&&'members' in w.group?w.group.items:[],
     ...(w.groupLosses??[]).map(l=>l.items),...(w.visitors?.departed??[]).map(d=>d.items),...(w.podRescues?.departed??[]).map(d=>d.items),...(w.raids?.departed??[]).map(d=>d.items),...(w.prisonDepartures??[]).map(d=>d.items),
     ...(w.startingArrival&&w.startingArrival.phase!=='opened'?w.startingArrival.pods.map(p=>p.items):[])];
@@ -145,6 +146,7 @@ export function validateTreeTransport(w:World,version:number=w.schemaVersion,col
     const people=captureHumanOwners(w),occurrences=captureTreeOccurrences(w,people);if(!occurrences)return false;
     const ids=new Set<number>();
     for(const collection of [w.pawns,w.resources,w.structures,w.jobs,w.piles,w.stockpiles,w.growingZones,w.wildlife?.animals??[],w.mechanoids??[],w.filth?.items??[],w.fires?.items??[],w.fires?.embers??[],w.projectiles??[],w.bombWaves??[]])for(const value of collection)ids.add(value.id);
+    for(const held of captureShipCasketAnimals277(w)){ids.add(held.animal.id);for(const p of held.items)ids.add(p.id);for(const p of held.packed){ids.add(p.building.id);for(const bill of p.building.bills??[])ids.add(bill.id);}}
     for(const p of people.slots){ids.add(p.id);for(const i of p.items)ids.add(i.id);for(const pack of p.packed){ids.add(pack.building.id);for(const b of pack.building.bills??[])ids.add(b.id);}}
     for(const s of [...w.structures,...w.packed.map(p=>p.building)]){ids.add(s.id);for(const id of s.shelf?.cells??[])ids.add(id);for(const b of s.bills??[])ids.add(b.id);}
     for(const p of w.civilianPost?.stock??[])ids.add(p.id);for(const s of w.orbital?.ships??[])ids.add(s.id);for(const d of w.orbital?.pending??[])ids.add(d.id);

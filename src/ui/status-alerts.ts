@@ -54,13 +54,18 @@ export function readAvailabilityStatusAlerts(world:World):StatusAlert[] {
   for(const person of availability.away)details.push({key:`availability-away:${person.id}`,
     text:`${person.name} · ${awayLabel(person.owner)}${phaseLabels[person.phase]?` · ${phaseLabels[person.phase]}`:''}`,
     targets:[],context:awayContext(person.owner)});
+  for(const person of availability.suspended??[]){
+    const target=personNotificationTarget(world,person.id);
+    details.push({key:`availability-suspended:${person.id}`,text:`${person.name} · vivant, en cryptosommeil dans ${person.owner==='ship-casket'?'le caisson spatial':'le caisson de colonie'}`,
+      targets:target?[target]:[]});
+  }
   for(const person of availability.deaths){
     const target=person.owner==='map'?personNotificationTarget(world,person.id):undefined;
     details.push({key:`availability-death:${person.id}`,text:`${person.name} · décès confirmé${person.owner==='group-loss'?' dans le groupe':person.owner==='scout-away'?' en reconnaissance':person.owner==='commercial-away'?' en voyage commercial':''}`,
       targets:target?[target]:[],context:person.owner==='map'?{panel:'history'}:awayContext(person.owner==='group-loss'?'group-away':person.owner),tab:'health'});
   }
-  const first=availability.local.length||availability.away.length?details[0]:undefined;
-  const summary:StatusAlert={key:'colonist-availability',text:first?'Aucun colon libre sur cette carte':'Aucun colon vivant actuellement recensé dans la colonie ou ses voyages',targets:first?.targets??[],context:first?.context??{panel:'menu'},...first?.tab?{tab:first.tab}:{}};
+  const first=availability.local.length||availability.away.length||availability.suspended?.length?details[0]:undefined;
+  const summary:StatusAlert={key:'colonist-availability',text:first?'Aucun colon libre sur cette carte':'Aucun colon vivant actuellement recensé dans la colonie ou ses voyages',targets:first?.targets??[],...first?first.context?{context:first.context}:{}:{context:{panel:'menu' as const}},...first?.tab?{tab:first.tab}:{}};
   return [summary,...details];
 }
 

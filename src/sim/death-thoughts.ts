@@ -12,7 +12,7 @@ import type { MoodThought } from './mood.ts';
 import type { Pawn,World } from './types.ts';
 
 export function expireDeathThoughts(pawn:Pawn,tick:number):void {
-  if(pawn.cryptosleepHeldAt271!==undefined)return;
+  if((pawn.cryptosleepHeldAt271!==undefined||pawn.shipCryptosleepHeldAt277!==undefined))return;
   if(!pawn.deathThoughts?.some(m=>memoryExpiry271(m,m.at+deathThoughtDuration(m.kind))<=tick))return;
   pawn.deathThoughts=pawn.deathThoughts.filter(m=>memoryExpiry271(m,m.at+deathThoughtDuration(m.kind))>tick);
   if(!pawn.deathThoughts.length)delete pawn.deathThoughts;

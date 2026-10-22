@@ -48,16 +48,16 @@ test('real desk and analyzer are required by the motor service and its own compl
  expect(shipEngineUnlocked276(w)).toBe(true);expect(w.research!.project).toBeNull();expect(events).toEqual(['Recherche achevée : Moteur Johnson–Tanaka. Construction extérieure débloquée.']);
  expect(architectToolAvailable(w,'ship-engine')).toBe(true);expect(architectToolAvailable(w,'ship-reactor')).toBe(false);expect(validShipResearchTransport275(w,276)).toBe(true);
 });
-test('prospective motor namespace is closed on275 and277, including false and undefined records',()=>{
+test('prospective motor namespace is closed on275 and278, including false and undefined records',()=>{
  const {w}=fixture();finish(w,'ship-basics');expect(validShipResearchTransport275(w,275)).toBe(true);
  for(const value of [undefined,false,{points:0}]){
   const state={...w.research,shipEngine:value};
-  expect(validShipEngineResearchDomain276(state,275,w.tick)).toBe(false);expect(validShipEngineResearchDomain276(state,277,w.tick)).toBe(false);
+  expect(validShipEngineResearchDomain276(state,275,w.tick)).toBe(false);expect(validShipEngineResearchDomain276(state,278,w.tick)).toBe(false);
   expect(validShipEngineResearchDomain276(state,276,w.tick)).toBe(value!==undefined&&value!==false);
  }
  expect(validShipEngineResearchDomain276({...w.research,project:'ship-engine'},276,w.tick)).toBe(false);
  const old=structuredClone(w);Object.assign(old,{schemaVersion:275});expect(selectResearch(old,'ship-engine').ok).toBe(false);expect(architectToolAvailable(old,'ship-beam')).toBe(false);
- const future=structuredClone(w);Object.assign(future,{schemaVersion:277});expect(selectResearch(future,'ship-engine').ok).toBe(false);expect(architectToolAvailable(future,'ship-engine')).toBe(false);
+ const future=structuredClone(w);Object.assign(future,{schemaVersion:278});expect(selectResearch(future,'ship-engine').ok).toBe(false);expect(architectToolAvailable(future,'ship-engine')).toBe(false);
  let reads=0;const getter={...w.research};Object.defineProperty(getter,'shipEngine',{enumerable:true,get(){reads++;throw Error('Forbidden getter');}});
  expect(validShipEngineResearchDomain276(getter,276,w.tick)).toBe(false);expect(reads).toBe(0);
 });

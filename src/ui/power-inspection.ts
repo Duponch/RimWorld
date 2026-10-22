@@ -92,7 +92,7 @@ export function powerInspection(world: World, structure: Structure, compact=fals
     detail=hydroponicsPowerInspection(structure);
   } else if (structure.kind === 'ship-reactor') {
     detail='Production électrique : 1 000 W · disponible dès la construction, indépendamment du démarrage stellaire';
-  } else if (structure.kind === 'ship-beam' || structure.kind === 'ship-engine') {
+  } else if (structure.kind === 'ship-cryptosleep-casket' || structure.kind === 'ship-beam' || structure.kind === 'ship-engine') {
     detail='Transmission électrique passive · aucune consommation propre';
   } else if (structure.kind === 'geothermal-generator') {
     detail=geothermalPowerInspection(world,structure);

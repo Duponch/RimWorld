@@ -1,5 +1,7 @@
 import {medicalCivilTick271,validMedicalCivilHeader271} from './suspended-human-clock-271.ts';
 import {isSchema265OrLater} from './schema-compatibility-257.ts';
+import {isSchema277OrLater} from './schema-compatibility-257.ts';
+import {isAnimalSpecies} from './animal-species.ts';
 import {hasAlcoholConsumeMarker265,validAlcoholConsumePawnShape265,validAlcoholConsumeTransport265} from './alcohol-consume-save-265.ts';
 import type {VomitState} from './food-poisoning.ts';
 import type {MedicalRecord} from './injury-types.ts';
@@ -28,7 +30,11 @@ const closed=(v:unknown,keys:readonly string[]):v is Record<string,unknown>=>pla
 const int=(v:unknown,lo=0,hi=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=lo&&v<=hi;
 const severity=(v:unknown,lo=0,hi=1):v is number=>typeof v==='number'&&Number.isFinite(v)&&v>=lo&&v<=hi&&Math.fround(v)===v;
 export function validAlcoholHeader265(record:unknown,version:number,human=true):boolean {
- if(!record||typeof record!=='object'||!validMedicalCivilHeader271(record,version,human))return false;
+ if(!record||typeof record!=='object')return false;
+ // The spatial flesh-animal owner also has an active/civil clock. This does
+ // not admit alcohol on that owner: the actual alcohol field stays human-only.
+ const fleshAnimal=isSchema277OrLater(version)&&isAnimalSpecies(Object.getOwnPropertyDescriptor(record,'body')?.value);
+ if(!validMedicalCivilHeader271(record,version,human||fleshAnimal))return false;
  const d=Object.getOwnPropertyDescriptor(record,'alcohol');if(!d)return !('alcohol'in record);
  const tick=own(record,'tick');if(!isSchema265OrLater(version)||!human||!d.enumerable||!('value'in d)||!tick||!int(tick.value)||!Number.isSafeInteger(tick.value*10))return false;
  const a=d.value;if(!closed(a,['bornAt','high','tolerance','hangover','lastDoseTick','dosesToday','addiction','cirrhosis','brainDamage','vomit','vomitRequestedAt','bingeRequestedAt'])||!['bornAt','high','tolerance','hangover','lastDoseTick','dosesToday'].every(k=>!!own(a,k))||!int(a.bornAt,0,tick.value)||!severity(a.high,0,3.4028234663852886e38)||!severity(a.tolerance)||!severity(a.hangover)||!int(a.lastDoseTick,a.bornAt,medicalCivilTick271(record as MedicalRecord))||!int(a.dosesToday,1,6000))return false;

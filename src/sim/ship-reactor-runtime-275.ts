@@ -1,5 +1,6 @@
 import {isSchema275OrLater} from './schema-compatibility-257.ts';
-import {isShipPartKind276} from './ship-part-content-276.ts';
+import {isShipPartKind277} from './ship-casket-graph-277.ts';
+import {validShipCasketBuilding277} from './ship-casket-owner-save-277.ts';
 import {indexShipParts276,connectedShipParts276} from './ship-part-reader-276.ts';
 import {validShipHullBuilding276} from './ship-part-save-276.ts';
 import {shipReactorEndCore275,isShipReactor275,validShipReactorCommand275,validShipReactorState275,type ShipReactor275,type ShipReactorCommand275,type ShipReactorState275} from './ship-reactor-state-275.ts';
@@ -15,8 +16,8 @@ const coreNow=(w:World):number|undefined=>Number.isSafeInteger(w.tick)&&w.tick>=
  * No terrain walk or graph work on a physical/render frame. */
 function connectedHibernating(w:World,id:number):ShipReactor275[]|undefined {
  const now=coreNow(w);if(!isSchema275OrLater(w.schemaVersion)||now===undefined)return;
- for(const s of w.structures)if(isShipPartKind276(s.kind)
-  &&(!validShipReactorBuilding275(s,w.schemaVersion,w,now)||!validShipHullBuilding276(s,w.schemaVersion,w)))return;
+ for(const s of w.structures)if(isShipPartKind277(s.kind)
+  &&(!validShipReactorBuilding275(s,w.schemaVersion,w,now)||!validShipHullBuilding276(s,w.schemaVersion,w)||!validShipCasketBuilding277(s,w.schemaVersion,w,w.tick)))return;
  const built=indexShipParts276(w.structures,w.width,w.height);if(!built.ok||built.index.get(id)?.kind!=='ship-reactor')return;
  const connected=connectedShipParts276(built.index,id);if(!connected.ok)return;
  return connected.parts.map(p=>p.source).filter(isShipReactor275).filter(s=>!Object.hasOwn(s,'shipReactor275'));
@@ -52,9 +53,9 @@ export function prepareShipReactorStart275(w:World,reactorId:number,confirmedIds
  const end=shipReactorEndCore275(now);if(end===undefined)return fail('L’échéance du réacteur dépasse l’horloge conservable.');
  if(selected.some(s=>!Object.isExtensible(s)))return fail('Le réacteur ne peut pas recevoir son état de démarrage.');
  const array=w.structures,originals=[...array],version=w.schemaVersion,tick=w.tick,width=w.width,height=w.height,nextId=w.nextId;
- const parts=array.filter(s=>isShipPartKind276(s.kind)),seals=parts.map(originalSeal);let used=false;
+ const parts=array.filter(s=>isShipPartKind277(s.kind)),seals=parts.map(originalSeal);let used=false;
  const current=()=>!used&&w.schemaVersion===version&&w.tick===tick&&w.width===width&&w.height===height&&w.nextId===nextId&&w.structures===array
-  &&array.length===originals.length&&originals.every((s,i)=>array[i]===s)&&array.filter(s=>isShipPartKind276(s.kind)).length===parts.length
+  &&array.length===originals.length&&originals.every((s,i)=>array[i]===s)&&array.filter(s=>isShipPartKind277(s.kind)).length===parts.length
   &&seals.every(s=>s())&&selected.every(s=>Object.isExtensible(s)&&!('shipReactor275'in s))
   &&(()=>{const current=connectedHibernating(w,reactorId);return !!current&&current.length===selected.length&&current.every((s,i)=>s===selected[i]);})();
  return {ok:true,reactorIds:Object.freeze([...ids]),current,commit:()=>{

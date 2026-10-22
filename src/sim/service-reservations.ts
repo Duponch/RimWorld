@@ -1,3 +1,5 @@
+import {isShipCasket277} from './ship-casket-state-277.ts';
+import {shipCasketInteraction277} from './ship-casket-geometry-277.ts';
 import {isPlayerCasket271,cryptosleepInteraction271} from './cryptosleep-state-271.ts';
 import {isAncientCasket256,ancientCasketInteraction256} from './ancient-casket-state-256.ts';
 import { isCookingOrder } from './order-types.ts';
@@ -9,6 +11,7 @@ import type { Cell, Pawn, World } from './types.ts';
  * occupancy: a passer-by can cross any of these cells without claiming its use.
  * Sleeping/collapsing on the floor does not acquire furniture or a work spot. */
 export function serviceCell(pawn: Pawn,world?:Pick<World,'structures'>): Cell | null {
+  if(pawn.shipCasketTask277&&world){const c=world.structures.find(s=>s.id===pawn.shipCasketTask277!.casketId);if(c&&isShipCasket277(c))return shipCasketInteraction277(c,c.orientation);}
   if(pawn.cryptosleepTask&&world){const c=world.structures.find(s=>s.id===pawn.cryptosleepTask!.casketId);if(c&&isPlayerCasket271(c))return cryptosleepInteraction271(c);}
   if(pawn.openCasket&&world){const c=world.structures.find(s=>s.id===pawn.openCasket!.casketId);if(c&&isAncientCasket256(c))return ancientCasketInteraction256(c);}
   if(pawn.need?.kind==='eat'&&pawn.need.paste&&(pawn.need.phase==='pickup'||pawn.need.phase==='collect'))return pawn.need.paste.spot;

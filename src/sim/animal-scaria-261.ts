@@ -1,3 +1,4 @@
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {startAnimalManhunter} from './animal-manhunter.ts';
 import {createAnimalMedicalRecord256} from './animal-clinical-age-v256.ts';
@@ -35,10 +36,10 @@ export function validPermanentManhunter261(a:WildAnimal,version:number):boolean 
 /** Actual hediff tick only. ClearMind/normal recovery is observed, never undone
  * by reconstructing the previous mental state. Zero keeps native semantics. */
 export function advanceScariaRecord261(h:MedicalRecord,core:number,permanent:boolean):void {
- const s=h.scaria261;if(!s||h.death)return;
- if(s.manhunterCore<0&&permanent)s.manhunterCore=core;
+ const s=h.scaria261;if(!s||h.death)return;const clinicalCore=core-(medicalCivilTick271(h)-h.tick)*10;
+ if(s.manhunterCore<0&&permanent)s.manhunterCore=clinicalCore;
  if(s.manhunterCore>0&&!permanent)s.manhunterCore=-999999;
- if(s.manhunterCore>0&&core-s.manhunterCore>300000){h.tick=core/10;h.death={tick:h.tick,cause:'scaria'};}
+ if(s.manhunterCore>0&&clinicalCore-s.manhunterCore>300000){h.tick=clinicalCore/10;if(h.civilTick271!==undefined)h.civilTick271=core/10;h.death={tick:core/10,cause:'scaria'};}
 }
 /** One roll at this SAME original's actual death, never at rendering/reload. */
 export function commitScariaDeath261(h:MedicalRecord,chance:number|undefined,draw:()=>number):void {
@@ -49,7 +50,7 @@ export function commitScariaDeath261(h:MedicalRecord,chance:number|undefined,dra
 export function advanceAnimalScaria261(w:World,a:WildAnimal):void {
  if((Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&!isSchema263OrLater(Number(w.schemaVersion))))||!a.health?.scaria261||a.health.death)return;
  const s=a.health.scaria261,permanent=a.manhunter?.permanent261===true;
- if(!(s.manhunterCore>0&&permanent&&w.tick*10-s.manhunterCore>300000)){advanceScariaRecord261(a.health,w.tick*10,permanent);return;}
+ if(!(s.manhunterCore>0&&permanent&&(w.tick-(medicalCivilTick271(a.health)-a.health.tick))*10-s.manhunterCore>300000)){advanceScariaRecord261(a.health,w.tick*10,permanent);return;}
  const record=structuredClone(a.health);advanceScariaRecord261(record,w.tick*10,a.manhunter?.permanent261===true);
  if(record.death){const death=planAnimalDeathExplosion256(w,a,record);commitScariaDeath261(record,w.gameProfile?.difficulty==='adventure-story'?.333:undefined,()=>healthRandom(w));death.commit();}
  a.health=record;

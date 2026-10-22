@@ -1,3 +1,4 @@
+import {shipCasketHumanReferences277} from './ship-casket-notifications-277.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {bindBornHumanFaction259,bornFactionForDef259} from './world-affiliation-259.ts';
 import {tempMapModern261,tempMapAdoptedAtCore261,tempMapTarget261} from './temp-map-incidents-261.ts';
@@ -61,7 +62,7 @@ export function visitorGroupDanger(w:World,p:Pawn,reason:'danger'|'hostile'|'blo
 function leaveGroup(w:World,g:VisitorGroup,reason:VisitorGroup['reason']):void {
   if(g.phase==='leaving'){if(reason==='hostile'){g.reason=reason;g.hostile=true;}return;}
   g.phase='leaving';g.reason=reason;
-  for(const p of w.pawns)if(p.visitor?.group===g.id){
+  for(const p of [...w.pawns,...shipCasketHumanReferences277(w)])if(p.visitor?.group===g.id){
     p.visitor.phase='leaving';p.visitor.goal=null;
     // A visit deadline changes its agenda, not an accepted medical service or
     // the captured movement of a carried guest. Departure resumes after care.
@@ -119,8 +120,8 @@ function arrive(w:World,kind:VisitorKind,intro=false,exotic=false):boolean {
 export function advanceVisitors(w:World):void {
   const s=w.visitors;if(!s)return;
   for(const g of s.groups){
-    const members=w.pawns.filter(p=>p.visitor?.group===g.id);
-    for(const p of members)p.visitor!.personalFoodIds=p.visitor!.personalFoodIds.filter(id=>w.piles.some(i=>i.id===id&&(i.owner.type==='inventory'||i.owner.type==='pawn')&&i.owner.pawnId===p.id));
+    const members=[...w.pawns,...shipCasketHumanReferences277(w)].filter(p=>p.visitor?.group===g.id);
+    for(const p of members)if(w.pawns.includes(p))p.visitor!.personalFoodIds=p.visitor!.personalFoodIds.filter(id=>w.piles.some(i=>i.id===id&&(i.owner.type==='inventory'||i.owner.type==='pawn')&&i.owner.pawnId===p.id));
     if(g.phase==='leaving')continue;
     const moving=members.filter(p=>p.state!=='dead'&&p.state!=='downed');
     const thermalCheck=Math.floor(w.tick*10/197)!==Math.floor((w.tick-1)*10/197);
@@ -132,7 +133,7 @@ export function advanceVisitors(w:World):void {
     }
     if(g.phase==='staying'&&(w.tick-g.arrivedAt!)*10>g.durationCore)leaveGroup(w,g,'timeout');
   }
-  s.groups=s.groups.filter(g=>w.pawns.some(p=>p.visitor?.group===g.id));
+  s.groups=s.groups.filter(g=>[...w.pawns,...shipCasketHumanReferences277(w)].some(p=>p.visitor?.group===g.id));
   // Maintain the same real groups above, but leave historical home tickets
   // literally dormant. TempMap MTB admissions own their separate shared RNG.
   if(s.profile==='temp-travelers261-v1'||tempMapModern261(w))return;
@@ -193,7 +194,7 @@ export function exitVisitor(w:World,p:Pawn):boolean {
   releaseAllowedAreaReturn(p);p.path=[];p.state='idle';p.visitor!.goal=null;p.bedId=null;delete p.bedSlot;delete p.medicalSleep;delete p.flee;delete p.tactics;delete p.shooting;delete p.melee;delete p.motion;delete p.stagger;delete p.stun;
   w.visitors!.departed.push({group:v.group,tick:w.tick,pawn:structuredClone(p),items:structuredClone(items),...packed.length?{packed:structuredClone(packed)}:{}});
   w.piles=w.piles.filter(i=>!items.includes(i));w.packed=w.packed.filter(i=>!packed.includes(i));w.pawns=w.pawns.filter(q=>q!==p);
-  if(!w.pawns.some(q=>q.visitor?.group===v.group))w.visitors!.groups=w.visitors!.groups.filter(g=>g.id!==v.group);
+  if(![...w.pawns,...shipCasketHumanReferences277(w)].some(q=>q.visitor?.group===v.group))w.visitors!.groups=w.visitors!.groups.filter(g=>g.id!==v.group);
   for(const q of w.pawns)if(q.trade?.traderId===p.id){delete q.trade;q.path=[];if(q.state==='moving'&&q.moveCooldown===0)q.state='idle';}
   log(w,`${p.name} quitte la carte avec ses possessions restantes.`);return true;
 }

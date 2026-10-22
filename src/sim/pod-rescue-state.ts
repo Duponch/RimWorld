@@ -14,7 +14,7 @@ export interface PodRescueIncident {
   id:number;start:number;openedAt:number;pawnId:number;tendedAt?:number;
   origin?:PodRescueOrigin;
   decision?:{at:number;outcome:'joined'|'left';admittedAt:number};
-  result?:'dead'|'captured'|'departed'|'joined';resolvedAt?:number;
+  result?:'dead'|'captured'|'departed'|'joined'|'destroyed277';resolvedAt?:number;
 }
 /** Frozen evidence at departure; these owners are never map inventory. */
 export interface PodRescueDeparture {incidentId:number;tick:number;pawn:Pawn;items:MaterialPile[];packed?:PackedFurniture[]}

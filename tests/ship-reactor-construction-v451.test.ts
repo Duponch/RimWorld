@@ -45,7 +45,7 @@ test('reactor pays four exact ingredients and rotates its native centered42-cell
  }
  expect(footprintCells({...plan,footprint:'standard'})).toEqual(shipReactorCells275(plan,1));
  expect(validConstructionMaterial(plan.kind,'steel',275)).toBe(true);
- for(const version of [274,277])expect(validConstructionMaterial(plan.kind,'steel',version)).toBe(false);
+ for(const version of [274,278])expect(validConstructionMaterial(plan.kind,'steel',version)).toBe(false);
  for(const material of [undefined,'wood','plasteel','granite-blocks'])expect(validConstructionMaterial(plan.kind,material,275)).toBe(false);
 });
 

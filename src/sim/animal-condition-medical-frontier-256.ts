@@ -1,3 +1,4 @@
+import {medicalCivilCore271} from './suspended-human-clock-271.ts';
 import {advanceAnimalAgeConditionInterval256,tickAnimalConditionTends256} from './animal-age-condition-runtime-256.ts';
 import {destroyAnimalConditionPart256} from './animal-condition-missing-part-256.ts';
 import {advanceAnimalConfusionState256,tryStartAnimalConfusionLocal256,tryStartAnimalConfusionCaravan256,interruptAnimalConditionJob256} from './animal-condition-mental-runtime-256.ts';
@@ -32,13 +33,13 @@ function frontier(a:ActualAnimalMind256,record:AnimalAgeMedical256,draw:MedicalR
    if(current!==record||record.tick!==lastTick+1||committed)throw Error('Animal clinical frontier is not its actual original outcome');lastTick=record.tick;
    for(let core=(record.tick-1)*10+1;core<=record.tick*10&&!record.death;core++){
     tickAnimalConditionTends256(record);
-    advanceAnimalAgeConditionInterval256(record,{actorId:a.id,atCore:core,deltaCore:1,random,bindings:{
+    advanceAnimalAgeConditionInterval256(record,{actorId:a.id,atCore:core,civilCore:medicalCivilCore271(record,core),deltaCore:1,random,bindings:{
      inMentalState:()=>!!a.manhunter||!!episode,
-     tryStartConfused:(_source,atCore)=>{if(!canStart())return false;episode={revision:1,ageCore:0};startedAt=atCore;return true;},
+     tryStartConfused:(_source,atCore)=>{if(!canStart())return false;episode={revision:1,ageCore:0};startedAt=medicalCivilCore271(record,atCore);return true;},
      destroyPart:(part,atCore)=>{destroyAnimalConditionPart256(record,part,atCore,random);},
      reconcileHealth:()=>{reconcileMedicalDeath(record);}
     }});
-    if(episode){if(medicalStatus(record)!=='mobile'||a.manhunter||advanceAnimalConfusionState256(episode,a.id,core,1,random)){episode=undefined;recovered=true;}}
+    if(episode){if(medicalStatus(record)!=='mobile'||a.manhunter||advanceAnimalConfusionState256(episode,a.id,medicalCivilCore271(record,core),1,random)){episode=undefined;recovered=true;}}
    }
   },
   commit(){

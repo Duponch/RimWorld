@@ -1,0 +1,12 @@
+{
+  "source": "tmp/ship-reactor-v452/assembled.json",
+  "schemaVersion": 276,
+  "tick": 46030,
+  "partIds": [284, 401, 445, 497, 544],
+  "builderId": 168,
+  "reactorId": 284,
+  "lampId": 185,
+  "sha256": "c41c0ec8e585ced1c88cc85cb5453b088bee8216e47a27f8b2a1754993fdf2ef",
+  "product": "6ac38d08100275803085ef19e7cdf9902f3f7461",
+  "proof": "Actual paid V452 beam and three engines, all hauling/contact work completed from the independently retained V451 reactor world. Native V452 imported this whole world exactly before the real GUI beam removal. The V451 workshop and forced work schedule, V452 engine research and finite new materials were declared preparation. The resulting tantrum, exhaustion and building damage remain present. No spatial casket, occupant, reactor startup or victory was prepared in this fixture."
+}

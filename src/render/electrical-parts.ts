@@ -1,3 +1,4 @@
+import {shipCasketParts277} from './ship-casket-parts277';
 import {shipReactorParts275} from './ship-reactor-parts275';
 import {shipHullParts276} from './ship-hull-parts276';
 import {geothermalParts264} from './geothermal-parts264';
@@ -52,6 +53,8 @@ export function electricalParts(world:World,cutaway=false,subjects:readonly Stru
         // resident emissive batch has no active segments.
         {targetId:s.id,x,z,y:.989,sx:.70,sy:.018,sz:.31,ry,color:0x304644});
       for(const sign of [-1,1])out.push({targetId:s.id,x:x+Math.sin(ry)*sign*.58,z:z+Math.cos(ry)*sign*.58,y:1.04,sx:.23,sy:.14,sz:.2,ry,color:sign>0?0xb07152:0xa8b5ae});
+    } else if(s.kind==='ship-cryptosleep-casket') {
+      out.push(...shipCasketParts277(s));
     } else if(s.kind==='ship-beam'||s.kind==='ship-engine') {
       out.push(...shipHullParts276(s));
     } else if(s.kind==='ship-reactor') {

@@ -9,17 +9,17 @@ import {serializeWorld,deserializeWorld,validateWorld} from '../src/sim/serializ
 import {SnapshotEncoder,SnapshotDecoder} from '../src/bridge/snapshots.ts';
 import {ResidentPresentationAssembler} from '../src/bridge/resident-presentation-assembler.ts';
 import {stepWorld} from '../src/sim/engine.ts';
-import type {Structure,World} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type Structure,type World} from '../src/sim/types.ts';
 
-test('276 adds hull kinds exclusively, while275 components continue and277 remains closed',()=>{
+test('276 adds hull kinds,275 components continue, and future278 remains closed',()=>{
  expect(isSchema275OrLater(275)).toBe(true);expect(isSchema275OrLater(276)).toBe(true);
  expect(isSchema276OrLater(276)).toBe(true);
- for(const version of [275,277,276.5,'276',NaN])expect(isSchema276OrLater(version)).toBe(false);
+ for(const version of [275,278,276.5,'276',NaN])expect(isSchema276OrLater(version)).toBe(false);
  const header={width:32,height:32,nextId:20};
  for(const kind of ['ship-beam','ship-engine'] as const)for(const orientation of [0,1,2,3] as const){
   const part={id:10,kind,x:16,z:16,orientation,footprint:'standard',material:'steel',power:{on:false,parentId:null}};
   expect(validShipHullBuilding276(part,276,header)).toBe(true);
-  for(const version of [275,277])expect(validShipHullBuilding276(part,version,header)).toBe(false);
+  for(const version of [275,278])expect(validShipHullBuilding276(part,version,header)).toBe(false);
   expect(validShipHullField276({kind},276,'job')).toBe(true);expect(validShipHullField276(part,276,'packed')).toBe(false);
   for(const mutate of [
    {...part,damage:400},{...part,damage:0},{...part,x:0,z:0},{...part,quality:undefined},
@@ -39,7 +39,7 @@ test('275 historical fences cover actual namespaces and sparse public upserts, w
   {stockpiles:[{items:{'ship-beam':false}}]}, {stockpiles:[{allowed:['ship-engine']}]},
   {world:{schemaVersion:275},structures:{removed:[],upserted:[{kind:'ship-beam'}]}},
  ];
- for(const raw of entries){expect(validShipPartHistoricalTransport276(raw,275)).toBe(false);expect(validShipPartHistoricalTransport276(raw,276)).toBe(true);expect(validShipPartHistoricalTransport276(raw,277)).toBe(false);}
+ for(const raw of entries){expect(validShipPartHistoricalTransport276(raw,275)).toBe(false);expect(validShipPartHistoricalTransport276(raw,276)).toBe(true);expect(validShipPartHistoricalTransport276(raw,278)).toBe(false);}
  let reads=0;const ordinary={structures:[{kind:'wall'}],research:{shipBasics:{points:0}}};
  Object.defineProperty(ordinary,'resources',{enumerable:true,get(){reads++;throw Error('No terrain walk');}});
  expect(validShipPartHistoricalTransport276(ordinary,275)).toBe(true);
@@ -55,12 +55,14 @@ const SHA_275='43db8af22cfc5f4db9d880601d7fda91ebc6721c6d90a13e51a80b9dbfd764d0'
 function acquired(){
  const text=readFileSync(SOURCE_275,'utf8');expect(createHash('sha256').update(text).digest('hex')).toBe(SHA_275);
  const before=JSON.parse(text) as World;expect(before.schemaVersion).toBe(275);
- const w=deserializeWorld(text);expect(w.schemaVersion).toBe(276);expect(validateWorld(w)).toEqual([]);
+ // The old expected migration target276 now continues to277 by number alone;
+ // the acquired275 source and every strict275/276 content fence stay literal.
+ const w=deserializeWorld(text);expect(w.schemaVersion).toBe(SCHEMA_VERSION);expect(validateWorld(w)).toEqual([]);
  return {w,before,text};
 }
 
 test.skipIf(!existsSync(SOURCE_275))('the acquired native V451 activation migrates by number alone, preserving reactor and pressure through a real step and both public readers',()=>{
- const {w,before,text}=acquired();expect(JSON.parse(serializeWorld(w))).toEqual({...before,schemaVersion:276});
+ const {w,before,text}=acquired();expect(JSON.parse(serializeWorld(w))).toEqual({...before,schemaVersion:SCHEMA_VERSION});
  expect(validShipReactorWorld275(w)).toBe(true);expect(validateShipReactorThreats275(w)).toEqual([]);
  expect(validShipReactorContinuation275(before,w)).toBe(true);expect(validShipReactorThreatContinuation275(before,w)).toBe(true);
  const encoder=new SnapshotEncoder({structureDelta:true}),decoder=new SnapshotDecoder(),resident=new ResidentPresentationAssembler();
@@ -106,5 +108,5 @@ test.skipIf(!existsSync(SOURCE_275))('276 admits declared existing hull parts on
  const packed=JSON.parse(text) as World;packed.structures=packed.structures.filter(s=>s.id!==beam.id);packed.packed.push({building:beam,owner:{type:'ground',x:6,z:15}});
  expect(()=>deserializeWorld(JSON.stringify(packed))).toThrow();
  const collision=JSON.parse(text) as World;collision.structures.find(s=>s.id===beam.id)!.id=collision.pawns[0]!.id;expect(()=>deserializeWorld(JSON.stringify(collision))).toThrow();
- const future=JSON.parse(text);future.schemaVersion=277;expect(()=>deserializeWorld(JSON.stringify(future))).toThrow();expect(validShipReactorContinuation275(w,future)).toBe(false);expect(validShipReactorThreatContinuation275(w,future)).toBe(false);
+ const future=JSON.parse(text);future.schemaVersion=278;expect(()=>deserializeWorld(JSON.stringify(future))).toThrow();expect(validShipReactorContinuation275(w,future)).toBe(false);expect(validShipReactorThreatContinuation275(w,future)).toBe(false);
 },120000);

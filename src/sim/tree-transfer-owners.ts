@@ -1,3 +1,4 @@
+import {captureShipCasketAnimals277} from './ship-casket-state-277.ts';
 /** Owner adapter invoked after raw owners validate, reusing their capture. */
 import type {World} from './types.ts';
 import type {HumanOwnershipCapture} from './human-owners.ts';
@@ -14,6 +15,7 @@ export function captureTreeOccurrences(world:World,people:HumanOwnershipCapture)
     if(slot.kind==='map'||slot.kind==='starting-pod')continue;
     for(const pile of slot.items)result.push({pile,ownerKey:`${slot.kind}:${slot.id}`,clock:slot.validationTick,active:slot.simulation==='world'});
   }
+  for(const held of captureShipCasketAnimals277(world))for(const pile of held.items)result.push({pile,ownerKey:`ship-casket-animal:${held.animal.id}`,clock:held.validationTick,active:false});
   const arrival=world.startingArrival;
   if(arrival&&arrival.phase!=='opened')for(const pod of arrival.pods)
     for(const pile of pod.items)result.push({pile,ownerKey:`starting-pod:${pod.id}`,clock:arrival.personalTick,active:false});

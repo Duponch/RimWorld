@@ -53,7 +53,7 @@ export function finishRoomRest(w:World,p:Pawn):void {
 }
 export function expireRoomMemories(w:World,p:Pawn):void {expireRoomMemoriesAt(p,w.tick);}
 export function expireRoomMemoriesAt(p:Pawn,tick:number):void {
-  if(p.cryptosleepHeldAt271!==undefined)return;
+  if((p.cryptosleepHeldAt271!==undefined||p.shipCryptosleepHeldAt277!==undefined))return;
   if(p.roomMemories?.some(m=>memoryExpiry271(m,m.expiresAt)<=tick)){
     p.roomMemories=p.roomMemories.filter(m=>memoryExpiry271(m,m.expiresAt)>tick);if(!p.roomMemories.length)delete p.roomMemories;
   }

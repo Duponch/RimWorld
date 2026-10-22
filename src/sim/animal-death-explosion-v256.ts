@@ -17,7 +17,7 @@ export function planAnimalDeathExplosion256(world:World,animal:WildAnimal,record
  if(!world.wildlife?.animals.includes(animal)||record.body!==animal.species||!Number.isSafeInteger(record.animalBirthTick)||record.death.tick!==world.tick
   ||!Number.isSafeInteger(core)||core<Math.max(0,(world.tick-1)*10)||core>world.tick*10||!Number.isSafeInteger(world.nextId+1)||(world.bombWaves?.length??0)>=world.width*world.height
   ||world.bombWaves?.some(w=>w.animalDeath&&w.sourceId===animal.id))throw RangeError('Cannot reserve animal death explosion.');
- const proof:AnimalDeathExplosion256={species:animal.species,lifeStage:animalLifeStage({...animal,ageTicks:record.death.tick-record.animalBirthTick!}),deathTick:record.death.tick};
+ const proof:AnimalDeathExplosion256={species:animal.species,lifeStage:animalLifeStage({...animal,ageTicks:record.tick-record.animalBirthTick!}),deathTick:record.death.tick};
  const center={x:animal.x,z:animal.z},radius=animalDeathExplosionRadius256(proof),nextId=world.nextId,waves=world.bombWaves;
  const wave:MiniTurretBombWave={id:nextId,sourceId:animal.id,center,startedAtCore:core,advancedAtCore:core,cells:captureBombCells(world,center,radius,true),nextCell:0,damagedThingKeys:[],animalDeath:proof};
  const draft={...world,...world.thermal?{thermal:structuredClone(world.thermal)}:{}},layout=reconcileTemperature(draft);

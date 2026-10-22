@@ -1,4 +1,6 @@
 import {medicalCivilTick271,medicalCivilCore271,validMedicalCivilHeader271} from './suspended-human-clock-271.ts';
+import {isSchema277OrLater} from './schema-compatibility-257.ts';
+import {isAnimalSpecies} from './animal-species.ts';
 import type {MedicalRecord,MedicalRandom} from './injury-types.ts';
 import type {VomitState} from './food-poisoning.ts';
 import {groupPawnInterval256} from './group-core-cadence-256.ts';
@@ -18,7 +20,9 @@ export function toxicStage256(severity:number){
 /** Absence remains literal. Header descriptors are checked before any field
  * access; the actual owner supplies its clinical clock and episode frontier. */
 export function validToxicBuildupHeader256(record:unknown,version:number,mechanical=false):boolean {
- if(!record||typeof record!=='object'||!validMedicalCivilHeader271(record,version,!Object.hasOwn(record,'body')))return false;
+ if(!record||typeof record!=='object')return false;
+ const fleshAnimal=!mechanical&&isSchema277OrLater(version)&&isAnimalSpecies(Object.getOwnPropertyDescriptor(record,'body')?.value);
+ if(!validMedicalCivilHeader271(record,version,!Object.hasOwn(record,'body')||fleshAnimal))return false;
  const desc=Object.getOwnPropertyDescriptor(record,'toxicBuildup');if(!desc)return !('toxicBuildup'in record);
  if(version<256||mechanical||!('value'in desc)||!desc.enumerable||!plain(desc.value))return false;
  const t=desc.value;if(!exact(t,['severity','bornAt','vomit','rotOnDeath','vomitRequestedAt'])||!data(t,'severity')||!data(t,'bornAt')||typeof t.severity!=='number'||!Number.isFinite(t.severity)||f(t.severity)!==t.severity||t.severity<0||!integer(t.bornAt))return false;

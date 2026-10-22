@@ -83,3 +83,11 @@ export function bleedFilth(w:World,cell:Cell,rate:number,lying:boolean,bodySize=
   if(w.schemaVersion<89||!Number.isFinite(rate)||rate<.1||!inside(w,cell))return false;
   return filthRandom(ensureFilth(w))<Math.min(1,rate*bodySize*(lying?.0004:.004)*10)&&addFilth(w,cell,'blood');
 }
+
+/** Only already-carried traces on the new animal/mechanical carrier. No new
+ * ambient dirt/trash behaviour is inferred for their older controllers. */
+export function recordShipCasketFilthMovement277(w:World,p:Cell&{state:string;filthFeet?:import('./filth-rules.ts').FilthFeet}):void {
+ if(w.schemaVersion!==277||p.state==='dead'||!p.filthFeet)return;const feet=p.filthFeet,state=ensureFilth(w);
+ if(filthRandom(state)<.05)for(let i=feet.carried.length-1;i>=0;i--){const carried=feet.carried[i]!;if(filthWalkable(w,p)&&accepted(w,p,carried.kind)&&addFilth(w,p,carried.kind)&&--carried.thickness===0)feet.carried.splice(i,1);}
+ if(!feet.carried.length&&!feet.lastTerrain)delete p.filthFeet;
+}

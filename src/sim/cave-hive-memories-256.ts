@@ -7,7 +7,7 @@ import {carrierOf} from './rescue-state.ts';
 import {foggedCell256} from './exploration-state-256.ts';
 import type {Pawn,World} from './types.ts';
 import type {MoodThought} from './mood.ts';
-export interface HiveMemoryPawn256 {hiveDefeats?:number[];hiveDefeatSuspendedTicks271?:number[];cryptosleepHeldAt271?:number}
+export interface HiveMemoryPawn256 {hiveDefeats?:number[];hiveDefeatSuspendedTicks271?:number[];cryptosleepHeldAt271?:number;shipCryptosleepHeldAt277?:number}
 export function validHiveDefeatMemory256(v:unknown,version:number,tick:number):boolean {
  if(!v||typeof v!=='object')return false;const d=Object.getOwnPropertyDescriptor(v,'hiveDefeats'),held=Object.getOwnPropertyDescriptor(v,'hiveDefeatSuspendedTicks271');if(!d)return !('hiveDefeats'in v)&&!('hiveDefeatSuspendedTicks271'in v);
  if(held||'hiveDefeatSuspendedTicks271'in v){
@@ -27,7 +27,7 @@ export function notifyHiveDefeated256(w:World):void {
  }
 }
 export function hiveDefeatThoughts256(p:HiveMemoryPawn256,tick:number):MoodThought[] {
- tick=Math.min(tick,p.cryptosleepHeldAt271??tick);
+ tick=Math.min(tick,p.cryptosleepHeldAt271??p.shipCryptosleepHeldAt277??tick);
  const active=(p.hiveDefeats??[]).map((at,i)=>at+(p.hiveDefeatSuspendedTicks271?.[i]??0)).filter(at=>at+60000>tick);if(!active.length)return [];
  const offset=active.reduce((sum,_at,index)=>sum+4*.75**index,0);
  return [{id:'defeated-insect-hive',label:'Ruche d’insectes vaincue',offset,kind:'memory',description:'La dernière ruche visible de cette carte a disparu.',expiresAt:active[0]!+60000}];

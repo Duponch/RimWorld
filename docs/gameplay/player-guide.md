@@ -1,8 +1,22 @@
 # Guide joueur
 
+**V453 qualifiée localement — schéma 277 :** [Caisson de cryptosommeil spatial](ship-casket-v453.md). Recherche, chantier payé et connexion à la vraie poutre ; entrée et portage, suspension puis éjection directe des mêmes humains, animaux et mécanoïdes représentés. 83 cas distincts acquis par reprises, dont 53 nouveaux et 30 voisins. Typage, présentation et interface natives muettes acquis. Build Pages et publication en attente ; V452 reste en production. Sauvegardes publiques inchangées. **Suite : bases ordinaires après audit transversal**, sans poursuite automatique ordinateur/capteurs. Lancement, victoire complète, six ensembles et cible FPS restent ouverts ; détail des reprises, adaptations et limites dans la note canonique.
+
 **V452 publiée — schéma 276 :** [Poutres et moteurs de vaisseau](ship-parts-v452.md). Recherche moteur, une poutre et trois moteurs payés, connexion physique, rapport et retraits conservés ; 63 cas ciblés acquis, dont 35 nouveaux et 28 voisins. Typage, présentation et interface natives muettes acquis. Build Pages acquis ; publié 6ac38d08/dd91c337, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. [Jouer sur Cloudflare](https://elsewhere-cq7.pages.dev/). **Ensemble 5 en cours** ; ordinateur, capteurs, caissons spatiaux, embarquement et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
 
 **V451 publiée — schéma 275 :** [Réacteur stellaire](ship-reactor-v451.md). Recherches, chantier payé, 1 000 W, démarrage confirmé et attaques indépendantes ; 50 cas ciblés acquis par reprises, un ancien rouge identique au témoin conservé. Typage, présentation et interface natives muettes acquis. Build Pages acquis ; publié 8e0e2ee6/7552f915, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. **Ensemble 5 engagé** ; autres pièces et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
+
+### Construire et utiliser un caisson spatial
+
+Recherchez **Caisson spatial de cryptosommeil — 2 800 points**, après **Construction de vaisseau** et **Cryptosommeil**, au bureau avancé utilisable avec son multi-analyseur relié. La catégorie **Vaisseau** propose ensuite le chantier : **120 acier, 14 uranium, 3 composants et 3 composants avancés**, avec un constructeur de niveau **8**. Les quatre matières doivent être réellement livrées avant le travail de finition.
+
+Le caisson occupe **1 × 2 cases**, commence orienté **Sud** et peut être tourné avant placement. Il exige un terrain de support lourd et ses deux cases à l'extérieur, sans toit. La **case située juste derrière sa tête doit appartenir à une vraie poutre structurelle achevée** ; toucher une pièce voisine ou un conduit électrique ne suffit pas. Gardez la case d'interaction accessible au colon et au porteur. Le caisson transmet passivement l'électricité, sans demande propre de courant.
+
+Sélectionnez un colon contrôlable et capable, puis utilisez **Entrer** sur le caisson vide. Un colon mobilisé peut également recevoir ce mandat. Pour une personne, un animal ou un mécanoïde représenté initialement **à terre**, utilisez **Porter vers le caisson** avec un colon capable de le transporter. Un captif garde sa faction et sa captivité ; le service ne le recrute pas. L'approche et le portage sont réels ; la fermeture demande **500 ticks Core de travail au contact**, soit 50 pas locaux à cadence normale. Un ordre interrompu ne crée pas d'occupant.
+
+L'occupant est le même original, avec ses biens ; ses besoins et sa biologie restent suspendus. Son ancien lit ne lui est pas retiré du seul fait de l'entrée. **Éjecter** agit directement depuis l'inspection, y compris en pause, **sans autre colon ni travailleur** : la sortie doit pouvoir déposer le véritable occupant et ses biens à proximité. Les humains et animaux de chair subissent le mal de cryptosommeil ; les mécanoïdes n'en reçoivent pas. La sortie conserve le dépôt de mucus prévu, sans inventer une nouvelle identité ou une guérison.
+
+Les dégâts peuvent déclencher une explosion ; destruction, déconstruction et retrait de carte conservent leurs règles propres et ne valent pas une éjection volontaire. Les mécanoïdes mis à terre par le combat ordinaire sont actuellement neutralisés : les cas cliniques préparés ne démontrent pas une nouvelle chaîne de capture mécanique. La preuve de ce lot déclare les recherches et stocks complémentaires préparés ; elle ne leur invente pas une acquisition naturelle. **Ordinateur, capteurs, lancement et victoire complète restent ouverts.** [Règles Core, adaptations, contrôles et limites](ship-casket-v453.md).
 
 ### Construire les poutres et moteurs du vaisseau
 
@@ -17,7 +31,7 @@ Choisissez un emplacement extérieur de support lourd, découvert et sans toit s
 
 Les pièces achevées doivent se toucher par un **bord** pour former le même vaisseau. Elles transmettent aussi l'électricité ; le moteur ne demande pas de combustible périodique. Leur inspection compte les pièces réellement reliées et celles qui manquent encore. Une poutre ou un moteur peut relier des réacteurs pour leur démarrage confirmé ; retirer ce pont scinde les prochaines lectures, sans remettre à zéro un réacteur déjà démarré ni effacer les adversaires arrivés.
 
-Vous pouvez déconstruire une pièce pour récupérer une partie de ses matériaux. **Ordinateur, capteurs, caissons spatiaux, embarquement et lancement restent à développer** : la coque partielle ne permet pas encore de quitter la planète. [Règles, coûts et contrôles](ship-parts-v452.md).
+Vous pouvez déconstruire une pièce pour récupérer une partie de ses matériaux. Le caisson spatial permet désormais de suspendre et de ressortir un occupant. **Ordinateur, capteurs et lancement restent à développer** : la coque partielle ne permet pas encore de quitter la planète. [Règles, coûts et contrôles](ship-parts-v452.md).
 
 ### Construire et démarrer un réacteur stellaire
 
@@ -27,7 +41,7 @@ Choisissez un constructeur de niveau **8** et un emplacement extérieur de suppo
 
 Dans son inspection, **Démarrer le réacteur** ouvre une confirmation. Annuler laisse le monde intact ; confirmer engage les réacteurs en veille réellement reliés. Préparez les défenses : le signal peut attirer des attaques pendant les **quatorze jours** de démarrage. Il n'existe pas de bouton d'arrêt gratuit. Plusieurs réacteurs ne multiplient pas les calendriers ; leur fin ou leur retrait n'effacent pas les adversaires arrivés. Pause et recharge conservent les dates.
 
-Poutres et moteurs prolongent désormais cette construction ; ordinateur, capteurs, caissons spatiaux, embarquement et lancement restent à développer. Le caisson ordinaire V447 reste un équipement de colonie. [Règles, adaptations et contrôles](ship-reactor-v451.md).
+Poutres, moteurs et caissons spatiaux prolongent désormais cette construction ; ordinateur, capteurs et lancement restent à développer. Le caisson ordinaire V447 reste un équipement de colonie. [Règles, adaptations et contrôles](ship-reactor-v451.md).
 
 ### Donner des textiles à une faction
 

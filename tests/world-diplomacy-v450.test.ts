@@ -84,7 +84,7 @@ test('gift faction admission returns original references and rechecks real playe
  for(const mutate of rejected){const copy=structuredClone(registry),f=copy.factions.find(f=>f.id===faction.id)!,pair=copy.relations.find(r=>r.aId===relation.aId&&r.bId===relation.bId)!;mutate(copy,f,pair);const state=JSON.stringify(copy);expect(diplomaticGiftFaction274(copy,f.id,274).ok).toBe(false);expect(JSON.stringify(copy)).toBe(state);}
  expect(diplomaticGiftFaction274(registry,registry.playerFactionId,274).ok).toBe(false);
  expect(diplomaticGiftFaction274(registry,999,274).ok).toBe(false);
- for(const version of [273,277])expect(diplomaticGiftFaction274(registry,faction.id,version).ok).toBe(false);
+ for(const version of [273,278])expect(diplomaticGiftFaction274(registry,faction.id,version).ok).toBe(false);
  const past=structuredClone(registry);past.settlements.find(s=>s.factionId===faction.id)!.attack263={revision:1,mapId:null,generatedAtCore:0,inhabitantIds:[],cooldownUntilCore:60000};
  expect(diplomaticGiftFaction274(past,faction.id,274).ok).toBe(true);
 });

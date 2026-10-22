@@ -36,6 +36,7 @@ export function equipmentInspectionView(world:World,pawn:Pawn):EquipmentInspecti
     .map(p=>`${ITEM_DEFINITIONS[p.item].label}${p.quantity>1?` ×${p.quantity}`:''}`);
   for(const packed of world.packed)if(packed.owner.type==='pawn'&&packed.owner.pawnId===pawn.id)inventory.push(buildingLabels[packed.building.kind]);
   if(pawn.cryptosleepTask?.action==='carry'&&(pawn.cryptosleepTask.phase==='carry'||pawn.cryptosleepTask.phase==='closing'))inventory.push('Patient porté vers un caisson de cryptosommeil');
+  if(pawn.shipCasketTask277?.action==='carry'&&(pawn.shipCasketTask277.phase==='carry'||pawn.shipCasketTask277.phase==='closing'))inventory.push('Patient porté vers un caisson spatial');
   if(pawn.rescue?.phase==='carry')inventory.push(pawn.rescue.capture?'Personne capturée transportée':'Personne secourue transportée');
   if(pawn.animalRescue?.phase==='carry')inventory.push(`Animal secouru transporté · ${pawn.animalRescue.animalId}`);
   return {

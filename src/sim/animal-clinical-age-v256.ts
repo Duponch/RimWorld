@@ -1,3 +1,4 @@
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {applyLiveAnimalBirthday256} from './animal-live-birthday-256.ts';
 import {healthRandom} from './health.ts';
 import {advanceTrackedAnimalAge256,synchronizeAnimalGrowthMedical256,type AnimalGrowthTracker256} from './animal-growth-runtime-256.ts';
@@ -20,9 +21,9 @@ export function createAnimalMedicalRecord256(world:{tick:number;schemaVersion:nu
  * at the exact clinical death tick. No clock or owner is repaired here. */
 export function validAnimalClinicalOwner256(record:MedicalRecord,species:WildAnimal['species'],ageTicks:number,worldTick:number):boolean {
   if(!isAnimalSpecies256(species)&&record.animalGrowth===undefined)return record.animalBirthTick===undefined;
-  const clinical=record.death?.tick??record.tick,birth=record.animalBirthTick;
-  if(record.body!==species||typeof birth!=='number'||!Number.isSafeInteger(birth)||!Number.isSafeInteger(ageTicks)||ageTicks<0||!Number.isSafeInteger(clinical)||clinical>worldTick)return false;
-  const ageAtClinical=record.death?ageTicks:ageTicks-(worldTick-clinical);
+  const clinical=record.tick,civil=record.death?.tick??medicalCivilTick271(record),birth=record.animalBirthTick;
+  if(record.body!==species||typeof birth!=='number'||!Number.isSafeInteger(birth)||!Number.isSafeInteger(ageTicks)||ageTicks<0||!Number.isSafeInteger(clinical)||!Number.isSafeInteger(civil)||civil>worldTick)return false;
+  const ageAtClinical=record.death?ageTicks:ageTicks-(worldTick-civil);
   return Number.isSafeInteger(ageAtClinical)&&ageAtClinical>=0&&clinical-birth===ageAtClinical;
 }
 

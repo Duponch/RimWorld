@@ -1,3 +1,7 @@
+import {isSchema277OrLater} from './schema-compatibility-257.ts';
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
+import {validFilthFeet} from './filth-save.ts';
+import {validHeldDomesticAnimal277} from './domestic-save.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {validCaravanRestField266} from './caravan-rest-state-266.ts';
 import {validPermanentManhunter261} from './animal-scaria-261.ts';
@@ -22,7 +26,7 @@ import {medicalStatus} from './injury-state.ts';
 import {validCorpseRot} from './corpse-save.ts';
 import {adultAgeTicks,gestationTicks,animalNutritionMax} from './animal-life.ts';
 import type {WorldGroupRecord} from './world-map-state.ts';
-export interface GroupAnimalRecordContext256 {context:Pick<WorldGroupRecord['context'],'width'|'height'>;tick:number;nextId:number;version:number;mothballedWorldPawn256?:true}
+export interface GroupAnimalRecordContext256 {context:Pick<WorldGroupRecord['context'],'width'|'height'>;tick:number;nextId:number;version:number;mothballedWorldPawn256?:true;heldShipCasket277?:{heldAt:number;structures?:import('./types.ts').World['structures']}}
 const obj=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype&&Reflect.ownKeys(v).every(k=>typeof k==='string'&&Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)!,'value'));
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 const finite=(v:unknown,min:number,max:number)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
@@ -31,17 +35,20 @@ const dense=(v:unknown,max:number):v is unknown[]=>Array.isArray(v)&&Object.getP
 const animalKeys=['id','species','sex','x','z','food','rest','state','path','nextDecision','health','corpseRot','domestic','ageTicks','parents','pregnancy','manhunter'];
 /** Shape only, with true personal clock. No terrain, pathfinder, climate generation or passive advance. */
 export function validCaravanAnimalRecord256(a:unknown,c:GroupAnimalRecordContext256):boolean {
- const {nextId,version}=c;if(c.mothballedWorldPawn256&&!isSchema256Or257(version))return false;
- if(!obj(a)||!validDetachedHiveInsect256(a,version,nextId)||!validHiveRuntimeFields256(a,version,c.tick,nextId)||!validStartingPetHeader256(a,version)||!validAnimalMindFields256(a,version,c.tick,c.context.width,c.context.height,false)||!validArrivalRotation256(a,version)||!validAnimalAgeCoreRemainder256(a,version,c.tick)||!keys(a,['id','species','sex','x','z','food','rest','state','path','nextDecision','ageTicks'],[...animalKeys,...(version>=256?['corpseDamage','eggLayer','mapBed','caravanCarrySick','ageCoreRemainder','growthTracker','arrivalRotation','wander','confusion','startingPet','hive','hiveThink']:[]),...(version>=266?['caravanRest']:[])])||!int(a.id,1,nextId-1)||!isAnimalSpeciesInVersion(a.species,version)||!int(a.x,0,c.context.width-1)||!int(a.z,0,c.context.height-1)||!['female','male'].includes(String(a.sex))||!finite(a.food,0,a.growthTracker?animalNutritionMax(a as unknown as import('./wildlife-state.ts').WildAnimal):animalSpecies(a.species).nutrition)||!finite(a.rest,0,1)||!['idle','downed','dead'].includes(String(a.state))||!dense(a.path,0)||!int(a.nextDecision,0,c.tick+100)||!int(a.ageTicks))return false;
+ const {nextId,version}=c;const held=c.heldShipCasket277;if(held&&(!isSchema277OrLater(version)||held.heldAt!==c.tick))return false;
+ if(obj(a)){const d=Object.getOwnPropertyDescriptor(a,'shipCryptosleepHeldAt277');if(held?(!d?.enumerable||!Object.hasOwn(d,'value')||d.value!==held.heldAt):'shipCryptosleepHeldAt277'in a)return false;if(Object.hasOwn(a,'filthFeet')&&(!isSchema277OrLater(version)||!validFilthFeet(a.filthFeet,version)))return false;}
+ if(c.mothballedWorldPawn256&&!isSchema256Or257(version))return false;
+ if(!obj(a)||!validDetachedHiveInsect256(a,version,nextId)||!validHiveRuntimeFields256(a,version,c.tick,nextId)||!validStartingPetHeader256(a,version)||!validAnimalMindFields256(a,version,c.tick,c.context.width,c.context.height,false)||!validArrivalRotation256(a,version)||!validAnimalAgeCoreRemainder256(a,version,c.tick)||!keys(a,['id','species','sex','x','z','food','rest','state','path','nextDecision','ageTicks'],[...animalKeys,...(version>=256?['corpseDamage','eggLayer','mapBed','caravanCarrySick','ageCoreRemainder','growthTracker','arrivalRotation','wander','confusion','startingPet','hive','hiveThink']:[]),...(version>=266?['caravanRest']:[]),...(isSchema277OrLater(version)?['filthFeet','taming']:[]),...(held?['shipCryptosleepHeldAt277']:[])])||!int(a.id,1,nextId-1)||!isAnimalSpeciesInVersion(a.species,version)||!int(a.x,0,c.context.width-1)||!int(a.z,0,c.context.height-1)||!['female','male'].includes(String(a.sex))||!finite(a.food,0,a.growthTracker?animalNutritionMax(a as unknown as import('./wildlife-state.ts').WildAnimal):animalSpecies(a.species).nutrition)||!finite(a.rest,0,1)||!['idle','downed','dead'].includes(String(a.state))||!dense(a.path,0)||!int(a.nextDecision,0,c.tick+100)||!int(a.ageTicks))return false;
  const animal=a as unknown as import('./wildlife-state.ts').WildAnimal,h=animal.health;if(!validToxicBuildupTransport256(animal,version,c.tick))return false;if(a.health!==undefined&&!obj(a.health))return false;
  if(!validActorMapBedField256(animal,version,nextId)||Object.hasOwn(a,'caravanCarrySick')&&typeof a.caravanCarrySick!=='boolean'||!validRetainedCorpseDamage256(animal,version)||!validAnimalEggState256(animal,version,{width:c.context.width,height:c.context.height,nextId,tick:c.tick}))return false;
  if(h&&Object.hasOwn(h,'animalBirthTick')&&!isAnimalSpecies256(animal.species)&&!animal.growthTracker)return false;
  if(isAnimalSpecies256(animal.species)&&!animalMechanicalReadiness256(animal.species).ok||h&&!validAnimalClinicalOwner256(h,animal.species,animal.ageTicks,c.tick))return false;
  if(h?.cryptosleepSickness?.vomit)return false;
- if(h&&(validateMedicalRecord(h,true,true,false,false,true,true,true,true,true,true,true,version)!==null||h.body!==animal.species||(h.death||c.mothballedWorldPawn256?h.tick>c.tick:h.tick!==c.tick)||(medicalStatus(h)==='mobile'?['downed','dead'].includes(animal.state):animal.state!==medicalStatus(h))))return false;
+ if(h&&(validateMedicalRecord(h,true,true,isSchema277OrLater(version),isSchema277OrLater(version),true,true,true,true,true,true,true,version)!==null||h.body!==animal.species||(h.death||c.mothballedWorldPawn256?medicalCivilTick271(h)>c.tick:medicalCivilTick271(h)!==c.tick)||(medicalStatus(h)==='mobile'?['downed','dead'].includes(animal.state):animal.state!==medicalStatus(h))))return false;
  if(!validCaravanRestField266(a,version,Math.min(c.tick,h?.death?.tick??c.tick)))return false;
- if(!h&&['downed','dead'].includes(animal.state)||!validDetachedDomesticAnimal(animal,c.tick,nextId,version))return false;
+ if(!h&&['downed','dead'].includes(animal.state)||!(held?.structures?validHeldDomesticAnimal277(animal,c.tick,nextId,version,held.structures):validDetachedDomesticAnimal(animal,c.tick,nextId,version)))return false;
  if(a.corpseRot!==undefined&&(animal.state!=='dead'||!h?.death||!validCorpseRot(a.corpseRot,c.tick,h.death.tick,h)))return false;
+ if(Object.hasOwn(a,'taming')&&(!isSchema277OrLater(version)||!obj(a.taming)||!keys(a.taming,['designated'],['lastAttempt'])||typeof a.taming.designated!=='boolean'||a.taming.lastAttempt!==undefined&&!int(a.taming.lastAttempt,0,c.tick)||animal.domestic&&a.taming.designated))return false;
  const parents=a.parents;if(parents!==undefined&&(!obj(parents)||!keys(parents,['motherId','fatherId'])||!int(parents.motherId,1,animal.id-1)||!int(parents.fatherId,1,animal.id-1)||parents.motherId===parents.fatherId))return false;
  const pregnancy=a.pregnancy;if(pregnancy!==undefined&&(!obj(pregnancy)||!keys(pregnancy,['fatherId','progress'])||!int(pregnancy.fatherId,1,nextId-1)||pregnancy.fatherId===animal.id||!int(pregnancy.progress,0,gestationTicks(animal.species))||animal.sex!=='female'||animal.ageTicks<adultAgeTicks(animal.species)))return false;
  if(!validPermanentManhunter261(animal,version))return false;

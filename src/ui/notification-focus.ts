@@ -1,4 +1,4 @@
-import {knownPosition256,knownPile256} from './exploration-readers-256';
+import {knownPosition256,knownPile256,knownBuilding256} from './exploration-readers-256';
 import {mapObjectExists} from './map-object-selection';
 import type { Cell,MaterialPile,World } from '../sim/types';
 import type { MapObjectSelection } from './map-object-selection';
@@ -48,7 +48,12 @@ export function pileNotificationTarget(world:World,pile:MaterialPile,key=`pile:$
   }
 }
 export function personNotificationTarget(world:World,id:number):NotificationTarget|undefined {
-  const pawn=world.pawns.find(p=>p.id===id);if(!pawn)return;
+  const pawn=world.pawns.find(p=>p.id===id);
+  if(!pawn){
+    const casket=world.structures.find(s=>s.kind==='cryptosleep-casket'&&s.cryptosleep?.human?.id===id
+      ||s.kind==='ship-cryptosleep-casket'&&s.shipCryptosleep277?.occupant?.kind==='human'&&s.shipCryptosleep277.occupant.pawn.id===id);
+    return casket&&knownBuilding256(world,casket)?objectNotificationTarget('structure',casket.id,casket):undefined;
+  }
   if(pawn.state!=='dead')return knownPosition256(world,pawn)?actorNotificationTarget(id):undefined;
   if(pawn.body?.lostAt!==undefined)return;
   const pile=world.piles.find(p=>p.humanCorpse?.pawnId===id);

@@ -1,5 +1,5 @@
 import { EMP_ADAPTATION_CORE_TICKS,empStunDuration } from './emp-rules.ts';
-import { empStructureActive,empStructureSupported } from './emp-state.ts';
+import { empStructureActive,empStructureSupported,empAdaptedUntilCore277,empStunUntilCore277 } from './emp-state.ts';
 import { mergeSlowIntervals,travelEnd } from './travel-timing.ts';
 import type { LivingTarget } from './combat-target.ts';
 import type { Mechanoid } from './mechanoid-state.ts';
@@ -14,10 +14,10 @@ export function applyEmpEffect(world:World,target:Structure|LivingTarget,damage:
   if('mechKind' in target){
     const mech=target as Mechanoid;
     if(!world.mechanoids?.includes(mech)||mech.state==='dead'||mech.state==='downed'||mech.health?.death
-      ||mech.emp&&core<mech.emp.adaptedUntilCore)return false;
+      ||mech.emp&&core<empAdaptedUntilCore277(mech.emp))return false;
     const recovery=mech.melee?.strike;
     if(recovery&&recovery.untilCore>core&&!Number.isSafeInteger(recovery.untilCore+duration))return false;
-    const until=Math.max(mech.emp?.stunUntilCore??core,core+duration),motion=mech.motion;
+    const until=Math.max(mech.emp?empStunUntilCore277(mech.emp):core,core+duration),motion=mech.motion;
     let slowed:typeof motion;
     if(motion&&motion.end>core/10){
       slowed={...motion,stuns:mergeSlowIntervals([...(motion.stuns??[]),{start:Math.max(motion.start,core/10),end:until/10}])};
@@ -44,7 +44,7 @@ export function applyEmpEffect(world:World,target:Structure|LivingTarget,damage:
  * topology mutation is needed when an EMP interval ends. */
 export function advanceEmp(world:World,core=world.tick*10):boolean {
   let changed=false;
-  for(const mech of world.mechanoids??[])if(mech.emp&&core>=Math.max(mech.emp.adaptedUntilCore,mech.emp.stunUntilCore)){
+  for(const mech of world.mechanoids??[])if(mech.emp&&core>=Math.max(empAdaptedUntilCore277(mech.emp),empStunUntilCore277(mech.emp))){
     delete mech.emp;changed=true;
   }
   for(const structure of world.structures)if(structure.emp&&core>=structure.emp.untilCore){delete structure.emp;changed=true;}
@@ -57,8 +57,8 @@ export function advanceEmp(world:World,core=world.tick*10):boolean {
 /** Downing stops the pawn's EMP stun, not its adaptation. Preserve every
  * elapsed position and the independent historical 45-Core impact suspension. */
 export function stopMechanoidEmpStun(mech:Mechanoid,core:number,tick=core/10):void {
-  const emp=mech.emp;if(!emp||emp.stunUntilCore<=core)return;
-  emp.stunUntilCore=core;
+  const emp=mech.emp;if(!emp||empStunUntilCore277(emp)<=core)return;
+  emp.stunUntilCore=core-(emp.suspendedCore277??0);
   const motion=mech.motion;if(!motion||motion.end<=core/10||!motion.stuns)return;
   const at=core/10,spans=motion.stuns.flatMap(span=>span.end<=at?[span]:span.start<at?[{start:span.start,end:at}]:[]);
   if(mech.stun&&mech.stun.untilCore>core)spans.push({start:Math.max(motion.start,at),end:mech.stun.untilCore/10});

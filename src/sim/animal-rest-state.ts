@@ -1,3 +1,4 @@
+import {shipCasketCarrierOf277,syncShipCasketPassenger277} from './ship-casket-carry-277.ts';
 import {groupAnimalClaimed256,groupAnimalCarrier256,syncGroupCarriedAnimals256} from './group-animal-formation-256.ts';
 import type { Pawn,World } from './types.ts';
 
@@ -8,10 +9,10 @@ export interface AnimalRestTask {spotId:number;phase:'travel'|'sleep'}
 export function animalServiceIds(p:Pawn):readonly number[] {
   const h=p.animalHandling;
   return [...(h?h.kind==='lead'?[h.animalId,...(h.ropees??[]),...(h.gatherId===undefined?[]:[h.gatherId])]:[h.animalId]:[]),
-    ...(p.animalCare?[p.animalCare.animalId]:[]),...(p.animalFeed?[p.animalFeed.animalId]:[]),...(p.animalRescue?[p.animalRescue.animalId]:[])];
+    ...(p.animalCare?[p.animalCare.animalId]:[]),...(p.animalFeed?[p.animalFeed.animalId]:[]),...(p.animalRescue?[p.animalRescue.animalId]:[]),...(p.shipCasketTask277?.action==='carry'&&p.shipCasketTask277.patient?.kind==='animal'?[p.shipCasketTask277.patient.id]:[])];
 }
 export const animalClaimed=(w:World,id:number,exceptPawn?:number):boolean=>w.pawns.some(p=>p.id!==exceptPawn&&animalServiceIds(p).includes(id))||w.schemaVersion>=256&&groupAnimalClaimed256(w,id,exceptPawn);
-export const animalCarrier=(w:World,id:number):Pawn|undefined=>w.pawns.find(p=>p.animalRescue?.animalId===id&&p.animalRescue.phase==='carry')??(w.schemaVersion>=256?groupAnimalCarrier256(w,id):undefined);
+export const animalCarrier=(w:World,id:number):Pawn|undefined=>shipCasketCarrierOf277(w,{kind:'animal',id})??w.pawns.find(p=>p.animalRescue?.animalId===id&&p.animalRescue.phase==='carry')??(w.schemaVersion>=256?groupAnimalCarrier256(w,id):undefined);
 export function animalSpotClaimed(w:World,id:number,exceptAnimal?:number,exceptPawn?:number):boolean {
   return w.pawns.some(p=>p.id!==exceptPawn&&p.animalRescue?.spotId===id&&p.animalRescue.animalId!==exceptAnimal)
     ||!!w.wildlife?.animals.some(a=>a.id!==exceptAnimal&&a.animalRest?.spotId===id);
@@ -19,6 +20,7 @@ export function animalSpotClaimed(w:World,id:number,exceptAnimal?:number,exceptP
 export function syncCarriedAnimals(w:World,carrier?:Pawn):void {
   if(w.schemaVersion>=256)for(const p of carrier?[carrier]:w.pawns)syncGroupCarriedAnimals256(w,p);
   for(const p of carrier?[carrier]:w.pawns){
+    syncShipCasketPassenger277(w,p);
     if(p.animalRescue?.phase!=='carry')continue;
     const a=w.wildlife?.animals.find(a=>a.id===p.animalRescue!.animalId);if(!a)continue;
     a.x=p.x;a.z=p.z;a.path=[];

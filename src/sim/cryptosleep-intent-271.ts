@@ -1,4 +1,5 @@
-import {isSchema271OrLater} from './schema-compatibility-257.ts';
+import {isShipCasket277} from './ship-casket-state-277.ts';
+import {isSchema271OrLater,isSchema277OrLater} from './schema-compatibility-257.ts';
 import {isPlayerCasket271,cryptosleepInteraction271,type PlayerCasket271,type CryptosleepCommand271} from './cryptosleep-state-271.ts';
 import {isColonist} from './affiliation.ts';
 import {biologicalYears} from './human-age.ts';
@@ -28,7 +29,7 @@ export const cryptosleepHuman271=(p:Pawn):boolean=>isColonist(p)&&!p.prisoner&&!
 export const cryptosleepActorCapable271=(w:World,p:Pawn):boolean=>cryptosleepHuman271(p)&&!p.draft&&!p.mental?.crisis&&!p.burning&&!p.flee&&!p.bombRefuge&&!p.heatRefuge&&!p.collapsePending
  &&!(p.stun&&p.stun.untilCore>w.tick*10)&&!medicalWorkRefusal(p)&&!(w.restRules==='legacy'&&p.rest===0)&&!carrierOf(w,p.id);
 // Core's spawned free-colonist counter includes a living downed person.
-export const cryptosleepLastColonist271=(w:World,pawnId:number):boolean=>!w.pawns.some(q=>q.id!==pawnId&&isColonist(q)&&!q.prisoner&&!q.visitor&&!q.raid&&!q.podRescue&&q.state!=='dead'&&!q.health?.death);
+export const cryptosleepLastColonist271=(w:World,pawnId:number):boolean=>!w.pawns.some(q=>q.id!==pawnId&&isColonist(q)&&!q.prisoner&&!q.visitor&&!q.raid&&!q.podRescue&&q.state!=='dead'&&!q.health?.death)&&!(isSchema277OrLater(w.schemaVersion)&&w.structures.some(s=>isShipCasket277(s)&&s.shipCryptosleep277.occupant?.kind==='human'&&s.shipCryptosleep277.occupant.pawn.id!==pawnId&&isColonist(s.shipCryptosleep277.occupant.pawn)&&!s.shipCryptosleep277.occupant.pawn.prisoner&&!s.shipCryptosleep277.occupant.pawn.visitor&&!s.shipCryptosleep277.occupant.pawn.raid&&!s.shipCryptosleep277.occupant.pawn.podRescue&&s.shipCryptosleep277.occupant.pawn.state!=='dead'&&!s.shipCryptosleep277.occupant.pawn.health?.death));
 export const cryptosleepClaim271=(w:World,id:number,except?:number):boolean=>w.pawns.some(p=>p.id!==except&&p.cryptosleepTask?.casketId===id);
 export function cryptosleepTravelRefusal271(w:World,p:Pawn):string|undefined {
  if(groupOnMapMember(w,p.id))return 'Terminez ou annulez la préparation de caravane avant cet ordre.';

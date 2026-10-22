@@ -1,3 +1,4 @@
+import {shipCasketTerminalParticipant277} from './ship-casket-notifications-277.ts';
 import {isSchema275OrLater} from './schema-compatibility-257.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {actualMechanicalBirthFaction259} from './mechanoid-world-faction-259.ts';
@@ -85,7 +86,8 @@ export function advanceMechanoidRaid(w:World,core=w.tick*10):boolean {
 function advanceMechanicalGroup(w:World,g:MechanoidRaidGroup,core:number):boolean {
   const s=w.raids!;
   if(g.lost.length===g.members.length){
-    s.last={id:g.id,tick:w.tick,reason:'defended',killed:g.members.length,downed:0,escaped:0,
+    const destroyed=g.members.filter(id=>shipCasketTerminalParticipant277(w,id,'mechanical',g.id)?.destroyed).length;
+    s.last={id:g.id,tick:w.tick,reason:'defended',killed:g.members.length-destroyed,...destroyed?{destroyed277:destroyed}:{},downed:0,escaped:0,
       mechanoid:true,mechComposition:{budget:g.composition.budget,roster:[...g.composition.roster]},...g.shipReactor275?{shipReactor275:{...g.shipReactor275}}:{}};
     retainRaidResult261(w);s.completed++;
     if(s.mechActive===g)delete s.mechActive;else s.extraMechActive261=s.extraMechActive261!.filter(row=>row!==g);

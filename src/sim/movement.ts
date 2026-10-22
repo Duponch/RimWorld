@@ -1,3 +1,4 @@
+import {shipCasketCarrying277} from './ship-casket-carry-277.ts';
 import {kidnapCarrying261} from './caravan-kidnap-261.ts';
 import {syncGroupHumanPassenger257,groupHumanCarrying257} from './group-human-admission-257.ts';
 import {finishSnowStep} from './snow-surface.ts';
@@ -27,7 +28,7 @@ export function startTravel(world:World,pawn:Pawn,next:Cell,getLight?:LightReade
   const door=doorAt(world,next);if(door)start=Math.max(start,door.door!.changedAt+(1-door.door!.from)*importDoorDuration(door));
   const terrainDelay=furnitureDelay(world,pawn,next,undefined,geometry);
   let speedFactor=(getLight?.()??new LightEnvironmentCache().read(world)).speedAt(pawn)*pawnBody(pawn).capacities.moving*apparelMoveFactor(world,pawn)*weatherMoveFactor(world,pawn);
-  if(world.schemaVersion>=86){if(pawn.prisoner)speedFactor*=.35;if(pawn.rescue?.phase==='carry'||cryptosleepCarrying271(pawn)||groupHumanCarrying257(world,pawn.id)||kidnapCarrying261(pawn))speedFactor*=.6;}
+  if(world.schemaVersion>=86){if(pawn.prisoner)speedFactor*=.35;if(pawn.rescue?.phase==='carry'||cryptosleepCarrying271(pawn)||shipCasketCarrying277(pawn)||groupHumanCarrying257(world,pawn.id)||kidnapCarrying261(pawn))speedFactor*=.6;}
   if((pawn.mental?.crisis?.kind==='sad-wander'||pawn.mental?.crisis?.kind==='food-binge')&&!pawn.need)speedFactor=Math.min(speedFactor/2,TRAVEL_TICKS/5);
   const duration = TRAVEL_TICKS * edgeLength(pawn,next)/speedFactor+terrainDelay;
   const motion:TravelSegment={from:{x:pawn.x,z:pawn.z},to:{x:next.x,z:next.z},start,end:start+duration,...terrainDelay?{terrainDelay}:{},...speedFactor!==1?{speedFactor}:{}};

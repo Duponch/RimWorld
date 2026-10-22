@@ -35,6 +35,7 @@ export const workColumns: readonly {id: WorkType; label: string}[] = [
   {id:'clean',label:'Nettoyage'}, {id:'research',label:'Recherche'},
 ];
 export const toolDefinitions: { id: Tool; title: string; hint: string; key: string; category: ArchitectCategory }[] = [
+  {id:'ship-cryptosleep-casket',title:'Caisson spatial de cryptosommeil',hint:'1 × 2 orientable · 120 acier + 14 uranium + 3 composants + 3 composants avancés · Construction 8 · terrain lourd sans toit · tête sur une poutre achevée · éjection directe sans électricité · Q / E pour tourner',key:'',category:'ship'},
   {id:'ship-beam',title:'Poutre structurelle de vaisseau',hint:'2 × 6 orientable · 200 acier + 40 plastacier + 3 composants + 1 composant avancé · Construction 5 · terrain lourd sans toit · recherche Construction de vaisseau · Q / E pour tourner',key:'',category:'ship'},
   {id:'ship-reactor',title:'Réacteur stellaire',hint:'6 × 7 orientable · 350 acier + 280 plastacier + 70 uranium + 8 composants avancés · Construction 8 · terrain lourd sans toit · 1 000 W dès construction · recherche Réacteur stellaire · Q / E pour tourner',key:'',category:'ship'},
   {id:'ship-engine',title:'Moteur Johnson–Tanaka',hint:'3 × 4 orientable · 260 acier + 140 plastacier + 70 uranium + 6 composants avancés · Construction 8 · terrain lourd sans toit · recherche Moteur Johnson–Tanaka · Q / E pour tourner',key:'',category:'ship'},

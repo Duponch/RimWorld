@@ -49,9 +49,9 @@ test('beam/engine paid recipes and placement recheck the farthest occupied cell;
   w.roofing!.constructed.push(i);expect(shipPartPlacementRefusal276(w,pose)).toContain('toit');w.roofing!.constructed=[];
   w.roofing!.natural={thin:[i],thick:[]};expect(shipPartPlacementRefusal276(w,pose)).toContain('toit');delete w.roofing!.natural;
   w.tiles[i]={terrain:'marsh'};expect(shipPartPlacementRefusal276(w,pose)).toContain('lourde');
-  for(const version of [275,277])expect(validConstructionMaterial(kind,'steel',version)).toBe(false);
+  for(const version of [275,278])expect(validConstructionMaterial(kind,'steel',version)).toBe(false);
   expect(validConstructionMaterial(kind,'steel',276)).toBe(true);expect(validConstructionMaterial(kind,'wood',276)).toBe(false);
-  w.structures.push(s);expect(validatePower(w,275)).not.toEqual([]);expect(validatePower(w,277)).not.toEqual([]);
+  w.structures.push(s);expect(validatePower(w,275)).not.toEqual([]);expect(validatePower(w,278)).not.toEqual([]);
   for(const power of [{on:true,parentId:null},{on:false,parentId:s.id},{on:false,parentId:null,switchOn:undefined}]){s.power=power;expect(validatePower(w,276)).not.toEqual([]);}
  }
 });

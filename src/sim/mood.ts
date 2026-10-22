@@ -73,7 +73,7 @@ export function moodThoughts(world:World,pawn:Pawn,topology?:RelationshipTopolog
     environment:{comfort:pawn.comfort,beauty:pawn.beauty},housing:relationshipHousingThought(world,pawn,topology),deathSituation:colonistUnburiedThought(world,pawn)});
 }
 export function personalMoodThoughts(pawn:Pawn,c:PersonalMoodContext):readonly MoodThought[] {
-  if(pawn.cryptosleepHeldAt271!==undefined)c={...c,tick:memoryReadTick271(pawn,c.tick)};
+  if((pawn.cryptosleepHeldAt271!==undefined||pawn.shipCryptosleepHeldAt277!==undefined))c={...c,tick:memoryReadTick271(pawn,c.tick)};
   if(pawn.mental?.crisis?.kind==='confused-wander')return [];
   if(pawn.state==='dead')return [];
   const expectation=c.expectation;
@@ -114,7 +114,7 @@ export function moodTarget(thoughts:readonly MoodThought[]):number {
 /** Downed does not mean unconscious. Awake medical rest and a conscious person
  * without usable legs still experience mood; sleep and lost awareness freeze it. */
 export function moodFrozen(pawn:Pawn,body?:BodyAssessment):boolean {
-  return pawn.cryptosleepHeldAt271!==undefined||pawn.state==='dead'||pawn.state==='sleeping'||!!pawn.medicalSleep||!(body??pawnBody(pawn)).canBeAwake;
+  return (pawn.cryptosleepHeldAt271!==undefined||pawn.shipCryptosleepHeldAt277!==undefined)||pawn.state==='dead'||pawn.state==='sleeping'||!!pawn.medicalSleep||!(body??pawnBody(pawn)).canBeAwake;
 }
 export function updateMood(world:World,pawn:Pawn,body?:BodyAssessment,topology?:RelationshipTopology):void {
   if(moodFrozen(pawn,body))return;
@@ -128,7 +128,7 @@ export function updateMoodFromThoughts(pawn:Pawn,thoughts:readonly MoodThought[]
 }
 export function expireMealMemories(world:World,pawn:Pawn):void {expireMealMemoriesAt(pawn,world.tick);}
 export function expireMealMemoriesAt(pawn:Pawn,tick:number):void {
-  if(pawn.cryptosleepHeldAt271!==undefined)return;
+  if((pawn.cryptosleepHeldAt271!==undefined||pawn.shipCryptosleepHeldAt277!==undefined))return;
   if(pawn.familyBereavement)expireFamilyBereavement(pawn,tick);
   if(pawn.romanceMemories)expireRomanceMemories(pawn,tick);
   if(pawn.bereavement)expireBereavement(pawn,tick);

@@ -1,3 +1,4 @@
+import {captureShipCasketHumans277,captureShipCasketAnimals277} from './ship-casket-state-277.ts';
 import { factionOf } from './affiliation.ts';
 import { floorRoomMarketValue, structureRoomMarketValue } from './room-market-value.ts';
 import { pileMarketValue } from './trade-prices.ts';
@@ -91,6 +92,7 @@ export function colonyWealth(world: World): ColonyWealth {
   const held = world.structures.filter(isPlayerCasket271).flatMap(c=>{
     const h=c.cryptosleep;return h.human?[{pawn:h.human,items:h.items,packed:h.packed}]:[];
   });
+  held.push(...captureShipCasketHumans277(world).map(h=>({pawn:h.pawn,items:[...h.items],packed:[...h.packed]})));
   const pawns = new Map(world.pawns.map(p => [p.id,p]));
   for (const owner of held) pawns.set(owner.pawn.id,owner.pawn);
   const unpricedPileIds: number[] = [], unpricedPackedIds: number[] = [], unpricedStructureIds: number[] = [], unpricedPawnIds: number[] = [];
@@ -118,7 +120,7 @@ export function colonyWealth(world: World): ColonyWealth {
   // Pawn MarketValue needs age/life stage, all Core capacities, full skill set,
   // beauty and hediff price offsets. Those facts are absent from this save.
   for (const pawn of pawns.values()) if (colonyPawn(pawn)) unpricedPawnIds.push(pawn.id);
-  for(const animal of world.wildlife?.animals??[])if(animal.domestic&&animal.state!=='dead')unpricedPawnIds.push(animal.id);
+  for(const animal of [...world.wildlife?.animals??[],...captureShipCasketAnimals277(world).map(h=>h.animal)])if(animal.domestic&&animal.state!=='dead')unpricedPawnIds.push(animal.id);
   const pawnsKnown = 0, knownTotal = items + structures + floors + pawnsKnown;
   return {
     items,structures,floors,pawnsKnown,knownTotal,

@@ -13,7 +13,7 @@ export function validateRelationshipWorld(world: World, version: number): string
 /** @internal Fixed Decoder consumers only. Public/RAW callers capture afresh. */
 export function validateRelationshipWorldForSnapshot(world:World,version:number,readOwners:()=>HumanOwnershipCapture):string[] {
   let owners: {pawn:Pawn;tick:number;civilTick:number}[];
-  try {owners=readOwners().pawnOwners.map(slot=>({pawn:slot.pawn!,tick:slot.validationTick,civilTick:slot.kind==='player-casket'?world.tick:slot.validationTick}));}
+  try {owners=readOwners().pawnOwners.map(slot=>({pawn:slot.pawn!,tick:slot.validationTick,civilTick:slot.kind==='player-casket'||slot.kind==='ship-casket'?world.tick:slot.validationTick}));}
   catch {return ['Invalid human relationship namespace.'];}
   const offers = [...(world.arrivals?.pending ? [world.arrivals.pending] : []), ...(world.quests?.entries ?? [])];
   const hasFields = Object.hasOwn(world, 'relationships')

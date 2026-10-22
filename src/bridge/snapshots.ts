@@ -1,3 +1,7 @@
+import {validShipCasketHistoricalTransport277} from '../sim/ship-casket-save-277.ts';
+import {validShipCasketBuilding277,registerShipCasketThingIds277} from '../sim/ship-casket-owner-save-277.ts';
+import {isShipCasket277} from '../sim/ship-casket-state-277.ts';
+import {validShipCasketTaskField277,validShipCasketTaskTransport277} from '../sim/ship-casket-task-save-277.ts';
 import {validShipPartHistoricalTransport276,validShipHullBuilding276} from '../sim/ship-part-save-276.ts';
 import {validateShipReactorThreats275,validShipReactorThreatContinuation275} from '../sim/ship-reactor-threat-save-275.ts';
 import {validShipReactorBuilding275,validShipReactorWorld275,validShipReactorContinuation275,validShipReactorHistoricalTransport275} from '../sim/ship-reactor-save-275.ts';
@@ -668,6 +672,7 @@ function denseArray(value:unknown):value is unknown[] {
 function validStructurePatchEntry(value:unknown,world:Pick<World,'nextId'|'width'|'height'|'schemaVersion'|'tick'>):value is Structure {
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
   if(!validCaveHiveBuilding256(value,world.schemaVersion,world)||!validAncientCasketField256(value,world.schemaVersion)||!validLocalRoadPropStructure256(value,world.schemaVersion,world)||!validHumanSleepingSpotStructureEntry(value,world.schemaVersion,world)||!validBedrollStructureEntry256(value,world.schemaVersion,world)||!validAncientMonumentBuilding256(value,world.schemaVersion))return false;
+  if(!validShipCasketBuilding277(value,world.schemaVersion,world,world.tick))return false;
   if(!validShipReactorBuilding275(value,world.schemaVersion,world,world.tick*10)||!validShipHullBuilding276(value,world.schemaVersion,world))return false;
   if(!validAncientCasketBuilding256(value,world.schemaVersion,world)||!validCryptosleepBuilding271(value,world.schemaVersion,world,world.tick))return false;
   const s=value as Structure;
@@ -1129,6 +1134,7 @@ export class SnapshotDecoder {
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
     if(packet.world.destroyed!==undefined&&!validNaturalHiveLoss256(packet.world.destroyed,packet.world.schemaVersion))return resync('Invalid or future natural Hive loss counter.');
     if(!validWorldPawnsEnvelope256(packet.world,packet.world.schemaVersion,packet.world.tick*10,packet.world.nextId))return resync('Invalid or future WorldPawns header.');
+    if(!validShipCasketHistoricalTransport277(packet,packet.world.schemaVersion))return resync('Future spatial casket content.');
     if(!validShipPartHistoricalTransport276(packet,packet.world.schemaVersion))return resync('Pièce de vaisseau ou recherche moteur future dans ce snapshot.');
     if(!validShipReactorHistoricalTransport275(packet,packet.world.schemaVersion))return resync('Réacteur stellaire futur dans ce snapshot.');
     if(!validProstheticHistoricalTransport273(packet,packet.world.schemaVersion))return resync('Prothèses industrielles futures dans ce snapshot.');
@@ -1211,7 +1217,7 @@ export class SnapshotDecoder {
     if(Object.hasOwn(message.world,'bombWaves')&&(!Array.isArray(message.world.bombWaves)||message.world.bombWaves.some(w=>!validBombWaveShape(w,message.world.schemaVersion))))return resync('Forme de vague Bomb invalide.');
     let hasDraftedTend=false;const forcedConsumers:Pawn[]=[];
     for(const pawn of message.world.pawns){
-      if(!validCryptosleepTaskField271(pawn,message.world.schemaVersion,message.world.tick,message.world.nextId)||Object.hasOwn(pawn,'cryptosleepHeldAt271'))return resync('Tâche ou propriétaire local de cryptosommeil invalide.');
+      if(!validCryptosleepTaskField271(pawn,message.world.schemaVersion,message.world.tick,message.world.nextId)||Object.hasOwn(pawn,'cryptosleepHeldAt271')||!validShipCasketTaskField277(pawn,message.world.schemaVersion,message.world.tick,message.world.nextId)||Object.hasOwn(pawn,'shipCryptosleepHeldAt277'))return resync('Tâche ou propriétaire local de cryptosommeil invalide.');
       if(pawn.health&&!validMedicalCivilHeader271(pawn.health,message.world.schemaVersion))return resync('Horloge médicale civile invalide ou future.');
       if(!validCaravanRestField266(pawn as unknown as Record<string,unknown>,message.world.schemaVersion,pawn.health?.death?.tick??message.world.tick))return resync('Trace de repos de caravane invalide ou future.');
       if(!validNativeHumanField256(pawn,message.world.schemaVersion))return resync('Identité humaine native invalide ou future.');
@@ -1450,7 +1456,7 @@ export class SnapshotDecoder {
     if(!validPemmicanCatalogueDomains(next,next.schemaVersion)||!validPemmicanResearchTransport(next,next.schemaVersion))return resync('Pemmican, recherche ou production future/invalide.');
     if(!validTundraTransport(next,next.schemaVersion))return resync('Toundra, flore ou climat futur/incohérent.');
     if(validateAncientCasketPhysical256(next).length)return resync('Invalid actual casket physical owner.');
-    if(!validCryptosleepResearchTransport271(next,next.schemaVersion)||!validCryptosleepTaskTransport271(next))return resync('Recherche, caisson ou service de cryptosommeil invalide.');
+    if(!validCryptosleepResearchTransport271(next,next.schemaVersion)||!validCryptosleepTaskTransport271(next)||!validShipCasketTaskTransport277(next))return resync('Recherche, caisson ou service de cryptosommeil invalide.');
     if(validateBridgeTransport(next,next.schemaVersion,message.kind==='delta'?changedTileIndices:[]).length)return resync('Fondation future, chantier ou support invalide.');
     if(this.validateMarshTransport(next,message.kind==='delta'?changedTileIndices:[],resourceReuse,resourceBaseReuse).length)return resync('Marais futur, sans support ou fertile invalide.');
     if(validateSnowTransport(next,next.schemaVersion, message.kind==='delta'&&!!this.current?.snow===!!next.snow?changedTileIndices:undefined).length)return resync('Snow surface clock, depth or owner invalid.');
@@ -1611,7 +1617,7 @@ export class SnapshotDecoder {
     // capture. Foreign registries above are already validated; their historical
     // owners reserve the same namespace as the map and cannot become a wave.
     const shelves=next.structures.some(s=>s.shelf!==undefined)||next.packed.some(p=>p.building.shelf!==undefined);
-    const startingArrival=Object.hasOwn(next,'startingArrival'),ancientCaskets=next.structures.some(isAncientCasket256),playerCaskets=next.structures.some(isPlayerCasket271);
+    const startingArrival=Object.hasOwn(next,'startingArrival'),ancientCaskets=next.structures.some(isAncientCasket256),playerCaskets=next.structures.some(s=>isPlayerCasket271(s)||isShipCasket277(s));
     if(next.ancientShrineWarnings||mineableIds.size||next.geysers||next.wildlife?.flyers?.length||collapsedRockIds.size||next.jobs.some(j=>j.tree)||next.piles.some(p=>p.innerResource)||startingArrival||ancientCaskets||playerCaskets||shelves||relationships||Object.hasOwn(next,'orbital')||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||next.raids?.extraMechActive261?.length||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
       // Only the closed MAIN context can reuse its resource facts. Keep RAW
       // and non-strict collection/getter evaluation on the historical path.
@@ -1662,6 +1668,7 @@ export class SnapshotDecoder {
       if(registerGroupThingIds(next,ids).length)return resync('Une identité du groupe possède plusieurs propriétaires.');
       if(registerStartingArrivalThingIds(next,ids).length)return resync('Une identité des capsules initiales possède plusieurs propriétaires.');
       if(registerAncientCasketThingIds256(next,ids).length)return resync('Propriétaire ou identité de capsule ancienne invalide.');
+      if(registerShipCasketThingIds277(next,ids).length)return resync('Invalid spatial casket owner or identity.');
       if(registerCryptosleepThingIds271(next,ids).length)return resync('Propriétaire ou identité de caisson de cryptosommeil invalide.');
       // Outer human/personal Things must precede their contained tree originals,
       // matching RAW. The player-holder guard can reuse this ordinary namespace

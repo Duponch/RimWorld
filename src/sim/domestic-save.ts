@@ -210,3 +210,6 @@ export function validateDomesticAnimals(w:World,version:number):string[] {
 }
 
 export function validDetachedDomesticAnimal(a:WildAnimal,tick:number,nextId:number,version=255):boolean {return a.domestic===undefined||validDomesticOwner({tick,nextId},a,version);}
+
+/** Scalar clock with the real local structures, solely for an actual held owner. */
+export function validHeldDomesticAnimal277(a:WildAnimal,tick:number,nextId:number,version:number,structures:World['structures']):boolean {return version===277&&(a.domestic===undefined||validDomesticOwner({tick,nextId,structures},a,version));}

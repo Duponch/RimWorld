@@ -1,3 +1,4 @@
+import {isSchema277OrLater} from './schema-compatibility-257.ts';
 import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {validCraftingFuelDestination269} from './fuel-purpose-save-269.ts';
 import {validCryptosleepTaskField271} from './cryptosleep-task-save-271.ts';
@@ -81,13 +82,17 @@ export function validateRetainedPlayerCasketPawnShape271(item:Record<string,unkn
 export function validateDetachedPawnRecordShape(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick=context.tick):string[] {return pawnRecordShape(item,context,version,validationTick,true);}
 /** Away ownership has real origin IDs, never manufactured Area objects. */
 export function validateAwayPawnRecordShape(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick:number,areaIds:ReadonlySet<number>):string[] {return pawnRecordShape(item,context,version,validationTick,true,areaIds);}
-function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,version:number,validationTick:number,detached:boolean,awayAreaIds?:ReadonlySet<number>,heldPlayer271?:{casketId:number;heldAt:number;retained?:true}):string[] {
+export function validateShipCasketPawnShape277(item:Record<string,unknown>,world:World,version:number,heldAt:number,casketId:number):string[] {return pawnRecordShape(item,world,version,heldAt,false,undefined,undefined,{casketId,heldAt});}
+export function validateRetainedShipCasketPawnShape277(item:Record<string,unknown>,context:PawnRecordContext,version:number,heldAt:number,casketId:number):string[] {return pawnRecordShape(item,context,version,heldAt,true,undefined,undefined,{casketId,heldAt,retained:true});}
+function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,version:number,validationTick:number,detached:boolean,awayAreaIds?:ReadonlySet<number>,heldPlayer271?:{casketId:number;heldAt:number;retained?:true},heldShip277?:{casketId:number;heldAt:number;retained?:true}):string[] {
   const input=world as unknown as Record<string,unknown>;
   const legacyV2=version===2, size=world.width*world.height, errors:string[]=[];
+  const shipHeld=Object.getOwnPropertyDescriptor(item,'shipCryptosleepHeldAt277');
+  if(heldShip277?(!isSchema277OrLater(version)||heldPlayer271!==undefined||detached&&!heldShip277.retained||heldShip277.heldAt!==validationTick||!shipHeld?.enumerable||!Object.hasOwn(shipHeld,'value')||shipHeld.value!==validationTick):'shipCryptosleepHeldAt277'in item)errors.push('Invalid actual spatial-casket suspension authority.');
   const held=Object.getOwnPropertyDescriptor(item,'cryptosleepHeldAt271');
   if(heldPlayer271?(!isSchema271OrLater(version)||detached&&!heldPlayer271.retained||heldPlayer271.heldAt!==validationTick||!held?.enumerable||!Object.hasOwn(held,'value')||held.value!==validationTick):'cryptosleepHeldAt271'in item)errors.push('Invalid actual player-casket suspension authority.');
   if(!validCryptosleepTaskField271(item,version,validationTick,world.nextId)||detached&&Object.hasOwn(item,'cryptosleepTask'))errors.push('Invalid or future player-casket task.');
-  const memoryCivil=heldPlayer271?world.tick:validationTick;
+  const memoryCivil=heldPlayer271||heldShip277?world.tick:validationTick;
   if(!validCaravanRestField266(item,version,item.state==='dead'&&typeof (item.health as {death?:{tick?:number}}|undefined)?.death?.tick==='number'?(item.health as {death:{tick:number}}).death.tick:validationTick))errors.push('Invalid or future caravan rest receipt.');
   if(Object.hasOwn(item,'brewing')&&(version<265||detached))return ['Invalid or future detached fermentation task.'];
   if(!validWorldAffiliationFields259(item,version)||Object.hasOwn(item,'prisonerHistory259')&&!validPrisonerStateRecord259(item.prisonerHistory259,version,input as unknown as World,true))return ['Invalid or future actual guest affiliation/history.'];

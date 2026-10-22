@@ -1,3 +1,5 @@
+import {isSchema277OrLater} from './schema-compatibility-257.ts';
+import {shipCasketHumanReferences277,shipCasketTerminalParticipant277} from './ship-casket-notifications-277.ts';
 import { isBedKind } from './bed-kinds.ts';
 import { visitorAtEdge } from './visitor-navigation.ts';
 import { POD_RESCUE_FALL_TICKS,POD_RESCUE_OPEN_TICKS,POD_RESCUE_LIMIT,type PodRescueDeparture } from './pod-rescue-state.ts';
@@ -27,7 +29,7 @@ export function validPodRescueShape(value:unknown,version:number,w:Bounds):boole
     if(!object(i)||!keys(i,['id','start','openedAt','pawnId'],['tendedAt','result','resolvedAt',...version>=199?['origin','decision']:[]])||i.origin!==undefined&&(typeof i.origin!=='string'||!['independent','outlander'].includes(i.origin))||!int(i.id,1,value.serial)||ids.has(i.id)||object(p)&&i.id===p.id
       ||!int(i.start,0,w.tick)||!int(i.openedAt,i.start+POD_RESCUE_FALL_TICKS+POD_RESCUE_OPEN_TICKS,w.tick)||!int(i.pawnId,1)
       ||i.tendedAt!==undefined&&!int(i.tendedAt,i.openedAt,w.tick)
-      ||(i.result===undefined?i.resolvedAt!==undefined:typeof i.result!=='string'||!['dead','captured','departed',...version>=199?['joined']:[]].includes(i.result)||!int(i.resolvedAt,i.openedAt,w.tick))
+      ||(i.result===undefined?i.resolvedAt!==undefined:typeof i.result!=='string'||!['dead','captured','departed',...version>=199?['joined']:[],...(isSchema277OrLater(version)?['destroyed277']:[])].includes(i.result)||!int(i.resolvedAt,i.openedAt,w.tick))
       ||i.tendedAt!==undefined&&i.resolvedAt!==undefined&&Number(i.tendedAt)>Number(i.resolvedAt))return false;
     const decision=i.decision;
     if(decision!==undefined&&(!object(decision)||!keys(decision,['at','outcome','admittedAt'])||i.origin!=='independent'
@@ -52,7 +54,7 @@ export function validPodRescueShape(value:unknown,version:number,w:Bounds):boole
   return true;
 }
 export type ValidatePodRescueDeparture=(departure:PodRescueDeparture,version:number,world:World)=>string[];
-export type PodRescueTransportWorld=Pick<World,'tick'|'width'|'height'|'nextId'|'pawns'|'podRescues'|'schemaVersion'>;
+export type PodRescueTransportWorld=Pick<World,'tick'|'width'|'height'|'nextId'|'pawns'|'podRescues'|'schemaVersion'>&Partial<Pick<World,'structures'|'worldPawns'|'worldMaps'|'campaignMap'>>;
 const colonialWorkFields=['draft','trade','animalHandling','animalCare','animalFeed','animalRescue','allowedAreaReturn','deepWork','research','hunting','burial','cleaning','firefighting','ward',
   'equipmentTask','priorityWork','rescue','tend','surgery','surgeryRequest','feed'];
 function uncommandedGuest(p:Pawn):boolean {
@@ -66,7 +68,7 @@ function transportBindings(w:PodRescueTransportWorld,version:number):boolean {
   const s=w.podRescues;
   if(!s)return w.pawns.every(p=>p.podRescue===undefined);
   const byId=new Map<number,Pawn>(),marked=new Set<number>();
-  for(const p of w.pawns){
+  for(const p of [...w.pawns,...shipCasketHumanReferences277(w)]){
     byId.set(p.id,p);
     if(p.podRescue===undefined)continue;
     const i=s.incidents.find(i=>i.id===p.podRescue?.incidentId&&i.pawnId===p.id);
@@ -79,12 +81,13 @@ function transportBindings(w:PodRescueTransportWorld,version:number):boolean {
   }
   const people=new Set<number>();
   for(const i of s.incidents){
-    const p=byId.get(i.pawnId),d=s.departed.find(d=>d.incidentId===i.id);
+    const p=byId.get(i.pawnId),d=s.departed.find(d=>d.incidentId===i.id),terminal=shipCasketTerminalParticipant277(w as World,i.pawnId,'human',i.id,'pod');
     if(!int(i.pawnId,1,w.nextId-1)||people.has(i.pawnId)||(i.result==='departed'?!d||!!p:!!d)
       ||p&&i.result!=='joined'&&p.podRescue?.incidentId!==i.id
       ||i.result==='joined'&&p?.podRescue!==undefined
       ||!i.result&&(!p||p.faction!=='outlanders'||p.prisoner)
-      ||i.result==='dead'&&(!p||p.state!=='dead'||p.health?.death?.tick!==i.resolvedAt))return false;
+      ||i.result==='dead'&&(!(p?.state==='dead'&&p.health?.death?.tick===i.resolvedAt)&&!(terminal?.actor.health?.death?.tick===i.resolvedAt))
+      ||i.result==='destroyed277'&&(!terminal?.destroyed||terminal.clockCore!==Number(i.resolvedAt)*10))return false;
     people.add(i.pawnId);
   }
   return s.departed.every(d=>!byId.has(d.pawn.id));
