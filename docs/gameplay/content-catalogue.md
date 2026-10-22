@@ -1,10 +1,16 @@
 # Catalogue de contenu : couverture connue
 
+**V454 qualifiée localement — schéma 277 inchangé :** [Paludisme géographique](malaria-geography-v454.md). Admission rétablie dans les trois biomes géographiques déjà pourvus de son ticket ; même patient, soins physiques et recharges entières. 43 cas distincts acquis, dont 24 nouveaux et 19 voisins ; un ancien échec de préparation identique au témoin V453 conservé. Typage et interface native muette acquis. Publication en attente ; V453 reste en production. Suite : réserves d’habits utilisables, puis valeur et vente des vêtements existants après l’audit transversal. Six ensembles et cible FPS restent ouverts.
+
 **V453 publiée — schéma 277 :** [Caisson de cryptosommeil spatial](ship-casket-v453.md). Recherche, chantier payé et connexion à la vraie poutre ; entrée et portage, suspension puis éjection directe des mêmes humains, animaux et mécanoïdes représentés. 83 cas distincts acquis par reprises, dont 53 nouveaux et 30 voisins. Typage, présentation et interface natives muettes acquis. Build Pages acquis ; publié 6d90207c/208e401f, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. [Jouer sur Cloudflare](https://elsewhere-cq7.pages.dev/). **Suite : bases ordinaires après audit transversal**, sans poursuite automatique ordinateur/capteurs. Lancement, victoire complète, six ensembles et cible FPS restent ouverts ; détail des reprises, adaptations et limites dans la note canonique.
 
 **V452 publiée — schéma 276 :** [Poutres et moteurs de vaisseau](ship-parts-v452.md). Recherche moteur, une poutre et trois moteurs payés, connexion physique, rapport et retraits conservés ; 63 cas ciblés acquis, dont 35 nouveaux et 28 voisins. Typage, présentation et interface natives muettes acquis. Build Pages acquis ; publié 6ac38d08/dd91c337, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. [Jouer sur Cloudflare](https://elsewhere-cq7.pages.dev/). **Ensemble 5 en cours** ; ordinateur, capteurs, caissons spatiaux, embarquement et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
 
 **V451 publiée — schéma 275 :** [Réacteur stellaire](ship-reactor-v451.md). Recherches, chantier payé, 1 000 W, démarrage confirmé et attaques indépendantes ; 50 cas ciblés acquis par reprises, un ancien rouge identique au témoin conservé. Typage, présentation et interface natives muettes acquis. Build Pages acquis ; publié 8e0e2ee6/7552f915, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. **Ensemble 5 engagé** ; autres pièces et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
+
+| Boucle V454 | Admission et usage locaux | Limites annoncées |
+| --- | --- | --- |
+| Paludisme géographique V454 | Ticket des quatre biomes admissibles, annonce du même patient, dossier clinique, médecin, lit, dose physique et sauvegarde. | Calendriers et fréquences adaptés préexistants conservés ; pas de nouvelle maladie, de fréquence annuelle qualifiée ou de parité du narrateur. |
 
 | Boucle V453 publiée | Acquisition et usage locaux | Limites annoncées |
 | --- | --- | --- |

@@ -1,10 +1,18 @@
 # Guide joueur
 
+**V454 qualifiée localement — schéma 277 inchangé :** [Paludisme géographique](malaria-geography-v454.md). Admission rétablie dans les trois biomes géographiques déjà pourvus de son ticket ; même patient, soins physiques et recharges entières. 43 cas distincts acquis, dont 24 nouveaux et 19 voisins ; un ancien échec de préparation identique au témoin V453 conservé. Typage et interface native muette acquis. Publication en attente ; V453 reste en production. Suite : réserves d’habits utilisables, puis valeur et vente des vêtements existants après l’audit transversal. Six ensembles et cible FPS restent ouverts.
+
 **V453 publiée — schéma 277 :** [Caisson de cryptosommeil spatial](ship-casket-v453.md). Recherche, chantier payé et connexion à la vraie poutre ; entrée et portage, suspension puis éjection directe des mêmes humains, animaux et mécanoïdes représentés. 83 cas distincts acquis par reprises, dont 53 nouveaux et 30 voisins. Typage, présentation et interface natives muettes acquis. Build Pages acquis ; publié 6d90207c/208e401f, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. [Jouer sur Cloudflare](https://elsewhere-cq7.pages.dev/). **Suite : bases ordinaires après audit transversal**, sans poursuite automatique ordinateur/capteurs. Lancement, victoire complète, six ensembles et cible FPS restent ouverts ; détail des reprises, adaptations et limites dans la note canonique.
 
 **V452 publiée — schéma 276 :** [Poutres et moteurs de vaisseau](ship-parts-v452.md). Recherche moteur, une poutre et trois moteurs payés, connexion physique, rapport et retraits conservés ; 63 cas ciblés acquis, dont 35 nouveaux et 28 voisins. Typage, présentation et interface natives muettes acquis. Build Pages acquis ; publié 6ac38d08/dd91c337, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. [Jouer sur Cloudflare](https://elsewhere-cq7.pages.dev/). **Ensemble 5 en cours** ; ordinateur, capteurs, caissons spatiaux, embarquement et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
 
 **V451 publiée — schéma 275 :** [Réacteur stellaire](ship-reactor-v451.md). Recherches, chantier payé, 1 000 W, démarrage confirmé et attaques indépendantes ; 50 cas ciblés acquis par reprises, un ancien rouge identique au témoin conservé. Typage, présentation et interface natives muettes acquis. Build Pages acquis ; publié 8e0e2ee6/7552f915, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. **Ensemble 5 engagé** ; autres pièces et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
+
+### Paludisme et biomes
+
+Le paludisme peut désormais atteindre les habitants des **marécages tempérés, forêts tropicales et marécages tropicaux**, en plus des forêts tempérées, lorsqu’une occasion de maladie le sélectionne. Il ne s’agit pas d’une maladie garantie à une date fixe. Les huit autres biomes géographiques ne reçoivent pas ce ticket ; les anciens profils conservent leurs règles historiques.
+
+L’annonce dans l’historique et le dossier **Santé** identifient le malade. Affectez un médecin et un lit médical accessible, avec des médicaments disponibles : les soins exigent un vrai déplacement et du travail au chevet. Leur qualité et l’immunité restent celles des règles existantes. Le chargement d’une ancienne partie n’ajoute aucun cas et ne rejoue pas les occasions passées. [Règles, adaptations et contrôles](malaria-geography-v454.md).
 
 ### Construire et utiliser un caisson spatial
 

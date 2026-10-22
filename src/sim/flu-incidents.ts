@@ -52,8 +52,8 @@ function coreRound(value:number):number {
   return value-whole===.5?whole+(whole%2):Math.round(value);
 }
 function fluCandidates(world:World):Pawn[] {
-  // The local game has no biosculptor or cryptosleep holder. Free player
-  // colonists and colony prisoners are the corresponding implemented subset.
+  // Only spawned human owners participate. Starting pods, cryptosleep holders
+  // and travellers keep their originals outside this active pawn collection.
   return world.pawns.filter(p=>p.state!=='dead'&&isPlayerPatient(p)&&!p.visitor&&!p.health?.body);
 }
 function emit(world:World,message:string):void {
@@ -115,7 +115,16 @@ export function resolveFluIncident(world:World,state:FluIncidentCalendar=world.f
  * Victim sampling/admission/luck consume only the prospective extension. */
 export function resolveImmuneDiseaseIncident(world:World,kind:ImmuneDiseaseKind,
   state:ImmuneDiseaseIncidentCalendar|undefined=world.fluIncidents?.immuneDiseases):number {
-  if(world.schemaVersion<207||!state||kind==='malaria'&&(world.site?.biome??'temperate-forest')!=='temperate-forest')return 0;
+  if(world.schemaVersion<207||!state)return 0;
+  if(kind==='malaria'){
+    const site=world.site;
+    // The geographic selector already owns the resolved biome weights. Keep
+    // its admission coherent without rewriting legacy calendars or rolls.
+    const offered=site?.revision===3
+      ?BIOME_DISEASE_FACTS_256[site.biome].diseases.some(d=>d.id==='Disease_Malaria'&&d.weight>0)
+      :(site?.biome??'temperate-forest')==='temperate-forest';
+    if(!offered)return 0;
+  }
   const candidates=fluCandidates(world);if(!candidates.length)return 0;
   const min=coreRound(candidates.length*.2),max=coreRound(candidates.length*.5);
   const requested=Math.min(99_999,Math.max(1,min+Math.floor(random(state)*(max-min+1))));
