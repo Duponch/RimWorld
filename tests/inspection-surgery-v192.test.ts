@@ -37,8 +37,8 @@ test('a hand/foot-only infection, wound or scar never admits the healthy parent;
   expect(healthSurgeryView(pawn).choices[0]!.reason).toBeUndefined();
 });
 
-test('lost parents, minors, non-colonists, captives and deceased patients remain disabled without dispatch or mutation',()=>{
-  const {pawn}=patient(),edits:((p:Pawn)=>void)[]=[
+test('historical279 lost parents, minors, non-colonists, captives and deceased patients remain disabled without dispatch or mutation',()=>{
+  const {world,pawn}=patient(),historical={...world,schemaVersion:279} as unknown as typeof world,edits:((p:Pawn)=>void)[]=[
     p=>{p.health!.missing=[{part:'left-shoulder',bornAt:0}];},
     p=>{p.age={biologicalTicks:17*HUMAN_YEAR_TICKS,chronologicalTicks:25*HUMAN_YEAR_TICKS};},
     p=>{p.faction='outlanders';},
@@ -46,8 +46,8 @@ test('lost parents, minors, non-colonists, captives and deceased patients remain
     p=>{p.state='dead';p.health!.death={tick:0,cause:'infection'};},
   ];
   for(const edit of edits){
-    const copy=structuredClone(pawn);edit(copy);const before=JSON.stringify(copy),actions={request:vi.fn(),cancel:vi.fn()};
-    expect(healthSurgeryView(copy).choices[0]!.reason).toBeTruthy();expect(requestInspectedAmputation(copy,'left-arm',actions)).toBeTruthy();
+    const copy=structuredClone(pawn);edit(copy);const before=JSON.stringify(copy),actions={version:()=>279,request:vi.fn(),cancel:vi.fn()};
+    expect(healthSurgeryView(copy,historical).choices[0]!.reason).toBeTruthy();expect(requestInspectedAmputation(copy,'left-arm',actions)).toBeTruthy();
     expect(actions.request).not.toHaveBeenCalled();expect(JSON.stringify(copy)).toBe(before);
   }
 });

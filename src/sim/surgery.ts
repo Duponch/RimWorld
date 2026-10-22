@@ -31,10 +31,12 @@ import type { NeedContext } from './needs.ts';
 import type { Cell,CommandResult,Pawn,World } from './types.ts';
 import { implantSurgeryReason,implantSurgeryProposal,processImplantSurgery,planArtificialRestitution273,commitArtificialRestitution273,reportRestitutionBlocked273 } from './prosthetic-surgery.ts';
 import { validImplantTaskRelations } from './surgery-ingredients.ts';
+import {isFreeSurgeryDoctor280} from './prisoner-surgery-rules-280.ts';
 
 const release=(world:World,doctor:Pawn):void=>{if(!releaseWork(world,doctor))interruptWork(world,doctor);};
 /** Sparse pending requests cost no clinical/topology query on other pawns. */
 export function surgeryReason(world:World,doctor:Pawn,patient:Pawn|undefined,accepted=false):string|undefined {
+  if(!isFreeSurgeryDoctor280(doctor))return 'Seul un colon libre peut opérer.';
   if(!accepted&&patient){const reason=allowedAreaReason(world,doctor,patient);if(reason)return reason;}
   if(patient?.surgeryRequest?.implant||accepted&&doctor.surgery?.implant)return implantSurgeryReason(world,doctor,patient,accepted);
   const task=accepted?doctor.surgery:undefined;
@@ -44,7 +46,7 @@ export function surgeryReason(world:World,doctor:Pawn,patient:Pawn|undefined,acc
   if(doctor.interruptedCargo)return 'Déposer la cargaison avant l’opération.';
   if(!patient||patient===doctor||!patient.surgeryRequest)return 'Aucune demande opératoire valide pour ce patient.';
   const part=patient.surgeryRequest.part;
-  const reason=surgeryRequestReason(patient,part,{...task?.consumedMedicine?{allowAnesthetic:true as const}:{},...patient.surgeryRequest.removeArtificial273?{removeArtificial273:patient.surgeryRequest.removeArtificial273}:{}});if(reason)return reason;
+  const reason=surgeryRequestReason(patient,part,{version:world.schemaVersion,...task?.consumedMedicine?{allowAnesthetic:true as const}:{},...patient.surgeryRequest.removeArtificial273?{removeArtificial273:patient.surgeryRequest.removeArtificial273}:{}});if(reason)return reason;
   if(task&&(task.part!==part||task.removeArtificial273!==patient.surgeryRequest.removeArtificial273))return 'Le membre demandé a changé.';
   if(task?.consumedMedicine&&!medicineAllowed(patient,task.consumedMedicine))return 'Le plafond médical du patient interdit ce médicament.';
   if(!lyingPatient(patient)||carrierOf(world,patient.id))return 'Le patient doit être installé dans un lit.';
@@ -80,7 +82,7 @@ export function applySurgery(world:World,command:SurgeryCommand):CommandResult {
   if(command.type==='surgery-remove-prosthetic'&&!isSchema273OrLater(world.schemaVersion))return fail('Cette partie ne permet pas le retrait de prothèses.');
   const removed=command.type==='surgery-remove-prosthetic'?patient.health?.artificialParts?.find(p=>p.part===command.part)?.kind:undefined;
   if(command.type==='surgery-remove-prosthetic'&&!removed)return fail('Aucune prothèse installée à retirer.');
-  const reason=surgeryRequestReason(patient,command.part,command.type==='surgery-install'?{implant:command.implant}:removed?{removeArtificial273:removed}:{});if(reason)return fail(reason);
+  const reason=surgeryRequestReason(patient,command.part,{version:world.schemaVersion,...command.type==='surgery-install'?{implant:command.implant}:removed?{removeArtificial273:removed}:{}});if(reason)return fail(reason);
   if(patient.surgeryRequest)return fail('Une opération est déjà demandée ; annulez-la pour changer de membre.');
   patient.surgeryRequest={part:command.part,requestedAt:world.tick,...command.type==='surgery-install'?{implant:command.implant}:removed?{removeArtificial273:removed}:{}};patient.planCooldown=0;
   for(const doctor of world.pawns)if(workPriority(doctor,'doctor')>0)doctor.planCooldown=0;
@@ -89,7 +91,7 @@ export function applySurgery(world:World,command:SurgeryCommand):CommandResult {
 export function reconcileSurgery(world:World):void {
   for(const patient of world.pawns)if(patient.surgeryRequest){
     const administered=world.pawns.some(d=>d.surgery?.patientId===patient.id&&!!d.surgery.consumedMedicine);
-    if(surgeryRequestReason(patient,patient.surgeryRequest.part,{...administered?{allowAnesthetic:true as const}:{},...patient.surgeryRequest.implant?{implant:patient.surgeryRequest.implant}:{},...patient.surgeryRequest.removeArtificial273?{removeArtificial273:patient.surgeryRequest.removeArtificial273}:{}}))delete patient.surgeryRequest;
+    if(surgeryRequestReason(patient,patient.surgeryRequest.part,{version:world.schemaVersion,...administered?{allowAnesthetic:true as const}:{},...patient.surgeryRequest.implant?{implant:patient.surgeryRequest.implant}:{},...patient.surgeryRequest.removeArtificial273?{removeArtificial273:patient.surgeryRequest.removeArtificial273}:{}}))delete patient.surgeryRequest;
   }
   for(const doctor of world.pawns)if(doctor.surgery){
     const patient=world.pawns.find(p=>p.id===doctor.surgery!.patientId);

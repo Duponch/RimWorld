@@ -7,7 +7,7 @@ import { canStandAt } from './furniture-travel.ts';
 import { medicalRestNeeded,treatmentTarget } from './care-rules.ts';
 import { interruptWork } from './interrupted-cargo.ts';
 import { processNeeds,type NeedContext } from './needs.ts';
-import { patientProposal,startPatientRest } from './patient-rest.ts';
+import { captiveSurgeryRest280,patientProposal,startPatientRest } from './patient-rest.ts';
 import { hasReachableCell,routeToCell } from './pathfinding.ts';
 import { capturePrisonTopology,prisonBedValid,prisonerAllowedCell,prisonerEscapeRoute } from './prison-space.ts';
 import { prisonDay,type PrisonerMode } from './prisoner-state.ts';
@@ -142,7 +142,7 @@ export function processPrisoner(world:World,p:Pawn,context:NeedContext):boolean 
     if(p.prisoner.escape){delete p.prisoner.escape;p.path=[];p.planCooldown=0;p.needCooldown=0;}
   }
   if(p.prisoner.escape){p.state='idle';return true;}
-  if(p.planCooldown===0&&!p.need&&(medicalRestNeeded(p)||treatmentTarget(p))){
+  if(p.planCooldown===0&&!p.need&&(medicalRestNeeded(p)||treatmentTarget(p)||captiveSurgeryRest280(p,world.schemaVersion))){
     const goals=new Set(world.structures.filter(b=>isBedKind(b.kind)&&b.prisoner&&prisonerAllowedCell(world,p,b,enclosure())).map(b=>b.z*world.width+b.x));
     if(goals.size){const reach=context.search(goals);if(!reach)return true;const proposal=patientProposal(world,p,reach);if(proposal)startPatientRest(world,p,proposal);}
   }

@@ -1,4 +1,4 @@
-import {isSchema273OrLater} from '../sim/schema-compatibility-257.ts';
+import {isSchema273OrLater,isSchema280OrLater} from '../sim/schema-compatibility-257.ts';
 import {artificialPartIngredient273} from '../sim/artificial-parts-rules';
 import {isProstheticItem273} from '../sim/prosthetic-content-273';
 import {ITEM_DEFINITIONS} from '../sim/items';
@@ -20,7 +20,7 @@ import { IMMUNE_DISEASE_KINDS } from '../sim/immune-diseases-types';
 import { immuneDiseaseModifiers } from '../sim/immune-diseases-rules';
 import { foodPoisoningStage,FOOD_POISON_UNIT } from '../sim/food-poisoning';
 import { bodyDescription } from './burial-controls';
-import { isCarePatient } from '../sim/affiliation';
+import { isCarePatient,isColonist } from '../sim/affiliation';
 import { SURGERY_PARTS,surgeryRequestReason,surgeryInstallRequestReason,surgeryRemoveRequestReason273 } from '../sim/surgery-rules';
 import type { SurgicalLimb } from '../sim/surgery-anatomy';
 import { ARTIFICIAL_PARTS,artificialPartCovering,artificialPartEfficiencies } from '../sim/artificial-parts-rules';
@@ -37,10 +37,18 @@ import { openObjectInformation } from './object-information';
 import './health-inspection.css';
 
 export interface SurgeryInspectionActions {
+  /** Re-read the authority version at click time, alongside the selected pawn. */
+  version?:()=>number|undefined;
   request:(pawnId:number,part:SurgicalLimb)=>void;
   install?:(pawnId:number,part:ArtificialPartSite,implant:ArtificialPartKind)=>void;
   remove?:(pawnId:number,part:ArtificialPartSite)=>void;
   cancel:(pawnId:number)=>void;
+}
+
+/** Operation access does not grant colony work or self-treatment controls. The
+ * individual clinical guards still decide every actual therapeutic choice. */
+export function healthSurgeryActionsAvailable280(pawn:Pawn,version:number):boolean {
+  return isColonist(pawn)&&!pawn.prisoner||isSchema280OrLater(version)&&!!pawn.prisoner;
 }
 
 const artificialOperationChoices=()=>Object.entries(ARTIFICIAL_PARTS).flatMap(([kind,rule])=>rule.sites.map(part=>({
@@ -59,28 +67,28 @@ export function healthSurgeryView(pawn:Pawn,world?:World) {
     :'Aucune opération demandée.';
   return {status,canCancel:!!request&&pawn.state!=='dead'&&!pawn.health?.death,
     choices:SURGERY_PARTS.map(part=>({part,label:BODY_PARTS[part].label,
-      reason:request?'Une opération est déjà demandée pour ce colon.':surgeryRequestReason(pawn,part)})),
-    removals:world&&isSchema273OrLater(world.schemaVersion)?(pawn.health?.artificialParts??[]).filter(a=>isProstheticItem273(a.kind)).map(a=>({part:a.part,kind:a.kind,label:`${ARTIFICIAL_PARTS[a.kind].label} · ${BODY_PARTS[a.part].label.toLocaleLowerCase('fr-FR')}`,reason:request?'Une opération est déjà demandée pour ce colon.':surgeryRemoveRequestReason273(pawn,a.part,a.kind)})):[],
+      reason:request?'Une opération est déjà demandée pour ce patient.':surgeryRequestReason(pawn,part,{version:world?.schemaVersion})})),
+    removals:world&&isSchema273OrLater(world.schemaVersion)?(pawn.health?.artificialParts??[]).filter(a=>isProstheticItem273(a.kind)).map(a=>({part:a.part,kind:a.kind,label:`${ARTIFICIAL_PARTS[a.kind].label} · ${BODY_PARTS[a.part].label.toLocaleLowerCase('fr-FR')}`,reason:request?'Une opération est déjà demandée pour ce patient.':surgeryRemoveRequestReason273(pawn,a.part,a.kind,{version:world.schemaVersion})})):[],
     installations:world&&world.schemaVersion>=210?artificialOperationChoices().filter(choice=>isSchema273OrLater(world.schemaVersion)||!isProstheticItem273(choice.implant)).map(choice=>({...choice,
-      reason:request?'Une opération est déjà demandée pour ce colon.':surgeryInstallRequestReason(pawn,choice.part,choice.implant)})):[]};
+      reason:request?'Une opération est déjà demandée pour ce patient.':surgeryInstallRequestReason(pawn,choice.part,choice.implant,{version:world.schemaVersion})})):[]};
 }
 
 /** Re-read the selected snapshot at click time; stale controls never send a
  * replacement request or make a missing member. Worker validation still owns
  * races between this display and the command's actual acknowledgement. */
 export function requestInspectedAmputation(pawn:Pawn|undefined,part:SurgicalLimb,actions:SurgeryInspectionActions):string|undefined {
-  const reason=!pawn?'Aucun colon sélectionné.':pawn.surgeryRequest?'Une opération est déjà demandée pour ce colon.':surgeryRequestReason(pawn,part);
+  const reason=!pawn?'Aucun patient sélectionné.':pawn.surgeryRequest?'Une opération est déjà demandée pour ce patient.':surgeryRequestReason(pawn,part,{version:actions.version?.()});
   if(reason)return reason;
   actions.request(pawn!.id,part);return undefined;
 }
 export function requestInspectedInstallation(pawn:Pawn|undefined,part:ArtificialPartSite,implant:ArtificialPartKind,actions:SurgeryInspectionActions):string|undefined {
-  const reason=!pawn?'Aucun colon sélectionné.':pawn.surgeryRequest?'Une opération est déjà demandée pour ce colon.':surgeryInstallRequestReason(pawn,part,implant);
+  const reason=!pawn?'Aucun patient sélectionné.':pawn.surgeryRequest?'Une opération est déjà demandée pour ce patient.':surgeryInstallRequestReason(pawn,part,implant,{version:actions.version?.()});
   if(reason)return reason;
   if(!actions.install)return 'La pose de prothèse n’est pas disponible.';
   actions.install(pawn!.id,part,implant);return undefined;
 }
 export function requestInspectedProstheticRemoval273(pawn:Pawn|undefined,part:ArtificialPartSite,kind:ArtificialPartKind,actions:SurgeryInspectionActions):string|undefined {
-  const reason=!pawn?'Aucun colon sélectionné.':pawn.surgeryRequest?'Une opération est déjà demandée pour ce colon.':surgeryRemoveRequestReason273(pawn,part,kind);
+  const reason=!pawn?'Aucun patient sélectionné.':pawn.surgeryRequest?'Une opération est déjà demandée pour ce patient.':surgeryRemoveRequestReason273(pawn,part,kind,{version:actions.version?.()});
   if(reason)return reason;
   if(!actions.remove)return 'Le retrait n’est pas disponible.';
   actions.remove(pawn!.id,part);return undefined;

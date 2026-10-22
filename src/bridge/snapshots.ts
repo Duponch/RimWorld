@@ -1,3 +1,4 @@
+import {validPrisonerSurgeryHistoricalTransport280,validPrisonerSurgeryWorld280,hasPrisonerSurgery280} from '../sim/prisoner-surgery-save-280.ts';
 import {validApparelTradeHistoricalTransport279,validApparelTradeWorld279} from '../sim/apparel-trade-save-279.ts';
 import {validApparelReservesBuilding278,validApparelReservesHistoricalTransport278} from '../sim/apparel-reserves-save-278.ts';
 import {validShipCasketHistoricalTransport277} from '../sim/ship-casket-save-277.ts';
@@ -1136,6 +1137,7 @@ export class SnapshotDecoder {
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
     if(packet.world.destroyed!==undefined&&!validNaturalHiveLoss256(packet.world.destroyed,packet.world.schemaVersion))return resync('Invalid or future natural Hive loss counter.');
     if(!validWorldPawnsEnvelope256(packet.world,packet.world.schemaVersion,packet.world.tick*10,packet.world.nextId))return resync('Invalid or future WorldPawns header.');
+    if(!validPrisonerSurgeryHistoricalTransport280(packet,packet.world.schemaVersion))return resync('Future captive surgery.');
     if(!validApparelTradeHistoricalTransport279(packet,packet.world.schemaVersion))return resync('Future ordinary apparel inventory or trade.');
     if(!validApparelReservesHistoricalTransport278(packet,packet.world.schemaVersion))return resync('Future apparel reserve settings.');
     if(!validShipCasketHistoricalTransport277(packet,packet.world.schemaVersion))return resync('Future spatial casket content.');
@@ -1718,7 +1720,8 @@ export class SnapshotDecoder {
     if(!validCobraClinicalWorldForSnapshot256(next,next.schemaVersion,readHumanOwners))return resync('Propriétaire clinique toxique invalide.');
     if(!validCryptosleepSicknessWorldTransportForSnapshot256(next,next.schemaVersion,readHumanOwners))return resync('Mal de cryptosommeil ou propriétaire clinique invalide.');
     if(validateAncientOpeningOwners256(next).length)return resync('Ouverture de capsule ancienne ou propriétaire incohérent.');
-    if(next.pawns.some(p=>p.surgery?.implant!==undefined||p.surgeryRequest?.implant!==undefined)
+    if(!validPrisonerSurgeryWorld280(next))return resync('Demande ou service chirurgical du captif incohérent.');
+    if(!hasPrisonerSurgery280(next)&&next.pawns.some(p=>p.surgery?.implant!==undefined||p.surgeryRequest?.implant!==undefined)
       &&validateSurgeries(next,next.schemaVersion).length)return resync('Prothèse demandée ou ingrédients chirurgicaux incohérents.');
     // Commit only after every patch is checked. A refusal preserves both state and revision.
     if(next.schemaVersion>=256&&!validGeographicSiteBinding256(next))return resync('Provenance locale distincte de la vraie planète.');

@@ -7,6 +7,7 @@ import { surgeryRequestReason,medicalSurgerySpeed,surgerySuccessChance,surgeryBa
 import { ARTIFICIAL_PARTS,installArtificialPart } from './artificial-parts.ts';
 import {artificialPartAvailable273} from './artificial-parts-rules.ts';
 import {isProstheticItem273} from './prosthetic-content-273.ts';
+import {isFreeSurgeryDoctor280} from './prisoner-surgery-rules-280.ts';
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {isWithinPart} from './injury-rules.ts';
 import {groundCapacity,groundPile,nearbyGround} from './ground-placement.ts';
@@ -35,6 +36,7 @@ import type { Cell,Pawn,World,MaterialPile } from './types.ts';
 
 const release=(w:World,d:Pawn):void=>{if(!releaseWork(w,d))interruptWork(w,d);};
 export function implantSurgeryReason(w:World,d:Pawn,p:Pawn|undefined,accepted=false):string|undefined {
+  if(!isFreeSurgeryDoctor280(d))return 'Seul un colon libre peut opérer.';
   if(!accepted&&p){const reason=allowedAreaReason(w,d,p);if(reason)return reason;}
   const task=accepted?d.surgery:undefined,request=p?.surgeryRequest;
   const refusal=backgroundWorkRefusal(d,'doctor')??medicalWorkRefusal(d);if(refusal)return refusal;
@@ -43,7 +45,7 @@ export function implantSurgeryReason(w:World,d:Pawn,p:Pawn|undefined,accepted=fa
   if(w.schemaVersion<210||!p||p===d||!request?.implant)return 'Aucune demande de prothèse valide.';
   if(!artificialPartAvailable273(request.implant,w.schemaVersion))return 'Cette prothèse est indisponible dans ce schéma.';
   if(d.skills.medicine.level<ARTIFICIAL_PARTS[request.implant].medicineSkill)return `Médecine ${ARTIFICIAL_PARTS[request.implant].medicineSkill} est requise pour poser cette prothèse.`;
-  const reason=surgeryRequestReason(p,request.part,{implant:request.implant,...task?.consumedMedicine?{allowAnesthetic:true as const}:{}});if(reason)return reason;
+  const reason=surgeryRequestReason(p,request.part,{version:w.schemaVersion,implant:request.implant,...task?.consumedMedicine?{allowAnesthetic:true as const}:{}});if(reason)return reason;
   if(task&&(task.implant!==request.implant||task.part!==request.part))return 'La prothèse demandée a changé.';
   if(task?.consumedMedicine&&!medicineAllowed(p,task.consumedMedicine))return 'Le plafond médical du patient interdit ce médicament.';
   if(!lyingPatient(p)||carrierOf(w,p.id))return 'Le patient doit être installé dans un lit.';

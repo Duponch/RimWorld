@@ -132,7 +132,7 @@ import { createEquipmentInspection,updateEquipmentInspection } from './ui/equipm
 import { equipmentProjection,equipmentDescription } from './render/character-equipment';
 import { bedControls,updateBedControls } from './ui/bed-controls.ts';
 import { medicalBleed } from './sim/injury-state';
-import { createHealthInspection,updateHealthInspection } from './ui/health-inspection';
+import { createHealthInspection,updateHealthInspection,healthSurgeryActionsAvailable280 } from './ui/health-inspection';
 import { createPrisonerInspection,updatePrisonerInspection } from './ui/prisoner-inspection';
 import { createSkillsInspection, updateSkillsInspection, updateWorkSkills } from './ui/skills-inspection';
 import { BACKGROUND_SKILL_IDS, backgroundSkillRefusal } from './sim/colonist-backgrounds';
@@ -1229,7 +1229,7 @@ function rebuildInspector() {
     createJournalInspection(panel);
     createSkillsInspection(panel);
     createEquipmentInspection(panel,current,send);
-    createHealthInspection(panel,()=>current()?.pawn,send,managed,managed?{request:(pawnId,part)=>send({type:'surgery-request',pawnId,part}),cancel:pawnId=>send({type:'surgery-cancel',pawnId}),install:(pawnId,part,implant)=>send({type:'surgery-install',pawnId,part,implant}),remove:(pawnId,part)=>send({type:'surgery-remove-prosthetic',pawnId,part})}:undefined);
+    createHealthInspection(panel,()=>current()?.pawn,send,managed,healthSurgeryActionsAvailable280(inspected,snapshot.schemaVersion)?{version:()=>current()?.world.schemaVersion,request:(pawnId,part)=>send({type:'surgery-request',pawnId,part}),cancel:pawnId=>send({type:'surgery-cancel',pawnId}),install:(pawnId,part,implant)=>send({type:'surgery-install',pawnId,part,implant}),remove:(pawnId,part)=>send({type:'surgery-remove-prosthetic',pawnId,part})}:undefined);
     if(inspected.prisoner)createPrisonerInspection(panel,current,send);
     if(managed){
       el('manage-work').onclick = () => setPanel('work');

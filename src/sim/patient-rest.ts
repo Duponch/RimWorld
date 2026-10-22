@@ -2,6 +2,7 @@ import {claimLocalActorBed256,captureActorBeds256,localBedClaimAvailable256} fro
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { allowedAreaAllows } from './allowed-area-state.ts';
 import { workPriority } from './work-types.ts';
+import {isTherapeuticCaptiveSurgery280} from './prisoner-surgery-rules-280.ts';
 import { isBedKind } from './bed-kinds.ts';
 import { bedSlotCell,pawnBedSlot } from './bed-slots.ts';
 import { lyingBlocked } from './disturbance-state.ts';
@@ -18,14 +19,22 @@ import type { BedSlot,Cell,Pawn,World } from './types.ts';
 
 export interface PatientRestProposal {work:'patient'|'bedrest';bedId:number;path:Cell[];bedSlot?:BedSlot}
 
-export function patientWork(p:Pawn):'patient'|'bedrest'|undefined {
+/** Only callers with the actual world's version admit prospective captive
+ * operations. Standalone legacy readers keep their existing priority rules. */
+export function captiveSurgeryRest280(p:Pawn,version:number|undefined):boolean {
+  const request=p.surgeryRequest;
+  return !!request&&request.removeArtificial273===undefined&&version!==undefined
+    &&isTherapeuticCaptiveSurgery280(p,request.part,{version,...request.implant?{implant:request.implant}:{}});
+}
+export function patientWork(p:Pawn,version?:number):'patient'|'bedrest'|undefined {
+  if(captiveSurgeryRest280(p,version))return 'patient';
   if(p.surgeryRequest)return workPriority(p,'patient')>0?'patient':workPriority(p,'bedrest')>0?'bedrest':undefined;
   if(treatmentTarget(p)&&(p.prisoner||isAdmittedGuest(p)||workPriority(p,'patient')>0))return 'patient';
   if((medicalRestNeeded(p)||treatmentTarget(p))&&(p.prisoner||isAdmittedGuest(p)||workPriority(p,'bedrest')>0))return 'bedrest';
 }
 export function patientProposal(world:World,pawn:Pawn,reach:Reachability):PatientRestProposal|undefined {
   if(lyingBlocked(world,pawn))return;
-  let work=patientWork(pawn);if(!work)return;
+  let work=patientWork(pawn,world.schemaVersion);if(!work)return;
   const bedOwners=world.schemaVersion>=256?captureActorBeds256(world):undefined;
   if(work==='patient'&&!pawn.surgeryRequest&&!urgentTreatment(pawn)&&!world.pawns.some(p=>p!==pawn&&workPriority(p,'doctor')>0&&!medicalWorkRefusal(p)&&p.state!=='sleeping'&&p.state!=='resting'&&!p.medicalSleep&&!(p.need?.kind==='sleep'&&p.need.phase==='sleep')&&routeToCell(world,p,reach)!==null)){
     if(!pawn.prisoner&&!isAdmittedGuest(pawn)&&workPriority(pawn,'bedrest')===0)return;work='bedrest';

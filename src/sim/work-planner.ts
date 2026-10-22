@@ -155,7 +155,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   const releasePatients=world.pawns.filter(p=>releaseReady(world,pawn,p));
   const releasePriority=Math.min(...[workPriority(pawn,'basic'),workPriority(pawn,'warden')].filter(p=>p>0),5);
   const productionRank=productionPriority(world,pawn),cooking=productionRank<5;
-  const selfCare=patientWork(pawn),tendable=workPriority(pawn,'doctor')>0?world.pawns.filter(p=>p!==pawn&&lyingPatient(p)&&treatmentTarget(p)):[];
+  const selfCare=patientWork(pawn,world.schemaVersion),tendable=workPriority(pawn,'doctor')>0?world.pawns.filter(p=>p!==pawn&&lyingPatient(p)&&treatmentTarget(p)):[];
   const operations=workPriority(pawn,'doctor')>0?world.pawns.filter(p=>p!==pawn&&p.surgeryRequest&&lyingPatient(p)):[];
   const selfTreatment=pawn.selfTend&&workPriority(pawn,'doctor')>0&&treatmentTarget(pawn);
   const feedable=world.pawns.filter(p=>p!==pawn&&workPriority(pawn,feedingWork(p))>0&&(p.prisoner?p.hunger<FEED_HUNGER:p.hunger<=FEED_HUNGER)&&needsAssistedFeeding(p));

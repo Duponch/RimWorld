@@ -28,7 +28,8 @@ test('therapeutic request requires a directly infected present adult free-colon 
 test('request excludes captives, guests, children and dead actors but accepts actually downed patients',()=>{
   const p=patient();p.state='downed';expect(surgeryRequestReason(p,'left-arm')).toBeUndefined();
   p.faction='outlanders';expect(surgeryRequestReason(p,'left-arm')).toBeDefined();delete p.faction;
-  p.prisoner={capturedAt:100} as NonNullable<typeof p.prisoner>;expect(surgeryRequestReason(p,'left-arm')).toBeDefined();delete p.prisoner;
+  // Captive admission opens prospectively in280; retain the original279 rule.
+  p.prisoner={capturedAt:100} as NonNullable<typeof p.prisoner>;expect(surgeryRequestReason(p,'left-arm',{version:279})).toBeDefined();delete p.prisoner;
   p.age!.biologicalTicks=17*HUMAN_YEAR_TICKS;expect(surgeryRequestReason(p,'left-arm')).toBeDefined();
   delete p.age;expect(surgeryRequestReason(p,'left-arm')).toBeUndefined(); // Historical bodies were adult.
   p.state='dead';expect(surgeryRequestReason(p,'left-arm')).toBeDefined();

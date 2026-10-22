@@ -1,4 +1,4 @@
-import {isSchema273OrLater} from './schema-compatibility-257.ts';
+import {isSchema273OrLater,isSchema280OrLater} from './schema-compatibility-257.ts';
 import {anestheticCivilBornAt271} from './anesthetic.ts';
 import { isColonist } from './affiliation.ts';
 import { isBedKind } from './bed-kinds.ts';
@@ -82,7 +82,7 @@ export function validateSurgeries(w:World,version:number,onlyBedIds?:ReadonlySet
     if(!validPawnSurgeryShape(p,version,w)){errors.push('Invalid or future surgery state.');continue;}
     if(p.surgeryRequest){
       const active=work.get(p.id),anesthetic=p.health?.anesthetic;
-      if(p.id===offMap||p.visitor||surgeryRequestReason(p,p.surgeryRequest.part,{...(active?{allowAnesthetic:true as const}:{}),...(p.surgeryRequest.implant?{implant:p.surgeryRequest.implant}:{}),...(p.surgeryRequest.removeArtificial273?{removeArtificial273:p.surgeryRequest.removeArtificial273}:{})})
+      if(p.id===offMap||p.visitor||surgeryRequestReason(p,p.surgeryRequest.part,{version,...(active?{allowAnesthetic:true as const}:{}),...(p.surgeryRequest.implant?{implant:p.surgeryRequest.implant}:{}),...(p.surgeryRequest.removeArtificial273?{removeArtificial273:p.surgeryRequest.removeArtificial273}:{})})
         ||anesthetic&&(!active||anestheticCivilBornAt271(p.health!)!<p.surgeryRequest.requestedAt))errors.push('Invalid surgical patient request.');
     }
     const t=p.surgery;if(!t)continue;
@@ -90,9 +90,9 @@ export function validateSurgeries(w:World,version:number,onlyBedIds?:ReadonlySet
     if(!isColonist(p)||p.prisoner||p.visitor||p.podRescue||p.id===offMap||medicalWorkRefusal(p)||p.priorities.doctor===0||p.orders.active!==null
       ||p.draft||p.mental?.crisis||p.melee?.order||p.shooting?.order||t.implant&&p.skills.medicine.level<ARTIFICIAL_PARTS[t.implant].medicineSkill)errors.push('Invalid surgical doctor.');
     if(!patient||patient===p||patient.id===offMap||!patient.surgeryRequest||patient.surgeryRequest.part!==t.part
-      ||patient.surgeryRequest.implant!==t.implant||patient.surgeryRequest.removeArtificial273!==t.removeArtificial273||surgeryRequestReason(patient,t.part,{...(t.phase==='work'?{allowAnesthetic:true as const}:{}),...(t.implant?{implant:t.implant}:{}),...(t.removeArtificial273?{removeArtificial273:t.removeArtificial273}:{})}))errors.push('Surgical task lacks an eligible matching patient.');
+      ||patient.surgeryRequest.implant!==t.implant||patient.surgeryRequest.removeArtificial273!==t.removeArtificial273||surgeryRequestReason(patient,t.part,{version,...(t.phase==='work'?{allowAnesthetic:true as const}:{}),...(t.implant?{implant:t.implant}:{}),...(t.removeArtificial273?{removeArtificial273:t.removeArtificial273}:{})}))errors.push('Surgical task lacks an eligible matching patient.');
     if(patients.has(t.patientId))errors.push('Duplicate surgical patient reservation.');patients.add(t.patientId);
-    if(!bed||bed.kind==='double-bed'||bed.prisoner||!patient||!rescueBedAvailable(w,bed,patient,p.id)||!lyingPatient(patient)||patient.need?.kind!=='sleep'||patient.need.bedId!==bed.id||patient.x!==bed.x||patient.z!==bed.z
+    if(!bed||bed.kind==='double-bed'||bed.prisoner&&(!isSchema280OrLater(version)||!patient?.prisoner)||!patient||!rescueBedAvailable(w,bed,patient,p.id)||!lyingPatient(patient)||patient.need?.kind!=='sleep'||patient.need.bedId!==bed.id||patient.x!==bed.x||patient.z!==bed.z
       ||Math.abs(t.spot.x-bed.x)+Math.abs(t.spot.z-bed.z)!==1||!canStandAt(w,t.spot))errors.push('Surgical patient or bedside is not physically installed.');
     if(w.pawns.some(other=>other!==p&&(other.tend?.patientId===t.patientId||other.feed?.patientId===t.patientId||other.ward?.patientId===t.patientId||other.rescue?.patientId===t.patientId
       ||serviceCell(other,w)&&serviceKey(serviceCell(other,w)!)===serviceKey(t.spot))))errors.push('Surgery conflicts with a patient or bedside reservation.');

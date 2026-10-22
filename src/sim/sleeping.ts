@@ -45,7 +45,7 @@ export function processSleeping(world: World, pawn: Pawn, context: NeedContext, 
     // Transit does not claim bed ownership; only a sleep reservation excludes another sleeper.
     const ownedBed = world.structures.find(item => item.id === pawn.bedId && isBedKind(item.kind)&&item.kind!=='double-bed'&&allows(item));
     const ownedTarget=doublePlaces.find(place=>place.rank===0)?.target??ownedBed;
-    const medical=patientWork(pawn);
+    const medical=patientWork(pawn,world.schemaVersion);
     reach = context.search( !medical&&ownedTarget ? new Set([ownedTarget.z * world.width + ownedTarget.x]) : undefined);
     if (!reach) return true;
     // A wounded sleeper may use a medical bed. Do not fall back to the floor

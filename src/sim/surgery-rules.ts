@@ -11,15 +11,19 @@ import type { Pawn } from './types.ts';
 import { artificialPartInstallReason,artificialPartRemovalReason273 } from './artificial-parts.ts';
 import type { ArtificialPartKind } from './artificial-parts-types.ts';
 import { isWithinPart } from './injury-rules.ts';
+import {SCHEMA_VERSION} from './types.ts';
+import {isTherapeuticCaptiveSurgery280} from './prisoner-surgery-rules-280.ts';
 
 /** Core 1.6.4871 RemoveBodyPart. Request/physical contacts belong to surgery.ts. */
 export const SURGERY_PARTS=SURGICAL_LIMBS;
 export const SURGERY_WORK=2000;
 export const surgeryBaseXp=(workedCoreTicks:number):number=>Math.round(workedCoreTicks*.1*16*XP_SCALE);
-export function surgeryRequestReason(patient:Pawn,part:unknown,options:{allowAnesthetic?:true;implant?:ArtificialPartKind;removeArtificial273?:ArtificialPartKind}={}):string|undefined {
+export interface SurgeryPatientOptions {version?:number;allowAnesthetic?:true;implant?:ArtificialPartKind;removeArtificial273?:ArtificialPartKind}
+export function surgeryRequestReason(patient:Pawn,part:unknown,options:SurgeryPatientOptions={}):string|undefined {
   if(options.removeArtificial273!==undefined)return surgeryRemoveRequestReason273(patient,part,options.removeArtificial273,options);
   if(options.implant!==undefined)return surgeryInstallRequestReason(patient,part,options.implant,options);
-  if(!isColonist(patient)||patient.prisoner||patient.visitor||patient.raid||patient.podRescue)return 'Cette opération est réservée aux colons adultes libres.';
+  if(patient.prisoner){if(!isTherapeuticCaptiveSurgery280(patient,part,{version:options.version??SCHEMA_VERSION}))return 'Ce captif adulte doit être détenu et présenter une infection directement sur ce membre pour cette opération thérapeutique.';}
+  else if(!isColonist(patient)||patient.visitor||patient.raid||patient.podRescue)return 'Cette opération est réservée aux colons adultes libres.';
   if(patient.age&&biologicalYears(patient.age)<18)return 'Cette opération est réservée aux adultes.';
   if(patient.state==='dead'||patient.health?.death)return 'Ce colon est décédé.';
   if(!isSurgicalLimb(part))return 'Seuls les bras et jambes infectés peuvent être opérés.';
@@ -32,14 +36,15 @@ export function surgeryRequestReason(patient:Pawn,part:unknown,options:{allowAne
   return undefined;
 }
 
-export function surgeryInstallRequestReason(patient:Pawn,part:unknown,implant:unknown,options:{allowAnesthetic?:true}={}):string|undefined {
-  if(!isColonist(patient)||patient.prisoner||patient.visitor||patient.raid||patient.podRescue)return 'Cette opération est réservée aux colons adultes libres.';
+export function surgeryInstallRequestReason(patient:Pawn,part:unknown,implant:unknown,options:Pick<SurgeryPatientOptions,'version'|'allowAnesthetic'>={}):string|undefined {
+  if(patient.prisoner){if(!isTherapeuticCaptiveSurgery280(patient,part,{version:options.version??SCHEMA_VERSION,implant}))return 'Ce captif adulte doit être détenu et la partie sélectionnée doit être réellement manquante pour cette pose thérapeutique.';}
+  else if(!isColonist(patient)||patient.visitor||patient.raid||patient.podRescue)return 'Cette opération est réservée aux colons adultes libres.';
   if(patient.age&&biologicalYears(patient.age)<18)return 'Cette opération est réservée aux adultes.';
   if(patient.state==='dead'||patient.health?.death)return 'Ce colon est décédé.';
   if(patient.health?.anesthetic&&!options.allowAnesthetic)return 'Attendre la disparition de l’anesthésie avant une nouvelle demande.';
   return artificialPartInstallReason(patient.health,part,implant);
 }
-export function surgeryRemoveRequestReason273(patient:Pawn,part:unknown,kind:unknown,options:{allowAnesthetic?:true}={}):string|undefined {
+export function surgeryRemoveRequestReason273(patient:Pawn,part:unknown,kind:unknown,options:Pick<SurgeryPatientOptions,'version'|'allowAnesthetic'>={}):string|undefined {
   if(!isColonist(patient)||patient.prisoner||patient.visitor||patient.raid||patient.podRescue||patient.age&&biologicalYears(patient.age)<18)return 'Cette opération est réservée aux colons adultes libres.';
   if(patient.health?.anesthetic&&!options.allowAnesthetic)return 'Attendre la disparition de l’anesthésie avant une nouvelle demande.';
   return artificialPartRemovalReason273(patient.health,part,kind);

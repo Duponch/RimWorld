@@ -9,7 +9,7 @@ import {isShipPartKind276,isShipAddedKind276,SHIP_PART_DEFAULT_ORIENTATION_276} 
 import {shipPartPlacementRefusal276} from './ship-reactor-placement-275.ts';
 import {applyShipReactorCommand275,advanceShipReactors275} from './ship-reactor-runtime-275.ts';
 import {cancelProstheticWork273,detachMissingProstheticBills273} from './prosthetic-work-273.ts';
-import {isSchema271OrLater,isSchema276OrLater,isSchema277OrLater} from './schema-compatibility-257.ts';
+import {isSchema271OrLater,isSchema276OrLater,isSchema277OrLater,isSchema280OrLater} from './schema-compatibility-257.ts';
 import {applyCryptosleep271,processCryptosleepTask271,reconcileCryptosleepTask271} from './cryptosleep-task-271.ts';
 import {cryptosleepUnlocked271} from './research.ts';
 import {newCryptosleepHolder271} from './cryptosleep-state-271.ts';
@@ -616,7 +616,8 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
   if(command.type==='commercial-return')return applyCommercialReturn(world);
   if(command.type==='scout-start'||command.type==='scout-cancel'||command.type==='scout-unload')return applyScoutCommand(world,command);
   const actors='pawnIds' in command&&Array.isArray(command.pawnIds)?command.pawnIds:'pawnId' in command&&command.pawnId!==null?[command.pawnId]:[];
-  if(actors.some(id=>world.pawns.find(p=>p.id===id)?.prisoner)&&!['medical-care','medical-policy','food-policy-assign','drug-policy-assign'].includes(command.type))return refusal('invalid-command','Une personne détenue ne reçoit pas d’ordres de colon. Utilisez son inspection de prison.');
+  const captiveOperation280=isSchema280OrLater(world.schemaVersion)&&['surgery-request','surgery-install','surgery-cancel'].includes(command.type);
+  if(actors.some(id=>world.pawns.find(p=>p.id===id)?.prisoner)&&!['medical-care','medical-policy','food-policy-assign','drug-policy-assign'].includes(command.type)&&!captiveOperation280)return refusal('invalid-command','Une personne détenue ne reçoit pas d’ordres de colon. Utilisez son inspection de prison.');
   if(actors.some(id=>groupOnMapMember(world,id))&&(typeof command.type==='string'&&command.type.startsWith('order-')||['clear-orders','draft','draft-move','draft-stop','shoot','melee','clean-room'].includes(command.type)))return refusal('invalid-command','Terminez ou annulez la préparation du groupe avant de donner un autre ordre.');
   const scoutId=scoutOnMapId(world)??commercialOnMapId(world);
   if(scoutId!==null&&actors.includes(scoutId)&&(typeof command.type==='string'&&command.type.startsWith('order-')||['clear-orders','draft','draft-move','draft-stop','shoot','melee','clean-room'].includes(command.type)))
@@ -665,7 +666,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
   if(command.type==='enable-quests'||command.type==='answer-quest')return applyQuestCommand(world,command);
   if(command.type==='prison-bed')return applyPrisonBed(world,command);
   if(command.type==='prisoner-mode')return applyPrisonerMode(world,command);
-  if(actors.some(id=>{const p=world.pawns.find(p=>p.id===id);return p&&!isColonist(p)&&!((p.prisoner||isAdmittedGuest(p))&&['medical-care','medical-policy','food-policy-assign','drug-policy-assign'].includes(command.type));}))return refusal('invalid-command','Cette personne ne fait pas partie de la colonie.');
+  if(actors.some(id=>{const p=world.pawns.find(p=>p.id===id);return p&&!isColonist(p)&&!(p.prisoner&&captiveOperation280)&&!((p.prisoner||isAdmittedGuest(p))&&['medical-care','medical-policy','food-policy-assign','drug-policy-assign'].includes(command.type));}))return refusal('invalid-command','Cette personne ne fait pas partie de la colonie.');
   if(typeof command.type==='string'&&command.type.startsWith('order-')||['draft','draft-move','draft-stop','fire-at-will','clear-orders','shoot','melee'].includes(command.type)){
     const affected=actors.map(id=>world.pawns.find(p=>p.id===id)).find(p=>p?.mental?.crisis);
     if(affected?.mental?.crisis)return refusal('invalid-command',`${mentalCrisisLabel(affected.mental.crisis.kind)} : ce colon ne peut pas obéir pendant sa crise.`);
