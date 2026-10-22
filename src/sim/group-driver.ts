@@ -46,6 +46,7 @@ import { advanceGroupIngestion } from './group-ingestion.ts';
 import { advanceGroupCare, applyConsumedGroupMass } from './group-care.ts';
 import { advanceGroupJoy } from './group-joy.ts';
 import { captureHumanOwners } from './human-owners.ts';
+import {notifyBillWorkerUnavailable283} from './bill-worker-owners-283.ts';
 import { healthRandom } from './health.ts';
 import { colonistMoodOffset } from './game-profile.ts';
 import { colonyExpectation } from './colony-economy.ts';
@@ -266,7 +267,7 @@ export function advanceGroupPersonalFrontier(w:World,prospective?:GroupPersonalF
     if(g.animalOwners)g.animalOwners.order=g.animalOwners.order.filter(id=>!dead.has(id));
     const transferred=transferOwnerlessCaravan259(w,g,animalPersonalTick);
     if(!transferred&&!g.members.length){if(w.schemaVersion>=256)archiveOwnerlessCaravanAnimals256(w,g,animalPersonalTick);delete w.group;}
-    for(const loss of losses){if(w.schemaVersion>=256)unclaimDetachedActorBed256(loss.pawn);notifyPawnDeath(w,loss.pawn);groupLog(w,`${loss.pawn.name} est décédé pendant le voyage ; son dossier et ses biens sont conservés à cette destination.`);}
+    for(const loss of losses){if(w.schemaVersion>=256)unclaimDetachedActorBed256(loss.pawn);notifyPawnDeath(w,loss.pawn);notifyBillWorkerUnavailable283(w,loss.pawn.id);groupLog(w,`${loss.pawn.name} est décédé pendant le voyage ; son dossier et ses biens sont conservés à cette destination.`);}
     if(!g.members.length)return;
     travel=captureGroupTravel(g,p=>({incapable:p.state==='downed'||hasMentalBreak(p)||pawnBody(p).capacities.moving<=0,restNeed:true}),w.schemaVersion);if(!travel)throw Error('Invalid surviving group');
   }

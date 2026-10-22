@@ -1,4 +1,8 @@
 import {isProstheticRecipe273,PROSTHETIC_REQUIREMENTS_273} from './prosthetic-content-273.ts';
+import {billWorkerRefusal283} from './bill-worker-rules-283.ts';
+import {isSchema283OrLater} from './schema-compatibility-257.ts';
+import {backgroundWorkRefusal} from './colonist-backgrounds.ts';
+import {isColonist} from './affiliation.ts';
 import {isApparelCountRecipe278} from './apparel-count-278.ts';
 import {smithingSkillRequired267,isSmithingRecipe267,smithingMaterials267,smithingUnits267,smithingWorkTotal267} from './smithing-content-267.ts';
 import {isBurnApparelRecipe,burnApparelIngredientAllowed} from './burn-apparel-rules.ts';
@@ -38,8 +42,24 @@ export function queryCookingBillStatus(world:World,station:Structure,bill:Cookin
   if(!billWanted(world,bill))return {code:'target-met',reason:bill.mode==='times'?'Quantité demandée terminée.':isApparelCountRecipe278(bill.recipe)&&bill.apparelCount?'Seuil de réserve vestimentaire atteint avec les critères confirmés.':bill.recipe==='butcher-creature'?'Seuil de viande stockée atteint.':'Seuil de produits comptés atteint.'};
   const serving=world.pawns.find(p=>p.cooking?.stationId===station.id||p.haul?.destination.type==='fuel'&&p.haul.destination.structureId===station.id);
   if(serving)return {code:'station-busy',reason:`Poste occupé par ${serving.name}.`};
-  if(!world.pawns.some(p=>workPriority(p,PRODUCTION_RECIPES[bill.recipe].work)>0))return {code:'waiting-worker',reason:'Métier désactivé pour tous les colons dans Travail.'};
-  if(!world.pawns.some(p=>workPriority(p,PRODUCTION_RECIPES[bill.recipe].work)>0&&productionWorkerQualified(p,bill.recipe)))return {code:'skill-required',reason:bill.recipe==='make-medicine'?'Un artisan de niveau Artisanat 4 et Intelligence 4 est nécessaire.':bill.recipe==='fine-meal'||bill.recipe==='cook-fine-meal-bulk'||bill.recipe==='vegetarian-fine-meal'||bill.recipe==='cook-vegetarian-fine-meal-bulk'||bill.recipe==='carnivore-fine-meal'||bill.recipe==='cook-carnivore-fine-meal-bulk'?'Un cuisinier de niveau Cuisine 6 est nécessaire.':bill.recipe==='cook-survival-meal'||bill.recipe==='lavish-meal'||bill.recipe==='cook-lavish-meal-bulk'||bill.recipe==='vegetarian-lavish-meal'||bill.recipe==='cook-vegetarian-lavish-meal-bulk'||bill.recipe==='cook-carnivore-lavish-meal'||bill.recipe==='cook-carnivore-lavish-meal-bulk'?'Un cuisinier de niveau Cuisine 8 est nécessaire.':`Un artisan de niveau ${isProstheticRecipe273(bill.recipe)?PROSTHETIC_REQUIREMENTS_273.skill:isSmithingRecipe267(bill.recipe)?smithingSkillRequired267(bill.recipe):isComponentRecipe(bill.recipe)?8:isGunRecipe(bill.recipe)?GUN_REQUIREMENTS[bill.recipe].skill:isFlakRecipe(bill.recipe)?flakRequirements(bill.recipe).skill:0} est nécessaire.`};
+  // Local availability is cheap. The selector separately queries real campaign
+  // holders on demand; inspections never fabricate workers from identity data.
+  const preference=isSchema283OrLater(world.schemaVersion)?bill.worker:undefined;
+  let workers=world.pawns;
+  if(preference){
+    workers=workers.filter(p=>isColonist(p)&&!p.prisoner&&!p.visitor&&!p.raid&&!p.podRescue&&p.state!=='dead'&&!p.health?.death);
+    if(preference.pawnId!==null){
+      workers=workers.filter(p=>p.id===preference.pawnId);
+      if(!workers.length)return {code:'worker-away',reason:'La personne désignée est absente de cette carte ou contenue ; aucun remplacement automatique.'};
+      const refusal=backgroundWorkRefusal(workers[0]!,PRODUCTION_RECIPES[bill.recipe].work);
+      if(refusal)return {code:'worker-incapable',reason:refusal};
+    }else{
+      workers=workers.filter(p=>!billWorkerRefusal283(world,p,bill));
+      if(!workers.length)return {code:'worker-range',reason:`Aucun colon de cette carte ne satisfait la plage de compétence choisie (${preference.skillMin}–${preference.skillMax}).`};
+    }
+  }
+  if(!workers.some(p=>workPriority(p,PRODUCTION_RECIPES[bill.recipe].work)>0))return {code:'waiting-worker',reason:preference?.pawnId!=null?'Métier désactivé pour la personne désignée dans Travail.':'Métier désactivé pour tous les colons dans Travail.'};
+  if(!workers.some(p=>workPriority(p,PRODUCTION_RECIPES[bill.recipe].work)>0&&productionWorkerQualified(p,bill.recipe)))return {code:'skill-required',reason:bill.recipe==='make-medicine'?'Un artisan de niveau Artisanat 4 et Intellectuel 4 est nécessaire.':bill.recipe==='fine-meal'||bill.recipe==='cook-fine-meal-bulk'||bill.recipe==='vegetarian-fine-meal'||bill.recipe==='cook-vegetarian-fine-meal-bulk'||bill.recipe==='carnivore-fine-meal'||bill.recipe==='cook-carnivore-fine-meal-bulk'?'Un cuisinier de niveau Cuisine 6 est nécessaire.':bill.recipe==='cook-survival-meal'||bill.recipe==='lavish-meal'||bill.recipe==='cook-lavish-meal-bulk'||bill.recipe==='vegetarian-lavish-meal'||bill.recipe==='cook-vegetarian-lavish-meal-bulk'||bill.recipe==='cook-carnivore-lavish-meal'||bill.recipe==='cook-carnivore-lavish-meal-bulk'?'Un cuisinier de niveau Cuisine 8 est nécessaire.':`Un artisan de niveau ${isProstheticRecipe273(bill.recipe)?PROSTHETIC_REQUIREMENTS_273.skill:isSmithingRecipe267(bill.recipe)?smithingSkillRequired267(bill.recipe):isComponentRecipe(bill.recipe)?8:isGunRecipe(bill.recipe)?GUN_REQUIREMENTS[bill.recipe].skill:isFlakRecipe(bill.recipe)?flakRequirements(bill.recipe).skill:0} est nécessaire.`};
   const spot=cookingSpot(station);
   if(!cookingPlaceFree(world,spot))return {code:'blocked-workplace',reason:'La place de travail devant le poste est obstruée.'};
   if(station.kind==='electric-stove'&&!foodStationUsable(station))return {code:'no-power',reason:'Cuisinière sans alimentation électrique :350 W nécessaires.'};

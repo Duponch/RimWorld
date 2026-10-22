@@ -1,4 +1,5 @@
 import {isProstheticRecipe273} from './prosthetic-content-273.ts';
+import {billWorkerRefusal283} from './bill-worker-rules-283.ts';
 import {validProstheticIngredients273} from './machining.ts';
 import {isSmithingRecipe267,smithingWorkpiece267,smithingMaterialFromIngredients267} from './smithing-content-267.ts';
 import {isBurnApparelRecipe,burnApparelIngredientAllowed,validBurnApparelIngredients} from './burn-apparel-rules.ts';
@@ -46,6 +47,8 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
   const enabled=(station.bills??[]).filter(b=>billWanted(world,b)&&workPriority(pawn,billWork(b))>0);
   const refusal=enabled.length&&enabled.every(b=>backgroundWorkRefusal(pawn,billWork(b)))?backgroundWorkRefusal(pawn,billWork(enabled[0]!)):undefined;if(refusal)return no(refusal);
   if(!enabled.length)return no('Métier désactivé dans le tableau Travail.');
+  const admitted=enabled.filter(b=>!billWorkerRefusal283(world,pawn,b));
+  if(!admitted.length)return no(billWorkerRefusal283(world,pawn,enabled[0]!)!);
   if(station.kind==='drug-lab'&&!productionResearchUnlocked(world,'make-medicine'))return no('La recherche Production de médicaments est nécessaire.');
   if(station.kind==='biofuel-refinery'&&!productionResearchUnlocked(world,'chemfuel-from-wood'))return no('La recherche Raffinage du biocarburant est nécessaire.');
   if(station.kind==='drug-lab'&&!productionWorkerQualified(pawn,'make-medicine'))return no('Artisanat 4 et Intellectuel 4 nécessaires.');

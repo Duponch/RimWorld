@@ -1,4 +1,5 @@
 import {isSchema273OrLater} from './schema-compatibility-257.ts';
+import {validBillWorkerBuilding283} from './bill-worker-save-283.ts';
 import {isProstheticRecipe273} from './prosthetic-content-273.ts';
 import {validProstheticIngredients273} from './machining.ts';
 import {isSchema267OrLater} from './schema-compatibility-257.ts';
@@ -271,6 +272,7 @@ export function validKibbleProductionTransport(w:World,version:number,memoizeSta
 export function validateCookingBuildingRecords258(w:Pick<World,'schemaVersion'|'research'|'nextId'>,version:number,ids:Set<number>,buildings:readonly import('./types.ts').Structure[]):string[] {
   const errors:string[]=[];
   for(const s of buildings) {
+    if(!validBillWorkerBuilding283(s,version,w.nextId)){errors.push('Invalid or future bill worker settings.');continue;}
     const recipe=stationRecipe(s);
     if((s.kind==='fueled-smithy'||s.kind==='electric-smithy')&&!isSchema267OrLater(version)){errors.push('Future smithy.');continue;}
     if(s.kind==='brewery'&&version<265){errors.push('Future brewery.');continue;}

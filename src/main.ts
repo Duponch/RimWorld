@@ -297,6 +297,7 @@ const client = (() => {
     cancelCampEntry256:(...args:Parameters<SimulationClient['cancelCampEntry256']>)=>native.cancelCampEntry256(...args),
     get hasCampPreparation(){return native.hasCampPreparation;},
     orderOptions: (...args: Parameters<SimulationClient['orderOptions']>) => native.orderOptions(...args),
+    billWorkerOptions: (...args: Parameters<SimulationClient['billWorkerOptions']>) => native.billWorkerOptions(...args),
     setSpeed: (...args: Parameters<SimulationClient['setSpeed']>) => native.setSpeed(...args),
     setThreatPauseMode: (mode:ThreatPauseMode) => native.setThreatPauseMode(mode),
     setMaxSettlements:(value:SettlementLimit)=>native.setMaxSettlements(value),
@@ -1288,8 +1289,8 @@ function rebuildInspector() {
     }
     const fire=selectedObject?.kind==='structure'?snapshot?.structures.find(s=>s.id===selectedObject!.id&&(stationRecipe(s)!==null||s.kind==='torch-lamp'||s.kind==='passive-cooler'||s.kind==='wood-generator'||s.kind==='chemfuel-generator')):undefined;
     if(fire) {
-      const send=(command:Command)=>void attempt(async()=>{await client.command(command);rebuildInspector();renderState();});
-      if(fire.fuel)panel.append(fireControls(fire,send));if(stationRecipe(fire))panel.append(billControls(fire,send));
+      const send=(command:Command)=>command.type==='bill-worker-policy'?client.command(command).then(()=>{renderState();}):void attempt(async()=>{await client.command(command);rebuildInspector();renderState();});
+      if(fire.fuel)panel.append(fireControls(fire,send));if(stationRecipe(fire))panel.append(billControls(fire,send,billId=>client.billWorkerOptions(fire.id,billId)));
     }
     const zone = selectedObject?.kind==='growing'?snapshot?.growingZones.find(z=>z.id===selectedObject!.id):selectedObject?.kind==='structure'?snapshot?.growingZones.find(z=>z.basinId===selectedObject!.id):undefined;
     if(zone){panel.append(growingControls(zone,command=>void attempt(async()=>{await client.command(command);renderState();})));if(zone.basinId===undefined)panel.querySelector('.cell-card')?.append(zoneActions('growing',zone.id));}

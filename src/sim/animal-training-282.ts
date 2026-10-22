@@ -34,7 +34,7 @@ export function readAnimalTraining282(a:WildAnimal,skill:AnimalTrainingSkill282)
 /** Refusal of ASSIGNMENT, not of the next lesson. Incomplete prerequisites,
  * cooldown and sleep do not prevent requesting their future training. The
  * command producer below resolves the actual local original by ID. */
-export function trainingRefusal282(w:Pick<World,'schemaVersion'>,a:WildAnimal,skill:AnimalTrainingSkill282):string|undefined {
+export function trainingRefusal282(w:{schemaVersion:number},a:WildAnimal,skill:AnimalTrainingSkill282):string|undefined {
  if(!isSchema282OrLater(w.schemaVersion))return 'Ce dressage exige une sauvegarde actuelle.';
  if(!isAnimalTrainingSkill282(skill))return 'Aptitude animale inconnue.';
  if(!a.domestic)return 'Cet animal n’appartient pas à la colonie.';
@@ -145,7 +145,7 @@ export function advanceAnimalTraining282(w:World,a:WildAnimal):AnimalTrainingAdv
 
 /** Learned behavior is independent of wanted. Urgent needs, claims and
  * physical storage selection are composed by the actual wildlife caller. */
-export function canAnimalHaul282(w:Pick<World,'schemaVersion'>,a:WildAnimal):boolean {
+export function canAnimalHaul282(w:{schemaVersion:number},a:WildAnimal):boolean {
  if(!isSchema282OrLater(w.schemaVersion)||!a.domestic||!readAnimalTraining282(a,'haul').learned||!a.training
   ||['dead','downed','sleeping','eating'].includes(a.state)||a.shipCryptosleepHeldAt277!==undefined||a.manhunter||a.confusion||a.stun||a.burning||a.flee||a.exiting||a.flight||a.exitFlight)return false;
  const body=animalBody(a);return body.canBeAwake&&body.movingCapable&&body.capacities.manipulation>0;

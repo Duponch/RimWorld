@@ -1,4 +1,5 @@
 import {isProstheticRecipe273,PROSTHETIC_REQUIREMENTS_273} from './prosthetic-content-273.ts';
+import {billWorkerRefusal283} from './bill-worker-rules-283.ts';
 import {planProstheticWork273} from './prosthetic-work-plan-273.ts';
 import {validProstheticIngredients273} from './machining.ts';
 import {isSchema269OrLater} from './schema-compatibility-257.ts';
@@ -44,7 +45,7 @@ export interface CookingPlan {station:Structure;priority:number;target:Cell;path
 const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
 const distance=(a:Cell,b:Cell)=>(a.x-b.x)**2+(a.z-b.z)**2;
 function stationPriority(world:World,pawn:Pawn,s:Structure):number {
-  let best=5;for(const bill of s.bills??[]){const priority=workPriority(pawn,billWork(bill));if(priority>0&&priority<best&&billWanted(world,bill)&&!backgroundWorkRefusal(pawn,billWork(bill)))best=priority;}return best;
+  let best=5;for(const bill of s.bills??[]){const priority=workPriority(pawn,billWork(bill));if(priority>0&&priority<best&&!billWorkerRefusal283(world,pawn,bill)&&billWanted(world,bill)&&!backgroundWorkRefusal(pawn,billWork(bill)))best=priority;}return best;
 }
 export function hasCookingWork(world:World,pawn:Pawn):boolean {
   return productionPriority(world,pawn)<5;
@@ -73,7 +74,7 @@ export function planCooking(world:World,pawn:Pawn,reachable:Reachability,budget:
     if(!toSpot)continue;
     for(const bill of station.bills!) {
       if(isBurnApparelRecipe(bill.recipe)&&((pawn.faction??'colony')!=='colony'||pawn.prisoner||pawn.visitor||pawn.raid||pawn.podRescue||medicalWorkRefusal(pawn)||pawn.stun||pawn.draft||pawn.burning||pawn.mental?.crisis||pawn.collapsePending))continue;
-      if(!workPriority(pawn,billWork(bill))||backgroundWorkRefusal(pawn,billWork(bill))||!billWanted(world,bill)||!productionResearchUnlocked(world,bill.recipe)||!productionWorkerQualified(pawn,bill.recipe))continue;
+      if(!workPriority(pawn,billWork(bill))||backgroundWorkRefusal(pawn,billWork(bill))||billWorkerRefusal283(world,pawn,bill)||!billWanted(world,bill)||!productionResearchUnlocked(world,bill.recipe)||!productionWorkerQualified(pawn,bill.recipe))continue;
       // The reference bill worker refuels an empty usable station before cooking.
       if(usesCookingFuel(station.kind)&&!station.fuel?.ticks) {
         const capacity=fuelCapacity(world,station.id,undefined,options?.forced);if(!capacity)break;

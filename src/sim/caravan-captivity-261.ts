@@ -1,4 +1,6 @@
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
+import {notifyBillWorkerUnavailable283} from './bill-worker-owners-283.ts';
+import {campaignClockContext,hasLoadedRoot} from './world-map-context.ts';
 import type {World,Pawn} from './types.ts';
 import type {AwayGroup} from './group-capture.ts';
 import type {CampaignState} from './world-map-state.ts';
@@ -85,5 +87,6 @@ export function advanceCaravanCaptivity261(root:CampaignState):void {
   if(!relation)throw Error('Missing actual captor/player relation');
   row.actor.faction=relation.kind==='hostile'?'outlaws':'outlanders';
   delete row.captivity261;if(row.mode!=='dead'&&row.actor.state!=='dead'&&!row.actor.health?.death)row.free=true;
+  notifyBillWorkerUnavailable283(hasLoadedRoot(root)?root:campaignClockContext(root),row.actor.id);
  }
 }

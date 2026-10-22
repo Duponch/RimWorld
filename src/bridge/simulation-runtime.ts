@@ -40,6 +40,7 @@ import { MotionRecorder } from './motion-tracks';
 import { FixedClock } from './fixed-clock';
 import { PresentationChanges } from './presentation-changes';
 import { queryOrderOptions } from '../sim/player-orders';
+import {queryBillWorkerOptions283} from '../sim/bill-worker-owners-283';
 import { applyCommand, deserializeWorld, serializeWorld, stepWorld } from '../sim/index';
 import type { World } from '../sim/types';
 import type { Request, Response, SimulationFault } from './protocol';
@@ -383,6 +384,13 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
       if (!world) throw new Error('La simulation ne répond pas encore.');
       if(request.type==='order-options') {
         data=JSON.stringify(queryOrderOptions(selectedMap(world as World),request.pawnId,request,request.queue));
+      } else if(request.type==='bill-worker-options') {
+        if(!Number.isSafeInteger(request.structureId)||request.structureId<1||!Number.isSafeInteger(request.billId)||request.billId<1)throw Error('Poste ou facture invalide.');
+        const options=queryBillWorkerOptions283(selectedMap(world as World),request.structureId,request.billId);
+        if(!options)throw Error('Cette facture ou son poste n’est plus disponible.');
+        // Metadata replies never publish/capture a snapshot, change revision,
+        // advance the clock or start a deferred map preparation.
+        send({type:'reply',id:request.id,ok:true,data:JSON.stringify(options)});return;
       } else if (request.type === 'command') {
         mutating = true;
         const retry=validCaravanCommand261(request.command)&&request.command.type==='caravan-encounter-choice'&&request.command.choice==='retry'?pendingCaravan261(world)?.pending261:undefined;

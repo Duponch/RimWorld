@@ -20,6 +20,7 @@ export type Request =
   | { id: number; type: 'init'; maxSettlements?:SettlementLimit; threatPauseMode?: ThreatPauseMode; seed: number; size: number; scenario?:import('../sim/scenario-definitions').ScenarioId; paused?:boolean; site?:import('../sim/site').SiteOptions; startingParty?:import('../sim/starting-candidates').StartingParty; startingWorld?:import('../sim/starting-world').StartingWorld;surface?:'snow-phased-v1' }
   | { id: number; type: 'command'; command: Command }
   | { id: number; type: 'order-options'; pawnId: number; x: number; z: number; queue: boolean }
+  | { id: number; type: 'bill-worker-options'; structureId:number; billId:number }
   | { id: number; type: 'speed'; speed: number; options?: ThreatSpeedOptions }
   | { id: number; type: 'threat-pause-mode'; mode: ThreatPauseMode }
   | { id: number; type:'settlement-limit';maxSettlements:SettlementLimit }

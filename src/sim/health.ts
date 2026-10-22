@@ -1,4 +1,5 @@
 import {notifyKidnapLordHarm261} from './caravan-kidnap-lord-261.ts';
+import {notifyBillWorkerUnavailable283} from './bill-worker-owners-283.ts';
 import {cancelAlcoholSpatial265} from './alcohol-state-265.ts';
 import {humanConditionMedicalFrontier256} from './human-condition-frontier-256.ts';
 import {recoverHumanConfusion256} from './human-condition-mind-256.ts';
@@ -51,7 +52,7 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn),ex
         if(status==='dead'){
           if(world.schemaVersion>=256){delete pawn.mapBed;pawn.bedId=null;delete pawn.bedSlot;}
         if(world.structures.some(b=>b.id===pawn.bedId&&(b.kind==='double-bed'||b.kind==='sleeping-spot'))||(world.packed??[]).some(pack=>pack.building.id===pawn.bedId&&pack.building.kind==='double-bed')){pawn.bedId=null;delete pawn.bedSlot;}
-        delete pawn.surgeryRequest;notifyPawnDeath(world,pawn);
+        delete pawn.surgeryRequest;notifyPawnDeath(world,pawn);notifyBillWorkerUnavailable283(world,pawn.id);
       }
       announce(world,status==='dead'?`${pawn.name} est décédé.`:`${pawn.name} est à terre.`);
     }

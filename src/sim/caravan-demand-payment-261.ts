@@ -13,6 +13,7 @@ import {prepareCaravanCaptivity261,prepareCaravanAnimalCession261,type PreparedC
 import {prepareEncounterForeignWorld261} from './caravan-foreign-world-261.ts';
 import {recordCaravanInventoryEffect256} from './group-animal-food-256.ts';
 import {draftCaravanPersonLost261} from './caravan-person-lost-261.ts';
+import {notifyBillWorkerUnavailable283} from './bill-worker-owners-283.ts';
 import type {LostCampaignMemory} from './world-map-lost.ts';
 
 export type DemandPaymentPlan261={ok:true;current():boolean;commit():void}|{ok:false;reason:string};
@@ -94,6 +95,7 @@ export function prepareDemandPayment261(root:CampaignState,record:EncounterGroup
   if(!packs.length)delete next.packed;
   if(g.animalOwners){const members=g.animalOwners.members.filter(a=>!cededIds.has(a.id));if(members.length)next.animalOwners={...g.animalOwners,members,origins:g.animalOwners.origins.filter(o=>!cededIds.has(o.pawnId)),order:g.animalOwners.order.filter(id=>!cededIds.has(id))};else delete next.animalOwners;}
   record.state=next;delete record.pending261;root.nextId=nextId;if(lostMemories)root.worldGroups!.lostMemories=lostMemories;
+  for(const p of membersBefore)if(cededIds.has(p.id))notifyBillWorkerUnavailable283(w,p.id);
   root.worldGroups!.events.push({tick:now,type:'command',message:'La caravane a cédé les originaux demandés. Les biens des personnes et animaux cédés restent aux détenteurs restants.'});if(root.worldGroups!.events.length>80)root.worldGroups!.events.splice(0,root.worldGroups!.events.length-80);
  }};
 }

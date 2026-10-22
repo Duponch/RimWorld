@@ -1,5 +1,6 @@
 import {isProstheticRecipe273} from '../sim/prosthetic-content-273';
-import {isSchema278OrLater} from '../sim/schema-compatibility-257';
+import {isSchema278OrLater,isSchema283OrLater} from '../sim/schema-compatibility-257';
+import {billWorkerControls283,type BillWorkerOptionsReader283} from './bill-worker-controls-283';
 import {isSmithingRecipe267} from '../sim/smithing-content-267';
 import { productionResearchUnlocked } from '../sim/machining';
 import { isArtRecipe, type ArtRecipe } from '../sim/art-rules';
@@ -32,6 +33,7 @@ const smeltingDescription='Détruit l’arme · récupère 25 % des métaux, auc
 const slagDescription256='1 vraie scorie d’acier → 15 acier · 400 ticks Core de travail · aucune expérience · entrée transportée au four';
 const qualityLabel:Readonly<Record<WeaponQuality,string>>={awful:'Déplorable',poor:'Médiocre',normal:'Normale',good:'Bonne',excellent:'Excellente',masterwork:'Chef-d’œuvre',legendary:'Légendaire'};
 const apparelDrafts278=new WeakMap<HTMLElement,{sync:(bill:CookingBill,available:boolean)=>void}>();
+const workerDrafts283=new WeakMap<HTMLElement,ReturnType<typeof billWorkerControls283>>();
 export const apparelReserveDescription278='La qualité choisie filtre la réserve ; elle ne garantit pas la prochaine fabrication. Toutes les matières du produit sont comptées, indépendamment des ingrédients autorisés.';
 
 const mechRecipe=(recipe:ProductionRecipe)=>recipe==='smash-mechanoid'||recipe==='shred-mechanoid';
@@ -43,7 +45,7 @@ const biofuelRecipeDescription=(recipe:ProductionRecipe)=>recipe==='chemfuel-fro
   ?'70 bois → 35 biocarburants · 200 ticks à vitesse normale · travail Artisanat · raffinerie alimentée'
   :'3,5 nutrition (70 unités crues) → 35 biocarburants · mélange accepté · 250 ticks à vitesse normale · filtre végétal initial, viandes et lait au choix · travail Artisanat · raffinerie alimentée';
 
-export function billControls(station:Structure,send:(command:Command)=>void):HTMLElement {
+export function billControls(station:Structure,send:(command:Command)=>void,readWorkerOptions?:BillWorkerOptionsReader283):HTMLElement {
   const root=document.createElement('section');root.className='bill-controls';
   const title=document.createElement('h3');title.textContent='Factures';root.append(title);
   for(const [index,recipe] of stationRecipes(station).entries()){const add=document.createElement('button');add.dataset.addRecipe=recipe;add.id=index===0?'add-cooking-bill':`add-bill-${recipe}`;add.textContent=`Ajouter : ${PRODUCTION_RECIPES[recipe].label.toLowerCase()}`;if(isProstheticRecipe273(recipe))add.title=prostheticRecipeDescription273;if(isSmithingRecipe267(recipe))add.title=smithingRecipeDescription(recipe);if(isCremationRecipe(recipe))add.title=cremationDescription;if(isBurnApparelRecipe(recipe))add.title=burnApparelDescription;if(isSmeltingRecipe(recipe))add.title=recipe==='smelt-slag'?slagDescription256:smeltingDescription;if(biofuelRecipe(recipe))add.title=biofuelRecipeDescription(recipe);if(isArtRecipe(recipe))add.title=`Art · ${artMaterialCount(recipe)} unités d’un seul matériau · Artistique détermine la qualité`;if(recipe==='brew-wort')add.title=brewingRecipeDescription;if(recipe==='make-pemmican')add.title=pemmicanRecipeDescription;if(recipe==='cook-simple-meal-bulk')add.title='40 ingrédients crus · 4 repas simples · Cuisine';if(recipe==='cook-fine-meal-bulk')add.title='20 protéines (viande ou lait) + 20 végétaux · 4 plats raffinés · Cuisine 6';if(recipe==='cook-vegetarian-fine-meal-bulk')add.title='60 végétaux crus ou lait · 4 plats raffinés végétariens · Cuisine 6';if(recipe==='cook-carnivore-fine-meal-bulk')add.title='60 viandes crues · 4 plats raffinés carnivores · Cuisine 6';if(recipe==='cook-lavish-meal-bulk')add.title='40 protéines (viande ou lait) + 40 végétaux · 4 plats gastronomiques · Cuisine 8';if(recipe==='cook-vegetarian-lavish-meal-bulk')add.title='100 végétaux crus ou lait · 4 plats gastronomiques végétariens · Cuisine 8';if(recipe==='cook-carnivore-lavish-meal-bulk')add.title='100 viandes crues · 4 plats gastronomiques carnivores · Cuisine 8';add.onclick=()=>send({type:'bill-add',structureId:station.id,recipe});root.append(add);}
@@ -149,6 +151,7 @@ export function billControls(station:Structure,send:(command:Command)=>void):HTM
       apparelDrafts278.set(form,{sync(next,enabled){confirmed=next;available=enabled;if(form.dataset.dirty&&matches(next))delete form.dataset.dirty;if(!form.dataset.dirty)restore(next);refreshReserve!();}});
       form.append(reserve);refreshReserve();
     }
+    if(readWorkerOptions){const workers=billWorkerControls283(station.id,bill,send,readWorkerOptions);workerDrafts283.set(form,workers);form.append(workers.element);}
     form.addEventListener('input',()=>{form.dataset.dirty='true';refreshReserve?.();});
     form.addEventListener('change',()=>{form.dataset.dirty='true';refreshReserve?.();});
     apply.onclick=()=>{
@@ -172,6 +175,7 @@ export function updateBillControls(root:ParentNode,station:Structure,world:World
     form.querySelector('[data-bill-status]')!.textContent=`${PRODUCTION_RECIPES[bill.recipe].label} · ${bill.suspended?'suspendue':bill.mode==='times'?`${bill.target} restant(s)`:bill.mode==='until'?`${countedProducts(world,bill)} / ${bill.target} ${isApparelCountRecipe278(bill.recipe)&&bill.apparelCount?'vêtement(s) admis dans la réserve confirmée':bill.recipe==='butcher-creature'?'viande(s) stockée(s)':'produit(s) compté(s)'}`:'sans limite'}`;
     form.querySelector('[data-bill-reason]')!.textContent=queryCookingBillStatus(world,station,bill).reason;
     apparelDrafts278.get(form)?.sync(bill,isSchema278OrLater(world.schemaVersion));
+    workerDrafts283.get(form)?.sync(bill,isSchema283OrLater(world.schemaVersion));
     if(!form.dataset.dirty)(form.querySelector('[data-field="target"]') as HTMLInputElement).value=String(bill.target);
   }
 }

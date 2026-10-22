@@ -1,4 +1,5 @@
 import {prepareHeldShipCasketRemoval277,heldShipCasketLivingIds277} from './world-pawn-ship-casket-277.ts';
+import {notifyBillWorkerUnavailable283} from './bill-worker-owners-283.ts';
 import {isShipCasket277} from './ship-casket-state-277.ts';
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {prepareHeldPlayerCasketRemoval271,heldPlayerCasketLivingIds271} from './world-pawn-player-casket-271.ts';
@@ -140,6 +141,7 @@ export function prepareMapRemoved259(input:CampaignState,map:World,mapId:number,
   commitNativeWorldPawnOrder256(state,nativeBefore,staged.nativeOrder);root.rng=randomState.rng;
   const lostIds=[...lostColonists.map(p=>p.id),...playerHeld.records.flatMap(e=>{const p=e.casket.cryptosleep.human;return p&&isColonist(p)&&!p.prisoner&&!p.visitor&&p.state!=='dead'?[p.id]:[];}),...shipHeld.records.flatMap(e=>{const o=e.casket.shipCryptosleep277.occupant,p=o?.kind==='human'?o.pawn:undefined;return p&&isColonist(p)&&!p.prisoner&&!p.visitor&&p.state!=='dead'?[p.id]:[];})];if(lostIds.length)compact.lostColonistIds259=lostIds;
   const moved=new Set(prepared.map(p=>p.original));compact.humans=compact.humans.filter(h=>!h.pawn||!moved.has(h.pawn));compact.animals=compact.animals.filter(a=>!moved.has(a.animal));map.pawns=map.pawns.filter(p=>!moved.has(p));if(map.mechanoids)map.mechanoids=map.mechanoids.filter(m=>!moved.has(m));if(map.wildlife){map.wildlife.animals=map.wildlife.animals.filter(a=>!moved.has(a));if(map.wildlife.flyers)map.wildlife.flyers=map.wildlife.flyers.filter(a=>!moved.has(a.animal));}
+  for(const p of prepared)if(p.outcome.kind==='human'&&p.outcome.factionId!==factions.playerFactionId&&lostColonists.some(c=>c.id===p.original.id))notifyBillWorkerUnavailable283(map,p.original.id);
  }};
  return brandHeldCasketRemoval259(plan,map,detachCurrent,()=>{
   // Consumed while every true source is still unchanged, before Reform writes.

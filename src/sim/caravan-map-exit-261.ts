@@ -23,6 +23,7 @@ import {isStunned} from './stun.ts';
 import {cancelMelee} from './melee-state.ts';
 import {cancelShooting} from './shooting-state.ts';
 import {kidnapping261,kidnapExitPhysicalReason261} from './caravan-kidnap-261.ts';
+import {notifyBillWorkerUnavailable283} from './bill-worker-owners-283.ts';
 
 type CaptivityRow261=WorldPawnOwner256&{entryKind261?:'map-exit';captivity261?:{factionId:number;atCore:number}};
 /** This actual dossier will be MOVED at commit, after private preflight. */
@@ -84,6 +85,7 @@ export function prepareMapRaiderWorldExit261(w:World,carrier:Pawn,patient?:Pawn)
   commitNativeWorldPawnOrder256(state,nativeBefore,staged.nativeOrder);root.rng=random.rng;
   const ids=new Set(originals.map(p=>p.id)),movedItems=new Set(prepared.flatMap(p=>p.items)),movedPacks=new Set(prepared.flatMap(p=>p.packed));
   w.pawns=w.pawns.filter(p=>!ids.has(p.id));w.piles=w.piles.filter(p=>!movedItems.has(p));w.packed=w.packed.filter(p=>!movedPacks.has(p));
+  if(patient)notifyBillWorkerUnavailable283(w,patient.id);
   // Same local combat cancellation as the existing physical exitRaider;
   // no renderer or stale target may continue to own the departed actor.
   for(const p of targeters){cancelShooting(p);cancelMelee(p);delete p.tactics;p.path=[];if(p.raid)p.raid.goal=null;p.planCooldown=0;if((p.motion?.end??0)<=w.tick&&p.state==='moving')p.state='idle';}

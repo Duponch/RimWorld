@@ -4,6 +4,7 @@ import {validAnimalTrainingWorld282} from '../sim/animal-training-world-282.ts';
 import {validPrisonerSurgeryHistoricalTransport280,validPrisonerSurgeryWorld280,hasPrisonerSurgery280} from '../sim/prisoner-surgery-save-280.ts';
 import {validApparelTradeHistoricalTransport279,validApparelTradeWorld279} from '../sim/apparel-trade-save-279.ts';
 import {validApparelReservesBuilding278,validApparelReservesHistoricalTransport278} from '../sim/apparel-reserves-save-278.ts';
+import {validBillWorkerHistoricalTransport283,validBillWorkerWorld283} from '../sim/bill-worker-save-283.ts';
 import {validShipCasketHistoricalTransport277} from '../sim/ship-casket-save-277.ts';
 import {validShipCasketBuilding277,registerShipCasketThingIds277} from '../sim/ship-casket-owner-save-277.ts';
 import {isShipCasket277} from '../sim/ship-casket-state-277.ts';
@@ -1145,6 +1146,7 @@ export class SnapshotDecoder {
     if(!validPrisonerSurgeryHistoricalTransport280(packet,packet.world.schemaVersion))return resync('Future captive surgery.');
     if(!validApparelTradeHistoricalTransport279(packet,packet.world.schemaVersion))return resync('Future ordinary apparel inventory or trade.');
     if(!validApparelReservesHistoricalTransport278(packet,packet.world.schemaVersion))return resync('Future apparel reserve settings.');
+    if(!validBillWorkerHistoricalTransport283(packet,packet.world.schemaVersion))return resync('Future bill worker settings.');
     if(!validShipCasketHistoricalTransport277(packet,packet.world.schemaVersion))return resync('Future spatial casket content.');
     if(!validShipPartHistoricalTransport276(packet,packet.world.schemaVersion))return resync('Pièce de vaisseau ou recherche moteur future dans ce snapshot.');
     if(!validShipReactorHistoricalTransport275(packet,packet.world.schemaVersion))return resync('Réacteur stellaire futur dans ce snapshot.');
@@ -1734,6 +1736,7 @@ export class SnapshotDecoder {
     // Commit only after every patch is checked. A refusal preserves both state and revision.
     if(next.schemaVersion>=256&&!validGeographicSiteBinding256(next))return resync('Provenance locale distincte de la vraie planète.');
     if(!this.validGeographicCalendar(next,message.epoch))return resync('Origine du calendrier géographique réécrite.');
+    if(!validBillWorkerWorld283(next,readHumanOwners))return resync('Opérateur de facture ou réglages incohérents.');
     if(acceptExtra&&!acceptExtra(next))return resync('Métadonnées supplémentaires incompatibles avec la carte confirmée.');
     freezeAdmittedNativeWorldPawnOrder256(next);
     if(!riverWater.inherited&&next.riverWater)freezeAdmittedRiverWater256(next.riverWater);

@@ -133,7 +133,7 @@ export function prepareWorldPawnRemoval256(row:WorldPawnOwner256,atCore:number,a
  return {ok:true,draft};
 }
 /** Transaction preparation only; does not clone geography or any map. */
-export function prepareWorldPawnLife256(state:WorldPawnsState256,atCore:number,randomOwner:{rng:number;gameProfile?:import('./game-profile.ts').GameProfile},version=256):{ok:true;notices:readonly string[];commit():void}|{ok:false;reason:string}{
+export function prepareWorldPawnLife256(state:WorldPawnsState256,atCore:number,randomOwner:{rng:number;gameProfile?:import('./game-profile.ts').GameProfile},version=256):{ok:true;notices:readonly string[];deceasedHumanIds:readonly number[];commit():void}|{ok:false;reason:string}{
  const nativeBefore=state.nativeOrder;if(!nativeWorldPawnOrderCurrent256(state,nativeBefore))return {ok:false,reason:'Actual native life order is not mutable/admitted'};
  let nativeAfter=nativeBefore;
  if(atCore!==state.atCore+10)return {ok:false,reason:'WorldPawn runtime requires the next actual local frontier'};
@@ -152,7 +152,11 @@ export function prepareWorldPawnLife256(state:WorldPawnsState256,atCore:number,r
   const provisionalMothball263=provisionalAnimalMothball263(draft,version,nativeBefore);
   const result=advancePreparedWorldPawnRow256(draft,atCore,random,notices,version,randomOwner.gameProfile?.difficulty==='adventure-story'?.333:undefined,provisionalMothball263);if(!result.ok)return result;
  }
- if(nativeAfter)for(const {row,draft} of pairs)if(row.mode!=='dead'&&draft.mode==='dead')nativeAfter=destroyNativeWorldPawnOrder256(nativeAfter,row.actor.id);
+ const deceasedHumanIds:number[]=[];
+ for(const {row,draft} of pairs)if(row.mode!=='dead'&&draft.mode==='dead'){
+  if(nativeAfter)nativeAfter=destroyNativeWorldPawnOrder256(nativeAfter,row.actor.id);
+  if(row.kind==='human'&&row.actor.state!=='dead'&&!row.actor.health?.death&&(draft.actor.state==='dead'||draft.actor.health?.death))deceasedHumanIds.push(row.actor.id);
+ }
  if(atCore%15000===0)for(const {draft} of pairs)if(draft.mode==='active'&&worldPawnMothballReadiness256(draft)==='yes'){if(nativeAfter)nativeAfter=mothballNativeWorldPawnOrder256(nativeAfter,draft.actor.id);draft.mode='mothballed';}
  // True clinical death removes the durable Free authority with the same actor.
  // Check its actual recipient before adoption, including a seal after preparation.
@@ -160,7 +164,7 @@ export function prepareWorldPawnLife256(state:WorldPawnsState256,atCore:number,r
  if(!canAdoptFree())return {ok:false,reason:'WorldPawn death requires its deletable actual Free authority'};
  // Unsupported true hediff flags stay ACTIVE conservatively. This does not
  // certify their native mothball eligibility or silently suspend them.
- let used=false;return {ok:true,notices:Object.freeze(notices.slice()),commit(){if(used||!nativeWorldPawnOrderCurrent256(state,nativeBefore)||state.atCore!==atBefore||state.owners.length!==membership.length||state.owners.some((r,i)=>r!==membership[i])||pairs.some(p=>JSON.stringify(p.row)!==p.before)||randomOwner.rng!==rngBefore||!canAdoptFree())throw Error('Stale WorldPawn life transaction');used=true;
+ let used=false;return {ok:true,notices:Object.freeze(notices.slice()),deceasedHumanIds:Object.freeze(deceasedHumanIds),commit(){if(used||!nativeWorldPawnOrderCurrent256(state,nativeBefore)||state.atCore!==atBefore||state.owners.length!==membership.length||state.owners.some((r,i)=>r!==membership[i])||pairs.some(p=>JSON.stringify(p.row)!==p.before)||randomOwner.rng!==rngBefore||!canAdoptFree())throw Error('Stale WorldPawn life transaction');used=true;
   for(const {row,draft:d} of pairs){const prisoner=row.kind==='human'?row.actor.prisoner:undefined,history=row.kind==='human'?row.actor.prisonerHistory259:undefined;for(const k of Object.keys(row.actor))delete (row.actor as unknown as Record<string,unknown>)[k];Object.assign(row.actor,d.actor);if(row.kind==='human'){if(prisoner)row.actor.prisoner=prisoner;if(history)row.actor.prisonerHistory259=history;}row.clockCore=d.clockCore;row.mode=d.mode;if(!Object.hasOwn(d,'free'))delete row.free;}
   commitNativeWorldPawnOrder256(state,nativeBefore,nativeAfter);state.atCore=atCore;randomOwner.rng=randomState.rng;
  }};

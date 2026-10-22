@@ -1,4 +1,7 @@
 import {smithingRecipeAvailable267,isSmithingRecipe267} from './smithing-content-267.ts';
+import {isSchema283OrLater} from './schema-compatibility-257.ts';
+import {validBillWorkerPolicy283} from './bill-worker-rules-283.ts';
+import {queryBillWorkerOptions283} from './bill-worker-owners-283.ts';
 import {isSchema267OrLater} from './schema-compatibility-257.ts';
 import {isBurnApparelRecipe} from './burn-apparel-rules.ts';
 import {hasTravellingCargo,interruptWork} from './interrupted-cargo.ts';
@@ -12,7 +15,7 @@ import { newCookingBill, validBillSettings } from './cooking-bills.ts';
 import { releaseWork, type DropPlan } from './work-release.ts';
 import type { Command, CommandResult, World } from './types.ts';
 
-type BillCommand=Extract<Command,{type:'bill-add'|'bill-update'|'bill-remove'|'bill-move'}>;
+type BillCommand=Extract<Command,{type:'bill-add'|'bill-update'|'bill-remove'|'bill-move'|'bill-worker-policy'}>;
 export function applyBillCommand(world:World,command:BillCommand,drops:DropPlan):CommandResult {
   const station=world.structures.find(s=>s.id===command.structureId&&stationRecipe(s)!==null);
   if(!station?.bills)return {ok:false,code:'missing-target',reason:'Poste de production introuvable.'};
@@ -23,13 +26,22 @@ export function applyBillCommand(world:World,command:BillCommand,drops:DropPlan)
   }
   const index=station.bills.findIndex(b=>b.id===command.billId),bill=station.bills[index];
   if(!bill)return {ok:false,code:'missing-target',reason:'Facture introuvable.'};
+  if(command.type==='bill-worker-policy') {
+    if(!isSchema283OrLater(world.schemaVersion)||!validBillWorkerPolicy283(command.policy,world.nextId))return {ok:false,code:'invalid-command',reason:'Réglage de l’exécutant invalide.'};
+    const policy=command.policy;
+    if(policy.pawnId!==null&&policy.pawnId!==bill.worker?.pawnId&&!queryBillWorkerOptions283(world,station.id,bill.id)?.candidates.some(p=>p.pawnId===policy.pawnId&&p.enabled))return {ok:false,code:'invalid-command',reason:'Cette personne ne peut pas être désignée pour cette facture.'};
+    // The job already admitted keeps its ingredients, author and queue place.
+    // Only later searches/new orders consult the new preference.
+    bill.worker={pawnId:policy.pawnId,skillMin:policy.skillMin,skillMax:policy.skillMax};
+    return {ok:true,affected:1};
+  }
   if(command.type==='bill-move') {
     if(command.direction!==1&&command.direction!==-1)return {ok:false,code:'invalid-command',reason:'Direction invalide.'};
     const next=index+command.direction;
     if(next<0||next>=station.bills.length)return {ok:false,code:'invalid-command',reason:'Extrémité de la liste.'};
     [station.bills[index],station.bills[next]]=[station.bills[next]!,bill];return {ok:true};
   }
-  if(command.type==='bill-update'&&!validBillSettings(command.settings,bill.recipe,world.schemaVersion))return {ok:false,code:'invalid-command',reason:'Réglages de recette invalides.'};
+  if(command.type==='bill-update'&&(!command.settings||typeof command.settings!=='object'||'worker'in command.settings||!validBillSettings(command.settings,bill.recipe,world.schemaVersion)))return {ok:false,code:'invalid-command',reason:'Réglages de recette invalides.'};
   for(const pawn of world.pawns)if(pawn.cooking?.stationId===station.id&&pawn.cooking.billId===bill.id) {
     if(isBurnApparelRecipe(pawn.cooking.recipe)&&hasTravellingCargo(world,pawn)){interruptWork(world,pawn,true);continue;}
     if(!releaseWork(world,pawn,drops))return {ok:false,code:'occupied',reason:'Aucune place pour conserver la cargaison.'};

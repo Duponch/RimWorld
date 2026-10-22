@@ -5,6 +5,9 @@ import {advanceCaravanCaptivity261} from './caravan-captivity-261.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import type {CampaignState} from './world-map-state.ts';
 import {prepareWorldPawnLife256} from './world-pawn-life-256.ts';
+import {notifyBillWorkerUnavailable283} from './bill-worker-owners-283.ts';
+import {campaignClockContext,hasLoadedRoot} from './world-map-context.ts';
+import type {World} from './types.ts';
 /** Called once from the actual campaign local-tick loop, after local/caravan
  * work. No second clock, background timer, fabricated map or historical catchup.
  * Schema259 uses the approved closed-model mechanical capture for actual GC.
@@ -17,6 +20,7 @@ export function advanceActualWorldPawns256(root:CampaignState):void {
  if(!Number.isSafeInteger(atCore)||state.atCore+10!==atCore)throw Error('WorldPawns actual campaign interval skipped or duplicated');
  const plan=prepareWorldPawnLife256(state,atCore,root,root.schemaVersion);if(!plan.ok)throw Error(plan.reason);
  plan.commit();
+ for(const id of plan.deceasedHumanIds)notifyBillWorkerUnavailable283(hasLoadedRoot(root)?root:campaignClockContext(root) as World,id);
  advanceCaravanCaptivity261(root);
  // One local interval pays ten Core work units at this confirmed frontier;
  // no backdated discard or ten biological/calendar passes are fabricated.

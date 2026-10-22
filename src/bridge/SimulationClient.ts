@@ -13,6 +13,7 @@ import { SimulationRequestError, type Request, type Response, type SimulationFau
 import { DEFAULT_MAP_SIZE } from '../sim/map-config';
 import { SnapshotDecoder } from './snapshots';
 import type { AudioCue } from './audio-cues';
+import type {BillWorkerOption283,BillWorkerOptions283} from '../sim/bill-worker-state-283';
 
 /** Transport readers are selected by a fixed client implementation, never by a packet flag. */
 export type SnapshotReader=Pick<SnapshotDecoder,'adopt'|'adoptCampaignOnly'|'prepareDraftPreview'|'authorizeDraftPreview'|'discardDraftPreview'>&{readMotion?(packet:import('./snapshots').SnapshotMessage<true>):import('./motion-tracks').PawnTrack[]|undefined};
@@ -305,6 +306,13 @@ export class SimulationClient {
   async orderOptions(pawnId:number,x:number,z:number,queue=false):Promise<import('../sim/player-orders').OrderOption[]> {
     return JSON.parse((await this.request({type:'order-options',pawnId,x,z,queue}))!);
   }
+  async billWorkerOptions(structureId:number,billId:number):Promise<BillWorkerOptions283> {
+    if(!positiveId283(structureId)||!positiveId283(billId))throw new SimulationRequestError('Poste ou facture invalide.','refused');
+    const raw=await this.request({type:'bill-worker-options',structureId,billId});
+    let options:unknown;try{options=JSON.parse(raw??'null');}catch{throw new SimulationRequestError('La liste des personnes pour cette facture est illisible.','refused');}
+    if(!validBillWorkerOptions283(options,structureId,billId))throw new SimulationRequestError('La liste des personnes pour cette facture est illisible ou périmée.','refused');
+    return options;
+  }
   getThreatPauseToken(): ThreatPauseToken { return this.urgentThreats.token(); }
   setSpeed(speed: number, options?: ThreatSpeedOptions) {
     // Copy at invocation: a caller cannot mutate a queued gesture's authority.
@@ -337,6 +345,20 @@ export class SimulationClient {
     this.stopped = true;
     this.rejectPending(new SimulationRequestError('Simulation fermée.', 'unknown', true));
   }
+}
+
+const positiveId283=(v:unknown):v is number=>Number.isSafeInteger(v)&&Number(v)>0;
+const plainFields283=(v:unknown,required:readonly string[],optional:readonly string[]=[]):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype&&required.every(k=>Object.hasOwn(v,k))&&Object.keys(v).every(k=>required.includes(k)||optional.includes(k));
+function validBillWorkerOption283(v:unknown):v is BillWorkerOption283 {
+ return plainFields283(v,['pawnId','name','level','description','enabled'])&&positiveId283(v.pawnId)&&typeof v.name==='string'&&v.name.length>0&&typeof v.description==='string'&&typeof v.enabled==='boolean'
+  &&(v.level===null||Number.isSafeInteger(v.level)&&Number(v.level)>=0&&Number(v.level)<=20);
+}
+/** This JSON is metadata only; validation never adopts or edits a World. */
+function validBillWorkerOptions283(v:unknown,structureId:number,billId:number):v is BillWorkerOptions283 {
+ if(!plainFields283(v,['structureId','billId','skill','candidates'],['selected'])||v.structureId!==structureId||v.billId!==billId
+  ||v.skill!==null&&(typeof v.skill!=='string'||!['cooking','crafting','artistic','intellectual'].includes(v.skill))||!Array.isArray(v.candidates))return false;
+ const ids=new Set<number>();for(const option of v.candidates){if(!validBillWorkerOption283(option)||ids.has(option.pawnId))return false;ids.add(option.pawnId);}
+ return !Object.hasOwn(v,'selected')||validBillWorkerOption283(v.selected);
 }
 
 function copyDraftRequest256(r:WorldCreationRequest256):WorldCreationRequest256 {return {seed:r.seed,settings:{...r.settings,factions:[...r.settings.factions]},player:{...r.player}};}

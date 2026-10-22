@@ -10,7 +10,7 @@ import {isShipPartKind276,isShipAddedKind276,SHIP_PART_DEFAULT_ORIENTATION_276} 
 import {shipPartPlacementRefusal276} from './ship-reactor-placement-275.ts';
 import {applyShipReactorCommand275,advanceShipReactors275} from './ship-reactor-runtime-275.ts';
 import {cancelProstheticWork273,detachMissingProstheticBills273} from './prosthetic-work-273.ts';
-import {isSchema271OrLater,isSchema276OrLater,isSchema277OrLater,isSchema280OrLater} from './schema-compatibility-257.ts';
+import {isSchema271OrLater,isSchema276OrLater,isSchema277OrLater,isSchema280OrLater,isSchema282OrLater} from './schema-compatibility-257.ts';
 import {applyCryptosleep271,processCryptosleepTask271,reconcileCryptosleepTask271} from './cryptosleep-task-271.ts';
 import {cryptosleepUnlocked271} from './research.ts';
 import {newCryptosleepHolder271} from './cryptosleep-state-271.ts';
@@ -759,6 +759,9 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
   if(command.type==='cooler-adjust')return adjustCoolerTarget(world,command.structureId,command.offset);
   if(command.type==='cooler-target')return setCoolerTarget(world,command.structureId,command.target);
   if(command.type==='research-project')return selectResearch(world,command.project);
+  if(command.type==='bill-worker-policy') {
+    const result=applyBillCommand(world,command,drops);if(result.ok)wakePlanners(world);return result;
+  }
   if(command.type==='bill-add'||command.type==='bill-update'||command.type==='bill-remove'||command.type==='bill-move') {
     const result=applyBillCommand(world,command,drops);if(result.ok){detachMissingBills(world);detachMissingSmithingBills267(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);detachMissingProstheticBills273(world);wakePlanners(world);refreshStock(world);}return result;
   }
@@ -1115,7 +1118,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     // Current thermal phase already owns its topology and region array. Borrow
     // one O(1) view for the whole human pass; public readers keep their exact
     // mutable point lookup. Historical exposure branches retain their reader.
-    const humanAir460=world.schemaVersion===282?new TemperatureView(world,thermal):undefined;
+    const humanAir460=isSchema282OrLater(world.schemaVersion)?new TemperatureView(world,thermal):undefined;
     for (let offset = 0; offset < (world.schemaVersion>=271?actingCount271:world.pawns.length); offset++) {
       const pawn = world.schemaVersion>=271?actingHumans271[((world.tick-1)+offset)%actingCount271]!:world.pawns[((world.tick-1)+offset)%world.pawns.length]!;
       if(world.schemaVersion>=271&&world.pawns!==actingHumans271&&!world.pawns.includes(pawn))continue;
