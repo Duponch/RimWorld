@@ -1,6 +1,6 @@
 # V456 — Valeur et vente des vêtements ordinaires
 
-**V456 qualifiée localement — schéma279 ; publication en attente, V455 reste publiée.** Après les réserves utilisables, ce lot raccorde la valeur et le commerce local des vêtements déjà fabriquables. Aucun nouvel objet, recette, poste ou recherche.
+**V456 publiée — schéma279.** Après les réserves utilisables, ce lot raccorde la valeur et le commerce local des vêtements déjà fabriquables. Aucun nouvel objet, recette, poste ou recherche.
 
 ## Boucle et frontières
 
@@ -56,4 +56,12 @@ La [réévaluation transversale](../development/audit-core-20261022.md) reprend 
 
 **Prochain lot retenu : chirurgie thérapeutique des captifs adultes**, sur le véritable patient, lit de prison, médecin et intrants existants. Trois barrières lues concernent admissibilité, lit et repos opératoire ; leur composition sert une base de survie sans nouvel objet. Il faudra vérifier les opérations réellement thérapeutiques, les suites et le maintien du dossier : ouvrir tous les retraits/remplacements sains ajouterait des conséquences natives de prélèvement encore non livrées. Cette portée réduite doit rester explicite, sans autorisation implicite des autres opérations.
 
-Lissage rocheux, apprentissage puis usage animal, vie de couple et demande commerciale mondiale ont été comparés comme autres bases utiles. Ils restent ouverts, au même titre que les domaines moins approfondis de cet audit. Pas de série textile suivante ni retour automatique ordinateur/capteurs/lancement ; une régression bloquante ou une consigne humaine peut réordonner la suite. Les six ensembles et la cible FPS restent ouverts. Publication à renseigner après acquisition.
+Lissage rocheux, apprentissage puis usage animal, vie de couple et demande commerciale mondiale ont été comparés comme autres bases utiles. Ils restent ouverts, au même titre que les domaines moins approfondis de cet audit. Pas de série textile suivante ni retour automatique ordinateur/capteurs/lancement ; une régression bloquante ou une consigne humaine peut réordonner la suite. Les six ensembles et la cible FPS restent ouverts.
+
+## Publication
+
+Produit sélectionné **`3b640b5b0ba4929633efb8a14b48da6892db17c8`**, poussé sur `origin/main`. Build Pages acquis4,733s ; paquet `tmp/elsewhere-pages/v456-package-Z7KVNV/`,552fichiers et152705527octets. Les68fiches/71chemins publics de sauvegarde sont strictement identiques public↔dist ; tous les actifs statiques et CSS restent ceux de V455. Aucun laboratoire, source privée ou branchement QA dans le paquet inspecté.
+
+Déploiement **`4900a0a8`** acquis14,014s sur [l’adresse publique stable](https://elsewhere-cq7.pages.dev/) et [l’adresse immuable](https://4900a0a8.elsewhere-cq7.pages.dev/). Vingt réponses HTTPS ciblées exactes en octets et MIME sur les deux adresses : `tmp/elsewhere-pages/v456-http-HjzImD/report.json`. Cette passe distante ne retélécharge pas toutes les sauvegardes ; leur comparaison locale entière et les parcours natifs restent les preuves distinctes déjà décrites.
+
+Les trois originaux du corpus sont byte-identiques. Sauvegardes publiques, parties personnelles et historiques ne sont pas réécrits. Le dossier humain `references_UI/` reste non suivi, conservé et exclu du paquet ; l’avertissement de répertoire Git non propre de l’outil de publication est conservé. Aucun gain FPS, richesse Core complète, catalogue commercial exhaustif ou clôture des six ensembles annoncé.
