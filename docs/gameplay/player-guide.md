@@ -1,5 +1,7 @@
 # Guide joueur
 
+**V463 publiée — schéma 285 :** [Vie quotidienne du couple adulte](couple-v463.md). Deux places réelles du lit, activité éveillée, clinique, souvenirs et délais personnels.135cas distincts acquis par reprises, dont101nouveaux et34voisins ;5anciens rouges de chambre reproduits et différences documentées. Parcours Chrome/WebGPU muet, recharges entières, présentation générale et typage acquis. Publié cb0e7b79/3956acea,20réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Migration284 stricte puis numéro seul285 ; aucun bénéfice offert, aucun gain FPS global. Ensemble3 principal ; tous les autres domaines et interactions, les six ensembles, campagnes et victoire restent ouverts.
+
 **V462 publiée — schéma 284 :** [Demandes commerciales mondiales](trade-requests-v462.md). Offres sur production possible, deux délais, choix de récompense et remise des mêmes objets par une vraie caravane. 104 cas distincts acquis par reprises, dont 66 nouveaux et 38 voisins ; parcours Chrome/WebGPU muet, annulation et recharges entières exactes. Typage et présentation acquis. Publié 6f63d2f6/2a66a836, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Coût géométrique ciblé réduit, aucun gain FPS global. Ensemble 4 ; autres bases, six ensembles, campagnes et cible FPS ouverts.
 
 **V461 publiée — schéma 283 :** [Exécutants des factures](bill-workers-v461.md). Choix d’une personne ou d’une plage de compétence pour les55recettes existantes ; vrais détenteurs, engagements et file déjà acceptés conservés, reprise liée à l’auteur. 52cas distincts acquis par reprises, dont41nouveaux et11voisins. Deux chemises physiques, recharges entières et interface native muette acquises ; sources finales recontrôlées après correction ciblée du cas Vanish. Mesure CPU ciblée conservée, aucun gain FPS global. Typage acquis. Publié 7b588bea/dc688b6c,20réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Migration282 stricte puis numéro seul283 ; aucune qualification offerte. Ensemble2, avec interactions humains/voyages/conservation ; autres bases, six ensembles, campagnes et cible FPS ouverts.
@@ -566,7 +568,7 @@ Dans son inspection, affectez **Place 1** et **Place 2**. Vous pouvez choisir de
 
 Désinstaller et réinstaller conserve les affectations et leurs places. Ce modèle est civil : il n’offre pas les rôles médical ou prison. Pansements, alimentation et secours non opératoires peuvent employer sa place physique ; les opérations demandent un lit compatible. Les [adaptations et limites](double-beds-v313.md) restent explicites.
 
-**V463 en qualification, pas encore publiée :** deux partenaires amoureux ou conjoints de 18 ans biologiques réels peuvent partager un moment intime lorsqu’ils sont réellement couchés dans leurs deux places du même lit double. L’occasion reste spontanée ; la fiche montre l’activité confirmée, puis les souvenirs gardent leur partenaire réel. [Règles, interruptions et état des contrôles](couple-v463.md).
+**V463 publiée :** deux partenaires amoureux ou conjoints de 18 ans biologiques réels peuvent partager un moment intime lorsqu’ils sont réellement couchés dans leurs deux places du même lit double. L’occasion reste spontanée ; la fiche montre l’activité confirmée, puis les souvenirs gardent leur partenaire réel. [Règles, interruptions et état des contrôles](couple-v463.md).
 
 **Schéma 223 — V312 : [zones autorisées humaines](allowed-areas-v312.md).** Utilisation et exceptions décrites ci-dessous ; preuves et limites dans la note unique. Les résultats datés suivants demeurent historiques.
 
@@ -692,7 +694,7 @@ Un nouveau départ peut contenir un couple préexistant. Les rencontres ordinair
 
 Pour résoudre **Dormir près de…**, attribuez un lit civil individuel à chaque partenaire dans la même pièce intérieure. La pensée dépend de leurs lits et de la pièce, sans exiger qu’ils soient déjà couchés. Un décès réel laisse un deuil familial nommé qui peut s’ajouter au deuil d’un ami ou rival.
 
-Dans le périmètre historique V214, mariage joué, lit double, relations sexuelles, enfants, naissances et famille étendue restaient à développer ; le [lit double V313](#utiliser-un-lit-double--v313) et la qualification V463 ont depuis leurs périmètres distincts. Les liens conjugaux sont neutres : le sexe graphique n’est pas utilisé comme une orientation ou un sexe biologique.
+Dans le périmètre historique V214, mariage joué, lit double, relations sexuelles, enfants, naissances et famille étendue restaient à développer ; le [lit double V313](#utiliser-un-lit-double--v313) et l’activité du couple V463 ont depuis leurs périmètres distincts. Les liens conjugaux sont neutres : le sexe graphique n’est pas utilisé comme une orientation ou un sexe biologique.
 
 ## Faire face aux crises mentales — V211
 

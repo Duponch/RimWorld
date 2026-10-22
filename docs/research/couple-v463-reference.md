@@ -1,6 +1,6 @@
 # Vie quotidienne du couple adulte — référence Core V463
 
-Référence établie les 22–23 octobre 2026. **V463 est en qualification, sous schéma prospectif 285 ; cette note n'annonce pas sa livraison.** Elle distingue les règles du Core installé, les adaptations locales et les domaines restant hors périmètre.
+Référence établie les 22–23 octobre 2026. **V463 publiée, schéma285 ; les preuves de livraison et leurs limites sont dans la [note de gameplay](../gameplay/couple-v463.md).** Elle distingue les règles du Core installé, les adaptations locales et les domaines restant hors périmètre.
 
 ## Sources et provenance
 
@@ -137,7 +137,7 @@ La simulation locale confirme un tick pour dix ticks Core. L'entrée est datée 
 
 ## Représentation prospective et limites
 
-Les propriétaires en qualification sont [les tâches et horloges](../../src/sim/couple-state-285.ts), [les règles](../../src/sim/couple-rules-285.ts), [le hasard personnel](../../src/sim/couple-random-285.ts), [les mémoires](../../src/sim/couple-memories-285.ts), [les gardes de sauvegarde](../../src/sim/couple-save-285.ts), [le moteur](../../src/sim/couple-runtime-285.ts) et [la fermeture](../../src/sim/couple-release-285.ts). Les champs suivent les mêmes originaux humains ; seules les personnes présentes sur carte peuvent porter une tâche physique. Les propriétaires hors carte, suspendus ou terminaux conservent leurs seuls faits passifs admissibles.
+Les propriétaires locaux sont [les tâches et horloges](../../src/sim/couple-state-285.ts), [les règles](../../src/sim/couple-rules-285.ts), [le hasard personnel](../../src/sim/couple-random-285.ts), [les mémoires](../../src/sim/couple-memories-285.ts), [les gardes de sauvegarde](../../src/sim/couple-save-285.ts), [le moteur](../../src/sim/couple-runtime-285.ts) et [la fermeture](../../src/sim/couple-release-285.ts). Les champs suivent les mêmes originaux humains ; seules les personnes présentes sur carte peuvent porter une tâche physique. Les propriétaires hors carte, suspendus ou terminaux conservent leurs seuls faits passifs admissibles.
 
 Le schéma 284 doit être strictement validé avant migration neutre vers 285 : aucun contrôle passé, durée, cooldown, souvenir, rapprochement ou compétence n'est offert. Les champs prospectifs ont des formes exactes, des références factuelles et des gardes de descripteurs ; les schémas futurs ne sont pas admis par simple borne inférieure. Les lecteurs et validateurs ne corrigent ni les personnes ni leur clinique pour rendre une paire admissible.
 

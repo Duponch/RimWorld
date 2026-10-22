@@ -1,6 +1,6 @@
 # V463 — vie quotidienne du couple adulte
 
-23 octobre 2026. **EN QUALIFICATION — schéma 285, pas publiée.** Parcours Chrome/WebGPU muet, présentation générale et typage final acquis ; livraison en préparation. La base publique reste V462.
+23 octobre 2026. **V463 publiée — schéma285.** Parcours Chrome/WebGPU muet, présentation générale, typage final et build Pages acquis. [Jouer](https://elsewhere-cq7.pages.dev/).
 
 Deux partenaires adultes réellement présents dans leur double-lit peuvent partager un moment intime. Ils occupent leurs deux places et restent éveillés pendant une durée réelle. La fermeture donne à chacun un souvenir temporaire, une opinion dirigée vers l’autre et son propre délai avant une nouvelle occasion. L’activité relie surtout l’ensemble 3 à l’habitat, aux relations, aux soins, aux voyages et à la conservation.
 
@@ -76,6 +76,10 @@ Le contrôle commun **`test:presentation` passe en 157,240 s** avec Chrome/WebGP
 
 Le [relevé ciblé Node](../../tmp/couple-v463/cost-probe/2026-10-22T23-06-52-450Z/report.json) mesure30lots de2000appels directs sur la préparation32² : médianes0,000014ms pour le refus d’un acteur debout,0,000056ms sans place de double-lit et0,000063ms pour le lecteur du vrai lit actif. Les mondes entiers restent inchangés. Ces coûts de helpers isolés, avec échauffement JIT, ne couvrent ni opportunité complète, ni simulation globale, image, GPU ou FPS ; aucune amélioration avant/après n’est mesurée. Listes bornées à dix souvenirs, garde rapide et résolution paresseuse des noms évitent des parcours inutiles ; aucun gain FPS global n’est annoncé.
 
-## Livraison restant à compléter
+## Livraison et suite
 
-Build Pages puis publication restent à acquérir et dater. Les contrôles du jeu gardent effets et musique coupés, sans imposer ce réglage aux joueurs. Aucun domaine Core, campagne ou ensemble n’est clos. Les six ensembles, les campagnes durables, la victoire et la cible FPS restent ouverts ; les autres bases et leurs interactions seront réévaluées après livraison, sans suite spatiale ou série de variantes automatique.
+Le produit **`cb0e7b793bfe2299b2ab321947774e2fc3aad40d`** est poussé sur origin/main. Après le typage final, le build Pages passe en **5,530s**. Le [contrôle du paquet](../../tmp/elsewhere-pages/v463-package-BuZyUS/report.json) acquiert552fichiers,71chemins de sauvegardes publiques identiques et tous les assets statiques du paquet V462 conservés, sans outil privé de QA.
+
+Déploiement **`3956acea`**, [adresse propre](https://3956acea.elsewhere-cq7.pages.dev/) et [site stable](https://elsewhere-cq7.pages.dev/). Les [20réponses HTTPS ciblées](../../tmp/elsewhere-pages/v463-http-8duP2m/report.json) ont les octets et types attendus sur les deux adresses. Cela établit la disponibilité du paquet, pas une deuxième campagne navigateur. L’avertissement Wrangler de dossier sale correspond au seul dossier humain non suivi `references_UI/`, conservé hors commit et hors paquet ; les fichiers suivis étaient propres. Le diagnostic local de version a aussi rencontré un journal AppData non inscriptible, sans bloquer la publication autorisée ensuite.
+
+Les contrôles du jeu gardent effets et musique coupés, sans imposer ce réglage aux joueurs. La [réévaluation après livraison](../development/audit-core-20261022.md#réévaluation-après-v463) couvre tous les domaines et leurs interactions. Aucun domaine Core, campagne ou ensemble n’est clos. Six ensembles, campagnes durables, victoire et cible FPS restent ouverts, sans suite spatiale ou série de variantes automatique.
