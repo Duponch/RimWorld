@@ -1,6 +1,6 @@
 # V455 — Réserves de vêtements utilisables
 
-**Qualification ciblée et interface native muette acquises ; V454 reste publiée.** Schéma278, publication encore en attente. Les factures vestimentaires « jusqu’à X » comptent les vêtements effectivement utilisables selon les critères choisis d’état, qualité et porté. Aucun nouvel objet nécessaire.
+**V455 publiée — schéma278.** Les factures vestimentaires « jusqu’à X » comptent les vêtements effectivement utilisables selon les critères choisis d’état, qualité et porté. Aucun nouvel objet nécessaire.
 
 Ce lot suit l’[audit transversal](../development/audit-core-20261022.md), après le [correctif du paludisme V454](malaria-geography-v454.md). Il couvre les six recettes textiles et les six recettes d’armures déjà jouables ; les autres productions conservent leur compteur. Une pièce trop usée ou de qualité insuffisante ne doit plus suffire lorsque le joueur choisit ces critères. La qualité choisie filtre la réserve, sans garantir la prochaine fabrication.
 
@@ -48,4 +48,8 @@ Sur ces fenêtres, aucune notification de mise en page ou autre erreur et aucun 
 
 ## Publication et suite
 
-Build Pages et publication à acquérir. Les sauvegardes publiques, originaux et histoires doivent rester strictement conservés. La prochaine priorité décidée reste la valeur et la vente des vêtements déjà fabriqués, puis une nouvelle réévaluation de tous les domaines ordinaires. Les six ensembles et la cible FPS restent ouverts.
+**Produit sélectionné : `271b13ba041b14e0a04b8e933f6b0ff783a3aeda`.** Build Pages acquis4,743s ; paquet `tmp/elsewhere-pages/v455-package-4LcwwC/`,552fichiers et152693255octets. Les68fiches/71chemins publics de sauvegarde sont strictement identiques public↔dist ; les actifs statiques et CSS restent ceux de V454. Laboratoire et branchements QA absents du paquet inspecté.
+
+Déploiement **`5a46d239`** acquis sur [l’adresse publique stable](https://elsewhere-cq7.pages.dev/) et [l’adresse immuable](https://5a46d239.elsewhere-cq7.pages.dev/). Vingt réponses HTTPS ciblées exactes en octets/MIME sur les deux adresses ; rapport `tmp/elsewhere-pages/v455-http-YPxGgz/report.json`. Les sauvegardes sont comparées localement en entier, cette passe distante ne les retélécharge pas toutes et ne remplace pas les parcours natifs acquis. Le dossier humain `references_UI/` demeure non suivi, conservé et exclu du paquet ; l’avertissement Git de l’outil de publication est laissé visible.
+
+Les trois originaux du corpus restent byte-identiques. Les sauvegardes et historiques ne sont pas réécrits. La prochaine priorité décidée est la valeur et la vente des vêtements déjà fabriqués, puis une nouvelle réévaluation de tous les domaines ordinaires. L’option de comptage ne crée aucun nouvel objet en inventaire : les formes de propriétaires déjà admises restent les seules sources comptées ; le transport commercial des vêtements ordinaires reste à compléter dans le lot suivant. Les six ensembles et la cible FPS restent ouverts.

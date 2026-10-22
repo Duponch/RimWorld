@@ -6,6 +6,8 @@ Les six ensembles restent ouverts. Le projet possède de nombreuses actions phys
 
 **Suite actualisée après V454 :** le [raccord du paludisme géographique](../gameplay/malaria-geography-v454.md) est publié, avec apparition, soins et reprises acquis dans son périmètre. La prochaine priorité est la réserve de vêtements utilisables, puis leur valeur/vente ; les autres domaines restent à réévaluer. La lecture initiale et les priorités ci-dessous sont conservées comme provenance de cette décision.
 
+**Suite actualisée après V455 :** les [réserves de vêtements utilisables](../gameplay/apparel-reserves-v455.md) sont publiées avec critères PV/qualité, option porté, vraie fabrication, remplacement et rechange conservé. La prochaine priorité est leur valeur et leur vente, y compris les propriétaires commerciaux nécessaires, puis une réévaluation de tous les domaines. Ce résultat ne transforme pas les autres lignes initiales en fonctions acquises ou manquantes définitives.
+
 ## Référence et méthode
 
 Lecture des sources courantes autour de V453, schéma 277, confrontée au [plan des six ensembles](core-completion-plan-20261020.md), au [corpus original](../reference/originals/Documentation_developpement.html) et à ses identifiants SYS/TEST/CONST/UI/STAT/GAP conservés. Les trois originaux sont préservés. Les chapitres couvrent temps, définitions/statistiques, génération et milieux, commandes, travail, économie, habitants, combat, environnement, récit, voyages, populations et sauvegardes ; leur seule énumération n’atteste pas une couverture exhaustive.

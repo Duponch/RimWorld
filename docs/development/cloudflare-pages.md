@@ -1,6 +1,6 @@
 # Elsewhere sur Cloudflare Pages
 
-**Publication courante V454, schéma277 inchangé : `c514a33d`.** Produit `33abcc2c` : [paludisme géographique, qualification et limites](../gameplay/malaria-geography-v454.md#livraison-et-suite).20réponses HTTPS ciblées exactes,68fiches et71chemins publics de sauvegarde inchangés. Les états suivants sont historiques.
+**Publication courante V455, schéma278 : `5a46d239`.** Produit `271b13ba` : [réserves de vêtements, qualification et limites](../gameplay/apparel-reserves-v455.md#publication-et-suite). Vingt réponses HTTPS ciblées exactes,68fiches et71chemins publics de sauvegarde inchangés. Les états suivants sont historiques.
 
 **Publication courante V452, schéma276 : `dd91c337`.** Produit `6ac38d08` : [poutres et moteurs de vaisseau, qualification et limites](../gameplay/ship-parts-v452.md#publication-et-suite).20réponses HTTPS ciblées exactes,68fiches et71chemins publics de sauvegarde inchangés. Les états suivants sont historiques.
 
