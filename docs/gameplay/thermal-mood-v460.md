@@ -1,6 +1,6 @@
 # V460 — Froid et chaleur ressentis
 
-**Qualifiée localement, schéma282 inchangé ; publication en attente, V459 reste publiée.** Ce lot apporte les pensées de situation thermiques des humains sur carte et en caravane. Il suit la [réévaluation transversale](../development/audit-core-20261022.md#réévaluation-après-v459). Les exemples humains ne ferment pas le périmètre ; tous les domaines et interactions Core, les six ensembles, campagnes durables, victoire complète et cible FPS restent ouverts.
+**Publiée, schéma282 inchangé.** Ce lot apporte les pensées de situation thermiques des humains sur carte et en caravane. Il suit la [réévaluation transversale](../development/audit-core-20261022.md#réévaluation-après-v459). Les exemples humains ne ferment pas le périmètre ; tous les domaines et interactions Core, les six ensembles, campagnes durables, victoire complète et cible FPS restent ouverts.
 
 ## Comportement et référence
 
@@ -52,3 +52,9 @@ Les moyennes et maxima restent mixtes (maximum air partagé8,792µs au chantier,
 ## Limites ouvertes
 
 Pensées de sommeil thermique, autres pensées/crises/social, catalogue, production, quêtes, dangers prolongés, aide/création et tous les autres aspects Core restent ouverts. Ce lot ne qualifie pas un nouveau trajet réel de caravane ni toutes les combinaisons de portage/porte/saison : ses lecteurs et producteurs sont reliés aux autorités existantes, avec les préparations et parcours nommés ci-dessus. Une colonie reste la référence de travail ; les historiques, sauvegardes et critères des six ensembles sont conservés.
+
+## Livraison
+
+Produit `744f5a2a79863fb793577ffb3f585c21281fff93`, commité et envoyé sur `origin/main`. Build Pages propre de ce HEAD acquis5,721s. Le paquet552 fichiers conserve tous les assets statiques et le CSS de V459, les71 chemins/68 fiches publiques et tous les payloads historiques strictement ; pilotes privés et laboratoires absents. Rapport `tmp/elsewhere-pages/v460-package-gkCN7i/report.json`.
+
+Déploiement `e5044b75` acquis17,224s. [Jouer sur Elsewhere](https://elsewhere-cq7.pages.dev/) ; [déploiement identifié](https://e5044b75.elsewhere-cq7.pages.dev/). Les20 réponses HTTPS ciblées sur les deux adresses ont leurs octets et types MIME exacts ; HEAD, paquet et sauvegardes restent inchangés pendant le contrôle. Rapport `tmp/elsewhere-pages/v460-http-xNuzpG/report.json`. Cette disponibilité ne vaut pas campagne ou mesure FPS supplémentaire.
