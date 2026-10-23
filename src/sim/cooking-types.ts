@@ -34,9 +34,10 @@ export interface CookingBill {
   cremationFilter?:CremationFilter;
   apparelCount?:ApparelCountFilter278;
   worker?:import('./bill-worker-state-283.ts').BillWorkerPolicy283;
+  reservePause?:import('./bill-pause-state-289.ts').BillReservePause289;
 }
 // Admission has its own command: changing it must not cancel engaged work.
-export type BillSettings=Omit<CookingBill,'id'|'recipe'|'worker'>;
+export type BillSettings=Omit<CookingBill,'id'|'recipe'|'worker'|'reservePause'>;
 export interface CookingIngredient {
   pileId:number;
   item:ProductionIngredient;

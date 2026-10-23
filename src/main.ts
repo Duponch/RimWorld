@@ -1332,7 +1332,7 @@ function rebuildInspector() {
     }
     const fire=selectedObject?.kind==='structure'?snapshot?.structures.find(s=>s.id===selectedObject!.id&&(stationRecipe(s)!==null||s.kind==='torch-lamp'||s.kind==='passive-cooler'||s.kind==='wood-generator'||s.kind==='chemfuel-generator')):undefined;
     if(fire) {
-      const send=(command:Command)=>command.type==='bill-worker-policy'?client.command(command).then(()=>{renderState();}):void attempt(async()=>{await client.command(command);rebuildInspector();renderState();});
+      const send=(command:Command)=>command.type==='bill-worker-policy'||command.type==='bill-pause-policy'||command.type==='bill-pause-resume'?client.command(command).then(()=>{renderState();}):void attempt(async()=>{await client.command(command);rebuildInspector();renderState();});
       if(fire.fuel)panel.append(fireControls(fire,send));if(stationRecipe(fire))panel.append(billControls(fire,send,billId=>client.billWorkerOptions(fire.id,billId)));
     }
     const zone = selectedObject?.kind==='growing'?snapshot?.growingZones.find(z=>z.id===selectedObject!.id):selectedObject?.kind==='structure'?snapshot?.growingZones.find(z=>z.basinId===selectedObject!.id):undefined;

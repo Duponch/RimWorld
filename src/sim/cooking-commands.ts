@@ -12,11 +12,14 @@ import { isCremationRecipe } from './cremation-rules.ts';
 import { PRODUCTION_RECIPES, stationAccepts, stationRecipe } from './production-recipes.ts';
 import { isCookingOrder } from './order-types.ts';
 import { newCookingBill, validBillSettings } from './cooking-bills.ts';
+import {supportsBillReservePause289,validBillReservePausePolicy289,validBillPauseCommand289,adjustBillReserveTarget289} from './bill-pause-rules-289.ts';
+import {canResumeBillReserve289,reconcileBillReservePause289} from './bill-pause-289.ts';
 import { releaseWork, type DropPlan } from './work-release.ts';
 import type { Command, CommandResult, World } from './types.ts';
 
-type BillCommand=Extract<Command,{type:'bill-add'|'bill-update'|'bill-remove'|'bill-move'|'bill-worker-policy'}>;
+type BillCommand=Extract<Command,{type:'bill-add'|'bill-update'|'bill-remove'|'bill-move'|'bill-worker-policy'|'bill-pause-policy'|'bill-pause-resume'}>;
 export function applyBillCommand(world:World,command:BillCommand,drops:DropPlan):CommandResult {
+  if((command.type==='bill-pause-policy'||command.type==='bill-pause-resume')&&!validBillPauseCommand289(command,world.schemaVersion))return {ok:false,code:'invalid-command',reason:'Commande de pause invalide.'};
   const station=world.structures.find(s=>s.id===command.structureId&&stationRecipe(s)!==null);
   if(!station?.bills)return {ok:false,code:'missing-target',reason:'Poste de production introuvable.'};
   if(command.type==='bill-add') {
@@ -26,6 +29,17 @@ export function applyBillCommand(world:World,command:BillCommand,drops:DropPlan)
   }
   const index=station.bills.findIndex(b=>b.id===command.billId),bill=station.bills[index];
   if(!bill)return {ok:false,code:'missing-target',reason:'Facture introuvable.'};
+  if(command.type==='bill-pause-policy'){
+    if(world.schemaVersion!==289||!supportsBillReservePause289(bill.recipe)||!validBillReservePausePolicy289(command.policy)
+      ||command.policy.enabled&&bill.mode==='until'&&(command.policy.resumeAt>=bill.target||bill.target>0&&command.policy.resumeAt<0))
+      return {ok:false,code:'invalid-command',reason:'Réglage de pause invalide : la reprise doit rester sous la cible.'};
+    bill.reservePause={enabled:command.policy.enabled,resumeAt:command.policy.resumeAt,paused:bill.reservePause?.paused??false};
+    reconcileBillReservePause289(world,bill);return {ok:true,affected:1};
+  }
+  if(command.type==='bill-pause-resume'){
+    if(!canResumeBillReserve289(world,bill))return {ok:false,code:'invalid-command',reason:'La réserve doit être en pause automatique et sous la cible.'};
+    bill.reservePause!.paused=false;return {ok:true,affected:1};
+  }
   if(command.type==='bill-worker-policy') {
     if(!isSchema283OrLater(world.schemaVersion)||!validBillWorkerPolicy283(command.policy,world.nextId))return {ok:false,code:'invalid-command',reason:'Réglage de l’exécutant invalide.'};
     const policy=command.policy;
@@ -41,7 +55,7 @@ export function applyBillCommand(world:World,command:BillCommand,drops:DropPlan)
     if(next<0||next>=station.bills.length)return {ok:false,code:'invalid-command',reason:'Extrémité de la liste.'};
     [station.bills[index],station.bills[next]]=[station.bills[next]!,bill];return {ok:true};
   }
-  if(command.type==='bill-update'&&(!command.settings||typeof command.settings!=='object'||'worker'in command.settings||!validBillSettings(command.settings,bill.recipe,world.schemaVersion)))return {ok:false,code:'invalid-command',reason:'Réglages de recette invalides.'};
+  if(command.type==='bill-update'&&(!command.settings||typeof command.settings!=='object'||'worker'in command.settings||'reservePause'in command.settings||!validBillSettings(command.settings,bill.recipe,world.schemaVersion)))return {ok:false,code:'invalid-command',reason:'Réglages de recette invalides.'};
   for(const pawn of world.pawns)if(pawn.cooking?.stationId===station.id&&pawn.cooking.billId===bill.id) {
     if(isBurnApparelRecipe(pawn.cooking.recipe)&&hasTravellingCargo(world,pawn)){interruptWork(world,pawn,true);continue;}
     if(!releaseWork(world,pawn,drops))return {ok:false,code:'occupied',reason:'Aucune place pour conserver la cargaison.'};
@@ -50,12 +64,14 @@ export function applyBillCommand(world:World,command:BillCommand,drops:DropPlan)
   if(command.type==='bill-remove')station.bills.splice(index,1);
   else {
     const s=command.settings;
+    const oldTarget=bill.target;
     bill.mode=s.mode;bill.target=s.target;bill.suspended=s.suspended;
     bill.filters=Object.fromEntries(PRODUCTION_RECIPES[bill.recipe].inputs.filter(i=>s.filters[i]!==undefined).map(i=>[i,s.filters[i]]));
     bill.radius=s.radius;bill.destination=s.destination;
     if(Object.hasOwn(s,'apparelCount'))bill.apparelCount={...s.apparelCount!};else delete bill.apparelCount;
     if(bill.recipe==='smelt-weapon'||bill.recipe==='smelt-apparel'||isBurnApparelRecipe(bill.recipe))bill.smeltFilter={...s.smeltFilter!};
     if(isCremationRecipe(bill.recipe))bill.cremationFilter={...s.cremationFilter!};
+    adjustBillReserveTarget289(bill,oldTarget);reconcileBillReservePause289(world,bill);
   }
   return {ok:true};
 }

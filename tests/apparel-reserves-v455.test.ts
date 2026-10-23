@@ -10,7 +10,7 @@ import {storageConditionAccepts} from '../src/sim/storage-condition.ts';
 import {serializeWorld,deserializeWorld,validateWorld} from '../src/sim/serialization.ts';
 import {deconstructionCamp} from './scenarios/deconstruction.ts';
 import type {ApparelCountFilter278,BillSettings,CookingBill} from '../src/sim/cooking-types.ts';
-import type {MaterialPile,World,Command} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type MaterialPile,type World,type Command} from '../src/sim/types.ts';
 
 const RECIPES=['tribalwear','shirt','pants','duster','parka','tuque','make-flak-vest','make-flak-helmet','make-recon-helmet','make-recon-armor','make-plate-armor','make-simple-helmet'] as const;
 function world278(count=1):World {
@@ -32,10 +32,12 @@ const fogReader278=(w:World):World=>({...w,site:{revision:3} as World['site'],ex
 test('only the twelve current apparel recipes create a neutral prospective count filter, with fresh independent data',()=>{
  expect(RECIPES.every(isApparelCountRecipe278)).toBe(true);
  for(const recipe of RECIPES){
-  const old=newCookingBill(1,recipe,277),current=newCookingBill(2,recipe,278),future=newCookingBill(3,recipe,279);
+  const old=newCookingBill(1,recipe,277),current=newCookingBill(2,recipe,278),future=newCookingBill(3,recipe,SCHEMA_VERSION+1);
   expect(Object.hasOwn(old,'apparelCount')).toBe(false);expect(Object.hasOwn(future,'apparelCount')).toBe(false);
   expect(current.apparelCount).toEqual({hpMin:0,hpMax:100,qualityMin:'awful',qualityMax:'legendary',includeEquipped:false});
-  expect(validBillSettings(current,recipe,278)).toBe(true);expect(validBillSettings(current,recipe,277)).toBe(false);expect(validBillSettings(current,recipe,279)).toBe(false);
+  expect(validBillSettings(current,recipe,278)).toBe(true);expect(validBillSettings(current,recipe,279)).toBe(true);expect(validBillSettings(current,recipe,SCHEMA_VERSION)).toBe(true);
+  expect(newCookingBill(3,recipe,279).apparelCount).toEqual(current.apparelCount);expect(newCookingBill(3,recipe,SCHEMA_VERSION).apparelCount).toEqual(current.apparelCount);
+  expect(validBillSettings(current,recipe,277)).toBe(false);expect(validBillSettings(current,recipe,SCHEMA_VERSION+1)).toBe(false);
   const other=newCookingBill(4,recipe,278);expect(other.apparelCount).not.toBe(current.apparelCount);
  }
  for(const recipe of ['make-mace','make-longsword','make-spear','make-plasteel-knife','make-revolver','simple-meal','small-sculpture','make-prosthetic-arm','smelt-apparel','burn-apparel'] as const){

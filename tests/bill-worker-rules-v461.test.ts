@@ -10,7 +10,7 @@ import {DRUG_PRODUCTION_RESEARCH_COST,MEDICINE_PRODUCTION_RESEARCH_COST,MICROELE
 import {serializeWorld} from '../src/sim/serialization.ts';
 import type {BillWorkerPolicy283} from '../src/sim/bill-worker-state-283.ts';
 import type {ProductionRecipe} from '../src/sim/production-recipes.ts';
-import type {Command,Structure,World} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type Command,type Structure,type World} from '../src/sim/types.ts';
 import {healrootCamp} from './helpers/healroot-domestic-v195.ts';
 import {fixtureBuilding} from './scenarios/deconstruction.ts';
 
@@ -75,7 +75,13 @@ test('policy shape rejects unknown, hidden, inherited, accessor and noninteger f
 test('closed schema guards preserve absent/history admission and reject prospective settings on historical or future worlds',()=>{
  const f=camp(),withPolicy={...f.bill,worker:policy(f.other!.id,20,20)};
  expect(validBillSettings(withPolicy,withPolicy.recipe,283)).toBe(true);expect(validBillSettings(withPolicy,withPolicy.recipe,282)).toBe(false);
- for(const version of [282,285]){
+ for(const version of [285,SCHEMA_VERSION]){
+  f.world.schemaVersion=version as World['schemaVersion'];const before=JSON.stringify(f.world);
+  expect(validBillSettings(withPolicy,withPolicy.recipe,version)).toBe(true);
+  expect(billWorkerRefusal283(f.world,f.pawn,withPolicy)).toBe('Cette facture est réservée à une autre personne.');expect(JSON.stringify(f.world)).toBe(before);
+  expect(applyCommand(f.world,{type:'bill-worker-policy',structureId:f.station.id,billId:f.bill.id,policy:policy()}).ok).toBe(true);
+ }
+ for(const version of [282,SCHEMA_VERSION+1]){
   f.world.schemaVersion=version as World['schemaVersion'];const before=JSON.stringify(f.world);
   expect(billWorkerRefusal283(f.world,f.pawn,withPolicy)).toBeUndefined();expect(JSON.stringify(f.world)).toBe(before);
   expect(applyCommand(f.world,{type:'bill-worker-policy',structureId:f.station.id,billId:f.bill.id,policy:policy()}).ok).toBe(false);expect(JSON.stringify(f.world)).toBe(before);

@@ -1,3 +1,4 @@
+import {isSchema288OrLater} from './schema-compatibility-257.ts';
 import {captureAnimalAreaOwners287} from './animal-area-owners-287.ts';
 import {createAnimalAreaPolicyReader287} from './animal-area-policy-287.ts';
 import {animalAreaProtected287} from './animal-area-runtime-287.ts';
@@ -18,9 +19,9 @@ const absent=(v:object,k:string)=>!Object.hasOwn(v,k)&&!(k in v);
 /** Only a spawned local original can own this prospective job. No getter is evaluated. */
 export function validAnimalThermalRefugeField288(value:unknown,version:number,tick:number,width:number,height:number,local=false):boolean {
  try{
-  if(!plain(value)||!int(version,1,288))return false;
+  if(!plain(value)||!int(version,1,289))return false;
   if(absent(value,FIELD))return true;
-  const d=data(value,FIELD);if(version!==288||!local||!d||!int(tick,0,Math.floor(Number.MAX_SAFE_INTEGER/10))||!int(width,1)||!int(height,1))return false;
+  const d=data(value,FIELD);if(!isSchema288OrLater(version)||!local||!d||!int(tick,0,Math.floor(Number.MAX_SAFE_INTEGER/10))||!int(width,1)||!int(height,1))return false;
   const t=d.value;if(!plain(t)||!exact(t,['mapId','target','phase','startedAtCore'])||!int(t.mapId)||!int(t.startedAtCore,0,tick*10)||t.startedAtCore%10!==0||t.phase!=='travel'&&t.phase!=='wait')return false;
   return plain(t.target)&&exact(t.target,['x','z'])&&int(t.target.x,0,width-1)&&int(t.target.z,0,height-1);
  }catch{return false;}
@@ -29,7 +30,7 @@ export function validAnimalThermalRefugeField288(value:unknown,version:number,ti
 const lanes=new Set(['world','dynamic','campaign','wildlife','animals','animal','piles','corpse','worldMaps','sites','map','worldGroups','groups','state','animalOwners','members','animalLosses','items','worldPawns','owners','actor','structures','packed','building','shipCryptosleep277','occupant','cryptosleep','casket','heldCaskets259','heldPlayerCaskets271','heldShipCaskets277','startingArrival','pods','pending261','abandonedContents','abandonedPawns','humans','posts','stock','leaders','worldFactions','scout','commercialTrip','groupLosses','secondarySite','group','tradeRequests284','entries','options','legacyTravellers','losses','flyers']);
 /** Historical sparse/dynamic packets visit real custody lanes, never terrain grids. */
 export function validAnimalThermalRefugeHistoricalTransport288(value:unknown,version:number):boolean {
- if(!int(version,1,288))return false;if(version===288)return true;
+ if(!int(version,1,289))return false;if(isSchema288OrLater(version))return true;
  const active=new Set<object>();let budget=2_000_000;
  const walk=(v:unknown):boolean=>{
   if(--budget<0)return false;if(v===null||typeof v!=='object')return true;
@@ -43,7 +44,7 @@ export function validAnimalThermalRefugeHistoricalTransport288(value:unknown,ver
 /** A job survives changing air/severity. Only ownership and physical task context are checked here. */
 export function validAnimalThermalRefugeWorld288(input:CampaignState|CampaignSummary):boolean {
  try{
-  const w=input as World;if(!validAnimalThermalRefugeHistoricalTransport288(w,Number(w.schemaVersion)))return false;if(Number(w.schemaVersion)!==288)return true;
+  const w=input as World;if(!validAnimalThermalRefugeHistoricalTransport288(w,Number(w.schemaVersion)))return false;if(!isSchema288OrLater(w.schemaVersion))return true;
   const capture=captureAnimalAreaOwners287(w,{seal:false});if(!capture.valid)return false;
   const maps=new Map<number,World>(),navs=new Map<number,ReturnType<typeof createAnimalNavigationReader>>(),policies=new Map<number,ReturnType<typeof createAnimalAreaPolicyReader287>>(),groupClaims=new Map<number,Set<number>>();
   for(const h of capture.owners){

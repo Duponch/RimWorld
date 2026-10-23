@@ -82,7 +82,7 @@ export function planCookingOrder(world:World,pawn:Pawn,stationId:number,access?:
 export function queuedCookingReason(world:World,order:CookingOrder,pawn?:Pawn):string|undefined {
   const areaReason=pawn?queuedCookingAreaReason(world,pawn,order):undefined;if(areaReason)return areaReason;
   const view=withoutQueuedOrder(world,order),c=order.cooking,station=view.structures.find(s=>s.id===c.stationId&&stationRecipe(s)!==null),bill=station?.bills?.find(b=>b.id===c.billId);
-  if(!station||!bill||bill.recipe!==taskRecipe(c)||!billWanted(view,bill))return 'Facture supprimée, suspendue ou quantité atteinte.';
+  if(!station||!bill||bill.recipe!==taskRecipe(c)||!billWanted(view,bill,true))return 'Facture supprimée, suspendue ou quantité atteinte.';
   if(isKibbleRecipe(bill.recipe)&&(world.schemaVersion<227||!stationAccepts(station,bill.recipe)||!validKibbleIngredients(c.ingredients)||c.ingredients.some(i=>i.stage==='source'&&i.quantity>10)))return 'Les croquettes exigent vingt protéines et vingt végétaux frais au poste de boucherie.';
   if(isBurnApparelRecipe(bill.recipe)&&(world.schemaVersion<251||!stationAccepts(station,bill.recipe)||!validBurnApparelIngredients(c.ingredients)||c.phase==='output'||c.phase==='interrupted'||bill.mode==='until'||bill.destination!=='drop'))return 'La combustion exige un vêtement entier autorisé et aucune sortie.';
   if(isCremationRecipe(bill.recipe)&&(!validCremationIngredients(c.ingredients)||c.phase==='output'||bill.mode==='until'||bill.destination!=='drop'))return 'La crémation exige une seule dépouille entière et aucune sortie.';

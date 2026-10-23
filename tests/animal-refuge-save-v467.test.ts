@@ -8,6 +8,7 @@ import {SnapshotEncoder,SnapshotDecoder} from '../src/bridge/snapshots.ts';
 import {ResidentPresentationAssembler} from '../src/bridge/resident-presentation-assembler.ts';
 import {createAnimalMedicalRecord256} from '../src/sim/animal-clinical-age-v256.ts';
 import type {AnimalThermalRefuge288} from '../src/sim/animal-thermal-refuge-state-288.ts';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 
 // Existing finite32² colony and the same fresh-constructor Labrador original.
 // Tasks/positions below are declared guard fixtures, never a played refuge claim.
@@ -18,9 +19,11 @@ function waiting(f:ReturnType<typeof camp>):AnimalThermalRefuge288{f.animal.heal
 test('prospective task shape is current288 local only and keeps literal absence distinct from ownundefined',()=>{
  const task={mapId:0,target:{x:3,z:4},phase:'travel',startedAtCore:20};
  expect(validAnimalThermalRefugeField288({animalThermalRefuge288:task},288,2,32,32,true)).toBe(true);
- for(const version of [1,256,286,287,289])expect(validAnimalThermalRefugeField288({animalThermalRefuge288:task},version,2,32,32,true)).toBe(false);
+ expect(validAnimalThermalRefugeField288({animalThermalRefuge288:task},SCHEMA_VERSION,2,32,32,true)).toBe(true);
+ for(const version of [1,256,286,287,SCHEMA_VERSION+1])expect(validAnimalThermalRefugeField288({animalThermalRefuge288:task},version,2,32,32,true)).toBe(false);
  expect(validAnimalThermalRefugeField288({},287,2,32,32)).toBe(true);
- expect(validAnimalThermalRefugeField288({},289,2,32,32)).toBe(false);
+ expect(validAnimalThermalRefugeField288({},SCHEMA_VERSION,2,32,32)).toBe(true);
+ expect(validAnimalThermalRefugeField288({},SCHEMA_VERSION+1,2,32,32)).toBe(false);
  expect(validAnimalThermalRefugeField288({animalThermalRefuge288:undefined},288,2,32,32,true)).toBe(false);
  expect(validAnimalThermalRefugeField288({animalThermalRefuge288:task},288,2,32,32,false)).toBe(false);
 });
@@ -46,7 +49,7 @@ test('historical fences inspect local sparse and every detached custody lane wit
   for(const envelope of envelopes)for(const version of [1,256,286,287])expect(validAnimalThermalRefugeHistoricalTransport288(envelope,version)).toBe(false);
  }
  expect(reads).toBe(0);expect(validAnimalThermalRefugeHistoricalTransport288({events:[{message:'animalThermalRefuge288'}]},287)).toBe(true);
- expect(validAnimalThermalRefugeHistoricalTransport288({},288)).toBe(true);expect(validAnimalThermalRefugeHistoricalTransport288({},289)).toBe(false);
+ expect(validAnimalThermalRefugeHistoricalTransport288({},288)).toBe(true);expect(validAnimalThermalRefugeHistoricalTransport288({},SCHEMA_VERSION)).toBe(true);expect(validAnimalThermalRefugeHistoricalTransport288({},SCHEMA_VERSION+1)).toBe(false);
 });
 
 test('an awake wait survives a healthy or changed thermal state but never becomes sleep or movement',()=>{
@@ -89,7 +92,7 @@ test('a nonlocal flyer original cannot retain its prior local task',()=>{
 
 test('strict287 migration changes only the number and rejects a future task before migration',()=>{
  const f=camp(),old=structuredClone(f.world);Object.assign(old,{schemaVersion:287});const raw=JSON.stringify(old);
- expect(validateCampaignSchema287(old)).toEqual([]);expect(deserializeWorld(raw)).toEqual({...old,schemaVersion:288});expect(JSON.stringify(old)).toBe(raw);
+ expect(validateCampaignSchema287(old)).toEqual([]);expect(deserializeWorld(raw)).toEqual({...old,schemaVersion:SCHEMA_VERSION});expect(JSON.stringify(old)).toBe(raw);
  Object.assign(old.wildlife!.animals[0]!,{animalThermalRefuge288:waiting(f)});expect(validateCampaignSchema287(old).length).toBeGreaterThan(0);expect(()=>deserializeWorld(JSON.stringify(old))).toThrow();
 });
 

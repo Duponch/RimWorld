@@ -287,6 +287,7 @@ import { updatePlantTemperatures } from './thermal-plants.ts';
 import { updateFoodTemperatures } from './thermal-food.ts';
 import { applyBillCommand } from './cooking-commands.ts';
 import { cookingCellReserved } from './cooking-bills.ts';
+import {reconcileBillReservePauses289} from './bill-pause-289.ts';
 import { burnFuel, refuelable, newBuildingFuel, isFueledBuilding } from './fuel.ts';
 import { newMiniTurretState } from './mini-turret-state.ts';
 import { reloadableTurret,draftTurretService } from './mini-turret-reload.ts';
@@ -408,7 +409,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   const selection = queryArea(world, command);
   if (!selection.ok) return selection;
   if (!selection.cells.length) return refusal('missing-target', 'Aucune case compatible dans ce rectangle.');
-  if([287,288].includes(Number(world.schemaVersion))&&(command.action==='home'||command.action==='remove-home'))return applyAnimalHomeArea287(world,command,selection.cells,drops);
+  if([287,288,289].includes(Number(world.schemaVersion))&&(command.action==='home'||command.action==='remove-home'))return applyAnimalHomeArea287(world,command,selection.cells,drops);
   if(command.action==='cancel'){
     const cells=new Set(selection.cells);
     const jobs=new Set(world.jobs.filter(j=>[...footprintCells(j),...furnitureSourceCells(world,j)].some(c=>cells.has(c.z*world.width+c.x))).map(j=>j.id));
@@ -644,8 +645,8 @@ export function applyCommand(world: World, command: Command,caravans?:import('./
 }
 type LocalCommand=Exclude<Command,SecondarySiteCommand>;
 function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
-  if([287,288].includes(Number(world.schemaVersion))&&command?.type==='animal-area-assign')return applyAnimalAreaAssignmentCommand287(world,command);
-  if([287,288].includes(Number(world.schemaVersion))&&(command?.type==='allowed-area-create'||command?.type==='allowed-area-settings'||command?.type==='allowed-area-paint'||command?.type==='allowed-area-delete'||command?.type==='assign-allowed-area'))return applyAnimalAwareAreaCommand287(world,command);
+  if([287,288,289].includes(Number(world.schemaVersion))&&command?.type==='animal-area-assign')return applyAnimalAreaAssignmentCommand287(world,command);
+  if([287,288,289].includes(Number(world.schemaVersion))&&(command?.type==='allowed-area-create'||command?.type==='allowed-area-settings'||command?.type==='allowed-area-paint'||command?.type==='allowed-area-delete'||command?.type==='assign-allowed-area'))return applyAnimalAwareAreaCommand287(world,command);
   if(command&&typeof command==='object'&&hiddenExplorationCommandTarget256(world,command))return refusal('missing-target','Cette cible n’est pas connue sur la carte actuelle.');
   if(command.type==='material-forbid')return applyMaterialPermission256(world,command);
   if(command.type==='egg-forbid')return applyEggPermission256(world,command);
@@ -655,7 +656,8 @@ function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
   if(command.type==='apparel-policy-update')return applyApparelPolicyUpdate(world,command);
   if(command.type==='apparel-policy-copy'||command.type==='apparel-policy-rename')return applyApparelPolicyName(world,command);
   const result=applyCommandInternal(world,command);
-  if([287,288].includes(Number(world.schemaVersion))&&command.type==='area'&&(command.action==='home'||command.action==='remove-home'))return result;
+  if(command.type==='bill-pause-policy'||command.type==='bill-pause-resume')return result;
+  if([287,288,289].includes(Number(world.schemaVersion))&&command.type==='area'&&(command.action==='home'||command.action==='remove-home'))return result;
   // These cold metadata transactions already reconcile their exact affected
   // destinations. A no-op must not advance unrelated services or clocks.
   if(command.type==='shelf-link'||command.type==='shelf-unlink'||command.type==='shelf-group-rename'
@@ -855,7 +857,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
   if(command.type==='cooler-adjust')return adjustCoolerTarget(world,command.structureId,command.offset);
   if(command.type==='cooler-target')return setCoolerTarget(world,command.structureId,command.target);
   if(command.type==='research-project')return selectResearch(world,command.project);
-  if(command.type==='bill-worker-policy') {
+  if(command.type==='bill-worker-policy'||command.type==='bill-pause-policy'||command.type==='bill-pause-resume') {
     const result=applyBillCommand(world,command,drops);if(result.ok)wakePlanners(world);return result;
   }
   if(command.type==='bill-add'||command.type==='bill-update'||command.type==='bill-remove'||command.type==='bill-move') {
@@ -1170,6 +1172,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     expireStaggers(world);advanceFilth(world,weatherRainRate(world));
     scheduleGrowing(world);
     scheduleRoofs(world);advanceWorldApparelWear(world);reconcilePrisoners(world);reconcileRescues(world);reconcileWarden(world);reconcilePatientRest(world);reconcileTending(world);reconcileSurgery(world);reconcilePasteRequests(world);reconcileFeeding(world);reconcileEquipmentTasks(world);for(const pawn of world.pawns){if(pawn.orbitalTrade)reconcileOrbitalTrade(world,pawn);if(pawn.deepWork)reconcileDeepWork(world,pawn);reconcileWeaponMemory(world,pawn);}
+    reconcileBillReservePauses289(world);
     // Build only if this tick actually plans or moves. No cross-tick cache can hide
     // a command, edited terrain, restored save, or a wall that changed between calls.
     let blocked: Uint8Array | undefined;
@@ -1367,13 +1370,13 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
       if(pawn.tend){processTending(world,pawn,needsContext,()=>getLight().speedAt(pawn),()=>searchCandidates(world,pawn,getBlocked(),occupied,budget));continue;}
       if(pawn.rescue){processRescue(world,pawn,needsContext);continue;}
       if (pawn.haul) { const refueling=pawn.haul.destination.type==='fuel';processHaul(world, pawn, (target, allow) => moveToward(world, pawn, target, allow, getBlocked, budget,false,getLight), () => {wakePlanners(world);if(refueling)invalidateEnvironment();});continue; }
-      if(pawn.cooking) {processCooking(world,pawn,{
+      if(pawn.cooking) {const priorProduct=pawn.cooking.productId,priorPhase=pawn.cooking.phase;processCooking(world,pawn,{
         workRate:(station,worker)=>getEnvironment().production(station,worker).total*((isFoodWorkstation(station.kind)||station.kind==='butcher-spot'||station.kind==='crafting-spot'||station.kind==='tailor-bench'||station.kind==='electric-tailor-bench'||station.kind==='machining-table'||station.kind==='art-bench'||station.kind==='drug-lab'||station.kind==='fueled-smithy'||station.kind==='electric-smithy'||station.kind==='brewery'||station.kind==='biofuel-refinery'||station.kind==='electric-crematorium'||station.kind==='electric-smelter')?tailoringTemperatureFactor(new TemperatureView(world,thermal).at(world,station.kind==='electric-crematorium'?pawn.cooking!.spot:station)):1)*(taskWork(pawn.cooking!)==='cook'||isMechSalvageRecipe(pawn.cooking!.recipe)||pawn.cooking!.recipe==='make-medicine'||isBiofuelRecipe(pawn.cooking!.recipe)||pawn.cooking!.recipe==='burn-apparel'||pawn.cooking!.recipe==='smelt-weapon'||pawn.cooking!.recipe==='smelt-apparel'||isSmithingRecipe267(pawn.cooking!.recipe)||pawn.cooking!.recipe==='cremate-corpse'?1:physicalWorkFactor(pawn,'craft',body)),
         candidates:()=>searchCandidates(world,pawn,getBlocked(),occupied,budget),
         search:goals=>search(world,pawn,getBlocked(),occupied,budget,goals),
         move:(target,exact)=>moveToward(world,pawn,target,true,getBlocked,budget,exact,getLight),
         release:()=>releaseWork(world,pawn),event:message=>event(world,'job',message),
-      });continue;}
+      });if(pawn.cooking?.productId!==priorProduct||priorPhase!=='output'&&pawn.cooking?.phase==='output')reconcileBillReservePauses289(world);continue;}
       const job = world.jobs.find(candidate => candidate.id === pawn.jobId); if (!job) { if(processReturnToAllowedArea(world,pawn,needsContext))continue; processRecreation(world,pawn,needsContext,true); continue; }
       if(job.tree){const beforeResources=world.resources,beforePiles=world.piles,beforeJobs=world.jobs;processTreeWork(world,pawn,job,(target,touch)=>moveToward(world,pawn,target,false,getBlocked,budget,false,getLight),getLight().speedAt(pawn));if(world.resources!==beforeResources||world.piles!==beforePiles||world.jobs!==beforeJobs){blocked=undefined;roofs=undefined;invalidateEnvironment();}continue;}
       if(backgroundWorkRefusal(pawn,workType(job))){releaseWork(world,pawn);continue;}
@@ -1496,7 +1499,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     advanceScoutTrip(world);advanceCommercialTrip(world);if(!world.worldMaps&&!isSecondaryContext(world))advanceGroup(world);
     advanceAncientShrineWarnings256(world);
     advanceStartingArrival(world);if(world.schemaVersion<236)advanceMinifiedTrees(world);
-    refreshStock(world);reconcileSpikeTrapContacts(world);
+    refreshStock(world);reconcileBillReservePauses289(world);reconcileSpikeTrapContacts(world);
     if(thermalDirty)thermal=reconcileTemperature(world);
     updateFoodTemperatures(world,thermal);
     if(light&&lightKey!==plantLightSourcesKey(world))light=undefined;

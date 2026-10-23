@@ -1,5 +1,6 @@
 import {isSchema273OrLater,isSchema278OrLater,isSchema283OrLater} from './schema-compatibility-257.ts';
 import {validBillWorkerPolicy283} from './bill-worker-rules-283.ts';
+import {validBillReservePauseState289} from './bill-pause-rules-289.ts';
 import {isApparelCountRecipe278,newApparelCountFilter278,validApparelCountFilter278,countedApparelProducts278} from './apparel-count-278.ts';
 import {isProstheticRecipe273} from './prosthetic-content-273.ts';
 import {isSchema272OrLater,isSchema269OrLater,isSchema270OrLater} from './schema-compatibility-257.ts';
@@ -54,6 +55,9 @@ export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-
   if(recipe==='make-emp-launcher'&&version<208)return false;
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
   const v=value as BillSettings;
+  const reservePause=Object.getOwnPropertyDescriptor(value,'reservePause');
+  if(!reservePause&&'reservePause'in value)return false;
+  if(reservePause&&(!Object.hasOwn(reservePause,'value')||!reservePause.enumerable||!validBillReservePauseState289(reservePause.value,version,recipe)))return false;
   const worker=Object.getOwnPropertyDescriptor(value,'worker');
   if(!worker&&'worker'in value)return false;
   if(worker&&(!isSchema283OrLater(version)||!Object.hasOwn(worker,'value')||!worker.enumerable||!validBillWorkerPolicy283(worker.value)))return false;
@@ -64,7 +68,7 @@ export function validBillSettings(value:unknown,recipe:ProductionRecipe='simple-
   const cremation=isCremationRecipe(recipe);
   if(smelting?!Object.hasOwn(v,'smeltFilter')||!validSmeltFilter(v.smeltFilter):Object.hasOwn(v,'smeltFilter'))return false;
   if(cremation?!Object.hasOwn(v,'cremationFilter')||!validCremationFilter(v.cremationFilter):Object.hasOwn(v,'cremationFilter'))return false;
-  return Object.keys(v).every(k=>['id','recipe','mode','target','suspended','filters','radius','destination',...smelting?['smeltFilter']:[],...cremation?['cremationFilter']:[],...apparelCount?['apparelCount']:[],...worker?['worker']:[]].includes(k))
+  return Object.keys(v).every(k=>['id','recipe','mode','target','suspended','filters','radius','destination',...smelting?['smeltFilter']:[],...cremation?['cremationFilter']:[],...apparelCount?['apparelCount']:[],...worker?['worker']:[],...reservePause?['reservePause']:[]].includes(k))
     &&(smelting||cremation?['times','forever']:['times','until','forever']).includes(v.mode)&&Number.isSafeInteger(v.target)&&v.target>=0&&v.target<=9999
     &&typeof v.suspended==='boolean'&&!!v.filters&&typeof v.filters==='object'&&!Array.isArray(v.filters)
     &&Object.keys(v.filters).every(i=>(PRODUCTION_RECIPES[recipe].inputs as readonly string[]).includes(i)&&(isSchema272OrLater(version)||!isSpearItem272(i))&&(isSchema269OrLater(version)||!isMaceItem269(i))&&(isSchema270OrLater(version)||!isLongswordItem270(i))&&(version>=267||!isSmithingProduct267(i))&&(version>=265||i!=='hops')&&(version>=256||!isFutureEcologyItem256(i))&&(version>=197||!V219_ITEM_IDS.some(future=>future===i)))
@@ -94,7 +98,10 @@ export function countedProducts(world:World,bill?:CookingBill):number {
     return zone&&(!meal||storageCellAccepts(world,zone,p.item))?n+p.quantity:n;
   },0);
 }
-export function billWanted(world:World,bill:CookingBill):boolean {
+export function billWanted(world:World,bill:CookingBill,alreadyAdmitted=false):boolean {
+  // Existing reserved orders keep their historical target/suspension checks;
+  // only the new automatic memory is prospective to later admissions.
+  if(!alreadyAdmitted&&world.schemaVersion===289&&bill.mode==='until'&&bill.reservePause?.enabled&&bill.reservePause.paused)return false;
   return !bill.suspended&&(bill.mode==='forever'||bill.mode==='times'&&bill.target>0||bill.mode==='until'&&countedProducts(world,bill)<bill.target);
 }
 export function cookingSpot(station:Structure):Cell {

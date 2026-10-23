@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 288 as const;
+export const SCHEMA_VERSION = 289 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -370,6 +370,8 @@ export type Command = import('./animal-area-state-287.ts').AnimalAreaCommand287 
   | { type: 'bill-add';recipe?:import('./production-recipes.ts').ProductionRecipe; structureId: number }
   | { type: 'bill-update'; structureId: number; billId: number; settings: import('./cooking-types.ts').BillSettings }
   | { type: 'bill-worker-policy'; structureId:number; billId:number; policy:import('./bill-worker-state-283.ts').BillWorkerPolicy283 }
+  | { type:'bill-pause-policy';structureId:number;billId:number;policy:import('./bill-pause-state-289.ts').BillReservePausePolicy289 }
+  | { type:'bill-pause-resume';structureId:number;billId:number }
   | { type: 'bill-remove'; structureId: number; billId: number }
   | { type: 'bill-move'; structureId: number; billId: number; direction: -1 | 1 }
   | DesignateCommand
