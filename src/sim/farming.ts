@@ -2,19 +2,23 @@ import {extractTreeDefinition} from './tree-transfer-rules.ts';
 import {clearingDuration,prospectivePlantWorkCore256} from './gathering.ts';
 import {terrainGroundFertility256,terrainHasProspectiveRules256} from './natural-terrain-runtime-256.ts';
 import {workOutputPending} from './construction-plants.ts';
-import { furnitureDuration } from './furniture-rules.ts';
+import { furnitureDuration,packedAt } from './furniture-rules.ts';
 import { constructionRecipe } from './construction-materials.ts';
 import { deconstructionDuration } from './deconstruction-rules.ts';
 import { footprintCells, footprintContains, JOB_DURATION, STRUCTURE_DEFINITIONS } from './definitions.ts';
 import {geyserBlocksPlantOrFloor256} from './local-geyser-state-256.ts';
 import { isCrop, isPlant, plantGrowth, PLANT_DEFINITIONS, sowingTemperatureAllowed } from './plants.ts';
-import { TemperatureView, outdoorTemperature } from './temperature.ts';
+import { TemperatureView, outdoorTemperature,temperatureAt } from './temperature.ts';
 import { releaseWork, type DropPlan } from './work-release.ts';
 import { isGrowingTerrain } from './soil.ts';
 import { createPlantLife } from './plant-life.ts';
 import { sowDaylily } from './flower-pot.ts';
 import { plantSkill } from './plant-skills.ts';
 import { hydroponicBasinAt,hydroponicCropAllowed,hydroponicSowingAllowed } from './hydroponics.ts';
+import {isRoofed} from './roof-rules.ts';
+import {FLORA_DEFINITIONS} from './biome-flora.ts';
+import {choppable,plantCanYieldNow} from './plants.ts';
+import {isForestrySpecies291,forestSowingChoices291,growingPlantMinFertility291,growingPlantSowSkill291,growingPlantSowTicks291} from './forestry-content-291.ts';
 import type { GrowingZone, Job, JobKind, Pawn, Resource, World } from './types.ts';
 
 export const FARM_SCAN_INTERVAL = 10;
@@ -45,12 +49,44 @@ function zoneCells(world: World) {
   return cached;
 }
 export const growingZoneAt = (world: World, cell: number): GrowingZone | undefined => zoneCells(world).byCell.get(cell);
+// Index all sowing intentions once; the live reservation on each Job remains
+// authoritative. A planner can accept another job during this same tick.
+const sowIndices=new WeakMap<World,{source:Job[];length:number;cells:Map<number,Job[]>}>();
+function sowCells(world:World):Map<number,Job[]>{
+ let entry=sowIndices.get(world);if(!entry||entry.source!==world.jobs||entry.length!==world.jobs.length){
+  const cells=new Map<number,Job[]>();for(const job of world.jobs)if(job.kind==='sow'&&job.growingZoneId!==undefined){const cell=index(world,job),rows=cells.get(cell)??[];rows.push(job);cells.set(cell,rows);}
+  entry={source:world.jobs,length:world.jobs.length,cells};sowIndices.set(world,entry);
+ }return entry.cells;
+}
+function adjacentCells291(world:World,cell:number):number[]{
+ const x=cell%world.width,z=Math.floor(cell/world.width),cells:number[]=[];
+ for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++)if(dx||dz){const nx=x+dx,nz=z+dz;if(nx>=0&&nz>=0&&nx<world.width&&nz<world.height)cells.push(nz*world.width+nx);}return cells;
+}
+const sameGrowingPlant291=(resource:Resource,zone:GrowingZone):boolean=>isForestrySpecies291(zone.plant)?resource.kind==='tree'&&resource.species===zone.plant:resource.kind===zone.plant;
+/** Trees block their neighbours. A newly planted tree additionally respects
+ * every cultivated crop and the actual sown provenance of transplanted trees. */
+function sowBlocker291(world:World,zone:GrowingZone,cell:number,resources:Map<number,Resource>,sows:Map<number,Job[]>,ownJob?:number):{cell:number;resource?:Resource}|undefined{
+ const forest=isForestrySpecies291(zone.plant);
+ for(const next of adjacentCells291(world,cell)){
+  const resource=resources.get(next);
+  if(resource&&(resource.kind==='tree'||forest&&(isCrop(resource)||resource.sown291===true)))return {cell:next,resource};
+  for(const job of sows.get(next)??[]){if(job.id===ownJob||job.reservedBy===null)continue;const other=zoneCells(world).byId.get(job.growingZoneId!);if(other&&(forest||isForestrySpecies291(other.plant)))return {cell:next};}
+ }return;
+}
 /** Admission only: accepted work keeps its captured reservation even if the
  * worker later loses a level. Clearing and harvesting have no sowing minimum. */
 export function sowingJobAllowed(world:World,pawn:Pawn,job:Pick<Job,'kind'|'growingZoneId'>):boolean {
   if(job.kind!=='sow'||job.growingZoneId===undefined)return true;
   const zone=zoneCells(world).byId.get(job.growingZoneId);
-  return (!zone||hydroponicSowingAllowed(world,zone))&&(zone?.plant!=='healroot'||plantSkill(pawn).level>=8)&&(zone?.plant!=='hops'||plantSkill(pawn).level>=3);
+  if(!zone)return true;
+  if(!hydroponicSowingAllowed(world,zone)||plantSkill(pawn).level<growingPlantSowSkill291(zone.plant))return false;
+  if(world.schemaVersion<291)return true;
+  const actual=job as Job,cell=index(world,actual);
+  if(isForestrySpecies291(zone.plant)){
+    if(!forestSowingChoices291(world).includes(zone.plant)||isRoofed(world,cell))return false;
+    const temperature=temperatureAt(world,actual);if(!(temperature>0&&temperature<FLORA_DEFINITIONS[zone.plant].maxGrowthTemperature))return false;
+  }
+  return !sowBlocker291(world,zone,cell,resourceCells(world),sowCells(world),actual.id);
 }
 /** Presentation may supply the already captured target; omission keeps the
  * simulation's existing spatial cache. null means the target is absent. */
@@ -60,6 +96,7 @@ export function jobDuration(world: World, job: Job, capturedResource?:Resource|n
   if(job.flowerPotId!==undefined&&job.kind==='sow')return 54;
   if(job.kind==='sow'&&job.growingZoneId!==undefined&&zoneCells(world).byId.get(job.growingZoneId)?.plant==='haygrass')return 17;
   if(job.kind==='sow'&&job.growingZoneId!==undefined&&zoneCells(world).byId.get(job.growingZoneId)?.plant==='healroot')return 80;
+  if(world.schemaVersion>=291&&job.kind==='sow'&&job.growingZoneId!==undefined){const plant=zoneCells(world).byId.get(job.growingZoneId)?.plant;if(plant&&isForestrySpecies291(plant))return growingPlantSowTicks291(plant);}
   if(job.kind==='build-bridge'||job.kind==='remove-bridge'||job.kind==='lay-floor'||job.kind==='remove-floor'||job.kind==='grave')return constructionRecipe(job).work;
   if(job.kind==='mine'&&job.pickTicks!==undefined)return job.pickTicks/10;
   if(job.furniture)return furnitureDuration(world,job);
@@ -81,7 +118,7 @@ export function jobDuration(world: World, job: Job, capturedResource?:Resource|n
   }
   return JOB_DURATION[job.kind];
 }
-interface Context { resources: Map<number, Resource>; fixed: Set<number>; hydroBlocked?:Set<number>; temperatures:TemperatureView }
+interface Context { resources: Map<number, Resource>; fixed: Set<number>; hydroBlocked?:Set<number>; temperatures:TemperatureView;sows:Map<number,Job[]>;forestry:ReadonlySet<string> }
 function context(world: World, queriedCells?:readonly number[]): Context {
   const placed=world.structures.filter(s=>s.kind!=='power-conduit'),planned=world.jobs.filter(j => j.kind==='replant-tree'||j.kind==='install'||j.kind!=='power-conduit'&&j.kind in STRUCTURE_DEFINITIONS);
   const objects=[...placed,...planned];
@@ -92,13 +129,13 @@ function context(world: World, queriedCells?:readonly number[]): Context {
   const other=world.growingZones.some(z=>z.basinId!==undefined)?[...placed.filter(s=>s.kind!=='hydroponics-basin'),...planned]:undefined;
   const hydroBlocked=other&&(queriedCells?new Set(queriedCells.filter(i=>other.some(s=>footprintContains(s,{x:i%world.width,z:Math.floor(i/world.width)}))))
     :new Set(other.flatMap(s=>footprintCells(s).map(c=>index(world,c)))));
-  let temperatures:TemperatureView|undefined;
+  let temperatures:TemperatureView|undefined,forestry:ReadonlySet<string>|undefined;
   return {
     resources: resourceCells(world),
-    get temperatures(){return temperatures??=new TemperatureView(world);},fixed,hydroBlocked,
+    get temperatures(){return temperatures??=new TemperatureView(world);},get forestry(){return forestry??=new Set(forestSowingChoices291(world));},fixed,hydroBlocked,sows:sowCells(world),
   };
 }
-function intention(world: World, zone: GrowingZone, cell: number, ctx: Context, committed=false): { kind: JobKind; cell: number } | null {
+function intention(world: World, zone: GrowingZone, cell: number, ctx: Context, committed=false,ownJob?:number): { kind: JobKind; cell: number } | null {
   const position={x:cell%world.width,z:Math.floor(cell/world.width)};
   if(geyserBlocksPlantOrFloor256(world,position))return null;
   const basin=zone.basinId===undefined?undefined:hydroponicBasinAt(world,position);
@@ -106,17 +143,27 @@ function intention(world: World, zone: GrowingZone, cell: number, ctx: Context, 
   if (ctx.fixed.has(cell)&&(!basin||ctx.hydroBlocked?.has(cell))||!basin&&(world.tiles[cell]!.floor||world.tiles[cell]!.bridge&&terrainHasProspectiveRules256(world.tiles[cell]!.terrain,world))) return null;
   const plant = ctx.resources.get(cell);
   if(plant?.blight)return zone.allowCut?{kind:'cut',cell}:null;
-  if (plant?.kind === zone.plant || (!zone.allowSow && zone.allowCut && plant && isPlant(plant))) {
+  const forest=world.schemaVersion>=291&&isForestrySpecies291(zone.plant);
+  if(world.schemaVersion>=291&&plant?.kind==='tree'&&(sameGrowingPlant291(plant,zone)||zone.allowCut)&&plantGrowth(world,plant)>.999&&plantCanYieldNow(world,plant))return {kind:'chop',cell};
+  if(forest&&plant&&sameGrowingPlant291(plant,zone))return null;
+  if (plant?.kind === zone.plant || (!zone.allowSow && zone.allowCut && plant && isPlant(plant)&&(world.schemaVersion<291||plant.kind!=='tree'))) {
     return plantGrowth(world, plant) >= 1 ? { kind: 'harvest', cell } : null;
   }
   if (!zone.allowSow) return null;
+  if(forest&&(!ctx.forestry.has(zone.plant)||!committed&&isRoofed(world,cell)))return null;
   const soil=world.tiles[cell]!;
-  if(!basin&&terrainHasProspectiveRules256(soil.terrain,world)&&terrainGroundFertility256(soil)<PLANT_DEFINITIONS[zone.plant].minFertility)return null;
+  if(!basin&&(forest||terrainHasProspectiveRules256(soil.terrain,world))&&terrainGroundFertility256(soil)<growingPlantMinFertility291(zone.plant))return null;
   // Temperature gates new sowing work, not harvesting or an accepted job.
-  if(!committed&&!sowingTemperatureAllowed(ctx.temperatures.at(world,{x:cell%world.width,z:Math.floor(cell/world.width)})))return null;
-  if (plant) return zone.allowCut && plant.kind !== 'rock' ? { kind: plant.kind === 'tree' ? 'chop' : 'cut', cell } : null;
+  if(!committed){const temperature=ctx.temperatures.at(world,position);if(forest?!(temperature>0&&temperature<FLORA_DEFINITIONS[zone.plant as import('./forestry-content-291.ts').ForestrySpecies291].maxGrowthTemperature):!sowingTemperatureAllowed(temperature))return null;}
+  if (plant) return zone.allowCut && plant.kind !== 'rock' ? { kind: plant.kind === 'tree'&&(world.schemaVersion<291||choppable(world,plant)) ? 'chop' : 'cut', cell } : null;
   // A sowing intention stays pending while its floor items are hauled aside.
   if (!basin&&!isGrowingTerrain(world.tiles[cell]!.terrain)||basin&&!hydroponicSowingAllowed(world,zone)) return null;
+  if(world.schemaVersion>=291){
+    const blocker=sowBlocker291(world,zone,cell,ctx.resources,ctx.sows,ownJob);if(!blocker)return {kind:'sow',cell};
+    if(!blocker.resource||!zone.allowCut)return null;
+    const other=growingZoneAt(world,blocker.cell);if(other&&sameGrowingPlant291(blocker.resource,other))return null;
+    return {kind:blocker.resource.kind==='tree'&&choppable(world,blocker.resource)?'chop':'cut',cell:blocker.cell};
+  }
   const x = cell % world.width, z = Math.floor(cell / world.width);
   for (const [dx, dz] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
     const nx = x + dx!, nz = z + dz!;
@@ -144,10 +191,10 @@ export function growingJobValid(world: World, job: Job, shared?:Context): boolea
   if (!zone) return false;
   const target = index(world, job);
   // Tree clearing can originate in a neighbouring cell outside the zone.
-  const origins = job.kind === 'chop' ? [target, target - world.width, target + 1, target + world.width, target - 1] : [target];
+  const origins = world.schemaVersion>=291&&(job.kind==='chop'||job.kind==='cut')?[target,...adjacentCells291(world,target)]:job.kind === 'chop' ? [target, target - world.width, target + 1, target + world.width, target - 1] : [target];
   const ctx=shared??context(world,origins);
   return origins.some(cell => growingZoneAt(world, cell)?.id === zone.id && (() => {
-    const desired = intention(world, zone, cell, ctx,job.reservedBy!==null);
+    const desired = intention(world, zone, cell, ctx,job.reservedBy!==null,job.id);
     return desired?.kind === job.kind && desired.cell === target;
   })());
 }
@@ -192,7 +239,9 @@ export function finishSowing(world: World, job: Job): void {
   const zone=world.growingZones.find(z=>z.id===job.growingZoneId);
   if(!zone||zone.basinId!==undefined&&(!hydroponicSowingAllowed(world,zone)||!zone.cells.includes(index(world,job))))return;
   const kind=zone.plant;
-  const plant:Resource={ id: world.nextId++, kind, x: job.x, z: job.z, amount: PLANT_DEFINITIONS[kind].yield, growth: .0001, growthTick: world.tick };
-  if(world.climate)plant.plantLife=createPlantLife(world,plant,true);
+  if(world.schemaVersion>=291&&(!growingJobValid(world,job)||packedAt(world,job)||world.piles.some(p=>p.owner.type==='ground'&&p.owner.x===job.x&&p.owner.z===job.z)||!Number.isSafeInteger(world.nextId+1)))return;
+  const forest=world.schemaVersion>=291&&isForestrySpecies291(kind);
+  const plant:Resource={ id: world.nextId++, kind:forest?'tree':kind as import('./crops.ts').CropKind,...(forest?{species:kind as import('./forestry-content-291.ts').ForestrySpecies291,sown291:true as const}:{}), x: job.x, z: job.z, amount:forest?FLORA_DEFINITIONS[kind as import('./forestry-content-291.ts').ForestrySpecies291].yield:PLANT_DEFINITIONS[kind as import('./crops.ts').CropKind].yield, growth: .0001, growthTick: world.tick };
+  if(world.climate||forest)plant.plantLife=createPlantLife(world,plant,true);
   world.resources = [...world.resources,plant];
 }

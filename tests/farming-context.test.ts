@@ -2,6 +2,7 @@ import {isBuildableFixtureKind} from './helpers/legacy-fixture-guards.ts';
 import { expect,test } from 'vitest';
 import { createWorld } from '../src/sim/engine';
 import { growingJobValid } from '../src/sim/farming';
+import {forestSowingChoices291} from '../src/sim/forestry-content-291';
 import { footprintCells,STRUCTURE_DEFINITIONS } from '../src/sim/definitions';
 import {isAncientMonumentKind256,ANCIENT_MONUMENT_DEFS_256} from '../src/sim/ancient-monument-props-256';
 import { TemperatureView } from '../src/sim/temperature';
@@ -11,7 +12,8 @@ import type { Job,Orientation,StructureKind,World } from '../src/sim/types';
  * capture. Both deliberately call the same unchanged intention rules. */
 function fullContext(w:World) {
   const objects=[...w.structures.filter(s=>s.kind!=='power-conduit'),...w.jobs.filter(j=>j.kind==='install'||j.kind!=='power-conduit'&&j.kind in STRUCTURE_DEFINITIONS)];
-  return {resources:new Map(w.resources.map(r=>[r.z*w.width+r.x,r])),fixed:new Set(objects.flatMap(s=>footprintCells(s).map(c=>c.z*w.width+c.x))),temperatures:new TemperatureView(w)};
+  const sows=new Map<number,Job[]>();for(const j of w.jobs)if(j.kind==='sow'){const cell=j.z*w.width+j.x;sows.set(cell,[...(sows.get(cell)??[]),j]);}
+  return {resources:new Map(w.resources.map(r=>[r.z*w.width+r.x,r])),fixed:new Set(objects.flatMap(s=>footprintCells(s).map(c=>c.z*w.width+c.x))),temperatures:new TemperatureView(w),sows,forestry:new Set(forestSowingChoices291(w))};
 }
 
 test('point agricultural validation retains complete-field decisions, neighbour clearing and mutation boundaries',()=>{

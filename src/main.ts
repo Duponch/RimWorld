@@ -182,7 +182,8 @@ import { billControls, updateBillControls } from './ui/bill-controls';
 import { growingControls } from './ui/growing-controls';
 import { plantInspection, growingTemperatureInspection } from './ui/plant-inspection';
 import { BIOME_LABELS,HILLINESS_LABELS } from './sim/site';
-import { choppable,harvestable,isPlant,PLANT_DEFINITIONS } from './sim/plants';
+import { choppable,harvestable,isPlant } from './sim/plants';
+import {growingPlantLabel291} from './sim/forestry-content-291';
 import './style.css';
 import './ui/colonist-inspector.css';
 import './ui/cell-inspector.css';
@@ -1336,7 +1337,7 @@ function rebuildInspector() {
       gatherSpotControls(panel,(structureId,enabled)=>attempt(async()=>{await client.command({type:'gather-spot',structureId,enabled});renderState();}));
       bedControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)));
       const popper=snapshot?.structures.find(s=>s.id===selectedObject!.id&&s.kind==='firefoam-popper');
-      if(popper&&snapshot?.schemaVersion===290)panel.append(firefoamControls290(snapshot,popper,command=>client.command(command).then(()=>renderState())));
+      if(popper&&[290,291].includes(Number(snapshot?.schemaVersion)))panel.append(firefoamControls290(snapshot!,popper,command=>client.command(command).then(()=>renderState())));
       const trap=snapshot?.structures.find(s=>s.id===selectedObject!.id&&s.kind==='spike-trap');
       if(trap)panel.append(spikeTrapControls(trap,command=>void attempt(async()=>{await client.command(command);rebuildInspector();renderState();})));
     }
@@ -1350,7 +1351,7 @@ function rebuildInspector() {
       if(fire.fuel)panel.append(fireControls(fire,send));if(stationRecipe(fire))panel.append(billControls(fire,send,billId=>client.billWorkerOptions(fire.id,billId)));
     }
     const zone = selectedObject?.kind==='growing'?snapshot?.growingZones.find(z=>z.id===selectedObject!.id):selectedObject?.kind==='structure'?snapshot?.growingZones.find(z=>z.basinId===selectedObject!.id):undefined;
-    if(zone){panel.append(growingControls(zone,command=>void attempt(async()=>{await client.command(command);renderState();})));if(zone.basinId===undefined)panel.querySelector('.cell-card')?.append(zoneActions('growing',zone.id));}
+    if(zone){panel.append(growingControls(zone,command=>void attempt(async()=>{await client.command(command);renderState();}),snapshot));if(zone.basinId===undefined)panel.querySelector('.cell-card')?.append(zoneActions('growing',zone.id));}
   } else panel.replaceChildren();
   if(selectedCell&&selectedObject){
     const heading=panel.querySelector('.cell-heading');
@@ -1626,7 +1627,7 @@ function renderState() {
       updateShipAssemblyInspection276(el('inspector'),world,structure);
       const zone=selectedObject.kind==='growing'?world.growingZones.find(z=>z.id===selectedObject!.id):undefined;
       el('cell-title').textContent = geyser?geyser.title:packed ? `Meuble emballé · ${buildingLabels[packed.building.kind]}` : pile ? ITEM_DEFINITIONS[pile.item].label : structure ? buildingLabels[structure.kind] : resource ? (floraDefinition(resource)?.label??resourceLabels[resource.kind]) : job ? `${job.construction==='blueprint'?'Plan · ':job.construction==='frame'?'Cadre · ':''}${jobLabels[job.kind]}` : zone ? 'Zone de culture' : storage ? `Zone de stockage ${stockpileZoneId(storageCell!)}` : 'Massif rocheux';
-      let cellDescription = geyser?geyser.description:resource ? (isPlant(resource)||resource.kind==='tree') ? plantInspection(world,resource) : `Quantité : ${resource.amount}` : pile ? `Quantité : ${pile.quantity}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:pile.kind==='corpse'?` · ${{fresh:'Fraîche',rotting:'Pourrie (impropre à la boucherie)',desiccated:'Desséchée'}[corpseStage(pile,world.tick)]}`:''}` : structure ? `${structureFootprintLabel(structure)} cases` : job ? queryJobStatus(world,job).reason??'' : zone ? `Culture : ${PLANT_DEFINITIONS[zone.plant].label} · ${zone.cells.length} cases${growingTemperatureInspection(world,selectedCell)}` : storage ? `Taille : ${stockpileZoneCells(world,storageCell!.id).length} cases` : '';
+      let cellDescription = geyser?geyser.description:resource ? (isPlant(resource)||resource.kind==='tree') ? plantInspection(world,resource) : `Quantité : ${resource.amount}` : pile ? `Quantité : ${pile.quantity}${pile.kind==='food'?` · ${foodFreshnessLabel(pile,world.tick)}`:pile.kind==='corpse'?` · ${{fresh:'Fraîche',rotting:'Pourrie (impropre à la boucherie)',desiccated:'Desséchée'}[corpseStage(pile,world.tick)]}`:''}` : structure ? `${structureFootprintLabel(structure)} cases` : job ? queryJobStatus(world,job).reason??'' : zone ? `Culture : ${growingPlantLabel291(zone.plant)} · ${zone.cells.length} cases${growingTemperatureInspection(world,selectedCell,zone.plant)}` : storage ? `Taille : ${stockpileZoneCells(world,storageCell!.id).length} cases` : '';
       if(pile&&isMinifiedTree(pile)){cellDescription=minifiedTreeDescription(pile,world.tick);if(pile.plantPack.pendingExpiry)el('cell-title').textContent='Arbre mort · restes en attente';}
       let cellHealth:CellHealth|undefined;
       const deterioration=pile?deteriorationInspection(world,pile):undefined;

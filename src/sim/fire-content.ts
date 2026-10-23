@@ -15,7 +15,7 @@ export class FireContent {
   readonly world:World;
   constructor(world:World){
     this.world=world;
-    if(world.schemaVersion===290)for(const f of world.filth?.items??[])if(f.kind==='firefoam')this.firefoam.add(index(world,f));
+    if((Number(world.schemaVersion)===290||Number(world.schemaVersion)===291))for(const f of world.filth?.items??[])if(f.kind==='firefoam')this.firefoam.add(index(world,f));
     const add=(c:Cell,t:FireTarget)=>{const key=index(world,c),list=this.contents.get(key);if(list)list.push(t);else this.contents.set(key,[t]);};
     for(const r of world.resources)if(r.kind!=='rock')add(r,{kind:'resource',value:r});
     for(const p of world.piles)if(p.owner.type==='ground')add(p.owner,{kind:'pile',value:p});

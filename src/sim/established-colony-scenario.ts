@@ -250,7 +250,7 @@ export function prepareEstablishedColonyScenario(): World {
   bill(butcher, 'butcher-creature', 1, 'times'); bill(tailor, 'pants', 2, 'times', 32);
   bill(stonecutter, 'stone-blocks', 200); bill(machine, 'shred-mechanoid', 1, 'times');
 
-  const fields: readonly { plant: World['growingZones'][number]['plant']; rectangle: readonly [number, number, number, number]; growth: number }[] = [
+  const fields: readonly { plant: import('./crops').CropKind; rectangle: readonly [number, number, number, number]; growth: number }[] = [
     { plant: 'rice', rectangle: [7, 34, 12, 39], growth: .93 },
     { plant: 'corn', rectangle: [7, 42, 11, 47], growth: .81 },
     { plant: 'cotton', rectangle: [14, 42, 17, 46], growth: .62 },

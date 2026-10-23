@@ -1,3 +1,5 @@
+import {validForestryPolicies291,validForestryHistoricalTransport291} from '../sim/forestry-save-291.ts';
+import {isGrowingPlantInVersion291} from '../sim/forestry-content-291.ts';
 import {validFirefoamHistoricalTransport290,validFirefoamWorld290,validateFirefoamLocal290} from '../sim/firefoam-save-290.ts';
 import {validBillPauseHistoricalTransport289,validBillPauseWorld289} from '../sim/bill-pause-save-289.ts';
 import {validAnimalThermalRefugeHistoricalTransport288,validAnimalThermalRefugeWorld288} from '../sim/animal-thermal-refuge-save-288.ts';
@@ -168,7 +170,6 @@ import { cookingSpot,validBillSettings } from '../sim/cooking-bills.ts';
 import { validCookingOrder } from '../sim/player-cooking-save.ts';
 import { reservedSource } from '../sim/materials.ts';
 import { validatePileRecordShape } from '../sim/material-record-save.ts';
-import { isCropKindInVersion } from '../sim/crops.ts';
 import { validateHydroponics } from '../sim/farming-save.ts';
 import { validFireResourceLosses } from '../sim/fire-save.ts';
 import { validPlantSkill, validMiningSkill } from '../sim/skills-save.ts';
@@ -661,7 +662,7 @@ function validImmuneDiseaseTransport(pawn:Pawn,world:Pick<World,'schemaVersion'|
   return status==='mobile'?pawn.state!=='dead'&&pawn.state!=='downed':pawn.state===status;
 }
 
-const equalResourceBase = (a: Resource, b: Resource): boolean => a.id === b.id && a.kind === b.kind && a.species === b.species
+const equalResourceBase = (a: Resource, b: Resource): boolean => a.id === b.id && a.kind === b.kind && a.species === b.species && a.sown291 === b.sown291 && Object.hasOwn(a,'sown291') === Object.hasOwn(b,'sown291')
   && a.growthLight === b.growthLight && a.x === b.x && a.z === b.z && a.amount === b.amount && a.stone === b.stone && a.damage === b.damage
   && a.plantLife?.initialAgeCore === b.plantLife?.initialAgeCore && a.plantLife?.since === b.plantLife?.since && a.plantLife?.bornAt === b.plantLife?.bornAt
   && a.plantLife?.pausedTicks === b.plantLife?.pausedTicks && a.plantLife?.ageTick === b.plantLife?.ageTick && a.plantLife?.leaflessPausedTicks === b.plantLife?.leaflessPausedTicks
@@ -1126,7 +1127,7 @@ export class SnapshotDecoder {
     const refuse=()=>({status:'resync' as const,reason:'Campagne sans carte illisible.'});
     if(!Number.isSafeInteger(packet.epoch)||packet.epoch<1||!Number.isSafeInteger(packet.revision)||packet.revision<1||!Number.isFinite(packet.stepMs)||packet.stepMs<0||![0,1,3,6].includes(packet.speed))return refuse();
     if(packet.epoch<this.epoch||packet.epoch===this.epoch&&packet.revision<=this.revision)return {status:'stale'};
-    if(!validFirefoamHistoricalTransport290(packet.summary,packet.summary.schemaVersion)||!validBillPauseHistoricalTransport289(packet.summary,packet.summary.schemaVersion)||!validAnimalThermalRefugeHistoricalTransport288(packet.summary,packet.summary.schemaVersion)||!validAnimalAreaHistoricalTransport287(packet.summary,packet.summary.schemaVersion)||!validLinkedStorageHistorical286(packet.summary,packet.summary.schemaVersion)||!validCoupleHistoricalTransport285(packet.summary,packet.summary.schemaVersion)||!validTradeRequestHistorical284(packet.summary,packet.summary.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet.summary,packet.summary.schemaVersion))return refuse();
+    if(!validForestryHistoricalTransport291(packet.summary,packet.summary.schemaVersion)||!validFirefoamHistoricalTransport290(packet.summary,packet.summary.schemaVersion)||!validBillPauseHistoricalTransport289(packet.summary,packet.summary.schemaVersion)||!validAnimalThermalRefugeHistoricalTransport288(packet.summary,packet.summary.schemaVersion)||!validAnimalAreaHistoricalTransport287(packet.summary,packet.summary.schemaVersion)||!validLinkedStorageHistorical286(packet.summary,packet.summary.schemaVersion)||!validCoupleHistoricalTransport285(packet.summary,packet.summary.schemaVersion)||!validTradeRequestHistorical284(packet.summary,packet.summary.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet.summary,packet.summary.schemaVersion))return refuse();
     if(!validWorldPawnsEnvelope256(packet.summary,packet.summary.schemaVersion,packet.summary.tick*10,packet.summary.nextId))return refuse();
     if(!validPlanetGeographyHistorical256(packet.summary,packet.summary.schemaVersion))return refuse();
     const geographic=this.geographicTransport.prepare(packet.summary,packet.geography,Object.hasOwn(packet,'geography'),packet.epoch!==this.epoch);if(!geographic.ok)return refuse();
@@ -1157,7 +1158,7 @@ export class SnapshotDecoder {
     if(!validPrisonerSurgeryHistoricalTransport280(packet,packet.world.schemaVersion))return resync('Future captive surgery.');
     if(!validApparelTradeHistoricalTransport279(packet,packet.world.schemaVersion))return resync('Future ordinary apparel inventory or trade.');
     if(!validApparelReservesHistoricalTransport278(packet,packet.world.schemaVersion))return resync('Future apparel reserve settings.');
-    if(!validFirefoamHistoricalTransport290(packet,packet.world.schemaVersion)||!validBillPauseHistoricalTransport289(packet,packet.world.schemaVersion)||!validAnimalThermalRefugeHistoricalTransport288(packet,packet.world.schemaVersion)||!validAnimalAreaHistoricalTransport287(packet,packet.world.schemaVersion)||!validLinkedStorageHistorical286(packet,packet.world.schemaVersion)||!validCoupleHistoricalTransport285(packet,packet.world.schemaVersion)||!validTradeRequestHistorical284(packet,packet.world.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet,packet.world.schemaVersion)||!validBillWorkerHistoricalTransport283(packet,packet.world.schemaVersion))return resync('Future couple or bill worker settings.');
+    if(!validForestryHistoricalTransport291(packet,packet.world.schemaVersion)||!validFirefoamHistoricalTransport290(packet,packet.world.schemaVersion)||!validBillPauseHistoricalTransport289(packet,packet.world.schemaVersion)||!validAnimalThermalRefugeHistoricalTransport288(packet,packet.world.schemaVersion)||!validAnimalAreaHistoricalTransport287(packet,packet.world.schemaVersion)||!validLinkedStorageHistorical286(packet,packet.world.schemaVersion)||!validCoupleHistoricalTransport285(packet,packet.world.schemaVersion)||!validTradeRequestHistorical284(packet,packet.world.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet,packet.world.schemaVersion)||!validBillWorkerHistoricalTransport283(packet,packet.world.schemaVersion))return resync('Future couple or bill worker settings.');
     if(!validShipCasketHistoricalTransport277(packet,packet.world.schemaVersion))return resync('Future spatial casket content.');
     if(!validShipPartHistoricalTransport276(packet,packet.world.schemaVersion))return resync('Pièce de vaisseau ou recherche moteur future dans ce snapshot.');
     if(!validShipReactorHistoricalTransport275(packet,packet.world.schemaVersion))return resync('Réacteur stellaire futur dans ce snapshot.');
@@ -1233,7 +1234,7 @@ export class SnapshotDecoder {
       if(message.world.schemaVersion<194&&(Object.hasOwn(zone.filters??{},'mech-corpse')||Object.hasOwn(zone.items??{},'scyther-corpse')))return resync('Filtre mécanique futur.');
       if(message.world.schemaVersion<197&&(Object.hasOwn(zone.items??{},'lancer-corpse')||Object.hasOwn(zone.items??{},'pikeman-corpse')))return resync('Filtre mécanique futur.');
     }
-    if(!Array.isArray(message.world.growingZones)||message.world.growingZones.some(zone=>!zone||!isCropKindInVersion(zone.plant,message.world.schemaVersion)))return resync('Culture future ou inconnue dans ce snapshot.');
+    if(!Array.isArray(message.world.growingZones)||message.world.growingZones.some(zone=>!zone||!isGrowingPlantInVersion291(zone.plant,message.world.schemaVersion)))return resync('Culture future ou inconnue dans ce snapshot.');
     if(message.world.fires!==undefined&&!validFireResourceLosses(message.world.fires?.ledger?.resources,message.world.schemaVersion))return resync('Pertes végétales du feu invalides pour ce snapshot.');
     if(message.world.schemaVersion<193&&(Object.hasOwn(message.world,'bombWaves')||Object.hasOwn(message.world.research??{},'gunTurrets')
       ||[...message.world.structures,...message.world.jobs,...message.world.packed.map(p=>p.building)].some(s=>s.kind==='mini-turret'||Object.hasOwn(s,'turret'))))return resync('Tourelle, recherche ou vague future.');
@@ -1749,6 +1750,7 @@ export class SnapshotDecoder {
     // Commit only after every patch is checked. A refusal preserves both state and revision.
     if(next.schemaVersion>=256&&!validGeographicSiteBinding256(next))return resync('Provenance locale distincte de la vraie planète.');
     if(!this.validGeographicCalendar(next,message.epoch))return resync('Origine du calendrier géographique réécrite.');
+    if(!validForestryPolicies291(next))return resync('Invalid or locked forest growing policy.');
     if(!validFirefoamWorld290(next)||!validBillPauseWorld289(next)||!validAnimalThermalRefugeWorld288(next)||!validAnimalAreaWorld287(next)||!validLinkedStorageProjection286(next)||!validBillWorkerWorld283(next,readHumanOwners))return resync('Opérateur de facture ou réglages incohérents.');
     if(acceptExtra&&!acceptExtra(next))return resync('Métadonnées supplémentaires incompatibles avec la carte confirmée.');
     freezeAdmittedNativeWorldPawnOrder256(next);

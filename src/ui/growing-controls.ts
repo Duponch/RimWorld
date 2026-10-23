@@ -1,6 +1,7 @@
-import type { Command, GrowingZone } from '../sim/types';
-import { PLANT_DEFINITIONS } from '../sim/plants';
+import type { Command, GrowingZone,World } from '../sim/types';
 import { CROP_KINDS, type CropKind } from '../sim/crops';
+import {FLORA_DEFINITIONS} from '../sim/biome-flora';
+import {forestNativeSpecies291,forestSowingChoices291,growingPlantLabel291,isForestrySpecies291,treeSowingUnlocked291,type GrowingPlant291} from '../sim/forestry-content-291';
 
 const CULTURE_HELP:Record<CropKind,string>={
   hops:'Culture 3 pour semer ; sol et hydroponie. Un plant mûr peut donner 8 houblons. Cinq jours de croissance pondérée et sensibilité à la fertilité de 70 % ; la lumière, le froid et la nuit modifient la durée réelle. Le houblon se conserve 30 jours à température ambiante. La recherche Brassage de bière débloque la brasserie et le tonneau, sans conditionner le semis du houblon.',
@@ -12,21 +13,31 @@ const CULTURE_HELP:Record<CropKind,string>={
   healroot:'Plantes 8 requis pour commencer le semis seulement ; récolte et dégagement restent accessibles sans ce minimum. Une racine mûre intacte peut donner une dose de médicament à base de plantes, selon le récolteur. Sept jours de croissance nominale, modulés par sol, lumière, température et repos. Travail de base : semis 80 ticks, récolte 40 ticks ; la durée réelle dépend du colon et du milieu. La coupe de dégagement ne donne aucune dose.',
 };
 
-export const growingCultureHelp=(kind:CropKind):string=>CULTURE_HELP[kind];
-export const growingCultureChoices=(zone:Pick<GrowingZone,'basinId'>):readonly CropKind[]=>
-  zone.basinId===undefined?CROP_KINDS:CROP_KINDS.filter(kind=>kind!=='corn'&&kind!=='haygrass');
+export const growingCultureHelp=(kind:GrowingPlant291,_world?:World):string=>{
+  if(!isForestrySpecies291(kind))return CULTURE_HELP[kind];
+  const def=FLORA_DEFINITIONS[kind];
+  return `Culture 6 pour commencer le semis ; recherche Semis d’arbres et essence indigène du biome. Sol sans toit, hors hydroponie. Travail nominal de semis : 400 ticks, modulé par le colon. ${def.growDays} jours de croissance pondérée ; la nuit, le sol et le climat modifient la durée réelle. À maturité, jusqu’à ${def.yield} bois avant effets du récolteur. Les huit cases voisines imposent l’espacement ; les plantes encore voulues par leur propre zone sont conservées. La coupe automatique attend la maturité, puis le semis peut recommencer. Le plant apparaît à la finition du semis, comme les autres cultures locales.`;
+};
+export const growingCultureChoices=(zone:Pick<GrowingZone,'basinId'>,world?:World):readonly GrowingPlant291[]=>
+  zone.basinId===undefined?[...CROP_KINDS,...(world?forestSowingChoices291(world):[])]:CROP_KINDS.filter(kind=>kind!=='corn'&&kind!=='haygrass');
 
-export function growingControls(zone: GrowingZone, send: (command: Command) => void): HTMLElement {
+export function growingControls(zone: GrowingZone, send: (command: Command) => void,world?:World): HTMLElement {
   const panel = document.createElement('div'); panel.className = 'storage-settings';
-  const heading = document.createElement('p'); heading.textContent = `${zone.basinId===undefined?'Zone de culture':'Bac hydroponique'} · ${PLANT_DEFINITIONS[zone.plant].label} · ${zone.cells.length} cases`;
+  const heading = document.createElement('p'); heading.textContent = `${zone.basinId===undefined?'Zone de culture':'Bac hydroponique'} · ${growingPlantLabel291(zone.plant)} · ${zone.cells.length} cases`;
   panel.append(heading);
   const choice=document.createElement('label'),plant=document.createElement('select');plant.id='growing-plant';
-  for(const kind of growingCultureChoices(zone)){const option=document.createElement('option');option.value=kind;option.textContent=PLANT_DEFINITIONS[kind].label;plant.append(option);}
+  for(const kind of growingCultureChoices(zone,world)){const option=document.createElement('option');option.value=kind;option.textContent=growingPlantLabel291(kind);plant.append(option);}
   plant.value=zone.plant;choice.append('Culture ',plant);panel.append(choice);
   const help=document.createElement('p');help.className='muted';
-  const updateHelp=()=>{help.textContent=growingCultureHelp(plant.value as CropKind);};
+  const updateHelp=()=>{help.textContent=growingCultureHelp(plant.value as GrowingPlant291,world);};
   updateHelp();plant.addEventListener('change',updateHelp);
   panel.append(help);
+  if(zone.basinId===undefined&&world&&world.schemaVersion>=291){
+    const forest=document.createElement('p');forest.className='muted';
+    const native=forestNativeSpecies291(world);
+    forest.textContent=!native.length?'Aucune essence à semer parmi les arbres livrés de ce biome.':treeSowingUnlocked291(world)?'Essences indigènes disponibles. Le choix de la zone ne remplace ni la compétence du cultivateur ni son trajet.':'Pour semer les arbres indigènes, recherchez Semis d’arbres (1 000 points). Culture 6 sera requise pour commencer le travail.';
+    panel.append(forest);
+  }
   if(zone.basinId!==undefined) {
     const care=document.createElement('p');care.className='muted';
     care.textContent='Fertilité 280 % · 70 W en continu, même la nuit. Sans alimentation : nouveaux semis suspendus et plantes qui dépérissent. Prévoir une lumière horticole sous toit et une température adaptée. Retirer le bac détruit ses plantes.';

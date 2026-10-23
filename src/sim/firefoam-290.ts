@@ -17,16 +17,16 @@ import type {World,Structure,CommandResult} from './types.ts';
 const state=(w:World):FirefoamWorld290=>w.firefoam290??={rng:((w.seed^0x46f09d31)>>>0)||1,waves:[]};
 function draw(s:FirefoamWorld290){let n=s.rng;n^=n<<13;n^=n>>>17;n^=n<<5;s.rng=n>>>0;return s.rng/4294967296;}
 export function initializeFirefoamPopper290(w:World,s:Structure):void {
- if(w.schemaVersion!==290||s.kind!=='firefoam-popper')return;
+ if((Number(w.schemaVersion)!==290&&Number(w.schemaVersion)!==291)||s.kind!=='firefoam-popper')return;
  s.firefoam290={autoRebuild:firefoamResearchUnlocked290(w)&&s.factionId===undefined&&!!w.home?.includes(s.z*w.width+s.x)};
 }
 export function startFirefoamWick290(w:World,s:Structure,core=w.tick*10):boolean {
- if(w.schemaVersion!==290||s.kind!=='firefoam-popper'||!s.firefoam290||!w.structures.includes(s)||!Number.isSafeInteger(core)||core<Math.max(0,(w.tick-1)*10)||core>w.tick*10||!Number.isSafeInteger(core+150))return false;
+ if((Number(w.schemaVersion)!==290&&Number(w.schemaVersion)!==291)||s.kind!=='firefoam-popper'||!s.firefoam290||!w.structures.includes(s)||!Number.isSafeInteger(core)||core<Math.max(0,(w.tick-1)*10)||core>w.tick*10||!Number.isSafeInteger(core+150))return false;
  if(s.firefoam290.wick)return true;
  s.firefoam290.wick={startedAtCore:core,endCore:core+140+Math.floor(draw(state(w))*11)};return true;
 }
 export function applyFirefoamAutoRebuild290(w:World,c:unknown):CommandResult {
- if(w.schemaVersion!==290||!firefoamData290(c,['type','structureId','on'])||c.type!=='firefoam-auto-rebuild'||!Number.isSafeInteger(c.structureId)||typeof c.on!=='boolean')return {ok:false,reason:'Réglage anti-incendie invalide.'};
+ if((Number(w.schemaVersion)!==290&&Number(w.schemaVersion)!==291)||!firefoamData290(c,['type','structureId','on'])||c.type!=='firefoam-auto-rebuild'||!Number.isSafeInteger(c.structureId)||typeof c.on!=='boolean')return {ok:false,reason:'Réglage anti-incendie invalide.'};
  const s=w.structures.find(s=>s.id===c.structureId&&s.kind==='firefoam-popper');
  if(!s?.firefoam290||s.factionId!==undefined||!firefoamResearchUnlocked290(w))return {ok:false,reason:'Appareil colonial installé et recherche Mousse anti-incendie requis.'};
  s.firefoam290.autoRebuild=c.on;return {ok:true,affected:1};
@@ -34,7 +34,7 @@ export function applyFirefoamAutoRebuild290(w:World,c:unknown):CommandResult {
 /** Broad-phase first; one shared physical component grid only when a real
  * nearby Fire exists. Detours are allowed outside the small detection disk. */
 export function detectFirefoam290(w:World,core:number):void {
- if(w.schemaVersion!==290||core%250||!w.fires?.items.length)return;
+ if((Number(w.schemaVersion)!==290&&Number(w.schemaVersion)!==291)||core%250||!w.fires?.items.length)return;
  const poppers=w.structures.filter(s=>s.kind==='firefoam-popper'&&s.firefoam290&&!s.firefoam290.wick);
  if(!poppers.length)return;
  const byCell=new Map<number,number[]>();
@@ -51,7 +51,7 @@ export function detectFirefoam290(w:World,core:number):void {
  for(const {s,cells}of candidates.sort((a,b)=>a.s.id-b.s.id)){const own=label(s.z*w.width+s.x);if(own>0&&cells.some(i=>!mask[i]&&label(i)===own))startFirefoamWick290(w,s,core);}
 }
 export function advanceFirefoamWick290(w:World,s:Structure,core:number):boolean {
- const wick=s.firefoam290?.wick;if(w.schemaVersion!==290||s.kind!=='firefoam-popper'||!wick||wick.endCore>core||!w.structures.includes(s))return false;
+ const wick=s.firefoam290?.wick;if((Number(w.schemaVersion)!==290&&Number(w.schemaVersion)!==291)||s.kind!=='firefoam-popper'||!wick||wick.endCore>core||!w.structures.includes(s))return false;
  if(!damageStructure(w,s,structureMaxHp(s)-(s.damage??0),'bomb',w.rng,{core,rawAmount:0,firefoamDetonate290:true}))throw new RangeError('Cannot commit admitted firefoam detonation');return true;
 }
 /** Called after actual source retirement with the ID already reserved by its
@@ -68,7 +68,7 @@ export function registerFirefoamWave290(w:World,s:Structure,id:number,core:numbe
 /** Deliberate local phase: helpful impact/clinical admission after this tick's
  * ordinary clinical intervals. Native substep timing differs by at most9Core. */
 export function advanceFirefoamWaves290(w:World):void {
- if(w.schemaVersion!==290||!w.firefoam290?.waves.length)return;
+ if((Number(w.schemaVersion)!==290&&Number(w.schemaVersion)!==291)||!w.firefoam290?.waves.length)return;
  const end=w.tick*10,start=end-10;
  w.firefoam290.waves=w.firefoam290.waves.filter(a=>a.nextCell<a.cells.length||a.advancedAtCore>start);
  if(!w.firefoam290.waves.length)return;

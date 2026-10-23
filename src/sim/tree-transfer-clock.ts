@@ -1,3 +1,4 @@
+import {validSownResource291} from './forestry-save-291.ts';
 import {isPlantSpeciesInVersion} from './biome-flora.ts';
 import {validInitialPlantAge256} from './initial-plant-age-256.ts';
 /** Versioned clock extension only for physically replanted species trees. */
@@ -12,18 +13,19 @@ export function hasPausedTreeClock(plant:Partial<Resource>):boolean {
   const life:unknown=plant.plantLife;return record(life)&&['pausedTicks','ageTick','leaflessPausedTicks'].some(k=>Object.hasOwn(life,k));
 }
 export function validPausedTreeLife(plant:Partial<Resource>,version:number,world:Pick<World,'tick'|'climate'>):boolean {
+  if(!validSownResource291(plant,version))return false;
   if(plant.species!==undefined&&!isPlantSpeciesInVersion(plant.species,version))return false;
   if(!hasPausedTreeClock(plant))return validOrdinaryPlantLife(plant,version,world);
   const life:unknown=plant.plantLife;
   if(!validInitialPlantAge256(plant,version))return false;
-  if(version<235||plant.kind!=='tree'||plant.species===undefined||!extractTreeDefinition(plant as Resource)||!world.climate||!record(life)||
+  if(version<235||plant.kind!=='tree'||plant.species===undefined||!extractTreeDefinition(plant as Resource)||!world.climate&&!(version===291&&plant.sown291===true)||!record(life)||
     !Object.keys(life).every(k=>['initialAgeCore','since','bornAt','age','darkTicks','leaflessAt','nextCheck','pausedTicks','ageTick','leaflessPausedTicks'].includes(k))||
-    !integer(life.since,version>=256&&Object.hasOwn(life,'initialAgeCore')?0:world.climate.adoptedAt,world.tick)||!integer(life.pausedTicks,0,world.tick-life.since)||
+    !integer(life.since,version>=256&&Object.hasOwn(life,'initialAgeCore')?0:(world.climate?.adoptedAt??0),world.tick)||!integer(life.pausedTicks,0,world.tick-life.since)||
     !integer(life.ageTick,life.since+life.pausedTicks,world.tick)||!integer(life.age,0,world.tick-life.since-life.pausedTicks)||
     life.age!==life.ageTick-life.since-life.pausedTicks||!integer(life.darkTicks,0,life.age)||
     !integer(life.nextCheck,world.tick+1,world.tick+PLANT_LIFE_INTERVAL)||
     life.nextCheck%PLANT_LIFE_INTERVAL!==(plant.id!+1)%PLANT_LIFE_INTERVAL)return false;
-  if(Object.hasOwn(life,'bornAt')&&life.bornAt!==life.since)return false;
+  if(plant.sown291===true&&!Object.hasOwn(life,'bornAt')||Object.hasOwn(life,'bornAt')&&life.bornAt!==life.since)return false;
   if(Object.hasOwn(life,'leaflessAt'))return integer(life.leaflessAt,life.since,world.tick)&&
     integer(life.leaflessPausedTicks,0,life.pausedTicks)&&
     (life.leaflessAt-life.leaflessPausedTicks)%PLANT_LIFE_INTERVAL===(plant.id!+1)%PLANT_LIFE_INTERVAL;

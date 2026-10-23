@@ -372,7 +372,7 @@ export function prepareAdvancedColonyScenario(): World {
   bill(tailor, 'pants', 2, 'times'); bill(tailor, 'shirt', 2, 'times'); bill(tailor, 'duster', 2, 'times'); bill(tailor, 'parka', 1, 'times');
   bill(stonecutter, 'stone-blocks', 950); bill(artBench, 'small-sculpture', 1, 'times'); bill(artBench, 'large-sculpture', 1, 'times');
 
-  const fields: readonly { plant: World['growingZones'][number]['plant']; rectangle: readonly [number, number, number, number]; growth: number }[] = [
+  const fields: readonly { plant: import('./crops').CropKind; rectangle: readonly [number, number, number, number]; growth: number }[] = [
     { plant: 'rice', rectangle: [70, 110, 85, 129], growth: .91 },
     { plant: 'corn', rectangle: [70, 132, 85, 143], growth: .78 },
     { plant: 'potato', rectangle: [88, 110, 103, 121], growth: .82 },

@@ -2,6 +2,8 @@ import {plantCompletelyIgnoresFertility256} from '../sim/plant-substrate-256';
 import {isCavePlant256} from '../sim/cave-flora-256';
 import {effectivePlantAgeCore256} from '../sim/initial-plant-age-256';
 import { floraDefinition } from '../sim/biome-flora';
+import {FLORA_DEFINITIONS} from '../sim/biome-flora';
+import {isForestrySpecies291,type GrowingPlant291} from '../sim/forestry-content-291';
 import { plantLeafless } from '../sim/plant-life';
 import { resourceMaxHp } from '../sim/thing-damage-rules';
 import { calendarTick } from '../sim/calendar';
@@ -13,7 +15,7 @@ function plantLight(world:World,plant:Resource):number {
   if(!world.structures.some(s=>s.kind==='sun-lamp'))return isRoofed(world,roofIndex(world,plant))?0:annualNaturalLight(world);
   let cache=lightCaches.get(world);if(!cache){cache=new LightEnvironmentCache();lightCaches.set(world,cache);}return cache.read(world).lightAt(plant);
 }
-import { harvestProductLabel, plantGrowth, harvestable, berryYield, plantResting, plantTemperatureFactorFor,choppable, sowingTemperatureAllowed, isPlant, plantFertility, PLANT_DEFINITIONS } from '../sim/plants';
+import { harvestProductLabel, plantGrowth, harvestable, berryYield, plantResting, plantTemperatureFactorFor,choppable, isPlant, plantFertility, PLANT_DEFINITIONS } from '../sim/plants';
 import { temperatureAt } from '../sim/temperature';
 import type { Cell, Resource, World } from '../sim/types';
 import { hydroponicBasinAt } from '../sim/hydroponics';
@@ -22,6 +24,7 @@ import { isPowerActive } from '../sim/power-rules';
 export function plantInspection(world:World,plant:Resource):string {
   const temperature=temperatureAt(world,plant),factor=plantTemperatureFactorFor(plant,temperature);
   const constraints:string[]=[];let soil='';
+  if(plant.sown291)constraints.push('Arbre semé');
   if(plant.blight)constraints.push(`Fléau des cultures · gravité ${Math.round(plant.blight.severity*100)} % · croissance arrêtée · contagieux à partir de 28 % · couper sans récolte pour contenir la propagation`);
   const basin=hydroponicBasinAt(world,plant);
   if(basin)constraints.push(isPowerActive(basin)?'Culture hydroponique · pompe alimentée':'Culture hydroponique · sans alimentation : dépérissement progressif, nouveaux semis suspendus');
@@ -39,9 +42,10 @@ export function plantInspection(world:World,plant:Resource):string {
     soil=` · Fertilité ${Math.round(fertility*100)} % · Effet sur cette plante ${Math.round(growthFactor*100)} %`;
   }
   const medicine=plant.kind==='healroot'?' · Racine médicinale cultivée · Plantes 8 pour commencer le semis seulement, sans minimum à la récolte · Travail de base : semis 80 ticks, récolte 40 ticks · Produit : médicament à base de plantes · Coupe sans dose':'';
-  return ` · Croissance ${Math.floor(plantGrowth(world,plant)*100)} % · ${plant.blight?'Récolte impossible':harvestable(world,plant)?`Récolte : environ ${Math.round(berryYield(world,plant))} ${harvestProductLabel(plant)}`:plant.kind==='tree'?(choppable(world,plant)?'Bois disponible par coupe':'Arbre trop jeune pour la coupe'):plant.species&&!floraDefinition(plant)?.product?'Végétation de pâturage':'Pas encore récoltable'} · ${constraints.length?constraints.join(' · '):'Croissance diurne'}${soil}${medicine}`;
+  return ` · Croissance ${Math.floor(plantGrowth(world,plant)*100)} % · ${plant.blight?'Récolte impossible':harvestable(world,plant)?`Récolte : environ ${Math.round(berryYield(world,plant))} ${harvestProductLabel(plant)}`:plant.kind==='tree'?(choppable(world,plant)&&berryYield(world,plant)>0?'Bois disponible par coupe':'Pas encore de bois récoltable'):plant.species&&!floraDefinition(plant)?.product?'Végétation de pâturage':'Pas encore récoltable'} · ${constraints.length?constraints.join(' · '):'Croissance diurne'}${soil}${medicine}`;
 }
 
-export function growingTemperatureInspection(world:World,cell:Cell):string {
-  return sowingTemperatureAllowed(temperatureAt(world,cell))?'':' · Nouveaux semis suspendus : température hors plage (0–58 °C exclus)';
+export function growingTemperatureInspection(world:World,cell:Cell,plant?:GrowingPlant291):string {
+  const maximum=isForestrySpecies291(plant)?FLORA_DEFINITIONS[plant].maxGrowthTemperature:58,temperature=temperatureAt(world,cell);
+  return temperature>0&&temperature<maximum?'':` · Nouveaux semis suspendus : température hors plage (0–${maximum} °C exclus)`;
 }

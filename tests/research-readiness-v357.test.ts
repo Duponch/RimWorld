@@ -19,7 +19,7 @@ function completed(w:World):void {
     const progress:ResearchProgress={points:researchCost(project.id),completedAt:0};
     if(project.id==='complex-clothing')Object.assign(w.research,progress);
     else {
-      const key=project.id.replace(/-([a-z])/g,(_,letter:string)=>letter.toUpperCase());
+      const key=project.id==='tree-sowing'?'treeSowing291':project.id.replace(/-([a-z])/g,(_,letter:string)=>letter.toUpperCase());
       (w.research as unknown as Record<string,unknown>)[key]=progress;
     }
   }

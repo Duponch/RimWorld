@@ -27,7 +27,7 @@ function fixture(on=true,orientation:Orientation=0) {
   const zone=w.growingZones.find(z=>z.basinId===basin.id)!;
   return {w,p,source,basin,zone};
 }
-function crop(w:World,cell:{x:number;z:number},kind:GrowingZone['plant']='rice',growth=.2):Resource {
+function crop(w:World,cell:{x:number;z:number},kind:import('../src/sim/crops').CropKind='rice',growth=.2):Resource {
   const plant:Resource={id:w.nextId++,kind,x:cell.x,z:cell.z,amount:PLANT_DEFINITIONS[kind].yield,growth,growthTick:w.tick};
   if(w.climate)plant.plantLife=createPlantLife(w,plant,true);
   w.resources=[...w.resources,plant];return plant;

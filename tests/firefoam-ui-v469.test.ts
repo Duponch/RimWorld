@@ -32,7 +32,7 @@ const settled=async()=>{for(let i=0;i<8;i++)await Promise.resolve();};
 function fixture(response?:(command:Command)=>unknown){
  vi.stubGlobal('document',{createElement:(tag:string)=>new Node469(tag)});
  const structure:Structure={id:12,kind:'firefoam-popper',x:9,z:11,orientation:0,footprint:'standard',material:'steel',firefoam290:{autoRebuild:false}};
- const world={schemaVersion:290,tick:2000,width:32,height:32,structures:[structure],research:{project:null,points:0,firefoam:{points:600_000_000,completedAt:1999}}} as World;
+ const world={schemaVersion:290,tick:2000,width:32,height:32,structures:[structure],research:{project:null,points:0,firefoam:{points:600_000_000,completedAt:1999}}} as unknown as World;
  const sent:Command[]=[],section=firefoamControls290(world,structure,c=>{sent.push(c);return response?.(c);}) as unknown as Node469,host=new Node469('host');host.append(section);
  const input=section.querySelector('[data-firefoam-auto-rebuild]')!,status=section.querySelector('[data-firefoam-status]')!,state=section.querySelector('[data-firefoam-state]')!;
  const refresh=(w:World=world,s:Structure|undefined=structure)=>updateFirefoamControls290(host as unknown as ParentNode,w,s);
@@ -42,7 +42,7 @@ function fixture(response?:(command:Command)=>unknown){
 test('installed current controls are pure and historical/future or removed devices hide',()=>{
  const f=fixture(),before=JSON.stringify(f.world);expect(f.section.hidden).toBe(false);expect(f.state.textContent).toContain('Prêt');
  for(let i=0;i<10;i++)f.refresh();expect(JSON.stringify(f.world)).toBe(before);expect(f.sent).toEqual([]);
- for(const schemaVersion of [289,288,291]){f.refresh({...f.world,schemaVersion} as World);expect(f.section.hidden).toBe(true);}
+ for(const schemaVersion of [289,288,292]){f.refresh({...f.world,schemaVersion} as World);expect(f.section.hidden).toBe(true);}
  f.refresh();expect(f.section.hidden).toBe(false);f.refresh({...f.world,structures:[]});expect(f.section.hidden).toBe(true);
 });
 
@@ -79,7 +79,7 @@ test('manual refusal and queue prevent sending, including a later shift click',(
 
 test('manual options are absent from older or future worlds and unrelated cells',()=>{
  const f=fixture(),menu=new Node469('menu'),actions={send:async()=>{},close(){},report(){}};
- for(const schemaVersion of [289,291])expect(appendFirefoamOptions290(menu as unknown as HTMLElement,{...f.world,schemaVersion} as World,3,{x:9,z:11},false,actions)).toBe(0);
+ for(const schemaVersion of [289,292])expect(appendFirefoamOptions290(menu as unknown as HTMLElement,{...f.world,schemaVersion} as World,3,{x:9,z:11},false,actions)).toBe(0);
  expect(appendFirefoamOptions290(menu as unknown as HTMLElement,f.world,3,{x:8,z:11},false,actions)).toBe(0);expect(authority.reason).not.toHaveBeenCalled();
 });
 
@@ -92,7 +92,7 @@ test('original geometry and pictogram retain physical selection and no external 
 test('research projection and construction visibility require the prospective completed research',()=>{
  const f=fixture();delete f.world.research;expect(researchCost('firefoam')).toBe(600_000_000);expect(researchUnlocked(f.world,'firefoam')).toBe(false);expect(architectToolAvailable(f.world,'firefoam-popper')).toBe(false);
  f.world.research={project:null,points:0,firefoam:{points:600_000_000,completedAt:1999}};const before=JSON.stringify(f.world);expect(readProjectProgress(f.world.research,'firefoam')?.completedAt).toBe(1999);expect(architectToolAvailable(f.world,'firefoam-popper')).toBe(true);expect(JSON.stringify(f.world)).toBe(before);
- for(const schemaVersion of [289,291])expect(architectToolAvailable({...f.world,schemaVersion} as World,'firefoam-popper')).toBe(false);
+ for(const schemaVersion of [289,292])expect(architectToolAvailable({...f.world,schemaVersion} as World,'firefoam-popper')).toBe(false);
  expect(constructionRecipe(f.structure)).toMatchObject({ingredients:[{item:'steel',quantity:75},{item:'component',quantity:1}],work:150,coreWork:1500});expect(constructionSkillRequired('firefoam-popper')).toBe(5);
  expect(validConstructionMaterial('firefoam-popper','steel',290)).toBe(true);expect(validConstructionMaterial('firefoam-popper','wood',290)).toBe(false);expect(validConstructionMaterial('firefoam-popper','steel',289)).toBe(false);
 });

@@ -163,7 +163,7 @@ import { processPrisonBreak } from './prison-break-behavior.ts';
 import { processWarden,reconcileWarden } from './warden.ts';
 import { sharesConstructionLayer } from './power-grid.ts';
 import { batteriesUnlocked,solarPowerUnlocked,complexFurnitureUnlocked } from './research.ts';
-import { isCropKind } from './crops.ts';
+import {forestNativeSpecies291,isForestrySpecies291,isGrowingPlantInVersion291,treeSowingUnlocked291} from './forestry-content-291.ts';
 import { isFoodWorkstation } from './food-workstations.ts';
 import { designateHunt,processHunting } from './hunting.ts';
 import { cancelHunting } from './hunting-state.ts';
@@ -413,7 +413,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   const selection = queryArea(world, command);
   if (!selection.ok) return selection;
   if (!selection.cells.length) return refusal('missing-target', 'Aucune case compatible dans ce rectangle.');
-  if([287,288,289,290].includes(Number(world.schemaVersion))&&(command.action==='home'||command.action==='remove-home'))return applyAnimalHomeArea287(world,command,selection.cells,drops);
+  if([287,288,289,290,291].includes(Number(world.schemaVersion))&&(command.action==='home'||command.action==='remove-home'))return applyAnimalHomeArea287(world,command,selection.cells,drops);
   if(command.action==='cancel'){
     const cells=new Set(selection.cells);
     const jobs=new Set(world.jobs.filter(j=>[...footprintCells(j),...furnitureSourceCells(world,j)].some(c=>cells.has(c.z*world.width+c.x))).map(j=>j.id));
@@ -650,8 +650,8 @@ export function applyCommand(world: World, command: Command,caravans?:import('./
 }
 type LocalCommand=Exclude<Command,SecondarySiteCommand>;
 function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
-  if([287,288,289,290].includes(Number(world.schemaVersion))&&command?.type==='animal-area-assign')return applyAnimalAreaAssignmentCommand287(world,command);
-  if([287,288,289,290].includes(Number(world.schemaVersion))&&(command?.type==='allowed-area-create'||command?.type==='allowed-area-settings'||command?.type==='allowed-area-paint'||command?.type==='allowed-area-delete'||command?.type==='assign-allowed-area'))return applyAnimalAwareAreaCommand287(world,command);
+  if([287,288,289,290,291].includes(Number(world.schemaVersion))&&command?.type==='animal-area-assign')return applyAnimalAreaAssignmentCommand287(world,command);
+  if([287,288,289,290,291].includes(Number(world.schemaVersion))&&(command?.type==='allowed-area-create'||command?.type==='allowed-area-settings'||command?.type==='allowed-area-paint'||command?.type==='allowed-area-delete'||command?.type==='assign-allowed-area'))return applyAnimalAwareAreaCommand287(world,command);
   if(command&&typeof command==='object'&&hiddenExplorationCommandTarget256(world,command))return refusal('missing-target','Cette cible n’est pas connue sur la carte actuelle.');
   if(command.type==='material-forbid')return applyMaterialPermission256(world,command);
   if(command.type==='egg-forbid')return applyEggPermission256(world,command);
@@ -663,7 +663,7 @@ function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
   const result=applyCommandInternal(world,command);
   if(command.type==='firefoam-auto-rebuild')return result;
   if(command.type==='bill-pause-policy'||command.type==='bill-pause-resume')return result;
-  if([287,288,289,290].includes(Number(world.schemaVersion))&&command.type==='area'&&(command.action==='home'||command.action==='remove-home'))return result;
+  if([287,288,289,290,291].includes(Number(world.schemaVersion))&&command.type==='area'&&(command.action==='home'||command.action==='remove-home'))return result;
   // These cold metadata transactions already reconcile their exact affected
   // destinations. A no-op must not advance unrelated services or clocks.
   if(command.type==='shelf-link'||command.type==='shelf-unlink'||command.type==='shelf-group-rename'
@@ -891,8 +891,12 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
   }
   if (command.type === 'growing-policy') {
     const zone = world.growingZones.find(z => z.id === command.zoneId);
-    if (!zone || typeof command.allowSow !== 'boolean' || typeof command.allowCut !== 'boolean' || command.plant!==undefined&&!isCropKind(command.plant)) return refusal('invalid-command', 'Zone ou réglages de culture invalides.');
+    if (!zone || typeof command.allowSow !== 'boolean' || typeof command.allowCut !== 'boolean' || command.plant!==undefined&&!isGrowingPlantInVersion291(command.plant,world.schemaVersion)) return refusal('invalid-command', 'Zone ou réglages de culture invalides.');
     if(zone.basinId!==undefined&&!hydroponicCropAllowed(command.plant??zone.plant))return refusal('invalid-command','Cette plante ne peut pas être cultivée en hydroponie.');
+    if(command.plant!==undefined&&command.plant!==zone.plant&&isForestrySpecies291(command.plant)){
+      if(!treeSowingUnlocked291(world))return refusal('invalid-command','Terminez la recherche Semis d’arbres avant de choisir cette essence.');
+      if(!forestNativeSpecies291(world).includes(command.plant))return refusal('invalid-command','Cette essence ne fait pas partie de la flore sauvage de ce biome.');
+    }
     cancelGrowingJobs(world, new Set([zone.id]),drops);
     world.growingZones = world.growingZones.map(z => z === zone ? {...z, plant:command.plant??z.plant, allowSow: command.allowSow, allowCut: command.allowCut} : z);
     wakePlanners(world); return {ok:true};
@@ -1106,7 +1110,7 @@ export function stepWorld(world:CampaignState,ticks=1,diagnostics?:import('./wor
     if(ticks)for(const map of registeredMaps(root)){adoptTempMapIncidents261(map);flushRegisteredMap(map);}
     adoptWorldIncidents(campaignClockContext(root));
     for(let i=0;i<ticks;i++){
-      const firefoamWorldOwners290=root.schemaVersion===290?captureFirefoamWorldPawnIds290(root):undefined;
+      const firefoamWorldOwners290=[290,291].includes(Number(root.schemaVersion))?captureFirefoamWorldPawnIds290(root):undefined;
       root.tick++;
       for(const map of registeredMaps(root)){stepLocalWorld(map,1,diagnostics,false);flushRegisteredMap(map);}
       if(root.schemaVersion>=256&&caravans)caravans.step(root);
@@ -1146,7 +1150,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
   adoptRainElectrical(world);
   let thermal=reconcileTemperature(world);reconcilePlantLighting(world,()=>readPlantLight(world));updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);
   for (let step = 0; step < ticks; step++) {
-    const firefoamLocalMechs290=world.schemaVersion===290?new Set((world.mechanoids??[]).filter(m=>m.state!=='dead'&&m.health?.coveredInFirefoam290).map(m=>m.id)):undefined;
+    const firefoamLocalMechs290=[290,291].includes(Number(world.schemaVersion))?new Set((world.mechanoids??[]).filter(m=>m.state!=='dead'&&m.health?.coveredInFirefoam290).map(m=>m.id)):undefined;
     flushColonyLosses(world);
     if(advanceClock)world.tick++;advanceActualHiveComponents256(world);advanceAnimalAges256(world);finishSnowSteps(world);
     let light:LightEnvironment|undefined,lightKey:string|undefined;
