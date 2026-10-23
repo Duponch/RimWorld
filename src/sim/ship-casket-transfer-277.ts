@@ -62,7 +62,7 @@ export function planShipCasketEntry277(w:World,c:ShipCasket277,o:ShipCasketOccup
    delete p.medicalSleep;delete p.draft;cancelShooting(p);cancelMelee(p);delete p.bombRefuge;delete p.heatRefuge;delete p.allowedAreaReturn;delete p.transitExit;
    p.moveCooldown=0;p.planCooldown=0;p.collapsePending=false;p.restZeroTicks=0;
   }else if(o.kind==='animal'){
-   const p=o.animal;delete p.haul;delete p.animalRest;delete p.meal;delete p.eggLay;delete p.mating;delete p.exitFlight;delete p.flight;delete p.exiting;delete p.flee;delete p.threat;delete p.retaliation;delete p.predation;delete p.hiveJob;
+   const p=o.animal;delete p.animalAreaReturn287;delete p.haul;delete p.animalRest;delete p.meal;delete p.eggLay;delete p.mating;delete p.exitFlight;delete p.flight;delete p.exiting;delete p.flee;delete p.threat;delete p.retaliation;delete p.predation;delete p.hiveJob;
    if(p.wander)delete p.wander.job;if(p.health){cancelToxicVomit256(p.health);cancelCryptosleepVomit256(p.health);}p.nextDecision=tick;
   }else{cancelMechanoidRanged(o.mech);cancelMelee(o.mech);o.mech.moveCooldown=0;o.mech.planCooldown=0;for(const duty of [o.mech.raid,o.mech.temple,o.mech.site263])if(duty)duty.goal=null;}
   done=true;delete a.motion;a.path=[];if(a.state!=='downed')a.state='idle';a.shipCryptosleepHeldAt277=tick;

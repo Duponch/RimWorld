@@ -1,3 +1,4 @@
+import {validAnimalAreaHistoricalTransport287,validAnimalAreaWorld287} from '../sim/animal-area-save-287.ts';
 import {validSmoothFloorsHistoricalTransport281,validSmoothFloorTile281,validSmoothFloorWorld281} from '../sim/smooth-floor-save-281';
 import {validAnimalTrainingHistoricalTransport282} from '../sim/animal-training-historical-282';
 import {validAnimalTrainingWorld282} from '../sim/animal-training-world-282';
@@ -204,13 +205,13 @@ export class ResidentPresentationAssembler {
   const fail=():CampaignAdoption=>({status:'resync',reason:'Projection de campagne illisible.'});
   const header=this.header(packet);if(header==='stale')return {status:'stale'};if(header==='invalid'||packet.type!=='campaign-only'||Object.keys(packet).some(key=>!['type','epoch','revision','stepMs','speed','summary','urgentThreats','geography'].includes(key))||!record(packet.summary))return fail();
   const raw=packet.summary;
-  if(!validLinkedStorageHistorical286(raw,raw.schemaVersion)||!validCoupleHistoricalTransport285(raw,raw.schemaVersion)||!validTradeRequestHistorical284(raw,raw.schemaVersion)||!validApparelProvenanceHistoricalTransport284(raw,raw.schemaVersion)||!validBillWorkerHistoricalTransport283(raw,raw.schemaVersion))return fail();
+  if(!validAnimalAreaHistoricalTransport287(raw,raw.schemaVersion)||!validLinkedStorageHistorical286(raw,raw.schemaVersion)||!validCoupleHistoricalTransport285(raw,raw.schemaVersion)||!validTradeRequestHistorical284(raw,raw.schemaVersion)||!validApparelProvenanceHistoricalTransport284(raw,raw.schemaVersion)||!validBillWorkerHistoricalTransport283(raw,raw.schemaVersion))return fail();
   if(!integer(raw.schemaVersion,1,SCHEMA_VERSION)||!integer(raw.tick)||!integer(raw.nextId,1)||!integer(raw.rng,0,0xffffffff)||!Number.isSafeInteger(raw.civilTick)||!projectionReferences(raw,false)
    ||!validSmoothFloorsHistoricalTransport281(raw,raw.schemaVersion)||!validPrisonerSurgeryHistoricalTransport280(raw,raw.schemaVersion)||!validGiftHistoricalTransport274(raw,raw.schemaVersion)||!validApparelTradeHistoricalTransport279(raw,raw.schemaVersion)||!validApparelReservesHistoricalTransport278(raw,raw.schemaVersion)||!validShipCasketHistoricalTransport277(raw,raw.schemaVersion)||!validShipPartHistoricalTransport276(raw,raw.schemaVersion)||!validShipReactorHistoricalTransport275(raw,raw.schemaVersion)||!rows(raw.events)||!rows(raw.people)||!rows(raw.lossContexts)||!rows(raw.lostMemories)||!rows(raw.incidents)
    ||own(raw,'tiles')||own(raw,'resources')||own(raw,'piles')||own(raw,'pawns')||own(raw,'structures')||own(raw,'jobs')||own(raw,'worldMaps')||own(raw,'worldGroups'))return fail();
   const geographic=this.geography.prepare(raw,packet.geography,own(packet,'geography'),packet.epoch!==this.epoch);if(!geographic.ok)return fail();
   const summary={...geographic.state},view=groupWorld(summary,null),calendar=summary.planet?.revision===3?summary.calendarOrigin:undefined;
-  if(!view||!validResidentTradeRequests284(view,summary)||!validLinkedStorageProjection286(summary)||!validBillWorkerWorld283(view)||!validCoupleProjection285(view)||!this.chronology(view,packet.epoch,calendar)||acceptExtra&&!acceptExtra(view)||!this.geography.canCommit(geographic))return fail();
+  if(!view||!validAnimalAreaWorld287(summary)||!validResidentTradeRequests284(view,summary)||!validLinkedStorageProjection286(summary)||!validBillWorkerWorld283(view)||!validCoupleProjection285(view)||!this.chronology(view,packet.epoch,calendar)||acceptExtra&&!acceptExtra(view)||!this.geography.canCommit(geographic))return fail();
   // Freezing is a representation adapter for exact native slots/free lists,
   // never inferred from final membership. Only the candidate is written.
   freezeAdmittedNativeWorldPawnOrder256(summary);view.worldPawns=summary.worldPawns;
@@ -271,7 +272,7 @@ export class ResidentPresentationAssembler {
    next={...previous,...dynamic,structures,tiles,resources,piles} as World;
    for(const key of Object.keys(previous!)as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&key!=='structures'&&!own(dynamic,key))delete (next as Partial<World>)[key];
   }
-  if(!validLinkedStorageHistorical286(packet,next.schemaVersion)||!validCoupleHistoricalTransport285(packet,next.schemaVersion)||!validTradeRequestHistorical284(packet,next.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet,next.schemaVersion)||!validResidentTradeRequests284(next)||!validBillWorkerHistoricalTransport283(packet,next.schemaVersion)||!validLinkedStorageProjection286(next)||!validBillWorkerWorld283(next)||!validCoupleProjection285(next))return fail('Invalid resident couple or bill worker settings');
+  if(!validAnimalAreaHistoricalTransport287(packet,next.schemaVersion)||!validAnimalAreaWorld287(next)||!validLinkedStorageHistorical286(packet,next.schemaVersion)||!validCoupleHistoricalTransport285(packet,next.schemaVersion)||!validTradeRequestHistorical284(packet,next.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet,next.schemaVersion)||!validResidentTradeRequests284(next)||!validBillWorkerHistoricalTransport283(packet,next.schemaVersion)||!validLinkedStorageProjection286(next)||!validBillWorkerWorld283(next)||!validCoupleProjection285(next))return fail('Invalid resident couple or bill worker settings');
   if(!validAnimalTrainingHistoricalTransport282(packet,next.schemaVersion)||!validAnimalTrainingWorld282(next))return fail('Invalid resident animal training or hauling');
   if(!validSmoothFloorsHistoricalTransport281(packet,next.schemaVersion)||!validSmoothFloorWorld281(next,packet.epoch===this.epoch?previous:undefined))return fail('Invalid resident natural stone smoothing');
   if((checkpoint?next.tiles.some(t=>!validSmoothFloorTile281(t,next.schemaVersion)):tileIndices.some(i=>!validSmoothFloorTile281(next.tiles[i]!,next.schemaVersion))))return fail('Invalid resident smoothed terrain');

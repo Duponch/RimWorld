@@ -1,3 +1,4 @@
+import {isSchema286OrLater} from '../sim/schema-compatibility-257';
 import {isShelfKind} from '../sim/shelf-storage';
 import {targetBuildingPlayerUse263} from '../sim/world-target-building-263';
 import type {LinkedStorageCommand286,LinkedStorageGroup286} from '../sim/linked-storage-state-286';
@@ -64,7 +65,7 @@ export function createLinkedStorageControls286(actions:LinkedStorageActions286){
 
  function view():View|undefined {
   if(disposed)return;
-  const context=actions.current();if(!context||context.world.schemaVersion!==286||!Number.isSafeInteger(context.epoch)||context.epoch<0||!Number.isSafeInteger(context.mapId)||context.mapId<0)return;
+  const context=actions.current();if(!context||!isSchema286OrLater(context.world.schemaVersion)||!Number.isSafeInteger(context.epoch)||context.epoch<0||!Number.isSafeInteger(context.mapId)||context.mapId<0)return;
   const {world}=context,projectedMap=world.campaignMap?.revision===2?world.campaignMap.activeMapId:undefined;
   if(projectedMap!==undefined&&projectedMap!==context.mapId)return;
   const shelf=world.structures.find(s=>s.id===context.structureId);if(!shelf||!usable(world,shelf))return;

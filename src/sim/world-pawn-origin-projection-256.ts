@@ -1,3 +1,4 @@
+import {isSchema286OrLater} from './schema-compatibility-257.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {mapExitRetiredOriginMatches261} from './caravan-map-exit-save-261.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
@@ -14,7 +15,7 @@ export function worldPawnOriginProjection256(root:CampaignState):{worldPawnOrigi
  if((Number(root.schemaVersion)===259||Number(root.schemaVersion)===260||(Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||isSchema263OrLater(Number(root.schemaVersion))))))for(const m of root.worldGroups?.lostMemories??[])if(m.kind==='new-colony-settled'&&!root.worldMaps.sites.some(s=>s.id===m.mapId))needed.add(m.mapId);
  if((Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||isSchema263OrLater(Number(root.schemaVersion)))))for(const m of root.worldGroups?.lostMemories??[])if(m.caravanCession261&&!root.worldMaps.sites.some(s=>s.id===m.mapId))needed.add(m.mapId);
  if(isSchema263OrLater(Number(root.schemaVersion)))for(const g of root.worldGroups?.groups??[])if(g.localMapId===null&&g.retreat261?.autoJoinable===true&&!root.worldMaps.sites.some(s=>s.id===g.originMapId))needed.add(g.originMapId);
- if(Number(root.schemaVersion)===286)for(const g of root.linkedStorage286?.groups??[])if(!root.worldMaps.sites.some(s=>s.id===g.originMapId))needed.add(g.originMapId);
+ if(isSchema286OrLater(root.schemaVersion))for(const g of root.linkedStorage286?.groups??[])if(!root.worldMaps.sites.some(s=>s.id===g.originMapId))needed.add(g.originMapId);
  const worldPawnOrigins=root.worldMaps.retired.flatMap(r=>needed.has(r.id)&&r.tile!==null?[{mapId:r.id,tile:r.tile,removedAt:r.removedAt,...(Number(root.schemaVersion)===259||Number(root.schemaVersion)===260||(Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||isSchema263OrLater(Number(root.schemaVersion)))))&&r.settledAt!==undefined?{settledAt:r.settledAt}:{}}]:[]);
  return worldPawnOrigins.length?{worldPawnOrigins}:{};
 }
@@ -51,5 +52,5 @@ export function settlementMemoryUsesRetiredOrigin259(value:Pick<CampaignMapPrese
 /** The same authentic retired-map witness may describe a policy's origin,
  * without implying a WorldPawn exists or a retired map can be used. */
 export function linkedStorageUsesRetiredOrigin286(value:Pick<CampaignState,'schemaVersion'|'linkedStorage286'>,origin:WorldPawnOriginMap256):boolean {
- return Number(value.schemaVersion)===286&&!!value.linkedStorage286?.groups.some(g=>g.originMapId===origin.mapId);
+ return isSchema286OrLater(value.schemaVersion)&&!!value.linkedStorage286?.groups.some(g=>g.originMapId===origin.mapId);
 }

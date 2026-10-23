@@ -22,7 +22,7 @@ import { adultAgeTicks,bodySizeAtAge } from './animal-life.ts';
 /** One corpse owns the original animal identity and frozen medical record. It is
  * not food, not a stack of abstract meat, and never also a live wildlife actor. */
 export type { ConsumedPart } from './corpse-anatomy.ts';
-export interface CorpseState {growthTracker?:import("./animal-growth-runtime-256.ts").AnimalGrowthTracker256;ageCoreRemainder?:number;animalId:number;species:AnimalSpeciesId;sex:'female'|'male';ageTicks:number;health:MedicalRecord;facing?:number;consumedParts?:ConsumedPart[]}
+export interface CorpseState {animalMapAreas287?:import('./animal-area-state-287.ts').AnimalMapAreas287;growthTracker?:import("./animal-growth-runtime-256.ts").AnimalGrowthTracker256;ageCoreRemainder?:number;animalId:number;species:AnimalSpeciesId;sex:'female'|'male';ageTicks:number;health:MedicalRecord;facing?:number;consumedParts?:ConsumedPart[]}
 export const CORPSE_ROT_TICKS=2.5*TICKS_PER_DAY;
 export const CORPSE_DESSICATION_TICKS=5*TICKS_PER_DAY;
 export const corpseStage=(p:MaterialPile,tick:number):'fresh'|'rotting'|'desiccated'=>rotAge(p,tick)>=CORPSE_DESSICATION_TICKS?'desiccated':rotAge(p,tick)>=CORPSE_ROT_TICKS?'rotting':'fresh';
@@ -51,7 +51,7 @@ function thermalAnchor(rot:RotState,tick:number,rate:number):RotState {
 }
 function corpsePile(a:WildAnimal,owner:MaterialOwner,rot:RotState):MaterialPile {
   return {...retainedCorpseDamage256(a)?{damage:retainedCorpseDamage256(a)}:{},id:a.id,kind:'corpse',item:animalCorpseItem(a.species),quantity:1,owner,rot:toxicCorpseRot256(a.health,rot),
-    corpse:{animalId:a.id,species:a.species,sex:a.sex,ageTicks:a.ageTicks,...a.growthTracker?{growthTracker:a.growthTracker,ageCoreRemainder:a.ageCoreRemainder}:{},health:a.health!,...a.motion?{facing:Math.atan2(a.motion.to.x-a.motion.from.x,a.motion.to.z-a.motion.from.z)}:a.arrivalRotation!==undefined?{facing:(a.arrivalRotation===3?-1:a.arrivalRotation)*Math.PI/2}:{}}};
+    corpse:{...a.animalMapAreas287?{animalMapAreas287:structuredClone(a.animalMapAreas287)}:{},animalId:a.id,species:a.species,sex:a.sex,ageTicks:a.ageTicks,...a.growthTracker?{growthTracker:a.growthTracker,ageCoreRemainder:a.ageCoreRemainder}:{},health:a.health!,...a.motion?{facing:Math.atan2(a.motion.to.x-a.motion.from.x,a.motion.to.z-a.motion.from.z)}:a.arrivalRotation!==undefined?{facing:(a.arrivalRotation===3?-1:a.arrivalRotation)*Math.PI/2}:{}}};
 }
 function releaseBodyTargets(w:World,id:number):void {
   for(const animal of w.wildlife?.animals??[])if(animal.threat?.targetId===id||animal.retaliation?.targetId===id){

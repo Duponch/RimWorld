@@ -12,7 +12,7 @@ import {registeredMapPresentation} from '../src/sim/world-map-presentation.ts';
 import {newCryptosleepHolder271,type PlayerCasket271} from '../src/sim/cryptosleep-state-271.ts';
 import {SnapshotEncoder,SnapshotDecoder} from '../src/bridge/snapshots.ts';
 import {ResidentPresentationAssembler} from '../src/bridge/resident-presentation-assembler.ts';
-import type {Structure,World} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type Structure,type World} from '../src/sim/types.ts';
 
 function shelf(w:World,x:number,z:number,small=false):Structure {
  const s:Structure={id:w.nextId++,kind:small?'small-shelf':'shelf',x,z,orientation:0,footprint:'standard',material:'wood',shelf:newShelfStorage(Array.from({length:small?1:2},()=>w.nextId++))};w.structures.push(s);return s;
@@ -28,7 +28,7 @@ function prepared(){const w=deconstructionCamp(3);initialWorldRegistry(w);const 
 
 test('linked member and registry shapes close versions, descriptors, identity ranges and exact optional policy presence',()=>{
  const {w,a}=prepared(),registry=w.linkedStorage286!;expect(validLinkedStorageRegistryShape286(registry,286,w.nextId)).toBe(true);
- expect(validLinkedStorageRegistryShape286(registry,285,w.nextId)).toBe(false);expect(validLinkedStorageRegistryShape286(registry,287,w.nextId)).toBe(false);
+ expect(validLinkedStorageRegistryShape286(registry,285,w.nextId)).toBe(false);expect(validLinkedStorageRegistryShape286(registry,SCHEMA_VERSION,w.nextId)).toBe(true);expect(validLinkedStorageRegistryShape286(registry,SCHEMA_VERSION+1,w.nextId)).toBe(false);
  expect(validLinkedShelfField286(a.shelf,286)).toBe(true);expect(validLinkedShelfField286(a.shelf,285)).toBe(false);
  for(const change of [(r:typeof registry)=>{r.groups[0]!.memberIds.pop();},(r:typeof registry)=>{r.nextId=1;},(r:typeof registry)=>{r.groups[0]!.name='x\n';},(r:typeof registry)=>{r.groups[0]!.memberIds[1]=r.groups[0]!.memberIds[0]!;},(r:typeof registry)=>{Object.assign(r.groups[0]!.settings,{allowFresh:undefined});}]){const bad=structuredClone(registry);change(bad);expect(validLinkedStorageRegistryShape286(bad,286,w.nextId)).toBe(false);}
  let reads=0;const bad=structuredClone(a.shelf!);Object.defineProperty(bad,'linked286',{enumerable:true,get(){reads++;throw Error('No getter');}});expect(validLinkedShelfField286(bad,286)).toBe(false);expect(reads).toBe(0);
@@ -38,7 +38,7 @@ test('linked member and registry shapes close versions, descriptors, identity ra
 test('historical fences reject future linked state through packed holders and sparse structure upserts without reads or mutation',()=>{
  const {a}=prepared(),p={building:a,owner:{type:'inventory',pawnId:1}};
  const envelopes=[{structures:[a]},{packed:[p]},{worldMaps:{sites:[{map:{packed:[p]}}]}},{worldGroups:{groups:[{state:{packed:[p]}}],abandonedContents:[{humans:[{packed:[p]}]}]}},{worldPawns:{owners:[{packed:[p]}],heldPlayerCaskets271:[{casket:{cryptosleep:{packed:[p]}}}]}},{world:{schemaVersion:285},structures:{removed:[],upserted:[a],order:[a.id]}}];
- for(const raw of envelopes){const before=JSON.stringify(raw);expect(validLinkedStorageHistorical286(raw,285)).toBe(false);expect(validLinkedStorageHistorical286(raw,286)).toBe(true);expect(validLinkedStorageHistorical286(raw,287)).toBe(false);expect(JSON.stringify(raw)).toBe(before);}
+ for(const raw of envelopes){const before=JSON.stringify(raw);expect(validLinkedStorageHistorical286(raw,285)).toBe(false);expect(validLinkedStorageHistorical286(raw,286)).toBe(true);expect(validLinkedStorageHistorical286(raw,SCHEMA_VERSION)).toBe(true);expect(validLinkedStorageHistorical286(raw,SCHEMA_VERSION+1)).toBe(false);expect(JSON.stringify(raw)).toBe(before);}
  expect(validLinkedStorageHistorical286({linkedStorage286:undefined},285)).toBe(false);
  let reads=0;const raw={};Object.defineProperty(raw,'linkedStorage286',{enumerable:true,get(){reads++;throw Error('Historical getter');}});expect(validLinkedStorageHistorical286(raw,285)).toBe(false);expect(reads).toBe(0);
 });
@@ -103,8 +103,8 @@ test('same-tick policy and sparse structure delta adopt together or retain the p
 
 test('strict285 migration changes only the version and first registry birth reaches an already cached real map presentation',()=>{
  const w=deconstructionCamp(2);initialWorldRegistry(w);w.schemaVersion=285 as World['schemaVersion'];const before=JSON.parse(JSON.stringify(w));
- expect(validateCampaignSchema285(w)).toEqual([]);expect(deserializeCampaign(JSON.stringify(w))).toEqual({...before,schemaVersion:286});expect(JSON.parse(JSON.stringify(w))).toEqual(before);
- w.schemaVersion=286;const opening=registeredMapPresentation(w)!;expect(Object.hasOwn(opening,'linkedStorage286')).toBe(false);
+ expect(validateCampaignSchema285(w)).toEqual([]);expect(deserializeCampaign(JSON.stringify(w))).toEqual({...before,schemaVersion:SCHEMA_VERSION});expect(JSON.parse(JSON.stringify(w))).toEqual(before);
+ w.schemaVersion=SCHEMA_VERSION;const opening=registeredMapPresentation(w)!;expect(Object.hasOwn(opening,'linkedStorage286')).toBe(false);
  const a=shelf(w,17,18),b=shelf(w,17,21,true);linked(w,[a,b]);const next=registeredMapPresentation(w)!;
  expect(next).toBe(opening);expect(next.linkedStorage286).toBe(w.linkedStorage286);expect(validLinkedStorageProjection286(next)).toBe(true);
 });

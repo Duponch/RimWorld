@@ -16,6 +16,7 @@ import { releaseAssignments } from './work-release.ts';
 import { animalNutritionMax } from './animal-life.ts';
 import { grazingResult,plantNutrition } from './biome-flora.ts';
 import { penRegion } from './animal-pens.ts';
+import {captureAnimalAreaPolicy287,type AnimalAreaPolicy287} from './animal-area-policy-287.ts';
 
 /** A closed pen bounds actual food candidates; it never supplies nutrition. */
 export function grazingPen(world:World,a:WildAnimal):ReadonlySet<number>|undefined {
@@ -62,22 +63,22 @@ function grazeablePlant(r:Resource,growth:number,world:World):boolean {
   if(world.snow&&r.kind!=='tree'&&(world.tiles[r.z*world.width+r.x]!.snowDepth??0)>.5)return false;
   return growth>=(r.species==='healroot-wild'||r.kind==='healroot'||r.kind==='haygrass'?.65:.1)&&plantNutrition(r,growth)>0;
 }
-export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
+export function animalFoods(world:World,a:WildAnimal,readArea:(a:WildAnimal)=>AnimalAreaPolicy287|undefined=a=>captureAnimalAreaPolicy287(world,a)):AnimalFood[] {
   const result:AnimalFood[]=[];
   const capacity=animalNutritionMax(a);
-  const pen=grazingPen(world,a);
+  const pen=grazingPen(world,a),policy=readArea(a),inside=(c:Cell)=>!policy||policy.has(c.z*world.width+c.x);
   // A food search can inspect thousands of plants. Collect competing claims
   // once for this decision instead of walking every animal and job per plant.
   const claimedPlants=new Set<number>();
   for(const other of world.wildlife?.animals??[])if(other.id!==a.id&&other.meal?.kind==='plant')claimedPlants.add(other.meal.id);
   const reservedPlantCells=new Set<number>();
   for(const job of world.jobs)if(job.reservedBy!==null&&(job.kind==='harvest'||job.kind==='cut'||job.kind==='sow'))reservedPlantCells.add(job.z*world.width+job.x);
-  if(animalPlantDiet256(a)??!animalSpecies(a.species).predator)for(const r of world.resources)if((r.kind!=='haygrass'||world.schemaVersion>=227)&&(!pen||pen.has(r.z*world.width+r.x))&&isPlant(r)&&(animalPlantDiet256(a,r.kind==='tree')??true)&&!plantLeafless(world,r)) {
+  if(animalPlantDiet256(a)??!animalSpecies(a.species).predator)for(const r of world.resources)if((r.kind!=='haygrass'||world.schemaVersion>=227)&&inside(r)&&(!pen||pen.has(r.z*world.width+r.x))&&isPlant(r)&&(animalPlantDiet256(a,r.kind==='tree')??true)&&!plantLeafless(world,r)) {
     const growth=plantGrowth(world,r);
     if(grazeablePlant(r,growth,world)&&!claimedPlants.has(r.id)&&!reservedPlantCells.has(r.z*world.width+r.x))result.push({id:r.id,kind:'plant',x:r.x,z:r.z,quantity:1});
   }
   let reservations:ReadonlyMap<number,number>|undefined;
-  for(const p of world.piles)if(animalPileFood(world,a,p)&&p.owner.type==='ground'&&(!pen||pen.has(p.owner.z*world.width+p.owner.x))) {
+  for(const p of world.piles)if(animalPileFood(world,a,p)&&p.owner.type==='ground'&&inside(p.owner)&&(!pen||pen.has(p.owner.z*world.width+p.owner.x))) {
     // No reservation scan is needed when this decision sees only plants.
     reservations??=reservedSourcesByPile(world,a.id);
     const available=p.quantity-(reservations.get(p.id)??0),nutrition=ITEM_DEFINITIONS[p.item].nutrition/100;
@@ -89,22 +90,22 @@ export function animalFoods(world:World,a:WildAnimal):AnimalFood[] {
   }
   return result;
 }
-export function animalMealTarget(world:World,a:WildAnimal,resourcesById?:ReadonlyMap<number,Resource>,workCells?:ReadonlySet<number>):Cell|undefined {
+export function animalMealTarget(world:World,a:WildAnimal,resourcesById?:ReadonlyMap<number,Resource>,workCells?:ReadonlySet<number>,readArea:(a:WildAnimal)=>AnimalAreaPolicy287|undefined=a=>captureAnimalAreaPolicy287(world,a)):Cell|undefined {
   const meal=a.meal;if(!meal)return;
-  const pen=grazingPen(world,a);
+  const pen=grazingPen(world,a),policy=readArea(a),inside=(c:Cell)=>!policy||policy.has(c.z*world.width+c.x);
   if(meal.kind==='plant') {
     if(!(animalPlantDiet256(a)??!animalSpecies(a.species).predator))return;
     const r=resourcesById?resourcesById.get(meal.id):world.resources.find(r=>r.id===meal.id);
     if(!r||animalPlantDiet256(a,r.kind==='tree')===false||r.kind==='haygrass'&&world.schemaVersion<227||!isPlant(r)||plantLeafless(world,r))return;
     const growth=plantGrowth(world,r);
-    return grazeablePlant(r,growth,world)&&unclaimedPlant(world,r,a.id,workCells)&&(!pen||pen.has(r.z*world.width+r.x))?r:undefined;
+    return inside(r)&&grazeablePlant(r,growth,world)&&unclaimedPlant(world,r,a.id,workCells)&&(!pen||pen.has(r.z*world.width+r.x))?r:undefined;
   }
   const p=world.piles.find(p=>p.id===meal.id);
-  return p&&animalPileFood(world,a,p)&&p.owner.type==='ground'&&p.quantity-reservedSource(world,p.id,a.id)>=meal.quantity&&(!animalFoodPreference(p.item)||meal.quantity<=ITEM_DEFINITIONS[p.item].maxIngest)&&(!p.corpse||meal.quantity===1)&&(!pen||pen.has(p.owner.z*world.width+p.owner.x))?p.owner:undefined;
+  return p&&animalPileFood(world,a,p)&&p.owner.type==='ground'&&inside(p.owner)&&p.quantity-reservedSource(world,p.id,a.id)>=meal.quantity&&(!animalFoodPreference(p.item)||meal.quantity<=ITEM_DEFINITIONS[p.item].maxIngest)&&(!p.corpse||meal.quantity===1)&&(!pen||pen.has(p.owner.z*world.width+p.owner.x))?p.owner:undefined;
 }
 /** Called only after physical contact and the complete ingestion interval. */
-export function finishAnimalMeal(world:World,a:WildAnimal):void {
-  const target=animalMealTarget(world,a);
+export function finishAnimalMeal(world:World,a:WildAnimal,readArea?:(a:WildAnimal)=>AnimalAreaPolicy287|undefined):void {
+  const target=animalMealTarget(world,a,undefined,undefined,readArea);
   if(!target||(a.motion?.end??0)>world.tick||Math.abs(a.x-target.x)+Math.abs(a.z-target.z)>1)return;
   const s=world.wildlife!,m=a.meal!,ingested=m.kind==='pile'?world.piles.find(p=>p.id===m.id):undefined;let nutrition=0;
   const capacity=animalNutritionMax(a);

@@ -15,6 +15,7 @@ import { captureStandability,navigationCosts,furnitureDelay } from './furniture-
 import { doorOpenness,isPassageDoor } from './door-rules.ts';
 import { WeightedSearch } from './weighted-search.ts';
 import { scaleNavigationCosts } from './navigation-costs.ts';
+import {captureAnimalAreaPolicy287,type AnimalAreaPolicy287} from './animal-area-policy-287.ts';
 import { meleeContact } from './melee-space.ts';
 import {START_STRUCTURE_PHYSICS_256} from './player-start-physics-256.ts';
 import {animalHaulDoorPassable282} from './animal-haul-door-282.ts';
@@ -23,6 +24,7 @@ import type { WildAnimal } from './wildlife-state.ts';
 import { animalSpecies } from './animal-species.ts';
 import {captureStructureNavigation,type StructureNavigationGeometry} from './structure-navigation.ts';
 import type { Cell,World } from './types.ts';
+import type {DistanceField} from './navigation-types.ts';
 /** Ranked food candidates resume a single frontier. Group once rather than
  * rescanning thousands of plant contacts for every distinct food score. */
 function rankedFood(world:World,cells:Cell[],search:WeightedSearch,rank:(c:Cell)=>number):Cell|undefined {
@@ -37,7 +39,9 @@ function rankedFood(world:World,cells:Cell[],search:WeightedSearch,rank:(c:Cell)
 /** Short-lived capture: no world mutation may interleave its searches/steps. */
 /** `allowClosedGate` is for planning a handler-led route only. Physical steps
  * must use the default navigation after the handler opens each passage. */
-export function animalNavigation(world:World,allowClosedGate=false,fencePassable=false,actor?:WildAnimal,capturedFlight=false,providedGeometry?:StructureNavigationGeometry) {
+export function animalNavigation(world:World,allowClosedGate=false,fencePassable=false,actor?:WildAnimal,capturedFlight=false,providedGeometry?:StructureNavigationGeometry,readArea:(a:WildAnimal)=>AnimalAreaPolicy287|undefined=a=>captureAnimalAreaPolicy287(world,a)) {
+  let failedRoute:{actor:Cell;x:number;z:number;tick:number;field:DistanceField}|undefined;
+  const area=(start:Cell)=>{if(Number(world.schemaVersion)!==287)return;const original=world.wildlife?.animals.find(a=>a===start);return original?readArea(original):undefined;};
   const duck=world.schemaVersion>=256&&actor?.species==='duck'?actor:undefined,override=duck&&duckTerrainOverride256(world,duck),flying=!!duck&&(capturedFlight||duckFlying256(duck.flight));
   const terrainFree=(terrain:unknown)=>naturalTerrainWalkable256(terrain)||flying&&terrain==='water-deep';
   const geometry=providedGeometry??captureStructureNavigation(world);
@@ -96,7 +100,8 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
     return haulPoint(a,xSide,false)&&haulPoint(a,zSide,false)&&!corners.has(xSide.z*width+xSide.x)&&!corners.has(zSide.z*width+zSide.x);
   };
   function findRoute(a:Cell,goals:Cell[],exitFallback=false,rank?:(c:Cell)=>number):{kind:'food'|'exit';path:Cell[]}|undefined {
-    const cells=goals.filter(free),indices=new Set(cells.map(c=>c.z*world.width+c.x));
+    failedRoute=undefined;
+    const policy=area(a),cells=goals.filter(c=>free(c)&&(!policy||policy.has(c.z*world.width+c.x))),indices=new Set(cells.map(c=>c.z*world.width+c.x));
     if(!indices.size&&!exitFallback)return;
     const edges:Cell[]=[];
     if(exitFallback){
@@ -108,18 +113,19 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
     const n=navigationCosts(world,a,override,geometry);
     // Food travel uses the species' pace. Convert common furniture costs from
     // human base-3 units into hare base-1 units; no human movement capacity.
-    const search=new WeightedSearch(world.width,world.height,a.z*world.width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
+    const search=new WeightedSearch(world.width,world.height,a.z*world.width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners,policy?.costs);
     if(rank){
       // Stop at a reachable preferred group, not the closest lower-priority
       // goal. An unreachable group exhausts this same frontier; fallbacks then
       // reuse its settled field without launching another search.
       const target=rankedFood(world,cells,search,rank);
       if(target){const path=routeToCell(world,target,search.finish(new Set([target.z*width+target.x])));return path?{kind:'food',path}:undefined;}
-      if(!exitFallback)return;
+      if(!exitFallback){if(Number(world.schemaVersion)===287)failedRoute={actor:a,x:a.x,z:a.z,tick:world.tick,field:search.finish()};return;}
     }
     const reach=search.finish(indices.size?indices:new Set(exits.map(c=>c.z*world.width+c.x)));
     const target=cells.filter(c=>hasReachableCell(reach,c.z*world.width+c.x)).sort((a,b)=>reach.costs[a.z*world.width+a.x]!-reach.costs[b.z*world.width+b.x]!)[0];
     if(target){const path=routeToCell(world,target,reach);return path?{kind:'food',path}:undefined;}
+    if(!exitFallback&&Number(world.schemaVersion)===287)failedRoute={actor:a,x:a.x,z:a.z,tick:world.tick,field:reach};
     // An unsuccessful food flood exhausted its frontier. Its complete field
     // already contains reachable edge cells: do not launch a second flood.
     const exit=exits.filter(c=>hasReachableCell(reach,c.z*world.width+c.x)).sort((a,b)=>reach.costs[a.z*world.width+a.x]!-reach.costs[b.z*world.width+b.x]!)[0];
@@ -127,6 +133,15 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
     return path?{kind:'exit',path}:undefined;
   }
   return {free,geometry,
+    /** A failed ranked search already exhausted THIS actor's full frontier.
+     * Reuse it once for a lower-priority destination without another quota. */
+    failedRouteTo(a:Cell,goals:Cell[]):Cell[]|null|undefined {
+      const previous=failedRoute;if(!previous||previous.actor!==a||previous.x!==a.x||previous.z!==a.z||previous.tick!==world.tick)return;
+      failedRoute=undefined;const policy=area(a),reach=previous.field;
+      const target=goals.filter(c=>free(c)&&(!policy||policy.has(c.z*width+c.x))&&hasReachableCell(reach,c.z*width+c.x))
+        .sort((x,y)=>reach.costs[x.z*width+x.x]!-reach.costs[y.z*width+y.x]!)[0];
+      return target?routeToCell(world,target,reach)??null:null;
+    },
     haulStep,
     /** ROOT grants one search quota. All source and destination questions
      * resume THIS frontier from this original animal, never flood per pile. */
@@ -138,16 +153,16 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
       for(const {structure:s,cells} of geometry.entries){
         if(START_STRUCTURE_PHYSICS_256[s.kind].fence&&haulFenceBlocked(a)||isPassageDoor(s.kind)&&!animalHaulDoorPassable282(world,a,s,true))for(const i of cells)unavailable[i]=1;
       }
-      const n=navigationCosts(world,a,undefined,geometry),search=new WeightedSearch(width,world.height,a.z*width+a.x,unavailable,scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
+      const policy=area(a),n=navigationCosts(world,a,undefined,geometry),search=new WeightedSearch(width,world.height,a.z*width+a.x,unavailable,scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners,policy?.costs);
       return {
-        canReach(c:Cell){if(!haulPoint(a,c,true))return false;const i=c.z*width+c.x;return hasReachableCell(search.advance(new Set([i])),i);},
-        pathTo(c:Cell){if(!haulPoint(a,c,true))return;const i=c.z*width+c.x,reach=search.advance(new Set([i]));return hasReachableCell(reach,i)?routeToCell(world,c,reach)??undefined:undefined;},
+        canReach(c:Cell){if(!haulPoint(a,c,true)||policy&&!policy.has(c.z*width+c.x))return false;const i=c.z*width+c.x;return hasReachableCell(search.advance(new Set([i])),i);},
+        pathTo(c:Cell){if(!haulPoint(a,c,true)||policy&&!policy.has(c.z*width+c.x))return;const i=c.z*width+c.x,reach=search.advance(new Set([i]));return hasReachableCell(reach,i)?routeToCell(world,c,reach)??undefined:undefined;},
       };
     },
     /** One quota-granted frontier shared by all confusion destination tickets. */
     wanderSearch(a:Cell){
-      const n=navigationCosts(world,a,override,geometry),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
-      return {canReach(c:Cell){if(!inBounds(world,c.x,c.z)||!free(c))return false;const i=c.z*width+c.x;return hasReachableCell(search.advance(new Set([i])),i);},pathTo(c:Cell){if(!inBounds(world,c.x,c.z)||!free(c))return;const i=c.z*width+c.x,reach=search.advance(new Set([i]));return hasReachableCell(reach,i)?routeToCell(world,c,reach)??undefined:undefined;}};
+      const policy=area(a),n=navigationCosts(world,a,override,geometry),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners,policy?.costs);
+      return {canReach(c:Cell){if(!inBounds(world,c.x,c.z)||!free(c)||policy&&!policy.has(c.z*width+c.x))return false;const i=c.z*width+c.x;return hasReachableCell(search.advance(new Set([i])),i);},pathTo(c:Cell){if(!inBounds(world,c.x,c.z)||!free(c)||policy&&!policy.has(c.z*width+c.x))return;const i=c.z*width+c.x,reach=search.advance(new Set([i]));return hasReachableCell(reach,i)?routeToCell(world,c,reach)??undefined:undefined;}};
     },occupy:(c:Cell)=>inBounds(world,c.x,c.z)&&!blockedAt(c.z*width+c.x),step,route:(a:Cell,goals:Cell[],rank?:(c:Cell)=>number)=>findRoute(a,goals,false,rank)?.path,
     humanPursuitRoute(a:Cell,targets:readonly (Cell&{id:number})[],physical:Uint8Array,retainFirst=false):{path:Cell[];targetId:number}|undefined {
       const groups=targets.map(target=>{
@@ -158,7 +173,7 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
         return {target,contacts};
       });
       if(!groups.some(g=>g.contacts.length))return;
-      const n=navigationCosts(world,a,override,geometry),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
+      const n=navigationCosts(world,a,override,geometry),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners,area(a)?.costs);
       const pick=(list:typeof groups)=>{
         const goals=new Set(list.flatMap(g=>g.contacts.map(c=>c.z*width+c.x))),reach=search.advance(goals);
         const found=list.flatMap(g=>g.contacts.filter(c=>hasReachableCell(reach,c.z*width+c.x)).map(c=>({target:g.target,cell:c,cost:reach.costs[c.z*width+c.x]!})))
@@ -172,9 +187,9 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
     },
     foodOrExitRoute:(a:Cell,goals:Cell[],rank?:(c:Cell)=>number)=>findRoute(a,goals,true,rank),
     foodPreyOrExitRoute(a:Cell,goals:Cell[],prey:readonly (Cell&{id:number})[],exitFallback=false,rank?:(c:Cell)=>number):{kind:'food'|'prey'|'exit';path:Cell[];targetId?:number}|undefined {
-      const cells=goals.filter(free),indices=new Set(cells.map(c=>c.z*width+c.x));
+      const policy=area(a),cells=goals.filter(c=>free(c)&&(!policy||policy.has(c.z*width+c.x))),indices=new Set(cells.map(c=>c.z*width+c.x));
       if(!indices.size&&!prey.length&&!exitFallback)return;
-      const n=navigationCosts(world,a,override,geometry),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners);
+      const n=navigationCosts(world,a,override,geometry),search=new WeightedSearch(width,world.height,a.z*width+a.x,routeGrid(),scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners,policy?.costs);
       if(indices.size){
         const reach=rank?undefined:search.advance(indices),food=rank?rankedFood(world,cells,search,rank):cells.filter(c=>hasReachableCell(reach!,c.z*width+c.x)).sort((a,b)=>reach!.costs[a.z*width+a.x]!-reach!.costs[b.z*width+b.x]!)[0];
         if(food){const path=routeToCell(world,food,search.finish(indices));return path?{kind:'food',path}:undefined;}

@@ -1,3 +1,4 @@
+import {isSchema286OrLater} from './schema-compatibility-257.ts';
 import {validLinkedShelfPolicy286,sameLinkedShelfPolicy286} from './linked-storage-policy-286.ts';
 import {captureLinkedStorageOwners286,type LinkedStorageOwners286} from './linked-storage-owners-286.ts';
 import {registeredCampaign} from './world-map-context.ts';
@@ -15,15 +16,15 @@ const fields=(v:Record<string,unknown>,required:readonly string[],optional:reado
 const dense=(v:unknown,min:number,max:number):v is unknown[]=>Array.isArray(v)&&Object.getPrototypeOf(v)===Array.prototype&&v.length>=min&&v.length<=max&&Reflect.ownKeys(v).length===v.length+1&&Array.from({length:v.length},(_,i)=>Object.getOwnPropertyDescriptor(v,String(i))).every(d=>!!d&&d.enumerable&&own(d,'value'));
 
 export function validLinkedShelfMemberShape286(value:unknown,version:number):value is LinkedShelfMember286 {
- return version===286&&record(value)&&fields(value,['revision','groupId','independent'])&&value.revision===1&&int(value.groupId,1)&&validLinkedShelfPolicy286(value.independent);
+ return isSchema286OrLater(version)&&record(value)&&fields(value,['revision','groupId','independent'])&&value.revision===1&&int(value.groupId,1)&&validLinkedShelfPolicy286(value.independent);
 }
 /** Always called, including absence on old formats. No accessor is evaluated. */
 export function validLinkedShelfField286(shelf:unknown,version:number):boolean {
- if(!int(version,1,286)||!record(shelf))return false;const d=Object.getOwnPropertyDescriptor(shelf,'linked286');
+ if(!int(version,1,287)||!record(shelf))return false;const d=Object.getOwnPropertyDescriptor(shelf,'linked286');
  return d?d.enumerable===true&&own(d,'value')&&validLinkedShelfMemberShape286(d.value,version):!('linked286'in shelf);
 }
 export function validLinkedStorageRegistryShape286(value:unknown,version:number,nextThingId=Number.MAX_SAFE_INTEGER):value is LinkedStorageRegistry286 {
- if(version!==286||!int(nextThingId,1)||!record(value)||!fields(value,['revision','nextId','groups'])||value.revision!==1||!int(value.nextId,1)||!dense(value.groups,0,4096))return false;
+ if(!isSchema286OrLater(version)||!int(nextThingId,1)||!record(value)||!fields(value,['revision','nextId','groups'])||value.revision!==1||!int(value.nextId,1)||!dense(value.groups,0,4096))return false;
  const ids=new Set<number>(),members=new Set<number>();
  for(const g of value.groups){
   if(!record(g)||!fields(g,['id','originMapId','name','settings','memberIds'])||!int(g.id,1,value.nextId-1)||ids.has(g.id)||!int(g.originMapId)||typeof g.name!=='string'||g.name.length<1||g.name.length>64||g.name.trim()!==g.name||/[\u0000-\u001f\u007f]/.test(g.name)||!validLinkedShelfPolicy286(g.settings)||!dense(g.memberIds,2,Math.min(nextThingId-1,1_000_000)))return false;
@@ -33,14 +34,14 @@ export function validLinkedStorageRegistryShape286(value:unknown,version:number,
 }
 /** Shared metadata shape; owner bijection belongs to the complete RAW guard. */
 export function validLinkedStorageRegistryField286(value:object,version:number,nextThingId:number):boolean {
- if(!int(version,1,286))return false;const d=Object.getOwnPropertyDescriptor(value,'linkedStorage286');
+ if(!int(version,1,287))return false;const d=Object.getOwnPropertyDescriptor(value,'linkedStorage286');
  return d?d.enumerable===true&&own(d,'value')&&validLinkedStorageRegistryShape286(d.value,version,nextThingId):!('linkedStorage286'in value);
 }
 
 /** Cold historical fence only. Current286 uses the closed custody census,
  * never this generic walk on each publication. */
 export function validLinkedStorageHistorical286(value:unknown,version:number):boolean {
- if(!int(version,1,286))return false;if(version===286)return true;
+ if(!int(version,1,287))return false;if(isSchema286OrLater(version))return true;
  let budget=2_000_000;const active=new Set<object>(),done=new Set<object>();
  const walk=(v:unknown):boolean=>{
   if(--budget<0)return false;if(v===null||typeof v!=='object')return typeof v!=='function'&&typeof v!=='symbol';
@@ -65,8 +66,8 @@ export function validLinkedStorageHistorical286(value:unknown,version:number):bo
 
 function validate(input:unknown,complete:boolean,captured?:LinkedStorageOwners286):boolean {
  try{
-  if(!record(input)||!int(input.schemaVersion,1,286))return false;
-  if(input.schemaVersion!==286)return validLinkedStorageHistorical286(input,input.schemaVersion);
+  if(!record(input)||!int(input.schemaVersion,1,287))return false;
+  if(!isSchema286OrLater(input.schemaVersion))return validLinkedStorageHistorical286(input,input.schemaVersion);
   const registryField=Object.getOwnPropertyDescriptor(input,'linkedStorage286');
   if(registryField&&(!registryField.enumerable||!own(registryField,'value'))||!registryField&&'linkedStorage286'in input)return false;
   const registry=registryField?.value;

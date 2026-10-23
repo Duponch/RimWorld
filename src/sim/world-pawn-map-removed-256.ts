@@ -1,3 +1,4 @@
+import {prepareAnimalAreaRemoval287} from './animal-area-owners-287.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {prepareMapRemoved259} from './world-pawn-map-removed-259.ts';
 import {composeArchiveLinkedStorageMapRemoval286} from './linked-storage-map-removal-286.ts';
@@ -59,6 +60,7 @@ function prepareLiteralCampMapRemoved256(input:CampaignState,map:World,mapId:num
  // A new row already at now receives delta0 in that ensuing real interval.
  if(at!==now&&!(automatic&&at+10===now))return no('La frontière réelle WorldPawns/Camp ne correspond pas au commit de retrait.');
  let enteredAtAbsCore:number;try{enteredAtAbsCore=actualCampRemovalAbsCore256(root,map);}catch(e){return no(e instanceof Error?e.message:String(e));}
+ const animalAreas=Number(root.schemaVersion)===287?prepareAnimalAreaRemoval287(root,{mapId}):undefined;if(animalAreas&&!animalAreas.ok)return no(animalAreas.reason);
  const originals=new Set<WildAnimal>(),ids=new Set<number>();
  const context={seed:map.seed,width:map.width,height:map.height,...map.climate?{climate:map.climate}:{},...map.site?{site:map.site}:{},...map.scenario?{scenario:map.scenario}:{}};
  // Null-faction animals cannot enter Notify_PassedToWorld's faction branch.
@@ -74,7 +76,7 @@ function prepareLiteralCampMapRemoved256(input:CampaignState,map:World,mapId:num
   if(animal.domestic)return no('Le changement réel de faction Free de cet animal apprivoisé n’est pas encore représenté.');
   if(clock!==map.tick)return no('Le contenu vivant possède une autre horloge détenue ; aucun rattrapage biologique n’est offert.');
   const items=map.piles.filter(p=>'pawnId'in p.owner&&p.owner.pawnId===animal.id),packed=map.packed.filter(p=>p.owner.type!=='ground'&&p.owner.pawnId===animal.id);
-  const actor=structuredClone(animal);cleanMapRemovedAnimal256(actor,map.tick);unclaimDetachedActorBed256(actor);const cleanedJson=JSON.stringify(actor);
+  const actor=structuredClone(animal);if(animalAreas?.ok)animalAreas.projectInto(animal,actor);cleanMapRemovedAnimal256(actor,map.tick);unclaimDetachedActorBed256(actor);const cleanedJson=JSON.stringify(actor);
   const row:Extract<WorldPawnOwner256,{kind:'animal'}>={kind:'animal',actor,factionId:null,originMapId:mapId,context,clockCore:now,enteredAtAbsCore,mode:'active',items,packed,...map.wildlife?.profile===GEOGRAPHIC_FAUNA_PROFILE_256&&map.wildlife.animals.includes(animal)?{everSeenByPlayer:true as const}:{}};
   const boundary=worldPawnActiveBoundary256(row);if(boundary)return no(boundary);
   const pass=preparePassedToWorld256(staged,row,factions,random,{situation:'Free'});if(!pass.ok)return no(pass.reason);pass.commit();

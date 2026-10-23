@@ -98,7 +98,7 @@ test('stale identity, deep policy, desired write, and player authority all inval
 });
 
 test('future/historical worlds and accessor commands cannot enter the current linked-storage rules',()=>{
- for(const schemaVersion of[285,287]){const {w,a,b}=prepared();Object.assign(w,{schemaVersion});const before=json(w);expect(prepareLinkedStorageCommand286(w,{type:'shelf-link',structureIds:[a.id,b.id]}).ok).toBe(false);expect(json(w)).toBe(before);}
+ for(const schemaVersion of[285,288]){const {w,a,b}=prepared();Object.assign(w,{schemaVersion});const before=json(w);expect(prepareLinkedStorageCommand286(w,{type:'shelf-link',structureIds:[a.id,b.id]}).ok).toBe(false);expect(json(w)).toBe(before);}
  const {w,a}=prepared();let calls=0;const command={type:'shelf-unlink' as const,structureId:a.id};Object.defineProperty(command,'type',{enumerable:true,get(){calls++;return 'shelf-unlink';}});
  expect(prepareLinkedStorageCommand286(w,command).ok).toBe(false);expect(calls).toBe(0);
 });

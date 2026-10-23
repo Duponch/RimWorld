@@ -5,7 +5,7 @@ import type { AllowedAreaCommand, World } from '../sim/types';
 
 export function allowedAreaLayout():string {
   return `<dialog id="allowed-area-dialog" class="allowed-area-dialog"><div class="panel-heading"><h2>Zones autorisées</h2><button id="allowed-area-close" aria-label="Fermer les zones autorisées">×</button></div>
-    <p>Tracez les lieux où vos colons peuvent choisir leurs activités. Ils peuvent traverser le reste de la carte pour les rejoindre. Une zone vide équivaut à Illimité.</p>
+    <p>Tracez les lieux où vos colons et les animaux concernés peuvent choisir leurs activités. Ils peuvent traverser le reste de la carte pour les rejoindre. Une zone vide équivaut à Sans restriction. Les animaux d’enclos gardent leur marqueur.</p>
     <div class="allowed-area-toolbar"><button id="allowed-area-new">Nouvelle zone</button><span id="allowed-area-count"></span></div>
     <div id="allowed-area-list" class="allowed-area-list"></div><p id="allowed-area-feedback" role="status"></p></dialog>`;
 }

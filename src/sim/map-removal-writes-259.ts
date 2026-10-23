@@ -1,7 +1,7 @@
 import type {RemovedMapAreaPlan} from './pawn-map-areas.ts';
 /** Only preflighted area/bed alias writes in this ONE removal transaction. */
 export interface MapRemovalWrite259 {object:object;key:string;present:boolean;value?:unknown}
-export function areaRemovalWrites259(plan:RemovedMapAreaPlan):MapRemovalWrite259[]{return plan.updates.flatMap(u=>[...u.next?[{object:u.pawn,key:'mapAreas',present:true,value:u.next}]:[],...u.clearAlias?[{object:u.pawn,key:'allowedAreaId',present:false},{object:u.pawn,key:'allowedAreaReturn',present:false}]:[]]);}
+export function areaRemovalWrites259(plan:RemovedMapAreaPlan):MapRemovalWrite259[]{return [...(plan.animal287?.writes??[]),...plan.updates.flatMap(u=>[...u.next?[{object:u.pawn,key:'mapAreas',present:true,value:u.next}]:[],...u.clearAlias?[{object:u.pawn,key:'allowedAreaId',present:false},{object:u.pawn,key:'allowedAreaReturn',present:false}]:[]])];}
 export function removalWritesMutable259(writes:readonly MapRemovalWrite259[]):boolean{return writes.every(w=>{const d=Object.getOwnPropertyDescriptor(w.object,w.key);return d?Object.hasOwn(d,'value')&&(w.present?d.writable===true:d.configurable===true):!w.present||Object.isExtensible(w.object);});}
 export function removalWritesApplied259(writes:readonly MapRemovalWrite259[]):boolean{return writes.every(w=>{const d=Object.getOwnPropertyDescriptor(w.object,w.key);return w.present?!!d&&d.enumerable===true&&Object.hasOwn(d,'value')&&Object.is(d.value,w.value):!d;});}
 /** Identity/descriptor seal over ORIGINAL links, allowing only the declared

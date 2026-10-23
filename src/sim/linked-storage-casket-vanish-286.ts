@@ -1,3 +1,4 @@
+import {isSchema286OrLater} from './schema-compatibility-257.ts';
 import {prepareLinkedStorageRemoval286} from './linked-storage-plan-286.ts';
 import {isShelfKind} from './shelf-storage.ts';
 import {registeredCampaign} from './world-map-context.ts';
@@ -20,7 +21,7 @@ export function prepareLinkedCasketVanish286(world:World,casket:Structure,key:'c
  const no=(reason:string):LinkedCasketVanishResult286=>({ok:false,reason});
  try{
   const linked=packs.filter(p=>isShelfKind(p.building.kind)&&p.building.shelf?.linked286);
-  if(Number(world.schemaVersion)!==286||!linked.length){let begun=false,done=false;return {ok:true,plan:{current:()=>!begun&&!done,begin(){if(begun||done)throw Error('Repeated empty casket storage phase');begun=true;},commit(){if(!begun||done)throw Error('Unadmitted empty casket storage phase');done=true;}}};}
+  if(!isSchema286OrLater(world.schemaVersion)||!linked.length){let begun=false,done=false;return {ok:true,plan:{current:()=>!begun&&!done,begin(){if(begun||done)throw Error('Repeated empty casket storage phase');begun=true;},commit(){if(!begun||done)throw Error('Unadmitted empty casket storage phase');done=true;}}};}
   const root=registeredCampaign(world),tick=world.tick,holderField=Object.getOwnPropertyDescriptor(casket,key);
   if(!holderField||!Object.hasOwn(holderField,'value')||holderField.enumerable!==true||holderField.writable!==true)return no('Le détenteur du caisson ne peut pas être remplacé.');
   const holder=holderField.value,packedField=holder&&typeof holder==='object'?Object.getOwnPropertyDescriptor(holder,'packed'):undefined;
@@ -33,7 +34,7 @@ export function prepareLinkedCasketVanish286(world:World,casket:Structure,key:'c
   const bounded={registry:root.linkedStorage286,states:writes.filter(w=>w.object!==root).map(w=>w.object),desired:writes.map(w=>w.value)},seal=sealRemovalOriginal259(bounded,[],writes);
   const holderCurrent=()=>{const now=Object.getOwnPropertyDescriptor(casket,key),packed=Object.getOwnPropertyDescriptor(holder,'packed');return !!now&&Object.hasOwn(now,'value')&&now.value===holder&&now.enumerable===holderField.enumerable&&now.writable===true&&now.configurable===holderField.configurable&&!!packed&&Object.hasOwn(packed,'value')&&packed.value===packs;};
   const rootCurrent=()=>{const now=Object.getOwnPropertyDescriptor(root,'linkedStorage286');return rootField?!!now&&Object.hasOwn(now,'value')&&now.value===rootField.value&&now.enumerable===rootField.enumerable&&now.writable===rootField.writable&&now.configurable===rootField.configurable:!now;};
-  const sameContext=()=>registeredCampaign(world)===root&&world.tick===tick&&root.tick===tick&&Number(root.schemaVersion)===286;
+  const sameContext=()=>registeredCampaign(world)===root&&world.tick===tick&&root.tick===tick&&isSchema286OrLater(root.schemaVersion);
   let begun=false,done=false;
   const current=()=>!begun&&!done&&sameContext()&&world.structures.includes(casket)&&holderCurrent()&&rootCurrent()&&removal.current()&&seal(0)&&removalWritesMutable259(writes);
   if(!current())return no('Les propriétaires des étagères du caisson ont changé.');

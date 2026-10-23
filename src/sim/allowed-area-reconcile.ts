@@ -6,7 +6,7 @@ import { interruptWork } from './interrupted-cargo.ts';
 import { planPawnDrops, releaseWork, type DropPlan } from './work-release.ts';
 import type { Pawn, World } from './types.ts';
 
-interface AreaInterruptionPlan { ids:ReadonlySet<number>; drops:DropPlan }
+export interface AreaInterruptionPlan { ids:ReadonlySet<number>; drops:DropPlan }
 const admissible=(world:World,pawn:Pawn)=>{
   const rescue=pawn.rescue;
   if(rescue?.phase==='approach'&&(rescue.capture||rescue.arrest)){

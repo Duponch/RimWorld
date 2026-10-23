@@ -1,3 +1,4 @@
+import {validAnimalAreaField287} from './animal-area-save-287.ts';
 import {validScariaRecord261} from './animal-scaria-261.ts';
 import {toxicCorpseRotAllowance256} from './toxic-victim-256.ts';
 import {validAnimalAgeCoreRemainder256} from './initial-animal-age-owner-256.ts';
@@ -21,8 +22,8 @@ export function validCorpseRot(v:unknown,tick:number,death:number,medical?:unkno
 export function validCorpseShape(p:Record<string,unknown>,version:number):boolean {
   if(p.kind!=='corpse')return p.corpse===undefined;
   const c=p.corpse;
-  return version>=79&&object(c)&&validAnimalAgeCoreRemainder256(c,version,Number((c.health as {tick?:number})?.tick))&&isAnimalSpeciesInVersion(c.species,version)&&(version>=178||String(c.species)!=='red-fox')&&(version>=91||c.species==='hare')&&p.item===animalSpecies(c.species).corpseItem&&p.quantity===1&&object(p.owner)&&['ground','pawn'].includes(String(p.owner.type))
-    &&Object.keys(c).every(k=>['animalId','species','sex','health','facing',...version>=121?['ageTicks']:[],...version>=178?['consumedParts']:[],...version>=256?['growthTracker','ageCoreRemainder']:[]].includes(k))
+  return version>=79&&object(c)&&validAnimalAreaField287(c,version,Number.MAX_SAFE_INTEGER)&&validAnimalAgeCoreRemainder256(c,version,Number((c.health as {tick?:number})?.tick))&&isAnimalSpeciesInVersion(c.species,version)&&(version>=178||String(c.species)!=='red-fox')&&(version>=91||c.species==='hare')&&p.item===animalSpecies(c.species).corpseItem&&p.quantity===1&&object(p.owner)&&['ground','pawn'].includes(String(p.owner.type))
+    &&Object.keys(c).every(k=>['animalId','species','sex','health','facing',...version>=121?['ageTicks']:[],...version>=178?['consumedParts']:[],...version>=256?['growthTracker','ageCoreRemainder']:[],...version===287?['animalMapAreas287']:[]].includes(k))
     &&(version<121?c.ageTicks===undefined:int(c.ageTicks,0,Number.MAX_SAFE_INTEGER))
     &&c.animalId===p.id&&['female','male'].includes(String(c.sex))
     &&(c.facing===undefined||typeof c.facing==='number'&&Number.isFinite(c.facing)&&Math.abs(c.facing)<=Math.PI)

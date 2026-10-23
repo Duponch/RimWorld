@@ -27,7 +27,7 @@ import {canReturnGroupBedrolls256} from './group-bedroll-capture-256.ts';
 import {planetTile} from './planet-geography-256.ts';
 import {captureGroupMemberContexts} from './group-member-origin.ts';
 import {prepareRemovedMapBeds256} from './actor-bed-transition-256.ts';
-import {prepareRemovedMapAreas,commitRemovedMapAreas,prepareMapAreaEntry,commitMapAreaEntry} from './pawn-map-areas.ts';
+import {prepareRemovedMapAreas,commitRemovedMapAreas,beginRemovedMapAreas287,prepareMapAreaEntry,commitMapAreaEntry} from './pawn-map-areas.ts';
 import {detachMapOwners} from './world-lost-owners.ts';
 import {captureGroupCapturePatients259} from './group-human-projection-259.ts';
 import {notifyMapLost,captureNewColonyReceivers259,resetNewColonyMemories259} from './world-map-lost.ts';
@@ -155,6 +155,7 @@ function commitRegisteredMapRemoval260(root:CampaignState,map:World,record:impor
  let removalPhase=admittedPhase;try{removalPhase??=beginHeldCasketRemoval259(map,pass);}catch(e){return fail(e instanceof Error?e.message:String(e));}
  const bedOwnership=removalPhase?undefined:prepareRemovedMapBeds256(root,map,id);
  const areaPlan=!removalPhase&&root.schemaVersion>=256?prepareRemovedMapAreas(root,id,new Set((map.allowedAreas??[]).map(a=>a.id))):undefined;
+ if(areaPlan)beginRemovedMapAreas287(areaPlan);
  notifyMapLost(root,map,id,lastSettlement,newColonyReceivers);
  const registry=root.worldGroups!;
  if(removalPhase)removalPhase.areas();else if(areaPlan)commitRemovedMapAreas(areaPlan);

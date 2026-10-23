@@ -11,5 +11,5 @@ export function prepareReformRemovalAreas260(root:CampaignState,mapId:number,ids
   const rows=mapAreas?.assignments,next=rows?.filter(r=>r.mapId!==mapId),clearAlias=area!==undefined&&ids.has(area);
   if(clearAlias||rows&&next!.length!==rows.length)updates.push({pawn:p,...rows?{next:{revision:1,assignments:next!}}:{},clearAlias,before:JSON.stringify([area,back,mapAreas])});
  }
- return {updates};
+ return {...ordinary,updates};
 }

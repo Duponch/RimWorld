@@ -1,9 +1,10 @@
+import {isSchema286OrLater} from './schema-compatibility-257.ts';
 import {captureDuckMapRemovedOwners256} from './duck-owner-capture-256.ts';
 import {prepareLinkedStorageRemoval286} from './linked-storage-plan-286.ts';
 import {isShelfKind} from './shelf-storage.ts';
 import {registeredCampaign,registeredMap,registeredMapId} from './world-map-context.ts';
 import {areaRemovalWrites259,removalWritesApplied259,removalWritesMutable259,sealRemovalOriginal259,type MapRemovalWrite259} from './map-removal-writes-259.ts';
-import {prepareRemovedMapAreas,removedMapAreasCurrent,commitRemovedMapAreas} from './pawn-map-areas.ts';
+import {prepareRemovedMapAreas,removedMapAreasCurrent,commitRemovedMapAreas,beginRemovedMapAreas287} from './pawn-map-areas.ts';
 import {prepareRemovedMapBeds256} from './actor-bed-transition-256.ts';
 import {planPawnDrops} from './work-release.ts';
 import {hasMapRemovalJob259} from './world-lost-owners.ts';
@@ -39,7 +40,7 @@ export function prepareLinkedStorageMapRemoval286(input:CampaignState,map:World,
  const no=(reason:string):LinkedStorageMapRemovalResult286=>({ok:false,reason});
  try{
   const root=registeredCampaign(input);
-  if(Number(root.schemaVersion)!==286){let begun=false,applied=false;return {ok:true,plan:{writes:[],lostIds:[],get applied(){return applied;},current:()=>!begun,beforeWrites:()=>begun&&!applied,afterWrites:()=>applied,begin(){if(begun)throw Error('Repeated historical storage-removal admission');begun=true;},commit(){if(!begun||applied)throw Error('Unadmitted historical storage removal');applied=true;},projectPacked:packs=>structuredClone([...packs])}};}
+  if(!isSchema286OrLater(root.schemaVersion)){let begun=false,applied=false;return {ok:true,plan:{writes:[],lostIds:[],get applied(){return applied;},current:()=>!begun,beforeWrites:()=>begun&&!applied,afterWrites:()=>applied,begin(){if(begun)throw Error('Repeated historical storage-removal admission');begun=true;},commit(){if(!begun||applied)throw Error('Unadmitted historical storage removal');applied=true;},projectPacked:packs=>structuredClone([...packs])}};}
   if(registeredCampaign(map)!==root||registeredMapId(map)!==mapId||registeredMap(root,mapId)!==map)return no('Le stockage doit quitter sa vraie carte enregistrée.');
   const retained=new Set([...map.pawns.map(p=>p.id),...(map.wildlife?.animals.map(a=>a.id)??[]),...captureDuckMapRemovedOwners256(map).map(r=>r.animal.id)]);
   const lostIds=map.structures.filter(s=>isShelfKind(s.kind)).map(s=>s.id);
@@ -58,7 +59,7 @@ export function prepareLinkedStorageMapRemoval286(input:CampaignState,map:World,
   const seal=sealRemovalOriginal259(bounded,[],writes),tick=root.tick;
   const rootCurrent=()=>{const now=Object.getOwnPropertyDescriptor(root,'linkedStorage286');return rootBefore?!!now&&now.enumerable===rootBefore.enumerable&&now.configurable===rootBefore.configurable&&now.writable===rootBefore.writable&&Object.hasOwn(now,'value')&&Object.is(now.value,rootBefore.value):!now&&!('linkedStorage286'in root);};
   let begun=false,applied=false;
-  const sameSource=()=>registeredCampaign(map)===root&&registeredMapId(map)===mapId&&root.tick===tick&&Number(root.schemaVersion)===286;
+  const sameSource=()=>registeredCampaign(map)===root&&registeredMapId(map)===mapId&&root.tick===tick&&isSchema286OrLater(root.schemaVersion);
   const beforeWrites=()=>begun&&!applied&&sameSource()&&rootCurrent()&&seal(0)&&removalWritesMutable259(writes);
   const afterWrites=()=>applied&&sameSource()&&seal(2)&&removalWritesApplied259(writes);
   const current=()=>!begun&&sameSource()&&removal.current()&&rootCurrent()&&seal(0);
@@ -89,8 +90,10 @@ export function prepareLinkedStorageMapRemoval286(input:CampaignState,map:World,
  * a furniture-only removal. Historical versions bypass this wrapper. */
 export function composeArchiveLinkedStorageMapRemoval286(input:CampaignState,map:World,mapId:number,base:CampMapRemoved256):CampMapRemoved256 {
  const root=registeredCampaign(input),no=(reason:string):CampMapRemoved256=>({ok:false,reason});
- if(!base.ok||Number(root.schemaVersion)!==286||!map.structures.some(s=>!!s.shelf?.linked286)&&!map.packed.some(p=>!!p.building.shelf?.linked286))return base;
+ if(!base.ok||!isSchema286OrLater(root.schemaVersion))return base;
  try{
+ const preAreas=Number(root.schemaVersion)===287?prepareRemovedMapAreas(root,mapId,new Set((map.allowedAreas??[]).map(a=>a.id))):undefined;
+ if(!map.structures.some(s=>!!s.shelf?.linked286)&&!map.packed.some(p=>!!p.building.shelf?.linked286)&&(!preAreas?.animal287||preAreas.animal287.noop))return base;
   if(!root.worldMaps?.sites.some(s=>s.id===mapId)||registeredCampaign(map)!==root||registeredMapId(map)!==mapId||registeredMap(root,mapId)!==map)return no('Le retrait classique exige sa vraie carte enregistrée.');
   // Those cross-owner drivers require the geographic removal phase; a permit
   // for shelves must never accidentally authorize an occupied casket/pair.
@@ -98,9 +101,9 @@ export function composeArchiveLinkedStorageMapRemoval286(input:CampaignState,map
   if(map.structures.some(s=>isAncientCasket256(s)&&ancientCasketHasContents256(s.casket)||isPlayerCasket271(s)&&s.cryptosleep.human||isShipCasket277(s)&&s.shipCryptosleep277.occupant))return no('Le vrai transfert des caissons occupés exige sa frontière géographique avant ce retrait.');
   const dropping=new Set(map.pawns.filter(hasMapRemovalJob259).map(p=>p.id)),drops=planPawnDrops(map,dropping);if(!drops)return no('Les cargaisons réelles n’ont pas de dépôt admissible avant ce retrait.');
   const result=prepareLinkedStorageMapRemoval286(root,map,mapId,new Set(drops.keys()));if(!result.ok)return no(result.reason);const linked=result.plan;
-  const areas=prepareRemovedMapAreas(root,mapId,new Set((map.allowedAreas??[]).map(a=>a.id))),areaWrites=areaRemovalWrites259(areas),beds=prepareRemovedMapBeds256(root,map,mapId,new Set(drops.keys()));
+  const areas=preAreas??prepareRemovedMapAreas(root,mapId,new Set((map.allowedAreas??[]).map(a=>a.id))),areaWrites=areaRemovalWrites259(areas),beds=prepareRemovedMapBeds256(root,map,mapId,new Set(drops.keys()));
   const finalWrites=[...(beds?.removalWrites259??[]),...linked.writes],tick=root.tick,rng=root.rng,nextId=root.nextId;
-  const source={structures:map.structures,packed:map.packed,pawns:map.pawns,animals:map.wildlife?.animals},sourceSeal=sealRemovalOriginal259(source,areaWrites,finalWrites);
+  const source={structures:map.structures,piles:map.piles,packed:map.packed,pawns:map.pawns,animals:map.wildlife?.animals},sourceSeal=sealRemovalOriginal259(source,areaWrites,finalWrites);
   const dropRows=[...drops].map(([id,cell])=>({id,cell,x:cell.x,z:cell.z})),dropsCurrent=()=>drops.size===dropRows.length&&dropRows.every(r=>drops.get(r.id)===r.cell&&r.cell.x===r.x&&r.cell.z===r.z);
   const mutable=()=>removalWritesMutable259(areaWrites)&&removalWritesMutable259(finalWrites),header=()=>root.tick===tick&&root.rng===rng&&root.nextId===nextId&&registeredCampaign(map)===root&&registeredMapId(map)===mapId&&mutable()&&dropsCurrent();
   let phase:'prepared'|'begun'|'areas'|'beds'|'used'='prepared';
@@ -112,7 +115,7 @@ export function composeArchiveLinkedStorageMapRemoval286(input:CampaignState,map
   }};
   if(!current())return no('Les destinataires du retrait classique ne sont pas mutables ou ont changé.');
   return brandHeldCasketRemoval259(plan,map,admitted,()=>{
-   if(!current())throw Error('Stale classic linked storage MapRemoved begin');linked.begin();phase='begun';
+   if(!current())throw Error('Stale classic linked storage MapRemoved begin');beginRemovedMapAreas287(areas);linked.begin();phase='begun';
    return {drops260:drops,areas(){
     if(phase!=='begun'||!header()||!linked.beforeWrites()||!sourceSeal(0))throw Error('Stale classic storage before area removal');
     commitRemovedMapAreas(areas);phase='areas';if(!admitted())throw Error('Unexpected classic storage area result');

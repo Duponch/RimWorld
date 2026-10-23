@@ -1,3 +1,4 @@
+import {isSchema286OrLater} from './schema-compatibility-257.ts';
 import {advanceShipReactorThreats275} from './ship-reactor-threats-275.ts';
 import {tryCoupleOpportunity285,reconcileCouple285,processCouple285} from './couple-runtime-285.ts';
 import {interruptAnimalStorage282,reconcileAnimalHauls282} from './animal-hauling-282.ts';
@@ -86,7 +87,11 @@ import {applyDesignationCancel,cancelIntentJobs,clearPileHaulFlags} from './desi
 import {isShelfKind,newShelfStorage} from './shelf-storage.ts';
 import {patchShelfPolicy} from './shelf-commands.ts';
 import { applyAllowedAreaCommand } from './allowed-areas.ts';
-import { commitAllowedAreaChange,preflightAllowedAreaChange,reconcileAllowedAreas,reconcileAllowedAreaPawn } from './allowed-area-reconcile.ts';
+import { commitAllowedAreaChange,preflightAllowedAreaChange,reconcileAllowedAreas,reconcileAllowedAreaPawn,type AreaInterruptionPlan } from './allowed-area-reconcile.ts';
+import {applyAnimalAreaAssignmentCommand287,prepareAnimalAreaCellsEdit287,prepareAnimalAreaDefinitionRemoval287,type AnimalAreaCommandPhase287} from './animal-area-commands-287.ts';
+import {animalAreaHumanPhaseMutable287,animalAreaHomePhaseMutable287} from './animal-area-human-admission-287.ts';
+import {removalWritesMutable259} from './map-removal-writes-259.ts';
+import {prepareRemovedMapAreas} from './pawn-map-areas.ts';
 import { processReturnToAllowedArea } from './allowed-area-navigation.ts';
 import { searchAllowed } from './work-planner.ts';
 import { deepDrillingUnlocked,groundScannerUnlocked,nutrientPasteUnlocked,biofuelRefiningUnlocked } from './research.ts';
@@ -338,10 +343,72 @@ const copyStorageConditions=(settings:StorageSettings)=>({
   ...(settings.quality!==undefined?{quality:{...settings.quality}}:{}),
   ...(settings.hitPoints!==undefined?{hitPoints:{...settings.hitPoints}}:{}),
 });
+/** The existing human provider retains its own work/clinical notifications;
+ * new animal promises share its finite physical drop plan before any write. */
+function applyAnimalAwareAreaCommand287(world:World,command:import('./types.ts').AllowedAreaCommand):CommandResult {
+  type Combined={human:AreaInterruptionPlan;animal?:Extract<AnimalAreaCommandPhase287,{ok:true}>};
+  return applyAllowedAreaCommand(world,command,{
+    preflight(next,affected){
+      const human=preflightAllowedAreaChange(world,next,affected);if(human===false)return false;
+      if(!animalAreaHumanPhaseMutable287(world,affected,human.ids))return false;
+      if(command.type!=='allowed-area-paint')return {human} satisfies Combined;
+      const cells=next.allowedAreas?.find(a=>a.id===command.areaId)?.cells;
+      if(!cells||!removalWritesMutable259([{object:world,key:'allowedAreas',present:true,value:next.allowedAreas}]))return false;
+      const animal=prepareAnimalAreaCellsEdit287(world,{kind:'allowed',areaId:command.areaId},cells,human.drops);
+      if(!animal.ok||!animal.begin()||!animal.adoptOwner())return false;
+      return {human,animal} satisfies Combined;
+    },
+    reconcile(w,affected,plan){
+      if(!plan){commitAllowedAreaChange(w,affected,undefined);return;}const prepared=plan as Combined;
+      commitAllowedAreaChange(w,affected,prepared.human);
+      if(prepared.animal&&!prepared.animal.adoptRuntime())throw Error('Admitted animal area painting failed');
+    },
+    prepareDelete(w,areaId){
+      const mapId=registeredMapId(w);if(mapId===undefined||!removalWritesMutable259([{object:w,key:'allowedAreas',present:(w.allowedAreas?.length??0)>1,value:undefined}]))return false;
+      if(!animalAreaHumanPhaseMutable287(w,w.pawns.filter(p=>p.allowedAreaId===areaId),new Set()))return false;
+      const humans=prepareRemovedMapAreas(registeredCampaign(w),mapId,new Set([areaId]),false);
+      for(const row of humans.updates){const p=row.pawn;
+        const changesDictionary=p.mapAreas?.assignments.some(a=>a.mapId===mapId&&a.areaId===areaId);
+        if(changesDictionary&&!removalWritesMutable259([{object:p,key:'mapAreas',present:true,value:undefined}]))return false;
+        if(p.allowedAreaId===areaId&&!removalWritesMutable259([{object:p,key:'allowedAreaId',present:false},
+          ...(p.allowedAreaReturn?[{object:p,key:'allowedAreaReturn',present:false},{object:p,key:'path',present:true,value:undefined},{object:p,key:'planCooldown',present:true,value:0},{object:p,key:'state',present:true,value:'idle'}]:[])]))return false;
+      }
+      const animal=prepareAnimalAreaDefinitionRemoval287(w,areaId);if(!animal.ok||!animal.begin())return false;return animal;
+    },
+    commitDelete(_w,plan){const animal=plan as Extract<AnimalAreaCommandPhase287,{ok:true}>;
+      if(!animal.adoptOwner()||!animal.adoptRuntime())throw Error('Admitted animal area definition removal failed');},
+  })!;
+}
+function applyAnimalHomeArea287(world:World,command:AreaCommand,selected:readonly number[],drops:DropPlan):CommandResult {
+  const cells=new Set(world.home);for(const id of selected){if(command.action==='home')cells.add(id);else cells.delete(id);}
+  const future=[...cells].sort((a,b)=>a-b),removed=new Set(command.action==='remove-home'?selected:[]);
+  const jobs=new Set(world.jobs.filter(j=>j.fixBreakdown&&removed.has(j.z*world.width+j.x)).map(j=>j.id));
+  const humans=world.pawns.filter(p=>p.jobId!==null&&jobs.has(p.jobId)||!!p.haul&&jobs.has(constructionHaulId(p.haul.destination)??-1));
+  const delivered=world.piles.filter(p=>p.owner.type==='job'&&jobs.has(p.owner.jobId));
+  const targets=[{object:world,key:'home',present:future.length>0,value:future},{object:world,key:'stock',present:true,value:undefined},{object:world,key:'jobs',present:true,value:undefined},
+    ...delivered.map(p=>({object:p,key:'owner',present:true,value:undefined})),
+    ...world.jobs.map(j=>({object:j,key:'escrow',present:true,value:undefined})),
+    ...world.pawns.map(p=>({object:p.orders,key:'queue',present:true,value:undefined})),
+    ...humans.flatMap(p=>['jobId','haul','path','planCooldown','state'].map(key=>({object:p,key,present:true,value:undefined})))];
+  if(!removalWritesMutable259(targets)||!animalAreaHumanPhaseMutable287(world,humans,new Set(humans.map(p=>p.id)))||!animalAreaHomePhaseMutable287(world))return refusal('occupied','Les travaux concernés ne peuvent pas être libérés.');
+  const animal=prepareAnimalAreaCellsEdit287(world,{kind:'home'},future,drops);
+  if(!animal.ok)return refusal('occupied',animal.reason);if(!animal.begin()||!animal.adoptOwner())return refusal('occupied','Les détenteurs ont changé avant la peinture.');
+  // All physical choices were admitted against the original common floor.
+  for(const pawn of humans)if(!releaseWork(world,pawn,drops))throw Error('Admitted Home worker release failed');
+  for(const pile of delivered){const owner=pile.owner,job=owner.type==='job'?world.jobs.find(j=>j.id===owner.jobId):undefined;
+    if(!job||!commitDrop(world,pile,job,drops))throw Error('Admitted Home job material release failed');}
+  if(jobs.size){world.jobs=world.jobs.filter(j=>!jobs.has(j.id));for(const pawn of world.pawns)pawn.orders.queue=pawn.orders.queue.filter(order=>typeof order!=='number'||!jobs.has(order));}
+  if(future.length)world.home=future;else delete world.home;
+  if(!animal.adoptRuntime())throw Error('Admitted Home animal phase failed');
+  reconcileBreakdownJobs(world);reconcileRepairs(world);wakePlanners(world);refreshStock(world);
+  event(world,'command',`Rectangle : ${selected.length} case(s) de foyer modifiée(s).`);
+  return {ok:true,affected:selected.length};
+}
 function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandResult {
   const selection = queryArea(world, command);
   if (!selection.ok) return selection;
   if (!selection.cells.length) return refusal('missing-target', 'Aucune case compatible dans ce rectangle.');
+  if(Number(world.schemaVersion)===287&&(command.action==='home'||command.action==='remove-home'))return applyAnimalHomeArea287(world,command,selection.cells,drops);
   if(command.action==='cancel'){
     const cells=new Set(selection.cells);
     const jobs=new Set(world.jobs.filter(j=>[...footprintCells(j),...furnitureSourceCells(world,j)].some(c=>cells.has(c.z*world.width+c.x))).map(j=>j.id));
@@ -577,6 +644,8 @@ export function applyCommand(world: World, command: Command,caravans?:import('./
 }
 type LocalCommand=Exclude<Command,SecondarySiteCommand>;
 function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
+  if(Number(world.schemaVersion)===287&&command?.type==='animal-area-assign')return applyAnimalAreaAssignmentCommand287(world,command);
+  if(Number(world.schemaVersion)===287&&(command?.type==='allowed-area-create'||command?.type==='allowed-area-settings'||command?.type==='allowed-area-paint'||command?.type==='allowed-area-delete'||command?.type==='assign-allowed-area'))return applyAnimalAwareAreaCommand287(world,command);
   if(command&&typeof command==='object'&&hiddenExplorationCommandTarget256(world,command))return refusal('missing-target','Cette cible n’est pas connue sur la carte actuelle.');
   if(command.type==='material-forbid')return applyMaterialPermission256(world,command);
   if(command.type==='egg-forbid')return applyEggPermission256(world,command);
@@ -586,10 +655,11 @@ function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
   if(command.type==='apparel-policy-update')return applyApparelPolicyUpdate(world,command);
   if(command.type==='apparel-policy-copy'||command.type==='apparel-policy-rename')return applyApparelPolicyName(world,command);
   const result=applyCommandInternal(world,command);
+  if(Number(world.schemaVersion)===287&&command.type==='area'&&(command.action==='home'||command.action==='remove-home'))return result;
   // These cold metadata transactions already reconcile their exact affected
   // destinations. A no-op must not advance unrelated services or clocks.
   if(command.type==='shelf-link'||command.type==='shelf-unlink'||command.type==='shelf-group-rename'
-    ||world.schemaVersion===286&&command.type==='shelf-policy')return result;
+    ||isSchema286OrLater(world.schemaVersion)&&command.type==='shelf-policy')return result;
   if(result.ok){
     reconcileSmoothFloorJobs281(world);
     reconcileAllowedAreas(world);
@@ -605,6 +675,7 @@ function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
 function applyCommandInternal(world: World, command: Exclude<LocalCommand,import('./world-map-state.ts').WorldMapCommand|{type:'apparel-policy-update'|'apparel-policy-copy'|'apparel-policy-rename'|'egg-forbid'|'material-forbid'}>): CommandResult {
   if(command.type==='trade-request-answer'||command.type==='trade-request-dismiss'||command.type==='trade-request-fulfill')return applyTradeRequestCommand284(world,command);
   if (!command || typeof command !== 'object') return refusal('invalid-command', 'Commande invalide.');
+  if(command.type==='animal-area-assign')return applyAnimalAreaAssignmentCommand287(world,command);
   if(command.type==='group-reform'||command.type==='group-split'||command.type==='group-merge'||command.type==='group-carry-sick')return refusal('invalid-command','Cette commande exige le registre et le contexte réel de caravane.');
   if(command.type==='cancel-job'||command.type==='cancel-resource'||command.type==='cancel-pile')return applyDesignationCancel(world,command)??refusal('invalid-command','Annulation inconnue.');
   if(command.type==='extract-tree'||command.type==='replant-tree')return applyTreeCommand(world,command)!;
@@ -765,7 +836,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
   }
   if(command.type==='install')return installCommand(world,command);
   if(command.type==='shelf-link'||command.type==='shelf-unlink'||command.type==='shelf-group-rename'
-    ||world.schemaVersion===286&&command.type==='shelf-policy'){
+    ||isSchema286OrLater(world.schemaVersion)&&command.type==='shelf-policy'){
     const policy=prepareLinkedStorageCommand286(world,command);
     if(!policy.ok)return refusal('invalid-storage',policy.reason);
     if(policy.noop)return {ok:true,affected:0};

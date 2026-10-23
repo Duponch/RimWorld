@@ -77,6 +77,7 @@ export function prepareWorldPawnEntryEffects256(input:WorldPawnOwner256,atCore:n
   if(row.kind==='animal'&&row.actor.domestic&&factionId!==registry.playerFactionId&&(options.version!==259&&options.version!==260&&(options.version!==261&&(Number(options.version)!==262&&!isSchema263OrLater(Number(options.version))))))return {ok:false,reason:'Actual SetFaction of a domesticated animal needs its non-player domestic owner adapter'};
  }
  row.factionId=factionId;
+ if(Number(options.version)===287&&row.kind==='animal'&&factionId!==input.factionId){delete row.actor.animalMapAreas287;delete row.actor.animalAreaReturn287;}
  if(row.kind==='human'&&row.actor.worldAffiliation259){row.actor.worldAffiliation259={...row.actor.worldAffiliation259,factionId};if(factionId!==input.factionId){const def=registry.factions.find(f=>f.id===factionId)?.def;row.actor.faction=def&&WORLD_FACTION_DEFINITIONS_256[def].player?'colony':def&&(WORLD_FACTION_DEFINITIONS_256[def].permanentEnemy||WORLD_FACTION_DEFINITIONS_256[def].naturalEnemy)?'outlaws':'outlanders';}}
  // Only the actual caller supplying Free may produce this durable authority.
  delete row.free;if(options.situation==='Free'&&!terminalWorldPawn256(row)&&!row.startingPawnLeftBehind)row.free=true;

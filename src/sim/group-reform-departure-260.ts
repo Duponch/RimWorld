@@ -89,7 +89,7 @@ export function prepareReformDeparture260(w:World,input:ReformDepartureInput260)
   const d=structuredClone(a);rememberActorBedDeparture256(d,mapId,bed.refs,w.schemaVersion);
   if(d.mapBed!==undefined){const same=a.mapBed&&d.mapBed.bedId===a.mapBed.bedId&&d.mapBed.mapId===a.mapBed.mapId;put(a,'mapBed',same?a.mapBed:d.mapBed);}else if(a.mapBed!==undefined)del(a,'mapBed');
   if(a.domestic){del(a.domestic,'bedId');del(a.domestic,'penMarkerId');}if(a.wander)del(a.wander,'job');
-  for(const key of ['motion','animalRest','meal','eggLay','flight','stagger','stun','sleepUntilCore'])del(a,key);
+  for(const key of ['motion','animalRest','meal','eggLay','flight','stagger','stun','sleepUntilCore',...(Number(w.schemaVersion)===287?['animalAreaReturn287']:[])])del(a,key);
   put(a,'path',[]);if(a.state!=='downed')put(a,'state','idle');put(a,'nextDecision',w.tick);
  }
  // Release the same work/equipment holders to the cells already preflighted.

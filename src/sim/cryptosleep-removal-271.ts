@@ -1,3 +1,4 @@
+import {isSchema286OrLater} from './schema-compatibility-257.ts';
 import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {prepareLinkedCasketVanish286} from './linked-storage-casket-vanish-286.ts';
 import {isPlayerCasket271,newCryptosleepHolder271,type PlayerCasket271} from './cryptosleep-state-271.ts';
@@ -164,9 +165,9 @@ export function planCryptosleepRemoval271(w:World,s:Structure,mode:'deconstruct'
  }}catch(error){return no(error instanceof Error?error.message:String(error));}
  // V286 counts the actual packed buildings lost with the terminal holder.
  // Historical actions retain their original ledger branch.
- const losesItems=!!vanish&&(w.schemaVersion!==286||Object.keys(vanish.quantities).length>0);
- const losesPossessions=!!vanish&&(w.schemaVersion!==286||losesItems||heldPacks.length>0||vanish.fuelTicksLost>0||vanish.fuelTicksBurned>0||vanish.batteryEnergyLost>0);
- const priorDestroyed=w.destroyed??{count:0,lost:{}},destroyed={...priorDestroyed,count:priorDestroyed.count+(mode==='kill-finalize'?1:0)+(w.schemaVersion===286&&vanish?heldPacks.length:0),lost:{...priorDestroyed.lost},...losesItems?{items:{...priorDestroyed.items}}:{}};
+ const losesItems=!!vanish&&(!isSchema286OrLater(w.schemaVersion)||Object.keys(vanish.quantities).length>0);
+ const losesPossessions=!!vanish&&(!isSchema286OrLater(w.schemaVersion)||losesItems||heldPacks.length>0||vanish.fuelTicksLost>0||vanish.fuelTicksBurned>0||vanish.batteryEnergyLost>0);
+ const priorDestroyed=w.destroyed??{count:0,lost:{}},destroyed={...priorDestroyed,count:priorDestroyed.count+(mode==='kill-finalize'?1:0)+(isSchema286OrLater(w.schemaVersion)&&vanish?heldPacks.length:0),lost:{...priorDestroyed.lost},...losesItems?{items:{...priorDestroyed.items}}:{}};
  if(mode!=='deconstruct'&&mode!=='vanish')for(const cost of constructionRecipe(c).ingredients){const key=cost.item as keyof typeof destroyed.lost;destroyed.lost[key]=(destroyed.lost[key]??0)+cost.quantity-(returned.get(cost.item)??0);}
  if(vanish){
   for(const [item,quantity]of Object.entries(vanish.quantities))destroyed.items![item as ItemId]=(destroyed.items![item as ItemId]??0)+quantity!;

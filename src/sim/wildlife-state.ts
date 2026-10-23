@@ -6,6 +6,8 @@ import type { CaravanRestMark266 } from './caravan-rest-state-266.ts';
 import { ANIMAL_SPECIES,type AnimalSpeciesId,type FaunaBiomeId } from './animal-species.ts';
 
 export interface WildAnimal extends Cell { shipCryptosleepHeldAt277?:number; filthFeet?:import('./filth-rules.ts').FilthFeet; hiveThink?:import('./cave-hive-think-256.ts').HiveThinkData256; hiveJob?:import('./cave-hive-lord-256.ts').HiveDutyJob256; hive?:import('./cave-insect-constructor-256.ts').HiveInsectMembership256; startingPet?:import("./starting-pet-state-256.ts").StartingPetState256; arrivalRotation?:import('./types.ts').Orientation; growthTracker?:import("./animal-growth-runtime-256.ts").AnimalGrowthTracker256; caravanCarrySick?:boolean; corpseDamage?:number;
+  animalMapAreas287?:import('./animal-area-state-287.ts').AnimalMapAreas287;
+  animalAreaReturn287?:import('./animal-area-state-287.ts').AnimalAreaReturn287;
   /** Last actual caravan rest; retained history, never a local rest promise. */
   caravanRest?:CaravanRestMark266;
   wander?:import('./animal-condition-mental-state-256.ts').AnimalWanderState256;

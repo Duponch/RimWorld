@@ -6,7 +6,7 @@ import {isShipCasket277} from './ship-casket-state-277.ts';
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {prepareHeldPlayerCasketRemoval271,heldPlayerCasketLivingIds271} from './world-pawn-player-casket-271.ts';
 import {isPlayerCasket271} from './cryptosleep-state-271.ts';
-import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
+import {isSchema263OrLater,isSchema286OrLater} from '../sim/schema-compatibility-257.ts';
 import {GEOGRAPHIC_FAUNA_PROFILE_256} from './geographic-fauna-profile-256.ts';
 import type {ReformDeparture260} from './group-reform-departure-260.ts';
 export type {ReformDeparture260} from './group-reform-departure-260.ts';
@@ -37,7 +37,7 @@ import {releaseAllowedAreaReturn} from './allowed-area-state.ts';
 import {cancelAutomaticCombat} from './automatic-combat-state.ts';
 import {cancelHunting} from './hunting-state.ts';
 import {unclaimDetachedActorBed256} from './actor-map-bed-256.ts';
-import {prepareRemovedMapAreas,removedMapAreasCurrent,commitRemovedMapAreas} from './pawn-map-areas.ts';
+import {prepareRemovedMapAreas,removedMapAreasCurrent,commitRemovedMapAreas,beginRemovedMapAreas287} from './pawn-map-areas.ts';
 import {cancelCryptosleepVomit256} from './cryptosleep-sickness-256.ts';
 import {cancelToxicVomit256} from './toxic-buildup-256.ts';
 import {validWorldAffiliationForeignKeys259} from './world-affiliation-259.ts';
@@ -72,10 +72,10 @@ export function prepareMapRemoved259(input:CampaignState,map:World,mapId:number,
  const lostColonists=captures.map(s=>s.pawn!).filter(p=>isColonist(p)&&!p.prisoner&&!p.visitor&&p.state!=='dead');
  const animals=[...(map.wildlife?.animals??[]).filter(alive).map(animal=>({animal,clock:map.tick})),...captureDuckMapRemovedOwners256(map)].filter(r=>!departure?.ids.has(r.animal.id));
  const mechanical=map.mechanoids??[];
- const localLinked=Number(root.schemaVersion)===286&&(map.structures.some(s=>!!s.shelf?.linked286)||map.packed.some(p=>!!p.building.shelf?.linked286));
+ const localLinked=isSchema286OrLater(root.schemaVersion)&&(map.structures.some(s=>!!s.shelf?.linked286)||map.packed.some(p=>!!p.building.shelf?.linked286));
  if(!departure&&!captures.length&&!animals.length&&!mechanical.length&&!map.structures.some(c=>isAncientCasket256(c)&&ancientCasketHasContents256(c.casket)||isPlayerCasket271(c)&&c.cryptosleep.human||isShipCasket277(c)&&c.shipCryptosleep277.occupant)){
   const archiveOnly:CampMapRemoved256={ok:true,current:()=>true,commit(){}};
-  return localLinked?composeArchiveLinkedStorageMapRemoval286(root,map,mapId,archiveOnly):archiveOnly;
+  return composeArchiveLinkedStorageMapRemoval286(root,map,mapId,archiveOnly);
  }
  const state=root.worldPawns,factions=root.worldFactions;if(!state||!factions)return no('Les propriétaires WorldPawns et factions réellement nés manquent ; aucun passé n’est créé.');
  const mechanicalExtras=Object.getOwnPropertyDescriptor(map.raids??{},'extraMechActive261');
@@ -126,7 +126,7 @@ export function prepareMapRemoved259(input:CampaignState,map:World,mapId:number,
  };
  try{
    for(const s of captures){const p=s.pawn!;const actor=cleanHumanDraft(map,p,areaByPawn.get(p),couple.project(p));add(p,'human',actor,actor.worldAffiliation259!.factionId);}
-  for(const {animal:a,clock} of animals){if(clock!==map.tick||!a.growthTracker||!a.wander)throw Error('L’animal restant n’a pas sa vraie horloge ou son propriétaire prospectif complet.');const actor=structuredClone(a);cleanMapRemovedAnimal256(actor,map.tick);unclaimDetachedActorBed256(actor);add(a,'animal',actor,a.domestic?factions.playerFactionId:null);}
+  for(const {animal:a,clock} of animals){if(clock!==map.tick||!a.growthTracker||!a.wander)throw Error('L’animal restant n’a pas sa vraie horloge ou son propriétaire prospectif complet.');const actor=structuredClone(a);areaPlan.animal287?.projectInto(a,actor);cleanMapRemovedAnimal256(actor,map.tick);unclaimDetachedActorBed256(actor);add(a,'animal',actor,a.domestic?factions.playerFactionId:null);}
    for(const m of mechanical){const actor=structuredClone(m);cleanMapRemovedMechanical259(actor,map.tick);add(m,'mechanical',actor,m.worldFaction259!.factionId);}
  }catch(e){return no(e instanceof Error?e.message:String(e));}
  let held:ReturnType<typeof prepareHeldCasketRemoval259>,playerHeld:ReturnType<typeof prepareHeldPlayerCasketRemoval271>,shipHeld:ReturnType<typeof prepareHeldShipCasketRemoval277>;try{held=prepareHeldCasketRemoval259(root,map,mapId,absolute,areaWrites,bedWrites);playerHeld=prepareHeldPlayerCasketRemoval271(root,map,mapId,absolute,areaWrites,bedWrites);shipHeld=prepareHeldShipCasketRemoval277(root,map,mapId,absolute,areaWrites,bedWrites);}catch(e){return no(e instanceof Error?e.message:String(e));}
@@ -159,7 +159,7 @@ export function prepareMapRemoved259(input:CampaignState,map:World,mapId:number,
  }};
  return brandHeldCasketRemoval259(plan,map,detachCurrent,()=>{
   // Consumed while every true source is still unchanged, before Reform writes.
-  if(!plan.ok||!plan.current())throw Error('Stale actual MapRemoved begin');linked.begin();phase='begun';
+  if(!plan.ok||!plan.current())throw Error('Stale actual MapRemoved begin');beginRemovedMapAreas287(areaPlan);linked.begin();phase='begun';
   return {...departure?{drops260:dropPlan}:{},departed260(){if(!departure||phase!=='begun')throw Error('Unexpected Reform departure phase');departed=true;phase='departed';if(!departureCurrent())throw Error('Unexpected admitted Reform departure');},
    areas(){if(departure?phase!=='departed'||!departureCurrent():phase!=='begun'||!initialCurrent())throw Error('Stale MapRemoved before area commit');commitRemovedMapAreas(areaPlan);held.confirmAreas();playerHeld.confirmAreas();shipHeld.confirmAreas();phase='areas';if(!detachCurrent())throw Error('Unexpected MapRemoved area result');},
    releaseCouples285(){if(!detachCurrent()||!removalWritesMutable259(couple.writes))throw Error('Stale MapRemoved couple release');for(const write of couple.writes){if(write.present){if(!Reflect.set(write.object,write.key,write.value))throw Error('Admitted removal couple write failed');}else if(!Reflect.deleteProperty(write.object,write.key))throw Error('Admitted removal couple deletion failed');}phase='released';if(!coupleAreaSeal(2))throw Error('Unexpected removal couple result');},

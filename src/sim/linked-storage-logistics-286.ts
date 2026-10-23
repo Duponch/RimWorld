@@ -1,3 +1,4 @@
+import {isSchema286OrLater} from './schema-compatibility-257.ts';
 import {dropRetainingIdentity} from './ground-placement.ts';
 import {hasTravellingCargo} from './interrupted-cargo.ts';
 import {clearReleasedPawnAssignments259,planSelectedDrops} from './work-release.ts';
@@ -102,7 +103,7 @@ function prepareWrites286(world:World,ids:ReadonlySet<number>):{writes:MapRemova
 /** Prepare once for the union of changed installed cells. A linked packed
  * member is policy data, never a local destination under its old coordinates. */
 export function prepareLinkedStorageLogistics286(world:World,changedCellIds:readonly number[]):LinkedStorageLogisticsResult286 {
- if(world.schemaVersion!==286||changedCellIds.some(id=>!Number.isSafeInteger(id)||id<1))return {ok:false,reason:'Réévaluation du stockage indisponible pour ce format.'};
+ if(!isSchema286OrLater(world.schemaVersion)||changedCellIds.some(id=>!Number.isSafeInteger(id)||id<1))return {ok:false,reason:'Réévaluation du stockage indisponible pour ce format.'};
  const ids=new Set(changedCellIds),at=world.tick,seed=world.seed,rng=world.rng;
  let used=false;
  if(!ids.size)return {ok:true,current:()=>!used,commit(){if(used)return false;used=true;return true;}};
@@ -120,7 +121,7 @@ export function prepareLinkedStorageLogistics286(world:World,changedCellIds:read
   // group policy is legitimately adopted just before this physical commit.
   const seal=sealRemovalOriginal259({pawns:before.pawns,piles:before.piles,jobs:before.jobs,animals:before.animals,
    packedOwners:ownerStamps.map(p=>p.owner)},admissions,[]);
-  const current=()=>!used&&world.schemaVersion===286&&world.tick===at&&world.seed===seed&&world.rng===rng
+  const current=()=>!used&&isSchema286OrLater(world.schemaVersion)&&world.tick===at&&world.seed===seed&&world.rng===rng
    &&world.pawns===before.pawns&&world.piles===before.piles&&world.jobs===before.jobs&&world.packed===before.packed&&world.wildlife?.animals===before.animals
    &&ownerStamps.every(p=>world.packed.includes(p.pack)&&p.pack.owner===p.owner&&p.pack.building===p.building)
    &&world.structures.length===layout.length&&layout.every((row,i)=>world.structures[i]===row.original

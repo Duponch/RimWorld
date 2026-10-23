@@ -10,6 +10,9 @@ export interface AllowedAreaCommandHooks {
   /** Originals own the physical cargo. Read future assignments through next. */
   preflight?(next:World,affected:readonly Pawn[]):false|unknown;
   reconcile?(world:World,affected:readonly Pawn[],plan:unknown):void;
+  /** Prospective extra owners are admitted before any definition/human write. */
+  prepareDelete?(world:World,areaId:number):false|unknown;
+  commitDelete?(world:World,plan:unknown):void;
 }
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,lo=1,hi=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=lo&&Number(v)<=hi;
@@ -62,11 +65,13 @@ export function applyAllowedAreaCommand(world:World,input:unknown,hooks:AllowedA
       const n=z*world.width+x;if(command.enabled)cells.add(n);else cells.delete(n);
     }
     const replacement={...area,cells:[...cells].sort((a,b)=>a-b)},nextAreas=areas.map(a=>a===area?replacement:a);
+    if(Number(world.schemaVersion)===287&&replacement.cells.length===area.cells.length&&replacement.cells.every((n,i)=>n===area.cells[i]))return {ok:true,affected:0};
     const affected=world.pawns.filter(p=>p.allowedAreaId===area.id),next={...world,allowedAreas:nextAreas,pawns:world.pawns.map(p=>affected.includes(p)?withoutReturn(p):p)};
     const plan=hooks.preflight?.(next,affected);if(plan===false)return refusal('Pas de place pour conserver le chargement interrompu.','occupied');
     world.allowedAreas=nextAreas;for(const p of affected)clearReturn(p);hooks.reconcile?.(world,affected,plan);return {ok:true,affected:replacement.cells.length};
   }
   if(!keys(c,['type','areaId']))return refusal('Suppression de zone invalide.');
+  const deletePlan=hooks.prepareDelete?.(world,area.id);if(deletePlan===false)return refusal('Les détenteurs ne peuvent pas libérer cette zone.','occupied');
   const owners=captureHumanOwners(world).pawnOwners,affected=owners.filter(s=>s.pawn!.allowedAreaId===area.id).map(s=>s.pawn!);
   const nextAreas=areas.filter(a=>a!==area);
   // Deletion removes only this real map/area reference, including off-map owners.
@@ -74,7 +79,7 @@ export function applyAllowedAreaCommand(world:World,input:unknown,hooks:AllowedA
   // Deletion makes every affected owner unlimited; no work becomes forbidden.
   if(nextAreas.length)world.allowedAreas=nextAreas;else delete world.allowedAreas;
   for(const p of affected){delete p.allowedAreaId;clearReturn(p);}
-  hooks.reconcile?.(world,affected,undefined);return {ok:true,affected:affected.length};
+  hooks.reconcile?.(world,affected,undefined);hooks.commitDelete?.(world,deletePlan);return {ok:true,affected:affected.length};
 }
 const withoutReturn=(p:Pawn):Pawn=>{const next={...p};delete next.allowedAreaReturn;return next;};
 function clearReturn(p:Pawn):void {

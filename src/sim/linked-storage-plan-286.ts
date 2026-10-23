@@ -1,3 +1,4 @@
+import {isSchema286OrLater} from './schema-compatibility-257.ts';
 import {captureLinkedStorageOwners286,type LinkedStorageOwner286,type LinkedStorageOwners286} from './linked-storage-owners-286.ts';
 import {validLinkedStorageWorld286,validLinkedStorageRegistryShape286} from './linked-storage-save-286.ts';
 import {cloneLinkedShelfPolicy286,sameLinkedShelfPolicy286,patchLinkedShelfPolicy286,validLinkedShelfPolicy286} from './linked-storage-policy-286.ts';
@@ -37,7 +38,7 @@ function rootFieldCurrent(root:CampaignState,key:string):()=>boolean{
  * group, no terrain is copied, and no physical cargo is moved by this plan. */
 function prepare(input:CampaignState,owners:LinkedStorageOwners286,change:(draft:Draft)=>string|undefined,authority:()=>boolean):LinkedStoragePlanResult286{
  const root=owners.root;
- if(Number(root.schemaVersion)!==286||!owners.valid||!validLinkedStorageWorld286(root,owners)||!owners.members.every(o=>validLinkedShelfPolicy286(o.building.shelf?.settings)))return refused('Propriétaires des réglages liés invalides.');
+ if(!isSchema286OrLater(root.schemaVersion)||!owners.valid||!validLinkedStorageWorld286(root,owners)||!owners.members.every(o=>validLinkedShelfPolicy286(o.building.shelf?.settings)))return refused('Propriétaires des réglages liés invalides.');
  const original=root.linkedStorage286,registryCurrent=rootFieldCurrent(root,'linkedStorage286');
  const draft=new Draft(owners,original);const reason=change(draft);if(reason)return refused(reason);
  const writes=draft.writes();
@@ -53,7 +54,7 @@ function prepare(input:CampaignState,owners:LinkedStorageOwners286,change:(draft
  try{seal=sealRemovalOriginal259({registry:original,buildings:owners.members.map(m=>m.building),next:writes.map(w=>w.value),changedCellIds},[],[]);}catch{return refused('Les réglages doivent être des données ordinaires.');}
  const writesCurrent=()=>writes.length===writeOriginals.length&&writes.every((w,i)=>{const old=writeOriginals[i]!;return Reflect.ownKeys(w).length===Reflect.ownKeys(old).length&&Reflect.ownKeys(old).every(k=>{const d=Object.getOwnPropertyDescriptor(w,k);return !!d&&Object.hasOwn(d,'value')&&d.enumerable===true&&Object.is(d.value,Reflect.get(old,k));});});
  let consumed=false;
- const current=()=>{try{return !consumed&&registeredCampaign(input)===root&&Number(root.schemaVersion)===286&&registryCurrent()&&owners.current()&&authority()&&seal(0)&&writesCurrent()&&removalWritesMutable259(writes);}catch{return false;}};
+ const current=()=>{try{return !consumed&&registeredCampaign(input)===root&&isSchema286OrLater(root.schemaVersion)&&registryCurrent()&&owners.current()&&authority()&&seal(0)&&writesCurrent()&&removalWritesMutable259(writes);}catch{return false;}};
  if(!current())return refused('Les étagères ont changé pendant la préparation.');
  return {ok:true,writes,changedCellIds,noop:writes.length===0,current,commit(){if(!current())return false;consumed=true;for(const w of writes){if(w.present){if(Object.hasOwn(w.object,w.key))Reflect.set(w.object,w.key,w.value);else Object.defineProperty(w.object,w.key,{value:w.value,writable:true,enumerable:true,configurable:true});}else Reflect.deleteProperty(w.object,w.key);}return true;}};
 }
@@ -128,7 +129,7 @@ class Draft {
 }
 export function prepareLinkedStorageCommand286(world:World,command:LinkedStorageCommand286|LinkedStoragePolicyCommand286):LinkedStoragePlanResult286{
  try{
-  if(Number(world.schemaVersion)!==286||!plain(command)||!dataFields(command))return refused('Réglages liés indisponibles.');
+  if(!isSchema286OrLater(world.schemaVersion)||!plain(command)||!dataFields(command))return refused('Réglages liés indisponibles.');
   const owners=captureLinkedStorageOwners286(world),mapId=registeredMapId(world);
   const local=(id:number)=>{const owner=owners.byId.get(id);return owner?.installed&&owner.mapId===mapId&&world.structures.includes(owner.building)&&targetBuildingPlayerUse263(world,owner.building)?owner:undefined;};
   let selected:LinkedStorageOwner286[]=[];

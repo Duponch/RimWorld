@@ -24,6 +24,8 @@ import { slaughterRefusal } from '../sim/animal-slaughter';
 import { mountAnimalRescueControls,updateAnimalRescueControls } from './animal-rescue-inspection';
 import {isSchema282OrLater} from '../sim/schema-compatibility-257';
 import {readAnimalTraining282,trainingRefusal282,nextTrainable282,ANIMAL_TRAINING_LABELS_282,ANIMAL_TRAINING_INTERVAL_CORE_282} from '../sim/animal-training-282';
+import {createAnimalAreaControls287,type AnimalAreaActions287} from './animal-area-287';
+import {supportsAnimalAreas287,currentAnimalAreaChoice287} from '../sim/animal-area-policy-287';
 
 type TrainingChoice282='obedience'|'haul';
 
@@ -35,6 +37,7 @@ export interface AnimalInspectorOptions {
   onRescue?: (pawnId:number,animalId:number) => void;
   onCarePolicy?: (animalId: number, care: MedicalCare) => void;
   onTraining?: (animalId:number,skill:TrainingChoice282,wanted:boolean) => void;
+  animalAreas?:AnimalAreaActions287;
   onClose: () => void;
 }
 export interface AnimalInspectorView {
@@ -156,7 +159,10 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
   const handling=tameReason??(qualified
     ? `Animaux ${minimum} minimum · deux nourrissages physiques par tentative.`
     : `Aucun dresseur actif de niveau Animaux ${minimum} ; la désignation attendra un colon qualifié et de la nourriture.`);
-  const penStatus=animalPenStatus(world,animal);
+  const areaAvailable=Number(world.schemaVersion)===287&&supportsAnimalAreas287(animal.species);
+  const penStatus=areaAvailable?undefined:animalPenStatus(world,animal);
+  const choice=areaAvailable?currentAnimalAreaChoice287(world,animal):null;
+  const areaLabel=choice===null?'Sans restriction':choice.kind==='home'?'Zone de foyer':world.allowedAreas?.find(a=>a.id===choice.areaId)?.label??'Zone indisponible';
   const product=animal.domestic?productKind(animal):undefined;
   const productLabel=product==='milk'?'Lait':'Laine de mufalo';
   const productWork=product==='milk'?'Traite':'Tonte';
@@ -201,6 +207,7 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
       `Besoins alimentaires quotidiens : ${animalFoodPerDay(animal).toLocaleString('fr-FR')} unité de nutrition`,
       animal.domestic?`Familiarité : ${animal.domestic.tameness} / 5`:`Apprivoisement : ${handling}`,
       ...(penStatus?[`Enclos : ${penStatus}`]:[]),
+      ...(areaAvailable&&animal.domestic?[`Zone autorisée : ${areaLabel}`]:[]),
       ...parentage,
       ...pregnancy,
       ...productLines,
@@ -232,11 +239,14 @@ function selectTab(root: HTMLElement, tab: AnimalInspectorTab): void {
 }
 
 /** Mount once per switch into animal selection. Updates keep tabs and their scroll state. */
+const animalAreaInspectors287=new WeakMap<HTMLElement,{actions:AnimalAreaActions287;animalId?:number;control?:ReturnType<typeof createAnimalAreaControls287>}>();
 export function createAnimalInspector(root: HTMLElement, options: AnimalInspectorOptions): void {
   root.classList.add('animal-inspector-host');
   if (root.querySelector('.animal-inspector-tabs')) return;
   root.classList.remove('colonist-inspector-host');
   root.innerHTML = animalInspectorScaffold();
+  animalAreaInspectors287.get(root)?.control?.dispose();animalAreaInspectors287.delete(root);
+  if(options.animalAreas)animalAreaInspectors287.set(root,{actions:options.animalAreas});
   mountAnimalRescueControls(root,options.onRescue);
   root.dataset.animalTameAvailable=String(!!options.onTame);
   root.dataset.animalSlaughterAvailable=String(!!options.onSlaughter);
@@ -245,7 +255,7 @@ export function createAnimalInspector(root: HTMLElement, options: AnimalInspecto
   const training=root.querySelector<HTMLElement>('[data-animal-content="training"]')!;
   training.innerHTML='<p data-animal-training-master></p><p data-animal-training-status aria-live="polite"></p>'
     +(['obedience','haul'] as const).map(skill=>`<section class="animal-inspector-section"><h3>${ANIMAL_TRAINING_LABELS_282[skill]}</h3><p data-animal-training-progress="${skill}"></p><p data-animal-training-prerequisites="${skill}"></p><label class="animal-care-policy"><input type="checkbox" data-animal-training="${skill}">Entraîner ${skill==='haul'?'au transport':'à l’obéissance'}</label><p data-animal-training-reason="${skill}"></p></section>`).join('')
-    +'<p class="muted">Décocher suspend la demande de leçons et conserve les aptitudes apprises. Le transport appris se déclenche automatiquement après les besoins et soins, avec une réserve accessible. Suivi, attaque et sauvetage ne sont pas proposés ici.</p><p class="muted">Zone de l’animal : Sans restriction. Les aires animales ne se règlent pas encore ici.</p>';
+    +'<p class="muted">Décocher suspend la demande de leçons et conserve les aptitudes apprises. Le transport appris se déclenche automatiquement après les besoins et soins, avec une réserve accessible. Suivi, attaque et sauvetage ne sont pas proposés ici.</p><p class="muted" data-animal-area-help></p>';
   for(const skill of ['obedience','haul'] as const){
     const input=training.querySelector<HTMLInputElement>(`[data-animal-training="${skill}"]`)!;
     input.onchange=()=>{const id=Number(root.dataset.animalInspectorId),wanted=input.checked;input.checked=input.dataset.confirmedWanted==='true';if(Number.isSafeInteger(id))options.onTraining?.(id,skill,wanted);};
@@ -312,6 +322,12 @@ function renderSections(root: HTMLElement, key: AnimalInspectorTab, groups: read
 
 /** Returns false when the selected animal has left the world. */
 export function updateAnimalInspector(root: HTMLElement, world: World, animalId: number): boolean {
+  const areaState=animalAreaInspectors287.get(root);
+  if(areaState){
+    if(areaState.animalId!==animalId){areaState.control?.dispose();areaState.control=createAnimalAreaControls287(animalId,areaState.actions);areaState.animalId=animalId;root.querySelector('[data-animal-panel="info"]')?.append(areaState.control.element);}
+    areaState.control?.update();
+  }
+  const areaHelp=root.querySelector<HTMLElement>('[data-animal-area-help]');if(areaHelp)areaHelp.textContent=Number(world.schemaVersion)===287?'La zone autorisée se règle dans Info pour les animaux concernés. Les animaux d’enclos gardent leur marqueur.':'Zone de l’animal : Sans restriction. Les aires animales ne se règlent pas encore ici.';
   const view = animalInspectorView(world, animalId);
   if (!view || !root.querySelector('.animal-inspector-tabs')) return false;
   root.dataset.animalInspectorId = String(view.id);

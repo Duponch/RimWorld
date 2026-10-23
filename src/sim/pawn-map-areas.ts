@@ -1,3 +1,4 @@
+import {prepareAnimalAreaRemoval287,type AnimalAreaOwnerPlan287} from './animal-area-owners-287.ts';
 import type {World,Pawn} from './types.ts';
 import type {CampaignState} from './world-map-state.ts';
 import {registeredCampaign,registeredMapId,registeredMapForValidation} from './world-map-context.ts';
@@ -68,24 +69,27 @@ export function prepareMapAreaEntry(root:CampaignState,p:Pawn,originMapId:number
 export function commitMapAreaEntry(p:Pawn,plan:MapAreaEntryPlan):void {if(plan.mapAreas)p.mapAreas=plan.mapAreas;applyMapAreaEntryAlias(p,plan.areaId);}
 export function applyMapAreaEntryAlias(p:Pawn,areaId:number|undefined):void {if(areaId===undefined)delete p.allowedAreaId;else p.allowedAreaId=areaId;delete p.allowedAreaReturn;}
 interface RemovedAreaUpdate {pawn:Holder;next?:PawnMapAreas;clearAlias:boolean;before:string}
-export interface RemovedMapAreaPlan {updates:RemovedAreaUpdate[]}
+export interface RemovedMapAreaPlan {updates:RemovedAreaUpdate[];animal287?:AnimalAreaOwnerPlan287}
 /** All original living, contained, away, terminal and lost Pawn owners. Pure
  * capture before DeSpawn removes a map; it installs no runtime map cache. */
-export function prepareRemovedMapAreas(root:CampaignState,mapId:number,areaIds:ReadonlySet<number>):RemovedMapAreaPlan {
+export function prepareRemovedMapAreas(root:CampaignState,mapId:number,areaIds:ReadonlySet<number>,includeAnimals=true):RemovedMapAreaPlan {
  const updates:RemovedAreaUpdate[]=[],seen=new Map<number,Pawn>();
  for(const capture of campaignPhysicalCaptures(root as World))for(const slot of capture.owners.pawnOwners){
   const p=slot.pawn! as Holder,previous=seen.get(p.id);if(previous){if(previous!==p)throw Error('Duplicate person while removing map areas');continue;}seen.set(p.id,p);
   const rows=p.mapAreas?.assignments,next=rows?.filter(row=>row.mapId!==mapId),clearAlias=p.allowedAreaId!==undefined&&areaIds.has(p.allowedAreaId);
   if(clearAlias||rows&&next!.length!==rows.length)updates.push({pawn:p,...rows?{next:{revision:1,assignments:next!}}:{},clearAlias,before:JSON.stringify([p.allowedAreaId,p.allowedAreaReturn,p.mapAreas])});
  }
- return {updates};
+ const animal287=includeAnimals&&Number(root.schemaVersion)===287?prepareAnimalAreaRemoval287(root,{mapId}):undefined;if(animal287&&!animal287.ok)throw Error(animal287.reason);
+ return {updates,...animal287?.ok?{animal287}:{}};
 }
-export function removedMapAreasCurrent(plan:RemovedMapAreaPlan):boolean {return plan.updates.every(u=>JSON.stringify([u.pawn.allowedAreaId,u.pawn.allowedAreaReturn,u.pawn.mapAreas])===u.before);}
+export function removedMapAreasCurrent(plan:RemovedMapAreaPlan):boolean {return (!plan.animal287||plan.animal287.current()||plan.animal287.admittedCurrent())&&plan.updates.every(u=>JSON.stringify([u.pawn.allowedAreaId,u.pawn.allowedAreaReturn,u.pawn.mapAreas])===u.before);}
+/** Admit every actual animal recipient before notification/departure writes. */
+export function beginRemovedMapAreas287(plan:RemovedMapAreaPlan):void {if(plan.animal287&&!plan.animal287.admittedCurrent())plan.animal287.begin();}
 /** No clinical field, item, movement edge or other map's setting is changed. */
-export function commitRemovedMapAreas(plan:RemovedMapAreaPlan):void {for(const row of plan.updates){if(row.next)row.pawn.mapAreas=row.next;if(row.clearAlias){delete row.pawn.allowedAreaId;delete row.pawn.allowedAreaReturn;}}}
+export function commitRemovedMapAreas(plan:RemovedMapAreaPlan):void {if(plan.animal287){beginRemovedMapAreas287(plan);if(!plan.animal287.adoptAdmitted())throw Error('Stale admitted animal area recipients');}for(const row of plan.updates){if(row.next)row.pawn.mapAreas=row.next;if(row.clearAlias){delete row.pawn.allowedAreaId;delete row.pawn.allowedAreaReturn;}}}
 /** Area deletion is the same reference removal restricted to one actual Map. */
 export function forgetMapArea(w:World,areaId:number):void {
- if(w.schemaVersion<256)return;const id=localMapId(w),root=registeredCampaign(w),plan=prepareRemovedMapAreas(root,id,new Set([areaId]));
+ if(w.schemaVersion<256)return;const id=localMapId(w),root=registeredCampaign(w),plan=prepareRemovedMapAreas(root,id,new Set([areaId]),false);
  // Deleting one definition preserves all other entries on that same map too.
  plan.updates=plan.updates.filter(row=>row.clearAlias||row.pawn.mapAreas?.assignments.some(a=>a.mapId===id&&a.areaId===areaId));
  for(const row of plan.updates)if(row.pawn.mapAreas)row.next={revision:1,assignments:row.pawn.mapAreas.assignments.filter(a=>!(a.mapId===id&&a.areaId===areaId))};

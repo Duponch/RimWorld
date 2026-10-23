@@ -18,6 +18,7 @@ import type {Cell,MaterialPile,World} from './types.ts';
 import type {WildAnimal} from './wildlife-state.ts';
 import type {animalNavigation} from './wildlife-navigation.ts';
 import type {AnimalStorageHaul282} from './animal-hauling-state-282.ts';
+import {captureAnimalAreaPolicy287,type AnimalAreaPolicy287} from './animal-area-policy-287.ts';
 
 export const ANIMAL_HAUL_INTERVAL_CORE_282=2500;
 const same=(a:Cell,b:Cell)=>a.x===b.x&&a.z===b.z;
@@ -103,7 +104,7 @@ function capacity(w:World,d:Decision282,c:StorageCell,p:MaterialPile,except:numb
 const safeCell=(w:World,c:Cell)=>!foggedCell256(w,c.z*w.width+c.x)&&!w.fires?.items.some(f=>f.x===c.x&&f.z===c.z);
 /** The caller grants at most the same one global navigation frontier used by
  * other animals. No candidate search runs for an unlearned or busy actor. */
-export function createAnimalHaulingPass282(w:World) {
+export function createAnimalHaulingPass282(w:World,readArea:(a:WildAnimal)=>AnimalAreaPolicy287|undefined=a=>captureAnimalAreaPolicy287(w,a)) {
  let view:Decision282|undefined;
  const read=()=>view??=capture(w),invalidate=()=>{view=undefined;};
  function recover(a:WildAnimal):void {
@@ -115,8 +116,8 @@ export function createAnimalHaulingPass282(w:World) {
  function start(a:WildAnimal,nav:ReturnType<typeof animalNavigation>,takeSearch:()=>boolean):boolean {
   if(a.haul||!a.training||a.training.lastHaulCheckCore!==undefined&&w.tick*10-a.training.lastHaulCheckCore<2500||!takeSearch())return false;
   if(!animalHaulOpportunity282(w,a))return false;
-  const d=read(),search=nav.haulSearch(a);
-  const sources=[...d.byId.values()].filter(p=>p.owner.type==='ground'&&animalHaulPileAllowed282(w,p)&&safeCell(w,p.owner)
+  const d=read(),policy=readArea(a),inside=(c:Cell)=>!policy||policy.has(c.z*w.width+c.x),search=nav.haulSearch(a);
+  const sources=[...d.byId.values()].filter(p=>p.owner.type==='ground'&&inside(p.owner)&&animalHaulPileAllowed282(w,p)&&safeCell(w,p.owner)
    &&p.quantity>(d.reserved.get(p.id)??0)).sort((x,y)=>{
     const a1=x.owner as Cell,b1=y.owner as Cell;return (a1.x-a.x)**2+(a1.z-a.z)**2-((b1.x-a.x)**2+(b1.z-a.z)**2)||x.id-y.id;
    });
@@ -124,7 +125,7 @@ export function createAnimalHaulingPass282(w:World) {
    if(pile.owner.type!=='ground'||!search.canReach(pile.owner))continue;
    const sourceCell=pile.owner;
    const current=d.facts.storage.get(sourceCell.z*w.width+sourceCell.x),priority=current&&storageCellAccepts(w,current,pile)?current.priority:-1;
-   const zones=d.zones.filter(c=>c.priority>priority&&safeCell(w,c)&&storageCellAccepts(w,c,pile))
+   const zones=d.zones.filter(c=>inside(c)&&c.priority>priority&&safeCell(w,c)&&storageCellAccepts(w,c,pile))
     .sort((x,y)=>y.priority-x.priority||(x.x-sourceCell.x)**2+(x.z-sourceCell.z)**2-((y.x-sourceCell.x)**2+(y.z-sourceCell.z)**2)||x.id-y.id);
    for(const zone of zones){
     const quantity=Math.min(pile.quantity-(d.reserved.get(pile.id)??0),animalCarryLimit282(a,pile.item),capacity(w,d,zone,pile,a.id));
@@ -141,8 +142,9 @@ export function createAnimalHaulingPass282(w:World) {
   const t=a.haul;if(!t||t.phase==='holding')return false;
   const d=read(),pile=d.byId.get(t.phase==='pickup'?t.sourcePileId:t.carryPileId!);
   const zone=d.zones.find(c=>c.id===t.destination.stockpileId);
-  if(!pile||!zone||!animalHaulPileAllowed282(w,pile)||!safeCell(w,zone)||capacity(w,d,zone,pile,a.id)<t.quantity
-   ||t.phase==='pickup'&&(pile.owner.type!=='ground'||!safeCell(w,pile.owner)||pile.quantity<(d.reserved.get(pile.id)??0)||t.quantity>animalCarryLimit282(a,pile.item))
+  const policy=readArea(a),inside=(c:Cell)=>!policy||policy.has(c.z*w.width+c.x);
+  if(!pile||!zone||!inside(zone)||!animalHaulPileAllowed282(w,pile)||!safeCell(w,zone)||capacity(w,d,zone,pile,a.id)<t.quantity
+   ||t.phase==='pickup'&&(pile.owner.type!=='ground'||!inside(pile.owner)||!safeCell(w,pile.owner)||pile.quantity<(d.reserved.get(pile.id)??0)||t.quantity>animalCarryLimit282(a,pile.item))
    ||t.phase==='deliver'&&(pile.owner.type!=='inventory'||pile.owner.pawnId!==a.id||pile.quantity!==t.quantity)){
    interruptAnimalHaul282(w,a);invalidate();return false;
   }

@@ -1,3 +1,4 @@
+import {isSchema286OrLater} from './schema-compatibility-257.ts';
 import {prepareLinkedStorageRemoval286,type LinkedStoragePlanResult286,type LinkedStoragePlan286} from './linked-storage-plan-286.ts';
 import {isShelfKind} from './shelf-storage.ts';
 import {registeredCampaign,registeredMapId} from './world-map-context.ts';
@@ -11,11 +12,11 @@ function unchanged():LinkedStoragePlan286{
  * are custody changes and deliberately do not call this helper. */
 export function prepareLinkedShelfRetirement286(world:World,buildings:readonly Structure[]):LinkedStoragePlanResult286{
  const shelves=buildings.filter(s=>isShelfKind(s.kind));
- return world.schemaVersion===286&&shelves.length?prepareLinkedStorageRemoval286(world,shelves.map(s=>s.id)):unchanged();
+ return isSchema286OrLater(world.schemaVersion)&&shelves.length?prepareLinkedStorageRemoval286(world,shelves.map(s=>s.id)):unchanged();
 }
 /** The physical installation frontier, not the earlier placement order. */
 export function prepareLinkedShelfInstall286(world:World,building:Structure):LinkedStoragePlanResult286{
- if(world.schemaVersion!==286||!isShelfKind(building.kind)||!building.shelf?.linked286)return unchanged();
+ if(!isSchema286OrLater(world.schemaVersion)||!isShelfKind(building.kind)||!building.shelf?.linked286)return unchanged();
  const group=registeredCampaign(world).linkedStorage286?.groups.find(g=>g.id===building.shelf!.linked286!.groupId);
  if(!group)return {ok:false,reason:'Groupe de l’étagère à réinstaller absent.'};
  return group.originMapId===registeredMapId(world)?unchanged():prepareLinkedStorageRemoval286(world,[building.id]);

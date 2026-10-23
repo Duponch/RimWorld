@@ -83,7 +83,7 @@ function collect(w:World,p:Pawn,ctx:HuntContext):void {
   // read-only condition view prevalidates that existing conversion, without
   // allocating a pile or moving its owner before a destination is available.
   const corpse:MaterialPile=body??{id:retained!.id,kind:'corpse',item:corpseItem,quantity:1,owner:{type:'ground',x:sourceCell.x,z:sourceCell.z},
-    corpse:{animalId:retained!.id,species:retained!.species,sex:retained!.sex,ageTicks:retained!.ageTicks,...retained!.growthTracker?{growthTracker:retained!.growthTracker,ageCoreRemainder:retained!.ageCoreRemainder}:{},health:retained!.health!},
+    corpse:{...retained!.animalMapAreas287?{animalMapAreas287:structuredClone(retained!.animalMapAreas287)}:{},animalId:retained!.id,species:retained!.species,sex:retained!.sex,ageTicks:retained!.ageTicks,...retained!.growthTracker?{growthTracker:retained!.growthTracker,ageCoreRemainder:retained!.ageCoreRemainder}:{},health:retained!.health!},
     rot:retained!.corpseRot??{progress:0,atTick:w.tick}};
   if(p.planCooldown>0){
     if(retained&&p.path.length){ctx.move(sourceCell,true);if(!p.path.length)p.planCooldown=0;}

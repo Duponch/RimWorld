@@ -1,3 +1,4 @@
+import {isSchema286OrLater} from './schema-compatibility-257.ts';
 import {isSchema277OrLater} from './schema-compatibility-257.ts';
 import {prepareLinkedCasketVanish286} from './linked-storage-casket-vanish-286.ts';
 import {isShipCasket277,newShipCasketHolder277,shipCasketActor277,type ShipCasket277,type ShipCasketOccupant277} from './ship-casket-state-277.ts';
@@ -172,10 +173,10 @@ export function planShipCasketRemoval277(w:World,s:Structure,mode:'deconstruct'|
  // mechanical original). Its WorldPawn receipt is still real, but an empty
  // material ledger would invent a counter and violate the strict save shape.
  const losesItems=!!vanish&&Object.keys(vanish.quantities).length>0;
- const losesPossessions=!!vanish&&(losesItems||vanish.materialLoss.size>0||w.schemaVersion===286&&heldPacks.length>0||vanish.fuelTicksLost>0||vanish.fuelTicksBurned>0||vanish.batteryEnergyLost>0);
- // Only V286 adds the original packed buildings destroyed by this Vanish;
+ const losesPossessions=!!vanish&&(losesItems||vanish.materialLoss.size>0||isSchema286OrLater(w.schemaVersion)&&heldPacks.length>0||vanish.fuelTicksLost>0||vanish.fuelTicksBurned>0||vanish.batteryEnergyLost>0);
+ // The family introduced in V286 counts the original packed buildings destroyed by this Vanish;
  // earlier action branches keep their historical counters unchanged.
- const priorDestroyed=w.destroyed??{count:0,lost:{}},destroyed={...priorDestroyed,count:priorDestroyed.count+(mode==='kill-finalize'?1:0)+(w.schemaVersion===286&&vanish?heldPacks.length:0),lost:{...priorDestroyed.lost},...losesItems?{items:{...priorDestroyed.items}}:{}};
+ const priorDestroyed=w.destroyed??{count:0,lost:{}},destroyed={...priorDestroyed,count:priorDestroyed.count+(mode==='kill-finalize'?1:0)+(isSchema286OrLater(w.schemaVersion)&&vanish?heldPacks.length:0),lost:{...priorDestroyed.lost},...losesItems?{items:{...priorDestroyed.items}}:{}};
  if(mode!=='deconstruct'&&mode!=='vanish')for(const cost of constructionRecipe(c).ingredients){const key=cost.item as keyof typeof destroyed.lost;destroyed.lost[key]=(destroyed.lost[key]??0)+cost.quantity-(returned.get(cost.item)??0);}
  if(vanish){
   for(const [item,quantity]of Object.entries(vanish.quantities))destroyed.items![item as ItemId]=(destroyed.items![item as ItemId]??0)+quantity!;
