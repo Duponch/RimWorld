@@ -20,6 +20,7 @@ import {validActorMapBedField256} from './actor-map-bed-256.ts';
 import {validRetainedCorpseDamage256} from './retained-corpse-damage-256.ts';
 import {validAnimalEggState256} from './animal-egg-save-v256.ts';
 import {validAnimalClinicalOwner256} from './animal-clinical-age-v256.ts';
+import {animalThermalFields466} from './animal-thermal-v466.ts';
 import {animalMechanicalReadiness256} from './animal-readiness-v256.ts';
 import {isAnimalSpecies256} from './animal-core-v256.ts';
 import {isAnimalSpeciesInVersion,animalSpecies} from './animal-species.ts';
@@ -48,7 +49,8 @@ export function validCaravanAnimalRecord256(a:unknown,c:GroupAnimalRecordContext
  if(h&&Object.hasOwn(h,'animalBirthTick')&&!isAnimalSpecies256(animal.species)&&!animal.growthTracker)return false;
  if(isAnimalSpecies256(animal.species)&&!animalMechanicalReadiness256(animal.species).ok||h&&!validAnimalClinicalOwner256(h,animal.species,animal.ageTicks,c.tick))return false;
  if(h?.cryptosleepSickness?.vomit)return false;
- if(h&&(validateMedicalRecord(h,true,true,isSchema277OrLater(version),isSchema277OrLater(version),true,true,true,true,true,true,true,version)!==null||h.body!==animal.species||(h.death||c.mothballedWorldPawn256?medicalCivilTick271(h)>c.tick:medicalCivilTick271(h)!==c.tick)||(medicalStatus(h)==='mobile'?['downed','dead'].includes(animal.state):animal.state!==medicalStatus(h))))return false;
+ const thermal=animalThermalFields466(animal,version),heat=version===287?thermal.heat:isSchema277OrLater(version),cold=version===287?thermal.cold:isSchema277OrLater(version);
+ if(h&&(validateMedicalRecord(h,true,true,heat,cold,true,true,true,true,true,true,true,version)!==null||h.body!==animal.species||(h.death||c.mothballedWorldPawn256?medicalCivilTick271(h)>c.tick:medicalCivilTick271(h)!==c.tick)||(medicalStatus(h)==='mobile'?['downed','dead'].includes(animal.state):animal.state!==medicalStatus(h))))return false;
  if(!validCaravanRestField266(a,version,Math.min(c.tick,h?.death?.tick??c.tick)))return false;
  if(!h&&['downed','dead'].includes(animal.state)||!(held?.structures?validHeldDomesticAnimal277(animal,c.tick,nextId,version,held.structures):validDetachedDomesticAnimal(animal,c.tick,nextId,version)))return false;
  if(a.corpseRot!==undefined&&(animal.state!=='dead'||!h?.death||!validCorpseRot(a.corpseRot,c.tick,h.death.tick,h)))return false;

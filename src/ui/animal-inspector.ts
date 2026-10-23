@@ -26,6 +26,8 @@ import {isSchema282OrLater} from '../sim/schema-compatibility-257';
 import {readAnimalTraining282,trainingRefusal282,nextTrainable282,ANIMAL_TRAINING_LABELS_282,ANIMAL_TRAINING_INTERVAL_CORE_282} from '../sim/animal-training-282';
 import {createAnimalAreaControls287,type AnimalAreaActions287} from './animal-area-287';
 import {supportsAnimalAreas287,currentAnimalAreaChoice287} from '../sim/animal-area-policy-287';
+import {HEAT_UNIT,HEAT_LABELS,heatStage} from '../sim/heat-severity';
+import {animalDietLabel} from './animal-diet-label';
 
 type TrainingChoice282='obedience'|'haul';
 
@@ -150,6 +152,8 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
   ];
   if (animal.state !== 'dead') condition.push(`Conscience ${percent(capacities.consciousness)} · Mobilité ${percent(capacities.moving)} · Vue ${percent(capacities.sight)} · Ouïe ${percent(capacities.hearing)}`);
   if (health?.malnutrition) condition.push(`Malnutrition ${MALNUTRITION_LABELS[malnutritionStage(health.malnutrition)]} : ${(health.malnutrition * 100 / MALNUTRITION_UNIT).toFixed(1)} %`);
+  if (health?.heatstroke) condition.push(`Coup de chaleur ${HEAT_LABELS[heatStage(health.heatstroke)]} · ${(health.heatstroke * 100 / HEAT_UNIT).toFixed(1)} %`);
+  if (health?.hypothermia) condition.push(`Hypothermie ${HEAT_LABELS[heatStage(health.hypothermia)]} · ${(health.hypothermia * 100 / HEAT_UNIT).toFixed(1)} %`);
   if (health?.cryptosleepSickness) condition.push(`Mal de cryptosommeil · ${(health.cryptosleepSickness.remainingCore/2500).toFixed(1)} h restantes${health.cryptosleepSickness.vomit?' · Vomit':''}`);
   if (health?.foodPoisoning) condition.push(`Intoxication alimentaire · ${poisonStage[foodPoisoningStage(health.foodPoisoning)]} · ${(health.foodPoisoning.severity * 100 / FOOD_POISON_UNIT).toFixed(1)} %${health.foodPoisoning.vomit ? ' · Vomit' : ''}`);
   if (health?.infections?.cases.length) condition.push(`Immunité ${Math.min(100, health.infections.immunity * 100 / INFECTION_UNIT).toFixed(1)} %`);
@@ -200,7 +204,7 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
         :animal.startingPet?.masterId!==undefined?[`Maître et lien initial : ${world.pawns.find(p=>p.id===animal.startingPet!.masterId)?.name??world.campaignPeople?.find(p=>p.id===animal.startingPet!.masterId)?.name??'personne hors carte'}`]:[]),
       ...(!animal.training&&animal.startingPet?.obedience?['Obéissance initiale : 3 / 3 · demandée']:[]),
       ...(animal.manhunter?['État : rage temporaire · attaque les humains','Récupération : durée variable ; le sommeil ordinaire ne met pas fin à la rage']:[]),
-      `Régime : ${species.predator?'carnivore · viande, repas et dépouilles fraîches':'herbivore'}`,
+      `Régime : ${animalDietLabel(animal,world.schemaVersion)}`,
       `Stade de vie : ${stageLabel[stage]}`,
       `Âge : ${(animal.ageTicks/6000).toLocaleString('fr-FR',{maximumFractionDigits:1})} jour(s)`,
       `Taille corporelle : ${animalBodySize(animal).toLocaleString('fr-FR')}`,

@@ -1,4 +1,5 @@
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
+import {animalThermalFields466} from './animal-thermal-v466.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {CORE_STARTING_ARRIVAL_PROFILE_256} from './starting-pod-state-256.ts';
 import {hasCryptosleepSickness256,validCryptosleepSicknessHeader256} from './cryptosleep-sickness-256.ts';
@@ -15,7 +16,8 @@ export function validCryptosleepSicknessTransport256(actor:ClinicalOwner256,vers
  const record=actor.health;if(!hasCryptosleepSickness256(record))return true;
  if(!record||!validCryptosleepSicknessHeader256(record,version)||!Number.isSafeInteger(clock)||clock<0||medicalCivilTick271(record)>clock)return false;
  const animal=isAnimalSpecies(record.body);
- if(validateMedicalRecord(record,true,true,!animal,!animal,animal,animal,true,true,true,true,true,version,!animal)!==null)return false;
+ const thermal=animalThermalFields466(actor,version);
+ if(validateMedicalRecord(record,true,true,!animal||thermal.heat,!animal||thermal.cold,animal,animal,true,true,true,true,true,version,!animal)!==null)return false;
  const v=record.cryptosleepSickness!.vomit;
  if(v){
   if(!spatial||v.cell.x>=spatial.width||v.cell.z>=spatial.height||actor.state!=='idle'||actor.path.length||(actor.motion?.end??0)>clock||Math.max(Math.abs(v.cell.x-actor.x),Math.abs(v.cell.z-actor.z))>1)return false;

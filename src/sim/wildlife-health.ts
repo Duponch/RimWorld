@@ -26,6 +26,7 @@ import { malnutritionRate } from './malnutrition.ts';
 import { cancelAnimalPredation } from './wildlife-predation.ts';
 import { recoverAnimalManhunter } from './animal-manhunter.ts';
 import { animalCarrier } from './animal-rest-state.ts';
+import {applyAnimalThermal466,type AnimalThermalOpportunity466} from './animal-thermal-v466.ts';
 
 const HEALTHY_ANIMALS=new Map<ReturnType<typeof animalBodyModel>,ReturnType<typeof assessBody>>();
 export const animalBody=(a:WildAnimal)=>{
@@ -51,18 +52,19 @@ export function reconcileAnimalHealth(w:World,a:WildAnimal):void {
     if(changed){w.events.push({tick:w.tick,type:'need',message:`${animalSpecies(a.species).label} ${a.id} ${status==='dead'?'est mort':'est à terre'}.`});if(w.events.length>80)w.events.splice(0,w.events.length-80);}
   } else if(a.state==='downed'){a.state='idle';a.nextDecision=w.tick;}
 }
-export function advanceAnimalHealth(w:World,a:WildAnimal):void {
+export function advanceAnimalHealth(w:World,a:WildAnimal,thermal?:AnimalThermalOpportunity466):void {
   advanceAnimalScaria261(w,a);if(a.health?.scaria261&&a.health.death){reconcileAnimalHealth(w,a);return;}
-  if(w.schemaVersion>=256&&a.health?.toxicBuildup&&!a.health.death&&a.state!=='dead'){advanceExplosiveAnimalHealth256(w,a,true);return;}
-  if(w.schemaVersion>=256&&isExplosiveAnimal256(a.species)){advanceExplosiveAnimalHealth256(w,a);return;}
+  if(w.schemaVersion>=256&&a.health?.toxicBuildup&&!a.health.death&&a.state!=='dead'){advanceExplosiveAnimalHealth256(w,a,true,thermal);return;}
+  if(w.schemaVersion>=256&&isExplosiveAnimal256(a.species)){advanceExplosiveAnimalHealth256(w,a,false,thermal);return;}
   if(w.schemaVersion>=84&&a.food<=0&&a.state!=='dead')a.health??=createAnimalMedicalRecord256(w,a,Math.max(0,w.tick-1));
   if(a.stagger&&a.stagger.untilCore<=w.tick*10)delete a.stagger;
   if(a.sleepUntilCore!==undefined&&a.sleepUntilCore<=w.tick*10)delete a.sleepUntilCore;
-  if(!a.health||a.health.death)return;
+  if(a.health?.death||!a.health&&!thermal)return;
   const lying=(!a.motion||a.motion.end<=w.tick)&&['sleeping','downed'].includes(a.state)&&!(w.schemaVersion>=221&&animalCarrier(w,a.id));
-  const conditionFrontier=localAnimalConditionFrontier256(w,a,a.health,()=>healthRandom(w));
-  advanceMedical(a.health,medicalElapsedTicks271(a.health,w.tick),{phase:a.id%60,toxicOwner:{id:a.id,spawned:!animalCarrier(w,a.id),awake:a.state!=='sleeping'&&!a.stun},cryptosleepSicknessSpawned:!animalCarrier(w,a.id),posture:lying?'ground':'standing',starving:a.food<=0,malnutritionRate:w.schemaVersion>=84?malnutritionRate(a.id):undefined,
+  const conditionFrontier=a.health?localAnimalConditionFrontier256(w,a,a.health,()=>healthRandom(w)):undefined;
+  if(a.health)advanceMedical(a.health,medicalElapsedTicks271(a.health,w.tick),{phase:a.id%60,toxicOwner:{id:a.id,spawned:!animalCarrier(w,a.id),awake:a.state!=='sleeping'&&!a.stun},cryptosleepSicknessSpawned:!animalCarrier(w,a.id),posture:lying?'ground':'standing',starving:a.food<=0,malnutritionRate:w.schemaVersion>=84?malnutritionRate(a.id):undefined,
     hunger:a.food/animalNutritionMax(a)*100,rest:a.rest*100,restingBonus:lying&&a.state==='sleeping',infectionSeed:(w.seed^Math.imul(a.id,0x9e3779b1))>>>0},()=>healthRandom(w),conditionFrontier);
+  if(thermal){const record=applyAnimalThermal466(w,a,a.health,thermal);if(record)a.health=record;}
   conditionFrontier?.commit();reconcileAnimalHealth(w,a);
 }
 export function scareAnimal(w:World,a:WildAnimal,danger:Cell,core:number):void {
@@ -119,20 +121,26 @@ export function delayAnimalImpact(a:WildAnimal,core:number,stun=false,stunDurati
 
 /** Explosive health evolves a private record/stream so a capacity refusal
  * cannot leave clinical death or RNG committed without its required wave. */
-function advanceExplosiveAnimalHealth256(w:World,a:WildAnimal,privateActor=false):void {
- const originalHealth=a.health,actualRng=w.rng,actualTick=w.tick,actualActors=w.wildlife?.animals,actorBefore=privateActor?JSON.stringify(a):undefined;
+function advanceExplosiveAnimalHealth256(w:World,a:WildAnimal,privateActor=false,thermal?:AnimalThermalOpportunity466):void {
+ const staged=privateActor||thermal!==undefined;
+ const originalHealth=a.health,actualRng=w.rng,actualTick=w.tick,actualActors=w.wildlife?.animals,actorBefore=staged?JSON.stringify(a):undefined;
  if(privateActor&&(!actualActors?.includes(a)||!Object.isExtensible(a)||Reflect.ownKeys(a).some(k=>{const d=Object.getOwnPropertyDescriptor(a,k)!;return !('value'in d)||!d.writable||!d.configurable;})))throw Error('Toxic animal lacks its mutable actual original');
  const outcome=privateActor?structuredClone(a):a;
- if(outcome.stagger&&outcome.stagger.untilCore<=w.tick*10)delete outcome.stagger;
- if(outcome.sleepUntilCore!==undefined&&outcome.sleepUntilCore<=w.tick*10)delete outcome.sleepUntilCore;
+ const expire=()=>{if(outcome.stagger&&outcome.stagger.untilCore<=w.tick*10)delete outcome.stagger;if(outcome.sleepUntilCore!==undefined&&outcome.sleepUntilCore<=w.tick*10)delete outcome.sleepUntilCore;};
+ // New thermal death may need a reserved explosion. Keep even timer cleanup
+ // private/deferred until that reservation succeeds, preserving nested owners.
+ if(!staged||privateActor)expire();
  if(a.state==='dead'||a.health?.death)return;
- const record=privateActor?outcome.health:a.health?structuredClone(a.health):a.food<=0?createAnimalMedicalRecord256(w,a,Math.max(0,w.tick-1)):undefined;if(!record)return;
+ let record=privateActor?outcome.health:a.health?structuredClone(a.health):a.food<=0?createAnimalMedicalRecord256(w,a,Math.max(0,w.tick-1)):undefined;if(!record&&!thermal)return;
  const lying=(!a.motion||a.motion.end<=w.tick)&&['sleeping','downed'].includes(a.state)&&!animalCarrier(w,a.id),random={rng:w.rng};
- const conditionFrontier=localAnimalConditionFrontier256(w,a,record,()=>healthRandom(random));
- advanceMedical(record,medicalElapsedTicks271(record,w.tick),{phase:a.id%60,toxicOwner:{id:a.id,spawned:!animalCarrier(w,a.id),awake:a.state!=='sleeping'&&!a.stun},cryptosleepSicknessSpawned:!animalCarrier(w,a.id),posture:lying?'ground':'standing',starving:a.food<=0,malnutritionRate:malnutritionRate(a.id),hunger:a.food/animalNutritionMax(a)*100,rest:a.rest*100,restingBonus:lying&&a.state==='sleeping',infectionSeed:(w.seed^Math.imul(a.id,0x9e3779b1))>>>0},()=>healthRandom(random),conditionFrontier);
- const death=planAnimalDeathExplosion256(w,a,record);
- if(privateActor&&(w.tick!==actualTick||w.rng!==actualRng||w.wildlife?.animals!==actualActors||!actualActors?.includes(a)||a.health!==originalHealth||JSON.stringify(a)!==actorBefore))throw Error('Stale actual toxic animal outcome');
+ const conditionFrontier=record?localAnimalConditionFrontier256(w,a,record,()=>healthRandom(random)):undefined;
+ if(record)advanceMedical(record,medicalElapsedTicks271(record,w.tick),{phase:a.id%60,toxicOwner:{id:a.id,spawned:!animalCarrier(w,a.id),awake:a.state!=='sleeping'&&!a.stun},cryptosleepSicknessSpawned:!animalCarrier(w,a.id),posture:lying?'ground':'standing',starving:a.food<=0,malnutritionRate:malnutritionRate(a.id),hunger:a.food/animalNutritionMax(a)*100,rest:a.rest*100,restingBonus:lying&&a.state==='sleeping',infectionSeed:(w.seed^Math.imul(a.id,0x9e3779b1))>>>0},()=>healthRandom(random),conditionFrontier);
+ if(thermal)record=applyAnimalThermal466(w,a,record,thermal);
+ if(!record){if(staged&&!privateActor)expire();return;}
+ const death=planAnimalDeathExplosion256(w,a,record,w.tick*10,thermal!==undefined);
+ if(staged&&(w.tick!==actualTick||w.rng!==actualRng||w.wildlife?.animals!==actualActors||!actualActors?.includes(a)||a.health!==originalHealth||JSON.stringify(a)!==actorBefore))throw Error('Stale actual toxic animal outcome');
  commitToxicDeath256(record,()=>healthRandom(random));death.commit();
  if(privateActor){outcome.health=record;for(const key of Object.keys(a))if(!Object.hasOwn(outcome,key))delete (a as unknown as Record<string,unknown>)[key];Object.assign(a,outcome);}else a.health=record;
+ if(staged&&!privateActor)expire();
  w.rng=random.rng;conditionFrontier?.commit();reconcileAnimalHealth(w,a);
 }

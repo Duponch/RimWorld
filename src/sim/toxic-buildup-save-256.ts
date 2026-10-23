@@ -1,4 +1,5 @@
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
+import {animalThermalFields466} from './animal-thermal-v466.ts';
 import {validToxicBuildupHeader256} from './toxic-buildup-256.ts';
 import {validHumanClinicalConditionOwner256} from './human-condition-mind-256.ts';
 import {captureHumanOwners,type HumanOwnershipCapture} from './human-owners.ts';
@@ -16,7 +17,8 @@ export function validToxicBuildupTransport256(actor:Pawn|WildAnimal,version:numb
  if(!validToxicBuildupHeader256(record,version))return false;
  const t=record.toxicBuildup;if(!t)return true;
  const animal=isAnimalSpecies(record.body);
- if(medicalCivilTick271(record)>clock||validateMedicalRecord(record,true,true,!animal,!animal,animal,animal,true,true,true,true,true,version,!animal)!==null||record.death&&typeof t.rotOnDeath!=='boolean')return false;
+ const thermal=animalThermalFields466(actor,version);
+ if(medicalCivilTick271(record)>clock||validateMedicalRecord(record,true,true,!animal||thermal.heat,!animal||thermal.cold,animal,animal,true,true,true,true,true,version,!animal)!==null||record.death&&typeof t.rotOnDeath!=='boolean')return false;
  const request=t.vomitRequestedAt;
  if(request!==undefined){const edge=toxicVomitEngagement256(actor,clock);if(!spatial||medicalCivilTick271(record)!==clock||!groupPawnInterval256(actor.id,request,600,1)||!edge||edge.startCore>request||edge.endCore<=clock*10||actor.state==='sleeping'||actor.state==='downed'||!assessMedical(record).canBeAwake||actor.stun)return false;}
  const v=t.vomit;if(!v)return true;

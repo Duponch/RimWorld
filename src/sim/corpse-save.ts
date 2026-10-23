@@ -1,4 +1,6 @@
 import {validAnimalAreaField287} from './animal-area-save-287.ts';
+import {animalThermalFields466} from './animal-thermal-v466.ts';
+import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {validScariaRecord261} from './animal-scaria-261.ts';
 import {toxicCorpseRotAllowance256} from './toxic-victim-256.ts';
 import {validAnimalAgeCoreRemainder256} from './initial-animal-age-owner-256.ts';
@@ -22,15 +24,16 @@ export function validCorpseRot(v:unknown,tick:number,death:number,medical?:unkno
 export function validCorpseShape(p:Record<string,unknown>,version:number):boolean {
   if(p.kind!=='corpse')return p.corpse===undefined;
   const c=p.corpse;
-  return version>=79&&object(c)&&validAnimalAreaField287(c,version,Number.MAX_SAFE_INTEGER)&&validAnimalAgeCoreRemainder256(c,version,Number((c.health as {tick?:number})?.tick))&&isAnimalSpeciesInVersion(c.species,version)&&(version>=178||String(c.species)!=='red-fox')&&(version>=91||c.species==='hare')&&p.item===animalSpecies(c.species).corpseItem&&p.quantity===1&&object(p.owner)&&['ground','pawn'].includes(String(p.owner.type))
+  const thermal=animalThermalFields466(c,version),clock=version===287&&object(c)&&object(c.health)?medicalCivilTick271(c.health as unknown as import('./injury-types.ts').MedicalRecord):Number((object(c)?c.health as {tick?:number}:undefined)?.tick);
+  return version>=79&&object(c)&&validAnimalAreaField287(c,version,Number.MAX_SAFE_INTEGER)&&validAnimalAgeCoreRemainder256(c,version,clock)&&isAnimalSpeciesInVersion(c.species,version)&&(version>=178||String(c.species)!=='red-fox')&&(version>=91||c.species==='hare')&&p.item===animalSpecies(c.species).corpseItem&&p.quantity===1&&object(p.owner)&&['ground','pawn'].includes(String(p.owner.type))
     &&Object.keys(c).every(k=>['animalId','species','sex','health','facing',...version>=121?['ageTicks']:[],...version>=178?['consumedParts']:[],...version>=256?['growthTracker','ageCoreRemainder']:[],...version===287?['animalMapAreas287']:[]].includes(k))
     &&(version<121?c.ageTicks===undefined:int(c.ageTicks,0,Number.MAX_SAFE_INTEGER))
     &&c.animalId===p.id&&['female','male'].includes(String(c.sex))
     &&(c.facing===undefined||typeof c.facing==='number'&&Number.isFinite(c.facing)&&Math.abs(c.facing)<=Math.PI)
     // This validator owns animal corpses only; the human-corpse pile keeps its
     // owner's medical record on the human pawn, validated in serialization.
-    &&validateMedicalRecord(c.health,true,true,false,false,true,version>=79,version>=81,version>=84,version>=87,version>=88,version>=89,version,false)===null&&object(c.health)&&object(c.health.death)&&c.health.body===c.species
-    &&validAnimalClinicalOwner256(c.health as unknown as import('./injury-types.ts').MedicalRecord,c.species,Number(c.ageTicks),Number(c.health.tick))
+    &&validateMedicalRecord(c.health,true,true,thermal.heat,thermal.cold,true,version>=79,version>=81,version>=84,version>=87,version>=88,version>=89,version,false)===null&&object(c.health)&&object(c.health.death)&&c.health.body===c.species
+    &&validAnimalClinicalOwner256(c.health as unknown as import('./injury-types.ts').MedicalRecord,c.species,Number(c.ageTicks),clock)
     &&validCorpseConsumption(c as unknown as CorpseState);
 }
 export function validateCorpses(w:World,version:number):string[] {

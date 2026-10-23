@@ -1,4 +1,8 @@
-# Validation courante — V465 publiée
+# Validation courante — V466 qualifiée
+
+**V466 qualifiée — schéma287 inchangé :** [Thermie animale locale](../gameplay/animal-thermal-v466.md).178cas distincts acquis par reprises (114nouveaux et64voisins), deux anciens rouges reproduits avec les mêmes diagnostics sur V465 ; typage de livraison acquis en14,072s. Parcours natif final muet129,260s : neuf exports, refroidisseur payé, trois recharges propres sur60images et rejeu moteur entier exact. Zéro erreur applicative ou notification de mise en page ; quatre avertissements d’adaptateur Windows conservés.
+
+Présentation générale acquise153,054s, écarts bruts de tick120/129 conservés. Mesure ciblée52,583s : passage partagé0,308ms contre lectures ponctuelles0,294ms sur Forges ; aucun gain CPU/FPS annoncé. La note canonique conserve préparations, reprises, rapports et limites. Publication en attente, public encore V465 ; refuge autonome, autres bases, six ensembles et cible FPS restent ouverts.
 
 **V465 publiée — schéma 287 :** [Aires animales](../gameplay/animal-areas-v465.md). Choix par carte, foyer et zones nommées du même animal ; vrais trajets, besoins, transport et détenteurs.197cas distincts acquis par reprises (67nouveaux et130voisins),34anciens rouges reproduits sur V464 avec différences de schéma seules précisées. Typage, présentation et parcours natifs muets acquis ; trois recharges entières exactes. Lecture optimisée, coût CPU ciblé mesuré ; aucun gain FPS global. Publiéee0321b3/65269ca2,20réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Migration286 stricte puis numéro seul287, aucun choix offert. Ensemble3 ; tous les domaines et interactions, six ensembles, campagnes, victoire et cible FPS restent ouverts.
 

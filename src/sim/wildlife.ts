@@ -1,4 +1,5 @@
 import {recordShipCasketFilthMovement277} from './filth.ts';
+import {createAnimalThermalPass466} from './animal-thermal-air-v466.ts';
 import {createAnimalHaulingPass282,animalHaulAvailable282,interruptAnimalHaul282} from './animal-hauling-282.ts';
 import {createAnimalAreaPolicyReader287} from './animal-area-policy-287.ts';
 import {reconcileAnimalAreaTasks287,processAnimalAreaReturn287} from './animal-area-runtime-287.ts';
@@ -178,6 +179,7 @@ export function reconcileWildlife(world:World,resourcesById?:ReadonlyMap<number,
 }
 export function advanceWildlife(world:World,duckFlyerServices:DuckFlyerServices256={hitRoof:hitSkyfallerRoof256}):void {
   const s=world.wildlife;if(!s)return;advanceGeographicRenewal262(world,(species,cell,nextDecision,flyIn)=>addAnimal(world,s,species,cell,nextDecision,flyIn));advancePopulation(world,s);advanceAnimalLife(world);advanceEggLayers256(world);if(!s.animals.length){advanceDuckFlyers256(world,duckFlyerServices);return;}
+  const readThermal466=createAnimalThermalPass466(world);
   // A meal can remain active for many ticks. Capture its plant identity once
   // for this synchronous decision, then discard the index before other world
   // systems can mutate resources. A handful of meals are cheaper to scan
@@ -212,7 +214,7 @@ export function advanceWildlife(world:World,duckFlyerServices:DuckFlyerServices2
     const a=s.animals[(world.tick+i)%s.animals.length]!;
     const species=animalSpecies(a.species);
     const aliveBefore=a.state!=='dead';
-    advanceAnimalHealth(world,a);reconcileAnimalEggLay256(world,a);reconcileHiveMaintenance256(world,a);
+    advanceAnimalHealth(world,a,readThermal466(a));reconcileAnimalEggLay256(world,a);reconcileHiveMaintenance256(world,a);
     if(aliveBefore&&a.state==='dead')hauling.invalidate();
     // Revoke future cargo travel before any danger, medical or other owner
     // can take control. The committed edge and actual inventory stay physical.

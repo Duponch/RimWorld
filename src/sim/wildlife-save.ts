@@ -1,4 +1,5 @@
 import {validAnimalAreaField287} from './animal-area-save-287.ts';
+import {animalThermalFields466} from './animal-thermal-v466.ts';
 import {findShipCasketActor277} from './ship-casket-state-277.ts';
 import {isSchema282OrLater} from './schema-compatibility-257.ts';
 import {validAnimalTrainingTransport282} from './animal-training-save-282.ts';
@@ -106,7 +107,8 @@ export function validWildlifePredationState(w:Pick<World,'tick'|'width'|'height'
   return s.animals.every(a=>{
     if(!object(a)||!validAnimalMindFields256(a,version,w.tick,w.width,w.height)||!validArrivalRotation256(a,version)||!validAnimalAgeCoreRemainder256(a,version,w.tick)||!validActorMapBedField256(a,version,w.nextId)||!validRetainedCorpseDamage256(a,version)||!isAnimalSpeciesInVersion(a.species,version)||version<178&&a.species==='red-fox')return false;
     if(!validDuckExitFlight256(a,version,w.tick)||!validDuckFlightFields256(a,version,w.tick)||!validAnimalEggState256(a,version,w)||a.health&&Object.hasOwn(a.health,'animalBirthTick')&&!isAnimalSpecies256(a.species)&&!a.growthTracker)return false;
-    if(isAnimalSpecies256(a.species)&&!animalMechanicalReadiness256(a.species).ok||(isAnimalSpecies256(a.species)||a.growthTracker)&&!int(a.ageTicks)||a.health&&(!validAnimalClinicalOwner256(a.health,a.species,a.ageTicks,w.tick)||!!validateMedicalRecord(a.health,true,true,false,false,true,true,true,true,true,true,true,version)))return false;
+    const thermal=animalThermalFields466(a,version);
+    if(isAnimalSpecies256(a.species)&&!animalMechanicalReadiness256(a.species).ok||(isAnimalSpecies256(a.species)||a.growthTracker)&&!int(a.ageTicks)||a.health&&(!validAnimalClinicalOwner256(a.health,a.species,a.ageTicks,w.tick)||!!validateMedicalRecord(a.health,true,true,thermal.heat,thermal.cold,true,true,true,true,true,true,true,version)))return false;
     const hunt:unknown=a.predation;if(hunt===undefined)return true;
     return version>=178&&isAnimalSpecies(a.species)&&animalSpecies(a.species).predator===true&&object(hunt)
       &&keys(hunt,['targetId','startedAtCore','firstHit'])&&int(hunt.targetId,1,w.nextId-1)&&hunt.targetId!==a.id
@@ -183,7 +185,8 @@ export function validateWildlife(w:World,version:number,ids:Set<number>):string[
     if((['water','rock'].includes(w.tiles[a.z*w.width+a.x]!.terrain)||version>=256&&!duckTerrainWalkable256(w,a,w.tiles[a.z*w.width+a.x]!.terrain)&&!(a.species==='duck'&&a.motion?.animalFlight===true&&w.tiles[a.z*w.width+a.x]!.terrain==='water-deep'))||w.structures.some(s=>(s.kind==='wall'||s.kind==='cooler')&&s.x===a.x&&s.z===a.z))errors.push('Wildlife inside solid terrain.');
     if(!validToxicBuildupTransport256(a,version,w.tick,w))errors.push('Invalid actual animal toxic clinical owner');
     if(a.health!==undefined){
-      if(validateMedicalRecord(a.health,true,true,false,false,true,version>=79,version>=81,version>=84,version>=87,version>=88,version>=89,version)||a.health.body!==a.species){errors.push('Invalid animal medical record.');continue;}
+      const thermal=animalThermalFields466(a,version);
+      if(validateMedicalRecord(a.health,true,true,thermal.heat,thermal.cold,true,version>=79,version>=81,version>=84,version>=87,version>=88,version>=89,version)||a.health.body!==a.species){errors.push('Invalid animal medical record.');continue;}
       if(!validAnimalClinicalOwner256(a.health,a.species,a.ageTicks,w.tick))errors.push('Invalid animal clinical age owner.');
       if(a.health.death?a.health.tick>w.tick:medicalCivilTick271(a.health)!==w.tick)errors.push('Invalid animal medical clock.');
       const status=medicalStatus(a.health);if(status==='mobile'?a.state==='dead'||a.state==='downed':a.state!==status)errors.push('Invalid animal medical state.');
