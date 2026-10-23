@@ -42,7 +42,7 @@ export function validSecondarySiteShape(raw:unknown,version:number):boolean {
   if((!w.climate||w.climate.adoptedAt<=s.createdAt)&&map.climate.calendarOrigin!==calendarTick(w,s.createdAt)+Number(map.expeditionSite.calendarOffset))return false;
   // The local validator owns all remaining state and exact Thing references.
   // Reject hidden/custom fields here; map record must be ordinary plain data.
-  if(Object.getPrototypeOf(map)!==Object.prototype||Reflect.ownKeys(map).some(k=>typeof k!=='string'||!LOCAL_FIELDS.has(k)
+  if(Object.getPrototypeOf(map)!==Object.prototype||Reflect.ownKeys(map).some(k=>typeof k!=='string'||!LOCAL_FIELDS.has(k)||k==='party292'&&version!==292
     ||!Object.hasOwn(Object.getOwnPropertyDescriptor(map,k)!,'value')))return false;
   const size=Number(raw.width)*Number(raw.height);
   if(!['tiles','pawns','resources','structures','jobs','piles','stockpiles','growingZones','packed'].every(k=>dense(map[k],k==='piles'?32768:size*3))
@@ -66,6 +66,7 @@ export function validExpeditionOrigin(value:unknown,w:Pick<World,'tick'|'planet'
 // Explicit map namespace: adding another World domain requires a conscious
 // partition decision. A future field is not accepted because World ignores it.
 export const LOCAL_FIELDS=new Set([
+  'party292',
   'firefoam290',
   'shipReactorThreats275',
   'worldSiteThreat263','worldDefence263','expeditionSite','autoSlaughter','allowedAreas','orbital','deepResources','group','groupLosses','mechSalvage','mechanoids','rainElectrical',

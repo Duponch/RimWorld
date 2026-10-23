@@ -147,7 +147,7 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   if(external&&(!Number.isFinite(external.rawAmount)||external.rawAmount<0||!Number.isSafeInteger(external.core)||external.core<Math.max(0,(world.tick-1)*10)||external.core>world.tick*10))return false;
   const core=external?.core??world.tick*10,explosive=world.schemaVersion>=193&&installed&&s.kind==='mini-turret'&&!!s.turret&&miniTurretExplosive(s.id);
   const detonates=explosive&&(external?.detonate|| (external?.rawAmount??amount)>=max-(s.damage??0));
-  const foam=(Number(world.schemaVersion)===290||Number(world.schemaVersion)===291)&&installed&&s.kind==='firefoam-popper'&&!!s.firefoam290;
+  const foam=(Number(world.schemaVersion)===290||(Number(world.schemaVersion)===291||Number(world.schemaVersion)===292))&&installed&&s.kind==='firefoam-popper'&&!!s.firefoam290;
   const foamDetonates=foam&&(external?.firefoamDetonate290|| (external?.rawAmount??amount)>=max-(s.damage??0));
   const emits=detonates||foamDetonates;
   if(foam&&(!Number.isSafeInteger(core+150)||foamDetonates&&(world.firefoam290?.waves.length??0)>=world.width*world.height))return false;

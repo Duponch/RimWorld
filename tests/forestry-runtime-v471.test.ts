@@ -30,7 +30,7 @@ test('forest choices use positive indigenous biome flora and acquired research, 
 
 test('all thirteen existing species use400 local sowing work without becoming CropKind and future291 additions stay closed',()=>{
  expect(FORESTRY_SPECIES_291).toHaveLength(13);for(const species of FORESTRY_SPECIES_291){expect(growingPlantSowTicks291(species)).toBe(400);expect(isGrowingPlantInVersion291(species,291)).toBe(true);expect(isGrowingPlantInVersion291(species,290)).toBe(false);}
- expect(isGrowingPlantInVersion291('rice',290)).toBe(true);expect(isGrowingPlantInVersion291('rice',292)).toBe(false);expect(isGrowingPlantInVersion291('oak',292)).toBe(false);
+ expect(isGrowingPlantInVersion291('rice',290)).toBe(true);for(const version of [291,292]){expect(isGrowingPlantInVersion291('rice',version)).toBe(true);expect(isGrowingPlantInVersion291('oak',version)).toBe(true);}expect(isGrowingPlantInVersion291('rice',293)).toBe(false);expect(isGrowingPlantInVersion291('oak',293)).toBe(false);
 });
 
 test('a foreign essence, absent research and a roof admit no new forest sowing work',()=>{

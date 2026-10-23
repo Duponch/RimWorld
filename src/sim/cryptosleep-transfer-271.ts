@@ -61,7 +61,7 @@ export function planCryptosleepEntry271(w:World,c:PlayerCasket271,p:Pawn):Crypto
   if(done||w.tick!==tick||w.rng!==rng||w.nextId!==nextId||!installed(w,c)||c.cryptosleep!==holder||holder.human||w.pawns!==pawns||w.piles!==piles||w.packed!==packs||!w.pawns.includes(p)||seal(p,items,packed)!==stamp||JSON.stringify([c.id,c.x,c.z,c.orientation,c.footprint,c.material])!==building||!service.current())return false;
   const actualItems=w.piles.filter(i=>personal(i,p.id)),actualPacked=w.packed.filter(i=>i.owner.type==='inventory'&&i.owner.pawnId===p.id);
   if(actualItems.length!==items.length||actualItems.some((i,n)=>i!==items[n])||actualPacked.length!==packed.length||actualPacked.some((i,n)=>i!==packed[n]))return false;
-  if(!releaseWork(w,p,drops))return false;done=true;clearQueuedOrders(w,p);delete p.priorityWork;
+  if(!releaseWork(w,p,drops,true))return false;done=true;clearQueuedOrders(w,p);delete p.priorityWork;
   // DeSpawn ends spatial jobs, never their disease or factual history.
   if(p.health){cancelAlcoholSpatial265(p.health);cancelToxicVomit256(p.health);cancelCryptosleepVomit256(p.health);for(const illness of [p.health.foodPoisoning,p.health.flu,p.health.immuneDiseases?.malaria])if(illness)delete illness.vomit;}
   delete p.motion;delete p.medicalSleep;delete p.draft;delete p.shooting;delete p.melee;delete p.bombRefuge;delete p.heatRefuge;delete p.allowedAreaReturn;delete p.transitExit;

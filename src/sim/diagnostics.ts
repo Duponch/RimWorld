@@ -126,6 +126,7 @@ export function queryPawnStatus(world: World, pawn: Pawn, foodReadability?:FoodR
   if(pawn.interruptedCargo)return {code:'interrupted-cargo',reason:'Travail interrompu ; cargaison conservée. Libérez une case de sol proche pour permettre son dépôt.'};
   if(pawn.recreation.task) {
     const task=pawn.recreation.task, patient=task.activity==='visit-sick'?world.pawns.find(other=>other.id===task.patientId):undefined;
+    if(task.activity==='party')return {code:'recreation',reason:task.phase==='travel'?'Se rend à la fête.':'Participe à la fête.'};
     if(task.activity==='visit-sick')return {code:'recreation',reason:task.phase==='travel'?`Se rend au chevet de ${patient?.name??'un patient'}.`:`Rend visite à ${patient?.name??'un patient'} (${Math.round(pawn.recreation.level)} % de loisirs).`};
     if(task.activity==='social-relax')return {code:'recreation',reason:task.phase==='travel'?'Rejoint un point de rencontre.':`Se détend au point de rencontre (${Math.round(pawn.recreation.level)} % de loisirs).`};
     const activity=task.activity==='horseshoes'?'jouer aux fers à cheval':task.activity==='chess'?'jouer aux échecs':task.activity==='watch-television'?'regarder la télévision':'observer le ciel';

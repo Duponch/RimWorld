@@ -18,11 +18,14 @@ import { cellIndex, routeToCell } from './pathfinding.ts';
 import type { NeedContext } from './needs.ts';
 import type { Pawn, World } from './types.ts';
 
-const labels: Record<RecreationActivity,string> = {horseshoes: 'jouer aux fers à cheval', skygaze: 'observer le ciel', chess:'jouer aux échecs','social-relax':'se détendre ensemble','visit-sick':'rendre visite à un malade','watch-television':'regarder la télévision'};
+const labels: Record<RecreationActivity,string> = {horseshoes: 'jouer aux fers à cheval', skygaze: 'observer le ciel', chess:'jouer aux échecs','social-relax':'se détendre ensemble','visit-sick':'rendre visite à un malade','watch-television':'regarder la télévision',party:'participer à la fête'};
 const urgentDoctorCall=(world:World,pawn:Pawn):boolean=>urgentWorkEnabled(pawn,'doctor')&&world.pawns.some(p=>p!==pawn&&allowedAreaAllows(world,pawn,p)&&lyingPatient(p)&&urgentTreatment(p));
 /** Search shares the existing bounded navigation budget. No gain in transit,
  * no worker/cargo preemption just because the timetable recommends recreation. */
 export function processRecreation(world: World, pawn: Pawn, context: NeedContext, afterWork = false): boolean {
+  // Party has its own physical presence watermark and outcome; personal joy
+  // saturation and the ordinary 400-tick limit must never finish it.
+  if(pawn.recreation.task?.activity==='party')return false;
   const joy=pawn.recreation, assignment=assignmentAt(world,pawn);
   if (joy.task) {
     if (assignment==='work' || urgentMedicalTask(pawn) || urgentDoctorCall(world,pawn)

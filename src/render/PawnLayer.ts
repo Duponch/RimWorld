@@ -127,6 +127,7 @@ function animationPose(pawn:Pawn,workPose:number,smallMelee:boolean,seated:boole
     const activity=pawn.recreation.task?.activity;
     if(activity==='horseshoes')return 4;
     if(activity==='skygaze')return 5;
+    if(activity==='party')return 0;
     if(activity==='watch-television'||activity==='chess'||activity==='social-relax'||activity==='visit-sick')return seated?3:0;
   }
   if(pawn.state==='resting'||medicallyStopped(pawn))return 1;

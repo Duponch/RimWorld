@@ -23,7 +23,7 @@ class ForestryNode {
 }
 afterEach(()=>vi.unstubAllGlobals());
 function fixture(biome='temperate-forest',researched=true){
-  const world=deconstructionCamp(1,32);world.schemaVersion=291;
+  const world=deconstructionCamp(1,32);world.schemaVersion=291 as World['schemaVersion'];
   world.site={revision:2,biome:biome as import('../src/sim/biome-flora').BiomeId,hilliness:'flat',river:'none',stones:['granite','limestone']};
   world.research={points:0,project:null,...(researched?{treeSowing291:{points:TREE_SOWING_COST_291,completedAt:world.tick}}:{})};
   const zone:GrowingZone={id:world.nextId++,cells:[12*world.width+12],plant:'rice',allowSow:true,allowCut:true};world.growingZones=[zone];
@@ -49,7 +49,7 @@ test('unresearched, historical, unknown-biome and context-free controls retain t
   expect(growingCultureChoices(zone,world)).toEqual(CROP_KINDS);
   world.research!.treeSowing291={points:TREE_SOWING_COST_291};expect(growingCultureChoices(zone,world)).toEqual(CROP_KINDS);
   world.research!.treeSowing291.completedAt=world.tick;world.schemaVersion=290 as World['schemaVersion'];expect(growingCultureChoices(zone,world)).toEqual(CROP_KINDS);
-  world.schemaVersion=291;delete world.site;expect(growingCultureChoices(zone,world)).toEqual(CROP_KINDS);
+  world.schemaVersion=291 as World['schemaVersion'];delete world.site;expect(growingCultureChoices(zone,world)).toEqual(CROP_KINDS);
   expect(growingCultureChoices(zone)).toEqual(CROP_KINDS);
 });
 

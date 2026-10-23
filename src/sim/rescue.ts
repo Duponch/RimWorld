@@ -1,3 +1,4 @@
+import {preparePartyRelease292} from './party-release-292.ts';
 import {commitMedicalGuest259} from './world-affiliation-259.ts';
 import {cancelToxicVomit256} from './toxic-buildup-256.ts';
 import {claimLocalActorBed256,captureActorBeds256,localBedClaimAvailable256} from './actor-bed-local-256.ts';
@@ -139,6 +140,8 @@ export function processRescue(world:World,actor:Pawn,context:NeedContext):void {
   if(task.phase==='approach'){
     if(actor.x!==patient.x||actor.z!==patient.z){context.move(patient,true);return;}
     if(patient.moveCooldown>0||bed.kind==='double-bed'&&(patient.motion?.end??0)>world.tick)return;
+    // Membership must leave before actual pickup changes this person's holder.
+    preparePartyRelease292(world,new Set([patient.id]),{finish:world.party292?.active?.organizerId===patient.id}).commit();
     patient.need=null;delete patient.medicalSleep;patient.path=[];
     // Core's invitation precedes the real carry, without changing faction,
     // inventory, visit group or phase. A later interruption retains admission.

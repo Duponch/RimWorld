@@ -24,7 +24,7 @@ const TAB_DEFINITIONS: readonly InspectorTabDefinition[] = Object.freeze([
   { id: 'prisoner', label: 'Prisonnier', selectors: ['#prisoner-inspection'] },
   { id: 'social', label: 'Social', selectors: ['#social-inspection'] },
   { id: 'bio', label: 'Bio', selectors: ['.skills-inspection'] },
-  { id: 'needs', label: 'Besoins', selectors: ['.needs', '#recreation-tolerance', '#mood-inspection', '#room-description'] },
+  { id: 'needs', label: 'Besoins', selectors: ['.needs', '#party-participation', '#recreation-tolerance', '#mood-inspection', '#room-description'] },
   { id: 'health', label: 'Santé', selectors: ['#health-inspection', '#hygiene-controls', '#burial-controls'] },
 ]);
 
@@ -113,7 +113,7 @@ export function refreshColonistInspectorLayout(root: HTMLElement): void {
       const right = document.createElement('section'); right.className = 'pawn-thoughts-list';
       right.setAttribute('aria-label', 'Humeur et pensées'); columns.append(left, right); needs.append(columns);
     }
-    for (const node of needs.querySelectorAll<HTMLElement>(':scope > .needs, :scope > #recreation-tolerance, :scope > #room-description')) columns.children[0]!.append(node);
+    for (const node of needs.querySelectorAll<HTMLElement>(':scope > .needs, :scope > #party-participation, :scope > #recreation-tolerance, :scope > #room-description')) columns.children[0]!.append(node);
     const mood = needs.querySelector<HTMLElement>(':scope > #mood-inspection');
     if (mood) columns.children[1]!.append(mood);
   }

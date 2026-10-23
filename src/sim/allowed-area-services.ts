@@ -7,6 +7,10 @@ import type { RecreationTask } from './recreation-rules.ts';
 /** Runtime admissions only. Transport keeps its existing physical guards. */
 export function allowedAreaRecreationAllowed(world:World,pawn:Pawn,task:RecreationTask,policy:AllowedAreaPolicy|undefined=captureAllowedArea(world,pawn)):boolean {
   if(!policy)return true;
+  if(task.activity==='party'){
+    const active=world.party292?.active;
+    return !!active&&task.partyStartedAtCore===active.startedAtCore&&allowedAreaAllows(world,pawn,active.site,policy)&&allowedAreaAllows(world,pawn,task.target,policy);
+  }
   if(task.activity==='skygaze'||task.activity==='social-relax')return allowedAreaAllows(world,pawn,task.target,policy);
   // The object/patient is the actual target. Its physically valid interaction
   // position may lie across the boundary, like any other work contact.

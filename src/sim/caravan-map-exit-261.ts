@@ -1,3 +1,4 @@
+import {preparePartyRelease292} from './party-release-292.ts';
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {prepareCoupleRelease285,type CoupleReleasePlan285} from './couple-release-285.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
@@ -60,7 +61,10 @@ export function prepareMapRaiderWorldExit261(w:World,carrier:Pawn,patient?:Pawn)
  const nativeBefore=state.nativeOrder,staged:WorldPawnsState256={...state,owners:state.owners.slice()},random={rng:root.rng};
  const prepared:{original:Pawn;row:CaptivityRow261;items:World['piles'];packed:World['packed'];history?:Pawn['prisonerHistory259']}[]=[];
  let couple:CoupleReleasePlan285;
- try{couple=prepareCoupleRelease285(w,new Set(originals.map(p=>p.id)));}catch(e){return no(e instanceof Error?e.message:String(e));}
+ try{couple=prepareCoupleRelease285(w,new Set(originals.map(p=>p.id)));
+  // Only these actual exiting originals are excluded; remaining members may finish.
+  const party=preparePartyRelease292(w,new Set(originals.map(p=>p.id)),{finish:originals.some(p=>p.id===w.party292?.active?.organizerId)});
+  const base=couple;couple={...base,writes:[...party.writes,...base.writes],people:[...new Set([...base.people,...party.people])],current:()=>base.current()&&party.current(),commit(){if(!base.current()||!party.current())throw Error('Stale Party map exit');party.commit();base.commit();}};}catch(e){return no(e instanceof Error?e.message:String(e));}
  try{for(const original of originals){
   const history=original.prisoner??original.prisonerHistory259;if(!mutableHistory261(history))return no('Le dossier de captivité original ne peut pas être déplacé à sa vraie sortie.');
   const draft=couple.project(original);clearReleasedPawnAssignments259(draft);cleanMapRemovedHumanRecord259(draft,w.tick);unclaimDetachedActorBed256(draft);delete draft.allowedAreaId;delete draft.allowedAreaReturn;

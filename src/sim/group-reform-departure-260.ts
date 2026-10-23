@@ -1,3 +1,4 @@
+import {preparePartyRelease292} from './party-release-292.ts';
 import {isSchema287OrLater} from './schema-compatibility-257.ts';
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {prepareCoupleRelease285} from './couple-release-285.ts';
@@ -45,6 +46,9 @@ export function prepareReformDeparture260(w:World,input:ReformDepartureInput260)
  const del=(object:object,key:string)=>put(object,key,undefined,false);
  const own=(o:object,k:string)=>Object.getOwnPropertyDescriptor(o,k)?.value;
  const after=(o:object,k:string)=>{const r=writes.find(r=>r.object===o&&r.key===k);return r?r.present?r.value:undefined:own(o,k);};
+ // Reform always retires its actual Camp: all originals leave this local Party.
+ const party=preparePartyRelease292(w,new Set(w.pawns.map(p=>p.id)),{finish:true});
+ for(const r of party.writes)put(r.object,r.key,r.value,r.present);
  const couple=prepareCoupleRelease285(w,ids);
  for(const r of couple.writes)put(r.object,r.key,r.value,r.present);
  const bed=captureActorBeds256(root),jobDrafts=new Map<Job,Job>();
@@ -120,7 +124,7 @@ export function prepareReformDeparture260(w:World,input:ReformDepartureInput260)
  const graph=sealRemovalOriginal259(scope,writes,[]);
  const slots=(afterWrites:readonly MapRemovalWrite259[])=>writes.every((r,i)=>{const final=[...afterWrites].reverse().find(w=>w.object===r.object&&w.key===r.key),d=Object.getOwnPropertyDescriptor(r.object,r.key);if(final)return final.present?!!d&&d.enumerable===true&&Object.hasOwn(d,'value')&&Object.is(d.value,final.value):d===undefined;const old=stamps[i];return !!d===!!old&&(!d||Object.hasOwn(d,'value')&&d.enumerable===old!.enumerable&&d.writable===old!.writable&&d.configurable===old!.configurable&&Object.is(d.value,old!.value));});
  let phase:'prepared'|'begun'|'departed'='prepared';
- const current=()=>phase==='prepared'&&stable()&&couple.current()&&removalWritesMutable259(writes)&&slots([])&&graph(0);
+ const current=()=>phase==='prepared'&&stable()&&party.current()&&couple.current()&&removalWritesMutable259(writes)&&slots([])&&graph(0);
  if(!current())throw Error('Reform originals or write recipients cannot be admitted');
  return {ids,packedIds,nextId,people,coupleWrites285:couple.writes,items:new Map(transfers.map(t=>[t.original.id,t.fragment?t.next:null])),valueAfter:after,
   seal(areas=[],beds=[]){const all=[...writes,...areas],check=sealRemovalOriginal259(scope,all,beds);return stage=>stable()&&slots(stage===0?[]:stage===1?all:[...all,...beds])&&check(stage);},

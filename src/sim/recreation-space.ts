@@ -1,4 +1,5 @@
 import { isBedKind } from './bed-kinds.ts';
+import {partyTaskSiteValid292} from './party-space-292.ts';
 import { deconstructionReserved } from './deconstruction-rules.ts';
 import { canStandAt, captureStandability } from './furniture-travel.ts';
 import { isRoofed, roofIndex } from './roof-rules.ts';
@@ -93,6 +94,7 @@ export function standableRecreationCell(world: World, cell: Cell, space?: Recrea
     && !(space ? space.solids.has(cell.z*world.width+cell.x) : world.structures.some(s=>['wall','table'].includes(s.kind)&&footprintContains(s,cell))||world.jobs.some(s=>['wall','table'].includes(s.kind)&&footprintContains(s,cell)));
 }
 export function recreationSiteValid(world: World, task: RecreationTask, space?: RecreationSpace,readTopology?:()=>RoomTopology): boolean {
+  if(task.activity==='party')return partyTaskSiteValid292(world,task,space?.roomTopology()??readTopology?.(),space?.standable);
   if(task.activity==='skygaze'&&isRoofed(world,roofIndex(world,task.target)))return false;
   if (!standableRecreationCell(world,task.target,space)) return false;
   if(task.activity==='watch-television') {

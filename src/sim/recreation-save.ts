@@ -1,3 +1,4 @@
+import {validPartyTask292} from './party-save-292.ts';
 import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import { initialRecreation, RECREATION_DURATION, RECREATION_KINDS, VISIT_SICK_DURATION } from './recreation-rules.ts';
 import { adjacentToTable, isChessCell, isGatherSpot, isHorseshoeCell } from './recreation-space.ts';
@@ -50,16 +51,18 @@ export function validateRecreation(world: World, version: number): string[] {
     if(!record(joy)||needErrors.includes('Invalid recreation need.'))continue;
     const task=joy.task;
     if(task===null){if(pawn.state==='recreating')errors.push('Recreation state has no activity.');continue;}
-    if(!record(task)||Object.keys(task).some(k=>!['activity','target','buildingId','seatId','patientId','phase','elapsed'].includes(k))
-      ||!['skygaze','horseshoes',...(version>=122?['chess']:[]),...(version>=124?['social-relax','visit-sick']:[]),...(version>=190?['watch-television']:[])].includes(task.activity as string)||!['travel','active'].includes(task.phase as string)
-      ||!Number.isInteger(task.elapsed)||(task.elapsed as number)<0||(task.elapsed as number)>=(task.activity==='visit-sick'?VISIT_SICK_DURATION:RECREATION_DURATION)
+    if(!record(task)||Object.keys(task).some(k=>!['activity','target','buildingId','seatId','patientId','phase','elapsed','partyStartedAtCore'].includes(k))
+      ||!['skygaze','horseshoes',...(version>=122?['chess']:[]),...(version>=124?['social-relax','visit-sick']:[]),...(version>=190?['watch-television']:[]),...(version===292?['party']:[])].includes(task.activity as string)||!['travel','active'].includes(task.phase as string)
+      ||!Number.isInteger(task.elapsed)||(task.elapsed as number)<0||(task.elapsed as number)>=(task.activity==='party'?1502:task.activity==='visit-sick'?VISIT_SICK_DURATION:RECREATION_DURATION)
       ||!record(task.target)||!Number.isInteger(task.target.x)||!Number.isInteger(task.target.z)
       ||(task.target.x as number)<0||(task.target.z as number)<0||(task.target.x as number)>=world.width||(task.target.z as number)>=world.height) {errors.push('Invalid recreation activity.');continue;}
+    if(!validPartyTask292(task,version,world.tick,world.width,world.height))errors.push('Invalid or future Party token.');
     if(pawn.jobId!==null||pawn.haul||pawn.cooking||pawn.need)errors.push('Recreation conflicts with another task.');
     if(task.seatId!==undefined&&(version<122||!['chess','social-relax','visit-sick',...(version>=190?['watch-television']:[])].includes(task.activity as string)||!Number.isSafeInteger(task.seatId)||Number(task.seatId)<1))errors.push('Invalid recreation seat.');
     if(task.patientId!==undefined&&(version<124||task.activity!=='visit-sick'||!Number.isSafeInteger(task.patientId)||Number(task.patientId)<1))errors.push('Invalid recreation patient.');
     if(task.phase==='travel'?(pawn.state!=='moving'||task.elapsed!==0):(pawn.state!=='recreating'||pawn.path.length>0||pawn.moveCooldown>0||pawn.x!==task.target.x||pawn.z!==task.target.z))errors.push('Invalid recreation phase or position.');
-    if(task.activity==='skygaze') {if(task.buildingId!==null||task.seatId!==undefined)errors.push('Skygazing cannot claim a building.');}
+    if(task.activity==='party'){if(task.buildingId!==null||task.seatId!==undefined||task.patientId!==undefined)errors.push('Party cannot claim furniture or patient.');}
+    else if(task.activity==='skygaze') {if(task.buildingId!==null||task.seatId!==undefined)errors.push('Skygazing cannot claim a building.');}
     else if(task.activity==='chess') {
       const table=world.structures.find(s=>s.id===task.buildingId&&s.kind==='chess-table');
       const seat=world.structures.find(s=>s.id===task.seatId&&(s.kind==='stool'||s.kind==='dining-chair'||s.kind==='armchair'));

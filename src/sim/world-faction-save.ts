@@ -1,3 +1,4 @@
+import {hasPartyMemoryField292} from './party-memories-292.ts';
 import {hasCoupleFields285} from './couple-owner-save-285.ts';
 import {validCouplePawnContext285} from './couple-save-285.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
@@ -25,7 +26,7 @@ const name=(v:unknown)=>typeof v==='string'&&v.trim().length>0&&v.length<=80&&!/
 /** Closed domain admission before nested personal guards; no cache or writer. */
 function plain(v:unknown,budget:{left:number},depth=0):boolean {if(--budget.left<0||depth>28)return false;if(v===null)return true;if(typeof v!=='object')return ['string','number','boolean','undefined'].includes(typeof v)&&(typeof v!=='number'||Number.isFinite(v));if(Array.isArray(v))return dense(v,10000)&&v.every(x=>plain(x,budget,depth+1));return object(v)&&Object.values(v).every(x=>plain(x,budget,depth+1));}
 const requiredPawn=['id','name','x','z','skills','orders','recreation','foodPolicyId','schedule','restZeroTicks','collapsePending','hunger','rest','mood','comfort','beauty','memories','jobId','haul','cooking','need','bedId','needCooldown','state','priorities','path','moveCooldown','planCooldown'];
-const passivePawn=['coupleClock285','coupleMemories285','age','appearance','health','medicalCare','apparelPolicyId','apparelAutomation','nextApparelCheckAt','faction','mental'];
+const passivePawn=['partyMemories292','coupleClock285','coupleMemories285','age','appearance','health','medicalCare','apparelPolicyId','apparelAutomation','nextApparelCheckAt','faction','mental'];
 export interface WorldFactionValidationHeader256 {present:boolean;tick:number;width:number;height:number;nextId:number;tileCount:number;postIds:ReadonlySet<number>;allowUnobservedPostReferences?:true;knownHumanIds:ReadonlySet<number>;occupiedThingIds:NumericMembershipLookup}
 /** Old schema accepts ABSENCE only. Call on RAW, full and reconstructed delta
  * before adoption; this module never creates historical factions or leaders. */
@@ -50,7 +51,7 @@ function validateCandidate(value:unknown,version:number,c:WorldFactionValidation
   if(Object.hasOwn(l.pawn,'mental')&&(!l.pawn.mental||!validMentalShape(l.pawn.mental,version,l.clock,c.width,c.height)||Object.hasOwn(l.pawn.mental,'crisis')))return ['Invalid detached faction leader mental owner.'];
   const p=l.pawn;if(p.worldAffiliation259&&(!validWorldAffiliationForeignKeys259(p,value as unknown as WorldFactionRegistry256)||p.worldAffiliation259.factionId!==l.factionId||p.worldAffiliation259.hostFactionId!==null||p.worldAffiliation259.guestStatus!=='Guest'))return ['Invalid leader faction/host foreign key.'];const context={width:c.width,height:c.height,tick:l.clock,nextId:c.nextId,schemaVersion:version as World['schemaVersion']};
   const personalErrors=validateDetachedPawnRecordShape(p as unknown as Record<string,unknown>,context,version,l.clock);if(personalErrors.length)return personalErrors;
-  if(hasCoupleFields285(p)&&!validCouplePawnContext285(p,{version,tick:l.clock,nextId:c.nextId,knownHumanIds:humanIds}))errors.push('Invalid faction leader couple clock or memory.');
+  if((hasCoupleFields285(p)||hasPartyMemoryField292(p))&&!validCouplePawnContext285(p,{version,tick:l.clock,nextId:c.nextId,knownHumanIds:humanIds}))errors.push('Invalid faction leader couple clock or memory.');
   errors.push(...validatePawnHealthRecord(p,context),...validateRecreationRecordShape(p as unknown as Record<string,unknown>,version,l.clock),...validateHumanSocial(p,version,l.clock,humanIds,[]));
   if(p.foodPolicyId!==1||p.apparelPolicyId!==1||typeof p.apparelAutomation!=='boolean'||!integer(p.nextApparelCheckAt,0,l.clock+APPAREL_POLICY_INTERVAL.max)||!integer(p.restZeroTicks,0,4500)||typeof p.collapsePending!=='boolean'||p.collapsePending&&(p.rest>=.01||p.restZeroTicks<=100)||!validSchedule(p.schedule)||p.jobId!==null||p.haul!==null||p.cooking!==null||p.need!==null||p.bedId!==null||p.path.length||p.moveCooldown||p.orders.active!==null||p.orders.queue.length||p.recreation.task!==null)errors.push('Faction leader retains local work.');
  }

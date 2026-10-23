@@ -27,6 +27,7 @@ import { readColonistAvailability,type AwayColonistAvailability } from './coloni
 import { readMoodRiskAlerts } from './mood-risk-alerts';
 import { setTooltip,type TooltipContent } from './tooltip';
 import {readResearchReadiness} from './research-readiness';
+import {partyView292} from './party-inspection-292';
 
 export interface NotificationContext { panel:Exclude<Panel,null>;category?:ArchitectCategory;tool?:'stockpile';worldTab?:'group'|'individual'; }
 export interface StatusAlert { key:string;text:string;targets:NotificationTarget[];context?:NotificationContext;tab?:'health'|'needs'|'prisoner';tooltip?:TooltipContent;campaign?:({mapId:number}|{site:'home'|'secondary'})&{actorId?:number}; }
@@ -81,6 +82,9 @@ export function readStatusAlerts(world:World,food:FoodReadability=captureFoodRea
     rows.push({key:`campaign:${'mapId' in incident?incident.mapId:incident.site}:${incident.kind}:${incident.actorId}`,text:`${place} · ${incident.count} ${label} hors carte · voir`,targets:[],campaign:{...target,actorId:incident.actorId}});
   }
   const add=(key:string,text:string,targets:NotificationTarget[],context?:NotificationContext,tab?:StatusAlert['tab'])=>rows.push({key,text,targets,...context?{context}:{},...tab?{tab}:{}});
+  const party=partyView292(world);
+  if(party&&knownPosition256(world,party.site))add('party',`Fête · ${party.members.length} participant(s) · ${party.remaining}`,
+    [cellNotificationTarget('party-site',party.site),...people(world,living.filter(p=>p.id===party.organizerId))]);
   const counted=(key:string,pawns:Pawn[],text:(count:number)=>string,tab?:StatusAlert['tab'])=>{if(pawns.length)add(key,text(pawns.length),people(world,pawns),{panel:'history'},tab);};
   counted('sad-wander',living.filter(p=>p.mental?.crisis?.kind==='sad-wander'),n=>`${n} colon(s) en errance triste`,'needs');
   counted('food-binge',living.filter(p=>p.mental?.crisis?.kind==='food-binge'),n=>`${n} colon(s) en frénésie alimentaire`,'needs');

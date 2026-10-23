@@ -1,3 +1,4 @@
+import {hasPartyMemoryField292} from './party-memories-292.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import type {World} from './types.ts';
 import type {NumericMembershipSink} from './numeric-membership.ts';
@@ -77,7 +78,7 @@ export function validatePendingEncounterRecords261(root:Pick<CampaignState,'sche
  // Only acquired couple fields need the complete, actual campaign knowledge.
  if(!errors.length&&p.people.some(hasCoupleFields285))try{
   const known=new Set(captureHumanOwners(context).people.keys());
-  for(const actor of p.people)if(hasCoupleFields285(actor)&&!validCouplePawnContext285(actor,{version:root.schemaVersion,tick:root.tick,nextId:root.nextId,knownHumanIds:known}))errors.push('Invalid pending foreign couple clock or memory.');
+  for(const actor of p.people)if((hasCoupleFields285(actor)||hasPartyMemoryField292(actor))&&!validCouplePawnContext285(actor,{version:root.schemaVersion,tick:root.tick,nextId:root.nextId,knownHumanIds:known}))errors.push('Invalid pending foreign couple clock or memory.');
  }catch{errors.push('Invalid pending foreign couple namespace.');}
  return errors;
 }

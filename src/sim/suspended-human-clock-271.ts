@@ -63,11 +63,11 @@ export function prepareSuspendedHumanResume271(pawn:Pawn,heldAt:number,targetCiv
  // unchanged and store the same per-memory correction as dated thoughts.
  dated(pawn.memories,m=>Number(m.expiresAt)-6000);
  dated(pawn.roomMemories,m=>Number(m.expiresAt)-6000);
- dated(pawn.bereavement,m=>Number(m.at));dated(pawn.deathThoughts,m=>Number(m.at));dated(pawn.familyBereavement,m=>Number(m.at));dated(pawn.romanceMemories,m=>Number(m.at));dated(pawn.coupleMemories285,m=>Number(m.at));dated(pawn.social?.memories,m=>Number(m.at));
+ dated(pawn.bereavement,m=>Number(m.at));dated(pawn.deathThoughts,m=>Number(m.at));dated(pawn.familyBereavement,m=>Number(m.at));dated(pawn.romanceMemories,m=>Number(m.at));dated(pawn.partyMemories292,m=>Number(m.at));dated(pawn.coupleMemories285,m=>Number(m.at));dated(pawn.social?.memories,m=>Number(m.at));
  const coupleOthers285=pawn.coupleMemories285?.map(m=>m.otherId);
  links.push(()=>!coupleOthers285||pawn.coupleMemories285?.every((m,i)=>m.otherId===coupleOthers285[i])===true);
- const lists=[pawn.memories,pawn.roomMemories,pawn.bereavement,pawn.deathThoughts,pawn.familyBereavement,pawn.romanceMemories,pawn.coupleMemories285,pawn.social?.memories],social=pawn.social;
- links.push(()=>pawn.social===social&&[pawn.memories,pawn.roomMemories,pawn.bereavement,pawn.deathThoughts,pawn.familyBereavement,pawn.romanceMemories,pawn.coupleMemories285,pawn.social?.memories].every((list,i)=>list===lists[i]));
+ const lists=[pawn.memories,pawn.roomMemories,pawn.bereavement,pawn.deathThoughts,pawn.familyBereavement,pawn.romanceMemories,pawn.partyMemories292,pawn.coupleMemories285,pawn.social?.memories],social=pawn.social;
+ links.push(()=>pawn.social===social&&[pawn.memories,pawn.roomMemories,pawn.bereavement,pawn.deathThoughts,pawn.familyBereavement,pawn.romanceMemories,pawn.partyMemories292,pawn.coupleMemories285,pawn.social?.memories].every((list,i)=>list===lists[i]));
  // Couple clocks are absolute global Core deadlines. Only the memories above
  // receive active-age correction; never shift a cooldown, attempt date or RNG.
  // Legacy scalar arrays contain deadlines, not factual event dates.

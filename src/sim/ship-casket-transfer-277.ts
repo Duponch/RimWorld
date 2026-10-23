@@ -57,7 +57,7 @@ export function planShipCasketEntry277(w:World,c:ShipCasket277,o:ShipCasketOccup
   const nowItems=w.piles.filter(p=>personal(p,a.id)),nowPacks=w.packed.filter(p=>p.owner.type==='inventory'&&p.owner.pawnId===a.id);
   if(nowItems.length!==items.length||nowItems.some((p,i)=>p!==items[i])||nowPacks.length!==packed.length||nowPacks.some((p,i)=>p!==packed[i]))return false;
   if(o.kind==='human'){
-   const p=o.pawn;if(!releaseWork(w,p,drops!))return false;clearQueuedOrders(w,p);delete p.priorityWork;
+   const p=o.pawn;if(!releaseWork(w,p,drops!,true))return false;clearQueuedOrders(w,p);delete p.priorityWork;
    if(p.health){cancelAlcoholSpatial265(p.health);cancelToxicVomit256(p.health);cancelCryptosleepVomit256(p.health);for(const illness of [p.health.foodPoisoning,p.health.flu,p.health.immuneDiseases?.malaria])if(illness)delete illness.vomit;}
    delete p.medicalSleep;delete p.draft;cancelShooting(p);cancelMelee(p);delete p.bombRefuge;delete p.heatRefuge;delete p.allowedAreaReturn;delete p.transitExit;
    p.moveCooldown=0;p.planCooldown=0;p.collapsePending=false;p.restZeroTicks=0;

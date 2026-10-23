@@ -1,3 +1,4 @@
+import {hasPartyMemoryField292} from './party-memories-292.ts';
 import {hasCoupleFields285} from './couple-owner-save-285.ts';
 import {validCouplePawnContext285} from './couple-save-285.ts';
 import {isSchema277OrLater} from './schema-compatibility-257.ts';
@@ -76,7 +77,7 @@ function validateContents277(c:ShipCasket277,context:RetainedShipCasketContext27
  if(a.shipCryptosleepHeldAt277!==held||a.state==='dead'||a.health?.death)errors.push('Spatial casket requires its one original living occupant and actual suspension frontier.');
  if(o.kind!=='mechanical'&&a.health&&medicalCivilTick271(a.health)!==held)errors.push('Spatial casket biological clinical frontier differs from its holder.');
  if(o.kind==='human'){
-  if(local&&hasCoupleFields285(o.pawn)&&!validCouplePawnContext285(o.pawn,{version,tick:held,civilTick:context.tick,nextId:context.nextId,knownHumanIds:humans}))errors.push('Invalid held spatial-casket couple clock or memory.');
+  if(local&&(hasCoupleFields285(o.pawn)||hasPartyMemoryField292(o.pawn))&&!validCouplePawnContext285(o.pawn,{version,tick:held,civilTick:context.tick,nextId:context.nextId,knownHumanIds:humans}))errors.push('Invalid held spatial-casket couple clock or memory.');
   const p=o.pawn;if(!inactiveHuman277(p)||Object.hasOwn(p,'cryptosleepHeldAt271'))errors.push('Spatial-casket human retains an active job or another holder marker.');
   errors.push(...(local?validateShipCasketPawnShape277(p as unknown as Record<string,unknown>,local,version,held,c.id):validateRetainedShipCasketPawnShape277(p as unknown as Record<string,unknown>,context,version,held,c.id)),
    ...validatePawnHealthRecord(p,{tick:held,width:context.width,height:context.height,schemaVersion:version},true),...validateRecreationRecordShape(p as unknown as Record<string,unknown>,version,held),...validateHumanSocial(p,version,held,humans,[],context.tick));

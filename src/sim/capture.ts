@@ -61,7 +61,7 @@ export function completeCapture(world:World,patient:Pawn,planned?:DropPlan,recap
   const drops=planned??planCaptureDrops(world,patient);if(!drops)return false;
   const held=world.piles.filter(p=>(p.owner.type==='pawn'||p.owner.type==='equipment')&&p.owner.pawnId===patient.id);
   if(held.some(item=>!drops.has(item.id)))return false;
-  if(!releaseWork(world,patient,drops))return false;
+  if(!releaseWork(world,patient,drops,true))return false;
   for(const item of held)item.owner={type:'ground',...drops.get(item.id)!};
   clearQueuedOrders(world,patient);delete patient.priorityWork;delete patient.draft;delete patient.flee;delete patient.equipmentDropPending;
   notifyKidnapLordHarm261(world,patient);

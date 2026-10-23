@@ -1,3 +1,4 @@
+import {partyMoodThoughts292,expirePartyMemories292} from './party-memories-292.ts';
 import {memoryExpiry271,memoryReadTick271} from './suspended-memory-271.ts';
 import {hiveDefeatThoughts256} from './cave-hive-memories-256.ts';
 import {alcoholThoughts265} from './alcohol-rules-265.ts';
@@ -103,6 +104,7 @@ export function personalMoodThoughts(pawn:Pawn,c:PersonalMoodContext):readonly M
   if(c.deathSituation)thoughts.push(c.deathSituation);
   if(pawn.familyBereavement)thoughts.push(...familyBereavementThoughtsAt(pawn,c.tick,c.relationPeople??c.people));
   if(pawn.romanceMemories)thoughts.push(...romanceMoodThoughtsAt(pawn,c.tick,c.relationPeople??c.people));
+  if(pawn.partyMemories292)thoughts.push(...partyMoodThoughts292(pawn,c.tick));
   if(pawn.coupleMemories285)thoughts.push(...coupleMoodThoughts285(pawn,c.tick,c.resolveCoupleNames285===false?unnamedCouplePeople285:c.couplePeople285??c.people));
   const housing=c.housing;if(housing)thoughts.push(housing);
   const difficultyMood=c.difficultyMood;
@@ -156,6 +158,7 @@ export function expireMealMemoriesAt(pawn:Pawn,tick:number):void {
   if((pawn.cryptosleepHeldAt271!==undefined||pawn.shipCryptosleepHeldAt277!==undefined))return;
   if(pawn.familyBereavement)expireFamilyBereavement(pawn,tick);
   if(pawn.romanceMemories)expireRomanceMemories(pawn,tick);
+  if(pawn.partyMemories292)expirePartyMemories292(pawn,tick);
   if(pawn.coupleMemories285)expireCoupleMemories285(pawn,tick);
   if(pawn.bereavement)expireBereavement(pawn,tick);
   if(pawn.deathThoughts)expireDeathThoughts(pawn,tick);

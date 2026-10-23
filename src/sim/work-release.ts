@@ -1,3 +1,4 @@
+import {preparePartyRelease292} from './party-release-292.ts';
 import {isSchema285OrLater} from './schema-compatibility-257.ts';
 import {releaseShipCasketCarry277} from './ship-casket-carry-277.ts';
 import {prepareCoupleRelease285} from './couple-release-285.ts';
@@ -176,17 +177,20 @@ export function commitDrop(world:World,pile:MaterialPile,origin:Cell,plan?:Reado
   if(cell){pile.owner={type:'ground',...cell};return true;}
   return dropRetainingIdentity(world,pile,origin);
 }
-export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
+export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan,ownerLoss=false):boolean {
+  // Refuse an immutable collective issue before any furniture/cargo drop.
+  if(world.schemaVersion===292&&(world.party292?.active?.members.some(m=>m.pawnId===pawn.id)||ownerLoss&&world.party292?.active?.organizerId===pawn.id)){try{if(!preparePartyRelease292(world,new Set([pawn.id]),{death:!!pawn.health?.death,finish:ownerLoss&&world.party292?.active?.organizerId===pawn.id}).current())return false;}catch{return false;}}
   if(!releaseFurniture(world,pawn,plan))return false;
   const held=world.piles.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
   if(held&&!commitDrop(world,held,pawn,plan))return false;
   delete pawn.interruptedCargo;
-  releaseAssignments(world,pawn);
+  releaseAssignments(world,pawn,false,ownerLoss);
   return true;
 }
 /** Release task/service claims independently of ownership. Only involuntary or tactical
  * interruption may use this while an object is still carried. */
-export function releaseAssignments(world:World,pawn:Pawn,despawning=false):void {
+export function releaseAssignments(world:World,pawn:Pawn,despawning=false,ownerLoss=despawning):void {
+  if(world.schemaVersion===292&&(pawn.recreation.task?.activity==='party'||world.party292?.active?.members.some(m=>m.pawnId===pawn.id)||ownerLoss&&world.party292?.active?.organizerId===pawn.id))preparePartyRelease292(world,new Set([pawn.id]),{death:!!pawn.health?.death,finish:ownerLoss&&world.party292?.active?.organizerId===pawn.id}).commit();
   if(isSchema285OrLater(world.schemaVersion)&&pawn.coupleTask285)prepareCoupleRelease285(world,new Set([pawn.id])).commit();
   releaseAllowedAreaReturn(pawn);
   releaseAnimalRescue(world,pawn);

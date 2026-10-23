@@ -1,3 +1,4 @@
+import {preparePartyRelease292} from './party-release-292.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {projectedCapturePatient259} from './group-human-projection-259.ts';
 import {prospectiveHuman259,captiveAdmission259,autoCapturePatient259,actualReform259,hostedCaptive259} from './group-human-admission-259.ts';
@@ -70,13 +71,19 @@ export function previewGroupHumanPreparation257(w:World,members:readonly Pawn[],
 /** All selected edges finish before any ordinary work is interrupted. A new
  * obstruction cancels the intent while leaving all prior tasks untouched. */
 export function releaseGroupHumanWork257(w:World,g:PreparingGroup,preflight:()=>boolean):'ready'|'waiting'|'refused' {
- const prep=g.humanPreparation;if(!prep?.releaseIds.length)return 'ready';
+ const prep=g.humanPreparation;
+ if(!prep?.releaseIds.length){
+  const active=w.party292?.active,ids=new Set(g.memberIds);if(!active||!ids.has(active.organizerId)&&!active.members.some(m=>ids.has(m.pawnId)))return 'ready';
+  try{const party=preparePartyRelease292(w,ids,{finish:ids.has(active.organizerId)});if(!preflight()||!party.current())return 'refused';party.commit();return 'ready';}catch{return 'refused';}
+ }
+
  const members=prep.releaseIds.map(id=>w.pawns.find(p=>p.id===id));
  if(members.some(p=>!p))return 'refused';
  if(members.some(p=>!settled(w,p!)))return 'waiting';
  if(members.some(p=>groupHumanAdmissionReason257(w,p!)))return 'refused';
  const drops=planPawnDrops(w,new Set(prep.releaseIds));if(!drops)return 'refused';
- if(!preflight())return 'refused';
+ let party:ReturnType<typeof preparePartyRelease292>;try{party=preparePartyRelease292(w,new Set(g.memberIds),{finish:w.party292?.active!==undefined&&g.memberIds.includes(w.party292.active.organizerId)});}catch{return 'refused';}
+ if(!preflight()||!party.current())return 'refused';party.commit();
  // Every drop and every task owner was preflighted before the first write.
  for(const p of members as Pawn[]){clearQueuedOrders(w,p);delete p.priorityWork;if(!releaseWork(w,p,drops))throw Error('Preflighted formation work release changed');p.planCooldown=0;p.needCooldown=0;}
  prep.releaseIds=[];return 'ready';

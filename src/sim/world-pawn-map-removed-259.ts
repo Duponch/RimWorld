@@ -1,3 +1,4 @@
+import {combinePartyRelease292} from './party-release-292.ts';
 import {prepareHeldShipCasketRemoval277,heldShipCasketLivingIds277} from './world-pawn-ship-casket-277.ts';
 import {prepareLinkedStorageMapRemoval286,composeArchiveLinkedStorageMapRemoval286} from './linked-storage-map-removal-286.ts';
 import {prepareCoupleRelease285,type CoupleReleasePlan285} from './couple-release-285.ts';
@@ -112,6 +113,9 @@ export function prepareMapRemoved259(input:CampaignState,map:World,mapId:number,
  for(const f of factions.factions)if(f.lifecycle259)conditions.push({factionId:f.id,defeated:f.lifecycle259.defeated,temporary:f.lifecycle259.temporary,techLevel:WORLD_FACTION_TECH_LEVEL_259[f.def]});
  let couple:CoupleReleasePlan285;
  try{couple=prepareCoupleRelease285(map,new Set(map.pawns.filter(p=>!departure?.ids.has(p.id)).map(p=>p.id)),{priorWrites:departure?.coupleWrites285});}catch(e){return no(e instanceof Error?e.message:String(e));}
+ // Reform's departure already owns the all-member Party cleanup. Otherwise
+ // compose it into the existing admitted release stage before owner transfer.
+ if(!departure)couple=combinePartyRelease292(map,new Set(map.pawns.map(p=>p.id)),couple);
  const coupleBeds=map.structures.filter(b=>couple.people.some(p=>p.coupleTask285?.bedId===b.id)),coupleAreaSeal=sealRemovalOriginal259({people:couple.people,beds:coupleBeds},areaWrites,couple.writes);
  const randomState={rng:root.rng},random={float:(min:number,max:number)=>min+(max-min)*healthRandom(randomState)},staged:WorldPawnsState256={...state,atCore:now,owners:state.owners.slice()};
  type Prepared={original:Pawn|WildAnimal|Mechanoid;kind:'human'|'animal'|'mechanical';outcome:WorldPawnOwner256;cleaned:string;items:World['piles'];packed:World['packed']};

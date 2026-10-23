@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 291 as const;
+export const SCHEMA_VERSION = 292 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -121,6 +121,7 @@ export interface Pawn extends Cell { firefoamTask290?:import('./firefoam-manual-
   romanceMemories?:import('./romance-memories.ts').RomanceMemory[];
   coupleClock285?:import('./couple-state-285.ts').CoupleClock285;
   coupleTask285?:import('./couple-state-285.ts').CoupleTask285;
+  partyMemories292?:import('./party-memories-292.ts').PartyMemory292[];
   coupleMemories285?:import('./couple-memories-285.ts').CoupleMemory285[];
   raid?:import('./raid-state.ts').RaiderState;
   traits?: import('./traits.ts').TraitId[];
@@ -203,6 +204,7 @@ export interface Pawn extends Cell { firefoamTask290?:import('./firefoam-manual-
 }
 export interface WorldEvent { tick: number; type: 'job' | 'need' | 'command'; message: string }
 export interface World {
+  party292?:import('./party-state-292.ts').PartyState292;
   firefoam290?:import('./firefoam-state-290.ts').FirefoamWorld290;
   ancientShrineWarnings?:import('./ancient-shrine-warning-state-256.ts').AncientShrineWarnings256;
   exploration?:import('./exploration-state-256.ts').ExplorationState256;

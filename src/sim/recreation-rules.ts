@@ -4,15 +4,15 @@ import { pawnBody } from './health-rules.ts';
 
 export const RECREATION_KINDS = ['solitary', 'dexterity', 'cerebral', 'social', 'television'] as const;
 export type RecreationKind = typeof RECREATION_KINDS[number] | 'chemical';
-export type RecreationActivity = 'skygaze' | 'horseshoes' | 'chess' | 'social-relax' | 'visit-sick' | 'watch-television';
-export interface RecreationTask { activity: RecreationActivity; target: Cell; buildingId: number | null; seatId?: number; patientId?: number; phase: 'travel' | 'active'; elapsed: number }
+export type RecreationActivity = 'skygaze' | 'horseshoes' | 'chess' | 'social-relax' | 'visit-sick' | 'watch-television' | 'party';
+export interface RecreationTask { activity: RecreationActivity; target: Cell; buildingId: number | null; seatId?: number; patientId?: number; partyStartedAtCore?:number; phase: 'travel' | 'active'; elapsed: number }
 export interface RecreationNeed { level: number; tolerance: Record<typeof RECREATION_KINDS[number], number>&{chemical?:number}; bored: Record<typeof RECREATION_KINDS[number], boolean>&{chemical?:boolean}; task: RecreationTask | null }
 export const RECREATION_DURATION = 400;
 export const VISIT_SICK_DURATION = 150;
 export const RECREATION_GAIN = 36 * 24 / TICKS_PER_DAY;
 // Extremely low expectations. Wealth-derived expectations await the economy.
 export const TOLERANCE_FALL = 18 / TICKS_PER_DAY;
-export const recreationKind = (activity: RecreationActivity): typeof RECREATION_KINDS[number] => activity === 'horseshoes' ? 'dexterity' : activity === 'chess' ? 'cerebral' : activity === 'watch-television' ? 'television' : activity === 'social-relax'||activity === 'visit-sick' ? 'social' : 'solitary';
+export const recreationKind = (activity: RecreationActivity): typeof RECREATION_KINDS[number] => activity === 'horseshoes' ? 'dexterity' : activity === 'chess' ? 'cerebral' : activity === 'watch-television' ? 'television' : activity === 'social-relax'||activity === 'visit-sick'||activity==='party' ? 'social' : 'solitary';
 export const initialRecreation = (level = 55): RecreationNeed => ({level, tolerance: {solitary: 0, dexterity: 0, cerebral: 0, social: 0, television:0}, bored: {solitary: false, dexterity: false, cerebral: false, social: false, television:false}, task: null});
 
 export function updateRecreation(pawn: Pawn,body?:import('./body-capacities.ts').BodyAssessment,toleranceFall=TOLERANCE_FALL,elapsedLocal=1): void {

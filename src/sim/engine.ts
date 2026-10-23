@@ -5,6 +5,7 @@ import {advanceLocalMechFirefoam290,captureFirefoamWorldPawnIds290} from './fire
 import {isSchema286OrLater} from './schema-compatibility-257.ts';
 import {advanceShipReactorThreats275} from './ship-reactor-threats-275.ts';
 import {tryCoupleOpportunity285,reconcileCouple285,processCouple285} from './couple-runtime-285.ts';
+import {reconcileParty292,reconcilePartyPawn292,advanceParty292,processParty292} from './party-runtime-292.ts';
 import {interruptAnimalStorage282,reconcileAnimalHauls282} from './animal-hauling-282.ts';
 import {shipCasketPlacementRefusal277} from './ship-casket-placement-277.ts';
 import {shipCryptosleepUnlocked277} from './research.ts';
@@ -413,7 +414,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   const selection = queryArea(world, command);
   if (!selection.ok) return selection;
   if (!selection.cells.length) return refusal('missing-target', 'Aucune case compatible dans ce rectangle.');
-  if([287,288,289,290,291].includes(Number(world.schemaVersion))&&(command.action==='home'||command.action==='remove-home'))return applyAnimalHomeArea287(world,command,selection.cells,drops);
+  if([287,288,289,290,291,292].includes(Number(world.schemaVersion))&&(command.action==='home'||command.action==='remove-home'))return applyAnimalHomeArea287(world,command,selection.cells,drops);
   if(command.action==='cancel'){
     const cells=new Set(selection.cells);
     const jobs=new Set(world.jobs.filter(j=>[...footprintCells(j),...furnitureSourceCells(world,j)].some(c=>cells.has(c.z*world.width+c.x))).map(j=>j.id));
@@ -650,8 +651,8 @@ export function applyCommand(world: World, command: Command,caravans?:import('./
 }
 type LocalCommand=Exclude<Command,SecondarySiteCommand>;
 function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
-  if([287,288,289,290,291].includes(Number(world.schemaVersion))&&command?.type==='animal-area-assign')return applyAnimalAreaAssignmentCommand287(world,command);
-  if([287,288,289,290,291].includes(Number(world.schemaVersion))&&(command?.type==='allowed-area-create'||command?.type==='allowed-area-settings'||command?.type==='allowed-area-paint'||command?.type==='allowed-area-delete'||command?.type==='assign-allowed-area'))return applyAnimalAwareAreaCommand287(world,command);
+  if([287,288,289,290,291,292].includes(Number(world.schemaVersion))&&command?.type==='animal-area-assign')return applyAnimalAreaAssignmentCommand287(world,command);
+  if([287,288,289,290,291,292].includes(Number(world.schemaVersion))&&(command?.type==='allowed-area-create'||command?.type==='allowed-area-settings'||command?.type==='allowed-area-paint'||command?.type==='allowed-area-delete'||command?.type==='assign-allowed-area'))return applyAnimalAwareAreaCommand287(world,command);
   if(command&&typeof command==='object'&&hiddenExplorationCommandTarget256(world,command))return refusal('missing-target','Cette cible n’est pas connue sur la carte actuelle.');
   if(command.type==='material-forbid')return applyMaterialPermission256(world,command);
   if(command.type==='egg-forbid')return applyEggPermission256(world,command);
@@ -663,7 +664,7 @@ function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
   const result=applyCommandInternal(world,command);
   if(command.type==='firefoam-auto-rebuild')return result;
   if(command.type==='bill-pause-policy'||command.type==='bill-pause-resume')return result;
-  if([287,288,289,290,291].includes(Number(world.schemaVersion))&&command.type==='area'&&(command.action==='home'||command.action==='remove-home'))return result;
+  if([287,288,289,290,291,292].includes(Number(world.schemaVersion))&&command.type==='area'&&(command.action==='home'||command.action==='remove-home'))return result;
   // These cold metadata transactions already reconcile their exact affected
   // destinations. A no-op must not advance unrelated services or clocks.
   if(command.type==='shelf-link'||command.type==='shelf-unlink'||command.type==='shelf-group-rename'
@@ -1110,7 +1111,7 @@ export function stepWorld(world:CampaignState,ticks=1,diagnostics?:import('./wor
     if(ticks)for(const map of registeredMaps(root)){adoptTempMapIncidents261(map);flushRegisteredMap(map);}
     adoptWorldIncidents(campaignClockContext(root));
     for(let i=0;i<ticks;i++){
-      const firefoamWorldOwners290=[290,291].includes(Number(root.schemaVersion))?captureFirefoamWorldPawnIds290(root):undefined;
+      const firefoamWorldOwners290=[290,291,292].includes(Number(root.schemaVersion))?captureFirefoamWorldPawnIds290(root):undefined;
       root.tick++;
       for(const map of registeredMaps(root)){stepLocalWorld(map,1,diagnostics,false);flushRegisteredMap(map);}
       if(root.schemaVersion>=256&&caravans)caravans.step(root);
@@ -1150,7 +1151,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
   adoptRainElectrical(world);
   let thermal=reconcileTemperature(world);reconcilePlantLighting(world,()=>readPlantLight(world));updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);
   for (let step = 0; step < ticks; step++) {
-    const firefoamLocalMechs290=[290,291].includes(Number(world.schemaVersion))?new Set((world.mechanoids??[]).filter(m=>m.state!=='dead'&&m.health?.coveredInFirefoam290).map(m=>m.id)):undefined;
+    const firefoamLocalMechs290=[290,291,292].includes(Number(world.schemaVersion))?new Set((world.mechanoids??[]).filter(m=>m.state!=='dead'&&m.health?.coveredInFirefoam290).map(m=>m.id)):undefined;
     flushColonyLosses(world);
     if(advanceClock)world.tick++;advanceActualHiveComponents256(world);advanceAnimalAges256(world);finishSnowSteps(world);
     let light:LightEnvironment|undefined,lightKey:string|undefined;
@@ -1233,6 +1234,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     // one O(1) view for the whole human pass; public readers keep their exact
     // mutable point lookup. Historical exposure branches retain their reader.
     const humanAir460=isSchema282OrLater(world.schemaVersion)?new TemperatureView(world,thermal):undefined;
+    reconcileParty292(world,getLight().topology);
     for (let offset = 0; offset < (world.schemaVersion>=271?actingCount271:world.pawns.length); offset++) {
       const pawn = world.schemaVersion>=271?actingHumans271[((world.tick-1)+offset)%actingCount271]!:world.pawns[((world.tick-1)+offset)%world.pawns.length]!;
       if(world.schemaVersion>=271&&world.pawns!==actingHumans271&&!world.pawns.includes(pawn))continue;
@@ -1241,7 +1243,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
       pawn.moveCooldown = Math.max(0, (pawn.motion?.end ?? world.tick) - world.tick); if (pawn.planCooldown > 0) pawn.planCooldown--;
       const readAir460=()=> (humanAir460??new TemperatureView(world,thermal)).at(world,pawn);
       advanceHeatExposure(world,pawn,readAir460);
-      const body=updatePawnHealth(world,pawn);reconcileCouple285(world,pawn,body);reconcileKidnapParticipant261(world,pawn);reconcileAncientCasketOpening256(world,pawn);reconcileFirefoamManual290(world,pawn);reconcileCryptosleepTask271(world,pawn);reconcileShipCasketTask277(world,pawn);
+      const body=updatePawnHealth(world,pawn);reconcilePartyPawn292(world,pawn,body);reconcileCouple285(world,pawn,body);reconcileKidnapParticipant261(world,pawn);reconcileAncientCasketOpening256(world,pawn);reconcileFirefoamManual290(world,pawn);reconcileCryptosleepTask271(world,pawn);reconcileShipCasketTask277(world,pawn);
       reconcileAllowedAreaPawn(world,pawn);
       if(pawn.animalRescue)reconcileAnimalRescues(world,pawn);
       if(prisonBreakActive(pawn)&&(pawn.state==='downed'||pawn.state==='dead'))endPrisonBreak(world,pawn);
@@ -1255,7 +1257,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
       tickSkills(world,pawn);
       updateNeeds(world, pawn,body,getFurnitureSight,()=>getLight().topology,readAir460);
       updateMentalBreak(world,pawn,budget);reconcileAncientCasketOpening256(world,pawn);reconcileFirefoamManual290(world,pawn);reconcileCryptosleepTask271(world,pawn);reconcileShipCasketTask277(world,pawn);
-      reconcileCouple285(world,pawn,body);
+      reconcilePartyPawn292(world,pawn,body);reconcileCouple285(world,pawn,body);
       if(prisonBreakActive(pawn)&&(pawn.mental?.crisis||pawn.state==='downed'||pawn.need))endPrisonBreak(world,pawn);
       if(pawn.mental?.crisis){
         if(scoutOnMapId(world)===pawn.id)applyScoutCommand(world,{type:'scout-cancel'});
@@ -1364,6 +1366,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
       if(processFirefighting(world,pawn,needsContext))continue;
       if (planUrgentCare(world,pawn,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget))) continue;
       if(processNeeds(world,pawn,needsContext)||processAutomaticAlcohol265(world,pawn,needsContext))continue;
+      if(processParty292(world,pawn,needsContext))continue;
       if (!pawn.animalHandling&&!pawn.animalCare&&!pawn.animalFeed&&!pawn.animalRescue&&!pawn.ward&&!pawn.feed&&!pawn.tend&&!pawn.surgery&&!pawn.rescue&&pawn.orders.active===null&&processRecreation(world, pawn, needsContext)) continue;
       if(!pawn.surgery&&pawn.planCooldown===0&&recoverDroppedWeapon(world,pawn,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget)))continue;
       if(!pawn.surgery&&pawn.planCooldown===0&&considerApparelPolicy(world,pawn,()=>searchCandidates(world,pawn,getBlocked(),occupied,budget)))continue;
@@ -1507,6 +1510,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     advanceRaids(world);
     advanceQuests(world);
     advanceSocial(world);
+    advanceParty292(world,getLight().topology);
     if(world.roofing)reconcileRoofJobs(world,roofs);
     reconcileFires(world);reconcilePowerFlicks(world);reconcilePower(world);reconcileOrders(world);syncCarriedAnimals(world);reconcileAnimalRescues(world);reconcileAnimalRest(world);reconcileWildlife(world);advanceCorpses(world,thermal);advanceMechanoidCorpses(world);reconcileDomesticWork(world);advanceHumanCorpses(world);reconcileBurials(world);reconcileCommercialOnMap(world);
     if(world.hunting)world.hunting.targets=world.hunting.targets.filter(id=>world.wildlife?.animals.some(a=>a.id===id&&a.state!=='dead')||world.pawns.some(p=>p.hunting?.animalId===id));

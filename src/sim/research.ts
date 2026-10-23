@@ -175,8 +175,8 @@ export function researchStationUsable(world:World,station:Structure,project:Rese
   return true;
 }
 export function selectResearch(world:World,project:unknown):CommandResult {
-  if(project==='tree-sowing'&&world.schemaVersion!==291)return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};
-  if(project==='firefoam'&&(Number(world.schemaVersion)!==290&&Number(world.schemaVersion)!==291)&&world.schemaVersion!==291)return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};
+  if(project==='tree-sowing'&&(Number(world.schemaVersion)!==291&&world.schemaVersion!==292))return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};
+  if(project==='firefoam'&&![290,291,292].includes(Number(world.schemaVersion)))return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};
   if(isShipCasketResearchProject277(project)&&!isSchema277OrLater(world.schemaVersion))return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};
   if(isShipEngineResearchProject276(project)&&!isSchema276OrLater(world.schemaVersion))return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};
   if(isShipResearchProject275(project)&&!isSchema275OrLater(world.schemaVersion))return {ok:false,code:'invalid-command',reason:'Projet indisponible dans ce schéma.'};
