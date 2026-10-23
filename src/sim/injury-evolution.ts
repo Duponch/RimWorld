@@ -1,3 +1,4 @@
+import {advanceCoveredInFirefoam290} from './firefoam-actor-state-290.ts';
 import {advanceToxicBuildupCore256} from './toxic-buildup-256.ts';
 import {advanceAlcoholCore265} from './alcohol-clinical-265.ts';
 import {alcoholClinicalActive265} from './alcohol-state-265.ts';
@@ -54,10 +55,11 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
   if(pending&&!Number.isSafeInteger((record.infections?.nextId??1)+pending))throw new Error('Infection identities exhausted');
   if((record.infections?.cases.length||pending)&&!Number.isSafeInteger((record.tick+ticks)*10))throw new Error('Infection clock exhausted');
   if(record.immuneDiseases&&!Number.isSafeInteger((record.tick+ticks)*10))throw new Error('Immune disease clock exhausted');
-  if(!animalConditions&&!alcoholClinicalActive265(record.alcohol)&&!record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.infections?.cases.length&&!record.infections?.immunity&&!record.foodPoisoning&&!record.toxicBuildup&&!record.cryptosleepSickness&&!record.flu&&!record.immuneDiseases&&!record.anesthetic&&!(context.malnutritionRate&&(context.starving||record.malnutrition))){record.tick+=ticks;if(record.civilTick271!==undefined)record.civilTick271=endCivil;return;}
+  if(!animalConditions&&!alcoholClinicalActive265(record.alcohol)&&!record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.infections?.cases.length&&!record.infections?.immunity&&!record.foodPoisoning&&!record.toxicBuildup&&!record.cryptosleepSickness&&!record.flu&&!record.immuneDiseases&&!record.anesthetic&&!(context.malnutritionRate&&(context.starving||record.malnutrition))){advanceCoveredInFirefoam290(record,ticks*10);record.tick+=ticks;if(record.civilTick271!==undefined)record.civilTick271=endCivil;return;}
   const end=record.tick+ticks;
   while(record.tick<end) {
     record.tick++;
+    advanceCoveredInFirefoam290(record,10);
     if(record.civilTick271!==undefined)record.civilTick271=record.tick+offset;
     if(record.cryptosleepSickness){
       const sickness=record.cryptosleepSickness;

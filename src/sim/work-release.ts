@@ -199,7 +199,7 @@ export function releaseAssignments(world:World,pawn:Pawn,despawning=false):void 
   cancelAutomaticCombat(pawn);cancelHunting(pawn);
   if(!despawning&&pawn.need?.kind==='sleep'&&pawn.need.medical&&pawn.health&&!pawn.health.death&&medicalCivilTick271(pawn.health)<world.tick)updatePawnHealth(world,pawn);
   releaseSurgeryState(world,pawn);
-  delete pawn.openCasket;
+  delete pawn.openCasket;delete pawn.firefoamTask290;
   releaseShipCasketCarry277(world,pawn);
   releaseCryptosleepCarry271(world,pawn,despawning);
   releaseRescue(world,pawn,despawning);
@@ -213,7 +213,7 @@ export function releaseAssignments(world:World,pawn:Pawn,despawning=false):void 
 export function clearReleasedPawnAssignments259(pawn:Pawn):void {
   if(pawn.coupleTask285)throw Error('Entered couple stage requires its actual pair release before own-record cleanup');
   delete pawn.brewing;delete pawn.orbitalTrade;delete pawn.deepWork;delete pawn.animalHandling;delete pawn.animalCare;delete pawn.animalFeed;delete pawn.burial;delete pawn.cleaning;delete pawn.trade;delete pawn.firefighting;delete pawn.ward;delete pawn.heatRefuge;delete pawn.research;delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
-  delete pawn.shipCasketTask277;delete pawn.cryptosleepTask;delete pawn.rescue;delete pawn.animalRescue;delete pawn.surgery;delete pawn.hunting;delete pawn.openCasket;
+  delete pawn.shipCasketTask277;delete pawn.cryptosleepTask;delete pawn.rescue;delete pawn.animalRescue;delete pawn.surgery;delete pawn.hunting;delete pawn.openCasket;delete pawn.firefoamTask290;
   delete pawn.transitExit;
   pawn.orders.active=null;
   pawn.recreation.task=null;pawn.jobId=null;pawn.haul=null;pawn.cooking=null;pawn.need=null;pawn.path=[];if(pawn.state!=='downed'&&pawn.state!=='dead')pawn.state='idle';pawn.planCooldown=20;pawn.needCooldown=20;

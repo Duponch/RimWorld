@@ -17,6 +17,7 @@ import type { ThermalLayout } from './thermal-topology.ts';
 import type {BombInstigatorKey} from './mini-turret-state.ts';
 import { burnFloor } from './flooring.ts';
 import { addFilth } from './filth.ts';
+import {firefoamIgnitionFactor290} from './firefoam-actor-state-290.ts';
 export { fireDanger,fireNavigationPenalty,isBurning } from './fire-rules.ts';
 
 const NEAR:readonly (readonly [number,number])[]=[[0,-1],[1,0],[0,1],[-1,0],[1,-1],[1,1],[-1,1],[-1,-1]];
@@ -33,6 +34,7 @@ function watchOwners(w:World,ids:Set<number>):()=>boolean {
 }
 function announce(w:World,text:string):void{w.events.push({tick:w.tick,type:'need',message:text});if(w.events.length>80)w.events.splice(0,w.events.length-80);}
 function createFire(w:World,c:Cell,size:number,core:number,attached?:{pawnId?:number;animalId?:number}):FireRecord|null {
+  if(!attached&&w.schemaVersion===290&&w.filth?.items.some(f=>f.kind==='firefoam'&&f.x===c.x&&f.z===c.z))return null;
   if(w.schemaVersion<87||!Number.isFinite(size)||size<(attached?Number.MIN_VALUE:FIRE_MIN_SIZE)||size>FIRE_MAX_SIZE||!Number.isSafeInteger(w.nextId+1))return null;
   const state=ensureFireState(w);if(!Number.isSafeInteger(state.ledger.ignitions+1)||state.items.length>=w.width*w.height+(w.wildlife?.animals.length??0)+w.pawns.length)return null;
   const fire:FireRecord={id:w.nextId++,x:c.x,z:c.z,size,bornCore:core,nextPulseCore:core+15,complexCore:0,spreadCore:Math.floor(fireRandom(state)*fireSpreadInterval(size)),
@@ -45,13 +47,13 @@ export function startFire(w:World,c:Cell,size=.1):boolean {
   const fire=createFire(w,c,size,w.tick*10);if(fire&&w.home?.includes(c.z*w.width+c.x))announce(w,'Incendie dans le foyer.');return !!fire;
 }
 export function attachPawnFire(w:World,pawnId:number,size=.1,core=w.tick*10):boolean {
-  const p=w.pawns.find(p=>p.id===pawnId);if(!p||p.state==='dead'||w.fires?.items.some(f=>f.attachedPawnId===pawnId))return false;
+  const p=w.pawns.find(p=>p.id===pawnId);if(!p||p.state==='dead'||firefoamIgnitionFactor290(p.health)===0||w.fires?.items.some(f=>f.attachedPawnId===pawnId))return false;
   const fire=createFire(w,p,size,core,{pawnId});if(!fire)return false;
   interruptWork(w,p);delete p.draft;delete p.shooting;delete p.melee;delete p.tactics;delete p.flee;
   p.burning={phase:'panic',remainingCore:0};announce(w,`${p.name} est en feu !`);return true;
 }
 export function attachAnimalFire(w:World,animalId:number,size=.1,core=w.tick*10):boolean {
-  const a=w.wildlife?.animals.find(a=>a.id===animalId);if(!a||a.state==='dead'||w.fires?.items.some(f=>f.attachedAnimalId===animalId))return false;
+  const a=w.wildlife?.animals.find(a=>a.id===animalId);if(!a||a.state==='dead'||firefoamIgnitionFactor290(a.health)===0||w.fires?.items.some(f=>f.attachedAnimalId===animalId))return false;
   if(!createFire(w,a,size,core,{animalId}))return false;
   delete a.animalThermalRefuge288;delete a.meal;delete a.flee;delete a.threat;delete a.retaliation;if(w.schemaVersion<183)delete a.strike;a.path=[];
   a.burning={phase:'panic',remainingCore:0};return true;
@@ -122,8 +124,8 @@ export function flameBurst(w:World,center:Cell,radius:number,coreTick=w.tick*10)
     const oldStructures=w.structures,oldPiles=w.piles,oldResources=w.resources;
     const ownershipChanged=watchOwners(w,new Set(w.pawns.filter(p=>same(p,c)).map(p=>p.id)));
     for(const t of content.allTargets(c)){const key=t.kind+t.value.id;if(seen.has(key))continue;seen.add(key);applyDamage(w,t,10,coreTick);}
-    for(const p of w.pawns)if(same(p,c)&&!seen.has('pawn'+p.id)){seen.add('pawn'+p.id);const penetrated=burnPawn(w,p,10);if(penetrated&&p.state!=='dead'&&fireRandom(state)<attachFireChance(.7,60))attachPawnFire(w,p.id,.15+fireRandom(state)*.1);}
-    for(const a of w.wildlife?.animals??[])if(same(a,c)&&!seen.has('animal'+a.id)){seen.add('animal'+a.id);burnAnimal(w,a,10);if(a.state!=='dead'&&fireRandom(state)<attachFireChance(.7,60))attachAnimalFire(w,a.id,.15+fireRandom(state)*.1);}
+    for(const p of w.pawns)if(same(p,c)&&!seen.has('pawn'+p.id)){seen.add('pawn'+p.id);const penetrated=burnPawn(w,p,10);if(penetrated&&p.state!=='dead'&&(w.schemaVersion!==290||firefoamIgnitionFactor290(p.health)>0)&&fireRandom(state)<attachFireChance(.7,60))attachPawnFire(w,p.id,.15+fireRandom(state)*.1);}
+    for(const a of w.wildlife?.animals??[])if(same(a,c)&&!seen.has('animal'+a.id)){seen.add('animal'+a.id);burnAnimal(w,a,10);if(a.state!=='dead'&&(w.schemaVersion!==290||firefoamIgnitionFactor290(a.health)>0)&&fireRandom(state)<attachFireChance(.7,60))attachAnimalFire(w,a.id,.15+fireRandom(state)*.1);}
     if(w.structures!==oldStructures||w.piles!==oldPiles||w.resources!==oldResources||ownershipChanged())content=new FireContent(w);
     if(w.structures!==oldStructures)layout=reconcileTemperature(w);heat(w,c,15,layout);
     if(fireRandom(state)<content.chance(c))createFire(w,c,.2+fireRandom(state)*.4,coreTick);
@@ -146,12 +148,12 @@ export function applyFlameWaveCell(w:World,c:Cell,core:number,affected:Set<strin
   }
   for(const pawn of [...w.pawns])if(same(pawn,c)&&pawn.state!=='dead'&&allowed.has(`pawn:${pawn.id}`)&&!affected.has(`pawn:${pawn.id}`)) {
     affected.add(`pawn:${pawn.id}`);const penetrated=burnPawn(w,pawn,10);changed=true;
-    const chance=attachFireChance(.7,60);
+    const chance=attachFireChance(.7,60)*(w.schemaVersion===290?firefoamIgnitionFactor290(pawn.health):1);
     if(penetrated&&alive(pawn)&&(chance>=1||chance>0&&fireRandom(state)<chance))attachPawnFire(w,pawn.id,.15+fireRandom(state)*.1,core);
   }
   for(const animal of [...w.wildlife?.animals??[]])if(same(animal,c)&&animal.state!=='dead'&&allowed.has(`animal:${animal.id}`)&&!affected.has(`animal:${animal.id}`)) {
     affected.add(`animal:${animal.id}`);burnAnimal(w,animal,10);changed=true;
-    const chance=attachFireChance(.7,60);
+    const chance=attachFireChance(.7,60)*(w.schemaVersion===290?firefoamIgnitionFactor290(animal.health):1);
     if(alive(animal)&&(chance>=1||chance>0&&fireRandom(state)<chance))attachAnimalFire(w,animal.id,.15+fireRandom(state)*.1,core);
   }
   for(const mech of [...w.mechanoids??[]])if(same(mech,c)&&mech.state!=='dead'&&allowed.has(`mech:${mech.id}`)&&!affected.has(`mech:${mech.id}`)) {
@@ -202,8 +204,8 @@ export function advanceFires(w:World,weather:{rainRate:number},initialLayout:The
     const ownershipChanged=watchOwners(w,new Set(peopleHere.map(p=>p.id)));
     const targets=groundFire(f)?view().allTargets(pos).filter(t=>targetFlammability(t)>=.01):[],fuel=groundFire(f)?Math.max(view().fuel(pos),peopleHere.length||animalsHere.length?.7:0):.7;
     if(fuel<.01){removeFire(w,f);break;}
-    if(groundFire(f)&&f.size>.4)for(const p of w.pawns)if(same(p,pos)&&p.state!=='dead'&&fireRandom(state)<attachFireChance(.7))attachPawnFire(w,p.id,f.size*.2);
-    if(groundFire(f)&&f.size>.4)for(const a of animalsHere)if(fireRandom(state)<attachFireChance(.7))attachAnimalFire(w,a.id,f.size*.2);
+    if(groundFire(f)&&f.size>.4)for(const p of w.pawns)if(same(p,pos)&&p.state!=='dead'&&(w.schemaVersion!==290||firefoamIgnitionFactor290(p.health)>0)&&fireRandom(state)<attachFireChance(.7))attachPawnFire(w,p.id,f.size*.2);
+    if(groundFire(f)&&f.size>.4)for(const a of animalsHere)if((w.schemaVersion!==290||firefoamIgnitionFactor290(a.health)>0)&&fireRandom(state)<attachFireChance(.7))attachAnimalFire(w,a.id,f.size*.2);
     const oldStructures=w.structures,oldPiles=w.piles,oldResources=w.resources;
     const amount=fireDamage(f.size,()=>fireRandom(state));
     if(f.attachedPawnId!==undefined){const p=w.pawns.find(p=>p.id===f.attachedPawnId);if(p)burnPawn(w,p,amount);}

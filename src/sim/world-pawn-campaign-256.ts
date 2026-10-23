@@ -13,12 +13,12 @@ import type {World} from './types.ts';
  * Schema259 uses the approved closed-model mechanical capture for actual GC.
  * Human/animal histories retain conservative Unknown facts.
  * MapRemoved and redress retain their own actual-owner guards. */
-export function advanceActualWorldPawns256(root:CampaignState):void {
+export function advanceActualWorldPawns256(root:CampaignState,firefoamActiveIds?:ReadonlySet<number>):void {
  const state=root.worldPawns;if(!state)return;
  if(!isSchema256Or257(root.schemaVersion)||root.planet?.revision!==3||!root.worldMaps||!root.worldGroups)throw Error('WorldPawns requires its actual geographic campaign');
  const atCore=root.tick*10;
  if(!Number.isSafeInteger(atCore)||state.atCore+10!==atCore)throw Error('WorldPawns actual campaign interval skipped or duplicated');
- const plan=prepareWorldPawnLife256(state,atCore,root,root.schemaVersion);if(!plan.ok)throw Error(plan.reason);
+ const plan=prepareWorldPawnLife256(state,atCore,root,root.schemaVersion,firefoamActiveIds);if(!plan.ok)throw Error(plan.reason);
  plan.commit();
  for(const id of plan.deceasedHumanIds)notifyBillWorkerUnavailable283(hasLoadedRoot(root)?root:campaignClockContext(root) as World,id);
  advanceCaravanCaptivity261(root);

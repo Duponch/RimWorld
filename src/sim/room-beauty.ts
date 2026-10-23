@@ -24,7 +24,7 @@ export const FLOOR_BEAUTY=Object.freeze({
   'broken-asphalt':-1,'granite-flagstone':0,'limestone-flagstone':0,'marble-flagstone':0,'sandstone-flagstone':0,'slate-flagstone':0,
   'wood-planks':0,'granite-tile':1,'limestone-tile':1,'marble-tile':1,'sandstone-tile':1,'slate-tile':1,'steel-tile':0,'sterile-tile':-1,'burned-wood':-6,
 } as const);
-export const FILTH_BEAUTY=Object.freeze({slime:-25,dirt:-15,trash:-15,blood:-30,ash:-10,vomit:-40,'corpse-bile':-50,'rock-rubble':-15,'building-rubble':-15} as const);
+export const FILTH_BEAUTY=Object.freeze({firefoam:-25,slime:-25,dirt:-15,trash:-15,blood:-30,ash:-10,vomit:-40,'corpse-bile':-50,'rock-rubble':-15,'building-rubble':-15} as const);
 export type BeautyBand='hideous'|'ugly'|'neutral'|'pretty'|'beautiful'|'very-beautiful'|'extremely-beautiful'|'unbelievably-beautiful';
 export const BEAUTY_BAND_LABEL:Readonly<Record<BeautyBand,string>>=Object.freeze({
   hideous:'hideuse',ugly:'laide',neutral:'neutre',pretty:'jolie',beautiful:'belle',
@@ -47,6 +47,7 @@ export function filthBeauty(filth:Pick<BeautyFilth,'kind'>,outdoors=false):numbe
 }
 export function groundObjectBeauty(object:BeautyObject):number {return object.visible===false?0:object.beauty??-4;}
 export function structureBeauty(structure:BeautyStructure):number {
+  if(structure.kind==='firefoam-popper')return -8;
   if(isAncientMonumentKind256(structure.kind)){const m=isFurnitureMaterial(structure.material)?FURNITURE_MATERIALS[structure.material]:undefined,d=ANCIENT_MONUMENT_DEFS_256[structure.kind];return d.beauty*(m?.beautyFactor??1)*(d.quality?QUALITY_BEAUTY[furnitureQuality(structure.quality)]:1)+(m?.beautyOffset??0);}
   if(isShipCasketKind277(structure.kind))return SHIP_CASKET_CONTENT_277.beauty;
   if(isShipPartKind276(structure.kind))return 0; // Fixed inputs, no Stuff or Beauty override.

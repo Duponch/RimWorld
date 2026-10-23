@@ -3,7 +3,7 @@ import {billControls,updateBillControls} from '../src/ui/bill-controls.ts';
 import {billPauseControls289} from '../src/ui/bill-pause-controls-289.ts';
 import {newCookingBill} from '../src/sim/cooking-bills.ts';
 import {PRODUCTION_RECIPES,type ProductionRecipe} from '../src/sim/production-recipes.ts';
-import type {Command,Structure,World} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type Command,type Structure,type World} from '../src/sim/types.ts';
 import {deconstructionCamp} from './scenarios/deconstruction.ts';
 
 /** Small DOM port shared in shape with the existing bill UI fixtures. These
@@ -61,7 +61,8 @@ test('pause controls are prospective, pure, and visible only for current until b
   const f=ui(),before=JSON.stringify(f.w);expect(f.pause!.hidden).toBe(false);
   expect(f.part('bill-pause-enabled').checked).toBe(false);expect(f.part('bill-pause-resume-at').value).toBe('5');
   for(let n=0;n<10;n++)f.update();expect(f.sent).toEqual([]);expect(JSON.stringify(f.w)).toBe(before);expect(f.bill.reservePause).toBeUndefined();
-  for(const schemaVersion of [288,287,290]){f.update({...f.w,schemaVersion} as unknown as World);expect(f.pause!.hidden).toBe(true);}
+  for(const schemaVersion of [288,287,SCHEMA_VERSION+1]){f.update({...f.w,schemaVersion} as unknown as World);expect(f.pause!.hidden).toBe(true);}
+  for(const schemaVersion of [289,SCHEMA_VERSION]){f.update({...f.w,schemaVersion} as unknown as World);expect(f.pause!.hidden).toBe(false);}
   f.update();for(const mode of ['times','forever'] as const){f.bill.mode=mode;f.update();expect(f.pause!.hidden).toBe(true);}
   f.bill.mode='until';f.update();expect(f.pause!.hidden).toBe(false);
   const excluded=new Set(['smelt-weapon','smelt-apparel','cremate-corpse','burn-apparel']);

@@ -17,6 +17,8 @@ export interface Injury {
 }
 export interface MissingPart {part:BodyPartId;bornAt:number;tended?:true;nonFresh?:true}
 export interface MedicalRecord {
+  /** Only a real V290 Extinguish victim acquires this active-time component. */
+  coveredInFirefoam290?:import('./firefoam-actor-state-290.ts').CoveredInFirefoam290;
   /** Schema271: actual civil frontier. tick and condition deadlines remain
    * clinical active time. Absent retains the historical identity clock. */
   civilTick271?:number;

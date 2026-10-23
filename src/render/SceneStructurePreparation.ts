@@ -6,7 +6,7 @@ import { readSnapshotStructureChanges } from '../bridge/snapshot-changes';
 
 export type SceneStructureGeometry=Pick<Structure,'id'|'kind'|'x'|'z'|'orientation'|'footprint'>;
 type Capture=SceneStructureGeometry&{effect:boolean};
-const effectKinds=new Set<string>(['electric-crematorium','electric-smelter','mini-turret','autodoor','machining-table','fabrication-bench','electric-stove',
+const effectKinds=new Set<string>(['firefoam-popper','electric-crematorium','electric-smelter','mini-turret','autodoor','machining-table','fabrication-bench','electric-stove',
   'fueled-stove','hi-tech-research-bench','multi-analyzer','battery','biofuel-refinery','chemfuel-generator',
   'wood-generator','campfire','torch-lamp']);
 const effect=(s:Structure)=>effectKinds.has(s.kind)||!!s.casketWick||!!s.breakdown||!!s.emp;

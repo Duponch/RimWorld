@@ -10,7 +10,7 @@ import {planCookingOrder} from '../src/sim/player-cooking.ts';
 import {isRecipeProduct} from '../src/sim/production-recipes.ts';
 import {serializeWorld,deserializeWorld,validateWorld} from '../src/sim/serialization.ts';
 import {writeTestFileSync,testOutputPath} from './test-output.ts';
-import type {World,Command} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type World,type Command} from '../src/sim/types.ts';
 
 function until(w:World,done:()=>boolean,limit=1800){for(let n=0;n<limit&&!done();n++)stepWorld(w);expect(done(),JSON.stringify({tick:w.tick,pawns:w.pawns.map(p=>({id:p.id,state:p.state,need:p.need,cooking:p.cooking})),bills:w.structures.flatMap(s=>s.bills??[])})).toBe(true);}
 const exact=(w:World)=>{expect(validateWorld(w)).toEqual([]);const raw=serializeWorld(w);expect(serializeWorld(deserializeWorld(raw))).toBe(raw);return raw;};
@@ -22,7 +22,7 @@ test('finite kitchen reaches its target, keeps a real output, waits through an i
   const checkpoints:Record<string,{path:string;tick:number;sha256:string}>={};let stage='before';
   const save=(name:string)=>{const raw=exact(w),path=testOutputPath(`${folder}/${name}.json`);writeTestFileSync(path,raw);checkpoints[name]={path,tick:w.tick,sha256:createHash('sha256').update(raw).digest('hex')};return raw;};
   try{
-    expect(w.schemaVersion).toBe(289);save('before-play');expect(countedProducts(w,bill)).toBe(0);expect(rice(w)).toBe(140);
+    expect(w.schemaVersion).toBe(SCHEMA_VERSION);save('before-play');expect(countedProducts(w,bill)).toBe(0);expect(rice(w)).toBe(140);
     stage='actual-work';until(w,()=>pawn.cooking?.phase==='work'&&pawn.cooking.progress>0);save('actual-work');
     stage='acquired-pause-with-real-output';until(w,()=>bill.reservePause!.paused);
     expect(countedProducts(w,bill)).toBe(4);expect(pawn.cooking?.phase).toBe('output');expect(pawn.cooking?.productId).not.toBeNull();save('actual-output-and-pause');

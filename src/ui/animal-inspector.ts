@@ -1,3 +1,4 @@
+import {firefoamProtectionText290} from './firefoam-inspection-290.ts';
 import {isSchema287OrLater} from '../sim/schema-compatibility-257.ts';
 import {actualAnimalName256} from '../sim/starting-pet-state-256';
 import { animalSpecies } from '../sim/animal-species';
@@ -153,6 +154,7 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
     `${animal.state === 'downed' ? 'À terre · ' : ''}Douleur ${percent(medicalPain(health))} · Sang perdu ${(health.bloodLoss * 100 / BLOOD_UNIT).toFixed(1)} % · Saignement ${(medicalBleed(health) * 100).toFixed(1)} %/jour`,
   ];
   if (animal.state !== 'dead') condition.push(`Conscience ${percent(capacities.consciousness)} · Mobilité ${percent(capacities.moving)} · Vue ${percent(capacities.sight)} · Ouïe ${percent(capacities.hearing)}`);
+  if(health?.coveredInFirefoam290)condition.push(firefoamProtectionText290(health,animal.state==='dead'));
   if (health?.malnutrition) condition.push(`Malnutrition ${MALNUTRITION_LABELS[malnutritionStage(health.malnutrition)]} : ${(health.malnutrition * 100 / MALNUTRITION_UNIT).toFixed(1)} %`);
   if (health?.heatstroke) condition.push(`Coup de chaleur ${HEAT_LABELS[heatStage(health.heatstroke)]} · ${(health.heatstroke * 100 / HEAT_UNIT).toFixed(1)} %`);
   if (health?.hypothermia) condition.push(`Hypothermie ${HEAT_LABELS[heatStage(health.hypothermia)]} · ${(health.hypothermia * 100 / HEAT_UNIT).toFixed(1)} %`);

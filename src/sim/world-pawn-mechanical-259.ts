@@ -1,3 +1,4 @@
+import {advanceCoveredInFirefoam290} from './firefoam-actor-state-290.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {validMechanoidShape} from './mechanoid-save.ts';
 import {validMechanicalWorldFaction259} from './mechanoid-world-faction-259.ts';
@@ -31,7 +32,8 @@ export function validMechanicalWorldPawn259(row:MechanicalWorldPawn259,version:n
 }
 /** No age/needs/organic healing/RNG exist for this sparse mechanical model.
  * The clinical engine already returns unchanged on mechanical bodies. */
-export function advanceMechanicalWorldPawn259(row:MechanicalWorldPawn259,toCore:number):string|null {
+export function advanceMechanicalWorldPawn259(row:MechanicalWorldPawn259,toCore:number,advanceFirefoam=true):string|null {
  if(!Number.isSafeInteger(toCore)||toCore%10||toCore-row.clockCore!==10||row.mode!=='active'||row.items.length||row.packed.length||!Number.isSafeInteger(row.mechanicalTimersAtCore259)||row.mechanicalTimersAtCore259<0||row.mechanicalTimersAtCore259%10||row.mechanicalTimersAtCore259>row.clockCore)return 'Invalid actual mechanical WorldPawn frontier';
+ if(advanceFirefoam&&row.actor.state!=='dead'&&row.actor.health&&!row.actor.health.death)advanceCoveredInFirefoam290(row.actor.health,toCore-row.clockCore);
  row.clockCore=toCore;return null;
 }

@@ -5,7 +5,7 @@ import { FILTH_ATLAS,createFilthAtlas,filthDecal } from '../src/render/filth-app
 import { FilthLayer } from '../src/render/FilthLayer.ts';
 
 const record=(kind:FilthKind,x=7,z=11):FilthRecord=>({id:42,kind,x,z,thickness:1,grownCore:123,expiresAfterCore:456,nextCheckCore:789});
-const limits:Record<FilthKind,number>={dirt:97,trash:255,blood:180,ash:220,vomit:180,'corpse-bile':255,'building-rubble':255,'rock-rubble':255,slime:170};
+const limits:Record<FilthKind,number>={firefoam:225,dirt:97,trash:255,blood:180,ash:220,vomit:180,'corpse-bile':255,'building-rubble':255,'rock-rubble':255,slime:170};
 
 function usedTiles(kind:FilthKind):number[] {
   const tiles=new Set<number>();
@@ -40,7 +40,7 @@ describe('aspect physique des salissures V107',()=>{
       for(let y=top;y<=bottom&&!transparentInside;y++)for(let x=left;x<=right;x++)if(a[y*tileSize+x]===0){transparentInside=true;break;}
       expect(transparentInside,`silhouette carrée ${tile}`).toBe(true);
     }
-    // The final atlas row has four intentionally unused transparent tiles.
+    // Ten kinds fill all 40 tiles; retain the transparency guard for any spare capacity.
     for(let tile=FILTH_KINDS.length*variants;tile<columns*rows;tile++)expect(alphas(data,width,tile).every(a=>a===0)).toBe(true);
   });
 
@@ -56,7 +56,7 @@ describe('aspect physique des salissures V107',()=>{
         expect(a.some(v=>v>0&&v<limit),`${kind} sans alpha intermédiaire`).toBe(true);
       }
     }
-    expect(all.size).toBe(36);
+    expect(all.size).toBe(40);
     const mass=(kind:FilthKind)=>groups.get(kind)!.reduce((sum,tile)=>sum+alphas(atlas.data,atlas.width,tile).reduce((s,a)=>s+a,0),0);
     expect(mass('dirt')).toBeLessThan(mass('blood'));
   });

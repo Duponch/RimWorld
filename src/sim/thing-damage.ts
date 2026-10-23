@@ -1,3 +1,6 @@
+import {startFirefoamWick290,registerFirefoamWave290} from './firefoam-290.ts';
+import {rebuildFirefoamPopper290} from './firefoam-rebuild-290.ts';
+import {reconcileFirefoamManual290} from './firefoam-manual-290.ts';
 import {detachMissingProstheticBills273} from './prosthetic-work-273.ts';
 import {prepareLinkedShelfRetirement286} from './linked-storage-lifecycle-286.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
@@ -132,7 +135,7 @@ export function damagePile(world:World,pile:MaterialPile,amount:number,cause:'fi
 /** Damage installed or packed furniture. Salvage is preflighted before a fatal hit.
  * Quarter raw-material restitution follows the existing cooler adaptation. */
 export type StructureDamageCause='fire'|'melee'|'bullet'|'bomb'|'roof'|'roof-thick';
-export interface StructureDamageContext {core:number;rawAmount:number;instigatorKey?:BombInstigatorKey;detonate?:true}
+export interface StructureDamageContext {core:number;rawAmount:number;instigatorKey?:BombInstigatorKey;detonate?:true;firefoamDetonate290?:true}
 export function damageStructure(world:World,s:Structure,amount:number,cause:StructureDamageCause='fire',rng=world.rng,external?:StructureDamageContext):boolean {
   if(isPlayerCasket271(s))return damagePlayerCryptosleep271(world,s,amount,cause,rng,external);
   if(isShipCasket277(s))return damageShipCasket277(world,s,amount,cause,rng,external);
@@ -144,14 +147,18 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   if(external&&(!Number.isFinite(external.rawAmount)||external.rawAmount<0||!Number.isSafeInteger(external.core)||external.core<Math.max(0,(world.tick-1)*10)||external.core>world.tick*10))return false;
   const core=external?.core??world.tick*10,explosive=world.schemaVersion>=193&&installed&&s.kind==='mini-turret'&&!!s.turret&&miniTurretExplosive(s.id);
   const detonates=explosive&&(external?.detonate|| (external?.rawAmount??amount)>=max-(s.damage??0));
+  const foam=world.schemaVersion===290&&installed&&s.kind==='firefoam-popper'&&!!s.firefoam290;
+  const foamDetonates=foam&&(external?.firefoamDetonate290|| (external?.rawAmount??amount)>=max-(s.damage??0));
+  const emits=detonates||foamDetonates;
+  if(foam&&(!Number.isSafeInteger(core+150)||foamDetonates&&(world.firefoam290?.waves.length??0)>=world.width*world.height))return false;
   if(explosive&&!Number.isSafeInteger(core+240)||detonates&&(!Number.isSafeInteger(core+5)||world.bombWaves&&world.bombWaves.length>=world.width*world.height))return false;
-  const damage=detonates?max:(s.damage??0)+amount;
-  if(damage<max){s.damage=damage;if(cause!=='fire')world.rng=rng;if(explosive&&max-damage<=Math.round(max*.2))startTurretWick(world,s,core,external?.instigatorKey);return true;}
+  const damage=emits?max:(s.damage??0)+amount;
+  if(damage<max){s.damage=damage;if(cause!=='fire')world.rng=rng;if(explosive&&max-damage<=Math.round(max*.2))startTurretWick(world,s,core,external?.instigatorKey);if(foam&&cause==='fire')startFirefoamWick290(world,s,core);return true;}
   const bedOwnership=prepareBedOwnershipTransition256(world,s,'destroy');
   const fogRemoval=prepareRemovedFogStructure256(world,s);
   const owner=packed?.owner,origin=owner?.type==='ground'?owner:owner?.type==='pawn'||owner?.type==='inventory'?world.pawns.find(p=>p.id===owner.pawnId)??s:s;
   // Refusing a fatal hit must not create a fire ledger or advance its stream.
-  const state=cause==='fire'&&!detonates?(world.fires??ensureFireState({...world})):undefined;
+  const state=cause==='fire'&&!emits?(world.fires??ensureFireState({...world})):undefined;
   const ids=new Set(world.jobs.filter(j=>j.repair?.structureId===s.id||j.fixBreakdown?.structureId===s.id||j.deconstruction?.structureId===s.id||j.furniture?.structureId===s.id||j.flick?.structureId===s.id).map(j=>j.id));
   const breakdownIds=new Set(world.jobs.filter(j=>j.fixBreakdown?.structureId===s.id).map(j=>j.id));
   const delivered=world.piles.filter(p=>p.owner.type==='job'&&breakdownIds.has(p.owner.jobId));
@@ -162,8 +169,8 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
       ||h&&(h.whole&&h.sourcePileId===s.id||(h.destination.type==='fuel'||h.destination.type==='turret'||h.destination.type==='fermenting-barrel')&&h.destination.structureId===s.id||h.destination.type==='job'&&ids.has(h.destination.jobId))
       ||p.need?.kind==='sleep'&&p.need.bedId===s.id||p.coupleTask285?.bedId===s.id||p.recreation.task?.buildingId===s.id||p.recreation.task?.seatId===s.id||p.rescue?.bedId===s.id;
   });
-  const plan=planStructureDestruction(detonates?{...world,nextId:world.nextId+1}:world,s,actors,origin,state?.rng??rng,cause==='roof-thick');if(!plan)return false;
-  if(detonates&&!Number.isSafeInteger(world.nextId+1+(plan.salvage?.drops.length??0)))return false;
+  const plan=planStructureDestruction(emits?{...world,nextId:world.nextId+1}:world,s,actors,origin,state?.rng??rng,cause==='roof-thick');if(!plan)return false;
+  if(emits&&!Number.isSafeInteger(world.nextId+1+(plan.salvage?.drops.length??0)))return false;
   const {salvage,drops}=plan;
   const destruction=world.destroyed??{count:0,lost:{}},lost={...destruction.lost};
   const fermentation=fermentationContents265(s);if(fermentation)lost[fermentation.item]=(lost[fermentation.item]??0)+fermentation.quantity;
@@ -181,7 +188,7 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   if(!linked.commit())throw Error('Admitted linked shelf destruction changed during grave release');
   coupleRelease?.commit();
   if(state)world.fires=state;
-  const waveId=detonates?world.nextId++:undefined;
+  const waveId=emits?world.nextId++:undefined;
   if(plan.rubble){world.filth=plan.rubble.filth;world.nextId=plan.rubble.nextId;}
   commitShelfRemoval(world,plan.shelfRemoval);
   world.structures=world.structures.filter(b=>b!==s);world.packed=world.packed.filter(p=>p!==packed);
@@ -223,6 +230,8 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   if(s.kind==='hydroponics-basin')removeHydroponicPlants(world,s);
   detachMissingBills(world);detachMissingFlakBills(world);detachMissingGunBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);detachMissingProstheticBills273(world);reconcilePower(world);if(installed)reconcileRoofSupport(world,false,s);refreshStock(world);
   if(installed&&s.kind==='spike-trap')rebuildSpikeTrap(world,s);
-  if(waveId!==undefined)registerBombWave(world,s,waveId,core,external?.instigatorKey??s.turret?.wick?.instigatorKey);
+  if(foam)rebuildFirefoamPopper290(world,s);
+  if(waveId!==undefined){if(foamDetonates)registerFirefoamWave290(world,s,waveId,core);else registerBombWave(world,s,waveId,core,external?.instigatorKey??s.turret?.wick?.instigatorKey);}
+  for(const p of world.pawns)if(p.firefoamTask290?.structureId===s.id)reconcileFirefoamManual290(world,p);
   commitRemovedFogBlocker256(world,fogRemoval);return true;
 }

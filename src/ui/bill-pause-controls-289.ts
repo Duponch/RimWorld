@@ -1,3 +1,4 @@
+import {isSchema289OrLater} from '../sim/schema-compatibility-257.ts';
 import {countedProducts} from '../sim/cooking-bills';
 import {defaultBillResumeAt289,supportsBillReservePause289,validBillReservePausePolicy289} from '../sim/bill-pause-rules-289';
 import type {BillReservePausePolicy289} from '../sim/bill-pause-state-289';
@@ -71,7 +72,7 @@ export function billPauseControls289(structureId:number,bill:CookingBill,send:(c
   restore();render();
   return {element,refresh(world:World,next:CookingBill,confirmedCount?:number){
     if(next.id!==bill.id||next.recipe!==bill.recipe)return;
-    const nextAvailable=world.schemaVersion===289&&next.mode==='until'&&supportsBillReservePause289(next.recipe);
+    const nextAvailable=isSchema289OrLater(world.schemaVersion)&&next.mode==='until'&&supportsBillReservePause289(next.recipe);
     if(available&&!nextAvailable){generation++;pending=false;sent=undefined;resuming=false;feedback='';}
     current=next;available=nextAvailable;confirmed=policy(next);count=available?(confirmedCount??countedProducts(world,next)):0;
     if(sent&&same(sent,confirmed)){sent=undefined;restore();feedback='Pause confirmée ; les engagements sont conservés.';}

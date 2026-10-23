@@ -1,3 +1,4 @@
+import {firefoamProtectionText290} from './firefoam-inspection-290.ts';
 import { mechanoidView } from '../sim/mechanoid-presentation';
 import type { Mechanoid } from '../sim/mechanoid-state';
 import type { World } from '../sim/types';
@@ -56,6 +57,7 @@ export function updateMechanoidInspector(root:HTMLElement,state:{world:World;act
     emp.textContent=`EMP : ${stun?`neutralisé encore ${(stun/60).toFixed(1).replace('.',',')} s`:'mobilité et attaques rétablies'}${adaptation?` · adapté encore ${(adaptation/60).toFixed(1).replace('.',',')} s`:''}`;
     setTooltip(emp,{title:'Neutralisation et adaptation EMP',body:'L’EMP suspend déplacement et attaques sans blesser. Pendant l’adaptation, un nouvel impact ne prolonge ni l’arrêt ni cette protection.'});
   }
+  let foam=root.querySelector<HTMLElement>('[data-mech-firefoam]');if(!foam){foam=document.createElement('p');foam.dataset.mechFirefoam='';root.querySelector('.mechanoid-facts')!.append(foam);}foam.textContent=firefoamProtectionText290(state.actor.health,state.actor.state==='dead');foam.hidden=!foam.textContent;
   for(const [id,label] of CAPACITIES){const row=root.querySelector<HTMLElement>(`[data-mech-capacity="${id}"]`)!;row.querySelector('strong')!.textContent=percent(view.capacities[id]);setTooltip(row,{title:label,body:'Valeur actuelle du dossier mécanique ; aucune capacité biologique ou compétence humaine n’est inventée.'});}
   const body=root.querySelector('[data-mech-parts]')!;
   const ids=new Set<string>(view.parts.map(p=>p.id));

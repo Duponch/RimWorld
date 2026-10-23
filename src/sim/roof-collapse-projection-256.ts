@@ -19,7 +19,7 @@ const replace=(target:Data,source:Data)=>{for(const key of Object.keys(target))i
 const mutableRecipient=(o:object)=>Object.isExtensible(o)&&Reflect.ownKeys(o).every(k=>{const d=Object.getOwnPropertyDescriptor(o,k)!;return Object.hasOwn(d,'value')&&d.writable===true&&d.configurable===true;});
 const writableSlot=(o:object,key:PropertyKey)=>{const d=Object.getOwnPropertyDescriptor(o,key);return d?Object.hasOwn(d,'value')&&d.writable===true:Object.isExtensible(o)&&!(key in o);};
 const deletableSlot=(o:object,key:PropertyKey)=>{const d=Object.getOwnPropertyDescriptor(o,key);return !d||d.configurable===true;};
-const mutableState=['startingArrival','roofing','economy','destroyed','stock','spoiled','deconstructed','tailoring','hunting','bombWaves','growingCursor'] as const;
+const mutableState=['startingArrival','roofing','economy','destroyed','stock','spoiled','deconstructed','tailoring','hunting','bombWaves','firefoam290','growingCursor'] as const;
 const localCollections=['pawns','resources','structures','jobs','piles','packed','stockpiles','growingZones','events'] as const;
 export function roofCollapseProjection256(world:World){
  const root=campaignAuthority(world),mapId=registeredMapId(world),pairs:Pair[]=[],byOriginal=new Map<object,object>(),originalForDraft=new Map<object,object>();

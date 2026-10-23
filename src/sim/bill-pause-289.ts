@@ -1,3 +1,4 @@
+import {isSchema289OrLater} from './schema-compatibility-257.ts';
 import {countedProducts} from './cooking-bills.ts';
 import {nextBillReservePaused289,supportsBillReservePause289} from './bill-pause-rules-289.ts';
 import type {CookingBill} from './cooking-types.ts';
@@ -22,7 +23,7 @@ function commit(bill:CookingBill,read:(bill:CookingBill)=>number):void {
 /** Explicit local simulation boundary, never called by UI, save/load, a
  * diagnostic or a planning query. Packed/off-map bills retain their memory. */
 export function reconcileBillReservePauses289(world:World):void {
-  if(world.schemaVersion!==289)return;
+  if(!isSchema289OrLater(world.schemaVersion))return;
   let read:ReturnType<typeof createBillReserveCountReader289>|undefined;
   for(const station of world.structures){
     if(!station.bills)continue;
@@ -34,10 +35,10 @@ export function reconcileBillReservePauses289(world:World):void {
 }
 /** A successful policy/target transaction evaluates only its actual original. */
 export function reconcileBillReservePause289(world:World,bill:CookingBill):void {
-  if(world.schemaVersion!==289||!bill.reservePause)return;
+  if(!isSchema289OrLater(world.schemaVersion)||!bill.reservePause)return;
   commit(bill,b=>countedProducts(world,b));
 }
 export function canResumeBillReserve289(world:World,bill:CookingBill):boolean {
-  return world.schemaVersion===289&&bill.mode==='until'&&!!bill.reservePause?.enabled&&bill.reservePause.paused
+  return isSchema289OrLater(world.schemaVersion)&&bill.mode==='until'&&!!bill.reservePause?.enabled&&bill.reservePause.paused
     &&countedProducts(world,bill)<bill.target;
 }

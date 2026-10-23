@@ -1,3 +1,4 @@
+import {isSchema289OrLater} from './schema-compatibility-257.ts';
 import {smithingRecipeAvailable267,isSmithingRecipe267} from './smithing-content-267.ts';
 import {isSchema283OrLater} from './schema-compatibility-257.ts';
 import {validBillWorkerPolicy283} from './bill-worker-rules-283.ts';
@@ -30,7 +31,7 @@ export function applyBillCommand(world:World,command:BillCommand,drops:DropPlan)
   const index=station.bills.findIndex(b=>b.id===command.billId),bill=station.bills[index];
   if(!bill)return {ok:false,code:'missing-target',reason:'Facture introuvable.'};
   if(command.type==='bill-pause-policy'){
-    if(world.schemaVersion!==289||!supportsBillReservePause289(bill.recipe)||!validBillReservePausePolicy289(command.policy)
+    if(!isSchema289OrLater(world.schemaVersion)||!supportsBillReservePause289(bill.recipe)||!validBillReservePausePolicy289(command.policy)
       ||command.policy.enabled&&bill.mode==='until'&&(command.policy.resumeAt>=bill.target||bill.target>0&&command.policy.resumeAt<0))
       return {ok:false,code:'invalid-command',reason:'Réglage de pause invalide : la reprise doit rester sous la cible.'};
     bill.reservePause={enabled:command.policy.enabled,resumeAt:command.policy.resumeAt,paused:bill.reservePause?.paused??false};

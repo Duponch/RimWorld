@@ -1,3 +1,4 @@
+import {firefoamProtectionText290} from './firefoam-inspection-290.ts';
 import {isSchema273OrLater,isSchema280OrLater} from '../sim/schema-compatibility-257.ts';
 import {artificialPartIngredient273} from '../sim/artificial-parts-rules';
 import {isProstheticItem273} from '../sim/prosthetic-content-273';
@@ -296,10 +297,10 @@ export function createHealthInspection(panel:HTMLElement,selected?:()=>Pawn|unde
 }
 
 export function healthStatusText(pawn:Pawn,world?:World):string {
-  if(pawn.state==='dead')return world?bodyDescription(world,pawn):'Décédé';
+  if(pawn.state==='dead')return [world?bodyDescription(world,pawn):'Décédé',firefoamProtectionText290(pawn.health,true)].filter(Boolean).join(' · ');
   const health=pawn.health;
   if(!health)return 'Aucune lésion';
-  return `${pawn.state==='downed'?'À terre · ':''}${cryptosleepSick256(health.cryptosleepSickness)||health.flu?.severity||activeImmuneDisease(health)?'Malade · ':''}Douleur ${Math.round(medicalPain(health)*100)} % · Sang perdu ${(health.bloodLoss/BLOOD_UNIT*100).toFixed(1)} % · Saignement ${(medicalBleed(health)*100).toFixed(0)} %/jour`;
+  return `${pawn.state==='downed'?'À terre · ':''}${cryptosleepSick256(health.cryptosleepSickness)||health.flu?.severity||activeImmuneDisease(health)?'Malade · ':''}Douleur ${Math.round(medicalPain(health)*100)} % · Sang perdu ${(health.bloodLoss/BLOOD_UNIT*100).toFixed(1)} % · Saignement ${(medicalBleed(health)*100).toFixed(0)} %/jour${health.coveredInFirefoam290?' · '+firefoamProtectionText290(health):''}`;
 }
 
 /** Selected pawn only, at HUD cadence. Save strings never enter innerHTML. */

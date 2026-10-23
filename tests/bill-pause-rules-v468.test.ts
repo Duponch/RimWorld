@@ -6,6 +6,7 @@ import {
 import {PRODUCTION_RECIPES,type ProductionRecipe} from '../src/sim/production-recipes.ts';
 import type {CookingBill} from '../src/sim/cooking-types.ts';
 import type {BillReservePause289} from '../src/sim/bill-pause-state-289.ts';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 
 /** Scalar contract only: stock figures below are supplied observations, not a
  * claimed physical production run. The caller alone commits acquired memory. */
@@ -135,10 +136,11 @@ test('policy and persisted state require plain own enumerable data fields, rejec
 });
 
 test('persisted pause belongs only to schema 289 and cannot appear on a historical or future envelope',()=>{
-  for(const version of [1,287,288,290,NaN,Infinity,289.5]){
+  for(const version of [1,287,288,SCHEMA_VERSION+1,NaN,Infinity,289.5]){
     expect(validBillReservePauseState289(state(),version,'simple-meal')).toBe(false);
   }
   expect(validBillReservePauseState289(state({enabled:false,paused:true}),289,'simple-meal')).toBe(true);
+  expect(validBillReservePauseState289(state({enabled:false,paused:true}),SCHEMA_VERSION,'simple-meal')).toBe(true);
 });
 
 test('explicit adoption preserves the native gap of five where possible and keeps the zero-target sentinel',()=>{

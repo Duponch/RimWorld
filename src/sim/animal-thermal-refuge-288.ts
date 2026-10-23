@@ -28,7 +28,7 @@ export function releaseAnimalThermalRefuge288(w:World,a:WildAnimal):void {
 
 /** Position owners and urgent jobs win before the thermal ThinkTree node. */
 function available(w:World,a:WildAnimal):boolean {
-  if((Number(w.schemaVersion)!==288&&Number(w.schemaVersion)!==289)||!a.domestic||!animalThermalProfile466(a)||!w.wildlife?.animals.includes(a)
+  if((Number(w.schemaVersion)!==288&&(Number(w.schemaVersion)!==289&&Number(w.schemaVersion)!==290))||!a.domestic||!animalThermalProfile466(a)||!w.wildlife?.animals.includes(a)
     ||a.shipCryptosleepHeldAt277!==undefined||a.state==='dead'||a.state==='downed'||a.health?.death
     ||a.sleepUntilCore||a.stun||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.manhunter||a.confusion
     ||a.exitFlight||a.eggLay||a.mating||a.predation||a.hiveJob

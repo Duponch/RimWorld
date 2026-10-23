@@ -9,7 +9,7 @@ import type { ArchitectCategory, Tool } from './layout';
 /** Research requirements for ordinary construction, without installation's
  * exemptions. Furniture and floors keep their delivered definition as owner. */
 const BUILD_RESEARCH:Readonly<Partial<Record<Tool,ResearchProject>>>=Object.freeze({
-  'ship-cryptosleep-casket':'ship-cryptosleep','ship-beam':'ship-basics','ship-engine':'ship-engine',
+  'firefoam-popper':'firefoam','ship-cryptosleep-casket':'ship-cryptosleep','ship-beam':'ship-basics','ship-engine':'ship-engine',
   'ship-reactor':'ship-reactor','cryptosleep-casket':'cryptosleep',vent:'complex-furniture',autodoor:'autodoors','mini-turret':'gun-turrets','vitals-monitor':'vitals-monitor',
   'tube-television':'tube-television',cooler:'air-conditioning',battery:'batteries',
   'fueled-smithy':'smithing','electric-smithy':'smithing',brewery:'brewing','fermenting-barrel':'brewing','geothermal-generator':'geothermal-power','solar-generator':'solar-power','hydroponics-basin':'hydroponics',
@@ -57,6 +57,7 @@ export const architectCategoryAvailable=(world:World,category:ArchitectCategory)
 /** Catalogue visibility only. Placement still has its own shared simulation
  * validation; an occupied cell or an empty stock never removes an icon. */
 export function architectToolAvailable(world:World,tool:Tool):boolean {
+  if(tool==='firefoam-popper'&&world.schemaVersion!==290)return false;
   if(tool==='smooth-floor'&&!isSchema281OrLater(world.schemaVersion))return false;
   if(tool==='ship-cryptosleep-casket'&&!isSchema277OrLater(world.schemaVersion))return false;
   if(isShipAddedKind276(tool)&&!isSchema276OrLater(world.schemaVersion))return false;

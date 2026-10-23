@@ -28,7 +28,7 @@ function put(w:World,c:Cell,kind:FilthKind,spontaneous=false):boolean {
   if(!filthWalkable(w,c))return false;
   const found=w.filth?.items.find(f=>same(f,c)&&f.kind===kind);
   if(found){if(found.thickness>=5)return false;found.thickness++;found.grownCore=w.tick*10;return true;}
-  if(!accepted(w,c,kind,spontaneous)||!Number.isSafeInteger(w.nextId+1)||(w.filth?.items.length??0)>=w.width*w.height*(w.schemaVersion>=256?9:6))return false;
+  if(!accepted(w,c,kind,spontaneous)||!Number.isSafeInteger(w.nextId+1)||(w.filth?.items.length??0)>=w.width*w.height*(w.schemaVersion>=290?10:w.schemaVersion>=256?9:6))return false;
   const state=ensureFilth(w),d=FILTH_DEFINITIONS[kind],period=filthCheckPeriod(w),now=w.tick*10;
   // A cell's phase is stable; adding another trace never rerolls rain chronology.
   const phase=((Math.imul(c.z*w.width+c.x,1103515245)>>>0)%(period));
@@ -38,7 +38,7 @@ function put(w:World,c:Cell,kind:FilthKind,spontaneous=false):boolean {
 /** Actual deposits only. A blocked/full cell tries the eight neighbors in a
  * private shuffled order; rejected terrain alone does not spill outward. */
 export function addFilth(w:World,c:Cell,kind:FilthKind,count=1,spontaneous=false):boolean {
-  if(w.schemaVersion<89||w.schemaVersion<256&&(kind==='rock-rubble'||kind==='building-rubble'||kind==='slime')||!inside(w,c)||!Object.hasOwn(FILTH_DEFINITIONS,kind)||!Number.isSafeInteger(count)||count<1||count>100)return false;
+  if(w.schemaVersion<89||kind==='firefoam'&&w.schemaVersion!==290||w.schemaVersion<256&&(kind==='rock-rubble'||kind==='building-rubble'||kind==='slime')||!inside(w,c)||!Object.hasOwn(FILTH_DEFINITIONS,kind)||!Number.isSafeInteger(count)||count<1||count>100)return false;
   let made=false;
   for(let n=0;n<count;n++){
     if(put(w,c,kind,spontaneous)){made=true;continue;}

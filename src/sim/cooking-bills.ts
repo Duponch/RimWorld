@@ -1,3 +1,4 @@
+import {isSchema289OrLater} from './schema-compatibility-257.ts';
 import {isSchema273OrLater,isSchema278OrLater,isSchema283OrLater} from './schema-compatibility-257.ts';
 import {validBillWorkerPolicy283} from './bill-worker-rules-283.ts';
 import {validBillReservePauseState289} from './bill-pause-rules-289.ts';
@@ -101,7 +102,7 @@ export function countedProducts(world:World,bill?:CookingBill):number {
 export function billWanted(world:World,bill:CookingBill,alreadyAdmitted=false):boolean {
   // Existing reserved orders keep their historical target/suspension checks;
   // only the new automatic memory is prospective to later admissions.
-  if(!alreadyAdmitted&&world.schemaVersion===289&&bill.mode==='until'&&bill.reservePause?.enabled&&bill.reservePause.paused)return false;
+  if(!alreadyAdmitted&&isSchema289OrLater(world.schemaVersion)&&bill.mode==='until'&&bill.reservePause?.enabled&&bill.reservePause.paused)return false;
   return !bill.suspended&&(bill.mode==='forever'||bill.mode==='times'&&bill.target>0||bill.mode==='until'&&countedProducts(world,bill)<bill.target);
 }
 export function cookingSpot(station:Structure):Cell {

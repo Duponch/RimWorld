@@ -2,6 +2,7 @@ import { FILTH_KINDS, type FilthKind, type FilthRecord } from '../sim/filth-rule
 
 export const FILTH_ATLAS = { tileSize: 128, columns: 8, rows: 5, variants: 4 } as const;
 const colors: Record<FilthKind, readonly [number, number, number, number]> = {
+  firefoam:[211,225,215,225],
   slime:[130,142,120,170],
   dirt: [91, 75, 65, 97], trash: [157, 139, 105, 255], blood: [131, 34, 34, 180],
   'rock-rubble':[117,128,130,255],'building-rubble':[169,151,127,255],

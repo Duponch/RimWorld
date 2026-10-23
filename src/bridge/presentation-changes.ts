@@ -11,7 +11,7 @@ export class PresentationChanges {
   private relationshipLinks:NonNullable<World['relationships']>['links']|undefined;
   private relationshipSignature:string|undefined;
   protected readStructures(world:World):unknown {
-    return world.structures.map(s=>[s.id,s.x,s.z,s.casketWick,s.medical,s.prisoner,s.emp,s.fuel? s.fuel.ticks>0:undefined,s.door?.changedAt,s.door?.open,s.power?.on,s.power?.parentId,s.power?.switchOn,
+    return world.structures.map(s=>[s.id,s.x,s.z,s.casketWick,s.firefoam290?.wick,s.medical,s.prisoner,s.emp,s.fuel? s.fuel.ticks>0:undefined,s.door?.changedAt,s.door?.open,s.power?.on,s.power?.parentId,s.power?.switchOn,
         s.turret?[s.turret.ammoQ,s.turret.autoReload,s.turret.holdFire,s.turret.targetKey,!!s.turret.warmup,
           s.turret.burst?.targetKey,!!s.turret.burst,s.turret.cooldownCore>0,s.turret.wick]:undefined]);
   }
@@ -41,6 +41,7 @@ export class PresentationChanges {
       world.civilianPost?[world.civilianPost.generation,world.civilianPost.transactions,world.civilianPost.stock.map(p=>[p.id,p.item,p.quantity,p.damage])]:undefined,
       world.projectiles?.map(p=>[p.id,p.emittedAtCore,p.arrival]),
       world.bombWaves?.map(w=>w.emp?[w.id,w.sourceId,w.startedAtCore,w.emp]:w.shortCircuit?[w.id,w.sourceId,w.startedAtCore,w.shortCircuit]:[w.id,w.sourceId,w.startedAtCore]),
+      world.firefoam290?.waves.map(w=>[w.id,w.sourceId,w.startedAtCore,w.nextCell]),
       world.raids?.mechActive,world.raids?.extraMechActive261,
       world.mechanoids?.map(m=>[m.id,m.mechKind,m.state,m.melee,m.stun,m.emp,m.raid?.goal,m.temple,m.health?.nextInjuryId,m.health?.missing,
         // Busy clocks decrease continuously; only real admissions, phase/focus
@@ -51,6 +52,7 @@ export class PresentationChanges {
         p.mental?.crisis?.kind==='tantrum'?p.mental.crisis.attempted:undefined,
         p.meleeThreat,p.bombRefuge,p.bedId,p.social?.last,p.romanceMemories,p.familyBereavement,p.deathThoughts,
         isSchema285OrLater(world.schemaVersion)&&p.coupleTask285?[p.coupleTask285.otherId,p.coupleTask285.bedId,p.coupleTask285.slot,p.bedSlot,p.coupleTask285.enteredAtCore,p.coupleTask285.endsAtCore]:undefined,
+        p.firefoamTask290?[p.firefoamTask290.structureId,p.firefoamTask290.phase]:undefined,!!p.health?.coveredInFirefoam290,
         p.jobId,p.faction,p.worldAffiliation259,p.prisonerHistory259?.capturedAt,p.prisoner?.capturedAt,p.prisoner?.mode,p.prisoner?.lastChatTick,p.prisoner?.escape,p.ward?.kind,p.ward?.patientId,p.ward?.phase,p.hostilityResponse,p.draft?.holdFire,p.tactics?.targetId,p.tactics?.post,p.flee,p.melee,p.stun,
         // Human Busy clocks pay every Core. Publish real orders/phases and
         // stun boundaries, leaving continuous watermarks to periodic snapshots.

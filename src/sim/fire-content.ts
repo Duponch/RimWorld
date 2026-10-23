@@ -11,9 +11,11 @@ const index=(world:World,c:Cell)=>c.z*world.width+c.x;
 export class FireContent {
   private contents=new Map<number,FireTarget[]>();
   private solids=new Set<number>();
+  private firefoam=new Set<number>();
   readonly world:World;
   constructor(world:World){
     this.world=world;
+    if(world.schemaVersion===290)for(const f of world.filth?.items??[])if(f.kind==='firefoam')this.firefoam.add(index(world,f));
     const add=(c:Cell,t:FireTarget)=>{const key=index(world,c),list=this.contents.get(key);if(list)list.push(t);else this.contents.set(key,[t]);};
     for(const r of world.resources)if(r.kind!=='rock')add(r,{kind:'resource',value:r});
     for(const p of world.piles)if(p.owner.type==='ground')add(p.owner,{kind:'pile',value:p});
@@ -31,6 +33,7 @@ export class FireContent {
     return (full?[full]:list).filter(t=>targetFlammability(t)>=.01);
   }
   chance(c:Cell):number {
+    if(this.firefoam.has(index(this.world,c)))return 0;
     if(!this.inside(c)||this.world.fires?.items.some(f=>firePosition(this.world,f)?.x===c.x&&firePosition(this.world,f)?.z===c.z))return 0;
     return this.fuel(c);
   }

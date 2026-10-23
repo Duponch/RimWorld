@@ -1,3 +1,4 @@
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 import {expect,test} from 'vitest';
 import {captureCoupleMapContext285,validCoupleClock285,validCoupleTask285,validCouplePawnShape285,validCouplePawnContext285,type CouplePawnContext285} from '../src/sim/couple-save-285.ts';
 import {HUMAN_YEAR_TICKS} from '../src/sim/human-age.ts';
@@ -29,7 +30,7 @@ test('all historical versions retain literal absence and reject any prospective 
    expect(validCouplePawnShape285(Object.create({[key]:undefined}),version,100)).toBe(false);
   }
  }
- expect(validCouplePawnShape285({},286,100)).toBe(false);expect(validCouplePawnShape285({},1,100)).toBe(false);
+ for(const version of [285,286,287,288,289,290])expect(validCouplePawnShape285({},version,100)).toBe(true);expect(validCouplePawnShape285({},SCHEMA_VERSION+1,100)).toBe(false);expect(validCouplePawnShape285({},1,100)).toBe(false);
 });
 
 test('descriptor-first guards never execute top-level or nested getters',()=>{

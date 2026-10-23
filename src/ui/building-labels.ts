@@ -1,6 +1,7 @@
 import type { StructureKind } from '../sim/types';
 
 export const buildingLabels: Readonly<Record<StructureKind, string>> = {
+  'firefoam-popper':'Diffuseur de mousse anti-incendie',
   'insect-hive':'Ruche souterraine','glow-pod':'Poche luminescente',
   'ship-cryptosleep-casket':'Caisson spatial de cryptosommeil',
   'ship-reactor':'Réacteur stellaire',

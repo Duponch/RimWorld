@@ -32,6 +32,7 @@ const projectById=new Map(researchProjects.map(project=>[project.id,project]));
 const NODE_WIDTH=142,NODE_HEIGHT=66,GRAPH_WIDTH=850,GRAPH_HEIGHT=740;
 const nodePosition=(project:ProjectNode)=>({x:20+(project.x-24)*.82,y:22+(project.y-20)*.66});
 const prerequisites=new Map<ResearchProject,string[]>([
+  ['firefoam',['Électricité (acquise au départ)']],
   ['ship-cryptosleep',['Construction de vaisseau','Cryptosommeil']],
   ['ship-basics',['Fabrication avancée']],['ship-reactor',['Construction de vaisseau']],['ship-engine',['Construction de vaisseau']],
   ['prosthetics',['Usinage']],
@@ -81,6 +82,7 @@ function paintSelected(root:HTMLElement,world:World,send:(command:Command)=>void
 
 export function updateResearchPanel(root: HTMLElement, world: World, send: (command: Command) => void, actions:ResearchPanelActions={}): void {
   const stations=captureResearchStationIssues(world);
+  if(root.dataset.selectedResearch==='firefoam'&&world.schemaVersion!==290)root.dataset.selectedResearch=world.research?.project??'complex-clothing';
   if(!projectById.has(root.dataset.selectedResearch as ResearchProject))root.dataset.selectedResearch=world.research?.project??'complex-clothing';
   const readiness=readResearchReadiness(world,root.dataset.selectedResearch as ResearchProject,stations);
   root.classList.add('research-reference');
@@ -135,6 +137,7 @@ export function updateResearchPanel(root: HTMLElement, world: World, send: (comm
     root.replaceChildren(layout);
   }
   for(const project of researchProjects){
+    if(project.id==='firefoam'){const node=root.querySelector<HTMLElement>('[data-research-node="firefoam"]')!;node.hidden=world.schemaVersion!==290;if(node.hidden)continue;}
     const done=researchUnlocked(world,project.id),active=world.research?.project===project.id,progress=project.progress(world),points=(progress?.points??0)/RESEARCH_SCALE,missing=researchPrerequisite(world,project.id);
     root.querySelector<HTMLProgressElement>(`[data-${project.prefix}-progress]`)!.value=points;
     const initial=done&&progress?.completedAt===0&&(world.scenario?.id==='survivors'||world.scenario?.id==='crashlanded');

@@ -10,7 +10,7 @@ import {flushRegisteredMap} from '../src/sim/world-map-context.ts';
 import {isSchema256Or257,isSchema283OrLater,isSchema287OrLater,isSchema288OrLater} from '../src/sim/schema-compatibility-257.ts';
 import {validAnimalThermalRefugeField288} from '../src/sim/animal-thermal-refuge-save-288.ts';
 import type {CookingBill} from '../src/sim/cooking-types.ts';
-import type {Structure,World} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type Structure,type World} from '../src/sim/types.ts';
 
 const pause=(paused=true)=>({enabled:true,resumeAt:5,paused});
 const first=(s:Structure):CookingBill=>s.bills![0]!;
@@ -37,10 +37,11 @@ function envelopes(s:unknown):unknown[]{return [
 
 test('289 alone admits an explicit reserve memory; earlier absence remains literal and future290 is closed',()=>{
  const w=deconstructionCamp(2),s=station(w);
- for(const version of [1,256,283,287,288,289])expect(validBillPauseBuilding289(s,version)).toBe(true);
+ for(const version of [1,256,283,287,288,289,SCHEMA_VERSION])expect(validBillPauseBuilding289(s,version)).toBe(true);
  first(s).reservePause=pause();
  expect(validBillPauseBuilding289(s,289)).toBe(true);
- for(const version of [1,256,283,287,288,290,NaN,289.5])expect(validBillPauseBuilding289(s,version)).toBe(false);
+ expect(validBillPauseBuilding289(s,SCHEMA_VERSION)).toBe(true);
+ for(const version of [1,256,283,287,288,SCHEMA_VERSION+1,NaN,289.5])expect(validBillPauseBuilding289(s,version)).toBe(false);
  const zero=structuredClone(s);first(zero).target=0;first(zero).reservePause={enabled:true,resumeAt:-1,paused:true};
  expect(validBillPauseBuilding289(zero,289)).toBe(true);
  first(zero).reservePause={enabled:false,resumeAt:9999,paused:false};expect(validBillPauseBuilding289(zero,289)).toBe(true);
@@ -74,11 +75,12 @@ test('historical, current and sparse transports fence all real custody lanes wit
  const record={bills:[{recipe:'simple-meal',reservePause:pause()}]};
  for(const raw of envelopes(record)){
   const before=JSON.stringify(raw);
-  for(const version of [1,256,283,287,288,290])expect(validBillPauseHistoricalTransport289(raw,version)).toBe(false);
-  expect(validBillPauseHistoricalTransport289(raw,289)).toBe(true);expect(JSON.stringify(raw)).toBe(before);
+  for(const version of [1,256,283,287,288,SCHEMA_VERSION+1])expect(validBillPauseHistoricalTransport289(raw,version)).toBe(false);
+  expect(validBillPauseHistoricalTransport289(raw,289)).toBe(true);expect(validBillPauseHistoricalTransport289(raw,SCHEMA_VERSION)).toBe(true);expect(JSON.stringify(raw)).toBe(before);
  }
  const bad={bills:[{recipe:'simple-meal',reservePause:{...pause(),resumeAt:-2}}]};
  for(const raw of envelopes(bad))expect(validBillPauseHistoricalTransport289(raw,289)).toBe(false);
+ for(const raw of envelopes(bad))expect(validBillPauseHistoricalTransport289(raw,SCHEMA_VERSION)).toBe(false);
 });
 
 test('custody accessors and loops are refused while terrain and personal physiology are never read',()=>{
@@ -106,7 +108,7 @@ test('strict288 migration changes only the number and never adds reserve setting
  const w=deconstructionCamp(2),s=station(w),old=JSON.parse(serializeWorld(w));old.schemaVersion=288;
  expect(validateCampaignSchema288(old)).toEqual([]);
  const saved=JSON.stringify(old),copy=deserializeWorld(saved);
- expect(JSON.parse(serializeWorld(copy))).toEqual({...old,schemaVersion:289});
+ expect(JSON.parse(serializeWorld(copy))).toEqual({...old,schemaVersion:SCHEMA_VERSION});
  expect(Object.hasOwn(first(copy.structures.find(b=>b.id===s.id)!),'reservePause')).toBe(false);
  expect(JSON.stringify(old)).toBe(saved);
  old.structures.find((b:Structure)=>b.id===s.id).bills[0].reservePause=pause();
@@ -133,13 +135,14 @@ test.each([false,true])('pause-only same-object publication survives public and 
 
 test('new family preserves old capability lower bounds and rejects numeric strings and future290',()=>{
  for(const fn of [isSchema256Or257,isSchema283OrLater,isSchema287OrLater,isSchema288OrLater]){
-  expect(fn(289)).toBe(true);expect(fn(290)).toBe(false);expect(fn('289')).toBe(false);
+  expect(fn(289)).toBe(true);expect(fn(SCHEMA_VERSION)).toBe(true);expect(fn(SCHEMA_VERSION+1)).toBe(false);expect(fn('289')).toBe(false);expect(fn(String(SCHEMA_VERSION))).toBe(false);
  }
  expect(isSchema256Or257('262')).toBe(false);expect(isSchema256Or257('263')).toBe(false);
  expect(isSchema283OrLater(282)).toBe(false);expect(isSchema287OrLater(286)).toBe(false);expect(isSchema288OrLater(287)).toBe(false);
  const task={mapId:0,target:{x:3,z:4},phase:'travel',startedAtCore:20};
  expect(validAnimalThermalRefugeField288({animalThermalRefuge288:task},288,2,32,32,true)).toBe(true);
  expect(validAnimalThermalRefugeField288({animalThermalRefuge288:task},289,2,32,32,true)).toBe(true);
+ expect(validAnimalThermalRefugeField288({animalThermalRefuge288:task},SCHEMA_VERSION,2,32,32,true)).toBe(true);
  expect(validAnimalThermalRefugeField288({animalThermalRefuge288:task},287,2,32,32,true)).toBe(false);
- expect(validAnimalThermalRefugeField288({animalThermalRefuge288:task},290,2,32,32,true)).toBe(false);
+ expect(validAnimalThermalRefugeField288({animalThermalRefuge288:task},SCHEMA_VERSION+1,2,32,32,true)).toBe(false);
 });

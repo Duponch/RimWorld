@@ -178,6 +178,7 @@ export class StructureVfxLayer {
     for(const s of subjects){
       const on=s.kind==='geothermal-generator'?powerWatts(s,world)>0:isPowerActive(s),work=working.has(s.id);
       const wick=actualBombWick256(s);if(wick)tokens.push(`${s.id}:turret-wick:${wick.startedAtCore}`);
+      const foamWick=s.kind==='firefoam-popper'?s.firefoam290?.wick:undefined;if(foamWick)tokens.push(`${s.id}:firefoam-wick:${foamWick.startedAtCore}:${foamWick.endCore}`);
       if(s.kind==='autodoor'){
         doorAxes??=doorOrientations(world);
         const axis=doorAxes.get(s.z*world.width+s.x)??0;
@@ -220,6 +221,7 @@ export class StructureVfxLayer {
       }
       if(s.emp&&s.emp.untilCore>world.tick*10)tokens.push(`${s.id}:emp:${s.emp.untilCore}`);
     }
+    for(const wave of world.firefoam290?.waves??[])tokens.push(`firefoam-wave:${wave.id}:${wave.nextCell}`);
     for(const p of world.projectiles??[])if(p.weaponItem==='mini-turret-gun'&&Math.ceil(p.emittedAtCore/10)===world.tick)tokens.push(`turret-shot:${p.id}`);
     for(const wave of world.bombWaves??[])if(Math.ceil(wave.startedAtCore/10)===world.tick){
       if(wave.emp){tokens.push(`emp-flash:${wave.id}`);continue;}
@@ -356,6 +358,8 @@ export class StructureVfxLayer {
         glow.push({x,y,z:z-.09,sx:.115,sy:.045,sz:.255,ry:0,color:0xffac62});
         glow.push({x,y,z:z+.16,sx:.115,sy:.045,sz:.085,ry:0,color:0xffac62});
       }
+      const foamWick=s.kind==='firefoam-popper'?s.firefoam290?.wick:undefined;
+      if(foamWick){tokens.push(`${s.id}:firefoam-wick:${foamWick.startedAtCore}:${foamWick.endCore}`);glow.push({x:s.x,y:.89,z:s.z,sx:.12,sy:.10,sz:.12,ry:0,color:0xffc369});}
       if(s.emp&&s.emp.untilCore>world.tick*10){
         tokens.push(`${s.id}:emp:${s.emp.untilCore}`);
         glow.push({x:s.x,y:1.3,z:s.z,sx:.11,sy:.36,sz:.11,ry:Math.PI/4,color:0x8cefff});
@@ -363,6 +367,13 @@ export class StructureVfxLayer {
     }
     // Confirmed emissions/departures use the existing status draw. No fake
     // Pawn pose, light or fire is created; a flash lasts the adopted birth tick.
+    // At most sixteen confirmed primary cells per wave feed the shared smoke
+    // batch. Halo cells never become floor foam through a presentation effect.
+    for(const wave of world.firefoam290?.waves??[]){
+      tokens.push(`firefoam-wave:${wave.id}:${wave.nextCell}`);
+      const from=Math.max(0,wave.nextCell-16);
+      for(let i=from;i<wave.nextCell;i++){const cell=wave.cells[i];if(cell===undefined||wave.damageOnlyCells.includes(cell))continue;puff(cell%world.width,.10,Math.floor(cell/world.width),wave.id+i,.30,-.10,.34,2);}
+    }
     for(const p of world.projectiles??[])if(p.weaponItem==='mini-turret-gun'&&Math.ceil(p.emittedAtCore/10)===world.tick){
       const from=p.flight.origin,to=p.flight.destination,ry=Math.atan2(to.x-from.x,to.z-from.z);
       tokens.push(`turret-shot:${p.id}`);glow.push({x:from.x+Math.sin(ry)*.7,y:1.12,z:from.z+Math.cos(ry)*.7,sx:.16,sy:.17,sz:.22,ry,color:0xffd599});

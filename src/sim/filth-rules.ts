@@ -1,6 +1,6 @@
 import type { Cell,World } from './types.ts';
 
-export const FILTH_KINDS=['dirt','trash','blood','ash','vomit','corpse-bile','rock-rubble','building-rubble','slime'] as const;
+export const FILTH_KINDS=['dirt','trash','blood','ash','vomit','corpse-bile','rock-rubble','building-rubble','slime','firefoam'] as const;
 export type FilthKind=typeof FILTH_KINDS[number];
 export interface FilthRecord extends Cell {
   id:number;kind:FilthKind;thickness:number;grownCore:number;expiresAfterCore:number;nextCheckCore:number;
@@ -8,6 +8,7 @@ export interface FilthRecord extends Cell {
 export interface FilthFeet {lastTerrain?:'dirt';carried:{kind:FilthKind;thickness:number}[]}
 export interface FilthState {rng:number;items:FilthRecord[];cleaned:number}
 export const FILTH_DEFINITIONS:Readonly<Record<FilthKind,{label:string;cleanliness:number;work:number;minDays:number;maxDays:number;rain:boolean}>>=Object.freeze({
+  firefoam:{label:'Mousse anti-incendie',cleanliness:-5,work:100,minDays:5,maxDays:10,rain:true},
   slime:{label:'Mucus',cleanliness:-5,work:70,minDays:35,maxDays:40,rain:true},
   dirt:{label:'Terre',cleanliness:-5,work:35,minDays:45,maxDays:50,rain:true},
   trash:{label:'Déchets',cleanliness:-5,work:35,minDays:45,maxDays:50,rain:false},

@@ -74,11 +74,11 @@ export function advanceWorldPawnRow256(row:WorldPawnOwner256,toCore:number,rando
 }
 /** Private campaign preparation only. The exported row/removal paths remain
  * strict; this switch cannot be supplied by a save or presentation consumer. */
-function advancePreparedWorldPawnRow256(row:WorldPawnOwner256,toCore:number,random:()=>number,notices:string[],version:number,scariaRotChance?:number,provisionalMothball263=false):WorldPawnLifeResult256 {
+function advancePreparedWorldPawnRow256(row:WorldPawnOwner256,toCore:number,random:()=>number,notices:string[],version:number,scariaRotChance?:number,provisionalMothball263=false,advanceFirefoam=true):WorldPawnLifeResult256 {
  if(terminalWorldPawn256(row))return {ok:true};
  if(toCore<row.clockCore||toCore%10)return {ok:false,reason:'Invalid WorldPawn personal clock'};
  const delta=toCore-row.clockCore;if(!delta)return {ok:true};
- if(row.kind==='mechanical'){const reason=(version===259||version===260||(version===261||(Number(version)===262||isSchema263OrLater(Number(version)))))?advanceMechanicalWorldPawn259(row,toCore):'Future mechanical WorldPawn';return reason?{ok:false,reason}:{ok:true};}
+ if(row.kind==='mechanical'){const reason=(version===259||version===260||(version===261||(Number(version)===262||isSchema263OrLater(Number(version)))))?advanceMechanicalWorldPawn259(row,toCore,advanceFirefoam):'Future mechanical WorldPawn';return reason?{ok:false,reason}:{ok:true};}
  const mothball=row.mode==='mothballed';
  const activeBoundary=worldPawnActiveBoundary256(row,version,toCore);if(activeBoundary)return {ok:false,reason:activeBoundary};
  if(row.kind==='animal'){
@@ -134,7 +134,7 @@ export function prepareWorldPawnRemoval256(row:WorldPawnOwner256,atCore:number,a
  return {ok:true,draft};
 }
 /** Transaction preparation only; does not clone geography or any map. */
-export function prepareWorldPawnLife256(state:WorldPawnsState256,atCore:number,randomOwner:{rng:number;gameProfile?:import('./game-profile.ts').GameProfile},version=256):{ok:true;notices:readonly string[];deceasedHumanIds:readonly number[];commit():void}|{ok:false;reason:string}{
+export function prepareWorldPawnLife256(state:WorldPawnsState256,atCore:number,randomOwner:{rng:number;gameProfile?:import('./game-profile.ts').GameProfile},version=256,firefoamActiveIds?:ReadonlySet<number>):{ok:true;notices:readonly string[];deceasedHumanIds:readonly number[];commit():void}|{ok:false;reason:string}{
  const nativeBefore=state.nativeOrder;if(!nativeWorldPawnOrderCurrent256(state,nativeBefore))return {ok:false,reason:'Actual native life order is not mutable/admitted'};
  let nativeAfter=nativeBefore;
  if(atCore!==state.atCore+10)return {ok:false,reason:'WorldPawn runtime requires the next actual local frontier'};
@@ -151,7 +151,7 @@ export function prepareWorldPawnLife256(state:WorldPawnsState256,atCore:number,r
  // A true native order or an absent actual mind/tracker retains the old guard.
  for(const {draft} of pairs){
   const provisionalMothball263=provisionalAnimalMothball263(draft,version,nativeBefore);
-  const result=advancePreparedWorldPawnRow256(draft,atCore,random,notices,version,randomOwner.gameProfile?.difficulty==='adventure-story'?.333:undefined,provisionalMothball263);if(!result.ok)return result;
+  const result=advancePreparedWorldPawnRow256(draft,atCore,random,notices,version,randomOwner.gameProfile?.difficulty==='adventure-story'?.333:undefined,provisionalMothball263,!firefoamActiveIds||firefoamActiveIds.has(draft.actor.id));if(!result.ok)return result;
  }
  const deceasedHumanIds:number[]=[];
  for(const {row,draft} of pairs)if(row.mode!=='dead'&&draft.mode==='dead'){

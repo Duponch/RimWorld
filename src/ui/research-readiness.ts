@@ -42,7 +42,7 @@ const minimumSchema:Partial<Record<ResearchProject,number>>={
   hydroponics:203,'gun-turrets':193,'tube-television':190,'packaged-survival-meals':188,
   'hospital-bed':187,autodoors:143,
 };
-const admitted=(world:World,project:ResearchProject)=>project==='ship-cryptosleep'?isSchema277OrLater(world.schemaVersion):project==='ship-engine'?isSchema276OrLater(world.schemaVersion):world.schemaVersion>=(minimumSchema[project]??0);
+const admitted=(world:World,project:ResearchProject)=>project==='firefoam'?world.schemaVersion===290:project==='ship-cryptosleep'?isSchema277OrLater(world.schemaVersion):project==='ship-engine'?isSchema276OrLater(world.schemaVersion):world.schemaVersion>=(minimumSchema[project]??0);
 
 const sorted=(ids:number[])=>ids.sort((a,b)=>a-b);
 const local=(pawn:Pawn)=>isColonist(pawn)&&!pawn.prisoner&&!pawn.visitor&&!pawn.raid&&!pawn.podRescue&&pawn.state!=='dead'&&!pawn.health?.death;
