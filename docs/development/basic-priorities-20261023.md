@@ -52,3 +52,11 @@ Après livraison effective de V469, préparer cette boucle de guidage courte, pu
 
 
 **Actualisation de livraison V469 :** produit53474721 / caf697e9 publié,20réponses HTTPS ciblées exactes,552fichiers/71chemins publics de sauvegardes conservés. Présentation finale157,402s et dernier test intégré animal/mécanique acquis ;225cas63nouveaux+162voisins. La préparation de guidage ci-dessus est retenue après livraison, sans code engagé ni règle actuelle déduite d’une annonce historique.
+
+## Comparaison après V470
+
+Le petit parcours facultatif est qualifié localement, dans son périmètre d’apprentissage d’interface : quatre vrais gestes acceptés ou déclaration explicite, mémoire navigateur, huit faits actuels conservés,112cas distincts et deux recharges entières acquis par reprises. La [réévaluation des vingt domaines et interactions](audit-core-20261022.md#réévaluation-après-v470) garde tous les autres manques ouverts ; aucune réalisation physique future n’est donnée par ce suivi. Publication à effectuer avant le prochain lot.
+
+Préparation retenue après livraison : **semis forestiers volontaires pour le bois**, principalement ensemble2. La source possède sept cultures et treize arbres physiques ; aucun n’est déclaré semable depuis ce simple inventaire. Fermer primaire actuelle, espèce/recherche/compétence/sol/toit/espacement, travail/croissance et vraie coupe/reprise avant code. Le bois relie construction, combustible, entretien et écologie ; aucun manque joué de bois n’est inventé pour justifier ce choix.
+
+Préparation courte, sans refonte générale imposée : si le résultat reste cosmétique ou déborde, réarbitrer avec **un événement social coordonné**, la diplomatie pacifique, les dangers prolongés, la lecture, les usages économiques des acteurs et toutes les autres bases. La prochaine priorité n’est pas une nouvelle variante de guide/thermie/arme ni un retour automatique au vaisseau. Tous domaines et interactions, six ensembles, campagnes, victoire et cible FPS restent ouverts.

@@ -180,7 +180,7 @@ export function gameLayout(): string {
     <span id="fps-counter" aria-live="off" title="Cadence du rendu, indépendante de la vitesse de simulation">— FPS</span>
     <div class="corner-tools"><span class="game-title">ELSEWHERE</span><button id="help-open" aria-label="Ouvrir l’aide" title="Guide complet">?</button></div>
     <details class="learning-readout" aria-label="Conseils de jeu"><summary>Conseils</summary>
-      <div class="learning-concepts"><div id="first-day-guide" aria-label="Préparer les premiers jours"></div><p>Notions disponibles</p>
+      <div class="learning-concepts"><div id="first-gestures-guide" aria-label="Parcours facultatif des premiers gestes"></div><div id="first-day-guide" aria-label="Préparer les premiers jours"></div><p>Notions disponibles</p>
         <details><summary>Emploi du temps</summary><p>Planning règle les heures de travail, de loisir et de repos de chaque colon.</p><button data-guide-panel="schedule" type="button">Ouvrir Planning</button></details>
         <details><summary>Ordres sur la carte</summary><p>Dans Ordres, au-dessus de la barre de gestion, désignez les arbres à abattre et les plantes à récolter. Les colons exécutent ces ordres selon leurs priorités et leur accès.</p><button data-guide-map-tools="orders" type="button">Ouvrir Ordres</button></details>
         <details><summary>Recherche</summary><p>Choisissez un projet ; un colon affecté à la recherche pourra progresser à un bureau construit et utilisable.</p><button data-guide-panel="research" type="button">Ouvrir Recherche</button></details>

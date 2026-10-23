@@ -1,0 +1,18 @@
+#app .first-gestures-guide{margin:0 0 10px;padding:9px;border:1px solid var(--line);border-radius:6px;background:var(--panel-soft,transparent)}
+#app .first-gestures-guide h3{margin:0 0 5px;font-size:14px}
+#app .first-gestures-guide p{margin:5px 0;font-size:12px;line-height:1.35}
+#app .first-gestures-guide [hidden]{display:none}
+#app .first-gestures-summary{font-weight:700}
+#app .first-gestures-indicators{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;padding:0;margin:7px 0;list-style:none}
+#app .first-gestures-indicators li{min-width:0;padding:4px 5px;border-left:2px solid var(--line);background:var(--panel-soft,transparent);font-size:11px;line-height:1.3}
+#app .first-gestures-indicators li[aria-current="step"]{border-left-color:var(--accent)}
+#app .first-gestures-indicators span,#app .first-gestures-indicators small{display:block}
+#app .first-gestures-indicators small{font-size:10px;color:var(--muted-ink)}
+#app .first-gestures-indicators [data-origin="confirmed"] small{color:var(--accent)}
+#app .first-gestures-current{padding:6px 0}
+#app .first-gestures-current small{font-size:11px;color:var(--muted-ink)}
+#app .first-gestures-current h4{margin:3px 0;font-size:13px}
+#app .first-gestures-actions{display:flex;flex-wrap:wrap;gap:5px;margin:5px 0}
+#app .first-gestures-actions button{min-height:30px;padding:4px 7px;font-size:11px}
+#app .first-gestures-guide .first-gestures-note{font-size:11px;color:var(--muted-ink)}
+#app .first-gestures-guide .first-gestures-warning{padding:5px;border-left:2px solid var(--accent);font-size:11px}

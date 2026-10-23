@@ -416,6 +416,12 @@ Le double couchage au sol et les bedrolls restent absents. La mémoire Core **Sl
 
 Le nouveau départ est en pause avec trois capsules en approche. **Reprendre** fait avancer la descente ; vous pouvez mettre en pause et sauvegarder à tout moment. L’impact précède l’ouverture, après laquelle les trois colons, leurs vêtements et les fournitures transportées apparaissent réellement. Bois et acier sont dispersés au sol dès le début. Une sortie obstruée garde tous les occupants dans les capsules : annulez les plans qui bloquent les sorties. [Fonctionnement et limites](starting-arrival-v335.md).
 
+## Parcours facultatif des premiers gestes — V470
+
+Le parcours **Premiers gestes**, dans Conseils, est facultatif : **Commencer** propose de régler une priorité active, tracer une réserve, poser un couchage au sol et tracer une culture. Les raccourcis choisissent les vrais outils ; les commandes acceptées font progresser ce suivi. Vous pouvez aussi choisir **Je connais déjà ce geste**, dont l’origine est affichée séparément. Un ordre accepté n’est pas une promesse de transport, de sommeil, de semis ou de récolte.
+
+**Interrompre le parcours** garde les repères pour **Reprendre** ; **Revoir ces gestes** efface seulement ce suivi. Les repères appartiennent au navigateur, sur cette adresse, et restent partagés entre vos colonies. Une ancienne partie ne donne aucun acquis automatique ; exporter la colonie n’exporte pas ces repères. L’échec d’enregistrement est signalé sans bloquer le jeu. [Fonctionnement, référence et contrôles V470](first-gestures-v470.md).
+
 ## Conseils des premiers jours — V334
 
 Après la sortie des capsules, **Conseils** s’ouvre en haut à droite. Développez une préparation pour consulter les faits actuels et ouvrir Travail, Zones, Meubles, Production ou Assignations. Le carnet distingue les chantiers des objets construits ; une réserve de rations ou une culture ne garantit pas la nourriture future. Un lit double libre compte une place avant affectation : inspectez le lit pour choisir ses occupants. Pour équiper une arme, sélectionnez un seul colon, faites un clic droit sur l’arme au sol, puis choisissez **Équiper**.

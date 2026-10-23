@@ -26,6 +26,8 @@ import {createUrgentThreatFeedback,type UrgentThreatTarget} from './ui/urgent-th
 import { createAllowedAreaControls } from './ui/allowed-area-controls';
 import './ui/allowed-area-controls.css';
 import { createFirstDayGuide } from './ui/first-day-guide';
+import {createFirstGesturesLearning,FIRST_GESTURES_STORAGE_KEY} from './ui/first-gestures-learning';
+import {createFirstGesturesGuide} from './ui/first-gestures-guide';
 import { createStartingArrivalUI } from './ui/starting-arrival';
 let allowedAreaEditId:number|undefined;
 import {PresentationQueue} from './render/PresentationQueue';
@@ -246,6 +248,7 @@ import './ui/resource-ledger.css';
 import './ui/architect-workbench.css';
 import './ui/time-controls.css';
 import './ui/first-day-guide.css';
+import './ui/first-gestures-guide.css';
 const jobLabels: Record<JobKind, string> = { 'firefoam-popper':'Construction du diffuseur de mousse', 'ship-cryptosleep-casket':'Construction du caisson spatial','ship-beam':'Construction de la poutre structurelle de vaisseau','ship-engine':'Construction du moteur Johnson–Tanaka', 'ship-reactor':'Construction du réacteur stellaire', 'cryptosleep-casket':'Construction du caisson de cryptosommeil', 'fueled-smithy':'Construction de la forge à combustible','electric-smithy':'Construction de la forge électrique', brewery:'Construction de la brasserie','fermenting-barrel':'Construction du fût de fermentation', 'geothermal-generator':'Construction de la centrale géothermique', column:'Construction de la colonne',urn:'Construction de l’urne','stele-large':'Construction de la grande stèle','stele-grand':'Construction de la stèle monumentale',sarcophagus:'Construction du sarcophage', 'torch-lamp':'Construction de la lampe-torche', 'build-bridge':'Construction du pont','remove-bridge':'Retrait du pont', vent:'Construction de la bouche d’aération', 'extract-tree':'Déracinement de l’arbre','replant-tree':'Replantation de l’arbre', 'sleeping-spot':'Couchage au sol', shelf:'Construction de l’étagère', 'small-shelf':'Construction de la petite étagère', 'spike-trap':'Construction du piège à pointes', 'electric-crematorium':'Construction du crématorium électrique','electric-smelter':'Construction de fonderie électrique','animal-sleeping-spot':'Emplacement de couchage animal', 'biofuel-refinery':'Construction de la raffinerie de biocarburant','chemfuel-generator':'Construction du générateur à biocarburant', 'nutrient-paste-dispenser':'Construction du distributeur de pâte nutritive',hopper:'Construction de la trémie', 'orbital-beacon':'Construction de la balise orbitale','comms-console':'Construction de la console de communication', 'deep-drill':'Construction de foreuse profonde','ground-scanner':'Construction du scanner souterrain', 'vitals-monitor':'Construction du moniteur vital', 'drug-lab':'Construction du laboratoire de chimie', 'hydroponics-basin':'Construction du bac hydroponique', 'mini-turret':'Construction de mini-tourelle automatique', 'tube-television':'Construction de télévision cathodique', sandbags: 'sacs de sable', fence:'Clôture','fence-gate':'Portillon',autodoor:'Porte automatique','pen-marker':'Marqueur d’enclos', 'art-bench':'Atelier de sculpture','small-sculpture':'Petite sculpture','large-sculpture':'Grande sculpture', 'machining-table':'Atelier d’usinage','fabrication-bench':'Établi de fabrication','hi-tech-research-bench':'Bureau de recherche haute technologie','multi-analyzer':'Multi-analyseur', grave:'Creuser une tombe','smooth-floor':'Lissage du sol','lay-floor':'Pose de sol','remove-floor':'Retrait de sol', heater:'Radiateur','wind-turbine':'Éolienne',flick:'Actionner un interrupteur', 'power-conduit':'Construction du câble', 'power-switch':'Construction de l’interrupteur', battery:'Construction de la batterie', 'solar-generator':'Construction du générateur solaire', 'fueled-stove':'Cuisinière à bois','electric-stove':'Cuisinière électrique','butcher-table':'Table de boucherie', 'butcher-spot':'Emplacement de boucherie', cooler:'Climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur','electric-tailor-bench':'Établi de tailleur électrique', 'crafting-spot':'Emplacement d’artisanat', repair:'Réparation', 'fix-breakdown':'Remplacement du composant', 'wood-generator':'Construction du générateur à bois', 'sun-lamp':'Construction de la lampe horticole', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis', wall: 'Construction du mur', 'double-bed':'Construction du lit double', bedroll:'Construction du sac de couchage', bed: 'Construction du lit', 'hospital-bed':'Construction du lit d’hôpital', table: 'Construction de la table','table-square':'Construction de la table carrée','table-long':'Construction de la table longue', stool: 'Construction du tabouret','dining-chair':'Construction de la chaise',armchair:'Construction du fauteuil','end-table':'Construction de la table de chevet',dresser:'Construction de la commode','flower-pot':'Construction du pot de fleurs', horseshoes: 'Construction du piquet de fers à cheval', 'chess-table': 'Construction de la table d’échecs', campfire: 'Construction du feu de camp' };
 const stateLabels: Record<Pawn['state'], string> = { resting:'Au lit pour soins', downed:'À terre', dead:'Décédé', idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
 const rotatableTools=new Set<Tool>(['ship-cryptosleep-casket','ship-beam','ship-engine','ship-reactor','cryptosleep-casket','fueled-smithy','electric-smithy','brewery','fermenting-barrel','vent','sleeping-spot','shelf','small-shelf','electric-crematorium','electric-smelter','biofuel-refinery','nutrient-paste-dispenser','hopper','comms-console','deep-drill','ground-scanner','vitals-monitor','drug-lab','hydroponics-basin','tube-television','art-bench','machining-table','hi-tech-research-bench','fabrication-bench','grave','wind-turbine','battery','fueled-stove','electric-stove','butcher-table','install','bedroll','bed','double-bed','hospital-bed','table','table-square','table-long','dining-chair','armchair','end-table','dresser','campfire','stonecutter','butcher-spot','crafting-spot','research-bench','tailor-bench','electric-tailor-bench','cooler']);
@@ -266,6 +269,7 @@ function openResearchContext(panel:'work'|'architect'):void {
 }
 // Only this fixed Worker/client and the fixed MAIN consumers can reach these
 // decoders. The command facade exposes no adoption or World callback entry.
+let firstGesturesLearning:ReturnType<typeof createFirstGesturesLearning>|undefined;
 const client = (() => {
   class MainSimulationClient extends SimulationClient {
     protected override createDecoder():SnapshotReader {return new ResidentVegetationAssembler();}
@@ -299,7 +303,12 @@ const client = (() => {
     startWorldDraft256:(...args:Parameters<SimulationClient['startWorldDraft256']>)=>native.startWorldDraft256(...args),
     hasConfirmedWorldDraft256:(...args:Parameters<SimulationClient['hasConfirmedWorldDraft256']>)=>native.hasConfirmedWorldDraft256(...args),
     init: (...args: Parameters<SimulationClient['init']>) => native.init(...args),
-    command: (...args: Parameters<SimulationClient['command']>) => native.command(...args),
+    command: async (command:Parameters<SimulationClient['command']>[0]) => {
+      const learning=firstGesturesLearning,token=learning?.prepare(command,snapshot);
+      const result=await native.command(command);
+      if(token)learning?.confirm(token,result);
+      return result;
+    },
     cancelCampEntry256:(...args:Parameters<SimulationClient['cancelCampEntry256']>)=>native.cancelCampEntry256(...args),
     get hasCampPreparation(){return native.hasCampPreparation;},
     orderOptions: (...args: Parameters<SimulationClient['orderOptions']>) => native.orderOptions(...args),
@@ -885,6 +894,7 @@ async function switchPanel(panel: Panel, preserveTool = false): Promise<void> {
   setPanel(panel, preserveTool);
 }
 async function replaceColony(action: () => Promise<void>,confirmedDraft?:WorldCreationTicket256): Promise<void> {
+  firstGesturesLearning?.cancelPending();
   await initialRuntimeOptions;
   await Promise.all([threatPausePreference.whenSettled(),settlementPreference.whenSettled()]);
   if(confirmedDraft){if(!client.hasConfirmedWorldDraft256(confirmedDraft))throw Error('La préparation est perdue. Générez le monde à nouveau.');}
@@ -896,7 +906,7 @@ async function replaceColony(action: () => Promise<void>,confirmedDraft?:WorldCr
     await action(); menuResumeSpeed = undefined;deferredResumeGuard.cancel();deferredResumeGuard.confirm(false);urgentThreatUI.reset(); updateIncident();
     if (simulationStopped) throw new Error('La simulation s’est arrêtée pendant la préparation de l’affichage. Chargez une colonie validée pour reprendre.');
     statusAlerts.reset();raidUI.reset();heatwaveUI.reset();flashstormUI.reset();weatherConditionUI.reset();tradeUI.reset();
-    guideAfterStartingArrival=false;learningReadout.open=false;firstDayGuide.reset();startingArrivalUI.reset();
+    guideAfterStartingArrival=false;learningReadout.open=false;firstDayGuide.reset();firstGesturesGuide.reset();startingArrivalUI.reset();
     if(snapshot)startingArrivalUI.update(snapshot,currentSpeed);
     clearSelection(); setPanel(campaignOnly?'world':null); frontMenu.hide();
     if (snapshot?.pawns[0]) renderer?.focusPawn(snapshot.pawns[0].id);
@@ -1805,7 +1815,7 @@ const statusAlerts=createStatusAlerts(el('status-alerts'),{
 },tab:tab=>document.querySelector<HTMLButtonElement>(`[data-colonist-tab="${tab}"]`)?.click()});
 const learningReadout=document.querySelector<HTMLDetailsElement>('.learning-readout')!;
 const startingArrivalUI=createStartingArrivalUI(document.querySelector<HTMLElement>('.game-shell')!,{onResume:()=>void attempt(()=>changeSpeed(1))});
-const firstDayGuide=createFirstDayGuide(el('first-day-guide'),{onAction:action=>{
+function performFirstDayGuideAction(action:import('./ui/first-day-guide').FirstDayGuideAction):void {
   learningReadout.open=false;firstDayGuide.setActive(false);
   if(action.target){
     focusNotification(action.target);
@@ -1816,11 +1826,25 @@ const firstDayGuide=createFirstDayGuide(el('first-day-guide'),{onAction:action=>
   if(action.tool){setTool(action.tool);return;}
   if(action.worldTab)worldTab=action.worldTab;
   if(action.panel)void attempt(async()=>{await switchPanel(action.panel!);if(action.category)setCategory(action.category);});
+}
+const firstDayGuide=createFirstDayGuide(el('first-day-guide'),{onAction:performFirstDayGuideAction});
+firstGesturesLearning=createFirstGesturesLearning({
+  read:()=>localStorage.getItem(FIRST_GESTURES_STORAGE_KEY),
+  write:value=>localStorage.setItem(FIRST_GESTURES_STORAGE_KEY,value),
+  changed:()=>syncFirstDayGuide(),
+});
+const firstGesturesGuide=createFirstGesturesGuide(el('first-gestures-guide'),{learning:firstGesturesLearning,onAction:action=>{
+  if(action.tool){learningReadout.open=false;firstDayGuide.setActive(false);firstGesturesGuide.setActive(false);setTool(action.tool);return;}
+  performFirstDayGuideAction(action);
 }});
 function syncFirstDayGuide():void {
   const pending=!!snapshot?.startingArrival&&snapshot.startingArrival.phase!=='opened';
   if(guideAfterStartingArrival&&!pending&&!frontMenu.isOpen()&&!replacingWorld){guideAfterStartingArrival=false;learningReadout.open=true;}
   firstDayGuide.setActive(learningReadout.open&&!pending&&!frontMenu.isOpen()&&!replacingWorld);
+  firstGesturesGuide.setActive(learningReadout.open&&!pending&&!frontMenu.isOpen()&&!replacingWorld&&!!snapshot);
+  const learning=firstGesturesLearning?.state,summary=learningReadout.querySelector('summary')!;
+  const label=learning?.enabled?`Conseils · ${Object.keys(learning.learned).length}/4 gestes`:'Conseils';
+  if(summary.textContent!==label)summary.textContent=label;
   if(snapshot)firstDayGuide.update(snapshot,confirmedFoodReadability());
 }
 learningReadout.addEventListener('toggle',syncFirstDayGuide);
@@ -2053,6 +2077,7 @@ client.onFault = () => {
   updateIncident(); syncStorageButtons();
 };
 function receiveMainSnapshot(world: World, cost: number, speed: number, replaced: boolean, motion?: PawnTrack[]): void {
+  if(replaced)firstGesturesLearning?.cancelPending();
   campaignOnly=undefined;shell.classList.remove('campaign-only');
   if(replaced){hoveredCell=null;hoverReadoutLayout?.reset();}
   if(replaced)campaignPresentationEpoch++;
@@ -2102,6 +2127,7 @@ function renderCampaignOnly():void {
  if(currentPanel==='world')refreshWorldPanels(state);
 }
 function receiveMainCampaignOnly(summary:CampaignSummary,cost:number,speed:number,replaced:boolean):void {
+ firstGesturesLearning?.cancelPending();
  const hadMap=!!snapshot;if(replaced||hadMap)campaignPresentationEpoch++;
  if(hadMap||replaced){renderer?.dispose();renderer=undefined;audio.reset();latestMotion=undefined;hoveredCell=null;hoverReadoutLayout?.reset();selection.clear();selectedPawn=undefined;selectedCell=undefined;selectedObject=undefined;selectedObjects=[];orderMenu.close();startingArrivalUI.reset();}
  snapshot=undefined;latestFoodReadability=undefined;campaignOnly=summary;stepMs=cost;currentSpeed=speed;if(speed>0)deferredResumeGuard.confirm(false);session.hasWorld=true;frontMenu.setHasGame(true);

@@ -1,4 +1,6 @@
-# Validation courante — V469 publiée
+# Validation courante — V470 qualifiée localement
+
+**V470 qualifiée localement — schéma 290 inchangé :** [Premiers gestes](../gameplay/first-gestures-v470.md).112cas distincts acquis par reprises (31nouveaux et81voisins), cinq anciens rouges reproduits à l’identique sur V469 ; premier oracle nouveau corrigé pour exiger le vrai refus du rectangle inchangé. Typage acquis en14,622s ; parcours Chrome/WebGPU muet acquis par reprises. Aucun banc de présentation inchangé relancé, gain FPS ou suite complète verte annoncé. Les preuves et limites restent dans la note canonique ; autres domaines et six ensembles ouverts.
 
 **V469 publiée — schéma 290 :** [Dispositif et mousse anti-incendie](../gameplay/firefoam-v469.md). Recherche600, construction75acier/1composant, activation automatique ou manuel au contact, extinction, enduction temporaire et reconstruction à payer.225cas distincts acquis par reprises (63nouveaux et162voisins), cinq anciens rouges reproduits sur V468 ; neuf oracles obsolètes corrigés sans nouveau cas. Typage, parcours Chrome/WebGPU muet et présentation acquis ;11exports et3recharges entières exactes. Produit53474721, [déploiement caf697e9](https://caf697e9.elsewhere-cq7.pages.dev/) / [jouer](https://elsewhere-cq7.pages.dev/),20réponses HTTPS ciblées exactes ;552fichiers/71chemins publics de sauvegardes conservés. Aucun gain FPS global annoncé ; tous domaines, six ensembles, campagnes et victoire restent ouverts.
 

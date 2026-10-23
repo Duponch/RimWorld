@@ -1,0 +1,31 @@
+# V470 — Parcours facultatif des premiers gestes
+
+**Qualification locale acquise par reprises, schéma290 inchangé ; publication encore à effectuer.** Principalement ensemble1 ; tous les domaines, six ensembles, campagnes, victoire et cible FPS restent ouverts.
+
+Dans **Conseils**, le joueur peut commencer un parcours de quatre gestes : changer une priorité active, tracer une réserve, placer un couchage au sol, tracer une zone de culture. Une consigne et un raccourci ouvrent les vrais outils. Les gestes acceptés sont reconnus, même effectués dans un autre ordre. Le titre Conseils garde le compte visible ; les huit rubriques de faits actuels demeurent accessibles.
+
+**Ordre accepté** décrit une interaction apprise. Les transports, le sommeil, les semis et les récoltes gardent leurs trajets, priorités et objets réels. Le couchage au sol existe immédiatement, sans créer de toit ou d’abri ; un plan de lit ne valide pas ce geste. **Je connais déjà ce geste** est une déclaration personnelle distincte. Aucun simple affichage, clic de raccourci, refus ou rectangle sans effet ne valide une notion.
+
+Le parcours est facultatif. **Interrompre le parcours** garde les notions, **Reprendre** poursuit le prochain geste inconnu. **Terminer le parcours**, après les quatre gestes, désactive ce suivi sans effacer les acquis. **Revoir ces gestes** efface explicitement ce suivi seulement. Fermer le carnet libère la vue sans arrêter la colonie ni le parcours. Le choix et les notions sont conservés dans ce navigateur, sur cette origine, entre les parties ; importer/exporter un World ne transporte pas ce savoir. En cas d’échec de stockage, le suivi reste disponible en mémoire pour la session et l’interface signale la limite. Aucun acquis n’est déduit de l’état d’une partie ancienne ou préparée.
+
+La [référence actuelle et les adaptations](../research/first-gestures-v470-reference.md) distinguent savoir joueur et contexte de tutoriel natif. Le périmètre local comprend quatre interactions binaires et une mémoire versionnée ; il ne livre pas le grand tutoriel Core ni toutes les leçons adaptatives.
+
+## Conservation et coût
+
+Le modèle est extérieur au World, au bridge, au rendu et au PRNG. Le format local est strict et borné ; un ancien/futur/invalide ne devient pas connu. Les jetons de commande sont consommés une seule fois et invalidés lors d’un arrêt, d’une révision ou d’un remplacement de carte/monde. Une réponse refusée ou inconnue ne devient pas une connaissance. La lecture d’une priorité capture la valeur avant l’envoi ; les rectangles exigent un nombre de cases acceptées strictement positif.
+
+Le suivi s’effectue aux commandes et changements de préférence, sans balayage du monde ajouté par image. Les quatre lignes de présentation restent stables et ne lisent pas le World ; les lecteurs du carnet existant restent suspendus lorsqu’il est fermé. Aucun gain CPU/FPS général n’est annoncé. Schéma290, sauvegardes publiques et historiques conservés.
+
+## Qualification
+
+**112cas distincts acquis par reprises :31nouveaux et81voisins.** La sélection de117cas a donné111acquis et six rouges. Le nouveau cas de rectangle répétitif attendait à tort affected0 : le moteur refuse réellement le rectangle inchangé. Son oracle est corrigé pour exiger ce refus ; les trois cas d’intégration ont été repris et acquis. Les cinq autres diagnostics sont reproduits à l’identique sur le témoin V469 publié, sans correction ni retrait. [Classification](../../tmp/guidance-v470/neighbor-classification.md), [première passe](../../tmp/validation-runs/v470-targeted-2026-10-23T14-23-28.887Z-20212/output.log), [reprise](../../tmp/validation-runs/v470-runtime-reprise-2026-10-23T14-25-55.419Z-6364/output.log). Aucune suite complète verte annoncée.
+
+Typage acquis en14,622s. Le premier lancement privé de préparation utilisait strip-only, incompatible avec une syntaxe TypeScript existante ; relancé avec transform-types en5,438s, sans correction produit.
+
+**Parcours Chrome155/WebGPU1440×1000 muet acquis par reprises :16exports entiers exacts, quatre commandes et deux recharges propres sur60RAF en pause.** Les contrôles du guide seul, la déclaration/interruption/reprise, la révision, l’import d’une autre partie et la connaissance partagée conservent les mêmes mondes. La priorité, les rectangles et le couchage passent par leurs contrôles habituels ; l’oracle Node applique les commandes réellement observées hors navigateur. Aucun moteur, setter World ou raccourci de commande n’est installé dans la page. [Rapport final84,521s](../../tmp/guidance-v470/native-ui/2026-10-23T14-39-04-307Z/report.json) et ses dépendances de reprise ; dernière enveloppe84,837s.
+
+Trois arrêts du pilote sont conservés : deux gestes clavier sur le select n’envoyaient aucune commande ; la sélection standard Playwright du vrai contrôle et son onchange inchangé ont acquis la priorité. Le rectangle initial visait une case derrière la navigation ; les cibles non encore utilisées ont été rapprochées de la caméra. Le vrai réglage acquis a été repris depuis son export entier. Ces réparations concernent uniquement le pilote privé ; les empreintes de toutes les sources produit restent identiques à travers les reprises. La validation ne prétend pas avoir acquis le chemin clavier interrompu. Les rapports antérieurs restent [initial](../../tmp/guidance-v470/native-ui/2026-10-23T14-28-43-581Z/report.json), [clavier](../../tmp/guidance-v470/native-ui/2026-10-23T14-33-55-546Z/report.json), [sélection/cible](../../tmp/guidance-v470/native-ui/2026-10-23T14-36-08-680Z/report.json).
+
+Zéro erreur applicative ou console d’erreur dans le parcours final ; trois avertissements Windows sur powerPreference ignoré restent conservés. Présentation1440×1000 inspectée visuellement ; aucune nouvelle qualification960×720 ou campagne naturelle déduite de ces captures. Effets et musique désactivés avant chaque document, volumes0, Chrome lancé avec mute-audio ; défauts audio publiés inchangés. Seul le serveur QA5175 identifié a été arrêté, le23octobre14:41:28UTC ;5173/5184 préservés.
+
+Le banc temporel inchangé n’est pas relancé : aucune horloge, bridge, interpolation, cadence ou phase de travail physique n’est modifiée. Un apprentissage d’interface n’est pas une campagne naturelle ni une preuve de performances globales.
