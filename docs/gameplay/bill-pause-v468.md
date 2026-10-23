@@ -1,6 +1,6 @@
 # V468 — Pause et reprise des réserves de production
 
-**Qualification ciblée acquise par reprises, schéma 289 ; non publié.** La version publique reste V467. La [priorité humaine actualisée](../development/basic-priorities-20261023.md) retient cette base quotidienne de l’ensemble2 avant un nouveau catalogue. Six ensembles, campagnes, victoire et cible FPS restent ouverts.
+**V468 publiée, schéma 289 ; qualification ciblée acquise par reprises.** Produit6f9cc87f, [jouer](https://elsewhere-cq7.pages.dev/)/[déploiement ac93263c](https://ac93263c.elsewhere-cq7.pages.dev/),20réponses HTTPS ciblées exactes. La [priorité humaine actualisée](../development/basic-priorities-20261023.md) retient cette base quotidienne de l’ensemble2 avant un nouveau catalogue. Six ensembles, campagnes, victoire et cible FPS restent ouverts.
 
 La facture « jusqu’à X » conserve une mémoire de pause lorsque sa réserve atteint la cible. Le même compteur autoritaire commande ensuite la reprise à la quantité choisie ou moins. Suspension manuelle, mémoire automatique et cible sont distinctes ; un ouvrage déjà engagé et sa sortie physique restent conservés. Une relance manuelle peut commencer un nouveau cycle sous la cible sans changer le seuil ni désuspendre une facture.
 
@@ -22,7 +22,7 @@ Le parcours Chrome155/WebGPU1440×1000 est acquis en215371ms (wrapper221,147s), 
 
 La présentation générale est acquise165,160s sur carte naturelle250² : minage puis abattage, commandes de vitesse, aucune des discontinuités vérifiées. Une première préparation Node native avait buté sur un ancien import sans extension ; reprise privée acquise sans modification du produit. Effets et musique coupés avant chaque document, Chrome muet ; aucune modification des défauts audio du produit publié. Serveur propre5175/PID17488 arrêté au2026-10-23T11:32:03Z après vérification de son identité complète ; sessions humaines5173/5184 intactes.
 
-Après les quatre fichiers d’oracles modifiés, typage final acquis16,738s. Les sources produit sont restées identiques entre le parcours natif et ce contrôle ; aucune réparation produit supplémentaire n’a été introduite après la première correction d’annotation. Contrôle documentaire acquis :1110documents,10508liens locaux, six en-têtes289 et trois originaux byte-identiques ; diff sans erreur d’espaces. La construction publique reste à faire à ce point.
+Après les quatre fichiers d’oracles modifiés, typage final acquis16,738s. Les sources produit sont restées identiques entre le parcours natif et ce contrôle ; aucune réparation produit supplémentaire n’a été introduite après la première correction d’annotation. Contrôle documentaire acquis :1110documents,10508liens locaux, six en-têtes289 et trois originaux byte-identiques ; diff sans erreur d’espaces. La livraison ci-dessous est acquise ensuite.
 
 ## Coût ciblé et limites
 
@@ -35,3 +35,11 @@ Probe séquentiel acquis62,262s, rapport tmp/bill-pause-v468/cost-probe/2026-10-
 | Forges335, aucune option |0,077695 /0,182425|0,108287 /0,273955|
 
 Le petit cas a un surcoût ; le partage devient utile sur les comptes équivalents. La comparaison Forges est un oracle de cette nouvelle passe, **pas le coût de V467 qui ne l’exécutait pas**. Les64factures ne sont ni64fabrications jouées ni64ateliers naturels. Aucune mesure globale CPU image/GPU/RAF, aucun gain FPS, débit×3/×6, longue campagne ou cible200–230FPS ne sont déduits.
+
+## Livraison et suite
+
+Produit **6f9cc87f29e6bb176a6d372207f1be792c9216b3**, build Pages acquis5,563s puis déploiement **ac93263c** acquis16,037s sur le projet existant Elsewhere. Paquet552fichiers,153386731octets,71chemins de sauvegardes/catalogue publics conservés ; statiques et CSS identiques àV467, HTML et trois JavaScript compilés modifiés. Aucun hook QA privé dans le paquet. Rapport local tmp/elsewhere-pages/v468-package-8SBU8Y/report.json, vérification stable+immuable20réponses exactes tmp/elsewhere-pages/v468-http-E0zfx9/report.json. Cela vérifie disponibilité/octet/MIME ciblés, pas une nouvelle campagne jouée sur HTTPS.
+
+Le premier push a été refusé par la revue automatique faute de destination/autorisation reconnues. Contrôles en lecture seule : GitHub connectéDuponch, dépôt originDuponch/RimWorld du même propriétaire avec admin/push, destination inchangée et autorisation consignée avant lot ; nouvel envoi autorisé puis réussi, sans autre canal ou forcepush. Références humaines, sauvegardes et historiques inchangés. Reçu privé tmp/bill-pause-v468/publication-authorization-check.json ; aucune action de publication ne reste bloquée.
+
+La [réévaluation de tous les domaines et interactions](../development/audit-core-20261022.md#réévaluation-après-v468) retient ensuite une préparation courte d’un appareil anti-incendie complet, depuis la primaire existante et quatre propriétaires à fermer avant code. Guidage progressif à partir de l’aide existante, événement social coordonné, semis forestier et tous les autres manques restent en concurrence. Ce lot ne clôt ni économie/catalogue, ni ensemble2, ni les six ensembles, la victoire, les campagnes ou la cibleFPS.

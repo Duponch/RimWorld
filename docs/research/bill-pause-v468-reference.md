@@ -1,6 +1,6 @@
 # Pause et reprise des factures — référence Core V468
 
-**Préparation gelée le23octobre2026 ; qualification locale acquise par reprises, publication encore ouverte.** Cette base ordinaire de production permet d'attendre une baisse réelle de réserve avant de relancer une facture. Les résultats locaux sont consignés dans la [note de livraison](../gameplay/bill-pause-v468.md) ; aucun résultat de test, parcours joué ou gain de performance ne découle de la seule référence.
+**Préparation gelée le23octobre2026 ; qualification locale acquise par reprises, V468 publiée6f9cc87f/ac93263c.** Cette base ordinaire de production permet d'attendre une baisse réelle de réserve avant de relancer une facture. Les résultats locaux et20réponses HTTPS ciblées exactes sont consignés dans la [note de livraison](../gameplay/bill-pause-v468.md) ; aucun résultat de test, parcours joué ou gain de performance ne découle de la seule référence.
 
 ## Sources et corpus
 
