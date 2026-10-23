@@ -1,6 +1,6 @@
 # V470 — Parcours facultatif des premiers gestes
 
-**Qualification locale acquise par reprises, schéma290 inchangé ; publication encore à effectuer.** Principalement ensemble1 ; tous les domaines, six ensembles, campagnes, victoire et cible FPS restent ouverts.
+**V470 publiée, schéma290 inchangé ; produit e1c2dea4, [jouer](https://elsewhere-cq7.pages.dev/) / [déploiement7457a930](https://7457a930.elsewhere-cq7.pages.dev/).** Qualification locale acquise par reprises. Principalement ensemble1 ; tous les domaines, six ensembles, campagnes, victoire et cible FPS restent ouverts.
 
 Dans **Conseils**, le joueur peut commencer un parcours de quatre gestes : changer une priorité active, tracer une réserve, placer un couchage au sol, tracer une zone de culture. Une consigne et un raccourci ouvrent les vrais outils. Les gestes acceptés sont reconnus, même effectués dans un autre ordre. Le titre Conseils garde le compte visible ; les huit rubriques de faits actuels demeurent accessibles.
 
@@ -29,3 +29,11 @@ Trois arrêts du pilote sont conservés : deux gestes clavier sur le select n’
 Zéro erreur applicative ou console d’erreur dans le parcours final ; trois avertissements Windows sur powerPreference ignoré restent conservés. Présentation1440×1000 inspectée visuellement ; aucune nouvelle qualification960×720 ou campagne naturelle déduite de ces captures. Effets et musique désactivés avant chaque document, volumes0, Chrome lancé avec mute-audio ; défauts audio publiés inchangés. Seul le serveur QA5175 identifié a été arrêté, le23octobre14:41:28UTC ;5173/5184 préservés.
 
 Le banc temporel inchangé n’est pas relancé : aucune horloge, bridge, interpolation, cadence ou phase de travail physique n’est modifiée. Un apprentissage d’interface n’est pas une campagne naturelle ni une preuve de performances globales.
+
+## Livraison et suite
+
+Build Pages acquis en4,617s et publication en15,092s. [Paquet contrôlé](../../tmp/elsewhere-pages/v470-package-GBXZXs/report.json) :552fichiers,153496728octets,71chemins publics de sauvegardes exacts et inchangés. Par rapport à V469, seuls l’entrée HTML et les bundles principaux JS/CSS changent ; les deux Workers compilés et tous les assets publics conservent leurs octets. Aucun pilote ou laboratoire privé livré.
+
+Les [20réponses HTTPS ciblées](../../tmp/elsewhere-pages/v470-http-TkLbNm/report.json) sont exactes sur l’adresse stable et le déploiement7457a930 : statuts/types/octet. Elles établissent la disponibilité du paquet, pas un nouveau parcours joué sur HTTPS. Les données de son et de connaissances du navigateur QA ne changent pas les défauts audio publiés.
+
+La [réévaluation des vingt domaines et interactions](../development/audit-core-20261022.md#réévaluation-après-v470) retient maintenant la **préparation des semis forestiers volontaires pour le bois**, avec vraie primaire actuelle avant code et plafond court ; réarbitrage vers un événement social coordonné ou les autres bases si le périmètre déborde. Aucun arbre n’est réputé semable depuis sa seule présence dans le catalogue physique. Les six ensembles, campagnes, victoire et cible FPS restent ouverts.
