@@ -1,6 +1,6 @@
 # V464 — réglages liés des étagères
 
-23 octobre2026. **Qualifiée, schéma286 ; publication en préparation.** Le produit public reste V463/schéma285 jusqu’à vérification du déploiement.
+23 octobre2026. **Publiée, schéma286.** [Jouer sur Cloudflare](https://elsewhere-cq7.pages.dev/).
 
 Une grande ou petite étagère peut partager ses réglages avec d’autres étagères de la même carte. Depuis son inspection, le joueur choisit le membre ou le groupe, voit quels réglages gagneront, puis confirme. Il peut renommer le groupe ou séparer un membre. La séparation conserve les réglages effectifs du moment ; elle ne rétablit pas une ancienne préférence.
 
@@ -38,4 +38,10 @@ Les lecteurs ordinaires de cellules n’ajoutent aucun parcours de campagne. Les
 
 La migration285 est strictement validée avant le seul changement de numéro vers286. Aucun groupe, meuble, qualification, politique favorable, horloge ou tirage n’est offert. Tous les domaines et leurs interactions restent dans le mandat des six ensembles ; les exemples humains ne ferment jamais le périmètre.
 
-Le typage final est acquis en13,666s. Le build Pages, la comparaison du paquet et la publication sont en préparation. Le serveur réservé5175 a été arrêté après contrôle du PID16592, de sa commande, de son exécutable et de son instant de création ; son absence est vérifiée. Les serveurs humains5173/5184 restent en place.
+Le typage final est acquis en13,666s, la vérification documentaire en2,037s et le build Pages en4,626s. Le serveur réservé5175 a été arrêté après contrôle du PID16592, de sa commande, de son exécutable et de son instant de création ; son absence est vérifiée. Les serveurs humains5173/5184 restent en place.
+
+## Livraison et suite
+
+Produit `377236b4e6f90f7192fe50da789250ea9045a522`, déploiement `e8950bf6`. Le paquet552fichiers conserve exactement les71chemins publics de sauvegardes et toutes les ressources statiques de V463, stylesheet inclus ; aucun fichier de contrôle privé ou source n’y entre. Vingt réponses HTTPS ciblées, dix sur le site stable et dix sur le déploiement, ont les octets et types exacts du paquet sélectionné. Cette disponibilité ne remplace pas les parcours natifs acquis séparément. Les historiques, sauvegardes et références humaines sont préservés.
+
+La [réévaluation de tous les domaines Core et de leurs interactions](../development/audit-core-20261022.md#réévaluation-après-v464) retient ensuite la préparation des aires animales pour les espèces concernées : contrôle quotidien d’animaux déjà utiles, avant un nouveau danger d’exposition. Les autres bases restent comparées. Aucun retour automatique au vaisseau ni clôture du domaine animal, des six ensembles, des campagnes ou de la cible FPS.
