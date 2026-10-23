@@ -9,11 +9,11 @@ export type ForestrySpecies291=typeof FORESTRY_SPECIES_291[number];
 export type GrowingPlant291=CropKind|ForestrySpecies291;
 export const TREE_SOWING_COST_291=1_000_000_000;
 export const isForestrySpecies291=(value:unknown):value is ForestrySpecies291=>typeof value==='string'&&(FORESTRY_SPECIES_291 as readonly string[]).includes(value);
-export const isGrowingPlantInVersion291=(value:unknown,version:number):value is GrowingPlant291=>Number.isSafeInteger(version)&&version<=292&&(isCropKindInVersion(value,version)||(version===291||version===292)&&isForestrySpecies291(value));
-export const treeSowingUnlocked291=(world:Pick<World,'schemaVersion'|'research'>):boolean=>(Number(world.schemaVersion)===291||world.schemaVersion===292)&&world.research?.treeSowing291?.completedAt!==undefined;
+export const isGrowingPlantInVersion291=(value:unknown,version:number):value is GrowingPlant291=>Number.isSafeInteger(version)&&version<=293&&(isCropKindInVersion(value,version)||(version===291||(version===292||version===293))&&isForestrySpecies291(value));
+export const treeSowingUnlocked291=(world:Pick<World,'schemaVersion'|'research'>):boolean=>(Number(world.schemaVersion)===291||(Number(world.schemaVersion)===292||Number(world.schemaVersion)===293))&&world.research?.treeSowing291?.completedAt!==undefined;
 /** Potential indigenous flora, never the set of trees physically on the map. */
 export function forestNativeSpecies291(world:Pick<World,'schemaVersion'|'site'>):readonly ForestrySpecies291[]{
- if((Number(world.schemaVersion)!==291&&world.schemaVersion!==292))return [];
+ if((Number(world.schemaVersion)!==291&&(Number(world.schemaVersion)!==292&&Number(world.schemaVersion)!==293)))return [];
  const rules=localBiomeRules256(world.site?.biome,world.schemaVersion);if(!rules)return [];
  const bindings:Readonly<Record<string,string|undefined>>=PROSPECTIVE_BIOME_PLANT_BINDINGS_256,native=new Set<string>();for(const row of rules.wildPlants){const species=bindings[row.defId];if(row.commonality>0&&species)native.add(species);}
  return FORESTRY_SPECIES_291.filter(species=>native.has(species));

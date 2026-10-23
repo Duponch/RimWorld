@@ -24,7 +24,7 @@ export interface ItemStash263 extends WorldSiteHeader263 {
  threat:ItemStashThreat263;closed?:ClosedWorldSite263;
 }
 export interface DestroyedSettlement263 extends WorldSiteHeader263 {kind:'destroyed-settlement';factionId:number;sourceSettlementId:number}
-export type WorldSite263=ItemStash263|DestroyedSettlement263;
+export type WorldSite263=ItemStash263|DestroyedSettlement263|import('./peace-talks-state-293.ts').PeaceTalksSite293;
 /** One narrow non-Royalty Cassandra quest cycle; persisted future checks only.
  * Absent families keep their own tickets and never become another ItemStash. */
 export interface WorldQuestCalendar263 {

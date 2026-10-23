@@ -52,7 +52,7 @@ export function validateRecreation(world: World, version: number): string[] {
     const task=joy.task;
     if(task===null){if(pawn.state==='recreating')errors.push('Recreation state has no activity.');continue;}
     if(!record(task)||Object.keys(task).some(k=>!['activity','target','buildingId','seatId','patientId','phase','elapsed','partyStartedAtCore'].includes(k))
-      ||!['skygaze','horseshoes',...(version>=122?['chess']:[]),...(version>=124?['social-relax','visit-sick']:[]),...(version>=190?['watch-television']:[]),...(version===292?['party']:[])].includes(task.activity as string)||!['travel','active'].includes(task.phase as string)
+      ||!['skygaze','horseshoes',...(version>=122?['chess']:[]),...(version>=124?['social-relax','visit-sick']:[]),...(version>=190?['watch-television']:[]),...((version===292||version===293)?['party']:[])].includes(task.activity as string)||!['travel','active'].includes(task.phase as string)
       ||!Number.isInteger(task.elapsed)||(task.elapsed as number)<0||(task.elapsed as number)>=(task.activity==='party'?1502:task.activity==='visit-sick'?VISIT_SICK_DURATION:RECREATION_DURATION)
       ||!record(task.target)||!Number.isInteger(task.target.x)||!Number.isInteger(task.target.z)
       ||(task.target.x as number)<0||(task.target.z as number)<0||(task.target.x as number)>=world.width||(task.target.z as number)>=world.height) {errors.push('Invalid recreation activity.');continue;}

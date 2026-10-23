@@ -11,7 +11,7 @@ import type {CommandResult,DesignateCommand,World} from './types.ts';
  * the recovered original and therefore does not require research again. */
 export function canPlaceFirefoamPopper290(world:World,command:DesignateCommand,installing=false):CommandResult {
  const fail=(code:'invalid-command'|'occupied'|'out-of-bounds'|'missing-target',reason:string):CommandResult=>({ok:false,code,reason});
- if((Number(world.schemaVersion)!==290&&(Number(world.schemaVersion)!==291&&Number(world.schemaVersion)!==292))||command.kind!=='firefoam-popper'||(command.orientation??0)!==0||command.targetId!==undefined
+ if((Number(world.schemaVersion)!==290&&(Number(world.schemaVersion)!==291&&(Number(world.schemaVersion)!==292&&Number(world.schemaVersion)!==293)))||command.kind!=='firefoam-popper'||(command.orientation??0)!==0||command.targetId!==undefined
   ||(command.material??'steel')!=='steel'||command.floor!==undefined)return fail('invalid-command','Diffuseur fixe ou matériau invalide.');
  if(!installing&&!firefoamResearchUnlocked290(world))return fail('invalid-command','Recherchez Mousse anti-incendie.');
  const {x,z}=command;if(!Number.isInteger(x)||!Number.isInteger(z)||x<0||z<0||x>=world.width||z>=world.height)return fail('out-of-bounds','Empreinte hors de la carte.');

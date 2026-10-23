@@ -1,3 +1,4 @@
+import {validPeaceTalksArrival293} from './peace-talks-save-293.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {CARAVAN_INCIDENTS_261,type CaravanStory261,type RetainedArrival261,type RetainedCaravan261,type CaravanBattlefield261} from './caravan-encounter-state-261.ts';
 import {validWorldEntryTarget263} from './world-target-access-263.ts';
@@ -21,6 +22,7 @@ export function validCaravanStory261(value:unknown,c:EncounterValidation261):val
 export function validRetainedArrival261(value:unknown,c:EncounterValidation261):value is RetainedArrival261 {
  if(value===null)return true;
  if(!plain(value))return false;
+ if(validPeaceTalksArrival293(value,c.version))return !!c.siteIds263?.has(Number(value.siteId));
  if(value.kind==='enter')return keys(value,['kind','mapId'])&&int(value.mapId)&&c.mapIds.has(value.mapId);
  if(isSchema263OrLater(c.version)&&validWorldEntryTarget263(value))return value.kind==='visit-site'?!!c.siteIds263?.has(value.siteId):c.settlements.some(s=>s.id===value.settlementId&&s.factionId===value.factionId);
  return value.kind==='trade'&&keys(value,['kind','settlementId','factionId','postId'])&&int(value.settlementId,1)&&int(value.factionId,1)&&(value.postId===null||int(value.postId,1))&&c.settlements.some(s=>s.id===value.settlementId&&s.factionId===value.factionId&&(value.postId===null||s.postId===value.postId));
@@ -28,7 +30,7 @@ export function validRetainedArrival261(value:unknown,c:EncounterValidation261):
 /** Stale arrival references remain serializable: they must be refused at the true
  * route boundary, not make a historical destination unreloadable after map loss. */
 export function validRetainedArrivalShape261(value:unknown,version=261):value is RetainedArrival261 {
- if(isSchema263OrLater(version)&&validWorldEntryTarget263(value))return true;
+ if(validPeaceTalksArrival293(value,version)||isSchema263OrLater(version)&&validWorldEntryTarget263(value))return true;
  return value===null||plain(value)&&(value.kind==='enter'&&keys(value,['kind','mapId'])&&int(value.mapId)||value.kind==='trade'&&keys(value,['kind','settlementId','factionId','postId'])&&int(value.settlementId,1)&&int(value.factionId,1)&&(value.postId===null||int(value.postId,1)));
 }
 export function validRetainedCaravan261(v:unknown,c:EncounterValidation261):v is RetainedCaravan261 {
@@ -40,7 +42,7 @@ export function validRetainedCaravan261(v:unknown,c:EncounterValidation261):v is
  return d===null||plain(d)&&keys(d,['tile','action'])&&int(d.tile,0,c.tileCount-1)&&validRetainedArrivalShape261(d.action,c.version);
 }
 export function validCaravanBattlefield261(value:unknown,c:EncounterValidation261):value is CaravanBattlefield261 {
- return (c.version===261||(Number(c.version)===262||isSchema263OrLater(Number(c.version))))&&plain(value)&&keys(value,['revision','kind','won','factionId','retained'])&&value.revision===1&&(value.kind==='ambush'||value.kind==='attacked-caravan')&&typeof value.won==='boolean'&&(value.factionId===null||int(value.factionId,1)&&c.factionIds.has(value.factionId))&&validRetainedCaravan261(value.retained,c);
+ return (c.version===261||(Number(c.version)===262||isSchema263OrLater(Number(c.version))))&&plain(value)&&keys(value,['revision','kind','won','factionId','retained'],value.kind==='peace-talks'?['peaceTalksSiteId293']:[])&&value.revision===1&&(value.kind==='ambush'||value.kind==='attacked-caravan'||c.version===293&&value.kind==='peace-talks'&&int(value.peaceTalksSiteId293,1)&&int(value.factionId,1))&&typeof value.won==='boolean'&&(value.factionId===null||int(value.factionId,1)&&c.factionIds.has(value.factionId))&&validRetainedCaravan261(value.retained,c);
 }
 export function validCaravanCaptivity261(value:unknown,c:EncounterValidation261):boolean {
  return value===undefined||(c.version===261||(Number(c.version)===262||isSchema263OrLater(Number(c.version))))&&plain(value)&&keys(value,['factionId','atCore'])&&int(value.factionId,1)&&c.factionIds.has(value.factionId)&&int(value.atCore,0,c.atCore);

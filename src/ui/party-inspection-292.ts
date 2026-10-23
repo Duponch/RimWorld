@@ -2,7 +2,7 @@ import type {Pawn,World} from '../sim/types';
 
 /** Confirmed map event only. Reading never adopts an occasion or grants presence. */
 export function partyView292(world:World) {
- const active=world.schemaVersion===292?world.party292?.active:undefined;
+ const active=[292,293].includes(world.schemaVersion)?world.party292?.active:undefined;
  if(!active)return;
  const minutes=Math.ceil(Math.max(0,active.startedAtCore+active.durationCore-world.tick*10)*60/2500);
  const time=minutes>=60?`${Math.floor(minutes/60)} h${minutes%60?` ${minutes%60} min`:''}`:`${minutes} min`;

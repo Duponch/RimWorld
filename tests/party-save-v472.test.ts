@@ -22,10 +22,10 @@ test('Party starter preserves absent first-start date, pending and independent R
 });
 test('strict 291 migration changes only schema and offers no Party owner, memory, opportunity or task',()=>{
  const {w}=camp();delete w.party292;const old=JSON.parse(serializeWorld(w));old.schemaVersion=291;expect(validateCampaignSchema291(old)).toEqual([]);
- const result=deserializeWorld(JSON.stringify(old));expect(JSON.parse(serializeWorld(result))).toEqual({...old,schemaVersion:292});
+ const result=deserializeWorld(JSON.stringify(old));expect(JSON.parse(serializeWorld(result))).toEqual({...old,schemaVersion:293});
 });
-test('future Party discriminants are rejected in literal 291 and future 293 remains closed',()=>{
- const {w,now}=active();expect(validPartyHistoricalTransport292(w,291)).toBe(false);expect(validPartyHistoricalTransport292(w,293)).toBe(false);
+test('future Party discriminants are rejected in literal 291 and future 294 remains closed',()=>{
+ const {w,now}=active();expect(validPartyHistoricalTransport292(w,291)).toBe(false);expect(validPartyHistoricalTransport292(w,293)).toBe(true);expect(validPartyHistoricalTransport292(w,294)).toBe(false);
  expect(validPartyHistoricalTransport292({world:{tick:w.tick},pawns:{removed:[],upserted:[{recreation:{task:{activity:'party',partyStartedAtCore:now,target:{x:1,z:1},buildingId:null,phase:'travel',elapsed:0}}}]}},291)).toBe(false);
  expect(validPartyTask292({activity:'skygaze',partyStartedAtCore:now},292,w.tick,w.width,w.height)).toBe(false);
 });

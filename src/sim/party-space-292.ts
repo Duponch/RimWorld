@@ -29,6 +29,6 @@ export function capturePartySpace292(world:World,site:Cell,topology?:RoomTopolog
 }
 export function partyTaskSiteValid292(world:World,task:RecreationTask,topology?:RoomTopology,standable=captureStandability(world)):boolean {
  const active=world.party292?.active;
- return world.schemaVersion===292&&task.activity==='party'&&!!active&&task.partyStartedAtCore===active.startedAtCore
+ return (Number(world.schemaVersion)===292||Number(world.schemaVersion)===293)&&task.activity==='party'&&!!active&&task.partyStartedAtCore===active.startedAtCore
   &&task.buildingId===null&&standable(active.site)&&standable(task.target)&&partyArea292(world,active.site,task.target,partyTopology292(world,topology));
 }

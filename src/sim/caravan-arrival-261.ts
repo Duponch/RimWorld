@@ -1,5 +1,6 @@
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {registeredCampaign,withWorldGroup} from './world-map-context.ts';
+import {peaceTalksArrivalReason293,preparePeaceTalksResolution293} from './peace-talks-runtime-293.ts';
 import {worldSettlementAccess256} from './world-faction-access.ts';
 import {arriveGeographicGroupPost256,groupGeographicTradeTarget256} from './group-geographic-post-256.ts';
 import {enterRegisteredSite} from './world-map-authority.ts';
@@ -24,6 +25,7 @@ export function applyCaravanArrivalCommand261(root:CampaignState,c:CaravanArriva
  const fail=(reason:string):CommandResult=>({ok:false,code:'invalid-command',reason}),r=root.worldGroups?.groups.find(r=>r.state.id===c.groupId),g=r?.state,planet=root.planet,a=c.action;
  if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&!isSchema263OrLater(Number(root.schemaVersion))))||!validCaravanArrivalCommand261(c,root.schemaVersion)||!r?.encounters261||r.pending261||!g||!('members'in g)||r.localMapId!==null||!planet)return fail('L’ordre exige la vraie caravane prospective disponible.');
  const pendingOrder=pendingWorldTargetOrder263(root,r,c.destination,a);if(pendingOrder)return pendingOrder;
+ if(a?.kind==='peace-talks'){const reason=peaceTalksArrivalReason293(root,g.id,a.siteId,c.destination);if(reason)return fail(reason);}
  if(a?.kind==='attack-settlement'||a?.kind==='visit-site'){const access=worldTargetAccess263(root,a,c.destination);if(!access.ok)return fail(access.reason);}
  if(a?.kind==='enter'&&!root.worldMaps?.sites.some(s=>s.id===a.mapId&&s.tile===c.destination))return fail('La carte de cette entrée a disparu ou changé de tuile.');
  if(a?.kind==='trade'){
@@ -41,7 +43,8 @@ export function advanceCaravanArrivals261(root:CampaignState):number[] {
  for(const r of root.worldGroups?.groups.slice()??[]){const g=r.state,a=r.arrival261;if(!a||!('members'in g)||r.localMapId!==null||g.segment||g.tile!==g.destination||g.tile!==a.tile||!['at-site','awaiting-entry'].includes(g.phase)||g.lastPersonalTick!==root.tick)continue;
   delete r.arrival261;changed.push(g.id);let ok=false;
   const action=a.action;
-  if(action.kind==='enter'){const target=root.worldMaps?.sites.find(s=>s.id===action.mapId&&s.tile===g.tile);if(target)ok=enterRegisteredSite(root,g.id,'visit',false).ok;}
+  if(action.kind==='peace-talks'){const prepared=preparePeaceTalksResolution293(root,g.id,action.siteId);if(prepared.ok)ok=prepared.commit().ok;}
+  else if(action.kind==='enter'){const target=root.worldMaps?.sites.find(s=>s.id===action.mapId&&s.tile===g.tile);if(target)ok=enterRegisteredSite(root,g.id,'visit',false).ok;}
   else if(action.kind==='attack-settlement'||action.kind==='visit-site')ok=queueWorldTargetEntry263(root,r,action);
   else {
    const factions=root.worldFactions,access=factions&&worldSettlementAccess256(factions,action.settlementId);

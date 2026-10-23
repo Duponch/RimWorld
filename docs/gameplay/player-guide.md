@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Rejoindre des pourparlers diplomatiques
+
+**V473 en qualification ; V472 reste publiée.** Une offre dans **Quêtes** indique une faction, un lieu sur la planète et un délai. Sélectionnez votre caravane dans **Monde**, choisissez ce lieu, puis l'action d'arrivée **Participer aux pourparlers** et validez son itinéraire. Prévoyez les provisions et le temps du trajet ; l'offre peut expirer avant l'arrivée.
+
+Le meilleur diplomate conscient et capable de Social négocie sur place. Le résultat affiche la relation réellement obtenue et son expérience sociale ; un succès ne garantit pas la fin de l'hostilité. Le triomphe remet des cadeaux à la caravane : leur masse peut la surcharger. Un désastre engage une vraie attaque locale ; la fin des pourparlers ne signifie pas que le combat est gagné. [Portée et limites V473](peace-talks-v473.md).
+
 ## Renouveler le bois par semis forestier
 
 Terminez **Semis d’arbres** dans Recherche (1000 points), puis inspectez une **zone de culture au sol**. Le choix de plante propose les essences indigènes du biome connu ; il ne dépend pas des arbres encore présents. Un cultivateur de **Culture 6** peut commencer le semis. Il rejoint la case et fournit le travail avant que le jeune arbre apparaisse. Les arbres sont exclus des bacs hydroponiques.

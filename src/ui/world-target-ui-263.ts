@@ -2,15 +2,17 @@ import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {worldTargetActions263} from '../sim/world-target-access-263';
 import type {World} from '../sim/types';
 import type {WorldSite263,WorldEntryTarget263} from '../sim/world-sites-state-263';
+import type {PeaceTalksArrival293} from '../sim/peace-talks-state-293';
 
 /** Confirmed scalar labels only. Hidden ambush variants, points, generation
  * inputs and held owner records never become a globe tooltip. */
 export function worldSiteLabel263(site:WorldSite263,atCore:number):string {
  if(site.kind==='destroyed-settlement')return 'Établissement en ruines';
+ if(site.kind==='peace-talks')return `Pourparlers · expire dans ${(Math.max(0,site.expiresAtCore-atCore)/60000).toLocaleString('fr-FR',{maximumFractionDigits:1})} j`;
  const remaining=site.expiresAtCore===null?null:Math.max(0,site.expiresAtCore-atCore);
  return `Réserve d’objets${remaining===null?'':` · expire dans ${(remaining/60000).toLocaleString('fr-FR',{maximumFractionDigits:1})} j`}`;
 }
-export interface WorldTargetChoice263 {key:string;label:string;target:WorldEntryTarget263;ok:boolean;reason?:string;confirmAttack:boolean}
+export interface WorldTargetChoice263 {key:string;label:string;target:WorldEntryTarget263|PeaceTalksArrival293;ok:boolean;reason?:string;confirmAttack:boolean}
 /** The same product admission reads the real target; this view adds labels and
  * the neutral/friendly confirmation, never permissions or preview mutations. */
 export function worldTargetChoices263(world:World,tile:number):WorldTargetChoice263[] {
@@ -25,6 +27,11 @@ export function worldTargetChoices263(world:World,tile:number):WorldTargetChoice
  }
  for(const site of world.worldSites263?.entries??[]){
   if(site.tile!==tile||site.kind==='item-stash'&&site.closed)continue;
+  if(site.kind==='peace-talks'){
+   if(world.schemaVersion!==293||site.closed)continue;
+   const available=world.tick*10<site.expiresAtCore,faction=world.worldFactions?.factions.find(f=>f.id===site.factionId);
+   result.push({key:`peace:${site.id}`,label:`Participer aux pourparlers${faction?` · ${faction.name}`:''}`,target:{kind:'peace-talks',siteId:site.id},ok:available&&!!faction,...!available?{reason:'Le délai des pourparlers est écoulé.'}:!faction?{reason:'La faction destinataire est absente.'}:{},confirmAttack:false});continue;
+  }
   const target:WorldEntryTarget263={kind:'visit-site',siteId:site.id},access=worldTargetActions263(world,target,tile);
   result.push({key:`site:${site.id}`,label:`Visiter · ${worldSiteLabel263(site,world.tick*10)}`,target,ok:access.ok,...access.reason?{reason:access.reason}:{},confirmAttack:false});
  }

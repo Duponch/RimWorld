@@ -11,7 +11,7 @@ import {validatePileRecordShape} from '../src/sim/material-record-save.ts';
 import {ITEM_DEFINITIONS,type ItemId} from '../src/sim/items.ts';
 import {newWeaponState} from '../src/sim/equipment-rules.ts';
 import {freshRot} from '../src/sim/food-preservation.ts';
-import type {MaterialPile} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type MaterialPile} from '../src/sim/types.ts';
 import type {TradeRequest284,TradeRequests284} from '../src/sim/trade-request-state-284.ts';
 
 /** Declared holder/guard preparation over real map/planet/faction constructors.
@@ -59,7 +59,7 @@ test('offered options own the same original Things once; scalar manifests do not
 test('historical transport rejects future registry presence and reward owner tags throughout envelopes without reading getters',()=>{
  const owner={type:'trade-request284',requestId:1,optionId:1};
  const cases=[{tradeRequests284:undefined},{world:{tradeRequests284:undefined}},{piles:[{owner}]},{structures:{removed:[],upserted:[{cryptosleep:{items:[{owner}]}}]}},{worldMaps:{sites:[{map:{piles:[{owner}]}}]}},{campaignMap:{groups:[{state:{items:[{owner}]}}]}},{worldGroups:{abandonedContents:[{humans:[{items:[{owner}]}]}]}},{worldPawns:{owners:[{items:[{owner}]}]}}];
- for(const raw of cases){expect(validTradeRequestHistorical284(raw,283)).toBe(false);expect(validTradeRequestHistorical284(raw,284)).toBe(true);expect(validTradeRequestHistorical284(raw,285)).toBe(false);}
+ for(const raw of cases){expect(validTradeRequestHistorical284(raw,283)).toBe(false);for(const version of [284,285,SCHEMA_VERSION])expect(validTradeRequestHistorical284(raw,version)).toBe(true);expect(validTradeRequestHistorical284(raw,SCHEMA_VERSION+1)).toBe(false);}
  let reads=0;const raw={};Object.defineProperty(raw,'tradeRequests284',{enumerable:true,get(){reads++;throw Error('No read');}});
  expect(validTradeRequestHistorical284(raw,283)).toBe(false);expect(reads).toBe(0);
  const cycle:{self?:unknown}={};cycle.self=cycle;expect(validTradeRequestHistorical284(cycle,283)).toBe(false);
@@ -68,7 +68,8 @@ test('historical transport rejects future registry presence and reward owner tag
 
 test('closed versions, undefined fields, getters and unknown fields refuse without mutating the namespace',()=>{
  const f=prepared();expect(validateTradeRequests284(undefined,{...f.context,schemaVersion:283},new Set())).toEqual([]);
- for(const schemaVersion of [283,285])expect(validateTradeRequests284(f.registry,{...f.context,schemaVersion},new Set()).length).toBeGreaterThan(0);
+ for(const schemaVersion of [283,SCHEMA_VERSION+1])expect(validateTradeRequests284(f.registry,{...f.context,schemaVersion},new Set()).length).toBeGreaterThan(0);
+ for(const schemaVersion of [284,285,SCHEMA_VERSION])expect(validateTradeRequests284(f.registry,{...f.context,schemaVersion},new Set())).toEqual([]);
  for(const schemaVersion of [283,284])expect(validateTradeRequests284(undefined,{...f.context,schemaVersion,tradeRequests284:undefined},new Set()).length).toBeGreaterThan(0);
  let reads=0;const getter=structuredClone(f.registry);Object.defineProperty(getter.entries[0]!,'options',{enumerable:true,get(){reads++;throw Error('No reward getter');}});
  expect(validateTradeRequests284(getter,f.context,new Set()).length).toBeGreaterThan(0);expect(reads).toBe(0);

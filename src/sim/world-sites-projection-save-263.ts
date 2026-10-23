@@ -1,3 +1,4 @@
+import {validPeaceTalksBindings293} from './peace-talks-save-293.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {validWorldSiteAmbush263} from './world-site-ambush-save-263.ts';
 import {validSiteDefenceSource263} from './world-site-defence-source-263.ts';
@@ -14,6 +15,7 @@ export function registerProjectedWorldSites263(w:World,ids:NumericMembershipSink
  if(!metadata)return isSchema263OrLater(Number(w.schemaVersion))&&Object.hasOwn(w,'worldSites263')?['Projected Sites lack their true campaign metadata.']:[];
  const context:WorldSitesValidationContext263={schemaVersion:w.schemaVersion,tick:w.tick,nextId:w.nextId,planet:w.planet,worldFactions:w.worldFactions,worldMaps:{sites:metadata.maps},...Object.hasOwn(w,'worldSites263')?{worldSites263:w.worldSites263}:{}};
  const errors=validateWorldSites263(w.worldSites263,context,ids);
+ if(!errors.length&&!validPeaceTalksBindings293(summary??w))errors.push('Invalid projected PeaceTalks reciprocal bindings.');
  if(isSchema263OrLater(Number(w.schemaVersion))){const packs=[...w.packed??[],...metadata.groups.flatMap(r=>'members'in r.state?r.state.packed??[]:[]),...w.worldPawns?.owners.flatMap(r=>r.packed)??[]];for(const p of packs)if(targetBuilding263(w,p.building)&&p.building.factionId!==w.worldFactions?.playerFactionId)errors.push('Projected target furniture is not actually player-owned.');}
  if(!summary&&!validWorldTargetDefence263(w,w.schemaVersion))errors.push('Invalid projected263 map defence.');
  if(!summary&&!validSiteDefenceSource263(w,w.schemaVersion))errors.push('Projected Site defence differs from its selected threat.');

@@ -46,5 +46,5 @@ test('V472 celebration time reads the common duration and never invents a finish
 });
 
 test('V472 old and unknown future schema views stay closed',()=>{
- const world=scene();for(const version of [291,293,'292']){Object.assign(world,{schemaVersion:version});expect(partyView292(world)).toBeUndefined();}
+ const world=scene();for(const version of [291,294,'292']){Object.assign(world,{schemaVersion:version});expect(partyView292(world)).toBeUndefined();}
 });

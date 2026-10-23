@@ -9,7 +9,7 @@ export interface PlanetOverlay {
   previewRoute?:readonly number[];
   groupTile?:number;
   maps?:readonly {mapId:number;tile:number;label:string;kind:WorldMapKind;active:boolean}[];
-  worldSites?:readonly {siteId:number;tile:number;label:string;kind:'item-stash'|'destroyed-settlement'}[];
+  worldSites?:readonly {siteId:number;tile:number;label:string;kind:'item-stash'|'destroyed-settlement'|'peace-talks'}[];
   retiredCamps?:readonly {retiredMapId:number;tile:number;label:string}[];
   homeTile?:number;
   civilianTile?:number|null;

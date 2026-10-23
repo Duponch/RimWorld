@@ -6,7 +6,7 @@ import {prepareBattlefieldGeneration261} from './caravan-battlefield-generation-
 import {prepareBattlefieldPlacements261} from './caravan-battlefield-placement-261.ts';
 import {caravanAmbushMapSize261} from './caravan-incident-calculation-261.ts';
 import {captureCurrentArrival261,captureRetainedCaravan261} from './caravan-retained-261.ts';
-import {copiedCaravanStory261,firedCaravanStory261,type EncounterGroup261} from './caravan-encounter-state-261.ts';
+import {copiedCaravanStory261,firedCaravanStory261,type EncounterGroup261,type CaravanBattlefield261} from './caravan-encounter-state-261.ts';
 import {registeredCampaign,registeredMap,flushRegisteredMap,promoteRootMap} from './world-map-context.ts';
 import {captureSecondaryMap} from './secondary-site-context.ts';
 import {captureActorBeds256} from './actor-bed-local-256.ts';
@@ -27,6 +27,7 @@ import type {CampaignState,WorldMapRecord} from './world-map-state.ts';
 import type {CampMapProgress256} from './camp-map-assembly-256.ts';
 import type {CommandResult,Pawn} from './types.ts';
 import type {CaravanRaidProvenance261} from './raid-state.ts';
+import type {PeaceTalksSite293} from './peace-talks-state-293.ts';
 
 export type BattlefieldEntry261={status:'ready';commit():CommandResult}|{status:'blocked';phase:string;reason:string};
 const writable=(o:object,k:string)=>{const d=Object.getOwnPropertyDescriptor(o,k);return d?Object.hasOwn(d,'value')&&d.writable===true:!(k in o)&&Object.isExtensible(o);};
@@ -43,6 +44,11 @@ export function* prepareActualBattlefieldEntry261(input:CampaignState,groupId:nu
  const root=registeredCampaign(input),record=root.worldGroups?.groups.find(g=>g.state.id===groupId) as EncounterGroup261|undefined,g=record?.state,pending=record?.pending261;
  const blocked=(phase:string,reason:string):BattlefieldEntry261=>({status:'blocked',phase,reason});
  if((Number(root.schemaVersion)!==261&&(Number(root.schemaVersion)!==262&&!isSchema263OrLater(Number(root.schemaVersion))))||!record||!g||!('members'in g)||!pending||pending.decision==='open'||!root.worldMaps||!root.worldFactions||!root.worldPawns)return blocked('owner','La vraie décision de rencontre et ses originaux sont absents.');
+ const peaceRegistry=root.worldSites263,peaceEntries=peaceRegistry?.entries,peaceSite=pending.kind==='peace-talks'?peaceEntries?.find((s):s is PeaceTalksSite293=>s.kind==='peace-talks'&&s.id===pending.peaceTalksSiteId293):undefined;
+ const peaceClosed=peaceSite?.closed,peaceResult=peaceClosed?.reason==='resolved'?peaceClosed.result:undefined,peaceAttack=peaceResult?.attack;
+ const peaceBefore=peaceSite?JSON.stringify(peaceSite):undefined;
+ const peaceCurrent=()=>pending.kind!=='peace-talks'||root.schemaVersion===293&&root.worldSites263===peaceRegistry&&peaceRegistry?.entries===peaceEntries&&!!peaceSite&&peaceEntries!.includes(peaceSite)&&peaceSite.closed===peaceClosed&&peaceSite.tile===g.tile&&peaceSite.factionId===pending.factionId&&peaceClosed?.atCore===pending.atCore&&peaceResult?.outcome==='disaster'&&peaceResult.groupId===g.id&&peaceResult.attack===peaceAttack&&peaceAttack?.phase==='pending'&&peaceAttack.groupId===g.id&&peaceAttack.enemyIds.length===pending.people.length&&peaceAttack.enemyIds.every((id,i)=>id===pending.people[i]!.id)&&JSON.stringify(peaceSite)===peaceBefore&&writable(peaceResult,'attack');
+ if(!peaceCurrent())return blocked('peace-owner','Le reçu terminal ne possède plus sa vraie attaque en attente.');
  const playerAnimals=g.animalOwners?.members??[],size=pending.kind==='meeting'?100:caravanAmbushMapSize261(g.members.length+playerAnimals.length,pending.people.length+pending.animals.length);
  if(size===undefined||pending.animals.length&&!pending.animalAmbush261)return blocked('roster','Ce producteur de rencontre n’a pas de détenteur animal étranger pris en charge.');
  const generation=yield*prepareBattlefieldGeneration261(root,groupId,size);if(generation.status==='blocked')return generation;
@@ -76,9 +82,12 @@ export function* prepareActualBattlefieldEntry261(input:CampaignState,groupId:nu
  const allPeople=[...g.members,...pending.people,...factionActors];
  if(!pending.animals.every(mutableWorldPawnOriginal256))return blocked('animal-recipients','Un animal original de rencontre n’est pas modifiable.');
  if(!recipients(root,record,allPeople))return blocked('recipients','Un véritable destinataire de l’entrée n’est pas modifiable.');
- const body=captureSecondaryMap(map),site:WorldMapRecord={id:mapId,tile:g.tile,kind:'battlefield',createdAt:root.tick,visit:null,map:body,campPressure:pressure,encounters261:{revision:1},...story?{story261:story}:{},battlefield261:{revision:1,kind:pending.kind==='meeting'?'attacked-caravan':'ambush',won:false,factionId:pending.kind==='meeting'?pending.factionId:null,retained}};
+ const battlefield:CaravanBattlefield261=pending.kind==='peace-talks'
+  ?{revision:1,kind:'peace-talks',won:false,factionId:pending.factionId,peaceTalksSiteId293:pending.peaceTalksSiteId293,retained}
+  :{revision:1,kind:pending.kind==='meeting'?'attacked-caravan':'ambush',won:false,factionId:pending.kind==='meeting'?pending.factionId:null,retained};
+ const body=captureSecondaryMap(map),site:WorldMapRecord={id:mapId,tile:g.tile,kind:'battlefield',createdAt:root.tick,visit:null,map:body,campPressure:pressure,encounters261:{revision:1},...story?{story261:story}:{},battlefield261:battlefield};
  const before=JSON.stringify(record),tick=root.tick,rng=root.rng,nextId=root.nextId;let used=false;
- const current=()=>!used&&root.tick===tick&&root.rng===rng&&root.nextId===nextId&&root.worldMaps===maps&&root.worldGroups===groups&&root.worldFactions===factions&&record.pending261===pending&&JSON.stringify(record)===before&&generation.current()&&pending.animals.every(mutableWorldPawnOriginal256)&&recipients(root,record,allPeople);
+ const current=()=>!used&&root.tick===tick&&root.rng===rng&&root.nextId===nextId&&root.worldMaps===maps&&root.worldGroups===groups&&root.worldFactions===factions&&record.pending261===pending&&JSON.stringify(record)===before&&generation.current()&&peaceCurrent()&&pending.animals.every(mutableWorldPawnOriginal256)&&recipients(root,record,allPeople);
  return {status:'ready',commit(){
   if(!current())return {ok:false,code:'invalid-command',reason:'La rencontre a changé avant son entrée réelle.'};used=true;
   map.wildlife!.animals=result.worldAnimalGeneration.commit();
@@ -90,6 +99,7 @@ export function* prepareActualBattlefieldEntry261(input:CampaignState,groupId:nu
   map.pawns.push(...g.members,...pending.people);map.piles.push(...g.items,...pending.items);map.packed.push(...g.packed??[],...pending.packed);
   if(provenance){map.raids!.active={id:1,startedAt:tick,deadline:null,lossPermille:null,members:pending.people.map(p=>p.id),lost:[],phase:'assault',caravan261:provenance};map.raids!.serial=1;}
   root.worldFactions=nextFactions;root.rng=random.rng;root.nextId=result.nextId;maps.generationRuntime=generation.runtimeAfter;maps.sites.push(site);maps.nextMapId++;
+  if(peaceResult&&peaceAttack?.phase==='pending')peaceResult.attack={phase:'entered',mapId,atCore,points:peaceAttack.points,enemyIds:peaceAttack.enemyIds.slice()};
   groups.groups=groups.groups.filter(r=>r!==record);if(groups.selectedGroupId===g.id)groups.selectedGroupId=null;maps.selectedMapId=mapId;
   const actual=registeredMap(root,mapId)!;for(const p of [...g.members,...playerAnimals])notifyActualExplorationSpawn256(actual,p);
   ensureFilth(actual);refreshStock(actual);flushRegisteredMap(actual);if(maps.rootMapId===null)promoteRootMap(root,mapId);

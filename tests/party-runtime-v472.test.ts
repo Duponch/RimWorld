@@ -15,7 +15,7 @@ import {secondaryContext} from '../src/sim/secondary-site-context.ts';
 import {captureSecondaryMap} from '../src/sim/secondary-site-context.ts';
 import {partyCamp472} from './scenarios/social-party-v472.ts';
 import type {NeedContext} from '../src/sim/needs.ts';
-import type {Pawn,World} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type Pawn,type World} from '../src/sim/types.ts';
 
 /** Prepared active owner only for isolated runtime boundaries, never a native acquisition. */
 function active(w:World,durationCore=5000):void {
@@ -46,7 +46,8 @@ test('prospective adoption schedules a future opportunity without touching globa
 });
 
 test('future family and true secondary/camp contexts cannot adopt Party',()=>{
- const w=partyCamp472();(w as unknown as {schemaVersion:number}).schemaVersion=293;advanceParty292(w);expect(w.party292).toBeUndefined();
+ const w=partyCamp472();(w as unknown as {schemaVersion:number}).schemaVersion=SCHEMA_VERSION+1;advanceParty292(w);expect(w.party292).toBeUndefined();
+ for(const version of [292,SCHEMA_VERSION]){const current=partyCamp472();(current as unknown as {schemaVersion:number}).schemaVersion=version;advanceParty292(current);expect(current.party292).toBeDefined();}
  const secondary=partyCamp472();secondary.expeditionSite={tile:1,createdAt:secondary.tick,calendarOffset:0};advanceParty292(secondary);expect(secondary.party292).toBeUndefined();
  const old=partyCamp472();delete old.worldMaps;delete old.worldGroups;expect(partyHome292(old)).toBe(true);
  old.secondarySite={revision:1,tile:1,createdAt:old.tick,selected:false,map:captureSecondaryMap(partyCamp472()),visit:null};

@@ -12,7 +12,7 @@ const lanes=new Set(['world','summary','dynamic','campaign','map','worldMaps','s
 /** Supplemental closed owner-context fence. Main guards still own actor shapes,
  * IDs and clocks. Relative remaining time is valid unchanged in frozen owners. */
 export function validFirefoamActorOwners290(raw:unknown,version:number):boolean {
- if(!Number.isSafeInteger(version)||version<1||version>292)return false;
+ if(!Number.isSafeInteger(version)||version<1||version>293)return false;
  const active=new Set<object>();let budget=2_000_000;
  const visit=(v:unknown,forbidden=false):boolean=>{
   if(--budget<0)return false;if(v===null||typeof v!=='object')return true;

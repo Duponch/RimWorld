@@ -1,3 +1,4 @@
+import {validPeaceTalksSite293} from './peace-talks-save-293.ts';
 import {isSchema284OrLater} from './schema-compatibility-257.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {WORLD_FACTION_TECH_LEVEL_259} from './world-faction-catalog.ts';
@@ -20,7 +21,7 @@ function calendar(value:unknown,core:number,nextId:number,version:number):value 
  return s.revision===1&&int(s.adoptedAtCore,0,core)&&s.adoptedAtCore%10===0&&int(s.nextCheckCore,core+1)&&s.nextCheckCore%1000===0&&s.nextCheckCore<=Math.floor(core/1000)*1000+1000&&int(s.cycle,0,Math.floor(core/600000))
   &&(s.pendingCore===null||int(s.pendingCore,core+1,(Number(s.cycle)+1)*600000-1)&&s.pendingCore%1000===0)
   &&int(s.previousHitInterval,-1000000,Math.floor(core/1000))&&int(s.rng,1,0xffffffff)&&int(s.opportunities)&&int(s.siteOffers,0,s.opportunities)
-  &&Array.isArray(s.recent)&&s.recent.length<=5&&s.recent.length===Math.min(5,s.siteOffers)&&s.recent.every(x=>x==='item-stash'||isSchema284OrLater(version)&&x==='trade-request')
+  &&Array.isArray(s.recent)&&s.recent.length<=5&&s.recent.length===Math.min(5,s.siteOffers)&&s.recent.every(x=>x==='item-stash'||isSchema284OrLater(version)&&x==='trade-request'||version===293&&x==='peace-talks')
   &&typeof s.populationAdaptationDays==='number'&&Number.isFinite(s.populationAdaptationDays)&&s.populationAdaptationDays>=0&&Number.isInteger(s.populationAdaptationDays*2)
   &&int(s.populationAtCore,s.adoptedAtCore,core)&&s.populationAtCore%10===0&&Array.isArray(s.knownColonistIds)&&s.knownColonistIds.length<=4096&&s.knownColonistIds.every(id=>int(id,1,nextId-1))&&new Set(s.knownColonistIds).size===s.knownColonistIds.length;
 }
@@ -32,12 +33,15 @@ export function validateWorldSites263(value:unknown,root:WorldSitesValidationCon
  if(!isSchema263OrLater(Number(root.schemaVersion)))return Object.hasOwn(root,'worldSites263')||value!==undefined?['Future263 world Sites in an older campaign.']:[];
  if(value===undefined)return Object.hasOwn(root,'worldSites263')?['Undefined263 Site authority.']:[];
  if(!plainWorldPawnData256(value)||!record(value)||!keys(value,['revision','nextId','entries'],['quest'])||value.revision!==1||!int(value.nextId,1)||!Array.isArray(value.entries)||value.entries.length>4096||Object.hasOwn(value,'quest')&&!calendar(value.quest,root.tick*10,root.nextId,root.schemaVersion))return ['Invalid263 world Site authority.'];
- const sites=value as unknown as WorldSitesState263,ids=new Set<number>(),activeTiles=new Set<number>(),core=root.tick*10,factions=root.worldFactions;
+ const sites=value as unknown as WorldSitesState263,ids=new Set<number>(),activeTiles=new Set<number>(),peaceTags=new Set<string>(),peaceActiveFactions=new Set<number>(),core=root.tick*10,factions=root.worldFactions;
  if(!factions||!root.planet)return ['Site authority requires the actual faction and planet registries.'];
  for(const raw of sites.entries){
-  if(!record(raw)||!keys(raw,['id','tile','factionId','createdAtCore','mapId','kind'],['enterCooldownUntilCore','sourceSettlementId','expiresAtCore','heldAtCore','items','threat','closed'])||!int(raw.id,1,sites.nextId-1)||ids.has(raw.id)||!int(raw.tile,0,planetTileCount(root.planet)-1)||!int(raw.createdAtCore,0,core)||raw.createdAtCore%10||raw.factionId!==null&&(!int(raw.factionId,1)||!factions.factions.some(f=>f.id===raw.factionId))||raw.mapId!==null&&!int(raw.mapId)||Object.hasOwn(raw,'enterCooldownUntilCore')&&!int(raw.enterCooldownUntilCore,0))return ['Invalid263 world Site header.'];
+  if(!record(raw)||!keys(raw,['id','tile','factionId','createdAtCore','mapId','kind'],['enterCooldownUntilCore','sourceSettlementId','expiresAtCore','heldAtCore','items','threat','closed','questTag'])||!int(raw.id,1,sites.nextId-1)||ids.has(raw.id)||!int(raw.tile,0,planetTileCount(root.planet)-1)||!int(raw.createdAtCore,0,core)||raw.createdAtCore%10||raw.factionId!==null&&(!int(raw.factionId,1)||!factions.factions.some(f=>f.id===raw.factionId))||raw.mapId!==null&&!int(raw.mapId)||Object.hasOwn(raw,'enterCooldownUntilCore')&&!int(raw.enterCooldownUntilCore,0))return ['Invalid263 world Site header.'];
   ids.add(raw.id);
-  if(raw.kind==='destroyed-settlement'){
+  if(raw.kind==='peace-talks'){
+   if(!validPeaceTalksSite293(raw,root)||peaceTags.has(raw.questTag))return ['Invalid or duplicate PeaceTalks site/tag receipt.'];peaceTags.add(raw.questTag);
+   if(!raw.closed){if(peaceActiveFactions.has(raw.factionId))return ['Two active PeaceTalks offers share a faction.'];peaceActiveFactions.add(raw.factionId);}
+  }else if(raw.kind==='destroyed-settlement'){
    if(!keys(raw,['id','tile','factionId','createdAtCore','mapId','kind','sourceSettlementId'],['enterCooldownUntilCore'])||!int(raw.factionId,1)||!int(raw.sourceSettlementId,1)||factions.settlements.some(s=>s.id===raw.sourceSettlementId))return ['Invalid destroyed foreign settlement.'];
   }else if(raw.kind==='item-stash'){
    if(!keys(raw,['id','tile','factionId','createdAtCore','mapId','kind','expiresAtCore','heldAtCore','items','threat'],['enterCooldownUntilCore','closed'])||raw.expiresAtCore!==null&&!int(raw.expiresAtCore,Number(raw.createdAtCore)+1)||!int(raw.heldAtCore,Number(raw.createdAtCore),core)||raw.heldAtCore%10||!Array.isArray(raw.items)||raw.items.length>64||!record(raw.threat))return ['Invalid ItemStash holder.'];

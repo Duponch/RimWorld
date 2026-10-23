@@ -29,6 +29,7 @@ export function groupConfirmedArrivalText(snapshot:GroupPanelSnapshot):string {
   const settlement=snapshot.world.worldFactions?.settlements.find(s=>s.id===action.settlementId);label=`faire du commerce avec ${settlement?.name??`l’établissement ${action.settlementId}`}`;
  }else if(action.kind==='attack-settlement'){
   const settlement=snapshot.world.worldFactions?.settlements.find(s=>s.id===action.settlementId);label=`attaquer ${settlement?.name??`l’établissement ${action.settlementId}`}`;
- }else label=`visiter le Site ${action.siteId}`;
+ }else if(action.kind==='peace-talks')label='participer aux pourparlers';
+ else label=`visiter le Site ${action.siteId}`;
  return `Ordre d’arrivée confirmé : ${label} · ${where}.`;
 }

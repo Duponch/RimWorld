@@ -52,9 +52,12 @@ export function prepareRetainedReform261(root:CampaignState,site:EncounterMap261
  if(old.destination&&old.destination.tile!==next.tile){
   const d=old.destination,action=d.action;
   const validAction=validRetainedArrival261(action,{version:root.schemaVersion,atCore:root.tick*10,tileCount:Number.MAX_SAFE_INTEGER,
-   factionIds:new Set(root.worldFactions?.factions.map(f=>f.id)),mapIds:new Set(root.worldMaps?.sites.map(s=>s.id)??projectedMaps.map(s=>s.id)),siteIds263:new Set(root.worldSites263?.entries.filter(s=>s.kind==='item-stash'&&!s.closed).map(s=>s.id)),settlements:root.worldFactions?.settlements??[]})
+   factionIds:new Set(root.worldFactions?.factions.map(f=>f.id)),mapIds:new Set(root.worldMaps?.sites.map(s=>s.id)??projectedMaps.map(s=>s.id)),siteIds263:new Set(root.worldSites263?.entries.filter(s=>(s.kind==='item-stash'||s.kind==='peace-talks')&&!s.closed).map(s=>s.id)),settlements:root.worldFactions?.settlements??[]})
    &&(action?.kind!=='enter'||(root.worldMaps?.sites??projectedMaps).some(s=>s.id===action.mapId&&s.tile===d.tile))
    &&(action?.kind!=='trade'||root.worldFactions!.settlements.some(s=>s.id===action.settlementId&&s.tile===d.tile))
+   // This is the new reform draft, not yet a registered group. Validate only
+   // its retained target here; the real arrival rechecks the actual owners.
+   &&(action?.kind!=='peace-talks'||root.schemaVersion===293&&!!root.worldSites263?.entries.some(s=>s.kind==='peace-talks'&&s.id===action.siteId&&s.tile===d.tile&&!s.closed&&root.tick*10<s.expiresAtCore))
    &&(action?.kind!=='attack-settlement'&&action?.kind!=='visit-site'||worldTargetActions263(root,action,d.tile).ok);
   retained.destination=null;
   // Native StartPath resets pause before checking the action/route, even when

@@ -14,16 +14,15 @@ export interface CaravanStory261 {
  revision:1;lastFire:Partial<Record<CaravanIncident261,number>>;
  lastThreatCore?:number;lastFactionId?:number;recent:CaravanIncident261[];
 }
-export type RetainedArrival261=null|{kind:'enter';mapId:number}|{kind:'trade';settlementId:number;factionId:number;postId:number|null}|import('./world-sites-state-263.ts').WorldEntryTarget263;
+export type RetainedArrival261=null|{kind:'enter';mapId:number}|{kind:'trade';settlementId:number;factionId:number;postId:number|null}|import('./world-sites-state-263.ts').WorldEntryTarget263|import('./peace-talks-state-293.ts').PeaceTalksArrival293;
 export interface RetainedCaravan261 {
  passStory:boolean;
  next:null|{tile:number;leftFraction:number;paused:boolean};
  destination:null|{tile:number;action:RetainedArrival261};
 }
-export interface CaravanBattlefield261 {
- revision:1;kind:'ambush'|'attacked-caravan';won:boolean;factionId:number|null;
- retained:RetainedCaravan261;
-}
+export type CaravanBattlefield261={revision:1;won:boolean;retained:RetainedCaravan261}&(
+ {kind:'ambush'|'attacked-caravan';factionId:number|null;peaceTalksSiteId293?:never}
+ |{kind:'peace-talks';factionId:number;peaceTalksSiteId293:number});
 export type CaravanDemandLine261={kind:'human'|'animal';id:number}|{kind:'pile'|'packed';id:number;quantity:number};
 /** Same originals held here until the player's real decision. Never a ledger/post. */
 interface EncounterForeignOwners261 {
@@ -32,6 +31,7 @@ interface EncounterForeignOwners261 {
  items:MaterialPile[];packed:PackedFurniture[];
 }
 export type PendingCaravanEncounter261=
+ | (EncounterForeignOwners261&{kind:'peace-talks';decision:'forced';peaceTalksSiteId293:number})
  | (EncounterForeignOwners261&{kind:'meeting';decision:'open'|'attack';traderId:number;guardIds:number[]})
  | (EncounterForeignOwners261&{kind:'ambush';decision:'forced'})
  | (Omit<EncounterForeignOwners261,'factionId'|'animalAmbush261'>&{kind:'ambush';decision:'forced';factionId:null;animalAmbush261:true})

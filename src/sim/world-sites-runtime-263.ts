@@ -3,7 +3,8 @@ import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {registeredMap} from './world-map-context.ts';
 import {isColonist} from './affiliation.ts';
 import {computeThreatPoints,summaryHealthPercent} from './threat-points.ts';
-import {newQuestCalendar263,advanceQuestPopulation263,advanceWorldQuestCalendar263,notifyItemStashBorn263,notifyTradeRequestBorn284} from './world-quest-calendar-263.ts';
+import {newQuestCalendar263,advanceQuestPopulation263,advanceWorldQuestCalendar263,notifyItemStashBorn263,notifyTradeRequestBorn284,notifyPeaceTalksBorn293} from './world-quest-calendar-263.ts';
+import {preparePeaceTalksBirth293} from './peace-talks-producer-293.ts';
 import {prepareTradeRequestBirth284} from './trade-request-producer-284.ts';
 import {logTradeRequest284} from './trade-request-runtime-284.ts';
 import {prepareItemStashBirth263} from './world-site-producer-263.ts';
@@ -25,7 +26,11 @@ export function advanceWorldSites263(root:CampaignState):void {
  // An absent valuation is a refused opportunity, never assumed free wealth.
  const wealth=home?.economy?.wealth.knownStorytellerWealth??0,adaptation=home?.economy?.adaptationDays??0;
  const points=home?computeThreatPoints({knownWealth:wealth,freeColonists:people.length,colonistHealthSum:people.reduce((sum,p)=>sum+(p.health?summaryHealthPercent(p.health):1),0),elapsedDays:root.tick/6000,adaptationDays:adaptation,seedBucket:Math.floor(root.tick/250)}).points:0;
- const selected=advanceWorldQuestCalendar263(calendar,core,{points,progress:people.length+wealth*.0001,adjustedPopulation:people.length,hasFreeColonist:people.length>0,hasHomeMap:!!home,tradeRequests284:isSchema284OrLater(root.schemaVersion)&&!!root.tradeRequests284&&core>root.tradeRequests284.adoptedAtCore});
+ const selected=advanceWorldQuestCalendar263(calendar,core,{points,progress:people.length+wealth*.0001,adjustedPopulation:people.length,hasFreeColonist:people.length>0,hasHomeMap:!!home,tradeRequests284:isSchema284OrLater(root.schemaVersion)&&!!root.tradeRequests284&&core>root.tradeRequests284.adoptedAtCore,peaceTalks293:Number(root.schemaVersion)===293});
+ if(selected==='peace-talks'){
+  const offer=preparePeaceTalksBirth293(root);if(!offer.ok)return;offer.commit();notifyPeaceTalksBorn293(calendar);
+  root.worldGroups.events.push({tick:root.tick,type:'command',message:'Une faction propose des pourparlers. Consultez Quêtes et envoyez une caravane au lieu indiqué.'});if(root.worldGroups.events.length>80)root.worldGroups.events.splice(0,root.worldGroups.events.length-80);return;
+ }
  if(selected==='trade-request'){
   const offer=prepareTradeRequestBirth284(root);if(!offer.ok)return;offer.commit();notifyTradeRequestBorn284(calendar);
   logTradeRequest284(root,`Une demande commerciale de ${offer.request.settlementName} est disponible dans Quêtes.`);return;

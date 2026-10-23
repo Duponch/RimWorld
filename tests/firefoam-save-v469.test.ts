@@ -10,7 +10,7 @@ import {newCookingBill} from '../src/sim/cooking-bills.ts';
 import {applyCommand,stepWorld} from '../src/sim/engine.ts';
 import {isSchema256Or257,isSchema283OrLater,isSchema287OrLater,isSchema288OrLater} from '../src/sim/schema-compatibility-257.ts';
 import type {FirefoamWave290} from '../src/sim/firefoam-state-290.ts';
-import type {Structure} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type Structure} from '../src/sim/types.ts';
 
 const component=()=>({autoRebuild:false});
 const building=()=>({id:2,kind:'firefoam-popper',material:'steel',firefoam290:component()});
@@ -44,23 +44,23 @@ function furnitureOwners(b:unknown):unknown[]{return [
 test('strict289 migration changes only the number, keeps V468 reserve capability and offers no firefoam acquisition',()=>{
  const w=deconstructionCamp(2),old=JSON.parse(serializeWorld(w));old.schemaVersion=289;
  expect(validateCampaignSchema289(old)).toEqual([]);const saved=JSON.stringify(old),copy=deserializeWorld(saved);
- expect(JSON.parse(serializeWorld(copy))).toEqual({...old,schemaVersion:290});expect(JSON.stringify(old)).toBe(saved);
+ expect(JSON.parse(serializeWorld(copy))).toEqual({...old,schemaVersion:SCHEMA_VERSION});expect(JSON.stringify(old)).toBe(saved);
  for(const key of ['firefoam290'])expect(Object.hasOwn(copy,key)).toBe(false);
  expect(copy.structures.some(s=>s.kind==='firefoam-popper')).toBe(false);expect(copy.research?.firefoam).toBeUndefined();
  const b=fixtureBuilding(w,'campfire',4,4) as Structure;
  b.bills=[newCookingBill(w.nextId++,'simple-meal',290)];b.bills[0]!.mode='until';b.bills[0]!.target=10;b.bills[0]!.reservePause={enabled:true,resumeAt:5,paused:true};
  const previous=JSON.parse(serializeWorld(w));previous.schemaVersion=289;
- expect(validateCampaignSchema289(previous)).toEqual([]);expect(JSON.parse(serializeWorld(deserializeWorld(JSON.stringify(previous))))).toEqual({...previous,schemaVersion:290});
+ expect(validateCampaignSchema289(previous)).toEqual([]);expect(JSON.parse(serializeWorld(deserializeWorld(JSON.stringify(previous))))).toEqual({...previous,schemaVersion:SCHEMA_VERSION});
 });
 
-test('historical imports refuse every prospective family and future291/292 before any migration or mutation',()=>{
+test('historical imports refuse every prospective family and future294/295 before any migration or mutation',()=>{
  const newData=[{structures:[building()]},{research:{project:'firefoam',firefoam:{points:1}}},{firefoam290:{rng:1,waves:[]}},
   {filth:{items:[{id:1,kind:'firefoam',x:0,z:0,thickness:1,grownCore:0,expiresAfterCore:300000,nextCheckCore:1}]}},
   {pawns:[{filthFeet:{carried:[{kind:'firefoam',thickness:1}]}}]},{pawns:[coated()]},
   {pawns:[{firefoamTask290:{structureId:2,phase:'approach',progressCore:0,lastWorkedAt:0}}]}];
- for(const raw of newData){const before=JSON.stringify(raw);for(const version of [1,256,283,288,289,291,292])expect(validFirefoamHistoricalTransport290(raw,version)).toBe(false);expect(JSON.stringify(raw)).toBe(before);}
+ for(const raw of newData){const before=JSON.stringify(raw);for(const version of [1,256,283,288,289,294,295])expect(validFirefoamHistoricalTransport290(raw,version)).toBe(false);for(const version of [290,291,292,293])expect(validFirefoamHistoricalTransport290(raw,version)).toBe(true);expect(JSON.stringify(raw)).toBe(before);}
  const clean=JSON.parse(serializeWorld(deconstructionCamp(2)));
- for(const version of [291,292]){const raw={...clean,schemaVersion:version};expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow();}
+ for(const version of [294,295]){const raw={...clean,schemaVersion:version};expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow();}
  for(const feature of newData){const raw={...clean,...feature,schemaVersion:289};expect(validateCampaignSchema289(raw).length).toBeGreaterThan(0);expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/firefoam/i);}
 });
 
@@ -133,7 +133,7 @@ test('wave-only dynamic publication is retained; a forged wave cursor cannot rep
 
 test('290 preserves actual older capabilities while numeric strings and future families stay closed',()=>{
  for(const fn of [isSchema256Or257,isSchema283OrLater,isSchema287OrLater,isSchema288OrLater]){
-  expect(fn(289)).toBe(true);expect(fn(290)).toBe(true);expect(fn(291)).toBe(false);expect(fn(292)).toBe(false);expect(fn('290')).toBe(false);
+  for(const version of [289,290,291,292,293])expect(fn(version)).toBe(true);expect(fn(294)).toBe(false);expect(fn(295)).toBe(false);expect(fn('290')).toBe(false);
  }
  expect(isSchema283OrLater(282)).toBe(false);expect(isSchema287OrLater(286)).toBe(false);expect(isSchema288OrLater(287)).toBe(false);
  for(const version of [289,290])expect(validFirefoamHistoricalTransport290({pawns:[],structures:[]},version)).toBe(true);

@@ -6,6 +6,7 @@ import { TICKS_PER_DAY,type Command,type World } from '../sim/types';
 import type { JoinerQuest } from '../sim/quest-state';
 import { offeredRelationshipText,updateOfferedRelationship } from './relationship-inspection';
 import {createTradeRequests284} from './trade-requests-284';
+import {createPeaceTalks293} from './peace-talks-293';
 import type {CampaignSummary} from '../sim/world-map-state';
 
 const duration=(ticks:number,elapsed=false):string=>{
@@ -39,6 +40,7 @@ export function createQuestUI(send:(command:Command)=>Promise<unknown>):{update:
   const history=document.createElement('ol');history.id='quest-history';
   const local=document.createElement('section');local.dataset.questLocal='';local.append(heading,intro,enable,status,details,profile,timing,response,feedback,historyHeading,history);root.replaceChildren(local);
   const tradeHost=document.createElement('section');root.append(tradeHost);const tradeRequests=createTradeRequests284(tradeHost,send);
+  const peaceHost=document.createElement('section');root.append(peaceHost);const peaceTalks=createPeaceTalks293(peaceHost);
   const letter=document.createElement('button');letter.id='quest-letter';letter.className='arrival-letter';letter.type='button';
   letter.onclick=()=>{if(document.getElementById('quests-panel')?.hidden)document.querySelector<HTMLButtonElement>('[data-panel="quests"]')?.click();requestAnimationFrame(()=>heading.focus());};
   let current:World|undefined,busy=false,shownId:number|undefined;
@@ -68,6 +70,7 @@ export function createQuestUI(send:(command:Command)=>Promise<unknown>):{update:
   function update(world:World):void {
     local.hidden=false;
     tradeRequests.update(world);
+    peaceTalks.update(world);
     current=world;
     const eligible=!!world.gameProfile&&world.raids?.profile==='cassandra-raids-v1';
     const calendar=world.quests;
@@ -120,7 +123,7 @@ export function createQuestUI(send:(command:Command)=>Promise<unknown>):{update:
     }else letter.remove();
   }
   function updateCampaign(summary:CampaignSummary):void {
-    current=undefined;shownId=undefined;local.hidden=true;enable.disabled=accept.disabled=refuse.disabled=true;letter.remove();tradeRequests.update(summary);
+    current=undefined;shownId=undefined;local.hidden=true;enable.disabled=accept.disabled=refuse.disabled=true;letter.remove();tradeRequests.update(summary);peaceTalks.update(summary);
   }
   return {update,updateCampaign};
 }

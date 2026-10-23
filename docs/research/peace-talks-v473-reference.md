@@ -1,0 +1,39 @@
+# Pourparlers mondiaux — référence V473
+
+23 octobre 2026. **V473 en qualification — schéma 293 ; V472 reste publiée.** 184 cas distincts acquis par reprises, six opt-in non exécutés, typage de livraison acquis en 21,677 s ; parcours natifs muets acquis par reprises avec neuf recharges entières exactes et limite de rejeu combat Node conservée dans la [note canonique](../gameplay/peace-talks-v473.md). Coût CPU courant ciblé acquis, aucun gain FPS global. Présentation contrôlée avec la borne de réactivité de 100 ms encore non acquise en abattage ; build et publication à effectuer. Cette note distingue le Core installé, les adaptations retenues avant code et les preuves ; elle n'annonce pas de campagne naturelle.
+
+Le corpus conserve ses identifiants : [chapitre24](../reference/originals/Documentation_developpement.html#chap-24), **SYS/TEST-132..137**, pour occasion, offre, signal et échéance ; chapitres26–27, **SYS/TEST-138..147**, pour voyageurs, possessions et diplomatie. Ces références ne ferment aucun domaine globalement. Les six ensembles et leurs interactions restent ouverts.
+
+## Sources et provenance
+
+Primaire actuelle : installation `E:/Steam/steamapps/common/RimWorld`, **1.6.4871 rev590**, Assembly-CSharp.dll SHA256 `5CF1B5BE399D5B1C9C56CA72C9D35B4ECF307FEACF5859D04AC5A1AA5926356A`. ROOT a exécuté seulement les extractions privées nommées avec ILSpy8.2/Cecil ; empreintes avant/après inchangées, échecs et bornes conservés. Aucun code ou asset propriétaire copié dans le produit.
+
+Le [readout privé](../../tmp/peace-talks-v473/primary-readout.md), la [lecture finale](../../tmp/peace-talks-v473/primary-final.md) et la [décision avant code](../../tmp/peace-talks-v473/decision-before-code.md) référencent les manifestes primary/supplement/followup, closure1930 puis trois compléments1931/1934/1935. XML nommés : Script_PeaceTalks, WorldObjects/PeaceTalks, Stats_Pawns_Social/NegotiationAbility et ThingSetMakers_Reward/Reward_ItemsStandard. Les lectures couvrent PeaceTalks, son arrivée, FindBestDiplomat, GetFaction/QuestUnique, End/QuestManager, SkillNeed/Learn, SlateRef et les seules méthodes finales nécessaires.
+
+La recherche officielle fraîche du23octobre a ouvert [Beta18](https://ludeon.com/blog/2017/11/rimworld-beta-18-a-world-of-story-is-released/) : introduction historique des pourparlers, pas spécification1.6. Le [correctif1.6.4850](https://ludeon.com/blog/2026/06/update-1-6-4850-released/) ne publie pas ces formules ; [l'annonce1.7](https://ludeon.com/blog/2026/10/announcing-the-waylith-engine-and-update-1-7/) situe les branches seulement. Les pages secondaires [Events](https://rimworldwiki.com/wiki/Events) et [Negotiation Ability](https://rimworldwiki.com/wiki/Negotiation_Ability) servent de recoupement : Hearing y diffère de l'XML installé et le plafond Disaster allégué ne remplace pas GoodwillToMakeHostile. Les règles numériques ci-dessous viennent de l'installation.
+
+## Adopter
+
+Le ticket OpportunitySite_PeaceTalks existe déjà dans le calendrier : poids1, progression10, autoaccepté. GetFaction autorise **seulement une faction hostile non permanente** : allowEnemy=true, allowNeutral/allowAlly omis sont des SlateRef<bool> dont default(T)=false. Chef natif sûr signifie non null, non Spawned, non prisonnier ; les récompenses diplomatiques doivent être admises. Lieu à distance5..13, délai entier12..28jours Core, objet mondial sans scène de débat.
+
+GetProcessedTag produit `PeaceTalks_` + nom de faction. QuestUnique teste Ongoing, mais GetFaction.PeaceTalksExist examine les objets actuels et **tous les tags de questsInDisplayOrder sans état**. End ne retire pas le tag ; QuestManagerTick déplace active vers historical sans retirer l'affichage, et ExposeData réajoute allQuests. Remove explicite enlève les caches. Ne pas déduire qu'une fin de rencontre libère automatiquement la faction.
+
+L'arrivée sur la bonne tuile résout immédiatement le même objet actif. Elle ne réimpose ni hostilité ni chef sûr : ces faits peuvent avoir changé pendant le trajet. Sans diplomate, aucun résultat, XP, signal ou destruction ; nouvel ordre explicite possible avant échéance. Diplomate : premier maximum strict de NegotiationAbility parmi propriétaires humains libres, vivants, non à terre/en état mental et Social non désactivé. Aucun âge18 commercial ni minimum de parole/audition ajouté.
+
+Stat float32 : `0,4 + 0,075 × Social effectif`, capacités Talking/Hearing poids0,9 ; sous1, inverse lerp normalisé par `1−allowedDefect`, défauts **0,05/0,20**, maximum1 avant pondération. Minimum final0,4. L'incapacité Social est requise par défaut ; le minimum de stat ne la contourne pas. Les capacités/cliniques locales restent leurs vrais producteurs.
+
+Facteur défavorable f : courbe (0,4), (1,1), (1,5;0,4). Poids Disaster/Backfire/Flounder/Success/Triumph : `0,05f / 0,10f / 0,20 / 0,55÷f / 0,10÷f`, normalisés ensemble. Variations nominales : −50..−40, −20..−10,0,+60..70,+100..110. Disaster demande le minimum du tirage et **0 si déjà hostile, sinon −75−goodwill actuel** ; ce n'est pas un plafond global−75. Réutiliser ajustement réel et hystérésis V450. Toutes les issues envoient Resolved, même défavorables.
+
+Learn(6000,direct:true) garde passion0,35/1/1,5 : gain nominal2100/6000/9000 avant plafond. Il ignore apprentissage global et saturation, ne modifie pas dailyXp, conserve incapacité/seuils/plafond. Le reçu local exprime les points réellement ajoutés après plafond, pas une promesse de6000. Social sparse n'est créé que par le vrai gain commis.
+
+Triumph remet au même groupe des choses de Reward_ItemsStandard, valeur demandée500..1200 et masse maximale20kg. Disaster force hostilité et vraie carte d'attaque de cette caravane ; aucune branche ne peut être supprimée pour simplifier. Voyageurs, provisions, animaux et biens gardent leurs propriétaires physiques ; reçu scalaire distinct.
+
+## Adapter et différer
+
+**Adapter** PRNG/horloge locaux, distance par graphe accessible5..13 et tuiles réellement libres ; la tuile doit aussi être admise par caravanMapAllowed261 (biome et traces de cartes retirées compris), pour conserver la possibilité physique de Disaster. Échéance gagnante dès nowCore>=expiresAtCore. Admission locale exclut factions cachées/défaites/temporaires/permanentes et chef décédé sans succession représentée ; pas de condition healthy/downed. Le verrou d'attaque projette conservativement la carte d'établissement réellement attaquée/conservée et le pending attack-settlement déjà admis, pas toute bataille ni simple route. Ces conditions restent à la naissance.
+
+**Adapter** tag figé au nom réel de naissance, tous tags retenus bloquants sans TTL ; archivage distinct différé. Le reçu ne devient jamais un second owner et ne requiert pas qu'un cadeau consommé ou un ancien négociateur mort soit encore présent. Schéma292 validé strictement avant **numéro seul293**, aucun lieu, chef, XP, tag ou avantage rétroactif.
+
+**Adapter** menace/composition PNJ au canal caravane V261 et paquet Triumph à une palette finie de vrais biens représentés, technologie locale, valeur500..1200 et masse<=20000g,16piles maximum. Ni DefaultParmsNow/MarketValue natif exhaustif, ni catalogue Reward_ItemsStandard complet ne sont revendiqués. Aucun argent abstrait ou disparition du surpoids ; pending forcé conserve roster/IDs/RNG après erreur et se reprend sans seconde issue.
+
+**Différer** Lord/génération de PNJ généraux, succession des chefs, archivage de quêtes, catalogue exhaustif et extensions Ideology/Royalty/gènes. Les trois bornes Learn (permanent-disabled, aptitude, répétition TotallyDisabled) restent documentées ; l'admission Social existante fournit l'incapacité locale, les aptitudes d'extension ne sont pas revendiquées. Qualification pure, cinq issues, atomisme, propriétaires, recharges, vraie attaque/récompense et coût ciblé restent à acquérir par ROOT.

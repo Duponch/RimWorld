@@ -7,7 +7,7 @@ import {defaultWorldGenerationSettings} from '../src/sim/world-generation-settin
 import {validateWorldFactionRegistry256,type WorldFactionValidationHeader256} from '../src/sim/world-faction-save.ts';
 import {applySettlementProximity263} from '../src/sim/world-settlement-proximity-263.ts';
 import type {WorldFactionRegistry256,WorldFactionRelation256} from '../src/sim/world-faction-state.ts';
-import type {WorldEvent} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type WorldEvent} from '../src/sim/types.ts';
 
 function prepared(){
  const tiles=Array.from({length:128},(_,i)=>({biome:'temperate-forest' as const,hilliness:'flat' as const,neighbours:[(i+127)%128,(i+1)%128]}));
@@ -35,7 +35,8 @@ test('schema274 admits the overlapping historical states of hysteresis without o
  for(let goodwill=-100;goodwill<=100;goodwill++)for(const kind of kinds){
   expect(validWorldRelationKind274(goodwill,kind,273)).toBe(kind===worldRelationKind256(goodwill));
   expect(validWorldRelationKind274(goodwill,kind,274)).toBe(kind==='hostile'?goodwill<0:kind==='ally'?goodwill>0:goodwill> -75&&goodwill<75);
-  expect(validWorldRelationKind274(goodwill,kind,277)).toBe(false);
+  for(const version of [277,SCHEMA_VERSION])expect(validWorldRelationKind274(goodwill,kind,version)).toBe(kind==='hostile'?goodwill<0:kind==='ally'?goodwill>0:goodwill> -75&&goodwill<75);
+  expect(validWorldRelationKind274(goodwill,kind,SCHEMA_VERSION+1)).toBe(false);
  }
  for(const goodwill of [-101,101,.5,NaN,Infinity])for(const kind of kinds)expect(validWorldRelationKind274(goodwill,kind,274)).toBe(false);
  expect(validWorldRelationKind274(0,'unknown',274)).toBe(false);expect(validWorldRelationKind274(0,'neutral',255)).toBe(false);
@@ -63,7 +64,8 @@ test('the actual faction validator preserves a historical kind on274 and rejects
   Object.assign(relation,{goodwill,kind});const before=JSON.stringify(registry);
   expect(validateWorldFactionRegistry256(registry,274,header)).toEqual([]);
   expect(validateWorldFactionRegistry256(registry,273,header)).toContain('Invalid bilateral faction relation.');
-  expect(validateWorldFactionRegistry256(registry,277,header)).not.toEqual([]);
+  for(const version of [277,SCHEMA_VERSION])expect(validateWorldFactionRegistry256(registry,version,header)).toEqual([]);
+  expect(validateWorldFactionRegistry256(registry,SCHEMA_VERSION+1,header)).not.toEqual([]);
   expect(JSON.stringify(registry)).toBe(before);
  }
  for(const [goodwill,kind] of [[0,'ally'],[0,'hostile'],[-75,'neutral'],[75,'neutral']] as const){Object.assign(relation,{goodwill,kind});expect(validateWorldFactionRegistry256(registry,274,header)).toContain('Invalid bilateral faction relation.');}
@@ -84,7 +86,8 @@ test('gift faction admission returns original references and rechecks real playe
  for(const mutate of rejected){const copy=structuredClone(registry),f=copy.factions.find(f=>f.id===faction.id)!,pair=copy.relations.find(r=>r.aId===relation.aId&&r.bId===relation.bId)!;mutate(copy,f,pair);const state=JSON.stringify(copy);expect(diplomaticGiftFaction274(copy,f.id,274).ok).toBe(false);expect(JSON.stringify(copy)).toBe(state);}
  expect(diplomaticGiftFaction274(registry,registry.playerFactionId,274).ok).toBe(false);
  expect(diplomaticGiftFaction274(registry,999,274).ok).toBe(false);
- for(const version of [273,278])expect(diplomaticGiftFaction274(registry,faction.id,version).ok).toBe(false);
+ for(const version of [273,SCHEMA_VERSION+1])expect(diplomaticGiftFaction274(registry,faction.id,version).ok).toBe(false);
+ for(const version of [274,278,SCHEMA_VERSION]){const current=diplomaticGiftFaction274(registry,faction.id,version);expect(current.ok).toBe(true);if(current.ok){expect(current.faction).toBe(faction);expect(current.relation).toBe(relation);}}
  const past=structuredClone(registry);past.settlements.find(s=>s.factionId===faction.id)!.attack263={revision:1,mapId:null,generatedAtCore:0,inhabitantIds:[],cooldownUntilCore:60000};
  expect(diplomaticGiftFaction274(past,faction.id,274).ok).toBe(true);
 });

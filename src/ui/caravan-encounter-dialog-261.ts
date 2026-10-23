@@ -24,7 +24,7 @@ export class CaravanEncounterDialog261 {
  progress(message:CaravanEncounterProgressMessage261):void {if(message.groupId!==this.#row?.id)return;this.#progress=message;this.render();}
  private render():void {
   const row=this.#row,p=row?.pending261,state=this.#state;if(!row||!state)return;if(row.pendingEntry263){this.renderWorldEntry263(row);return;}if(!p)return;
-  this.dialog.replaceChildren();const title=document.createElement('h2');title.textContent=p.kind==='meeting'?'Rencontre de caravanes':p.kind==='demand'?'Demande de paiement':'Embuscade';this.dialog.append(title);
+  this.dialog.replaceChildren();const title=document.createElement('h2');title.textContent=p.kind==='meeting'?'Rencontre de caravanes':p.kind==='demand'?'Demande de paiement':p.kind==='peace-talks'?'Attaque après les pourparlers':'Embuscade';this.dialog.append(title);
   const text=document.createElement('p');text.textContent=p.decision==='open'?'La caravane et ses interlocuteurs attendent votre décision. La simulation est en pause.':'Les mêmes voyageurs et adversaires préparent leur entrée sur le champ de bataille. La simulation est en pause.';this.dialog.append(text);
   if(p.kind==='demand'){
    const list=document.createElement('ul'),g=row.state;

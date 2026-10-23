@@ -24,7 +24,7 @@ const envelopes=(resource:unknown)=>[
 test('cultivated provenance is literal true only on the thirteen real tree species in291 and never inferred from birth',()=>{
  const w=deconstructionCamp(),r=tree(w);
  for(const species of FORESTRY_SPECIES_291)expect(validSownResource291({...r,species},291)).toBe(true);
- expect(validSownResource291(r,292)).toBe(true);for(const version of [1,87,256,289,290,293,'291',NaN])expect(validSownResource291(r,version)).toBe(false);
+ expect(validSownResource291(r,292)).toBe(true);expect(validSownResource291(r,293)).toBe(true);for(const version of [1,87,256,289,290,294,'291',NaN])expect(validSownResource291(r,version)).toBe(false);
  for(const value of [false,undefined,null,1,'true'])expect(validSownResource291({...r,sown291:value},291)).toBe(false);
  for(const patch of [{kind:'rice'},{species:'grass'},{species:undefined}])expect(validSownResource291({...r,...patch},291)).toBe(false);
  const old={...r};delete old.sown291;expect(validSownResource291(old,290)).toBe(true);expect(Object.hasOwn(old,'sown291')).toBe(false);
@@ -39,12 +39,12 @@ test('cultivated state refuses inherited and accessor fields without executing g
  expect(reads).toBe(0);
 });
 
-test('prospective choices and research preserve old seven crops while293 and old marked envelopes remain closed',()=>{
+test('prospective choices and research preserve old seven crops while294 and old marked envelopes remain closed',()=>{
  expect(isGrowingPlantInVersion291('rice',290)).toBe(true);expect(isGrowingPlantInVersion291('oak',290)).toBe(false);
- expect(isGrowingPlantInVersion291('oak',291)).toBe(true);expect(isGrowingPlantInVersion291('rice',292)).toBe(true);expect(isGrowingPlantInVersion291('rice',293)).toBe(false);
+ expect(isGrowingPlantInVersion291('oak',291)).toBe(true);expect(isGrowingPlantInVersion291('rice',292)).toBe(true);expect(isGrowingPlantInVersion291('rice',293)).toBe(true);expect(isGrowingPlantInVersion291('rice',294)).toBe(false);
  const state={project:'tree-sowing',points:0,treeSowing291:{points:10}};
  expect(validForestryResearch291(state,291,10)).toBe(true);
- expect(validForestryResearch291(state,292,10)).toBe(true);for(const version of [290,293,'291'])expect(validForestryResearch291(state,version,10)).toBe(false);
+ expect(validForestryResearch291(state,292,10)).toBe(true);expect(validForestryResearch291(state,293,10)).toBe(true);for(const version of [290,294,'291'])expect(validForestryResearch291(state,version,10)).toBe(false);
  for(const p of [{points:TREE_SOWING_COST_291},{points:TREE_SOWING_COST_291,completedAt:11},{points:0,completedAt:0},{points:'1'},{points:1,future:true}])expect(validForestryResearch291({...state,treeSowing291:p},291,10)).toBe(false);
  expect(validForestryResearch291({...state,project:null,treeSowing291:{points:TREE_SOWING_COST_291,completedAt:10}},291,10)).toBe(true);
  expect(validForestryResearch291({project:'tree-sowing',points:0},291,10)).toBe(false);
@@ -130,11 +130,11 @@ test('same-object provenance changes publish a real base upsert and survive delt
  for(const receiver of [decoder,resident]){const result=receiver.adopt(structuredClone(delta));expect(result.status).toBe('applied');if(result.status==='applied')expect(result.world.resources[0]!.sown291).toBe(true);}
 });
 
-test('new supported family keeps predecessor content and numeric lower bounds while293 stays closed',async()=>{
+test('new supported family keeps predecessor content and numeric lower bounds while294 stays closed',async()=>{
  const {isSchema256Or257,isSchema288OrLater,isSchema289OrLater}=await import('../src/sim/schema-compatibility-257');
- for(const guard of [isSchema256Or257,isSchema288OrLater,isSchema289OrLater]){expect(guard(291)).toBe(true);expect(guard(292)).toBe(true);expect(guard(293)).toBe(false);expect(guard('291')).toBe(false);}
+ for(const guard of [isSchema256Or257,isSchema288OrLater,isSchema289OrLater]){expect(guard(291)).toBe(true);expect(guard(292)).toBe(true);expect(guard(293)).toBe(true);expect(guard(294)).toBe(false);expect(guard('291')).toBe(false);}
  expect(isSchema288OrLater(287)).toBe(false);expect(isSchema289OrLater(288)).toBe(false);
  const {validCoveredInFirefoamField290}=await import('../src/sim/firefoam-actor-state-290');
- for(const version of [290,291,292])expect(validCoveredInFirefoamField290({coveredInFirefoam290:{remainingCore:900}},version)).toBe(true);
- expect(validCoveredInFirefoamField290({coveredInFirefoam290:{remainingCore:900}},293)).toBe(false);
+ for(const version of [290,291,292,293])expect(validCoveredInFirefoamField290({coveredInFirefoam290:{remainingCore:900}},version)).toBe(true);
+ expect(validCoveredInFirefoamField290({coveredInFirefoam290:{remainingCore:900}},294)).toBe(false);
 });
