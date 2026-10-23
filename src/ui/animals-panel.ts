@@ -1,3 +1,4 @@
+import {isSchema287OrLater} from '../sim/schema-compatibility-257.ts';
 import {actualAnimalName256} from '../sim/starting-pet-state-256';
 import {animalSpecies} from '../sim/animal-species';
 import {MEDICAL_CARE} from '../sim/medicine-rules';
@@ -34,7 +35,7 @@ export function updateAnimalsPanel(root:HTMLElement,world:World,focus:(id:number
   const animals=world.wildlife?.animals.filter(a=>!!a.domestic&&a.state!=='dead')??[];
   root.querySelector<HTMLElement>('[data-domestic-empty]')!.hidden=animals.length>0;
   const list=root.querySelector<HTMLElement>('[data-domestic-list]')!;
-  const areaAvailable=Number(world.schemaVersion)===287,trainingAvailable=isSchema282OrLater(world.schemaVersion),ids=`${areaAvailable}:${!!animalAreas}:${trainingAvailable}:`+animals.map(a=>`${a.id}:${a.species}`).join(',');
+  const areaAvailable=isSchema287OrLater(world.schemaVersion),trainingAvailable=isSchema282OrLater(world.schemaVersion),ids=`${areaAvailable}:${!!animalAreas}:${trainingAvailable}:`+animals.map(a=>`${a.id}:${a.species}`).join(',');
   if(list.dataset.ids!==ids){
     for(const row of domesticRows.get(list)?.values()??[])row.area?.dispose();
     list.dataset.ids=ids;

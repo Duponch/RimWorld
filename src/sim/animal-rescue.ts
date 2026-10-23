@@ -92,7 +92,7 @@ export function processAnimalRescue(w:World,p:Pawn,ctx:NeedContext):void {
   if(t.phase==='approach'){
     if(!slaughterContact(w,p,a)){ctx.move(a,false);return;}
     if((a.motion?.end??0)>w.tick)return;
-    delete a.animalRest;delete a.meal;delete a.mating;delete a.exiting;delete a.strike;a.path=[];
+    delete a.animalThermalRefuge288;delete a.animalRest;delete a.meal;delete a.mating;delete a.exiting;delete a.strike;a.path=[];
     if(a.health)cancelToxicVomit256(a.health);
     t.phase='carry';p.path=[];syncCarriedAnimals(w,p);ctx.event(`${p.name} porte l’animal ${a.id} vers un couchage.`);
   }

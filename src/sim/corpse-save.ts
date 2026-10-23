@@ -1,3 +1,4 @@
+import {isSchema287OrLater} from './schema-compatibility-257.ts';
 import {validAnimalAreaField287} from './animal-area-save-287.ts';
 import {animalThermalFields466} from './animal-thermal-v466.ts';
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
@@ -24,9 +25,9 @@ export function validCorpseRot(v:unknown,tick:number,death:number,medical?:unkno
 export function validCorpseShape(p:Record<string,unknown>,version:number):boolean {
   if(p.kind!=='corpse')return p.corpse===undefined;
   const c=p.corpse;
-  const thermal=animalThermalFields466(c,version),clock=version===287&&object(c)&&object(c.health)?medicalCivilTick271(c.health as unknown as import('./injury-types.ts').MedicalRecord):Number((object(c)?c.health as {tick?:number}:undefined)?.tick);
+  const thermal=animalThermalFields466(c,version),clock=isSchema287OrLater(version)&&object(c)&&object(c.health)?medicalCivilTick271(c.health as unknown as import('./injury-types.ts').MedicalRecord):Number((object(c)?c.health as {tick?:number}:undefined)?.tick);
   return version>=79&&object(c)&&validAnimalAreaField287(c,version,Number.MAX_SAFE_INTEGER)&&validAnimalAgeCoreRemainder256(c,version,clock)&&isAnimalSpeciesInVersion(c.species,version)&&(version>=178||String(c.species)!=='red-fox')&&(version>=91||c.species==='hare')&&p.item===animalSpecies(c.species).corpseItem&&p.quantity===1&&object(p.owner)&&['ground','pawn'].includes(String(p.owner.type))
-    &&Object.keys(c).every(k=>['animalId','species','sex','health','facing',...version>=121?['ageTicks']:[],...version>=178?['consumedParts']:[],...version>=256?['growthTracker','ageCoreRemainder']:[],...version===287?['animalMapAreas287']:[]].includes(k))
+    &&Object.keys(c).every(k=>['animalId','species','sex','health','facing',...version>=121?['ageTicks']:[],...version>=178?['consumedParts']:[],...version>=256?['growthTracker','ageCoreRemainder']:[],...isSchema287OrLater(version)?['animalMapAreas287']:[]].includes(k))
     &&(version<121?c.ageTicks===undefined:int(c.ageTicks,0,Number.MAX_SAFE_INTEGER))
     &&c.animalId===p.id&&['female','male'].includes(String(c.sex))
     &&(c.facing===undefined||typeof c.facing==='number'&&Number.isFinite(c.facing)&&Math.abs(c.facing)<=Math.PI)

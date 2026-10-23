@@ -1,3 +1,4 @@
+import {releaseAnimalThermalRefuge288} from './animal-thermal-refuge-288.ts';
 import {eggAllowedForPlayer256} from './animal-egg-permission-v256.ts';
 import { allowedAreaServicesAllowed } from './allowed-area-services.ts';
 import { allowedAreaAllows } from './allowed-area-state.ts';
@@ -90,7 +91,7 @@ export function processAnimalFeeding(w:World,doctor:Pawn,ctx:NeedContext):void {
     t.phase='deliver';doctor.path=[];doctor.state='moving';return;
   }
   if(doctor.x!==t.spot.x||doctor.z!==t.spot.z){ctx.move(t.spot,true);return;}
-  t.phase='feed';doctor.state='working';doctor.path=[];
+  releaseAnimalThermalRefuge288(w,a);t.phase='feed';doctor.state='working';doctor.path=[];
   if(t.progress+1<ANIMAL_FEED_TICKS){t.progress++;return;}
   const wildlife=w.wildlife!,nutrition=ITEM_DEFINITIONS[food.item].nutrition*t.quantity/100;
   if(!Number.isSafeInteger(wildlife.eatenItems+t.quantity)||!Number.isFinite(wildlife.eatenNutrition+nutrition)

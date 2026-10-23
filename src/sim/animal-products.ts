@@ -1,3 +1,4 @@
+import {releaseAnimalThermalRefuge288} from './animal-thermal-refuge-288.ts';
 import {animalProductDefinition256} from './animal-products-v256.ts';
 import {isAnimalSpecies256} from './animal-core-v256.ts';
 import {ITEM_DEFINITIONS} from './items.ts';
@@ -86,7 +87,7 @@ export function processProduct(world:World,pawn:Pawn,task:ProductTask,ctx:NeedCo
     else {pawn.path=[];pawn.state='idle';}
     return;
   }
-  task.phase='interact';pawn.path=[];pawn.state='working';
+  releaseAnimalThermalRefuge288(world,animal);task.phase='interact';pawn.path=[];pawn.state='working';
   const def=animalProductDefinition(animal)!;
   const body=pawnBody(pawn).capacities;
   const level=pawn.skills.animals?.level??0,sight=Math.min(1,body.sight);

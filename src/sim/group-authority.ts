@@ -225,6 +225,9 @@ export function applyGroupCommand(w:World,c:GroupCommand):CommandResult {
     const p=previewFormation(w,c.memberIds,c.sources,c.destination,c.packedIds??[],c.animalIds??[]);if(p.kind!=='ready')return fail(p.kind==='deferred'?'La préparation attend une nouvelle tentative.':p.reason);
     const id=w.planet!.nextGroupId;
     w.group={...(w.worldMaps&&w.worldMaps.sites.find(s=>s.id===registeredMapId(w))?.tile!==w.planet!.homeTile?{originTile:w.worldMaps.sites.find(s=>s.id===registeredMapId(w))!.tile!}:w.expeditionSite?{originTile:w.expeditionSite.tile}:{}),id,startedAt:w.tick,destination:c.destination,ledger:emptyGroupLedger(),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?{provisions:newGroupProvisions()}:{}),...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA?{freight:newGroupFreight()}:{}),...p.bedrollLoading?{bedrollLoading:p.bedrollLoading}:{},...p.animalPreparation?{animalPreparation:p.animalPreparation}:{},...p.humanPreparation?{admission:{revision:newGroupAdmissionRevision259(w)},humanPreparation:p.humanPreparation}:{},...(w.schemaVersion>=256?{travelPreparation:true as const}:{}),phase:'gathering',memberIds:p.loading.capture.members.map(p=>p.id),rendezvous:p.rendezvous,meeting:p.meeting,manifest:p.loading.manifest,cursor:0,exits:p.exits};
+    // Formation has passed every preview. Its real position authority now
+    // supersedes only this local job; the captured edge and goods stay owned.
+    for(const a of p.loading.capture.animals??[])delete a.animalThermalRefuge288;
     w.planet!.nextGroupId++;groupLog(w,'Le groupe se rassemble avant le chargement des provisions.');return {ok:true};
   }
   if(c.type==='group-cancel'){if(!w.group||away(w.group))return fail('Aucune préparation ou décharge à annuler.');cancelGroupPreparation(w);return {ok:true};}

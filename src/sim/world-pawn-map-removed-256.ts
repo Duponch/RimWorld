@@ -1,3 +1,4 @@
+import {isSchema287OrLater} from './schema-compatibility-257.ts';
 import {prepareAnimalAreaRemoval287} from './animal-area-owners-287.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {prepareMapRemoved259} from './world-pawn-map-removed-259.ts';
@@ -60,7 +61,7 @@ function prepareLiteralCampMapRemoved256(input:CampaignState,map:World,mapId:num
  // A new row already at now receives delta0 in that ensuing real interval.
  if(at!==now&&!(automatic&&at+10===now))return no('La frontière réelle WorldPawns/Camp ne correspond pas au commit de retrait.');
  let enteredAtAbsCore:number;try{enteredAtAbsCore=actualCampRemovalAbsCore256(root,map);}catch(e){return no(e instanceof Error?e.message:String(e));}
- const animalAreas=Number(root.schemaVersion)===287?prepareAnimalAreaRemoval287(root,{mapId}):undefined;if(animalAreas&&!animalAreas.ok)return no(animalAreas.reason);
+ const animalAreas=isSchema287OrLater(root.schemaVersion)?prepareAnimalAreaRemoval287(root,{mapId}):undefined;if(animalAreas&&!animalAreas.ok)return no(animalAreas.reason);
  const originals=new Set<WildAnimal>(),ids=new Set<number>();
  const context={seed:map.seed,width:map.width,height:map.height,...map.climate?{climate:map.climate}:{},...map.site?{site:map.site}:{},...map.scenario?{scenario:map.scenario}:{}};
  // Null-faction animals cannot enter Notify_PassedToWorld's faction branch.

@@ -1,3 +1,4 @@
+import {releaseAnimalThermalRefuge288} from './animal-thermal-refuge-288.ts';
 import {isSchema282OrLater} from './schema-compatibility-257.ts';
 import {nextTrainable282,completeAnimalTraining282} from './animal-training-282.ts';
 import {ANIMAL_TRAINING_CONVERSATION_CORE_282,ANIMAL_TRAINING_FINAL_CORE_282,type AnimalTrainingSkill282} from './animal-training-state-282.ts';
@@ -114,7 +115,7 @@ export function processAnimalTraining282(w:World,p:Pawn,task:AnimalTrainingTask2
   if(task.phase==='interact'){stop();return;}
   if(!adjacent(p,a))ctx.move(a,false);else{p.path=[];p.state='idle';}return;
  }
- task.phase='interact';p.path=[];p.state='working';
+ releaseAnimalThermalRefuge288(w,a);task.phase='interact';p.path=[];p.state='working';
  const feeding=task.step===2||task.step===4;
  if(feeding&&task.progress===0&&food){
   if(task.feedUnits<animalTrainingFeedUnits282(a,food.item)){stop();return;}

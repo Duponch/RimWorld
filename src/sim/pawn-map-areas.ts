@@ -1,3 +1,4 @@
+import {isSchema287OrLater} from './schema-compatibility-257.ts';
 import {prepareAnimalAreaRemoval287,type AnimalAreaOwnerPlan287} from './animal-area-owners-287.ts';
 import type {World,Pawn} from './types.ts';
 import type {CampaignState} from './world-map-state.ts';
@@ -79,7 +80,7 @@ export function prepareRemovedMapAreas(root:CampaignState,mapId:number,areaIds:R
   const rows=p.mapAreas?.assignments,next=rows?.filter(row=>row.mapId!==mapId),clearAlias=p.allowedAreaId!==undefined&&areaIds.has(p.allowedAreaId);
   if(clearAlias||rows&&next!.length!==rows.length)updates.push({pawn:p,...rows?{next:{revision:1,assignments:next!}}:{},clearAlias,before:JSON.stringify([p.allowedAreaId,p.allowedAreaReturn,p.mapAreas])});
  }
- const animal287=includeAnimals&&Number(root.schemaVersion)===287?prepareAnimalAreaRemoval287(root,{mapId}):undefined;if(animal287&&!animal287.ok)throw Error(animal287.reason);
+ const animal287=includeAnimals&&isSchema287OrLater(root.schemaVersion)?prepareAnimalAreaRemoval287(root,{mapId}):undefined;if(animal287&&!animal287.ok)throw Error(animal287.reason);
  return {updates,...animal287?.ok?{animal287}:{}};
 }
 export function removedMapAreasCurrent(plan:RemovedMapAreaPlan):boolean {return (!plan.animal287||plan.animal287.current()||plan.animal287.admittedCurrent())&&plan.updates.every(u=>JSON.stringify([u.pawn.allowedAreaId,u.pawn.allowedAreaReturn,u.pawn.mapAreas])===u.before);}

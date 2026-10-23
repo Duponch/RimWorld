@@ -1,3 +1,4 @@
+import {isSchema287OrLater} from './schema-compatibility-257.ts';
 import {prepareAnimalAreaAssignment287,prepareAnimalAreaRemoval287,type AnimalAreaOwnerPlan287} from './animal-area-owners-287.ts';
 import {prepareAnimalAreaChange287,type AnimalAreaChange287,type AnimalAreaChangePlan287} from './animal-area-change-287.ts';
 import {currentAnimalAreaChoice287,supportsAnimalAreas287} from './animal-area-policy-287.ts';
@@ -42,7 +43,7 @@ export function prepareAnimalAreaDefinitionRemoval287(w:World,areaId:number):Ani
  return compose(w,prepareAnimalAreaChange287(w,changes),owner);
 }
 export function applyAnimalAreaAssignmentCommand287(w:World,input:unknown):CommandResult {
- if(Number(w.schemaVersion)!==287)return refusal('Les aires animales nécessitent le schéma287.');
+ if(!isSchema287OrLater(w.schemaVersion))return refusal('Les aires animales nécessitent le schéma287.');
  if(!input||typeof input!=='object'||Array.isArray(input)||Object.getPrototypeOf(input)!==Object.prototype)return refusal('Affectation animale invalide.');
  const keys=Reflect.ownKeys(input),required=['type','animalId','choice'];
  if(keys.length!==3||keys.some(key=>typeof key!=='string'||!required.includes(key))||required.some(key=>{const d=Object.getOwnPropertyDescriptor(input,key);return !d?.enumerable||!Object.hasOwn(d,'value');}))return refusal('Affectation animale invalide.');

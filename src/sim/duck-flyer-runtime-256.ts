@@ -45,7 +45,7 @@ export function beginDuckFlyExit256(w:World,a:WildAnimal,core:number,cause:'flee
  const wait=Math.floor(wildlifeRandom(s)*10);notifyDuckFlightJob256(w,a,'other',()=>wildlifeRandom(s));
  // A real forced new job stops the pather at the occupied cell. This is not an
  // ordinary mid-edge interruption or completion of the anticipated destination.
- a.x=occupied.x;a.z=occupied.z;for(const fire of w.fires?.items??[])if(fire.attachedAnimalId===a.id){fire.x=a.x;fire.z=a.z;}delete a.motion;a.path=[];delete a.meal;delete a.mating;delete a.eggLay;delete a.animalRest;delete a.flee;delete a.threat;delete a.retaliation;delete a.predation;delete a.exiting;
+ a.x=occupied.x;a.z=occupied.z;for(const fire of w.fires?.items??[])if(fire.attachedAnimalId===a.id){fire.x=a.x;fire.z=a.z;}delete a.animalThermalRefuge288;delete a.motion;a.path=[];delete a.meal;delete a.mating;delete a.eggLay;delete a.animalRest;delete a.flee;delete a.threat;delete a.retaliation;delete a.predation;delete a.exiting;
  a.state='idle';a.nextDecision=w.tick;a.exitFlight={revision:1,startedAtCore:core,readyAtCore:core+wait};return true;
 }
 /** End-of-step transfer reserves the holder ID BEFORE removing the spawned owner. */
@@ -53,7 +53,7 @@ export function commitDuckFlyExits256(w:World):void {
  const s=w.wildlife;if(w.schemaVersion<256||!s)return;const removed=new Set<number>();
  for(const a of s.animals){const job=a.exitFlight;if(!job||job.readyAtCore>w.tick*10)continue;if(a.state==='dead'||a.state==='downed'||a.domestic||animalCarrier(w,a.id)||duckFlyExitUnsupportedReason256(w,a)){delete a.exitFlight;continue;}if(!Number.isSafeInteger(w.nextId+1)||!Number.isSafeInteger((s.exitedAnimals??0)+(s.flyers?.filter(f=>f.kind==='leaving').length??0)+1))continue;
   const now=w.tick*10,flipped=wildlifeRandom(s)<.5,holder:DuckFlyer256={revision:1,id:w.nextId,kind:'leaving',cell:{x:a.x,z:a.z},startedAtCore:now,atCore:now,totalCore:220,remainingCore:220,personalTick:w.tick,animal:a,flipped};
-  w.nextId++;detachDuckTargetOrders256(w,a);if(!autoExtinguishDuckForHolder256(w,a))throw Error('Duck attached Fire owner changed during holder commit');suspendDuckContents256(w,a);if(a.wander)delete a.wander.job;delete a.exitFlight;delete a.flight;delete a.taming;delete a.animalRest;a.path=[];delete a.motion;a.state='idle';a.nextDecision=w.tick;(s.flyers??=[]).push(holder);removed.add(a.id);
+  w.nextId++;detachDuckTargetOrders256(w,a);if(!autoExtinguishDuckForHolder256(w,a))throw Error('Duck attached Fire owner changed during holder commit');suspendDuckContents256(w,a);if(a.wander)delete a.wander.job;delete a.exitFlight;delete a.flight;delete a.taming;delete a.animalThermalRefuge288;delete a.animalRest;a.path=[];delete a.motion;a.state='idle';a.nextDecision=w.tick;(s.flyers??=[]).push(holder);removed.add(a.id);
  }
  if(removed.size)s.animals=s.animals.filter(a=>!removed.has(a.id));
 }

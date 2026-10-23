@@ -1,3 +1,4 @@
+import {isSchema287OrLater} from './schema-compatibility-257.ts';
 import {registeredCampaign} from './world-map-context.ts';
 import {PRIORITY_WORK_TICKS} from './priority-work-state.ts';
 import {removalWritesMutable259,type MapRemovalWrite259} from './map-removal-writes-259.ts';
@@ -14,7 +15,7 @@ export function animalAreaHumanPhaseMutable287(world:World,affected:readonly Paw
  const root=registeredCampaign(world),version=Object.getOwnPropertyDescriptor(root,'schemaVersion');
  if(!version||!Object.hasOwn(version,'value'))return false;
  if(Number.isInteger(version.value)&&version.value>=1&&version.value<=286)return true;
- if(version.value!==287)return false;
+ if(!isSchema287OrLater(version.value))return false;
  const cache=new WeakMap<object,Fields|undefined>();
  const fields=(v:unknown):Fields|undefined=>{
   if(!object(v)||Array.isArray(v)||Object.getPrototypeOf(v)!==Object.prototype)return;
@@ -130,7 +131,7 @@ export function animalAreaHomePhaseMutable287(world:World):boolean {
  const root=registeredCampaign(world),version=Object.getOwnPropertyDescriptor(root,'schemaVersion');
  if(!version||!Object.hasOwn(version,'value'))return false;
  if(Number.isInteger(version.value)&&version.value>=1&&version.value<=286)return true;
- if(version.value!==287)return false;
+ if(!isSchema287OrLater(version.value))return false;
  const fields=(value:unknown):Fields|undefined=>{
   if(!object(value)||Array.isArray(value)||Object.getPrototypeOf(value)!==Object.prototype)return;
   const result:Fields=Object.create(null);

@@ -71,8 +71,9 @@ export function processAnimalRest(w:World,a:WildAnimal,ctx:AnimalRestContext):bo
     if(!a.path.length){clearRest(w,a);return false;}
     ctx.move();return true;
   }
-  const replaceAreaReturn=Number(w.schemaVersion)===287&&ctx.medicalRest&&!!a.animalAreaReturn287;
-  if(!wanted||a.meal||a.path.length&&!replaceAreaReturn||a.nextDecision>w.tick)return false;
+  const replaceAreaReturn=[287,288].includes(Number(w.schemaVersion))&&ctx.medicalRest&&!!a.animalAreaReturn287;
+  const replaceThermal=Number(w.schemaVersion)===288&&ctx.medicalRest&&!!a.animalThermalRefuge288;
+  if(!wanted||a.meal||a.path.length&&!replaceAreaReturn&&!replaceThermal||a.nextDecision>w.tick&&!replaceThermal)return false;
   const rank=(s:Structure)=>s.medical?0:a.domestic?.bedId===s.id?1:2;
   const bedOwners=w.schemaVersion>=256?captureActorBeds256(w):undefined;
   const spots=w.structures.filter(s=>inside(s)&&animalSpotAvailable(w,s,a,undefined,bedOwners)&&ctx.free(s)).sort((x,y)=>rank(x)-rank(y)
@@ -83,6 +84,7 @@ export function processAnimalRest(w:World,a:WildAnimal,ctx:AnimalRestContext):bo
   const path=ctx.route(spots,c=>ranks.get(c.z*w.width+c.x)??2);if(!path)return false;
   const end=path.at(-1)??a,spot=spots.find(s=>same(s,end));if(!spot)return false;
   if(replaceAreaReturn)delete a.animalAreaReturn287;
+  if(replaceThermal)delete a.animalThermalRefuge288;
   if(!spot.medical)claimLocalActorBed256(w,a,spot);
   a.animalRest={spotId:spot.id,phase:path.length?'travel':'sleep'};a.path=path;a.state=path.length?'moving':'sleeping';
   if(path.length)ctx.move();return true;

@@ -1,3 +1,5 @@
+import {releaseAnimalThermalRefuge288} from './animal-thermal-refuge-288.ts';
+import {isSchema287OrLater} from './schema-compatibility-257.ts';
 // Scaria remains a real illness even after actual ClearMind.
 
 import {tameHiveInsect256} from './cave-hive-lifecycle-256.ts';
@@ -179,7 +181,7 @@ function finish(w:World,p:Pawn,a:WildAnimal,task:AnimalHandlingTask,ctx:NeedCont
   if(skill)learnSkill(skill,task.kind==='tame'?90_000:70_000,p);
   const success=healthRandom(w)<(task.kind==='tame'?tameChance(p)*tameWildnessFactor256(a.species):trainChance(p));
   if(task.kind==='tame') {
-    if(success){if(Number(w.schemaVersion)===287){delete a.animalMapAreas287;delete a.animalAreaReturn287;}tameHiveInsect256(w,a);a.domestic={since:w.tick,care:'herbal',tameness:MAX_TAMENESS,nextDecay:w.tick+TAMENESS_DECAY,lastTraining:w.tick,...(productKind(a)?{productFullness:0}:{})};
+    if(success){if(isSchema287OrLater(w.schemaVersion)){delete a.animalThermalRefuge288;delete a.animalMapAreas287;delete a.animalAreaReturn287;}tameHiveInsect256(w,a);a.domestic={since:w.tick,care:'herbal',tameness:MAX_TAMENESS,nextDecay:w.tick+TAMENESS_DECAY,lastTraining:w.tick,...(productKind(a)?{productFullness:0}:{})};
       delete a.taming;delete a.flee;delete a.threat;delete a.retaliation;
       if(w.hunting)w.hunting.targets=w.hunting.targets.filter(id=>id!==a.id);
       for(const hunter of w.pawns)if(hunter.hunting?.animalId===a.id){cancelHunting(hunter);hunter.path=[];hunter.state='idle';hunter.planCooldown=0;}
@@ -223,7 +225,7 @@ export function processHandling(w:World,p:Pawn,ctx:HandlingContext):void {
     if(!adjacent(p,a)){ctx.move(a,false);return;}
     p.path=[];p.state='idle';return;
   }
-  task.phase='interact';p.path=[];p.state='working';
+  releaseAnimalThermalRefuge288(w,a);task.phase='interact';p.path=[];p.state='working';
   if(task.kind==='tame'&&task.step===5&&task.progress===0&&a.taming
     &&(a.taming.lastAttempt===undefined||w.tick-a.taming.lastAttempt>=TAME_COOLDOWN))a.taming.lastAttempt=w.tick;
   if(task.kind==='maintain'&&task.step===5&&task.progress===0&&a.domestic
@@ -252,7 +254,7 @@ export function advanceTameness(w:World):void {
     const d=a.domestic;if(startingPetFourNoTamenessDecay256(a.species)||!d||!(a.species==='hare'||w.schemaVersion>=256&&isAnimalSpecies256(a.species)&&!PEN_ANIMALS_256.includes(a.species))||a.state==='dead'||w.tick<d.nextDecay)continue;
     while(a.domestic&&w.tick>=a.domestic.nextDecay) {
       a.domestic.tameness--;
-      if(a.domestic.tameness<=0){if(Number(w.schemaVersion)===287){delete a.animalMapAreas287;delete a.animalAreaReturn287;}delete a.domestic;delete a.taming;break;}
+      if(a.domestic.tameness<=0){if(isSchema287OrLater(w.schemaVersion)){delete a.animalThermalRefuge288;delete a.animalMapAreas287;delete a.animalAreaReturn287;}delete a.domestic;delete a.taming;break;}
       a.domestic.nextDecay+=TAMENESS_DECAY;
     }
   }

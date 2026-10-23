@@ -1,3 +1,4 @@
+import {isSchema287OrLater} from './schema-compatibility-257.ts';
 import {registeredMapId} from './world-map-context.ts';
 import {groupAnimalPreparation} from './group-animal-formation-256.ts';
 import {animalCarrier} from './animal-rest-state.ts';
@@ -13,7 +14,7 @@ export const ANIMAL_OUTSIDE_AREA_COST_287=60000;
 export const supportsAnimalAreas287=(species:AnimalSpeciesId):boolean=>supported.has(species);
 /** Canonical preference remains visible while a real collective job masks it. */
 export function currentAnimalAreaChoice287(w:World,a:WildAnimal):AnimalAreaChoice287|null {
- const mapId=registeredMapId(w);return Number(w.schemaVersion)===287&&mapId!==undefined?readAnimalAreaChoice287(a,mapId):null;
+ const mapId=registeredMapId(w);return isSchema287OrLater(w.schemaVersion)&&mapId!==undefined?readAnimalAreaChoice287(a,mapId):null;
 }
 export interface AnimalAreaPolicy287 {
  readonly choice:AnimalAreaChoice287;
@@ -22,7 +23,7 @@ export interface AnimalAreaPolicy287 {
  readonly costs:NavigationCostLookup;
 }
 export function animalAreaEffective287(w:World,a:WildAnimal):boolean {
- return Number(w.schemaVersion)===287&&!!a.domestic&&supportsAnimalAreas287(a.species)&&!!w.wildlife?.animals.includes(a)
+ return isSchema287OrLater(w.schemaVersion)&&!!a.domestic&&supportsAnimalAreas287(a.species)&&!!w.wildlife?.animals.includes(a)
   &&a.state!=='dead'&&!a.health?.death&&a.shipCryptosleepHeldAt277===undefined&&!animalCarrier(w,a.id)
   &&!a.confusion&&!a.manhunter&&!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike&&!groupAnimalPreparation(w,a.id);
 }

@@ -53,7 +53,7 @@ export function syncGroupCarriedAnimals256(w:World,p:Pawn):void {
 export function processGroupAnimalHandler256(w:World,g:PreparingGroup,p:Pawn,ctx:NeedContext):boolean {
  const lines=g.animalPreparation?.lines.filter(l=>l.handlerId===p.id)??[];for(const line of lines){const a=w.wildlife?.animals.find(a=>a.id===line.animalId);if(!a||groupAnimalReason256(w,a,true)||line.mode==='lead'&&(a.state==='downed'||animalBody(a).capacities.moving<=0)){cancelGroupPreparation(w);return true;}
   if(!line.gathered){if(!finished(w,p)||p.moveCooldown>0)return true;if(!slaughterContact(w,p,a)){ctx.move(a,false);return true;}if(!finished(w,a))return true;
-   line.gathered=true;notifyDuckFlightJob256(w,a,'other',()=>healthRandom(w));a.path=[];delete a.animalRest;delete a.meal;if(line.mode==='carry')syncGroupCarriedAnimals256(w,p);
+   delete a.animalThermalRefuge288;line.gathered=true;notifyDuckFlightJob256(w,a,'other',()=>healthRandom(w));a.path=[];delete a.animalRest;delete a.meal;if(line.mode==='carry')syncGroupCarriedAnimals256(w,p);
   }
   if(line.mode==='carry')syncGroupCarriedAnimals256(w,p);
   else if(Math.hypot(p.x-a.x,p.z-a.z)>8){p.path=[];p.state='idle';return true;}

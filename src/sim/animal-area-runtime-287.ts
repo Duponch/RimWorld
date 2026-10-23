@@ -1,3 +1,4 @@
+import {isSchema287OrLater} from './schema-compatibility-257.ts';
 import {registeredMapId} from './world-map-context.ts';
 import {captureAnimalAreaPolicy287,type AnimalAreaPolicy287} from './animal-area-policy-287.ts';
 import {animalCarrier} from './animal-rest-state.ts';
@@ -12,7 +13,7 @@ export function animalAreaProtected287(w:World,a:WildAnimal):boolean {
  return a.state==='dead'||a.state==='downed'||!!a.health?.death||!!animalCarrier(w,a.id)
   ||animalHandlingHolding(w,a.id)||animalCareInProgress(w,a)||animalFeedingInProgress(w,a);
 }
-const busy=(a:WildAnimal)=>!!(a.meal||a.animalRest||a.haul||a.eggLay||a.mating||a.exiting||a.predation||a.hiveJob||a.flight||a.exitFlight);
+const busy=(a:WildAnimal)=>!!(a.meal||a.animalRest||a.haul||a.eggLay||a.mating||a.exiting||a.predation||a.hiveJob||a.flight||a.exitFlight||a.animalThermalRefuge288);
 const settle=(w:World,a:WildAnimal)=>{if((a.motion?.end??0)<=w.tick&&a.state==='moving')a.state='idle';a.nextDecision=w.tick;};
 /** Remove only this Goto's future route. A replacement job already owns its
  * own path, and every admitted physical edge remains untouched. */
@@ -22,10 +23,15 @@ export function releaseAnimalAreaReturn287(w:World,a:WildAnimal):void {
 }
 /** Targets are checked before their next real act, never every corridor cell. */
 export function reconcileAnimalAreaTasks287(w:World,a:WildAnimal,policy=captureAnimalAreaPolicy287(w,a)):void {
- if(Number(w.schemaVersion)!==287)return;
+ if(!isSchema287OrLater(w.schemaVersion))return;
  if(a.animalAreaReturn287&&(a.stun||a.sleepUntilCore||busy(a)||a.state==='sleeping'||a.state==='eating'||a.wander?.job))releaseAnimalAreaReturn287(w,a);
  if(!policy||animalAreaProtected287(w,a)){
   releaseAnimalAreaReturn287(w,a);return;
+ }
+ if(a.animalThermalRefuge288&&(a.animalThermalRefuge288.mapId!==registeredMapId(w)||!policy.has(a.animalThermalRefuge288.target.z*w.width+a.animalThermalRefuge288.target.x))){
+  delete a.animalThermalRefuge288;
+  const replacement=!!(a.meal||a.animalRest||a.haul&&a.haul.phase!=='holding'||a.eggLay||a.mating||a.predation||a.exiting||a.hiveJob||a.wander?.job||a.animalAreaReturn287||a.flight||a.exitFlight);
+  if(!replacement){a.path=[];settle(w,a);}
  }
  if(a.animalAreaReturn287&&(a.motion?.end??0)<=w.tick&&policy.has(a.z*w.width+a.x))releaseAnimalAreaReturn287(w,a);
  const inside=(c:{x:number;z:number})=>policy.has(c.z*w.width+c.x);
@@ -50,7 +56,7 @@ export interface AnimalAreaReturnContext287 {
 /** A deterministic, budgeted real Goto. Medical rest and urgent/held branches
  * run before this caller; ordinary needs run after it. No reader draws RNG. */
 export function processAnimalAreaReturn287(w:World,a:WildAnimal,c:AnimalAreaReturnContext287):boolean {
- if(Number(w.schemaVersion)!==287)return false;
+ if(!isSchema287OrLater(w.schemaVersion))return false;
  const policy=c.policy,mapId=registeredMapId(w);
  if(!policy||mapId===undefined||animalAreaProtected287(w,a)||a.stun||a.sleepUntilCore||busy(a)){
   releaseAnimalAreaReturn287(w,a);return false;

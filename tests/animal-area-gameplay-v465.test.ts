@@ -1,4 +1,5 @@
 import {expect,test} from 'vitest';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 import {animalHaulingCamp459} from './scenarios/animal-hauling-v459.ts';
 import {fixtureBuilding} from './scenarios/deconstruction.ts';
 import {fixturePower} from './scenarios/power.ts';
@@ -53,7 +54,7 @@ test('canonical Home survives its empty effect; fresh same-tick reads observe in
  w.home=[12*w.width+12];const old=captureAnimalAreaPolicy287(w,a)!;w.home.push(12*w.width+13);
  expect(old.has(12*w.width+13)).toBe(false);expect(captureAnimalAreaPolicy287(w,a)!.has(12*w.width+13)).toBe(true);
  Object.assign(w,{schemaVersion:286});expect(currentAnimalAreaChoice287(w,a)).toBeNull();expect(captureAnimalAreaPolicy287(w,a)).toBeUndefined();
- Object.assign(w,{schemaVersion:288});expect(captureAnimalAreaPolicy287(w,a)).toBeUndefined();
+ Object.assign(w,{schemaVersion:SCHEMA_VERSION+1});expect(captureAnimalAreaPolicy287(w,a)).toBeUndefined();
 });
 
 test('a shared navigation object reads this original current choice; disjoint islands remain connected through outside',()=>{

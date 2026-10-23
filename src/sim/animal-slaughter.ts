@@ -1,3 +1,4 @@
+import {releaseAnimalThermalRefuge288} from './animal-thermal-refuge-288.ts';
 import {planAnimalDeathExplosion256,isExplosiveAnimal256} from './animal-death-explosion-v256.ts';
 import {animalExecutionPart256} from './animal-execution-v256.ts';
 import {createAnimalMedicalRecord256} from './animal-clinical-age-v256.ts';
@@ -96,7 +97,7 @@ export function processSlaughter(world:World,pawn:Pawn,task:SlaughterTask,contex
     else {pawn.path=[];pawn.state=(pawn.motion?.end??0)>world.tick?'moving':'idle';}
     return;
   }
-  task.phase='interact';pawn.path=[];pawn.state='working';
+  releaseAnimalThermalRefuge288(world,animal);task.phase='interact';pawn.path=[];pawn.state='working';
   if(++task.progress<SLAUGHTER_WORK_TICKS)return;
   const record=animal.health?(world.schemaVersion>=256&&isExplosiveAnimal256(animal.species)?structuredClone(animal.health):animal.health):createAnimalMedicalRecord256(world,animal);
   const random={rng:world.rng},part=animalExecutionPart256(record,()=>healthRandom(random));

@@ -28,7 +28,7 @@ function stopAtOccupiedCell(p:Pawn,tick:number):void {if(p.motion&&p.motion.end>
 /** One actual DeSpawn/StopDead cleanup, shared by the real removal and its
  * per-record private preflight. No World clone or future-cell arrival. */
 export function cleanMapRemovedAnimal256(animal:WildAnimal,tick:number):void {
- delete animal.animalAreaReturn287;delete animal.haul;
+ delete animal.animalThermalRefuge288;delete animal.animalAreaReturn287;delete animal.haul;
  if(animal.health){cancelCryptosleepVomit256(animal.health);cancelToxicVomit256(animal.health);}if(animal.motion&&animal.motion.end>tick){animal.x=animal.motion.from.x;animal.z=animal.motion.from.z;}if(animal.wander)delete animal.wander.job;animal.path=[];for(const key of ['motion','meal','predation','exiting','flee','threat','retaliation','strike','stun','stagger','sleepUntilCore','mating','taming','animalRest','eggLay','burning','flight','exitFlight'] as const)delete animal[key];if(animal.domestic){delete animal.domestic.bedId;delete animal.domestic.penMarkerId;delete animal.domestic.slaughter;}if(animal.manhunter){delete animal.manhunter.targetId;delete animal.manhunter.door;}if(animal.state!=='dead'&&animal.state!=='downed')animal.state='idle';
 }
 /** Rare removal transition. Normal interruption/edge continuation is a different contract. */

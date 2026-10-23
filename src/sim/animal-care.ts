@@ -1,3 +1,4 @@
+import {releaseAnimalThermalRefuge288} from './animal-thermal-refuge-288.ts';
 import {materialAllowedForPlayer256} from './material-permission-256.ts';
 import {animalConditionCareTargets256,animalConditionTreatmentBatch256,animalConditionMedicineCount256,type ActualAnimalTreatment256} from './animal-condition-care-256.ts';
 import {tendAnimalAgeCondition256} from './animal-age-condition-runtime-256.ts';
@@ -142,7 +143,7 @@ export function processAnimalCare(w:World,doctor:Pawn,ctx:AnimalCareContext,ligh
   if(task.phase==='pickup'){pickup(w,doctor,task,ctx);return;}
   if(doctor.x!==task.spot.x||doctor.z!==task.spot.z){ctx.move(task.spot,true);return;}
   task.duration??=Math.max(1,Math.floor(600/medicalTendSpeed(doctor,light())));
-  task.phase='treat';doctor.state='working';doctor.path=[];task.progress+=10;
+  releaseAnimalThermalRefuge288(w,patient);task.phase='treat';doctor.state='working';doctor.path=[];task.progress+=10;
   if(task.progress<task.duration)return;
   const batch=animalConditionTreatmentBatch256(patient.health!,animalCareTargets(patient),!!task.medicine);
   if(!batch.length){releaseCare(w,doctor);return;}

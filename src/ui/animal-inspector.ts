@@ -1,3 +1,4 @@
+import {isSchema287OrLater} from '../sim/schema-compatibility-257.ts';
 import {actualAnimalName256} from '../sim/starting-pet-state-256';
 import { animalSpecies } from '../sim/animal-species';
 import { animalBodyModel } from '../sim/body-model';
@@ -78,6 +79,7 @@ function trainingView282(world:World,a:WildAnimal):AnimalInspectorView['training
   const trainer=world.pawns.find(p=>p.animalHandling?.kind==='train'&&p.animalHandling.animalId===a.id),task=trainer?.animalHandling;
   const next=nextTrainable282(world,a),left=a.training?.lastAttemptCore===undefined?0:Math.max(0,a.training.lastAttemptCore+ANIMAL_TRAINING_INTERVAL_CORE_282-world.tick*10);
   const status=task?`${trainer!.name} · ${task.phase==='pickup'?'rassemble les deux portions de nourriture':task.phase==='approach'?'rejoint l’animal':task.finalStartedCore!==undefined?'tentative effectuée, termine l’interaction':task.step===2||task.step===4?'nourrit l’animal':'leçon en cours'}`
+    :a.animalThermalRefuge288?`Refuge thermique : ${a.animalThermalRefuge288.phase==='travel'?'rejoint l’abri choisi':'attend éveillé dans l’abri choisi'}`
     :a.haul?`Transport : ${a.haul.phase==='pickup'?'rejoint une pile':a.haul.phase==='holding'?'conserve un objet, attend un dépôt':'porte un objet vers le stockage'}`
     :left?`Intervalle avant un nouvel essai : ${Math.ceil(left/2500)} h.`
     :next?`Prochaine leçon demandée : ${ANIMAL_TRAINING_LABELS_282[next]}. Un dresseur habilité, de la nourriture et un accès restent nécessaires.`
@@ -154,6 +156,7 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
   if (health?.malnutrition) condition.push(`Malnutrition ${MALNUTRITION_LABELS[malnutritionStage(health.malnutrition)]} : ${(health.malnutrition * 100 / MALNUTRITION_UNIT).toFixed(1)} %`);
   if (health?.heatstroke) condition.push(`Coup de chaleur ${HEAT_LABELS[heatStage(health.heatstroke)]} · ${(health.heatstroke * 100 / HEAT_UNIT).toFixed(1)} %`);
   if (health?.hypothermia) condition.push(`Hypothermie ${HEAT_LABELS[heatStage(health.hypothermia)]} · ${(health.hypothermia * 100 / HEAT_UNIT).toFixed(1)} %`);
+  if (animal.animalThermalRefuge288) condition.push(`Refuge thermique : ${animal.animalThermalRefuge288.phase==='travel'?'rejoint l’abri choisi':'attend éveillé dans l’abri choisi'}`);
   if (health?.cryptosleepSickness) condition.push(`Mal de cryptosommeil · ${(health.cryptosleepSickness.remainingCore/2500).toFixed(1)} h restantes${health.cryptosleepSickness.vomit?' · Vomit':''}`);
   if (health?.foodPoisoning) condition.push(`Intoxication alimentaire · ${poisonStage[foodPoisoningStage(health.foodPoisoning)]} · ${(health.foodPoisoning.severity * 100 / FOOD_POISON_UNIT).toFixed(1)} %${health.foodPoisoning.vomit ? ' · Vomit' : ''}`);
   if (health?.infections?.cases.length) condition.push(`Immunité ${Math.min(100, health.infections.immunity * 100 / INFECTION_UNIT).toFixed(1)} %`);
@@ -163,7 +166,7 @@ export function animalInspectorView(world: World, animalId: number): AnimalInspe
   const handling=tameReason??(qualified
     ? `Animaux ${minimum} minimum · deux nourrissages physiques par tentative.`
     : `Aucun dresseur actif de niveau Animaux ${minimum} ; la désignation attendra un colon qualifié et de la nourriture.`);
-  const areaAvailable=Number(world.schemaVersion)===287&&supportsAnimalAreas287(animal.species);
+  const areaAvailable=isSchema287OrLater(world.schemaVersion)&&supportsAnimalAreas287(animal.species);
   const penStatus=areaAvailable?undefined:animalPenStatus(world,animal);
   const choice=areaAvailable?currentAnimalAreaChoice287(world,animal):null;
   const areaLabel=choice===null?'Sans restriction':choice.kind==='home'?'Zone de foyer':world.allowedAreas?.find(a=>a.id===choice.areaId)?.label??'Zone indisponible';
@@ -331,7 +334,7 @@ export function updateAnimalInspector(root: HTMLElement, world: World, animalId:
     if(areaState.animalId!==animalId){areaState.control?.dispose();areaState.control=createAnimalAreaControls287(animalId,areaState.actions);areaState.animalId=animalId;root.querySelector('[data-animal-panel="info"]')?.append(areaState.control.element);}
     areaState.control?.update();
   }
-  const areaHelp=root.querySelector<HTMLElement>('[data-animal-area-help]');if(areaHelp)areaHelp.textContent=Number(world.schemaVersion)===287?'La zone autorisée se règle dans Info pour les animaux concernés. Les animaux d’enclos gardent leur marqueur.':'Zone de l’animal : Sans restriction. Les aires animales ne se règlent pas encore ici.';
+  const areaHelp=root.querySelector<HTMLElement>('[data-animal-area-help]');if(areaHelp)areaHelp.textContent=isSchema287OrLater(world.schemaVersion)?'La zone autorisée se règle dans Info pour les animaux concernés. Les animaux d’enclos gardent leur marqueur.':'Zone de l’animal : Sans restriction. Les aires animales ne se règlent pas encore ici.';
   const view = animalInspectorView(world, animalId);
   if (!view || !root.querySelector('.animal-inspector-tabs')) return false;
   root.dataset.animalInspectorId = String(view.id);

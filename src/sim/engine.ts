@@ -408,7 +408,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   const selection = queryArea(world, command);
   if (!selection.ok) return selection;
   if (!selection.cells.length) return refusal('missing-target', 'Aucune case compatible dans ce rectangle.');
-  if(Number(world.schemaVersion)===287&&(command.action==='home'||command.action==='remove-home'))return applyAnimalHomeArea287(world,command,selection.cells,drops);
+  if([287,288].includes(Number(world.schemaVersion))&&(command.action==='home'||command.action==='remove-home'))return applyAnimalHomeArea287(world,command,selection.cells,drops);
   if(command.action==='cancel'){
     const cells=new Set(selection.cells);
     const jobs=new Set(world.jobs.filter(j=>[...footprintCells(j),...furnitureSourceCells(world,j)].some(c=>cells.has(c.z*world.width+c.x))).map(j=>j.id));
@@ -644,8 +644,8 @@ export function applyCommand(world: World, command: Command,caravans?:import('./
 }
 type LocalCommand=Exclude<Command,SecondarySiteCommand>;
 function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
-  if(Number(world.schemaVersion)===287&&command?.type==='animal-area-assign')return applyAnimalAreaAssignmentCommand287(world,command);
-  if(Number(world.schemaVersion)===287&&(command?.type==='allowed-area-create'||command?.type==='allowed-area-settings'||command?.type==='allowed-area-paint'||command?.type==='allowed-area-delete'||command?.type==='assign-allowed-area'))return applyAnimalAwareAreaCommand287(world,command);
+  if([287,288].includes(Number(world.schemaVersion))&&command?.type==='animal-area-assign')return applyAnimalAreaAssignmentCommand287(world,command);
+  if([287,288].includes(Number(world.schemaVersion))&&(command?.type==='allowed-area-create'||command?.type==='allowed-area-settings'||command?.type==='allowed-area-paint'||command?.type==='allowed-area-delete'||command?.type==='assign-allowed-area'))return applyAnimalAwareAreaCommand287(world,command);
   if(command&&typeof command==='object'&&hiddenExplorationCommandTarget256(world,command))return refusal('missing-target','Cette cible n’est pas connue sur la carte actuelle.');
   if(command.type==='material-forbid')return applyMaterialPermission256(world,command);
   if(command.type==='egg-forbid')return applyEggPermission256(world,command);
@@ -655,7 +655,7 @@ function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
   if(command.type==='apparel-policy-update')return applyApparelPolicyUpdate(world,command);
   if(command.type==='apparel-policy-copy'||command.type==='apparel-policy-rename')return applyApparelPolicyName(world,command);
   const result=applyCommandInternal(world,command);
-  if(Number(world.schemaVersion)===287&&command.type==='area'&&(command.action==='home'||command.action==='remove-home'))return result;
+  if([287,288].includes(Number(world.schemaVersion))&&command.type==='area'&&(command.action==='home'||command.action==='remove-home'))return result;
   // These cold metadata transactions already reconcile their exact affected
   // destinations. A no-op must not advance unrelated services or clocks.
   if(command.type==='shelf-link'||command.type==='shelf-unlink'||command.type==='shelf-group-rename'

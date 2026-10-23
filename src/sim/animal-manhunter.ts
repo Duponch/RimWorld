@@ -38,7 +38,7 @@ export function startAnimalManhunter(w:World,a:WildAnimal,core=w.tick*10,permane
   if(a.health)cancelToxicVomit256(a.health);
   delete a.confusion;if(a.wander)delete a.wander.job;
   a.manhunter={...permanent261?{permanent261:true as const}:{},startedAtCore:core,rng:(w.seed^Math.imul(a.id,0x9e3779b1)^core^0x73b914f5)>>>0||1,zeroRestTicks:0};
-  delete a.meal;delete a.predation;delete a.exiting;delete a.mating;delete a.flee;delete a.threat;delete a.retaliation;delete a.taming;delete a.sleepUntilCore;
+  delete a.animalThermalRefuge288;delete a.meal;delete a.predation;delete a.exiting;delete a.mating;delete a.flee;delete a.threat;delete a.retaliation;delete a.taming;delete a.sleepUntilCore;
   a.path=[];a.state=(a.motion?.end??0)>w.tick?'moving':'idle';a.nextDecision=w.tick;return true;
 }
 export function animalManhunterTarget(w:World,a:WildAnimal){

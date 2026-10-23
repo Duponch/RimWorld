@@ -1,3 +1,4 @@
+import {isSchema287OrLater} from './schema-compatibility-257.ts';
 import {animalAreaEffective287,animalAreaPolicyFromCells287} from './animal-area-policy-287.ts';
 import {animalAreaProtected287} from './animal-area-runtime-287.ts';
 import {registeredMapId} from './world-map-context.ts';
@@ -14,7 +15,7 @@ export type AnimalAreaChangePlan287={ok:false;reason:string}|{
  current():boolean;begin():boolean;adoptAdmitted():boolean;commit():boolean;
 };
 const physical=(w:World,a:WildAnimal)=>a.motion&&a.motion.end>w.tick?a.motion.from:a;
-const ownPathJob=(a:WildAnimal)=>!!(a.meal||a.haul||a.animalRest||a.eggLay||a.mating||a.predation||a.exiting||a.hiveJob);
+const ownPathJob=(a:WildAnimal)=>!!(a.meal||a.haul&&a.haul.phase!=='holding'||a.animalRest||a.eggLay||a.mating||a.predation||a.exiting||a.hiveJob||a.animalThermalRefuge288);
 
 /** Prospective policy and cargo only. The finite placement view contains real
  * geometry/owners, never runs simulation or invents an actor/clinical World. */
@@ -42,6 +43,12 @@ function prepareWrites(w:World,changes:readonly AnimalAreaChange287[],prior:Read
   }
   if(a.animalAreaReturn287&&(!policy||animalAreaProtected287(w,a)||a.animalAreaReturn287.mapId!==mapId||!inside(a.animalAreaReturn287.target))){
    delete draft.animalAreaReturn287;if(!ownPathJob(a))interrupted=true;
+  }
+  if(a.animalThermalRefuge288&&(a.animalThermalRefuge288.mapId!==mapId||!inside(a.animalThermalRefuge288.target))){
+   delete draft.animalThermalRefuge288;
+   // A new owner may already have installed its own future route. Retire
+   // only the old refuge route; never alter its committed physical edge.
+   if(!ownPathJob(draft))interrupted=true;
   }
   if(interrupted){draft.path=[];draft.nextDecision=w.tick;if(draft.state==='moving'&&(a.motion?.end??0)<=w.tick)draft.state='idle';}
   drafts.set(a,draft);
@@ -72,7 +79,7 @@ function prepareWrites(w:World,changes:readonly AnimalAreaChange287[],prior:Read
   }
  }
  }
- for(const [a,draft]of drafts)for(const key of ['meal','animalRest','eggLay','haul','animalAreaReturn287','path','nextDecision','state','wander'] as const){
+ for(const [a,draft]of drafts)for(const key of ['meal','animalRest','eggLay','haul','animalAreaReturn287','animalThermalRefuge288','path','nextDecision','state','wander'] as const){
   const present=Object.hasOwn(draft,key);if(present!==Object.hasOwn(a,key)||!Object.is(a[key],draft[key]))put(a,key,draft[key],present);
  }
  return writes;
@@ -80,15 +87,15 @@ function prepareWrites(w:World,changes:readonly AnimalAreaChange287[],prior:Read
 /** All current/begin calls precede the FIRST composed policy/human/cargo
  * write. adoptAdmitted then applies this one preflighted phase exactly once. */
 export function prepareAnimalAreaChange287(w:World,changes:readonly AnimalAreaChange287[],priorHumanDrops:ReadonlyMap<number,Cell>=new Map()):AnimalAreaChangePlan287 {
- if(Number(w.schemaVersion)!==287||new Set(changes.map(r=>r.animal)).size!==changes.length)return {ok:false,reason:'Réconciliation des aires animales indisponible.'};
+ if(!isSchema287OrLater(w.schemaVersion)||new Set(changes.map(r=>r.animal)).size!==changes.length)return {ok:false,reason:'Réconciliation des aires animales indisponible.'};
  try{
   const inputs=changes.map(r=>({...r,choice:r.choice?{...r.choice}:null,...r.cells?{cells:[...r.cells]}:{}})),prior=new Map([...priorHumanDrops].map(([id,c])=>[id,{...c}]));
   const writes=prepareWrites(w,inputs,prior);if(!writes||!removalWritesMutable259(writes))return {ok:false,reason:'Les détenteurs concernés ne peuvent pas conserver leur chargement.'};
   for(const write of writes)Object.freeze(write);Object.freeze(writes);
-  const at=w.tick,seed=w.seed,rng=w.rng,mapId=registeredMapId(w),before={pawns:w.pawns,piles:w.piles,packed:w.packed,structures:w.structures,jobs:w.jobs,resources:w.resources,animals:w.wildlife?.animals,home:w.home,areas:w.allowedAreas};
+  const at=w.tick,seed=w.seed,rng=w.rng,version=w.schemaVersion,mapId=registeredMapId(w),before={pawns:w.pawns,piles:w.piles,packed:w.packed,structures:w.structures,jobs:w.jobs,resources:w.resources,animals:w.wildlife?.animals,home:w.home,areas:w.allowedAreas};
   const priorEntries=[...priorHumanDrops],seal=sealRemovalOriginal259(before,writes,[]),desiredSeal=sealRemovalOriginal259({inputs,requested:changes,prior:priorEntries,writes},[],[]);
   let admitted=false,used=false;
-  const current=()=>!used&&!admitted&&Number(w.schemaVersion)===287&&w.tick===at&&w.seed===seed&&w.rng===rng&&registeredMapId(w)===mapId
+  const current=()=>!used&&!admitted&&w.schemaVersion===version&&isSchema287OrLater(w.schemaVersion)&&w.tick===at&&w.seed===seed&&w.rng===rng&&registeredMapId(w)===mapId
    &&Object.entries(before).every(([key,value])=>key==='animals'?w.wildlife?.animals===value:key==='areas'?w.allowedAreas===value:Reflect.get(w,key)===value)
    &&priorHumanDrops.size===priorEntries.length&&[...priorHumanDrops].every(([id,c],i)=>id===priorEntries[i]![0]&&c===priorEntries[i]![1])
    &&removalWritesMutable259(writes)&&seal(0)&&desiredSeal(0);

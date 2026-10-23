@@ -32,6 +32,7 @@ export function animalActivity(world:World,animal:WildAnimal,quotaTargets?:Reado
   if(animal.strike)return 'Riposte';
   if(animal.threat)return 'Se défend';
   if(animal.exiting)return 'Quitte la carte faute de nourriture';
+  if(animal.animalThermalRefuge288)return animal.animalThermalRefuge288.phase==='travel'?'Refuge thermique · rejoint l’abri choisi':'Refuge thermique · attend éveillé';
   if(animal.animalRest)return animal.animalRest.phase==='travel'?'Rejoint son couchage':'Dort au couchage';
   if(animal.training){
     const trainer=world.pawns.find(p=>p.animalHandling?.kind==='train'&&p.animalHandling.animalId===animal.id),task=trainer?.animalHandling;

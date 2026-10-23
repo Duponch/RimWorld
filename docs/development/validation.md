@@ -1,4 +1,8 @@
-# Validation courante — V466 publiée
+# Validation courante — V467 qualifiée
+
+**V467 qualifiée — schéma 288 :** [Refuge thermique animal autonome](../gameplay/animal-refuge-v467.md).153cas distincts acquis par reprises (44nouveaux et109voisins), typage final20,137s. Sept anciens oracles de futur reproduits sur V466 ; témoin28passes plus1ENOENT public, aucune suite29verte affirmée. Huit checkpoints moteur et continuation indépendante20pas exacts ; dix checkpoints natifs01/02 rejoués sur sources finales après le correctif de fuite rouge puis vert. Trois recharges propres60images acquises par reprises ; deux échecs de pilote conservés.
+
+La fin native03 reprend son propre Wait27134 : vraie porte224, unique commande de relâchement, porte physiquement fermée et récupération27765 ; quatre exports entiers exacts,150,050s externes/142,649s internes, zéro erreur applicative et seul avertissement Chrome powerPreference. Aucune nouvelle recharge attribuée à cette fin de parcours. Présentation158,692s et mesure ciblée59,105s acquises ; chemins exacts moins coûteux que l’oracle, aucun gain FPS global. Publication encore à faire, public V466 ; autres domaines, six ensembles et cible FPS ouverts. Préparations, sources et limites restent dans la note canonique.
 
 **V466 publiée — schéma287 inchangé :** [Thermie animale locale](../gameplay/animal-thermal-v466.md).178cas distincts acquis par reprises (114nouveaux et64voisins), deux anciens rouges reproduits avec les mêmes diagnostics sur V465 ; typage de livraison acquis en14,072s. Parcours natif final muet129,260s : neuf exports, refroidisseur payé, trois recharges propres sur60images et rejeu moteur entier exact. Zéro erreur applicative ou notification de mise en page ; quatre avertissements d’adaptateur Windows conservés.
 

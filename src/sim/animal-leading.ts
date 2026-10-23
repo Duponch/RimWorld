@@ -136,7 +136,7 @@ export function processLeading(world:World,pawn:Pawn,task:LeadingTask,ctx:NeedCo
   if(task.phase==='approach'){
     if(animal.motion&&animal.motion.end>world.tick)return;
     if(!adjacent(pawn,animal)&&(pawn.x!==animal.x||pawn.z!==animal.z)){ctx.move(animal,false);return;}
-    animal.path=[];delete animal.meal;animal.nextDecision=world.tick;
+    delete animal.animalThermalRefuge288;animal.path=[];delete animal.meal;animal.nextDecision=world.tick;
     if(!animal.motion||animal.motion.end<=world.tick)animal.state='idle';
     task.ropees=[animal.id];
     task.gatherId=nextGather(world,pawn,task,ctx);
@@ -151,7 +151,7 @@ export function processLeading(world:World,pawn:Pawn,task:LeadingTask,ctx:NeedCo
     if(!followRopees(world,pawn,task,null))return;
     if(target.motion&&target.motion.end>world.tick)return;
     if(!adjacent(pawn,target)&&(pawn.x!==target.x||pawn.z!==target.z)){ctx.move(target,false);return;}
-    target.path=[];delete target.meal;target.nextDecision=world.tick;
+    delete target.animalThermalRefuge288;target.path=[];delete target.meal;target.nextDecision=world.tick;
     if(!target.motion||target.motion.end<=world.tick)target.state='idle';
     target.domestic!.penMarkerId=task.markerId;
     task.ropees=[...leadRopees(task),target.id];delete task.gatherId;

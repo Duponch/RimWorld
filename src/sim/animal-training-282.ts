@@ -1,3 +1,4 @@
+import {isSchema287OrLater} from './schema-compatibility-257.ts';
 import {animalCore256,isAnimalSpecies256} from './animal-core-v256.ts';
 import {PEN_ANIMALS_256} from './animal-domestic-v256.ts';
 import {animalBodySize} from './animal-life.ts';
@@ -135,7 +136,7 @@ export function advanceAnimalTraining282(w:World,a:WildAnimal):AnimalTrainingAdv
   const exempt=isAnimalSpecies256(a.species)?animalCore256(a.species).stats.Wildness<=f(.101)||PEN_ANIMALS_256.includes(a.species):false;
   if(exempt)return unchanged();
   a.domestic.tameness--;
-  if(a.domestic.tameness<=0){if(Number(w.schemaVersion)===287){delete a.animalMapAreas287;delete a.animalAreaReturn287;}delete a.domestic;delete a.taming;return {becameWild:true,decayed:leaf};}
+  if(a.domestic.tameness<=0){if(isSchema287OrLater(w.schemaVersion)){delete a.animalThermalRefuge288;delete a.animalMapAreas287;delete a.animalAreaReturn287;}delete a.domestic;delete a.taming;return {becameWild:true,decayed:leaf};}
  } else {
   const previous=readAnimalTraining282(a,leaf),steps=previous.steps-1;
   state[leaf]={steps,learned:steps>0&&previous.learned,wanted:previous.wanted};

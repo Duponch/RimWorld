@@ -39,6 +39,7 @@ export function reconcileAnimalHealth(w:World,a:WildAnimal):void {
   const status=medicalStatus(a.health);if(status==='dead'){commitToxicDeath256(a.health,()=>healthRandom(w));commitScariaDeath261(a.health,w.gameProfile?.difficulty==='adventure-story'?.333:undefined,()=>healthRandom(w));if(a.health.scaria261)a.corpseRot=scariaCorpseRot261(a.health,a.corpseRot??{progress:0,atTick:w.tick});}
   if(w.schemaVersion>=256&&status==='dead'){if(a.state!=='dead'){detachHiveInsect256(w,a);const wasSpawned=!animalCarrier(w,a.id);dropAnimalContentsOnDeath256(w,a,wasSpawned);cancelAnimalLocalGroupIntents256(w,a.id);}delete a.mapBed;if(a.domestic)delete a.domestic.bedId;}
   if(status!=='mobile') {
+    delete a.animalThermalRefuge288;
     delete a.animalAreaReturn287;
     // A real downing also releases the implicit Hive job reservation now;
     // Lord membership and the captured physical edge keep their own owners.
@@ -69,6 +70,7 @@ export function advanceAnimalHealth(w:World,a:WildAnimal,thermal?:AnimalThermalO
 }
 export function scareAnimal(w:World,a:WildAnimal,danger:Cell,core:number):void {
   if(a.state==='dead'||a.state==='downed'||a.manhunter||a.exitFlight||activeHiveInsect256(a))return;
+  delete a.animalThermalRefuge288;
   if(a.health)cancelToxicVomit256(a.health);
   cancelAnimalPredation(w,a);
   a.sleepUntilCore=Math.max(a.sleepUntilCore??0,core+1000);

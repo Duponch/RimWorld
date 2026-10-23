@@ -1,4 +1,5 @@
 import {expect,test} from 'vitest';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {writeTestFileSync} from './test-output.ts';
@@ -73,14 +74,14 @@ function exact(w:World){
 test('the current local dossier crosses whole RAW, Snapshot and Resident without changing a thermal value or owner',()=>{
  const {world:w,animal:a}=animalHaulingCamp459();const h=conditions(w,a),before=structuredClone(w),rng=w.rng;
  const {raw}=exact(w);expect(w).toEqual(before);expect(a.health).toBe(h);expect(w.rng).toBe(rng);
- const future=JSON.parse(raw);future.schemaVersion=288;expect(()=>deserializeWorld(JSON.stringify(future))).toThrow();
+ const future=JSON.parse(raw);future.schemaVersion=SCHEMA_VERSION+1;expect(()=>deserializeWorld(JSON.stringify(future))).toThrow();
 });
 
 test('thermal sickness and toxicity use the same real local medical record instead of failing their independent guards',()=>{
  const {world:w,animal:a}=animalHaulingCamp459(),h=conditions(w,a);
  addCryptosleepSickness256(h,{integer:()=>10000,integerValue:()=>17},w.schemaVersion);h.toxicBuildup={severity:Math.fround(.01),bornAt:h.tick};
  expect(validCryptosleepSicknessTransport256(a,287,w.tick,w)).toBe(true);expect(validToxicBuildupTransport256(a,287,w.tick,w)).toBe(true);
- for(const version of [286,288]){expect(validCryptosleepSicknessTransport256(a,version,w.tick,w)).toBe(false);expect(validToxicBuildupTransport256(a,version,w.tick,w)).toBe(false);}
+ for(const version of [286,SCHEMA_VERSION+1]){expect(validCryptosleepSicknessTransport256(a,version,w.tick,w)).toBe(false);expect(validToxicBuildupTransport256(a,version,w.tick,w)).toBe(false);}
  exact(w);expect(a.health).toBe(h);
 });
 
@@ -109,7 +110,7 @@ test('an actual insect admits Heat only in local and shared group guards, keepin
  expect(animalThermalFields466(a,287)).toEqual({heat:true,cold:false});expect(validateWorld(w)).toEqual([]);
  const context={context:w,tick:w.tick,nextId:w.nextId,version:287};expect(validCaravanAnimalRecord256(a,context)).toBe(true);
  a.health.hypothermia=10_000_000;expect(validateWorld(w).length).toBeGreaterThan(0);expect(validCaravanAnimalRecord256(a,context)).toBe(false);
- expect(validCaravanAnimalRecord256(a,{...context,version:286})).toBe(true);expect(validCaravanAnimalRecord256(a,{...context,version:288})).toBe(false);
+ expect(validCaravanAnimalRecord256(a,{...context,version:286})).toBe(true);expect(validCaravanAnimalRecord256(a,{...context,version:SCHEMA_VERSION+1})).toBe(false);
 });
 
 test('the isolated retained-casket animal guard rejects a false insect Hypothermia without a whole-campaign transfer claim',()=>{
@@ -133,7 +134,7 @@ test('a real thermal death keeps the same medical record and same-ID body throug
  const {world:w,animal:a}=animalHaulingCamp459(),h=conditions(w,a);h.heatstroke=HEAT_UNIT;reconcileMedicalDeath(h);reconcileAnimalHealth(w,a);
  expect(a.state).toBe('dead');exact(w);advanceCorpses(w);const body=w.piles.find(p=>p.id===a.id)!;
  expect(body.corpse!.health).toBe(h);expect(validCorpseShape(body as unknown as Record<string,unknown>,287)).toBe(true);
- for(const version of [286,288])expect(validCorpseShape(body as unknown as Record<string,unknown>,version)).toBe(false);
+ for(const version of [286,SCHEMA_VERSION+1])expect(validCorpseShape(body as unknown as Record<string,unknown>,version)).toBe(false);
  exact(w);
 });
 
@@ -143,7 +144,7 @@ test('real classic retirement retains the same thermal patient, dossier and fini
  preparedMap(w);command(w,{type:'map-abandon',mapId:0,confirm:true});
  const archive=w.worldGroups!.abandonedContents.find(row=>row.mapId===0)!,row=archive.animals.find(row=>row.animal.id===a.id)!;
  expect(row.animal).toBe(a);expect(a.health).toBe(h);expect(row.items![0]).toBe(item);expect([h.heatstroke,h.hypothermia]).toEqual([10_000_000,10_000_000]);
- expect(validLostArchiveShape(archive,w.tick,w.nextId,287,w)).toBe(true);for(const version of [286,288])expect(validLostArchiveShape(archive,w.tick,w.nextId,version,w)).toBe(false);
+ expect(validLostArchiveShape(archive,w.tick,w.nextId,287,w)).toBe(true);for(const version of [286,SCHEMA_VERSION+1])expect(validLostArchiveShape(archive,w.tick,w.nextId,version,w)).toBe(false);
  exact(w);
 });
 
@@ -157,7 +158,7 @@ function leavingDuck(){
 
 test('an actual leaving Duck holds its thermal original frozen through RAW, Snapshot and Resident',()=>{
  const {w,map,a,h,holder}=leavingDuck();expect(map.wildlife!.animals).not.toContain(a);expect(holder.animal.health).toBe(h);
- expect(validateDuckFlyers256(map,287)).toEqual([]);for(const version of [286,288])expect(validateDuckFlyers256(map,version).length).toBeGreaterThan(0);
+ expect(validateDuckFlyers256(map,287)).toEqual([]);for(const version of [286,SCHEMA_VERSION+1])expect(validateDuckFlyers256(map,version).length).toBeGreaterThan(0);
  const frozen=structuredClone(a),personal=holder.personalTick,{raw}=exact(w);stepWorld(w);expect(a).toEqual(frozen);expect(holder.personalTick).toBe(personal);exact(w);
  const copy=deserializeCampaign(raw);if(!('pawns'in copy))throw Error('The declared loaded world must remain local');stepWorld(copy);expect(serializeCampaign(copy)).toBe(serializeCampaign(w));
 });
@@ -214,5 +215,5 @@ test('the same thermal animal resumes from its real casket and enters a classic 
  // Removing clinical state on this independent negative candidate isolates
  // the newly admitted physical filth field from the thermal/civil guards.
  expect(validLostArchiveShape(withoutThermalOrOffset,w.tick,w.nextId,287,w)).toBe(true);
- for(const version of [286,288])expect(validLostArchiveShape(withoutThermalOrOffset,w.tick,w.nextId,version,w)).toBe(false);
+ for(const version of [286,SCHEMA_VERSION+1])expect(validLostArchiveShape(withoutThermalOrOffset,w.tick,w.nextId,version,w)).toBe(false);
 },30_000);

@@ -1,3 +1,4 @@
+import {isSchema287OrLater} from './schema-compatibility-257.ts';
 import {isSchema286OrLater} from './schema-compatibility-257.ts';
 import {captureDuckMapRemovedOwners256} from './duck-owner-capture-256.ts';
 import {prepareLinkedStorageRemoval286} from './linked-storage-plan-286.ts';
@@ -92,7 +93,7 @@ export function composeArchiveLinkedStorageMapRemoval286(input:CampaignState,map
  const root=registeredCampaign(input),no=(reason:string):CampMapRemoved256=>({ok:false,reason});
  if(!base.ok||!isSchema286OrLater(root.schemaVersion))return base;
  try{
- const preAreas=Number(root.schemaVersion)===287?prepareRemovedMapAreas(root,mapId,new Set((map.allowedAreas??[]).map(a=>a.id))):undefined;
+ const preAreas=isSchema287OrLater(root.schemaVersion)?prepareRemovedMapAreas(root,mapId,new Set((map.allowedAreas??[]).map(a=>a.id))):undefined;
  if(!map.structures.some(s=>!!s.shelf?.linked286)&&!map.packed.some(p=>!!p.building.shelf?.linked286)&&(!preAreas?.animal287||preAreas.animal287.noop))return base;
   if(!root.worldMaps?.sites.some(s=>s.id===mapId)||registeredCampaign(map)!==root||registeredMapId(map)!==mapId||registeredMap(root,mapId)!==map)return no('Le retrait classique exige sa vraie carte enregistrée.');
   // Those cross-owner drivers require the geographic removal phase; a permit

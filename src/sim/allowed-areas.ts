@@ -1,3 +1,4 @@
+import {isSchema287OrLater} from './schema-compatibility-257.ts';
 import {planCurrentMapArea,rememberCurrentMapArea,forgetMapArea} from './pawn-map-areas.ts';
 import { captureHumanOwners } from './human-owners.ts';
 import { validAllowedAreaCell,validAllowedAreaLabel } from './allowed-area-save.ts';
@@ -65,7 +66,7 @@ export function applyAllowedAreaCommand(world:World,input:unknown,hooks:AllowedA
       const n=z*world.width+x;if(command.enabled)cells.add(n);else cells.delete(n);
     }
     const replacement={...area,cells:[...cells].sort((a,b)=>a-b)},nextAreas=areas.map(a=>a===area?replacement:a);
-    if(Number(world.schemaVersion)===287&&replacement.cells.length===area.cells.length&&replacement.cells.every((n,i)=>n===area.cells[i]))return {ok:true,affected:0};
+    if(isSchema287OrLater(world.schemaVersion)&&replacement.cells.length===area.cells.length&&replacement.cells.every((n,i)=>n===area.cells[i]))return {ok:true,affected:0};
     const affected=world.pawns.filter(p=>p.allowedAreaId===area.id),next={...world,allowedAreas:nextAreas,pawns:world.pawns.map(p=>affected.includes(p)?withoutReturn(p):p)};
     const plan=hooks.preflight?.(next,affected);if(plan===false)return refusal('Pas de place pour conserver le chargement interrompu.','occupied');
     world.allowedAreas=nextAreas;for(const p of affected)clearReturn(p);hooks.reconcile?.(world,affected,plan);return {ok:true,affected:replacement.cells.length};

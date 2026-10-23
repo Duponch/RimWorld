@@ -14,7 +14,7 @@ export function interruptAnimalConditionJob256(a:ActualAnimalMind256,ownerTick:n
  if(a.health)cancelToxicVomit256(a.health);
  stopAnimalWanderJob256(a);
  if(keepLaying&&a.state==='sleeping')return;
- a.path=[];delete a.meal;delete a.predation;delete a.exiting;delete a.mating;delete a.eggLay;delete a.animalRest;
+ delete a.animalThermalRefuge288;a.path=[];delete a.meal;delete a.predation;delete a.exiting;delete a.mating;delete a.eggLay;delete a.animalRest;
  if(a.state!=='dead'&&a.state!=='downed')a.state=a.motion&&a.motion.end>ownerTick?'moving':'idle';
 }
 /** Real spawned owner admission. A carried/skyfaller Pawn is not spawned;

@@ -68,7 +68,7 @@ export function reconcileAnimalHauls282(w:World):void {
  }
 }
 export function animalHaulAvailable282(w:World,a:WildAnimal,night=false):boolean {
- if(!canAnimalHaul282(w,a)||a.state==='dead'||a.state==='downed'||a.state==='sleeping'||a.meal||a.animalRest||a.eggLay||a.mating
+ if(!canAnimalHaul282(w,a)||a.state==='dead'||a.state==='downed'||a.state==='sleeping'||a.meal||a.animalRest||a.animalThermalRefuge288||a.eggLay||a.mating
   ||a.manhunter||a.confusion||a.stun||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.predation||a.exiting
   ||animalClaimed(w,a.id)||groupAnimalPreparation(w,a.id))return false;
  const c=animalBody(a).capacities;

@@ -1,3 +1,4 @@
+import {isSchema287OrLater} from '../sim/schema-compatibility-257.ts';
 import {supportsAnimalAreas287,currentAnimalAreaChoice287} from '../sim/animal-area-policy-287';
 import {sameAnimalAreaChoice287,type AnimalAreaChoice287,type AnimalAreaCommand287} from '../sim/animal-area-state-287';
 import {actualAnimalName256} from '../sim/starting-pet-state-256';
@@ -31,7 +32,7 @@ export function createAnimalAreaControls287(animalId:number,actions:AnimalAreaAc
  function view(){
   if(element.isConnected)wasConnected=true;
   if(disposed||wasConnected&&!element.isConnected)return;
-  const context=actions.current(animalId);if(!context||Number(context.world.schemaVersion)!==287||!Number.isSafeInteger(context.mapId)||context.mapId<0||!Number.isSafeInteger(context.epoch)||context.epoch<0)return;
+  const context=actions.current(animalId);if(!context||!isSchema287OrLater(context.world.schemaVersion)||!Number.isSafeInteger(context.mapId)||context.mapId<0||!Number.isSafeInteger(context.epoch)||context.epoch<0)return;
   if(registeredMapId(context.world)!==context.mapId)return;
   const projected=context.world.campaignMap;if(projected?.revision===2&&projected.activeMapId!==context.mapId)return;
   const animal=context.world.wildlife?.animals.find(a=>a.id===animalId);

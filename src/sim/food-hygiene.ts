@@ -84,9 +84,9 @@ export function processAnimalVomiting(w:World,a:WildAnimal):boolean {
   const context:FoodPoisonVomitContext={
     awake:!['sleeping','downed'].includes(a.state)&&!a.stun,position:a,foodLevel:a.food,foodMax:a.growthTracker?animalNutritionMax(a):animalSpecies(a.species).nutrition,
     random:()=>healthRandom(w),canStand:c=>canStandAt(w,c),deposit:c=>addFilth(w,c,'vomit'),
-    start:()=>{if(a.motion&&a.motion.end>w.tick||a.strike&&a.strike.untilCore>w.tick*10)return false;a.path=[];delete a.meal;delete a.strike;delete a.retaliation;a.state='idle';return true;},
+    start:()=>{if(a.motion&&a.motion.end>w.tick||a.strike&&a.strike.untilCore>w.tick*10)return false;delete a.animalThermalRefuge288;a.path=[];delete a.meal;delete a.strike;delete a.retaliation;a.state='idle';return true;},
   };
-  const toxicContext:FoodPoisonVomitContext={...context,awake:!animalCarrier(w,a.id)&&a.state!=='sleeping'&&!a.stun&&!!a.health&&assessMedical(a.health).canBeAwake,start:()=>{if(a.motion&&a.motion.end>w.tick||a.strike&&a.strike.untilCore>w.tick*10)return false;const down=a.state==='downed';a.path=[];delete a.meal;delete a.strike;delete a.retaliation;a.state=down?'downed':'idle';return true;}};
+  const toxicContext:FoodPoisonVomitContext={...context,awake:!animalCarrier(w,a.id)&&a.state!=='sleeping'&&!a.stun&&!!a.health&&assessMedical(a.health).canBeAwake,start:()=>{if(a.motion&&a.motion.end>w.tick||a.strike&&a.strike.untilCore>w.tick*10)return false;const down=a.state==='downed';delete a.animalThermalRefuge288;a.path=[];delete a.meal;delete a.strike;delete a.retaliation;a.state=down?'downed':'idle';return true;}};
   if(toxic&&!toxicContext.awake&&a.health)cancelToxicVomit256(a.health);
   let result=(toxic?.vomit||toxic?.vomitRequestedAt!==undefined)&&a.health?processToxicVomit256(a.health,w.tick,a.id,toxicContext,toxicVomitEngagement256(a,w.tick)):crypto?.vomit?processVomit(crypto,w.tick,a.id%60,context,cryptosleepVomitChance256(crypto)):state?processFoodPoisoningVomit(state,w.tick,a.id%60,context):undefined;
   if(!result?.active&&crypto&&!animalCarrier(w,a.id))result=processVomit(crypto,w.tick,a.id%60,context,cryptosleepVomitChance256(crypto));
