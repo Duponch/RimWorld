@@ -1,6 +1,6 @@
 # V467 — Référence du refuge thermique animal autonome
 
-Recherche du23octobre2026 après la publication de V466. **V467 qualifiée — schéma 288 ; cette note documente la référence et les adaptations.** La qualification ciblée, les parcours natifs et leurs reprises sont consignés dans la [note de gameplay](../gameplay/animal-refuge-v467.md) pilotée par ROOT ; publication encore à faire, public V466. Le [contrat primaire privé](../../tmp/animal-refuge-v467/primary-contract.md) et la [décision bornée](../../tmp/animal-refuge-v467/decision.md) conservent les preuves détaillées.
+Recherche du23octobre2026 après la publication de V466. **V467 publiée — schéma 288 ; cette note documente la référence et les adaptations.** La qualification ciblée, les parcours natifs et leurs reprises sont consignés dans la [note de gameplay](../gameplay/animal-refuge-v467.md) pilotée par ROOT. Produit fa673e74, [jouer](https://elsewhere-cq7.pages.dev/)/[déploiement e536a9c0](https://e536a9c0.elsewhere-cq7.pages.dev/),[20réponses HTTPS ciblées exactes](../../tmp/elsewhere-pages/v467-http-Oeyfbx/report.json) ; sauvegardes publiques inchangées. Le [contrat primaire privé](../../tmp/animal-refuge-v467/primary-contract.md) et la [décision bornée](../../tmp/animal-refuge-v467/decision.md) conservent les preuves détaillées.
 
 ## Provenance et portée
 
