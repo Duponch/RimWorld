@@ -1,6 +1,6 @@
 # V466 — Exposition et récupération thermiques animales locales
 
-**Qualification ciblée acquise, schéma287 inchangé.** Ce lot suit la [réévaluation transversale après V465](../development/audit-core-20261022.md#réévaluation-après-v465). Les animaux dont le profil natif est réellement représenté peuvent acquérir et résorber les troubles thermiques ordinaires selon l’air de leur case. Le refuge autonome reste un travail distinct. Les autres bases Core et interactions, six ensembles, campagnes durables, victoire et cible FPS restent ouverts.
+**Publiée le23octobre2026, schéma287 inchangé.** Ce lot suit la [réévaluation transversale après V465](../development/audit-core-20261022.md#réévaluation-après-v465). Les animaux dont le profil natif est réellement représenté peuvent acquérir et résorber les troubles thermiques ordinaires selon l’air de leur case. Le refuge autonome reste un travail distinct. Les autres bases Core et interactions, six ensembles, campagnes durables, victoire et cible FPS restent ouverts.
 
 ## Référence et comportement
 
@@ -59,4 +59,10 @@ L’index borne le parcours des régions à une construction par passe/replaceme
 
 HypothermicSlowdown des insectes, gelures anatomiques, brûlures d’air extrême, terrain spécial chauffant et refuge thermique autonome restent distincts et différés. Les kernels entiers sont une adaptation numérique déjà présente, sans égalité float Unity revendiquée. La branche hors carte259 préexistante conserve son ordre chaleur puis froid, divergence nommée de la primaire actuelle ; ce raccord local ne déclare pas sa correction globale. Aucun nouveau voyage géographique, campagne annuelle, gain FPS global ou clôture Core n’est déduit des contrôles ciblés.
 
-Publication et réévaluation de tous les domaines après qualification restent à effectuer. Sauvegardes publiques, historiques et références humaines sont préservés.
+## Publication et suite
+
+Produit `a082e873d6fbbeaf05b6324a8692f5cf51401349`, poussé sur origin/main ; build Pages propre acquis en5,360s, sans câblage QA. Le contrôle du [paquet](../../tmp/elsewhere-pages/v466-package-bQ76Oc/report.json) est acquis en2,054s :552fichiers,71chemins de sauvegardes publiques exacts, actifs statiques et CSS inchangés face au paquet V465. Les1961fichiers de sources qualifiés ont leurs mêmes empreintes avant livraison. Le build garde ses avertissements de taille des chunks et de temps de plugins, sans gain de chargement affirmé.
+
+Déploiement [5b9f16a7](https://5b9f16a7.elsewhere-cq7.pages.dev/) acquis en19,082s ; [contrôle HTTPS](../../tmp/elsewhere-pages/v466-http-SG4Bq0/report.json) acquis en5,125s,20réponses exactes en octets et MIME sur adresse stable et immuable. [Jouer](https://elsewhere-cq7.pages.dev/). L’avertissement Wrangler de répertoire non propre correspond à la référence humaine non suivie `references_UI/`, préservée et exclue du commit comme du paquet ; aucun changement produit suivi ne restait hors commit.
+
+La [réévaluation après V466](../development/audit-core-20261022.md#réévaluation-après-v466) reprend tous les domaines Core et interactions ; prochaine préparation retenue : refuge thermique animal autonome borné, avec feu, factures et autres bases toujours comparés. Sauvegardes publiques, historiques et références humaines sont préservés. Aucune clôture des six ensembles, campagne durable, victoire ou cible FPS.
