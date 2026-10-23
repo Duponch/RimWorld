@@ -1,6 +1,6 @@
 # V465 — aires animales
 
-23octobre2026. **Implémentation qualifiée par reprises, schéma287 ; livraison en préparation.** La version publique reste V464/schéma286 jusqu’à la vérification de publication.
+23octobre2026. **Publiée, schéma287.** [Jouer sur Cloudflare](https://elsewhere-cq7.pages.dev/).
 
 Après la [réévaluation de tous les domaines Core](../development/audit-core-20261022.md#réévaluation-après-v464), ce lot vise un contrôle quotidien des animaux déjà présents, principalement ensemble3. La [référence primaire actuelle et les décisions avant code](../research/animal-areas-v465-reference.md) distinguent espèces à aire et animaux d’enclos, destination et trajet, choix de carte et tâche locale.
 
@@ -36,7 +36,7 @@ Onze exports complets, trois recharges depuis leurs propres états avec60images 
 
 Le refuge thermique autonome général reste absent. Les branches d’urgence, le contrôle de tous les animaux sauvages, l’inventaire de corps et les notifications humaines croisées sans préflight propre ne sont pas déclarés complétés. L’admission Home contrôle conservativement les destinataires possibles des réconciliateurs d’entretien ; elle peut refuser une modification exigeant une notification non composable. L’interface indique une attente jusqu’à ACK et publication confirmée, sans changer la simulation pour une simple inspection.
 
-Le typage, la présentation et la mesure CPU sont acquis dans les périmètres précisés ci-dessous ; build et vérification HTTPS restent à consigner. Les sauvegardes, historiques et références humaines sont préservés. Aucun gain FPS global, campagne durable, victoire ou clôture d’ensemble n’est annoncé.
+Le typage, la présentation et la mesure CPU sont acquis dans les périmètres précisés ci-dessous ; build et vérification HTTPS sont acquis ci-dessous. Les sauvegardes, historiques et références humaines sont préservés. Aucun gain FPS global, campagne durable, victoire ou clôture d’ensemble n’est annoncé.
 
 ## Révision optimisée et qualification de livraison
 
@@ -51,4 +51,10 @@ La [mesure CPU finale](../../tmp/animal-areas-v465/cost-probe/2026-10-23T02-09-1
 | Forges,80humains/241animaux/7512ouvrages,aucunchoix | 3.489 → 3.024 | 3.557 | 0.0231 |
 | Même Cour native,1humain/1animal/1choix | 0.015 → 0.013 | 0.023 | 0.0024 |
 
-Les échantillons, percentiles et maxima restent dans les rapports. Cette comparaison porte seulement sur ce garde direct ; aucun gain FPS, vitesse physique, GPU ou campagne durable n’est déduit. La présentation générale avant cette seule optimisation de lecture est acquise en154,265s : mine/chop45s aux vitesses6/1/3, zéro saut confirmé ou brut, occupation solide, famine de présentation, erreur ou requête échouée. Le [rapport complet](../../tmp/test-runs/v465-presentation-general-20261023T0152/artifacts/harvest-sync-verification.json) conserve aussi les écarts de tick initiaux ; ceux-ci ne sont pas déclarés absents. Le typage de livraison est acquis en12,991s. Build et vérification de publication restent à consigner.
+Les échantillons, percentiles et maxima restent dans les rapports. Cette comparaison porte seulement sur ce garde direct ; aucun gain FPS, vitesse physique, GPU ou campagne durable n’est déduit. La présentation générale avant cette seule optimisation de lecture est acquise en154,265s : mine/chop45s aux vitesses6/1/3, zéro saut confirmé ou brut, occupation solide, famine de présentation, erreur ou requête échouée. Le [rapport complet](../../tmp/test-runs/v465-presentation-general-20261023T0152/artifacts/harvest-sync-verification.json) conserve aussi les écarts de tick initiaux ; ceux-ci ne sont pas déclarés absents. Le typage de livraison est acquis en12,991s. Documentation qualifiée acquise en2,051s, build Pages en5,144s ; livraison vérifiée ci-dessous.
+
+## Publication et suite
+
+Produit`ee0321b382697db76924eae43c116e59f91f2531`, déploiement`65269ca2`. Le [paquet contrôlé](../../tmp/elsewhere-pages/v465-package-JPGaeN/report.json) contient552fichiers, conserve exactement les71chemins publics de sauvegarde et tous les actifs statiques de V464, stylesheet inclus ; aucune source ou instrumentation privée n’y entre. Les [20réponses HTTPS ciblées](../../tmp/elsewhere-pages/v465-http-Jh4wwT/report.json) ont les octets et types MIME du paquet sélectionné, dix sur le site stable et dix sur le déploiement. Ce contrôle de disponibilité ne remplace pas les parcours de jeu acquis séparément.
+
+La [réévaluation après livraison](../development/audit-core-20261022.md#réévaluation-après-v465) couvre tous les domaines Core et leurs interactions, sans réduire le périmètre aux exemples humains. Elle retient la préparation de l’exposition/récupération thermique animale locale avant un nouvel appareil ou danger : ce manque ressort du raccord actuel, sans diagnostic joué prétendu. Primaire fraîche et propriétaires restent à fermer avant code ; le refuge autonome est distinct. Les bases ordinaires restent prioritaires sur variantes et fin de partie spécifiques ; aucun retour automatique au vaisseau. Les six ensembles, campagnes durables, victoire et cible FPS restent ouverts. Sauvegardes, historiques et références humaines sont préservés.
