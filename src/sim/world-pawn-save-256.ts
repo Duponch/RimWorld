@@ -1,3 +1,4 @@
+import {linkedStorageUsesRetiredOrigin286} from './world-pawn-origin-projection-256.ts';
 import {validHeldShipCasketEnvelope277,validateHeldShipCaskets277} from './world-pawn-ship-casket-277.ts';
 import {validShipCasketTerminal277} from './ship-casket-notifications-277.ts';
 import {validCouplePawnContext285} from './couple-save-285.ts';
@@ -147,6 +148,6 @@ export function validateWorldPawnOwners256(s:WorldPawnsState256,root:Readonly<Pi
   const removedAt=retired?.removedAt??proof?.removedAt,calendar=root.worldMaps?.calendarOrigin??projection?.calendarOrigin;
   if(root.planet?.revision!==3||removedAt===undefined||calendar===undefined)errors.push('Discarded mechanical receipt lacks its actual absolute calendar');else {const home=geographicPlanetClimateDefinition256(root.planet,root.planet.homeTile),absolute=(calendar+removedAt)*10-geographicLongitudeOffsetCore256(home.longitude);if(!Number.isSafeInteger(absolute)||absolute!==receipt.enteredAtAbsCore)errors.push('Discarded mechanical receipt changed its actual absolute MapRemoved entry');}
  }
- if(projection?.worldPawnOrigins?.some(origin=>!s.owners.some(row=>row.originMapId===origin.mapId)&&!s.discardedMechanical259?.some(row=>row.originMapId===origin.mapId)&&!s.heldCaskets259?.some(row=>row.originMapId===origin.mapId)&&!s.heldPlayerCaskets271?.some(row=>row.originMapId===origin.mapId)&&!s.heldShipCaskets277?.some(row=>row.originMapId===origin.mapId)&&!settlementMemoryUsesRetiredOrigin259(projection,origin,root.schemaVersion)&&!caravanCessionUsesRetiredOrigin261(projection,origin,root)))errors.push('Unreferenced WorldPawn retired origin metadata');
+ if(projection?.worldPawnOrigins?.some(origin=>!s.owners.some(row=>row.originMapId===origin.mapId)&&!s.discardedMechanical259?.some(row=>row.originMapId===origin.mapId)&&!s.heldCaskets259?.some(row=>row.originMapId===origin.mapId)&&!s.heldPlayerCaskets271?.some(row=>row.originMapId===origin.mapId)&&!s.heldShipCaskets277?.some(row=>row.originMapId===origin.mapId)&&!settlementMemoryUsesRetiredOrigin259(projection,origin,root.schemaVersion)&&!linkedStorageUsesRetiredOrigin286(root,origin)&&!caravanCessionUsesRetiredOrigin261(projection,origin,root)))errors.push('Unreferenced WorldPawn retired origin metadata');
  return errors;
 }

@@ -1,3 +1,4 @@
+import {isSchema285OrLater} from './schema-compatibility-257.ts';
 import {isShipCasket277} from './ship-casket-state-277.ts';
 import {isPlayerCasket271} from './cryptosleep-state-271.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
@@ -37,7 +38,7 @@ export function detachMapOwners(map:World,mapId:number,tile:number,removalPlan?:
  const casketRemoval=ancientCasketMapRemovalBoundary256(map);if(casketRemoval&&!retainedCaskets)throw Error(casketRemoval);
  if(map.structures.some(s=>isPlayerCasket271(s)&&s.cryptosleep.human)&&!retainedCaskets)throw Error('Occupied player casket requires its actual current MapRemoved permit.');
  if(map.structures.some(s=>isShipCasket277(s)&&s.shipCryptosleep277.occupant)&&!retainedCaskets)throw Error('Occupied spatial casket requires its actual current MapRemoved permit.');
- if(map.schemaVersion===285&&map.pawns.some(p=>p.coupleTask285)&&!releaseCouples285)throw Error('Entered couple stages require the actual admitted MapRemoved pair release.');
+ if(isSchema285OrLater(map.schemaVersion)&&map.pawns.some(p=>p.coupleTask285)&&!releaseCouples285)throw Error('Entered couple stages require the actual admitted MapRemoved pair release.');
  const heldAnimals=captureDuckMapRemovedOwners256(map),animalRows:AbandonedMapContents['animals']=[...(map.wildlife?.animals??[]).map(animal=>({animal})),...heldAnimals];
  const animalIds=new Set<number>();for(const row of animalRows){if(animalIds.has(row.animal.id))throw Error('Duplicate actual MapRemoved animal owner');animalIds.add(row.animal.id);}
  const before=captureHumanOwners(map,{},false),holders=new Map<number,number>(),animalHolders=new Map<number,number>();

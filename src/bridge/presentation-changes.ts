@@ -1,3 +1,4 @@
+import {isSchema285OrLater} from '../sim/schema-compatibility-257.ts';
 // Affiliation and flight are discrete gameplay presentation phases.
 import type { World } from '../sim/types.ts';
 import { anestheticStage } from '../sim/anesthetic.ts';
@@ -49,7 +50,7 @@ export class PresentationChanges {
         p.mental?.crisis&&'targetId' in p.mental.crisis?p.mental.crisis.targetId:undefined,
         p.mental?.crisis?.kind==='tantrum'?p.mental.crisis.attempted:undefined,
         p.meleeThreat,p.bombRefuge,p.bedId,p.social?.last,p.romanceMemories,p.familyBereavement,p.deathThoughts,
-        world.schemaVersion===285&&p.coupleTask285?[p.coupleTask285.otherId,p.coupleTask285.bedId,p.coupleTask285.slot,p.bedSlot,p.coupleTask285.enteredAtCore,p.coupleTask285.endsAtCore]:undefined,
+        isSchema285OrLater(world.schemaVersion)&&p.coupleTask285?[p.coupleTask285.otherId,p.coupleTask285.bedId,p.coupleTask285.slot,p.bedSlot,p.coupleTask285.enteredAtCore,p.coupleTask285.endsAtCore]:undefined,
         p.jobId,p.faction,p.worldAffiliation259,p.prisonerHistory259?.capturedAt,p.prisoner?.capturedAt,p.prisoner?.mode,p.prisoner?.lastChatTick,p.prisoner?.escape,p.ward?.kind,p.ward?.patientId,p.ward?.phase,p.hostilityResponse,p.draft?.holdFire,p.tactics?.targetId,p.tactics?.post,p.flee,p.melee,p.stun,
         // Human Busy clocks pay every Core. Publish real orders/phases and
         // stun boundaries, leaving continuous watermarks to periodic snapshots.

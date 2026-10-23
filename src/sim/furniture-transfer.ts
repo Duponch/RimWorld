@@ -1,4 +1,5 @@
 import {pauseGlowPod256,resumeGlowPod256} from './cave-glowpod-minification-256.ts';
+import {prepareLinkedShelfInstall286,adoptLinkedShelfInstallWrites286} from './linked-storage-lifecycle-286.ts';
 import {normalizeBillWorkersAtInstall283} from './bill-worker-owners-283.ts';
 import {clearSnowForStructure} from './snow-surface.ts';
 import {shelfAt} from './shelf-storage.ts';
@@ -92,7 +93,9 @@ export function advanceFurniture(world:World,pawn:Pawn,job:Job,move:(target:Cell
     // The 150 WorkTotal field is inspection text, not its execution duration.
     // The same object is installed, not a replacement with copied attributes.
     const retirement=planConstructionPlantRetirement(world,job,job.id);
-    if(!retirement||retirement.actors.has(pawn.id)||!commitConstructionPlantRetirement(world,retirement))return false;
+    const linked=prepareLinkedShelfInstall286(world,pack.building);
+    if(!retirement||retirement.actors.has(pawn.id)||!linked.ok||!linked.current()||!commitConstructionPlantRetirement(world,retirement))return false;
+    adoptLinkedShelfInstallWrites286(linked);
     Object.assign(pack.building,{x:job.x,z:job.z,orientation:job.orientation});resumeGlowPod256(world,pack.building);
     if(pack.building.kind==='spike-trap')pack.building.spikeTrap=initialSpikeTrapState(world,pack.building);
     world.packed=world.packed.filter(p=>p!==pack);world.structures.push(pack.building);clearSnowForStructure(world,pack.building);normalizeBillWorkersAtInstall283(world,pack.building);

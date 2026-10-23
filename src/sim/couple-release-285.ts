@@ -1,3 +1,4 @@
+import {isSchema285OrLater} from './schema-compatibility-257.ts';
 import {bedSlotCell} from './bed-slots.ts';
 import {coupleBed285,coupleBedBurning285} from './couple-bed-285.ts';
 import {addCoupleMemory285} from './couple-memories-285.ts';
@@ -45,7 +46,7 @@ export function prepareCoupleRelease285(world:World,releasedIds:ReadonlySet<numb
  const view=(p:Pawn)=>{let d=drafts.get(p);if(!d){d=prior.some(w=>w.object===p)?projectCouplePawn285(p,prior):p;drafts.set(p,d);}return d;};
  const put=(p:Pawn,key:string,value:unknown,present=true)=>writes.push({object:p,key,present,...present?{value}:{}});
  const seen=new Set<number>(),beds:World['structures']=[],roomChecks:(()=>boolean)[]=[],resumeChecks:(()=>boolean)[]=[];
- if(version===285)for(const original of before){
+ if(isSchema285OrLater(version))for(const original of before){
   const task=view(original).coupleTask285;if(!task||seen.has(original.id)||!releasedIds.has(original.id)&&!releasedIds.has(task.otherId))continue;
   const other=byId.get(task.otherId),second=other&&view(other),reciprocal=second?.coupleTask285;
   if(!other||!second||!reciprocal||reciprocal.otherId!==original.id||reciprocal.initiatorId!==task.initiatorId

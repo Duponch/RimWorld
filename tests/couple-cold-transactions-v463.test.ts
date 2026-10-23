@@ -19,6 +19,7 @@ import {releaseWork} from '../src/sim/work-release.ts';
 import {clearQueuedOrders} from '../src/sim/player-orders.ts';
 import {isAncientCasket256} from '../src/sim/ancient-casket-state-256.ts';
 import type {Pawn,Structure,World} from '../src/sim/types.ts';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 
 const source='tmp/test-runs/reform-v415-complete11-2026-10-17T22-21-45.321Z-20704/artifacts/reform-v415/07-existing-camp736-before-real-work-order-RAW-BEFORE-ADMISSION.json';
 const sourceSHA='70dea3811dab70e7225cced4c715c8438b1d7aecec6aa173ac72eaa52115e699';
@@ -31,7 +32,7 @@ let baseline:string;
 beforeAll(()=>{
  const raw=readFileSync(source,'utf8');expect(createHash('sha256').update(raw).digest('hex')).toBe(sourceSHA);
  const root=deserializeCampaign(raw);if(!('pawns'in root))throw Error('Acquired loaded settlement required');
- const map=registeredMap(root,1)!;expect(root.tick).toBe(736);expect(root.schemaVersion).toBe(285);
+ const map=registeredMap(root,1)!;expect(root.tick).toBe(736);expect(root.schemaVersion).toBe(SCHEMA_VERSION);
  expect(root.worldMaps!.sites.find(s=>s.id===1)?.kind).toBe('camp');
  const a=map.pawns.find(p=>p.id===7)!,b=map.pawns.find(p=>p.id===8)!;expect([a.name,b.name]).toEqual(['Milo','Émile']);
  const occupied=new Set([...map.structures.flatMap(footprintCells),...map.resources,...map.piles.flatMap(p=>p.owner.type==='ground'?[p.owner]:[])].map(c=>c.z*map.width+c.x));

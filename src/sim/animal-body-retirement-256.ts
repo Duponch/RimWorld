@@ -1,4 +1,5 @@
 import type {World,MaterialPile} from './types.ts';
+import {prepareLinkedShelfRetirement286} from './linked-storage-lifecycle-286.ts';
 import {animalContentsOwner256} from './animal-local-contents-256.ts';
 import {neutralLossPlan} from './destruction-losses.ts';
 import {ensureFireState} from './fire-rules.ts';
@@ -27,8 +28,9 @@ function planAnimalContentsRetirement256(w:World,id:number,includeBody:boolean,c
  const neutral=cause==='fire'?undefined:neutralLossPlan(w,{items:delta});if(neutral===null)return null;
  if(cause==='fire'){for(const [item,n] of Object.entries(delta))if(!Number.isSafeInteger((w.fires?.ledger.items[item as MaterialPile['item']]??0)+n!))return null;if(!Number.isSafeInteger((w.fires?.ledger.structures??0)+packs.length))return null;}
  const beds=packs.map(p=>prepareBedOwnershipTransition256(w,p.building,'destroy')),pileIds=new Set(items.map(p=>p.id)),packSet=new Set(packs),signatures=items.map(p=>JSON.stringify(p)),packSignatures=packs.map(p=>JSON.stringify(p));
- const current=()=>{const actual=animalContentsOwner256(w,id);return !!actual&&actual.kind===owner.kind&&(actual.kind==='animal'&&owner.kind==='animal'?actual.animal===owner.animal&&actual.holder===owner.holder:actual.kind==='corpse'&&owner.kind==='corpse'&&actual.pile===owner.pile)&&w.piles===piles&&w.packed===packed&&w.destroyed===beforeDestroyed&&w.fires===beforeFire&&JSON.stringify(w.destroyed)===destroyedSignature&&JSON.stringify(w.fires)===fireSignature&&items.every((p,i)=>w.piles.includes(p)&&JSON.stringify(p)===signatures[i])&&packs.every((p,i)=>w.packed.includes(p)&&JSON.stringify(p)===packSignatures[i]);};
- let committed=false;return {pileIds,current,commit(){if(committed||!current())return false;const ledger=cause==='fire'?ensureFireState(w).ledger:undefined;
+ const linked=prepareLinkedShelfRetirement286(w,packs.map(p=>p.building));if(!linked.ok)return null;
+ const current=()=>{const actual=animalContentsOwner256(w,id);return linked.current()&&!!actual&&actual.kind===owner.kind&&(actual.kind==='animal'&&owner.kind==='animal'?actual.animal===owner.animal&&actual.holder===owner.holder:actual.kind==='corpse'&&owner.kind==='corpse'&&actual.pile===owner.pile)&&w.piles===piles&&w.packed===packed&&w.destroyed===beforeDestroyed&&w.fires===beforeFire&&JSON.stringify(w.destroyed)===destroyedSignature&&JSON.stringify(w.fires)===fireSignature&&items.every((p,i)=>w.piles.includes(p)&&JSON.stringify(p)===signatures[i])&&packs.every((p,i)=>w.packed.includes(p)&&JSON.stringify(p)===packSignatures[i]);};
+ let committed=false;return {pileIds,current,commit(){if(committed||!current()||!linked.commit())return false;const ledger=cause==='fire'?ensureFireState(w).ledger:undefined;
   if(ledger){for(const [item,n]of Object.entries(delta))ledger.items[item as MaterialPile['item']]=(ledger.items[item as MaterialPile['item']]??0)+n!;ledger.structures+=packs.length;}
   if(neutral)w.destroyed=neutral;if(packs.length)w.destroyed={...w.destroyed,count,lost};
   w.piles=w.piles.filter(p=>!pileIds.has(p.id));w.packed=w.packed.filter(p=>!packSet.has(p));for(const b of beds)b?.commit();committed=true;return true;

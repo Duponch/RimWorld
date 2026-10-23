@@ -5,6 +5,7 @@ import {validPrisonerSurgeryHistoricalTransport280,validPrisonerSurgeryWorld280,
 import {validApparelTradeHistoricalTransport279,validApparelTradeWorld279} from '../sim/apparel-trade-save-279.ts';
 import {validApparelReservesBuilding278,validApparelReservesHistoricalTransport278} from '../sim/apparel-reserves-save-278.ts';
 import {validBillWorkerHistoricalTransport283,validBillWorkerWorld283} from '../sim/bill-worker-save-283.ts';
+import {validLinkedStorageHistorical286,validLinkedStorageProjection286} from '../sim/linked-storage-save-286.ts';
 import {validShipCasketHistoricalTransport277} from '../sim/ship-casket-save-277.ts';
 import {validShipCasketBuilding277,registerShipCasketThingIds277} from '../sim/ship-casket-owner-save-277.ts';
 import {isShipCasket277} from '../sim/ship-casket-state-277.ts';
@@ -1121,7 +1122,7 @@ export class SnapshotDecoder {
     const refuse=()=>({status:'resync' as const,reason:'Campagne sans carte illisible.'});
     if(!Number.isSafeInteger(packet.epoch)||packet.epoch<1||!Number.isSafeInteger(packet.revision)||packet.revision<1||!Number.isFinite(packet.stepMs)||packet.stepMs<0||![0,1,3,6].includes(packet.speed))return refuse();
     if(packet.epoch<this.epoch||packet.epoch===this.epoch&&packet.revision<=this.revision)return {status:'stale'};
-    if(!validCoupleHistoricalTransport285(packet.summary,packet.summary.schemaVersion)||!validTradeRequestHistorical284(packet.summary,packet.summary.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet.summary,packet.summary.schemaVersion))return refuse();
+    if(!validLinkedStorageHistorical286(packet.summary,packet.summary.schemaVersion)||!validCoupleHistoricalTransport285(packet.summary,packet.summary.schemaVersion)||!validTradeRequestHistorical284(packet.summary,packet.summary.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet.summary,packet.summary.schemaVersion))return refuse();
     if(!validWorldPawnsEnvelope256(packet.summary,packet.summary.schemaVersion,packet.summary.tick*10,packet.summary.nextId))return refuse();
     if(!validPlanetGeographyHistorical256(packet.summary,packet.summary.schemaVersion))return refuse();
     const geographic=this.geographicTransport.prepare(packet.summary,packet.geography,Object.hasOwn(packet,'geography'),packet.epoch!==this.epoch);if(!geographic.ok)return refuse();
@@ -1152,7 +1153,7 @@ export class SnapshotDecoder {
     if(!validPrisonerSurgeryHistoricalTransport280(packet,packet.world.schemaVersion))return resync('Future captive surgery.');
     if(!validApparelTradeHistoricalTransport279(packet,packet.world.schemaVersion))return resync('Future ordinary apparel inventory or trade.');
     if(!validApparelReservesHistoricalTransport278(packet,packet.world.schemaVersion))return resync('Future apparel reserve settings.');
-    if(!validCoupleHistoricalTransport285(packet,packet.world.schemaVersion)||!validTradeRequestHistorical284(packet,packet.world.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet,packet.world.schemaVersion)||!validBillWorkerHistoricalTransport283(packet,packet.world.schemaVersion))return resync('Future couple or bill worker settings.');
+    if(!validLinkedStorageHistorical286(packet,packet.world.schemaVersion)||!validCoupleHistoricalTransport285(packet,packet.world.schemaVersion)||!validTradeRequestHistorical284(packet,packet.world.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet,packet.world.schemaVersion)||!validBillWorkerHistoricalTransport283(packet,packet.world.schemaVersion))return resync('Future couple or bill worker settings.');
     if(!validShipCasketHistoricalTransport277(packet,packet.world.schemaVersion))return resync('Future spatial casket content.');
     if(!validShipPartHistoricalTransport276(packet,packet.world.schemaVersion))return resync('Pièce de vaisseau ou recherche moteur future dans ce snapshot.');
     if(!validShipReactorHistoricalTransport275(packet,packet.world.schemaVersion))return resync('Réacteur stellaire futur dans ce snapshot.');
@@ -1743,7 +1744,7 @@ export class SnapshotDecoder {
     // Commit only after every patch is checked. A refusal preserves both state and revision.
     if(next.schemaVersion>=256&&!validGeographicSiteBinding256(next))return resync('Provenance locale distincte de la vraie planète.');
     if(!this.validGeographicCalendar(next,message.epoch))return resync('Origine du calendrier géographique réécrite.');
-    if(!validBillWorkerWorld283(next,readHumanOwners))return resync('Opérateur de facture ou réglages incohérents.');
+    if(!validLinkedStorageProjection286(next)||!validBillWorkerWorld283(next,readHumanOwners))return resync('Opérateur de facture ou réglages incohérents.');
     if(acceptExtra&&!acceptExtra(next))return resync('Métadonnées supplémentaires incompatibles avec la carte confirmée.');
     freezeAdmittedNativeWorldPawnOrder256(next);
     if(!riverWater.inherited&&next.riverWater)freezeAdmittedRiverWater256(next.riverWater);

@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 285 as const;
+export const SCHEMA_VERSION = 286 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -271,6 +271,7 @@ export interface World {
   smallIncidents?:import('./cassandra-small.ts').CassandraSmallCalendar;
   worldIncidents?:import('./cassandra-world.ts').CassandraWorldCalendar;
   tradeRequests284?:import('./trade-request-state-284.ts').TradeRequests284;
+  linkedStorage286?:import('./linked-storage-state-286.ts').LinkedStorageRegistry286;
   worldSites263?:import('./world-sites-state-263.ts').WorldSitesState263;
   worldDefence263?:import('./world-target-defence-263.ts').WorldTargetDefence263;
   worldSiteThreat263?:import('./world-site-ambush-state-263.ts').WorldSiteAmbush263;
@@ -320,7 +321,7 @@ export type AreaAction = 'smooth-floor' | 'build-bridge' | 'remove-bridge' | 'sn
 export interface StorageSettings extends StorageConditions { items?:Partial<Record<ItemId,boolean>>; filters?: StorageFilters; priority?: number; capacity?: number }
 export interface AreaCommand extends StorageSettings { type: 'area'; action: AreaAction; from: Cell; to: Cell; targetZoneId?:number; floor?: import('./flooring.ts').FloorKind }
 export interface BuildLineCommand { type: 'build-line'; kind: import('./construction-line.ts').LineBuildKind; from: Cell; to: Cell; material?: import('./construction-materials.ts').ConstructionMaterial }
-export type Command = import('./trade-request-state-284.ts').TradeRequestCommand284 | import('./ship-casket-state-277.ts').ShipCasketCommand277 | import('./ship-reactor-state-275.ts').ShipReactorCommand275 | import('./cryptosleep-state-271.ts').CryptosleepCommand271 | import('./alcohol-policy-265.ts').DrugPolicyCommand265 | import('./caravan-arrival-261.ts').CaravanArrivalCommand261 | import('./caravan-commands-261.ts').CaravanCommand261 | import('./material-permission-256.ts').MaterialPermissionCommand256 | import('./ancient-casket-state-256.ts').AncientCasketCommand256 | import('./local-road-prop-ownership-256.ts').ClaimRoadPropCommand256 | import('./animal-egg-permission-v256.ts').EggPermissionCommand256 | import('./world-map-state.ts').WorldMapCommand | import('./secondary-site-state.ts').SecondarySiteCommand | import('./tree-transfer-state.ts').TreeCommand | import('./orbital-state.ts').OrbitalCommand | import('./group-state.ts').GroupCommand | {type:'enable-mech-raids'} | import('./commercial-state.ts').CommercialCommand | import('./surgery-state.ts').SurgeryCommand | import('./quest-state.ts').QuestCommand | import('./caravan-state.ts').ScoutCommand | import('./domestic-state.ts').DomesticCommand | import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
+export type Command = import('./linked-storage-state-286.ts').LinkedStorageCommand286 | import('./trade-request-state-284.ts').TradeRequestCommand284 | import('./ship-casket-state-277.ts').ShipCasketCommand277 | import('./ship-reactor-state-275.ts').ShipReactorCommand275 | import('./cryptosleep-state-271.ts').CryptosleepCommand271 | import('./alcohol-policy-265.ts').DrugPolicyCommand265 | import('./caravan-arrival-261.ts').CaravanArrivalCommand261 | import('./caravan-commands-261.ts').CaravanCommand261 | import('./material-permission-256.ts').MaterialPermissionCommand256 | import('./ancient-casket-state-256.ts').AncientCasketCommand256 | import('./local-road-prop-ownership-256.ts').ClaimRoadPropCommand256 | import('./animal-egg-permission-v256.ts').EggPermissionCommand256 | import('./world-map-state.ts').WorldMapCommand | import('./secondary-site-state.ts').SecondarySiteCommand | import('./tree-transfer-state.ts').TreeCommand | import('./orbital-state.ts').OrbitalCommand | import('./group-state.ts').GroupCommand | {type:'enable-mech-raids'} | import('./commercial-state.ts').CommercialCommand | import('./surgery-state.ts').SurgeryCommand | import('./quest-state.ts').QuestCommand | import('./caravan-state.ts').ScoutCommand | import('./domestic-state.ts').DomesticCommand | import('./burial.ts').BurialCommand | import('./cleaning.ts').CommandCleaning | import('./trade-state.ts').TradeCommand | import('./hunting-state.ts').HuntingCommand
   | import('./auto-slaughter-state.ts').AutoSlaughterCommand
   | {type:'spike-trap-auto-rebuild';structureId:number;on:boolean}
   | {type:'shelf-policy';structureId:number;settings:StorageSettings}

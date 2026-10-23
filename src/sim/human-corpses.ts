@@ -1,4 +1,5 @@
 import {toxicCorpseRot256} from './toxic-victim-256.ts';
+import {prepareLinkedShelfRetirement286} from './linked-storage-lifecycle-286.ts';
 import { constructionRecipe,type ConstructionMaterial } from './construction-materials.ts';
 import { corpseStage } from './corpses.ts';
 import { rotAge,rotRateAtTemperature,type RotState } from './food-preservation.ts';
@@ -119,6 +120,7 @@ function destroyHumanBodyContents(w:World,person:Pawn,pile:MaterialPile|undefine
   const changes=new Map<MaterialPile['item'],number>();for(const p of contents)changes.set(p.item,(changes.get(p.item)??0)+p.quantity);
   const neutral=cause==='fire'?undefined:neutralLossPlan(w,{items:Object.fromEntries(changes)});if(neutral===null)return false;
   if(cause==='fire')for(const [item,quantity] of changes)if(!Number.isSafeInteger((w.fires?.ledger.items[item]??0)+quantity))return false;
+  const linked=prepareLinkedShelfRetirement286(w,packed.map(p=>p.building));if(!linked.ok||!linked.commit())return false;
   const ledger=cause==='fire'?ensureFireState(w).ledger:undefined;
   if(ledger)for(const [item,quantity] of changes)ledger.items[item]=(ledger.items[item]??0)+quantity;
   if(neutral)w.destroyed=neutral;

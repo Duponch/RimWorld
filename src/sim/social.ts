@@ -1,3 +1,4 @@
+import {isSchema285OrLater} from './schema-compatibility-257.ts';
 import { isColonist,distanceSquared } from './affiliation.ts';
 import {alcoholModifiers265} from './alcohol-rules-265.ts';
 import { pawnBody } from './health-rules.ts';
@@ -16,7 +17,7 @@ import type { Pawn,World } from './types.ts';
 
 const stateFor=(w:World,p:Pawn):SocialState=>p.social??={rng:socialSeed(w.seed,p.id),memories:[]};
 export function canSocialize(world:World,pawn:Pawn,initiate:boolean,carried?:ReadonlySet<number>):boolean {
-  if(world.schemaVersion===285&&pawn.coupleTask285)return false;
+  if(isSchema285OrLater(world.schemaVersion)&&pawn.coupleTask285)return false;
   if(!isColonist(pawn)||pawn.state==='dead'||pawn.state==='downed'||pawn.state==='sleeping'||pawn.medicalSleep||pawn.mental?.crisis||pawn.stun||pawn.shooting||pawn.melee||pawn.social?.fight||pawn.flee||pawn.tactics||(carried?carried.has(pawn.id):carrierOf(world,pawn.id)))return false;
   const body=pawnBody(pawn);return body.canBeAwake&&(!initiate||body.capacities.talking>0);
 }

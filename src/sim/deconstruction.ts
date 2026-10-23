@@ -1,4 +1,5 @@
 import {isSchema276OrLater} from './schema-compatibility-257.ts';
+import {prepareLinkedShelfRetirement286} from './linked-storage-lifecycle-286.ts';
 import {isShipPartKind276,isShipAddedKind276} from './ship-part-content-276.ts';
 import {isSchema275OrLater} from './schema-compatibility-257.ts';
 import {shipChunkNextRandom256} from './ship-chunk-leavings-256.ts';
@@ -37,6 +38,7 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   const fogRemoval=prepareRemovedFogStructure256(world,structure);
   if(world.jobs.some(j=>j.fixBreakdown?.structureId===structure.id))return false;
   const shelfRemoval=planShelfRemoval(world,structure);if(!shelfRemoval)return false;
+  const linked=prepareLinkedShelfRetirement286(world,[structure]);if(!linked.ok)return false;
   const structures = world.structures.filter(s => s.id !== structure.id);
   const jobs = world.jobs.filter(j => j.id !== job.id);
   // The preview owns piles and escrow: planning several ingredient refunds must
@@ -85,7 +87,9 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   const fermentation=fermentationContents265(structure),fermentationLostKey=fermentation?.item==='beer'?'lostBeer':'lostWort';
   if(fermentation&&!Number.isSafeInteger((ledger[fermentationLostKey]??0)+fermentation.quantity))return false;
   if (![(ledger.lostPlasteel275??0)+lostPlasteel,(ledger.lostUranium??0)+lostUranium,(ledger.lostAdvancedComponents271??0)+lostAdvancedComponents,(ledger.lostComponents??0)+lostComponents, ledger.count + 1, ledger.lostWood + lostWood, (ledger.lostSteel ?? 0) + lostSteel, ledger.fuelTicks + fuelTicks,...Object.values(lostBlocks),...Object.values(lostTextiles)].every(Number.isSafeInteger)) return false;
+  if(!linked.current())return false;
   if(!commitGraveRelease(world,structure,graveRelease))return false;
+  if(!linked.commit())throw Error('Admitted linked shelf deconstruction changed during grave release');
   commitShelfRemoval(world,shelfRemoval);
   world.structures = structures; world.jobs = jobs; world.rng = rng;
   bedOwnership?.commit();

@@ -1,5 +1,7 @@
 # Guide joueur
 
+**V464 qualifiée — schéma 286 :** [Réglages liés des étagères](linked-storage-v464.md). Groupes d’étagères, réglages effectifs et mêmes meubles emballés/détenus.143cas distincts acquis par reprises (62nouveaux et81voisins),1ancien rouge reproduit sur V463. Typage, parcours Chrome/WebGPU muet, deux recharges entières et présentation acquis ; coût CPU ciblé conservé, aucun gain FPS global. Build et publication en préparation ; public V463 encore inchangé. Migration285 stricte puis numéro seul286, aucune liaison offerte. Ensemble2 ; tous les domaines et interactions, les six ensembles, campagnes, victoire et cible FPS restent ouverts.
+
 **V463 publiée — schéma 285 :** [Vie quotidienne du couple adulte](couple-v463.md). Deux places réelles du lit, activité éveillée, clinique, souvenirs et délais personnels.135cas distincts acquis par reprises, dont101nouveaux et34voisins ;5anciens rouges de chambre reproduits et différences documentées. Parcours Chrome/WebGPU muet, recharges entières, présentation générale et typage acquis. Publié cb0e7b79/3956acea,20réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Migration284 stricte puis numéro seul285 ; aucun bénéfice offert, aucun gain FPS global. Ensemble3 principal ; tous les autres domaines et interactions, les six ensembles, campagnes et victoire restent ouverts.
 
 **V462 publiée — schéma 284 :** [Demandes commerciales mondiales](trade-requests-v462.md). Offres sur production possible, deux délais, choix de récompense et remise des mêmes objets par une vraie caravane. 104 cas distincts acquis par reprises, dont 66 nouveaux et 38 voisins ; parcours Chrome/WebGPU muet, annulation et recharges entières exactes. Typage et présentation acquis. Publié 6f63d2f6/2a66a836, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. Coût géométrique ciblé réduit, aucun gain FPS global. Ensemble 4 ; autres bases, six ensembles, campagnes et cible FPS ouverts.
@@ -25,6 +27,12 @@
 **V452 publiée — schéma 276 :** [Poutres et moteurs de vaisseau](ship-parts-v452.md). Recherche moteur, une poutre et trois moteurs payés, connexion physique, rapport et retraits conservés ; 63 cas ciblés acquis, dont 35 nouveaux et 28 voisins. Typage, présentation et interface natives muettes acquis. Build Pages acquis ; publié 6ac38d08/dd91c337, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. [Jouer sur Cloudflare](https://elsewhere-cq7.pages.dev/). **Ensemble 5 en cours** ; ordinateur, capteurs, caissons spatiaux, embarquement et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
 
 **V451 publiée — schéma 275 :** [Réacteur stellaire](ship-reactor-v451.md). Recherches, chantier payé, 1 000 W, démarrage confirmé et attaques indépendantes ; 50 cas ciblés acquis par reprises, un ancien rouge identique au témoin conservé. Typage, présentation et interface natives muettes acquis. Build Pages acquis ; publié 8e0e2ee6/7552f915, 20 réponses HTTPS ciblées exactes ; sauvegardes publiques inchangées. **Ensemble 5 engagé** ; autres pièces et lancement ouverts, aucun gain FPS ni clôture des six ensembles.
+
+### Lier les réglages des étagères
+
+Inspectez une étagère installée puis choisissez **Lier les réglages…**. Sélectionnez une autre étagère indépendante ou un groupe de cette carte. L’aperçu indique les réglages qui gagneront ; confirmez après l’avoir vérifié. Grandes et petites étagères peuvent partager le même groupe. **Renommer le groupe…** change son nom sans déplacer ses membres.
+
+Les filtres et la priorité d’un membre lié valent pour le groupe, y compris ses mêmes meubles emballés. **Délier cette étagère…** conserve les réglages actuels ; une paire est dissoute quand un membre part. **Copier** reste une photographie indépendante ; **Coller** dans un membre lié vise le groupe annoncé. Les objets et la capacité physique restent propres à chaque meuble. [Règles et état de qualification](linked-storage-v464.md).
 
 ### Vendre et racheter des vêtements
 

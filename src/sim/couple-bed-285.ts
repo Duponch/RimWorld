@@ -1,3 +1,4 @@
+import {isSchema285OrLater} from './schema-compatibility-257.ts';
 import {bedSlotCell,pawnBedSlot} from './bed-slots.ts';
 import {footprintCells} from './definitions.ts';
 import {groundFire} from './fire-rules.ts';
@@ -17,7 +18,7 @@ export function coupleBedBurning285(world:Pick<World,'fires'>,bed:Structure):boo
  * belong to the task's simulation/owner guards, never to a renderer query. */
 export function coupleBed285(world:CoupleBedWorld285,pawn:CoupleBedPawn285):Structure|undefined {
  const task=pawn.coupleTask285;
- if(world.schemaVersion!==285||!task||pawn.state==='dead'||pawn.moveCooldown!==0||(pawn.motion?.end??0)>world.tick)return;
+ if(!isSchema285OrLater(world.schemaVersion)||!task||pawn.state==='dead'||pawn.moveCooldown!==0||(pawn.motion?.end??0)>world.tick)return;
  const bed=world.structures.find(s=>s.id===task.bedId);
  if(!bed||bed.kind!=='double-bed'||bed.medical||bed.prisoner||pawnBedSlot(pawn,bed)!==task.slot)return;
  const cell=bedSlotCell(bed,task.slot);

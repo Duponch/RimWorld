@@ -1,3 +1,4 @@
+import {isSchema285OrLater} from './schema-compatibility-257.ts';
 import {memoryAge271,memoryExpiry271,memoryReadTick271,validSuspendedMemory271} from './suspended-memory-271.ts';
 import {TICKS_PER_DAY} from './types.ts';
 import type {MoodThought} from './mood.ts';
@@ -84,14 +85,14 @@ export function coupleOpinionOffset285(holder:Readonly<CoupleMemoryHolder285>,ot
 }
 
 const plain=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype;
-const versionAllowed=(version:number)=>int(version,2,285);
+const versionAllowed=(version:number)=>int(version,2,286);
 
 /** Shape only: the enclosing actual-owner guard checks self/nextId/namespace.
  * Presence starts ONLY285. No future version is inferred from a lower bound. */
 export function validCoupleMemories285(value:unknown,version:number,tick:number,civilTick=tick):value is CoupleMemory285[]|undefined {
  if(!versionAllowed(version)||!int(tick)||!int(civilTick,tick))return false;
  if(value===undefined)return true;
- if(version!==285||!Array.isArray(value)||Object.getPrototypeOf(value)!==Array.prototype||!value.length||value.length>COUPLE_MEMORY_LIMIT_285||Reflect.ownKeys(value).length!==value.length+1)return false;
+ if(!isSchema285OrLater(version)||!Array.isArray(value)||Object.getPrototypeOf(value)!==Array.prototype||!value.length||value.length>COUPLE_MEMORY_LIMIT_285||Reflect.ownKeys(value).length!==value.length+1)return false;
  for(let i=0;i<value.length;i++){
   const slot=Object.getOwnPropertyDescriptor(value,String(i));if(!slot||!slot.enumerable||!Object.hasOwn(slot,'value')||!plain(slot.value))return false;
   const m=slot.value,keys=Reflect.ownKeys(m),suspended=Object.hasOwn(m,'suspendedTicks');

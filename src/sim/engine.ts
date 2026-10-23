@@ -295,6 +295,8 @@ import { search, searchCandidates, destinationValid, planWork, type SearchBudget
 import { workPriority,workType } from './work-types.ts';
 import { backgroundWorkRefusal } from './colonist-backgrounds.ts';
 import { releaseAssignments, planCommandDrops, commitDrop, releaseWork, type DropPlan } from './work-release.ts';
+import {prepareLinkedStorageCommand286} from './linked-storage-plan-286.ts';
+import {prepareLinkedStorageLogistics286} from './linked-storage-logistics-286.ts';
 import { validDiningPlace } from './dining.ts';
 import { CIVIL_TRANSIT_BLOCKERS, moveToward } from './travel.ts';
 import { haulingWork } from './haul-aside.ts';
@@ -584,6 +586,10 @@ function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
   if(command.type==='apparel-policy-update')return applyApparelPolicyUpdate(world,command);
   if(command.type==='apparel-policy-copy'||command.type==='apparel-policy-rename')return applyApparelPolicyName(world,command);
   const result=applyCommandInternal(world,command);
+  // These cold metadata transactions already reconcile their exact affected
+  // destinations. A no-op must not advance unrelated services or clocks.
+  if(command.type==='shelf-link'||command.type==='shelf-unlink'||command.type==='shelf-group-rename'
+    ||world.schemaVersion===286&&command.type==='shelf-policy')return result;
   if(result.ok){
     reconcileSmoothFloorJobs281(world);
     reconcileAllowedAreas(world);
@@ -758,6 +764,19 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
     return result;
   }
   if(command.type==='install')return installCommand(world,command);
+  if(command.type==='shelf-link'||command.type==='shelf-unlink'||command.type==='shelf-group-rename'
+    ||world.schemaVersion===286&&command.type==='shelf-policy'){
+    const policy=prepareLinkedStorageCommand286(world,command);
+    if(!policy.ok)return refusal('invalid-storage',policy.reason);
+    if(policy.noop)return {ok:true,affected:0};
+    const logistics=prepareLinkedStorageLogistics286(world,policy.changedCellIds);
+    if(!logistics.ok)return refusal('occupied',logistics.reason);
+    if(!policy.current()||!logistics.current())return refusal('occupied','Le stockage a changé pendant la préparation.');
+    if(!policy.commit())return refusal('invalid-storage','Les réglages ont changé pendant la préparation.');
+    if(!logistics.commit())throw Error('Admitted linked storage cargo plan changed during policy adoption');
+    if(policy.changedCellIds.length){wakePlanners(world);refreshStock(world);}
+    return {ok:true,affected:policy.changedCellIds.length};
+  }
   const replacing=command.type==='designate'?wallBlueprintForDoor(world,command):undefined;
   const drops=replacing?planBlueprintDoorReplacement(world,command as DesignateCommand,replacing):planCommandDrops(world,command);
   if(!drops)return refusal('occupied','Pas de place à proximité pour les matériaux libérés.');

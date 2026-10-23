@@ -13,7 +13,7 @@ export type ShelfKind='shelf'|'small-shelf';
 export const isShelfKind=(kind:string):kind is ShelfKind=>kind==='shelf'||kind==='small-shelf';
 export interface ShelfStorageSettings extends StorageConditions {filters:StorageFilters;priority:number;capacity:number;items?:Partial<Record<ItemId,boolean>>}
 /** Cell identities belong to the same building through construction and packing. */
-export interface ShelfStorageState {cells:number[];settings:ShelfStorageSettings}
+export interface ShelfStorageState {cells:number[];settings:ShelfStorageSettings;linked286?:import('./linked-storage-state-286.ts').LinkedShelfMember286}
 export interface StorageCell extends StockpileCell {shelfId?:number}
 export function newShelfStorage(cells:readonly number[],version:number=SCHEMA_VERSION):ShelfStorageState {
   return {cells:[...cells],settings:{priority:3,capacity:500,filters:{...(isSchema273OrLater(version)?{prosthesis:true}:{}),...(version>=265?{wort:true,beer:true}:{}),wood:true,food:true,chemfuel:true,neutroamine:true,silver:true,unfinished:true,textile:true,steel:true,gold:true,uranium:true,plasteel:true,component:true,'advanced-component':true,medicine:true,weapon:true,apparel:true,blocks:true}}};

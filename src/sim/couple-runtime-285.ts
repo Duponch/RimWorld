@@ -1,3 +1,4 @@
+import {isSchema285OrLater} from './schema-compatibility-257.ts';
 import {actualBedOwners256,captureActorBeds256} from './actor-bed-local-256.ts';
 import {bedSlotCell,pawnBedSlot} from './bed-slots.ts';
 import {coupleBed285,coupleBedBurning285} from './couple-bed-285.ts';
@@ -43,7 +44,7 @@ const apply=(writes:readonly MapRemovalWrite259[])=>{for(const w of writes){if(w
 export function tryCoupleOpportunity285(world:World,pawn:Pawn,body?:BodyAssessment):boolean {
  // Common standing/single-bed actors never need biological-header validation
  // or a structure/relationship lookup for this lying-down-only opportunity.
- if(world.schemaVersion!==285||pawn.coupleTask285||pawn.need?.kind!=='sleep'||pawn.need.phase!=='sleep'||pawn.bedSlot===undefined)return false;
+ if(!isSchema285OrLater(world.schemaVersion)||pawn.coupleTask285||pawn.need?.kind!=='sleep'||pawn.need.phase!=='sleep'||pawn.bedSlot===undefined)return false;
  const bed=lyingSleep(world,pawn);if(!bed||!civilAdult(pawn))return false;
  const now=world.tick*10;if(!coupleCheckDue285(pawn.coupleClock285,now))return false;
  const clock=coupleClockDraft285(world.seed,pawn.id,pawn.coupleClock285);clock.lastAttemptAtCore=now;
@@ -87,7 +88,7 @@ export function tryCoupleOpportunity285(world:World,pawn:Pawn,body?:BodyAssessme
 /** Reconcile before any dead/downed/stun dispatcher exit. Start-only famine
  * and bleeding rules are deliberately not reused as continuation failures. */
 export function reconcileCouple285(world:World,pawn:Pawn,body?:BodyAssessment):void {
- const task=pawn.coupleTask285;if(world.schemaVersion!==285||!task)return;
+ const task=pawn.coupleTask285;if(!isSchema285OrLater(world.schemaVersion)||!task)return;
  const other=world.pawns.find(p=>p.id===task.otherId),peer=other?.coupleTask285;
  const bed=coupleBed285(world,pawn);
  const invalid=!other||!peer||peer.otherId!==pawn.id||peer.initiatorId!==task.initiatorId||peer.bedId!==task.bedId||peer.endsAtCore!==task.endsAtCore
@@ -104,7 +105,7 @@ export function reconcileCouple285(world:World,pawn:Pawn,body?:BodyAssessment):v
 }
 
 export function processCouple285(world:World,pawn:Pawn):boolean {
- const task=pawn.coupleTask285;if(world.schemaVersion!==285||!task)return false;
+ const task=pawn.coupleTask285;if(!isSchema285OrLater(world.schemaVersion)||!task)return false;
  if(world.tick*10>=task.endsAtCore){prepareCoupleRelease285(world,new Set([pawn.id]),{resumeAll:true}).commit();return false;}
  advanceRoomRest(world,pawn);return true;
 }

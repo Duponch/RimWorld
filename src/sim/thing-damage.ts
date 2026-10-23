@@ -1,4 +1,5 @@
 import {detachMissingProstheticBills273} from './prosthetic-work-273.ts';
+import {prepareLinkedShelfRetirement286} from './linked-storage-lifecycle-286.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {isPlayerCasket271} from './cryptosleep-state-271.ts';
 import {damagePlayerCryptosleep271} from './cryptosleep-removal-271.ts';
@@ -175,7 +176,9 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
     ||state&&(!addSafe(state.ledger.structures,1)||!addSafe(state.ledger.items.component??0,serviceLoss)))return false;
   const coupleIds=new Set(actors.filter(p=>p.coupleTask285?.bedId===s.id).map(p=>p.id));
   const coupleRelease=coupleIds.size?prepareCoupleRelease285(world,coupleIds):undefined;
+  const linked=prepareLinkedShelfRetirement286(world,[s]);if(!linked.ok||!linked.current())return false;
   if(s.kind==='sarcophagus'&&!commitGraveRelease(world,s,plan.graveRelease))return false;
+  if(!linked.commit())throw Error('Admitted linked shelf destruction changed during grave release');
   coupleRelease?.commit();
   if(state)world.fires=state;
   const waveId=detonates?world.nextId++:undefined;

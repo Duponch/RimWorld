@@ -1,3 +1,4 @@
+import {isSchema285OrLater} from './schema-compatibility-257.ts';
 import {groupHumanPendingPassenger259} from './group-human-admission-257.ts';
 import { isBedKind } from './bed-kinds.ts';
 import { bedSlotCell,pawnBedSlot } from './bed-slots.ts';
@@ -26,7 +27,7 @@ export function updateRest(world: World, pawn: Pawn): void {
     pawn.rest=depletedHumanRest(pawn.rest,world.restRules==='legacy');
     return;
   }
-  const coupleAwake285=world.schemaVersion===285&&pawn.coupleTask285!==undefined;
+  const coupleAwake285=isSchema285OrLater(world.schemaVersion)&&pawn.coupleTask285!==undefined;
   if(coupleAwake285)delete pawn.medicalSleep;
   if(!coupleAwake285&&(pawn.state==='downed'||pawn.state==='resting')) {
     pawn.restZeroTicks=0;pawn.collapsePending=false;

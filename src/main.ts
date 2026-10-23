@@ -108,6 +108,7 @@ import { mountStorageControls, type MountedStorageControls as StorageControls, t
 import { stockpileZoneCells, stockpileZoneId, stockpileCellsByZoneId } from './sim/stockpile-zones';
 import { isShelfKind } from './sim/shelf-storage';
 import { shelfControlOptions,updateShelfInspection } from './ui/shelf-inspection';
+import {createLinkedStorageControls286,linkedStoragePasteScope286} from './ui/linked-storage-286';
 import {updateCryptosleepInspection271} from './ui/cryptosleep-inspection-271';
 import {updateShipCasketInspection277} from './ui/ship-casket-inspection-277';
 import './ui/zone-controls.css';
@@ -251,6 +252,7 @@ const diagnosticStart = params.has('scenario');
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = gameLayout();
 const creationStorageControls=mountStorageControls(document.getElementById('stockpile-items')!,{priority:2,filters:{wood:true,food:true,unfinished:true,textile:true,apparel:true,weapon:true,medicine:true,neutroamine:true,chemfuel:true,component:true,'advanced-component':true,steel:true,gold:true,uranium:true,plasteel:true,blocks:true,furniture:true,silver:true}},()=>{});
 let selectedStorageControls:StorageControls|undefined;
+let selectedLinkedStorage:ReturnType<typeof createLinkedStorageControls286>|undefined;
 let selectedStoragePending=0;
 let storageClipboard:StorageControlSettings|undefined;
 let zoneEditTarget:number|undefined;
@@ -1190,6 +1192,7 @@ function rotatePlacement(direction = 1) {
 }
 function rebuildInspector() {
   dismissTooltip();
+  selectedLinkedStorage?.dispose();selectedLinkedStorage=undefined;
   selectedStorageControls?.dispose();selectedStorageControls=undefined;selectedStoragePending=0;
   const panel = el('inspector');
   panel.hidden = currentPanel !== null || (!selection.ids.size && !selectedCell);
@@ -1253,8 +1256,14 @@ function rebuildInspector() {
     const storage = storageCell??shelf?.shelf?.settings;
     if(storage){
       panel.classList.add('stockpile-inspector-host');
-      const stockpileId=storageCell?.id,structureId=shelf?.id;let pending=0,needsRollback=false;
+      const stockpileId=storageCell?.id,structureId=shelf?.id,storageEpoch=campaignPresentationEpoch,
+        storageMap=campaignUIFacts(snapshot!)?.activeMapId??0;let pending=0,needsRollback=false;
+      const storageCurrent=()=>!!snapshot&&client.hasActiveMap&&storageEpoch===campaignPresentationEpoch
+        &&(campaignUIFacts(snapshot)?.activeMapId??0)===storageMap&&!replacingWorld&&!session.busy&&!simulationStopped
+        &&selectedObject?.kind===(structureId!==undefined?'structure':'stockpile')
+        &&selectedObject.id===(structureId??stockpileId);
       const sendSettings=(settings:StorageControlSettings)=>{
+        if(!storageCurrent()||selectedLinkedStorage?.pending)return;
         pending++;selectedStoragePending=pending;
         void attempt(async()=>{
           try{await client.command(structureId!==undefined?{type:'shelf-policy',structureId,settings}:{type:'stockpile-policy',stockpileId:stockpileId!,settings});}
@@ -1264,12 +1273,28 @@ function rebuildInspector() {
       };
       const controls=mountStorageControls(el('selected-stockpile-items'),storage,sendSettings,shelf?shelfControlOptions:undefined);selectedStorageControls=controls;
       if(shelf)controls.element.dataset.shelfControls=String(shelf.id);
+      if(shelf&&snapshot?.schemaVersion===286){
+        const linked=createLinkedStorageControls286({
+          current:()=>storageCurrent()&&snapshot?{world:snapshot,mapId:storageMap,epoch:storageEpoch,structureId:shelf.id,blocked:selectedStoragePending>0}:undefined,
+          onPendingChange:pending=>{
+            if(selectedStorageControls!==controls)return;controls.element.inert=pending;
+            const paste=panel.querySelector<HTMLButtonElement>('[data-zone-action="paste"]');if(paste)paste.disabled=!storageClipboard||pending;
+          },
+          send:async(command,context)=>{
+            if(!storageCurrent()||context.mapId!==storageMap||context.epoch!==storageEpoch||context.structureId!==shelf.id||selectedStoragePending)
+              throw Error('La carte ou l’inspection du stockage a changé.');
+            const result=await client.command(command);renderState();return result;
+          },
+        });
+        selectedLinkedStorage=linked;panel.querySelector('#cell-storage')?.prepend(linked.element);linked.update();
+      }
       const commands=storageCell?zoneActions('stockpile',stockpileZoneId(storageCell)):document.createElement('div');
       if(shelf)commands.className='zone-actions';
       const copy=document.createElement('button');copy.type='button';copy.textContent='Copier les réglages';copy.dataset.zoneAction='copy';
       copy.onclick=()=>{storageClipboard=structuredClone(controls.read());rebuildInspector();renderState();};commands.append(copy);
       const paste=document.createElement('button');paste.type='button';paste.textContent='Coller les réglages';paste.dataset.zoneAction='paste';paste.disabled=!storageClipboard;
-      paste.onclick=()=>{if(storageClipboard){const settings=structuredClone(storageClipboard);controls.show(settings);sendSettings(settings);}};commands.append(paste);
+      if(shelf&&snapshot)setTooltip(paste,{body:linkedStoragePasteScope286(snapshot,shelf.id)});
+      paste.onclick=()=>{if(storageClipboard&&storageCurrent()&&!selectedLinkedStorage?.pending){const settings=structuredClone(storageClipboard);controls.show(settings);sendSettings(settings);}};commands.append(paste);
       panel.querySelector('.cell-card')?.append(commands);
     }
     el('cell-deconstruct').onclick=()=>{if(selectedCell)void attempt(()=>client.command({type:'designate',kind:'deconstruct',...selectedCell!}));};
@@ -1674,6 +1699,11 @@ function renderState() {
       el('cell-storage').hidden = !storage;
       if(structure)updateBedControls(el('inspector'),world,structure);
       if(storage&&!selectedStoragePending)selectedStorageControls?.show(storage);
+      selectedLinkedStorage?.update();
+      if(selectedStorageControls)selectedStorageControls.element.inert=!!selectedLinkedStorage?.pending;
+      const storagePaste=el('inspector').querySelector<HTMLButtonElement>('[data-zone-action="paste"]');
+      if(storagePaste){storagePaste.disabled=!storageClipboard||!!selectedLinkedStorage?.pending;
+        if(structure&&isShelfKind(structure.kind))setTooltip(storagePaste,{body:linkedStoragePasteScope286(world,structure.id)});}
     }
   }
   if(currentPanel===null){const target=selectedPawn===undefined?selectedObject?.kind==='pile'&&world.piles.some(p=>p.id===selectedObject!.id&&p.humanCorpse)||selectedObject?.kind==='structure'&&world.structures.some(s=>s.id===selectedObject!.id&&s.kind==='grave')?selectedCell:undefined:world.pawns.find(p=>p.id===selectedPawn);

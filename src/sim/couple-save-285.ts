@@ -1,3 +1,4 @@
+import {isSchema285OrLater} from './schema-compatibility-257.ts';
 import {bedSlotCell} from './bed-slots.ts';
 import {coupleAdult285} from './couple-rules-285.ts';
 import {validCoupleMemoryField285} from './couple-memories-285.ts';
@@ -22,7 +23,7 @@ function field(raw:object,key:string):unknown {
  if(!d)return key in raw?invalid:undefined;
  return d.enumerable===true&&Object.hasOwn(d,'value')&&d.value!==undefined?d.value:invalid;
 }
-const dates=(version:number,tick:number,civilTick:number)=>int(version,2,285)&&int(tick)&&int(civilTick,tick,Math.floor(Number.MAX_SAFE_INTEGER/10));
+const dates=(version:number,tick:number,civilTick:number)=>int(version,2,286)&&int(tick)&&int(civilTick,tick,Math.floor(Number.MAX_SAFE_INTEGER/10));
 
 export function validCoupleClock285(value:unknown,civilTick:number):value is CoupleClock285 {
  return int(civilTick,0,Math.floor(Number.MAX_SAFE_INTEGER/10))&&exact(value,['revision','rng'],['lastAttemptAtCore','nextAllowedAtCore'])
@@ -49,7 +50,7 @@ export function validCouplePawnShape285(raw:unknown,version:number,tick:number,c
  if(!raw||typeof raw!=='object'||Array.isArray(raw)||!dates(version,tick,civilTick))return false;
  const clock=field(raw,'coupleClock285'),task=field(raw,'coupleTask285');
  if(clock===invalid||task===invalid||!validCoupleMemoryField285(raw,version,tick,civilTick))return false;
- if(version!==285)return clock===undefined&&task===undefined;
+ if(!isSchema285OrLater(version))return clock===undefined&&task===undefined;
  return (clock===undefined||validCoupleClock285(clock,civilTick))&&(task===undefined||validCoupleTask285(task,tick));
 }
 

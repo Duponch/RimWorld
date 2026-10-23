@@ -5,7 +5,8 @@ import {geographicLongitudeOffsetCore256} from './site-climate.ts';
 import type {CampaignMapPresentation,CampaignSummary} from './world-map-state.ts';
 import type {CampaignState} from './world-map-state.ts';
 import type {WorldPawnOwner256} from './world-pawn-state-256.ts';
-/** Foreign-key evidence for physical origins and259 settlement memories only. Never a live map, marker, grid or UI action. */
+/** Foreign-key evidence for physical origins,259 memories and286 linked shelf
+ * groups. Never a live map, occupant, marker, grid or UI action. */
 export interface WorldPawnOriginMap256 {mapId:number;tile:number;removedAt:number;settledAt?:number}
 export function worldPawnOriginProjection256(root:CampaignState):{worldPawnOrigins?:WorldPawnOriginMap256[]} {
  if(!isSchema256Or257(root.schemaVersion)||!root.worldMaps)return {};
@@ -13,6 +14,7 @@ export function worldPawnOriginProjection256(root:CampaignState):{worldPawnOrigi
  if((Number(root.schemaVersion)===259||Number(root.schemaVersion)===260||(Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||isSchema263OrLater(Number(root.schemaVersion))))))for(const m of root.worldGroups?.lostMemories??[])if(m.kind==='new-colony-settled'&&!root.worldMaps.sites.some(s=>s.id===m.mapId))needed.add(m.mapId);
  if((Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||isSchema263OrLater(Number(root.schemaVersion)))))for(const m of root.worldGroups?.lostMemories??[])if(m.caravanCession261&&!root.worldMaps.sites.some(s=>s.id===m.mapId))needed.add(m.mapId);
  if(isSchema263OrLater(Number(root.schemaVersion)))for(const g of root.worldGroups?.groups??[])if(g.localMapId===null&&g.retreat261?.autoJoinable===true&&!root.worldMaps.sites.some(s=>s.id===g.originMapId))needed.add(g.originMapId);
+ if(Number(root.schemaVersion)===286)for(const g of root.linkedStorage286?.groups??[])if(!root.worldMaps.sites.some(s=>s.id===g.originMapId))needed.add(g.originMapId);
  const worldPawnOrigins=root.worldMaps.retired.flatMap(r=>needed.has(r.id)&&r.tile!==null?[{mapId:r.id,tile:r.tile,removedAt:r.removedAt,...(Number(root.schemaVersion)===259||Number(root.schemaVersion)===260||(Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||isSchema263OrLater(Number(root.schemaVersion)))))&&r.settledAt!==undefined?{settledAt:r.settledAt}:{}}]:[]);
  return worldPawnOrigins.length?{worldPawnOrigins}:{};
 }
@@ -45,4 +47,9 @@ export function worldPawnRetiredOriginMatches256(row:WorldPawnOwner256,origin:Wo
 /** A settlement memory may use this SAME scalar proof without inventing a Pawn origin. */
 export function settlementMemoryUsesRetiredOrigin259(value:Pick<CampaignMapPresentation|CampaignSummary,'lostMemories'>|undefined,origin:WorldPawnOriginMap256,version:number):boolean {
  return (version===259||version===260||(version===261||(Number(version)===262||isSchema263OrLater(Number(version)))))&&origin.settledAt!==undefined&&!!value?.lostMemories.some(m=>m.kind==='new-colony-settled'&&m.mapId===origin.mapId&&m.at===origin.settledAt);
+}
+/** The same authentic retired-map witness may describe a policy's origin,
+ * without implying a WorldPawn exists or a retired map can be used. */
+export function linkedStorageUsesRetiredOrigin286(value:Pick<CampaignState,'schemaVersion'|'linkedStorage286'>,origin:WorldPawnOriginMap256):boolean {
+ return Number(value.schemaVersion)===286&&!!value.linkedStorage286?.groups.some(g=>g.originMapId===origin.mapId);
 }

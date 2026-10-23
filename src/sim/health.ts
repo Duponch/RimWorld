@@ -1,3 +1,4 @@
+import {isSchema285OrLater} from './schema-compatibility-257.ts';
 import {notifyKidnapLordHarm261} from './caravan-kidnap-lord-261.ts';
 import {notifyBillWorkerUnavailable283} from './bill-worker-owners-283.ts';
 import {cancelAlcoholSpatial265} from './alcohol-state-265.ts';
@@ -46,7 +47,7 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn),ex
       notifyKidnapLordHarm261(world,pawn);
       if(status==='dead'||externalViolence)notifyColonyLoss(world,pawn,status==='dead'?'died':'downed');
       const wasSleeping=pawn.state==='sleeping';
-      const coupled=pawn.coupleTask285,physicalCoupleBed=world.schemaVersion===285&&coupled&&!carrierOf(world,pawn.id)?coupleBed285(world,pawn):undefined;
+      const coupled=pawn.coupleTask285,physicalCoupleBed=isSchema285OrLater(world.schemaVersion)&&coupled&&!carrierOf(world,pawn.id)?coupleBed285(world,pawn):undefined;
       const bed=pawn.need?.kind==='sleep'&&pawn.need.phase==='sleep'&&pawn.need.bedId!==null?pawn.need
         :physicalCoupleBed&&coupled?{kind:'sleep' as const,phase:'sleep' as const,bedId:physicalCoupleBed.id,target:{x:pawn.x,z:pawn.z},
           ...coupled.roomRest?{roomRest:coupled.roomRest}:{},...coupled.medical?{medical:coupled.medical}:{}}:null;
@@ -85,7 +86,7 @@ export function updatePawnHealth(world:World,pawn:Pawn,retainTravellingCargo=fal
     const resting=restingCandidate&&!carried;
     // Awake couple activity still owns its physical bed posture: natural
     // healing and both immunity factors do not depend on gaining sleep rest.
-    const coupleBed=world.schemaVersion===285&&pawn.coupleTask285&&!carrierOf(world,pawn.id)?coupleBed285(world,pawn):undefined;
+    const coupleBed=isSchema285OrLater(world.schemaVersion)&&pawn.coupleTask285&&!carrierOf(world,pawn.id)?coupleBed285(world,pawn):undefined;
     const bed=coupleBed??(resting?currentMedicalBed(world,pawn,carried):undefined);
     const nextInfection=record.infections?.nextId??1;
     const sky=pawn.moveCooldown===0&&pawn.state==='recreating'&&pawn.recreation.task?.activity==='skygaze'&&pawn.recreation.task.phase==='active';

@@ -1,3 +1,4 @@
+import {isSchema285OrLater} from './schema-compatibility-257.ts';
 import {memoryExpiry271,validSuspendedMemory271,memoryReadTick271} from './suspended-memory-271.ts';
 import { isBedKind } from './bed-kinds.ts';
 import { bedSlotCell,pawnBedSlot } from './bed-slots.ts';
@@ -18,7 +19,7 @@ type RoomRestTask285=Extract<NonNullable<Pawn['need']>,{kind:'sleep'}>|NonNullab
  * The common historical sleep path still borrows its original task directly. */
 function roomRestTask285(w:World,p:Pawn):RoomRestTask285|undefined {
  if(p.need?.kind==='sleep'&&p.need.phase==='sleep')return p.need;
- return w.schemaVersion===285&&p.coupleTask285&&coupleBed285(w,p)?p.coupleTask285:undefined;
+ return isSchema285OrLater(w.schemaVersion)&&p.coupleTask285&&coupleBed285(w,p)?p.coupleTask285:undefined;
 }
 
 function remember(w:World,p:Pawn,kind:RoomMemoryKind,stage:number):void {

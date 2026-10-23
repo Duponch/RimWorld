@@ -1,4 +1,5 @@
 import {isSchema273OrLater} from './schema-compatibility-257.ts';
+import {validLinkedShelfField286} from './linked-storage-save-286.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {validTargetBuildingFactionShape263} from './world-target-building-263.ts';
 import {isBlockMaterial} from './building-materials.ts';
@@ -26,7 +27,7 @@ export function validShelfBuildingShape(value:unknown,version:number):boolean {
   if(Reflect.ownKeys(value).some(k=>typeof k!=='string'||!['id','kind','x','z','orientation','footprint','material','shelf','damage',...(isSchema263OrLater(version)?['factionId']:[])].includes(k)))return false;
   if(Object.hasOwn(value,'factionId')&&!validTargetBuildingFactionShape263(value,version))return false;
   const state=value.shelf;
-  if(version<229||!object(state)||Reflect.ownKeys(state).length!==2||!Object.hasOwn(state,'cells')||!Object.hasOwn(state,'settings')
+  if(version<229||!object(state)||Reflect.ownKeys(state).length!==(Object.hasOwn(state,'linked286')?3:2)||!validLinkedShelfField286(state,version)||!Object.hasOwn(state,'cells')||!Object.hasOwn(state,'settings')
     ||!Array.isArray(state.cells)||state.cells.length!==(value.kind==='shelf'?2:1)||Reflect.ownKeys(state.cells).length!==state.cells.length+1
     ||state.cells.some((id,i)=>!Object.hasOwn(state.cells as object,i)||!integer(id,1))||new Set(state.cells).size!==state.cells.length
     ||!validShelfSettings(state.settings,version)||!integer(value.orientation,0,3)||value.footprint!=='standard'

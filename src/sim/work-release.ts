@@ -1,3 +1,4 @@
+import {isSchema285OrLater} from './schema-compatibility-257.ts';
 import {releaseShipCasketCarry277} from './ship-casket-carry-277.ts';
 import {prepareCoupleRelease285} from './couple-release-285.ts';
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
@@ -186,7 +187,7 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan):boolean {
 /** Release task/service claims independently of ownership. Only involuntary or tactical
  * interruption may use this while an object is still carried. */
 export function releaseAssignments(world:World,pawn:Pawn,despawning=false):void {
-  if(world.schemaVersion===285&&pawn.coupleTask285)prepareCoupleRelease285(world,new Set([pawn.id])).commit();
+  if(isSchema285OrLater(world.schemaVersion)&&pawn.coupleTask285)prepareCoupleRelease285(world,new Set([pawn.id])).commit();
   releaseAllowedAreaReturn(pawn);
   releaseAnimalRescue(world,pawn);
   if(pawn.animalHandling?.kind==='lead'){
