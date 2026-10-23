@@ -434,7 +434,7 @@ Plafond court : si le contrat impose une refonte générale ou une variante de c
 
 ## Réévaluation après V471
 
-23octobre2026. Le [semis forestier volontaire](../gameplay/forestry-v471.md) est qualifié localement par reprises, publication en cours. Tous les vingt domaines et leurs interactions sont repris selon le mandat humain ; aucun pourcentage global n’est déduit des versions. Recherche, semis et croissance réels de l’arbre276 sont acquis ; la longue continuation perd sa seule coloniste après un raid. La coupe, le dépôt, l’usage du bois et un nouveau semis sont acquis dans un autre témoin dont la maturité initiale est déclarée. Ces limites ne deviennent ni campagne annuelle réussie ni défaut forestier causal démontré. La [préparation transversale](../../tmp/forestry-v471/post-lot-priorities.md) garde la comparaison détaillée et ses lectures actuelles.
+23octobre2026. Le [semis forestier volontaire](../gameplay/forestry-v471.md) est publié dc4c3694/5c7fdea3,20réponses HTTPS ciblées exactes, sauvegardes publiques inchangées ; qualification locale acquise par reprises. Tous les vingt domaines et leurs interactions sont repris selon le mandat humain ; aucun pourcentage global n’est déduit des versions. Recherche, semis et croissance réels de l’arbre276 sont acquis ; la longue continuation perd sa seule coloniste après un raid. La coupe, le dépôt, l’usage du bois et un nouveau semis sont acquis dans un autre témoin dont la maturité initiale est déclarée. Ces limites ne deviennent ni campagne annuelle réussie ni défaut forestier causal démontré. La [préparation transversale](../../tmp/forestry-v471/post-lot-priorities.md) garde la comparaison détaillée et ses lectures actuelles.
 
 | Domaine | État actuel et besoin ordinaire à comparer |
 |---|---|

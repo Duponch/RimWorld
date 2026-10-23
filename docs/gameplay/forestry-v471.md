@@ -1,6 +1,6 @@
 # V471 — Semis forestiers volontaires
 
-**Qualification ciblée acquise par reprises, 23 octobre 2026 ; publication en cours. Schéma 291.** Ensemble 2 principal, avec interactions recherche, travail, milieu vivant, transport et conservation. Tous les domaines et interactions, les six ensembles, campagnes, victoire et cible FPS restent ouverts.
+**V471 publiée le23octobre2026, schéma 291 ; qualification ciblée acquise par reprises.** Ensemble 2 principal, avec interactions recherche, travail, milieu vivant, transport et conservation. Tous les domaines et interactions, les six ensembles, campagnes, victoire et cible FPS restent ouverts.
 
 ## Objectif du lot
 
@@ -38,7 +38,7 @@ La première sélection125cas donnait87acquis/38rouges. Les nouveaux scénarios 
 | Interface réelle muette | Chrome155/WebGPU1440×1000, recherche restante réelle, choix indigène au vrai select, deux réglages, approche/travail puis arbre276 au tick3659, recharges. Coupe et transport d’un arbre mûr préparé distinct acquis.18exports/11états entiers distincts, trois commandes et cinq recharges60RAF, par reprises. |
 | Coût ciblé | Carte250²,512candidats/2384arbres/128intentions, cinq échauffements et25mesures : moyenne1,398ms, p95nearest-rank1,818ms, maximum2,221ms. Monde hors mutations permises et PRNG égaux ; coût courant seul, pas comparaison fonctionnelleV470, moteur entier ou gainFPS. |
 | Présentation générale | Acquise163,670s, Chrome muet, mine/coupe et changements de vitesse. Zéro jump retenu et occupation solide ; deux signaux bruts de trajet/coupe restent dans le rapport, sans revendication de correction ou gainFPS. |
-| Publication | En attente de build, livraison et vérificationsHTTPS ; aucun lienV471 revendiqué à ce stade. |
+| Publication | Build Pages acquis6,387s ; produit dc4c3694, déploiement 5c7fdea3,20réponses HTTPS ciblées exactes. |
 
 Les rapports courts restent dans [les contrôles ROOT](../../tmp/validation-runs/), avec [comparaison des26premiers diagnostics anciens](../../tmp/forestry-v471/baseline-comparison.json), [coût acquis](../../tmp/forestry-v471/performance/2026-10-23T16-32-40-502Z/report.json), [rejeu final des18exports](../../tmp/forestry-v471/final-native-replay.json) et [équivalence de format](../../tmp/forestry-v471/final-format-proof.json). Les essais initiaux et témoins restent indépendants ; originaux et références humaines sont préservés.
 
@@ -54,6 +54,8 @@ Pour isoler la coupe, une **seconde préparation fraîche jamais jouée**, depui
 
 ## Livraison et réévaluation
 
-À compléter après qualification puis livraison effective : résultats distincts, anciens diagnostics reproduits, reprises, parcours réels, limites, mesure, empreintes de publication et contrôlesHTTPS. Sauvegardes publiques et historiques restent à préserver ; aucune disponibilité en ligne V471 n’est annoncée ici.
+Produit **dc4c369403e84008dbd9b4e1655ab36d77149cc1**, commit puis push sur origin/main ; build Pages depuis ce produit6,387s et livraison Cloudflare16,436s. [Jouer](https://elsewhere-cq7.pages.dev/) / [déploiement immuable](https://5c7fdea3.elsewhere-cq7.pages.dev/). Le [paquet local](../../tmp/elsewhere-pages/v471-package-DVws0l/report.json) conserve552fichiers/153526029octets, dont les71chemins publics de catalogue/sauvegardes strictement égaux au public et au paquet V470. Seuls HTML et les scripts principaux/Workers explicitement autorisés peuvent varier ; aucune exemption générale d’assets ou copie de QA dans la livraison.
 
-Après ce lot, reprendre la comparaison de tous les domaines Core et interactions selon la priorité humaine aux bases ordinaires. Aucun enchaînement automatique d’essences, de variantes, de guidage ou de fin de partie ; social coordonné et les autres bases restent comparés. Cette note ne ferme aucun ensemble, domaine global, campagne ou objectifFPS.
+Les [20réponses HTTPS ciblées](../../tmp/elsewhere-pages/v471-http-xS8nNi/report.json), dix par adresse stable/immuable, sont exactes en octets et types. Ce contrôle prouve la disponibilité ciblée du paquet, pas une campagne navigateur publique ou tous les chemins en ligne. La métadonnée de livraison est enregistrée ensuite sans changement produit ni nouveau build. Documents :1116fichiers/10595liens à ce contrôle, six entêtes courants291 et trois originaux strictement inchangés.
+
+Serveur QA5175/PID10220 arrêté après identité exacte le23octobre16:51:13UTC ; serveurs humains5173/5184, sauvegardes/historiques et références visuelles humaines préservés. La [réévaluation de tous les domaines et interactions](../development/audit-core-20261022.md#réévaluation-après-v471) retient un seul événement social collectif ordinaire à préparer, principalement ensemble3, avec primaire exacte et vrais propriétaires avant code. Aucun enchaînement automatique d’essences ou de variantes, ni retour automatique au vaisseau. Six ensembles, campagnes durables, victoire et cibleFPS restent ouverts.
