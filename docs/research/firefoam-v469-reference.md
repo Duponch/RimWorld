@@ -11,3 +11,6 @@ L’onde9,9 tient compte de la ligne physique et des édifices adjacents. Ses vo
 Le despawn réel arrête la mèche du même meuble ; une perte de son emballage ne provoque pas d’explosion ni de reconstruction à distance. Un vrai spawn nonload initialise l’option selon droits/recherche/Home ; le load conserve son état. Après consommation/destruction de l’installé, l’option et les droits/recherche/placement peuvent produire un nouveau blueprint vide à payer. La déconstruction ne le fait pas.
 
 Les adaptations locales sont déclarées dans la [note du lot](../gameplay/firefoam-v469.md) : détection régionale sans fallbackglobal natif, pas10Core, PRNG distinct, édifices/holders/PV locaux, cinq couches et propreté par trace, absence de nouveau contrôleur de stupéfaction de bâtiment. Cette référence ferme le contrat choisi ; elle ne prouve pas une acquisition jouée, une identité de distribution interne, tous les chemins exceptionnels ou une campagne complète.
+
+
+Adoption V469 publiée53474721/caf697e9 après qualification ciblée225cas, parcours natif muet, reprises entières et présentation ; voir la note canonique pour les5rouges historiques et les adaptations. Cette livraison ne transforme pas les règles locales déclarées en parité intégrale avec Core.

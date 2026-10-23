@@ -49,3 +49,6 @@ La [réévaluation complète après V469](audit-core-20261022.md#réévaluation-
 L’[annonce officielle Alpha15](https://ludeon.com/blog/2016/08/alpha-15-tutorial-and-drugs-released/), relue le23octobre, distingue historiquement tutoriel et aide qui reconnaît les interactions. C’est un appui historique pour séparer ces fonctions, pas une règle actuelle Core1.6 ni une autorisation d’imiter tous ses verrous. La fermeture primaire reste préalable au code du candidat retenu.
 
 Après livraison effective de V469, préparer cette boucle de guidage courte, puis décider sur son contrat concret. Si elle n’apporte qu’un habillage ou exige une refonte générale, comparer immédiatement semis forestier et événement social. Aucun nouveau lot engagé par ce texte ; tous domaines et interactions, six ensembles, campagnes durables, victoire et cible FPS restent ouverts.
+
+
+**Actualisation de livraison V469 :** produit53474721 / caf697e9 publié,20réponses HTTPS ciblées exactes,552fichiers/71chemins publics de sauvegardes conservés. Présentation finale157,402s et dernier test intégré animal/mécanique acquis ;225cas63nouveaux+162voisins. La préparation de guidage ci-dessus est retenue après livraison, sans code engagé ni règle actuelle déduite d’une annonce historique.
