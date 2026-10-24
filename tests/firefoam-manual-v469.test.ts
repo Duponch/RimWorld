@@ -106,7 +106,8 @@ test('task and command guards reject hidden, inherited, accessor, symbol, undefi
  for(const value of badTask)expect(validFirefoamManualTask290(value,290,2000,10)).toBe(false);
  expect(validFirefoamManualTask290(base,290,2000,10)).toBe(true);
  expect(validFirefoamManualTask290(task({phase:'use',progressCore:90}),290,2000,10)).toBe(true);
- for(const version of [289,291])expect(validFirefoamManualField290({firefoamTask290:base},version,2000,10)).toBe(false);
+ for(const version of [289,294])expect(validFirefoamManualField290({firefoamTask290:base},version,2000,10)).toBe(false);
+ for(const version of [290,291,292,293])expect(validFirefoamManualField290({firefoamTask290:base},version,2000,10)).toBe(true);
  expect(validFirefoamManualField290({},289,2000,10)).toBe(true);expect(validFirefoamManualField290({firefoamTask290:undefined},290,2000,10)).toBe(false);
  const inherited=Object.create({firefoamTask290:base});expect(validFirefoamManualField290(inherited,290,2000,10)).toBe(false);
  const command={type:'firefoam-trigger',pawnId:1,structureId:2};

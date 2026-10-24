@@ -3,7 +3,7 @@ import {firefoamCellCore290,firefoamData290,firefoamDense290,firefoamInteger290,
 import {validFirefoamManualField290,validateFirefoamManualOwners290} from './firefoam-manual-290.ts';
 import {validFirefoamResearchTransport290} from './research-save.ts';
 import {validCoveredInFirefoamField290} from './firefoam-actor-state-290.ts';
-import {validFirefoamActorOwners290} from './firefoam-actor-save-290.ts';
+import {validFirefoamActorOwnersWithLanesInternal290,type FirefoamLaneReaderInternal290,type FirefoamEmptyOwnerLanesInternal290} from './firefoam-actor-save-290.ts';
 import {filthCheckPeriod} from './filth-rules.ts';
 import {CAMPAIGN_FIELDS} from './secondary-site-state.ts';
 import type {World} from './types.ts';
@@ -14,6 +14,11 @@ const field=(v:object,k:string)=>{const d=Object.getOwnPropertyDescriptor(v,k);r
 const versionAllowed=(v:unknown):v is number=>firefoamInteger290(v,1,293);
 type Kind='world'|'record'|'thing'|'building'|'retainedBuilding'|'job'|'actor'|'localActor'|'health'|'feet'|'trace'|'carried'|'research'|'filth';
 type Branch=readonly [string,Kind,boolean?];
+/** Positive scalar/shape body only, never a World or clock verdict. */
+interface TracePositiveInternal290 {
+ has(value:object,version:number):boolean;
+ remember(value:object,version:number):void;
+}
 /** The closed owner/envelope lanes include original actors and retained
  * furniture. Terrain, anatomy, planet tiles and presentation caches are not
  * recursively searched. Sparse tables visit only their actual upserts. */
@@ -35,7 +40,10 @@ const lanes:readonly Branch[]=[
  ['health','health'],['filthFeet','feet'],['research','research'],['filth','filth'],
 ];
 
-function scan(raw:unknown,version:number,contexts?:Record<string,unknown>[],identities?:Set<number>):boolean {
+const laneKeys:ReadonlySet<string>=new Set(lanes.map(([key])=>key));
+const feetLaneKeys:ReadonlySet<string>=new Set(['carried']),filthLaneKeys:ReadonlySet<string>=new Set(['items']);
+
+function scan(raw:unknown,version:number,contexts?:Record<string,unknown>[],identities?:Set<number>,readLane:FirefoamLaneReaderInternal290=Object.getOwnPropertyDescriptor,skipEmptyOwnerLanes?:FirefoamEmptyOwnerLanesInternal290,tracePositive?:TracePositiveInternal290):boolean {
  if(!plain(raw))return false;
  let budget=2_000_000;const active=new Set<object>();
  const list=(v:unknown,kind:Kind):boolean=>{
@@ -57,43 +65,49 @@ function scan(raw:unknown,version:number,contexts?:Record<string,unknown>[],iden
   for(const k of ['kind','firefoam290','firefoamTask290','coveredInFirefoam290']){
    if(k in v&&!field(v,k))return false;
   }
-  const foam=field(v,'firefoam290');
-  if(foam){
-   if(kind==='world'){if(!validFirefoamWorldShape290(foam.value,version))return false;}
-   else if(kind==='building'||kind==='retainedBuilding'){
-    if(v.kind!=='firefoam-popper'||!validFirefoamPopper290(foam.value,version)||kind==='retainedBuilding'&&own(foam.value,'wick'))return false;
-   }else return false;
-  }
-  if(v.kind==='firefoam-popper'&&((version!==290&&(version!==291&&(version!==292&&version!==293)))||!['building','retainedBuilding','job'].includes(kind)||kind!=='job'&&!foam||!field(v,'material')||v.material!=='steel'))return false;
-  if(v.kind==='firefoam'){
-   if((version!==290&&(version!==291&&(version!==292&&version!==293)))||kind!=='trace'&&kind!=='carried')return false;
-   if(kind==='carried'){if(!firefoamData290(v,['kind','thickness'])||!firefoamInteger290(v.thickness,1,5))return false;}
-   else if(!firefoamData290(v,['id','kind','x','z','thickness','grownCore','expiresAfterCore','nextCheckCore'])||!firefoamInteger290(v.id,1)
-    ||!firefoamInteger290(v.thickness,1,5)||!firefoamInteger290(v.x)||!firefoamInteger290(v.z)||!firefoamInteger290(v.grownCore)||!firefoamInteger290(v.expiresAfterCore,300000,599999)||!firefoamInteger290(v.nextCheckCore,1))return false;
-  }
-  if(!validFirefoamManualField290(v,version)||own(v,'firefoamTask290')&&kind!=='localActor')return false;
-  if(own(v,'coveredInFirefoam290')&&kind!=='health'||kind==='health'&&!validCoveredInFirefoamField290(v,version))return false;
-  if(kind==='research'){
-   if(('project'in v)&&!field(v,'project'))return false;
-   if(v.project==='firefoam'&&((version!==290&&(version!==291&&(version!==292&&version!==293)))||!field(v,'firefoam')))return false;
-   if('firefoam'in v){const p=field(v,'firefoam')?.value;
-    if((version!==290&&(version!==291&&(version!==292&&version!==293)))||!firefoamData290(p,['points'],['completedAt'])||!firefoamInteger290(p.points,0,600000000)
-     ||(own(p,'completedAt')?!firefoamInteger290(p.completedAt)||p.points!==600000000||v.project==='firefoam':p.points>=600000000))return false;
+  // The four inherited/reserved fences above stay live on every hit.
+  if(kind!=='trace'||!tracePositive?.has(v,version)){
+   const foam=field(v,'firefoam290');
+   if(foam){
+    if(kind==='world'){if(!validFirefoamWorldShape290(foam.value,version))return false;}
+    else if(kind==='building'||kind==='retainedBuilding'){
+     if(v.kind!=='firefoam-popper'||!validFirefoamPopper290(foam.value,version)||kind==='retainedBuilding'&&own(foam.value,'wick'))return false;
+    }else return false;
    }
-  }
-  if(kind==='feet'){
-   const carried=field(v,'carried')?.value;
-   if(Array.isArray(carried)){
-    if(!firefoamDense290(carried,8))return false;
-    let foam=false;for(let i=0;i<carried.length;i++){const row=Object.getOwnPropertyDescriptor(carried,String(i))?.value;if(plain(row)&&field(row,'kind')?.value==='firefoam')foam=true;}
-    if(foam&&(!firefoamData290(v,['carried'],['lastTerrain'])||own(v,'lastTerrain')&&v.lastTerrain!=='dirt'))return false;
+   if(v.kind==='firefoam-popper'&&((version!==290&&(version!==291&&(version!==292&&version!==293)))||!['building','retainedBuilding','job'].includes(kind)||kind!=='job'&&!foam||!field(v,'material')||v.material!=='steel'))return false;
+   if(v.kind==='firefoam'){
+    if((version!==290&&(version!==291&&(version!==292&&version!==293)))||kind!=='trace'&&kind!=='carried')return false;
+    if(kind==='carried'){if(!firefoamData290(v,['kind','thickness'])||!firefoamInteger290(v.thickness,1,5))return false;}
+    else if(!firefoamData290(v,['id','kind','x','z','thickness','grownCore','expiresAfterCore','nextCheckCore'])||!firefoamInteger290(v.id,1)
+     ||!firefoamInteger290(v.thickness,1,5)||!firefoamInteger290(v.x)||!firefoamInteger290(v.z)||!firefoamInteger290(v.grownCore)||!firefoamInteger290(v.expiresAfterCore,300000,599999)||!firefoamInteger290(v.nextCheckCore,1))return false;
    }
+   if(!validFirefoamManualField290(v,version)||own(v,'firefoamTask290')&&kind!=='localActor')return false;
+   if(own(v,'coveredInFirefoam290')&&kind!=='health'||kind==='health'&&!validCoveredInFirefoamField290(v,version))return false;
+   if(kind==='research'){
+    if(('project'in v)&&!field(v,'project'))return false;
+    if(v.project==='firefoam'&&((version!==290&&(version!==291&&(version!==292&&version!==293)))||!field(v,'firefoam')))return false;
+    if('firefoam'in v){const p=field(v,'firefoam')?.value;
+     if((version!==290&&(version!==291&&(version!==292&&version!==293)))||!firefoamData290(p,['points'],['completedAt'])||!firefoamInteger290(p.points,0,600000000)
+      ||(own(p,'completedAt')?!firefoamInteger290(p.completedAt)||p.points!==600000000||v.project==='firefoam':p.points>=600000000))return false;
+    }
+   }
+   if(kind==='feet'){
+    const carried=field(v,'carried')?.value;
+    if(Array.isArray(carried)){
+     if(!firefoamDense290(carried,8))return false;
+     let foam=false;for(let i=0;i<carried.length;i++){const row=Object.getOwnPropertyDescriptor(carried,String(i))?.value;if(plain(row)&&field(row,'kind')?.value==='firefoam')foam=true;}
+     if(foam&&(!firefoamData290(v,['carried'],['lastTerrain'])||own(v,'lastTerrain')&&v.lastTerrain!=='dirt'))return false;
+    }
+   }
+   if(kind==='trace')tracePositive?.remember(v,version);
   }
   if(kind==='world'&&contexts&&Array.isArray(field(v,'structures')?.value)&&Array.isArray(field(v,'pawns')?.value)&&firefoamInteger290(field(v,'width')?.value,1)&&firefoamInteger290(field(v,'height')?.value,1))contexts.push(v);
   active.add(v);
   const branches:readonly Branch[]=kind==='feet'?[['carried','carried',true]]:kind==='filth'?[['items','trace',true]]:kind==='health'||kind==='trace'||kind==='carried'||kind==='research'?[]:lanes;
+  // Proof removes only an empty edge loop, after all semantics/IDs/context.
+  if(branches.length&&skipEmptyOwnerLanes?.(v,kind==='feet'?feetLaneKeys:kind==='filth'?filthLaneKeys:laneKeys)){active.delete(v);return true;}
   for(const [key,child,array]of branches){
-   const d=Object.getOwnPropertyDescriptor(v,key);if(!d){if(key in v)return false;continue;}
+   const d=readLane(v,key);if(d===null)continue;if(!d){if(key in v)return false;continue;}
    if(!d.enumerable||!own(d,'value'))return false;if(d.value===undefined||d.value===null||typeof d.value!=='object')continue;
    // Animals and mechanics are local only in their actual map collections;
    // neither can receive the human manual order, even when spawned.
@@ -106,15 +120,27 @@ function scan(raw:unknown,version:number,contexts?:Record<string,unknown>[],iden
 
 /** Called before migration, sparse reconstruction or geographic preparation. */
 export function validFirefoamHistoricalTransport290(raw:unknown,version:unknown):boolean {
- return versionAllowed(version)&&scan(raw,version)&&validFirefoamActorOwners290(raw,version);
+ return validFirefoamHistoricalWithLanesInternal290(raw,version,Object.getOwnPropertyDescriptor);
+}
+function validFirefoamHistoricalWithLanesInternal290(raw:unknown,version:unknown,readLane:FirefoamLaneReaderInternal290,skipEmptyOwnerLanes?:FirefoamEmptyOwnerLanesInternal290,tracePositive?:TracePositiveInternal290):boolean {
+ return versionAllowed(version)&&scan(raw,version,undefined,undefined,readLane,skipEmptyOwnerLanes,tracePositive)&&validFirefoamActorOwnersWithLanesInternal290(raw,version,readLane,skipEmptyOwnerLanes);
 }
 
 /** Full map context, using the captured propagation list rather than today's
  * LOS. Registry callers supply their shared Thing identity set. */
 export function validateFirefoamLocal290(w:World,ids?:{has(value:number):boolean;add(value:number):unknown}):string[] {
- const errors:string[]=[];
  try{
   if(!validFirefoamHistoricalTransport290(w,w.schemaVersion))return ['Invalid or future firefoam data.'];
+  return validatePrevalidatedFirefoamLocal290(w,ids);
+ }catch{return ['Invalid firefoam local context.'];}
+}
+
+/** Private semantic phase for the same synchronously admitted owner scopes.
+ * Public local callers still pass the complete historical/actor fence above.
+ * Never export, cache or grant this prerequisite through a packet marker. */
+function validatePrevalidatedFirefoamLocal290(w:World,ids?:{has(value:number):boolean;add(value:number):unknown}):string[] {
+ const errors:string[]=[];
+ try{
   for(const s of w.structures)if(s.firefoam290?.wick){const wick=s.firefoam290.wick;
    if(wick.startedAtCore>w.tick*10||wick.endCore<=w.tick*10||!w.firefoam290)errors.push('Invalid installed firefoam wick clock.');
   }
@@ -155,19 +181,36 @@ export function validateFirefoamLocal290(w:World,ids?:{has(value:number):boolean
 /** Complete owners are checked after their own envelope guards. A mapless
  * summary retains actors/furniture, but cannot own a local propagation wave. */
 export function validFirefoamWorld290(input:unknown):boolean {
+ return validFirefoamWorldWithLanesInternal290(input,Object.getOwnPropertyDescriptor);
+}
+/** Internal dependency adapter only. It cannot stamp a World, mint a native
+ * proof or change the strict choice of any public façade. */
+export function createFirefoamLaneValidatorsInternal290(readLane:FirefoamLaneReaderInternal290,skipEmptyOwnerLanes?:FirefoamEmptyOwnerLanesInternal290,ownedFrozenTrace?:(value:object)=>boolean){
+ const positives=new WeakMap<object,number>();
+ const tracePositive:TracePositiveInternal290|undefined=ownedFrozenTrace?{
+  has:(value,version)=>positives.get(value)===version,
+  // Only genuine deeply frozen copies can acquire this representation proof.
+  remember(value,version){if(ownedFrozenTrace?.(value))positives.set(value,version);},
+ }:undefined;
+ return {
+  historical:(raw:unknown,version:unknown)=>validFirefoamHistoricalWithLanesInternal290(raw,version,readLane,skipEmptyOwnerLanes,tracePositive),
+  world:(input:unknown)=>validFirefoamWorldWithLanesInternal290(input,readLane,skipEmptyOwnerLanes,tracePositive),
+ };
+}
+function validFirefoamWorldWithLanesInternal290(input:unknown,readLane:FirefoamLaneReaderInternal290,skipEmptyOwnerLanes?:FirefoamEmptyOwnerLanesInternal290,tracePositive?:TracePositiveInternal290):boolean {
  try{
   if(!plain(input))return false;const world=input as unknown as World,root=campaignAuthority(world) as unknown as Record<string,unknown>;
   const schema=field(root,'schemaVersion');if(!schema||!versionAllowed(schema.value))return false;
-  const maps:Record<string,unknown>[]=[],ids=new Set<number>();if(!scan(root,schema.value,maps,ids)||!validFirefoamActorOwners290(root,schema.value))return false;
+  const maps:Record<string,unknown>[]=[],ids=new Set<number>();if(!scan(root,schema.value,maps,ids,readLane,skipEmptyOwnerLanes,tracePositive)||!validFirefoamActorOwnersWithLanesInternal290(root,schema.value,readLane,skipEmptyOwnerLanes))return false;
   if(!validFirefoamResearchTransport290({...root,jobs:Array.isArray(root.jobs)?root.jobs:[]} as unknown as World,schema.value))return false;
   const shared:Record<string,unknown>={};for(const key of CAMPAIGN_FIELDS)if(own(root,key))shared[key]=root[key];
-  if(root!==input){const local:Record<string,unknown>={};for(const key of Object.keys(input)){if((CAMPAIGN_FIELDS as readonly string[]).includes(key)||key==='worldMaps'||key==='worldGroups'||key==='civilianPost')continue;const d=Object.getOwnPropertyDescriptor(input,key);if(!d||!d.enumerable||!own(d,'value'))return false;local[key]=d.value;}if(!scan(local,schema.value,maps,ids)||!validFirefoamActorOwners290(local,schema.value))return false;}
+  if(root!==input){const local:Record<string,unknown>={};for(const key of Object.keys(input)){if((CAMPAIGN_FIELDS as readonly string[]).includes(key)||key==='worldMaps'||key==='worldGroups'||key==='civilianPost')continue;const d=Object.getOwnPropertyDescriptor(input,key);if(!d||!d.enumerable||!own(d,'value'))return false;local[key]=d.value;}if(!scan(local,schema.value,maps,ids,readLane,skipEmptyOwnerLanes,tracePositive)||!validFirefoamActorOwnersWithLanesInternal290(local,schema.value,readLane,skipEmptyOwnerLanes))return false;}
   if(own(root,'firefoam290')&&!Array.isArray(root.structures))return false;
   const unique=[...new Map(maps.map(map=>[map.structures,map])).values()];for(const map of unique){
    const context={...shared,...map,schemaVersion:schema.value,tick:root.tick,nextId:root.nextId} as unknown as World;
    for(const list of [context.resources,context.stockpiles,context.growingZones,context.fires?.items,context.fires?.embers,context.projectiles,context.bombWaves])for(const row of list??[])ids.add(row.id);
   }
-  for(const map of unique){const context={...shared,...map,schemaVersion:schema.value,tick:root.tick,nextId:root.nextId} as unknown as World;if(validateFirefoamLocal290(context,ids).length)return false;}
+  for(const map of unique){const context={...shared,...map,schemaVersion:schema.value,tick:root.tick,nextId:root.nextId} as unknown as World;if(validatePrevalidatedFirefoamLocal290(context,ids).length)return false;}
   return true;
  }catch{return false;}
 }

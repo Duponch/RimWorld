@@ -81,6 +81,10 @@ export class SimulationClient {
   protected createWorker():Worker {return new Worker(new URL('./simulation.worker.ts',import.meta.url),{type:'module'});}
   protected readWorkerMessage(value:unknown):Response {return value as Response;}
 
+  /** The default client and readWorkerMessage instrumentation remain strict. */
+  protected withWorkerMessage(_source:Worker,_event:MessageEvent<unknown>,dispatch:()=>void):void {dispatch();}
+  protected workerStopped(_source:Worker):void {}
+
   protected deliverSnapshot(world: World, stepMs: number, speed: number, replaced: boolean, motion?: import('./motion-tracks').PawnTrack[]): void {
     this.onSnapshot(world, stepMs, speed, replaced, motion);
   }
@@ -95,7 +99,11 @@ export class SimulationClient {
   private startWorker() {
     this.worker = this.createWorker();
     this.stopped = false;
-    this.worker.onmessage = ({ data:raw }: MessageEvent<unknown>) => {
+    const source=this.worker;
+    this.worker.onmessage = (event:MessageEvent<unknown>) => {
+      if(source!==this.worker||this.stopped)return;
+      this.withWorkerMessage(source,event,()=>{
+      const raw=event.data;
       let data:Response;
       try{data=this.readWorkerMessage(raw);}catch{this.stop('La projection reçue ne correspond pas au Worker courant.');return;}
       if(data.type==='world-draft-progress'){
@@ -174,6 +182,7 @@ export class SimulationClient {
       if (!pending) return;
       pending.reply = data;
       this.finishReply(data.id, pending);
+      });
     };
     this.worker.onerror = (event) => {
       this.stop(`Simulation interrompue : ${event.message}`);
@@ -209,7 +218,7 @@ export class SimulationClient {
     if (this.stopped) return;
     this.stopped = true;
     this.clearWorldDraft256();
-    this.worker.terminate();
+    this.workerStopped(this.worker);this.worker.terminate();
     const fault: SimulationFault = { type: 'fault', reason, speed: 0, transport: true };
     this.fault = fault;
     this.rejectPending(new SimulationRequestError(reason, 'unknown', true));
@@ -268,7 +277,7 @@ export class SimulationClient {
     if([...this.pending.values()].some(p=>p.type==='init'||p.type==='load'||p.type==='world-draft-start'))throw Error('Un remplacement attend encore sa décision.');
     // A previous fatal worker may be retired before a NEW generation only.
     // Its already-delivered fault is not emitted again into this menu flow.
-    if(this.fault&&!this.stopped){this.worker.terminate();this.stopped=true;this.rejectPending(new SimulationRequestError(this.fault.reason,'unknown',true));}
+    if(this.fault&&!this.stopped){this.workerStopped(this.worker);this.worker.terminate();this.stopped=true;this.rejectPending(new SimulationRequestError(this.fault.reason,'unknown',true));}
     if(this.stopped){this.restartForReplacement();this.fault=undefined;}
     this.clearWorldDraft256();if(!Number.isSafeInteger(this.draftGeneration+1))throw Error('Identité de préparation épuisée.');const generation=++this.draftGeneration,request=copyDraftRequest256(input),draft:PendingWorldDraft256={generation,request,onProgress:context.onProgress};
     const cancel=()=>{draft.aborted=true;if(this.draftGeneration===generation)this.clearWorldDraft256();void this.request({type:'world-draft-cancel',generation}).catch(()=>{});};
@@ -340,7 +349,7 @@ export class SimulationClient {
   }
 
   dispose() {
-    this.worker.terminate();
+    this.workerStopped(this.worker);this.worker.terminate();
     this.clearWorldDraft256();
     this.stopped = true;
     this.rejectPending(new SimulationRequestError('Simulation fermée.', 'unknown', true));

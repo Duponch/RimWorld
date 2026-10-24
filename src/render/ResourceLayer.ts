@@ -105,7 +105,7 @@ export class ResourceLayer {
   private readonly targetTint=new ResourceTargetTint((attribute,start,count)=>this.compiledAttributeChanged435?.(attribute,start,count));
   private readonly rangeBounds=new WeakMap<THREE.BufferGeometry,ResourceRangeBounds>();
   private targetPreviewIds=new Set<number>();
-  private readonly chunks=new Map<string,{signature:string;group:THREE.Group;identities:Map<number,string>;originalSizes:Map<number,number>;currentSizes:Map<number,number>;treeIds:number[]}>();
+  private readonly chunks=new Map<string,{signature:string;group:THREE.Group;identities:Map<number,string>;originalSizes:Map<number,number>;currentSizes:Map<number,number>;visibleKeys:Set<number>;treeIds:number[]}>();
   private readonly resourceChunks=new Map<number,string>();
   private readonly treeParts=new Map<number,TreePart[]>();
   private readonly treeHits=new Map<number,TreeHit>();
@@ -366,7 +366,7 @@ export class ResourceLayer {
       if(key)this.resourceChunks.set(id,key);else this.resourceChunks.delete(id);
     }
     for (const [key, previous] of this.chunks) if ((!partial||affected.has(key))&&!chunks.has(key) && previous.signature !== '') {
-      retainResources(previous.group, new Set()); previous.signature = '';
+      retainResources(previous.group, new Set()); previous.visibleKeys.clear(); previous.signature = '';
       for(const id of previous.treeIds){this.treeParts.delete(id);this.treeHits.delete(id);}
       previous.treeIds=[];
     }
@@ -375,12 +375,19 @@ export class ResourceLayer {
       const previous = this.chunks.get(key);
       if (previous?.signature === signature) continue;
       const sizes=new Map(chunk.map(resource=>[resource.id,size(resource)]));
+      const visibleKeys=new Set(chunk.flatMap(r=>visibleResourceKeys(world,r,appearance)));
       if (previous && chunk.every(r => previous.identities.get(r.id) === resourceIdentity(world,r))) {
         const treeSizeChanged=previous.treeIds.some(id=>previous.currentSizes.get(id)!==sizes.get(id));
         if(treeSizeChanged)this.clearChopRecoil();
         resizeResources(world,previous.group,new Map(chunk.map(resource=>[resource.id,resource])),previous.originalSizes,previous.currentSizes,sizes,this.rangeBounds);
         if(treeSizeChanged)this.refreshTreeBases(previous.treeIds);
-        retainResources(previous.group, new Set(chunk.flatMap(r => visibleResourceKeys(world,r,appearance)))); previous.signature = signature; continue;
+        // Growth changes vertex positions, not the selected original ranges.
+        // Keep their index version stable until actual membership changes;
+        // otherwise the static compiler remaps/uploads the same triangles.
+        if(visibleKeys.size!==previous.visibleKeys.size||[...visibleKeys].some(id=>!previous.visibleKeys.has(id))){
+          retainResources(previous.group,visibleKeys);previous.visibleKeys=visibleKeys;
+        }
+        previous.signature = signature; continue;
       }
       if(previous)for(const id of previous.treeIds)this.treeParts.delete(id);
       const group = previous?.group ?? new THREE.Group();
@@ -427,7 +434,7 @@ export class ResourceLayer {
       ], this.texturesEnabled?this.texturedMaterial:this.staticMaterial,true,true);
       const canopy = mergedInstances(group, [{ geometry: world.site?new THREE.IcosahedronGeometry(1,0):new THREE.ConeGeometry(1, 1, 6), items: [...crowns, ...upperCrowns] },{geometry:new THREE.ConeGeometry(1,1,6),items:cones}], this.texturesEnabled?this.texturedMaterial:this.staticMaterial,true,true);
       if (canopy) { canopy.name = 'tree-canopy'; canopy.visible = this.foliageVisible; }
-      retainResources(group, new Set(chunk.flatMap(r => visibleResourceKeys(world,r,appearance))));
+      retainResources(group,visibleKeys);
       const trees=new Map(chunk.filter(r=>r.kind==='tree').map(r=>[r.id,r] as const));
       const treeIds=[...trees.keys()],treeSet=new Set(treeIds);
       for(const object of group.children){
@@ -470,7 +477,7 @@ export class ResourceLayer {
         mesh.material=this.texturesEnabled?this.windTextured:this.windPlain;
       }
       for(const id of treeIds){const hit=this.treeHits.get(id);if(hit)hit.angle=NaN;}
-      this.chunks.set(key,{signature,group,identities:new Map(chunk.map(r=>[r.id,resourceIdentity(world,r)])),originalSizes:new Map(sizes),currentSizes:new Map(sizes),treeIds});
+      this.chunks.set(key,{signature,group,identities:new Map(chunk.map(r=>[r.id,resourceIdentity(world,r)])),originalSizes:new Map(sizes),currentSizes:new Map(sizes),visibleKeys,treeIds});
       if(this.targetPreviewIds.size&&chunk.some(r=>this.targetPreviewIds.has(r.id)))this.targetTint.apply(group,this.targetPreviewIds);
     }
   }

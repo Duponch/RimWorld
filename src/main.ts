@@ -217,7 +217,7 @@ import { ITEM_DEFINITIONS, availableNutrition } from './sim/items';
 import { foodFreshnessLabel } from './ui/food-freshness';
 import { SimulationClient } from './bridge/SimulationClient';
 import type {SnapshotReader} from './bridge/SimulationClient';
-import {ResidentVegetationAssembler} from './bridge/resident-vegetation-assembler';
+import {createNativeCloneResidentLane,type NativeCloneResidentLane} from './bridge/native-clone-resident';
 import {readResidentWorkerMessage} from './bridge/resident-protocol';
 import type { AudioCue } from './bridge/audio-cues';
 import { AudioDirector } from './audio/AudioDirector';
@@ -272,10 +272,19 @@ function openResearchContext(panel:'work'|'architect'):void {
 // decoders. The command facade exposes no adoption or World callback entry.
 let firstGesturesLearning:ReturnType<typeof createFirstGesturesLearning>|undefined;
 const client = (() => {
+  // External WeakMap survives virtual createDecoder during super(), without a
+  // subclass field initializer overwriting the freshly created lane afterward.
+  const lanes=new WeakMap<SimulationClient,NativeCloneResidentLane>();
   class MainSimulationClient extends SimulationClient {
-    protected override createDecoder():SnapshotReader {return new ResidentVegetationAssembler();}
-    protected override createWorker():Worker {return new Worker(new URL('./bridge/presentation.worker.ts',import.meta.url),{type:'module'});}
+    protected override createDecoder():SnapshotReader {
+      lanes.get(this)?.close();const lane=createNativeCloneResidentLane();lanes.set(this,lane);return lane.reader;
+    }
+    protected override createWorker():Worker {const lane=lanes.get(this);if(!lane)throw Error('Missing native clone lane');return lane.createWorker();}
     protected override readWorkerMessage(value:unknown){return readResidentWorkerMessage(value);}
+    protected override withWorkerMessage(source:Worker,event:MessageEvent<unknown>,dispatch:()=>void):void {
+      const lane=lanes.get(this);if(lane)lane.withWorkerMessage(source,event,dispatch);else dispatch();
+    }
+    protected override workerStopped(_source:Worker):void {lanes.get(this)?.close();}
     protected override deliverSnapshot(world: World, cost: number, speed: number, replaced: boolean, motion?: PawnTrack[]): void {
       receiveMainSnapshot(world, cost, speed, replaced, motion);
     }

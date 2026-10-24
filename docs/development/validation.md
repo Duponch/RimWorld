@@ -1,4 +1,6 @@
-# Validation courante — V473 publiée
+# Validation courante — V474 qualifiée localement
+
+**V474 — schéma 293 inchangé :** [Régularité du rendu](performance-regularity-v474.md). Contrôles ciblés acquis par reprises,7contrats Worker natifs, typage final, présentation mine/abattage et parcours UI final muet avec recharge entière exacte. Trois paires contrôlées conservées : dernière paire >50ms38→0/180→1/153→1 en×1/×3/×6 ; preuve native distincte du premier cargo sans compilation nouvelle. Pointe90ms et débit5,8947× en×6 restent observés. Aucun résultat de suite complète ou fluidité universelle ; publication à effectuer, performances et six ensembles ouverts.
 
 **V473 publiée — schéma 293 :** [Pourparlers diplomatiques](../gameplay/peace-talks-v473.md), ensemble 4 principal. Offre mondiale, vraie caravane et cinq issues, cadeaux physiques ou attaque réelle. 184 cas distincts acquis par reprises (72 nouveaux/112 voisins), six opt-in non exécutés ; typage et natifs muets acquis, neuf recharges entières exactes. Limites du rejeu combat Node et de réactivité à 100 ms conservées ; aucun gain FPS global. Produit 8cbd2525, [déploiement 382ffce0](https://382ffce0.elsewhere-cq7.pages.dev/) / [jouer](https://elsewhere-cq7.pages.dev/), vingt réponses HTTPS ciblées exactes ; 552 fichiers/71 chemins publics de sauvegardes préservés. Tous domaines et interactions, six ensembles, campagnes et victoire restent ouverts.
 

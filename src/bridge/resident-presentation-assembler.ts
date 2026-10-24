@@ -176,6 +176,8 @@ type Chronology={calendar:number|undefined;birth:ReturnType<typeof captureNative
 const mapIdentity=(view:Pick<World,'campaignMap'>):number|string|undefined=>view.campaignMap?.revision===2?view.campaignMap.activeMapId:view.campaignMap?.active;
 
 export class ResidentPresentationAssembler {
+ protected firefoamTransport(value:unknown,version:unknown):boolean {return validFirefoamHistoricalTransport290(value,version);}
+ protected firefoamWorld(value:World,_packet:SnapshotMessage<true>):boolean {return validFirefoamWorld290(value);}
  private epoch=0;
  private revision=0;
  private current:World|undefined;
@@ -238,7 +240,7 @@ export class ResidentPresentationAssembler {
   if(unknown)return fail('Unknown resident publication field: '+unknown);
   const checkpoint=packet.kind==='checkpoint',sparseStructures=!checkpoint&&own(packet,'structures');
   const malformed=localShape(packet.world,checkpoint,sparseStructures,!checkpoint&&canReuseResidentAuxiliaryStockpiles(packet,this.current));if(malformed)return fail('Invalid resident shape: '+malformed);
-  if(!validPeaceTalksHistorical293(packet,packet.world.schemaVersion)||!validPartyHistoricalTransport292(packet,packet.world.schemaVersion)||!validForestryHistoricalTransport291(packet,packet.world.schemaVersion)||!validFirefoamHistoricalTransport290(packet,packet.world.schemaVersion)||!validBillPauseHistoricalTransport289(packet,packet.world.schemaVersion))return fail('Invalid or future resident bill reserve pause');
+  if(!validPeaceTalksHistorical293(packet,packet.world.schemaVersion)||!validPartyHistoricalTransport292(packet,packet.world.schemaVersion)||!validForestryHistoricalTransport291(packet,packet.world.schemaVersion)||!this.firefoamTransport(packet,packet.world.schemaVersion)||!validBillPauseHistoricalTransport289(packet,packet.world.schemaVersion))return fail('Invalid or future resident bill reserve pause');
   if(checkpoint&&['tiles','resources','piles','structures','baseRevision'].some(key=>own(packet,key)))return fail('Ambiguous resident checkpoint');
   const previous=this.current;
   if(!checkpoint&&(!previous||packet.epoch!==this.epoch||packet.baseRevision!==this.revision||packet.revision!==packet.baseRevision+1
@@ -280,7 +282,8 @@ export class ResidentPresentationAssembler {
    for(const key of Object.keys(previous!)as (keyof World)[])if(key!=='tiles'&&key!=='resources'&&key!=='piles'&&key!=='structures'&&!own(dynamic,key))delete (next as Partial<World>)[key];
   }
   if(!validPeaceTalksBindings293(next)||!validPartyWorld292(next)||!validForestryPolicies291(next))return fail('Invalid or locked forest growing policy');
-  if(!validFirefoamHistoricalTransport290(packet,next.schemaVersion)||!validBillPauseHistoricalTransport289(packet,next.schemaVersion)||!validFirefoamWorld290(next)||!validBillPauseWorld289(next)||!validAnimalThermalRefugeHistoricalTransport288(packet,next.schemaVersion)||!validAnimalAreaHistoricalTransport287(packet,next.schemaVersion)||!validAnimalThermalRefugeWorld288(next)||!validAnimalAreaWorld287(next)||!validLinkedStorageHistorical286(packet,next.schemaVersion)||!validCoupleHistoricalTransport285(packet,next.schemaVersion)||!validTradeRequestHistorical284(packet,next.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet,next.schemaVersion)||!validResidentTradeRequests284(next)||!validBillWorkerHistoricalTransport283(packet,next.schemaVersion)||!validLinkedStorageProjection286(next)||!validBillWorkerWorld283(next)||!validCoupleProjection285(next))return fail('Invalid resident couple or bill worker settings');
+  // Both transport fences already accepted this exact packet and schema above.
+  if(!this.firefoamWorld(next,packet)||!validBillPauseWorld289(next)||!validAnimalThermalRefugeHistoricalTransport288(packet,next.schemaVersion)||!validAnimalAreaHistoricalTransport287(packet,next.schemaVersion)||!validAnimalThermalRefugeWorld288(next)||!validAnimalAreaWorld287(next)||!validLinkedStorageHistorical286(packet,next.schemaVersion)||!validCoupleHistoricalTransport285(packet,next.schemaVersion)||!validTradeRequestHistorical284(packet,next.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet,next.schemaVersion)||!validResidentTradeRequests284(next)||!validBillWorkerHistoricalTransport283(packet,next.schemaVersion)||!validLinkedStorageProjection286(next)||!validBillWorkerWorld283(next)||!validCoupleProjection285(next))return fail('Invalid resident couple or bill worker settings');
   if(!validAnimalTrainingHistoricalTransport282(packet,next.schemaVersion)||!validAnimalTrainingWorld282(next))return fail('Invalid resident animal training or hauling');
   if(!validSmoothFloorsHistoricalTransport281(packet,next.schemaVersion)||!validSmoothFloorWorld281(next,packet.epoch===this.epoch?previous:undefined))return fail('Invalid resident natural stone smoothing');
   if((checkpoint?next.tiles.some(t=>!validSmoothFloorTile281(t,next.schemaVersion)):tileIndices.some(i=>!validSmoothFloorTile281(next.tiles[i]!,next.schemaVersion))))return fail('Invalid resident smoothed terrain');

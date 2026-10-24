@@ -9,6 +9,14 @@ export interface PlantSpawnerCell256 {
  readonly terrainDefId:string;readonly terrainTags:readonly string[];readonly occupied:boolean;readonly blocksPlanting:boolean;readonly snowDepth:number;readonly sandDepth:number;
 }
 export interface PlantSpawnerRegionCounts256 {readonly count:number;readonly species:ReadonlyMap<string,number>}
+/** Single-use population built while the actual map captures its physical
+ * owners. Transfer only within that synchronous composition; no World or
+ * mutable Resource is retained and no population survives the advance. */
+export interface PreparedPlantPopulation256 {
+ readonly at:Map<number,ExistingGenerationPlant256>;
+ readonly globalSpecies:Map<string,number>;
+ totalPlants:number;
+}
 /** Trusted actual-map session only. Cold generation keeps its complete grids
  * and validation; runtime asks the same kernel for exact reachable regions. */
 export interface PlantSpatialSpawnerInput256 extends Pick<WildPlantMapInput256,'width'|'height'|'rules'|'densityFactor'|'tileMinTemperature'|'tileMaxTemperature'|'existing'> {
@@ -40,7 +48,13 @@ export function createWildPlantSpawner256(input:WildPlantMapInput256,order:reado
 export function createSpatialWildPlantSpawner256(input:PlantSpatialSpawnerInput256,order:readonly Def[]) {
  return createPlantSpawner256(input,order,undefined,input.spatial);
 }
-function createPlantSpawner256(input:WildPlantMapInput256|PlantSpatialSpawnerInput256,order:readonly Def[],cache?:PlantRegionCache256,spatial?:PlantSpatialSpawnerInput256['spatial']) {
+/** Internal composition: the producer already accumulated the exact plain
+ * plant DTOs in source order. Cold and ordinary spatial callers still record
+ * their literal existing rows below. The producer surrenders this population. */
+export function createPreparedSpatialWildPlantSpawner256(input:PlantSpatialSpawnerInput256,order:readonly Def[],population:PreparedPlantPopulation256) {
+ return createPlantSpawner256(input,order,undefined,input.spatial,population);
+}
+function createPlantSpawner256(input:WildPlantMapInput256|PlantSpatialSpawnerInput256,order:readonly Def[],cache?:PlantRegionCache256,spatial?:PlantSpatialSpawnerInput256['spatial'],population?:PreparedPlantPopulation256) {
  const n=input.width*input.height;
  const captured=spatial?undefined:input as WildPlantMapInput256;
  const ordinaryWeights=new Map<Def,number>();for(const row of input.rules.wildPlants)ordinaryWeights.set(row.defId as Def,f(row.commonality*2));
@@ -55,10 +69,10 @@ function createPlantSpawner256(input:WildPlantMapInput256|PlantSpatialSpawnerInp
  let desired=spatial?(input as PlantSpatialSpawnerInput256).desiredPlants:0;
  if(captured)for(let c=0;c<n;c++){let value=captured.fertility[c]!;if(captured.naturalRoof[c])value=f(value*.5);if(anyIgnores&&captured.water[c]&&value<=0)value=f(.1);base![c]=value;desired=f(desired+Math.min(f(value*multiplier(c)),1));}
  const topology=captured?(cache?cache.read(input.width,input.height,captured.regionTypes,base!):createPlantGenerationRegions256(input.width,input.height,captured.regionTypes,base!)):undefined;
- const regionCounts=new Int32Array(topology?.regions.length??0),regionSpecies=topology?.regions.map(()=>new Map<string,number>())??[],globalSpecies=new Map<string,number>();
- const at=new Map<number,ExistingGenerationPlant256>();let totalPlants=0;
+ const regionCounts=new Int32Array(topology?.regions.length??0),regionSpecies=topology?.regions.map(()=>new Map<string,number>())??[],globalSpecies=population?.globalSpecies??new Map<string,number>();
+ const at=population?.at??new Map<number,ExistingGenerationPlant256>();let totalPlants=population?.totalPlants??0;
  const record=(plant:ExistingGenerationPlant256)=>{at.set(plant.cell,plant);if(!plant.nonStump)return;totalPlants++;globalSpecies.set(plant.defId,(globalSpecies.get(plant.defId)??0)+1);if(spatial){spatial.record();return;}for(const r of touchablePlantRegions256(topology!,plant.cell,captured!.walkableNoDoor)){regionCounts[r]++;const counts=regionSpecies[r]!;counts.set(plant.defId,(counts.get(plant.defId)??0)+1);}};
- for(const plant of input.existing)record(plant);
+ if(!population)for(const plant of input.existing)record(plant);
  const countAt=(region:PlantGenerationRegion256)=>spatial?spatial.counts(region,at).count:regionCounts[region.id]!;
  const speciesAt=(region:PlantGenerationRegion256,def:string)=>spatial?spatial.counts(region,at).species.get(def)??0:regionSpecies[region.id]!.get(def)??0;
  const lowest=Math.min(...all.map(d=>FACTS[d].wildOrder)),maxCluster=Math.max(0,...all.map(d=>FACTS[d].wildClusterRadius));

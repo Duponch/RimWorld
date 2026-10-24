@@ -2,6 +2,7 @@ import {expect,test} from 'vitest';
 import {createWorld} from '../src/sim/engine';
 import type {Structure,World} from '../src/sim/types';
 import {TICKS_PER_DAY} from '../src/sim/types';
+import {newShelfStorage} from '../src/sim/shelf-storage';
 import {lightSources} from '../src/sim/light-sources';
 import {caveLightSources256} from '../src/sim/cave-flora-256';
 import {roofCoverage} from '../src/sim/roof-rules';
@@ -19,6 +20,7 @@ function fixture(){
   {...structure('standing-lamp',10,10),power:{on:true,parentId:null}},
   {...structure('machining-table',10,10),power:{on:true,parentId:null}},
   {...structure('torch-lamp',9,10),fuel:{ticks:100,burned:0,autoRefuel:true}}];
+ w.structures[1]!.shelf=newShelfStorage([w.nextId++],w.schemaVersion);
  w.roofing={constructed:[8*w.width+9],build:[],remove:[],cursor:0,natural:{thin:[4*w.width+4],thick:[5*w.width+4]}};
  w.piles=[{id:w.nextId++,kind:'wood',item:'wood',quantity:10,owner:{type:'ground',x:12,z:12}},
   {id:w.nextId++,kind:'wood',item:'wood',quantity:20,owner:{type:'ground',x:12,z:12}}];

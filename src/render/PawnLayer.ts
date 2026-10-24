@@ -27,7 +27,7 @@ import { apparelProjection,apparelAppearance,SIMPLE_HELMET_COLORS267 } from './c
 import { coreTimeSeconds,localTimeSeconds } from '../bridge/clock-rate';
 import { growPawnBuffers } from './pawn-buffers';
 import { isColonist } from '../sim/affiliation';
-import { pawnGeometry,cargoGeometry,selectCargoGeometryKinds,PARKA_HOOD_DYE,FLAK_HELMET_DYE,PLATE_ARMOR_DYE,SIMPLE_HELMET_DYE,TUQUE_DYE,RECON_HELMET_DYE,RECON_ARMOR_DYE,PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS } from './pawn-geometry';
+import { pawnGeometry,cargoGeometry,selectCargoGeometryKinds,prepareCargoGeometryForCompile,PARKA_HOOD_DYE,FLAK_HELMET_DYE,PLATE_ARMOR_DYE,SIMPLE_HELMET_DYE,TUQUE_DYE,RECON_HELMET_DYE,RECON_ARMOR_DYE,PAWN_EYE_OPEN,PAWN_EYE_CLOSED,PAWN_EYE_CROSS } from './pawn-geometry';
 import { equipmentProjection } from './character-equipment';
 import { RESIDENT_WEAPON_VISUALS269,weaponVisual } from './weapon-shape';
 import {LONGSWORD_DYE270,LONGSWORD_EQUIPMENT270,longswordStrikeActivity270} from './longsword-parts270';
@@ -258,6 +258,26 @@ export class PawnLayer {
     const geometry=this.fireMesh.geometry as THREE.InstancedBufferGeometry,count=geometry.instanceCount;
     geometry.instanceCount=Math.max(1,count);
     return ()=>{geometry.instanceCount=count;};
+  }
+  /** Keep both resident cargo materials visible to the existing scene/shadow
+   * preparation. No snapshot, attribute, material or capacity is fabricated. */
+  prepareCargoForCompile():()=>void {
+    const restorers:(()=>void)[]=[];let active=true;
+    const restore=()=>{if(!active)return;active=false;for(let i=restorers.length-1;i>=0;i--)restorers[i]!();};
+    try {
+      for(const mesh of [this.cargoMesh,this.partialCargoMesh]) {
+        if(!mesh)continue;
+        const geometry=mesh.geometry as THREE.InstancedBufferGeometry,visible=mesh.visible;
+        const restoreGeometry=prepareCargoGeometryForCompile(geometry);
+        mesh.visible=true;
+        restorers.push(()=>{
+          const sameGeometry=mesh.geometry===geometry;
+          restoreGeometry(sameGeometry);
+          if(mesh.visible===true)mesh.visible=visible;
+        });
+      }
+      return restore;
+    } catch(error) {restore();throw error;}
   }
   private showPose(id:number,pose:number,tick:number):void {
     const previous=this.shownPoses.get(id);

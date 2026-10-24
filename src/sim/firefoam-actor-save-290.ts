@@ -12,6 +12,14 @@ const lanes=new Set(['world','summary','dynamic','campaign','map','worldMaps','s
 /** Supplemental closed owner-context fence. Main guards still own actor shapes,
  * IDs and clocks. Relative remaining time is valid unchanged in frozen owners. */
 export function validFirefoamActorOwners290(raw:unknown,version:number):boolean {
+ return validFirefoamActorOwnersWithLanesInternal290(raw,version,Object.getOwnPropertyDescriptor);
+}
+
+/** Internal dependency only, never an adoption or World capability. null is
+ * reserved for an absent lane on the fixed native clone path. */
+export type FirefoamLaneReaderInternal290=(value:object,key:string)=>PropertyDescriptor|undefined|null;
+export type FirefoamEmptyOwnerLanesInternal290=(value:object,laneKeys:ReadonlySet<string>)=>boolean;
+export function validFirefoamActorOwnersWithLanesInternal290(raw:unknown,version:number,readLane:FirefoamLaneReaderInternal290,skipEmptyOwnerLanes?:FirefoamEmptyOwnerLanesInternal290):boolean {
  if(!Number.isSafeInteger(version)||version<1||version>293)return false;
  const active=new Set<object>();let budget=2_000_000;
  const visit=(v:unknown,forbidden=false):boolean=>{
@@ -35,8 +43,10 @@ export function validFirefoamActorOwners290(raw:unknown,version:number):boolean 
    }
    // This field belongs only inside an admitted MedicalRecord.
    if('coveredInFirefoam290'in v)return false;
+   // All actor semantics above still run, even when no custody edge exists.
+   if(skipEmptyOwnerLanes?.(v,lanes)){active.delete(v);return true;}
    for(const key of lanes){
-    const d=Object.getOwnPropertyDescriptor(v,key);if(!d){if(key in v)return false;continue;}
+    const d=readLane(v,key);if(d===null)continue;if(!d){if(key in v)return false;continue;}
     if(!d.enumerable||!own(d,'value'))return false;
     let initial=blocked;
     if(key==='startingArrival'&&plain(d.value)){

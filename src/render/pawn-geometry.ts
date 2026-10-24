@@ -286,12 +286,55 @@ export function cargoGeometry(): THREE.InstancedBufferGeometry {
 export interface CargoGeometryRange {kind:number;start:number;count:number;materialIndex:number}
 const activeCargoKinds=new WeakMap<THREE.BufferGeometry,string>();
 
+type CargoGroups=THREE.BufferGeometry['groups'];
+interface CargoCompilePreparation {
+  groups:CargoGroups;saved:CargoGroups;override:CargoGroups[number]|undefined;
+  count:number;warmCount:number;
+}
+const cargoCompilePreparations=new WeakMap<THREE.InstancedBufferGeometry,CargoCompilePreparation>();
+function ownsCargoCompileGroups(geometry:THREE.InstancedBufferGeometry,state:CargoCompilePreparation):boolean {
+  const expected=state.override?[state.override]:state.saved;
+  return geometry.groups===state.groups&&geometry.groups.length===expected.length&&
+    geometry.groups.every((group,index)=>group===expected[index]);
+}
+/** The producer has already written its new instanceCount before selection.
+ * Retire only the temporary groups, even on an unchanged-kind cache hit. */
+function releaseCargoCompileGroups(geometry:THREE.InstancedBufferGeometry):void {
+  const state=cargoCompilePreparations.get(geometry);
+  if(!state)return;
+  cargoCompilePreparations.delete(geometry);
+  if(state.override&&ownsCargoCompileGroups(geometry,state))
+    geometry.groups.splice(0,geometry.groups.length,...state.saved);
+}
+/** One real packed range warms the existing material/attributes, including its
+ * shadow pass. A later producer selection owns the new groups and count. */
+export function prepareCargoGeometryForCompile(geometry:THREE.InstancedBufferGeometry):(stillOwned?:boolean)=>void {
+  if(cargoCompilePreparations.has(geometry))throw new Error('Cargo geometry is already preparing');
+  const groups=geometry.groups,saved=[...groups],count=geometry.instanceCount;
+  const packed=(geometry.userData.cargoRangesByKind as Record<number,CargoGeometryRange>|undefined)?.[4];
+  if(!groups.length&&(!packed||!Number.isInteger(packed.count)||packed.count<=0))throw new Error('Packed cargo preparation range is missing');
+  // A unique immutable copy distinguishes the override from a real selection.
+  const override=groups.length?undefined:Object.freeze({...packed!});
+  const state:CargoCompilePreparation={groups,saved,override,count,warmCount:Math.max(1,count)};
+  if(override)groups.splice(0,groups.length,override);
+  geometry.instanceCount=state.warmCount;
+  cargoCompilePreparations.set(geometry,state);
+  return(stillOwned=true)=>{
+    if(cargoCompilePreparations.get(geometry)!==state)return;
+    cargoCompilePreparations.delete(geometry);
+    if(!stillOwned||!ownsCargoCompileGroups(geometry,state))return;
+    if(override)groups.splice(0,groups.length,...saved);
+    if(geometry.instanceCount===state.warmCount)geometry.instanceCount=count;
+  };
+}
+
 /** Groups only change where the producer changes cargo kinds. A single-entry
  * material array makes Three submit these ranges with the same shader/material.
  * Source vertices and the actor instance order never change. Immutable range
  * metadata survives the population-growth clone; selection is geometry-local
  * because Three's clone shares userData but copies the groups array. */
 export function selectCargoGeometryKinds(geometry:THREE.InstancedBufferGeometry,kinds:ReadonlySet<number>):void {
+  releaseCargoCompileGroups(geometry);
   const byKind=geometry.userData.cargoRangesByKind as Record<number,CargoGeometryRange>|undefined;
   if(!byKind)throw new Error('Cargo geometry ranges are missing');
   const selected:CargoGeometryRange[]=[];

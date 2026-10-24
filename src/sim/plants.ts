@@ -111,12 +111,17 @@ function createPlantGrowthInputs(world:World):GrowthPassInputs {
   type Substrate=ReturnType<typeof naturalPlantSubstrate256>;
   type Ground={fertility:number;substrate?:Substrate;allowed:Map<Resource['species'],boolean|undefined>};
   const grounds=new Map<string,Map<string|undefined,[Ground?,Ground?]>>();
+  let recent:Ground|undefined,recentTerrain:string|undefined,recentStone:string|undefined,recentLayer=-1;
   const ground=(plant:Resource):Ground=>{
     const tile=world.tiles[plant.z*world.width+plant.x]!,terrain=tile.terrain,stone=tile.stone;
+    const layer=tile.bridge||tile.floor?1:0;
+    // Re-read the actual key on every call. fertility -> allowed commonly
+    // repeats this exact private entry, without needing two more Map lookups.
+    if(recent&&terrain===recentTerrain&&stone===recentStone&&layer===recentLayer)return recent;
     let stones=grounds.get(terrain);if(!stones){stones=new Map();grounds.set(terrain,stones);}
     let layers=stones.get(stone);if(!layers){layers=[];stones.set(stone,layers);}
-    const layer=tile.bridge||tile.floor?1:0;
-    return layers[layer]??(layers[layer]={fertility:terrainGroundFertility256(tile),allowed:new Map()});
+    const value=layers[layer]??(layers[layer]={fertility:terrainGroundFertility256(tile),allowed:new Map()});
+    recentTerrain=terrain;recentStone=stone;recentLayer=layer;return recent=value;
   };
   const annual=new Map<number,number>(),full=new Map<number,number>();
   const integral=(tick:number,artificial:boolean):number=>{
@@ -131,7 +136,8 @@ function createPlantGrowthInputs(world:World):GrowthPassInputs {
     },
     allowed(plant){
       const entry=ground(plant),species=plant.species;
-      if(entry.allowed.has(species))return entry.allowed.get(species);
+      const cached=entry.allowed.get(species);
+      if(cached!==undefined||entry.allowed.has(species))return cached;
       const substrate=entry.substrate??(entry.substrate=naturalPlantSubstrate256(world.tiles[plant.z*world.width+plant.x]!));
       const value=plantSubstrateAllowed256(species,world.schemaVersion,substrate);entry.allowed.set(species,value);return value;
     },

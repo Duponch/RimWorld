@@ -9,7 +9,7 @@ import {planetFactionTargets256} from '../src/sim/planet-faction-targets-256.ts'
 import {canPlaceWorldSettlement} from '../src/sim/world-settlement-placement.ts';
 import {createWildPlantMapReader256,createActualWildPlantMapReader256} from '../src/sim/wild-plant-runtime-map-256.ts';
 import {actualPlantPhysicalMasks256} from '../src/sim/actual-plant-physical-masks-256.ts';
-import {createActualPlantSpatialSession256} from '../src/sim/actual-plant-spatial-session-256.ts';
+import {createActualPlantSpatialSession256,createActualPlantSpatialSpawner256} from '../src/sim/actual-plant-spatial-session-256.ts';
 import {PlantSpatialRegions256} from '../src/sim/wild-plant-spatial-regions-256.ts';
 import {createPlantGenerationRegions256,plantRegionsNear256,touchablePlantRegions256} from '../src/sim/wild-plant-regions-256.ts';
 import {createWildPlantSpawner256,createSpatialWildPlantSpawner256} from '../src/sim/wild-plant-spawner-256.ts';
@@ -20,6 +20,7 @@ import {createWildPlantResource256} from '../src/sim/wild-plant-acquisition-v256
 import {createWildFloraState256,advanceWildFlora256,plantRegrowthMtb256} from '../src/sim/wild-plant-runtime-256.ts';
 import {WorldGenerationRandom} from '../src/sim/world-generation-random.ts';
 import {healthRandom} from '../src/sim/health.ts';
+import {geyserCells256} from '../src/sim/local-geyser-state-256.ts';
 import {addMaterial} from '../src/sim/materials.ts';
 import {sowDaylily} from '../src/sim/flower-pot.ts';
 import type {World,Structure,Job,Tile} from '../src/sim/types.ts';
@@ -63,6 +64,29 @@ function populated(){
 }
 
 describe('V425 ephemeral spatial flora',()=>{
+ it('preserves raw geyser Map-key observations without adding coordinate validation or changing existing guards',()=>{
+  const world=prepare(),input=coldReader().capture(world),n=world.width*world.height;
+  const raw=[{x:4,z:4},{x:-1,z:0},{x:31,z:31},{x:2000,z:2000},{x:.5,z:.125},
+   {x:.5,z:.015625},{x:NaN,z:0},{x:Infinity,z:0},{x:-Infinity,z:0},{x:-0,z:0},{x:'',z:0}];
+  for(const point of raw){
+   const geyser={id:world.nextId,x:point.x,z:point.z,ticksUntilSpray:10,sprayTicksLeft:0} as unknown as NonNullable<World['geysers']>['items'][number];
+   world.geysers={revision:1,atTick:world.tick,items:[geyser]};
+   // Legacy Map keys are intentionally not normalized: strings/fractions/NaN
+   // never matched numeric valid queries, while edge spill/cancellation can.
+   const legacy=new Map<unknown,number>();for(const key of geyserCells256(world.width,geyser))legacy.set(key,8);
+   const actual=session(world,input,0);
+   for(let c=0;c<n;c++){
+    expect(actual.spatial.cell(c).blocksPlanting).toBe(legacy.has(c));
+    expect(actual.spatial.cell(c).occupied).toBe(false);
+   }
+   for(const c of [-1,n,.5,NaN,Infinity])expect(()=>actual.spatial.cell(c)).toThrow('Invalid actual spatial plant cell');
+  }
+  world.geysers!.items[0]!.x=Symbol('raw coordinate') as unknown as number;
+  expect(()=>session(world,input,0)).toThrow(TypeError);
+  delete world.geysers;
+  world.resources=[{id:world.nextId,kind:'rock',x:-1,z:0,amount:1}];
+  expect(()=>session(world,input,0)).toThrow('Physical plant owner outside its actual map');
+ });
  it('preserves exact chunk components, BFS order, float sums and diagonal contacts',()=>{
   const width=37,height=29,n=width*height,types=Uint8Array.from({length:n},(_,c)=>c%31===0?2:c%19===0?3:c%17===0?0:c%23===0?4:1),base=Float32Array.from({length:n},(_,c)=>(c%11)/7),walk=Uint8Array.from(types,v=>v===1||v===3?1:0);
   const cold=createPlantGenerationRegions256(width,height,types,base),lazy=new PlantSpatialRegions256(width,height,c=>types[c]!,c=>base[c]!);
@@ -100,6 +124,36 @@ describe('V425 ephemeral spatial flora',()=>{
    }
   }
   expect(placed).toBeGreaterThan(0);
+ });
+ it('transfers one actual population exactly, including crops, pot owners and staged record invalidation',()=>{
+  const world=populated();
+  world.resources.push({id:world.nextId++,kind:'rice',x:29,z:29,amount:6,growth:.2,growthTick:world.tick});
+  world.resources.reverse();const before=structuredClone(world),captured=coldReader().capture(world);let placed=0;
+  for(const biome of ['temperate-forest','cold-bog','tropical-swamp','desert'] as const){
+   const input={...captured,rules:LOCAL_BIOME_RULES_256[biome]},order=validatePlantMap256(input),desired=createWildPlantSpawner256(input,order).desiredPlants;
+   const literal=createSpatialWildPlantSpawner256(session(world,input,desired),order);
+   const prepared=createActualPlantSpatialSpawner256(world,{width:world.width,height:world.height,rules:input.rules,densityFactor:input.densityFactor,
+    tileMinTemperature:input.tileMinTemperature,tileMaxTemperature:input.tileMaxTemperature,desiredPlants:desired},order);
+   const a=new WorldGenerationRandom(3157),b=new WorldGenerationRandom(3157);
+   for(let i=0;i<320;i++){
+    const cell=(i*719)%world.tiles.length,expected=literal.pick(cell,a,desired,true),actual=prepared.pick(cell,b,desired,true);
+    expect(actual).toBe(expected);expect(b.state).toEqual(a.state);expect(prepared.desiredAt(cell)).toBe(literal.desiredAt(cell));
+    if(expected!==undefined){const row={cell,defId:expected,nonStump:true};literal.record(row);prepared.record(row);placed++;}
+   }
+  }
+  expect(placed).toBeGreaterThan(0);expect(world).toStrictEqual(before);
+ });
+ it('keeps actual population duplicate refusals and failure atomicity before returning a spawner',()=>{
+  for(const duplicatePot of [false,true]){
+   const world=populated(),input=coldReader().capture(world),order=validatePlantMap256(input);
+   const row=duplicatePot?world.structures.find(s=>s.kind==='flower-pot')!:world.resources[0]!;
+   world.resources.push({id:world.nextId++,kind:'rice',x:row.x,z:row.z,amount:6,growth:.2,growthTick:world.tick});
+   const before=structuredClone(world),header={width:world.width,height:world.height,rules:input.rules,densityFactor:input.densityFactor,
+    tileMinTemperature:input.tileMinTemperature,tileMaxTemperature:input.tileMaxTemperature,desiredPlants:0};
+   expect(()=>createActualPlantSpatialSession256(world,header)).toThrow('Invalid existing initial plant');
+   expect(()=>createActualPlantSpatialSpawner256(world,header,order)).toThrow('Invalid existing initial plant');
+   expect(world).toStrictEqual(before);
+  }
  });
  it('does not grant runtime trust to generic readers, copies or replaced methods',()=>{
   const actual=createActualWildPlantMapReader256(()=>1),generic=coldReader();expect(actualPlantRuntimeSessionFactory256(actual)).toBeTypeOf('function');

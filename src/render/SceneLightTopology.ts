@@ -1,14 +1,13 @@
 import {readSnapshotStructureChanges} from '../bridge/snapshot-changes';
-import {footprintCells} from '../sim/definitions';
-import {isRoomDoor} from '../sim/door-rules';
+import {roomBarrierValue,roomBarrierCells} from '../sim/room-barriers.ts';
 import {RoomTopologyCache,type RoomTopology} from '../sim/room-topology';
 import type {Structure,World} from '../sim/types';
 
 // Match RoomTopologyCache's ordered barrier inputs, including overlap precedence.
 function barrier(s:Structure,width:number):string {
-  const value=s.kind==='wall'||s.kind==='cooler'||s.kind==='vent'||s.kind==='electric-crematorium'?1:isRoomDoor(s.kind)?2:0;
+  const value=roomBarrierValue(s.kind);
   if(!value)return '';
-  return (s.kind==='electric-crematorium'?footprintCells(s):[s]).map(c=>(c.z*width+c.x)*3+value).join(',');
+  return roomBarrierCells(s).map(c=>(c.z*width+c.x)*3+value).join(',');
 }
 
 /** Owned only by MAIN's fixed immutable readers. A valid journal allows local

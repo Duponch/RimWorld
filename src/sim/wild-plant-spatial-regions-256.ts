@@ -18,6 +18,7 @@ export class PlantSpatialRegions256 {
  }
  regionAt(cell:number):PlantGenerationRegion256|undefined {
   if(!Number.isSafeInteger(cell)||cell<0||cell>=this.width*this.height)throw Error('Invalid spatial plant cell');
+  const resolved=this.at.get(cell);if(resolved)return resolved;
   const cx=Math.floor(cell%this.width/12),cz=Math.floor(Math.floor(cell/this.width)/12),chunk=cz*Math.ceil(this.width/12)+cx;
   if(!this.chunks.has(chunk)){
    this.chunks.add(chunk);

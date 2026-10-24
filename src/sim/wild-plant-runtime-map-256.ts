@@ -11,9 +11,9 @@ import {FLORA_DEFINITIONS,isPlantSpeciesInVersion} from './biome-flora.ts';
 import {WILD_PLANT_GENERATION_FACTS_256 as FACTS} from './wild-plant-generation-data-256.ts';
 import {runtimePlantCell256,runtimePlantDef256,type WildPlantMapReader256} from './wild-plant-runtime-256.ts';
 import {actualPlantPhysicalMasks256} from './actual-plant-physical-masks-256.ts';
-import {createActualPlantSpatialSession256} from './actual-plant-spatial-session-256.ts';
+import {createActualPlantSpatialSpawner256} from './actual-plant-spatial-session-256.ts';
 import {registerActualPlantRuntimeSession256} from './wild-plant-runtime-session-256.ts';
-import {createSpatialWildPlantSpawner256} from './wild-plant-spawner-256.ts';
+
 /** Actual physical classifications supplied by existing map composition.
  * Normal walkability and standability are DIFFERENT: bed/table/shelf remain
  * walkable; doors/fences/full-fill have their own RegionType precedence.
@@ -45,8 +45,8 @@ export function createActualWildPlantMapReader256(densityFactor:(world:World)=>n
    if(!Object.hasOwn(FACTS,id))throw Error(`Unresolved initial plant ${id}`);
    const def=FACTS[id as keyof typeof FACTS];if(!isPlantSpeciesInVersion(def.species,world.schemaVersion)||!Object.hasOwn(FLORA_DEFINITIONS,def.species))throw Error(`Missing concrete initial plant ${id}`);
   }
-  return createSpatialWildPlantSpawner256(createActualPlantSpatialSession256(world,{width:world.width,height:world.height,rules,densityFactor:density,
-   tileMinTemperature:range.min,tileMaxTemperature:range.max,desiredPlants:desired}),order);
+  return createActualPlantSpatialSpawner256(world,{width:world.width,height:world.height,rules,densityFactor:density,
+   tileMinTemperature:range.min,tileMaxTemperature:range.max,desiredPlants:desired},order);
  });
  return reader;
 }

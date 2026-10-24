@@ -23,7 +23,9 @@ class JournalTileSnapshotCache extends TileSnapshotCache {
 }
 export class TerrainJournalSnapshotEncoder extends SnapshotEncoder<true> {
  private requireCheckpoint=false;
- constructor(){super({structureDelta:true,minimumStructures:1000});}
+ // Even a small colony needs exact structure edges: a literal replacement
+ // invalidates MAIN's topology/support readers on every ordinary publication.
+ constructor(){super({structureDelta:true,minimumStructures:0});}
  protected override createTileCache():TileSnapshotCache {return new JournalTileSnapshotCache();}
  override encode(world:World,stepMs:number,speed:number,checkpoint=false):SnapshotMessage<true> {
   // A late codec exception can already have changed its private value cache.

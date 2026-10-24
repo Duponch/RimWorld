@@ -24,7 +24,9 @@ function fixture():World {
  return world;
 }
 function pair(world=fixture()){
- const full=new SnapshotEncoder({structureDelta:true,minimumStructures:1000}),closed=new TerrainJournalSnapshotEncoder();
+ // Match the fixed Worker's structure mode; the public Encoder still discovers
+ // every terrain value independently of the closed terrain journal.
+ const full=new SnapshotEncoder({structureDelta:true,minimumStructures:0}),closed=new TerrainJournalSnapshotEncoder();
  const history:unknown[]=[],frozen:unknown[]=[];
  const send=(checkpoint=false)=>{const before=structuredClone(world),a=structuredClone(full.encode(world,0,1,checkpoint)),b=structuredClone(closed.encode(world,0,1,checkpoint));expect(b).toStrictEqual(a);expect(world).toStrictEqual(before);expect(history).toStrictEqual(frozen);history.push(b);frozen.push(structuredClone(b));return b;};
  return {world,full,closed,send};

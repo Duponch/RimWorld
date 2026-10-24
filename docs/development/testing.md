@@ -149,3 +149,35 @@ F4 exerce les commandes dans le navigateur quand elles existent ; F5 mesure leur
 ## Documentation
 
 `npm run check:docs` contrôle liens, fragments, 25 domaines/cinq familles, les trois originaux et l’accord des six en-têtes courants avec le schéma du code. Il ne prouve pas la vérité d’une affirmation de gameplay. Tenir [la validation courante](validation.md) à jour avec les résultats réellement exécutés, les échecs ouverts, les skips et les reprises ; garder leurs diagnostics dans la preuve datée.
+
+
+## Contrats natifs de clone V474
+
+La suite dédiée couvre sept contrats du vrai Worker de présentation : checkpoint
+et delta authentiques face à une copie stricte, getter world refusé sans appel,
+mutation réentrante du prototype, Proxy inséré après capture ou dans le
+prédécesseur conservé, Event synthétique et Event enveloppé par un Proxy. Les
+mondes sont comparés intégralement au lecteur strict, avec own undefined,
+trous de tableaux et -0 conservés. Aucun skip interne ni voie rapide inactive ne
+compte comme réussite. Aucun renderer, sauvegarde jouée ou gain CPU/FPS n'est
+certifié par cette suite.
+
+ROOT fournit un serveur Vite distinct aux sources gelées et un nouveau dossier
+absolu de rapports ; la configuration ne démarre aucun serveur et utilise le
+Chromium déjà installé, muet avant la page. Exemple PowerShell depuis la racine :
+
+```powershell
+$env:NATIVE_CLONE474_NATIVE='1'
+$env:NATIVE_CLONE474_BASE_URL='http://127.0.0.1:5175'
+$env:NATIVE_CLONE474_OUTPUT='E:\Code\RimWorld\tmp\native-clone-v474\run-unique'
+node node_modules/@playwright/test/cli.js test --config playwright.native-clone-v474-native.config.ts
+```
+
+Le rapport contracts.json conserve les assertions et erreurs, y compris un échec
+de chargement. Le cas réentrant cible la pile firefoam-save-290.ts : utiliser la
+route de sources Vite, pas un bundle de production sans ces noms. Le cas de
+prédécesseur exige une vraie pile de fournitures initiale. Le spec reste opt-in
+avant la fixture page ; les fichiers .spec.ts et -browser.ts ne rejoignent pas
+la sélection Node Vitest .test.ts. Aucun provider navigateur ni dépendance
+supplémentaire n'est nécessaire. Exécuter cette suite successivement avec les
+contrôles CPU, présentation et mesures natives existants.

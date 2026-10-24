@@ -1,6 +1,7 @@
 import {afterEach,expect,test,vi} from 'vitest';
 import * as environment from '../src/sim/environment';
 import * as terrain from '../src/sim/natural-terrain-runtime-256';
+import * as substrate from '../src/sim/plant-substrate-256';
 import {createWorld} from '../src/sim/engine';
 import {createPlantGrowthReader,createPlantGrowthForecastReader,plantGrowth,harvestable} from '../src/sim/plants';
 import {floraSize} from '../src/render/flora-presentation';
@@ -83,4 +84,57 @@ test('forecast inputs share actual tick integrals and substrate without caching 
   expect(integral.mock.calls).toHaveLength(4); // anchor1200 + queried1500/1501/1563
   expect(new Set(integral.mock.calls.map(([owner])=>owner)).size).toBe(1);
   expect(integral.mock.calls[0]![0]).not.toBe(world);expect(substrate).toHaveBeenCalledTimes(1);
+});
+
+test('one current pass alternates actual terrain, stone and surface keys without reusing another ground',()=>{
+  const world=fixture();delete world.roofing;
+  const grounds:Tile[]=[{terrain:'soil-natural'},{terrain:'rich-soil'},{terrain:'gravel'},
+    {terrain:'rough-stone',stone:'granite'},{terrain:'rough-stone',stone:'marble'},
+    {terrain:'soil-natural',floor:'wood-planks'},{terrain:'soil-natural',bridge:true}];
+  for(const [i,plant]of world.resources.entries()){
+    world.tiles[plant.z*world.width+plant.x]={...grounds[i%grounds.length]!};
+    plant.growth=.2;plant.growthTick=1200;plant.growthThermalFactor=.875;delete plant.blight;delete plant.growthLight;
+  }
+  const before=structuredClone(world),query=createPlantGrowthReader(world),rng=world.rng;
+  for(const index of [0,1,0,2,1,3,0,4,0,5,0,6,0,7,8,9,10,11,0,1,0]){
+    const plant=world.resources[index]!;expect(Object.is(query(plant),plantGrowth(world,plant))).toBe(true);
+  }
+  expect(world).toStrictEqual(before);expect(world.rng).toBe(rng);
+});
+
+test('an allowed result of undefined stays memoized as a real result, rather than a miss',()=>{
+  const world=fixture();delete world.roofing;
+  const plant:Resource={id:world.nextId++,kind:'berries',x:2,z:3,amount:10,growth:.2,growthTick:1200};
+  world.tiles[plant.z*world.width+plant.x]={terrain:'soil-natural'};
+  const expected=plantGrowth(world,plant),allowed=vi.spyOn(substrate,'plantSubstrateAllowed256'),query=createPlantGrowthReader(world);
+  for(let n=0;n<4;n++)expect(Object.is(query(plant),expected)).toBe(true);
+  expect(allowed).toHaveBeenCalledTimes(1);expect(allowed.mock.results[0]!.value).toBeUndefined();
+});
+
+test.each(['terrain','stone','bridge','floor'] as const)('a recent ground still reads live %s and preserves its error and retry',key=>{
+  const world=fixture();delete world.roofing;const plant=world.resources[0]!;
+  plant.growth=.2;plant.growthTick=1200;delete plant.blight;delete plant.growthLight;
+  const tile=world.tiles[plant.z*world.width+plant.x]!,query=createPlantGrowthReader(world),rng=world.rng;
+  const expected=plantGrowth(world,plant);expect(Object.is(query(plant),expected)).toBe(true);expect(Object.is(query(plant),expected)).toBe(true);
+  const prior=Object.getOwnPropertyDescriptor(tile,key),message='actual ground '+key;
+  Object.defineProperty(tile,key,{enumerable:true,configurable:true,get(){throw Error(message);}});
+  try{expect(()=>query(plant)).toThrow(message);}
+  finally{if(prior)Object.defineProperty(tile,key,prior);else Reflect.deleteProperty(tile,key);}
+  expect(Object.is(query(plant),expected)).toBe(true);expect(world.rng).toBe(rng);
+});
+
+test('a missing current tile still throws after a recent hit and the restored input retries',()=>{
+  const world=fixture();delete world.roofing;const plant=world.resources[0]!;
+  plant.growth=.2;plant.growthTick=1200;delete plant.blight;delete plant.growthLight;
+  const index=plant.z*world.width+plant.x,tile=world.tiles[index]!,query=createPlantGrowthReader(world),expected=plantGrowth(world,plant);
+  expect(Object.is(query(plant),expected)).toBe(true);Reflect.deleteProperty(world.tiles,String(index));
+  try{expect(()=>query(plant)).toThrow(TypeError);}finally{world.tiles[index]=tile;}
+  expect(Object.is(query(plant),expected)).toBe(true);
+});
+
+test('a mature current plant still performs its original roof read before returning',()=>{
+  const world=fixture(),plant=world.resources[0]!;plant.growth=1;delete plant.blight;delete plant.growthLight;
+  const query=createPlantGrowthReader(world);
+  Object.defineProperty(world,'roofing',{enumerable:true,configurable:true,get(){throw Error('actual roof read');}});
+  expect(()=>query(plant)).toThrow('actual roof read');expect(()=>plantGrowth(world,plant)).toThrow('actual roof read');
 });

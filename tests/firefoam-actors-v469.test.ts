@@ -33,10 +33,11 @@ test('prepared physical custody excludes a held animal or mechanical patient fro
  const other=JSON.stringify(w);expect(canApplyFirefoamActor290(w,`mech:${m.id}`)).toBe(false);expect(JSON.stringify(w)).toBe(other);
 });
 
-test('scalar protection is prospective290 only and closes future291 without manufacturing absent state',()=>{
+test('scalar protection starts at290 and closes future schemas without manufacturing absent state',()=>{
  const r={coveredInFirefoam290:foam()};expect(validCoveredInFirefoamField290(r,290)).toBe(true);
- for(const v of [1,194,256,289,291,290.5,NaN])expect(validCoveredInFirefoamField290(r,v)).toBe(false);
- expect(validCoveredInFirefoamField290({},289)).toBe(true);expect(validCoveredInFirefoamField290({},290)).toBe(true);expect(validCoveredInFirefoamField290({},291)).toBe(false);
+ for(const v of [1,194,256,289,294,290.5,NaN])expect(validCoveredInFirefoamField290(r,v)).toBe(false);
+ for(const v of [290,291,292,293])expect(validCoveredInFirefoamField290(r,v)).toBe(true);
+ expect(validCoveredInFirefoamField290({},289)).toBe(true);expect(validCoveredInFirefoamField290({},290)).toBe(true);expect(validCoveredInFirefoamField290({},294)).toBe(false);
  for(const remainingCore of [0,-1,901,.5,NaN,Infinity])expect(validCoveredInFirefoamState290({remainingCore})).toBe(false);
  for(const remainingCore of [1,10,899,900])expect(validCoveredInFirefoamState290({remainingCore})).toBe(true);
 });

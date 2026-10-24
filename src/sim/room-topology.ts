@@ -1,6 +1,4 @@
-import {isShipPartKind276} from './ship-part-content-276.ts';
-import { isRoomDoor } from './door-rules.ts';
-import { footprintCells } from './definitions.ts';
+import {roomBarrierValue,roomBarrierCells} from './room-barriers.ts';
 import type { World } from './types.ts';
 
 export interface RoomSpace {
@@ -57,9 +55,9 @@ export class RoomTopologyCache {
     // at each read. Barrier order is captured because later objects win.
     let inputChanged = resized, count = 0;
     for (const building of world.structures) {
-      const value = building.kind === 'wall' || building.kind === 'cooler' || building.kind === 'vent' || building.kind==='electric-crematorium'||isShipPartKind276(building.kind)||building.kind==='geothermal-generator' ? 1 : isRoomDoor(building.kind) ? 2 : 0;
+      const value = roomBarrierValue(building.kind);
       if (!value) continue;
-      for(const cell of building.kind==='electric-crematorium'||isShipPartKind276(building.kind)||building.kind==='geothermal-generator'?footprintCells(building):[building]){
+      for(const cell of roomBarrierCells(building)){
         const code = (cell.z * width + cell.x) * 3 + value;
         if (this.barriers[count] !== code) { this.barriers[count] = code; inputChanged = true; }
         count++;

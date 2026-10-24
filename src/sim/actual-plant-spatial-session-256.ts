@@ -12,7 +12,7 @@ import {PlantSpatialRegions256} from './wild-plant-spatial-regions-256.ts';
 import {WILD_PLANT_GENERATION_FACTS_256 as FACTS,type WildPlantGenerationDef256 as Def} from './wild-plant-generation-data-256.ts';
 import type {World,StructureKind,Cell} from './types.ts';
 import type {ExistingGenerationPlant256} from './wild-plant-generation-256.ts';
-import type {PlantSpatialSpawnerInput256,PlantSpawnerCell256,PlantSpawnerRegionCounts256} from './wild-plant-spawner-256.ts';
+import {createPreparedSpatialWildPlantSpawner256,type PreparedPlantPopulation256,type PlantSpatialSpawnerInput256,type PlantSpawnerCell256,type PlantSpawnerRegionCounts256} from './wild-plant-spawner-256.ts';
 
 const f=Math.fround;
 const BLOCKED=1,FULL=2,COVER=4,BLOCKS_PLANT=8,DOOR=16,FENCE=32;
@@ -25,18 +25,34 @@ type Header256=Omit<PlantSpatialSpawnerInput256,'existing'|'spatial'>;
  * retained by World, save/load, or the next tick. This is not an admission
  * validator: the public cold capture remains the complete strict boundary. */
 export function createActualPlantSpatialSession256(world:World,header:Header256):PlantSpatialSpawnerInput256 {
+ return captureActualPlantSpatialSession256(world,header);
+}
+/** Runtime-only ownership transfer. The full physical capture and duplicate
+ * guards still run once; the kernel receives the population built by that
+ * same pass. No exposed existing array or previous session is reused. */
+export function createActualPlantSpatialSpawner256(world:World,header:Header256,order:readonly Def[]) {
+ const population:PreparedPlantPopulation256={at:new Map(),globalSpecies:new Map(),totalPlants:0};
+ const input=captureActualPlantSpatialSession256(world,header,population);
+ return createPreparedSpatialWildPlantSpawner256(input,order,population);
+}
+function captureActualPlantSpatialSession256(world:World,header:Header256,population?:PreparedPlantPopulation256):PlantSpatialSpawnerInput256 {
  const n=world.width*world.height;
  if(world.schemaVersion<256||header.width!==world.width||header.height!==world.height||![world.width,world.height].every(v=>Number.isSafeInteger(v)&&v>=1&&v<=400)||world.tiles.length!==n)throw Error('Invalid actual spatial plant map');
- const owners=new Map<number,number>(),existing:ExistingGenerationPlant256[]=[],plantCells=new Set<number>();
+ const owners=new Uint8Array(n),existing:ExistingGenerationPlant256[]=[],plantCells=population?.at??new Set<number>();
  const index=(c:Cell)=>{if(!Number.isSafeInteger(c.x)||!Number.isSafeInteger(c.z)||c.x<0||c.z<0||c.x>=world.width||c.z>=world.height)throw Error('Physical plant owner outside its actual map');return c.z*world.width+c.x;};
- const add=(cell:number,bits:number)=>{if(bits)owners.set(cell,(owners.get(cell)??0)|bits);};
+ // Map's non-number keys never matched a valid numeric cell query. Preserve
+ // that raw behavior instead of coercing a malformed geyser key to an index.
+ const add=(cell:number,bits:number)=>{if(bits&&typeof cell==='number')owners[cell]=owners[cell]!|bits;};
  const filled=(c:Cell,fill:number,blocks=false)=>{
   if(!Number.isFinite(fill)||fill<0||fill>1)throw Error('Missing physical plant fill definition');
   add(index(c),(fill>.99?FULL:0)|(fill>=.01?COVER:0)|(blocks||fill>=.01?BLOCKS_PLANT:0));
  };
  const plant=(row:ExistingGenerationPlant256)=>{
   if(!Number.isSafeInteger(row.cell)||row.cell<0||row.cell>=n||plantCells.has(row.cell))throw Error('Invalid existing initial plant');
-  plantCells.add(row.cell);existing.push(row);
+  if(population){
+   population.at.set(row.cell,row);
+   if(row.nonStump){population.totalPlants++;population.globalSpecies.set(row.defId,(population.globalSpecies.get(row.defId)??0)+1);}
+  }else{(plantCells as Set<number>).add(row.cell);existing.push(row);}
  };
  for(const structure of world.structures){
   if(!Object.hasOwn(STRUCTURE_SHOT_FILL,structure.kind)||!Object.hasOwn(STRUCTURE_DEFINITIONS,structure.kind))throw Error('Missing physical plant structure metadata');
@@ -64,7 +80,7 @@ export function createActualPlantSpatialSession256(world:World,header:Header256)
   let cell=cells.get(c);if(cell)return cell;
   if(!Number.isSafeInteger(c)||c<0||c>=n)throw Error('Invalid actual spatial plant cell');
   const tile=world.tiles[c];if(!tile)throw Error('Actual plant terrain is absent');
-  const substrate=readNaturalPlantSubstrate256(tile),roof=roofKindAt(world,c),bits=owners.get(c)??0,solid=tile.terrain==='rock'||!!tile.collapsedRock;
+  const substrate=readNaturalPlantSubstrate256(tile),roof=roofKindAt(world,c),bits=owners[c]!,solid=tile.terrain==='rock'||!!tile.collapsedRock;
   const normal=!!(tile.bridge||tile.floor||naturalTerrainWalkable256(tile.terrain))&&!solid&&!(bits&BLOCKED),door=!!(bits&DOOR);
   const fertility=f(substrate.fertility),snowDepth=f(tile.snowDepth??0),baseWater=terrainIsWater256(tile.terrain);
   if(!Number.isFinite(fertility)||fertility<0||!Number.isFinite(snowDepth)||snowDepth<0)throw Error('Invalid actual spatial plant cell');

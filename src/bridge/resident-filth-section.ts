@@ -28,6 +28,9 @@ function dense(value:unknown):value is unknown[] {
 }
 const exact=(value:Data,keys:readonly string[])=>Object.keys(value).length===keys.length&&Object.keys(value).every(key=>keys.includes(key));
 const keysFor=new WeakMap<object,readonly string[]>();
+/** Representation proof only: ordinary recursively copied/frozen data. It
+ * neither admits a publication nor certifies Firefoam fields or local clocks. */
+export const isOwnedResidentFilthCopyInternal=(value:object):boolean=>keysFor.has(value);
 function valid(value:unknown,depth=0):boolean {
  if(depth>24)return false;
  if(value===null||value===undefined||['string','number','boolean'].includes(typeof value))return true;

@@ -13,6 +13,8 @@ export class ResidentVegetationAssembler extends ResidentPresentationAssembler {
  private readonly natural=new PreparedNaturalFrameOwner();
  private readonly auxiliary=new ResidentAuxiliaryFrameOwner();
  readMotion(packet:SnapshotMessage<true>){return this.auxiliary.readMotion(packet);}
+ /** Internal composition notification; ordinary readers grant no provenance. */
+ protected preparedPublication(_original:SnapshotMessage<true>,_prepared:SnapshotMessage<true>):void {}
  override adopt(packet:SnapshotMessage<true>,acceptExtra?:(world:World)=>boolean):SnapshotAdoption {
   const original=packet,rawAuxiliary=readResidentAuxiliarySidecar(packet),rawNatural=readResidentNaturalSidecar(packet);
   let auxiliary:PreparedResidentAuxiliary|undefined;
@@ -21,6 +23,7 @@ export class ResidentVegetationAssembler extends ResidentPresentationAssembler {
    if(!prepared)return {status:'resync',reason:'Invalid resident auxiliary sections'};
    auxiliary=prepared;packet=prepared.packet;
   }
+  this.preparedPublication(original,packet);
   let draft:PreparedNaturalDraft|undefined;
   const result=super.adopt(packet,world=>{
    draft=this.natural.prepare(world,packet,rawNatural);

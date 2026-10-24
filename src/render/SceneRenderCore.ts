@@ -1007,6 +1007,8 @@ export class SceneRenderCore {
     const restoreOrderRock=this.orderRockPreview.prepareForCompile();
     const restoreConstruction=this.constructionPreview.prepareForCompile();
     const restoreDeep=this.deepResources.prepareForCompile();
+    let restorePawnCargo=()=>{};
+    const preparePawnCargo=()=>{restorePawnCargo();restorePawnCargo=this.pawns.prepareCargoForCompile();};
     try {
       // The double-sided cursor otherwise compiles both face variants on the
       // first map interaction. Include it behind the loading overlay.
@@ -1026,14 +1028,17 @@ export class SceneRenderCore {
         await this.room.prepare(this.renderer, this.rig.perspective);
       }
       this.environmentLighting.exploration.bind(this.scene);
+      preparePawnCargo();
       await this.renderer.compileAsync(this.scene, this.rig.orthographic);
+      preparePawnCargo();
       await this.renderer.compileAsync(this.scene, this.rig.perspective);
       await this.pawns.prepareBodyPipelines(this.renderer,this.scene,[this.rig.orthographic,this.rig.perspective],async()=>{
         const shadow=(this.room?.lighting.shadowLight??this.daylight.light).shadow,needsUpdate=shadow.needsUpdate;
-        try {shadow.needsUpdate=true;await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);}
+        try {shadow.needsUpdate=true;preparePawnCargo();await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);}
         finally {shadow.needsUpdate=needsUpdate;}
       });
       this.landscape.needsUpdate=true;
+      preparePawnCargo();
       await prepareShadowPipelines(this.renderer,this.scene,this.rig.orthographic,this.boxes);
       if (this.fatalError) throw new Error(this.fatalError);
     } finally {
@@ -1042,7 +1047,7 @@ export class SceneRenderCore {
       // restorers must therefore run last to recover their real runtime flag.
       for (const [object, value] of culling) object.frustumCulled = value;
       restoreMechanoids();
-      restoreWind();restorePawnFires();restoreWildlife();restoreAnimalCargo();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
+      restoreWind();restorePawnFires();restorePawnCargo();restoreWildlife();restoreAnimalCargo();restoreRopes();restoreFeedback();restoreActionVfx();restoreBrawlCloud();restoreStructureVfx();restoreRoofs();restoreDoors();restoreTimber();restoreCrops();restorePlants();restoreGrass();restoreDesignations();restoreFilth();restoreClouds();restorePrecipitation();
       restoreSnow();restoreBoxes();restoreArea();restoreTurretRange();restoreHints();restoreOrderRock();restoreConstruction();restoreDeep();
       restoreOverview();
       restoreLabels?.();

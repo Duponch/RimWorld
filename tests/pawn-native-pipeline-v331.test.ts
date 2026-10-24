@@ -22,9 +22,9 @@ interface InspectionNode {
   jsFunc?:unknown;call?:()=>InspectionNode;
   isTextureNode?:boolean;sampler?:boolean;value?:unknown;
 }
-function outputNodes(root:unknown):InspectionNode[] {
-  const Constructor=THREE.NodeBuilder as unknown as new()=>InspectionBuilder;
-  const builder=new Constructor();builder.context={};
+function outputNodes(root:unknown,mesh:Body):InspectionNode[] {
+  const Constructor=THREE.NodeBuilder as unknown as new(object:Body)=>InspectionBuilder;
+  const builder=new Constructor(mesh);builder.context={};
   const pending=[root as InspectionNode],seen=new Set<InspectionNode>();
   while(pending.length){
     const node=pending.pop()!;
@@ -35,8 +35,8 @@ function outputNodes(root:unknown):InspectionNode[] {
   }
   return [...seen];
 }
-function textureReads(root:unknown):InspectionNode[] {
-  return outputNodes(root).filter(node=>node.isTextureNode);
+function textureReads(root:unknown,mesh:Body):InspectionNode[] {
+  return outputNodes(root,mesh).filter(node=>node.isTextureNode);
 }
 function body(layer:PawnLayer):Body {
   const mesh=layer.group.getObjectByName('Colonists — procedural eight-bone GPU rig');
@@ -75,8 +75,8 @@ const names=['aFrom','aTo','aTravel','aMotion','aCargo','aShape','aEquipment'] a
 function streams(source:THREE.InstancedBufferGeometry){
   return names.map(name=>({name,attribute:source.getAttribute(name),values:Array.from(source.getAttribute(name).array)}));
 }
-function expectNativeGraph(material:Surface,detail:AnimationDetail):void {
-  const nodes=outputNodes(material.positionNode);
+function expectNativeGraph(material:Surface,detail:AnimationDetail,mesh:Body):void {
+  const nodes=outputNodes(material.positionNode,mesh);
   expect(nodes.length).toBeGreaterThan(50); // A real authored rig, not an empty output.
   expect(nodes.filter(node=>node.isTextureNode)).toEqual([]);
   for(const uniform of [detail.enabled,detail.nearPixels,detail.farPixels,detail.projectionScale,detail.perspective])expect(nodes).not.toContain(uniform);
@@ -88,18 +88,18 @@ test('actual PawnLayer uses four configured material variants and native positio
     const mesh=body(layer),source=layer.feedbackSource!;
     const actorPalette=(layer.animationCache.cell(0) as unknown as {value:THREE.DataTexture}).value;
     frame(0,101,iso(30));const nativeTextured=mesh.material;
-    expectNativeGraph(nativeTextured,detail);expect(textureReads(nativeTextured.colorNode).length).toBeGreaterThan(0);
+    expectNativeGraph(nativeTextured,detail,mesh);expect(textureReads(nativeTextured.colorNode,mesh).length).toBeGreaterThan(0);
     layer.setTexturesEnabled(false);const nativePlain=mesh.material;
-    expect(nativePlain).not.toBe(nativeTextured);expectNativeGraph(nativePlain,detail);
-    expect(textureReads(nativePlain.colorNode)).toEqual([]);
+    expect(nativePlain).not.toBe(nativeTextured);expectNativeGraph(nativePlain,detail,mesh);
+    expect(textureReads(nativePlain.colorNode,mesh)).toEqual([]);
 
     frame(1,101,iso(16));const lodPlain=mesh.material;
     expect(lodPlain).not.toBe(nativePlain);
-    expect(textureReads(lodPlain.positionNode).some(node=>node.sampler===false&&node.value===actorPalette)).toBe(true);
-    expect(textureReads(lodPlain.colorNode)).toEqual([]);
+    expect(textureReads(lodPlain.positionNode,mesh).some(node=>node.sampler===false&&node.value===actorPalette)).toBe(true);
+    expect(textureReads(lodPlain.colorNode,mesh)).toEqual([]);
     layer.setTexturesEnabled(true);const lodTextured=mesh.material;
     expect(lodTextured).not.toBe(lodPlain);expect(lodTextured.positionNode).toBe(lodPlain.positionNode);
-    expect(textureReads(lodTextured.colorNode).length).toBeGreaterThan(0);
+    expect(textureReads(lodTextured.colorNode,mesh).length).toBeGreaterThan(0);
     expect(nativeTextured.positionNode).toBe(nativePlain.positionNode);
     expect(nativePlain.positionNode).not.toBe(lodPlain.positionNode);
     frame(2,101,iso(4));expect(mesh.material).toBe(lodTextured);
@@ -109,7 +109,7 @@ test('actual PawnLayer uses four configured material variants and native positio
     frame(4,101,perspective());expect(mesh.material).toBe(nativeTextured);
     frame(5,101,iso(4));expect(mesh.material).toBe(nativeTextured);
     layer.setTexturesEnabled(false);expect(mesh.material).toBe(nativePlain);
-    expectNativeGraph(mesh.material,detail);
+    expectNativeGraph(mesh.material,detail,mesh);
     const variants=[lodPlain,lodTextured,nativePlain,nativeTextured];
     expect(new Set(variants).size).toBe(4);
     for(const material of variants){
