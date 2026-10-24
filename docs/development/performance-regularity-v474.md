@@ -1,11 +1,13 @@
 # V474 — régularité du rendu et débit de simulation
 
-Lot A–G qualifié localement après V473, demandé le 24 octobre 2026.
+Lot A–G publié après V473, demandé le 24 octobre 2026.
 Schéma 293 conservé ; aucune migration, modification des règles ou réduction
 de qualité graphique. Les contrôles acquis ci-dessous montrent une forte
 réduction des microcoupures sur Éclaircies, sans clôturer le chantier : une
 pointe90ms en×6 et un débit5,8947× restent observés. Les ajouts de gameplay
-attendent la suite de cette priorité. Publication encore à effectuer.
+attendent la suite de cette priorité. Produit `508fdfd6`,
+[déploiement befebf5d](https://befebf5d.elsewhere-cq7.pages.dev/) /
+[jouer](https://elsewhere-cq7.pages.dev/).
 
 ## Problème et méthode
 
@@ -495,6 +497,32 @@ Suite prioritaire : localiser la pointe résiduelle en×6 et vérifier le coût
 Worker courant après F. Ne pas augmenter l'écrêtage temporel, réduire la
 qualité ou la cadence de simulation pour améliorer les seuls chiffres RAF.
 Le chantier performances, les campagnes et les six ensembles restent ouverts.
+
+## Publication
+
+Produit `508fdfd6b2ee3539c1d48c3e8a33069c79737890`, push `origin/main`
+acquis. Build Pages PASS4,419s ; avertissement de taille des chunks conservé.
+Documentation PASS2,026s après un refus de lancement Python dans le bac à
+sable, avant contrôle, conservé comme incident d'environnement.
+
+Les2006entrées de compilation sont identiques avant/après build et les
+sources `src` identiques au parcours final G. Le contrôle Git brut a relevé
+253fichiers à fins de ligne CRLF ; son échec est conservé. Le compagnon
+`release-crlf-companion-2026-10-24T03-43-39-070Z.json` vérifie1753fichiers
+bruts exacts et253écarts exclusivement CRLF→LF, octet par octet contre les
+blobs du commit et selon ses attributs explicites. Aucun fichier produit
+n'a été réécrit pour cette vérification, aucun autre filtre admis.
+
+Paquet `tmp/elsewhere-pages/v474-package-gmz4Ao/report.json`, PASS2,146s :
+552fichiers,68entrées du catalogue et71chemins publics de sauvegardes
+préservés ; ressources statiques identiques au paquet V473. Les sources,
+laboratoire et marqueurs QA privés sont absents. Déploiement `befebf5d`
+PASS16,444s puis contrôle de20réponses HTTPS PASS6,440s, octets et MIME
+exacts sur origine stable et immuable. L'avertissement Wrangler sur l'arbre
+sale vient de `references_UI/`, resté non suivi et hors paquet.
+
+Ces vérifications établissent le paquet servi, pas un nouveau benchmark en
+production. Les tests natifs restent ceux des sources identiques qualifiées.
 
 ## Références techniques
 

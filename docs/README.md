@@ -1,6 +1,6 @@
 # Documentation d’Elsewhere
 
-**V474 qualifiée localement — schéma 293 inchangé :** [Régularité du rendu](development/performance-regularity-v474.md). Microcoupures fortement réduites dans les comparaisons contrôlées sur Éclaircies, premier cargo préparé et recharge entière exacte. Pointe90ms et débit5,8947× en×6 conservés ; publication à effectuer, performances et six ensembles ouverts.
+**V474 publiée — schéma 293 inchangé :** [Régularité du rendu](development/performance-regularity-v474.md). Microcoupures fortement réduites dans les comparaisons contrôlées sur Éclaircies, premier cargo préparé et recharge entière exacte. Pointe90ms et débit5,8947× en×6 conservés ; publié `508fdfd6`/[`befebf5d`](https://befebf5d.elsewhere-cq7.pages.dev/), performances et six ensembles ouverts.
 
 **V473 publiée — schéma 293 :** [Pourparlers diplomatiques](gameplay/peace-talks-v473.md), ensemble 4 principal. Offre mondiale, vraie caravane et cinq issues, cadeaux physiques ou attaque réelle. 184 cas distincts acquis par reprises (72 nouveaux/112 voisins), six opt-in non exécutés ; typage et natifs muets acquis, neuf recharges entières exactes. Limites du rejeu combat Node et de réactivité à 100 ms conservées ; aucun gain FPS global. Produit 8cbd2525, [déploiement 382ffce0](https://382ffce0.elsewhere-cq7.pages.dev/) / [jouer](https://elsewhere-cq7.pages.dev/), vingt réponses HTTPS ciblées exactes ; 552 fichiers/71 chemins publics de sauvegardes préservés. Tous domaines et interactions, six ensembles, campagnes et victoire restent ouverts.
 
