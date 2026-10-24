@@ -1360,9 +1360,9 @@ export class SceneRenderCore {
     const prepared=this.immutableWorlds.has(world)?this.applicationContext?.piles.read(world,hidden,newMap):undefined;
     if(prepared){
       for(const [key,chunk]of this.pileChunks)if(!prepared.activeKeys.has(key)&&chunk.signature!==''){this.boxes.set(chunk.group,`pile:${key}`,[]);chunk.signature='';}
-      for(const {key,signature,bundles}of prepared.changedChunks){const previous=this.pileChunks.get(key);if(previous?.signature===signature)continue;
+      for(const change of prepared.changedChunks){const {key,signature}=change,previous=this.pileChunks.get(key);if(previous?.signature===signature)continue;
         const group=previous?.group??new THREE.Group();if(!previous)this.pileGroup.add(group);group.name=`Material piles ${key}`;
-        this.boxes.set(group,`pile:${key}`,pileParts(bundles));this.pileChunks.set(key,{signature,group});
+        this.boxes.set(group,`pile:${key}`,this.applicationContext!.piles.placements(prepared,change));this.pileChunks.set(key,{signature,group});
       }
       this.applicationContext!.acknowledgePiles(prepared);return;
     }

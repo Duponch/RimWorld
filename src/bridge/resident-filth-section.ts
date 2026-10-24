@@ -28,6 +28,10 @@ function dense(value:unknown):value is unknown[] {
 }
 const exact=(value:Data,keys:readonly string[])=>Object.keys(value).length===keys.length&&Object.keys(value).every(key=>keys.includes(key));
 const keysFor=new WeakMap<object,readonly string[]>();
+const frozenItemLists=new WeakSet<object>();
+/** Array identity made by prepareItems, never a literal/foreign freeze proof.
+ * Row provenance is checked separately before caching a semantic list body. */
+export const isOwnedResidentFilthItemListInternal=(value:object):boolean=>frozenItemLists.has(value);
 /** Representation proof only: ordinary recursively copied/frozen data. It
  * neither admits a publication nor certifies Firefoam fields or local clocks. */
 export const isOwnedResidentFilthCopyInternal=(value:object):boolean=>keysFor.has(value);
@@ -156,7 +160,7 @@ function prepareItems(raw:Data,old:Held|undefined,nextId:number,checkpoint:boole
  if(sparse){
   values=previous!.values;slots=previous!.slots;let changed:Row[]|undefined;
   for(const [id,row]of writes){const at=slots.get(id)!;if(row===values[at])continue;changed??=[...values];changed[at]=row;}
-  if(changed)values=Object.freeze(changed);
+  if(changed){values=Object.freeze(changed);frozenItemLists.add(values);}
  }else{
   const byId=new Map((previous?.values??[]).map(row=>[row.id,row]));
   for(const id of removed)byId.delete(id as number);for(const [id,row]of writes)byId.set(id,row);
@@ -167,7 +171,12 @@ function prepareItems(raw:Data,old:Held|undefined,nextId:number,checkpoint:boole
    values=order.map(id=>byId.get(id as number)!);
   }else values=[...byId.values()];
   if(previous&&values.length===previous.values.length&&values.every((row,i)=>row===previous.values[i])){values=previous.values;slots=previous.slots;}
-  else{values=Object.freeze(values);slots=index(values);}
+  else{
+   values=Object.freeze(values);slots=index(values);
+   // The no-order branch above uses an array literal. order.map may consult
+   // Array species; it does not acquire this ordinary-array provenance.
+   if(!own(raw,'order'))frozenItemLists.add(values);
+  }
  }
  if(values.length!==raw.count)return;
  return heldItems(copy(raw.header) as Data,values,slots,old);

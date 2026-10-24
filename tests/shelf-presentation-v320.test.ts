@@ -37,7 +37,7 @@ test.each([0,1,2,3] as const)('both shelf ghosts share finished resident geometr
 
 test('actual scene pile projection retains three same-item stacks in one resident chunk and patches only changed poses or quantities',()=>{
   const {w}=fixture('small-shelf');w.piles=[pile(600,11,{type:'ground',x:16,z:16}),pile(601,22,{type:'ground',x:16,z:16}),pile(602,33,{type:'ground',x:16,z:16})];
-  const writes:{group:Group;name:string;parts:Placement[]}[]=[],facade={pileGroup:new Group(),pileChunks:new Map(),pawns:{hiddenPileQuantities:()=>new Map()},boxes:{set(group:Group,name:string,parts:Placement[]){writes.push({group,name,parts});}}};
+  const writes:{group:Group;name:string;parts:Placement[]}[]=[],facade={pileGroup:new Group(),pileChunks:new Map(),immutableWorlds:new WeakSet<object>(),pawns:{hiddenPileQuantities:()=>new Map()},boxes:{set(group:Group,name:string,parts:Placement[]){writes.push({group,name,parts});}}};
   const update=Reflect.get(SceneRenderCore.prototype,'updatePiles') as (this:typeof facade,world:typeof w,newMap:boolean)=>void;
   update.call(facade,w,true);const first=writes.at(-1)!;expect(first.parts).toHaveLength(27); // three complete nine-part wood assemblies
   const supports=pileIdentitySurfaces(w);for(const [index,real] of w.piles.entries()){

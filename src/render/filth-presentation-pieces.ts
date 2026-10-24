@@ -3,10 +3,22 @@ import {filthDecal} from './filth-appearance';
 import {FLOOR_SURFACE_Y,filthDecalBounds,filthSurfacePatches,surfaceHeightAtCell,type FilthSurface,type SurfacePatch} from './surface-height';
 
 export interface FilthPresentationPiece {readonly decal:ReturnType<typeof filthDecal>;readonly patch:SurfacePatch}
+type HeightCapture=Readonly<{index:number;height:number|undefined}>;
+interface HeightCache {has(index:number):boolean;get(index:number):number|undefined;set(index:number,value:number|undefined):unknown}
+type HeightCell={stamp:number;value:number|undefined};
+const HEIGHT_CACHE_LIMIT=131072;
+/** A per-read view, never a retained surface observation across reads. */
+class HeightReadCache {
+ constructor(private readonly cells:Map<number,HeightCell>,private readonly stamp:number){}
+ has(index:number):boolean {return this.cells.get(index)?.stamp===this.stamp;}
+ get(index:number):number|undefined {const cell=this.cells.get(index);return cell?.stamp===this.stamp?cell.value:undefined;}
+ set(index:number,value:number|undefined):this {const cell=this.cells.get(index);if(cell){cell.stamp=this.stamp;cell.value=value;}else this.cells.set(index,{stamp:this.stamp,value});return this;}
+}
+
 type Capture=Pick<FilthRecord,'id'|'x'|'z'|'kind'|'thickness'>;
 interface Entry {
  readonly source:Capture;readonly width:number|undefined;readonly height:number|undefined;
- readonly heights:ReadonlyMap<number,number|undefined>;readonly pieces:readonly FilthPresentationPiece[];readonly offset:number;
+ readonly heights:readonly HeightCapture[];readonly pieces:readonly FilthPresentationPiece[];readonly offset:number;
 }
 export interface FilthPresentationBlock {readonly offset:number;readonly pieces:readonly FilthPresentationPiece[];readonly changed:boolean}
 
@@ -18,10 +30,16 @@ export class FilthPresentationPieces {
  private ordered:Entry[]=[];
  private blocks:readonly FilthPresentationBlock[]=[];
  private count=0;
- private same(entry:Entry,item:FilthRecord,surface:FilthSurface|undefined,heights:Map<number,number|undefined>):boolean {
+ // Scalars only: no World, surface, tile, callback or ID owner is retained.
+ private readonly heightCells=new Map<number,HeightCell>();
+ private heightStamp=0;
+ private reading=false;
+ private clearHeightCells=false;
+ private same(entry:Entry,item:FilthRecord,surface:FilthSurface|undefined,heights:HeightCache):boolean {
   const p=entry.source;
   if(p.x!==item.x||p.z!==item.z||p.kind!==item.kind||p.thickness!==item.thickness||entry.width!==surface?.width||entry.height!==surface?.height)return false;
-  if(surface)for(const [index,height]of entry.heights){
+  if(surface)for(let at=0;at<entry.heights.length;at++){
+   const capture=entry.heights[at]!,index=capture.index,height=capture.height;
    let current:number|undefined;
    if(heights.has(index))current=heights.get(index);
    else {current=surfaceHeightAtCell(surface,index%surface.width,Math.floor(index/surface.width));heights.set(index,current);}
@@ -30,7 +48,18 @@ export class FilthPresentationPieces {
   return true;
  }
  read(items:readonly FilthRecord[],reset=false,surface?:FilthSurface):{blocks:readonly FilthPresentationBlock[];count:number;changed:boolean} {
-  const heights=new Map<number,number|undefined>();
+  const nested=this.reading;
+  // A nested public read may be triggered by a surface getter. Its historical
+  // local Map cannot invalidate this outer call's still-live view.
+  if(!nested&&this.heightStamp>=Number.MAX_SAFE_INTEGER){this.heightCells.clear();this.heightStamp=0;}
+  const stamp=++this.heightStamp;
+  this.clearHeightCells=this.clearHeightCells||reset;
+  const heights:HeightCache=nested?new Map<number,number|undefined>():new HeightReadCache(this.heightCells,stamp);
+  if(!nested)this.reading=true;
+  try{return this.readWithin(items,reset,surface,heights);}
+  finally {if(!nested){this.reading=false;if(this.clearHeightCells||this.heightCells.size>HEIGHT_CACHE_LIMIT)this.heightCells.clear();this.clearHeightCells=false;}}
+ }
+ private readWithin(items:readonly FilthRecord[],reset:boolean,surface:FilthSurface|undefined,heights:HeightCache):{blocks:readonly FilthPresentationBlock[];count:number;changed:boolean} {
   if(!reset&&items.length===this.ordered.length&&items.every((item,i)=>{
    const old=this.ordered[i]!;return old.source.id===item.id&&this.same(old,item,surface,heights);
   }))return {blocks:this.blocks,count:this.count,changed:false};
@@ -55,7 +84,8 @@ export class FilthPresentationPieces {
      }
      for(const patch of surface?filthSurfacePatches(surface,bounds):[{...bounds,height:FLOOR_SURFACE_Y}])pieces.push({decal,patch});
     }
-    entry={source:{id:item.id,x:item.x,z:item.z,kind:item.kind,thickness:item.thickness},width:surface?.width,height:surface?.height,heights:observed,pieces,offset:count};
+    const captured:HeightCapture[]=[];observed.forEach((height,index)=>captured.push({index,height}));
+    entry={source:{id:item.id,x:item.x,z:item.z,kind:item.kind,thickness:item.thickness},width:surface?.width,height:surface?.height,heights:captured,pieces,offset:count};
    }
    const dirty=entry!==old||entry.offset!==count;
    blocks.push({offset:count,pieces:entry.pieces,changed:dirty});changed=changed||dirty;
@@ -66,3 +96,4 @@ export class FilthPresentationPieces {
   return {blocks,count,changed};
  }
 }
+

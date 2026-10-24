@@ -1,5 +1,5 @@
 import type {World} from '../sim/types';
-import {isOwnedResidentFilthCopyInternal} from './resident-filth-section';
+import {isOwnedResidentFilthCopyInternal,isOwnedResidentFilthItemListInternal} from './resident-filth-section';
 import {createFirefoamLaneValidatorsInternal290} from '../sim/firefoam-save-290';
 import {ResidentVegetationAssembler} from './resident-vegetation-assembler';
 import type {SnapshotAdoption,SnapshotMessage} from './snapshots';
@@ -76,7 +76,7 @@ export function createNativeCloneResidentLane():NativeCloneResidentLane {
   // Live, never cached: earlier unknown children may pollute this prototype.
   for(const key of Reflect.ownKeys(Object.prototype))if(typeof key==='string'&&laneKeys.has(key))return false;
   return true;
- },isOwnedResidentFilthCopyInternal);
+ },isOwnedResidentFilthCopyInternal,isOwnedResidentFilthItemListInternal);
 
  class NativeCloneAssembler extends ResidentVegetationAssembler {
   protected override preparedPublication(original:Packet,prepared:Packet):void {

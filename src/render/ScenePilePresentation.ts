@@ -3,7 +3,8 @@ import {WORLD_SCALE} from '../world/scale';
 import {corpseStage} from '../sim/corpses';
 import {corpseVisualMask} from './corpse-presentation';
 import type {World,Structure,MaterialPile,Job} from '../sim/types';
-import type {PileBundle} from './pile-parts';
+import {pileParts,type PileBundle} from './pile-parts';
+import type {Placement} from './primitives';
 import {pileSurfaces,pileShelfCells,pileIdentitySurfacesFromCells,type PileSurface,type PileShelfCell,type PileSurfaceReadPair} from './pile-surfaces';
 
 type Geometry=Pick<Structure,'id'|'kind'|'x'|'z'|'orientation'|'footprint'>;
@@ -22,6 +23,14 @@ export interface ScenePileChunks {readonly activeKeys:ReadonlySet<string>;readon
  * This is called only for affected chunks on the closed immutable path. */
 function signature(bundles:readonly PileBundle[]):string {
  return bundles.map(bundle=>`${bundle.x}:${bundle.z}:${bundle.item}:${bundle.quantity}:${bundle.supplied}:${bundle.pileId??''}:${bundle.corpseStage??''}:${bundle.facing??0}:${bundle.innerResource?`${bundle.innerResource.species??'legacy'}:${bundle.innerResource.growth??1}:${bundle.innerResource.blight??false}`:''}:${bundle.corpse?corpseVisualMask(bundle.corpse):0}:${bundle.surface?Object.values(bundle.surface).join(','):'ground'}`).join('|');
+}
+
+/** Clone BEFORE freezing: seeds may contain nested references to the admitted
+ * World. Publication must never freeze or expose those source-owned objects. */
+function ownBundle(value:PileBundle):PileBundle {
+ const copy=structuredClone(value),seen=new WeakSet<object>();
+ const freeze=(object:object):void=>{if(seen.has(object))return;seen.add(object);for(const child of Object.values(object))if(child!==null&&typeof child==='object')freeze(child);Object.freeze(object);};
+ freeze(copy);return copy;
 }
 
 /** One renderer-owned projection, covering physical pile support, ordered
@@ -46,9 +55,12 @@ export class ScenePilePresentation {
  private pendingChunks=new Map<string,{key:string;signature:string;bundles:readonly PileBundle[];source:number}>();
  private pendingEmpty=new Set<string>();
  private lastRead:ScenePileChunks|undefined;
+ // Only renderer-owned, once-published bundles are keys. Atlas category and
+ // pattern ordinals remain BoxBatches' current whole-group responsibility.
+ private partCache=new WeakMap<PileBundle,readonly Placement[]>();
  private visit=0;
 
- private clearProjection():void {this.records.clear();this.ordered=[];this.members.clear();this.bundles.clear();this.chunkMembers.clear();this.chunks.clear();this.pendingChunks.clear();this.pendingEmpty.clear();this.lastRead=undefined;this.visit=0;}
+ private clearProjection():void {this.records.clear();this.ordered=[];this.members.clear();this.bundles.clear();this.chunkMembers.clear();this.chunks.clear();this.pendingChunks.clear();this.pendingEmpty.clear();this.lastRead=undefined;this.partCache=new WeakMap();this.visit=0;}
 
  clear():void {
   this.supportWorld=undefined;this.geometry=[];this.cells=new Map();this.shelves=new Map();this.shelfMembers.clear();this.identities=new Map();this.supports=new WeakMap();this.clearProjection();
@@ -132,23 +144,39 @@ export class ScenePilePresentation {
    // Preserve original floating arithmetic/source-order even for atypical
    // direct fixtures. No sum is reordered by ID or chunk membership.
    for(let i=1;i<ordered.length;i++)value.quantity+=ordered[i]!.input!.quantity;
-   const bundle:Bundle={source:first.source,chunk:input.chunk,value};this.bundles.set(key,bundle);
+   const bundle:Bundle={source:first.source,chunk:input.chunk,value:ownBundle(value)};this.bundles.set(key,bundle);
    let chunk=this.chunkMembers.get(input.chunk);if(!chunk){chunk=new Map();this.chunkMembers.set(input.chunk,chunk);}chunk.set(key,bundle);dirtyChunks.add(input.chunk);
   }
   for(const key of dirtyChunks){
    const members=this.chunkMembers.get(key),old=this.chunks.get(key);if(!members?.size){if(old||this.pendingChunks.has(key)){this.chunks.delete(key);this.pendingChunks.delete(key);this.pendingEmpty.add(key);}continue;}
-   const ordered=[...members.values()].sort((a,b)=>a.source-b.source),bundles=ordered.map(row=>row.value),text=signature(bundles),source=ordered[0]!.source;
-   this.chunks.set(key,{signature:text,bundles,source});this.pendingEmpty.delete(key);if(old?.signature!==text||this.pendingChunks.has(key))this.pendingChunks.set(key,{key,signature:text,bundles,source});
+   const ordered=[...members.values()].sort((a,b)=>a.source-b.source),bundles=Object.freeze(ordered.map(row=>row.value)),text=signature(bundles),source=ordered[0]!.source;
+   this.chunks.set(key,{signature:text,bundles,source});this.pendingEmpty.delete(key);if(old?.signature!==text||this.pendingChunks.has(key))this.pendingChunks.set(key,Object.freeze({key,signature:text,bundles,source}));
   }
-  const changedChunks=[...this.pendingChunks.values()].sort((a,b)=>a.source-b.source);
-  return{activeKeys:new Set(this.chunks.keys()),emptiedKeys:[...this.pendingEmpty],changedChunks};
+  const changedChunks=Object.freeze([...this.pendingChunks.values()].sort((a,b)=>a.source-b.source));
+  return Object.freeze({activeKeys:new Set(this.chunks.keys()),emptiedKeys:Object.freeze([...this.pendingEmpty]),changedChunks});
  }
 
  /** ACK only after all current Core writes succeed. Failure leaves exact
   * pending output available to the next read, even for the same World. */
  acknowledge(frame:ScenePileChunks):boolean {if(frame!==this.lastRead)return false;this.pendingChunks.clear();this.pendingEmpty.clear();this.lastRead=undefined;return true;}
 
+ /** Closed current-frame capability: callers cannot cache mutable public
+  * fixtures or a forged/replayed chunk. Parts contain intrinsic item geometry,
+  * support and exact target IDs only; BoxBatches still computes every atlas
+  * ordinal in its current category order and retains its original full writes.
+  * Never expose the cached Placement references through a public diagnostic. */
+ placements(frame:ScenePileChunks,chunk:ScenePileChunks['changedChunks'][number]):Placement[] {
+  if(frame!==this.lastRead||!frame.changedChunks.includes(chunk))throw Error('Stale or foreign pile placement frame');
+  const result:Placement[]=[];
+  for(const bundle of chunk.bundles){
+   let parts=this.partCache.get(bundle);
+   if(!parts){parts=pileParts([bundle]);this.partCache.set(bundle,parts);}
+   for(const part of parts)result.push({...part});
+  }
+  return result;
+ }
+
  /** Diagnostics/tests only: complete current value oracle, no timing state or
   * source references added to a public World. */
- inspect():readonly {key:string;signature:string;bundles:readonly PileBundle[]}[]{return [...this.chunks].sort((a,b)=>a[1].source-b[1].source).map(([key,value])=>({key,bundles:value.bundles,signature:value.signature}));}
+ inspect():readonly {key:string;signature:string;bundles:readonly PileBundle[]}[]{return [...this.chunks].sort((a,b)=>a[1].source-b[1].source).map(([key,value])=>({key,bundles:structuredClone(value.bundles),signature:value.signature}));}
 }

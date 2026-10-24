@@ -14,11 +14,56 @@ const field=(v:object,k:string)=>{const d=Object.getOwnPropertyDescriptor(v,k);r
 const versionAllowed=(v:unknown):v is number=>firefoamInteger290(v,1,293);
 type Kind='world'|'record'|'thing'|'building'|'retainedBuilding'|'job'|'actor'|'localActor'|'health'|'feet'|'trace'|'carried'|'research'|'filth';
 type Branch=readonly [string,Kind,boolean?];
+interface IdentitySinkInternal290 {add(value:number):unknown;has(value:number):boolean}
+interface IdentityLeaseInternal290 {readonly ids:IdentitySinkInternal290;release():void}
+/** Only the native dependency adapter creates this factory. Its retained
+ * storage contains numbers exclusively, never row/World references. Each
+ * synchronous World verdict owns an independent active prefix and finally.
+ * Public World/Local callers still create/use their original eager Sets. */
+function createPooledIdentityFactoryInternal290():()=>IdentityLeaseInternal290 {
+ const capacity=65536;let retained:Float64Array|undefined,leased=false;
+ return ()=>{
+  // Unknown getters can reenter the adapter: never share an active prefix.
+  if(leased)return {ids:new Set<number>(),release(){}};
+  const values=retained??new Float64Array(capacity);retained=values;leased=true;
+  let count=0,queries=0,tail:number[]|undefined,index:Set<number>|undefined;
+  const materialize=():Set<number>=>{
+   const result=new Set<number>();
+   for(let i=0;i<count;i++)result.add(values[i]!);
+   if(tail)for(let i=0;i<tail.length;i++)result.add(tail[i]!);
+   index=result;count=0;tail=undefined;return result;
+  };
+  const ids:IdentitySinkInternal290={
+   add(value){
+    if(index)return index.add(value);
+    // Runtime unknown census IDs must preserve Set identity, not undergo a
+    // Float64 coercion. A local Set may hold them until this verdict's finally.
+    if(typeof value!=='number')return materialize().add(value);
+    if(count<capacity)values[count++]=value;else (tail??=[]).push(value);
+   },
+   has(value){
+    if(index)return index.has(value);
+    if(++queries>16)return materialize().has(value);
+    if(typeof value!=='number')return false;
+    for(let i=0;i<count;i++){const seen=values[i]!;if(seen===value||seen!==seen&&value!==value)return true;}
+    return tail?.includes(value)??false;
+   },
+  };
+  return {ids,release(){count=0;queries=0;tail=undefined;index=undefined;leased=false;}};
+ };
+}
 /** Positive scalar/shape body only, never a World or clock verdict. */
 interface TracePositiveInternal290 {
  has(value:object,version:number):boolean;
  remember(value:object,version:number):void;
+ list(value:object,version:number):TraceListPositiveInternal290|undefined;
+ rememberList(value:unknown[],version:number):void;
 }
+interface TraceListPositiveInternal290 {
+ readonly version:number;readonly count:number;readonly ids:readonly number[];
+ readonly rows:readonly unknown[];readonly missingReserved:number;
+}
+const traceReserved=['kind','firefoam290','firefoamTask290','coveredInFirefoam290'] as const;
 /** The closed owner/envelope lanes include original actors and retained
  * furniture. Terrain, anatomy, planet tiles and presentation caches are not
  * recursively searched. Sparse tables visit only their actual upserts. */
@@ -43,7 +88,7 @@ const lanes:readonly Branch[]=[
 const laneKeys:ReadonlySet<string>=new Set(lanes.map(([key])=>key));
 const feetLaneKeys:ReadonlySet<string>=new Set(['carried']),filthLaneKeys:ReadonlySet<string>=new Set(['items']);
 
-function scan(raw:unknown,version:number,contexts?:Record<string,unknown>[],identities?:Set<number>,readLane:FirefoamLaneReaderInternal290=Object.getOwnPropertyDescriptor,skipEmptyOwnerLanes?:FirefoamEmptyOwnerLanesInternal290,tracePositive?:TracePositiveInternal290):boolean {
+function scan(raw:unknown,version:number,contexts?:Record<string,unknown>[],identities?:{add(value:number):unknown},readLane:FirefoamLaneReaderInternal290=Object.getOwnPropertyDescriptor,skipEmptyOwnerLanes?:FirefoamEmptyOwnerLanesInternal290,tracePositive?:TracePositiveInternal290):boolean {
  if(!plain(raw))return false;
  let budget=2_000_000;const active=new Set<object>();
  const list=(v:unknown,kind:Kind):boolean=>{
@@ -51,8 +96,24 @@ function scan(raw:unknown,version:number,contexts?:Record<string,unknown>[],iden
    if(!plain(v)||active.has(v))return false;const d=field(v,'upserted');if(!d)return false;
    active.add(v);const ok=list(d.value,kind);active.delete(v);return ok;
   }
+  const cached=kind==='trace'?tracePositive?.list(v,version):undefined;
+  if(cached){
+   // This exact array is ordinary/frozen by its constructor; its rows carry
+   // separate private deep-copy proofs. No input getter or Proxy runs here.
+   if(Object.getPrototypeOf(v)!==Array.prototype||active.has(v)||budget<cached.count)return false;
+   // The constructor-owned ordinary frozen array is already the exact list.
+   // Indexed data reads have no getters; primitives cannot be active ancestors.
+   for(let i=0;i<cached.rows.length;i++)if(active.has(cached.rows[i] as object))return false;
+   // Object.prototype has immutable null [[Prototype]]. An inherited reserved
+   // field is invalid precisely when one admitted row lacks that own field.
+   for(let n=0;n<traceReserved.length;n++)if((cached.missingReserved&(1<<n))&&own(Object.prototype,traceReserved[n]!))return false;
+   budget-=cached.count;
+   if(identities)for(const id of cached.ids)identities.add(id);
+   return true;
+  }
   if(!firefoamDense290(v,1_000_000)||active.has(v))return false;active.add(v);
   for(let i=0;i<v.length;i++)if(!visit(v[i],kind)){active.delete(v);return false;}
+  if(kind==='trace')tracePositive?.rememberList(v,version);
   active.delete(v);return true;
  };
  const visit=(v:unknown,kind:Kind):boolean=>{
@@ -185,23 +246,43 @@ export function validFirefoamWorld290(input:unknown):boolean {
 }
 /** Internal dependency adapter only. It cannot stamp a World, mint a native
  * proof or change the strict choice of any public façade. */
-export function createFirefoamLaneValidatorsInternal290(readLane:FirefoamLaneReaderInternal290,skipEmptyOwnerLanes?:FirefoamEmptyOwnerLanesInternal290,ownedFrozenTrace?:(value:object)=>boolean){
+export function createFirefoamLaneValidatorsInternal290(readLane:FirefoamLaneReaderInternal290,skipEmptyOwnerLanes?:FirefoamEmptyOwnerLanesInternal290,ownedFrozenTrace?:(value:object)=>boolean,ownedFrozenTraceList?:(value:object)=>boolean){
+ const identityFactory=createPooledIdentityFactoryInternal290();
  const positives=new WeakMap<object,number>();
+ const lists=new WeakMap<object,TraceListPositiveInternal290>();
  const tracePositive:TracePositiveInternal290|undefined=ownedFrozenTrace?{
   has:(value,version)=>positives.get(value)===version,
   // Only genuine deeply frozen copies can acquire this representation proof.
   remember(value,version){if(ownedFrozenTrace?.(value))positives.set(value,version);},
+  list(value,version){const held=lists.get(value);return held?.version===version?held:undefined;},
+  rememberList(value,version){
+   if(!ownedFrozenTraceList?.(value))return;
+   const ids:number[]=[];let missingReserved=0;
+   for(let i=0;i<value.length;i++){
+    const row=value[i];
+    // Primitive visits still consume one budget unit; arrays/unknown objects
+    // never borrow a record proof, even when somebody froze them externally.
+    if(row===null||typeof row!=='object')continue;
+    // The successful first visit just established this exact-version private
+    // immutable row positive. Do not invoke the representation callback twice.
+    if(positives.get(row)!==version)return;
+    const id=field(row,'id')?.value;if(firefoamInteger290(id,1))ids.push(id);
+    for(let n=0;n<traceReserved.length;n++)if(!own(row,traceReserved[n]!))missingReserved|=1<<n;
+   }
+   lists.set(value,{version,count:value.length,ids,rows:value,missingReserved});
+  },
  }:undefined;
  return {
   historical:(raw:unknown,version:unknown)=>validFirefoamHistoricalWithLanesInternal290(raw,version,readLane,skipEmptyOwnerLanes,tracePositive),
-  world:(input:unknown)=>validFirefoamWorldWithLanesInternal290(input,readLane,skipEmptyOwnerLanes,tracePositive),
+  world:(input:unknown)=>validFirefoamWorldWithLanesInternal290(input,readLane,skipEmptyOwnerLanes,tracePositive,identityFactory),
  };
 }
-function validFirefoamWorldWithLanesInternal290(input:unknown,readLane:FirefoamLaneReaderInternal290,skipEmptyOwnerLanes?:FirefoamEmptyOwnerLanesInternal290,tracePositive?:TracePositiveInternal290):boolean {
+function validFirefoamWorldWithLanesInternal290(input:unknown,readLane:FirefoamLaneReaderInternal290,skipEmptyOwnerLanes?:FirefoamEmptyOwnerLanesInternal290,tracePositive?:TracePositiveInternal290,identityFactory?:()=>IdentityLeaseInternal290):boolean {
+ let identityLease:IdentityLeaseInternal290|undefined;
  try{
   if(!plain(input))return false;const world=input as unknown as World,root=campaignAuthority(world) as unknown as Record<string,unknown>;
   const schema=field(root,'schemaVersion');if(!schema||!versionAllowed(schema.value))return false;
-  const maps:Record<string,unknown>[]=[],ids=new Set<number>();if(!scan(root,schema.value,maps,ids,readLane,skipEmptyOwnerLanes,tracePositive)||!validFirefoamActorOwnersWithLanesInternal290(root,schema.value,readLane,skipEmptyOwnerLanes))return false;
+  const maps:Record<string,unknown>[]=[],ids=(identityLease=identityFactory?.())?.ids??new Set<number>();if(!scan(root,schema.value,maps,ids,readLane,skipEmptyOwnerLanes,tracePositive)||!validFirefoamActorOwnersWithLanesInternal290(root,schema.value,readLane,skipEmptyOwnerLanes))return false;
   if(!validFirefoamResearchTransport290({...root,jobs:Array.isArray(root.jobs)?root.jobs:[]} as unknown as World,schema.value))return false;
   const shared:Record<string,unknown>={};for(const key of CAMPAIGN_FIELDS)if(own(root,key))shared[key]=root[key];
   if(root!==input){const local:Record<string,unknown>={};for(const key of Object.keys(input)){if((CAMPAIGN_FIELDS as readonly string[]).includes(key)||key==='worldMaps'||key==='worldGroups'||key==='civilianPost')continue;const d=Object.getOwnPropertyDescriptor(input,key);if(!d||!d.enumerable||!own(d,'value'))return false;local[key]=d.value;}if(!scan(local,schema.value,maps,ids,readLane,skipEmptyOwnerLanes,tracePositive)||!validFirefoamActorOwnersWithLanesInternal290(local,schema.value,readLane,skipEmptyOwnerLanes))return false;}
@@ -212,5 +293,5 @@ function validFirefoamWorldWithLanesInternal290(input:unknown,readLane:FirefoamL
   }
   for(const map of unique){const context={...shared,...map,schemaVersion:schema.value,tick:root.tick,nextId:root.nextId} as unknown as World;if(validatePrevalidatedFirefoamLocal290(context,ids).length)return false;}
   return true;
- }catch{return false;}
+ }catch{return false;}finally{identityLease?.release();}
 }
