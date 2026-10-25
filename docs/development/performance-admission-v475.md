@@ -781,3 +781,86 @@ ce runtime Node ont `isTrusted=false`. L'échec est conservé ; ces assertions
 passent ensuite avec de vrais Workers Chrome, sans faux marqueur de trust.
 Les fixtures de transport Node utilisent un décodeur explicitement limité
 aux checkpoints ; elles ne prouvent pas la validation d'un World.
+
+### Rotation de caméra et cadence des ombres
+
+Le profil natif du Main FIFO en ×1 localise5,800s échantillonnées dans le
+rendu, dont3,336s dans les ombres, sur une acquisition de20,944s avec ses
+franges. Ces poids ne sont ni des temps GPU ni une comparaison de gain.
+Le comptage natif suivant trouve44objets d'ombre rendus à chacune des1518
+images en10s : la rotation annule la deadline du réglage existant à60Hz.
+
+La cause est l'appel urgent par défaut de `invalidatePausedShadow()` lors
+de tout changement de matrice de vue. Le correctif réserve cette urgence
+au premier état, au changement de caméra, de projection, de couches ou de
+convention de profondeur. Un mouvement de vue seul invalide toujours le
+cache de pause mais conserve la deadline en cours. Résolution2048,
+fréquence60, simulation, réserve temporelle et écrêtage restent inchangés.
+En pause, une caméra mobile continue de rafraîchir immédiatement l'ombre.
+
+Le cadrage de la caméra d'ombre reste associé à son atlas : Room et
+Daylight le changent lors d'une vraie passe. Le comptage après correction
+observe599passes pour1535images en10s, soit26356appels CPU d'objets
+d'ombre au lieu de66792. Ces appels ne comptent pas les commandes GPU
+rejouées dans des bundles et ne suffisent pas à annoncer un gain FPS.
+
+Le contrôle natif Chrome155.0.8059.85 passe : zéro passe en90images fixes
+en pause,90passes pendant leur déplacement, image fixe du cache identique
+octet pour octet à son recalcul. En marche,39passes sur91images,52images
+avec matrices d'ombre tenues, aucune violation ni urgence de caméra pure ;
+le changement de projection force une passe avant la deadline. Son et
+musique sont coupés. Typage et trois suites ciblées sur les ombres acquis.
+
+Première paire V5 sans profileur,40s par vitesse, témoin FIFO puis candidat :
+
+| Mesure | FIFO | Cadence corrigée |
+| --- | ---: | ---: |
+| ×1 p99 wall |21,4ms|20,6ms|
+| ×1 maximum wall |34,5ms|42,9ms|
+| ×1 intervalles>16,7ms |207|189|
+| ×1 CPU Chrome total |68,133s|67,898s|
+| ×1 FPS callbacks moyens |150,991|152,213|
+| ×3 p99 / maximum wall |27,6 /43,3ms|27,7 /66,8ms|
+| ×3 intervalles>50ms |0|2|
+| ×6 p99 / maximum wall |31,5 /78,7ms|30,1 /74ms|
+| ×6 intervalles>50ms |1|2|
+| ×6 débit réel |5,853×|5,870×|
+
+Le résultat ×1 est modeste, avec un maximum plus haut. Main reste proche
+de12,7ms par adoption ; les pointes accélérées restent ouvertes. Cette
+paire ne démontre ni confort final ni gain général. La répétition ×1 dans
+l'ordre inverse, candidat puis témoin FIFO, reste comparable : p99
+20,7 contre20,9ms, maximum37,5 contre39,4ms,193 contre203intervalles
+>16,7ms et aucun>50ms. CPU Chrome64,06 contre68,74s, simulation≈1×.
+La régularité s'améliore légèrement dans les deux ordres ; l'ampleur du
+gain CPU varie entre les paires et Main reste inchangé. Le correctif est
+retenu pour rétablir la cadence, sans annoncer le chantier terminé.
+
+Les premiers essais natifs sont conservés : fixture v98 refusée avant
+les oracles, collecte accidentelle des copies de tests archivées, puis
+erreur Tint IR dans le canal Chromium historique. Réparer fixture et
+collecte puis aligner le canal Chrome sur les mesures principales conserve
+toutes les assertions, y compris l'absence d'erreur console. La cause de
+l'erreur Tint n'est pas attribuée au correctif ou au canal sans comparaison.
+
+Les sorties détaillées sont dans `tmp/performance-v475/` : paire
+`main-camera-shadow-{baseline,candidate}-x1-x3-x6-*`, bilan
+`camera-shadow-summary-20261025T0519Z`, comptages
+`fifo-shadow-families-x1-url-*` et `camera-shadow-families-x1-*`, natif
+`shadow-cadence-native-r4-*`. Rotation rapide, grand angle, bords d'atlas,
+nuit et chemin hors Room ne sont pas couverts par ce seul contrôle natif.
+
+Le parcours UI complémentaire passe ensuite en124,523s : douze rotations
+rapides, trois séquences de zoom/dézoom amples et deux changements réels
+Room off/on, puis les rotations ordinaires en ×1/×3/×6. Les captures loin
+sans Room et près avec Room ont été inspectées. Aucune erreur applicative
+ou console ; World et RNG sont produits normalement par la simulation.
+La sauvegarde entière après ces gestes se recharge exactement après60RAF
+en pause : SHA `705ed0250783bf43337744b3fe7a7085c64b40a493396a8ba321057d27038692`,
+tick1903/RNG3829763511. Ce parcours couvre les commandes caméra citées,
+sans prouver tous les bords d'atlas ou la transition nocturne.
+
+Le typage du produit intégré passe en14,283s et la présentation ordinaire
+en155,768s :7492images de minage puis7368d'abattage, sans saut, excès de
+trajet continu ni occupation solide. Maxima d'intervalles30,1 et30ms dans
+ce parcours préparé, distinct de la charge Éclaircies et de ses pointes.

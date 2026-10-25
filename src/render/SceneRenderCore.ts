@@ -1444,11 +1444,14 @@ export class SceneRenderCore {
     this.pawns.presentAnimations();this.wildlife.presentAnimations(this.pawns);this.mechanoids.presentAnimations(this.pawns);
     if(this.animalCargo.present(this.wildlife))this.invalidatePausedShadow(false);
     this.ropes.present(this.hasTracks?this.timeline:undefined,this.pawns,this.wildlife);
-    if(!this.shadowViewReady||this.shadowCamera!==this.camera||this.shadowCameraLayers!==this.camera.layers.mask||this.shadowCameraCoordinates!==this.camera.coordinateSystem||this.shadowCameraReversedDepth!==this.camera.reversedDepth||!this.shadowView.equals(this.camera.matrixWorld)||!this.shadowProjection.equals(this.camera.projectionMatrix)) {
+    // Continuous view motion invalidates the pause cache without cancelling the
+    // running shadow deadline. Projection/layer/camera changes remain urgent.
+    const urgentShadowViewChange=!this.shadowViewReady||this.shadowCamera!==this.camera||this.shadowCameraLayers!==this.camera.layers.mask||this.shadowCameraCoordinates!==this.camera.coordinateSystem||this.shadowCameraReversedDepth!==this.camera.reversedDepth||!this.shadowProjection.equals(this.camera.projectionMatrix);
+    if(urgentShadowViewChange||!this.shadowView.equals(this.camera.matrixWorld)) {
       this.shadowView.copy(this.camera.matrixWorld);this.shadowProjection.copy(this.camera.projectionMatrix);
       this.shadowCamera=this.camera;this.shadowViewReady=true;
       this.shadowCameraLayers=this.camera.layers.mask;this.shadowCameraCoordinates=this.camera.coordinateSystem;this.shadowCameraReversedDepth=this.camera.reversedDepth;
-      this.invalidatePausedShadow();
+      this.invalidatePausedShadow(urgentShadowViewChange);
     }
     this.refreshAreaPointer();
     // Share the confirmed presentation clock with pawn motion. Loading a save
