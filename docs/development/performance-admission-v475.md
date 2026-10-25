@@ -1,6 +1,8 @@
 # V475 — coût des validations de présentation
 
-Lot local A2H et FIFO natif, non publié ; dernière livraison V474. Schéma 293 inchangé.
+Lot A2H, FIFO natif et cadence des ombres publié le25octobre2026 sous
+`2e222a29`, depuis le produit qualifié `699621a8` (sources `729e748b`).
+Schéma293 inchangé. Les prototypes écartés restent hors de cette publication.
 Les sources produit contiennent les résumés de listes privées B, les formes
 de piles D, les captures de hauteurs et pièces de salissures H, et le tampon
 numérique d'identifiants A2. Les parcours natifs, contrôles ciblés et recharges
@@ -1062,3 +1064,37 @@ attribution. Les données nouvelles sont conservées dans
 La restauration entière des2002sources qualifiées est vérifiée dans
 `cooperative-adoption-prototype/baseline-restoration-2026-10-25T12-41-54-905Z.json`.
 Aucune intégration ni nouvelle variante ne suit ce lot avant le bilan demandé.
+
+## Publication et pause demandées
+
+L'utilisateur demande ensuite de publier les gains qualifiés puis de mettre
+le développement en pause pour échanger. La lecture de Cloudflare confirme
+d'abord V474 `befebf5d`, source `508fdfd`, encore seule en production.
+
+Le build Pages frais de `699621a8c2da09e41b77e2bc1b20840577a1cacd` passe :
+typage23,886s, compilation7,419s. Les2002sources correspondent exactement
+à la version qualifiée729e ; sources, ressources publiques et configurations
+de compilation sont identiques avant/après, manifeste
+`tmp/performance-v475/publication/build-inputs-after.json`.
+Les parcours natifs et recharges antérieurs de ces mêmes sources restent
+applicables ; aucun nouveau gain de performance en ligne n'est déduit du build.
+
+Le contrôle du paquet passe en2,668s :552fichiers,68sauvegardes au catalogue,
+71chemins publics préservés octet pour octet ; ressources statiques identiques
+au paquet V474. Laboratoire, sources et marqueurs privés V475 absents.
+Preuve : `tmp/elsewhere-pages/v475-package-bwRur5/report.json`.
+
+Push `origin/main` acquis, puis une seule publication Pages sur `main`,
+PASS16,694s, quatre fichiers envoyés. Cloudflare confirme la production
+`2e222a29-cac2-4aee-a067-dfe554b23061`, source `699621a` :
+[adresse stable](https://elsewhere-cq7.pages.dev/) et
+[déploiement immuable](https://2e222a29.elsewhere-cq7.pages.dev/).
+Le contrôle de20réponses HTTPS passe en5,520s, statuts/MIME/octets exacts
+sur les deux origines, rapport `tmp/elsewhere-pages/v475-http-o8CZBC/report.json`.
+L'avertissement Wrangler sur l'arbre sale correspond uniquement au dossier
+humain non suivi `references_UI/`, conservé et absent du paquet.
+
+Cette livraison rend accessibles les gains retenus A2H/FIFO/ombres. Elle ne
+clôt ni les microcoupures, ni les pointes accélérées, ni les six ensembles.
+Le travail est mis en pause à la demande explicite de l'utilisateur après
+la publication ; aucun nouveau test ou chantier d'optimisation ne suit.
