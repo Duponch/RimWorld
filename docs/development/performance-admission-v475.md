@@ -685,3 +685,44 @@ Les preuves sont référencées dans
 `tmp/performance-v475/main-path-performance-prototype/rejected-fj1b-bracket.json`.
 Le census instrumenté ultérieur échoue au contrôle de chronologie ; il est
 conservé sans être présenté comme une qualification ou un gain.
+
+### 25 octobre : régularité ×1 prioritaire, caches de piles écartés
+
+La priorité humaine est désormais explicite : améliorer d'abord la régularité
+à ×1, puis vérifier ×3 et ×6. Les deux commits locaux `266eb16d` et
+`34c1fd60` conservent A2H ; V474 reste la seule version publiée.
+
+Le protocole privé V4 corrige le contrôle de chronologie CPU : les requêtes
+et réponses sont ordonnées dans l'horloge Node, et les intervalles d'image
+dans l'horloge Page. Les écarts entre ces horloges restent indicatifs, sans
+marge de tolérance ni attente artificielle. Caméra, qualité et simulation
+restent identiques entre les variantes. Les preuves RAW sont recalculées par
+le comparateur.
+
+Deux variantes privées de cache de piles passent leurs contrats ciblés,
+mais ne gagnent pas le critère de régularité. Leur paire ×1 de40s donne :
+
+| Mesure | Témoin A2H | F2v2 | F2v3 |
+| --- | ---: | ---: | ---: |
+| Intervalle wall p99 |21,2ms|35,6ms|25,4ms|
+| Maximum wall |39,1ms|74,1ms|34,7ms|
+| Intervalles wall>50ms |0|2|0|
+| Admission Main moyenne |12,99ms|26,01ms|15,38ms|
+| Débit réel |0,99989×|0,99992×|0,99986×|
+
+F2v3 passe13contrats après correction d'une fixture dont le point
+d'injection n'était jamais lu ; le premier échec est conservé. Sa baisse
+de CPU total accompagne moins d'images et ne constitue pas un gain accepté.
+Les deux variantes sont écartées ; aucun prolongement F2 n'est prévu.
+Les2000sources privées du candidat sont restaurées exactement à A2H,
+avec reçu `tmp/performance-v475/main-path-performance-prototype/rejected-f2-final-restoration.json`.
+Aucune source F2 n'entre dans le produit.
+
+Sur le RAW du témoin ×1, les241intervalles wall supérieurs à16,7ms
+chevauchent une adoption ou une application d'état. Cette corrélation
+oriente le prochain essai vers leur ordonnancement ; elle ne mesure ni
+un temps GPU ni une cause unique. Le prototype FIFO préparé conserve
+tous les messages et leur ordre, avec une seule entrée par frame ou par
+macrotâche de repli. Son intérêt reste à mesurer. La profondeur, l'âge
+de la file et le retard en ticks doivent être rapportés pour exclure
+un gain apparent obtenu en affichant un état ancien.
