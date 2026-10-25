@@ -864,3 +864,45 @@ Le typage du produit intégré passe en14,283s et la présentation ordinaire
 en155,768s :7492images de minage puis7368d'abattage, sans saut, excès de
 trajet continu ni occupation solide. Maxima d'intervalles30,1 et30ms dans
 ce parcours préparé, distinct de la charge Éclaircies et de ses pointes.
+
+### Parcours natif du transport : prototype rejeté
+
+Un essai privé remplace des recherches de champs absents par un parcours
+des seules arêtes présentes, pour les sous-arbres originaux du message
+natif. Il reste limité au transport : World reconstruit, clinique Actor et
+contrôles sémantiques restent stricts. Les données inconnues rétablissent
+le parcours initial. Ce code expérimental n'est pas intégré.
+
+Les12contrats différentiels Node et10contrats avec de vrais Workers,
+116assertions, passent. Ils couvrent notamment réentrance, propriété
+héritée, mutation d'un ancêtre, capture différée, registre interposé puis
+restauré, refus et reprise. Deux lancements natifs conservent leurs erreurs
+WebSocket accessoires ; le passage final garde toutes les assertions avec
+la permission réseau limitée à l'origine locale du contexte de test.
+L'API employée est documentée par [Playwright](https://playwright.dev/docs/api/class-browsercontext#browser-context-grant-permissions).
+
+Mesure V5 fraîche en ×1,40s sans profileur, après entretien du disque puis
+témoin rapproché après le candidat ; les deux comparaisons sont recevables :
+
+| Mesure | Produit avant | Prototype | Produit après |
+| --- | ---: | ---: | ---: |
+| Adoption Main moyenne |12,487ms|15,213ms|12,531ms|
+| p99 wall |20,1ms|23,6ms|19,9ms|
+| Maximum wall |31,9ms|35,1ms|32,2ms|
+| Intervalles>16,7ms |180|240|176|
+| Intervalles>50ms |0|0|0|
+| CPU Chrome total |62,587s|61,928s|63,674s|
+| Débit réel |1,000×|1,000×|1,000×|
+
+L'adoption et la régularité empirent malgré la petite baisse du CPU total.
+Les nouveaux contrôles du registre s'appliquent aussi aux chemins restés
+stricts, les feuilles sans arêtes sont encore énumérées et une tentative
+abandonnée précède sa reprise. Ces coûts sont visibles dans le code ; leur
+contribution individuelle n'a pas été mesurée. Corriger une seule boucle
+ne justifie pas une nouvelle variante sur cette preuve.
+
+Les deux sources privées sont restaurées ; les2002fichiers et toute la
+provenance correspondent exactement au dernier témoin produit. Reçu :
+`tmp/performance-v475/native-sparse-custody-proposal/rejected-native-sparse-final-restoration.json`.
+Pas de parcours UI ou de vitesses supplémentaires pour ce candidat rejeté.
+Le coût Main d'environ12,5ms et le confort global restent ouverts.
