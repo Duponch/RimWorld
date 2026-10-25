@@ -1036,3 +1036,29 @@ implémentation devient donc provisoire, et aucune intégration n'a lieu.
 Les contrôles fonctionnels passants restent acquis. Les mesures antérieures
 à ce lancement ne sont pas remises en cause par cette scène. Une paire
 fraîche témoin/candidat sera nécessaire après confirmation de sa fermeture.
+
+#### Reprise après fermeture confirmée de la scène Firefox
+
+L'utilisateur confirme la scène fermée. Une nouvelle paire ×1/40s passe les
+mêmes vérifications de comparabilité et de RAW, sans changement des sources
+ou du banc : témoin12:33UTC puis candidat12:35UTC.
+
+| Mesure | Produit qualifié | Prototype coopératif |
+| --- | ---: | ---: |
+| p99 / maximum wall |21,6 /50,4ms|15,4 /54,0ms|
+| Intervalles>16,7ms / >50ms |234 /1|53 /1|
+| CPU moyen par publication complète |15,959ms|276,261ms|
+| Publications reçues / traitées |240 /240|240 /52|
+| File début → fin |0 →0|18 →206|
+| Ancienneté finale |0|34,269s|
+| Débit de l'état livré |1,000×|0,217×|
+
+Le retard inacceptable se reproduit après fermeture de la scène : **cette
+implémentation reste rejetée**. Cela ne mesure pas l'effet propre de Firefox
+sur les anciens chiffres, et la paire précédente reste exclue de cette
+attribution. Les données nouvelles sont conservées dans
+`cooperative-firefox-closed-{baseline,candidate}-x1-*`, comparateur
+`cooperative-adoption-prototype/firefox-closed-x1-comparability.json`.
+La restauration entière des2002sources qualifiées est vérifiée dans
+`cooperative-adoption-prototype/baseline-restoration-2026-10-25T12-41-54-905Z.json`.
+Aucune intégration ni nouvelle variante ne suit ce lot avant le bilan demandé.
