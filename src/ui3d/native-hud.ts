@@ -56,6 +56,8 @@ interface ResourceRecord {
   delivered: number;
 }
 interface ResourceTag {
+  id: string;
+  seed: number;
   piece: CardboardPiece;
   label: string;
   value: string;
@@ -65,6 +67,16 @@ interface ResourceTag {
   branch?: {id:string;open:boolean};
   screenWidth?: number;
   signature: string;
+}
+interface AlertCard {
+  key: string;
+  seed: number;
+  width: number;
+  height: number;
+  lines: string[];
+  color: string;
+  signature: string;
+  piece: CardboardPiece;
 }
 interface PortraitCard {
   piece: CardboardPiece;
@@ -125,7 +137,6 @@ export class NativeHudCards {
   private readonly tags: ResourceTag[] = [];
   private readonly resourceImages=new Map<ItemId,HTMLImageElement>();
   private readonly resourceExpanded=new Set(['foods','manufactured','raw-resources']);
-  private resourceSignature='';
   private resourcePage=0;
   private readonly speedButtons: CardboardPiece[] = [];
   private readonly viewButtons=new Map<NativeHudViewAction,CardboardPiece>();
@@ -147,7 +158,7 @@ export class NativeHudCards {
   private readonly rosterButton: CardboardPiece;
   private readonly allAlertsButton: CardboardPiece;
   private portraits: PortraitCard[] = [];
-  private alertPieces: CardboardPiece[] = [];
+  private alertCards: AlertCard[] = [];
   private world?: World;
   private colonists: Pawn[] = [];
   private resources: ResourceRecord[] = [];
@@ -157,7 +168,7 @@ export class NativeHudCards {
   private selectedIds = new Set<number>();
   private page = 0;
   private portraitIds = '';
-  private alertSignature = '';
+  private allAlertsCount = 0;
   private weatherSignature = '';
   private weatherReadout = {clock: '—', date: '—', weather: '—', temperature: '—', condition: '', wind: '—'};
   private speedValue = -1;
@@ -379,6 +390,10 @@ export class NativeHudCards {
     const piece = this.art.createPiece(options); this.ownedPieces.add(piece); return piece;
   }
   private dropPiece(piece: CardboardPiece): void { this.ownedPieces.delete(piece); this.art.disposePiece(piece); }
+  private placePiece(piece:CardboardPiece,x:number,y:number,z=0,rotation=0):void {
+    const base=piece.userData.basePos;
+    if(base.x!==x||base.y!==y||base.z!==z||piece.userData.baseRot.z!==rotation)piece.setBaseTransform(x,y,z,rotation);
+  }
   private drawCaption(ctx: CanvasRenderingContext2D, w: number, h: number, label: string,width=w/2.8,height=h/2.8): void {
     ctx.save();ctx.scale(w/width,h/height);ctx.font=`bold 13px ${FONT}`;ctx.fillStyle=PALETTE.inkDark;ctx.textAlign='center';fitText(ctx,label,width/2,height/2+4,width-12);ctx.restore();
   }
@@ -492,22 +507,33 @@ export class NativeHudCards {
     if(!rows.length)rows.push({id:'empty',label:'Stocks connus',value:'0',color:PALETTE.creamPaper,level:0,activate:()=>this.showResources()});
     const capacity=Math.max(3,Math.floor((this.viewportHeight-144)/28)),pages=Math.max(1,Math.ceil(rows.length/capacity));
     this.resourcePage=Math.min(this.resourcePage,pages-1);
-    const signature=JSON.stringify([capacity,this.resourcePage,rows.map(row=>[row.id,row.label,row.value,row.branch?.open])]);
-    if(signature===this.resourceSignature)return;this.resourceSignature=signature;
-    for(const tag of this.tags)this.dropPiece(tag.piece);this.tags.length=0;
+    const previous=new Map(this.tags.map(tag=>[tag.id,tag]));
+    this.tags.length=0;
     const visible=rows.slice(this.resourcePage*capacity,(this.resourcePage+1)*capacity);
     const add=(row:Row,index:number,x=1.12,width=2.24):void=>{
-      const ink:Omit<ResourceTag,'piece'>={...row,screenWidth:width*100,signature:''};
-      const piece=this.makePiece({w:width,h:.28,depth:.001,paper:false,seed:1100+index*17,hasBorder:false,interactive:true,
-        drawFn:(ctx,w,h,rng)=>this.drawResource(ink,ctx,w,h,rng),onClick:row.activate});
-      const tag:ResourceTag={...ink,piece};
+      const seed=1100+index*17,signature=JSON.stringify([row.label,row.value,row.color,row.item,row.level,row.branch?.open]);
+      let tag=previous.get(row.id);previous.delete(row.id);
+      // The index supplies the literal brush seed, so a reordered row needs a
+      // fresh cut/paint just as the original layout did.
+      if(tag&&(tag.seed!==seed||tag.piece.userData.w!==width||tag.piece.userData.h!==.28)){this.dropPiece(tag.piece);tag=undefined;}
+      if(!tag){
+        const live={id:row.id,label:row.label,value:row.value,color:row.color,item:row.item,level:row.level,branch:row.branch,seed,screenWidth:width*100,signature} as ResourceTag;
+        live.piece=this.makePiece({w:width,h:.28,depth:.001,paper:false,seed,hasBorder:false,interactive:true,
+          drawFn:(ctx,w,h,rng)=>this.drawResource(live,ctx,w,h,rng),onClick:row.activate});
+        tag=live;this.resourcesGroup.add(tag.piece);
+      }else{
+        const changed=tag.signature!==signature;
+        Object.assign(tag,{label:row.label,value:row.value,color:row.color,item:row.item,level:row.level,branch:row.branch,signature});
+        if(changed)tag.piece.redraw();
+      }
       tag.piece.userData.nativeId=`hud:resource:${row.id}`;
+      tag.piece.userData.onClick=row.activate;
       tag.piece.userData.tooltip=row.branch?`${row.branch.open?'Replier':'Déplier'} ${row.label}`:`${row.label} · ${row.value} comptabilisé(s) · détails des propriétaires`;
-      tag.piece.setBaseTransform(x,-.14-index*.28,.02);this.resourcesGroup.add(tag.piece);this.tags.push(tag);
+      this.placePiece(tag.piece,x,-.14-index*.28,.02);this.tags.push(tag);
       if(row.item&&!this.resourceImages.has(row.item)){
-        const image=new Image();this.resourceImages.set(row.item,image);
-        image.onload=()=>{if(!this.disposed)for(const current of this.tags)if(current.item===row.item)current.piece.redraw();};
-        image.src=modelIconUrl(`item-${row.item}`);
+        const item=row.item,image=new Image();this.resourceImages.set(item,image);
+        image.onload=()=>{if(!this.disposed&&this.resourceImages.get(item)===image)for(const current of this.tags)if(current.item===item&&this.ownedPieces.has(current.piece))current.piece.redraw();};
+        image.src=modelIconUrl(`item-${item}`);
       }
     };
     visible.forEach((row,index)=>add(row,index));
@@ -516,6 +542,7 @@ export class NativeHudCards {
       add(footer('previous',`‹ ${this.resourcePage+1}/${pages}`,-1),visible.length,.42,.84);
       add(footer('next','Suite ›',1),visible.length,1.64,1.2);
     }
+    for(const tag of previous.values())this.dropPiece(tag.piece);
   }
   private drawResource(res:Omit<ResourceTag,'piece'>,ctx:CanvasRenderingContext2D,w:number,h:number,rng:()=>number):void {
     const screenWidth=res.screenWidth??224;
@@ -538,11 +565,8 @@ export class NativeHudCards {
   private refreshAlerts():void {
     const maxWidth=Math.min(300,Math.max(170,this.viewportWidth*.36));
     const availableHeight=Math.max(110,this.viewportHeight-370);
-    const signature=JSON.stringify([maxWidth,availableHeight,this.alerts.map(row=>[row.key,row.text])]);
-    if(signature===this.alertSignature)return;
-    this.alertSignature=signature;
-    for(const piece of this.alertPieces)this.dropPiece(piece);
-    this.alertPieces=[];
+    const previous=new Map(this.alertCards.map(card=>[card.key,card]));
+    this.alertCards=[];
     const ctx=this.allAlertsButton.userData.ctx;ctx.font=`bold 13px ${FONT}`;
     let y=.32;
     this.alerts.slice(0,4).forEach((alert,idx)=>{
@@ -555,18 +579,32 @@ export class NativeHudCards {
       const height=Math.max(28,lines.length*17+12);
       const danger=alert.domain?.severity==='danger'||/critical|downed|bleeding|threat|manhunter|death|fire|infection|malnutrition/.test(alert.key);
       const color=danger?PALETTE.terracotta:PALETTE.ochre;
-      const card=this.makePiece({w:width/100,h:height/100,depth:.028,bgColor:PALETTE.creamPaper,bevel:.02,seed:idx*29+53,interactive:true,tooltip:alert.text,
-        drawFn:(ctx,w,h,rng)=>{
-          ctx.save();ctx.scale(w/width,h/height);drawHandRect(ctx,4,5,4,height-10,color,null,0,rng);
-          ctx.fillStyle=PALETTE.inkDark;ctx.font=`bold 13px ${FONT}`;ctx.textAlign='left';
-          lines.forEach((line,index)=>ctx.fillText(line,14,19+index*17,width-24));ctx.restore();
-        },onClick:()=>this.showAlert(alert.key)});
-      card.userData.nativeId=`hud:alert:${alert.key}`;
-      card.setBaseTransform(-width/200,-y-height/200,.02,idx%2===0?-.005:.005);
-      this.alertsGroup.add(card);this.alertPieces.push(card);y+=(height+6)/100;
+      const seed=idx*29+53,signature=JSON.stringify([lines,color]);
+      let entry=previous.get(alert.key);previous.delete(alert.key);
+      if(entry&&(entry.seed!==seed||entry.width!==width||entry.height!==height)){this.dropPiece(entry.piece);entry=undefined;}
+      if(!entry){
+        const live={key:alert.key,seed,width,height,lines,color,signature} as AlertCard;
+        live.piece=this.makePiece({w:width/100,h:height/100,depth:.028,bgColor:PALETTE.creamPaper,bevel:.02,seed,interactive:true,
+          drawFn:(ctx,w,h,rng)=>{
+            ctx.save();ctx.scale(w/live.width,h/live.height);drawHandRect(ctx,4,5,4,live.height-10,live.color,null,0,rng);
+            ctx.fillStyle=PALETTE.inkDark;ctx.font=`bold 13px ${FONT}`;ctx.textAlign='left';
+            live.lines.forEach((line,index)=>ctx.fillText(line,14,19+index*17,live.width-24));ctx.restore();
+          },onClick:()=>this.showAlert(live.key)});
+        entry=live;this.alertsGroup.add(entry.piece);
+      }else{
+        const changed=entry.signature!==signature;
+        Object.assign(entry,{lines,color,signature});
+        if(changed)entry.piece.redraw();
+      }
+      entry.piece.userData.nativeId=`hud:alert:${alert.key}`;
+      entry.piece.userData.tooltip=alert.text;
+      this.placePiece(entry.piece,-width/200,-y-height/200,.02,idx%2===0?-.005:.005);
+      this.alertCards.push(entry);y+=(height+6)/100;
     });
-    this.allAlertsButton.visible=this.alerts.length>this.alertPieces.length;
-    this.allAlertsButton.setBaseTransform(-.73,-y-.125,0);this.allAlertsButton.redraw();
+    for(const entry of previous.values())this.dropPiece(entry.piece);
+    this.allAlertsButton.visible=this.alerts.length>this.alertCards.length;
+    this.placePiece(this.allAlertsButton,-.73,-y-.125);
+    if(this.allAlertsCount!==this.alerts.length){this.allAlertsCount=this.alerts.length;this.allAlertsButton.redraw();}
     this.alertHandleGroup.visible=this.notificationsAutoHide&&this.shown&&!!this.world&&this.alerts.length>0;
   }
 
@@ -656,6 +694,7 @@ export class NativeHudCards {
     for(const image of this.resourceImages.values()){image.onload=null;image.onerror=null;}this.resourceImages.clear();
     for (const piece of this.ownedPieces) this.art.disposePiece(piece);
     this.ownedPieces.clear();
+    this.tags.length=0;this.alertCards=[];
     this.rail.geometry.dispose();
     (this.rail.material as THREE.Material).dispose();
     for (const group of [this.colonistsGroup, this.resourcesGroup, this.alertsGroup, this.timeGroup, this.fpsGroup, this.alertHandleGroup]) { group.removeFromParent(); group.clear(); }

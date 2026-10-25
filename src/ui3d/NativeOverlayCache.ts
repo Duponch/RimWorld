@@ -8,8 +8,22 @@ export interface NativeOverlayCacheOptions {
   samples?: number;
 }
 
+/** A conservative damage region in physical drawing-buffer pixels, top-left
+ * origin. objects includes every renderable intersecting that region, including
+ * unchanged ink behind a moved or removed object. */
+export interface NativeOverlayDamage {
+  rect: {x: number; y: number; width: number; height: number};
+  objects: ReadonlySet<THREE.Object3D>;
+  full?: boolean;
+}
+
 export interface NativeOverlayCacheStats {
   cacheRenders: number;
+  fullCaptures: number;
+  partialCaptures: number;
+  copiedPixels: number;
+  totalCapturePixels: number;
+  patchSize: {width: number; height: number};
   composites: number;
   /** CPU submission time of the most recent draw(), including a dirty capture. */
   renderCPUms: number;
@@ -64,6 +78,22 @@ export class NativeOverlayCache {
   private backend: object | undefined;
   private device: unknown;
   private target: THREE.RenderTarget | undefined;
+  private patchTarget: THREE.RenderTarget | undefined;
+  private patchCamera: THREE.Camera | undefined;
+  private readonly cropMatrix = new THREE.Matrix4();
+  private readonly copyPosition = new THREE.Vector2();
+  private readonly cameraProjection = new THREE.Matrix4();
+  private readonly cameraWorld = new THREE.Matrix4();
+  private readonly cameraWorldInverse = new THREE.Matrix4();
+  private readonly cameraPosition = new THREE.Vector3();
+  private readonly cameraQuaternion = new THREE.Quaternion();
+  private readonly cameraScale = new THREE.Vector3();
+  private cameraLayers = 0;
+  private cameraCoordinateSystem: THREE.CoordinateSystem | undefined;
+  private cameraReversedDepth = false;
+  private readonly viewport = new THREE.Vector4();
+  private readonly cachedViewport = new THREE.Vector4();
+  private hasViewport = false;
   private sourceScene: THREE.Scene | undefined;
   private sourceCamera: THREE.Camera | undefined;
   private workingColorSpace = '';
@@ -75,6 +105,10 @@ export class NativeOverlayCache {
   private drawing = false;
   private disposed = false;
   private cacheRenders = 0;
+  private fullCaptures = 0;
+  private partialCaptures = 0;
+  private copiedPixels = 0;
+  private totalCapturePixels = 0;
   private composites = 0;
   private renderCPUms = 0;
   private captureCPUms = 0;
@@ -98,7 +132,7 @@ export class NativeOverlayCache {
 
   invalidate(): void { this.dirty = true; }
 
-  draw(renderer: THREE.WebGPURenderer, scene: THREE.Scene, camera: THREE.Camera, revision: number, animated: boolean): void {
+  draw(renderer: THREE.WebGPURenderer, scene: THREE.Scene, camera: THREE.Camera, revision: number, animated: boolean, damage?: NativeOverlayDamage): void {
     if (this.disposed || this.drawing || !renderer.initialized) return;
     renderer.getDrawingBufferSize(this.size);
     const width = Math.floor(this.size.x), height = Math.floor(this.size.y);
@@ -106,7 +140,15 @@ export class NativeOverlayCache {
 
     this.ensureTarget(renderer, width, height);
     const target = this.target!;
-    const capture = this.dirty || this.cachedRevision !== revision || animated || this.previouslyAnimated || this.sourceScene !== scene || this.sourceCamera !== camera;
+    // Keep old callers' settled-animation capture. Damage-aware callers supply
+    // the last changed pose through their revision and region.
+    const cameraChanged = this.sourceCamera !== camera || !this.cameraMatches(camera);
+    const viewportAvailable = typeof renderer.getViewport === 'function';
+    if (viewportAvailable) renderer.getViewport(this.viewport);
+    const viewportChanged = viewportAvailable !== this.hasViewport || (viewportAvailable && !this.viewport.equals(this.cachedViewport));
+    if (viewportChanged) this.releasePatch();
+    const forceFull = this.dirty || this.sourceScene !== scene || cameraChanged || viewportChanged;
+    const capture = forceFull || this.cachedRevision !== revision || animated || (damage === undefined && this.previouslyAnimated);
     const start = performance.now(), drawsBefore = renderer.info.render.drawCalls;
     // setRenderTarget() in the pinned renderer does not mutate the canvas
     // viewport/scissor rectangles. They are deliberately never rewritten here,
@@ -137,7 +179,6 @@ export class NativeOverlayCache {
       renderer.xr.enabled = false;
 
       if (capture) {
-        renderer.setRenderTarget(target);
         renderer.setScissorTest(false);
         renderer.setClearColor(0x000000, 0);
         renderer.autoClear = true;
@@ -147,13 +188,49 @@ export class NativeOverlayCache {
         scene.background = null;
         scene.backgroundNode = null;
         const captureStart = performance.now(), captureDraws = renderer.info.render.drawCalls;
-        renderer.render(scene, camera);
+        const region = !forceFull && this.validPatch(renderer, damage, width, height) ? damage!.rect : undefined;
+        let partial = false;
+        if (region) {
+          try {
+            const patch = this.ensurePatch(region.width, region.height);
+            const patchCamera = this.cropCamera(camera, region, width, height);
+            renderer.setRenderTarget(patch);
+            renderer.setRenderObjectFunction((...args) => {
+              if (damage!.objects.has(args[0])) renderer.renderObject(...args);
+            });
+            renderer.render(scene, patchCamera);
+            renderer.setRenderObjectFunction(null);
+            // r186 WebGPU copyTextureToTexture copies resolved texture bytes
+            // with top-left GPU origins. It neither blends nor converts color.
+            // Never render a scissored MSAA pass into the retained global target:
+            // its resolve could overwrite the otherwise untouched cached pixels.
+            renderer.copyTextureToTexture(patch.texture, target.texture, null, this.copyPosition.set(region.x, region.y));
+            partial = true;
+            this.partialCaptures++;
+            this.copiedPixels += region.width * region.height;
+            this.totalCapturePixels += region.width * region.height;
+          } catch {
+            // An unsupported copy or failed patch must not leave a partially
+            // updated image visible. A fresh full capture repairs it immediately.
+            renderer.setRenderObjectFunction(null);
+            this.releasePatch();
+          }
+        }
+        if (!partial) {
+          renderer.setRenderTarget(target);
+          renderer.render(scene, camera);
+          this.fullCaptures++;
+          this.totalCapturePixels += width * height;
+        }
         this.captureCPUms = performance.now() - captureStart;
         this.cacheDrawcalls = renderer.info.render.drawCalls - captureDraws;
         this.cacheRenders++;
         this.cachedRevision = revision;
         this.sourceScene = scene;
         this.sourceCamera = camera;
+        this.rememberCamera(camera);
+        this.hasViewport = viewportAvailable;
+        if (viewportAvailable) this.cachedViewport.copy(this.viewport);
         this.dirty = false;
       }
 
@@ -197,6 +274,97 @@ export class NativeOverlayCache {
     }
   }
 
+  private cameraMatches(camera: THREE.Camera): boolean {
+    return this.cameraProjection.equals(camera.projectionMatrix) && this.cameraWorld.equals(camera.matrixWorld)
+      && this.cameraWorldInverse.equals(camera.matrixWorldInverse) && this.cameraPosition.equals(camera.position)
+      && this.cameraQuaternion.equals(camera.quaternion) && this.cameraScale.equals(camera.scale)
+      && this.cameraLayers === camera.layers.mask && this.cameraCoordinateSystem === camera.coordinateSystem
+      && this.cameraReversedDepth === camera.reversedDepth;
+  }
+
+  private rememberCamera(camera: THREE.Camera): void {
+    this.cameraProjection.copy(camera.projectionMatrix);
+    this.cameraWorld.copy(camera.matrixWorld);
+    this.cameraWorldInverse.copy(camera.matrixWorldInverse);
+    this.cameraPosition.copy(camera.position);
+    this.cameraQuaternion.copy(camera.quaternion);
+    this.cameraScale.copy(camera.scale);
+    this.cameraLayers = camera.layers.mask;
+    this.cameraCoordinateSystem = camera.coordinateSystem;
+    this.cameraReversedDepth = camera.reversedDepth;
+  }
+
+  private validPatch(renderer: THREE.WebGPURenderer, damage: NativeOverlayDamage | undefined, width: number, height: number): boolean {
+    if (!damage || damage.full || !(renderer.backend as unknown as {isWebGPUBackend?: boolean}).isWebGPUBackend
+      || typeof renderer.copyTextureToTexture !== 'function' || typeof renderer.renderObject !== 'function') return false;
+    const rect = damage.rect;
+    return !!rect && !!damage.objects && typeof damage.objects.has === 'function'
+      && [rect.x, rect.y, rect.width, rect.height].every(Number.isSafeInteger)
+      && rect.x >= 0 && rect.y >= 0 && rect.width > 0 && rect.height > 0
+      && rect.x + rect.width <= width && rect.y + rect.height <= height
+      && rect.width * rect.height <= width * height * .35;
+  }
+
+  private cropCamera(source: THREE.Camera, rect: NativeOverlayDamage['rect'], width: number, height: number): THREE.Camera {
+    if (!this.patchCamera || this.patchCamera.constructor !== source.constructor) {
+      const CameraType = source.constructor as new () => THREE.Camera;
+      this.patchCamera = new CameraType();
+    }
+    const camera = this.patchCamera;
+    camera.copy(source, false);
+    // The source projection already includes exact DPR/aspect, coordinate-system
+    // and asymmetric-view choices. setViewOffset would recompute and round them.
+    this.cropMatrix.set(width / rect.width, 0, 0, (width - 2 * rect.x - rect.width) / rect.width,
+      0, height / rect.height, 0, (rect.height - height + 2 * rect.y) / rect.height,
+      0, 0, 1, 0, 0, 0, 0, 1);
+    camera.projectionMatrix.multiplyMatrices(this.cropMatrix, source.projectionMatrix);
+    camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
+    camera.matrix.copy(source.matrix);
+    camera.matrixWorld.copy(source.matrixWorld);
+    camera.matrixWorldInverse.copy(source.matrixWorldInverse);
+    camera.position.copy(source.position);
+    camera.quaternion.copy(source.quaternion);
+    camera.scale.copy(source.scale);
+    camera.layers.mask = source.layers.mask;
+    camera.coordinateSystem = source.coordinateSystem;
+    // Pinned r186's renderer checks this flag before deciding whether to replace
+    // the projection. Camera.copy() does not copy it.
+    (camera as unknown as {_reversedDepth: boolean})._reversedDepth = source.reversedDepth;
+    camera.matrixAutoUpdate = false;
+    camera.matrixWorldAutoUpdate = false;
+    return camera;
+  }
+
+  private createTarget(width: number, height: number): THREE.RenderTarget {
+    return new THREE.RenderTarget(width, height, {
+      type: this.targetType,
+      format: THREE.RGBAFormat,
+      colorSpace: this.workingColorSpace as THREE.ColorSpace,
+      minFilter: THREE.NearestFilter,
+      magFilter: THREE.NearestFilter,
+      generateMipmaps: false,
+      depthBuffer: true,
+      stencilBuffer: false,
+      samples: this.targetSamples,
+      resolveDepthBuffer: false,
+      storeMultisampledColorBuffer: false,
+      storeMultisampledDepthBuffer: false
+    });
+  }
+
+  private ensurePatch(width: number, height: number): THREE.RenderTarget {
+    if (!this.patchTarget) {
+      this.patchTarget = this.createTarget(width, height);
+      this.patchTarget.texture.name = 'Native UI linear premultiplied RGBA patch';
+    } else if (this.patchTarget.width !== width || this.patchTarget.height !== height) this.patchTarget.setSize(width, height);
+    return this.patchTarget;
+  }
+
+  private releasePatch(): void {
+    this.patchTarget?.dispose();
+    this.patchTarget = undefined;
+  }
+
   private ensureTarget(renderer: THREE.WebGPURenderer, width: number, height: number): void {
     const backend = renderer.backend;
     // WebGPU's actual GPUDevice is replaced on a device lifetime change. The
@@ -223,25 +391,13 @@ export class NativeOverlayCache {
       this.workingColorSpace = workingColorSpace;
     }
     if (!this.target) {
-      this.target = new THREE.RenderTarget(width, height, {
-        type,
-        format: THREE.RGBAFormat,
-        colorSpace: workingColorSpace as THREE.ColorSpace,
-        minFilter: THREE.NearestFilter,
-        magFilter: THREE.NearestFilter,
-        generateMipmaps: false,
-        depthBuffer: true,
-        stencilBuffer: false,
-        samples,
-        resolveDepthBuffer: false,
-        storeMultisampledColorBuffer: false,
-        storeMultisampledDepthBuffer: false
-      });
+      this.target = this.createTarget(width, height);
       this.target.texture.name = 'Native UI linear premultiplied RGBA cache';
       this.material.map = this.target.texture;
       this.material.needsUpdate = true;
       this.dirty = true;
     } else if (this.target.width !== width || this.target.height !== height) {
+      this.releasePatch();
       this.target.setSize(width, height);
       this.dirty = true;
     }
@@ -250,6 +406,11 @@ export class NativeOverlayCache {
   get stats(): NativeOverlayCacheStats {
     return {
       cacheRenders: this.cacheRenders,
+      fullCaptures: this.fullCaptures,
+      partialCaptures: this.partialCaptures,
+      copiedPixels: this.copiedPixels,
+      totalCapturePixels: this.totalCapturePixels,
+      patchSize: {width: this.patchTarget?.width ?? 0, height: this.patchTarget?.height ?? 0},
       composites: this.composites,
       renderCPUms: this.renderCPUms,
       captureCPUms: this.captureCPUms,
@@ -265,6 +426,7 @@ export class NativeOverlayCache {
   }
 
   private releaseTarget(): void {
+    this.releasePatch();
     this.material.map = null;
     this.target?.dispose();
     this.target = undefined;
@@ -285,5 +447,6 @@ export class NativeOverlayCache {
     this.device = undefined;
     this.sourceScene = undefined;
     this.sourceCamera = undefined;
+    this.patchCamera = undefined;
   }
 }

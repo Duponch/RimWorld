@@ -3,6 +3,8 @@ import {PrototypeCardboardArt,MANAGEMENT_BUTTONS,PALETTE,drawHandRect,drawMarker
 import type {NativeControl,NativePage,NativeRow} from './native-contract';
 import {NativeGlobe} from './NativeGlobe';
 import {NativeOverlayCache} from './NativeOverlayCache';
+import {NativeDamageTracker} from './NativeDamageTracker';
+import {NativeRendererStandby} from './NativeRendererStandby';
 import {NATIVE_UI,layoutNativePage,wrapNativeText,type NativePageBox,type NativeRowBox} from './native-layout';
 
 const HUD_DISTANCE=7.5;
@@ -34,6 +36,7 @@ export class NativeStage {
     bottomLeft:new THREE.Group(),bottomCenter:new THREE.Group(),bottomRight:new THREE.Group(),drawerAnchor:new THREE.Group()};
   readonly ready:Promise<void>;
   private readonly ownRenderer=new THREE.WebGPURenderer({alpha:false,antialias:true,powerPreference:'high-performance'});
+  private readonly standby=new NativeRendererStandby(this.ownRenderer);
   private readonly raycaster=new THREE.Raycaster();
   private readonly pointer=new THREE.Vector2();
   private readonly management:CardboardPiece[]=[];
@@ -108,6 +111,8 @@ export class NativeStage {
   private worldReadoutInk='';
   private pointerOverUi=true;
   private readonly overlayCache=new NativeOverlayCache();
+  private readonly damageTracker=new NativeDamageTracker();
+  private readonly overlaySize=new THREE.Vector2();
   private readonly reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   private sceneRevision=0;
   private cacheRevision=0;
@@ -116,6 +121,7 @@ export class NativeStage {
   private readonly cacheEnabled=!(import.meta.env.DEV&&new URLSearchParams(location.search).get('ui-cache')==='off');
   private readonly stats={renders:0,overlayRenders:0,rebuilds:0,raycasts:0,activeAnimations:0,uiObjects:0,drawCalls:0,renderMs:0,backend:'',error:null as string|null};
   constructor(private readonly options:NativeStageOptions){
+    this.raycaster.layers.enable(31);
     this.hudRoot.position.set(0,0,-HUD_DISTANCE);this.camera.add(this.hudRoot);this.scene.add(this.camera);
     Object.values(this.anchors).forEach(group=>this.hudRoot.add(group));
     this.selectionBox.add(this.selectionFill,this.selectionOutline);this.selectionBox.visible=false;this.selectionBox.position.z=.5;this.hudRoot.add(this.selectionBox);
@@ -156,7 +162,7 @@ export class NativeStage {
     this.listen(document,'contextmenu',event=>{const mouse=event as MouseEvent;if(this.frontVisible||this.page?.modal||this.hit(mouse.clientX,mouse.clientY))this.swallow(event);},true);
     this.listen(document,'visibilitychange',()=>{if(document.hidden){this.cancelPress();this.hover(null);}else this.invalidate();});
     this.resize();this.ready=this.ownRenderer.init().then(()=>{
-      if(this.closed)return;this.initialized=true;this.stats.backend=this.ownRenderer.getContext() instanceof WebGL2RenderingContext?'WebGL 2':'WebGPU';this.invalidate();
+      if(this.closed)return;this.initialized=true;this.standby.setActive(this.frontVisible||this.standalone);this.stats.backend=this.ownRenderer.getContext() instanceof WebGL2RenderingContext?'WebGL 2':'WebGPU';this.invalidate();
     }).catch(error=>{this.stats.error=String(error);this.options.onError(String(error));});
   }
   private listen(target:EventTarget,name:string,listener:EventListener,options?:boolean|AddEventListenerOptions):void{
@@ -164,7 +170,7 @@ export class NativeStage {
   }
   diagnostics(){
     this.scene.updateMatrixWorld(true);
-    return {...this.stats,cache:this.overlayCache.stats,activeAnimations:this.moving.size,uiObjects:this.art.interactiveMeshes.length,
+    return {...this.stats,cache:this.overlayCache.stats,standby:this.standby.stats,activeAnimations:this.moving.size,uiObjects:this.art.interactiveMeshes.length,
       mode:'native-meshes',page:this.page?.id??null,scroll:this.scroll,maxScroll:this.maxScroll,pageBounds:this.pageBox?{x:this.pageBox.x,y:this.pageBox.y,width:this.pageBox.width,height:this.pageBox.height}:null,dropdown:this.dropdown?{owner:this.dropdown.controlId,...this.dropdown.box}:null,bottomDock:{autoHide:this.autoHideBottom,open:this.bottomOpen,offset:this.bottomOffset},front:this.frontVisible,globe:this.globeDiagnostics(),
       readout:this.worldReadout?{visible:this.worldReadout.visible,paper:this.worldReadout.userData.paper,width:this.worldReadout.userData.w*100,height:this.worldReadout.userData.h*100,lines:this.worldReadoutLines}:null,
       tooltip:this.hintPiece?{width:this.hintPiece.userData.w*100,height:this.hintPiece.userData.h*100}:null,
@@ -197,13 +203,18 @@ export class NativeStage {
   setWorldVisible(visible:boolean):void{
     if(this.worldVisible===visible)return;this.sceneRevision++;
     this.worldVisible=visible;this.standalone=!visible;
-    this.ownRenderer.domElement.style.display=this.frontVisible||this.standalone?'block':'none';
+    this.updateOwnSurface();
     this.anchors.bottomCenter.visible=!this.frontVisible;this.toolsDock.visible=visible&&!this.frontVisible;this.updateWorldReadoutVisibility();this.invalidate();
   }
   setFrontVisible(visible:boolean):void{
     if(this.frontVisible===visible)return;this.sceneRevision++;
-    this.frontVisible=visible;this.ownRenderer.domElement.style.display=visible||this.standalone?'block':'none';
+    this.frontVisible=visible;this.updateOwnSurface();
     this.anchors.bottomCenter.visible=!visible;this.toolsDock.visible=this.worldVisible&&!visible;this.resize();this.rebuildPage(true);this.updateWorldReadoutVisibility();this.invalidate();
+  }
+  private updateOwnSurface():void{
+    const active=this.frontVisible||this.standalone;
+    if(active){this.standby.setActive(true);this.ownRenderer.domElement.style.display='block';}
+    else{this.ownRenderer.domElement.style.display='none';if(this.frameId){cancelAnimationFrame(this.frameId);this.frameId=0;}this.standby.setActive(false);}
   }
   setPanel(id:string|null):void{
     this.management.forEach((piece,index)=>{const active=PANEL_IDS[index]===id;if(piece.userData.active!==active){piece.setActive(active);this.moving.add(piece);}});this.invalidate();
@@ -277,7 +288,7 @@ export class NativeStage {
     this.sceneRevision++;
     this.width=innerWidth;this.height=innerHeight;
     this.camera.aspect=this.width/this.height;this.camera.updateProjectionMatrix();
-    this.ownRenderer.setSize(this.width,this.height,false);
+    this.standby.resize(this.width,this.height,Math.min(devicePixelRatio||1,2));
     this.visH=2*Math.tan(THREE.MathUtils.degToRad(this.camera.fov)/2)*HUD_DISTANCE;this.visW=this.visH*this.camera.aspect;
     this.uiScale=this.visH/this.height*100;
     const halfW=this.visW/2,halfH=this.visH/2,s=this.uiScale;
@@ -299,10 +310,15 @@ export class NativeStage {
     const animated=this.moving.size>0||this.extraAnimating;
     this.animate(now);
     if(this.cacheEnabled){
-      if(this.lastArtRevision!==this.art.revision||this.lastSceneRevision!==this.sceneRevision){
-        this.lastArtRevision=this.art.revision;this.lastSceneRevision=this.sceneRevision;this.cacheRevision++;
+      const start=performance.now();
+      let damage;
+      if(animated||this.lastArtRevision!==this.art.revision||this.lastSceneRevision!==this.sceneRevision){
+        renderer.getDrawingBufferSize(this.overlaySize);
+        damage=this.damageTracker.collect(this.scene,this.camera,Math.floor(this.overlaySize.x),Math.floor(this.overlaySize.y),this.globe?.visible?undefined:this.art.resourceRevision);
+        this.lastArtRevision=this.art.revision;this.lastSceneRevision=this.sceneRevision;
+        if(damage)this.cacheRevision++;
       }
-      const start=performance.now();this.overlayCache.draw(renderer,this.scene,this.camera,this.cacheRevision,animated);
+      this.overlayCache.draw(renderer,this.scene,this.camera,this.cacheRevision,false,damage??undefined);
       this.stats.renderMs=performance.now()-start;this.stats.overlayRenders++;return;
     }
     const auto=renderer.autoClear,target=renderer.getRenderTarget();renderer.autoClear=false;
@@ -533,9 +549,22 @@ export class NativeStage {
   }
   private measure=(text:string,size:number,bold=false):number=>{this.measureContext.font=this.font(size,bold);return this.measureContext.measureText(text).width;};
   private rowHint(row:NativeRow):string{return row.hint??[row.label,row.value,row.detail,row.meter?.label,row.meter?.secondary?.label].filter(Boolean).join('\n');}
+  private controlInk(control:NativeControl):unknown{
+    const {hint:_hint,select,...ink}=control;
+    return {...ink,select:select?{...select,options:select.options.map(({hint:_optionHint,...option})=>option)}:undefined};
+  }
+  private rowInk(row:NativeRow):unknown{
+    const {hint:_hint,controls,columns,...ink}=row;
+    // Empty hints have no input plane. Preserve that structural distinction
+    // while excluding the text that only appears in a native tooltip.
+    return [{...ink,controls:controls?.map(control=>this.controlInk(control)),columns:columns?.map(({hint:_columnHint,...column})=>column)},!!this.rowHint(row)];
+  }
+  private pageInkSignature(page:NativePage|null):string{
+    return page?JSON.stringify([page.id,page.title,page.subtitle,page.width,page.height,page.layout,page.columnRatio,page.portrait?.url,page.visual?.selected,page.visual?.markers,page.rows.map(row=>this.rowInk(row)),page.actions?.map(control=>this.controlInk(control)),page.closable,this.textFontRevision,this.frontVisible,this.width,this.height,this.scroll]):'';
+  }
   private rebuildPage(force=false):void{
     const page=this.page;
-    const signature=page?JSON.stringify([page.id,page.title,page.subtitle,page.width,page.height,page.layout,page.columnRatio,page.portrait?.url,page.visual?.selected,page.visual?.markers,page.rows,page.actions,page.closable,this.textFontRevision,this.frontVisible,this.width,this.height,this.scroll]):'';
+    const signature=this.pageInkSignature(page);
     if(!force&&signature===this.pageSignature){this.rebindPage(page);return;}
     const focused=this.pageControls.filter(hit=>!hit.control?.disabled)[this.focusIndex],focusedId=focused?String(focused.piece.userData.nativeId):undefined;
     this.pageSignature=signature;this.pagePieceIds=new Set();this.pagePieces.length=0;this.pageControls=[];this.pageBackdrop=undefined;
@@ -549,7 +578,7 @@ export class NativeStage {
     this.pageGroup.position.set((box.x+box.width/2-this.width/2)*this.visH/this.height*factor,(this.height/2-box.y-box.height/2)*this.visH/this.height*factor,z);
     this.maxScroll=Math.max(0,box.contentHeight-box.body.height);this.scroll=THREE.MathUtils.clamp(this.scroll,0,this.maxScroll);
     const visible=box.rows.filter(r=>r.top+r.height>this.scroll&&r.top<this.scroll+box.body.height);
-    const background=this.pagePiece('page:'+page.id,{w,h,uvPadding:1,textureWidth:Math.ceil(box.width*2),textureHeight:Math.ceil(box.height*2),bgColor:PALETTE.creamPaper,seed:2003,depth:.035,interactive:true,
+    const background=this.pagePiece('page:'+page.id,{w,h,cacheBackground:true,uvPadding:1,textureWidth:Math.ceil(box.width*2),textureHeight:Math.ceil(box.height*2),bgColor:PALETTE.creamPaper,seed:2003,depth:.035,interactive:true,
       drawFn:(ctx,wp,hp,rng)=>{
         ctx.save();ctx.scale(wp/box.width,hp/box.height);ctx.textAlign='left';ctx.fillStyle=PALETTE.inkDark;ctx.font=this.font(17,true);
         ctx.fillText(page.title,margin,25,box.width-margin*2-(page.portrait?74:28));
@@ -568,12 +597,12 @@ export class NativeStage {
       const row=r.row,top=box.body.y+r.top-this.scroll,cy=top+r.height/2;
       const hint=this.rowHint(row);
       if(hint){
-        const piece=this.pagePiece('row-hint:'+row.id,{w:r.width*k,h:r.height*k,paper:false,interactive:true,drawFn:()=>{}},hint,(r.x+r.width/2-box.width/2)*k,(box.height/2-cy)*k,.025);
+        const piece=this.pagePiece('row-hint:'+row.id,{w:r.width*k,h:r.height*k,paper:false,hitOnly:true,interactive:true,drawFn:()=>{}},hint,(r.x+r.width/2-box.width/2)*k,(box.height/2-cy)*k,.025);
         piece.userData.tooltip=hint;piece.userData.nativeStatic=true;this.pageContent.add(piece);
       }
       if(row.columns){
         const tail=row.value?142:0,left=r.x+104,cw=(r.width-104-tail)/row.columns.length;
-        row.columns.forEach((column,index)=>{const hintPiece=this.pagePiece('column:'+row.id+':'+index,{w:cw*k,h:r.height*k,paper:false,interactive:true,drawFn:()=>{}},column.hint??column.label,(left+cw*(index+.5)-box.width/2)*k,(box.height/2-cy)*k,.04);hintPiece.userData.nativeStatic=true;hintPiece.userData.tooltip=column.hint??column.label;this.pageContent.add(hintPiece);});
+        row.columns.forEach((column,index)=>{const hintPiece=this.pagePiece('column:'+row.id+':'+index,{w:cw*k,h:r.height*k,paper:false,hitOnly:true,interactive:true,drawFn:()=>{}},column.hint??column.label,(left+cw*(index+.5)-box.width/2)*k,(box.height/2-cy)*k,.04);hintPiece.userData.nativeStatic=true;hintPiece.userData.tooltip=column.hint??column.label;this.pageContent.add(hintPiece);});
       }
       const controls=row.controls??[];
       if(controls.length){
@@ -622,6 +651,7 @@ export class NativeStage {
     }
     this.retirePagePieces();this.focusIndex=focusedId===undefined?-1:this.pageControls.filter(hit=>!hit.control?.disabled).findIndex(hit=>String(hit.piece.userData.nativeId)===focusedId);
     if(this.editingPaintDirty){this.editingPaintDirty=false;this.editRepaint?.();}
+    this.rebindPage(page);
     this.scene.updateMatrixWorld(true);
   }
   private drawPageRow(ctx:CanvasRenderingContext2D,r:NativeRowBox,top:number,rng:()=>number,box:NativePageBox):void{
@@ -683,24 +713,40 @@ export class NativeStage {
   }
   private rebindPage(page:NativePage|null):void{
     if(!page)return;
-    const controls=new Map<string,NativeControl>(),inputs=new Map<string,NonNullable<NativeRow['input']>>();
-    for(const row of page.rows){for(const control of row.controls??[])controls.set(control.id,this.rowControl(row,control));if(row.input)inputs.set(row.id,row.input);}
+    const controls=new Map<string,NativeControl>(),inputs=new Map<string,NonNullable<NativeRow['input']>>(),hints=new Map<string,string>();
+    for(const row of page.rows){
+      for(const control of row.controls??[])controls.set(control.id,this.rowControl(row,control));if(row.input)inputs.set(row.id,row.input);
+      hints.set('row-hint:'+row.id,this.rowHint(row));
+      row.columns?.forEach((column,index)=>hints.set('column:'+row.id+':'+index,column.hint??column.label));
+    }
     for(const control of page.actions??[])controls.set(control.id,control);
     controls.set('page:close',this.closeControl());
     for(const record of this.retainedPagePieces.values()){
       const id=String(record.piece.userData.nativeId);
       const control=controls.get(id),input=inputs.get(id);
       record.hit.control=control;record.hit.input=input;
-      const row=page.rows.find(row=>'row-hint:'+row.id===id);
-      const hint=control?.hint??control?.label??(row?this.rowHint(row):record.piece.userData.tooltip??'');
+      const hint=control?.hint??control?.label??hints.get(id)??record.piece.userData.tooltip??'';
       if(this.hintOwner===record.piece&&record.piece.userData.tooltip!==hint)this.clearHint();
       record.piece.userData.tooltip=hint;record.piece.userData.nativeDisabled=!!control?.disabled;
       if(this.editing===record.hit&&input&&this.editor)this.editor.maxLength=input.maxLength??2048;
     }
+    const dropdown=this.dropdown;
+    if(dropdown){
+      const owner=controls.get(dropdown.controlId),select=owner?.select;
+      if(page.id!==dropdown.pageId||owner?.disabled||!select){this.closeDropdown();return;}
+      const options=new Map(select.options.map(option=>['select-option:'+dropdown.controlId+':'+option.value,option]));
+      for(const piece of dropdown.pieces){
+        const option=options.get(String(piece.userData.nativeId));if(!option)continue;
+        const hint=option.hint??option.label,hit=this.hits.get(piece.userData.mesh);
+        if(this.hintOwner===piece&&piece.userData.tooltip!==hint)this.clearHint();
+        piece.userData.tooltip=hint;
+        if(hit?.control)hit.control.hint=hint;
+      }
+    }
   }
   private pagePiece(id:string,options:CardboardPieceOptions,ink:string,x:number,y:number,z:number,control?:NativeControl,input?:NativeRow['input']):CardboardPiece{
     this.pagePieceIds.add(id);
-    const geometry=JSON.stringify([options.w,options.h,options.depth??.044,options.bevel??.026,options.seed??1,!!options.interactive,options.paper,options.textureWidth,options.textureHeight,options.uvPadding]);
+    const geometry=JSON.stringify([options.w,options.h,options.depth??.044,options.bevel??.026,options.seed??1,!!options.interactive,options.paper,options.hitOnly,options.cacheBackground,options.textureWidth,options.textureHeight,options.uvPadding]);
     const paint=JSON.stringify([options.bgColor??PALETTE.kraftBase,ink]);
     let record=this.retainedPagePieces.get(id),created=false;
     const old=record,wasEditing=!!record&&this.editing===record.hit;

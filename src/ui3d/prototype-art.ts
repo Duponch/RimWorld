@@ -8,6 +8,8 @@ type Paint = string | CanvasGradient | CanvasPattern;
 export type CardboardDraw = (ctx: CanvasRenderingContext2D, wPx: number, hPx: number, rng: () => number) => void;
 export interface CardboardPieceOptions {
   paper?:boolean;
+  cacheBackground?:boolean;
+  hitOnly?:boolean;
   textureWidth?:number;
   textureHeight?:number;
   uvPadding?:number;
@@ -52,6 +54,7 @@ export interface CardboardPieceData {
   interactiveMeshes?: readonly THREE.Mesh[];
   redraw(drawFn?: CardboardDraw, bgColor?: string): void;
   setBaseTransform(x: number, y: number, z?: number, rotZ?: number): void;
+  releasePaint?:()=>void;
 }
 export interface CardboardPiece extends THREE.Group {
   userData: CardboardPieceData;
@@ -78,7 +81,18 @@ export const PALETTE = {
   tapeHex: 0xeadfc2
 };
 
-export function seededRandom(seed: number) {
+interface RandomStream {():number;clone():RandomStream}
+function randomStream(seed:number):RandomStream {
+  let s = (seed % 2147483647);
+  if (s <= 0) s += 2147483646;
+  const next = function() {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  } as RandomStream;
+  next.clone=()=>randomStream(s);
+  return next;
+}
+export function seededRandom(seed: number):()=>number {
   let s = (seed % 2147483647);
   if (s <= 0) s += 2147483646;
   return function() {
@@ -253,8 +267,7 @@ export function drawHandBlob(ctx: CanvasRenderingContext2D, cx: number, cy: numb
 }
 
 // Peint une vraie surface en carton kraft recouverte de coups de pinceau à la gouache irréguliers
-export function paintCardboardCanvas(ctx: CanvasRenderingContext2D, wPx: number, hPx: number, bgColor: string, drawCallback: CardboardDraw | undefined, hasBorder = true, seed = 1) {
-  const rng = seededRandom(seed * 313 + 7);
+export function paintCardboardCanvas(ctx: CanvasRenderingContext2D, wPx: number, hPx: number, bgColor: string, drawCallback: CardboardDraw | undefined, hasBorder = true, seed = 1, rng:()=>number = seededRandom(seed * 313 + 7)) {
   ctx.clearRect(0, 0, wPx, hPx);
 
   // 1. Fond de carton kraft brut (qui restera visible sur les bords mal peints !)
@@ -335,11 +348,37 @@ export function paintCardboardCanvas(ctx: CanvasRenderingContext2D, wPx: number,
   if (drawCallback) drawCallback(ctx, wPx, hPx, rng);
 }
 
+/** Invisible native input planes have no painted or GPU-sampled surface. The
+ * compatibility texture is never bound to a material, so it is never uploaded. */
+function createHitOnlyPiece({w,h,depth=.044,seed=1,interactive=false,onClick=null,tooltip='',drawFn,bgColor=PALETTE.kraftBase}:CardboardPieceOptions):CardboardPiece {
+  const group=new THREE.Group() as CardboardPiece;
+  const canvas=document.createElement('canvas');canvas.width=canvas.height=1;
+  const ctx=canvas.getContext('2d');
+  if(!ctx)throw new Error('Canvas 2D is required for native input compatibility.');
+  const texture=new THREE.CanvasTexture(canvas),geometry=new THREE.PlaneGeometry(w,h);
+  const material=new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false});
+  const mesh=new THREE.Mesh(geometry,material),shadowMesh=new THREE.Mesh(geometry,material);
+  mesh.layers.set(31);shadowMesh.layers.set(31);shadowMesh.visible=false;
+  group.add(mesh,shadowMesh);
+  group.userData={w,h,depth,seed,paper:false,hitOnly:true,mesh,shadowMesh,canvas,ctx,wPx:1,hPx:1,texture,
+    bgColor,hasBorder:false,drawFn,basePos:new THREE.Vector3(),baseRot:new THREE.Euler(),baseScale:new THREE.Vector3(1,1,1),
+    hoverTarget:0,hoverVal:0,pressVal:0,active:false,tooltip,onClick,
+    redraw(drawFn,bgColor=group.userData.bgColor){group.userData.drawFn=drawFn;group.userData.bgColor=bgColor;},
+    setBaseTransform(x,y,z=0,rotZ=0){group.position.set(x,y,z);group.rotation.set(0,0,rotZ);group.userData.basePos.set(x,y,z);group.userData.baseRot.set(0,0,rotZ);}
+  };
+  group.setBaseTransform=(x,y,z=0,rotZ=0)=>group.userData.setBaseTransform(x,y,z,rotZ);
+  group.redraw=(draw=group.userData.drawFn,bg=group.userData.bgColor)=>group.userData.redraw(draw,bg);
+  group.setActive=(active,bg)=>{group.userData.active=active;group.redraw(undefined,bg);};
+  if(interactive){mesh.userData.widgetGroup=group;group.userData.interactiveMeshes=[mesh];}
+  return group;
+}
+
 export function createCardboardPiece({
   w, h, depth = 0.044, bgColor = PALETTE.kraftBase,
   bevel = 0.026, seed = 1, drawFn, interactive = false,
-  onClick = null, hasBorder = true, tooltip = '', paper = true, textureWidth, textureHeight, uvPadding
+  onClick = null, hasBorder = true, tooltip = '', paper = true, textureWidth, textureHeight, uvPadding, cacheBackground = false, hitOnly = false
 }: CardboardPieceOptions, cardboardEdgeMat: THREE.MeshStandardMaterial, shadowMat: THREE.MeshBasicMaterial): CardboardPiece {
+  if(hitOnly)return createHitOnlyPiece({w,h,depth,seed,interactive,onClick,tooltip,drawFn,bgColor});
   const group = new THREE.Group() as CardboardPiece;
   const shape = createCutoutRectShape(w, h, bevel, seed);
 
@@ -370,7 +409,26 @@ export function createCardboardPiece({
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D is required for the original cardboard paint.');
 
-  const paint=(draw:CardboardDraw|undefined,bg:string)=>{if(paper)paintCardboardCanvas(ctx,wPx,hPx,bg,draw,hasBorder,seed);else{ctx.clearRect(0,0,wPx,hPx);draw?.(ctx,wPx,hPx,seededRandom(seed));}};
+  let background:HTMLCanvasElement|undefined,backgroundKey='',backgroundFill:Paint=PALETTE.kraftBase;
+  let inkRandom:RandomStream|undefined;
+  const paint=(draw:CardboardDraw|undefined,bg:string)=>{
+    if(paper&&cacheBackground){
+      const key=JSON.stringify([wPx,hPx,seed,bg,hasBorder]);
+      if(backgroundKey!==key){
+        background??=document.createElement('canvas');background.width=wPx;background.height=hPx;
+        const backgroundCtx=background.getContext('2d',{alpha:false});
+        if(!backgroundCtx)throw new Error('Canvas 2D is required for cached cardboard paint.');
+        paintCardboardCanvas(backgroundCtx,wPx,hPx,bg,(_ctx,_w,_h,rng)=>{inkRandom=(rng as RandomStream).clone();},hasBorder,seed,randomStream(seed*313+7));
+        backgroundFill=backgroundCtx.fillStyle;backgroundKey=key;
+      }
+      // Copy the opaque pixels at their original resolution. Restore the live
+      // ink context's state, including any transform owned by its draw callback.
+      ctx.save();ctx.resetTransform();ctx.globalAlpha=1;ctx.globalCompositeOperation='copy';ctx.drawImage(background!,0,0);ctx.restore();
+      ctx.fillStyle=backgroundFill;
+      draw?.(ctx,wPx,hPx,inkRandom!.clone());
+    }else if(paper)paintCardboardCanvas(ctx,wPx,hPx,bg,draw,hasBorder,seed);
+    else{ctx.clearRect(0,0,wPx,hPx);draw?.(ctx,wPx,hPx,seededRandom(seed));}
+  };
   paint(drawFn,bgColor);
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -409,6 +467,7 @@ export function createCardboardPiece({
     active: false,
     tooltip,
     onClick,
+    releasePaint:()=>{if(background){background.width=background.height=1;background=undefined;}inkRandom=undefined;},
     redraw(newDrawFn, newBg = group.userData.bgColor) {
       group.userData.bgColor = newBg;
       group.userData.drawFn = newDrawFn;
@@ -622,6 +681,9 @@ export const MANAGEMENT_BUTTONS: readonly ManagementButtonConfig[] = [
 
 export class PrototypeCardboardArt {
   revision=0;
+  /** Geometry, material or texture ownership changes; transform-only poses do
+   * not invalidate retained resource descriptors. */
+  resourceRevision=0;
   readonly cardboardEdgeMat = new THREE.MeshStandardMaterial({
     color: PALETTE.edgeCream,
     roughness: 1.0,
@@ -643,11 +705,12 @@ export class PrototypeCardboardArt {
   createPiece(options: CardboardPieceOptions): CardboardPiece {
     const piece = createCardboardPiece(options, this.cardboardEdgeMat, this.shadowMat);
     const redraw=piece.userData.redraw,setBase=piece.userData.setBaseTransform;
-    piece.userData.redraw=(...args)=>{redraw(...args);this.revision++;};
+    piece.userData.redraw=(...args)=>{redraw(...args);this.revision++;this.resourceRevision++;};
     piece.userData.setBaseTransform=(...args)=>{setBase(...args);this.revision++;};
     this.pieces.add(piece);
     this.hitMeshes.push(...(piece.userData.interactiveMeshes ?? []));
     this.revision++;
+    this.resourceRevision++;
     return piece;
   }
 
@@ -715,11 +778,13 @@ export class PrototypeCardboardArt {
   disposePiece(piece: CardboardPiece): void {
     if (!this.pieces.delete(piece)) return;
     this.revision++;
+    this.resourceRevision++;
     for (const mesh of piece.userData.interactiveMeshes ?? []) {
       const index = this.hitMeshes.indexOf(mesh);
       if (index >= 0) this.hitMeshes.splice(index, 1);
     }
     piece.userData.texture.dispose();
+    piece.userData.releasePaint?.();
     this.disposeMeshes(piece);
     piece.removeFromParent();
     piece.clear();
