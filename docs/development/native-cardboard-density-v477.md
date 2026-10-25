@@ -1,5 +1,7 @@
 # Interface carton : densité et usages V477
 
+L’audit ultérieur demandé sur le coût de l’UI en partie est consigné dans [Coût de l’interface 3D en partie](native-ui-cost-audit-v477.md). Il identifie notamment le surcoût des survols animés et les allocations graphiques supplémentaires ; les présentes vérifications de disposition ne constituent pas une preuve de coût identique à l’ancien DOM.
+
 ## Demande et périmètre
 
 Suite aux captures humaines du 25 octobre : conserver les véritables objets Three.js découpés et peints de V476, mais retrouver la densité, les informations et les interactions du jeu. Les grandes feuilles vides, l’agrandissement dépendant de la hauteur d’écran, les priorités en sous-page et les regroupements Ordres/Zones/Vue ne conviennent pas.
