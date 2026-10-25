@@ -84,6 +84,9 @@ export class SimulationClient {
   /** The default client and readWorkerMessage instrumentation remain strict. */
   protected withWorkerMessage(_source:Worker,_event:MessageEvent<unknown>,dispatch:()=>void):void {dispatch();}
   protected workerStopped(_source:Worker):void {}
+  /** Default public path preserves the live synchronous event read. */
+  protected dispatchWorkerMessage(source:Worker,event:MessageEvent<unknown>,dispatch:(raw:unknown)=>void):void {this.withWorkerMessage(source,event,()=>dispatch(event.data));}
+  protected dispatchWorkerFailure(_source:Worker,dispatch:()=>void):void {dispatch();}
 
   protected deliverSnapshot(world: World, stepMs: number, speed: number, replaced: boolean, motion?: import('./motion-tracks').PawnTrack[]): void {
     this.onSnapshot(world, stepMs, speed, replaced, motion);
@@ -102,8 +105,8 @@ export class SimulationClient {
     const source=this.worker;
     this.worker.onmessage = (event:MessageEvent<unknown>) => {
       if(source!==this.worker||this.stopped)return;
-      this.withWorkerMessage(source,event,()=>{
-      const raw=event.data;
+      this.dispatchWorkerMessage(source,event,(raw)=>{
+      if(source!==this.worker||this.stopped)return;
       let data:Response;
       try{data=this.readWorkerMessage(raw);}catch{this.stop('La projection reçue ne correspond pas au Worker courant.');return;}
       if(data.type==='world-draft-progress'){
@@ -185,9 +188,10 @@ export class SimulationClient {
       });
     };
     this.worker.onerror = (event) => {
-      this.stop(`Simulation interrompue : ${event.message}`);
+      const reason=`Simulation interrompue : ${event.message}`;
+      this.dispatchWorkerFailure(source,()=>{if(source===this.worker&&!this.stopped)this.stop(reason);});
     };
-    this.worker.onmessageerror = () => this.stop('La communication avec la simulation est interrompue.');
+    this.worker.onmessageerror = () => this.dispatchWorkerFailure(source,()=>{if(source===this.worker&&!this.stopped)this.stop('La communication avec la simulation est interrompue.');});
   }
 
   private finishReply(id: number, pending: PendingRequest) {

@@ -1,4 +1,5 @@
 import type {World} from '../sim/types';
+import {captureNativeMessageForDeferred} from './native-message-capture';
 import {isOwnedResidentFilthCopyInternal,isOwnedResidentFilthItemListInternal} from './resident-filth-section';
 import {createFirefoamLaneValidatorsInternal290} from '../sim/firefoam-save-290';
 import {ResidentVegetationAssembler} from './resident-vegetation-assembler';
@@ -10,6 +11,7 @@ export interface NativeCloneResidentLane {
  readonly reader:ResidentVegetationAssembler;
  createWorker():Worker;
  withWorkerMessage(source:Worker,event:MessageEvent<unknown>,dispatch:()=>void):void;
+ takeDeferredMessage(source:Worker,event:MessageEvent<unknown>,dispatch:(raw:unknown)=>void):{run:()=>void;arrivalAt:number;epoch?:number;tick?:number}|undefined;
  close():void;
  diagnostics():Readonly<{fastAdoptions:number;strictAdoptions:number;fastLaneReads:number}>;
 }
@@ -43,6 +45,11 @@ function nativeEventReader(){
 export function createNativeCloneResidentLane():NativeCloneResidentLane {
  let worker:Worker|undefined,closed=false,capture:((event:MessageEvent<unknown>)=>void)|undefined;
  const ordinary=new WeakSet<object>(),receipts=new WeakMap<object,Receipt>(),readNative=nativeEventReader();
+ interface Deferred {readonly eventRaw:unknown;readonly captured:unknown;readonly arrivalAt:number;receipt:Receipt|undefined;taken:boolean;used:boolean;epoch?:number;tick?:number}
+ const deferred=new WeakMap<object,Deferred>();
+ const deferredGet=Function.call.bind(WeakMap.prototype.get) as (map:WeakMap<object,Deferred>,key:object)=>Deferred|undefined;
+ const deferredSet=Function.call.bind(WeakMap.prototype.set) as (map:WeakMap<object,Deferred>,key:object,value:Deferred)=>unknown;
+ const deferredDelete=Function.call.bind(WeakMap.prototype.delete) as (map:WeakMap<object,Deferred>,key:object)=>unknown;
  interface Receipt {readonly raw:unknown;readonly original:Packet;consumed:boolean}
  interface Scope {readonly frame:Receipt;prepared:Packet|undefined}
  let frame:Receipt|undefined,scope:Scope|undefined;
@@ -121,6 +128,17 @@ export function createNativeCloneResidentLane():NativeCloneResidentLane {
    capture=event=>{
     if(closed||worker!==source)return;
     const native=readNative?.(event,source);if(!native)return;
+    const arrivalAt=performance.now();
+    try{
+     const captured=captureNativeMessageForDeferred(native.value);
+     const envelope=captured as {type?:unknown;publication?:Packet};
+     const packet=envelope.type==='resident-publication'&&envelope.publication?.type==='snapshot'?envelope.publication:undefined;
+     // The captured packet is a private own-data envelope. Its shared World
+     // body is marked exactly once below through the original native packet.
+     if(packet)ordinary.add(packet);
+     const epoch=packet&&Object.getOwnPropertyDescriptor(packet,'epoch')?.value,tick=packet?.world&&Object.getOwnPropertyDescriptor(packet.world,'tick')?.value;
+     deferredSet(deferred,event,{eventRaw:native.value,captured,arrivalAt,receipt:undefined,taken:false,used:false,...Number.isSafeInteger(epoch)?{epoch}:{},...Number.isSafeInteger(tick)?{tick}:{}});
+    }catch{/* No deferred authority: the ordinary strict immediate reader owns malformed inputs. */}
     try{
      const raw=native.value as Record<string,unknown>|null;
      if(!raw||typeof raw!=='object'||raw.type!=='resident-publication')return;
@@ -129,6 +147,8 @@ export function createNativeCloneResidentLane():NativeCloneResidentLane {
      mark(packet);
      const receipt:Receipt={raw,original:packet,consumed:false};
      receipts.set(event,receipt);
+     const held=deferredGet(deferred,event),owned=(held?.captured as {publication?:Packet}|undefined)?.publication;
+     if(held&&owned?.type==='snapshot'&&owned.world===packet.world)held.receipt={raw:held.captured,original:owned,consumed:false};
     }catch{/* ordinary strict reader owns malformed publication refusal */}
    };
    // Registered before exposing the Worker to arbitrary client listeners.
@@ -141,8 +161,21 @@ export function createNativeCloneResidentLane():NativeCloneResidentLane {
    // redispatch cannot redeem this exact-Event, weakly held one-use receipt.
    const receipt=receipts.get(event),native=readNative?.(event,source);
    if(!receipt||receipt.consumed||!native||native.value!==receipt.raw){dispatch();return;}
+   const alternative=deferredGet(deferred,event);if(alternative){alternative.used=true;deferredDelete(deferred,event);}
    receipts.delete(event);frame=receipt;
    try{dispatch();}finally{receipt.consumed=true;frame=undefined;scope=undefined;}
+  },
+  takeDeferredMessage(source,event,dispatch){
+   if(closed||!worker||source!==worker||frame)return;
+   const held=deferredGet(deferred,event),native=readNative?.(event,source);
+   if(!held||held.taken||held.used||!native||native.value!==held.eventRaw)return;
+   held.taken=true;deferredDelete(deferred,event);receipts.delete(event);
+   return {arrivalAt:held.arrivalAt,...held.epoch!==undefined?{epoch:held.epoch}:{},...held.tick!==undefined?{tick:held.tick}:{},run(){
+    if(held.used||closed||worker!==source)return;held.used=true;
+    if(frame)throw Error('Reentrant deferred native receipt');
+    frame=held.receipt;
+    try{dispatch(held.captured);}finally{if(held.receipt)held.receipt.consumed=true;frame=undefined;scope=undefined;}
+   }};
   },
   close(){closed=true;if(worker&&capture)worker.removeEventListener('message',capture);frame=undefined;scope=undefined;},
   diagnostics:()=>Object.freeze({...metrics}),

@@ -3,7 +3,7 @@ import {writeFile} from 'node:fs/promises';
 
 // Opt-in before the page fixture, matching the existing native integration suites.
 test.skip(process.env.NATIVE_CLONE474_NATIVE!=='1','ROOT opt-in only; separately frozen Vite source server required.');
-test('V474: seven real Worker clone contracts, without a game renderer',async({page},info)=>{
+test('V475: eight real Worker clone contracts, without a game renderer',async({page},info)=>{
  const errors:string[]=[];page.on('pageerror',error=>errors.push(String(error)));
  let report:unknown;
  try{
@@ -16,5 +16,5 @@ test('V474: seven real Worker clone contracts, without a game renderer',async({p
  }catch(error){report={status:'failed',error:String(error)};}
  await writeFile(info.outputPath('contracts.json'),JSON.stringify({report,errors},null,2)+'\n');
  expect(errors).toEqual([]);
- expect(report).toMatchObject({status:'passed',tests:7,renderer:false});
+ expect(report).toMatchObject({status:'passed',tests:8,renderer:false});
 });

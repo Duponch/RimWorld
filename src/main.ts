@@ -218,6 +218,7 @@ import { foodFreshnessLabel } from './ui/food-freshness';
 import { SimulationClient } from './bridge/SimulationClient';
 import type {SnapshotReader} from './bridge/SimulationClient';
 import {createNativeCloneResidentLane,type NativeCloneResidentLane} from './bridge/native-clone-resident';
+import {MainFrameAdmissionFIFO} from './bridge/main-frame-admission-fifo';
 import {readResidentWorkerMessage} from './bridge/resident-protocol';
 import type { AudioCue } from './bridge/audio-cues';
 import { AudioDirector } from './audio/AudioDirector';
@@ -271,28 +272,45 @@ function openResearchContext(panel:'work'|'architect'):void {
 // Only this fixed Worker/client and the fixed MAIN consumers can reach these
 // decoders. The command facade exposes no adoption or World callback entry.
 let firstGesturesLearning:ReturnType<typeof createFirstGesturesLearning>|undefined;
+let drainMainAdmissionsBeforeFrame=()=>{};
+let notifyMainAdmissionAvailability=()=>{};
+let mainAdmissionCanFrame=()=>false;
 const client = (() => {
   // External WeakMap survives virtual createDecoder during super(), without a
   // subclass field initializer overwriting the freshly created lane afterward.
   const lanes=new WeakMap<SimulationClient,NativeCloneResidentLane>();
+  const queues=new WeakMap<SimulationClient,MainFrameAdmissionFIFO>();
   class MainSimulationClient extends SimulationClient {
     protected override createDecoder():SnapshotReader {
-      lanes.get(this)?.close();const lane=createNativeCloneResidentLane();lanes.set(this,lane);return lane.reader;
+      queues.get(this)?.close();lanes.get(this)?.close();const lane=createNativeCloneResidentLane();lanes.set(this,lane);
+      queues.set(this,new MainFrameAdmissionFIFO(()=>mainAdmissionCanFrame(),()=>this.stop('La file de présentation est saturée. Le résultat des opérations reste inconnu ; rechargez une colonie validée.')));
+      return lane.reader;
     }
     protected override createWorker():Worker {const lane=lanes.get(this);if(!lane)throw Error('Missing native clone lane');return lane.createWorker();}
     protected override readWorkerMessage(value:unknown){return readResidentWorkerMessage(value);}
     protected override withWorkerMessage(source:Worker,event:MessageEvent<unknown>,dispatch:()=>void):void {
       const lane=lanes.get(this);if(lane)lane.withWorkerMessage(source,event,dispatch);else dispatch();
     }
-    protected override workerStopped(_source:Worker):void {lanes.get(this)?.close();}
-    protected override deliverSnapshot(world: World, cost: number, speed: number, replaced: boolean, motion?: PawnTrack[]): void {
-      receiveMainSnapshot(world, cost, speed, replaced, motion);
+    protected override dispatchWorkerMessage(source:Worker,event:MessageEvent<unknown>,dispatch:(raw:unknown)=>void):void {
+      const ticket=lanes.get(this)?.takeDeferredMessage(source,event,dispatch),queue=queues.get(this);
+      if(queue){if(ticket)queue.enqueue(ticket.run,ticket);else {const raw=event.data;queue.enqueue(()=>dispatch(raw));}return;}
+      super.dispatchWorkerMessage(source,event,dispatch);
     }
-    protected override deliverCampaignOnly(summary:CampaignSummary,cost:number,speed:number,replaced:boolean):void {receiveMainCampaignOnly(summary,cost,speed,replaced);}
+    protected override dispatchWorkerFailure(_source:Worker,dispatch:()=>void):void {const queue=queues.get(this);if(queue)queue.enqueue(dispatch);else dispatch();}
+    protected override workerStopped(_source:Worker):void {queues.get(this)?.close();lanes.get(this)?.close();}
+    admissionFIFODiagnostics475(){return queues.get(this)?.diagnostics();}
+    resetAdmissionFIFODiagnostics475():void {queues.get(this)?.resetDiagnostics();}
+    protected override deliverSnapshot(world: World, cost: number, speed: number, replaced: boolean, motion?: PawnTrack[]): void {
+      queues.get(this)?.recordApplied(world.tick);receiveMainSnapshot(world, cost, speed, replaced, motion);
+    }
+    protected override deliverCampaignOnly(summary:CampaignSummary,cost:number,speed:number,replaced:boolean):void {queues.get(this)?.recordApplied(summary.tick);receiveMainCampaignOnly(summary,cost,speed,replaced);}
     protected override deliverAudioCues(cues: readonly AudioCue[]): void { receiveMainAudioCues(cues); }
     protected override deliverUrgentThreats(receipt:UrgentThreatReceipt):void { receiveMainUrgentThreats(receipt); }
   }
   const native = new MainSimulationClient();
+  drainMainAdmissionsBeforeFrame=()=>queues.get(native)?.drainFrame();
+  notifyMainAdmissionAvailability=()=>queues.get(native)?.notifyAvailability();
+  document.addEventListener('visibilitychange',()=>queues.get(native)?.notifyAvailability());
   let onError: SimulationClient['onError'] = () => {};
   let onFault: SimulationClient['onFault'] = () => {};
   let onRequestStatus: SimulationClient['onRequestStatus'] = () => {};
@@ -512,6 +530,8 @@ class MainPresentationChanges extends PresentationChanges {
   protected override readStructures(world:World):unknown { return this.#structures.read(world); }
 }
 class MainColonyRenderer extends ColonyRenderer {
+  get admissionFrameReady():boolean {return !this.disposed&&!this.preparing&&!this.fatalError;}
+  protected override frame(now:number):void {drainMainAdmissionsBeforeFrame();try{super.frame(now);}finally{notifyMainAdmissionAvailability();}}
   protected override createApplicationContext():SceneApplicationContext{return new SceneApplicationContext();}
   protected override createEnvironmentLighting():EnvironmentLighting {const context=this.applicationContext!;return new EnvironmentLighting(new EnvironmentLightField(context.topology,world=>context.read(world)?.lighting));}
   protected override createIntentReader(){return createClosedMainMapIntentReader();}
@@ -2181,7 +2201,7 @@ function updateIncident(): void {
 async function handleGraphicsFailure(message: string): Promise<void> {
   const alreadyFailed = graphicsFault;
   graphicsFault = true; graphicsMessage = message;
-  const failed = renderer; renderer = undefined; failed?.dispose(); audio.reset();
+  const failed = renderer; renderer = undefined; failed?.dispose(); notifyMainAdmissionAvailability(); audio.reset();
   if (alreadyFailed) { updateIncident(); syncStorageButtons(); return; }
   graphicsRecovering = true;
   updateIncident(); syncStorageButtons();
@@ -2332,4 +2352,5 @@ const metricsInterval = setInterval(() => {
   }
 }, 1000);
 window.addEventListener('pagehide', event => { if (event.persisted) return; clearInterval(metricsInterval); client.dispose(); audio.dispose(); music.dispose(); renderer?.dispose(); saveRepository.close(); });
+mainAdmissionCanFrame=()=>renderer instanceof MainColonyRenderer&&renderer.admissionFrameReady&&!presentationPreparation&&!replacingWorld&&!simulationStopped&&!graphicsFault&&!graphicsRecovering&&!frontMenu.isOpen()&&!document.hidden;
 void start().catch(error => { frontMenu.showError(error instanceof Error ? error.message : String(error)); });

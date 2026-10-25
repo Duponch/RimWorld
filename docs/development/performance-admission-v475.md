@@ -1,6 +1,6 @@
 # V475 — coût des validations de présentation
 
-Lot local A2H, non publié ; dernière livraison V474. Schéma 293 inchangé.
+Lot local A2H et FIFO natif, non publié ; dernière livraison V474. Schéma 293 inchangé.
 Les sources produit contiennent les résumés de listes privées B, les formes
 de piles D, les captures de hauteurs et pièces de salissures H, et le tampon
 numérique d'identifiants A2. Les parcours natifs, contrôles ciblés et recharges
@@ -726,3 +726,58 @@ tous les messages et leur ordre, avec une seule entrée par frame ou par
 macrotâche de repli. Son intérêt reste à mesurer. La profondeur, l'âge
 de la file et le retard en ticks doivent être rapportés pour exclure
 un gain apparent obtenu en affichant un état ancien.
+
+### FIFO natif : amélioration partielle de régularité
+
+Le Main natif reçoit désormais tous les messages dans une file ordonnée.
+Une entrée est traitée avant chaque image ; hors rendu disponible, une
+macrotâche traite une entrée. Le chargement initial sans renderer conserve
+son chemin immédiat. Les réponses, erreurs et checkpoints suivent le même
+ordre. Arrêt, remplacement et incident graphique libèrent ou réveillent la
+file selon leur contrat. Le client public par défaut reste immédiat.
+
+Le reçu différé est capturé pendant le vrai MessageEvent, avec son Worker.
+Les entêtes et les métadonnées de contrôle sont copiés ; World et sidecars
+passent les validations A2H complètes. Un reçu sert une seule fois et ne
+survit pas à la fermeture de sa source. Aucun nouveau Worker n'est ajouté.
+
+Les comparaisons V5 fraîches utilisent40s par vitesse, même sauvegarde,
+caméra, réglages et audio coupé, sans profileur :
+
+| Mesure | A2H témoin | FIFO |
+| --- | ---: | ---: |
+| ×1 p99 wall |22,6ms puis23,3ms|21,5ms|
+| ×1 intervalles>16,7ms |239 puis251|217|
+| ×1 intervalle moyen wall |6,54ms puis6,68ms|6,60ms|
+| ×3 p99 wall |30,3ms|28,1ms|
+| ×3 intervalle moyen wall |8,12ms|8,26ms|
+| ×3 intervalles>50ms |2|1|
+| ×6 p99 wall |32,6ms|30,8ms|
+| ×6 intervalle moyen wall |8,18ms|8,36ms|
+| ×6 intervalles>50ms |3|0|
+| ×6 débit réel |5,884×|5,829×|
+
+Le gain concerne la régularité de ces relevés. Le débit moyen de rendu
+n'augmente pas ; la petite baisse de simulation ×6 reste conservée.
+L'adoption Main reste proche de13ms à ×1. Le confort final, les pointes
+rares et la cible de débit restent ouverts. RAF et wall mesurent les
+callbacks, sans prouver la cadence physique du moniteur ou le temps GPU.
+
+La file atteint une profondeur maximale de1 et finit vide dans les trois
+mesures. Le délai maximal réception→adoption est de19,3/23,1/35,4ms en
+×1/×3/×6 ; aucune amélioration n'est attribuée à une accumulation d'états.
+Les comparateurs recalculent leurs résultats à partir des RAW conservés.
+
+Qualification des cinq sources gelées : typage privé,15contrats Node,
+huit contrats natifs Chrome/101assertions, vraie rotation aux trois vitesses,
+puis recharge de toute la partie exacte après60RAF en pause. SHA de cette
+partie avant/après : `bc22978a4456cc201af643d9cbcfe8a5515a85bcbf5bc8c79a4aa85a2786c107`.
+Le contrôle de présentation ordinaire passe minage, abattage et changements
+de vitesse en155,915s, sans saut ni occupation solide observés. Son probe
+CPU exclut le drain FIFO ; les mesures V5 servent à évaluer la performance.
+
+Le premier run Node18cas échoue sur trois positifs : les MessageEvents de
+ce runtime Node ont `isTrusted=false`. L'échec est conservé ; ces assertions
+passent ensuite avec de vrais Workers Chrome, sans faux marqueur de trust.
+Les fixtures de transport Node utilisent un décodeur explicitement limité
+aux checkpoints ; elles ne prouvent pas la validation d'un World.

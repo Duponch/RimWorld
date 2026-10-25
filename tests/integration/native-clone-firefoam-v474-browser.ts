@@ -44,8 +44,8 @@ export async function runBrowserContracts(){
   }catch(error){throw Error(item.name+': '+(error instanceof Error?error.stack:String(error)));}
   finally{if(timer)clearTimeout(timer);}
  }
- if(results.length!==7)throw Error('Expected exactly seven real Worker browser cases; found '+results.length);
- return {status:'passed',tests:results.length,assertions,results,renderer:false,scope:'Worker clone/event/adoption contracts only'};
+ if(results.length!==8)throw Error('Expected exactly eight real Worker browser cases; found '+results.length);
+ return {status:'passed',tests:results.length,assertions,results,renderer:false,scope:'Seven original clone contracts plus real Worker deferred receipt once/close/reentrance/header contracts; no renderer or Main scheduling claim'};
 }
 
 
@@ -103,6 +103,8 @@ test.skipIf(typeof Worker!=='function'||typeof document==='undefined')('real Wor
   for(const p of replies.values())clearTimeout(p.timer);replies.clear();
  }
 },60000);
+
+
 
 
 type Data=Record<string,unknown>;
@@ -273,3 +275,67 @@ for(const mode of ['synthetic','wrapped'] as const)test.skipIf(!browser)('R2 '+m
   expect(observed.last?.status).toBe('applied');expect(lane.diagnostics().fastAdoptions).toBe(1);
  }finally{lane.close();worker.terminate();for(const reply of pending.values())clearTimeout(reply.timer);pending.clear();}
 },60000);
+
+// This eighth registration is independent of the seven retained legacy cases.
+// Only actual Worker message dispatch can mint these tickets; no trust getter,
+// MessagePort stub, callback granting a receipt, or synthetic applied result.
+test.skipIf(typeof Worker!=='function'||typeof document==='undefined')('FIFO real Worker deferred header capture, once, closed source and consumed reentrant ticket',async()=>{
+ type Lane=ReturnType<typeof createNativeCloneResidentLane>;
+ type Ticket=NonNullable<ReturnType<Lane['takeDeferredMessage']>>;
+ const capture=(lane:Lane,worker:Worker,deliver:(raw:unknown,reference:unknown)=>void,mutateHeaders=false)=>new Promise<{ticket:Ticket;event:MessageEvent;reference:unknown}>((resolve,reject)=>{
+  const timer=setTimeout(()=>{worker.removeEventListener('message',listen);reject(Error('Real Worker deferred snapshot timeout'));},12000);
+  const listen=(event:MessageEvent<unknown>)=>{
+   if(!snapshot(event.data))return;
+   try{
+    const reference=structuredClone(event.data),expected=snapshot(reference)!;
+    expect(event.isTrusted).toBe(true);expect(event.currentTarget).toBe(worker);
+    const ticket=lane.takeDeferredMessage(worker,event,raw=>deliver(raw,reference));
+    expect(ticket===undefined).toBe(false);expect(lane.takeDeferredMessage(worker,event,()=>{throw Error('Duplicate ticket dispatched');})).toBe(undefined);
+    if(!ticket)throw Error('Actual Worker Event did not produce a deferred ticket');
+    // The original Node fixture used epoch1/tick4. Here both values come from
+    // this actual SIM publication, without manufacturing a publication.
+    expect(ticket).toMatchObject({epoch:expected.epoch,tick:expected.world.tick});expect(Number.isFinite(ticket.arrivalAt)).toBe(true);
+    if(mutateHeaders){const raw=event.data as Data,p=snapshot(raw)! as unknown as Data;raw.version=-1;p.epoch=-1;p.revision=-1;}
+    clearTimeout(timer);worker.removeEventListener('message',listen);
+    // A later TASK is intentional: an await alone may checkpoint between
+    // native listeners while Event.currentTarget is still the real source.
+    setTimeout(()=>resolve({ticket,event,reference}),0);
+   }catch(error){clearTimeout(timer);worker.removeEventListener('message',listen);reject(error);}
+  };
+  worker.addEventListener('message',listen);
+ });
+ const old=createNativeCloneResidentLane(),oldWorker=old.createWorker(),oldStrict=new ResidentVegetationAssembler();
+ let dispatches=0,oldTicket:Ticket|undefined;const seen:number[]=[];
+ try{
+  const first=capture(old,oldWorker,(raw,reference)=>{
+   dispatches++;const actual=readResidentWorkerMessage(raw),expected=readResidentWorkerMessage(reference);
+   if(actual.type!=='snapshot'||expected.type!=='snapshot')throw Error('Deferred snapshot missing');
+   expect(actual.epoch).toBe(expected.epoch);expect(actual.revision).toBe(expected.revision);
+   const a=old.reader.adopt(actual),b=oldStrict.adopt(expected);expect(a.status).toBe('applied');expect(b.status).toBe('applied');
+   if(a.status!=='applied'||b.status!=='applied')throw Error('Deferred authentic admission refused');expect(a.world).toStrictEqual(b.world);
+  },true);
+  oldWorker.postMessage({type:'init',id:1,seed:474,size:32,paused:true});
+  const held=await first;expect(held.event.currentTarget).toBe(null);expect(dispatches).toBe(0);
+  held.ticket.run();held.ticket.run();expect(dispatches).toBe(1);expect(old.diagnostics().fastAdoptions).toBe(1);
+  const closing=capture(old,oldWorker,()=>seen.push(1));oldWorker.postMessage({type:'resync',id:2});oldTicket=(await closing).ticket;
+  old.close();oldTicket.run();expect(seen).toEqual([]);
+ }finally{old.close();oldWorker.terminate();}
+ const fresh=createNativeCloneResidentLane(),freshWorker=fresh.createWorker(),freshStrict=new ResidentVegetationAssembler();
+ const tickets:Ticket[]=[];let reentrantAttempts=0;
+ try{
+  const first=capture(fresh,freshWorker,(raw,reference)=>{
+   seen.push(2);let error='';reentrantAttempts++;
+   try{tickets[1]!.run();}catch(caught){error=caught instanceof Error?caught.message:String(caught);}
+   expect(error).toBe('Reentrant deferred native receipt');
+   const actual=readResidentWorkerMessage(raw),expected=readResidentWorkerMessage(reference);
+   if(actual.type!=='snapshot'||expected.type!=='snapshot')throw Error('Fresh deferred snapshot missing');
+   const a=fresh.reader.adopt(actual),b=freshStrict.adopt(expected);expect(a.status).toBe('applied');expect(b.status).toBe('applied');
+   if(a.status!=='applied'||b.status!=='applied')throw Error('Fresh deferred admission refused');expect(a.world).toStrictEqual(b.world);
+  });
+  freshWorker.postMessage({type:'init',id:1,seed:475,size:32,paused:true});tickets.push((await first).ticket);
+  const second=capture(fresh,freshWorker,()=>seen.push(3));freshWorker.postMessage({type:'resync',id:2});tickets.push((await second).ticket);
+  expect(seen).toEqual([]);tickets[0]!.run();expect(seen).toEqual([2]);expect(reentrantAttempts).toBe(1);
+  tickets[1]!.run();tickets[0]!.run();expect(seen).toEqual([2]);expect(fresh.diagnostics().fastAdoptions).toBe(1);
+  oldTicket!.run();expect(seen).toEqual([2]);
+ }finally{fresh.close();freshWorker.terminate();}
+},90000);
