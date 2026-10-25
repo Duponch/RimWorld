@@ -21,10 +21,12 @@ export interface NativeControl {
   active?:boolean;
   hint?:string;
   caption?:string;
+  presentation?:NativeControlStyle;
   select?:{value:string;options:readonly {value:string;label:string;hint?:string;disabled?:boolean}[];onChange:(value:string)=>void|Promise<unknown>};
   paint?:{group:string;index:number;onPaint:(indices:readonly number[])=>void|Promise<unknown>};
   onActivate:()=>void|Promise<unknown>;
 }
+export type NativeControlStyle='button'|'tab'|'tile'|'icon'|'navigation'|'research';
 export interface NativeRow {
   id:string;
   label:string;
@@ -35,6 +37,9 @@ export interface NativeRow {
   column?:0|1;
   labelWidth?:number;
   dense?:boolean;
+  region?:'navigation'|'catalogue'|'details'|'graph';
+  controlStyle?:NativeControlStyle;
+  graphNode?:{x:number;y:number;width:number;height:number;points:number;cost:number;state:'done'|'active'|'locked'|'available'};
   columns?:readonly {label:string;hint?:string}[];
   meter?:{value:number;max?:number;label?:string;color?:string;passion?:0|1|2;secondary?:{value:number;max?:number;label?:string;color?:string}};
   controls?:NativeControl[];
@@ -59,7 +64,9 @@ export interface NativePage {
   width?:number;
   height?:number;
   columnRatio?:number;
-  layout?:'inspector'|'table'|'tools'|'dialog'|'front';
+  layout?:'inspector'|'table'|'tools'|'dialog'|'front'|'architect'|'palette'|'research';
+  palette?:'orders'|'zones';
+  research?:{width:number;height:number;selected:string;links:readonly {from:string;to:string;path:readonly {x:number;y:number}[]}[]};
   visual?:{
     kind:'planet';surface:WorldPhysicalSurface;roads?:readonly (readonly WorldRoadLink[])[];
     selected:number|null;markers?:readonly {tile:number;label?:string;color?:number}[];

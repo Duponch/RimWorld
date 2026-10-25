@@ -3,55 +3,14 @@ import type { Command, World } from '../sim/types';
 import './world-panels.css';
 import './management-reference-v199.css';
 import {setTooltip} from './tooltip';
-import {researchProjects,type ProjectNode} from './research-projects';
+import {researchProjects} from './research-projects';
+import {researchLinks,researchNodePosition as nodePosition,researchPrerequisiteLabels as prerequisites,researchLinkSvgPath,RESEARCH_GRAPH_WIDTH as GRAPH_WIDTH,RESEARCH_GRAPH_HEIGHT as GRAPH_HEIGHT} from './research-tree';
+export {researchLinks} from './research-tree';
 import {captureResearchStationIssues,readResearchReadiness,type ResearchStationCapture,type ResearchStationIssue} from './research-readiness';
 export {researchProjects} from './research-projects';
 export interface ResearchPanelActions {onOpenWork?:()=>void;onOpenProduction?:()=>void}
 
-export const researchLinks: readonly (readonly [ResearchProject, ResearchProject])[] = [
-  ['ship-basics','ship-cryptosleep'],['cryptosleep','ship-cryptosleep'],
-  ['advanced-fabrication','ship-basics'],['ship-basics','ship-reactor'],['ship-basics','ship-engine'],
-  ['machining','prosthetics'],
-  ['multi-analyzer','cryptosleep'],
-  ['microelectronics','deep-drilling'],['deep-drilling','ground-scanner'],
-  ['hospital-bed','vitals-monitor'],['multi-analyzer','vitals-monitor'],
-  ['drug-production','medicine-production'],['microelectronics','medicine-production'],
-  ['gunsmithing','gun-turrets'],
-  ['complex-furniture','tube-television'],
-  ['smithing','long-blades'],
-  ['smithing','machining'],['machining','gunsmithing'],
-  ['smithing','plate-armor'],['complex-clothing','plate-armor'],
-  ['machining','flak-armor'],['plate-armor','flak-armor'],
-  ['microelectronics','multi-analyzer'],['machining','multi-analyzer'],['multi-analyzer','fabrication'],
-  ['fabrication','advanced-fabrication'],
-  ['fabrication','recon-armor'],
-  ['complex-clothing','recon-armor'],
-  ['microelectronics','hospital-bed'],['complex-furniture','hospital-bed'],
-];
 const projectById=new Map(researchProjects.map(project=>[project.id,project]));
-const NODE_WIDTH=142,NODE_HEIGHT=66,GRAPH_WIDTH=850,GRAPH_HEIGHT=Math.ceil(Math.max(740,...researchProjects.map(project=>22+(project.y-20)*.66+NODE_HEIGHT+22)));
-const nodePosition=(project:ProjectNode)=>({x:20+(project.x-24)*.82,y:22+(project.y-20)*.66});
-const prerequisites=new Map<ResearchProject,string[]>([
-  ['firefoam',['Électricité (acquise au départ)']],
-  ['ship-cryptosleep',['Construction de vaisseau','Cryptosommeil']],
-  ['ship-basics',['Fabrication avancée']],['ship-reactor',['Construction de vaisseau']],['ship-engine',['Construction de vaisseau']],
-  ['prosthetics',['Usinage']],
-  ['cryptosleep',['Multi-analyseur']],
-  ['long-blades',['Forge']],
-  ['brewing',[]],
-  ['geothermal-power',['Électricité (acquise au départ)']],
-  ['biofuel-refining',['Électricité (acquise au départ)']],
-  ['nutrient-paste',['Électricité (acquise au départ)']],
-  ['deep-drilling',['Microélectronique']],['ground-scanner',['Forage profond']],
-  ['sterile-materials',['Électricité (acquise au départ)']],['vitals-monitor',['Lit d’hôpital','Multi-analyseur']],
-  ['drug-production',[]],['medicine-production',['Production de drogues','Microélectronique']],
-  ['hydroponics',['Électricité (acquise au départ)']],
-  ['gun-turrets',['Armurerie']],
-  ['tube-television',['Mobilier complexe','Électricité (acquise au départ)']],
-  ['machining',['Forge']],['gunsmithing',['Usinage']],['plate-armor',['Forge','Vêtements complexes']],['flak-armor',['Usinage','Armure de plaques']],
-  ['autodoors',['Électricité (acquise au départ)']],['microelectronics',['Électricité (acquise au départ)']],['multi-analyzer',['Microélectronique','Usinage']],['fabrication',['Multi-analyseur']],['advanced-fabrication',['Fabrication']],['recon-armor',['Fabrication','Vêtements complexes']],
-  ['hospital-bed',['Microélectronique','Mobilier complexe']],
-]);
 const stationIssueLabels:Record<ResearchStationIssue,string>={
   bench:'Bureau de recherche construit requis',
   'advanced-bench':'Bureau de recherche avancé construit requis',
@@ -95,24 +54,8 @@ export function updateResearchPanel(root: HTMLElement, world: World, send: (comm
     const lines=document.createElementNS('http://www.w3.org/2000/svg','svg');lines.setAttribute('class','research-links');lines.setAttribute('viewBox',`0 0 ${GRAPH_WIDTH} ${GRAPH_HEIGHT}`);lines.setAttribute('aria-hidden','true');
     lines.style.height=`${GRAPH_HEIGHT}px`;
     for(const [fromId,toId] of researchLinks){
-      const from=nodePosition(projectById.get(fromId)!),to=nodePosition(projectById.get(toId)!);
       const path=document.createElementNS('http://www.w3.org/2000/svg','path');
-      if(toId==='tube-television'){
-        const x1=from.x,y1=from.y+NODE_HEIGHT/2,y2=to.y+NODE_HEIGHT/2;
-        path.setAttribute('d',`M${x1} ${y1} L6 ${y1} L6 ${y2} L${to.x} ${y2}`);
-      } else if(to.y===from.y&&to.x<from.x){
-        const y=from.y+NODE_HEIGHT/2;
-        path.setAttribute('d',`M${from.x} ${y} L${to.x+NODE_WIDTH} ${y}`);
-      } else if(from.x===to.x){
-        const x=from.x+NODE_WIDTH/2,y1=from.y+NODE_HEIGHT,y2=to.y;
-        path.setAttribute('d',`M${x} ${y1} L${x} ${y2}`);
-      } else if(to.y>from.y&&to.x<from.x){
-        const x1=from.x+NODE_WIDTH/2,y1=from.y+NODE_HEIGHT,x2=to.x+NODE_WIDTH/2,y2=to.y,mid=(y1+y2)/2;
-        path.setAttribute('d',`M${x1} ${y1} C${x1} ${mid},${x2} ${mid},${x2} ${y2}`);
-      } else {
-        const x1=from.x+NODE_WIDTH,y1=from.y+NODE_HEIGHT/2,x2=to.x,y2=to.y+NODE_HEIGHT/2;
-        path.setAttribute('d',`M${x1} ${y1} C${x1+Math.max(18,(x2-x1)/2)} ${y1},${x2-Math.max(18,(x2-x1)/2)} ${y2},${x2} ${y2}`);
-      }
+      path.setAttribute('d',researchLinkSvgPath(fromId,toId));
       lines.append(path);
     }
     graph.append(lines);

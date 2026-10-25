@@ -32,9 +32,7 @@ import {supportsAnimalAreas287,currentAnimalAreaChoice287} from '../sim/animal-a
 import type {AnimalAreaChoice287} from '../sim/animal-area-state-287';
 import {AUTO_SLAUGHTER_SPECIES,defaultAutoSlaughterConfig,type AutoSlaughterConfig,type AutoSlaughterSpecies} from '../sim/auto-slaughter-state';
 import {autoSlaughterCounts,autoSlaughterTargets} from '../sim/auto-slaughter';
-import {researchProjects} from '../ui/research-projects';
-import {captureResearchStationIssues,readResearchReadiness} from '../ui/research-readiness';
-import {researchPrerequisite,researchUnlocked,RESEARCH_SCALE,type ResearchProject} from '../sim/research';
+import {buildNativeResearch,resetNativeResearch} from './native-research';
 import {expectationForWealth} from '../sim/expectations';
 import {ITEM_DEFINITIONS} from '../sim/items';
 import {FOOD_ITEMS} from '../sim/food-policy';
@@ -52,13 +50,11 @@ import type {StorageControlSettings} from '../ui/storage-item-controls';
 /** Native drafts only. Confirmed World objects are borrowed and never edited. */
 let latest:NativeUiState|undefined;
 let host:NativeUiActions|undefined;
-let researchSelection:ResearchProject|undefined;
-let researchSelectionRevision=0;
 let scheduleBrush:ScheduleAssignment='anything';
 let scheduleClipboard:ScheduleAssignment[]|undefined;
 let lastIdentity='',lastTick=-1;
 let dispatching=false;
-const categories:readonly [ArchitectCategory,string][]=[['structure','Structure'],['floors','Sols'],['furniture','Mobilier'],['temperature','Température'],['recreation','Loisirs'],['production','Production'],['power','Énergie'],['ship','Vaisseau']];
+const categories:readonly [ArchitectCategory,string][]=[['temperature','Température'],['structure','Structure'],['floors','Sols'],['furniture','Mobilier'],['recreation','Loisirs'],['production','Production'],['power','Énergie'],['ship','Vaisseau']];
 const assignmentLabels:Record<ScheduleAssignment,string>={anything:'Temps libre',work:'Travail',sleep:'Dormir',recreation:'Loisir'};
 const assignmentSymbols:Record<ScheduleAssignment,string>={anything:'·',work:'T',sleep:'Z',recreation:'L'};
 const stageLabels={baby:'Petit',juvenile:'Jeune',adult:'Adulte'} as const;
@@ -71,7 +67,7 @@ function currentWorld():World {const world=latest?.world;if(!world)throw Error('
 function currentPawn(id:number):Pawn {const pawn=currentWorld().pawns.find(p=>p.id===id);if(!pawn)throw Error('Cette personne n’est plus présente sur la carte.');return pawn;}
 function currentAnimal(id:number){const animal=currentWorld().wildlife?.animals.find(a=>a.id===id);if(!animal)throw Error('Cet animal n’est plus présent sur la carte.');return animal;}
 async function send(command:Command):Promise<unknown>{
- if(!host||!latest||dispatching||latest.busy)throw Error('Attendez la fin de l’opération courante.');
+ if(!host||!latest||dispatching||(host.readState?.()??latest).busy)throw Error('Attendez la fin de l’opération courante.');
  dispatching=true;
  try {const result=await host.command(command);if(result&&typeof result==='object'&&'ok'in result&&result.ok===false)throw Error('reason'in result&&typeof result.reason==='string'?result.reason:'La commande a été refusée.');return result;}
  finally {dispatching=false;host.refresh();}
@@ -122,24 +118,33 @@ function creationStorageEditor(onBack:()=>void=back):void {
 export function buildNativeToolPalette(state:NativeUiState,actions:NativeUiActions,kind:'orders'|'zones'):NativePage {
  syncNativePanelState(state,actions);
  const tools=toolDefinitions.filter(tool=>tool.category===kind&&tool.id!=='select'&&!!state.world&&architectToolAvailable(state.world,tool.id));
- const rows:NativeRow[]=[];
- for(let i=0;i<tools.length;i+=3)rows.push({id:`${kind}-tools-${i/3}`,label:'',controls:tools.slice(i,i+3).map(tool=>button(`tool-${tool.id}-select`,tool.title,()=>actions.tool(tool.id),{icon:tool.id,hint:`${tool.title}${tool.key?` · ${tool.key}`:''}\n${tool.hint}`,active:state.tool===tool.id}))});
- if(kind==='zones')rows.push({...row('architect-storage-settings','Nouvelle réserve',undefined,'Les réglages sont appliqués aux prochaines réserves tracées.',[button('architect-storage-settings-open','Réglages du stockage',()=>creationStorageEditor(()=>{if(latest&&host)open(buildNativeToolPalette(latest,host,'zones'));}))]),compact:true});
- return {id:`map-tools-${kind}`,title:kind==='orders'?'Ordres':'Zones',layout:'tools',width:3.1,rows,onClose:()=>{actions.closePage?.();void actions.panel(null);}};
+ const controls=tools.map(tool=>nativeToolControl(tool,state,actions));
+ if(kind==='zones')controls.push(button('architect-storage-settings-open','Réglages du stockage',()=>creationStorageEditor(()=>{if(latest&&host)open(buildNativeToolPalette(latest,host,'zones'));}),{icon:'settings',hint:'Réglages de la nouvelle réserve\nObjets acceptés, priorité, conservation, qualité et points de vie. Les réglages sont appliqués aux prochaines réserves tracées.'}));
+ return {id:`map-tools-${kind}`,title:kind==='orders'?'Ordres':'Zones',layout:'palette',palette:kind,width:600,
+  rows:[{id:`${kind}-tools`,label:'',region:'catalogue',controlStyle:'icon',controls}],onClose:()=>{actions.closePage?.();void actions.panel(null);}};
+}
+function nativeToolControl(tool:(typeof toolDefinitions)[number],state:NativeUiState,actions:NativeUiActions):NativeControl {
+ return button(`tool-${tool.id}-select`,tool.title,()=>actions.tool(tool.id),{
+  icon:tool.id,caption:tool.key||undefined,hint:`${tool.title}${tool.key?` · ${tool.key}`:''}\n${tool.hint}`,active:state.tool===tool.id,
+ });
 }
 function architect(state:NativeUiState,actions:NativeUiActions,world:World):NativePage {
  const category=state.category==='orders'||state.category==='zones'?'structure':state.category;
  const tools=toolDefinitions.filter(tool=>tool.category===category&&architectToolAvailable(world,tool.id));
  if(category==='production')tools.sort((a,b)=>{const ai=productionToolOrder.indexOf(a.id),bi=productionToolOrder.indexOf(b.id);return (ai<0?productionToolOrder.length:ai)-(bi<0?productionToolOrder.length:bi);});
  const selected=tools.find(tool=>tool.id===state.tool),materials=selected?constructionMaterials(selected.id):[];
- const rows:NativeRow[]=[{...row('architect-categories','Catégories',undefined,undefined,categories.filter(([id])=>architectCategoryAvailable(world,id)).map(([id,label])=>button(`category-${id}`,label,()=>{actions.category(id);redraw();},{active:id===category}))),compact:true}];
- for(let i=0;i<tools.length;i+=4)rows.push({id:`architect-tools-${i/4}`,label:'',controls:tools.slice(i,i+4).map(tool=>button(`tool-${tool.id}-select`,tool.title,()=>actions.tool(tool.id),{icon:tool.id,hint:`${tool.title}${tool.key?` · ${tool.key}`:''}\n${tool.hint}`,active:state.tool===tool.id}))});
+ const rows:NativeRow[]=[
+  {id:'architect-categories',label:'',region:'navigation',controlStyle:'navigation',controls:categories.filter(([id])=>architectCategoryAvailable(world,id)).map(([id,label])=>button(`category-${id}`,label,()=>{actions.category(id);redraw();},{icon:id,hint:`${label}\nAfficher les constructions de cette catégorie.`,active:id===category}))},
+  {id:'architect-tools',label:'',region:'catalogue',controlStyle:'tile',controls:tools.map(tool=>nativeToolControl(tool,state,actions))},
+ ];
  if(selected){
-  rows.push({...row('architect-selected',selected.title,undefined,selected.hint),compact:true});
-  if(materials.length>1)rows.push({...row('architect-material','Matériau',undefined,undefined,[button(`tool-${selected.id}-material`,ITEM_DEFINITIONS[state.constructionMaterial].label,()=>{}, {select:{value:state.constructionMaterial,options:materials.map(material=>({value:material,label:ITEM_DEFINITIONS[material].label})),onChange:value=>{const material=materials.find(item=>item===value);if(material)actions.material(material);}}})]),compact:true});
-  rows.push({...row('architect-rotation','Orientation',`${state.orientation*90}°`,'Q / E tourne les constructions orientables.',[button('rotate-left','↶',()=>actions.rotate(-1)),button('rotate-right','↷',()=>actions.rotate(1))]),compact:true});
- }
- return {id:'architect',title:'Architecte',layout:'tools',subtitle:'Choisir une construction, puis désigner son emplacement sur la carte.',width:14.2,rows,onClose:()=>void actions.panel(null)};
+  rows.push({...row('architect-selected',selected.title,undefined,selected.hint),region:'details',emphasis:'heading'});
+  if(materials.length>1)rows.push({...row('architect-material','Matériau',undefined,undefined,[button(`tool-${selected.id}-material`,ITEM_DEFINITIONS[state.constructionMaterial].label,()=>{}, {hint:'Matériau de la construction sélectionnée',select:{value:state.constructionMaterial,options:materials.map(material=>({value:material,label:ITEM_DEFINITIONS[material].label})),onChange:value=>{const material=materials.find(item=>item===value);if(material)actions.material(material);}}})]),region:'details',compact:true});
+  rows.push({...row('architect-rotation','Orientation',`${state.orientation*90}°`,'Q / E tourne les constructions orientables.',[button('rotate-left','↶',()=>actions.rotate(-1),{hint:'Tourner à gauche · Q'}),button('rotate-right','↷',()=>actions.rotate(1),{hint:'Tourner à droite · E'})]),region:'details',compact:true});
+ }else rows.push({...row('architect-instruction','Choisir une construction',undefined,'Choisissez une carte du catalogue, puis désignez son emplacement sur le terrain. Q / E tourne les constructions orientables.'),region:'details'});
+ const pending=world.jobs.filter(job=>job.status==='pending').length;
+ rows.push({...row('architect-job-count',world.jobs.length?`${world.jobs.length} ordre(s) · ${pending} en attente`:'Aucun ordre en cours'),region:'details',emphasis:'muted'});
+ return {id:'architect',title:'Architecte',layout:'architect',width:1420,height:900,rows,onClose:()=>void actions.panel(null)};
 }
 const passionLabels=['Sans passion','Passion','Passion brûlante'] as const;
 function workSkill(pawn:Pawn,work:WorkType):{caption?:string;hint?:string} {
@@ -236,25 +241,6 @@ function wildlifePanel(state:NativeUiState,world:World):NativePage {
  return {id:'wildlife',title:'Faune',subtitle:'Les ordres de combat utilisent les colons mobilisés sélectionnés.',rows,width:7.8,onClose:()=>void host?.panel(null)};
 }
 
-const researchMinimum:Partial<Record<ResearchProject,number>>={'tree-sowing':291,firefoam:290,'ship-cryptosleep':277,'ship-engine':276,'ship-basics':275,'ship-reactor':275,prosthetics:273,cryptosleep:271,'long-blades':270,brewing:265,'geothermal-power':264,pemmican:248,'biofuel-refining':218,'nutrient-paste':217,'deep-drilling':215,'ground-scanner':215,'sterile-materials':211,'vitals-monitor':211,'drug-production':206,'medicine-production':206,hydroponics:203,'gun-turrets':193,'tube-television':190,'packaged-survival-meals':188,'hospital-bed':187,autodoors:143};
-function researchPanel(world:World):NativePage {
- const projects=researchProjects.filter(p=>world.schemaVersion>=(researchMinimum[p.id]??0)),selected=projects.find(p=>p.id===researchSelection)??projects.find(p=>p.id===world.research?.project)??projects[0]!;
- researchSelection=selected.id;
- const stations=captureResearchStationIssues(world),readiness=readResearchReadiness(world,selected.id,stations),missing=researchPrerequisite(world,selected.id),done=researchUnlocked(world,selected.id),active=world.research?.project===selected.id;
- const issueLabel={bench:'Bureau de recherche construit requis','advanced-bench':'Bureau avancé construit requis',power:'Alimentation active requise',analyzer:'Multi-analyseur alimenté relié requis'};
- const names=(ids:readonly number[])=>ids.map(id=>world.pawns.find(p=>p.id===id)?.name??`#${id}`).join(', ')||'Aucun';
- const points=(selected.progress(world)?.points??0)/RESEARCH_SCALE;
- const rows:NativeRow[]=[row('research-selected',selected.title,`${points.toFixed(1)} / ${selected.cost} points`,selected.detail,[button('research-start',done?'Terminée':active?'Projet actif':'Lancer',()=>send({type:'research-project',project:selected.id}),{disabled:done||active||!!missing||selected.id==='vitals-monitor'&&!stations.vitalsMonitorAvailable})]),row('research-prerequisite','Prérequis',missing??'Prérequis acquis'),row('research-station','Installation',readiness.stationIssue?issueLabel[readiness.stationIssue]:'Installation compatible disponible'),row('research-workers','Chercheurs affectés',names(readiness.assignedIds),`En travail : ${names(readiness.workingIds)} · en déplacement : ${names(readiness.movingIds)} · indisponibilité médicale : ${names(readiness.medicallyUnavailableIds)}`),row('research-context','Organisation',undefined,undefined,[button('research-open-work','Travail',()=>host?.panel('work')),button('research-open-production','Production',()=>{host?.category('production');return host?.panel('architect');}),button('research-pause','Suspendre la recherche',()=>send({type:'research-project',project:null}),{disabled:!world.research?.project})])];
- rows.push({id:'research-catalogue-heading',label:'Projets de recherche',emphasis:'heading'});
- for(let offset=0;offset<projects.length;offset+=4){
-  rows.push({id:`research-grid-${offset/4}`,label:'',controls:projects.slice(offset,offset+4).map(project=>{
-   const points=(project.progress(world)?.points??0)/RESEARCH_SCALE,complete=researchUnlocked(world,project.id),prerequisite=researchPrerequisite(world,project.id),issue=stations.issues.get(project.id);
-   const status=complete?'Terminée':world.research?.project===project.id?'Projet actif':prerequisite?`Nécessite ${prerequisite}`:issue?issueLabel[issue]:'Disponible';
-   return button(`research-${project.id}-select`,project.title,()=>{researchSelection=project.id;researchSelectionRevision++;redraw();},{active:project.id===selected.id,color:complete?'#c4d3b3':prerequisite?'#d7ccbb':undefined,hint:`${project.title}\n${points.toFixed(1)} / ${project.cost} points · ${status}\n${project.detail}`});
-  })});
- }
- return {id:`research:${selected.id}:${researchSelectionRevision}`,title:'Recherche',layout:'dialog',subtitle:'Choisir un projet dans le catalogue ; son dossier et ses conditions sont présentés au-dessus.',rows,width:10.4,onClose:()=>void host?.panel(null)};
-}
 function historyPanel(state:NativeUiState):NativePage {
  const source=state.world??state.campaign,rows:NativeRow[]=[];
  if(state.world){const economy=state.world.economy;if(economy){const wealth=economy.wealth,expect=expectationForWealth(wealth.knownTotal);rows.push(row('economy-total','Patrimoine évalué',`${money(wealth.knownTotal)}${wealth.complete?'':' au minimum'}`,`Relevé jour ${1+Math.floor(economy.sampledAt/TICKS_PER_DAY)} · attentes ${expect.label} (${signed(expect.moodOffset)} humeur)`),row('economy-parts','Composition',undefined,`Objets ${money(wealth.items)} · bâtiments ${money(wealth.structures)} · sols ${money(wealth.floors)}`),row('economy-coverage','Couverture',wealth.complete?'Complète':'Valeurs manquantes',`${wealth.unpricedPawnIds.length} personnes ; ${(wealth.unpricedPileIds?.length??0)+(wealth.unpricedPackedIds?.length??0)+(wealth.unpricedStructureIds?.length??0)} autres biens non évalués.`));}else rows.push(row('economy-adopt','Patrimoine',undefined,'La partie conserve ses règles historiques. Adopter le suivi part des biens présents.',[button('economy-enable','Activer le suivi économique',()=>send({type:'adopt-economy'}))]));}
@@ -393,7 +379,7 @@ export function syncNativePanelState(state:NativeUiState,actions:NativeUiActions
  latest=state;host=actions;
  syncNativeWorldState(state,actions);
  const source=state.world??state.campaign,identity=state.world?`${state.world.seed}:${state.world.width}:${state.world.height}`:state.campaign?`campaign:${state.campaign.campaignSeed}`:'none';
- if(identity!==lastIdentity||(source&&source.tick<lastTick)){researchSelection=undefined;scheduleClipboard=undefined;lastIdentity=identity;}
+ if(identity!==lastIdentity||(source&&source.tick<lastTick)){resetNativeResearch();scheduleClipboard=undefined;lastIdentity=identity;}
  lastTick=source?.tick??-1;
 }
 /** Builds data for native meshes. It never reads a legacy control or emits HTML. */
@@ -413,6 +399,6 @@ export function buildNativePanel(state:NativeUiState,actions:NativeUiActions):Na
   case 'assign':return assignPanel(world);
   case 'animals':return animalsPanel(world);
   case 'wildlife':return wildlifePanel(state,world);
-  case 'research':return researchPanel(world);
+  case 'research':return buildNativeResearch(world,{...actions,command:send},redraw);
  }
 }

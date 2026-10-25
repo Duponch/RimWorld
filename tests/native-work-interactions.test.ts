@@ -140,7 +140,7 @@ describe('native work and schedule retain their direct confirmed interactions', 
     expect(categories.map(control => control.id)).not.toContain('category-zones');
     for (const [kind, tool] of [['orders', 'mine'], ['zones', 'stockpile']] as const) {
       const palette = buildNativeToolPalette(f.state, f.actions, kind);
-      expect(palette.id).toBe(`map-tools-${kind}`); expect(palette.layout).toBe('tools');
+      expect(palette.id).toBe(`map-tools-${kind}`); expect(palette.layout).toBe('palette');
       const control = palette.rows.flatMap(row => row.controls ?? []).find(control => control.id === `tool-${tool}-select`)!;
       await control.onActivate(); expect(f.actions.tool).toHaveBeenLastCalledWith(tool);
       expect(palette.rows.flatMap(row => row.controls ?? []).some(control => control.id === 'tool-select-select')).toBe(false);

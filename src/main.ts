@@ -1005,8 +1005,9 @@ function updateNativeDockPointer(x:number,y:number):void {
   const open=!nativeDockPreferences.notifications||x>=Math.min(innerWidth-12,bounds.left)&&y>=bounds.top-15&&y<=bounds.bottom+20;
   if(open!==nativeHud.getRightDockOpen()){nativeRightDockOpen=open;nativeHud.setRightDockOpen(open);nativeUi?.invalidate();}
 }
-function showNativeToolPalette(kind:'orders'|'zones'):void {
+function showNativeToolPalette(kind:'orders'|'zones',toggle=true):void {
   if(!nativeUi||!snapshot||replacingWorld)return;
+  if(toggle&&nativeToolPalette===kind){nativeToolPalette=undefined;nativeCustomPage=undefined;refreshNativeUi();return;}
   setPanel(null,true);nativeToolPalette=kind;nativeCustomPage=buildNativeToolPalette(readNativeState(),nativeActions(),kind);nativeUi.showPage(nativeCustomPage);
 }
 function applyNativeViewControl(action:NativeHudViewAction):void {
@@ -1286,7 +1287,7 @@ function setTool(tool: Tool) {
   if(!snapshot||!architectToolAvailable(snapshot,tool))return;
   const definition = toolDefinitions.find(item => item.id === tool);
   if(!definition)return;
-  if(nativeUi&&(definition.category==='orders'||definition.category==='zones')){setPanel(null,true);setCategory(definition.category);applyTool(tool);showNativeToolPalette(definition.category);return;}
+  if(nativeUi&&(definition.category==='orders'||definition.category==='zones')){setPanel(null,true);setCategory(definition.category);applyTool(tool);showNativeToolPalette(definition.category,false);return;}
   setCategory(definition.category);
   setPanel('architect');
   applyTool(tool);

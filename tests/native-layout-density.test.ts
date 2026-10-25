@@ -29,12 +29,18 @@ function inspector(tab: 'bio' | 'needs') {
 }
 
 describe('native interface keeps the former compact dossier density', () => {
-  it('keeps Bio at 514 × 489 maximum and all twelve skill meters visible in its second column', () => {
+  it('keeps Bio within 514 × 529 with all twelve skill meters visible above its separate tabs and footer', () => {
     const { page } = inspector('bio');
     expect([page.width, page.height]).toEqual([514, 489]);
     const boxes = viewports.map(viewport => layoutNativePage(page, viewport, false, measure));
-    expect(boxes.map(box => [box.width, box.height])).toEqual([[514, 489], [514, 489]]);
+    expect(boxes[0]!.width).toBe(514);expect(boxes[0]!.height).toBeLessThanOrEqual(529);
+    expect([boxes[1]!.width,boxes[1]!.height,boxes[1]!.contentHeight]).toEqual([boxes[0]!.width,boxes[0]!.height,boxes[0]!.contentHeight]);
     for (const box of boxes) {
+      expect(box.header).toBe(34);expect(box.body.height).toBeGreaterThanOrEqual(358);expect(box.body.height).toBeLessThanOrEqual(359);
+      expect(box.inspectorParts).toBeDefined();expect(box.inspectorParts!.sheet.height).toBe(box.header+box.body.height+8);
+      expect(box.inspectorParts!.tabs.y).toBeGreaterThanOrEqual(box.inspectorParts!.sheet.height+4);
+      expect(box.inspectorParts!.summary.y).toBeGreaterThanOrEqual(box.inspectorParts!.tabs.y+box.inspectorParts!.tabs.height+4);
+      expect(box.height).toBeLessThanOrEqual(686);
       const skills = box.rows.filter(entry => entry.row.id.startsWith('skill-'));
       expect(skills.map(entry => entry.row.id)).toEqual([
         'skill-shooting', 'skill-melee', 'skill-construction', 'skill-mining', 'skill-cooking', 'skill-plants',
@@ -54,16 +60,31 @@ describe('native interface keeps the former compact dossier density', () => {
     }
   });
 
-  it('keeps Needs within 580 × 520 and does not enlarge it on a wider screen', () => {
+  it('keeps Needs below the former 580 × 717 footprint without losing visible dossier content', () => {
     const { page } = inspector('needs');
     expect([page.width, page.height]).toEqual([580, 520]);
     const [ordinary, wide] = viewports.map(viewport => layoutNativePage(page, viewport, false, measure));
-    expect(ordinary!.width).toBe(580); expect(ordinary!.height).toBeLessThanOrEqual(520);
+    expect(ordinary!.width).toBe(580); expect(ordinary!.height).toBeLessThanOrEqual(717);
     expect([wide!.width, wide!.height, wide!.contentHeight]).toEqual([ordinary!.width, ordinary!.height, ordinary!.contentHeight]);
     expect(page.rows.find(row => row.id === 'need-hunger')?.column).toBe(0);
     expect(page.rows.find(row => row.id === 'need-mood')?.column).toBe(1);
     expect(page.rows.filter(row => row.id.startsWith('need-') || row.id === 'recreation-level').every(row => row.meter)).toBe(true);
-    expect(ordinary!.rows.map(entry => entry.row)).toEqual(page.rows);
+    expect(ordinary!.rows.map(entry => entry.row.id)).toEqual(page.rows.map(row=>row.id));
+    for(const entry of ordinary!.rows)expect(entry.row).toMatchObject(page.rows.find(row=>row.id===entry.row.id)!);
+    for(const viewport of viewports){
+      const box=layoutNativePage(page,viewport,false,measure);
+      // The generic path reproduces the former in-body tab/header allocation.
+      const former=layoutNativePage({...page,portrait:undefined},viewport,false,measure);
+      const tab=former.rows.find(entry=>entry.row.id==='pawn-tabs')!;
+      expect(Math.min(box.contentHeight,box.body.height)).toBe(Math.min(former.contentHeight,former.body.height)-tab.height);
+      expect(box.contentHeight+tab.height).toBe(former.contentHeight);
+      expect(box.rows.find(entry=>entry.row.id==='pawn-tabs')?.row.region).toBe('navigation');
+      expect(box.regions.navigation).toEqual({...box.inspectorParts!.tabs,contentHeight:box.inspectorParts!.tabs.height});
+      for(const action of box.actions){
+        expect(action.y+box.header).toBeGreaterThanOrEqual(box.inspectorParts!.actions.y);
+        expect(action.y+box.header+action.height).toBeLessThanOrEqual(box.height);
+      }
+    }
   });
 
   it('retains every long content row and its full extent across partial scroll positions', () => {

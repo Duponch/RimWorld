@@ -224,7 +224,7 @@ function anatomyPage(world: World, pawn: Pawn): NativePage {
 function pawnPage(world: World, pawn: Pawn): NativePage {
   const colonist = isColonist(pawn) && !pawn.prisoner, alive = pawn.state !== 'dead';
   if (!pawn.prisoner && activeTab === 'prisoner') activeTab = 'bio';
-  const rows: NativeRow[] = [{ id: 'pawn-tabs', label: '', compact: true, controls: tabs.filter(([tab]) => tab !== 'prisoner' || pawn.prisoner).map(([tab, label]) => control(`pawn-tab-${tab}`, label, () => { activeTab = tab; }, false, activeTab === tab, tabHints[tab])) },
+  const rows: NativeRow[] = [{ id: 'pawn-tabs', label: '', region:'navigation', compact: true, controls: tabs.filter(([tab]) => tab !== 'prisoner' || pawn.prisoner).map(([tab, label]) => control(`pawn-tab-${tab}`, label, () => { activeTab = tab; }, false, activeTab === tab, tabHints[tab])) },
     row('pawn-identity', `${appearanceOf(pawn, world.seed).sex === 'female' ? 'Femme' : 'Homme'} · ${pawn.prisoner ? 'Prisonnier' : colonist ? 'Colon' : pawn.visitor ? 'Visiteur' : pawn.podRescue ? 'Naufragé' : 'Hors-la-loi'}`, pawn.age ? `${biologicalYears(pawn.age)} ans (${chronologicalYears(pawn.age)} chronologiques)` : undefined),
     row('pawn-action', 'Activité', owner.pawnActivity?.(pawn.id) || coupleActivity285(world, pawn)?.label || specificWorkActivity(world, pawn) || queryPawnStatus(world, pawn).reason, `${pawn.x}, ${pawn.z}`)];
   if(colonist&&alive)rows.push(choices('pawn-hostility','Réaction hostile',pawn.hostilityResponse??'flee',['flee','ignore','attack'] as const,response=>send({type:'hostility-response',pawnId:pawn.id,response}),response=>({flee:'Fuir',ignore:'Ignorer',attack:'Attaquer'})[response]),
@@ -366,7 +366,7 @@ function pawnPage(world: World, pawn: Pawn): NativePage {
       if(activeTab==='health'){if(entry.meter&&entry.column===0)entry.dense=true;if(entry.id==='anatomy'){entry.label='';entry.compact=true;}}
     }
   }
-  if (activeTab === 'bio' || activeTab === 'gear') result.portrait = { url: portraitDataUrl(appearanceOf(pawn, world.seed), apparelAppearance(portraitClothed ? wornApparel(world, pawn) : []), equippedWeapon(world, pawn)?.item, portraitExpressionOf(pawn), humanLimbVisualMask(pawn)), label: `Portrait de ${pawn.name}` };
+  result.portrait = { url: portraitDataUrl(appearanceOf(pawn, world.seed), apparelAppearance(portraitClothed ? wornApparel(world, pawn) : []), equippedWeapon(world, pawn)?.item, portraitExpressionOf(pawn), humanLimbVisualMask(pawn)), label: `Portrait de ${pawn.name}` };
   return result;
 }
 
