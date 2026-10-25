@@ -15,6 +15,7 @@ import {installMapWheelZoom} from '../ui/map-wheel';
 import {DeferredMapHover} from './deferred-map-hover';
 import type {AreaAction,Cell} from '../sim/types';
 export class ColonyRenderer extends SceneRenderCore {
+  protected createSelectionRectanglePort():((bounds:{left:number;top:number;width:number;height:number}|null)=>void)|undefined{return undefined;}
   private readonly selectionInput:PawnSelectionInput;
   private readonly deferredHover=new DeferredMapHover();
   private areaPointer: { x:number; y:number } | undefined;
@@ -49,6 +50,7 @@ export class ColonyRenderer extends SceneRenderCore {
     super(renderer,grassEnabled,lifetime,dom.port);
     dom.bind(this);this.mapLabels=dom.labels();this.scene.add(this.mapLabels.mesh);
     try {    this.selectionInput=new PawnSelectionInput(this.renderer.domElement,{
+      rectangle:this.createSelectionRectanglePort(),
       enabled:()=>this.tool==='select'&&!document.querySelector('dialog[open]'),
       pawns:()=>this.screenPawns(),select:gesture=>this.onSelection(gesture),
       selected:()=>this.selectedPawns,

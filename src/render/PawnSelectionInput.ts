@@ -21,14 +21,15 @@ interface Callbacks {
   inspect(event:PointerEvent):void;
   inspectGroup?(event:MouseEvent):boolean;
   lock(locked:boolean):void;
+  rectangle?:(bounds:{left:number;top:number;width:number;height:number}|null)=>void;
 }
 /** Screen-space rectangle remains meaningful after rotating either 3D camera.
  * Simulation cells and GPU rig geometry are never used as selection authority. */
 export class PawnSelectionInput {
   private drag:{id:number;x:number;y:number;shift:boolean}|null=null;
-  private readonly box=document.createElement('div');
+  private readonly box:HTMLDivElement|undefined;
   constructor(private readonly canvas:HTMLCanvasElement,private readonly callbacks:Callbacks) {
-    this.box.className='selection-rectangle';this.box.hidden=true;document.body.append(this.box);
+    if(!callbacks.rectangle){this.box=document.createElement('div');this.box.className='selection-rectangle';this.box.hidden=true;document.body.append(this.box);}
     canvas.addEventListener('dblclick',this.doubleClick);
   }
   get active():boolean{return this.drag!==null;}
@@ -42,8 +43,10 @@ export class PawnSelectionInput {
   move(event:PointerEvent):boolean {
     const drag=this.drag;if(!drag||drag.id!==event.pointerId)return false;
     if(event.buttons&2){this.cancel();return true;}
-    this.box.hidden=Math.hypot(event.clientX-drag.x,event.clientY-drag.y)<=6;
-    Object.assign(this.box.style,{left:`${Math.min(event.clientX,drag.x)}px`,top:`${Math.min(event.clientY,drag.y)}px`,width:`${Math.abs(event.clientX-drag.x)}px`,height:`${Math.abs(event.clientY-drag.y)}px`});
+    const visible=Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>6;
+    const bounds={left:Math.min(event.clientX,drag.x),top:Math.min(event.clientY,drag.y),width:Math.abs(event.clientX-drag.x),height:Math.abs(event.clientY-drag.y)};
+    if(this.callbacks.rectangle)this.callbacks.rectangle(visible?bounds:null);
+    else if(this.box){this.box.hidden=!visible;Object.assign(this.box.style,{left:`${bounds.left}px`,top:`${bounds.top}px`,width:`${bounds.width}px`,height:`${bounds.height}px`});}
     return true;
   }
   up(event:PointerEvent):boolean {
@@ -78,9 +81,9 @@ export class PawnSelectionInput {
     event.preventDefault();
   };
   cancel():boolean {
-    const drag=this.drag;this.drag=null;this.box.hidden=true;
+    const drag=this.drag;this.drag=null;if(this.box)this.box.hidden=true;this.callbacks.rectangle?.(null);
     if(drag){this.callbacks.lock(false);if(this.canvas.hasPointerCapture(drag.id))this.canvas.releasePointerCapture(drag.id);}
     return !!drag;
   }
-  dispose():void {this.cancel();this.canvas.removeEventListener('dblclick',this.doubleClick);this.box.remove();}
+  dispose():void {this.cancel();this.canvas.removeEventListener('dblclick',this.doubleClick);this.box?.remove();}
 }

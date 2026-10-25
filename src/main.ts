@@ -1,4 +1,19 @@
 import {updateShipAssemblyInspection276} from './ui/ship-assembly-inspection-276';
+import {NativeStage} from './ui3d/NativeStage';
+import {createNativeFrontMenu} from './ui3d/native-front';
+import {buildNativePanel,syncNativePanelState} from './ui3d/native-panels';
+import {buildNativeEncounter,buildNativeFactions,setNativeWorldTab,focusNativeCaravanTrade} from './ui3d/native-world';
+import {nativeOrderPage,cancelNativeOrderPage} from './ui3d/native-orders';
+import {nativeHelpPage} from './ui3d/native-help';
+import {createNativeSaveManager} from './ui3d/native-saves';
+import {createNativeLocalTrade} from './ui3d/native-local-trade';
+import {buildNativeArrivals} from './ui3d/native-arrivals';
+import type {NativeDomainAlert} from './ui3d/native-domain-alerts';
+import {buildNativeInspector,setNativeInspectorTab} from './ui3d/native-inspector';
+import {NativeHudCards} from './ui3d/native-hud';
+import type {NativeUiState,NativeUiActions,NativePage} from './ui3d/native-contract';
+import type {ConstructionMaterial} from './sim/construction-materials';
+import type {CampEntryProgressMessage256,CaravanEncounterProgressMessage261} from './bridge/protocol';
 import {isShipPartKind276,SHIP_PART_DEFAULT_ORIENTATION_276} from './sim/ship-part-content-276';
 import {updateShipReactorInspection275} from './ui/ship-reactor-inspection-275';
 import {SceneApplicationContext} from './render/SceneApplicationContext';
@@ -22,7 +37,7 @@ import {campaignUIFacts,mapDisplayName,readMapRegistryState,readJumpToEntries,re
 import {createPlanetView} from './ui/planet-view';
 import type {ThreatPauseMode,ThreatPauseToken,UrgentThreatReceipt} from './bridge/urgent-threats';
 import {THREAT_PAUSE_PREFERENCE_KEY,createThreatPausePreference,readThreatPausePreference,createDeferredResumeGuard} from './ui/threat-pause-settings';
-import {createUrgentThreatFeedback,type UrgentThreatTarget} from './ui/urgent-threat-feedback';
+import {createUrgentThreatFeedback,urgentThreatLabel,type UrgentThreatTarget} from './ui/urgent-threat-feedback';
 import { createAllowedAreaControls } from './ui/allowed-area-controls';
 import './ui/allowed-area-controls.css';
 import { createFirstDayGuide } from './ui/first-day-guide';
@@ -70,13 +85,13 @@ import { BrowserSaveRepository } from './ui/save-repository';
 import { AutosaveScheduler, AUTOSAVE_PREFERENCE_KEY, autosaveMinutes } from './ui/autosave';
 import { createSaveManager } from './ui/save-manager';
 import { fetchTestColonies, readSaveFile, readTestColony } from './ui/test-colonies';
-import { createFrontMenu } from './ui/front-menu';
+import { createFrontMenu,type FrontMenuOptions } from './ui/front-menu';
 import { bindRenderPerformanceControls } from './ui/render-performance-controls';
 import { DEFAULT_SHADOW_SETTINGS, SHADOW_PREFERENCE_KEY, parseShadowSettings, type ShadowSettings } from './render/shadow-settings';
 import { DEFAULT_ANIMATION_SETTINGS, ANIMATION_PREFERENCE_KEY, parseAnimationSettings, type AnimationSettings } from './render/animation-settings';
 import {DESIGNATION_VISIBILITY_KEY,designationMinCellPixels,designationVisibilityLabel} from './ui/designation-visibility';
 import {ITEM_LABEL_VISIBILITY_KEY,itemLabelMinCellPixels,itemLabelVisibilityLabel} from './ui/item-label-visibility';
-import {applyUiFont,readUiFont,saveUiFont,type UiFontId} from './ui/ui-fonts';
+import {applyUiFont,readUiFont,saveUiFont,UI_FONT_CHOICES,type UiFontId} from './ui/ui-fonts';
 import {CLOUD_MASK_RADIUS_KEY} from './render/cloud-mask';
 import {DECOR_OCCLUSION_KEY,DEFAULT_DECOR_OCCLUSION_ENABLED,decorOcclusionEnabled} from './render/decor-occlusion-settings';
 import {DIORAMA_PREFERENCE_KEY,DEFAULT_DIORAMA_ENABLED,dioramaEnabled as parseDioramaEnabled} from './render/diorama-settings';
@@ -152,7 +167,7 @@ import { SnapshotHud } from './ui/snapshot-hud';
 import { isRoofArea } from './sim/roof-rules';
 import { stationRecipe } from './sim/production-recipes';
 import { RoomInspection } from './ui/room-inspection';
-import { constructionControls, constructionDeliveryLabel, structureFootprintLabel } from './ui/construction-controls';
+import { constructionControls, constructionDeliveryLabel, structureFootprintLabel,placementMaterial } from './ui/construction-controls';
 import { constructionRecipe } from './sim/construction-materials';
 import { rockInspection } from './ui/geology-inspection';
 import { doorControls, updateDoorControls } from './ui/door-controls';
@@ -256,6 +271,17 @@ const stateLabels: Record<Pawn['state'], string> = { resting:'Au lit pour soins'
 const rotatableTools=new Set<Tool>(['ship-cryptosleep-casket','ship-beam','ship-engine','ship-reactor','cryptosleep-casket','fueled-smithy','electric-smithy','brewery','fermenting-barrel','vent','sleeping-spot','shelf','small-shelf','electric-crematorium','electric-smelter','biofuel-refinery','nutrient-paste-dispenser','hopper','comms-console','deep-drill','ground-scanner','vitals-monitor','drug-lab','hydroponics-basin','tube-television','art-bench','machining-table','hi-tech-research-bench','fabrication-bench','grave','wind-turbine','battery','fueled-stove','electric-stove','butcher-table','install','bedroll','bed','double-bed','hospital-bed','table','table-square','table-long','dining-chair','armchair','end-table','dresser','campfire','stonecutter','butcher-spot','crafting-spot','research-bench','tailor-bench','electric-tailor-bench','cooler']);
 const resourceLabels = { hops:'Houblon', 'wild-plant':'Plante sauvage', healroot:'Racine médicinale', haygrass:'Herbe à foin', potato:'Plant de pommes de terre',corn:'Plant de maïs', tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz', cotton: 'Cotonnier' };
 const params = new URLSearchParams(location.search);
+const nativeMode=!(import.meta.env.DEV&&params.get('ui')==='legacy');
+let nativeUi:NativeStage|undefined;
+let nativeHud:NativeHudCards|undefined;
+let nativeCustomPage:NativePage|undefined;
+let nativeCampProgress:CampEntryProgressMessage256|undefined;
+let nativeCaravanProgress:CaravanEncounterProgressMessage261|undefined;
+let nativeEncounterKey:string|undefined;
+let nativeBeforeIncident:NativePage|undefined;
+let nativeConstructionMaterial:ConstructionMaterial='wood';
+let nativeRoofsVisible=false,nativeZonesVisible=true,nativePerspective=false;
+let nativeCreationStorage:StorageControlSettings={priority:2,filters:{wood:true,food:true,unfinished:true,textile:true,apparel:true,weapon:true,medicine:true,neutroamine:true,chemfuel:true,component:true,'advanced-component':true,steel:true,gold:true,uranium:true,plasteel:true,blocks:true,furniture:true,silver:true}};
 const diagnosticStart = params.has('scenario');
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = gameLayout();
 const creationStorageControls=mountStorageControls(document.getElementById('stockpile-items')!,{priority:2,filters:{wood:true,food:true,unfinished:true,textile:true,apparel:true,weapon:true,medicine:true,neutroamine:true,chemfuel:true,component:true,'advanced-component':true,steel:true,gold:true,uranium:true,plasteel:true,blocks:true,furniture:true,silver:true}},()=>{});
@@ -264,7 +290,8 @@ let selectedLinkedStorage:ReturnType<typeof createLinkedStorageControls286>|unde
 let selectedStoragePending=0;
 let storageClipboard:StorageControlSettings|undefined;
 let zoneEditTarget:number|undefined;
-const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+const legacyElements=new Map<string,HTMLElement>();
+const el = <T extends HTMLElement = HTMLElement>(id: string) => (document.getElementById(id)??legacyElements.get(id)) as T;
 const researchPanelActions:ResearchPanelActions={onOpenWork:()=>openResearchContext('work'),onOpenProduction:()=>openResearchContext('architect')};
 function openResearchContext(panel:'work'|'architect'):void {
   void attempt(async()=>{await switchPanel(panel);if(panel==='architect')setCategory('production');});
@@ -371,7 +398,7 @@ const music = new MusicDirector();
 let snapshot: World | undefined;
 let campaignOnly:CampaignSummary|undefined;
 const caravanEncounterDialog261=new CaravanEncounterDialog261(c=>client.command(c));
-client.onCaravanEncounterProgress=message=>caravanEncounterDialog261.progress(message);
+client.onCaravanEncounterProgress=message=>{if(nativeUi){nativeCaravanProgress=message;refreshNativeUi();}else caravanEncounterDialog261.progress(message);};
 const campaignState=():CampaignUIState|undefined=>snapshot??campaignOnly;
 let latestFoodReadability:FoodReadability|undefined;
 function confirmedFoodReadability():FoodReadability|undefined {
@@ -434,12 +461,13 @@ let replantPileId:number|undefined;
 let currentTool: Tool = 'select';
 let currentPanel: Panel = null;
 const scoutUI=createScoutUI(el('scout-content'),c=>void attempt(()=>client.command(c)));
-const commercialUI=createCommercialUI(el('commercial-content'),async command=>{
+async function commercialCommand(command:Parameters<typeof client.command>[0]):Promise<unknown>{
   const resumeRevision=deferredResumeGuard.capture();
   const result=await client.command(command);
   if(['commercial-start','commercial-return','commercial-unload'].includes(command.type)&&currentSpeed===0&&deferredResumeGuard.allows(resumeRevision))await client.setSpeed(1);
   return result;
-});
+}
+const commercialUI=createCommercialUI(el('commercial-content'),commercialCommand);
 type WorldTab='maps'|'group'|'individual';
 let worldTab:WorldTab='individual';
 const groupUI=createGroupPanel(el('group-content'),createGroupAdapters({
@@ -449,7 +477,7 @@ const groupUI=createGroupPanel(el('group-content'),createGroupAdapters({
   inspectPresentPawn:id=>{if(snapshot?.pawns.some(p=>p.id===id))selectPawn(id);},
 }));
 const campPreparationUI256=createCampPreparationView256(el('group-content'),(id,groupId)=>client.cancelCampEntry256(id,groupId));
-client.onCampProgress=message=>campPreparationUI256.update(message);
+client.onCampProgress=message=>{if(nativeUi){nativeCampProgress=message;refreshNativeUi();}else campPreparationUI256.update(message);};
 function groupCommandsBlocked():string|undefined {
  if(client.hasCampPreparation)return 'La pr\u00e9paration du camp attend encore sa d\u00e9cision.';
   if(simulationStopped)return 'La simulation est arrêtée. Chargez ou créez une colonie pour reprendre.';
@@ -488,7 +516,9 @@ async function jumpToCampaignTarget(target:JumpToEntry):Promise<void>{
  else if(target.kind==='group'){await sendCampaignCommand({type:'group-select',groupId:target.id});worldTab='group';setPanel('world');}
  else {setPanel('quests');}
 }
-client.onCaravanTradeArrival=notice=>{const state=campaignState(),view=state&&groupWorld(state,notice.groupId),g=view?.group;if(!view||!g||!('members'in g))return;const target=groupGeographicTradeTarget256(view,g);if(!target||target.settlementId!==notice.settlementId||target.factionId!==notice.factionId||target.postId!==notice.postId)return;worldTab='group';setPanel('world');refreshWorldPanels(state!);groupUI.focusTrade261();};
+client.onCaravanTradeArrival=notice=>{const state=campaignState(),view=state&&groupWorld(state,notice.groupId),g=view?.group;if(!view||!g||!('members'in g))return;const target=groupGeographicTradeTarget256(view,g);if(!target||target.settlementId!==notice.settlementId||target.factionId!==notice.factionId||target.postId!==notice.postId)return;
+ if(nativeUi){setNativeWorldTab('groups');setPanel('world');focusNativeCaravanTrade(readNativeState(),nativeActions(),notice.groupId);return;}
+ worldTab='group';setPanel('world');refreshWorldPanels(state!);groupUI.focusTrade261();};
 function refreshWorldPanels(world:CampaignUIState):void {
  const group=worldTab==='group',maps=worldTab==='maps',local='width' in world;
  el('group-content').hidden=!group;el('maps-content').hidden=!maps;el('individual-world-content').hidden=maps||group;
@@ -530,6 +560,7 @@ class MainPresentationChanges extends PresentationChanges {
   protected override readStructures(world:World):unknown { return this.#structures.read(world); }
 }
 class MainColonyRenderer extends ColonyRenderer {
+  protected override createSelectionRectanglePort(){return nativeUi?(bounds:{left:number;top:number;width:number;height:number}|null)=>nativeUi!.setSelectionRectangle(bounds):undefined;}
   get admissionFrameReady():boolean {return !this.disposed&&!this.preparing&&!this.fatalError;}
   protected override frame(now:number):void {drainMainAdmissionsBeforeFrame();try{super.frame(now);}finally{notifyMainAdmissionAvailability();}}
   protected override createApplicationContext():SceneApplicationContext{return new SceneApplicationContext();}
@@ -539,6 +570,7 @@ class MainColonyRenderer extends ColonyRenderer {
     return new PresentationQueue(this.confirmedIntentReader,()=>new MainPresentationChanges());
   }
   protected override createStructurePreparation():SceneStructurePreparation { return this.applicationContext!.structures; }
+  protected override renderScene():void {super.renderScene();nativeUi?.renderOverlay(this.renderer);}
 }
 let renderer: ColonyRenderer | undefined;
 const TEXTURE_PREFERENCE_KEY = 'lisiere.presentation.textures.v1';
@@ -671,6 +703,7 @@ const fontSelect = el<HTMLSelectElement>('ui-font');
 fontSelect.value = uiFont;
 function setUiFontPreference(value:UiFontId):void {
   uiFont=value; fontSelect.value=value; applyUiFont(value); saveUiFont(value);
+  nativeUi?.setTextFont(UI_FONT_CHOICES.find(choice=>choice.id===value)!.family);
 }
 const decorOcclusionToggle=el<HTMLInputElement>('decor-occlusion-enabled');
 decorOcclusionToggle.checked=decorOcclusionPreference;
@@ -774,16 +807,17 @@ let latestMotion: PawnTrack[] | undefined;
 let menuResumeSpeed: number | undefined;
 let menuTransition: Promise<unknown> = Promise.resolve();
 const shell = document.querySelector<HTMLElement>('.game-shell')!;
-installVisualIdentity(document.querySelector<HTMLElement>('#app')!);
-installTooltips(document.body);
-installTextSelectionGuard(document.body);
-installArchitectIcons(document.querySelector<HTMLElement>('#app')!);
+if(!nativeMode){
+  installVisualIdentity(document.querySelector<HTMLElement>('#app')!);
+  installTooltips(document.body);installTextSelectionGuard(document.body);
+  installArchitectIcons(document.querySelector<HTMLElement>('#app')!);
+}
 const siteHud = createSiteHud(document.querySelector<HTMLElement>('#app')!);
 const resourceLedger = createResourceLedger(document.querySelector<HTMLElement>('#app')!);
-const architectWorkbench = installArchitectWorkbench(document.querySelector<HTMLElement>('#app')!, () => {
+const architectWorkbench = nativeMode?{close:()=>{}}:installArchitectWorkbench(document.querySelector<HTMLElement>('#app')!, () => {
   setPanel(null); clearSelection(); applyTool('select');
 });
-hoverReadoutLayout=installHoverReadoutLayout(shell,{cell:()=>hoveredCell,refresh:()=>updateMapHover(true)});
+if(!nativeMode)hoverReadoutLayout=installHoverReadoutLayout(shell,{cell:()=>hoveredCell,refresh:()=>updateMapHover(true)});
 // Workbench has already moved Orders/Zones out of Architect. Keep the
 // resident catalogue and its icon/handler nodes; only visibility changes.
 const architectToolButtons=[...el('architect-panel').querySelectorAll<HTMLButtonElement>('[data-tool-category]')]
@@ -808,10 +842,45 @@ const session = new GameSession(client, saveRepository, prepareWorld, () => {
   updateIncident(); syncStorageButtons();
 });
 const frontHost = document.createElement('div'); document.querySelector('#app')!.append(frontHost);
+if(nativeMode){
+  nativeUi=new NativeStage({onPanel:id=>{
+    nativeCustomPage=undefined;
+    if(id==='factions'){nativeCustomPage=buildNativeFactions(readNativeState(),nativeActions());nativeUi!.showPage(nativeCustomPage);return;}
+    void attempt(()=>switchPanel(currentPanel===id?null:id));
+  },onEscape:()=>{cancelNativeOrderPage();nativeCustomPage=undefined;renderer?.cancelSelection();renderer?.cancelDesignation();if(frontMenu.isOpen())return;setPanel(null);clearSelection();},onError:message=>notify(message,true),
+    onGesture:()=>{unlockAudioFromGesture();music.unlock();},
+    onActivate:id=>audio.playInterface(id.startsWith('tab:')||id.includes('back')?'ui.panel':'ui.click'),
+    onCancelWorldInteraction:()=>{renderer?.cancelSelection();renderer?.cancelDesignation();},
+  });
+  nativeUi.setTextFont(UI_FONT_CHOICES.find(choice=>choice.id===uiFont)!.family);
+  nativeHud=new NativeHudCards(nativeUi.art,nativeUi.anchors,{selectPawn,focus:(target,tab)=>{nativeCustomPage=undefined;focusNotification(target);if(tab)setNativeInspectorTab(tab);refreshNativeUi();},
+    domain:openNativeDomainAlert,campaign:target=>{nativeCustomPage=undefined;void attempt(async()=>{const reason=await viewUrgentThreat(target);if(reason)throw Error(reason);});},
+    context:context=>{nativeCustomPage=undefined;if(context.tool){setTool(context.tool);return;}if(context.worldTab)setNativeWorldTab(context.worldTab==='group'?'groups':'individual');void attempt(async()=>{await switchPanel(context.panel);if(context.category)setCategory(context.category);});},
+    speed:value=>{const token=client.getThreatPauseToken();void attempt(()=>changeSpeed(value,token));},showViewControls:showNativeViewControls,
+    showPage:page=>{nativeCustomPage=page;nativeUi!.showPage(page);}});
+  // Old controls are a disabled development witness only. Native scene layout
+  // and input never read their measurements, values, handlers or visibility.
+  for(const child of shell.children)if(child.id!=='viewport'){
+    (child as HTMLElement).style.display='none';(child as HTMLElement).inert=true;
+  }
+}
 // Help is shared by both entry points, outside the hidden/inert colony shell.
 const helpDialog=el<HTMLDialogElement>('help');document.querySelector('#app')!.append(helpDialog);
 let helpOpener:HTMLElement|null=null;
 function openHelp():void {
+  if(nativeUi){
+    renderer?.cancelDesignation();altInspectorHeld=false;nativeUi.setWorldReadout(null);
+    const close=()=>{nativeCustomPage=undefined;if(frontMenu.isOpen())frontMenu.showHome(session.hasWorld);else refreshNativeUi();};
+    nativeCustomPage=nativeHelpPage({...nativeActions(),currentWorld:()=>snapshot,learning:firstGesturesLearning,close,
+      onGuideAction:async action=>{
+        nativeCustomPage=undefined;if(frontMenu.isOpen())frontMenu.hide();
+        if(action.target){focusNotification(action.target);if(action.tab)setNativeInspectorTab(action.tab);refreshNativeUi();return;}
+        if(action.worldTab)setNativeWorldTab(action.worldTab==='group'?'groups':'individual');
+        if(action.tool){setTool(action.tool);return;}
+        if(action.mapTools){await switchPanel('architect');setCategory(action.mapTools);return;}
+        if(action.panel)await switchPanel(action.panel);if(action.category)setCategory(action.category);
+      }});nativeUi.showPage(nativeCustomPage);return;
+  }
   if(helpDialog.open)return;
   helpOpener=document.activeElement instanceof HTMLElement?document.activeElement:null;
   renderer?.cancelDesignation();altInspectorHeld=false;updateMapCellDetails(true);
@@ -841,7 +910,7 @@ const worldCreationBackend256:WorldCreationCallbacks256={
  confirmSite:request=>client.confirmWorldDraftSite256(request),
  start:(ticket,party,context)=>session.createConfirmedDraft(()=>client.startWorldDraft256(ticket,party,context)),
 };
-const frontMenu = createFrontMenu(frontHost, {
+const frontOptions:FrontMenuOptions = {
   getWorldCreationPlayer:()=>({...worldCreationPlayer256}),
   worldCreation:createMainWorldCreationCallbacks256(worldCreationBackend256,{
     replaceConfirmedDraft:(ticket,operation)=>replaceColony(operation,ticket),
@@ -899,7 +968,101 @@ const frontMenu = createFrontMenu(frontHost, {
     const speed = menuResumeSpeed ?? 0; menuResumeSpeed = undefined;
     await changeSpeed(deferredResumeGuard.held?0:speed);
   },
-});
+};
+const frontMenu=nativeUi?createNativeFrontMenu(frontOptions,page=>{
+  nativeUi!.setFrontVisible(page!==null);nativeHud?.setVisible(page===null&&!!snapshot);nativeUi!.showPage(page);
+}):createFrontMenu(frontHost,frontOptions);
+const nativeSaveManager=nativeUi?createNativeSaveManager({
+  readSaves:()=>session.saves(),refresh:()=>session.refreshSaves(),save,saveNamed:(label,key,revision)=>session.saveNamed(label,key,revision),
+  deleteSave:(key,revision)=>session.deleteSave(key,revision),load:key=>replaceColony(()=>session.load(key)),exportSave:exportCurrentColony,
+  show:page=>{nativeCustomPage=page;nativeUi!.showPage(page);},close:()=>{nativeCustomPage=undefined;setPanel('menu');},
+  blocked:()=>!saveStorageReady||replacingWorld||session.busy||simulationStopped||waitingRequests.size>0,
+}):undefined;
+async function openNativeSaveManager():Promise<void>{await pauseForMenu();await nativeSaveManager?.open();}
+async function openNativeOptions():Promise<void>{await pauseForMenu();frontMenu.setHasGame(session.hasWorld);frontMenu.showOptions?.();syncStorageButtons();}
+function openNativeDomainAlert(alert:NativeDomainAlert):void {
+  if(!nativeUi)return;
+  if(alert.action.kind==='arrivals'){nativeCustomPage=buildNativeArrivals(readNativeState(),nativeActions());nativeUi.showPage(nativeCustomPage);}
+  else if(alert.action.kind==='quests'){nativeCustomPage=undefined;void attempt(()=>switchPanel('quests'));}
+  else if(alert.action.kind==='trade')nativeLocalTrade?.openVisitors();
+  else if(alert.action.kind==='orbital')nativeLocalTrade?.openOrbital();
+}
+function showNativeViewControls():void {
+  if(!nativeUi)return;
+  const change=(action:()=>void)=>{action();showNativeViewControls();};
+  nativeCustomPage={id:'native-view',title:'Vue de la colonie',width:6.6,
+    rows:[
+      {id:'native-walls',label:'Murs',value:wallCutaway?'Coupés':'Hauts',detail:'Coupe visuelle ; les murs conservent leurs collisions.',controls:[{id:'native-wall-toggle',label:wallCutaway?'Murs hauts':'Couper les murs',onActivate:()=>change(()=>{wallCutaway=!wallCutaway;renderer?.setWallCutaway(wallCutaway);})}]},
+      {id:'native-roofs',label:'Couverture',value:nativeRoofsVisible?'Visible':'Masquée',detail:'Masquer le toit ne le retire pas.',controls:[{id:'native-roof-toggle',label:nativeRoofsVisible?'Masquer les toits':'Voir les toits',onActivate:()=>change(()=>{nativeRoofsVisible=!nativeRoofsVisible;renderer?.setRoofsVisible(nativeRoofsVisible);})}]},
+      {id:'native-foliage',label:'Végétation',value:foliageVisible?'Feuillage':'Troncs',controls:[{id:'native-foliage-toggle',label:foliageVisible?'Voir les troncs':'Voir le feuillage',onActivate:()=>change(()=>{foliageVisible=!foliageVisible;renderer?.setFoliageVisible(foliageVisible);})}]},
+      {id:'native-zones',label:'Zones',value:nativeZonesVisible?'Visibles':'Masquées',detail:'Ce réglage ne change pas leurs règles.',controls:[{id:'native-zone-toggle',label:nativeZonesVisible?'Masquer les zones':'Voir les zones',onActivate:()=>change(()=>{nativeZonesVisible=!nativeZonesVisible;renderer?.setZonesVisible(nativeZonesVisible);})}]},
+      {id:'native-camera',label:'Caméra',value:nativePerspective?'Perspective':'Isométrique',detail:'Glisser avec le bouton droit pour tourner ; bouton central pour déplacer ; molette pour zoomer.',controls:[{id:'native-camera-toggle',label:'Changer de vue',onActivate:()=>change(()=>{nativePerspective=renderer?.toggleCameraMode()==='perspective';})},{id:'native-home-focus',label:'Recentrer la colonie',onActivate:()=>{const pawn=snapshot?.pawns[0];if(pawn)renderer?.focusPawn(pawn.id);}}]},
+      {id:'native-diagnostics',label:'Diagnostics actuels',detail:renderer?`${renderer.backend} · ${renderer.stats.frameMs.toFixed(1)} ms/image · p95 ${renderer.stats.frameP95.toFixed(1)} ms · simulation ${stepMs.toFixed(2)} ms/tick · ${renderer.stats.drawCalls} appels de rendu. Ces relevés ne prouvent pas un gain de performance.`:'Aucune carte locale active.',controls:[{id:'native-diagnostics-refresh',label:'Actualiser',onActivate:showNativeViewControls}]},
+    ],onClose:()=>{nativeCustomPage=undefined;refreshNativeUi();}};
+  nativeUi.showPage(nativeCustomPage);
+}
+function readNativeState():NativeUiState {
+  return {world:snapshot,epoch:session.generation,campaign:campaignOnly,panel:currentPanel,category:currentCategory,tool:currentTool,
+    orientation:placementOrientation,constructionMaterial:nativeConstructionMaterial,creationStorage:nativeCreationStorage,selectedPawnIds:[...selection.ids],selectedCell,
+    selectedObjects,campProgress:nativeCampProgress,caravanProgress:nativeCaravanProgress,
+    selectedAnimalId:selectedPawn!==undefined&&snapshot?.wildlife?.animals.some(animal=>animal.id===selectedPawn)?selectedPawn:undefined,
+    selectedMechanoidId:selectedPawn!==undefined&&snapshot?.mechanoids?.some(actor=>actor.id===selectedPawn)?selectedPawn:undefined,
+    speed:currentSpeed,hasGame:session.hasWorld,busy:session.busy||replacingWorld||waitingRequests.size>0,
+    fault:simulationStopped?'La simulation s’est arrêtée. Rechargez une colonie validée.':graphicsFault?'Le rendu doit être rétabli.':undefined,
+    saves:saveStorageReady?session.saves():[]};
+}
+function nativeActions():NativeUiActions {
+  return {
+    command:async command=>{
+      if(replacingWorld||simulationStopped||graphicsFault||waitingRequests.size)throw Error('L’état courant ne permet pas encore cette commande.');
+      const campaign=/^(group-|map-|caravan-)/.test(command.type);
+      const result=campaign?await sendCampaignCommand(command):['commercial-start','commercial-return','commercial-unload'].includes(command.type)?await commercialCommand(command):await client.command(command);
+      renderState();return result;
+    },
+    panel:panel=>switchPanel(panel),category:setCategory,tool:setTool,selectPawn,
+    speed:value=>{const token=client.getThreatPauseToken();return changeSpeed(value,token);},rotate:direction=>{placementOrientation=((placementOrientation+direction+4)%4) as Orientation;renderer?.setPlacementRotation(placementOrientation);refreshNativeUi();},
+    material:material=>{nativeConstructionMaterial=material;renderer?.setConstructionMaterial(material);refreshNativeUi();},
+    creationStorage:settings=>{nativeCreationStorage=structuredClone(settings);refreshNativeUi();},
+    front:openFront,save,exportSave:exportCurrentColony,
+    showPage:page=>{nativeCustomPage=page;nativeUi?.showPage(page);},refresh:()=>renderState(),clearSelection,
+    readState:readNativeState,closePage:()=>{nativeCustomPage=undefined;renderState();},
+    openVisitorTrade:()=>nativeLocalTrade?.openVisitors(),openOrbitalTrade:id=>nativeLocalTrade?.openOrbital(id),
+    resizeZone:(kind,id,shrink)=>{nativeCustomPage=undefined;editZone(kind,id,shrink);},
+    paintAllowedArea:(id,enabled)=>{if(!snapshot?.allowedAreas?.some(area=>area.id===id))return;nativeCustomPage=undefined;setPanel(null);applyTool(enabled?'allowed-expand':'allowed-shrink');allowedAreaEditId=id;renderer?.setAllowedAreaTarget(id);},
+    selectObject:object=>selectObjects([object]),
+    readBillWorkers:(structureId,billId)=>client.billWorkerOptions(structureId,billId),
+    cancelCampEntry:(id,groupId)=>client.cancelCampEntry256(id,groupId),
+    placeFurniture:structureId=>{const object=snapshot&&furnitureObject(snapshot,structureId);if(!object)return;
+      installationId=structureId;placementOrientation=object.orientation;applyTool('install');renderer?.setFurniturePlacement(object);setPanel(null,true);},
+    replant:pileId=>{replantPileId=pileId;applyTool('replant-tree');renderer?.setTreePlacement(pileId);setPanel(null,true);},
+  };
+}
+function refreshNativeUi():void {
+  if(!nativeUi)return;
+  nativeUi.setWorldVisible(!!snapshot&&!!renderer);nativeHud?.setVisible(!!snapshot&&!frontMenu.isOpen());
+  if(snapshot){nativeHud?.setSelection([...selection.ids]);nativeHud?.update(snapshot,currentSpeed,renderer?.stats.fps??0);}
+  if(frontMenu.isOpen())return;
+  const state=readNativeState(),actions=nativeActions();
+  syncNativePanelState(state,actions);
+  nativeLocalTrade?.update();
+  const encounter=buildNativeEncounter(state,actions);
+  if(encounter){
+    if(nativeEncounterKey!==encounter.id){nativeEncounterKey=encounter.id;nativeCustomPage=undefined;}
+    if(!nativeCustomPage){encounter.closable=false;nativeUi.showPage(encounter);return;}
+  }else if(nativeEncounterKey){nativeEncounterKey=undefined;nativeCustomPage=undefined;}
+  if(nativeCustomPage){nativeUi.showPage(nativeCustomPage);return;}
+  const page=currentPanel?buildNativePanel(state,actions):buildNativeInspector(state,actions);
+  if(page?.id==='menu')page.rows.push({id:'native-menu-details',label:'Sauvegardes, options et carnet',controls:[
+    {id:'native-manage-saves',label:'Gérer les sauvegardes',onActivate:openNativeSaveManager},
+    {id:'native-options',label:'Options',onActivate:openNativeOptions},{id:'native-help',label:'Aide',onActivate:openHelp},
+  ]});
+  if(page?.id==='menu')page.rows.push({id:'native-menu-trade',label:'Échanges',controls:[
+    {id:'native-visitor-trade',label:'Visiteurs et commerce',onActivate:()=>nativeLocalTrade?.openVisitors()},
+    {id:'native-orbital-trade',label:'Commerce orbital',onActivate:()=>nativeLocalTrade?.openOrbital()},
+  ]});
+  if(page&&!page.onClose)page.onClose=()=>setPanel(null);
+  nativeUi.showPage(page);
+}
 const initialRuntimeOptions=(async()=>{await attempt(()=>threatPausePreference.initialize());await attempt(()=>settlementPreference.initialize());})();
 async function pauseForMenu(): Promise<void> {
   renderer?.cancelDesignation(); orderMenu.close();
@@ -924,6 +1087,7 @@ async function switchPanel(panel: Panel, preserveTool = false): Promise<void> {
   setPanel(panel, preserveTool);
 }
 async function replaceColony(action: () => Promise<void>,confirmedDraft?:WorldCreationTicket256): Promise<void> {
+  cancelNativeOrderPage();nativeCustomPage=undefined;
   firstGesturesLearning?.cancelPending();
   await initialRuntimeOptions;
   await Promise.all([threatPausePreference.whenSettled(),settlementPreference.whenSettled()]);
@@ -946,6 +1110,7 @@ async function replaceColony(action: () => Promise<void>,confirmedDraft?:WorldCr
 
 
 function notify(message: string, error = false) {
+  if(nativeUi){nativeUi.showNotice(message,error);return;}
   el('notice').textContent = message;
   el('notice').classList.toggle('error', error);
   el('notice').hidden = false;
@@ -969,7 +1134,7 @@ const apparelPolicyUI = createApparelPolicyControls(el('assign-panel'), async co
   try { await client.command(command); renderState(); return null; }
   catch(error) {return error instanceof Error ? error.message : String(error);}
 });
-const allowedAreaUI=createAllowedAreaControls(el('assign-panel'),async command=>{
+const allowedAreaUI=nativeMode?undefined:createAllowedAreaControls(el('assign-panel'),async command=>{
   try{await client.command(command);renderState();return null;}catch(error){return error instanceof Error?error.message:String(error);}
 },(id,enabled)=>{setPanel(null);applyTool(enabled?'allowed-expand':'allowed-shrink');allowedAreaEditId=id;renderer?.setAllowedAreaTarget(id);},id=>renderer?.setAllowedAreaTarget(id));
 const animalAreaActions287:AnimalAreaActions287={
@@ -984,11 +1149,12 @@ const animalAreaActions287:AnimalAreaActions287={
       throw new Error('La carte ou l’animal a changé. Reprenez le choix depuis son état confirmé.');
     return client.command(command);
   },
-  onManage:()=>allowedAreaUI.open(),
+  onManage:()=>allowedAreaUI?.open(),
   onPendingChange:()=>queueMicrotask(()=>renderState()),
 };
 const constructionUI = constructionControls(() => applyTool(currentTool));
 function setCategory(category: ArchitectCategory) {
+  if(nativeUi){currentCategory=category;nativeCustomPage=undefined;refreshNativeUi();return;}
   if(category==='orders'||category==='zones')return;
   currentCategory = category;
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-category]')) {button.classList.toggle('active',button.dataset.category===category);if(button.dataset.category==='ship')button.hidden=!snapshot||!architectCategoryAvailable(snapshot,'ship');}
@@ -996,6 +1162,7 @@ function setCategory(category: ArchitectCategory) {
 }
 
 function syncArchitectAvailability(force=false):void {
+  if(nativeUi){if(snapshot&&!architectToolAvailable(snapshot,currentTool))applyTool('select');return;}
   const key=`${currentCategory}:${snapshot?architectAvailabilityKey(snapshot):'no-world'}`;
   if(!force&&key===lastArchitectAvailabilityKey)return;
   lastArchitectAvailabilityKey=key;
@@ -1012,6 +1179,16 @@ function syncArchitectAvailability(force=false):void {
 function selectedColonyIds():number[]{return snapshot?.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner).map(p=>p.id)??[];}
 function renderWildlife(world:World){updateWildlifePanel(el('wildlife-content'),world,id=>selectPawn(id),()=>void attempt(async()=>{await client.command({type:'enable-wildlife'});renderState();}),[...selection.ids],id=>void attempt(async()=>{await client.command({type:'shoot',pawnIds:selectedColonyIds(),targetId:id});renderState();}),id=>void attempt(async()=>{await client.command({type:'melee',pawnIds:selectedColonyIds(),targetId:id});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'hunt',animalId:id,enabled});renderState();}),(id,enabled)=>void attempt(async()=>{await client.command({type:'tame',animalId:id,enabled});renderState();}));}
 function setPanel(panel: Panel, preserveTool = false) {
+  if(nativeUi){
+    cancelNativeOrderPage();
+    if(!snapshot&&campaignOnly&&panel===null)panel='world';
+    const previous=currentPanel;currentPanel=panel;nativeCustomPage=undefined;
+    if(previous==='menu'&&panel!=='menu'&&menuResumeSpeed!==undefined&&!replacingWorld&&!frontMenu.isOpen()){
+      const speed=menuResumeSpeed;menuResumeSpeed=undefined;void attempt(()=>client.setSpeed(deferredResumeGuard.held?0:speed));
+    }
+    if(panel!=='architect'&&!preserveTool&&currentTool!=='select')applyTool('select');
+    nativeUi.setPanel(panel);refreshNativeUi();return;
+  }
   if(!snapshot&&campaignOnly&&panel===null)panel='world';
   if(!snapshot&&campaignOnly&&panel!==null&&panel!=='world'&&panel!=='menu'&&panel!=='quests')return;
   hoverReadoutLayout?.reset();
@@ -1038,7 +1215,7 @@ function setPanel(panel: Panel, preserveTool = false) {
     button.setAttribute('aria-pressed', String(active));
   }
   if (panel === 'schedule' && snapshot) scheduleUI.update(snapshot);
-  if (panel === 'assign' && snapshot) {foodPolicyUI.update(snapshot,confirmedFoodReadability());apparelPolicyUI.update(snapshot);drugPolicyUI.update(snapshot);allowedAreaUI.update(snapshot);}
+  if (panel === 'assign' && snapshot) {foodPolicyUI.update(snapshot,confirmedFoodReadability());apparelPolicyUI.update(snapshot);drugPolicyUI.update(snapshot);allowedAreaUI?.update(snapshot);}
   if (panel === 'research' && snapshot) updateResearchPanel(el('research-content'),snapshot,c=>void attempt(()=>client.command(c)),researchPanelActions);
   el('inspector').hidden = panel !== null || preserveTool&&currentTool!=='select' || (!selection.ids.size && !selectedCell);
   if (panel !== 'architect' && !preserveTool) applyTool('select');
@@ -1049,6 +1226,18 @@ function setPanel(panel: Panel, preserveTool = false) {
   if (panel === 'work' && snapshot) updateWorkPanel(snapshot,carriedPatientsOf(snapshot));
 }
 function applyTool(tool: Tool) {
+  if(nativeUi){
+    zoneEditTarget=undefined;renderer?.setZoneTarget(undefined);allowedAreaEditId=undefined;renderer?.setAllowedAreaTarget(undefined);shootingControls.cancel();
+    if(tool==='ship-cryptosleep-casket'&&currentTool!==tool){placementOrientation=2;renderer?.setPlacementRotation(placementOrientation);}
+    if(isShipPartKind276(tool)&&currentTool!==tool){placementOrientation=SHIP_PART_DEFAULT_ORIENTATION_276[tool];renderer?.setPlacementRotation(placementOrientation);}
+    currentTool=tool;syncToolCursor(el('viewport'),tool);
+    if(tool!=='install'){installationId=undefined;renderer?.setFurniturePlacement(undefined);}
+    if(tool!=='replant-tree'){replantPileId=undefined;renderer?.setTreePlacement(undefined);}
+    renderer?.setFloorSelection(isBuildableFloor(tool)?tool:undefined);renderer?.setTool(isBuildableFloor(tool)?'lay-floor':tool);
+    renderer?.setRoofAreasVisible(isRoofArea(tool));const material=placementMaterial(tool,nativeConstructionMaterial);
+    if(material)nativeConstructionMaterial=material;renderer?.setConstructionMaterial(material);
+    refreshNativeUi();return;
+  }
   hoverReadoutLayout?.reset();
   architectWorkbench.close();
   zoneEditTarget=undefined;renderer?.setZoneTarget(undefined);allowedAreaEditId=undefined;renderer?.setAllowedAreaTarget(undefined);
@@ -1089,6 +1278,13 @@ function selectPawn(id: number) {
   selectPawns({ids:[id],additive:false,toggle:false},true);
 }
 function updateMapHover(force=false):void {
+  if(nativeUi){
+    const cell=hoveredCell;
+    if(currentTool!=='select'||!snapshot||!cell||currentPanel!==null||frontMenu.isOpen()||replacingWorld){nativeUi.setWorldReadout(null);return;}
+    if(altInspectorHeld){updateMapCellDetails(force);return;}
+    const now=performance.now();if(!force&&now-lastHoverReadAt<250)return;lastHoverReadAt=now;
+    nativeUi.setWorldReadout(mapHoverLines(snapshot,cell,mapHoverLight.lightAt(snapshot,cell,now)));return;
+  }
   const readout=el('map-hover-readout'),cell=hoveredCell??hoverReadoutLayout?.retainedCell;
   if(currentTool!=='select'||!snapshot||!cell||currentPanel!==null||frontMenu.isOpen()||replacingWorld||document.querySelector('dialog[open]')){
     const changed=!readout.hidden||lastHoverCopy!=='';
@@ -1107,6 +1303,7 @@ function updateMapHover(force=false):void {
   updateMapCellDetails(force);
 }
 function positionMapCellDetails():void {
+  if(nativeUi)return;
   const panel=el('map-cell-details');if(panel.hidden)return;
   const bounds=shell.getBoundingClientRect();
   const x=mapPointerX-bounds.left,y=mapPointerY-bounds.top;
@@ -1114,6 +1311,13 @@ function positionMapCellDetails():void {
   panel.style.top=`${Math.max(8,Math.min(bounds.height-panel.offsetHeight-8,y+26))}px`;
 }
 function updateMapCellDetails(force=false):void {
+  if(nativeUi){
+    if(!altInspectorHeld){updateMapHover(force);return;}
+    if(currentTool!=='select'||!snapshot||!hoveredCell||frontMenu.isOpen()||replacingWorld)return;
+    const now=performance.now();if(!force&&now-lastAltReadAt<160)return;lastAltReadAt=now;
+    const details=mapCellDetails(snapshot,hoveredCell,mapHoverLight.lightAt(snapshot,hoveredCell,now));
+    nativeUi.setWorldReadout(details?[details.heading,...details.things,...details.rows.map(row=>`${row.label} : ${row.value}`)]:null);return;
+  }
   const panel=el('map-cell-details');
   if(currentTool!=='select'||!altInspectorHeld||!snapshot||!hoveredCell||frontMenu.isOpen()||replacingWorld
     ||document.elementFromPoint(mapPointerX,mapPointerY)!==document.querySelector('#viewport canvas')){
@@ -1141,7 +1345,7 @@ function selectPawns(gesture:SelectionGesture,focus=false) {
   renderer?.setSelectedPawns(selection.ids);
   setPanel(null);
   if(focus&&selectedPawn!==undefined)renderer?.focusPawn(selectedPawn);
-  rebuildInspector(); renderState();
+  if(!nativeUi)rebuildInspector(); renderState();
 }
 function pickCell(x: number, z: number) {
   if (!snapshot || replacingWorld || frontMenu.isOpen()) return;
@@ -1164,7 +1368,8 @@ function pickCell(x: number, z: number) {
       if (tool==='stockpile'||tool==='remove-stockpile')return client.command({type:'area',action:tool,from:{x,z},to:{x,z},...(zoneEditTarget===undefined?{}:{targetZoneId:zoneEditTarget}),...(tool==='stockpile'?readStorageSettings('stockpile'):{})});
       const objects = tool==='deconstruct'||tool==='uninstall' ? snapshot?.structures.filter(s=>footprintCells(s).some(c=>c.x===x&&c.z===z))??[] : [];
       const target = objects.find(s=>s.kind!=='power-conduit')??objects[0];
-      return client.command(tool === 'cancel' ? { type: 'cancel', x, z } : { type: 'designate', kind: tool as JobKind, ...(target?{targetId:target.id}:{}), orientation: tool==='geothermal-generator'||tool==='mini-turret'||tool==='sandbags'||tool==='solar-generator'||tool==='power-conduit'||tool==='power-switch'||tool==='wood-generator'||tool==='chemfuel-generator'||tool==='sun-lamp'||tool==='standing-lamp'||tool==='door'||tool==='autodoor'||tool==='passive-cooler'?0:placementOrientation, x, z, ...(constructionUI.material(tool) ? {material:constructionUI.material(tool)} : {}) });
+      const material=nativeUi?placementMaterial(tool,nativeConstructionMaterial):constructionUI.material(tool);
+      return client.command(tool === 'cancel' ? { type: 'cancel', x, z } : { type: 'designate', kind: tool as JobKind, ...(target?{targetId:target.id}:{}), orientation: tool==='geothermal-generator'||tool==='mini-turret'||tool==='sandbags'||tool==='solar-generator'||tool==='power-conduit'||tool==='power-switch'||tool==='wood-generator'||tool==='chemfuel-generator'||tool==='sun-lamp'||tool==='standing-lamp'||tool==='door'||tool==='autodoor'||tool==='passive-cooler'?0:placementOrientation, x, z, ...(material ? {material} : {}) });
     });
     return;
   }
@@ -1172,7 +1377,7 @@ function pickCell(x: number, z: number) {
   if(!object){clearSelection();return;}
   selection.clear();renderer?.setSelectedPawns(selection.ids);
   selectedPawn = undefined; selectedCell = cell;selectedObject=object;selectedObjects=[object];renderer?.setSelectedObject(object);
-  setPanel(null); rebuildInspector(); renderState();
+  setPanel(null); if(!nativeUi)rebuildInspector(); renderState();
 }
 function paintAllowedArea(id:number,enabled:boolean,from:Cell,to:Cell):void {
   if(!snapshot||replacingWorld||frontMenu.isOpen())return;
@@ -1196,7 +1401,7 @@ function designateArea(action: AreaAction, from: Cell, to: Cell) {
 function clearSelection() {
   selection.clear();renderer?.setSelectedPawns(selection.ids);orderMenu.close();
   selectedPawn = undefined; selectedCell = undefined;selectedObject=undefined;selectedObjects=[];renderer?.setSelectedObject(undefined);
-  rebuildInspector();renderState();
+  if(!nativeUi)rebuildInspector();renderState();
 }
 function selectObjects(objects:MapObjectSelection[],additive=false):void {
   if(!snapshot||replacingWorld||frontMenu.isOpen())return;
@@ -1205,7 +1410,7 @@ function selectObjects(objects:MapObjectSelection[],additive=false):void {
   selectedObjects=[...merged.values()].slice(0,MAX_MAP_OBJECT_SELECTION);
   selectedObject=selectedObjects[0];selectedCell=selectedObject?mapObjectGroupCells(snapshot,[selectedObject])[0]?.[0]:undefined;
   selection.clear();selectedPawn=undefined;renderer?.setSelectedPawns(selection.ids);renderer?.setSelectedObjects(selectedObjects);
-  setPanel(null);rebuildInspector();renderState();
+  setPanel(null);if(!nativeUi)rebuildInspector();renderState();
 }
 function objectGroupControls():void {
   if(!snapshot||!selectedObject)return;
@@ -1227,7 +1432,7 @@ function objectGroupControls():void {
     });return button;
   }));
 }
-function readStorageSettings(_prefix:string){return creationStorageControls.read();}
+function readStorageSettings(_prefix:string){return nativeUi?nativeCreationStorage:creationStorageControls.read();}
 function editZone(kind:'stockpile'|'growing',id:number,shrink=false):void {
   setTool(kind==='stockpile'?(shrink?'remove-stockpile':'stockpile'):(shrink?'remove-growing':'growing'));
   zoneEditTarget=id;renderer?.setZoneTarget(id);
@@ -1250,6 +1455,7 @@ function rotatePlacement(direction = 1) {
   el('placement-orientation').textContent = `${placementOrientation * 90}°`;
 }
 function rebuildInspector() {
+  if(nativeUi){refreshNativeUi();return;}
   dismissTooltip();
   selectedLinkedStorage?.dispose();selectedLinkedStorage=undefined;
   selectedStorageControls?.dispose();selectedStorageControls=undefined;selectedStoragePending=0;
@@ -1500,7 +1706,25 @@ async function updateAutoSlaughterPolicy(config:AutoSlaughterConfig):Promise<voi
   await client.command({type:'auto-slaughter-policy',config});renderState();
 }
 
+function handleCommercialArrival(world:World):void {
+  if(world.commercialTrip?.phase!=='at-post')return;
+  const trip=world.commercialTrip,key=[world.seed,trip.pawn.id,trip.departedAt,trip.arrivedAt].join(':');
+  if(key===lastCommercialArrivalKey)return;
+  lastCommercialArrivalKey=key;
+  worldTab='individual';if(nativeUi)setNativeWorldTab('individual');
+  if(currentSpeed!==0)void client.setSpeed(0);
+  if(currentPanel!=='menu')setPanel('world');
+}
 function renderState() {
+  if(nativeUi){
+    if(snapshot)handleCommercialArrival(snapshot);
+    if(snapshot&&explorationEnabled256(snapshot)){
+      const visible=new Set([...snapshot.pawns,...(snapshot.wildlife?.animals??[]),...(snapshot.mechanoids??[])].filter(actor=>knownPosition256(snapshot!,actor)).map(actor=>actor.id));
+      const kept=new Set([...selection.ids].filter(id=>visible.has(id)));
+      if(kept.size!==selection.ids.size){selection.ids=kept;selectedPawn=selection.single;nativeCustomPage=undefined;cancelNativeOrderPage();renderer?.setSelectedPawns(kept);}
+    }
+    refreshNativeUi();return;
+  }
   caravanEncounterDialog261.update(snapshot??campaignOnly);
   if (!snapshot) {if(campaignOnly)renderCampaignOnly();return;}
   shell.classList.remove('campaign-only');
@@ -1523,17 +1747,9 @@ function renderState() {
   if(currentPanel==='research')updateResearchPanel(el('research-content'),world,c=>void attempt(()=>client.command(c)),researchPanelActions);
   mapJumpTo.update(readJumpToEntries(world));
   if(currentPanel==='world')refreshWorldPanels(world);
-  if(world.commercialTrip?.phase==='at-post'){
-    const t=world.commercialTrip,key=[world.seed,t.pawn.id,t.departedAt,t.arrivedAt].join(':');
-    if(key!==lastCommercialArrivalKey){
-      lastCommercialArrivalKey=key;
-      worldTab='individual';
-      if(currentSpeed!==0)void client.setSpeed(0);
-      if(currentPanel!=='menu')setPanel('world');
-    }
-  }
+  handleCommercialArrival(world);
   if(currentPanel==='schedule')scheduleUI.update(world);
-  if(currentPanel==='assign'){foodPolicyUI.update(world,food);apparelPolicyUI.update(world);drugPolicyUI.update(world);} allowedAreaUI.update(world);
+  if(currentPanel==='assign'){foodPolicyUI.update(world,food);apparelPolicyUI.update(world);drugPolicyUI.update(world);} allowedAreaUI?.update(world);
   const totals = {blocks:0,medicine:0,silver:0,component:0,cloth:0,steel:0,chemfuel:0,gold:0,uranium:0,plasteel:0,'advanced-component':0,carried:0,delivered:0};
   const stockCounts = new Map<World['piles'][number]['item'],number>();
   for (const pile of world.piles) {
@@ -1833,7 +2049,14 @@ async function viewUrgentThreat(target:UrgentThreatTarget):Promise<string|undefi
 const urgentThreatUI=createUrgentThreatFeedback(el('alerts'),{view:viewUrgentThreat,mapName:id=>{const state=campaignState(),map=state?campaignUIFacts(state)?.maps.find(map=>map.id===id):undefined;return map?mapDisplayName(map):`Carte ${id}`;}});
 function receiveMainUrgentThreats(receipt:UrgentThreatReceipt):void {
  if(receipt.paused){deferredResumeGuard.confirm(true);menuResumeSpeed=undefined;}
- urgentThreatUI.show(receipt);
+ if(nativeUi&&receipt.rows.length){
+  const prior=nativeCustomPage,id=`native-threat-${receipt.generation}-${receipt.serial}`;
+  const close=()=>{if(nativeCustomPage?.id!==id)return;nativeCustomPage=prior;if(frontMenu.isOpen())frontMenu.showHome(session.hasWorld);else refreshNativeUi();};
+  nativeCustomPage={id,title:receipt.rows.length>1?'Nouvelles menaces':'Nouvelle menace',subtitle:receipt.paused?'Jeu mis en pause. Fermez cet avertissement puis reprenez avec les commandes de temps.':'La simulation suit la vitesse choisie.',
+    rows:receipt.rows.map((row,index)=>({id:`native-threat-row-${index}`,label:urgentThreatLabel(row,mapId=>{const state=campaignState(),map=state?campaignUIFacts(state)?.maps.find(map=>map.id===mapId):undefined;return map?mapDisplayName(map):`Carte ${mapId}`;}),controls:[{id:`native-threat-view-${index}`,label:'Voir la carte',onActivate:async()=>{const reason=await viewUrgentThreat({...typeof row.mapId==='number'?{mapId:row.mapId}:{site:row.site},...row.actorId===undefined?{}:{actorId:row.actorId}});if(reason)throw Error(reason);}}]})),
+    actions:[{id:'native-threat-close',label:'Fermer',onActivate:close}],onClose:close};
+  nativeUi.showPage(nativeCustomPage);
+ }else urgentThreatUI.show(receipt);
  if(soundEnabled)audio.playInterface('ui.threat');
 }
 const statusAlerts=createStatusAlerts(el('status-alerts'),{
@@ -1868,6 +2091,7 @@ const firstGesturesGuide=createFirstGesturesGuide(el('first-gestures-guide'),{le
   performFirstDayGuideAction(action);
 }});
 function syncFirstDayGuide():void {
+  if(nativeUi)return;
   const pending=!!snapshot?.startingArrival&&snapshot.startingArrival.phase!=='opened';
   if(guideAfterStartingArrival&&!pending&&!frontMenu.isOpen()&&!replacingWorld){guideAfterStartingArrival=false;learningReadout.open=true;}
   firstDayGuide.setActive(learningReadout.open&&!pending&&!frontMenu.isOpen()&&!replacingWorld);
@@ -1888,9 +2112,17 @@ const raidUI=createRaidUI(command=>client.command(command),focusNotification);
 let orbitalResumeRevision=0,tradeResumeRevision=0;
 const orbitalUI=createOrbitalTradeUI(command=>{orbitalResumeRevision=deferredResumeGuard.capture();return client.command(command);},()=>client.setSpeed(0),id=>{const console=snapshot?.structures.find(s=>s.id===id);if(console)renderer?.focusCell(console);},async()=>{if(currentSpeed===0&&deferredResumeGuard.allows(orbitalResumeRevision))await client.setSpeed(1);});
 const tradeUI=createTradeUI(command=>{tradeResumeRevision=deferredResumeGuard.capture();return client.command(command);},()=>client.setSpeed(0),id=>selectPawn(id),async()=>{if(currentSpeed===0&&deferredResumeGuard.allows(tradeResumeRevision))await client.setSpeed(1);});
+let nativeTradeResumeRevision=0;
+const nativeLocalTrade:ReturnType<typeof createNativeLocalTrade>|undefined=nativeUi?createNativeLocalTrade({
+  readState:readNativeState,command:command=>{nativeTradeResumeRevision=deferredResumeGuard.capture();return client.command(command);},
+  pause:()=>client.setSpeed(0),resume:async()=>{if(currentSpeed===0&&deferredResumeGuard.allows(nativeTradeResumeRevision))await client.setSpeed(1);},
+  show:page=>{nativeCustomPage=page;nativeUi!.showPage(page);},close:()=>{nativeCustomPage=undefined;refreshNativeUi();},
+  isCurrent:()=>!!nativeLocalTrade?.ownsPage(nativeCustomPage?.id),focusPawn:id=>renderer?.focusPawn(id),focusCell:cell=>renderer?.focusCell(cell),
+}):undefined;
 const arrivalUI=createArrivalUI(command=>client.command(command));
 const questUI=createQuestUI(command=>client.command(command));
 function syncStorageButtons() {
+  if(nativeUi){shell.inert=replacingWorld||frontMenu.isOpen()||!campaignState()||simulationStopped||graphicsFault||graphicsRecovering||waitingRequests.size>0;return;}
   syncFirstDayGuide();
   for(const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]')){if(button.dataset.mapOriginalDisabled===undefined){button.dataset.mapOriginalDisabled=String(button.disabled);button.dataset.mapOriginalTitle=button.title;}const local=!['world','menu','quests'].includes(button.dataset.panel??'');button.disabled=button.dataset.mapOriginalDisabled==='true'||local&&!snapshot;button.title=local&&!snapshot?'Affichez une carte locale pour ouvrir ce panneau.':button.dataset.mapOriginalTitle??'';}
   groupUI.setHostBlocked(groupCommandsBlocked());mapRegistry.setBlocked(groupCommandsBlocked());mapJumpTo.setBlocked(groupCommandsBlocked());
@@ -2146,6 +2378,7 @@ function receiveMainSnapshot(world: World, cost: number, speed: number, replaced
   snapshotHud.request(changed||roleChanged||speedChanged);
 }
 function renderCampaignOnly():void {
+ if(nativeUi){refreshNativeUi();return;}
  const state=campaignOnly;if(!state)return;caravanEncounterDialog261.update(state);shell.classList.add('campaign-only');
  // A confirmed globe-only campaign does not create a terrain renderer. It
  // must still finish the initial loading presentation and accept real input.
@@ -2168,6 +2401,20 @@ function receiveMainAudioCues(cues: readonly AudioCue[]): void {
   if (soundEnabled) audio.ingestCues(cues);
 }
 function updateIncident(): void {
+  if(nativeUi){
+    if(!simulationStopped&&!graphicsFault&&!waitingRequests.size){
+      if(nativeCustomPage?.id==='native-incident'){nativeCustomPage=nativeBeforeIncident;nativeBeforeIncident=undefined;refreshNativeUi();}
+      return;
+    }
+    if(nativeCustomPage?.id!=='native-incident')nativeBeforeIncident=nativeCustomPage;
+    nativeUi.setWorldVisible(!!renderer&&!!snapshot);
+    nativeCustomPage={id:'native-incident',title:simulationStopped?'Simulation arrêtée':graphicsFault?'Affichage interrompu':'Opération en attente',modal:true,closable:false,
+      rows:[{id:'native-incident-message',label:simulationStopped?'Le dernier tick peut être incomplet. Vos sauvegardes sont conservées.':graphicsFault?graphicsMessage:'La commande peut avoir été appliquée ; son résultat et sa récupération restent en attente.'}],
+      actions:[{id:'native-incident-home',label:'Charger une colonie',disabled:graphicsRecovering||replacingWorld||session.busy,onActivate:()=>openFront('load')},
+        ...(graphicsFault&&!simulationStopped?[{id:'native-incident-retry',label:'Rétablir l’affichage',onActivate:()=>prepareWorld()}]:[]),
+        ...(waitingRequests.size?[{id:'native-incident-stop',label:'Arrêter la simulation',onActivate:()=>client.stop()}]:[])]};
+    nativeUi.showPage(nativeCustomPage);return;
+  }
   const visible = simulationStopped || graphicsFault || waitingRequests.size > 0;
   if (!incidentPanel && !visible) return;
   if (!incidentPanel) {
@@ -2260,6 +2507,7 @@ async function prepareWorldView(): Promise<void> {
     renderer.onFatalError = message => { if(renderer===created&&client.hasActiveMap&&snapshot)void handleGraphicsFailure(message); };
     renderer.onCompatibilityWarning = message => notify(message, true);
     renderer.setTexturesEnabled(texturesEnabled);
+    if(nativeUi){renderer.setWallCutaway(wallCutaway);renderer.setFoliageVisible(foliageVisible);renderer.setRoofsVisible(nativeRoofsVisible);renderer.setZonesVisible(nativeZonesVisible);if(nativePerspective)renderer.toggleCameraMode();}
     renderer.setDesignationMinCellPixels(designationIconThreshold);
     renderer.setItemLabelMinCellPixels(itemLabelThreshold);
     renderer.onAudioFrame = view => {
@@ -2275,8 +2523,17 @@ async function prepareWorldView(): Promise<void> {
     renderer.onSelection=gesture=>{if(shootingControls.active){const targetId=gesture.ids[0];if(targetId!==undefined){const type=shootingControls.mode!;shootingControls.cancel();void attempt(async()=>{await client.command({type,pawnIds:selectedColonyIds(),targetId});renderState();});}return;}selectPawns(gesture);};
     renderer.onObjectSelection=selectObjects;
     renderer.onHover=cell=>{hoveredCell=cell;if(cell)hoverReadoutLayout?.resume();updateMapHover(true);};
-    renderer.onInteractionCancel=()=>orderMenu.close();
-    renderer.onContext=(cell,x,y,queue,targetId)=>{if(shootingControls.active){shootingControls.cancel();renderState();return;}if(!snapshot||replacingWorld||frontMenu.isOpen())return;const selected=snapshot.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner);if(selected.some(p=>p.draft))void orderMenu.openTactical(snapshot,new Set(selected.map(p=>p.id)),cell,x,y,queue,targetId);else void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);};
+    renderer.onInteractionCancel=()=>{cancelNativeOrderPage();orderMenu.close();};
+    renderer.onContext=(cell,x,y,queue,targetId)=>{
+      if(shootingControls.active){shootingControls.cancel();renderState();return;}if(!snapshot||replacingWorld||frontMenu.isOpen())return;
+      if(nativeUi){
+        const epoch=session.generation;void nativeOrderPage(snapshot,[...selection.ids],cell,x,y,queue,targetId,
+          {orderOptions:client.orderOptions,command:client.command,currentWorld:()=>snapshot,currentSelectedPawnIds:()=>[...selection.ids],
+            isCurrent:()=>session.generation===epoch&&!replacingWorld&&!frontMenu.isOpen(),close:()=>{nativeCustomPage=undefined;refreshNativeUi();}},
+          page=>{nativeCustomPage=page;nativeUi!.showPage(page);}).catch(error=>notify(String(error),true));return;
+      }
+      const selected=snapshot.pawns.filter(p=>selection.ids.has(p.id)&&isColonist(p)&&!p.prisoner);if(selected.some(p=>p.draft))void orderMenu.openTactical(snapshot,new Set(selected.map(p=>p.id)),cell,x,y,queue,targetId);else void orderMenu.open(snapshot,selection.ids,cell,x,y,queue);
+    };
     renderer.onArea = designateArea;
     renderer.onAllowedAreaPaint=(enabled,from,to)=>{if(allowedAreaEditId!==undefined)paintAllowedArea(allowedAreaEditId,enabled,from,to);};
     renderer.onExitOrder=()=>{applyTool('select');setPanel(null);clearSelection();};
@@ -2309,6 +2566,9 @@ async function start() {
   finally { frontMenu.setBusy(false); }
   if (import.meta.env.DEV && params.has('e2e')) Object.defineProperty(window, '__lisiere', { value: {
     get world() { return structuredClone(snapshot); }, get tick() { return campaignState()?.tick ?? 0; }, get campaign() { const state=campaignState();return state?structuredClone(campaignUIFacts(state)):undefined; },get hasActiveMap(){return client.hasActiveMap;}, get backend() { return renderer?.backend; },
+    get nativeUi(){return nativeUi?.diagnostics();},
+    get renderStats(){return renderer?{...renderer.stats}:undefined;},get speed(){return currentSpeed;},
+    get busy(){return session.busy||replacingWorld||graphicsRecovering;},
     get audio() { return { loadedCount: audio.loadedCount, availableSounds: audio.availableSounds, music: music.diagnostics }; },
     saveRepository,
     get incident() { return { simulationStopped, graphicsFault, waiting: waitingRequests.size }; },
@@ -2342,6 +2602,7 @@ const metricsInterval = setInterval(() => {
     try{await saving;}finally{syncStorageButtons();}
   },error=>notify(`Autosauvegarde échouée : ${error instanceof Error?error.message:String(error)}. Les autres copies sont conservées ; vous pouvez exporter la partie.`,true));
   if (!renderer) return;
+  if(nativeHud&&snapshot)nativeHud.update(snapshot,currentSpeed,renderer.stats.fps);
   el('fps-counter').textContent = renderer.stats.fps > 0 ? `${Math.round(renderer.stats.fps)} FPS` : '— FPS';
   if (!el('metrics').hidden) {
     const sound = audio.diagnostics;
@@ -2351,6 +2612,14 @@ const metricsInterval = setInterval(() => {
     el('metrics').textContent = `${renderer.backend} · ${renderer.stats.frameMs.toFixed(1)} ms/image · p95 ${renderer.stats.frameP95.toFixed(1)} ms · simulation ${stepMs.toFixed(2)} ms/tick · son ${soundState}, ${sound.loaded} MP3, ${sound.playedOneShots} effets, dernier ${sound.lastKind ?? '—'} · musique ${song.state}${song.track ? ` (${song.track})` : ''}`;
   }
 }, 1000);
-window.addEventListener('pagehide', event => { if (event.persisted) return; clearInterval(metricsInterval); client.dispose(); audio.dispose(); music.dispose(); renderer?.dispose(); saveRepository.close(); });
+window.addEventListener('pagehide', event => { if (event.persisted) return; clearInterval(metricsInterval);nativeLocalTrade?.dispose();nativeSaveManager?.dispose();nativeHud?.dispose();nativeUi?.dispose(); client.dispose(); audio.dispose(); music.dispose(); renderer?.dispose(); saveRepository.close(); });
 mainAdmissionCanFrame=()=>renderer instanceof MainColonyRenderer&&renderer.admissionFrameReady&&!presentationPreparation&&!replacingWorld&&!simulationStopped&&!graphicsFault&&!graphicsRecovering&&!frontMenu.isOpen()&&!document.hidden;
+if(nativeMode){
+  // Compatibility bookkeeping is detached after bootstrap. No legacy control
+  // remains in the active page or supplies native input, layout or values.
+  for(const node of document.querySelectorAll<HTMLElement>('#app [id],body > dialog[id]'))legacyElements.set(node.id,node);
+  for(const child of [...shell.children])if(child.id!=='viewport')child.remove();
+  for(const child of [...document.querySelector('#app')!.children])if(child!==shell)child.remove();
+  for(const dialog of document.querySelectorAll('body > dialog'))dialog.remove();
+}
 void start().catch(error => { frontMenu.showError(error instanceof Error ? error.message : String(error)); });

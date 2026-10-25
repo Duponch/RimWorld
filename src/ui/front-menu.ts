@@ -93,6 +93,7 @@ export interface FrontMenuOptions {
 }
 
 export interface FrontMenu {
+  showOptions?():void;
   showHome(hasGame?: boolean): void;
   setHasGame(hasGame: boolean): void;
   showCreation(): void;
