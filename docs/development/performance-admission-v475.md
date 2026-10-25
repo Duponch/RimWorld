@@ -962,8 +962,60 @@ Les matrices, mises à jour d'uniformes et appels `writeBuffer` y restent
 visibles. Ces poids ne sont ni du temps GPU ni une comparaison de gain et
 ne sont pas additionnés aux coûts inclusifs qui les contiennent.
 
-La priorité suivante est donc de relever les familles d'objets et les
-chemins natifs réellement coûteux du rendu hors ombres sur le produit
-restauré. Les bases existent déjà : matrices locales statiques, passage
-matriciel unique et compilation spatiale. Aucun manque de regroupement
-n'est déduit d'un nom de classe ou d'un simple compteur de draw calls.
+Le census couleur sur le produit restauré passe :2009images,122RenderObjects,
+aucune référence manquante. Le propriétaire existant obtient97,38% de
+réponses SHARED, sans fallback, retry ou nouvelle compilation. Les appels
+de dessin couleur coûtent1,455ms par image dans ce diagnostic instrumenté,
+dont0,409ms pour la faune déjà instanciée par espèce. Ces postes ne suffisent
+pas à expliquer les blocs d'adoption d'environ14ms. Dans le témoin ×1,
+235des247intervalles>16,7ms chevauchent une adoption ; c'est une observation
+d'intersection temporelle, pas une mesure de causalité exclusive.
+
+### Adoption en plusieurs images : prototype rejeté
+
+Une verticale privée conserve la publication atomique mais répartit les
+validations sur plusieurs images. Les messages restent dans l'ordre et
+les acquittements attendent le commit. Le typage et32contrats Node passent,
+y compris la limite de deux millions de visites et les protections de
+prototypes/générateurs entre étapes. Cinq groupes Chrome passent ensuite :
+vrai port privé, état inchangé avant commit, recharge entière exacte,
+annulation entre étapes et refus d'une mutation tardive de prototype.
+Les premiers échecs, dont une taille de fixture96 non admissible corrigée
+en128, restent conservés. Aucune règle du jeu n'a été modifiée pour ce test.
+
+La comparaison fraîche ×1/40s est recevable ; le temps CPU cumulé de chaque
+publication comprend toutes ses étapes et sa livraison. Les étapes sont
+enregistrées comme de vrais intervalles, sans compter l'attente entre images
+comme du CPU. Les transactions partielles sont conservées et exclues de la
+moyenne par publication.
+
+| Mesure | Produit qualifié | Prototype coopératif |
+| --- | ---: | ---: |
+| p99 wall |23,9ms|14,0ms|
+| Maximum wall |68,6ms|49,0ms|
+| Intervalles>16,7ms |254|19|
+| Intervalles>50ms |3|0|
+| CPU moyen par publication complète |17,175ms|248,992ms|
+| Publications reçues / traitées |240 /240|240 /62|
+| File en fin de fenêtre |0|194|
+| Ancienneté du premier message en attente |0|32,219s|
+| Débit de l'état livré |1,000×|0,258×|
+
+**Ce résultat est rejeté.** Les images plus régulières masquent un état
+livré avec environ32secondes de retard. La file contient déjà16messages à
+l'ouverture de la fenêtre, puis en accumule178supplémentaires. Le Worker continue de produire
+normalement ; ce chiffre mesure le débit des états effectivement livrés au
+Main, pas une baisse démontrée de la vitesse interne du Worker. La baisse
+du CPU Chrome total91,047→83,312s accompagne beaucoup moins de publications
+traitées et ne constitue pas un gain accepté. Une comparaison inverse ou
+des parcours étendus ne rendraient pas cette accumulation acceptable.
+
+Le prototype2005sources n'entre pas dans le produit. La copie de mesure est
+restaurée exactement aux2002sources qualifiées ; reçu
+`tmp/performance-v475/cooperative-adoption-prototype/baseline-restoration-2026-10-25T12-24-08-841Z.json`.
+Manifestes, préimages, contrôles, RAW et comparaison sont conservés sous
+`tmp/performance-v475/cooperative-adoption-prototype/`, avec les acquisitions
+`cooperative-fresh-baseline-x1-2026-10-25T12-14-14-699Z` et
+`cooperative-candidate-x1-2026-10-25T12-18-05-487Z`.
+Les gains intégrés restent A2H, FIFO et cadence des ombres ; les microcoupures,
+le débit accéléré et le confort final ne sont pas déclarés résolus.
