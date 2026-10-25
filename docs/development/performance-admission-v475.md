@@ -906,3 +906,64 @@ provenance correspondent exactement au dernier témoin produit. Reçu :
 `tmp/performance-v475/native-sparse-custody-proposal/rejected-native-sparse-final-restoration.json`.
 Pas de parcours UI ou de vitesses supplémentaires pour ce candidat rejeté.
 Le coût Main d'environ12,5ms et le confort global restent ouverts.
+
+### Port privé et vues immuables : gain non établi
+
+Un second prototype privé emploie un MessagePort vers le même Worker de
+présentation. Il capture les vrais messages avant tout abonné et gèle les
+nouvelles vues, avec les plans des constructeurs COW pour les collections.
+Les lecteurs publics, sauvegardes et validations métier restent stricts.
+Les2002préimages et2004sources candidates sont conservées sous
+`tmp/performance-v475/owned-projection-prototype/` ; manifeste
+`203b8832a5e7d115bef358eb21c48cae96d6da7f0c09ccb92537536838825aad`.
+Ce code n'est pas intégré au produit.
+
+Typage, trois contrats Node et trois groupes natifs Chrome passent. Le natif
+acquiert dix refus de substitution du message, une sauvegarde entière
+rechargée à l'identique et aucun message brut sur `Worker.message`, ni erreur
+de page, console ou requête. Ce petit parcours ne sollicite cependant aucun
+plan COW ; il ne qualifie pas toutes les interactions du jeu.
+
+Nouvelle série ×1/40s sans profileur, avec les mêmes entrées et un témoin
+rapproché après le candidat :
+
+| Mesure | Produit avant | Prototype | Produit après |
+| --- | ---: | ---: | ---: |
+| Adoption Main moyenne |14,196ms|13,525ms|15,963ms|
+| Capture avant FIFO moyenne |sans ce traitement|1,500ms|sans ce traitement|
+| p99 wall |23,6ms|23,8ms|27,6ms|
+| Maximum wall |37,4ms|73,7ms|48,2ms|
+| Intervalles>16,7ms |247|257|283|
+| Intervalles>50ms |0|1|0|
+| CPU Chrome total |91,594s|90,412s|95,395s|
+| Débit réel |1,000×|1,000×|1,000×|
+
+Les deux vérifications de comparabilité et des RAW passent. La dérive des
+témoins limite l'attribution : aucune régression générale n'est affirmée,
+mais aucun gain convaincant de fluidité n'est établi. Le temps d'adoption
+seul omettrait le coût de capture, dont une pointe de67,2ms est conservée.
+Les calculs V5 de cadence, débit et CPU restent identiques ; ses sondes
+acceptent les deux lecteurs et mesurent séparément cette capture.
+
+Un profil Main distinct,20s×1, est acquis en101,893s avec le même échantillonnage
+causal1000µs. Il sert à attribuer le coût restant, sans comparaison de gain :
+`tmp/performance-v475/main-owned-js-x1-2026-10-25T11-09-21-691Z/`.
+Le débit1,058× de ce diagnostic inclut une file initiale de six publications ;
+il ne démontre pas une accélération du jeu. Les sources privées ont ensuite
+été restaurées exactement aux2002fichiers produit. Les échecs, rapports,
+préimages et limites sont conservés ; aucun parcours étendu ×3/×6 ou UI de ce
+prototype n'est revendiqué. Le confort reste ouvert.
+
+La comptabilité des échantillons sépare10,234s de rendu,1,845s d'adoption,
+0,180s de capture et0,154s de GC observé sur21,184s pondérées, franges du
+profileur comprises. Scan et Actor occupent0,856s,46,4% de l'adoption.
+Les ombres ne représentent plus que0,921s,9% du rendu ; le reste vaut9,314s.
+Les matrices, mises à jour d'uniformes et appels `writeBuffer` y restent
+visibles. Ces poids ne sont ni du temps GPU ni une comparaison de gain et
+ne sont pas additionnés aux coûts inclusifs qui les contiennent.
+
+La priorité suivante est donc de relever les familles d'objets et les
+chemins natifs réellement coûteux du rendu hors ombres sur le produit
+restauré. Les bases existent déjà : matrices locales statiques, passage
+matriciel unique et compilation spatiale. Aucun manque de regroupement
+n'est déduit d'un nom de classe ou d'un simple compteur de draw calls.
