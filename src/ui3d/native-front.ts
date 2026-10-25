@@ -72,7 +72,7 @@ export function createNativeFrontMenu(options: FrontMenuOptions, show: (page: Na
     const result = renderPage();
     if (error) result.rows.unshift({ id: 'front-error', label: error });
     if (status) result.rows.unshift({ id: 'front-status', label: status });
-    result.id = `front-${page}`; result.modal = true; result.width = page==='home'?4.4:7.8;
+    result.id = `front-${page}`; result.modal = true; result.width ??= page==='home'?4.4:7.8;
     result.onClose = () => { if (!busy && !pending) back(); };
     show(result);
   }
@@ -93,7 +93,10 @@ export function createNativeFrontMenu(options: FrontMenuOptions, show: (page: Na
     } } };
   }
   function choice<T extends string | number>(id: string, label: string, value: T, values: readonly T[], change: (value: T) => unknown, labelOf: (value: T) => string = String, disabled = false): NativeRow {
-    return { id, label, value: labelOf(value), controls: values.map((candidate, index) => control(`${id}-${index}`, labelOf(candidate), () => change(candidate), disabled, candidate === value)) };
+    const entries=values.map((candidate,index)=>control(`${id}-${index}`,labelOf(candidate),()=>change(candidate),disabled,candidate===value));
+    const select=control(id,labelOf(value),()=>undefined,disabled);
+    select.select={value:String(value),options:values.map(candidate=>({value:String(candidate),label:labelOf(candidate)})),onChange:async text=>{const index=values.findIndex(candidate=>String(candidate)===text);if(index>=0)await entries[index]!.onActivate();}};
+    return {id,label,compact:true,controls:[select]};
   }
   function range(id: string, label: string, value: number, min: number, max: number, step: number, change: (value: number) => unknown, disabled = false, unit = ''): NativeRow {
     const apply = (next: number) => change(Math.max(min, Math.min(max, Math.round(next / step) * step)));
@@ -162,6 +165,11 @@ export function createNativeFrontMenu(options: FrontMenuOptions, show: (page: Na
 
   function renderOptions(): NativePage {
     const rows: NativeRow[] = [];
+    if(options.getUiAutoHide&&options.onUiAutoHideChange){
+      const settings=options.getUiAutoHide();
+      rows.push(toggle('auto-hide-bottom','Barre du bas escamotable',settings.bottom,bottom=>preference(options.onUiAutoHideChange!({...options.getUiAutoHide!(),bottom}))),
+        toggle('auto-hide-notifications','Notifications escamotables',settings.notifications,notifications=>preference(options.onUiAutoHideChange!({...options.getUiAutoHide!(),notifications}))));
+    }
     if (options.getAutosaveMinutes && options.onAutosaveMinutesChange) rows.push(choice('autosave', 'Sauvegarde automatique', options.getAutosaveMinutes(), AUTOSAVE_MINUTES, value => preference(options.onAutosaveMinutesChange!(value)), value => value ? `${value} min` : 'Désactivée'));
     if (options.getThreatPauseMode && options.onThreatPauseModeChange) rows.push(choice('threat', 'Pause automatique', options.getThreatPauseMode(), THREAT_PAUSE_CHOICES.map(c => c.value), async value => {
       await run(() => preference(options.onThreatPauseModeChange!(value)), 'Application du choix…');
@@ -200,7 +208,8 @@ export function createNativeFrontMenu(options: FrontMenuOptions, show: (page: Na
       { id: 'test-sound', label: 'Essayer le son', controls: [control('test-sound', 'Essayer', async () => { if (await run(options.onTestSound, 'Chargement du son d’essai…')) status = 'Son d’essai lancé.'; })] },
       toggle('music', 'Musique', options.getMusicEnabled(), value => preference(options.onMusicEnabledChange(value))),
       range('music-volume', 'Volume de la musique', Math.round(options.getMusicVolume() * 100), 0, 100, 1, value => preference(options.onMusicVolumeChange(value / 100)), false, ' %'));
-    return { id: '', title: 'Options', rows, actions: navigation() };
+    const split=Math.ceil(rows.length/2);rows.forEach((row,index)=>{row.column=index<split?0:1;});
+    return { id: '', title: 'Options', rows, width:1040,height:720,columnRatio:.5,layout:'front',actions: navigation() };
   }
 
   function renderWorld(): NativePage {

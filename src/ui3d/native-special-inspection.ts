@@ -58,7 +58,7 @@ interface LinkChoice { id: number; label: string; groupId?: number; stamp: strin
 let lastState: ExtendedState, actions: ExtendedActions, pending = false;
 const environmentCache = new WorkEnvironmentCache();
 const percent = (value: number) => `${(value * 100).toFixed(1).replace('.0', '')} %`;
-const row = (id: string, label: string, value?: string, detail?: string): NativeRow => ({ id, label, value, detail });
+const row = (id: string, label: string, value?: string, detail?: string): NativeRow => ({ id, label, value, hint: detail });
 const now = (): ExtendedState => actions.readState?.() ?? lastState;
 const worldNow = (): World => { const world = now().world; if (!world) throw Error('La carte inspectée n’est plus disponible.'); return world; };
 const close = () => { actions.closePage?.(); actions.refresh(); };
@@ -69,10 +69,11 @@ function assertScope(scope: Scope): World {
   return worldNow();
 }
 function show(title: string, rows: NativeRow[], controls: NativeControl[] = []): void {
-  actions.showPage({ id: `inspect-special-${title}`, title, modal: true, rows, actions: [...controls, button('special-close', 'Retour', close)], onClose: close, width: 10.8 });
+  for (const entry of rows) { if (entry.detail) { entry.hint = [entry.hint, entry.detail].filter(Boolean).join(' · '); delete entry.detail; } if (entry.hint) for (const action of entry.controls ?? []) action.hint = [action.hint, entry.hint].filter(Boolean).join(' · '); }
+  actions.showPage({ id: `inspect-special-${title}`, title, modal: true, rows, actions: [...controls, button('special-close', 'Retour', close)], onClose: close, layout: 'inspector', width: 600, height: 430 });
 }
 function button(id: string, label: string, action: () => unknown, disabled = false, active = false, hint?: string): NativeControl {
-  return { id, label, disabled, active, hint, onActivate: async () => {
+  return { id, label, disabled, active, hint: hint ?? label, onActivate: async () => {
     if (disabled || pending || now().busy) return;
     pending = true;
     try { await action(); } catch (cause) { show('Choix non appliqué', [row('special-error', cause instanceof Error ? cause.message : String(cause))]); }
@@ -97,7 +98,7 @@ export function nativeClinicalConditionRows(health: MedicalRecord | undefined, s
   if (!health) return [];
   const rows: NativeRow[] = [], clock = health.tick * 10;
   const episode = (id: string, label: string, state: { severity: number; immunity: number; tend?: { quality: number; expiresAtCore: number }; vomit?: unknown }, unit: number) => {
-    rows.push(row(`${id}-severity`, label, `Gravité ${percent(state.severity / unit)} · Immunité ${percent(state.immunity / unit)}`));
+    rows.push({ ...row(`${id}-severity`, label, `Gravité ${percent(state.severity / unit)} · Immunité ${percent(state.immunity / unit)}`, 'La gravité et l’immunité progressent séparément ; les soins et le repos influencent leur évolution.'), meter: { value: state.severity, max: unit, color: '#b77b68', secondary: { value: state.immunity, max: unit, label: `Immunité ${percent(state.immunity / unit)}`, color: '#89a48b' } } });
     if (state.tend) rows.push(row(`${id}-tend`, 'Derniers soins', `Qualité ${percent(state.tend.quality / 1000)}`, `${Math.max(0, state.tend.expiresAtCore - clock) / 2500} h cliniques restantes${suspended ? ' · Horloge suspendue' : ''}`));
     if (state.vomit) rows.push(row(`${id}-vomit`, 'Épisode de vomissement en cours'));
   };

@@ -22,6 +22,8 @@ import {readStatusAlerts, type StatusAlert} from '../ui/status-alerts';
 import type {NativePage, NativeRow} from './native-contract';
 import {NotificationFocusCycle,type NotificationTarget} from '../ui/notification-focus';
 import {readNativeDomainAlerts,type NativeDomainAlert} from './native-domain-alerts';
+import {STORAGE_FILTER_TREE,type StorageFilterNode} from '../ui/storage-filter-tree';
+import {modelIconUrl} from '../ui/pictograms';
 type HudAlert=StatusAlert&{domain?:NativeDomainAlert};
 import {PrototypeCardboardArt, PALETTE, createCutoutRectShape, createMaskingTape, drawHandBlob, drawHandRect, drawMarkerLine, type CardboardPiece, type CardboardPieceOptions} from './prototype-art';
 
@@ -36,11 +38,14 @@ export interface NativeHudActions {
   speed(value: number): void;
   showPage(page: NativePage): void;
   showViewControls?:()=>void;
+  view?: (action: NativeHudViewAction)=>void;
   focus?: (target:NotificationTarget,tab?:StatusAlert['tab'])=>void;
   domain?: (alert:NativeDomainAlert)=>void;
   campaign?: (target:NonNullable<StatusAlert['campaign']>)=>void;
   context?: (target:NonNullable<StatusAlert['context']>)=>void;
 }
+export type NativeHudViewAction='walls'|'roofs'|'foliage'|'zones'|'home'|'camera';
+export interface NativeHudViewState {walls:string;roofs:boolean;foliage:boolean;zones:boolean;camera:string}
 interface ResourceRecord {
   item: ItemId;
   stock: number;
@@ -55,6 +60,10 @@ interface ResourceTag {
   label: string;
   value: string;
   color: string;
+  item?: ItemId;
+  level?: number;
+  branch?: {id:string;open:boolean};
+  screenWidth?: number;
   signature: string;
 }
 interface PortraitCard {
@@ -114,7 +123,21 @@ export class NativeHudCards {
   private readonly ownedPieces = new Set<CardboardPiece>();
   private readonly rail: THREE.Mesh;
   private readonly tags: ResourceTag[] = [];
+  private readonly resourceImages=new Map<ItemId,HTMLImageElement>();
+  private readonly resourceExpanded=new Set(['foods','manufactured','raw-resources']);
+  private resourceSignature='';
+  private resourcePage=0;
   private readonly speedButtons: CardboardPiece[] = [];
+  private readonly viewButtons=new Map<NativeHudViewAction,CardboardPiece>();
+  private readonly alertHandle: CardboardPiece;
+  private readonly alertHandleGroup=new THREE.Group();
+  private portraitCapacity=PORTRAITS_PER_PAGE;
+  private viewportWidth=1440;
+  private viewportHeight=1000;
+  private rightDockOpen=false;
+  private notificationsAutoHide=false;
+  private rightDockOffset=3.16;
+  private viewState:NativeHudViewState={walls:'hauts',roofs:false,foliage:true,zones:true,camera:'iso'};
   private readonly weatherPiece: CardboardPiece;
   private readonly miniSun: THREE.Mesh;
   private readonly miniCloud: THREE.Mesh;
@@ -134,7 +157,6 @@ export class NativeHudCards {
   private selectedIds = new Set<number>();
   private page = 0;
   private portraitIds = '';
-  private rosterSignature = '';
   private alertSignature = '';
   private weatherSignature = '';
   private weatherReadout = {clock: '—', date: '—', weather: '—', temperature: '—', condition: '', wind: '—'};
@@ -146,74 +168,76 @@ export class NativeHudCards {
   constructor(private readonly art: PrototypeCardboardArt, anchors: NativeHudAnchors, private readonly actions: NativeHudActions) {
     anchors.topCenter.add(this.colonistsGroup);
     anchors.topLeft.add(this.resourcesGroup);
-    anchors.topRight.add(this.alertsGroup,this.fpsGroup);this.alertsGroup.position.y=-.12;
+    anchors.topRight.add(this.alertsGroup,this.fpsGroup,this.alertHandleGroup);
     anchors.bottomRight.add(this.timeGroup);
 
     this.rail = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.035, 0.025), new THREE.MeshStandardMaterial({color: 0x7c5c3e, roughness: 0.98}));
     this.rail.position.set(0, -0.08, -0.01);
     this.colonistsGroup.add(this.rail);
 
-    this.previousButton = this.smallButton('‹', 810, () => this.changePage(-1));
-    this.previousButton.setBaseTransform(-2.68, -0.44, 0, -0.045);
-    this.nextButton = this.smallButton('›', 833, () => this.changePage(1));
-    this.nextButton.setBaseTransform(2.68, -0.44, 0, 0.04);
-    this.rosterButton = this.makePiece({w: 1.65, h: 0.2, depth: 0.036, seed: 853, bgColor: PALETTE.creamPaper, interactive: true,
-      drawFn: (ctx, w, h) => this.drawCaption(ctx, w, h, this.rosterCaption()), onClick: () => this.showRoster()});
-    this.rosterButton.setBaseTransform(0, -0.96, 0, 0.012);
-    this.colonistsGroup.add(this.previousButton, this.nextButton, this.rosterButton);
+    this.previousButton=this.smallButton('‹',810,()=>this.changePage(-1));
+    this.previousButton.userData.tooltip='Colons précédents';
+    this.previousButton.userData.nativeId='hud:colonists:previous';
+    this.nextButton=this.smallButton('›',833,()=>this.changePage(1));
+    this.nextButton.userData.tooltip='Colons suivants';
+    this.nextButton.userData.nativeId='hud:colonists:next';
+    this.rosterButton=this.smallButton('≡',853,()=>this.showRoster());
+    this.rosterButton.userData.tooltip='Liste complète des colons';
+    this.rosterButton.userData.nativeId='hud:colonists:list';
+    this.colonistsGroup.add(this.previousButton,this.nextButton,this.rosterButton);
+    this.alertHandle=this.smallButton('‹',9281,()=>this.setRightDockOpen(!this.rightDockOpen));
+    this.alertHandle.userData.nativeId='hud:alerts:handle';
+    this.alertHandle.userData.tooltip='Afficher les notifications';
+    this.alertHandleGroup.add(this.alertHandle);
+    this.alertHandle.setBaseTransform(-.14,-.56,.1);
 
-    for (let idx = 0; idx < 6; idx++) {
-      const record = {label: '', value: '', color: PALETTE.ochre, signature: ''} as ResourceTag;
-      record.piece = this.makePiece({w: 1.06 + (idx % 3) * 0.04, h: 0.22, depth: 0.036, bgColor: PALETTE.kraftBase, bevel: 0.032, seed: idx * 17 + 11,
-        hasBorder: false, interactive: true, drawFn: (ctx, w, h, rng) => this.drawResource(record, ctx, w, h, rng), onClick: () => this.showResources()});
-      const rotJitter = (idx % 2 === 0 ? 0.028 : -0.024) + (idx - 2.5) * 0.005;
-      record.piece.setBaseTransform(0.58 + (idx % 2) * 0.02, -0.18 - idx * 0.255, 0, rotJitter);
-      this.resourcesGroup.add(record.piece);
-      this.tags.push(record);
-    }
-
-    this.weatherPiece = this.makePiece({w: 1.50, h: 0.47, depth: 0.046, bgColor: PALETTE.creamPaper, bevel: 0.038, seed: 209, interactive: true,
+    this.weatherPiece = this.makePiece({w: 2.76, h: .96, depth: 0.046, bgColor: PALETTE.creamPaper, bevel: 0.038, seed: 209, interactive: true,
       drawFn: (ctx, w, h, rng) => this.drawWeather(ctx, w, h, rng), onClick: () => this.showWeather()});
     // Time belongs at bottom right in Elsewhere; its artwork stays literal.
-    this.weatherPiece.setBaseTransform(-0.82, 1.25, 0, 0.025);
+    this.weatherPiece.setBaseTransform(-1.38, 2.04, 0, .006);
     this.timeGroup.add(this.weatherPiece);
     const miniSun = this.miniSun = new THREE.Mesh(new THREE.CylinderGeometry(0.088, 0.088, 0.03, 7), new THREE.MeshStandardMaterial({color: 0xe8ab3a, roughness: 0.98, flatShading: true}));
     miniSun.rotation.x = Math.PI / 2;
-    miniSun.position.set(-0.52, 0.04, 0.055);
+    miniSun.position.set(-1.05, .12, .055);
     this.weatherPiece.add(miniSun);
     const miniCloud = this.miniCloud = new THREE.Mesh(new THREE.ExtrudeGeometry(createCutoutRectShape(0.22, 0.10, 0.025, 88), {depth: 0.032, bevelEnabled: false}), art.cardboardEdgeMat);
-    miniCloud.position.set(-0.46, -0.05, 0.055);
+    miniCloud.position.set(-1.02, .03, .055);
     this.weatherPiece.add(miniCloud);
     const weatherTape = createMaskingTape(0.18, 0.05, -0.35);
-    weatherTape.position.set(0.64, 0.20, 0.048);
+    weatherTape.position.set(1.12, .43, .048);
     this.weatherPiece.add(weatherTape);
 
     speeds.forEach((cfg, idx) => {
-      const piece = this.makePiece({w: 0.34, h: 0.29, depth: 0.044, bgColor: PALETTE.kraftBase, bevel: 0.036, seed: 310 + idx * 23, interactive: true, tooltip: cfg.title,
+      const piece = this.makePiece({w: .48, h: .37, depth: .034, bgColor: PALETTE.kraftBase, bevel: .025, seed: 310 + idx * 23, interactive: true, tooltip: cfg.title,
         drawFn: (ctx, w, h, rng) => {
           const isAct = this.speedValue === cfg.speed;
           if (isAct) drawHandBlob(ctx, w / 2, h / 2, Math.min(w, h) * 0.36, 'rgba(255,248,230,0.28)', '#261e18', 2.5, rng);
           ctx.save(); ctx.translate(w / 2, h / 2 + 12); ctx.rotate(idx % 2 === 0 ? -0.06 : 0.06);
-          ctx.fillStyle = isAct ? '#fff9eb' : '#261e18'; ctx.font = `bold 34px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText(cfg.label, 0, 0); ctx.restore();
+          ctx.fillStyle = isAct ? '#fff9eb' : '#261e18'; ctx.font = `bold 40px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText(cfg.label, 0, 0); ctx.restore();
         }, onClick: () => { if (this.world) this.actions.speed(cfg.speed); }});
-      piece.setBaseTransform(-1.36 + idx * 0.365, 0.81 + (idx % 2) * 0.015, 0, idx % 2 === 0 ? -0.045 : 0.04);
+      piece.userData.nativeId=`hud:speed:${cfg.speed}`;
+      piece.setBaseTransform(-1.98+idx*.54,1.31,0,idx%2===0?-.012:.012);
       this.timeGroup.add(piece); this.speedButtons.push(piece);
     });
 
-    const view=this.makePiece({w:.61,h:.25,depth:.035,bgColor:PALETTE.sageMountain,seed:9297,interactive:true,tooltip:'Réglages de vue et diagnostics',
-      drawFn:(ctx,w,h,rng)=>{
-        ctx.save();ctx.translate(w*.24,h*.5);ctx.beginPath();ctx.ellipse(0,0,19,12,-.06,0,Math.PI*2);ctx.fillStyle=PALETTE.creamPaper;ctx.fill();ctx.strokeStyle=PALETTE.inkDark;ctx.lineWidth=3;ctx.stroke();
-        drawHandBlob(ctx,0,0,5,PALETTE.inkDark,null,0,rng);ctx.restore();ctx.font=`bold 25px ${FONT}`;ctx.fillStyle=PALETTE.inkDark;ctx.textAlign='center';ctx.fillText('Vue',w*.66,h*.59);
-      },onClick:()=>this.actions.showViewControls?.()});
-    view.setBaseTransform(-.35,1.71,0,.025);this.timeGroup.add(view);
-    this.fpsPiece = this.makePiece({w: 0.72, h: 0.17, depth: 0.03, bgColor: PALETTE.creamPaper, seed: 929, hasBorder: false,
-      drawFn: (ctx, w, h) => this.drawCaption(ctx, w, h, `${this.fpsValue < 0 ? '—' : this.fpsValue} FPS`)});
-    this.fpsPiece.setBaseTransform(-0.42, -0.08, .08, -0.02);
+    (['walls','roofs','foliage','zones','home','camera'] as const).forEach((action,index)=>{
+      const button=this.makePiece({w:.32,h:.32,depth:.028,bgColor:PALETTE.creamPaper,seed:9297+index*17,interactive:true,
+        drawFn:(ctx,w,h,rng)=>this.drawViewControl(action,ctx,w,h,rng),onClick:()=>this.actions.view?.(action)});
+      button.userData.nativeId=`hud:view:${action}`;
+      button.setBaseTransform(-1.98+index*.36,.87,0,index%2===0?-.012:.012);
+      this.timeGroup.add(button);this.viewButtons.set(action,button);
+    });
+    this.setViewState(this.viewState);
+    this.fpsPiece = this.makePiece({w: .72, h: .22, depth: 0.03, bgColor: PALETTE.creamPaper, seed: 929, hasBorder: false,
+      drawFn: (ctx, w, h) => this.drawCaption(ctx, w, h, `${this.fpsValue < 0 ? '—' : this.fpsValue} FPS`,72,22)});
+    this.fpsPiece.setBaseTransform(-.40,-.12,.08);
     this.fpsGroup.add(this.fpsPiece);
-    this.allAlertsButton = this.makePiece({w: 1.34, h: 0.22, depth: 0.036, bgColor: PALETTE.creamPaper, seed: 973, interactive: true,
-      drawFn: (ctx, w, h) => this.drawCaption(ctx, w, h, `${this.alerts.length} alertes · tout voir`), onClick: () => this.showAlerts()});
-    this.allAlertsButton.setBaseTransform(-0.72, -1.99, 0, 0.02);
+    this.allAlertsButton = this.makePiece({w: 1.46, h: .25, depth: 0.036, bgColor: PALETTE.creamPaper, seed: 973, interactive: true,
+      drawFn: (ctx, w, h) => this.drawCaption(ctx, w, h, `${this.alerts.length} alertes · tout voir`,146,25), onClick: () => this.showAlerts()});
+    this.allAlertsButton.userData.nativeId='hud:alerts:all';
+    this.allAlertsButton.setBaseTransform(-.73,-.25,0);
     this.alertsGroup.add(this.allAlertsButton);
+    this.setViewport(1440,1000,.01);
     this.setVisible(false);
   }
 
@@ -231,7 +255,7 @@ export class NativeHudCards {
     this.world = world;
     if (!world) { this.setVisible(false); return; }
     this.colonists = world.pawns.filter(p => isColonist(p) && !p.prisoner && p.state !== 'dead').sort((a, b) => a.id - b.id);
-    this.page = Math.max(0, Math.min(this.page, Math.ceil(this.colonists.length / PORTRAITS_PER_PAGE) - 1));
+    this.page = Math.max(0, Math.min(this.page, Math.ceil(this.colonists.length / this.portraitCapacity) - 1));
     this.food = captureFoodReadability(world, {pileVisible: pile => knownPile256(world, pile), structureVisible: structure => knownBuilding256(world, structure)});
     this.physicalNutrition = knownNutrition256(world);
     this.readResources(world);
@@ -249,12 +273,94 @@ export class NativeHudCards {
     if (this.world) this.refreshPortraits(this.world);
   }
 
+  /** Layout is expressed in screen pixels, converted only by the native stage's
+   * projection. Canvas measurements decide ink wrapping, never hit regions. */
+  setViewport(width:number,height:number,unitsPerPixel:number):void {
+    this.viewportWidth=width;this.viewportHeight=height;
+    const scale=100*unitsPerPixel;
+    for(const group of [this.colonistsGroup,this.resourcesGroup,this.alertsGroup,this.timeGroup,this.fpsGroup,this.alertHandleGroup])group.scale.setScalar(scale);
+    this.alertsGroup.position.x=this.rightDockOffset*scale;
+    const capacity=Math.max(1,Math.min(12,Math.floor((width-560)/78)));
+    if(capacity!==this.portraitCapacity){
+      this.portraitCapacity=capacity;this.page=0;this.portraitIds='';
+      if(this.world)this.refreshPortraits(this.world);
+    }
+    // The bottom shelf remains below the legacy-sized time and view controls.
+    this.timeGroup.position.y=.4*scale;
+    this.refreshAlerts();
+    if(this.world)this.refreshResources();
+  }
+
+  setViewState(state:Partial<NativeHudViewState>):void {
+    this.viewState={...this.viewState,...state};
+    const labels:Record<NativeHudViewAction,string>={walls:`Murs : ${this.viewState.walls}`,roofs:`Toits : ${this.viewState.roofs?'visibles':'masqués'}`,
+      foliage:`Feuillage : ${this.viewState.foliage?'visible':'masqué'}`,zones:`Zones : ${this.viewState.zones?'visibles':'masquées'}`,home:'Recentrer sur la colonie',camera:`Vue : ${this.viewState.camera}`};
+    for(const [action,button] of this.viewButtons){
+      const active=action==='roofs'?this.viewState.roofs:action==='foliage'?!this.viewState.foliage:action==='zones'?this.viewState.zones:action==='walls'?this.viewState.walls!=='hauts':action==='camera'?this.viewState.camera!=='iso':false;
+      if(button.userData.tooltip!==labels[action]||button.userData.active!==active){button.userData.tooltip=labels[action];button.userData.active=active;button.redraw(undefined,active?PALETTE.sageMountain:PALETTE.creamPaper);}
+    }
+  }
+
+  setRightDockOpen(open:boolean):void {
+    if(this.rightDockOpen===open)return;
+    this.rightDockOpen=open;
+    this.alertHandle.userData.tooltip=open?'Replier les notifications':'Afficher les notifications';
+    this.alertHandle.redraw((ctx,w,h)=>{ctx.font=`bold 38px ${FONT}`;ctx.fillStyle=PALETTE.inkDark;ctx.textAlign='center';ctx.fillText(open?'›':'‹',w/2,h/2+12);});
+  }
+  getRightDockOpen():boolean{return this.rightDockOpen;}
+  setNotificationsAutoHide(enabled:boolean):void {
+    this.notificationsAutoHide=enabled;
+    this.alertHandleGroup.visible=enabled&&this.shown&&!!this.world&&this.alerts.length>0;
+    if(!enabled)this.setRightDockOpen(true);
+  }
+
+  /** Returns true through the last changed frame, so the stage invalidates its
+   * composed scene even when the drawer has just reached its resting pose. */
+  animate(deltaSeconds:number):boolean {
+    const target=this.rightDockOpen?0:3.16;
+    const before=this.rightDockOffset;
+    if(Math.abs(before-target)<.001){this.rightDockOffset=target;return false;}
+    this.rightDockOffset=THREE.MathUtils.lerp(before,target,1-Math.exp(-Math.max(0,deltaSeconds)*15));
+    if(Math.abs(this.rightDockOffset-target)<.001)this.rightDockOffset=target;
+    this.alertsGroup.position.x=this.rightDockOffset*this.alertsGroup.scale.x;
+    this.alertHandle.setBaseTransform(-.14-(3.16-this.rightDockOffset),-.56,.1);
+    this.alertsGroup.visible=this.shown&&!!this.world&&(this.rightDockOpen||this.rightDockOffset<3.16);
+    return true;
+  }
+
+  getRightDockBounds():{left:number;top:number;right:number;bottom:number} {
+    return {left:this.viewportWidth-324+this.rightDockOffset*100,top:30,right:this.viewportWidth,bottom:Math.max(100,this.viewportHeight-370)};
+  }
+
+  private drawViewControl(action:NativeHudViewAction,ctx:CanvasRenderingContext2D,w:number,h:number,rng:()=>number):void {
+    ctx.save();ctx.scale(w/32,h/32);ctx.strokeStyle=PALETTE.inkDark;ctx.fillStyle=PALETTE.inkDark;ctx.lineWidth=1.6;ctx.lineCap='round';ctx.lineJoin='round';
+    if(action==='walls'){
+      drawHandRect(ctx,7,8,18,16,PALETTE.creamPaper,PALETTE.inkDark,1.3,rng);
+      for(const y of [13,19])drawMarkerLine(ctx,7,y,25,y,PALETTE.inkDark,1.2,rng);
+      for(const [x,y] of [[13,8],[19,13],[13,19]])drawMarkerLine(ctx,x,y,x,y+5,PALETTE.inkDark,1.2,rng);
+    }else if(action==='roofs'){
+      ctx.beginPath();ctx.moveTo(5,15);ctx.lineTo(16,6);ctx.lineTo(27,15);ctx.lineTo(23,15);ctx.lineTo(23,25);ctx.lineTo(9,25);ctx.lineTo(9,15);ctx.closePath();ctx.fillStyle=PALETTE.terracotta;ctx.fill();ctx.stroke();
+    }else if(action==='foliage'){
+      drawMarkerLine(ctx,16,18,16,27,PALETTE.inkDark,2,rng);drawHandBlob(ctx,16,14,9,PALETTE.sageMountain,PALETTE.inkDark,1.3,rng);
+    }else if(action==='zones'){
+      ctx.setLineDash([3,2]);ctx.strokeRect(6,6,20,20);ctx.setLineDash([]);ctx.fillStyle=PALETTE.sageMountain;ctx.globalAlpha=.7;ctx.fillRect(8,8,16,16);
+    }else if(action==='home'){
+      ctx.beginPath();ctx.moveTo(6,15);ctx.lineTo(16,6);ctx.lineTo(26,15);ctx.moveTo(10,13);ctx.lineTo(10,25);ctx.lineTo(22,25);ctx.lineTo(22,13);ctx.stroke();
+      ctx.strokeRect(14,19,4,6);
+    }else{
+      ctx.beginPath();ctx.moveTo(5,11);ctx.lineTo(18,11);ctx.lineTo(18,8);ctx.lineTo(25,8);ctx.lineTo(25,24);ctx.lineTo(5,24);ctx.closePath();ctx.stroke();
+      ctx.beginPath();ctx.arc(15,17,5,0,Math.PI*2);ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   setVisible(visible: boolean): void {
     this.shown = visible;
     this.colonistsGroup.visible = visible && !!this.world;
     this.resourcesGroup.visible = visible && !!this.world;
-    this.alertsGroup.visible = visible && !!this.world;
+    this.alertsGroup.visible = visible && !!this.world && (this.rightDockOpen||this.rightDockOffset<3.16);
     this.timeGroup.visible = visible && !!this.world;
+    this.alertHandleGroup.visible=this.notificationsAutoHide&&visible&&!!this.world&&this.alerts.length>0;
     // The discreet actual frame rate remains visible through pages/front screens.
     this.fpsGroup.visible = true;
   }
@@ -266,32 +372,28 @@ export class NativeHudCards {
     });
   }
   get stats(): {portraits: number; colonists: number; resourceTypes: number; alerts: number; page: number; pages: number} {
-    return {portraits: this.portraits.length, colonists: this.colonists.length, resourceTypes: this.resources.length, alerts: this.alerts.length, page: this.page + 1, pages: Math.max(1, Math.ceil(this.colonists.length / PORTRAITS_PER_PAGE))};
+    return {portraits: this.portraits.length, colonists: this.colonists.length, resourceTypes: this.resources.length, alerts: this.alerts.length, page: this.page + 1, pages: Math.max(1, Math.ceil(this.colonists.length / this.portraitCapacity))};
   }
 
   private makePiece(options: CardboardPieceOptions): CardboardPiece {
     const piece = this.art.createPiece(options); this.ownedPieces.add(piece); return piece;
   }
   private dropPiece(piece: CardboardPiece): void { this.ownedPieces.delete(piece); this.art.disposePiece(piece); }
-  private drawCaption(ctx: CanvasRenderingContext2D, w: number, h: number, label: string): void {
-    ctx.font = `bold 20px ${FONT}`; ctx.fillStyle = PALETTE.inkDark; ctx.textAlign = 'center'; fitText(ctx, label, w / 2, h / 2 + 7, w - 24);
+  private drawCaption(ctx: CanvasRenderingContext2D, w: number, h: number, label: string,width=w/2.8,height=h/2.8): void {
+    ctx.save();ctx.scale(w/width,h/height);ctx.font=`bold 13px ${FONT}`;ctx.fillStyle=PALETTE.inkDark;ctx.textAlign='center';fitText(ctx,label,width/2,height/2+4,width-12);ctx.restore();
   }
   private smallButton(label: string, seed: number, onClick: () => void): CardboardPiece {
     return this.makePiece({w: 0.34, h: 0.29, depth: 0.044, bgColor: PALETTE.kraftBase, bevel: 0.036, seed, interactive: true,
       drawFn: (ctx, w, h) => { ctx.font = `bold 38px ${FONT}`; ctx.fillStyle = PALETTE.inkDark; ctx.textAlign = 'center'; ctx.fillText(label, w / 2, h / 2 + 12); }, onClick});
   }
-  private rosterCaption(): string {
-    const pages = Math.max(1, Math.ceil(this.colonists.length / PORTRAITS_PER_PAGE));
-    return `${this.colonists.length} colons · ${this.page + 1}/${pages} · liste`;
-  }
   private changePage(delta: number): void {
-    const pages = Math.max(1, Math.ceil(this.colonists.length / PORTRAITS_PER_PAGE));
+    const pages = Math.max(1, Math.ceil(this.colonists.length / this.portraitCapacity));
     this.page = (this.page + delta + pages) % pages;
     if (this.world) this.refreshPortraits(this.world);
   }
 
   private refreshPortraits(world: World): void {
-    const start = this.page * PORTRAITS_PER_PAGE, shown = this.colonists.slice(start, start + PORTRAITS_PER_PAGE);
+    const start = this.page * this.portraitCapacity, shown = this.colonists.slice(start, start + this.portraitCapacity);
     const ids = `${this.page}:${shown.map(p => p.id).join(',')}`, changed = ids !== this.portraitIds;
     if (changed) {
       for (const entry of this.portraits) { if (entry.image) { entry.image.onload = null; entry.image.onerror = null; } this.dropPiece(entry.piece); }
@@ -299,15 +401,16 @@ export class NativeHudCards {
       shown.forEach((pawn, localIdx) => {
         const idx = start + localIdx;
         const entry = {pawnId: pawn.id, index: idx, name: pawn.name, mood: rounded(pawn.mood), skin: '#f2cfb1', shirt: PALETTE.sageMountain, sleeping: false, selected: this.selectedIds.has(pawn.id), loaded: false, appearanceKey: '', signature: ''} as PortraitCard;
-        entry.piece = this.makePiece({w: 0.69, h: 0.73, depth: 0.042, bgColor: entry.selected ? PALETTE.ochre : PALETTE.kraftBase, bevel: 0.035, seed: idx * 41 + 105, interactive: true,
+        entry.piece = this.makePiece({w: .70, h: .96, depth: 0.042, bgColor: entry.selected ? PALETTE.ochre : PALETTE.kraftBase, bevel: 0.035, seed: idx * 41 + 105, interactive: true,
           drawFn: (ctx, w, h, rng) => this.drawColonist(entry, ctx, w, h, rng),
           onClick: () => { if (!this.world?.pawns.some(p => p.id === entry.pawnId && isColonist(p))) return; this.setSelection([entry.pawnId]); this.actions.selectPawn(entry.pawnId); }});
         const peg = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.14, 0.06), new THREE.MeshStandardMaterial({color: 0x9e7448, roughness: 0.96}));
-        peg.position.set(0, 0.36, 0.03); peg.rotation.z = idx % 2 === 0 ? 0.08 : -0.08; entry.piece.add(peg);
-        entry.piece.setBaseTransform((localIdx - (shown.length - 1) / 2) * 0.79, -0.44, 0, idx % 2 === 0 ? -0.04 : 0.038);
+        peg.position.set(0,.47,.03); peg.rotation.z = idx % 2 === 0 ? 0.08 : -0.08; entry.piece.add(peg);
+        entry.piece.userData.nativeId=`hud:pawn:${pawn.id}`;
+        entry.piece.setBaseTransform((localIdx-(shown.length-1)/2)*.78,-.52,0,idx%2===0?-.012:.012);
         this.colonistsGroup.add(entry.piece); this.portraits.push(entry);
       });
-      this.rail.scale.x = Math.max(0.4, (shown.length - 1) * 0.79 + 0.4) / 3.4;
+      this.rail.scale.x = Math.max(0.4, (shown.length-1)*.78+.4) / 3.4;
     }
     const apparel = new Map<number, MaterialPile[]>(), weapons = new Map<number, string>();
     const idsOnPage = new Set(shown.map(p => p.id));
@@ -331,38 +434,25 @@ export class NativeHudCards {
       const signature = JSON.stringify([entry.name, entry.mood, entry.selected, appearanceKey]);
       if (entry.signature !== signature) { entry.signature = signature; entry.piece.userData.active = entry.selected; entry.piece.redraw(undefined, entry.selected ? PALETTE.ochre : PALETTE.kraftBase); }
     });
-    this.previousButton.visible = this.nextButton.visible = this.colonists.length > PORTRAITS_PER_PAGE;
-    const rosterCaption = this.rosterCaption();
-    if (rosterCaption !== this.rosterSignature) { this.rosterSignature = rosterCaption; this.rosterButton.redraw(); }
+    this.previousButton.visible = this.nextButton.visible = this.colonists.length > this.portraitCapacity;
+    this.rosterButton.visible=this.colonists.length>this.portraitCapacity;
+    const edge=shown.length*.78/2+.15;
+    this.previousButton.setBaseTransform(-edge,-.48,.02);
+    this.nextButton.setBaseTransform(edge,-.48,.02);
+    this.rosterButton.setBaseTransform(edge,-.82,.02);
+    this.nextButton.userData.tooltip=`Colons suivants · page ${this.page+1}/${Math.max(1,Math.ceil(this.colonists.length/this.portraitCapacity))}`;
     this.setVisible(this.shown);
   }
 
-  private drawColonist(col: PortraitCard, ctx: CanvasRenderingContext2D, wPx: number, _hPx: number, rng: () => number): void {
-    const isSel = col.selected, idx = col.index;
-    drawHandRect(ctx, 18, 18, wPx - 36, 96, isSel ? '#d8e4c4' : '#b2c4ab', '#261e18', 3, rng);
-    const cx = wPx / 2 + (rng() - 0.5) * 4;
-    ctx.save();
-    // Keep the prototype's random stroke sequence when its demonstration
-    // person is replaced by the actual pawn's authored identity portrait.
-    if (col.loaded) ctx.globalAlpha = 0;
-    drawHandBlob(ctx, cx, 104, 32, col.shirt, '#261e18', 3, rng);
-    drawHandBlob(ctx, cx, 62, 22, col.skin, '#261e18', 3, rng);
-    drawHandBlob(ctx, cx - 7, 60, 2.8, '#261e18', null, 0, rng);
-    drawHandBlob(ctx, cx + 7, 60, 2.8, '#261e18', null, 0, rng);
-    drawMarkerLine(ctx, cx - 6, 70, cx + 6, 71, '#261e18', 2.2, rng);
+  private drawColonist(col:PortraitCard,ctx:CanvasRenderingContext2D,w:number,h:number,rng:()=>number):void {
+    ctx.save();ctx.scale(w/70,h/96);
+    drawHandRect(ctx,6,6,58,54,col.selected?'#d8e4c4':'#b2c4ab','#261e18',1.2,rng);
+    if(col.loaded&&col.image)ctx.drawImage(col.image,6,6,58,54);
+    else {drawHandBlob(ctx,35,48,15,col.shirt,'#261e18',1,rng);drawHandBlob(ctx,35,26,11,col.skin,'#261e18',1,rng);}
+    ctx.fillStyle=PALETTE.inkDark;ctx.font=`bold 12px ${FONT}`;ctx.textAlign='center';fitText(ctx,col.name,35,75,61);
+    drawHandRect(ctx,10,81,50,5,'#423328',null,0,rng);
+    if(col.mood>0)drawHandRect(ctx,10,81,50*col.mood/100,5,col.mood>70?'#639452':'#d16b3b',null,0,rng);
     ctx.restore();
-    if (col.loaded && col.image) ctx.drawImage(col.image, 18, 13, wPx - 36, 116);
-    ctx.save(); ctx.translate(cx, 135); ctx.rotate(idx % 2 === 0 ? -0.03 : 0.035);
-    drawHandRect(ctx, -wPx * 0.42, -15, wPx * 0.84, 30, '#efe4c6', 'rgba(38,30,24,0.35)', 2, rng);
-    ctx.fillStyle = '#261e18'; ctx.font = `bold 20px ${FONT}`; ctx.textAlign = 'center'; fitText(ctx, col.name, 0, 7, wPx * 0.78); ctx.restore();
-    const barX = 20, barY = 160, barW = wPx - 40, barH = 19;
-    drawHandRect(ctx, barX, barY, barW, barH, '#423328', null, 0, rng);
-    ctx.save();
-    if (col.mood === 0) ctx.globalAlpha = 0;
-    drawHandRect(ctx, barX + 3, barY + 3, (barW - 6) * col.mood / 100, barH - 6, col.mood > 70 ? '#639452' : '#d16b3b', null, 0, rng);
-    ctx.restore();
-    drawHandRect(ctx, barX, barY, barW, barH, null, '#261e18', 3, rng);
-    ctx.fillStyle = '#261e18'; ctx.font = 'bold 13px Georgia, serif'; ctx.textAlign = 'center'; ctx.fillText(`Moral ${col.mood}%`, wPx / 2, 195);
   }
 
   private readResources(world: World): void {
@@ -383,55 +473,101 @@ export class NativeHudCards {
     this.resources = [...records.values()].sort((a, b) => ITEM_DEFINITIONS[a.item].label.localeCompare(ITEM_DEFINITIONS[b.item].label, 'fr'));
   }
 
-  private refreshResources(): void {
-    const priority: readonly string[] = ['wood', 'steel', 'component', 'silver'];
-    const ranked = [...this.resources.filter(row => row.stock > 0)].sort((a, b) => {
-      const ai = priority.indexOf(a.item), bi = priority.indexOf(b.item);
-      return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi) || ITEM_DEFINITIONS[a.item].label.localeCompare(ITEM_DEFINITIONS[b.item].label, 'fr');
-    });
-    this.tags.forEach((tag, index) => {
-      if (index < 4) {
-        const resource = ranked[index];
-        tag.label = resource ? ITEM_DEFINITIONS[resource.item].label : index === 0 ? 'Stocks connus' : '—'; tag.value = resource ? amount(resource.stock) : '0'; tag.color = resource ? hex(ITEM_DEFINITIONS[resource.item].color) : PALETTE.kraftDark;
-      } else if (index === 4) { tag.label = 'Nutrition fraîche'; tag.value = amount(this.food?.freshNutrition ?? 0); tag.color = PALETTE.ochre; }
-      else { tag.label = 'Tous les stocks'; tag.value = `${this.resources.length} types`; tag.color = PALETTE.slateBlue; }
-      const signature = `${tag.label}|${tag.value}|${tag.color}`;
-      if (tag.signature !== signature) { tag.signature = signature; tag.piece.userData.tooltip = 'Voir toutes les piles connues, leur propriétaire et la nutrition'; tag.piece.redraw(); }
-    });
+  private refreshResources():void {
+    const counts=new Map(this.resources.map(row=>[row.item,row.stock]));
+    const quantity=(node:StorageFilterNode):number=>node.item?(node.item==='furniture'?0:counts.get(node.item)??0):(node.children??[]).reduce((sum,child)=>sum+quantity(child),0);
+    type Row={id:string;label:string;value:string;color:string;item?:ItemId;level:number;branch?:{id:string;open:boolean};activate:()=>void};
+    const rows:Row[]=[];
+    const visit=(node:StorageFilterNode,level:number):void=>{
+      const count=quantity(node);if(count<=0)return;
+      const isBranch=!node.item,open=this.resourceExpanded.has(node.id),item=node.item&&node.item!=='furniture'?node.item:undefined;
+      rows.push({id:node.id,label:node.label,value:amount(count),color:item?hex(ITEM_DEFINITIONS[item].color):PALETTE.creamPaper,item,level,
+        branch:isBranch?{id:node.id,open}:undefined,activate:isBranch?()=>{if(this.resourceExpanded.has(node.id))this.resourceExpanded.delete(node.id);else this.resourceExpanded.add(node.id);this.resourcePage=0;this.refreshResources();}:()=>this.showResources()});
+      if(isBranch&&open){
+        if(node.id==='foods')rows.push({id:'fresh-nutrition',label:'Nutrition fraîche',value:amount(this.food?.freshNutrition??0),color:PALETTE.ochre,level:level+1,activate:()=>this.showResources()});
+        for(const child of node.children??[])visit(child,level+1);
+      }
+    };
+    for(const node of STORAGE_FILTER_TREE)visit(node,0);
+    if(!rows.length)rows.push({id:'empty',label:'Stocks connus',value:'0',color:PALETTE.creamPaper,level:0,activate:()=>this.showResources()});
+    const capacity=Math.max(3,Math.floor((this.viewportHeight-144)/28)),pages=Math.max(1,Math.ceil(rows.length/capacity));
+    this.resourcePage=Math.min(this.resourcePage,pages-1);
+    const signature=JSON.stringify([capacity,this.resourcePage,rows.map(row=>[row.id,row.label,row.value,row.branch?.open])]);
+    if(signature===this.resourceSignature)return;this.resourceSignature=signature;
+    for(const tag of this.tags)this.dropPiece(tag.piece);this.tags.length=0;
+    const visible=rows.slice(this.resourcePage*capacity,(this.resourcePage+1)*capacity);
+    const add=(row:Row,index:number,x=1.12,width=2.24):void=>{
+      const ink:Omit<ResourceTag,'piece'>={...row,screenWidth:width*100,signature:''};
+      const piece=this.makePiece({w:width,h:.28,depth:.001,paper:false,seed:1100+index*17,hasBorder:false,interactive:true,
+        drawFn:(ctx,w,h,rng)=>this.drawResource(ink,ctx,w,h,rng),onClick:row.activate});
+      const tag:ResourceTag={...ink,piece};
+      tag.piece.userData.nativeId=`hud:resource:${row.id}`;
+      tag.piece.userData.tooltip=row.branch?`${row.branch.open?'Replier':'Déplier'} ${row.label}`:`${row.label} · ${row.value} comptabilisé(s) · détails des propriétaires`;
+      tag.piece.setBaseTransform(x,-.14-index*.28,.02);this.resourcesGroup.add(tag.piece);this.tags.push(tag);
+      if(row.item&&!this.resourceImages.has(row.item)){
+        const image=new Image();this.resourceImages.set(row.item,image);
+        image.onload=()=>{if(!this.disposed)for(const current of this.tags)if(current.item===row.item)current.piece.redraw();};
+        image.src=modelIconUrl(`item-${row.item}`);
+      }
+    };
+    visible.forEach((row,index)=>add(row,index));
+    if(pages>1){
+      const footer=(id:string,label:string,delta:number):Row=>({id,label,value:'',color:PALETTE.creamPaper,level:0,activate:()=>{this.resourcePage=(this.resourcePage+delta+pages)%pages;this.refreshResources();}});
+      add(footer('previous',`‹ ${this.resourcePage+1}/${pages}`,-1),visible.length,.42,.84);
+      add(footer('next','Suite ›',1),visible.length,1.64,1.2);
+    }
   }
-  private drawResource(res: ResourceTag, ctx: CanvasRenderingContext2D, wPx: number, hPx: number, rng: () => number): void {
-    drawHandBlob(ctx, 32, hPx / 2, 15, res.color, '#261e18', 2.5, rng);
-    drawHandBlob(ctx, wPx - 42, hPx / 2, 24, 'rgba(244, 236, 218, 0.45)', null, 0, rng);
-    ctx.save(); ctx.translate(56, hPx / 2 + 7); ctx.rotate((rng() - 0.5) * 0.04); ctx.fillStyle = '#261e18'; ctx.font = `bold 20px ${FONT}`; ctx.textAlign = 'left'; fitText(ctx, res.label, 0, 0, wPx - 144); ctx.restore();
-    ctx.save(); ctx.translate(wPx - 16, hPx / 2 + 9); ctx.rotate((rng() - 0.5) * 0.06); ctx.font = 'bold 26px Georgia, serif'; ctx.textAlign = 'right'; ctx.strokeStyle = '#261e18'; ctx.lineWidth = 5; ctx.strokeText(res.value, 0, 0, 82); ctx.fillStyle = '#fff9eb'; ctx.fillText(res.value, 0, 0, 82); ctx.restore();
+  private drawResource(res:Omit<ResourceTag,'piece'>,ctx:CanvasRenderingContext2D,w:number,h:number,rng:()=>number):void {
+    const screenWidth=res.screenWidth??224;
+    ctx.save();ctx.scale(w/screenWidth,h/28);ctx.strokeStyle='#19242b';ctx.lineWidth=3;ctx.lineJoin='round';
+    const indent=Math.min(30,(res.level??0)*9),iconX=12+indent;
+    if(res.branch){
+      ctx.font=`bold 15px ${FONT}`;ctx.fillStyle='#fff8e9';ctx.textAlign='center';const glyph=res.branch.open?'⌄':'›';ctx.strokeText(glyph,iconX,19);ctx.fillText(glyph,iconX,19);
+    }else{
+      const image=res.item?this.resourceImages.get(res.item):undefined;
+      if(image?.complete&&image.naturalWidth>0)ctx.drawImage(image,indent,2,24,24);
+      else {drawHandBlob(ctx,iconX,14,7,res.color,'#19242b',1.5,rng);}
+    }
+    ctx.font=`${res.branch?'bold ':''}13px ${FONT}`;ctx.textAlign='left';ctx.fillStyle='#fff8e9';
+    const textX=29+indent,valueWidth=res.value?Math.min(68,ctx.measureText(res.value).width+7):0,labelWidth=Math.max(35,screenWidth-textX-valueWidth-8);
+    ctx.strokeText(res.label,textX,19,labelWidth);ctx.fillText(res.label,textX,19,labelWidth);
+    if(res.value){ctx.textAlign='right';ctx.strokeText(res.value,screenWidth-2,19,68);ctx.fillText(res.value,screenWidth-2,19,68);}
+    ctx.restore();
   }
 
-  private refreshAlerts(): void {
-    const signature = JSON.stringify([this.alerts.length, this.alerts.slice(0, 4).map(row => [row.key, row.text])]);
-    if (signature === this.alertSignature) return;
-    this.alertSignature = signature;
-    const previous = this.alertPieces;
-    this.alertPieces = [];
-    this.alerts.slice(0, 4).forEach((alert, idx) => {
-      const cardSignature = `${alert.key}:${alert.text}`;
-      if (previous[idx]?.userData.nativeAlertSignature === cardSignature) { this.alertPieces.push(previous[idx]!); return; }
-      if (previous[idx]) this.dropPiece(previous[idx]!);
-      const danger = /critical|downed|bleeding|threat|manhunter|death|fire|infection|malnutrition/.test(alert.key), color = danger ? PALETTE.terracotta : PALETTE.ochre;
-      const card = this.makePiece({w: 1.34, h: 0.35, depth: 0.04, bgColor: PALETTE.creamPaper, bevel: 0.036, seed: idx * 29 + 53, interactive: true, tooltip: alert.text,
-        drawFn: (ctx, w, h, rng) => {
-          drawHandRect(ctx, 12, 12, 24, h - 24, color, '#261e18', 2.5, rng);
-          ctx.save(); ctx.translate(48, 38); ctx.rotate((rng() - 0.5) * 0.03); ctx.fillStyle = '#261e18'; ctx.font = `bold 18px ${FONT}`; ctx.textAlign = 'left';
-          const lines = inkLines(ctx, alert.text, w - 67); fitText(ctx, lines[0] ?? '', 0, 0, w - 67); fitText(ctx, lines[1] ?? '', 0, 23, w - 67); ctx.restore();
-          ctx.fillStyle = '#524132'; ctx.font = 'italic 14px Georgia, serif'; ctx.textAlign = 'right'; ctx.fillText('Voir', w - 17, h - 9);
-        }, onClick: () => this.showAlert(alert.key)});
-      const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.032, 0.032, 7), new THREE.MeshStandardMaterial({color: danger ? 0xc94a38 : 0x3f6a8a, roughness: 0.65, flatShading: true}));
-      card.userData.nativeAlertSignature = cardSignature;
-      pin.rotation.x = Math.PI / 2; pin.position.set(-0.52, 0.11, 0.062); card.add(pin);
-      card.setBaseTransform(-0.72 - (idx % 2) * 0.03, -0.30 - idx * 0.41, 0.02, idx % 2 === 0 ? -0.038 : 0.032);
-      this.alertsGroup.add(card); this.alertPieces.push(card);
+  private refreshAlerts():void {
+    const maxWidth=Math.min(300,Math.max(170,this.viewportWidth*.36));
+    const availableHeight=Math.max(110,this.viewportHeight-370);
+    const signature=JSON.stringify([maxWidth,availableHeight,this.alerts.map(row=>[row.key,row.text])]);
+    if(signature===this.alertSignature)return;
+    this.alertSignature=signature;
+    for(const piece of this.alertPieces)this.dropPiece(piece);
+    this.alertPieces=[];
+    const ctx=this.allAlertsButton.userData.ctx;ctx.font=`bold 13px ${FONT}`;
+    let y=.32;
+    this.alerts.slice(0,4).forEach((alert,idx)=>{
+      const room=availableHeight-y*100-40;
+      if(room<28)return;
+      const originalLines=inkLines(ctx,alert.text,maxWidth-28),maxLines=Math.max(1,Math.floor((room-12)/17));
+      const lines=originalLines.slice(0,maxLines);
+      if(lines.length<originalLines.length)lines[lines.length-1]=`${lines.at(-1)??''}…`;
+      const width=Math.min(maxWidth,Math.max(82,...lines.map(line=>ctx.measureText(line).width+28)));
+      const height=Math.max(28,lines.length*17+12);
+      const danger=alert.domain?.severity==='danger'||/critical|downed|bleeding|threat|manhunter|death|fire|infection|malnutrition/.test(alert.key);
+      const color=danger?PALETTE.terracotta:PALETTE.ochre;
+      const card=this.makePiece({w:width/100,h:height/100,depth:.028,bgColor:PALETTE.creamPaper,bevel:.02,seed:idx*29+53,interactive:true,tooltip:alert.text,
+        drawFn:(ctx,w,h,rng)=>{
+          ctx.save();ctx.scale(w/width,h/height);drawHandRect(ctx,4,5,4,height-10,color,null,0,rng);
+          ctx.fillStyle=PALETTE.inkDark;ctx.font=`bold 13px ${FONT}`;ctx.textAlign='left';
+          lines.forEach((line,index)=>ctx.fillText(line,14,19+index*17,width-24));ctx.restore();
+        },onClick:()=>this.showAlert(alert.key)});
+      card.userData.nativeId=`hud:alert:${alert.key}`;
+      card.setBaseTransform(-width/200,-y-height/200,.02,idx%2===0?-.005:.005);
+      this.alertsGroup.add(card);this.alertPieces.push(card);y+=(height+6)/100;
     });
-    for (let index = this.alertPieces.length; index < previous.length; index++) this.dropPiece(previous[index]!);
-    this.allAlertsButton.redraw();
+    this.allAlertsButton.visible=this.alerts.length>this.alertPieces.length;
+    this.allAlertsButton.setBaseTransform(-.73,-y-.125,0);this.allAlertsButton.redraw();
+    this.alertHandleGroup.visible=this.notificationsAutoHide&&this.shown&&!!this.world&&this.alerts.length>0;
   }
 
   private refreshWeather(world: World): void {
@@ -452,16 +588,16 @@ export class NativeHudCards {
     this.weatherReadout = readout;
     if (signature !== this.weatherSignature) { this.weatherSignature = signature; this.weatherPiece.userData.tooltip = `${readout.date} · ${readout.weather} · ${readout.temperature}${readout.condition ? ` · ${readout.condition}` : ''}`; this.weatherPiece.redraw(); }
   }
-  private drawWeather(ctx: CanvasRenderingContext2D, wPx: number, hPx: number, rng: () => number): void {
-    drawHandRect(ctx, 18, 18, 122, hPx - 36, '#7ba1b5', '#261e18', 3.2, rng);
-    ctx.fillStyle = '#261e18'; ctx.font = `bold 34px ${FONT}`; ctx.textAlign = 'left'; fitText(ctx, this.weatherReadout.clock, 154, 52, wPx - 165);
-    ctx.font = 'bold 18px Georgia, serif'; ctx.fillStyle = '#4a3a2c'; fitText(ctx, this.weatherReadout.date, 154, 80, wPx - 165);
-    ctx.font = 'italic 17px Georgia, serif'; ctx.fillStyle = '#36573e'; fitText(ctx, `${this.weatherReadout.weather} · ${this.weatherReadout.temperature}`, 154, 106, wPx - 165);
+  private drawWeather(ctx:CanvasRenderingContext2D,w:number,h:number,rng:()=>number):void {
+    ctx.save();ctx.scale(w/276,h/96);drawHandRect(ctx,8,10,54,70,'#7ba1b5','#261e18',1.2,rng);
+    ctx.fillStyle=PALETTE.inkDark;ctx.textAlign='left';ctx.font=`bold 25px ${FONT}`;fitText(ctx,this.weatherReadout.clock,75,34,190);
+    ctx.font=`bold 13px ${FONT}`;fitText(ctx,this.weatherReadout.date,75,56,190);
+    ctx.font=`13px ${FONT}`;fitText(ctx,`${this.weatherReadout.weather} · ${this.weatherReadout.temperature}`,75,77,190);ctx.restore();
   }
 
   private showRoster(): void {
     this.actions.showPage({id: 'hud-colonists', title: `${this.colonists.length} colons sur cette carte`, color: PALETTE.sageMountain,
-      subtitle: 'Liste complète · les flèches de la barre parcourent les mêmes personnes par six.',
+      subtitle: 'Liste complète · les flèches de la barre parcourent les mêmes personnes par pages compactes.',
       rows: this.colonists.map(pawn => ({id: `pawn-${pawn.id}`, label: pawn.name, value: `Moral ${rounded(pawn.mood)}%`, detail: `${pawn.state} · Nourriture ${rounded(pawn.hunger)}% · Repos ${rounded(pawn.rest)}%`,
         controls: [{id: `select-${pawn.id}`, label: 'Sélectionner', onActivate: () => { this.setSelection([pawn.id]); this.actions.selectPawn(pawn.id); }}]}))});
   }
@@ -517,11 +653,12 @@ export class NativeHudCards {
     if (this.disposed) return;
     this.disposed = true;
     for (const entry of this.portraits) if (entry.image) { entry.image.onload = null; entry.image.onerror = null; }
+    for(const image of this.resourceImages.values()){image.onload=null;image.onerror=null;}this.resourceImages.clear();
     for (const piece of this.ownedPieces) this.art.disposePiece(piece);
     this.ownedPieces.clear();
     this.rail.geometry.dispose();
     (this.rail.material as THREE.Material).dispose();
-    for (const group of [this.colonistsGroup, this.resourcesGroup, this.alertsGroup, this.timeGroup, this.fpsGroup]) { group.removeFromParent(); group.clear(); }
+    for (const group of [this.colonistsGroup, this.resourcesGroup, this.alertsGroup, this.timeGroup, this.fpsGroup, this.alertHandleGroup]) { group.removeFromParent(); group.clear(); }
     this.world = undefined; this.colonists = []; this.resources = []; this.alerts = []; this.portraits = [];
   }
 }

@@ -1,17 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
 import { applyCommand, createWorld } from '../src/sim/index';
 import type { MaterialPile, Resource, World } from '../src/sim/types';
+import { backgroundSkillRefusal, type BackgroundSkillId } from '../src/sim/colonist-backgrounds';
 import { ITEM_DEFINITIONS } from '../src/sim/items';
 import { ANIMAL_EGG_CONTENT_256 } from '../src/sim/animal-egg-content-v256';
 import { newWeaponState } from '../src/sim/equipment-rules';
 import { newApparelState } from '../src/sim/apparel-rules';
 import { infectCrop } from '../src/sim/plant-blight';
 import type { NativePage, NativeUiActions, NativeUiState } from '../src/ui3d/native-contract';
-import { buildNativeInspector } from '../src/ui3d/native-inspector';
+import { buildNativeInspector, setNativeInspectorTab } from '../src/ui3d/native-inspector';
 import { animalRescueCamp } from './helpers/animal-rescue-v310';
 
 let epoch = 476100;
-function inspector(world: World, selected: Partial<Pick<NativeUiState, 'selectedAnimalId' | 'selectedObjects'>>) {
+function inspector(world: World, selected: Partial<Pick<NativeUiState, 'selectedAnimalId' | 'selectedObjects' | 'selectedPawnIds'>>) {
   let page: NativePage;
   const state: NativeUiState = { world, epoch: ++epoch, panel: null, category: 'orders', tool: 'select', orientation: 0,
     selectedPawnIds: [], selectedObjects: [], ...selected, constructionMaterial: 'wood', creationStorage: { priority: 3, filters: { wood: true, food: true } }, speed: 0, hasGame: true, busy: false, saves: [] };
@@ -30,6 +31,62 @@ function rescueFixture() {
 }
 
 describe('native inspector restores real animal rescue and egg permissions', () => {
+  it('projects all twelve real skill meters in two compact Bio columns within the prior dossier dimensions', () => {
+    const world = createWorld(476, 16, 16), pawn = world.pawns[0]!;
+    setNativeInspectorTab('bio');
+    const ui = inspector(world, { selectedPawnIds: [pawn.id] }), skills = ui.page.rows.filter(row => row.id.startsWith('skill-'));
+    expect(ui.page).toMatchObject({ layout: 'inspector', width: 514, height: 489, columnRatio: .48 });
+    expect(skills).toHaveLength(12);
+    expect(new Set(ui.page.rows.filter(row => row.id !== 'pawn-tabs').map(row => row.column))).toEqual(new Set([0, 1]));
+    for (const row of skills) {
+      const id = row.id.slice('skill-'.length) as BackgroundSkillId, record = pawn.skills[id];
+      expect(row.column).toBe(1);
+      expect(row.meter).toMatchObject({ value: backgroundSkillRefusal(pawn, id) ? 0 : record?.level ?? (id === 'mining' || id === 'plants' ? 8 : 0), max: 20, passion: record?.passion ?? 0 });
+      expect(row.meter!.secondary!.value).toBe(backgroundSkillRefusal(pawn, id) ? 0 : record?.xp ?? 0);
+      expect(row.meter!.secondary!.max).toBeGreaterThan(0);
+      expect(row.hint).toContain('Expérience du niveau');
+      expect(row.hint).toContain('Apprentissage');
+      expect(row.detail).toBeUndefined();
+    }
+    const tabs = ui.page.rows.find(row => row.id === 'pawn-tabs')!;
+    expect(tabs.compact).toBe(true); expect(tabs.column).toBeUndefined();
+    expect(tabs.controls!.every(control => !!control.hint)).toBe(true);
+    expect(ui.actions.command).not.toHaveBeenCalled();
+  });
+
+  it('changes the inspected colonist’s hostility through the real local selector and preserves map structures', async () => {
+    const world = createWorld(476, 16, 16), pawn = world.pawns[0]!, structures = structuredClone(world.structures);
+    const positions = world.pawns.map(person => [person.id, person.x, person.z]);
+    setNativeInspectorTab('bio');
+    const ui = inspector(world, { selectedPawnIds: [pawn.id] });
+    const select = () => ui.page.rows.find(row => row.id === 'pawn-hostility')!.controls![0]!.select!;
+    expect(select().options).toEqual([{ value: 'flee', label: 'Fuir' }, { value: 'ignore', label: 'Ignorer' }, { value: 'attack', label: 'Attaquer' }]);
+    await select().onChange('not-a-response');
+    expect(ui.actions.command).not.toHaveBeenCalled();
+    for (const response of ['ignore', 'attack', 'flee'] as const) {
+      await select().onChange(response);
+      expect(ui.actions.command).toHaveBeenLastCalledWith({ type: 'hostility-response', pawnId: pawn.id, response });
+      expect(pawn.hostilityResponse ?? 'flee').toBe(response);
+      expect(select().value).toBe(response);
+    }
+    expect(ui.actions.command).toHaveBeenCalledTimes(3);
+    expect(world.structures).toEqual(structures);
+    expect(world.pawns.map(person => [person.id, person.x, person.z])).toEqual(positions);
+    expect(ui.page.rows.find(row => row.id === 'pawn-orders')!.value).toContain(`${pawn.orders.queue.length} en file`);
+  });
+
+  it('keeps busy and captured epoch guards on the inspected hostility selector', async () => {
+    const world = createWorld(476, 16, 16), pawn = world.pawns[0]!, response = pawn.hostilityResponse;
+    setNativeInspectorTab('bio');
+    const ui = inspector(world, { selectedPawnIds: [pawn.id] });
+    const select = ui.page.rows.find(row => row.id === 'pawn-hostility')!.controls![0]!.select!;
+    ui.state.busy = true; await select.onChange('attack');
+    expect(ui.actions.command).not.toHaveBeenCalled(); expect(pawn.hostilityResponse).toBe(response);
+    ui.state.busy = false; ui.state.epoch!++; await select.onChange('attack');
+    expect(ui.actions.command).not.toHaveBeenCalled(); expect(pawn.hostilityResponse).toBe(response);
+    expect(ui.page.rows.find(row=>row.id==='pawn-hostility')!.controls![0]!.select).not.toBe(select);
+  });
+
   it('orders the selected doctor to approach the same animal without moving it remotely', async () => {
     const f = rescueFixture(), ui = inspector(f.world, { selectedAnimalId: f.animalId });
     const before = { x: f.animal.x, z: f.animal.z }, button = ui.page.rows.find(row => row.id === 'animal-rescue')!.controls!.find(control => control.id === `animal-rescue-${f.doctorId}`)!;

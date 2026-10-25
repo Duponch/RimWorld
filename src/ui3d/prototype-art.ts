@@ -7,6 +7,10 @@ import * as THREE from 'three/webgpu';
 type Paint = string | CanvasGradient | CanvasPattern;
 export type CardboardDraw = (ctx: CanvasRenderingContext2D, wPx: number, hPx: number, rng: () => number) => void;
 export interface CardboardPieceOptions {
+  paper?:boolean;
+  textureWidth?:number;
+  textureHeight?:number;
+  uvPadding?:number;
   w: number;
   h: number;
   depth?: number;
@@ -334,7 +338,7 @@ export function paintCardboardCanvas(ctx: CanvasRenderingContext2D, wPx: number,
 export function createCardboardPiece({
   w, h, depth = 0.044, bgColor = PALETTE.kraftBase,
   bevel = 0.026, seed = 1, drawFn, interactive = false,
-  onClick = null, hasBorder = true, tooltip = ''
+  onClick = null, hasBorder = true, tooltip = '', paper = true, textureWidth, textureHeight, uvPadding
 }: CardboardPieceOptions, cardboardEdgeMat: THREE.MeshStandardMaterial, shadowMat: THREE.MeshBasicMaterial): CardboardPiece {
   const group = new THREE.Group() as CardboardPiece;
   const shape = createCutoutRectShape(w, h, bevel, seed);
@@ -346,51 +350,53 @@ export function createCardboardPiece({
     steps: 1
   };
 
-  const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  const geo = paper ? new THREE.ExtrudeGeometry(shape, extrudeSettings) : new THREE.PlaneGeometry(w,h);
 
   // Recalibrage UV sur [0..1] avec légère marge pour couvrir tous les sommets découpés
   const pos = geo.attributes.position;
   const uvs = geo.attributes.uv;
-  const spanW = w * 1.08;
-  const spanH = h * 1.08;
+  const spanW = w * (uvPadding??(paper?1.08:1));
+  const spanH = h * (uvPadding??(paper?1.08:1));
   for (let i = 0; i < pos.count; i++) {
     uvs.setXY(i, (pos.getX(i) + spanW / 2) / spanW, (pos.getY(i) + spanH / 2) / spanH);
   }
   uvs.needsUpdate = true;
 
-  const wPx = Math.max(128, Math.round(w * 280));
-  const hPx = Math.max(84, Math.round(h * 280));
+  const wPx = textureWidth??Math.max(128, Math.round(w * 280));
+  const hPx = textureHeight??Math.max(84, Math.round(h * 280));
   const canvas = document.createElement('canvas');
   canvas.width = wPx;
   canvas.height = hPx;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D is required for the original cardboard paint.');
 
-  paintCardboardCanvas(ctx, wPx, hPx, bgColor, drawFn, hasBorder, seed);
+  const paint=(draw:CardboardDraw|undefined,bg:string)=>{if(paper)paintCardboardCanvas(ctx,wPx,hPx,bg,draw,hasBorder,seed);else{ctx.clearRect(0,0,wPx,hPx);draw?.(ctx,wPx,hPx,seededRandom(seed));}};
+  paint(drawFn,bgColor);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.needsUpdate = true;
 
   // Gouache 100% mate (roughness: 0.99, metalness: 0)
-  const frontMat = new THREE.MeshStandardMaterial({
+  const frontMat = paper?new THREE.MeshStandardMaterial({
     map: texture,
     roughness: 0.99,
     metalness: 0.0
-  });
+  }):new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,toneMapped:false});
 
   // Matériau 0 = Face peinte à la gouache, Matériau 1 = Tranche crème franche du carton
-  const mesh = new THREE.Mesh(geo, [frontMat, cardboardEdgeMat]);
+  const mesh = new THREE.Mesh(geo, paper?[frontMat, cardboardEdgeMat]:frontMat);
   group.add(mesh);
 
   // Ombre portée décalée
   const shadowGeo = new THREE.ShapeGeometry(shape);
   const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
   shadowMesh.position.set(0.022, -0.026, -0.012);
+  shadowMesh.visible=paper;
   group.add(shadowMesh);
 
   group.userData = {
-    w, h, depth, seed,
+    w, h, depth, seed, paper,
     mesh, shadowMesh,
     canvas, ctx, wPx, hPx, texture,
     bgColor, hasBorder, drawFn,
@@ -406,13 +412,13 @@ export function createCardboardPiece({
     redraw(newDrawFn, newBg = group.userData.bgColor) {
       group.userData.bgColor = newBg;
       group.userData.drawFn = newDrawFn;
-      paintCardboardCanvas(ctx, wPx, hPx, newBg, newDrawFn, hasBorder, seed);
+      paint(newDrawFn,newBg);
       texture.needsUpdate = true;
     },
     setBaseTransform(x, y, z = 0, rotZ = 0) {
       // Légère inclinaison organique pour que chaque carton semble collé à la main
-      const handWarpX = ((seed % 7) - 3) * 0.008;
-      const handWarpY = ((seed % 5) - 2) * 0.008;
+      const handWarpX = paper?((seed % 7) - 3) * 0.008:0;
+      const handWarpY = paper?((seed % 5) - 2) * 0.008:0;
       group.position.set(x, y, z);
       group.rotation.set(handWarpX, handWarpY, rotZ);
       group.userData.basePos.set(x, y, z);
@@ -645,7 +651,7 @@ export class PrototypeCardboardArt {
     return piece;
   }
 
-  createManagementButton(index: number, cfg: ManagementButtonConfig, onActivate: () => void): CardboardPiece {
+  createManagementButton(index: number, cfg: ManagementButtonConfig, onActivate: () => void, labelSize=16): CardboardPiece {
     const idx = index;
     // These dimensions, offsets, stroke order and font are the literal prototype.
     const tabW = 0.63 + ((idx * 7) % 3) * 0.018;
@@ -663,7 +669,7 @@ export class PrototypeCardboardArt {
       ctx.rotate((idx % 2 === 0 ? -0.035 : 0.035));
       drawHandRect(ctx, -wPx * 0.44, -15, wPx * 0.88, 30, '#f4ecda', '#261e18', 2.5, rng);
       ctx.fillStyle = '#261e18';
-      ctx.font = 'bold 16px "Comic Sans MS", "Chalkboard SE", Georgia, serif';
+      ctx.font = 'bold '+labelSize+'px "Comic Sans MS", "Chalkboard SE", Georgia, serif';
       ctx.textAlign = 'center';
       ctx.fillText(cfg.label, 0, 6);
       ctx.restore();
@@ -697,10 +703,10 @@ export class PrototypeCardboardArt {
   createBottomShelf(): THREE.Mesh {
     const wallMat = new THREE.MeshStandardMaterial({ color: PALETTE.wallKraft, roughness: 0.94 });
     const bottomShelf = new THREE.Mesh(
-      new THREE.BoxGeometry(8.6, 0.14, 0.08),
+      new THREE.BoxGeometry(8.6, 0.035, 0.055),
       [this.cardboardEdgeMat, this.cardboardEdgeMat, this.cardboardEdgeMat, this.cardboardEdgeMat, wallMat, wallMat]
     );
-    bottomShelf.position.set(0, 0.08, -0.03);
+    bottomShelf.position.set(0, 0.51, -0.035);
     this.shelves.add(bottomShelf);
     return bottomShelf;
   }

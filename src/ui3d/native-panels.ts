@@ -1,11 +1,17 @@
 import type {NativeUiState,NativeUiActions,NativePage,NativeRow,NativeControl} from './native-contract';
 import {buildNativeWorld,syncNativeWorldState} from './native-world';
 import {nativeArrivalRows} from './native-arrivals';
-import {toolDefinitions,workColumns} from './native-catalog';
+import {toolDefinitions,workColumns,productionToolOrder} from './native-catalog';
 import type {ArchitectCategory} from '../ui/layout';
 import {architectCategoryAvailable,architectToolAvailable} from '../ui/architect-availability';
 import {isColonist} from '../sim/affiliation';
-import {backgroundWorkRefusal,type BackgroundSkillId} from '../sim/colonist-backgrounds';
+import {backgroundWorkRefusal} from '../sim/colonist-backgrounds';
+import {miningSkill,miningWorkSpeed,miningYield} from '../sim/mining-skills';
+import {plantSkill,plantWorkSpeed} from '../sim/plant-skills';
+import {cookingSkill,cookingSpeed,butcheryEfficiency} from '../sim/cooking-statistics';
+import {artisticSkill} from '../sim/art-rules';
+import {constructionSpeed,learningFactor} from '../sim/skills';
+import {TRAITS} from '../sim/traits';
 import {queryPawnStatus} from '../sim/diagnostics';
 import {calendarTick} from '../sim/calendar';
 import {hourOfDay,type ScheduleAssignment} from '../sim/schedule';
@@ -47,13 +53,13 @@ import type {StorageControlSettings} from '../ui/storage-item-controls';
 let latest:NativeUiState|undefined;
 let host:NativeUiActions|undefined;
 let researchSelection:ResearchProject|undefined;
+let researchSelectionRevision=0;
 let scheduleBrush:ScheduleAssignment='anything';
 let scheduleClipboard:ScheduleAssignment[]|undefined;
-let scheduleRange:{pawnId:number;from:number;to:number}|undefined;
 let lastIdentity='',lastTick=-1;
 let dispatching=false;
-const categories:readonly [ArchitectCategory,string][]=[['orders','Ordres'],['zones','Zones'],['structure','Structure'],['floors','Sols'],['furniture','Mobilier'],['temperature','Température'],['recreation','Loisirs'],['production','Production'],['power','Énergie'],['ship','Vaisseau']];
-const assignmentLabels:Record<ScheduleAssignment,string>={anything:'Libre',work:'Travail',sleep:'Sommeil',recreation:'Loisir'};
+const categories:readonly [ArchitectCategory,string][]=[['structure','Structure'],['floors','Sols'],['furniture','Mobilier'],['temperature','Température'],['recreation','Loisirs'],['production','Production'],['power','Énergie'],['ship','Vaisseau']];
+const assignmentLabels:Record<ScheduleAssignment,string>={anything:'Temps libre',work:'Travail',sleep:'Dormir',recreation:'Loisir'};
 const assignmentSymbols:Record<ScheduleAssignment,string>={anything:'·',work:'T',sleep:'Z',recreation:'L'};
 const stageLabels={baby:'Petit',juvenile:'Jeune',adult:'Adulte'} as const;
 const money=(value:number)=>`${value.toLocaleString('fr-FR',{maximumFractionDigits:2})} argent`;
@@ -73,9 +79,10 @@ async function send(command:Command):Promise<unknown>{
 function open(page:NativePage):void {host?.showPage(page);}
 function redraw():void {host?.refresh();}
 function back():void {const state=latest,actions=host;if(!state||!actions)return;const page=buildNativePanel(state,actions);if(page)open(page);}
-function detailPage(id:string,title:string,rows:NativeRow[],actions:NativeControl[]=[]):NativePage{return {id,title,rows,actions:[...actions,button(`${id}-back`,'Retour',back)],modal:true,width:7.8,onClose:back};}
+function detailPage(id:string,title:string,rows:NativeRow[],actions:NativeControl[]=[],onBack:()=>void=back):NativePage{return {id,title,rows,actions:[...actions,button(`${id}-back`,'Retour',onBack)],modal:true,width:7.8,onClose:onBack};}
 function choose(id:string,title:string,choices:{id:string;label:string;detail?:string;active?:boolean;disabled?:boolean;choose:()=>void|Promise<unknown>}[],after:()=>void=back):void {
- open(detailPage(id,title,choices.map(choice=>row(choice.id,choice.label,undefined,choice.detail,[button(`${choice.id}-choose`,choice.active?'Choisi':'Choisir',async()=>{await choice.choose();after();},{active:choice.active,disabled:choice.disabled})]))));
+ const rows=choices.map(choice=>row(choice.id,choice.label,undefined,choice.detail,[button(`${choice.id}-choose`,choice.active?'Choisi':'Choisir',async()=>{await choice.choose();after();},{active:choice.active,disabled:choice.disabled})]));
+ open(detailPage(id,title,rows,[],after));
 }
 function confirm(id:string,title:string,detail:string,action:()=>Promise<unknown>):void {open(detailPage(id,title,[row(`${id}-message`,detail)], [button(`${id}-confirm`,'Confirmer',async()=>{await action();back();})]));}
 function inputPage(id:string,title:string,value:string,onCommit:(value:string)=>void|Promise<unknown>,detail?:string,maxLength=60):void {
@@ -84,7 +91,7 @@ function inputPage(id:string,title:string,value:string,onCommit:(value:string)=>
  open(detailPage(id,title,[input],[button(`${id}-apply`,'Appliquer',async()=>{await onCommit(draft);back();})]));
 }
 
-function creationStorageEditor():void {
+function creationStorageEditor(onBack:()=>void=back):void {
  if(!latest||!host)return;
  const initial=latest.creationStorage,selected=storageTreeSelection(initial.filters,initial.items),expanded=new Set<string>();
  let priority=initial.priority,allowFresh=initial.allowFresh!==false,allowRotten=initial.allowRotten!==false,search='';
@@ -106,58 +113,69 @@ function creationStorageEditor():void {
   return detailPage('creation-storage','Réglages de la nouvelle réserve',rows,[button('creation-storage-apply','Appliquer aux prochaines zones',()=>{
    if(qualityEnabled&&WEAPON_QUALITIES.indexOf(minQuality)>WEAPON_QUALITIES.indexOf(maxQuality)||hpEnabled&&minHp>maxHp)throw Error('Le minimum dépasse le maximum.');
    const settings:StorageControlSettings={...storageTreePermissions(selected),priority,allowFresh,allowRotten,...qualityEnabled?{quality:{min:minQuality,max:maxQuality}}:{},...hpEnabled?{hitPoints:{min:minHp,max:maxHp}}:{}};
-   host!.creationStorage(settings);back();
-  })]);
+   host!.creationStorage(settings);onBack();
+  })],onBack);
  };open(make());
 }
 
-function architect(state:NativeUiState,actions:NativeUiActions,world:World):NativePage {
- const tools=toolDefinitions.filter(tool=>tool.category===state.category&&architectToolAvailable(world,tool.id));
- return {id:'architect',title:'Architecte',subtitle:'Choisir un outil, puis désigner les cases sur la carte.',width:7.8,rows:[
-  row('architect-categories','Catégories',undefined,undefined,categories.filter(([id])=>architectCategoryAvailable(world,id)).map(([id,label])=>button(`category-${id}`,label,()=>{actions.category(id);redraw();},{active:id===state.category}))),
-  ...state.category==='zones'?[row('architect-storage-settings','Nouvelle réserve',undefined,'Choisir la priorité, les catégories, les objets et leurs conditions avant de tracer la zone.',[button('architect-storage-settings-open','Réglages du stockage',creationStorageEditor)])]:[],
-  ...tools.map(tool=>{const materials=constructionMaterials(tool.id);return row(`tool-${tool.id}`,tool.title,tool.key?`Raccourci ${tool.key}`:undefined,tool.hint,[button(`tool-${tool.id}-select`,'Placer',()=>actions.tool(tool.id),{active:state.tool===tool.id}),...(materials.length>1?[button(`tool-${tool.id}-material`,'Matériau',()=>choose(`material-${tool.id}`,`${tool.title} · matériau`,materials.map(material=>({id:material,label:ITEM_DEFINITIONS[material].label,active:state.constructionMaterial===material,choose:()=>actions.material(material)})),()=>actions.tool(tool.id)))]:[])]);}),
-  row('architect-rotation','Orientation',`${state.orientation*90}°`,'La rotation s’applique aux constructions orientables.',[button('rotate-left','↶',()=>actions.rotate(-1)),button('rotate-right','↷',()=>actions.rotate(1))]),
- ],onClose:()=>void actions.panel(null)};
+/** Map designations keep their own owner, separate from construction categories. */
+export function buildNativeToolPalette(state:NativeUiState,actions:NativeUiActions,kind:'orders'|'zones'):NativePage {
+ syncNativePanelState(state,actions);
+ const tools=toolDefinitions.filter(tool=>tool.category===kind&&tool.id!=='select'&&!!state.world&&architectToolAvailable(state.world,tool.id));
+ const rows:NativeRow[]=[];
+ for(let i=0;i<tools.length;i+=3)rows.push({id:`${kind}-tools-${i/3}`,label:'',controls:tools.slice(i,i+3).map(tool=>button(`tool-${tool.id}-select`,tool.title,()=>actions.tool(tool.id),{icon:tool.id,hint:`${tool.title}${tool.key?` · ${tool.key}`:''}\n${tool.hint}`,active:state.tool===tool.id}))});
+ if(kind==='zones')rows.push({...row('architect-storage-settings','Nouvelle réserve',undefined,'Les réglages sont appliqués aux prochaines réserves tracées.',[button('architect-storage-settings-open','Réglages du stockage',()=>creationStorageEditor(()=>{if(latest&&host)open(buildNativeToolPalette(latest,host,'zones'));}))]),compact:true});
+ return {id:`map-tools-${kind}`,title:kind==='orders'?'Ordres':'Zones',layout:'tools',width:3.1,rows,onClose:()=>{actions.closePage?.();void actions.panel(null);}};
 }
-const workSkill:Partial<Record<WorkType,BackgroundSkillId>>={doctor:'medicine',warden:'social',handle:'animals',cook:'cooking',hunt:'shooting',build:'construction',grow:'plants',mine:'mining',gather:'plants',art:'artistic',craft:'crafting',research:'intellectual'};
-function skillText(pawn:Pawn,work:WorkType):string {const id=workSkill[work],skill=id?pawn.skills[id]:undefined;return skill?`${skill.level}${' ♥'.repeat(skill.passion)}`:'—';}
+function architect(state:NativeUiState,actions:NativeUiActions,world:World):NativePage {
+ const category=state.category==='orders'||state.category==='zones'?'structure':state.category;
+ const tools=toolDefinitions.filter(tool=>tool.category===category&&architectToolAvailable(world,tool.id));
+ if(category==='production')tools.sort((a,b)=>{const ai=productionToolOrder.indexOf(a.id),bi=productionToolOrder.indexOf(b.id);return (ai<0?productionToolOrder.length:ai)-(bi<0?productionToolOrder.length:bi);});
+ const selected=tools.find(tool=>tool.id===state.tool),materials=selected?constructionMaterials(selected.id):[];
+ const rows:NativeRow[]=[{...row('architect-categories','Catégories',undefined,undefined,categories.filter(([id])=>architectCategoryAvailable(world,id)).map(([id,label])=>button(`category-${id}`,label,()=>{actions.category(id);redraw();},{active:id===category}))),compact:true}];
+ for(let i=0;i<tools.length;i+=4)rows.push({id:`architect-tools-${i/4}`,label:'',controls:tools.slice(i,i+4).map(tool=>button(`tool-${tool.id}-select`,tool.title,()=>actions.tool(tool.id),{icon:tool.id,hint:`${tool.title}${tool.key?` · ${tool.key}`:''}\n${tool.hint}`,active:state.tool===tool.id}))});
+ if(selected){
+  rows.push({...row('architect-selected',selected.title,undefined,selected.hint),compact:true});
+  if(materials.length>1)rows.push({...row('architect-material','Matériau',undefined,undefined,[button(`tool-${selected.id}-material`,ITEM_DEFINITIONS[state.constructionMaterial].label,()=>{}, {select:{value:state.constructionMaterial,options:materials.map(material=>({value:material,label:ITEM_DEFINITIONS[material].label})),onChange:value=>{const material=materials.find(item=>item===value);if(material)actions.material(material);}}})]),compact:true});
+  rows.push({...row('architect-rotation','Orientation',`${state.orientation*90}°`,'Q / E tourne les constructions orientables.',[button('rotate-left','↶',()=>actions.rotate(-1)),button('rotate-right','↷',()=>actions.rotate(1))]),compact:true});
+ }
+ return {id:'architect',title:'Architecte',layout:'tools',subtitle:'Choisir une construction, puis désigner son emplacement sur la carte.',width:14.2,rows,onClose:()=>void actions.panel(null)};
+}
+const passionLabels=['Sans passion','Passion','Passion brûlante'] as const;
+function workSkill(pawn:Pawn,work:WorkType):{caption?:string;hint?:string} {
+ const zero={level:0,xp:0,dailyXp:0,passion:0 as const};
+ const skill=work==='mine'?miningSkill(pawn):work==='grow'||work==='gather'?plantSkill(pawn):work==='cook'?cookingSkill(pawn):work==='art'?artisticSkill(pawn):work==='handle'?pawn.skills.animals??zero:work==='warden'?pawn.skills.social??zero:work==='doctor'?pawn.skills.medicine:work==='build'?pawn.skills.construction:work==='hunt'?pawn.skills.shooting??zero:work==='craft'?pawn.skills.crafting??zero:work==='research'?pawn.skills.intellectual??zero:undefined;
+ if(!skill)return {};
+ const label=work==='mine'?'Minage':work==='grow'||work==='gather'?'Plantes':work==='cook'?'Cuisine':work==='art'?'Artistique':work==='handle'?'Animaux':work==='warden'?'Social':work==='doctor'?'Médecine':work==='hunt'?'Tir':work==='craft'?'Artisanat':work==='research'?'Intellectuel':'Construction';
+ const stats=work==='mine'?`vitesse ${Math.round(miningWorkSpeed(pawn)*100)} % avant lumière · rendement minéral ${Math.round(miningYield(pawn)*100)} % ; moyenne pondérée par les dégâts des coups sur le gisement`:work==='grow'||work==='gather'?`vitesse ${Math.round(plantWorkSpeed(pawn)*100)} % avant lumière · semis, récolte et abattage`:work==='cook'?`cuisson ${Math.round(cookingSpeed(pawn)*100)} % · rendement de boucherie ${Math.round(butcheryEfficiency(pawn)*100)} % avant poste`:work==='art'?'qualité des sculptures, sans effet direct sur la vitesse':work==='handle'?'Apprivoisement et entretien des lièvres · niveau Animaux 8 requis':work==='warden'?'nourrit les prisonniers et mène les conversations selon le mode choisi':work==='build'?`vitesse ${Math.round(constructionSpeed(pawn)*100)} % · apprentissage ${Math.round(learningFactor(skill,pawn)*100)} %`:`apprentissage ${Math.round(learningFactor(skill,pawn)*100)} %`;
+ return {caption:`${skill.level}${' ♨'.repeat(skill.passion)}`,hint:`${label} ${skill.level}/20 · ${passionLabels[skill.passion]} · ${stats}`};
+}
 function workPanel(world:World):NativePage {
  const pawns=world.pawns.filter(p=>isColonist(p)&&!p.prisoner);
- return {id:'work',title:'Travail',subtitle:'0 désactive un travail ; 1 est la priorité la plus élevée. Chaque case ouvre les cinq valeurs.',width:8.2,rows:[
-  row('work-headings','Priorités',undefined,workColumns.map((c,i)=>`${i+1} ${c.label}`).join(' · ')),
-  ...pawns.map(pawn=>({...row(`worker-${pawn.id}`,pawn.name,queryPawnStatus(world,pawn).reason,undefined,workColumns.map(({id,label},index)=>{
-   const refusal=backgroundWorkRefusal(pawn,id),value=pawn.priorities[id];
-   return button(`work-${pawn.id}-${id}`,`${index+1}:${refusal?'—':value}`,()=>choose(`priority-${pawn.id}-${id}`,`${pawn.name} · ${label}`,[0,1,2,3,4].map(priority=>({id:`priority-${priority}`,label:priority?`Priorité ${priority}`:'Désactivé',active:currentPawn(pawn.id).priorities[id]===priority,choose:()=>send({type:'priority',pawnId:pawn.id,work:id,value:priority})}))),{hint:refusal??`${label} · compétence ${skillText(pawn,id)}`,disabled:!!refusal||pawn.state==='dead',active:value===1});
+ return {id:'work',title:'Travail',layout:'table',subtitle:'Priorités manuelles : 1 haute · 4 basse · 0 désactivée. Le transport livre aussi les chantiers.',width:14.8,rows:[
+  {id:'work-headings',label:'Colon',value:'Activité',compact:true,columns:workColumns.map(c=>({label:c.label,hint:c.label}))},
+  ...pawns.map(pawn=>({...row(`worker-${pawn.id}`,pawn.name,host?.pawnActivity?.(pawn.id)??queryPawnStatus(world,pawn).reason,pawn.traits?.map(id=>TRAITS[id].label).join(' · ')??'Aucun trait attribué',workColumns.map(({id,label})=>{
+   const refusal=backgroundWorkRefusal(pawn,id),value=pawn.priorities[id],skill=workSkill(pawn,id);
+   return button(`work-${pawn.id}-${id}`,String(value),()=>{},{caption:skill.caption,hint:[`Priorité ${label} · ${pawn.name}`,refusal?`${refusal} Priorité enregistrée : ${value}. Un ordre direct ne permet pas de contourner cette incapacité.`:undefined,skill.hint].filter(Boolean).join('\n'),disabled:!!refusal||pawn.state==='dead',active:value===1,select:{value:String(value),options:[0,1,2,3,4].map(priority=>({value:String(priority),label:String(priority),hint:priority===0?'Désactivé':`Priorité ${priority}${priority===1?' · haute':priority===4?' · basse':''}`})),onChange:value=>{const priority=Number(value);if(!Number.isInteger(priority)||priority<0||priority>4)throw Error('Priorité entière de 0 à 4 requise.');return send({type:'priority',pawnId:pawn.id,work:id,value:priority});}}});
   })),compact:true})),
-  ...pawns.map(pawn=>row(`skills-${pawn.id}`,`${pawn.name} · compétences`,undefined,workColumns.filter(c=>workSkill[c.id]).map(c=>`${c.label} ${skillText(pawn,c.id)}`).join(' · '))),
  ],onClose:()=>void host?.panel(null)};
 }
+const assignmentColors:Record<ScheduleAssignment,string>={anything:'#e9d2a9',work:'#dfb7a4',sleep:'#c2d5e0',recreation:'#c9dfc1'};
 function schedulePanel(world:World):NativePage {
  const hour=hourOfDay(calendarTick(world));
- const rows:NativeRow[]=[row('schedule-brush','Activité à peindre',`Heure actuelle ${hour} h`,'Choisir l’activité puis une heure. Le mode plage permet de peindre plusieurs heures ensemble.',(Object.keys(assignmentLabels) as ScheduleAssignment[]).map(id=>button(`brush-${id}`,assignmentLabels[id],()=>{scheduleBrush=id;redraw();},{active:scheduleBrush===id})))];
- for(const pawn of world.pawns.filter(p=>isColonist(p)&&!p.prisoner)){
-  rows.push({...row(`schedule-${pawn.id}`,pawn.name,undefined,undefined,Array.from({length:24},(_,h)=>{
+ const rows:NativeRow[]=[{...row('schedule-brush','Activité à peindre',undefined,'Choisir une activité puis cliquer ou glisser sur les heures. Temps libre : le colon gère ses besoins et son travail. Dormir exige un couchage accessible ; travailler permet toujours de manger.',(Object.keys(assignmentLabels) as ScheduleAssignment[]).map(id=>button(`brush-${id}`,assignmentLabels[id],()=>{scheduleBrush=id;redraw();},{color:assignmentColors[id],active:scheduleBrush===id}))),compact:true},
+  {id:'schedule-headings',label:'Colon',compact:true,columns:[...Array.from({length:24},(_,h)=>({label:String(h),hint:`${h} h – ${h+1} h${h===hour?' · heure actuelle':''}`})),{label:'Copier'},{label:'Coller'}]},
+ ];
+ for(const pawn of world.pawns.filter(isColonist)){
+  rows.push({...row(`schedule-${pawn.id}`,pawn.name,undefined,undefined,[...Array.from({length:24},(_,h)=>{
    const assignment=pawn.schedule[h]??'anything';
-   return button(`hour-${pawn.id}-${h}`,`${h}${assignmentSymbols[assignment]}`,()=>send({type:'schedule-paint',pawnId:pawn.id,hours:[h],assignment:scheduleBrush}),{hint:`${h} h · ${assignmentLabels[assignment]} → ${assignmentLabels[scheduleBrush]}`,active:h===hour,disabled:pawn.state==='dead'});
-  })),compact:true});
-  rows.push(row(`schedule-tools-${pawn.id}`,'',undefined,undefined,[
-   button(`copy-${pawn.id}`,'Copier',()=>{scheduleClipboard=[...currentPawn(pawn.id).schedule];redraw();}),
-   button(`paste-${pawn.id}`,'Coller',()=>send({type:'schedule-replace',pawnId:pawn.id,assignments:[...scheduleClipboard!]}),{disabled:!scheduleClipboard}),
-   button(`range-${pawn.id}`,'Peindre une plage',()=>{
-    scheduleRange={pawnId:pawn.id,from:0,to:23};
-    const make=():NativePage=>detailPage(`range-${pawn.id}`,`${pawn.name} · plage de ${assignmentLabels[scheduleBrush]}`,[
-     {id:'range-from',label:'Première heure (0–23)',input:{value:String(scheduleRange!.from),kind:'number',onCommit:value=>{const h=Number(value);if(!Number.isInteger(h)||h<0||h>23)throw Error('Heure comprise entre 0 et 23 requise.');scheduleRange!.from=h;}}},
-     {id:'range-to',label:'Dernière heure (0–23)',input:{value:String(scheduleRange!.to),kind:'number',onCommit:value=>{const h=Number(value);if(!Number.isInteger(h)||h<0||h>23)throw Error('Heure comprise entre 0 et 23 requise.');scheduleRange!.to=h;}}},
-    ],[button('range-commit','Peindre',async()=>{const range=scheduleRange!;const from=Math.min(range.from,range.to),to=Math.max(range.from,range.to);await send({type:'schedule-paint',pawnId:range.pawnId,hours:Array.from({length:to-from+1},(_,i)=>from+i),assignment:scheduleBrush});scheduleRange=undefined;back();})]);
-    open(make());
-   }),
-  ]));
+   return button(`hour-${pawn.id}-${h}`,assignmentSymbols[assignment],()=>send({type:'schedule-paint',pawnId:pawn.id,hours:[h],assignment:scheduleBrush}),{hint:`${pawn.name} · ${h} h – ${h+1} h : ${assignmentLabels[assignment]}`,color:assignmentColors[assignment],active:h===hour,disabled:pawn.state==='dead',paint:{group:`schedule-${pawn.id}`,index:h,onPaint:indices=>{const hours=[...new Set(indices)].filter(value=>Number.isInteger(value)&&value>=0&&value<24);if(hours.length)return send({type:'schedule-paint',pawnId:pawn.id,hours,assignment:scheduleBrush});}}});
+  }),button(`copy-${pawn.id}`,'Copier',()=>{scheduleClipboard=[...currentPawn(pawn.id).schedule];redraw();},{hint:`Copier les 24 heures de ${pawn.name}`}),button(`paste-${pawn.id}`,'Coller',()=>send({type:'schedule-replace',pawnId:pawn.id,assignments:[...scheduleClipboard!]}),{disabled:!scheduleClipboard||pawn.state==='dead',hint:`Coller les 24 heures chez ${pawn.name}`})]),compact:true});
  }
- rows.push(row('schedule-help','Règles',undefined,'Une plage est une priorité, pas un ordre immédiat. Dormir exige un couchage accessible ; travailler permet toujours de manger. Temps libre laisse le colon gérer ses besoins. Le copier-coller conserve les 24 heures.'));
- return {id:'schedule',title:'Planning',subtitle:'24 heures · T Travail · Z Sommeil · L Loisir · · Temps libre',rows,width:8.2,onClose:()=>void host?.panel(null)};
+ rows.push({...row('schedule-profile',world.restRules==='legacy'?'Sauvegarde historique : ancienne vitesse de fatigue conservée. Les horaires sont modifiables.':'Profil adulte : repos nocturne de 22 h à 6 h par défaut. Le sommeil peut continuer en plage libre jusqu’à récupération complète.'),compact:true});
+ rows.push({...row('schedule-help','La plage indique une priorité, pas un ordre instantané.',undefined,'Tab parcourt les cases, Entrée ou Espace peint ; Échap annule le tracé. Loisir favorise les activités accessibles sous 95 % de satisfaction ; temps libre sous 35 %. Répéter la même famille crée de la lassitude.'),compact:true});
+ return {id:'schedule',title:'Planning',layout:'table',rows,width:14.8,onClose:()=>void host?.panel(null)};
 }
-
 function animalArea(id:number):void {
  const world=currentWorld(),animal=currentAnimal(id),current=currentAnimalAreaChoice287(world,animal);
  const choices:{id:string;label:string;choice:AnimalAreaChoice287|null}[]=[{id:'unrestricted',label:'Sans restriction',choice:null},{id:'home',label:'Zone de foyer',choice:{kind:'home'}},...(world.allowedAreas??[]).map(area=>({id:`area-${area.id}`,label:area.label,choice:{kind:'allowed' as const,areaId:area.id}}))];
@@ -189,16 +207,20 @@ function quotaEditor(species:AutoSlaughterSpecies):void {
 }
 function animalsPanel(world:World):NativePage {
  const animals=world.wildlife?.animals.filter(a=>!!a.domestic&&a.state!=='dead')??[],targets=autoSlaughterTargets(world);
- const rows:NativeRow[]=animals.map(animal=>{
+ const rows:NativeRow[]=[{id:'animals-headings',label:'Animal',value:'Âge · activité',compact:true,columns:['Repérer','Dossier','Abattage','Transport','Zone'].map(label=>({label}))},...animals.map(animal=>{
   const product=productKind(animal),refusal=slaughterRefusal(world,animal),training=readAnimalTraining282(animal,'haul');
   const controls=[button(`animal-${animal.id}-locate`,'Repérer',()=>host?.selectPawn(animal.id)),button(`animal-${animal.id}-details`,'Dossier',()=>animalDetails(animal.id)),button(`animal-${animal.id}-slaughter`,animal.domestic!.slaughter?'Abattage demandé':'Abattre',()=>send({type:'slaughter',animalId:animal.id,enabled:!currentAnimal(animal.id).domestic?.slaughter}),{active:!!animal.domestic!.slaughter,disabled:!!refusal&&!animal.domestic!.slaughter,hint:refusal})];
   if(world.schemaVersion>=282)controls.push(button(`animal-${animal.id}-haul`,training.wanted?'Transport demandé':'Entraîner',()=>send({type:'animal-training',animalId:animal.id,skill:'haul',wanted:!readAnimalTraining282(currentAnimal(animal.id),'haul').wanted}),{active:training.wanted,disabled:!!trainingRefusal282(world,animal,'haul'),hint:trainingRefusal282(world,animal,'haul')??`${training.steps}/${training.maxSteps}`}));
   if(world.schemaVersion>=287&&supportsAnimalAreas287(animal.species))controls.push(button(`animal-${animal.id}-area`,'Zone',()=>animalArea(animal.id)));
-  return row(`animal-${animal.id}`,actualAnimalName256(animal)??`${animalSpecies(animal.species).label} ${animal.id}`,`${animal.sex==='female'?'♀':'♂'} · ${(animal.ageTicks/(TICKS_PER_DAY*60)).toLocaleString('fr-FR',{maximumFractionDigits:2})} an · ${stageLabels[animalLifeStage(animal)]}`,[animalActivity(world,animal,targets),animalAreaLabel(world,animal),MEDICAL_CARE[animal.domestic!.care],product?`${product==='milk'?'Lait':'Laine'} ${Math.round(100*productFullness(animal))} %`:'',animal.pregnancy?`Gestation ${Math.round(100*animal.pregnancy.progress/gestationTicks(animal.species))} %`:''].filter(Boolean).join(' · '),controls);
- });
+  const identity=actualAnimalName256(animal)??`${animalSpecies(animal.species).label} ${animal.id}`;
+  const age=`${animal.sex==='female'?'♀':'♂'} · ${(animal.ageTicks/(TICKS_PER_DAY*60)).toLocaleString('fr-FR',{maximumFractionDigits:2})} an · ${stageLabels[animalLifeStage(animal)]}`;
+  const facts=[animalActivity(world,animal,targets),animalAreaLabel(world,animal),MEDICAL_CARE[animal.domestic!.care],product?`${product==='milk'?'Lait':'Laine'} ${Math.round(100*productFullness(animal))} %`:'',animal.pregnancy?`Gestation ${Math.round(100*animal.pregnancy.progress/gestationTicks(animal.species))} %`:''].filter(Boolean).join(' · ');
+  const ordered=['locate','details','slaughter','haul','area'].map(action=>controls.find(control=>control.id===`animal-${animal.id}-${action}`)??button(`animal-${animal.id}-${action}-unavailable`,'—',()=>{},{disabled:true,hint:'Indisponible dans cette partie ou pour cette espèce.'}));
+  return {...row(`animal-${animal.id}`,identity,`${age} · ${animalActivity(world,animal,targets)}`,undefined,ordered.map(control=>({...control,hint:[control.hint,identity,age,facts].filter(Boolean).join('\n')}))),compact:true,hint:[identity,age,facts].join('\n')};
+ })];
  if(!animals.length)rows.push(row('animals-empty','Aucun animal domestique.'));
  if(world.schemaVersion>=228)for(const species of AUTO_SLAUGHTER_SPECIES){const c=autoSlaughterCounts(world,species),config=world.autoSlaughter?.find(c=>c.species===species)??defaultAutoSlaughterConfig(species);rows.push(row(`quota-${species}`,animalSpecies(species).label,`${c.total} animaux · limite ${config.maxTotal<0?'∞':config.maxTotal}`,`Adultes ${c.males} ♂ / ${c.females} ♀ · jeunes ${c.malesYoung} ♂ / ${c.femalesYoung} ♀ · gestantes ${c.pregnant}`,[button(`quota-${species}-edit`,'Quotas',()=>quotaEditor(species))]));}
- return {id:'animals',title:'Animaux',rows,width:7.8,onClose:()=>void host?.panel(null)};
+ return {id:'animals',title:'Animaux',layout:'table',rows,width:11.4,onClose:()=>void host?.panel(null)};
 }
 function wildlifePanel(state:NativeUiState,world:World):NativePage {
  const animals=world.wildlife?.animals.filter(a=>!a.domestic&&knownPosition256(world,a))??[];
@@ -223,13 +245,20 @@ function researchPanel(world:World):NativePage {
  const names=(ids:readonly number[])=>ids.map(id=>world.pawns.find(p=>p.id===id)?.name??`#${id}`).join(', ')||'Aucun';
  const points=(selected.progress(world)?.points??0)/RESEARCH_SCALE;
  const rows:NativeRow[]=[row('research-selected',selected.title,`${points.toFixed(1)} / ${selected.cost} points`,selected.detail,[button('research-start',done?'Terminée':active?'Projet actif':'Lancer',()=>send({type:'research-project',project:selected.id}),{disabled:done||active||!!missing||selected.id==='vitals-monitor'&&!stations.vitalsMonitorAvailable})]),row('research-prerequisite','Prérequis',missing??'Prérequis acquis'),row('research-station','Installation',readiness.stationIssue?issueLabel[readiness.stationIssue]:'Installation compatible disponible'),row('research-workers','Chercheurs affectés',names(readiness.assignedIds),`En travail : ${names(readiness.workingIds)} · en déplacement : ${names(readiness.movingIds)} · indisponibilité médicale : ${names(readiness.medicallyUnavailableIds)}`),row('research-context','Organisation',undefined,undefined,[button('research-open-work','Travail',()=>host?.panel('work')),button('research-open-production','Production',()=>{host?.category('production');return host?.panel('architect');}),button('research-pause','Suspendre la recherche',()=>send({type:'research-project',project:null}),{disabled:!world.research?.project})])];
- for(const project of projects){const p=(project.progress(world)?.points??0)/RESEARCH_SCALE,complete=researchUnlocked(world,project.id),prerequisite=researchPrerequisite(world,project.id),issue=stations.issues.get(project.id);rows.push(row(`research-${project.id}`,project.title,complete?'Terminée':`${p.toFixed(1)} / ${project.cost}`,prerequisite?`Nécessite ${prerequisite}`:issue?issueLabel[issue]:world.research?.project===project.id?'Projet actif':'Disponible',[button(`research-${project.id}-select`,'Détails',()=>{researchSelection=project.id;redraw();},{active:project.id===selected.id})]));}
- return {id:'research',title:'Recherche',subtitle:'Tous les projets, leurs progrès et leurs conditions réelles.',rows,width:7.8,onClose:()=>void host?.panel(null)};
+ rows.push({id:'research-catalogue-heading',label:'Projets de recherche',emphasis:'heading'});
+ for(let offset=0;offset<projects.length;offset+=4){
+  rows.push({id:`research-grid-${offset/4}`,label:'',controls:projects.slice(offset,offset+4).map(project=>{
+   const points=(project.progress(world)?.points??0)/RESEARCH_SCALE,complete=researchUnlocked(world,project.id),prerequisite=researchPrerequisite(world,project.id),issue=stations.issues.get(project.id);
+   const status=complete?'Terminée':world.research?.project===project.id?'Projet actif':prerequisite?`Nécessite ${prerequisite}`:issue?issueLabel[issue]:'Disponible';
+   return button(`research-${project.id}-select`,project.title,()=>{researchSelection=project.id;researchSelectionRevision++;redraw();},{active:project.id===selected.id,color:complete?'#c4d3b3':prerequisite?'#d7ccbb':undefined,hint:`${project.title}\n${points.toFixed(1)} / ${project.cost} points · ${status}\n${project.detail}`});
+  })});
+ }
+ return {id:`research:${selected.id}:${researchSelectionRevision}`,title:'Recherche',layout:'dialog',subtitle:'Choisir un projet dans le catalogue ; son dossier et ses conditions sont présentés au-dessus.',rows,width:10.4,onClose:()=>void host?.panel(null)};
 }
 function historyPanel(state:NativeUiState):NativePage {
  const source=state.world??state.campaign,rows:NativeRow[]=[];
  if(state.world){const economy=state.world.economy;if(economy){const wealth=economy.wealth,expect=expectationForWealth(wealth.knownTotal);rows.push(row('economy-total','Patrimoine évalué',`${money(wealth.knownTotal)}${wealth.complete?'':' au minimum'}`,`Relevé jour ${1+Math.floor(economy.sampledAt/TICKS_PER_DAY)} · attentes ${expect.label} (${signed(expect.moodOffset)} humeur)`),row('economy-parts','Composition',undefined,`Objets ${money(wealth.items)} · bâtiments ${money(wealth.structures)} · sols ${money(wealth.floors)}`),row('economy-coverage','Couverture',wealth.complete?'Complète':'Valeurs manquantes',`${wealth.unpricedPawnIds.length} personnes ; ${(wealth.unpricedPileIds?.length??0)+(wealth.unpricedPackedIds?.length??0)+(wealth.unpricedStructureIds?.length??0)} autres biens non évalués.`));}else rows.push(row('economy-adopt','Patrimoine',undefined,'La partie conserve ses règles historiques. Adopter le suivi part des biens présents.',[button('economy-enable','Activer le suivi économique',()=>send({type:'adopt-economy'}))]));}
- const events=source?.events??[];for(let i=events.length-1;i>=0;i--){const event=events[i]!;rows.push(row(`event-${i}`,`Jour ${1+Math.floor(event.tick/TICKS_PER_DAY)}`,event.message));}
+ const events=source?.events??[];for(let i=events.length-1;i>=0;i--){const event=events[i]!;rows.push({...row(`event-${i}`,`Jour ${1+Math.floor(event.tick/TICKS_PER_DAY)}`,event.message),labelWidth:80});}
  if(!events.length)rows.push(row('history-empty','Aucun événement consigné.'));
  return {id:'history',title:'Historique',rows,width:7.8,onClose:()=>void host?.panel(null)};
 }
@@ -294,19 +323,28 @@ function paintAreaCoordinates(areaId:number):void {
  ],[button('paint-apply','Appliquer le rectangle',async()=>{await send({type:'allowed-area-paint',areaId,enabled,from:{x:fromX,z:fromZ},to:{x:toX,z:toZ}});areaEditor();})]);open(make());
 }
 function assignPanel(world:World):NativePage {
- const rows:NativeRow[]=[];
+ const rows:NativeRow[]=[{id:'assign-headings',label:'Colon',value:'Activité',compact:true,columns:['Régime','Hostilité','Zone','Tenue','Auto','Port forcé','Drogues'].map(label=>({label}))}];
  for(const pawn of world.pawns.filter(p=>isColonist(p)&&!p.prisoner)){
   const food=world.foodPolicies.find(p=>p.id===pawn.foodPolicyId),apparel=world.apparelPolicies?.find(p=>p.id===pawn.apparelPolicyId),drug=effectiveDrugPolicies265(world).find(p=>p.id===pawn.drugPolicyId)??effectiveDrugPolicies265(world)[0]!;
    const controls=[button(`assign-food-${pawn.id}`,'Régime',()=>choose(`food-choice-${pawn.id}`,`${pawn.name} · alimentation`,currentWorld().foodPolicies.map(policy=>({id:`food-${policy.id}`,label:policy.name,active:currentPawn(pawn.id).foodPolicyId===policy.id,choose:()=>send({type:'food-policy-assign',pawnId:pawn.id,policyId:policy.id})})))),button(`assign-response-${pawn.id}`,'Hostilité',()=>choose(`response-${pawn.id}`,`${pawn.name} · réaction hostile`,(['flee','ignore','attack'] as const).map(response=>({id:response,label:{flee:'Fuir',ignore:'Ignorer',attack:'Attaquer'}[response],active:(currentPawn(pawn.id).hostilityResponse??'flee')===response,choose:()=>send({type:'hostility-response',pawnId:pawn.id,response})})))),button(`assign-area-${pawn.id}`,'Zone',()=>choose(`area-choice-${pawn.id}`,`${pawn.name} · zone autorisée`,[{id:0,label:'Sans restriction'},...(currentWorld().allowedAreas??[])].map(area=>({id:`area-${area.id}`,label:area.label,active:(currentPawn(pawn.id).allowedAreaId??0)===area.id,choose:()=>send({type:'assign-allowed-area',pawnId:pawn.id,areaId:area.id||null})}))))];
   if(world.schemaVersion>=90&&apparel){controls.push(button(`assign-apparel-${pawn.id}`,'Tenue',()=>choose(`apparel-choice-${pawn.id}`,`${pawn.name} · tenue`,(currentWorld().apparelPolicies??[]).map(policy=>({id:`apparel-${policy.id}`,label:policy.label,active:currentPawn(pawn.id).apparelPolicyId===policy.id,choose:()=>send({type:'apparel-policy-assign',pawnId:pawn.id,policyId:policy.id,automatic:!!currentPawn(pawn.id).apparelAutomation})})))),button(`assign-auto-${pawn.id}`,pawn.apparelAutomation?'Auto actif':'Auto inactif',()=>{const p=currentPawn(pawn.id);return send({type:'apparel-policy-assign',pawnId:p.id,policyId:p.apparelPolicyId??apparel.id,automatic:!p.apparelAutomation});},{active:!!pawn.apparelAutomation}),button(`assign-forced-${pawn.id}`,'Libérer le port forcé',()=>send({type:'apparel-clear-forced',pawnId:pawn.id})));}
   if(world.schemaVersion>=265)controls.push(button(`assign-drug-${pawn.id}`,'Drogues',()=>choose(`drug-choice-${pawn.id}`,`${pawn.name} · drogues`,effectiveDrugPolicies265(currentWorld()).map(policy=>({id:`drug-${policy.id}`,label:policy.name,active:currentPawn(pawn.id).drugPolicyId===policy.id,choose:()=>send({type:'drug-policy-assign',pawnId:pawn.id,policyId:policy.id})})))));
-  rows.push(row(`assign-${pawn.id}`,pawn.name,food?.name??'Régime inconnu',[apparel?.label,world.schemaVersion>=265?drug.name:'',pawn.allowedAreaId?world.allowedAreas?.find(a=>a.id===pawn.allowedAreaId)?.label:'Sans restriction',queryPawnStatus(world,pawn).reason].filter(Boolean).join(' · '),controls.map(c=>({...c,disabled:c.disabled||pawn.state==='dead'||!!pawn.health?.death||!!pawn.visitor}))));
+  const area=pawn.allowedAreaId?world.allowedAreas?.find(a=>a.id===pawn.allowedAreaId)?.label??'Zone inconnue':'Sans restriction';
+  const response={flee:'Fuir',ignore:'Ignorer',attack:'Attaquer'}[pawn.hostilityResponse??'flee'];
+  const values:Record<string,string>={food:food?.name??'Régime inconnu',response,area,apparel:apparel?.label??'Tenue indisponible',auto:pawn.apparelAutomation?'Auto actif':'Auto inactif',forced:'Libérer',drug:drug?.name??'Politique indisponible'};
+  const hint=[pawn.name,`Régime : ${values.food}`,`Hostilité : ${response}`,`Zone : ${area}`,`Tenue : ${values.apparel}`,values.auto,world.schemaVersion>=265?`Drogues : ${drug.name}`:'',queryPawnStatus(world,pawn).reason].filter(Boolean).join('\n');
+  const ordered=['food','response','area','apparel','auto','forced','drug'].map(action=>{
+   const original=controls.find(control=>control.id===`assign-${action}-${pawn.id}`);
+   if(!original)return button(`assign-${action}-${pawn.id}-unavailable`,'—',()=>{},{disabled:true,hint:'Indisponible dans cette partie.'});
+   return {...original,label:values[action]!,hint:[original.label,original.hint,hint].filter(Boolean).join('\n'),disabled:original.disabled||pawn.state==='dead'||!!pawn.health?.death||!!pawn.visitor};
+  });
+  rows.push({...row(`assign-${pawn.id}`,pawn.name,queryPawnStatus(world,pawn).reason,undefined,ordered),compact:true,hint});
  }
  rows.push(row('manage-food','Régimes alimentaires',undefined,undefined,[button('food-new','Nouveau régime',()=>inputPage('new-food','Nouveau régime','Nouveau régime',name=>send({type:'food-policy-create',name}))),...world.foodPolicies.map(policy=>button(`food-edit-${policy.id}`,policy.name,()=>foodEditor(policy.id)))]));
  if(world.apparelPolicies)rows.push(row('manage-apparel','Politiques de tenue',undefined,'Filtre des vêtements et matières, qualité, PV, copie et renommage.',world.apparelPolicies.map(policy=>button(`apparel-edit-${policy.id}`,policy.label,()=>apparelEditor(policy.id)))));
  if(world.schemaVersion>=265)rows.push(row('manage-drugs','Politiques de drogues',undefined,undefined,[button('drug-new','Nouvelle politique',()=>inputPage('new-drug','Nouvelle politique','Nouvelle politique',name=>send({type:'drug-policy-create',name}))),...effectiveDrugPolicies265(world).map(policy=>button(`drug-edit-${policy.id}`,policy.name,()=>drugEditor(policy.id)))]));
  rows.push(row('manage-areas','Zones autorisées',`${world.allowedAreas?.length??0} zones`,undefined,[button('areas-manage','Gérer les zones',areaEditor)]));
- return {id:'assign',title:'Assignations',rows,width:8.2,onClose:()=>void host?.panel(null)};
+ return {id:'assign',title:'Assignations',layout:'table',rows,width:11.4,onClose:()=>void host?.panel(null)};
 }
 
 function questsPanel(state:NativeUiState):NativePage {
@@ -355,7 +393,7 @@ export function syncNativePanelState(state:NativeUiState,actions:NativeUiActions
  latest=state;host=actions;
  syncNativeWorldState(state,actions);
  const source=state.world??state.campaign,identity=state.world?`${state.world.seed}:${state.world.width}:${state.world.height}`:state.campaign?`campaign:${state.campaign.campaignSeed}`:'none';
- if(identity!==lastIdentity||(source&&source.tick<lastTick)){researchSelection=undefined;scheduleClipboard=undefined;scheduleRange=undefined;lastIdentity=identity;}
+ if(identity!==lastIdentity||(source&&source.tick<lastTick)){researchSelection=undefined;scheduleClipboard=undefined;lastIdentity=identity;}
  lastTick=source?.tick??-1;
 }
 /** Builds data for native meshes. It never reads a legacy control or emits HTML. */

@@ -114,6 +114,49 @@ describe('native storage controls match confirmed storage rules', () => {
     expect(f.page.rows[0]!.label).toBe('Stockage indisponible.');
   });
 
+  it('applies localized quality choices directly to the same storage and rejects values absent from its options', async () => {
+    const f = await fixture(), minimum = f.page.rows.find(row => row.id === 'storage-quality-min')!.controls![0]!.select!;
+    expect(minimum.options.some(option => option.value === 'good' && !!option.label)).toBe(true);
+    await minimum.onChange('not-a-quality');
+    expect(f.actions.command).not.toHaveBeenCalled();
+    await minimum.onChange('good');
+    expect(f.world.stockpiles[0]!.quality).toEqual({ min: 'good', max: 'legendary' });
+    expect(f.actions.command).toHaveBeenCalledExactlyOnceWith({ type: 'stockpile-policy', stockpileId: f.stockpile.id, settings: { quality: { min: 'good', max: 'legendary' } } });
+    const maximum = f.page.rows.find(row => row.id === 'storage-quality-max')!.controls![0]!.select!;
+    expect(maximum.options.some(option => option.value === 'normal')).toBe(false);
+    await maximum.onChange('normal');
+    expect(f.actions.command).toHaveBeenCalledTimes(1);
+    await maximum.onChange('excellent');
+    expect(f.world.stockpiles[0]!.quality).toEqual({ min: 'good', max: 'excellent' });
+    expect(f.actions.command).toHaveBeenLastCalledWith({ type: 'stockpile-policy', stockpileId: f.stockpile.id, settings: { quality: { min: 'good', max: 'excellent' } } });
+    expect(f.page.id).toBe(`inspect-storage-${f.stockpile.id}`);
+  });
+
+  it('retains the captured map guard and the current busy guard for localized select changes', async () => {
+    const f = await fixture(), minimum = f.page.rows.find(row => row.id === 'storage-quality-min')!.controls![0]!.select!;
+    f.state.busy = true; await minimum.onChange('good');
+    expect(f.actions.command).not.toHaveBeenCalled();
+    f.state.busy = false; f.state.epoch!++; await minimum.onChange('good');
+    expect(f.actions.command).not.toHaveBeenCalled();
+    expect(f.world.stockpiles[0]!.quality).toBeUndefined();
+    expect(f.page.rows.some(row => row.id === 'storage-quality-min')).toBe(false);
+    expect(f.page.rows.some(row => row.id === 'object-id')).toBe(true);
+  });
+
+  it('edits a bill through its local repeat selector and keeps the confirmed bill unchanged until Apply', async () => {
+    const f = await fixture('tailor'), before = f.bill.mode;
+    const mode = f.page.rows.find(row => row.id === `bill-mode-${f.bill.id}`)!.controls![0]!.select!;
+    expect(mode.options).toEqual([{ value: 'times', label: 'Faire X fois' }, { value: 'until', label: 'Jusqu’à X en réserve' }, { value: 'forever', label: 'Sans limite' }]);
+    await mode.onChange('forever');
+    expect(f.bill.mode).toBe(before);
+    expect(f.actions.command).not.toHaveBeenCalled();
+    expect(f.page.rows.find(row => row.id === `bill-mode-${f.bill.id}`)!.controls![0]!.select!.value).toBe('forever');
+    const apply = `bill-apply-${f.bill.id}`;
+    await f.page.rows.find(row => row.id === apply)!.controls!.find(control => control.id === apply)!.onActivate();
+    expect(f.bill.mode).toBe('forever');
+    expect(f.actions.command).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ type: 'bill-update', structureId: f.station.id, billId: f.bill.id, settings: expect.objectContaining({ mode: 'forever' }) }));
+  });
+
   it('pastes an independent confirmed policy copy into the actual target without copying ground capacity', async () => {
     const f = await fixture();
     Object.assign(f.stockpile, { priority: 5, capacity: 12, quality: { min: 'good', max: 'excellent' }, allowRotten: false });

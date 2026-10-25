@@ -20,6 +20,9 @@ export interface NativeControl {
   disabled?:boolean;
   active?:boolean;
   hint?:string;
+  caption?:string;
+  select?:{value:string;options:readonly {value:string;label:string;hint?:string;disabled?:boolean}[];onChange:(value:string)=>void|Promise<unknown>};
+  paint?:{group:string;index:number;onPaint:(indices:readonly number[])=>void|Promise<unknown>};
   onActivate:()=>void|Promise<unknown>;
 }
 export interface NativeRow {
@@ -27,6 +30,13 @@ export interface NativeRow {
   label:string;
   value?:string;
   detail?:string;
+  hint?:string;
+  emphasis?:'heading'|'muted'|'normal';
+  column?:0|1;
+  labelWidth?:number;
+  dense?:boolean;
+  columns?:readonly {label:string;hint?:string}[];
+  meter?:{value:number;max?:number;label?:string;color?:string;passion?:0|1|2;secondary?:{value:number;max?:number;label?:string;color?:string}};
   controls?:NativeControl[];
   /** Equal-width cells are used by work and schedule matrices. */
   compact?:boolean;
@@ -47,6 +57,9 @@ export interface NativePage {
   modal?:boolean;
   closable?:boolean;
   width?:number;
+  height?:number;
+  columnRatio?:number;
+  layout?:'inspector'|'table'|'tools'|'dialog'|'front';
   visual?:{
     kind:'planet';surface:WorldPhysicalSurface;roads?:readonly (readonly WorldRoadLink[])[];
     selected:number|null;markers?:readonly {tile:number;label?:string;color?:number}[];
@@ -105,4 +118,5 @@ export interface NativeUiActions {
   openOrbitalTrade?:(consoleId?:number)=>void;
   resizeZone?:(kind:'stockpile'|'growing',id:number,shrink:boolean)=>void;
   paintAllowedArea?:(id:number,enabled:boolean)=>void;
+  pawnActivity?:(pawnId:number)=>string;
 }

@@ -1,5 +1,7 @@
 # Interface native en carton — V476 qualifiée localement
 
+La reprise de densité, de structure et des interactions demandée après les captures humaines est documentée dans [Interface carton : densité et usages V477](native-cardboard-density-v477.md). Cette reprise conserve le moteur natif et les preuves ci-dessous.
+
 L’utilisateur a demandé la refonte complète UI/HUD/menus à partir de son prototype `diorama_carton_hud_3d_three_js_webgpu(3).html`. Il a rejeté le premier essai qui projetait la disposition et les contrôles DOM existants, puis explicitement autorisé la reprise : « Très bien, dans ce cas commence le travail ».
 
 Précision humaine suivante : les proportions, dimensions, placements, structures et textes du prototype peuvent être adaptés. L’exigence porte sur son rendu de cartons découpés aux ciseaux, sa peinture et ses pictogrammes, avec de vrais objets et interactions 3D. Les contenus et actions du jeu sont conservés.

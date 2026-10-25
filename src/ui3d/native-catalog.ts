@@ -3,6 +3,15 @@ import type {Tool,ArchitectCategory} from '../ui/layout';
 import {ITEM_DEFINITIONS} from '../sim/items';
 import {FLOOR_KINDS,FLOOR_DEFINITIONS,flooringRecipe} from '../sim/flooring';
 /** Native catalogue: definitions only, with no legacy layout dependency. */
+/** Match the construction workbench's established production order. */
+export const productionToolOrder:readonly string[]=[
+  'hydroponics-basin','deep-drill','ground-scanner','orbital-beacon',
+  'comms-console','nutrient-paste-dispenser','hopper','research-bench',
+  'tailor-bench','fueled-smithy','electric-smithy','brewery','fermenting-barrel','drug-lab',
+  'electric-crematorium','electric-smelter','biofuel-refinery','art-bench',
+  'machining-table','hi-tech-research-bench','multi-analyzer','fabrication-bench',
+  'electric-tailor-bench','crafting-spot','fueled-stove','electric-stove',
+];
 export const workColumns: readonly {id: WorkType; label: string}[] = [
   {id:'firefight',label:'Incendie'}, {id:'patient',label:'Patient'},
   {id:'doctor',label:'Médecin'}, {id:'bedrest',label:'Repos au lit'},
