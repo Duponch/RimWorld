@@ -1019,3 +1019,20 @@ Manifestes, préimages, contrôles, RAW et comparaison sont conservés sous
 `cooperative-candidate-x1-2026-10-25T12-18-05-487Z`.
 Les gains intégrés restent A2H, FIFO et cadence des ombres ; les microcoupures,
 le débit accéléré et le confort final ne sont pas déclarés résolus.
+
+#### Charge concurrente signalée après cette paire
+
+L'utilisateur indique ensuite avoir lancé une scène Three.js dans Firefox
+pendant les derniers tests. Les processus Firefox actuels ont été créés
+à12:04:48UTC, soit13:04heure locale, avant le témoin12:14et le candidat12:18.
+Le chevauchement est confirmé ; l'heure exacte d'ouverture de la scène et
+l'intensité de sa charge pendant chaque fenêtre ne sont pas connues.
+
+**La paire précédente est conservée mais exclue de l'attribution causale
+des performances jusqu'à une reprise sans cette charge concurrente.**
+Le retard de32secondes reste une observation réelle dans ces conditions,
+sans prouver la part du prototype et celle de Firefox. Le rejet de cette
+implémentation devient donc provisoire, et aucune intégration n'a lieu.
+Les contrôles fonctionnels passants restent acquis. Les mesures antérieures
+à ce lancement ne sont pas remises en cause par cette scène. Une paire
+fraîche témoin/candidat sera nécessaire après confirmation de sa fermeture.
