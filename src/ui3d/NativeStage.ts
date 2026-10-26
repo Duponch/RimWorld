@@ -21,6 +21,7 @@ type PagePiece={piece:CardboardPiece;hit:Hit;geometry:string;paint:string};
 export interface NativeStageOptions {
   onPanel:(panel:NativePanelId)=>void;
   onEscape:()=>void;
+  onHudInspectorDismiss?:()=>void;
   onError:(message:string)=>void;
   onGesture?:()=>void;
   onActivate?:(id:string)=>void;
@@ -599,8 +600,11 @@ export class NativeStage {
     if(down.pointerId!==event.pointerId||Math.hypot(event.clientX-down.x,event.clientY-down.y)>12)return;
     if(hit?.piece!==down.piece&&down.pageId===this.page?.id&&down.layout===this.pageBox&&this.acquiredHitLive(down.piece)&&!this.insetControls.has(down.piece)&&down.pose.intersects(this.raycaster))hit=this.hits.get(down.piece.userData.mesh)??{piece:down.piece};
     if(hit?.piece!==down.piece||hit?.control?.id!==down.controlId)return;
-    if(down.outsidePage&&this.page?.id===down.outsidePage)this.dismissPage();
-    this.activate(hit);
+    const page=this.page,id=hit.control?.id??String(hit.piece.userData.nativeId??'');
+    const dismissInspector=!!(down.outsidePage&&page&&page.id===down.outsidePage&&!this.frontVisible&&!page.modal&&page.closable!==false
+      &&page.layout==='inspector'&&page.id.startsWith('inspect-pawn-')&&/^hud:speed:(0|1|3|6)$/.test(id)&&this.options.onHudInspectorDismiss);
+    if(down.outsidePage&&page?.id===down.outsidePage&&!dismissInspector)this.dismissPage();
+    this.activate(hit,dismissInspector);
   }
   private belongsToPage(hit:Hit|undefined):boolean{if(!hit)return false;if(this.dropdown?.pieces.includes(hit.piece))return true;for(let parent:THREE.Object3D|null=hit.piece;parent;parent=parent.parent)if(parent===this.pageGroup)return true;return false;}
   private dismissPage():void{const page=this.page;if(!page||page.closable===false)return;this.activationSerial++;this.closeDropdown();this.clearHint();try{page.onClose?.();if(!this.frontVisible||!page.onClose)this.options.onEscape();}catch(error){this.options.onError(String(error));}}
@@ -610,7 +614,7 @@ export class NativeStage {
     this.pointer.set(x/(this.width*this.displayScale)*2-1,1-y/(this.height*this.displayScale)*2);this.scene.updateMatrixWorld(true);this.raycaster.setFromCamera(this.pointer,this.camera);
     return this.globe.hitTest(this.raycaster);
   }
-  private activate(hit:Hit):void{
+  private activate(hit:Hit,dismissInspector=false):void{
     if(hit.control?.disabled)return;
     if(hit.input&&this.editing===hit&&this.editor){this.editor.focus({preventScroll:true});return;}
     const serial=++this.activationSerial,id=hit.control?.id??String(hit.piece.userData.nativeId??''),pageId=this.page?.id;
@@ -626,6 +630,9 @@ export class NativeStage {
       if(live.control?.select){this.openDropdown(live);return;}
       const action=live.control?.onActivate??live.piece.userData.onClick;
       if(action){
+        if(dismissInspector&&this.page&&this.page.id===pageId&&!this.frontVisible&&!this.page.modal&&this.page.closable!==false){
+          this.closeDropdown();this.clearHint();this.options.onHudInspectorDismiss?.();
+        }
         if(id)this.options.onActivate?.(id);const result=action(),pending=result!=null&&typeof (result as PromiseLike<unknown>).then==='function';
         if(pending){this.pendingActions++;this.updatePointerCursor();}
         void Promise.resolve(result).catch(error=>{if(!this.closed)this.options.onError(error instanceof Error?error.message:String(error));}).finally(()=>{if(pending){this.pendingActions--;if(!this.closed)this.updatePointerCursor(this.hit(this.lastPointer.x*this.displayScale,this.lastPointer.y*this.displayScale));}});
