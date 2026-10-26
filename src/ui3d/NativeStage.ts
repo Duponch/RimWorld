@@ -475,6 +475,7 @@ export class NativeStage {
       const hit=this.hits.get(acquired.piece.userData.mesh);return hit??{piece:acquired.piece};
     }
     const objects=this.art.interactiveMeshes.filter(mesh=>{let object:THREE.Object3D|null=mesh;while(object){if(!object.visible)return false;object=object.parent;}return true;});
+    let backdrop:Hit|undefined;
     for(const intersection of this.raycaster.intersectObjects(objects,false)){
       const mesh=intersection.object as THREE.Mesh;
       const found=this.hits.get(mesh)??(mesh.userData.widgetGroup?{piece:mesh.userData.widgetGroup as CardboardPiece}:undefined);if(!found)continue;
@@ -486,11 +487,15 @@ export class NativeStage {
         let parent:THREE.Object3D|null=found.piece;while(parent&&parent!==this.pageGroup)parent=parent.parent;
         if(!parent&&!this.dropdown?.pieces.includes(found.piece))continue;
       }
+      // The physical paper can extend in front of its invisible text targets.
+      // Keep it as an occlusion barrier while checking this page's own content.
+      if(found.piece===this.pageBackdrop){backdrop=found;continue;}
+      if(backdrop&&!this.belongsToPage(found))continue;
       const insets=this.insetControls.get(found.piece);
       if(insets){const local=found.piece.worldToLocal(intersection.point.clone());for(const inset of insets){const rect=inset.region!;if(local.x>=rect.x&&local.x<=rect.x+rect.width&&local.y>=rect.y&&local.y<=rect.y+rect.height)return inset;}}
       return found;
     }
-    return;
+    return backdrop;
   }
   private swallow(event:Event):void{event.preventDefault();event.stopImmediatePropagation();}
   private gesture():void{try{this.options.onGesture?.();}catch(error){this.options.onError(String(error));}}

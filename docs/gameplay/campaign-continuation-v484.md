@@ -23,3 +23,11 @@ Continuer désormais depuis [actual-preparation-paused.json.gz](../../tmp/campai
 **Ne pas rejouer la préparation depuis1782 pour obtenir un état favorable.** Le nouveau pilote de devis doit authentifier ce checkpoint2010, laisser sa permission déjà acquise intacte et conserver exactement l’export entier pendant le brouillon.
 
 Prochaine étape : choisir par l’interface Eden8+Robin9, laisser Gaël7 au foyer, vérifier les disponibilités actuelles pour douze rations et demander le devis vers39971. Lire réellement capacité, autonomie, route et avertissements **avant** `group-start`. Aucun départ, camp, retour, perte ou victoire n’est acquis ici. Aucun gain FPS ni cadence de jeu n’est déduit de ce parcours instrumenté.
+
+## Devis réellement acquis après correction du survol
+
+La première lecture native échoue61,212s sur un véritable défaut de plan d'infobulle sous le carton ; l'entier2010 reste exact et l'échec est conservé. Le [correctif ciblé de détection](../development/native-ui-reliability-v485.md#reprise-du-survol-des-textes-pendant-v484) ne change aucun mécanisme de campagne. Le [nouveau devis natif](../../tmp/campaign-continuation-v484/native-preview-prepared-2026-10-26T18-40-21.384Z-17732/report.json) passe55,412s, avec deux exports entiers exactement égaux au checkpoint2010, sans nouvelle permission ni temps joué.
+
+ROOT lit la confirmation réelle : Eden8 et Robin9, Gaël7 restant au foyer ; route0→39971, deux tuiles forêt tempérée/terrain plat ;12rations,6de37557 attribuées à8 et6de37876 à9. Charge3,74kg/70kg,1,87kg/35kg par porteur ; autonomie alimentaire3,45jours, cueillette0,45nutrition/jour et conservation600jours. Le seul avertissement affiché est **moins de cinq jours de nourriture estimés**. Ce devis et cet avertissement sont conservés tels quels ; ils ne constituent pas encore un départ ni une garantie de durée du chargement ou du camp.
+
+Avant tout engagement, rapprocher le coût réel de l'arête, la réserve alimentaire de Gaël et la marge du court aller/camp/retour. Si l'engagement est retenu, sauver après sa réponse puis jouer réellement les contacts et départs ; conserver le dernier état effectivement joué à chaque frontière. L'automatisation de poursuite de ce même chat est active selon la demande humaine de continuer sans relance ; le checkpoint privé courant reste la source de reprise.
