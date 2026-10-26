@@ -1,5 +1,6 @@
 import {updateShipAssemblyInspection276} from './ui/ship-assembly-inspection-276';
 import {NativeStage} from './ui3d/NativeStage';
+import {nativeTextEntitiesFor} from './ui3d/native-text-entities';
 import {createNativeFrontMenu} from './ui3d/native-front';
 import {buildNativePanel,buildNativeToolPalette,syncNativePanelState} from './ui3d/native-panels';
 import {buildNativeEncounter,buildNativeFactions,setNativeWorldTab,focusNativeCaravanTrade} from './ui3d/native-world';
@@ -1058,6 +1059,7 @@ function nativeActions():NativeUiActions {
 }
 function refreshNativeUi():void {
   if(!nativeUi)return;
+  nativeUi.setTextEntities(nativeTextEntitiesFor(snapshot,campaignOnly));
   nativeUi.setWorldVisible(!!snapshot&&!!renderer);nativeHud?.setVisible(!!snapshot&&!frontMenu.isOpen());
   if(snapshot){nativeHud?.setSelection([...selection.ids]);nativeHud?.update(snapshot,currentSpeed,renderer?.stats.fps??0);}
   nativeHud?.setViewState({walls:wallCutaway?'coupés':'hauts',roofs:nativeRoofsVisible,foliage:foliageVisible,zones:nativeZonesVisible,camera:nativePerspective?'perspective':'iso'});

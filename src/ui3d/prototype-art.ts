@@ -7,6 +7,9 @@ import * as THREE from 'three/webgpu';
 type Paint = string | CanvasGradient | CanvasPattern;
 export type CardboardDraw = (ctx: CanvasRenderingContext2D, wPx: number, hPx: number, rng: () => number) => void;
 export interface CardboardPieceOptions {
+  /** Use the same cut cardboard construction for silhouettes, not a flat decal. */
+  outline?:THREE.Shape|THREE.Shape[];
+  surface?:'panel';
   paper?:boolean;
   cacheBackground?:boolean;
   hitOnly?:boolean;
@@ -267,7 +270,7 @@ export function drawHandBlob(ctx: CanvasRenderingContext2D, cx: number, cy: numb
 }
 
 // Peint une vraie surface en carton kraft recouverte de coups de pinceau à la gouache irréguliers
-export function paintCardboardCanvas(ctx: CanvasRenderingContext2D, wPx: number, hPx: number, bgColor: string, drawCallback: CardboardDraw | undefined, hasBorder = true, seed = 1, rng:()=>number = seededRandom(seed * 313 + 7)) {
+export function paintCardboardCanvas(ctx: CanvasRenderingContext2D, wPx: number, hPx: number, bgColor: string, drawCallback: CardboardDraw | undefined, hasBorder = true, seed = 1, rng:()=>number = seededRandom(seed * 313 + 7), surface?:'panel') {
   ctx.clearRect(0, 0, wPx, hPx);
 
   // 1. Fond de carton kraft brut (qui restera visible sur les bords mal peints !)
@@ -310,13 +313,14 @@ export function paintCardboardCanvas(ctx: CanvasRenderingContext2D, wPx: number,
   drawHandRect(ctx, 8, 8, wPx - 16, hPx - 16, bgColor, null, 0, rng);
 
   // 3. Variations de dilution de la gouache (auréoles plus claires / plus sombres et traces de poils)
-  for (let b = 0; b < 7; b++) {
-    ctx.fillStyle = (b % 2 === 0) ? 'rgba(255, 248, 230, 0.08)' : 'rgba(35, 20, 10, 0.07)';
+  const pigmentCount=surface?Math.min(42,Math.max(7,Math.ceil(wPx*hPx/80000))):7;
+  for (let b = 0; b < pigmentCount; b++) {
+    ctx.fillStyle = (b % 2 === 0) ? 'rgba(255, 248, 230, 0.08)' : surface?'rgba(74, 48, 25, 0.025)':'rgba(35, 20, 10, 0.07)';
     drawHandBlob(
       ctx,
       wPx * (0.15 + rng() * 0.7),
       hPx * (0.15 + rng() * 0.7),
-      Math.min(wPx, hPx) * (0.18 + rng() * 0.25),
+      Math.min(surface?96:Infinity,Math.min(wPx, hPx) * (0.18 + rng() * 0.25)),
       ctx.fillStyle,
       null,
       0,
@@ -376,11 +380,11 @@ function createHitOnlyPiece({w,h,depth=.044,seed=1,interactive=false,onClick=nul
 export function createCardboardPiece({
   w, h, depth = 0.044, bgColor = PALETTE.kraftBase,
   bevel = 0.026, seed = 1, drawFn, interactive = false,
-  onClick = null, hasBorder = true, tooltip = '', paper = true, textureWidth, textureHeight, uvPadding, cacheBackground = false, hitOnly = false
+  onClick = null, hasBorder = true, tooltip = '', paper = true, textureWidth, textureHeight, uvPadding, cacheBackground = false, hitOnly = false, outline, surface
 }: CardboardPieceOptions, cardboardEdgeMat: THREE.MeshStandardMaterial, shadowMat: THREE.MeshBasicMaterial): CardboardPiece {
   if(hitOnly)return createHitOnlyPiece({w,h,depth,seed,interactive,onClick,tooltip,drawFn,bgColor});
   const group = new THREE.Group() as CardboardPiece;
-  const shape = createCutoutRectShape(w, h, bevel, seed);
+  const shape = outline??createCutoutRectShape(w, h, bevel, seed);
 
   // bevelEnabled: false -> Arête vive et franche de carton coupé aux ciseaux (zéro reflet plastique arrondi !)
   const extrudeSettings = {
@@ -413,12 +417,12 @@ export function createCardboardPiece({
   let inkRandom:RandomStream|undefined;
   const paint=(draw:CardboardDraw|undefined,bg:string)=>{
     if(paper&&cacheBackground){
-      const key=JSON.stringify([wPx,hPx,seed,bg,hasBorder]);
+      const key=JSON.stringify([wPx,hPx,seed,bg,hasBorder,surface]);
       if(backgroundKey!==key){
         background??=document.createElement('canvas');background.width=wPx;background.height=hPx;
         const backgroundCtx=background.getContext('2d',{alpha:false});
         if(!backgroundCtx)throw new Error('Canvas 2D is required for cached cardboard paint.');
-        paintCardboardCanvas(backgroundCtx,wPx,hPx,bg,(_ctx,_w,_h,rng)=>{inkRandom=(rng as RandomStream).clone();},hasBorder,seed,randomStream(seed*313+7));
+        paintCardboardCanvas(backgroundCtx,wPx,hPx,bg,(_ctx,_w,_h,rng)=>{inkRandom=(rng as RandomStream).clone();},hasBorder,seed,randomStream(seed*313+7),surface);
         backgroundFill=backgroundCtx.fillStyle;backgroundKey=key;
       }
       // Copy the opaque pixels at their original resolution. Restore the live
@@ -426,7 +430,7 @@ export function createCardboardPiece({
       ctx.save();ctx.resetTransform();ctx.globalAlpha=1;ctx.globalCompositeOperation='copy';ctx.drawImage(background!,0,0);ctx.restore();
       ctx.fillStyle=backgroundFill;
       draw?.(ctx,wPx,hPx,inkRandom!.clone());
-    }else if(paper)paintCardboardCanvas(ctx,wPx,hPx,bg,draw,hasBorder,seed);
+    }else if(paper)paintCardboardCanvas(ctx,wPx,hPx,bg,draw,hasBorder,seed,undefined,surface);
     else{ctx.clearRect(0,0,wPx,hPx);draw?.(ctx,wPx,hPx,seededRandom(seed));}
   };
   paint(drawFn,bgColor);

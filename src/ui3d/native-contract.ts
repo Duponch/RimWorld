@@ -9,6 +9,7 @@ import type {StorageControlSettings} from '../ui/storage-item-controls';
 import type {CampEntryProgressMessage256,CaravanEncounterProgressMessage261} from '../bridge/protocol';
 import type {WorldPhysicalSurface} from '../sim/world-surface-geography';
 import type {WorldRoadLink} from '../sim/world-roads';
+import type {NativeTextEntity} from './native-rich-text';
 
 /** Renderer-neutral native interface. No element, HTML, CSS, browser layout or
  * synthetic click is an authority for a visible control. */
@@ -28,6 +29,7 @@ export interface NativeControl {
 }
 export type NativeControlStyle='button'|'tab'|'tile'|'icon'|'navigation'|'research';
 export interface NativeRow {
+  presentation?:'record'|'summary'|'plain';
   id:string;
   label:string;
   value?:string;
@@ -51,6 +53,7 @@ export interface NativeRow {
   };
 }
 export interface NativePage {
+  textEntities?:readonly NativeTextEntity[];
   id:string;
   title:string;
   subtitle?:string;

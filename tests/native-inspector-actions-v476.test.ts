@@ -31,11 +31,11 @@ function rescueFixture() {
 }
 
 describe('native inspector restores real animal rescue and egg permissions', () => {
-  it('projects all twelve real skill meters in two compact Bio columns within the prior dossier dimensions', () => {
+  it('projects all twelve real skill meters in the stable V480 Bio dossier', () => {
     const world = createWorld(476, 16, 16), pawn = world.pawns[0]!;
     setNativeInspectorTab('bio');
     const ui = inspector(world, { selectedPawnIds: [pawn.id] }), skills = ui.page.rows.filter(row => row.id.startsWith('skill-'));
-    expect(ui.page).toMatchObject({ layout: 'inspector', width: 514, height: 489, columnRatio: .48 });
+    expect(ui.page).toMatchObject({ layout: 'inspector', width: 700, height: 620, columnRatio: .48 });
     expect(skills).toHaveLength(12);
     expect(new Set(ui.page.rows.filter(row => row.id !== 'pawn-tabs').map(row => row.column))).toEqual(new Set([0, 1]));
     for (const row of skills) {

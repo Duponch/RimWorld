@@ -65,6 +65,7 @@ import { artificialPartCovering, artificialPartEfficiencies } from '../sim/artif
 import { humanLimbVisualMask } from '../render/human-anatomy-presentation';
 import { apparelAppearance } from '../render/character-apparel';
 import { portraitDataUrl, portraitExpressionOf } from '../ui/pawn-portrait';
+import { nativeTextEntitiesFor } from './native-text-entities';
 import { registeredMapId } from '../sim/world-map-context';
 import { fuelLimit } from '../sim/fuel';
 import { batteryWattDays, BATTERY_CAPACITY, BATTERY_ENERGY_SCALE } from '../sim/power-battery';
@@ -356,8 +357,9 @@ function pawnPage(world: World, pawn: Pawn): NativePage {
     command('clear-orders', 'Effacer les ordres', { type: 'clear-orders', pawnId: pawn.id }), control('manage-work', 'Travail', () => owner.panel('work')));
   if (pawn.draft && colonist && alive) actions.push(command('draft-stop', 'Stop', { type: 'draft-stop', pawnIds: [pawn.id] }), command('fire-at-will', pawn.draft.holdFire ? 'Feu à volonté' : 'Cesser le feu', { type: 'fire-at-will', pawnIds: [pawn.id], enabled: !!pawn.draft.holdFire }));
   const result: NativePage & { portrait?: { url: string; label: string } } = { id: `inspect-pawn-${pawn.id}-${activeTab}`, title: pawn.name, subtitle:activeTab==='bio'||activeTab==='gear'?tabs.find(([tab]) => tab === activeTab)![1]:undefined, rows, actions, layout: 'inspector' };
-  const dimensions = { journal: [630, 510], gear: [460, 450], social: [540, 510], bio: [514, 489], needs: [580, 520], health: [630, 430], prisoner: [460, 450] } as const;
-  [result.width, result.height] = dimensions[activeTab];
+  // All tabs belong to the same cardboard dossier, rather than seven windows
+  // with different bounds. The pixel layout handles the viewport reduction.
+  [result.width, result.height] = [700, 620];
   if (activeTab === 'bio' || activeTab === 'needs' || activeTab === 'health' && healthPane === 'overview') {
     result.columnRatio = activeTab === 'bio' ? .48 : activeTab === 'needs' ? .38 : .375;
     for (const entry of rows) {
@@ -632,5 +634,6 @@ export function buildNativeInspector(state: NativeUiState, actions: NativeUiActi
   for (const entry of page.rows) { if (entry.detail) { entry.hint = [entry.hint, entry.detail].filter(Boolean).join(' · '); delete entry.detail; } if (entry.hint) for (const action of entry.controls ?? []) action.hint = [action.hint, entry.hint].filter(Boolean).join(' · '); }
   if (feedback) page.rows.unshift(row('inspector-feedback', feedback));
   if (owner.clearSelection) { page.actions ??= []; page.actions.push(control('inspect-close', 'Fermer', () => owner.clearSelection!())); page.onClose = owner.clearSelection; }
+  page.textEntities=nativeTextEntitiesFor(world,state.campaign);
   return page;
 }

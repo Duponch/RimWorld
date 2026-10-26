@@ -10,9 +10,9 @@ import {isSmoothedStone281,smoothedStoneLabel281,SMOOTHED_STONE_FACTS_281} from 
 export const TERRAIN_LABELS: Record<Terrain, string> = {
   'packed-dirt':'Terre tassée',
   'soil-natural':'Terre fertile',
-  'mossy-soil':'Sol moussu','marshy-soil':'Sol marÃ©cageux',mud:'Boue',sand:'Sable','soft-sand':'Sable meuble',ice:'Glace',riverbank:'Alluvions',
+  'mossy-soil':'Sol moussu','marshy-soil':'Sol marécageux',mud:'Boue',sand:'Sable','soft-sand':'Sable meuble',ice:'Glace',riverbank:'Alluvions',
   'water-deep':'Eau profonde infranchissable','ocean-shallow':'Eau marine peu profonde','ocean-deep':'Eau marine profonde infranchissable',
-  'river-shallow':'RiviÃ¨re peu profonde','river-chest-deep':'RiviÃ¨re profonde traversable',
+  'river-shallow':'Rivière peu profonde','river-chest-deep':'Rivière profonde traversable',
   grass: 'Terre ordinaire',
   soil: 'Terre pauvre',
   'rich-soil': 'Terre riche',
@@ -28,7 +28,7 @@ export const TERRAIN_LABELS: Record<Terrain, string> = {
 const legacy=new Set<string>(['grass','soil','rich-soil','gravel','rough-stone','marsh','water','water-shallow','rock']);
 const prospective=(tile:Tile,metadata?:TerrainRuntimeMetadata256)=>metadata?terrainHasProspectiveRules256(tile.terrain,metadata):!legacy.has(tile.terrain)&&isNaturalTerrain256(tile.terrain);
 export const terrainSurfaceLabel=(tile:Tile):string=>tile.collapsedRock?'Roche effondrée infranchissable':tile.bridge?`Pont en bois sur ${TERRAIN_LABELS[tile.terrain].toLocaleLowerCase('fr')}`:tile.floor?FLOOR_DEFINITIONS[tile.floor].label:isSmoothedStone281(tile.terrain)?smoothedStoneLabel281(tile.stone):TERRAIN_LABELS[tile.terrain];
-export const bridgeTerrainNote=(tile:Tile):string=>tile.collapsedRock?`Pont en bois conservé sous la roche · Terrain sous-jacent : ${TERRAIN_LABELS[tile.collapsedRock.terrain].toLocaleLowerCase('fr')}`:tile.terrain==='water-shallow'||tile.terrain==='marsh'?`Support lÃ©ger uniquement Â· Marche : +0 tick (${tile.terrain==='water-shallow'?'eau peu profonde nue':'marais nu'} : +3)`:`Support lÃ©ger uniquement Â· Marche : +0 tick (terrain sous le pont : ${TERRAIN_LABELS[tile.terrain].toLocaleLowerCase('fr')} Â· +${isNaturalTerrain256(tile.terrain)?NATURAL[tile.terrain].pathCostCore/10:0})`;
+export const bridgeTerrainNote=(tile:Tile):string=>tile.collapsedRock?`Pont en bois conservé sous la roche · Terrain sous-jacent : ${TERRAIN_LABELS[tile.collapsedRock.terrain].toLocaleLowerCase('fr')}`:tile.terrain==='water-shallow'||tile.terrain==='marsh'?`Support léger uniquement · Marche : +0 tick (${tile.terrain==='water-shallow'?'eau peu profonde nue':'marais nu'} : +3)`:`Support léger uniquement · Marche : +0 tick (terrain sous le pont : ${TERRAIN_LABELS[tile.terrain].toLocaleLowerCase('fr')} · +${isNaturalTerrain256(tile.terrain)?NATURAL[tile.terrain].pathCostCore/10:0})`;
 /** Terrain passage, distinct from furniture standability or a reachable route. */
 export function terrainSurfaceWalkable(tile:Tile,metadata?:TerrainRuntimeMetadata256):boolean {
  if(tile.terrain==='rock'||tile.collapsedRock)return false;
@@ -42,12 +42,12 @@ export function terrainSurfaceSpeed(world:World,index:number):number {const tile
 export function terrainAffordanceNote(tile:Tile,metadata?:TerrainRuntimeMetadata256):string {
  if(tile.collapsedRock)return 'Passage impossible · Case occupée par une roche · Dégager avant construction ou culture';
  if(tile.bridge)return bridgeTerrainNote(tile);
- if(tile.floor)return 'Support de revÃªtement Â· Terrain non cultivable';
+ if(tile.floor)return 'Support de revêtement · Terrain non cultivable';
  if(isSmoothedStone281(tile.terrain))return metadata&&!terrainHasProspectiveRules256(tile.terrain,metadata)?'':'Marche : +0 tick · Supports léger, moyen et lourd · Terrain non cultivable';
  if(!prospective(tile,metadata)||!isNaturalTerrain256(tile.terrain))return '';
  const d=NATURAL[tile.terrain],a=d.affordances,walk=a.includes('Walkable');
- const support=a.includes('Heavy')?'Supports lÃ©ger, moyen et lourd':a.includes('Medium')?'Supports lÃ©ger et moyen':a.includes('Light')?'Support lÃ©ger uniquement':'Support de construction ordinaire absent';
- return `${walk?`Marche : +${d.pathCostCore/10} tick(s)`:'Passage impossible'} Â· ${support} Â· ${a.includes('GrowSoil')?'Sol de culture (fertilitÃ© et plante Ã  vÃ©rifier)':'Sol de culture absent'}${a.includes('Bridgeable')?' Â· Pont en bois possible':''}${d.water&&!a.includes('WaterproofConduitable')?' Â· Conduit Ã©lectrique ordinaire incompatible':''}`;
+ const support=a.includes('Heavy')?'Supports léger, moyen et lourd':a.includes('Medium')?'Supports léger et moyen':a.includes('Light')?'Support léger uniquement':'Support de construction ordinaire absent';
+ return `${walk?`Marche : +${d.pathCostCore/10} tick(s)`:'Passage impossible'} · ${support} · ${a.includes('GrowSoil')?'Sol de culture (fertilité et plante à vérifier)':'Sol de culture absent'}${a.includes('Bridgeable')?' · Pont en bois possible':''}${d.water&&!a.includes('WaterproofConduitable')?' · Conduit électrique ordinaire incompatible':''}`;
 }
 
 /** Describe the actual saved terrain even when a plant or rock occupies it.
@@ -60,13 +60,13 @@ function baseTerrainInspection(tile: Tile,metadata?:TerrainRuntimeMetadata256): 
     if(tile.floor)return `Sol : ${FLOOR_DEFINITIONS[tile.floor].label} · Fertilité : 0 % · Propreté du revêtement : ${FLOOR_DEFINITIONS[tile.floor].cleanliness.toFixed(1)} · Terrain non cultivable · Terrain conservé : ${label}`;
     return `Sol : ${label} · Fertilité : 0 % · Beauté : ${facts.beauty} · Propreté du sol : ${facts.cleanliness.toFixed(1)} · Valeur : ${facts.marketValue} · ${terrainAffordanceNote(tile,metadata)}`;
   }
-  if(tile.bridge)return `Sol : ${terrainSurfaceLabel(tile)} Â· FertilitÃ© : 0 % Â· Terrain non cultivable Â· ${bridgeTerrainNote(tile)}`;
-  if(tile.floor)return `Sol : ${FLOOR_DEFINITIONS[tile.floor].label} Â· FertilitÃ© : 0 % Â· PropretÃ© du revÃªtement : ${FLOOR_DEFINITIONS[tile.floor].cleanliness.toFixed(1)} Â· Terrain non cultivable`;
-  if(prospective(tile,metadata)&&isNaturalTerrain256(tile.terrain))return `Sol : ${terrainSurfaceLabel(tile)} Â· FertilitÃ© : ${Math.round(NATURAL[tile.terrain].fertility*100)} % Â· ${terrainAffordanceNote(tile,metadata)}`;
-  if(tile.terrain==='water-shallow')return 'Sol : Eau peu profonde Â· FertilitÃ© : 0 % Â· Terrain non cultivable Â· DÃ©placements ralentis Â· Marche : +3 ticks Â· Support de construction ordinaire absent Â· Pont en bois possible Â· Conduit Ã©lectrique ordinaire incompatible';
-  if(tile.terrain==='marsh')return 'Sol : Marais Â· FertilitÃ© : 0 % Â· Terrain non cultivable Â· DÃ©placements ralentis Â· Support de construction ordinaire absent Â· Conduit Ã©lectrique ordinaire incompatible';
+  if(tile.bridge)return `Sol : ${terrainSurfaceLabel(tile)} · Fertilité : 0 % · Terrain non cultivable · ${bridgeTerrainNote(tile)}`;
+  if(tile.floor)return `Sol : ${FLOOR_DEFINITIONS[tile.floor].label} · Fertilité : 0 % · Propreté du revêtement : ${FLOOR_DEFINITIONS[tile.floor].cleanliness.toFixed(1)} · Terrain non cultivable`;
+  if(prospective(tile,metadata)&&isNaturalTerrain256(tile.terrain))return `Sol : ${terrainSurfaceLabel(tile)} · Fertilité : ${Math.round(NATURAL[tile.terrain].fertility*100)} % · ${terrainAffordanceNote(tile,metadata)}`;
+  if(tile.terrain==='water-shallow')return 'Sol : Eau peu profonde · Fertilité : 0 % · Terrain non cultivable · Déplacements ralentis · Marche : +3 ticks · Support de construction ordinaire absent · Pont en bois possible · Conduit électrique ordinaire incompatible';
+  if(tile.terrain==='marsh')return 'Sol : Marais · Fertilité : 0 % · Terrain non cultivable · Déplacements ralentis · Support de construction ordinaire absent · Conduit électrique ordinaire incompatible';
   const fertility = Math.round(soilFertility(tile.terrain) * 100);
-  return `Sol : ${TERRAIN_LABELS[tile.terrain]} Â· FertilitÃ© : ${fertility} % Â· ${isGrowingTerrain(tile.terrain) ? 'Terrain cultivable' : 'Terrain non cultivable'}`;
+  return `Sol : ${TERRAIN_LABELS[tile.terrain]} · Fertilité : ${fertility} % · ${isGrowingTerrain(tile.terrain) ? 'Terrain cultivable' : 'Terrain non cultivable'}`;
 }
 
-export function terrainInspection(tile:Tile,metadata?:TerrainRuntimeMetadata256):string {const depth=tile.snowDepth??0;return baseTerrainInspection(tile,metadata)+(depth>0?` Â· Neige : ${Math.round(depth*100)} % Â· Marche : +${depth<.25?0:depth<.5?.4:depth<.75?.8:1.2} tick(s)`:'');}
+export function terrainInspection(tile:Tile,metadata?:TerrainRuntimeMetadata256):string {const depth=tile.snowDepth??0;return baseTerrainInspection(tile,metadata)+(depth>0?` · Neige : ${Math.round(depth*100)} % · Marche : +${depth<.25?0:depth<.5?.4:depth<.75?.8:1.2} tick(s)`:'');}

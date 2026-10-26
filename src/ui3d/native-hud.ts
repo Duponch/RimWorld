@@ -25,7 +25,8 @@ import {readNativeDomainAlerts,type NativeDomainAlert} from './native-domain-ale
 import {STORAGE_FILTER_TREE,type StorageFilterNode} from '../ui/storage-filter-tree';
 import {modelIconUrl} from '../ui/pictograms';
 type HudAlert=StatusAlert&{domain?:NativeDomainAlert};
-import {PrototypeCardboardArt, PALETTE, createCutoutRectShape, createMaskingTape, drawHandBlob, drawHandRect, drawMarkerLine, type CardboardPiece, type CardboardPieceOptions} from './prototype-art';
+import {PrototypeCardboardArt, PALETTE, createMaskingTape, drawHandBlob, drawHandRect, drawMarkerLine, type CardboardPiece, type CardboardPieceOptions} from './prototype-art';
+import {applyNativeHudButtonPose,drawNativeSpeedIcon,drawNativeWeatherIcon,nativeWeatherColor,nativeWeatherIcon,nativeWeatherOutline,type NativeWeatherIcon} from './native-hud-art';
 
 export interface NativeHudAnchors {
   topCenter: THREE.Group;
@@ -97,10 +98,10 @@ const PORTRAITS_PER_PAGE = 6;
 const FONT = '"Comic Sans MS", "Chalkboard SE", Georgia, serif';
 const quadrums = ['avrimai', 'juillêt', 'septobre', 'décembary'] as const;
 const speeds = [
-  {label: '❚❚', speed: 0, title: 'Pause'},
-  {label: '▶', speed: 1, title: 'Lecture ×1'},
-  {label: 'x3', speed: 3, title: 'Vitesse ×3'},
-  {label: 'x6', speed: 6, title: 'Vitesse ×6'}
+  {speed: 0, title: 'Pause'},
+  {speed: 1, title: 'Lecture ×1'},
+  {speed: 3, title: 'Vitesse ×3'},
+  {speed: 6, title: 'Vitesse ×6'}
 ] as const;
 const hex = (value: number) => `#${value.toString(16).padStart(6, '0')}`;
 const rounded = (value: number) => Math.round(Math.max(0, Math.min(100, value)));
@@ -139,6 +140,7 @@ export class NativeHudCards {
   private readonly resourceExpanded=new Set(['foods','manufactured','raw-resources']);
   private resourcePage=0;
   private readonly speedButtons: CardboardPiece[] = [];
+  private readonly activePoses=new Set<CardboardPiece>();
   private readonly viewButtons=new Map<NativeHudViewAction,CardboardPiece>();
   private readonly alertHandle: CardboardPiece;
   private readonly alertHandleGroup=new THREE.Group();
@@ -150,8 +152,8 @@ export class NativeHudCards {
   private rightDockOffset=3.16;
   private viewState:NativeHudViewState={walls:'hauts',roofs:false,foliage:true,zones:true,camera:'iso'};
   private readonly weatherPiece: CardboardPiece;
-  private readonly miniSun: THREE.Mesh;
-  private readonly miniCloud: THREE.Mesh;
+  private weatherIconPiece:CardboardPiece;
+  private weatherIconValue:NativeWeatherIcon='sun';
   private readonly fpsPiece: CardboardPiece;
   private readonly previousButton: CardboardPiece;
   private readonly nextButton: CardboardPiece;
@@ -202,31 +204,22 @@ export class NativeHudCards {
     this.alertHandleGroup.add(this.alertHandle);
     this.alertHandle.setBaseTransform(-.14,-.56,.1);
 
-    this.weatherPiece = this.makePiece({w: 2.76, h: .96, depth: 0.046, bgColor: PALETTE.creamPaper, bevel: 0.038, seed: 209, interactive: true,
+    this.weatherPiece = this.makePiece({w: 2.12, h: .96, depth: 0.046, bgColor: PALETTE.creamPaper, bevel: 0.038, seed: 209, interactive: true,surface:'panel',
       drawFn: (ctx, w, h, rng) => this.drawWeather(ctx, w, h, rng), onClick: () => this.showWeather()});
-    // Time belongs at bottom right in Elsewhere; its artwork stays literal.
-    this.weatherPiece.setBaseTransform(-1.38, 2.04, 0, .006);
+    this.weatherPiece.userData.nativeId='hud:clock';
+    this.weatherPiece.setBaseTransform(-1.06, 2.04, 0, .006);
     this.timeGroup.add(this.weatherPiece);
-    const miniSun = this.miniSun = new THREE.Mesh(new THREE.CylinderGeometry(0.088, 0.088, 0.03, 7), new THREE.MeshStandardMaterial({color: 0xe8ab3a, roughness: 0.98, flatShading: true}));
-    miniSun.rotation.x = Math.PI / 2;
-    miniSun.position.set(-1.05, .12, .055);
-    this.weatherPiece.add(miniSun);
-    const miniCloud = this.miniCloud = new THREE.Mesh(new THREE.ExtrudeGeometry(createCutoutRectShape(0.22, 0.10, 0.025, 88), {depth: 0.032, bevelEnabled: false}), art.cardboardEdgeMat);
-    miniCloud.position.set(-1.02, .03, .055);
-    this.weatherPiece.add(miniCloud);
+    this.weatherIconPiece=this.createWeatherIcon(this.weatherIconValue);
     const weatherTape = createMaskingTape(0.18, 0.05, -0.35);
-    weatherTape.position.set(1.12, .43, .048);
+    weatherTape.position.set(.80, .43, .048);
     this.weatherPiece.add(weatherTape);
 
     speeds.forEach((cfg, idx) => {
-      const piece = this.makePiece({w: .48, h: .37, depth: .034, bgColor: PALETTE.kraftBase, bevel: .025, seed: 310 + idx * 23, interactive: true, tooltip: cfg.title,
-        drawFn: (ctx, w, h, rng) => {
-          const isAct = this.speedValue === cfg.speed;
-          if (isAct) drawHandBlob(ctx, w / 2, h / 2, Math.min(w, h) * 0.36, 'rgba(255,248,230,0.28)', '#261e18', 2.5, rng);
-          ctx.save(); ctx.translate(w / 2, h / 2 + 12); ctx.rotate(idx % 2 === 0 ? -0.06 : 0.06);
-          ctx.fillStyle = isAct ? '#fff9eb' : '#261e18'; ctx.font = `bold 40px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText(cfg.label, 0, 0); ctx.restore();
-        }, onClick: () => { if (this.world) this.actions.speed(cfg.speed); }});
+      const piece = this.makePiece({w: .48, h: .37, depth: .046, bgColor: PALETTE.kraftBase, bevel: .038, hasBorder:false,seed: 310 + idx * 23, interactive: true, tooltip: cfg.title,
+        drawFn: (ctx, w, h, rng) => drawNativeSpeedIcon(ctx,w,h,cfg.speed,this.speedValue===cfg.speed,rng),
+        onClick: () => { if (this.world) this.actions.speed(cfg.speed); }});
       piece.userData.nativeId=`hud:speed:${cfg.speed}`;
+      piece.userData.nativeToolbarPose=true;piece.userData.nativeActivePose=0;
       piece.setBaseTransform(-1.98+idx*.54,1.31,0,idx%2===0?-.012:.012);
       this.timeGroup.add(piece); this.speedButtons.push(piece);
     });
@@ -260,7 +253,7 @@ export class NativeHudCards {
     if (this.fpsValue !== nextFps) { this.fpsValue = nextFps; this.fpsPiece.redraw(); }
     if (speed !== this.speedValue) {
       this.speedValue = speed;
-      this.speedButtons.forEach((piece, idx) => { piece.userData.active = speeds[idx]!.speed === speed; piece.redraw(undefined, piece.userData.active ? PALETTE.terracotta : PALETTE.kraftBase); });
+      this.speedButtons.forEach((piece, idx) => { const active=speeds[idx]!.speed===speed;if(piece.userData.active!==active){piece.userData.active=active;this.activePoses.add(piece);piece.redraw(undefined,active?PALETTE.terracotta:PALETTE.kraftBase);} });
     }
     if (this.world === world) return;
     this.world = world;
@@ -328,9 +321,17 @@ export class NativeHudCards {
   /** Returns true through the last changed frame, so the stage invalidates its
    * composed scene even when the drawer has just reached its resting pose. */
   animate(deltaSeconds:number):boolean {
+    let changed=false;
+    for(const piece of this.activePoses){
+      const target=Number(piece.userData.active),before=Number(piece.userData.nativeActivePose??0);
+      const next=THREE.MathUtils.lerp(before,target,1-Math.exp(-Math.max(0,deltaSeconds)*16));
+      piece.userData.nativeActivePose=Math.abs(next-target)<.001?target:next;
+      changed=applyNativeHudButtonPose(piece)||changed;
+      if(piece.userData.nativeActivePose===target)this.activePoses.delete(piece);
+    }
     const target=this.rightDockOpen?0:3.16;
     const before=this.rightDockOffset;
-    if(Math.abs(before-target)<.001){this.rightDockOffset=target;return false;}
+    if(Math.abs(before-target)<.001){this.rightDockOffset=target;return changed;}
     this.rightDockOffset=THREE.MathUtils.lerp(before,target,1-Math.exp(-Math.max(0,deltaSeconds)*15));
     if(Math.abs(this.rightDockOffset-target)<.001)this.rightDockOffset=target;
     this.alertsGroup.position.x=this.rightDockOffset*this.alertsGroup.scale.x;
@@ -389,7 +390,7 @@ export class NativeHudCards {
   private makePiece(options: CardboardPieceOptions): CardboardPiece {
     const piece = this.art.createPiece(options); this.ownedPieces.add(piece); return piece;
   }
-  private dropPiece(piece: CardboardPiece): void { this.ownedPieces.delete(piece); this.art.disposePiece(piece); }
+  private dropPiece(piece: CardboardPiece): void { this.activePoses.delete(piece);this.ownedPieces.delete(piece); this.art.disposePiece(piece); }
   private placePiece(piece:CardboardPiece,x:number,y:number,z=0,rotation=0):void {
     const base=piece.userData.basePos;
     if(base.x!==x||base.y!==y||base.z!==z||piece.userData.baseRot.z!==rotation)piece.setBaseTransform(x,y,z,rotation);
@@ -416,12 +417,13 @@ export class NativeHudCards {
       shown.forEach((pawn, localIdx) => {
         const idx = start + localIdx;
         const entry = {pawnId: pawn.id, index: idx, name: pawn.name, mood: rounded(pawn.mood), skin: '#f2cfb1', shirt: PALETTE.sageMountain, sleeping: false, selected: this.selectedIds.has(pawn.id), loaded: false, appearanceKey: '', signature: ''} as PortraitCard;
-        entry.piece = this.makePiece({w: .70, h: .96, depth: 0.042, bgColor: entry.selected ? PALETTE.ochre : PALETTE.kraftBase, bevel: 0.035, seed: idx * 41 + 105, interactive: true,
+        entry.piece = this.makePiece({w: .70, h: .96, depth: .046, bgColor: entry.selected ? PALETTE.ochre : PALETTE.kraftBase, bevel: .038, hasBorder:false,surface:'panel',seed: idx * 41 + 105, interactive: true,
           drawFn: (ctx, w, h, rng) => this.drawColonist(entry, ctx, w, h, rng),
           onClick: () => { if (!this.world?.pawns.some(p => p.id === entry.pawnId && isColonist(p))) return; this.setSelection([entry.pawnId]); this.actions.selectPawn(entry.pawnId); }});
         const peg = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.14, 0.06), new THREE.MeshStandardMaterial({color: 0x9e7448, roughness: 0.96}));
         peg.position.set(0,.47,.03); peg.rotation.z = idx % 2 === 0 ? 0.08 : -0.08; entry.piece.add(peg);
         entry.piece.userData.nativeId=`hud:pawn:${pawn.id}`;
+        entry.piece.userData.nativeToolbarPose=true;entry.piece.userData.nativeActivePose=0;
         entry.piece.setBaseTransform((localIdx-(shown.length-1)/2)*.78,-.52,0,idx%2===0?-.012:.012);
         this.colonistsGroup.add(entry.piece); this.portraits.push(entry);
       });
@@ -447,7 +449,7 @@ export class NativeHudCards {
       }
       entry.piece.userData.tooltip = `${pawn.name} · ${pawn.state} · Moral ${entry.mood}% · Nourriture ${rounded(pawn.hunger)}% · Repos ${rounded(pawn.rest)}%`;
       const signature = JSON.stringify([entry.name, entry.mood, entry.selected, appearanceKey]);
-      if (entry.signature !== signature) { entry.signature = signature; entry.piece.userData.active = entry.selected; entry.piece.redraw(undefined, entry.selected ? PALETTE.ochre : PALETTE.kraftBase); }
+      if (entry.signature !== signature) { entry.signature = signature;if(entry.piece.userData.active!==entry.selected){entry.piece.userData.active=entry.selected;this.activePoses.add(entry.piece);} entry.piece.redraw(undefined, entry.selected ? PALETTE.ochre : PALETTE.kraftBase); }
     });
     this.previousButton.visible = this.nextButton.visible = this.colonists.length > this.portraitCapacity;
     this.rosterButton.visible=this.colonists.length>this.portraitCapacity;
@@ -464,7 +466,8 @@ export class NativeHudCards {
     drawHandRect(ctx,6,6,58,54,col.selected?'#d8e4c4':'#b2c4ab','#261e18',1.2,rng);
     if(col.loaded&&col.image)ctx.drawImage(col.image,6,6,58,54);
     else {drawHandBlob(ctx,35,48,15,col.shirt,'#261e18',1,rng);drawHandBlob(ctx,35,26,11,col.skin,'#261e18',1,rng);}
-    ctx.fillStyle=PALETTE.inkDark;ctx.font=`bold 12px ${FONT}`;ctx.textAlign='center';fitText(ctx,col.name,35,75,61);
+    drawHandRect(ctx,5,63,60,15,PALETTE.creamPaper,PALETTE.inkDark,.8,rng);
+    ctx.fillStyle=PALETTE.inkDark;ctx.font=`bold 12px ${FONT}`;ctx.textAlign='center';fitText(ctx,col.name,35,75,57);
     drawHandRect(ctx,10,81,50,5,'#423328',null,0,rng);
     if(col.mood>0)drawHandRect(ctx,10,81,50*col.mood/100,5,col.mood>70?'#639452':'#d16b3b',null,0,rng);
     ctx.restore();
@@ -584,7 +587,7 @@ export class NativeHudCards {
       if(entry&&(entry.seed!==seed||entry.width!==width||entry.height!==height)){this.dropPiece(entry.piece);entry=undefined;}
       if(!entry){
         const live={key:alert.key,seed,width,height,lines,color,signature} as AlertCard;
-        live.piece=this.makePiece({w:width/100,h:height/100,depth:.028,bgColor:PALETTE.creamPaper,bevel:.02,seed,interactive:true,
+        live.piece=this.makePiece({w:width/100,h:height/100,depth:.046,bgColor:PALETTE.creamPaper,bevel:.038,surface:'panel',seed,interactive:true,
           drawFn:(ctx,w,h,rng)=>{
             ctx.save();ctx.scale(w/live.width,h/live.height);drawHandRect(ctx,4,5,4,live.height-10,live.color,null,0,rng);
             ctx.fillStyle=PALETTE.inkDark;ctx.font=`bold 13px ${FONT}`;ctx.textAlign='left';
@@ -612,8 +615,8 @@ export class NativeHudCards {
     const civil = calendarTick(world), minute = Math.floor(((civil % TICKS_PER_DAY + TICKS_PER_DAY) % TICKS_PER_DAY) * 1440 / TICKS_PER_DAY);
     const kind = world.weather ? perceivedWeather(world) : 'clear', temperature = outdoorTemperature(world);
     const date = world.climate ? climateDate(world) : undefined;
-    this.miniSun.visible = kind === 'clear' && minute >= 360 && minute < 1080 && !activeEclipse(world);
-    this.miniCloud.visible = kind !== 'clear';
+    const icon=nativeWeatherIcon(kind,minute>=360&&minute<1080,!!activeEclipse(world));
+    if(icon!==this.weatherIconValue){this.dropPiece(this.weatherIconPiece);this.weatherIconValue=icon;this.weatherIconPiece=this.createWeatherIcon(icon);}
     const readout = {
       clock: `${String(Math.floor(minute / 60)).padStart(2, '0')}h${String(minute % 60).padStart(2, '0')}`,
       date: date ? `${date.day} ${quadrums[date.quadrum]} ${date.year}` : `Jour ${1 + Math.floor(civil / TICKS_PER_DAY)} · historique`,
@@ -624,13 +627,18 @@ export class NativeHudCards {
     };
     const signature = [readout.clock, readout.date, readout.weather, readout.temperature, readout.condition].join('|');
     this.weatherReadout = readout;
-    if (signature !== this.weatherSignature) { this.weatherSignature = signature; this.weatherPiece.userData.tooltip = `${readout.date} · ${readout.weather} · ${readout.temperature}${readout.condition ? ` · ${readout.condition}` : ''}`; this.weatherPiece.redraw(); }
+    if (signature !== this.weatherSignature) { this.weatherSignature = signature;this.weatherPiece.userData.tooltip=this.weatherIconPiece.userData.tooltip=`${readout.date} · ${readout.weather} · ${readout.temperature}${readout.condition ? ` · ${readout.condition}` : ''}`; this.weatherPiece.redraw(); }
+  }
+  private createWeatherIcon(icon:NativeWeatherIcon):CardboardPiece {
+    const piece=this.makePiece({w:.66,h:.66,depth:.046,outline:nativeWeatherOutline(icon),bgColor:nativeWeatherColor(icon),bevel:.038,hasBorder:false,uvPadding:1.08,textureWidth:160,textureHeight:160,seed:224,interactive:true,
+      drawFn:(ctx,w,h,rng)=>drawNativeWeatherIcon(ctx,icon,w,h,rng),onClick:()=>this.showWeather()});
+    piece.userData.nativeId='hud:weather';piece.userData.weatherIcon=icon;piece.setBaseTransform(-2.49,2.04,.06,-.025);this.timeGroup.add(piece);return piece;
   }
   private drawWeather(ctx:CanvasRenderingContext2D,w:number,h:number,rng:()=>number):void {
-    ctx.save();ctx.scale(w/276,h/96);drawHandRect(ctx,8,10,54,70,'#7ba1b5','#261e18',1.2,rng);
-    ctx.fillStyle=PALETTE.inkDark;ctx.textAlign='left';ctx.font=`bold 25px ${FONT}`;fitText(ctx,this.weatherReadout.clock,75,34,190);
-    ctx.font=`bold 13px ${FONT}`;fitText(ctx,this.weatherReadout.date,75,56,190);
-    ctx.font=`13px ${FONT}`;fitText(ctx,`${this.weatherReadout.weather} · ${this.weatherReadout.temperature}`,75,77,190);ctx.restore();
+    ctx.save();ctx.scale(w/212,h/96);
+    ctx.fillStyle=PALETTE.inkDark;ctx.textAlign='left';ctx.font=`bold 25px ${FONT}`;fitText(ctx,this.weatherReadout.clock,12,34,190);
+    ctx.font=`bold 13px ${FONT}`;fitText(ctx,this.weatherReadout.date,12,56,190);
+    ctx.font=`13px ${FONT}`;fitText(ctx,`${this.weatherReadout.weather} · ${this.weatherReadout.temperature}`,12,77,190);ctx.restore();
   }
 
   private showRoster(): void {
@@ -695,6 +703,7 @@ export class NativeHudCards {
     for (const piece of this.ownedPieces) this.art.disposePiece(piece);
     this.ownedPieces.clear();
     this.tags.length=0;this.alertCards=[];
+    this.activePoses.clear();
     this.rail.geometry.dispose();
     (this.rail.material as THREE.Material).dispose();
     for (const group of [this.colonistsGroup, this.resourcesGroup, this.alertsGroup, this.timeGroup, this.fpsGroup, this.alertHandleGroup]) { group.removeFromParent(); group.clear(); }

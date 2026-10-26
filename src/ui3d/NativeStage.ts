@@ -1,6 +1,8 @@
 import * as THREE from 'three/webgpu';
 import {PrototypeCardboardArt,MANAGEMENT_BUTTONS,PALETTE,drawHandBlob,drawHandRect,drawMarkerLine,type CardboardPiece,type CardboardDraw,type CardboardPieceOptions} from './prototype-art';
 import {drawNativeActionIcon} from './native-action-icons';
+import {applyNativeHudButtonPose} from './native-hud-art';
+import {createNativeTextLexicon,tokenizeNativeText,NATIVE_TEXT_STYLES,type NativeTextLexicon,type NativeTextEntity,type NativeTextSpan} from './native-rich-text';
 import type {NativeControl,NativeControlStyle,NativePage,NativeRow} from './native-contract';
 import {NativeGlobe} from './NativeGlobe';
 import {NativeOverlayCache} from './NativeOverlayCache';
@@ -46,6 +48,7 @@ export class NativeStage {
   private readonly regionGroups={navigation:new THREE.ClippingGroup(),details:new THREE.ClippingGroup(),graph:new THREE.ClippingGroup()};
   private readonly regionOffsets={navigation:0,details:0,graph:0};
   private graphX=0;
+  private paletteX=0;
   private regionDrag:{pointerId:number;region:NativeRegion|undefined;axis:'x'|'y';start:number;offset:number;travel:number;max:number}|undefined;
   private pageBox:NativePageBox|undefined;
   private readonly measureContext=document.createElement('canvas').getContext('2d')!;
@@ -68,13 +71,19 @@ export class NativeStage {
   private page:NativePage|null=null;
   private pageBackdrop:CardboardPiece|undefined;
   private hovered:CardboardPiece|null=null;
-  private down:{piece:CardboardPiece;controlId?:string;pointerId:number;x:number;y:number}|null=null;
+  private down:{piece:CardboardPiece;controlId?:string;outsidePage?:string;pointerId:number;x:number;y:number}|null=null;
+  private dismissedPointer:number|undefined;
   private worldPress:{pointerId:number;button:number}|undefined;
   private focusIndex=-1;
   private pageControls:Hit[]=[];
   private scroll=0;
   private maxScroll=0;
   private pageSignature='';
+  private textLexicon:NativeTextLexicon=createNativeTextLexicon();
+  private sharedTextEntities:readonly NativeTextEntity[]|undefined;
+  private inkTextEntities:readonly NativeTextEntity[]|undefined;
+  private textEntityRevision=0;
+  private readonly semanticInk=new Map<string,NativeTextSpan[]>();
   private lastTime=0;
   private frameId=0;
   private closed=false;
@@ -116,6 +125,8 @@ export class NativeStage {
   private worldReadoutLines:readonly string[]=[];
   private worldReadoutGeometry='';
   private worldReadoutInk='';
+  private worldReadoutLayout='';
+  private readoutCanPlace=true;
   private pointerOverUi=true;
   private readonly overlayCache=new NativeOverlayCache();
   private readonly damageTracker=new NativeDamageTracker();
@@ -136,7 +147,7 @@ export class NativeStage {
     this.anchors.bottomLeft.add(this.toolsDock);this.toolsDock.visible=false;
     for(const [index,kind]of (['orders','zones'] as const).entries()){
       const control:NativeControl={id:'map-dock:'+kind,label:kind==='orders'?'Ordres':'Zones',hint:kind==='orders'?'Ordres sur la carte':'Zones sur la carte',onActivate:()=>this.options.onTools?.(kind)};
-      const piece=this.art.createPiece({w:1.08,h:.46,depth:.024,uvPadding:1,textureWidth:216,textureHeight:92,seed:381+index*5,bgColor:PALETTE.sageMountain,interactive:true,tooltip:control.hint,drawFn:(ctx,w,h)=>{ctx.save();ctx.scale(w/108,h/46);drawNativeActionIcon(ctx,kind,23,23,13);ctx.fillStyle=PALETTE.inkDark;ctx.textAlign='center';ctx.font=this.font(13,true);ctx.fillText(control.label,70,28,66);ctx.restore();}});
+      const piece=this.art.createPiece({w:1.08,h:.46,depth:.046,bevel:.038,uvPadding:1,textureWidth:216,textureHeight:92,seed:381+index*5,bgColor:PALETTE.sageMountain,interactive:true,tooltip:control.hint,drawFn:(ctx,w,h,rng)=>{ctx.save();ctx.scale(w/108,h/46);drawHandBlob(ctx,23,23,17,PALETTE.creamPaper,PALETTE.inkDark,1.5,rng);drawNativeActionIcon(ctx,kind,23,23,11);drawHandRect(ctx,44,11,58,25,PALETTE.creamPaper,PALETTE.inkDark,1,rng);ctx.fillStyle=PALETTE.inkDark;ctx.textAlign='center';ctx.font=this.font(13,true);ctx.fillText(control.label,73,28,54);ctx.restore();}});
       piece.userData.nativeId=control.id;piece.setBaseTransform(.54,index===0?1.63:1.09,.08);this.toolsDock.add(piece);this.register(piece,control);
     }
     // The reference's three lights, with the world key expressed in HUD-camera
@@ -158,7 +169,7 @@ export class NativeStage {
     canvas.style.cssText='position:fixed;inset:0;width:100%;height:100%;display:block;z-index:40;outline:none;touch-action:none';
     this.ownRenderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
     this.ownRenderer.setClearColor(0xd8cbb8,1);document.body.append(canvas);
-    this.listen(window,'resize',()=>{this.resize();this.rebuildPage(true);this.invalidate();});
+    this.listen(window,'resize',()=>{this.resize();this.rebuildPage(true);this.layoutToolsDock();this.refreshWorldReadout();this.invalidate();});
     this.listen(document,'pointermove',event=>this.pointerMove(event as PointerEvent),true);
     this.listen(document,'pointerdown',event=>this.pointerDown(event as PointerEvent),true);
     this.listen(document,'pointerup',event=>this.pointerUp(event as PointerEvent),true);
@@ -182,7 +193,7 @@ export class NativeStage {
       readout:this.worldReadout?{visible:this.worldReadout.visible,paper:this.worldReadout.userData.paper,width:this.worldReadout.userData.w*100,height:this.worldReadout.userData.h*100,lines:this.worldReadoutLines}:null,
       tooltip:this.hintPiece?{width:this.hintPiece.userData.w*100,height:this.hintPiece.userData.h*100}:null,
       regions:this.pageBox?.regions,inspectorParts:this.pageBox?.inspectorParts,graph:this.page?.research?{x:this.graphX,y:this.regionOffsets.graph,width:this.page.research.width,height:this.page.research.height,bounds:this.pageBox?.regions.graph}:null,
-      rows:this.pageBox?.rows.map(row=>({id:row.row.id,column:row.row.column,region:row.row.region,meter:!!row.row.meter,x:row.x-(row.row.region==='graph'?this.graphX:0),top:row.top-this.regionOffset(row.row.region),width:row.width,height:row.height,visible:this.rowVisible(row)}))??[],
+      paletteOffset:this.paletteX,rows:this.pageBox?.rows.map(row=>({id:row.row.id,column:row.row.column,region:row.row.region,meter:!!row.row.meter,x:row.x-this.horizontalOffset(row.row.region),top:row.top-this.regionOffset(row.row.region),width:row.width,height:row.height,visible:this.rowVisible(row)}))??[],
       management:this.management.map((piece,index)=>{
         const center=piece.getWorldPosition(new THREE.Vector3()).project(this.camera);
         return {id:PANEL_IDS[index],x:(center.x+1)*this.width/2,y:(1-center.y)*this.height/2,
@@ -228,15 +239,19 @@ export class NativeStage {
     this.management.forEach((piece,index)=>{const active=PANEL_IDS[index]===id;if(piece.userData.active!==active){piece.setActive(active);this.moving.add(piece);}});this.invalidate();
   }
   getViewportMetrics(){return {width:this.width,height:this.height,unitsPerPixel:.01};}
+  setTextEntities(entities:readonly NativeTextEntity[]):void{if(this.sharedTextEntities===entities)return;this.sharedTextEntities=entities;if(this.page&&!this.page.textEntities){this.rebuildPage(true);this.invalidate();}}
   setAutoHideBottom(enabled:boolean):void{this.autoHideBottom=enabled;this.bottomOpen=!enabled||this.lastPointer.y>=this.height-14;this.extraAnimating=true;this.invalidate();}
   showPage(page:NativePage|null):void{
     if(this.closed)return;
     const same=page?.id===this.page?.id,ownerChanged=page?.visual?.surface!==this.page?.visual?.surface||page?.visual?.roads!==this.page?.visual?.roads;
-    this.page=page;if(!same){this.cancelPress();this.scroll=0;this.regionOffsets.navigation=this.regionOffsets.details=this.regionOffsets.graph=this.graphX=0;this.closeDropdown();}
-    this.toolsDock.visible=this.worldVisible&&!this.frontVisible&&(!page||page.layout==='palette'||page.layout==='inspector');
-    if(!page)this.toolsDock.children.forEach((object,index)=>{const piece=object as CardboardPiece,y=index===0?1.63:1.09;if(piece.userData.basePos.y!==y)piece.setBaseTransform(.54,y,.08);});
+    this.page=page;if(!same){this.cancelPress();this.scroll=0;this.regionOffsets.navigation=this.regionOffsets.details=this.regionOffsets.graph=this.graphX=this.paletteX=0;this.closeDropdown();}
     this.toolsDock.children.forEach((object,index)=>{const piece=object as CardboardPiece,active=page?.palette===(index===0?'orders':'zones');if(piece.userData.active!==active)piece.setActive(active,active?PALETTE.ochre:PALETTE.sageMountain);});
-    this.rebuildPage(ownerChanged);this.updateWorldReadoutVisibility();this.invalidate();
+    this.rebuildPage(ownerChanged);this.layoutToolsDock();this.refreshWorldReadout();this.updateWorldReadoutVisibility();this.invalidate();
+  }
+  private layoutToolsDock():void{
+    const box=this.pageBox,inspector=box?.layout==='inspector',side=inspector?box.x+box.width+12:8;
+    this.toolsDock.visible=this.worldVisible&&!this.frontVisible&&(!this.page||box?.layout==='palette'||!!inspector&&this.width-side>=420);
+    for(const [index,object]of this.toolsDock.children.entries()){const piece=object as CardboardPiece,x=(side-8)*.01+.54,y=index===0?1.63:1.09;if(piece.userData.basePos.x!==x||piece.userData.basePos.y!==y)piece.setBaseTransform(x,y,.08);}
   }
   /** The font service supplies glyphs only; mesh sizes and input remain native. */
   setTextFont(family:string):void{
@@ -258,22 +273,30 @@ export class NativeStage {
   }
   private refreshWorldReadout():void{
     if(!this.worldReadoutLines.length)return;
-    const lines=this.worldReadoutLines.flatMap(line=>wrapNativeText(line,Math.min(640,this.width-32),this.measure,13));
-    const width=Math.min(this.width-24,Math.max(...lines.map(line=>this.measure(line,13)))+8),height=lines.length*17+4;
+    const placement=JSON.stringify([this.worldReadoutLines,this.textFontRevision,this.width,this.height,this.toolsDock.visible,this.pageBox?.x,this.pageBox?.y,this.pageBox?.width,this.pageBox?.height]);
+    if(placement===this.worldReadoutLayout)return;this.worldReadoutLayout=placement;
+    const pageRight=this.pageBox?this.pageBox.x+this.pageBox.width+12:0,sideWidth=this.width-pageRight-16;
+    const narrow=!!this.pageBox&&sideWidth<504,beside=!!this.pageBox&&sideWidth>=160;
+    this.readoutCanPlace=!this.pageBox||beside;
+    const dockRight=this.toolsDock.visible?Math.max(...this.toolsDock.children.map(piece=>((piece as CardboardPiece).userData.basePos.x+.54)*100+8)):12;
+    const left=beside?narrow?pageRight:Math.max(pageRight,dockRight+12):this.toolsDock.visible?128:12;
+    const maxWidth=Math.max(160,Math.min(640,this.width-left-(narrow?16:304)));
+    const lines=this.worldReadoutLines.flatMap(line=>wrapNativeText(line,maxWidth,this.measure,14));
+    const width=Math.min(this.width-left-12,Math.max(...lines.map(line=>this.measure(line,14)))+8),height=lines.length*19+4;
     const w=width*.01,h=height*.01,geometry=width+'|'+height,ink=JSON.stringify([lines,this.textFontRevision]);
-    const draw:CardboardDraw=(ctx,wp,hp)=>{ctx.save();ctx.scale(wp/width,hp/height);ctx.textAlign='left';ctx.font=this.font(13);ctx.lineJoin='round';ctx.strokeStyle='rgba(15,22,17,.95)';ctx.lineWidth=3;ctx.fillStyle='#fff9eb';lines.forEach((line,i)=>{ctx.strokeText(line,3,15+i*17);ctx.fillText(line,3,15+i*17);});ctx.restore();};
+    const draw:CardboardDraw=(ctx,wp,hp)=>{ctx.save();ctx.scale(wp/width,hp/height);ctx.textAlign='left';ctx.font=this.font(14);ctx.lineJoin='round';ctx.strokeStyle='rgba(15,22,17,.95)';ctx.lineWidth=3;ctx.fillStyle='#fff9eb';lines.forEach((line,i)=>{ctx.strokeText(line,3,16+i*19);ctx.fillText(line,3,16+i*19);});ctx.restore();};
     if(!this.worldReadout||this.worldReadoutGeometry!==geometry){
       if(this.worldReadout)this.art.disposePiece(this.worldReadout);
       this.worldReadout=this.art.createPiece({w,h,paper:false,textureWidth:Math.ceil(width*2),textureHeight:Math.ceil(height*2),drawFn:draw,seed:3751});
       this.worldReadout.userData.nativeId='world-readout';this.worldReadout.userData.nativeStatic=true;this.anchors.bottomLeft.add(this.worldReadout);
     }else if(this.worldReadoutInk!==ink)this.worldReadout.redraw(draw);
-    const left=this.pageBox&&this.pageBox.x+this.pageBox.width+width+24<this.width?this.pageBox.x+this.pageBox.width+12:12;
-    this.worldReadout.setBaseTransform((left+width/2)*.01,(126+height/2)*.01,.08);
+    const bottom=narrow?290:126;
+    this.worldReadout.setBaseTransform((left+width/2)*.01,(bottom+height/2)*.01,.08);
     this.worldReadoutGeometry=geometry;this.worldReadoutInk=ink;this.updateWorldReadoutVisibility();this.invalidate();
   }
   private updateWorldReadoutVisibility():void{
     if(!this.worldReadout)return;
-    const visible=this.worldVisible&&!this.frontVisible&&!this.pointerOverUi&&!this.page?.modal&&this.worldReadoutLines.length>0;
+    const visible=this.worldVisible&&!this.frontVisible&&!this.pointerOverUi&&!this.page?.modal&&this.readoutCanPlace&&this.worldReadoutLines.length>0;
     if(this.worldReadout.visible!==visible){this.worldReadout.visible=visible;this.sceneRevision++;this.invalidate();}
   }
   private setPointerOverUi(over:boolean):void{if(this.pointerOverUi!==over){this.pointerOverUi=over;this.updateWorldReadoutVisibility();}}
@@ -281,7 +304,7 @@ export class NativeStage {
     clearTimeout(this.noticeTimer);if(this.notice)this.unregister(this.notice);
     const width=Math.min(this.width-32,460,Math.max(120,this.measure(message,13)+24)),lines=wrapNativeText(message,width-24,this.measure,13),height=lines.length*17+20;
     const w=width*.01,h=height*.01;
-    const piece=this.art.createPiece({w,h,seed:1881,uvPadding:1,textureWidth:Math.ceil(width*2),textureHeight:Math.ceil(height*2),bgColor:error?'#e2b59a':PALETTE.creamPaper,depth:.025,
+    const piece=this.art.createPiece({w,h,seed:1881,uvPadding:1,textureWidth:Math.ceil(width*2),textureHeight:Math.ceil(height*2),bgColor:error?'#e2b59a':PALETTE.creamPaper,depth:.046,bevel:.038,surface:'panel',
       drawFn:(ctx,wp,hp)=>{ctx.save();ctx.scale(wp/width,hp/height);ctx.fillStyle=PALETTE.inkDark;ctx.font=this.font(13);ctx.textAlign='left';lines.forEach((line,index)=>ctx.fillText(line,12,23+index*17,width-24));ctx.restore();}});
     piece.setBaseTransform(0,-1.0,.35);this.anchors.topCenter.add(piece);this.notice=piece;this.invalidate();
     this.noticeTimer=setTimeout(()=>{if(this.notice===piece){this.unregister(piece);this.notice=undefined;this.invalidate();}},error?8000:4000);
@@ -360,6 +383,7 @@ export class NativeStage {
     }
   }
   private setPose(piece:CardboardPiece,hover:number):void{
+    if(piece.userData.nativeToolbarPose){if(applyNativeHudButtonPose(piece))this.sceneRevision++;return;}
     const ud=piece.userData,toolbar=String(ud.nativeId??'').startsWith('tab:'),activeLift=ud.active?(toolbar?.065:.02):0,hoverLift=hover*(toolbar?.085:.025),pressPush=ud.pressVal*(toolbar?.05:Math.min(.02,ud.depth*.5));
     const x=ud.basePos.x,y=ud.basePos.y+(ud.active&&toolbar?.045:0)+hover*(toolbar?.03:.005),z=ud.basePos.z+activeLift+hoverLift-pressPush;
     const rx=-hover*(toolbar?.14:.045)+(ud.active&&toolbar?-.1:0),ry=hover*(toolbar?.12:.035),rz=ud.baseRot.z+hover*(toolbar?.035:.012);
@@ -412,7 +436,7 @@ export class NativeStage {
     const bottomOpen=event.clientY>=this.height-Math.max(14,100+this.bottomOffset*100);
     if(bottomOpen!==this.bottomOpen){this.bottomOpen=bottomOpen;this.extraAnimating=true;this.invalidate();}
     if(this.editor&&event.target===this.editor)return;
-    if(this.regionDrag){const drag=this.regionDrag;if(drag.pointerId!==event.pointerId)return;const value=THREE.MathUtils.clamp(drag.offset+((drag.axis==='x'?event.clientX:event.clientY)-drag.start)/Math.max(1,drag.travel)*drag.max,0,drag.max);if(drag.axis==='x')this.graphX=value;else this.setRegionOffset(drag.region,value);this.rebuildPage(true);this.swallow(event);this.invalidate();return;}
+    if(this.regionDrag){const drag=this.regionDrag;if(drag.pointerId!==event.pointerId)return;const value=THREE.MathUtils.clamp(drag.offset+((drag.axis==='x'?event.clientX:event.clientY)-drag.start)/Math.max(1,drag.travel)*drag.max,0,drag.max);if(drag.axis==='x')this.setHorizontalOffset(drag.region,value);else this.setRegionOffset(drag.region,value);this.rebuildPage(true);this.swallow(event);this.invalidate();return;}
     if(this.scrollbarDrag){const drag=this.scrollbarDrag;if(drag.pointerId!==event.pointerId)return;this.scroll=THREE.MathUtils.clamp(drag.scroll+(event.clientY-drag.startY)/Math.max(1,drag.travel)*drag.max,0,drag.max);this.rebuildPage(true);this.swallow(event);this.invalidate();return;}
     if(this.paintDrag){const hit=this.hit(event.clientX,event.clientY),paint=hit?.control?.paint;if(paint?.group===this.paintDrag.group){this.paintDrag.indices.add(paint.index);hit!.piece.userData.pressVal=.7;this.moving.add(hit!.piece);this.invalidate();}this.swallow(event);return;}
     if(this.dropdown){const hit=this.hit(event.clientX,event.clientY);this.setPointerOverUi(true);this.updateHint(hit,event.clientX,event.clientY);this.hover(this.dropdown.pieces.includes(hit?.piece!)?hit!.piece:null);this.swallow(event);return;}
@@ -430,12 +454,18 @@ export class NativeStage {
       this.gesture();this.setPointerOverUi(true);this.globeDrag={pointerId:event.pointerId,x:event.clientX,y:event.clientY,startX:event.clientX,startY:event.clientY};this.swallow(event);return;
     }
     const hit=this.hit(event.clientX,event.clientY);
+    const box=this.pageBox,inside=!!box&&event.clientX>=box.x&&event.clientX<=box.x+box.width&&event.clientY>=box.y&&event.clientY<=box.y+box.height;
+    const outside=event.button===0&&this.page&&this.page.closable!==false&&!this.belongsToPage(hit)&&(!inside||!!hit)?this.page.id:undefined;
+    if(outside&&(!hit||hit.piece.userData.nativeStatic||hit.control?.disabled||this.dropdown&&!this.dropdown.pieces.includes(hit.piece))){
+      this.dismissPage();this.dismissedPointer=event.pointerId;this.swallow(event);return;
+    }
     if(this.dropdown&&!this.dropdown.pieces.includes(hit?.piece!)){this.closeDropdown();this.swallow(event);return;}
+    if(!hit&&inside){this.dismissedPointer=event.pointerId;this.swallow(event);return;}
     const scroll=hit?.piece.userData.nativeScroll as {region:NativeRegion|undefined;axis:'x'|'y';start:number;travel:number;max:number;thumb:number;isThumb:boolean}|undefined;
     if(event.button===0&&scroll){
       const coordinate=scroll.axis==='x'?event.clientX:event.clientY;
-      if(!scroll.isThumb){const next=THREE.MathUtils.clamp((coordinate-scroll.start-scroll.thumb/2)/Math.max(1,scroll.travel)*scroll.max,0,scroll.max);if(scroll.axis==='x')this.graphX=next;else this.setRegionOffset(scroll.region,next);this.rebuildPage(true);}
-      this.regionDrag={pointerId:event.pointerId,region:scroll.region,axis:scroll.axis,start:coordinate,offset:scroll.axis==='x'?this.graphX:this.regionOffset(scroll.region),travel:scroll.travel,max:scroll.max};this.swallow(event);this.invalidate();return;
+      if(!scroll.isThumb){const next=THREE.MathUtils.clamp((coordinate-scroll.start-scroll.thumb/2)/Math.max(1,scroll.travel)*scroll.max,0,scroll.max);if(scroll.axis==='x')this.setHorizontalOffset(scroll.region,next);else this.setRegionOffset(scroll.region,next);this.rebuildPage(true);}
+      this.regionDrag={pointerId:event.pointerId,region:scroll.region,axis:scroll.axis,start:coordinate,offset:scroll.axis==='x'?this.horizontalOffset(scroll.region):this.regionOffset(scroll.region),travel:scroll.travel,max:scroll.max};this.swallow(event);this.invalidate();return;
     }
     if(event.button===0&&(hit?.piece.userData.nativeId==='native-scrollbar'||hit?.piece.userData.nativeId==='native-scroll-thumb')&&this.pageBox){
       const box=this.pageBox,travel=box.body.height-Math.max(28,box.body.height*box.body.height/box.contentHeight);
@@ -449,10 +479,12 @@ export class NativeStage {
     if(hit.piece.userData.nativeStatic)return;
     if(hit.control?.disabled)return;
     if(hit.control?.paint){const paint=hit.control.paint;this.paintDrag={pointerId:event.pointerId,group:paint.group,indices:new Set([paint.index]),onPaint:paint.onPaint};hit.piece.userData.pressVal=.7;this.moving.add(hit.piece);this.invalidate();return;}
-    this.down={piece:hit.piece,controlId:hit.control?.id,pointerId:event.pointerId,x:event.clientX,y:event.clientY};
+    const id=hit.control?.id??String(hit.piece.userData.nativeId),switchesPage=id.startsWith('tab:')||id.startsWith('map-dock:');
+    this.down={piece:hit.piece,controlId:hit.control?.id,outsidePage:switchesPage?undefined:outside,pointerId:event.pointerId,x:event.clientX,y:event.clientY};
     hit.piece.userData.pressVal=1;this.moving.add(hit.piece);this.invalidate();
   }
   private pointerUp(event:PointerEvent):void{
+    if(this.dismissedPointer===event.pointerId){this.dismissedPointer=undefined;this.swallow(event);return;}
     if(this.regionDrag){this.regionDrag=undefined;this.swallow(event);return;}
     if(this.scrollbarDrag){this.scrollbarDrag=undefined;this.swallow(event);return;}
     if(this.paintDrag){const drag=this.paintDrag;this.paintDrag=undefined;this.swallow(event);if(drag.pointerId===event.pointerId){const values=[...drag.indices],from=Math.min(...values),to=Math.max(...values);void Promise.resolve(drag.onPaint(Array.from({length:to-from+1},(_,i)=>from+i))).catch(error=>this.options.onError(String(error)));}return;}
@@ -470,9 +502,12 @@ export class NativeStage {
     const down=this.down;if(!down){if(this.frontVisible||this.page?.modal)this.swallow(event);return;}
     this.down=null;this.swallow(event);const hit=this.hit(event.clientX,event.clientY);
     if(down.pointerId!==event.pointerId||hit?.piece!==down.piece||hit?.control?.id!==down.controlId||Math.hypot(event.clientX-down.x,event.clientY-down.y)>12)return;
+    if(down.outsidePage&&this.page?.id===down.outsidePage)this.dismissPage();
     this.activate(hit);
   }
-  private cancelPress():void{this.down=null;this.globeDrag=undefined;this.scrollbarDrag=undefined;this.regionDrag=undefined;this.paintDrag=undefined;if(this.worldPress)this.options.onCancelWorldInteraction?.();this.worldPress=undefined;}
+  private belongsToPage(hit:Hit|undefined):boolean{if(!hit)return false;if(this.dropdown?.pieces.includes(hit.piece))return true;for(let parent:THREE.Object3D|null=hit.piece;parent;parent=parent.parent)if(parent===this.pageGroup)return true;return false;}
+  private dismissPage():void{const page=this.page;if(!page||page.closable===false)return;this.activationSerial++;this.closeDropdown();this.clearHint();try{page.onClose?.();if(!this.frontVisible||!page.onClose)this.options.onEscape();}catch(error){this.options.onError(String(error));}}
+  private cancelPress():void{this.down=null;this.dismissedPointer=undefined;this.globeDrag=undefined;this.scrollbarDrag=undefined;this.regionDrag=undefined;this.paintDrag=undefined;if(this.worldPress)this.options.onCancelWorldInteraction?.();this.worldPress=undefined;}
   private globeHit(x:number,y:number):number|null{
     if(!this.globe?.visible||!this.page?.visual)return null;
     this.pointer.set(x/this.width*2-1,1-y/this.height*2);this.scene.updateMatrixWorld(true);this.raycaster.setFromCamera(this.pointer,this.camera);
@@ -515,7 +550,7 @@ export class NativeStage {
     for(const piece of state.pieces)this.unregister(piece);state.pieces=[];
     const {box}=state,count=Math.max(1,Math.floor((box.height-10)/25));state.offset=THREE.MathUtils.clamp(state.offset,0,Math.max(0,select.options.length-count));
     const place=(piece:CardboardPiece,x:number,y:number,z:number)=>{const factor=1-z/HUD_DISTANCE;piece.scale.setScalar(this.uiScale*factor);piece.setBaseTransform((x-this.width/2)*this.visH/this.height*factor,(this.height/2-y)*this.visH/this.height*factor,z);this.hudRoot.add(piece);state.pieces.push(piece);};
-    const background=this.art.createPiece({w:box.width*.01,h:box.height*.01,uvPadding:1,bgColor:PALETTE.creamPaper,seed:938,interactive:true,drawFn:()=>{}});
+    const background=this.art.createPiece({w:box.width*.01,h:box.height*.01,uvPadding:1,bgColor:PALETTE.creamPaper,depth:.046,bevel:.038,surface:'panel',seed:938,interactive:true,drawFn:()=>{}});
     background.userData.nativeId='select-popup';background.userData.nativeStatic=true;this.register(background);place(background,box.x+box.width/2,box.y+box.height/2,1.6);
     select.options.slice(state.offset,state.offset+count).forEach((option,index)=>{
       const actual=index+state.offset,selected=actual===state.index,piece=this.art.createPiece({w:(box.width-10)*.01,h:.235,uvPadding:1,paper:selected,textureWidth:Math.ceil((box.width-10)*2),textureHeight:47,bgColor:PALETTE.ochre,seed:949+actual,interactive:true,tooltip:option.hint??option.label,drawFn:(ctx,wp,hp)=>{ctx.save();ctx.scale(wp/(box.width-10),hp/23.5);ctx.textAlign='left';ctx.fillStyle=option.disabled?'#92816a':PALETTE.inkDark;ctx.font=this.font(13);ctx.fillText((option.value===select.value?'✓ ':'')+option.label,7,16,box.width-28);ctx.restore();}});
@@ -562,9 +597,10 @@ export class NativeStage {
     if(this.dropdown){this.swallow(event);this.dropdown.offset=Math.max(0,this.dropdown.offset+Math.sign(event.deltaY)*3);this.rebuildDropdown();return;}
     if(this.globeHit(event.clientX,event.clientY)!==null){this.swallow(event);this.globe?.zoom(-event.deltaY*.001);this.sceneRevision++;this.invalidate();return;}
     const region=this.regionAt(event.clientX,event.clientY);
-    if(region&&this.pageBox?.layout!=='palette'){
+    if(region){
       this.swallow(event);const unit=event.deltaMode===1?18:event.deltaMode===2?this.height:1;
-      if(region==='graph'&&(event.shiftKey||Math.abs(event.deltaX)>Math.abs(event.deltaY))){const bounds=this.pageBox!.regions.graph!;this.graphX=THREE.MathUtils.clamp(this.graphX+(event.shiftKey?event.deltaY:event.deltaX)*unit,0,Math.max(0,(bounds.contentWidth??bounds.width)-bounds.width));}
+      if(this.pageBox?.layout==='palette')this.setHorizontalOffset(region,this.horizontalOffset(region)+(Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY)*unit);
+      else if(region==='graph'&&(event.shiftKey||Math.abs(event.deltaX)>Math.abs(event.deltaY)))this.setHorizontalOffset(region,this.graphX+(event.shiftKey?event.deltaY:event.deltaX)*unit);
       else this.setRegionOffset(region,this.regionOffset(region)+event.deltaY*unit);
       this.rebuildPage(true);this.invalidate();return;
     }
@@ -578,6 +614,8 @@ export class NativeStage {
   }
   private measure=(text:string,size:number,bold=false):number=>{this.measureContext.font=this.font(size,bold);return this.measureContext.measureText(text).width;};
   private primaryRegion():NativeRegion|undefined{return this.pageBox?.layout==='architect'?'catalogue':this.pageBox?.layout==='research'?'details':undefined;}
+  private horizontalOffset(region?:NativeRegion):number{return region==='graph'?this.graphX:region==='catalogue'&&this.pageBox?.layout==='palette'?this.paletteX:0;}
+  private setHorizontalOffset(region:NativeRegion|undefined,value:number):void{const rect=region?this.pageBox?.regions[region]:undefined,next=THREE.MathUtils.clamp(value,0,Math.max(0,(rect?.contentWidth??rect?.width??0)-(rect?.width??0)));if(region==='graph')this.graphX=next;else if(region==='catalogue'&&this.pageBox?.layout==='palette')this.paletteX=next;}
   private regionOffset(region?:NativeRegion):number{return !region||region===this.primaryRegion()?this.scroll:region==='catalogue'?this.scroll:this.regionOffsets[region];}
   private setRegionOffset(region:NativeRegion|undefined,value:number):void{
     const bounds=region?this.pageBox?.regions[region]:undefined,max=bounds?Math.max(0,bounds.contentHeight-bounds.height):this.maxScroll;
@@ -599,14 +637,14 @@ export class NativeStage {
     if(row){
       const control=row.controls.find(control=>control.control.id===next.id),rect=this.rowViewport(row.row),top=box.header+(control?.y??row.top),height=control?.height??row.height,offset=this.regionOffset(row.row.region);
       if(top-offset<rect.y)this.setRegionOffset(row.row.region,top-rect.y-4);else if(top+height-offset>rect.y+rect.height)this.setRegionOffset(row.row.region,top+height-rect.y-rect.height+4);
-      if(row.row.region==='graph'){const left=control?.x??row.x,width=control?.width??row.width,max=Math.max(0,this.page!.research!.width-rect.width);if(left-this.graphX<rect.x)this.graphX=Math.max(0,left-rect.x-4);else if(left+width-this.graphX>rect.x+rect.width)this.graphX=Math.min(max,left+width-rect.x-rect.width+4);}
+      if(row.row.region==='graph'||box.layout==='palette'){const left=control?.x??row.x,width=control?.width??row.width,offsetX=this.horizontalOffset(row.row.region);if(left-offsetX<rect.x)this.setHorizontalOffset(row.row.region,left-rect.x-4);else if(left+width-offsetX>rect.x+rect.width)this.setHorizontalOffset(row.row.region,left+width-rect.x-rect.width+4);}
       this.rebuildPage(true);
     }
     const list=this.pageControls.filter(hit=>!hit.control?.disabled);this.focusIndex=list.findIndex(hit=>(hit.control?.id??hit.piece.userData.nativeId)===next.id);
     if(this.focusIndex>=0)this.hover(list[this.focusIndex]!.piece);
   }
   private rowVisible(row:NativeRowBox):boolean{
-    const box=this.pageBox!,region=this.rowViewport(row.row),top=box.header+row.top-this.regionOffset(row.row.region),left=row.x-(row.row.region==='graph'?this.graphX:0);
+    const box=this.pageBox!,region=this.rowViewport(row.row),top=box.header+row.top-this.regionOffset(row.row.region),left=row.x-this.horizontalOffset(row.row.region);
     return top+row.height>region.y&&top<region.y+region.height&&left+row.width>region.x&&left<region.x+region.width;
   }
   private regionAt(x:number,y:number):NativeRegion|undefined{
@@ -625,10 +663,10 @@ export class NativeStage {
     const primary=this.primaryRegion(),regions:Array<[NativeRegion|undefined,NativeRegionBox]>=Object.entries(box.regions).length?Object.entries(box.regions) as [NativeRegion,NativeRegionBox][]:[[undefined,{...box.body,contentHeight:box.contentHeight}]];
     if(box.inspectorParts)regions.unshift([undefined,{...box.body,contentHeight:box.contentHeight}]);
     for(const [region,rect]of regions){
-      const axes:('x'|'y')[]=region==='graph'?['y','x']:['y'];
+      const axes:('x'|'y')[]=region==='graph'?['y','x']:box.layout==='palette'?['x']:['y'];
       for(const axis of axes){
         const length=axis==='x'?rect.width:rect.height,content=axis==='x'?(rect.contentWidth??length):rect.contentHeight,max=Math.max(0,content-length);if(max<=0)continue;
-        const thumb=Math.max(28,length*length/content),travel=length-thumb,offset=axis==='x'?this.graphX:this.regionOffset(region),primaryId=!region||region===primary;
+        const thumb=Math.max(28,length*length/content),travel=length-thumb,offset=axis==='x'?this.horizontalOffset(region):this.regionOffset(region),primaryId=!region||region===primary;
         const base=primaryId?'native-scroll':'native-scroll:'+region+(axis==='x'?':x':''),trackId=primaryId?'native-scrollbar':base+':track',thumbId=primaryId?'native-scroll-thumb':base+':thumb';
         const start=axis==='x'?rect.x:rect.y,cross=axis==='x'?rect.y+rect.height+4:rect.x+rect.width+4;
         const place=(id:string,isThumb:boolean)=>{
@@ -653,10 +691,13 @@ export class NativeStage {
     return [{...ink,controls:controls?.map(control=>this.controlInk(control)),columns:columns?.map(({hint:_columnHint,...column})=>column)},!!this.rowHint(row)];
   }
   private pageInkSignature(page:NativePage|null):string{
-    return page?JSON.stringify([page.id,page.title,page.subtitle,page.width,page.height,page.layout,page.palette,page.research,page.columnRatio,page.portrait?.url,page.visual?.selected,page.visual?.markers,page.rows.map(row=>this.rowInk(row)),page.actions?.map(control=>this.controlInk(control)),page.closable,this.textFontRevision,this.frontVisible,this.width,this.height,this.scroll,this.regionOffsets,this.graphX]):'';
+    return page?JSON.stringify([page.id,page.title,page.subtitle,page.width,page.height,page.layout,page.palette,page.research,page.columnRatio,page.portrait?.url,page.visual?.selected,page.visual?.markers,page.rows.map(row=>this.rowInk(row)),page.actions?.map(control=>this.controlInk(control)),page.closable,this.textFontRevision,this.textEntityRevision,this.frontVisible,this.width,this.height,this.scroll,this.regionOffsets,this.graphX,this.paletteX]):'';
   }
   private rebuildPage(force=false):void{
     const page=this.page;
+    const entities=page?.textEntities??this.sharedTextEntities;
+    if(entities!==this.inkTextEntities){this.inkTextEntities=entities;this.textEntityRevision++;this.semanticInk.clear();}
+    this.textLexicon=createNativeTextLexicon(entities);
     const signature=this.pageInkSignature(page);
     if(!force&&signature===this.pageSignature){this.rebindPage(page);return;}
     const focused=this.pageControls.filter(hit=>!hit.control?.disabled)[this.focusIndex],focusedId=focused?focused.control?.id??String(focused.piece.userData.nativeId):undefined;
@@ -664,25 +705,24 @@ export class NativeStage {
     if(this.globe&&this.globe.visible!==!!page?.visual){this.globe.visible=!!page?.visual;this.sceneRevision++;}
     if(!page){this.pageBox=undefined;this.retirePagePieces();this.focusIndex=-1;return;}
     this.stats.rebuilds++;
-    const box=layoutNativePage(page,{width:this.width,height:this.height},this.frontVisible,this.measure);this.pageBox=box;
-    const extra=box.layout==='palette'?Math.max(0,box.height-46)*.01:box.layout==='inspector'?(box.height+12)*.01:0;
-    this.toolsDock.children.forEach((object,index)=>{const piece=object as CardboardPiece,y=(index===0?1.63:1.09)+(index===0||page.palette==='zones'||box.layout==='inspector'?extra:0);if(piece.userData.basePos.y!==y)piece.setBaseTransform(.54,y,.08);});
+    const box=layoutNativePage(page,{width:this.width,height:this.height},this.frontVisible,(text,size,bold)=>this.measure(text,size,bold??true));this.pageBox=box;
     const k=.01,w=box.width*k,h=box.height*k,margin=12;
     const z=.18,factor=1-z/HUD_DISTANCE;
     this.pageGroup.scale.setScalar(this.uiScale*factor);
     this.pageGroup.position.set((box.x+box.width/2-this.width/2)*this.visH/this.height*factor,(this.height/2-box.y-box.height/2)*this.visH/this.height*factor,z);
     this.maxScroll=Math.max(0,box.contentHeight-box.body.height);this.scroll=THREE.MathUtils.clamp(this.scroll,0,this.maxScroll);
     for(const [key,rect]of Object.entries(box.regions)){
-      const region=key as NativeRegion;if(region==='graph'){this.graphX=THREE.MathUtils.clamp(this.graphX,0,Math.max(0,(rect.contentWidth??rect.width)-rect.width));}
+      const region=key as NativeRegion;if(region==='graph'||box.layout==='palette')this.setHorizontalOffset(region,this.horizontalOffset(region));
       this.setRegionOffset(region,this.regionOffset(region));
     }
     const visible=box.rows.filter(r=>this.rowVisible(r)),sheet=box.inspectorParts?.sheet??{x:0,y:0,width:box.width,height:box.height};
     if(box.layout!=='palette'){
-    const background=this.pagePiece('page:'+page.id,{w,h:sheet.height*k,cacheBackground:true,uvPadding:1,textureWidth:Math.ceil(box.width*2),textureHeight:Math.ceil(sheet.height*2),bgColor:PALETTE.creamPaper,seed:2003,depth:.035,interactive:true,
+    const background=this.pagePiece('page:'+page.id,{w,h:sheet.height*k,cacheBackground:true,surface:'panel',uvPadding:1,bevel:.038,textureWidth:Math.ceil(box.width*2),textureHeight:Math.ceil(sheet.height*2),bgColor:'#f1e7cf',seed:2003,depth:.046,interactive:true,
       drawFn:(ctx,wp,hp,rng)=>{
         ctx.save();ctx.scale(wp/box.width,hp/sheet.height);ctx.textAlign='left';ctx.fillStyle=PALETTE.inkDark;ctx.font=this.font(17,true);
         const title=box.inspectorParts?page.rows.find(row=>row.id==='pawn-tabs')?.controls?.find(control=>control.active)?.label??page.title:page.title;
-        ctx.fillText(title,margin,25,box.width-margin*2-(page.portrait&&!box.inspectorParts?74:28));
+        ctx.fillText(title,margin,27,box.width-margin*2-(page.portrait&&!box.inspectorParts?74:28));
+        drawMarkerLine(ctx,margin,35,Math.min(box.width-48,margin+this.measure(title,17,true)+22),35,'#b58b4a',1.3,rng);
         if(page.subtitle&&!box.inspectorParts){ctx.font=this.font(12);ctx.fillStyle='#66583f';ctx.fillText(page.subtitle,margin,44,box.width-margin*2-(page.portrait?62:0));}
         for(const r of visible){if(r.row.graphNode)continue;const region=this.rowViewport(r.row);ctx.save();ctx.beginPath();ctx.rect(region.x,region.y,region.width,region.height);ctx.clip();this.drawPageRow(ctx,r,box.header+r.top-this.regionOffset(r.row.region),rng,box);ctx.restore();}
         this.drawResearchLinks(ctx,box,rng);
@@ -700,7 +740,7 @@ export class NativeStage {
       const row=r.row,offset=this.regionOffset(row.region),group=this.regionGroup(row.region),top=box.header+r.top-offset,cy=top+r.height/2;
       const hint=this.rowHint(row);
       if(hint&&!row.graphNode){
-        const piece=this.pagePiece('row-hint:'+row.id,{w:r.width*k,h:r.height*k,paper:false,hitOnly:true,interactive:true,drawFn:()=>{}},hint,(r.x-(row.region==='graph'?this.graphX:0)+r.width/2-box.width/2)*k,(box.height/2-cy)*k,.025);
+        const piece=this.pagePiece('row-hint:'+row.id,{w:r.width*k,h:r.height*k,paper:false,hitOnly:true,interactive:true,drawFn:()=>{}},hint,(r.x-this.horizontalOffset(row.region)+r.width/2-box.width/2)*k,(box.height/2-cy)*k,.025);
         piece.userData.tooltip=hint;piece.userData.nativeStatic=true;group.add(piece);
       }
       if(row.columns){
@@ -710,7 +750,7 @@ export class NativeStage {
       const controls=row.controls??[];
       let graphCard:CardboardPiece|undefined;const graphInset=r.controls.find(control=>control.style==='icon'),graphMain=r.controls.find(control=>control.style==='research');
       for(const cb of r.controls){
-        const region=this.rowViewport(row),left=cb.x-(row.region==='graph'?this.graphX:0),ct=box.header+cb.y-offset;
+        const region=this.rowViewport(row),left=cb.x-this.horizontalOffset(row.region),ct=box.header+cb.y-offset;
         if(left+cb.width<=region.x||left>=region.x+region.width||ct+cb.height<=region.y||ct>=region.y+region.height)continue;
         if(row.graphNode&&cb.style==='icon'&&graphCard&&graphMain){
           const hit:Hit={piece:graphCard,control:cb.control,region:{x:(cb.x-graphMain.x-graphMain.width/2)*k,y:(graphMain.y+graphMain.height/2-cb.y-cb.height)*k,width:cb.width*k,height:cb.height*k}};
@@ -740,7 +780,7 @@ export class NativeStage {
       const summary=box.inspectorParts?.summary;
       if(summary){
         const activity=page.rows.find(row=>row.id==='pawn-action')?.value??'',identity=page.rows.find(row=>row.id==='pawn-identity')?.value??'';
-        this.pagePiece('page:summary',{w:summary.width*k,h:summary.height*k,depth:.025,bgColor:PALETTE.creamPaper,seed:2080,cacheBackground:true,textureWidth:Math.ceil(summary.width*2),textureHeight:Math.ceil(summary.height*2),drawFn:(ctx,wp,hp)=>{
+        this.pagePiece('page:summary',{w:summary.width*k,h:summary.height*k,depth:.046,bevel:.038,surface:'panel',bgColor:PALETTE.creamPaper,seed:2080,cacheBackground:true,textureWidth:Math.ceil(summary.width*2),textureHeight:Math.ceil(summary.height*2),drawFn:(ctx,wp,hp)=>{
           ctx.save();ctx.scale(wp/summary.width,hp/summary.height);ctx.textAlign='left';ctx.fillStyle=PALETTE.inkDark;ctx.font=this.font(14,true);ctx.fillText(page.title,84,20,summary.width-92);ctx.font=this.font(11.5);this.wrap(ctx,identity,84,37,summary.width-92,14,1);this.wrap(ctx,activity,84,53,summary.width-92,14,2);ctx.restore();
         }},JSON.stringify([page.title,activity,identity,this.textFontRevision]),(summary.x+summary.width/2-box.width/2)*k,(box.height/2-summary.y-summary.height/2)*k,.025);
       }
@@ -755,30 +795,43 @@ export class NativeStage {
     this.scene.updateMatrixWorld(true);
   }
   private drawPageRow(ctx:CanvasRenderingContext2D,r:NativeRowBox,top:number,rng:()=>number,box:NativePageBox):void{
-    const row=r.row,ink='#151b13';ctx.fillStyle=ink;ctx.textAlign='left';ctx.font=this.font(13,row.emphasis==='heading');
-    if(row.emphasis==='muted')ctx.fillStyle='#706450';
-    if(row.columns){
-      ctx.fillStyle='#4d5c46';ctx.font=this.font(12,true);ctx.fillText(row.label,r.x,top+24);
-      const tail=row.value?142:0,left=r.x+104,cw=(r.width-104-tail)/row.columns.length;
-      row.columns.forEach((column,index)=>{const lines=wrapNativeText(column.label,cw-5,this.measure,11.5);ctx.textAlign='center';ctx.font=this.font(11.5,true);lines.slice(0,2).forEach((line,lineIndex)=>ctx.fillText(line,left+cw*(index+.5),top+14+lineIndex*14,cw-4));});
-      if(row.value){ctx.textAlign='left';ctx.fillText(row.value,r.x+r.width-tail+6,top+24,tail-10);}return;
+    const row=r.row,ink=PALETTE.inkDark,body=NATIVE_UI.body,line=NATIVE_UI.line;ctx.fillStyle=ink;ctx.textAlign='left';
+    const record=row.presentation==='record'||!!row.controls?.length&&!!row.label&&!row.meter&&!row.columns&&!r.matrix;
+    if(record||row.presentation==='summary'){
+      const summary=row.presentation==='summary';drawHandRect(ctx,r.x-4,top+2,r.width+6,r.height-7,summary?'rgba(217,153,62,.12)':'rgba(255,251,235,.38)','rgba(122,95,58,.28)',.75,rng);
+      ctx.fillStyle=summary?'#bd8b45':'#92a287';ctx.fillRect(r.x-3,top+8,2,Math.max(10,r.height-20));
     }
-    if(r.matrix){ctx.font=this.font(13,true);ctx.fillText(row.label,r.x,top+r.height/2+4,98);if(row.value){ctx.font=this.font(12);ctx.fillStyle='#685c48';const lines=wrapNativeText(row.value,132,this.measure,12);lines.slice(0,2).forEach((line,i)=>ctx.fillText(line,r.x+r.width-138,top+15+i*14,132));}return;}
+    if(row.columns){
+      ctx.fillStyle='#4d5c46';ctx.font=this.font(13,true);ctx.fillText(row.label,r.x,top+28);
+      const tail=row.value?142:0,left=r.x+104,cw=(r.width-104-tail)/row.columns.length;
+      row.columns.forEach((column,index)=>{const lines=wrapNativeText(column.label,cw-5,this.measure,12);ctx.textAlign='center';ctx.font=this.font(12,true);lines.slice(0,2).forEach((line,lineIndex)=>ctx.fillText(line,left+cw*(index+.5),top+16+lineIndex*15,cw-4));});
+      if(row.value)this.semanticText(ctx,row.value,r.x+r.width-tail+6,top+28,tail-10,12);return;
+    }
+    if(r.matrix){this.semanticText(ctx,row.label,r.x,top+r.height/2+4,98,body,true);if(row.value){const lines=wrapNativeText(row.value,132,this.measure,12);lines.slice(0,2).forEach((line,i)=>this.semanticText(ctx,line,r.x+r.width-138,top+16+i*15,132,12));}return;}
     if(row.id==='pawn-tabs'||row.id==='health-tabs')return;
     if(row.meter){
       const meter=row.meter,labelWidth=Math.min(r.width*.45,138),barX=r.x+labelWidth,barW=Math.max(40,r.width-labelWidth-8),fraction=THREE.MathUtils.clamp(meter.value/(meter.max??1),0,1);
-      ctx.font=this.font(12.5);ctx.fillText(row.label,r.x,top+15,labelWidth-5);
+      this.semanticText(ctx,row.label,r.x,top+18,labelWidth-5,body);
       if(meter.passion){ctx.fillStyle='#b45c29';ctx.font=this.font(10,true);ctx.fillText('♥'.repeat(meter.passion),r.x+labelWidth-24,top+24);}
-      drawHandRect(ctx,barX,top+5,barW,12,'rgba(70,58,38,.20)',ink,.7,rng);
-      if(fraction>0)drawHandRect(ctx,barX+.8,top+5.8,Math.max(.5,(barW-1.6)*fraction),10.4,meter.color??'#78975c',null,.5,rng);
-      ctx.fillStyle=ink;ctx.font=this.font(11,true);ctx.textAlign='center';ctx.fillText(meter.label??row.value??'',barX+barW/2,top+15,barW-4);ctx.textAlign='left';
-      if(meter.secondary){const secondary=meter.secondary;ctx.fillStyle='rgba(70,58,38,.15)';ctx.fillRect(barX,top+20,barW,3);ctx.fillStyle=secondary.color??'#bd994b';ctx.fillRect(barX,top+20,barW*THREE.MathUtils.clamp(secondary.value/(secondary.max??1),0,1),3);}
+      drawHandRect(ctx,barX,top+6,barW,14,'rgba(70,58,38,.20)',ink,.7,rng);
+      if(fraction>0)drawHandRect(ctx,barX+.8,top+6.8,Math.max(.5,(barW-1.6)*fraction),12.4,meter.color??'#78975c',null,.5,rng);
+      ctx.fillStyle=ink;ctx.font=this.font(12,true);ctx.textAlign='center';ctx.fillText(meter.label??row.value??'',barX+barW/2,top+18,barW-4);ctx.textAlign='left';
+      if(meter.secondary){const secondary=meter.secondary;ctx.fillStyle='rgba(70,58,38,.15)';ctx.fillRect(barX,top+23,barW,3);ctx.fillStyle=secondary.color??'#bd994b';ctx.fillRect(barX,top+23,barW*THREE.MathUtils.clamp(secondary.value/(secondary.max??1),0,1),3);}
       return;
     }
-    if(row.label){ctx.font=this.font(row.emphasis==='heading'?13.5:13,row.emphasis==='heading');r.labelLines.forEach((line,i)=>ctx.fillText(line,r.x,top+15+i*17,row.value||row.input?r.labelWidth-5:r.width));}
-    if(row.value&&!(row.controls?.length&&r.controlTop===2)){ctx.font=this.font(13);ctx.fillStyle='#364c38';r.valueLines.forEach((line,i)=>ctx.fillText(line,r.x+r.labelWidth+6,top+15+i*17,r.width-r.labelWidth-6));}
-    if(r.detailLines.length){ctx.font=this.font(12);ctx.fillStyle='#6b5b45';const y=top+Math.max(r.labelLines.length,r.valueLines.length,1)*17+15;r.detailLines.forEach((line,i)=>ctx.fillText(line,r.x,y+i*16,r.width));}
-    if(row.emphasis==='heading'){ctx.strokeStyle='rgba(67,50,28,.2)';ctx.lineWidth=.7;ctx.beginPath();ctx.moveTo(r.x,top+r.height-2);ctx.lineTo(r.x+r.width,top+r.height-2);ctx.stroke();}
+    const baseline=top+(record?21:18),labelWidth=row.value||row.input?r.labelWidth-5:r.textWidth;
+    if(row.label)r.labelLines.forEach((text,i)=>this.semanticText(ctx,text,r.x+3,baseline+i*line,labelWidth-3,body,row.emphasis==='heading'||row.presentation==='summary'||record&&!!row.value));
+    if(row.value)r.valueLines.forEach((text,i)=>this.semanticText(ctx,text,r.x+r.labelWidth+6,baseline+i*line,r.textWidth-r.labelWidth-8,body));
+    if(r.detailLines.length){const y=baseline+Math.max(r.labelLines.length,r.valueLines.length,1)*line+2;r.detailLines.forEach((text,i)=>this.semanticText(ctx,text,r.x+3,y+i*18,r.textWidth-5,12));}
+    if(row.emphasis==='heading'){ctx.strokeStyle='rgba(103,76,38,.35)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(r.x,top+r.height-4);ctx.lineTo(r.x+r.width,top+r.height-4);ctx.stroke();}
+  }
+  private semanticText(ctx:CanvasRenderingContext2D,text:string,x:number,y:number,width:number,size:number,bold=false):void{
+    if(!text||width<=0)return;let spans=this.semanticInk.get(text);
+    if(!spans){spans=tokenizeNativeText(text,this.textLexicon);if(this.semanticInk.size>=1024)this.semanticInk.delete(this.semanticInk.keys().next().value!);this.semanticInk.set(text,spans);}
+    const measured=spans.reduce((sum,span)=>sum+this.measure(span.text,size,bold||NATIVE_TEXT_STYLES[span.kind].bold),0);
+    ctx.save();ctx.textAlign='left';ctx.translate(x,y);ctx.scale(Math.min(1,width/Math.max(1,measured)),1);let offset=0;
+    for(const span of spans){const style=NATIVE_TEXT_STYLES[span.kind];ctx.font=this.font(size,bold||style.bold);ctx.fillStyle=style.color;ctx.fillText(span.text,offset,0);offset+=this.measure(span.text,size,bold||style.bold);}
+    ctx.restore();
   }
   private wrap(ctx:CanvasRenderingContext2D,text:string,x:number,y:number,width:number,lineHeight:number,maxLines=20):number{
     const words=text.split(/\s+/);let line='',lines=0;
@@ -792,14 +845,13 @@ export class NativeStage {
       ctx.save();ctx.scale(wp/cssW,hp/cssH);ctx.fillStyle=control.disabled?'#8b7b60':PALETTE.inkDark;ctx.textAlign='center';
       const ink=control.disabled?'#776c55':PALETTE.inkDark;
       const icon=(cx:number,cy:number,r:number)=>drawNativeActionIcon(ctx,control.icon??(control.label==='▶'?'play':control.id),cx,cy,r,ink,PALETTE.creamPaper);
-      if(style==='tile'){
-        const radius=Math.min(36,cssW*.27);drawHandBlob(ctx,cssW/2,radius+24,radius+7,PALETTE.creamPaper,ink,2,rng);icon(cssW/2,radius+24,radius);
-        ctx.font=this.font(14,true);const lines=wrapNativeText(control.label,cssW-16,this.measure,14).slice(0,2);lines.forEach((line,index)=>ctx.fillText(line,cssW/2,cssH-28+index*17,cssW-14));
+      if(style==='tile'||style==='navigation'){
+        const radius=Math.min(23,cssW*.24,cssH*.24),cy=cssH*.34;drawHandBlob(ctx,cssW/2,cy,radius+5,PALETTE.creamPaper,ink,1.8,rng);icon(cssW/2,cy,radius*.77);
+        const lines=wrapNativeText(control.label,cssW-13,this.measure,13).slice(0,2),bandHeight=lines.length>1?31:24,bandY=cssH-bandHeight-4;
+        ctx.save();ctx.translate(cssW/2,bandY+bandHeight/2);ctx.rotate(this.seed(control.id)%2?.024:-.024);drawHandRect(ctx,-cssW*.46,-bandHeight/2,cssW*.92,bandHeight,PALETTE.creamPaper,ink,1.1,rng);ctx.font=this.font(13,true);lines.forEach((line,index)=>ctx.fillText(line,0,4+(index-(lines.length-1)/2)*14,cssW-13));ctx.restore();
         if(control.caption){ctx.font=this.font(10,true);ctx.textAlign='right';ctx.fillText(control.caption,cssW-7,14,cssW-12);}
       }else if(style==='icon'){
         icon(cssW/2,cssH/2,Math.min(cssW,cssH)*.35);
-      }else if(style==='navigation'){
-        icon(23,cssH/2,14);ctx.textAlign='left';ctx.font=this.font(14,true);ctx.fillText(control.label,48,cssH/2+5,cssW-61);ctx.textAlign='right';ctx.fillText('›',cssW-8,cssH/2+5,10);
       }else if(style==='research'&&node){
         icon(18,22,11);ctx.textAlign='left';ctx.font=this.font(12,true);wrapNativeText(control.label,cssW-42,this.measure,12).slice(0,2).forEach((line,index)=>ctx.fillText(line,36,19+index*15,cssW-42));
         const barWidth=cssW-38,filled=barWidth*THREE.MathUtils.clamp(node.points/Math.max(1,node.cost),0,1);
@@ -808,7 +860,7 @@ export class NativeStage {
         if(inset){drawHandRect(ctx,118,40,22,19,inset.disabled?PALETTE.kraftLight:PALETTE.sageMountain,ink,1,rng);drawNativeActionIcon(ctx,'play',129,49.5,6.5,inset.disabled?'#776c55':ink,PALETTE.creamPaper);}
       }else{
         const inlineIcon=!!control.icon&&cssH>=28;if(inlineIcon)icon(17,cssH/2,10);
-        const available=cssW-(control.select?24:12)-(inlineIcon?26:0),font=control.id==='page:close'?20:control.label.length<=1&&cssW<=48?17:13;
+        const available=cssW-(control.select?24:12)-(inlineIcon?26:0),font=control.id==='page:close'?20:control.label.length<=1&&cssW<=48?17:14;
         ctx.font=this.font(font,true);let label=control.label;
         if(cssH>=39&&!control.caption){const lines=wrapNativeText(label,available,this.measure,font).slice(0,2);lines.forEach((line,index)=>ctx.fillText(line,cssW/2+(inlineIcon?12:0)-(control.select?4:0),cssH/2+4+(index-(lines.length-1)/2)*15,available));}
         else{
@@ -822,9 +874,11 @@ export class NativeStage {
       if(control.active)drawMarkerLine(ctx,5,cssH-3,cssW-5,cssH-3,PALETTE.inkDark,1,rng);
       ctx.restore();
     };
-    const piece=this.pagePiece(control.id,{w,h,depth:.018,bevel:.012,uvPadding:1,textureWidth:Math.max(32,Math.ceil(cssW*2)),textureHeight:Math.max(32,Math.ceil(cssH*2)),bgColor:control.disabled?PALETTE.kraftLight:control.active?PALETTE.ochre:control.color??PALETTE.sageMountain,seed:this.seed(control.id),interactive:true,drawFn:draw},
+    const piece=this.pagePiece(control.id,{w,h,depth:.046,bevel:.038,uvPadding:1,textureWidth:Math.max(32,Math.ceil(cssW*2)),textureHeight:Math.max(32,Math.ceil(cssH*2)),bgColor:control.disabled?PALETTE.kraftLight:control.active?PALETTE.ochre:control.color??PALETTE.sageMountain,seed:this.seed(control.id),interactive:true,drawFn:draw},
       JSON.stringify([control.label,control.caption,control.icon,style,node,!!inset?.disabled,!!control.active,!!control.disabled,!!control.select,this.textFontRevision]),x,y,z,control);
-    piece.userData.nativeStyle=style;this.pageGroup.add(piece);return piece;
+    piece.userData.nativeStyle=style;piece.userData.active=!!control.active;
+    piece.userData.nativeToolbarPose=style==='tile'||style==='navigation'||style==='tab';this.setPose(piece,piece.userData.hoverVal);
+    this.pageGroup.add(piece);return piece;
   }
   private closeControl():NativeControl{return {id:'page:close',label:'×',hint:'Fermer · Échap',color:'#d7ad91',onActivate:()=>{if(this.page?.onClose)this.page.onClose();else this.options.onEscape();}};}
   private rowControl(row:NativeRow,control:NativeControl):NativeControl{
@@ -867,7 +921,7 @@ export class NativeStage {
   private pagePiece(id:string,options:CardboardPieceOptions,ink:string,x:number,y:number,z:number,control?:NativeControl,input?:NativeRow['input']):CardboardPiece{
     this.pagePieceIds.add(id);
     const geometry=JSON.stringify([options.w,options.h,options.depth??.044,options.bevel??.026,options.seed??1,!!options.interactive,options.paper,options.hitOnly,options.cacheBackground,options.textureWidth,options.textureHeight,options.uvPadding]);
-    const paint=JSON.stringify([options.bgColor??PALETTE.kraftBase,ink]);
+    const paint=JSON.stringify([options.bgColor??PALETTE.kraftBase,options.surface,ink]);
     let record=this.retainedPagePieces.get(id),created=false;
     const old=record,wasEditing=!!record&&this.editing===record.hit;
     const interaction=record?{hoverTarget:record.piece.userData.hoverTarget,hoverVal:record.piece.userData.hoverVal,pressVal:record.piece.userData.pressVal,hovered:this.hovered===record.piece,moving:this.moving.has(record.piece),pressed:this.down?.piece===record.piece}:undefined;
@@ -913,7 +967,7 @@ export class NativeStage {
       const maxWidth=Math.min(420,this.width-24),raw=text.split('\n'),requested=Math.min(maxWidth,Math.max(70,...raw.map(line=>this.measure(line,13)))+20);
       const lines=wrapNativeText(text,requested-20,this.measure,13),width=Math.min(maxWidth,Math.max(70,...lines.map(line=>this.measure(line,13)))+20),height=Math.min(this.height-20,lines.length*17+16);
       const count=lines.length*17+16>height?Math.max(1,Math.floor((height-30)/17)):lines.length;this.hintMaxScroll=Math.max(0,lines.length-count);this.hintScroll=0;
-      const z=2,factor=1-z/HUD_DISTANCE,piece=this.art.createPiece({w:width*.01,h:height*.01,depth:.02,uvPadding:1,textureWidth:Math.ceil(width*2),textureHeight:Math.ceil(height*2),seed:347,bgColor:PALETTE.creamPaper,
+      const z=2,factor=1-z/HUD_DISTANCE,piece=this.art.createPiece({w:width*.01,h:height*.01,depth:.046,bevel:.038,surface:'panel',uvPadding:1,textureWidth:Math.ceil(width*2),textureHeight:Math.ceil(height*2),seed:347,bgColor:PALETTE.creamPaper,
         drawFn:(ctx,wp,hp)=>{ctx.save();ctx.scale(wp/width,hp/height);ctx.fillStyle=PALETTE.inkDark;ctx.textAlign='left';ctx.font=this.font(13);const scrolling=this.hintMaxScroll>0;lines.slice(scrolling?this.hintScroll:0,scrolling?this.hintScroll+count:lines.length).forEach((line,i)=>ctx.fillText(line,10,20+i*17,width-20));if(scrolling){ctx.font=this.font(11);ctx.fillStyle='#6b5b45';ctx.fillText('Molette : suite',10,height-7);ctx.fillStyle='#78975c';ctx.fillRect(width-6,6+(height-12)*this.hintScroll/lines.length,3,Math.max(8,(height-12)*count/lines.length));}ctx.restore();}});
       const left=THREE.MathUtils.clamp(x+16+width>this.width?x-width-12:x+16,8,this.width-width-8),top=THREE.MathUtils.clamp(y+18+height>this.height?y-height-8:y+18,8,this.height-height-8);
       piece.userData.nativeId='native-tooltip';piece.scale.setScalar(this.uiScale*factor);piece.setBaseTransform((left+width/2-this.width/2)*this.visH/this.height*factor,(this.height/2-top-height/2)*this.visH/this.height*factor,z);this.setPose(piece,0);this.hudRoot.add(piece);this.hintPiece=piece;this.invalidate();

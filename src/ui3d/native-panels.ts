@@ -1,6 +1,7 @@
 import type {NativeUiState,NativeUiActions,NativePage,NativeRow,NativeControl} from './native-contract';
 import {buildNativeWorld,syncNativeWorldState} from './native-world';
 import {nativeArrivalRows} from './native-arrivals';
+import {nativeTextEntitiesFor} from './native-text-entities';
 import {toolDefinitions,workColumns,productionToolOrder} from './native-catalog';
 import type {ArchitectCategory} from '../ui/layout';
 import {architectCategoryAvailable,architectToolAvailable} from '../ui/architect-availability';
@@ -72,7 +73,7 @@ async function send(command:Command):Promise<unknown>{
  try {const result=await host.command(command);if(result&&typeof result==='object'&&'ok'in result&&result.ok===false)throw Error('reason'in result&&typeof result.reason==='string'?result.reason:'La commande a été refusée.');return result;}
  finally {dispatching=false;host.refresh();}
 }
-function open(page:NativePage):void {host?.showPage(page);}
+function open(page:NativePage):void {host?.showPage({...page,textEntities:page.textEntities??nativeTextEntitiesFor(latest?.world,latest?.campaign)});}
 function redraw():void {host?.refresh();}
 function back():void {const state=latest,actions=host;if(!state||!actions)return;const page=buildNativePanel(state,actions);if(page)open(page);}
 function detailPage(id:string,title:string,rows:NativeRow[],actions:NativeControl[]=[],onBack:()=>void=back):NativePage{return {id,title,rows,actions:[...actions,button(`${id}-back`,'Retour',onBack)],modal:true,width:7.8,onClose:onBack};}
@@ -212,7 +213,7 @@ function quotaEditor(species:AutoSlaughterSpecies):void {
 }
 function animalsPanel(world:World):NativePage {
  const animals=world.wildlife?.animals.filter(a=>!!a.domestic&&a.state!=='dead')??[],targets=autoSlaughterTargets(world);
- const rows:NativeRow[]=[{id:'animals-headings',label:'Animal',value:'Âge · activité',compact:true,columns:['Repérer','Dossier','Abattage','Transport','Zone'].map(label=>({label}))},...animals.map(animal=>{
+ const rows:NativeRow[]=[{id:'animals-headings',label:'Animal',value:'Âge · activité',compact:true,columns:['Repérer','Dossier','Abattage','Transport','Zone'].map(label=>({label}))},...animals.map((animal):NativeRow=>{
   const product=productKind(animal),refusal=slaughterRefusal(world,animal),training=readAnimalTraining282(animal,'haul');
   const controls=[button(`animal-${animal.id}-locate`,'Repérer',()=>host?.selectPawn(animal.id)),button(`animal-${animal.id}-details`,'Dossier',()=>animalDetails(animal.id)),button(`animal-${animal.id}-slaughter`,animal.domestic!.slaughter?'Abattage demandé':'Abattre',()=>send({type:'slaughter',animalId:animal.id,enabled:!currentAnimal(animal.id).domestic?.slaughter}),{active:!!animal.domestic!.slaughter,disabled:!!refusal&&!animal.domestic!.slaughter,hint:refusal})];
   if(world.schemaVersion>=282)controls.push(button(`animal-${animal.id}-haul`,training.wanted?'Transport demandé':'Entraîner',()=>send({type:'animal-training',animalId:animal.id,skill:'haul',wanted:!readAnimalTraining282(currentAnimal(animal.id),'haul').wanted}),{active:training.wanted,disabled:!!trainingRefusal282(world,animal,'haul'),hint:trainingRefusal282(world,animal,'haul')??`${training.steps}/${training.maxSteps}`}));
@@ -221,10 +222,10 @@ function animalsPanel(world:World):NativePage {
   const age=`${animal.sex==='female'?'♀':'♂'} · ${(animal.ageTicks/(TICKS_PER_DAY*60)).toLocaleString('fr-FR',{maximumFractionDigits:2})} an · ${stageLabels[animalLifeStage(animal)]}`;
   const facts=[animalActivity(world,animal,targets),animalAreaLabel(world,animal),MEDICAL_CARE[animal.domestic!.care],product?`${product==='milk'?'Lait':'Laine'} ${Math.round(100*productFullness(animal))} %`:'',animal.pregnancy?`Gestation ${Math.round(100*animal.pregnancy.progress/gestationTicks(animal.species))} %`:''].filter(Boolean).join(' · ');
   const ordered=['locate','details','slaughter','haul','area'].map(action=>controls.find(control=>control.id===`animal-${animal.id}-${action}`)??button(`animal-${animal.id}-${action}-unavailable`,'—',()=>{},{disabled:true,hint:'Indisponible dans cette partie ou pour cette espèce.'}));
-  return {...row(`animal-${animal.id}`,identity,`${age} · ${animalActivity(world,animal,targets)}`,undefined,ordered.map(control=>({...control,hint:[control.hint,identity,age,facts].filter(Boolean).join('\n')}))),compact:true,hint:[identity,age,facts].join('\n')};
+  return {...row(`animal-${animal.id}`,identity,`${age} · ${animalActivity(world,animal,targets)}`,undefined,ordered.map(control=>({...control,hint:[control.hint,identity,age,facts].filter(Boolean).join('\n')}))),compact:true,presentation:'record',hint:[identity,age,facts].join('\n')};
  })];
  if(!animals.length)rows.push(row('animals-empty','Aucun animal domestique.'));
- if(world.schemaVersion>=228)for(const species of AUTO_SLAUGHTER_SPECIES){const c=autoSlaughterCounts(world,species),config=world.autoSlaughter?.find(c=>c.species===species)??defaultAutoSlaughterConfig(species);rows.push(row(`quota-${species}`,animalSpecies(species).label,`${c.total} animaux · limite ${config.maxTotal<0?'∞':config.maxTotal}`,`Adultes ${c.males} ♂ / ${c.females} ♀ · jeunes ${c.malesYoung} ♂ / ${c.femalesYoung} ♀ · gestantes ${c.pregnant}`,[button(`quota-${species}-edit`,'Quotas',()=>quotaEditor(species))]));}
+ if(world.schemaVersion>=228){rows.push({id:'animals-quotas-heading',label:'Abattage automatique',emphasis:'heading',presentation:'plain'});for(const species of AUTO_SLAUGHTER_SPECIES){const c=autoSlaughterCounts(world,species),config=world.autoSlaughter?.find(c=>c.species===species)??defaultAutoSlaughterConfig(species);rows.push({...row(`quota-${species}`,animalSpecies(species).label,`${c.total} animaux · limite ${config.maxTotal<0?'∞':config.maxTotal}`,`Adultes ${c.males} ♂ / ${c.females} ♀ · jeunes ${c.malesYoung} ♂ / ${c.femalesYoung} ♀ · gestantes ${c.pregnant}`,[button(`quota-${species}-edit`,'Quotas',()=>quotaEditor(species))]),presentation:'record'});}}
  return {id:'animals',title:'Animaux',layout:'table',rows,width:11.4,onClose:()=>void host?.panel(null)};
 }
 function wildlifePanel(state:NativeUiState,world:World):NativePage {
@@ -235,7 +236,7 @@ function wildlifePanel(state:NativeUiState,world:World):NativePage {
   const controls=[button(`wildlife-${animal.id}-focus`,'Repérer',()=>host?.selectPawn(animal.id)),button(`wildlife-${animal.id}-hunt`,hunted?'Chasse désignée':'Chasser',()=>send({type:'hunt',animalId:animal.id,enabled:!currentWorld().hunting?.targets.includes(animal.id)}),{active:hunted,disabled:animal.state==='dead'})];
   if(canTameSpecies(animal.species))controls.push(button(`wildlife-${animal.id}-tame`,animal.taming?.designated?'Apprivoisement demandé':'Apprivoiser',()=>send({type:'tame',animalId:animal.id,enabled:!currentAnimal(animal.id).taming?.designated}),{active:!!animal.taming?.designated,disabled:animal.state==='dead'}));
   controls.push(button(`wildlife-${animal.id}-shoot`,'Tirer',()=>send({type:'shoot',pawnIds:[...(latest?.selectedPawnIds??[])],targetId:animal.id}),{disabled:!drafted||animal.state==='dead'}),button(`wildlife-${animal.id}-melee`,'Mêlée',()=>send({type:'melee',pawnIds:[...(latest?.selectedPawnIds??[])],targetId:animal.id}),{disabled:!drafted||animal.state==='dead'}));
-  rows.push(row(`wildlife-${animal.id}`,actualAnimalName256(animal)??`${animalSpecies(animal.species).label} ${animal.id}`,`${animal.sex==='female'?'Femelle':'Mâle'} · ${animal.x}, ${animal.z}`,animalActivity(world,animal),controls));
+  rows.push({...row(`wildlife-${animal.id}`,actualAnimalName256(animal)??`${animalSpecies(animal.species).label} ${animal.id}`,`${animal.sex==='female'?'Femelle':'Mâle'} · ${animal.x}, ${animal.z}`,animalActivity(world,animal),controls),presentation:'record'});
  }
  if(world.wildlife&&!animals.length)rows.push(row('wildlife-empty','Aucun animal sauvage connu.'));
  return {id:'wildlife',title:'Faune',subtitle:'Les ordres de combat utilisent les colons mobilisés sélectionnés.',rows,width:7.8,onClose:()=>void host?.panel(null)};
@@ -244,7 +245,8 @@ function wildlifePanel(state:NativeUiState,world:World):NativePage {
 function historyPanel(state:NativeUiState):NativePage {
  const source=state.world??state.campaign,rows:NativeRow[]=[];
  if(state.world){const economy=state.world.economy;if(economy){const wealth=economy.wealth,expect=expectationForWealth(wealth.knownTotal);rows.push(row('economy-total','Patrimoine évalué',`${money(wealth.knownTotal)}${wealth.complete?'':' au minimum'}`,`Relevé jour ${1+Math.floor(economy.sampledAt/TICKS_PER_DAY)} · attentes ${expect.label} (${signed(expect.moodOffset)} humeur)`),row('economy-parts','Composition',undefined,`Objets ${money(wealth.items)} · bâtiments ${money(wealth.structures)} · sols ${money(wealth.floors)}`),row('economy-coverage','Couverture',wealth.complete?'Complète':'Valeurs manquantes',`${wealth.unpricedPawnIds.length} personnes ; ${(wealth.unpricedPileIds?.length??0)+(wealth.unpricedPackedIds?.length??0)+(wealth.unpricedStructureIds?.length??0)} autres biens non évalués.`));}else rows.push(row('economy-adopt','Patrimoine',undefined,'La partie conserve ses règles historiques. Adopter le suivi part des biens présents.',[button('economy-enable','Activer le suivi économique',()=>send({type:'adopt-economy'}))]));}
- const events=source?.events??[];for(let i=events.length-1;i>=0;i--){const event=events[i]!;rows.push({...row(`event-${i}`,`Jour ${1+Math.floor(event.tick/TICKS_PER_DAY)}`,event.message),labelWidth:80});}
+ for(const fact of rows)fact.presentation='summary';
+ const events=source?.events??[];for(let i=events.length-1;i>=0;i--){const event=events[i]!;rows.push({...row(`event-${i}`,`Jour ${1+Math.floor(event.tick/TICKS_PER_DAY)}`,event.message),labelWidth:72,presentation:'record'});}
  if(!events.length)rows.push(row('history-empty','Aucun événement consigné.'));
  return {id:'history',title:'Historique',rows,width:7.8,onClose:()=>void host?.panel(null)};
 }
@@ -383,7 +385,7 @@ export function syncNativePanelState(state:NativeUiState,actions:NativeUiActions
  lastTick=source?.tick??-1;
 }
 /** Builds data for native meshes. It never reads a legacy control or emits HTML. */
-export function buildNativePanel(state:NativeUiState,actions:NativeUiActions):NativePage|null {
+function buildNativePanelContent(state:NativeUiState,actions:NativeUiActions):NativePage|null {
  syncNativePanelState(state,actions);
  if(state.panel===null)return null;
  if(state.panel==='menu')return menuPanel(state,actions);
@@ -401,4 +403,8 @@ export function buildNativePanel(state:NativeUiState,actions:NativeUiActions):Na
   case 'wildlife':return wildlifePanel(state,world);
   case 'research':return buildNativeResearch(world,{...actions,command:send},redraw);
  }
+}
+export function buildNativePanel(state:NativeUiState,actions:NativeUiActions):NativePage|null {
+ const page=buildNativePanelContent(state,actions);
+ return page?{...page,textEntities:page.textEntities??nativeTextEntitiesFor(state.world,state.campaign)}:null;
 }

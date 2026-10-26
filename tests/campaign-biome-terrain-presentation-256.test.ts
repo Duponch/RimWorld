@@ -24,9 +24,9 @@ describe('twelve original biome scenes and actual terrain facts256',()=>{
   expect(terrainSurfaceWalkable({terrain:'river-chest-deep'},context)).toBe(true);expect(terrainAffordanceNote({terrain:'river-chest-deep'},context)).toContain('+4.2');
  });
  it('reads real light/heavy/bridge/culture affordances and preserves terrain below an actual bridge',()=>{
-  expect(terrainAffordanceNote({terrain:'marshy-soil'},context)).toContain('Support lÃ©ger uniquement');expect(terrainAffordanceNote({terrain:'soil-natural'},context)).toContain('lourd');
+  expect(terrainAffordanceNote({terrain:'marshy-soil'},context)).toContain('Support léger uniquement');expect(terrainAffordanceNote({terrain:'soil-natural'},context)).toContain('lourd');
   expect(terrainAffordanceNote({terrain:'sand'},context)).toContain('Sol de culture absent');const bridge={terrain:'mud' as const,bridge:true as const};
-  expect(terrainSurfaceLabel(bridge)).toContain('boue');expect(terrainInspection(bridge,context)).toContain('FertilitÃ© : 0 %');expect(bridgeTerrainNote(bridge)).toContain('+1.4');expect(bridge.terrain).toBe('mud');expect(NATURAL_TERRAIN_DEFINITIONS_256.mud.fertility).toBe(0);
+  expect(terrainSurfaceLabel(bridge)).toContain('boue');expect(terrainInspection(bridge,context)).toContain('Fertilité : 0 %');expect(bridgeTerrainNote(bridge)).toContain('+1.4');expect(bridge.terrain).toBe('mud');expect(NATURAL_TERRAIN_DEFINITIONS_256.mud.fertility).toBe(0);
   expect(terrainInspection({terrain:'soil'})).toContain('70 %');expect(terrainSurfaceLabel({terrain:'water'})).toBe('Eau infranchissable');
  });
 });
@@ -50,4 +50,27 @@ it('the actual impassable collapsed rock takes precedence over preserved bridge/
   expect(terrainInspection(tile,context)).toContain('Fertilité : 0 %');expect(terrainInspection(tile,context)).toContain(tile.bridge?'Pont en bois conservé':'Revêtement conservé');
   expect(JSON.stringify(tile)).toBe(before);
  }
+});
+
+it('keeps French terrain, support and hover facts readable without changing their physical values',()=>{
+ const cases:Tile[]=[
+  {terrain:'soil'}, {terrain:'soil-natural'}, {terrain:'marshy-soil'}, {terrain:'river-shallow'},
+  {terrain:'river-chest-deep'}, {terrain:'water-shallow'}, {terrain:'marsh'},
+  {terrain:'mud',bridge:true}, {terrain:'water-shallow',bridge:true},
+  {terrain:'grass',floor:'wood-planks'}, {terrain:'sand',snowDepth:.5},
+  {terrain:'rock',bridge:true,collapsedRock:{id:7,terrain:'marshy-soil'}},
+ ];
+ for(const tile of cases){const before=JSON.stringify(tile),facts=[terrainSurfaceLabel(tile),terrainAffordanceNote(tile,context),terrainInspection(tile,context)];
+  if(tile.bridge)facts.push(bridgeTerrainNote(tile));
+  expect(facts.join('\n')).not.toMatch(/[ÃÂ]/u);expect(JSON.stringify(tile)).toBe(before);
+ }
+ expect(TERRAIN_LABELS['marshy-soil']).toBe('Sol marécageux');expect(TERRAIN_LABELS['river-shallow']).toBe('Rivière peu profonde');
+ expect(terrainAffordanceNote({terrain:'marshy-soil'},context)).toContain('Sol de culture (fertilité et plante à vérifier)');
+ expect(terrainInspection({terrain:'soil-natural'},context)).toContain('Fertilité : 100 %');
+ expect(terrainInspection({terrain:'water-shallow'})).toContain('Déplacements ralentis · Marche : +3 ticks');
+ expect(terrainInspection({terrain:'grass',floor:'wood-planks'})).toContain('Propreté du revêtement');
+ expect(terrainInspection({terrain:'sand',snowDepth:.5},context)).toContain('Neige : 50 % · Marche : +0.8 tick(s)');
+ const w=deconstructionCamp(0),cell={x:8,z:8},index=cell.z*w.width+cell.x;w.tiles[index]={terrain:'water-shallow',bridge:true};const before=JSON.stringify(w),hover=mapHoverLines(w,cell,1).join(' · ');
+ expect(hover).toContain('Support léger uniquement · Marche : +0 tick');expect(hover).toContain('vitesse de déplacement 100 %, fertilité 0 %');
+ expect(hover).not.toMatch(/[ÃÂ]/u);expect(JSON.stringify(w)).toBe(before);
 });
