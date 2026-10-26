@@ -376,7 +376,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
     } else if (request.type === 'speed') {
       if (![0, 1, 3, 6].includes(request.speed)) throw new Error('Vitesse invalide.');
       const beforeAdvance = urgentThreats.token();
-      if (!advanceSimulation(performance.now())) throw new Error(fault!.reason);
+      if (!advanceSimulation(performance.now(),request.speed===0)) throw new Error(fault!.reason);
       if(world&&(pendingCaravan261(world)||pendingWorldEntry263(world))&&request.speed!==0)throw Error('La rencontre réelle conserve la simulation en pause jusqu’à sa décision.');
       speed = urgentThreats.requestedSpeed(request.speed, request.options, beforeAdvance);
       if(request.speed===0&&neutralResume261&&neutralResume261.root===world)neutralResume261.speed=0;
@@ -422,7 +422,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
 };
 
 // Fixed gameplay clock. Wall-clock time never enters the simulation core.
-function advanceSimulation(now:number):boolean {
+function advanceSimulation(now:number,deferFinalPublication=false):boolean {
   if(fault){clock.reset(now);return false;}
   if(world&&pendingCaravan261(world)){holdEncounterPause261(now);startEncounter261();return true;}
   if(world&&pendingWorldEntry263(world)){holdWorldEntry263(now);startWorldEntry263();return true;}
@@ -440,13 +440,15 @@ function advanceSimulation(now:number):boolean {
       if(encounter)holdEncounterPause261(now);if(entry)holdWorldEntry263(now);
       const visible=visibleWorld();if(visible){motion.capture(visible);audioCues.capture(visible);}
       const changed = visible?presentationChanges.capture(visible):false;
-      if (changed || paused) publishCapturedTick();
+      // A normal final tick and its immediate pause share one publication.
+      // Every earlier phase and every urgent pause still publishes here.
+      if ((changed || paused)&&(!deferFinalPublication||i<ticks-1||paused)) publishCapturedTick();
       if (paused) {if(encounter)startEncounter261();if(entry)startWorldEntry263();break;}
     }
   }
   // Supply confirmed motion every active batch (20 ms), including batches
   // without discrete events. Do not duplicate a phase snapshot of the last tick.
-  if(ticks>0&&lastPublishedTick!==world.tick)publishCapturedTick();
+  if(ticks>0&&lastPublishedTick!==world.tick&&!deferFinalPublication)publishCapturedTick();
   return true;
   } catch (error) {
     // World may already have been partially mutated. Never publish it or

@@ -174,16 +174,25 @@ export function navigationCosts(world:World,origin?:Cell,terrainOverride?:DuckTe
     // scalar travel rule, without scanning the whole map through that helper.
     const tiles=world.tiles,hasSite=!!world.site;
     const drafted=!!actor&&'draft' in actor&&!!actor.draft,marshPerception=drafted?MARSH_PERCEIVED_CORE.drafted:MARSH_PERCEIVED_CORE.ordinary;
+    // Definition facts are frozen; retain only their conversions in this one
+    // capture. Every Tile and override is still read in the original order.
+    const naturalByKind=new Map<World['tiles'][number]['terrain'],{pathCost:number;perceivedCore:number;perceivedCost:number}|null>();
+    const readNatural=(kind:World['tiles'][number]['terrain'])=>{
+      const cached=naturalByKind.get(kind);if(cached!==undefined)return cached;
+      const definition=naturalTerrainCosts256(kind),perceivedCore=definition?(drafted?definition.perceivedDraftedCore:definition.perceivedCivilCore):0;
+      const captured=definition?{pathCost:Math.round(definition.pathCostCore/30*1000),perceivedCore,perceivedCost:Math.round(perceivedCore/30*1000)}:null;
+      naturalByKind.set(kind,captured);return captured;
+    };
     for(let i=0;i<tiles.length;i++){
       const tile=tiles[i]!,kind=tile.terrain;
       let cost=tile.floor?Math.round(FLOOR_DEFINITIONS[tile.floor].pathCost/10/3*1000):kind==='rough-stone'||kind==='rich-soil'||kind==='gravel'||hasSite&&kind==='grass'?67:0;
-      const natural=naturalTerrainCosts256(kind);
-      if(natural&&!tile.bridge&&!tile.floor)cost=Math.round(natural.pathCostCore/30*1000);
+      const natural=readNatural(kind);
+      if(natural&&!tile.bridge&&!tile.floor)cost=natural.pathCost;
       else if(isWetTerrain(kind)&&!tile.bridge&&!tile.floor)cost=Math.round(MARSH_PATH_COST_CORE/30*1000);
       const override=terrainOverride?.coreCost(tile);if(override!==undefined)cost=Math.round(override/30*1000);
       if(snow)cost=Math.max(cost,snowSearchCost(tile.snowDepth??0));
-      const perception=terrainOverride?.perceivedCore(tile)??(natural?(drafted?natural.perceivedDraftedCore:natural.perceivedCivilCore):isWetTerrain(kind)?marshPerception:0);
-      if(perception&&!tile.bridge&&!tile.floor)marshPerceptionCosts.set(i,Math.round(perception/30*1000));
+      const perceivedOverride=terrainOverride?.perceivedCore(tile),perception=perceivedOverride??(natural?natural.perceivedCore:isWetTerrain(kind)?marshPerception:0);
+      if(perception&&!tile.bridge&&!tile.floor)marshPerceptionCosts.set(i,perceivedOverride==null&&natural?natural.perceivedCost:Math.round(perception/30*1000));
       if(cost>255&&terrain instanceof Uint8Array){const wide:Uint16Array=new Uint16Array(terrain.length);wide.set(terrain);terrain=wide;}
       if(cost){terrain[i]=cost;if(cost>terrainMaximum)terrainMaximum=cost;}
     }
