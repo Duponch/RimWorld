@@ -1,6 +1,8 @@
 # Interface native : fiabilité, lecture et échelle — V485
 
-**Contrôles ciblés acquis localement, 26 octobre 2026.** Revue visuelle finale effectuée ; enregistrement Git en clôture, aucune publication de ce lot acquise. Base `b7ead1de`, schéma **296** inchangé ; production `b969b256` / `61d63e51` au295 inchangée. Six ensembles, SYS069, campagne et confort global ouverts.
+**Qualifiée localement et enregistrée le 26 octobre 2026.** Revue visuelle finale effectuée ; commit UI `5de0c82b` poussé sur `origin/main`, aucune publication de ce lot acquise. Base `b7ead1de`, schéma **296** inchangé ; production `b969b256` / `61d63e51` au295 inchangée. Six ensembles, SYS069, campagne et confort global ouverts.
+
+Le gel final retrouve les 2 056 entrées natives inchangées. Sur les 58 fichiers enregistrés, 56 sont identiques aux octets de travail ; seules deux sources reçoivent la normalisation CRLF→LF de Git, sans autre différence, avec émission JavaScript normalisée identique. [Reçu d’enregistrement](../../tmp/ui-native-v485/staging-fence.json).
 
 ## Corrections retenues
 
@@ -48,7 +50,7 @@ Le parcours caméra séparé passe56,264 s (Factions/Ordres, droit/milieu/molett
 
 - Anciennes attentes de présentation, erreurs de type d’auteur et oracle flottant10.000000000000014 sont conservés avec leurs corrections dans le brouillon détaillé ; aucun garde produit affaibli.
 - SourceMismatch **36,325 s** : une source de curseur change pendant la fixture ; refus du gel, pas panne graphique établie. Deux oracles de chargement échouent **43,066 s** puis **60,643 s** avant le PASS : attente du contrôle activé et réellement visible réparée, sans contourner ses verrous.
-- Vues/curseurs **68,633 s** : timeout de pilote ; reprise **13,948 s** interrompue par`ENOSPC`. Fixture **40,058 s** : nombre de pages lu avant resize natif à960 px. La reprise attend explicitement les dimensions logiques avant lecture du pager, sans retries aveugles ni baisse des assertions.
+- Vues/curseurs **68,633 s** : le contrôle natif a révélé une vraie priorité CSS incorrecte, laissant le curseur de terrain gagner sur celui du contrôle ; le sélecteur corrigé est acquis dans le parcours final. Reprise **13,948 s** interrompue par`ENOSPC`. Fixture **40,058 s** : nombre de pages lu avant resize natif à960 px. La reprise attend explicitement les dimensions logiques avant lecture du pager, sans retries aveugles ni baisse des assertions.
 - Le premier écart3395pixels précède la garantie d’image fraîche ; un ancien tooltip est une hypothèse, pas une cause acquise. Cache partiel et DamageTracker ne sont pas désactivés comme palliatif. Les reprises comparent repos et poses animées avec de rares pixels de bord bornés ; elles ne mesurent pas le temps GPU.
 
 Les régions, matières et surfaces réutilisées conservent leur cache au repos ; les insets n’ajoutent pas de carton GPU par ligne. Captures de poses CPU, raycasts, première composition de curseur et surfaces plus grandes coûtent réellement. **Aucun coût nul, gain FPS global, équivalence HTML ou coût GPU inchangé n’est déduit.** V477/V478 conservent leurs audits et limites propres.
@@ -56,3 +58,5 @@ Les régions, matières et surfaces réutilisées conservent leur cache au repos
 À la demande humaine de libérer plusieurs Go anciens, ROOT a retiré **2 821 099 734 octets** de copies redondantes et de caches anciens, avec vérification intégrale des originaux : [preuve d’entretien](storage-maintenance-20261026.md). Les journaux historiques originaux, RAW uniques, sauvegardes et références restent intacts. Le cache ROOT1400 retiré sur autorisation humaine explicite constitue une opération distincte ; aucun fichier récent n’est assimilé à un déchet ancien.
 
 Après enregistrement UI, reprendre l’[arbitrage V484](audit-core-20261022.md#réévaluation-après-v483) depuis son checkpoint avec un précontrôle frais. La pagination seize sources conserve les quantités du brouillon et ses sept contrats ; aucun voyage, camp ou résultat favorable n’est acquis. Robin occupé à une restitution physique reste refusé, sans contournement. Commit, push, éventuelle publication et poursuite des six ensembles doivent être consignés comme étapes distinctes.
+
+La [reprise V484](../gameplay/campaign-continuation-v484.md) a ensuite effectivement commencé, avec 228 ticks de préparation joués puis un nouveau checkpoint entier conservé. Le voyage reste à décider depuis cet état réel.
