@@ -50,7 +50,7 @@ test('expiry consumes the original, propagates only due cells, extinguishes real
  expect(w.filth?.items.some(f=>f.kind==='firefoam')).toBe(true);
 });
 test('lethal violence emits helpful foam and no salvage while a nonlethal flame arms just once',()=>{
- const first=firefoamManualCamp469();expect(damageStructure(first.w,first.popper,1,'fire')).toBe(true);const wick=structuredClone(first.popper.firefoam290!.wick),rng=first.w.firefoam290!.rng;
+ const first=firefoamManualCamp469();expect(damageStructure(first.w,first.popper,1,'fire')).toBe(true);expect(first.popper.firefoam290!.wick).toBeDefined();const wick=structuredClone(first.popper.firefoam290!.wick),rng=first.w.firefoam290!.rng;
  expect(damageStructure(first.w,first.popper,1,'fire')).toBe(true);expect(first.popper.firefoam290!.wick).toEqual(wick);expect(first.w.firefoam290!.rng).toBe(rng);
  const {w,popper}=firefoamManualCamp469();expect(damageStructure(w,popper,50,'melee')).toBe(true);expect(w.piles).toHaveLength(0);expect(w.structures).not.toContain(popper);expect(w.firefoam290!.waves).toHaveLength(1);
  advanceFirefoamWaves290(w);expect(w.bombWaves).toBeUndefined();exact(w);
