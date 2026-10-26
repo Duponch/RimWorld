@@ -71,8 +71,8 @@ export function processAnimalRest(w:World,a:WildAnimal,ctx:AnimalRestContext):bo
     if(!a.path.length){clearRest(w,a);return false;}
     ctx.move();return true;
   }
-  const replaceAreaReturn=[287,288,289,290,291,292,293].includes(Number(w.schemaVersion))&&ctx.medicalRest&&!!a.animalAreaReturn287;
-  const replaceThermal=(Number(w.schemaVersion)===288||(Number(w.schemaVersion)===289||(Number(w.schemaVersion)===290||(Number(w.schemaVersion)===291||(Number(w.schemaVersion)===292||Number(w.schemaVersion)===293)))))&&ctx.medicalRest&&!!a.animalThermalRefuge288;
+  const replaceAreaReturn=[287,288,289,290,291,292,293,294].includes(Number(w.schemaVersion))&&ctx.medicalRest&&!!a.animalAreaReturn287;
+  const replaceThermal=(Number(w.schemaVersion)===288||(Number(w.schemaVersion)===289||(Number(w.schemaVersion)===290||(Number(w.schemaVersion)===291||(Number(w.schemaVersion)===292||(Number(w.schemaVersion)===293||Number(w.schemaVersion)===294))))))&&ctx.medicalRest&&!!a.animalThermalRefuge288;
   if(!wanted||a.meal||a.path.length&&!replaceAreaReturn&&!replaceThermal||a.nextDecision>w.tick&&!replaceThermal)return false;
   const rank=(s:Structure)=>s.medical?0:a.domestic?.bedId===s.id?1:2;
   const bedOwners=w.schemaVersion>=256?captureActorBeds256(w):undefined;

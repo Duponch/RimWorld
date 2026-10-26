@@ -176,6 +176,8 @@ import { validateHydroponics } from '../sim/farming-save.ts';
 import { validFireResourceLosses } from '../sim/fire-save.ts';
 import { validPlantSkill, validMiningSkill } from '../sim/skills-save.ts';
 import { validMiscIncidents } from '../sim/cassandra-misc-save.ts';
+import {validToxicFalloutRotCredit294} from '../sim/toxic-fallout-save-294.ts';
+import {validToxicFalloutTransport294} from '../sim/toxic-fallout-transport-294.ts';
 import { validSmallIncidents } from '../sim/cassandra-small-save.ts';
 import { validWorldIncidents } from '../sim/cassandra-world-save.ts';
 import { validWildlifeManhunterState } from '../sim/animal-manhunter-save.ts';
@@ -791,6 +793,7 @@ function validPile(pile:MaterialPile,world:World|DynamicWorld,deferAnimalHolder=
   if(pile.haulRequested!==undefined&&(world.schemaVersion<28||pile.kind!=='chunk'||pile.haulRequested!==true))return false;
   if(pile.damage!==undefined&&(world.schemaVersion<87||!Number.isSafeInteger(pile.damage)||pile.damage<1||pile.damage>=pileMaxHp(pile,world.schemaVersion)))return false;
   const rot=pile.rot;
+  if(!validToxicFalloutRotCredit294(rot,world.schemaVersion,pile.kind==='corpse'))return false;
   if(rot!==undefined&&(!rot||typeof rot!=='object'||!Number.isFinite(rot.progress)||rot.progress<0
     ||!Number.isSafeInteger(rot.atTick)||rot.atTick<0||rot.atTick>world.tick
     ||rot.rate!==undefined&&(!Number.isFinite(rot.rate)||rot.rate<0||rot.rate>1)))return false;
@@ -1129,7 +1132,7 @@ export class SnapshotDecoder {
     const refuse=()=>({status:'resync' as const,reason:'Campagne sans carte illisible.'});
     if(!Number.isSafeInteger(packet.epoch)||packet.epoch<1||!Number.isSafeInteger(packet.revision)||packet.revision<1||!Number.isFinite(packet.stepMs)||packet.stepMs<0||![0,1,3,6].includes(packet.speed))return refuse();
     if(packet.epoch<this.epoch||packet.epoch===this.epoch&&packet.revision<=this.revision)return {status:'stale'};
-    if(!validPeaceTalksHistorical293(packet.summary,packet.summary.schemaVersion)||!validPartyHistoricalTransport292(packet.summary,packet.summary.schemaVersion)||!validForestryHistoricalTransport291(packet.summary,packet.summary.schemaVersion)||!validFirefoamHistoricalTransport290(packet.summary,packet.summary.schemaVersion)||!validBillPauseHistoricalTransport289(packet.summary,packet.summary.schemaVersion)||!validAnimalThermalRefugeHistoricalTransport288(packet.summary,packet.summary.schemaVersion)||!validAnimalAreaHistoricalTransport287(packet.summary,packet.summary.schemaVersion)||!validLinkedStorageHistorical286(packet.summary,packet.summary.schemaVersion)||!validCoupleHistoricalTransport285(packet.summary,packet.summary.schemaVersion)||!validTradeRequestHistorical284(packet.summary,packet.summary.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet.summary,packet.summary.schemaVersion))return refuse();
+    if(!validToxicFalloutTransport294(packet.summary,packet.summary.schemaVersion)||!validPeaceTalksHistorical293(packet.summary,packet.summary.schemaVersion)||!validPartyHistoricalTransport292(packet.summary,packet.summary.schemaVersion)||!validForestryHistoricalTransport291(packet.summary,packet.summary.schemaVersion)||!validFirefoamHistoricalTransport290(packet.summary,packet.summary.schemaVersion)||!validBillPauseHistoricalTransport289(packet.summary,packet.summary.schemaVersion)||!validAnimalThermalRefugeHistoricalTransport288(packet.summary,packet.summary.schemaVersion)||!validAnimalAreaHistoricalTransport287(packet.summary,packet.summary.schemaVersion)||!validLinkedStorageHistorical286(packet.summary,packet.summary.schemaVersion)||!validCoupleHistoricalTransport285(packet.summary,packet.summary.schemaVersion)||!validTradeRequestHistorical284(packet.summary,packet.summary.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet.summary,packet.summary.schemaVersion))return refuse();
     if(!validWorldPawnsEnvelope256(packet.summary,packet.summary.schemaVersion,packet.summary.tick*10,packet.summary.nextId))return refuse();
     if(!validPlanetGeographyHistorical256(packet.summary,packet.summary.schemaVersion))return refuse();
     const geographic=this.geographicTransport.prepare(packet.summary,packet.geography,Object.hasOwn(packet,'geography'),packet.epoch!==this.epoch);if(!geographic.ok)return refuse();
@@ -1160,6 +1163,7 @@ export class SnapshotDecoder {
     if(!validPrisonerSurgeryHistoricalTransport280(packet,packet.world.schemaVersion))return resync('Future captive surgery.');
     if(!validApparelTradeHistoricalTransport279(packet,packet.world.schemaVersion))return resync('Future ordinary apparel inventory or trade.');
     if(!validApparelReservesHistoricalTransport278(packet,packet.world.schemaVersion))return resync('Future apparel reserve settings.');
+    if(!validToxicFalloutTransport294(packet,packet.world.schemaVersion))return resync('Invalid or future ToxicFallout condition or corpse rot credit.');
     if(!validPeaceTalksHistorical293(packet,packet.world.schemaVersion)||!validPartyHistoricalTransport292(packet,packet.world.schemaVersion)||!validForestryHistoricalTransport291(packet,packet.world.schemaVersion)||!validFirefoamHistoricalTransport290(packet,packet.world.schemaVersion)||!validBillPauseHistoricalTransport289(packet,packet.world.schemaVersion)||!validAnimalThermalRefugeHistoricalTransport288(packet,packet.world.schemaVersion)||!validAnimalAreaHistoricalTransport287(packet,packet.world.schemaVersion)||!validLinkedStorageHistorical286(packet,packet.world.schemaVersion)||!validCoupleHistoricalTransport285(packet,packet.world.schemaVersion)||!validTradeRequestHistorical284(packet,packet.world.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet,packet.world.schemaVersion)||!validBillWorkerHistoricalTransport283(packet,packet.world.schemaVersion))return resync('Future couple or bill worker settings.');
     if(!validShipCasketHistoricalTransport277(packet,packet.world.schemaVersion))return resync('Future spatial casket content.');
     if(!validShipPartHistoricalTransport276(packet,packet.world.schemaVersion))return resync('Pièce de vaisseau ou recherche moteur future dans ce snapshot.');

@@ -37,7 +37,9 @@ export function pawnContentsLocation(w:World,p:Pawn):{cell:Cell;suspended:boolea
   const cell=pawnBodyLocation(w,p);return cell?{cell,suspended:false}:null;
 }
 function anchor(rot:RotState,tick:number,rate:number):RotState {
-  return rate===(rot.rate??1)?rot:{progress:rot.progress+(tick-rot.atTick)*(rot.rate??1),atTick:tick,...rate!==1?{rate}:{}};
+  if(rate===(rot.rate??1))return rot;
+  const next={...rot,progress:rot.progress+(tick-rot.atTick)*(rot.rate??1),atTick:tick};
+  if(rate===1)delete next.rate;else next.rate=rate;return next;
 }
 function observe(w:World,p:Pawn,view:TemperatureView):HumanBodyState {
   p.body??={observedAt:w.tick,rot:toxicCorpseRot256(p.health,{progress:0,atTick:w.tick})};

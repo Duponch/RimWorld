@@ -1,5 +1,7 @@
 import {advanceCoveredInFirefoam290} from './firefoam-actor-state-290.ts';
 import {advanceToxicBuildupCore256} from './toxic-buildup-256.ts';
+import {applyToxicFalloutDose294} from './toxic-fallout-dose-294.ts';
+import {TOXIC_FALLOUT_DOSE_INTERVAL294} from './toxic-fallout-state-294.ts';
 import {advanceAlcoholCore265} from './alcohol-clinical-265.ts';
 import {alcoholClinicalActive265} from './alcohol-state-265.ts';
 import {animalClinicalRandom256} from './animal-condition-medical-frontier-256.ts';
@@ -16,7 +18,7 @@ import { advanceFlu } from './flu-evolution.ts';
 import { advanceImmuneDiseases } from './immune-diseases-evolution.ts';
 import { advanceAnesthetic } from './anesthetic.ts';
 import { isMechanoidKind } from './mechanoid-definition.ts';
-import {medicalCivilTick271} from './suspended-human-clock-271.ts';
+import {medicalCivilTick271,medicalCivilCore271} from './suspended-human-clock-271.ts';
 
 function heal(record:MedicalRecord,injury:Injury,amount:number,random:MedicalRandom):void {
   injury.severity-=amount;
@@ -48,14 +50,16 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
   // civil cadence while conditions/deadlines keep the active clinical clock.
   if(offset)context={...context,phase:((context.phase-offset)%HEAL_INTERVAL+HEAL_INTERVAL)%HEAL_INTERVAL};
   if(record.alcohol&&(!context.alcoholOwner||!Number.isSafeInteger(context.alcoholOwner.id)||context.alcoholOwner.id<1||typeof context.alcoholOwner.spawned!=='boolean'||typeof context.alcoholOwner.awake!=='boolean'))throw Error('Alcohol clinical interval requires its actual original owner');
-  if(record.toxicBuildup&&(!context.toxicOwner||!Number.isSafeInteger(context.toxicOwner.id)||context.toxicOwner.id<1||typeof context.toxicOwner.spawned!=='boolean'||typeof context.toxicOwner.awake!=='boolean'))throw Error('Toxic clinical interval requires its actual original owner');
+  if((record.toxicBuildup||context.toxicFallout294)&&(!context.toxicOwner||!Number.isSafeInteger(context.toxicOwner.id)||context.toxicOwner.id<1||typeof context.toxicOwner.spawned!=='boolean'||typeof context.toxicOwner.awake!=='boolean'))throw Error('Toxic clinical interval requires its actual original owner');
+  const fallout=context.toxicFallout294;
+  if(fallout&&(!context.toxicOwner!.spawned||!Number.isSafeInteger(fallout.firstCore)||!Number.isSafeInteger(fallout.lastCore)||fallout.firstCore<=startCivil*10||fallout.lastCore>endCivil*10||fallout.firstCore>fallout.lastCore||fallout.firstCore%TOXIC_FALLOUT_DOSE_INTERVAL294!==0||fallout.lastCore%TOXIC_FALLOUT_DOSE_INTERVAL294!==0||!Number.isFinite(fallout.dose)||fallout.dose<=0||Math.fround(fallout.dose)!==fallout.dose))throw Error('Invalid actual fallout clinical segment');
   if(record.animalAgeConditions&&!animalConditions)throw Error('Actual conditions require the real owner frontier');
   if(record.cryptosleepSickness&&typeof context.cryptosleepSicknessSpawned!=='boolean')throw Error('Missing actual cryptosleep sickness physical owner');
   const pending=record.injuries.filter(i=>i.infection&&i.infection.dueCore<=(record.tick+ticks)*10).length;
   if(pending&&!Number.isSafeInteger((record.infections?.nextId??1)+pending))throw new Error('Infection identities exhausted');
   if((record.infections?.cases.length||pending)&&!Number.isSafeInteger((record.tick+ticks)*10))throw new Error('Infection clock exhausted');
   if(record.immuneDiseases&&!Number.isSafeInteger((record.tick+ticks)*10))throw new Error('Immune disease clock exhausted');
-  if(!animalConditions&&!alcoholClinicalActive265(record.alcohol)&&!record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.infections?.cases.length&&!record.infections?.immunity&&!record.foodPoisoning&&!record.toxicBuildup&&!record.cryptosleepSickness&&!record.flu&&!record.immuneDiseases&&!record.anesthetic&&!(context.malnutritionRate&&(context.starving||record.malnutrition))){advanceCoveredInFirefoam290(record,ticks*10);record.tick+=ticks;if(record.civilTick271!==undefined)record.civilTick271=endCivil;return;}
+  if(!fallout&&!animalConditions&&!alcoholClinicalActive265(record.alcohol)&&!record.injuries.length&&!record.missing.length&&!record.bloodLoss&&!record.infections?.cases.length&&!record.infections?.immunity&&!record.foodPoisoning&&!record.toxicBuildup&&!record.cryptosleepSickness&&!record.flu&&!record.immuneDiseases&&!record.anesthetic&&!(context.malnutritionRate&&(context.starving||record.malnutrition))){advanceCoveredInFirefoam290(record,ticks*10);record.tick+=ticks;if(record.civilTick271!==undefined)record.civilTick271=endCivil;return;}
   const end=record.tick+ticks;
   while(record.tick<end) {
     record.tick++;
@@ -70,7 +74,11 @@ export function advanceMedical(record:MedicalRecord,ticks:number,context:Medical
     }
     animalConditions?.step(record);if(record.death)return;
     if(record.alcohol){for(let core=(record.tick-1)*10+1;core<=record.tick*10&&!record.death;core++){advanceAlcoholCore265(record,core,context.alcoholOwner!,random);reconcileMedicalDeath(record);}if(record.death)return;}
-    if(record.toxicBuildup){const actual=context.toxicOwner!,draw=animalClinicalRandom256(random);for(let core=(record.tick-1)*10+1;core<=record.tick*10&&!record.death;core++){advanceToxicBuildupCore256(record,actual.id,core,draw,actual);reconcileMedicalDeath(record);}if(record.death)return;}
+    if(record.toxicBuildup||fallout){const actual=context.toxicOwner!,draw=animalClinicalRandom256(random);for(let core=(record.tick-1)*10+1;core<=record.tick*10&&!record.death;core++){
+      const civilCore=medicalCivilCore271(record,core);
+      if(fallout&&civilCore>=fallout.firstCore&&civilCore<=fallout.lastCore&&civilCore%TOXIC_FALLOUT_DOSE_INTERVAL294===0){applyToxicFalloutDose294(record,fallout.dose,random);reconcileMedicalDeath(record);if(record.death)return;}
+      advanceToxicBuildupCore256(record,actual.id,core,draw,actual);reconcileMedicalDeath(record);
+    }if(record.death)return;}
     if(advanceAnesthetic(record,context.phase)){reconcileMedicalDeath(record);if(record.death)return;}
     if(record.foodPoisoning){
       const previous=record.foodPoisoning.severity;

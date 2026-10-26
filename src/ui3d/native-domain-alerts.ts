@@ -24,7 +24,7 @@ export type NativeDomainAlertAction =
   | {kind: 'quests'; questId?: number; requestId?: number; siteId?: number}
   | {kind: 'trade'; traderId?: number}
   | {kind: 'orbital'; shipId?: number}
-  | {kind: 'site'; condition: 'starting-arrival' | 'heatwave' | 'cold-snap' | 'eclipse' | 'solar-flare' | 'flashstorm' | 'short-circuit'}
+  | {kind: 'site'; condition: 'starting-arrival' | 'heatwave' | 'cold-snap' | 'eclipse' | 'toxic-fallout' | 'solar-flare' | 'flashstorm' | 'short-circuit'}
   | {kind: 'raid-focus'; raidId: number; mechanical: boolean};
 
 export interface NativeDomainAlert {
@@ -107,7 +107,7 @@ export function readNativeDomainAlerts(world: World, speed?: number): NativeDoma
     add(`trade-request:${request.id}`, text, 'Demandes commerciales',
       `Accepter sous ${timeLeft((request.offerExpiresAtCore - world.tick * 10) / 10)}. Après acceptation : ${timeLeft(request.durationCore / 10)} pour livrer. Livrez les biens dans les inventaires de la caravane : frais, de qualité normale ou meilleure si applicable, et vêtements non souillés. La récompense suit la livraison complète. Masquer l’offre ne la refuse pas et n’arrête pas son délai.`, {kind: 'quests', requestId: request.id});
   }
-  if (world.schemaVersion === 293) for (const site of world.worldSites263?.entries ?? []) {
+  if ((Number(world.schemaVersion)===293||Number(world.schemaVersion)===294)) for (const site of world.worldSites263?.entries ?? []) {
     if (site.kind !== 'peace-talks') continue;
     const facts = peaceTalksFacts293(world, site);
     if (facts.active) add(`peace-talks:${site.id}`, facts.title, facts.title, `${facts.destination} ${facts.status} ${facts.body}`, {kind: 'quests', siteId: site.id});

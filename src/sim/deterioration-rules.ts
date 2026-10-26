@@ -6,6 +6,7 @@ import {footprintCells} from './definitions.ts';
 import {isShelfKind} from './shelf-storage.ts';
 import {isRoofed} from './roof-rules.ts';
 import {weatherRainRate} from './weather.ts';
+import {toxicFalloutActive294} from './toxic-fallout-state-294.ts';
 import {DETERIORATION_RATES,isDeteriorationItem} from './deterioration-content.ts';
 import {isSmithingApparel267} from './smithing-apparel-267.ts';
 import type {ThermalLayout} from './thermal-topology.ts';
@@ -29,6 +30,6 @@ export function deteriorationExposure(w:World,pile:MaterialPile,environment?:Det
  const tile=w.tiles[cell],terrainFactor=tile?terrainExtraDeterioration256(tile):0;
  const flags={baseRate,roofed,usesOutdoorTemperature:!inside,terrainFactor};
  if(e.shelves.has(cell))return {status:'protected-shelf',...flags,rate:0};
- const rate=baseRate*((roofed?0:.5)+(inside?0:.5)+terrainFactor)*(roofed?1:1+4*e.rain);
+ const rate=baseRate*((roofed?0:.5)+(inside?0:.5)+terrainFactor)*(roofed?1:1+4*e.rain)*(!roofed&&toxicFalloutActive294(w)?3:1);
  return {status:rate===0?'protected-inside':roofed&&inside?'terrain-exposed':roofed?'covered-outside':inside?'unroofed-inside':'outside',...flags,rate};
 }

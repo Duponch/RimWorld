@@ -1,5 +1,6 @@
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {cobraAdmissionReason256} from './cobra-admission-256.ts';
+import {toxicFalloutActive294} from './toxic-fallout-state-294.ts';
 import type {prepareWorldAnimalGeneration256} from './world-pawn-generation-256.ts';
 /** Actual GenStep1200 producer over a genuine fresh map. Physical capture is
  * shared for the whole phase; no old starter World, independent wildlife RNG,
@@ -68,9 +69,8 @@ export function produceInitialAnimals256(world:World,options:{random:WorldGenera
  for(const defId of options.pawnKindOrder){const commonality=required.get(defId);if(commonality===undefined||commonality<=0)continue;const fact=facts[defId];if(!fact)throw Error('Missing real animal kind definition: '+defId);
   total=f(total+commonality);const allowed=season>f(fact.comfyMin)&&season<f(fact.comfyMax);if(allowed){acceptable=f(acceptable+commonality);all.push({fact,commonality,weight:commonality});}
  }
- // Existing conditions currently produced by this game (heat/cold/eclipse)
- // do not change AnimalDensityFactor; no toxicity/pollution/DLC factor is made.
- const target=initialAnimalTargetWeight256(world.width*world.height,rules.scalars.animalDensity,acceptable,total);
+ // Only this map's actual active fallout suppresses spontaneous fauna.
+ const target=initialAnimalTargetWeight256(world.width*world.height,rules.scalars.animalDensity,acceptable,total,toxicFalloutActive294(world)?0:1);
  const capture=options.closewalk??captureRandomClosewalk256(world),water=anyActualWater(world.tiles);
  if(capture.width!==world.width||capture.height!==world.height)throw Error('Initial fauna physical capture mismatch');
  const tickets=all.map(row=>({...row,weight:row.fact.waterSeeker&&!water?0:f(row.commonality/f(f(row.fact.wildGroupSize[0]+row.fact.wildGroupSize[1])/2))}));

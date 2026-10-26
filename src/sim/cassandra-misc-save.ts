@@ -4,6 +4,7 @@ import { TICKS_PER_DAY,type World } from './types.ts';
 import {validWeatherIncidents} from './weather-incident-save.ts';
 import {validShortCircuits} from './short-circuit-save.ts';
 import {validCropBlightCalendar} from './plant-blight-save.ts';
+import {validToxicFalloutCalendar294} from './toxic-fallout-save-294.ts';
 
 const object=(value:unknown):value is Record<string,unknown>=>!!value&&typeof value==='object'&&!Array.isArray(value);
 const integer=(value:unknown,min=0,max=Number.MAX_SAFE_INTEGER):value is number=>Number.isSafeInteger(value)&&Number(value)>=min&&Number(value)<=max;
@@ -13,8 +14,12 @@ const keys=(value:Record<string,unknown>,allowed:readonly string[])=>Object.keys
 export function validMiscIncidents(value:unknown,version:number,world:Pick<World,'tick'|'gameProfile'|'heatwaves'>&Partial<World>):boolean {
   const scheduleTick=tempMapModern261(world as World)?tempMapAdoptedAtCore261(world as World)!/10:world.tick;
   if(value===undefined)return true;
+  // A future field is forbidden even when hidden, undefined or an accessor.
+  // Never read it before its own data descriptor has been admitted.
+  const toxic=object(value)?Object.getOwnPropertyDescriptor(value,'toxicFallout'):undefined;
+  if(object(value)&&'toxicFallout'in value&&(version!==294||!toxic||toxic.enumerable!==true||!Object.hasOwn(toxic,'value')||toxic.value===undefined))return false;
   if(version<169||!world.gameProfile||!object(value)||
-    !keys(value,['profile','adoptedAt','rng','nextCheck','introDone','checks','opportunities','heatwaves','lastHeatwaveStart','active',...version>=200?['weather']:[],...version>=201?['shortCircuits']:[],...version>=205?['cropBlights']:[]])||
+    !keys(value,['profile','adoptedAt','rng','nextCheck','introDone','checks','opportunities','heatwaves','lastHeatwaveStart','active',...version>=200?['weather']:[],...version>=201?['shortCircuits']:[],...version>=205?['cropBlights']:[],...version===294?['toxicFallout']:[]])||
     value.profile!=='cassandra-misc-v1'||!integer(value.adoptedAt,0,world.tick)||!integer(value.rng,1,0xffffffff)||
     !integer(value.nextCheck,MISC_FIRST_CHECK)||value.nextCheck%MISC_CHECK_INTERVAL!==0||
     value.nextCheck!==Math.max(MISC_FIRST_CHECK,(Math.floor(scheduleTick/MISC_CHECK_INTERVAL)+1)*MISC_CHECK_INTERVAL)||
@@ -46,7 +51,8 @@ export function validMiscIncidents(value:unknown,version:number,world:Pick<World
   const calendar=value as unknown as import('./cassandra-misc.ts').CassandraMiscCalendar;
   return validWeatherIncidents(value.weather,version,world,calendar)&&validShortCircuits(value.shortCircuits,version,world,calendar)
     &&validCropBlightCalendar(value.cropBlights,version,world,calendar)
-    &&(value.cropBlights===undefined||calendar.heatwaves+(calendar.weather?.coldSnaps??0)+(calendar.weather?.eclipses??0)+(calendar.shortCircuits?.count??0)+(calendar.cropBlights?.count??0)<=calendar.opportunities);
+    &&validToxicFalloutCalendar294(toxic?.value,version,world as World,calendar)
+    &&(value.cropBlights===undefined&&toxic===undefined||calendar.heatwaves+(calendar.weather?.coldSnaps??0)+(calendar.weather?.eclipses??0)+(calendar.shortCircuits?.count??0)+(calendar.cropBlights?.count??0)+(calendar.toxicFallout?.count??0)<=calendar.opportunities);
 }
 
 export function validateMiscIncidents(world:World,version=world.schemaVersion):string[] {

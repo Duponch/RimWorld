@@ -38,7 +38,7 @@ function put(w:World,c:Cell,kind:FilthKind,spontaneous=false):boolean {
 /** Actual deposits only. A blocked/full cell tries the eight neighbors in a
  * private shuffled order; rejected terrain alone does not spill outward. */
 export function addFilth(w:World,c:Cell,kind:FilthKind,count=1,spontaneous=false):boolean {
-  if(w.schemaVersion<89||kind==='firefoam'&&(Number(w.schemaVersion)!==290&&(Number(w.schemaVersion)!==291&&(Number(w.schemaVersion)!==292&&Number(w.schemaVersion)!==293)))||w.schemaVersion<256&&(kind==='rock-rubble'||kind==='building-rubble'||kind==='slime')||!inside(w,c)||!Object.hasOwn(FILTH_DEFINITIONS,kind)||!Number.isSafeInteger(count)||count<1||count>100)return false;
+  if(w.schemaVersion<89||kind==='firefoam'&&(Number(w.schemaVersion)!==290&&(Number(w.schemaVersion)!==291&&(Number(w.schemaVersion)!==292&&(Number(w.schemaVersion)!==293&&Number(w.schemaVersion)!==294))))||w.schemaVersion<256&&(kind==='rock-rubble'||kind==='building-rubble'||kind==='slime')||!inside(w,c)||!Object.hasOwn(FILTH_DEFINITIONS,kind)||!Number.isSafeInteger(count)||count<1||count>100)return false;
   let made=false;
   for(let n=0;n<count;n++){
     if(put(w,c,kind,spontaneous)){made=true;continue;}

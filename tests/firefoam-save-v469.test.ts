@@ -53,14 +53,15 @@ test('strict289 migration changes only the number, keeps V468 reserve capability
  expect(validateCampaignSchema289(previous)).toEqual([]);expect(JSON.parse(serializeWorld(deserializeWorld(JSON.stringify(previous))))).toEqual({...previous,schemaVersion:SCHEMA_VERSION});
 });
 
-test('historical imports refuse every prospective family and future294/295 before any migration or mutation',()=>{
+test('historical imports refuse prospective families and future295 while current294 preserves exact state',()=>{
  const newData=[{structures:[building()]},{research:{project:'firefoam',firefoam:{points:1}}},{firefoam290:{rng:1,waves:[]}},
   {filth:{items:[{id:1,kind:'firefoam',x:0,z:0,thickness:1,grownCore:0,expiresAfterCore:300000,nextCheckCore:1}]}},
   {pawns:[{filthFeet:{carried:[{kind:'firefoam',thickness:1}]}}]},{pawns:[coated()]},
   {pawns:[{firefoamTask290:{structureId:2,phase:'approach',progressCore:0,lastWorkedAt:0}}]}];
- for(const raw of newData){const before=JSON.stringify(raw);for(const version of [1,256,283,288,289,294,295])expect(validFirefoamHistoricalTransport290(raw,version)).toBe(false);for(const version of [290,291,292,293])expect(validFirefoamHistoricalTransport290(raw,version)).toBe(true);expect(JSON.stringify(raw)).toBe(before);}
+ for(const raw of newData){const before=JSON.stringify(raw);for(const version of [1,256,283,288,289,295])expect(validFirefoamHistoricalTransport290(raw,version)).toBe(false);for(const version of [290,291,292,293,294])expect(validFirefoamHistoricalTransport290(raw,version)).toBe(true);expect(JSON.stringify(raw)).toBe(before);}
  const clean=JSON.parse(serializeWorld(deconstructionCamp(2)));
- for(const version of [294,295]){const raw={...clean,schemaVersion:version};expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow();}
+ expect(JSON.parse(serializeWorld(deserializeWorld(JSON.stringify({...clean,schemaVersion:294}))))).toEqual({...clean,schemaVersion:294});
+ for(const version of [295]){const raw={...clean,schemaVersion:version};expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow();}
  for(const feature of newData){const raw={...clean,...feature,schemaVersion:289};expect(validateCampaignSchema289(raw).length).toBeGreaterThan(0);expect(()=>deserializeWorld(JSON.stringify(raw))).toThrow(/firefoam/i);}
 });
 
@@ -133,7 +134,7 @@ test('wave-only dynamic publication is retained; a forged wave cursor cannot rep
 
 test('290 preserves actual older capabilities while numeric strings and future families stay closed',()=>{
  for(const fn of [isSchema256Or257,isSchema283OrLater,isSchema287OrLater,isSchema288OrLater]){
-  for(const version of [289,290,291,292,293])expect(fn(version)).toBe(true);expect(fn(294)).toBe(false);expect(fn(295)).toBe(false);expect(fn('290')).toBe(false);
+  for(const version of [289,290,291,292,293,294])expect(fn(version)).toBe(true);expect(fn(295)).toBe(false);expect(fn('290')).toBe(false);
  }
  expect(isSchema283OrLater(282)).toBe(false);expect(isSchema287OrLater(286)).toBe(false);expect(isSchema288OrLater(287)).toBe(false);
  for(const version of [289,290])expect(validFirefoamHistoricalTransport290({pawns:[],structures:[]},version)).toBe(true);

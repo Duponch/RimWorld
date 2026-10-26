@@ -5,7 +5,7 @@ export interface PartyReleasePlan292 {readonly writes:readonly MapRemovalWrite25
 export function preparePartyRelease292(world:World,ids:ReadonlySet<number>,options:{finish?:boolean;death?:boolean;reason?:string}={}):PartyReleasePlan292 {
  const state=world.party292,active=state?.active,at=world.tick,version=world.schemaVersion,before=world.pawns,beforeEvents=world.events,writes:MapRemovalWrite259[]=[],people:Pawn[]=[];
  const put=(object:object,key:string,value:unknown,present=true)=>writes.push({object,key,present,...present?{value}:{}});
- if((Number(version)===292||Number(version)===293)&&active){
+ if((Number(version)===292||(Number(version)===293||Number(version)===294))&&active){
   const finish=options.finish===true||options.death===true||active.organizerJoined===true&&ids.has(active.organizerId);
   const remaining=active.members.filter(m=>!ids.has(m.pawnId));
   for(const member of active.members){

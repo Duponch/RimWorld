@@ -32,12 +32,12 @@ export function cremationIngredientAllowed(world:World,bill:CookingBill,pile:Mat
     if(!person||person.state!=='dead'||!person.health?.death||!body||body.pileId!==pile.id||body.lostAt!==undefined
       ||!Number.isSafeInteger(body.observedAt)||body.observedAt<person.health.death.tick||medicalCivilTick271(person.health)>world.tick
       ||validateMedicalRecord(person.health,true,true,true,true,false,false,true,true,true,true,true,world.schemaVersion,world.schemaVersion>=127)!==null
-      ||!validCorpseRot(pile.rot,world.tick,body.observedAt,person.health)||!filter[isColonist(person)?'colonists':'strangers'])return false;
+      ||!validCorpseRot(pile.rot,world.tick,body.observedAt,world.schemaVersion,person.health)||!filter[isColonist(person)?'colonists':'strangers'])return false;
   }else{
     // The existing animal metadata validator is independent of the carrier.
     if(pile.humanCorpse!==undefined||!validCorpseShape({...pile,owner:{type:'ground'}},world.schemaVersion))return false;
     const c=pile.corpse!;
-    if(c.health.tick>world.tick||!validCorpseRot(pile.rot,world.tick,c.health.death!.tick,c.health)
+    if(c.health.tick>world.tick||!validCorpseRot(pile.rot,world.tick,c.health.death!.tick,world.schemaVersion,c.health)
       ||!validCorpseConsumption(c,world.tick)||world.wildlife?.animals.some(a=>a.id===c.animalId))return false;
   }
   return filter[corpseStage(pile,world.tick)];

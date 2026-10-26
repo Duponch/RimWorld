@@ -1,4 +1,8 @@
 import {validPeaceTalksHistorical293,validPeaceTalksBindings293} from '../sim/peace-talks-save-293.ts';
+import {validToxicFalloutTransport294} from '../sim/toxic-fallout-transport-294.ts';
+import {validMiscIncidents} from '../sim/cassandra-misc-save.ts';
+import {validDrugPolicyRegistry265} from '../sim/alcohol-policy-265.ts';
+import {isSchema265OrLater} from '../sim/schema-compatibility-257.ts';
 import {validPartyHistoricalTransport292,validPartyWorld292} from '../sim/party-save-292.ts';
 import {validForestryPolicies291,validForestryHistoricalTransport291} from '../sim/forestry-save-291.ts';
 import {validFirefoamHistoricalTransport290,validFirefoamWorld290} from '../sim/firefoam-save-290.ts';
@@ -213,6 +217,11 @@ export class ResidentPresentationAssembler {
   const fail=():CampaignAdoption=>({status:'resync',reason:'Projection de campagne illisible.'});
   const header=this.header(packet);if(header==='stale')return {status:'stale'};if(header==='invalid'||packet.type!=='campaign-only'||Object.keys(packet).some(key=>!['type','epoch','revision','stepMs','speed','summary','urgentThreats','geography'].includes(key))||!record(packet.summary))return fail();
   const raw=packet.summary;
+  // The two campaign-owned fields travel together. Reuse their native scalar
+  // registry contract, without scanning alcohol dossiers in this read model.
+  if(!isSchema265OrLater(raw.schemaVersion)?own(raw,'drugPolicies')||own(raw,'nextDrugPolicyId'):
+   own(raw,'drugPolicies')!==own(raw,'nextDrugPolicyId')||own(raw,'drugPolicies')&&(raw.drugPolicies===undefined||raw.nextDrugPolicyId===undefined)||!validDrugPolicyRegistry265(raw.drugPolicies,raw.nextDrugPolicyId))return fail();
+  if(!validToxicFalloutTransport294(raw,raw.schemaVersion))return fail();
   if(!validPeaceTalksHistorical293(raw,raw.schemaVersion)||!validPartyHistoricalTransport292(raw,raw.schemaVersion)||!validForestryHistoricalTransport291(raw,raw.schemaVersion)||!validFirefoamHistoricalTransport290(raw,raw.schemaVersion)||!validBillPauseHistoricalTransport289(raw,raw.schemaVersion)||!validAnimalThermalRefugeHistoricalTransport288(raw,raw.schemaVersion)||!validAnimalAreaHistoricalTransport287(raw,raw.schemaVersion)||!validLinkedStorageHistorical286(raw,raw.schemaVersion)||!validCoupleHistoricalTransport285(raw,raw.schemaVersion)||!validTradeRequestHistorical284(raw,raw.schemaVersion)||!validApparelProvenanceHistoricalTransport284(raw,raw.schemaVersion)||!validBillWorkerHistoricalTransport283(raw,raw.schemaVersion))return fail();
   if(!integer(raw.schemaVersion,1,SCHEMA_VERSION)||!integer(raw.tick)||!integer(raw.nextId,1)||!integer(raw.rng,0,0xffffffff)||!Number.isSafeInteger(raw.civilTick)||!projectionReferences(raw,false)
    ||!validSmoothFloorsHistoricalTransport281(raw,raw.schemaVersion)||!validPrisonerSurgeryHistoricalTransport280(raw,raw.schemaVersion)||!validGiftHistoricalTransport274(raw,raw.schemaVersion)||!validApparelTradeHistoricalTransport279(raw,raw.schemaVersion)||!validApparelReservesHistoricalTransport278(raw,raw.schemaVersion)||!validShipCasketHistoricalTransport277(raw,raw.schemaVersion)||!validShipPartHistoricalTransport276(raw,raw.schemaVersion)||!validShipReactorHistoricalTransport275(raw,raw.schemaVersion)||!rows(raw.events)||!rows(raw.people)||!rows(raw.lossContexts)||!rows(raw.lostMemories)||!rows(raw.incidents)
@@ -240,6 +249,8 @@ export class ResidentPresentationAssembler {
   if(unknown)return fail('Unknown resident publication field: '+unknown);
   const checkpoint=packet.kind==='checkpoint',sparseStructures=!checkpoint&&own(packet,'structures');
   const malformed=localShape(packet.world,checkpoint,sparseStructures,!checkpoint&&canReuseResidentAuxiliaryStockpiles(packet,this.current));if(malformed)return fail('Invalid resident shape: '+malformed);
+  if(!validToxicFalloutTransport294(packet,packet.world.schemaVersion))return fail('Invalid or future resident ToxicFallout condition or corpse rot credit');
+  if(!validMiscIncidents(packet.world.miscIncidents,packet.world.schemaVersion,packet.world))return fail('Invalid resident Misc incident calendar');
   if(!validPeaceTalksHistorical293(packet,packet.world.schemaVersion)||!validPartyHistoricalTransport292(packet,packet.world.schemaVersion)||!validForestryHistoricalTransport291(packet,packet.world.schemaVersion)||!this.firefoamTransport(packet,packet.world.schemaVersion)||!validBillPauseHistoricalTransport289(packet,packet.world.schemaVersion))return fail('Invalid or future resident bill reserve pause');
   if(checkpoint&&['tiles','resources','piles','structures','baseRevision'].some(key=>own(packet,key)))return fail('Ambiguous resident checkpoint');
   const previous=this.current;

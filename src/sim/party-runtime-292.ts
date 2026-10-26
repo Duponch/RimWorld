@@ -7,6 +7,7 @@ import {gainRecreation} from './recreation-rules.ts';
 import {gatherActive,isGatherSpot} from './recreation-space.ts';
 import {reservedServiceCells} from './service-reservations.ts';
 import {carrierOf} from './rescue-state.ts';
+import {toxicFalloutActive294} from './toxic-fallout-state-294.ts';
 import {hourOfDay} from './schedule.ts';
 import {registeredMapId} from './world-map-context.ts';
 import {preparePartyRelease292} from './party-release-292.ts';
@@ -37,14 +38,14 @@ function membersOf(active:PartyActive292):Map<number,PartyMember292> {
  let cached=memberIndices.get(active);
  if(!cached||cached.members!==active.members){cached={members:active.members,index:new Map(active.members.map(m=>[m.pawnId,m]))};memberIndices.set(active,cached);}return cached.index;
 }
-interface PassSpace {tick:number;active:PartyActive292;topology:RoomTopology;structures:World['structures'];jobs:World['jobs'];structureCount:number;jobCount:number;space:PartySpace292}
+interface PassSpace {tick:number;active:PartyActive292;topology:RoomTopology;structures:World['structures'];jobs:World['jobs'];structureCount:number;jobCount:number;fallout:boolean;space:PartySpace292}
 const passSpaces=new WeakMap<World,PassSpace>();
 function spaceFor(world:World,active:PartyActive292,topology?:RoomTopology):PartySpace292 {
- const rooms=partyTopology292(world,topology),old=passSpaces.get(world);
+ const rooms=partyTopology292(world,topology),old=passSpaces.get(world),fallout=toxicFalloutActive294(world);
  // Membership copies do not invalidate geometry. Furniture changes do.
- if(old&&old.tick===world.tick&&old.active.site===active.site&&old.topology===rooms&&old.structures===world.structures&&old.jobs===world.jobs&&old.structureCount===world.structures.length&&old.jobCount===world.jobs.length)return old.space;
+ if(old&&old.tick===world.tick&&old.active.site===active.site&&old.topology===rooms&&old.structures===world.structures&&old.jobs===world.jobs&&old.structureCount===world.structures.length&&old.jobCount===world.jobs.length&&old.fallout===fallout)return old.space;
  const space=capturePartySpace292(world,active.site,rooms);
- passSpaces.set(world,{tick:world.tick,active,topology:rooms,structures:world.structures,jobs:world.jobs,structureCount:world.structures.length,jobCount:world.jobs.length,space});return space;
+ passSpaces.set(world,{tick:world.tick,active,topology:rooms,structures:world.structures,jobs:world.jobs,structureCount:world.structures.length,jobCount:world.jobs.length,fallout,space});return space;
 }
 const actualTask=(p:Pawn,a:PartyActive292)=>p.recreation.task?.activity==='party'&&p.recreation.task.partyStartedAtCore===a.startedAtCore;
 const atTarget=(world:World,p:Pawn)=>{const t=p.recreation.task;return !!t&&p.x===t.target.x&&p.z===t.target.z&&p.moveCooldown<=0&&(p.motion?.end??0)<=world.tick;};
@@ -54,7 +55,7 @@ function release(world:World,ids:ReadonlySet<number>,finish=false,death=false):v
 
 /** Cheap clinical boundary. No map, hostiles, furniture or per-pawn member scan. */
 export function reconcilePartyPawn292(world:World,pawn:Pawn,body?:BodyAssessment):void {
- const a=(Number(world.schemaVersion)===292||Number(world.schemaVersion)===293)?world.party292?.active:undefined;if(!a)return;
+ const a=(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||Number(world.schemaVersion)===294))?world.party292?.active:undefined;if(!a)return;
  const member=membersOf(a).has(pawn.id),organizer=pawn.id===a.organizerId;
  if(!member&&!organizer)return;
  const dead=pawn.state==='dead'||!!pawn.health?.death;
@@ -64,7 +65,7 @@ export function reconcilePartyPawn292(world:World,pawn:Pawn,body?:BodyAssessment
 
 /** Reconcile all current owners before dispatch or outcome. No presence credit. */
 export function reconcileParty292(world:World,topology?:RoomTopology):void {
- const a=(Number(world.schemaVersion)===292||Number(world.schemaVersion)===293)?world.party292?.active:undefined;if(!a)return;
+ const a=(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||Number(world.schemaVersion)===294))?world.party292?.active:undefined;if(!a)return;
  const opening=openingPresence.get(world);
  if(!opening||opening.tick!==world.tick||opening.startedAtCore!==a.startedAtCore){
   const ids=new Set<number>(),index=membersOf(a);
@@ -156,7 +157,7 @@ export function advanceParty292(world:World,topology?:RoomTopology):void {
 
 /** Runs after needs and player orders, before personal leisure/new work. */
 export function processParty292(world:World,pawn:Pawn,context:NeedContext):boolean {
- const a=(Number(world.schemaVersion)===292||Number(world.schemaVersion)===293)?world.party292?.active:undefined;if(!a)return false;
+ const a=(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||Number(world.schemaVersion)===294))?world.party292?.active:undefined;if(!a)return false;
  const member=membersOf(a).has(pawn.id);
  if(member){
   reconcilePartyPawn292(world,pawn);const active=world.party292?.active;

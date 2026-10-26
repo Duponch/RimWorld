@@ -12,7 +12,7 @@ export function validHumanBodyShape(v:unknown,version:number,tick:number,medical
   if(v===undefined)return true;
   if(object(v)&&Object.hasOwn(v,'damage')){const d=Object.getOwnPropertyDescriptor(v,'damage');if(version<256||!d||!Object.hasOwn(d,'value')||!int(d.value,1,99)||v.pileId!==undefined||v.lostAt!==undefined)return false;}
   return version>=89&&object(v)&&keys(v,['observedAt','pileId','lostAt','rot',...(version>=256?['damage']:[])])&&int(v.observedAt,0,tick)
-    &&(v.pileId===undefined? v.lostAt===undefined?validCorpseRot(v.rot,tick,Number(v.observedAt),medical):version>=256&&int(v.lostAt,Number(v.observedAt),tick)&&v.rot===undefined
+    &&(v.pileId===undefined? v.lostAt===undefined?validCorpseRot(v.rot,tick,Number(v.observedAt),version,medical):version>=256&&int(v.lostAt,Number(v.observedAt),tick)&&v.rot===undefined
       :int(v.pileId,1)&&v.rot===undefined&&(v.lostAt===undefined||int(v.lostAt,Number(v.observedAt),tick)));
 }
 export function validHumanCorpseShape(v:unknown,version:number,tick:number):boolean {
@@ -58,7 +58,7 @@ export function validateBurials(w:World,version:number,ids?:Set<number>):string[
       errors.push('Invalid human corpse shape.');continue;
     }
     const p=people.get(pile.humanCorpse!.pawnId);
-    if(!p?.body||p.body.pileId!==pile.id||p.body.lostAt!==undefined||!validCorpseRot(pile.rot,w.tick,p.body.observedAt,p.health))errors.push('Invalid human corpse provenance or age.');
+    if(!p?.body||p.body.pileId!==pile.id||p.body.lostAt!==undefined||!validCorpseRot(pile.rot,w.tick,p.body.observedAt,version,p.health))errors.push('Invalid human corpse provenance or age.');
     if(pile.owner.type==='grave'){
       const graveId=pile.owner.graveId,grave=w.structures.find(s=>s.id===graveId);
       if(!isBurialContainer256(grave?.kind,version)||grave?.grave?.corpseId!==pile.id||pile.rot?.rate!==0)errors.push('Invalid buried corpse ownership or suspended age.');

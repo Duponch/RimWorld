@@ -19,12 +19,12 @@ export function updateFoodTemperatures(world:World,layout?:ThermalLayout):void {
     if(!cell)continue;
     const rate=contents?.suspended?0:rotRateAtTemperature(view.at(world,cell));
     if(rate===(pile.rot.rate??1))continue;
-    pile.rot={progress:rotAge(pile,world.tick),atTick:world.tick,...rate!==1?{rate}:{}};
+    const fallout=pile.rot.fallout294;pile.rot={progress:rotAge(pile,world.tick),atTick:world.tick,...rate!==1?{rate}:{},...fallout!==undefined?{fallout294:fallout}:{}};
   }
   // Retained bodies have the same thermal timeline as already transferable
   // corpses, including commands changing a room between simulation ticks.
   for(const a of world.wildlife?.animals??[])if(a.corpseRot){
     const rot=a.corpseRot,rate=rotRateAtTemperature(view.at(world,a));
-    if(rate!==(rot.rate??1))a.corpseRot={progress:rot.progress+(world.tick-rot.atTick)*(rot.rate??1),atTick:world.tick,...rate!==1?{rate}:{}};
+    if(rate!==(rot.rate??1))a.corpseRot={progress:rot.progress+(world.tick-rot.atTick)*(rot.rate??1),atTick:world.tick,...rate!==1?{rate}:{},...rot.fallout294!==undefined?{fallout294:rot.fallout294}:{}};
   }
 }

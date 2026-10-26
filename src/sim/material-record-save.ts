@@ -33,6 +33,7 @@ import { validWeaponShape } from './equipment-save.ts';
 import { MAX_STACK } from './definitions.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import type { World } from './types.ts';
+import {validToxicFalloutRotCredit294} from './toxic-fallout-save-294.ts';
 
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
@@ -42,6 +43,7 @@ export function validatePileRecordShape(item:Record<string,unknown>,world:Pick<W
  const input={width:world.width,height:world.height,tick:validationTick};
  const coord=(v:Record<string,unknown>)=>integer(v.x,0,world.width-1)&&integer(v.z,0,world.height-1);
  const errors:string[]=[];
+ if(!validToxicFalloutRotCredit294(item.rot,version,item.kind==='corpse'))return ['Invalid or future corpse fallout rot credit.'];
  if(item.kind==='prosthesis'&&record(item.owner)&&item.owner.type==='job')return ['Prosthesis cannot be a construction deposit.'];
  if(!isSchema273OrLater(version)&&(isProstheticItem273(item.item)||item.item==='unfinished-prosthetic'||Object.hasOwn(item,'prostheticWork273')))return ['Future industrial prosthetics.'];
  if(!validProstheticWorkShape273(item,version))errors.push('Invalid prosthetic work.');

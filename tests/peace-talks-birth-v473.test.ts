@@ -78,6 +78,6 @@ test('stale sources, mutated plan and unwritable recipient refuse commit atomica
  expect(JSON.stringify(w)).toBe(before);expect(birth.current()).toBe(true);
 });
 
-test('historical292 and future294 cannot obtain an offer through the current producer',()=>{
- for(const version of [292,294]){const {w}=camp();Object.assign(w,{schemaVersion:version});const before=JSON.stringify(w);expect(preparePeaceTalksBirth293(w).ok).toBe(false);expect(JSON.stringify(w)).toBe(before);}
+test('historical292 and future295 cannot obtain an offer through the current producer',()=>{
+ for(const version of [292,295]){const {w}=camp();Object.assign(w,{schemaVersion:version});const before=JSON.stringify(w);expect(preparePeaceTalksBirth293(w).ok).toBe(false);expect(JSON.stringify(w)).toBe(before);}
 });

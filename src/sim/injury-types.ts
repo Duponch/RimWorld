@@ -68,6 +68,8 @@ export interface MedicalContext {
   cryptosleepSicknessSpawned?:boolean;
   /** Actual owner id/spawn/awake witness, required only for prospective toxicity. */
   toxicOwner?:{id:number;spawned:boolean;awake:boolean};
+  /** Positive outdoor dose, captured only on actual global fallout boundaries. */
+  toxicFallout294?:import('./toxic-fallout-dose-294.ts').ToxicFalloutExposure294;
   /** Stable phase in [0,59], supplied by the owning actor. */
   phase:number;
   posture:'standing'|'ground'|'bed';

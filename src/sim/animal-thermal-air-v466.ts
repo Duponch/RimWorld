@@ -37,7 +37,7 @@ export function createAnimalAirReader466(world:World):AnimalAirReader466 {
 /** Clinical cadence belongs here; destination queries never invent a dose. */
 export function createAnimalThermalPass466(world:World,air=createAnimalAirReader466(world)):(animal:WildAnimal)=>AnimalThermalOpportunity466|undefined {
   return animal=>{
-    if(![287,288,289,290,291,292,293].includes(Number(world.schemaVersion))||animal.state==='dead'||animal.health?.death||
+    if(![287,288,289,290,291,292,293,294].includes(Number(world.schemaVersion))||animal.state==='dead'||animal.health?.death||
       !groupPawnInterval256(animal.id,world.tick*10,60,10)||!animalThermalProfile466(animal))return;
     // AnyParentSpawned stays true for a patient carried on this actual map.
     return {temperature:air.atAnimal(animal),mapHeld:true};

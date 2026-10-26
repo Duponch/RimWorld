@@ -12,6 +12,7 @@ import {duckPhysicalOwnerCount256} from './duck-flyer-runtime-256.ts';
 import {animalMechanicalReadiness256} from './animal-readiness-v256.ts';
 import {isAnimalSpecies256} from './animal-core-v256.ts';
 import {cobraAdmissionReason256} from './cobra-admission-256.ts';
+import {toxicFalloutActive294} from './toxic-fallout-state-294.ts';
 import {orderedCoreLocalMutators256} from './world-local-mutators-256.ts';
 import {MAX_WILDLIFE} from './wildlife-state.ts';
 import type {AnimalSpeciesId} from './animal-species.ts';
@@ -26,7 +27,7 @@ export function geographicRenewalDue262(previousTick:number,tick:number):boolean
  return Math.floor(previousTick*10/1213)!==Math.floor(tick*10/1213);
 }
 /** Current scalar target; no stored fixed target ages through later seasons.
- * All admitted Core-only modifiers/active conditions have densityfactor1. */
+ * Fallout changes new arrivals, never removes an existing physical animal. */
 export function geographicRenewalTarget262(w:World){
  const site=w.site,c=w.climate;if(site?.revision!==3||c?.revision!==4||c.tileId!==site.tileId)throw Error('Renewal needs its actual biome and tile climate');
  const rules=localBiomeRules256(site.biome,w.schemaVersion);if(!rules)throw Error('Missing actual renewal biome');orderedCoreLocalMutators256(site.mutatorCode);
@@ -34,7 +35,7 @@ export function geographicRenewalTarget262(w:World){
  const order=new Set<string>(CORE_4871_PAWN_KIND_ORDER);if([...commonality.keys()].some(def=>!order.has(def)))throw Error('Renewal biome names a missing ordered real species');
  let total=0,acceptable=0;const entries:{fact:InitialAnimalFact256;commonality:number;weight:number}[]=[];
  for(const def of CORE_4871_PAWN_KIND_ORDER){const weight=commonality.get(def);if(weight===undefined||weight<=0)continue;const fact=facts[def];if(!fact)throw Error('Unrepresented real renewal species');total=f(total+weight);if(season>f(fact.comfyMin)&&season<f(fact.comfyMax)){acceptable=f(acceptable+weight);entries.push({fact,commonality:weight,weight});}}
- const target=initialAnimalTargetWeight256(w.width*w.height,rules.scalars.animalDensity,acceptable,total);
+ const target=initialAnimalTargetWeight256(w.width*w.height,rules.scalars.animalDensity,acceptable,total,toxicFalloutActive294(w)?0:1);
  let current=0;for(const a of w.wildlife?.animals??[])if(a.state!=='dead'&&!a.domestic&&!a.hive){const fact=bySpecies.get(a.species);if(!fact)throw Error('Unrepresented spawned ecological weight');current=f(current+f(fact.ecoSystemWeight));}
  return {...target,current,entries};
 }

@@ -148,7 +148,7 @@ test('true terminal commit rolls rot once and the same real human body inherits 
  const {w,p}=scene();p.health=createMedicalRecord(w.tick);p.health.toxicBuildup={severity:1,bornAt:w.tick};reconcileMedicalDeath(p.health);expect(p.health.death!.cause).toBe('toxic-buildup');
  let calls=0;commitToxicDeath256(p.health,()=>{calls++;return .5;});const record=p.health;reconcilePawnHealth(w,p);advanceHumanCorpses(w);expect(calls).toBe(1);expect(p.health).toBe(record);expect(p.state).toBe('dead');
  const body=p.body!,corpse=w.piles.find(i=>i.id===body.pileId)!;expect(corpse.item).toBe('human-corpse');expect(corpse.humanCorpse!.pawnId).toBe(p.id);expect(corpse.owner).toEqual({type:'ground',x:p.x,z:p.z});expect(body.rot).toBeUndefined();
- expect(corpse.rot!.progress).toBeGreaterThanOrEqual(CORPSE_ROT_TICKS);expect(validCorpseRot(corpse.rot,w.tick,body.observedAt,p.health)).toBe(true);expect(validCorpseRot(corpse.rot,w.tick,body.observedAt)).toBe(false);
+ expect(corpse.rot!.progress).toBeGreaterThanOrEqual(CORPSE_ROT_TICKS);expect(validCorpseRot(corpse.rot,w.tick,body.observedAt,w.schemaVersion,p.health)).toBe(true);expect(validCorpseRot(corpse.rot,w.tick,body.observedAt,w.schemaVersion)).toBe(false);
  const resumed=JSON.parse(JSON.stringify(p.health));commitToxicDeath256(resumed,()=>{throw Error('read/reconcile cannot reroll terminal rot');});expect(resumed).toEqual(p.health);expect(assessMedical(p.health).capacities.consciousness).toBeLessThanOrEqual(Math.fround(.1));
 });
 

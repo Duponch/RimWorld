@@ -1,12 +1,13 @@
 import { activeColdSnap, coldSnapOffset } from '../sim/cold-snap';
 import { activeEclipse } from '../sim/eclipse';
+import {toxicFalloutActive294} from '../sim/toxic-fallout-state-294';
 import { TICKS_PER_DAY, type World } from '../sim/types';
 import { personNotificationTarget,NotificationFocusCycle,type NotificationTarget,type FocusNotification } from './notification-focus';
 import { createNotificationLetterDetails } from './notification-letter';
 
-type WeatherWorld = Pick<World, 'tick' | 'miscIncidents'>;
+type WeatherWorld = Pick<World, 'tick' | 'miscIncidents'> & {schemaVersion?:number};
 export interface WeatherConditionInspection {
-  kind: 'cold-snap' | 'eclipse';
+  kind: 'cold-snap' | 'eclipse' | 'toxic-fallout';
   title: string;
   summary: string;
   body: string;
@@ -34,11 +35,15 @@ export function weatherConditionInspection(world: WeatherWorld): WeatherConditio
     summary: `Éclipse · reste ${remainingTime(eclipse.end - world.tick)}`,
     body: 'La lumière naturelle diminue et la production des panneaux solaires est réduite. Vérifiez les réserves des batteries, le combustible des générateurs et l’alimentation réelle des chauffages, du froid et des ateliers. Les appareils électriques ne sont pas directement neutralisés par une éclipse. Les plantes ont toujours besoin de lumière et d’une température favorable ; les lampes horticoles peuvent les éclairer si elles sont alimentées et dans leur horaire de fonctionnement. L’éclipse ne change pas l’heure et ne protège ni du froid ni des blessures. Une reprise du soleil ne répare pas les pertes déjà subies.',
   });
+  if(toxicFalloutActive294(world))conditions.push({
+    kind:'toxic-fallout',title:'Retombées toxiques',summary:'Retombées toxiques · restez sous un toit',
+    body:'Des retombées toxiques touchent cette carte. Placez les personnes et les animaux sous un toit réellement construit ou naturel, et adaptez leurs zones et leurs travaux. Un mur seul ne protège pas ; les personnes couchées au sol et les animaux dehors restent exposés. Surveillez l’accumulation toxique dans Santé. Les vêtements actuellement disponibles n’offrent pas de protection contre ces retombées. Les plantes et les denrées non couvertes peuvent être perdues ; les objets sensibles à la détérioration s’abîment trois fois plus vite lorsqu’ils sont exposés. Les arrivées spontanées de plantes et de faune sont interrompues. La fin arrête les nouvelles expositions, sans guérir les lésions ni restituer les plantes ou les biens perdus.',
+  });
   return conditions;
 }
 
 export function weatherConditionLabel(world: WeatherWorld): string {
-  return [activeColdSnap(world) ? 'Vague de froid' : '', activeEclipse(world) ? 'Éclipse' : ''].filter(Boolean).join(' · ');
+  return [activeColdSnap(world) ? 'Vague de froid' : '', activeEclipse(world) ? 'Éclipse' : '',toxicFalloutActive294(world)?'Retombées toxiques':''].filter(Boolean).join(' · ');
 }
 
 /** Informational letters reuse the existing alerts; they issue no commands. */

@@ -8,7 +8,6 @@ import {outdoorTemperature} from '../sim/temperature';
 import {perceivedWeather} from '../sim/weather';
 import {WEATHER} from '../sim/weather-definitions';
 import {windIntensity} from '../sim/wind-rules';
-import {activeColdSnap} from '../sim/cold-snap';
 import {activeEclipse} from '../sim/eclipse';
 import {ITEM_DEFINITIONS, type ItemId} from '../sim/items';
 import {colonyPile} from '../sim/materials';
@@ -22,6 +21,7 @@ import {readStatusAlerts, type StatusAlert} from '../ui/status-alerts';
 import type {NativePage, NativeRow} from './native-contract';
 import {NotificationFocusCycle,type NotificationTarget} from '../ui/notification-focus';
 import {readNativeDomainAlerts,type NativeDomainAlert} from './native-domain-alerts';
+import {weatherConditionLabel} from '../ui/weather-inspection';
 import {STORAGE_FILTER_TREE,type StorageFilterNode} from '../ui/storage-filter-tree';
 import {modelIconUrl} from '../ui/pictograms';
 type HudAlert=StatusAlert&{domain?:NativeDomainAlert};
@@ -622,7 +622,7 @@ export class NativeHudCards {
       date: date ? `${date.day} ${quadrums[date.quadrum]} ${date.year}` : `Jour ${1 + Math.floor(civil / TICKS_PER_DAY)} · historique`,
       weather: kind === 'clear' && (minute < 360 || minute >= 1080) ? 'Ciel dégagé' : WEATHER[kind].label,
       temperature: `${temperature.toFixed(1)} °C`,
-      condition: [activeColdSnap(world) ? 'Vague de froid' : '', activeEclipse(world) ? 'Éclipse' : ''].filter(Boolean).join(' · '),
+      condition: weatherConditionLabel(world),
       wind: world.wind ? windIntensity(world).toFixed(2) : '—'
     };
     const signature = [readout.clock, readout.date, readout.weather, readout.temperature, readout.condition].join('|');
@@ -638,7 +638,7 @@ export class NativeHudCards {
     ctx.save();ctx.scale(w/212,h/96);
     ctx.fillStyle=PALETTE.inkDark;ctx.textAlign='left';ctx.font=`bold 25px ${FONT}`;fitText(ctx,this.weatherReadout.clock,12,34,190);
     ctx.font=`bold 13px ${FONT}`;fitText(ctx,this.weatherReadout.date,12,56,190);
-    ctx.font=`13px ${FONT}`;fitText(ctx,`${this.weatherReadout.weather} · ${this.weatherReadout.temperature}`,12,77,190);ctx.restore();
+    ctx.font=`13px ${FONT}`;fitText(ctx,`${this.weatherReadout.condition||this.weatherReadout.weather} · ${this.weatherReadout.temperature}`,12,77,190);ctx.restore();
   }
 
   private showRoster(): void {

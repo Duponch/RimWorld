@@ -1,6 +1,7 @@
 import {captureStandability} from './furniture-travel.ts';
 import {RoomTopologyCache,type RoomTopology} from './room-topology.ts';
 import {isRoofed} from './roof-rules.ts';
+import {toxicFalloutActive294} from './toxic-fallout-state-294.ts';
 import type {Cell,World} from './types.ts';
 import type {RecreationTask} from './recreation-rules.ts';
 
@@ -24,11 +25,13 @@ export function partyArea292(world:World,site:Cell,target:Cell,topology:RoomTopo
 export interface PartySpace292 {topology:RoomTopology;standable:(cell:Cell)=>boolean;cells:Cell[]}
 /** Pass-local only: no topology read or complete furniture capture per member. */
 export function capturePartySpace292(world:World,site:Cell,topology?:RoomTopology):PartySpace292 {
- const rooms=partyTopology292(world,topology),standable=captureStandability(world);
+ const rooms=partyTopology292(world,topology),physical=captureStandability(world),fallout=toxicFalloutActive294(world);
+ const standable=fallout?(cell:Cell)=>physical(cell)&&isRoofed(world,cell.z*world.width+cell.x):physical;
  return {topology:rooms,standable,cells:partyCells292(site).filter(c=>standable(c)&&partyArea292(world,site,c,rooms))};
 }
 export function partyTaskSiteValid292(world:World,task:RecreationTask,topology?:RoomTopology,standable=captureStandability(world)):boolean {
  const active=world.party292?.active;
- return (Number(world.schemaVersion)===292||Number(world.schemaVersion)===293)&&task.activity==='party'&&!!active&&task.partyStartedAtCore===active.startedAtCore
+ if(toxicFalloutActive294(world)&&active&&(!isRoofed(world,active.site.z*world.width+active.site.x)||!isRoofed(world,task.target.z*world.width+task.target.x)))return false;
+ return (Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||Number(world.schemaVersion)===294))&&task.activity==='party'&&!!active&&task.partyStartedAtCore===active.startedAtCore
   &&task.buildingId===null&&standable(active.site)&&standable(task.target)&&partyArea292(world,active.site,task.target,partyTopology292(world,topology));
 }

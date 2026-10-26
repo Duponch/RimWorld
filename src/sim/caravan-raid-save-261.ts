@@ -17,7 +17,7 @@ export function validCaravanRaidProvenance261(value:unknown,w:World,startedAt:nu
  const actual=site??projection,battlefield=actual?.battlefield261;
  if(value.kind==='assault'&&actual?.kind==='battlefield'&&battlefield?.kind==='peace-talks'){
   const offer=root.worldSites263?.entries.find(s=>s.kind==='peace-talks'&&s.id===battlefield.peaceTalksSiteId293);
-  if(Number(w.schemaVersion)!==293||battlefield.factionId!==value.factionId||offer?.kind!=='peace-talks'||offer.tile!==actual.tile||offer.factionId!==value.factionId||offer.closed?.reason!=='resolved')return false;
+  if((Number(w.schemaVersion)!==293&&Number(w.schemaVersion)!==294)||battlefield.factionId!==value.factionId||offer?.kind!=='peace-talks'||offer.tile!==actual.tile||offer.factionId!==value.factionId||offer.closed?.reason!=='resolved')return false;
   const result=offer.closed.result,attack=result.attack;
   return result.outcome==='disaster'&&result.groupId===value.sourceGroupId&&attack?.phase==='entered'&&attack.mapId===actual.id&&attack.atCore===value.bornAtCore
    &&(!members||members.length===attack.enemyIds.length&&members.every((id,i)=>id===attack.enemyIds[i]));

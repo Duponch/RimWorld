@@ -64,12 +64,12 @@ export function cancelResourceHarvests(world:World,resource:Resource):void {
   removeJobs(world,new Set(world.jobs.filter(job=>job.kind==='harvest'&&at(job,resource)).map(job=>job.id)));
 }
 /** Shared destructive plant boundary; the cause never creates a harvest. */
-export function damageResource(world:World,r:Resource,amount:number,reason:'fire'|'frost'|'darkness'|'age'|'bullet'|'bomb'|'rotting'|'blight'|'roof'='fire'):boolean {
+export function damageResource(world:World,r:Resource,amount:number,reason:'fire'|'frost'|'darkness'|'age'|'bullet'|'bomb'|'rotting'|'blight'|'roof'|'fallout'='fire'):boolean {
   const max=resourceMaxHp(r);if(!max||!positive(amount)||!world.resources.includes(r))return false;
   const damage=(r.damage??0)+amount;if(damage<max){r.damage=damage;return true;}
   const ledger=reason==='fire'?ensureFireState(world).ledger:undefined;
   const woodPotential=r.kind==='tree'?r.amount:0;
-  const neutral=reason==='bullet'||reason==='bomb'||reason==='roof'?neutralLossPlan(world,{resources:{[r.kind]:1},...(woodPotential?{woodPotentialLost:woodPotential}:{})}):undefined;
+  const neutral=reason==='bullet'||reason==='bomb'||reason==='roof'||reason==='fallout'?neutralLossPlan(world,{resources:{[r.kind]:1},...(woodPotential?{woodPotentialLost:woodPotential}:{})}):undefined;
   if(neutral===null)return false;
   if(ledger&&(!addSafe(ledger.resources[r.kind]??0,1)||!addSafe(ledger.woodPotentialLost,woodPotential)))return false;
   const jobs=new Set(world.jobs.filter(j=>at(j,r)&&['mine','chop','cut','harvest','extract-tree'].includes(j.kind)).map(j=>j.id));
@@ -147,7 +147,7 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   if(external&&(!Number.isFinite(external.rawAmount)||external.rawAmount<0||!Number.isSafeInteger(external.core)||external.core<Math.max(0,(world.tick-1)*10)||external.core>world.tick*10))return false;
   const core=external?.core??world.tick*10,explosive=world.schemaVersion>=193&&installed&&s.kind==='mini-turret'&&!!s.turret&&miniTurretExplosive(s.id);
   const detonates=explosive&&(external?.detonate|| (external?.rawAmount??amount)>=max-(s.damage??0));
-  const foam=(Number(world.schemaVersion)===290||(Number(world.schemaVersion)===291||(Number(world.schemaVersion)===292||Number(world.schemaVersion)===293)))&&installed&&s.kind==='firefoam-popper'&&!!s.firefoam290;
+  const foam=(Number(world.schemaVersion)===290||(Number(world.schemaVersion)===291||(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||Number(world.schemaVersion)===294))))&&installed&&s.kind==='firefoam-popper'&&!!s.firefoam290;
   const foamDetonates=foam&&(external?.firefoamDetonate290|| (external?.rawAmount??amount)>=max-(s.damage??0));
   const emits=detonates||foamDetonates;
   if(foam&&(!Number.isSafeInteger(core+150)||foamDetonates&&(world.firefoam290?.waves.length??0)>=world.width*world.height))return false;

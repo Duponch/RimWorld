@@ -175,6 +175,8 @@ import { enableHeatwaves,advanceHeatwaves } from './heatwave.ts';
 import { adoptMiscIncidents,adoptWeatherIncidents,advanceMiscIncidents } from './cassandra-misc.ts';
 import { adoptShortCircuits } from './short-circuit.ts';
 import { adoptCropBlights } from './crop-blight-incident.ts';
+import {adoptToxicFallout294,finishToxicFallout294} from './toxic-fallout-incident-294.ts';
+import {advanceToxicFalloutEnvironment294} from './toxic-fallout-environment-294.ts';
 import { advanceCropBlight } from './plant-blight.ts';
 import { designateBlightedCrops } from './crop-blight-orders.ts';
 import { adoptWorldIncidents,advanceWorldIncidents } from './cassandra-world.ts';
@@ -415,7 +417,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   const selection = queryArea(world, command);
   if (!selection.ok) return selection;
   if (!selection.cells.length) return refusal('missing-target', 'Aucune case compatible dans ce rectangle.');
-  if([287,288,289,290,291,292,293].includes(Number(world.schemaVersion))&&(command.action==='home'||command.action==='remove-home'))return applyAnimalHomeArea287(world,command,selection.cells,drops);
+  if([287,288,289,290,291,292,293,294].includes(Number(world.schemaVersion))&&(command.action==='home'||command.action==='remove-home'))return applyAnimalHomeArea287(world,command,selection.cells,drops);
   if(command.action==='cancel'){
     const cells=new Set(selection.cells);
     const jobs=new Set(world.jobs.filter(j=>[...footprintCells(j),...furnitureSourceCells(world,j)].some(c=>cells.has(c.z*world.width+c.x))).map(j=>j.id));
@@ -652,8 +654,8 @@ export function applyCommand(world: World, command: Command,caravans?:import('./
 }
 type LocalCommand=Exclude<Command,SecondarySiteCommand>;
 function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
-  if([287,288,289,290,291,292,293].includes(Number(world.schemaVersion))&&command?.type==='animal-area-assign')return applyAnimalAreaAssignmentCommand287(world,command);
-  if([287,288,289,290,291,292,293].includes(Number(world.schemaVersion))&&(command?.type==='allowed-area-create'||command?.type==='allowed-area-settings'||command?.type==='allowed-area-paint'||command?.type==='allowed-area-delete'||command?.type==='assign-allowed-area'))return applyAnimalAwareAreaCommand287(world,command);
+  if([287,288,289,290,291,292,293,294].includes(Number(world.schemaVersion))&&command?.type==='animal-area-assign')return applyAnimalAreaAssignmentCommand287(world,command);
+  if([287,288,289,290,291,292,293,294].includes(Number(world.schemaVersion))&&(command?.type==='allowed-area-create'||command?.type==='allowed-area-settings'||command?.type==='allowed-area-paint'||command?.type==='allowed-area-delete'||command?.type==='assign-allowed-area'))return applyAnimalAwareAreaCommand287(world,command);
   if(command&&typeof command==='object'&&hiddenExplorationCommandTarget256(world,command))return refusal('missing-target','Cette cible n’est pas connue sur la carte actuelle.');
   if(command.type==='material-forbid')return applyMaterialPermission256(world,command);
   if(command.type==='egg-forbid')return applyEggPermission256(world,command);
@@ -665,7 +667,7 @@ function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
   const result=applyCommandInternal(world,command);
   if(command.type==='firefoam-auto-rebuild')return result;
   if(command.type==='bill-pause-policy'||command.type==='bill-pause-resume')return result;
-  if([287,288,289,290,291,292,293].includes(Number(world.schemaVersion))&&command.type==='area'&&(command.action==='home'||command.action==='remove-home'))return result;
+  if([287,288,289,290,291,292,293,294].includes(Number(world.schemaVersion))&&command.type==='area'&&(command.action==='home'||command.action==='remove-home'))return result;
   // These cold metadata transactions already reconcile their exact affected
   // destinations. A no-op must not advance unrelated services or clocks.
   if(command.type==='shelf-link'||command.type==='shelf-unlink'||command.type==='shelf-group-rename'
@@ -1112,7 +1114,7 @@ export function stepWorld(world:CampaignState,ticks=1,diagnostics?:import('./wor
     if(ticks)for(const map of registeredMaps(root)){adoptTempMapIncidents261(map);flushRegisteredMap(map);}
     adoptWorldIncidents(campaignClockContext(root));
     for(let i=0;i<ticks;i++){
-      const firefoamWorldOwners290=[290,291,292,293].includes(Number(root.schemaVersion))?captureFirefoamWorldPawnIds290(root):undefined;
+      const firefoamWorldOwners290=[290,291,292,293,294].includes(Number(root.schemaVersion))?captureFirefoamWorldPawnIds290(root):undefined;
       root.tick++;
       for(const map of registeredMaps(root)){stepLocalWorld(map,1,diagnostics,false);flushRegisteredMap(map);}
       if(root.schemaVersion>=256&&caravans)caravans.step(root);
@@ -1145,14 +1147,14 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
   adoptTempMapIncidents261(world);adoptSecondaryIncidents(world);
   // Old profiles start this new stream prospectively, when play resumes.
   // Loading or pausing never invents a past opportunity or heat exposure.
-  if(!tempMapModern261(world)){adoptMiscIncidents(world);adoptWeatherIncidents(world);adoptShortCircuits(world);adoptCropBlights(world);}
+  if(!tempMapModern261(world)){adoptMiscIncidents(world);adoptWeatherIncidents(world);adoptShortCircuits(world);adoptCropBlights(world);adoptToxicFallout294(world);}
   adoptDeepResources(world);adoptOrbital(world);
   if(!isSecondaryContext(world))adoptWorldIncidents(world);
   adoptSmallIncidents(world);
   adoptRainElectrical(world);
   let thermal=reconcileTemperature(world);reconcilePlantLighting(world,()=>readPlantLight(world));updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);
   for (let step = 0; step < ticks; step++) {
-    const firefoamLocalMechs290=[290,291,292,293].includes(Number(world.schemaVersion))?new Set((world.mechanoids??[]).filter(m=>m.state!=='dead'&&m.health?.coveredInFirefoam290).map(m=>m.id)):undefined;
+    const firefoamLocalMechs290=[290,291,292,293,294].includes(Number(world.schemaVersion))?new Set((world.mechanoids??[]).filter(m=>m.state!=='dead'&&m.health?.coveredInFirefoam290).map(m=>m.id)):undefined;
     flushColonyLosses(world);
     if(advanceClock)world.tick++;advanceActualHiveComponents256(world);advanceAnimalAges256(world);finishSnowSteps(world);
     let light:LightEnvironment|undefined,lightKey:string|undefined;
@@ -1160,6 +1162,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     advanceHumanAges(world);
     sampleColonyEconomy(world);
     advanceArrivals(world);advanceHeatwaves(world);advanceMiscIncidents(world);advanceSmallIncidents(world);advanceVisitors(world);advancePodRescues(world);advanceFluIncidents(world);
+    advanceToxicFalloutEnvironment294(world);
     const beforeWeather=world.structures;
     advanceSurfaceWeather(world,cell=>{const c={type:'designate' as const,kind:'chop' as const,...cell};if(canDesignate(world,c).ok)applyLocalCommand(world,c);});
     if(beforeWeather!==world.structures)thermal=reconcileTemperature(world);
@@ -1529,6 +1532,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     reconcileAnimalHauls282(world);
     advanceLocalMechFirefoam290(world,firefoamLocalMechs290);advanceFirefoamWaves290(world);
     for(const pawn of world.pawns)if(pawn.firefoamTask290)reconcileFirefoamManual290(world,pawn);
+    finishToxicFallout294(world);
   }
 }
 import { updatePawnHealth,reconcilePawnHealth } from './health.ts';

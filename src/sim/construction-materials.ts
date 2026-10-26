@@ -146,7 +146,7 @@ for(const kind of Object.keys(JOB_DURATION) as JobKind[]) {
   }
 }
 export function validConstructionMaterial(kind:unknown,material:unknown,version:number=SCHEMA_VERSION):boolean {
-  if(kind==='firefoam-popper')return (version===290||(version===291||(version===292||version===293)))&&material==='steel';
+  if(kind==='firefoam-popper')return (version===290||(version===291||(version===292||(version===293||version===294))))&&material==='steel';
   if(isShipCasketKind277(kind))return isSchema277OrLater(version)&&material==='steel';
   if(isShipAddedKind276(kind))return isSchema276OrLater(version)&&material==='steel';
   if(kind==='ship-reactor')return isSchema275OrLater(version)&&material==='steel';

@@ -1,5 +1,11 @@
 # Guide joueur
 
+## Traverser des retombées toxiques
+
+**V481 locale, non publiée.** L’alerte et l’horloge signalent les retombées sur la carte. Placez personnes et animaux sous un toit réel ; un mur seul ne protège pas. Adaptez leurs zones et travaux pour limiter les trajets dehors. Les personnes couchées et les animaux au repos restent exposés sans toit. Les vêtements disponibles ne donnent aucune protection contre ces retombées.
+
+Surveillez la **charge toxique** dans Santé. La nourriture et les cultures découvertes peuvent être perdues, les objets exposés se détériorent plus vite, et le renouvellement spontané de la flore et de la faune s’interrompt. Un animal d’enclos compatible peut chercher un abri accessible ; cela ne garantit pas qu’il en trouve un. La fin de l’alerte arrête les nouvelles expositions, sans guérir les lésions ni restituer les pertes. Les anciennes parties ne reçoivent aucune exposition au chargement. [Règles, preuves et limites V481](toxic-fallout-v481.md).
+
 ## Rejoindre des pourparlers diplomatiques
 
 **V473 publiée.** Une offre dans **Quêtes** indique une faction, un lieu sur la planète et un délai. Sélectionnez votre caravane dans **Monde**, choisissez ce lieu, puis l'action d'arrivée **Participer aux pourparlers** et validez son itinéraire. Prévoyez les provisions et le temps du trajet ; l'offre peut expirer avant l'arrivée.

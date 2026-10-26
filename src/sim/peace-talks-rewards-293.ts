@@ -20,7 +20,7 @@ export const PEACE_REWARD_PALETTE_293:readonly {item:ItemId;tech:number}[]=Objec
 export interface PeaceTriumphDraft293 {items:MaterialPile[];nextId:number;rng:number;budget:number;marketValue:number;massGrams:number;delivered:PeaceTalksDelivered293[]}
 export function draftPeaceTriumph293(input:{group:AwayGroup;factionDef:WorldFactionDef256;tile:number;tick:number;version:number;rng:number;nextId:number}):{ok:false;reason:string}|({ok:true}&PeaceTriumphDraft293) {
  const no=(reason:string)=>({ok:false as const,reason});
- if(input.version!==293||!Number.isSafeInteger(input.nextId)||input.nextId<1||!Number.isSafeInteger(input.tick)||input.tick<0||!Number.isSafeInteger(input.rng)||input.rng<1||input.rng>0xffffffff)return no('Le paquet exige les vrais compteurs courants.');
+ if((input.version!==293&&input.version!==294)||!Number.isSafeInteger(input.nextId)||input.nextId<1||!Number.isSafeInteger(input.tick)||input.tick<0||!Number.isSafeInteger(input.rng)||input.rng<1||input.rng>0xffffffff)return no('Le paquet exige les vrais compteurs courants.');
  const g=input.group,initialMass=captureProspectiveGroupMass256(g,input.version);if(!initialMass)return no('La charge actuelle de la caravane est invalide.');
  const carriers=groupPhysicalPawns256(g).filter(p=>p.state!=='dead'&&!p.health?.death);if(!carriers.length)return no('Aucun voyageur réel ne peut recevoir les objets.');
  const random={rng:input.rng},draw=()=>healthRandom(random),budget=500+Math.floor(draw()*701),tech=WORLD_FACTION_TECH_LEVEL_259[input.factionDef];

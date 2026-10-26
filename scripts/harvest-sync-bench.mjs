@@ -40,7 +40,22 @@ b.poses.set(p.id,witness);});
 ${process.env.HARVEST_CONTACT_STALL==='1'?`if(!b.contactStalls.length&&this.timeline.tick>=2744.5&&this.timeline.tick<2746&&this.received?.speed===6){b.contactStalls.push({at:now,play:this.timeline.tick,milliseconds:30});const until=performance.now()+30;while(performance.now()<until){}}`:''}
 return result;};}
 `;
-const probeTail=`\nconst originalSync=receiveMainSnapshot;receiveMainSnapshot=function(...args){window.__sync.stepMs=args[1];window.__sync.receptions++;return originalSync.apply(this,args);};`;
+const probeTail=`\nconst originalSync=receiveMainSnapshot;receiveMainSnapshot=function(...args){window.__sync.stepMs=args[1];window.__sync.receptions++;return originalSync.apply(this,args);};
+const harvestNative=typeof nativeUi!=='undefined'&&nativeUi;
+window.__harvestUi={native:!!harvestNative,
+ get ready(){return !!renderer&&!renderer.preparing&&!renderer.fatalError&&!session.busy&&!replacingWorld&&!presentationPreparation&&!graphicsRecovering&&!graphicsFault&&!simulationStopped&&!waitingRequests.size&&!frontMenu.isOpen();},
+ get audio(){return {effects:soundEnabled,music:musicEnabled,effectsVolume:soundVolume,musicVolume};},
+ get state(){return {preparing:renderer?.preparing,busy:session.busy||replacingWorld,front:frontMenu.isOpen(),speed:currentSpeed,waiting:waitingRequests.size,ui:harvestNative?.diagnostics()};},
+ point(id){if(!harvestNative)return null;const d=harvestNative.diagnostics(),p=d.controls.find(c=>c.id===id)??d.targets.find(c=>c.nativeId===id);if(!p||p.disabled)return null;const h=harvestNative.hit(p.x,p.y);return (h?.control?.id??h?.piece.userData.nativeId)===id?p:null;},
+ clickSpeed(speed){if(!harvestNative){const button=document.querySelector('[data-speed="'+speed+'"]');if(!button)throw Error('Missing legacy speed control');button.click();return;}
+  const p=this.point('hud:speed:'+speed);if(!p)throw Error('Missing or occluded native speed control '+speed);
+  // Preserve the existing browser timer's synthetic input cadence. Both
+  // pointer edges go through NativeStage's real raycast/activation handlers.
+  for(const type of ['pointerdown','pointerup'])document.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,pointerType:'mouse',pointerId:1,isPrimary:true,button:0,buttons:type==='pointerdown'?1:0,clientX:p.x,clientY:p.y}));
+ }
+};
+if(harvestNative){const activated=harvestNative.options.onActivate;harvestNative.options.onActivate=id=>{const match=/^hud:speed:([0136])$/.exec(id),b=window.__sync;if(match&&b.active){const speed=Number(match[1]),old=b.view.received?.speed;if(speed>0&&old>0&&speed!==old)b.controls.push({speed,previousSpeed:old,at:performance.now(),delay:null,fullRateDelay:null});}return activated?.(id);};}
+`;
 // Keep one probe for development ESM and compiled QA packages. Inject before
 // bundling so module bindings are renamed together by Vite, never by a regexp.
 if(process.env.HARVEST_EMIT_PROBE){
@@ -49,8 +64,10 @@ if(process.env.HARVEST_EMIT_PROBE){
 }
 if(process.env.HARVEST_PREINSTRUMENTED==='1'&&process.env.HARVEST_TRACE==='1')throw Error('Compiled presentation probe does not contain the optional worker trace');
 const {createWorld,applyCommand,serializeWorld}=await import('../src/sim/index.ts');
+const targetUrl=new URL(process.env.HARVEST_URL??'http://127.0.0.1:5173/');
+for(const [key,value]of [['scenario','camp'],['e2e','1'],['size','250']])if(!targetUrl.searchParams.has(key))targetUrl.searchParams.set(key,value);
 const report={date:new Date().toISOString(),cpu:os.cpus()[0].model,seconds,switches,initialSpeed,speedCycle,viewport:{width:1440,height:1000},contactStallDiagnostic:process.env.HARVEST_CONTACT_STALL==='1',protocol:'Native Chromium WebGPU, seed 42 / 250² / 3 colonists, rectangular designations, actual worker at initialSpeed; switches=true uses speedCycle every 2 seconds. Frame pose read from shared GPU inputs; no full-world serialization in frames. Runtime clock: 6 local ticks/s at 1x. 13 cells/s candidate bound includes neutral 6x travel (12 cells/s). An excess is continuous only on one unchanged confirmed segment or exactly one contiguous grid/GPU boundary with exact shared endpoint and timestamp; both witnessed legs stay within the contact envelope and independent time/pose/arc bounds. Raw candidates are reported separately.',phases:[]};
-report.browserChannel=browserChannel;
+report.browserChannel=browserChannel;report.url=targetUrl.href;
 const browser=await chromium.launch({channel:browserChannel,args:['--mute-audio']});
 try{for(const action of (process.env.HARVEST_ACTIONS??'mine,chop').split(',')){
  const w=createWorld(42,250,250);w.tick=2000;w.deterioration.lastTick=w.tick; // Declared initial noon, no past exposure.
@@ -85,29 +102,36 @@ const originalTraceAdvance=advanceSimulation;advanceSimulation=now=>{const at=pe
   localStorage.setItem('lisiere.audio.music.volume.v1','0');
   localStorage.setItem('lisiere.save.v1',data);
  },serializeWorld(w));
- await page.goto(process.env.HARVEST_URL??'http://127.0.0.1:5173/?scenario=camp&e2e&size=250');await page.waitForFunction(()=>!!window.__lisiere);
- await page.waitForFunction(()=>!!window.__sync);
- if(await page.locator('#sound-enabled').isChecked()||await page.locator('#music-enabled').isChecked())throw Error('Presentation checks must disable sound effects and music before play');
+ await page.goto(targetUrl.href);await page.waitForFunction(()=>!!window.__lisiere);
+ await page.waitForFunction(()=>!!window.__sync&&!!window.__harvestUi);
+ const native=await page.evaluate(()=>window.__harvestUi.native);
+ const clickNative=async id=>{await page.waitForFunction(id=>!!window.__harvestUi.point(id),id);const p=await page.evaluate(id=>window.__harvestUi.point(id),id);await page.mouse.click(p.x,p.y);};
+ const clickSpeed=async speed=>{if(native)await clickNative('hud:speed:'+speed);else await page.locator('[data-speed="'+speed+'"]').click();};
+ if(native?(await page.evaluate(()=>{const a=window.__harvestUi.audio;return a.effects||a.music||a.effectsVolume!==0||a.musicVolume!==0;})):await page.locator('#sound-enabled').isChecked()||await page.locator('#music-enabled').isChecked())throw Error('Presentation checks must disable sound effects and music before play');
+ report.uiInput=native?'NativeStage raycast; physical setup clicks and browser-timer pointer events':'legacy DOM controls';
  report.audio={effects:false,music:false,browserMuted:true};
  const prepareStarted=performance.now();
- await page.waitForFunction(()=>!document.querySelector('.game-shell').inert&&!document.querySelector('[data-speed="0"]').disabled,undefined,{timeout:60000}).catch(async error=>{
-  report.preparationFailure={action,errors,elapsed:performance.now()-prepareStarted,state:await page.evaluate(()=>({preparing:window.__sync?.view?.preparing,backend:window.__lisiere?.backend,tick:window.__lisiere?.world?.tick,text:document.querySelector('.front-menu')?.textContent}))};
+ await page.waitForFunction(()=>window.__harvestUi.native?window.__harvestUi.ready:!document.querySelector('.game-shell').inert&&!document.querySelector('[data-speed="0"]').disabled,undefined,{timeout:60000}).catch(async error=>{
+  report.preparationFailure={action,errors,elapsed:performance.now()-prepareStarted,state:await page.evaluate(()=>({preparing:window.__sync?.view?.preparing,backend:window.__lisiere?.backend,tick:window.__lisiere?.world?.tick,text:document.querySelector('.front-menu')?.textContent,native:window.__harvestUi?.state}))};
   await page.screenshot({path:testOutputPath('artifacts/harvest-preparation-'+action+'-'+label+'.png')});throw error;
  });
  (report.preparation??=[]).push({action,ms:performance.now()-prepareStarted});
- await page.locator('[data-speed="0"]').click();await page.locator('[data-panel="menu"]').click();await page.locator('#load').click();await page.keyboard.press('Escape');
- await page.waitForFunction(()=>!document.querySelector('.game-shell').inert,undefined,{timeout:60000}).catch(async error=>{
+ await clickSpeed(0);
+ if(native){await page.waitForFunction(()=>window.__harvestUi.ready&&window.__lisiere.speed===0);await clickNative('tab:menu');await clickNative('menu-load');await clickNative('select-save-lisiere.save.v1');await clickNative('load');}
+ else {await page.locator('[data-panel="menu"]').click();await page.locator('#load').click();}
+ await page.keyboard.press('Escape');
+ await page.waitForFunction(()=>window.__harvestUi.native?window.__harvestUi.ready&&window.__lisiere.speed===0:!document.querySelector('.game-shell').inert,undefined,{timeout:60000}).catch(async error=>{
   report.reloadFailure={action,errors,failedRequests,state:await page.evaluate(()=>({
    preparing:window.__sync?.view?.preparing,backend:window.__lisiere?.backend,tick:window.__lisiere?.world?.tick,
    notice:document.querySelector('#notice')?.textContent,incident:document.querySelector('#incident-panel')?.textContent,
-   frontVisible:!document.querySelector('.front-menu')?.hidden,loadingVisible:!document.querySelector('#loading')?.hidden,
+   frontVisible:!document.querySelector('.front-menu')?.hidden,loadingVisible:!document.querySelector('#loading')?.hidden,native:window.__harvestUi?.state,
   }))};
   await page.screenshot({path:testOutputPath('artifacts/harvest-reload-'+action+'-'+label+'.png')});throw error;
  });
- await page.evaluate(()=>{window.__sync.active=true;});await page.locator('[data-speed="'+initialSpeed+'"]').click();
- if(switches)await page.evaluate(speeds=>{let i=0;window.__sync.switchTimer=setInterval(()=>document.querySelector('[data-speed="'+speeds[i++%speeds.length]+'"]').click(),2000);},speedCycle);
+ await page.evaluate(()=>{window.__sync.active=true;});await clickSpeed(initialSpeed);
+ if(switches)await page.evaluate(speeds=>{let i=0;window.__sync.switchTimer=setInterval(()=>window.__harvestUi.clickSpeed(speeds[i++%speeds.length]),2000);},speedCycle);
  await page.waitForFunction(start=>performance.now()-start>=0,await page.evaluate(s=>performance.now()+s*1000,seconds),{timeout:(seconds+15)*1000,polling:200});
- await page.evaluate(()=>clearInterval(window.__sync.switchTimer));await page.locator('[data-speed="0"]').click();
+ await page.evaluate(()=>clearInterval(window.__sync.switchTimer));await clickSpeed(0);
  const data=await page.evaluate(()=>{const b=window.__sync;b.active=false;const d=b.view.renderer.getContext().getConfiguration().device;return {workerBatches:b.workerBatches,workerSnapshots:b.workerSnapshots,adapter:{vendor:d.adapterInfo.vendor,architecture:d.adapterInfo.architecture},longTasks:b.longTasks,frames:b.frames,snapshots:b.snapshots,controls:b.controls,removals:b.removals,jumps:b.jumps,rawJumpCount:b.rawJumpCount,continuousTravelExcess:b.continuousTravelExcess,contactStalls:b.contactStalls,gaps:b.gaps,solidOccupancy:b.solidOccupancy,stepMs:b.stepMs,receptions:b.receptions,tick:b.view.world.tick,jobs:b.view.world.jobs.length};});
  if(!Number.isFinite(data.stepMs)||data.receptions<1)throw Error('Presentation probe did not observe the actual MAIN snapshot reception');
  const starvation=presentationStarvations(data.frames);
@@ -118,12 +142,12 @@ const originalTraceAdvance=advanceSimulation;advanceSimulation=now=>{const at=pe
  // Preserve a completed phase even if the host interrupts the next page.
  await writeTestFile('artifacts/harvest-sync-'+label+'.json',JSON.stringify(report,null,2)+'\n');
  if(process.env.HARVEST_RECOVERY==='1'){
-  await page.locator('[data-speed="6"]').click();
+  await clickSpeed(6);
   // Exceed the 64-tick history at 36 ticks/s. This isolated page stall is outside
   // all timed performance data, and the independent tick assertion stays below.
   await page.evaluate(()=>{const end=performance.now()+2500;while(performance.now()<end){}});
   await page.waitForFunction(()=>{const v=window.__sync.view;return v.received.world.tick-v.timeline.tick<=64&&v.world.tick<=v.timeline.tick;},undefined,{timeout:3000});
-  await page.locator('[data-speed="0"]').click();
+  await clickSpeed(0);
   phase.recovery=await page.evaluate(()=>{const v=window.__sync.view;return {latest:v.received.world.tick,display:v.world.tick,play:v.timeline.tick,queued:v.presentation.size};});
   const r=phase.recovery;
   if(r.latest<phase.tick+64||r.display>r.play||r.play>r.latest||r.latest-r.play>64||r.queued>64)throw Error('Incoherent recovery: '+JSON.stringify(r));

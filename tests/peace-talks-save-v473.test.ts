@@ -63,7 +63,7 @@ test('strict292 migration changes only the number and grants no PeaceTalks offer
  // JSON.parse alone loses that representation witness; it changes no saved fact.
  for(const site of old.worldMaps.sites)if(site.map)expect(Object.hasOwn(site.map,'schemaVersion')).toBe(false);
  expect(validateCampaignSchema292({...old,planet:w.planet})).toEqual([]);const raw=JSON.stringify(old),loaded=deserializeCampaign(raw);
- expect(JSON.parse(serializeCampaign(loaded))).toEqual({...old,schemaVersion:293});expect(JSON.stringify(old)).toBe(raw);
+ expect(JSON.parse(serializeCampaign(loaded))).toEqual({...old,schemaVersion:294});expect(JSON.stringify(old)).toBe(raw);
 });
 
 test('PeaceTalks fields stay closed in every historical registry and retained transport lane before293',()=>{
@@ -71,10 +71,10 @@ test('PeaceTalks fields stay closed in every historical registry and retained tr
  for(const sample of samples)for(const v of [263,284,291,292])expect(validPeaceTalksHistorical293(sample,v)).toBe(false);
 });
 
-test('future294 and numeric schema strings stay closed without running getters or reading terrain',()=>{
+test('current294 stays supported while future295 and numeric schema strings stay closed without reading getters or terrain',()=>{
  let reads=0;const raw={worldSites263:{entries:[]}};Object.defineProperty(raw,'resources',{get(){reads++;throw Error('terrain read');}});
- expect(validPeaceTalksHistorical293(raw,293)).toBe(true);expect(reads).toBe(0);
- for(const version of [294,'293',NaN])expect(validPeaceTalksHistorical293({},version)).toBe(false);
+ expect(validPeaceTalksHistorical293(raw,293)).toBe(true);expect(validPeaceTalksHistorical293(raw,294)).toBe(true);expect(reads).toBe(0);
+ for(const version of [295,'293','294',NaN])expect(validPeaceTalksHistorical293({},version)).toBe(false);
  const getter={};Object.defineProperty(getter,'worldSites263',{enumerable:true,get(){reads++;throw Error('registry getter');}});
  expect(validPeaceTalksHistorical293(getter,292)).toBe(false);expect(reads).toBe(0);
 });

@@ -6,6 +6,9 @@ import {cryptosleepSick256} from './cryptosleep-sickness-256.ts';
 import {lostThoughts} from './world-map-lost.ts';
 import {isSchema282OrLater} from './schema-compatibility-257.ts';
 import {thermalMoodThoughts460} from './thermal-mood-v460.ts';
+import {toxicFalloutActive294} from './toxic-fallout-state-294.ts';
+import {carrierOf} from './rescue-state.ts';
+import {isRoofed} from './roof-rules.ts';
 import {temperatureAt} from './temperature.ts';
 import { COLONY_EXPECTATIONS,type ColonyExpectation } from './expectations.ts';
 import { colonyExpectation } from './colony-economy.ts';
@@ -43,6 +46,7 @@ const beauty=[situation('hideous-environment','Environnement affreux',-15,'Beaut
 const leisure=[situation('recreation-starved','Privé de loisirs',-20,'Loisirs sous 1 %.'),situation('recreation-deprived','Manque important de loisirs',-10,'Loisirs sous 15 %.'),situation('recreation-low','Manque de loisirs',-5,'Loisirs sous 30 %.'),situation('recreation-high','Loisirs satisfaisants',5,'Loisirs d’au moins 70 %.'),situation('recreation-full','Loisirs pleinement satisfaits',10,'Loisirs d’au moins 85 %.')];
 const pains=[situation('minor-pain','Douleur légère',-5,'Douleur présente, sous 15 %.'),situation('serious-pain','Douleur importante',-10,'Douleur d’au moins 15 %.'),situation('intense-pain','Douleur intense',-15,'Douleur d’au moins 40 %.'),situation('extreme-pain','Douleur extrême',-20,'Douleur d’au moins 80 %.')];
 const sick=situation('sick','Malade',-5,'Maladie active ; cette pensée disparaît avec la maladie.');
+const toxicFallout294=situation('toxic-fallout','Retombées toxiques',-5,'Des retombées toxiques sont présentes au-dessus de cette position non couverte. Cette pensée disparaît sous un toit ou à la fin de la condition ; elle ne mesure pas une dose clinique.');
 const apparel=[situation('ratty-apparel','Vêtements abîmés',-3,'Au moins une pièce portée a moins de 50 % de ses PV.'),situation('tattered-apparel','Vêtements en lambeaux',-5,'Au moins une pièce portée a moins de 20 % de ses PV.')];
 const expectationThoughts=new Map(COLONY_EXPECTATIONS.map(e=>[e.id,situation(`expectations-${e.id}`,e.label,e.moodOffset,'Attentes liées au patrimoine évalué de la colonie ; les valeurs inconnues restent exclues.')]));
 const camp=situation('camp-expectations','Attentes extrêmement basses',30,'Profil fixe de ce camp, partagé avec les loisirs ; ne varie pas encore avec la richesse.');
@@ -77,6 +81,17 @@ export interface PersonalMoodContext {
    * Only a supported prospective owner supplies this optional situation. */
   ambientTemperature460?:number;
   deathSituation?:MoodThought;lost?:readonly MoodThought[];
+  toxicFallout294?:MoodThought;
+}
+/** Held position differs deliberately from the spawned-only dose pass. Rescue,
+ * captive and casket-service carriers resolve through their existing owner.
+ * Off-map or suspended originals never borrow the displayed map's condition. */
+function localToxicFalloutThought294(world:World,pawn:Pawn):MoodThought|undefined {
+  if(!toxicFalloutActive294(world)||!world.pawns.includes(pawn)||pawn.cryptosleepHeldAt271!==undefined||pawn.shipCryptosleepHeldAt277!==undefined)return;
+  const holder=carrierOf(world,pawn.id)??pawn;
+  if(!world.pawns.includes(holder))return;
+  const position=holder.motion&&holder.motion.end>world.tick?holder.motion.from:holder;
+  return isRoofed(world,position.z*world.width+position.x)?undefined:toxicFallout294;
 }
 export function moodThoughts(world:World,pawn:Pawn,topology?:RelationshipTopology,readTemperature?:()=>number,resolveCoupleNames285=true):readonly MoodThought[] {
   if(pawn.state==='dead')return [];
@@ -90,7 +105,7 @@ export function moodThoughts(world:World,pawn:Pawn,topology?:RelationshipTopolog
     items:world.piles,expectation:colonyExpectation(world,pawn),difficultyMood:colonistMoodOffset(world,pawn),
     ...(isSchema282OrLater(world.schemaVersion)&&pawn.cryptosleepHeldAt271===undefined&&pawn.shipCryptosleepHeldAt277===undefined
       ?{ambientTemperature460:readTemperature?readTemperature():temperatureAt(world,pawn)}:{}),
-    environment:{comfort:pawn.comfort,beauty:pawn.beauty},housing:relationshipHousingThought(world,pawn,topology),deathSituation:colonistUnburiedThought(world,pawn)});
+    environment:{comfort:pawn.comfort,beauty:pawn.beauty},housing:relationshipHousingThought(world,pawn,topology),deathSituation:colonistUnburiedThought(world,pawn),toxicFallout294:localToxicFalloutThought294(world,pawn)});
 }
 export function personalMoodThoughts(pawn:Pawn,c:PersonalMoodContext):readonly MoodThought[] {
   if((pawn.cryptosleepHeldAt271!==undefined||pawn.shipCryptosleepHeldAt277!==undefined))c={...c,tick:memoryReadTick271(pawn,c.tick)};
@@ -102,6 +117,7 @@ export function personalMoodThoughts(pawn:Pawn,c:PersonalMoodContext):readonly M
   if(pawn.deathThoughts)thoughts.push(...deathThoughtsAt(pawn,c.tick,c.people));
   if(c.lost)thoughts.push(...c.lost);
   if(c.deathSituation)thoughts.push(c.deathSituation);
+  if(c.toxicFallout294)thoughts.push(c.toxicFallout294);
   if(pawn.familyBereavement)thoughts.push(...familyBereavementThoughtsAt(pawn,c.tick,c.relationPeople??c.people));
   if(pawn.romanceMemories)thoughts.push(...romanceMoodThoughtsAt(pawn,c.tick,c.relationPeople??c.people));
   if(pawn.partyMemories292)thoughts.push(...partyMoodThoughts292(pawn,c.tick));

@@ -47,7 +47,9 @@ export function corpseProducts(p:Pick<MaterialPile,'corpse'>):{meat:{item:Animal
 export const animalCorpseItem=(species:AnimalSpeciesId)=>animalSpecies(species).corpseItem;
 
 function thermalAnchor(rot:RotState,tick:number,rate:number):RotState {
-  return rate===(rot.rate??1)?rot:{progress:rot.progress+(tick-rot.atTick)*(rot.rate??1),atTick:tick,...rate!==1?{rate}:{}};
+  if(rate===(rot.rate??1))return rot;
+  const next={...rot,progress:rot.progress+(tick-rot.atTick)*(rot.rate??1),atTick:tick};
+  if(rate===1)delete next.rate;else next.rate=rate;return next;
 }
 function corpsePile(a:WildAnimal,owner:MaterialOwner,rot:RotState):MaterialPile {
   return {...retainedCorpseDamage256(a)?{damage:retainedCorpseDamage256(a)}:{},id:a.id,kind:'corpse',item:animalCorpseItem(a.species),quantity:1,owner,rot:toxicCorpseRot256(a.health,rot),
