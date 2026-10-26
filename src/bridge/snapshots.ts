@@ -893,6 +893,8 @@ export class SnapshotEncoder<SparseStructures extends boolean = false> {
   private readonly geographicTransport=new PlanetGeographyTransportEncoder256();
   /** Public default always performs complete value discovery. A fixed Worker
    * may own a separate subclass; no packet/boolean changes this authority. */
+  protected trackNaturalInputs=false;
+  protected naturalInputsUnchanged=false;
   protected createTileCache():TileSnapshotCache {return new TileSnapshotCache();}
   reserveDraftPreview(owner:import('../sim/world-geography-owner-256.ts').CampaignGeography256){return this.geographicTransport.reserveDraftPreview(owner);}
   authorizeDraftPreview(owner:import('../sim/world-geography-owner-256.ts').CampaignGeography256,id:number):void {this.geographicTransport.authorizeDraftPreview(owner,id);}
@@ -908,6 +910,7 @@ export class SnapshotEncoder<SparseStructures extends boolean = false> {
 
   /** postMessage must follow synchronously: it owns cloning the returned dynamic state. */
   encode(world: World, stepMs: number, speed: number, checkpoint = false): SnapshotMessage<SparseStructures> {
+    this.naturalInputsUnchanged=false;
     const actualExplorationWorld=world;
     if(world.worldMaps){const selected=registeredMapPresentation(world);if(!selected)throw Error('No selected map; publish campaignHeader and campaignOnlySummary.');world=selected;}
     this.campaignOnly=false;
@@ -939,6 +942,7 @@ export class SnapshotEncoder<SparseStructures extends boolean = false> {
     const upserted: Resource[] = [];
     const growthValues:number[]=[],growthUpdates:Resource[]=[];
     let nextOrder: Resource[] | undefined = world.resources.length !== this.orderedResources.length ? [] : undefined;
+    let naturalSame=this.trackNaturalInputs&&world.resources.length===this.orderedResources.length;
     for (let index = 0; index < world.resources.length; index++) {
       const resource = world.resources[index]!;
       const ordered = this.orderedResources[index];
@@ -949,6 +953,9 @@ export class SnapshotEncoder<SparseStructures extends boolean = false> {
       const previous = sameSlot ? ordered : this.resources.get(resource.id);
       let cached = previous;
       const sameBase=previous!==undefined&&equalResourceBase(previous,resource);
+      if(naturalSame&&(!sameSlot||!sameBase||!Object.is(previous!.growth,resource.growth)||!Object.is(previous!.growthTick,resource.growthTick)
+        ||!Object.is(previous!.growthThermalFactor,resource.growthThermalFactor)||!Object.is(previous!.plantLife?.leaflessAt,resource.plantLife?.leaflessAt)
+        ||Object.hasOwn(previous!,'plantLife')!==Object.hasOwn(resource,'plantLife')||Object.hasOwn(previous!,'blight')!==Object.hasOwn(resource,'blight')||!!previous!.blight!==!!resource.blight))naturalSame=false;
       if (!sameBase || previous!.growth!==resource.growth || previous!.growthTick!==resource.growthTick || previous!.growthThermalFactor!==resource.growthThermalFactor) {
         const copy = copyResource(resource);
         // Exact doubles, not rounded presentation values. A whole forest can
@@ -1047,6 +1054,7 @@ export class SnapshotEncoder<SparseStructures extends boolean = false> {
       for(const id of structureChanges.removed)this.structures.delete(id);
       for(const structure of cacheUpdates)this.structures.set(structure.id,structure);
       if(nextOrder)this.orderedStructures=nextOrder;
+      this.naturalInputsUnchanged=naturalSame&&tiles.length===0&&structureChanges.removed.length===0&&structureChanges.upserted.length===0&&structureChanges.order===undefined;
       const {structures:_structures,...sparseWorld}=dynamic;
       return {...header,kind:'delta',baseRevision,world:sparseWorld,structures:structureChanges,
         ...(tiles.length?{tiles}:{}),...(changes?{resources:changes}:{}),...(pileChanges?{piles:pileChanges}:{})} as SnapshotMessage<SparseStructures>;

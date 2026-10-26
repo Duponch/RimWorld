@@ -22,6 +22,7 @@ export class WorkerNaturalAppearance {
  private captures=new Map<number,Capture>();private cropCaptures=new Map<number,CropCapture>();
  private epoch=0;private revision=0;private tick=-1;private visit=0;
  clear():void {this.captures.clear();this.cropCaptures.clear();this.epoch=0;this.revision=0;this.tick=-1;this.visit=0;}
+ protected canReuseInputs(_world:World,_publication:SnapshotMessage<true>):boolean{return false;}
  capture(world:World,publication:SnapshotMessage<true>):TypedCropNaturalVisualDelta {
   const checkpoint=publication.kind==='checkpoint';
   if(!Number.isSafeInteger(publication.epoch)||publication.epoch<1||!Number.isSafeInteger(publication.revision)||publication.revision<1
@@ -30,6 +31,11 @@ export class WorkerNaturalAppearance {
    ||this.revision>0&&(publication.epoch<this.epoch||publication.epoch===this.epoch&&publication.revision<=this.revision))throw Error('Mismatched natural visual publication');
   if(!checkpoint&&(publication.epoch!==this.epoch||publication.baseRevision!==this.revision
    ||publication.revision!==this.revision+1||world.tick<this.tick))throw Error('Missing natural visual predecessor');
+  if(!checkpoint&&this.canReuseInputs(world,publication)){
+   const crops=new CropVisualColumnWriter(0).finish([]);
+   this.visit++;this.epoch=publication.epoch;this.revision=publication.revision;this.tick=world.tick;
+   return {epoch:publication.epoch,revision:publication.revision,baseRevision:publication.baseRevision,tick:world.tick,checkpoint:false,upsert:[],removed:[],crops};
+  }
   const staged=new Map<number,Capture>(),cropStaged=new Map<number,CropCapture>(),removed=new Set<number>(),cropRemoved=new Set<number>(),
    upsert:NaturalVisualUpsert[]=[],cropColumns=new CropVisualColumnWriter(world.resources.length),visit=++this.visit,
    physicalRemoved=!checkpoint&&publication.resources?.removed.length?new Set(publication.resources.removed):undefined;

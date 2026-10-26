@@ -51,7 +51,7 @@ import { AudioCueRecorder } from './audio-cues';
 /** Both fixed entrypoints execute this identical authoritative engine. The
  * closed entry supplies its concrete transport encoder; public default stays
  * complete. Request ordering, clocks, ACK and SAVE never select that boundary. */
-export function startSimulationWorker(scope:DedicatedWorkerGlobalScope,send:(message:Response)=>void,snapshots:SnapshotEncoder<true>=new SnapshotEncoder({structureDelta:true,minimumStructures:1000}),publishLocal?:(world:World,publication:SnapshotMessage<true>)=>void,createMotionRecorder:()=>MotionRecorder=()=>new MotionRecorder()):void {
+export function startSimulationWorker(scope:DedicatedWorkerGlobalScope,send:(message:Response)=>void,snapshots:SnapshotEncoder<true>=new SnapshotEncoder({structureDelta:true,minimumStructures:1000}),publishLocal?:(world:World,publication:SnapshotMessage<true>,originalPacket:SnapshotMessage<true>)=>void,createMotionRecorder:()=>MotionRecorder=()=>new MotionRecorder()):void {
 let world: CampaignState | undefined;
 let caravans:GroupCampaignRuntime256|undefined;
 /** Build on the validated replacement BEFORE changing the active owner. The
@@ -103,7 +103,7 @@ const publishCapturedTick = (checkpoint = false) => {
     const publication={...packet, urgentThreats: urgentThreats.snapshot(), motion:motion.snapshot(),...cues.length?{audioCues:cues}:{}};
     // The fixed resident entry observes this exact confirmed World synchronously.
     // Commands, ACK, public snapshots and SAVE retain their existing path.
-    if(publishLocal)publishLocal(visible,publication);else send(publication);
+    if(publishLocal)publishLocal(visible,publication,packet);else send(publication);
     published = { epoch: packet.epoch, revision: packet.revision };
   }
   lastPublishedTick=world?.tick??-1;

@@ -27,6 +27,7 @@ export class TerrainJournalSnapshotEncoder extends SnapshotEncoder<true> {
  // invalidates MAIN's topology/support readers on every ordinary publication.
  constructor(){super({structureDelta:true,minimumStructures:0});}
  protected override createTileCache():TileSnapshotCache {return new JournalTileSnapshotCache();}
+ protected forcePublicationCheckpoint():void {this.requireCheckpoint=true;}
  override encode(world:World,stepMs:number,speed:number,checkpoint=false):SnapshotMessage<true> {
   // A late codec exception can already have changed its private value cache.
   // The runtime stops fatally; any explicit caller retry must send a complete
