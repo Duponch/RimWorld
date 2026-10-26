@@ -978,8 +978,8 @@ const frontOptions:FrontMenuOptions = {
     if (simulationStopped || waitingRequests.size > 0) throw new Error('Chargez une colonie validée pour reprendre.');
     await prepareWorld();
     if (simulationStopped || waitingRequests.size > 0) throw new Error('Chargez une colonie validée pour reprendre.');
-    frontMenu.hide(); syncStorageButtons();
     const speed = menuResumeSpeed ?? 0; menuResumeSpeed = undefined;
+    frontMenu.hide(); setPanel(null); syncStorageButtons();
     await changeSpeed(deferredResumeGuard.held?0:speed);
   },
 };
