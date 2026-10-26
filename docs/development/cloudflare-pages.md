@@ -1,6 +1,13 @@
 # Elsewhere sur Cloudflare Pages
 
-**Publication courante V475, schéma293 inchangé : `2e222a29`.** Produit
+**Publication courante V480–V482, schéma295 : `b969b256`.** Produit `61d63e51`,
+UI carton native, retombées toxiques, lecture physique et correctif anti-incendie.
+[Provenance et vérifications](publication-v482.md) : copie propre5043fichiers,
+552fichiers publiés,71chemins publics préservés et20réponses HTTPS exactes.
+Le chantier296 en cours est exclu. [Adresse stable](https://elsewhere-cq7.pages.dev/).
+Les publications suivantes sont historiques.
+
+**Publication historique V475, schéma293 inchangé : `2e222a29`.** Produit
 `699621a8`, sources qualifiées729e : [allocations, FIFO et cadence des ombres](performance-admission-v475.md#publication-et-pause-demandées).
 Vingt réponses HTTPS ciblées exactes,552fichiers et71chemins publics de
 sauvegarde préservés. [Adresse stable](https://elsewhere-cq7.pages.dev/).

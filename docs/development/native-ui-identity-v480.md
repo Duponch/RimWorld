@@ -1,5 +1,7 @@
 # Identité matérielle et lisibilité de l’interface V480
 
+**Publication acquise le26octobre :** l’UI qualifiée ci-dessous est incluse dans la production `b969b256` issue de `61d63e51`. [Preuve de publication](publication-v482.md). Les mesures et limites locales restent celles de la qualification ; la publication ne constitue pas une nouvelle mesure de performance.
+
 ## Portée et état
 
 **Qualification locale acquise par reprises :** 124 cas ciblés distincts, les parcours natifs de fixture puis de vraie colonie, le typage final, le build et deux comparaisons encadrées sont acquis ci-dessous. La matière et la lecture sont harmonisées ; de petits surcoûts CPU et des ouvertures plus longues restent mesurés. Aucun coût nul, gain FPS global, déploiement ou accomplissement de l’objectif global n’est revendiqué.

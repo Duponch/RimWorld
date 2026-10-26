@@ -1,6 +1,6 @@
 # Validation courante — V474 publiée
 
-**V482 locale — schéma 295, non publiée :** [Roman physique acheté et lu](../gameplay/novel-v482.md). Achat, livraison, lecture et conservation du même exemplaire acquis ; 76 nouveaux cas et 119 voisins par reprises, deux anciens rouges reproduits. Parcours natif, recharges exactes, typage et compilation acquis ; coût JS ciblé documenté sans gain FPS global. Les six ensembles restent ouverts.
+**V482 publiée — schéma 295, production b969b256 :** [Roman physique acheté et lu](../gameplay/novel-v482.md). Achat, livraison, lecture et conservation du même exemplaire acquis ; 76 nouveaux cas et 119 voisins par reprises, deux anciens rouges reproduits. Parcours natif, recharges exactes, typage et compilation acquis ; coût JS ciblé documenté sans gain FPS global. Les six ensembles restent ouverts. [Publication vérifiée](publication-v482.md).
 
 **V481 locale — schéma 294, non publiée :** [Retombées toxiques locales](../gameplay/toxic-fallout-v481.md). Exposition réelle, toits, clinique, pertes physiques et sauvegardes exactes acquis ; 96 nouveaux cas par reprises, parcours natif et présentation minage/abattage qualifiés. Typage et build acquis. Anciens rouges et limites de coût restent documentés ; aucune promesse de FPS global. Les six ensembles restent ouverts après le lot UI V480 committé et poussé `ea9fa382`.
 

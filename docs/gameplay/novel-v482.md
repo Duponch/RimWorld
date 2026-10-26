@@ -1,6 +1,8 @@
 # Un roman acheté puis réellement lu — V482
 
-**Qualification ciblée acquise le 26 octobre 2026 — schéma 295, non publié.** 76 nouveaux cas et 119 voisins distincts sont acquis par reprises ; deux anciens rouges sont reproduits sur V481. Parcours natif final, sauvegardes entières, typage, compilation et présentation sont acquis. Les six ensembles, SYS-069 et les campagnes longues restent ouverts.
+La [publication groupée du26octobre](../development/publication-v482.md) rend ce lot et son correctif anti-incendie accessibles sur [Elsewhere](https://elsewhere-cq7.pages.dev/). Les résultats ci-dessous décrivent sa qualification antérieure ; ils ne deviennent pas des mesures de performance en ligne.
+
+**Qualification ciblée acquise le 26 octobre 2026 — schéma 295 ; publication groupée b969b256 acquise ensuite.** 76 nouveaux cas et 119 voisins distincts sont acquis par reprises ; deux anciens rouges sont reproduits sur V481. Parcours natif final, sauvegardes entières, typage, compilation et présentation sont acquis. Les six ensembles, SYS-069 et les campagnes longues restent ouverts.
 
 ## Résultat pour le joueur
 
