@@ -12,8 +12,19 @@ import { storageConditionAccepts,type StorageConditions } from './storage-condit
 import { isPerishable } from './food-preservation.ts';
 import { SCHEMA_VERSION,type MaterialPile,type StockpileCell } from './types.ts';
 
+/** One prospective category flag. Inspect its descriptor before a caller can
+ * enumerate/read policy values; an absent historical choice stays absent. */
+export function validNovelStorageFilters295(filters:unknown,version:number):boolean {
+  if(filters===undefined)return true;
+  if(!filters||typeof filters!=='object'||Array.isArray(filters))return false;
+  if(!('book'in filters))return true;
+  const d=Object.getOwnPropertyDescriptor(filters,'book');
+  return version===295&&!!d&&d.enumerable===true&&Object.hasOwn(d,'value')&&typeof d.value==='boolean';
+}
+
 export function validStorageItems(items:unknown,version:number=SCHEMA_VERSION):boolean {
-  return items===undefined||!!items&&typeof items==='object'&&!Array.isArray(items)&&Object.entries(items).every(([key,value])=>Object.hasOwn(ITEM_DEFINITIONS,key)&&(isSchema273OrLater(version)||!isProstheticItem273(key)&&key!=='unfinished-prosthetic')&&(isSchema272OrLater(version)||!isSpearItem272(key)&&key!=='unfinished-spear')&&(isSchema269OrLater(version)||!isMaceItem269(key)&&key!=='unfinished-mace')&&(isSchema270OrLater(version)||!isLongswordItem270(key)&&key!=='unfinished-longsword')&&(version>=268||key!=='unfinished-knife')&&(version>=267||!isSmithingProduct267(key)&&!isSmithingWorkpiece267(key))&&(version>=265||!['hops','wort','beer'].includes(key))&&(version>=256||!isFutureEcologyItem256(key)&&key!=='slag-steel-chunk')&&(version>=241||!['uranium','recon-armor','unfinished-recon-armor'].includes(key))&&(version>=235||key!=='minified-tree')&&(version>=227||key!=='hay'&&key!=='kibble')&&(version>=218||key!=='chemfuel')&&(version>=206||key!=='neutroamine')&&(version>=217||key!=='nutrient-paste-meal')&&typeof value==='boolean');
+  if(items&&typeof items==='object'&&'novel'in items){const d=Object.getOwnPropertyDescriptor(items,'novel');if(version!==295||!d||!d.enumerable||!Object.hasOwn(d,'value')||typeof d.value!=='boolean')return false;}
+  return items===undefined||!!items&&typeof items==='object'&&!Array.isArray(items)&&Object.entries(items).every(([key,value])=>Object.hasOwn(ITEM_DEFINITIONS,key)&&(key!=='novel'||version===295)&&(isSchema273OrLater(version)||!isProstheticItem273(key)&&key!=='unfinished-prosthetic')&&(isSchema272OrLater(version)||!isSpearItem272(key)&&key!=='unfinished-spear')&&(isSchema269OrLater(version)||!isMaceItem269(key)&&key!=='unfinished-mace')&&(isSchema270OrLater(version)||!isLongswordItem270(key)&&key!=='unfinished-longsword')&&(version>=268||key!=='unfinished-knife')&&(version>=267||!isSmithingProduct267(key)&&!isSmithingWorkpiece267(key))&&(version>=265||!['hops','wort','beer'].includes(key))&&(version>=256||!isFutureEcologyItem256(key)&&key!=='slag-steel-chunk')&&(version>=241||!['uranium','recon-armor','unfinished-recon-armor'].includes(key))&&(version>=235||key!=='minified-tree')&&(version>=227||key!=='hay'&&key!=='kibble')&&(version>=218||key!=='chemfuel')&&(version>=206||key!=='neutroamine')&&(version>=217||key!=='nutrient-paste-meal')&&typeof value==='boolean');
 }
 
 /** A missing item list is the historical category-only rule. Once present,

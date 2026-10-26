@@ -12,10 +12,10 @@ export function validCoveredInFirefoamState290(value:unknown):value is CoveredIn
 /** Descriptor-first medical header. Absence never acquires an effect. */
 export function validCoveredInFirefoamField290(record:unknown,version:number):boolean {
  try{
-  if(!plain(record)||!Number.isSafeInteger(version)||version<1||version>294)return false;
+  if(!plain(record)||!Number.isSafeInteger(version)||version<1||version>295)return false;
   const d=Object.getOwnPropertyDescriptor(record,'coveredInFirefoam290');
   if(!d)return !('coveredInFirefoam290'in record);
-  return (version===290||(version===291||(version===292||(version===293||version===294))))&&d.enumerable===true&&Object.hasOwn(d,'value')&&validCoveredInFirefoamState290(d.value);
+  return (version===290||(version===291||(version===292||(version===293||(version===294||version===295)))))&&d.enumerable===true&&Object.hasOwn(d,'value')&&validCoveredInFirefoamState290(d.value);
  }catch{return false;}
 }
 export function firefoamIgnitionFactor290(record:MedicalRecord|undefined):0|1 {

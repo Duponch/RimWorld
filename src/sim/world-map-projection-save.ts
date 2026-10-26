@@ -1,3 +1,4 @@
+import {validNovelHistoricalTransport295} from './book-save-295.ts';
 import {isSchema286OrLater} from './schema-compatibility-257.ts';
 import {isSchema284OrLater} from './schema-compatibility-257.ts';
 import {validLinkedStorageProjection286} from './linked-storage-save-286.ts';
@@ -79,6 +80,7 @@ function metadata(value:unknown,w:Pick<World,'schemaVersion'|'tick'|'nextId'|'pl
 }
 export function validRegisteredPresentation(w:World):boolean {if(!obj(w)||['worldMaps','worldGroups','secondarySite'].some(k=>Object.hasOwn(w,k))||!int(w.tick)||!int(w.nextId,1)||!metadata(w.campaignMap,w)||!people(w.campaignPeople,w.nextId,w.tick))return false;if(w.campaignMap!.revision!==2)return false;const known=new Set([...(w.pawns??[]).map(p=>p.id),...(w.campaignPeople??[]).map(p=>p.id)]);return knownMemoryReceivers259(w,w.campaignMap.lostMemories,known);}
 export function validCampaignSummary(value:unknown):value is CampaignSummary {
+ if(!obj(value)||!validNovelHistoricalTransport295(value,value.schemaVersion))return false;
  if(!obj(value)||!(value.schemaVersion===255||isSchema256Or257(value.schemaVersion))||!int(value.tick)||!int(value.nextId,1)||!int(value.rng,1,0xffffffff)||!Number.isSafeInteger(value.civilTick)||value.activeMapId!==null||!people(value.people,Number(value.nextId),Number(value.tick)))return false;
  const originField=Object.getOwnPropertyDescriptor(value,'worldPawnOrigins');
  if(originField?originField.enumerable!==true||!Object.hasOwn(originField,'value'):'worldPawnOrigins' in value)return false;

@@ -11,7 +11,7 @@ import { tradeCatalogueEntry } from './trade-catalogue.ts';
 import { roundTradeSilver,tradeUnitPrice } from './trade-prices.ts';
 import { ticksUntilRot } from './food-preservation.ts';
 import { reservedSource } from './materials.ts';
-import { orbitalBeerCatalogue265,ORBITAL_STOCK } from './orbital-stock.ts';
+import { orbitalBeerCatalogue265,orbitalNovelCatalogue295,ORBITAL_STOCK } from './orbital-stock.ts';
 import type { TradeGood } from './trade-goods.ts';
 import type { TradeLine } from './trade-state.ts';
 import type { OrbitalShip } from './orbital-state.ts';
@@ -67,7 +67,7 @@ export function orbitalItemRefusal(pile:MaterialPile,side:'buy'|'sell',w:World,s
   if(!e||pile.quantity<=0||ticksUntilRot(pile,w.tick)<=0)return 'Objet indisponible ou sans profil commercial.';
   if(pile.kind==='weapon'||pile.kind==='apparel'||pile.unfinished||pile.corpse||pile.humanCorpse||pile.mechCorpse)return 'Ce profil orbital ne commerce pas cet objet.';
   if(side==='sell'&&!e.playerCanSell||side==='buy'&&!e.playerCanBuy)return 'Cet objet ne peut pas être échangé dans ce sens.';
-  if(!orbitalBeerCatalogue265(w.schemaVersion,ship.kind,pile.item)&&!ORBITAL_STOCK[ship.kind].some(([item])=>item===pile.item)&&!(side==='sell'&&ship.kind==='bulk'&&ORBITAL_BULK_EXTRAS.has(pile.item)))return 'Ce profil orbital ne commerce pas cette catégorie.';
+  if(!orbitalNovelCatalogue295(w.schemaVersion,ship.kind,pile.item)&&!orbitalBeerCatalogue265(w.schemaVersion,ship.kind,pile.item)&&!ORBITAL_STOCK[ship.kind].some(([item])=>item===pile.item)&&!(side==='sell'&&ship.kind==='bulk'&&ORBITAL_BULK_EXTRAS.has(pile.item)))return 'Ce profil orbital ne commerce pas cette catégorie.';
 }
 export function orbitalTradeGoods(w:World,p:Pawn,ship:OrbitalShip):{goods:TradeGood[];silver:MaterialPile[];merchantSilver:MaterialPile[]} {
   const covered=orbitalCoverage(w),improvement=tradeImprovement(p),goods:TradeGood[]=[],silver:MaterialPile[]=[],merchantSilver:MaterialPile[]=[];
@@ -91,6 +91,6 @@ export function quoteOrbitalTrade(w:World,pawnId:number,shipId:number,lines:Trad
   const silver=stock.silver.reduce((n,p)=>n+p.quantity,0),merchantSilver=stock.merchantSilver.reduce((n,p)=>n+p.quantity,0);
   if(net>silver)return fail('La colonie ne dispose pas d’assez d’argent couvert par les balises.');
   const forgone=Math.max(0,-net-merchantSilver),paid=Math.max(net,-merchantSilver);
-  const signature=JSON.stringify([pawnId,shipId,p.orbitalTrade!.consoleId,selected.map(({good:g,quantity})=>[g.pile.id,g.pile.item,g.available,quantity,g.unitPrice,g.pile.damage,g.pile.rot,g.pile.foodPoison]),stock.silver.map(s=>[s.id,s.quantity]),stock.merchantSilver.map(s=>[s.id,s.quantity]),net,forgone]);
+  const signature=JSON.stringify([pawnId,shipId,p.orbitalTrade!.consoleId,selected.map(({good:g,quantity})=>[g.pile.id,g.pile.item,g.available,quantity,g.unitPrice,g.pile.damage,g.pile.rot,g.pile.foodPoison,...g.pile.book?[g.pile.book]:[]]),stock.silver.map(s=>[s.id,s.quantity]),stock.merchantSilver.map(s=>[s.id,s.quantity]),net,forgone]);
   return {ok:true as const,p,ship,stock,selected,net,paid,forgone,signature};
 }

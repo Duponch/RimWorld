@@ -1,4 +1,6 @@
 import {validPartyTask292} from './party-save-292.ts';
+import {validReadingPawnFields295,validReadingTask295} from './book-save-295.ts';
+import {validReadingWorld295} from './book-transport-295.ts';
 import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import { initialRecreation, RECREATION_DURATION, RECREATION_KINDS, VISIT_SICK_DURATION } from './recreation-rules.ts';
 import { adjacentToTable, isChessCell, isGatherSpot, isHorseshoeCell } from './recreation-space.ts';
@@ -23,7 +25,10 @@ export function initializeRecreation(world: World): void {
 }
 function recreationNeedErrors(joy:unknown,version:number):string[] {
   const base=version>=190?RECREATION_KINDS:version>=124?RECREATION_KINDS.slice(0,4):version>=122?RECREATION_KINDS.slice(0,3):RECREATION_KINDS.slice(0,2);
-  const kinds:readonly string[]=isSchema265OrLater(version)&&record(joy)&&record(joy.tolerance)&&Object.hasOwn(joy.tolerance,'chemical')?[...base,'chemical']:base;
+  const chemical=isSchema265OrLater(version)&&record(joy)&&record(joy.tolerance)&&Object.hasOwn(joy.tolerance,'chemical');
+  const reading=version===295&&record(joy)&&record(joy.tolerance)&&Object.hasOwn(joy.tolerance,'reading');
+  const kinds:readonly string[]=[...base,...chemical?['chemical']:[],...reading?['reading']:[]];
+  if(!validReadingPawnFields295({recreation:joy},version))return ['Invalid or future reading need.'];
   if(!record(joy)||!meter(joy.level)||!record(joy.tolerance)||!record(joy.bored)
     ||Object.keys(joy.tolerance).length!==kinds.length||Object.keys(joy.bored).length!==kinds.length
     ||kinds.some(k=>!meter((joy.tolerance as Record<string,unknown>)[k])||typeof (joy.bored as Record<string,unknown>)[k]!=='boolean'))return ['Invalid recreation need.'];
@@ -34,6 +39,7 @@ function recreationNeedErrors(joy:unknown,version:number):string[] {
 /** Passive original owner: no spatial recreation task can be carried off-map.
  * Numeric need rules are the same ones used by the local site validator. */
 export function validateRecreationRecordShape(pawn:Record<string,unknown>,version:number,clock:number):string[] {
+  if(!validReadingPawnFields295(pawn,version))return ['Invalid or future reading policy or need.'];
   if(!Number.isSafeInteger(clock)||clock<0)return ['Invalid recreation clock.'];
   if(version<15)return [];
   const errors=recreationNeedErrors(pawn.recreation,version);
@@ -51,8 +57,18 @@ export function validateRecreation(world: World, version: number): string[] {
     if(!record(joy)||needErrors.includes('Invalid recreation need.'))continue;
     const task=joy.task;
     if(task===null){if(pawn.state==='recreating')errors.push('Recreation state has no activity.');continue;}
+    if(record(task)&&task.activity==='read'){
+      if(!validReadingTask295(task,version)){errors.push('Invalid or future reading activity.');continue;}
+      // Deferred place/return decisions have no reserved service place.
+      if(task.stage==='read'||task.stage==='seat'&&task.phase==='travel'){
+        const cell=Number((task.target as {x:number;z:number}).z)*world.width+Number((task.target as {x:number;z:number}).x);
+        if(claimedServiceCells.has(cell))errors.push('Duplicate recreation service place.');
+        claimedServiceCells.add(cell);
+      }
+      continue;
+    }
     if(!record(task)||Object.keys(task).some(k=>!['activity','target','buildingId','seatId','patientId','phase','elapsed','partyStartedAtCore'].includes(k))
-      ||!['skygaze','horseshoes',...(version>=122?['chess']:[]),...(version>=124?['social-relax','visit-sick']:[]),...(version>=190?['watch-television']:[]),...((version===292||(version===293||version===294))?['party']:[])].includes(task.activity as string)||!['travel','active'].includes(task.phase as string)
+      ||!['skygaze','horseshoes',...(version>=122?['chess']:[]),...(version>=124?['social-relax','visit-sick']:[]),...(version>=190?['watch-television']:[]),...((version===292||(version===293||version===294||version===295))?['party']:[])].includes(task.activity as string)||!['travel','active'].includes(task.phase as string)
       ||!Number.isInteger(task.elapsed)||(task.elapsed as number)<0||(task.elapsed as number)>=(task.activity==='party'?1502:task.activity==='visit-sick'?VISIT_SICK_DURATION:RECREATION_DURATION)
       ||!record(task.target)||!Number.isInteger(task.target.x)||!Number.isInteger(task.target.z)
       ||(task.target.x as number)<0||(task.target.z as number)<0||(task.target.x as number)>=world.width||(task.target.z as number)>=world.height) {errors.push('Invalid recreation activity.');continue;}
@@ -104,5 +120,6 @@ export function validateRecreation(world: World, version: number): string[] {
     }
   }
   if(version>=190&&!validTelevisionTasks(world))errors.push('Invalid television source, seat or activity.');
+  if(!validReadingWorld295(world))errors.push('Invalid reading original, ownership, phase or reservation.');
   return errors;
 }

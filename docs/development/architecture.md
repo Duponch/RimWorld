@@ -1,5 +1,7 @@
 # Architecture et décisions
 
+**V482 locale — schéma 295, non publiée :** [Roman physique acheté et lu](../gameplay/novel-v482.md). Achat, livraison, lecture et conservation du même exemplaire acquis ; 76 nouveaux cas et 119 voisins par reprises, deux anciens rouges reproduits. Parcours natif, recharges exactes, typage et compilation acquis ; coût JS ciblé documenté sans gain FPS global. Les six ensembles restent ouverts.
+
 **V481 locale — schéma 294, non publiée :** [Retombées toxiques locales](../gameplay/toxic-fallout-v481.md). Exposition réelle, toits, clinique, pertes physiques et sauvegardes exactes acquis ; 96 nouveaux cas par reprises, parcours natif et présentation minage/abattage qualifiés. Typage et build acquis. Anciens rouges et limites de coût restent documentés ; aucune promesse de FPS global. Les six ensembles restent ouverts après le lot UI V480 committé et poussé `ea9fa382`.
 
 **V474 publiée — schéma 293 inchangé :** [Régularité du rendu](performance-regularity-v474.md). Validation Resident sans parcours historiques répétés, provenance privée du clone Worker, réutilisation bornée des copies immuables, structures partielles et lectures végétales réduites ; préparation des lots de cargo vides avant usage. Aucun World, flux PRNG, cadence ou réglage graphique modifié. Publié `508fdfd6`/[`befebf5d`](https://befebf5d.elsewhere-cq7.pages.dev/) ; pointe90ms et débit5,8947× en×6 restent ouverts.

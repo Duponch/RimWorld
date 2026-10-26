@@ -1,11 +1,12 @@
+import {copyNovelBook295} from './book-state-295.ts';
 import {mergeFertilizedEgg256} from './animal-egg-state-v256.ts';
 import { copyRot } from './food-preservation.ts';
 import { mergedFoodPoison } from './food-poisoning.ts';
 import type { MaterialPile } from './types.ts';
 
 /** A split keeps the condition of the whole stack; it creates no fresh goods. */
-export function copyPileCondition(pile:Pick<MaterialPile,'rot'|'damage'|'foodPoison'|'egg'|'eggForbidden'|'forbidden'>):Pick<MaterialPile,'rot'|'damage'|'foodPoison'|'egg'|'eggForbidden'|'forbidden'> {
-  return {...(pile.forbidden?{forbidden:true as const}:{}),...(pile.eggForbidden?{eggForbidden:true as const}:{}),...copyRot(pile),...(pile.egg?{egg:{...pile.egg}}:{}),...(pile.damage?{damage:pile.damage}:{}),...(pile.foodPoison?{foodPoison:{...pile.foodPoison}}:{})};
+export function copyPileCondition(pile:Pick<MaterialPile,'rot'|'damage'|'foodPoison'|'egg'|'eggForbidden'|'forbidden'|'book'>):Pick<MaterialPile,'rot'|'damage'|'foodPoison'|'egg'|'eggForbidden'|'forbidden'|'book'> {
+  return {...(pile.forbidden?{forbidden:true as const}:{}),...(pile.eggForbidden?{eggForbidden:true as const}:{}),...copyRot(pile),...(pile.egg?{egg:{...pile.egg}}:{}),...(pile.book?{book:copyNovelBook295(pile.book)}:{}),...(pile.damage||pile.book&&pile.damage===0?{damage:pile.damage}:{}),...(pile.foodPoison?{foodPoison:{...pile.foodPoison}}:{})};
 }
 /** Capture both quantities before the material transfer, including fresh food. */
 export function mergePileContamination(target:MaterialPile,quantity:number,source?:MaterialPile['foodPoison']):void {

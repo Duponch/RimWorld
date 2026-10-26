@@ -14,8 +14,8 @@ import {SnapshotEncoder,SnapshotDecoder} from '../src/bridge/snapshots.ts';
 import {ResidentPresentationAssembler} from '../src/bridge/resident-presentation-assembler.ts';
 import {SCHEMA_VERSION,type Structure,type World} from '../src/sim/types.ts';
 
-function shelf(w:World,x:number,z:number,small=false):Structure {
- const s:Structure={id:w.nextId++,kind:small?'small-shelf':'shelf',x,z,orientation:0,footprint:'standard',material:'wood',shelf:newShelfStorage(Array.from({length:small?1:2},()=>w.nextId++))};w.structures.push(s);return s;
+function shelf(w:World,x:number,z:number,small=false,version=Number(w.schemaVersion)):Structure {
+ const s:Structure={id:w.nextId++,kind:small?'small-shelf':'shelf',x,z,orientation:0,footprint:'standard',material:'wood',shelf:newShelfStorage(Array.from({length:small?1:2},()=>w.nextId++),version)};w.structures.push(s);return s;
 }
 /** Declared linked state at the save boundary. Gameplay tests own creation;
  * this fixture does not claim a paid construction or played link command. */
@@ -24,10 +24,15 @@ function linked(w:World,buildings:readonly Structure[],origin=registeredMapId(w)
  w.linkedStorage286={revision:1,nextId:2,groups:[{id:1,originMapId:origin,name:'Réserves',settings:policy,memberIds:buildings.map(s=>s.id)}]};
  for(const s of buildings){const independent=cloneLinkedShelfPolicy286(s.shelf!.settings);s.shelf!.settings=cloneLinkedShelfPolicy286(policy);s.shelf!.linked286={revision:1,groupId:1,independent};}
 }
-function prepared(){const w=deconstructionCamp(3);initialWorldRegistry(w);const a=shelf(w,17,18),b=shelf(w,17,21,true);b.shelf!.settings.priority=5;linked(w,[a,b]);return {w,a,b};}
+function prepared(version:number=SCHEMA_VERSION){const w=deconstructionCamp(3);initialWorldRegistry(w);const a=shelf(w,17,18,false,version),b=shelf(w,17,21,true,version);b.shelf!.settings.priority=5;linked(w,[a,b]);return {w,a,b};}
 
 test('linked member and registry shapes close versions, descriptors, identity ranges and exact optional policy presence',()=>{
- const {w,a}=prepared(),registry=w.linkedStorage286!;expect(validLinkedStorageRegistryShape286(registry,286,w.nextId)).toBe(true);
+ // The explicit286 shape must be born from that historical constructor.
+ // Current295 shelves retain their prospective Book choice in the other tests.
+ const {w,a}=prepared(286),registry=w.linkedStorage286!;expect(validLinkedStorageRegistryShape286(registry,286,w.nextId)).toBe(true);
+ const current=prepared();expect(current.a.shelf!.settings.filters.book).toBe(true);
+ expect(validLinkedStorageRegistryShape286(current.w.linkedStorage286,SCHEMA_VERSION,current.w.nextId)).toBe(true);
+ expect(validLinkedStorageRegistryShape286(current.w.linkedStorage286,294,current.w.nextId)).toBe(false);
  expect(validLinkedStorageRegistryShape286(registry,285,w.nextId)).toBe(false);expect(validLinkedStorageRegistryShape286(registry,SCHEMA_VERSION,w.nextId)).toBe(true);expect(validLinkedStorageRegistryShape286(registry,SCHEMA_VERSION+1,w.nextId)).toBe(false);
  expect(validLinkedShelfField286(a.shelf,286)).toBe(true);expect(validLinkedShelfField286(a.shelf,285)).toBe(false);
  for(const change of [(r:typeof registry)=>{r.groups[0]!.memberIds.pop();},(r:typeof registry)=>{r.nextId=1;},(r:typeof registry)=>{r.groups[0]!.name='x\n';},(r:typeof registry)=>{r.groups[0]!.memberIds[1]=r.groups[0]!.memberIds[0]!;},(r:typeof registry)=>{Object.assign(r.groups[0]!.settings,{allowFresh:undefined});}]){const bad=structuredClone(registry);change(bad);expect(validLinkedStorageRegistryShape286(bad,286,w.nextId)).toBe(false);}

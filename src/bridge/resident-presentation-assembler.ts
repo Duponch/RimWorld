@@ -1,3 +1,5 @@
+import {validNovelHistoricalTransport295} from '../sim/book-save-295.ts';
+import {validReadingWorld295} from '../sim/book-transport-295.ts';
 import {validPeaceTalksHistorical293,validPeaceTalksBindings293} from '../sim/peace-talks-save-293.ts';
 import {validToxicFalloutTransport294} from '../sim/toxic-fallout-transport-294.ts';
 import {validMiscIncidents} from '../sim/cassandra-misc-save.ts';
@@ -221,6 +223,7 @@ export class ResidentPresentationAssembler {
   // registry contract, without scanning alcohol dossiers in this read model.
   if(!isSchema265OrLater(raw.schemaVersion)?own(raw,'drugPolicies')||own(raw,'nextDrugPolicyId'):
    own(raw,'drugPolicies')!==own(raw,'nextDrugPolicyId')||own(raw,'drugPolicies')&&(raw.drugPolicies===undefined||raw.nextDrugPolicyId===undefined)||!validDrugPolicyRegistry265(raw.drugPolicies,raw.nextDrugPolicyId))return fail();
+  if(!validNovelHistoricalTransport295(raw,raw.schemaVersion))return fail();
   if(!validToxicFalloutTransport294(raw,raw.schemaVersion))return fail();
   if(!validPeaceTalksHistorical293(raw,raw.schemaVersion)||!validPartyHistoricalTransport292(raw,raw.schemaVersion)||!validForestryHistoricalTransport291(raw,raw.schemaVersion)||!validFirefoamHistoricalTransport290(raw,raw.schemaVersion)||!validBillPauseHistoricalTransport289(raw,raw.schemaVersion)||!validAnimalThermalRefugeHistoricalTransport288(raw,raw.schemaVersion)||!validAnimalAreaHistoricalTransport287(raw,raw.schemaVersion)||!validLinkedStorageHistorical286(raw,raw.schemaVersion)||!validCoupleHistoricalTransport285(raw,raw.schemaVersion)||!validTradeRequestHistorical284(raw,raw.schemaVersion)||!validApparelProvenanceHistoricalTransport284(raw,raw.schemaVersion)||!validBillWorkerHistoricalTransport283(raw,raw.schemaVersion))return fail();
   if(!integer(raw.schemaVersion,1,SCHEMA_VERSION)||!integer(raw.tick)||!integer(raw.nextId,1)||!integer(raw.rng,0,0xffffffff)||!Number.isSafeInteger(raw.civilTick)||!projectionReferences(raw,false)
@@ -249,6 +252,7 @@ export class ResidentPresentationAssembler {
   if(unknown)return fail('Unknown resident publication field: '+unknown);
   const checkpoint=packet.kind==='checkpoint',sparseStructures=!checkpoint&&own(packet,'structures');
   const malformed=localShape(packet.world,checkpoint,sparseStructures,!checkpoint&&canReuseResidentAuxiliaryStockpiles(packet,this.current));if(malformed)return fail('Invalid resident shape: '+malformed);
+  if(!validNovelHistoricalTransport295(packet,packet.world.schemaVersion))return fail('Invalid or future resident Novel/reading data');
   if(!validToxicFalloutTransport294(packet,packet.world.schemaVersion))return fail('Invalid or future resident ToxicFallout condition or corpse rot credit');
   if(!validMiscIncidents(packet.world.miscIncidents,packet.world.schemaVersion,packet.world))return fail('Invalid resident Misc incident calendar');
   if(!validPeaceTalksHistorical293(packet,packet.world.schemaVersion)||!validPartyHistoricalTransport292(packet,packet.world.schemaVersion)||!validForestryHistoricalTransport291(packet,packet.world.schemaVersion)||!this.firefoamTransport(packet,packet.world.schemaVersion)||!validBillPauseHistoricalTransport289(packet,packet.world.schemaVersion))return fail('Invalid or future resident bill reserve pause');
@@ -301,6 +305,7 @@ export class ResidentPresentationAssembler {
   if(!validPrisonerSurgeryHistoricalTransport280(packet,next.schemaVersion)||!validPrisonerSurgeryWorld280(next))return fail('Invalid resident captive surgery');
   if(next.structures.some(s=>!validApparelReservesBuilding278(s,next.schemaVersion))||next.packed.some(p=>!validApparelReservesBuilding278(p.building,next.schemaVersion)))return fail('Invalid resident apparel reserve settings');
   if(!validApparelTradeHistoricalTransport279(packet,next.schemaVersion)||!validApparelTradeWorld279(next))return fail('Invalid resident ordinary apparel custody');
+  if(!validReadingWorld295(next))return fail('Invalid resident Novel ownership, reading phase or reservation');
   const calendar=next.planet?.revision===3&&next.campaignMap?.revision===2?next.campaignMap.calendarOrigin:undefined;
   if(!this.chronology(next,packet.epoch,calendar)||acceptExtra&&!acceptExtra(next)||!this.geography.canCommit(geographic))return fail('Rejected resident transaction');
   freezeAdmittedNativeWorldPawnOrder256(next);if(!river.inherited&&next.riverWater)freezeAdmittedRiverWater256(next.riverWater);

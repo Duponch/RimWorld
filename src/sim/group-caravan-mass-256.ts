@@ -1,3 +1,4 @@
+import {validNovelPile295} from './book-save-295.ts';
 import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import {additionalGroupFreightMass258,groupPackedMassGrams258} from './group-freight-mass-258.ts';
 import {SCHEMA_VERSION} from './types.ts';
@@ -17,6 +18,7 @@ export type GroupWithTravelPacked256=AwayGroup&{packed?:PackedFurniture[]};
 /** This new contract alone admits real gathered fruits. It does not broaden
  * mass/possession admission of a historical group or an individual trip. */
 export function groupCaravanUnitMass256(item:MaterialPile['item'],freight:boolean,version:number=256):number|undefined {
+ if(item==='novel')return version===295?500:undefined;
  if(isProstheticItem273(item))return isSchema273OrLater(version)?commercialItemMassGrams(item,version):undefined;
  if(isSmithingApparel267(item))return version>=267?commercialItemMassGrams(item,version):undefined;
  if(item==='hops'||item==='wort'||item==='beer')return version>=265?commercialItemMassGrams(item,version):undefined;
@@ -26,6 +28,7 @@ export function groupCaravanUnitMass256(item:MaterialPile['item'],freight:boolea
 }
 /** Preserve the actual inner payload where mass belongs to a Thing, not ItemId. */
 export function groupCaravanPileMass256(pile:MaterialPile,freight:boolean,version:number):number|undefined {
+ if(pile.item==='novel'||pile.kind==='book'||'book'in pile)return version===295&&pile.item==='novel'&&validNovelPile295(pile,version)?500:undefined;
  return version>=258&&pile.item==='minified-tree'?physicalTravelUnitMass(pile,version):groupCaravanUnitMass256(pile.item,freight,version);
 }
 /** Core-only current human life stage has BodySize1. Pack-animal/child/DLC

@@ -7,6 +7,16 @@ import type { RecreationTask } from './recreation-rules.ts';
 /** Runtime admissions only. Transport keeps its existing physical guards. */
 export function allowedAreaRecreationAllowed(world:World,pawn:Pawn,task:RecreationTask,policy:AllowedAreaPolicy|undefined=captureAllowedArea(world,pawn)):boolean {
   if(!policy)return true;
+  if(task.activity==='read'){
+    if(task.stage==='pickup'){
+      const pile=world.piles.find(p=>p.id===task.bookId);
+      return !!pile&&(pile.owner.type==='ground'?allowedAreaAllows(world,pawn,pile.owner,policy):(pile.owner.type==='pawn'||pile.owner.type==='inventory')&&pile.owner.pawnId===pawn.id);
+    }
+    // Like another admitted work contact, pickup can end just across a border.
+    // The deferred seat decision still must choose an allowed real place.
+    if(task.stage==='seat'&&task.phase==='active')return true;
+    return allowedAreaAllows(world,pawn,task.target,policy);
+  }
   if(task.activity==='party'){
     const active=world.party292?.active;
     return !!active&&task.partyStartedAtCore===active.startedAtCore&&allowedAreaAllows(world,pawn,active.site,policy)&&allowedAreaAllows(world,pawn,task.target,policy);

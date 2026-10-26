@@ -29,6 +29,7 @@ export function serviceCell(pawn: Pawn,world?:Pick<World,'structures'>): Cell | 
   if(pawn.research)return pawn.research.spot;
   if(pawn.feed)return pawn.feed.spot;
   if(pawn.tend)return pawn.tend.spot;
+  if(pawn.recreation?.task?.activity==='read'&&pawn.recreation.task.phase==='active'&&pawn.recreation.task.stage!=='read')return null;
   if (pawn.recreation?.task && pawn.recreation.task.activity !== 'skygaze') return pawn.recreation.task.target;
   if (pawn.cooking) return pawn.cooking.spot;
   if (pawn.need?.kind === 'eat') return pawn.need.dining?.target ?? null;

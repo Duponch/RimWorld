@@ -1,4 +1,5 @@
 import {partyMoodThoughts292,expirePartyMemories292} from './party-memories-292.ts';
+import {readingActive295} from './reading-state-295.ts';
 import {memoryExpiry271,memoryReadTick271} from './suspended-memory-271.ts';
 import {hiveDefeatThoughts256} from './cave-hive-memories-256.ts';
 import {alcoholThoughts265} from './alcohol-rules-265.ts';
@@ -46,6 +47,7 @@ const beauty=[situation('hideous-environment','Environnement affreux',-15,'Beaut
 const leisure=[situation('recreation-starved','Privé de loisirs',-20,'Loisirs sous 1 %.'),situation('recreation-deprived','Manque important de loisirs',-10,'Loisirs sous 15 %.'),situation('recreation-low','Manque de loisirs',-5,'Loisirs sous 30 %.'),situation('recreation-high','Loisirs satisfaisants',5,'Loisirs d’au moins 70 %.'),situation('recreation-full','Loisirs pleinement satisfaits',10,'Loisirs d’au moins 85 %.')];
 const pains=[situation('minor-pain','Douleur légère',-5,'Douleur présente, sous 15 %.'),situation('serious-pain','Douleur importante',-10,'Douleur d’au moins 15 %.'),situation('intense-pain','Douleur intense',-15,'Douleur d’au moins 40 %.'),situation('extreme-pain','Douleur extrême',-20,'Douleur d’au moins 80 %.')];
 const sick=situation('sick','Malade',-5,'Maladie active ; cette pensée disparaît avec la maladie.');
+const readingPassion295=[situation('reading-passion','Passion pour la lecture',4,'Une passion intellectuelle est satisfaite pendant la lecture effective.'),situation('reading-burning-passion','Passion ardente pour la lecture',6,'Une passion intellectuelle ardente est satisfaite pendant la lecture effective.')];
 const toxicFallout294=situation('toxic-fallout','Retombées toxiques',-5,'Des retombées toxiques sont présentes au-dessus de cette position non couverte. Cette pensée disparaît sous un toit ou à la fin de la condition ; elle ne mesure pas une dose clinique.');
 const apparel=[situation('ratty-apparel','Vêtements abîmés',-3,'Au moins une pièce portée a moins de 50 % de ses PV.'),situation('tattered-apparel','Vêtements en lambeaux',-5,'Au moins une pièce portée a moins de 20 % de ses PV.')];
 const expectationThoughts=new Map(COLONY_EXPECTATIONS.map(e=>[e.id,situation(`expectations-${e.id}`,e.label,e.moodOffset,'Attentes liées au patrimoine évalué de la colonie ; les valeurs inconnues restent exclues.')]));
@@ -118,6 +120,7 @@ export function personalMoodThoughts(pawn:Pawn,c:PersonalMoodContext):readonly M
   if(c.lost)thoughts.push(...c.lost);
   if(c.deathSituation)thoughts.push(c.deathSituation);
   if(c.toxicFallout294)thoughts.push(c.toxicFallout294);
+  if(readingActive295(pawn)&&pawn.skills.intellectual?.passion)thoughts.push(readingPassion295[pawn.skills.intellectual.passion-1]!);
   if(pawn.familyBereavement)thoughts.push(...familyBereavementThoughtsAt(pawn,c.tick,c.relationPeople??c.people));
   if(pawn.romanceMemories)thoughts.push(...romanceMoodThoughtsAt(pawn,c.tick,c.relationPeople??c.people));
   if(pawn.partyMemories292)thoughts.push(...partyMoodThoughts292(pawn,c.tick));

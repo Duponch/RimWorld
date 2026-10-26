@@ -38,12 +38,12 @@ function rootFieldCurrent(root:CampaignState,key:string):()=>boolean{
  * group, no terrain is copied, and no physical cargo is moved by this plan. */
 function prepare(input:CampaignState,owners:LinkedStorageOwners286,change:(draft:Draft)=>string|undefined,authority:()=>boolean):LinkedStoragePlanResult286{
  const root=owners.root;
- if(!isSchema286OrLater(root.schemaVersion)||!owners.valid||!validLinkedStorageWorld286(root,owners)||!owners.members.every(o=>validLinkedShelfPolicy286(o.building.shelf?.settings)))return refused('Propriétaires des réglages liés invalides.');
+ if(!isSchema286OrLater(root.schemaVersion)||!owners.valid||!validLinkedStorageWorld286(root,owners)||!owners.members.every(o=>validLinkedShelfPolicy286(o.building.shelf?.settings,root.schemaVersion)))return refused('Propriétaires des réglages liés invalides.');
  const original=root.linkedStorage286,registryCurrent=rootFieldCurrent(root,'linkedStorage286');
  const draft=new Draft(owners,original);const reason=change(draft);if(reason)return refused(reason);
  const writes=draft.writes();
  const registryWrite=writes.find(w=>w.object===root&&w.key==='linkedStorage286');
- if(registryWrite&&!validLinkedStorageRegistryShape286(registryWrite.value,286,root.nextId))return refused('Limites du registre de réglages atteintes.');
+ if(registryWrite&&!validLinkedStorageRegistryShape286(registryWrite.value,root.schemaVersion,root.nextId))return refused('Limites du registre de réglages atteintes.');
  if(!removalWritesMutable259(writes)||writes.some(w=>{const d=Object.getOwnPropertyDescriptor(w.object,w.key);return !!d&&d.enumerable!==true;}))return refused('Un réglage concerné ne peut pas être modifié.');
  // Seal original membership, exact policy leaves/descriptors, and the private
  // desired values too: mutating a returned write must never bless a new plan.
@@ -113,7 +113,7 @@ class Draft {
  }
  patch(owner:LinkedStorageOwner286,settings:StorageSettings):string|undefined{
   const s=owner.building,link=s.shelf!.linked286,g=link?this.groups.get(link.groupId):undefined;
-  const policy=patchLinkedShelfPolicy286(g?.settings??s.shelf!.settings,settings);if(!policy)return 'Politique de stockage invalide.';
+  const policy=patchLinkedShelfPolicy286(g?.settings??s.shelf!.settings,settings,this.owners.root.schemaVersion);if(!policy)return 'Politique de stockage invalide.';
   if(sameLinkedShelfPolicy286(g?.settings??s.shelf!.settings,policy))return;
   if(!g)this.setPolicy(owner,policy);
   else{this.groups.set(g.id,{...g,settings:cloneLinkedShelfPolicy286(policy)});this.registryChanged=true;for(const id of g.memberIds)this.setPolicy(this.owners.byId.get(id)!,policy);}

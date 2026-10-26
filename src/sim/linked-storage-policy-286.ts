@@ -1,6 +1,8 @@
 import {validStorageSettings} from './designation.ts';
 import {ITEM_DEFINITIONS} from './items.ts';
-import {validStorageItems} from './storage-filters.ts';
+import {validStorageItems,validNovelStorageFilters295} from './storage-filters.ts';
+import {isSchema286OrLater} from './schema-compatibility-257.ts';
+import {SCHEMA_VERSION} from './types.ts';
 import {validStorageConditions} from './storage-condition.ts';
 import {patchStockpilePolicy} from './stockpile-zones.ts';
 import type {ShelfStorageSettings} from './shelf-storage.ts';
@@ -14,11 +16,11 @@ function dataRecord(value:unknown,allowUndefined=false,depth=0):value is Record<
  if(depth>2||!value||typeof value!=='object'||Array.isArray(value)||Object.getPrototypeOf(value)!==Object.prototype)return false;
  return Reflect.ownKeys(value).every(key=>{const d=Object.getOwnPropertyDescriptor(value,key)!;return typeof key==='string'&&d.enumerable===true&&Object.hasOwn(d,'value')&&(d.value===undefined?allowUndefined:d.value===null||typeof d.value!=='object'||dataRecord(d.value,false,depth+1));});
 }
-export function validLinkedShelfPolicy286(value:unknown):value is ShelfStorageSettings{
- return dataRecord(value)&&['filters','priority','capacity'].every(k=>Object.hasOwn(value,k))&&Reflect.ownKeys(value).every(k=>typeof k==='string'&&keys.includes(k))&&dataRecord(value.filters)
+export function validLinkedShelfPolicy286(value:unknown,version:number=SCHEMA_VERSION):value is ShelfStorageSettings{
+ return isSchema286OrLater(version)&&dataRecord(value)&&['filters','priority','capacity'].every(k=>Object.hasOwn(value,k))&&Reflect.ownKeys(value).every(k=>typeof k==='string'&&keys.includes(k))&&dataRecord(value.filters)&&validNovelStorageFilters295(value.filters,version)
   &&Object.entries(value.filters).every(([key,v])=>filterKeys.has(key)&&typeof v==='boolean')
   &&Number.isInteger(value.priority)&&Number(value.priority)>=1&&Number(value.priority)<=5&&value.capacity===500
-  &&validStorageItems(value.items,286)&&validStorageConditions(value,286);
+  &&validStorageItems(value.items,version===295?295:286)&&validStorageConditions(value,286);
 }
 /** No effective/hidden/caller record shares a mutable policy leaf. */
 export function cloneLinkedShelfPolicy286(value:ShelfStorageSettings):ShelfStorageSettings{
@@ -32,10 +34,10 @@ function sameData(a:object,b:object,depth=0):boolean{
 export function sameLinkedShelfPolicy286(a:ShelfStorageSettings,b:ShelfStorageSettings):boolean{return sameData(a,b);}
 /** Same partial-patch contract as ordinary shelves, including explicit clears.
  * Capacity remains one historical policy field, never a second footprint. */
-export function patchLinkedShelfPolicy286(base:ShelfStorageSettings,patch:StorageSettings):ShelfStorageSettings|undefined{
- if(!validLinkedShelfPolicy286(base)||!dataRecord(patch,true)||Reflect.ownKeys(patch).some(k=>typeof k!=='string'||!keys.includes(k))||!validStorageSettings(patch,286))return;
+export function patchLinkedShelfPolicy286(base:ShelfStorageSettings,patch:StorageSettings,version:number=SCHEMA_VERSION):ShelfStorageSettings|undefined{
+ if(!validLinkedShelfPolicy286(base,version)||!dataRecord(patch,true)||Reflect.ownKeys(patch).some(k=>typeof k!=='string'||!keys.includes(k))||!validStorageSettings(patch,version))return;
  const next={...cloneLinkedShelfPolicy286(base),id:0,x:0,z:0};
  patchStockpilePolicy(next,patch);next.capacity=500;
  const {id:_id,x:_x,z:_z,...policy}=next;
- return validLinkedShelfPolicy286(policy)?policy:undefined;
+ return validLinkedShelfPolicy286(policy,version)?policy:undefined;
 }

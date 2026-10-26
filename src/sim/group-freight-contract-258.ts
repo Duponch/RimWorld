@@ -14,9 +14,11 @@ export function groupFreightUnitMass258(pile:MaterialPile,version:number):number
  return groupCaravanPileMass256(pile,true,version);
 }
 export function regularGroupFreight258(pile:MaterialPile,version:number):boolean {
+ if(pile.item==='novel'||pile.kind==='book'||'book'in pile)return groupCaravanPileMass256(pile,true,version)!==undefined;
  return regularGroupFreightItem258(pile.item,version);
 }
 export function regularGroupFreightItem258(item:ItemId,version:number):boolean {
+ if(item==='novel')return version===295;
  if(isProstheticItem273(item))return isSchema273OrLater(version)&&groupCaravanUnitMass256(item,true,version)!==undefined;
  if(item==='hops'||item==='wort'||item==='beer')return version>=265&&groupCaravanUnitMass256(item,true,version)!==undefined;
  return version>=258&&['medicine','component','advanced-component','weapon','apparel','blocks','gold','plasteel','uranium','jade','chemfuel','neutroamine','textile','wood','steel','chunk'].includes(ITEM_DEFINITIONS[item].kind)&&groupCaravanUnitMass256(item,true,version)!==undefined;
@@ -31,7 +33,7 @@ export function validLoadedGroupFreight258(g:PreparingGroup,piles:ReadonlyMap<nu
   const line=g.manifest[i]!;if(!regularGroupFreightItem258(line.item,version))continue;
   if(line.carriedPileId===undefined||seen.has(line.carriedPileId))return false;seen.add(line.carriedPileId);
   const pile=piles.get(line.carriedPileId),holder=line.deliveredToAnimal?line.animalCarrierId:line.carrierId;
-  if(!pile||pile.item!==line.item||pile.quantity!==line.quantity||pile.owner.type!=='inventory'||pile.owner.pawnId!==holder)return false;
+  if(!pile||pile.item!==line.item||pile.quantity!==line.quantity||pile.owner.type!=='inventory'||pile.owner.pawnId!==holder||line.item==='novel'&&!regularGroupFreight258(pile,version))return false;
  }
  return true;
 }

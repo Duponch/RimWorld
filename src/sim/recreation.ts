@@ -1,4 +1,8 @@
 import { allowedAreaRecreationAllowed } from './allowed-area-services.ts';
+import {readingAllowed295,readingAutoNeeds295} from './reading-state-295.ts';
+import {processReading295,selectAutomaticReading295} from './reading-runtime-295.ts';
+import {readingSourceAllowed295} from './reading-space-295.ts';
+import {interruptWork} from './interrupted-cargo.ts';
 import { allowedAreaAllows,captureAllowedArea } from './allowed-area-state.ts';
 import { assignmentAt } from './schedule.ts';
 import { gainRecreation, RECREATION_GAIN, RECREATION_DURATION, VISIT_SICK_DURATION, recreationKind, recreationRandom, type RecreationActivity, type RecreationTask } from './recreation-rules.ts';
@@ -18,7 +22,7 @@ import { cellIndex, routeToCell } from './pathfinding.ts';
 import type { NeedContext } from './needs.ts';
 import type { Pawn, World } from './types.ts';
 
-const labels: Record<RecreationActivity,string> = {horseshoes: 'jouer aux fers à cheval', skygaze: 'observer le ciel', chess:'jouer aux échecs','social-relax':'se détendre ensemble','visit-sick':'rendre visite à un malade','watch-television':'regarder la télévision',party:'participer à la fête'};
+const labels: Record<RecreationActivity,string> = {horseshoes: 'jouer aux fers à cheval', skygaze: 'observer le ciel', chess:'jouer aux échecs','social-relax':'se détendre ensemble','visit-sick':'rendre visite à un malade','watch-television':'regarder la télévision',party:'participer à la fête',read:'lire un roman'};
 const urgentDoctorCall=(world:World,pawn:Pawn):boolean=>urgentWorkEnabled(pawn,'doctor')&&world.pawns.some(p=>p!==pawn&&allowedAreaAllows(world,pawn,p)&&lyingPatient(p)&&urgentTreatment(p));
 /** Search shares the existing bounded navigation budget. No gain in transit,
  * no worker/cargo preemption just because the timetable recommends recreation. */
@@ -26,6 +30,10 @@ export function processRecreation(world: World, pawn: Pawn, context: NeedContext
   // Party has its own physical presence watermark and outcome; personal joy
   // saturation and the ordinary 400-tick limit must never finish it.
   if(pawn.recreation.task?.activity==='party')return false;
+  if(pawn.recreation.task?.activity==='read'){
+    if(urgentDoctorCall(world,pawn)){interruptWork(world,pawn,true);return false;}
+    return processReading295(world,pawn,context);
+  }
   const joy=pawn.recreation, assignment=assignmentAt(world,pawn);
   if (joy.task) {
     if (assignment==='work' || urgentMedicalTask(pawn) || urgentDoctorCall(world,pawn)
@@ -74,8 +82,10 @@ export function processRecreation(world: World, pawn: Pawn, context: NeedContext
     const kind=recreationKind(activity);
     if(!joy.bored[kind]&&(activity!=='horseshoes'||(pins??=availablePins(world,pawn.id)).length)&&(activity!=='chess'||(chessTables??=availableChessTables(world,pawn.id)).length&&pawnBody(pawn).capacities.manipulation>0)
       &&(activity!=='social-relax'||gathers.length)&&(activity!=='visit-sick'||patients.length))
-      choices.push({activity,weight:(activity==='horseshoes'?2.5:activity==='chess'?2:activity==='social-relax'?4:activity==='visit-sick'?3:activity==='watch-television'?TELEVISION_WEIGHT:1)*Math.max(.001,(1-joy.tolerance[kind]/100)**5)});
+      choices.push({activity,weight:(activity==='horseshoes'?2.5:activity==='chess'?2:activity==='social-relax'?4:activity==='visit-sick'?3:activity==='watch-television'?TELEVISION_WEIGHT:1)*Math.max(.001,(1-(joy.tolerance[kind]??0)/100)**5)});
   }
+  if(world.schemaVersion===295&&readingAllowed295(pawn)&&readingAutoNeeds295(pawn)&&!joy.bored.reading&&world.piles.some(p=>p.kind==='book'&&readingSourceAllowed295(world,pawn,p)))
+    choices.push({activity:'read',weight:3*Math.max(.001,(1-(joy.tolerance.reading??0)/100)**5)});
   if(!choices.length){pawn.needCooldown=20;return false;}
   const reserved=reservedServiceCells(world,pawn.id);
   let space:RecreationSpace|undefined;
@@ -84,6 +94,9 @@ export function processRecreation(world: World, pawn: Pawn, context: NeedContext
     let draw=recreationRandom(world)*choices.reduce((sum,c)=>sum+c.weight,0), index=0;
     for(;index<choices.length-1;index++){draw-=choices[index]!.weight;if(draw<0)break;}
     const {activity}=choices.splice(index,1)[0]!;
+    if(activity==='read'){
+      const selected=selectAutomaticReading295(world,pawn,context);if(selected!=='unavailable')return selected;continue;
+    }
     const candidates: RecreationTask[]=[];
     if(activity==='horseshoes') {
       for(const pin of pins??=availablePins(world,pawn.id))for(const target of horseshoeCells(pin))

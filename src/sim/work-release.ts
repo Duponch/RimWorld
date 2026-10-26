@@ -179,7 +179,7 @@ export function commitDrop(world:World,pile:MaterialPile,origin:Cell,plan?:Reado
 }
 export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan,ownerLoss=false):boolean {
   // Refuse an immutable collective issue before any furniture/cargo drop.
-  if((Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||Number(world.schemaVersion)===294))&&(world.party292?.active?.members.some(m=>m.pawnId===pawn.id)||ownerLoss&&world.party292?.active?.organizerId===pawn.id)){try{if(!preparePartyRelease292(world,new Set([pawn.id]),{death:!!pawn.health?.death,finish:ownerLoss&&world.party292?.active?.organizerId===pawn.id}).current())return false;}catch{return false;}}
+  if((Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||Number(world.schemaVersion)===294||Number(world.schemaVersion)===295))&&(world.party292?.active?.members.some(m=>m.pawnId===pawn.id)||ownerLoss&&world.party292?.active?.organizerId===pawn.id)){try{if(!preparePartyRelease292(world,new Set([pawn.id]),{death:!!pawn.health?.death,finish:ownerLoss&&world.party292?.active?.organizerId===pawn.id}).current())return false;}catch{return false;}}
   if(!releaseFurniture(world,pawn,plan))return false;
   const held=world.piles.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
   if(held&&!commitDrop(world,held,pawn,plan))return false;
@@ -190,7 +190,7 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan,ownerLoss=false
 /** Release task/service claims independently of ownership. Only involuntary or tactical
  * interruption may use this while an object is still carried. */
 export function releaseAssignments(world:World,pawn:Pawn,despawning=false,ownerLoss=despawning):void {
-  if((Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||Number(world.schemaVersion)===294))&&(pawn.recreation.task?.activity==='party'||world.party292?.active?.members.some(m=>m.pawnId===pawn.id)||ownerLoss&&world.party292?.active?.organizerId===pawn.id))preparePartyRelease292(world,new Set([pawn.id]),{death:!!pawn.health?.death,finish:ownerLoss&&world.party292?.active?.organizerId===pawn.id}).commit();
+  if((Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||Number(world.schemaVersion)===294||Number(world.schemaVersion)===295))&&(pawn.recreation.task?.activity==='party'||world.party292?.active?.members.some(m=>m.pawnId===pawn.id)||ownerLoss&&world.party292?.active?.organizerId===pawn.id))preparePartyRelease292(world,new Set([pawn.id]),{death:!!pawn.health?.death,finish:ownerLoss&&world.party292?.active?.organizerId===pawn.id}).commit();
   if(isSchema285OrLater(world.schemaVersion)&&pawn.coupleTask285)prepareCoupleRelease285(world,new Set([pawn.id])).commit();
   releaseAllowedAreaReturn(pawn);
   releaseAnimalRescue(world,pawn);
@@ -200,6 +200,7 @@ export function releaseAssignments(world:World,pawn:Pawn,despawning=false,ownerL
   }
   finishRoomRest(world,pawn);
   if((pawn.recreation.task?.activity==='horseshoes'||pawn.recreation.task?.activity==='chess'||pawn.recreation.task?.activity==='watch-television')&&pawn.recreation.task.phase==='active'&&pawn.recreation.task.elapsed>0)rememberRoomUse(world,pawn,'recreation');
+  if(pawn.recreation.task?.activity==='read'&&pawn.recreation.task.stage==='read'&&pawn.recreation.task.elapsed>0)rememberRoomUse(world,pawn,'recreation');
   cancelAutomaticCombat(pawn);cancelHunting(pawn);
   if(!despawning&&pawn.need?.kind==='sleep'&&pawn.need.medical&&pawn.health&&!pawn.health.death&&medicalCivilTick271(pawn.health)<world.tick)updatePawnHealth(world,pawn);
   releaseSurgeryState(world,pawn);

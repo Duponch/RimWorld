@@ -1,3 +1,4 @@
+import {NOVEL_MAX_HIT_POINTS_295} from './book-state-295.ts';
 import {SHIP_CASKET_CONTENT_277} from './ship-casket-content-277.ts';
 import {SHIP_BEAM_CONTENT_276,SHIP_ENGINE_CONTENT_276} from './ship-part-content-276.ts';
 import {isSchema273OrLater} from './schema-compatibility-257.ts';
@@ -65,7 +66,8 @@ export const structureFlammability=(s:Pick<Structure,'kind'|'material'>)=>isAnci
 export const structureLeavesResources=(s:Pick<Structure,'kind'>)=>isAncientMonumentKind256(s.kind)|| (BUILDINGS[s.kind]?.[2]??false);
 export const resourceMaxHp=(r:Pick<Resource,'kind'|'species'>)=>floraDefinition(r)?.hitPoints??(r.kind==='healroot'?60:r.kind==='tree'?200:r.kind==='berries'?120:r.kind==='corn'?150:r.kind==='rock'?0:85);
 export const resourceFlammability=(r:Pick<Resource,'kind'|'species'>)=>floraDefinition(r)?.flammability??(r.kind==='rock'?0:r.kind==='tree'?.8:r.kind==='haygrass'?1.3:1);
-export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=isProstheticItem273(p.item)?273:isSmithingApparel267(p.item)?267:193):number {
+export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=p.item==='novel'?295:isProstheticItem273(p.item)?273:isSmithingApparel267(p.item)?267:193):number {
+  if(p.item==='novel')return version>=295&&p.kind==='book'?NOVEL_MAX_HIT_POINTS_295:0;
   if(isProstheticItem273(p.item))return isSchema273OrLater(version)&&p.kind==='prosthesis'?50:0;
   if(isSmithingApparel267(p.item))return version>=267&&p.kind==='apparel'?APPAREL[p.item].hitPoints:0;
   if(version<256&&(p.item==='flak-pants'||p.item==='plasteel-flak-helmet'))return 0;
@@ -83,6 +85,7 @@ export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=isProstheti
   return p.item==='wood'?150:p.item==='cloth'?80:p.item==='light-leather'?60:p.item==='component'?70:0;
 }
 export function pileFlammability(p:Pick<MaterialPile,'kind'|'item'>):number {
+  if(p.item==='novel'&&p.kind==='book')return 1;
   if(isProstheticItem273(p.item))return .7;
   if(isSpearItem272(p.item))return SPEAR_DEFINITIONS_272[spearMaterial272(p.item)].flammability;
   if(isLongswordItem270(p.item))return LONGSWORD_DEFINITIONS_270[longswordMaterial270(p.item)].flammability;

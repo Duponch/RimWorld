@@ -27,12 +27,12 @@ export function validStorageConditions(value:unknown,version:number=SCHEMA_VERSI
 type Subject=MaterialPile|Structure;
 const isPile=(s:Subject):s is MaterialPile=>'item' in s;
 function subjectQuality(s:Subject):WeaponQuality|undefined {
-  return isPile(s)?s.apparel?.quality??s.weapon?.quality:s.quality;
+  return isPile(s)?s.book?.quality??s.apparel?.quality??s.weapon?.quality:s.quality;
 }
 /** Core GenMath.RoundedHundredth uses Mathf.Round (ties to even), with
  * single-precision arithmetic at the division and multiplication boundaries. */
 function hitPointsPercent(s:Subject):number|undefined {
-  const max=isPile(s)?pileMaxHp(s,s.kind==='plant'?235:193):structureMaxHp(s);
+  const max=isPile(s)?pileMaxHp(s,s.item==='novel'?295:s.kind==='plant'?235:193):structureMaxHp(s);
   if(max<=0)return;
   const hp=max-(isPile(s)?pileDamage(s):s.damage??0);
   const ratio=Math.max(0,Math.min(1,Math.fround(hp/max))),scaled=Math.fround(ratio*100);

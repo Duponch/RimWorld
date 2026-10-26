@@ -9,7 +9,7 @@ import { tradeGoods, quoteTrade } from '../sim/trade-goods';
 import { orbitalAtContact, orbitalTradeGoods, orbitalTradeReason, quoteOrbitalTrade } from '../sim/orbital-rules';
 import { tradeImprovement } from '../sim/trade-negotiator';
 import { ITEM_DEFINITIONS } from '../sim/items';
-import { weaponLabel } from '../sim/equipment-rules';
+import { weaponLabel,QUALITY_LABELS } from '../sim/equipment-rules';
 import { apparelDefinition, apparelLabel } from '../sim/apparel-rules';
 import { isSculptureMaterial, sculptureMaxHitPoints } from '../sim/furniture-stats';
 
@@ -36,7 +36,7 @@ const prefix = 'native-local-trade-';
 const message = (cause: unknown) => cause instanceof Error ? cause.message : String(cause);
 const money = (amount: number) => amount.toLocaleString('fr-FR', { maximumFractionDigits: 2 });
 function pileLabel(pile: MaterialPile): string {
-  return pile.weapon ? weaponLabel(pile) : pile.apparel ? `${apparelLabel(pile)} · ${pile.apparel.hitPoints}/${apparelDefinition(pile).hitPoints} PV` : ITEM_DEFINITIONS[pile.item].label;
+  return pile.book ? `${pile.book.title} · ${QUALITY_LABELS[pile.book.quality]} · ${60-(pile.damage??0)}/60 PV` : pile.weapon ? weaponLabel(pile) : pile.apparel ? `${apparelLabel(pile)} · ${pile.apparel.hitPoints}/${apparelDefinition(pile).hitPoints} PV` : ITEM_DEFINITIONS[pile.item].label;
 }
 
 /** Local contact and orbital trading retain their original real owners,

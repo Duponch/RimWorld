@@ -1,3 +1,4 @@
+import {isNovelBook295,NOVEL_MAX_HIT_POINTS_295} from './book-state-295.ts';
 import {isProstheticItem273} from './prosthetic-content-273.ts';
 import {isNewApparelTrade279} from './apparel-trade-279.ts';
 import { WEAPON_QUALITIES } from './equipment-rules.ts';
@@ -22,14 +23,17 @@ export function tradeHealthFactor(fraction:number):number {
   if(hp<.9)return .5+(hp-.6)*(5/3);
   return 1;
 }
-export function pileMarketValue(pile:Pick<MaterialPile,'item'|'weapon'|'apparel'|'damage'>):number|undefined {
+export function pileMarketValue(pile:Pick<MaterialPile,'item'|'weapon'|'apparel'|'damage'|'book'>):number|undefined {
   const entry=tradeCatalogueEntry(pile.item);if(!entry)return undefined;
   let value=entry.baseMarketValue;
   if(entry.hasQuality){
-    const state=pile.weapon??pile.apparel;if(!state)return undefined;
-    const index=WEAPON_QUALITIES.indexOf(state.quality);if(index<0||!Number.isFinite(state.hitPoints))return undefined;
+    if(pile.item==='novel'&&(!isNovelBook295(pile.book)||pile.weapon!==undefined||pile.apparel!==undefined||pile.damage!==undefined&&(!Number.isInteger(pile.damage)||pile.damage<0||pile.damage>=NOVEL_MAX_HIT_POINTS_295)))return undefined;
+    const state=pile.weapon??pile.apparel,quality=pile.item==='novel'?pile.book?.quality:state?.quality;
+    const hitPoints=pile.item==='novel'?NOVEL_MAX_HIT_POINTS_295-(pile.damage??0):state?.hitPoints;
+    if(quality===undefined||hitPoints===undefined||!Number.isFinite(hitPoints))return undefined;
+    const index=WEAPON_QUALITIES.indexOf(quality);if(index<0)return undefined;
     value+=Math.min(value*(qualityFactors[index]!-1),qualityGains[index]!);
-    if(entry.healthAffectsPrice)value*=tradeHealthFactor(state.hitPoints/entry.maxHitPoints);
+    if(entry.healthAffectsPrice)value*=tradeHealthFactor(hitPoints/entry.maxHitPoints);
   }
   if(isProstheticItem273(pile.item)&&entry.healthAffectsPrice)value*=tradeHealthFactor((entry.maxHitPoints-(pile.damage??0))/entry.maxHitPoints);
   return value>200?roundTradeSilver(value/5)*5:value;
@@ -42,11 +46,11 @@ export function tradeUnitPrice(pile:MaterialPile,direction:TradeDirection,improv
 }
 /** Settlement's two percentage points follow the Pawn stat clamp. This does
  * not broaden the historical visitor's admissible improvement range. */
-export function settlementTradeUnitPrice(pile:Pick<MaterialPile,'item'|'weapon'|'apparel'|'damage'>,direction:TradeDirection,negotiatorImprovement:number,priceLoss=0):number|undefined {
+export function settlementTradeUnitPrice(pile:Pick<MaterialPile,'item'|'weapon'|'apparel'|'damage'|'book'>,direction:TradeDirection,negotiatorImprovement:number,priceLoss=0):number|undefined {
   if(!Number.isFinite(negotiatorImprovement)||negotiatorImprovement<0||negotiatorImprovement>.395)return undefined;
   return priceWithImprovement(pile,direction,negotiatorImprovement+.02,priceLoss);
 }
-function priceWithImprovement(pile:Pick<MaterialPile,'item'|'weapon'|'apparel'|'damage'>,direction:TradeDirection,improvement:number,priceLoss:number):number|undefined {
+function priceWithImprovement(pile:Pick<MaterialPile,'item'|'weapon'|'apparel'|'damage'|'book'>,direction:TradeDirection,improvement:number,priceLoss:number):number|undefined {
   const marketValue=pileMarketValue(pile),entry=tradeCatalogueEntry(pile.item);
   if(marketValue===undefined||!entry||!Number.isFinite(priceLoss)||priceLoss<0||priceLoss>1)return undefined;
   if(pile.item==='silver')return 1;

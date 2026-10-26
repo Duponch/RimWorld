@@ -1,3 +1,5 @@
+import {validNovelPile295,validNovelHistoricalTransport295} from '../sim/book-save-295.ts';
+import {validReadingWorld295} from '../sim/book-transport-295.ts';
 import {validPeaceTalksHistorical293,validPeaceTalksBindings293} from '../sim/peace-talks-save-293.ts';
 import {validPartyHistoricalTransport292,validPartyWorld292} from '../sim/party-save-292.ts';
 import {validForestryPolicies291,validForestryHistoricalTransport291} from '../sim/forestry-save-291.ts';
@@ -755,6 +757,7 @@ function prepareStructureChanges(previous:World,world:Pick<World,'nextId'|'width
 function validPile(pile:MaterialPile,world:World|DynamicWorld,deferAnimalHolder=false):boolean {
   if(!pile||typeof pile!=='object'||Array.isArray(pile)||!Number.isSafeInteger(pile.id)||pile.id<1||pile.id>=world.nextId
     ||typeof pile.item!=='string'||!Object.hasOwn(ITEM_DEFINITIONS,pile.item))return false;
+  if(!validNovelPile295(pile,world.schemaVersion))return false;
   if(!validProstheticWorkShape273(pile as unknown as Record<string,unknown>,world.schemaVersion))return false;
   if(!validSmithingWorkShape267(pile as unknown as Record<string,unknown>,world.schemaVersion))return false;
   if(world.schemaVersion<265&&['hops','wort','beer'].includes(pile.item))return false;
@@ -786,12 +789,12 @@ function validPile(pile:MaterialPile,world:World|DynamicWorld,deferAnimalHolder=
     if(world.schemaVersion<89||!Number.isSafeInteger(owner.graveId)||owner.graveId<1||!world.structures.some(s=>s.id===owner.graveId&&(s.kind==='grave'||world.schemaVersion>=256&&s.kind==='sarcophagus'))
       ||Object.keys(owner).some(key=>!['type','graveId'].includes(key)))return false;
   }else return false;
-  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','mechCorpse','damage','unfinished','gunWork','flakWork','componentWork','artWork','smithingWork','prostheticWork273','apparel','weapon','haulRequested','innerResource','plantPack','egg','eggForbidden','forbidden'].includes(key)))return false;
+  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','mechCorpse','damage','unfinished','gunWork','flakWork','componentWork','artWork','smithingWork','prostheticWork273','apparel','weapon','haulRequested','innerResource','plantPack','egg','eggForbidden','forbidden',...(Number(world.schemaVersion)===295?['book']:[])].includes(key)))return false;
   if(!validMaterialPermission256(pile,world.schemaVersion))return false;
   if(!validEggPile256(pile,world.schemaVersion,heldDuckInventoryClock256(world,pile,world.schemaVersion,world.tick),world.nextId)||world.schemaVersion<256&&isFutureEcologyItem256(pile.item))return false;
   if(world.schemaVersion<194&&Object.hasOwn(pile,'mechCorpse'))return false;
   if(pile.haulRequested!==undefined&&(world.schemaVersion<28||pile.kind!=='chunk'||pile.haulRequested!==true))return false;
-  if(pile.damage!==undefined&&(world.schemaVersion<87||!Number.isSafeInteger(pile.damage)||pile.damage<1||pile.damage>=pileMaxHp(pile,world.schemaVersion)))return false;
+  if(pile.damage!==undefined&&(world.schemaVersion<87||!Number.isSafeInteger(pile.damage)||pile.damage<(pile.kind==='book'?0:1)||pile.damage>=pileMaxHp(pile,world.schemaVersion)))return false;
   const rot=pile.rot;
   if(!validToxicFalloutRotCredit294(rot,world.schemaVersion,pile.kind==='corpse'))return false;
   if(rot!==undefined&&(!rot||typeof rot!=='object'||!Number.isFinite(rot.progress)||rot.progress<0
@@ -1132,6 +1135,7 @@ export class SnapshotDecoder {
     const refuse=()=>({status:'resync' as const,reason:'Campagne sans carte illisible.'});
     if(!Number.isSafeInteger(packet.epoch)||packet.epoch<1||!Number.isSafeInteger(packet.revision)||packet.revision<1||!Number.isFinite(packet.stepMs)||packet.stepMs<0||![0,1,3,6].includes(packet.speed))return refuse();
     if(packet.epoch<this.epoch||packet.epoch===this.epoch&&packet.revision<=this.revision)return {status:'stale'};
+    if(!validNovelHistoricalTransport295(packet.summary,packet.summary.schemaVersion))return refuse();
     if(!validToxicFalloutTransport294(packet.summary,packet.summary.schemaVersion)||!validPeaceTalksHistorical293(packet.summary,packet.summary.schemaVersion)||!validPartyHistoricalTransport292(packet.summary,packet.summary.schemaVersion)||!validForestryHistoricalTransport291(packet.summary,packet.summary.schemaVersion)||!validFirefoamHistoricalTransport290(packet.summary,packet.summary.schemaVersion)||!validBillPauseHistoricalTransport289(packet.summary,packet.summary.schemaVersion)||!validAnimalThermalRefugeHistoricalTransport288(packet.summary,packet.summary.schemaVersion)||!validAnimalAreaHistoricalTransport287(packet.summary,packet.summary.schemaVersion)||!validLinkedStorageHistorical286(packet.summary,packet.summary.schemaVersion)||!validCoupleHistoricalTransport285(packet.summary,packet.summary.schemaVersion)||!validTradeRequestHistorical284(packet.summary,packet.summary.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet.summary,packet.summary.schemaVersion))return refuse();
     if(!validWorldPawnsEnvelope256(packet.summary,packet.summary.schemaVersion,packet.summary.tick*10,packet.summary.nextId))return refuse();
     if(!validPlanetGeographyHistorical256(packet.summary,packet.summary.schemaVersion))return refuse();
@@ -1163,6 +1167,7 @@ export class SnapshotDecoder {
     if(!validPrisonerSurgeryHistoricalTransport280(packet,packet.world.schemaVersion))return resync('Future captive surgery.');
     if(!validApparelTradeHistoricalTransport279(packet,packet.world.schemaVersion))return resync('Future ordinary apparel inventory or trade.');
     if(!validApparelReservesHistoricalTransport278(packet,packet.world.schemaVersion))return resync('Future apparel reserve settings.');
+    if(!validNovelHistoricalTransport295(packet,packet.world.schemaVersion))return resync('Invalid or future Novel/reading data.');
     if(!validToxicFalloutTransport294(packet,packet.world.schemaVersion))return resync('Invalid or future ToxicFallout condition or corpse rot credit.');
     if(!validPeaceTalksHistorical293(packet,packet.world.schemaVersion)||!validPartyHistoricalTransport292(packet,packet.world.schemaVersion)||!validForestryHistoricalTransport291(packet,packet.world.schemaVersion)||!validFirefoamHistoricalTransport290(packet,packet.world.schemaVersion)||!validBillPauseHistoricalTransport289(packet,packet.world.schemaVersion)||!validAnimalThermalRefugeHistoricalTransport288(packet,packet.world.schemaVersion)||!validAnimalAreaHistoricalTransport287(packet,packet.world.schemaVersion)||!validLinkedStorageHistorical286(packet,packet.world.schemaVersion)||!validCoupleHistoricalTransport285(packet,packet.world.schemaVersion)||!validTradeRequestHistorical284(packet,packet.world.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet,packet.world.schemaVersion)||!validBillWorkerHistoricalTransport283(packet,packet.world.schemaVersion))return resync('Future couple or bill worker settings.');
     if(!validShipCasketHistoricalTransport277(packet,packet.world.schemaVersion))return resync('Future spatial casket content.');
@@ -1756,6 +1761,7 @@ export class SnapshotDecoder {
     // Commit only after every patch is checked. A refusal preserves both state and revision.
     if(next.schemaVersion>=256&&!validGeographicSiteBinding256(next))return resync('Provenance locale distincte de la vraie planète.');
     if(!this.validGeographicCalendar(next,message.epoch))return resync('Origine du calendrier géographique réécrite.');
+    if(!validReadingWorld295(next))return resync('Invalid Novel ownership, reading phase or reservation.');
     if(!validPeaceTalksBindings293(next)||!validPartyWorld292(next)||!validForestryPolicies291(next))return resync('Invalid or locked forest growing policy.');
     if(!validFirefoamWorld290(next)||!validBillPauseWorld289(next)||!validAnimalThermalRefugeWorld288(next)||!validAnimalAreaWorld287(next)||!validLinkedStorageProjection286(next)||!validBillWorkerWorld283(next,readHumanOwners))return resync('Opérateur de facture ou réglages incohérents.');
     if(acceptExtra&&!acceptExtra(next))return resync('Métadonnées supplémentaires incompatibles avec la carte confirmée.');

@@ -79,7 +79,11 @@ export function itemInformation(pile:MaterialPile,world?:World):ObjectInformatio
     add('Alimentation','Usage','Réserve de camp','Aliment préparé pouvant être consommé selon le régime. Les expéditions de cette version demandent toujours des repas de survie.');
   }
   if(world){const deterioration=deteriorationInspection(world,pile);if(deterioration)rows.push(...deterioration.rows);}
-  const quality=pile.weapon?.quality??pile.apparel?.quality;
+  if(pile.book){
+    add('Livre','Titre',pile.book.title,pile.book.description);
+    add('Lecture','Usage','Loisirs et Intellectuel','Les bénéfices commencent uniquement pendant la lecture réelle. Le même roman peut être relu ; une séance ne le consomme pas.');
+  }
+  const quality=pile.weapon?.quality??pile.apparel?.quality??pile.book?.quality;
   if(quality)add('Général','Qualité',QUALITY_LABELS[quality],'Qualité propre à cette instance, conservée pendant les déplacements et l’équipement.');
   if(isWeaponItem(pile.item)&&pile.weapon)add('Général','Points de vie',`${pile.weapon.hitPoints} / ${weaponMaxHitPoints(pile.item)}`,'État réel de l’arme sélectionnée.');
   if(isMaceItem269(pile.item)&&pile.weapon){

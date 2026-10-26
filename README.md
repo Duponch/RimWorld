@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V482 locale — schéma 295, non publiée :** [Roman physique acheté et lu](docs/gameplay/novel-v482.md). Achat, livraison, lecture et conservation du même exemplaire acquis ; 76 nouveaux cas et 119 voisins par reprises, deux anciens rouges reproduits. Parcours natif, recharges exactes, typage et compilation acquis ; coût JS ciblé documenté sans gain FPS global. Les six ensembles restent ouverts.
+
 **V481 locale — schéma 294, non publiée :** [Retombées toxiques locales](docs/gameplay/toxic-fallout-v481.md). Exposition réelle, toits, clinique, pertes physiques et sauvegardes exactes acquis ; 96 nouveaux cas par reprises, parcours natif et présentation minage/abattage qualifiés. Typage et build acquis. Anciens rouges et limites de coût restent documentés ; aucune promesse de FPS global. Les six ensembles restent ouverts après le lot UI V480 committé et poussé `ea9fa382`.
 
 **V474 publiée — schéma 293 inchangé :** [Régularité du rendu](docs/development/performance-regularity-v474.md). Sur Éclaircies à qualité constante, la dernière paire mesure38→0,180→1 et153→1 intervalles dépassant50ms en×1/×3/×6. Premier transport sans nouvelle compilation graphique, contrôles ciblés et recharge entière exacts ; une pointe90ms et un débit5,8947× restent observés en×6. Publié `508fdfd6`/[`befebf5d`](https://befebf5d.elsewhere-cq7.pages.dev/) ; chantier performances et six ensembles ouverts, aucun nouvel ajout de gameplay.

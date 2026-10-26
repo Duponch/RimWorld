@@ -23,7 +23,7 @@ import type {WildAnimal} from '../src/sim/wildlife-state';
  * supplied. Those effects remain under their separate runtime owners. */
 function prepared():World {
   const world=createWorld(481,32,32);
-  world.schemaVersion=294;world.tick=122;
+  world.tick=122; // The subsystem fixture follows the current supported schema.
   world.tiles=Array.from({length:1024},()=>({terrain:'soil-natural'}));
   world.resources=[];world.structures=[];world.jobs=[];world.piles=[];world.packed=[];
   delete world.roofing;delete world.thermal;delete world.wildlife;

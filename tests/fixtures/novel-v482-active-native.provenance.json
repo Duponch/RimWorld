@@ -1,0 +1,16 @@
+{
+  "protocol": "native-game-journey-novel-v482-1",
+  "sourceReport": "tmp/novel-v482/native-2026-10-26T05-08-46.456Z-12044/report.json",
+  "sourceReportSHA256": "95849eda479f34320ac54c6e4ed5e212686ecdec198e58ab59f4c3af1c1c54f2",
+  "driverSHA256": "01ccec87cd4ffb2f6421459faf4269f22cb43bef1d259ced20d177ccb311e627",
+  "sourceSave": "reloaded-manual-reading-exact.json",
+  "saveSHA256": "cdeeee40b28d591f1f0295ab9b6020e5601f9668681d9742bf4d3f25e60551f8",
+  "bytes": 36786,
+  "schema": 295,
+  "tick": 64,
+  "readerId": 1,
+  "bookId": 56,
+  "elapsed": 5,
+  "preparation": "Exact bytes of the ordinary GameSession export after actual native orbital contact/payment/capsule, inspector order, pickup/walk/seating, five active reading steps, policy2 and exact whole reload. No fixture edits or replayed gain. The preserved native run then failed because clear-orders acknowledged without cancelling manual reading.",
+  "automaticCaseDerivation": "A separate isolated command boundary deletes only task.manual and changes only readingPolicy295 from2 to1. This declares an admissible automatic session at the same original state; it does not claim automatic selection was played. No tick, dose, skill, joy, book, owner, RNG or identity is altered."
+}

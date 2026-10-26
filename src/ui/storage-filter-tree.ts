@@ -42,7 +42,7 @@ export const STORAGE_FILTER_TREE:readonly StorageFilterNode[]=[
     ...leaves((_id,k)=>['jade','steel','gold','uranium','plasteel','silver','wood'].includes(k)),
   ]),
   branch('plants','Plantes déracinées',kind('plant')),
-  branch('objects','Objets',[branch('unfinished','Inachevé',kind('unfinished'))]),
+  branch('objects','Objets',[branch('unfinished','Inachevé',kind('unfinished')),branch('books','Livres',kind('book'))]),
   branch('weapons','Armes',[
     branch('ranged','Armes à distance',leaves((id,k)=>k==='weapon'&&id!=='plasteel-knife'&&!isMaceItem269(id)&&!isLongswordItem270(id)&&!isSpearItem272(id))),
     branch('melee','Armes de mêlée',leaves(id=>id==='plasteel-knife'||isMaceItem269(id)||isLongswordItem270(id)||isSpearItem272(id))),

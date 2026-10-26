@@ -21,7 +21,12 @@ export function itemGeometry(item:ItemId,quantity:number=ITEM_DEFINITIONS[item].
   const box=(x:number,y:number,z:number,sx:number,sy:number,sz:number,tint:number=color,ry=0)=>add(undefined,x,y,z,sx,sy,sz,tint,ry);
   const round=(x:number,y:number,z:number,sx:number,sy:number,sz:number,tint:number=color)=>add('item-round',x,y,z,sx,sy,sz,tint);
   const amount=Math.max(.65,Math.min(1,quantity/Math.max(1,definition.stackLimit)));
-  if(item==='prosthetic-arm'||item==='prosthetic-leg'||item==='unfinished-prosthetic'){
+  if(item==='novel'){
+    // Original cardboard covers and paper leaves, shared by ground/cargo/portraits.
+    box(0,.025,0,.42,.028,.32);box(-.095,.071,.005,.18,.064,.275,0xe7dfbe);box(.095,.071,.005,.18,.064,.275,0xe7dfbe);
+    box(-.105,.116,0,.205,.024,.32);box(.105,.116,0,.205,.024,.32);box(-.203,.07,0,.024,.10,.32,0x776647);
+    box(0,.134,.018,.15,.009,.16,0xe9dfbd);box(0,.140,.008,.09,.004,.012,0x4c4938);box(0,.140,.039,.065,.004,.009,0x4c4938);
+  }else if(item==='prosthetic-arm'||item==='prosthetic-leg'||item==='unfinished-prosthetic'){
     // Original assembled limb, reused by ground, cargo and portrait batches.
     const leg=item==='prosthetic-leg',unfinished=item==='unfinished-prosthetic';
     box(0,.12,-.18,.18,.16,.32);box(0,.12,.15,.15,.14,.30);

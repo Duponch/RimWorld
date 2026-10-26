@@ -14,8 +14,9 @@ export function patchShelfPolicy(world: World, structureId: number, settings: St
   const keys = new Set(['filters', 'items', 'priority', 'capacity', 'quality', 'hitPoints', 'allowFresh', 'allowRotten']);
   const filterKeys = new Set<string>(['furniture',...Object.values(ITEM_DEFINITIONS).map(item=>item.kind)]);
   if (!settings || typeof settings !== 'object' || Array.isArray(settings) || Reflect.ownKeys(settings).some(key => typeof key!=='string'||!keys.has(key))
+    || !validStorageSettings(settings, world.schemaVersion)
     || settings.filters && (typeof settings.filters!=='object'||Array.isArray(settings.filters) || Reflect.ownKeys(settings.filters).some(key=>typeof key!=='string'||!filterKeys.has(key)||typeof settings.filters![key as keyof typeof settings.filters]!=='boolean'))
-    || !validStorageSettings(settings, world.schemaVersion)) return { ok: false, reason: 'Politique de stockage invalide.' };
+    ) return { ok: false, reason: 'Politique de stockage invalide.' };
   // Reuse the ordinary patch semantics, including explicit undefined clears;
   // build privately before adopting so neither caller nor prior policy aliases.
   const next = { ...structure.shelf.settings, filters: { ...structure.shelf.settings.filters },

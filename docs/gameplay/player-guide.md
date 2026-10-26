@@ -1,5 +1,13 @@
 # Guide joueur
 
+## Acheter et lire un roman
+
+**V482 locale, encore en qualification et non publiée.** Les futurs marchands orbitaux de gros ou exotiques proposent un exemplaire de **Roman**. Utilisez la console et les balises habituelles pour l’acheter ; attendez l’arrivée réelle de la capsule. Le titre, la qualité et les PV décrivent cet exemplaire précis.
+
+Sélectionnez un adulte libre disponible, puis le livre connu et autorisé, et choisissez **Lire un roman** dans l’inspection. Le colon prend le livre et rejoint une chaise accessible ou une place debout. Les trajets ne donnent aucun bénéfice ; la lecture apporte des loisirs et de l’expérience en Intellectuel. Le livre reste réutilisable après rangement ou dépôt.
+
+Dans **Assignations**, **Romans autorisés** ou **Aucune lecture** règlent la lecture automatique. Un ordre manuel garde sa permission ; **Effacer les ordres** l’interrompt et fait déposer le même exemplaire. Les bibliothèques, manuels et lecture hors carte ne sont pas encore livrés. [Règles, contrôles acquis et limites V482](novel-v482.md).
+
 ## Traverser des retombées toxiques
 
 **V481 locale, non publiée.** L’alerte et l’horloge signalent les retombées sur la carte. Placez personnes et animaux sous un toit réel ; un mur seul ne protège pas. Adaptez leurs zones et travaux pour limiter les trajets dehors. Les personnes couchées et les animaux au repos restent exposés sans toit. Les vêtements disponibles ne donnent aucune protection contre ces retombées.

@@ -20,7 +20,7 @@ const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(v)
 export function validCorpseRot(v:unknown,tick:number,death:number,version:number,medical?:unknown):boolean {
   const scaria=object(medical)&&object(medical.death)&&medical.death.tick===death&&validScariaRecord261(medical,261,true)&&object(medical.scaria261)&&medical.scaria261.deathRot===true?15000:0;
   const credit=object(v)?Object.getOwnPropertyDescriptor(v,'fallout294')?.value??0:0;
-  return object(v)&&Object.getPrototypeOf(v)===Object.prototype&&validToxicFalloutRotCredit294(v,version,true)&&Reflect.ownKeys(v).every(k=>typeof k==='string'&&['progress','atTick','rate',...version===294?['fallout294']:[]].includes(k)&&Object.getOwnPropertyDescriptor(v,k)?.enumerable===true&&Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)!,'value'))&&int(v.atTick,death,tick)
+  return object(v)&&Object.getPrototypeOf(v)===Object.prototype&&validToxicFalloutRotCredit294(v,version,true)&&Reflect.ownKeys(v).every(k=>typeof k==='string'&&['progress','atTick','rate',...(version===294||version===295)?['fallout294']:[]].includes(k)&&Object.getOwnPropertyDescriptor(v,k)?.enumerable===true&&Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)!,'value'))&&int(v.atTick,death,tick)
     &&credit<=Math.min(Number.MAX_SAFE_INTEGER,3000*(Number(v.atTick)-death+1))
     &&typeof v.progress==='number'&&Number.isFinite(v.progress)&&v.progress>=credit&&v.progress-credit<=Number(v.atTick)-death+Math.max(scaria,toxicCorpseRotAllowance256(medical,death))
     &&(v.rate===undefined||typeof v.rate==='number'&&Number.isFinite(v.rate)&&v.rate>=0&&v.rate<1);

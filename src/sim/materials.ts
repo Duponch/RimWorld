@@ -1,3 +1,4 @@
+import {isNovelBook295} from './book-state-295.ts';
 import {animalContentsOwner256,animalContentsLocation256} from './animal-local-contents-256.ts';
 import {animalHaulContents282} from './animal-haul-contents-282.ts';
 import {isFutureEcologyItem256} from './cave-products-256.ts';
@@ -70,16 +71,21 @@ export function materialIdentityCount(world:World,quantity:number,owner:Material
   return Math.ceil(Math.max(0,remaining)/limit);
 }
 export function materialCanFit(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner, item: ItemId = legacyItem(kind),subject?:MaterialPile): boolean {
+  if(kind==='book'||item==='novel'){
+    if(world.schemaVersion<295||kind!=='book'||item!=='novel'||quantity!==1||!subject||subject.item!==item||subject.kind!==kind||subject.quantity!==1||!isNovelBook295(subject.book)||owner.type==='job'||owner.type==='equipment'||owner.type==='apparel'||owner.type==='grave')return false;
+  }
   if(world.schemaVersion<256&&(isFutureEcologyItem256(item)||item==='slag-steel-chunk')||!validOrbitalOwner(world,owner))return false;
   if((kind==='prosthesis'||kind==='corpse'||kind==='mech-corpse'||kind==='weapon'||kind==='apparel')&&owner.type==='job')return false;
   if(owner.type==='apparel'&&(kind!=='apparel'||quantity!==1||!isApparelItem(item)||world.piles.some(p=>p.owner.type==='apparel'&&p.owner.pawnId===owner.pawnId&&!apparelCompatible(APPAREL[p.item as keyof typeof APPAREL].coverage,APPAREL[item].coverage))))return false;
   if(owner.type==='equipment'&&(kind!=='weapon'||quantity!==1||world.piles.some(p=>p.owner.type==='equipment'&&p.owner.pawnId===owner.pawnId)))return false;
-  if (owner.type === 'ground' && quantity > groundCapacity(world, owner, subject??item)) return false;
-  const needed=materialIdentityCount(world,quantity,owner,item,subject??{});
+  const bookCarrier=kind==='book'&&subject&&(subject.owner.type==='pawn'||subject.owner.type==='inventory')?subject.owner.pawnId:undefined;
+  if (owner.type === 'ground' && quantity > groundCapacity(world, owner, subject??item,bookCarrier)) return false;
+  const needed=kind==='book'&&subject&&world.piles.includes(subject)?0:materialIdentityCount(world,quantity,owner,item,subject??{});
   return world.piles.length + needed <= 32768 && Number.isSafeInteger(world.nextId + needed);
 }
 
 export function addMaterial(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner, item: ItemId = legacyItem(kind),condition:Pick<MaterialPile,'egg'|'eggForbidden'>={}): void {
+  if(kind==='book'||item==='novel')throw new Error('A Novel requires an original generated book.');
   if(world.schemaVersion<256&&(isFutureEcologyItem256(item)||item==='slag-steel-chunk'))throw Error('Future animal item.');
   if(kind==='plant')throw new Error('A minified tree requires an original Resource.');
   if(kind==='corpse'||kind==='mech-corpse')throw new Error('A corpse requires an existing dead owner identity.');
@@ -109,6 +115,7 @@ export function addMaterial(world: World, kind: MaterialKind, quantity: number, 
   refreshStock(world);
 }
 export function addGroundMaterial(world: World, kind: MaterialKind, quantity: number, cell: Cell, item: ItemId = legacyItem(kind),condition:Pick<MaterialPile,'egg'|'eggForbidden'>={}): void {
+  if(kind==='book'||item==='novel')throw new Error('A Novel requires an original generated book.');
   if (!Number.isSafeInteger(quantity) || quantity < 0 || quantity > MAX_STACK * 32768) throw new Error('Invalid ground quantity.');
   if (!Object.hasOwn(ITEM_DEFINITIONS,item) || ITEM_DEFINITIONS[item].kind!==kind) throw new Error('Invalid ground item.');
   const plan = planGroundPlacement(world, quantity, cell, item);
@@ -119,6 +126,8 @@ export function addGroundMaterial(world: World, kind: MaterialKind, quantity: nu
 /** Move the existing stack, merging only when possible. No allocation or identity budget needed. */
 export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):boolean {
   if(!world.piles.includes(pile)||!validOrbitalOwner(world,owner))return false;
+  if((pile.kind==='book'||pile.item==='novel')&&sameOwner(pile.owner,owner))return world.schemaVersion>=295&&pile.kind==='book'&&pile.item==='novel'&&pile.quantity===1&&isNovelBook295(pile.book)&&owner.type!=='job'&&owner.type!=='equipment'&&owner.type!=='apparel'&&owner.type!=='grave';
+  if((pile.kind==='book'||pile.item==='novel')&&!materialCanFit(world,pile.kind,pile.quantity,owner,pile.item,pile))return false;
   if(sameOwner(pile.owner,owner))return true;
   if(pile.kind==='plant'){if(owner.type!=='ground'&&owner.type!=='pawn'&&owner.type!=='inventory')return false;if(owner.type==='ground'&&groundCapacity(world,owner,pile,pile.owner.type==='pawn'?pile.owner.pawnId:undefined)<1)return false;pile.owner={...owner};refreshStock(world);return true;}
   if((pile.kind==='corpse'||pile.kind==='mech-corpse')&&owner.type!=='ground'&&owner.type!=='pawn')return false;
@@ -139,6 +148,7 @@ export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):
 }
 /** Split only the delivered fraction. The held source identity and its states survive. */
 export function depositMaterialPart(world:World,source:MaterialPile,cell:Cell,quantity:number,exceptPawn?:number):boolean {
+  if((source.kind==='book'||source.item==='novel')&&(quantity!==1||source.quantity!==1||!isNovelBook295(source.book)))return false;
   if(!world.piles.includes(source)||!Number.isSafeInteger(quantity)||quantity<1||quantity>source.quantity||groundCapacity(world,cell,source,exceptPawn)<quantity)return false;
   if(quantity===source.quantity)return transferPile(world,source,{type:'ground',x:cell.x,z:cell.z});
   const targets=world.piles.filter(p=>p!==source&&p.owner.type==='ground'&&p.owner.x===cell.x&&p.owner.z===cell.z&&p.item===source.item&&canMergeEggPile256(p,source)&&p.quantity<ITEM_DEFINITIONS[source.item].stackLimit);
@@ -159,6 +169,7 @@ export function reservedSource(world: World, pileId: number, exceptPawn?: number
   }
   for (const pawn of world.pawns) {
     if (pawn.id !== exceptPawn&&!exceptPawns?.has(pawn.id)) {
+      if(pawn.recreation.task?.activity==='read'&&pawn.recreation.task.stage==='pickup'&&pawn.recreation.task.bookId===pileId)quantity++;
       if(pawn.burial?.phase==='pickup'&&pawn.burial.corpseId===pileId)quantity++;
       if(pawn.hunting?.animalId===pileId)quantity++;
       if((pawn.equipmentTask?.action==='equip'||pawn.equipmentTask?.action==='wear')&&pawn.equipmentTask.itemId===pileId)quantity++;
@@ -202,6 +213,7 @@ export function reservedSourcesByPile(world: World, exceptPawn?: number): Readon
   }
   for (const pawn of world.pawns) {
     if (pawn.id !== exceptPawn) {
+      if(pawn.recreation.task?.activity==='read'&&pawn.recreation.task.stage==='pickup')add(pawn.recreation.task.bookId,1);
       if (pawn.burial?.phase === 'pickup' && pawn.burial.corpseId !== undefined) add(pawn.burial.corpseId, 1);
       if (pawn.hunting) add(pawn.hunting.animalId, 1);
       if (pawn.equipmentTask?.action === 'equip' || pawn.equipmentTask?.action === 'wear') add(pawn.equipmentTask.itemId, 1);

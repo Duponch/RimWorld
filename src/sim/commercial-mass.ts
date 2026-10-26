@@ -24,6 +24,7 @@ const TEXTILE=Object.freeze({tribalwear:500,shirt:300,pants:500,duster:2000,park
 /** The delivered shirt is Core's CollarShirt, not the lighter BasicShirt.
  * Quality, HP and the seven represented stuffs do not alter these masses. */
 export function commercialItemMassGrams(item:ItemId,version:number=SCHEMA_VERSION):number|undefined {
+  if(item==='novel')return version>=295?500:undefined;
   if(item==='unfinished-prosthetic')return isSchema273OrLater(version)?23400:undefined;
   if(isProstheticItem273(item))return isSchema273OrLater(version)?PROSTHETIC_DEFINITIONS_273[item].massGrams:undefined;
   if(isSpearItem272(item))return version>=272?2000:undefined;

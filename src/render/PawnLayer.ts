@@ -74,13 +74,13 @@ const CROUCH_TICKS=.28*TICKS_PER_SECOND;
 // short pose transition: quarter-tick start, initial crouch fraction, and the
 // locomotion bit. Work subtype (y), pose (z), and strike clock (w) stay intact.
 const CROUCH_QUANTA=4,CROUCH_PADDING=16,CROUCH_WALK_MARK=8192;
-const POSE_SLEEP=18,POSE_DEAD=19,POSE_FIGHT_READY=22;
+const POSE_SLEEP=18,POSE_DEAD=19,POSE_FIGHT_READY=22,READING_ACTIVITY295=14;
 const crouched=(pose:number|undefined):boolean=>pose===WORK_POSE.ground||pose===WORK_POSE.groundMelee;
 function seatedOnFurniture(pawn:Pawn):boolean {
   if(pawn.state==='eating')return pawn.need?.kind==='eat'&&typeof pawn.need.dining?.seatId==='number';
   if(pawn.state!=='recreating')return false;
   const task=pawn.recreation.task;
-  return !!task&&(task.activity==='watch-television'||task.activity==='chess'||task.activity==='social-relax'||task.activity==='visit-sick')&&typeof task.seatId==='number';
+  return !!task&&(task.activity==='read'||task.activity==='watch-television'||task.activity==='chess'||task.activity==='social-relax'||task.activity==='visit-sick')&&typeof task.seatId==='number';
 }
 function crouchAt(transition:CrouchTransition,tick:number):number {
   const fraction=THREE.MathUtils.clamp((tick-transition.start)/CROUCH_TICKS,0,1);
@@ -99,6 +99,7 @@ function workActivity(pawn:Pawn):number {
 }
 /** Decode the already published equipment scalar; no pile lookup in a frame. */
 function presentationActivity(pawn:Pawn,equipmentCode:number):number {
+  if(pawn.state==='recreating'&&pawn.recreation.task?.activity==='read'&&pawn.recreation.task.stage==='read'&&pawn.recreation.task.phase==='active')return READING_ACTIVITY295;
   if(Math.floor(equipmentCode)===SPEAR_EQUIPMENT272&&pawn.melee?.strike){
     const item=SPEAR_ITEMS_272[Math.round((equipmentCode-SPEAR_EQUIPMENT272)*8)-1];
     return item?spearStrikeActivity272(pawn.melee.strike.tool,item):0;
@@ -128,7 +129,7 @@ function animationPose(pawn:Pawn,workPose:number,smallMelee:boolean,seated:boole
     if(activity==='horseshoes')return 4;
     if(activity==='skygaze')return 5;
     if(activity==='party')return 0;
-    if(activity==='watch-television'||activity==='chess'||activity==='social-relax'||activity==='visit-sick')return seated?3:0;
+    if(activity==='read'||activity==='watch-television'||activity==='chess'||activity==='social-relax'||activity==='visit-sick')return seated?3:0;
   }
   if(pawn.state==='resting'||medicallyStopped(pawn))return 1;
   if(pasteCollectionSource(pawn))return 0;
@@ -148,7 +149,7 @@ function cargoAppearance(load:MaterialPile|undefined):readonly [number,number] {
   const kind=load.kind==='corpse'?(BIOME_CARGO[load.item]??27):load.item==='minified-tree'?treeCargoKind(load.innerResource):itemCargoKind(load.item);
   // Corpse loads are indivisible. Negative y encodes their exact anatomical
   // mask in the existing actor stream; no extra per-actor GPU attribute.
-  const size=load.corpse?-1-corpseVisualMask(load.corpse):load.kind==='corpse'||load.kind==='unfinished'||load.kind==='weapon'||load.kind==='apparel'||load.kind==='plant'?1:Math.min(1,load.quantity/CARRY_CAPACITY);
+  const size=load.corpse?-1-corpseVisualMask(load.corpse):load.kind==='corpse'||load.kind==='unfinished'||load.kind==='book'||load.kind==='weapon'||load.kind==='apparel'||load.kind==='plant'?1:Math.min(1,load.quantity/CARRY_CAPACITY);
   return [kind,size];
 }
 /** Packed into the existing appearance stream; no extra vertex buffer. */
@@ -734,7 +735,13 @@ export class PawnLayer {
       If(attribute('aMotion', 'vec4').z.equal(3), () => { height.addAssign(WORLD_SCALE.stoolHeight - 0.605 * PAWN_MODEL_SCALE); });
       If(attribute('aMotion','vec4').z.equal(6),()=>{height.assign(1.3);});
       });
-      const local = positionLocal.mul(scale).add(vec3(0, height, WORLD_SCALE.carriedForward));
+      const local = positionLocal.mul(scale).toVar();
+      // Open only the actually held novel during the published reading phase.
+      // Existing motion scalars suffice; no new buffer or per-frame lookup.
+      If(attribute('cargoKind','float').equal(itemCargoKind('novel')).and(attribute('aMotion','vec4').y.equal(READING_ACTIVITY295)),()=>{
+        local.x.mulAssign(1.45);local.y.addAssign(local.x.abs().mul(.42));
+      });
+      local.addAssign(vec3(0,height,WORLD_SCALE.carriedForward));
       const cy = this.animationCache.yawNode(pose.w,'cos',instanceIndex,cached), sy = this.animationCache.yawNode(pose.w,'sin',instanceIndex,cached);
       const carried=vec3(local.x.mul(cy).add(local.z.mul(sy)), local.y, local.z.mul(cy).sub(local.x.mul(sy))).add(pose.xyz);
       const result=carried.toVar();

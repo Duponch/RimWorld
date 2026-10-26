@@ -89,7 +89,7 @@ export function damageResource(world:World,r:Resource,amount:number,reason:'fire
 }
 function referencesPile(p:Pawn,id:number):boolean {
   const c=p.cooking,h=p.haul,n=p.need;
-  return !!(p.equipmentTask?.itemId===id||c&&(c.productId===id||c.ingredients.some(i=>i.pileId===id))
+  return !!(p.recreation.task?.activity==='read'&&p.recreation.task.bookId===id||p.equipmentTask?.itemId===id||c&&(c.productId===id||c.ingredients.some(i=>i.pileId===id))
     ||h&&(h.sourcePileId===id||h.carryPileId===id)||n?.kind==='eat'&&(n.sourcePileId===id||n.carryPileId===id)
     ||p.animalHandling&&(p.animalHandling.sourcePileId===id||p.animalHandling.carryPileId===id)
     ||p.animalFeed&&(p.animalFeed.sourcePileId===id||p.animalFeed.carryPileId===id)

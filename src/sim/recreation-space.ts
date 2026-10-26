@@ -1,4 +1,5 @@
 import { isBedKind } from './bed-kinds.ts';
+import {readingTaskSiteValid295} from './reading-space-295.ts';
 import {partyTaskSiteValid292} from './party-space-292.ts';
 import {toxicFalloutActive294} from './toxic-fallout-state-294.ts';
 import { deconstructionReserved } from './deconstruction-rules.ts';
@@ -95,6 +96,7 @@ export function standableRecreationCell(world: World, cell: Cell, space?: Recrea
     && !(space ? space.solids.has(cell.z*world.width+cell.x) : world.structures.some(s=>['wall','table'].includes(s.kind)&&footprintContains(s,cell))||world.jobs.some(s=>['wall','table'].includes(s.kind)&&footprintContains(s,cell)));
 }
 export function recreationSiteValid(world: World, task: RecreationTask, space?: RecreationSpace,readTopology?:()=>RoomTopology): boolean {
+  if(task.activity==='read')return readingTaskSiteValid295(world,task);
   if(toxicFalloutActive294(world)&&!isRoofed(world,roofIndex(world,task.target)))return false;
   if(task.activity==='party')return partyTaskSiteValid292(world,task,space?.roomTopology()??readTopology?.(),space?.standable);
   if(task.activity==='skygaze'&&isRoofed(world,roofIndex(world,task.target)))return false;

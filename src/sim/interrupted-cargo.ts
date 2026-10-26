@@ -16,7 +16,7 @@ export function interruptWork(world:World,pawn:Pawn,retainTravellingCargo=false)
   // also retains the real beer from an interrupted automatic drink.
   // Health can interrupt before the actor dispatcher has observed that edge;
   // its logical arrival cell is not yet a physical drop location.
-  if(retainTravellingCargo&&hasTravellingCargo(world,pawn)||(pawn.need?.kind==='eat'&&(pawn.need.forced===true||world.schemaVersion>=265&&pawn.need.alcoholReason!==undefined)||world.jobs.some(j=>j.id===pawn.jobId&&j.tree))&&(pawn.motion?.end??0)>world.tick
+  if((retainTravellingCargo||pawn.recreation.task?.activity==='read')&&hasTravellingCargo(world,pawn)||(pawn.need?.kind==='eat'&&(pawn.need.forced===true||world.schemaVersion>=265&&pawn.need.alcoholReason!==undefined)||world.jobs.some(j=>j.id===pawn.jobId&&j.tree))&&(pawn.motion?.end??0)>world.tick
     &&world.piles.some(p=>(p.kind==='food'||p.kind==='plant'||world.schemaVersion>=265&&p.kind==='beer'||world.jobs.some(j=>j.id===pawn.jobId&&j.tree))&&p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)){
     releaseAssignments(world,pawn);pawn.interruptedCargo=true;pawn.planCooldown=0;return;
   }

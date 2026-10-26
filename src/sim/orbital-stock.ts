@@ -1,3 +1,4 @@
+import {generateNovelBook295} from './book-state-295.ts';
 import { ITEM_DEFINITIONS,type ItemId } from './items.ts';
 import { freshRot } from './food-preservation.ts';
 import type { OrbitalKind,OrbitalShip,OrbitalState } from './orbital-state.ts';
@@ -16,6 +17,7 @@ export function orbitalBeerCount265(random:number):number {
   return Math.max(0,fraction>.5||fraction===.5&&lo%2!==0?lo+1:lo);
 }
 export const orbitalBeerCatalogue265=(version:number,kind:OrbitalKind,item:ItemId):boolean=>version>=265&&kind==='bulk'&&item==='beer';
+export const orbitalNovelCatalogue295=(version:number,kind:OrbitalKind,item:ItemId):boolean=>version>=295&&(kind==='bulk'||kind==='exotic')&&item==='novel';
 /** Direct supported Core stock only. Every draw and physical identity is once. */
 export function orbitalStock(w:World,ship:OrbitalShip,state:Pick<OrbitalState,'rng'>):MaterialPile[] {
   const result:MaterialPile[]=[];
@@ -26,6 +28,15 @@ export function orbitalStock(w:World,ship:OrbitalShip,state:Pick<OrbitalState,'r
   if(w.schemaVersion>=265&&ship.kind==='bulk'){
     let quantity=orbitalBeerCount265(orbitalRandom(state));
     while(quantity>0){const n=Math.min(quantity,ITEM_DEFINITIONS.beer.stackLimit);result.push({id:w.nextId++,item:'beer',kind:'beer',quantity:n,owner:{type:'orbital-ship',shipId:ship.id}});quantity-=n;}
+  }
+  // New stock only, after every historical draw and identity. Existing ships
+  // are never backfilled by loading, quoting or inspecting their old stock.
+  if(orbitalNovelCatalogue295(w.schemaVersion,ship.kind,'novel')){
+    // createOrbitalShip rejects an overflowing draft without committing its
+    // identities or RNG. Keep that ordinary refusal rather than throw late.
+    const id=w.nextId++;if(!Number.isSafeInteger(id)||!Number.isSafeInteger(w.nextId))return result;
+    const book=generateNovelBook295(id,()=>orbitalRandom(state));
+    result.push({id,item:'novel',kind:'book',quantity:1,owner:{type:'orbital-ship',shipId:ship.id},book});
   }
   return result;
 }
