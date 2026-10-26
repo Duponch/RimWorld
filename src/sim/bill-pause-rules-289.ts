@@ -15,13 +15,13 @@ export function validBillReservePausePolicy289(value:unknown):value is BillReser
     &&(value.resumeAt as number)>=-1&&(value.resumeAt as number)<=9999;}catch{return false;}
 }
 export function validBillReservePauseState289(value:unknown,version:number,recipe:unknown):value is BillReservePause289 {
-  try{return (version===289||(version===290||(version===291||(version===292||(version===293||(version===294||version===295))))))&&supportsBillReservePause289(recipe)&&data(value,['enabled','resumeAt','paused'])
+  try{return (version===289||(version===290||(version===291||(version===292||(version===293||(version===294||(version===295||version===296)))))))&&supportsBillReservePause289(recipe)&&data(value,['enabled','resumeAt','paused'])
     &&typeof value.enabled==='boolean'&&typeof value.paused==='boolean'&&Number.isSafeInteger(value.resumeAt)
     &&(value.resumeAt as number)>=-1&&(value.resumeAt as number)<=9999;}catch{return false;}
 }
 export function validBillPauseCommand289(value:unknown,version:number):boolean {
   try{
-    if((version!==289&&(version!==290&&(version!==291&&(version!==292&&(version!==293&&(version!==294&&version!==295))))))||!value||typeof value!=='object')return false;
+    if((version!==289&&(version!==290&&(version!==291&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&version!==296)))))))||!value||typeof value!=='object')return false;
     const type=Object.getOwnPropertyDescriptor(value,'type');if(!type||!Object.hasOwn(type,'value'))return false;
     const keys=type.value==='bill-pause-policy'?['type','structureId','billId','policy']:type.value==='bill-pause-resume'?['type','structureId','billId']:undefined;
     if(!keys||!data(value,keys)||!Number.isSafeInteger(value.structureId)||!Number.isSafeInteger(value.billId)||(value.structureId as number)<=0||(value.billId as number)<=0)return false;

@@ -3,6 +3,7 @@ import {knownPosition256} from './exploration-readers-256';
 import { footprintCells } from '../sim/definitions';
 import type { Cell, Resource, World } from '../sim/types';
 import { stockpileZoneCells } from '../sim/stockpile-zones';
+import { selectedMapJob296 } from './wall-door-selection-296';
 
 /** Core's incidental foliage remains a hover readout, not a selectable Thing. */
 export const mapResourceSelectable=(resource:Resource):boolean=>!['grass','tall-grass','brambles','moss','astragalus','chokevine','dandelion','low-shrub'].includes(resource.species??'');
@@ -15,6 +16,11 @@ export function mapObjectsAt(world:World,cell:Cell):MapObjectSelection[] {
   const inFootprint=(object:World['structures'][number]|World['jobs'][number])=>footprintCells(object).some(same);
   const geyser=geyserAt256(world,cell);
   const harvested=geyser&&world.structures.some(s=>s.kind==='geothermal-generator'&&s.geothermal?.geyserId===geyser.id&&s.x+2===geyser.x&&s.z+2===geyser.z);
+  const jobs:MapObjectSelection[]=[];
+  for(const job of world.jobs)if(inFootprint(job)){
+    if(job.wallDoor296?.manual!==false)jobs.push({kind:'job',id:job.id});
+    if(job.wallDoor296?.plan)jobs.push({kind:'job',id:job.wallDoor296.plan.id});
+  }
   return [
     ...(geyser&&!harvested?[{kind:'geyser' as const,id:geyser.id}]:[]),
     ...world.packed.filter(p=>p.owner.type==='ground'&&same(p.owner)).map(p=>({kind:'packed' as const,id:p.building.id})),
@@ -23,7 +29,7 @@ export function mapObjectsAt(world:World,cell:Cell):MapObjectSelection[] {
     ...(geyser&&harvested?[{kind:'geyser' as const,id:geyser.id}]:[]),
     ...world.resources.filter(r=>same(r)&&mapResourceSelectable(r)).map(r=>({kind:'resource' as const,id:r.id})),
     ...(world.tiles[cell.z*world.width+cell.x]?.terrain==='rock'?[{kind:'rock' as const,id:cell.z*world.width+cell.x}]:[]),
-    ...world.jobs.filter(inFootprint).map(j=>({kind:'job' as const,id:j.id})),
+    ...jobs,
     ...world.growingZones.filter(z=>z.cells.includes(cell.z*world.width+cell.x)).map(z=>({kind:'growing' as const,id:z.id})),
     ...world.stockpiles.filter(same).map(s=>({kind:'stockpile' as const,id:s.id})),
   ].filter(selected=>mapObjectExists(world,selected));
@@ -37,7 +43,7 @@ function physicalMapObjectCells(world:World,selected:MapObjectSelection):Cell[] 
     case 'structure': {const structure=world.structures.find(s=>s.id===selected.id);return structure?footprintCells(structure):[];}
     case 'resource': {const resource=world.resources.find(r=>r.id===selected.id);return resource&&mapResourceSelectable(resource)?[resource]:[];}
     case 'rock': {const tile=world.tiles[selected.id];return tile?.terrain==='rock'?[{x:selected.id%world.width,z:Math.floor(selected.id/world.width)}]:[];}
-    case 'job': {const job=world.jobs.find(j=>j.id===selected.id);return job?footprintCells(job):[];}
+    case 'job': {const job=selectedMapJob296(world,selected.id);return job?footprintCells(job):[];}
     case 'growing': {const zone=world.growingZones.find(z=>z.id===selected.id);return zone?.cells.map(i=>({x:i%world.width,z:Math.floor(i/world.width)}))??[];}
     case 'stockpile': return stockpileZoneCells(world,selected.id);
   }
@@ -55,7 +61,7 @@ export function mapObjectExists(world:World,selected:MapObjectSelection):boolean
     case 'structure':return world.structures.some(s=>s.id===selected.id);
     case 'resource':return world.resources.some(r=>r.id===selected.id&&mapResourceSelectable(r));
     case 'rock':return world.tiles[selected.id]?.terrain==='rock';
-    case 'job':return world.jobs.some(j=>j.id===selected.id);
+    case 'job':return !!selectedMapJob296(world,selected.id);
     case 'growing':return world.growingZones.some(z=>z.id===selected.id&&z.cells.length>0);
     case 'stockpile':return world.stockpiles.some(s=>s.id===selected.id);
   }

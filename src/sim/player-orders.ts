@@ -1,4 +1,5 @@
 import {isSchema265OrLater} from './schema-compatibility-257.ts';
+import { startWallDoorWork296, wallDoorHasIntent296 } from './wall-door-state-296.ts';
 import {ancientCasketOpenIntent256} from './ancient-casket-open-intent-256.ts';
 import {isAncientCasket256} from './ancient-casket-state-256.ts';
 import {planAncientCasketRelease256} from './ancient-casket-release-256.ts';
@@ -62,6 +63,7 @@ const orderLabel=(world:World,job:Job)=>clearingPlant(world,job)?'Couper la plan
 /** This provider orders one executable job, never an entire construction chain.
  * Quantity-based delivery is handled separately by player-hauling. */
 export function orderReadiness(world: World, pawn: Pawn, job: Job, accepted=false, queued=false): string | undefined {
+  if(!wallDoorHasIntent296(job)&&(!accepted||queued))return 'Le plan et la désignation de ce retrait ont été annulés.';
   const areaReason=allowedAreaReason(world,pawn,job);if(areaReason)return areaReason;
   if(!isColonist(pawn)||pawn.prisoner)return 'Seul un colon libre peut recevoir un ordre de travail.';
   const work=job.kind==='install'&&!job.installationWork?(asBuilder(pawn)?'build':'haul'):workType(job);
@@ -212,6 +214,7 @@ export function clearQueuedOrders(world:World,pawn:Pawn):void {
 export function startJobOrder(pawn:Pawn,job:Job,path:Cell[]):void {
   if(job.kind==='install')job.installationWork??=asBuilder(pawn)?'build':'haul';
   job.reservedBy=pawn.id;job.status='active';pawn.jobId=job.id;
+  startWallDoorWork296(job);
   pawn.orders.active=job.id;pawn.path=path;pawn.planCooldown=0;
   pawn.state=path.length||pawn.moveCooldown>0?'moving':'working';
 }
@@ -220,7 +223,7 @@ export function applyOrderCommand(world:World,command:OrderCommand):CommandResul
   if(!pawn)return fail('Colon introuvable.');
   if(command.type==='clear-orders') {
     if(isForcedConsuming(pawn)){interruptDraftWork(world,pawn);return {ok:true};}
-    const active=pawn.orders.active!==null||!!pawn.shipCasketTask277||!!pawn.cryptosleepTask||!!pawn.openCasket||!!pawn.firefoamTask290||!!pawn.orbitalTrade||!!pawn.allowedAreaReturn||Number(world.schemaVersion)===295&&pawn.recreation.task?.activity==='read'&&pawn.recreation.task.manual===true;
+    const active=pawn.orders.active!==null||!!pawn.shipCasketTask277||!!pawn.cryptosleepTask||!!pawn.openCasket||!!pawn.firefoamTask290||!!pawn.orbitalTrade||!!pawn.allowedAreaReturn||(Number(world.schemaVersion)===295||Number(world.schemaVersion)===296)&&pawn.recreation.task?.activity==='read'&&pawn.recreation.task.manual===true;
     const drops=active?planCommandDrops(world,command):new Map();
     if(!drops)return fail('Pas de place pour déposer la cargaison.');
     if(active&&!releaseWork(world,pawn,drops))return fail('Impossible d’interrompre ce travail.');

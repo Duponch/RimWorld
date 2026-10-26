@@ -1597,7 +1597,7 @@ function rebuildInspector() {
       gatherSpotControls(panel,(structureId,enabled)=>attempt(async()=>{await client.command({type:'gather-spot',structureId,enabled});renderState();}));
       bedControls(panel,()=>snapshot,()=>selectedCell,c=>void attempt(()=>client.command(c)));
       const popper=snapshot?.structures.find(s=>s.id===selectedObject!.id&&s.kind==='firefoam-popper');
-      if(popper&&[290,291,292,293,294,295].includes(Number(snapshot?.schemaVersion)))panel.append(firefoamControls290(snapshot!,popper,command=>client.command(command).then(()=>renderState())));
+      if(popper&&[290,291,292,293,294,295,296].includes(Number(snapshot?.schemaVersion)))panel.append(firefoamControls290(snapshot!,popper,command=>client.command(command).then(()=>renderState())));
       const trap=snapshot?.structures.find(s=>s.id===selectedObject!.id&&s.kind==='spike-trap');
       if(trap)panel.append(spikeTrapControls(trap,command=>void attempt(async()=>{await client.command(command);rebuildInspector();renderState();})));
     }

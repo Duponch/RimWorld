@@ -1,5 +1,7 @@
 # Elsewhere
 
+**V483 qualifiée localement — schéma 296, non publiée :** [Porte sur mur fini](docs/gameplay/door-over-wall-v483.md). Retrait réel, phase ouverte et porte payée, intentions séparées et propriétaires conservés. 303cas distincts par reprises, natif68,954s/16exports/9captures, type15,573s/build5,052s, présentation160,082s/44changements≤41,3ms. Coût ciblé résiduel trois plans17,439/6,457ms checkpoint/delta ; aucun gain FPS global. Production295/b969 inchangée. Reprendre le réarbitrage vers une continuation réelle des Éclaircies ; six ensembles ouverts.
+
 **V482 publiée — schéma 295, production b969b256 :** [Roman physique acheté et lu](docs/gameplay/novel-v482.md). Achat, livraison, lecture et conservation du même exemplaire acquis ; 76 nouveaux cas et 119 voisins par reprises, deux anciens rouges reproduits. Parcours natif, recharges exactes, typage et compilation acquis ; coût JS ciblé documenté sans gain FPS global. Les six ensembles restent ouverts. [Publication vérifiée](docs/development/publication-v482.md).
 
 **V481 locale — schéma 294, non publiée :** [Retombées toxiques locales](docs/gameplay/toxic-fallout-v481.md). Exposition réelle, toits, clinique, pertes physiques et sauvegardes exactes acquis ; 96 nouveaux cas par reprises, parcours natif et présentation minage/abattage qualifiés. Typage et build acquis. Anciens rouges et limites de coût restent documentés ; aucune promesse de FPS global. Les six ensembles restent ouverts après le lot UI V480 committé et poussé `ea9fa382`.

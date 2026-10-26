@@ -33,7 +33,7 @@ export function partyRoll292(rng:number):{rng:number;value:number} {
  return {rng:next,value:next/0x100000000};
 }
 export function partyHome292(world:World):boolean {
- if((Number(world.schemaVersion)!==292&&(Number(world.schemaVersion)!==293&&(Number(world.schemaVersion)!==294&&Number(world.schemaVersion)!==295)))||world.expeditionSite||boundWorldGroup(world)||campaignAuthority(world)!==registeredCampaign(world)||!world.tiles?.length)return false;
+ if((Number(world.schemaVersion)!==292&&(Number(world.schemaVersion)!==293&&(Number(world.schemaVersion)!==294&&(Number(world.schemaVersion)!==295&&Number(world.schemaVersion)!==296))))||world.expeditionSite||boundWorldGroup(world)||campaignAuthority(world)!==registeredCampaign(world)||!world.tiles?.length)return false;
  const id=registeredMapId(world);if(id===undefined)return false;
  const maps=registeredCampaign(world).worldMaps;
  return !maps||id===maps.rootMapId&&maps.sites.some(s=>s.id===id&&s.kind==='settlement');

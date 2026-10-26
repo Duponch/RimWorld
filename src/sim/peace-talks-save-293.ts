@@ -15,12 +15,12 @@ const finite=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v
 const core=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>int(v,min,max)&&v%10===0;
 const dense=(v:unknown,max:number):v is unknown[]=>Array.isArray(v)&&Object.getPrototypeOf(v)===Array.prototype&&v.length<=max&&Reflect.ownKeys(v).length===v.length+1&&Array.from({length:v.length},(_,i)=>!!data(v,String(i))).every(Boolean);
 export function validPeaceTalksArrival293(value:unknown,version:number):boolean {
- return (version===293||(version===294||version===295))&&keys(value,['kind','siteId'])&&value.kind==='peace-talks'&&int(value.siteId,1);
+ return (version===293||(version===294||(version===295||version===296)))&&keys(value,['kind','siteId'])&&value.kind==='peace-talks'&&int(value.siteId,1);
 }
 /** Contextual scalar admission. No diplomatic birth gate is reapplied on load. */
 export function validPeaceTalksSite293(value:unknown,c:WorldSitesValidationContext263):value is PeaceTalksSite293 {
  try{
-  if((Number(c.schemaVersion)!==293&&(Number(c.schemaVersion)!==294&&Number(c.schemaVersion)!==295))||!keys(value,['kind','id','tile','factionId','createdAtCore','expiresAtCore','mapId','questTag'],['closed'])||value.kind!=='peace-talks'||value.mapId!==null
+  if((Number(c.schemaVersion)!==293&&(Number(c.schemaVersion)!==294&&(Number(c.schemaVersion)!==295&&Number(c.schemaVersion)!==296)))||!keys(value,['kind','id','tile','factionId','createdAtCore','expiresAtCore','mapId','questTag'],['closed'])||value.kind!=='peace-talks'||value.mapId!==null
    ||!int(value.id,1)||!int(value.tile)||!int(value.factionId,1)||!core(value.createdAtCore,0,c.tick*10)||!int(value.expiresAtCore,Number(value.createdAtCore)+720000,Number(value.createdAtCore)+1680000)||(Number(value.expiresAtCore)-Number(value.createdAtCore))%60000
    ||typeof value.questTag!=='string'||!value.questTag.startsWith('PeaceTalks_')||value.questTag.length<=11||value.questTag.length>256)return false;
   const faction=c.worldFactions?.factions.find(f=>f.id===value.factionId);if(!faction||!c.planet||value.tile>=planetTileCount(c.planet)||value.factionId===c.worldFactions!.playerFactionId)return false;
@@ -57,17 +57,17 @@ export function validPeaceTalksSite293(value:unknown,c:WorldSitesValidationConte
 
 /** Only registry/transport envelopes: never inspect terrain, Things or actors. */
 export function validPeaceTalksHistorical293(raw:unknown,version:unknown):boolean {
- if(!int(version,1,295))return false;
+ if(!int(version,1,296))return false;
  const active=new Set<object>();let budget=100000;
  const lanes=['world','summary','dynamic','campaign','worldMaps','worldGroups','campaignMap','secondarySite','map','worldSites263','sites','maps','entries','groups','group','state','pending261','arrival261','battlefield261','retained','destination','action','quest','recent'] as const;
  const visit=(v:unknown,lane:string):boolean=>{
   if(--budget<0)return false;if(v===null||typeof v!=='object')return true;
-  if(Array.isArray(v)){if(!dense(v,100000)||active.has(v))return false;active.add(v);for(const x of v){if(lane==='recent'&&x==='peace-talks'&&(version!==293&&(version!==294&&version!==295))||!visit(x,lane==='entries'?'entry':lane))return false;}active.delete(v);return true;}
+  if(Array.isArray(v)){if(!dense(v,100000)||active.has(v))return false;active.add(v);for(const x of v){if(lane==='recent'&&x==='peace-talks'&&(version!==293&&(version!==294&&(version!==295&&version!==296)))||!visit(x,lane==='entries'?'entry':lane))return false;}active.delete(v);return true;}
   if(!plain(v)||active.has(v))return false;active.add(v);
   const kind=data(v,'kind');if('kind'in v&&!kind)return false;
-  if(kind?.value==='peace-talks'&&((version!==293&&(version!==294&&version!==295))||!['entry','action','pending261','battlefield261'].includes(lane)))return false;
+  if(kind?.value==='peace-talks'&&((version!==293&&(version!==294&&(version!==295&&version!==296)))||!['entry','action','pending261','battlefield261'].includes(lane)))return false;
   if(kind?.value==='peace-talks'&&Reflect.ownKeys(v).some(k=>typeof k!=='string'||!data(v,k)))return false;
-  for(const key of ['peaceTalksSiteId293','questTag'])if(key in v){if((version!==293&&(version!==294&&version!==295))||!data(v,key)||(key==='questTag'?lane!=='entry':!['pending261','battlefield261'].includes(lane)))return false;}
+  for(const key of ['peaceTalksSiteId293','questTag'])if(key in v){if((version!==293&&(version!==294&&(version!==295&&version!==296)))||!data(v,key)||(key==='questTag'?lane!=='entry':!['pending261','battlefield261'].includes(lane)))return false;}
   if('upserted'in v){const d=data(v,'upserted');if(!d||!visit(d.value,lane))return false;}
   for(const key of lanes){if(!(key in v))continue;const d=data(v,key);if(!d)return false;if(!visit(d.value,key))return false;}
   active.delete(v);return true;
@@ -79,8 +79,8 @@ export function validPeaceTalksHistorical293(raw:unknown,version:unknown):boolea
  * This is never sufficient for campaign admission or publication. */
 export function validPeaceTalksRegistryScalars293(value:unknown):boolean {
  try{
-  if(!plain(value)||!int(value.schemaVersion,1,295))return false;
-  if((Number(value.schemaVersion)!==293&&(Number(value.schemaVersion)!==294&&Number(value.schemaVersion)!==295)))return validPeaceTalksHistorical293(value,value.schemaVersion);
+  if(!plain(value)||!int(value.schemaVersion,1,296))return false;
+  if((Number(value.schemaVersion)!==293&&(Number(value.schemaVersion)!==294&&(Number(value.schemaVersion)!==295&&Number(value.schemaVersion)!==296))))return validPeaceTalksHistorical293(value,value.schemaVersion);
   const d=data(value,'worldSites263');if(!d)return !('worldSites263'in value);
   const registry=d.value;if(!keys(registry,['revision','nextId','entries'],['quest'])||registry.revision!==1||!int(registry.nextId,1)||!dense(registry.entries,4096))return false;
   const w=value as unknown as World,ids=new Set<number>(),tags=new Set<string>(),activeFactions=new Set<number>();
@@ -100,7 +100,7 @@ export function validPeaceTalksRegistryScalars293(value:unknown):boolean {
 export function validPeaceTalksBindings293(value:unknown):boolean {
  try{
   if(!validPeaceTalksRegistryScalars293(value)||!plain(value))return false;
-  if((Number(value.schemaVersion)!==293&&(Number(value.schemaVersion)!==294&&Number(value.schemaVersion)!==295)))return true;
+  if((Number(value.schemaVersion)!==293&&(Number(value.schemaVersion)!==294&&(Number(value.schemaVersion)!==295&&Number(value.schemaVersion)!==296))))return true;
   const w=value as unknown as World,sites=w.worldSites263?.entries??[];
   const byId=new Map(sites.map(s=>[s.id,s]));
   const meta=w.campaignMap?.revision===2?w.campaignMap:undefined;

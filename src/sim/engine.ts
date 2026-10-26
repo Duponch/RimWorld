@@ -277,6 +277,7 @@ import { constructionHaulId, constructionSiteFree, constructionWorkTarget, isCon
 import { advanceOrders, applyOrderCommand, reconcileOrders } from './player-orders.ts';
 import { gatherResource, clearingDuration, clearingKind,plantWorkGrowthFactor256 } from './gathering.ts';
 import { wallBlueprintForDoor, planBlueprintDoorReplacement, retireWallBlueprint } from './construction-replacement.ts';
+import { wallDoorTarget296, wallDoorRemoval296, canAttachWallDoor296, attachWallDoor296, promoteWallDoorManual296 } from './wall-door-runtime-296.ts';
 import { processRecreation } from './recreation.ts';
 import { applyScheduleCommand } from './schedule.ts';
 import { applyFoodPolicyCommand } from './food-policy.ts';
@@ -418,17 +419,17 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   const selection = queryArea(world, command);
   if (!selection.ok) return selection;
   if (!selection.cells.length) return refusal('missing-target', 'Aucune case compatible dans ce rectangle.');
-  if([287,288,289,290,291,292,293,294,295].includes(Number(world.schemaVersion))&&(command.action==='home'||command.action==='remove-home'))return applyAnimalHomeArea287(world,command,selection.cells,drops);
+  if([287,288,289,290,291,292,293,294,295,296].includes(Number(world.schemaVersion))&&(command.action==='home'||command.action==='remove-home'))return applyAnimalHomeArea287(world,command,selection.cells,drops);
   if(command.action==='cancel'){
     const cells=new Set(selection.cells);
-    const jobs=new Set(world.jobs.filter(j=>[...footprintCells(j),...furnitureSourceCells(world,j)].some(c=>cells.has(c.z*world.width+c.x))).map(j=>j.id));
+    const jobs=new Set(world.jobs.filter(j=>[...footprintCells(j),...furnitureSourceCells(world,j)].some(c=>cells.has(c.z*world.width+c.x))).flatMap(j=>j.wallDoor296?.plan?[j.id,j.wallDoor296.plan.id]:[j.id]));
     const result=cancelIntentJobs(world,jobs);if(!result.ok)return result;
     const removed=clearPileHaulFlags(world,new Set(world.piles.filter(p=>p.owner.type==='ground'&&cells.has(p.owner.z*world.width+p.owner.x)).map(p=>p.id)));
     wakePlanners(world);refreshStock(world);return {ok:true,affected:jobs.size+removed,skipped:selection.skipped};
   }
   const creates = command.action === 'smooth-floor' || command.action === 'build-bridge' || command.action === 'remove-bridge' || command.action === 'lay-floor' || command.action === 'remove-floor' || command.action === 'mine' || command.action === 'deconstruct' || command.action === 'chop' || command.action === 'harvest' || command.action === 'cut' || command.action === 'stockpile' || command.action === 'growing';
   const deconstructionCells=command.action==='deconstruct'?new Set(selection.cells):undefined;
-  const identities=deconstructionCells?world.structures.filter(s=>!['sleeping-spot','animal-sleeping-spot','crafting-spot','butcher-spot'].includes(s.kind)&&footprintCells(s).some(c=>deconstructionCells.has(c.z*world.width+c.x))).length:command.action==='growing'?(selection.targetZoneId===undefined?zoneCellComponents(world.width,selection.cells).length:0):selection.cells.length;
+  const identities=deconstructionCells?world.structures.filter(s=>!['sleeping-spot','animal-sleeping-spot','crafting-spot','butcher-spot'].includes(s.kind)&&!world.jobs.some(j=>j.deconstruction?.structureId===s.id&&j.wallDoor296?.manual===false)&&footprintCells(s).some(c=>deconstructionCells.has(c.z*world.width+c.x))).length:command.action==='growing'?(selection.targetZoneId===undefined?zoneCellComponents(world.width,selection.cells).length:0):selection.cells.length;
   if (creates && !Number.isSafeInteger(world.nextId + identities)) return refusal('invalid-command', 'Limite des identités atteinte.');
   let affected = selection.cells.length;
   if(command.action==='snow-clear'||command.action==='remove-snow-clear'){editSnowArea(world,selection.cells,command.action==='snow-clear',drops);}else if(command.action==='home'||command.action==='remove-home'){const cells=new Set(world.home);for(const i of selection.cells)if(command.action==='home')cells.add(i);else cells.delete(i);world.home=[...cells].sort((a,b)=>a-b);if(!world.home.length)delete world.home;} else if (isRoofArea(command.action)) { designateRoofArea(world, selection.cells, command.action); } else if (command.action === 'deconstruct') {
@@ -461,7 +462,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
     const settings=target??command;
     for(const cells of zoneCellComponents(world.width,selection.cells)){
       const zoneId=target?stockpileZoneId(target):world.nextId;
-      for(const index of cells)world.stockpiles.push({id:world.nextId++,zoneId,x:index%world.width,z:Math.floor(index/world.width),filters:{...(settings.filters??{wood:true,food:true,...(world.schemaVersion>=265?{wort:true,beer:true}:{}),...(Number(world.schemaVersion)===295?{book:true}:{})})},...(settings.items!==undefined?{items:{...settings.items}}:{}),...copyStorageConditions(settings),priority:settings.priority??2,capacity:settings.capacity??ITEM_DEFINITIONS.silver.stackLimit});
+      for(const index of cells)world.stockpiles.push({id:world.nextId++,zoneId,x:index%world.width,z:Math.floor(index/world.width),filters:{...(settings.filters??{wood:true,food:true,...(world.schemaVersion>=265?{wort:true,beer:true}:{}),...((Number(world.schemaVersion)===295||Number(world.schemaVersion)===296)?{book:true}:{})})},...(settings.items!==undefined?{items:{...settings.items}}:{}),...copyStorageConditions(settings),priority:settings.priority??2,capacity:settings.capacity??ITEM_DEFINITIONS.silver.stackLimit});
     }
   } else {
     const cells = new Set(selection.cells);
@@ -615,8 +616,11 @@ export function canDesignate(world: World, command: DesignateCommand|import('./c
   if(command.kind==='grave'&&world.jobs.some(j=>j.kind==='lay-floor'&&cells.some(c=>sameCell(c,j))))return refusal('occupied','Un plan de sol occupe la future tombe.');
   if(command.kind==='grave'&&cells.some(c=>{const tile=world.tiles[cellIndex(world,c.x,c.z)]!;return !!tile.floor||!['grass','soil','rich-soil','gravel'].includes(tile.terrain);}))return refusal('incompatible-resource','La tombe exige un terrain meuble à creuser.');
   const replacing=installing||command.kind==='glow-pod'?undefined:wallBlueprintForDoor(world,command);
+  const wallTarget=installing?undefined:wallDoorTarget296(world,command.kind,command);
+  const wallRemoval=wallTarget?wallDoorRemoval296(world,wallTarget):command.kind==='deconstruct'&&target?wallDoorRemoval296(world,target):undefined;
+  const allowedRemoval=wallTarget?wallRemoval:wallRemoval?.wallDoor296?.manual===false?wallRemoval:undefined;
   if (!replacing&&index?.kind===command.kind ? cells.some(cell=>!!(index.flags[cellIndex(world,cell.x,cell.z)]!&1))
-    : world.jobs.some(job => job!==replacing && !isRoofJob(job) && !isPlantDesignationJob(job) && !constructionRetiresSowingIntent(job,target?.kind??command.kind) && !(command.kind==='deconstruct'&&(job.kind==='repair'||job.kind==='fix-breakdown'||job.kind==='flick')) && sharesConstructionLayer(job.furniture?.kind??job.deconstruction?.kind??job.flick?.kind??job.fixBreakdown?.kind??job.kind,target?.kind??command.kind) && footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
+    : world.jobs.some(job => job!==replacing && job!==allowedRemoval && !isRoofJob(job) && !isPlantDesignationJob(job) && !constructionRetiresSowingIntent(job,target?.kind??command.kind) && !(command.kind==='deconstruct'&&(job.kind==='repair'||job.kind==='fix-breakdown'||job.kind==='flick')) && sharesConstructionLayer(job.furniture?.kind??job.deconstruction?.kind??job.flick?.kind??job.fixBreakdown?.kind??job.kind,target?.kind??command.kind) && footprintCells(job).some(cell => cells.some(target => sameCell(cell, target))))) return refusal('occupied', 'Un ordre existe déjà dans cette empreinte.');
   if(command.kind==='deconstruct'||command.kind==='uninstall')return {ok:true};
   if(isAncientMonumentKind256(command.kind)&&!validConstructionMaterial(command.kind,command.material,world.schemaVersion))return refusal('invalid-command','Choisissez une matière admissible explicite pour cet ouvrage.');
   if(command.kind==='mine')return blindMineDesignation256(world,cellIndex(world,command.x,command.z))||world.tiles[cellIndex(world,command.x,command.z)]!.terrain==='rock'?{ok:true}:refusal('incompatible-resource','Désigner un massif rocheux à miner.');
@@ -628,7 +632,7 @@ export function canDesignate(world: World, command: DesignateCommand|import('./c
   for (const cell of cells) {
     if ((['water', 'rock'].includes(world.tiles[cellIndex(world, cell.x, cell.z)]!.terrain)||!marshSupportsFootprint(world,[cell],{kind:command.kind,material:installing?command.material:command.material??'wood'}))
       || (index?.kind===command.kind ? !!(index.flags[cellIndex(world,cell.x,cell.z)]!&4) : world.resources.some(item => item.kind==='rock'&&sameCell(item, cell)))
-      || (index?.kind===command.kind ? !!(index.flags[cellIndex(world,cell.x,cell.z)]!&2) : world.structures.some(item => sharesConstructionLayer(item.kind,command.kind)&&footprintCells(item).some(target => sameCell(target, cell))))
+      || (index?.kind===command.kind ? !!(index.flags[cellIndex(world,cell.x,cell.z)]!&2) : world.structures.some(item => item!==wallTarget&&sharesConstructionLayer(item.kind,command.kind)&&footprintCells(item).some(target => sameCell(target, cell))))
       || world.pawns.some(p => p.haul?.destination.type === 'aside' && sameCell(p.haul.destination, cell))
       || cookingCellReserved(world,cell)) {
       return refusal('occupied', 'Construction impossible : terrain, ouvrage ou réservation incompatible dans l’empreinte.');
@@ -638,6 +642,7 @@ export function canDesignate(world: World, command: DesignateCommand|import('./c
     if(!Number.isSafeInteger(world.nextId+1))return refusal('invalid-command','Limite des identités atteinte.');
     if(!planBlueprintDoorReplacement(world,command,replacing))return refusal('occupied','Attendez la fin du transport et une place pour déposer les matériaux du mur.');
   }
+  if(wallTarget&&(command.kind==='door'||command.kind==='autodoor')&&!canAttachWallDoor296(world,wallTarget,command.kind,command.material??'wood'))return refusal('occupied','Le mur, ses ordres ou la limite des identités ne permettent pas ce plan de porte.');
   return { ok: true };
 }
 export function applyCommand(world: World, command: Command,caravans?:import('./group-campaign-runtime-256.ts').GroupCampaignRuntime256): CommandResult {
@@ -657,8 +662,8 @@ type LocalCommand=Exclude<Command,SecondarySiteCommand>;
 function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
   if(command?.type==='read-book-295')return applyReadBook295(world,command.pawnId,command.bookId);
   if(command?.type==='reading-policy-295')return applyReadingPolicy295(world,command.pawnId,command.policyId);
-  if([287,288,289,290,291,292,293,294,295].includes(Number(world.schemaVersion))&&command?.type==='animal-area-assign')return applyAnimalAreaAssignmentCommand287(world,command);
-  if([287,288,289,290,291,292,293,294,295].includes(Number(world.schemaVersion))&&(command?.type==='allowed-area-create'||command?.type==='allowed-area-settings'||command?.type==='allowed-area-paint'||command?.type==='allowed-area-delete'||command?.type==='assign-allowed-area'))return applyAnimalAwareAreaCommand287(world,command);
+  if([287,288,289,290,291,292,293,294,295,296].includes(Number(world.schemaVersion))&&command?.type==='animal-area-assign')return applyAnimalAreaAssignmentCommand287(world,command);
+  if([287,288,289,290,291,292,293,294,295,296].includes(Number(world.schemaVersion))&&(command?.type==='allowed-area-create'||command?.type==='allowed-area-settings'||command?.type==='allowed-area-paint'||command?.type==='allowed-area-delete'||command?.type==='assign-allowed-area'))return applyAnimalAwareAreaCommand287(world,command);
   if(command&&typeof command==='object'&&hiddenExplorationCommandTarget256(world,command))return refusal('missing-target','Cette cible n’est pas connue sur la carte actuelle.');
   if(command.type==='material-forbid')return applyMaterialPermission256(world,command);
   if(command.type==='egg-forbid')return applyEggPermission256(world,command);
@@ -670,7 +675,7 @@ function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
   const result=applyCommandInternal(world,command);
   if(command.type==='firefoam-auto-rebuild')return result;
   if(command.type==='bill-pause-policy'||command.type==='bill-pause-resume')return result;
-  if([287,288,289,290,291,292,293,294,295].includes(Number(world.schemaVersion))&&command.type==='area'&&(command.action==='home'||command.action==='remove-home'))return result;
+  if([287,288,289,290,291,292,293,294,295,296].includes(Number(world.schemaVersion))&&command.type==='area'&&(command.action==='home'||command.action==='remove-home'))return result;
   // These cold metadata transactions already reconcile their exact affected
   // destinations. A no-op must not advance unrelated services or clocks.
   if(command.type==='shelf-link'||command.type==='shelf-unlink'||command.type==='shelf-group-rename'
@@ -1007,7 +1012,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
         || [...world.structures, ...world.jobs].some(item => !['deconstruct','uninstall'].includes(item.kind)&&(world.schemaVersion>=219?occupancyOf('furniture' in item?item.furniture?.kind??item.kind:item.kind)?.zones===false:occupancyOf('furniture' in item?item.furniture?.kind??item.kind:item.kind)?.zones!==true)&&occupies(item,command))) return refusal('occupied', 'Stockage impossible sur cette cellule occupée ou infranchissable.');
       if (existing) {
         for(const cell of stockpileZoneCells(world,existing.id))patchStockpilePolicy(cell,command);
-      } else {const id=world.nextId++;world.stockpiles.push({ id,zoneId:id, x: command.x, z: command.z, filters: { ...(command.filters ?? { wood: true, food: true,...(world.schemaVersion>=265?{wort:true,beer:true}:{}),...(Number(world.schemaVersion)===295?{book:true}:{}) }) },...(command.items!==undefined?{items:{...command.items}}:{}),...copyStorageConditions(command), priority: command.priority ?? 2, capacity: command.capacity ?? ITEM_DEFINITIONS.silver.stackLimit });}
+      } else {const id=world.nextId++;world.stockpiles.push({ id,zoneId:id, x: command.x, z: command.z, filters: { ...(command.filters ?? { wood: true, food: true,...(world.schemaVersion>=265?{wort:true,beer:true}:{}),...((Number(world.schemaVersion)===295||Number(world.schemaVersion)===296)?{book:true}:{}) }) },...(command.items!==undefined?{items:{...command.items}}:{}),...copyStorageConditions(command), priority: command.priority ?? 2, capacity: command.capacity ?? ITEM_DEFINITIONS.silver.stackLimit });}
     }
     for(const pawn of world.pawns)if(pawn.cooking?.storageId!==null&&pawn.cooking?.storageId!==undefined&&affectedIds.has(pawn.cooking.storageId)){pawn.cooking.storageId=null;delete pawn.cooking.storageQuantity;pawn.path=[];pawn.planCooldown=0;}
     // Re-evaluate pending capacity reservations atomically after the policy change.
@@ -1018,7 +1023,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
     wakePlanners(world); refreshStock(world); return { ok: true };
   }
   if(command.type==='cancel'){
-    const jobs=new Set(world.jobs.filter(j=>[...footprintCells(j),...furnitureSourceCells(world,j)].some(c=>sameCell(c,command))).map(j=>j.id));
+    const jobs=new Set(world.jobs.filter(j=>[...footprintCells(j),...furnitureSourceCells(world,j)].some(c=>sameCell(c,command))).flatMap(j=>j.wallDoor296?.plan?[j.id,j.wallDoor296.plan.id]:[j.id]));
     if(!jobs.size)return refusal('missing-target','Aucun ordre a annuler ici.');
     return cancelIntentJobs(world,jobs);
   }
@@ -1033,6 +1038,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
   }
   if(command.kind==='deconstruct') {
     const immediate=deconstructionAt(world,command)!;
+    if(promoteWallDoorManual296(world,immediate)){wakePlanners(world);event(world,'command','Déconstruction du mur confirmée indépendamment du plan de porte.');return {ok:true};}
     if(immediate.kind==='sleeping-spot'){const removed=removeHumanSleepingSpot(world,immediate,drops);if(removed.ok){wakePlanners(world);event(world,'command','Emplacement de couchage retiré.');}return removed;}
     if(!Number.isSafeInteger(world.nextId+1))return refusal('invalid-command','Limite des identités atteinte.');
     const target=deconstructionAt(world,command)!;if(target.kind==='animal-sleeping-spot')removeAnimalSpot(world,target);else if((target.kind==='crafting-spot'||target.kind==='butcher-spot'))removeCraftingSpot(world,target,drops);else designateDeconstruction(world,target);
@@ -1041,6 +1047,12 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
   if(command.kind==='sleeping-spot')return placeHumanSleepingSpot(world,command);
   if(command.kind==='animal-sleeping-spot')return placeAnimalSpot(world,command);
   if(command.kind==='crafting-spot'||command.kind==='butcher-spot'){const r=placeCraftingSpot(world,command,drops);if(r.ok)wakePlanners(world);return r;}
+  const wallTarget=wallDoorTarget296(world,command.kind,command);
+  if(wallTarget&&(command.kind==='door'||command.kind==='autodoor')){
+    if(!attachWallDoor296(world,wallTarget,command.kind,command.material??'wood'))return refusal('occupied','Le mur ne permet plus ce plan de porte.');
+    removeZonesForPlan(world,command,drops);refreshStock(world);wakePlanners(world);
+    event(world,'command',`Plan de porte posé : le mur sera réellement démonté avant la construction (${command.x}, ${command.z}).`);return {ok:true};
+  }
   if(replacing)retireWallBlueprint(world,replacing,drops);
   removeZonesForPlan(world,command,drops);
   world.jobs.push({ id: world.nextId++, kind: command.kind, ...(world.schemaVersion>=235&&['chop','cut','harvest'].includes(command.kind)?{plantTarget:{resourceId:world.resources.find(r=>sameCell(r,command))!.id}}:{}), ...(isConstruction(command)?{construction:command.kind==='grave'?'frame' as const:'blueprint' as const,...command.kind==='grave'||command.kind==='build-bridge'||command.kind==='lay-floor'?{}:{material:command.material??(command.kind==='electric-crematorium'?'granite-blocks' as const:command.kind==='sandbags'?'cloth' as const:command.kind==='firefoam-popper'||isShipPartKind276(command.kind)||command.kind==='ship-cryptosleep-casket'||command.kind==='cryptosleep-casket'||command.kind==='geothermal-generator'||command.kind==='electric-smelter'||command.kind==='biofuel-refinery'||command.kind==='chemfuel-generator'||command.kind==='nutrient-paste-dispenser'||command.kind==='hopper'||command.kind==='orbital-beacon'||command.kind==='comms-console'||command.kind==='deep-drill'||command.kind==='ground-scanner'||command.kind==='vitals-monitor'||command.kind==='hydroponics-basin'||command.kind==='mini-turret'||command.kind==='hospital-bed'||command.kind==='tube-television'?'steel' as const:'wood' as const)}}:{}),...(command.kind==='lay-floor'?{floor:command.floor}:command.kind==='remove-floor'?{floor:world.tiles[command.z*world.width+command.x]!.floor}:{}), x: command.x, z: command.z, orientation: command.orientation ?? (command.kind==='ship-cryptosleep-casket'?2:isShipPartKind276(command.kind)?SHIP_PART_DEFAULT_ORIENTATION_276[command.kind]:0), footprint: 'standard', status: 'pending', reservedBy: null, progress: 0, escrow: { wood: 0, food: 0 } });
@@ -1117,7 +1129,7 @@ export function stepWorld(world:CampaignState,ticks=1,diagnostics?:import('./wor
     if(ticks)for(const map of registeredMaps(root)){adoptTempMapIncidents261(map);flushRegisteredMap(map);}
     adoptWorldIncidents(campaignClockContext(root));
     for(let i=0;i<ticks;i++){
-      const firefoamWorldOwners290=[290,291,292,293,294,295].includes(Number(root.schemaVersion))?captureFirefoamWorldPawnIds290(root):undefined;
+      const firefoamWorldOwners290=[290,291,292,293,294,295,296].includes(Number(root.schemaVersion))?captureFirefoamWorldPawnIds290(root):undefined;
       root.tick++;
       for(const map of registeredMaps(root)){stepLocalWorld(map,1,diagnostics,false);flushRegisteredMap(map);}
       if(root.schemaVersion>=256&&caravans)caravans.step(root);
@@ -1157,7 +1169,7 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
   adoptRainElectrical(world);
   let thermal=reconcileTemperature(world);reconcilePlantLighting(world,()=>readPlantLight(world));updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);
   for (let step = 0; step < ticks; step++) {
-    const firefoamLocalMechs290=[290,291,292,293,294,295].includes(Number(world.schemaVersion))?new Set((world.mechanoids??[]).filter(m=>m.state!=='dead'&&m.health?.coveredInFirefoam290).map(m=>m.id)):undefined;
+    const firefoamLocalMechs290=[290,291,292,293,294,295,296].includes(Number(world.schemaVersion))?new Set((world.mechanoids??[]).filter(m=>m.state!=='dead'&&m.health?.coveredInFirefoam290).map(m=>m.id)):undefined;
     flushColonyLosses(world);
     if(advanceClock)world.tick++;advanceActualHiveComponents256(world);advanceAnimalAges256(world);finishSnowSteps(world);
     let light:LightEnvironment|undefined,lightKey:string|undefined;

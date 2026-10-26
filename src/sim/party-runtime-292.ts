@@ -55,7 +55,7 @@ function release(world:World,ids:ReadonlySet<number>,finish=false,death=false):v
 
 /** Cheap clinical boundary. No map, hostiles, furniture or per-pawn member scan. */
 export function reconcilePartyPawn292(world:World,pawn:Pawn,body?:BodyAssessment):void {
- const a=(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||Number(world.schemaVersion)===295)))?world.party292?.active:undefined;if(!a)return;
+ const a=(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||(Number(world.schemaVersion)===295||Number(world.schemaVersion)===296))))?world.party292?.active:undefined;if(!a)return;
  const member=membersOf(a).has(pawn.id),organizer=pawn.id===a.organizerId;
  if(!member&&!organizer)return;
  const dead=pawn.state==='dead'||!!pawn.health?.death;
@@ -65,7 +65,7 @@ export function reconcilePartyPawn292(world:World,pawn:Pawn,body?:BodyAssessment
 
 /** Reconcile all current owners before dispatch or outcome. No presence credit. */
 export function reconcileParty292(world:World,topology?:RoomTopology):void {
- const a=(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||Number(world.schemaVersion)===295)))?world.party292?.active:undefined;if(!a)return;
+ const a=(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||(Number(world.schemaVersion)===295||Number(world.schemaVersion)===296))))?world.party292?.active:undefined;if(!a)return;
  const opening=openingPresence.get(world);
  if(!opening||opening.tick!==world.tick||opening.startedAtCore!==a.startedAtCore){
   const ids=new Set<number>(),index=membersOf(a);
@@ -157,7 +157,7 @@ export function advanceParty292(world:World,topology?:RoomTopology):void {
 
 /** Runs after needs and player orders, before personal leisure/new work. */
 export function processParty292(world:World,pawn:Pawn,context:NeedContext):boolean {
- const a=(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||Number(world.schemaVersion)===295)))?world.party292?.active:undefined;if(!a)return false;
+ const a=(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||(Number(world.schemaVersion)===295||Number(world.schemaVersion)===296))))?world.party292?.active:undefined;if(!a)return false;
  const member=membersOf(a).has(pawn.id);
  if(member){
   reconcilePartyPawn292(world,pawn);const active=world.party292?.active;

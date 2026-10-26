@@ -4,13 +4,18 @@ import {createHash} from 'node:crypto';
 import provenance from './fixtures/novel-v482-active-native.provenance.json';
 import {applyCommand} from '../src/sim/engine.ts';
 import {deserializeWorld,serializeCampaign,validateWorld} from '../src/sim/serialization.ts';
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 
 const input=readFileSync(new URL('./fixtures/novel-v482-active-native.json',import.meta.url));
 const raw=input.toString('utf8');
 function original(){
  expect(createHash('sha256').update(input).digest('hex')).toBe(provenance.saveSHA256);expect(input.length).toBe(provenance.bytes);
+ const historical=JSON.parse(raw);expect(historical.schemaVersion).toBe(provenance.schema);
  const w=deserializeWorld(raw),p=w.pawns.find(p=>p.id===provenance.readerId)!,book=w.piles.find(p=>p.id===provenance.bookId)!;
- expect(w.schemaVersion).toBe(provenance.schema);expect(w.tick).toBe(provenance.tick);expect(p.recreation.task).toMatchObject({activity:'read',stage:'read',phase:'active',manual:true,bookId:provenance.bookId,elapsed:provenance.elapsed});expect(p.readingPolicy295).toBe(2);expect(serializeCampaign(w)).toBe(raw);
+ // The archived native bytes/provenance remain295. Admission changes only the
+ // schema number; every acquired field still equals the original campaign.
+ const migrated={...historical,schemaVersion:SCHEMA_VERSION};expect(w).toEqual(migrated);
+ expect(w.schemaVersion).toBe(SCHEMA_VERSION);expect(w.tick).toBe(provenance.tick);expect(p.recreation.task).toMatchObject({activity:'read',stage:'read',phase:'active',manual:true,bookId:provenance.bookId,elapsed:provenance.elapsed});expect(p.readingPolicy295).toBe(2);expect(serializeCampaign(w)).toBe(JSON.stringify(migrated));
  return {w,p,book};
 }
 

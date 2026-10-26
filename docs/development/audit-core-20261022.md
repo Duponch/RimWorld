@@ -636,3 +636,77 @@ Plafond : depuis un mur réellement achevé et des ressources finies, le mur sub
 **Alternatives conservées :** commerce vivant utile mais plus large, exigeant même corps, santé, affiliation, entraînement, aires, propriétaire et prix vérifié ; valeur biologique utile mais non remplaçable par un forfait, puisque le modèle de richesse manque encore de faits natifs. Profils/accessibilité et campagnes restent nécessaires, sans défaut nouveau précis de cette lecture qui impose leur refonte immédiate. Reprendre périodiquement une campagne depuis son checkpoint fiable avec pertes conservées ; une nouvelle régression de conservation ou de jouabilité rencontrée prime ce choix. Aucun enchaînement automatique manuels, schémas, livres, climat ou vaisseau.
 
 Les **six ensembles restent ouverts** : 1 expérience/performance ; 2 économie/recherche/catalogue ; 3 habitants/santé/animaux ; 4 narration/combat/quêtes/diplomatie ; 5 victoire ; 6 campagnes durables et qualification finale. V482 demeure locale, prête à l’enregistrement et non publiée ; aucun domaine ni identifiant global n’est fermé par cette tranche.
+
+## Réévaluation après V483
+
+**26octobre2026 : V483 qualifiée localement, enregistrement en clôture, non publiée.** 303cas distincts par reprises, typage15,573s/build5,052s, natif68,954s/16exports/9captures et présentation160,082s acquis. Coût final ciblé trois plans17,439/6,457ms checkpoint/delta ; limites et variantes rejetées conservées. La tranche [porte sur mur fini](../gameplay/door-over-wall-v483.md) retire de la liste des mécaniques entièrement absentes la succession Wall construit → vraie déconstruction → blueprint ordinaire → matériaux livrés → Door/Autodoor construite. Elle conserve deux intentions, le travail réellement attribué, le futur propriétaire d'identité et la chute de toit entre les phases. Son correctif générique de projection et ses garde-fous de transport ont demandé des reprises réelles ; le diagnostic et les contretests ne deviennent pas une preuve globale par simple présence de code. Le schéma296 ne reprend pas la publication antérieure du produit295/61d63e51. Aucun gain FPS/GPU général, confort, campagne durable ou victoire n'est fermé.
+
+### Actualisation des manques
+
+Les anciennes tables gardent leurs dates et leurs limites historiques. Au présent, ToxicFallout local complet et borné, Novel payé puis lu, et la succession de chantier V483 dans son périmètre ne doivent plus être proposés comme s'ils étaient tous absents. Inversement, leur présence n'établit ni diversité complète des incidents, ni toutes les formes de lecture, ni remplacement général des constructions. Les [six ensembles](core-completion-plan-20261020.md#mandat-et-référence) restent simultanés ; leur ensemble6 exige périodiquement de reprendre les mêmes campagnes et leurs pertes, sans faire de l'année entière un préalable à chaque correction.
+
+La [comparaison privée des vingt domaines](../../tmp/door-over-wall-v483/next-arbitration.md) est conservée, avec une correction décisive issue de la [lecture des propriétaires de voyage](../../tmp/campaign-continuation-v484/reading-notes.md) : le roman56 de V482 n'est pas imposé à la prochaine sortie. Son checkpoint n'a pas de planète3 ; la commande ordinaire d'adoption n'ajoute que le circuit historique1/2, tandis que la reformation géographique actuelle exige les véritables autorités3. Ni greffe d'un globe, ni faux détenteur, ni mécanique nouvelle pour faire réussir ce seul livre. Ce manque de composition du circuit historique reste documenté ; le choix suivant porte sur une campagne géographique déjà existante.
+
+| Domaine | Présence actuelle et manque qui reste utile à comparer |
+|---|---|
+| 1. Temps, travail, commandes, compétences, interruptions | Les engagements réels existent. Garder marche, chargement, faim/repos, travail, XP et interruptions pendant sortie/retour ; ne réinitialiser aucun acteur. |
+| 2. Création, profils, aide, accessibilité | Création et interface natives sont présentes ; profils/accessibilité et gestes réellement difficiles restent ouverts. Un refus de pilote n'autorise pas une refonte UI présumée. |
+| 3. Géographie, écologie, climat, ressources | Génération géographique et ToxicFallout sont présentes. Observer le vrai milieu du camp et ses ressources, sans graine favorable substituée ni condition injectée. |
+| 4. Construction, habitat, sols, meubles, toits | La succession de porte retire un manque quotidien précis. Abri, supports et approvisionnement restent physiques ; pas d'autres remplacements automatiques par inertie. |
+| 5. Énergie, combustible, entretien | Sources et entretien existent. Le domicile laissé continue de consommer et de subir ses pannes ; aucune nouvelle énergie requise pour cocher un catalogue. |
+| 6. Stockage, fret, possessions, conservation | Détenteurs et fret existent. La jointure entre originaux locaux, groupe hors carte, camp, Reform et déchargement constitue la qualification composée prioritaire. |
+| 7. Agriculture, forêt, alimentation | Les filières existent ; provisions finies, consommation et accès réel décident de la sortie. Les campagnes agricoles longues et renouvellements ne sont pas clos. |
+| 8. Industrie, recherche, factures, catalogue | Roman et construction payés raccordent les chaînes. Catalogue/économie restent incomplets ; ni nouvelle famille de livres ni nouvelle recette automatique. |
+| 9. Équipements, protections, prothèses | Objets équipables et récupération existent. Leur sélection, masse, état et portage restent réels ; les armes au sol ne deviennent pas équipées par import. |
+| 10. Besoins, humeur, loisirs, relations, famille | Lecture, couple et Party sont présents dans leurs bornes. Conserver faim, repos, humeur, tolérances et liens ; pas de lecture hors carte déduite d'un camp local. |
+| 11. Anatomie, clinique, captivité, décès, suspension | Services cliniques présents ; catalogue et crises composées restent ouverts. Garder blessures, abandon, mort et original, sans guérison ou remplaçant gratuit. |
+| 12. Animaux, espaces, santé, usages | Apprentissages, transport, aires et refuge présents. Le commerce vivant et la valeur biologique restent ouverts ; aucun animal ajouté pour augmenter artificiellement les axes du trajet. |
+| 13. Combat, défense, fuite, crises | Défense et interruptions présentes ; tactiques partielles. Menace, retraite et pertes rencontrées sont conservées ; aucune crise provoquée pour forcer une preuve. |
+| 14. Narration, incidents, dangers prolongés | Pourparlers, social et condition toxique présents. Distribution/diversité en campagne demeurent ouvertes ; l'absence d'incident dans une courte sortie est une limite observable. |
+| 15. Monde, voyages, cartes temporaires | Groupes/camps/retour existent avec plusieurs générations de propriétaires. La continuation choisit les véritables autorités3, une seule colonie et un camp temporaire, sans élargir le mode multicolonie. |
+| 16. Factions, diplomatie, quêtes | Dons, demandes, caches et pourparlers présents. Une route disponible n'offre ni récompense ni transaction ; relations, délais et accès gardent leur effet. |
+| 17. Commerce, prix, richesse réelle | Échanges matériels/vêtements présents ; lignes de commerce vivant et richesse humaine/animale restent manquantes. `pawnsKnown=0` demeure explicite ; aucun prix forfaitaire par tête. |
+| 18. Progression, vaisseau, victoire | Pièces jusqu'aux caissons présentes ; ordinateur/cœur, capteurs, lancement et issue complète restent ouverts. Une sortie ne constitue pas une victoire ni un motif de la repousser indéfiniment. |
+| 19. Sauvegardes, PRNG, campagnes | Recharges et propriétaires sont raccordés dans leurs limites. Exercer les vrais transferts, garder le même RNG et les pertes ; ne pas transformer une projection en checkpoint entier. |
+| 20. CPU/GPU, mémoire, présentation, confort | Coûts et natif sont qualifiés par lots bornés ; pointes et confort global restent ouverts. Un voyage peut révéler un défaut précis sans relancer une matrice UI/performance déjà acquise. |
+
+### Décision préparatoire ROOT : une continuation géographique des Éclaircies
+
+Après enregistrement de V483, préparer **une sortie avec un camp temporaire puis retour ou résultat terminal conservé**, d'abord comme qualification de l'existant. Reprendre l'authentique Éclaircies V480, avec Gaël7, Eden8, Robin9, leurs biens finis, besoins, travaux, état clinique et patrimoine du domicile. La composition du groupe se choisit depuis leurs capacités et les services à préserver ; ni «deux partent/un reste» ni départ de tous les trois n'est décidé avant lecture de la partie.
+
+Le checkpoint recommandé est `tmp/ui3d-identity-v480/game-2026-10-26T01-22-58.387Z-4940/reloaded-commanded-save.json`, schéma293/tick1782, empreinte annoncée `92cb686224f7f7a41ab47056490a2907af2e3cb3a4c8b5775f889ff65ab08e3b`. Son rapport entier et ses octets seront recontrôlés avant admission courante. `planet.revision=3`, carte racine0 et autorités de génération/factions/WorldPawns sont déjà présents en lecture. Ce choix ne prend ni l'entrée publique tick1730 comme un nouveau départ, ni la copie enrichie de trois plans du banc de coût. Le patrimoine initial préparé reste déclaré ; sa simple présence ne prouve pas que toutes ses constructions ont été jouées.
+
+Le stock lu est67 repas, **11 autorisés/56 interdits**, ainsi que les quantités finies de bois, acier, argent et médicaments déjà détenues. Ce n'est ni une autonomie garantie ni une permission de tout déverrouiller. Robin commence avec faim basse et un trajet réel de transport ; Gaël a un semis actif. Formation et besoins doivent résoudre ces engagements par les règles ordinaires, sans écrire idle, modifier la tuile, téléporter, soigner ou ajouter des provisions. Les mêmes originaux7/8/9 restent suivis dans la campagne, qu'ils voyagent ou restent au domicile.
+
+Le plafond est strict : **une colonie maximum1, une seule continuation, une seule sortie et un seul camp temporaire**, puis retour effectif et dépôt des mêmes biens ou pertes terminales expliquées. Aucun reset de partie, relance favorable, édition d'un fichier humain, ajout de roman, fabrication d'un incident ou déplacement de phase/acteur dans le pilote. L'entrée authentique reste en lecture ; les nouvelles acquisitions et sauvegardes vont dans un dossier privé distinct.
+
+1. **Reprise et formation.** Vérifier migration permise, identités, besoins, santé, équipements, quantités, argent et PRNG. Lire route, masse par porteur, autonomie, avertissements et accès depuis le devis natif. Jouer les seules permissions/repos/préparations nécessaires et garder leurs coûts.
+2. **Départ et voyage.** Faire charger au contact, quitter physiquement le domicile et jouer progression mondiale, repas, repos et événements. Le domicile conserve ses horloges et conséquences. Les IDs effectifs du groupe et du futur camp sont lus, jamais supposés constants.
+3. **Camp réel.** Entrer par `group-enter(mode:'camp')` sur la vraie carte géographique200² ; attendre son commit et sa pause, sans confondre génération intermédiaire et entrée adoptée. Employer les biens compatibles avec le service de déchargement existant ; bois/acier/herbes/livre ne passent pas automatiquement par `commercial-unload`. Récolter/construire seulement ce qui devient réellement nécessaire. Une porte V483 peut composer un besoin de passage effectivement rencontré ; aucun chantier forcé pour la cocher.
+4. **Reform et retour.** Lire le vrai devis et sélectionner personnes/biens à emporter, puis employer la transaction existante `group-reform` ; elle transfère les propriétaires sans rejouer une marche de bord, et cette limite reste annoncée. Choisir explicitement le domicile0 : le bouton bas niveau de retour peut viser l'origine courante du groupe après Reform. Jouer la route et l'entrée `visit/map0`, puis le vrai déchargement ou le refus d'accès conservé.
+5. **Preuve et durée.** Exports/recharges entiers exacts aux détenteurs utiles : avant départ, préparation/portage, hors carte, camp, Reform, retour/dépôt. Conserver objets laissés, camp retiré, arbres coupés, consommation, blessures et morts. Annoncer la durée réellement jouée et la part SIM/native/lecture ; une seule sortie ne démontre ni plusieurs saisons ni survie annuelle.
+
+### Concurrents et seuil de réarbitrage
+
+| Lot concurrent | Motif de le garder ouvert | Ce qui manque avant de l'engager |
+|---|---|---|
+| Commerce d'animaux vivants | Boucle ordinaire absente des lignes marchandes actuelles. | Primaire fraîche, prix/admissibilité, même corps et santé/affiliation/entraînement/aire, transfert atomique entre vrais propriétaires. |
+| Richesse biologique | Inconnue assumée influençant attentes et menaces. | Faits représentés et adaptations explicités, sans forfait par tête et sans couplage automatique au commerce vivant. |
+| Profils/accessibilité et confort | Fréquence quotidienne, ensemble1 toujours ouvert. | Un geste ou défaut concret, une mesure proportionnée ; préserver l'UI récente et ses preuves. |
+| Voie de victoire complète | Ensemble5 ne possède toujours pas son issue finale. | Dépendances et acquisition physique de l'objectif, pression, partants, lancement et résultat terminal cohérent. |
+| Autres bases Core et interactions | Les vingt rubriques et exemples humains ne sont pas une liste fermée. | Utilité réelle, défaut ou manque délimité, propriétaires et référence fraîche quand la règle doit être décidée. |
+
+**Plafond de préparation court, sans implémentation présumée.** Si cette sortie réclame plusieurs nouvelles mécaniques pour seulement démarrer, conserver le checkpoint/refus et réarbitrer immédiatement le manque précis avec ces concurrents. Un défaut réel de conservation, d'accès ou de jouabilité révélé par la campagne prime la continuation ; le reproduire avant correction et en faire si nécessaire un lot séparé, sans effacer son histoire. Ne pas attendre indéfiniment un incident ou une transaction pour rendre le trajet intéressant.
+
+### Six ensembles : aucun n'est clos
+
+| Ensemble | Situation et effet de cette décision |
+|---|---|
+| 1. Expérience/performance | UI native et coûts bornés présents ; profils, accessibilité, pointes et confort global restent ouverts. |
+| 2. Économie/recherche/catalogue | Chaînes matérielles réelles présentes ; économie, catalogue et autres filières incomplets. Une continuation les compose sans les fermer. |
+| 3. Habitants/santé/animaux | Conserver les mêmes vivants et leur clinique ; autres besoins, usages animaux et crises composées restent ouverts. |
+| 4. Narration/combat/quêtes/diplomatie | Systèmes présents mais tactiques, diversité et distribution dans la durée restent ouverts ; aucun incident artificiel offert. |
+| 5. Victoire | Pas d'issue complète acquise ; concurrent explicite à la prochaine revue, sans retour automatique pièce par pièce au vaisseau. |
+| 6. Campagnes durables/qualification finale | Aller-camp-retour proposé comme qualification périodique bornée ; saisons, renouvellements, crises/récupération et durabilité générale restent à établir. |
+
+Aucun domaine, SYS069, ensemble, paritéCore ou cible FPS n'est fermé par cet arbitrage. Aucune publication supplémentaire n'en est déduite. Le prochain engagement commence par les preuves de son checkpoint et les commandes ordinaires, pas par un nouveau numéro de schéma.

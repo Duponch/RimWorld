@@ -618,7 +618,7 @@ export class SceneRenderCore {
     this.turretTops.update(world,this.structureGroup,this.boxes,resetPoses);
     // Quantize presentation of progression to avoid rebuilding static meshes for
     // every work tick. Saved simulation progress remains exact and authoritative.
-    const jobKey = world.jobs.filter(j=>j.kind!=='fix-breakdown').map((j) => `${j.id}:${j.kind}:${j.floor}:${j.material}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.construction}:${j.escrow.wood}:${j.kind === 'mine' || j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' || j.kind === 'deconstruct' || j.kind==='repair' ? 0 : Math.floor(j.progress / jobDuration(world,j) * 20)}`).join('|');
+    const jobKey = world.jobs.filter(j=>j.kind!=='fix-breakdown').map((j) => `${j.id}:${j.kind}:${j.floor}:${j.material}:${j.x}:${j.z}:${j.orientation}:${j.footprint}:${j.status}:${j.construction}:${j.escrow.wood}:${j.kind === 'mine' || j.kind === 'chop' || j.kind === 'harvest' || j.kind === 'cut' || j.kind === 'sow' || j.kind === 'deconstruct' || j.kind==='repair' ? 0 : Math.floor(j.progress / jobDuration(world,j) * 20)}${j.wallDoor296?`:wall-door:${j.wallDoor296.manual}:${j.wallDoor296.plan?.id}:${j.wallDoor296.plan?.kind}:${j.wallDoor296.plan?.material}`:''}`).join('|');
     const jobsChanged=jobKey!==this.jobKey||newMap||resetPoses;
     if (jobsChanged) { this.jobKey = jobKey; this.buildJobs(world); }
     // Chunk permissions and unscheduled roof intentions have no Job. Check

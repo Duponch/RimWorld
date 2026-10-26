@@ -20,7 +20,7 @@ export function validLinkedShelfPolicy286(value:unknown,version:number=SCHEMA_VE
  return isSchema286OrLater(version)&&dataRecord(value)&&['filters','priority','capacity'].every(k=>Object.hasOwn(value,k))&&Reflect.ownKeys(value).every(k=>typeof k==='string'&&keys.includes(k))&&dataRecord(value.filters)&&validNovelStorageFilters295(value.filters,version)
   &&Object.entries(value.filters).every(([key,v])=>filterKeys.has(key)&&typeof v==='boolean')
   &&Number.isInteger(value.priority)&&Number(value.priority)>=1&&Number(value.priority)<=5&&value.capacity===500
-  &&validStorageItems(value.items,version===295?295:286)&&validStorageConditions(value,286);
+  &&validStorageItems(value.items,(version===295||version===296)?295:286)&&validStorageConditions(value,286);
 }
 /** No effective/hidden/caller record shares a mutable policy leaf. */
 export function cloneLinkedShelfPolicy286(value:ShelfStorageSettings):ShelfStorageSettings{

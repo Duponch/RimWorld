@@ -27,7 +27,7 @@ export const TOXIC_FALLOUT_DOSE_INTERVAL294=3451;
 /** No time filtering here: the clinical adapter also needs the last partial
  * interval when the native end falls between two local simulation steps. */
 export function getToxicFallout294(world:Pick<World,'miscIncidents'>&{schemaVersion?:number}):ToxicFalloutActive294|undefined {
-  return (world.schemaVersion===294||world.schemaVersion===295)?world.miscIncidents?.toxicFallout?.active:undefined;
+  return (world.schemaVersion===294||(Number(world.schemaVersion)===295||Number(world.schemaVersion)===296))?world.miscIncidents?.toxicFallout?.active:undefined;
 }
 export function toxicFalloutActive294(world:Pick<World,'tick'|'miscIncidents'>&{schemaVersion?:number},atCore=world.tick*10):boolean {
   const active=getToxicFallout294(world);

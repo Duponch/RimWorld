@@ -25,9 +25,18 @@ function readJobMarkerParts(jobs:readonly Job[],cutaway:boolean,physical?:World,
       if(job.kind==='fix-breakdown')continue;
       const cells = footprintCells(job);
       if(!physical&&visibility&&!cells.every(cell=>knownCell256(visibility,cell.z*visibility.width+cell.x)))continue;
+      const future=job.wallDoor296?.plan;
+      if(future){
+        // The future identity owns this wire outline, never the standing wall.
+        // Three placements reuse the resident plan batch and remain visible
+        // around the actual wall without borrowing its roof support.
+        const height=wallHeight+.12;
+        for(const dx of [-.53,.53])blueprints.push({targetId:future.id,x:job.x+dx,z:job.z,y:height/2,sx:.08,sy:height,sz:.2});
+        blueprints.push({targetId:future.id,x:job.x,z:job.z,y:height,sx:1.14,sy:.08,sz:.2});
+      }
       // Automatic sowing is not a player designation. Explicit order icons
       // already identify their targets; neither needs a selection-like floor.
-      if(job.kind!=='sow'&&!hasDesignationPictogram(job.kind))for (const cell of cells) orders.push({ targetId:job.id, x: cell.x, y: 0.032, z: cell.z, color: physical&&job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
+      if(job.wallDoor296?.manual!==false&&job.kind!=='sow'&&!hasDesignationPictogram(job.kind))for (const cell of cells) orders.push({ targetId:job.id, x: cell.x, y: 0.032, z: cell.z, color: physical&&job.status === 'active' ? 0xe7c17a : 0x99cfc3 });
       if(job.kind==='repair'||job.kind==='flick')continue;
       if(job.kind==='build-bridge'||job.kind==='remove-bridge'){
         blueprints.push({targetId:job.id,x:job.x,z:job.z,y:.075,sx:.94,sy:.04,sz:.94});
@@ -47,6 +56,7 @@ function readJobMarkerParts(jobs:readonly Job[],cutaway:boolean,physical?:World,
       // Tree intentions use their actual-source billboard, never a building cube.
       if(isIconDesignationKind(job.kind)||job.kind==='smooth-floor'||job.kind === 'sow')continue;
       if(job.kind==='deconstruct'||job.kind==='uninstall') {
+        if(job.wallDoor296?.manual===false)continue;
         const targetKind=(job.deconstruction??job.furniture)!.kind;
         const y=(targetKind==='ship-cryptosleep-casket'?SHIP_CASKET_MODEL_BOUNDS_277.height:isShipAddedKind276(targetKind)?SHIP_HULL_MODEL_BOUNDS_276[targetKind].height:targetKind==='ship-reactor'?3.10:targetKind==='cryptosleep-casket'?.80:targetKind==='fueled-smithy'?1.665:targetKind==='electric-smithy'?1.57:targetKind==='brewery'?1.35:targetKind==='fermenting-barrel'?1.09:targetKind==='geothermal-generator'?2.70:targetKind==='bedroll'?.19:targetKind==='torch-lamp'?1.1:targetKind==='firefoam-popper'?.97:targetKind==='spike-trap'?.625:targetKind==='electric-crematorium'?1.56:targetKind==='electric-smelter'?1.32:targetKind==='biofuel-refinery'?1.69:targetKind==='chemfuel-generator'?1.75:targetKind==='vitals-monitor'?1.14:targetKind==='mini-turret'?1.18:targetKind==='tube-television'?.81:targetKind==='sandbags'?.66:(isFoodWorkstation(targetKind)||targetKind==='machining-table'||targetKind==='hi-tech-research-bench'||targetKind==='fabrication-bench'||targetKind==='multi-analyzer'||targetKind==='drug-lab'||targetKind==='art-bench'||targetKind==='research-bench'||targetKind==='tailor-bench'||targetKind==='stonecutter')?WORLD_SCALE.stonecutterHeight:(targetKind==='vent'||targetKind==='wall'||targetKind==='cooler')?wallHeight:targetKind==='table'||targetKind==='chess-table'?WORLD_SCALE.tableHeight:targetKind==='horseshoes'?WORLD_SCALE.horseshoeHeight:targetKind==='stool'?WORLD_SCALE.stoolHeight:WORLD_SCALE.bedSurfaceHeight)+.06;
         for(const cell of cells)for(const ry of [-Math.PI/4,Math.PI/4])intentSolids.push({targetId:job.id,x:cell.x,z:cell.z,y,sx:.85,sy:.05,sz:.08,ry,color:job.kind==='uninstall'?0xd9b66c:0xd77855});

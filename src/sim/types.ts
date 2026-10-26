@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 295 as const;
+export const SCHEMA_VERSION = 296 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -53,7 +53,7 @@ export interface Memory { suspendedTicks?:number; kind: 'ate-without-table' | 'a
 export type NeedTask =
   | { kind: 'eat'; alcoholReason?:'joy'|'scheduled'|'addiction'|'ordered'|'binge'|'inventory'; forced?:true; phase: 'pickup' | 'collect' | 'choose-spot' | 'travel' | 'ingest'; sourcePileId: number | null; paste?:import('./nutrient-paste.ts').PasteRequest; carryPileId: number | null; quantity: number; progress: number; workRemainder?:number; dining: DiningPlace | null }
   | { kind: 'sleep'; roomRest?:import('./room-experience.ts').RoomRest; medical?:'patient'|'bedrest'; phase: 'travel' | 'sleep'; bedId: number | null; target: Cell };
-export interface Job extends Cell { frameDamage?:number;
+export interface Job extends Cell { wallDoor296?:import('./wall-door-state-296.ts').WallDoorState296; frameDamage?:number;
   tree?:import('./tree-transfer-state.ts').TreeTask; plantTarget?:{resourceId:number};
   fixBreakdown?:import('./breakdowns.ts').BreakdownTarget;
   floor?:import('./flooring.ts').FloorKind;

@@ -21,7 +21,7 @@ import {validLinkedStorageRegistryShape286} from '../src/sim/linked-storage-save
 import {patchShelfPolicy} from '../src/sim/shelf-commands.ts';
 import type {NovelBook295} from '../src/sim/book-state-295.ts';
 import type {ReadingTask295} from '../src/sim/reading-state-295.ts';
-import type {MaterialPile,World} from '../src/sim/types.ts';
+import {SCHEMA_VERSION,type MaterialPile,type World} from '../src/sim/types.ts';
 
 /** Exact own V481 native export after286 played steps, not a295 world renamed
  *294. Original: tmp/toxic-fallout-v481/native-2026-10-26T04-01-45.763Z-26724/
@@ -46,11 +46,11 @@ function readingWorld(stage:ReadingTask295['stage'],phase:ReadingTask295['phase'
 test('authentic294 active Fallout migrates the entire campaign by its schema number alone',()=>{
  expect(createHash('sha256').update(legacyBytes).digest('hex')).toBe('71965d8d91399346f793cd19af49f2954096ac2ae87fd8e09e3e17f6fcc89da2');
  const old=JSON.parse(legacyText),before=JSON.stringify(old);expect(old.schemaVersion).toBe(294);expect(validateCampaignSchema294(old)).toEqual([]);expect(JSON.stringify(old)).toBe(before);
- const migrated=deserializeCampaign(legacyText) as World;expect(migrated).toEqual({...old,schemaVersion:295});expect(migrated.rng).toBe(old.rng);
+ const migrated=deserializeCampaign(legacyText) as World;expect(migrated).toEqual({...old,schemaVersion:SCHEMA_VERSION});expect(migrated.rng).toBe(old.rng);
  expect(getToxicFallout294(migrated)).toEqual(old.miscIncidents.toxicFallout.active);expect(migrated.pawns.map(p=>p.health)).toEqual(old.pawns.map((p:World['pawns'][number])=>p.health));
  expect(migrated.piles.some(p=>p.item==='novel'||p.kind==='book'||Object.hasOwn(p,'book'))).toBe(false);
  for(const p of migrated.pawns){expect(Object.hasOwn(p,'readingPolicy295')).toBe(false);expect(Object.hasOwn(p.recreation.tolerance,'reading')).toBe(false);expect(Object.hasOwn(p.recreation.bored,'reading')).toBe(false);}
- expect(JSON.parse(serializeCampaign(migrated))).toEqual({...old,schemaVersion:295});
+ expect(JSON.parse(serializeCampaign(migrated))).toEqual({...old,schemaVersion:SCHEMA_VERSION});
 });
 
 test.each(['book','policy','genre','task'] as const)('the complete294 contract refuses future %s before changing its number',kind=>{
@@ -70,7 +70,7 @@ test.each([
  ['lost caravan',{worldGroups:{abandonedContents:[{items:[pile()]}]}}],
  ['orbital delivery',{orbital:{pending:[{items:[pile()]}]}}],
 ] as const)('historical book closure follows the actual %s envelope',(_name,raw)=>{
- expect(validNovelHistoricalTransport295(raw,294)).toBe(false);expect(validNovelHistoricalTransport295(raw,295)).toBe(true);expect(validNovelHistoricalTransport295(raw,296)).toBe(false);
+ expect(validNovelHistoricalTransport295(raw,294)).toBe(false);expect(validNovelHistoricalTransport295(raw,295)).toBe(true);expect(validNovelHistoricalTransport295(raw,296)).toBe(true);expect(validNovelHistoricalTransport295(raw,297)).toBe(false);
 });
 
 test('a Novel item without its Book original is refused even when the metadata key is absent',()=>{
@@ -121,9 +121,9 @@ test('new storage choices are prospective and historical filters/getters stay cl
  let reads=0;const items={};Object.defineProperty(items,'novel',{enumerable:true,get(){reads++;return true;}});expect(validStorageItems(items,295)).toBe(false);expect(reads).toBe(0);
 });
 
-test.each([294,295,296] as const)('standalone shelf/category and linked policies use their actual schema%s',version=>{
+test.each([294,295,296,297] as const)('standalone shelf/category and linked policies use their actual schema%s',version=>{
  const base=newShelfStorage([2,3],294).settings,filters={wood:true,food:true,book:true},policy={...base,filters};
- const expected=version===295;
+ const expected=version===295||version===296;
  expect(validStorageSettings({filters},version)).toBe(expected);expect(validLinkedShelfPolicy286(policy,version)).toBe(expected);
  expect(patchLinkedShelfPolicy286(base,{filters},version)!==undefined).toBe(expected);
  expect(validLinkedStorageRegistryShape286({revision:1,nextId:2,groups:[{id:1,originMapId:0,name:'Livres',settings:policy,memberIds:[10,11]}]},version,100)).toBe(expected);
@@ -176,10 +176,10 @@ test.each(['second carry','different goods','different book'] as const)('a readi
  expect(validateWorld(world).length).toBeGreaterThan(0);expect(()=>serializeCampaign(world)).toThrow();expect(JSON.stringify(world)).toBe(before);
 });
 
-test('orbital save admits only the295 original book, including explicit full HP, without changing stock',()=>{
+test('orbital save admits the295 and296 original book, including explicit full HP, with297 closed and no stock change',()=>{
  const {world,ids}=prepareNovelScenario482(),book=world.piles.find(p=>p.id===ids.bookId)!;book.damage=0;
  const before=JSON.stringify(world);expect(validOrbitalTransport(world,295)).toBe(true);expect(JSON.stringify(world)).toBe(before);
- expect(validOrbitalTransport(world,294)).toBe(false);expect(validOrbitalTransport(world,296)).toBe(false);
+ expect(validOrbitalTransport(world,294)).toBe(false);expect(validOrbitalTransport(world,296)).toBe(true);expect(validOrbitalTransport(world,297)).toBe(false);
  const state=book.book;delete book.book;expect(validOrbitalTransport(world,295)).toBe(false);book.book=state;
  book.quantity=2;expect(validOrbitalTransport(world,295)).toBe(false);
 });

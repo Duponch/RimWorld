@@ -83,13 +83,15 @@ test('293 full validation refuses a current condition before migration and leave
  expect(validateCampaignSchema293(old).length).toBeGreaterThan(0);expect(()=>deserializeWorld(before)).toThrow(/ToxicFallout/);expect(JSON.stringify(old)).toBe(before);
 });
 
-test.each([293,296])('ToxicFallout state never opens the historical or future schema %s',version=>{
+test.each([293,297])('ToxicFallout state never opens the historical or future schema %s',version=>{
  expect(validToxicFalloutCalendar294(active(),version,context,parent)).toBe(false);
  expect(validToxicFalloutHistoricalTransport294({world:{...context,miscIncidents:{...parent,toxicFallout:active()}}},version)).toBe(false);
 });
 
-test('all supported schema-family helpers include294 and295 while preserving closed296 admission',()=>{
- for(const guard of Object.values(compatibility)){expect(guard(294)).toBe(true);expect(guard(295)).toBe(true);expect(guard(296)).toBe(false);expect(guard(0)).toBe(false);}
+test('all supported schema-family helpers include294/295/296 while preserving closed297 admission',()=>{
+ for(const guard of Object.values(compatibility)){expect(guard(294)).toBe(true);expect(guard(295)).toBe(true);expect(guard(296)).toBe(true);expect(guard(297)).toBe(false);expect(guard(0)).toBe(false);}
+ expect(validToxicFalloutCalendar294(active(),296,context,parent)).toBe(true);
+ expect(validToxicFalloutHistoricalTransport294({world:{...context,miscIncidents:{...parent,toxicFallout:active()}}},296)).toBe(true);
 });
 
 test.each([150000,630000])('native duration endpoint %s Core is preserved, not rounded to a local day',duration=>{
@@ -184,7 +186,7 @@ test('corpse age credit is exact, historical-closed and cannot replace ordinary 
  const rot={progress:310,atTick:100,fallout294:300};expect(validCorpseRot(rot,100,90,294)).toBe(true);
  expect(validCorpseRot({progress:300,atTick:100,fallout294:300},100,100,294)).toBe(true);
  expect(validCorpseRot({progress:300300,atTick:100,fallout294:300300},100,90,294)).toBe(false);
- expect(validCorpseRot(rot,100,90,293)).toBe(false);expect(validCorpseRot(rot,100,90,295)).toBe(true);expect(validCorpseRot(rot,100,90,296)).toBe(false);
+ expect(validCorpseRot(rot,100,90,293)).toBe(false);expect(validCorpseRot(rot,100,90,295)).toBe(true);expect(validCorpseRot(rot,100,90,296)).toBe(true);expect(validCorpseRot(rot,100,90,297)).toBe(false);
  expect(validCorpseRot({...rot,progress:311},100,90,294)).toBe(false);expect(validCorpseRot({...rot,progress:299},100,90,294)).toBe(false);
  for(const credit of [0,-300,299,301,.3,NaN,Infinity,undefined])expect(validCorpseRot({...rot,fallout294:credit},100,90,294)).toBe(false);
  expect(validToxicFalloutRotCredit294(rot,294,false)).toBe(false);

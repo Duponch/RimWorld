@@ -39,6 +39,7 @@ import { furnitureHaulValid } from './furniture-haul-rules.ts';
 import { furnitureStorageCandidates, mayImproveFurnitureStorage } from './furniture-haul-planner.ts';
 import { furnitureReady, furnitureWorkTarget, packedAt } from './furniture-rules.ts';
 import { deconstructionAvailable } from './deconstruction-rules.ts';
+import { startWallDoorWork296 } from './wall-door-state-296.ts';
 import { validSowingClearance } from './sowing-clearance.ts';
 import { sowingJobAllowed } from './farming.ts';
 import { constructionCandidates } from './construction-planner.ts';
@@ -185,7 +186,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   const ready = world.jobs.filter(job => (job.kind!=='mine'||!explorationEnabled256(world)||world.tiles[cellIndex(world,job.x,job.z)]?.terrain==='rock')&&(job.kind!=='smooth-floor'||!smoothFloorReason281(world,job,job.id,budget.structureGeometry?.()))&&allows(ancientRepairTarget256(world,job))&&(!job.tree||!treeJobReason(world,job,pawn))&&!isConstruction(job) && job.reservedBy === null && !clearingCells.has(cellIndex(world,job.x,job.z)) && workPriority(pawn,workType(job)) > 0
     &&(job.kind!=='fix-breakdown'||fixBreakdownWanted(world,job)&&deliveredMaterial(world,job,'component')===1)
     && sowingJobAllowed(world,pawn,job) && (job.kind!=='sow'||!packedAt(world,job)) && job.escrow.wood >= JOB_WOOD_COST[job.kind] && (pawn.hunger > 20 || job.kind === 'harvest') && (job.kind!=='deconstruct'||deconstructionAvailable(world,job,pawn.id)) && (!job.furniture||furnitureReady(world,job,pawn)&&allows(furnitureWorkTarget(world,job))))
-    .map(job => ({ job, target: treeWorkTarget(world,job)??ancientRepairTarget256(world,job), id: job.id, priority: workPriority(pawn,workType(job)), rank: job.kind==='fix-breakdown'?-3:job.kind==='flick'?-2.5:job.kind==='uninstall' ? -2 : job.kind==='deconstruct' ? 3 : workType(job) === 'gather' ? 0 : 1, distance: Math.abs(job.x-pawn.x)+Math.abs(job.z-pawn.z) }))
+    .map(job => ({ job, target: treeWorkTarget(world,job)??ancientRepairTarget256(world,job), id: job.id, priority: workPriority(pawn,workType(job)), rank: job.kind==='fix-breakdown'?-3:job.kind==='flick'?-2.5:job.kind==='uninstall' ? -2 : job.kind==='deconstruct' ? job.wallDoor296?.plan?2:3 : workType(job) === 'gather' ? 0 : 1, distance: Math.abs(job.x-pawn.x)+Math.abs(job.z-pawn.z) }))
     .sort(compareCandidate);
   let reachable: Reachability | null = null;
   const first = ready[0];
@@ -203,7 +204,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
         const destination=source?findAsideDestination(world,first.job,source,quantity,blocked,budget,pawn):null;
         if (!source || destination) {
           if (source && destination) pawn.haul={sourcePileId:source.id,quantity,phase:'pickup',destination,carryPileId:null};
-          else {first.job.reservedBy=pawn.id;first.job.status='active';pawn.jobId=first.job.id;}
+          else {first.job.reservedBy=pawn.id;first.job.status='active';pawn.jobId=first.job.id;startWallDoorWork296(first.job);}
           pawn.path=path;pawn.state=path.length?'moving':'working';pawn.planCooldown=PLAN_INTERVAL;return;
         }
         reachable=null; // Partial result cannot rank the remaining jobs.
@@ -283,7 +284,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
     if(job.kind==='sow'&&packedAt(world,job))continue;
     if(job.furniture&&(!furnitureReady(world,job,pawn)||!allows(furnitureWorkTarget(world,job))))continue;
     if(job.kind==='deconstruct'&&!deconstructionAvailable(world,job,pawn.id))continue;
-    const candidate: Candidate = { priority: workPriority(pawn,work), rank: job.kind==='fix-breakdown'?-3:job.kind==='flick'?-2.5:job.kind==='uninstall' ? -2 : job.kind==='deconstruct' ? 3 : work === 'gather' ? 0 : 1, distance: Math.abs(job.x - pawn.x) + Math.abs(job.z - pawn.z), id: job.id, job, target: treeWorkTarget(world,job)??ancientRepairTarget256(world,job) };
+    const candidate: Candidate = { priority: workPriority(pawn,work), rank: job.kind==='fix-breakdown'?-3:job.kind==='flick'?-2.5:job.kind==='uninstall' ? -2 : job.kind==='deconstruct' ? job.wallDoor296?.plan?2:3 : work === 'gather' ? 0 : 1, distance: Math.abs(job.x - pawn.x) + Math.abs(job.z - pawn.z), id: job.id, job, target: treeWorkTarget(world,job)??ancientRepairTarget256(world,job) };
     if (job.kind === 'sow' && ground.has(cellIndex(world, job.x, job.z))) {
       if (best && compareCandidate(candidate, best) >= 0) continue;
       const source = world.piles.find(p => p.owner.type === 'ground' && sameCell(p.owner, job));
@@ -422,7 +423,7 @@ export function planWork(world: World, pawn: Pawn, getBlocked: NavigationGrid, o
   if (best) {
     const path = routeToJob(world, best.target, reachable, !best.job,budget.structureGeometry?.())!;
     if (best.destination) pawn.haul = { ...(best.whole?{whole:true as const}:{}), sourcePileId: best.sourceId!, quantity: best.quantity!, phase: 'pickup', destination: best.destination, carryPileId: null };
-    else { if(best.job!.kind==='install')best.job!.installationWork=asBuilder(pawn)?'build':'haul';if(best.clearance)best.job!.clearance=best.clearance;best.job!.reservedBy = pawn.id; best.job!.status = 'active'; pawn.jobId = best.job!.id; }
+    else { if(best.job!.kind==='install')best.job!.installationWork=asBuilder(pawn)?'build':'haul';if(best.clearance)best.job!.clearance=best.clearance;best.job!.reservedBy = pawn.id; best.job!.status = 'active'; pawn.jobId = best.job!.id;startWallDoorWork296(best.job!); }
     pawn.path = path; pawn.state = path.length ? 'moving' : 'working'; return;
   }
 }

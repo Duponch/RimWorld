@@ -22,31 +22,46 @@ function report(world:World,message:string):void {
  * first unrelated blueprint at the same coordinate. All refusals precede edits. */
 export function cancelIntentJobs(world:World,ids:ReadonlySet<number>):CommandResult {
   if(!ids.size)return {ok:true};
-  const jobs=world.jobs.filter(job=>ids.has(job.id));
-  if(jobs.length!==ids.size)return fail('Un ordre sélectionné n’existe plus.','missing-target');
+  const jobs=world.jobs.filter(job=>ids.has(job.id)||job.wallDoor296?.plan&&ids.has(job.wallDoor296.plan.id));
+  if([...ids].some(id=>!jobs.some(j=>j.id===id||j.wallDoor296?.plan?.id===id)))return fail('Un ordre sélectionné n’existe plus.','missing-target');
   if(jobs.some(maintenance))return fail('Retirez la zone de foyer pour suspendre cet entretien automatique.');
-  const actors=new Set(world.pawns.filter(p=>actorFor(p,ids)).map(p=>p.id));
+  const removeIds=new Set<number>(),releaseIds=new Set<number>(),queueIds=new Set<number>();
+  const changes: {job:Job;manual:boolean;removePlan:boolean}[]=[];
+  for(const job of jobs){
+    const state=job.wallDoor296;
+    if(!state){removeIds.add(job.id);releaseIds.add(job.id);queueIds.add(job.id);continue;}
+    const removeManual=ids.has(job.id),removePlan=!!state.plan&&ids.has(state.plan.id);
+    const manual=state.manual&&!removeManual,plan=!!state.plan&&!removePlan;
+    const implicitActive=!!state.fromBlueprint&&world.pawns.some(p=>p.id===job.reservedBy&&p.jobId===job.id);
+    changes.push({job,manual,removePlan});
+    if(!manual&&!plan&&!implicitActive){removeIds.add(job.id);releaseIds.add(job.id);}
+    if(removeManual&&!implicitActive)releaseIds.add(job.id);
+    if(removeManual||removeIds.has(job.id))queueIds.add(job.id);
+  }
+  const actors=new Set(world.pawns.filter(p=>actorFor(p,releaseIds)).map(p=>p.id));
   const retained=new Set(world.pawns.filter(pawn=>actors.has(pawn.id)&&(pawn.motion?.end??0)>world.tick
     &&(world.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)||world.packed.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id))).map(p=>p.id));
   // Captured travel finishes with the original held object. The existing
   // interrupted-cargo producer will drop it at real contact, never ahead.
-  const drops=planSelectedDrops(world,new Set(ids),new Set([...actors].filter(id=>!retained.has(id))));
+  const drops=planSelectedDrops(world,removeIds,new Set([...actors].filter(id=>!retained.has(id))));
   if(!drops)return fail('Pas de place pour restituer les matériaux du chantier ou la cargaison.','occupied');
+  for(const {job,manual,removePlan} of changes){job.wallDoor296!.manual=manual;if(removePlan)delete job.wallDoor296!.plan;}
   const roofCells=jobs.filter(isRoofJob).map(j=>j.z*world.width+j.x);
   if(roofCells.length)designateRoofArea(world,roofCells,'ignore-roof');
   for(const pawn of world.pawns){
-    const active=actorFor(pawn,ids);
+    const active=actorFor(pawn,releaseIds);
     if(active&&retained.has(pawn.id)){releaseAssignments(world,pawn);pawn.interruptedCargo=true;pawn.planCooldown=0;}
     else if(active&&!releaseWork(world,pawn,drops))throw Error('Preflighted cancellation has no physical cargo drop.');
     if(active&&pawn.priorityWork&&jobs.some(job=>footprintCells(job).some(cell=>same(cell,pawn.priorityWork!.cell))))delete pawn.priorityWork;
-    pawn.orders.queue=pawn.orders.queue.filter(order=>typeof order==='number'?!ids.has(order)
-      :!isHaulOrder(order)||!ids.has(constructionHaulId(order.destination)??-1));
+    pawn.orders.queue=pawn.orders.queue.filter(order=>typeof order==='number'?!queueIds.has(order)
+      :!isHaulOrder(order)||!queueIds.has(constructionHaulId(order.destination)??-1));
   }
-  for(const pile of world.piles)if(pile.owner.type==='job'&&ids.has(pile.owner.jobId)){
+  for(const job of jobs)if(queueIds.has(job.id)&&job.reservedBy!==null&&!world.pawns.some(p=>p.id===job.reservedBy&&p.jobId===job.id)){job.reservedBy=null;job.status='pending';}
+  for(const pile of world.piles)if(pile.owner.type==='job'&&removeIds.has(pile.owner.jobId)){
     const job=jobs.find(j=>pile.owner.type==='job'&&j.id===pile.owner.jobId)!;
     if(!commitDrop(world,pile,job,drops))throw Error('Preflighted cancellation has no material drop.');
   }
-  world.jobs=world.jobs.filter(job=>!ids.has(job.id));
+  world.jobs=world.jobs.filter(job=>!removeIds.has(job.id));
   report(world,'Ordre annulé ; les matériaux restent physiquement disponibles.');return {ok:true};
 }
 

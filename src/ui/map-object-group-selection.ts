@@ -4,6 +4,7 @@ import { apparelFamily, isApparelItem } from '../sim/apparel-rules';
 import { footprintCells, STRUCTURE_DEFINITIONS } from '../sim/definitions';
 import type { Cell, Job, MaterialPile, Resource, World } from '../sim/types';
 import { mapObjectCells, mapResourceSelectable, sameMapObject, type MapObjectSelection } from './map-object-selection';
+import { selectedMapJob296, selectableMapJobs296 } from './wall-door-selection-296';
 
 /** Installed Core 1.6 Selector.MaxNumSelected, not a world-distance radius. */
 export const MAX_MAP_OBJECT_SELECTION = 200;
@@ -45,7 +46,7 @@ function targetIdentity(world:GeyserWorld256,target:MapObjectSelection):Identity
     case 'pile': {const object=world.piles.find(p=>p.id===target.id&&p.owner.type==='ground');return object?pileIdentity(object):undefined;}
     case 'resource': {const object=world.resources.find(r=>r.id===target.id);return object&&mapResourceSelectable(object)?resourceIdentity(object):undefined;}
     case 'rock': {const tile=world.tiles[target.id];return tile?.terrain==='rock'?naturalDefinition(`mineable:${tile.ore??tile.stone??'legacy'}`):undefined;}
-    case 'job': {const object=world.jobs.find(j=>j.id===target.id);return object?jobIdentity(object):undefined;}
+    case 'job': {const object=selectedMapJob296(world,target.id);return object?jobIdentity(object):undefined;}
     // Zones keep their own editing and selection pipeline.
     case 'growing': case 'stockpile': return undefined;
   }
@@ -87,7 +88,7 @@ export function matchingMapObjects(world:GeyserWorld256,target:MapObjectSelectio
       }
       break;
     case 'job':
-      for(const object of world.jobs)add({kind:'job',id:object.id},jobIdentity(object),footprintCells(object));
+      for(const object of selectableMapJobs296(world))add({kind:'job',id:object.id},jobIdentity(object),footprintCells(object));
       break;
   }
   const visible=candidates.flatMap(candidate=>{
@@ -123,7 +124,7 @@ export function mapObjectGroupCells(world:GeyserWorld256,selections:readonly Map
   const structures=indexes.get('structure');
   if(structures)for(const object of world.structures)if(structures.has(object.id))structures.set(object.id,footprintCells(object));
   const jobs=indexes.get('job');
-  if(jobs)for(const object of world.jobs)if(jobs.has(object.id))jobs.set(object.id,footprintCells(object));
+  if(jobs)for(const object of selectableMapJobs296(world))if(jobs.has(object.id))jobs.set(object.id,footprintCells(object));
   const resources=indexes.get('resource');
   if(resources)for(const object of world.resources)if(resources.has(object.id)&&mapResourceSelectable(object))resources.set(object.id,[cellOf(object)]);
   const piles=indexes.get('pile');

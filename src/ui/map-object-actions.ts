@@ -38,6 +38,7 @@ function actionsFor(world: World, selected: MapObjectSelection, cells: readonly 
   if (!cell) return [];
   const actions: MapObjectAction[] = [];
   const blocked = (kind: Job['kind']|Structure['kind'], targets: readonly Cell[], deconstruct = false) => world.jobs.some(job => !isRoofJob(job)
+    && !(deconstruct&&job.wallDoor296?.manual===false)
     && !(deconstruct && ['repair', 'fix-breakdown', 'flick'].includes(job.kind))
     && sharesConstructionLayer(job.furniture?.kind ?? job.deconstruction?.kind ?? job.flick?.kind ?? job.fixBreakdown?.kind ?? job.kind, kind)
     && footprintCells(job).some(at => targets.some(target => same(at, target))));
@@ -77,9 +78,12 @@ function actionsFor(world: World, selected: MapObjectSelection, cells: readonly 
       actions.push({ id: 'deconstruct', label: structure.kind==='sleeping-spot'?'Retirer l’emplacement':'Déconstruire',
         command: { type: 'designate', kind: 'deconstruct', targetId: structure.id, x: structure.x, z: structure.z } });
     }
-    ownsJob = job => job.deconstruction?.structureId === selected.id || job.furniture?.structureId === selected.id || job.flick?.structureId === selected.id;
+    ownsJob = job => job.deconstruction?.structureId === selected.id&&job.wallDoor296?.manual!==false || job.furniture?.structureId === selected.id || job.flick?.structureId === selected.id;
   } else if (selected.kind === 'packed') ownsJob = job => job.furniture?.structureId === selected.id;
-  else if (selected.kind === 'job') ownsJob = job => job.id === selected.id;
+  else if (selected.kind === 'job') {
+    if(world.jobs.some(job=>job.wallDoor296?.plan?.id===selected.id))actions.push({id:'cancel',label:'Annuler le plan de porte',command:{type:'cancel-job',jobId:selected.id}});
+    else ownsJob = job => job.id === selected.id&&job.wallDoor296?.manual!==false;
+  }
   // Each inspector cancels its own identity, even under another blueprint.
   const owned=ownsJob&&world.jobs.find(job=>cancellable(job)&&ownsJob!(job));
   if(owned)actions.push({id:'cancel',label:'Annuler l’ordre',command:selected.kind==='resource'&&owned.kind!=='mine'?{type:'cancel-resource',resourceId:selected.id}:{type:'cancel-job',jobId:owned.id}});

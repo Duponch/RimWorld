@@ -17,9 +17,9 @@ export function validMiscIncidents(value:unknown,version:number,world:Pick<World
   // A future field is forbidden even when hidden, undefined or an accessor.
   // Never read it before its own data descriptor has been admitted.
   const toxic=object(value)?Object.getOwnPropertyDescriptor(value,'toxicFallout'):undefined;
-  if(object(value)&&'toxicFallout'in value&&((version!==294&&version!==295)||!toxic||toxic.enumerable!==true||!Object.hasOwn(toxic,'value')||toxic.value===undefined))return false;
+  if(object(value)&&'toxicFallout'in value&&((version!==294&&(version!==295&&version!==296))||!toxic||toxic.enumerable!==true||!Object.hasOwn(toxic,'value')||toxic.value===undefined))return false;
   if(version<169||!world.gameProfile||!object(value)||
-    !keys(value,['profile','adoptedAt','rng','nextCheck','introDone','checks','opportunities','heatwaves','lastHeatwaveStart','active',...version>=200?['weather']:[],...version>=201?['shortCircuits']:[],...version>=205?['cropBlights']:[],...(version===294||version===295)?['toxicFallout']:[]])||
+    !keys(value,['profile','adoptedAt','rng','nextCheck','introDone','checks','opportunities','heatwaves','lastHeatwaveStart','active',...version>=200?['weather']:[],...version>=201?['shortCircuits']:[],...version>=205?['cropBlights']:[],...(version===294||(version===295||version===296))?['toxicFallout']:[]])||
     value.profile!=='cassandra-misc-v1'||!integer(value.adoptedAt,0,world.tick)||!integer(value.rng,1,0xffffffff)||
     !integer(value.nextCheck,MISC_FIRST_CHECK)||value.nextCheck%MISC_CHECK_INTERVAL!==0||
     value.nextCheck!==Math.max(MISC_FIRST_CHECK,(Math.floor(scheduleTick/MISC_CHECK_INTERVAL)+1)*MISC_CHECK_INTERVAL)||

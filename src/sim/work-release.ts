@@ -1,4 +1,5 @@
 import {preparePartyRelease292} from './party-release-292.ts';
+import { wallDoorImplicitOrphan296 } from './wall-door-state-296.ts';
 import {isSchema285OrLater} from './schema-compatibility-257.ts';
 import {releaseShipCasketCarry277} from './ship-casket-carry-277.ts';
 import {prepareCoupleRelease285} from './couple-release-285.ts';
@@ -179,7 +180,7 @@ export function commitDrop(world:World,pile:MaterialPile,origin:Cell,plan?:Reado
 }
 export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan,ownerLoss=false):boolean {
   // Refuse an immutable collective issue before any furniture/cargo drop.
-  if((Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||Number(world.schemaVersion)===294||Number(world.schemaVersion)===295))&&(world.party292?.active?.members.some(m=>m.pawnId===pawn.id)||ownerLoss&&world.party292?.active?.organizerId===pawn.id)){try{if(!preparePartyRelease292(world,new Set([pawn.id]),{death:!!pawn.health?.death,finish:ownerLoss&&world.party292?.active?.organizerId===pawn.id}).current())return false;}catch{return false;}}
+  if((Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||Number(world.schemaVersion)===294||Number(world.schemaVersion)===295||Number(world.schemaVersion)===296))&&(world.party292?.active?.members.some(m=>m.pawnId===pawn.id)||ownerLoss&&world.party292?.active?.organizerId===pawn.id)){try{if(!preparePartyRelease292(world,new Set([pawn.id]),{death:!!pawn.health?.death,finish:ownerLoss&&world.party292?.active?.organizerId===pawn.id}).current())return false;}catch{return false;}}
   if(!releaseFurniture(world,pawn,plan))return false;
   const held=world.piles.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
   if(held&&!commitDrop(world,held,pawn,plan))return false;
@@ -190,7 +191,7 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan,ownerLoss=false
 /** Release task/service claims independently of ownership. Only involuntary or tactical
  * interruption may use this while an object is still carried. */
 export function releaseAssignments(world:World,pawn:Pawn,despawning=false,ownerLoss=despawning):void {
-  if((Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||Number(world.schemaVersion)===294||Number(world.schemaVersion)===295))&&(pawn.recreation.task?.activity==='party'||world.party292?.active?.members.some(m=>m.pawnId===pawn.id)||ownerLoss&&world.party292?.active?.organizerId===pawn.id))preparePartyRelease292(world,new Set([pawn.id]),{death:!!pawn.health?.death,finish:ownerLoss&&world.party292?.active?.organizerId===pawn.id}).commit();
+  if((Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||Number(world.schemaVersion)===294||Number(world.schemaVersion)===295||Number(world.schemaVersion)===296))&&(pawn.recreation.task?.activity==='party'||world.party292?.active?.members.some(m=>m.pawnId===pawn.id)||ownerLoss&&world.party292?.active?.organizerId===pawn.id))preparePartyRelease292(world,new Set([pawn.id]),{death:!!pawn.health?.death,finish:ownerLoss&&world.party292?.active?.organizerId===pawn.id}).commit();
   if(isSchema285OrLater(world.schemaVersion)&&pawn.coupleTask285)prepareCoupleRelease285(world,new Set([pawn.id])).commit();
   releaseAllowedAreaReturn(pawn);
   releaseAnimalRescue(world,pawn);
@@ -208,7 +209,12 @@ export function releaseAssignments(world:World,pawn:Pawn,despawning=false,ownerL
   releaseShipCasketCarry277(world,pawn);
   releaseCryptosleepCarry271(world,pawn,despawning);
   releaseRescue(world,pawn,despawning);
-  releasePawnJob259(world.jobs.find(j=>j.id===pawn.jobId),pawn.id);
+  const releasedJob=world.jobs.find(j=>j.id===pawn.jobId);
+  releasePawnJob259(releasedJob,pawn.id);
+  if(releasedJob&&releasedJob.reservedBy===null&&wallDoorImplicitOrphan296(releasedJob)){
+    world.jobs=world.jobs.filter(j=>j!==releasedJob);
+    for(const p of world.pawns)p.orders.queue=p.orders.queue.filter(o=>o!==releasedJob.id);
+  }
   clearReleasedPawnAssignments259(pawn);
 }
 
@@ -235,5 +241,5 @@ export function planReformInventoryDrops260(world:World,piles:readonly MaterialP
 
 /** Existing job half of release, also reusable on a private Job record. */
 export function releasePawnJob259(job:import('./types.ts').Job|undefined,pawnId:number):void {
-  if(job?.reservedBy===pawnId){if(job.tree?.kind==='replant'){job.tree.phase='pickup';job.tree.carryPileId=null;job.tree.workCore=0;delete job.tree.durationCore;delete job.clearance;resetWork(job);}delete job.installationWork;delete job.clearance;delete job.pickTicks;job.reservedBy=null;job.status='pending';if(job.repair)delete job.repair.warmed;if(job.kind==='smooth-floor'||job.kind==='remove-bridge'||job.kind==='remove-floor'||job.kind==='flick'||job.kind==='repair'||job.kind==='fix-breakdown'||job.furniture||job.kind==='mine'||job.kind==='sow'||job.kind==='deconstruct'||isRoofJob(job))resetWork(job);}
+  if(job?.reservedBy===pawnId){if(job.wallDoor296){delete job.wallDoor296.fromBlueprint;if(job.wallDoor296.manual&&!job.wallDoor296.plan)delete job.wallDoor296;}if(job.tree?.kind==='replant'){job.tree.phase='pickup';job.tree.carryPileId=null;job.tree.workCore=0;delete job.tree.durationCore;delete job.clearance;resetWork(job);}delete job.installationWork;delete job.clearance;delete job.pickTicks;job.reservedBy=null;job.status='pending';if(job.repair)delete job.repair.warmed;if(job.kind==='smooth-floor'||job.kind==='remove-bridge'||job.kind==='remove-floor'||job.kind==='flick'||job.kind==='repair'||job.kind==='fix-breakdown'||job.furniture||job.kind==='mine'||job.kind==='sow'||job.kind==='deconstruct'||isRoofJob(job))resetWork(job);}
 }

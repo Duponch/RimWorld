@@ -3,6 +3,8 @@ import {roadPropCanDeconstruct256} from './local-road-prop-ownership-256.ts';
 import { footprintContains, JOB_DURATION } from './definitions.ts';
 import { constructionRecipe, type ConstructionMaterial } from './construction-materials.ts';
 import type { Cell, Job, Structure, World } from './types.ts';
+import { wallDoorHasIntent296 } from './wall-door-state-296.ts';
+import { promoteWallDoorManual296 } from './wall-door-runtime-296.ts';
 
 export interface DeconstructionTarget { structureId: number; kind: Structure['kind']; material?:ConstructionMaterial }
 /** Lost construction wood and retired fuel history are distinct ledger terms. */
@@ -15,6 +17,7 @@ export function deconstructionReserved(world: World, id: number, exceptPawn?: nu
 /** Reserve the object, not its owner's bed assignment or a table's eating surface.
  * A queued order may follow the same pawn's service; other users must finish first. */
 export function deconstructionAvailable(world: World, job: Job, exceptPawn?: number): boolean {
+  if(!wallDoorHasIntent296(job)&&!(job.wallDoor296?.fromBlueprint&&job.reservedBy===exceptPawn&&world.pawns.some(p=>p.id===exceptPawn&&p.jobId===job.id)))return false;
   const target=deconstructionTarget(world,job);if(target&&ancientCasketRemovalRefusal256(target))return false;
   const id = job.deconstruction?.structureId;
   if (!id || !deconstructionTarget(world, job)||!roadPropCanDeconstruct256(world,deconstructionTarget(world,job)!)) return false;
@@ -39,6 +42,7 @@ export function deconstructionDuration(job: Job): number {
 }
 export function designateDeconstruction(world: World, structure: Structure): void {
   if(ancientCasketRemovalRefusal256(structure)||!roadPropCanDeconstruct256(world,structure))return;
+  if(promoteWallDoorManual296(world,structure))return;
   world.jobs.push({ id: world.nextId++, kind: 'deconstruct', deconstruction: { structureId: structure.id, kind: structure.kind,...structure.material?{material:structure.material}:{} },
     x: structure.x, z: structure.z, orientation: structure.orientation, footprint: structure.footprint,
     progress: 0, status: 'pending', reservedBy: null, escrow: { wood: 0, food: 0 } });

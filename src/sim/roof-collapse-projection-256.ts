@@ -70,6 +70,15 @@ export function roofCollapseProjection256(world:World){
    const actual=registeredMapForValidation(root,record.id);if(!actual)throw Error('Roof projection has no actual map owner');
    const local=record.id===mapId?view:observerView(actual);return {...record,map:captureLocalMap(local)};
   })};
+  if(root!==world&&mapId!==undefined&&mapId===root.worldMaps.rootMapId){
+   // A registered home-map context may already have retired a support and
+   // replaced its local arrays before the tick flushes to the campaign root.
+   // Rebinding below must read that OWNED draft, never the stale root body.
+   // Campaign fields and other-map observer drafts retain their own owners.
+   const activeHome=captureLocalMap(view) as unknown as Data;
+   for(const key of Object.keys(captureLocalMap(privateRoot)))if(!Object.hasOwn(activeHome,key))delete (privateRoot as unknown as Data)[key];
+   Object.assign(privateRoot,activeHome);
+  }
   if(root!==world)forwardCampaignFields(view,privateRoot);
   brandCampaignContext(view,privateRoot,mapId);brandCampaignContext(privateRoot,privateRoot,root.worldMaps.rootMapId??undefined);
  } else if(root.secondarySite){

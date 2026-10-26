@@ -1,8 +1,14 @@
 # Guide joueur
 
+## Poser une porte sur un mur construit
+
+**V483 locale qualifiée, non publiée.** Dans **Architecte → Structure**, choisissez une porte et son matériau, puis posez son plan sur un mur construit compatible. Le constructeur retire d'abord réellement le mur, même si les matériaux de la porte manquent encore. Le retrait récupère une partie de l'ancienne matière ; la case reste ouverte jusqu'aux livraisons et au travail de la nouvelle porte.
+
+L'inspection permet de passer du mur à son plan et d'annuler leurs intentions séparément. Annuler le plan laisse terminer un démontage implicite déjà attribué ; après interruption, il ne repart pas sans motif. Le mur perd réellement son soutien de toit : vérifiez les supports avant le chantier. [Règles et limites V483](door-over-wall-v483.md).
+
 ## Acheter et lire un roman
 
-**V482 locale, encore en qualification et non publiée.** Les futurs marchands orbitaux de gros ou exotiques proposent un exemplaire de **Roman**. Utilisez la console et les balises habituelles pour l’acheter ; attendez l’arrivée réelle de la capsule. Le titre, la qualité et les PV décrivent cet exemplaire précis.
+**V482 publiée le 26 octobre.** Les futurs marchands orbitaux de gros ou exotiques proposent un exemplaire de **Roman**. Utilisez la console et les balises habituelles pour l’acheter ; attendez l’arrivée réelle de la capsule. Le titre, la qualité et les PV décrivent cet exemplaire précis.
 
 Sélectionnez un adulte libre disponible, puis le livre connu et autorisé, et choisissez **Lire un roman** dans l’inspection. Le colon prend le livre et rejoint une chaise accessible ou une place debout. Les trajets ne donnent aucun bénéfice ; la lecture apporte des loisirs et de l’expérience en Intellectuel. Le livre reste réutilisable après rangement ou dépôt.
 
@@ -10,7 +16,7 @@ Dans **Assignations**, **Romans autorisés** ou **Aucune lecture** règlent la l
 
 ## Traverser des retombées toxiques
 
-**V481 locale, non publiée.** L’alerte et l’horloge signalent les retombées sur la carte. Placez personnes et animaux sous un toit réel ; un mur seul ne protège pas. Adaptez leurs zones et travaux pour limiter les trajets dehors. Les personnes couchées et les animaux au repos restent exposés sans toit. Les vêtements disponibles ne donnent aucune protection contre ces retombées.
+**V481 publiée dans le lot du 26 octobre.** L’alerte et l’horloge signalent les retombées sur la carte. Placez personnes et animaux sous un toit réel ; un mur seul ne protège pas. Adaptez leurs zones et travaux pour limiter les trajets dehors. Les personnes couchées et les animaux au repos restent exposés sans toit. Les vêtements disponibles ne donnent aucune protection contre ces retombées.
 
 Surveillez la **charge toxique** dans Santé. La nourriture et les cultures découvertes peuvent être perdues, les objets exposés se détériorent plus vite, et le renouvellement spontané de la flore et de la faune s’interrompt. Un animal d’enclos compatible peut chercher un abri accessible ; cela ne garantit pas qu’il en trouve un. La fin de l’alerte arrête les nouvelles expositions, sans guérir les lésions ni restituer les pertes. Les anciennes parties ne reçoivent aucune exposition au chargement. [Règles, preuves et limites V481](toxic-fallout-v481.md).
 

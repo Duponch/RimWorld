@@ -33,12 +33,13 @@ function loaded(){
 }
 function exact(w:World){expect(validateWorld(w)).toEqual([]);const encoded=serializeWorld(w);const copy=deserializeWorld(encoded);expect(serializeWorld(copy)).toBe(encoded);return copy;}
 
-test('the purchased original has500g mass and regular freight only in295, with malformed books refused',()=>{
+test('the purchased original has500g mass and regular freight in295 and296, with294/297 and malformed books refused',()=>{
  const f=freightColony(),p=f.book,reader=f.world.pawns.find(p=>p.id===f.ids.readerId)!;
  expect(groupCaravanUnitMass256('novel',false,295)).toBe(500);expect(groupCaravanUnitMass256('novel',true,295)).toBe(500);
  expect(groupCaravanPileMass256(p,true,295)).toBe(500);expect(regularGroupFreight258(p,295)).toBe(true);expect(regularGroupFreightItem258('novel',295)).toBe(true);
  const inventory={...p,owner:{type:'inventory' as const,pawnId:reader.id}};expect(captureGroupMass([reader],[inventory],true,295)?.grams).toBe(500);
- for(const version of [294,296]){expect(groupCaravanUnitMass256('novel',true,version)).toBeUndefined();expect(groupCaravanPileMass256(p,true,version)).toBeUndefined();expect(regularGroupFreight258(p,version)).toBe(false);expect(regularGroupFreightItem258('novel',version)).toBe(false);expect(captureGroupMass([reader],[inventory],true,version)).toBeUndefined();}
+ expect(groupCaravanUnitMass256('novel',false,296)).toBe(500);expect(groupCaravanUnitMass256('novel',true,296)).toBe(500);expect(groupCaravanPileMass256(p,true,296)).toBe(500);expect(regularGroupFreight258(p,296)).toBe(true);expect(regularGroupFreightItem258('novel',296)).toBe(true);expect(captureGroupMass([reader],[inventory],true,296)?.grams).toBe(500);
+ for(const version of [294,297]){expect(groupCaravanUnitMass256('novel',true,version)).toBeUndefined();expect(groupCaravanPileMass256(p,true,version)).toBeUndefined();expect(regularGroupFreight258(p,version)).toBe(false);expect(regularGroupFreightItem258('novel',version)).toBe(false);expect(captureGroupMass([reader],[inventory],true,version)).toBeUndefined();}
  for(const patch of [{quantity:2},{book:undefined},{book:{...p.book,revision:2}},{damage:60},{damage:-1},{kind:'wood'},{owner:{type:'equipment',pawnId:reader.id}}]){
   const bad={...inventory,...patch} as unknown as MaterialPile;expect(groupCaravanPileMass256(bad,true,295)).toBeUndefined();expect(regularGroupFreight258(bad,295)).toBe(false);expect(captureGroupMass([reader],[bad],true,295)).toBeUndefined();
  }

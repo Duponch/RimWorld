@@ -88,14 +88,14 @@ export function validOrbitalTransport(w:World,version:number,powerTopology?:Powe
       const o=p.owner;
       if(o.type!=='orbital-ship'&&o.type!=='orbital-cargo')return false;
       const ship=o.type==='orbital-ship'?w.orbital!.ships.find(s=>s.id===o.shipId):undefined;
-      const allowed=ship?version===295&&orbitalNovelCatalogue295(version,ship.kind,p.item)||orbitalBeerCatalogue265(version,ship.kind,p.item)||ORBITAL_STOCK[ship.kind].some(([item])=>item===p.item)||ship.kind==='bulk'&&ORBITAL_BULK_EXTRAS.has(p.item)
-        :version===295&&orbitalNovelCatalogue295(version,'bulk',p.item)||orbitalBeerCatalogue265(version,'bulk',p.item)||Object.values(ORBITAL_STOCK).some(stock=>stock.some(([item])=>item===p.item))||ORBITAL_BULK_EXTRAS.has(p.item);
+      const allowed=ship?(version===295||version===296)&&orbitalNovelCatalogue295(version,ship.kind,p.item)||orbitalBeerCatalogue265(version,ship.kind,p.item)||ORBITAL_STOCK[ship.kind].some(([item])=>item===p.item)||ship.kind==='bulk'&&ORBITAL_BULK_EXTRAS.has(p.item)
+        :(version===295||version===296)&&orbitalNovelCatalogue295(version,'bulk',p.item)||orbitalBeerCatalogue265(version,'bulk',p.item)||Object.values(ORBITAL_STOCK).some(stock=>stock.some(([item])=>item===p.item))||ORBITAL_BULK_EXTRAS.has(p.item);
       if(!obj(o)||!keys(o,o.type==='orbital-ship'?['type','shipId']:['type','deliveryId'])
         ||o.type==='orbital-ship'&&!ships.has(o.shipId)||o.type==='orbital-cargo'&&!deliveries.has(o.deliveryId)
         ||!int(p.id,1,w.nextId-1)||ids.has(p.id)||!Object.hasOwn(ITEM_DEFINITIONS,p.item)
         ||p.kind!==ITEM_DEFINITIONS[p.item].kind||!int(p.quantity,1,ITEM_DEFINITIONS[p.item].stackLimit)
         ||['corpse','mech-corpse','unfinished','weapon','apparel','chunk','blocks'].includes(p.kind)
-        ||!allowed||!validNovelPile295(p,version)||p.haulRequested!==undefined||Object.keys(p).some(k=>!['id','kind','item','quantity','owner','rot','foodPoison','damage',...(version===295&&p.kind==='book'?['book','forbidden']:[])].includes(k))
+        ||!allowed||!validNovelPile295(p,version)||p.haulRequested!==undefined||Object.keys(p).some(k=>!['id','kind','item','quantity','owner','rot','foodPoison','damage',...((version===295||version===296)&&p.kind==='book'?['book','forbidden']:[])].includes(k))
         ||p.damage!==undefined&&!int(p.damage,p.kind==='book'?0:1,pileMaxHp(p)-1)||validatePileRecordShape(p as unknown as Record<string,unknown>,w,version).length
         ||validatePreservation({...w,piles:[p]},version).length)return false;
       ids.add(p.id);if(o.type==='orbital-cargo')cargo.add(o.deliveryId);

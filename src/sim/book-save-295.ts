@@ -4,7 +4,7 @@ const plain=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!
 const data=(v:object,k:PropertyKey):PropertyDescriptor|undefined=>{const d=Object.getOwnPropertyDescriptor(v,k);return d?.enumerable===true&&Object.hasOwn(d,'value')?d:undefined;};
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 const keys=(v:unknown,required:readonly string[],optional:readonly string[]=[]):v is Record<string,unknown>=>plain(v)&&required.every(k=>!!data(v,k))&&Reflect.ownKeys(v).every(k=>typeof k==='string'&&(required.includes(k)||optional.includes(k))&&!!data(v,k));
-const supported=(version:unknown):version is number=>int(version,1,295);
+const supported=(version:unknown):version is number=>int(version,1,296);
 
 /** One physical exemplar, with the existing damage authority. A book is never
  * disguised as apparel/weapon, a construction deposit, or a corpse. */
@@ -14,7 +14,7 @@ export function validNovelPile295(value:unknown,version:number):boolean {
   const item=data(value,'item'),kind=data(value,'kind');
   const novel=item?.value==='novel'||kind?.value==='book';
   if(!novel)return !('book'in value);
-  if(version!==295||!keys(value,['id','kind','item','quantity','owner','book'],['damage','forbidden'])
+  if((version!==295&&version!==296)||!keys(value,['id','kind','item','quantity','owner','book'],['damage','forbidden'])
     ||!int(value.id,1)||value.item!=='novel'||value.kind!=='book'||value.quantity!==1||!isNovelBook295(value.book)
     ||'damage'in value&&!int(value.damage,0,59)||'forbidden'in value&&value.forbidden!==true)return false;
   if(!plain(value.owner))return false;
@@ -34,7 +34,7 @@ export function validReadingTask295(value:unknown,version:number):boolean {
   if(!supported(version)||!plain(value))return false;
   const activity=data(value,'activity');
   if(activity?.value!=='read')return !('bookId'in value);
-  if(version!==295||!keys(value,['activity','bookId','stage','phase','target','buildingId','elapsed'],['manual','seatId'])
+  if((version!==295&&version!==296)||!keys(value,['activity','bookId','stage','phase','target','buildingId','elapsed'],['manual','seatId'])
     ||!int(value.bookId,1)||!['pickup','seat','read','return'].includes(String(value.stage))||!['travel','active'].includes(String(value.phase))
     ||!keys(value.target,['x','z'])||!int(value.target.x)||!int(value.target.z)
     ||value.buildingId!==null&&!int(value.buildingId,1)||'seatId'in value&&!int(value.seatId,1)||'manual'in value&&value.manual!==true)return false;
@@ -52,14 +52,14 @@ export function validReadingTask295(value:unknown,version:number):boolean {
 export function validReadingPawnFields295(value:unknown,version:number):boolean {
  try{
   if(!supported(version)||!plain(value))return false;
-  if('readingPolicy295'in value){const d=data(value,'readingPolicy295');if(version!==295||!d||d.value!==1&&d.value!==2||!data(value,'recreation'))return false;}
+  if('readingPolicy295'in value){const d=data(value,'readingPolicy295');if((version!==295&&version!==296)||!d||d.value!==1&&d.value!==2||!data(value,'recreation'))return false;}
   if(!('recreation'in value))return true;
   const joy=data(value,'recreation');if(!joy||!plain(joy.value))return false;
   const tolerance=data(joy.value,'tolerance'),bored=data(joy.value,'bored');
   if(tolerance&&plain(tolerance.value)&&bored&&plain(bored.value)){
    const hasTolerance='reading'in tolerance.value,hasBored='reading'in bored.value;
    if(hasTolerance!==hasBored)return false;
-   if(hasTolerance){const t=data(tolerance.value,'reading'),b=data(bored.value,'reading');if(version!==295||!t||!b||typeof t.value!=='number'||!Number.isFinite(t.value)||t.value<0||t.value>100||typeof b.value!=='boolean'||t.value>50&&!b.value||t.value<30&&b.value)return false;}
+   if(hasTolerance){const t=data(tolerance.value,'reading'),b=data(bored.value,'reading');if((version!==295&&version!==296)||!t||!b||typeof t.value!=='number'||!Number.isFinite(t.value)||t.value<0||t.value>100||typeof b.value!=='boolean'||t.value>50&&!b.value||t.value<30&&b.value)return false;}
   }
   const task=data(joy.value,'task');
   if(task?.value!==null&&plain(task?.value)&&!validReadingTask295(task.value,version))return false;
@@ -83,11 +83,11 @@ export function validNovelHistoricalTransport295(raw:unknown,version:unknown):bo
     for(let i=0;i<v.length;i++){const d=data(v,String(i));if(!d||!visit(d.value,lane))return false;}
    }else{
     if(!plain(v))return false;
-    if('novel'in v){const d=data(v,'novel');if(version!==295||!d)return false;}
+    if('novel'in v){const d=data(v,'novel');if((version!==295&&version!==296)||!d)return false;}
     const novelItem=data(v,'item')?.value==='novel';
-    if(novelItem&&version!==295)return false;
+    if(novelItem&&(version!==295&&version!==296))return false;
     if('book'in v){
-     if(lane==='filters'){const d=data(v,'book');if(version!==295||!d||typeof d.value!=='boolean')return false;}
+     if(lane==='filters'){const d=data(v,'book');if((version!==295&&version!==296)||!d||typeof d.value!=='boolean')return false;}
      else if(!validNovelPile295(v,version))return false;
     }else if(data(v,'kind')?.value==='book'||novelItem&&('owner'in v||'id'in v||lane==='piles'||lane==='upserted'))return false;
     if(!validReadingPawnFields295(v,version))return false;

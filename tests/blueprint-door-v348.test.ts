@@ -8,9 +8,10 @@ import {serializeWorld,deserializeWorld,validateWorld} from '../src/sim/serializ
 import {constructionRecipe} from '../src/sim/construction-materials';
 import {AUTODOORS_RESEARCH_COST} from '../src/sim/research';
 import {SnapshotEncoder,SnapshotDecoder} from '../src/bridge/snapshots';
+import {registeredMapPresentation} from '../src/sim/world-map-presentation';
 import type {Command,DesignateCommand,World} from '../src/sim/types';
 
-function camp(){const w=medicalCamp();w.tick=2000;Object.assign(w.pawns[0]!,{x:8,z:10});w.pawns[0]!.priorities.build=1;addMaterial(w,'wood',30,{type:'ground',x:7,z:10},'wood');refreshStock(w);valid(w);return w;}
+function camp(){const w=medicalCamp();w.tick=2000;w.deterioration!.lastTick=w.tick;Object.assign(w.pawns[0]!,{x:8,z:10});w.pawns[0]!.priorities.build=1;addMaterial(w,'wood',30,{type:'ground',x:7,z:10},'wood');refreshStock(w);valid(w);return w;}
 function valid(w:World){expect(validateWorld(w)).toEqual([]);}
 function accept(w:World,c:Command){const result=applyCommand(w,c);expect(result.ok,JSON.stringify({command:c,result})).toBe(true);valid(w);}
 function until(w:World,done:()=>boolean,max=1100){for(let i=0;i<max&&!done();i++)stepWorld(w);expect(done(),JSON.stringify({jobs:w.jobs,pawns:w.pawns})).toBe(true);valid(w);}
@@ -50,18 +51,21 @@ test('V348 a captured supply cargo prevents ghost replacement without dropping a
   until(w,()=>old.construction==='frame');const paid=serializeWorld(w);expect(applyCommand(w,door).ok).toBe(false);expect(serializeWorld(w)).toBe(paid);expect(w.piles.filter(v=>v.owner.type==='job').reduce((n,v)=>n+v.quantity,0)).toBe(5);
 });
 
-test('V348 paid frames, finished walls and unrelated furniture plans refuse door replacement atomically',()=>{
+test('V348 paid frames and unrelated furniture plans refuse replacement; a finished wall now receives an independent V483 project',()=>{
   const frame=camp();accept(frame,wall);until(frame,()=>frame.jobs[0]?.construction==='frame');
   const built=camp(),building=fixtureBuilding(built,'wall',12,10);built.structures.find(s=>s.id===building.id)!.material='wood';valid(built);
   const other=camp();accept(other,{type:'designate',kind:'bed',material:'wood',x:12,z:10});
-  for(const w of [frame,built,other]){const before=serializeWorld(w);expect(canDesignate(w,door).ok).toBe(false);expect(applyCommand(w,door).ok).toBe(false);expect(serializeWorld(w)).toBe(before);valid(w);}
+  for(const w of [frame,other]){const before=serializeWorld(w);expect(canDesignate(w,door).ok).toBe(false);expect(applyCommand(w,door).ok).toBe(false);expect(serializeWorld(w)).toBe(before);valid(w);}
+  const standing=structuredClone(built.structures),before=serializeWorld(built);expect(canDesignate(built,door).ok).toBe(true);expect(serializeWorld(built)).toBe(before);
+  accept(built,door);expect(built.structures).toEqual(standing);expect(built.jobs).toHaveLength(1);expect(built.jobs[0]!.kind).toBe('deconstruct');
+  expect(built.jobs[0]!.wallDoor296?.plan).toMatchObject({kind:'door',material:'wood'});expect(built.deconstructed.count).toBe(0);
 });
 
 test.each([true,false])('V348 replacement snapshot checkpoint=%s removes the old foreign key and rejects a malformed protocol revision atomically',checkpoint=>{
   const w=camp();accept(w,wall);const oldId=w.jobs[0]!.id,encoder=new SnapshotEncoder(),decoder=new SnapshotDecoder(),first=decoder.adopt(structuredClone(encoder.encode(w,0,0,true)));
   expect(first.status).toBe('applied');if(first.status!=='applied')throw Error('Invalid prepared ghost snapshot');const previous=structuredClone(first.world);accept(w,door);
   const good=structuredClone(encoder.encode(w,0,0,checkpoint)),bad=structuredClone(good);bad.revision=0;
-  expect(decoder.adopt(bad).status).toBe('resync');expect(first.world).toEqual(previous);const retry=decoder.adopt(good);expect(retry.status).toBe('applied');if(retry.status==='applied')expect(retry.world).toEqual(w);replay(w,0);
+  expect(decoder.adopt(bad).status).toBe('resync');expect(first.world).toEqual(previous);const retry=decoder.adopt(good);expect(retry.status).toBe('applied');if(retry.status==='applied'){expect(retry.world).toEqual(structuredClone(w.worldMaps?registeredMapPresentation(w)!:w));expect(retry.world.jobs.some(j=>j.id===oldId)).toBe(false);}replay(w,0);
 });
 test('V348 RAW reload rejects a forged retained queue to the retired wall',()=>{
   const w=camp();accept(w,wall);const oldId=w.jobs[0]!.id;accept(w,door);

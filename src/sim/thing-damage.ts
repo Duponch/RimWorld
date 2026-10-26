@@ -47,6 +47,7 @@ import { miniTurretExplosive,registerBombWave,startTurretWick } from './bomb-cre
 import type { BombInstigatorKey } from './mini-turret-state.ts';
 import { pileDamage,pileMaxHp,resourceMaxHp,structureMaxHp } from './thing-damage-rules.ts';
 import type { MaterialPile,Pawn,Resource,Structure,World } from './types.ts';
+import { wallDoorBlueprint296 } from './wall-door-state-296.ts';
 export { pileDamage,pileMaxHp,resourceMaxHp,structureMaxHp,copyThingDamage,mergeThingDamage } from './thing-damage-rules.ts';
 
 const positive=(n:number)=>Number.isSafeInteger(n)&&n>0;
@@ -147,7 +148,7 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   if(external&&(!Number.isFinite(external.rawAmount)||external.rawAmount<0||!Number.isSafeInteger(external.core)||external.core<Math.max(0,(world.tick-1)*10)||external.core>world.tick*10))return false;
   const core=external?.core??world.tick*10,explosive=world.schemaVersion>=193&&installed&&s.kind==='mini-turret'&&!!s.turret&&miniTurretExplosive(s.id);
   const detonates=explosive&&(external?.detonate|| (external?.rawAmount??amount)>=max-(s.damage??0));
-  const foam=(Number(world.schemaVersion)===290||(Number(world.schemaVersion)===291||(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||Number(world.schemaVersion)===295)))))&&installed&&s.kind==='firefoam-popper'&&!!s.firefoam290;
+  const foam=(Number(world.schemaVersion)===290||(Number(world.schemaVersion)===291||(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||Number(world.schemaVersion)===295||Number(world.schemaVersion)===296)))))&&installed&&s.kind==='firefoam-popper'&&!!s.firefoam290;
   const foamDetonates=foam&&(external?.firefoamDetonate290|| (external?.rawAmount??amount)>=max-(s.damage??0));
   const emits=detonates||foamDetonates;
   if(foam&&(!Number.isSafeInteger(core+150)||foamDetonates&&(world.firefoam290?.waves.length??0)>=world.width*world.height))return false;
@@ -160,6 +161,7 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   // Refusing a fatal hit must not create a fire ledger or advance its stream.
   const state=cause==='fire'&&!emits?(world.fires??ensureFireState({...world})):undefined;
   const ids=new Set(world.jobs.filter(j=>j.repair?.structureId===s.id||j.fixBreakdown?.structureId===s.id||j.deconstruction?.structureId===s.id||j.furniture?.structureId===s.id||j.flick?.structureId===s.id).map(j=>j.id));
+  const wallDoorBlueprints=s.kind==='wall'?world.jobs.filter(j=>ids.has(j.id)).flatMap(j=>{const b=wallDoorBlueprint296(j);return b?[b]:[];}):[];
   const breakdownIds=new Set(world.jobs.filter(j=>j.fixBreakdown?.structureId===s.id).map(j=>j.id));
   const delivered=world.piles.filter(p=>p.owner.type==='job'&&breakdownIds.has(p.owner.jobId));
   const serviceLoss=delivered.reduce((sum,p)=>sum+(p.item==='component'?p.quantity:0),0);
@@ -213,6 +215,7 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   for(const p of actors)interruptWork(world,p,true);
   for(const a of world.wildlife?.animals??[])if(a.manhunter?.door?.targetId===s.id)delete a.manhunter.door;
   removeJobs(world,ids,cause==='roof'||cause==='roof-thick');
+  world.jobs.push(...wallDoorBlueprints);
   for(const p of world.pawns){
     if(p.bedId===s.id){p.bedId=null;delete p.bedSlot;}
     if(p.need?.kind==='eat'&&p.need.dining?.tableId===s.id)p.need.dining.tableId=null;

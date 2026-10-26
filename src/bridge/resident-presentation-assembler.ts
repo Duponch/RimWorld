@@ -1,3 +1,4 @@
+import {validWallDoorHistoricalTransport296,validWallDoorWorld296,validWallDoorResidentNamespace296} from '../sim/wall-door-save-296.ts';
 import {validNovelHistoricalTransport295} from '../sim/book-save-295.ts';
 import {validReadingWorld295} from '../sim/book-transport-295.ts';
 import {validPeaceTalksHistorical293,validPeaceTalksBindings293} from '../sim/peace-talks-save-293.ts';
@@ -219,6 +220,7 @@ export class ResidentPresentationAssembler {
   const fail=():CampaignAdoption=>({status:'resync',reason:'Projection de campagne illisible.'});
   const header=this.header(packet);if(header==='stale')return {status:'stale'};if(header==='invalid'||packet.type!=='campaign-only'||Object.keys(packet).some(key=>!['type','epoch','revision','stepMs','speed','summary','urgentThreats','geography'].includes(key))||!record(packet.summary))return fail();
   const raw=packet.summary;
+  if(!validWallDoorHistoricalTransport296(raw,raw.schemaVersion))return fail();
   // The two campaign-owned fields travel together. Reuse their native scalar
   // registry contract, without scanning alcohol dossiers in this read model.
   if(!isSchema265OrLater(raw.schemaVersion)?own(raw,'drugPolicies')||own(raw,'nextDrugPolicyId'):
@@ -253,6 +255,7 @@ export class ResidentPresentationAssembler {
   const checkpoint=packet.kind==='checkpoint',sparseStructures=!checkpoint&&own(packet,'structures');
   const malformed=localShape(packet.world,checkpoint,sparseStructures,!checkpoint&&canReuseResidentAuxiliaryStockpiles(packet,this.current));if(malformed)return fail('Invalid resident shape: '+malformed);
   if(!validNovelHistoricalTransport295(packet,packet.world.schemaVersion))return fail('Invalid or future resident Novel/reading data');
+  if(!validWallDoorHistoricalTransport296(packet,packet.world.schemaVersion))return fail('Invalid or future resident wall-door successor data');
   if(!validToxicFalloutTransport294(packet,packet.world.schemaVersion))return fail('Invalid or future resident ToxicFallout condition or corpse rot credit');
   if(!validMiscIncidents(packet.world.miscIncidents,packet.world.schemaVersion,packet.world))return fail('Invalid resident Misc incident calendar');
   if(!validPeaceTalksHistorical293(packet,packet.world.schemaVersion)||!validPartyHistoricalTransport292(packet,packet.world.schemaVersion)||!validForestryHistoricalTransport291(packet,packet.world.schemaVersion)||!this.firefoamTransport(packet,packet.world.schemaVersion)||!validBillPauseHistoricalTransport289(packet,packet.world.schemaVersion))return fail('Invalid or future resident bill reserve pause');
@@ -306,6 +309,7 @@ export class ResidentPresentationAssembler {
   if(next.structures.some(s=>!validApparelReservesBuilding278(s,next.schemaVersion))||next.packed.some(p=>!validApparelReservesBuilding278(p.building,next.schemaVersion)))return fail('Invalid resident apparel reserve settings');
   if(!validApparelTradeHistoricalTransport279(packet,next.schemaVersion)||!validApparelTradeWorld279(next))return fail('Invalid resident ordinary apparel custody');
   if(!validReadingWorld295(next))return fail('Invalid resident Novel ownership, reading phase or reservation');
+  if(!validWallDoorWorld296(next)||!validWallDoorResidentNamespace296(next))return fail('Invalid resident wall-door target, work owner or successor identity');
   const calendar=next.planet?.revision===3&&next.campaignMap?.revision===2?next.campaignMap.calendarOrigin:undefined;
   if(!this.chronology(next,packet.epoch,calendar)||acceptExtra&&!acceptExtra(next)||!this.geography.canCommit(geographic))return fail('Rejected resident transaction');
   freezeAdmittedNativeWorldPawnOrder256(next);if(!river.inherited&&next.riverWater)freezeAdmittedRiverWater256(next.riverWater);

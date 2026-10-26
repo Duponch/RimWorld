@@ -24,6 +24,7 @@ import { groundPile, groundCapacity, planGroundPlacement } from './ground-placem
 import { addMaterial,materialCanFit } from './materials.ts';
 import { planGraveRelease,commitGraveRelease } from './burial.ts';
 import type { Job, Pawn, World } from './types.ts';
+import { retireWallDoorWork296 } from './wall-door-runtime-296.ts';
 
 /** Preview the random rounding without changing authoritative RNG. Only a
  * successful, fully placeable removal consumes a draw or retires material. */
@@ -92,6 +93,7 @@ export function finishDeconstruction(world: World, pawn: Pawn, job: Job): boolea
   if(!linked.commit())throw Error('Admitted linked shelf deconstruction changed during grave release');
   commitShelfRemoval(world,shelfRemoval);
   world.structures = structures; world.jobs = jobs; world.rng = rng;
+  if(job.wallDoor296)retireWallDoorWork296(world,job);
   bedOwnership?.commit();
   releaseStructureMelee(world,structure.id);
   for(const a of world.wildlife?.animals??[])if(a.manhunter?.door?.targetId===structure.id)delete a.manhunter.door;

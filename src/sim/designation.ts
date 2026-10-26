@@ -96,6 +96,7 @@ export function queryArea(world: World, command: AreaCommand, index?: AreaIndex)
   const flags = (index ?? buildAreaIndex(world)).flags;
   const smoothGeometry=command.action==='smooth-floor'?captureStructureNavigation(world):undefined;
   const cells: number[] = [],home=new Set(world.home);
+  const manualWallCells=command.action==='deconstruct'?new Set(world.jobs.filter(j=>j.wallDoor296?.manual===false).flatMap(j=>footprintCells(j).map(c=>c.z*world.width+c.x))):undefined;
   for (let z = bounds.minZ; z <= bounds.maxZ; z++) for (let x = bounds.minX; x <= bounds.maxX; x++) {
     const i = z * world.width + x, value = flags[i]!;
     const hidden=foggedCell256(world,i);
@@ -106,7 +107,7 @@ export function queryArea(world: World, command: AreaCommand, index?: AreaIndex)
     }
     const eligible = command.action==='smooth-floor'?canDesignateSmoothFloor281(world,{x,z},undefined,smoothGeometry).ok:command.action==='build-bridge'||command.action==='remove-bridge'?canDesignateBridge(world,{type:'designate',kind:command.action,x,z}).ok:command.action==='snow-clear'?!(world.snowClearArea??[]).includes(i)&&!(value&BLOCKED):command.action==='remove-snow-clear'?(world.snowClearArea??[]).includes(i):command.action==='lay-floor'||command.action==='remove-floor'?canDesignateFloor(world,{type:'designate',kind:command.action,x,z,...command.action==='lay-floor'?{floor:command.floor}:{}}).ok:command.action==='home'?!home.has(i):command.action==='remove-home'?home.has(i):isRoofArea(command.action) ? true : command.action === 'mine' ? (value & ROCK) && !(value & JOB)
       : command.action === 'haul-chunks' ? value & CHUNK
-      : command.action === 'deconstruct' ? (value & DECONSTRUCTIBLE) && !(value & JOB)
+      : command.action === 'deconstruct' ? (value & DECONSTRUCTIBLE) && (!(value & JOB)||manualWallCells!.has(i))
       : command.action === 'chop' ? (value & TREE) && !(value & (world.schemaVersion>=235?PLANT_JOB:JOB))
       : command.action === 'cut' ? (value & BERRIES) && !(value & (world.schemaVersion>=235?PLANT_JOB:JOB))
       : command.action === 'harvest' ? (value & RIPE) && !(value & (world.schemaVersion>=235?PLANT_JOB:JOB))

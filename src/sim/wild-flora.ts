@@ -33,7 +33,7 @@ export function validateWildFlora(world:Pick<World,'flora'|'site'|'tick'|'width'
   if(world.resources.some(resource=>!validSownResource291(resource,version)))return false;
   if(world.site?.revision===3||state?.revision===2)return validateWildFlora256(world,version);
   if(state&&['cycleIndex','desired','desiredTmp','fertile','fertileTmp','hasCalculated','lastTick'].some(key=>Object.hasOwn(state,key)))return false;
-  if(state===undefined)return world.site?.revision!==2&&world.resources.every(resource=>resource.species===undefined||(version===291||(version===292||(version===293||(version===294||version===295))))&&validSownResource291(resource,version)&&resource.sown291===true&&resource.species!==undefined&&resource.amount===FLORA_DEFINITIONS[resource.species].yield&&typeof resource.growth==='number'&&Number.isFinite(resource.growth)&&resource.growth>=0&&resource.growth<=1&&Number.isSafeInteger(resource.growthTick)&&resource.growthTick!>=0&&resource.growthTick!<=world.tick&&resource.plantLife!==undefined);
+  if(state===undefined)return world.site?.revision!==2&&world.resources.every(resource=>resource.species===undefined||(version===291||(version===292||(version===293||(version===294||(version===295||version===296)))))&&validSownResource291(resource,version)&&resource.sown291===true&&resource.species!==undefined&&resource.amount===FLORA_DEFINITIONS[resource.species].yield&&typeof resource.growth==='number'&&Number.isFinite(resource.growth)&&resource.growth>=0&&resource.growth<=1&&Number.isSafeInteger(resource.growthTick)&&resource.growthTick!>=0&&resource.growthTick!<=world.tick&&resource.plantLife!==undefined);
   if(version<91||world.site?.revision!==2||!record(state)||Object.keys(state).length!==6||
     !Object.keys(state).every(key=>['revision','biome','rng','nextCheck','adoptedAt','capacity'].includes(key)))return false;
   if(state.revision!==1||state.biome==='tundra'&&version<239||!isBiomeId(state.biome)||state.biome!==world.site.biome||!uint(state.rng)||state.rng===0||
@@ -48,7 +48,7 @@ export function validateWildFlora(world:Pick<World,'flora'|'site'|'tick'|'width'
     const growthTick=resource.growthTick;
     if(resource.kind!==definition.kind||resource.amount!==definition.yield||typeof resource.growth!=='number'||!Number.isFinite(resource.growth)||resource.growth<0||resource.growth>1||
       typeof growthTick!=='number'||!Number.isSafeInteger(growthTick)||growthTick<0||growthTick>world.tick||!resource.plantLife)return false;
-    if(!((version===291||(version===292||(version===293||(version===294||version===295))))&&resource.sown291===true))present++;
+    if(!((version===291||(version===292||(version===293||(version===294||(version===295||version===296)))))&&resource.sown291===true))present++;
   }
   return present<=state.capacity;
 }
@@ -80,7 +80,7 @@ export function advanceWildFlora(world:World):void {
   if(state.revision!==1||world.site?.revision===3)throw Error('Geographic flora requires its actual physical reader');
   if(world.tick<state.nextCheck)return;
   while(state.nextCheck<=world.tick)state.nextCheck+=CHECK_INTERVAL;
-  const present=world.resources.reduce((count,resource)=>count+(resource.species!==undefined&&!((Number(world.schemaVersion)===291||(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||Number(world.schemaVersion)===295))))&&resource.sown291===true)?1:0),0),missing=Math.max(0,state.capacity-present);
+  const present=world.resources.reduce((count,resource)=>count+(resource.species!==undefined&&!((Number(world.schemaVersion)===291||(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||(Number(world.schemaVersion)===295||Number(world.schemaVersion)===296)))))&&resource.sown291===true)?1:0),0),missing=Math.max(0,state.capacity-present);
   if(!missing||!Number.isSafeInteger(world.nextId+1))return;
   const checksPerDay=6000/CHECK_INTERVAL,expected=missing/(BIOME_FLORA[state.biome].regrowDays*checksPerDay);
   let attempts=Math.floor(expected);if(next(state)<expected-attempts)attempts++;

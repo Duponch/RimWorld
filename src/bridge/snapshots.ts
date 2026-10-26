@@ -1,3 +1,4 @@
+import {validWallDoorHistoricalTransport296,validWallDoorWorld296,registerWallDoorPlanIds296} from '../sim/wall-door-save-296.ts';
 import {validNovelPile295,validNovelHistoricalTransport295} from '../sim/book-save-295.ts';
 import {validReadingWorld295} from '../sim/book-transport-295.ts';
 import {validPeaceTalksHistorical293,validPeaceTalksBindings293} from '../sim/peace-talks-save-293.ts';
@@ -789,7 +790,7 @@ function validPile(pile:MaterialPile,world:World|DynamicWorld,deferAnimalHolder=
     if(world.schemaVersion<89||!Number.isSafeInteger(owner.graveId)||owner.graveId<1||!world.structures.some(s=>s.id===owner.graveId&&(s.kind==='grave'||world.schemaVersion>=256&&s.kind==='sarcophagus'))
       ||Object.keys(owner).some(key=>!['type','graveId'].includes(key)))return false;
   }else return false;
-  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','mechCorpse','damage','unfinished','gunWork','flakWork','componentWork','artWork','smithingWork','prostheticWork273','apparel','weapon','haulRequested','innerResource','plantPack','egg','eggForbidden','forbidden',...(Number(world.schemaVersion)===295?['book']:[])].includes(key)))return false;
+  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','mechCorpse','damage','unfinished','gunWork','flakWork','componentWork','artWork','smithingWork','prostheticWork273','apparel','weapon','haulRequested','innerResource','plantPack','egg','eggForbidden','forbidden',...((Number(world.schemaVersion)===295||Number(world.schemaVersion)===296)?['book']:[])].includes(key)))return false;
   if(!validMaterialPermission256(pile,world.schemaVersion))return false;
   if(!validEggPile256(pile,world.schemaVersion,heldDuckInventoryClock256(world,pile,world.schemaVersion,world.tick),world.nextId)||world.schemaVersion<256&&isFutureEcologyItem256(pile.item))return false;
   if(world.schemaVersion<194&&Object.hasOwn(pile,'mechCorpse'))return false;
@@ -1135,6 +1136,7 @@ export class SnapshotDecoder {
     const refuse=()=>({status:'resync' as const,reason:'Campagne sans carte illisible.'});
     if(!Number.isSafeInteger(packet.epoch)||packet.epoch<1||!Number.isSafeInteger(packet.revision)||packet.revision<1||!Number.isFinite(packet.stepMs)||packet.stepMs<0||![0,1,3,6].includes(packet.speed))return refuse();
     if(packet.epoch<this.epoch||packet.epoch===this.epoch&&packet.revision<=this.revision)return {status:'stale'};
+    if(!validWallDoorHistoricalTransport296(packet.summary,packet.summary.schemaVersion))return refuse();
     if(!validNovelHistoricalTransport295(packet.summary,packet.summary.schemaVersion))return refuse();
     if(!validToxicFalloutTransport294(packet.summary,packet.summary.schemaVersion)||!validPeaceTalksHistorical293(packet.summary,packet.summary.schemaVersion)||!validPartyHistoricalTransport292(packet.summary,packet.summary.schemaVersion)||!validForestryHistoricalTransport291(packet.summary,packet.summary.schemaVersion)||!validFirefoamHistoricalTransport290(packet.summary,packet.summary.schemaVersion)||!validBillPauseHistoricalTransport289(packet.summary,packet.summary.schemaVersion)||!validAnimalThermalRefugeHistoricalTransport288(packet.summary,packet.summary.schemaVersion)||!validAnimalAreaHistoricalTransport287(packet.summary,packet.summary.schemaVersion)||!validLinkedStorageHistorical286(packet.summary,packet.summary.schemaVersion)||!validCoupleHistoricalTransport285(packet.summary,packet.summary.schemaVersion)||!validTradeRequestHistorical284(packet.summary,packet.summary.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet.summary,packet.summary.schemaVersion))return refuse();
     if(!validWorldPawnsEnvelope256(packet.summary,packet.summary.schemaVersion,packet.summary.tick*10,packet.summary.nextId))return refuse();
@@ -1167,6 +1169,7 @@ export class SnapshotDecoder {
     if(!validPrisonerSurgeryHistoricalTransport280(packet,packet.world.schemaVersion))return resync('Future captive surgery.');
     if(!validApparelTradeHistoricalTransport279(packet,packet.world.schemaVersion))return resync('Future ordinary apparel inventory or trade.');
     if(!validApparelReservesHistoricalTransport278(packet,packet.world.schemaVersion))return resync('Future apparel reserve settings.');
+    if(!validWallDoorHistoricalTransport296(packet,packet.world.schemaVersion))return resync('Invalid or future wall-door successor data.');
     if(!validNovelHistoricalTransport295(packet,packet.world.schemaVersion))return resync('Invalid or future Novel/reading data.');
     if(!validToxicFalloutTransport294(packet,packet.world.schemaVersion))return resync('Invalid or future ToxicFallout condition or corpse rot credit.');
     if(!validPeaceTalksHistorical293(packet,packet.world.schemaVersion)||!validPartyHistoricalTransport292(packet,packet.world.schemaVersion)||!validForestryHistoricalTransport291(packet,packet.world.schemaVersion)||!validFirefoamHistoricalTransport290(packet,packet.world.schemaVersion)||!validBillPauseHistoricalTransport289(packet,packet.world.schemaVersion)||!validAnimalThermalRefugeHistoricalTransport288(packet,packet.world.schemaVersion)||!validAnimalAreaHistoricalTransport287(packet,packet.world.schemaVersion)||!validLinkedStorageHistorical286(packet,packet.world.schemaVersion)||!validCoupleHistoricalTransport285(packet,packet.world.schemaVersion)||!validTradeRequestHistorical284(packet,packet.world.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet,packet.world.schemaVersion)||!validBillWorkerHistoricalTransport283(packet,packet.world.schemaVersion))return resync('Future couple or bill worker settings.');
@@ -1658,10 +1661,10 @@ export class SnapshotDecoder {
     // owners reserve the same namespace as the map and cannot become a wave.
     const shelves=next.structures.some(s=>s.shelf!==undefined)||next.packed.some(p=>p.building.shelf!==undefined);
     const startingArrival=Object.hasOwn(next,'startingArrival'),ancientCaskets=next.structures.some(isAncientCasket256),playerCaskets=next.structures.some(s=>isPlayerCasket271(s)||isShipCasket277(s));
-    if(next.ancientShrineWarnings||mineableIds.size||next.geysers||next.wildlife?.flyers?.length||collapsedRockIds.size||next.jobs.some(j=>j.tree)||next.piles.some(p=>p.innerResource)||startingArrival||ancientCaskets||playerCaskets||shelves||relationships||Object.hasOwn(next,'orbital')||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||next.raids?.extraMechActive261?.length||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
+    if(next.jobs.some(j=>j.wallDoor296?.plan)||next.ancientShrineWarnings||mineableIds.size||next.geysers||next.wildlife?.flyers?.length||collapsedRockIds.size||next.jobs.some(j=>j.tree)||next.piles.some(p=>p.innerResource)||startingArrival||ancientCaskets||playerCaskets||shelves||relationships||Object.hasOwn(next,'orbital')||Object.hasOwn(next,'mechanoids')||next.raids?.mechActive||next.raids?.extraMechActive261?.length||mechanicalCorpseIds.size||Object.hasOwn(next,'projectiles')||Object.hasOwn(next,'bombWaves')||next.pawns.some(p=>Object.hasOwn(p,'bombRefuge')||p.shooting!==undefined)){
       // Only the closed MAIN context can reuse its resource facts. Keep RAW
       // and non-strict collection/getter evaluation on the historical path.
-      const owned=validation.resourceFacts&&(startingArrival||ancientCaskets||playerCaskets||shelves||relationships||Object.hasOwn(next,'orbital'))
+      const owned=validation.resourceFacts&&(next.jobs.some(j=>j.wallDoor296?.plan)||startingArrival||ancientCaskets||playerCaskets||shelves||relationships||Object.hasOwn(next,'orbital'))
         ?captureOwnedStrictNamespace(next,validation.resourceFacts,mechanicalCorpseIds):undefined;
       let ids:NumericMembershipSink&Iterable<number>,strictIds:boolean;
       if(owned!==undefined){
@@ -1673,7 +1676,7 @@ export class SnapshotDecoder {
           ...(next.wildlife?.animals??[]),...(next.filth?.items??[]),...(next.fires?.items??[]),...(next.fires?.embers??[]),
           ...next.packed.map(p=>p.building),...shelfIdentityOwners(next),...next.structures.flatMap(s=>s.bills??[]),...next.packed.flatMap(p=>p.building.bills??[]),
         ];
-        ids=new NumericMembership();strictIds=!!next.ancientShrineWarnings||mineableIds.size>0||!!next.geysers||!!next.wildlife?.flyers?.length||collapsedRockIds.size>0||startingArrival||ancientCaskets||playerCaskets||shelves||relationships||Object.hasOwn(next,'orbital')||next.schemaVersion>=235&&(next.jobs.some(j=>j.tree!==undefined||j.plantTarget!==undefined)||next.piles.some(p=>p.kind==='plant')||next.resources.some(hasPausedTreeClock));
+        ids=new NumericMembership();strictIds=next.jobs.some(j=>!!j.wallDoor296?.plan)||!!next.ancientShrineWarnings||mineableIds.size>0||!!next.geysers||!!next.wildlife?.flyers?.length||collapsedRockIds.size>0||startingArrival||ancientCaskets||playerCaskets||shelves||relationships||Object.hasOwn(next,'orbital')||next.schemaVersion>=235&&(next.jobs.some(j=>j.tree!==undefined||j.plantTarget!==undefined)||next.piles.some(p=>p.kind==='plant')||next.resources.some(hasPausedTreeClock));
         for(const owner of owners){if(strictIds&&(!Number.isSafeInteger(owner.id)||owner.id<1||owner.id>=next.nextId||ids.has(owner.id)))return resync('Identité dupliquée ou invalide dans le registre relationnel.');if(mechanicalCorpseIds.has(owner.id)&&ids.has(owner.id))return resync('Identité de carcasse mécanique dupliquée.');ids.add(owner.id);}
       }
       if(next.geysers&&!registerGeyserIdentities256(next.geysers,ids))return resync('Duplicate geyser identity.');
@@ -1705,6 +1708,7 @@ export class SnapshotDecoder {
       planetCheck=this.planetValidation.prepare(next,next.schemaVersion,message.epoch);
       if(!planetCheck.ok||validateGroupStateWithPlanet(next,next.schemaVersion,planetCheck.context).length)return resync('Planète, groupe ou pertes incohérents.');
       if(registerProjectedGroups(next,ids,planetCheck.context).length)return resync('Registre projeté de caravanes incohérent.');
+      if(registerWallDoorPlanIds296(next,ids).length)return resync('Invalid or duplicate wall-door successor identity.');
       if(registerGroupThingIds(next,ids).length)return resync('Une identité du groupe possède plusieurs propriétaires.');
       if(registerStartingArrivalThingIds(next,ids).length)return resync('Une identité des capsules initiales possède plusieurs propriétaires.');
       if(registerAncientCasketThingIds256(next,ids).length)return resync('Propriétaire ou identité de capsule ancienne invalide.');
@@ -1761,6 +1765,7 @@ export class SnapshotDecoder {
     // Commit only after every patch is checked. A refusal preserves both state and revision.
     if(next.schemaVersion>=256&&!validGeographicSiteBinding256(next))return resync('Provenance locale distincte de la vraie planète.');
     if(!this.validGeographicCalendar(next,message.epoch))return resync('Origine du calendrier géographique réécrite.');
+    if(!validWallDoorWorld296(next))return resync('Invalid wall-door target or implicit work owner.');
     if(!validReadingWorld295(next))return resync('Invalid Novel ownership, reading phase or reservation.');
     if(!validPeaceTalksBindings293(next)||!validPartyWorld292(next)||!validForestryPolicies291(next))return resync('Invalid or locked forest growing policy.');
     if(!validFirefoamWorld290(next)||!validBillPauseWorld289(next)||!validAnimalThermalRefugeWorld288(next)||!validAnimalAreaWorld287(next)||!validLinkedStorageProjection286(next)||!validBillWorkerWorld283(next,readHumanOwners))return resync('Opérateur de facture ou réglages incohérents.');

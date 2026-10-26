@@ -32,7 +32,7 @@ export function validShipReactorState275(v:unknown,core:number):v is ShipReactor
 /** Descriptor-first prospective field fence. Jobs may name the future built
  * kind but never own a running component; minified reactors do not exist. */
 export function validShipReactorField275(v:unknown,version:number,core:number,owner:'installed'|'job'|'packed'='installed'):boolean {
- if(!integer(version,1,295)||!integer(core)||!plain(v))return false;
+ if(!integer(version,1,296)||!integer(core)||!plain(v))return false;
  const kind=data(v,'kind');if(!kind)return owner==='job'&&!('kind'in v)&&!('shipReactor275'in v);
  const has='shipReactor275'in v;
  if(kind.value!=='ship-reactor')return !has;

@@ -1,4 +1,5 @@
 import {preparePartyRelease292} from './party-release-292.ts';
+import { wallDoorImplicitOrphan296 } from './wall-door-state-296.ts';
 import {isSchema287OrLater} from './schema-compatibility-257.ts';
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {prepareCoupleRelease285} from './couple-release-285.ts';
@@ -85,11 +86,15 @@ export function prepareReformDeparture260(w:World,input:ReformDepartureInput260)
   const prisoner=captured.has(p.id)?d.prisoner:p.prisoner;
   if(prisoner){del(prisoner,'escape');if(prisoner.breakout)del(prisoner.breakout,'active');del(p,'raid');del(p,'visitor');}
  }
+ const retiredWallJobs=new Set<Job>();
  for(const [job,d] of jobDrafts){
+  if(d.reservedBy===null&&wallDoorImplicitOrphan296(d)){retiredWallJobs.add(job);continue;}
+  if(job.wallDoor296){if(d.wallDoor296)put(job,'wallDoor296',d.wallDoor296);else del(job,'wallDoor296');}
   for(const key of ['clearance','installationWork','reservedBy','status','pickTicks','progress','workRemainder'] as const){if(Object.hasOwn(d,key))put(job,key,d[key]&&typeof d[key]==='object'?job[key]:d[key]);else del(job,key);}
   if(job.tree?.kind==='replant'&&d.tree?.kind==='replant')for(const key of ['phase','carryPileId','workCore','durationCore'] as const){if(Object.hasOwn(d.tree,key))put(job.tree,key,d.tree[key]);else del(job.tree,key);}
   if(job.repair&&d.repair&&!Object.hasOwn(d.repair,'warmed'))del(job.repair,'warmed');
  }
+ if(retiredWallJobs.size)put(w,'jobs',w.jobs.filter(j=>!retiredWallJobs.has(j)));
  for(const a of animals){
   const d=structuredClone(a);rememberActorBedDeparture256(d,mapId,bed.refs,w.schemaVersion);
   if(d.mapBed!==undefined){const same=a.mapBed&&d.mapBed.bedId===a.mapBed.bedId&&d.mapBed.mapId===a.mapBed.mapId;put(a,'mapBed',same?a.mapBed:d.mapBed);}else if(a.mapBed!==undefined)del(a,'mapBed');

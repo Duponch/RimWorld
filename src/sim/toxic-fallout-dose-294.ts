@@ -44,7 +44,7 @@ export function toxicFalloutDose294(id:number,resistance:number,environmentResis
  * Only the existing wander authority is added inside the staged Pawn outcome.
  * No existing mind state is reset and no random draw or memory is created. */
 export function adoptFalloutClinicalMind294(pawn:Pawn,version:number,exposure:ToxicFalloutExposure294):void {
- if((version!==294&&version!==295)||!(exposure.dose>0)||pawn.mental&&Object.hasOwn(pawn.mental,'wander'))return;
+ if((version!==294&&(version!==295&&version!==296))||!(exposure.dose>0)||pawn.mental&&Object.hasOwn(pawn.mental,'wander'))return;
  const mental=pawn.mental??={below:[0,0,0],cooldown:0,catharsis:[]};
  mental.wander={revision:1,nextMoveOrderIsWait:false};
 }

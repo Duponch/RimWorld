@@ -6,6 +6,8 @@ import type { CookingBill, BillSettings } from '../sim/cooking-types';
 import type { BillWorkerOptions283 } from '../sim/bill-worker-state-283';
 import { mapObjectActions, mapObjectGroupActions } from '../ui/map-object-actions';
 import { mapObjectsAt, mapObjectExists, type MapObjectSelection } from '../ui/map-object-selection';
+import { selectedMapJob296 } from '../ui/wall-door-selection-296';
+import { constructionRecipe } from '../sim/construction-materials';
 import { mapCellDetails } from '../ui/map-cell-details';
 import { buildingLabels } from '../ui/building-labels';
 import { plantInspection } from '../ui/plant-inspection';
@@ -264,7 +266,7 @@ function pawnPage(world: World, pawn: Pawn): NativePage {
     rows.push(alive ? meterRow('recreation-level', 'Loisirs', pawn.recreation.level, 100, 'Sous 30 % : manque de loisirs ; sous 15 % : manque important ; sous 1 % : privation. À partir de 70 et 85 % : loisirs satisfaisants. Varier les activités évite la lassitude. Une famille lassante redevient intéressante sous 30 %. Repères de la jauge : 15 · 30 · 70 · 85 %.', `${pawn.recreation.level.toFixed(1)} %`) : row('recreation-level', 'Loisirs', '—'));
     const recreationLabels = { reading:'Lecture', solitary: 'Détente solitaire', dexterity: 'Dextérité', cerebral: 'Jeux cérébraux', social: 'Loisirs sociaux', television: 'Télévision', chemical: 'Consommation de boissons' };
     const pleasure = rows.find(entry => entry.id === 'recreation-level')!;
-    pleasure.hint = (pleasure.hint ?? 'Décédé · Dossier arrêté au décès.') + ` La lassitude diminue de ${Math.round((colonyExpectation(world, pawn)?.joyToleranceDropPerDay ?? .18) * 100)} points par jour éveillé. Effet sur l’humeur : ${alive ? signed(recreationMood(pawn.recreation.level)) : '—'}. ` + [...RECREATION_KINDS, 'chemical' as const,...Number(world.schemaVersion)===295?['reading' as const]:[]].filter(kind => kind==='reading'||pawn.recreation.tolerance[kind] !== undefined).map(kind => `${recreationLabels[kind]} : ${(pawn.recreation.tolerance[kind]??0).toFixed(1)} %${pawn.recreation.bored[kind] ? ' · lassé' : ''}`).join(' · ');
+    pleasure.hint = (pleasure.hint ?? 'Décédé · Dossier arrêté au décès.') + ` La lassitude diminue de ${Math.round((colonyExpectation(world, pawn)?.joyToleranceDropPerDay ?? .18) * 100)} points par jour éveillé. Effet sur l’humeur : ${alive ? signed(recreationMood(pawn.recreation.level)) : '—'}. ` + [...RECREATION_KINDS, 'chemical' as const,...(Number(world.schemaVersion)===295||Number(world.schemaVersion)===296)?['reading' as const]:[]].filter(kind => kind==='reading'||pawn.recreation.tolerance[kind] !== undefined).map(kind => `${recreationLabels[kind]} : ${(pawn.recreation.tolerance[kind]??0).toFixed(1)} %${pawn.recreation.bored[kind] ? ' · lassé' : ''}`).join(' · ');
     rows.push(heading('thoughts', 'Humeur et pensées'));
     const thoughts = moodThoughts(world, pawn), thresholds = breakThresholds(pawn);
     rows.push(alive ? meterRow('need-mood', 'Humeur', pawn.mood, 100, `L’humeur évolue progressivement vers la somme des pensées. Les repères indiquent les seuils de risque de crise mentale. Actuelle : ${pawn.mood.toFixed(1)} %. Cible : ${moodTarget(thoughts).toFixed(1)} %. ${thresholds.map((value, index) => `${['Risque mineur', 'Risque majeur', 'Risque extrême'][index]} : ${value.toFixed(1)} %`).join(' · ')}.`, `${Math.round(pawn.mood)} %`) : row('need-mood', 'Humeur', '—'));
@@ -460,6 +462,7 @@ function storagePage(world: World, structureId?: number, stockpileId?: number): 
 }
 
 function objectLabel(world: World, selected: MapObjectSelection): string {
+  if(selected.kind==='job'){const job=selectedMapJob296(world,selected.id);if(job&&job.kind in buildingLabels)return `Plan · ${buildingLabels[job.kind as Structure['kind']]}`;}
   if (selected.kind === 'structure' || selected.kind === 'packed') { const structure = world.structures.find(s => s.id === selected.id) ?? world.packed.find(p => p.building.id === selected.id)?.building; return structure ? buildingLabels[structure.kind] : 'Bâtiment absent'; }
   if (selected.kind === 'pile') { const pile = world.piles.find(p => p.id === selected.id); return pile ? `${ITEM_DEFINITIONS[pile.item].label} × ${pile.quantity}` : 'Pile absente'; }
   if (selected.kind === 'resource') { const resource = world.resources.find(r => r.id === selected.id); return resource ? resource.species ?? resource.kind : 'Ressource absente'; }
@@ -478,6 +481,14 @@ function objectPage(world: World, objects: readonly MapObjectSelection[]): Nativ
   if (subpage?.kind === 'storage') { const storage = storagePage(world, subpage.structureId, subpage.stockpileId); if (storage) return storage; subpage = undefined; }
   const actions = mapObjectActions(world, selected).map(action => action.command ? command(`object-action-${action.id}`, action.label, action.command) : control(`object-action-${action.id}`, action.label, () => action.placementPileId === undefined ? undefined : owner.replant?.(action.placementPileId), !owner.replant));
   rows.push(row('object-id', 'Identité', String(selected.id)));
+  const wallProject=world.jobs.find(job=>job.wallDoor296?.plan&&(selected.kind==='structure'&&job.deconstruction?.structureId===selected.id||selected.kind==='job'&&(job.id===selected.id||job.wallDoor296.plan.id===selected.id)));
+  if(wallProject?.wallDoor296?.plan&&owner.selectObject){
+    const planId=wallProject.wallDoor296.plan.id,wallId=wallProject.deconstruction!.structureId;
+    const target:MapObjectSelection=selected.kind==='job'&&selected.id===planId?{kind:'structure',id:wallId}:{kind:'job',id:planId};
+    rows.push({id:'wall-door-inspection',label:'À cet emplacement',controls:[control(`wall-door-inspect-${target.kind}-${target.id}`,target.kind==='job'?'Inspecter le plan de porte':'Inspecter le mur',()=>{
+      const current=owner.readState?.().world??latest.world;if(current&&mapObjectExists(current,target))owner.selectObject!(target);
+    },false,false,'Changer d’élément inspecté sans annuler le plan ni la déconstruction.')]});
+  }
   if (structure) {
     const max = structureMaxHp(structure), use = targetBuildingPlayerUse263(world, structure);
     rows.push(meterRow('structure-condition', 'Points de vie', Math.max(0, max - (structure.damage ?? 0)), max, undefined, `${Math.max(0, max - (structure.damage ?? 0))} / ${max}`), row('structure-orientation', 'Orientation', String(structure.orientation)));
@@ -511,7 +522,7 @@ function objectPage(world: World, objects: readonly MapObjectSelection[]): Nativ
     const pile = world.piles.find(pile => pile.id === selected.id); if (pile) {
       const max = pileMaxHp(pile, world.schemaVersion), info = itemInformation(pile, world);
       rows.push(row('pile-quantity', 'Quantité', String(pile.quantity)), meterRow('pile-condition', 'Points de vie', Math.max(0, max - pileDamage(pile)), max, undefined, `${Math.max(0, max - pileDamage(pile))} / ${max}`), ...info.rows.map((fact, index) => row(`pile-information-${index}`, `${fact.category} · ${fact.label}`, fact.value, fact.description)));
-      if(pile.book&&Number(world.schemaVersion)===295){
+      if(pile.book&&(Number(world.schemaVersion)===295||Number(world.schemaVersion)===296)){
         const readers=world.pawns.filter(p=>isColonist(p)&&!p.prisoner&&!p.visitor&&p.state!=='dead');
         const readerSelect=control('book-read-select','Choisir un lecteur',()=>undefined,!readers.length);
         readerSelect.select={value:'',options:[{value:'',label:'Choisir un lecteur',disabled:true},...readers.map(p=>{
@@ -562,7 +573,16 @@ function objectPage(world: World, objects: readonly MapObjectSelection[]): Nativ
     if (owner.resizeZone) actions.push(control('growing-expand', 'Agrandir la zone', () => owner.resizeZone!('growing', selected.id, false)), control('growing-shrink', 'Réduire la zone', () => owner.resizeZone!('growing', selected.id, true)));
     actions.push(command('delete-growing', 'Supprimer la zone', { type: 'delete-zone', kind: 'growing', zoneId: selected.id }));
   } else if (selected.kind === 'packed') { const packed = world.packed.find(p => p.building.id === selected.id); if (packed) { const building = packed.building, max = structureMaxHp(building); rows.push(row('packed-label', 'Meuble emballé', buildingLabels[building.kind]), meterRow('packed-health', 'Points de vie conservés', max - (building.damage ?? 0), max, undefined, `${max - (building.damage ?? 0)} / ${max}`), row('packed-material', 'Matériau', building.material ?? 'Matériau de construction enregistré'), row('packed-quality', 'Qualité', building.quality ?? 'Sans qualité')); if (owner.placeFurniture) actions.push(control('install-packed', 'Installer', () => owner.placeFurniture!(selected.id))); } }
-  else if (selected.kind === 'job') { const job = world.jobs.find(job => job.id === selected.id); if (job) { const diagnostic = queryJobStatus(world, job); rows.push(row('job-kind', 'Travail', job.kind in buildingLabels ? buildingLabels[job.kind as Structure['kind']] : job.kind), row('job-state', 'État', job.status === 'active' ? 'En cours' : 'En attente', diagnostic.reason), row('job-worker', 'Réservation', world.pawns.find(pawn => pawn.id === job.reservedBy)?.name ?? 'Aucune'), row('job-materials', 'Matériaux livrés', `${diagnostic.delivered} / ${diagnostic.required}`)); } }
+  else if (selected.kind === 'job') {
+    const parent=world.jobs.find(job=>job.wallDoor296?.plan?.id===selected.id),job=selectedMapJob296(world,selected.id);
+    if(job&&parent){
+      const recipe=constructionRecipe(job);
+      rows.push(row('job-kind','Projet',buildingLabels[job.kind as Structure['kind']]),
+        row('job-state','Étape','Retrait du mur','Le mur reste en place jusqu’à sa déconstruction réelle. La porte sera ensuite approvisionnée et construite.'),
+        row('job-worker','Démontage',world.pawns.find(pawn=>pawn.id===parent.reservedBy)?.name??'En attente d’un constructeur'),
+        row('job-materials','Matériaux de la porte',recipe.ingredients.map(cost=>`${cost.quantity} ${ITEM_DEFINITIONS[cost.item].label}`).join(' · '),'Aucun matériau de la future porte n’est encore livré.'));
+    }else if(job){const diagnostic=queryJobStatus(world,job);rows.push(row('job-kind','Travail',job.kind in buildingLabels?buildingLabels[job.kind as Structure['kind']]:job.kind),row('job-state','État',job.status==='active'?'En cours':'En attente',diagnostic.reason),row('job-worker','Réservation',world.pawns.find(pawn=>pawn.id===job.reservedBy)?.name??'Aucune'),row('job-materials','Matériaux livrés',`${diagnostic.delivered} / ${diagnostic.required}`));}
+  }
   return { id: `inspect-${selected.kind}-${selected.id}`, title: objectLabel(world, selected), rows, actions, layout: 'inspector' };
 }
 
