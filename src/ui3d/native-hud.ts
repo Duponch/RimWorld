@@ -19,6 +19,7 @@ import {portraitDataUrl, portraitExpressionOf} from '../ui/pawn-portrait';
 import {knownBuilding256, knownNutrition256, knownPile256, knownPosition256, knownStockCounts256} from '../ui/exploration-readers-256';
 import {readStatusAlerts, type StatusAlert} from '../ui/status-alerts';
 import type {NativePage, NativeRow} from './native-contract';
+import {NATIVE_RIGHT_DOCK_WIDTH} from './native-layout';
 import {NotificationFocusCycle,type NotificationTarget} from '../ui/notification-focus';
 import {readNativeDomainAlerts,type NativeDomainAlert} from './native-domain-alerts';
 import {weatherConditionLabel} from '../ui/weather-inspection';
@@ -47,6 +48,7 @@ export interface NativeHudActions {
 }
 export type NativeHudViewAction='walls'|'roofs'|'foliage'|'zones'|'home'|'camera';
 export interface NativeHudViewState {walls:string;roofs:boolean;foliage:boolean;zones:boolean;camera:string}
+export interface NativeHudWindowBounds {x:number;y:number;width:number;height:number}
 interface ResourceRecord {
   item: ItemId;
   stock: number;
@@ -107,6 +109,19 @@ const hex = (value: number) => `#${value.toString(16).padStart(6, '0')}`;
 const rounded = (value: number) => Math.round(Math.max(0, Math.min(100, value)));
 const amount = (value: number) => value.toLocaleString('fr-FR', {maximumFractionDigits: 2});
 
+/** Domain severity is authoritative, including a resolved incident marked info.
+ * Older status alerts have stable semantic keys; their translated text is never
+ * parsed to decide urgency. Evaluated only while updating the alert records. */
+export function nativeHudAlertColor(alert:Pick<StatusAlert,'key'|'tab'>&{domain?:Pick<NativeDomainAlert,'severity'>}):string {
+  if(alert.domain)return alert.domain.severity==='danger'?PALETTE.terracotta:alert.domain.severity==='warning'?PALETTE.ochre:PALETTE.creamPaper;
+  const key=alert.key;
+  if(/(?:^|[:-])(?:critical|downed|bleeding|threat|manhunter|deaths?|fire|malnutrition|hypothermia)(?:$|[:-])/.test(key)||
+    /^(?:turret-wick|casket-wick|prison-break|mechanical-threat|mental|availability-death)(?:$|:)/.test(key)||
+    /^campaign:[^:]+:(?:raid|mechanoid|manhunter|downed):/.test(key))return PALETTE.terracotta;
+  if(/^(?:hungry|food-reserves|food-policy-blocked|infection|flu|malaria|plague|sad-wander|food-binge|mood-risk-minor|mood-risk-high|camp-pressure|availability-local|colonist-availability|blight)(?:$|:)/.test(key))return PALETTE.ochre;
+  return PALETTE.creamPaper;
+}
+
 function fitText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, width: number): void {
   ctx.fillText(text, x, y, Math.max(1, width));
 }
@@ -139,6 +154,7 @@ export class NativeHudCards {
   private readonly resourceImages=new Map<ItemId,HTMLImageElement>();
   private readonly resourceExpanded=new Set(['foods','manufactured','raw-resources']);
   private resourcePage=0;
+  private leftHudBottom=Infinity;
   private readonly speedButtons: CardboardPiece[] = [];
   private readonly activePoses=new Set<CardboardPiece>();
   private readonly viewButtons=new Map<NativeHudViewAction,CardboardPiece>();
@@ -147,6 +163,10 @@ export class NativeHudCards {
   private portraitCapacity=PORTRAITS_PER_PAGE;
   private viewportWidth=1440;
   private viewportHeight=1000;
+  private baseTimeY=30;
+  private windowBounds:NativeHudWindowBounds|null=null;
+  private windowDockVisible=true;
+  private windowDockMode:'normal'|'above-window'|'hidden-window-space'='normal';
   private rightDockOpen=false;
   private notificationsAutoHide=false;
   private rightDockOffset=3.16;
@@ -204,31 +224,31 @@ export class NativeHudCards {
     this.alertHandleGroup.add(this.alertHandle);
     this.alertHandle.setBaseTransform(-.14,-.56,.1);
 
-    this.weatherPiece = this.makePiece({w: 2.12, h: .96, depth: 0.046, bgColor: PALETTE.creamPaper, bevel: 0.038, seed: 209, interactive: true,surface:'panel',
+    this.weatherPiece = this.makePiece({w: 2.48, h: .96, depth: 0.046, bgColor: PALETTE.creamPaper, bevel: 0.038, seed: 209, interactive: true,surface:'panel',
       drawFn: (ctx, w, h, rng) => this.drawWeather(ctx, w, h, rng), onClick: () => this.showWeather()});
     this.weatherPiece.userData.nativeId='hud:clock';
-    this.weatherPiece.setBaseTransform(-1.06, 2.04, 0, .006);
+    this.weatherPiece.setBaseTransform(-1.24, 2.04, 0, .006);
     this.timeGroup.add(this.weatherPiece);
     this.weatherIconPiece=this.createWeatherIcon(this.weatherIconValue);
     const weatherTape = createMaskingTape(0.18, 0.05, -0.35);
-    weatherTape.position.set(.80, .43, .048);
+    weatherTape.position.set(.98, .43, .048);
     this.weatherPiece.add(weatherTape);
 
     speeds.forEach((cfg, idx) => {
-      const piece = this.makePiece({w: .48, h: .37, depth: .046, bgColor: PALETTE.kraftBase, bevel: .038, hasBorder:false,seed: 310 + idx * 23, interactive: true, tooltip: cfg.title,
+      const piece = this.makePiece({w: .56, h: .42, depth: .046, bgColor: PALETTE.kraftBase, bevel: .038, hasBorder:false,seed: 310 + idx * 23, interactive: true, tooltip: cfg.title,
         drawFn: (ctx, w, h, rng) => drawNativeSpeedIcon(ctx,w,h,cfg.speed,this.speedValue===cfg.speed,rng),
         onClick: () => { if (this.world) this.actions.speed(cfg.speed); }});
       piece.userData.nativeId=`hud:speed:${cfg.speed}`;
       piece.userData.nativeToolbarPose=true;piece.userData.nativeActivePose=0;
-      piece.setBaseTransform(-1.98+idx*.54,1.31,0,idx%2===0?-.012:.012);
+      piece.setBaseTransform(-2.20+idx*.64,1.31,0,idx%2===0?-.012:.012);
       this.timeGroup.add(piece); this.speedButtons.push(piece);
     });
 
     (['walls','roofs','foliage','zones','home','camera'] as const).forEach((action,index)=>{
-      const button=this.makePiece({w:.32,h:.32,depth:.028,bgColor:PALETTE.creamPaper,seed:9297+index*17,interactive:true,
+      const button=this.makePiece({w:.38,h:.4,depth:.028,bgColor:PALETTE.creamPaper,seed:9297+index*17,interactive:true,
         drawFn:(ctx,w,h,rng)=>this.drawViewControl(action,ctx,w,h,rng),onClick:()=>this.actions.view?.(action)});
       button.userData.nativeId=`hud:view:${action}`;
-      button.setBaseTransform(-1.98+index*.36,.87,0,index%2===0?-.012:.012);
+      button.setBaseTransform(-2.29+index*.42,.81,0,index%2===0?-.012:.012);
       this.timeGroup.add(button);this.viewButtons.set(action,button);
     });
     this.setViewState(this.viewState);
@@ -279,8 +299,9 @@ export class NativeHudCards {
 
   /** Layout is expressed in screen pixels, converted only by the native stage's
    * projection. Canvas measurements decide ink wrapping, never hit regions. */
-  setViewport(width:number,height:number,unitsPerPixel:number):void {
+  setViewport(width:number,height:number,unitsPerPixel:number,bottomDockHeight=96,leftHudBottom=Infinity):void {
     this.viewportWidth=width;this.viewportHeight=height;
+    this.leftHudBottom=leftHudBottom;
     const scale=100*unitsPerPixel;
     for(const group of [this.colonistsGroup,this.resourcesGroup,this.alertsGroup,this.timeGroup,this.fpsGroup,this.alertHandleGroup])group.scale.setScalar(scale);
     this.alertsGroup.position.x=this.rightDockOffset*scale;
@@ -290,9 +311,41 @@ export class NativeHudCards {
       if(this.world)this.refreshPortraits(this.world);
     }
     // The bottom shelf remains below the legacy-sized time and view controls.
-    this.timeGroup.position.y=.4*scale;
+    this.baseTimeY=30+Math.max(0,bottomDockHeight-96);
+    this.layoutWindowDock();
     this.refreshAlerts();
     if(this.world)this.refreshResources();
+  }
+
+  /** Logical-pixel reservation for complete cards, including their hover tilt
+   * and shadow. The window owner can reserve this lane before laying out a page.
+   * No pointer/hover state participates in this layout decision. */
+  getWindowLayoutBudget(){return {rightReserve:NATIVE_RIGHT_DOCK_WIDTH,height:197,minimumTop:118,mode:this.windowDockMode,visible:this.windowDockVisible,shiftPx:this.timeGroup.position.y/this.timeGroup.scale.x*100-this.baseTimeY};}
+
+  /** A page may overlap a complete dock, never slice individual cards. Prefer
+   * moving the whole assembly into the space above it. At a narrow accessibility
+   * viewport without that space, hide the whole assembly and its hit meshes
+   * until this page closes; the normal HUD returns at its exact previous size. */
+  setWindowBounds(box:NativeHudWindowBounds|null):boolean {
+    this.windowBounds=box&&[box.x,box.y,box.width,box.height].every(Number.isFinite)&&box.width>0&&box.height>0?{...box}:null;
+    const changed=this.layoutWindowDock();
+    if(changed)this.refreshAlerts();
+    return changed;
+  }
+
+  private layoutWindowDock():boolean {
+    let y=this.baseTimeY,visible=true,mode:'normal'|'above-window'|'hidden-window-space'='normal';
+    const box=this.windowBounds,left=this.viewportWidth-NATIVE_RIGHT_DOCK_WIDTH,top=this.viewportHeight-y-268,bottom=this.viewportHeight-y-71;
+    if(box&&box.x<this.viewportWidth&&box.x+box.width>left&&box.y<bottom&&box.y+box.height>top){
+      const raisedY=this.viewportHeight-box.y-61,raisedTop=this.viewportHeight-raisedY-268;
+      if(this.viewportWidth>=720&&raisedTop>=118){y=Math.max(y,raisedY);mode='above-window';}
+      else{visible=false;mode='hidden-window-space';}
+    }
+    const position=y*.01*this.timeGroup.scale.x;
+    const changed=this.timeGroup.position.y!==position||this.windowDockVisible!==visible||this.windowDockMode!==mode;
+    this.timeGroup.position.y=position;this.windowDockVisible=visible;this.windowDockMode=mode;
+    this.timeGroup.visible=this.shown&&!!this.world&&visible;
+    return changed;
   }
 
   setViewState(state:Partial<NativeHudViewState>):void {
@@ -371,7 +424,7 @@ export class NativeHudCards {
     this.colonistsGroup.visible = visible && !!this.world;
     this.resourcesGroup.visible = visible && !!this.world;
     this.alertsGroup.visible = visible && !!this.world && (this.rightDockOpen||this.rightDockOffset<3.16);
-    this.timeGroup.visible = visible && !!this.world;
+    this.timeGroup.visible = visible && !!this.world && this.windowDockVisible;
     this.alertHandleGroup.visible=this.notificationsAutoHide&&visible&&!!this.world&&this.alerts.length>0;
     // The discreet actual frame rate remains visible through pages/front screens.
     this.fpsGroup.visible = true;
@@ -491,6 +544,10 @@ export class NativeHudCards {
     this.resources = [...records.values()].sort((a, b) => ITEM_DEFINITIONS[a.item].label.localeCompare(ITEM_DEFINITIONS[b.item].label, 'fr'));
   }
 
+  private cornerWidth():number{
+    const count=Math.max(1,Math.min(this.colonists.length,this.portraitCapacity)),roster=count*78+(this.colonists.length>this.portraitCapacity?64:0);
+    return Math.max(80,this.viewportWidth/2-roster/2-16);
+  }
   private refreshResources():void {
     const counts=new Map(this.resources.map(row=>[row.item,row.stock]));
     const quantity=(node:StorageFilterNode):number=>node.item?(node.item==='furniture'?0:counts.get(node.item)??0):(node.children??[]).reduce((sum,child)=>sum+quantity(child),0);
@@ -508,7 +565,9 @@ export class NativeHudCards {
     };
     for(const node of STORAGE_FILTER_TREE)visit(node,0);
     if(!rows.length)rows.push({id:'empty',label:'Stocks connus',value:'0',color:PALETTE.creamPaper,level:0,activate:()=>this.showResources()});
-    const capacity=Math.max(3,Math.floor((this.viewportHeight-144)/28)),pages=Math.max(1,Math.ceil(rows.length/capacity));
+    if(this.leftHudBottom<76)rows.splice(0,rows.length,{id:'compact',label:'Stocks · ouvrir',value:'',color:PALETTE.ochre,level:0,activate:()=>this.showResources()});
+    const width=Math.min(224,this.cornerWidth()),limit=Math.min(this.viewportHeight-144,this.leftHudBottom-8-28);
+    const capacity=Math.max(1,Math.floor(limit/28)),pages=Math.max(1,Math.ceil(rows.length/capacity));
     this.resourcePage=Math.min(this.resourcePage,pages-1);
     const previous=new Map(this.tags.map(tag=>[tag.id,tag]));
     this.tags.length=0;
@@ -531,7 +590,7 @@ export class NativeHudCards {
       }
       tag.piece.userData.nativeId=`hud:resource:${row.id}`;
       tag.piece.userData.onClick=row.activate;
-      tag.piece.userData.tooltip=row.branch?`${row.branch.open?'Replier':'Déplier'} ${row.label}`:`${row.label} · ${row.value} comptabilisé(s) · détails des propriétaires`;
+      tag.piece.userData.tooltip=row.id==='compact'?'Ouvrir tous les stocks connus et leurs propriétaires':row.branch?`${row.branch.open?'Replier':'Déplier'} ${row.label}`:`${row.label} · ${row.value} comptabilisé(s) · détails des propriétaires`;
       this.placePiece(tag.piece,x,-.14-index*.28,.02);this.tags.push(tag);
       if(row.item&&!this.resourceImages.has(row.item)){
         const item=row.item,image=new Image();this.resourceImages.set(item,image);
@@ -539,11 +598,11 @@ export class NativeHudCards {
         image.src=modelIconUrl(`item-${item}`);
       }
     };
-    visible.forEach((row,index)=>add(row,index));
+    visible.forEach((row,index)=>add(row,index,width/200,width/100));
     if(pages>1){
       const footer=(id:string,label:string,delta:number):Row=>({id,label,value:'',color:PALETTE.creamPaper,level:0,activate:()=>{this.resourcePage=(this.resourcePage+delta+pages)%pages;this.refreshResources();}});
-      add(footer('previous',`‹ ${this.resourcePage+1}/${pages}`,-1),visible.length,.42,.84);
-      add(footer('next','Suite ›',1),visible.length,1.64,1.2);
+      add(footer('previous',`‹ ${this.resourcePage+1}/${pages}`,-1),visible.length,width*.225/100,width*.45/100);
+      add(footer('next','Suite ›',1),visible.length,width*.75/100,width*.5/100);
     }
     for(const tag of previous.values())this.dropPiece(tag.piece);
   }
@@ -560,14 +619,15 @@ export class NativeHudCards {
     }
     ctx.font=`${res.branch?'bold ':''}13px ${FONT}`;ctx.textAlign='left';ctx.fillStyle='#fff8e9';
     const textX=29+indent,valueWidth=res.value?Math.min(68,ctx.measureText(res.value).width+7):0,labelWidth=Math.max(35,screenWidth-textX-valueWidth-8);
-    ctx.strokeText(res.label,textX,19,labelWidth);ctx.fillText(res.label,textX,19,labelWidth);
+    let label=res.label;while(label.length>1&&ctx.measureText(label+(label!==res.label?'…':'')).width>labelWidth)label=label.slice(0,-1);if(label!==res.label)label=label.trimEnd()+'…';
+    ctx.strokeText(label,textX,19);ctx.fillText(label,textX,19);
     if(res.value){ctx.textAlign='right';ctx.strokeText(res.value,screenWidth-2,19,68);ctx.fillText(res.value,screenWidth-2,19,68);}
     ctx.restore();
   }
 
   private refreshAlerts():void {
-    const maxWidth=Math.min(300,Math.max(170,this.viewportWidth*.36));
-    const availableHeight=Math.max(110,this.viewportHeight-370);
+    const maxWidth=Math.min(300,Math.max(80,this.viewportWidth*.36),this.cornerWidth());
+    const availableHeight=Math.max(58,this.viewportHeight-16-this.timeGroup.position.y/this.timeGroup.scale.x*100-252);
     const previous=new Map(this.alertCards.map(card=>[card.key,card]));
     this.alertCards=[];
     const ctx=this.allAlertsButton.userData.ctx;ctx.font=`bold 13px ${FONT}`;
@@ -580,16 +640,15 @@ export class NativeHudCards {
       if(lines.length<originalLines.length)lines[lines.length-1]=`${lines.at(-1)??''}…`;
       const width=Math.min(maxWidth,Math.max(82,...lines.map(line=>ctx.measureText(line).width+28)));
       const height=Math.max(28,lines.length*17+12);
-      const danger=alert.domain?.severity==='danger'||/critical|downed|bleeding|threat|manhunter|death|fire|infection|malnutrition/.test(alert.key);
-      const color=danger?PALETTE.terracotta:PALETTE.ochre;
+      const color=nativeHudAlertColor(alert);
       const seed=idx*29+53,signature=JSON.stringify([lines,color]);
       let entry=previous.get(alert.key);previous.delete(alert.key);
       if(entry&&(entry.seed!==seed||entry.width!==width||entry.height!==height)){this.dropPiece(entry.piece);entry=undefined;}
       if(!entry){
         const live={key:alert.key,seed,width,height,lines,color,signature} as AlertCard;
-        live.piece=this.makePiece({w:width/100,h:height/100,depth:.046,bgColor:PALETTE.creamPaper,bevel:.038,surface:'panel',seed,interactive:true,
+        live.piece=this.makePiece({w:width/100,h:height/100,depth:.046,bgColor:color,bevel:.038,surface:'panel',seed,interactive:true,
           drawFn:(ctx,w,h,rng)=>{
-            ctx.save();ctx.scale(w/live.width,h/live.height);drawHandRect(ctx,4,5,4,live.height-10,live.color,null,0,rng);
+            ctx.save();ctx.scale(w/live.width,h/live.height);drawHandRect(ctx,4,5,4,live.height-10,live.color===PALETTE.creamPaper?PALETTE.ochre:PALETTE.creamPaper,null,0,rng);
             ctx.fillStyle=PALETTE.inkDark;ctx.font=`bold 13px ${FONT}`;ctx.textAlign='left';
             live.lines.forEach((line,index)=>ctx.fillText(line,14,19+index*17,live.width-24));ctx.restore();
           },onClick:()=>this.showAlert(live.key)});
@@ -597,7 +656,7 @@ export class NativeHudCards {
       }else{
         const changed=entry.signature!==signature;
         Object.assign(entry,{lines,color,signature});
-        if(changed)entry.piece.redraw();
+        if(changed)entry.piece.redraw(undefined,color);
       }
       entry.piece.userData.nativeId=`hud:alert:${alert.key}`;
       entry.piece.userData.tooltip=alert.text;
@@ -630,15 +689,15 @@ export class NativeHudCards {
     if (signature !== this.weatherSignature) { this.weatherSignature = signature;this.weatherPiece.userData.tooltip=this.weatherIconPiece.userData.tooltip=`${readout.date} · ${readout.weather} · ${readout.temperature}${readout.condition ? ` · ${readout.condition}` : ''}`; this.weatherPiece.redraw(); }
   }
   private createWeatherIcon(icon:NativeWeatherIcon):CardboardPiece {
-    const piece=this.makePiece({w:.66,h:.66,depth:.046,outline:nativeWeatherOutline(icon),bgColor:nativeWeatherColor(icon),bevel:.038,hasBorder:false,uvPadding:1.08,textureWidth:160,textureHeight:160,seed:224,interactive:true,
+    const piece=this.makePiece({w:.62,h:.62,depth:.046,outline:nativeWeatherOutline(icon),bgColor:nativeWeatherColor(icon),bevel:.038,hasBorder:false,uvPadding:1.08,textureWidth:160,textureHeight:160,seed:224,interactive:true,
       drawFn:(ctx,w,h,rng)=>drawNativeWeatherIcon(ctx,icon,w,h,rng),onClick:()=>this.showWeather()});
-    piece.userData.nativeId='hud:weather';piece.userData.weatherIcon=icon;piece.setBaseTransform(-2.49,2.04,.06,-.025);this.timeGroup.add(piece);return piece;
+    piece.userData.nativeId='hud:weather';piece.userData.weatherIcon=icon;piece.setBaseTransform(-2.05,2.04,.06,-.025);this.timeGroup.add(piece);return piece;
   }
   private drawWeather(ctx:CanvasRenderingContext2D,w:number,h:number,rng:()=>number):void {
-    ctx.save();ctx.scale(w/212,h/96);
-    ctx.fillStyle=PALETTE.inkDark;ctx.textAlign='left';ctx.font=`bold 25px ${FONT}`;fitText(ctx,this.weatherReadout.clock,12,34,190);
-    ctx.font=`bold 13px ${FONT}`;fitText(ctx,this.weatherReadout.date,12,56,190);
-    ctx.font=`13px ${FONT}`;fitText(ctx,`${this.weatherReadout.condition||this.weatherReadout.weather} · ${this.weatherReadout.temperature}`,12,77,190);ctx.restore();
+    ctx.save();ctx.scale(w/248,h/96);
+    ctx.fillStyle=PALETTE.inkDark;ctx.textAlign='left';ctx.font=`bold 25px ${FONT}`;fitText(ctx,this.weatherReadout.clock,78,34,158);
+    ctx.font=`bold 13px ${FONT}`;fitText(ctx,this.weatherReadout.date,78,56,158);
+    ctx.font=`13px ${FONT}`;fitText(ctx,`${this.weatherReadout.condition||this.weatherReadout.weather} · ${this.weatherReadout.temperature}`,78,77,158);ctx.restore();
   }
 
   private showRoster(): void {

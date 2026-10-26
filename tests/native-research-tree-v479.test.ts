@@ -55,36 +55,65 @@ describe('shared delivered research hierarchy',()=>{
 describe('native research keeps the former tree, dossier and direct actions',()=>{
   it('exposes the Principal tab, every fixed-size node and its distinct select/start controls without changing the World',()=>{
     const f=fixture(),before=JSON.stringify(f.world);f.rebuild();
-    expect(f.page.id).toBe('research');expect(f.page.layout).toBe('research');expect(f.page.width).toBe(1190);
+    expect(f.page.id).toBe('research');expect(f.page.layout).toBe('research');expect([f.page.width,f.page.height]).toEqual([1420,780]);
     expect(f.page.rows.filter(row=>row.region==='navigation').flatMap(row=>row.controls??[]).map(control=>[control.id,control.label])).toEqual([['research-tab-main','Principal']]);
     const nodes=f.page.rows.filter(row=>row.graphNode);
     expect(nodes).toHaveLength(42);expect(f.page.research!.links).toHaveLength(30);
-    for(const project of researchProjects){const node=nodes.find(row=>row.id==='research-node-'+project.id)!;const position=project.id==='prosthetics'?{x:184,y:726.88}:researchNodePosition(project);expect(node.graphNode).toMatchObject({...position,width:142,height:66,cost:project.cost});expect(node.controls!.map(control=>control.id)).toEqual([`research-${project.id}-select`,`research-${project.id}-start`]);expect(node.controls![0]!.hint).toContain(project.detail);}
+    for(const project of researchProjects){const node=nodes.find(row=>row.id==='research-node-'+project.id)!;const base=project.id==='prosthetics'?{x:184,y:726.88}:researchNodePosition(project);expect(node.graphNode).toMatchObject({x:base.x*1.25,y:base.y*1.25,width:142,height:66,cost:project.cost});expect(node.controls!.map(control=>control.id)).toEqual([`research-${project.id}-select`,`research-${project.id}-start`]);expect(node.controls![0]!.hint).toContain(project.detail);}
     expect(f.page.rows.some(row=>row.region==='details'&&row.id==='research-active-heading')).toBe(true);
     expect(JSON.stringify(f.world)).toBe(before);expect(f.actions.command).not.toHaveBeenCalled();
   });
-  it('repairs only the native Prothèses overlap and routes its one link through empty graph corridors',()=>{
-    const f=fixture(),nodes=f.page.rows.filter(row=>row.graphNode);
+  it('spaces all native cards without overlap, preserves every link port and retains the empty Prothèses corridor',()=>{
+    const legacyBefore=JSON.stringify({positions:researchProjects.map(researchNodePosition),links:researchGraphLinks});
+    const f=fixture(),worldBefore=JSON.stringify(f.world),nodes=f.page.rows.filter(row=>row.graphNode);
     expect(new Set(nodes.map(row=>`${row.graphNode!.x}:${row.graphNode!.y}`)).size).toBe(42);
     expect(new Set(nodes.map(row=>row.id))).toEqual(new Set(researchProjects.map(project=>'research-node-'+project.id)));
-    expect(f.page.research!.links).toHaveLength(30);expect([f.page.research!.width,f.page.research!.height]).toEqual([850,815]);
+    expect(f.page.research!.links).toHaveLength(30);expect([f.page.research!.width,f.page.research!.height]).toEqual([1063,1019]);
+    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+      const a=nodes[i]!.graphNode!,b=nodes[j]!.graphNode!;
+      expect(a.x<b.x+b.width&&a.x+a.width>b.x&&a.y<b.y+b.height&&a.y+a.height>b.y,`${nodes[i]!.label} and ${nodes[j]!.label} must not overlap`).toBe(false);
+    }
+    const basePosition=(id:string)=>id==='prosthetics'?{x:184,y:726.88}:researchNodePosition(researchProjects.find(project=>project.id===id)!);
+    const onBoundary=(box:NonNullable<(typeof nodes)[number]['graphNode']>,point:{x:number;y:number})=>{
+      const epsilon=1e-7,inside=point.x>=box.x-epsilon&&point.x<=box.x+box.width+epsilon&&point.y>=box.y-epsilon&&point.y<=box.y+box.height+epsilon;
+      const edge=Math.abs(point.x-box.x)<epsilon||Math.abs(point.x-box.x-box.width)<epsilon||Math.abs(point.y-box.y)<epsilon||Math.abs(point.y-box.y-box.height)<epsilon;
+      expect(inside&&edge,'route endpoint lies on its actual card port').toBe(true);
+    };
+    const crossesInterior=(a:{x:number;y:number},b:{x:number;y:number},box:NonNullable<(typeof nodes)[number]['graphNode']>)=>{
+      let enter=0,exit=1;
+      for(const [start,delta,min,max]of[[a.x,b.x-a.x,box.x+1e-7,box.x+box.width-1e-7],[a.y,b.y-a.y,box.y+1e-7,box.y+box.height-1e-7]]){
+        if(Math.abs(delta!)<1e-10){if(start!<=min!||start!>=max!)return false;continue;}
+        const first=(min!-start!)/delta!,last=(max!-start!)/delta!;enter=Math.max(enter,Math.min(first,last));exit=Math.min(exit,Math.max(first,last));if(enter>=exit)return false;
+      }
+      return enter<exit;
+    };
     for(const link of f.page.research!.links){
       const legacy=researchGraphLinks.find(previous=>previous.from===link.from&&previous.to===link.to)!;
-      if(link.to!=='prosthetics'){expect(link.path).toEqual(legacy.path);continue;}
+      const source=nodes.find(row=>row.id==='research-node-'+link.from)!.graphNode!,target=nodes.find(row=>row.id==='research-node-'+link.to)!.graphNode!;
+      onBoundary(source,link.path[0]!);onBoundary(target,link.path.at(-1)!);
+      for(const point of link.path){expect(Number.isFinite(point.x)&&Number.isFinite(point.y)).toBe(true);expect(point.x).toBeGreaterThanOrEqual(0);expect(point.y).toBeGreaterThanOrEqual(0);expect(point.x).toBeLessThanOrEqual(1063);expect(point.y).toBeLessThanOrEqual(1019);}
+      if(link.to!=='prosthetics'){
+        const from=basePosition(link.from),to=basePosition(link.to),first=legacy.path[0]!,last=legacy.path.at(-1)!;
+        expect(link.path).toHaveLength(legacy.path.length);
+        expect(link.path[0]!.x-source.x).toBeCloseTo(first.x-from.x,10);expect(link.path[0]!.y-source.y).toBeCloseTo(first.y-from.y,10);
+        expect(link.path.at(-1)!.x-target.x).toBeCloseTo(last.x-to.x,10);expect(link.path.at(-1)!.y-target.y).toBeCloseTo(last.y-to.y,10);
+        for(let index=1;index<link.path.length-1;index++){expect(link.path[index]!.x).toBeCloseTo(legacy.path[index]!.x*1.25,10);expect(link.path[index]!.y).toBeCloseTo(legacy.path[index]!.y*1.25,10);}
+        continue;
+      }
       expect(link.from).toBe('machining');expect(link.path).not.toEqual(legacy.path);
-      const source=nodes.find(row=>row.id==='research-node-machining')!.graphNode!,target=nodes.find(row=>row.id==='research-node-prosthetics')!.graphNode!;
-      expect(link.path[0]).toEqual({x:source.x+source.width/2,y:source.y+source.height});expect(link.path.at(-1)).toEqual({x:target.x+target.width/2,y:target.y});
+      expect(link.path[0]!.x).toBeCloseTo(source.x+source.width/2,10);expect(link.path[0]!.y).toBeCloseTo(source.y+source.height,10);
+      expect(link.path.at(-1)!.x).toBeCloseTo(target.x+target.width/2,10);expect(link.path.at(-1)!.y).toBeCloseTo(target.y,10);
       for(const row of nodes){
         if(row.id==='research-node-machining'||row.id==='research-node-prosthetics')continue;
         const box=row.graphNode!;
         for(let i=1;i<link.path.length;i++){
-          const a=link.path[i-1]!,b=link.path[i]!;
-          const crosses=a.x===b.x?a.x>box.x&&a.x<box.x+box.width&&Math.max(a.y,b.y)>box.y&&Math.min(a.y,b.y)<box.y+box.height
-            :a.y>box.y&&a.y<box.y+box.height&&Math.max(a.x,b.x)>box.x&&Math.min(a.x,b.x)<box.x+box.width;
+          const a=link.path[i-1]!,b=link.path[i]!,crosses=crossesInterior(a,b,box);
           expect(crosses,`Usinage → Prothèses must not cross ${row.label}`).toBe(false);
         }
       }
     }
+    expect(JSON.stringify({positions:researchProjects.map(researchNodePosition),links:researchGraphLinks})).toBe(legacyBefore);
+    expect(JSON.stringify(f.world)).toBe(worldBefore);expect(f.actions.command).not.toHaveBeenCalled();
   });
   it('keeps selection separate from launch, preserves the page identity and retains an explicit player choice across fresh World snapshots',async()=>{
     const f=fixture(),before=JSON.stringify(f.world),active=f.world.research?.project;

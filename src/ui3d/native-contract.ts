@@ -22,12 +22,14 @@ export interface NativeControl {
   active?:boolean;
   hint?:string;
   caption?:string;
+  /** Wrapped secondary information on a full-row painted card. */
+  description?:string;
   presentation?:NativeControlStyle;
   select?:{value:string;options:readonly {value:string;label:string;hint?:string;disabled?:boolean}[];onChange:(value:string)=>void|Promise<unknown>};
   paint?:{group:string;index:number;onPaint:(indices:readonly number[])=>void|Promise<unknown>};
   onActivate:()=>void|Promise<unknown>;
 }
-export type NativeControlStyle='button'|'tab'|'tile'|'icon'|'navigation'|'research';
+export type NativeControlStyle='button'|'tab'|'tile'|'icon'|'navigation'|'research'|'card';
 export interface NativeRow {
   presentation?:'record'|'summary'|'plain';
   id:string;

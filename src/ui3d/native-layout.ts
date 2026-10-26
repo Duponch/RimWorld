@@ -1,7 +1,8 @@
 import type {NativeControl,NativeControlStyle,NativePage,NativeRow} from './native-contract';
 
 /** CSS-pixel design tokens; neither browser layout nor DPR changes the model. */
-export const NATIVE_UI={body:14,small:12,title:18,line:20,padding:14,gap:10,button:34,tab:34,scrollbar:10,bottom:82} as const;
+export const NATIVE_UI={body:14,small:12,title:18,line:20,padding:18,gap:10,button:34,tab:34,scrollbar:10,bottom:82} as const;
+export const NATIVE_RIGHT_DOCK_WIDTH=264;
 export type NativeRegion='navigation'|'catalogue'|'details'|'graph';
 export interface NativeRect {x:number;y:number;width:number;height:number}
 /** Region y is absolute in the page. Row/control y remains relative to header. */
@@ -12,7 +13,7 @@ export interface NativeRowBox {
   row:NativeRow;x:number;top:number;width:number;height:number;labelWidth:number;
   controlTop:number;controlHeight:number;controlColumns:number;detailLines:string[];
   /** Text lane stays clear of actions arranged beside the same record. */
-  textWidth:number;inlineActions:boolean;
+  textWidth:number;inlineActions:boolean;matrixTail?:boolean;
   labelLines:string[];valueLines:string[];matrix:boolean;controls:NativeControlBox[];
 }
 export interface NativePageBox {
@@ -22,6 +23,24 @@ export interface NativePageBox {
   inspectorParts?:NativeInspectorParts;
 }
 export type TextMeasure=(text:string,size:number,bold?:boolean)=>number;
+/** Shared geometry for matrix controls, painted headings and their hint planes.
+ * The name and activity lanes have the same width in every row. */
+export function nativeMatrixColumns(row:Pick<NativeRow,'value'>,x:number,width:number,count:number,tail=!!row.value):NativeRect[]{
+  if(count<=0)return [];
+  const left=x+104,available=Math.max(1,width-104-(tail?192:0)),gap=6,cell=Math.max(1,(available-gap*(count-1))/count);
+  return Array.from({length:count},(_,index)=>({x:left+index*(cell+gap),y:0,width:cell,height:0}));
+}
+/** Long single-word headings wrap instead of squeezing their glyphs. The full
+ * original column label is still the tooltip and the model's authority. */
+export function nativeMatrixHeadingLines(text:string,width:number,measure:TextMeasure):string[]{
+  const words:string[]=[];
+  for(const word of text.split(/\s+/).filter(Boolean)){
+    let part='';for(const character of Array.from(word)){if(part&&measure(part+character,12,true)>width){words.push(part);part='';}part+=character;}if(part)words.push(part);
+  }
+  return wrapNativeText(words.join(' '),width,(value,size)=>measure(value,size,true),12);
+}
+/** Share the globe/dossier split with its physical scene placement. */
+export function nativeVisualWidth(page:NativePage,width:number):number{return page.visual?Math.min(page.id==='world'?560:360,width*.48):0;}
 export function wrapNativeText(text:string,width:number,measure:TextMeasure,size=13):string[]{
   const lines:string[]=[];
   for(const paragraph of text.split('\n')){
@@ -33,6 +52,33 @@ export function wrapNativeText(text:string,width:number,measure:TextMeasure,size
     lines.push(line);
   }
   return lines;
+}
+/** File names and seeds can be one long token. Card text wraps these without
+ * compressing its glyphs; the complete string remains in its native tooltip. */
+export function wrapNativeCardText(text:string,width:number,measure:TextMeasure,size=13):string[]{
+  const parts:string[]=[];
+  for(const paragraph of text.split('\n')){
+    const words:string[]=[];
+    for(const word of paragraph.split(/\s+/).filter(Boolean)){
+      let part='';for(const character of Array.from(word)){if(part&&measure(part+character,size)>width){words.push(part);part='';}part+=character;}if(part)words.push(part);
+    }
+    parts.push(...wrapNativeText(words.join(' '),width,measure,size));
+  }
+  return parts;
+}
+/** A save catalogue stays a catalogue, even when its provenance is a long
+ * report. Complete text is retained by the control and its scrollable tooltip. */
+export function nativeCardInk(control:NativeControl,width:number,measure:TextMeasure,secondary=false){
+  const inkWidth=Math.max(40,width-36-(secondary?54:0));
+  const lines=(text:string|undefined,size:number,bold:boolean)=>{
+    if(!text)return [];
+    const full=wrapNativeCardText(text,inkWidth,(value,s)=>measure(value,s,bold),size),visible=full.slice(0,2);
+    if(full.length>2){const last=Array.from(visible[1]!);while(last.length&&measure(last.join('')+'…',size,bold)>inkWidth)last.pop();visible[1]=last.join('').trimEnd()+'…';}
+    return visible;
+  };
+  const title=lines(control.label,15,true),caption=lines(control.caption,13,false),description=lines(control.description,13,false);
+  const height=Math.max(76,28+title.length*20+(caption.length?caption.length*19+4:0)+(description.length?description.length*19+4:0));
+  return {title,caption,description,height,inkWidth};
 }
 function naturalWidth(control:NativeControl,measure:TextMeasure,style:NativeControlStyle):number {
   if(style==='icon')return 48;
@@ -46,6 +92,17 @@ export function flowNativeControls(controls:readonly NativeControl[],rect:Native
   const boxes:NativeControlBox[]=[];
   if(!controls.length)return {controls:boxes,height:0};
   const gap=style==='icon'?6:NATIVE_UI.gap;
+  if(style==='card'){
+    let top=rect.y;
+    for(let index=0;index<controls.length;){
+      const control=controls[index++]!,secondary=controls[index]?.presentation==='icon'?controls[index++]:undefined;
+      const {height}=nativeCardInk(control,rect.width,measure,!!secondary);
+      boxes.push({control,style:'card',x:rect.x,y:top,width:rect.width,height});
+      if(secondary)boxes.push({control:secondary,style:'icon',x:rect.x+rect.width-54,y:top+14,width:38,height:38});
+      top+=height+12;
+    }
+    return {controls:boxes,height:top-rect.y-12};
+  }
   if(style==='navigation'){
     const columns=rect.width>=190?2:1,width=Math.min(100,(rect.width-gap*(columns-1))/columns),height=96;
     controls.forEach((control,index)=>boxes.push({control,style:control.presentation??style,x:rect.x+index%columns*(width+gap),y:rect.y+Math.floor(index/columns)*(height+gap),width,height}));
@@ -67,7 +124,7 @@ export function flowNativeControls(controls:readonly NativeControl[],rect:Native
   }
   return {controls:boxes,height:y-rect.y+lineHeight};
 }
-function rowBox(row:NativeRow,x:number,top:number,width:number,measure:TextMeasure,table:boolean,tileColumnLimit?:number):NativeRowBox {
+function rowBox(row:NativeRow,x:number,top:number,width:number,measure:TextMeasure,table:boolean,tileColumnLimit?:number,matrixTail=!!row.value):NativeRowBox {
   const matrix=!!row.compact&&!!row.controls?.length&&table;
   const isTabs=row.controlStyle==='tab'||row.id==='pawn-tabs'||row.id==='health-tabs';
   const rowControls=row.controls??[],onlyButtons=!row.label&&!row.value&&!row.detail||isTabs;
@@ -85,10 +142,8 @@ function rowBox(row:NativeRow,x:number,top:number,width:number,measure:TextMeasu
   if(row.columns)height=48;
   else if(matrix){
     height=row.controls!.some(control=>control.caption)?48:42;controlHeight=height-6;controlTop=3;
-    const tail=row.value?142:0,left=x+104,available=Math.max(1,width-104-tail),gap=4;
-    const cell=(available-gap*(controlColumns-1))/controlColumns;
-    controls=row.controls!.map((control,index)=>({control,style:control.presentation??'button',x:left+index*(cell+gap),y:top+3,width:Math.max(1,cell),height:controlHeight}));
-  }else if(row.meter)height=row.meter.secondary?30:row.dense?25:28;
+    controls=nativeMatrixColumns(row,x,width,controlColumns,matrixTail).map((column,index)=>({control:row.controls![index]!,style:row.controls![index]!.presentation??'button',x:column.x,y:top+3,width:column.width,height:controlHeight}));
+  }else if(row.meter)height=row.meter.secondary?34:row.dense?25:28;
   else if(row.input){
     height=Math.max(36,labelLines.length*NATIVE_UI.line+8);controlHeight=26;controlTop=4;
     const count=row.controls?.length??0,left=x+width-Math.max(0,count*28-2);
@@ -112,7 +167,7 @@ function rowBox(row:NativeRow,x:number,top:number,width:number,measure:TextMeasu
   }
   if(detailLines.length&&!row.controls?.length)height+=detailLines.length*18+4;
   if(row.presentation==='record'&&!row.meter&&!isTabs&&!matrix)height+=8;
-  return {row,x,top,width,height,labelWidth,controlTop,controlHeight,controlColumns,detailLines,labelLines,valueLines,matrix,controls,textWidth,inlineActions};
+  return {row,x,top,width,height,labelWidth,controlTop,controlHeight,controlColumns,detailLines,labelLines,valueLines,matrix,controls,textWidth,inlineActions,matrixTail};
 }
 const requestedWidth=(page:NativePage,fallback:number)=>page.width?(page.width>20?page.width:page.width*100):fallback;
 function regionRows(page:NativePage,regions:Partial<Record<NativeRegion,NativeRegionBox>>,header:number,measure:TextMeasure,tileColumnLimit?:number):NativeRowBox[]{
@@ -132,9 +187,10 @@ function regionRows(page:NativePage,regions:Partial<Record<NativeRegion,NativeRe
   return rows;
 }
 function structuredPage(page:NativePage,viewport:{width:number;height:number},measure:TextMeasure,layout:'architect'|'research'):NativePageBox {
-  const pad=NATIVE_UI.padding,gap=14,requested=requestedWidth(page,layout==='architect'?1180:1190),width=Math.max(280,Math.min(layout==='architect'?Math.min(requested,1180):requested,viewport.width-32));
+  const pad=NATIVE_UI.padding,gap=14,requested=requestedWidth(page,layout==='architect'?1180:1190),width=Math.min(Math.max(280,Math.min(layout==='architect'?Math.min(requested,1180):requested,viewport.width-32)),Math.max(1,viewport.width-24));
   const header=48,bottom=NATIVE_UI.bottom+12;
-  let height=Math.max(180,Math.min(page.height??720,layout==='architect'?740:760,viewport.height-214));
+  const availableHeight=Math.max(1,viewport.height-bottom-12);
+  const height=Math.min(availableHeight,layout==='architect'?476:Math.max(180,Math.min(page.height??780,780,viewport.height-214)));
   const body:NativeRect={x:pad,y:header,width:width-pad*2,height:height-header-pad};
   const regions:Partial<Record<NativeRegion,NativeRegionBox>>={};
   if(layout==='architect'){
@@ -142,7 +198,8 @@ function structuredPage(page:NativePage,viewport:{width:number;height:number},me
     regions.navigation={x:pad,y:header,width:navWidth,height:body.height,contentHeight:0};
     const catalogueX=pad+navWidth+gap,remaining=width-pad-catalogueX;
     if(width<850){
-      const detailsHeight=Math.min(190,Math.max(110,body.height*.29)),catalogueHeight=Math.max(48,body.height-detailsHeight-10);
+      const minimumCatalogue=Math.min(48,Math.max(1,(body.height-10)*.6));
+      const detailsHeight=Math.min(Math.max(1,body.height-10-minimumCatalogue),190,Math.max(110,body.height*.29)),catalogueHeight=Math.max(1,body.height-detailsHeight-10);
       regions.catalogue={x:catalogueX,y:header,width:remaining,height:catalogueHeight,contentHeight:0};
       regions.details={x:catalogueX,y:header+catalogueHeight+10,width:remaining,height:detailsHeight,contentHeight:0};
     }else{
@@ -151,32 +208,16 @@ function structuredPage(page:NativePage,viewport:{width:number;height:number},me
       regions.details={x:width-pad-detailsWidth,y:header,width:detailsWidth,height:body.height,contentHeight:0};
     }
   }else{
-    const sidebar=Math.min(viewport.width>760?260:220,Math.max(120,width*.4));
+    const sidebar=Math.min(viewport.width>1100?300:viewport.width>760?260:220,Math.max(120,width*.4));
     const graphX=pad+sidebar+12,graphWidth=Math.max(60,width-pad-graphX);
     regions.details={x:pad,y:header,width:sidebar,height:body.height,contentHeight:0};
     regions.navigation={x:graphX,y:header,width:graphWidth,height:NATIVE_UI.tab,contentHeight:0};
-    regions.graph={x:graphX,y:header+NATIVE_UI.tab+6,width:graphWidth,height:Math.max(50,body.height-NATIVE_UI.tab-6),contentHeight:page.research?.height??815,contentWidth:page.research?.width??850};
+    regions.graph={x:graphX,y:header+NATIVE_UI.tab+6,width:graphWidth,height:Math.max(1,body.height-NATIVE_UI.tab-6),contentHeight:page.research?.height??815,contentWidth:page.research?.width??850};
   }
   const tileColumnLimit=layout==='architect'?10:4;
+  // The cardboard and its regions depend only on the viewport, never on the
+  // selected category or construction. Their complete contents scroll inside.
   const rows=regionRows(page,regions,header,measure,tileColumnLimit);
-  if(layout==='architect'){
-    const navigation=regions.navigation!,catalogue=regions.catalogue!,details=regions.details!;
-    if(width>=850){
-      const content=Math.max(navigation.contentHeight,catalogue.contentHeight,details.contentHeight);
-      height=Math.min(height,Math.max(180,header+pad+content));
-      for(const region of Object.values(regions))region.height=height-header-pad;
-    }else{
-      // Reflow the stacked options after choosing the compact height, so their
-      // bottom edge cannot drift outside the cardboard on short catalogues.
-      let detailsHeight=Math.min(190,Math.max(112,details.contentHeight));
-      const content=Math.max(navigation.contentHeight,catalogue.contentHeight+detailsHeight+10);
-      height=Math.min(height,Math.max(180,header+pad+content));
-      navigation.height=height-header-pad;
-      detailsHeight=Math.min(detailsHeight,Math.max(40,navigation.height-58));
-      catalogue.height=Math.max(48,navigation.height-detailsHeight-10);
-      details.y=header+catalogue.height+10;details.height=detailsHeight;
-    }
-  }
   const primary=regions[layout==='architect'?'catalogue':'details']!;
   return {x:12,y:viewport.height-bottom-height,width,height,header,footer:pad,body:{x:primary.x,y:primary.y,width:primary.width,height:primary.height},contentHeight:primary.contentHeight,rows,layout,regions,actions:[]};
 }
@@ -184,7 +225,7 @@ function structuredPage(page:NativePage,viewport:{width:number;height:number},me
 function inspectorPage(page:NativePage,viewport:{width:number;height:number},measure:TextMeasure):NativePageBox {
   // A dossier is one stable physical object. Changing tab changes its contents,
   // never the paper, tabs or the portrait/action strip underneath it.
-  const width=Math.max(220,Math.min(700,viewport.width-32)),pad=NATIVE_UI.padding,header=40;
+  const width=Math.min(Math.max(220,Math.min(760,viewport.width-32)),Math.max(1,viewport.width-24)),pad=NATIVE_UI.padding,header=40;
   const bodyX=pad,contentWidth=width-pad*2-12,tabsRow=page.rows.find(row=>row.id==='pawn-tabs')!;
   const tabsBox=rowBox(tabsRow,bodyX,0,contentWidth,measure,false);
   const rows:NativeRowBox[]=[];let top=0,left=0,right=0,columns=false;
@@ -198,17 +239,24 @@ function inspectorPage(page:NativePage,viewport:{width:number;height:number},mea
     if(columns){if(row.column===1)right+=box.height;else left+=box.height;}else top+=box.height;
   }
   const contentHeight=Math.max(top,left,right),bottom=NATIVE_UI.bottom+10;
-  const stripWidth=width-pad*2,summaryWidth=Math.min(240,Math.max(118,stripWidth*.4));
+  const stripWidth=width-pad*2,summaryWidth=Math.min(260,Math.max(118,stripWidth*.4));
   const actionsX=pad+summaryWidth+12,actionsWidth=Math.max(64,width-pad-actionsX),actionColumns=(page.actions?.length??0)>4?3:2;
   const cellWidth=Math.max(24,(actionsWidth-(actionColumns-1)*NATIVE_UI.gap)/actionColumns),actions:NativeControlBox[]=[];
   for(const [index,control]of(page.actions??[]).entries()){
     const style=control.presentation??'button',buttonWidth=Math.min(cellWidth,naturalWidth(control,measure,style));
     const textWidth=Math.max(12,buttonWidth-24-(control.icon?24:0)-(control.select?16:0));
     const height=wrapNativeText(control.label,textWidth,measure,NATIVE_UI.body).length>1?42:NATIVE_UI.button;
-    actions.push({control,style,x:actionsX+index%actionColumns*(cellWidth+NATIVE_UI.gap),y:6+Math.floor(index/actionColumns)*50,width:buttonWidth,height});
+    actions.push({control,style,x:actionsX+index%actionColumns*(cellWidth+NATIVE_UI.gap),y:13+Math.floor(index/actionColumns)*50,width:buttonWidth,height});
   }
-  const stripHeight=Math.max(104,Math.ceil(actions.length/actionColumns)*50+4);
-  const height=Math.max(300,Math.min(620,viewport.height-200));
+  const stripHeight=Math.max(118,Math.ceil(actions.length/actionColumns)*50+4);
+  const availableHeight=Math.max(1,viewport.height-bottom-12);
+  const minimumHeight=header+8+4+tabsBox.height+4+stripHeight+40;
+  if(availableHeight<minimumHeight){
+    // At a large accessibility scale, keep full-sized text and controls in one
+    // scrollable dossier rather than pushing its fixed strips off the screen.
+    return layoutNativePage({...page,layout:'dialog',rows:page.rows.map(row=>({...row,region:undefined}))},viewport,false,measure);
+  }
+  const height=Math.min(availableHeight,660);
   const bodyHeight=Math.max(40,height-header-8-4-tabsBox.height-4-stripHeight);
   const sheet:NativeRect={x:0,y:0,width,height:header+bodyHeight+8};
   const tabs:NativeRect={x:pad,y:sheet.height+4,width:contentWidth,height:tabsBox.height};
@@ -243,24 +291,39 @@ export function layoutNativePage(page:NativePage,viewport:{width:number;height:n
   }
   let requested=requestedWidth(page,layout==='inspector'?680:layout==='tools'?350:760);
   if(page.id==='menu')requested=368;if(page.id==='history')requested=720;if(page.id==='animals')requested=900;
-  const width=Math.max(220,Math.min(requested,viewport.width-32)),pad=NATIVE_UI.padding;
-  const visual=page.visual?Math.min(330,width*.42):0,contentWidth=width-pad*2-(visual?visual+10:0)-12,bodyX=pad+visual+(visual?10:0);
-  const header=page.portrait||page.subtitle?58:42;
+  const width=Math.min(Math.max(220,Math.min(requested,viewport.width-32)),Math.max(1,viewport.width-24)),pad=NATIVE_UI.padding;
+  const visual=nativeVisualWidth(page,width),contentWidth=width-pad*2-(visual?visual+10:0)-12,bodyX=pad+visual+(visual?10:0);
+  const matrixColumns=layout==='table'?Math.max(0,...page.rows.map(row=>row.columns?.length??0)):0;
+  const matrixRow=(row:NativeRow)=>matrixColumns>0&&(!!row.columns||!!row.compact&&row.controls?.length===matrixColumns);
+  const matrixTail=page.rows.some(row=>matrixRow(row)&&!!row.value);
+  const intrinsicWidth=matrixColumns?Math.max(contentWidth,page.id==='work'?1320:0,...page.rows.filter(matrixRow).map(row=>104+(matrixTail?192:0)+matrixColumns*42+Math.max(0,matrixColumns-1)*6)):contentWidth;
+  const horizontalReserve=intrinsicWidth>contentWidth?12:0;
+  const header=page.subtitle?76:page.portrait?58:48;
   const actionFlow=flowNativeControls(page.actions??[],{x:pad,y:0,width:width-pad*2,height:0},measure);
-  const footer=page.actions?.length?actionFlow.height+8:10;
+  const bottom=front?20:NATIVE_UI.bottom+10,availableHeight=Math.max(1,viewport.height-bottom-(front?20:12));
+  const scrollActions=header+actionFlow.height+8+32>availableHeight;
+  const footer=(page.actions?.length&&!scrollActions?actionFlow.height+pad*2:pad)+horizontalReserve;
+  const effectiveRows:readonly NativeRow[]=scrollActions&&page.actions?.length?[...page.rows,{id:'page-overflow-actions',label:'Actions',controls:page.actions,controlStyle:'button'}]:page.rows;
   const rows:NativeRowBox[]=[];let top=0,left=0,right=0,columns=false;
-  for(const row of page.rows){
+  const rowGap=front?12:matrixColumns?4:3;
+  for(const row of effectiveRows){
     if(row.column!==undefined&&!columns){columns=true;left=right=top;}
     else if(row.column===undefined&&columns){columns=false;top=Math.max(left,right);}
-    const ratio=page.columnRatio??.5,columnWidth=columns?(row.column===1?contentWidth*(1-ratio)-5:contentWidth*ratio-5):contentWidth;
+    const ratio=page.columnRatio??.5,columnWidth=columns?(row.column===1?contentWidth*(1-ratio)-5:contentWidth*ratio-5):matrixRow(row)?intrinsicWidth:contentWidth;
     const x=bodyX+(columns&&row.column===1?contentWidth*ratio+5:0),rowTop=columns?(row.column===1?right:left):top;
-    const box=rowBox(row,x,rowTop,columnWidth,measure,layout==='table');rows.push(box);
-    if(columns){if(row.column===1)right+=box.height;else left+=box.height;}else top+=box.height;
+    const displayRow=matrixRow(row)?{...row,region:'catalogue' as const}:row;
+    const box=rowBox(displayRow,x,rowTop,columnWidth,measure,layout==='table',undefined,matrixRow(row)?matrixTail:undefined);rows.push(box);
+    if(columns){if(row.column===1)right+=box.height+rowGap;else left+=box.height+rowGap;}else top+=box.height+rowGap;
   }
-  const contentHeight=Math.max(top,left,right),bottom=front?20:NATIVE_UI.bottom+10;
-  const maxHeight=Math.max(150,Math.min(page.height??(front?760:layout==='inspector'?600:layout==='tools'?560:720),viewport.height-bottom-(front?20:110)));
-  const height=Math.min(maxHeight,Math.max(header+footer+40,header+contentHeight+footer+8,page.visual?440:0));
-  const actions=actionFlow.controls.map(control=>({...control,y:height-header-footer+4+control.y}));
+  const contentHeight=Math.max(top,left,right);
+  const maxHeight=Math.min(availableHeight,Math.max(header+footer+32,150,Math.min(page.height??(front?760:layout==='inspector'?600:layout==='tools'?560:720),viewport.height-bottom-(front?20:110))));
+  const height=page.id==='world'?maxHeight:Math.min(maxHeight,Math.max(header+footer+40,header+contentHeight+footer+8,page.visual?440:0));
+  const actions=scrollActions?[]:actionFlow.controls.map(control=>({...control,y:height-header-footer+horizontalReserve+pad+control.y}));
   const x=front?(viewport.width-width)/2:12,y=front?(viewport.height-height)/2:viewport.height-bottom-height;
-  return {x,y,width,height,header,footer,body:{x:bodyX,y:header,width:contentWidth,height:height-header-footer},contentHeight,rows,layout,regions:{},actions};
+  const body={x:bodyX,y:header,width:contentWidth,height:height-header-footer};
+  const nameWidth=Math.min(104,Math.max(1,body.width-1));
+  return {x,y,width,height,header,footer,body,contentHeight,rows,layout,regions:matrixColumns?{
+    navigation:{...body,width:nameWidth,contentHeight},
+    catalogue:{...body,x:body.x+nameWidth,width:body.width-nameWidth,contentWidth:intrinsicWidth-nameWidth,contentHeight},
+  }:{},actions};
 }

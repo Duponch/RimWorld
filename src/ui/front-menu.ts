@@ -46,6 +46,8 @@ export interface FrontMenuSave {
 export interface FrontMenuOptions {
   getUiAutoHide?:()=>{bottom:boolean;notifications:boolean};
   onUiAutoHideChange?:(value:{bottom:boolean;notifications:boolean})=>boolean;
+  getUiScale?:()=>number;
+  onUiScaleChange?:(scale:number)=>boolean;
   worldCreation?:WorldCreationCallbacks256;
   getWorldCreationPlayer?:()=>WorldCreationPlayer256;
   getMaxSettlements?:()=>SettlementLimit;getMaxSettlementsPending?:()=>boolean;onMaxSettlementsChange?:(value:SettlementLimit)=>Promise<boolean>;

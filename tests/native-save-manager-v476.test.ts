@@ -15,6 +15,18 @@ function fixture(){
   return {manager,options,click,get page(){return page!;},setEntries:(next:SavedColony[])=>{entries=next;}};
 }
 describe('native save manager ownership and consent',()=>{
+  it('loads the clicked complete card directly once while keeping management actions separate',async()=>{
+    const f=fixture();await f.manager.open();const row=f.page.rows.find(row=>row.id==='native-save-slot-lisiere.named.v1.1')!;
+    expect(row.controlStyle).toBe('card');expect(row.controls![0]).toMatchObject({id:'native-save-load-lisiere.named.v1.1',label:'Camp sûr',presentation:'card',description:'Jour 2 · 250 × 250'});expect(row.controls![0]!.caption).toContain('Sauvegarde nommée');
+    await f.click('native-save-select-lisiere.named.v1.1');expect(f.options.load).not.toHaveBeenCalled();expect(f.page.rows.flatMap(row=>row.controls??[]).some(control=>control.id==='native-save-load')).toBe(false);
+    await f.click('native-save-load-lisiere.named.v1.1');expect(f.options.load).toHaveBeenCalledExactlyOnceWith('lisiere.named.v1.1');expect(f.options.close).toHaveBeenCalledOnce();f.manager.dispose();expect(f.options.close).toHaveBeenCalledOnce();
+  });
+  it('revalidates the exact clicked revision before direct loading',async()=>{
+    const f=fixture();await f.manager.open();f.options.refresh.mockImplementationOnce(async()=>{f.setEntries([{key:'lisiere.named.v1.1',kind:'named',label:'Copie changée',detail:'Jour 3',savedAt:21,revision:'opaque-B'}]);});await f.click('native-save-load-lisiere.named.v1.1');expect(f.options.load).not.toHaveBeenCalled();expect(f.options.close).not.toHaveBeenCalled();expect(f.page.rows.map(row=>row.label).join(' ')).toMatch(/changé|disparu/);f.manager.dispose();
+  });
+  it('preserves the real session-blocked guard after refreshing a directly clicked copy',async()=>{
+    const f=fixture();await f.manager.open();f.options.refresh.mockImplementationOnce(async()=>{f.options.blocked=()=>true;});await f.click('native-save-load-lisiere.named.v1.1');expect(f.options.load).not.toHaveBeenCalled();expect(f.options.close).not.toHaveBeenCalled();expect(f.page.rows.map(row=>row.label).join(' ')).toContain('Attendez la fin');f.manager.dispose();
+  });
   it('requires explicit confirmation and commits the exact selected revision',async()=>{
     const f=fixture();await f.manager.open();await f.click('native-save-select-lisiere.named.v1.1');await f.click('native-save-overwrite');
     expect(f.page.id).toBe('native-saves-confirm');expect(f.options.saveNamed).not.toHaveBeenCalled();

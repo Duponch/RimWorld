@@ -24,7 +24,7 @@ describe('cardboard UI proportions and record flow · V480',()=>{
     expect(nav.filter(c=>c.y===nav[0]!.y)).toHaveLength(2);
     expect(tiles.filter(c=>c.y===tiles[0]!.y)).toHaveLength(6);
     expect(tiles.every(c=>c.height===104&&c.width>=96&&c.width<=104)).toBe(true);
-    expect(tiles[1]!.x-tiles[0]!.x-tiles[0]!.width).toBe(10);
+    expect(tiles[1]!.x-tiles[0]!.x-tiles[0]!.width).toBeCloseTo(10,10);
     for(const region of Object.values(box.regions))inside({x:0,y:0,width:box.width,height:box.height},region);
     expect(box.regions.navigation!.contentHeight).toBe(414);
     expect(box.regions.catalogue!.contentHeight).toBe(218);
@@ -59,8 +59,8 @@ describe('cardboard UI proportions and record flow · V480',()=>{
     const actions=['Mobiliser','Effacer les ordres','Travail','Fermer'].map(label=>button(label));
     const boxes=['journal','gear','social','bio','needs','health','prisoner'].map((tab,index)=>layout({id:'inspect-pawn-8-'+tab,title:'Eden',subtitle:tab,portrait:{url:'data:,',label:'Eden'},layout:'inspector',width:400+index*20,height:400+index*15,rows:[tabs,...Array.from({length:index*12},(_,i)=>({id:'fact-'+i,label:'Fait du dossier '+i,detail:'Toutes les informations restent conservées dans leur section.'}))],actions}));
     for(const box of boxes){
-      expect([box.width,box.height,box.header]).toEqual([700,620,40]);
-      expect(box.body.height).toBe(426);expect(box.inspectorParts).toEqual(boxes[0]!.inspectorParts);
+      expect([box.width,box.height,box.header]).toEqual([760,660,40]);
+      expect(box.body.height).toBe(452);expect(box.inspectorParts).toEqual(boxes[0]!.inspectorParts);
       for(const control of box.actions)inside(box.inspectorParts!.actions,{...control,y:control.y+box.header});
       for(const control of box.rows[0]!.controls)inside(box.inspectorParts!.tabs,{...control,y:control.y+box.header});
       expect(box.actions.map(c=>c.control)).toEqual(actions);
@@ -74,9 +74,11 @@ describe('cardboard UI proportions and record flow · V480',()=>{
       ...Array.from({length:12},(_,i)=>({id:'skill-'+i,label:'Compétence '+i,column:1 as const,meter:{value:12,max:20,secondary:{value:50,max:100}}}))];
     for(const viewport of[desktop,{width:960,height:800}]){
       const box=layout({id:'inspect-pawn-bio',title:'Ada',layout:'inspector',portrait:{url:'data:,',label:'Ada'},rows},viewport),skills=box.rows.filter(r=>r.row.id.startsWith('skill-'));
-      expect(box.width).toBe(700);expect(box.height).toBe(viewport.height===800?600:620);
-      expect(skills).toHaveLength(12);expect(skills.every(r=>r.height===30&&r.top+r.height<=box.body.height)).toBe(true);
-      expect(skills.at(-1)!.top+skills.at(-1)!.height).toBe(388);expect(NATIVE_UI.body).toBe(14);expect(NATIVE_UI.line).toBe(20);
+      expect(box.width).toBe(760);expect(box.height).toBe(660);
+      expect(skills).toHaveLength(12);expect(skills.every(r=>r.height===34&&r.top+r.height<=box.body.height)).toBe(true);
+      expect(skills.map(row=>row.row.id)).toEqual(Array.from({length:12},(_,i)=>'skill-'+i));
+      expect(skills.every(row=>row.row.meter?.secondary?.value===50&&row.row.meter?.max===20)).toBe(true);
+      expect(skills.at(-1)!.top+skills.at(-1)!.height).toBe(436);expect(NATIVE_UI.body).toBe(14);expect(NATIVE_UI.line).toBe(20);
     }
   });
 

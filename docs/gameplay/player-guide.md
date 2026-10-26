@@ -1,5 +1,15 @@
 # Guide joueur
 
+## Régler et utiliser l’interface en carton
+
+Dans **Options → Échelle de l’interface**, réglez l’ensemble du HUD, des fenêtres et du texte de **75 à 200 %**, par pas de 5 %. **100 %** correspond aux dimensions par défaut. Le choix est conservé par ce navigateur. Les cartes se réorganisent ; sur un petit écran fortement agrandi, les flèches de la barre permettent d’accéder à tous les menus.
+
+Les options d’escamotage de la barre du bas et des notifications sont indépendantes. Une fois activées, approchez la souris du bord correspondant pour les faire ressortir. Les jauges et les étiquettes de danger utilisent une couleur plus contrastée ; les informations neutres conservent leur carton clair.
+
+Un clic sur une **carte de sauvegarde** charge directement cette partie en pause. Dans les colonies de test, le petit dessin de téléchargement est une action indépendante. Les descriptions longues restent complètes dans les informations au survol, qui peuvent défiler à la molette.
+
+Avec une fenêtre de jeu ouverte, utilisez le bouton droit maintenu pour tourner la caméra, le bouton central pour la déplacer et la molette pour zoomer, en commençant sur le terrain libre. Le contexte Ordres reste ouvert. Un clic gauche extérieur ferme la fenêtre. Le curseur en mode ordre associe une petite flèche de carton beige au dessin de l’action choisie ; **Échap** revient à la sélection.
+
 ## Poser une porte sur un mur construit
 
 **V483 locale qualifiée, non publiée.** Dans **Architecte → Structure**, choisissez une porte et son matériau, puis posez son plan sur un mur construit compatible. Le constructeur retire d'abord réellement le mur, même si les matériaux de la porte manquent encore. Le retrait récupère une partie de l'ancienne matière ; la case reste ouverte jusqu'aux livraisons et au travail de la nouvelle porte.

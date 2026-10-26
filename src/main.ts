@@ -13,7 +13,8 @@ import type {NativeDomainAlert} from './ui3d/native-domain-alerts';
 import {buildNativeInspector,setNativeInspectorTab} from './ui3d/native-inspector';
 import {NativeHudCards} from './ui3d/native-hud';
 import type {NativeHudViewAction} from './ui3d/native-hud';
-import {NATIVE_DOCK_PREFERENCE_KEY,parseNativeDockPreferences,type NativeDockPreferences} from './ui3d/native-preferences';
+import {NATIVE_DOCK_PREFERENCE_KEY,parseNativeDockPreferences,NATIVE_UI_SCALE_PREFERENCE_KEY,parseNativeUiScale,normalizeNativeUiScale,type NativeDockPreferences} from './ui3d/native-preferences';
+import {installNativeCardboardCursors} from './ui/native-cardboard-cursors';
 import type {NativeUiState,NativeUiActions,NativePage} from './ui3d/native-contract';
 import type {ConstructionMaterial} from './sim/construction-materials';
 import type {CampEntryProgressMessage256,CaravanEncounterProgressMessage261} from './bridge/protocol';
@@ -275,11 +276,13 @@ const rotatableTools=new Set<Tool>(['ship-cryptosleep-casket','ship-beam','ship-
 const resourceLabels = { hops:'Houblon', 'wild-plant':'Plante sauvage', healroot:'Racine médicinale', haygrass:'Herbe à foin', potato:'Plant de pommes de terre',corn:'Plant de maïs', tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz', cotton: 'Cotonnier' };
 const params = new URLSearchParams(location.search);
 const nativeMode=!(import.meta.env.DEV&&params.get('ui')==='legacy');
+if(nativeMode)installNativeCardboardCursors(document.documentElement);
 let nativeUi:NativeStage|undefined;
 let nativeHud:NativeHudCards|undefined;
 let nativeCustomPage:NativePage|undefined;
 let nativeToolPalette:'orders'|'zones'|undefined;
 let nativeDockPreferences:NativeDockPreferences=(()=>{try{return parseNativeDockPreferences(localStorage.getItem(NATIVE_DOCK_PREFERENCE_KEY));}catch{return parseNativeDockPreferences(null);}})();
+let nativeUiScale=(()=>{try{return parseNativeUiScale(localStorage.getItem(NATIVE_UI_SCALE_PREFERENCE_KEY));}catch{return parseNativeUiScale(null);}})();
 let nativeRightDockOpen=!nativeDockPreferences.notifications;
 let nativeCampProgress:CampEntryProgressMessage256|undefined;
 let nativeCaravanProgress:CaravanEncounterProgressMessage261|undefined;
@@ -566,6 +569,7 @@ class MainPresentationChanges extends PresentationChanges {
   protected override readStructures(world:World):unknown { return this.#structures.read(world); }
 }
 class MainColonyRenderer extends ColonyRenderer {
+  protected override cameraOnlyInput():boolean{return nativeUi?.hasOpenGamePage(true)??false;}
   protected override createSelectionRectanglePort(){return nativeUi?(bounds:{left:number;top:number;width:number;height:number}|null)=>nativeUi!.setSelectionRectangle(bounds):undefined;}
   get admissionFrameReady():boolean {return !this.disposed&&!this.preparing&&!this.fatalError;}
   protected override frame(now:number):void {drainMainAdmissionsBeforeFrame();try{super.frame(now);}finally{notifyMainAdmissionAvailability();}}
@@ -849,7 +853,7 @@ const session = new GameSession(client, saveRepository, prepareWorld, () => {
 });
 const frontHost = document.createElement('div'); document.querySelector('#app')!.append(frontHost);
 if(nativeMode){
-  nativeUi=new NativeStage({onTools:showNativeToolPalette,onViewport:(w,h,k)=>nativeHud?.setViewport(w,h,k),onPointer:updateNativeDockPointer,onAnimate:dt=>nativeHud?.animate(dt)??false,onPanel:id=>{
+  nativeUi=new NativeStage({onTools:showNativeToolPalette,onViewport:(w,h,k,bottom,left)=>nativeHud?.setViewport(w,h,k,bottom??96,left),onWindowLayout:bounds=>nativeHud?.setWindowBounds(bounds)??false,onPointer:updateNativeDockPointer,onAnimate:dt=>nativeHud?.animate(dt)??false,onPanel:id=>{
     nativeCustomPage=undefined;nativeToolPalette=undefined;
     if(id==='factions'){nativeCustomPage=buildNativeFactions(readNativeState(),nativeActions());nativeUi!.showPage(nativeCustomPage);return;}
     void attempt(()=>switchPanel(currentPanel===id?null:id));
@@ -864,7 +868,8 @@ if(nativeMode){
     context:context=>{nativeCustomPage=undefined;if(context.tool){setTool(context.tool);return;}if(context.worldTab)setNativeWorldTab(context.worldTab==='group'?'groups':'individual');void attempt(async()=>{await switchPanel(context.panel);if(context.category)setCategory(context.category);});},
     speed:value=>{const token=client.getThreatPauseToken();void attempt(()=>changeSpeed(value,token));},view:applyNativeViewControl,
     showPage:page=>{nativeCustomPage=page;nativeUi!.showPage(page);}});
-  const viewport=nativeUi.getViewportMetrics();nativeHud.setViewport(viewport.width,viewport.height,viewport.unitsPerPixel);nativeHud.setNotificationsAutoHide(nativeDockPreferences.notifications);nativeHud.setRightDockOpen(nativeRightDockOpen);nativeUi.setAutoHideBottom(nativeDockPreferences.bottom);
+  nativeUi.setUiScale(nativeUiScale);
+  const viewport=nativeUi.getViewportMetrics();nativeHud.setViewport(viewport.width,viewport.height,viewport.unitsPerPixel,viewport.bottomDockHeight??96,viewport.leftHudBottom);nativeHud.setNotificationsAutoHide(nativeDockPreferences.notifications);nativeHud.setRightDockOpen(nativeRightDockOpen);nativeUi.setAutoHideBottom(nativeDockPreferences.bottom);
   // Old controls are a disabled development witness only. Native scene layout
   // and input never read their measurements, values, handlers or visibility.
   for(const child of shell.children)if(child.id!=='viewport'){
@@ -919,6 +924,7 @@ const worldCreationBackend256:WorldCreationCallbacks256={
 };
 const frontOptions:FrontMenuOptions = {
   getUiAutoHide:()=>({...nativeDockPreferences}),onUiAutoHideChange:setNativeDockPreferences,
+  getUiScale:()=>nativeUiScale,onUiScaleChange:setNativeUiScale,
   getWorldCreationPlayer:()=>({...worldCreationPlayer256}),
   worldCreation:createMainWorldCreationCallbacks256(worldCreationBackend256,{
     replaceConfirmedDraft:(ticket,operation)=>replaceColony(operation,ticket),
@@ -995,6 +1001,10 @@ function openNativeDomainAlert(alert:NativeDomainAlert):void {
   else if(alert.action.kind==='trade')nativeLocalTrade?.openVisitors();
   else if(alert.action.kind==='orbital')nativeLocalTrade?.openOrbital();
 }
+function setNativeUiScale(value:number):boolean {
+  nativeUiScale=normalizeNativeUiScale(value);nativeUi?.setUiScale(nativeUiScale);
+  try{localStorage.setItem(NATIVE_UI_SCALE_PREFERENCE_KEY,JSON.stringify(nativeUiScale));return true;}catch{return false;}
+}
 function setNativeDockPreferences(value:NativeDockPreferences):boolean {
   nativeDockPreferences={bottom:value.bottom===true,notifications:value.notifications===true};
   nativeUi?.setAutoHideBottom(nativeDockPreferences.bottom);nativeHud?.setNotificationsAutoHide(nativeDockPreferences.notifications);
@@ -1003,7 +1013,8 @@ function setNativeDockPreferences(value:NativeDockPreferences):boolean {
 }
 function updateNativeDockPointer(x:number,y:number):void {
   if(!nativeHud)return;const bounds=nativeHud.getRightDockBounds();
-  const open=!nativeDockPreferences.notifications||x>=Math.min(innerWidth-12,bounds.left)&&y>=bounds.top-15&&y<=bounds.bottom+20;
+  const width=nativeUi?.getViewportMetrics().width??innerWidth;
+  const open=!nativeDockPreferences.notifications||x>=Math.min(width-12,bounds.left)&&y>=bounds.top-15&&y<=bounds.bottom+20;
   if(open!==nativeHud.getRightDockOpen()){nativeRightDockOpen=open;nativeHud.setRightDockOpen(open);nativeUi?.invalidate();}
 }
 function showNativeToolPalette(kind:'orders'|'zones',toggle=true):void {

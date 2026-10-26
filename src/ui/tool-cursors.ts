@@ -1,6 +1,7 @@
 import { pictogramDataUrl } from './pictograms';
 import type { Tool } from './layout';
 import { ARCHITECT_ICON_ATLASES, ARCHITECT_ICON_MAPPING, ARCHITECT_ICON_ORDER } from './architect-icons';
+import {syncNativeMapToolCursor} from './native-cardboard-cursors';
 
 export const UI_ICONS = ['mine', 'chop', 'harvest', 'cut', 'wood', 'steel', 'component', 'silver', 'medicine', 'blocks', 'food', 'meal', 'home', 'clock', 'people', 'research', 'leaf', 'eye', 'layers', 'pointer'] as const;
 export type UiIcon = typeof UI_ICONS[number];
@@ -27,15 +28,17 @@ export function toolCursorIcon(tool: Tool): string { return TOOL_ICON_ALIASES[to
 export function toolCursorKind(tool: Tool): ToolCursorKind { return tool === 'select' ? 'pointer' : tool; }
 export function syncToolCursor(viewport: HTMLElement, tool: Tool): ToolCursorKind {
   const cursor = toolCursorKind(tool);
+  const nativeRoot=viewport.ownerDocument?.documentElement,native=!!nativeRoot&&nativeRoot.dataset.cardboardCursors==='true';
   if (viewport.dataset.cursor !== cursor) {
     viewport.dataset.cursor = cursor;
     viewport.removeAttribute('data-cursor-gesture');
   }
   viewport.dataset.cursorMode = tool === 'select' ? 'select' : 'order';
   viewport.style.setProperty('--map-tool-cursor', cursor === 'pointer'
-    ? 'var(--cursor-pointer, default)' : `var(--cursor-tool-${cursor}, crosshair)`);
+    ? 'var(--cursor-pointer, default)' : native?`var(--cursor-tool-${cursor}, var(--cursor-pointer, crosshair))`:`var(--cursor-tool-${cursor}, crosshair)`);
   for (const gesture of ['grab', 'grabbing'] as const) viewport.style.setProperty(`--map-tool-${gesture}-cursor`, cursor === 'pointer'
     ? `var(--cursor-${gesture}, ${gesture})` : `var(--cursor-tool-${cursor}-${gesture}, var(--cursor-${gesture}, ${gesture}))`);
+  if(native)syncNativeMapToolCursor(nativeRoot,viewport,tool);
   return cursor;
 }
 

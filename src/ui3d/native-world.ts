@@ -104,7 +104,7 @@ function individualDraftRows(direction:'buy'|'sell',lines:CommercialBuyLine[]):N
  const q=direction==='buy'?quoteCommercial(local(),lines):quoteCommercialSell(local(),lines);return q.ok?[r('individual-draft-total','Total du panier',`${q.totalSilver} argent`,`${q.remainingSilver} argent après l’échange`),r('individual-draft-mass','Charge après l’échange',`${kg(q.mass.grams)} / ${kg(q.mass.capacityGrams)}`)]:[r('individual-draft-refusal','Brouillon non admissible',q.reason)];
 }
 
-interface Formation {scope:string;mapId:number;retreat:boolean;members:Set<number>;animals:Set<number>;packs:Set<number>;sources:Map<number,number>;destination?:number;stationary:boolean}
+interface Formation {scope:string;mapId:number;retreat:boolean;members:Set<number>;animals:Set<number>;packs:Set<number>;sources:Map<number,number>;sourcePage:number;destination?:number;stationary:boolean}
 let formation:Formation|undefined;
 function formationContext(draft:Formation):{s:GroupPanelSnapshot;f:GroupPanelFacts}{
  if(draft.scope!==scope)throw Error('La partie a changé. Préparez de nouveau le départ.');
@@ -115,7 +115,7 @@ function previewFormation(d:Formation):GroupFormationPreview {const {s,f}=format
 function openFormation(retreat=false):void {
  const s=snapshot(),f=facts(s,retreat);if(s.group)throw Error('Une formation est déjà engagée sur cette carte.');
  if(!f.actions.start.ok&&!f.reform&&!f.retreat)throw Error(f.actions.start.reason??'Ce départ n’est pas admissible.');
- formation={scope,mapId:s.originMapId!,retreat,members:new Set(),animals:new Set(),packs:new Set(),sources:new Map(),destination:retreat?f.retreatTile:selectedTile,stationary:!!f.reform};renderFormation(formation);
+ formation={scope,mapId:s.originMapId!,retreat,members:new Set(),animals:new Set(),packs:new Set(),sources:new Map(),sourcePage:0,destination:retreat?f.retreatTile:selectedTile,stationary:!!f.reform};renderFormation(formation);
 }
 function renderFormation(d:Formation):void {
  const {s,f}=formationContext(d),rows:NativeRow[]=[r('formation-origin','Origine',f.originLabel,`Case ${f.originTile}. ${f.reform?'Reformation directe depuis les originaux du camp.':'Rassemblement, prises et sortie physiques des mêmes personnes et biens.'}`),r('formation-choice','Sélection',`${d.members.size} personnes · ${d.animals.size} animaux · ${d.packs.size} meubles`)];
@@ -124,7 +124,14 @@ function renderFormation(d:Formation):void {
  for(const choice of f.candidates){const p=choice.pawn;rows.push(r(`formation-person-${p.id}`,p.name,actorNeeds(p),choice.reason,[b(`formation-person-${p.id}-toggle`,d.members.has(p.id)?'Choisi':'Choisir',()=>{toggle(d.members,p.id);renderFormation(d);},{active:d.members.has(p.id),disabled:!choice.ok&&!d.members.has(p.id)})]));}
  for(const choice of f.animals??[]){const a=choice.animal;rows.push(r(`formation-animal-${a.id}`,travelActorLabel256(a),travelAnimalNeeds256(a),choice.reason,[b(`formation-animal-${a.id}-toggle`,d.animals.has(a.id)?'Choisi':'Choisir',()=>{toggle(d.animals,a.id);renderFormation(d);},{active:d.animals.has(a.id),disabled:!choice.ok&&!d.animals.has(a.id)})]));}
  for(const choice of f.bedrolls??[]){const pack=choice.pack,grams=groupPackedMassGrams258(pack,s.world.schemaVersion);rows.push(r(`formation-pack-${pack.building.id}`,travelPackLabel256(pack),grams===undefined?'Masse inconnue':kg(grams),choice.reason,[b(`formation-pack-${pack.building.id}-toggle`,d.packs.has(pack.building.id)?'Choisi':'Choisir',()=>{toggle(d.packs,pack.building.id);renderFormation(d);},{active:d.packs.has(pack.building.id),disabled:!choice.ok&&!d.packs.has(pack.building.id)})]));}
- for(const choice of f.sources){const pile=choice.pile,unit=groupFreightUnitMass258(pile,s.world.schemaVersion);rows.push({...numberRow(`formation-pile-${pile.id}`,`${ITEM_DEFINITIONS[pile.item].label} · pile ${pile.id}`,d.sources.get(pile.id)??0,n=>{d.sources.set(pile.id,n);renderFormation(d);},0,choice.available,`${pile.quantity} présentes · ${choice.reserved} réservées · ${choice.available} disponibles${unit===undefined?'':` · ${kg(unit)}/unité`}${pile.owner.type==='ground'?` · sol (${pile.owner.x}, ${pile.owner.z})`:'pawnId'in pile.owner?` · détenteur #${pile.owner.pawnId}`:''}${choice.reason?` · ${choice.reason}`:''}`),controls:[b(`formation-pile-${pile.id}-clear`,'Retirer',()=>{d.sources.delete(pile.id);renderFormation(d);})]});}
+ const sourcePageSize=16,totalSources=f.sources.length;
+ d.sourcePage=Math.min(d.sourcePage,Math.max(0,Math.ceil(totalSources/sourcePageSize)-1));
+ const sourceStart=d.sourcePage*sourcePageSize;
+ for(const choice of f.sources.slice(sourceStart,sourceStart+sourcePageSize)){const pile=choice.pile,unit=groupFreightUnitMass258(pile,s.world.schemaVersion);rows.push({...numberRow(`formation-pile-${pile.id}`,`${ITEM_DEFINITIONS[pile.item].label} · ${choice.available} dispo.`,d.sources.get(pile.id)??0,n=>{d.sources.set(pile.id,n);renderFormation(d);},0,choice.available),hint:`${ITEM_DEFINITIONS[pile.item].label} · pile ${pile.id}\n${pile.quantity} présentes · ${choice.reserved} réservées · ${choice.available} disponibles${unit===undefined?'':` · ${kg(unit)}/unité`}${pile.owner.type==='ground'?` · sol (${pile.owner.x}, ${pile.owner.z})`:'pawnId'in pile.owner?` · détenteur #${pile.owner.pawnId}`:''}${choice.reason?` · ${choice.reason}`:''}`,controls:[b(`formation-pile-${pile.id}-clear`,'Retirer',()=>{d.sources.delete(pile.id);renderFormation(d);},{icon:'cancel',presentation:'icon',hint:'Retirer cette pile du chargement.'})]});}
+ if(totalSources>sourcePageSize)rows.push(r('formation-sources-page','Sources au sol',`${sourceStart+1}–${Math.min(totalSources,sourceStart+sourcePageSize)} / ${totalSources}`,undefined,[
+  b('formation-sources-previous','Précédents',()=>{d.sourcePage=Math.max(0,d.sourcePage-1);renderFormation(d);},{disabled:d.sourcePage===0,hint:'Afficher les sources précédentes. Les quantités choisies sont conservées.'}),
+  b('formation-sources-next','Suivants',()=>{d.sourcePage++;renderFormation(d);},{disabled:sourceStart+sourcePageSize>=totalSources,hint:'Afficher les sources suivantes. Les quantités choisies sont conservées.'}),
+ ]));
  const preview=previewFormation(d);rows.push(r('formation-draft-preview','Vérification du brouillon',preview.ok?'Choix admissibles':preview.reason));if(preview.ok)rows.push(...massRows(preview.mass),...provisionsRows(preview.provisions));
  rows.push(r('formation-cleanup','Choix devenus indisponibles',undefined,'Les choix ne sont jamais remplacés silencieusement.',[b('formation-cleanup-action','Retirer les indisponibles',()=>{const fresh=formationContext(d).f;for(const id of d.members)if(!fresh.candidates.some(c=>c.pawn.id===id&&c.ok))d.members.delete(id);for(const id of d.animals)if(!fresh.animals?.some(c=>c.animal.id===id&&c.ok))d.animals.delete(id);for(const id of d.packs)if(!fresh.bedrolls?.some(c=>c.pack.building.id===id&&c.ok))d.packs.delete(id);for(const [id,n]of d.sources)if(!fresh.sources.some(c=>c.pile.id===id&&!c.reason&&n<=c.available))d.sources.delete(id);renderFormation(d);})]));
  show(page('formation',f.retreat?'Fuir par la bordure':f.reform?'Reformer la caravane':'Former une caravane',rows,[b('formation-preview','Vérifier la formation',()=>formationConfirmation(d)),b('formation-plan','Planifier des étapes',()=>itinerary(undefined,d))]));
@@ -391,6 +398,6 @@ export function buildNativeWorld(next:NativeUiState,callbacks:NativeUiActions):N
   ];
   visual={kind:'planet',surface:geography.surface,roads:geography.roads,selected:selectedTile??planet.homeTile,markers,onSelect:nativeWorldChooseTile};
  }
- return {id:'world',title:'Monde',subtitle:'Les mêmes personnes et biens conservent leurs propriétaires pendant chaque voyage.',rows,width:8.2,visual,onClose:()=>void callbacks.panel(null)};
+ return {id:'world',title:'Monde',subtitle:'Les mêmes personnes et biens conservent leurs propriétaires pendant chaque voyage.',rows,width:1120,height:740,visual,onClose:()=>void callbacks.panel(null)};
 }
 export function buildNativeFactions(next:NativeUiState,callbacks:NativeUiActions):NativePage {update(next,callbacks);return page('factions','Factions',next.world||next.campaign?factionRows():[r('factions-no-game','Aucune partie active.')],[],()=>void callbacks.panel(null));}

@@ -125,15 +125,15 @@ export function createNativeSaveManager(options:NativeSaveManagerOptions):Native
       control('native-save-create','Créer une nouvelle copie',createNamed,locked||!listingAvailable||count>=NAMED_SAVE_KEYS.length),
     ]});
     if(!entries.length)rows.push({id:'native-saves-empty',label:listingAvailable?'Aucune sauvegarde disponible.':'La liste est indisponible. Actualisez-la avant de choisir une copie.'});
-    for(const entry of entries)rows.push({id:`native-save-slot-${entry.key}`,label:entry.label,value:metadata(entry),detail:entry.detail,controls:[
-      control(`native-save-select-${entry.key}`,selectedKey===entry.key?'Sélectionnée':'Sélectionner',()=>{
+    for(const entry of entries)rows.push({id:`native-save-slot-${entry.key}`,label:'',controlStyle:'card',controls:[
+      {...control(`native-save-load-${entry.key}`,entry.label,()=>loadEntry(entry),locked,[entry.label,metadata(entry),entry.detail].join('\n')),presentation:'card',icon:'load',color:'#f3ead6',caption:metadata(entry),description:entry.detail},
+      {...control(`native-save-select-${entry.key}`,'Gérer cette copie',()=>{
         if(unavailable()||confirmation)return;
         const current=entries.find(candidate=>candidate.key===entry.key);if(!current)throw Error('Cette copie n’existe plus.');
         selectedKey=entry.key;feedback('');paint();
-      },locked,undefined,selectedKey===entry.key),
+      },locked,'Afficher les actions de remplacement ou de suppression de cette copie.',selectedKey===entry.key),presentation:'icon',icon:'settings'},
     ]});
     if(target)rows.push({id:'native-save-selected',label:`Sélection : ${target.label}`,value:metadata(target),detail:target.detail,controls:[
-      control('native-save-load','Charger cette copie',loadSelected,locked),
       control('native-save-overwrite','Remplacer par la partie actuelle',()=>ask('overwrite'),locked||!isNamedSaveKey(target.key)||target.kind!=='named'||typeof target.revision!=='string',target.kind==='named'?undefined:'Seul un emplacement nommé peut être remplacé ici.'),
       control('native-save-delete','Supprimer cette copie',()=>ask('delete'),locked||!isManagedSaveKey(target.key)||typeof target.revision!=='string',isManagedSaveKey(target.key)?undefined:'La sauvegarde manuelle et la colonie précédente sont préservées.'),
     ]});
@@ -204,9 +204,9 @@ export function createNativeSaveManager(options:NativeSaveManagerOptions):Native
     },action==='overwrite'?`Remplacement de « ${captured.label} »…`:`Suppression de « ${captured.label} »…`,action==='overwrite'?`Sauvegarde « ${captured.label} » remplacée.`:`Copie « ${captured.label} » supprimée.`);
   }
 
-  async function loadSelected():Promise<void> {
+  async function loadEntry(entry:SavedColony):Promise<void> {
     if(unavailable()||confirmation)return;
-    const chosen=selected();if(!chosen)return;const captured={...chosen};
+    const captured={...entry};
     await run(async()=>{await options.refresh();assertCurrent(captured,isManagedSaveKey(captured.key));if(options.blocked())throw Error('Attendez la fin de l’opération de partie.');await options.load(captured.key);},`Chargement de « ${captured.label} »…`,`Sauvegarde « ${captured.label} » chargée.`,{refresh:false,closeAfter:true});
   }
 

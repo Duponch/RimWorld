@@ -131,7 +131,7 @@ const lightCache = new LightEnvironmentCache();
 function row(id: string, label: string, value?: string, hint?: string): NativeRow { return { id, label, value, hint }; }
 function tooltipText(tip: TooltipContent): string { return [tip.body, ...(tip.rows ?? []).map(fact => `${fact.label} : ${fact.value}`)].filter(Boolean).join(' · '); }
 function heading(id: string, label: string): NativeRow { return { id: `heading-${id}`, label, emphasis: 'heading' }; }
-function meterRow(id: string, label: string, value: number, max = 1, hint?: string, display = pct(value / max), color = '#72aaa8'): NativeRow { return { id, label, value: display, hint, meter: { value, max, label: display, color } }; }
+function meterRow(id: string, label: string, value: number, max = 1, hint?: string, display = pct(value / max), color = '#4e8277'): NativeRow { return { id, label, value: display, hint, meter: { value, max, label: display, color } }; }
 const tabHints: Record<Tab, string> = {
   bio: 'Âge, traits et compétences. Survoler une compétence pour consulter son expérience et ses effets.',
   needs: 'Nourriture, sommeil, confort, loisirs et pensées qui influencent l’humeur.',
@@ -253,9 +253,9 @@ function pawnPage(world: World, pawn: Pawn): NativePage {
       const passion = record.passion === 2 ? 'Passion brûlante' : record.passion === 1 ? 'Passion' : 'Sans passion';
       const xp = `${(record.xp / XP_SCALE).toFixed(1)} / ${xpRequired(record.level) / XP_SCALE} XP`;
       const hint = `${skillLabels[skill]} ${record.level}/20 · ${passion}. ${reason ? `${reason} Le niveau enregistré est conservé ; cette compétence n’apprend pas et n’oublie pas.` : effects} Expérience du niveau : ${xp} · ${pct(Math.max(0, record.xp / xpRequired(record.level)))} du niveau. Aujourd’hui ${(record.dailyXp / XP_SCALE).toFixed(1)} / 4 000 XP avant saturation. Apprentissage : ${reason ? 'Indisponible' : pct(learningFactor(record, pawn))}${record.dailyXp > 4000 * XP_SCALE ? ' (saturation quotidienne)' : ''}.`;
-      const skillRow = meterRow(`skill-${skill}`, skillLabels[skill]!, reason ? 0 : record.level, 20, hint, reason ? `${record.level}/20 · Indisponible` : `${record.level}/20`, reason ? '#9d9a8c' : '#bdcbb0');
+      const skillRow = meterRow(`skill-${skill}`, skillLabels[skill]!, reason ? 0 : record.level, 20, hint, reason ? `${record.level}/20 · Indisponible` : `${record.level}/20`, reason ? '#888679' : '#557c55');
       skillRow.emphasis = reason ? 'muted' : 'normal'; skillRow.meter!.passion = record.passion;
-      skillRow.meter!.secondary = { value: reason ? 0 : record.xp, max: xpRequired(record.level), label: xp, color: '#b9a16d' }; rows.push(skillRow);
+      skillRow.meter!.secondary = { value: reason ? 0 : record.xp, max: xpRequired(record.level), label: xp, color: '#a26935' }; rows.push(skillRow);
     }
     rows.push({ id: 'portrait-clothing', label: '', compact:true, controls: [control('portrait-clothing', portraitClothed ? 'Vêtements visibles' : 'Vêtements masqués', () => { portraitClothed = !portraitClothed; }, false, portraitClothed, portraitClothed?'Masquer les vêtements dans le portrait':'Montrer les vêtements dans le portrait')] });
     const restrictions = backgroundRestrictionRows(pawn); if (restrictions.length) rows.push(heading('bio-restrictions', 'Incapable de'));
@@ -362,7 +362,7 @@ function pawnPage(world: World, pawn: Pawn): NativePage {
   const result: NativePage & { portrait?: { url: string; label: string } } = { id: `inspect-pawn-${pawn.id}-${activeTab}`, title: pawn.name, subtitle:activeTab==='bio'||activeTab==='gear'?tabs.find(([tab]) => tab === activeTab)![1]:undefined, rows, actions, layout: 'inspector' };
   // All tabs belong to the same cardboard dossier, rather than seven windows
   // with different bounds. The pixel layout handles the viewport reduction.
-  [result.width, result.height] = [700, 620];
+  [result.width, result.height] = [760, 660];
   if (activeTab === 'bio' || activeTab === 'needs' || activeTab === 'health' && healthPane === 'overview') {
     result.columnRatio = activeTab === 'bio' ? .48 : activeTab === 'needs' ? .38 : .375;
     for (const entry of rows) {

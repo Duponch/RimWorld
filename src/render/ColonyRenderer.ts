@@ -20,10 +20,24 @@ export class ColonyRenderer extends SceneRenderCore {
   private readonly deferredHover=new DeferredMapHover();
   private areaPointer: { x:number; y:number } | undefined;
   private orderRightPress: {pointerId:number;x:number;y:number;at:number;tool:string;moved:boolean} | null = null;
+  private cameraOnlyPointer:number|undefined;
   private readonly resizeObserver:ResizeObserver;
   private releaseMapWheel: (() => void) | undefined;
   protected readonly mapLabels:MapLabelsOverlay;
   setItemLabelMinCellPixels(value:number):void {this.mapLabels.setMinCellPixels(value);}
+  /** Native game pages may keep their command context while the player looks
+   * around it. The ordinary/legacy input owner keeps its existing behavior. */
+  protected cameraOnlyInput():boolean{return false;}
+  private beginCameraOnlyInput(event:PointerEvent):boolean{
+    if((event.button!==1&&event.button!==2)||!this.cameraOnlyInput())return false;
+    this.selectionInput.cancel();this.keys.clear();this.orderRightPress=null;
+    this.cameraOnlyPointer=event.pointerId;this.pointerDown={x:event.clientX,y:event.clientY,button:event.button,pointerId:event.pointerId};
+    this.renderer.domElement.focus({preventScroll:true});this.deferredHover.beginCamera(event);return true;
+  }
+  private endCameraOnlyInput(event:PointerEvent):boolean{
+    if(this.cameraOnlyPointer!==event.pointerId)return false;
+    this.cameraOnlyPointer=undefined;this.pointerDown=null;return true;
+  }
   static async create(host: HTMLElement, onPick: (x: number, z: number) => void, groundGrassEnabled = true): Promise<ColonyRenderer> {
     const renderer = new ReentrantRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
     const lifetime: RendererLifetime = { closed: false };
@@ -126,6 +140,7 @@ export class ColonyRenderer extends SceneRenderCore {
     document.removeEventListener('visibilitychange',this.onVisibility);
   }
   private onPointerDown = (event: PointerEvent): void => {
+    if(this.beginCameraOnlyInput(event))return;
     this.onInteractionCancel();
     this.renderer.domElement.focus({preventScroll:true});
     if(this.selectionInput.down(event)){this.deferredHover.clear();return;}
@@ -158,6 +173,7 @@ export class ColonyRenderer extends SceneRenderCore {
   };
   private onPointerUp = (event: PointerEvent): void => {
     this.deferredHover.release(event);
+    if(this.endCameraOnlyInput(event))return;
     if(this.selectionInput.up(event))return;
     const right=this.orderRightPress;
     if(right&&event.pointerId===right.pointerId&&event.button===2){
@@ -227,6 +243,7 @@ export class ColonyRenderer extends SceneRenderCore {
     if (this.areaDrag) this.updateAreaPreview(); else {this.pointerDown = null;this.updateHover();}
   };
   private onPointerCancel = (event: PointerEvent): void => {
+    if(this.cameraOnlyPointer===event.pointerId)this.cameraOnlyPointer=undefined;
     this.deferredHover.cancel(event.pointerId);
     if(this.orderRightPress?.pointerId===event.pointerId)this.orderRightPress=null;
     if(this.selectionInput.active){this.selectionInput.cancel();return;}
@@ -246,7 +263,7 @@ export class ColonyRenderer extends SceneRenderCore {
     }
   };
   private onKeyUp = (event: KeyboardEvent): void => { this.keys.delete(event.key.toLowerCase()); };
-  private onBlur = (): void => { this.deferredHover.resume();this.keys.clear(); this.cancelDesignation(); };
+  private onBlur = (): void => { this.cameraOnlyPointer=undefined;this.deferredHover.resume();this.keys.clear(); this.cancelDesignation(); };
 
 
 }

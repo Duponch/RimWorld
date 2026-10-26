@@ -32,6 +32,7 @@ import { apparelAppearance } from '../render/character-apparel';
 import { humanLimbVisualMask } from '../render/human-anatomy-presentation';
 import { portraitDataUrl, portraitExpressionOf } from '../ui/pawn-portrait';
 import { nativeClinicalConditionRows } from './native-special-inspection';
+import { NATIVE_UI_SCALE_LIMITS } from './native-preferences';
 
 type Page = 'home' | 'scenario' | 'story' | 'world' | 'site' | 'pawns' | 'load' | 'tests' | 'options';
 const names: Record<string, string> = {
@@ -57,7 +58,7 @@ export function createNativeFrontMenu(options: FrontMenuOptions, show: (page: Na
   let teamSeed = 0, roster: StartingCandidateDescriptor[] = [], inspected = 1;
   let showCandidateClothes = true;
   let selectedTile: number | null = null, eligible: number[] = [], siteOffset = 0;
-  let selectedSave: string | undefined, tests: TestColony[] | undefined, selectedTest: string | undefined;
+  let tests: TestColony[] | undefined;
   let confirmation: { message: string; accept: () => void | Promise<unknown> } | undefined;
 
   function paint(): void {
@@ -72,7 +73,7 @@ export function createNativeFrontMenu(options: FrontMenuOptions, show: (page: Na
     const result = renderPage();
     if (error) result.rows.unshift({ id: 'front-error', label: error });
     if (status) result.rows.unshift({ id: 'front-status', label: status });
-    result.id = `front-${page}`; result.modal = true; result.width ??= page==='home'?4.4:7.8;
+    result.id = `front-${page}`; result.modal = true; result.width ??= page==='home'?4.9:8.8;
     result.onClose = () => { if (!busy && !pending) back(); };
     show(result);
   }
@@ -165,6 +166,7 @@ export function createNativeFrontMenu(options: FrontMenuOptions, show: (page: Na
 
   function renderOptions(): NativePage {
     const rows: NativeRow[] = [];
+    if(options.getUiScale&&options.onUiScaleChange)rows.push(range('ui-scale','Échelle de l’interface',Math.round(options.getUiScale()*100),NATIVE_UI_SCALE_LIMITS.min*100,NATIVE_UI_SCALE_LIMITS.max*100,NATIVE_UI_SCALE_LIMITS.step*100,value=>preference(options.onUiScaleChange!(value/100)),false,' %'));
     if(options.getUiAutoHide&&options.onUiAutoHideChange){
       const settings=options.getUiAutoHide();
       rows.push(toggle('auto-hide-bottom','Barre du bas escamotable',settings.bottom,bottom=>preference(options.onUiAutoHideChange!({...options.getUiAutoHide!(),bottom}))),
@@ -209,7 +211,7 @@ export function createNativeFrontMenu(options: FrontMenuOptions, show: (page: Na
       toggle('music', 'Musique', options.getMusicEnabled(), value => preference(options.onMusicEnabledChange(value))),
       range('music-volume', 'Volume de la musique', Math.round(options.getMusicVolume() * 100), 0, 100, 1, value => preference(options.onMusicVolumeChange(value / 100)), false, ' %'));
     const split=Math.ceil(rows.length/2);rows.forEach((row,index)=>{row.column=index<split?0:1;});
-    return { id: '', title: 'Options', rows, width:1040,height:720,columnRatio:.5,layout:'front',actions: navigation() };
+    return { id: '', title: 'Options', rows, width:1120,height:760,columnRatio:.5,layout:'front',actions: navigation() };
   }
 
   function renderWorld(): NativePage {
@@ -356,7 +358,7 @@ export function createNativeFrontMenu(options: FrontMenuOptions, show: (page: Na
   async function loadTestCatalogue(): Promise<void> {
     navigate('tests');
     if (tests) return;
-    const loaded = await run(async () => { tests = await options.getTestColonies(); selectedTest = tests[0]?.id; }, 'Chargement du catalogue de test…');
+    const loaded = await run(async () => { tests = await options.getTestColonies(); }, 'Chargement du catalogue de test…');
     if (loaded) paint();
   }
   function renderPage(): NativePage {
@@ -385,20 +387,29 @@ export function createNativeFrontMenu(options: FrontMenuOptions, show: (page: Na
       { id: 'saving', label: 'Mode de sauvegarde', controls: [control('reloadable', 'Rechargeable à tout moment', () => { reloadChosen = true; }, false, reloadChosen), control('commitment', 'Engagement', () => {}, true)] },
     ], actions: navigation(control('story-next', 'Suivant', () => { if (!difficultyChosen || !reloadChosen) throw Error('Choisissez Récit d’aventure et le mode de sauvegarde pour continuer.'); navigate('world'); })) };
     if (page === 'tests') {
-      const chosen = tests?.find(save => save.id === selectedTest), rows: NativeRow[] = [];
-      for (const save of tests ?? []) rows.push({ id: `test-${save.id}`, label: save.label, value: `${save.colonists} colons · ${save.width} × ${save.height}`, controls: [control(`choose-test-${save.id}`, 'Choisir', () => { selectedTest = save.id; }, false, save.id === selectedTest)] });
-      if (chosen) { rows.push({ id: 'test-description', label: chosen.label, detail: chosen.description, value: chosen.prepared ? 'Situation préparée' : 'Colonie jouée' }, { id: 'test-focus', label: 'À explorer', value: chosen.focus.join(' · ') }); chosen.steps.forEach((step, index) => rows.push({ id: `test-step-${index}`, label: step })); rows.push({ id: 'test-provenance', label: chosen.provenance }); }
+      const rows: NativeRow[] = [];
+      for (const save of tests ?? []) {
+        const caption=`${save.colonists} colons · ${save.width} × ${save.height} · ${save.prepared?'Situation préparée':'Colonie jouée'}`;
+        const description=[save.description,save.focus.length?`À explorer : ${save.focus.join(' · ')}`:'',...save.steps.map((step,index)=>`${index+1}. ${step}`),save.provenance].filter(Boolean).join('\n');
+        rows.push({id:`test-${save.id}`,label:'',controlStyle:'card',controls:[
+          {...control(`load-test-${save.id}`,save.label,()=>run(()=>options.onLoadTest(save),'Chargement de la colonie de test…')),presentation:'card',icon:'load',color:'#f3ead6',caption,description,hint:[save.label,caption,description].join('\n')},
+          {...control(`download-test-${save.id}`,'Télécharger ce fichier',()=>downloadTest(save)),presentation:'icon',icon:'load',hint:`Télécharger « ${save.label} » sans ouvrir la colonie.`},
+        ]});
+      }
       rows.push({ id: 'test-preservation', label: 'La sauvegarde manuelle reste intacte. La colonie ouverte est conservée dans « Colonie précédente ». Sauvegardez votre progression avant de multiplier les essais.' });
-      return { id: '', title: 'Colonies de test', rows, actions: [...navigation(), control('download-test', 'Télécharger le fichier', () => chosen && downloadTest(chosen), !chosen), control('load-test', 'Charger cette colonie', () => chosen && run(() => options.onLoadTest(chosen), 'Chargement de la colonie de test…'), !chosen)] };
+      return { id: '', title: 'Colonies de test', rows, actions: navigation() };
     }
     let saves: ReturnType<FrontMenuOptions['getSaves']> = []; try { saves = options.getSaves(); } catch (cause) { error = errorMessage(cause); }
-    return { id: '', title: 'Charger une partie', subtitle: 'La colonie sera ouverte en pause.', rows: saves.length ? saves.map(save => ({
-      id: `save-${save.key}`, label: save.label, detail: save.detail, value: save.savedAt === undefined ? undefined : new Date(save.savedAt).toLocaleString('fr-FR'),
-      controls: [control(`select-save-${save.key}`, save.disabled ? 'Indisponible' : 'Choisir', () => { selectedSave = save.key; }, save.disabled, selectedSave === save.key)],
-    })) : [{ id: 'no-save', label: 'Aucune colonie enregistrée' }], actions: [...navigation(),
+    const kinds={manual:'Sauvegarde manuelle',recovery:'Colonie précédente',named:'Sauvegarde nommée',auto:'Copie automatique'} as const;
+    return { id: '', title: 'Charger une partie', subtitle: 'Cliquer sur une copie ouvre cette colonie en pause.', rows: saves.length ? saves.map((save):NativeRow => {
+      const caption=[save.kind?kinds[save.kind]:'Colonie enregistrée',save.savedAt===undefined?'':new Date(save.savedAt).toLocaleString('fr-FR')].filter(Boolean).join(' · ');
+      return {id:`save-${save.key}`,label:'',controlStyle:'card',controls:[{
+        ...control(`load-save-${save.key}`,save.label,()=>run(async()=>{const current=options.getSaves().find(entry=>entry.key===save.key);if(!current||current.disabled)throw Error('Cette sauvegarde n’est plus disponible. Actualisez la liste avant de la charger.');await options.onLoad(current.key);},'Vérification et chargement de la sauvegarde…'),save.disabled),
+        presentation:'card',icon:'load',color:'#f3ead6',caption,description:save.detail,hint:[save.label,caption,save.detail].join('\n'),
+      }]};
+    }) : [{ id: 'no-save', label: 'Aucune colonie enregistrée' }], actions: [...navigation(),
       control('test-colonies', 'Colonies de test', loadTestCatalogue), control('import', 'Importer un fichier', importFile),
       ...(hasGame && options.onExport ? [control('export', 'Exporter la partie actuelle', () => run(options.onExport!, 'Préparation du fichier de la partie actuelle…'))] : []),
-      control('load', 'Charger', () => selectedSave === undefined ? undefined : run(() => options.onLoad(selectedSave!), 'Vérification et chargement de la sauvegarde…'), selectedSave === undefined || !saves.some(save => save.key === selectedSave && !save.disabled)),
     ] };
   }
 
@@ -415,7 +426,7 @@ export function createNativeFrontMenu(options: FrontMenuOptions, show: (page: Na
     setHasGame(next) { hasGame = next; if (page === 'home') paint(); },
     showCreation,
     showOptions(){if(!busy&&!pending)navigate('options');},
-    showLoad() { if (!busy && !pending) { selectedSave = undefined; navigate('load'); } },
+    showLoad() { if (!busy && !pending) navigate('load'); },
     hide, isOpen: () => open,
     setBusy(next, message = 'Préparation de la colonie…') { busy = next; status = next ? message : ''; paint(); },
     showError(message) { error = message; paint(); },

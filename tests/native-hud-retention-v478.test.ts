@@ -214,3 +214,75 @@ describe('retained native HUD alerts',()=>{
     }finally{f.close();g.close();}
   });
 });
+
+describe('responsive retained HUD reservations · V485',()=>{
+  it('uses one compact Stocks control in a short left lane and opens every unchanged resource record',()=>{
+    const f=fixture();
+    try{
+      f.hud.setViewport(480,400,.01,96,60);
+      f.resources([['wood',12],['steel',20],['gold',3]]);
+      const original=structuredClone(f.access.resources),compact=f.piece('hud:resource:compact'),shown:string[]=[];
+      f.root.traverse(object=>{if(String(object.userData.nativeId??'').startsWith('hud:resource:'))shown.push(String(object.userData.nativeId));});
+      expect(shown).toEqual(['hud:resource:compact']);expect(compact.userData.paper).toBe(false);
+      expect(compact.userData.tooltip).toContain('tous les stocks');
+      compact.userData.onClick?.();
+      const page=f.showPage.mock.lastCall?.[0];expect(page.id).toBe('hud-resources');
+      expect(page.rows.filter((row:{id:string})=>row.id.startsWith('item-'))).toEqual([
+        expect.objectContaining({id:'item-wood',value:'12 comptabilisé(s)',detail:expect.stringContaining('Sol 12')}),
+        expect.objectContaining({id:'item-steel',value:'20 comptabilisé(s)',detail:expect.stringContaining('Sol 20')}),
+        expect.objectContaining({id:'item-gold',value:'3 comptabilisé(s)',detail:expect.stringContaining('Sol 3')})
+      ]);
+      expect(f.access.resources).toEqual(original);
+      const revision=f.art.revision,version=compact.userData.texture.version;
+      f.resources([['wood',12],['steel',20],['gold',3]]);
+      expect(f.piece('hud:resource:compact')).toBe(compact);expect(compact.userData.texture.version).toBe(version);expect(f.art.revision).toBe(revision);
+    }finally{f.close();}
+  });
+
+  it('keeps resource ink inside the corner reserved before the portrait and roster controls',()=>{
+    const f=fixture();
+    try{
+      // Display-only roster count; no World or simulated person is introduced.
+      const display=f.hud as unknown as {colonists:unknown[];portraitCapacity:number};display.colonists=Array.from({length:8},()=>({}));
+      f.hud.setViewport(480,400,.01,96,200);
+      f.resources([['wood',12],['steel',20],['gold',3],['silver',4],['marble-chunk',5]]);
+      expect(display.portraitCapacity).toBe(1);
+      const rosterLeft=480/2-(display.portraitCapacity*78+64)/2;
+      const records:CardboardPiece[]=[];f.root.traverse(object=>{if(String(object.userData.nativeId??'').startsWith('hud:resource:'))records.push(object as CardboardPiece);});
+      expect(records.length).toBeGreaterThan(1);
+      for(const piece of records){
+        const right=8+(piece.userData.basePos.x+piece.userData.w/2)*100;
+        expect(right).toBeLessThanOrEqual(rosterLeft-8+.001);
+        expect(piece.userData.w*100).toBeGreaterThanOrEqual(60);
+      }
+      const source=f.access.resources.map(row=>({item:row.item,quantity:row.stock}));
+      f.piece('hud:resource:raw-resources').userData.onClick?.();
+      expect(f.access.resources.map(row=>({item:row.item,quantity:row.stock}))).toEqual(source);
+      expect(ink(records[0]!).some(command=>command[0]==='set'&&command[1]==='font'&&String(command[2]).includes('13px'))).toBe(true);
+    }finally{f.close();}
+  });
+
+  it('keeps the alerts and overflow footer above the weather board and leaves settled paint untouched',()=>{
+    const f=fixture();
+    try{
+      const rows=Array.from({length:7},(_,index)=>alert(`bounded-${index}`,`Alerte actuelle ${index}`));
+      for(const viewport of [{width:480,height:400,bottom:96},{width:720,height:500,bottom:174},{width:1440,height:800,bottom:96}]){
+        f.hud.setViewport(viewport.width,viewport.height,.01,viewport.bottom,60);f.alerts(rows);
+        const all=f.piece('hud:alerts:all'),weather=f.piece('hud:clock');
+        // Recreate the native anchor offsets in logical pixels. Bounds include
+        // actual cut geometry, hand rotation and its physical shadow.
+        all.parent!.parent!.position.y=(viewport.height/2-8)/100;
+        weather.parent!.parent!.position.y=(-viewport.height/2+8)/100;
+        f.root.updateMatrixWorld(true);
+        const weatherBounds=new THREE.Box3().setFromObject(weather),visible:CardboardPiece[]=[];
+        f.root.traverse(object=>{if(String(object.userData.nativeId??'').startsWith('hud:alert:')||object===all&&all.visible)visible.push(object as CardboardPiece);});
+        expect(all.visible).toBe(true);
+        for(const piece of visible)expect(new THREE.Box3().setFromObject(piece).min.y).toBeGreaterThan(weatherBounds.max.y+.03);
+        const painted=visible.map(piece=>({piece,canvas:piece.userData.canvas,texture:piece.userData.texture,version:piece.userData.texture.version,draws:ink(piece).filter(command=>['fillText','fillRect','stroke','drawImage'].includes(String(command[0]))).length})),revision=f.art.revision;
+        f.hud.setViewport(viewport.width,viewport.height,.01,viewport.bottom,60);f.alerts(rows);
+        expect(f.art.revision).toBe(revision);
+        for(const old of painted){expect(old.piece.userData.canvas).toBe(old.canvas);expect(old.piece.userData.texture).toBe(old.texture);expect(old.texture.version).toBe(old.version);expect(ink(old.piece).filter(command=>['fillText','fillRect','stroke','drawImage'].includes(String(command[0])))).toHaveLength(old.draws);}
+      }
+    }finally{f.close();}
+  });
+});

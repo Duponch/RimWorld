@@ -21,12 +21,12 @@ function fixture(filename='les-eclaircies.json'){
  return {menu,click,link,createElement,options,get page(){return page!;}};
 }
 describe('native test-colony browser download',()=>{
- it('downloads the chosen original file without requiring File System Access or loading a colony',async()=>{
-  const f=fixture();f.menu.showLoad();await f.click('test-colonies');await f.click('download-test');
+ it('downloads the row’s original file without requiring File System Access or loading a colony',async()=>{
+  const f=fixture();f.menu.showLoad();await f.click('test-colonies');await f.click('download-test-eclaircies-v419');
   expect(f.createElement).toHaveBeenCalledExactlyOnceWith('a');expect(f.link.href).toBe('/test-saves/v419/les-eclaircies.json');expect(f.link.download).toBe('les-eclaircies.json');expect(f.link.click).toHaveBeenCalledOnce();expect(f.options.onLoadTest).not.toHaveBeenCalled();expect(f.page.rows.some(row=>row.id==='front-error')).toBe(false);
  });
  it('does not dispatch an invalid catalogue path through the download service',async()=>{
-  const f=fixture('../outside.json');f.menu.showLoad();await f.click('test-colonies');await f.click('download-test');
+  const f=fixture('../outside.json');f.menu.showLoad();await f.click('test-colonies');await f.click('download-test-eclaircies-v419');
   expect(f.link.click).not.toHaveBeenCalled();expect(f.page.rows.find(row=>row.id==='front-error')?.label).toContain('Fichier de colonie inconnu');expect(f.options.onLoadTest).not.toHaveBeenCalled();
  });
 });

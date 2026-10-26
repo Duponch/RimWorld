@@ -13,7 +13,12 @@ const helpText='Construisez un bureau de recherche dans Architecte → Productio
 // card. Move only Prothèses into the unused last-row slot; keep the graph bounds
 // and the legacy coordinates/routes untouched for their existing renderer.
 const prostheticsPosition=researchNodePosition({x:224,y:1088});
-const nativeNodePosition=(project:ProjectNode)=>project.id==='prosthetics'?prostheticsPosition:researchNodePosition(project);
+const baseNodePosition=(project:ProjectNode)=>project.id==='prosthetics'?prostheticsPosition:researchNodePosition(project);
+// Increase the space between the existing cards without enlarging their
+// textures. Static routes are transformed once, never during a game frame.
+const graphSpacing=1.25;
+const nativeNodePosition=(project:ProjectNode)=>{const position=baseNodePosition(project);return {x:position.x*graphSpacing,y:position.y*graphSpacing};};
+const nodePositions=new Map(researchProjects.map(project=>[project.id,baseNodePosition(project)]));
 const machiningPosition=researchNodePosition(researchProjects.find(project=>project.id==='machining')!);
 const nativeGraphLinks=researchGraphLinks.map(link=>link.from==='machining'&&link.to==='prosthetics'?{...link,path:[
   {x:machiningPosition.x+RESEARCH_NODE_WIDTH/2,y:machiningPosition.y+RESEARCH_NODE_HEIGHT},
@@ -22,7 +27,10 @@ const nativeGraphLinks=researchGraphLinks.map(link=>link.from==='machining'&&lin
   {x:RESEARCH_GRAPH_WIDTH-12,y:prostheticsPosition.y-6},
   {x:prostheticsPosition.x+RESEARCH_NODE_WIDTH/2,y:prostheticsPosition.y-6},
   {x:prostheticsPosition.x+RESEARCH_NODE_WIDTH/2,y:prostheticsPosition.y},
-]}:link);
+]}:link).map(link=>{
+  const from=nodePositions.get(link.from)!,to=nodePositions.get(link.to)!;
+  return {...link,path:link.path.map((point,index)=>index===0?{x:from.x*graphSpacing+point.x-from.x,y:from.y*graphSpacing+point.y-from.y}:index===link.path.length-1?{x:to.x*graphSpacing+point.x-to.x,y:to.y*graphSpacing+point.y-to.y}:{x:point.x*graphSpacing,y:point.y*graphSpacing})};
+});
 const catalogues=new Map<number,{projects:readonly ProjectNode[];links:typeof researchGraphLinks}>();
 function catalogue(schema:number){
   let result=catalogues.get(schema);
@@ -100,7 +108,7 @@ export function buildNativeResearch(world:World,actions:NativeUiActions,onRefres
       controls:[button(`research-${project.id}-select`,project.title,()=>select(project.id),{active:selected.id===project.id,color:nodeColors[state],icon:project.id,hint:`${project.title}\n${project.detail}\nProgression : ${progress.toFixed(1)} / ${project.cost}\nPrérequis : ${prerequisite(project.id)}\nÉtat : ${status}`}),
         button(`research-${project.id}-start`,'▶',()=>start(project.id),{disabled:current.disabled,active:current.isActive,hint:`Lancer ${project.title}\n${current.hint}`})]});
   }
-  return {id:'research',title:'Recherche',layout:'research',width:1190,height:720,rows,
-    research:{width:RESEARCH_GRAPH_WIDTH,height:RESEARCH_GRAPH_HEIGHT,selected:selected.id,links},
+  return {id:'research',title:'Recherche',layout:'research',width:1420,height:780,rows,
+    research:{width:Math.ceil(RESEARCH_GRAPH_WIDTH*graphSpacing),height:Math.ceil(RESEARCH_GRAPH_HEIGHT*graphSpacing),selected:selected.id,links},
     onClose:()=>void actions.panel(null)};
 }

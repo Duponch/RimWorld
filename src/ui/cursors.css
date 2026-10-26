@@ -28,3 +28,14 @@
 #app [data-resize-handle] { cursor: var(--cursor-resize, nwse-resize) !important; }
 #app [aria-busy="true"],
 #app [aria-busy="true"] * { cursor: var(--cursor-wait, wait) !important; }
+
+/* The native stage surface is attached to body, outside the legacy app shell.
+ * Give it the same physical cursor without reintroducing DOM controls. */
+html[data-cardboard-cursors="true"] canvas[data-ui3d="native"] { cursor: var(--cursor-pointer, default); }
+html[data-cardboard-cursors="true"] #viewport[data-cursor] canvas { cursor: var(--map-tool-cursor, var(--cursor-pointer, default)) !important; }
+html[data-cardboard-cursors="true"] #viewport[data-cursor-gesture="grab"] canvas { cursor: var(--map-tool-grab-cursor, var(--cursor-grab, grab)) !important; }
+html[data-cardboard-cursors="true"] #viewport[data-cursor-gesture="grabbing"] canvas { cursor: var(--map-tool-grabbing-cursor, var(--cursor-grabbing, grabbing)) !important; }
+html[data-native-cursor] canvas[data-ui3d="native"],
+html[data-native-cursor] #viewport[data-cursor] canvas { cursor: var(--native-ui-cursor, default) !important; }
+html[data-native-cursor="grab"] #viewport[data-cursor-mode="order"] canvas { cursor: var(--map-tool-grab-cursor, var(--cursor-grab, grab)) !important; }
+html[data-native-cursor="grabbing"] #viewport[data-cursor-mode="order"] canvas { cursor: var(--map-tool-grabbing-cursor, var(--cursor-grabbing, grabbing)) !important; }
