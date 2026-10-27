@@ -1,6 +1,6 @@
 # V490 — peinture identique, gain local retenu
 
-**Qualifiée localement le 27 octobre 2026, schéma 296 inchangé ; enregistrement en clôture, non publiée.** Le gain retenu concerne le calcul de peinture, sans instantanéité ni gain global établi. Les correctifs de commandes V488 et du garde Monde V489 restent publiés séparément.
+**Qualifiée puis [publiée le 27 octobre 2026](publication-v490.md), source `44937af7`, Production `9ea67eb8`, schéma 296 inchangé.** Le gain retenu concerne le calcul de peinture, sans instantanéité ni gain global établi. Les correctifs de commandes V488 et du garde Monde V489 restent publiés séparément.
 
 Le changement se limite à `paintPixels` dans `src/render/TerrainLayer.ts` : quatre offsets de palette calculés une fois par texel, hors boucle RGB, et classification de l'eau dans un masque propre à chaque appel, borné au rectangle peint et à ses voisins. Bruits, ordre flottant RGB/écume et Float32 restent identiques. Le domaine est celui des Worlds denses et stables déjà validés par le rendu ; l'ordre et le nombre de lectures du terrain changent, sans équivalence prétendue pour des accesseurs à effets de bord arbitraires. Le masque transitoire couvre62500octets pour250²,25octets pour un patch3×3 intérieur. Aucun cache entre appels, changement Core, schéma, règle ou résolution. Avant : `4a23b8c3e2cf98b3de92d307c6e8a2de525b71bf8914abceb23f1db066f97bd3` ; retenu : `84714ced9e33a380504ec1dea1c5fc6b5109bd57d7b425be1efcf1e4f2edd143`, réinstallé exactement par ROOT.
 
