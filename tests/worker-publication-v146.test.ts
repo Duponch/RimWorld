@@ -5,12 +5,23 @@ import { PresentationChanges } from '../src/bridge/presentation-changes.ts';
 import type { Request, Response } from '../src/bridge/protocol.ts';
 import type { World } from '../src/sim/types.ts';
 
+// Existing SIM/codec doubles below are transport fixtures, not Core qualification.
+// Capture task messages so no live Node port can fire after mock restoration.
+function captureWorkerTasks488(){
+ const posted:(()=>void)[]=[];
+ vi.stubGlobal('MessageChannel',class {port1={onmessage:undefined as undefined|((event:{data:unknown})=>void),unref(){}};port2={unref(){},postMessage:(data:unknown)=>{const owned=structuredClone(data);posted.push(()=>this.port1.onmessage?.({data:owned}));}};});
+ return {drain(){for(let n=0;posted.length&&n<64;n++)posted.shift()!();expect(posted).toHaveLength(0);}};
+}
 const scenario = vi.hoisted(() => ({ initialTick: 0 }));
 
 vi.mock('../src/bridge/fixed-clock.ts', () => ({
   FixedClock: class {
-    reset(): void {}
+    private reserved=0;
+    reset(): void {this.reserved=0;}
     advance(_now: number, speed: number): number { return speed > 0 ? 1 : 0; }
+    reserve(_now:number,speed:number):number {return this.reserved=speed>0?1:0;}
+    consume():boolean {if(!this.reserved)return false;this.reserved--;return true;}
+    cancelUnplayed():void {this.reserved=0;}
   },
 }));
 
@@ -52,6 +63,7 @@ test('worker publishes phase and batch ticks once, then captures same-tick comma
   vi.stubGlobal('setInterval', (callback: () => void) => { wake = callback; return 1; });
   const phases = vi.spyOn(PresentationChanges.prototype, 'capture');
   const motion = vi.spyOn(MotionRecorder.prototype, 'capture');
+  captureWorkerTasks488();
   await import('../src/bridge/simulation.worker.ts');
   const request = (value: Request) => scope.onmessage!({ data: value } as MessageEvent<Request>);
   request({ type: 'load', id: 1, data: saved });

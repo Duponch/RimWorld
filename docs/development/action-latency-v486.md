@@ -1,8 +1,45 @@
 # Latence des ordres et des vitesses — V486
 
-26 octobre 2026. **Qualification en cours ; la réponse instantanée n’est pas acquise.** Base enregistrée `1c6900c2`, schéma296 inchangé, production295 / `b969b256` inchangée. Six ensembles et campagne V484 restent ouverts. Cette priorité humaine concerne le clic droit d’un colon mobilisé, son trajet bleu confirmé, et play/pause/vitesses.
+27 octobre 2026. **V488 qualifiée localement : rattrapage dans les boutons supprimé, commandes admises entre les pas complets.** Le parcours courant mesure environ60–110ms selon le geste, sans promesse de0ms physique. Schéma296 inchangé ; production295 / `b969b256` encore inchangée. Le blocage principal peut être enregistré, puis la campagne V484 et les six ensembles reprennent en autonomie. Les sections V486/V487 conservent les essais, résultats et politiques historiques ; la politique actuelle est décrite dans la section V488 ci-dessous.
 
 Les mesures utilisent exclusivement la sauvegarde publique QA v419 Éclaircies, dans un Chromium isolé et muet. La campagne autoritative T2010 n’est jamais chargée ni avancée. Les trajectoires proviennent des vrais ordres natifs et du moteur ; aucun trajet, tick, résultat ou mouvement n’est injecté pour améliorer le chronométrage. Le dessin observé est une soumission CPU, pas la fin du travail GPU ou l’affichage physique.
+
+## Commandes au point sûr — V488
+
+Le handler de vitesse avançait à l'ancienne vitesse avant d'appliquer la nouvelle demande. Les tâches régulières pouvaient aussi jouer plusieurs pas et publications sans rendre la main au port des commandes. Le diagnostic conservé plus bas montrait183ms d'attente dans une tâche de269,8ms. La demande humaine de réactivité remplace explicitement cette politique : une vitesse valide0/1/3/6 s'applique au dernier état complètement joué, sans tick de rattrapage dans son handler. Les crédits entiers non joués sont abandonnés, la fraction connue est conservée et l'horloge murale est recalée. Aucun tick joué, RNG, son ou publication n'est annulé. Les requêtes invalides et les chargements refusés conservent l'ancien lot ; urgences, pannes et remplacements réussis gardent leur remise à zéro complète.
+
+Trois sources changent : [horloge](../../src/bridge/fixed-clock.ts), [runtime](../../src/bridge/simulation-runtime.ts) et [ordonnanceur de tâches](../../src/bridge/worker-task-scheduler.ts). Une réservation échantillonne une fois le lot logique, toujours borné à250ms et15pas. Le Worker existant joue au plus un `stepWorld(...,1)` complet par tâche puis rend la main par MessageChannel. Le timer20ms est coalescé ; une continuation périmée ne consomme pas le drapeau du nouveau propriétaire. Les publications discrètes et urgentes restent immédiates, les publications calmes restent à la vraie fin du lot, avec les observateurs, mouvements et sons réels. Il n'y a ni nouveau Worker ni nouvelle passe de rendu.
+
+Le timestamp PauseIntent reste validé pour compatibilité, mais ne déclenche plus de rattrapage. Le moteur publie l'état réellement courant avant ACK ; le trait bleu provient toujours de l'ordre, de sa publication et de l'adoption confirmée. La référence [Time du Wiki RimWorld](https://rimworldwiki.com/wiki/Time) distingue vitesse cible, vitesse atteinte et pause. Les lectures de code historiques n'attestent pas une version actuelle du moteur : la nouvelle politique Elsewhere répond à la demande humaine, sans revendiquer une copie certifiée de RimWorld1.6. Le refus451/DMCA rencontré sur un miroir n'a pas été contourné.
+
+Les mêmes12contrats privés reproduisent onze échecs sur l'ancienne politique puis passent avec le candidat. Les30contrats privés recoupent les durables et ne s'ajoutent pas au total suivant : **69cas repository ciblés**, acquis en29durables24,711s,19contrats réels de pause21,145s et21voisins26,330s. Les anciens oracles de rattrapage sont explicitement remplacés ; leurs préimages sont conservées. Quatre harness voisins étaient déjà mockés et restent décrits comme tels. La fixture402 reçoit son `discardDraftPreview` manquant, défaut ancien reproduit avant cette évolution. Typage final14,824s et build5,439s passent sur les trois sources gelées.
+
+Le [comparatif des neuf gestes](../../tmp/responsive-controls-v488/native-nine-comparison-2026-10-27T02-28-54.339Z-14992.json) passe1,070s après les trois parcours natifs73,860 /74,657 /75,981s. Les graphes Runtime+Clock sont cohérents ; le Client courant et ses vrais stamps Pause sont communs aux témoins et au candidat. Les27mesures sont recalculées depuis les marques brutes. Délai depuis la capture du pointerUp jusqu'au premier dessin CPU correspondant, dans l'ordre témoin1 / candidat / témoin2 :
+
+| Geste | Témoin1 | Candidat | Témoin2 |
+|---|---:|---:|---:|
+| Premier ordre en pause |97,6ms|105,2ms|92,6ms|
+| Moyenne des trois ordres chauds en pause |70,2ms|67,6ms|73,2ms|
+| Ordre en marche ×1 |128,8ms|89,0ms|85,7ms|
+| Pause depuis ×1 |146,2ms|63,5ms|59,8ms|
+| Reprise ×1 |57,6ms|54,7ms|57,0ms|
+| Reprise ×3 |55,8ms|60,0ms|58,9ms|
+| Pause depuis ×3 |205,2ms|105,5ms|183,2ms|
+
+La baisse de pause×3 est observée face aux deux témoins, environ42–49%. Les ordres en marche et la pause×1 restent dans leur variation : aucun gain stable supplémentaire n'est revendiqué pour ces gestes. Les quatre ordres en pause donnent strictement le même RAW entier14 558 009octets, T1730, SHA`d0a086c7702f06d669cc7b9036557fc729987ea3be7ec18068fcf77d2410b339`. Les vrais finaux joués1738/1736/1739 sont sauvegardés puis rechargés exactement chacun ; leur égalité croisée ne serait plus le contrat.
+
+Le [contrôle global W/C/W](../../tmp/responsive-controls-v488/global-comparison-2026-10-27T02-39-11.921Z-22116.json) passe188,606 /185,853 /184,797s ; vérification hors navigateur1,932s. Chaque niveau recharge le même entier initial, avec vue et réglages identiques. Les12RAW de cadence et les3finaux réels sont vérifiés lossless ; les3finaux sont rechargés exactement. Le débit utilise deux lectures du Worker **avant Pause**, avec ses propres bornes ; les ticks supplémentaires de l'ancienne pause n'entrent pas dans cette mesure.
+
+| Niveau | Soumissions CPU/s W/C/W | Intervalle MAIN p99 W/C/W | Gaps >50ms W/C/W | Débit autoritatif W/C/W |
+|---|---:|---:|---:|---:|
+| Pause |168,1 /168,0 /168,2|6,4 /6,2 /6,3ms|0 /0 /0|0 /0 /0|
+| ×1 |152,0 /153,5 /152,5|22,8 /23,0 /23,7ms|1 /0 /0|1,007 /1,006 /1,007×|
+| ×3 |121,0 /120,9 /119,4|34,0 /32,9 /32,6ms|0 /0 /0|3,012 /3,015 /2,986×|
+| ×6 |130,2 /122,4 /118,6|35,3 /36,3 /39,0ms|1 /0 /0|5,236 /5,714 /5,879×|
+
+Les valeurs du candidat restent dans la variation des témoins ou proches de la cible ; aucun recul net de cadence, débit ou blocages n'est établi dans ces fenêtres. Les pointes du candidat restent visibles :49,7ms de gap en×3 et47,1ms en×6. Il n'y a aucun gap>50ms dans ses quatre fenêtres, sans preuve d'absence de pointe rare. Le déficit commun×6 demeure. La cadence de soumission CPU n'est ni le FPS physique ni une mesure GPU/CPU matériel ; les fenêtres courtes et la charge externe non égalisée limitent l'inférence.
+
+**Décision : enregistrer ce lot cohérent et reprendre la vraie campagne T2010**, sans nouveau prototype marginal de performance faute d'élément nouveau. Le rattrapage des boutons et les longs lots indivisibles sont supprimés ; une transaction complète, sa publication et l'adoption restent indivisibles et peuvent encore coûter du temps. MessageChannel ne garantit pas une priorité interports absolue. La réactivité locale qualifiée ne promet ni0ms universel, ni confort global, ni clôture des six ensembles. Sources, échecs, RAW, sauvegardes humaines et références sont conservés ; aucun déploiement nouveau n'est acquis par ces tests.
 
 ## Référence et critère de performance
 

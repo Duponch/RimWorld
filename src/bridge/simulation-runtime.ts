@@ -38,6 +38,7 @@ import {campaignPresentation} from '../sim/secondary-site-presentation';
 import { createScenarioWorld } from '../sim/new-game';
 import { MotionRecorder } from './motion-tracks';
 import { FixedClock } from './fixed-clock';
+import {WorkerTaskScheduler} from './worker-task-scheduler';
 import { PresentationChanges } from './presentation-changes';
 import { queryOrderOptions } from '../sim/player-orders';
 import {queryBillWorkerOptions283} from '../sim/bill-worker-owners-283';
@@ -66,6 +67,15 @@ let speed = 1;
 let threatPauseMode: ThreatPauseMode = 'major';
 const urgentThreats = new UrgentThreatObserver();
 const clock=new FixedClock();clock.reset(performance.now());
+type LogicalTickBatch={owner:CampaignState;remaining:number;completed:number;simulationMs:number};
+let logicalBatch:LogicalTickBatch|undefined,wakeDue=false;
+const regularTasks=new WorkerTaskScheduler(runRegularTask);
+function resetSimulationClock(now:number):void {
+ logicalBatch=undefined;wakeDue=false;regularTasks.invalidate();clock.reset(now);
+}
+function cancelUnplayedSimulation(now:number):void {
+ logicalBatch=undefined;wakeDue=false;regularTasks.invalidate();clock.cancelUnplayed(now);
+}
 // Core forcePause is a modal overlay, not an explicit player Pause. This
 // bridge-only intent is never a saved World field or a permission to advance.
 let neutralResume261:{root:CampaignState;pending:object;speed:number}|undefined;
@@ -74,11 +84,11 @@ function holdEncounterPause261(now:number):void {
  if((pending.kind==='meeting'||pending.kind==='demand')&&pending.decision==='open'){
   if(!neutralResume261||neutralResume261.root!==root||neutralResume261.pending!==pending)neutralResume261={root,pending,speed};
  }else neutralResume261=undefined; // Fight/Attack/forced map keeps an actual pause.
- speed=0;clock.reset(now);
+ speed=0;resetSimulationClock(now);
 }
 function resumeNeutralEncounter261(previous:object|undefined):void {
  const held=neutralResume261;if(!held||!world||held.root!==world||held.pending!==previous||pendingCaravan261(world))return;
- neutralResume261=undefined;speed=urgentThreats.snapshot().urgentHeld?0:held.speed;clock.reset(performance.now());
+ neutralResume261=undefined;speed=urgentThreats.snapshot().urgentHeld?0:held.speed;resetSimulationClock(performance.now());
 }
 let lastPublishedTick=-1;
 let stepMs = 0;
@@ -119,7 +129,7 @@ function stopFatal(error: unknown): void {
   if (fault) return;
   neutralResume261=undefined;
   speed = 0;
-  clock.reset(performance.now());
+  resetSimulationClock(performance.now());
   fault = { type: 'fault', speed: 0, ...(world ? { tick: world.tick } : {}),
     reason: `La simulation est arrêtée après une erreur. Le dernier tick peut être incomplet ; rechargez une colonie validée pour reprendre. ${error instanceof Error ? error.message : String(error)}` };
   send(fault);
@@ -146,7 +156,7 @@ async function handleCamp256(request:Extract<Request,{type:'command'}>):Promise<
   if(!world||!validWorldMapCommand(request.command)||request.command.type!=='group-enter'||!['camp','settle'].includes(request.command.mode))throw Error('Commande de création locale invalide.');
   const root=registeredCampaign(world),groupId=request.command.groupId,mode=request.command.mode==='settle'?'settle':'camp',permission=groupEntryActions(root,groupId)[mode];
   owned={id:request.id,groupId,root,cancelled:false};activeCamp256=owned;
-  speed=0;clock.reset(performance.now());try{publish();}catch(error){stopFatal(error);throw error;}
+  speed=0;resetSimulationClock(performance.now());try{publish();}catch(error){stopFatal(error);throw error;}
   if(!permission.ok)throw Error(permission.reason??'Cette entrée est refusée.');
   send({type:'camp-entry-progress',id:request.id,groupId,progress:{phase:'preparing'}});
   const iterator=mode==='settle'?prepareActualSettlementEntry257(root,groupId):prepareActualCampEntry256(root,groupId);let completed=false;
@@ -169,7 +179,7 @@ async function handleCamp256(request:Extract<Request,{type:'command'}>):Promise<
  }catch(error){
   if(committing)stopFatal(error);
   send({type:'reply',id:request.id,ok:false,outcome:committing||fault?'unknown':'refused',...(owned?.cancelled?{data:JSON.stringify({campEntry:'cancelled'})}:{}),reason:error instanceof Error?error.message:String(error)});
- }finally{if(owned&&activeCamp256===owned){activeCamp256=undefined;clock.reset(performance.now());}}
+ }finally{if(owned&&activeCamp256===owned){activeCamp256=undefined;resetSimulationClock(performance.now());}}
 }
 
 const nextCampTurn256=()=>new Promise<void>(resolve=>setTimeout(resolve,0));
@@ -202,7 +212,7 @@ function startEncounter261():void {
     send({type:'caravan-encounter-progress',groupId:owner.groupId,phase:step.value.phase});await nextCampTurn256();
    }
   }catch(error){if(committed)stopFatal(error);if(world===root)send({type:'caravan-encounter-progress',groupId:owner.groupId,phase:'refused',reason:error instanceof Error?error.message:String(error)});
-  }finally{if(!finished)iterator.return({status:'blocked',phase:'cancelled',reason:'Unpublished battlefield discarded'});if(activeEncounter261===owner)activeEncounter261=undefined;clock.reset(performance.now());}
+  }finally{if(!finished)iterator.return({status:'blocked',phase:'cancelled',reason:'Unpublished battlefield discarded'});if(activeEncounter261===owner)activeEncounter261=undefined;resetSimulationClock(performance.now());}
  })();
 }
 
@@ -214,7 +224,7 @@ function worldTargetOrder263(request:Request):boolean {
  const held=pendingWorldEntry263(world),c=request.command,g=held&&world.worldGroups?.groups.find(r=>r.state.id===held.groupId)?.state;
  return !!held&&!!g&&'members'in g&&c.groupId===held.groupId&&c.destination===g.tile&&(c.action===null||JSON.stringify(c.action)===JSON.stringify(held.pending.target));
 }
-function holdWorldEntry263(now:number):void {neutralResume261=undefined;speed=0;clock.reset(now);}
+function holdWorldEntry263(now:number):void {neutralResume261=undefined;speed=0;resetSimulationClock(now);}
 function startWorldEntry263():void {
  const root=world,held=root&&pendingWorldEntry263(root);if(!root||!held)return;
  holdWorldEntry263(performance.now());if(activeWorldEntry263||activeEncounter261||activeCamp256||attemptedWorldEntry263.has(held.pending))return;
@@ -233,7 +243,7 @@ function startWorldEntry263():void {
     send({type:'caravan-encounter-progress',groupId:owner.groupId,phase:step.value.phase});await nextCampTurn256();
    }
   }catch(error){if(committed)stopFatal(error);if(world===root&&pendingWorldEntry263(root)?.pending===owner.pending)send({type:'caravan-encounter-progress',groupId:owner.groupId,phase:'refused',reason:error instanceof Error?error.message:String(error)});
-  }finally{if(!finished)iterator.return({status:'blocked',phase:'cancelled',reason:'Unpublished world target discarded'});if(activeWorldEntry263===owner)activeWorldEntry263=undefined;clock.reset(performance.now());if(!fault)startWorldEntry263();}
+  }finally{if(!finished)iterator.return({status:'blocked',phase:'cancelled',reason:'Unpublished world target discarded'});if(activeWorldEntry263===owner)activeWorldEntry263=undefined;resetSimulationClock(performance.now());if(!fault)startWorldEntry263();}
  })();
 }
 
@@ -309,7 +319,7 @@ async function handleWorldDraft256(request:DraftRequest256):Promise<void> {
   // Sole authoritative replacement boundary. No old colony, clock or RNG was
   // touched before the complete local World and every owner passed validation.
   const createdCaravans=prepareCaravans(created);
-  snapshots.authorizeDraftPreview(owner,d.geographyId);world=created;caravans=createdCaravans;neutralResume261=undefined;committed=true;maxSettlements=request.maxSettlements;threatPauseMode=request.threatPauseMode;speed=0;urgentThreats.bootstrap(world);motion.reset();audioCues.reset();fault=undefined;clock.reset(performance.now());
+  snapshots.authorizeDraftPreview(owner,d.geographyId);world=created;caravans=createdCaravans;neutralResume261=undefined;committed=true;maxSettlements=request.maxSettlements;threatPauseMode=request.threatPauseMode;speed=0;urgentThreats.bootstrap(world);motion.reset();audioCues.reset();fault=undefined;resetSimulationClock(performance.now());
   const checkpoint=publish(true);if(!checkpoint)throw Error('Le checkpoint initial n’a pas été publié.');heldWorldDraft=undefined;
   send({type:'reply',id:request.id,ok:true,checkpoint});
  }catch(error){
@@ -317,8 +327,8 @@ async function handleWorldDraft256(request:DraftRequest256):Promise<void> {
   if(committed)stopFatal(error);
   send({type:'reply',id:request.id,ok:false,outcome:committed||fault?'unknown':'refused',...(ownedCreation?.cancelled?{data:JSON.stringify({worldCreation:'cancelled'})}:{}),reason:error instanceof Error?error.message:String(error)});
  }finally{
-  if(request.type==='world-draft-generate'&&preparingWorldDraft?.generation===request.generation){preparingWorldDraft=undefined;clock.reset(performance.now());}
-  if(ownedCreation&&creatingDraftColony===ownedCreation){if(heldWorldDraft===ownedCreation)discardWorldDraft256();creatingDraftColony=undefined;clock.reset(performance.now());}
+  if(request.type==='world-draft-generate'&&preparingWorldDraft?.generation===request.generation){preparingWorldDraft=undefined;resetSimulationClock(performance.now());}
+  if(ownedCreation&&creatingDraftColony===ownedCreation){if(heldWorldDraft===ownedCreation)discardWorldDraft256();creatingDraftColony=undefined;resetSimulationClock(performance.now());}
  }
 }
 
@@ -358,7 +368,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
       speed=request.paused?0:1;
       motion.reset();
       audioCues.reset();
-      clock.reset(performance.now());
+      resetSimulationClock(performance.now());
     } else if (request.type === 'load') {
       if (request.threatPauseMode !== undefined && !validThreatPauseMode(request.threatPauseMode)) throw new Error('Mode de pause invalide.');
       // A cold load needs no temporary colony. Validate completely before the
@@ -372,11 +382,11 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
       urgentThreats.bootstrap(world);
       fault = undefined;
       audioCues.reset();
-      clock.reset(performance.now());
+      resetSimulationClock(performance.now());
     } else if (request.type === 'speed') {
       if (![0, 1, 3, 6].includes(request.speed)) throw new Error('Vitesse invalide.');
       const beforeAdvance = urgentThreats.token();
-      const now=performance.now();let cutoff=now;
+      const now=performance.now();
       if(request.speed===0){
         const stamp=Object.getOwnPropertyDescriptor(request,'pauseIntent');
         if(stamp){
@@ -389,12 +399,14 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
           if(!origin||!at||!Object.hasOwn(origin,'value')||!Object.hasOwn(at,'value')||typeof origin.value!=='number'||!Number.isFinite(origin.value)||typeof at.value!=='number'||!Number.isFinite(at.value))throw Error('L’horodatage de pause est invalide.');
           const local=at.value+(origin.value-performance.timeOrigin);
           if(!Number.isFinite(local))throw Error('L’horodatage de pause est invalide.');
-          cutoff=Math.min(now,local);
+          // Compatibility validation only. Human speed changes no longer
+          // acquire old-speed wall time through this invocation timestamp.
         }
       }
-      if (!advanceSimulation(now,request.speed===0,cutoff)) throw new Error(fault!.reason);
       if(world&&(pendingCaravan261(world)||pendingWorldEntry263(world))&&request.speed!==0)throw Error('La rencontre réelle conserve la simulation en pause jusqu’à sa décision.');
-      speed = urgentThreats.requestedSpeed(request.speed, request.options, beforeAdvance);
+      const requestedSpeed=urgentThreats.requestedSpeed(request.speed,request.options,beforeAdvance);
+      cancelUnplayedSimulation(now);
+      speed=requestedSpeed;
       if(request.speed===0&&neutralResume261&&neutralResume261.root===world)neutralResume261.speed=0;
     } else {
       if (!world) throw new Error('La simulation ne répond pas encore.');
@@ -437,42 +449,49 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
   }
 };
 
-// Fixed gameplay clock. Wall-clock time never enters the simulation core.
-function advanceSimulation(now:number,deferFinalPublication=false,clockCutoff=now):boolean {
-  if(fault){clock.reset(now);return false;}
-  if(world&&pendingCaravan261(world)){holdEncounterPause261(now);startEncounter261();return true;}
-  if(world&&pendingWorldEntry263(world)){holdWorldEntry263(now);startWorldEntry263();return true;}
-  if(!world||activeEncounter261||activeWorldEntry263||activeCamp256||creatingDraftColony||preparingWorldDraft){clock.reset(now);return true;}
+// Wall time funds a logical batch once. Each task commits at most one real
+// tick, keeping observers/publication atomic without monopolizing the port.
+function runRegularTask():void {
+  const now=performance.now();
+  if(fault){resetSimulationClock(now);return;}
+  if(world&&pendingCaravan261(world)){holdEncounterPause261(now);startEncounter261();return;}
+  if(world&&pendingWorldEntry263(world)){holdWorldEntry263(now);startWorldEntry263();return;}
+  if(!world||activeEncounter261||activeWorldEntry263||activeCamp256||creatingDraftColony||preparingWorldDraft){resetSimulationClock(now);return;}
   try {
-  const ticks=clock.advance(clockCutoff,speed);
-  if (ticks > 0) {
-    let simulationMs=0;
-    for(let i=0;i<ticks;i++) {
-      urgentThreats.prepareMaps(world);
-      const started=performance.now();stepWorld(world,1,undefined,caravans);simulationMs+=performance.now()-started;stepMs=simulationMs/(i+1);
-      const encounter=pendingCaravan261(world);
-      const entry=pendingWorldEntry263(world),threatPaused=urgentThreats.capture(world, threatPauseMode),paused=!!encounter||!!entry||threatPaused;
-      if(threatPaused){speed=0;clock.reset(now);}
-      if(encounter)holdEncounterPause261(now);if(entry)holdWorldEntry263(now);
-      const visible=visibleWorld();if(visible){motion.capture(visible);audioCues.capture(visible);}
-      const changed = visible?presentationChanges.capture(visible):false;
-      // A normal final tick and its immediate pause share one publication.
-      // Every earlier phase and every urgent pause still publishes here.
-      if ((changed || paused)&&(!deferFinalPublication||i<ticks-1||paused)) publishCapturedTick();
-      if (paused) {if(encounter)startEncounter261();if(entry)startWorldEntry263();break;}
+    if(logicalBatch&&logicalBatch.owner!==world){resetSimulationClock(now);return;}
+    if(!logicalBatch){
+      wakeDue=false;
+      const budget=clock.reserve(now,speed);if(budget===0)return;
+      logicalBatch={owner:world,remaining:budget,completed:0,simulationMs:0};
     }
-  }
-  // Supply confirmed motion every active batch (20 ms), including batches
-  // without discrete events. Do not duplicate a phase snapshot of the last tick.
-  if(ticks>0&&lastPublishedTick!==world.tick&&!deferFinalPublication)publishCapturedTick();
-  return true;
-  } catch (error) {
-    // World may already have been partially mutated. Never publish it or
-    // pretend to restore the last snapshot; replacement validates a fresh one.
+    const active=logicalBatch;
+    urgentThreats.prepareMaps(world);
+    if(!clock.consume())throw Error('Missing reserved simulation tick.');
+    const started=performance.now();stepWorld(world,1,undefined,caravans);
+    active.simulationMs+=performance.now()-started;active.completed++;active.remaining--;stepMs=active.simulationMs/active.completed;
+    const encounter=pendingCaravan261(world),entry=pendingWorldEntry263(world),threatPaused=urgentThreats.capture(world,threatPauseMode),paused=!!encounter||!!entry||threatPaused;
+    if(threatPaused){speed=0;resetSimulationClock(now);}
+    if(encounter)holdEncounterPause261(now);if(entry)holdWorldEntry263(now);
+    const visible=visibleWorld();if(visible){motion.capture(visible);audioCues.capture(visible);}
+    const changed=visible?presentationChanges.capture(visible):false;
+    if(changed||paused)publishCapturedTick();
+    if(paused){if(encounter)startEncounter261();if(entry)startWorldEntry263();return;}
+    if(active.remaining===0){
+      // A quiet task is not a quiet BATCH tail. Intermediate command/save
+      // publications already update lastPublishedTick and drain actual cues.
+      if(lastPublishedTick!==world.tick)publishCapturedTick();
+      logicalBatch=undefined;
+      if(wakeDue)regularTasks.request();
+    }else regularTasks.request();
+  } catch(error){
+    // A partly mutated tick remains fatal; no rollback or speculative ACK.
     stopFatal(error);
-    return false;
   }
 }
-setInterval(()=>advanceSimulation(performance.now()),20);
+function regularWake():void {
+  if(logicalBatch||regularTasks.scheduled){wakeDue=true;return;}
+  runRegularTask();
+}
+setInterval(regularWake,20);
 
 }

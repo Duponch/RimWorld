@@ -3,6 +3,13 @@ import {afterEach,beforeEach,describe,expect,it,vi} from 'vitest';
 import type {Request,Response} from '../src/bridge/protocol';
 // Worker scheduling doubles only. Does not generate a map or validate owners.
 // Camp-only scheduling composition; the unimplemented creation factory is not imported.
+// Existing SIM/codec doubles below are transport fixtures, not Core qualification.
+// Capture task messages so no live Node port can fire after mock restoration.
+function captureWorkerTasks488(){
+ const posted:(()=>void)[]=[];
+ vi.stubGlobal('MessageChannel',class {port1={onmessage:undefined as undefined|((event:{data:unknown})=>void),unref(){}};port2={unref(){},postMessage:(data:unknown)=>{const owned=structuredClone(data);posted.push(()=>this.port1.onmessage?.({data:owned}));}};});
+ return {drain(){for(let n=0;posted.length&&n<64;n++)posted.shift()!();expect(posted).toHaveLength(0);}};
+}
 const h=vi.hoisted(()=>({root:{schemaVersion:256,tick:90,rng:17,nextId:30,planet:{revision:3},worldMaps:{sites:[] as {id:number;tile:number}[]},worldGroups:{groups:[{state:{id:7,tile:8}}]}},sent:[] as Response[],revision:0,tick:undefined as (()=>void)|undefined,settlement:vi.fn(),commit:vi.fn(),discard:vi.fn(),step:vi.fn(),scope:{} as DedicatedWorkerGlobalScope}));
 vi.mock('../src/sim/group-campaign-runtime-256',()=>({GroupCampaignRuntime256:class{bootstrap(){}step(){}}}));
 vi.mock('../src/sim/group-caravan-physical-256',()=>({GroupCaravanPhysical256:class{}}));
@@ -20,7 +27,7 @@ vi.mock('../src/sim/new-game',()=>({createScenarioWorld:()=>h.root}));
 vi.mock('../src/sim/index',()=>({applyCommand:()=>({ok:true}),deserializeWorld:()=>h.root,serializeWorld:()=>'',stepWorld:h.step,validateWorld:()=>[]}));
 vi.mock('../src/sim/player-orders',()=>({queryOrderOptions:()=>[]}));
 vi.mock('../src/bridge/urgent-threats',()=>({validThreatPauseMode:()=>true,UrgentThreatObserver:class{bootstrap(){}prepareMaps(){}capture(){return false;}snapshot(){return {};}token(){return {};}requestedSpeed(speed:number){return speed;}}}));
-vi.mock('../src/bridge/fixed-clock',()=>({FixedClock:class{reset(){}advance(_now:number,speed:number){return speed?1:0;}}}));
+vi.mock('../src/bridge/fixed-clock',()=>({FixedClock:class{private reserved=0;reset(){this.reserved=0;}advance(_now:number,speed:number){return speed?1:0;}reserve(_now:number,speed:number){return this.reserved=speed?1:0;}consume(){if(!this.reserved)return false;this.reserved--;return true;}cancelUnplayed(){this.reserved=0;}}}));
 vi.mock('../src/bridge/snapshots',()=>({SnapshotEncoder:class{discardDraftPreview(){}encode(world:unknown,_ms:number,speed:number){return {type:'snapshot',epoch:1,revision:++h.revision,world,speed};}}}));
 vi.mock('../src/bridge/motion-tracks',()=>({MotionRecorder:class{reset(){}capture(){}snapshot(){return [];}}}));
 vi.mock('../src/bridge/presentation-changes',()=>({PresentationChanges:class{capture(){return false;}}}));
@@ -28,7 +35,7 @@ vi.mock('../src/bridge/audio-cues',()=>({AudioCueRecorder:class{reset(){}capture
 function send(request:Request){h.scope.onmessage!({data:request} as MessageEvent<Request>);}
 const replies=(id:number)=>h.sent.filter((m):m is Extract<Response,{type:'reply'}>=>m.type==='reply'&&m.id===id);
 const command=()=>send({id:20,type:'command',command:{type:'group-enter',groupId:7,mode:'camp'}});
-beforeEach(async()=>{vi.useFakeTimers();vi.resetModules();h.sent=[];h.revision=0;h.root.worldMaps.sites=[];h.commit.mockReset().mockImplementation(()=>{h.root.worldMaps.sites.push({id:1,tile:8});return {ok:true};});h.discard.mockClear();h.settlement.mockClear();h.step.mockClear();h.scope={postMessage:(m:Response)=>h.sent.push(structuredClone(m))} as unknown as DedicatedWorkerGlobalScope;vi.stubGlobal('self',h.scope);vi.stubGlobal('setInterval',(fn:()=>void)=>{h.tick=fn;return 1;});await import('../src/bridge/simulation.worker');send({id:1,type:'init',seed:1,size:250});expect(replies(1)[0],JSON.stringify(h.sent)).toMatchObject({ok:true});h.sent=[];});
+beforeEach(async()=>{captureWorkerTasks488();vi.useFakeTimers();vi.resetModules();h.sent=[];h.revision=0;h.root.worldMaps.sites=[];h.commit.mockReset().mockImplementation(()=>{h.root.worldMaps.sites.push({id:1,tile:8});return {ok:true};});h.discard.mockClear();h.settlement.mockClear();h.step.mockClear();h.scope={postMessage:(m:Response)=>h.sent.push(structuredClone(m))} as unknown as DedicatedWorkerGlobalScope;vi.stubGlobal('self',h.scope);vi.stubGlobal('setInterval',(fn:()=>void)=>{h.tick=fn;return 1;});await import('../src/bridge/simulation.worker');send({id:1,type:'init',seed:1,size:250});expect(replies(1)[0],JSON.stringify(h.sent)).toMatchObject({ok:true});h.sent=[];});
 afterEach(()=>{vi.clearAllTimers();vi.useRealTimers();vi.unstubAllGlobals();});
 describe('ordered Camp worker',()=>{
  it('a refused final entry preserves source fields and leaves speed zero',async()=>{

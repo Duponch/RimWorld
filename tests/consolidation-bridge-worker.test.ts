@@ -1,6 +1,13 @@
 import { afterEach, expect, test, vi } from 'vitest';
 import type { Request, Response } from '../src/bridge/protocol';
 
+// Existing SIM/codec doubles below are transport fixtures, not Core qualification.
+// Capture task messages so no live Node port can fire after mock restoration.
+function captureWorkerTasks488(){
+ const posted:(()=>void)[]=[];
+ vi.stubGlobal('MessageChannel',class {port1={onmessage:undefined as undefined|((event:{data:unknown})=>void),unref(){}};port2={unref(){},postMessage:(data:unknown)=>{const owned=structuredClone(data);posted.push(()=>this.port1.onmessage?.({data:owned}));}};});
+ return {drain(){for(let n=0;posted.length&&n<64;n++)posted.shift()!();expect(posted).toHaveLength(0);}};
+}
 const control = vi.hoisted(() => ({ fail: '', steps: 0 }));
 vi.mock('../src/sim/new-game', () => ({ createScenarioWorld: () => ({ tick: 0 }) }));
 vi.mock('../src/sim/serialization', () => ({ deserializeCampaign(data:string) { if(data==='bad')throw Error('invalid'); return JSON.parse(data); }, serializeCampaign:JSON.stringify }));
@@ -11,7 +18,7 @@ vi.mock('../src/sim/index', () => ({
   stepWorld: (world: { tick: number }) => { control.steps++; world.tick++; if (control.fail === 'step') throw Error('step'); },
 }));
 vi.mock('../src/sim/player-orders', () => ({ queryOrderOptions: () => [] }));
-vi.mock('../src/bridge/fixed-clock', () => ({ FixedClock: class { reset() {} advance(_now: number, speed: number) { return speed > 0 ? 1 : 0; } } }));
+vi.mock('../src/bridge/fixed-clock', () => ({ FixedClock: class { private reserved=0;reset() {this.reserved=0;}advance(_now: number, speed: number) { return speed > 0 ? 1 : 0; } reserve(_now:number,speed:number){return this.reserved=speed>0?1:0;}consume(){if(!this.reserved)return false;this.reserved--;return true;}cancelUnplayed(){this.reserved=0;} } }));
 vi.mock('../src/bridge/motion-tracks', () => ({ MotionRecorder: class { reset() {} capture() { if (control.fail === 'capture') throw Error('capture'); } snapshot() { return []; } } }));
 vi.mock('../src/bridge/audio-cues', () => ({ AudioCueRecorder: class { reset() {} capture() {} drain() { return []; } } }));
 vi.mock('../src/bridge/presentation-changes', () => ({ PresentationChanges: class { capture() { return false; } } }));
@@ -35,6 +42,7 @@ test.each(['step', 'capture', 'encode', 'send'])('worker stops once on fatal %s 
   const scope = { onmessage: undefined as unknown as (event: MessageEvent<Request>) => void,
     postMessage(packet: Response) { if (control.fail === 'send' && packet.type === 'snapshot') throw Error('send'); packets.push(structuredClone(packet)); } };
   vi.stubGlobal('self', scope); vi.stubGlobal('setInterval', (callback: () => void) => { wake = callback; return 1; });
+  captureWorkerTasks488();
   await import('../src/bridge/simulation.worker');
   const request = (packet: Request) => scope.onmessage({ data: packet } as MessageEvent<Request>);
   request({ type: 'load', id: 1, data: '{"tick":7}' });
@@ -61,6 +69,7 @@ test('a publication failure after replacement is unknown and blocks further save
   const packets: Response[] = [];
   const scope = { onmessage: undefined as unknown as (event: MessageEvent<Request>) => void, postMessage(packet: Response) { packets.push(structuredClone(packet)); } };
   vi.stubGlobal('self', scope); vi.stubGlobal('setInterval', () => 1);
+  captureWorkerTasks488();
   await import('../src/bridge/simulation.worker');
   control.fail = 'encode';
   scope.onmessage({ data: { type: 'load', id: 1, data: '{"tick":30}' } } as MessageEvent<Request>);
