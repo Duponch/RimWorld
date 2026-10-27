@@ -710,3 +710,20 @@ Le plafond est strict : **une colonie maximum1, une seule continuation, une seul
 | 6. Campagnes durables/qualification finale | Aller-camp-retour proposé comme qualification périodique bornée ; saisons, renouvellements, crises/récupération et durabilité générale restent à établir. |
 
 Aucun domaine, SYS069, ensemble, paritéCore ou cible FPS n'est fermé par cet arbitrage. Aucune publication supplémentaire n'en est déduite. Le prochain engagement commence par les preuves de son checkpoint et les commandes ordinaires, pas par un nouveau numéro de schéma.
+## Réévaluation après V484
+
+27 octobre — préparation V490.
+
+La frontière demandée aprèsV483 est acquise : même campagne Éclaircies, originaux7/8/9, chargement et sortie réels, arrivée39971, entréeCamp1, reformation puis route d'entrée au foyer et douze rations réellement déposées. Le [bilan et dernier entier](../gameplay/campaign-continuation-v484.md#retour-et-dépôts-réels-acquis--t3328) font autorité :T3328/94de34ac, propre recharge exacte,1546ticks depuis1782. Les acteurs, biens, besoins et nourriture finis sont conservés ; aucun temps local au camp, saison, combat, production complète ni victoire n'est acquis par ce seul parcours. Ce n'est pas une campagne annuelle réussie.
+
+**Décision ROOT : diagnostic court des blocages lors des changements de carte, ensemble1.** Deux transitions réelles à l'arrêt ont enregistré1,87/3,24s de blocage MAIN. Le retour a tenu5,99TPS livrés pour6 attendus, mais conserve un intervalle119,5ms. Ce défaut concret de jouabilité prime maintenant une nouvelle mécanique. Le correctif de latenceV488 reste livré ; le nouveau diagnostic ne remplace ni ses témoins ni ses limites et ne rouvre pas les variantes rejetéesV475 sans fait discriminant.
+
+Le concurrent **commerce d'animaux vivants** reste une boucle ordinaire utile, mais demande encore sa primaire et ses transferts physiques. La **voie de victoire complète** reste explicitement inachevée et candidate à la décision suivante ; aucune nouvelle pièce automatique du vaisseau n'est engagée. Richesse biologique, clinique/crises composées, économie/catalogue, narration et campagnes durables restent ouverts. Aucun des six ensembles ni SYS069 n'est clos ; la performance garde ici la priorité en raison d'un défaut effectivement rencontré.
+
+### Plafond du diagnostic
+
+Réutiliser un seul entier historique du camp comme **fixture de diagnostic séparée**, en pause, pour afficher la carte0 par son vrai bouton. Cette fixture ne devient jamais le checkpoint de continuation, qui reste94de/T3328 ; ne pas rejouer Reform, route ou temps de campagne. Observer la même entrée native et un profil CPU MAIN borné autour du geste, sans instrumentation Core/Worker, nouveau Worker, baisse de détail, GC forcé ni preuve de gain déduite d'un profil. Localiser admission/FIFO, adoption et rendu avant de proposer une modification. L'import et la compilation initiale sont exclus de la fenêtre choisie et restent déclarés.
+
+Un profil diagnostique a son propre coût ; sa durée n'est pas un témoin comparable. Si le défaut ne se reproduit pas, conserver ce résultat et décider d'une seule mesure discriminante plutôt que lancer une matrice générale. Si une cause est isolée, proposer une seule correction bornée, avec conservation, contrôles voisins et comparaison à qualité constante sur cadence/débit/blocages avant intégration. Aucun changement de schéma ou architecture générale n'est présumé.
+
+La référence mécanique reste le Core local1.6.4871rev590 déjà versionné, avec le [Wiki Caravan](https://rimworldwiki.com/wiki/Caravan) relu le27octobre comme appui secondaire pour sélection/chargement/sortie et Reform ; il ne prouve pas notre campagne. Le [guide officiel Chrome de profilage à l'exécution](https://developer.chrome.com/docs/devtools/performance/reference#record-runtime-performance), relu le27octobre, décrit la capture pendant le geste et les piles JavaScript. Il soutient la méthode du diagnostic, pas une attribution ou une promesse de performances du jeu.
