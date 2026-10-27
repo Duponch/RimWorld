@@ -1,5 +1,7 @@
 # État courant avant une commande Monde — V489
 
+**Publication acquise le 27 octobre 2026 :** [Production956c48af](publication-v489.md), source15cc2671, schéma 296,20réponses HTTPS exactes. Les qualifications locales ci-dessous restent datées. La [continuation réelle](../gameplay/campaign-continuation-v484.md) a ensuite acquis chargement, sortie et arrivée ; sa reprise emploie toujours son dernier entier actuel, avec toutes ses conséquences.
+
 27octobre2026. **Correction locale qualifiée, non publiée à ce point.** Elle débloque les commandes de l'écran Monde après un export terminé. Schéma296 inchangé ; production [V488/1fa8b7c5](publication-v488.md). La [campagne V484](../gameplay/campaign-continuation-v484.md#formation-réelle-en-pause--27octobre) possède maintenant un vrai groupe en préparation, sans départ ni tick supplémentaire.
 
 ## Défaut et correction
