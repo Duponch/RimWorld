@@ -74,11 +74,11 @@ describe('latence du tampon confirmé à deux ticks',()=>{
     expect(minimumReserve).toBeGreaterThan(0);
   });
 
-  it('après une pause entièrement vidée, attend deux nouveaux ticks ; un snapshot répété ne déplace pas le curseur',()=>{
+  it('après une pause autoritaire recalée au confirmé, attend deux nouveaux ticks ; une livraison positive répétée ne déplace pas le curseur',()=>{
     const timeline=new MotionTimeline();timeline.adopt(0,1,[],0,true);
     timeline.adopt(2,1,[],340);expect(timeline.advance(340)).toBe(0);
     expect(timeline.advance(500)).toBeCloseTo(.96,8);
-    timeline.adopt(2,0,[],500);expect(timeline.advance(1000)).toBe(2);
+    timeline.adopt(2,0,[],500);expect(timeline.tick).toBe(2);expect(timeline.advance(500)).toBe(2);expect(timeline.advance(1000)).toBe(2);
     timeline.adopt(2,6,[],1000);expect(timeline.advance(1010)).toBe(2);
     timeline.adopt(3,6,[],1040);expect(timeline.advance(1040)).toBe(2);
     timeline.adopt(4,6,[],1070);expect(timeline.advance(1070)).toBe(2);

@@ -177,3 +177,62 @@ Le [premier comparatif](../../tmp/resource-base-v487/qa19-combined-2026-10-27T01
 L’unique [confirmation en ordre inverse](../../tmp/resource-base-v487/qa36-cwc-combined-2026-10-27T01-31-02.088Z-27972/report.json) passe48,667s : checkpoint puis cinq chauffes avancées et trente mesures par bloc. Candidat/contrôle/candidat donnent44,349 /40,104 /39,148ms en moyenne,44,322 /38,744 /38,775ms en médiane ; maxima62,158 /48,390 /44,572ms. Les108sorties complètes et trois entiers T1765 sont exacts, SHA`9affffd84e445d01c0c94c7881dd8593992ffc7cf7e4809bf46aaa142df4bf69`, gzip`34974c4792b11e32e84ec1451f1726bfa986cb2c3b334cbdda83d67a077a0498` vérifié lossless. Ces QA ont réellement avancé ; la campagne T2010 reste distincte.
 
 Le résultat ne montre pas de gain stable. **Cette variante est écartée sans installation, sans autre réglage et sans qualification native supplémentaire.** Les quatre contrats préparés restent non exécutés : ils ne rendraient pas performant un candidat sans bénéfice convaincant. Les pointes et les différences entre blocs ne permettent ni une cause externe certaine ni un gain global FPS/TPS. La priorité revient à la longueur des tâches régulières et à la commande de vitesse qui rattrape encore l’ancienne vitesse avant de répondre.
+
+## Réactivité visuelle des ordres et de la pause — V491
+
+Le nouveau signalement concerne Les Éclaircies en local à ×1 : chemin bleu et pause semblent tardifs. L’[acquisition courante](../../tmp/action-latency-v491/native-current--2026-10-27T09-38-56.502Z-8924/report.json), PASS 77,689 s après un premier ECONNREFUSED avant tout geste, confirme un délai après application : une route réellement admise attend encore que l’origine et l’arête de l’acteur rendu correspondent à celles de la nouvelle intention. Ce n’est pas une cause démontrée de la refonte UI. Le tampon de mouvement existait avant elle, comme les gardes de feedback. L’[attribution de l’entrée Worker](../../tmp/action-latency-v491/worker-entry-attribution-v491.md) distingue une autre attente, jusqu’à 143,3 ms avant le handler, qui n’est pas supprimée par ce lot de présentation.
+
+### Trois sources de présentation et un contrat de pause explicite
+
+Le suffixe bleu vient maintenant de l’état réellement appliqué. Si son origine confirmée est au-delà de l’acteur encore rendu, il reste ancré à cette origine, sans faux raccord depuis l’avatar. Aucun trajet local calculé en avance, déplacement anticipé, nouvel ordre différé, ACK optimiste, tick Core perdu ou temps futur présenté n’est introduit. Un suffixe réduit à sa seule origine reste volontairement vide. Aucun changement de Core, Worker ou schéma 296 n’entre dans ce lot.
+
+**La pause visuelle change explicitement de contrat.** Après réception d’une vitesse 0 autoritaire, le playhead rejoint le dernier tick confirmé, ses taux s’arrêtent et le World courant s’applique sans attendre l’ancienne queue de scène ni son fondu de 200 ms. La portion visuelle encore tamponnée peut donc être recalée ; les ticks Core déjà joués et l’historique motion sont conservés. Les gardes hidden/fatal/load, la FIFO d’admission et les changements positifs lisses demeurent. La reprise garde sa réserve de **deux nouveaux ticks**, environ 333 ms à ×1 à cadence nominale. Une commande play acceptée ne fabrique aucun temps physique confirmé.
+
+Le [reçu d’installation](../../tmp/action-latency-v491/visual-install-receipt.json) et le [reçu de normalisation LF](../../tmp/action-latency-v491/lf-normalization-2026-10-27T10-37-53.712Z-9140/receipt.json) distinguent les octets réellement mesurés des sources finales normalisées :
+
+| Source | SHA mesuré avant LF | SHA final LF |
+| --- | --- | --- |
+| ActionFeedbackLayer | 9b351f00a3770226aabe002cbb222a67954e98760c09187e355bf60dfd96d7f6 | 1c317324bd568415cc0ed06273edb738b6df8b72de71cf206078a4313f300124 |
+| MotionTimeline | 10d98c4227c709044cbd8cee58243241a345d4974d0f71a6d6c2a7b67abdfef0 | 1e2b98b0fd9b127350f60cb51026420e4c4acc669598e10ddcef2d7577a2a2dd |
+| SceneRenderCore | b70819458f08356334b01dba9acc8dff41b57752fbc37258e9617806a8b10594 | 95a14ea005aebc26ecd6c411822794dc0a49d6cc34312ea4d67f919409298091 |
+
+### Contrats, anciens rouges et gestes isolés
+
+Les lots ciblés acquièrent **116 cas distincts par reprises** : 46 contrats en 25,897 s, 40 voisins en 23,677 s, 29 passants dans le lot spatial/cargo/gait/cache initial, puis le seul cas spatial de pause migré en 11,596 s. Les 40 replays internes d’un test ne sont pas 40 cas supplémentaires. Le premier lot spatial reste à 4 rouges/29 passants en 20,702 s : l’ancien oracle « reprise avant drain » est adapté explicitement à la pause recalée ; les trois autres rouges — pose de cache acteur, deteriorationClock du croisement civil, pile historique Novel — sont reproduits à l’identique sur les corps originaux en 14,180 s. Seul MotionTimeline est réellement chargé dans cette reprise des trois rouges ; les deux autres substitutions sont disponibles mais non sollicitées. Aucun vert global n’est revendiqué. Typage 17,557 s et build Pages 4,855 s sont acquis.
+
+Les [trois parcours natifs W1/C/W2](../../tmp/action-latency-v491/visual-three-comparison-2026-10-27T10-03-45.579Z-10852.json), 12 gestes chacun, sont vérifiés par le [comparateur hors ligne](../../tmp/validation-runs/v491-visual-three-offline-comparison-exact-path-2026-10-27T10-03-44.494Z-9868/output.log), PASS 1,133 s. Les trois exports après les quatre ordres en pause sont le même entier T1730, SHA `d0a086c7702f06d669cc7b9036557fc729987ea3be7ec18068fcf77d2410b339`. Les finaux réellement joués T1749/T1747/T1748 sont chacun sauvegardés et rechargés exactement ; ils ne sont pas déclarés égaux. La vraie campagne 94de/T3328 n’est jamais chargée.
+
+Sur les quatre ordres ×1 du candidat, clic → bleu CPU vaut **61,2/65,2/75,4/47,4 ms**, dont **2,6/2,7/3,0/4,6 ms** entre adoption et dessin. Les ordres 2–4 du témoin ancien W2 prennent **354,6/280,2/366,7 ms**, dont **277,3/210,1/260,9 ms** après adoption ; son premier ordre à 59,4 ms n’établit pas un gain général de calcul. Le candidat dessine les vrais suffixes alors que l’ancien critère origine/arête reste faux.
+
+Les pauses ×1/×3 atteignent le HUD en **71/84,1 ms**, avec playhead et World exécuté exactement au snapshot confirmé ; W2 garde à ce moment 1,5564/0,3268 tick de retard de playhead et deux ticks de World exécuté. W1 ne possède pas le relevé speedDrawVisual : sa comparaison de pause n’est pas présentée comme une instrumentation rigoureusement identique. Ces résultats établissent une meilleure réaction visuelle dans ces parcours ; le dessin CPU ne mesure ni photons ni temps GPU physique.
+
+### Cadence : six fenêtres C1/W/C2 acquises
+
+Les trois parcours séparés à ×1/×3 passent en **125,310/117,322/117,782 s** ; le [comparateur hors ligne](../../tmp/action-latency-v491/visual-cadence-three-comparison-2026-10-27T10-23-11.134Z-12436.json) passe **1,824 s**. Il rehash les rapports, les six captures d’intervalles compressées et les exports, puis recalcule les métriques. Les mêmes entrée, vue, réglages et code Worker sont attestés ; seuls les trois rendus historiques sont substitués dans W. Chaque fenêtre MAIN dure environ dix secondes. Le débit utilise uniquement les deux bornes propres du Worker avant la pause ; ni les bornes MAIN ni le tick de la sauvegarde après pause ne le remplacent.
+
+| Parcours | Vitesse | Soumissions CPU/s | p99 intervalle MAIN ms | Maximum ms | Intervalles >50/>100 ms | TPS Worker |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| C1 | ×1 | 211,568 | 20,4 | 32,7 | 0/0 | 5,9948 |
+| W | ×1 | 213,642 | 18,5 | 31,7 | 0/0 | 6,0668 |
+| C2 | ×1 | 212,475 | 19,9 | 27,7 | 0/0 | 6,0013 |
+| C1 | ×3 | 164,144 | 27,6 | 41,2 | 0/0 | 17,9416 |
+| W | ×3 | 166,535 | 25,5 | 39,9 | 0/0 | 17,8492 |
+| C2 | ×3 | 171,933 | 23,9 | 34,2 | 0/0 | 17,8915 |
+
+Il n’y a aucun intervalle supérieur à 50 ms dans ces six fenêtres. Les débits restent proches des cibles 6/18 TPS. **Les écarts adverses restent visibles** : à ×1 les deux candidats ont environ 0,5–1 % de soumissions CPU en moins et un p99 supérieur de 1,4–1,9 ms au témoin ; à ×3 C1 est inférieur de 1,4 % avec p99 +2,1 ms, tandis que C2 est supérieur de 3,2 % avec p99 −1,6 ms. Le second candidat ne transforme pas le premier en résultat favorable. Ces fenêtres ne montrent pas de recul net systématique justifiant de rejeter le gain de réaction ; elles ne prouvent ni coût nul, équivalence statistique générale, FPS physique, temps GPU, absence d’événement rare ni performance à ×6.
+
+Les finaux joués T1920/T1919/T1918 sont conservés et rechargés chacun exactement, sans égalité inter-parcours imposée. Ce sont des QA indépendantes, pas de la continuation de campagne.
+
+### Rafale réelle : quatre ordres, puis pause
+
+Le [pilote V5](../../tmp/action-latency-v491/native-functional-burst-2026-10-27T10-34-29.243Z-9900/report.json) passe **77,388 s**. Quatre vrais clics droits alternent les cibles A/B/A/B, sans attendre chaque ACK ; espacement visé 120 ms, offsets d’envoi observés 5/132/256/376 ms. Une vraie Pause suit immédiatement, à l’offset 382 ms. Les quatre commandes et la Pause sont acceptées, leurs promesses réellement réglées ; le quatrième ordre, son suffixe bleu, la vitesse 0 et les frontières World/playhead T1733 sont confirmés. Pendant les 350 ms suivants, aucune ancienne cible ne reprend la main. Les quatre pointerup droits et celui de Pause sont trusted ; pas d’overflow, pas de wrapper restant. L’export final réel T1733 `4a2628388f9daae2679fba228f7418d4104e902b677b0f468629738de30d59fa` est rechargé exactement.
+
+Cette rafale vérifie l’ordre des admissions et la stabilité après plusieurs clics, pas une instantanéité générale : Pause pointerup → dessin vaut **299,5 ms** dans cette charge, distinct des 71/84,1 ms des gestes isolés. Les essais précédents restent **FAIL 86,710 s et FAIL 85,693 s**, avec leurs vrais exports/recharges et leurs diagnostics de préparation/observation. V5 avance seulement les listeners DOM avant NativeStage pour observer le pointerup que stopImmediatePropagation masquait au pilote V4 ; aucune assertion métier n’est relâchée et aucun de ces échecs n’est reclassifié PASS.
+
+### Normalisation LF, coût restant et suite
+
+Après le PASS V5, la [normalisation bornée](../../tmp/action-latency-v491/lf-normalization-2026-10-27T10-37-53.712Z-9140/receipt.json), PASS **5,704 s**, examine huit fichiers autorisés et en écrit cinq : les trois sources de rendu et les deux nouveaux tests. Trois autres tests étaient déjà LF et restent byte-exacts. Les préimages sont conservées. Les corps JavaScript servis sont exactement identiques après retrait des seules sourcemaps et des deux URLs d’import `?t` explicitement déclarées pour SceneRenderCore ; les autres feuilles protégées restent byte-exactes. **Aucun nouveau parcours Native final LF n’est revendiqué** et les Native antérieurs ne sont pas réétiquetés rétroactivement. Cette preuve d’équivalence de corps est distincte de leur qualification préalable.
+
+Le [microdiagnostic combiné courant](../../tmp/action-latency-v491/combined-natural-current/acquisition-2026-10-27T09-59-44.575Z-16320/report.json), PASS 35,572 s, n’introduit aucun candidat : deux QA indépendantes jouent chacune vingt vrais ticks T1730→1750, mêmes sorties et entier final `25cc71ba474fcd6e13bd98bfe6ceb9e59fa234f8de2f5d166462f6d1389f72fc`. Encode+Natural vaut 44,725 ms moyens sur vingt captures non profilées ; Inspector est séparé, son premier delta et les cadres inconnus/inlinés conservés. Ces deux microtests ne s’ajoutent pas aux 116 cas durables. Ce profil n’est ni un gain global ni une autorisation de rouvrir UnionMap, agenda V487 ou Worker V475.
+
+**Le lot visuel V491 est qualifié localement dans ce périmètre ; son enregistrement et sa publication restent à faire.** La latence résiduelle d’entrée Worker, la reprise à deux ticks et le confort global demeurent ouverts. La nouvelle demande humaine impose un bilan de la nuit et une lecture factuelle du déplacement du vrai Core 1.6 avant la reprise autonome des six ensembles. Cette recherche doit distinguer admission d’un ordre, fin du segment courant, vitesse et lissage, sans modifier les règles ni prétendre la parité par une lecture superficielle. Aucun ensemble, SYS069, campagne durable ou victoire n’est fermé par la présente tranche ; la vraie continuation reste exclusivement 94de/T3328.

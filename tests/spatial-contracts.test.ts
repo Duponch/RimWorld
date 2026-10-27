@@ -188,9 +188,14 @@ test('buffered motion is linear across jitter, duplicate messages, turns, pause 
     changes.adopt(confirmed,6,[],32000);changes.advance(32010);expect(changes.tick).toBe(confirmed);
     changes.adopt(confirmed+4,6,[],32070);changes.advance(32070);expect(changes.tick).toBe(confirmed);
     expect(changes.advance(32080)).toBeCloseTo(confirmed+.36,8);
-    changes.adopt(confirmed+4,0,[],32080);changes.adopt(confirmed+4,1,[],32080);
-    expect(changes.advance(32090)).toBeCloseTo(confirmed+.42,8); // resume before drain: no refill
-    expect(changes.advance(40000)).toBe(confirmed+4); // starvation never predicts
+    // Authoritative pause now joins the latest confirmed frontier immediately.
+    // Its old buffered fraction is already presented; resume needs two NEW ticks.
+    changes.adopt(confirmed+4,0,[],32080);expect(changes.tick).toBe(confirmed+4);
+    changes.adopt(confirmed+4,1,[],32080);expect(changes.advance(32090)).toBe(confirmed+4);
+    changes.adopt(confirmed+5,1,[],32250);expect(changes.advance(32250)).toBe(confirmed+4);
+    changes.adopt(confirmed+6,1,[],32420);expect(changes.advance(32420)).toBe(confirmed+4);
+    expect(changes.advance(32430)).toBeCloseTo(confirmed+4.06,8);
+    expect(changes.advance(40000)).toBe(confirmed+6); // starvation never predicts
   }
   // Frequent controls must not discard partial ticks in the worker. The oracle
   // integrates elapsed game milliseconds independently of batching and pauses.

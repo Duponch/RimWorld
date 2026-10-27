@@ -506,6 +506,12 @@ export class SceneRenderCore {
     this.projectiles.adopt(world,reset);
     if(this.hostPort.hidden())return;
     if(tracks){this.timeline.adopt(world.tick,speed,tracks,this.hostPort.now(),reset||!this.hasTracks,!!this.applicationContext&&immutableSnapshot);this.hasTracks=true;}
+    if(speed===0){
+      // This World has already been received/admitted. Pause presents this
+      // confirmed state now, bypassing only the scene's old playout/5Hz queue.
+      if(!tracks&&this.hasTracks)this.timeline.adopt(world.tick,0,[],this.hostPort.now(),reset,!!this.applicationContext&&immutableSnapshot);
+      this.presentation.clear();this.applyWorld(world,reset);return;
+    }
     if(reset||!tracks){if(!reset)this.presentation.clear();this.applyWorld(world,reset);return;}
     this.presentation.push(world);
     // A background/stalled page must not retain an unlimited snapshot history.
@@ -640,13 +646,14 @@ export class SceneRenderCore {
     this.pawns.adoptCargo(previousWorld??undefined,world,this.hasTracks?this.timeline.tick:world.tick,
       !resetPoses&&this.hasTracks&&(this.received?.speed??0)>0);
     this.updatePiles(world, newMap);
+    const paused=this.received?.world===world&&this.received.speed===0;
     const oldBlend = this.pawns.blend.value;
-    this.snapshotDuration = previousWorld && world.tick >= previousWorld.tick ? Math.min(200, Math.max(70, now - this.snapshotAt)) : 0;
+    this.snapshotDuration = !paused && previousWorld && world.tick >= previousWorld.tick ? Math.min(200, Math.max(70, now - this.snapshotAt)) : 0;
     this.snapshotAt = now;
-    this.timeFrom = resetPoses ? world.tick / TICKS_PER_SECOND : this.pawns.time.value;
+    this.timeFrom = resetPoses||paused ? world.tick / TICKS_PER_SECOND : this.pawns.time.value;
     this.timeTo = world.tick / TICKS_PER_SECOND;
-    this.pawns.blend.value = resetPoses ? 1 : 0;
-    this.pawns.update(world, resetPoses ? 1 : oldBlend, resetPoses);
+    this.pawns.blend.value = resetPoses||paused ? 1 : 0;
+    this.pawns.update(world, resetPoses||paused ? 1 : oldBlend, resetPoses);
     this.actionVfx.update(world,this.pawns.feedbackSource!);
     this.brawlCloud.update(world,this.pawns.feedbackSource!);
     if(prepared)this.structureVfx.adoptNative(world,newMap,prepared.axes,prepared.effects);

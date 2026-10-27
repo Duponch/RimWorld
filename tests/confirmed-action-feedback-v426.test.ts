@@ -40,7 +40,7 @@ test('admitted route IDs bind to executed slots, with absent bodies skipped and 
   }finally{layer.dispose();geometry.dispose();}
 });
 
-test('a future origin or confirmed edge mismatch retains the real executed route instead of drawing a chord',()=>{
+test('a future origin or confirmed edge mismatch shows its confirmed suffix without a GPU chord',()=>{
   for(const mismatch of ['origin','edge'] as const){
     const executed=createWorld(426,16,16),pawn=executed.pawns[0]!;executed.tick=12;
     pawn.x=1;pawn.z=1;pawn.state='moving';pawn.motion={from:{x:1,z:1},to:{x:2,z:1},start:10,end:15};pawn.path=[{x:2,z:2},{x:3,z:2}];
@@ -50,7 +50,11 @@ test('a future origin or confirmed edge mismatch retains the real executed route
     const routes=createClosedMainMapIntentReader().admit!(latest).routes,geometry=source(executed.pawns.length),layer=new ActionFeedbackLayer({blend:uniform(.2),travelTime:uniform(12)});
     try{
       layer.updateConfirmedPath(routes,executed,new Set([pawn.id]),geometry);
-      expect(ends(layer)).toEqual(selectedConfirmedPath(executed,pawn));expect(ends(layer).at(-1)).not.toEqual({x:7,z:7});
+      expect(ends(layer)).toEqual(mismatch==='origin'?[{x:7,z:7}]:[{x:1,z:2},{x:7,z:7}]);
+      expect(ends(layer).at(-1)).toEqual({x:7,z:7});
+      const owner=layer.path.geometry.getAttribute('aPathOwner'),from=layer.path.geometry.getAttribute('aFrom'),to=layer.path.geometry.getAttribute('aTo');
+      expect(Array.from({length:layer.path.geometry.instanceCount},(_,i)=>owner.getX(i))).toEqual(Array(layer.path.geometry.instanceCount).fill(-1));
+      expect([from.getX(0),from.getZ(0),to.getX(0),to.getZ(0)]).toEqual([future.x,future.z,future.x,future.z]);
     }finally{layer.dispose();geometry.dispose();}
   }
 });

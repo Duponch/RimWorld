@@ -7,6 +7,10 @@ import type { PawnLayer } from './PawnLayer';
 import { actionProgress, selectedConfirmedPath,type ActionLookup } from './action-feedback';
 
 type Clock=Pick<PawnLayer,'blend'|'travelTime'>;
+type Path491={index:number;id:number;route:readonly Readonly<Cell>[];anchor?:Readonly<Cell>};
+/** A confirmed active edge may already end at the future logical origin.
+ * Skip that zero segment; the remaining suffix still starts at that origin. */
+const firstRouteStep491=(item:Path491)=>item.anchor&&item.route[0]?.x===item.anchor.x&&item.route[0]?.z===item.anchor.z?1:0;
 const poseAttributes=['aFrom','aTo','aTravel'] as const;
 
 function quad():THREE.InstancedBufferGeometry {
@@ -133,9 +137,9 @@ export class ActionFeedbackLayer {
     this.writePath(paths,source);
   }
 
-  /** The origin is always the executed PawnLayer slot. When the newer route
-   * starts beyond that physical origin, retain the existing confirmed route;
-   * never join across an unproven chord/turn. Confirmed cancellation is empty. */
+  /** Only an exactly compatible edge follows the executed GPU origin. A newer
+   * confirmed suffix starts statically at its own logical origin, without a
+   * chord from the actor, prediction or execution-clock/pose change. */
   updateConfirmedPath(routes:readonly ConfirmedIntentRoute[],executed:World,selected:ReadonlySet<number>,source:THREE.InstancedBufferGeometry):void {
     this.bindSource(source);
     const byId=new Map(routes.map(route=>[route.pawnId,route]));
@@ -143,17 +147,17 @@ export class ActionFeedbackLayer {
       const intent=byId.get(pawn.id);if(!selected.has(pawn.id)||!intent)return [];
       const compatible=pawn.x===intent.origin.x&&pawn.z===intent.origin.z
         &&confirmedRouteEdgeSignature(pawn.motion)===intent.edgeSignature;
-      const route=compatible?intent.cells:selectedConfirmedPath(executed,pawn);
-      return route.length?[{index,id:pawn.id,route}]:[];
+      const route=intent.cells;
+      return route.length?[{index,id:pawn.id,route,...compatible?{}:{anchor:intent.origin}}]:[];
     });
     this.writePath(paths,source);
   }
 
-  private writePath(paths:readonly {index:number;id:number;route:readonly Readonly<Cell>[]}[],source:THREE.InstancedBufferGeometry):void {
-    const signature=paths.map(item=>`${item.id}@${item.index}:${item.route.map(c=>`${c.x},${c.z}`).join(';')}`).join('|');
+  private writePath(paths:readonly Path491[],source:THREE.InstancedBufferGeometry):void {
+    const signature=paths.map(item=>`${item.id}@${item.index}:${item.anchor?`static@${item.anchor.x},${item.anchor.z}`:'gpu'}:${item.route.map(c=>`${c.x},${c.z}`).join(';')}`).join('|');
     if(signature===this.pathSignature){this.syncTravel(source);return;}
     this.pathSignature=signature;this.stats.pathRebuilds++;
-    const total=paths.reduce((count,item)=>count+item.route.length,0);
+    const total=paths.reduce((count,item)=>count+item.route.length-firstRouteStep491(item),0);
     if(total>this.pathCapacity)this.allocatePath(2**Math.ceil(Math.log2(total)));
     this.movingSlots.length=0;
     const g=this.path.geometry,from=g.getAttribute('aFrom') as THREE.InstancedBufferAttribute,
@@ -163,13 +167,14 @@ export class ActionFeedbackLayer {
       owner=g.getAttribute('aPathOwner') as THREE.InstancedBufferAttribute;
     let slot=0;
     for(const item of paths){
-      this.movingSlots.push({slot,pawnIndex:item.index});
-      for(let step=0;step<item.route.length;step++,slot++){
-        const target=item.route[step]!;
-        owner.setX(slot,step===0?item.index:-1);
+      const first=firstRouteStep491(item);
+      if(!item.anchor&&first<item.route.length)this.movingSlots.push({slot,pawnIndex:item.index});
+      for(let step=first;step<item.route.length;step++,slot++){
+        const target=item.route[step]!,gpuOrigin=step===first&&!item.anchor;
+        owner.setX(slot,gpuOrigin?item.index:-1);
         end.setXYZ(slot,target.x,0,target.z);
-        if(step===0)continue;
-        const previous=item.route[step-1]!;
+        if(gpuOrigin)continue;
+        const previous=step===first?item.anchor!:item.route[step-1]!;
         from.setXYZW(slot,previous.x,0,previous.z,0);
         to.setXYZW(slot,previous.x,0,previous.z,0);
         travel.setXYZW(slot,0,0,0,1);

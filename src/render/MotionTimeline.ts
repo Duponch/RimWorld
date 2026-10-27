@@ -9,7 +9,8 @@ import type { PresentationSegment as TravelSegment } from '../sim/travel-timing'
 export const MOTION_BUFFER_TICKS = 2;
 
 /** Confirmed-time playout. Running speed changes affect the next frame without
- * moving the playhead or inserting a new wait. No prediction on starvation. */
+ * moving the playhead or inserting a new wait. An authoritative pause may rebase
+ * to its latest confirmed tick. No prediction on starvation. */
 export class MotionTimeline {
   private readonly playbackCursor435=new ConfirmedTrackCursor435();
   get playbackEnabled435():boolean{return this.playbackCursor435.enabled;}
@@ -29,7 +30,17 @@ export class MotionTimeline {
   adopt(tick:number,speed:number,tracks:PawnTrack[],now:number,reset=false,closed435=false):void {
     this.playbackCursor435.configure(closed435,reset);
     if(reset){this.tick=tick;this.latest=tick;this.previous=now;this.ready=Infinity;this.buffering=true;this.tracks.clear();this.speed=speed;this.rate=speed*LOCAL_TICKS_PER_SECOND;this.frameRate=this.rate;this.rateChanges.length=0;}
-    // Only RAF advances the playhead. A delivery timestamp can be later than
+    // An adopted pause is authoritative presentation state, not a request or
+    // predicted Core tick. Show its latest confirmed frontier immediately.
+    // Running deliveries keep the ordinary smooth, buffered RAF policy below.
+    if(speed===0){
+      this.latest=Math.max(this.latest,tick);this.tick=this.latest;
+      this.speed=0;this.rate=this.frameRate=0;this.rateChanges.length=0;
+      this.previous=Math.max(this.previous,now);this.ready=Infinity;this.buffering=true;
+      for(const track of tracks)this.tracks.set(track.id,track.segments);
+      return;
+    }
+    // Only RAF advances positive playout. A delivery timestamp can be later than
     // the next frame timestamp; changing rate here never consumes that time.
     if(speed!==this.speed) {
       if(speed>0){
@@ -61,7 +72,7 @@ export class MotionTimeline {
     delta+=Math.max(0,now-start)*this.frameRate/1000;
     this.previous=Math.max(this.previous,now);
     this.tick=Math.min(this.latest,this.tick+delta);
-    // Drain only confirmed time on pause so paused edits can be displayed.
+    // An adopted pause has already stopped at its latest confirmed frontier.
     if(this.speed===0&&this.tick>=this.latest)this.rate=this.frameRate=0;
     return this.tick;
   }
