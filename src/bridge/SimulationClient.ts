@@ -329,7 +329,8 @@ export class SimulationClient {
   getThreatPauseToken(): ThreatPauseToken { return this.urgentThreats.token(); }
   setSpeed(speed: number, options?: ThreatSpeedOptions) {
     // Copy at invocation: a caller cannot mutate a queued gesture's authority.
-    return this.request({ type: 'speed', speed, ...options ? { options: { explicit: options.explicit, token: { ...options.token } } } : {} });
+    const pauseIntent=speed===0?{origin:performance.timeOrigin,at:performance.now()}:undefined;
+    return this.request({ type: 'speed', speed, ...pauseIntent?{pauseIntent}:{}, ...options ? { options: { explicit: options.explicit, token: { ...options.token } } } : {} });
   }
   async setThreatPauseMode(mode: ThreatPauseMode): Promise<string | undefined> {
     if (!validThreatPauseMode(mode)) throw new Error('Mode de pause invalide.');

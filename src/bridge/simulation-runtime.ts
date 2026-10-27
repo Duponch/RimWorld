@@ -376,7 +376,23 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
     } else if (request.type === 'speed') {
       if (![0, 1, 3, 6].includes(request.speed)) throw new Error('Vitesse invalide.');
       const beforeAdvance = urgentThreats.token();
-      if (!advanceSimulation(performance.now(),request.speed===0)) throw new Error(fault!.reason);
+      const now=performance.now();let cutoff=now;
+      if(request.speed===0){
+        const stamp=Object.getOwnPropertyDescriptor(request,'pauseIntent');
+        if(stamp){
+          if(!Object.hasOwn(stamp,'value'))throw Error('L’horodatage de pause est invalide.');
+          const intent:unknown=stamp.value;
+          if(!intent||typeof intent!=='object'||Array.isArray(intent))throw Error('L’horodatage de pause est invalide.');
+          const prototype=Object.getPrototypeOf(intent),keys=Reflect.ownKeys(intent);
+          if((prototype!==Object.prototype&&prototype!==null)||keys.length!==2||!keys.includes('origin')||!keys.includes('at'))throw Error('L’horodatage de pause est invalide.');
+          const origin=Object.getOwnPropertyDescriptor(intent,'origin'),at=Object.getOwnPropertyDescriptor(intent,'at');
+          if(!origin||!at||!Object.hasOwn(origin,'value')||!Object.hasOwn(at,'value')||typeof origin.value!=='number'||!Number.isFinite(origin.value)||typeof at.value!=='number'||!Number.isFinite(at.value))throw Error('L’horodatage de pause est invalide.');
+          const local=at.value+(origin.value-performance.timeOrigin);
+          if(!Number.isFinite(local))throw Error('L’horodatage de pause est invalide.');
+          cutoff=Math.min(now,local);
+        }
+      }
+      if (!advanceSimulation(now,request.speed===0,cutoff)) throw new Error(fault!.reason);
       if(world&&(pendingCaravan261(world)||pendingWorldEntry263(world))&&request.speed!==0)throw Error('La rencontre réelle conserve la simulation en pause jusqu’à sa décision.');
       speed = urgentThreats.requestedSpeed(request.speed, request.options, beforeAdvance);
       if(request.speed===0&&neutralResume261&&neutralResume261.root===world)neutralResume261.speed=0;
@@ -422,13 +438,13 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
 };
 
 // Fixed gameplay clock. Wall-clock time never enters the simulation core.
-function advanceSimulation(now:number,deferFinalPublication=false):boolean {
+function advanceSimulation(now:number,deferFinalPublication=false,clockCutoff=now):boolean {
   if(fault){clock.reset(now);return false;}
   if(world&&pendingCaravan261(world)){holdEncounterPause261(now);startEncounter261();return true;}
   if(world&&pendingWorldEntry263(world)){holdWorldEntry263(now);startWorldEntry263();return true;}
   if(!world||activeEncounter261||activeWorldEntry263||activeCamp256||creatingDraftColony||preparingWorldDraft){clock.reset(now);return true;}
   try {
-  const ticks=clock.advance(now,speed);
+  const ticks=clock.advance(clockCutoff,speed);
   if (ticks > 0) {
     let simulationMs=0;
     for(let i=0;i<ticks;i++) {

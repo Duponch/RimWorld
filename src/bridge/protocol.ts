@@ -21,7 +21,7 @@ export type Request =
   | { id: number; type: 'command'; command: Command }
   | { id: number; type: 'order-options'; pawnId: number; x: number; z: number; queue: boolean }
   | { id: number; type: 'bill-worker-options'; structureId:number; billId:number }
-  | { id: number; type: 'speed'; speed: number; options?: ThreatSpeedOptions }
+  | { id: number; type: 'speed'; speed: number; options?: ThreatSpeedOptions; pauseIntent?: {origin:number;at:number} }
   | { id: number; type: 'threat-pause-mode'; mode: ThreatPauseMode }
   | { id: number; type:'settlement-limit';maxSettlements:SettlementLimit }
   | { id: number; type: 'save' }
