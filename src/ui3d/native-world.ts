@@ -64,7 +64,8 @@ function tileLabel(id:number):string {const planet=source().planet,tile=planet&&
 function changeTab(next:typeof tab):void {tab=next;rootPage();}
 export function setNativeWorldTab(next:'maps'|'groups'|'individual'|'factions'):void {tab=next;}
 async function send(command:Command):Promise<unknown>{
- if(!actions||state?.busy||state?.fault||pending)throw Error(state?.fault??'Attendez la fin de l’opération courante.');
+ const current=actions?.readState?.()??state;
+ if(!actions||current?.busy||current?.fault||pending)throw Error(current?.fault??'Attendez la fin de l’opération courante.');
  pending=true;
  try {const result=await actions.command(command);if(result&&typeof result==='object'&&'ok'in result&&result.ok===false)throw Error('reason'in result&&typeof result.reason==='string'?result.reason:'Commande refusée.');return result;}
  finally {pending=false;actions.refresh();}
