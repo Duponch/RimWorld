@@ -3,6 +3,7 @@ import * as THREE from 'three/webgpu';
 import { createWorld } from '../src/sim/engine';
 import { buildTerrain, createTerrainPaintTexture, patchTerrainPaintTexture, terrainPaintEdge, terrainPaintPixelsPerCell } from '../src/render/TerrainLayer';
 import { clearGroup } from '../src/render/primitives';
+import { WORLD_SCALE } from '../src/world/scale';
 
 test('shore pigment is irregular, locally foamy, and deterministic under a water patch',()=>{
   const world=createWorld(133,8,8);
@@ -23,8 +24,9 @@ test('shore pigment is irregular, locally foamy, and deterministic under a water
 });
 
 test('painted water and land reuse original cell triangles with continuous UVs',()=>{
-  const world=createWorld(133,65,8);
-  world.tiles=world.tiles.map((_,i)=>({terrain:i%world.width>31?'water':'grass'}));
+  const width=WORLD_SCALE.chunkSize+1,waterStart=Math.floor(WORLD_SCALE.chunkSize/2);
+  const world=createWorld(133,width,8);
+  world.tiles=world.tiles.map((_,i)=>({terrain:i%world.width>=waterStart?'water':'grass'}));
   const group=new THREE.Group(),land=new THREE.MeshStandardNodeMaterial(),water=new THREE.MeshStandardNodeMaterial();
   land.userData.rendererOwned=water.userData.rendererOwned=true;
   try {
@@ -32,7 +34,7 @@ test('painted water and land reuse original cell triangles with continuous UVs',
     const meshes=group.children as THREE.Mesh[];
     expect(meshes.filter(mesh=>mesh.material===water)).toHaveLength(2);
     const waterIndices=meshes.filter(mesh=>mesh.material===water).reduce((sum,mesh)=>sum+mesh.geometry.index!.count,0);
-    expect(waterIndices).toBe(world.height*(world.width-32)*6);
+    expect(waterIndices).toBe(world.height*(world.width-waterStart)*6);
     for(const mesh of meshes.filter(mesh=>mesh.material===water)){
       const position=mesh.geometry.getAttribute('position'),uv=mesh.geometry.getAttribute('uv');
       expect(uv.count).toBe(position.count);

@@ -67,8 +67,14 @@ function paintTileColor(world:World,palette:Uint8Array,index:number):void {
 
 function paintPixels(world:World,scale:number,pixels:Uint8Array,palette:Uint8Array,x0:number,z0:number,x1:number,z1:number):void {
   const width=world.width*scale;
-  const channel=(x:number,z:number,c:number)=>palette[((Math.max(0,Math.min(world.height-1,z))*world.width+Math.max(0,Math.min(world.width-1,x)))*3)+c]!;
-  const waterAt=(x:number,z:number)=>x>=0&&z>=0&&x<world.width&&z<world.height&&isWaterTerrain(terrainPresentationType(world,z*world.width+x));
+  // Classify only this paint rectangle's cells and their immediate shore
+  // neighbours. No terrain/fog result survives this synchronous paint call.
+  const waterX0=Math.max(0,Math.floor((x0+.5)/scale)-1),waterZ0=Math.max(0,Math.floor((z0+.5)/scale)-1);
+  const waterX1=Math.min(world.width,Math.floor((x1-.5)/scale)+2),waterZ1=Math.min(world.height,Math.floor((z1-.5)/scale)+2);
+  const waterWidth=waterX1-waterX0,waterMask=new Uint8Array(waterWidth*(waterZ1-waterZ0));
+  for(let z=waterZ0;z<waterZ1;z++)for(let x=waterX0;x<waterX1;x++)
+    waterMask[(z-waterZ0)*waterWidth+x-waterX0]=isWaterTerrain(terrainPresentationType(world,z*world.width+x))?1:0;
+  const waterAt=(x:number,z:number)=>x>=0&&z>=0&&x<world.width&&z<world.height&&waterMask[(z-waterZ0)*waterWidth+x-waterX0]===1;
   // The horizontal boundary varies with each row but is shared by the ~8
   // texels across a cell. The vertical boundary varies with each column but
   // is shared by the ~8 rows. Cache those exact samples within this bake (or
@@ -99,9 +105,13 @@ function paintPixels(world:World,scale:number,pixels:Uint8Array,palette:Uint8Arr
     const stroke=noise(Math.floor((px+py*.24)/3),Math.floor(py/2),world.seed+907)>.77?13:0;
     const broad=(noise(Math.floor(px/17),Math.floor(py/19),world.seed+113)-.5)*20;
     const i=(py*width+px)*4;
+    const paletteLeft=Math.max(0,Math.min(world.width-1,left)),paletteRight=Math.max(0,Math.min(world.width-1,right));
+    const paletteTop=Math.max(0,Math.min(world.height-1,top))*world.width,paletteBottom=Math.max(0,Math.min(world.height-1,bottom))*world.width;
+    const leftTop=(paletteTop+paletteLeft)*3,rightTop=(paletteTop+paletteRight)*3;
+    const leftBottom=(paletteBottom+paletteLeft)*3,rightBottom=(paletteBottom+paletteRight)*3;
     for(let c=0;c<3;c++){
-      const a=channel(left,top,c)*(1-blendX)+channel(right,top,c)*blendX;
-      const b=channel(left,bottom,c)*(1-blendX)+channel(right,bottom,c)*blendX;
+      const a=palette[leftTop+c]!*(1-blendX)+palette[rightTop+c]!*blendX;
+      const b=palette[leftBottom+c]!*(1-blendX)+palette[rightBottom+c]!*blendX;
       pixels[i+c]=Math.max(0,Math.min(255,Math.round((a*(1-blendZ)+b*blendZ)*(.97+(dust+stroke+broad)/255))));
     }
     // Alpha is a *pigment channel*, not transparency: water's material reads

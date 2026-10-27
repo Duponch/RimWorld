@@ -59,15 +59,19 @@ test.each(rows)('%s keeps its real identity and the shared Core smooth-terrain f
  expect(rockInspection(tile)?.title).toBe(label);
 });
 
-test('new substrate is closed to280/future282 and neither generation nor untyped historical rough terrain is enriched',()=>{
+test('new substrate is closed to280/future297 and neither generation nor untyped historical rough terrain is enriched',()=>{
  expect(isNaturalTerrain256(SMOOTHED_STONE_TERRAIN_281)).toBe(false);
  expect(Object.hasOwn(NATURAL_TERRAIN_DEFINITIONS_256,SMOOTHED_STONE_TERRAIN_281)).toBe(false);
  expect(naturalTerrainCosts256('rough-stone')?.pathCostCore).toBe(2); // Historical Rough/RoughHewn merge is preserved.
- for(const version of [27,28,256,280,282]){
+ for(const version of [27,28,256,280,297]){
   expect(terrainAvailable256(SMOOTHED_STONE_TERRAIN_281,version)).toBe(false);
   for(const stone of STONE_KINDS)expect(validStoneIdentity(stone,SMOOTHED_STONE_TERRAIN_281,version)).toBe(false);
  }
  expect(terrainAvailable256(SMOOTHED_STONE_TERRAIN_281,281)).toBe(true);
+ for(const version of [282,296]){
+  expect(terrainAvailable256(SMOOTHED_STONE_TERRAIN_281,version)).toBe(true);
+  for(const stone of STONE_KINDS)expect(validStoneIdentity(stone,SMOOTHED_STONE_TERRAIN_281,version)).toBe(true);
+ }
  expect(terrainHasProspectiveRules256(SMOOTHED_STONE_TERRAIN_281,{schemaVersion:281})).toBe(true);
  expect(terrainHasProspectiveRules256('rough-stone',{schemaVersion:281})).toBe(false);
  expect(validStoneIdentity(undefined,SMOOTHED_STONE_TERRAIN_281,281)).toBe(false);
@@ -116,7 +120,7 @@ test('a real collapsed-rock owner retains the new stone and its terrain statisti
  expect(snowDepthAt(w,index)).toBe(0);expect(snowDepthAt(w,snowIndex)).toBe(.3);
  expect(w.nextId).toBe(nextId+1);expect(w.rng).toBe(rng);expect(validateWorld(w)).toEqual([]);
  const valid=(tile:object,version:number)=>validCollapsedRock256(tile,version,w.nextId,(value):value is Tile['terrain']=>admittedRoofTerrain256(value,version));
- expect(valid(fallen,281)).toBe(true);expect(valid(fallen,280)).toBe(false);expect(valid(fallen,282)).toBe(false);
+ expect(valid(fallen,281)).toBe(true);expect(valid(fallen,280)).toBe(false);expect(valid(fallen,282)).toBe(true);expect(valid(fallen,296)).toBe(true);expect(valid(fallen,297)).toBe(false);
  const missing=structuredClone(fallen);delete missing.stone;expect(valid(missing,281)).toBe(false);
  expect(floorRoomMarketValue(fallen)).toBe(5);expect(floorBeauty(fallen)).toBe(2);expect(colonyWealth(w).floors).toBe(5);
  expect(deserializeWorld(serializeWorld(w))).toEqual(w);
