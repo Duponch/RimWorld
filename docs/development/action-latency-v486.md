@@ -1,6 +1,6 @@
 # Latence des ordres et des vitesses — V486
 
-27 octobre 2026. **V488 qualifiée localement : rattrapage dans les boutons supprimé, commandes admises entre les pas complets.** Le parcours courant mesure environ60–110ms selon le geste, sans promesse de0ms physique. Schéma296 inchangé ; production295 / `b969b256` encore inchangée. Le blocage principal peut être enregistré, puis la campagne V484 et les six ensembles reprennent en autonomie. Les sections V486/V487 conservent les essais, résultats et politiques historiques ; la politique actuelle est décrite dans la section V488 ci-dessous.
+27 octobre 2026. **V488 qualifiée et publiée : rattrapage dans les boutons supprimé, commandes admises entre les pas complets.** Le parcours courant mesure environ60–110ms selon le geste, sans promesse de0ms physique. Schéma296 ; commit `1b6a44a0`, [production `1fa8b7c5`](publication-v488.md) vérifiée. La campagne V484 et les six ensembles reprennent en autonomie depuisT2010. Les sections V486/V487 conservent les essais, résultats et politiques historiques ; la politique actuelle est décrite dans la section V488 ci-dessous.
 
 Les mesures utilisent exclusivement la sauvegarde publique QA v419 Éclaircies, dans un Chromium isolé et muet. La campagne autoritative T2010 n’est jamais chargée ni avancée. Les trajectoires proviennent des vrais ordres natifs et du moteur ; aucun trajet, tick, résultat ou mouvement n’est injecté pour améliorer le chronométrage. Le dessin observé est une soumission CPU, pas la fin du travail GPU ou l’affichage physique.
 
