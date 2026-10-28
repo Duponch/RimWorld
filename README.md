@@ -420,7 +420,9 @@ Lisière est un jeu de colonie 3D low poly pour navigateur, inspiré de RimWorld
 
 ## Démarrer
 
-Node.js 22.12 ou plus récent et un navigateur avec accélération graphique sont requis. Les dépendances sont épinglées.
+Node.js 24.22.1 est recommandé (voir `.nvmrc`). Les branches acceptées sont 22 à partir de 22.23.4, 24 à partir de 24.22.1 et 26 à partir de 26.12.1, correctifs de sécurité du 21 octobre 2026 inclus. Un navigateur avec accélération graphique est requis. Les dépendances sont épinglées.
+
+Sélectionner d’abord ce moteur avec votre gestionnaire Node, puis exécuter `node --version` et `npm ci`. `.npmrc` fait refuser l’installation avec un moteur incompatible ; `.nvmrc` ne change pas seul le binaire du terminal. Après un changement de moteur, refaire `npm ci` avant les commandes de développement ou de compilation. Voir [l’audit ciblé Node.js](docs/development/security-node-20261028.md).
 
 ```powershell
 npm ci

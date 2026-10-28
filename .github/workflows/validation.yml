@@ -24,8 +24,10 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version-file: '.nvmrc'
           cache: npm
+      - name: Record actual Node.js runtime
+        run: node -p 'JSON.stringify({ node: process.version, executable: process.execPath })'
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
