@@ -50,3 +50,9 @@ Deux nettoyages pendant la nuit/matinée retirent uniquement des caches SSR anci
 Cela représente **1601562170 octets logiques supplémentaires, environ 1,60 Go**. Ce volume supprimé ne remplace pas une mesure du gain physique exact sur le disque. Les **2821099734 octets, environ 2,82 Go**, retirés le26 avant la reprise de campagne, sont une opération antérieure distincte :19 caches, trois ZIP Git reproductibles et deux ZST redondants. Le cache récent87070746 octets retiré sur autorisation explicite est également compté séparément. [Entretien et preuves](storage-maintenance-20261026.md).
 
 Sauvegardes, RAW, références, données récentes uniques et serveurs humains sont conservés. Les six ensembles, SYS069, durabilité, victoire et confort global restent ouverts. Après livraison du présent bilan et du rapport demandé, la poursuite autonome reprend depuis les points de reprise actuels, sans réinitialiser la vraie campagne.
+
+## Complément du 28 octobre au soir — déplacements V492 toujours non livrés
+
+Le travail demandé ensuite pour rapprocher les déplacements de RimWorld 1.6 reste privé. Le candidat Source12 a acquis ses huit ordres réels et la correction des pointes de rendu, mais sa dernière comparaison confirme encore 9,98 à 11,28 % de débit en moins à ×6. La dernière piste de navigation isolée ne démontre pas de gain fiable et a été écartée. Aucun code V492 n'est intégré ni publié ; le produit reste V491.
+
+Le [bilan V492 vérifié](movement-parity-v492-status.md) donne les mesures, essais rejetés et limites, notamment les délais complets de clic et la visibilité non acquise. Les résultats passés restent conservés. À la suite de la demande humaine de délai, le contrôle courant est clos sans nouvelle série automatique ; la correction complète n'est pas déclarée terminée. L'objectif général, le heartbeat et les six ensembles restent en pause : la phrase de reprise autonome du bilan historique ci-dessus ne les réactive pas.
