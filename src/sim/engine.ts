@@ -22,7 +22,7 @@ import {shipReactorPlacementRefusal275} from './ship-reactor-placement-275.ts';
 import {shipReactorUnlocked275,shipBasicsUnlocked275,shipEngineUnlocked276} from './research.ts';
 import {isShipPartKind276,isShipAddedKind276,SHIP_PART_DEFAULT_ORIENTATION_276} from './ship-part-content-276.ts';
 import {shipPartPlacementRefusal276} from './ship-reactor-placement-275.ts';
-import {applyShipReactorCommand275,advanceShipReactors275} from './ship-reactor-runtime-275.ts';
+import {applyShipReactorCommand275,advanceShipReactors275,advanceShipReactorsCore297} from './ship-reactor-runtime-275.ts';
 import {cancelProstheticWork273,detachMissingProstheticBills273} from './prosthetic-work-273.ts';
 import {isSchema271OrLater,isSchema276OrLater,isSchema277OrLater,isSchema280OrLater,isSchema282OrLater} from './schema-compatibility-257.ts';
 import {applyCryptosleep271,processCryptosleepTask271,reconcileCryptosleepTask271} from './cryptosleep-task-271.ts';
@@ -1593,8 +1593,10 @@ function advanceCoreMap297(world:World,boundary=false):CoreStepResult297 {
  const moved=state.movement.advance();if(moved.changedCells||moved.topologyChanged)state.physics.invalidate('movement');
  const result=state.physics.advance(effectiveCore297(world));
  const expired=expirePhysicalActorTimers297(world);
+ const reactorStep=advanceShipReactorsCore297(world);
+ if(reactorStep?.completed)event(world,'command',reactorStep.completed===1?'Un réacteur stellaire a terminé son démarrage.':`${reactorStep.completed} réacteurs stellaires ont terminé leur démarrage.`);
  if(result.requiresFull){state.movement.invalidate();invalidateHumanMoveSpeed297(world);}
- state.result={...result,observerEffects297:{threatsChanged:result.observerEffects297.threatsChanged||moved.topologyChanged,audioChanged:result.observerEffects297.audioChanged||moved.topologyChanged},requiresFull:result.requiresFull||moved.requiresFull,actorsChanged:[...new Set([...moved.actorsChanged,...result.actorsChanged,...expired])]};return state.result;
+ state.result={...result,observerEffects297:{threatsChanged:result.observerEffects297.threatsChanged||moved.topologyChanged,audioChanged:result.observerEffects297.audioChanged||moved.topologyChanged},requiresFull:result.requiresFull||moved.requiresFull||!!reactorStep?.completed,actorsChanged:[...new Set([...moved.actorsChanged,...result.actorsChanged,...expired])]};return state.result;
 }
 /** requiresFull preserves the existing conservative boundary signal. Only the
  * fixed bridge may use the separate actual hard receipt to coalesce calm macros. */

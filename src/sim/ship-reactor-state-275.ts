@@ -22,9 +22,9 @@ export function shipReactorEndCore275(startCore:number):number|undefined {
  return integer(rounded,startCore+1,2147483647)?rounded:undefined;
 }
 
-export function validShipReactorState275(v:unknown,core:number):v is ShipReactorState275 {
- if(!integer(core)||!plain(v)||Reflect.ownKeys(v).length!==3||!['state','startCore','endCore'].every(k=>data(v,k)))return false;
- return integer(v.startCore,0,core)&&v.startCore%10===0&&integer(v.endCore,SHIP_REACTOR_STARTUP_CORE_275)
+export function validShipReactorState275(v:unknown,core:number,version:number=275):v is ShipReactorState275 {
+ if(!integer(version,1,297)||!integer(core)||!plain(v)||Reflect.ownKeys(v).length!==3||!['state','startCore','endCore'].every(k=>data(v,k)))return false;
+ return integer(v.startCore,0,core)&&(version===297||v.startCore%10===0)&&integer(v.endCore,SHIP_REACTOR_STARTUP_CORE_275)
   &&v.endCore===shipReactorEndCore275(v.startCore)
   &&(v.state==='starting'?core<=v.endCore:v.state==='running'&&core>v.endCore);
 }
@@ -39,7 +39,7 @@ export function validShipReactorField275(v:unknown,version:number,core:number,ow
  if(!isSchema275OrLater(version)||owner==='packed')return false;
  if(owner==='job')return !has;
  if(!has)return true;
- const field=data(v,'shipReactor275');return !!field&&validShipReactorState275(field.value,core);
+ const field=data(v,'shipReactor275');return !!field&&validShipReactorState275(field.value,core,version);
 }
 
 export function validShipReactorCommand275(v:unknown,version:number,nextId=Number.MAX_SAFE_INTEGER):v is ShipReactorCommand275 {

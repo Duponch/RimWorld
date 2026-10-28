@@ -1,3 +1,4 @@
+import {SCHEMA_VERSION} from '../src/sim/types.ts';
 import {expect,test} from 'vitest';
 import type {World} from '../src/sim/types.ts';
 import {SHIP_REACTOR_STARTUP_CORE_275,shipReactorEndCore275,validShipReactorState275,validShipReactorField275,validShipReactorCommand275,type ShipReactor275} from '../src/sim/ship-reactor-state-275.ts';
@@ -76,7 +77,7 @@ test('native Float32 end dates differ from naive integer addition at long campai
 
 test('closed component/building guards reject malformed, future, foreign and minified owners without invoking accessors',()=>{
  const w=context(),s=reactor(w),now=w.tick*10;expect(validShipReactorBuilding275(s,275,w,now)).toBe(true);
- for(const version of [274,278])expect(validShipReactorBuilding275(s,version,w,now)).toBe(false);
+ for(const version of [274,SCHEMA_VERSION+1])expect(validShipReactorBuilding275(s,version,w,now)).toBe(false);
  const mutations=[{...s,shipReactor275:undefined},{...s,quality:'normal'},{...s,fuel:{ticks:1}},{...s,power:{on:true,parentId:null,extra:1}},{...s,x:0},{...s,factionId:null},{...s,factionId:undefined}];
  for(const v of mutations)expect(validShipReactorBuilding275(v,275,w,now)).toBe(false);
  let reads=0;const bad={...s};Object.defineProperty(bad,'shipReactor275',{enumerable:true,get(){reads++;throw Error('Must not read');}});expect(validShipReactorBuilding275(bad,275,w,now)).toBe(false);expect(reads).toBe(0);
@@ -88,7 +89,7 @@ test('closed component/building guards reject malformed, future, foreign and min
 
 test('the startup command requires a dense sorted exact confirmed list and the supported closed275 family',()=>{
  const c={type:'ship-reactor-start',reactorId:10,reactorIds:[10,11]};expect(validShipReactorCommand275(c,275,20)).toBe(true);
- for(const v of [274,278])expect(validShipReactorCommand275(c,v,20)).toBe(false);
+ for(const v of [274,SCHEMA_VERSION+1])expect(validShipReactorCommand275(c,v,20)).toBe(false);
  for(const ids of [[],[11,10],[10,10],[10,,11],[20]])expect(validShipReactorCommand275({...c,reactorIds:ids},275,20)).toBe(false);
  expect(validShipReactorCommand275({...c,extra:undefined},275,20)).toBe(false);
  let reads=0;const ids=[10,11];Object.defineProperty(ids,'0',{enumerable:true,get(){reads++;throw Error('No getter');}});expect(validShipReactorCommand275({...c,reactorIds:ids},275,20)).toBe(false);expect(reads).toBe(0);
@@ -111,7 +112,7 @@ test('historical transport rejects future reactor/research markers in inactive, 
   {worldMaps:{sites:[{map:{shipReactorThreats275:{revision:1}}}]}},
   {worldGroups:{abandonedContents:[{humans:[{packed:[{building:{kind:'wall',shipReactor275:undefined}}]}]}]}},
   {world:{schemaVersion:274},structures:{removed:[],upserted:[{kind:'wall',shipReactor275:undefined}]}}];
- for(const entry of entries){expect(validShipReactorHistoricalTransport275(entry,274)).toBe(false);expect(validShipReactorHistoricalTransport275(entry,275)).toBe(true);expect(validShipReactorHistoricalTransport275(entry,277)).toBe(false);}
+ for(const entry of entries){expect(validShipReactorHistoricalTransport275(entry,274)).toBe(false);expect(validShipReactorHistoricalTransport275(entry,275)).toBe(true);expect(validShipReactorHistoricalTransport275(entry,SCHEMA_VERSION+1)).toBe(false);}
  expect(validShipReactorHistoricalTransport275({structures:[{kind:'wall'}],research:{progress:{machining:0}}},274)).toBe(true);
  let reads=0;const getter={};Object.defineProperty(getter,'structures',{enumerable:true,get(){reads++;throw Error('No getter');}});expect(validShipReactorHistoricalTransport275(getter,274)).toBe(false);expect(reads).toBe(0);
 });
@@ -121,7 +122,7 @@ test('ordinary frames without reactors continue without changing either original
  const next=structuredClone(previous);next.tick++;const oldArray=previous.structures,newArray=next.structures,oldValue=structuredClone(previous),newValue=structuredClone(next);
  expect(validShipReactorContinuation275(previous,next)).toBe(true);expect(previous.structures).toBe(oldArray);expect(next.structures).toBe(newArray);expect(previous).toEqual(oldValue);expect(next).toEqual(newValue);
  Object.assign(next.structures[0]!,{shipReactor275:undefined});expect(validShipReactorContinuation275(previous,next)).toBe(false);
- delete next.structures[0]!.shipReactor275;Object.assign(next,{schemaVersion:278});expect(validShipReactorContinuation275(previous,next)).toBe(false);
+ delete next.structures[0]!.shipReactor275;Object.assign(next,{schemaVersion:SCHEMA_VERSION+1});expect(validShipReactorContinuation275(previous,next)).toBe(false);
 });
 
 test('removed reactors no longer advance and ordinary damage preserves the existing startup dates',()=>{

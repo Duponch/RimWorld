@@ -1,3 +1,4 @@
+import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema275OrLater} from './schema-compatibility-257.ts';
 import {isShipPartKind277} from './ship-casket-graph-277.ts';
 import {validShipCasketBuilding277} from './ship-casket-owner-save-277.ts';
@@ -10,14 +11,17 @@ import type {World,CommandResult} from './types.ts';
 export type ShipReactorStartPlan275={ok:false;reason:string}|{ok:true;reactorIds:readonly number[];current():boolean;commit():boolean};
 export type ShipReactorStartView275={ok:false;reason:string}|{ok:true;reactorIds:number[]};
 const fail=(reason:string):Extract<ShipReactorStartPlan275,{ok:false}>=>({ok:false,reason});
-const coreNow=(w:World):number|undefined=>Number.isSafeInteger(w.tick)&&w.tick>=0&&Number.isSafeInteger(w.tick*10)?w.tick*10:undefined;
+const coreNow=(w:World):number|undefined=>{try{return effectiveCore297(w);}catch{return undefined;}};
+// Only an acceleration hint: actual structures/state remain the authority.
+// Refreshed in the existing macro pass and revoked by a successful activation.
+const reactorDue297=new WeakMap<World,{structures:World['structures'];next:number}>();
 
 /** At command time only: adjacency from the completed parts' actual cells.
  * No terrain walk or graph work on a physical/render frame. */
 function connectedHibernating(w:World,id:number):ShipReactor275[]|undefined {
  const now=coreNow(w);if(!isSchema275OrLater(w.schemaVersion)||now===undefined)return;
  for(const s of w.structures)if(isShipPartKind277(s.kind)
-  &&(!validShipReactorBuilding275(s,w.schemaVersion,w,now)||!validShipHullBuilding276(s,w.schemaVersion,w)||!validShipCasketBuilding277(s,w.schemaVersion,w,w.tick)))return;
+  &&(!validShipReactorBuilding275(s,w.schemaVersion,w,now)||!validShipHullBuilding276(s,w.schemaVersion,w)||!validShipCasketBuilding277(s,w.schemaVersion,w,w.tick,now)))return;
  const built=indexShipParts276(w.structures,w.width,w.height);if(!built.ok||built.index.get(id)?.kind!=='ship-reactor')return;
  const connected=connectedShipParts276(built.index,id);if(!connected.ok)return;
  return connected.parts.map(p=>p.source).filter(isShipReactor275).filter(s=>!Object.hasOwn(s,'shipReactor275'));
@@ -54,14 +58,14 @@ export function prepareShipReactorStart275(w:World,reactorId:number,confirmedIds
  if(selected.some(s=>!Object.isExtensible(s)))return fail('Le réacteur ne peut pas recevoir son état de démarrage.');
  const array=w.structures,originals=[...array],version=w.schemaVersion,tick=w.tick,width=w.width,height=w.height,nextId=w.nextId;
  const parts=array.filter(s=>isShipPartKind277(s.kind)),seals=parts.map(originalSeal);let used=false;
- const current=()=>!used&&w.schemaVersion===version&&w.tick===tick&&w.width===width&&w.height===height&&w.nextId===nextId&&w.structures===array
+ const current=()=>!used&&w.schemaVersion===version&&w.tick===tick&&coreNow(w)===now&&w.width===width&&w.height===height&&w.nextId===nextId&&w.structures===array
   &&array.length===originals.length&&originals.every((s,i)=>array[i]===s)&&array.filter(s=>isShipPartKind277(s.kind)).length===parts.length
   &&seals.every(s=>s())&&selected.every(s=>Object.isExtensible(s)&&!('shipReactor275'in s))
   &&(()=>{const current=connectedHibernating(w,reactorId);return !!current&&current.length===selected.length&&current.every((s,i)=>s===selected[i]);})();
  return {ok:true,reactorIds:Object.freeze([...ids]),current,commit:()=>{
   if(!current())return false;
   const states:ShipReactorState275[]=selected.map(()=>({state:'starting',startCore:now,endCore:end}));
-  used=true;for(let i=0;i<selected.length;i++)selected[i]!.shipReactor275=states[i]!;
+  used=true;for(let i=0;i<selected.length;i++)selected[i]!.shipReactor275=states[i]!;reactorDue297.delete(w);
   return true;
  }};
 }
@@ -73,19 +77,28 @@ export function applyShipReactorCommand275(w:World,c:ShipReactorCommand275):Comm
  return plan.commit()?{ok:true,affected:plan.reactorIds.length}:{ok:false,code:'invalid-command',reason:'Le démarrage du réacteur a changé avant confirmation.'};
 }
 
-/** One structure pass per physical step. Absolute dates stay unchanged. No
+/** One authoritative structure pass at macros or an actual due frontier. Dates stay unchanged. No
  * load/adoption call is allowed to produce this actual lifecycle transition. */
 export interface ShipReactorAdvance275 {completed:number;starting:boolean;completedReactorIds:number[]}
 export function advanceShipReactors275(w:World):ShipReactorAdvance275 {
  if(!isSchema275OrLater(w.schemaVersion))return {completed:0,starting:false,completedReactorIds:[]};const now=coreNow(w);if(now===undefined)throw Error('Invalid actual ship reactor clock');
- const ready:{id:number;state:ShipReactorState275}[]=[];let starting=false;
+ const ready:{id:number;state:ShipReactorState275}[]=[];let starting=false,next=Infinity;
  for(const s of w.structures)if(isShipReactor275(s)&&Object.hasOwn(s,'shipReactor275')){
   const state=s.shipReactor275;
-  if(!state||!validShipReactorState275(state,state.state==='starting'?Math.min(now,state.endCore):now))throw Error('Invalid actual ship reactor before its physical step');
+  if(!state||!validShipReactorState275(state,state.state==='starting'?Math.min(now,state.endCore):now,w.schemaVersion))throw Error('Invalid actual ship reactor before its physical step');
   if(state.state==='starting'){
    if(now>state.endCore){const d=Object.getOwnPropertyDescriptor(state,'state');if(!d?.writable)throw Error('Actual ship reactor state is not writable');ready.push({id:s.id,state});}
-   else starting=true;
+   else {starting=true;next=Math.min(next,state.endCore);}
   }
  }
- for(const {state} of ready)state.state='running';return {completed:ready.length,starting,completedReactorIds:ready.map(r=>r.id)};
+ for(const {state} of ready)state.state='running';if(Number(w.schemaVersion)===297)reactorDue297.set(w,{structures:w.structures,next});return {completed:ready.length,starting,completedReactorIds:ready.map(r=>r.id)};
+}
+/** A constant-time deadline probe between macros. No building walk while the
+ * retained deadline is in the future (including maps without any reactor).
+ * A new World/load or replaced structures owner reconstructs from actual state;
+ * a removed/reactivated part is always rechecked by the authoritative due pass. */
+export function advanceShipReactorsCore297(w:World):ShipReactorAdvance275|undefined {
+ const hint=reactorDue297.get(w);
+ if(hint&&hint.structures===w.structures&&effectiveCore297(w)<=hint.next)return;
+ return advanceShipReactors275(w);
 }
