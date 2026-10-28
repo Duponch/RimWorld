@@ -1,6 +1,6 @@
 # Réacteur et frontière physique — V493
 
-État : correction locale qualifiée, enregistrement à terminer, schéma297 inchangé. Ce jalon précède le raccord de la victoire ; il ne livre pas le décollage.
+État : correction committée et poussée dans5d8b227f, schéma297 inchangé ; aucun déploiement Cloudflare. Ce jalon précède le raccord de la victoire ; il ne livre pas le décollage.
 
 ## Écart et primaire
 
