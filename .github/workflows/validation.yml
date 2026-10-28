@@ -27,7 +27,8 @@ jobs:
           node-version-file: '.nvmrc'
           cache: npm
       - name: Record actual Node.js runtime
-        run: node -p 'JSON.stringify({ node: process.version, executable: process.execPath })'
+        run: |
+          node -p 'JSON.stringify({ node: process.version, executable: process.execPath })'
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
